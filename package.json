@@ -1,0 +1,19 @@
+{
+  "name": "AngularExt",
+  "version": "0.0.1n",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "./scripts/build.sh"
+  },
+  "devDependencies": {
+    "typescript": "2.4.2",
+    "@types/node": "8.0.7",
+    "@types/jasmine": "2.5.53",
+
+    "@angular-devkit/core": "0.0.9",
+    "@angular-devkit/schematics": "0.0.9"
+  },
+  "author": "Victor Savkin",
+  "license": "MIT"
+}
