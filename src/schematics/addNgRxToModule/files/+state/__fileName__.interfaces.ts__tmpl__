@@ -1,0 +1,7 @@
+export interface <%= className %> {
+  // define state here
+}
+
+export interface <%= className %>State {
+  readonly <%= propertyName %>: <%= className %>;
+}

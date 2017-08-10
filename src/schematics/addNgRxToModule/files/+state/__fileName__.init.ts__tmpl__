@@ -1,0 +1,5 @@
+import {<%= className %>} from './<%= fileName %>.interfaces';
+
+export const <%= propertyName %>InitialState: <%= className %> = {
+  // fill it initial state here
+};

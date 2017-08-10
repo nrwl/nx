@@ -1,0 +1,17 @@
+import {TalksAndFiltersEffects} from './talks-and-filters.effects';
+import {readAll} from '@nrwl/ext';
+import {of} from 'rxjs/observable/of';
+import {hot} from 'jasmine-marbles';
+
+describe('<%= className %>Effects', () => {
+  describe('someEffect', () => {
+    it('should work', async () => {
+      const actions = new Actions(hot('-a-|', {a: {type: 'SOME_ACTION'}}));
+      const effects = new <%= className %>Effects();
+
+      expect(await readAll(effects.navigateToTalk)).toEqual([
+        {type: 'OTHER_ACTION'}
+      ]);
+    });
+  });
+});

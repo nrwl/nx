@@ -1,0 +1,7 @@
+export interface SomeAction {
+  type: 'SOME_ACTION';
+  payload: {};
+}
+
+export type <%= className %>Action = SomeAction;
+
