@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
 import {Effect, Actions} from '@ngrx/effects';
 import {of} from 'rxjs/observable/of';
+import 'rxjs/add/operator/switchMap';
 
 @Injectable()
 export class <%= className %>Effects {

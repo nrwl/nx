@@ -4,11 +4,20 @@
   "title": "Add NgRx support to a module",
   "type": "object",
   "properties": {
-    "path": {
+    "module": {
       "type": "string"
+    },
+    "skipImport": {
+      "type": "boolean"
+    },
+    "root": {
+      "type": "boolean"
+    },
+    "emptyRoot": {
+      "type": "boolean"
     }
   },
   "required": [
-    "path"
+    "module"
   ]
 }
