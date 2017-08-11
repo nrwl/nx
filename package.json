@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "./scripts/build.sh",
-    "e2e": "yarn build && ./scripts/e2e.sh"
+    "e2e": "yarn build && ./scripts/e2e.sh",
+    "release": "yarn build && ./scripts/release.sh"
   },
   "dependencies" :{
     "rxjs": "5.4.2",
