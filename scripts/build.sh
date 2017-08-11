@@ -3,4 +3,4 @@
 rm -rf build
 rm -rf tmp
 tsc
-rsync -a --exclude=*.ts src/ build/
+rsync -a --exclude=*.ts src/ build/src

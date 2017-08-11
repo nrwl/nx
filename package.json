@@ -1,19 +1,27 @@
 {
-  "name": "AngularExt",
-  "version": "0.0.1n",
+  "name": "@nrwl/ext",
+  "version": "0.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "./scripts/build.sh"
+    "build": "./scripts/build.sh",
+    "e2e": "yarn build && ./scripts/e2e.sh"
   },
   "devDependencies": {
     "typescript": "2.4.2",
     "@types/node": "8.0.7",
     "@types/jasmine": "2.5.53",
-
-    "@angular-devkit/core": "0.0.9",
-    "@angular-devkit/schematics": "0.0.9"
+    "@angular-devkit/core": "0.0.10",
+    "@angular-devkit/schematics": "0.0.16",
+    "jest": "20.0.4"
   },
   "author": "Victor Savkin",
-  "license": "MIT"
+  "license": "MIT",
+  "jest" : {
+    "modulePathIgnorePatterns": [
+      "tmp",
+      "files"
+    ]
+  },
+  "schematics": "schematics/collection.json"
 }
