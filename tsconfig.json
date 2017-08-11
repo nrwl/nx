@@ -7,7 +7,7 @@
     "typeRoots": ["node_modules/@types"],
     "skipLibCheck": true,
     "lib": [
-      "es2015"
+      "es2017"
     ]
   },
   "exclude": [
