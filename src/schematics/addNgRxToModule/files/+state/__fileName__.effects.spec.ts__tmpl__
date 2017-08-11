@@ -1,5 +1,5 @@
 import {Actions} from '@ngrx/effects';
-import {readAll, hot} from '@nrwl/ext';
+import {readAll, hot} from '@nrwl/nx';
 import {<%= className %>Effects} from './<%= fileName %>.effects';
 import {of} from 'rxjs/observable/of';
 
