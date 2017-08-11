@@ -8,7 +8,7 @@ describe('addNgRxToModule', () => {
 
   it('should add root configuration', () => {
     newApp('new proj --skipInstall');
-    runSchematic('@nrwl/ext:addNgRxToModule --module=src/app/app.module.ts --root', {cwd: 'proj'});
+    runSchematic('@nrwl/nx:addNgRxToModule --module=src/app/app.module.ts --root', {cwd: 'proj'});
 
     checkFilesExists(
       `proj/src/app/+state/app.actions.ts`,
@@ -33,7 +33,7 @@ describe('addNgRxToModule', () => {
 
   it('should add empty root configuration', () => {
     newApp('new proj2 --skipInstall');
-    runSchematic('@nrwl/ext:addNgRxToModule --module=src/app/app.module.ts --emptyRoot', {cwd: 'proj2'});
+    runSchematic('@nrwl/nx:addNgRxToModule --module=src/app/app.module.ts --emptyRoot', {cwd: 'proj2'});
 
     const contents = readFile('proj2/src/app/app.module.ts');
     expect(contents).toContain('StoreModule.forRoot');
@@ -46,7 +46,7 @@ describe('addNgRxToModule', () => {
 
   it('should add feature configuration', () => {
     newApp('new proj3 --skipInstall');
-    runSchematic('@nrwl/ext:addNgRxToModule --module=src/app/app.module.ts', {cwd: 'proj3'});
+    runSchematic('@nrwl/nx:addNgRxToModule --module=src/app/app.module.ts', {cwd: 'proj3'});
 
     checkFilesExists(
       `proj3/src/app/+state/app.actions.ts`,
@@ -65,7 +65,7 @@ describe('addNgRxToModule', () => {
 
   it('should generate files without importing them', () => {
     newApp('new proj4 --skipInstall');
-    runSchematic('@nrwl/ext:addNgRxToModule --module=src/app/app.module.ts --skipImport', {cwd: 'proj4'});
+    runSchematic('@nrwl/nx:addNgRxToModule --module=src/app/app.module.ts --skipImport', {cwd: 'proj4'});
 
     checkFilesExists(
       `proj4/src/app/+state/app.actions.ts`,
