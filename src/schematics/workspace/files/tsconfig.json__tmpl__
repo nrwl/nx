@@ -3,6 +3,13 @@
     "strict": true,
     "skipLibCheck": true,
     "experimentalDecorators": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "*",
+        "libs/*",
+        "apps/*"
+      ]
+    }
   }
 }
