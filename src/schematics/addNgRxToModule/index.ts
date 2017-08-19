@@ -3,9 +3,8 @@ import {apply, branchAndMerge, chain, mergeWith, move, Rule, template, Tree, url
 import {names, toClassName, toFileName, toPropertyName} from "../name-utils";
 import * as path from 'path';
 import * as ts from 'typescript';
-import {addImportToModule, addProviderToModule} from '../utility/ast-utils';
-import {InsertChange} from '../utility/change';
-import {insertImport} from '../utility/route-utils';
+import {addImportToModule, addProviderToModule, insert} from '../utility/ast-utils';
+import {insertImport} from '@schematics/angular/utility/route-utils';
 
 function addImportsToModule(name: string, options: any): Rule {
   return (host: Tree) => {
@@ -24,17 +23,10 @@ function addImportsToModule(name: string, options: any): Rule {
 
     if (options.emptyRoot) {
       const reducer = `StoreModule.forRoot({})`;
-      const changes = [
+      insert(host, modulePath, [
         insertImport(source, modulePath, 'StoreModule', '@ngrx/store'),
         ...addImportToModule(source, modulePath, reducer)
-      ];
-      const declarationRecorder = host.beginUpdate(modulePath);
-      for (const change of changes) {
-        if (change instanceof InsertChange) {
-          declarationRecorder.insertLeft(change.pos, change.toAdd);
-        }
-      }
-      host.commitUpdate(declarationRecorder);
+      ]);
       return host;
 
     } else {
@@ -49,7 +41,7 @@ function addImportsToModule(name: string, options: any): Rule {
       const effects = options.root ? `EffectsModule.forRoot([${effectsName}])` : `EffectsModule.forFeature([${effectsName}])`;
       const reducer = options.root ? `StoreModule.forRoot(${reducerName}, {initialState: ${initName}})` : `StoreModule.forFeature('${toPropertyName(name)}', ${reducerName}, {initialState: ${initName}})`;
 
-      const changes = [
+      insert(host, modulePath, [
         insertImport(source, modulePath, 'StoreModule', '@ngrx/store'),
         insertImport(source, modulePath, 'EffectsModule', '@ngrx/effects'),
         insertImport(source, modulePath, reducerName, reducerPath),
@@ -58,15 +50,7 @@ function addImportsToModule(name: string, options: any): Rule {
         ...addImportToModule(source, modulePath, reducer),
         ...addImportToModule(source, modulePath, effects),
         ...addProviderToModule(source, modulePath, effectsName)
-      ];
-      const declarationRecorder = host.beginUpdate(modulePath);
-      for (const change of changes) {
-        if (change instanceof InsertChange) {
-          declarationRecorder.insertLeft(change.pos, change.toAdd);
-        }
-      }
-
-      host.commitUpdate(declarationRecorder);
+      ]);
       return host;
     }
   };

@@ -5,17 +5,18 @@ import {readFileSync, statSync, writeFileSync} from 'fs';
 export function newApp(command: string): string {
   return execSync(`../node_modules/.bin/ng ${command}`, {cwd: `./tmp`}).toString();
 }
-export function runCLI(command: string, {cwd}: {cwd: string}): string {
-  cwd = cwd === undefined ? '' : cwd;
-  return execSync(`../../node_modules/.bin/ng ${command}`, {cwd: `./tmp/${cwd}`}).toString();
+export function runCLI(command: string, {projectName: projectName}: {projectName: string}): string {
+  projectName = projectName === undefined ? '' : projectName;
+  return execSync(`../../node_modules/.bin/ng ${command}`, {cwd: `./tmp/${projectName}`}).toString();
 }
-export function runSchematic(command: string, {cwd}: {cwd: string}): string {
-  cwd = cwd === undefined ? '' : cwd;
-  return execSync(`../../node_modules/.bin/schematics ${command}`, {cwd: `./tmp/${cwd}`}).toString();
+export function runSchematic(command: string, {projectName}: {projectName?: string} = {}): string {
+  const up = projectName ? '../' : '';
+  projectName = projectName === undefined ? '' : projectName;
+  return execSync(`../${up}node_modules/.bin/schematics ${command}`, {cwd: `./tmp/${projectName}`}).toString();
 }
-export function runCommand(command: string, {cwd}: {cwd: string}): string {
-  cwd = cwd === undefined ? '' : cwd;
-  return execSync(command, {cwd: `./tmp/${cwd}`}).toString();
+export function runCommand(command: string, {projectName}: {projectName: string}): string {
+  projectName = projectName === undefined ? '' : projectName;
+  return execSync(command, {cwd: `./tmp/${projectName}`}).toString();
 }
 
 export function updateFile(f: string, content: string): void {
@@ -70,5 +71,5 @@ export function addNgRx(path: string): string {
   p['dependencies']['@ngrx/effects'] = '4.0.2';
   p['dependencies']['jasmine-marbles'] = '0.1.0';
   updateFile(`${path}/package.json`, JSON.stringify(p, null, 2));
-  return runCommand('npm install', {cwd: path});
+  return runCommand('npm install', {projectName: path});
 }
