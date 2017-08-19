@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "skipLibCheck": true,
+    "experimentalDecorators": true,
+    "baseUrl": "."
+  }
+}

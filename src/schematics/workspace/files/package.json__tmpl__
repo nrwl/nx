@@ -1,0 +1,53 @@
+{
+  "name": "<%= fileName %>",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "test": "ng test",
+    "lint": "ng lint",
+    "e2e": "ng e2e"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "4.3.0",
+    "@angular/common": "4.3.0",
+    "@angular/compiler": "4.3.0",
+    "@angular/core": "4.3.0",
+    "@angular/forms": "4.3.0",
+    "@angular/http": "4.3.0",
+    "@angular/platform-browser": "4.3.0",
+    "@angular/platform-browser-dynamic": "4.3.0",
+    "@angular/router": "4.3.0",
+    "core-js": "^2.4.1",
+    "rxjs": "^5.4.2",
+    "zone.js": "^0.8.14"
+  },
+  "devDependencies": {
+    "@angular/cli": "https://github.com/nrwl/bazel-cli-build",
+    "@nrwl/nx": "https://github.com/nrwl/nx-build",
+    "@angular/compiler-cli": "4.3.0",
+    "@angular/language-service": "4.3.0",
+    "@types/jasmine": "~2.5.53",
+    "@types/jasminewd2": "~2.0.2",
+    "@types/node": "~6.0.60",
+    "codelyzer": "~3.1.1",
+    "jasmine-core": "~2.6.2",
+    "jasmine-spec-reporter": "~4.1.0",
+    "karma": "~1.7.0",
+    "karma-chrome-launcher": "~2.1.1",
+    "karma-cli": "~1.0.1",
+    "karma-coverage-istanbul-reporter": "^1.2.1",
+    "karma-jasmine": "~1.1.0",
+    "karma-jasmine-html-reporter": "^0.2.2",
+    "protractor": "~5.1.2",
+    "ts-node": "~3.2.0",
+    "tslint": "~5.3.2",
+    "typescript": "2.3.4",
+    "protobufjs": "5.0.0",
+    "karma-spec-reporter": "0.0.31",
+    "karma-webpack": "2.0.4"
+  }
+}
