@@ -8,7 +8,7 @@ describe('addNgRxToModule', () => {
 
   it('should add root configuration', () => {
     newApp('new proj --skipInstall');
-    runSchematic('@nrwl/nx:addNgRxToModule --module=src/app/app.module.ts --root', {cwd: 'proj'});
+    runSchematic('@nrwl/nx:addNgRxToModule --module=src/app/app.module.ts --root', {projectName: 'proj'});
 
     checkFilesExists(
       `proj/src/app/+state/app.actions.ts`,
@@ -26,14 +26,14 @@ describe('addNgRxToModule', () => {
 
     addNgRx('proj');
 
-    runCLI('build', {cwd: 'proj'});
-    runCLI('test --single-run', {cwd: 'proj'});
+    runCLI('build', {projectName: 'proj'});
+    runCLI('test --single-run', {projectName: 'proj'});
 
   }, 50000);
 
   it('should add empty root configuration', () => {
     newApp('new proj2 --skipInstall');
-    runSchematic('@nrwl/nx:addNgRxToModule --module=src/app/app.module.ts --emptyRoot', {cwd: 'proj2'});
+    runSchematic('@nrwl/nx:addNgRxToModule --module=src/app/app.module.ts --emptyRoot', {projectName: 'proj2'});
 
     const contents = readFile('proj2/src/app/app.module.ts');
     expect(contents).toContain('StoreModule.forRoot');
@@ -41,12 +41,12 @@ describe('addNgRxToModule', () => {
 
     addNgRx('proj2');
 
-    runCLI('build', {cwd: 'proj2'});
+    runCLI('build', {projectName: 'proj2'});
   }, 50000);
 
   it('should add feature configuration', () => {
     newApp('new proj3 --skipInstall');
-    runSchematic('@nrwl/nx:addNgRxToModule --module=src/app/app.module.ts', {cwd: 'proj3'});
+    runSchematic('@nrwl/nx:addNgRxToModule --module=src/app/app.module.ts', {projectName: 'proj3'});
 
     checkFilesExists(
       `proj3/src/app/+state/app.actions.ts`,
@@ -65,7 +65,7 @@ describe('addNgRxToModule', () => {
 
   it('should generate files without importing them', () => {
     newApp('new proj4 --skipInstall');
-    runSchematic('@nrwl/nx:addNgRxToModule --module=src/app/app.module.ts --skipImport', {cwd: 'proj4'});
+    runSchematic('@nrwl/nx:addNgRxToModule --module=src/app/app.module.ts --skipImport', {projectName: 'proj4'});
 
     checkFilesExists(
       `proj4/src/app/+state/app.actions.ts`,
