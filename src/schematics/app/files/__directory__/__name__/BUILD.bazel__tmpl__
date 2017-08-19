@@ -1,0 +1,35 @@
+package(default_visibility = ["//visibility:public"])
+load("@build_bazel_rules_angular//:defs.bzl", "ng_module")
+load("@build_bazel_rules_nrwl//:webpack.bzl", "webpack_bundle")
+
+ng_module(
+  name = "compile",
+  srcs = glob(["**/*.ts"], exclude = ["e2e/**/*.ts"]),
+  deps = [],
+  tsconfig = "//:tsconfig.json"
+)
+
+genrule(
+  name = "copy_static",
+  srcs = ["src"] + glob(["src/**/*"], exclude=["**/*.ts"]),
+  outs = ["marker"],
+  cmd = """
+    rsync -a --exclude '*.ts' $(locations :src) $(@D)/
+    touch $(locations :marker)
+  """,
+  output_to_bindir = 1
+)
+
+filegroup(
+  name = "compile_and_static",
+  srcs = [
+    ":compile",
+    ":copy_static"
+  ]
+)
+
+webpack_bundle(
+  name = "<%= name %>",
+  srcs = ["compile_and_static"],
+  config = "@build_bazel_rules_nrwl//:webpack.config.js"
+)
