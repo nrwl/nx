@@ -6,217 +6,12 @@
  * found in the LICENSE file at https://angular.io/license
  */
 import * as ts from 'typescript';
-import { Change, InsertChange } from './change';
-import { insertImport } from './route-utils';
+import {Tree} from '@angular-devkit/schematics';
+import {getDecoratorMetadata} from '@schematics/angular/utility/ast-utils';
+import {Change, InsertChange, NoopChange} from '@schematics/angular/utility/change';
 
 
-/**
- * Find all nodes from the AST in the subtree of node of SyntaxKind kind.
- * @param node
- * @param kind
- * @param max The maximum number of items to return.
- * @return all nodes of kind, or [] if none is found
- */
-export function findNodes(node: ts.Node, kind: ts.SyntaxKind, max = Infinity): ts.Node[] {
-  if (!node || max == 0) {
-    return [];
-  }
-
-  const arr: ts.Node[] = [];
-  if (node.kind === kind) {
-    arr.push(node);
-    max--;
-  }
-  if (max > 0) {
-    for (const child of node.getChildren()) {
-      findNodes(child, kind, max).forEach(node => {
-        if (max > 0) {
-          arr.push(node);
-        }
-        max--;
-      });
-
-      if (max <= 0) {
-        break;
-      }
-    }
-  }
-
-  return arr;
-}
-
-
-/**
- * Get all the nodes from a source.
- * @param sourceFile The source file object.
- * @returns {Observable<ts.Node>} An observable of all the nodes in the source.
- */
-export function getSourceNodes(sourceFile: ts.SourceFile): ts.Node[] {
-  const nodes: ts.Node[] = [sourceFile];
-  const result = [];
-
-  while (nodes.length > 0) {
-    const node = nodes.shift();
-
-    if (node) {
-      result.push(node);
-      if (node.getChildCount(sourceFile) >= 0) {
-        nodes.unshift(...node.getChildren());
-      }
-    }
-  }
-
-  return result;
-}
-
-
-/**
- * Helper for sorting nodes.
- * @return function to sort nodes in increasing order of position in sourceFile
- */
-function nodesByPosition(first: ts.Node, second: ts.Node): number {
-  return first.pos - second.pos;
-}
-
-
-/**
- * Insert `toInsert` after the last occurence of `ts.SyntaxKind[nodes[i].kind]`
- * or after the last of occurence of `syntaxKind` if the last occurence is a sub child
- * of ts.SyntaxKind[nodes[i].kind] and save the changes in file.
- *
- * @param nodes insert after the last occurence of nodes
- * @param toInsert string to insert
- * @param file file to insert changes into
- * @param fallbackPos position to insert if toInsert happens to be the first occurence
- * @param syntaxKind the ts.SyntaxKind of the subchildren to insert after
- * @return Change instance
- * @throw Error if toInsert is first occurence but fall back is not set
- */
-export function insertAfterLastOccurrence(nodes: ts.Node[],
-                                          toInsert: string,
-                                          file: string,
-                                          fallbackPos: number,
-                                          syntaxKind?: ts.SyntaxKind): Change {
-  let lastItem = nodes.sort(nodesByPosition).pop();
-  if (syntaxKind) {
-    lastItem = findNodes(lastItem !, syntaxKind).sort(nodesByPosition).pop();
-  }
-  if (!lastItem && fallbackPos == undefined) {
-    throw new Error(`tried to insert ${toInsert} as first occurence with no fallback position`);
-  }
-  const lastItemPosition: number = lastItem ? lastItem.end : fallbackPos;
-
-  return new InsertChange(file, lastItemPosition, toInsert);
-}
-
-
-export function getContentOfKeyLiteral(_source: ts.SourceFile, node: ts.Node): string | null {
-  if (node.kind == ts.SyntaxKind.Identifier) {
-    return (node as ts.Identifier).text;
-  } else if (node.kind == ts.SyntaxKind.StringLiteral) {
-    return (node as ts.StringLiteral).text;
-  } else {
-    return null;
-  }
-}
-
-
-function _angularImportsFromNode(node: ts.ImportDeclaration,
-                                 _sourceFile: ts.SourceFile): {[name: string]: string} {
-  const ms = node.moduleSpecifier;
-  let modulePath: string | null = null;
-  switch (ms.kind) {
-    case ts.SyntaxKind.StringLiteral:
-      modulePath = (ms as ts.StringLiteral).text;
-      break;
-    default:
-      return {};
-  }
-
-  if (!modulePath.startsWith('@angular/')) {
-    return {};
-  }
-
-  if (node.importClause) {
-    if (node.importClause.name) {
-      // This is of the form `import Name from 'path'`. Ignore.
-      return {};
-    } else if (node.importClause.namedBindings) {
-      const nb = node.importClause.namedBindings;
-      if (nb.kind == ts.SyntaxKind.NamespaceImport) {
-        // This is of the form `import * as name from 'path'`. Return `name.`.
-        return {
-          [(nb as ts.NamespaceImport).name.text + '.']: modulePath,
-        };
-      } else {
-        // This is of the form `import {a,b,c} from 'path'`
-        const namedImports = nb as ts.NamedImports;
-
-        return namedImports.elements
-          .map((is: ts.ImportSpecifier) => is.propertyName ? is.propertyName.text : is.name.text)
-          .reduce((acc: {[name: string]: string}, curr: string) => {
-            acc[curr] = modulePath !;
-
-            return acc;
-          }, {});
-      }
-    }
-
-    return {};
-  } else {
-    // This is of the form `import 'path';`. Nothing to do.
-    return {};
-  }
-}
-
-
-export function getDecoratorMetadata(source: ts.SourceFile, identifier: string,
-                                     module: string): ts.Node[] {
-  const angularImports: {[name: string]: string}
-    = findNodes(source, ts.SyntaxKind.ImportDeclaration)
-    .map((node: ts.ImportDeclaration) => _angularImportsFromNode(node, source))
-    .reduce((acc: {[name: string]: string}, current: {[name: string]: string}) => {
-      for (const key of Object.keys(current)) {
-        acc[key] = current[key];
-      }
-
-      return acc;
-    }, {});
-
-  return getSourceNodes(source)
-    .filter(node => {
-      return node.kind == ts.SyntaxKind.Decorator
-        && (node as ts.Decorator).expression.kind == ts.SyntaxKind.CallExpression;
-    })
-    .map(node => (node as ts.Decorator).expression as ts.CallExpression)
-    .filter(expr => {
-      if (expr.expression.kind == ts.SyntaxKind.Identifier) {
-        const id = expr.expression as ts.Identifier;
-
-        return id.getFullText(source) == identifier
-          && angularImports[id.getFullText(source)] === module;
-      } else if (expr.expression.kind == ts.SyntaxKind.PropertyAccessExpression) {
-        // This covers foo.NgModule when importing * as foo.
-        const paExpr = expr.expression as ts.PropertyAccessExpression;
-        // If the left expression is not an identifier, just give up at that point.
-        if (paExpr.expression.kind !== ts.SyntaxKind.Identifier) {
-          return false;
-        }
-
-        const id = paExpr.name.text;
-        const moduleId = (paExpr.expression as ts.Identifier).getText(source);
-
-        return id === identifier && (angularImports[moduleId + '.'] === module);
-      }
-
-      return false;
-    })
-    .filter(expr => expr.arguments[0]
-      && expr.arguments[0].kind == ts.SyntaxKind.ObjectLiteralExpression)
-    .map(expr => expr.arguments[0] as ts.ObjectLiteralExpression);
-}
-
-
+// This should be moved to @schematics/angular once it allows to pass custom expressions as providers
 function _addSymbolToNgModuleMetadata(source: ts.SourceFile,
                                       ngModulePath: string, metadataField: string,
                                       expression: string): Change[] {
@@ -350,4 +145,19 @@ export function addImportToModule(source: ts.SourceFile,
 export function addProviderToModule(source: ts.SourceFile,
                                     modulePath: string, symbolName: string): Change[] {
   return _addSymbolToNgModuleMetadata(source, modulePath, 'providers', symbolName);
+}
+
+
+export function insert(host: Tree, modulePath: string, changes: Change[]) {
+  const recorder = host.beginUpdate(modulePath);
+  for (const change of changes) {
+    if (change instanceof InsertChange) {
+      recorder.insertLeft(change.pos, change.toAdd);
+    } else if (change instanceof  NoopChange) {
+      // do nothing
+    } else {
+      throw new Error(`Unexpected Change '${change}'`);
+    }
+  }
+  host.commitUpdate(recorder);
 }
