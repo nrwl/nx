@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
-cp package.json build/src/package.json
-cp README.md build/src/README.md
-cp LICENSE build/src/LICENSE
+./scripts/package.sh
 cd build/src
 git init
 git add .
