@@ -2,6 +2,16 @@
   "name": "nrwl",
   "version": "0.1",
   "schematics": {
+    "application": {
+      "factory": "./workspace",
+      "schema": "./workspace/schema.json",
+      "description": "Create an Angular Bazel workspace."
+    },
+    "app": {
+      "factory": "./app",
+      "schema": "./app/schema.json",
+      "description": "Create an Angular application."
+    },
     "addNgRxToModule": {
       "factory": "./addNgRxToModule",
       "schema": "./addNgRxToModule/schema.json",
