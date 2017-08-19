@@ -8,22 +8,24 @@ describe('application', () => {
 
   it('creates a new application in a workspace', () => {
     runSchematic('@nrwl/nx:application --name=proj');
-    runSchematic('@nrwl/nx:app --name=myapp', {projectName: 'proj'});
+    runSchematic('@nrwl/nx:app --name=myApp', {projectName: 'proj'});
 
     checkFilesExists(
       `proj/tsconfig.json`,
       `proj/WORKSPACE`,
       `proj/BUILD.bazel`,
-      `proj/apps/myapp/BUILD.bazel`,
-      `proj/apps/myapp/src/index.html`,
-      `proj/apps/myapp/src/app/app.module.ts`,
-      `proj/apps/myapp/src/app/app.component.ts`
+      `proj/apps/my-app/BUILD.bazel`,
+      `proj/apps/my-app/src/index.html`,
+      `proj/apps/my-app/src/app/app.module.ts`,
+      `proj/apps/my-app/src/app/app.component.ts`
     );
 
-    expect(readFile('proj/apps/myapp/src/app/app.module.ts')).toContain('bootstrap: [AppComponent]');
+    expect(readFile('proj/apps/my-app/src/app/app.module.ts')).toContain('bootstrap: [AppComponent]');
 
     const cliConfig = JSON.parse(readFile('proj/.angular-cli.json'));
     expect(cliConfig.apps.length).toEqual(1);
+    expect(cliConfig.apps[0].name).toEqual('myApp');
+    expect(cliConfig.apps[0].root).toEqual('apps/my-app/src');
   });
 
   it('creates multiple applications in a workspace', () => {

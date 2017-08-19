@@ -21,8 +21,13 @@ module.exports = function(env) {
   const out = path.join(process.cwd(), env.bin, env.package, 'bundles');
   const src = path.join(process.cwd(), env.bin, appConfig.root);
 
+  const aliasesForApps = apps.reduce((acc, curr) => {
+    acc[curr.name] = path.join(process.cwd(), env.bin, path.dirname(curr.root));
+    return acc;
+  }, {});
+
   // victor todo: remove it when ng_module rule is fixed
-  const alias = Object.assign({}, {
+  const alias = Object.assign({}, aliasesForApps, {
     '@angular/core/core': '@angular/core/@angular/core.es5',
     '@angular/common/common': '@angular/common/@angular/common.es5',
     '@angular/platform-browser/platform-browser': '@angular/platform-browser/@angular/platform-browser.es5'

@@ -12,6 +12,16 @@
       "schema": "./app/schema.json",
       "description": "Create an Angular application."
     },
+    "lib": {
+      "factory": "./lib",
+      "schema": "./lib/schema.json",
+      "description": "Create a TypeScript library."
+    },
+    "nglib": {
+      "factory": "./nglib",
+      "schema": "./nglib/schema.json",
+      "description": "Create an Angular library."
+    },
     "addNgRxToModule": {
       "factory": "./addNgRxToModule",
       "schema": "./addNgRxToModule/schema.json",

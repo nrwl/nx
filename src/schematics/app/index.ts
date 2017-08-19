@@ -1,6 +1,6 @@
 import {apply, chain, mergeWith, move, Rule, externalSchematic, template, url, Tree,} from '@angular-devkit/schematics';
 import {Schema} from './schema';
-import {names} from '../name-utils';
+import {names, toFileName} from '../name-utils';
 import * as path from 'path';
 import * as ts from 'typescript';
 import {addBootstrapToModule, addImportToModule} from '@schematics/angular/utility/ast-utils';
@@ -48,7 +48,7 @@ function addAppToAngularCliJson(fullPath: string, options: Schema): Rule {
 
 
 export default function (options: Schema): Rule {
-  const fullPath = path.join(options.directory, options.name, options.sourceDir);
+  const fullPath = path.join(options.directory, toFileName(options.name), options.sourceDir);
   return chain([
     mergeWith(
       apply(url('./files'), [
