@@ -6,13 +6,14 @@
   "scripts": {
     "build": "./scripts/build.sh",
     "e2e": "yarn build && ./scripts/e2e.sh",
-    "release": "yarn build && ./scripts/release.sh"
+    "package": "./scripts/package.sh",
+    "release": "./scripts/release.sh"
   },
   "dependencies" :{
-    "@angular-devkit/schematics": "0.0.16",
     "jasmine-marbles": "0.1.0"
   },
   "peerDependencies" :{
+    "@angular-devkit/schematics": "*",
     "rxjs": "*"
   },
   "devDependencies": {
@@ -20,7 +21,9 @@
     "typescript": "2.4.2",
     "@types/node": "8.0.7",
     "@types/jasmine": "2.5.53",
-    "jest": "20.0.4"
+    "jest": "20.0.4",
+    "@angular-devkit/schematics": "0.0.17",
+    "@schematics/angular": "git+https://github.com/Brocco/zzz-ng-schematics.git"
   },
   "author": "Victor Savkin",
   "license": "MIT",
