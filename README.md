@@ -11,7 +11,8 @@ Add the following dependencies to your project's `package.json` and run `npm ins
   dependencies: {
     "@ngrx/store": "4.0.2",
     "@ngrx/effects": "4.0.2",
-    "@nrwl/nx": "https://github.com/nrwl/nx-build" 
+    "@nrwl/nx": "https://github.com/nrwl/nx-build",
+    "@angular-devkit/schematics": "0.0.17" 
   }
 }
 ```
