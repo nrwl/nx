@@ -1,0 +1,185 @@
+const fs = require('fs');
+const path = require('path');
+const ProgressPlugin = require('webpack/lib/ProgressPlugin');
+const CircularDependencyPlugin = require('circular-dependency-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+const { NoEmitOnErrorsPlugin, SourceMapDevToolPlugin, NamedModulesPlugin } = require('webpack');
+const { GlobCopyWebpackPlugin, NamedLazyChunksWebpackPlugin, BaseHrefWebpackPlugin } = require('@angular/cli/plugins/webpack');
+const { CommonsChunkPlugin } = require('webpack').optimize;
+
+const nodeModules = path.join(process.cwd(), 'node_modules');
+const realNodeModules = fs.realpathSync(nodeModules);
+
+const entryPoints = ["inline", "polyfills", "styles", "vendor", "main"];
+const baseHref = "";
+
+module.exports = function(env) {
+  const name = path.parse(env.package).name;
+  const apps = JSON.parse(fs.readFileSync(path.join(process.cwd(), '.angular-cli.json'), 'UTF-8')).apps;
+  const appConfig = apps.filter(a => a.name === name)[0];
+  const out = path.join(process.cwd(), env.bin, env.package, 'bundles');
+  const src = path.join(process.cwd(), env.bin, appConfig.root);
+
+  // victor todo: remove it when ng_module rule is fixed
+  const alias = Object.assign({}, {
+    '@angular/core/core': '@angular/core/@angular/core.es5',
+    '@angular/common/common': '@angular/common/@angular/common.es5',
+    '@angular/platform-browser/platform-browser': '@angular/platform-browser/@angular/platform-browser.es5'
+  });
+
+  return {
+    "resolve": {
+      "extensions": [
+        ".js"
+      ],
+      "modules": [
+        "./node_modules"
+      ],
+      "symlinks": true,
+      alias
+    },
+    "resolveLoader": {
+      "modules": [
+        "./node_modules"
+      ]
+    },
+    "entry": {
+      "main": [
+        tsToJs(path.join(src, appConfig.main))
+      ],
+      "polyfills": [
+        tsToJs(path.join(src, appConfig.polyfills))
+      ],
+      "styles": appConfig.styles.map(s => path.join(src, s))
+    },
+    "output": {
+      "path": out,
+      "filename": "[name].bundle.js",
+      "chunkFilename": "[id].chunk.js"
+    },
+    "module": {
+      "rules": [
+        {
+          "enforce": "pre",
+          "test": /\.js$/,
+          "loader": "source-map-loader",
+          "exclude": [
+            /(\\|\/)node_modules(\\|\/)/
+          ]
+        },
+        {
+          "test": /\.html$/,
+          "loader": "raw-loader"
+        },
+        {
+          "test": /\.(eot|svg|cur)$/,
+          "loader": "file-loader?name=[name].[hash:20].[ext]"
+        },
+        {
+          "test": /\.(jpg|png|webp|gif|otf|ttf|woff|woff2|ani)$/,
+          "loader": "url-loader?name=[name].[hash:20].[ext]&limit=10000"
+        }
+      ]
+    },
+    "plugins": [
+      new NoEmitOnErrorsPlugin(),
+      new GlobCopyWebpackPlugin({
+        "patterns": [
+          "assets",
+          "favicon.ico"
+        ],
+        "globOptions": {
+          "cwd": src,
+          "dot": true,
+          "ignore": "**/.gitkeep"
+        }
+      }),
+      new ProgressPlugin(),
+      new CircularDependencyPlugin({
+        "exclude": /(\\|\/)node_modules(\\|\/)/,
+        "failOnError": false
+      }),
+      new NamedLazyChunksWebpackPlugin(),
+      new HtmlWebpackPlugin({
+        "template": path.join(src, 'index.html'),
+        "filename": "./index.html",
+        "hash": false,
+        "inject": true,
+        "compile": true,
+        "favicon": false,
+        "minify": false,
+        "cache": true,
+        "showErrors": true,
+        "chunks": "all",
+        "excludeChunks": [],
+        "xhtml": true,
+        "chunksSortMode": function sort(left, right) {
+          let leftIndex = entryPoints.indexOf(left.names[0]);
+          let rightindex = entryPoints.indexOf(right.names[0]);
+          if (leftIndex > rightindex) {
+            return 1;
+          }
+          else if (leftIndex < rightindex) {
+            return -1;
+          }
+          else {
+            return 0;
+          }
+        }
+      }),
+      new BaseHrefWebpackPlugin({}),
+      new CommonsChunkPlugin({
+        "name": [
+          "inline"
+        ],
+        "minChunks": null
+      }),
+      new CommonsChunkPlugin({
+        "name": [
+          "vendor"
+        ],
+        "minChunks": (module) => {
+          return module.resource
+            && (module.resource.startsWith(nodeModules)
+              || module.resource.startsWith(realNodeModules));
+        },
+        "chunks": [
+          "main"
+        ]
+      }),
+      new SourceMapDevToolPlugin({
+        "filename": "[file].map[query]",
+        "moduleFilenameTemplate": "[resource-path]",
+        "fallbackModuleFilenameTemplate": "[resource-path]?[hash]",
+        "sourceRoot": "webpack:///"
+      }),
+      new CommonsChunkPlugin({
+        "name": [
+          "main"
+        ],
+        "minChunks": 2,
+        "async": "common"
+      }),
+      new NamedModulesPlugin({}),
+    ],
+    "node": {
+      "fs": "empty",
+      "global": true,
+      "crypto": "empty",
+      "tls": "empty",
+      "net": "empty",
+      "process": true,
+      "module": false,
+      "clearImmediate": false,
+      "setImmediate": false
+    },
+    "devServer": {
+      "historyApiFallback": true
+    }
+  };
+};
+
+function tsToJs(s) {
+  return `${s.substring(0, s.length - 3)}.js`;
+}
