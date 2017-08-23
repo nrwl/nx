@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 load("@build_bazel_rules_angular//:defs.bzl", "ng_module")
-load("@build_bazel_rules_nrwl//:webpack.bzl", "webpack_bundle")
+load("@nrwl//:webpack.bzl", "webpack_bundle")
 
 ng_module(
   name = "compile",
@@ -9,6 +9,7 @@ ng_module(
   tsconfig = "//:tsconfig.json"
 )
 
+# temporary work-around to handle static
 genrule(
   name = "copy_static",
   srcs = ["src"] + glob(["src/**/*"], exclude=["**/*.ts"]),
@@ -31,5 +32,5 @@ filegroup(
 webpack_bundle(
   name = "<%= name %>",
   srcs = ["compile_and_static"],
-  config = "@build_bazel_rules_nrwl//:webpack.config.js"
+  config = "@nrwl//:webpack.config.js"
 )

@@ -1,0 +1,8 @@
+load("@build_bazel_rules_typescript//:defs.bzl", "nodejs_binary")
+exports_files(["webpack.config.js", "test.js"])
+
+nodejs_binary(
+    name = "webpack",
+    entry_point = "webpack/bin/webpack",
+    visibility = ["//visibility:public"],
+)

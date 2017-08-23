@@ -9,7 +9,7 @@ import {insert} from '../utility/ast-utils';
 function addBootstrap(path: string): Rule {
   return (host: Tree) => {
     const modulePath = `${path}/app/app.module.ts`;
-    const moduleSource = host.read(modulePath) !.toString('utf-8');
+    const moduleSource = host.read(modulePath)!.toString('utf-8');
     const sourceFile = ts.createSourceFile(modulePath, moduleSource, ts.ScriptTarget.Latest, true);
     const importChanges = addImportToModule(sourceFile, modulePath, 'BrowserModule', '@angular/platform-browser');
     const bootstrapChanges = addBootstrapToModule(sourceFile, modulePath, 'AppComponent', './app.component');
