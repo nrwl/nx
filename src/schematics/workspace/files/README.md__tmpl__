@@ -1,6 +1,6 @@
 # <%= className %>
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version <%= version %>.
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version EXPERIMENTAL BAZEL.
 
 ## Development server
 
