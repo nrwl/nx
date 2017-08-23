@@ -5,6 +5,8 @@
     "moduleResolution": "node",
     "outDir": "build",
     "typeRoots": ["node_modules/@types"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "skipLibCheck": true,
     "lib": [
       "es2017"
