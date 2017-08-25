@@ -19,11 +19,11 @@ module.exports = function(env) {
   const apps = JSON.parse(fs.readFileSync(path.join(process.cwd(), '.angular-cli.json'), 'UTF-8')).apps;
   const appConfig = apps.filter(a => a.name === name)[0];
   const binDir = env.bin_dir.startsWith('/') ? env.bin_dir : path.join(process.cwd(), env.bin_dir);
-  const out = path.join(process.cwd(), binDir, env.package, 'bundles');
-  const src = path.join(process.cwd(), binDir, appConfig.root);
+  const out = path.join(binDir, env.package, 'bundles');
+  const src = path.join(binDir, appConfig.root);
 
   const aliasesForApps = apps.reduce((acc, curr) => {
-    acc[curr.name] = path.join(process.cwd(), binDir, path.dirname(curr.root));
+    acc[curr.name] = path.join(binDir, path.dirname(curr.root));
     return acc;
   }, {});
 
@@ -182,7 +182,8 @@ module.exports = function(env) {
     },
     "devServer": {
       "historyApiFallback": true,
-      "lazy": true
+      "lazy": true,
+      "contentBase": out
     }
   };
 };
