@@ -20,25 +20,20 @@ function addBootstrap(path: string): Rule {
 
 function addAppToAngularCliJson(fullPath: string, options: Schema): Rule {
   return (host: Tree) => {
-    const config = JSON.parse(host.read('.angular-cli.json') !.toString('utf-8'));
+    const config = JSON.parse(host.read('.angular-cli.json')!.toString('utf-8'));
 
     config.apps.push({
       name: options.name,
       root: fullPath,
-      assets: ["assets", "favicon.ico"],
-      index: "index.html",
-      main: "main.ts",
-      polyfills: "polyfills.ts",
+      assets: ['assets', 'favicon.ico'],
+      index: 'index.html',
+      main: 'main.ts',
+      polyfills: 'polyfills.ts',
       prefix: options.name,
-      styles: [
-        "styles.css"
-      ],
+      styles: ['styles.css'],
       scripts: [],
-      environmentSource: "environments/environment.ts",
-      environments: {
-        "dev": "environments/environment.ts",
-        "prod": "environments/environment.prod.ts"
-      }
+      environmentSource: 'environments/environment.ts',
+      environments: {'dev': 'environments/environment.ts', 'prod': 'environments/environment.prod.ts'}
     });
 
     host.overwrite('.angular-cli.json', JSON.stringify(config, null, 2));
@@ -47,18 +42,10 @@ function addAppToAngularCliJson(fullPath: string, options: Schema): Rule {
 }
 
 
-export default function (options: Schema): Rule {
+export default function(options: Schema): Rule {
   const fullPath = path.join(options.directory, toFileName(options.name), options.sourceDir);
   return chain([
-    mergeWith(
-      apply(url('./files'), [
-        template({
-          ...options,
-          ...names(options.name),
-          'dot': '.',
-          'tmpl': ''
-        })
-      ])),
+    mergeWith(apply(url('./files'), [template({...options, ...names(options.name), 'dot': '.', 'tmpl': ''})])),
     externalSchematic('@schematics/angular', 'module', {
       name: 'app',
       commonModule: false,
@@ -79,7 +66,6 @@ export default function (options: Schema): Rule {
       viewEncapsulation: options.viewEncapsulation,
       changeDetection: options.changeDetection
     }),
-    addBootstrap(fullPath),
-    addAppToAngularCliJson(fullPath, options)
+    addBootstrap(fullPath), addAppToAngularCliJson(fullPath, options)
   ]);
 }

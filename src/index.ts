@@ -1,1 +1,1 @@
-export { DataPersistence } from './utils/data-persistence';
+export {DataPersistence} from './utils/data-persistence';

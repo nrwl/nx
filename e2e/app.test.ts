@@ -1,7 +1,4 @@
-import {
-  addNgRx, checkFilesExists, cleanup, newApp, readFile, runCLI, runCommand, runSchematic,
-  updateFile
-} from './utils';
+import {addNgRx, checkFilesExists, cleanup, newApp, readFile, runCLI, runCommand, runSchematic, updateFile} from './utils';
 
 describe('application', () => {
   beforeEach(cleanup);
@@ -11,14 +8,9 @@ describe('application', () => {
     runSchematic('@nrwl/nx:app --name=myApp', {projectName: 'proj'});
 
     checkFilesExists(
-      `proj/tsconfig.json`,
-      `proj/WORKSPACE`,
-      `proj/BUILD.bazel`,
-      `proj/apps/my-app/BUILD.bazel`,
-      `proj/apps/my-app/src/index.html`,
-      `proj/apps/my-app/src/app/app.module.ts`,
-      `proj/apps/my-app/src/app/app.component.ts`
-    );
+        `proj/tsconfig.json`, `proj/WORKSPACE`, `proj/BUILD.bazel`, `proj/apps/my-app/BUILD.bazel`,
+        `proj/apps/my-app/src/index.html`, `proj/apps/my-app/src/app/app.module.ts`,
+        `proj/apps/my-app/src/app/app.component.ts`);
 
     expect(readFile('proj/apps/my-app/src/app/app.module.ts')).toContain('bootstrap: [AppComponent]');
 

@@ -1,46 +1,46 @@
+import {Injectable, Type} from '@angular/core';
+import {ActivatedRouteSnapshot, RouterStateSnapshot} from '@angular/router';
 import {Actions} from '@ngrx/effects';
+import {ROUTER_NAVIGATION, RouterNavigationAction} from '@ngrx/router-store';
 import {Action, State, Store} from '@ngrx/store';
 import {Observable} from 'rxjs/Observable';
-import {ActivatedRouteSnapshot, RouterStateSnapshot} from '@angular/router';
-import {ROUTER_NAVIGATION, RouterNavigationAction} from '@ngrx/router-store';
-import {Injectable, Type} from '@angular/core';
-import {filter} from 'rxjs/operator/filter';
-import {withLatestFrom} from 'rxjs/operator/withLatestFrom';
-import {switchMap} from 'rxjs/operator/switchMap';
+import {of} from 'rxjs/observable/of';
 import {_catch} from 'rxjs/operator/catch';
 import {concatMap} from 'rxjs/operator/concatMap';
+import {filter} from 'rxjs/operator/filter';
 import {map} from 'rxjs/operator/map';
-import {of} from 'rxjs/observable/of';
+import {switchMap} from 'rxjs/operator/switchMap';
+import {withLatestFrom} from 'rxjs/operator/withLatestFrom';
 
 /**
  * See DataPersistence.pessimisticUpdate for more information.
  */
 export interface PessimisticUpdateOpts {
-  run(a: Action, state?: any): Observable<Action> | Action | void;
-  onError(a: Action, e: any): Observable<any> | any;
+  run(a: Action, state?: any): Observable<Action>|Action|void;
+  onError(a: Action, e: any): Observable<any>|any;
 }
 /**
  * See DataPersistence.pessimisticUpdate for more information.
  */
 export interface OptimisticUpdateOpts {
-  run(a: Action, state?: any): Observable<any> | any;
-  undoAction(a: Action, e: any): Observable<Action> | Action;
+  run(a: Action, state?: any): Observable<any>|any;
+  undoAction(a: Action, e: any): Observable<Action>|Action;
 }
 
 /**
  * See DataPersistence.navigation for more information.
  */
 export interface FetchOpts {
-  run(a: Action, state?: any): Observable<Action> | Action | void;
-  onError?(a: Action, e: any): Observable<any> | any;
+  run(a: Action, state?: any): Observable<Action>|Action|void;
+  onError?(a: Action, e: any): Observable<any>|any;
 }
 
 /**
  * See DataPersistence.navigation for more information.
  */
 export interface HandleNavigationOpts {
-  run(a: ActivatedRouteSnapshot, state?: any): Observable<Action> | Action | void;
-  onError?(a: ActivatedRouteSnapshot, e: any): Observable<any> | any;
+  run(a: ActivatedRouteSnapshot, state?: any): Observable<Action>|Action|void;
+  onError?(a: ActivatedRouteSnapshot, e: any): Observable<any>|any;
 }
 
 /**
@@ -188,9 +188,10 @@ export class DataPersistence<T> {
    */
   navigation(component: Type<any>, opts: HandleNavigationOpts): Observable<any> {
     const nav = filter.call(
-      map.call(this.actions.ofType(ROUTER_NAVIGATION),
-        (a: RouterNavigationAction<RouterStateSnapshot>) => findSnapshot(component, a.payload.routerState.root)),
-      s => !!s);
+        map.call(
+            this.actions.ofType(ROUTER_NAVIGATION),
+            (a: RouterNavigationAction<RouterStateSnapshot>) => findSnapshot(component, a.payload.routerState.root)),
+        s => !!s);
 
     const pairs = withLatestFrom.call(nav, this.store);
     return switchMap.call(pairs, this.runWithErrorHandling(opts.run, opts.onError));
@@ -225,8 +226,8 @@ function wrapIntoObservable(obj: any): Observable<any> {
   if (!!obj && typeof obj.subscribe === 'function') {
     return obj;
   } else if (!obj) {
-    return of();
+    return of ();
   } else {
-    return of(obj);
+    return of (obj);
   }
 }

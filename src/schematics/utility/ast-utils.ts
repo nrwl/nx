@@ -5,16 +5,15 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import * as ts from 'typescript';
 import {Tree} from '@angular-devkit/schematics';
 import {getDecoratorMetadata} from '@schematics/angular/utility/ast-utils';
 import {Change, InsertChange, NoopChange} from '@schematics/angular/utility/change';
+import * as ts from 'typescript';
 
 
 // This should be moved to @schematics/angular once it allows to pass custom expressions as providers
-function _addSymbolToNgModuleMetadata(source: ts.SourceFile,
-                                      ngModulePath: string, metadataField: string,
-                                      expression: string): Change[] {
+function _addSymbolToNgModuleMetadata(
+    source: ts.SourceFile, ngModulePath: string, metadataField: string, expression: string): Change[] {
   const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
   let node: any = nodes[0];  // tslint:disable-line:no-any
 
@@ -25,21 +24,22 @@ function _addSymbolToNgModuleMetadata(source: ts.SourceFile,
 
   // Get all the children property assignment of object literals.
   const matchingProperties: ts.ObjectLiteralElement[] =
-    (node as ts.ObjectLiteralExpression).properties
-      .filter(prop => prop.kind == ts.SyntaxKind.PropertyAssignment)
-      // Filter out every fields that's not "metadataField". Also handles string literals
-      // (but not expressions).
-      .filter((prop: ts.PropertyAssignment) => {
-        const name = prop.name;
-        switch (name.kind) {
-          case ts.SyntaxKind.Identifier:
-            return (name as ts.Identifier).getText(source) == metadataField;
-          case ts.SyntaxKind.StringLiteral:
-            return (name as ts.StringLiteral).text == metadataField;
-        }
+      (node as ts.ObjectLiteralExpression)
+          .properties
+          .filter(prop => prop.kind == ts.SyntaxKind.PropertyAssignment)
+          // Filter out every fields that's not "metadataField". Also handles string literals
+          // (but not expressions).
+          .filter((prop: ts.PropertyAssignment) => {
+            const name = prop.name;
+            switch (name.kind) {
+              case ts.SyntaxKind.Identifier:
+                return (name as ts.Identifier).getText(source) == metadataField;
+              case ts.SyntaxKind.StringLiteral:
+                return (name as ts.StringLiteral).text == metadataField;
+            }
 
-        return false;
-      });
+            return false;
+          });
 
   // Get the last node of the array literal.
   if (!matchingProperties) {
@@ -136,14 +136,16 @@ function _addSymbolToNgModuleMetadata(source: ts.SourceFile,
   return [insert];
 }
 
-export function addImportToModule(source: ts.SourceFile,
-                                  modulePath: string, symbolName: string): Change[] {
-
-  return _addSymbolToNgModuleMetadata(source, modulePath, 'imports', symbolName,);
+export function addImportToModule(source: ts.SourceFile, modulePath: string, symbolName: string): Change[] {
+  return _addSymbolToNgModuleMetadata(
+      source,
+      modulePath,
+      'imports',
+      symbolName,
+  );
 }
 
-export function addProviderToModule(source: ts.SourceFile,
-                                    modulePath: string, symbolName: string): Change[] {
+export function addProviderToModule(source: ts.SourceFile, modulePath: string, symbolName: string): Change[] {
   return _addSymbolToNgModuleMetadata(source, modulePath, 'providers', symbolName);
 }
 
@@ -153,7 +155,7 @@ export function insert(host: Tree, modulePath: string, changes: Change[]) {
   for (const change of changes) {
     if (change instanceof InsertChange) {
       recorder.insertLeft(change.pos, change.toAdd);
-    } else if (change instanceof  NoopChange) {
+    } else if (change instanceof NoopChange) {
       // do nothing
     } else {
       throw new Error(`Unexpected Change '${change}'`);

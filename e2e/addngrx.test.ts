@@ -1,7 +1,4 @@
-import {
-  addNgRx, checkFilesExists, cleanup, newApp, readFile, runCLI, runCommand, runSchematic,
-  updateFile
-} from './utils';
+import {addNgRx, checkFilesExists, cleanup, newApp, readFile, runCLI, runCommand, runSchematic, updateFile} from './utils';
 
 describe('addNgRxToModule', () => {
   beforeEach(cleanup);
@@ -11,14 +8,10 @@ describe('addNgRxToModule', () => {
     runSchematic('@nrwl/nx:addNgRxToModule --module=src/app/app.module.ts --root', {projectName: 'proj'});
 
     checkFilesExists(
-      `proj/src/app/+state/app.actions.ts`,
-      `proj/src/app/+state/app.effects.ts`,
-      `proj/src/app/+state/app.effects.spec.ts`,
-      `proj/src/app/+state/app.init.ts`,
-      `proj/src/app/+state/app.interfaces.ts`,
-      `proj/src/app/+state/app.reducer.ts`,
-      `proj/src/app/+state/app.reducer.spec.ts`
-    );
+        `proj/src/app/+state/app.actions.ts`, `proj/src/app/+state/app.effects.ts`,
+        `proj/src/app/+state/app.effects.spec.ts`, `proj/src/app/+state/app.init.ts`,
+        `proj/src/app/+state/app.interfaces.ts`, `proj/src/app/+state/app.reducer.ts`,
+        `proj/src/app/+state/app.reducer.spec.ts`);
 
     const contents = readFile('proj/src/app/app.module.ts');
     expect(contents).toContain('StoreModule.forRoot');
@@ -49,14 +42,10 @@ describe('addNgRxToModule', () => {
     runSchematic('@nrwl/nx:addNgRxToModule --module=src/app/app.module.ts', {projectName: 'proj3'});
 
     checkFilesExists(
-      `proj3/src/app/+state/app.actions.ts`,
-      `proj3/src/app/+state/app.effects.ts`,
-      `proj3/src/app/+state/app.effects.spec.ts`,
-      `proj3/src/app/+state/app.init.ts`,
-      `proj3/src/app/+state/app.interfaces.ts`,
-      `proj3/src/app/+state/app.reducer.ts`,
-      `proj3/src/app/+state/app.reducer.spec.ts`
-    );
+        `proj3/src/app/+state/app.actions.ts`, `proj3/src/app/+state/app.effects.ts`,
+        `proj3/src/app/+state/app.effects.spec.ts`, `proj3/src/app/+state/app.init.ts`,
+        `proj3/src/app/+state/app.interfaces.ts`, `proj3/src/app/+state/app.reducer.ts`,
+        `proj3/src/app/+state/app.reducer.spec.ts`);
 
     const contents = readFile('proj3/src/app/app.module.ts');
     expect(contents).toContain('StoreModule.forFeature');
@@ -68,14 +57,10 @@ describe('addNgRxToModule', () => {
     runSchematic('@nrwl/nx:addNgRxToModule --module=src/app/app.module.ts --skipImport', {projectName: 'proj4'});
 
     checkFilesExists(
-      `proj4/src/app/+state/app.actions.ts`,
-      `proj4/src/app/+state/app.effects.ts`,
-      `proj4/src/app/+state/app.effects.spec.ts`,
-      `proj4/src/app/+state/app.init.ts`,
-      `proj4/src/app/+state/app.interfaces.ts`,
-      `proj4/src/app/+state/app.reducer.ts`,
-      `proj4/src/app/+state/app.reducer.spec.ts`
-    );
+        `proj4/src/app/+state/app.actions.ts`, `proj4/src/app/+state/app.effects.ts`,
+        `proj4/src/app/+state/app.effects.spec.ts`, `proj4/src/app/+state/app.init.ts`,
+        `proj4/src/app/+state/app.interfaces.ts`, `proj4/src/app/+state/app.reducer.ts`,
+        `proj4/src/app/+state/app.reducer.spec.ts`);
 
     const contents = readFile('proj4/src/app/app.module.ts');
     expect(contents).not.toContain('StoreModule');
