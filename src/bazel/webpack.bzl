@@ -19,7 +19,7 @@ def _webpack_bundle_impl(ctx):
     if hasattr(s, "es5_sources"):
       inputs += s.es5_sources
 
-  config = ctx.files.config
+  config = ctx.attr.config.files.to_list()[0]
 
   if ctx.attr.mode == 'prod':
     main = ctx.new_file('bundles/main.bundle.prod.js')
