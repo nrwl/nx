@@ -25,7 +25,7 @@ git_repository(
 )
 
 local_repository(
-  name = "build_bazel_rules_nrwl",
+  name = "nrwl",
   path = "node_modules/@nrwl/nx/bazel",
 )
 
