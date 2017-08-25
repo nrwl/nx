@@ -18,11 +18,12 @@ module.exports = function(env) {
   const name = path.parse(env.package).name;
   const apps = JSON.parse(fs.readFileSync(path.join(process.cwd(), '.angular-cli.json'), 'UTF-8')).apps;
   const appConfig = apps.filter(a => a.name === name)[0];
-  const out = path.join(process.cwd(), env.bin, env.package, 'bundles');
-  const src = path.join(process.cwd(), env.bin, appConfig.root);
+  const binDir = env.bin_dir.startsWith('/') ? env.bin_dir : path.join(process.cwd(), env.bin_dir);
+  const out = path.join(process.cwd(), binDir, env.package, 'bundles');
+  const src = path.join(process.cwd(), binDir, appConfig.root);
 
   const aliasesForApps = apps.reduce((acc, curr) => {
-    acc[curr.name] = path.join(process.cwd(), env.bin, path.dirname(curr.root));
+    acc[curr.name] = path.join(process.cwd(), binDir, path.dirname(curr.root));
     return acc;
   }, {});
 
@@ -180,7 +181,8 @@ module.exports = function(env) {
       "setImmediate": false
     },
     "devServer": {
-      "historyApiFallback": true
+      "historyApiFallback": true,
+      "lazy": true
     }
   };
 };
