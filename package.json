@@ -46,7 +46,8 @@
     "karma": "~1.7.0",
     "karma-chrome-launcher": "~2.1.1",
     "karma-jasmine": "~1.1.0",
-    "karma-webpack": "2.0.4"
+    "karma-webpack": "2.0.4",
+    "clang-format": "^1.0.32"
   },
   "author": "Victor Savkin",
   "license": "MIT",
