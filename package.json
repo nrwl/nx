@@ -6,6 +6,7 @@
   "scripts": {
     "build": "./scripts/build.sh",
     "e2e": "yarn build && ./scripts/e2e.sh",
+    "format": "./scripts/format.sh",
     "package": "./scripts/package.sh",
     "release": "./scripts/release.sh",
     "test": "yarn build && ./scripts/test.sh"
