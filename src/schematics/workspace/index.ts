@@ -2,17 +2,7 @@ import {apply, chain, mergeWith, move, Rule, schematic, template, url,} from '@a
 import {Schema} from './schema';
 import {names} from '../name-utils';
 
-export default function (options: Schema): Rule {
-  return chain([
-    mergeWith(
-      apply(url('./files'), [
-        template({
-          ...options,
-          ...names(options.name),
-          'dot': '.',
-          'tmpl': ''
-        }),
-        move(options.name !)
-      ]))
-  ]);
+export default function(options: Schema): Rule {
+  return chain([mergeWith(apply(
+      url('./files'), [template({...options, ...names(options.name), 'dot': '.', 'tmpl': ''}), move(options.name!)]))]);
 }

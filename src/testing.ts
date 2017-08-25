@@ -1,2 +1,2 @@
-export { readAll } from './utils/testing';
-export { hot, cold } from 'jasmine-marbles';
+export {cold, hot} from 'jasmine-marbles';
+export {readAll} from './utils/testing';

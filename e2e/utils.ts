@@ -1,6 +1,6 @@
 import {execSync} from 'child_process';
-import * as path from 'path';
 import {readFileSync, statSync, writeFileSync} from 'fs';
+import * as path from 'path';
 
 export function newApp(command: string): string {
   return execSync(`../node_modules/.bin/ng ${command}`, {cwd: `./tmp`}).toString();
@@ -26,7 +26,7 @@ export function updateFile(f: string, content: string): void {
 export function checkFilesExists(...expectedFiles: string[]) {
   expectedFiles.forEach(f => {
     const ff = f.startsWith('/') ? f : path.join(getCwd(), 'tmp', f);
-    if (! exists(ff)) {
+    if (!exists(ff)) {
       throw new Error(`File '${ff}' does not exist`);
     }
   });
