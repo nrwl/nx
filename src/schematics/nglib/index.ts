@@ -6,7 +6,7 @@ import {names, toFileName} from '../name-utils';
 function addLibToAngularCliJson(fullPath: string, schema: Schema): Rule {
   return (host: Tree) => {
     const source = JSON.parse(host.read('.angular-cli.json')!.toString('utf-8'));
-    source.apps.push({name: schema.name, root: fullPath, prefix: schema.prefix ? schema.prefix : schema.name});
+    source.apps.push({name: schema.name, root: fullPath, appDir: false, prefix: schema.prefix ? schema.prefix : schema.name});
     host.overwrite('.angular-cli.json', JSON.stringify(source, null, 2));
     return host;
   };
