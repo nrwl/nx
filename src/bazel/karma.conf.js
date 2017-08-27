@@ -3,8 +3,8 @@
  *
  * Instead of running karma outside of bazel against the bin_dir directory, we will run it as part of the bazel process.
  */
-import * as path from "path";
-import * as fs from "fs";
+const path = require("path");
+const fs = require("fs");
 
 module.exports = function(config) {
   const binDir = config.opts.bin_dir.startsWith('/') ? config.opts.bin_dir : path.join(process.cwd(), config.opts.bin_dir);
