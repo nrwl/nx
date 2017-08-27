@@ -3,8 +3,21 @@
  *
  * Instead of running karma outside of bazel against the bin_dir directory, we will run it as part of the bazel process.
  */
+import * as path from "path";
+import * as fs from "fs";
+
 module.exports = function(config) {
+  const binDir = config.opts.bin_dir.startsWith('/') ? config.opts.bin_dir : path.join(process.cwd(), config.opts.bin_dir);
+  const apps = JSON.parse(fs.readFileSync(path.join(process.cwd(), '.angular-cli.json'), 'UTF-8')).apps;
+  const alias = apps.reduce((acc, curr) => {
+    acc[curr.name] = path.join(binDir, path.dirname(curr.root));
+    return acc;
+  }, {});
+
   const webpackConfig = {
+    resolve: {
+      alias
+    },
     resolveLoader: {
       alias: {
         "template-loader": '@nrwl/nx/bazel/template-loader'
