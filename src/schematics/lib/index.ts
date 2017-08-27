@@ -9,6 +9,7 @@ function addLibToAngularCliJson(fullPath: string, schema: Schema): Rule {
     source.apps.push({
       name: schema.name,
       root: fullPath,
+      appDir: false
     });
     host.overwrite('.angular-cli.json', JSON.stringify(source, null, 2));
     return host;
