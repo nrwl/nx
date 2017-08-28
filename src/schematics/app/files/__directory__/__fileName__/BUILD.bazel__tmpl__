@@ -1,5 +1,5 @@
 package(default_visibility = ["//visibility:public"])
-load("@build_bazel_rules_angular//:defs.bzl", "ng_module")
+load("@angular//:index.bzl", "ng_module")
 load("@nrwl//:webpack.bzl", "webpack_bundle")
 
 ng_module(
