@@ -1,0 +1,26 @@
+{
+  "name": "bazel",
+  "version": "0.1",
+  "schematics": {
+    "application": {
+      "factory": "./workspace",
+      "schema": "./workspace/schema.json",
+      "description": "Create an Angular Bazel workspace."
+    },
+    "app": {
+      "factory": "./app",
+      "schema": "./app/schema.json",
+      "description": "Create an Angular application."
+    },
+    "lib": {
+      "factory": "./lib",
+      "schema": "./lib/schema.json",
+      "description": "Create a TypeScript library."
+    },
+    "nglib": {
+      "factory": "./nglib",
+      "schema": "./nglib/schema.json",
+      "description": "Create an Angular library."
+    }
+  }
+}

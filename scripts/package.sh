@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
 ./scripts/build.sh
-cp package.json build/src/package.json
-cp README.md build/src/README.md
-cp LICENSE build/src/LICENSE
+
+cd build/packages
+
+tar -czf bazel.tgz bazel
+tar -czf nx.tgz nx
+tar -czf schematics.tgz schematics
