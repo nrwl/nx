@@ -12,6 +12,11 @@
       "es2017"
     ]
   },
+  "path": {
+    "@nrwl/schematics": [
+      "packages/schematics/src/index"
+    ]
+  },
   "exclude": [
     "tmp",
     "node_modules"

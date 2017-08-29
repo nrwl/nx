@@ -1,0 +1,11 @@
+{
+  "name": "nx",
+  "version": "0.1",
+  "schematics": {
+    "addNgRxToModule": {
+      "factory": "./addNgRxToModule",
+      "schema": "./addNgRxToModule/schema.json",
+      "description": "Add NgRx support to a module."
+    }
+  }
+}

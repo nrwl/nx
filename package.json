@@ -1,12 +1,13 @@
 {
   "name": "@nrwl/nx",
   "version": "0.0.1",
-  "description": "Nrwl Extensions for Angular",
+  "description": "Angular Extensions",
   "main": "index.js",
   "scripts": {
     "build": "./scripts/build.sh",
     "e2e": "yarn build && ./scripts/e2e.sh",
     "format": "./scripts/format.sh",
+    "link": "./scripts/link.sh",
     "package": "./scripts/package.sh",
     "release": "./scripts/release.sh",
     "test": "yarn build && ./scripts/test.sh"
@@ -14,18 +15,6 @@
   "dependencies" :{
     "jasmine-marbles": "0.1.0"
   },
-  "peerDependencies" :{
-    "@angular-devkit/schematics": "*",
-    "rxjs": ">5.4.2",
-    "@angular/core": ">4.0.0",
-    "@angular/common": ">4.0.0",
-    "@angular/router": ">4.0.0",
-    "@angular/platform-browser": ">4.0.0",
-    "@ngrx/store": ">4.0.0",
-    "@ngrx/router-store": ">4.0.0",
-    "@ngrx/effects": ">4.0.0"
-  },
-
   "devDependencies": {
     "rxjs": "5.4.3",
     "@angular/core": "4.3.5",
@@ -41,8 +30,7 @@
     "@types/node": "8.0.7",
     "@types/jasmine": "2.5.53",
     "jest": "20.0.4",
-    "@angular-devkit/schematics": "0.0.17",
-    "@schematics/angular": "git+https://github.com/Brocco/zzz-ng-schematics.git",
+    "@schematics/angular": "0.0.30",
     "jasmine-core": "~2.6.2",
     "karma": "~1.7.0",
     "karma-chrome-launcher": "~2.1.1",
@@ -57,6 +45,5 @@
       "tmp",
       "files"
     ]
-  },
-  "schematics": "schematics/collection.json"
+  }
 }
