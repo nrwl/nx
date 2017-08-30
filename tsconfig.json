@@ -10,12 +10,13 @@
     "skipLibCheck": true,
     "lib": [
       "es2017"
-    ]
-  },
-  "path": {
-    "@nrwl/schematics": [
-      "packages/schematics/index"
-    ]
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@nrwl/schematics": [
+        "./packages/schematics"
+      ]
+    }
   },
   "exclude": [
     "tmp",
