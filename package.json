@@ -18,6 +18,7 @@
   },
   "devDependencies": {
     "rxjs": "5.4.3",
+    "@angular-devkit/schematics": "0.0.19",
     "@angular/core": "4.3.5",
     "@angular/common": "4.3.5",
     "@angular/platform-browser": "4.3.5",
