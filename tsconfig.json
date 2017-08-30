@@ -14,7 +14,7 @@
   },
   "path": {
     "@nrwl/schematics": [
-      "packages/schematics/src/index"
+      "packages/schematics/index"
     ]
   },
   "exclude": [
