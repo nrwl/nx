@@ -10,6 +10,7 @@
     "link": "./scripts/link.sh",
     "package": "./scripts/package.sh",
     "release": "./scripts/release.sh",
+    "copy-to-cli": "./scripts/copy-to-cli.sh",
     "test": "yarn build && ./scripts/test.sh"
   },
   "dependencies" :{
