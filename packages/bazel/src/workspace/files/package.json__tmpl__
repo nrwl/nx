@@ -29,6 +29,7 @@
   "devDependencies": {
     "@angular/cli": "https://github.com/nrwl/bazel-cli-build",
     "@bazel/typescript": "~0.0.7",
+    "@nrwl/schematics": "https://github.com/nrwl/schematics-build",
     "@nrwl/bazel": "https://github.com/nrwl/bazel-build",
     "@angular/bazel": "angular/bazel-builds#6f50535",
     "@angular/compiler-cli": "angular/compiler-cli-builds#797acb2",

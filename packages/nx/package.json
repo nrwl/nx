@@ -4,8 +4,7 @@
   "description": "Angular Extensions",
   "main": "index.js",
   "dependencies" :{
-    "jasmine-marbles": "0.1.0",
-    "@nrwl/schematics": "0.0.1"
+    "jasmine-marbles": "0.1.0"
   },
   "peerDependencies" :{
     "rxjs": ">5.4.2",
