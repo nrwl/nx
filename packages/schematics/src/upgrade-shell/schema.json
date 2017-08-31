@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "UpgradeShell",
+  "title": "Add Upgrade Shell to an application",
+  "type": "object",
+  "properties": {
+    "module": {
+      "type": "string",
+      "description": "Path to the bootstrapped Angular module"
+    },
+    "angularJsImport": {
+      "type": "string",
+      "description": "Import expression of the AngularJS application"
+    },
+    "angularJsModule": {
+      "type": "string",
+      "description": "The name of AngularJS main module"
+    },
+    "angularJsCmpSelector": {
+      "type": "string",
+      "description": "The selector of an AngularJS component"
+    }
+  },
+  "required": [
+    "module",
+    "angularJsImport",
+    "angularJsCmpSelector"
+  ]
+}

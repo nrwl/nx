@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "NewLib",
+  "id": "NgRx",
   "title": "Add NgRx support to a module",
   "type": "object",
   "properties": {

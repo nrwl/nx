@@ -61,3 +61,24 @@ Also, `mymodule.module.ts` will have `StoreModule.forFeature` and `EffectsModule
 #### skipImport
 
 Add `--skipImport` to generate files without adding imports to the module.
+
+
+
+### upgrade-shell
+
+Run `schematics @nrwl/schematics:upgrade-shell --module=src/app/app.module.ts --angularJsImport=../legacy --angularJsCmpSelector=rootLegacyCmp` and you will see the following files created:
+
+```
+/src/app/legacy-setup.ts
+/src/app/hybrid.spec.ts
+```
+
+`legacy-setup.ts` contains all the downgraded and upgraded components.
+
+`src/app/module.ts` has been modified to bootstrap a hybrid app instead of `AppComponent`.
+
+`/src/app/hybrid.spec.ts` contains the spec verifying that the hybrid application runs properly.
+
+For simple scenarios, no modification is necessary in `/src/app/legacy-setup.ts`.
+
+Open `/src/app/hybrid.spec.ts` to update the expectation in the test and run `ng test`. It should pass.
