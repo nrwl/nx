@@ -25,6 +25,7 @@
     "@angular/compiler": "4.3.5",
     "@angular/platform-browser-dynamic": "4.3.5",
     "@angular/router": "4.3.5",
+    "@angular/cli": "1.3.2",
     "@ngrx/store": "4.0.3",
     "@ngrx/router-store": "4.0.3",
     "@ngrx/effects": "4.0.3",

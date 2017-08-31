@@ -65,11 +65,9 @@ export function exists(filePath: string): boolean {
   return directoryExists(filePath) || fileExists(filePath);
 }
 
-export function addNgRx(path: string): string {
-  const p = JSON.parse(readFile(`${path}/package.json`));
-  p['dependencies']['@ngrx/store'] = '4.0.2';
-  p['dependencies']['@ngrx/effects'] = '4.0.2';
-  p['dependencies']['jasmine-marbles'] = '0.1.0';
-  updateFile(`${path}/package.json`, JSON.stringify(p, null, 2));
-  return runCommand('npm install', {projectName: path});
+export function addNgRx(path: string): void {
+  runCommand('npm install', {projectName: path});
+  execSync(`cp -r node_modules/@ngrx tmp/${path}/node_modules/@ngrx`);
+  execSync(`cp -r node_modules/jasmine-marbles tmp/${path}/node_modules/jasmine-marbles`);
+  execSync(`cp -r node_modules/@nrwl tmp/${path}/node_modules/@nrwl`);
 }
