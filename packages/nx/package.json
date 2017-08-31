@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Angular Extensions",
   "main": "index.js",
+  "types": "index.d.js",
   "dependencies" :{
     "jasmine-marbles": "0.1.0"
   },
