@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "UpgradeShell",
+  "title": "Add Upgrade Shell to an application",
+  "type": "object",
+  "properties": {
+    "module": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "module"
+  ]
+}

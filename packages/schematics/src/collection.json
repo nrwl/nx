@@ -6,6 +6,12 @@
       "factory": "./addNgRxToModule",
       "schema": "./addNgRxToModule/schema.json",
       "description": "Add NgRx support to a module."
+    },
+
+    "upgrade-shell": {
+      "factory": "./upgrade-shell",
+      "schema": "./upgrade-shell/schema.json",
+      "description": "Add Upgrade Shell to an application."
     }
   }
 }

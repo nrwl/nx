@@ -25,7 +25,8 @@
     "@angular/compiler": "4.3.5",
     "@angular/platform-browser-dynamic": "4.3.5",
     "@angular/router": "4.3.5",
-    "@angular/cli": "1.3.2",
+    "@angular/upgrade": "4.3.5",
+    "@angular/cli": "1.4.0-rc.2",
     "@ngrx/store": "4.0.3",
     "@ngrx/router-store": "4.0.3",
     "@ngrx/effects": "4.0.3",
@@ -39,7 +40,8 @@
     "karma-chrome-launcher": "~2.1.1",
     "karma-jasmine": "~1.1.0",
     "karma-webpack": "2.0.4",
-    "clang-format": "^1.0.32"
+    "clang-format": "^1.0.32",
+    "angular": "1.6.6"
   },
   "author": "Victor Savkin",
   "license": "MIT",

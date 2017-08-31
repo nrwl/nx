@@ -1,0 +1,30 @@
+import 'angular';
+import { Injector } from '@angular/core';
+/**
+ * TODO: Import other libraries (e.g, requirejs) needed to run the AngularJS app.
+ * Delete this if angular is available globally.
+ */
+
+if (!! (<any>window).angular) {
+  throw new Error('AngularJS is not loaded');
+}
+
+
+import '<%= name %>';
+/**
+ * Import your application here.
+ * You can also add new run and config callbacks here if needed.
+ */
+
+
+if (!! (<any>window).angular.module('<%= name %>')) {
+  throw new Error('"<%= name %>" is not loaded');
+}
+
+/**
+ * Placeholder for additional configuration.
+ * You can define run and config functions that depend on the Angular injector.
+ */
+export function configure<%= name %>(i: Injector) {
+
+}

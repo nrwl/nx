@@ -66,8 +66,11 @@ export function exists(filePath: string): boolean {
 }
 
 export function addNgRx(path: string): void {
-  runCommand('npm install', {projectName: path});
   execSync(`cp -r node_modules/@ngrx tmp/${path}/node_modules/@ngrx`);
   execSync(`cp -r node_modules/jasmine-marbles tmp/${path}/node_modules/jasmine-marbles`);
   execSync(`cp -r node_modules/@nrwl tmp/${path}/node_modules/@nrwl`);
+}
+
+export function addAngularJs(path: string): void {
+  execSync(`cp -r node_modules/angular tmp/${path}/node_modules/angular`);
 }
