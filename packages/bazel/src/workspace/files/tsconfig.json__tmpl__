@@ -4,6 +4,7 @@
     "skipLibCheck": true,
     "experimentalDecorators": true,
     "baseUrl": ".",
+    "types": ["jasmine"],
     "paths": {
       "*": [
         "*",

@@ -1,4 +1,4 @@
-load("@build_bazel_rules_typescript//:defs.bzl", "nodejs_binary")
+load("@build_bazel_rules_nodejs//:defs.bzl", "nodejs_binary")
 exports_files(["webpack.config.js", "test.js"])
 
 nodejs_binary(
