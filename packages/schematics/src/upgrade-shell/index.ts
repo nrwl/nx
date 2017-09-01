@@ -1,4 +1,7 @@
-import {apply, branchAndMerge, chain, mergeWith, move, Rule, template, Tree, url} from '@angular-devkit/schematics';
+import {
+  apply, branchAndMerge, chain, mergeWith, move, Rule, SchematicContext, template, Tree,
+  url
+} from '@angular-devkit/schematics';
 
 import {names, toClassName, toFileName, toPropertyName} from '../utility/name-utils';
 import * as path from 'path';
@@ -62,6 +65,23 @@ this.upgrade.bootstrap(document.body, ['downgraded', '${options.name}']);
   };
 }
 
+function createFiles(moduleClassName: string, moduleFileName: string, options: Schema): Rule {
+  return (host: Tree, context: SchematicContext) => {
+    const moduleDir = path.dirname(options.module);
+    const templateSource = apply(url('./files'), [
+      template({
+        ...options,
+        tmpl: '',
+        moduleFileName,
+        moduleClassName,
+        ...names(options.name)
+      }),
+      move(moduleDir)
+    ]);
+    const r = branchAndMerge(chain([mergeWith(templateSource)]));
+    return r(host, context);
+  };
+}
 /**
  * DONE Remove bootstrap:
  * DONE Add ngDoBootstrap
@@ -75,23 +95,11 @@ this.upgrade.bootstrap(document.body, ['downgraded', '${options.name}']);
  */
 
 export default function (options: Schema): Rule {
-  const moduleDir = path.dirname(options.module);
   const moduleFileName = path.basename(options.module, '.ts');
   const moduleClassName = `${toClassName(moduleFileName)}`;
 
-  const templateSource = apply(url('./files'), [
-    template({
-      ...options,
-      tmpl: '',
-      moduleFileName,
-      moduleClassName,
-      ...names(options.name)
-    }),
-    move(moduleDir)
-  ]);
-
   return chain([
-    branchAndMerge(chain([mergeWith(templateSource)])),
+    createFiles(moduleClassName, moduleFileName, options),
     addImportsToModule(moduleClassName, options),
     addNgDoBootstrapToModule(moduleClassName, options)
   ]);
