@@ -194,7 +194,7 @@ function findClass(source: ts.SourceFile, className: string): ts.ClassDeclaratio
   return clazz;
 }
 
-function offset(text: string, numberOfTabs: number, wrap: boolean): string {
+export function offset(text: string, numberOfTabs: number, wrap: boolean): string {
   const lines = text.trim().split('\n').map(line => {
     let tabs = '';
     for (let c = 0; c < numberOfTabs; ++c) {

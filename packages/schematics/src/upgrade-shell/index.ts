@@ -1,5 +1,5 @@
 import {
-  apply, branchAndMerge, chain, mergeWith, move, Rule, SchematicContext, template, Tree,
+  apply, branchAndMerge, chain, mergeWith, move, noop, Rule, SchematicContext, template, Tree,
   url
 } from '@angular-devkit/schematics';
 
@@ -13,6 +13,8 @@ import {
 } from '../utility/ast-utils';
 import {insertImport} from '@schematics/angular/utility/route-utils';
 import {Schema} from './schema';
+import {angularJsVersion} from '../utility/lib-versions';
+
 
 function addImportsToModule(moduleClassName: string, angularJsModule: string, options: Schema): Rule {
   return (host: Tree) => {
@@ -92,6 +94,29 @@ function createFiles(moduleClassName: string, moduleFileName: string, angularJsM
   };
 }
 
+
+function addUpgradeToPackageJson() {
+  return (host: Tree) => {
+    if (!host.exists("package.json")) return host;
+
+    const sourceText = host.read('package.json')!.toString('utf-8');
+    const json = JSON.parse(sourceText);
+    if (! json['dependencies']) {
+      json['dependencies'] = {};
+    }
+
+    if (! json['dependencies']['@angular/upgrade']) {
+      json['dependencies']['@angular/upgrade'] = json['dependencies']['@angular/core'];
+    }
+    if (! json['dependencies']['angular']) {
+      json['dependencies']['angular'] = angularJsVersion;
+    }
+
+    host.overwrite('package.json', JSON.stringify(json, null, 2));
+    return host;
+  };
+}
+
 export default function (options: Schema): Rule {
   const moduleFileName = path.basename(options.module, '.ts');
   const moduleClassName = `${toClassName(moduleFileName)}`;
@@ -100,6 +125,7 @@ export default function (options: Schema): Rule {
   return chain([
     createFiles(moduleClassName, moduleFileName, angularJsModule, options),
     addImportsToModule(moduleClassName, angularJsModule, options),
-    addNgDoBootstrapToModule(moduleClassName, angularJsModule, options)
+    addNgDoBootstrapToModule(moduleClassName, angularJsModule, options),
+    options.skipPackageJson ? noop() : addUpgradeToPackageJson()
   ]);
 }

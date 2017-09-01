@@ -3,4 +3,5 @@ export interface Schema {
   angularJsModule: string;
   angularJsCmpSelector: string;
   module: string;
+  skipPackageJson: boolean;
 }

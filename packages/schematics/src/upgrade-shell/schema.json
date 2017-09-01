@@ -6,20 +6,25 @@
   "properties": {
     "module": {
       "type": "string",
-      "description": "Path to the Angular module with a bootstrap component (e.g., src/app/app.module.ts).",
+      "description": "Path to the Angular module with a bootstrap component (e.g., --module=src/app/app.module.ts).",
       "alias": "name"
     },
     "angularJsImport": {
       "type": "string",
-      "description": "Import expression of the AngularJS application (e.g., some_node_module/my_app)."
+      "description": "Import expression of the AngularJS application (e.g., --angularJsImport=some_node_module/my_app)."
     },
     "angularJsModule": {
       "type": "string",
-      "description": "The name of the main AngularJS module (e.g., myAppModule)"
+      "description": "The name of the main AngularJS module (e.g., --angularJsModule=myAppModule). If not specified, the last segment of angularJsImport will be used."
     },
     "angularJsCmpSelector": {
       "type": "string",
-      "description": "The selector of an AngularJS component (e.g., myComponent)"
+      "description": "The selector of an AngularJS component (e.g., --angularJsCmpSelector=myComponent)"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add @angular/upgrade to package.json (e.g., --skipPackageJson)"
     }
   },
   "required": [

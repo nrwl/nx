@@ -68,4 +68,15 @@ describe('ngrx', () => {
     expect(contents).not.toContain('StoreModule');
     expect(contents).not.toContain('EffectsModule');
   });
+
+  it('should update package.json', () => {
+    newApp('new proj5 --skipInstall');
+    runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts', {projectName: 'proj5'});
+
+    const contents = JSON.parse(readFile('proj5/package.json'));
+
+    expect(contents.dependencies['@ngrx/store']).toBeDefined();
+    expect(contents.dependencies['@ngrx/router-store']).toBeDefined();
+    expect(contents.dependencies['@ngrx/effects']).toBeDefined();
+  });
 });

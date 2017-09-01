@@ -23,6 +23,11 @@
       "type": "boolean",
       "default": false,
       "description": "Do not generate any files. Only generate StoreModule.forRoot and EffectsModule.forRoot (e.g., --onlyEmptyRoot)."
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add ngrx dependencies to package.json (e.g., --skipPackageJson)"
     }
   },
   "required": [

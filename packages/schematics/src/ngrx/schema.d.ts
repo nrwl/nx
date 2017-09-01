@@ -3,4 +3,5 @@ export interface Schema {
   root: boolena;
   onlyAddFiles: boolean;
   module: string;
+  skipPackageJson: boolean;
 }
