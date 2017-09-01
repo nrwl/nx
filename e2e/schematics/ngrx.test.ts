@@ -1,13 +1,13 @@
 import {copyMissingPackages, checkFilesExists, cleanup, newApp, readFile, runCLI, runCommand, runSchematic, updateFile} from '../utils';
 
-describe('addNgRxToModule', () => {
+describe('ngrx', () => {
   beforeEach(cleanup);
 
   it('should add root configuration', () => {
     newApp('new proj');
     copyMissingPackages('proj');
 
-    runSchematic('@nrwl/schematics:addNgRxToModule --module=src/app/app.module.ts --root', {projectName: 'proj'});
+    runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --root', {projectName: 'proj'});
 
     checkFilesExists(
         `proj/src/app/+state/app.actions.ts`, `proj/src/app/+state/app.effects.ts`,
@@ -29,7 +29,7 @@ describe('addNgRxToModule', () => {
     newApp('new proj2');
     copyMissingPackages('proj2');
 
-    runSchematic('@nrwl/schematics:addNgRxToModule --module=src/app/app.module.ts --emptyRoot', {projectName: 'proj2'});
+    runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --onlyEmptyRoot', {projectName: 'proj2'});
 
     const contents = readFile('proj2/src/app/app.module.ts');
     expect(contents).toContain('StoreModule.forRoot');
@@ -41,7 +41,7 @@ describe('addNgRxToModule', () => {
 
   it('should add feature configuration', () => {
     newApp('new proj3 --skipInstall');
-    runSchematic('@nrwl/schematics:addNgRxToModule --module=src/app/app.module.ts', {projectName: 'proj3'});
+    runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts', {projectName: 'proj3'});
 
     checkFilesExists(
         `proj3/src/app/+state/app.actions.ts`, `proj3/src/app/+state/app.effects.ts`,
@@ -56,7 +56,7 @@ describe('addNgRxToModule', () => {
 
   it('should generate files without importing them', () => {
     newApp('new proj4 --skipInstall');
-    runSchematic('@nrwl/schematics:addNgRxToModule --module=src/app/app.module.ts --skipImport', {projectName: 'proj4'});
+    runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --onlyAddFiles', {projectName: 'proj4'});
 
     checkFilesExists(
         `proj4/src/app/+state/app.actions.ts`, `proj4/src/app/+state/app.effects.ts`,

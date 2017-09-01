@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "ngrx",
+  "title": "Add NgRx support to a module",
+  "type": "object",
+  "properties": {
+    "module": {
+      "type": "string",
+      "description": "Path to anAngular module (e.g., src/app/app.module.ts).",
+      "alias": "name"
+    },
+    "onlyAddFiles": {
+      "type": "boolean",
+      "default": false,
+      "description": "Only add new NgRx files, without changing the module file (e.g., --onlyAddFiles)."
+    },
+    "root": {
+      "type": "boolean",
+      "default": false,
+      "description": "Add StoreModule.forRoot and EffectsModule.forRoot instead of forFeature (e.g., --root)."
+    },
+    "onlyEmptyRoot": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not generate any files. Only generate StoreModule.forRoot and EffectsModule.forRoot (e.g., --onlyEmptyRoot)."
+    }
+  },
+  "required": [
+    "module"
+  ]
+}

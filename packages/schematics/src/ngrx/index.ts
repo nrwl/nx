@@ -5,10 +5,11 @@ import * as path from 'path';
 import * as ts from 'typescript';
 import {addImportToModule, addProviderToModule, insert} from '../utility/ast-utils';
 import {insertImport} from '@schematics/angular/utility/route-utils';
+import {Schema} from './schema';
 
-function addImportsToModule(name: string, options: any): Rule {
+function addImportsToModule(name: string, options: Schema): Rule {
   return (host: Tree) => {
-    if (options.skipImport) {
+    if (options.onlyAddFiles) {
       return host;
     }
 
@@ -21,7 +22,7 @@ function addImportsToModule(name: string, options: any): Rule {
     const sourceText = host.read(modulePath)!.toString('utf-8');
     const source = ts.createSourceFile(modulePath, sourceText, ts.ScriptTarget.Latest, true);
 
-    if (options.emptyRoot) {
+    if (options.onlyEmptyRoot) {
       const reducer = `StoreModule.forRoot({})`;
       insert(host, modulePath, [
         insertImport(source, modulePath, 'StoreModule', '@ngrx/store'),
@@ -57,11 +58,11 @@ function addImportsToModule(name: string, options: any): Rule {
   };
 }
 
-export default function(options: any): Rule {
+export default function(options: Schema): Rule {
   const name = path.basename(options.module, '.module.ts');
   const moduleDir = path.dirname(options.module);
 
-  if (options.emptyRoot) {
+  if (options.onlyEmptyRoot) {
     return chain([addImportsToModule(name, options)]);
   } else {
     const templateSource = apply(url('./files'), [template({...options, tmpl: '', ...names(name)}), move(moduleDir)]);

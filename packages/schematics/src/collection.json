@@ -2,16 +2,16 @@
   "name": "nx",
   "version": "0.1",
   "schematics": {
-    "addNgRxToModule": {
-      "factory": "./addNgRxToModule",
-      "schema": "./addNgRxToModule/schema.json",
-      "description": "Add NgRx support to a module."
+    "ngrx": {
+      "factory": "./ngrx",
+      "schema": "./ngrx/schema.json",
+      "description": "Add NgRx support to a module"
     },
 
     "upgrade-shell": {
       "factory": "./upgrade-shell",
       "schema": "./upgrade-shell/schema.json",
-      "description": "Add Upgrade Shell to an application."
+      "description": "Add an upgrade shell to an application"
     }
   }
 }

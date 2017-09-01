@@ -20,11 +20,11 @@ Add the following dependencies to your project's `package.json` and run `npm ins
 
 ## Schematics
 
-### addNgRxToModule
+### NgRx
 
 #### Root
 
-Run `schematics @nrwl/schematics:addNgRxToModule --module=src/app/app.module.ts  --root`, and you will see the following files created:
+Run `schematics @nrwl/schematics:ngrx --module=src/app/app.module.ts  --root`, and you will see the following files created:
 
 ```
 /src/app/+state/app.actions.ts
@@ -38,13 +38,13 @@ Run `schematics @nrwl/schematics:addNgRxToModule --module=src/app/app.module.ts 
 
 Also, `app.module.ts` will have `StoreModule.forRoot` and `EffectsModule.forRoot` configured.
 
-#### EmptyRoot
+#### onlyEmptyRoot
 
-Run `schematics @nrwl/schematics:addNgRxToModule --module=src/app/app.module.ts  --emptyRoot` to only add the `StoreModule.forRoot` and `EffectsModule.forRoot` calls.
+Run `schematics @nrwl/schematics:ngrx --module=src/app/app.module.ts  --onlyEmptyRoot` to only add the `StoreModule.forRoot` and `EffectsModule.forRoot` calls without generating any new files.
 
 #### Feature
 
-Run `schematics @nrwl/schematics:addNgRxToModule --module=src/app/mymodule/mymodule.module.ts `, and you will see the following files created:
+Run `schematics @nrwl/schematics:ngrx --module=src/app/mymodule/mymodule.module.ts `, and you will see the following files created:
 
 ```
 /src/app/mymodule/+state/app.actions.ts
@@ -58,15 +58,15 @@ Run `schematics @nrwl/schematics:addNgRxToModule --module=src/app/mymodule/mymod
 
 Also, `mymodule.module.ts` will have `StoreModule.forFeature` and `EffectsModule.forFeature` configured.
 
-#### skipImport
+#### onlyAddFiles
 
-Add `--skipImport` to generate files without adding imports to the module.
+Add `--onlyAddFiles` to generate files without adding imports to the module.
 
 
 
 ### upgrade-shell
 
-Run `schematics @nrwl/schematics:upgrade-shell --module=src/app/app.module.ts --angularJsImport=../legacy --angularJsCmpSelector=rootLegacyCmp` and you will see the following files created:
+Run `schematics @nrwl/schematics:upgrade-shell --module=src/app/app.module.ts --angularJsImport=legacy --angularJsCmpSelector=rootLegacyCmp` and you will see the following files created:
 
 ```
 /src/app/legacy-setup.ts
