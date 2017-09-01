@@ -5,13 +5,25 @@
   "type": "object",
   "properties": {
     "module": {
-      "type": "string"
+      "type": "string",
+      "description": "Path to the bootstrapped Angular module"
     },
-    "name": {
-      "type": "string"
+    "angularJsImport": {
+      "type": "string",
+      "description": "Import expression of the AngularJS application"
+    },
+    "angularJsModule": {
+      "type": "string",
+      "description": "The name of AngularJS main module"
+    },
+    "angularJsCmpSelector": {
+      "type": "string",
+      "description": "The selector of an AngularJS component"
     }
   },
   "required": [
-    "module"
+    "module",
+    "angularJsImport",
+    "angularJsCmpSelector"
   ]
 }

@@ -1,4 +1,6 @@
 export interface Schema {
-  name: string;
+  angularJsImport: string;
+  angularJsModule: string;
+  angularJsCmpSelector: string;
   module: string;
 }

@@ -1,10 +1,12 @@
-import {addNgRx, checkFilesExists, cleanup, newApp, readFile, runCLI, runCommand, runSchematic, updateFile} from '../utils';
+import {copyMissingPackages, checkFilesExists, cleanup, newApp, readFile, runCLI, runCommand, runSchematic, updateFile} from '../utils';
 
 describe('addNgRxToModule', () => {
   beforeEach(cleanup);
 
   it('should add root configuration', () => {
-    newApp('new proj --skipInstall');
+    newApp('new proj');
+    copyMissingPackages('proj');
+
     runSchematic('@nrwl/schematics:addNgRxToModule --module=src/app/app.module.ts --root', {projectName: 'proj'});
 
     checkFilesExists(
@@ -17,7 +19,6 @@ describe('addNgRxToModule', () => {
     expect(contents).toContain('StoreModule.forRoot');
     expect(contents).toContain('EffectsModule.forRoot');
 
-    addNgRx('proj');
 
     runCLI('build', {projectName: 'proj'});
     runCLI('test --single-run', {projectName: 'proj'});
@@ -25,14 +26,15 @@ describe('addNgRxToModule', () => {
   }, 50000);
 
   it('should add empty root configuration', () => {
-    newApp('new proj2 --skipInstall');
+    newApp('new proj2');
+    copyMissingPackages('proj2');
+
     runSchematic('@nrwl/schematics:addNgRxToModule --module=src/app/app.module.ts --emptyRoot', {projectName: 'proj2'});
 
     const contents = readFile('proj2/src/app/app.module.ts');
     expect(contents).toContain('StoreModule.forRoot');
     expect(contents).not.toContain('EffectsModule.forRoot');
 
-    addNgRx('proj2');
 
     runCLI('build', {projectName: 'proj2'});
   }, 50000);

@@ -2,30 +2,30 @@ import {Directive, ElementRef, Injector} from '@angular/core';
 import {setAngularLib, UpgradeComponent, downgradeComponent} from '@angular/upgrade/static';
 import * as angular from 'angular'; // replace with const angular = (<any>window).angular; if Angular is available globally
 
-import '<%= name %>'; // import your application files here.
-if (! angular.module('<%= name %>')) {
-  throw new Error('"<%= name %>" is not loaded');
+import '<%= angularJsImport %>'; // import your application files here.
+if (! angular.module('<%= angularJsModule %>')) {
+  throw new Error('"<%= angularJsModule %>" is not loaded');
 }
 
 
 // all components downgraded from Angular to AngularJS go here
-import {AppComponent} from "./app.component";
+import {<%= bootstrapComponentClassName %>} from "./<%= bootstrapComponentFileName %>";
 angular.module('downgraded', []).
-  directive('appRoot', downgradeComponent({component: AppComponent}));
+  directive('appRoot', downgradeComponent({component: <%= bootstrapComponentClassName %>}));
 
 
 // all components upgraded from AngularJS to Angular go here
-@Directive({selector: '<%= name %>-cmp'})
-export class <%= name %>Component extends UpgradeComponent {
+@Directive({selector: '<%= angularJsCmpSelector %>'})
+export class <%= className %>Component extends UpgradeComponent {
   constructor(ref: ElementRef, inj: Injector) {
-    super('<%= name %>Cmp', ref, inj);
+    super('<%= angularJsCmpSelector %>', ref, inj);
   }
 }
-export const upgradedComponents = [<%= name %>Component];
+export const upgradedComponents = [<%= className %>Component];
 
 
 // additional configuration invoked right before bootstrap
-export function configure<%= name %>(i: Injector) {
+export function configure<%= className %>(i: Injector) {
   setAngularLib(angular);
   //  Insert additional configuration here
 }

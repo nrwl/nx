@@ -19,7 +19,7 @@ describe('hybrid bootstrap test', () => {
   });
 
   it('should work', async (done) => {
-    await platformBrowserDynamic().bootstrapModule(AppModule);
+    await platformBrowserDynamic().bootstrapModule(<%= moduleClassName %>);
     expect(element.innerText).toContain('Expected Value');
     done();
   });

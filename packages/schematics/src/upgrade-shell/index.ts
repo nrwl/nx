@@ -14,7 +14,7 @@ import {
 import {insertImport} from '@schematics/angular/utility/route-utils';
 import {Schema} from './schema';
 
-function addImportsToModule(moduleClassName: string, options: any): Rule {
+function addImportsToModule(moduleClassName: string, angularJsModule: string, options: Schema): Rule {
   return (host: Tree) => {
     if (!host.exists(options.module)) {
       throw new Error('Specified module does not exist');
@@ -26,7 +26,7 @@ function addImportsToModule(moduleClassName: string, options: any): Rule {
     const source = ts.createSourceFile(modulePath, sourceText, ts.ScriptTarget.Latest, true);
 
     insert(host, modulePath, [
-      insertImport(source, modulePath, `configure${options.name}, upgradedComponents`, `./${options.name}-setup`),
+      insertImport(source, modulePath, `configure${toClassName(angularJsModule)}, upgradedComponents`, `./${toFileName(angularJsModule)}-setup`),
       insertImport(source, modulePath, 'UpgradeModule', '@angular/upgrade/static'),
       ...addImportToModule(source, modulePath, "UpgradeModule"),
       ...addDeclarationToModule(source, modulePath, "...upgradedComponents"),
@@ -38,10 +38,9 @@ function addImportsToModule(moduleClassName: string, options: any): Rule {
 }
 
 
-function addNgDoBootstrapToModule(moduleClassName: string, options: Schema): Rule {
+function addNgDoBootstrapToModule(moduleClassName: string, angularJsModule: string, options: Schema): Rule {
   return (host: Tree) => {
     const modulePath = options.module;
-
     const sourceText = host.read(modulePath)!.toString('utf-8');
     const source = ts.createSourceFile(modulePath, sourceText, ts.ScriptTarget.Latest, true);
 
@@ -54,8 +53,8 @@ function addNgDoBootstrapToModule(moduleClassName: string, options: Schema): Rul
         className: moduleClassName,
         methodHeader: 'ngDoBootstrap(): void',
         body: `
-configure${options.name}(this.upgrade.injector);
-this.upgrade.bootstrap(document.body, ['downgraded', '${options.name}']);
+configure${toClassName(angularJsModule)}(this.upgrade.injector);
+this.upgrade.bootstrap(document.body, ['downgraded', '${angularJsModule}']);
         `
       }),
       ...removeFromNgModule(source, modulePath, 'bootstrap')
@@ -65,8 +64,15 @@ this.upgrade.bootstrap(document.body, ['downgraded', '${options.name}']);
   };
 }
 
-function createFiles(moduleClassName: string, moduleFileName: string, options: Schema): Rule {
+function createFiles(moduleClassName: string, moduleFileName: string, angularJsModule: string, options: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
+    const modulePath = options.module;
+    const moduleSourceText = host.read(modulePath)!.toString('utf-8');
+    const moduleSource = ts.createSourceFile(modulePath, moduleSourceText, ts.ScriptTarget.Latest, true);
+
+    const bootstrapComponentClassName = getBootstrapComponent(moduleSource, moduleClassName);
+    const bootstrapComponentFileName = `${toFileName(bootstrapComponentClassName.substring(0, bootstrapComponentClassName.length - 9))}.component`;
+
     const moduleDir = path.dirname(options.module);
     const templateSource = apply(url('./files'), [
       template({
@@ -74,7 +80,10 @@ function createFiles(moduleClassName: string, moduleFileName: string, options: S
         tmpl: '',
         moduleFileName,
         moduleClassName,
-        ...names(options.name)
+        angularJsModule,
+        bootstrapComponentClassName,
+        bootstrapComponentFileName,
+        ...names(angularJsModule)
       }),
       move(moduleDir)
     ]);
@@ -82,25 +91,15 @@ function createFiles(moduleClassName: string, moduleFileName: string, options: S
     return r(host, context);
   };
 }
-/**
- * DONE Remove bootstrap:
- * DONE Add ngDoBootstrap
- * DONE Import UpgradeModule
- * DONE Import angular with a comment that it can be removed
- * DONE Reset globalAngular right before that
- * DONE Inject UpgradeModule and call upgrade.bootstrap()
- * Add hybrid.spec.ts checking that everything bootstraps successfully
- * Change package.json to add upgrade???
- *
- */
 
 export default function (options: Schema): Rule {
   const moduleFileName = path.basename(options.module, '.ts');
   const moduleClassName = `${toClassName(moduleFileName)}`;
+  const angularJsModule = options.angularJsModule ? options.angularJsModule : path.basename(options.angularJsImport);
 
   return chain([
-    createFiles(moduleClassName, moduleFileName, options),
-    addImportsToModule(moduleClassName, options),
-    addNgDoBootstrapToModule(moduleClassName, options)
+    createFiles(moduleClassName, moduleFileName, angularJsModule, options),
+    addImportsToModule(moduleClassName, angularJsModule, options),
+    addNgDoBootstrapToModule(moduleClassName, angularJsModule, options)
   ]);
 }

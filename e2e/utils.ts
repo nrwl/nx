@@ -65,10 +65,12 @@ export function exists(filePath: string): boolean {
   return directoryExists(filePath) || fileExists(filePath);
 }
 
-export function addNgRx(path: string): void {
+export function copyMissingPackages(path: string): void {
   execSync(`cp -r node_modules/@ngrx tmp/${path}/node_modules/@ngrx`);
   execSync(`cp -r node_modules/jasmine-marbles tmp/${path}/node_modules/jasmine-marbles`);
   execSync(`cp -r node_modules/@nrwl tmp/${path}/node_modules/@nrwl`);
+  execSync(`cp -r node_modules/angular tmp/${path}/node_modules/angular`);
+  execSync(`cp -r node_modules/@angular/upgrade tmp/${path}/node_modules/@angular/upgrade`);
 }
 
 export function addNodeModule(path: string, module: string): void {
