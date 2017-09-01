@@ -1,8 +1,9 @@
 {
-  "name": "@nrwl/nx",
+  "name": "@nrwl/nx-source",
   "version": "0.0.1",
   "description": "Angular Extensions",
   "main": "index.js",
+  "private": true,
   "scripts": {
     "build": "./scripts/build.sh",
     "e2e": "yarn build && ./scripts/e2e.sh",
@@ -11,7 +12,8 @@
     "package": "./scripts/package.sh",
     "release": "./scripts/release.sh",
     "copy-to-cli": "./scripts/copy-to-cli.sh",
-    "test": "yarn build && ./scripts/test.sh"
+    "test": "yarn build && ./scripts/test.sh",
+    "publish_npm": "./scripts/publish.sh"
   },
   "dependencies" :{
     "jasmine-marbles": "0.1.0"
@@ -41,7 +43,8 @@
     "karma-jasmine": "~1.1.0",
     "karma-webpack": "2.0.4",
     "clang-format": "^1.0.32",
-    "angular": "1.6.6"
+    "angular": "1.6.6",
+    "semver": "^5.4.1"
   },
   "author": "Victor Savkin",
   "license": "MIT",
