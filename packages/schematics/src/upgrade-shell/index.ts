@@ -4,13 +4,14 @@ import {names, toClassName, toFileName, toPropertyName} from '../utility/name-ut
 import * as path from 'path';
 import * as ts from 'typescript';
 import {
-  addImportToModule, addMethod, addParameterToConstructor, addProviderToModule,
+  addDeclarationToModule, addEntryComponents,
+  addImportToModule, addMethod, addParameterToConstructor, addProviderToModule, getBootstrapComponent,
   insert, removeFromNgModule
 } from '../utility/ast-utils';
 import {insertImport} from '@schematics/angular/utility/route-utils';
 import {Schema} from './schema';
 
-function addImportsToModule(options: any): Rule {
+function addImportsToModule(moduleClassName: string, options: any): Rule {
   return (host: Tree) => {
     if (!host.exists(options.module)) {
       throw new Error('Specified module does not exist');
@@ -22,10 +23,11 @@ function addImportsToModule(options: any): Rule {
     const source = ts.createSourceFile(modulePath, sourceText, ts.ScriptTarget.Latest, true);
 
     insert(host, modulePath, [
-      insertImport(source, modulePath, `configure${options.name}`, `./${options.name}-setup`),
-      insertImport(source, modulePath, 'setAngularLib', '@angular/upgrade/static'),
+      insertImport(source, modulePath, `configure${options.name}, upgradedComponents`, `./${options.name}-setup`),
       insertImport(source, modulePath, 'UpgradeModule', '@angular/upgrade/static'),
-      ...addImportToModule(source, modulePath, "UpgradeModule")
+      ...addImportToModule(source, modulePath, "UpgradeModule"),
+      ...addDeclarationToModule(source, modulePath, "...upgradedComponents"),
+      ...addEntryComponents(source, modulePath, getBootstrapComponent(source, moduleClassName))
     ]);
 
     return host;
@@ -33,7 +35,7 @@ function addImportsToModule(options: any): Rule {
 }
 
 
-function addNgDoBootstrapToModule(options: Schema): Rule {
+function addNgDoBootstrapToModule(moduleClassName: string, options: Schema): Rule {
   return (host: Tree) => {
     const modulePath = options.module;
 
@@ -42,16 +44,15 @@ function addNgDoBootstrapToModule(options: Schema): Rule {
 
     insert(host, modulePath, [
       ...addParameterToConstructor(source, modulePath, {
-        className: 'AppModule',
+        className: moduleClassName,
         param: 'private upgrade: UpgradeModule'
       }),
       ...addMethod(source, modulePath, {
-        className: 'AppModule',
+        className: moduleClassName,
         methodHeader: 'ngDoBootstrap(): void',
         body: `
-setAngularLib((<any>window).angular);
 configure${options.name}(this.upgrade.injector);
-this.upgrade.bootstrap(document.body, ['${options.name}']);
+this.upgrade.bootstrap(document.body, ['downgraded', '${options.name}']);
         `
       }),
       ...removeFromNgModule(source, modulePath, 'bootstrap')
@@ -75,11 +76,23 @@ this.upgrade.bootstrap(document.body, ['${options.name}']);
 
 export default function (options: Schema): Rule {
   const moduleDir = path.dirname(options.module);
+  const moduleFileName = path.basename(options.module, '.ts');
+  const moduleClassName = `${toClassName(moduleFileName)}`;
 
-  const templateSource = apply(url('./files'), [template({...options, tmpl: '', ...names(options.name)}), move(moduleDir)]);
+  const templateSource = apply(url('./files'), [
+    template({
+      ...options,
+      tmpl: '',
+      moduleFileName,
+      moduleClassName,
+      ...names(options.name)
+    }),
+    move(moduleDir)
+  ]);
+
   return chain([
     branchAndMerge(chain([mergeWith(templateSource)])),
-    addImportsToModule(options),
-    addNgDoBootstrapToModule(options)
+    addImportsToModule(moduleClassName, options),
+    addNgDoBootstrapToModule(moduleClassName, options)
   ]);
 }

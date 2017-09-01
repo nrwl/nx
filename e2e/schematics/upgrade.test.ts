@@ -1,5 +1,5 @@
 import {
-  addAngularJs, addNgRx, checkFilesExists, cleanup, newApp, readFile, runCLI, runCommand, runSchematic,
+  addNgRx, addNodeModule, checkFilesExists, cleanup, newApp, readFile, runCLI, runCommand, runSchematic,
   updateFile
 } from '../utils';
 import {execSync} from 'child_process';
@@ -9,12 +9,15 @@ describe('Upgrade', () => {
 
   it('should generate an upgrade shell', () => {
     newApp('new proj --skip-install');
+
     // addNgRx('proj');
-    // addAngularJs('proj');
+    // addNodeModule('proj', 'angular');
+    // addNodeModule('proj', '@angular/upgrade');
+
     updateFile('proj/src/legacy.js', `
       const angular = angular.module('legacy', []);
-      angular.component('main', {
-        template: 'main-component'
+      angular.component('legacy-cmp', {
+        template: 'Expected Value'
       });
     `);
 

@@ -171,23 +171,7 @@ export function removeFromNgModule(source: ts.SourceFile, modulePath: string, pr
   }
 
   // Get all the children property assignment of object literals.
-  const matchingProperty: ts.ObjectLiteralElement =
-    (node as ts.ObjectLiteralExpression)
-      .properties
-      .filter(prop => prop.kind == ts.SyntaxKind.PropertyAssignment)
-      // Filter out every fields that's not "metadataField". Also handles string literals
-      // (but not expressions).
-      .filter((prop: ts.PropertyAssignment) => {
-        const name = prop.name;
-        switch (name.kind) {
-          case ts.SyntaxKind.Identifier:
-            return (name as ts.Identifier).getText(source) === property;
-          case ts.SyntaxKind.StringLiteral:
-            return (name as ts.StringLiteral).text === property;
-        }
-        return false;
-      })[0];
-
+  const matchingProperty = getMatchingProperty(source, property);
   if (matchingProperty) {
     return [new RemoveChange(modulePath, matchingProperty.pos, matchingProperty.getFullText(source))]
   } else {
@@ -198,17 +182,23 @@ export function removeFromNgModule(source: ts.SourceFile, modulePath: string, pr
 function findClass(source: ts.SourceFile, className: string): ts.ClassDeclaration {
   const nodes = getSourceNodes(source);
 
-  return <any>nodes.filter(n =>
+  const clazz = <any>nodes.filter(n =>
     n.kind === ts.SyntaxKind.ClassDeclaration &&
     (<any>n).name.text === className
   )[0];
+
+  if (! clazz) {
+    throw new Error(`Cannot find class '${className}'`);
+  }
+
+  return clazz;
 }
 
 function offset(text: string, numberOfTabs: number, wrap: boolean): string {
   const lines = text.trim().split('\n').map(line => {
     let tabs = '';
     for (let c = 0; c < numberOfTabs; ++c) {
-      tabs += '\t';
+      tabs += '  ';
     }
     return `${tabs}${line}`;
   }).join("\n");
@@ -225,8 +215,56 @@ export function addImportToModule(source: ts.SourceFile, modulePath: string, sym
   );
 }
 
+export function getBootstrapComponent(source: ts.SourceFile, moduleClassName: string): string {
+  const bootstrap = getMatchingProperty(source, 'bootstrap');
+  if (! bootstrap) {
+    throw new Error(`Cannot find bootstrap components in '${moduleClassName}'`);
+  }
+  const c = bootstrap.getChildren();
+  const nodes = c[c.length - 1].getChildren();
+
+  const bootstrapComponent = nodes.slice(1, nodes.length - 1)[0];
+  if (! bootstrapComponent) {
+    throw new Error(`Cannot find bootstrap components in '${moduleClassName}'`);
+  }
+
+  return bootstrapComponent.getText();
+}
+
+function getMatchingProperty(source: ts.SourceFile, property: string): ts.ObjectLiteralElement  {
+  const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
+  let node: any = nodes[0];  // tslint:disable-line:no-any
+
+  if (!node) return null;
+
+  // Get all the children property assignment of object literals.
+  return (node as ts.ObjectLiteralExpression)
+      .properties
+      .filter(prop => prop.kind == ts.SyntaxKind.PropertyAssignment)
+      // Filter out every fields that's not "metadataField". Also handles string literals
+      // (but not expressions).
+      .filter((prop: ts.PropertyAssignment) => {
+        const name = prop.name;
+        switch (name.kind) {
+          case ts.SyntaxKind.Identifier:
+            return (name as ts.Identifier).getText(source) === property;
+          case ts.SyntaxKind.StringLiteral:
+            return (name as ts.StringLiteral).text === property;
+        }
+        return false;
+      })[0];
+}
+
 export function addProviderToModule(source: ts.SourceFile, modulePath: string, symbolName: string): Change[] {
   return _addSymbolToNgModuleMetadata(source, modulePath, 'providers', symbolName);
+}
+
+export function addDeclarationToModule(source: ts.SourceFile, modulePath: string, symbolName: string): Change[] {
+  return _addSymbolToNgModuleMetadata(source, modulePath, 'declarations', symbolName);
+}
+
+export function addEntryComponents(source: ts.SourceFile, modulePath: string, symbolName: string): Change[] {
+  return _addSymbolToNgModuleMetadata(source, modulePath, 'entryComponents', symbolName);
 }
 
 

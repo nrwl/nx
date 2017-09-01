@@ -71,6 +71,6 @@ export function addNgRx(path: string): void {
   execSync(`cp -r node_modules/@nrwl tmp/${path}/node_modules/@nrwl`);
 }
 
-export function addAngularJs(path: string): void {
-  execSync(`cp -r node_modules/angular tmp/${path}/node_modules/angular`);
+export function addNodeModule(path: string, module: string): void {
+  execSync(`cp -r node_modules/${module} tmp/${path}/node_modules/${module}`);
 }
