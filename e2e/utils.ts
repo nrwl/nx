@@ -66,11 +66,19 @@ export function exists(filePath: string): boolean {
 }
 
 export function copyMissingPackages(path: string): void {
-  execSync(`cp -r node_modules/@ngrx tmp/${path}/node_modules/@ngrx`);
-  execSync(`cp -r node_modules/jasmine-marbles tmp/${path}/node_modules/jasmine-marbles`);
-  execSync(`cp -r node_modules/@nrwl tmp/${path}/node_modules/@nrwl`);
-  execSync(`cp -r node_modules/angular tmp/${path}/node_modules/angular`);
-  execSync(`cp -r node_modules/@angular/upgrade tmp/${path}/node_modules/@angular/upgrade`);
+  const modulesToCopy = [
+    "@ngrx",
+    "jasmine-marbles",
+    "@nrwl",
+    "angular",
+    "@angular/upgrade",
+  ];
+  modulesToCopy.forEach(m => copyNodeModule(path, m));
+}
+
+function copyNodeModule(path: string, name: string) {
+  execSync(`rm -rf tmp/${path}/node_modules/${name}`);
+  execSync(`cp -r node_modules/${name} tmp/${path}/node_modules/${name}`);
 }
 
 export function addNodeModule(path: string, module: string): void {

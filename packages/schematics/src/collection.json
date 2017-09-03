@@ -2,6 +2,24 @@
   "name": "nx",
   "version": "0.1",
   "schematics": {
+    "application": {
+      "factory": "./workspace",
+      "schema": "./workspace/schema.json",
+      "description": "Create an empty workspace"
+    },
+
+    "app": {
+      "factory": "./app",
+      "schema": "./app/schema.json",
+      "description": "Create an application"
+    },
+
+    "lib": {
+      "factory": "./lib",
+      "schema": "./lib/schema.json",
+      "description": "Create a library"
+    },
+
     "ngrx": {
       "factory": "./ngrx",
       "schema": "./ngrx/schema.json",

@@ -8,7 +8,7 @@
     "build": "./scripts/build.sh",
     "e2e": "yarn build && ./scripts/e2e.sh",
     "format": "./scripts/format.sh",
-    "link": "./scripts/link.sh",
+    "linknpm": "./scripts/link.sh",
     "package": "./scripts/package.sh",
     "release": "./scripts/release.sh",
     "copy-to-cli": "./scripts/copy-to-cli.sh",

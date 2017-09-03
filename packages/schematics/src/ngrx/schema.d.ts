@@ -1,6 +1,6 @@
 export interface Schema {
   onlyEmptyRoot: boolean;
-  root: boolena;
+  root: boolean;
   onlyAddFiles: boolean;
   module: string;
   skipPackageJson: boolean;

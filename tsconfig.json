@@ -21,6 +21,7 @@
   },
   "exclude": [
     "tmp",
-    "node_modules"
+    "node_modules",
+    "packages/schematics/src/*/files/**/*"
   ]
 }
