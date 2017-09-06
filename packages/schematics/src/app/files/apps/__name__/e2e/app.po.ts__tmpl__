@@ -6,6 +6,6 @@ export class AppPage {
   }
 
   getParagraphText() {
-    return element(by.css('<%= prefix %>-root h1')).getText();
+    return browser.findElement(by.css('body')).getText();
   }
 }
