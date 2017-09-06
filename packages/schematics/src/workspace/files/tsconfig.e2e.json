@@ -17,5 +17,9 @@
         "apps/*"
       ]
     }
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "tmp"
+  ]
 }
