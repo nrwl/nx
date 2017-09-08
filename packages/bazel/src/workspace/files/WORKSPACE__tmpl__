@@ -9,7 +9,7 @@ git_repository(
 local_repository(
     name = "build_bazel_rules_typescript",
     path = "node_modules/@bazel/typescript",
-)p
+)
 
 local_repository(
     name = "angular",
