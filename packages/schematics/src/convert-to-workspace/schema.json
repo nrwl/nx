@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "convert-to-workspace",
+  "title": "Convert to Nx workspace",
+  "description": "NOTE: Does not work in the --dry-run mode",
+  "type": "object",
+  "properties": {
+  },
+  "required": [
+  ]
+}

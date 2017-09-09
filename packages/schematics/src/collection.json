@@ -2,6 +2,12 @@
   "name": "nx",
   "version": "0.1",
   "schematics": {
+    "convert-to-workspace": {
+      "factory": "./convert-to-workspace",
+      "schema": "./convert-to-workspace/schema.json",
+      "description": "Convert an existing CLI project into an Nx Workspace"
+    },
+
     "application": {
       "factory": "./workspace",
       "schema": "./workspace/schema.json",

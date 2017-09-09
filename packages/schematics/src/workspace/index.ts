@@ -13,8 +13,7 @@ export default function (options: Schema): Rule {
 
   return chain([
     branchAndMerge(chain([
-      mergeWith(templateSource),
-      move(options.directory)
+      mergeWith(templateSource)
     ]))
   ]);
 }

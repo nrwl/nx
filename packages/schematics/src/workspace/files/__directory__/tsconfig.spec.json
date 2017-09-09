@@ -2,20 +2,12 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/spec",
-    "baseUrl": "./",
     "module": "commonjs",
     "target": "es5",
     "types": [
       "jasmine",
       "node"
-    ],
-    "paths": {
-      "*": [
-        "*",
-        "libs/*",
-        "apps/*"
-      ]
-    }
+    ]
   },
   "files": [
     "test.js"

@@ -23,12 +23,12 @@
     "@angular/router": "^4.2.4",
     "core-js": "^2.4.1",
     "rxjs": "^5.4.2",
-    "zone.js": "^0.8.14"
+    "zone.js": "^0.8.14",
+    "@nrwl/nx": "nrwl/nx-build"
   },
   "devDependencies": {
     "@angular/cli": "<%= version %>",
     "@angular/compiler-cli": "^4.2.4",
-    "@nrwl/nx": "nrwl/nx-build",
     "@nrwl/schematics": "nrwl/schematics-build",
     "@angular/language-service": "^4.2.4",<% if (!minimal) { %>
     "@types/jasmine": "~2.5.53",

@@ -140,7 +140,31 @@ import { MyLib } from 'mylib';
 And then run `ng build --app=myapp`, it will build `mylib` and include it in the app's bundle.
 
 
+#### Covert and Existing App into a Nx Workspace
 
+If you have an existing CLI project, you can convert it into an Nx Workspace like this.
+
+First, make sure you have `@nrwl/schematics` installed. Either run:
+
+```
+yarn global add @nrwl/schematics
+```
+
+Or run the following in the project dir:
+
+```
+yarn add @nrwl/schematics
+```
+
+Now, run:
+
+```
+schematics @nrwl/schematics:convert-to-workspace
+```
+
+* Your project files will be moved under:`apps/projectName`
+* Some files have moved to the root: tsconfigs, test.js, so all apps and libs share them.
+* `package.json` and `.angular-cli.json` will be updated
 
 
 ### NgRx

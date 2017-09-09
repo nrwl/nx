@@ -24,7 +24,7 @@ function addAppToAngularCliJson(options: Schema): Rule {
   return (host: Tree) => {
     const appConfig = {
       "name": options.name,
-      "root": `apps/${options.name}/${options.sourceDir}`,
+      "root": path.join('apps', options.name, options.sourceDir),
       "outDir": `dist/apps/${options.name}`,
       "assets": [
         "assets",
