@@ -1,7 +1,4 @@
-import {
-  apply, branchAndMerge, chain, externalSchematic, mergeWith, move, Rule, template, Tree,
-  url
-} from '@angular-devkit/schematics';
+import {apply, branchAndMerge, chain, externalSchematic, mergeWith, move, Rule, template, Tree, url} from '@angular-devkit/schematics';
 import {Schema} from './schema';
 import * as stringUtils from '@schematics/angular/strings';
 import {insert, toFileName} from '@nrwl/schematics';
@@ -23,33 +20,25 @@ function addBootstrap(path: string): Rule {
 function addAppToAngularCliJson(options: Schema): Rule {
   return (host: Tree) => {
     const appConfig = {
-      "name": options.name,
-      "root": path.join('apps', options.name, options.sourceDir),
-      "outDir": `dist/apps/${options.name}`,
-      "assets": [
-        "assets",
-        "favicon.ico"
-      ],
-      "index": "index.html",
-      "main": "main.ts",
-      "polyfills": "polyfills.ts",
-      "test": "../../../test.js",
-      "tsconfig": "../../../tsconfig.app.json",
-      "testTsconfig": "../../../tsconfig.spec.json",
-      "prefix": options.prefix,
-      "styles": [
-        `styles.${options.style}`
-      ],
-      "scripts": [],
-      "environmentSource": "environments/environment.ts",
-      "environments": {
-        "dev": "environments/environment.ts",
-        "prod": "environments/environment.prod.ts"
-      }
+      'name': options.name,
+      'root': path.join('apps', options.name, options.sourceDir),
+      'outDir': `dist/apps/${options.name}`,
+      'assets': ['assets', 'favicon.ico'],
+      'index': 'index.html',
+      'main': 'main.ts',
+      'polyfills': 'polyfills.ts',
+      'test': '../../../test.js',
+      'tsconfig': '../../../tsconfig.app.json',
+      'testTsconfig': '../../../tsconfig.spec.json',
+      'prefix': options.prefix,
+      'styles': [`styles.${options.style}`],
+      'scripts': [],
+      'environmentSource': 'environments/environment.ts',
+      'environments': {'dev': 'environments/environment.ts', 'prod': 'environments/environment.prod.ts'}
     };
 
-    if (!host.exists(".angular-cli.json")) {
-      throw new Error("Missing .angular-cli.json");
+    if (!host.exists('.angular-cli.json')) {
+      throw new Error('Missing .angular-cli.json');
     }
 
     const sourceText = host.read('.angular-cli.json')!.toString('utf-8');
@@ -64,23 +53,14 @@ function addAppToAngularCliJson(options: Schema): Rule {
   };
 }
 
-export default function (options: Schema): Rule {
-  const fullPath = path.join("apps", toFileName(options.name), options.sourceDir);
+export default function(options: Schema): Rule {
+  const fullPath = path.join('apps', toFileName(options.name), options.sourceDir);
 
-  const templateSource = apply(url('./files'), [
-    template({
-      utils: stringUtils,
-      dot: '.',
-      tmpl: '',
-      ...options as object
-    })
-  ]);
+  const templateSource =
+      apply(url('./files'), [template({utils: stringUtils, dot: '.', tmpl: '', ...options as object})]);
 
   return chain([
-    branchAndMerge(chain([
-      mergeWith(templateSource)
-    ])),
-    externalSchematic('@schematics/angular', 'module', {
+    branchAndMerge(chain([mergeWith(templateSource)])), externalSchematic('@schematics/angular', 'module', {
       name: 'app',
       commonModule: false,
       flat: true,
@@ -100,7 +80,6 @@ export default function (options: Schema): Rule {
       viewEncapsulation: options.viewEncapsulation,
       changeDetection: options.changeDetection
     }),
-    addBootstrap(fullPath),
-    addAppToAngularCliJson(options)
+    addBootstrap(fullPath), addAppToAngularCliJson(options)
   ]);
 }

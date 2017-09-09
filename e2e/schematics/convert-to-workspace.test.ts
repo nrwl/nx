@@ -8,21 +8,19 @@ describe('Nrwl Convert to Nx Workspace', () => {
 
     // update package.json
     const packageJson = JSON.parse(readFile('proj/package.json'));
-    packageJson.description = "some description";
-    packageJson.dependencies['@ngrx/store'] = "4.0.3";
-    packageJson.devDependencies['@ngrx/router-store'] = "4.0.3";
+    packageJson.description = 'some description';
+    packageJson.dependencies['@ngrx/store'] = '4.0.3';
+    packageJson.devDependencies['@ngrx/router-store'] = '4.0.3';
     updateFile('proj/package.json', JSON.stringify(packageJson, null, 2));
 
     // update tsconfig.json
     const tsconfigJson = JSON.parse(readFile('proj/tsconfig.json'));
-    tsconfigJson.compilerOptions.paths = {
-      'a': ['b']
-    };
+    tsconfigJson.compilerOptions.paths = {'a': ['b']};
     updateFile('proj/tsconfig.json', JSON.stringify(tsconfigJson, null, 2));
 
 
     // run the command
-    runSchematic('@nrwl/schematics:convert-to-workspace', { projectName: 'proj' });
+    runSchematic('@nrwl/schematics:convert-to-workspace', {projectName: 'proj'});
 
     // check that files have been moved!
     checkFilesExists('proj/apps/proj/src/main.ts', 'proj/apps/proj/src/app/app.module.ts');
@@ -45,22 +43,14 @@ describe('Nrwl Convert to Nx Workspace', () => {
 
     // check if tsconfig.json get merged
     const updatedTsConfig = JSON.parse(readFile('proj/tsconfig.json'));
-    expect(updatedTsConfig.compilerOptions.paths).toEqual({
-      "a": ["b"],
-      "*": [
-        "*",
-        "libs/*",
-        "apps/*"
-      ]
-    });
+    expect(updatedTsConfig.compilerOptions.paths).toEqual({'a': ['b'], '*': ['*', 'libs/*', 'apps/*']});
   });
 
   it('should build and test', () => {
     newApp('new proj');
-    runSchematic('@nrwl/schematics:convert-to-workspace', { projectName: 'proj' });
+    runSchematic('@nrwl/schematics:convert-to-workspace', {projectName: 'proj'});
 
-    expect(runCLI('build', { projectName: 'proj' })).toContain('{main} main.bundle.js');
-    expect(runCLI('test --single-run', { projectName: 'proj' })).toContain('Executed 3 of 3 SUCCESS');
+    expect(runCLI('build', {projectName: 'proj'})).toContain('{main} main.bundle.js');
+    expect(runCLI('test --single-run', {projectName: 'proj'})).toContain('Executed 3 of 3 SUCCESS');
   });
 });
-

@@ -136,7 +136,8 @@ function _addSymbolToNgModuleMetadata(
   return [insert];
 }
 
-export function addParameterToConstructor(source: ts.SourceFile, modulePath: string, opts: {className: string, param: string}): Change[] {
+export function addParameterToConstructor(
+    source: ts.SourceFile, modulePath: string, opts: {className: string, param: string}): Change[] {
   const clazz = findClass(source, opts.className);
   const constructor = clazz.members.filter(m => m.kind === ts.SyntaxKind.Constructor)[0];
   if (constructor) {
@@ -147,13 +148,16 @@ export function addParameterToConstructor(source: ts.SourceFile, modulePath: str
   }
 }
 
-export function addMethod(source: ts.SourceFile, modulePath: string, opts: {className: string, methodHeader: string, body: string}): Change[] {
+export function addMethod(
+    source: ts.SourceFile, modulePath: string,
+    opts: {className: string, methodHeader: string, body: string}): Change[] {
   const clazz = findClass(source, opts.className);
   const body = opts.body ? `
 ${opts.methodHeader} {
 ${offset(opts.body, 1, false)}
 }
-` : `
+` :
+                           `
 ${opts.methodHeader} {}
 `;
 
@@ -182,12 +186,10 @@ export function removeFromNgModule(source: ts.SourceFile, modulePath: string, pr
 function findClass(source: ts.SourceFile, className: string): ts.ClassDeclaration {
   const nodes = getSourceNodes(source);
 
-  const clazz = <any>nodes.filter(n =>
-    n.kind === ts.SyntaxKind.ClassDeclaration &&
-    (<any>n).name.text === className
-  )[0];
+  const clazz =
+      <any>nodes.filter(n => n.kind === ts.SyntaxKind.ClassDeclaration && (<any>n).name.text === className)[0];
 
-  if (! clazz) {
+  if (!clazz) {
     throw new Error(`Cannot find class '${className}'`);
   }
 
@@ -195,13 +197,16 @@ function findClass(source: ts.SourceFile, className: string): ts.ClassDeclaratio
 }
 
 export function offset(text: string, numberOfTabs: number, wrap: boolean): string {
-  const lines = text.trim().split('\n').map(line => {
-    let tabs = '';
-    for (let c = 0; c < numberOfTabs; ++c) {
-      tabs += '  ';
-    }
-    return `${tabs}${line}`;
-  }).join("\n");
+  const lines = text.trim()
+                    .split('\n')
+                    .map(line => {
+                      let tabs = '';
+                      for (let c = 0; c < numberOfTabs; ++c) {
+                        tabs += '  ';
+                      }
+                      return `${tabs}${line}`;
+                    })
+                    .join('\n');
 
   return wrap ? `\n${lines}\n` : lines;
 }
@@ -217,21 +222,21 @@ export function addImportToModule(source: ts.SourceFile, modulePath: string, sym
 
 export function getBootstrapComponent(source: ts.SourceFile, moduleClassName: string): string {
   const bootstrap = getMatchingProperty(source, 'bootstrap');
-  if (! bootstrap) {
+  if (!bootstrap) {
     throw new Error(`Cannot find bootstrap components in '${moduleClassName}'`);
   }
   const c = bootstrap.getChildren();
   const nodes = c[c.length - 1].getChildren();
 
   const bootstrapComponent = nodes.slice(1, nodes.length - 1)[0];
-  if (! bootstrapComponent) {
+  if (!bootstrapComponent) {
     throw new Error(`Cannot find bootstrap components in '${moduleClassName}'`);
   }
 
   return bootstrapComponent.getText();
 }
 
-function getMatchingProperty(source: ts.SourceFile, property: string): ts.ObjectLiteralElement  {
+function getMatchingProperty(source: ts.SourceFile, property: string): ts.ObjectLiteralElement {
   const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
   let node: any = nodes[0];  // tslint:disable-line:no-any
 

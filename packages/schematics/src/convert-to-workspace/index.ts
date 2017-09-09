@@ -1,8 +1,4 @@
-import {
-  apply, branchAndMerge, chain, externalSchematic, mergeWith, move, Rule, template, Tree,
-  url,
-  schematic
-} from '@angular-devkit/schematics';
+import {apply, branchAndMerge, chain, externalSchematic, mergeWith, move, Rule, template, Tree, url, schematic} from '@angular-devkit/schematics';
 import {Schema} from './schema';
 import {names, toFileName} from '@nrwl/schematics';
 import * as path from 'path';
@@ -40,17 +36,8 @@ function updateAngularCLIJson() {
       throw new Error('Can only convert projects with one app');
     }
 
-    angularCliJson.lint = [
-      {
-        "project": "./tsconfig.app.json"
-      },
-      {
-        "project": "./tsconfig.spec.json"
-      },
-      {
-        "project": "./tsconfig.e2e.json"
-      }
-    ];
+    angularCliJson.lint =
+        [{'project': './tsconfig.app.json'}, {'project': './tsconfig.spec.json'}, {'project': './tsconfig.e2e.json'}];
 
     const app = angularCliJson.apps[0];
     app.root = path.join('apps', angularCliJson.project.name, app.root);
@@ -68,15 +55,11 @@ function updateAngularCLIJson() {
 function updateTsConfigsJson() {
   return (host: Tree) => {
     const tsconfigJson = JSON.parse(fs.readFileSync('tsconfig.json', 'utf-8'));
-    if (! tsconfigJson.compilerOptions.paths) {
+    if (!tsconfigJson.compilerOptions.paths) {
       tsconfigJson.compilerOptions.paths = {};
     }
     tsconfigJson.compilerOptions.baseUrl = '.';
-    tsconfigJson.compilerOptions.paths['*'] = [
-      "*",
-      "libs/*",
-      "apps/*"
-    ];
+    tsconfigJson.compilerOptions.paths['*'] = ['*', 'libs/*', 'apps/*'];
     fs.writeFileSync('tsconfig.json', JSON.stringify(tsconfigJson, null, 2));
 
     const tsconfingAppJson = JSON.parse(fs.readFileSync('tsconfig.app.json', 'utf-8'));
@@ -84,12 +67,8 @@ function updateTsConfigsJson() {
     if (!tsconfingAppJson.exclude) {
       tsconfingAppJson.exclude = [];
     }
-    tsconfingAppJson.exclude = dedup(tsconfingAppJson.exclude.concat([
-      "**/*.spec.ts",
-      "**/*.e2e-spec.ts",
-      "node_modules",
-      "tmp"
-    ]));
+    tsconfingAppJson.exclude =
+        dedup(tsconfingAppJson.exclude.concat(['**/*.spec.ts', '**/*.e2e-spec.ts', 'node_modules', 'tmp']));
     fs.writeFileSync('tsconfig.app.json', JSON.stringify(tsconfingAppJson, null, 2));
 
     const tsconfingSpecJson = JSON.parse(fs.readFileSync('tsconfig.spec.json', 'utf-8'));
@@ -97,13 +76,8 @@ function updateTsConfigsJson() {
     if (!tsconfingSpecJson.exclude) {
       tsconfingSpecJson.exclude = [];
     }
-    tsconfingSpecJson.files = [
-      'test.js'
-    ];
-    tsconfingSpecJson.exclude = dedup(tsconfingSpecJson.exclude.concat([
-      "node_modules",
-      "tmp"
-    ]));
+    tsconfingSpecJson.files = ['test.js'];
+    tsconfingSpecJson.exclude = dedup(tsconfingSpecJson.exclude.concat(['node_modules', 'tmp']));
     fs.writeFileSync('tsconfig.spec.json', JSON.stringify(tsconfingSpecJson, null, 2));
 
     const tsconfingE2eJson = JSON.parse(fs.readFileSync('tsconfig.e2e.json', 'utf-8'));
@@ -111,11 +85,7 @@ function updateTsConfigsJson() {
     if (!tsconfingE2eJson.exclude) {
       tsconfingE2eJson.exclude = [];
     }
-    tsconfingE2eJson.exclude = dedup(tsconfingE2eJson.exclude.concat([
-      "**/*.spec.ts",
-      "node_modules",
-      "tmp"
-    ]));
+    tsconfingE2eJson.exclude = dedup(tsconfingE2eJson.exclude.concat(['**/*.spec.ts', 'node_modules', 'tmp']));
     fs.writeFileSync('tsconfig.e2e.json', JSON.stringify(tsconfingE2eJson, null, 2));
 
 
@@ -152,14 +122,11 @@ function dedup(array: any[]): any[] {
   return res;
 }
 
-export default function (options: Schema): Rule {
+export default function(options: Schema): Rule {
   return chain([
-    moveFiles(),
-    branchAndMerge(chain([
-      mergeWith( apply(url('./files'), [])),
+    moveFiles(), branchAndMerge(chain([
+      mergeWith(apply(url('./files'), [])),
     ])),
-    updatePackageJson(),
-    updateAngularCLIJson(),
-    updateTsConfigsJson()
+    updatePackageJson(), updateAngularCLIJson(), updateTsConfigsJson()
   ]);
 }

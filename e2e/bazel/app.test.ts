@@ -1,4 +1,4 @@
-import {copyMissingPackages, checkFilesExists, cleanup, newApp, readFile, runCLI, runCommand, runSchematic, updateFile} from '../utils';
+import {checkFilesExists, cleanup, copyMissingPackages, newApp, readFile, runCLI, runCommand, runSchematic, updateFile} from '../utils';
 
 describe('application', () => {
   beforeEach(cleanup);

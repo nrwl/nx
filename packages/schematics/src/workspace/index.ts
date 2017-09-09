@@ -3,20 +3,9 @@ import {Schema} from './schema';
 import * as stringUtils from '@schematics/angular/strings';
 import {nxVersion, schematicsVersion} from '../utility/lib-versions';
 
-export default function (options: Schema): Rule {
-  const templateSource = apply(url('./files'), [
-    template({
-      utils: stringUtils,
-      dot: '.',
-      nxVersion,
-      schematicsVersion,
-      ...options as object
-    })
-  ]);
+export default function(options: Schema): Rule {
+  const templateSource = apply(
+      url('./files'), [template({utils: stringUtils, dot: '.', nxVersion, schematicsVersion, ...options as object})]);
 
-  return chain([
-    branchAndMerge(chain([
-      mergeWith(templateSource)
-    ]))
-  ]);
+  return chain([branchAndMerge(chain([mergeWith(templateSource)]))]);
 }

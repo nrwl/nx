@@ -20,12 +20,12 @@ describe('Upgrade', () => {
 
     updateFile('proj/src/app/app.component.spec.ts', ``);
 
-    runSchematic('@nrwl/schematics:upgrade-shell ' +
-      '--module=src/app/app.module.ts '+
-      '--angularJsImport=../legacy ' +
-      '--angularJsCmpSelector=rootLegacyCmp',
-      {projectName: 'proj'}
-    );
+    runSchematic(
+        '@nrwl/schematics:upgrade-shell ' +
+            '--module=src/app/app.module.ts ' +
+            '--angularJsImport=../legacy ' +
+            '--angularJsCmpSelector=rootLegacyCmp',
+        {projectName: 'proj'});
 
     runCLI('build', {projectName: 'proj'});
     runCLI('test --single-run', {projectName: 'proj'});
@@ -34,12 +34,12 @@ describe('Upgrade', () => {
   it('should update package.json', () => {
     newApp('new proj2 --skipInstall');
 
-    runSchematic('@nrwl/schematics:upgrade-shell ' +
-      '--module=src/app/app.module.ts '+
-      '--angularJsImport=../legacy ' +
-      '--angularJsCmpSelector=rootLegacyCmp',
-      {projectName: 'proj2'}
-    );
+    runSchematic(
+        '@nrwl/schematics:upgrade-shell ' +
+            '--module=src/app/app.module.ts ' +
+            '--angularJsImport=../legacy ' +
+            '--angularJsCmpSelector=rootLegacyCmp',
+        {projectName: 'proj2'});
 
     const contents = JSON.parse(readFile('proj2/package.json'));
     expect(contents.dependencies['@angular/upgrade']).toBeDefined();
@@ -49,16 +49,15 @@ describe('Upgrade', () => {
   it('should not update package.json when --skipPackageJson', () => {
     newApp('new proj3 --skipInstall');
 
-    runSchematic('@nrwl/schematics:upgrade-shell ' +
-      '--module=src/app/app.module.ts '+
-      '--angularJsImport=../legacy ' +
-      '--angularJsCmpSelector=rootLegacyCmp ' +
-      '--skipPackageJson',
-      {projectName: 'proj3'}
-    );
+    runSchematic(
+        '@nrwl/schematics:upgrade-shell ' +
+            '--module=src/app/app.module.ts ' +
+            '--angularJsImport=../legacy ' +
+            '--angularJsCmpSelector=rootLegacyCmp ' +
+            '--skipPackageJson',
+        {projectName: 'proj3'});
 
     const contents = JSON.parse(readFile('proj3/package.json'));
     expect(contents.dependencies['@angular/upgrade']).not.toBeDefined();
   });
 });
-

@@ -24,4 +24,3 @@ describe('TestingUtils', () => {
     });
   });
 });
-
