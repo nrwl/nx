@@ -14,7 +14,7 @@ describe('Nrwl Workspace', () => {
 
     const packageJson = JSON.parse(readFile('proj/package.json'));
     expect(packageJson.devDependencies['@nrwl/schematics']).toBeDefined();
-    expect(packageJson.devDependencies['@nrwl/nx']).toBeDefined();
+    expect(packageJson.dependencies['@nrwl/nx']).toBeDefined();
     checkFilesExists('proj/test.js', 'proj/tsconfig.app.json', 'proj/tsconfig.spec.json', 'proj/tsconfig.e2e.json', 'proj/apps', 'proj/libs');
   });
 
