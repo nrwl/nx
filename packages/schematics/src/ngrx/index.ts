@@ -27,9 +27,13 @@ function addImportsToModule(name: string, options: Schema): Rule {
 
     if (options.onlyEmptyRoot) {
       const reducer = `StoreModule.forRoot({})`;
+      const effects = `EffectsModule.forRoot([])`;
+
       insert(host, modulePath, [
         insertImport(source, modulePath, 'StoreModule', '@ngrx/store'),
-        ...addImportToModule(source, modulePath, reducer)
+        insertImport(source, modulePath, 'EffectsModule', '@ngrx/effects'),
+        ...addImportToModule(source, modulePath, reducer),
+        ...addImportToModule(source, modulePath, effects)
       ]);
       return host;
 

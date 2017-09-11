@@ -3,55 +3,62 @@ import {checkFilesExists, cleanup, copyMissingPackages, newApp, readFile, runCLI
 describe('ngrx', () => {
   beforeEach(cleanup);
 
-  it('should add root configuration', () => {
-    newApp('new proj');
-    copyMissingPackages('proj');
+  describe('root', () => {
+    it('should generate', () => {
+      newApp('new proj --skip-import');
 
-    runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --root', {projectName: 'proj'});
+      runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --root', {projectName: 'proj'});
 
-    checkFilesExists(
+      checkFilesExists(
         `proj/src/app/+state/app.actions.ts`, `proj/src/app/+state/app.effects.ts`,
         `proj/src/app/+state/app.effects.spec.ts`, `proj/src/app/+state/app.init.ts`,
         `proj/src/app/+state/app.interfaces.ts`, `proj/src/app/+state/app.reducer.ts`,
         `proj/src/app/+state/app.reducer.spec.ts`);
 
-    const contents = readFile('proj/src/app/app.module.ts');
-    expect(contents).toContain('StoreModule.forRoot');
-    expect(contents).toContain('EffectsModule.forRoot');
+      const contents = readFile('proj/src/app/app.module.ts');
+      expect(contents).toContain('StoreModule.forRoot');
+      expect(contents).toContain('EffectsModule.forRoot');
+    });
 
+    it('should build', () => {
+      newApp('new proj');
+      copyMissingPackages('proj');
 
-    runCLI('build', {projectName: 'proj'});
-    runCLI('test --single-run', {projectName: 'proj'});
+      runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --root', {projectName: 'proj'});
 
-  }, 50000);
+      runCLI('build', {projectName: 'proj'});
+      runCLI('test --single-run', {projectName: 'proj'});
+    }, 50000);
 
-  it('should add empty root configuration', () => {
-    newApp('new proj2');
-    copyMissingPackages('proj2');
+    it('should add empty root configuration', () => {
+      newApp('new proj2');
+      copyMissingPackages('proj2');
 
-    runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --onlyEmptyRoot', {projectName: 'proj2'});
+      runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --onlyEmptyRoot', {projectName: 'proj2'});
 
-    const contents = readFile('proj2/src/app/app.module.ts');
-    expect(contents).toContain('StoreModule.forRoot');
-    expect(contents).not.toContain('EffectsModule.forRoot');
+      const contents = readFile('proj2/src/app/app.module.ts');
+      expect(contents).toContain('StoreModule.forRoot');
+      expect(contents).toContain('EffectsModule.forRoot');
 
+      runCLI('build', {projectName: 'proj2'});
+    }, 50000);
+  });
 
-    runCLI('build', {projectName: 'proj2'});
-  }, 50000);
+  describe('feature', () => {
+    it('should generate', () => {
+      newApp('new proj3 --skipInstall');
+      runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts', {projectName: 'proj3'});
 
-  it('should add feature configuration', () => {
-    newApp('new proj3 --skipInstall');
-    runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts', {projectName: 'proj3'});
-
-    checkFilesExists(
+      checkFilesExists(
         `proj3/src/app/+state/app.actions.ts`, `proj3/src/app/+state/app.effects.ts`,
         `proj3/src/app/+state/app.effects.spec.ts`, `proj3/src/app/+state/app.init.ts`,
         `proj3/src/app/+state/app.interfaces.ts`, `proj3/src/app/+state/app.reducer.ts`,
         `proj3/src/app/+state/app.reducer.spec.ts`);
 
-    const contents = readFile('proj3/src/app/app.module.ts');
-    expect(contents).toContain('StoreModule.forFeature');
-    expect(contents).toContain('EffectsModule.forFeature');
+      const contents = readFile('proj3/src/app/app.module.ts');
+      expect(contents).toContain('StoreModule.forFeature');
+      expect(contents).toContain('EffectsModule.forFeature');
+    });
   });
 
   it('should generate files without importing them', () => {
