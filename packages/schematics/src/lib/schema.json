@@ -12,6 +12,10 @@
       "type": "string",
       "default": "src",
       "alias": "sd"
+    },
+    "ngmodule": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [

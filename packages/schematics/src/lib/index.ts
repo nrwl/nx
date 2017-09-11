@@ -3,12 +3,11 @@ import {Schema} from './schema';
 import {names, toFileName} from '@nrwl/schematics';
 import * as path from 'path';
 
-
 export default function(options: Schema): Rule {
   const fullPath = path.join('libs', toFileName(options.name), options.sourceDir);
 
   const templateSource =
-      apply(url('./files'), [template({...names(options.name), dot: '.', tmpl: '', ...options as object})]);
+      apply(url(options.ngmodule ? './ngfiles' : './files'), [template({...names(options.name), dot: '.', tmpl: '', ...options as object})]);
 
   return chain([branchAndMerge(chain([mergeWith(templateSource)]))]);
 }

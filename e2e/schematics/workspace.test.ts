@@ -17,33 +17,61 @@ describe('Nrwl Workspace', () => {
         'proj/libs');
   });
 
-  it('should generate an app', () => {
-    newApp('new proj2 --collection=@nrwl/schematics');
-    copyMissingPackages('proj2');
-    runSchematic('@nrwl/schematics:app --name=myapp', {projectName: 'proj2'});
+  describe('app', () => {
+    it('should generate an app', () => {
+      newApp('new proj2 --collection=@nrwl/schematics');
+      copyMissingPackages('proj2');
+      runSchematic('@nrwl/schematics:app --name=myapp', {projectName: 'proj2'});
 
-    const angularCliJson = JSON.parse(readFile('proj2/.angular-cli.json'));
-    expect(angularCliJson.apps[0].name).toEqual('myapp');
+      const angularCliJson = JSON.parse(readFile('proj2/.angular-cli.json'));
+      expect(angularCliJson.apps[0].name).toEqual('myapp');
 
-    checkFilesExists(
+      checkFilesExists(
         'proj2/apps/myapp/src/main.ts', 'proj2/apps/myapp/src/app/app.module.ts',
         'proj2/apps/myapp/src/app/app.component.ts', 'proj2/apps/myapp/e2e/app.po.ts');
 
-    runCLI('build --aot', {projectName: 'proj2'});
-    checkFilesExists('proj2/dist/apps/myapp/main.bundle.js');
+      runCLI('build --aot', {projectName: 'proj2'});
+      checkFilesExists('proj2/dist/apps/myapp/main.bundle.js');
 
-    expect(runCLI('test --single-run', {projectName: 'proj2'})).toContain('Executed 1 of 1 SUCCESS');
+      expect(runCLI('test --single-run', {projectName: 'proj2'})).toContain('Executed 1 of 1 SUCCESS');
+    });
   });
 
-  it('should generate a lib', () => {
-    newApp('new proj3 --collection=@nrwl/schematics');
-    copyMissingPackages('proj3');
-    runSchematic('@nrwl/schematics:app --name=myapp', {projectName: 'proj3'});
-    runSchematic('@nrwl/schematics:lib --name=mylib', {projectName: 'proj3'});
+  describe('lib', () => {
+    it('should generate a lib', () => {
+      newApp('new proj3 --collection=@nrwl/schematics --skip-install');
+      runSchematic('@nrwl/schematics:lib --name=mylib', {projectName: 'proj3'});
 
-    checkFilesExists(
+      checkFilesExists(
         'proj3/libs/mylib/src/mylib.ts', 'proj3/libs/mylib/src/mylib.spec.ts', 'proj3/libs/mylib/index.ts');
+    });
 
-    expect(runCLI('test --single-run', {projectName: 'proj3'})).toContain('Executed 2 of 2 SUCCESS');
+    it('should test a lib', () => {
+      newApp('new proj3 --collection=@nrwl/schematics');
+      copyMissingPackages('proj3');
+      runSchematic('@nrwl/schematics:app --name=myapp', {projectName: 'proj3'});
+      runSchematic('@nrwl/schematics:lib --name=mylib', {projectName: 'proj3'});
+
+      expect(runCLI('test --single-run', {projectName: 'proj3'})).toContain('Executed 2 of 2 SUCCESS');
+    });
+  });
+
+  describe('nglib', () => {
+    it('should generate an ng lib', () => {
+      newApp('new proj3 --collection=@nrwl/schematics --skip-install');
+      runSchematic('@nrwl/schematics:lib --name=mylib --ngmodule', {projectName: 'proj3'});
+
+      checkFilesExists(
+        'proj3/libs/mylib/src/mylib.module.ts', 'proj3/libs/mylib/src/mylib.module.spec.ts', 'proj3/libs/mylib/index.ts');
+    });
+
+    it('should test an ng lib', () => {
+      newApp('new proj3 --collection=@nrwl/schematics');
+      copyMissingPackages('proj3');
+      runSchematic('@nrwl/schematics:app --name=myapp', {projectName: 'proj3'});
+      runSchematic('@nrwl/schematics:lib --name=mylib --ngmodule', {projectName: 'proj3'});
+
+      expect(runCLI('test --single-run', {projectName: 'proj3'})).toContain('Executed 2 of 2 SUCCESS');
+    });
   });
 });
