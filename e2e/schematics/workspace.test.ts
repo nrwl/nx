@@ -27,8 +27,8 @@ describe('Nrwl Workspace', () => {
       expect(angularCliJson.apps[0].name).toEqual('myapp');
 
       checkFilesExists(
-        'proj2/apps/myapp/src/main.ts', 'proj2/apps/myapp/src/app/app.module.ts',
-        'proj2/apps/myapp/src/app/app.component.ts', 'proj2/apps/myapp/e2e/app.po.ts');
+          'proj2/apps/myapp/src/main.ts', 'proj2/apps/myapp/src/app/app.module.ts',
+          'proj2/apps/myapp/src/app/app.component.ts', 'proj2/apps/myapp/e2e/app.po.ts');
 
       runCLI('build --aot', {projectName: 'proj2'});
       checkFilesExists('proj2/dist/apps/myapp/main.bundle.js');
@@ -43,7 +43,7 @@ describe('Nrwl Workspace', () => {
       runSchematic('@nrwl/schematics:lib --name=mylib', {projectName: 'proj3'});
 
       checkFilesExists(
-        'proj3/libs/mylib/src/mylib.ts', 'proj3/libs/mylib/src/mylib.spec.ts', 'proj3/libs/mylib/index.ts');
+          'proj3/libs/mylib/src/mylib.ts', 'proj3/libs/mylib/src/mylib.spec.ts', 'proj3/libs/mylib/index.ts');
     });
 
     it('should test a lib', () => {
@@ -62,7 +62,8 @@ describe('Nrwl Workspace', () => {
       runSchematic('@nrwl/schematics:lib --name=mylib --ngmodule', {projectName: 'proj3'});
 
       checkFilesExists(
-        'proj3/libs/mylib/src/mylib.module.ts', 'proj3/libs/mylib/src/mylib.module.spec.ts', 'proj3/libs/mylib/index.ts');
+          'proj3/libs/mylib/src/mylib.module.ts', 'proj3/libs/mylib/src/mylib.module.spec.ts',
+          'proj3/libs/mylib/index.ts');
     });
 
     it('should test an ng lib', () => {
@@ -72,6 +73,29 @@ describe('Nrwl Workspace', () => {
       runSchematic('@nrwl/schematics:lib --name=mylib --ngmodule', {projectName: 'proj3'});
 
       expect(runCLI('test --single-run', {projectName: 'proj3'})).toContain('Executed 2 of 2 SUCCESS');
+    });
+
+    it('should resolve dependencies on the lib', () => {
+      newApp('new proj3 --collection=@nrwl/schematics --npmScope=nrwl');
+      copyMissingPackages('proj3');
+      runSchematic('@nrwl/schematics:app --name=myapp', {projectName: 'proj3'});
+      runSchematic('@nrwl/schematics:lib --name=mylib --ngmodule', {projectName: 'proj3'});
+
+      updateFile('proj3/apps/myapp/src/app/app.module.ts', `
+        import { NgModule } from '@angular/core';
+        import { BrowserModule } from '@angular/platform-browser';
+        import { MylibModule } from '@nrwl/mylib';
+        import { AppComponent } from './app.component';
+
+        @NgModule({
+          imports: [BrowserModule, MylibModule],
+          declarations: [AppComponent],
+          bootstrap: [AppComponent]
+        })
+        export class AppModule {}
+      `);
+
+      runCLI('build --aot', {projectName: 'proj3'});
     });
   });
 });

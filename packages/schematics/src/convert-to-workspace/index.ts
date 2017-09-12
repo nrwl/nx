@@ -5,6 +5,7 @@ import * as path from 'path';
 import {nxVersion, schematicsVersion} from '../utility/lib-versions';
 import * as fs from 'fs';
 import {join} from 'path';
+import {updateJsonFile} from '../utility/fileutils';
 
 function updatePackageJson() {
   return (host: Tree) => {
@@ -52,45 +53,45 @@ function updateAngularCLIJson() {
   };
 }
 
-function updateTsConfigsJson() {
+function updateTsConfigsJson(options: Schema) {
   return (host: Tree) => {
-    const tsconfigJson = JSON.parse(fs.readFileSync('tsconfig.json', 'utf-8'));
-    if (!tsconfigJson.compilerOptions.paths) {
-      tsconfigJson.compilerOptions.paths = {};
-    }
-    tsconfigJson.compilerOptions.baseUrl = '.';
-    tsconfigJson.compilerOptions.paths['*'] = ['*', 'libs/*', 'apps/*'];
-    fs.writeFileSync('tsconfig.json', JSON.stringify(tsconfigJson, null, 2));
+    const angularCliJson = JSON.parse(host.read('.angular-cli.json')!.toString('utf-8'));
+    const npmScope = options.npmScope ? options.npmScope : angularCliJson.project.name;
 
-    const tsconfingAppJson = JSON.parse(fs.readFileSync('tsconfig.app.json', 'utf-8'));
-    tsconfingAppJson['extends'] = './tsconfig.json';
-    if (!tsconfingAppJson.exclude) {
-      tsconfingAppJson.exclude = [];
-    }
-    tsconfingAppJson.exclude =
-        dedup(tsconfingAppJson.exclude.concat(['**/*.spec.ts', '**/*.e2e-spec.ts', 'node_modules', 'tmp']));
-    fs.writeFileSync('tsconfig.app.json', JSON.stringify(tsconfingAppJson, null, 2));
+    updateJsonFile('tsconfig.json', (json) => setUpCompilerOptions(json, npmScope));
 
-    const tsconfingSpecJson = JSON.parse(fs.readFileSync('tsconfig.spec.json', 'utf-8'));
-    tsconfingSpecJson['extends'] = './tsconfig.json';
-    if (!tsconfingSpecJson.exclude) {
-      tsconfingSpecJson.exclude = [];
-    }
-    tsconfingSpecJson.files = ['test.js'];
-    tsconfingSpecJson.exclude = dedup(tsconfingSpecJson.exclude.concat(['node_modules', 'tmp']));
-    fs.writeFileSync('tsconfig.spec.json', JSON.stringify(tsconfingSpecJson, null, 2));
+    updateJsonFile('tsconfig.app.json', (json) => {
+      json['extends'] = './tsconfig.json';
+      if (!json.exclude) json.exclude = [];
+      json.exclude = dedup(json.exclude.concat(['**/*.spec.ts', '**/*.e2e-spec.ts', 'node_modules', 'tmp']));
+      setUpCompilerOptions(json, npmScope);
+    });
 
-    const tsconfingE2eJson = JSON.parse(fs.readFileSync('tsconfig.e2e.json', 'utf-8'));
-    tsconfingE2eJson['extends'] = './tsconfig.json';
-    if (!tsconfingE2eJson.exclude) {
-      tsconfingE2eJson.exclude = [];
-    }
-    tsconfingE2eJson.exclude = dedup(tsconfingE2eJson.exclude.concat(['**/*.spec.ts', 'node_modules', 'tmp']));
-    fs.writeFileSync('tsconfig.e2e.json', JSON.stringify(tsconfingE2eJson, null, 2));
+    updateJsonFile('tsconfig.spec.json', (json) => {
+      json['extends'] = './tsconfig.json';
+      if (!json.exclude) json.exclude = [];
+      json.files = ['test.js'];
+      json.exclude = dedup(json.exclude.concat(['node_modules', 'tmp']));
+      setUpCompilerOptions(json, npmScope);
+    });
 
+    updateJsonFile('tsconfig.e2e.json', (json) => {
+      json['extends'] = './tsconfig.json';
+      if (!json.exclude) json.exclude = [];
+      json.exclude = dedup(json.exclude.concat(['**/*.spec.ts', 'node_modules', 'tmp']));
+      setUpCompilerOptions(json, npmScope);
+    });
 
     return host;
   };
+}
+
+function setUpCompilerOptions(tsconfig: any, npmScope: string): void {
+  if (!tsconfig.compilerOptions.paths) {
+    tsconfig.compilerOptions.paths = {};
+  }
+  tsconfig.compilerOptions.baseUrl = '.';
+  tsconfig.compilerOptions.paths[`@${npmScope}/*`] = ['libs/*'];
 }
 
 function moveFiles() {
@@ -127,6 +128,6 @@ export default function(options: Schema): Rule {
     moveFiles(), branchAndMerge(chain([
       mergeWith(apply(url('./files'), [])),
     ])),
-    updatePackageJson(), updateAngularCLIJson(), updateTsConfigsJson()
+    updatePackageJson(), updateAngularCLIJson(), updateTsConfigsJson(options)
   ]);
 }

@@ -32,8 +32,7 @@ function addImportsToModule(name: string, options: Schema): Rule {
       insert(host, modulePath, [
         insertImport(source, modulePath, 'StoreModule', '@ngrx/store'),
         insertImport(source, modulePath, 'EffectsModule', '@ngrx/effects'),
-        ...addImportToModule(source, modulePath, reducer),
-        ...addImportToModule(source, modulePath, effects)
+        ...addImportToModule(source, modulePath, reducer), ...addImportToModule(source, modulePath, effects)
       ]);
       return host;
 

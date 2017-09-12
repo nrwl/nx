@@ -3,7 +3,7 @@ import {checkFilesExists, cleanup, newApp, readFile, runCLI, runSchematic, updat
 describe('Nrwl Convert to Nx Workspace', () => {
   beforeEach(cleanup);
 
-  fit('should generate a workspace', () => {
+  it('should generate a workspace', () => {
     newApp('new proj --skip-install');
 
     // update package.json
@@ -48,9 +48,24 @@ describe('Nrwl Convert to Nx Workspace', () => {
 
   it('should build and test', () => {
     newApp('new proj');
-    runSchematic('@nrwl/schematics:convert-to-workspace', {projectName: 'proj'});
+    runSchematic('@nrwl/schematics:convert-to-workspace --npmScope=nrwl', {projectName: 'proj'});
+    runSchematic('@nrwl/schematics:lib --name=mylib --ngmodule', {projectName: 'proj'});
 
-    expect(runCLI('build', {projectName: 'proj'})).toContain('{main} main.bundle.js');
-    expect(runCLI('test --single-run', {projectName: 'proj'})).toContain('Executed 3 of 3 SUCCESS');
+    updateFile('proj/apps/proj/src/app/app.module.ts', `
+        import { NgModule } from '@angular/core';
+        import { BrowserModule } from '@angular/platform-browser';
+        import { MylibModule } from '@nrwl/mylib';
+        import { AppComponent } from './app.component';
+
+        @NgModule({
+          imports: [BrowserModule, MylibModule],
+          declarations: [AppComponent],
+          bootstrap: [AppComponent]
+        })
+        export class AppModule {}
+      `);
+
+    expect(runCLI('build --aot', {projectName: 'proj'})).toContain('{main} main.bundle.js');
+    expect(runCLI('test --single-run', {projectName: 'proj'})).toContain('Executed 4 of 4 SUCCESS');
   });
 });

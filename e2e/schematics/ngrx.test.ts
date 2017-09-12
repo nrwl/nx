@@ -10,10 +10,10 @@ describe('ngrx', () => {
       runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --root', {projectName: 'proj'});
 
       checkFilesExists(
-        `proj/src/app/+state/app.actions.ts`, `proj/src/app/+state/app.effects.ts`,
-        `proj/src/app/+state/app.effects.spec.ts`, `proj/src/app/+state/app.init.ts`,
-        `proj/src/app/+state/app.interfaces.ts`, `proj/src/app/+state/app.reducer.ts`,
-        `proj/src/app/+state/app.reducer.spec.ts`);
+          `proj/src/app/+state/app.actions.ts`, `proj/src/app/+state/app.effects.ts`,
+          `proj/src/app/+state/app.effects.spec.ts`, `proj/src/app/+state/app.init.ts`,
+          `proj/src/app/+state/app.interfaces.ts`, `proj/src/app/+state/app.reducer.ts`,
+          `proj/src/app/+state/app.reducer.spec.ts`);
 
       const contents = readFile('proj/src/app/app.module.ts');
       expect(contents).toContain('StoreModule.forRoot');
@@ -50,10 +50,10 @@ describe('ngrx', () => {
       runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts', {projectName: 'proj3'});
 
       checkFilesExists(
-        `proj3/src/app/+state/app.actions.ts`, `proj3/src/app/+state/app.effects.ts`,
-        `proj3/src/app/+state/app.effects.spec.ts`, `proj3/src/app/+state/app.init.ts`,
-        `proj3/src/app/+state/app.interfaces.ts`, `proj3/src/app/+state/app.reducer.ts`,
-        `proj3/src/app/+state/app.reducer.spec.ts`);
+          `proj3/src/app/+state/app.actions.ts`, `proj3/src/app/+state/app.effects.ts`,
+          `proj3/src/app/+state/app.effects.spec.ts`, `proj3/src/app/+state/app.init.ts`,
+          `proj3/src/app/+state/app.interfaces.ts`, `proj3/src/app/+state/app.reducer.ts`,
+          `proj3/src/app/+state/app.reducer.spec.ts`);
 
       const contents = readFile('proj3/src/app/app.module.ts');
       expect(contents).toContain('StoreModule.forFeature');

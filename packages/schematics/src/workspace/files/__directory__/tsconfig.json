@@ -16,10 +16,8 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "*": [
-        "*",
-        "libs/*",
-        "apps/*"
+      "@<%= npmScope %>/*": [
+        "libs/*"
       ]
     }
   },

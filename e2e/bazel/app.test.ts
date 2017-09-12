@@ -3,7 +3,7 @@ import {checkFilesExists, cleanup, copyMissingPackages, newApp, readFile, runCLI
 describe('application', () => {
   beforeEach(cleanup);
 
-  fit('creates a new application in a workspace', () => {
+  it('creates a new application in a workspace', () => {
     runSchematic('@nrwl/bazel:application --name=proj');
     runSchematic('@nrwl/bazel:app --name=myApp', {projectName: 'proj'});
 

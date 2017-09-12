@@ -13,6 +13,10 @@
       "description": "The directory name to create the app in.",
       "alias": "dir"
     },
+    "npmScope": {
+      "type": "string",
+      "description": "Npm scope for importing libs."
+    },
     "version": {
       "type": "string"
     },

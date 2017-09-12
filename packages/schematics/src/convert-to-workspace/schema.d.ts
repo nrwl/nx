@@ -1,1 +1,1 @@
-export interface Schema {}
+export interface Schema { npmScope?: string; }

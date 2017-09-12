@@ -5,6 +5,10 @@
   "description": "NOTE: Does not work in the --dry-run mode",
   "type": "object",
   "properties": {
+    "npmScope": {
+      "type": "string",
+      "description": "Npm scope for importing libs."
+    }
   },
   "required": [
   ]
