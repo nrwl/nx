@@ -3,7 +3,7 @@ import {<%= className %>Action} from './<%= fileName %>.actions';
 
 export function <%= propertyName %>Reducer(state: <%= className %>, action: <%= className %>Action): <%= className %> {
   switch (action.type) {
-    case 'SOME_ACTION': {
+    case 'DATA_LOADED': {
       return {...state, ...action.payload};
     }
     default: {

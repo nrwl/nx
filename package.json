@@ -32,6 +32,7 @@
     "@ngrx/store": "4.0.3",
     "@ngrx/router-store": "4.0.3",
     "@ngrx/effects": "4.0.3",
+    "@ngrx/store-devtools": "^4.0.0",
     "typescript": "2.4.2",
     "@types/node": "8.0.7",
     "@types/jasmine": "2.5.53",

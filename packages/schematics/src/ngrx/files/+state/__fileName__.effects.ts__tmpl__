@@ -1,14 +1,25 @@
 import {Injectable} from '@angular/core';
 import {Effect, Actions} from '@ngrx/effects';
+import {DataPersistence} from '@nrwl/nx';
 import {of} from 'rxjs/observable/of';
 import 'rxjs/add/operator/switchMap';
+import {<%= className %>State} from './<%= fileName %>.interfaces';
+import {LoadData, DataLoaded} from './<%= fileName %>.actions';
 
 @Injectable()
 export class <%= className %>Effects {
-  @Effect() someEffect = this.actions.ofType('SOME_ACTION').switchMap((a) => {
-    // process the action
-    return of({type: 'OTHER_ACTION'});
+  @Effect() loadData = this.d.pessimisticUpdate('LOAD_DATA', {
+    run(a: LoadData, state: <%= className %>State) {
+      return {
+        type: 'DATA_LOADED',
+        payload: {}
+      };
+    },
+
+    onError(a: LoadData, error) {
+      console.error('Error', error);
+    }
   });
 
-  constructor(private actions: Actions) {}
+  constructor(private actions: Actions, private d: DataPersistence<<%= className %>State>) {}
 }

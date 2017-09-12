@@ -1,7 +1,12 @@
-export interface SomeAction {
-  type: 'SOME_ACTION';
+export interface LoadData {
+  type: 'LOAD_DATA';
   payload: {};
 }
 
-export type <%= className %>Action = SomeAction;
+export interface DataLoaded {
+  type: 'DATA_LOADED';
+  payload: {};
+}
+
+export type <%= className %>Action = LoadData | DataLoaded;
 

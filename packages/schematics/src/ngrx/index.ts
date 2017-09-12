@@ -26,13 +26,14 @@ function addImportsToModule(name: string, options: Schema): Rule {
     const source = ts.createSourceFile(modulePath, sourceText, ts.ScriptTarget.Latest, true);
 
     if (options.onlyEmptyRoot) {
-      const reducer = `StoreModule.forRoot({})`;
-      const effects = `EffectsModule.forRoot([])`;
-
       insert(host, modulePath, [
         insertImport(source, modulePath, 'StoreModule', '@ngrx/store'),
         insertImport(source, modulePath, 'EffectsModule', '@ngrx/effects'),
-        ...addImportToModule(source, modulePath, reducer), ...addImportToModule(source, modulePath, effects)
+        insertImport(source, modulePath, 'StoreDevtoolsModule', '@ngrx/store-devtools'),
+        insertImport(source, modulePath, 'environment', '../environments/environment'),
+        ...addImportToModule(source, modulePath, `StoreModule.forRoot({})`),
+        ...addImportToModule(source, modulePath, `EffectsModule.forRoot([])`),
+        ...addImportToModule(source, modulePath, `!environment.production ? StoreDevtoolsModule.instrument() : []`)
       ]);
       return host;
 
@@ -45,20 +46,34 @@ function addImportsToModule(name: string, options: Schema): Rule {
       const effectsName = `${toClassName(name)}Effects`;
       const initName = `${toPropertyName(name)}InitialState`;
 
-      const effects =
-          options.root ? `EffectsModule.forRoot([${effectsName}])` : `EffectsModule.forFeature([${effectsName}])`;
-      const reducer = options.root ?
-          `StoreModule.forRoot(${reducerName}, {initialState: ${initName}})` :
-          `StoreModule.forFeature('${toPropertyName(name)}', ${reducerName}, {initialState: ${initName}})`;
-
-      insert(host, modulePath, [
+      const common = [
         insertImport(source, modulePath, 'StoreModule', '@ngrx/store'),
         insertImport(source, modulePath, 'EffectsModule', '@ngrx/effects'),
         insertImport(source, modulePath, reducerName, reducerPath),
         insertImport(source, modulePath, initName, initPath),
-        insertImport(source, modulePath, effectsName, effectsPath), ...addImportToModule(source, modulePath, reducer),
-        ...addImportToModule(source, modulePath, effects), ...addProviderToModule(source, modulePath, effectsName)
-      ]);
+        insertImport(source, modulePath, effectsName, effectsPath),
+        ...addProviderToModule(source, modulePath, effectsName)
+      ];
+
+      if (options.root) {
+        insert(host, modulePath, [
+          ...common,
+          insertImport(source, modulePath, 'StoreDevtoolsModule', '@ngrx/store-devtools'),
+          insertImport(source, modulePath, 'environment', '../environments/environment'),
+          ...addImportToModule(source, modulePath, `StoreModule.forRoot(${reducerName}, {initialState: ${initName}})`),
+          ...addImportToModule(source, modulePath, `EffectsModule.forRoot([${effectsName}])`),
+          ...addImportToModule(source, modulePath, `!environment.production ? StoreDevtoolsModule.instrument() : []`),
+        ]);
+      } else {
+        insert(host, modulePath, [
+          ...common,
+          ...addImportToModule(
+              source, modulePath,
+              `StoreModule.forFeature('${toPropertyName(name)}', ${reducerName}, {initialState: ${initName}})`),
+          ...addImportToModule(source, modulePath, `EffectsModule.forFeature([${effectsName}])`)
+        ]);
+      }
+
       return host;
     }
   };
@@ -82,6 +97,9 @@ function addNgRxToPackageJson() {
     }
     if (!json['dependencies']['@ngrx/effects']) {
       json['dependencies']['@ngrx/effects'] = ngrxVersion;
+    }
+    if (!json['dependencies']['@ngrx/store-devtools']) {
+      json['dependencies']['@ngrx/store-devtools'] = ngrxVersion;
     }
     host.overwrite('package.json', JSON.stringify(json, null, 2));
     return host;

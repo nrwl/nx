@@ -135,6 +135,10 @@
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/@ngrx/router-store/-/router-store-4.0.3.tgz#5f924914a8dda136b049fc6c7ce9fe177f44be97"
 
+"@ngrx/store-devtools@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/store-devtools/-/store-devtools-4.0.0.tgz#b79c24773217df7fd9735ad21f9cbf2533c96e04"
+
 "@ngrx/store@4.0.3":
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/@ngrx/store/-/store-4.0.3.tgz#36abacdfa19bfb8506e40de80bae06050a1e15e9"
