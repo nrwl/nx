@@ -4,7 +4,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
   beforeEach(cleanup);
 
   it('should generate a workspace', () => {
-    newApp('new proj --skip-install');
+    newApp('new proj --skip-install --npmScope=nrwl');
 
     // update package.json
     const packageJson = JSON.parse(readFile('proj/package.json'));
@@ -43,7 +43,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
 
     // check if tsconfig.json get merged
     const updatedTsConfig = JSON.parse(readFile('proj/tsconfig.json'));
-    expect(updatedTsConfig.compilerOptions.paths).toEqual({'a': ['b'], '*': ['*', 'libs/*', 'apps/*']});
+    expect(updatedTsConfig.compilerOptions.paths).toEqual({'a': ['b'], '@nrwl/*': ['libs/*']});
   });
 
   it('should build and test', () => {
