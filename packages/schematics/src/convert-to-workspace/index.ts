@@ -115,6 +115,7 @@ function moveFiles() {
 
 function dedup(array: any[]): any[] {
   const res = [];
+
   array.forEach(a => {
     if (res.indexOf(a) === -1) {
       res.push(a);

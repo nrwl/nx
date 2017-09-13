@@ -5,7 +5,7 @@ export class AppPage {
     return browser.get('/');
   }
 
-  getParagraphText() {
+  text() {
     return browser.findElement(by.css('body')).getText();
   }
 }
