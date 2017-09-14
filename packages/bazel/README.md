@@ -1,1 +1,1 @@
-# Angular Extensions: Bazel Backend for CLI
+# Nrwl Extensions for Angular: Bazel Backend for CLI

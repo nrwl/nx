@@ -1,6 +1,6 @@
-# Angular Extensions
+# Nrwl Extensions for Angular
 
-Nx (Angular Extensions) is a set of libraries and schematics for the Angular framework.
+Nx (Nrwl Extensions for Angular) is a set of libraries and schematics for the Angular framework.
 
 ## Installing
 

@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/bazel",
   "version": "0.0.1",
-  "description": "Angular Extensions: Schematics",
+  "description": "Nrwl Extensions for Angular: Schematics",
   "main": "src/index.js",
   "peerDependencies" :{
     "@nrwl/schematics": "0.0.1"

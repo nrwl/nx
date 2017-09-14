@@ -1,4 +1,4 @@
-# Angular Extensions
+# Nrwl Extensions for Angular
 
 * See packages/bazel/README.md
 * See packages/nx/README.md
