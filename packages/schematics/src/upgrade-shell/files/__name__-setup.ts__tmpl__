@@ -14,6 +14,7 @@ angular.module('downgraded', []).
   directive('appRoot', downgradeComponent({component: <%= bootstrapComponentClassName %>}));
 
 
+<% if (angularJsCmpSelector) { %>
 // all components upgraded from AngularJS to Angular go here
 @Directive({selector: '<%= angularJsCmpSelector %>'})
 export class <%= className %>Component extends UpgradeComponent {
@@ -22,6 +23,10 @@ export class <%= className %>Component extends UpgradeComponent {
   }
 }
 export const upgradedComponents = [<%= className %>Component];
+<% } %>
+<% if (!angularJsCmpSelector) { %>
+export const upgradedComponents = [];
+<% } %>
 
 
 // additional configuration invoked right before bootstrap
