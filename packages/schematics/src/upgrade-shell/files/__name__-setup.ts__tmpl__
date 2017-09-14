@@ -1,5 +1,9 @@
 import {Directive, ElementRef, Injector} from '@angular/core';
-import {setAngularLib, UpgradeComponent, downgradeComponent} from '@angular/upgrade/static';
+import {setAngularLib, UpgradeComponent, downgradeComponent, UpgradeModule} from '@angular/upgrade/static';
+<% if (router) { %>
+import {Router} from '@angular/router';
+import {setUpLocationSync} from '@angular/router/upgrade';
+<% } %>
 import * as angular from 'angular'; // replace with const angular = (<any>window).angular; if Angular is available globally
 
 import '<%= angularJsImport %>'; // import your application files here.
@@ -33,4 +37,10 @@ export const upgradedComponents = [];
 export function configure<%= className %>(i: Injector) {
   setAngularLib(angular);
   //  Insert additional configuration here
+  <% if (router) { %>
+  angular.module('downgraded').run(() => {
+    setUpLocationSync(i.get(UpgradeModule));
+    i.get(Router).initialNavigation();
+  });
+  <% } %>
 }

@@ -25,6 +25,11 @@
       "type": "boolean",
       "default": false,
       "description": "Do not add @angular/upgrade to package.json (e.g., --skipPackageJson)"
+    },
+    "router": {
+      "type": "boolean",
+      "default": false,
+      "description": "Sets up router synchronization (e.g., --router)"
     }
   },
   "required": [

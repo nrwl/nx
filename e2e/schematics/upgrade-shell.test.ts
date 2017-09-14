@@ -22,10 +22,9 @@ describe('Upgrade', () => {
 
     runSchematic(
         '@nrwl/schematics:upgrade-shell ' +
-            '--module=src/app/app.module.ts ' +
-            '--angularJsImport=../legacy ' +
-            '--angularJsCmpSelector=rootLegacyCmp'
-        );
+        '--module=src/app/app.module.ts ' +
+        '--angularJsImport=../legacy ' +
+        '--angularJsCmpSelector=rootLegacyCmp');
 
     runCLI('build');
     runCLI('test --single-run');
@@ -36,10 +35,9 @@ describe('Upgrade', () => {
 
     runSchematic(
         '@nrwl/schematics:upgrade-shell ' +
-            '--module=src/app/app.module.ts ' +
-            '--angularJsImport=../legacy ' +
-            '--angularJsCmpSelector=rootLegacyCmp'
-        );
+        '--module=src/app/app.module.ts ' +
+        '--angularJsImport=../legacy ' +
+        '--angularJsCmpSelector=rootLegacyCmp');
 
     const contents = JSON.parse(readFile('package.json'));
     expect(contents.dependencies['@angular/upgrade']).toBeDefined();
@@ -51,11 +49,10 @@ describe('Upgrade', () => {
 
     runSchematic(
         '@nrwl/schematics:upgrade-shell ' +
-            '--module=src/app/app.module.ts ' +
-            '--angularJsImport=../legacy ' +
-            '--angularJsCmpSelector=rootLegacyCmp ' +
-            '--skipPackageJson'
-        );
+        '--module=src/app/app.module.ts ' +
+        '--angularJsImport=../legacy ' +
+        '--angularJsCmpSelector=rootLegacyCmp ' +
+        '--skipPackageJson');
 
     const contents = JSON.parse(readFile('package.json'));
     expect(contents.dependencies['@angular/upgrade']).not.toBeDefined();

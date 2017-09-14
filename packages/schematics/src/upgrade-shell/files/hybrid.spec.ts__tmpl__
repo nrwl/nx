@@ -9,8 +9,14 @@ describe('hybrid bootstrap test', () => {
 
     element = document.createElement('app-root'); // TODO change it to match the root component of the AngularJS application
     const content = document.createElement('content');
-    document.body.appendChild(element);
     element.appendChild(content);
+    document.body.appendChild(element);
+
+    <% if (router) { %>
+    const base = document.createElement('base');
+    base.setAttribute('href', '/');
+    document.head.appendChild(base);
+    <% } %>
   });
 
   afterEach(() => {
@@ -18,7 +24,7 @@ describe('hybrid bootstrap test', () => {
     document.body.removeChild(element);
   });
 
-  it('should work', async (done) => {
+  it('should work', async (done) => {;
     await platformBrowserDynamic().bootstrapModule(<%= moduleClassName %>);
     expect(element.innerText).toContain('Expected Value');
     done();

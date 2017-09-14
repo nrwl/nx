@@ -2,7 +2,7 @@ import {execSync} from 'child_process';
 import {readFileSync, statSync, writeFileSync} from 'fs';
 import * as path from 'path';
 
-const projectName:string = 'proj';
+const projectName: string = 'proj';
 
 export function newApp(command?: string): string {
   return execSync(`../node_modules/.bin/ng new proj ${command}`, {cwd: `./tmp`}).toString();

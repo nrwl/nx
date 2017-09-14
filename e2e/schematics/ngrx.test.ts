@@ -10,9 +10,8 @@ describe('ngrx', () => {
       runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --root');
 
       checkFilesExists(
-          `src/app/+state/app.actions.ts`, `src/app/+state/app.effects.ts`,
-          `src/app/+state/app.effects.spec.ts`, `src/app/+state/app.init.ts`,
-          `src/app/+state/app.interfaces.ts`, `src/app/+state/app.reducer.ts`,
+          `src/app/+state/app.actions.ts`, `src/app/+state/app.effects.ts`, `src/app/+state/app.effects.spec.ts`,
+          `src/app/+state/app.init.ts`, `src/app/+state/app.interfaces.ts`, `src/app/+state/app.reducer.ts`,
           `src/app/+state/app.reducer.spec.ts`);
 
       const contents = readFile('src/app/app.module.ts');
@@ -50,9 +49,8 @@ describe('ngrx', () => {
       runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts');
 
       checkFilesExists(
-          `src/app/+state/app.actions.ts`, `src/app/+state/app.effects.ts`,
-          `src/app/+state/app.effects.spec.ts`, `src/app/+state/app.init.ts`,
-          `src/app/+state/app.interfaces.ts`, `src/app/+state/app.reducer.ts`,
+          `src/app/+state/app.actions.ts`, `src/app/+state/app.effects.ts`, `src/app/+state/app.effects.spec.ts`,
+          `src/app/+state/app.init.ts`, `src/app/+state/app.interfaces.ts`, `src/app/+state/app.reducer.ts`,
           `src/app/+state/app.reducer.spec.ts`);
 
       const contents = readFile('src/app/app.module.ts');
@@ -66,9 +64,8 @@ describe('ngrx', () => {
     runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --onlyAddFiles');
 
     checkFilesExists(
-        `src/app/+state/app.actions.ts`, `src/app/+state/app.effects.ts`,
-        `src/app/+state/app.effects.spec.ts`, `src/app/+state/app.init.ts`,
-        `src/app/+state/app.interfaces.ts`, `src/app/+state/app.reducer.ts`,
+        `src/app/+state/app.actions.ts`, `src/app/+state/app.effects.ts`, `src/app/+state/app.effects.spec.ts`,
+        `src/app/+state/app.init.ts`, `src/app/+state/app.interfaces.ts`, `src/app/+state/app.reducer.ts`,
         `src/app/+state/app.reducer.spec.ts`);
 
     const contents = readFile('src/app/app.module.ts');

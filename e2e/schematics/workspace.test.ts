@@ -12,9 +12,7 @@ describe('Nrwl Workspace', () => {
     const packageJson = JSON.parse(readFile('package.json'));
     expect(packageJson.devDependencies['@nrwl/schematics']).toBeDefined();
     expect(packageJson.dependencies['@nrwl/nx']).toBeDefined();
-    checkFilesExists(
-        'test.js', 'tsconfig.app.json', 'tsconfig.spec.json', 'tsconfig.e2e.json', 'apps',
-        'libs');
+    checkFilesExists('test.js', 'tsconfig.app.json', 'tsconfig.spec.json', 'tsconfig.e2e.json', 'apps', 'libs');
   });
 
   describe('app', () => {
@@ -42,8 +40,7 @@ describe('Nrwl Workspace', () => {
       newApp('--collection=@nrwl/schematics --skip-install');
       runSchematic('@nrwl/schematics:lib --name=mylib');
 
-      checkFilesExists(
-          'libs/mylib/src/mylib.ts', 'libs/mylib/src/mylib.spec.ts', 'libs/mylib/index.ts');
+      checkFilesExists('libs/mylib/src/mylib.ts', 'libs/mylib/src/mylib.spec.ts', 'libs/mylib/index.ts');
     });
 
     it('should test a lib', () => {
@@ -61,9 +58,7 @@ describe('Nrwl Workspace', () => {
       newApp('--collection=@nrwl/schematics --skip-install');
       runSchematic('@nrwl/schematics:lib --name=mylib --ngmodule');
 
-      checkFilesExists(
-          'libs/mylib/src/mylib.module.ts', 'libs/mylib/src/mylib.module.spec.ts',
-          'libs/mylib/index.ts');
+      checkFilesExists('libs/mylib/src/mylib.module.ts', 'libs/mylib/src/mylib.module.spec.ts', 'libs/mylib/index.ts');
     });
 
     it('should test an ng lib', () => {

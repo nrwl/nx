@@ -8,8 +8,8 @@ describe('angular library', () => {
     runSchematic('@nrwl/bazel:nglib --name=myLib');
 
     checkFilesExists(
-        'tsconfig.json', 'WORKSPACE', 'BUILD.bazel', 'libs/my-lib/BUILD.bazel',
-        'libs/my-lib/index.ts', 'libs/my-lib/src/my-lib.module.ts');
+        'tsconfig.json', 'WORKSPACE', 'BUILD.bazel', 'libs/my-lib/BUILD.bazel', 'libs/my-lib/index.ts',
+        'libs/my-lib/src/my-lib.module.ts');
 
     const cliConfig = JSON.parse(readFile('.angular-cli.json'));
     expect(cliConfig.apps[0].name).toEqual('myLib');
