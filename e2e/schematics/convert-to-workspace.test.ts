@@ -4,29 +4,28 @@ describe('Nrwl Convert to Nx Workspace', () => {
   beforeEach(cleanup);
 
   it('should generate a workspace', () => {
-    newApp('new proj --skip-install --npmScope=nrwl');
+    newApp('--skip-install --npmScope=nrwl');
 
     // update package.json
-    const packageJson = JSON.parse(readFile('proj/package.json'));
+    const packageJson = JSON.parse(readFile('package.json'));
     packageJson.description = 'some description';
     packageJson.dependencies['@ngrx/store'] = '4.0.3';
     packageJson.devDependencies['@ngrx/router-store'] = '4.0.3';
-    updateFile('proj/package.json', JSON.stringify(packageJson, null, 2));
+    updateFile('package.json', JSON.stringify(packageJson, null, 2));
 
     // update tsconfig.json
-    const tsconfigJson = JSON.parse(readFile('proj/tsconfig.json'));
+    const tsconfigJson = JSON.parse(readFile('tsconfig.json'));
     tsconfigJson.compilerOptions.paths = {'a': ['b']};
-    updateFile('proj/tsconfig.json', JSON.stringify(tsconfigJson, null, 2));
-
+    updateFile('tsconfig.json', JSON.stringify(tsconfigJson, null, 2));
 
     // run the command
-    runSchematic('@nrwl/schematics:convert-to-workspace', {projectName: 'proj'});
+    runSchematic('@nrwl/schematics:convert-to-workspace');
 
     // check that files have been moved!
-    checkFilesExists('proj/apps/proj/src/main.ts', 'proj/apps/proj/src/app/app.module.ts');
+    checkFilesExists('apps/proj/src/main.ts', 'apps/proj/src/app/app.module.ts');
 
     // check that package.json got merged
-    const updatedPackageJson = JSON.parse(readFile('proj/package.json'));
+    const updatedPackageJson = JSON.parse(readFile('package.json'));
     expect(updatedPackageJson.description).toEqual('some description');
     expect(updatedPackageJson.dependencies['@ngrx/store']).toEqual('4.0.3');
     expect(updatedPackageJson.devDependencies['@ngrx/router-store']).toEqual('4.0.3');
@@ -34,7 +33,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     expect(updatedPackageJson.dependencies['@nrwl/nx']).toBeDefined();
 
     // check if angular-cli.json get merged
-    const updatedAngularCLIJson = JSON.parse(readFile('proj/.angular-cli.json'));
+    const updatedAngularCLIJson = JSON.parse(readFile('.angular-cli.json'));
     expect(updatedAngularCLIJson.apps[0].root).toEqual('apps/proj/src');
     expect(updatedAngularCLIJson.apps[0].outDir).toEqual('dist/apps/proj');
     expect(updatedAngularCLIJson.apps[0].test).toEqual('../../../test.js');
@@ -42,16 +41,16 @@ describe('Nrwl Convert to Nx Workspace', () => {
     expect(updatedAngularCLIJson.apps[0].testTsconfig).toEqual('../../../tsconfig.spec.json');
 
     // check if tsconfig.json get merged
-    const updatedTsConfig = JSON.parse(readFile('proj/tsconfig.json'));
-    expect(updatedTsConfig.compilerOptions.paths).toEqual({'a': ['b'], '@nrwl/*': ['libs/*']});
+    const updatedTsConfig = JSON.parse(readFile('tsconfig.json'));
+    expect(updatedTsConfig.compilerOptions.paths).toEqual({'a': ['b'], '@proj/*': ['libs/*']});
   });
 
   it('should build and test', () => {
-    newApp('new proj');
-    runSchematic('@nrwl/schematics:convert-to-workspace --npmScope=nrwl', {projectName: 'proj'});
-    runSchematic('@nrwl/schematics:lib --name=mylib --ngmodule', {projectName: 'proj'});
+    newApp();
+    runSchematic('@nrwl/schematics:convert-to-workspace --npmScope=nrwl');
+    runSchematic('@nrwl/schematics:lib --name=mylib --ngmodule');
 
-    updateFile('proj/apps/proj/src/app/app.module.ts', `
+    updateFile('apps/proj/src/app/app.module.ts', `
         import { NgModule } from '@angular/core';
         import { BrowserModule } from '@angular/platform-browser';
         import { MylibModule } from '@nrwl/mylib';
@@ -65,7 +64,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
         export class AppModule {}
       `);
 
-    expect(runCLI('build --aot', {projectName: 'proj'})).toContain('{main} main.bundle.js');
-    expect(runCLI('test --single-run', {projectName: 'proj'})).toContain('Executed 4 of 4 SUCCESS');
+    expect(runCLI('build --aot')).toContain('{main} main.bundle.js');
+    expect(runCLI('test --single-run')).toContain('Executed 4 of 4 SUCCESS');
   });
 });

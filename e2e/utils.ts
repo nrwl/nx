@@ -2,30 +2,31 @@ import {execSync} from 'child_process';
 import {readFileSync, statSync, writeFileSync} from 'fs';
 import * as path from 'path';
 
-export function newApp(command: string): string {
-  return execSync(`../node_modules/.bin/ng ${command}`, {cwd: `./tmp`}).toString();
+const projectName:string = 'proj';
+
+export function newApp(command?: string): string {
+  return execSync(`../node_modules/.bin/ng new proj ${command}`, {cwd: `./tmp`}).toString();
 }
-export function runCLI(command: string, {projectName: projectName}: {projectName: string}): string {
-  projectName = projectName === undefined ? '' : projectName;
+
+export function runCLI(command?: string): string {
   return execSync(`../../node_modules/.bin/ng ${command}`, {cwd: `./tmp/${projectName}`}).toString();
 }
-export function runSchematic(command: string, {projectName}: {projectName?: string} = {}): string {
-  const up = projectName ? '../' : '';
-  projectName = projectName === undefined ? '' : projectName;
-  return execSync(`../${up}node_modules/.bin/schematics ${command}`, {cwd: `./tmp/${projectName}`}).toString();
+
+export function runSchematic(command: string): string {
+  return execSync(`../../node_modules/.bin/schematics ${command}`, {cwd: `./tmp/${projectName}`}).toString();
 }
-export function runCommand(command: string, {projectName}: {projectName: string}): string {
-  projectName = projectName === undefined ? '' : projectName;
+
+export function runCommand(command: string): string {
   return execSync(command, {cwd: `./tmp/${projectName}`}).toString();
 }
 
 export function updateFile(f: string, content: string): void {
-  writeFileSync(path.join(getCwd(), 'tmp', f), content);
+  writeFileSync(path.join(getCwd(), 'tmp', 'proj', f), content);
 }
 
 export function checkFilesExists(...expectedFiles: string[]) {
   expectedFiles.forEach(f => {
-    const ff = f.startsWith('/') ? f : path.join(getCwd(), 'tmp', f);
+    const ff = f.startsWith('/') ? f : path.join(getCwd(), 'tmp', projectName, f);
     if (!exists(ff)) {
       throw new Error(`File '${ff}' does not exist`);
     }
@@ -33,7 +34,7 @@ export function checkFilesExists(...expectedFiles: string[]) {
 }
 
 export function readFile(f: string) {
-  const ff = f.startsWith('/') ? f : path.join(getCwd(), 'tmp', f);
+  const ff = f.startsWith('/') ? f : path.join(getCwd(), 'tmp', projectName, f);
   return readFileSync(ff).toString();
 }
 
@@ -65,7 +66,7 @@ export function exists(filePath: string): boolean {
   return directoryExists(filePath) || fileExists(filePath);
 }
 
-export function copyMissingPackages(path: string): void {
+export function copyMissingPackages(): void {
   const modulesToCopy = [
     '@ngrx',
     'jasmine-marbles',
@@ -73,7 +74,7 @@ export function copyMissingPackages(path: string): void {
     'angular',
     '@angular/upgrade',
   ];
-  modulesToCopy.forEach(m => copyNodeModule(path, m));
+  modulesToCopy.forEach(m => copyNodeModule(projectName, m));
 }
 
 function copyNodeModule(path: string, name: string) {
