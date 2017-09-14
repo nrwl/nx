@@ -23,5 +23,9 @@
     "tmp",
     "node_modules",
     "packages/schematics/src/*/files/**/*"
-  ]
+  ],
+  "angularCompilerOptions": {
+    "strictMetadataEmit": true,
+    "skipTemplateCodegen": true
+  }
 }

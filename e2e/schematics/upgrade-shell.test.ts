@@ -24,7 +24,7 @@ describe('Upgrade', () => {
         '@nrwl/schematics:upgrade-shell ' +
         '--module=src/app/app.module.ts ' +
         '--angularJsImport=../legacy ' +
-        '--angularJsCmpSelector=rootLegacyCmp');
+        '--angularJsCmpSelector=rootLegacyCmp ');
 
     runCLI('build');
     runCLI('test --single-run');

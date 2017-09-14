@@ -12,6 +12,7 @@ import {_throw} from 'rxjs/observable/throw';
 import {Subject} from 'rxjs/Subject';
 
 import {DataPersistence} from '../index';
+import {NxModule} from '../src/nx.module';
 import {readAll} from '../testing';
 
 // interfaces
@@ -76,9 +77,8 @@ describe('DataPersistence', () => {
         declarations: [RootCmp, TodoComponent],
         imports: [
           StoreModule.forRoot({todos: todosReducer, user: userReducer}), StoreRouterConnectingModule,
-          RouterTestingModule.withRoutes([{path: 'todo/:id', component: TodoComponent}])
-        ],
-        providers: [DataPersistence]
+          RouterTestingModule.withRoutes([{path: 'todo/:id', component: TodoComponent}]), NxModule.forRoot()
+        ]
       });
     });
 

@@ -25,11 +25,11 @@ describe('Nrwl Workspace', () => {
       expect(angularCliJson.apps[0].name).toEqual('myapp');
 
       checkFilesExists(
-          'proj/apps/myapp/src/main.ts', 'proj2/apps/myapp/src/app/app.module.ts',
-          'proj/apps/myapp/src/app/app.component.ts', 'proj2/apps/myapp/e2e/app.po.ts');
+          'apps/myapp/src/main.ts', 'apps/myapp/src/app/app.module.ts', 'apps/myapp/src/app/app.component.ts',
+          'apps/myapp/e2e/app.po.ts');
 
       runCLI('build --aot');
-      checkFilesExists('proj/dist/apps/myapp/main.bundle.js');
+      checkFilesExists('dist/apps/myapp/main.bundle.js');
 
       expect(runCLI('test --single-run')).toContain('Executed 1 of 1 SUCCESS');
     });

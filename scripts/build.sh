@@ -1,5 +1,5 @@
 #!/bin/bash
 
 rm -rf build
-tsc
+ngc
 rsync -a --exclude=*.ts packages/ build/packages

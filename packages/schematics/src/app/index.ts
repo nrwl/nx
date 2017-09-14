@@ -1,19 +1,35 @@
 import {apply, branchAndMerge, chain, externalSchematic, mergeWith, move, Rule, template, Tree, url} from '@angular-devkit/schematics';
 import {Schema} from './schema';
 import * as stringUtils from '@schematics/angular/strings';
-import {insert, toFileName} from '@nrwl/schematics';
+import {addImportToModule, insert, toFileName} from '@nrwl/schematics';
 import * as path from 'path';
 import * as ts from 'typescript';
-import {addBootstrapToModule, addImportToModule} from '@schematics/angular/utility/ast-utils';
+import {addBootstrapToModule} from '@schematics/angular/utility/ast-utils';
+import {insertImport} from '@schematics/angular/utility/route-utils';
 
 function addBootstrap(path: string): Rule {
   return (host: Tree) => {
     const modulePath = `${path}/app/app.module.ts`;
     const moduleSource = host.read(modulePath)!.toString('utf-8');
     const sourceFile = ts.createSourceFile(modulePath, moduleSource, ts.ScriptTarget.Latest, true);
-    const importChanges = addImportToModule(sourceFile, modulePath, 'BrowserModule', '@angular/platform-browser');
-    const bootstrapChanges = addBootstrapToModule(sourceFile, modulePath, 'AppComponent', './app.component');
-    insert(host, modulePath, [...importChanges, ...bootstrapChanges]);
+    insert(host, modulePath, [
+      insertImport(sourceFile, modulePath, 'BrowserModule', '@angular/platform-browser'),
+      ...addImportToModule(sourceFile, modulePath, 'BrowserModule'),
+      ...addBootstrapToModule(sourceFile, modulePath, 'AppComponent', './app.component')
+    ]);
+    return host;
+  };
+}
+
+function addNxModule(path: string): Rule {
+  return (host: Tree) => {
+    const modulePath = `${path}/app/app.module.ts`;
+    const moduleSource = host.read(modulePath)!.toString('utf-8');
+    const sourceFile = ts.createSourceFile(modulePath, moduleSource, ts.ScriptTarget.Latest, true);
+    insert(host, modulePath, [
+      insertImport(sourceFile, modulePath, 'NxModule', '@nrwl/nx'),
+      ...addImportToModule(sourceFile, modulePath, 'NxModule.forRoot()'),
+    ]);
     return host;
   };
 }
@@ -80,6 +96,6 @@ export default function(options: Schema): Rule {
       viewEncapsulation: options.viewEncapsulation,
       changeDetection: options.changeDetection
     }),
-    addBootstrap(fullPath), addAppToAngularCliJson(options)
+    addBootstrap(fullPath), addNxModule(fullPath), addAppToAngularCliJson(options)
   ]);
 }
