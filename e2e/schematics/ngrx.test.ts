@@ -5,82 +5,82 @@ describe('ngrx', () => {
 
   describe('root', () => {
     it('should generate', () => {
-      newApp('new proj --skip-import');
+      newApp('--skip-import');
 
-      runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --root', {projectName: 'proj'});
+      runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --root');
 
       checkFilesExists(
-          `proj/src/app/+state/app.actions.ts`, `proj/src/app/+state/app.effects.ts`,
-          `proj/src/app/+state/app.effects.spec.ts`, `proj/src/app/+state/app.init.ts`,
-          `proj/src/app/+state/app.interfaces.ts`, `proj/src/app/+state/app.reducer.ts`,
-          `proj/src/app/+state/app.reducer.spec.ts`);
+          `src/app/+state/app.actions.ts`, `src/app/+state/app.effects.ts`,
+          `src/app/+state/app.effects.spec.ts`, `src/app/+state/app.init.ts`,
+          `src/app/+state/app.interfaces.ts`, `src/app/+state/app.reducer.ts`,
+          `src/app/+state/app.reducer.spec.ts`);
 
-      const contents = readFile('proj/src/app/app.module.ts');
+      const contents = readFile('src/app/app.module.ts');
       expect(contents).toContain('StoreModule.forRoot');
       expect(contents).toContain('EffectsModule.forRoot');
     });
-
+    //
     it('should build', () => {
-      newApp('new proj');
-      copyMissingPackages('proj');
+      newApp();
+      copyMissingPackages();
 
-      runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --root', {projectName: 'proj'});
+      runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --root');
 
-      runCLI('build', {projectName: 'proj'});
-      runCLI('test --single-run', {projectName: 'proj'});
+      runCLI('build');
+      runCLI('test --single-run');
     }, 50000);
 
     it('should add empty root configuration', () => {
-      newApp('new proj2');
-      copyMissingPackages('proj2');
+      newApp();
+      copyMissingPackages();
 
-      runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --onlyEmptyRoot', {projectName: 'proj2'});
+      runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --onlyEmptyRoot');
 
-      const contents = readFile('proj2/src/app/app.module.ts');
+      const contents = readFile('src/app/app.module.ts');
       expect(contents).toContain('StoreModule.forRoot');
       expect(contents).toContain('EffectsModule.forRoot');
 
-      runCLI('build', {projectName: 'proj2'});
+      runCLI('build');
     }, 50000);
   });
 
   describe('feature', () => {
     it('should generate', () => {
-      newApp('new proj3 --skipInstall');
-      runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts', {projectName: 'proj3'});
+      newApp('--skipInstall');
+      runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts');
 
       checkFilesExists(
-          `proj3/src/app/+state/app.actions.ts`, `proj3/src/app/+state/app.effects.ts`,
-          `proj3/src/app/+state/app.effects.spec.ts`, `proj3/src/app/+state/app.init.ts`,
-          `proj3/src/app/+state/app.interfaces.ts`, `proj3/src/app/+state/app.reducer.ts`,
-          `proj3/src/app/+state/app.reducer.spec.ts`);
+          `src/app/+state/app.actions.ts`, `src/app/+state/app.effects.ts`,
+          `src/app/+state/app.effects.spec.ts`, `src/app/+state/app.init.ts`,
+          `src/app/+state/app.interfaces.ts`, `src/app/+state/app.reducer.ts`,
+          `src/app/+state/app.reducer.spec.ts`);
 
-      const contents = readFile('proj3/src/app/app.module.ts');
+      const contents = readFile('src/app/app.module.ts');
       expect(contents).toContain('StoreModule.forFeature');
       expect(contents).toContain('EffectsModule.forFeature');
     });
   });
 
   it('should generate files without importing them', () => {
-    newApp('new proj4 --skipInstall');
-    runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --onlyAddFiles', {projectName: 'proj4'});
+    newApp('--skipInstall');
+    runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --onlyAddFiles');
 
     checkFilesExists(
-        `proj4/src/app/+state/app.actions.ts`, `proj4/src/app/+state/app.effects.ts`,
-        `proj4/src/app/+state/app.effects.spec.ts`, `proj4/src/app/+state/app.init.ts`,
-        `proj4/src/app/+state/app.interfaces.ts`, `proj4/src/app/+state/app.reducer.ts`,
-        `proj4/src/app/+state/app.reducer.spec.ts`);
+        `src/app/+state/app.actions.ts`, `src/app/+state/app.effects.ts`,
+        `src/app/+state/app.effects.spec.ts`, `src/app/+state/app.init.ts`,
+        `src/app/+state/app.interfaces.ts`, `src/app/+state/app.reducer.ts`,
+        `src/app/+state/app.reducer.spec.ts`);
 
-    const contents = readFile('proj4/src/app/app.module.ts');
+    const contents = readFile('src/app/app.module.ts');
     expect(contents).not.toContain('StoreModule');
     expect(contents).not.toContain('EffectsModule');
   });
 
   it('should update package.json', () => {
-    newApp('new proj5 --skipInstall');
-    runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts', {projectName: 'proj5'});
+    newApp('--skipInstall');
+    runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts');
 
-    const contents = JSON.parse(readFile('proj5/package.json'));
+    const contents = JSON.parse(readFile('package.json'));
 
     expect(contents.dependencies['@ngrx/store']).toBeDefined();
     expect(contents.dependencies['@ngrx/router-store']).toBeDefined();

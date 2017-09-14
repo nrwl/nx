@@ -6,6 +6,6 @@ describe('workspace', () => {
   it('creates a new workspace for developing angular applications', () => {
     runSchematic('@nrwl/bazel:application --name=proj --version=0.1');
 
-    checkFilesExists(`proj/tsconfig.json`, `proj/WORKSPACE`, `proj/BUILD.bazel`);
+    checkFilesExists(`tsconfig.json`, `WORKSPACE`, `BUILD.bazel`);
   });
 });
