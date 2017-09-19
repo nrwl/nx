@@ -30,9 +30,9 @@ module.exports = function(env) {
 
   // victor todo: remove it when ng_module rule is fixed
   const alias = Object.assign({}, aliasesForApps, {
-    'node_modules/@angular/core/index': '@angular/core/bundles/core.umd',
-    'node_modules/@angular/common/index': `@angular/common/bundles/common.umd`,
-    'node_modules/@angular/platform-browser/index': '@angular/platform-browser/bundles/platform-browser.umd'
+    'node_modules/@angular/core/index': '@angular/core/esm5/index',
+    'node_modules/@angular/common/index': `@angular/common/esm5/index`,
+    'node_modules/@angular/platform-browser/index': '@angular/platform-browser/esm5/index'
   });
 
   return {
