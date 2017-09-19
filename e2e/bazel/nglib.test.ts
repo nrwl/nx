@@ -27,4 +27,13 @@ describe('angular library', () => {
       expect(runCLI('build')).not.toContain('error');
     });
   });
+
+  describe('test', () => {
+    it('should work', () => {
+      newBazelApp('--collection=@nrwl/bazel');
+      copyMissingPackages();
+      runSchematic('@nrwl/bazel:nglib --name=myLib');
+      expect(runCLI('test --single-run')).toContain('Executed 0 of 0');
+    });
+  });
 });

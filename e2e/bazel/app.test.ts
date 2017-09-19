@@ -41,4 +41,13 @@ describe('application', () => {
       expect(runCLI('build')).toContain('main.bundle.js');
     });
   });
+
+  describe('test', () => {
+    it('should work', () => {
+      newBazelApp('--collection=@nrwl/bazel');
+      copyMissingPackages();
+      runSchematic('@nrwl/bazel:app --name=app');
+      expect(runCLI('test --single-run')).toContain('Executed 1 of 1 SUCCESS');
+    });
+  });
 });
