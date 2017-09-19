@@ -12,7 +12,7 @@
     "linknpm": "./scripts/link.sh",
     "package": "./scripts/package.sh",
     "release": "./scripts/release.sh",
-    "copy-to-cli": "./scripts/copy-to-cli.sh",
+    "copy": "./scripts/copy.sh",
     "test": "yarn build && ./scripts/test.sh",
     "publish_npm": "./scripts/publish.sh",
     "postinstall": "./scripts/copy-clis.sh"
