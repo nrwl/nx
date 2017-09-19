@@ -4,6 +4,7 @@ load("@angular//:index.bzl", "ng_module")
 ng_module(
   name = "module",
   srcs = glob(["**/*.ts"]),
+  assets = glob(["**/*.css", "**/*.html"]),
   deps = [
     # "//libs/libname",
   ],

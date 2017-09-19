@@ -1,11 +1,19 @@
 import {execSync} from 'child_process';
-import {readFileSync, statSync, writeFileSync} from 'fs';
+import {linkSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync} from 'fs';
 import * as path from 'path';
 
 const projectName: string = 'proj';
 
 export function newApp(command?: string): string {
   return execSync(`../node_modules/.bin/ng new proj ${command}`, {cwd: `./tmp`}).toString();
+}
+
+export function newBazelApp(command?: string): string {
+  const res = newApp(command);
+  const cliPath = path.join('tmp', projectName, 'node_modules', '@angular', 'cli');
+  execSync(`rm -rf ${cliPath}`);
+  execSync(`cp -r node_modules/clis/bazel ${cliPath}`);
+  return res;
 }
 
 export function runCLI(command?: string): string {
@@ -80,8 +88,4 @@ export function copyMissingPackages(): void {
 function copyNodeModule(path: string, name: string) {
   execSync(`rm -rf tmp/${path}/node_modules/${name}`);
   execSync(`cp -r node_modules/${name} tmp/${path}/node_modules/${name}`);
-}
-
-export function addNodeModule(path: string, module: string): void {
-  execSync(`cp -r node_modules/${module} tmp/${path}/node_modules/${module}`);
 }

@@ -5,6 +5,7 @@ load("@nrwl//:webpack.bzl", "webpack_bundle")
 ng_module(
   name = "module",
   srcs = glob(["**/*.ts"], exclude = ["e2e/**/*.ts"]),
+  assets = glob(["**/*.css", "**/*.html"]),
   deps = [],
   tsconfig = "//:tsconfig.json"
 )
@@ -30,7 +31,7 @@ filegroup(
 )
 
 webpack_bundle(
-  name = "<%= name %>",
+  name = "<%= fileName %>",
   srcs = ["compile_and_static"],
   config = "@nrwl//:webpack.config.js"
 )

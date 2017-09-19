@@ -27,11 +27,13 @@ module.exports = function(env) {
     return acc;
   }, {});
 
+  const root = path.join(binDir, '..', '..', '..');
+
   // victor todo: remove it when ng_module rule is fixed
   const alias = Object.assign({}, aliasesForApps, {
-    '@angular/core/core': '@angular/core/@angular/core.es5',
-    '@angular/common/common': '@angular/common/@angular/common.es5',
-    '@angular/platform-browser/platform-browser': '@angular/platform-browser/@angular/platform-browser.es5'
+    'node_modules/@angular/core/index': '@angular/core/bundles/core.umd',
+    'node_modules/@angular/common/index': `@angular/common/bundles/common.umd`,
+    'node_modules/@angular/platform-browser/index': '@angular/platform-browser/bundles/platform-browser.umd'
   });
 
   return {
@@ -40,7 +42,8 @@ module.exports = function(env) {
         ".js"
       ],
       "modules": [
-        "./node_modules"
+        binDir,
+        `./node_modules`,
       ],
       "symlinks": true,
       alias

@@ -7,13 +7,15 @@
   "scripts": {
     "build": "./scripts/build.sh",
     "e2e": "yarn build && ./scripts/e2e.sh",
+    "e2e:bazel": "yarn build && ./scripts/e2e-bazel.sh",
     "format": "./scripts/format.sh",
     "linknpm": "./scripts/link.sh",
     "package": "./scripts/package.sh",
     "release": "./scripts/release.sh",
     "copy-to-cli": "./scripts/copy-to-cli.sh",
     "test": "yarn build && ./scripts/test.sh",
-    "publish_npm": "./scripts/publish.sh"
+    "publish_npm": "./scripts/publish.sh",
+    "postinstall": "./scripts/copy-clis.sh"
   },
   "dependencies" :{
     "jasmine-marbles": "0.1.0"
@@ -30,6 +32,7 @@
     "@angular/upgrade": "4.3.5",
     "@angular/compiler-cli": "4.3.5",
     "@angular/cli": "nrwl/fix-cli-build",
+    "bazel-cli": "nrwl/bazel-cli-build",
     "@ngrx/store": "4.0.3",
     "@ngrx/router-store": "4.0.3",
     "@ngrx/effects": "4.0.3",
