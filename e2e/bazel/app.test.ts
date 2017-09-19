@@ -37,7 +37,7 @@ describe('application', () => {
     it('should work', () => {
       newBazelApp('--collection=@nrwl/bazel');
       copyMissingPackages();
-      runSchematic('@nrwl/bazel:app --name=app');
+      runSchematic('@nrwl/bazel:app --name=myApp');
       expect(runCLI('build')).toContain('main.bundle.js');
     });
   });
@@ -46,7 +46,7 @@ describe('application', () => {
     it('should work', () => {
       newBazelApp('--collection=@nrwl/bazel');
       copyMissingPackages();
-      runSchematic('@nrwl/bazel:app --name=app');
+      runSchematic('@nrwl/bazel:app --name=myApp');
       expect(runCLI('test --single-run')).toContain('Executed 1 of 1 SUCCESS');
     });
   });

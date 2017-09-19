@@ -9,7 +9,7 @@ ng_module(
     # "//libs/libname",
   ],
   tsconfig = "//:tsconfig.json",
-  module_name = "<%= name %>"
+  module_name = "<%= fileName %>"
 )
 
 genrule(
@@ -24,7 +24,7 @@ genrule(
 )
 
 filegroup(
-  name = "<%= name %>",
+  name = "<%= fileName %>",
   srcs = [
     ":module",
     ":copy_static"
@@ -34,6 +34,6 @@ filegroup(
 filegroup(
   name = "compile_and_static",
   srcs = [
-    ":<%= name %>"
+    ":<%= fileName %>"
   ]
 )

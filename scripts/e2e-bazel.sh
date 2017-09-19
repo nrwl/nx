@@ -2,4 +2,4 @@
 
 ./scripts/link.sh
 rm -rf tmp
-jest --maxWorkers=1 ./build/e2e/bazel/nglib.test.js
+jest --maxWorkers=1 ./build/e2e/bazel

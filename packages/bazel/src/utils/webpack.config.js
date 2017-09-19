@@ -15,9 +15,8 @@ const entryPoints = ["inline", "polyfills", "styles", "vendor", "main"];
 const baseHref = "";
 
 module.exports = function(env) {
-  const name = path.parse(env.package).name;
   const apps = JSON.parse(fs.readFileSync(path.join(process.cwd(), '.angular-cli.json'), 'UTF-8')).apps;
-  const appConfig = apps.filter(a => a.name === name)[0];
+  const appConfig = apps.filter(a => a.root.indexOf(env.package) > -1)[0];
   const binDir = env.bin_dir.startsWith('/') ? env.bin_dir : path.join(process.cwd(), env.bin_dir);
   const out = path.join(binDir, env.package, 'bundles');
   const src = path.join(binDir, appConfig.root);
