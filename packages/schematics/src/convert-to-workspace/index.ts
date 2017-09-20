@@ -46,6 +46,7 @@ function updateAngularCLIJson() {
     app.test = '../../../test.js';
     app.tsconfig = '../../../tsconfig.app.json';
     app.testTsconfig = '../../../tsconfig.spec.json';
+    app.scripts = app.scripts.map((p) => path.join('../../', p));
 
     host.overwrite('.angular-cli.json', JSON.stringify(angularCliJson, null, 2));
 
@@ -81,6 +82,23 @@ function updateTsConfigsJson(options: Schema) {
       json.exclude = dedup(json.exclude.concat(['**/*.spec.ts', 'node_modules', 'tmp']));
       setUpCompilerOptions(json, npmScope);
     });
+
+    return host;
+  };
+}
+
+function updateProtractorConf() {
+  return (host: Tree) => {
+    if (!host.exists('protractor.conf.js')) {
+      throw new Error('Cannot find protractor.conf.js');
+    }
+    const protractorConf = host.read('protractor.conf.js')!.toString('utf-8');
+    const angularCliJson = JSON.parse(host.read('.angular-cli.json')!.toString('utf-8'));
+
+    protractorConf.replace(`'./e2e/**/*.e2e-spec.ts'`, `'.apps/${angularCliJson.project.name}/e2e/**/*.e2e-spec.ts'`)
+      .replace(`'e2e/tsconfig.e2e.json'`, `'./tsconfig.e2e.json'`);
+
+    host.overwrite('protractor.conf.js', JSON.stringify(protractorConf, null, 2));
 
     return host;
   };
@@ -129,6 +147,6 @@ export default function(options: Schema): Rule {
     moveFiles(), branchAndMerge(chain([
       mergeWith(apply(url('./files'), [])),
     ])),
-    updatePackageJson(), updateAngularCLIJson(), updateTsConfigsJson(options)
+    updatePackageJson(), updateAngularCLIJson(), updateTsConfigsJson(options), updateProtractorConf()
   ]);
 }

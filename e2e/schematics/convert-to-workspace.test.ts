@@ -15,8 +15,13 @@ describe('Nrwl Convert to Nx Workspace', () => {
 
     // update tsconfig.json
     const tsconfigJson = JSON.parse(readFile('tsconfig.json'));
-    tsconfigJson.compilerOptions.paths = {'a': ['b']};
+    tsconfigJson.compilerOptions.paths = { 'a': ['b'] };
     updateFile('tsconfig.json', JSON.stringify(tsconfigJson, null, 2));
+
+    // update angular-cli.json
+    const angularCLIJson = JSON.parse(readFile('.angular-cli.json'));
+    angularCLIJson.apps[0].scripts = ['../node_modules/x.js'];
+    updateFile('.angular-cli.json', JSON.stringify(angularCLIJson, null, 2));
 
     // run the command
     runSchematic('@nrwl/schematics:convert-to-workspace');
@@ -39,10 +44,12 @@ describe('Nrwl Convert to Nx Workspace', () => {
     expect(updatedAngularCLIJson.apps[0].test).toEqual('../../../test.js');
     expect(updatedAngularCLIJson.apps[0].tsconfig).toEqual('../../../tsconfig.app.json');
     expect(updatedAngularCLIJson.apps[0].testTsconfig).toEqual('../../../tsconfig.spec.json');
+    expect(updatedAngularCLIJson.apps[0].scripts[0]).toEqual('../../../node_modules/x.js');
 
     // check if tsconfig.json get merged
     const updatedTsConfig = JSON.parse(readFile('tsconfig.json'));
-    expect(updatedTsConfig.compilerOptions.paths).toEqual({'a': ['b'], '@proj/*': ['libs/*']});
+    expect(updatedTsConfig.compilerOptions.paths).toEqual({ 'a': ['b'], '@proj/*': ['libs/*'] });
+
   });
 
   it('should build and test', () => {
@@ -65,6 +72,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
       `);
 
     expect(runCLI('build --aot')).toContain('{main} main.bundle.js');
-    expect(runCLI('test --single-run')).toContain('Executed 4 of 4 SUCCESS');
+    expect(runCLI('test --single-run')).toContain('Executed 3 of 3 SUCCESS');
+    expect(runCLI('e2e')).toContain('Executed 1 of 1 spec SUCCESS');
   });
 });
