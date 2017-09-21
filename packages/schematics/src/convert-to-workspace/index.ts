@@ -22,7 +22,6 @@ function updatePackageJson() {
     packageJson.dependencies['@nrwl/nx'] = nxVersion;
     packageJson.devDependencies['@nrwl/schematics'] = schematicsVersion;
     host.overwrite('package.json', JSON.stringify(packageJson, null, 2));
-
     return host;
   };
 }
@@ -47,6 +46,13 @@ function updateAngularCLIJson() {
     app.tsconfig = '../../../tsconfig.app.json';
     app.testTsconfig = '../../../tsconfig.spec.json';
     app.scripts = app.scripts.map((p) => path.join('../../', p));
+    if (!app.defaults) {
+      app.defaults = {};
+    }
+    if (!app.defaults.schematics) {
+      app.defaults.schematics = {};
+    }
+    app.defaults.schematics['newProject'] = ['app', 'lib'];
 
     host.overwrite('.angular-cli.json', JSON.stringify(angularCliJson, null, 2));
 
@@ -96,7 +102,7 @@ function updateProtractorConf() {
     const angularCliJson = JSON.parse(host.read('.angular-cli.json')!.toString('utf-8'));
 
     protractorConf.replace(`'./e2e/**/*.e2e-spec.ts'`, `'.apps/${angularCliJson.project.name}/e2e/**/*.e2e-spec.ts'`)
-      .replace(`'e2e/tsconfig.e2e.json'`, `'./tsconfig.e2e.json'`);
+        .replace(`'e2e/tsconfig.e2e.json'`, `'./tsconfig.e2e.json'`);
 
     host.overwrite('protractor.conf.js', JSON.stringify(protractorConf, null, 2));
 

@@ -4,10 +4,13 @@
   "title": "Add NgRx support to a module",
   "type": "object",
   "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the directory (e.g., state)."
+    },
     "module": {
       "type": "string",
-      "description": "Path to anAngular module (e.g., src/app/app.module.ts).",
-      "alias": "name"
+      "description": "Path to an Angular module (e.g., src/app/app.module.ts)."
     },
     "onlyAddFiles": {
       "type": "boolean",
@@ -31,6 +34,7 @@
     }
   },
   "required": [
+    "name",
     "module"
   ]
 }

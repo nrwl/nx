@@ -15,7 +15,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
 
     // update tsconfig.json
     const tsconfigJson = JSON.parse(readFile('tsconfig.json'));
-    tsconfigJson.compilerOptions.paths = { 'a': ['b'] };
+    tsconfigJson.compilerOptions.paths = {'a': ['b']};
     updateFile('tsconfig.json', JSON.stringify(tsconfigJson, null, 2));
 
     // update angular-cli.json
@@ -48,7 +48,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
 
     // check if tsconfig.json get merged
     const updatedTsConfig = JSON.parse(readFile('tsconfig.json'));
-    expect(updatedTsConfig.compilerOptions.paths).toEqual({ 'a': ['b'], '@proj/*': ['libs/*'] });
+    expect(updatedTsConfig.compilerOptions.paths).toEqual({'a': ['b'], '@proj/*': ['libs/*']});
 
   });
 

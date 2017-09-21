@@ -1,13 +1,12 @@
-import {checkFilesExists, cleanup, copyMissingPackages, newApp, readFile, runCLI, runCommand, runSchematic, updateFile} from '../utils';
+import {checkFilesExists, cleanup, copyMissingPackages, newApp, readFile, runCLI} from '../utils';
 
 describe('ngrx', () => {
   beforeEach(cleanup);
 
   describe('root', () => {
     it('should generate', () => {
-      newApp('--skip-import');
-
-      runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --root');
+      newApp('--skip-install');
+      runCLI('generate ngrx app --module=src/app/app.module.ts --root --collection=@nrwl/schematics');
 
       checkFilesExists(
           `src/app/+state/app.actions.ts`, `src/app/+state/app.effects.ts`, `src/app/+state/app.effects.spec.ts`,
@@ -18,12 +17,11 @@ describe('ngrx', () => {
       expect(contents).toContain('StoreModule.forRoot');
       expect(contents).toContain('EffectsModule.forRoot');
     });
-    //
+
     it('should build', () => {
       newApp();
       copyMissingPackages();
-
-      runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --root');
+      runCLI('generate ngrx app --module=src/app/app.module.ts --root --collection=@nrwl/schematics');
 
       runCLI('build');
       runCLI('test --single-run');
@@ -32,8 +30,7 @@ describe('ngrx', () => {
     it('should add empty root configuration', () => {
       newApp();
       copyMissingPackages();
-
-      runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --onlyEmptyRoot');
+      runCLI('generate ngrx app --module=src/app/app.module.ts --onlyEmptyRoot --collection=@nrwl/schematics');
 
       const contents = readFile('src/app/app.module.ts');
       expect(contents).toContain('StoreModule.forRoot');
@@ -45,8 +42,8 @@ describe('ngrx', () => {
 
   describe('feature', () => {
     it('should generate', () => {
-      newApp('--skipInstall');
-      runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts');
+      newApp('--skip-install');
+      runCLI('generate ngrx app --module=src/app/app.module.ts --collection=@nrwl/schematics');
 
       checkFilesExists(
           `src/app/+state/app.actions.ts`, `src/app/+state/app.effects.ts`, `src/app/+state/app.effects.spec.ts`,
@@ -60,8 +57,8 @@ describe('ngrx', () => {
   });
 
   it('should generate files without importing them', () => {
-    newApp('--skipInstall');
-    runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts --onlyAddFiles');
+    newApp('--skip-install');
+    runCLI('generate ngrx app --module=src/app/app.module.ts --onlyAddFiles --collection=@nrwl/schematics');
 
     checkFilesExists(
         `src/app/+state/app.actions.ts`, `src/app/+state/app.effects.ts`, `src/app/+state/app.effects.spec.ts`,
@@ -74,8 +71,8 @@ describe('ngrx', () => {
   });
 
   it('should update package.json', () => {
-    newApp('--skipInstall');
-    runSchematic('@nrwl/schematics:ngrx --module=src/app/app.module.ts');
+    newApp('--skip-install');
+    runCLI('generate ngrx app --module=src/app/app.module.ts --collection=@nrwl/schematics');
 
     const contents = JSON.parse(readFile('package.json'));
 

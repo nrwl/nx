@@ -107,7 +107,7 @@ function addNgRxToPackageJson() {
 }
 
 export default function(options: Schema): Rule {
-  const name = path.basename(options.module, '.module.ts');
+  const name = options.name;
   const moduleDir = path.dirname(options.module);
 
   if (options.onlyEmptyRoot) {

@@ -17,43 +17,43 @@
     "publish_npm": "./scripts/publish.sh",
     "postinstall": "./scripts/copy-clis.sh"
   },
-  "dependencies" :{
+  "dependencies": {
     "jasmine-marbles": "0.1.0"
   },
   "devDependencies": {
-    "rxjs": "5.4.3",
-    "@angular-devkit/schematics": "0.0.19",
-    "@angular/core": "4.3.5",
+    "@schematics/angular": "^0.0.36",
+    "@angular-devkit/schematics": "^0.0.24",
+    "@angular/cli": "nrwl/fix-cli-build",
     "@angular/common": "4.3.5",
-    "@angular/platform-browser": "4.3.5",
     "@angular/compiler": "4.3.5",
+    "@angular/compiler-cli": "4.3.5",
+    "@angular/core": "4.3.5",
+    "@angular/platform-browser": "4.3.5",
     "@angular/platform-browser-dynamic": "4.3.5",
     "@angular/router": "4.3.5",
     "@angular/upgrade": "4.3.5",
-    "@angular/compiler-cli": "4.3.5",
-    "@angular/cli": "nrwl/fix-cli-build",
-    "bazel-cli": "nrwl/bazel-cli-build",
-    "@ngrx/store": "4.0.3",
-    "@ngrx/router-store": "4.0.3",
     "@ngrx/effects": "4.0.3",
+    "@ngrx/router-store": "4.0.3",
+    "@ngrx/store": "4.0.3",
     "@ngrx/store-devtools": "^4.0.0",
-    "typescript": "2.4.2",
-    "@types/node": "8.0.7",
     "@types/jasmine": "2.5.53",
-    "jest": "20.0.4",
-    "@schematics/angular": "0.0.30",
+    "@types/node": "8.0.7",
+    "angular": "1.6.6",
+    "bazel-cli": "nrwl/bazel-cli-build",
+    "clang-format": "^1.0.32",
     "jasmine-core": "~2.6.2",
+    "jest": "20.0.4",
     "karma": "~1.7.0",
     "karma-chrome-launcher": "~2.1.1",
     "karma-jasmine": "~1.1.0",
     "karma-webpack": "2.0.4",
-    "clang-format": "^1.0.32",
-    "angular": "1.6.6",
-    "semver": "^5.4.1"
+    "rxjs": "5.4.3",
+    "semver": "^5.4.1",
+    "typescript": "2.4.2"
   },
   "author": "Victor Savkin",
   "license": "MIT",
-  "jest" : {
+  "jest": {
     "modulePathIgnorePatterns": [
       "tmp",
       "files"

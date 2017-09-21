@@ -1,4 +1,4 @@
-import {checkFilesExists, cleanup, copyMissingPackages, newApp, readFile, runCLI, runSchematic, updateFile} from '../utils';
+import {checkFilesExists, cleanup, copyMissingPackages, newApp, readFile, runCLI, updateFile} from '../utils';
 
 describe('Nrwl Workspace', () => {
   beforeEach(cleanup);
@@ -17,9 +17,8 @@ describe('Nrwl Workspace', () => {
 
   describe('app', () => {
     it('should generate an app', () => {
-      newApp('--collection=@nrwl/schematics');
-      copyMissingPackages();
-      runSchematic('@nrwl/schematics:app --name=myapp');
+      newApp('--collection=@nrwl/schematics --skip-install');
+      runCLI('generate app myapp --collection=@nrwl/schematics');
 
       const angularCliJson = JSON.parse(readFile('.angular-cli.json'));
       expect(angularCliJson.apps[0].name).toEqual('myapp');
@@ -27,10 +26,14 @@ describe('Nrwl Workspace', () => {
       checkFilesExists(
           'apps/myapp/src/main.ts', 'apps/myapp/src/app/app.module.ts', 'apps/myapp/src/app/app.component.ts',
           'apps/myapp/e2e/app.po.ts');
+    });
 
+    it('should build app', () => {
+      newApp('--collection=@nrwl/schematics');
+      copyMissingPackages();
+      runCLI('generate app myapp --collection=@nrwl/schematics');
       runCLI('build --aot');
       checkFilesExists('dist/apps/myapp/main.bundle.js');
-
       expect(runCLI('test --single-run')).toContain('Executed 1 of 1 SUCCESS');
     });
   });
@@ -38,7 +41,7 @@ describe('Nrwl Workspace', () => {
   describe('lib', () => {
     it('should generate a lib', () => {
       newApp('--collection=@nrwl/schematics --skip-install');
-      runSchematic('@nrwl/schematics:lib --name=mylib');
+      runCLI('generate lib mylib --collection=@nrwl/schematics');
 
       checkFilesExists('libs/mylib/src/mylib.ts', 'libs/mylib/src/mylib.spec.ts', 'libs/mylib/index.ts');
     });
@@ -46,8 +49,8 @@ describe('Nrwl Workspace', () => {
     it('should test a lib', () => {
       newApp('--collection=@nrwl/schematics');
       copyMissingPackages();
-      runSchematic('@nrwl/schematics:app --name=myapp');
-      runSchematic('@nrwl/schematics:lib --name=mylib');
+      runCLI('generate app myapp --collection=@nrwl/schematics');
+      runCLI('generate lib mylib --collection=@nrwl/schematics');
 
       expect(runCLI('test --single-run')).toContain('Executed 2 of 2 SUCCESS');
     });
@@ -56,7 +59,7 @@ describe('Nrwl Workspace', () => {
   describe('nglib', () => {
     it('should generate an ng lib', () => {
       newApp('--collection=@nrwl/schematics --skip-install');
-      runSchematic('@nrwl/schematics:lib --name=mylib --ngmodule');
+      runCLI('generate lib mylib --collection=@nrwl/schematics --ngmodule');
 
       checkFilesExists('libs/mylib/src/mylib.module.ts', 'libs/mylib/src/mylib.module.spec.ts', 'libs/mylib/index.ts');
     });
@@ -64,8 +67,8 @@ describe('Nrwl Workspace', () => {
     it('should test an ng lib', () => {
       newApp('--collection=@nrwl/schematics');
       copyMissingPackages();
-      runSchematic('@nrwl/schematics:app --name=myapp');
-      runSchematic('@nrwl/schematics:lib --name=mylib --ngmodule');
+      runCLI('generate app myapp --collection=@nrwl/schematics');
+      runCLI('generate lib mylib --collection=@nrwl/schematics --ngmodule');
 
       expect(runCLI('test --single-run')).toContain('Executed 2 of 2 SUCCESS');
     });
@@ -73,8 +76,8 @@ describe('Nrwl Workspace', () => {
     it('should resolve dependencies on the lib', () => {
       newApp('--collection=@nrwl/schematics --npmScope=nrwl');
       copyMissingPackages();
-      runSchematic('@nrwl/schematics:app --name=myapp');
-      runSchematic('@nrwl/schematics:lib --name=mylib --ngmodule');
+      runCLI('generate app myapp --collection=@nrwl/schematics');
+      runCLI('generate lib mylib --collection=@nrwl/schematics --ngmodule');
 
       updateFile('apps/myapp/src/app/app.module.ts', `
         import { NgModule } from '@angular/core';

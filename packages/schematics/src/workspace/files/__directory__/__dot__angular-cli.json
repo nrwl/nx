@@ -26,6 +26,9 @@
     }
   },
   "defaults": {
+    "schematics": {
+      "newProject": ["app", "lib"]
+    },
     "styleExt": "<%= style %>",<% if (!minimal) { %>
     "component": {}<% } else { %>
     "component": {

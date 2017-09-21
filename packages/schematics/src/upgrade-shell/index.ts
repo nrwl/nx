@@ -9,7 +9,7 @@ import {Schema} from './schema';
 import {angularJsVersion} from '../utility/lib-versions';
 
 
-function addImportsToModule(moduleClassName: string, angularJsModule: string, options: Schema): Rule {
+function addImportsToModule(moduleClassName: string, options: Schema): Rule {
   return (host: Tree) => {
     if (!host.exists(options.module)) {
       throw new Error('Specified module does not exist');
@@ -22,8 +22,8 @@ function addImportsToModule(moduleClassName: string, angularJsModule: string, op
 
     insert(host, modulePath, [
       insertImport(
-          source, modulePath, `configure${toClassName(angularJsModule)}, upgradedComponents`,
-          `./${toFileName(angularJsModule)}-setup`),
+          source, modulePath, `configure${toClassName(options.name)}, upgradedComponents`,
+          `./${toFileName(options.name)}-setup`),
       insertImport(source, modulePath, 'UpgradeModule', '@angular/upgrade/static'),
       ...addImportToModule(source, modulePath, 'UpgradeModule'),
       ...addDeclarationToModule(source, modulePath, '...upgradedComponents'),
@@ -35,7 +35,7 @@ function addImportsToModule(moduleClassName: string, angularJsModule: string, op
 }
 
 
-function addNgDoBootstrapToModule(moduleClassName: string, angularJsModule: string, options: Schema): Rule {
+function addNgDoBootstrapToModule(moduleClassName: string, options: Schema): Rule {
   return (host: Tree) => {
     const modulePath = options.module;
     const sourceText = host.read(modulePath)!.toString('utf-8');
@@ -48,8 +48,8 @@ function addNgDoBootstrapToModule(moduleClassName: string, angularJsModule: stri
         className: moduleClassName,
         methodHeader: 'ngDoBootstrap(): void',
         body: `
-configure${toClassName(angularJsModule)}(this.upgrade.injector);
-this.upgrade.bootstrap(document.body, ['downgraded', '${angularJsModule}']);
+configure${toClassName(options.name)}(this.upgrade.injector);
+this.upgrade.bootstrap(document.body, ['downgraded', '${options.name}']);
         `
       }),
       ...removeFromNgModule(source, modulePath, 'bootstrap')
@@ -59,7 +59,7 @@ this.upgrade.bootstrap(document.body, ['downgraded', '${angularJsModule}']);
   };
 }
 
-function createFiles(moduleClassName: string, moduleFileName: string, angularJsModule: string, options: Schema): Rule {
+function createFiles(angularJsImport: string, moduleClassName: string, moduleFileName: string, options: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const modulePath = options.module;
     const moduleSourceText = host.read(modulePath)!.toString('utf-8');
@@ -76,10 +76,11 @@ function createFiles(moduleClassName: string, moduleFileName: string, angularJsM
         tmpl: '',
         moduleFileName,
         moduleClassName,
-        angularJsModule,
+        angularJsImport,
+        angularJsModule: options.name,
         bootstrapComponentClassName,
         bootstrapComponentFileName,
-        ...names(angularJsModule)
+        ...names(options.name)
       }),
       move(moduleDir)
     ]);
@@ -114,12 +115,11 @@ function addUpgradeToPackageJson() {
 export default function(options: Schema): Rule {
   const moduleFileName = path.basename(options.module, '.ts');
   const moduleClassName = `${toClassName(moduleFileName)}`;
-  const angularJsModule = options.angularJsModule ? options.angularJsModule : path.basename(options.angularJsImport);
+  const angularJsImport = options.angularJsImport ? options.angularJsImport : options.name;
 
   return chain([
-    createFiles(moduleClassName, moduleFileName, angularJsModule, options),
-    addImportsToModule(moduleClassName, angularJsModule, options),
-    addNgDoBootstrapToModule(moduleClassName, angularJsModule, options),
+    createFiles(angularJsImport, moduleClassName, moduleFileName, options),
+    addImportsToModule(moduleClassName, options), addNgDoBootstrapToModule(moduleClassName, options),
     options.skipPackageJson ? noop() : addUpgradeToPackageJson()
   ]);
 }

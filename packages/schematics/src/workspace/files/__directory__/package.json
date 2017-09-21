@@ -27,7 +27,7 @@
     "@nrwl/nx": "<%= nxVersion %>"
   },
   "devDependencies": {
-    "@angular/cli": "<%= version %>",
+    "@angular/cli": "nrwl/fix-cli-build",
     "@angular/compiler-cli": "^4.2.4",
     "@nrwl/schematics": "<%= schematicsVersion %>",
     "@angular/language-service": "^4.2.4",<% if (!minimal) { %>

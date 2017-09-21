@@ -4,18 +4,17 @@
   "title": "Add an upgrade shell to an application",
   "type": "object",
   "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name of the main AngularJS module."
+    },
     "module": {
       "type": "string",
-      "description": "Path to the Angular module with a bootstrap component (e.g., --module=src/app/app.module.ts).",
-      "alias": "name"
+      "description": "Path to the Angular module with a bootstrap component (e.g., --module=src/app/app.module.ts)."
     },
     "angularJsImport": {
       "type": "string",
       "description": "Import expression of the AngularJS application (e.g., --angularJsImport=some_node_module/my_app)."
-    },
-    "angularJsModule": {
-      "type": "string",
-      "description": "The name of the main AngularJS module (e.g., --angularJsModule=myAppModule). If not specified, the last segment of angularJsImport will be used."
     },
     "angularJsCmpSelector": {
       "type": "string",
@@ -33,8 +32,7 @@
     }
   },
   "required": [
-    "module",
-    "angularJsImport",
-    "angularJsCmpSelector"
+    "name",
+    "module"
   ]
 }
