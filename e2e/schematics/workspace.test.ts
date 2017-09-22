@@ -46,6 +46,9 @@ describe('Nrwl Workspace', () => {
       const angularCliJson = JSON.parse(readFile('.angular-cli.json'));
       expect(angularCliJson.apps[0].name).toEqual('mylib');
 
+      const angularCliJson = JSON.parse(readFile('.angular-cli.json'));
+      expect(angularCliJson.apps[0].name).toEqual('mylib');
+
       checkFilesExists('libs/mylib/src/mylib.ts', 'libs/mylib/src/mylib.spec.ts', 'libs/mylib/index.ts');
     });
 
