@@ -1,10 +1,10 @@
-import {checkFilesExists, cleanup, newApp, readFile, runCLI, runSchematic, updateFile} from '../utils';
+import {checkFilesExists, cleanup, ngNew, readFile, runCLI, runSchematic, updateFile} from '../utils';
 
 describe('Nrwl Convert to Nx Workspace', () => {
   beforeEach(cleanup);
 
   it('should generate a workspace', () => {
-    newApp('--skip-install --npmScope=nrwl');
+    ngNew('--skip-install --npmScope=nrwl');
 
     // update package.json
     const packageJson = JSON.parse(readFile('package.json'));
@@ -53,7 +53,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
   });
 
   it('should build and test', () => {
-    newApp();
+    ngNew();
     runSchematic('@nrwl/schematics:convert-to-workspace --npmScope=nrwl');
     runSchematic('@nrwl/schematics:lib --name=mylib --ngmodule');
 

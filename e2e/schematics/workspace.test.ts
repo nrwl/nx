@@ -1,10 +1,10 @@
-import {checkFilesExists, cleanup, copyMissingPackages, newApp, readFile, runCLI, updateFile} from '../utils';
+import {checkFilesExists, cleanup, copyMissingPackages, newApp, newLib, ngNew, readFile, runCLI, updateFile} from '../utils';
 
 describe('Nrwl Workspace', () => {
   beforeEach(cleanup);
 
   it('should generate an empty workspace', () => {
-    newApp('--collection=@nrwl/schematics --skip-install');
+    ngNew('--collection=@nrwl/schematics --skip-install');
 
     const angularCliJson = JSON.parse(readFile('.angular-cli.json'));
     expect(angularCliJson.apps).toEqual([]);
@@ -17,8 +17,8 @@ describe('Nrwl Workspace', () => {
 
   describe('app', () => {
     it('should generate an app', () => {
-      newApp('--collection=@nrwl/schematics --skip-install');
-      runCLI('generate app myapp --collection=@nrwl/schematics');
+      ngNew('--collection=@nrwl/schematics --skip-install');
+      newApp('myapp');
 
       const angularCliJson = JSON.parse(readFile('.angular-cli.json'));
       expect(angularCliJson.apps[0].name).toEqual('myapp');
@@ -29,9 +29,9 @@ describe('Nrwl Workspace', () => {
     });
 
     it('should build app', () => {
-      newApp('--collection=@nrwl/schematics');
+      ngNew('--collection=@nrwl/schematics');
       copyMissingPackages();
-      runCLI('generate app myapp --collection=@nrwl/schematics');
+      newApp('myapp');
       runCLI('build --aot');
       checkFilesExists('dist/apps/myapp/main.bundle.js');
       expect(runCLI('test --single-run')).toContain('Executed 1 of 1 SUCCESS');
@@ -40,17 +40,20 @@ describe('Nrwl Workspace', () => {
 
   describe('lib', () => {
     it('should generate a lib', () => {
-      newApp('--collection=@nrwl/schematics --skip-install');
-      runCLI('generate lib mylib --collection=@nrwl/schematics');
+      ngNew('--collection=@nrwl/schematics --skip-install');
+      newLib('mylib');
+
+      const angularCliJson = JSON.parse(readFile('.angular-cli.json'));
+      expect(angularCliJson.apps[0].name).toEqual('mylib');
 
       checkFilesExists('libs/mylib/src/mylib.ts', 'libs/mylib/src/mylib.spec.ts', 'libs/mylib/index.ts');
     });
 
     it('should test a lib', () => {
-      newApp('--collection=@nrwl/schematics');
+      ngNew('--collection=@nrwl/schematics');
       copyMissingPackages();
-      runCLI('generate app myapp --collection=@nrwl/schematics');
-      runCLI('generate lib mylib --collection=@nrwl/schematics');
+      newApp('myapp');
+      newLib('generate lib mylib');
 
       expect(runCLI('test --single-run')).toContain('Executed 2 of 2 SUCCESS');
     });
@@ -58,26 +61,26 @@ describe('Nrwl Workspace', () => {
 
   describe('nglib', () => {
     it('should generate an ng lib', () => {
-      newApp('--collection=@nrwl/schematics --skip-install');
-      runCLI('generate lib mylib --collection=@nrwl/schematics --ngmodule');
+      ngNew('--collection=@nrwl/schematics --skip-install');
+      newLib('mylib --ngmodule');
 
       checkFilesExists('libs/mylib/src/mylib.module.ts', 'libs/mylib/src/mylib.module.spec.ts', 'libs/mylib/index.ts');
     });
 
     it('should test an ng lib', () => {
-      newApp('--collection=@nrwl/schematics');
+      ngNew('--collection=@nrwl/schematics');
       copyMissingPackages();
-      runCLI('generate app myapp --collection=@nrwl/schematics');
-      runCLI('generate lib mylib --collection=@nrwl/schematics --ngmodule');
+      newApp('myapp');
+      newLib('mylib --ngmodule');
 
       expect(runCLI('test --single-run')).toContain('Executed 2 of 2 SUCCESS');
     });
 
     it('should resolve dependencies on the lib', () => {
-      newApp('--collection=@nrwl/schematics --npmScope=nrwl');
+      ngNew('--collection=@nrwl/schematics --npmScope=nrwl');
       copyMissingPackages();
-      runCLI('generate app myapp --collection=@nrwl/schematics');
-      runCLI('generate lib mylib --collection=@nrwl/schematics --ngmodule');
+      newApp('myapp');
+      newLib('mylib --ngmodule');
 
       updateFile('apps/myapp/src/app/app.module.ts', `
         import { NgModule } from '@angular/core';

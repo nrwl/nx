@@ -1,11 +1,11 @@
-import {checkFilesExists, cleanup, copyMissingPackages, newApp, readFile, runCLI} from '../utils';
+import {checkFilesExists, cleanup, copyMissingPackages, ngNew, readFile, runCLI} from '../utils';
 
 describe('ngrx', () => {
   beforeEach(cleanup);
 
   describe('root', () => {
     it('should generate', () => {
-      newApp('--skip-install');
+      ngNew('--skip-install');
       runCLI('generate ngrx app --module=src/app/app.module.ts --root --collection=@nrwl/schematics');
 
       checkFilesExists(
@@ -19,7 +19,7 @@ describe('ngrx', () => {
     });
 
     it('should build', () => {
-      newApp();
+      ngNew();
       copyMissingPackages();
       runCLI('generate ngrx app --module=src/app/app.module.ts --root --collection=@nrwl/schematics');
 
@@ -28,7 +28,7 @@ describe('ngrx', () => {
     }, 50000);
 
     it('should add empty root configuration', () => {
-      newApp();
+      ngNew();
       copyMissingPackages();
       runCLI('generate ngrx app --module=src/app/app.module.ts --onlyEmptyRoot --collection=@nrwl/schematics');
 
@@ -42,7 +42,7 @@ describe('ngrx', () => {
 
   describe('feature', () => {
     it('should generate', () => {
-      newApp('--skip-install');
+      ngNew('--skip-install');
       runCLI('generate ngrx app --module=src/app/app.module.ts --collection=@nrwl/schematics');
 
       checkFilesExists(
@@ -57,7 +57,7 @@ describe('ngrx', () => {
   });
 
   it('should generate files without importing them', () => {
-    newApp('--skip-install');
+    ngNew('--skip-install');
     runCLI('generate ngrx app --module=src/app/app.module.ts --onlyAddFiles --collection=@nrwl/schematics');
 
     checkFilesExists(
@@ -71,7 +71,7 @@ describe('ngrx', () => {
   });
 
   it('should update package.json', () => {
-    newApp('--skip-install');
+    ngNew('--skip-install');
     runCLI('generate ngrx app --module=src/app/app.module.ts --collection=@nrwl/schematics');
 
     const contents = JSON.parse(readFile('package.json'));

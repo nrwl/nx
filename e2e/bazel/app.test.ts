@@ -1,11 +1,11 @@
-import {checkFilesExists, cleanup, copyMissingPackages, newBazelApp, readFile, runCLI, runSchematic} from '../utils';
+import {checkFilesExists, cleanup, copyMissingPackages, ngNewBazel, readFile, runCLI, runSchematic} from '../utils';
 
 describe('application', () => {
   beforeEach(cleanup);
 
   describe('generate', () => {
     it('should work', () => {
-      newBazelApp('--collection=@nrwl/bazel --skip-install');
+      ngNewBazel('--collection=@nrwl/bazel --skip-install');
       runSchematic('@nrwl/bazel:app --name=myApp');
 
       checkFilesExists(
@@ -35,7 +35,7 @@ describe('application', () => {
 
   describe('build', () => {
     it('should work', () => {
-      newBazelApp('--collection=@nrwl/bazel');
+      ngNewBazel('--collection=@nrwl/bazel');
       copyMissingPackages();
       runSchematic('@nrwl/bazel:app --name=myApp');
       expect(runCLI('build')).toContain('main.bundle.js');
@@ -44,7 +44,7 @@ describe('application', () => {
 
   describe('test', () => {
     it('should work', () => {
-      newBazelApp('--collection=@nrwl/bazel');
+      ngNewBazel('--collection=@nrwl/bazel');
       copyMissingPackages();
       runSchematic('@nrwl/bazel:app --name=myApp');
       expect(runCLI('test --single-run')).toContain('Executed 1 of 1 SUCCESS');

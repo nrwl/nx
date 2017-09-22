@@ -1,11 +1,11 @@
-import {checkFilesExists, cleanup, copyMissingPackages, newApp, newBazelApp, readFile, runCLI, runCommand, runSchematic, updateFile} from '../utils';
+import {checkFilesExists, cleanup, copyMissingPackages, ngNew, ngNewBazel, readFile, runCLI, runCommand, runSchematic, updateFile} from '../utils';
 
 describe('angular library', () => {
   beforeEach(cleanup);
 
   describe('generate', () => {
     it('creates a new  angularlibrary in a workspace', () => {
-      newBazelApp('--collection=@nrwl/bazel --skip-install');
+      ngNewBazel('--collection=@nrwl/bazel --skip-install');
       runSchematic('@nrwl/bazel:nglib --name=myLib');
 
       checkFilesExists(
@@ -20,7 +20,7 @@ describe('angular library', () => {
 
   describe('build', () => {
     it('should work', () => {
-      newBazelApp('--collection=@nrwl/bazel');
+      ngNewBazel('--collection=@nrwl/bazel');
       copyMissingPackages();
       runSchematic('@nrwl/bazel:nglib --name=myLib');
 
@@ -30,7 +30,7 @@ describe('angular library', () => {
 
   describe('test', () => {
     it('should work', () => {
-      newBazelApp('--collection=@nrwl/bazel');
+      ngNewBazel('--collection=@nrwl/bazel');
       copyMissingPackages();
       runSchematic('@nrwl/bazel:nglib --name=myLib');
       expect(runCLI('test --single-run')).toContain('Executed 0 of 0');

@@ -1,11 +1,11 @@
-import {checkFilesExists, cleanup, copyMissingPackages, newBazelApp, readFile, runCLI, runSchematic} from '../utils';
+import {checkFilesExists, cleanup, copyMissingPackages, ngNewBazel, readFile, runCLI, runSchematic} from '../utils';
 
 describe('library', () => {
   beforeEach(cleanup);
 
   describe('generate', () => {
     it('should work', () => {
-      newBazelApp('--collection=@nrwl/bazel --skip-install');
+      ngNewBazel('--collection=@nrwl/bazel --skip-install');
       runSchematic('@nrwl/bazel:lib --name=myLib');
 
       checkFilesExists(
@@ -20,7 +20,7 @@ describe('library', () => {
 
   describe('build', () => {
     it('should work', () => {
-      newBazelApp('--collection=@nrwl/bazel');
+      ngNewBazel('--collection=@nrwl/bazel');
       copyMissingPackages();
       runSchematic('@nrwl/bazel:lib --name=lib');
 

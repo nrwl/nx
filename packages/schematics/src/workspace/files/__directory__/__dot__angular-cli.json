@@ -27,6 +27,7 @@
   },
   "defaults": {
     "schematics": {
+      "collection": "@nrwl/schematics",
       "newProject": ["app", "lib"]
     },
     "styleExt": "<%= style %>",<% if (!minimal) { %>

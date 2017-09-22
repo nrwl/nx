@@ -85,7 +85,7 @@ It's similar to the standard CLI projects with a few changes:
 
 #### Create an App
 
-Run `ng generate app myapp --collection=@nrwl/schematics`, and you will see the following files created:
+Run `ng generate app myapp`, and you will see the following files created:
 
 ```
 apps/myapp/src/main.ts
@@ -104,7 +104,7 @@ As with the standard CLI, running `ng build` without specifying an app will buil
 
 #### Create a Lib
 
-Run `ng generate lib mylib --collection=@nrwl/schematics`, and you will see the following files created:
+Run `ng generate lib mylib`, and you will see the following files created:
 
 ```
 libs/mylib/src/mylib.ts
@@ -156,7 +156,7 @@ schematics @nrwl/schematics:convert-to-workspace
 
 #### Root
 
-Run `ng generate ngrx app --module=src/app/app.module.ts  --root --collection=@nrwl/schematics`, and you will see the following files created:
+Run `ng generate ngrx app --module=src/app/app.module.ts  --root`, and you will see the following files created:
 
 ```
 /src/app/+state/app.actions.ts
@@ -172,11 +172,11 @@ Also, `app.module.ts` will have `StoreModule.forRoot` and `EffectsModule.forRoot
 
 #### onlyEmptyRoot
 
-Run `ng generate ngrx app --module=src/app/app.module.ts  --onlyEmptyRoot --collection=@nrwl/schematics` to only add the `StoreModule.forRoot` and `EffectsModule.forRoot` calls without generating any new files.
+Run `ng generate ngrx app --module=src/app/app.module.ts  --onlyEmptyRoot` to only add the `StoreModule.forRoot` and `EffectsModule.forRoot` calls without generating any new files.
 
 #### Feature
 
-Run `ng generate ngrx app --module=src/app/mymodule/mymodule.module.ts --collection=@nrwl/schematics`, and you will see the following files created:
+Run `ng generate ngrx app --module=src/app/mymodule/mymodule.module.ts`, and you will see the following files created:
 
 ```
 /src/app/mymodule/+state/app.actions.ts
@@ -198,7 +198,7 @@ Add `--onlyAddFiles` to generate files without adding imports to the module.
 
 ### upgrade-shell
 
-Run `ng generate upgrade-shell legacy --module=src/app/app.module.ts --angularJsCmpSelector=rootLegacyCmp --collection=@nrwl/schematics` and you will see the following files created:
+Run `ng generate upgrade-shell legacy --module=src/app/app.module.ts --angularJsCmpSelector=rootLegacyCmp` and you will see the following files created:
 
 ```
 /src/app/legacy-setup.ts

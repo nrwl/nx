@@ -1,10 +1,10 @@
-import {cleanup, copyMissingPackages, newApp, readFile, runCLI, runSchematic, updateFile} from '../utils';
+import {cleanup, copyMissingPackages, ngNew, readFile, runCLI, runSchematic, updateFile} from '../utils';
 
 describe('Upgrade', () => {
   beforeEach(cleanup);
 
   it('should generate an upgrade shell', () => {
-    newApp();
+    ngNew();
 
     copyMissingPackages();
     updateFile('src/legacy.js', `
@@ -29,7 +29,7 @@ describe('Upgrade', () => {
   }, 50000);
 
   it('should update package.json', () => {
-    newApp('--skip-install');
+    ngNew('--skip-install');
     runCLI(
         'generate upgrade-shell legacy --module=src/app/app.module.ts --angularJsImport=../legacy ' +
         '--angularJsCmpSelector=rootLegacyCmp --collection=@nrwl/schematics');
@@ -40,7 +40,7 @@ describe('Upgrade', () => {
   });
 
   it('should not update package.json when --skipPackageJson', () => {
-    newApp('--skipInstall');
+    ngNew('--skipInstall');
     runCLI(
         'generate upgrade-shell legacy --module=src/app/app.module.ts --angularJsImport=../legacy ' +
         '--angularJsCmpSelector=rootLegacyCmp --skipPackageJson --collection=@nrwl/schematics');

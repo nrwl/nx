@@ -4,12 +4,12 @@ import * as path from 'path';
 
 const projectName: string = 'proj';
 
-export function newApp(command?: string): string {
+export function ngNew(command?: string): string {
   return execSync(`../node_modules/.bin/ng new proj ${command}`, {cwd: `./tmp`}).toString();
 }
 
-export function newBazelApp(command?: string): string {
-  const res = newApp(command);
+export function ngNewBazel(command?: string): string {
+  const res = ngNew(command);
   const cliPath = path.join('tmp', projectName, 'node_modules', '@angular', 'cli');
   execSync(`rm -rf ${cliPath}`);
   execSync(`cp -r node_modules/clis/bazel ${cliPath}`);
@@ -18,6 +18,20 @@ export function newBazelApp(command?: string): string {
 
 export function runCLI(command?: string): string {
   return execSync(`../../node_modules/.bin/ng ${command}`, {cwd: `./tmp/${projectName}`}).toString();
+}
+
+// switch to ng generate, once CLI is fixed
+export function newApp(name: string): string {
+  return runCLI(`generate app ${name}`)
+  // return execSync(`../../node_modules/.bin/schematics @nrwl/schematics:app --name=${name}
+  // --collection=@nrwl/schematics`, { cwd: `./tmp/${projectName}` }).toString();
+}
+
+// switch to ng generate, once CLI is fixed
+export function newLib(name: string): string {
+  return runCLI(`generate lib ${name}`)
+  // return execSync(`../../node_modules/.bin/schematics @nrwl/schematics:lib --name=${name}
+  // --collection=@nrwl/schematics`, { cwd: `./tmp/${projectName}` }).toString();
 }
 
 export function runSchematic(command: string): string {
