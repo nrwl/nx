@@ -1,4 +1,4 @@
-import {checkFilesExists, cleanup, ngNew, readFile, runCLI, runSchematic, updateFile} from '../utils';
+import {checkFilesExist, cleanup, ngNew, readFile, runCLI, runSchematic, updateFile} from '../utils';
 
 describe('Nrwl Convert to Nx Workspace', () => {
   beforeEach(cleanup);
@@ -27,7 +27,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     runSchematic('@nrwl/schematics:convert-to-workspace');
 
     // check that files have been moved!
-    checkFilesExists('apps/proj/src/main.ts', 'apps/proj/src/app/app.module.ts');
+    checkFilesExist('apps/proj/src/main.ts', 'apps/proj/src/app/app.module.ts');
 
     // check that package.json got merged
     const updatedPackageJson = JSON.parse(readFile('package.json'));

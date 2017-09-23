@@ -1,4 +1,4 @@
-import {checkFilesExists, cleanup, copyMissingPackages, ngNew, ngNewBazel, readFile, runCLI, runCommand, runSchematic, updateFile} from '../utils';
+import {checkFilesExist, cleanup, copyMissingPackages, ngNew, ngNewBazel, readFile, runCLI, runCommand, runSchematic, updateFile} from '../utils';
 
 describe('angular library', () => {
   beforeEach(cleanup);
@@ -8,7 +8,7 @@ describe('angular library', () => {
       ngNewBazel('--collection=@nrwl/bazel --skip-install');
       runSchematic('@nrwl/bazel:nglib --name=myLib');
 
-      checkFilesExists(
+      checkFilesExist(
           'tsconfig.json', 'WORKSPACE', 'BUILD.bazel', 'libs/my-lib/BUILD.bazel', 'libs/my-lib/index.ts',
           'libs/my-lib/src/my-lib.module.ts');
 

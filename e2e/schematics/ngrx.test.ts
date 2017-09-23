@@ -1,4 +1,4 @@
-import {checkFilesExists, cleanup, copyMissingPackages, ngNew, readFile, runCLI} from '../utils';
+import {checkFilesExist, cleanup, copyMissingPackages, ngNew, readFile, runCLI} from '../utils';
 
 describe('ngrx', () => {
   beforeEach(cleanup);
@@ -8,7 +8,7 @@ describe('ngrx', () => {
       ngNew('--skip-install');
       runCLI('generate ngrx app --module=src/app/app.module.ts --root --collection=@nrwl/schematics');
 
-      checkFilesExists(
+      checkFilesExist(
           `src/app/+state/app.actions.ts`, `src/app/+state/app.effects.ts`, `src/app/+state/app.effects.spec.ts`,
           `src/app/+state/app.init.ts`, `src/app/+state/app.interfaces.ts`, `src/app/+state/app.reducer.ts`,
           `src/app/+state/app.reducer.spec.ts`);
@@ -45,7 +45,7 @@ describe('ngrx', () => {
       ngNew('--skip-install');
       runCLI('generate ngrx app --module=src/app/app.module.ts --collection=@nrwl/schematics');
 
-      checkFilesExists(
+      checkFilesExist(
           `src/app/+state/app.actions.ts`, `src/app/+state/app.effects.ts`, `src/app/+state/app.effects.spec.ts`,
           `src/app/+state/app.init.ts`, `src/app/+state/app.interfaces.ts`, `src/app/+state/app.reducer.ts`,
           `src/app/+state/app.reducer.spec.ts`);
@@ -60,7 +60,7 @@ describe('ngrx', () => {
     ngNew('--skip-install');
     runCLI('generate ngrx app --module=src/app/app.module.ts --onlyAddFiles --collection=@nrwl/schematics');
 
-    checkFilesExists(
+    checkFilesExist(
         `src/app/+state/app.actions.ts`, `src/app/+state/app.effects.ts`, `src/app/+state/app.effects.spec.ts`,
         `src/app/+state/app.init.ts`, `src/app/+state/app.interfaces.ts`, `src/app/+state/app.reducer.ts`,
         `src/app/+state/app.reducer.spec.ts`);

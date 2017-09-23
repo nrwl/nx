@@ -1,4 +1,4 @@
-import {checkFilesExists, cleanup, copyMissingPackages, newApp, newLib, ngNew, readFile, runCLI, updateFile} from '../utils';
+import {checkFilesExist, cleanup, copyMissingPackages, newApp, newLib, ngNew, readFile, runCLI, updateFile} from '../utils';
 
 describe('Nrwl Workspace', () => {
   beforeEach(cleanup);
@@ -12,7 +12,7 @@ describe('Nrwl Workspace', () => {
     const packageJson = JSON.parse(readFile('package.json'));
     expect(packageJson.devDependencies['@nrwl/schematics']).toBeDefined();
     expect(packageJson.dependencies['@nrwl/nx']).toBeDefined();
-    checkFilesExists('test.js', 'tsconfig.app.json', 'tsconfig.spec.json', 'tsconfig.e2e.json', 'apps', 'libs');
+    checkFilesExist('test.js', 'tsconfig.app.json', 'tsconfig.spec.json', 'tsconfig.e2e.json', 'apps', 'libs');
   });
 
   describe('app', () => {
@@ -23,7 +23,7 @@ describe('Nrwl Workspace', () => {
       const angularCliJson = JSON.parse(readFile('.angular-cli.json'));
       expect(angularCliJson.apps[0].name).toEqual('myapp');
 
-      checkFilesExists(
+      checkFilesExist(
           'apps/myapp/src/main.ts', 'apps/myapp/src/app/app.module.ts', 'apps/myapp/src/app/app.component.ts',
           'apps/myapp/e2e/app.po.ts');
     });
@@ -33,7 +33,7 @@ describe('Nrwl Workspace', () => {
       copyMissingPackages();
       newApp('myapp');
       runCLI('build --aot');
-      checkFilesExists('dist/apps/myapp/main.bundle.js');
+      checkFilesExist('dist/apps/myapp/main.bundle.js');
       expect(runCLI('test --single-run')).toContain('Executed 1 of 1 SUCCESS');
     });
   });
@@ -46,7 +46,7 @@ describe('Nrwl Workspace', () => {
       const angularCliJson = JSON.parse(readFile('.angular-cli.json'));
       expect(angularCliJson.apps[0].name).toEqual('mylib');
 
-      checkFilesExists('libs/mylib/src/mylib.ts', 'libs/mylib/src/mylib.spec.ts', 'libs/mylib/index.ts');
+      checkFilesExist('libs/mylib/src/mylib.ts', 'libs/mylib/src/mylib.spec.ts', 'libs/mylib/index.ts');
     });
 
     it('should test a lib', () => {
@@ -64,7 +64,7 @@ describe('Nrwl Workspace', () => {
       ngNew('--collection=@nrwl/schematics --skip-install');
       newLib('mylib --ngmodule');
 
-      checkFilesExists('libs/mylib/src/mylib.module.ts', 'libs/mylib/src/mylib.module.spec.ts', 'libs/mylib/index.ts');
+      checkFilesExist('libs/mylib/src/mylib.module.ts', 'libs/mylib/src/mylib.module.spec.ts', 'libs/mylib/index.ts');
     });
 
     it('should test an ng lib', () => {

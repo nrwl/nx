@@ -46,7 +46,7 @@ export function updateFile(f: string, content: string): void {
   writeFileSync(path.join(getCwd(), 'tmp', 'proj', f), content);
 }
 
-export function checkFilesExists(...expectedFiles: string[]) {
+export function checkFilesExist(...expectedFiles: string[]) {
   expectedFiles.forEach(f => {
     const ff = f.startsWith('/') ? f : path.join(getCwd(), 'tmp', projectName, f);
     if (!exists(ff)) {
