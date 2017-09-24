@@ -184,8 +184,11 @@ module.exports = function(env) {
     },
     "devServer": {
       "historyApiFallback": true,
-      "lazy": true,
-      "contentBase": out
+      "contentBase": out,
+      "watchOptions": {
+        "aggregateTimeout": 3000,
+        "poll": 1000
+      }
     }
   };
 };
