@@ -68,6 +68,7 @@ module.exports = function(env) {
       "chunkFilename": "[id].chunk.js"
     },
     "module": {
+      "exprContextCritical": false,
       "rules": [
         {
           "enforce": "pre",
