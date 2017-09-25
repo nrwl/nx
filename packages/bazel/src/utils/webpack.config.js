@@ -32,6 +32,7 @@ module.exports = function(env) {
   const alias = Object.assign({}, aliasesForApps, {
     'node_modules/@angular/core/index': '@angular/core/esm5/index',
     'node_modules/@angular/common/index': `@angular/common/esm5/index`,
+    'node_modules/@angular/router/index': `@angular/router/esm5/index`,
     'node_modules/@angular/platform-browser/index': '@angular/platform-browser/esm5/index'
   });
 
