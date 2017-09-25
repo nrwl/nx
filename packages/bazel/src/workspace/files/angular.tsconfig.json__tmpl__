@@ -17,7 +17,8 @@
         "node_modules/@angular/bazel/**",
         "node_modules/@angular/compiler-cli/**",
         "node_modules/@angular/cli/**",
-        "node_modules/@angular/router/**",
+        "node_modules/@angular/router/upgrade/**",
+        "node_modules/@angular/router/upgrade.d.ts",
         // Workaround bug introduced by 079d884
         "node_modules/@angular/common/i18n_data*",
         "node_modules/@angular/common/locales.d.ts",
