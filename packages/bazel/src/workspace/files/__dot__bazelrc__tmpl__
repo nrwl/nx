@@ -1,4 +1,4 @@
-build --strategy=AngularTemplateCompile=standalone
+build --strategy=AngularTemplateCompile=worker
 build --strategy=TypeScriptCompile=worker
 build --spawn_strategy=standalone
 build --watchfs
