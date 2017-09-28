@@ -1,0 +1,7 @@
+.core-pieces {
+    display: flex;
+    flex-direction: row;
+}
+.core-pieces div {
+    width: 300px;
+}
