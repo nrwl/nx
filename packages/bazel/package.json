@@ -8,5 +8,5 @@
   },
   "author": "Victor Savkin",
   "license": "MIT",
-  "schematics": "src/collection.json"
+  "schematics": "./src/collection.json"
 }
