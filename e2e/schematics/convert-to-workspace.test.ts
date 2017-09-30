@@ -9,9 +9,14 @@ describe('Nrwl Convert to Nx Workspace', () => {
     // update package.json
     const packageJson = JSON.parse(readFile('package.json'));
     packageJson.description = 'some description';
-    packageJson.dependencies['@ngrx/store'] = '4.0.3';
-    packageJson.devDependencies['@ngrx/router-store'] = '4.0.3';
     updateFile('package.json', JSON.stringify(packageJson, null, 2));
+    // confirm that @nrwl and @ngrx dependencies do not exist yet
+    expect(packageJson.devDependencies['@nrwl/schematics']).not.toBeDefined();
+    expect(packageJson.dependencies['@nrwl/nx']).not.toBeDefined();
+    expect(packageJson.dependencies['@ngrx/store']).not.toBeDefined();
+    expect(packageJson.dependencies['@ngrx/effects']).not.toBeDefined();
+    expect(packageJson.dependencies['@ngrx/router-store']).not.toBeDefined();
+    expect(packageJson.dependencies['@ngrx/store-devtools']).not.toBeDefined();
 
     // update tsconfig.json
     const tsconfigJson = JSON.parse(readFile('tsconfig.json'));
@@ -32,10 +37,12 @@ describe('Nrwl Convert to Nx Workspace', () => {
     // check that package.json got merged
     const updatedPackageJson = JSON.parse(readFile('package.json'));
     expect(updatedPackageJson.description).toEqual('some description');
-    expect(updatedPackageJson.dependencies['@ngrx/store']).toEqual('4.0.3');
-    expect(updatedPackageJson.devDependencies['@ngrx/router-store']).toEqual('4.0.3');
     expect(updatedPackageJson.devDependencies['@nrwl/schematics']).toBeDefined();
     expect(updatedPackageJson.dependencies['@nrwl/nx']).toBeDefined();
+    expect(updatedPackageJson.dependencies['@ngrx/store']).toBeDefined();
+    expect(updatedPackageJson.dependencies['@ngrx/effects']).toBeDefined();
+    expect(updatedPackageJson.dependencies['@ngrx/router-store']).toBeDefined();
+    expect(updatedPackageJson.dependencies['@ngrx/store-devtools']).toBeDefined();
 
     // check if angular-cli.json get merged
     const updatedAngularCLIJson = JSON.parse(readFile('.angular-cli.json'));
@@ -50,6 +57,33 @@ describe('Nrwl Convert to Nx Workspace', () => {
     const updatedTsConfig = JSON.parse(readFile('tsconfig.json'));
     expect(updatedTsConfig.compilerOptions.paths).toEqual({'a': ['b'], '@proj/*': ['libs/*']});
 
+  });
+
+  it('should generate a workspace and not change dependencies or devDependencies if they already exist', () => {
+    // create a new AngularCLI app
+    ngNew('--skip-install --npmScope=nrwl');
+    const nxVersion = '0.0.0';
+    const schematicsVersion = '0.0.0';
+    const ngrxVersion = '0.0.0';
+    // update package.json
+    const existingPackageJson = JSON.parse(readFile('package.json'));
+    existingPackageJson.devDependencies['@nrwl/schematics'] = schematicsVersion;
+    existingPackageJson.dependencies['@nrwl/nx'] = nxVersion;
+    existingPackageJson.dependencies['@ngrx/store'] = ngrxVersion;
+    existingPackageJson.dependencies['@ngrx/effects'] = ngrxVersion;
+    existingPackageJson.dependencies['@ngrx/router-store'] = ngrxVersion;
+    existingPackageJson.dependencies['@ngrx/store-devtools'] = ngrxVersion;
+    updateFile('package.json', JSON.stringify(existingPackageJson, null, 2));
+    // run the command
+    runSchematic('@nrwl/schematics:convert-to-workspace');
+    // check that dependencies and devDependencies remained the same
+    const packageJson = JSON.parse(readFile('package.json'));
+    expect(packageJson.devDependencies['@nrwl/schematics']).toEqual(schematicsVersion);
+    expect(packageJson.dependencies['@nrwl/nx']).toEqual(nxVersion);
+    expect(packageJson.dependencies['@ngrx/store']).toEqual(ngrxVersion);
+    expect(packageJson.dependencies['@ngrx/effects']).toEqual(ngrxVersion);
+    expect(packageJson.dependencies['@ngrx/router-store']).toEqual(ngrxVersion);
+    expect(packageJson.dependencies['@ngrx/store-devtools']).toEqual(ngrxVersion);
   });
 
   it('should build and test', () => {
