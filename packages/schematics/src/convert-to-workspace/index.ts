@@ -2,7 +2,7 @@ import {apply, branchAndMerge, chain, externalSchematic, mergeWith, move, Rule, 
 import {Schema} from './schema';
 import {names, toFileName} from '@nrwl/schematics';
 import * as path from 'path';
-import {nxVersion, schematicsVersion} from '../utility/lib-versions';
+import {ngrxVersion, nxVersion, schematicsVersion} from '../utility/lib-versions';
 import * as fs from 'fs';
 import {join} from 'path';
 import {updateJsonFile} from '../utility/fileutils';
@@ -19,8 +19,24 @@ function updatePackageJson() {
     if (!packageJson.dependencies) {
       packageJson.dependencies = {};
     }
-    packageJson.dependencies['@nrwl/nx'] = nxVersion;
-    packageJson.devDependencies['@nrwl/schematics'] = schematicsVersion;
+    if (!packageJson.dependencies['@nrwl/nx']) {
+      packageJson.dependencies['@nrwl/nx'] = nxVersion;
+    }
+    if (!packageJson.dependencies['@ngrx/store']) {
+      packageJson.dependencies['@ngrx/store'] = ngrxVersion;
+    }
+    if (!packageJson.dependencies['@ngrx/router-store']) {
+      packageJson.dependencies['@ngrx/router-store'] = ngrxVersion;
+    }
+    if (!packageJson.dependencies['@ngrx/effects']) {
+      packageJson.dependencies['@ngrx/effects'] = ngrxVersion;
+    }
+    if (!packageJson.dependencies['@ngrx/store-devtools']) {
+      packageJson.dependencies['@ngrx/store-devtools'] = ngrxVersion;
+    }
+    if (!packageJson.devDependencies['@nrwl/schematics']) {
+      packageJson.devDependencies['@nrwl/schematics'] = schematicsVersion;
+    }
     host.overwrite('package.json', JSON.stringify(packageJson, null, 2));
     return host;
   };
