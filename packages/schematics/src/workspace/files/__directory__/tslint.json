@@ -1,6 +1,7 @@
 {
   "rulesDirectory": [
-    "node_modules/codelyzer"
+    "node_modules/codelyzer",
+    "node_modules/@nrwl/schematics/src/tslint"
   ],
   "rules": {
     "arrow-return-shorthand": true,
@@ -137,6 +138,14 @@
     "directive-class-suffix": true,
     "no-access-missing-member": true,
     "templates-use-public": true,
-    "invoke-injectable": true
+    "invoke-injectable": true,
+
+    "nx-enforce-module-boundaries": [
+      true,
+      {
+        "npmScope": "<%= npmScope %>",
+        "lazyLoad": []
+      }
+    ]
   }
 }
