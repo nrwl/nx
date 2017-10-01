@@ -7,7 +7,8 @@ export default function(options: Schema): Rule {
   const npmScope = options.npmScope ? options.npmScope : options.name;
   const templateSource = apply(
       url('./files'),
-      [template({utils: stringUtils, dot: '.', nxVersion, ngrxVersion, schematicsVersion, ...options as object, npmScope})]);
+      [template(
+          {utils: stringUtils, dot: '.', nxVersion, ngrxVersion, schematicsVersion, ...options as object, npmScope})]);
 
   return chain([branchAndMerge(chain([mergeWith(templateSource)]))]);
 }
