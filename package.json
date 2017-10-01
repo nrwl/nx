@@ -21,8 +21,6 @@
     "jasmine-marbles": "0.1.0"
   },
   "devDependencies": {
-    "@schematics/angular": "^0.0.36",
-    "@angular-devkit/schematics": "^0.0.24",
     "@angular/cli": "nrwl/fix-cli-build",
     "@angular/common": "4.3.5",
     "@angular/compiler": "4.3.5",
@@ -39,7 +37,6 @@
     "@types/jasmine": "2.5.53",
     "@types/node": "8.0.7",
     "angular": "1.6.6",
-    "bazel-cli": "nrwl/bazel-cli-build",
     "clang-format": "^1.0.32",
     "jasmine-core": "~2.6.2",
     "jest": "20.0.4",
@@ -48,7 +45,7 @@
     "karma-jasmine": "~1.1.0",
     "karma-webpack": "2.0.4",
     "rxjs": "5.4.3",
-    "semver": "^5.4.1",
+    "tslint": "5.7.0",
     "typescript": "2.4.2"
   },
   "author": "Victor Savkin",
