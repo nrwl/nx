@@ -1,5 +1,17 @@
 module.exports = function(config) {
-  const webpackConfig = {};
+  const webpackConfig = {
+    "node": {
+      "fs": "empty",
+      "global": true,
+      "crypto": "empty",
+      "tls": "empty",
+      "net": "empty",
+      "process": true,
+      "module": false,
+      "clearImmediate": false,
+      "setImmediate": false
+    }
+  };
   config.set({
     basePath: '.',
 
