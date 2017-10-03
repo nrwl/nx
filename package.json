@@ -14,7 +14,7 @@
     "release": "./scripts/release.sh",
     "copy": "./scripts/copy.sh",
     "test": "yarn build && ./scripts/test.sh",
-    "ci": "yarn build && ./scripts/check-format.sh && ./scripts/test.sh && ./scripts/e2e.sh",
+    "ci": "./scripts/check-format.sh && yarn build && ./scripts/test.sh && ./scripts/e2e.sh",
     "publish_npm": "./scripts/publish.sh",
     "postinstall": "./scripts/copy-clis.sh"
   },
