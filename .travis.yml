@@ -7,7 +7,10 @@ before_install:
 install:
   - sh -e /etc/init.d/xvfb start
   - yarn install
-script: yarn ci
+script:
+  - yarn checkformat
+  - yarn test
+  - yarn e2e
 addons:
   chrome: stable
 cache:
