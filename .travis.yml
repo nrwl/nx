@@ -1,3 +1,5 @@
 language: node_js
 node_js:
   - "stable"
+install: yarn install
+script: yarn test:all
