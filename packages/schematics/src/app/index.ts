@@ -31,8 +31,6 @@ function addNxModule(path: string): Rule {
       ...addImportToModule(sourceFile, modulePath, 'NxModule.forRoot()'),
     ]);
     return host;
-
-
   };
 }
 function addAppToAngularCliJson(options: Schema): Rule {
