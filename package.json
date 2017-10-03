@@ -18,9 +18,11 @@
     "publish_npm": "./scripts/publish.sh",
     "postinstall": "./scripts/copy-clis.sh"
   },
+
   "dependencies": {
     "jasmine-marbles": "0.1.0"
   },
+
   "devDependencies": {
     "@angular/cli": "nrwl/fix-cli-build",
     "@angular/common": "4.3.5",

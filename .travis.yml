@@ -1,5 +1,20 @@
 language: node_js
+dist: trusty
 node_js:
-  - "stable"
-install: yarn install
+  - '6.9.5'
+before_install:
+  - export DISPLAY=:99.0
+install:
+  - sh -e /etc/init.d/xvfb start
+  - yarn install
 script: yarn test:all
+addons:
+  chrome: stable
+cache:
+  directories:
+    - node_modules
+notifications:
+  webhooks:
+    on_success: always  # options: [always|never|change] default: always
+    on_failure: always  # options: [always|never|change] default: always
+    on_start: false     # default: false

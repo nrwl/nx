@@ -89,7 +89,7 @@ export function exists(filePath: string): boolean {
 }
 
 export function copyMissingPackages(): void {
-  const modulesToCopy = ['@ngrx', 'jasmine-marbles', '@nrwl', 'angular', '@angular/upgrade', '@angular/cli'];
+  const modulesToCopy = ['@ngrx', 'jasmine-marbles', '@nrwl', 'angular', '@angular/upgrade'];
   modulesToCopy.forEach(m => copyNodeModule(projectName, m));
 }
 

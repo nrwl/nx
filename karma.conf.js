@@ -59,10 +59,14 @@ module.exports = function(config) {
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: true,
 
-    // start these browsers
-    // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    // browsers: ['PhantomJS'],
-    browsers: ['Chrome'],
+    customLaunchers: {
+      Chrome_travis_ci: {
+        base: 'Chrome',
+        flags: ['--no-sandbox']
+      }
+    },
+
+    browsers: process.env.TRAVIS ?  ['Chrome_travis_ci'] : ['Chrome'],
 
     // Concurrency level
     // how many browser should be started simultaneous

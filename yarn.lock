@@ -966,7 +966,7 @@ circular-dependency-plugin@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/circular-dependency-plugin/-/circular-dependency-plugin-3.0.0.tgz#9b68692e35b0e3510998d0164b6ae5011bea5760"
 
-clang-format@^1.0.32:
+clang-format@1.0.55:
   version "1.0.55"
   resolved "https://registry.yarnpkg.com/clang-format/-/clang-format-1.0.55.tgz#8031271329e27a779a5d08fc5dce24d7c52c14d5"
   dependencies:
