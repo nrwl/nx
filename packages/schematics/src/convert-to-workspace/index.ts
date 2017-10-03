@@ -62,13 +62,14 @@ function updateAngularCLIJson() {
     app.tsconfig = '../../../tsconfig.app.json';
     app.testTsconfig = '../../../tsconfig.spec.json';
     app.scripts = app.scripts.map((p) => path.join('../../', p));
-    if (!app.defaults) {
-      app.defaults = {};
+    if (!angularCliJson.defaults) {
+      angularCliJson.defaults = {};
     }
-    if (!app.defaults.schematics) {
-      app.defaults.schematics = {};
+    if (!angularCliJson.defaults.schematics) {
+      angularCliJson.defaults.schematics = {};
     }
-    app.defaults.schematics['newProject'] = ['app', 'lib'];
+    angularCliJson.defaults.schematics['collection'] = '@nrwl/schematics';
+    angularCliJson.defaults.schematics['newProject'] = ['app', 'lib'];
 
     host.overwrite('.angular-cli.json', JSON.stringify(angularCliJson, null, 2));
 
@@ -79,7 +80,7 @@ function updateAngularCLIJson() {
 function updateTsConfigsJson(options: Schema) {
   return (host: Tree) => {
     const angularCliJson = JSON.parse(host.read('.angular-cli.json')!.toString('utf-8'));
-    const npmScope = options.npmScope ? options.npmScope : angularCliJson.project.name;
+    const npmScope = options && options.npmScope ? options.npmScope : angularCliJson.project.name;
 
     updateJsonFile('tsconfig.json', (json) => setUpCompilerOptions(json, npmScope));
 
