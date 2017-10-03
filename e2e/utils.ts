@@ -17,7 +17,8 @@ export function ngNewBazel(command?: string): string {
 }
 
 export function runCLI(command?: string): string {
-  return execSync(`../../node_modules/.bin/ng ${command}`, {cwd: `./tmp/${projectName}`}).toString();
+  return execSync(`../../node_modules/.bin/ng ${command}`, {cwd: `./tmp/${projectName}`}).toString().replace(
+    /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
 }
 
 // switch to ng generate, once CLI is fixed
