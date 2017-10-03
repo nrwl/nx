@@ -107,7 +107,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
       `);
 
     expect(runCLI('build --aot')).toContain('{main} main.bundle.js');
-    expect(runCLI('test --single-run')).toContain('Executed 3 of 3 SUCCESS');
+    expect(runCLI('test --single-run')).toContain('Executed 4 of 4 SUCCESS');
     expect(runCLI('e2e')).toContain('Executed 1 of 1 spec SUCCESS');
   });
 });
