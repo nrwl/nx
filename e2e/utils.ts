@@ -27,7 +27,7 @@ export function runCLI(command?: string, opts = {
     if (opts.silenceError) {
       return e.stdout.toString();
     } else {
-      console.log(e);
+      console.log(e.stdout.toString(), e.stderr.toString());
       throw e;
     }
   }
