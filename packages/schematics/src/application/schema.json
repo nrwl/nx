@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "workspace",
+  "title": "Create an empty workspace",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Workspace name"
+    },
+    "directory": {
+      "type": "string",
+      "description": "The directory name to create the app in.",
+      "alias": "dir"
+    },
+    "npmScope": {
+      "type": "string",
+      "description": "Npm scope for importing libs."
+    },
+    "version": {
+      "type": "string"
+    },
+    "prefix": {
+      "type": "string",
+      "description": "The prefix to apply to generated selectors.",
+      "default": "app",
+      "alias": "p"
+    },
+    "style": {
+      "description": "The file extension to be used for style files.",
+      "type": "string",
+      "default": "css"
+    },
+    "minimal": {
+      "description": "Should create a minimal app.",
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "name",
+    "directory"
+  ]
+}
