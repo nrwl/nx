@@ -116,12 +116,10 @@ function updateProtractorConf() {
       throw new Error('Cannot find protractor.conf.js');
     }
     const protractorConf = host.read('protractor.conf.js')!.toString('utf-8');
-    const angularCliJson = JSON.parse(host.read('.angular-cli.json')!.toString('utf-8'));
+    const updatedConf = protractorConf.replace(`./e2e/**/*.e2e-spec.ts`, `./apps/**/*.e2e-spec.ts`)
+        .replace(`e2e/tsconfig.e2e.json`, `./tsconfig.e2e.json`);
 
-    protractorConf.replace(`'./e2e/**/*.e2e-spec.ts'`, `'.apps/${angularCliJson.project.name}/e2e/**/*.e2e-spec.ts'`)
-        .replace(`'e2e/tsconfig.e2e.json'`, `'./tsconfig.e2e.json'`);
-
-    host.overwrite('protractor.conf.js', JSON.stringify(protractorConf, null, 2));
+    host.overwrite('protractor.conf.js', updatedConf);
 
     return host;
   };
