@@ -2,15 +2,15 @@
   "name": "nx",
   "version": "0.1",
   "schematics": {
-    "convert-to-workspace": {
-      "factory": "./convert-to-workspace",
-      "schema": "./convert-to-workspace/schema.json",
+    "workspace": {
+      "factory": "./workspace",
+      "schema": "./workspace/schema.json",
       "description": "Convert an existing CLI project into an Nx Workspace"
     },
 
     "application": {
-      "factory": "./workspace",
-      "schema": "./workspace/schema.json",
+      "factory": "./application",
+      "schema": "./application/schema.json",
       "description": "Create an empty workspace"
     },
 
