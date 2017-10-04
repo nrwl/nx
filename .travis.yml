@@ -17,7 +17,8 @@ cache:
   directories:
     - node_modules
 notifications:
+  email: false
   webhooks:
-    on_success: always  # options: [always|never|change] default: always
-    on_failure: always  # options: [always|never|change] default: always
-    on_start: false     # default: false
+    on_success: true
+    on_failure: true
+    on_start: true
