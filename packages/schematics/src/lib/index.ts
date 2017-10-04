@@ -8,7 +8,8 @@ function addLibToAngularCliJson(options: Schema): Rule {
     const appConfig = {
       'name': options.name,
       'root': path.join('libs', options.name, options.sourceDir),
-      'test': '../../../test.js'
+      'test': '../../../test.js',
+      "appRoot": ""
     };
 
     if (!host.exists('.angular-cli.json')) {
