@@ -16,14 +16,20 @@ export function ngNewBazel(command?: string): string {
   return res;
 }
 
-export function runCLI(command?: string): string {
+export function runCLI(command?: string, opts = {
+  silenceError: false
+}): string {
   try {
     return execSync(`../../node_modules/.bin/ng ${command}`, {cwd: `./tmp/${projectName}`})
-      .toString()
-      .replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
+        .toString()
+        .replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
   } catch (e) {
-    console.log(e);
-    throw e;
+    if (opts.silenceError) {
+      return e.stdout.toString();
+    } else {
+      console.log(e);
+      throw e;
+    }
   }
 }
 

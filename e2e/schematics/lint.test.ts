@@ -19,13 +19,8 @@ describe('Lint', () => {
       import '@proj/lazylib';
     `);
 
-    try {
-      runCLI('lint --type-check');
-      throw new Error('should not reach');
-    } catch (e) {
-      const out = e.stdout.toString();
-      expect(out).toContain('relative imports of libraries are forbidden');
-      expect(out).toContain('import of lazy-loaded libraries are forbidden');
-    }
+    const out = runCLI('lint --type-check', {silenceError: true});
+    expect(out).toContain('relative imports of libraries are forbidden');
+    expect(out).toContain('import of lazy-loaded libraries are forbidden');
   });
 });
