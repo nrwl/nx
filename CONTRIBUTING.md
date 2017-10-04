@@ -53,6 +53,7 @@ The type must be one of the following:
 * fix
 * refactor
 * style
+* docs
 
 #### Scope
 
