@@ -1,3 +1,5 @@
+import 'rxjs/add/operator/delay';
+
 import {Component, Injectable} from '@angular/core';
 import {ComponentFixture, fakeAsync, TestBed, tick} from '@angular/core/testing';
 import {ActivatedRouteSnapshot, Router} from '@angular/router';
@@ -9,6 +11,7 @@ import {Store, StoreModule} from '@ngrx/store';
 import {Observable} from 'rxjs/Observable';
 import {of} from 'rxjs/observable/of';
 import {_throw} from 'rxjs/observable/throw';
+import {delay} from 'rxjs/operator/delay';
 import {Subject} from 'rxjs/Subject';
 
 import {DataPersistence} from '../index';
@@ -212,13 +215,14 @@ describe('DataPersistence', () => {
       TestBed.configureTestingModule({providers: [DataPersistence]});
     });
 
-    describe('successful', () => {
+    describe('no id', () => {
       @Injectable()
       class TodoEffects {
         @Effect()
-        loadTodo = this.s.fetch('GET_TODOS', {
+        loadTodos = this.s.fetch('GET_TODOS', {
           run(a: any, state: TodosState) {
-            return ({type: 'TODOS', payload: {user: state.user, todos: 'some todos'}});
+            // we need to introduce the delay to "enable" switchMap
+            return of ({type: 'TODOS', payload: {user: state.user, todos: 'some todos'}}).delay(1);
           },
 
           onError(a: UpdateTodo, e: any) {
@@ -244,10 +248,60 @@ describe('DataPersistence', () => {
       });
 
       it('should work', async (done) => {
-        actions = of({type: 'GET_TODOS', payload: {}});
+        actions = of({type: 'GET_TODOS', payload: {}}, {type: 'GET_TODOS', payload: {}});
+
+        expect(await readAll(TestBed.get(TodoEffects).loadTodos)).toEqual([
+          {type: 'TODOS', payload: {user: 'bob', todos: 'some todos'}},
+          {type: 'TODOS', payload: {user: 'bob', todos: 'some todos'}}
+        ]);
+
+        done();
+      });
+    });
+
+    describe('id', () => {
+      @Injectable()
+      class TodoEffects {
+        @Effect()
+        loadTodo = this.s.fetch('GET_TODO', {
+          id(a: any, state: TodosState) {
+            return a.payload.id;
+          },
+
+          run(a: any, state: TodosState) {
+            // we need to introduce the delay to "enable" switchMap
+            return of ({type: 'TODO', payload: a.payload}).delay(1);
+          },
+
+          onError(a: UpdateTodo, e: any) {
+            return null;
+          }
+        });
+
+        constructor(private s: DataPersistence<any>) {}
+      }
+
+      function userReducer() {
+        return 'bob';
+      }
+
+      let actions: Observable<any>;
+
+      beforeEach(() => {
+        actions = new Subject<any>();
+        TestBed.configureTestingModule({
+          providers: [TodoEffects, provideMockActions(() => actions)],
+          imports: [StoreModule.forRoot({user: userReducer})]
+        })
+      });
+
+      it('should work', async (done) => {
+        actions =
+            of({type: 'GET_TODO', payload: {id: 1, value: '1'}}, {type: 'GET_TODO', payload: {id: 2, value: '2a'}},
+               {type: 'GET_TODO', payload: {id: 2, value: '2b'}});
 
         expect(await readAll(TestBed.get(TodoEffects).loadTodo)).toEqual([
-          {type: 'TODOS', payload: {user: 'bob', todos: 'some todos'}}
+          {type: 'TODO', payload: {id: 1, value: '1'}}, {type: 'TODO', payload: {id: 2, value: '2b'}}
         ]);
 
         done();

@@ -8,7 +8,9 @@ import {of} from 'rxjs/observable/of';
 import {_catch} from 'rxjs/operator/catch';
 import {concatMap} from 'rxjs/operator/concatMap';
 import {filter} from 'rxjs/operator/filter';
+import {groupBy} from 'rxjs/operator/groupBy';
 import {map} from 'rxjs/operator/map';
+import {mergeMap} from 'rxjs/operator/mergeMap';
 import {switchMap} from 'rxjs/operator/switchMap';
 import {withLatestFrom} from 'rxjs/operator/withLatestFrom';
 
@@ -31,6 +33,7 @@ export interface OptimisticUpdateOpts {
  * See {@link DataPersistence.navigation} for more information.
  */
 export interface FetchOpts {
+  id?(a: Action, state?: any): any;
   run(a: Action, state?: any): Observable<Action>|Action|void;
   onError?(a: Action, e: any): Observable<any>|any;
 }
@@ -43,8 +46,10 @@ export interface HandleNavigationOpts {
   onError?(a: ActivatedRouteSnapshot, e: any): Observable<any>|any;
 }
 
+type Pair = [Action, any];
+
 /**
- * @whatItDoes Provides convenience methods for implementing common operations of talking to the backend.
+ * @whatItDoes Provides convenience methods for implementing common operations of persisting data.
  */
 @Injectable()
 export class DataPersistence<T> {
@@ -54,11 +59,11 @@ export class DataPersistence<T> {
    *
    * @whatItDoes Handles pessimistic updates (updating the server first).
    *
-   * It provides the action and the current state. It runs all updates in order by using `concatMap` to prevent race
-   * conditions.
+   * Update the server implemented naively suffers from race conditions and poor error handling.
    *
-   * * `run` callback must return an action or an observable with an action.
-   * * `onError` is called when a server update was not successful.
+   * `pessimisticUpdate` addresses these problems--it runs all fetches in order, which removes race conditions
+   * and forces the developer to handle errors.
+   *
    * ## Example:
    *
    * ```typescript
@@ -96,12 +101,13 @@ export class DataPersistence<T> {
    *
    * @whatItDoes Handles optimistic updates (updating the client first).
    *
-   * It provides the action and the current state. It runs all updates in order by using `concatMap` to prevent race
-   * conditions.
+   * `optimisticUpdate` addresses these problems--it runs all fetches in order, which removes race conditions
+   * and forces the developer to handle errors.
    *
-   * * `run` callback must return an action or an observable with an action.
-   * * `undoAction` is called server update was not successful. It must return an action or an observable with an action
-   * to undo the changes in the client state.
+   * `optimisticUpdate` is different from `pessimisticUpdate`. In case of a failure, when using `optimisticUpdate`,
+   * the developer already updated the state locally, so the developer must provide an undo action.
+   *
+   * The error handling must be done in the callback, or by means of the undo action.
    *
    * ## Example:
    *
@@ -137,17 +143,17 @@ export class DataPersistence<T> {
    *
    * @whatItDoes Handles data fetching.
    *
-   * It provides the action and the current state. It only runs the last fetch by using `switchMap`.
+   * Data fetching implemented naively suffers from race conditions and poor error handling.
    *
-   * * `run` callback must return an action or an observable with an action.
-   * * `onError` is called when a server request was not successful.
+   * `fetch` addresses these problems--it runs all fetches in order, which removes race conditions
+   * and forces the developer to handle errors.
    *
    * ## Example:
    *
    * ```typescript
    * @Injectable()
    * class TodoEffects {
-   *   @Effect() loadTodo = this.s.fetch('GET_TODOS', {
+   *   @Effect() loadTodos = this.s.fetch('GET_TODOS', {
    *     // provides an action and the current state of the store
    *     run(a: GetTodos, state: TodosState) {
    *       return this.backend(state.user, a.payload).map(r => ({
@@ -165,22 +171,66 @@ export class DataPersistence<T> {
    *   constructor(private s: DataPersistence<TodosState>, private backend: Backend) {}
    * }
    * ```
+   *
+   * This is correct, but because it set the concurrency to 1, it may not be performant.
+   *
+   * To fix that, you can provide the `id` function, like this:
+   *
+   * ```typescript
+   * @Injectable()
+   * class TodoEffects {
+   *   @Effect() loadTodo = this.s.fetch('GET_TODO', {
+   *     run(a: GetTodo, state: TodosState) {
+   *       return a.payload.id;
+   *     }
+   *
+   *     // provides an action and the current state of the store
+   *     run(a: GetTodo, state: TodosState) {
+   *       return this.backend(state.user, a.payload).map(r => ({
+   *         type: 'TODO',
+   *         payload: r
+   *       });
+   *     },
+   *
+   *     onError(a: GetTodo, e: any): Action {
+   *       // dispatch an undo action to undo the changes in the client state
+   *       // return null;
+   *     }
+   *   });
+   *
+   *   constructor(private s: DataPersistence<TodosState>, private backend: Backend) {}
+   * }
+   * ```
+   *
+   * With this setup, the requests for Todo 1 will run concurrently with the requests for Todo 2.
+   *
+   * In addition, if DataPersistence notices that there are multiple requests for Todo 1 scheduled,
+   * it will only run the last one.
    */
   fetch(actionType: string, opts: FetchOpts): Observable<any> {
     const nav = this.actions.ofType(actionType);
-    const pairs = withLatestFrom.call(nav, this.store);
-    return switchMap.call(pairs, this.runWithErrorHandling(opts.run, opts.onError));
+    const allPairs = withLatestFrom.call(nav, this.store);
+
+    if (opts.id) {
+      const groupedFetches: Observable<Observable<Pair>> = groupBy.call(allPairs, (p) => opts.id(p[0], p[1]));
+      return mergeMap.call(
+          groupedFetches,
+          (pairs: Observable<Pair>) => switchMap.call(pairs, this.runWithErrorHandling(opts.run, opts.onError)));
+    } else {
+      return concatMap.call(allPairs, this.runWithErrorHandling(opts.run, opts.onError));
+    }
   }
 
   /**
    * @whatItDoes Handles data fetching as part of router navigation.
    *
-   * It checks if an activated router state contains the passed in component type, and, if it does, runs the `run`
-   * callback. It provides the activated snapshot associated with the component and the current state. It only runs the
-   * last request by using `switchMap`.
+   * Data fetching implemented naively suffers from race conditions and poor error handling.
    *
-   * * `run` callback must return an action or an observable with an action.
-   * * `onError` is called when a server request was not successful.
+   * `navigation` addresses these problems.
+   *
+   * It checks if an activated router state contains the passed in component type, and, if it does, runs the `run`
+   * callback. It provides the activated snapshot associated with the component and the current state. And it only runs
+   * the last request.
    *
    * ## Example:
    *
