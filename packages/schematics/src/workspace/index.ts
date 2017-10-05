@@ -79,7 +79,6 @@ function updateAngularCLIJson(options: Schema) {
 
 function updateTsConfigsJson(options: Schema) {
   return (host: Tree) => {
-    const angularCliJson = JSON.parse(host.read('.angular-cli.json')!.toString('utf-8'));
     const npmScope = options && options.npmScope ? options.npmScope : options.name;
 
     updateJsonFile('tsconfig.json', (json) => setUpCompilerOptions(json, npmScope));
@@ -106,6 +105,20 @@ function updateTsConfigsJson(options: Schema) {
       setUpCompilerOptions(json, npmScope);
     });
 
+    return host;
+  };
+}
+
+function updateTsLintJson(options: Schema) {
+  return (host: Tree) => {
+    const npmScope = options && options.npmScope ? options.npmScope : options.name;
+
+    updateJsonFile('tslint.json', (json) => {
+      ['no-trailing-whitespace', 'one-line', 'quotemark', 'typedef-whitespace', 'whitespace'].forEach(key => {
+        json[key] = undefined;
+      });
+      json['nx-enforce-module-boundaries'] = [true, {'npmScope': npmScope, 'lazyLoad': []}];
+    });
     return host;
   };
 }
@@ -168,6 +181,7 @@ export default function(options: Schema): Rule {
     moveFiles(options), branchAndMerge(chain([
       mergeWith(apply(url('./files'), [])),
     ])),
-    updatePackageJson(), updateAngularCLIJson(options), updateTsConfigsJson(options), updateProtractorConf()
+    updatePackageJson(), updateAngularCLIJson(options), updateTsConfigsJson(options), updateProtractorConf(),
+    updateTsLintJson(options)
   ]);
 }
