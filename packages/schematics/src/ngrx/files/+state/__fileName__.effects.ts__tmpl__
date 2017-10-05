@@ -9,14 +9,14 @@ import {LoadData, DataLoaded} from './<%= fileName %>.actions';
 @Injectable()
 export class <%= className %>Effects {
   @Effect() loadData = this.d.pessimisticUpdate('LOAD_DATA', {
-    run(a: LoadData, state: <%= className %>State) {
+    run: (a: LoadData, state: <%= className %>State) => {
       return {
         type: 'DATA_LOADED',
         payload: {}
       };
     },
 
-    onError(a: LoadData, error) {
+    onError: (a: LoadData, error) => {
       console.error('Error', error);
     }
   });
