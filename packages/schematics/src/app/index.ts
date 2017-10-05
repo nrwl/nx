@@ -6,6 +6,7 @@ import * as path from 'path';
 import * as ts from 'typescript';
 import {addBootstrapToModule} from '@schematics/angular/utility/ast-utils';
 import {insertImport} from '@schematics/angular/utility/route-utils';
+import {addApp} from '../utility/config-file-utils';
 
 function addBootstrap(path: string): Rule {
   return (host: Tree) => {
@@ -35,7 +36,13 @@ function addNxModule(path: string): Rule {
 }
 function addAppToAngularCliJson(options: Schema): Rule {
   return (host: Tree) => {
-    const appConfig = {
+    if (!host.exists('.angular-cli.json')) {
+      throw new Error('Missing .angular-cli.json');
+    }
+
+    const sourceText = host.read('.angular-cli.json')!.toString('utf-8');
+    const json = JSON.parse(sourceText);
+    json.apps = addApp(json.apps, {
       'name': options.name,
       'root': path.join('apps', options.name, options.sourceDir),
       'outDir': `dist/apps/${options.name}`,
@@ -51,18 +58,7 @@ function addAppToAngularCliJson(options: Schema): Rule {
       'scripts': [],
       'environmentSource': 'environments/environment.ts',
       'environments': {'dev': 'environments/environment.ts', 'prod': 'environments/environment.prod.ts'}
-    };
-
-    if (!host.exists('.angular-cli.json')) {
-      throw new Error('Missing .angular-cli.json');
-    }
-
-    const sourceText = host.read('.angular-cli.json')!.toString('utf-8');
-    const json = JSON.parse(sourceText);
-    if (!json['apps']) {
-      json['apps'] = [];
-    }
-    json['apps'].push(appConfig);
+    });
 
     host.overwrite('.angular-cli.json', JSON.stringify(json, null, 2));
     return host;
