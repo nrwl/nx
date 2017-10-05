@@ -1,8 +1,7 @@
 import {apply, branchAndMerge, chain, externalSchematic, mergeWith, move, Rule, template, Tree, url, schematic} from '@angular-devkit/schematics';
 import {Schema} from './schema';
-import {names, toFileName} from '@nrwl/schematics';
 import * as path from 'path';
-import {ngrxVersion, nxVersion, schematicsVersion} from '../utility/lib-versions';
+import {angularCliVersion, ngrxVersion, nxVersion, schematicsVersion} from '../utility/lib-versions';
 import * as fs from 'fs';
 import {join} from 'path';
 import {updateJsonFile} from '../utility/fileutils';
@@ -36,6 +35,9 @@ function updatePackageJson() {
     }
     if (!packageJson.devDependencies['@nrwl/schematics']) {
       packageJson.devDependencies['@nrwl/schematics'] = schematicsVersion;
+    }
+    if (!packageJson.dependencies['@angular/cli']) {
+      packageJson.dependencies['@angular/cli'] = angularCliVersion;
     }
     host.overwrite('package.json', JSON.stringify(packageJson, null, 2));
     return host;

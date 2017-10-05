@@ -9,7 +9,6 @@ import {Schema} from './schema';
 import {InsertChange} from '@schematics/angular/utility/change';
 import {ngrxVersion} from '../utility/lib-versions';
 
-
 function addImportsToModule(name: string, options: Schema): Rule {
   return (host: Tree) => {
     if (options.onlyAddFiles) {
