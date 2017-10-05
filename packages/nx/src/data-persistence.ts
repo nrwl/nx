@@ -116,11 +116,11 @@ export class DataPersistence<T> {
    * class TodoEffects {
    *   @Effect() updateTodo = this.s.optimisticUpdate('UPDATE_TODO', {
    *     // provides an action and the current state of the store
-   *     run(a: UpdateTodo, state: TodosState) {
+   *     run: (a: UpdateTodo, state: TodosState) => {
    *       return this.backend(state.user, a.payload);
    *     },
    *
-   *     undoAction(a: UpdateTodo, e: any): Action {
+   *     undoAction: (a: UpdateTodo, e: any) => {
    *       // dispatch an undo action to undo the changes in the client state
    *       return ({
    *         type: 'UNDO_UPDATE_TODO',
@@ -155,16 +155,15 @@ export class DataPersistence<T> {
    * class TodoEffects {
    *   @Effect() loadTodos = this.s.fetch('GET_TODOS', {
    *     // provides an action and the current state of the store
-   *     run(a: GetTodos, state: TodosState) {
+   *     run: (a: GetTodos, state: TodosState) => {
    *       return this.backend(state.user, a.payload).map(r => ({
    *         type: 'TODOS',
    *         payload: r
    *       });
    *     },
    *
-   *     onError(a: GetTodos, e: any): Action {
+   *     onError: (a: GetTodos, e: any) => {
    *       // dispatch an undo action to undo the changes in the client state
-   *       // return null;
    *     }
    *   });
    *
@@ -174,27 +173,27 @@ export class DataPersistence<T> {
    *
    * This is correct, but because it set the concurrency to 1, it may not be performant.
    *
-   * To fix that, you can provide the `id` function, like this:
+   * To fix that, you can provide the `id` function, li ke this:
    *
    * ```typescript
    * @Injectable()
    * class TodoEffects {
    *   @Effect() loadTodo = this.s.fetch('GET_TODO', {
-   *     run(a: GetTodo, state: TodosState) {
+   *     id: (a: GetTodo, state: TodosState) => {
    *       return a.payload.id;
    *     }
    *
    *     // provides an action and the current state of the store
-   *     run(a: GetTodo, state: TodosState) {
+   *     run: (a: GetTodo, state: TodosState) => {
    *       return this.backend(state.user, a.payload).map(r => ({
    *         type: 'TODO',
    *         payload: r
    *       });
    *     },
    *
-   *     onError(a: GetTodo, e: any): Action {
+   *     onError: (a: GetTodo, e: any) => {
    *       // dispatch an undo action to undo the changes in the client state
-   *       // return null;
+   *       return null;
    *     }
    *   });
    *

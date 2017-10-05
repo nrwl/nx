@@ -93,10 +93,7 @@ describe('DataPersistence', () => {
           run: (a: ActivatedRouteSnapshot, state: TodosState) => {
             return ({type: 'TODO_LOADED', payload: {id: a.params['id'], user: state.user}});
           },
-          onError:
-              () => {
-                return null;
-              }
+          onError: () => null
         });
         constructor(private s: DataPersistence<any>) {}
       }
@@ -130,10 +127,7 @@ describe('DataPersistence', () => {
               return ({type: 'TODO_LOADED', payload: {id: a.params['id'], user: state.user}});
             }
           },
-          onError:
-              (a, e) => {
-                return ({type: 'ERROR', payload: {error: e}});
-              }
+          onError: (a, e) => ({type: 'ERROR', payload: {error: e}})
         });
         constructor(private s: DataPersistence<any>) {}
       }
@@ -176,10 +170,7 @@ describe('DataPersistence', () => {
               return ({type: 'TODO_LOADED', payload: {id: a.params['id'], user: state.user}});
             }
           },
-          onError:
-              (a, e) => {
-                return ({type: 'ERROR', payload: {error: e}});
-              }
+          onError: (a, e) => ({type: 'ERROR', payload: {error: e}})
         });
         constructor(private s: DataPersistence<any>) {}
       }
@@ -220,14 +211,12 @@ describe('DataPersistence', () => {
       class TodoEffects {
         @Effect()
         loadTodos = this.s.fetch('GET_TODOS', {
-          run(a: any, state: TodosState) {
+          run: (a: any, state: TodosState) => {
             // we need to introduce the delay to "enable" switchMap
             return of ({type: 'TODOS', payload: {user: state.user, todos: 'some todos'}}).delay(1);
           },
 
-          onError(a: UpdateTodo, e: any) {
-            return null;
-          }
+          onError: (a: UpdateTodo, e: any) => null
         });
 
         constructor(private s: DataPersistence<any>) {}
@@ -264,18 +253,9 @@ describe('DataPersistence', () => {
       class TodoEffects {
         @Effect()
         loadTodo = this.s.fetch('GET_TODO', {
-          id(a: any, state: TodosState) {
-            return a.payload.id;
-          },
-
-          run(a: any, state: TodosState) {
-            // we need to introduce the delay to "enable" switchMap
-            return of ({type: 'TODO', payload: a.payload}).delay(1);
-          },
-
-          onError(a: UpdateTodo, e: any) {
-            return null;
-          }
+          id: (a: any, state: TodosState) => a.payload.id,
+          run: (a: any, state: TodosState) => of({type: 'TODO', payload: a.payload}).delay(1),
+          onError: (a: UpdateTodo, e: any) => null
         });
 
         constructor(private s: DataPersistence<any>) {}
@@ -319,13 +299,9 @@ describe('DataPersistence', () => {
       class TodoEffects {
         @Effect()
         loadTodo = this.s.pessimisticUpdate('UPDATE_TODO', {
-          run(a: UpdateTodo, state: TodosState) {
-            return ({type: 'TODO_UPDATED', payload: {user: state.user, newTitle: a.payload.newTitle}});
-          },
-
-          onError(a: UpdateTodo, e: any) {
-            return null;
-          }
+          run: (a: UpdateTodo, state: TodosState) =>
+              ({type: 'TODO_UPDATED', payload: {user: state.user, newTitle: a.payload.newTitle}}),
+          onError: (a: UpdateTodo, e: any) => null
         });
 
         constructor(private s: DataPersistence<any>) {}
@@ -361,13 +337,11 @@ describe('DataPersistence', () => {
       class TodoEffects {
         @Effect()
         loadTodo = this.s.pessimisticUpdate('UPDATE_TODO', {
-          run(a: UpdateTodo, state: TodosState) {
+          run: (a: UpdateTodo, state: TodosState) => {
             throw new Error('boom');
           },
 
-          onError(a: UpdateTodo, e: any) {
-            return ({type: 'ERROR', payload: {error: e}});
-          }
+          onError: (a: UpdateTodo, e: any) => ({type: 'ERROR', payload: {error: e}})
         });
 
         constructor(private s: DataPersistence<any>) {}
@@ -404,13 +378,11 @@ describe('DataPersistence', () => {
       class TodoEffects {
         @Effect()
         loadTodo = this.s.pessimisticUpdate('UPDATE_TODO', {
-          run(a: UpdateTodo, state: TodosState) {
+          run: (a: UpdateTodo, state: TodosState) => {
             return _throw('boom');
           },
 
-          onError(a: UpdateTodo, e: any) {
-            return ({type: 'ERROR', payload: {error: e}});
-          }
+          onError: (a: UpdateTodo, e: any) => ({type: 'ERROR', payload: {error: e}})
         });
 
         constructor(private s: DataPersistence<any>) {}
@@ -453,13 +425,11 @@ describe('DataPersistence', () => {
       class TodoEffects {
         @Effect()
         loadTodo = this.s.optimisticUpdate('UPDATE_TODO', {
-          run(a: UpdateTodo, state: TodosState) {
+          run: (a: UpdateTodo, state: TodosState) => {
             throw new Error('boom');
           },
 
-          undoAction(a: UpdateTodo, e: any) {
-            return ({type: 'UNDO_UPDATE_TODO', payload: a.payload});
-          }
+          undoAction: (a: UpdateTodo, e: any) => ({type: 'UNDO_UPDATE_TODO', payload: a.payload})
         });
 
         constructor(private s: DataPersistence<any>) {}
