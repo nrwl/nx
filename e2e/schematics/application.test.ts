@@ -32,7 +32,7 @@ describe('Nrwl Workspace', () => {
           'apps/myapp/e2e/app.po.ts');
     });
 
-    fit('should build app', () => {
+    it('should build app', () => {
       ngNew('--collection=@nrwl/schematics');
       copyMissingPackages();
       newApp('myapp');
