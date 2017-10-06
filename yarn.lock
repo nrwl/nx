@@ -28,7 +28,7 @@
 
 "@angular/cli@nrwl/fix-cli-build":
   version "1.5.0-beta.2"
-  resolved "https://codeload.github.com/nrwl/fix-cli-build/tar.gz/34770ecd376f84a67c1a2c8969cd50a2efff0bca"
+  resolved "https://codeload.github.com/nrwl/fix-cli-build/tar.gz/9b5ae4e30aa11d7b55b323e481c42aac3c09996f"
   dependencies:
     "@angular-devkit/build-optimizer" "~0.0.18"
     "@angular-devkit/schematics" "~0.0.25"

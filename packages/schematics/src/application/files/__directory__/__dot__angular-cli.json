@@ -28,6 +28,7 @@
   "defaults": {
     "schematics": {
       "collection": "@nrwl/schematics",
+      "postGenerate": "npm run format",
       "newProject": ["app", "lib"]
     },
     "styleExt": "<%= style %>",<% if (!minimal) { %>

@@ -19,6 +19,9 @@ function updatePackageJson() {
     if (!packageJson.dependencies) {
       packageJson.dependencies = {};
     }
+    if (packageJson.scripts) {
+      packageJson.scripts = {};
+    }
     if (!packageJson.dependencies['@nrwl/nx']) {
       packageJson.dependencies['@nrwl/nx'] = nxVersion;
     }
@@ -40,6 +43,8 @@ function updatePackageJson() {
     if (!packageJson.dependencies['@angular/cli']) {
       packageJson.dependencies['@angular/cli'] = angularCliVersion;
     }
+    packageJson.scripts['format'] =
+        `find apps/ -iname '*.ts' | xargs clang-format -i && find libs/ -iname '*.ts' | xargs clang-format -i`;
     host.overwrite('package.json', JSON.stringify(packageJson, null, 2));
     return host;
   };
@@ -72,6 +77,7 @@ function updateAngularCLIJson(options: Schema) {
       angularCliJson.defaults.schematics = {};
     }
     angularCliJson.defaults.schematics['collection'] = '@nrwl/schematics';
+    angularCliJson.defaults.schematics['postGenerate'] = 'npm run format';
     angularCliJson.defaults.schematics['newProject'] = ['app', 'lib'];
 
     host.overwrite('.angular-cli.json', JSON.stringify(angularCliJson, null, 2));
