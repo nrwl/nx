@@ -37,6 +37,10 @@ function addImportsToModule(moduleClassName: string, options: Schema): Rule {
 
 function addNgDoBootstrapToModule(moduleClassName: string, options: Schema): Rule {
   return (host: Tree) => {
+    if (!host.exists(options.module)) {
+      throw new Error('Specified module does not exist');
+    }
+
     const modulePath = options.module;
     const sourceText = host.read(modulePath)!.toString('utf-8');
     const source = ts.createSourceFile(modulePath, sourceText, ts.ScriptTarget.Latest, true);
@@ -61,6 +65,10 @@ this.upgrade.bootstrap(document.body, ['downgraded', '${options.name}']);
 
 function createFiles(angularJsImport: string, moduleClassName: string, moduleFileName: string, options: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
+    if (!host.exists(options.module)) {
+      throw new Error('Specified module does not exist');
+    }
+
     const modulePath = options.module;
     const moduleSourceText = host.read(modulePath)!.toString('utf-8');
     const moduleSource = ts.createSourceFile(modulePath, moduleSourceText, ts.ScriptTarget.Latest, true);
