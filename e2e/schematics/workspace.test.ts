@@ -121,5 +121,5 @@ describe('Nrwl Convert to Nx Workspace', () => {
     expect(generatorHelpText).toContain('module');
     expect(generatorHelpText).toContain('pipe');
     expect(generatorHelpText).toContain('service');
-  }, 50000);
+  }, 100000);
 });

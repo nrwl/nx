@@ -25,7 +25,7 @@ describe('ngrx', () => {
 
       runCLI('build');
       runCLI('test --single-run');
-    }, 50000);
+    }, 100000);
 
     it('should add empty root configuration', () => {
       ngNew();
@@ -37,7 +37,7 @@ describe('ngrx', () => {
       expect(contents).toContain('EffectsModule.forRoot');
 
       runCLI('build');
-    }, 50000);
+    }, 100000);
   });
 
   describe('feature', () => {

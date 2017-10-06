@@ -27,7 +27,7 @@ describe('Upgrade', () => {
 
     runCLI('build');
     runCLI('test --single-run');
-  }, 50000);
+  }, 100000);
 
   it('should update package.json', () => {
     ngNew('--skip-install');

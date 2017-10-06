@@ -39,7 +39,7 @@ describe('Nrwl Workspace', () => {
       runCLI('build --aot');
       checkFilesExist('dist/apps/myapp/main.bundle.js');
       expect(runCLI('test --single-run')).toContain('Executed 1 of 1 SUCCESS');
-    }, 50000);
+    }, 100000);
   });
 
   describe('lib', () => {
@@ -60,7 +60,7 @@ describe('Nrwl Workspace', () => {
       newLib('generate lib mylib');
 
       expect(runCLI('test --single-run')).toContain('Executed 2 of 2 SUCCESS');
-    }, 50000);
+    }, 100000);
   });
 
   describe('nglib', () => {
@@ -78,7 +78,7 @@ describe('Nrwl Workspace', () => {
       newLib('mylib --ngmodule');
 
       expect(runCLI('test --single-run')).toContain('Executed 2 of 2 SUCCESS');
-    }, 50000);
+    }, 100000);
 
     it('should resolve dependencies on the lib', () => {
       ngNew('--collection=@nrwl/schematics --npmScope=nrwl');
@@ -101,6 +101,6 @@ describe('Nrwl Workspace', () => {
       `);
 
       runCLI('build --aot');
-    }, 50000);
+    }, 100000);
   });
 });
