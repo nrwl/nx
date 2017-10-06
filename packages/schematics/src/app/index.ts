@@ -1,4 +1,4 @@
-import {apply, branchAndMerge, chain, externalSchematic, mergeWith, move, Rule, template, Tree, url} from '@angular-devkit/schematics';
+import {apply, branchAndMerge, chain, externalSchematic, mergeWith, move, Rule, template, Tree, url, MergeStrategy, filter, noop} from '@angular-devkit/schematics';
 import {Schema} from './schema';
 import * as stringUtils from '@schematics/angular/strings';
 import {addImportToModule, insert, toFileName} from '@nrwl/schematics';
@@ -70,6 +70,7 @@ export default function(schema: Schema): Rule {
   const templateSource =
       apply(url('./files'), [template({utils: stringUtils, dot: '.', tmpl: '', ...options as object})]);
 
+  const selector = `${options.prefix}-root`;
   return chain([
     branchAndMerge(chain([mergeWith(templateSource)])), externalSchematic('@schematics/angular', 'module', {
       name: 'app',
@@ -81,7 +82,7 @@ export default function(schema: Schema): Rule {
     }),
     externalSchematic('@schematics/angular', 'component', {
       name: 'app',
-      selector: `${options.prefix}-root`,
+      selector: selector,
       sourceDir: fullPath(options),
       flat: true,
       inlineStyle: options.inlineStyle,
@@ -91,6 +92,16 @@ export default function(schema: Schema): Rule {
       viewEncapsulation: options.viewEncapsulation,
       changeDetection: options.changeDetection
     }),
+
+    mergeWith(
+        apply(
+            url('./component-files'),
+            [
+              options.inlineTemplate ? filter(path => !path.endsWith('.html')) : noop(),
+              template({...options, tmpl: ''}),
+              move(path.join(fullPath(options), 'app')),
+            ]),
+        MergeStrategy.Overwrite),
     addBootstrap(fullPath(options)), addNxModule(fullPath(options)), addAppToAngularCliJson(options)
   ]);
 }
