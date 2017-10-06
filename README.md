@@ -3,6 +3,8 @@
 
 # Nrwl Extensions for Angular
 
+<img src="https://preview.ibb.co/mW6sdw/nx_logo.png">
+
 An open source toolkit for enterprise Angular applications.
 
 Nx is designed to help you create and build enterprise grade Angular applications. It provides an opinionated approach to application project structure and patterns.
