@@ -18,22 +18,19 @@
     "publish_npm": "./scripts/publish.sh",
     "postinstall": "./scripts/copy-clis.sh"
   },
-
   "dependencies": {
     "jasmine-marbles": "0.1.0"
   },
-
   "devDependencies": {
     "@angular/cli": "nrwl/fix-cli-build",
-    "@angular/common": "5.0.0-rc.0",
-    "@angular/compiler": "5.0.0-rc.0",
-    "@angular/compiler-cli": "5.0.0-rc.0",
-    "@angular/core": "5.0.0-rc.0",
-    "@angular/platform-browser": "5.0.0-rc.0",
-    "@angular/platform-browser-dynamic": "5.0.0-rc.0",
-    "@angular/router": "5.0.0-rc.0",
-    "@angular/upgrade": "5.0.0-rc.0",
-
+    "@angular/common": "4.4.4",
+    "@angular/compiler": "4.4.4",
+    "@angular/compiler-cli": "4.4.4",
+    "@angular/core": "4.4.4",
+    "@angular/platform-browser": "4.4.4",
+    "@angular/platform-browser-dynamic": "4.4.4",
+    "@angular/router": "4.4.4",
+    "@angular/upgrade": "4.4.4",
     "@ngrx/effects": "4.0.3",
     "@ngrx/router-store": "4.0.3",
     "@ngrx/store": "4.0.3",
