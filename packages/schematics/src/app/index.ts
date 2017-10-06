@@ -44,7 +44,7 @@ function addAppToAngularCliJson(options: Schema): Rule {
     const json = JSON.parse(sourceText);
     json.apps = addApp(json.apps, {
       'name': options.name,
-      'root': path.join('apps', options.name, options.sourceDir),
+      'root': fullPath(options),
       'outDir': `dist/apps/${options.name}`,
       'assets': ['assets', 'favicon.ico'],
       'index': 'index.html',
@@ -65,9 +65,8 @@ function addAppToAngularCliJson(options: Schema): Rule {
   };
 }
 
-export default function(options: Schema): Rule {
-  const fullPath = path.join('apps', toFileName(options.name), options.sourceDir);
-
+export default function(schema: Schema): Rule {
+  const options = {...schema, name: toFileName(schema.name)};
   const templateSource =
       apply(url('./files'), [template({utils: stringUtils, dot: '.', tmpl: '', ...options as object})]);
 
@@ -77,13 +76,13 @@ export default function(options: Schema): Rule {
       commonModule: false,
       flat: true,
       routing: options.routing,
-      sourceDir: fullPath,
+      sourceDir: fullPath(options),
       spec: false,
     }),
     externalSchematic('@schematics/angular', 'component', {
       name: 'app',
       selector: `${options.prefix}-root`,
-      sourceDir: fullPath,
+      sourceDir: fullPath(options),
       flat: true,
       inlineStyle: options.inlineStyle,
       inlineTemplate: options.inlineTemplate,
@@ -92,6 +91,10 @@ export default function(options: Schema): Rule {
       viewEncapsulation: options.viewEncapsulation,
       changeDetection: options.changeDetection
     }),
-    addBootstrap(fullPath), addNxModule(fullPath), addAppToAngularCliJson(options)
+    addBootstrap(fullPath(options)), addNxModule(fullPath(options)), addAppToAngularCliJson(options)
   ]);
+}
+
+function fullPath(options: Schema) {
+  return path.join('apps', options.name, options.sourceDir);
 }

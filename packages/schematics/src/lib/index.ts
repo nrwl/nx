@@ -12,19 +12,16 @@ function addLibToAngularCliJson(options: Schema): Rule {
 
     const sourceText = host.read('.angular-cli.json')!.toString('utf-8');
     const json = JSON.parse(sourceText);
-    json.apps = addApp(json.apps, {
-      'name': options.name,
-      'root': path.join('libs', options.name, options.sourceDir),
-      'test': '../../../test.js',
-      'appRoot': ''
-    });
+    json.apps =
+        addApp(json.apps, {'name': options.name, 'root': fullPath(options), 'test': '../../../test.js', 'appRoot': ''});
 
     host.overwrite('.angular-cli.json', JSON.stringify(json, null, 2));
     return host;
   };
 }
 
-export default function(options: Schema): Rule {
+export default function(schema: Schema): Rule {
+  const options = {...schema, name: toFileName(schema.name)};
   const fullPath = path.join('libs', toFileName(options.name), options.sourceDir);
 
   const templateSource = apply(
@@ -32,4 +29,8 @@ export default function(options: Schema): Rule {
       [template({...names(options.name), dot: '.', tmpl: '', ...options as object})]);
 
   return chain([branchAndMerge(chain([mergeWith(templateSource)])), addLibToAngularCliJson(options)]);
+}
+
+function fullPath(options: Schema) {
+  return path.join('libs', options.name, options.sourceDir);
 }

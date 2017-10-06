@@ -5,6 +5,7 @@ import {angularCliVersion, ngrxVersion, nxVersion, schematicsVersion} from '../u
 import * as fs from 'fs';
 import {join} from 'path';
 import {updateJsonFile} from '../utility/fileutils';
+import {toFileName} from '@nrwl/schematics';
 
 function updatePackageJson() {
   return (host: Tree) => {
@@ -178,7 +179,8 @@ function dedup(array: any[]): any[] {
   return res;
 }
 
-export default function(options: Schema): Rule {
+export default function(schema: Schema): Rule {
+  const options = {...schema, name: toFileName(schema.name)};
   return chain([
     moveFiles(options), branchAndMerge(chain([
       mergeWith(apply(url('./files'), [])),
