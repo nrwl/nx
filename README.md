@@ -3,7 +3,7 @@
 
 # Nrwl Extensions for Angular
 
-<img src="https://preview.ibb.co/mW6sdw/nx_logo.png">
+<img src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png">
 
 An open source toolkit for enterprise Angular applications.
 
