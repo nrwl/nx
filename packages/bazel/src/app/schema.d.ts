@@ -4,8 +4,8 @@ export interface Schema {
   sourceDir?: string;
   inlineStyle?: boolean;
   inlineTemplate?: boolean;
-  viewEncapsulation?: ('Emulated'|'Native'|'None');
-  changeDetection?: ('Default'|'OnPush');
+  viewEncapsulation?: 'Emulated' | 'Native' | 'None';
+  changeDetection?: 'Default' | 'OnPush';
   prefix?: string;
   style?: string;
   skipTests?: boolean;

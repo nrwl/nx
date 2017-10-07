@@ -1,9 +1,19 @@
-import {apply, chain, mergeWith, move, Rule, externalSchematic, template, url, Tree,} from '@angular-devkit/schematics';
-import {Schema} from './schema';
-import {names, toFileName, insert} from '@nrwl/schematics';
+import {
+  apply,
+  chain,
+  mergeWith,
+  move,
+  Rule,
+  externalSchematic,
+  template,
+  url,
+  Tree
+} from '@angular-devkit/schematics';
+import { Schema } from './schema';
+import { names, toFileName, insert } from '@nrwl/schematics';
 import * as path from 'path';
 import * as ts from 'typescript';
-import {addBootstrapToModule, addImportToModule} from '@schematics/angular/utility/ast-utils';
+import { addBootstrapToModule, addImportToModule } from '@schematics/angular/utility/ast-utils';
 
 function addBootstrap(path: string): Rule {
   return (host: Tree) => {
@@ -32,7 +42,10 @@ function addAppToAngularCliJson(fullPath: string, options: Schema): Rule {
       styles: ['styles.css'],
       scripts: [],
       environmentSource: 'environments/environment.ts',
-      environments: {'dev': 'environments/environment.ts', 'prod': 'environments/environment.prod.ts'}
+      environments: {
+        dev: 'environments/environment.ts',
+        prod: 'environments/environment.prod.ts'
+      }
     });
 
     host.overwrite('.angular-cli.json', JSON.stringify(config, null, 2));
@@ -40,18 +53,17 @@ function addAppToAngularCliJson(fullPath: string, options: Schema): Rule {
   };
 }
 
-
 export default function(options: Schema): Rule {
   const fullPath = path.join(options.directory, toFileName(options.name), options.sourceDir);
   return chain([
-    mergeWith(apply(url('./files'), [template({...options, ...names(options.name), 'dot': '.', 'tmpl': ''})])),
+    mergeWith(apply(url('./files'), [template({ ...options, ...names(options.name), dot: '.', tmpl: '' })])),
     externalSchematic('@schematics/angular', 'module', {
       name: 'app',
       commonModule: false,
       flat: true,
       routing: options.routing,
       sourceDir: fullPath,
-      spec: false,
+      spec: false
     }),
     externalSchematic('@schematics/angular', 'component', {
       name: 'app',
@@ -65,6 +77,7 @@ export default function(options: Schema): Rule {
       viewEncapsulation: options.viewEncapsulation,
       changeDetection: options.changeDetection
     }),
-    addBootstrap(fullPath), addAppToAngularCliJson(fullPath, options)
+    addBootstrap(fullPath),
+    addAppToAngularCliJson(fullPath, options)
   ]);
 }

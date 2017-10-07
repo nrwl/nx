@@ -1,32 +1,32 @@
-import {Injectable, Type} from '@angular/core';
-import {ActivatedRouteSnapshot, RouterStateSnapshot} from '@angular/router';
-import {Actions} from '@ngrx/effects';
-import {ROUTER_NAVIGATION, RouterNavigationAction} from '@ngrx/router-store';
-import {Action, State, Store} from '@ngrx/store';
-import {Observable} from 'rxjs/Observable';
-import {of} from 'rxjs/observable/of';
-import {_catch} from 'rxjs/operator/catch';
-import {concatMap} from 'rxjs/operator/concatMap';
-import {filter} from 'rxjs/operator/filter';
-import {groupBy} from 'rxjs/operator/groupBy';
-import {map} from 'rxjs/operator/map';
-import {mergeMap} from 'rxjs/operator/mergeMap';
-import {switchMap} from 'rxjs/operator/switchMap';
-import {withLatestFrom} from 'rxjs/operator/withLatestFrom';
+import { Injectable, Type } from '@angular/core';
+import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import { Actions } from '@ngrx/effects';
+import { ROUTER_NAVIGATION, RouterNavigationAction } from '@ngrx/router-store';
+import { Action, State, Store } from '@ngrx/store';
+import { Observable } from 'rxjs/Observable';
+import { of } from 'rxjs/observable/of';
+import { _catch } from 'rxjs/operator/catch';
+import { concatMap } from 'rxjs/operator/concatMap';
+import { filter } from 'rxjs/operator/filter';
+import { groupBy } from 'rxjs/operator/groupBy';
+import { map } from 'rxjs/operator/map';
+import { mergeMap } from 'rxjs/operator/mergeMap';
+import { switchMap } from 'rxjs/operator/switchMap';
+import { withLatestFrom } from 'rxjs/operator/withLatestFrom';
 
 /**
  * See {@link DataPersistence.pessimisticUpdate} for more information.
  */
 export interface PessimisticUpdateOpts {
-  run(a: Action, state?: any): Observable<Action>|Action|void;
-  onError(a: Action, e: any): Observable<any>|any;
+  run(a: Action, state?: any): Observable<Action> | Action | void;
+  onError(a: Action, e: any): Observable<any> | any;
 }
 /**
  * See {@link DataPersistence.pessimisticUpdate} for more information.
  */
 export interface OptimisticUpdateOpts {
-  run(a: Action, state?: any): Observable<any>|any;
-  undoAction(a: Action, e: any): Observable<Action>|Action;
+  run(a: Action, state?: any): Observable<any> | any;
+  undoAction(a: Action, e: any): Observable<Action> | Action;
 }
 
 /**
@@ -34,16 +34,16 @@ export interface OptimisticUpdateOpts {
  */
 export interface FetchOpts {
   id?(a: Action, state?: any): any;
-  run(a: Action, state?: any): Observable<Action>|Action|void;
-  onError?(a: Action, e: any): Observable<any>|any;
+  run(a: Action, state?: any): Observable<Action> | Action | void;
+  onError?(a: Action, e: any): Observable<any> | any;
 }
 
 /**
  * See {@link DataPersistence.navigation} for more information.
  */
 export interface HandleNavigationOpts {
-  run(a: ActivatedRouteSnapshot, state?: any): Observable<Action>|Action|void;
-  onError?(a: ActivatedRouteSnapshot, e: any): Observable<any>|any;
+  run(a: ActivatedRouteSnapshot, state?: any): Observable<Action> | Action | void;
+  onError?(a: ActivatedRouteSnapshot, e: any): Observable<any> | any;
 }
 
 type Pair = [Action, any];
@@ -211,10 +211,10 @@ export class DataPersistence<T> {
     const allPairs = withLatestFrom.call(nav, this.store);
 
     if (opts.id) {
-      const groupedFetches: Observable<Observable<Pair>> = groupBy.call(allPairs, (p) => opts.id(p[0], p[1]));
-      return mergeMap.call(
-          groupedFetches,
-          (pairs: Observable<Pair>) => switchMap.call(pairs, this.runWithErrorHandling(opts.run, opts.onError)));
+      const groupedFetches: Observable<Observable<Pair>> = groupBy.call(allPairs, p => opts.id(p[0], p[1]));
+      return mergeMap.call(groupedFetches, (pairs: Observable<Pair>) =>
+        switchMap.call(pairs, this.runWithErrorHandling(opts.run, opts.onError))
+      );
     } else {
       return concatMap.call(allPairs, this.runWithErrorHandling(opts.run, opts.onError));
     }
@@ -256,10 +256,11 @@ export class DataPersistence<T> {
    */
   navigation(component: Type<any>, opts: HandleNavigationOpts): Observable<any> {
     const nav = filter.call(
-        map.call(
-            this.actions.ofType(ROUTER_NAVIGATION),
-            (a: RouterNavigationAction<RouterStateSnapshot>) => findSnapshot(component, a.payload.routerState.root)),
-        s => !!s);
+      map.call(this.actions.ofType(ROUTER_NAVIGATION), (a: RouterNavigationAction<RouterStateSnapshot>) =>
+        findSnapshot(component, a.payload.routerState.root)
+      ),
+      s => !!s
+    );
 
     const pairs = withLatestFrom.call(nav, this.store);
     return switchMap.call(pairs, this.runWithErrorHandling(opts.run, opts.onError));
@@ -269,11 +270,11 @@ export class DataPersistence<T> {
     return a => {
       try {
         const r = wrapIntoObservable(run(a[0], a[1]));
-        return _catch.call(r, e => wrapIntoObservable(onError(a[0], e)))
+        return _catch.call(r, e => wrapIntoObservable(onError(a[0], e)));
       } catch (e) {
         return wrapIntoObservable(onError(a[0], e));
       }
-    }
+    };
   }
 }
 
@@ -294,8 +295,8 @@ function wrapIntoObservable(obj: any): Observable<any> {
   if (!!obj && typeof obj.subscribe === 'function') {
     return obj;
   } else if (!obj) {
-    return of ();
+    return of();
   } else {
-    return of (obj);
+    return of(obj);
   }
 }

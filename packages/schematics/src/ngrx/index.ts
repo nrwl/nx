@@ -1,13 +1,24 @@
-import {apply, branchAndMerge, chain, mergeWith, move, noop, Rule, template, Tree, url} from '@angular-devkit/schematics';
+import {
+  apply,
+  branchAndMerge,
+  chain,
+  mergeWith,
+  move,
+  noop,
+  Rule,
+  template,
+  Tree,
+  url
+} from '@angular-devkit/schematics';
 
-import {names, toClassName, toFileName, toPropertyName} from '../utility/name-utils';
+import { names, toClassName, toFileName, toPropertyName } from '../utility/name-utils';
 import * as path from 'path';
 import * as ts from 'typescript';
-import {addImportToModule, addProviderToModule, insert, offset} from '../utility/ast-utils';
-import {insertImport} from '@schematics/angular/utility/route-utils';
-import {Schema} from './schema';
-import {InsertChange} from '@schematics/angular/utility/change';
-import {ngrxVersion} from '../utility/lib-versions';
+import { addImportToModule, addProviderToModule, insert, offset } from '../utility/ast-utils';
+import { insertImport } from '@schematics/angular/utility/route-utils';
+import { Schema } from './schema';
+import { InsertChange } from '@schematics/angular/utility/change';
+import { ngrxVersion } from '../utility/lib-versions';
 
 function addImportsToModule(name: string, options: Schema): Rule {
   return (host: Tree) => {
@@ -35,7 +46,6 @@ function addImportsToModule(name: string, options: Schema): Rule {
         ...addImportToModule(source, modulePath, `!environment.production ? StoreDevtoolsModule.instrument() : []`)
       ]);
       return host;
-
     } else {
       const reducerPath = `./+state/${toFileName(name)}.reducer`;
       const effectsPath = `./+state/${toFileName(name)}.effects`;
@@ -61,14 +71,16 @@ function addImportsToModule(name: string, options: Schema): Rule {
           insertImport(source, modulePath, 'environment', '../environments/environment'),
           ...addImportToModule(source, modulePath, `StoreModule.forRoot(${reducerName}, {initialState: ${initName}})`),
           ...addImportToModule(source, modulePath, `EffectsModule.forRoot([${effectsName}])`),
-          ...addImportToModule(source, modulePath, `!environment.production ? StoreDevtoolsModule.instrument() : []`),
+          ...addImportToModule(source, modulePath, `!environment.production ? StoreDevtoolsModule.instrument() : []`)
         ]);
       } else {
         insert(host, modulePath, [
           ...common,
           ...addImportToModule(
-              source, modulePath,
-              `StoreModule.forFeature('${toPropertyName(name)}', ${reducerName}, {initialState: ${initName}})`),
+            source,
+            modulePath,
+            `StoreModule.forFeature('${toPropertyName(name)}', ${reducerName}, {initialState: ${initName}})`
+          ),
           ...addImportToModule(source, modulePath, `EffectsModule.forFeature([${effectsName}])`)
         ]);
       }
@@ -112,9 +124,10 @@ export default function(options: Schema): Rule {
   if (options.onlyEmptyRoot) {
     return chain([addImportsToModule(name, options), options.skipPackageJson ? noop() : addNgRxToPackageJson()]);
   } else {
-    const templateSource = apply(url('./files'), [template({...options, tmpl: '', ...names(name)}), move(moduleDir)]);
+    const templateSource = apply(url('./files'), [template({ ...options, tmpl: '', ...names(name) }), move(moduleDir)]);
     return chain([
-      branchAndMerge(chain([mergeWith(templateSource)])), addImportsToModule(name, options),
+      branchAndMerge(chain([mergeWith(templateSource)])),
+      addImportsToModule(name, options),
       options.skipPackageJson ? noop() : addNgRxToPackageJson()
     ]);
   }

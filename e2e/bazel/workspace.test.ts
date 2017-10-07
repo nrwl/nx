@@ -1,4 +1,15 @@
-import {checkFilesExist, cleanup, copyMissingPackages, ngNew, ngNewBazel, readFile, runCLI, runCommand, runSchematic, updateFile} from '../utils';
+import {
+  checkFilesExist,
+  cleanup,
+  copyMissingPackages,
+  ngNew,
+  ngNewBazel,
+  readFile,
+  runCLI,
+  runCommand,
+  runSchematic,
+  updateFile
+} from '../utils';
 
 describe('workspace', () => {
   beforeEach(cleanup);

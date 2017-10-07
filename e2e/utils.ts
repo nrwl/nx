@@ -1,11 +1,13 @@
-import {execSync} from 'child_process';
-import {linkSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync} from 'fs';
+import { execSync } from 'child_process';
+import { linkSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'fs';
 import * as path from 'path';
 
 const projectName: string = 'proj';
 
 export function ngNew(command?: string): string {
-  return execSync(`../node_modules/.bin/ng new proj ${command}`, {cwd: `./tmp`}).toString();
+  return execSync(`../node_modules/.bin/ng new proj ${command}`, {
+    cwd: `./tmp`
+  }).toString();
 }
 
 export function ngNewBazel(command?: string): string {
@@ -16,13 +18,18 @@ export function ngNewBazel(command?: string): string {
   return res;
 }
 
-export function runCLI(command?: string, opts = {
-  silenceError: false
-}): string {
+export function runCLI(
+  command?: string,
+  opts = {
+    silenceError: false
+  }
+): string {
   try {
-    return execSync(`../../node_modules/.bin/ng ${command}`, {cwd: `./tmp/${projectName}`})
-        .toString()
-        .replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
+    return execSync(`../../node_modules/.bin/ng ${command}`, {
+      cwd: `./tmp/${projectName}`
+    })
+      .toString()
+      .replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
   } catch (e) {
     if (opts.silenceError) {
       return e.stdout.toString();
@@ -35,24 +42,26 @@ export function runCLI(command?: string, opts = {
 
 // switch to ng generate, once CLI is fixed
 export function newApp(name: string): string {
-  return runCLI(`generate app ${name}`)
+  return runCLI(`generate app ${name}`);
   // return execSync(`../../node_modules/.bin/schematics @nrwl/schematics:app --name=${name}
   // --collection=@nrwl/schematics`, { cwd: `./tmp/${projectName}` }).toString();
 }
 
 // switch to ng generate, once CLI is fixed
 export function newLib(name: string): string {
-  return runCLI(`generate lib ${name}`)
+  return runCLI(`generate lib ${name}`);
   // return execSync(`../../node_modules/.bin/schematics @nrwl/schematics:lib --name=${name}
   // --collection=@nrwl/schematics`, { cwd: `./tmp/${projectName}` }).toString();
 }
 
 export function runSchematic(command: string): string {
-  return execSync(`../../node_modules/.bin/schematics ${command}`, {cwd: `./tmp/${projectName}`}).toString();
+  return execSync(`../../node_modules/.bin/schematics ${command}`, {
+    cwd: `./tmp/${projectName}`
+  }).toString();
 }
 
 export function runCommand(command: string): string {
-  return execSync(command, {cwd: `./tmp/${projectName}`}).toString();
+  return execSync(command, { cwd: `./tmp/${projectName}` }).toString();
 }
 
 export function updateFile(f: string, content: string): void {

@@ -9,7 +9,7 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "format": "find apps/ -iname '*.ts' | xargs clang-format -i && find libs/ -iname '*.ts' | xargs clang-format -i"
+    "format": "prettier --single-quote --print-width 120 --write '{apps,libs}/**/*.ts'"
   },
   "private": true,
   "dependencies": {
@@ -52,6 +52,6 @@
     "ts-node": "~3.2.0",
     "tslint": "~5.3.2",<% } %>
     "typescript": "~2.3.3",
-    "clang-format": "1.0.55"
+    "prettier": "<%= prettierVersion %>"
   }
 }

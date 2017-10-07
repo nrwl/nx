@@ -1,4 +1,4 @@
-import {checkFilesExist, cleanup, copyMissingPackages, ngNewBazel, readFile, runCLI, runSchematic} from '../utils';
+import { checkFilesExist, cleanup, copyMissingPackages, ngNewBazel, readFile, runCLI, runSchematic } from '../utils';
 
 describe('application', () => {
   beforeEach(cleanup);
@@ -9,8 +9,14 @@ describe('application', () => {
       runSchematic('@nrwl/bazel:app --name=myApp');
 
       checkFilesExist(
-          `tsconfig.json`, `WORKSPACE`, `BUILD.bazel`, `apps/my-app/BUILD.bazel`, `apps/my-app/src/index.html`,
-          `apps/my-app/src/app/app.module.ts`, `apps/my-app/src/app/app.component.ts`);
+        `tsconfig.json`,
+        `WORKSPACE`,
+        `BUILD.bazel`,
+        `apps/my-app/BUILD.bazel`,
+        `apps/my-app/src/index.html`,
+        `apps/my-app/src/app/app.module.ts`,
+        `apps/my-app/src/app/app.component.ts`
+      );
 
       expect(readFile('apps/my-app/src/app/app.module.ts')).toContain('bootstrap: [AppComponent]');
 

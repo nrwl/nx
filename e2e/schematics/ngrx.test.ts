@@ -1,4 +1,4 @@
-import {checkFilesExist, cleanup, copyMissingPackages, ngNew, readFile, runCLI} from '../utils';
+import { checkFilesExist, cleanup, copyMissingPackages, ngNew, readFile, runCLI } from '../utils';
 
 describe('ngrx', () => {
   beforeEach(cleanup);
@@ -9,35 +9,48 @@ describe('ngrx', () => {
       runCLI('generate ngrx app --module=src/app/app.module.ts --root --collection=@nrwl/schematics');
 
       checkFilesExist(
-          `src/app/+state/app.actions.ts`, `src/app/+state/app.effects.ts`, `src/app/+state/app.effects.spec.ts`,
-          `src/app/+state/app.init.ts`, `src/app/+state/app.interfaces.ts`, `src/app/+state/app.reducer.ts`,
-          `src/app/+state/app.reducer.spec.ts`);
+        `src/app/+state/app.actions.ts`,
+        `src/app/+state/app.effects.ts`,
+        `src/app/+state/app.effects.spec.ts`,
+        `src/app/+state/app.init.ts`,
+        `src/app/+state/app.interfaces.ts`,
+        `src/app/+state/app.reducer.ts`,
+        `src/app/+state/app.reducer.spec.ts`
+      );
 
       const contents = readFile('src/app/app.module.ts');
       expect(contents).toContain('StoreModule.forRoot');
       expect(contents).toContain('EffectsModule.forRoot');
     });
 
-    it('should build', () => {
-      ngNew();
-      copyMissingPackages();
-      runCLI('generate ngrx app --module=src/app/app.module.ts --root --collection=@nrwl/schematics');
+    it(
+      'should build',
+      () => {
+        ngNew();
+        copyMissingPackages();
+        runCLI('generate ngrx app --module=src/app/app.module.ts --root --collection=@nrwl/schematics');
 
-      runCLI('build');
-      runCLI('test --single-run');
-    }, 100000);
+        runCLI('build');
+        runCLI('test --single-run');
+      },
+      100000
+    );
 
-    it('should add empty root configuration', () => {
-      ngNew();
-      copyMissingPackages();
-      runCLI('generate ngrx app --module=src/app/app.module.ts --onlyEmptyRoot --collection=@nrwl/schematics');
+    it(
+      'should add empty root configuration',
+      () => {
+        ngNew();
+        copyMissingPackages();
+        runCLI('generate ngrx app --module=src/app/app.module.ts --onlyEmptyRoot --collection=@nrwl/schematics');
 
-      const contents = readFile('src/app/app.module.ts');
-      expect(contents).toContain('StoreModule.forRoot');
-      expect(contents).toContain('EffectsModule.forRoot');
+        const contents = readFile('src/app/app.module.ts');
+        expect(contents).toContain('StoreModule.forRoot');
+        expect(contents).toContain('EffectsModule.forRoot');
 
-      runCLI('build');
-    }, 100000);
+        runCLI('build');
+      },
+      100000
+    );
   });
 
   describe('feature', () => {
@@ -46,9 +59,14 @@ describe('ngrx', () => {
       runCLI('generate ngrx app --module=src/app/app.module.ts --collection=@nrwl/schematics');
 
       checkFilesExist(
-          `src/app/+state/app.actions.ts`, `src/app/+state/app.effects.ts`, `src/app/+state/app.effects.spec.ts`,
-          `src/app/+state/app.init.ts`, `src/app/+state/app.interfaces.ts`, `src/app/+state/app.reducer.ts`,
-          `src/app/+state/app.reducer.spec.ts`);
+        `src/app/+state/app.actions.ts`,
+        `src/app/+state/app.effects.ts`,
+        `src/app/+state/app.effects.spec.ts`,
+        `src/app/+state/app.init.ts`,
+        `src/app/+state/app.interfaces.ts`,
+        `src/app/+state/app.reducer.ts`,
+        `src/app/+state/app.reducer.spec.ts`
+      );
 
       const contents = readFile('src/app/app.module.ts');
       expect(contents).toContain('StoreModule.forFeature');
@@ -61,9 +79,14 @@ describe('ngrx', () => {
     runCLI('generate ngrx app --module=src/app/app.module.ts --onlyAddFiles --collection=@nrwl/schematics');
 
     checkFilesExist(
-        `src/app/+state/app.actions.ts`, `src/app/+state/app.effects.ts`, `src/app/+state/app.effects.spec.ts`,
-        `src/app/+state/app.init.ts`, `src/app/+state/app.interfaces.ts`, `src/app/+state/app.reducer.ts`,
-        `src/app/+state/app.reducer.spec.ts`);
+      `src/app/+state/app.actions.ts`,
+      `src/app/+state/app.effects.ts`,
+      `src/app/+state/app.effects.spec.ts`,
+      `src/app/+state/app.init.ts`,
+      `src/app/+state/app.interfaces.ts`,
+      `src/app/+state/app.reducer.ts`,
+      `src/app/+state/app.reducer.spec.ts`
+    );
 
     const contents = readFile('src/app/app.module.ts');
     expect(contents).not.toContain('StoreModule');

@@ -1,4 +1,13 @@
-import {checkFilesExist, cleanup, copyMissingPackages, ngNew, readFile, runCLI, runSchematic, updateFile} from '../utils';
+import {
+  checkFilesExist,
+  cleanup,
+  copyMissingPackages,
+  ngNew,
+  readFile,
+  runCLI,
+  runSchematic,
+  updateFile
+} from '../utils';
 
 describe('Nrwl Convert to Nx Workspace', () => {
   beforeEach(cleanup);
@@ -20,7 +29,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
 
     // update tsconfig.json
     const tsconfigJson = JSON.parse(readFile('tsconfig.json'));
-    tsconfigJson.compilerOptions.paths = {'a': ['b']};
+    tsconfigJson.compilerOptions.paths = { a: ['b'] };
     updateFile('tsconfig.json', JSON.stringify(tsconfigJson, null, 2));
 
     // update angular-cli.json
@@ -56,8 +65,10 @@ describe('Nrwl Convert to Nx Workspace', () => {
 
     // check if tsconfig.json get merged
     const updatedTsConfig = JSON.parse(readFile('tsconfig.json'));
-    expect(updatedTsConfig.compilerOptions.paths).toEqual({'a': ['b'], '@proj/*': ['libs/*']});
-
+    expect(updatedTsConfig.compilerOptions.paths).toEqual({
+      a: ['b'],
+      '@proj/*': ['libs/*']
+    });
   });
 
   it('should generate a workspace and not change dependencies or devDependencies if they already exist', () => {
@@ -87,14 +98,18 @@ describe('Nrwl Convert to Nx Workspace', () => {
     expect(packageJson.dependencies['@ngrx/store-devtools']).toEqual(ngrxVersion);
   });
 
-  it('should build and test and support the existing AngularCLI generators', () => {
-    ngNew();
-    copyMissingPackages();
+  it(
+    'should build and test and support the existing AngularCLI generators',
+    () => {
+      ngNew();
+      copyMissingPackages();
 
-    runCLI('generate workspace proj --collection=@nrwl/schematics');
-    runCLI('generate lib mylib --ngmodule');
+      runCLI('generate workspace proj --collection=@nrwl/schematics');
+      runCLI('generate lib mylib --ngmodule');
 
-    updateFile('apps/proj/src/app/app.module.ts', `
+      updateFile(
+        'apps/proj/src/app/app.module.ts',
+        `
         import { NgModule } from '@angular/core';
         import { BrowserModule } from '@angular/platform-browser';
         import { MylibModule } from '@proj/mylib';
@@ -106,20 +121,23 @@ describe('Nrwl Convert to Nx Workspace', () => {
           bootstrap: [AppComponent]
         })
         export class AppModule {}
-      `);
+      `
+      );
 
-    expect(runCLI('build --aot')).toContain('{main} main.bundle.js');
-    expect(runCLI('test --single-run')).toContain('Executed 4 of 4 SUCCESS');
-    expect(runCLI('e2e')).toContain('Executed 1 of 1 spec SUCCESS');
-    const generatorHelpText = runCLI('g -h');
-    expect(generatorHelpText).toContain('class');
-    expect(generatorHelpText).toContain('component');
-    expect(generatorHelpText).toContain('directive');
-    expect(generatorHelpText).toContain('enum');
-    expect(generatorHelpText).toContain('guard');
-    expect(generatorHelpText).toContain('interface');
-    expect(generatorHelpText).toContain('module');
-    expect(generatorHelpText).toContain('pipe');
-    expect(generatorHelpText).toContain('service');
-  }, 100000);
+      expect(runCLI('build --aot')).toContain('{main} main.bundle.js');
+      expect(runCLI('test --single-run')).toContain('Executed 4 of 4 SUCCESS');
+      expect(runCLI('e2e')).toContain('Executed 1 of 1 spec SUCCESS');
+      const generatorHelpText = runCLI('g -h');
+      expect(generatorHelpText).toContain('class');
+      expect(generatorHelpText).toContain('component');
+      expect(generatorHelpText).toContain('directive');
+      expect(generatorHelpText).toContain('enum');
+      expect(generatorHelpText).toContain('guard');
+      expect(generatorHelpText).toContain('interface');
+      expect(generatorHelpText).toContain('module');
+      expect(generatorHelpText).toContain('pipe');
+      expect(generatorHelpText).toContain('service');
+    },
+    100000
+  );
 });

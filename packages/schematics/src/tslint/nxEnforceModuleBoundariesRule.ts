@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as Lint from 'tslint';
-import {IOptions} from 'tslint';
+import { IOptions } from 'tslint';
 import * as ts from 'typescript';
 
 export class Rule extends Lint.Rules.AbstractRule {
@@ -29,10 +29,8 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
 
     if (impParts[0] === npmScope && impParts.length > 2) {
       this.addFailureAt(node.getStart(), node.getWidth(), 'deep imports into libraries are forbidden');
-
     } else if (impParts[0] === npmScope && impParts.length === 2 && lazyLoad && lazyLoad.indexOf(impParts[1]) > -1) {
       this.addFailureAt(node.getStart(), node.getWidth(), 'import of lazy-loaded libraries are forbidden');
-
     } else if (this.isRelative(imp) && this.isRelativeImportIntoAnotherProject(imp)) {
       this.addFailureAt(node.getStart(), node.getWidth(), 'relative imports of libraries are forbidden');
     }

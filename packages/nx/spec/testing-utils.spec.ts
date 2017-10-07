@@ -1,9 +1,9 @@
-import {from} from 'rxjs/observable/from'
-import {readAll, readFirst} from '../src/testing-utils';
+import { from } from 'rxjs/observable/from';
+import { readAll, readFirst } from '../src/testing-utils';
 
 describe('TestingUtils', () => {
   describe('readAll', () => {
-    it('should transform Observable<T> to Promise<Array<T>>', async (done) => {
+    it('should transform Observable<T> to Promise<Array<T>>', async done => {
       const obs = from([1, 2, 3]);
       const result = await readAll(obs);
 
@@ -14,7 +14,7 @@ describe('TestingUtils', () => {
   });
 
   describe('readFirst', () => {
-    it('should transform first item emitted from Observable<T> to Promise<T>', async (done) => {
+    it('should transform first item emitted from Observable<T> to Promise<T>', async done => {
       const obs = from([1, 2, 3]);
       const result = await readFirst(obs);
 

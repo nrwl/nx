@@ -1,7 +1,7 @@
-import {Observable} from 'rxjs/Observable';
-import {first} from 'rxjs/operator/first';
-import {toArray} from 'rxjs/operator/toArray';
-import {toPromise} from 'rxjs/operator/toPromise';
+import { Observable } from 'rxjs/Observable';
+import { first } from 'rxjs/operator/first';
+import { toArray } from 'rxjs/operator/toArray';
+import { toPromise } from 'rxjs/operator/toPromise';
 
 /**
  * @whatItDoes reads all the values from an observable and returns a promise

@@ -1,5 +1,5 @@
-import {ModuleWithProviders, NgModule} from '@angular/core';
-import {DataPersistence} from './data-persistence';
+import { ModuleWithProviders, NgModule } from '@angular/core';
+import { DataPersistence } from './data-persistence';
 
 /**
  * @whatItDoes Provides services for enterprise Angular applications.
@@ -9,6 +9,6 @@ import {DataPersistence} from './data-persistence';
 @NgModule({})
 export class NxModule {
   static forRoot(): ModuleWithProviders {
-    return {ngModule: NxModule, providers: [DataPersistence]};
+    return { ngModule: NxModule, providers: [DataPersistence] };
   }
 }

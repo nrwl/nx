@@ -1,4 +1,4 @@
-export function addApp(apps: any[]|undefined, newApp: any): any[] {
+export function addApp(apps: any[] | undefined, newApp: any): any[] {
   if (!apps) {
     apps = [];
   }

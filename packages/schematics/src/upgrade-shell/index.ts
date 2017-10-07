@@ -1,13 +1,34 @@
-import {apply, branchAndMerge, chain, mergeWith, move, noop, Rule, SchematicContext, template, Tree, url} from '@angular-devkit/schematics';
+import {
+  apply,
+  branchAndMerge,
+  chain,
+  mergeWith,
+  move,
+  noop,
+  Rule,
+  SchematicContext,
+  template,
+  Tree,
+  url
+} from '@angular-devkit/schematics';
 
-import {names, toClassName, toFileName, toPropertyName} from '../utility/name-utils';
+import { names, toClassName, toFileName, toPropertyName } from '../utility/name-utils';
 import * as path from 'path';
 import * as ts from 'typescript';
-import {addDeclarationToModule, addEntryComponents, addImportToModule, addMethod, addParameterToConstructor, addProviderToModule, getBootstrapComponent, insert, removeFromNgModule} from '../utility/ast-utils';
-import {insertImport} from '@schematics/angular/utility/route-utils';
-import {Schema} from './schema';
-import {angularJsVersion} from '../utility/lib-versions';
-
+import {
+  addDeclarationToModule,
+  addEntryComponents,
+  addImportToModule,
+  addMethod,
+  addParameterToConstructor,
+  addProviderToModule,
+  getBootstrapComponent,
+  insert,
+  removeFromNgModule
+} from '../utility/ast-utils';
+import { insertImport } from '@schematics/angular/utility/route-utils';
+import { Schema } from './schema';
+import { angularJsVersion } from '../utility/lib-versions';
 
 function addImportsToModule(moduleClassName: string, options: Schema): Rule {
   return (host: Tree) => {
@@ -22,8 +43,11 @@ function addImportsToModule(moduleClassName: string, options: Schema): Rule {
 
     insert(host, modulePath, [
       insertImport(
-          source, modulePath, `configure${toClassName(options.name)}, upgradedComponents`,
-          `./${toFileName(options.name)}-setup`),
+        source,
+        modulePath,
+        `configure${toClassName(options.name)}, upgradedComponents`,
+        `./${toFileName(options.name)}-setup`
+      ),
       insertImport(source, modulePath, 'UpgradeModule', '@angular/upgrade/static'),
       ...addImportToModule(source, modulePath, 'UpgradeModule'),
       ...addDeclarationToModule(source, modulePath, '...upgradedComponents'),
@@ -33,7 +57,6 @@ function addImportsToModule(moduleClassName: string, options: Schema): Rule {
     return host;
   };
 }
-
 
 function addNgDoBootstrapToModule(moduleClassName: string, options: Schema): Rule {
   return (host: Tree) => {
@@ -46,8 +69,10 @@ function addNgDoBootstrapToModule(moduleClassName: string, options: Schema): Rul
     const source = ts.createSourceFile(modulePath, sourceText, ts.ScriptTarget.Latest, true);
 
     insert(host, modulePath, [
-      ...addParameterToConstructor(
-          source, modulePath, {className: moduleClassName, param: 'private upgrade: UpgradeModule'}),
+      ...addParameterToConstructor(source, modulePath, {
+        className: moduleClassName,
+        param: 'private upgrade: UpgradeModule'
+      }),
       ...addMethod(source, modulePath, {
         className: moduleClassName,
         methodHeader: 'ngDoBootstrap(): void',
@@ -74,8 +99,9 @@ function createFiles(angularJsImport: string, moduleClassName: string, moduleFil
     const moduleSource = ts.createSourceFile(modulePath, moduleSourceText, ts.ScriptTarget.Latest, true);
 
     const bootstrapComponentClassName = getBootstrapComponent(moduleSource, moduleClassName);
-    const bootstrapComponentFileName =
-        `${toFileName(bootstrapComponentClassName.substring(0, bootstrapComponentClassName.length - 9))}.component`;
+    const bootstrapComponentFileName = `${toFileName(
+      bootstrapComponentClassName.substring(0, bootstrapComponentClassName.length - 9)
+    )}.component`;
 
     const moduleDir = path.dirname(options.module);
     const templateSource = apply(url('./files'), [
@@ -96,7 +122,6 @@ function createFiles(angularJsImport: string, moduleClassName: string, moduleFil
     return r(host, context);
   };
 }
-
 
 function addUpgradeToPackageJson() {
   return (host: Tree) => {
@@ -127,7 +152,8 @@ export default function(options: Schema): Rule {
 
   return chain([
     createFiles(angularJsImport, moduleClassName, moduleFileName, options),
-    addImportsToModule(moduleClassName, options), addNgDoBootstrapToModule(moduleClassName, options),
+    addImportsToModule(moduleClassName, options),
+    addNgDoBootstrapToModule(moduleClassName, options),
     options.skipPackageJson ? noop() : addUpgradeToPackageJson()
   ]);
 }

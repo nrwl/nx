@@ -1,4 +1,15 @@
-import {checkFilesExist, cleanup, copyMissingPackages, ngNew, ngNewBazel, readFile, runCLI, runCommand, runSchematic, updateFile} from '../utils';
+import {
+  checkFilesExist,
+  cleanup,
+  copyMissingPackages,
+  ngNew,
+  ngNewBazel,
+  readFile,
+  runCLI,
+  runCommand,
+  runSchematic,
+  updateFile
+} from '../utils';
 
 describe('angular library', () => {
   beforeEach(cleanup);
@@ -9,8 +20,13 @@ describe('angular library', () => {
       runSchematic('@nrwl/bazel:nglib --name=myLib');
 
       checkFilesExist(
-          'tsconfig.json', 'WORKSPACE', 'BUILD.bazel', 'libs/my-lib/BUILD.bazel', 'libs/my-lib/index.ts',
-          'libs/my-lib/src/my-lib.module.ts');
+        'tsconfig.json',
+        'WORKSPACE',
+        'BUILD.bazel',
+        'libs/my-lib/BUILD.bazel',
+        'libs/my-lib/index.ts',
+        'libs/my-lib/src/my-lib.module.ts'
+      );
 
       const cliConfig = JSON.parse(readFile('.angular-cli.json'));
       expect(cliConfig.apps[0].name).toEqual('myLib');

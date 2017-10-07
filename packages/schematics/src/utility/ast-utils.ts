@@ -5,17 +5,20 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import {Tree} from '@angular-devkit/schematics';
-import {getDecoratorMetadata, getSourceNodes, insertAfterLastOccurrence} from '@schematics/angular/utility/ast-utils';
-import {Change, InsertChange, NoopChange, RemoveChange} from '@schematics/angular/utility/change';
+import { Tree } from '@angular-devkit/schematics';
+import { getDecoratorMetadata, getSourceNodes, insertAfterLastOccurrence } from '@schematics/angular/utility/ast-utils';
+import { Change, InsertChange, NoopChange, RemoveChange } from '@schematics/angular/utility/change';
 import * as ts from 'typescript';
-
 
 // This should be moved to @schematics/angular once it allows to pass custom expressions as providers
 function _addSymbolToNgModuleMetadata(
-    source: ts.SourceFile, ngModulePath: string, metadataField: string, expression: string): Change[] {
+  source: ts.SourceFile,
+  ngModulePath: string,
+  metadataField: string,
+  expression: string
+): Change[] {
   const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
-  let node: any = nodes[0];  // tslint:disable-line:no-any
+  let node: any = nodes[0]; // tslint:disable-line:no-any
 
   // Find the decorator declaration.
   if (!node) {
@@ -23,23 +26,21 @@ function _addSymbolToNgModuleMetadata(
   }
 
   // Get all the children property assignment of object literals.
-  const matchingProperties: ts.ObjectLiteralElement[] =
-      (node as ts.ObjectLiteralExpression)
-          .properties
-          .filter(prop => prop.kind == ts.SyntaxKind.PropertyAssignment)
-          // Filter out every fields that's not "metadataField". Also handles string literals
-          // (but not expressions).
-          .filter((prop: ts.PropertyAssignment) => {
-            const name = prop.name;
-            switch (name.kind) {
-              case ts.SyntaxKind.Identifier:
-                return (name as ts.Identifier).getText(source) == metadataField;
-              case ts.SyntaxKind.StringLiteral:
-                return (name as ts.StringLiteral).text == metadataField;
-            }
+  const matchingProperties: ts.ObjectLiteralElement[] = (node as ts.ObjectLiteralExpression).properties
+    .filter(prop => prop.kind == ts.SyntaxKind.PropertyAssignment)
+    // Filter out every fields that's not "metadataField". Also handles string literals
+    // (but not expressions).
+    .filter((prop: ts.PropertyAssignment) => {
+      const name = prop.name;
+      switch (name.kind) {
+        case ts.SyntaxKind.Identifier:
+          return (name as ts.Identifier).getText(source) == metadataField;
+        case ts.SyntaxKind.StringLiteral:
+          return (name as ts.StringLiteral).text == metadataField;
+      }
 
-            return false;
-          });
+      return false;
+    });
 
   // Get the last node of the array literal.
   if (!matchingProperties) {
@@ -90,7 +91,7 @@ function _addSymbolToNgModuleMetadata(
   }
 
   if (Array.isArray(node)) {
-    const nodeArray = node as {} as Array<ts.Node>;
+    const nodeArray = (node as {}) as Array<ts.Node>;
     const symbolsArray = nodeArray.map(node => node.getText());
     if (symbolsArray.includes(expression)) {
       return [];
@@ -137,27 +138,37 @@ function _addSymbolToNgModuleMetadata(
 }
 
 export function addParameterToConstructor(
-    source: ts.SourceFile, modulePath: string, opts: {className: string, param: string}): Change[] {
+  source: ts.SourceFile,
+  modulePath: string,
+  opts: { className: string; param: string }
+): Change[] {
   const clazz = findClass(source, opts.className);
   const constructor = clazz.members.filter(m => m.kind === ts.SyntaxKind.Constructor)[0];
   if (constructor) {
     throw new Error('Should be tested');
   } else {
     const methodHeader = `constructor(${opts.param})`;
-    return addMethod(source, modulePath, {className: opts.className, methodHeader, body: null});
+    return addMethod(source, modulePath, {
+      className: opts.className,
+      methodHeader,
+      body: null
+    });
   }
 }
 
 export function addMethod(
-    source: ts.SourceFile, modulePath: string,
-    opts: {className: string, methodHeader: string, body: string}): Change[] {
+  source: ts.SourceFile,
+  modulePath: string,
+  opts: { className: string; methodHeader: string; body: string }
+): Change[] {
   const clazz = findClass(source, opts.className);
-  const body = opts.body ? `
+  const body = opts.body
+    ? `
 ${opts.methodHeader} {
 ${offset(opts.body, 1, false)}
 }
-` :
-                           `
+`
+    : `
 ${opts.methodHeader} {}
 `;
 
@@ -167,7 +178,7 @@ ${opts.methodHeader} {}
 
 export function removeFromNgModule(source: ts.SourceFile, modulePath: string, property: string): Change[] {
   const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
-  let node: any = nodes[0];  // tslint:disable-line:no-any
+  let node: any = nodes[0]; // tslint:disable-line:no-any
 
   // Find the decorator declaration.
   if (!node) {
@@ -177,7 +188,7 @@ export function removeFromNgModule(source: ts.SourceFile, modulePath: string, pr
   // Get all the children property assignment of object literals.
   const matchingProperty = getMatchingProperty(source, property);
   if (matchingProperty) {
-    return [new RemoveChange(modulePath, matchingProperty.pos, matchingProperty.getFullText(source))]
+    return [new RemoveChange(modulePath, matchingProperty.pos, matchingProperty.getFullText(source))];
   } else {
     return [];
   }
@@ -186,8 +197,9 @@ export function removeFromNgModule(source: ts.SourceFile, modulePath: string, pr
 function findClass(source: ts.SourceFile, className: string): ts.ClassDeclaration {
   const nodes = getSourceNodes(source);
 
-  const clazz =
-      <any>nodes.filter(n => n.kind === ts.SyntaxKind.ClassDeclaration && (<any>n).name.text === className)[0];
+  const clazz = <any>nodes.filter(
+    n => n.kind === ts.SyntaxKind.ClassDeclaration && (<any>n).name.text === className
+  )[0];
 
   if (!clazz) {
     throw new Error(`Cannot find class '${className}'`);
@@ -197,27 +209,23 @@ function findClass(source: ts.SourceFile, className: string): ts.ClassDeclaratio
 }
 
 export function offset(text: string, numberOfTabs: number, wrap: boolean): string {
-  const lines = text.trim()
-                    .split('\n')
-                    .map(line => {
-                      let tabs = '';
-                      for (let c = 0; c < numberOfTabs; ++c) {
-                        tabs += '  ';
-                      }
-                      return `${tabs}${line}`;
-                    })
-                    .join('\n');
+  const lines = text
+    .trim()
+    .split('\n')
+    .map(line => {
+      let tabs = '';
+      for (let c = 0; c < numberOfTabs; ++c) {
+        tabs += '  ';
+      }
+      return `${tabs}${line}`;
+    })
+    .join('\n');
 
   return wrap ? `\n${lines}\n` : lines;
 }
 
 export function addImportToModule(source: ts.SourceFile, modulePath: string, symbolName: string): Change[] {
-  return _addSymbolToNgModuleMetadata(
-      source,
-      modulePath,
-      'imports',
-      symbolName,
-  );
+  return _addSymbolToNgModuleMetadata(source, modulePath, 'imports', symbolName);
 }
 
 export function getBootstrapComponent(source: ts.SourceFile, moduleClassName: string): string {
@@ -238,13 +246,13 @@ export function getBootstrapComponent(source: ts.SourceFile, moduleClassName: st
 
 function getMatchingProperty(source: ts.SourceFile, property: string): ts.ObjectLiteralElement {
   const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
-  let node: any = nodes[0];  // tslint:disable-line:no-any
+  let node: any = nodes[0]; // tslint:disable-line:no-any
 
   if (!node) return null;
 
   // Get all the children property assignment of object literals.
-  return (node as ts.ObjectLiteralExpression)
-      .properties
+  return (
+    (node as ts.ObjectLiteralExpression).properties
       .filter(prop => prop.kind == ts.SyntaxKind.PropertyAssignment)
       // Filter out every fields that's not "metadataField". Also handles string literals
       // (but not expressions).
@@ -257,7 +265,8 @@ function getMatchingProperty(source: ts.SourceFile, property: string): ts.Object
             return (name as ts.StringLiteral).text === property;
         }
         return false;
-      })[0];
+      })[0]
+  );
 }
 
 export function addProviderToModule(source: ts.SourceFile, modulePath: string, symbolName: string): Change[] {
@@ -271,7 +280,6 @@ export function addDeclarationToModule(source: ts.SourceFile, modulePath: string
 export function addEntryComponents(source: ts.SourceFile, modulePath: string, symbolName: string): Change[] {
   return _addSymbolToNgModuleMetadata(source, modulePath, 'entryComponents', symbolName);
 }
-
 
 export function insert(host: Tree, modulePath: string, changes: Change[]) {
   const recorder = host.beginUpdate(modulePath);

@@ -1,11 +1,23 @@
-import {apply, branchAndMerge, chain, externalSchematic, mergeWith, move, Rule, template, Tree, url, schematic} from '@angular-devkit/schematics';
-import {Schema} from './schema';
+import {
+  apply,
+  branchAndMerge,
+  chain,
+  externalSchematic,
+  mergeWith,
+  move,
+  Rule,
+  template,
+  Tree,
+  url,
+  schematic
+} from '@angular-devkit/schematics';
+import { Schema } from './schema';
 import * as path from 'path';
-import {angularCliVersion, ngrxVersion, nxVersion, schematicsVersion} from '../utility/lib-versions';
+import { angularCliVersion, ngrxVersion, nxVersion, prettierVersion, schematicsVersion } from '../utility/lib-versions';
 import * as fs from 'fs';
-import {join} from 'path';
-import {updateJsonFile} from '../utility/fileutils';
-import {toFileName} from '@nrwl/schematics';
+import { join } from 'path';
+import { updateJsonFile } from '../utility/fileutils';
+import { toFileName } from '@nrwl/schematics';
 
 function updatePackageJson() {
   return (host: Tree) => {
@@ -43,8 +55,10 @@ function updatePackageJson() {
     if (!packageJson.dependencies['@angular/cli']) {
       packageJson.dependencies['@angular/cli'] = angularCliVersion;
     }
-    packageJson.scripts['format'] =
-        `find apps/ -iname '*.ts' | xargs clang-format -i && find libs/ -iname '*.ts' | xargs clang-format -i`;
+    if (!packageJson.devDependencies['prettier']) {
+      packageJson.devDependencies['prettier'] = prettierVersion;
+    }
+    packageJson.scripts['format'] = `prettier --single-quote --print-width 120 --write '{apps,libs}/**/*.ts'`;
     host.overwrite('package.json', JSON.stringify(packageJson, null, 2));
     return host;
   };
@@ -60,8 +74,11 @@ function updateAngularCLIJson(options: Schema) {
       throw new Error('Can only convert projects with one app');
     }
 
-    angularCliJson.lint =
-        [{'project': './tsconfig.app.json'}, {'project': './tsconfig.spec.json'}, {'project': './tsconfig.e2e.json'}];
+    angularCliJson.lint = [
+      { project: './tsconfig.app.json' },
+      { project: './tsconfig.spec.json' },
+      { project: './tsconfig.e2e.json' }
+    ];
 
     const app = angularCliJson.apps[0];
     app.root = path.join('apps', options.name, app.root);
@@ -69,7 +86,7 @@ function updateAngularCLIJson(options: Schema) {
     app.test = '../../../test.js';
     app.tsconfig = '../../../tsconfig.app.json';
     app.testTsconfig = '../../../tsconfig.spec.json';
-    app.scripts = app.scripts.map((p) => path.join('../../', p));
+    app.scripts = app.scripts.map(p => path.join('../../', p));
     if (!angularCliJson.defaults) {
       angularCliJson.defaults = {};
     }
@@ -90,16 +107,16 @@ function updateTsConfigsJson(options: Schema) {
   return (host: Tree) => {
     const npmScope = options && options.npmScope ? options.npmScope : options.name;
 
-    updateJsonFile('tsconfig.json', (json) => setUpCompilerOptions(json, npmScope));
+    updateJsonFile('tsconfig.json', json => setUpCompilerOptions(json, npmScope));
 
-    updateJsonFile('tsconfig.app.json', (json) => {
+    updateJsonFile('tsconfig.app.json', json => {
       json['extends'] = './tsconfig.json';
       if (!json.exclude) json.exclude = [];
       json.exclude = dedup(json.exclude.concat(['**/*.spec.ts', '**/*.e2e-spec.ts', 'node_modules', 'tmp']));
       setUpCompilerOptions(json, npmScope);
     });
 
-    updateJsonFile('tsconfig.spec.json', (json) => {
+    updateJsonFile('tsconfig.spec.json', json => {
       json['extends'] = './tsconfig.json';
       if (!json.exclude) json.exclude = [];
       json.files = ['test.js'];
@@ -107,7 +124,7 @@ function updateTsConfigsJson(options: Schema) {
       setUpCompilerOptions(json, npmScope);
     });
 
-    updateJsonFile('tsconfig.e2e.json', (json) => {
+    updateJsonFile('tsconfig.e2e.json', json => {
       json['extends'] = './tsconfig.json';
       if (!json.exclude) json.exclude = [];
       json.exclude = dedup(json.exclude.concat(['**/*.spec.ts', 'node_modules', 'tmp']));
@@ -122,11 +139,11 @@ function updateTsLintJson(options: Schema) {
   return (host: Tree) => {
     const npmScope = options && options.npmScope ? options.npmScope : options.name;
 
-    updateJsonFile('tslint.json', (json) => {
+    updateJsonFile('tslint.json', json => {
       ['no-trailing-whitespace', 'one-line', 'quotemark', 'typedef-whitespace', 'whitespace'].forEach(key => {
         json[key] = undefined;
       });
-      json['nx-enforce-module-boundaries'] = [true, {'npmScope': npmScope, 'lazyLoad': []}];
+      json['nx-enforce-module-boundaries'] = [true, { npmScope: npmScope, lazyLoad: [] }];
     });
     return host;
   };
@@ -138,8 +155,9 @@ function updateProtractorConf() {
       throw new Error('Cannot find protractor.conf.js');
     }
     const protractorConf = host.read('protractor.conf.js')!.toString('utf-8');
-    const updatedConf = protractorConf.replace(`./e2e/**/*.e2e-spec.ts`, `./apps/**/*.e2e-spec.ts`)
-                            .replace(`e2e/tsconfig.e2e.json`, `./tsconfig.e2e.json`);
+    const updatedConf = protractorConf
+      .replace(`./e2e/**/*.e2e-spec.ts`, `./apps/**/*.e2e-spec.ts`)
+      .replace(`e2e/tsconfig.e2e.json`, `./tsconfig.e2e.json`);
 
     host.overwrite('protractor.conf.js', updatedConf);
 
@@ -186,12 +204,14 @@ function dedup(array: any[]): any[] {
 }
 
 export default function(schema: Schema): Rule {
-  const options = {...schema, name: toFileName(schema.name)};
+  const options = { ...schema, name: toFileName(schema.name) };
   return chain([
-    moveFiles(options), branchAndMerge(chain([
-      mergeWith(apply(url('./files'), [])),
-    ])),
-    updatePackageJson(), updateAngularCLIJson(options), updateTsConfigsJson(options), updateProtractorConf(),
+    moveFiles(options),
+    branchAndMerge(chain([mergeWith(apply(url('./files'), []))])),
+    updatePackageJson(),
+    updateAngularCLIJson(options),
+    updateTsConfigsJson(options),
+    updateProtractorConf(),
     updateTsLintJson(options)
   ]);
 }

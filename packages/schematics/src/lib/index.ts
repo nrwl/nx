@@ -1,8 +1,19 @@
-import {apply, branchAndMerge, chain, externalSchematic, mergeWith, move, Rule, template, Tree, url} from '@angular-devkit/schematics';
-import {Schema} from './schema';
-import {names, toFileName} from '@nrwl/schematics';
+import {
+  apply,
+  branchAndMerge,
+  chain,
+  externalSchematic,
+  mergeWith,
+  move,
+  Rule,
+  template,
+  Tree,
+  url
+} from '@angular-devkit/schematics';
+import { Schema } from './schema';
+import { names, toFileName } from '@nrwl/schematics';
 import * as path from 'path';
-import {addApp} from '../utility/config-file-utils';
+import { addApp } from '../utility/config-file-utils';
 
 function addLibToAngularCliJson(options: Schema): Rule {
   return (host: Tree) => {
@@ -12,8 +23,12 @@ function addLibToAngularCliJson(options: Schema): Rule {
 
     const sourceText = host.read('.angular-cli.json')!.toString('utf-8');
     const json = JSON.parse(sourceText);
-    json.apps =
-        addApp(json.apps, {'name': options.name, 'root': fullPath(options), 'test': '../../../test.js', 'appRoot': ''});
+    json.apps = addApp(json.apps, {
+      name: options.name,
+      root: fullPath(options),
+      test: '../../../test.js',
+      appRoot: ''
+    });
 
     host.overwrite('.angular-cli.json', JSON.stringify(json, null, 2));
     return host;
@@ -21,12 +36,17 @@ function addLibToAngularCliJson(options: Schema): Rule {
 }
 
 export default function(schema: Schema): Rule {
-  const options = {...schema, name: toFileName(schema.name)};
+  const options = { ...schema, name: toFileName(schema.name) };
   const fullPath = path.join('libs', toFileName(options.name), options.sourceDir);
 
-  const templateSource = apply(
-      url(options.ngmodule ? './ngfiles' : './files'),
-      [template({...names(options.name), dot: '.', tmpl: '', ...options as object})]);
+  const templateSource = apply(url(options.ngmodule ? './ngfiles' : './files'), [
+    template({
+      ...names(options.name),
+      dot: '.',
+      tmpl: '',
+      ...(options as object)
+    })
+  ]);
 
   return chain([branchAndMerge(chain([mergeWith(templateSource)])), addLibToAngularCliJson(options)]);
 }
