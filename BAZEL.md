@@ -131,7 +131,7 @@ If you serve the app again, you will see the logo properly displayed. If you cha
 
 Now when we learned how to use, let's talk about "why".
 
-Bazel uses advanced local and distributed caching techniques. It uses dependency analysis, so it can run operations in parallel. This means that you if you having a giant codebase, Bazel is a good way to make sure your build times are small. For instance, the whole Google code base is in a single repository. This repository is built by an internal version of Bazel. And you still get a one-second refresh time. If it scales for Google, it will scale for your organization.
+Bazel uses advanced local and distributed caching techniques. It uses dependency analysis, so it can run operations in parallel. This means that if you have a giant codebase, Bazel is a good way to make sure your build times are small. For instance, the whole Google code base is in a single repository. This repository is built by an internal version of Bazel. And you still get a one-second refresh time. If it scales for Google, it will scale for your organization.
 
 
 ## Status
