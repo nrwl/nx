@@ -58,6 +58,15 @@ describe('Nrwl Workspace', () => {
       },
       100000
     );
+
+    it('should have router-outlet in app.component.ts with routing flag', () => {
+      ngNew('--collection=@nrwl/schematics --skip-install');
+      newApp('myapp --routing');
+
+      const contents = readFile('apps/myapp/src/app/app.component.html');
+
+      expect(contents).toContain('<router-outlet></router-outlet>');
+    });
   });
 
   describe('lib', () => {
