@@ -9,7 +9,7 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "format": "prettier --single-quote --print-width 120 --write '{apps,libs}/**/*.ts'"
+    "format": "prettier --single-quote --print-width 120 --write \"{apps,libs}/**/*.ts\""
   },
   "private": true,
   "dependencies": {
