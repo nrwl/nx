@@ -11,7 +11,7 @@ WORK_DIR=`mktemp -d`
 
 echo 'Creating a sandbox with the CLI and Nx Schematics...'
 touch $WORK_DIR/package.json
-echo '{"dependencies": {"@angular/cli": "nrwl/fix-cli-build", "@nrwl/schematics": "nrwl/schematics-build"}}' > $WORK_DIR/package.json
+echo '{"dependencies": {"@angular/cli": "nrwl/fix-cli-build", "@nrwl/schematics": "^0.0.6"}}' > $WORK_DIR/package.json
 
 cd $WORK_DIR
 npm install --silent
