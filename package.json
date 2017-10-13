@@ -53,6 +53,7 @@
   "license": "MIT",
   "jest": {
     "modulePathIgnorePatterns": [
+      "packages",
       "tmp",
       "files"
     ]
