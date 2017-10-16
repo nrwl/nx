@@ -106,4 +106,16 @@ describe('ngrx', () => {
     expect(packageJson.dependencies['@ngrx/router-store']).toBeDefined();
     expect(packageJson.dependencies['@ngrx/effects']).toBeDefined();
   });
+
+  it('should error when no module is provided', () => {
+    expect(() =>
+      schematicRunner.runSchematic(
+        'ngrx',
+        {
+          name: 'state'
+        },
+        appTree
+      )
+    ).toThrow('Property "/module" is required but missing.');
+  });
 });
