@@ -97,47 +97,4 @@ describe('Nrwl Convert to Nx Workspace', () => {
     expect(packageJson.dependencies['@ngrx/router-store']).toEqual(ngrxVersion);
     expect(packageJson.dependencies['@ngrx/store-devtools']).toEqual(ngrxVersion);
   });
-
-  it(
-    'should build and test and support the existing AngularCLI generators',
-    () => {
-      ngNew();
-      copyMissingPackages();
-
-      runCLI('generate workspace proj --collection=@nrwl/schematics');
-      runCLI('generate lib mylib --ngmodule');
-
-      updateFile(
-        'apps/proj/src/app/app.module.ts',
-        `
-        import { NgModule } from '@angular/core';
-        import { BrowserModule } from '@angular/platform-browser';
-        import { MylibModule } from '@proj/mylib';
-        import { AppComponent } from './app.component';
-
-        @NgModule({
-          imports: [BrowserModule, MylibModule],
-          declarations: [AppComponent],
-          bootstrap: [AppComponent]
-        })
-        export class AppModule {}
-      `
-      );
-
-      expect(runCLI('build --aot')).toContain('{main} main.bundle.js');
-      expect(runCLI('test --single-run')).toContain('Executed 4 of 4 SUCCESS');
-      expect(runCLI('e2e')).toContain('Executed 1 of 1 spec SUCCESS');
-      const generatorHelpText = runCLI('g -h');
-      expect(generatorHelpText).toContain('class');
-      expect(generatorHelpText).toContain('component');
-      expect(generatorHelpText).toContain('directive');
-      expect(generatorHelpText).toContain('enum');
-      expect(generatorHelpText).toContain('guard');
-      expect(generatorHelpText).toContain('interface');
-      expect(generatorHelpText).toContain('module');
-      expect(generatorHelpText).toContain('pipe');
-      expect(generatorHelpText).toContain('service');
-    },
-    100000
-  );
 });

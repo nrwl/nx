@@ -17,7 +17,7 @@ After that run `yarn build` to build the `bazel`, `nx`, and `schematics` package
 
 ### Running Unit Tests
 
-To make sure you changes do not break any unit tests, run `yarn test`.
+To make sure you changes do not break any unit tests, run `yarn test`. You can also run `yarn test:schematics` and `yarn test:nx` to test the schematics and nx packages individually.
 
 ### Running E2E Tests
 

@@ -17,6 +17,21 @@
   dependencies:
     source-map "^0.5.6"
 
+"@angular-devkit/core@0.0.20":
+  version "0.0.20"
+  resolved "https://registry.yarnpkg.com/@angular-devkit/core/-/core-0.0.20.tgz#2ad36dd210fccd0e156d01c6499082ad4cd8c2af"
+  dependencies:
+    source-map "^0.5.6"
+
+"@angular-devkit/schematics@0.0.33":
+  version "0.0.33"
+  resolved "https://registry.yarnpkg.com/@angular-devkit/schematics/-/schematics-0.0.33.tgz#25c460bfde10a414bb6af65c89bea7a5cbff46ff"
+  dependencies:
+    "@angular-devkit/core" "0.0.20"
+    "@ngtools/json-schema" "^1.1.0"
+    minimist "^1.2.0"
+    rxjs "^5.4.2"
+
 "@angular-devkit/schematics@~0.0.25":
   version "0.0.30"
   resolved "https://registry.yarnpkg.com/@angular-devkit/schematics/-/schematics-0.0.30.tgz#9582019fc85bf058c749a832a1c20406fd933ff2"
@@ -176,6 +191,10 @@
     semver "^5.3.0"
     source-map "^0.5.6"
     tree-kill "^1.0.0"
+
+"@schematics/angular@0.0.45":
+  version "0.0.45"
+  resolved "https://registry.yarnpkg.com/@schematics/angular/-/angular-0.0.45.tgz#830df863b9677c42d7220cfaf28741c06789f1e0"
 
 "@schematics/angular@~0.0.38":
   version "0.0.41"

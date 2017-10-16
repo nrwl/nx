@@ -24,7 +24,6 @@ function _addSymbolToNgModuleMetadata(
   if (!node) {
     return [];
   }
-
   // Get all the children property assignment of object literals.
   const matchingProperties: ts.ObjectLiteralElement[] = (node as ts.ObjectLiteralExpression).properties
     .filter(prop => prop.kind == ts.SyntaxKind.PropertyAssignment)

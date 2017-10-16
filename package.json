@@ -13,7 +13,9 @@
     "package": "./scripts/package.sh",
     "release": "./scripts/release.sh",
     "copy": "./scripts/copy.sh",
-    "test": "yarn build && ./scripts/test.sh",
+    "test:schematics": "yarn build && ./scripts/test_schematics.sh",
+    "test:nx": "yarn build && ./scripts/test_nx.sh",
+    "test": "yarn build && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
     "checkformat": "./scripts/check-format.sh",
     "publish_npm": "./scripts/publish.sh",
     "postinstall": "./scripts/copy-clis.sh"
@@ -23,6 +25,8 @@
   },
   "devDependencies": {
     "@angular/cli": "nrwl/fix-cli-build",
+    "@angular-devkit/schematics": "0.0.33",
+    "@schematics/angular": "0.0.45",
     "@angular/common": "4.4.4",
     "@angular/compiler": "4.4.4",
     "@angular/compiler-cli": "4.4.4",
@@ -53,7 +57,6 @@
   "license": "MIT",
   "jest": {
     "modulePathIgnorePatterns": [
-      "packages",
       "tmp",
       "files"
     ]
