@@ -1,16 +1,16 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "upgrade-shell",
-  "title": "Add an upgrade shell to an application",
+  "id": "upgrade-module",
+  "title": "Generates UpgradeModule setup",
   "type": "object",
   "properties": {
+    "app": {
+      "type": "string",
+      "description": "The name of the application"
+    },
     "name": {
       "type": "string",
       "description": "The name of the main AngularJS module."
-    },
-    "module": {
-      "type": "string",
-      "description": "Path to the Angular module with a bootstrap component (e.g., --module=src/app/app.module.ts)."
     },
     "angularJsImport": {
       "type": "string",
@@ -32,7 +32,6 @@
     }
   },
   "required": [
-    "name",
-    "module"
+    "name"
   ]
 }

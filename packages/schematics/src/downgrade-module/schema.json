@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "downgrade-module",
+  "title": "Generates downgradeModule setup",
+  "type": "object",
+  "properties": {
+    "app": {
+      "type": "string",
+      "description": "The name of the application"
+    },
+    "name": {
+      "type": "string",
+      "description": "The name of the main AngularJS module."
+    },
+    "angularJsImport": {
+      "type": "string",
+      "description": "Import expression of the AngularJS application (e.g., --angularJsImport=some_node_module/my_app)."
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add @angular/upgrade to package.json (e.g., --skipPackageJson)"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

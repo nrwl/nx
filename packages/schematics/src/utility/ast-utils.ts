@@ -6,9 +6,16 @@
  * found in the LICENSE file at https://angular.io/license
  */
 import { Tree } from '@angular-devkit/schematics';
-import { getDecoratorMetadata, getSourceNodes, insertAfterLastOccurrence } from '@schematics/angular/utility/ast-utils';
+import {
+  findNodes,
+  getDecoratorMetadata,
+  getSourceNodes,
+  insertAfterLastOccurrence
+} from '@schematics/angular/utility/ast-utils';
 import { Change, InsertChange, NoopChange, RemoveChange } from '@schematics/angular/utility/change';
 import * as ts from 'typescript';
+import { toFileName } from './name-utils';
+import * as path from 'path';
 
 // This should be moved to @schematics/angular once it allows to pass custom expressions as providers
 function _addSymbolToNgModuleMetadata(
@@ -268,6 +275,25 @@ function getMatchingProperty(source: ts.SourceFile, property: string): ts.Object
   );
 }
 
+export function getImport(
+  source: ts.SourceFile,
+  predicate: (a: any) => boolean
+): { moduleSpec: string; bindings: string[] }[] {
+  const allImports = findNodes(source, ts.SyntaxKind.ImportDeclaration);
+  const matching = allImports.filter((i: ts.ImportDeclaration) => predicate(i.moduleSpecifier.getText()));
+
+  return matching.map((i: ts.ImportDeclaration) => {
+    const moduleSpec = i.moduleSpecifier.getText().substring(1, i.moduleSpecifier.getText().length - 1);
+    const t = i.importClause.namedBindings.getText();
+    const bindings = t
+      .replace('{', '')
+      .replace('}', '')
+      .split(',')
+      .map(q => q.trim());
+    return { moduleSpec, bindings };
+  });
+}
+
 export function addProviderToModule(source: ts.SourceFile, modulePath: string, symbolName: string): Change[] {
   return _addSymbolToNgModuleMetadata(source, modulePath, 'providers', symbolName);
 }
@@ -294,4 +320,76 @@ export function insert(host: Tree, modulePath: string, changes: Change[]) {
     }
   }
   host.commitUpdate(recorder);
+}
+
+export function getAppConfig(host: Tree, name: string): any {
+  if (!host.exists('.angular-cli.json')) {
+    throw new Error('Missing .angular-cli.json');
+  }
+  const angularCliJson = JSON.parse(host.read('.angular-cli.json')!.toString('utf-8'));
+  const apps = angularCliJson.apps;
+  if (!apps || apps.length === 0) {
+    throw new Error(`Cannot find app '${name}'`);
+  }
+  if (name) {
+    const appConfig = apps.filter(a => a.name === name)[0];
+    if (!appConfig) {
+      throw new Error(`Cannot find app '${name}'`);
+    } else {
+      return appConfig;
+    }
+  }
+  return apps[0];
+}
+
+export function readBootstrapInfo(
+  host: Tree,
+  app: string
+): {
+  moduleSpec: string;
+  modulePath: string;
+  mainPath: string;
+  moduleClassName: string;
+  moduleSource: ts.SourceFile;
+  bootstrapComponentClassName: string;
+  bootstrapComponentFileName: string;
+} {
+  const config = getAppConfig(host, app);
+  const mainPath = path.join(config.root, config.main);
+  if (!host.exists(mainPath)) {
+    throw new Error('Main file cannot be located');
+  }
+
+  const mainSource = host.read('apps/myapp/src/main.ts')!.toString('utf-8');
+  const main = ts.createSourceFile('apps/myapp/src/main.ts', mainSource, ts.ScriptTarget.Latest, true);
+  const moduleImports = getImport(main, (s: string) => s.indexOf('.module') > -1);
+  if (moduleImports.length !== 1) {
+    throw new Error(`main.ts can only import a single module`);
+  }
+  const moduleImport = moduleImports[0];
+  const moduleClassName = moduleImport.bindings.filter(b => b.endsWith('Module'))[0];
+
+  const modulePath = `${path.join(path.dirname(mainPath), moduleImport.moduleSpec)}.ts`;
+  if (!host.exists(modulePath)) {
+    throw new Error(`Cannot find '${modulePath}'`);
+  }
+
+  const moduleSourceText = host.read(modulePath)!.toString('utf-8');
+  const moduleSource = ts.createSourceFile(modulePath, moduleSourceText, ts.ScriptTarget.Latest, true);
+
+  const bootstrapComponentClassName = getBootstrapComponent(moduleSource, moduleClassName);
+  const bootstrapComponentFileName = `./${path.join(
+    path.dirname(moduleImport.moduleSpec),
+    `${toFileName(bootstrapComponentClassName.substring(0, bootstrapComponentClassName.length - 9))}.component`
+  )}`;
+
+  return {
+    moduleSpec: moduleImport.moduleSpec,
+    mainPath,
+    modulePath,
+    moduleSource,
+    moduleClassName,
+    bootstrapComponentClassName,
+    bootstrapComponentFileName
+  };
 }

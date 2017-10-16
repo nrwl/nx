@@ -21,5 +21,36 @@ export function createApp(tree: Tree, appName: string): Tree {
      export class AppModule {}
   `
   );
+  tree.create(
+    `/apps/${appName}/src/main.ts`,
+    `
+    import { enableProdMode } from '@angular/core';
+    import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+    
+    import { AppModule } from './app/app.module';
+    import { environment } from './environments/environment';
+    
+    if (environment.production) {
+      enableProdMode();
+    }
+    
+    platformBrowserDynamic()
+      .bootstrapModule(AppModule)
+      .catch(err => console.log(err));
+  `
+  );
+  tree.overwrite(
+    '/.angular-cli.json',
+    JSON.stringify({
+      apps: [
+        {
+          name: appName,
+          root: `apps/${appName}/src`,
+          main: 'main.ts',
+          index: 'index.html'
+        }
+      ]
+    })
+  );
   return tree;
 }

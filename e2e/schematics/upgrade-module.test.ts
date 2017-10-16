@@ -4,7 +4,7 @@ describe('Upgrade', () => {
   beforeEach(cleanup);
 
   it(
-    'should generate an upgrade shell',
+    'should generate an UpgradeModule setup',
     () => {
       ngNew('--collection=@nrwl/schematics');
       newApp('myapp');
@@ -29,10 +29,7 @@ describe('Upgrade', () => {
 
       updateFile('apps/myapp/src/app/app.component.spec.ts', ``);
 
-      runCLI(
-        'generate upgrade-shell legacy --module=apps/myapp/src/app/app.module.ts --angularJsImport=../legacy ' +
-          '--angularJsCmpSelector=rootLegacyCmp'
-      );
+      runCLI('generate upgrade-module legacy --angularJsImport=./legacy ' + '--angularJsCmpSelector=rootLegacyCmp');
 
       runCLI('build');
       runCLI('test --single-run');
