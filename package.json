@@ -24,7 +24,7 @@
     "jasmine-marbles": "0.1.0"
   },
   "devDependencies": {
-    "@angular/cli": "nrwl/fix-cli-build",
+    "@angular/cli": "1.5.0-rc.0",
     "@angular-devkit/schematics": "0.0.33",
     "@schematics/angular": "0.0.45",
     "@angular/common": "4.4.4",
