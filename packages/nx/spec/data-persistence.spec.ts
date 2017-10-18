@@ -92,7 +92,7 @@ describe('DataPersistence', () => {
       class TodoEffects {
         @Effect()
         loadTodo = this.s.navigation(TodoComponent, {
-          run: (a: ActivatedRouteSnapshot, state: TodosState) => {
+          run: (a, state) => {
             return {
               type: 'TODO_LOADED',
               payload: { id: a.params['id'], user: state.user }
@@ -100,7 +100,7 @@ describe('DataPersistence', () => {
           },
           onError: () => null
         });
-        constructor(private s: DataPersistence<any>) {}
+        constructor(private s: DataPersistence<TodosState>) {}
       }
 
       beforeEach(() => {
@@ -131,7 +131,7 @@ describe('DataPersistence', () => {
       class TodoEffects {
         @Effect()
         loadTodo = this.s.navigation(TodoComponent, {
-          run: (a: ActivatedRouteSnapshot, state: TodosState) => {
+          run: (a, state) => {
             if (a.params['id'] === '123') {
               throw new Error('boom');
             } else {
@@ -143,7 +143,7 @@ describe('DataPersistence', () => {
           },
           onError: (a, e) => ({ type: 'ERROR', payload: { error: e } })
         });
-        constructor(private s: DataPersistence<any>) {}
+        constructor(private s: DataPersistence<TodosState>) {}
       }
 
       beforeEach(() => {
@@ -183,7 +183,7 @@ describe('DataPersistence', () => {
       class TodoEffects {
         @Effect()
         loadTodo = this.s.navigation(TodoComponent, {
-          run: (a: ActivatedRouteSnapshot, state: TodosState) => {
+          run: (a, state) => {
             if (a.params['id'] === '123') {
               return _throw('boom');
             } else {
@@ -195,7 +195,7 @@ describe('DataPersistence', () => {
           },
           onError: (a, e) => ({ type: 'ERROR', payload: { error: e } })
         });
-        constructor(private s: DataPersistence<any>) {}
+        constructor(private s: DataPersistence<TodosState>) {}
       }
 
       beforeEach(() => {
@@ -236,11 +236,15 @@ describe('DataPersistence', () => {
     });
 
     describe('no id', () => {
+      type GetTodos = {
+        type: 'GET_TODOS';
+      };
+
       @Injectable()
       class TodoEffects {
         @Effect()
-        loadTodos = this.s.fetch('GET_TODOS', {
-          run: (a: any, state: TodosState) => {
+        loadTodos = this.s.fetch<GetTodos>('GET_TODOS', {
+          run: (a, state) => {
             // we need to introduce the delay to "enable" switchMap
             return of({
               type: 'TODOS',
@@ -248,10 +252,10 @@ describe('DataPersistence', () => {
             }).delay(1);
           },
 
-          onError: (a: UpdateTodo, e: any) => null
+          onError: (a, e: any) => null
         });
 
-        constructor(private s: DataPersistence<any>) {}
+        constructor(private s: DataPersistence<TodosState>) {}
       }
 
       function userReducer() {
@@ -281,16 +285,21 @@ describe('DataPersistence', () => {
     });
 
     describe('id', () => {
+      type GetTodo = {
+        type: 'GET_TODO';
+        payload: { id: string };
+      };
+
       @Injectable()
       class TodoEffects {
         @Effect()
-        loadTodo = this.s.fetch('GET_TODO', {
-          id: (a: any, state: TodosState) => a.payload.id,
-          run: (a: any, state: TodosState) => of({ type: 'TODO', payload: a.payload }).delay(1),
-          onError: (a: UpdateTodo, e: any) => null
+        loadTodo = this.s.fetch<GetTodo>('GET_TODO', {
+          id: (a, state) => a.payload.id,
+          run: (a, state) => of({ type: 'TODO', payload: a.payload }).delay(1),
+          onError: (a, e: any) => null
         });
 
-        constructor(private s: DataPersistence<any>) {}
+        constructor(private s: DataPersistence<TodosState>) {}
       }
 
       function userReducer() {
@@ -333,15 +342,15 @@ describe('DataPersistence', () => {
       @Injectable()
       class TodoEffects {
         @Effect()
-        loadTodo = this.s.pessimisticUpdate('UPDATE_TODO', {
-          run: (a: UpdateTodo, state: TodosState) => ({
+        loadTodo = this.s.pessimisticUpdate<UpdateTodo>('UPDATE_TODO', {
+          run: (a, state) => ({
             type: 'TODO_UPDATED',
             payload: { user: state.user, newTitle: a.payload.newTitle }
           }),
-          onError: (a: UpdateTodo, e: any) => null
+          onError: (a, e: any) => null
         });
 
-        constructor(private s: DataPersistence<any>) {}
+        constructor(private s: DataPersistence<TodosState>) {}
       }
 
       function userReducer() {
@@ -379,18 +388,18 @@ describe('DataPersistence', () => {
       @Injectable()
       class TodoEffects {
         @Effect()
-        loadTodo = this.s.pessimisticUpdate('UPDATE_TODO', {
-          run: (a: UpdateTodo, state: TodosState) => {
+        loadTodo = this.s.pessimisticUpdate<UpdateTodo>('UPDATE_TODO', {
+          run: (a, state) => {
             throw new Error('boom');
           },
 
-          onError: (a: UpdateTodo, e: any) => ({
+          onError: (a, e: any) => ({
             type: 'ERROR',
             payload: { error: e }
           })
         });
 
-        constructor(private s: DataPersistence<any>) {}
+        constructor(private s: DataPersistence<TodosState>) {}
       }
 
       function userReducer() {
@@ -426,18 +435,18 @@ describe('DataPersistence', () => {
       @Injectable()
       class TodoEffects {
         @Effect()
-        loadTodo = this.s.pessimisticUpdate('UPDATE_TODO', {
-          run: (a: UpdateTodo, state: TodosState) => {
+        loadTodo = this.s.pessimisticUpdate<UpdateTodo>('UPDATE_TODO', {
+          run: (a, state) => {
             return _throw('boom');
           },
 
-          onError: (a: UpdateTodo, e: any) => ({
+          onError: (a, e: any) => ({
             type: 'ERROR',
             payload: { error: e }
           })
         });
 
-        constructor(private s: DataPersistence<any>) {}
+        constructor(private s: DataPersistence<TodosState>) {}
       }
 
       function userReducer() {
@@ -479,18 +488,18 @@ describe('DataPersistence', () => {
       @Injectable()
       class TodoEffects {
         @Effect()
-        loadTodo = this.s.optimisticUpdate('UPDATE_TODO', {
-          run: (a: UpdateTodo, state: TodosState) => {
+        loadTodo = this.s.optimisticUpdate<UpdateTodo>('UPDATE_TODO', {
+          run: (a, state) => {
             throw new Error('boom');
           },
 
-          undoAction: (a: UpdateTodo, e: any) => ({
+          undoAction: (a, e: any) => ({
             type: 'UNDO_UPDATE_TODO',
             payload: a.payload
           })
         });
 
-        constructor(private s: DataPersistence<any>) {}
+        constructor(private s: DataPersistence<TodosState>) {}
       }
 
       function userReducer() {
