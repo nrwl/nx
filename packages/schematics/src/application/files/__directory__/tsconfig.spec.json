@@ -15,12 +15,8 @@
       ]
     }
   },
-  "files": [
-    "test.js"
-  ],
   "include": [
-    "**/*.spec.ts",
-    "**/*.d.ts"
+    "**/*.ts"
   ],
   "exclude": [
     "node_modules",

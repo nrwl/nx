@@ -35,7 +35,7 @@
     "@angular/cli": "<%= angularCliVersion %>",
     "@angular/compiler-cli": "<%= angularVersion %>",
     "@nrwl/schematics": "<%= schematicsVersion %>",
-    "@angular/language-service": "^4.2.4",<% if (!minimal) { %>
+    "@angular/language-service": "<%= angularVersion %>",<% if (!minimal) { %>
     "@types/jasmine": "~2.5.53",
     "@types/jasminewd2": "~2.0.2",
     "@types/node": "~6.0.60",
@@ -51,7 +51,7 @@
     "protractor": "~5.1.2",
     "ts-node": "~3.2.0",
     "tslint": "~5.3.2",<% } %>
-    "typescript": "~2.3.3",
+    "typescript": "2.5.3",
     "prettier": "<%= prettierVersion %>"
   }
 }
