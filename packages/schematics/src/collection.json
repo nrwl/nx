@@ -32,10 +32,16 @@
       "description": "Add NgRx support to a module"
     },
 
-    "upgrade-shell": {
-      "factory": "./upgrade-shell",
-      "schema": "./upgrade-shell/schema.json",
-      "description": "Add an upgrade shell to an application"
+    "upgrade-module": {
+      "factory": "./upgrade-module",
+      "schema": "./upgrade-module/schema.json",
+      "description": "Generates UpgradeModule setup"
+    },
+
+    "downgrade-module": {
+      "factory": "./downgrade-module",
+      "schema": "./downgrade-module/schema.json",
+      "description": "Generates downgradeModule setup"
     },
 
     "class": {

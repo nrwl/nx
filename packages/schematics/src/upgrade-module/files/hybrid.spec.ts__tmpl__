@@ -1,6 +1,6 @@
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { destroyPlatform } from '@angular/core';
-import { <%= moduleClassName %> } from './<%= moduleFileName %>';
+import { <%= moduleClassName %> } from '<%= moduleFileName %>';
 
 describe('hybrid bootstrap test', () => {
   let element;

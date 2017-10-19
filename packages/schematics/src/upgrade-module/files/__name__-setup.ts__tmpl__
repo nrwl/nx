@@ -13,7 +13,7 @@ if (! angular.module('<%= angularJsModule %>')) {
 
 
 // all components downgraded from Angular to AngularJS go here
-import {<%= bootstrapComponentClassName %>} from './<%= bootstrapComponentFileName %>';
+import {<%= bootstrapComponentClassName %>} from '<%= bootstrapComponentFileName %>';
 angular.module('downgraded', []).
   directive('appRoot', downgradeComponent({component: <%= bootstrapComponentClassName %>}));
 

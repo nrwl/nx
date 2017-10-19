@@ -4,7 +4,7 @@ import { Tree, VirtualTree } from '@angular-devkit/schematics';
 import { createApp, createEmptyWorkspace } from '../testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
 
-describe('upgrade-shell', () => {
+describe('downgrade-module', () => {
   const schematicRunner = new SchematicTestRunner('@nrwl/schematics', path.join(__dirname, '../collection.json'));
 
   let appTree: Tree;
@@ -15,24 +15,34 @@ describe('upgrade-shell', () => {
     appTree = createApp(appTree, 'myapp');
   });
 
-  it('should update the bootstrap logic', () => {
+  it('should update main.ts', () => {
     const tree = schematicRunner.runSchematic(
-      'upgrade-shell',
+      'downgrade-module',
       {
-        name: 'legacy',
-        module: 'apps/myapp/src/app/app.module.ts'
+        name: 'legacy'
       },
       appTree
     );
 
-    const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
-    expect(appModule).toContain(`this.upgrade.bootstrap(document.body, ['downgraded', 'legacy'])`);
-    expect(appModule).not.toContain(`bootstrap:`);
+    const main = getFileContent(tree, '/apps/myapp/src/main.ts');
+    expect(main).toContain('downgradeModule(bootstrapAngular)');
+    expect(main).toContain(`import 'legacy';`);
+    expect(main).toContain(`angular.bootstrap(document, ['legacy', downgraded.name]);`);
+  });
 
-    const legacySetup = getFileContent(tree, '/apps/myapp/src/app/legacy-setup.ts');
-    expect(legacySetup).toContain(`import 'legacy';`);
+  it('should update module', () => {
+    const tree = schematicRunner.runSchematic(
+      'downgrade-module',
+      {
+        name: 'legacy'
+      },
+      appTree
+    );
 
-    expect(tree.exists('/apps/myapp/src/app/hybrid.spec.ts')).toBeTruthy();
+    const appModule = getFileContent(tree, 'apps/myapp/src/app/app.module.ts');
+    expect(appModule).not.toContain('bootstrap:');
+    expect(appModule).toContain('entryComponents: [AppComponent]');
+    expect(appModule).toContain('ngDoBootstrap');
   });
 
   it('should update package.json by default', () => {
@@ -46,10 +56,9 @@ describe('upgrade-shell', () => {
     );
 
     const tree = schematicRunner.runSchematic(
-      'upgrade-shell',
+      'downgrade-module',
       {
-        name: 'legacy',
-        module: 'apps/myapp/src/app/app.module.ts'
+        name: 'legacy'
       },
       appTree
     );
@@ -70,10 +79,9 @@ describe('upgrade-shell', () => {
     );
 
     const tree = schematicRunner.runSchematic(
-      'upgrade-shell',
+      'downgrade-module',
       {
         name: 'legacy',
-        module: 'apps/myapp/src/app/app.module.ts',
         skipPackageJson: true
       },
       appTree
@@ -83,34 +91,18 @@ describe('upgrade-shell', () => {
     expect(packageJson.dependencies['@angular/upgrade']).not.toBeDefined();
   });
 
-  it('should add router configuration when --router=true', () => {
-    const tree = schematicRunner.runSchematic(
-      'upgrade-shell',
-      {
-        name: 'legacy',
-        module: 'apps/myapp/src/app/app.module.ts',
-        router: true
-      },
-      appTree
-    );
-
-    const legacySetup = getFileContent(tree, '/apps/myapp/src/app/legacy-setup.ts');
-    expect(legacySetup).toContain(`setUpLocationSync`);
-  });
-
   it('should support custom angularJsImport', () => {
     const tree = schematicRunner.runSchematic(
-      'upgrade-shell',
+      'downgrade-module',
       {
         name: 'legacy',
-        module: 'apps/myapp/src/app/app.module.ts',
         angularJsImport: 'legacy-app'
       },
       appTree
     );
 
-    const legacySetup = getFileContent(tree, '/apps/myapp/src/app/legacy-setup.ts');
-    expect(legacySetup).toContain(`import 'legacy-app';`);
-    expect(legacySetup).not.toContain(`import 'legacy';`);
+    const main = getFileContent(tree, '/apps/myapp/src/main.ts');
+    expect(main).toContain(`import 'legacy-app';`);
+    expect(main).not.toContain(`import 'legacy';`);
   });
 });
