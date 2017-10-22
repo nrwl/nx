@@ -31,7 +31,7 @@ function updatePackageJson() {
     if (!packageJson.dependencies) {
       packageJson.dependencies = {};
     }
-    if (packageJson.scripts) {
+    if (!packageJson.scripts) {
       packageJson.scripts = {};
     }
     if (!packageJson.dependencies['@nrwl/nx']) {
