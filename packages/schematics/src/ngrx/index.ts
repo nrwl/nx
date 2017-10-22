@@ -69,7 +69,13 @@ function addImportsToModule(name: string, options: Schema): Rule {
           ...common,
           insertImport(source, modulePath, 'StoreDevtoolsModule', '@ngrx/store-devtools'),
           insertImport(source, modulePath, 'environment', '../environments/environment'),
-          ...addImportToModule(source, modulePath, `StoreModule.forRoot(${reducerName}, {initialState: ${initName}})`),
+          ...addImportToModule(
+            source,
+            modulePath,
+            `StoreModule.forRoot({${toPropertyName(name)}: ${reducerName}}, {initialState: {${toPropertyName(
+              name
+            )}: ${initName}}})`
+          ),
           ...addImportToModule(source, modulePath, `EffectsModule.forRoot([${effectsName}])`),
           ...addImportToModule(source, modulePath, `!environment.production ? StoreDevtoolsModule.instrument() : []`)
         ]);
