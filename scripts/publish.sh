@@ -10,8 +10,6 @@
 # - publish all packages in the build/packages directory to npm
 # - publish to the provided tag OR `latest` by default
 
-./scripts/package.sh
-
 # i.e. ./scripts/publish.sh 1.0.0-beta.1 beta
 VERSION=$1
 TAG=$2
@@ -35,6 +33,8 @@ fi
 if [ -z "$TAG" ]; then
   TAG="latest"
 fi
+
+./scripts/package.sh $VERSION $VERSION
 
 # Create working directory and copy over built packages
 rm -rf $NPM_DEST

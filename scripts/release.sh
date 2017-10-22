@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-./scripts/package.sh
+./scripts/package.sh "nrwl/schematics-build" "nrwl/nx-build"
 
 function restore() {
   echo "FINISHED"
