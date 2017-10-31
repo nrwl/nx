@@ -1,12 +1,17 @@
-export interface LoadData {
-  type: 'LOAD_DATA';
-  payload: {};
+import {Action} from '@ngrx/store';
+
+export const LOAD = '[<%= className %>] Load';
+export const LOAD_SUCCESS = '[<%= className %>] Load Success';
+
+export class Load implements Action {
+  readonly type = LOAD;
 }
 
-export interface DataLoaded {
-  type: 'DATA_LOADED';
-  payload: {};
+export class LoadSuccess implements Action {
+  readonly type = LOAD_SUCCESS;
+
+  constructor(public payload: {}) {}
 }
 
-export type <%= className %>Action = LoadData | DataLoaded;
+export type Action = Load | LoadSuccess;
 
