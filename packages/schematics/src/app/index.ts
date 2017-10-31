@@ -20,7 +20,7 @@ import * as path from 'path';
 import * as ts from 'typescript';
 import { addBootstrapToModule } from '@schematics/angular/utility/ast-utils';
 import { insertImport } from '@schematics/angular/utility/route-utils';
-import { addApp } from '../utility/config-file-utils';
+import { serializeJson, addApp } from '../utility/fileutils';
 
 function addBootstrap(path: string): Rule {
   return (host: Tree) => {
@@ -77,7 +77,7 @@ function addAppToAngularCliJson(options: Schema): Rule {
       }
     });
 
-    host.overwrite('.angular-cli.json', JSON.stringify(json, null, 2));
+    host.overwrite('.angular-cli.json', serializeJson(json));
     return host;
   };
 }

@@ -16,7 +16,7 @@ import * as path from 'path';
 import { angularCliVersion, ngrxVersion, nxVersion, prettierVersion, schematicsVersion } from '../utility/lib-versions';
 import * as fs from 'fs';
 import { join } from 'path';
-import { updateJsonFile } from '../utility/fileutils';
+import { serializeJson, updateJsonFile } from '../utility/fileutils';
 import { toFileName } from '@nrwl/schematics';
 
 function updatePackageJson() {
@@ -59,7 +59,7 @@ function updatePackageJson() {
       packageJson.devDependencies['prettier'] = prettierVersion;
     }
     packageJson.scripts['format'] = `prettier --single-quote --print-width 120 --write '{apps,libs}/**/*.ts'`;
-    host.overwrite('package.json', JSON.stringify(packageJson, null, 2));
+    host.overwrite('package.json', serializeJson(packageJson));
     return host;
   };
 }
@@ -97,7 +97,7 @@ function updateAngularCLIJson(options: Schema) {
     angularCliJson.defaults.schematics['postGenerate'] = 'npm run format';
     angularCliJson.defaults.schematics['newProject'] = ['app', 'lib'];
 
-    host.overwrite('.angular-cli.json', JSON.stringify(angularCliJson, null, 2));
+    host.overwrite('.angular-cli.json', serializeJson(angularCliJson));
 
     return host;
   };

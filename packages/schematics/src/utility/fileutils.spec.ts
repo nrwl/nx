@@ -1,6 +1,6 @@
-import { addApp } from './config-file-utils';
+import { addApp } from './fileutils';
 
-describe('configFileUtils', () => {
+describe('fileutils', () => {
   describe('sortApps', () => {
     it('should handle undefined', () => {
       expect(addApp(undefined, { name: 'a' })).toEqual([{ name: 'a' }]);

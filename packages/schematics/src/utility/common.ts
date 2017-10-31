@@ -1,5 +1,6 @@
 import { Tree, Rule } from '@angular-devkit/schematics';
 import { angularJsVersion } from './lib-versions';
+import { serializeJson } from './fileutils';
 
 export function addUpgradeToPackageJson(): Rule {
   return (host: Tree) => {
@@ -18,7 +19,7 @@ export function addUpgradeToPackageJson(): Rule {
       json['dependencies']['angular'] = angularJsVersion;
     }
 
-    host.overwrite('package.json', JSON.stringify(json, null, 2));
+    host.overwrite('package.json', serializeJson(json));
     return host;
   };
 }

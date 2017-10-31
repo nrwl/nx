@@ -19,6 +19,7 @@ import { insertImport } from '@schematics/angular/utility/route-utils';
 import { Schema } from './schema';
 import { InsertChange } from '@schematics/angular/utility/change';
 import { ngrxVersion } from '../utility/lib-versions';
+import { serializeJson } from '../utility/fileutils';
 
 function addImportsToModule(name: string, options: Schema): Rule {
   return (host: Tree) => {
@@ -118,7 +119,7 @@ function addNgRxToPackageJson() {
     if (!json['dependencies']['@ngrx/store-devtools']) {
       json['dependencies']['@ngrx/store-devtools'] = ngrxVersion;
     }
-    host.overwrite('package.json', JSON.stringify(json, null, 2));
+    host.overwrite('package.json', serializeJson(json));
     return host;
   };
 }

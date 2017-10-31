@@ -13,7 +13,7 @@ import {
 import { Schema } from './schema';
 import { names, toFileName } from '@nrwl/schematics';
 import * as path from 'path';
-import { addApp } from '../utility/config-file-utils';
+import { serializeJson, addApp } from '../utility/fileutils';
 
 function addLibToAngularCliJson(options: Schema): Rule {
   return (host: Tree) => {
@@ -30,7 +30,7 @@ function addLibToAngularCliJson(options: Schema): Rule {
       appRoot: ''
     });
 
-    host.overwrite('.angular-cli.json', JSON.stringify(json, null, 2));
+    host.overwrite('.angular-cli.json', serializeJson(json));
     return host;
   };
 }
