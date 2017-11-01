@@ -49,7 +49,7 @@
     "karma-jasmine": "~1.1.0",
     "karma-webpack": "2.0.4",
     "prettier": "1.7.4",
-    "rxjs": "5.4.3",
+    "rxjs": "5.5.2",
     "tslint": "5.7.0",
     "typescript": "2.5.3"
   },

@@ -1,5 +1,3 @@
-import 'rxjs/add/operator/delay';
-
 import { Component, Injectable } from '@angular/core';
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, Router } from '@angular/router';
@@ -11,7 +9,7 @@ import { Store, StoreModule } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 import { of } from 'rxjs/observable/of';
 import { _throw } from 'rxjs/observable/throw';
-import { delay } from 'rxjs/operator/delay';
+import { delay } from 'rxjs/operators';
 import { Subject } from 'rxjs/Subject';
 
 import { DataPersistence } from '../index';
@@ -249,7 +247,7 @@ describe('DataPersistence', () => {
             return of({
               type: 'TODOS',
               payload: { user: state.user, todos: 'some todos' }
-            }).delay(1);
+            }).pipe(delay(1));
           },
 
           onError: (a, e: any) => null
@@ -295,7 +293,7 @@ describe('DataPersistence', () => {
         @Effect()
         loadTodo = this.s.fetch<GetTodo>('GET_TODO', {
           id: (a, state) => a.payload.id,
-          run: (a, state) => of({ type: 'TODO', payload: a.payload }).delay(1),
+          run: (a, state) => of({ type: 'TODO', payload: a.payload }).pipe(delay(1)),
           onError: (a, e: any) => null
         });
 

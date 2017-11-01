@@ -1,7 +1,5 @@
 import { Observable } from 'rxjs/Observable';
-import { first } from 'rxjs/operator/first';
-import { toArray } from 'rxjs/operator/toArray';
-import { toPromise } from 'rxjs/operator/toPromise';
+import { first, toArray } from 'rxjs/operators';
 
 /**
  * @whatItDoes reads all the values from an observable and returns a promise
@@ -16,7 +14,7 @@ import { toPromise } from 'rxjs/operator/toPromise';
  * ```
  */
 export function readAll<T>(o: Observable<T>): Promise<T[]> {
-  return toPromise.call(toArray.call(o));
+  return o.pipe(toArray()).toPromise();
 }
 
 /**
@@ -32,5 +30,5 @@ export function readAll<T>(o: Observable<T>): Promise<T[]> {
  * ```
  */
 export function readFirst<T>(o: Observable<T>): Promise<T> {
-  return toPromise.call(first.call(o));
+  return o.pipe(first()).toPromise();
 }
