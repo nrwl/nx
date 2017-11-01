@@ -5,14 +5,7 @@ import { ROUTER_NAVIGATION, RouterNavigationAction } from '@ngrx/router-store';
 import { Action, State, Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 import { of } from 'rxjs/observable/of';
-import { _catch } from 'rxjs/operator/catch';
-import { concatMap } from 'rxjs/operator/concatMap';
-import { filter } from 'rxjs/operator/filter';
-import { groupBy } from 'rxjs/operator/groupBy';
-import { map } from 'rxjs/operator/map';
-import { mergeMap } from 'rxjs/operator/mergeMap';
-import { switchMap } from 'rxjs/operator/switchMap';
-import { withLatestFrom } from 'rxjs/operator/withLatestFrom';
+import { catchError, concatMap, filter, groupBy, map, mergeMap, switchMap, withLatestFrom } from 'rxjs/operators';
 
 /**
  * See {@link DataPersistence.pessimisticUpdate} for more information.
@@ -45,8 +38,6 @@ export interface HandleNavigationOpts<T> {
   run(a: ActivatedRouteSnapshot, state?: T): Observable<Action> | Action | void;
   onError?(a: ActivatedRouteSnapshot, e: any): Observable<any> | any;
 }
-
-type Pair = [Action, any];
 
 /**
  * @whatItDoes Provides convenience methods for implementing common operations of persisting data.
@@ -91,10 +82,10 @@ export class DataPersistence<T> {
    * }
    * ```
    */
-  pessimisticUpdate<A = Action>(actionType: string, opts: PessimisticUpdateOpts<T, A>): Observable<any> {
-    const nav = this.actions.ofType(actionType);
-    const pairs = withLatestFrom.call(nav, this.store);
-    return concatMap.call(pairs, this.runWithErrorHandling(opts.run, opts.onError));
+  pessimisticUpdate<A extends Action = Action>(actionType: string, opts: PessimisticUpdateOpts<T, A>): Observable<any> {
+    const nav = this.actions.ofType<A>(actionType);
+    const pairs = nav.pipe(withLatestFrom(this.store));
+    return pairs.pipe(concatMap(this.runWithErrorHandling(opts.run, opts.onError)));
   }
 
   /**
@@ -133,10 +124,10 @@ export class DataPersistence<T> {
    * }
    * ```
    */
-  optimisticUpdate<A = Action>(actionType: string, opts: OptimisticUpdateOpts<T, A>): Observable<any> {
-    const nav = this.actions.ofType(actionType);
-    const pairs = withLatestFrom.call(nav, this.store);
-    return concatMap.call(pairs, this.runWithErrorHandling(opts.run, opts.undoAction));
+  optimisticUpdate<A extends Action = Action>(actionType: string, opts: OptimisticUpdateOpts<T, A>): Observable<any> {
+    const nav = this.actions.ofType<A>(actionType);
+    const pairs = nav.pipe(withLatestFrom(this.store));
+    return pairs.pipe(concatMap(this.runWithErrorHandling(opts.run, opts.undoAction)));
   }
 
   /**
@@ -206,17 +197,17 @@ export class DataPersistence<T> {
    * In addition, if DataPersistence notices that there are multiple requests for Todo 1 scheduled,
    * it will only run the last one.
    */
-  fetch<A = Action>(actionType: string, opts: FetchOpts<T, A>): Observable<any> {
-    const nav = this.actions.ofType(actionType);
-    const allPairs = withLatestFrom.call(nav, this.store);
+  fetch<A extends Action = Action>(actionType: string, opts: FetchOpts<T, A>): Observable<any> {
+    const nav = this.actions.ofType<A>(actionType);
+    const allPairs = nav.pipe(withLatestFrom(this.store));
 
     if (opts.id) {
-      const groupedFetches: Observable<Observable<Pair>> = groupBy.call(allPairs, p => opts.id(p[0], p[1]));
-      return mergeMap.call(groupedFetches, (pairs: Observable<Pair>) =>
-        switchMap.call(pairs, this.runWithErrorHandling(opts.run, opts.onError))
+      const groupedFetches = allPairs.pipe(groupBy(([action, store]) => opts.id(action, store)));
+      return groupedFetches.pipe(
+        mergeMap(pairs => pairs.pipe(switchMap(this.runWithErrorHandling(opts.run, opts.onError))))
       );
     } else {
-      return concatMap.call(allPairs, this.runWithErrorHandling(opts.run, opts.onError));
+      return allPairs.pipe(concatMap(this.runWithErrorHandling(opts.run, opts.onError)));
     }
   }
 
@@ -255,24 +246,21 @@ export class DataPersistence<T> {
    *
    */
   navigation(component: Type<any>, opts: HandleNavigationOpts<T>): Observable<any> {
-    const nav = filter.call(
-      map.call(this.actions.ofType(ROUTER_NAVIGATION), (a: RouterNavigationAction<RouterStateSnapshot>) =>
-        findSnapshot(component, a.payload.routerState.root)
-      ),
-      s => !!s
-    );
+    const nav = this.actions
+      .ofType<RouterNavigationAction<RouterStateSnapshot>>(ROUTER_NAVIGATION)
+      .pipe(map(a => findSnapshot(component, a.payload.routerState.root)), filter(s => !!s));
 
-    const pairs = withLatestFrom.call(nav, this.store);
-    return switchMap.call(pairs, this.runWithErrorHandling(opts.run, opts.onError));
+    const pairs = nav.pipe(withLatestFrom(this.store));
+    return pairs.pipe(switchMap(this.runWithErrorHandling(opts.run, opts.onError)));
   }
 
-  private runWithErrorHandling(run: any, onError: any) {
-    return a => {
+  private runWithErrorHandling<A, R>(run: (a: A, state?: T) => Observable<R> | R | void, onError: any) {
+    return ([action, state]: [A, T]): Observable<R> => {
       try {
-        const r = wrapIntoObservable(run(a[0], a[1]));
-        return _catch.call(r, e => wrapIntoObservable(onError(a[0], e)));
+        const r = wrapIntoObservable(run(action, state));
+        return r.pipe(catchError(e => wrapIntoObservable(onError(action, e))));
       } catch (e) {
-        return wrapIntoObservable(onError(a[0], e));
+        return wrapIntoObservable(onError(action, e));
       }
     };
   }
@@ -291,12 +279,12 @@ function findSnapshot(component: Type<any>, s: ActivatedRouteSnapshot): Activate
   return null;
 }
 
-function wrapIntoObservable(obj: any): Observable<any> {
-  if (!!obj && typeof obj.subscribe === 'function') {
+function wrapIntoObservable<O>(obj: Observable<O> | O | void): Observable<O> {
+  if (!!obj && obj instanceof Observable) {
     return obj;
   } else if (!obj) {
     return of();
   } else {
-    return of(obj);
+    return of(obj as O);
   }
 }
