@@ -23,13 +23,13 @@
     "@angular/platform-browser-dynamic": "<%= angularVersion %>",
     "@angular/router": "<%= angularVersion %>",
     "core-js": "^2.4.1",
-    "rxjs": "^5.4.2",
+    "rxjs": "^5.5.2",
     "zone.js": "^0.8.14",
     "@nrwl/nx": "<%= nxVersion %>",
     "@ngrx/effects": "<%= ngrxVersion %>",
     "@ngrx/router-store": "<%= ngrxVersion %>",
     "@ngrx/store": "<%= ngrxVersion %>",
-    "@ngrx/store-devtools": "<%= ngrxVersion %>"
+    "@ngrx/store-devtools": "4.0.0"
   },
   "devDependencies": {
     "@angular/cli": "<%= angularCliVersion %>",

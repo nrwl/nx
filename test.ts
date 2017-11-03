@@ -1,6 +1,4 @@
 // This file is required by karma.conf.js and loads recursively all the .spec and framework files
-
-import 'core-js/es6/reflect';
 import 'core-js/es7/reflect';
 import 'zone.js/dist/zone';
 
@@ -11,8 +9,14 @@ import 'zone.js/dist/jasmine-patch';
 import 'zone.js/dist/async-test';
 import 'zone.js/dist/fake-async-test';
 
-import {getTestBed} from '@angular/core/testing';
-import {BrowserDynamicTestingModule, platformBrowserDynamicTesting} from '@angular/platform-browser-dynamic/testing';
+import { getTestBed } from '@angular/core/testing';
+import {
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting
+} from '@angular/platform-browser-dynamic/testing';
+
+// Unfortunately there's no typing for the `__karma__` variable. Just declare it as any.
+declare const require: any;
 
 // Prevent Karma from running prematurely.
 declare const  __karma__: any;
