@@ -1,10 +1,13 @@
 export interface Schema {
   name: string;
   sourceDir?: string;
-  ngmodule: boolean;
+  nomodule: boolean;
 
-  routing?: boolean;
   spec?: boolean;
   flat?: boolean;
   commonModule?: boolean;
+
+  routing?: boolean;
+  lazy?: boolean;
+  parentModule?: string;
 }

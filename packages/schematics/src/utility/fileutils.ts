@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import { Tree } from '@angular-devkit/schematics';
 
 export function updateJsonFile(path: string, callback: (a: any) => any) {
   const json = JSON.parse(fs.readFileSync(path, 'utf-8'));
@@ -24,4 +25,13 @@ export function addApp(apps: any[] | undefined, newApp: any): any[] {
 
 export function serializeJson(json: any): string {
   return `${JSON.stringify(json, null, 2)}\n`;
+}
+
+export function cliConfig(host: Tree): any {
+  if (!host.exists('.angular-cli.json')) {
+    throw new Error('Missing .angular-cli.json');
+  }
+
+  const sourceText = host.read('.angular-cli.json')!.toString('utf-8');
+  return JSON.parse(sourceText);
 }

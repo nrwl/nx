@@ -234,6 +234,25 @@ export function addImportToModule(source: ts.SourceFile, modulePath: string, sym
   return _addSymbolToNgModuleMetadata(source, modulePath, 'imports', symbolName);
 }
 
+export function addReexport(
+  source: ts.SourceFile,
+  modulePath: string,
+  reexportedFileName: string,
+  token: string
+): Change[] {
+  const allExports = findNodes(source, ts.SyntaxKind.ExportDeclaration);
+  if (allExports.length > 0) {
+    const m = allExports.filter(
+      (e: ts.ExportDeclaration) => e.moduleSpecifier.getText(source).indexOf(reexportedFileName) > -1
+    );
+    if (m.length > 0) {
+      const mm: ts.ExportDeclaration = <any>m[0];
+      return [new InsertChange(modulePath, mm.exportClause.end - 1, `, ${token} `)];
+    }
+  }
+  return [];
+}
+
 export function getBootstrapComponent(source: ts.SourceFile, moduleClassName: string): string {
   const bootstrap = getMatchingProperty(source, 'bootstrap');
   if (!bootstrap) {
@@ -275,6 +294,39 @@ function getMatchingProperty(source: ts.SourceFile, property: string): ts.Object
   );
 }
 
+export function addRoute(ngModulePath: string, source: ts.SourceFile, route: string): Change[] {
+  const routes = getListOfRoutes(source);
+  if (!routes) return [];
+
+  if (routes.hasTrailingComma || routes.length === 0) {
+    return [new InsertChange(ngModulePath, routes.end, route)];
+  } else {
+    return [new InsertChange(ngModulePath, routes.end, `, ${route}`)];
+  }
+}
+
+function getListOfRoutes(source: ts.SourceFile): ts.NodeArray<ts.Expression> {
+  const imports: any = getMatchingProperty(source, 'imports');
+
+  if (imports.initializer.kind === ts.SyntaxKind.ArrayLiteralExpression) {
+    const a = imports.initializer as ts.ArrayLiteralExpression;
+
+    for (let e of a.elements) {
+      if (e.kind === 181) {
+        const ee = e as ts.CallExpression;
+        const text = ee.expression.getText(source);
+        if ((text === 'RouterModule.forRoot' || text === 'RouterModule.forChild') && ee.arguments.length > 0) {
+          const routes = ee.arguments[0];
+          if (routes.kind === ts.SyntaxKind.ArrayLiteralExpression) {
+            return (routes as ts.ArrayLiteralExpression).elements;
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
 export function getImport(
   source: ts.SourceFile,
   predicate: (a: any) => boolean
@@ -304,6 +356,16 @@ export function addDeclarationToModule(source: ts.SourceFile, modulePath: string
 
 export function addEntryComponents(source: ts.SourceFile, modulePath: string, symbolName: string): Change[] {
   return _addSymbolToNgModuleMetadata(source, modulePath, 'entryComponents', symbolName);
+}
+
+export function addGlobal(source: ts.SourceFile, modulePath: string, statement: string): Change[] {
+  const allImports = findNodes(source, ts.SyntaxKind.ImportDeclaration);
+  if (allImports.length > 0) {
+    const lastImport = allImports[allImports.length - 1];
+    return [new InsertChange(modulePath, lastImport.end + 1, `\n${statement}\n`)];
+  } else {
+    return [new InsertChange(modulePath, 0, `${statement}\n`)];
+  }
 }
 
 export function insert(host: Tree, modulePath: string, changes: Change[]) {

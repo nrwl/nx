@@ -70,6 +70,8 @@ function updateAngularCLIJson(options: Schema) {
       throw new Error('Cannot find .angular-cli.json');
     }
     const angularCliJson = JSON.parse(host.read('.angular-cli.json')!.toString('utf-8'));
+    angularCliJson.project.npmScope = npmScope(options);
+
     if (angularCliJson.apps.length !== 1) {
       throw new Error('Can only convert projects with one app');
     }
@@ -105,15 +107,13 @@ function updateAngularCLIJson(options: Schema) {
 
 function updateTsConfigsJson(options: Schema) {
   return (host: Tree) => {
-    const npmScope = options && options.npmScope ? options.npmScope : options.name;
-
-    updateJsonFile('tsconfig.json', json => setUpCompilerOptions(json, npmScope));
+    updateJsonFile('tsconfig.json', json => setUpCompilerOptions(json, npmScope(options)));
 
     updateJsonFile('tsconfig.app.json', json => {
       json['extends'] = './tsconfig.json';
       if (!json.exclude) json.exclude = [];
       json.exclude = dedup(json.exclude.concat(['**/*.spec.ts', '**/*.e2e-spec.ts', 'node_modules', 'tmp']));
-      setUpCompilerOptions(json, npmScope);
+      setUpCompilerOptions(json, npmScope(options));
     });
 
     updateJsonFile('tsconfig.spec.json', json => {
@@ -121,14 +121,14 @@ function updateTsConfigsJson(options: Schema) {
       if (!json.exclude) json.exclude = [];
       json.files = ['test.js'];
       json.exclude = dedup(json.exclude.concat(['node_modules', 'tmp']));
-      setUpCompilerOptions(json, npmScope);
+      setUpCompilerOptions(json, npmScope(options));
     });
 
     updateJsonFile('tsconfig.e2e.json', json => {
       json['extends'] = './tsconfig.json';
       if (!json.exclude) json.exclude = [];
       json.exclude = dedup(json.exclude.concat(['**/*.spec.ts', 'node_modules', 'tmp']));
-      setUpCompilerOptions(json, npmScope);
+      setUpCompilerOptions(json, npmScope(options));
     });
 
     return host;
@@ -137,16 +137,18 @@ function updateTsConfigsJson(options: Schema) {
 
 function updateTsLintJson(options: Schema) {
   return (host: Tree) => {
-    const npmScope = options && options.npmScope ? options.npmScope : options.name;
-
     updateJsonFile('tslint.json', json => {
       ['no-trailing-whitespace', 'one-line', 'quotemark', 'typedef-whitespace', 'whitespace'].forEach(key => {
         json[key] = undefined;
       });
-      json['nx-enforce-module-boundaries'] = [true, { npmScope: npmScope, lazyLoad: [] }];
+      json['nx-enforce-module-boundaries'] = [true, { npmScope: npmScope(options), lazyLoad: [] }];
     });
     return host;
   };
+}
+
+function npmScope(options: Schema): string {
+  return options && options.npmScope ? options.npmScope : options.name;
 }
 
 function updateProtractorConf() {

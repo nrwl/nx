@@ -3,6 +3,20 @@ import { Tree } from '@angular-devkit/schematics';
 export function createEmptyWorkspace(tree: Tree): Tree {
   tree.create('/.angular-cli.json', JSON.stringify({}));
   tree.create('/package.json', JSON.stringify({}));
+  tree.create(
+    '/tslint.json',
+    JSON.stringify({
+      rules: {
+        'nx-enforce-module-boundaries': [
+          true,
+          {
+            npmScope: '<%= npmScope %>',
+            lazyLoad: []
+          }
+        ]
+      }
+    })
+  );
   return tree;
 }
 
@@ -12,9 +26,10 @@ export function createApp(tree: Tree, appName: string): Tree {
     `
      import { NgModule } from '@angular/core';
      import { BrowserModule } from '@angular/platform-browser';
+     import { RouterModule } from '@angular/router';
      import { AppComponent } from './app.component';
      @NgModule({
-       imports: [BrowserModule],
+       imports: [BrowserModule, RouterModule.forRoot([])],
        declarations: [AppComponent],
        bootstrap: [AppComponent]
      })
@@ -42,6 +57,10 @@ export function createApp(tree: Tree, appName: string): Tree {
   tree.overwrite(
     '/.angular-cli.json',
     JSON.stringify({
+      project: {
+        name: 'proj',
+        npmScope: 'proj'
+      },
       apps: [
         {
           name: appName,

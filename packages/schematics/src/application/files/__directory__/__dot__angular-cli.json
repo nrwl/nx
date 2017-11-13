@@ -1,7 +1,8 @@
 {
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "project": {
-    "name": "<%= utils.dasherize(name) %>"
+    "name": "<%= utils.dasherize(name) %>",
+    "npmScope": "<%= npmScope %>"
   },
   "apps": [],
   "e2e": {

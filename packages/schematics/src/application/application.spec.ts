@@ -49,6 +49,9 @@ describe('application', () => {
   it('should set right npmScope', () => {
     const tree = schematicRunner.runSchematic('application', { name: 'myApp', directory: 'my-app' }, appTree);
 
+    const angularCliJson = JSON.parse(getFileContent(tree, '/my-app/.angular-cli.json'));
+    expect(angularCliJson.project.npmScope).toEqual('myApp');
+
     const tsconfigJson = JSON.parse(getFileContent(tree, '/my-app/tsconfig.json'));
     expect(tsconfigJson.compilerOptions.paths).toEqual({ '@myApp/*': ['libs/*'] });
 

@@ -43,4 +43,30 @@ describe('Nrwl Workspace', () => {
     },
     100000
   );
+
+  it(
+    'should support router config generation (lazy)',
+    () => {
+      ngNew('--collection=@nrwl/schematics --npmScope=nrwl');
+      copyMissingPackages();
+      newApp('myapp --routing');
+      newLib('mylib --ngmodule --routing --lazy --parentModule=apps/myapp/src/app/app.module.ts');
+
+      runCLI('build --aot');
+    },
+    100000
+  );
+
+  it(
+    'should support router config generation (eager)',
+    () => {
+      ngNew('--collection=@nrwl/schematics --npmScope=nrwl');
+      copyMissingPackages();
+      newApp('myapp --routing');
+      newLib('mylib --ngmodule --routing --parentModule=apps/myapp/src/app/app.module.ts');
+
+      runCLI('build --aot');
+    },
+    100000
+  );
 });

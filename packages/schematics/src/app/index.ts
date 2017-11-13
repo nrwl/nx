@@ -82,6 +82,20 @@ function addAppToAngularCliJson(options: Schema): Rule {
   };
 }
 
+function addRouterRootConfiguration(path: string): Rule {
+  return (host: Tree) => {
+    const modulePath = `${path}/app/app.module.ts`;
+    const moduleSource = host.read(modulePath)!.toString('utf-8');
+    const sourceFile = ts.createSourceFile(modulePath, moduleSource, ts.ScriptTarget.Latest, true);
+    insert(host, modulePath, [
+      insertImport(sourceFile, modulePath, 'RouterModule', '@angular/router'),
+      ...addImportToModule(sourceFile, modulePath, `RouterModule.forRoot([], {initialNavigation: 'enabled'})`)
+    ]);
+    return host;
+    // add onSameUrlNavigation: 'reload'
+  };
+}
+
 export default function(schema: Schema): Rule {
   const options = { ...schema, name: toFileName(schema.name) };
   const templateSource = apply(url('./files'), [
@@ -95,7 +109,7 @@ export default function(schema: Schema): Rule {
       name: 'app',
       commonModule: false,
       flat: true,
-      routing: options.routing,
+      routing: false,
       sourceDir: fullPath(options),
       spec: false
     }),
@@ -122,7 +136,8 @@ export default function(schema: Schema): Rule {
     ),
     addBootstrap(fullPath(options)),
     addNxModule(fullPath(options)),
-    addAppToAngularCliJson(options)
+    addAppToAngularCliJson(options),
+    options.routing ? addRouterRootConfiguration(fullPath(options)) : noop()
   ]);
 }
 
