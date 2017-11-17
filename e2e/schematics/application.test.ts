@@ -50,9 +50,10 @@ describe('Nrwl Workspace', () => {
       ngNew('--collection=@nrwl/schematics --npmScope=nrwl');
       copyMissingPackages();
       newApp('myapp --routing');
-      newLib('mylib --ngmodule --routing --lazy --parentModule=apps/myapp/src/app/app.module.ts');
+      newLib('mylib --routing --lazy --parentModule=apps/myapp/src/app/app.module.ts');
 
       runCLI('build --aot');
+      expect(runCLI('test --single-run')).toContain('Executed 2 of 2 SUCCESS');
     },
     100000
   );
@@ -63,9 +64,10 @@ describe('Nrwl Workspace', () => {
       ngNew('--collection=@nrwl/schematics --npmScope=nrwl');
       copyMissingPackages();
       newApp('myapp --routing');
-      newLib('mylib --ngmodule --routing --parentModule=apps/myapp/src/app/app.module.ts');
+      newLib('mylib --routing --parentModule=apps/myapp/src/app/app.module.ts');
 
       runCLI('build --aot');
+      expect(runCLI('test --single-run')).toContain('Executed 2 of 2 SUCCESS');
     },
     100000
   );
