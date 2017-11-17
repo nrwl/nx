@@ -15,6 +15,8 @@ After cloning the project run: `yarn`.
 
 After that run `yarn build` to build the `bazel`, `nx`, and `schematics` packages.
 
+After that run `yarn linknpm`.
+
 ### Running Unit Tests
 
 To make sure you changes do not break any unit tests, run `yarn test`. You can also run `yarn test:schematics` and `yarn test:nx` to test the schematics and nx packages individually.
