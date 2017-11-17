@@ -38,12 +38,12 @@ describe('ngrx', () => {
         import { appReducer } from './app.reducer';
         import { appInitialState } from './app.init';
         import { App } from './app.interfaces';
-        import { DataLoaded } from './app.actions';
+        import * as app from './app.actions';
         
         describe('appReducer', () => {
           it('should work', () => {
             const state: App = {rootCount: 0};
-            const action: DataLoaded = {type: 'DATA_LOADED', payload: {}};
+            const action = new app.LoadSuccess({});
             const actual = appReducer(state, action);
             expect(actual).toEqual({rootCount: 0});
           });
