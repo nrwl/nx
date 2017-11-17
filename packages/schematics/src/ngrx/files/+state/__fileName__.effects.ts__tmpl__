@@ -8,7 +8,7 @@ import {LoadData, DataLoaded} from './<%= fileName %>.actions';
 
 @Injectable()
 export class <%= className %>Effects {
-  @Effect() loadData = this.d.pessimisticUpdate('LOAD_DATA', {
+  @Effect() loadData = this.d.fetch('LOAD_DATA', {
     run: (a: LoadData, state: <%= className %>State) => {
       return {
         type: 'DATA_LOADED',
