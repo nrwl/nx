@@ -234,6 +234,22 @@ export function addImportToModule(source: ts.SourceFile, modulePath: string, sym
   return _addSymbolToNgModuleMetadata(source, modulePath, 'imports', symbolName);
 }
 
+export function addImportToTestBed(source: ts.SourceFile, specPath: string, symbolName: string): Change[] {
+  const allCalls: ts.CallExpression[] = <any>findNodes(source, ts.SyntaxKind.CallExpression);
+
+  const configureTestingModuleObjectLiterals = allCalls
+    .filter(c => c.expression.kind === ts.SyntaxKind.PropertyAccessExpression)
+    .filter((c: any) => c.expression.name.getText(source) === 'configureTestingModule')
+    .map(c => (c.arguments[0].kind === ts.SyntaxKind.ObjectLiteralExpression ? c.arguments[0] : null));
+
+  if (configureTestingModuleObjectLiterals.length > 0) {
+    const startPosition = configureTestingModuleObjectLiterals[0].getFirstToken(source).getEnd();
+    return [new InsertChange(specPath, startPosition, `imports: [${symbolName}], `)];
+  } else {
+    return [];
+  }
+}
+
 export function addReexport(
   source: ts.SourceFile,
   modulePath: string,
@@ -269,13 +285,7 @@ export function getBootstrapComponent(source: ts.SourceFile, moduleClassName: st
   return bootstrapComponent.getText();
 }
 
-function getMatchingProperty(source: ts.SourceFile, property: string): ts.ObjectLiteralElement {
-  const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
-  let node: any = nodes[0]; // tslint:disable-line:no-any
-
-  if (!node) return null;
-
-  // Get all the children property assignment of object literals.
+function getMatchingObjectLiteralElement(node: any, source: ts.SourceFile, property: string) {
   return (
     (node as ts.ObjectLiteralExpression).properties
       .filter(prop => prop.kind == ts.SyntaxKind.PropertyAssignment)
@@ -292,6 +302,16 @@ function getMatchingProperty(source: ts.SourceFile, property: string): ts.Object
         return false;
       })[0]
   );
+}
+
+function getMatchingProperty(source: ts.SourceFile, property: string): ts.ObjectLiteralElement {
+  const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
+  let node: any = nodes[0]; // tslint:disable-line:no-any
+
+  if (!node) return null;
+
+  // Get all the children property assignment of object literals.
+  return getMatchingObjectLiteralElement(node, source, property);
 }
 
 export function addRoute(ngModulePath: string, source: ts.SourceFile, route: string): Change[] {

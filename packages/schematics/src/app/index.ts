@@ -21,6 +21,7 @@ import * as ts from 'typescript';
 import { addBootstrapToModule } from '@schematics/angular/utility/ast-utils';
 import { insertImport } from '@schematics/angular/utility/route-utils';
 import { serializeJson, addApp } from '../utility/fileutils';
+import { addImportToTestBed } from '../utility/ast-utils';
 
 function addBootstrap(path: string): Rule {
   return (host: Tree) => {
@@ -91,8 +92,20 @@ function addRouterRootConfiguration(path: string): Rule {
       insertImport(sourceFile, modulePath, 'RouterModule', '@angular/router'),
       ...addImportToModule(sourceFile, modulePath, `RouterModule.forRoot([], {initialNavigation: 'enabled'})`)
     ]);
+
+    const componentSpecPath = `${path}/app/app.component.spec.ts`;
+    const componentSpecSource = host.read(componentSpecPath)!.toString('utf-8');
+    const componentSpecSourceFile = ts.createSourceFile(
+      componentSpecPath,
+      componentSpecSource,
+      ts.ScriptTarget.Latest,
+      true
+    );
+    insert(host, componentSpecPath, [
+      insertImport(componentSpecSourceFile, componentSpecPath, 'RouterTestingModule', '@angular/router/testing'),
+      ...addImportToTestBed(componentSpecSourceFile, componentSpecPath, `RouterTestingModule`)
+    ]);
     return host;
-    // add onSameUrlNavigation: 'reload'
   };
 }
 

@@ -124,6 +124,4 @@ describe('lib', () => {
       });
     });
   });
-
-  // should throw when no --ngmodule
 });

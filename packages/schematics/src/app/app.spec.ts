@@ -39,7 +39,7 @@ describe('app', () => {
   });
 
   it('should generate files', () => {
-    const tree = schematicRunner.runSchematic('app', { name: 'myAPp' }, appTree);
+    const tree = schematicRunner.runSchematic('app', { name: 'myApp' }, appTree);
     expect(tree.exists('apps/my-app/src/main.ts')).toBeTruthy();
     expect(tree.exists('apps/my-app/src/app/app.module.ts')).toBeTruthy();
     expect(tree.exists('apps/my-app/src/app/app.component.ts')).toBeTruthy();
@@ -50,5 +50,15 @@ describe('app', () => {
   it('should import NgModule', () => {
     const tree = schematicRunner.runSchematic('app', { name: 'myApp' }, appTree);
     expect(getFileContent(tree, 'apps/my-app/src/app/app.module.ts')).toContain('NxModule.forRoot()');
+  });
+
+  describe('routing', () => {
+    it('should include RouterTestingModule', () => {
+      const tree = schematicRunner.runSchematic('app', { name: 'myApp', routing: true }, appTree);
+      expect(getFileContent(tree, 'apps/my-app/src/app/app.module.ts')).toContain('RouterModule.forRoot');
+      expect(getFileContent(tree, 'apps/my-app/src/app/app.component.spec.ts')).toContain(
+        'imports: [RouterTestingModule]'
+      );
+    });
   });
 });
