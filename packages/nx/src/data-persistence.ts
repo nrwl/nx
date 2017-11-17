@@ -81,6 +81,16 @@ export class DataPersistence<T> {
    *   constructor(private s: DataPersistence<TodosState>, private backend: Backend) {}
    * }
    * ```
+   *
+   * Note that if you don't return a new action from the run callback, you must set the dispatch property
+   * of the effect to false, like this:
+   *
+   * ```
+   * class TodoEffects {
+   *   @Effect({dispatch: false})
+   *   updateTodo; //...
+   * }
+   * ```
    */
   pessimisticUpdate<A extends Action = Action>(actionType: string, opts: PessimisticUpdateOpts<T, A>): Observable<any> {
     const nav = this.actions.ofType<A>(actionType);
@@ -121,6 +131,16 @@ export class DataPersistence<T> {
    *   });
    *
    *   constructor(private s: DataPersistence<TodosState>, private backend: Backend) {}
+   * }
+   * ```
+   *
+   * Note that if you don't return a new action from the run callback, you must set the dispatch property
+   * of the effect to false, like this:
+   *
+   * ```
+   * class TodoEffects {
+   *   @Effect({dispatch: false})
+   *   updateTodo; //...
    * }
    * ```
    */
@@ -243,7 +263,6 @@ export class DataPersistence<T> {
    *   constructor(private s: DataPersistence<TodosState>, private backend: Backend) {}
    * }
    * ```
-   *
    */
   navigation(component: Type<any>, opts: HandleNavigationOpts<T>): Observable<any> {
     const nav = this.actions
