@@ -42,9 +42,11 @@ function addImportsToModule(name: string, options: Schema): Rule {
         insertImport(source, modulePath, 'EffectsModule', '@ngrx/effects'),
         insertImport(source, modulePath, 'StoreDevtoolsModule', '@ngrx/store-devtools'),
         insertImport(source, modulePath, 'environment', '../environments/environment'),
+        insertImport(source, modulePath, 'StoreRouterConnectingModule', '@ngrx/router-store'),
         ...addImportToModule(source, modulePath, `StoreModule.forRoot({})`),
         ...addImportToModule(source, modulePath, `EffectsModule.forRoot([])`),
-        ...addImportToModule(source, modulePath, `!environment.production ? StoreDevtoolsModule.instrument() : []`)
+        ...addImportToModule(source, modulePath, `!environment.production ? StoreDevtoolsModule.instrument() : []`),
+        ...addImportToModule(source, modulePath, `StoreRouterConnectingModule`)
       ]);
       return host;
     } else {
@@ -70,6 +72,7 @@ function addImportsToModule(name: string, options: Schema): Rule {
           ...common,
           insertImport(source, modulePath, 'StoreDevtoolsModule', '@ngrx/store-devtools'),
           insertImport(source, modulePath, 'environment', '../environments/environment'),
+          insertImport(source, modulePath, 'StoreRouterConnectingModule', '@ngrx/router-store'),
           ...addImportToModule(
             source,
             modulePath,
@@ -78,7 +81,8 @@ function addImportsToModule(name: string, options: Schema): Rule {
             )}: ${initName}}})`
           ),
           ...addImportToModule(source, modulePath, `EffectsModule.forRoot([${effectsName}])`),
-          ...addImportToModule(source, modulePath, `!environment.production ? StoreDevtoolsModule.instrument() : []`)
+          ...addImportToModule(source, modulePath, `!environment.production ? StoreDevtoolsModule.instrument() : []`),
+          ...addImportToModule(source, modulePath, `StoreRouterConnectingModule`)
         ]);
       } else {
         insert(host, modulePath, [
