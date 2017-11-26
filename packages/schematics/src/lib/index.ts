@@ -130,10 +130,9 @@ function updateTsLint(schema: Schema): Rule {
 
 export default function(schema: Schema): Rule {
   const options = { ...schema, name: toFileName(schema.name) };
-  const fullPath = path.join('libs', toFileName(options.name), options.sourceDir);
   const moduleFileName = `${toFileName(schema.name)}.module`;
-  const modulePath = path.join(fullPath, `${moduleFileName}.ts`);
-  const indexFile = path.join('libs', toFileName(options.name), 'index.ts');
+  const modulePath = `${fullPath(schema)}/${moduleFileName}.ts`;
+  const indexFile = `libs/${toFileName(options.name)}/index.ts`;
 
   if (schema.routing && schema.nomodule) {
     throw new Error(`nomodule and routing cannot be used together`);
@@ -165,5 +164,5 @@ export default function(schema: Schema): Rule {
 }
 
 function fullPath(options: Schema) {
-  return path.join('libs', options.name, options.sourceDir);
+  return `libs/${toFileName(options.name)}/${options.sourceDir}`;
 }

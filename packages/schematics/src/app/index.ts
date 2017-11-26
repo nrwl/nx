@@ -3,24 +3,23 @@ import {
   branchAndMerge,
   chain,
   externalSchematic,
+  filter,
+  MergeStrategy,
   mergeWith,
   move,
+  noop,
   Rule,
   template,
   Tree,
-  url,
-  MergeStrategy,
-  filter,
-  noop
+  url
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as stringUtils from '@schematics/angular/strings';
 import { addImportToModule, insert, toFileName } from '@nrwl/schematics';
-import * as path from 'path';
 import * as ts from 'typescript';
 import { addBootstrapToModule } from '@schematics/angular/utility/ast-utils';
 import { insertImport } from '@schematics/angular/utility/route-utils';
-import { serializeJson, addApp } from '../utility/fileutils';
+import { addApp, serializeJson } from '../utility/fileutils';
 import { addImportToTestBed } from '../utility/ast-utils';
 
 function addBootstrap(path: string): Rule {
@@ -143,7 +142,7 @@ export default function(schema: Schema): Rule {
       apply(url('./component-files'), [
         options.inlineTemplate ? filter(path => !path.endsWith('.html')) : noop(),
         template({ ...options, tmpl: '' }),
-        move(path.join(fullPath(options), 'app'))
+        move(`${fullPath(options)}/app`)
       ]),
       MergeStrategy.Overwrite
     ),
@@ -155,5 +154,5 @@ export default function(schema: Schema): Rule {
 }
 
 function fullPath(options: Schema) {
-  return path.join('apps', options.name, options.sourceDir);
+  return `apps/${options.name}/${options.sourceDir}`;
 }
