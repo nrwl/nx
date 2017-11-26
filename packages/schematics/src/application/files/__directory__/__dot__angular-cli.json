@@ -1,8 +1,9 @@
 {
-  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "$schema": "./node_modules/@nrwl/schematics/src/schema.json",
   "project": {
     "name": "<%= utils.dasherize(name) %>",
-    "npmScope": "<%= npmScope %>"
+    "npmScope": "<%= npmScope %>",
+    "latestMigration": "<%= schematicsVersion %>"
   },
   "apps": [],
   "e2e": {

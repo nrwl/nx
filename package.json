@@ -58,7 +58,8 @@
   "jest": {
     "modulePathIgnorePatterns": [
       "tmp",
-      "files"
+      "files",
+      "bazel"
     ]
   }
 }
