@@ -4,7 +4,7 @@ export const angularJsVersion = '1.6.6';
 export const ngrxVersion = '^4.1.0';
 export const nxVersion = '*';
 export const schematicsVersion = '*';
-export const prettierVersion = '1.7.4';
+export const prettierVersion = '1.8.2';
 
 export const libVersions = {
   angularVersion,
