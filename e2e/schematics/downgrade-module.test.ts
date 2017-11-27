@@ -1,15 +1,12 @@
-import { cleanup, copyMissingPackages, newApp, ngNew, readFile, runCLI, runSchematic, updateFile } from '../utils';
+import { newApp, newProject, runCLI, updateFile } from '../utils';
 
 describe('DowngradeModule', () => {
-  beforeEach(cleanup);
-
   it(
     'should generate a downgradeModule setup',
     () => {
-      ngNew('--collection=@nrwl/schematics');
+      newProject();
       newApp('myapp');
 
-      copyMissingPackages();
       updateFile('apps/myapp/src/legacy.js', `window.angular.module('legacy', []);`);
 
       runCLI('generate downgrade-module legacy --angularJsImport=./legacy');

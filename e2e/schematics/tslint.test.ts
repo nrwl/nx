@@ -1,23 +1,10 @@
-import {
-  checkFilesExist,
-  cleanup,
-  copyMissingPackages,
-  newApp,
-  newLib,
-  ngNew,
-  readFile,
-  runCLI,
-  updateFile
-} from '../utils';
+import { newApp, newLib, newProject, readFile, runCLI, updateFile } from '../utils';
 
 describe('Lint', () => {
-  beforeEach(cleanup);
-
   it(
     'should ensure module boundaries',
     () => {
-      ngNew('--collection=@nrwl/schematics');
-      copyMissingPackages();
+      newProject();
       newApp('myapp');
       newLib('mylib');
       newLib('lazylib');

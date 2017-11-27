@@ -1,19 +1,10 @@
-import {
-  checkFilesExist,
-  cleanup,
-  copyMissingPackages,
-  ngNew,
-  readFile,
-  runCLI,
-  runSchematic,
-  updateFile
-} from '../utils';
+import { checkFilesExist, cleanup, runNgNew, readFile, runCLI, runSchematic, updateFile } from '../utils';
 
 describe('Nrwl Convert to Nx Workspace', () => {
   beforeEach(cleanup);
 
   it('should generate a workspace', () => {
-    ngNew('--skip-install');
+    runNgNew('--skip-install');
 
     // update package.json
     const packageJson = JSON.parse(readFile('package.json'));
@@ -73,7 +64,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
 
   it('should generate a workspace and not change dependencies or devDependencies if they already exist', () => {
     // create a new AngularCLI app
-    ngNew('--skip-install');
+    runNgNew('--skip-install');
     const nxVersion = '0.0.0';
     const schematicsVersion = '0.0.0';
     const ngrxVersion = '0.0.0';

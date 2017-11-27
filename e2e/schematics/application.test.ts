@@ -1,23 +1,10 @@
-import {
-  checkFilesExist,
-  cleanup,
-  copyMissingPackages,
-  newApp,
-  newLib,
-  ngNew,
-  readFile,
-  runCLI,
-  updateFile
-} from '../utils';
+import { newApp, newLib, newProject, runCLI, updateFile } from '../utils';
 
 describe('Nrwl Workspace', () => {
-  beforeEach(cleanup);
-
   it(
     'should work',
     () => {
-      ngNew('--collection=@nrwl/schematics --npmScope=nrwl');
-      copyMissingPackages();
+      newProject();
       newApp('myapp');
       newLib('mylib --ngmodule');
 
@@ -47,8 +34,7 @@ describe('Nrwl Workspace', () => {
   it(
     'should support router config generation (lazy)',
     () => {
-      ngNew('--collection=@nrwl/schematics --npmScope=nrwl');
-      copyMissingPackages();
+      newProject();
       newApp('myapp --routing');
       newLib('mylib --routing --lazy --parentModule=apps/myapp/src/app/app.module.ts');
 
@@ -61,8 +47,7 @@ describe('Nrwl Workspace', () => {
   it(
     'should support router config generation (eager)',
     () => {
-      ngNew('--collection=@nrwl/schematics --npmScope=nrwl');
-      copyMissingPackages();
+      newProject();
       newApp('myapp --routing');
       newLib('mylib --routing --parentModule=apps/myapp/src/app/app.module.ts');
 

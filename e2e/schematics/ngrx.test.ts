@@ -1,14 +1,11 @@
-import { checkFilesExist, cleanup, copyMissingPackages, newApp, ngNew, readFile, runCLI, updateFile } from '../utils';
+import { newApp, newProject, runCLI, updateFile } from '../utils';
 
 describe('ngrx', () => {
-  beforeEach(cleanup);
-
   it(
     'should work',
     () => {
-      ngNew('--collection=@nrwl/schematics');
+      newProject();
       newApp('myapp');
-      copyMissingPackages();
       runCLI('generate ngrx app --module=apps/myapp/src/app/app.module.ts --root --collection=@nrwl/schematics');
       updateFile(
         'apps/myapp/src/app/+state/app.interfaces.ts',

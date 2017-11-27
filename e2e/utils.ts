@@ -1,21 +1,33 @@
 import { execSync } from 'child_process';
-import { linkSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'fs';
+import { readFileSync, statSync, writeFileSync } from 'fs';
 import * as path from 'path';
 
 const projectName: string = 'proj';
 
-export function ngNew(command?: string): string {
+export function runNgNew(command?: string): string {
   return execSync(`../node_modules/.bin/ng new proj ${command}`, {
     cwd: `./tmp`
   }).toString();
 }
 
-export function ngNewBazel(command?: string): string {
-  const res = ngNew(command);
-  const cliPath = path.join('tmp', projectName, 'node_modules', '@angular', 'cli');
-  execSync(`rm -rf ${cliPath}`);
-  execSync(`cp -r node_modules/clis/bazel ${cliPath}`);
-  return res;
+export function newProject(): string {
+  cleanup();
+  if (!directoryExists('./tmp/proj_backup')) {
+    runNgNew('--collection=@nrwl/schematics --npmScope=nrwl');
+    copyMissingPackages();
+    execSync('mv ./tmp/proj ./tmp/proj_backup');
+  }
+  return execSync('cp -r ./tmp/proj_backup ./tmp/proj').toString();
+}
+
+function copyMissingPackages(): void {
+  const modulesToCopy = ['@ngrx', 'jasmine-marbles', '@nrwl', 'angular', '@angular/upgrade', '@angular/cli'];
+  modulesToCopy.forEach(m => copyNodeModule(projectName, m));
+}
+
+function copyNodeModule(path: string, name: string) {
+  execSync(`rm -rf tmp/${path}/node_modules/${name}`);
+  execSync(`cp -r node_modules/${name} tmp/${path}/node_modules/${name}`);
 }
 
 export function runCLI(
@@ -40,18 +52,12 @@ export function runCLI(
   }
 }
 
-// switch to ng generate, once CLI is fixed
 export function newApp(name: string): string {
   return runCLI(`generate app ${name}`);
-  // return execSync(`../../node_modules/.bin/schematics @nrwl/schematics:app --name=${name}
-  // --collection=@nrwl/schematics`, { cwd: `./tmp/${projectName}` }).toString();
 }
 
-// switch to ng generate, once CLI is fixed
 export function newLib(name: string): string {
   return runCLI(`generate lib ${name}`);
-  // return execSync(`../../node_modules/.bin/schematics @nrwl/schematics:lib --name=${name}
-  // --collection=@nrwl/schematics`, { cwd: `./tmp/${projectName}` }).toString();
 }
 
 export function runSchematic(command: string): string {
@@ -83,7 +89,7 @@ export function readFile(f: string) {
 }
 
 export function cleanup() {
-  execSync('rm -rf tmp && mkdir tmp');
+  execSync('rm -rf ./tmp/proj');
 }
 
 export function getCwd(): string {
@@ -108,14 +114,4 @@ export function fileExists(filePath: string): boolean {
 
 export function exists(filePath: string): boolean {
   return directoryExists(filePath) || fileExists(filePath);
-}
-
-export function copyMissingPackages(): void {
-  const modulesToCopy = ['@ngrx', 'jasmine-marbles', '@nrwl', 'angular', '@angular/upgrade', '@angular/cli'];
-  modulesToCopy.forEach(m => copyNodeModule(projectName, m));
-}
-
-function copyNodeModule(path: string, name: string) {
-  execSync(`rm -rf tmp/${path}/node_modules/${name}`);
-  execSync(`cp -r node_modules/${name} tmp/${path}/node_modules/${name}`);
 }
