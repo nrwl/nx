@@ -3,44 +3,44 @@
   "version": "0.1",
   "schematics": {
     "workspace": {
-      "factory": "./workspace",
-      "schema": "./workspace/schema.json",
+      "factory": "./collection/workspace",
+      "schema": "./collection/workspace/schema.json",
       "description": "Convert an existing CLI project into an Nx Workspace"
     },
 
     "application": {
-      "factory": "./application",
-      "schema": "./application/schema.json",
+      "factory": "./collection/application",
+      "schema": "./collection/application/schema.json",
       "description": "Create an empty workspace"
     },
 
     "app": {
-      "factory": "./app",
-      "schema": "./app/schema.json",
+      "factory": "./collection/app",
+      "schema": "./collection/app/schema.json",
       "description": "Create an application"
     },
 
     "lib": {
-      "factory": "./lib",
-      "schema": "./lib/schema.json",
+      "factory": "./collection/lib",
+      "schema": "./collection/lib/schema.json",
       "description": "Create a library"
     },
 
     "ngrx": {
-      "factory": "./ngrx",
-      "schema": "./ngrx/schema.json",
+      "factory": "./collection/ngrx",
+      "schema": "./collection/ngrx/schema.json",
       "description": "Add NgRx support to a module"
     },
 
     "upgrade-module": {
-      "factory": "./upgrade-module",
-      "schema": "./upgrade-module/schema.json",
+      "factory": "./collection/upgrade-module",
+      "schema": "./collection/upgrade-module/schema.json",
       "description": "Generates UpgradeModule setup"
     },
 
     "downgrade-module": {
-      "factory": "./downgrade-module",
-      "schema": "./downgrade-module/schema.json",
+      "factory": "./collection/downgrade-module",
+      "schema": "./collection/downgrade-module/schema.json",
       "description": "Generates downgradeModule setup"
     },
 
