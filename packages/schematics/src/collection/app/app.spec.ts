@@ -5,7 +5,7 @@ import { createEmptyWorkspace } from '../testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
 
 describe('app', () => {
-  const schematicRunner = new SchematicTestRunner('@nrwl/schematics', path.join(__dirname, '../collection.json'));
+  const schematicRunner = new SchematicTestRunner('@nrwl/schematics', path.join(__dirname, '../../collection.json'));
 
   let appTree: Tree;
 
