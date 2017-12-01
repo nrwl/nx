@@ -17,7 +17,7 @@ describe('Lint', () => {
         'apps/myapp/src/main.ts',
         `
       import '../../../libs/mylib';
-      import '@proj/lazylib';
+      import '@nrwl/lazylib';
     `
       );
 

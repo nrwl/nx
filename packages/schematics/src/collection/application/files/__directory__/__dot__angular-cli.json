@@ -3,7 +3,7 @@
   "project": {
     "name": "<%= utils.dasherize(name) %>",
     "npmScope": "<%= npmScope %>",
-    "latestMigration": "<%= schematicsVersion %>"
+    "latestMigration": "<%= latestMigration %>"
   },
   "apps": [],
   "e2e": {

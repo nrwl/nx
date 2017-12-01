@@ -9,7 +9,8 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "format": "node ./node_modules/prettier/index.js --single-quote --print-width 120 --write \"{apps,libs}/**/*.ts\""
+    "format": "node ./node_modules/prettier/index.js --single-quote --print-width 120 --write \"{apps,libs}/**/*.ts\"",
+    "nx-migrate": "node ./node_modules/@nrwl/schematics/src/migrator/migrator.js"
   },
   "private": true,
   "dependencies": {
