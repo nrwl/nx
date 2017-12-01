@@ -1,7 +1,6 @@
 import { execSync } from 'child_process';
 import { readFileSync, statSync, writeFileSync } from 'fs';
 import * as path from 'path';
-import {exitCodeFromResult} from '@angular/compiler-cli';
 
 const projectName: string = 'proj';
 

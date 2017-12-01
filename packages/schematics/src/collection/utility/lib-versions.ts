@@ -4,6 +4,7 @@ export const angularJsVersion = '1.6.6';
 export const ngrxVersion = '^4.1.0';
 export const nxVersion = '*';
 export const schematicsVersion = '*';
+export const latestMigration = '20171129-change-schema';
 export const prettierVersion = '1.8.2';
 
 export const libVersions = {
@@ -13,5 +14,6 @@ export const libVersions = {
   ngrxVersion,
   nxVersion,
   schematicsVersion,
-  prettierVersion
+  prettierVersion,
+  latestMigration
 };
