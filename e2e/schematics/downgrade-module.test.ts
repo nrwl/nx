@@ -14,6 +14,6 @@ describe('DowngradeModule', () => {
       runCLI('build');
       expect(runCLI('test --single-run')).toContain('Executed 1 of 1 SUCCESS');
     },
-    100000
+    1000000
   );
 });

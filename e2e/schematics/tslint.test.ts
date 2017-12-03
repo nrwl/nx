@@ -25,6 +25,6 @@ describe('Lint', () => {
       expect(out).toContain('relative imports of libraries are forbidden');
       expect(out).toContain('import of lazy-loaded libraries are forbidden');
     },
-    100000
+    1000000
   );
 });

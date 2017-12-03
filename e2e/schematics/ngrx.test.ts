@@ -51,6 +51,6 @@ describe('ngrx', () => {
       runCLI('build');
       runCLI('test --single-run');
     },
-    100000
+    1000000
   );
 });

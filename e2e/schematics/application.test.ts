@@ -28,7 +28,7 @@ describe('Nrwl Workspace', () => {
       runCLI('build --aot');
       expect(runCLI('test --single-run')).toContain('Executed 2 of 2 SUCCESS');
     },
-    100000
+    1000000
   );
 
   it(
@@ -41,7 +41,7 @@ describe('Nrwl Workspace', () => {
       runCLI('build --aot');
       expect(runCLI('test --single-run')).toContain('Executed 2 of 2 SUCCESS');
     },
-    100000
+    1000000
   );
 
   it(
@@ -54,6 +54,6 @@ describe('Nrwl Workspace', () => {
       runCLI('build --aot');
       expect(runCLI('test --single-run')).toContain('Executed 2 of 2 SUCCESS');
     },
-    100000
+    1000000
   );
 });
