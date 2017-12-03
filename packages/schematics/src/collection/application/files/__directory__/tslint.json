@@ -114,7 +114,8 @@
       true,
       {
         "npmScope": "<%= npmScope %>",
-        "lazyLoad": []
+        "lazyLoad": [],
+        "allow": []
       }
     ]
   }

@@ -6,9 +6,10 @@ import { Rule } from './nxEnforceModuleBoundariesRule';
 describe('Enforce Module Boundaries', () => {
   it('should not error when everything is in order', () => {
     const failures = runRule(
-      { npmScope: 'mycompany' },
+      { npmScope: 'mycompany', allow: ['@mycompany/mylib/deep'] },
       `
       import '@mycompany/mylib';
+      import '@mycompany/mylib/deep';
       import '../blah';
     `
     );
