@@ -24,10 +24,13 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
   public visitImportDeclaration(node: ts.ImportDeclaration) {
     const npmScope = `@${this.getOptions()[0].npmScope}`;
     const lazyLoad = this.getOptions()[0].lazyLoad;
+    const allow: string[] = Array.isArray(this.getOptions()[0].allow)
+      ? this.getOptions()[0].allow.map(a => `${a}`)
+      : [];
     const imp = node.moduleSpecifier.getText().substring(1, node.moduleSpecifier.getText().length - 1);
     const impParts = imp.split(path.sep);
 
-    if (impParts[0] === npmScope && impParts.length > 2) {
+    if (impParts[0] === npmScope && allow.indexOf(imp) === -1 && impParts.length > 2) {
       this.addFailureAt(node.getStart(), node.getWidth(), 'deep imports into libraries are forbidden');
     } else if (impParts[0] === npmScope && impParts.length === 2 && lazyLoad && lazyLoad.indexOf(impParts[1]) > -1) {
       this.addFailureAt(node.getStart(), node.getWidth(), 'import of lazy-loaded libraries are forbidden');

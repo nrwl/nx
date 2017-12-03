@@ -141,7 +141,7 @@ function updateTsLintJson(options: Schema) {
       ['no-trailing-whitespace', 'one-line', 'quotemark', 'typedef-whitespace', 'whitespace'].forEach(key => {
         json[key] = undefined;
       });
-      json['nx-enforce-module-boundaries'] = [true, { npmScope: npmScope(options), lazyLoad: [] }];
+      json['nx-enforce-module-boundaries'] = [true, { npmScope: npmScope(options), lazyLoad: [], allow: [] }];
     });
     return host;
   };
