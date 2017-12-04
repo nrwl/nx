@@ -27,6 +27,10 @@ function addImportsToModule(name: string, options: Schema): Rule {
       return host;
     }
 
+    if (!options.directory) {
+      options.directory = '+state';
+    }
+
     if (!host.exists(options.module)) {
       throw new Error('Specified module does not exist');
     }
@@ -50,9 +54,9 @@ function addImportsToModule(name: string, options: Schema): Rule {
       ]);
       return host;
     } else {
-      const reducerPath = `./+state/${toFileName(name)}.reducer`;
-      const effectsPath = `./+state/${toFileName(name)}.effects`;
-      const initPath = `./+state/${toFileName(name)}.init`;
+      const reducerPath = `./${toFileName(options.directory)}/${toFileName(name)}.reducer`;
+      const effectsPath = `./${toFileName(options.directory)}/${toFileName(name)}.effects`;
+      const initPath = `./${toFileName(options.directory)}/${toFileName(name)}.init`;
 
       const reducerName = `${toPropertyName(name)}Reducer`;
       const effectsName = `${toClassName(name)}Effects`;

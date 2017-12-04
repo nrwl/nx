@@ -74,6 +74,24 @@ describe('ngrx', () => {
     expect(tree.exists(`/apps/myapp/src/app/+state/state.actions.ts`)).toBeTruthy();
   });
 
+  it('should add with custom directoryName', () => {
+    const tree = schematicRunner.runSchematic(
+      'ngrx',
+      {
+        name: 'state',
+        module: 'apps/myapp/src/app/app.module.ts',
+        directory: 'myCustomState'
+      },
+      appTree
+    );
+
+    const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
+    expect(appModule).toContain('StoreModule.forFeature');
+    expect(appModule).toContain('EffectsModule.forFeature');
+
+    expect(tree.exists(`/apps/myapp/src/app/myCustomState/state.actions.ts`)).toBeTruthy();
+  });
+
   it('should only add files', () => {
     const tree = schematicRunner.runSchematic(
       'ngrx',

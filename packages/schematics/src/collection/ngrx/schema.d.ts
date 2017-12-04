@@ -5,4 +5,5 @@ export interface Schema {
   onlyAddFiles: boolean;
   module: string;
   skipPackageJson: boolean;
+  directory: string;
 }
