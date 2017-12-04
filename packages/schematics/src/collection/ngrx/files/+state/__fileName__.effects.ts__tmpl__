@@ -8,18 +8,18 @@ import {LoadData, DataLoaded} from './<%= fileName %>.actions';
 
 @Injectable()
 export class <%= className %>Effects {
-  @Effect() loadData = this.d.fetch('LOAD_DATA', {
-    run: (a: LoadData, state: <%= className %>State) => {
+  @Effect() loadData = this.dataPersistence.fetch('LOAD_DATA', {
+    run: (action: LoadData, state: <%= className %>State) => {
       return {
         type: 'DATA_LOADED',
         payload: {}
       };
     },
 
-    onError: (a: LoadData, error) => {
+    onError: (action: LoadData, error) => {
       console.error('Error', error);
     }
   });
 
-  constructor(private actions: Actions, private d: DataPersistence<<%= className %>State>) {}
+  constructor(private actions: Actions, private dataPersistence: DataPersistence<<%= className %>State>) {}
 }
