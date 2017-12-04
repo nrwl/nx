@@ -205,9 +205,29 @@ function dedup(array: any[]): any[] {
   return res;
 }
 
+function checkCanConvertToWorkspace(options: Schema) {
+  return (host: Tree) => {
+    if (!host.exists('package.json')) {
+      throw new Error('Cannot find package.json');
+    }
+    if (!host.exists('protractor.conf.js')) {
+      throw new Error('Cannot find protractor.conf.js');
+    }
+    if (!host.exists('.angular-cli.json')) {
+      throw new Error('Cannot find .angular-cli.json');
+    }
+    const angularCliJson = JSON.parse(host.read('.angular-cli.json')!.toString('utf-8'));
+    if (angularCliJson.apps.length !== 1) {
+      throw new Error('Can only convert projects with one app');
+    }
+    return host;
+  };
+}
+
 export default function(schema: Schema): Rule {
   const options = { ...schema, name: toFileName(schema.name) };
   return chain([
+    checkCanConvertToWorkspace(options),
     moveFiles(options),
     branchAndMerge(chain([mergeWith(apply(url('./files'), []))])),
     updatePackageJson(),
