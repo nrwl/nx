@@ -27,10 +27,6 @@ function addImportsToModule(name: string, options: Schema): Rule {
       return host;
     }
 
-    if (!options.directory) {
-      options.directory = '+state';
-    }
-
     if (!host.exists(options.module)) {
       throw new Error('Specified module does not exist');
     }
