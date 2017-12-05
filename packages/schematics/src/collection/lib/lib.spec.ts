@@ -16,33 +16,58 @@ describe('lib', () => {
     schematicRunner.logger.subscribe(s => console.log(s));
   });
 
-  it('should update angular-cli.json', () => {
-    const tree = schematicRunner.runSchematic('lib', { name: 'myLib' }, appTree);
-    const updatedAngularCLIJson = JSON.parse(getFileContent(tree, '/.angular-cli.json'));
-    expect(updatedAngularCLIJson.apps).toEqual([
-      {
-        appRoot: '',
-        name: 'my-lib',
-        root: 'libs/my-lib/src',
-        test: '../../../test.js'
-      }
-    ]);
+  describe('not nested', () => {
+    it('should update angular-cli.json', () => {
+      const tree = schematicRunner.runSchematic('lib', { name: 'myLib' }, appTree);
+      const updatedAngularCLIJson = JSON.parse(getFileContent(tree, '/.angular-cli.json'));
+      expect(updatedAngularCLIJson.apps).toEqual([
+        {
+          appRoot: '',
+          name: 'my-lib',
+          root: 'libs/my-lib/src',
+          test: '../../../test.js'
+        }
+      ]);
+    });
+
+    it('should generate files', () => {
+      const tree = schematicRunner.runSchematic('lib', { name: 'myLib', nomodule: true }, appTree);
+      expect(tree.exists('libs/my-lib/src/my-lib.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/my-lib.spec.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/index.ts')).toBeTruthy();
+      expect(getFileContent(tree, 'libs/my-lib/src/my-lib.ts')).toContain('class MyLib');
+    });
+
+    it('should generate files', () => {
+      const tree = schematicRunner.runSchematic('lib', { name: 'myLib' }, appTree);
+      expect(tree.exists('libs/my-lib/src/my-lib.module.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/my-lib.module.spec.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/index.ts')).toBeTruthy();
+      expect(getFileContent(tree, 'libs/my-lib/src/my-lib.module.ts')).toContain('class MyLibModule');
+    });
   });
 
-  it('should generate files', () => {
-    const tree = schematicRunner.runSchematic('lib', { name: 'myLib', nomodule: true }, appTree);
-    expect(tree.exists('libs/my-lib/src/my-lib.ts')).toBeTruthy();
-    expect(tree.exists('libs/my-lib/src/my-lib.spec.ts')).toBeTruthy();
-    expect(tree.exists('libs/my-lib/index.ts')).toBeTruthy();
-    expect(getFileContent(tree, 'libs/my-lib/src/my-lib.ts')).toContain('class MyLib');
-  });
+  describe('nested', () => {
+    it('should update angular-cli.json', () => {
+      const tree = schematicRunner.runSchematic('lib', { name: 'myLib', directory: 'myDir' }, appTree);
+      const updatedAngularCLIJson = JSON.parse(getFileContent(tree, '/.angular-cli.json'));
+      expect(updatedAngularCLIJson.apps).toEqual([
+        {
+          appRoot: '',
+          name: 'my-dir/my-lib',
+          root: 'libs/my-dir/my-lib/src',
+          test: '../../../../test.js'
+        }
+      ]);
+    });
 
-  it('should generate files', () => {
-    const tree = schematicRunner.runSchematic('lib', { name: 'myLib' }, appTree);
-    expect(tree.exists('libs/my-lib/src/my-lib.module.ts')).toBeTruthy();
-    expect(tree.exists('libs/my-lib/src/my-lib.module.spec.ts')).toBeTruthy();
-    expect(tree.exists('libs/my-lib/index.ts')).toBeTruthy();
-    expect(getFileContent(tree, 'libs/my-lib/src/my-lib.module.ts')).toContain('class MyLibModule');
+    it('should generate files', () => {
+      const tree = schematicRunner.runSchematic('lib', { name: 'myLib', directory: 'myDir', nomodule: true }, appTree);
+      expect(tree.exists('libs/my-dir/my-lib/src/my-lib.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-dir/my-lib/src/my-lib.spec.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-dir/my-lib/index.ts')).toBeTruthy();
+      expect(getFileContent(tree, 'libs/my-dir/my-lib/src/my-lib.ts')).toContain('class MyLib');
+    });
   });
 
   describe('router', () => {
@@ -60,53 +85,75 @@ describe('lib', () => {
 
     describe('lazy', () => {
       it('should add RouterModule.forChild', () => {
-        const tree = schematicRunner.runSchematic('lib', { name: 'myLib', routing: true, lazy: true }, appTree);
-        expect(tree.exists('libs/my-lib/src/my-lib.module.ts')).toBeTruthy();
-        expect(getFileContent(tree, 'libs/my-lib/src/my-lib.module.ts')).toContain('RouterModule.forChild');
+        const tree = schematicRunner.runSchematic(
+          'lib',
+          { name: 'myLib', directory: 'myDir', routing: true, lazy: true },
+          appTree
+        );
+        expect(tree.exists('libs/my-dir/my-lib/src/my-lib.module.ts')).toBeTruthy();
+        expect(getFileContent(tree, 'libs/my-dir/my-lib/src/my-lib.module.ts')).toContain('RouterModule.forChild');
       });
 
       it('should update the parent module', () => {
         appTree = createApp(appTree, 'myapp');
         const tree = schematicRunner.runSchematic(
           'lib',
-          { name: 'myLib', routing: true, lazy: true, parentModule: 'apps/myapp/src/app/app.module.ts' },
+          {
+            name: 'myLib',
+            directory: 'myDir',
+            routing: true,
+            lazy: true,
+            parentModule: 'apps/myapp/src/app/app.module.ts'
+          },
           appTree
         );
         expect(getFileContent(tree, 'apps/myapp/src/app/app.module.ts')).toContain(
-          `RouterModule.forRoot([{path: 'my-lib', loadChildren: '@proj/my-lib#MyLibModule'}])`
+          `RouterModule.forRoot([{path: 'my-lib', loadChildren: '@proj/my-dir/my-lib#MyLibModule'}])`
         );
 
         const tree2 = schematicRunner.runSchematic(
           'lib',
-          { name: 'myLib2', routing: true, lazy: true, parentModule: 'apps/myapp/src/app/app.module.ts' },
+          {
+            name: 'myLib2',
+            directory: 'myDir',
+            routing: true,
+            lazy: true,
+            parentModule: 'apps/myapp/src/app/app.module.ts'
+          },
           tree
         );
         expect(getFileContent(tree2, 'apps/myapp/src/app/app.module.ts')).toContain(
-          `RouterModule.forRoot([{path: 'my-lib', loadChildren: '@proj/my-lib#MyLibModule'}, {path: 'my-lib2', loadChildren: '@proj/my-lib2#MyLib2Module'}])`
+          `RouterModule.forRoot([{path: 'my-lib', loadChildren: '@proj/my-dir/my-lib#MyLibModule'}, {path: 'my-lib2', loadChildren: '@proj/my-dir/my-lib2#MyLib2Module'}])`
         );
       });
 
       it('should register the module as lazy loaded in tslint.json', () => {
-        const tree = schematicRunner.runSchematic('lib', { name: 'myLib', routing: true, lazy: true }, appTree);
+        const tree = schematicRunner.runSchematic(
+          'lib',
+          { name: 'myLib', directory: 'myDir', routing: true, lazy: true },
+          appTree
+        );
         const tslint = JSON.parse(getFileContent(tree, 'tslint.json'));
-        expect(tslint['rules']['nx-enforce-module-boundaries'][1]['lazyLoad']).toEqual(['my-lib']);
+        expect(tslint['rules']['nx-enforce-module-boundaries'][1]['lazyLoad']).toEqual(['my-dir/my-lib']);
       });
     });
 
     describe('eager', () => {
       it('should add RouterModule and define an array of routes', () => {
-        const tree = schematicRunner.runSchematic('lib', { name: 'myLib', routing: true }, appTree);
-        expect(tree.exists('libs/my-lib/src/my-lib.module.ts')).toBeTruthy();
-        expect(getFileContent(tree, 'libs/my-lib/src/my-lib.module.ts')).toContain('RouterModule]');
-        expect(getFileContent(tree, 'libs/my-lib/src/my-lib.module.ts')).toContain('const myLibRoutes: Route[] = ');
-        expect(getFileContent(tree, 'libs/my-lib/index.ts')).toContain('myLibRoutes');
+        const tree = schematicRunner.runSchematic('lib', { name: 'myLib', directory: 'myDir', routing: true }, appTree);
+        expect(tree.exists('libs/my-dir/my-lib/src/my-lib.module.ts')).toBeTruthy();
+        expect(getFileContent(tree, 'libs/my-dir/my-lib/src/my-lib.module.ts')).toContain('RouterModule]');
+        expect(getFileContent(tree, 'libs/my-dir/my-lib/src/my-lib.module.ts')).toContain(
+          'const myLibRoutes: Route[] = '
+        );
+        expect(getFileContent(tree, 'libs/my-dir/my-lib/index.ts')).toContain('myLibRoutes');
       });
 
       it('should update the parent module', () => {
         appTree = createApp(appTree, 'myapp');
         const tree = schematicRunner.runSchematic(
           'lib',
-          { name: 'myLib', routing: true, parentModule: 'apps/myapp/src/app/app.module.ts' },
+          { name: 'myLib', directory: 'myDir', routing: true, parentModule: 'apps/myapp/src/app/app.module.ts' },
           appTree
         );
         expect(getFileContent(tree, 'apps/myapp/src/app/app.module.ts')).toContain(
@@ -115,7 +162,7 @@ describe('lib', () => {
 
         const tree2 = schematicRunner.runSchematic(
           'lib',
-          { name: 'myLib2', routing: true, parentModule: 'apps/myapp/src/app/app.module.ts' },
+          { name: 'myLib2', directory: 'myDir', routing: true, parentModule: 'apps/myapp/src/app/app.module.ts' },
           tree
         );
         expect(getFileContent(tree2, 'apps/myapp/src/app/app.module.ts')).toContain(

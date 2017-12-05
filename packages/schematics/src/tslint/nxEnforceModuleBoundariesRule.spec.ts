@@ -6,7 +6,7 @@ import { Rule } from './nxEnforceModuleBoundariesRule';
 describe('Enforce Module Boundaries', () => {
   it('should not error when everything is in order', () => {
     const failures = runRule(
-      { npmScope: 'mycompany', allow: ['@mycompany/mylib/deep'] },
+      { allow: ['@mycompany/mylib/deep'] },
       `
       import '@mycompany/mylib';
       import '@mycompany/mylib/deep';
@@ -25,14 +25,14 @@ describe('Enforce Module Boundaries', () => {
   });
 
   it('should error about deep imports into libraries', () => {
-    const failures = runRule({ npmScope: 'mycompany' }, `import '@mycompany/mylib/blah';`);
+    const failures = runRule({}, `import '@mycompany/mylib/blah';`);
 
     expect(failures.length).toEqual(1);
     expect(failures[0].getFailure()).toEqual('deep imports into libraries are forbidden');
   });
 
   it('should error on importing a lazy-loaded library', () => {
-    const failures = runRule({ npmScope: 'mycompany', lazyLoad: ['mylib'] }, `import '@mycompany/mylib';`);
+    const failures = runRule({ lazyLoad: ['mylib'] }, `import '@mycompany/mylib';`);
 
     expect(failures.length).toEqual(1);
     expect(failures[0].getFailure()).toEqual('import of lazy-loaded libraries are forbidden');
@@ -47,6 +47,6 @@ function runRule(ruleArguments: any, content: string): RuleFailure[] {
   };
 
   const sourceFile = ts.createSourceFile('proj/apps/myapp/src/main.ts', content, ts.ScriptTarget.Latest, true);
-  const rule = new Rule(options, 'proj');
+  const rule = new Rule(options, 'proj', 'mycompany', ['mylib']);
   return rule.apply(sourceFile);
 }

@@ -18,12 +18,14 @@ describe('Lint', () => {
         `
       import '../../../libs/mylib';
       import '@nrwl/lazylib';
+      import '@nrwl/mylib/deep';
     `
       );
 
       const out = runCLI('lint --type-check', { silenceError: true });
       expect(out).toContain('relative imports of libraries are forbidden');
       expect(out).toContain('import of lazy-loaded libraries are forbidden');
+      expect(out).toContain('deep imports into libraries are forbidden');
     },
     1000000
   );

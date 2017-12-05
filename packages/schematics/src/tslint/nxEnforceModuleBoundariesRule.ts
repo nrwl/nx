@@ -2,40 +2,71 @@ import * as path from 'path';
 import * as Lint from 'tslint';
 import { IOptions } from 'tslint';
 import * as ts from 'typescript';
+import { readFileSync } from 'fs';
 
 export class Rule extends Lint.Rules.AbstractRule {
-  constructor(options: IOptions, private path?: string) {
+  constructor(options: IOptions, private path?: string, private npmScope?: string, private appNames?: string[]) {
     super(options);
     if (!path) {
+      const cliConfig = this.readCliConfig();
       this.path = process.cwd();
+      this.npmScope = cliConfig.project.npmScope;
+      this.appNames = cliConfig.apps.map(a => a.name);
     }
   }
 
   public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-    return this.applyWithWalker(new EnforceModuleBoundariesWalker(sourceFile, this.getOptions(), this.path));
+    return this.applyWithWalker(
+      new EnforceModuleBoundariesWalker(sourceFile, this.getOptions(), this.path, this.npmScope, this.appNames)
+    );
+  }
+
+  private readCliConfig(): any {
+    return JSON.parse(readFileSync(`.angular-cli.json`, 'UTF-8'));
   }
 }
 
 class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
-  constructor(sourceFile: ts.SourceFile, options: IOptions, private projectPath: string) {
+  constructor(
+    sourceFile: ts.SourceFile,
+    options: IOptions,
+    private projectPath: string,
+    private npmScope: string,
+    private appNames: string[]
+  ) {
     super(sourceFile, options);
   }
 
   public visitImportDeclaration(node: ts.ImportDeclaration) {
-    const npmScope = `@${this.getOptions()[0].npmScope}`;
-    const lazyLoad = this.getOptions()[0].lazyLoad;
+    const imp = node.moduleSpecifier.getText().substring(1, node.moduleSpecifier.getText().length - 1);
     const allow: string[] = Array.isArray(this.getOptions()[0].allow)
       ? this.getOptions()[0].allow.map(a => `${a}`)
       : [];
-    const imp = node.moduleSpecifier.getText().substring(1, node.moduleSpecifier.getText().length - 1);
-    const impParts = imp.split(path.sep);
+    const lazyLoad: string[] = Array.isArray(this.getOptions()[0].lazyLoad)
+      ? this.getOptions()[0].lazyLoad.map(a => `${a}`)
+      : [];
 
-    if (impParts[0] === npmScope && allow.indexOf(imp) === -1 && impParts.length > 2) {
-      this.addFailureAt(node.getStart(), node.getWidth(), 'deep imports into libraries are forbidden');
-    } else if (impParts[0] === npmScope && impParts.length === 2 && lazyLoad && lazyLoad.indexOf(impParts[1]) > -1) {
+    // whitelisted import => return
+    if (allow.indexOf(imp) > -1) {
+      super.visitImportDeclaration(node);
+      return;
+    }
+
+    const lazyLoaded = lazyLoad.filter(a => imp.startsWith(`@${this.npmScope}/${a}`))[0];
+    if (lazyLoaded) {
       this.addFailureAt(node.getStart(), node.getWidth(), 'import of lazy-loaded libraries are forbidden');
-    } else if (this.isRelative(imp) && this.isRelativeImportIntoAnotherProject(imp)) {
+      return;
+    }
+
+    if (this.isRelative(imp) && this.isRelativeImportIntoAnotherProject(imp)) {
       this.addFailureAt(node.getStart(), node.getWidth(), 'relative imports of libraries are forbidden');
+      return;
+    }
+
+    const app = this.appNames.filter(a => imp.startsWith(`@${this.npmScope}/${a}`))[0];
+    if (app && imp !== `@${this.npmScope}/${app}`) {
+      this.addFailureAt(node.getStart(), node.getWidth(), 'deep imports into libraries are forbidden');
+      return;
     }
 
     super.visitImportDeclaration(node);

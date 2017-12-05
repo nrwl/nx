@@ -54,11 +54,5 @@ describe('application', () => {
 
     const tsconfigJson = JSON.parse(getFileContent(tree, '/my-app/tsconfig.json'));
     expect(tsconfigJson.compilerOptions.paths).toEqual({ '@myApp/*': ['libs/*'] });
-
-    const tslintJson = JSON.parse(getFileContent(tree, '/my-app/tslint.json'));
-    expect(tslintJson.rules['nx-enforce-module-boundaries']).toEqual([
-      true,
-      { allow: [], lazyLoad: [], npmScope: 'myApp' }
-    ]);
   });
 });

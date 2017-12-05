@@ -5,19 +5,19 @@ describe('Nrwl Workspace', () => {
     'should work',
     () => {
       newProject();
-      newApp('myapp');
-      newLib('mylib --ngmodule');
+      newApp('myApp --directory=myDir');
+      newLib('myLib --directory=myDir --ngmodule');
 
       updateFile(
-        'apps/myapp/src/app/app.module.ts',
+        'apps/my-dir/my-app/src/app/app.module.ts',
         `
         import { NgModule } from '@angular/core';
         import { BrowserModule } from '@angular/platform-browser';
-        import { MylibModule } from '@nrwl/mylib';
+        import { MyLibModule } from '@nrwl/my-dir/my-lib';
         import { AppComponent } from './app.component';
 
         @NgModule({
-          imports: [BrowserModule, MylibModule],
+          imports: [BrowserModule, MyLibModule],
           declarations: [AppComponent],
           bootstrap: [AppComponent]
         })
@@ -35,8 +35,8 @@ describe('Nrwl Workspace', () => {
     'should support router config generation (lazy)',
     () => {
       newProject();
-      newApp('myapp --routing');
-      newLib('mylib --routing --lazy --parentModule=apps/myapp/src/app/app.module.ts');
+      newApp('myApp --directory=myDir --routing');
+      newLib('myLib --directory=myDir --routing --lazy --parentModule=apps/my-dir/my-app/src/app/app.module.ts');
 
       runCLI('build --aot');
       expect(runCLI('test --single-run')).toContain('Executed 2 of 2 SUCCESS');
@@ -48,8 +48,8 @@ describe('Nrwl Workspace', () => {
     'should support router config generation (eager)',
     () => {
       newProject();
-      newApp('myapp --routing');
-      newLib('mylib --routing --parentModule=apps/myapp/src/app/app.module.ts');
+      newApp('myApp --directory=myDir --routing');
+      newLib('myLib --directory=myDir --routing --parentModule=apps/my-dir/my-app/src/app/app.module.ts');
 
       runCLI('build --aot');
       expect(runCLI('test --single-run')).toContain('Executed 2 of 2 SUCCESS');

@@ -21,6 +21,12 @@ import { addBootstrapToModule } from '@schematics/angular/utility/ast-utils';
 import { insertImport } from '@schematics/angular/utility/route-utils';
 import { addApp, serializeJson } from '../utility/fileutils';
 import { addImportToTestBed } from '../utility/ast-utils';
+import { offsetFromRoot } from '../utility/common';
+
+interface NormalizedSchema extends Schema {
+  fullName: string;
+  fullPath: string;
+}
 
 function addBootstrap(path: string): Rule {
   return (host: Tree) => {
@@ -48,7 +54,7 @@ function addNxModule(path: string): Rule {
     return host;
   };
 }
-function addAppToAngularCliJson(options: Schema): Rule {
+function addAppToAngularCliJson(options: NormalizedSchema): Rule {
   return (host: Tree) => {
     if (!host.exists('.angular-cli.json')) {
       throw new Error('Missing .angular-cli.json');
@@ -57,16 +63,16 @@ function addAppToAngularCliJson(options: Schema): Rule {
     const sourceText = host.read('.angular-cli.json')!.toString('utf-8');
     const json = JSON.parse(sourceText);
     json.apps = addApp(json.apps, {
-      name: options.name,
-      root: fullPath(options),
-      outDir: `dist/apps/${options.name}`,
+      name: options.fullName,
+      root: options.fullPath,
+      outDir: `dist/apps/${options.fullName}`,
       assets: ['assets', 'favicon.ico'],
       index: 'index.html',
       main: 'main.ts',
       polyfills: 'polyfills.ts',
-      test: '../../../test.js',
-      tsconfig: '../../../tsconfig.app.json',
-      testTsconfig: '../../../tsconfig.spec.json',
+      test: `${offsetFromRoot(options)}test.js`,
+      tsconfig: `${offsetFromRoot(options)}tsconfig.app.json`,
+      testTsconfig: `${offsetFromRoot(options)}tsconfig.spec.json`,
       prefix: options.prefix,
       styles: [`styles.${options.style}`],
       scripts: [],
@@ -109,7 +115,8 @@ function addRouterRootConfiguration(path: string): Rule {
 }
 
 export default function(schema: Schema): Rule {
-  const options = { ...schema, name: toFileName(schema.name) };
+  const options = normalizeOptions(schema);
+
   const templateSource = apply(url('./files'), [
     template({ utils: stringUtils, dot: '.', tmpl: '', ...(options as object) })
   ]);
@@ -122,13 +129,13 @@ export default function(schema: Schema): Rule {
       commonModule: false,
       flat: true,
       routing: false,
-      sourceDir: fullPath(options),
+      sourceDir: options.fullPath,
       spec: false
     }),
     externalSchematic('@schematics/angular', 'component', {
       name: 'app',
       selector: selector,
-      sourceDir: fullPath(options),
+      sourceDir: options.fullPath,
       flat: true,
       inlineStyle: options.inlineStyle,
       inlineTemplate: options.inlineTemplate,
@@ -142,17 +149,20 @@ export default function(schema: Schema): Rule {
       apply(url('./component-files'), [
         options.inlineTemplate ? filter(path => !path.endsWith('.html')) : noop(),
         template({ ...options, tmpl: '' }),
-        move(`${fullPath(options)}/app`)
+        move(`${options.fullPath}/app`)
       ]),
       MergeStrategy.Overwrite
     ),
-    addBootstrap(fullPath(options)),
-    addNxModule(fullPath(options)),
+    addBootstrap(options.fullPath),
+    addNxModule(options.fullPath),
     addAppToAngularCliJson(options),
-    options.routing ? addRouterRootConfiguration(fullPath(options)) : noop()
+    options.routing ? addRouterRootConfiguration(options.fullPath) : noop()
   ]);
 }
 
-function fullPath(options: Schema) {
-  return `apps/${options.name}/${options.sourceDir}`;
+function normalizeOptions(options: Schema): NormalizedSchema {
+  const name = toFileName(options.name);
+  const fullName = options.directory ? `${toFileName(options.directory)}/${name}` : name;
+  const fullPath = `apps/${fullName}/${options.sourceDir}`;
+  return { ...options, name, fullName, fullPath };
 }
