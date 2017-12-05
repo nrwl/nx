@@ -13,7 +13,14 @@ import {
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';
-import { angularCliVersion, ngrxVersion, nxVersion, prettierVersion, schematicsVersion } from '../utility/lib-versions';
+import {
+  angularCliVersion,
+  latestMigration,
+  ngrxVersion,
+  nxVersion,
+  prettierVersion,
+  schematicsVersion
+} from '../utility/lib-versions';
 import * as fs from 'fs';
 import { join } from 'path';
 import { serializeJson, updateJsonFile } from '../utility/fileutils';
@@ -71,6 +78,7 @@ function updateAngularCLIJson(options: Schema) {
     }
     const angularCliJson = JSON.parse(host.read('.angular-cli.json')!.toString('utf-8'));
     angularCliJson.project.npmScope = npmScope(options);
+    angularCliJson.project.latestMigration = latestMigration;
 
     if (angularCliJson.apps.length !== 1) {
       throw new Error('Can only convert projects with one app');
@@ -141,7 +149,7 @@ function updateTsLintJson(options: Schema) {
       ['no-trailing-whitespace', 'one-line', 'quotemark', 'typedef-whitespace', 'whitespace'].forEach(key => {
         json[key] = undefined;
       });
-      json['nx-enforce-module-boundaries'] = [true, { npmScope: npmScope(options), lazyLoad: [], allow: [] }];
+      json['nx-enforce-module-boundaries'] = [true, { lazyLoad: [], allow: [] }];
     });
     return host;
   };

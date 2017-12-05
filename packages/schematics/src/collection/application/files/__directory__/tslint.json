@@ -113,7 +113,6 @@
     "nx-enforce-module-boundaries": [
       true,
       {
-        "npmScope": "<%= npmScope %>",
         "lazyLoad": [],
         "allow": []
       }

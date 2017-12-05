@@ -8,6 +8,10 @@
       "type": "string",
       "description": "Library name"
     },
+    "directory": {
+      "type": "string",
+      "description": "A directory where the app is placed"
+    },
     "sourceDir": {
       "type": "string",
       "default": "src",

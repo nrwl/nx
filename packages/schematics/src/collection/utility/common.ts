@@ -1,6 +1,7 @@
 import { Tree, Rule } from '@angular-devkit/schematics';
 import { angularJsVersion } from './lib-versions';
 import { serializeJson } from './fileutils';
+import { Schema } from '../app/schema';
 
 export function addUpgradeToPackageJson(): Rule {
   return (host: Tree) => {
@@ -22,4 +23,15 @@ export function addUpgradeToPackageJson(): Rule {
     host.overwrite('package.json', serializeJson(json));
     return host;
   };
+}
+
+export function offsetFromRoot(options: Schema): string {
+  let offset = '../../../';
+  if (options.directory) {
+    const parts = options.directory.split('/').length;
+    for (let i = 0; i < parts; ++i) {
+      offset += '../';
+    }
+  }
+  return offset;
 }

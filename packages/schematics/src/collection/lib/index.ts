@@ -18,14 +18,21 @@ import { serializeJson, addApp, cliConfig } from '../utility/fileutils';
 import { insertImport } from '@schematics/angular/utility/route-utils';
 import * as ts from 'typescript';
 import { addGlobal, addReexport, addRoute } from '../utility/ast-utils';
+import { offsetFromRoot } from '../utility/common';
 
-function addLibToAngularCliJson(options: Schema): Rule {
+interface NormalizedSchema extends Schema {
+  name: string;
+  fullName: string;
+  fullPath: string;
+}
+
+function addLibToAngularCliJson(options: NormalizedSchema): Rule {
   return (host: Tree) => {
     const json = cliConfig(host);
     json.apps = addApp(json.apps, {
-      name: options.name,
-      root: fullPath(options),
-      test: '../../../test.js',
+      name: options.fullName,
+      root: options.fullPath,
+      test: `${offsetFromRoot(options)}test.js`,
       appRoot: ''
     });
 
@@ -54,7 +61,7 @@ function addLazyLoadedRouterConfiguration(modulePath: string): Rule {
 }
 
 function addRouterConfiguration(
-  schema: Schema,
+  schema: NormalizedSchema,
   indexFilePath: string,
   moduleFileName: string,
   modulePath: string
@@ -76,14 +83,14 @@ function addRouterConfiguration(
   };
 }
 
-function addLoadChildren(schema: Schema): Rule {
+function addLoadChildren(schema: NormalizedSchema): Rule {
   return (host: Tree) => {
     const json = cliConfig(host);
 
     const moduleSource = host.read(schema.parentModule)!.toString('utf-8');
     const sourceFile = ts.createSourceFile(schema.parentModule, moduleSource, ts.ScriptTarget.Latest, true);
 
-    const loadChildren = `@${json.project.npmScope}/${toFileName(schema.name)}#${toClassName(schema.name)}Module`;
+    const loadChildren = `@${json.project.npmScope}/${toFileName(schema.fullName)}#${toClassName(schema.name)}Module`;
     insert(host, schema.parentModule, [
       ...addRoute(
         schema.parentModule,
@@ -95,14 +102,14 @@ function addLoadChildren(schema: Schema): Rule {
   };
 }
 
-function addChildren(schema: Schema): Rule {
+function addChildren(schema: NormalizedSchema): Rule {
   return (host: Tree) => {
     const json = cliConfig(host);
 
     const moduleSource = host.read(schema.parentModule)!.toString('utf-8');
     const sourceFile = ts.createSourceFile(schema.parentModule, moduleSource, ts.ScriptTarget.Latest, true);
     const constName = `${toPropertyName(schema.name)}Routes`;
-    const importPath = `@${json.project.npmScope}/${toFileName(schema.name)}`;
+    const importPath = `@${json.project.npmScope}/${toFileName(schema.fullName)}`;
 
     insert(host, schema.parentModule, [
       insertImport(sourceFile, schema.parentModule, constName, importPath),
@@ -112,7 +119,7 @@ function addChildren(schema: Schema): Rule {
   };
 }
 
-function updateTsLint(schema: Schema): Rule {
+function updateTsLint(schema: NormalizedSchema): Rule {
   return (host: Tree) => {
     const tsLint = JSON.parse(host.read('tslint.json')!.toString('utf-8'));
     if (
@@ -121,7 +128,7 @@ function updateTsLint(schema: Schema): Rule {
       tsLint['rules']['nx-enforce-module-boundaries'][1] &&
       tsLint['rules']['nx-enforce-module-boundaries'][1]['lazyLoad']
     ) {
-      tsLint['rules']['nx-enforce-module-boundaries'][1]['lazyLoad'].push(toFileName(schema.name));
+      tsLint['rules']['nx-enforce-module-boundaries'][1]['lazyLoad'].push(toFileName(schema.fullName));
       host.overwrite('tslint.json', serializeJson(tsLint));
     }
     return host;
@@ -129,16 +136,16 @@ function updateTsLint(schema: Schema): Rule {
 }
 
 export default function(schema: Schema): Rule {
-  const options = { ...schema, name: toFileName(schema.name) };
-  const moduleFileName = `${toFileName(schema.name)}.module`;
-  const modulePath = `${fullPath(schema)}/${moduleFileName}.ts`;
-  const indexFile = `libs/${toFileName(options.name)}/index.ts`;
+  const options = normalizeOptions(schema);
+  const moduleFileName = `${toFileName(options.name)}.module`;
+  const modulePath = `${options.fullPath}/${moduleFileName}.ts`;
+  const indexFile = `libs/${toFileName(options.fullName)}/index.ts`;
 
-  if (schema.routing && schema.nomodule) {
+  if (options.routing && options.nomodule) {
     throw new Error(`nomodule and routing cannot be used together`);
   }
 
-  if (!schema.routing && schema.lazy) {
+  if (!options.routing && options.lazy) {
     throw new Error(`routing must be set`);
   }
 
@@ -154,15 +161,18 @@ export default function(schema: Schema): Rule {
   return chain([
     branchAndMerge(chain([mergeWith(templateSource)])),
     addLibToAngularCliJson(options),
-    schema.routing && schema.lazy ? addLazyLoadedRouterConfiguration(modulePath) : noop(),
-    schema.routing && schema.lazy ? updateTsLint(schema) : noop(),
-    schema.routing && schema.lazy && schema.parentModule ? addLoadChildren(schema) : noop(),
+    options.routing && options.lazy ? addLazyLoadedRouterConfiguration(modulePath) : noop(),
+    options.routing && options.lazy ? updateTsLint(options) : noop(),
+    options.routing && options.lazy && options.parentModule ? addLoadChildren(options) : noop(),
 
-    schema.routing && !schema.lazy ? addRouterConfiguration(schema, indexFile, moduleFileName, modulePath) : noop(),
-    schema.routing && !schema.lazy && schema.parentModule ? addChildren(schema) : noop()
+    options.routing && !options.lazy ? addRouterConfiguration(options, indexFile, moduleFileName, modulePath) : noop(),
+    options.routing && !options.lazy && options.parentModule ? addChildren(options) : noop()
   ]);
 }
 
-function fullPath(options: Schema) {
-  return `libs/${toFileName(options.name)}/${options.sourceDir}`;
+function normalizeOptions(options: Schema): NormalizedSchema {
+  const name = toFileName(options.name);
+  const fullName = options.directory ? `${toFileName(options.directory)}/${name}` : name;
+  const fullPath = `libs/${fullName}/${options.sourceDir}`;
+  return { ...options, name, fullName, fullPath };
 }
