@@ -114,6 +114,33 @@ function addRouterRootConfiguration(path: string): Rule {
   };
 }
 
+const staticComponentContent = `
+<div style="text-align:center">
+  <h1>
+    Welcome to an Angular CLI app built with Nrwl Nx!
+  </h1>
+  <img width="300" src="assets/nx-logo.png">
+</div>
+
+<h2>Nx</h2>
+
+An open source toolkit for enterprise Angular applications.
+
+Nx is designed to help you create and build enterprise grade Angular applications. It provides an opinionated approach to application project structure and patterns.
+
+<h2>Quick Start & Documentation</h2>
+
+<a href="https://nrwl.io/nx">Watch a 5-minute video on how to get started with Nx.</a>`;
+
+function updateComponentTemplate(options: NormalizedSchema): Rule {
+  return (host: Tree) => {
+    const content = options.routing
+      ? `${staticComponentContent}\n<router-outlet></router-outlet>`
+      : staticComponentContent;
+    host.overwrite(`${options.fullPath}/app/app.component.html`, content);
+  };
+}
+
 export default function(schema: Schema): Rule {
   const options = normalizeOptions(schema);
 
@@ -144,15 +171,7 @@ export default function(schema: Schema): Rule {
       viewEncapsulation: options.viewEncapsulation,
       changeDetection: options.changeDetection
     }),
-
-    mergeWith(
-      apply(url('./component-files'), [
-        options.inlineTemplate ? filter(path => !path.endsWith('.html')) : noop(),
-        template({ ...options, tmpl: '' }),
-        move(`${options.fullPath}/app`)
-      ]),
-      MergeStrategy.Overwrite
-    ),
+    updateComponentTemplate(options),
     addBootstrap(options.fullPath),
     addNxModule(options.fullPath),
     addAppToAngularCliJson(options),
