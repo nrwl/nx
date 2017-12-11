@@ -35,3 +35,7 @@ export function cliConfig(host: Tree): any {
   const sourceText = host.read('.angular-cli.json')!.toString('utf-8');
   return JSON.parse(sourceText);
 }
+
+export function readCliConfigFile(): any {
+  return JSON.parse(fs.readFileSync('.angular-cli.json', 'utf-8'));
+}

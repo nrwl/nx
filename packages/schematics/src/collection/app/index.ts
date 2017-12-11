@@ -19,7 +19,7 @@ import { addImportToModule, insert, toFileName } from '@nrwl/schematics';
 import * as ts from 'typescript';
 import { addBootstrapToModule } from '@schematics/angular/utility/ast-utils';
 import { insertImport } from '@schematics/angular/utility/route-utils';
-import { addApp, serializeJson } from '../utility/fileutils';
+import { addApp, serializeJson, cliConfig, readCliConfigFile } from '../utility/fileutils';
 import { addImportToTestBed } from '../utility/ast-utils';
 import { offsetFromRoot } from '../utility/common';
 
@@ -70,9 +70,9 @@ function addAppToAngularCliJson(options: NormalizedSchema): Rule {
       index: 'index.html',
       main: 'main.ts',
       polyfills: 'polyfills.ts',
-      test: `${offsetFromRoot(options)}test.js`,
-      tsconfig: `${offsetFromRoot(options)}tsconfig.app.json`,
-      testTsconfig: `${offsetFromRoot(options)}tsconfig.spec.json`,
+      test: `${offsetFromRoot(options.fullPath)}test.js`,
+      tsconfig: `tsconfig.app.json`,
+      testTsconfig: `${offsetFromRoot(options.fullPath)}tsconfig.spec.json`,
       prefix: options.prefix,
       styles: [`styles.${options.style}`],
       scripts: [],
@@ -82,6 +82,18 @@ function addAppToAngularCliJson(options: NormalizedSchema): Rule {
         prod: 'environments/environment.prod.ts'
       }
     });
+
+    json.lint = [
+      ...(json.lint || []),
+      {
+        project: `${options.fullPath}/tsconfig.app.json`,
+        exclude: '**/node_modules/**'
+      },
+      {
+        project: `apps/${options.fullName}/e2e/tsconfig.e2e.json`,
+        exclude: '**/node_modules/**'
+      }
+    ];
 
     host.overwrite('.angular-cli.json', serializeJson(json));
     return host;
@@ -142,10 +154,21 @@ function updateComponentTemplate(options: NormalizedSchema): Rule {
 }
 
 export default function(schema: Schema): Rule {
-  const options = normalizeOptions(schema);
+  let npmScope = schema.npmScope;
+  if (!npmScope) {
+    npmScope = readCliConfigFile().project.npmScope;
+  }
 
+  const options = normalizeOptions(schema);
   const templateSource = apply(url('./files'), [
-    template({ utils: stringUtils, dot: '.', tmpl: '', ...(options as object) })
+    template({
+      utils: stringUtils,
+      dot: '.',
+      tmpl: '',
+      offsetFromRoot: offsetFromRoot(options.fullPath),
+      ...(options as object),
+      npmScope
+    })
   ]);
 
   const selector = `${options.prefix}-root`;

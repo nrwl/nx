@@ -26,8 +26,6 @@ describe('application', () => {
       '/my-app/package.json',
       '/my-app/protractor.conf.js',
       '/my-app/test.js',
-      '/my-app/tsconfig.app.json',
-      '/my-app/tsconfig.e2e.json',
       '/my-app/tsconfig.json',
       '/my-app/tsconfig.spec.json',
       '/my-app/tslint.json'

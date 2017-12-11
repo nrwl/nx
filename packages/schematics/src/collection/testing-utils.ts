@@ -55,6 +55,18 @@ export function createApp(tree: Tree, appName: string): Tree {
       .catch(err => console.log(err));
   `
   );
+  tree.create(
+    `/apps/${appName}/src/tsconfig.app.json`,
+    JSON.stringify({
+      include: ['**/*.ts']
+    })
+  );
+  tree.create(
+    `/apps/${appName}/e2e/tsconfig.e2e.json`,
+    JSON.stringify({
+      include: ['../**/*.ts']
+    })
+  );
   tree.overwrite(
     '/.angular-cli.json',
     JSON.stringify({

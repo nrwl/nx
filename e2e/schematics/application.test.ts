@@ -1,7 +1,7 @@
 import { newApp, newLib, newProject, runCLI, updateFile } from '../utils';
 
 describe('Nrwl Workspace', () => {
-  it(
+  fit(
     'should work',
     () => {
       newProject();
@@ -27,6 +27,7 @@ describe('Nrwl Workspace', () => {
 
       runCLI('build --aot -a=my-dir/my-app');
       expect(runCLI('test --single-run')).toContain('Executed 2 of 2 SUCCESS');
+      expect(runCLI('e2e -a=my-dir/my-app')).toContain('my-app App');
     },
     1000000
   );

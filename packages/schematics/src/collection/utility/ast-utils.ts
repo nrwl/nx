@@ -325,6 +325,16 @@ export function addRoute(ngModulePath: string, source: ts.SourceFile, route: str
   }
 }
 
+export function addIncludeToTsConfig(tsConfigPath: string, source: ts.SourceFile, include: string): Change[] {
+  const includeKeywordPos = source.text.indexOf('"include":');
+  if (includeKeywordPos > -1) {
+    const includeArrayEndPos = source.text.indexOf(']', includeKeywordPos);
+    return [new InsertChange(tsConfigPath, includeArrayEndPos, include)];
+  } else {
+    return [];
+  }
+}
+
 function getListOfRoutes(source: ts.SourceFile): ts.NodeArray<ts.Expression> {
   const imports: any = getMatchingProperty(source, 'imports');
 
