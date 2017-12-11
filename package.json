@@ -1,13 +1,12 @@
 {
   "name": "@nrwl/nx-source",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Nrwl Extensions for Angular",
   "main": "index.js",
   "private": true,
   "scripts": {
     "build": "./scripts/build.sh",
     "e2e": "yarn build && ./scripts/e2e.sh",
-    "e2e:bazel": "yarn build && ./scripts/e2e-bazel.sh",
     "format": "./scripts/format.sh",
     "linknpm": "./scripts/link.sh",
     "package": "./scripts/package.sh",
