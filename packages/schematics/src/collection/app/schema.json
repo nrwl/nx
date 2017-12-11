@@ -8,6 +8,10 @@
       "type": "string",
       "description": "Application name"
     },
+    "npmScope": {
+      "type": "string",
+      "description": "Calculated stuff"
+    },
     "directory": {
       "type": "string",
       "description": "A directory where the app is placed"

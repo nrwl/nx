@@ -25,13 +25,11 @@ export function addUpgradeToPackageJson(): Rule {
   };
 }
 
-export function offsetFromRoot(options: Schema): string {
-  let offset = '../../../';
-  if (options.directory) {
-    const parts = options.directory.split('/').length;
-    for (let i = 0; i < parts; ++i) {
-      offset += '../';
-    }
+export function offsetFromRoot(fullPathToSourceDir: string): string {
+  const parts = fullPathToSourceDir.split('/');
+  let offset = '';
+  for (let i = 0; i < parts.length; ++i) {
+    offset += '../';
   }
   return offset;
 }

@@ -51,7 +51,8 @@
     "prettier": "1.8.2",
     "rxjs": "5.5.2",
     "tslint": "5.7.0",
-    "typescript": "2.5.3"
+    "typescript": "2.5.3",
+    "strip-json-comments": "2.0.1"
   },
   "author": "Victor Savkin",
   "license": "MIT",

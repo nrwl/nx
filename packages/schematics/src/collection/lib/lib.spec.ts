@@ -3,6 +3,7 @@ import * as path from 'path';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
 import { createApp, createEmptyWorkspace } from '../testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
+import * as stripJsonComments from 'strip-json-comments';
 
 describe('lib', () => {
   const schematicRunner = new SchematicTestRunner('@nrwl/schematics', path.join(__dirname, '../../collection.json'));
@@ -111,6 +112,9 @@ describe('lib', () => {
           `RouterModule.forRoot([{path: 'my-lib', loadChildren: '@proj/my-dir/my-lib#MyLibModule'}])`
         );
 
+        const tsConfigAppJson = JSON.parse(stripJsonComments(getFileContent(tree, 'apps/myapp/src/tsconfig.app.json')));
+        expect(tsConfigAppJson.include).toEqual(['**/*.ts', '../../../libs/my-dir/my-lib/index.ts']);
+
         const tree2 = schematicRunner.runSchematic(
           'lib',
           {
@@ -125,6 +129,24 @@ describe('lib', () => {
         expect(getFileContent(tree2, 'apps/myapp/src/app/app.module.ts')).toContain(
           `RouterModule.forRoot([{path: 'my-lib', loadChildren: '@proj/my-dir/my-lib#MyLibModule'}, {path: 'my-lib2', loadChildren: '@proj/my-dir/my-lib2#MyLib2Module'}])`
         );
+
+        const tsConfigAppJson2 = JSON.parse(
+          stripJsonComments(getFileContent(tree2, 'apps/myapp/src/tsconfig.app.json'))
+        );
+        expect(tsConfigAppJson2.include).toEqual([
+          '**/*.ts',
+          '../../../libs/my-dir/my-lib/index.ts',
+          '../../../libs/my-dir/my-lib2/index.ts'
+        ]);
+
+        const tsConfigE2EJson = JSON.parse(
+          stripJsonComments(getFileContent(tree2, 'apps/myapp/e2e/tsconfig.e2e.json'))
+        );
+        expect(tsConfigE2EJson.include).toEqual([
+          '../**/*.ts',
+          '../../../libs/my-dir/my-lib/index.ts',
+          '../../../libs/my-dir/my-lib2/index.ts'
+        ]);
       });
 
       it('should register the module as lazy loaded in tslint.json', () => {

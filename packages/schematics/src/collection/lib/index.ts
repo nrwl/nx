@@ -14,10 +14,10 @@ import {
 import { Schema } from './schema';
 import { addImportToModule, insert, names, toClassName, toFileName, toPropertyName } from '@nrwl/schematics';
 import * as path from 'path';
-import { serializeJson, addApp, cliConfig } from '../utility/fileutils';
+import { serializeJson, addApp, cliConfig, updateJsonFile } from '../utility/fileutils';
 import { insertImport } from '@schematics/angular/utility/route-utils';
 import * as ts from 'typescript';
-import { addGlobal, addReexport, addRoute } from '../utility/ast-utils';
+import { addGlobal, addIncludeToTsConfig, addReexport, addRoute, offset } from '../utility/ast-utils';
 import { offsetFromRoot } from '../utility/common';
 
 interface NormalizedSchema extends Schema {
@@ -32,7 +32,7 @@ function addLibToAngularCliJson(options: NormalizedSchema): Rule {
     json.apps = addApp(json.apps, {
       name: options.fullName,
       root: options.fullPath,
-      test: `${offsetFromRoot(options)}test.js`,
+      test: `${offsetFromRoot(options.fullPath)}test.js`,
       appRoot: ''
     });
 
@@ -98,8 +98,41 @@ function addLoadChildren(schema: NormalizedSchema): Rule {
         `{path: '${toFileName(schema.name)}', loadChildren: '${loadChildren}'}`
       )
     ]);
+
+    const tsConfig = findClosestTsConfigApp(host, schema.parentModule);
+    if (tsConfig) {
+      const tsConfigAppSource = host.read(tsConfig)!.toString('utf-8');
+      const tsConfigAppFile = ts.createSourceFile(tsConfig, tsConfigAppSource, ts.ScriptTarget.Latest, true);
+      const offset = offsetFromRoot(path.dirname(tsConfig));
+      insert(host, tsConfig, [
+        ...addIncludeToTsConfig(tsConfig, tsConfigAppFile, `\n    , "${offset}libs/${schema.fullName}/index.ts"\n`)
+      ]);
+
+      const e2e = `${path.dirname(path.dirname(tsConfig))}/e2e/tsconfig.e2e.json`;
+      if (host.exists(e2e)) {
+        const tsConfigE2ESource = host.read(e2e)!.toString('utf-8');
+        const tsConfigE2EFile = ts.createSourceFile(e2e, tsConfigE2ESource, ts.ScriptTarget.Latest, true);
+        insert(host, e2e, [
+          ...addIncludeToTsConfig(e2e, tsConfigE2EFile, `\n    , "${offset}libs/${schema.fullName}/index.ts"\n`)
+        ]);
+      }
+    } else {
+      // we should warn the user about not finding the config
+    }
+
     return host;
   };
+}
+
+function findClosestTsConfigApp(host: Tree, parentModule: string): string | null {
+  const dir = path.parse(parentModule).dir;
+  if (host.exists(`${dir}/tsconfig.app.json`)) {
+    return `${dir}/tsconfig.app.json`;
+  } else if (dir != '') {
+    return findClosestTsConfigApp(host, dir);
+  } else {
+    return null;
+  }
 }
 
 function addChildren(schema: NormalizedSchema): Rule {

@@ -25,6 +25,7 @@ import * as fs from 'fs';
 import { join } from 'path';
 import { serializeJson, updateJsonFile } from '../utility/fileutils';
 import { toFileName } from '@nrwl/schematics';
+import { offsetFromRoot } from '../utility/common';
 
 function updatePackageJson() {
   return (host: Tree) => {
@@ -65,18 +66,25 @@ function updatePackageJson() {
     if (!packageJson.devDependencies['prettier']) {
       packageJson.devDependencies['prettier'] = prettierVersion;
     }
-    packageJson.scripts['format'] = `prettier --single-quote --print-width 120 --write '{apps,libs}/**/*.ts'`;
+    packageJson.scripts[
+      'format'
+    ] = `node ./node_modules/prettier/index.js --single-quote --print-width 120 --write \"{apps,libs}/**/*.ts\"`;
+    packageJson.scripts['nx-migrate'] = 'node ./node_modules/@nrwl/schematics/src/migrator/migrator.js';
     host.overwrite('package.json', serializeJson(packageJson));
     return host;
   };
 }
 
+function readAngularCliJson(host: Tree): any {
+  if (!host.exists('.angular-cli.json')) {
+    throw new Error('Cannot find .angular-cli.json');
+  }
+  return JSON.parse(host.read('.angular-cli.json')!.toString('utf-8'));
+}
+
 function updateAngularCLIJson(options: Schema) {
   return (host: Tree) => {
-    if (!host.exists('.angular-cli.json')) {
-      throw new Error('Cannot find .angular-cli.json');
-    }
-    const angularCliJson = JSON.parse(host.read('.angular-cli.json')!.toString('utf-8'));
+    const angularCliJson = readAngularCliJson(host);
     angularCliJson.project.npmScope = npmScope(options);
     angularCliJson.project.latestMigration = latestMigration;
 
@@ -84,17 +92,10 @@ function updateAngularCLIJson(options: Schema) {
       throw new Error('Can only convert projects with one app');
     }
 
-    angularCliJson.lint = [
-      { project: './tsconfig.app.json' },
-      { project: './tsconfig.spec.json' },
-      { project: './tsconfig.e2e.json' }
-    ];
-
     const app = angularCliJson.apps[0];
     app.root = path.join('apps', options.name, app.root);
     app.outDir = path.join('dist', 'apps', options.name);
     app.test = '../../../test.js';
-    app.tsconfig = '../../../tsconfig.app.json';
     app.testTsconfig = '../../../tsconfig.spec.json';
     app.scripts = app.scripts.map(p => path.join('../../', p));
     if (!angularCliJson.defaults) {
@@ -107,6 +108,21 @@ function updateAngularCLIJson(options: Schema) {
     angularCliJson.defaults.schematics['postGenerate'] = 'npm run format';
     angularCliJson.defaults.schematics['newProject'] = ['app', 'lib'];
 
+    angularCliJson.lint = [
+      {
+        project: `${app.root}/tsconfig.app.json`,
+        exclude: '**/node_modules/**'
+      },
+      {
+        project: './tsconfig.spec.json',
+        exclude: '**/node_modules/**'
+      },
+      {
+        project: `${options.name}/tsconfig.e2e.json`,
+        exclude: '**/node_modules/**'
+      }
+    ];
+
     host.overwrite('.angular-cli.json', serializeJson(angularCliJson));
 
     return host;
@@ -115,28 +131,39 @@ function updateAngularCLIJson(options: Schema) {
 
 function updateTsConfigsJson(options: Schema) {
   return (host: Tree) => {
-    updateJsonFile('tsconfig.json', json => setUpCompilerOptions(json, npmScope(options)));
+    const angularCliJson = readAngularCliJson(host);
+    const app = angularCliJson.apps[0];
+    updateJsonFile('tsconfig.json', json => setUpCompilerOptions(json, npmScope(options), ''));
 
-    updateJsonFile('tsconfig.app.json', json => {
-      json['extends'] = './tsconfig.json';
+    const offset = '../../../';
+    updateJsonFile(`${app.root}/tsconfig.app.json`, json => {
+      json.extends = `${offset}tsconfig.json`;
+      json.compilerOptions.outDir = `${offset}dist/out-tsc/apps/${options.name}`;
       if (!json.exclude) json.exclude = [];
-      json.exclude = dedup(json.exclude.concat(['**/*.spec.ts', '**/*.e2e-spec.ts', 'node_modules', 'tmp']));
-      setUpCompilerOptions(json, npmScope(options));
+      json.exclude = dedup(json.exclude.concat(['**/*.spec.ts']));
+
+      if (!json.include) json.include = [];
+      json.include = dedup(json.include.concat(['**/*.ts']));
     });
 
     updateJsonFile('tsconfig.spec.json', json => {
-      json['extends'] = './tsconfig.json';
+      json.extends = './tsconfig.json';
+      json.compilerOptions.outDir = `./dist/out-tsc/spec`;
+
       if (!json.exclude) json.exclude = [];
       json.files = ['test.js'];
+      json.include = ['**/*.ts'];
       json.exclude = dedup(json.exclude.concat(['node_modules', 'tmp']));
-      setUpCompilerOptions(json, npmScope(options));
     });
 
-    updateJsonFile('tsconfig.e2e.json', json => {
-      json['extends'] = './tsconfig.json';
+    updateJsonFile(`apps/${options.name}/e2e/tsconfig.e2e.json`, json => {
+      json.extends = `${offset}tsconfig.json`;
+      json.compilerOptions.outDir = `${offset}dist/out-tsc/e2e/${options.name}`;
       if (!json.exclude) json.exclude = [];
-      json.exclude = dedup(json.exclude.concat(['**/*.spec.ts', 'node_modules', 'tmp']));
-      setUpCompilerOptions(json, npmScope(options));
+      json.exclude = dedup(json.exclude.concat(['**/*.spec.ts']));
+
+      if (!json.include) json.include = [];
+      json.include = dedup(json.include.concat(['../**/*.ts']));
     });
 
     return host;
@@ -149,6 +176,7 @@ function updateTsLintJson(options: Schema) {
       ['no-trailing-whitespace', 'one-line', 'quotemark', 'typedef-whitespace', 'whitespace'].forEach(key => {
         json[key] = undefined;
       });
+      json.rulesDirectory.push('node_modules/@nrwl/schematics/src/tslint');
       json['nx-enforce-module-boundaries'] = [true, { lazyLoad: [], allow: [] }];
     });
     return host;
@@ -166,8 +194,16 @@ function updateProtractorConf() {
     }
     const protractorConf = host.read('protractor.conf.js')!.toString('utf-8');
     const updatedConf = protractorConf
-      .replace(`./e2e/**/*.e2e-spec.ts`, `./apps/**/*.e2e-spec.ts`)
-      .replace(`e2e/tsconfig.e2e.json`, `./tsconfig.e2e.json`);
+      .replace(`'./e2e/**/*.e2e-spec.ts'`, `appDir + ;'/e2e/**/*.e2e-spec.ts'`)
+      .replace(`'e2e/tsconfig.e2e.json'`, `appDir + '/e2e/tsconfig.e2e.json'`)
+      .replace(
+        `exports.config = {`,
+        `
+const { getAppDirectoryUsingCliConfig } = require('@nrwl/schematics/src/utils/cli-config-utils');
+const appDir = getAppDirectoryUsingCliConfig();
+exports.config = {
+`
+      );
 
     host.overwrite('protractor.conf.js', updatedConf);
 
@@ -175,12 +211,12 @@ function updateProtractorConf() {
   };
 }
 
-function setUpCompilerOptions(tsconfig: any, npmScope: string): void {
+function setUpCompilerOptions(tsconfig: any, npmScope: string, offset: string): void {
   if (!tsconfig.compilerOptions.paths) {
     tsconfig.compilerOptions.paths = {};
   }
   tsconfig.compilerOptions.baseUrl = '.';
-  tsconfig.compilerOptions.paths[`@${npmScope}/*`] = ['libs/*'];
+  tsconfig.compilerOptions.paths[`@${npmScope}/*`] = [`${offset}libs/*`];
 }
 
 function moveFiles(options: Schema) {
@@ -192,9 +228,7 @@ function moveFiles(options: Schema) {
     fs.mkdirSync('libs');
     fs.unlinkSync(path.join(app.root, app.test));
     fs.mkdirSync(path.join('apps', options.name));
-    fs.renameSync(path.join(app.root, app.tsconfig), 'tsconfig.app.json');
     fs.renameSync(path.join(app.root, app.testTsconfig), 'tsconfig.spec.json');
-    fs.renameSync(path.join('e2e', 'tsconfig.e2e.json'), 'tsconfig.e2e.json');
     fs.renameSync(app.root, join('apps', options.name, app.root));
     fs.renameSync('e2e', join('apps', options.name, 'e2e'));
 

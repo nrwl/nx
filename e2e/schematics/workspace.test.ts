@@ -49,7 +49,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     expect(updatedAngularCLIJson.apps[0].root).toEqual('apps/proj/src');
     expect(updatedAngularCLIJson.apps[0].outDir).toEqual('dist/apps/proj');
     expect(updatedAngularCLIJson.apps[0].test).toEqual('../../../test.js');
-    expect(updatedAngularCLIJson.apps[0].tsconfig).toEqual('../../../tsconfig.app.json');
+    expect(updatedAngularCLIJson.apps[0].tsconfig).toEqual('tsconfig.app.json');
     expect(updatedAngularCLIJson.apps[0].testTsconfig).toEqual('../../../tsconfig.spec.json');
     expect(updatedAngularCLIJson.apps[0].scripts[0]).toEqual('../../../node_modules/x.js');
     expect(updatedAngularCLIJson.defaults.schematics.collection).toEqual('@nrwl/schematics');

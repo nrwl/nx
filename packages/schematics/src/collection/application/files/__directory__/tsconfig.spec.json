@@ -1,19 +1,13 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "./out-tsc/spec",
+    "outDir": "./dist/out-tsc/spec",
     "module": "commonjs",
     "target": "es5",
     "types": [
       "jasmine",
       "node"
-    ],
-    "baseUrl": ".",
-    "paths": {
-      "@<%= npmScope %>/*": [
-        "libs/*"
-      ]
-    }
+    ]
   },
   "include": [
     "**/*.ts"
