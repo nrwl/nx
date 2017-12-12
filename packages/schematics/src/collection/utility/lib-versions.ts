@@ -4,7 +4,7 @@ export const angularJsVersion = '1.6.6';
 export const ngrxVersion = '^4.1.0';
 export const nxVersion = '*';
 export const schematicsVersion = '*';
-export const latestMigration = '20171205-remove-npmscope-from-tslintjson';
+export const latestMigration = '20171211-create-tsconfigapp-per-app.ts';
 export const prettierVersion = '1.8.2';
 
 export const libVersions = {
