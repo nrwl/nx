@@ -2,6 +2,28 @@
 
 The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
 
+# 0.5.0
+
+## Features
+
+* [Update the workspace to use Angular 5.1 and CLI 1.6](https://github.com/nrwl/nx/commit/a477bb9fc953e3b44d696945cc259119f701fb78)
+
+# 0.4.0
+
+## Features
+
+* [Add support for generating nested apps and libs](https://github.com/nrwl/nx/commit/013a828d1e31f55a9b3f7c69587316890ea834d4)
+* [Update NgRx schematic to allow the customization of the state folder](https://github.com/nrwl/nx/commit/a2d02652665f497be8958efc403d7a44bd831088)
+
+## Bug Fixes
+ 
+* [Only begin converting to workspace once files have been checked](https://github.com/nrwl/nx/commit/e7fd6b1e04f3f3387a91c53a7ac479fe72bdd72e)
+* ["ng build" should only recompile the selected app](https://github.com/nrwl/nx/commit/550de7bb80f4d3f306c23fac70db52c98dadcd05)
+
+## Refactoring
+
+* [Eliminated single letter variable names in effects template](https://github.com/nrwl/nx/commit/996143cf60bac1a57629815d5756db9ce23193ab)
+
 # 0.3.0
 
 We want to be able to add new features to Nx without breaking existing workspaces. Say, you created an Nx Workspace using Nx 0.2.0. Then, half a year later, you decided to upgrade the version of Nx to 0.5.0. Imagine the 0.5.0 release requires you to have more information in your `.angular-cli.json`. Until now, you would have to manually go through the changelog and modify your `.angular-cli.json`. This release adds the `nx-migrate` command that does it for you. Run `npm run nx-migrate` after upgrading `@nrwl/schematics`, and it will upgrade your workspace to be 0.5.0 compatible. 
