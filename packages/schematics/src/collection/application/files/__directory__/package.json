@@ -24,7 +24,7 @@
     "@angular/platform-browser-dynamic": "<%= angularVersion %>",
     "@angular/router": "<%= angularVersion %>",
     "core-js": "^2.4.1",
-    "rxjs": "^5.5.2",
+    "rxjs": "<%= rxjsVersion %>",
     "zone.js": "^0.8.14",
     "@nrwl/nx": "<%= nxVersion %>",
     "@ngrx/effects": "<%= ngrxVersion %>",
@@ -52,7 +52,7 @@
     "protractor": "~5.1.2",
     "ts-node": "~3.2.0",
     "tslint": "~5.3.2",<% } %>
-    "typescript": "2.5.3",
+    "typescript": "<%= typescriptVersion %>",
     "prettier": "<%= prettierVersion %>"
   }
 }
