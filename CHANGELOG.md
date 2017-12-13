@@ -2,6 +2,17 @@
 
 The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
 
+# 0.5.1
+
+## Features
+
+* [Disable typescript mismatch warnings](https://github.com/nrwl/nx/commit/ecb87a0dcd08f0968d77508976ce43a84f049743)
+
+## Bug Fixes
+
+* ["ng test" should not compile e2e tests](https://github.com/nrwl/nx/commit/ac53e9a624b01cf71f88eb412678ffc48125ff38)
+* [Fix 'npm run format'](https://github.com/nrwl/nx/commit/670cd57dfa7d5bbf6b9af4e52f2c7d40081138cb)
+
 # 0.5.0
 
 ## Features
