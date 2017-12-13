@@ -7,7 +7,7 @@ export const schematicsVersion = '*';
 export const latestMigration = '20171213-update-tsconfig-spec-to-exclude-e2e';
 export const prettierVersion = '1.8.2';
 export const typescriptVersion = '2.5.3';
-export const rxjsVersion = '5.5.2';
+export const rxjsVersion = '^5.5.2';
 
 export const libVersions = {
   angularVersion,
