@@ -148,4 +148,25 @@ describe('app', () => {
       );
     });
   });
+
+  describe('view encapsulation', () => {
+    it('should not set Component encapsulation metadata if option flag not included', () => {
+      const tree = schematicRunner.runSchematic(
+        'app',
+        { name: 'myApp', npmScope: 'nrwl', directory: 'myDir' },
+        appTree
+      );
+      expect(getFileContent(tree, 'apps/my-dir/my-app/src/app/app.component.ts')).not.toContain('encapsulation: ');
+    });
+    it('should set Component encapsulation metadata if option flag is included', () => {
+      const tree = schematicRunner.runSchematic(
+        'app',
+        { name: 'myApp', npmScope: 'nrwl', directory: 'myDir', viewEncapsulation: 'Native' },
+        appTree
+      );
+      expect(getFileContent(tree, 'apps/my-dir/my-app/src/app/app.component.ts')).toContain(
+        'encapsulation: ViewEncapsulation.Native'
+      );
+    });
+  });
 });
