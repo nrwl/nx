@@ -153,7 +153,9 @@ function updateTsConfigsJson(options: Schema) {
       if (!json.exclude) json.exclude = [];
       json.files = ['test.js'];
       json.include = ['**/*.ts'];
-      json.exclude = dedup(json.exclude.concat(['node_modules', 'tmp']));
+      json.exclude = dedup(
+        json.exclude.concat(['**/e2e/*.ts', '**/*.e2e-spec.ts', '**/*.po.ts', 'node_modules', 'tmp'])
+      );
     });
 
     updateJsonFile(`apps/${options.name}/e2e/tsconfig.e2e.json`, json => {
