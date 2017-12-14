@@ -2,6 +2,14 @@
 
 The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
 
+# 0.5.2
+
+## Bug Fixes
+
+* [Remove default prop for viewEncapsulation option flag](https://github.com/nrwl/nx/commit/b46eb1c699dd509f4be103979a5938c3f7486fb1)
+* [Fix NPM link in README](https://github.com/nrwl/nx/commit/4aa42e4772522a20df384ab9a48861a8d4f7ab0f)
+* [Change rxjs version to use hat](https://github.com/nrwl/nx/commit/3b1942ed830ea31269a1fb9e995efb93b182870a)
+
 # 0.5.1
 
 ## Features
