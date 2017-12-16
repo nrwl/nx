@@ -63,8 +63,8 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       return;
     }
 
-    const app = this.appNames.filter(a => imp.startsWith(`@${this.npmScope}/${a}`))[0];
-    if (app && imp !== `@${this.npmScope}/${app}`) {
+    const deepImport = this.appNames.filter(a => imp.startsWith(`@${this.npmScope}/${a}/`))[0];
+    if (deepImport) {
       this.addFailureAt(node.getStart(), node.getWidth(), 'deep imports into libraries are forbidden');
       return;
     }
