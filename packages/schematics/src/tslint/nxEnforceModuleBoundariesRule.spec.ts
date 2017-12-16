@@ -31,6 +31,30 @@ describe('Enforce Module Boundaries', () => {
     expect(failures[0].getFailure()).toEqual('deep imports into libraries are forbidden');
   });
 
+  it('should not error about deep imports when libs contain the same prefix', () => {
+    let failures = runRule(
+      {},
+      `import '@mycompany/reporting-dashboard-ui';
+       import '@mycompany/reporting-other';
+       import '@mycompany/reporting';
+       `,
+      ['reporting', 'reporting-dashboard-ui']
+    );
+
+    expect(failures.length).toEqual(0);
+
+    // Make sure it works regardless of order of app names list
+    failures = runRule(
+      {},
+      `import '@mycompany/reporting-dashboard-ui';
+       import '@mycompany/reporting-other';
+       import '@mycompany/reporting';`,
+      ['reporting-dashboard-ui', 'reporting']
+    );
+
+    expect(failures.length).toEqual(0);
+  });
+
   it('should error on importing a lazy-loaded library', () => {
     const failures = runRule({ lazyLoad: ['mylib'] }, `import '@mycompany/mylib';`);
 
@@ -39,7 +63,7 @@ describe('Enforce Module Boundaries', () => {
   });
 });
 
-function runRule(ruleArguments: any, content: string): RuleFailure[] {
+function runRule(ruleArguments: any, content: string, appNames: string[] = ['mylib']): RuleFailure[] {
   const options: any = {
     ruleArguments: [ruleArguments],
     ruleSeverity: 'error',
@@ -47,6 +71,6 @@ function runRule(ruleArguments: any, content: string): RuleFailure[] {
   };
 
   const sourceFile = ts.createSourceFile('proj/apps/myapp/src/main.ts', content, ts.ScriptTarget.Latest, true);
-  const rule = new Rule(options, 'proj', 'mycompany', ['mylib']);
+  const rule = new Rule(options, 'proj', 'mycompany', appNames);
   return rule.apply(sourceFile);
 }
