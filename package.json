@@ -16,14 +16,13 @@
     "test:nx": "yarn build && ./scripts/test_nx.sh",
     "test": "yarn build && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
     "checkformat": "./scripts/check-format.sh",
-    "publish_npm": "./scripts/publish.sh",
-    "postinstall": "./scripts/copy-clis.sh"
+    "publish_npm": "./scripts/publish.sh"
   },
   "dependencies": {
     "jasmine-marbles": "0.1.0"
   },
   "devDependencies": {
-    "@angular/cli": "nrwl/fix-cli-build#release16",
+    "@angular/cli": "file:./packages/schematics/src/collection/application/files/__directory__/.angular_cli.tgz",
     "@angular/common": "5.0.0",
     "@angular/compiler": "5.0.0",
     "@angular/compiler-cli": "5.0.0",
@@ -49,7 +48,9 @@
     "rxjs": "^5.5.2",
     "tslint": "5.7.0",
     "typescript": "2.5.3",
-    "strip-json-comments": "2.0.1"
+    "strip-json-comments": "2.0.1",
+    "tmp": "0.0.33",
+    "semver": "5.4.1"
   },
   "author": "Victor Savkin",
   "license": "MIT",

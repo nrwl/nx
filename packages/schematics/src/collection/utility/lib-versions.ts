@@ -1,4 +1,4 @@
-export const angularCliVersion = 'nrwl/fix-cli-build#release16';
+export const angularCliVersion = 'file:.angular_cli.tgz';
 export const angularVersion = '5.1.0';
 export const angularJsVersion = '1.6.6';
 export const ngrxVersion = '4.1.1';
