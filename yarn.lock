@@ -27,9 +27,9 @@
     minimist "^1.2.0"
     rxjs "^5.5.2"
 
-"@angular/cli@nrwl/fix-cli-build#release16":
+"@angular/cli@file:./packages/schematics/src/collection/application/files/__directory__/.angular_cli.tgz":
   version "1.6.0"
-  resolved "https://codeload.github.com/nrwl/fix-cli-build/tar.gz/c75958e7f32f5997421fe6351f49367e5c43313a"
+  resolved "file:./packages/schematics/src/collection/application/files/__directory__/.angular_cli.tgz#5a19107a74a7454c97d6947508ca12e83a2bdc9d"
   dependencies:
     "@angular-devkit/build-optimizer" "~0.0.35"
     "@angular-devkit/schematics" "~0.0.41"
@@ -5185,7 +5185,7 @@ selfsigned@^1.9.1:
   dependencies:
     node-forge "0.6.33"
 
-"semver@2 || 3 || 4 || 5", semver@^5.1.0, semver@^5.3.0:
+"semver@2 || 3 || 4 || 5", semver@5.4.1, semver@^5.1.0, semver@^5.3.0:
   version "5.4.1"
   resolved "https://registry.yarnpkg.com/semver/-/semver-5.4.1.tgz#e059c09d8571f0540823733433505d3a2f00b18e"
 
@@ -5727,7 +5727,7 @@ tmp@0.0.31:
   dependencies:
     os-tmpdir "~1.0.1"
 
-tmp@0.0.x:
+tmp@0.0.33, tmp@0.0.x:
   version "0.0.33"
   resolved "https://registry.yarnpkg.com/tmp/-/tmp-0.0.33.tgz#6d34335889768d21b2bcda0aa277ced3b1bfadf9"
   dependencies:

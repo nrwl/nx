@@ -2,10 +2,17 @@
   "name": "@nrwl/schematics",
   "version": "0.0.1",
   "description": "Nrwl Extensions for Angular: Schematics",
+  "bin": {
+    "create-nx-workspace": "./bin/create-nx-workspace.js"
+  },
   "main": "index.js",
   "types": "index.d.js",
   "peerDependencies" :{},
   "author": "Victor Savkin",
   "license": "MIT",
-  "schematics": "./src/collection.json"
+  "schematics": "./src/collection.json",
+  "dependencies": {
+    "tmp": "0.0.33",
+    "semver": "5.4.1"
+  }
 }
