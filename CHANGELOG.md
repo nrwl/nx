@@ -10,6 +10,39 @@ The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use
 * [Fix NPM link in README](https://github.com/nrwl/nx/commit/4aa42e4772522a20df384ab9a48861a8d4f7ab0f)
 * [Change rxjs version to use hat](https://github.com/nrwl/nx/commit/3b1942ed830ea31269a1fb9e995efb93b182870a)
 
+# 0.5.3
+
+`ng new myproj --collection=@nrwl/schematics` creates a new workspace. 
+
+For this to work `@nrwl/schematics` and `@angular/cli` have to be installed globally, and they have to be compatible. This is error prone, and it often results in hard to debug errors. And it is impossible for Nx to solve this problem because we do not control your globally installed npm modules. 
+
+That is why we provided a way to create a new workspace using a sandbox that does not depend on any global modules, like this:
+
+```
+curl -fsSL https://raw.githubusercontent.com/nrwl/nx/master/packages/install/install.sh | bash -s myprojectname
+```
+
+This works, but with one caveat: you have to have `curl` and `bash` installed, which might be a problem for a lot of windows folks. That is why starting with `0.5.3`, `@nrwl/schematics` ships with a binary that works on all platforms and creates an Nx workspace without relying on globally installed npm modules.
+
+This is what you can do now:
+
+```
+yarn global add @nrwl/schematics # do it once
+create-nx-workspace myproj
+```
+
+Some folks also reported having problems running Nx behind a firewall, in a corporate environment. We fixed them as well.
+
+
+## Features
+
+* [Replace install.sh with a more robust way of creating projects](https://github.com/nrwl/nx/commit/f91b5309bdaf764e436bd544ec4f10c84b99cb08)
+* [Bump up the version of prettier](https://github.com/nrwl/nx/commit/1481d169bbb7f1fbe3df5af2bce51c4215776d93)
+
+## Buf Fixes
+
+* [Generate an angular-cli config without the apps array, so the CLI can error properly](https://github.com/nrwl/nx/commit/a7f06edf5914212bcefbafb1198d262e9692cfdb)
+
 # 0.5.1
 
 ## Features
