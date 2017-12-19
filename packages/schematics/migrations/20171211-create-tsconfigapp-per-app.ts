@@ -33,7 +33,7 @@ export default {
         `{
   "extends": "${offset}tsconfig.json",
   "compilerOptions": {
-    "outDir": "${offset}dist/out-tsc/e2e/<%= fullName %>",
+    "outDir": "${offset}dist/out-tsc/e2e/${app.name}",
     "module": "commonjs",
     "target": "es5",
     "types": [
