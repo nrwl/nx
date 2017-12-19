@@ -76,9 +76,9 @@ function addImportsToModule(name: string, options: Schema): Rule {
           ...addImportToModule(
             source,
             modulePath,
-            `StoreModule.forRoot({${toPropertyName(name)}: ${reducerName}}, {initialState: {${toPropertyName(name)}: ${
-              initName
-            }}})`
+            `StoreModule.forRoot({${toPropertyName(name)}: ${reducerName}}, {initialState: {${toPropertyName(
+              name
+            )}: ${initName}}})`
           ),
           ...addImportToModule(source, modulePath, `EffectsModule.forRoot([${effectsName}])`),
           ...addImportToModule(source, modulePath, `!environment.production ? StoreDevtoolsModule.instrument() : []`),
