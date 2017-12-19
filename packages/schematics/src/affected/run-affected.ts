@@ -4,23 +4,27 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const command = process.argv[2];
-try {
-  const { files, rest } = parseFiles();
-  const affectedApps = getAffectedApps(files);
+let apps;
+let rest;
 
-  switch (command) {
-    case 'apps':
-      console.log(affectedApps.join(' '));
-      break;
-    case 'build':
-      build(affectedApps, rest);
-      break;
-    case 'e2e':
-      e2e(affectedApps, rest);
-      break;
-  }
+try {
+  const p = parseFiles();
+  rest = p.rest;
+  apps = getAffectedApps(p.files);
 } catch (e) {
   printError(command);
+}
+
+switch (command) {
+  case 'apps':
+    console.log(apps.join(' '));
+    break;
+  case 'build':
+    build(apps, rest);
+    break;
+  case 'e2e':
+    e2e(apps, rest);
+    break;
 }
 
 function printError(command: string) {
@@ -51,9 +55,11 @@ function parseDashDashFiles(dashDashFiles: string): string[] {
 }
 
 function getFilesFromShash(sha1: string, sha2: string): string[] {
-  return execSync(`git diff --names-only ${sha1} ${sha2}`)
+  return execSync(`git diff --name-only ${sha1} ${sha2}`)
     .toString('utf-8')
-    .split('\n');
+    .split('\n')
+    .map(a => a.trim())
+    .filter(a => a.length > 0);
 }
 
 export function getAffectedApps(touchedFiles: string[]): string[] {
