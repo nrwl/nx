@@ -1,11 +1,11 @@
 import * as fs from 'fs';
 
 export function getAppDirectoryUsingCliConfig() {
-  const appOption = process.argv.filter(a => a.startsWith('-a=') || a.startsWith('--app='))[0];
+  const appArg = findAppArg();
   const cli = JSON.parse(fs.readFileSync(process.cwd() + '/.angular-cli.json', 'UTF-8'));
 
-  if (appOption) {
-    const appName = appOption.split('=')[1];
+  if (appArg) {
+    const appName = appArg.split('=')[1];
     const app = cli.apps.filter(a => a.name === appName)[0];
     if (!app) {
       console.error(`Cannot find app '${appName}'.`);
@@ -23,11 +23,22 @@ export function getAppDirectoryUsingCliConfig() {
 }
 
 export function makeSureNoAppIsSelected() {
-  const appOption = process.argv.filter(a => a.startsWith('-a=') || a.startsWith('--app='))[0];
-  if (appOption) {
+  if (findAppArg()) {
     console.error('Nx only supports running unit tests for all apps and libs.');
     console.error('You cannot use -a or --app.');
     console.error('Use fdescribe or fit to select a subset of tests to run.');
     process.exit(1);
   }
+}
+
+function findAppArg() {
+  return process.argv.filter(
+    a =>
+      a.startsWith(`-a=`) ||
+      a.startsWith(`--app=`) ||
+      a.startsWith(`"-a="`) ||
+      a.startsWith(`"--app="`) ||
+      a.startsWith(`'-a='`) ||
+      a.startsWith(`'--app='`)
+  )[0];
 }
