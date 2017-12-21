@@ -2,13 +2,39 @@
 
 The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
 
-# 0.5.2
+# 0.6.0
+
+## Features
+
+This release adds the following commands:
+
+```
+npm run apps:affected -- SHA1 SHA2
+npm run build:affected -- SHA1 SHA2
+npm run e2e:affected -- SHA1 SHA2
+```
+
+The `apps:affected` prints the apps that are affected by the commits between the given SHAs. The `build:affected` builds them, and `e2e:affected` runs their e2e tests. 
+
+To be able to do that, Nx analyzes your monorepo to figure out the dependency graph or your libs and apps. Next, it looks at the files touched by the commits to figure out what apps and libs they belong to. Finally, it uses all this information to generate the list of apps that can be affected by the commits. 
+
+Instead of passing the two SHAs, you can also pass the list of files, like this:
+
+```
+npm run apps:affected -- --files="libs/mylib/index.ts,libs/mylib2/index.ts"
+npm run build:affected ----files="libs/mylib/index.ts,libs/mylib2/index.ts"
+npm run e2e:affected ----files="libs/mylib/index.ts,libs/mylib2/index.ts"
+```
+
+
+
+
+* [Add support for building and testing only the apps affected by a commit](https://github.com/nrwl/nx/commit/428762664acc5fd155dd7be630dab09101d23542)
 
 ## Bug Fixes
 
-* [Remove default prop for viewEncapsulation option flag](https://github.com/nrwl/nx/commit/b46eb1c699dd509f4be103979a5938c3f7486fb1)
-* [Fix NPM link in README](https://github.com/nrwl/nx/commit/4aa42e4772522a20df384ab9a48861a8d4f7ab0f)
-* [Change rxjs version to use hat](https://github.com/nrwl/nx/commit/3b1942ed830ea31269a1fb9e995efb93b182870a)
+* [Make deep import check work for libs with same prefix](https://github.com/nrwl/nx/commit/3c55f34ca12a4d5338099586ffe9455c81a3b199)
+
 
 # 0.5.3
 
@@ -39,9 +65,17 @@ Some folks also reported having problems running Nx behind a firewall, in a corp
 * [Replace install.sh with a more robust way of creating projects](https://github.com/nrwl/nx/commit/f91b5309bdaf764e436bd544ec4f10c84b99cb08)
 * [Bump up the version of prettier](https://github.com/nrwl/nx/commit/1481d169bbb7f1fbe3df5af2bce51c4215776d93)
 
-## Buf Fixes
+## Bug Fixes
 
 * [Generate an angular-cli config without the apps array, so the CLI can error properly](https://github.com/nrwl/nx/commit/a7f06edf5914212bcefbafb1198d262e9692cfdb)
+
+# 0.5.2
+
+## Bug Fixes
+
+* [Remove default prop for viewEncapsulation option flag](https://github.com/nrwl/nx/commit/b46eb1c699dd509f4be103979a5938c3f7486fb1)
+* [Fix NPM link in README](https://github.com/nrwl/nx/commit/4aa42e4772522a20df384ab9a48861a8d4f7ab0f)
+* [Change rxjs version to use hat](https://github.com/nrwl/nx/commit/3b1942ed830ea31269a1fb9e995efb93b182870a)
 
 # 0.5.1
 
