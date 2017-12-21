@@ -137,6 +137,22 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
 
       expect(deps).toEqual({ app1: ['app1', 'lib1', 'lib2'], lib1: ['lib1'], lib2: ['lib2'] });
     });
+
+    it('should handle non-ts files', () => {
+      const deps = dependencies(
+        'nrwl',
+        [
+          {
+            name: 'app1',
+            files: ['index.html'],
+            isApp: true
+          }
+        ],
+        () => null
+      );
+
+      expect(deps).toEqual({ app1: ['app1'] });
+    });
   });
 
   describe('affectedApps', () => {
@@ -221,6 +237,30 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
       );
 
       expect(affected).toEqual(['app1', 'app2']);
+    });
+
+    it('should handle slashes', () => {
+      const affected = affectedApps(
+        'nrwl',
+        [
+          {
+            name: 'app1',
+            files: ['one\\app1.ts', 'two/app1.ts'],
+            isApp: true
+          }
+        ],
+        file => {
+          switch (file) {
+            case 'one/app1.ts':
+              return '';
+            case 'two/app1.ts':
+              return '';
+          }
+        },
+        ['one/app1.ts', 'two/app1.ts']
+      );
+
+      expect(affected).toEqual(['app1']);
     });
   });
 });

@@ -80,7 +80,7 @@ function allFilesInDir(dirName: string): string[] {
   fs.readdirSync(dirName).forEach(c => {
     const child = path.join(dirName, c);
     try {
-      if (!fs.statSync(child).isDirectory() && path.extname(child) === '.ts') {
+      if (!fs.statSync(child).isDirectory()) {
         res.push(child);
       } else if (fs.statSync(child).isDirectory()) {
         res = [...res, ...allFilesInDir(child)];

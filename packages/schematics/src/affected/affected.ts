@@ -1,4 +1,5 @@
 import * as ts from 'typescript';
+import * as path from 'path';
 
 export type Project = { name: string; isApp: boolean; files: string[] };
 
@@ -8,6 +9,8 @@ export function affectedApps(
   fileRead: (s: string) => string,
   touchedFiles: string[]
 ): string[] {
+  projects = normalizeProjects(projects);
+  touchedFiles = normalizeFiles(touchedFiles);
   const deps = dependencies(npmScope, projects, fileRead);
 
   const touchedProjects = touchedFiles.map(f => {
@@ -22,6 +25,19 @@ export function affectedApps(
   return projects
     .filter(p => p.isApp && deps[p.name].filter(dep => touchedProjects.indexOf(dep) > -1).length > 0)
     .map(p => p.name);
+}
+
+function normalizeProjects(projects: Project[]) {
+  return projects.map(p => {
+    return {
+      ...p,
+      files: normalizeFiles(p.files)
+    };
+  });
+}
+
+function normalizeFiles(files: string[]): string[] {
+  return files.map(f => f.replace(/[\\\/]+/g, '/'));
 }
 
 export function dependencies(
@@ -70,8 +86,10 @@ class Deps {
   }
 
   private processFile(projectName: string, filePath: string): void {
-    const tsFile = ts.createSourceFile(filePath, this.fileRead(filePath), ts.ScriptTarget.Latest, true);
-    this.processNode(projectName, tsFile);
+    if (path.extname(filePath) === '.ts') {
+      const tsFile = ts.createSourceFile(filePath, this.fileRead(filePath), ts.ScriptTarget.Latest, true);
+      this.processNode(projectName, tsFile);
+    }
   }
 
   private processNode(projectName: string, node: ts.Node): void {
