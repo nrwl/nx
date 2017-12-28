@@ -21,7 +21,14 @@ describe('Enforce Module Boundaries', () => {
     const failures = runRule({}, `import '../../../libs/mylib';`);
 
     expect(failures.length).toEqual(1);
-    expect(failures[0].getFailure()).toEqual('relative imports of libraries are forbidden');
+    expect(failures[0].getFailure()).toEqual('library imports must start with @mycompany/');
+  });
+
+  it('should error on absolute imports into libraries without using the npm scope', () => {
+    const failures = runRule({}, `import 'libs/mylib';`);
+
+    expect(failures.length).toEqual(1);
+    expect(failures[0].getFailure()).toEqual('library imports must start with @mycompany/');
   });
 
   it('should error about deep imports into libraries', () => {
