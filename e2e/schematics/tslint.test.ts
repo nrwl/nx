@@ -23,7 +23,7 @@ describe('Lint', () => {
       );
 
       const out = runCLI('lint --type-check', { silenceError: true });
-      expect(out).toContain('relative imports of libraries are forbidden');
+      expect(out).toContain('library imports must start with @nrwl/');
       expect(out).toContain('import of lazy-loaded libraries are forbidden');
       expect(out).toContain('deep imports into libraries are forbidden');
     },

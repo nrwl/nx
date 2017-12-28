@@ -58,8 +58,8 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       return;
     }
 
-    if (this.isRelative(imp) && this.isRelativeImportIntoAnotherProject(imp)) {
-      this.addFailureAt(node.getStart(), node.getWidth(), 'relative imports of libraries are forbidden');
+    if (this.isRelativeImportIntoAnotherProject(imp) || this.isAbsoluteImportIntoAnotherProject(imp)) {
+      this.addFailureAt(node.getStart(), node.getWidth(), `library imports must start with @${this.npmScope}/`);
       return;
     }
 
@@ -73,6 +73,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
   }
 
   private isRelativeImportIntoAnotherProject(imp: string): boolean {
+    if (!this.isRelative(imp)) return false;
     const sourceFile = this.getSourceFile().fileName.substring(this.projectPath.length);
     const targetFile = path.resolve(path.dirname(sourceFile), imp);
     if (this.workspacePath(sourceFile) && this.workspacePath(targetFile)) {
@@ -81,6 +82,10 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       }
     }
     return false;
+  }
+
+  private isAbsoluteImportIntoAnotherProject(imp: string): boolean {
+    return imp.startsWith('libs/') || (imp.startsWith('/libs/') && imp.startsWith('apps/')) || imp.startsWith('/apps/');
   }
 
   private workspacePath(s: string): boolean {
