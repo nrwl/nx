@@ -1,4 +1,4 @@
-import { affectedApps, dependencies } from './affected';
+import { affectedApps, dependencies } from './affected-apps';
 
 describe('Calculates Dependencies Between Apps and Libs', () => {
   describe('dependencies', () => {

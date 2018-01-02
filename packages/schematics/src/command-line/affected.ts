@@ -1,4 +1,4 @@
-import { affectedApps } from './affected';
+import { affectedApps } from './affected-apps';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
