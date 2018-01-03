@@ -14,18 +14,18 @@ switch (command) {
     break;
 }
 
-function parseFiles() {
+function parseFiles(): string[] {
   const args = process.argv.slice(3);
   if (args.length === 0) {
-    return '"{apps,libs}/**/*.ts"';
+    return ['"{apps,libs}/**/*.ts"'];
   }
   const dashDashFiles = args.filter(a => a.startsWith('--files='))[0];
   if (dashDashFiles) {
     args.splice(args.indexOf(dashDashFiles), 1);
-    return `"${parseDashDashFiles(dashDashFiles).join(',')}"`;
+    return parseDashDashFiles(dashDashFiles).map(t => `\"${t}\"`);
   } else {
     const withoutShahs = args.slice(2);
-    return `"${getFilesFromShash(args[0], args[1]).join(',')}"`;
+    return getFilesFromShash(args[0], args[1]).map(t => `\"${t}\"`);
   }
 }
 
@@ -42,19 +42,22 @@ function getFilesFromShash(sha1: string, sha2: string): string[] {
     .toString('utf-8')
     .split('\n')
     .map(a => a.trim())
-    .filter(a => a.length > 0);
+    .filter(a => a.length > 0)
+    .filter(a => path.extname(a) === '.ts');
 }
 
-function write(files: string) {
-  execSync(`node ./node_modules/prettier/bin/prettier.js --single-quote --print-width 120 --write ${files}`, {
+function write(files: string[]) {
+  execSync(`node ./node_modules/prettier/bin/prettier.js --single-quote --print-width 120 --write ${files.join(' ')}`, {
     stdio: [0, 1, 2]
   });
 }
 
-function check(files: string) {
+function check(files: string[]) {
   try {
     execSync(
-      `node ./node_modules/prettier/bin/prettier.js --single-quote --print-width 120 --list-different ${files}`,
+      `node ./node_modules/prettier/bin/prettier.js --single-quote --print-width 120 --list-different ${files.join(
+        ' '
+      )}`,
       {
         stdio: [0, 1, 2]
       }

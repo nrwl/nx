@@ -88,7 +88,21 @@ describe('Command line', () => {
       updateFile(
         'apps/myapp/src/main.ts',
         `
-         const x = 3232;
+         const x = 1111;
+    `
+      );
+
+      updateFile(
+        'apps/myapp/src/app/app.module.ts',
+        `
+         const y = 1111;
+    `
+      );
+
+      updateFile(
+        'apps/myapp/src/app/app.component.ts',
+        `
+         const z = 1111;
     `
       );
 
@@ -97,7 +111,22 @@ describe('Command line', () => {
         fail('boom');
       } catch (e) {
         expect(e.stdout.toString()).toContain('apps/myapp/src/main.ts');
+        expect(e.stdout.toString()).toContain('apps/myapp/src/app/app.module.ts');
+        expect(e.stdout.toString()).toContain('apps/myapp/src/app/app.component.ts');
       }
+      runCommand(
+        'npm run format:write -- --files="apps/myapp/src/app/app.module.ts,apps/myapp/src/app/app.component.ts"'
+      );
+
+      try {
+        runCommand('npm run -s format:check');
+        fail('boom');
+      } catch (e) {
+        expect(e.stdout.toString()).toContain('apps/myapp/src/main.ts');
+        expect(e.stdout.toString()).not.toContain('apps/myapp/src/app/app.module.ts');
+        expect(e.stdout.toString()).not.toContain('apps/myapp/src/app/app.component.ts');
+      }
+
       runCommand('npm run format:write');
       expect(runCommand('npm run -s format:check')).toEqual('');
     },
