@@ -2,6 +2,49 @@
 
 The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
 
+# 0.6.5
+
+## Features
+
+This release adds the following commands:
+
+```
+npm run format:write -- SHA1 SHA2
+npm run format:check -- SHA1 SHA2
+```
+
+The `format:check` command checks that the files touched between the given SHAs are formatted properly, and `format:write` formats them.
+
+Instead of passing the two SHAs, you can also pass the list of files, like this:
+
+```
+npm run format:write -- --files="libs/mylib/index.ts,libs/mylib2/index.ts"
+npm run format:check -- --files="libs/mylib/index.ts,libs/mylib2/index.ts"
+```
+
+You can add `--libs-and-apps` flag to always run the formatter on apps and libs instead of individual files. 
+
+```
+npm run format:write -- SHA1 SHA2 --libs-and-apps
+npm run format:check -- SHA1 SHA2 --libs-and-apps
+```
+
+Finally, you can the command on the whole repo, like this:
+
+```
+npm run format:write
+npm run format:check
+```
+
+* [Add format:check and format:write commands](https://github.com/nrwl/nx/commit/826a0b1056f9000425e189bad5a5d63966c3a704)
+
+
+## Bugs
+
+* [Only allow importing libs using the configured npm scope](https://github.com/nrwl/nx/commit/c836668541532e64db088ef9a984678022abb3bd)
+
+
+
 # 0.6.0
 
 ## Features
