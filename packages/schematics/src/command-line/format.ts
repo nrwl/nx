@@ -1,68 +1,80 @@
 import { execSync } from 'child_process';
-import * as fs from 'fs';
 import * as path from 'path';
+import { getAffectedApps, getAppRoots, parseFiles } from './shared';
 
 const command = process.argv[2];
-const files = parseFiles();
+let patterns: string[];
+let rest: string[];
+
+try {
+  if (process.argv.length === 3) {
+    patterns = ['"{apps,libs}/**/*.ts"'];
+    rest = [];
+  } else {
+    const p = parseFiles();
+    patterns = p.files.filter(f => path.extname(f) === '.ts');
+    rest = p.rest;
+
+    const libsAndApp = rest.filter(a => a.startsWith('--libs-and-apps'))[0];
+    if (libsAndApp) {
+      patterns = getPatternsFromApps(patterns);
+    }
+  }
+} catch (e) {
+  printError(command);
+}
 
 switch (command) {
   case 'write':
-    write(files);
+    write(patterns);
     break;
   case 'check':
-    check(files);
+    check(patterns);
     break;
 }
 
-function parseFiles(): string[] {
-  const args = process.argv.slice(3);
-  if (args.length === 0) {
-    return ['"{apps,libs}/**/*.ts"'];
-  }
-  const dashDashFiles = args.filter(a => a.startsWith('--files='))[0];
-  if (dashDashFiles) {
-    args.splice(args.indexOf(dashDashFiles), 1);
-    return parseDashDashFiles(dashDashFiles).map(t => `\"${t}\"`);
+function getPatternsFromApps(affectedFiles: string[]): string[] {
+  const roots = getAppRoots(getAffectedApps(affectedFiles));
+  if (roots.length === 0) {
+    return [];
+  } else if (roots.length === 1) {
+    return [`\"${roots[0]}/**/*.ts\"`];
   } else {
-    const withoutShahs = args.slice(2);
-    return getFilesFromShash(args[0], args[1]).map(t => `\"${t}\"`);
+    return [`\"{${roots.join(',')}}/**/*.ts\"`];
   }
 }
 
-function parseDashDashFiles(dashDashFiles: string): string[] {
-  let f = dashDashFiles.substring(8); // remove --files=
-  if (f.startsWith('"') || f.startsWith("'")) {
-    f = f.substring(1, f.length - 1);
-  }
-  return f.split(',').map(f => f.trim());
+function printError(command: string) {
+  console.error(`Pass the SHA range, as follows: npm run format:${command} SHA1 SHA2.`);
+  console.error(
+    `Or pass the list of files, as follows: npm run format:${command} --files="libs/mylib/index.ts,libs/mylib2/index.ts".`
+  );
 }
 
-function getFilesFromShash(sha1: string, sha2: string): string[] {
-  return execSync(`git diff --name-only ${sha1} ${sha2}`)
-    .toString('utf-8')
-    .split('\n')
-    .map(a => a.trim())
-    .filter(a => a.length > 0)
-    .filter(a => path.extname(a) === '.ts');
-}
-
-function write(files: string[]) {
-  execSync(`node ./node_modules/prettier/bin/prettier.js --single-quote --print-width 120 --write ${files.join(' ')}`, {
-    stdio: [0, 1, 2]
-  });
-}
-
-function check(files: string[]) {
-  try {
+function write(patterns: string[]) {
+  if (patterns.length > 0) {
     execSync(
-      `node ./node_modules/prettier/bin/prettier.js --single-quote --print-width 120 --list-different ${files.join(
-        ' '
-      )}`,
+      `node ./node_modules/prettier/bin/prettier.js --single-quote --print-width 120 --write ${patterns.join(' ')}`,
       {
         stdio: [0, 1, 2]
       }
     );
-  } catch (e) {
-    process.exit(1);
+  }
+}
+
+function check(patterns: string[]) {
+  if (patterns.length > 0) {
+    try {
+      execSync(
+        `node ./node_modules/prettier/bin/prettier.js --single-quote --print-width 120 --list-different ${patterns.join(
+          ' '
+        )}`,
+        {
+          stdio: [0, 1, 2]
+        }
+      );
+    } catch (e) {
+      process.exit(1);
+    }
   }
 }

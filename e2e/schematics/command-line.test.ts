@@ -107,6 +107,17 @@ describe('Command line', () => {
       );
 
       try {
+        // this will group it by app, so all three files will be "marked"
+        runCommand('npm run -s format:check -- --files="apps/myapp/src/app/app.module.ts" --libs-and-apps');
+        fail('boom');
+      } catch (e) {
+        expect(e.stdout.toString()).toContain('apps/myapp/src/main.ts');
+        expect(e.stdout.toString()).toContain('apps/myapp/src/app/app.module.ts');
+        expect(e.stdout.toString()).toContain('apps/myapp/src/app/app.component.ts');
+      }
+
+      try {
+        // this is a global run
         runCommand('npm run -s format:check');
         fail('boom');
       } catch (e) {
