@@ -262,5 +262,34 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
 
       expect(affected).toEqual(['app1']);
     });
+
+    it('should handle circular dependencies', () => {
+      const affected = affectedApps(
+        'nrwl',
+        [
+          {
+            name: 'app1',
+            files: ['app1.ts'],
+            isApp: true
+          },
+          {
+            name: 'app2',
+            files: ['app2.ts'],
+            isApp: true
+          }
+        ],
+        file => {
+          switch (file) {
+            case 'app1.ts':
+              return `import '@nrwl/app2';`;
+            case 'app2.ts':
+              return `import '@nrwl/app1';`;
+          }
+        },
+        ['app1.ts']
+      );
+
+      expect(affected).toEqual(['app1', 'app2']);
+    });
   });
 });

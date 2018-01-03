@@ -70,16 +70,18 @@ class Deps {
   private includeTransitive() {
     const res = {};
     Object.keys(this.deps).forEach(project => {
-      res[project] = this.transitiveDeps(project);
+      res[project] = this.transitiveDeps(project, [project]);
     });
     return res;
   }
 
-  private transitiveDeps(project: string): string[] {
+  private transitiveDeps(project: string, path: string[]): string[] {
     let res = [project];
 
     this.deps[project].forEach(d => {
-      res = [...res, ...this.transitiveDeps(d)];
+      if (path.indexOf(d) === -1) {
+        res = [...res, ...this.transitiveDeps(d, [...path, d])];
+      }
     });
 
     return Array.from(new Set(res));
