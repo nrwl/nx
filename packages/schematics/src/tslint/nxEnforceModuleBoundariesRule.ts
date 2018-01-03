@@ -5,19 +5,33 @@ import * as ts from 'typescript';
 import { readFileSync } from 'fs';
 
 export class Rule extends Lint.Rules.AbstractRule {
-  constructor(options: IOptions, private path?: string, private npmScope?: string, private appNames?: string[]) {
+  constructor(
+    options: IOptions,
+    private path?: string,
+    private npmScope?: string,
+    private libNames?: string[],
+    private appNames?: string[]
+  ) {
     super(options);
     if (!path) {
       const cliConfig = this.readCliConfig();
       this.path = process.cwd();
       this.npmScope = cliConfig.project.npmScope;
-      this.appNames = cliConfig.apps.map(a => a.name);
+      this.libNames = cliConfig.apps.filter(p => p.root.startsWith('libs/')).map(a => a.name);
+      this.appNames = cliConfig.apps.filter(p => p.root.startsWith('apps/')).map(a => a.name);
     }
   }
 
   public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
     return this.applyWithWalker(
-      new EnforceModuleBoundariesWalker(sourceFile, this.getOptions(), this.path, this.npmScope, this.appNames)
+      new EnforceModuleBoundariesWalker(
+        sourceFile,
+        this.getOptions(),
+        this.path,
+        this.npmScope,
+        this.libNames,
+        this.appNames
+      )
     );
   }
 
@@ -32,6 +46,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     options: IOptions,
     private projectPath: string,
     private npmScope: string,
+    private libNames: string[],
     private appNames: string[]
   ) {
     super(sourceFile, options);
@@ -52,9 +67,9 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       return;
     }
 
-    const lazyLoaded = lazyLoad.filter(a => imp.startsWith(`@${this.npmScope}/${a}`))[0];
+    const lazyLoaded = lazyLoad.filter(l => imp.startsWith(`@${this.npmScope}/${l}`))[0];
     if (lazyLoaded) {
-      this.addFailureAt(node.getStart(), node.getWidth(), 'import of lazy-loaded libraries are forbidden');
+      this.addFailureAt(node.getStart(), node.getWidth(), 'imports of lazy-loaded libraries are forbidden');
       return;
     }
 
@@ -63,9 +78,17 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       return;
     }
 
-    const deepImport = this.appNames.filter(a => imp.startsWith(`@${this.npmScope}/${a}/`))[0];
+    const deepImport = this.libNames.filter(l => imp.startsWith(`@${this.npmScope}/${l}/`))[0];
     if (deepImport) {
       this.addFailureAt(node.getStart(), node.getWidth(), 'deep imports into libraries are forbidden');
+      return;
+    }
+
+    const appImport = this.appNames.filter(
+      a => imp.startsWith(`@${this.npmScope}/${a}/`) || imp === `@${this.npmScope}/${a}`
+    )[0];
+    if (appImport) {
+      this.addFailureAt(node.getStart(), node.getWidth(), 'imports of apps are forbidden');
       return;
     }
 

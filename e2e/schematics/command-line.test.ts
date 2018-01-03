@@ -19,13 +19,16 @@ describe('Command line', () => {
       import '../../../libs/mylib';
       import '@nrwl/lazylib';
       import '@nrwl/mylib/deep';
+      import '@nrwl/myapp';
+      import '@nrwl/myapp/main';
     `
       );
 
       const out = runCLI('lint --type-check', { silenceError: true });
       expect(out).toContain('library imports must start with @nrwl/');
-      expect(out).toContain('import of lazy-loaded libraries are forbidden');
+      expect(out).toContain('imports of lazy-loaded libraries are forbidden');
       expect(out).toContain('deep imports into libraries are forbidden');
+      expect(out).toContain('imports of apps are forbidden');
     },
     1000000
   );

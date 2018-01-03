@@ -66,11 +66,23 @@ describe('Enforce Module Boundaries', () => {
     const failures = runRule({ lazyLoad: ['mylib'] }, `import '@mycompany/mylib';`);
 
     expect(failures.length).toEqual(1);
-    expect(failures[0].getFailure()).toEqual('import of lazy-loaded libraries are forbidden');
+    expect(failures[0].getFailure()).toEqual('imports of lazy-loaded libraries are forbidden');
+  });
+
+  it('should error on importing an app', () => {
+    const failures = runRule({ lazyLoad: ['mylib'] }, `import '@mycompany/myapp';`, [], ['myapp']);
+
+    expect(failures.length).toEqual(1);
+    expect(failures[0].getFailure()).toEqual('imports of apps are forbidden');
   });
 });
 
-function runRule(ruleArguments: any, content: string, appNames: string[] = ['mylib']): RuleFailure[] {
+function runRule(
+  ruleArguments: any,
+  content: string,
+  libNames: string[] = ['mylib'],
+  appNames: string[] = []
+): RuleFailure[] {
   const options: any = {
     ruleArguments: [ruleArguments],
     ruleSeverity: 'error',
@@ -78,6 +90,6 @@ function runRule(ruleArguments: any, content: string, appNames: string[] = ['myl
   };
 
   const sourceFile = ts.createSourceFile('proj/apps/myapp/src/main.ts', content, ts.ScriptTarget.Latest, true);
-  const rule = new Rule(options, 'proj', 'mycompany', appNames);
+  const rule = new Rule(options, 'proj', 'mycompany', libNames, appNames);
   return rule.apply(sourceFile);
 }
