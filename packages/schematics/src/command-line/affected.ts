@@ -10,7 +10,8 @@ try {
   rest = p.rest;
   apps = getAffectedApps(p.files);
 } catch (e) {
-  printError(command);
+  printError(command, e);
+  process.exit(1);
 }
 
 switch (command) {
@@ -25,11 +26,12 @@ switch (command) {
     break;
 }
 
-function printError(command: string) {
-  console.error(`Pass the SHA range, as follows: npm run affected:${command} SHA1 SHA2.`);
+function printError(command: string, e: any) {
+  console.error(`Pass the SHA range, as follows: npm run affected:${command} -- SHA1 SHA2.`);
   console.error(
     `Or pass the list of files, as follows: npm run affected:${command} --files="libs/mylib/index.ts,libs/mylib2/index.ts".`
   );
+  console.error(e.message);
 }
 
 function build(apps: string[], rest: string[]) {

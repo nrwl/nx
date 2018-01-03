@@ -21,7 +21,8 @@ try {
     }
   }
 } catch (e) {
-  printError(command);
+  printError(command, e);
+  process.exit(1);
 }
 
 switch (command) {
@@ -44,11 +45,12 @@ function getPatternsFromApps(affectedFiles: string[]): string[] {
   }
 }
 
-function printError(command: string) {
-  console.error(`Pass the SHA range, as follows: npm run format:${command} SHA1 SHA2.`);
+function printError(command: string, e: any) {
+  console.error(`Pass the SHA range, as follows: npm run format:${command} -- SHA1 SHA2.`);
   console.error(
     `Or pass the list of files, as follows: npm run format:${command} --files="libs/mylib/index.ts,libs/mylib2/index.ts".`
   );
+  console.error(e.message);
 }
 
 function write(patterns: string[]) {

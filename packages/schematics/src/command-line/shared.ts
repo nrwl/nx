@@ -53,6 +53,10 @@ export function getAffectedApps(touchedFiles: string[]): string[] {
     };
   });
 
+  if (!config.project.npmScope) {
+    throw new Error(`.angular-cli.json must define the npmScope property.`);
+  }
+
   return affectedApps(config.project.npmScope, projects, f => fs.readFileSync(f, 'utf-8'), touchedFiles);
 }
 
