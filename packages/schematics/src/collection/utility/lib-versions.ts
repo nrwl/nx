@@ -4,6 +4,7 @@ export const angularJsVersion = '1.6.6';
 export const ngrxVersion = '4.1.1';
 export const nxVersion = '*';
 export const schematicsVersion = '*';
+export const angularCliSchema = './node_modules/@nrwl/schematics/src/schema.json';
 export const latestMigration = '20180103-update-command-line-scripts';
 export const prettierVersion = '^1.9.0';
 export const typescriptVersion = '2.5.3';
@@ -17,6 +18,7 @@ export const libVersions = {
   nxVersion,
   schematicsVersion,
   prettierVersion,
+  angularCliSchema,
   latestMigration,
   typescriptVersion,
   rxjsVersion

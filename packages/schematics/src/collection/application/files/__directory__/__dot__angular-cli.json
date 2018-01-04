@@ -1,5 +1,5 @@
 {
-  "$schema": "./node_modules/@nrwl/schematics/src/schema.json",
+  "$schema": "<%= angularCliSchema %>",
   "project": {
     "name": "<%= utils.dasherize(name) %>",
     "npmScope": "<%= npmScope %>",

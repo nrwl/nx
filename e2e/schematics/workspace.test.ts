@@ -1,4 +1,5 @@
 import { checkFilesExist, cleanup, runNgNew, readFile, runCLI, runSchematic, updateFile } from '../utils';
+import { angularCliSchema } from '../../packages/schematics/src/collection/utility/lib-versions';
 
 describe('Nrwl Convert to Nx Workspace', () => {
   beforeEach(cleanup);
@@ -46,6 +47,8 @@ describe('Nrwl Convert to Nx Workspace', () => {
 
     // check if angular-cli.json get merged
     const updatedAngularCLIJson = JSON.parse(readFile('.angular-cli.json'));
+    expect(updatedAngularCLIJson.$schema).toEqual(angularCliSchema);
+    expect(updatedAngularCLIJson.apps[0].name).toEqual('proj');
     expect(updatedAngularCLIJson.apps[0].root).toEqual('apps/proj/src');
     expect(updatedAngularCLIJson.apps[0].outDir).toEqual('dist/apps/proj');
     expect(updatedAngularCLIJson.apps[0].test).toEqual('../../../test.js');
