@@ -14,6 +14,7 @@ import {
 import { Schema } from './schema';
 import * as path from 'path';
 import {
+  angularCliSchema,
   angularCliVersion,
   latestMigration,
   ngrxVersion,
@@ -85,6 +86,7 @@ function readAngularCliJson(host: Tree): any {
 function updateAngularCLIJson(options: Schema) {
   return (host: Tree) => {
     const angularCliJson = readAngularCliJson(host);
+    angularCliJson.$schema = angularCliSchema;
     angularCliJson.project.npmScope = npmScope(options);
     angularCliJson.project.latestMigration = latestMigration;
 
@@ -93,6 +95,7 @@ function updateAngularCLIJson(options: Schema) {
     }
 
     const app = angularCliJson.apps[0];
+    app.name = options.name;
     app.root = path.join('apps', options.name, app.root);
     app.outDir = path.join('dist', 'apps', options.name);
     app.test = '../../../test.js';
