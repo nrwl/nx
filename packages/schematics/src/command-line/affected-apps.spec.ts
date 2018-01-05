@@ -153,6 +153,34 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
 
       expect(deps).toEqual({ app1: ['app1'] });
     });
+
+    it('should handle projects with the names starting with the same string', () => {
+      const deps = dependencies(
+        'nrwl',
+        [
+          {
+            name: 'aa',
+            files: ['aa.ts'],
+            isApp: true
+          },
+          {
+            name: 'aa/bb',
+            files: ['bb.ts'],
+            isApp: true
+          }
+        ],
+        file => {
+          switch (file) {
+            case 'aa.ts':
+              return `import '@nrwl/aa/bb'`;
+            case 'bb.ts':
+              return '';
+          }
+        }
+      );
+
+      expect(deps).toEqual({ aa: ['aa', 'aa/bb'], 'aa/bb': ['aa/bb'] });
+    });
   });
 
   describe('affectedApps', () => {
@@ -236,7 +264,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         ['package.json']
       );
 
-      expect(affected).toEqual(['app1', 'app2']);
+      expect(affected).toEqual(['app2', 'app1']);
     });
 
     it('should handle slashes', () => {
@@ -289,7 +317,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         ['app1.ts']
       );
 
-      expect(affected).toEqual(['app1', 'app2']);
+      expect(affected).toEqual(['app2', 'app1']);
     });
   });
 });

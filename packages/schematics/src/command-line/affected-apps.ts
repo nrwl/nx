@@ -51,7 +51,13 @@ export function dependencies(
 class Deps {
   private deps: { [appName: string]: string[] };
 
-  constructor(private npmScope: string, private projects: Project[], private fileRead: (s: string) => string) {}
+  constructor(private npmScope: string, private projects: Project[], private fileRead: (s: string) => string) {
+    this.projects.sort((a, b) => {
+      if (!a.name) return -1;
+      if (!b.name) return -1;
+      return a.name.length > b.name.length ? -1 : 1;
+    });
+  }
 
   calculateDeps() {
     this.deps = this.projects.reduce((m, c) => ({ ...m, [c.name]: [] }), {});
