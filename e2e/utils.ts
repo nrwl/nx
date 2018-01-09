@@ -20,7 +20,7 @@ export function newProject(): string {
   return execSync('cp -r ./tmp/proj_backup ./tmp/proj').toString();
 }
 
-function copyMissingPackages(): void {
+export function copyMissingPackages(): void {
   const modulesToCopy = ['@ngrx', 'jasmine-marbles', '@nrwl', 'angular', '@angular/upgrade', '@angular/cli'];
   modulesToCopy.forEach(m => copyNodeModule(projectName, m));
 }

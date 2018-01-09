@@ -241,6 +241,34 @@ function moveFiles(options: Schema) {
   };
 }
 
+function copyAngularCliTgz() {
+  return (host: Tree) => {
+    copyFile(
+      path.join(
+        'node_modules',
+        '@nrwl',
+        'schematics',
+        'src',
+        'collection',
+        'application',
+        'files',
+        '__directory__',
+        '.angular_cli.tgz'
+      ),
+      '.'
+    );
+    return host;
+  };
+}
+
+function copyFile(file: string, target: string) {
+  const f = path.basename(file);
+  const source = fs.createReadStream(file);
+  const dest = fs.createWriteStream(path.resolve(target, f));
+  source.pipe(dest);
+  source.on('error', e => console.error(e));
+}
+
 function dedup(array: any[]): any[] {
   const res = [];
 
@@ -281,6 +309,7 @@ export default function(schema: Schema): Rule {
     updateAngularCLIJson(options),
     updateTsConfigsJson(options),
     updateProtractorConf(),
-    updateTsLintJson(options)
+    updateTsLintJson(options),
+    copyAngularCliTgz()
   ]);
 }
