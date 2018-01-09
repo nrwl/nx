@@ -2,6 +2,20 @@
 
 The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
 
+# 0.6.10
+
+## Features
+
+* [Improve error messages in the affected: and format: commands](https://github.com/nrwl/nx/commit/878784ae814ffea28796f458ff2f8b0b641996c0)
+
+## Bugs
+
+* [Handle circular deps between apps and libs](https://github.com/nrwl/nx/commit/3531323fb5210b995b1296a198c8e76ee8bf9a07)
+* [Handle projects that have similar names](https://github.com/nrwl/nx/commit/fe7032d29f4dcd66b51dbb889a1cf1751cd1d20a) 
+* [Update workspace to set $schema and app name](https://github.com/nrwl/nx/commit/df5bd089b6515ea747f891bf590b46a4e00d0a92) 
+* [Update workspace to copy the cli file](https://github.com/nrwl/nx/commit/ddd8de3813f374a752b0e6f47deaa58c2e9f40c8) 
+* [Disallow importing apps](https://github.com/nrwl/nx/commit/912fc81708d381f49950255eeff746a2dfd46c7b) 
+
 # 0.6.5
 
 ## Features
