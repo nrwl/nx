@@ -56,7 +56,7 @@ function printError(command: string, e: any) {
 function write(patterns: string[]) {
   if (patterns.length > 0) {
     execSync(
-      `node ./node_modules/prettier/bin/prettier.js --single-quote --print-width 120 --write ${patterns.join(' ')}`,
+      `node ./node_modules/.bin/prettier --single-quote --print-width 120 --write ${patterns.join(' ')}`,
       {
         stdio: [0, 1, 2]
       }
@@ -68,7 +68,7 @@ function check(patterns: string[]) {
   if (patterns.length > 0) {
     try {
       execSync(
-        `node ./node_modules/prettier/bin/prettier.js --single-quote --print-width 120 --list-different ${patterns.join(
+        `node ./node_modules/.bin/prettier --single-quote --print-width 120 --list-different ${patterns.join(
           ' '
         )}`,
         {
