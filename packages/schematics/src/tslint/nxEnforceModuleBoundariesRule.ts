@@ -73,6 +73,11 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       return;
     }
 
+    if (this.libNames.filter(l => imp === `@${this.npmScope}/${l}`).length > 0) {
+      super.visitImportDeclaration(node);
+      return;
+    }
+
     if (this.isRelativeImportIntoAnotherProject(imp) || this.isAbsoluteImportIntoAnotherProject(imp)) {
       this.addFailureAt(node.getStart(), node.getWidth(), `library imports must start with @${this.npmScope}/`);
       return;

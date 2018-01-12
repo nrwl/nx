@@ -75,6 +75,12 @@ describe('Enforce Module Boundaries', () => {
     expect(failures.length).toEqual(1);
     expect(failures[0].getFailure()).toEqual('imports of apps are forbidden');
   });
+
+  it('should error on importing a lib that has the same prefix as an app', () => {
+    const noFailures = runRule({ lazyLoad: [] }, `import '@mycompany/myapp/mylib';`, ['myapp/mylib'], ['myapp']);
+
+    expect(noFailures.length).toEqual(0);
+  });
 });
 
 function runRule(
