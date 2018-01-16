@@ -67,10 +67,21 @@ function updatePackageJson() {
     if (!packageJson.devDependencies['prettier']) {
       packageJson.devDependencies['prettier'] = prettierVersion;
     }
-    packageJson.scripts[
-      'format'
-    ] = `node ./node_modules/prettier/index.js --single-quote --print-width 120 --write \"{apps,libs}/**/*.ts\"`;
-    packageJson.scripts['nx-migrate'] = 'node ./node_modules/@nrwl/schematics/src/migrator/migrator.js';
+
+    packageJson.scripts['apps:affected'] = './node_modules/.bin/nx affected apps';
+    packageJson.scripts['build:affected'] = './node_modules/.bin/nx affected build';
+    packageJson.scripts['e2e:affected'] = './node_modules/.bin/nx affected e2e';
+
+    packageJson.scripts['affected:apps'] = './node_modules/.bin/nx affected apps';
+    packageJson.scripts['affected:build'] = './node_modules/.bin/nx affected build';
+    packageJson.scripts['affected:e2e'] = './node_modules/.bin/nx affected e2e';
+
+    packageJson.scripts['format'] = './node_modules/.bin/nx format write';
+    packageJson.scripts['format:write'] = './node_modules/.bin/nx format write';
+    packageJson.scripts['format:check'] = './node_modules/.bin/nx format check';
+
+    packageJson.scripts['nx-migrate'] = './node_modules/.bin/nx migrate';
+
     host.overwrite('package.json', serializeJson(packageJson));
     return host;
   };

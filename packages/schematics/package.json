@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "description": "Nrwl Extensions for Angular: Schematics",
   "bin": {
-    "create-nx-workspace": "./bin/create-nx-workspace.js"
+    "create-nx-workspace": "./bin/create-nx-workspace.js",
+    "nx": "./src/command-line/nx.js"
   },
   "main": "index.js",
   "types": "index.d.js",

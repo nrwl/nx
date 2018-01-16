@@ -1,29 +1,30 @@
 import { execSync } from 'child_process';
 import { getAffectedApps, parseFiles } from './shared';
 
-const command = process.argv[2];
-let apps: string[];
-let rest: string[];
+export function affected(args: string[]): void {
+  const command = args[0];
+  let apps: string[];
+  let rest: string[];
+  try {
+    const p = parseFiles(args.slice(1));
+    rest = p.rest;
+    apps = getAffectedApps(p.files);
+  } catch (e) {
+    printError(command, e);
+    process.exit(1);
+  }
 
-try {
-  const p = parseFiles();
-  rest = p.rest;
-  apps = getAffectedApps(p.files);
-} catch (e) {
-  printError(command, e);
-  process.exit(1);
-}
-
-switch (command) {
-  case 'apps':
-    console.log(apps.join(' '));
-    break;
-  case 'build':
-    build(apps, rest);
-    break;
-  case 'e2e':
-    e2e(apps, rest);
-    break;
+  switch (command) {
+    case 'apps':
+      console.log(apps.join(' '));
+      break;
+    case 'build':
+      build(apps, rest);
+      break;
+    case 'e2e':
+      e2e(apps, rest);
+      break;
+  }
 }
 
 function printError(command: string, e: any) {

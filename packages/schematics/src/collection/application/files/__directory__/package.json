@@ -10,19 +10,19 @@
     "lint": "ng lint",
     "e2e": "ng e2e",
 
-    "apps:affected": "node ./node_modules/@nrwl/schematics/src/command-line/affected.js apps",
-    "build:affected": "node ./node_modules/@nrwl/schematics/src/command-line/affected.js build",
-    "e2e:affected": "node ./node_modules/@nrwl/schematics/src/command-line/affected.js e2e",
+    "apps:affected": "./node_modules/.bin/nx affected apps",
+    "build:affected": "./node_modules/.bin/nx affected build",
+    "e2e:affected": "./node_modules/.bin/nx affected e2e",
 
-    "affected:apps": "node ./node_modules/@nrwl/schematics/src/command-line/affected.js apps",
-    "affected:build": "node ./node_modules/@nrwl/schematics/src/command-line/affected.js build",
-    "affected:e2e": "node ./node_modules/@nrwl/schematics/src/command-line/affected.js e2e",
+    "affected:apps": "./node_modules/.bin/nx affected apps",
+    "affected:build": "./node_modules/.bin/nx affected build",
+    "affected:e2e": "./node_modules/.bin/nx affected e2e",
 
-    "format": "node ./node_modules/@nrwl/schematics/src/command-line/format.js write",
-    "format:write": "node ./node_modules/@nrwl/schematics/src/command-line/format.js write",
-    "format:check": "node ./node_modules/@nrwl/schematics/src/command-line/format.js check",
+    "format": "./node_modules/.bin/nx format write",
+    "format:write": "./node_modules/.bin/nx format write",
+    "format:check": "./node_modules/.bin/nx format check",
 
-    "nx-migrate": "node ./node_modules/@nrwl/schematics/src/command-line/nx-migrate.js"
+    "nx-migrate": "./node_modules/.bin/nx migrate"
   },
   "private": true,
   "dependencies": {
