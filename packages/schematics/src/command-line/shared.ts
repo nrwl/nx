@@ -3,9 +3,7 @@ import * as path from 'path';
 import { affectedApps } from './affected-apps';
 import * as fs from 'fs';
 
-export function parseFiles(): { files: string[]; rest: string[] } {
-  const args = process.argv.slice(3);
-
+export function parseFiles(args: string[]): { files: string[]; rest: string[] } {
   let unnamed = [];
   let named = [];
   args.forEach(a => {

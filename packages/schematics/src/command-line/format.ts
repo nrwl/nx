@@ -1,37 +1,40 @@
 import { execSync } from 'child_process';
 import * as path from 'path';
+import * as resolve from 'resolve';
 import { getAffectedApps, getAppRoots, parseFiles } from './shared';
 
-const command = process.argv[2];
-let patterns: string[];
-let rest: string[];
+export function format(args: string[]) {
+  const command = args[0];
+  let patterns: string[];
+  let rest: string[];
 
-try {
-  if (process.argv.length === 3) {
-    patterns = ['"{apps,libs}/**/*.ts"'];
-    rest = [];
-  } else {
-    const p = parseFiles();
-    patterns = p.files.filter(f => path.extname(f) === '.ts');
-    rest = p.rest;
+  try {
+    if (args.length === 1) {
+      patterns = ['"{apps,libs}/**/*.ts"'];
+      rest = [];
+    } else {
+      const p = parseFiles(args.slice(1));
+      patterns = p.files.filter(f => path.extname(f) === '.ts');
+      rest = p.rest;
 
-    const libsAndApp = rest.filter(a => a.startsWith('--libs-and-apps'))[0];
-    if (libsAndApp) {
-      patterns = getPatternsFromApps(patterns);
+      const libsAndApp = rest.filter(a => a.startsWith('--libs-and-apps'))[0];
+      if (libsAndApp) {
+        patterns = getPatternsFromApps(patterns);
+      }
     }
+  } catch (e) {
+    printError(command, e);
+    process.exit(1);
   }
-} catch (e) {
-  printError(command, e);
-  process.exit(1);
-}
 
-switch (command) {
-  case 'write':
-    write(patterns);
-    break;
-  case 'check':
-    check(patterns);
-    break;
+  switch (command) {
+    case 'write':
+      write(patterns);
+      break;
+    case 'check':
+      check(patterns);
+      break;
+  }
 }
 
 function getPatternsFromApps(affectedFiles: string[]): string[] {
@@ -55,28 +58,24 @@ function printError(command: string, e: any) {
 
 function write(patterns: string[]) {
   if (patterns.length > 0) {
-    execSync(
-      `node ./node_modules/prettier/bin/prettier.js --single-quote --print-width 120 --write ${patterns.join(' ')}`,
-      {
-        stdio: [0, 1, 2]
-      }
-    );
+    execSync(`node ${prettierPath()} --single-quote --print-width 120 --write ${patterns.join(' ')}`, {
+      stdio: [0, 1, 2]
+    });
   }
 }
 
 function check(patterns: string[]) {
   if (patterns.length > 0) {
     try {
-      execSync(
-        `node ./node_modules/prettier/bin/prettier.js --single-quote --print-width 120 --list-different ${patterns.join(
-          ' '
-        )}`,
-        {
-          stdio: [0, 1, 2]
-        }
-      );
+      execSync(`node ${prettierPath()} --single-quote --print-width 120 --list-different ${patterns.join(' ')}`, {
+        stdio: [0, 1, 2]
+      });
     } catch (e) {
       process.exit(1);
     }
   }
+}
+
+function prettierPath() {
+  return `${path.dirname(resolve.sync('prettier', { basedir: __dirname }))}/bin-prettier.js`;
 }

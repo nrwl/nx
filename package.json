@@ -44,7 +44,7 @@
     "karma-chrome-launcher": "~2.1.1",
     "karma-jasmine": "~1.1.0",
     "karma-webpack": "2.0.4",
-    "prettier": "^1.9.0",
+    "prettier": "1.10.2",
     "rxjs": "^5.5.2",
     "tslint": "5.7.0",
     "typescript": "2.5.3",

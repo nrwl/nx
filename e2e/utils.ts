@@ -10,19 +10,25 @@ export function runNgNew(command?: string): string {
   }).toString();
 }
 
-export function newProject(): string {
+export function newProject(): void {
   cleanup();
   if (!directoryExists('./tmp/proj_backup')) {
     runNgNew('--collection=@nrwl/schematics --npmScope=nrwl');
     copyMissingPackages();
     execSync('mv ./tmp/proj ./tmp/proj_backup');
   }
-  return execSync('cp -r ./tmp/proj_backup ./tmp/proj').toString();
+  execSync('cp -r ./tmp/proj_backup ./tmp/proj');
+  setUpSynLink();
 }
 
 export function copyMissingPackages(): void {
   const modulesToCopy = ['@ngrx', 'jasmine-marbles', '@nrwl', 'angular', '@angular/upgrade', '@angular/cli'];
   modulesToCopy.forEach(m => copyNodeModule(projectName, m));
+}
+
+export function setUpSynLink(): void {
+  execSync(`ln -s ../@nrwl/schematics/src/command-line/nx.js tmp/${projectName}/node_modules/.bin/nx`);
+  execSync(`chmod +x tmp/${projectName}/node_modules/.bin/nx`);
 }
 
 function copyNodeModule(path: string, name: string) {
