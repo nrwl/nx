@@ -8,9 +8,10 @@ install:
   - sh -e /etc/init.d/xvfb start
   - yarn install
 script:
-  - yarn checkformat
-  - yarn test
-  - yarn e2e
+  - echo $TRAVIS_COMMIT
+  - echo $(git rev-parse origin/master)
+  # - yarn test
+  # - yarn e2e
 addons:
   chrome: stable
 cache:
