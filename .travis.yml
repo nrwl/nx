@@ -9,7 +9,7 @@ install:
   - yarn install
 script:
   - echo $TRAVIS_COMMIT
-  - echo $(git rev-parse origin/master)
+  - echo $(git rev-parse master)
   # - yarn test
   # - yarn e2e
 addons:
