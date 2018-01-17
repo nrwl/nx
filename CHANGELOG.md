@@ -2,13 +2,20 @@
 
 The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
 
+# 0.6.13
+
+## Bug Fixes
+
+* [Avoid relative paths to node modules](https://github.com/nrwl/nx/commit/2c49c3029535a9b98216d367e9c2b77a8d40a4a4)
+* [Handle the case when libraries are placed in the directory with the same name as an app](https://github.com/nrwl/nx/commit/f862ed05d18e1474156779ad1dee2e7a7c785d1d)
+
 # 0.6.10
 
 ## Features
 
 * [Improve error messages in the affected: and format: commands](https://github.com/nrwl/nx/commit/878784ae814ffea28796f458ff2f8b0b641996c0)
 
-## Bugs
+## Bug Fixes
 
 * [Handle circular deps between apps and libs](https://github.com/nrwl/nx/commit/3531323fb5210b995b1296a198c8e76ee8bf9a07)
 * [Handle projects that have similar names](https://github.com/nrwl/nx/commit/fe7032d29f4dcd66b51dbb889a1cf1751cd1d20a) 
@@ -53,7 +60,7 @@ npm run format:check
 * [Add format:check and format:write commands](https://github.com/nrwl/nx/commit/826a0b1056f9000425e189bad5a5d63966c3a704)
 
 
-## Bugs
+## Bug Fixes
 
 * [Only allow importing libs using the configured npm scope](https://github.com/nrwl/nx/commit/c836668541532e64db088ef9a984678022abb3bd)
 
