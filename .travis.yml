@@ -6,13 +6,11 @@ before_install:
   - export DISPLAY=:99.0
 install:
   - sh -e /etc/init.d/xvfb start
-  # - yarn install
+  - yarn install
 script:
-  - echo $TRAVIS_COMMIT
-  - echo $TRAVIS_COMMIT_RANGE
-  - echo $(git merge-base HEAD $TRAVIS_BRANCH)
-  # - yarn test
-  # - yarn e2e
+  - yarn checkformat --sha1=$TRAVIS_COMMIT --sha2=$(git merge-base HEAD $TRAVIS_BRANCH)
+  - yarn test
+  - yarn e2e
 addons:
   chrome: stable
 cache:

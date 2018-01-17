@@ -15,7 +15,7 @@
     "test:schematics": "yarn build && ./scripts/test_schematics.sh",
     "test:nx": "yarn build && ./scripts/test_nx.sh",
     "test": "yarn build && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
-    "checkformat": "./scripts/check-format.sh",
+    "checkformat": "./node_modules/prettier-lines/prettier-lines/bin/prettier-lines.js --check-only --whitelist=\"{packages,e2e}/**/*.ts\"",
     "publish_npm": "./scripts/publish.sh"
   },
   "dependencies": {
@@ -45,12 +45,13 @@
     "karma-jasmine": "~1.1.0",
     "karma-webpack": "2.0.4",
     "prettier": "1.10.2",
+    "prettier-lines": "file:./pl.tgz",
     "rxjs": "^5.5.2",
-    "tslint": "5.7.0",
-    "typescript": "2.5.3",
+    "semver": "5.4.1",
     "strip-json-comments": "2.0.1",
     "tmp": "0.0.33",
-    "semver": "5.4.1"
+    "tslint": "5.7.0",
+    "typescript": "2.5.3"
   },
   "author": "Victor Savkin",
   "license": "MIT",
