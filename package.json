@@ -49,12 +49,12 @@
     "karma-webpack": "2.0.4",
     "prettier": "1.10.2",
     "rxjs": "^5.5.6",
-    "tslint": "5.9.1",
-    "typescript": "2.6.2",
+    "semver": "5.4.1",
     "strip-json-comments": "2.0.1",
     "tmp": "0.0.33",
-    "zone.js": "^0.8.19",
-    "semver": "5.4.1"
+    "tslint": "5.9.1",
+    "typescript": "2.6.2",
+    "zone.js": "^0.8.19"
   },
   "author": "Victor Savkin",
   "license": "MIT",
