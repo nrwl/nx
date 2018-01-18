@@ -54,6 +54,7 @@
     "rxjs": "^5.5.6",
     "semver": "5.4.1",
     "strip-json-comments": "2.0.1",
+    "app-root-path": "^2.0.1",
     "tmp": "0.0.33",
     "tslint": "5.9.1",
     "typescript": "2.6.2",

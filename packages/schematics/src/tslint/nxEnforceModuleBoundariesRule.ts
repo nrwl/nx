@@ -3,6 +3,7 @@ import * as Lint from 'tslint';
 import { IOptions } from 'tslint';
 import * as ts from 'typescript';
 import { readFileSync } from 'fs';
+import * as appRoot from 'app-root-path';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(
@@ -15,8 +16,8 @@ export class Rule extends Lint.Rules.AbstractRule {
   ) {
     super(options);
     if (!projectPath) {
-      const cliConfig = this.readCliConfig();
-      this.projectPath = process.cwd();
+      this.projectPath = appRoot.path;
+      const cliConfig = this.readCliConfig(this.projectPath);
       this.npmScope = cliConfig.project.npmScope;
       this.libNames = cliConfig.apps.filter(p => p.root.startsWith('libs/')).map(a => a.name);
       this.appNames = cliConfig.apps.filter(p => p.root.startsWith('apps/')).map(a => a.name);
@@ -38,8 +39,8 @@ export class Rule extends Lint.Rules.AbstractRule {
     );
   }
 
-  private readCliConfig(): any {
-    return JSON.parse(readFileSync(`.angular-cli.json`, 'UTF-8'));
+  private readCliConfig(projectPath: string): any {
+    return JSON.parse(readFileSync(`${projectPath}/.angular-cli.json`, 'UTF-8'));
   }
 }
 
