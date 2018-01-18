@@ -8,12 +8,13 @@
   },
   "main": "index.js",
   "types": "index.d.js",
-  "peerDependencies" :{},
+  "peerDependencies": {},
   "author": "Victor Savkin",
   "license": "MIT",
   "schematics": "./src/collection.json",
   "dependencies": {
-    "tmp": "0.0.33",
-    "semver": "5.4.1"
+    "app-root-path": "^2.0.1",
+    "semver": "5.4.1",
+    "tmp": "0.0.33"
   }
 }
