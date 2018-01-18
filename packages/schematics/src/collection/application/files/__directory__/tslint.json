@@ -10,7 +10,8 @@
     "forin": true,
     "import-blacklist": [
       true,
-      "rxjs"
+      "rxjs",
+      "rxjs/Rx"
     ],
     "interface-over-type-literal": true,
     "member-access": false,
@@ -65,18 +66,27 @@
     "typeof-compare": true,
     "unified-signatures": true,
     "variable-name": false,
+    "whitespace": [
+      true,
+      "check-branch",
+      "check-decl",
+      "check-operator",
+      "check-separator",
+      "check-type"
+    ],
     "directive-selector": [
       true,
       "attribute",
-      "<%= prefix %>",
+      "app",
       "camelCase"
     ],
     "component-selector": [
       true,
       "element",
-      "<%= prefix %>",
+      "app",
       "kebab-case"
     ],
+    "no-output-on-prefix": true,
     "use-input-property-decorator": true,
     "use-output-property-decorator": true,
     "use-host-property-decorator": true,
@@ -86,9 +96,6 @@
     "use-pipe-transform-interface": true,
     "component-class-suffix": true,
     "directive-class-suffix": true,
-    "no-access-missing-member": true,
-    "templates-use-public": true,
-    "invoke-injectable": true,
 
     "nx-enforce-module-boundaries": [
       true,
