@@ -68,8 +68,6 @@ describe('Command line', () => {
 
       updateFile('apps/myapp/src/app/app.component.spec.ts', `import '@nrwl/mylib';`);
 
-      updateRunAffectedToWorkInE2ESetup();
-
       const affectedApps = runCommand('npm run affected:apps -- --files="libs/mylib/index.ts"');
       expect(affectedApps).toContain('myapp');
       expect(affectedApps).not.toContain('myapp2');
@@ -147,11 +145,3 @@ describe('Command line', () => {
     1000000
   );
 });
-
-function updateRunAffectedToWorkInE2ESetup() {
-  const runAffected = readFile('node_modules/@nrwl/schematics/src/command-line/affected.js');
-  const newRunAffected = runAffected
-    .replace('ng build', '../../node_modules/.bin/ng build')
-    .replace('ng e2e', '../../node_modules/.bin/ng e2e');
-  updateFile('node_modules/@nrwl/schematics/src/command-line/affected.js', newRunAffected);
-}

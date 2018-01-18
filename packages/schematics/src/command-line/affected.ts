@@ -1,5 +1,7 @@
 import { execSync } from 'child_process';
 import { getAffectedApps, parseFiles } from './shared';
+import * as path from 'path';
+import * as resolve from 'resolve';
 
 export function affected(args: string[]): void {
   const command = args[0];
@@ -39,7 +41,7 @@ function build(apps: string[], rest: string[]) {
   if (apps.length > 0) {
     console.log(`Building ${apps.join(', ')}`);
     apps.forEach(app => {
-      execSync(`ng build ${rest.join(' ')} -a=${app}`, { stdio: [0, 1, 2] });
+      execSync(`${ngPath()} build ${rest.join(' ')} -a=${app}`, { stdio: [0, 1, 2] });
     });
   } else {
     console.log('No apps to build');
@@ -50,9 +52,13 @@ function e2e(apps: string[], rest: string[]) {
   if (apps.length > 0) {
     console.log(`Testing ${apps.join(', ')}`);
     apps.forEach(app => {
-      execSync(`ng e2e ${rest.join(' ')} -a=${app}`, { stdio: [0, 1, 2] });
+      execSync(`${ngPath()} e2e ${rest.join(' ')} -a=${app}`, { stdio: [0, 1, 2] });
     });
   } else {
-    console.log('No apps to tst');
+    console.log('No apps to test');
   }
+}
+
+function ngPath() {
+  return `${path.dirname(path.dirname(path.dirname(resolve.sync('@angular/cli', { basedir: __dirname }))))}/bin/ng`;
 }

@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "build": "./scripts/build.sh",
-    "e2e": "yarn build && ./scripts/e2e.sh",
+    "e2e": "./scripts/e2e.sh",
     "format": "./scripts/format.sh",
     "linknpm": "./scripts/link.sh",
     "package": "./scripts/package.sh",
@@ -14,7 +14,7 @@
     "copy": "./scripts/copy.sh",
     "test:schematics": "yarn build && ./scripts/test_schematics.sh",
     "test:nx": "yarn build && ./scripts/test_nx.sh",
-    "test": "yarn build && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
+    "test": "yarn linknpm && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
     "checkformat": "./scripts/check-format.sh",
     "publish_npm": "./scripts/publish.sh"
   },
