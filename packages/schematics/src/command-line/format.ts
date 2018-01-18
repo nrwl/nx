@@ -29,10 +29,10 @@ export function format(args: string[]) {
 
   switch (command) {
     case 'write':
-      write(patterns);
+      writePrettierLines(patterns);
       break;
     case 'check':
-      check(patterns);
+      checkPrettierLines(patterns);
       break;
   }
 }
@@ -78,4 +78,37 @@ function check(patterns: string[]) {
 
 function prettierPath() {
   return `${path.dirname(resolve.sync('prettier', { basedir: __dirname }))}/bin-prettier.js`;
+}
+
+
+function writePrettierLines(patterns: string[]) {
+  if (patterns.length > 0) {
+    let cmd = `node ${prettierLinesPath()}`;
+    patterns.forEach(pattern => {
+      cmd += ` --whitelist="${pattern}"`;
+    });
+    execSync(cmd, {
+      stdio: [0, 1, 2]
+    });
+  }
+}
+
+function checkPrettierLines(patterns: string[]) {
+  if (patterns.length > 0) {
+    try {
+      let cmd = `node ${prettierLinesPath()} --check-only`;
+      patterns.forEach(pattern => {
+        cmd += ` --whitelist="${pattern}"`;
+      });
+      execSync(cmd, {
+        stdio: [0, 1, 2]
+      });
+    } catch (e) {
+      process.exit(1);
+    }
+  }
+}
+
+function prettierLinesPath() {
+  return `${path.dirname(resolve.sync('prettier-lines', { basedir: __dirname }))}/bin/prettier-lines.js`;
 }
