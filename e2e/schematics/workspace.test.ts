@@ -82,7 +82,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
 
   it('should generate a workspace and not change dependencies or devDependencies if they already exist', () => {
     // create a new AngularCLI app
-    runNgNew('--skip-install');
+    runNgNew();
     const nxVersion = '0.0.0';
     const schematicsVersion = '0.0.0';
     const ngrxVersion = '0.0.0';

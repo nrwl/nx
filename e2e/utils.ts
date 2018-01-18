@@ -17,8 +17,7 @@ export function newProject(): void {
     copyMissingPackages();
     execSync('mv ./tmp/proj ./tmp/proj_backup');
   }
-  execSync('cp -r ./tmp/proj_backup ./tmp/proj');
-  setUpSynLink();
+  execSync('cp -a ./tmp/proj_backup ./tmp/proj');
 }
 
 export function copyMissingPackages(): void {
@@ -26,14 +25,9 @@ export function copyMissingPackages(): void {
   modulesToCopy.forEach(m => copyNodeModule(projectName, m));
 }
 
-export function setUpSynLink(): void {
-  execSync(`ln -s ../@nrwl/schematics/src/command-line/nx.js tmp/${projectName}/node_modules/.bin/nx`);
-  execSync(`chmod +x tmp/${projectName}/node_modules/.bin/nx`);
-}
-
 function copyNodeModule(path: string, name: string) {
   execSync(`rm -rf tmp/${path}/node_modules/${name}`);
-  execSync(`cp -r node_modules/${name} tmp/${path}/node_modules/${name}`);
+  execSync(`cp -a node_modules/${name} tmp/${path}/node_modules/${name}`);
 }
 
 export function runCLI(
@@ -43,7 +37,7 @@ export function runCLI(
   }
 ): string {
   try {
-    return execSync(`../../node_modules/.bin/ng ${command}`, {
+    return execSync(`./node_modules/.bin/ng ${command}`, {
       cwd: `./tmp/${projectName}`
     })
       .toString()
@@ -67,7 +61,7 @@ export function newLib(name: string): string {
 }
 
 export function runSchematic(command: string): string {
-  return execSync(`../../node_modules/.bin/schematics ${command}`, {
+  return execSync(`./node_modules/.bin/schematics ${command}`, {
     cwd: `./tmp/${projectName}`
   }).toString();
 }

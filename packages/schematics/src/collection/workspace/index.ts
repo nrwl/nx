@@ -254,20 +254,7 @@ function moveFiles(options: Schema) {
 
 function copyAngularCliTgz() {
   return (host: Tree) => {
-    copyFile(
-      path.join(
-        'node_modules',
-        '@nrwl',
-        'schematics',
-        'src',
-        'collection',
-        'application',
-        'files',
-        '__directory__',
-        '.angular_cli.tgz'
-      ),
-      '.'
-    );
+    copyFile(path.join(__dirname, '..', 'application', 'files', '__directory__', '.angular_cli.tgz'), '.');
     return host;
   };
 }
