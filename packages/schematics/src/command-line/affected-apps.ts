@@ -104,18 +104,24 @@ class Deps {
     if (node.kind === ts.SyntaxKind.ImportDeclaration) {
       const imp = this.getStringLiteralValue((node as ts.ImportDeclaration).moduleSpecifier);
       this.addDepIfNeeded(imp, projectName);
-    } else if (node.kind === ts.SyntaxKind.PropertyAssignment) {
+      return; // stop traversing downwards
+    }
+
+    if (node.kind === ts.SyntaxKind.PropertyAssignment) {
       const name = this.getPropertyAssignmentName((node as ts.PropertyAssignment).name);
       if (name === 'loadChildren') {
         const init = (node as ts.PropertyAssignment).initializer;
         if (init.kind === ts.SyntaxKind.StringLiteral) {
           const childrenExpr = this.getStringLiteralValue(init);
           this.addDepIfNeeded(childrenExpr, projectName);
+          return; // stop traversing downwards
         }
       }
-    } else {
-      ts.forEachChild(node, child => this.processNode(projectName, child));
     }
+    /**
+     * Continue traversing down the AST from the current node
+     */
+    ts.forEachChild(node, child => this.processNode(projectName, child));
   }
 
   private getPropertyAssignmentName(nameNode: ts.PropertyName) {
