@@ -77,5 +77,6 @@ function check(patterns: string[]) {
 }
 
 function prettierPath() {
-  return `${path.dirname(resolve.sync('prettier', { basedir: __dirname }))}/bin-prettier.js`;
+  const basePath = path.dirname(resolve.sync('prettier', { basedir: __dirname }));
+  return path.join(basePath, 'bin-prettier.js');
 }

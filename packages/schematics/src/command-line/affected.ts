@@ -41,7 +41,7 @@ function build(apps: string[], rest: string[]) {
   if (apps.length > 0) {
     console.log(`Building ${apps.join(', ')}`);
     apps.forEach(app => {
-      execSync(`${ngPath()} build ${rest.join(' ')} -a=${app}`, { stdio: [0, 1, 2] });
+      execSync(`node ${ngPath()} build ${rest.join(' ')} -a=${app}`, { stdio: [0, 1, 2] });
     });
   } else {
     console.log('No apps to build');
@@ -52,7 +52,7 @@ function e2e(apps: string[], rest: string[]) {
   if (apps.length > 0) {
     console.log(`Testing ${apps.join(', ')}`);
     apps.forEach(app => {
-      execSync(`${ngPath()} e2e ${rest.join(' ')} -a=${app}`, { stdio: [0, 1, 2] });
+      execSync(`node ${ngPath()} e2e ${rest.join(' ')} -a=${app}`, { stdio: [0, 1, 2] });
     });
   } else {
     console.log('No apps to test');
@@ -60,5 +60,6 @@ function e2e(apps: string[], rest: string[]) {
 }
 
 function ngPath() {
-  return `${path.dirname(path.dirname(path.dirname(resolve.sync('@angular/cli', { basedir: __dirname }))))}/bin/ng`;
+  const basePath = path.dirname(path.dirname(path.dirname(resolve.sync('@angular/cli', { basedir: __dirname }))));
+  return path.join(basePath, 'bin', 'ng');
 }
