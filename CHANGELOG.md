@@ -2,6 +2,18 @@
 
 The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
 
+# 0.6.18
+
+## Bug Fixes
+
+* [Fixed affected: commands. Continue traversing within irrelevant PropertyAssignment nodes](https://github.com/nrwl/nx/commit/2293e28bd031efa80566228dddc202bc437c2b03)
+* [Make affected and format windows-friendly](https://github.com/nrwl/nx/commit/9609fc675031bd4dca285ceb942a71d995d1ee7b)
+
+## Cleanup
+
+* [Clean up tslint configuration](https://github.com/nrwl/nx/commit/828e4fe75da66dc41790e55a7738192940a04cbf)
+* [Add a migration updating the version of prettier](https://github.com/nrwl/nx/commit/847a249980c3505845a8c597de8e9a3d78766f8b)
+
 # 0.6.13
 
 ## Bug Fixes
