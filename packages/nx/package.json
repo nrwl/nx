@@ -5,10 +5,7 @@
   "main": "index.js",
   "types": "index.d.js",
   "dependencies": {
-    "jasmine-marbles": "0.1.0"
-  },
-  "peerDependencies": {
-    "rxjs": "^5.5.0"
+    "jasmine-marbles": "0.2.0"
   },
   "author": "Victor Savkin",
   "license": "MIT"

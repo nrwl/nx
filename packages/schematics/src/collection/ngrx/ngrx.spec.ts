@@ -125,7 +125,7 @@ describe('ngrx', () => {
     expect(packageJson.dependencies['@ngrx/effects']).toBeDefined();
   });
 
-  it('should error when no module is provided', () => {
+  fit('should error when no module is provided', () => {
     expect(() =>
       schematicRunner.runSchematic(
         'ngrx',
@@ -134,6 +134,6 @@ describe('ngrx', () => {
         },
         appTree
       )
-    ).toThrow('Property "/module" is required but missing.');
+    ).toThrow("should have required property 'module'");
   });
 });

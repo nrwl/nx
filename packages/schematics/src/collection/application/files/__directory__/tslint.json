@@ -8,6 +8,9 @@
     "callable-types": true,
     "class-name": true,
     "forin": true,
+    "deprecation": {
+      "severity": "warn"
+    },
     "import-blacklist": [
       true,
       "rxjs",
@@ -63,17 +66,8 @@
       true,
       "allow-null-check"
     ],
-    "typeof-compare": true,
     "unified-signatures": true,
     "variable-name": false,
-    "whitespace": [
-      true,
-      "check-branch",
-      "check-decl",
-      "check-operator",
-      "check-separator",
-      "check-type"
-    ],
     "directive-selector": [
       true,
       "attribute",

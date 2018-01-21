@@ -35,7 +35,7 @@ writeFileSync(
         'application',
         'files',
         '__directory__',
-        '.angular_cli.tgz'
+        '.angular_cli165.tgz'
       )}`
     }
   })

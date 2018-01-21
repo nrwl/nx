@@ -33,7 +33,6 @@ describe('ngrx', () => {
         'apps/myapp/src/app/+state/app.reducer.spec.ts',
         `
         import { appReducer } from './app.reducer';
-        import { appInitialState } from './app.init';
         import { App } from './app.interfaces';
         import { DataLoaded } from './app.actions';
         
