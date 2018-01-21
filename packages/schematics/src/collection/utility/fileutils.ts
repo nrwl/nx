@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import { Tree } from '@angular-devkit/schematics';
+import * as path from 'path';
 
 export function updateJsonFile(path: string, callback: (a: any) => any) {
   const json = JSON.parse(fs.readFileSync(path, 'utf-8'));
@@ -38,4 +39,12 @@ export function cliConfig(host: Tree): any {
 
 export function readCliConfigFile(): any {
   return JSON.parse(fs.readFileSync('.angular-cli.json', 'utf-8'));
+}
+
+export function copyFile(file: string, target: string) {
+  const f = path.basename(file);
+  const source = fs.createReadStream(file);
+  const dest = fs.createWriteStream(path.resolve(target, f));
+  source.pipe(dest);
+  source.on('error', e => console.error(e));
 }

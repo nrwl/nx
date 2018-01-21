@@ -1,18 +1,7 @@
-import {
-  apply,
-  branchAndMerge,
-  chain,
-  externalSchematic,
-  mergeWith,
-  move,
-  Rule,
-  template,
-  Tree,
-  url,
-  schematic
-} from '@angular-devkit/schematics';
+import { apply, branchAndMerge, chain, mergeWith, Rule, Tree, url } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';
+import { join } from 'path';
 import {
   angularCliSchema,
   angularCliVersion,
@@ -23,10 +12,8 @@ import {
   schematicsVersion
 } from '../utility/lib-versions';
 import * as fs from 'fs';
-import { join } from 'path';
-import { serializeJson, updateJsonFile } from '../utility/fileutils';
+import { copyFile, serializeJson, updateJsonFile } from '../utility/fileutils';
 import { toFileName } from '@nrwl/schematics';
-import { offsetFromRoot } from '../utility/common';
 
 function updatePackageJson() {
   return (host: Tree) => {
@@ -254,17 +241,9 @@ function moveFiles(options: Schema) {
 
 function copyAngularCliTgz() {
   return (host: Tree) => {
-    copyFile(path.join(__dirname, '..', 'application', 'files', '__directory__', '.angular_cli.tgz'), '.');
+    copyFile(path.join(__dirname, '..', 'application', 'files', '__directory__', '.angular_cli165.tgz'), '.');
     return host;
   };
-}
-
-function copyFile(file: string, target: string) {
-  const f = path.basename(file);
-  const source = fs.createReadStream(file);
-  const dest = fs.createWriteStream(path.resolve(target, f));
-  source.pipe(dest);
-  source.on('error', e => console.error(e));
 }
 
 function dedup(array: any[]): any[] {

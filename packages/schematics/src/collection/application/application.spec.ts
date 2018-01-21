@@ -16,7 +16,7 @@ describe('application', () => {
   it('should generate files', () => {
     const tree = schematicRunner.runSchematic('application', { name: 'myApp', directory: 'my-app' }, appTree);
     expect(tree.files).toEqual([
-      '/my-app/.angular_cli.tgz',
+      '/my-app/.angular_cli165.tgz',
       '/my-app/README.md',
       '/my-app/.angular-cli.json',
       '/my-app/.editorconfig',
