@@ -2,6 +2,12 @@
 
 The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
 
+# 0.7.0-beta.1
+
+## Features
+
+* [Switch to Angular 5.2 and CLI 1.6.5](https://github.com/nrwl/nx/commit/172c18dc9b84f7ac3019694e4a0eeeb40dd1bc26)
+
 # 0.6.18
 
 ## Bug Fixes
