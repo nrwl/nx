@@ -9,6 +9,7 @@ export const latestMigration = '20180120-update-prettier';
 export const prettierVersion = '1.10.2';
 export const typescriptVersion = '2.5.3';
 export const rxjsVersion = '^5.5.2';
+export const devKitCoreVersion = '^0.0.28';
 
 export const libVersions = {
   angularVersion,
@@ -21,5 +22,6 @@ export const libVersions = {
   angularCliSchema,
   latestMigration,
   typescriptVersion,
-  rxjsVersion
+  rxjsVersion,
+  devKitCoreVersion
 };

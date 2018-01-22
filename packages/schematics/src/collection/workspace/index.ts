@@ -16,6 +16,7 @@ import * as path from 'path';
 import {
   angularCliSchema,
   angularCliVersion,
+  devKitCoreVersion,
   latestMigration,
   ngrxVersion,
   nxVersion,
@@ -66,6 +67,9 @@ function updatePackageJson() {
     }
     if (!packageJson.devDependencies['prettier']) {
       packageJson.devDependencies['prettier'] = prettierVersion;
+    }
+    if (!packageJson.devDependencies['@angular-devkit/core']) {
+      packageJson.devDependencies['@angular-devkit/core'] = devKitCoreVersion;
     }
 
     packageJson.scripts['apps:affected'] = './node_modules/.bin/nx affected apps';
