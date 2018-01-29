@@ -9,7 +9,7 @@ export const latestMigration = '20180121-update-testjs';
 export const prettierVersion = '1.10.2';
 export const typescriptVersion = '2.6.2';
 export const rxjsVersion = '^5.5.6';
-export const devKitCoreVersion = '^0.0.28';
+export const devKitCoreVersion = '^0.0.29';
 
 export const libVersions = {
   angularVersion,
