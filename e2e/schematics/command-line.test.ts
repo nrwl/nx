@@ -48,11 +48,40 @@ describe('Command line', () => {
         };
       `
       );
-      const out = runCommand('npm run nx-migrate');
-      expect(out).toContain('Test migration');
-      expect(out).toContain('Running test migration');
-      expect(out).toContain('All migrations run successfully');
+      const checkOut = runCommand('npm run nx-migrate:check');
+      expect(checkOut).toContain('Run "npm run nx-migrate" to run the following migrations');
+      expect(checkOut).toContain('20200101-test-migration');
 
+      const migrateOut = runCommand('npm run nx-migrate');
+      expect(migrateOut).toContain('Test migration');
+      expect(migrateOut).toContain('Running test migration');
+      expect(migrateOut).toContain('All migrations run successfully');
+      expect(migrateOut).toContain(
+        `The latestMigration property in .angular-cli.json has been set to '20200101-test-migration'.`
+      );
+
+      updateFile(
+        'node_modules/@nrwl/schematics/migrations/20200102-test-migration.js',
+        `
+        exports.default = {
+          description: 'Test migration2',
+          run: function() {
+            console.log('Running test migration');
+          }
+        };
+      `
+      );
+
+      const checkOut2 = runCommand('npm run nx-migrate:check');
+      expect(checkOut2).toContain('Run "npm run nx-migrate" to run the following migrations');
+      expect(checkOut2).toContain('20200102-test-migration');
+
+      const skipOut = runCommand('npm run nx-migrate:skip');
+      expect(skipOut).toContain(
+        `The latestMigration property in .angular-cli.json has been set to '20200102-test-migration'.`
+      );
+
+      expect(runCommand('npm run nx-migrate:check')).not.toContain('IMPORTANT');
       expect(runCommand('npm run nx-migrate')).toContain('No migrations to run');
     },
     1000000
