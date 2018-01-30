@@ -14,7 +14,7 @@ switch (command) {
     format(args);
     break;
   case 'migrate':
-    migrate();
+    migrate(args);
     break;
   default:
     throw new Error(`Unrecognized command '${command}'`);
