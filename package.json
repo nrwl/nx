@@ -1,6 +1,6 @@
 {
   "name": "@nrwl/nx-source",
-  "version": "0.7.0-beta.3",
+  "version": "0.7.0",
   "description": "Nrwl Extensions for Angular",
   "main": "index.js",
   "private": true,
@@ -24,6 +24,8 @@
   "devDependencies": {
     "@angular/cli": "file:./packages/schematics/src/collection/application/files/__directory__/.angular_cli165.tgz",
     "@angular-devkit/core": "0.0.29",
+    "@angular-devkit/schematics": "0.0.52",
+    "@schematics/angular": "0.1.17",
     "@angular/common": "5.2.1",
     "@angular/compiler": "5.2.1",
     "@angular/compiler-cli": "5.2.1",

@@ -37,7 +37,9 @@ writeFileSync(
         '__directory__',
         '.angular_cli165.tgz'
       )}`,
-      '@angular-devkit/core': '^0.0.29'
+      '@angular-devkit/core': '^0.0.29',
+      '@angular-devkit/schematics': '0.0.52',
+      '@schematics/angular': '0.1.17'
     }
   })
 );

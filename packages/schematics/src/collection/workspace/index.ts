@@ -6,10 +6,12 @@ import {
   angularCliSchema,
   angularCliVersion,
   devKitCoreVersion,
+  devKitSchematicsVersion,
   latestMigration,
   ngrxVersion,
   nxVersion,
   prettierVersion,
+  schematicsAngularVersion,
   schematicsVersion
 } from '../utility/lib-versions';
 import * as fs from 'fs';
@@ -57,6 +59,12 @@ function updatePackageJson() {
     }
     if (!packageJson.devDependencies['@angular-devkit/core']) {
       packageJson.devDependencies['@angular-devkit/core'] = devKitCoreVersion;
+    }
+    if (!packageJson.devDependencies['@angular-devkit/schematics']) {
+      packageJson.devDependencies['@angular-devkit/schematics'] = devKitSchematicsVersion;
+    }
+    if (!packageJson.devDependencies['@schematics/angular']) {
+      packageJson.devDependencies['@schematics/angular'] = schematicsAngularVersion;
     }
 
     packageJson.scripts['apps:affected'] = './node_modules/.bin/nx affected apps';

@@ -49,6 +49,8 @@
     "@angular/cli": "<%= angularCliVersion %>",
     "@angular/compiler-cli": "<%= angularVersion %>",
     "@angular-devkit/core": "<%= devKitCoreVersion %>",
+    "@angular-devkit/schematics": "<%= devKitSchematicsVersion %>",
+    "@schematics/angular": "<%= schematicsAngularVersion %>",
     "@nrwl/schematics": "<%= schematicsVersion %>",
     "@angular/language-service": "<%= angularVersion %>",<% if (!minimal) { %>
     "@types/jasmine": "~2.5.53",
