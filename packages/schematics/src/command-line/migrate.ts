@@ -74,7 +74,6 @@ function check(latestMigration: string, migrations: MigrationName[]): void {
   const target = migrations[migrations.length - 1].name;
   console.log(`Or run 'npm run nx-migrate:skip' to set the latestMigration property`);
   console.log(`in .angular-cli.json to: '${target}'.`);
-  console.log('-----------------------------------------------------------------------------');
 }
 
 function run(latestMigration: string, migrations: MigrationName[]): void {
@@ -82,12 +81,6 @@ function run(latestMigration: string, migrations: MigrationName[]): void {
     console.log('No migrations to run');
     process.exit(0);
   }
-
-  console.log(`Nx will run the following migrations (after ${latestMigration}):`);
-  migrations.forEach(m => {
-    console.log(`- ${m.name}`);
-  });
-  console.log('-----------------------------------------------------------------------------');
 
   migrations.forEach(m => {
     try {
@@ -105,8 +98,12 @@ function run(latestMigration: string, migrations: MigrationName[]): void {
 
   updateLatestMigration(migrations);
 
+  console.log(`The following migrations have been run:`);
+  migrations.forEach(m => {
+    console.log(`- ${m.name}`);
+  });
+
   const target = migrations[migrations.length - 1].name;
-  console.log('All migrations run successfully.');
   console.log(`The latestMigration property in .angular-cli.json has been set to '${target}'.`);
 }
 
