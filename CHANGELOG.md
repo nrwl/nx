@@ -2,6 +2,12 @@
 
 The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
 
+# 0.7.0
+
+## Features
+
+* [Add nx-migrate:check and nx-migrate:skip scripts](d7ba9fdc1b9f4208db6de32184e953d00f6f064f)
+
 # 0.7.0-beta.1
 
 ## Features
