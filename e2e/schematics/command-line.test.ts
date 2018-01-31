@@ -55,7 +55,6 @@ describe('Command line', () => {
       const migrateOut = runCommand('npm run nx-migrate');
       expect(migrateOut).toContain('Test migration');
       expect(migrateOut).toContain('Running test migration');
-      expect(migrateOut).toContain('All migrations run successfully');
       expect(migrateOut).toContain(
         `The latestMigration property in .angular-cli.json has been set to '20200101-test-migration'.`
       );
