@@ -56,7 +56,7 @@ describe('Command line', () => {
       expect(migrateOut).toContain('Test migration');
       expect(migrateOut).toContain('Running test migration');
       expect(migrateOut).toContain(
-        `The latestMigration property in .angular-cli.json has been set to '20200101-test-migration'.`
+        `The latestMigration property in .angular-cli.json has been set to "20200101-test-migration".`
       );
 
       updateFile(
@@ -77,7 +77,7 @@ describe('Command line', () => {
 
       const skipOut = runCommand('npm run nx-migrate:skip');
       expect(skipOut).toContain(
-        `The latestMigration property in .angular-cli.json has been set to '20200102-test-migration'.`
+        `The latestMigration property in .angular-cli.json has been set to "20200102-test-migration".`
       );
 
       expect(runCommand('npm run nx-migrate:check')).not.toContain('IMPORTANT');
