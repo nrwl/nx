@@ -2,6 +2,17 @@
 
 The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
 
+# 0.7.2
+
+## Features
+
+* [Added a post install script that run nx-migrate:check](https://github.com/nrwl/nx/commit/93a6b4e94be4b1b591eb017e77b79c777bc23deb)
+* [Updated create-nx-workspace to support yarn](https://github.com/nrwl/nx/commit/e5b247b573cef0c1cf5cc5163d030dbf514f4dff)
+
+## Cleanup
+
+* [Cleaned up the output of nx-migrate](https://github.com/nrwl/nx/commit/7ab14e3b26e0e91d660ad5bb454dccb21b9745cf)
+
 # 0.7.0
 
 ## Features
