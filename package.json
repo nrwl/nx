@@ -7,7 +7,7 @@
   "scripts": {
     "build": "./scripts/build.sh",
     "e2e": "./scripts/e2e.sh",
-    "format": "./scripts/format.sh",
+    "format": "precise-commits --whitelist=\"{packages,e2e}/**/*.ts\"",
     "linknpm": "./scripts/link.sh",
     "package": "./scripts/package.sh",
     "release": "./scripts/release.sh",
@@ -15,8 +15,9 @@
     "test:schematics": "yarn build && ./scripts/test_schematics.sh",
     "test:nx": "yarn build && ./scripts/test_nx.sh",
     "test": "yarn linknpm && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
-    "checkformat": "./scripts/check-format.sh",
-    "publish_npm": "./scripts/publish.sh"
+    "checkformat": "yarn format --check-only",
+    "publish_npm": "./scripts/publish.sh",
+    "precommit": "yarn checkformat"
   },
   "dependencies": {
     "jasmine-marbles": "0.2.0"
@@ -41,12 +42,14 @@
     "@types/jasmine": "2.5.53",
     "@types/node": "8.0.7",
     "angular": "1.6.6",
+    "husky": "^0.14.3",
     "jasmine-core": "~2.8.0",
     "jest": "20.0.4",
     "karma": "~2.0.0",
     "karma-chrome-launcher": "~2.2.0",
     "karma-jasmine": "~1.1.0",
     "karma-webpack": "2.0.4",
+    "precise-commits": "1.0.0",
     "prettier": "1.10.2",
     "rxjs": "^5.5.6",
     "semver": "5.4.1",
