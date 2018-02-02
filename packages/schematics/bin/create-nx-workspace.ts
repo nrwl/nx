@@ -58,15 +58,13 @@ copyFile(
     '__directory__',
     '.angular_cli165.tgz'
   ),
-  '.'
+  tmpDir
 );
 
 function copyFile(file: string, target: string) {
   const f = path.basename(file);
-  const source = createReadStream(file);
-  const dest = createWriteStream(path.resolve(target, f));
-  source.pipe(dest);
-  source.on('error', e => console.error(e));
+  const source = readFileSync(file);
+  writeFileSync(path.join(target, f), source);
 }
 
 if (useYarn) {
