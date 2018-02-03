@@ -31,9 +31,7 @@ export function affected(args: string[]): void {
 
 function printError(command: string, e: any) {
   console.error(`Pass the SHA range, as follows: npm run affected:${command} -- SHA1 SHA2.`);
-  console.error(
-    `Or pass the list of files, as follows: npm run affected:${command} --files="libs/mylib/index.ts,libs/mylib2/index.ts".`
-  );
+  console.error(`Or pass the list of files, as follows: npm run affected:${command} -- --files="libs/mylib/index.ts,libs/mylib2/index.ts".`);
   console.error(e.message);
 }
 
