@@ -20,6 +20,16 @@ export function newProject(): void {
   execSync('cp -a ./tmp/proj_backup ./tmp/proj');
 }
 
+export function createNxWorkspace(command: string): string {
+  cleanup();
+  return execSync(
+    `node ../node_modules/@nrwl/schematics/bin/create-nx-workspace.js ${command}`,
+    {
+      cwd: `./tmp`
+    }
+  ).toString();
+}
+
 export function copyMissingPackages(): void {
   const modulesToCopy = ['@ngrx', 'jasmine-marbles', '@nrwl', 'angular', '@angular/upgrade', '@angular/cli'];
   modulesToCopy.forEach(m => copyNodeModule(projectName, m));
