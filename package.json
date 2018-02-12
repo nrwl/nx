@@ -23,7 +23,7 @@
     "jasmine-marbles": "~0.2.0"
   },
   "devDependencies": {
-    "@angular/cli": "1.6.8",
+    "@angular/cli": "file:./packages/schematics/src/collection/application/files/__directory__/.angular_cli168.tgz",
     "@angular-devkit/core": "~0.3.1",
     "@angular-devkit/schematics": "~0.3.1",
     "@schematics/angular": "~0.3.1",
