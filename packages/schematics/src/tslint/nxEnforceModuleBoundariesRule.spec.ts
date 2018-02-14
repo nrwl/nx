@@ -17,11 +17,28 @@ describe('Enforce Module Boundaries', () => {
     expect(failures.length).toEqual(0);
   });
 
-  it('should error on a relative import of a library', () => {
-    const failures = runRule({}, `import '../../../libs/mylib';`);
+  describe('relative imports', () => {
+    it('should not error when relatively importing the same library', () => {
+      const failures = runRuleToCheckForRelativeImport('import "../mylib2"');
+      expect(failures.length).toEqual(0);
+    });
 
-    expect(failures.length).toEqual(1);
-    expect(failures[0].getFailure()).toEqual('library imports must start with @mycompany/');
+    it('should not error when relatively importing the same library (index file)', () => {
+      const failures = runRuleToCheckForRelativeImport('import "../../mylib"');
+      expect(failures.length).toEqual(0);
+    });
+
+    it('should error when relatively importing another library', () => {
+      const failures = runRuleToCheckForRelativeImport('import "../../../libs/mylib2"');
+      expect(failures.length).toEqual(1);
+      expect(failures[0].getFailure()).toEqual('library imports must start with @mycompany/');
+    });
+
+    it('should error on a relatively importing another library (in the same dir)', () => {
+      const failures = runRuleToCheckForRelativeImport('import "../../mylib2"');
+      expect(failures.length).toEqual(1);
+      expect(failures[0].getFailure()).toEqual('library imports must start with @mycompany/');
+    });
   });
 
   it('should error on absolute imports into libraries without using the npm scope', () => {
@@ -95,7 +112,36 @@ function runRule(
     ruleName: 'enforceModuleBoundaries'
   };
 
-  const sourceFile = ts.createSourceFile('proj/apps/myapp/src/main.ts', content, ts.ScriptTarget.Latest, true);
-  const rule = new Rule(options, 'proj', 'mycompany', libNames, appNames);
+  const sourceFile = ts.createSourceFile(
+    'proj/apps/myapp/src/main.ts',
+    content,
+    ts.ScriptTarget.Latest,
+    true
+  );
+  const rule = new Rule(options, 'proj', 'mycompany', libNames, appNames, []);
+  return rule.apply(sourceFile);
+}
+
+function runRuleToCheckForRelativeImport(content: string): RuleFailure[] {
+  const options: any = {
+    ruleArguments: [{}],
+    ruleSeverity: 'error',
+    ruleName: 'enforceModuleBoundaries'
+  };
+
+  const sourceFile = ts.createSourceFile(
+    'proj/libs/dir/mylib/src/module.t',
+    content,
+    ts.ScriptTarget.Latest,
+    true
+  );
+  const rule = new Rule(
+    options,
+    'proj',
+    'mycompany',
+    ['dir/mylib', 'dir/mylib2'],
+    [],
+    ['libs/dir/mylib', 'libs/dir/mylib2']
+  );
   return rule.apply(sourceFile);
 }

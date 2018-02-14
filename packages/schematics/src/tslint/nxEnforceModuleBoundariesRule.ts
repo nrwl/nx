@@ -7,18 +7,20 @@ import { readFileSync } from 'fs';
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(
     options: IOptions,
-    private path?: string,
-    private npmScope?: string,
-    private libNames?: string[],
-    private appNames?: string[]
+    private readonly projectPath?: string,
+    private readonly npmScope?: string,
+    private readonly libNames?: string[],
+    private readonly appNames?: string[],
+    private readonly roots?: string[]
   ) {
     super(options);
-    if (!path) {
+    if (!projectPath) {
       const cliConfig = this.readCliConfig();
-      this.path = process.cwd();
+      this.projectPath = process.cwd();
       this.npmScope = cliConfig.project.npmScope;
       this.libNames = cliConfig.apps.filter(p => p.root.startsWith('libs/')).map(a => a.name);
       this.appNames = cliConfig.apps.filter(p => p.root.startsWith('apps/')).map(a => a.name);
+      this.roots = cliConfig.apps.map(a => path.dirname(a.root));
     }
   }
 
@@ -27,10 +29,11 @@ export class Rule extends Lint.Rules.AbstractRule {
       new EnforceModuleBoundariesWalker(
         sourceFile,
         this.getOptions(),
-        this.path,
+        this.projectPath,
         this.npmScope,
         this.libNames,
-        this.appNames
+        this.appNames,
+        this.roots
       )
     );
   }
@@ -47,9 +50,11 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     private projectPath: string,
     private npmScope: string,
     private libNames: string[],
-    private appNames: string[]
+    private appNames: string[],
+    private roots: string[]
   ) {
     super(sourceFile, options);
+    this.roots = [...roots].sort((a, b) => a.length - b.length);
   }
 
   public visitImportDeclaration(node: ts.ImportDeclaration) {
@@ -103,27 +108,18 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
   private isRelativeImportIntoAnotherProject(imp: string): boolean {
     if (!this.isRelative(imp)) return false;
     const sourceFile = this.getSourceFile().fileName.substring(this.projectPath.length);
-    const targetFile = path.resolve(path.dirname(sourceFile), imp);
-    if (this.workspacePath(sourceFile) && this.workspacePath(targetFile)) {
-      if (this.parseProject(sourceFile) !== this.parseProject(targetFile)) {
-        return true;
-      }
-    }
-    return false;
+    const targetFile = path.resolve(path.dirname(sourceFile), imp).substring(1); // remove leading slash
+    if (!this.libraryRoot()) return false;
+    return !(targetFile.startsWith(`${this.libraryRoot()}/`) || targetFile === this.libraryRoot());
+  }
+
+  private libraryRoot(): string {
+    const sourceFile = this.getSourceFile().fileName.substring(this.projectPath.length + 1);
+    return this.roots.filter(r => sourceFile.startsWith(r))[0];
   }
 
   private isAbsoluteImportIntoAnotherProject(imp: string): boolean {
     return imp.startsWith('libs/') || (imp.startsWith('/libs/') && imp.startsWith('apps/')) || imp.startsWith('/apps/');
-  }
-
-  private workspacePath(s: string): boolean {
-    return s.startsWith('/apps/') || s.startsWith('/libs/');
-  }
-
-  private parseProject(s: string): string {
-    const rest = s.substring(6);
-    const r = rest.split(path.sep);
-    return r[0];
   }
 
   private isRelative(s: string): boolean {
