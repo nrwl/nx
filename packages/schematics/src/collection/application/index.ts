@@ -1,6 +1,6 @@
 import { apply, branchAndMerge, chain, mergeWith, move, Rule, template, Tree, url } from '@angular-devkit/schematics';
 import { Schema } from './schema';
-import * as stringUtils from '@schematics/angular/strings';
+import { strings as stringUtils } from '@angular-devkit/core';
 import { libVersions } from '../utility/lib-versions';
 
 export default function(options: Schema): Rule {

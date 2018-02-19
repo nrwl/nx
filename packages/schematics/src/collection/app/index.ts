@@ -14,7 +14,7 @@ import {
   url
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
-import * as stringUtils from '@schematics/angular/strings';
+import { strings as stringUtils } from '@angular-devkit/core';
 import { addImportToModule, insert, toFileName } from '@nrwl/schematics';
 import * as ts from 'typescript';
 import { addBootstrapToModule } from '@schematics/angular/utility/ast-utils';

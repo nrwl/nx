@@ -39,7 +39,7 @@ writeFileSync(
   JSON.stringify({
     dependencies: {
       '@nrwl/schematics': nxVersion,
-      '@angular/cli': 'file:.angular_cli165.tgz',
+      '@angular/cli': 'file:.angular_cli168.tgz',
       '@angular-devkit/core': '^0.0.29',
       '@angular-devkit/schematics': '0.0.52',
       '@schematics/angular': '0.1.17'
@@ -56,7 +56,7 @@ copyFile(
     'application',
     'files',
     '__directory__',
-    '.angular_cli165.tgz'
+    '.angular_cli168.tgz'
   ),
   tmpDir
 );
