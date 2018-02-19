@@ -2,6 +2,17 @@
 
 The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
 
+# 0.7.4
+
+## Features
+
+* [Change generate effect tests to use toBeObservable](https://github.com/nrwl/nx/commit/222efe2f2630b02f6fdb11f560c9158cd4f51d75)
+
+## Fixes
+
+* [Base projectPath on the full path instead of the current working directory of the process](https://github.com/nrwl/nx/commit/545f2ff13902a635b9c26854e9687790adff0616)
+* [Ammend command in script errors](https://github.com/nrwl/nx/commit/9128fa8be1e31525acb6043ff87af73b6b884aaa)
+
 # 0.7.2
 
 ## Features
