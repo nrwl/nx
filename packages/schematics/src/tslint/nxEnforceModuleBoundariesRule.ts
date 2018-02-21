@@ -126,7 +126,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
 
   private libraryRoot(): string {
     const sourceFile = this.getSourceFile().fileName.substring(this.projectPath.length + 1);
-    return this.roots.filter(r => sourceFile.startsWith(r))[0];
+    return this.roots.filter(r => sourceFile.startsWith(`${r}/`))[0];
   }
 
   private isAbsoluteImportIntoAnotherProject(imp: string): boolean {
