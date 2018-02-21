@@ -119,7 +119,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     if (targetFile.startsWith(':')) {
       // windows compatibility
       targetFile = targetFile.substring(2); // remove ":\"
-      targetFile = targetFile.split(path.sep).join('/'); // replace "\"" with "/"
+      targetFile = targetFile.split(path.sep).join('/'); // replace "\" with "/"
     }
     return targetFile;
   }
