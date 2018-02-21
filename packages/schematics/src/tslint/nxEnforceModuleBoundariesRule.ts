@@ -109,9 +109,19 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
   private isRelativeImportIntoAnotherProject(imp: string): boolean {
     if (!this.isRelative(imp)) return false;
     const sourceFile = this.getSourceFile().fileName.substring(this.projectPath.length);
-    const targetFile = path.resolve(path.dirname(sourceFile), imp).substring(1); // remove leading slash
+    const targetFile = this.getTargetFile(imp, sourceFile);
     if (!this.libraryRoot()) return false;
     return !(targetFile.startsWith(`${this.libraryRoot()}/`) || targetFile === this.libraryRoot());
+  }
+
+  private getTargetFile(imp: string, sourceFile: string): string {
+    let targetFile = path.resolve(path.dirname(sourceFile), imp).substring(1); // remove leading slash
+    if (targetFile.startsWith(':')) {
+      // windows compatibility
+      targetFile = targetFile.substring(2); // remove ":\"
+      targetFile = targetFile.split(path.sep).join('/'); // replace "\"" with "/"
+    }
+    return targetFile;
   }
 
   private libraryRoot(): string {
