@@ -11,15 +11,15 @@ import {
   url
 } from '@angular-devkit/schematics';
 
-import { names, toClassName, toFileName, toPropertyName } from '../utility/name-utils';
+import {names, toClassName, toFileName, toPropertyName} from '../utility/name-utils';
 import * as path from 'path';
 import * as ts from 'typescript';
-import { addImportToModule, addProviderToModule, insert, offset } from '../utility/ast-utils';
-import { insertImport } from '@schematics/angular/utility/route-utils';
-import { Schema } from './schema';
-import { InsertChange } from '@schematics/angular/utility/change';
+import {addImportToModule, addProviderToModule, insert} from '../utility/ast-utils';
+import {insertImport} from '@schematics/angular/utility/route-utils';
+import {Schema} from './schema';
 import {ngrxVersion, routerStoreVersion} from '../utility/lib-versions';
-import { serializeJson } from '../utility/fileutils';
+import {serializeJson} from '../utility/fileutils';
+import {wrapIntoFormat} from '../utility/tasks';
 
 function addImportsToModule(name: string, options: Schema): Rule {
   return (host: Tree) => {
@@ -129,17 +129,19 @@ function addNgRxToPackageJson() {
 }
 
 export default function(options: Schema): Rule {
-  const name = options.name;
-  const moduleDir = path.dirname(options.module);
+  return wrapIntoFormat(() => {
+    const name = options.name;
+    const moduleDir = path.dirname(options.module);
 
-  if (options.onlyEmptyRoot) {
-    return chain([addImportsToModule(name, options), options.skipPackageJson ? noop() : addNgRxToPackageJson()]);
-  } else {
-    const templateSource = apply(url('./files'), [template({ ...options, tmpl: '', ...names(name) }), move(moduleDir)]);
-    return chain([
-      branchAndMerge(chain([mergeWith(templateSource)])),
-      addImportsToModule(name, options),
-      options.skipPackageJson ? noop() : addNgRxToPackageJson()
-    ]);
-  }
+    if (options.onlyEmptyRoot) {
+      return chain([addImportsToModule(name, options), options.skipPackageJson ? noop() : addNgRxToPackageJson()]);
+    } else {
+      const templateSource = apply(url('./files'), [template({...options, tmpl: '', ...names(name)}), move(moduleDir)]);
+      return chain([
+        branchAndMerge(chain([mergeWith(templateSource)])),
+        addImportsToModule(name, options),
+        options.skipPackageJson ? noop() : addNgRxToPackageJson()
+      ]);
+    }
+  });
 }

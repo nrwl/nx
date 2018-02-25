@@ -1,24 +1,13 @@
-import {
-  apply,
-  branchAndMerge,
-  chain,
-  externalSchematic,
-  mergeWith,
-  move,
-  noop,
-  Rule,
-  template,
-  Tree,
-  url
-} from '@angular-devkit/schematics';
-import { Schema } from './schema';
-import { addImportToModule, insert, names, toClassName, toFileName, toPropertyName } from '@nrwl/schematics';
+import {apply, branchAndMerge, chain, mergeWith, noop, Rule, template, Tree, url} from '@angular-devkit/schematics';
+import {Schema} from './schema';
+import {addImportToModule, insert, names, toClassName, toFileName, toPropertyName} from '@nrwl/schematics';
 import * as path from 'path';
-import { serializeJson, addApp, cliConfig, updateJsonFile } from '../utility/fileutils';
-import { insertImport } from '@schematics/angular/utility/route-utils';
+import {addApp, cliConfig, serializeJson} from '../utility/fileutils';
+import {insertImport} from '@schematics/angular/utility/route-utils';
 import * as ts from 'typescript';
-import { addGlobal, addIncludeToTsConfig, addReexport, addRoute, offset } from '../utility/ast-utils';
-import { offsetFromRoot } from '../utility/common';
+import {addGlobal, addIncludeToTsConfig, addReexport, addRoute} from '../utility/ast-utils';
+import {offsetFromRoot} from '../utility/common';
+import {wrapIntoFormat} from '../utility/tasks';
 
 interface NormalizedSchema extends Schema {
   name: string;
@@ -169,38 +158,40 @@ function updateTsLint(schema: NormalizedSchema): Rule {
 }
 
 export default function(schema: Schema): Rule {
-  const options = normalizeOptions(schema);
-  const moduleFileName = `${toFileName(options.name)}.module`;
-  const modulePath = `${options.fullPath}/${moduleFileName}.ts`;
-  const indexFile = `libs/${toFileName(options.fullName)}/index.ts`;
+  return wrapIntoFormat(() => {
+    const options = normalizeOptions(schema);
+    const moduleFileName = `${toFileName(options.name)}.module`;
+    const modulePath = `${options.fullPath}/${moduleFileName}.ts`;
+    const indexFile = `libs/${toFileName(options.fullName)}/index.ts`;
 
-  if (options.routing && options.nomodule) {
-    throw new Error(`nomodule and routing cannot be used together`);
-  }
+    if (options.routing && options.nomodule) {
+      throw new Error(`nomodule and routing cannot be used together`);
+    }
 
-  if (!options.routing && options.lazy) {
-    throw new Error(`routing must be set`);
-  }
+    if (!options.routing && options.lazy) {
+      throw new Error(`routing must be set`);
+    }
 
-  const templateSource = apply(url(options.nomodule ? './files' : './ngfiles'), [
-    template({
-      ...names(options.name),
-      dot: '.',
-      tmpl: '',
-      ...(options as object)
-    })
-  ]);
+    const templateSource = apply(url(options.nomodule ? './files' : './ngfiles'), [
+      template({
+        ...names(options.name),
+        dot: '.',
+        tmpl: '',
+        ...(options as object)
+      })
+    ]);
 
-  return chain([
-    branchAndMerge(chain([mergeWith(templateSource)])),
-    addLibToAngularCliJson(options),
-    options.routing && options.lazy ? addLazyLoadedRouterConfiguration(modulePath) : noop(),
-    options.routing && options.lazy ? updateTsLint(options) : noop(),
-    options.routing && options.lazy && options.parentModule ? addLoadChildren(options) : noop(),
+    return chain([
+      branchAndMerge(chain([mergeWith(templateSource)])),
+      addLibToAngularCliJson(options),
+      options.routing && options.lazy ? addLazyLoadedRouterConfiguration(modulePath) : noop(),
+      options.routing && options.lazy ? updateTsLint(options) : noop(),
+      options.routing && options.lazy && options.parentModule ? addLoadChildren(options) : noop(),
 
-    options.routing && !options.lazy ? addRouterConfiguration(options, indexFile, moduleFileName, modulePath) : noop(),
-    options.routing && !options.lazy && options.parentModule ? addChildren(options) : noop()
-  ]);
+      options.routing && !options.lazy ? addRouterConfiguration(options, indexFile, moduleFileName, modulePath) : noop(),
+      options.routing && !options.lazy && options.parentModule ? addChildren(options) : noop()
+    ]);
+  });
 }
 
 function normalizeOptions(options: Schema): NormalizedSchema {

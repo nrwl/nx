@@ -31,6 +31,7 @@ import { insertImport } from '@schematics/angular/utility/route-utils';
 import { Schema } from './schema';
 import { angularJsVersion } from '../utility/lib-versions';
 import { addUpgradeToPackageJson } from '../utility/common';
+import {wrapIntoFormat} from '../utility/tasks';
 
 function addImportsToModule(options: Schema): Rule {
   return (host: Tree) => {
@@ -108,12 +109,14 @@ function createFiles(angularJsImport: string, options: Schema): Rule {
 }
 
 export default function(options: Schema): Rule {
-  const angularJsImport = options.angularJsImport ? options.angularJsImport : options.name;
+  return wrapIntoFormat(() => {
+    const angularJsImport = options.angularJsImport ? options.angularJsImport : options.name;
 
-  return chain([
-    createFiles(angularJsImport, options),
-    addImportsToModule(options),
-    addNgDoBootstrapToModule(options),
-    options.skipPackageJson ? noop() : addUpgradeToPackageJson()
-  ]);
+    return chain([
+      createFiles(angularJsImport, options),
+      addImportsToModule(options),
+      addNgDoBootstrapToModule(options),
+      options.skipPackageJson ? noop() : addUpgradeToPackageJson()
+    ]);
+  });
 }

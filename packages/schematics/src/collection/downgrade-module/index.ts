@@ -1,7 +1,8 @@
-import { chain, noop, Rule, SchematicContext, Tree } from '@angular-devkit/schematics';
-import { addEntryComponents, addMethod, insert, readBootstrapInfo, removeFromNgModule } from '../utility/ast-utils';
-import { Schema } from './schema';
-import { addUpgradeToPackageJson } from '../utility/common';
+import {chain, noop, Rule, Tree} from '@angular-devkit/schematics';
+import {addEntryComponents, addMethod, insert, readBootstrapInfo, removeFromNgModule} from '../utility/ast-utils';
+import {Schema} from './schema';
+import {addUpgradeToPackageJson} from '../utility/common';
+import {wrapIntoFormat} from '../utility/tasks';
 
 function updateMain(angularJsImport: string, options: Schema): Rule {
   return (host: Tree) => {
@@ -71,12 +72,14 @@ function addEntryComponentsToModule(options: Schema): Rule {
 }
 
 export default function(options: Schema): Rule {
-  const angularJsImport = options.angularJsImport ? options.angularJsImport : options.name;
+  return  wrapIntoFormat(() => {
+    const angularJsImport = options.angularJsImport ? options.angularJsImport : options.name;
 
-  return chain([
-    updateMain(angularJsImport, options),
-    addEntryComponentsToModule(options),
-    rewriteBootstrapLogic(options),
-    options.skipPackageJson ? noop() : addUpgradeToPackageJson()
-  ]);
+    return chain([
+      updateMain(angularJsImport, options),
+      addEntryComponentsToModule(options),
+      rewriteBootstrapLogic(options),
+      options.skipPackageJson ? noop() : addUpgradeToPackageJson()
+    ]);
+  });
 }
