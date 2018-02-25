@@ -18,7 +18,7 @@ import { addImportToModule, addProviderToModule, insert, offset } from '../utili
 import { insertImport } from '@schematics/angular/utility/route-utils';
 import { Schema } from './schema';
 import { InsertChange } from '@schematics/angular/utility/change';
-import { ngrxVersion } from '../utility/lib-versions';
+import {ngrxVersion, routerStoreVersion} from '../utility/lib-versions';
 import { serializeJson } from '../utility/fileutils';
 
 function addImportsToModule(name: string, options: Schema): Rule {
@@ -115,7 +115,7 @@ function addNgRxToPackageJson() {
       json['dependencies']['@ngrx/store'] = ngrxVersion;
     }
     if (!json['dependencies']['@ngrx/router-store']) {
-      json['dependencies']['@ngrx/router-store'] = ngrxVersion;
+      json['dependencies']['@ngrx/router-store'] = routerStoreVersion;
     }
     if (!json['dependencies']['@ngrx/effects']) {
       json['dependencies']['@ngrx/effects'] = ngrxVersion;

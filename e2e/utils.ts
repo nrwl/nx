@@ -13,7 +13,8 @@ export function runNgNew(command?: string): string {
 export function newProject(): void {
   cleanup();
   if (!directoryExists('./tmp/proj_backup')) {
-    runNgNew('--collection=@nrwl/schematics --npmScope=nrwl');
+    runNgNew('--collection=@nrwl/schematics --npmScope=proj');
+    execSync('npm i', {cwd: `./tmp/${projectName}`});
     copyMissingPackages();
     execSync('mv ./tmp/proj ./tmp/proj_backup');
   }

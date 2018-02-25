@@ -14,7 +14,7 @@ import {
   url
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
-import * as stringUtils from '@schematics/angular/strings';
+import {strings} from '@angular-devkit/core';
 import { addImportToModule, insert, toFileName } from '@nrwl/schematics';
 import * as ts from 'typescript';
 import { addBootstrapToModule } from '@schematics/angular/utility/ast-utils';
@@ -162,7 +162,7 @@ export default function(schema: Schema): Rule {
   const options = normalizeOptions(schema);
   const templateSource = apply(url('./files'), [
     template({
-      utils: stringUtils,
+      utils: strings,
       dot: '.',
       tmpl: '',
       offsetFromRoot: offsetFromRoot(options.fullPath),
@@ -205,6 +205,6 @@ export default function(schema: Schema): Rule {
 function normalizeOptions(options: Schema): NormalizedSchema {
   const name = toFileName(options.name);
   const fullName = options.directory ? `${toFileName(options.directory)}/${name}` : name;
-  const fullPath = `apps/${fullName}/${options.sourceDir}`;
-  return { ...options, name, fullName, fullPath };
+  const fullPath = `apps/${fullName}/src`;
+  return { ...options, sourceDir: 'src', name, fullName, fullPath };
 }

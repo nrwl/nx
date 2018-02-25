@@ -43,19 +43,16 @@
     "zone.js": "^0.8.19",
     "@nrwl/nx": "<%= nxVersion %>",
     "@ngrx/effects": "<%= ngrxVersion %>",
-    "@ngrx/router-store": "<%= ngrxVersion %>",
+    "@ngrx/router-store": "<%= routerStoreVersion %>",
     "@ngrx/store": "<%= ngrxVersion %>",
-    "@ngrx/store-devtools": "4.0.0"
+    "@ngrx/store-devtools": "<%= ngrxVersion %>"
   },
   "devDependencies": {
     "@angular/cli": "<%= angularCliVersion %>",
     "@angular/compiler-cli": "<%= angularVersion %>",
-    "@angular-devkit/core": "<%= devKitCoreVersion %>",
-    "@angular-devkit/schematics": "<%= devKitSchematicsVersion %>",
-    "@schematics/angular": "<%= schematicsAngularVersion %>",
     "@nrwl/schematics": "<%= schematicsVersion %>",
     "@angular/language-service": "<%= angularVersion %>",<% if (!minimal) { %>
-    "@types/jasmine": "~2.5.53",
+    "@types/jasmine": "~2.8.3",
     "@types/jasminewd2": "~2.0.2",
     "@types/node": "~6.0.60",
     "codelyzer": "^4.0.1",
@@ -63,7 +60,6 @@
     "jasmine-spec-reporter": "~4.2.1",
     "karma": "~2.0.0",
     "karma-chrome-launcher": "~2.2.0",
-    "karma-cli": "~1.0.1",
     "karma-coverage-istanbul-reporter": "^1.2.1",
     "karma-jasmine": "~1.1.0",
     "karma-jasmine-html-reporter": "^0.2.2",

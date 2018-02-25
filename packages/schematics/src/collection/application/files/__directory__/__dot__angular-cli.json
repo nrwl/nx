@@ -21,11 +21,16 @@
       "config": "./karma.conf.js"
     }
   },
+  "apps": [
+    {
+      "name": "$workspaceRoot",
+      "root": ".",
+      "appRoot": ""
+    }
+  ],
   "defaults": {
     "schematics": {
-      "collection": "@nrwl/schematics",
-      "postGenerate": "npm run format",
-      "newProject": ["app", "lib"]
+      "collection": "@nrwl/schematics"
     },
     "styleExt": "<%= style %>",<% if (!minimal) { %>
     "component": {}<% } else { %>

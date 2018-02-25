@@ -16,11 +16,6 @@
       "type": "string",
       "description": "A directory where the app is placed"
     },
-    "sourceDir": {
-      "type": "string",
-      "default": "src",
-      "alias": "sd"
-    },
     "inlineStyle": {
       "description": "Specifies if the style will be in the ts file.",
       "type": "boolean",

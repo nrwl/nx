@@ -15,6 +15,8 @@ export function addApp(apps: any[] | undefined, newApp: any): any[] {
   apps.push(newApp);
 
   apps.sort((a: any, b: any) => {
+    if (a.name === '$workspaceRoot') return 1;
+    if (b.name === '$workspaceRoot') return -1;
     if (a.main && !b.main) return -1;
     if (!a.main && b.main) return 1;
     if (a.name > b.name) return 1;
