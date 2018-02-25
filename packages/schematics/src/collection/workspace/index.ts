@@ -5,14 +5,10 @@ import { join } from 'path';
 import {
   angularCliSchema,
   angularCliVersion,
-  devKitCoreVersion,
-  devKitSchematicsVersion,
   latestMigration,
   ngrxVersion,
   nxVersion,
-  prettierVersion,
-  schematicsAngularVersion,
-  schematicsVersion
+  prettierVersion, routerStoreVersion, schematicsVersion,
 } from '../utility/lib-versions';
 import * as fs from 'fs';
 import { copyFile, serializeJson, updateJsonFile } from '../utility/fileutils';
@@ -40,7 +36,7 @@ function updatePackageJson() {
       packageJson.dependencies['@ngrx/store'] = ngrxVersion;
     }
     if (!packageJson.dependencies['@ngrx/router-store']) {
-      packageJson.dependencies['@ngrx/router-store'] = ngrxVersion;
+      packageJson.dependencies['@ngrx/router-store'] = routerStoreVersion;
     }
     if (!packageJson.dependencies['@ngrx/effects']) {
       packageJson.dependencies['@ngrx/effects'] = ngrxVersion;
@@ -56,15 +52,6 @@ function updatePackageJson() {
     }
     if (!packageJson.devDependencies['prettier']) {
       packageJson.devDependencies['prettier'] = prettierVersion;
-    }
-    if (!packageJson.devDependencies['@angular-devkit/core']) {
-      packageJson.devDependencies['@angular-devkit/core'] = devKitCoreVersion;
-    }
-    if (!packageJson.devDependencies['@angular-devkit/schematics']) {
-      packageJson.devDependencies['@angular-devkit/schematics'] = devKitSchematicsVersion;
-    }
-    if (!packageJson.devDependencies['@schematics/angular']) {
-      packageJson.devDependencies['@schematics/angular'] = schematicsAngularVersion;
     }
 
     packageJson.scripts['apps:affected'] = './node_modules/.bin/nx affected apps';
@@ -251,13 +238,6 @@ function moveFiles(options: Schema) {
   };
 }
 
-function copyAngularCliTgz() {
-  return (host: Tree) => {
-    copyFile(path.join(__dirname, '..', 'application', 'files', '__directory__', '.angular_cli165.tgz'), '.');
-    return host;
-  };
-}
-
 function dedup(array: any[]): any[] {
   const res = [];
 
@@ -298,7 +278,6 @@ export default function(schema: Schema): Rule {
     updateAngularCLIJson(options),
     updateTsConfigsJson(options),
     updateProtractorConf(),
-    updateTsLintJson(options),
-    copyAngularCliTgz()
+    updateTsLintJson(options)
   ]);
 }

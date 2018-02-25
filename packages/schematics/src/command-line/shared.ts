@@ -43,7 +43,7 @@ function getFilesFromShash(sha1: string, sha2: string): string[] {
 
 export function getAffectedApps(touchedFiles: string[]): string[] {
   const config = JSON.parse(fs.readFileSync('.angular-cli.json', 'utf-8'));
-  const projects = (config.apps ? config.apps : []).map(p => {
+  const projects = (config.apps ? config.apps : []).filter(p => p.name !== '$workspaceRoot').map(p => {
     return {
       name: p.name,
       isApp: p.root.startsWith('apps/'),
@@ -60,7 +60,7 @@ export function getAffectedApps(touchedFiles: string[]): string[] {
 
 export function getAppRoots(appNames: string[]): string[] {
   const config = JSON.parse(fs.readFileSync('.angular-cli.json', 'utf-8'));
-  return (config.apps ? config.apps : []).filter(p => appNames.indexOf(p.name) > -1).map(p => path.dirname(p.root));
+  return (config.apps ? config.apps : []).filter(p => p.name !== '$workspaceRoot').filter(p => appNames.indexOf(p.name) > -1).map(p => path.dirname(p.root));
 }
 
 function allFilesInDir(dirName: string): string[] {

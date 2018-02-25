@@ -12,11 +12,6 @@
       "type": "string",
       "description": "A directory where the app is placed"
     },
-    "sourceDir": {
-      "type": "string",
-      "default": "src",
-      "alias": "sd"
-    },
     "nomodule": {
       "type": "boolean",
       "default": false,

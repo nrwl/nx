@@ -13,7 +13,7 @@ describe('Nrwl Workspace', () => {
         `
         import { NgModule } from '@angular/core';
         import { BrowserModule } from '@angular/platform-browser';
-        import { MyLibModule } from '@nrwl/my-dir/my-lib';
+        import { MyLibModule } from '@proj/my-dir/my-lib';
         import { AppComponent } from './app.component';
 
         @NgModule({

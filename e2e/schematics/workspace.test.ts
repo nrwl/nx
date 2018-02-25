@@ -51,7 +51,6 @@ describe('Nrwl Convert to Nx Workspace', () => {
     const updatedPackageJson = JSON.parse(readFile('package.json'));
     expect(updatedPackageJson.description).toEqual('some description');
     expect(updatedPackageJson.devDependencies['@nrwl/schematics']).toBeDefined();
-    expect(updatedPackageJson.dependencies['@angular/cli']).toEqual('file:.angular_cli165.tgz');
     expect(updatedPackageJson.dependencies['@nrwl/nx']).toBeDefined();
     expect(updatedPackageJson.dependencies['@ngrx/store']).toBeDefined();
     expect(updatedPackageJson.dependencies['@ngrx/effects']).toBeDefined();
@@ -76,8 +75,6 @@ describe('Nrwl Convert to Nx Workspace', () => {
       a: ['b'],
       '@proj/*': ['libs/*']
     });
-
-    expect(fileExists('./tmp/proj/.angular_cli165.tgz')).toEqual(true);
   });
 
   it('should generate a workspace and not change dependencies or devDependencies if they already exist', () => {

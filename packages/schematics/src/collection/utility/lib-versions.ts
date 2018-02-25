@@ -1,11 +1,12 @@
-export const angularCliVersion = 'file:.angular_cli165.tgz';
-export const angularVersion = '^5.2.0';
+export const angularCliVersion = '1.7.1';
+export const angularVersion = '5.2.6';
 export const angularJsVersion = '1.6.6';
-export const ngrxVersion = '4.1.1';
+export const ngrxVersion = '5.1.0';
+export const routerStoreVersion = '5.0.1';
 export const nxVersion = '*';
 export const schematicsVersion = '*';
 export const angularCliSchema = './node_modules/@nrwl/schematics/src/schema.json';
-export const latestMigration = '20180130-angular-devkit-schematics';
+export const latestMigration = '20180225-switch-to-cli17';
 export const prettierVersion = '1.10.2';
 export const typescriptVersion = '2.6.2';
 export const rxjsVersion = '^5.5.6';
@@ -27,5 +28,6 @@ export const libVersions = {
   rxjsVersion,
   devKitCoreVersion,
   devKitSchematicsVersion,
-  schematicsAngularVersion
+  schematicsAngularVersion,
+  routerStoreVersion
 };

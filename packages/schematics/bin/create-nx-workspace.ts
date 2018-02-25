@@ -39,33 +39,11 @@ writeFileSync(
   JSON.stringify({
     dependencies: {
       '@nrwl/schematics': nxVersion,
-      '@angular/cli': 'file:.angular_cli165.tgz',
-      '@angular-devkit/core': '^0.0.29',
-      '@angular-devkit/schematics': '0.0.52',
-      '@schematics/angular': '0.1.17'
+      '@angular/cli': '1.7.1'
     },
     license: 'MIT'
   })
 );
-
-copyFile(
-  path.join(
-    path.dirname(__dirname),
-    'src',
-    'collection',
-    'application',
-    'files',
-    '__directory__',
-    '.angular_cli165.tgz'
-  ),
-  tmpDir
-);
-
-function copyFile(file: string, target: string) {
-  const f = path.basename(file);
-  const source = readFileSync(file);
-  writeFileSync(path.join(target, f), source);
-}
 
 if (useYarn) {
   execSync('yarn install --silent', { cwd: tmpDir, stdio: [0, 1, 2] });

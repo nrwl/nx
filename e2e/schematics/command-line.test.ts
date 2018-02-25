@@ -17,15 +17,15 @@ describe('Command line', () => {
         'apps/myapp/src/main.ts',
         `
       import '../../../libs/mylib';
-      import '@nrwl/lazylib';
-      import '@nrwl/mylib/deep';
-      import '@nrwl/myapp';
-      import '@nrwl/myapp/main';
+      import '@proj/lazylib';
+      import '@proj/mylib/deep';
+      import '@proj/myapp';
+      import '@proj/myapp/main';
     `
       );
 
       const out = runCLI('lint --type-check', { silenceError: true });
-      expect(out).toContain('library imports must start with @nrwl/');
+      expect(out).toContain('library imports must start with @proj/');
       expect(out).toContain('imports of lazy-loaded libraries are forbidden');
       expect(out).toContain('deep imports into libraries are forbidden');
       expect(out).toContain('imports of apps are forbidden');
@@ -94,7 +94,7 @@ describe('Command line', () => {
       newApp('myapp2');
       newLib('mylib');
 
-      updateFile('apps/myapp/src/app/app.component.spec.ts', `import '@nrwl/mylib';`);
+      updateFile('apps/myapp/src/app/app.component.spec.ts', `import '@proj/mylib';`);
 
       const affectedApps = runCommand('npm run affected:apps -- --files="libs/mylib/index.ts"');
       expect(affectedApps).toContain('myapp');

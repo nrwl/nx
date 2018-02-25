@@ -206,6 +206,6 @@ export default function(schema: Schema): Rule {
 function normalizeOptions(options: Schema): NormalizedSchema {
   const name = toFileName(options.name);
   const fullName = options.directory ? `${toFileName(options.directory)}/${name}` : name;
-  const fullPath = `libs/${fullName}/${options.sourceDir}`;
-  return { ...options, name, fullName, fullPath };
+  const fullPath = `libs/${fullName}/src`;
+  return { ...options, sourceDir: 'src', name, fullName, fullPath };
 }
