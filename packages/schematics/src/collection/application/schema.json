@@ -17,6 +17,43 @@
       "type": "string",
       "description": "Npm scope for importing libs."
     },
+    "skipInstall": {
+      "description": "Skip installing dependency packages.",
+      "type": "boolean",
+      "default": false
+    },
+    "skipGit": {
+      "description": "Skip initializing a git repository.",
+      "type": "boolean",
+      "default": false,
+      "alias": "sg"
+    },
+    "commit": {
+      "description": "Initial repository commit information.",
+      "default": null,
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "message": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "email"
+          ]
+        }
+      ]
+    },
     "version": {
       "type": "string"
     },

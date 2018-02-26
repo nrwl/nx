@@ -15,6 +15,6 @@ export class FormatFiles implements TaskConfigurationGenerator<any> {
 export function wrapIntoFormat(fn: Function): any {
   return (host: Tree, context: SchematicContext) => {
     context.addTask(new FormatFiles());
-    return fn()(host, context);
+    return fn(context)(host, context);
   };
 }

@@ -6,4 +6,7 @@ export interface Schema {
   prefix?: string;
   style?: string;
   minimal?: boolean;
+  skipInstall?: boolean;
+  commit?: { name: string, email: string, message?: string };
+  skipGit?: boolean;
 }
