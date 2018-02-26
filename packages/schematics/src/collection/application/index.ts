@@ -1,14 +1,22 @@
-import {apply, branchAndMerge, chain, mergeWith, Rule, template, url, SchematicContext} from '@angular-devkit/schematics';
+import {
+  apply,
+  branchAndMerge,
+  chain,
+  mergeWith,
+  Rule,
+  SchematicContext,
+  template,
+  Tree,
+  url
+} from '@angular-devkit/schematics';
 import {Schema} from './schema';
 import {strings} from '@angular-devkit/core';
-import {RepositoryInitializerTask, NodePackageInstallTask} from '@angular-devkit/schematics/tasks';
+import {NodePackageInstallTask, RepositoryInitializerTask} from '@angular-devkit/schematics/tasks';
 import {libVersions} from '../utility/lib-versions';
-import {wrapIntoFormat} from '../utility/tasks';
 
 export default function(options: Schema): Rule {
-  return wrapIntoFormat((context: SchematicContext) => {
-    addSkipInstallAndSkipGit(options, context);
-
+  return (host: Tree, context: SchematicContext) => {
+    addTasks(options, context);
     const npmScope = options.npmScope ? options.npmScope : options.name;
     const templateSource = apply(url('./files'), [
       template({
@@ -19,14 +27,14 @@ export default function(options: Schema): Rule {
         npmScope
       })
     ]);
-    return chain([branchAndMerge(chain([mergeWith(templateSource)]))]);
-  });
+    return chain([branchAndMerge(chain([mergeWith(templateSource)]))])(host, context);
+  };
 }
 
-function addSkipInstallAndSkipGit(options: Schema, context: SchematicContext) {
+function addTasks(options: Schema, context: SchematicContext) {
   let packageTask;
   if (!options.skipInstall) {
-    packageTask = context.addTask(new NodePackageInstallTask(options.directory));
+     packageTask = context.addTask(new NodePackageInstallTask(options.directory));
   }
   if (!options.skipGit) {
     context.addTask(new RepositoryInitializerTask(options.directory, options.commit), packageTask ? [packageTask] : []);
