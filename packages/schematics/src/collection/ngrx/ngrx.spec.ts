@@ -125,7 +125,7 @@ describe('ngrx', () => {
     expect(packageJson.dependencies['@ngrx/effects']).toBeDefined();
   });
 
-  fit('should error when no module is provided', () => {
+  it('should error when no module is provided', () => {
     expect(() =>
       schematicRunner.runSchematic(
         'ngrx',

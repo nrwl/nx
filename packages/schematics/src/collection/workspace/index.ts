@@ -54,10 +54,6 @@ function updatePackageJson() {
       packageJson.devDependencies['prettier'] = prettierVersion;
     }
 
-    packageJson.scripts['apps:affected'] = './node_modules/.bin/nx affected apps';
-    packageJson.scripts['build:affected'] = './node_modules/.bin/nx affected build';
-    packageJson.scripts['e2e:affected'] = './node_modules/.bin/nx affected e2e';
-
     packageJson.scripts['affected:apps'] = './node_modules/.bin/nx affected apps';
     packageJson.scripts['affected:build'] = './node_modules/.bin/nx affected build';
     packageJson.scripts['affected:e2e'] = './node_modules/.bin/nx affected e2e';
@@ -66,7 +62,11 @@ function updatePackageJson() {
     packageJson.scripts['format:write'] = './node_modules/.bin/nx format write';
     packageJson.scripts['format:check'] = './node_modules/.bin/nx format check';
 
-    packageJson.scripts['nx-migrate'] = './node_modules/.bin/nx migrate';
+    packageJson.scripts['update'] = './node_modules/.bin/nx update';
+    packageJson.scripts['update:check'] = './node_modules/.bin/nx update check';
+    packageJson.scripts['update:skip'] = './node_modules/.bin/nx update skip';
+
+    packageJson.scripts['postinstall'] = './node_modules/.bin/nx postinstall';
 
     host.overwrite('package.json', serializeJson(packageJson));
     return host;
