@@ -4,17 +4,23 @@ import * as path from 'path';
 
 const projectName: string = 'proj';
 
-export function runNgNew(command?: string): string {
+export function runNgNew(command?: string, silent?: boolean): string {
   return execSync(`../node_modules/.bin/ng new proj ${command}`, {
-    cwd: `./tmp`
+    cwd: `./tmp`,
+    ...(silent ? {stdio: ['ignore', 'ignore', 'ignore']} : {})
   }).toString();
 }
 
 export function newProject(): void {
   cleanup();
   if (!directoryExists('./tmp/proj_backup')) {
-    runNgNew('--collection=@nrwl/schematics --npmScope=proj');
+    //TODO delete the try catch after 0.8.0 is released
+    try {
+      runNgNew('--collection=@nrwl/schematics --npmScope=proj', true);
+    } catch (e) {
+    }
     copyMissingPackages();
+    execSync('npm run postinstall', {cwd: './tmp/proj'});
     execSync('mv ./tmp/proj ./tmp/proj_backup');
   }
   execSync('cp -a ./tmp/proj_backup ./tmp/proj');
@@ -31,7 +37,7 @@ export function createNxWorkspace(command: string): string {
 }
 
 export function copyMissingPackages(): void {
-  const modulesToCopy = ['@ngrx', 'jasmine-marbles', '@nrwl', 'angular', '@angular/upgrade', '@angular/cli'];
+  const modulesToCopy = ['@ngrx', 'jasmine-marbles', '@nrwl', 'angular', '@angular/upgrade'];
   modulesToCopy.forEach(m => copyNodeModule(projectName, m));
 }
 

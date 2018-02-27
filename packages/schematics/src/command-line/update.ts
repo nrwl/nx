@@ -4,7 +4,7 @@ import * as path from 'path';
 type Migration = { description: string; run(): void };
 type MigrationName = { name: string; migration: Migration };
 
-export function migrate(args: string[]) {
+export function update(args: string[]) {
   const allMigrations = readAllMigrations();
   const latestMigration = readLatestMigration();
   const migrationsToRun = calculateMigrationsToRun(allMigrations, latestMigration);
@@ -66,7 +66,7 @@ function check(latestMigration: string, migrations: MigrationName[]): void {
   console.log('-----------------------------------------------------------------------------');
   console.log('-------------------------------IMPORTANT!!!----------------------------------');
   console.log('-----------------------------------------------------------------------------');
-  console.log('Run "npm run nx-migrate" to run the following migrations:');
+  console.log('Run "npm run update" to run the following migrations:');
   migrations.forEach(m => {
     console.log(`- ${m.name}`);
     console.log(m.migration.description);
@@ -74,7 +74,7 @@ function check(latestMigration: string, migrations: MigrationName[]): void {
   });
 
   const target = migrations[migrations.length - 1].name;
-  console.log(`Or run "npm run nx-migrate:skip" to set the latestMigration property`);
+  console.log(`Or run "npm run update:skip" to set the latestMigration property`);
   console.log(`in .angular-cli.json to: "${target}".`);
 }
 
