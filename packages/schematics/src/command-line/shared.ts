@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 import * as path from 'path';
-import { affectedApps } from './affected-apps';
+import {affectedApps, ProjectType, touchedProjects} from './affected-apps';
 import * as fs from 'fs';
 
 export function parseFiles(args: string[]): { files: string[]; rest: string[] } {
@@ -41,15 +41,20 @@ function getFilesFromShash(sha1: string, sha2: string): string[] {
     .filter(a => a.length > 0);
 }
 
-export function getAffectedApps(touchedFiles: string[]): string[] {
-  const config = JSON.parse(fs.readFileSync('.angular-cli.json', 'utf-8'));
-  const projects = (config.apps ? config.apps : []).filter(p => p.name !== '$workspaceRoot').map(p => {
+function getProjectNodes(config) {
+  return (config.apps ? config.apps : []).filter(p => p.name !== '$workspaceRoot').map(p => {
     return {
       name: p.name,
-      isApp: p.root.startsWith('apps/'),
+      root: p.root,
+      type: p.root.startsWith('apps/') ? ProjectType.app : ProjectType.lib,
       files: allFilesInDir(path.dirname(p.root))
     };
   });
+}
+
+export function getAffectedApps(touchedFiles: string[]): string[] {
+  const config = JSON.parse(fs.readFileSync('.angular-cli.json', 'utf-8'));
+  const projects = getProjectNodes(config);
 
   if (!config.project.npmScope) {
     throw new Error(`.angular-cli.json must define the npmScope property.`);
@@ -58,9 +63,19 @@ export function getAffectedApps(touchedFiles: string[]): string[] {
   return affectedApps(config.project.npmScope, projects, f => fs.readFileSync(f, 'utf-8'), touchedFiles);
 }
 
-export function getAppRoots(appNames: string[]): string[] {
+export function getTouchedProjects(touchedFiles: string[]): string[] {
   const config = JSON.parse(fs.readFileSync('.angular-cli.json', 'utf-8'));
-  return (config.apps ? config.apps : []).filter(p => p.name !== '$workspaceRoot').filter(p => appNames.indexOf(p.name) > -1).map(p => path.dirname(p.root));
+  const projects = getProjectNodes(config);
+  if (!config.project.npmScope) {
+    throw new Error(`.angular-cli.json must define the npmScope property.`);
+  }
+  return touchedProjects(projects, touchedFiles).filter(p => !!p);
+}
+
+export function getProjectRoots(projectNames: string[]): string[] {
+  const config = JSON.parse(fs.readFileSync('.angular-cli.json', 'utf-8'));
+  const projects = getProjectNodes(config);
+  return projectNames.map(name => path.dirname(projects.filter(p => p.name === name)[0].root));
 }
 
 function allFilesInDir(dirName: string): string[] {

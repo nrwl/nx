@@ -114,6 +114,7 @@ describe('Command line', () => {
     () => {
       newProject();
       newApp('myapp');
+      newLib('mylib');
       updateFile(
         'apps/myapp/src/main.ts',
         `
@@ -135,14 +136,26 @@ describe('Command line', () => {
     `
       );
 
+      updateFile(
+        'libs/mylib/index.ts',
+        `
+         const x = 1111;
+    `
+      );
+      updateFile(
+        'libs/mylib/src/mylib.module.ts',
+        `
+         const y = 1111;
+    `
+      );
+
       try {
-        // this will group it by app, so all three files will be "marked"
-        runCommand('npm run -s format:check -- --files="apps/myapp/src/app/app.module.ts" --libs-and-apps');
+        // this will group it by lib, so all three files will be "marked"
+        runCommand('npm run -s format:check -- --files="libs/mylib/index.ts" --libs-and-apps');
         fail('boom');
       } catch (e) {
-        expect(e.stdout.toString()).toContain('apps/myapp/src/main.ts');
-        expect(e.stdout.toString()).toContain('apps/myapp/src/app/app.module.ts');
-        expect(e.stdout.toString()).toContain('apps/myapp/src/app/app.component.ts');
+        expect(e.stdout.toString()).toContain('libs/mylib/index.ts');
+        expect(e.stdout.toString()).toContain('libs/mylib/src/mylib.module.ts');
       }
 
       try {
