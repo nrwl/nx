@@ -1,33 +1,51 @@
 import * as ts from 'typescript';
 import * as path from 'path';
 
-export type Project = { name: string; isApp: boolean; files: string[] };
+export enum ProjectType {
+  app = 'app',
+  lib = 'lib'
+}
+
+export enum DependencyType {
+  es6Import = 'es6Import',
+  loadChildren = 'loadChildren'
+}
+
+export type ProjectNode = { name: string; root: string; type: ProjectType; files: string[] };
+export type Dependency = { projectName: string; type: DependencyType };
+
+export function touchedProjects(projects: ProjectNode[], touchedFiles: string[]) {
+  projects = normalizeProjects(projects);
+  touchedFiles = normalizeFiles(touchedFiles);
+  return touchedFiles.map(f => {
+    const p = projects.filter(project => project.files.indexOf(f) > -1)[0];
+    return p ? p.name : null;
+  });
+}
 
 export function affectedApps(
   npmScope: string,
-  projects: Project[],
+  projects: ProjectNode[],
   fileRead: (s: string) => string,
   touchedFiles: string[]
 ): string[] {
   projects = normalizeProjects(projects);
-  touchedFiles = normalizeFiles(touchedFiles);
   const deps = dependencies(npmScope, projects, fileRead);
-
-  const touchedProjects = touchedFiles.map(f => {
-    const p = projects.filter(project => project.files.indexOf(f) > -1)[0];
-    return p ? p.name : null;
-  });
-
-  if (touchedProjects.indexOf(null) > -1) {
-    return projects.filter(p => p.isApp).map(p => p.name);
+  const tp = touchedProjects(projects, touchedFiles);
+  if (tp.indexOf(null) > -1) {
+    return projects.filter(p => p.type === ProjectType.app).map(p => p.name);
+  } else {
+    return projects.filter(p => p.type === ProjectType.app).map(p => p.name).filter(name => hasDependencyOnTouchedProjects(name, tp, deps, []));
   }
-
-  return projects
-    .filter(p => p.isApp && deps[p.name].filter(dep => touchedProjects.indexOf(dep) > -1).length > 0)
-    .map(p => p.name);
 }
 
-function normalizeProjects(projects: Project[]) {
+function hasDependencyOnTouchedProjects(project: string, touchedProjects: string[], deps: { [projectName: string]: Dependency[] }, visisted: string[]) {
+  if (touchedProjects.indexOf(project) > -1) return true;
+  if (visisted.indexOf(project) > -1) return false;
+  return deps[project].map(d => d.projectName).filter(k => hasDependencyOnTouchedProjects(k, touchedProjects, deps, [...visisted, project])).length > 0;
+}
+
+function normalizeProjects(projects: ProjectNode[]) {
   return projects.map(p => {
     return {
       ...p,
@@ -42,16 +60,16 @@ function normalizeFiles(files: string[]): string[] {
 
 export function dependencies(
   npmScope: string,
-  projects: Project[],
+  projects: ProjectNode[],
   fileRead: (s: string) => string
-): { [appName: string]: string[] } {
+): { [projectName: string]: Dependency[] } {
   return new Deps(npmScope, projects, fileRead).calculateDeps();
 }
 
 class Deps {
-  private deps: { [appName: string]: string[] };
+  private deps: { [projectName: string]: Dependency[] };
 
-  constructor(private npmScope: string, private projects: Project[], private fileRead: (s: string) => string) {
+  constructor(private npmScope: string, private projects: ProjectNode[], private fileRead: (s: string) => string) {
     this.projects.sort((a, b) => {
       if (!a.name) return -1;
       if (!b.name) return -1;
@@ -60,9 +78,10 @@ class Deps {
   }
 
   calculateDeps() {
-    this.deps = this.projects.reduce((m, c) => ({ ...m, [c.name]: [] }), {});
+    this.deps = this.projects.reduce((m, c) => ({...m, [c.name]: []}), {});
     this.processAllFiles();
-    return this.includeTransitive();
+    return this.deps;
+    // return this.includeTransitive();
   }
 
   private processAllFiles() {
@@ -71,26 +90,6 @@ class Deps {
         this.processFile(p.name, f);
       });
     });
-  }
-
-  private includeTransitive() {
-    const res = {};
-    Object.keys(this.deps).forEach(project => {
-      res[project] = this.transitiveDeps(project, [project]);
-    });
-    return res;
-  }
-
-  private transitiveDeps(project: string, path: string[]): string[] {
-    let res = [project];
-
-    this.deps[project].forEach(d => {
-      if (path.indexOf(d) === -1) {
-        res = [...res, ...this.transitiveDeps(d, [...path, d])];
-      }
-    });
-
-    return Array.from(new Set(res));
   }
 
   private processFile(projectName: string, filePath: string): void {
@@ -103,7 +102,7 @@ class Deps {
   private processNode(projectName: string, node: ts.Node): void {
     if (node.kind === ts.SyntaxKind.ImportDeclaration) {
       const imp = this.getStringLiteralValue((node as ts.ImportDeclaration).moduleSpecifier);
-      this.addDepIfNeeded(imp, projectName);
+      this.addDepIfNeeded(imp, projectName, DependencyType.es6Import);
       return; // stop traversing downwards
     }
 
@@ -113,7 +112,7 @@ class Deps {
         const init = (node as ts.PropertyAssignment).initializer;
         if (init.kind === ts.SyntaxKind.StringLiteral) {
           const childrenExpr = this.getStringLiteralValue(init);
-          this.addDepIfNeeded(childrenExpr, projectName);
+          this.addDepIfNeeded(childrenExpr, projectName, DependencyType.loadChildren);
           return; // stop traversing downwards
         }
       }
@@ -135,7 +134,7 @@ class Deps {
     }
   }
 
-  private addDepIfNeeded(expr: string, projectName: string) {
+  private addDepIfNeeded(expr: string, projectName: string, depType: DependencyType) {
     const matchingProject = this.projectNames.filter(
       a =>
         expr === `@${this.npmScope}/${a}` ||
@@ -144,7 +143,7 @@ class Deps {
     )[0];
 
     if (matchingProject) {
-      this.deps[projectName].push(matchingProject);
+      this.deps[projectName].push({projectName: matchingProject, type: depType});
     }
   }
 

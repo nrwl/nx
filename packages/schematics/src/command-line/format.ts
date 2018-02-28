@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import * as path from 'path';
 import * as resolve from 'resolve';
-import { getAffectedApps, getAppRoots, parseFiles } from './shared';
+import {getProjectRoots, getTouchedProjects, parseFiles} from './shared';
 
 export function format(args: string[]) {
   const command = args[0];
@@ -38,7 +38,7 @@ function getPatterns(args: string[]) {
 }
 
 function getPatternsFromApps(affectedFiles: string[]): string[] {
-  const roots = getAppRoots(getAffectedApps(affectedFiles));
+  const roots = getProjectRoots(getTouchedProjects(affectedFiles));
   if (roots.length === 0) {
     return [];
   } else if (roots.length === 1) {
