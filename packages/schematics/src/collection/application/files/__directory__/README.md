@@ -1,6 +1,6 @@
 # <%= utils.classify(name) %>
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version <%= version %> using [Nrwl Nx](https://nrwl.io/nx).
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) using [Nrwl Nx](https://nrwl.io/nx).
 
 ## Nrwl Extensions for Angular (Nx)
 
