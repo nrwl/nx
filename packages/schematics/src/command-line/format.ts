@@ -6,22 +6,9 @@ import { getAffectedApps, getAppRoots, parseFiles } from './shared';
 export function format(args: string[]) {
   const command = args[0];
   let patterns: string[];
-  let rest: string[];
 
   try {
-    if (args.length === 1) {
-      patterns = ['"{apps,libs}/**/*.ts"'];
-      rest = [];
-    } else {
-      const p = parseFiles(args.slice(1));
-      patterns = p.files.filter(f => path.extname(f) === '.ts');
-      rest = p.rest;
-
-      const libsAndApp = rest.filter(a => a.startsWith('--libs-and-apps'))[0];
-      if (libsAndApp) {
-        patterns = getPatternsFromApps(patterns);
-      }
-    }
+    patterns = getPatterns(args);
   } catch (e) {
     printError(command, e);
     process.exit(1);
@@ -34,6 +21,19 @@ export function format(args: string[]) {
     case 'check':
       check(patterns);
       break;
+  }
+}
+
+function getPatterns(args: string[]) {
+  try {
+    const p = parseFiles(args.slice(1));
+    let patterns = p.files.filter(f => path.extname(f) === '.ts');
+    let rest = p.rest;
+
+    const libsAndApp = rest.filter(a => a.startsWith('--libs-and-apps'))[0];
+    return libsAndApp ? getPatternsFromApps(patterns) : patterns;
+  } catch (e) {
+    return ['"{apps,libs}/**/*.ts"'];
   }
 }
 
