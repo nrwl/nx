@@ -17,7 +17,6 @@ export default {
         ['karma-cli']: undefined
       };
 
-
       json.dependencies = {
         ...json.dependencies,
         "@angular/animations": "5.2.6",
@@ -35,6 +34,8 @@ export default {
       };
     });
 
-    unlinkSync('.angular_cli165.tgz');
+    try {
+      unlinkSync('.angular_cli165.tgz');
+    } catch (e) {}
   }
 };
