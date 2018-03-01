@@ -17,7 +17,7 @@ import * as ts from 'typescript';
 import {addImportToModule, addProviderToModule, insert} from '../utility/ast-utils';
 import {insertImport} from '@schematics/angular/utility/route-utils';
 import {Schema} from './schema';
-import {ngrxVersion, routerStoreVersion} from '../utility/lib-versions';
+import {ngrxVersion, routerStoreVersion, ngrxStoreFreezeVersion} from '../utility/lib-versions';
 import {serializeJson} from '../utility/fileutils';
 import {wrapIntoFormat} from '../utility/tasks';
 
@@ -43,7 +43,8 @@ function addImportsToModule(name: string, options: Schema): Rule {
         insertImport(source, modulePath, 'StoreDevtoolsModule', '@ngrx/store-devtools'),
         insertImport(source, modulePath, 'environment', '../environments/environment'),
         insertImport(source, modulePath, 'StoreRouterConnectingModule', '@ngrx/router-store'),
-        ...addImportToModule(source, modulePath, `StoreModule.forRoot({})`),
+        insertImport(source, modulePath, 'storeFreeze', 'ngrx-store-freeze'),
+        ...addImportToModule(source, modulePath, `StoreModule.forRoot({},{metaReducers: !environment.production ? [storeFreeze] : []})`),
         ...addImportToModule(source, modulePath, `EffectsModule.forRoot([])`),
         ...addImportToModule(source, modulePath, `!environment.production ? StoreDevtoolsModule.instrument() : []`),
         ...addImportToModule(source, modulePath, `StoreRouterConnectingModule`)
@@ -73,12 +74,14 @@ function addImportsToModule(name: string, options: Schema): Rule {
           insertImport(source, modulePath, 'StoreDevtoolsModule', '@ngrx/store-devtools'),
           insertImport(source, modulePath, 'environment', '../environments/environment'),
           insertImport(source, modulePath, 'StoreRouterConnectingModule', '@ngrx/router-store'),
+          insertImport(source, modulePath, 'storeFreeze', 'ngrx-store-freeze'),
           ...addImportToModule(
             source,
             modulePath,
-            `StoreModule.forRoot({${toPropertyName(name)}: ${reducerName}}, {initialState: {${toPropertyName(
-              name
-            )}: ${initName}}})`
+            `StoreModule.forRoot({${toPropertyName(name)}: ${reducerName}}, {
+              initialState: {${toPropertyName(name)}: ${initName}},
+              metaReducers: !environment.production ? [storeFreeze] : []
+            })`
           ),
           ...addImportToModule(source, modulePath, `EffectsModule.forRoot([${effectsName}])`),
           ...addImportToModule(source, modulePath, `!environment.production ? StoreDevtoolsModule.instrument() : []`),
@@ -122,6 +125,9 @@ function addNgRxToPackageJson() {
     }
     if (!json['dependencies']['@ngrx/store-devtools']) {
       json['dependencies']['@ngrx/store-devtools'] = ngrxVersion;
+    }
+    if (!json['dependencies']['ngrx-store-freeze']) {
+      json['dependencies']['ngrx-store-freeze'] = ngrxStoreFreezeVersion;
     }
     host.overwrite('package.json', serializeJson(json));
     return host;

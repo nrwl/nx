@@ -2,6 +2,7 @@ export const angularCliVersion = '1.7.1';
 export const angularVersion = '5.2.6';
 export const angularJsVersion = '1.6.6';
 export const ngrxVersion = '5.1.0';
+export const ngrxStoreFreezeVersion = '^0.2.1';
 export const routerStoreVersion = '5.0.1';
 export const nxVersion = '*';
 export const schematicsVersion = '*';
@@ -19,6 +20,7 @@ export const libVersions = {
   angularCliVersion,
   angularJsVersion,
   ngrxVersion,
+  ngrxStoreFreezeVersion,
   nxVersion,
   schematicsVersion,
   prettierVersion,

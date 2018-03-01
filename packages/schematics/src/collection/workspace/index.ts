@@ -7,6 +7,7 @@ import {
   angularCliVersion,
   latestMigration,
   ngrxVersion,
+  ngrxStoreFreezeVersion,
   nxVersion,
   prettierVersion, routerStoreVersion, schematicsVersion,
 } from '../utility/lib-versions';
@@ -44,6 +45,9 @@ function updatePackageJson() {
     if (!packageJson.dependencies['@ngrx/store-devtools']) {
       packageJson.dependencies['@ngrx/store-devtools'] = ngrxVersion;
     }
+    if (!packageJson.dependencies['ngrx-store-freeze']) {
+          packageJson.dependencies['ngrx-store-freeze'] = ngrxStoreFreezeVersion;
+        }
     if (!packageJson.devDependencies['@nrwl/schematics']) {
       packageJson.devDependencies['@nrwl/schematics'] = schematicsVersion;
     }
