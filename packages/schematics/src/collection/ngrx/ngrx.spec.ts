@@ -27,7 +27,7 @@ describe('ngrx', () => {
     );
 
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
-    expect(appModule).toContain('StoreModule.forRoot');
+    expect(appModule).toContain('StoreModule.forRoot({},{metaReducers: !environment.production ? [storeFreeze] : []})');
     expect(appModule).toContain('EffectsModule.forRoot');
 
     expect(tree.exists('apps/myapp/src/app/+state')).toBeFalsy();
@@ -47,6 +47,8 @@ describe('ngrx', () => {
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
     expect(appModule).toContain('StoreModule.forRoot');
     expect(appModule).toContain('EffectsModule.forRoot');
+    expect(appModule).toContain('!environment.production ? [storeFreeze] : []');
+
 
     expect(tree.exists(`/apps/myapp/src/app/+state/state.actions.ts`)).toBeTruthy();
     expect(tree.exists(`/apps/myapp/src/app/+state/state.effects.ts`)).toBeTruthy();
@@ -70,6 +72,7 @@ describe('ngrx', () => {
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
     expect(appModule).toContain('StoreModule.forFeature');
     expect(appModule).toContain('EffectsModule.forFeature');
+    expect(appModule).not.toContain('!environment.production ? [storeFreeze] : []');
 
     expect(tree.exists(`/apps/myapp/src/app/+state/state.actions.ts`)).toBeTruthy();
   });
@@ -88,6 +91,7 @@ describe('ngrx', () => {
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
     expect(appModule).toContain('StoreModule.forFeature');
     expect(appModule).toContain('EffectsModule.forFeature');
+    expect(appModule).not.toContain('!environment.production ? [storeFreeze] : []');
 
     expect(tree.exists(`/apps/myapp/src/app/myCustomState/state.actions.ts`)).toBeTruthy();
   });
@@ -105,6 +109,7 @@ describe('ngrx', () => {
 
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
     expect(appModule).not.toContain('StoreModule');
+    expect(appModule).not.toContain('!environment.production ? [storeFreeze] : []');
 
     expect(tree.exists(`/apps/myapp/src/app/+state/state.actions.ts`)).toBeTruthy();
   });
@@ -118,11 +123,13 @@ describe('ngrx', () => {
       },
       appTree
     );
-
     const packageJson = JSON.parse(getFileContent(tree, '/package.json'));
+
     expect(packageJson.dependencies['@ngrx/store']).toBeDefined();
     expect(packageJson.dependencies['@ngrx/router-store']).toBeDefined();
     expect(packageJson.dependencies['@ngrx/effects']).toBeDefined();
+    expect(packageJson.dependencies['ngrx-store-freeze']).toBeDefined();
+
   });
 
   it('should error when no module is provided', () => {
