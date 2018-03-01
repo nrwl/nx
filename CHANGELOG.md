@@ -2,6 +2,25 @@
 
 The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
 
+# 0.8.0
+
+## Features
+
+Nx no longer uses a patched version of the CLI--we switched to using `@angular/cli@1.7.1`. We also renamed the nx-migrate command into `update` to align with the CLI.
+
+* [Switch to @angular/cli 1.7](https://github.com/nrwl/nx/commit/acdeb1b71c14e3bc7e5bd2bc925640ad7d0aa24d)
+* [Add update, update:skip, and update:check commands](https://github.com/nrwl/nx/commit/2fb62597514f1c82e4d80d75a7d60d11229d5aa3)
+
+## Fixes
+
+* [Fix format:write --libs-and-apps](https://github.com/nrwl/nx/commit/feeaba1a4b8d827a71731d919740135464d6e049)
+* [Change format to default to format-all when no patterns are detected](https://github.com/nrwl/nx/commit/58e99ab04d8e9505285bdcf31014f3774a6f900a)
+
+## Cleanup
+
+* [Remove the version property](https://github.com/nrwl/nx/commit/24063f02464b6da38e003841e04820dcc347e876)
+* [Use schematic context to format the generated code](https://github.com/nrwl/nx/commit/e7481a790f5becffc46e794ec46c0835a2114319)
+
 # 0.7.4
 
 ## Features
