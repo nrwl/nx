@@ -8,8 +8,8 @@ export default {
       json.devDependencies = {
         ...json.devDependencies,
         "@angular/cli": "1.7.1",
-        "@angular/compiler-cli": "5.2.6",
-        "@angular/language-service": "5.2.6",
+        "@angular/compiler-cli": "5.2.7",
+        "@angular/language-service": "5.2.7",
         "@types/jasmine": "~2.5.53",
         ['@angular-devkit/core']: undefined,
         ['@angular-devkit/schematics']: undefined,
@@ -19,19 +19,23 @@ export default {
 
       json.dependencies = {
         ...json.dependencies,
-        "@angular/animations": "5.2.6",
-        "@angular/common": "5.2.6",
-        "@angular/compiler": "5.2.6",
-        "@angular/core": "5.2.6",
-        "@angular/forms": "5.2.6",
-        "@angular/platform-browser": "5.2.6",
-        "@angular/platform-browser-dynamic": "5.2.6",
-        "@angular/router": "5.2.6",
+        "@angular/animations": "5.2.7",
+        "@angular/common": "5.2.7",
+        "@angular/compiler": "5.2.7",
+        "@angular/core": "5.2.7",
+        "@angular/forms": "5.2.7",
+        "@angular/platform-browser": "5.2.7",
+        "@angular/platform-browser-dynamic": "5.2.7",
+        "@angular/router": "5.2.7",
         "@ngrx/effects": "5.1.0",
         "@ngrx/router-store": "5.0.1",
         "@ngrx/store": "5.1.0",
         "@ngrx/store-devtools": "5.1.0"
       };
+
+      if (json.dependencies['@angular/http']) {
+        json.dependencies['@angular/http'] = '5.2.7';
+      }
     });
 
     try {
