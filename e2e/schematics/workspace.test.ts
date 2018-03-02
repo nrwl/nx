@@ -10,7 +10,7 @@ import {
   copyMissingPackages,
   fileExists
 } from '../utils';
-import { angularCliSchema } from '../../packages/schematics/src/collection/utility/lib-versions';
+import { angularCliSchema } from '../../packages/shared/lib-versions';
 
 describe('Nrwl Convert to Nx Workspace', () => {
   beforeEach(cleanup);

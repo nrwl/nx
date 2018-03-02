@@ -1,26 +1,16 @@
 {
-  "name": "bazel",
+  "name": "nx-bazel",
   "version": "0.1",
   "schematics": {
     "application": {
-      "factory": "./workspace",
-      "schema": "./workspace/schema.json",
-      "description": "Create an Angular Bazel workspace."
+      "factory": "./collection/application",
+      "schema": "./collection/application/schema.json",
+      "description": "Create a Bazel workspace."
     },
     "app": {
-      "factory": "./app",
-      "schema": "./app/schema.json",
-      "description": "Create an Angular application."
-    },
-    "lib": {
-      "factory": "./lib",
-      "schema": "./lib/schema.json",
-      "description": "Create a TypeScript library."
-    },
-    "nglib": {
-      "factory": "./nglib",
-      "schema": "./nglib/schema.json",
-      "description": "Create an Angular library."
+      "factory": "./collection/app",
+      "schema": "./collection/app/schema.json",
+      "description": "Create an application."
     }
   }
 }

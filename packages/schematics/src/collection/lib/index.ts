@@ -2,12 +2,12 @@ import {apply, branchAndMerge, chain, mergeWith, noop, Rule, template, Tree, url
 import {Schema} from './schema';
 import {addImportToModule, insert, names, toClassName, toFileName, toPropertyName} from '@nrwl/schematics';
 import * as path from 'path';
-import {addApp, cliConfig, serializeJson} from '../utility/fileutils';
+import {addApp, cliConfig, serializeJson} from '../../../../shared/fileutils';
 import {insertImport} from '@schematics/angular/utility/route-utils';
 import * as ts from 'typescript';
-import {addGlobal, addIncludeToTsConfig, addReexport, addRoute} from '../utility/ast-utils';
-import {offsetFromRoot} from '../utility/common';
-import {wrapIntoFormat} from '../utility/tasks';
+import {addGlobal, addIncludeToTsConfig, addReexport, addRoute} from '../../../../shared/ast-utils';
+import {offsetFromRoot} from '../../../../shared/common';
+import {wrapIntoFormat} from '../../../../shared/tasks';
 
 interface NormalizedSchema extends Schema {
   name: string;

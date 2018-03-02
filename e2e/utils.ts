@@ -26,6 +26,21 @@ export function newProject(): void {
   execSync('cp -a ./tmp/proj_backup ./tmp/proj');
 }
 
+export function newBazelProject(): void {
+  cleanup();
+  if (!directoryExists('./tmp/proj_backup')) {
+    //TODO delete the try catch after 0.8.0 is released
+    try {
+      runNgNew('--collection=@nrwl/bazel --npmScope=proj', true);
+    } catch (e) {
+    }
+    copyMissingPackages();
+    execSync('npm run postinstall', {cwd: './tmp/proj'});
+    execSync('mv ./tmp/proj ./tmp/proj_backup');
+  }
+  execSync('cp -a ./tmp/proj_backup ./tmp/proj');
+}
+
 export function createNxWorkspace(command: string): string {
   cleanup();
   return execSync(
