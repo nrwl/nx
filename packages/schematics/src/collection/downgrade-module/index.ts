@@ -1,8 +1,8 @@
 import {chain, noop, Rule, Tree} from '@angular-devkit/schematics';
-import {addEntryComponents, addMethod, insert, readBootstrapInfo, removeFromNgModule} from '../utility/ast-utils';
+import {addEntryComponents, addMethod, insert, readBootstrapInfo, removeFromNgModule} from '../../../../shared/ast-utils';
 import {Schema} from './schema';
-import {addUpgradeToPackageJson} from '../utility/common';
-import {wrapIntoFormat} from '../utility/tasks';
+import {addUpgradeToPackageJson} from '../../../../shared/common';
+import {wrapIntoFormat} from '../../../../shared/tasks';
 
 function updateMain(angularJsImport: string, options: Schema): Rule {
   return (host: Tree) => {

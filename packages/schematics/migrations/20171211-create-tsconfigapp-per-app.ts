@@ -1,6 +1,6 @@
-import { cliConfig, readCliConfigFile, updateJsonFile } from '../src/collection/utility/fileutils';
+import { cliConfig, readCliConfigFile, updateJsonFile } from '../../shared/fileutils';
 import { writeFileSync, unlinkSync } from 'fs';
-import { offsetFromRoot } from '../src/collection/utility/common';
+import { offsetFromRoot } from '../../shared/common';
 import * as path from 'path';
 
 export default {

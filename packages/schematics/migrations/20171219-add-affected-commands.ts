@@ -1,4 +1,4 @@
-import { updateJsonFile } from '../src/collection/utility/fileutils';
+import { updateJsonFile } from '../../shared/fileutils';
 
 export default {
   description: 'Update package.json to include apps:affected, build:affected, e2e:affected',

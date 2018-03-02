@@ -9,9 +9,9 @@ import {
   ngrxVersion,
   nxVersion,
   prettierVersion, routerStoreVersion, schematicsVersion,
-} from '../utility/lib-versions';
+} from '../../../../shared/lib-versions';
 import * as fs from 'fs';
-import { copyFile, serializeJson, updateJsonFile } from '../utility/fileutils';
+import { copyFile, serializeJson, updateJsonFile } from '../../../../shared/fileutils';
 import { toFileName } from '@nrwl/schematics';
 
 function updatePackageJson() {

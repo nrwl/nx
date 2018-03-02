@@ -1,4 +1,4 @@
-import { updateJsonFile } from '../src/collection/utility/fileutils';
+import { updateJsonFile } from '../../shared/fileutils';
 import { unlinkSync } from 'fs';
 
 export default {

@@ -1,5 +1,0 @@
-build --strategy=AngularTemplateCompile=worker
-build --strategy=TypeScriptCompile=worker
-build --spawn_strategy=standalone
-build --watchfs
-build --symlink_prefix=/

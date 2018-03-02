@@ -1,4 +1,4 @@
-import { updateJsonFile } from '../src/collection/utility/fileutils';
+import { updateJsonFile } from '../../shared/fileutils';
 
 export default {
   description: 'Update the version of prettier',

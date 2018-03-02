@@ -12,7 +12,7 @@ import {
   url
 } from '@angular-devkit/schematics';
 
-import { names, toClassName, toFileName, toPropertyName } from '../utility/name-utils';
+import { names, toClassName, toFileName, toPropertyName } from '../../../../shared/name-utils';
 import * as path from 'path';
 import * as ts from 'typescript';
 import {
@@ -26,12 +26,12 @@ import {
   insert,
   readBootstrapInfo,
   removeFromNgModule
-} from '../utility/ast-utils';
+} from '../../../../shared/ast-utils';
 import { insertImport } from '@schematics/angular/utility/route-utils';
 import { Schema } from './schema';
-import { angularJsVersion } from '../utility/lib-versions';
-import { addUpgradeToPackageJson } from '../utility/common';
-import {wrapIntoFormat} from '../utility/tasks';
+import { angularJsVersion } from '../../../../shared/lib-versions';
+import { addUpgradeToPackageJson } from '../../../../shared/common';
+import {wrapIntoFormat} from '../../../../shared/tasks';
 
 function addImportsToModule(options: Schema): Rule {
   return (host: Tree) => {

@@ -1,4 +1,4 @@
-import { updateJsonFile } from '../src/collection/utility/fileutils';
+import { updateJsonFile } from '../../shared/fileutils';
 
 export default {
   description: 'Add postinstall script to run nx-migrate:check',

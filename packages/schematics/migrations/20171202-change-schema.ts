@@ -1,4 +1,4 @@
-import { updateJsonFile } from '../src/collection/utility/fileutils';
+import { updateJsonFile } from '../../shared/fileutils';
 
 export default {
   description: 'Update the schema file to reflect the `allow` option for `nx-enforce-module-boundaries`.',

@@ -1,12 +1,16 @@
 {
   "name": "@nrwl/bazel",
   "version": "0.0.1",
-  "description": "Nrwl Extensions for Angular: Schematics",
-  "main": "src/index.js",
-  "peerDependencies" :{
-    "@nrwl/schematics": "0.0.1"
-  },
+  "description": "Nrwl Extensions for Angular: Bazel Schematics",
+  "main": "index.js",
+  "types": "index.d.js",
+  "peerDependencies": {},
   "author": "Victor Savkin",
   "license": "MIT",
-  "schematics": "./src/collection.json"
+  "schematics": "./src/collection.json",
+  "dependencies": {
+    "app-root-path": "^2.0.1",
+    "semver": "5.4.1",
+    "tmp": "0.0.33"
+  }
 }
