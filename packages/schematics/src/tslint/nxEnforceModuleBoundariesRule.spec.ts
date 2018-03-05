@@ -17,6 +17,11 @@ describe('Enforce Module Boundaries', () => {
     expect(failures.length).toEqual(0);
   });
 
+  it('should not error when lib name prefix collides with name of lazy loaded lib', () => {
+    const failures = runRule({ lazyLoad: ['mylib'] }, `import '@mycompany/mylib-not-lazy';`);
+    expect(failures.length).toEqual(0);
+  });
+
   describe('relative imports', () => {
     it('should not error when relatively importing the same library', () => {
       const failures = runRuleToCheckForRelativeImport('import "../mylib2"');
@@ -25,6 +30,14 @@ describe('Enforce Module Boundaries', () => {
 
     it('should not error when relatively importing the same library (index file)', () => {
       const failures = runRuleToCheckForRelativeImport('import "../../mylib"');
+      expect(failures.length).toEqual(0);
+    });
+
+    it('should not error when relatively importing the same library (lib name prefix collision)', () => {
+      const failures = runRuleToCheckForRelativeImport(
+        'import "../some-comp"',
+        '/proj/libs/dir/mylib2/src/module.t'
+      );
       expect(failures.length).toEqual(0);
     });
 
@@ -122,7 +135,10 @@ function runRule(
   return rule.apply(sourceFile);
 }
 
-function runRuleToCheckForRelativeImport(content: string): RuleFailure[] {
+function runRuleToCheckForRelativeImport(
+  content: string,
+  sourceFilePath = '/proj/libs/dir/mylib/src/module.t'
+): RuleFailure[] {
   const options: any = {
     ruleArguments: [{}],
     ruleSeverity: 'error',
@@ -130,14 +146,14 @@ function runRuleToCheckForRelativeImport(content: string): RuleFailure[] {
   };
 
   const sourceFile = ts.createSourceFile(
-    'proj/libs/dir/mylib/src/module.t',
+    sourceFilePath,
     content,
     ts.ScriptTarget.Latest,
     true
   );
   const rule = new Rule(
     options,
-    'proj',
+    '/proj',
     'mycompany',
     ['dir/mylib', 'dir/mylib2'],
     [],
