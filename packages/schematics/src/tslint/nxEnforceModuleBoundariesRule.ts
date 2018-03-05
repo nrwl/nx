@@ -55,7 +55,6 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     private roots: string[]
   ) {
     super(sourceFile, options);
-    this.roots = [...roots].sort((a, b) => a.length - b.length);
   }
 
   public visitImportDeclaration(node: ts.ImportDeclaration) {
@@ -73,7 +72,9 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       return;
     }
 
-    const lazyLoaded = lazyLoad.filter(l => imp.startsWith(`@${this.npmScope}/${l}`))[0];
+    const lazyLoaded = lazyLoad.filter(
+      l => imp.startsWith(`@${this.npmScope}/${l}/`) || imp === `@${this.npmScope}/${l}`
+    )[0];
     if (lazyLoaded) {
       this.addFailureAt(node.getStart(), node.getWidth(), 'imports of lazy-loaded libraries are forbidden');
       return;
@@ -109,14 +110,23 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
   private isRelativeImportIntoAnotherProject(imp: string): boolean {
     if (!this.isRelative(imp)) return false;
     const sourceFile = this.getSourceFile().fileName.substring(this.projectPath.length);
-    const targetFile = path.resolve(path.dirname(sourceFile), imp).substring(1); // remove leading slash
+    /**
+     * include projectPath for resolve (windows compatibility, eg. c:\)
+     * and remove including leading slash afterwards for import comparison.
+     * be sure separator is '/' like at the import statements.
+     **/
+    const targetFile = path
+      .resolve(this.projectPath + path.dirname(sourceFile), imp)
+      .split(path.sep)
+      .join('/')
+      .substring(this.projectPath.length + 1);
     if (!this.libraryRoot()) return false;
     return !(targetFile.startsWith(`${this.libraryRoot()}/`) || targetFile === this.libraryRoot());
   }
 
   private libraryRoot(): string {
     const sourceFile = this.getSourceFile().fileName.substring(this.projectPath.length + 1);
-    return this.roots.filter(r => sourceFile.startsWith(r))[0];
+    return this.roots.filter(r => sourceFile.startsWith(`${r}/`))[0];
   }
 
   private isAbsoluteImportIntoAnotherProject(imp: string): boolean {
