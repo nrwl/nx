@@ -1,6 +1,7 @@
 {
   "name": "nx",
   "version": "0.1",
+  "extends": "@schematics/angular",
   "schematics": {
     "workspace": {
       "factory": "./collection/workspace",
@@ -42,51 +43,6 @@
       "factory": "./collection/downgrade-module",
       "schema": "./collection/downgrade-module/schema.json",
       "description": "Generates downgradeModule setup"
-    },
-
-    "class": {
-      "aliases": [ "cl" ],
-      "extends": "@schematics/angular:class"
-    },
-
-    "component": {
-      "aliases": [ "c" ],
-      "extends": "@schematics/angular:component"
-    },
-
-    "directive": {
-      "aliases": [ "d" ],
-      "extends": "@schematics/angular:directive"
-    },
-
-    "enum": {
-      "aliases": [ "e" ],
-      "extends": "@schematics/angular:enum"
-    },
-
-    "guard": {
-      "aliases": [ "g" ],
-      "extends": "@schematics/angular:guard"
-    },
-
-    "interface": {
-      "aliases": [ "i" ],
-      "extends": "@schematics/angular:interface"
-    },
-
-    "module": {
-      "aliases": [ "m" ],
-      "extends": "@schematics/angular:module"
-    },
-
-    "pipe": {
-      "aliases": [ "p" ],
-      "extends": "@schematics/angular:pipe"
-    },
-
-    "service": {
-      "aliases": [ "s" ],
-      "extends": "@schematics/angular:service"
     }
   }
 }
