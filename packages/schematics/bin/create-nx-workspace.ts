@@ -65,8 +65,11 @@ execSync(
   }
 );
 
+const dir = process.argv.filter(a => a.startsWith('-dir') || a.startsWith('--directory'))[0];
+const cwd = dir ? dir.split('=')[1] : projectName;
+
 if (useYarn) {
-  execSync(`yarn install`, { stdio: [0, 1, 2], cwd: projectName });
+  execSync(`yarn install`, { stdio: [0, 1, 2], cwd });
 } else {
-  execSync(`npm install`, { stdio: [0, 1, 2], cwd: projectName });
+  execSync(`npm install`, { stdio: [0, 1, 2], cwd });
 }

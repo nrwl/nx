@@ -35,6 +35,16 @@ xdescribe('CreateNxWorkspace', () => {
   );
 
   it(
+    'should create a new workspace with the --directory option',
+    () => {
+      const res = createNxWorkspace('myproj --npmScope=myscope --directory=proj');
+      expect(res).toContain("Project 'myproj' successfully created.");
+      checkFilesExist('package-lock.json');
+    },
+    1000000
+  );
+
+  it(
     'should error when no name is given',
     () => {
       expect(() => createNxWorkspace('')).toThrowError(
