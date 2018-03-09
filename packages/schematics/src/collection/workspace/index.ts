@@ -196,7 +196,7 @@ function updateProtractorConf() {
     }
     const protractorConf = host.read('protractor.conf.js')!.toString('utf-8');
     const updatedConf = protractorConf
-      .replace(`'./e2e/**/*.e2e-spec.ts'`, `appDir + ;'/e2e/**/*.e2e-spec.ts'`)
+      .replace(`'./e2e/**/*.e2e-spec.ts'`, `appDir + '/e2e/**/*.e2e-spec.ts'`)
       .replace(`'e2e/tsconfig.e2e.json'`, `appDir + '/e2e/tsconfig.e2e.json'`)
       .replace(
         `exports.config = {`,
