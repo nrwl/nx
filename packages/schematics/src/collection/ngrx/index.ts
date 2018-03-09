@@ -134,8 +134,9 @@ function addNgRxToPackageJson() {
   };
 }
 
-export default function(options: Schema): Rule {
+export default function(schema: Schema): Rule {
   return wrapIntoFormat(() => {
+    const options = normalizeOptions(schema);
     const name = options.name;
     const moduleDir = path.dirname(options.module);
 
@@ -150,4 +151,8 @@ export default function(options: Schema): Rule {
       ]);
     }
   });
+}
+
+function normalizeOptions(options: Schema): Schema {
+  return { ...options, directory: toFileName(options.directory)};
 }
