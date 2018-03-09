@@ -93,7 +93,7 @@ describe('ngrx', () => {
     expect(appModule).toContain('EffectsModule.forFeature');
     expect(appModule).not.toContain('!environment.production ? [storeFreeze] : []');
 
-    expect(tree.exists(`/apps/myapp/src/app/myCustomState/state.actions.ts`)).toBeTruthy();
+    expect(tree.exists(`/apps/myapp/src/app/my-custom-state/state.actions.ts`)).toBeTruthy();
   });
 
   it('should only add files', () => {
