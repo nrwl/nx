@@ -44,8 +44,8 @@ describe('Nrwl Convert to Nx Workspace', () => {
     // run the command
     runCLI('generate workspace proj --npmScope=proj --collection=@nrwl/schematics');
 
-    // check that files have been moved!
-    checkFilesExist('apps/proj/src/main.ts', 'apps/proj/src/app/app.module.ts');
+    // check that prettier config exits and that files have been moved!
+    checkFilesExist('.prettierrc', 'apps/proj/src/main.ts', 'apps/proj/src/app/app.module.ts');
 
     // check that package.json got merged
     const updatedPackageJson = JSON.parse(readFile('package.json'));

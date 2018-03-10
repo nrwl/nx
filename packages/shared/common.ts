@@ -1,4 +1,8 @@
 import { Tree, Rule } from '@angular-devkit/schematics';
+import { readdirSync, readFileSync } from 'fs';
+import { Options } from 'prettier';
+import * as cosmiconfig from 'cosmiconfig';
+
 import { angularJsVersion } from './lib-versions';
 import { serializeJson } from './fileutils';
 import { Schema } from '../schematics/src/collection/app/schema';
@@ -14,7 +18,8 @@ export function addUpgradeToPackageJson(): Rule {
     }
 
     if (!json['dependencies']['@angular/upgrade']) {
-      json['dependencies']['@angular/upgrade'] = json['dependencies']['@angular/core'];
+      json['dependencies']['@angular/upgrade'] =
+        json['dependencies']['@angular/core'];
     }
     if (!json['dependencies']['angular']) {
       json['dependencies']['angular'] = angularJsVersion;
@@ -32,4 +37,37 @@ export function offsetFromRoot(fullPathToSourceDir: string): string {
     offset += '../';
   }
   return offset;
+}
+
+export const DEFAULT_NRWL_PRETTIER_CONFIG = {
+  singleQuote: true
+};
+
+export interface ExistingPrettierConfig {
+  sourceFilepath: string;
+  config: Options;
+}
+
+export function resolveUserExistingPrettierConfig(): Promise<ExistingPrettierConfig | null> {
+  const explorer = cosmiconfig('prettier', {
+    sync: true,
+    cache: false,
+    rcExtensions: true,
+    stopDir: process.cwd(),
+    transform: result => {
+      if (result && result.config) {
+        delete result.config.$schema;
+      }
+      return result;
+    }
+  });
+  return Promise.resolve(explorer.load(process.cwd())).then(result => {
+    if (!result) {
+      return null;
+    }
+    return {
+      sourceFilepath: result.filepath,
+      config: result.config
+    };
+  });
 }

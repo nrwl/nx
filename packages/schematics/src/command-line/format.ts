@@ -56,7 +56,7 @@ function printError(command: string, e: any) {
 
 function write(patterns: string[]) {
   if (patterns.length > 0) {
-    execSync(`node ${prettierPath()} --single-quote --print-width 120 --write ${patterns.join(' ')}`, {
+    execSync(`node ${prettierPath()} --write ${patterns.join(' ')}`, {
       stdio: [0, 1, 2]
     });
   }
@@ -65,7 +65,7 @@ function write(patterns: string[]) {
 function check(patterns: string[]) {
   if (patterns.length > 0) {
     try {
-      execSync(`node ${prettierPath()} --single-quote --print-width 120 --list-different ${patterns.join(' ')}`, {
+      execSync(`node ${prettierPath()} --list-different ${patterns.join(' ')}`, {
         stdio: [0, 1, 2]
       });
     } catch (e) {
