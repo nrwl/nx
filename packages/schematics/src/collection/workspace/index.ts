@@ -14,6 +14,10 @@ import {
 import * as fs from 'fs';
 import { copyFile, serializeJson, updateJsonFile } from '../../../../shared/fileutils';
 import { toFileName } from '@nrwl/schematics';
+import { resolveUserExistingPrettierConfig, DEFAULT_NRWL_PRETTIER_CONFIG } from '../../../../shared/common';
+import { Observable } from 'rxjs/Observable';
+import { fromPromise } from 'rxjs/observable/fromPromise'
+import { tap, map } from 'rxjs/operators';
 
 function updatePackageJson() {
   return (host: Tree) => {
@@ -225,7 +229,7 @@ function setUpCompilerOptions(tsconfig: any, npmScope: string, offset: string): 
   tsconfig.compilerOptions.paths[`@${npmScope}/*`] = [`${offset}libs/*`];
 }
 
-function moveFiles(options: Schema) {
+function moveExistingFiles(options: Schema) {
   return (host: Tree) => {
     const angularCliJson = JSON.parse(host.read('.angular-cli.json')!.toString('utf-8'));
     const app = angularCliJson.apps[0];
@@ -239,6 +243,22 @@ function moveFiles(options: Schema) {
     fs.renameSync('e2e', join('apps', options.name, 'e2e'));
 
     return host;
+  };
+}
+
+function createAdditionalFiles(options: Schema) {
+  return (host: Tree): Observable<Tree> => {
+    // if the user does not already have a prettier configuration
+    // of any kind, create one
+    return fromPromise(resolveUserExistingPrettierConfig())
+      .pipe(
+        tap((resolvedExistingConfig) => {
+          if (!resolvedExistingConfig) {
+            fs.writeFileSync('.prettierrc', JSON.stringify(DEFAULT_NRWL_PRETTIER_CONFIG, null, 2));
+          }
+        }),
+        map(() => host)
+      );
   };
 }
 
@@ -276,7 +296,8 @@ export default function(schema: Schema): Rule {
   const options = { ...schema, name: toFileName(schema.name) };
   return chain([
     checkCanConvertToWorkspace(options),
-    moveFiles(options),
+    moveExistingFiles(options),
+    createAdditionalFiles(options),
     branchAndMerge(chain([mergeWith(apply(url('./files'), []))])),
     updatePackageJson(),
     updateAngularCLIJson(options),
