@@ -124,14 +124,15 @@ function runRule(
     ruleSeverity: 'error',
     ruleName: 'enforceModuleBoundaries'
   };
+  const roots = [...appNames.map(a => `apps/${a}`), ...libNames.map(l => `libs/${l}`)];
 
   const sourceFile = ts.createSourceFile(
-    'proj/apps/myapp/src/main.ts',
+    '/proj/apps/myapp/src/main.ts',
     content,
     ts.ScriptTarget.Latest,
     true
   );
-  const rule = new Rule(options, 'proj', 'mycompany', libNames, appNames, []);
+  const rule = new Rule(options, '/proj', 'mycompany', libNames, appNames, roots);
   return rule.apply(sourceFile);
 }
 
