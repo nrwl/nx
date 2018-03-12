@@ -4,24 +4,24 @@ import { IOptions } from 'tslint';
 import * as ts from 'typescript';
 import { readFileSync } from 'fs';
 import * as appRoot from 'app-root-path';
+import {getProjectNodes} from '../command-line/shared';
+import {dependencies, Dependency, DependencyType, ProjectNode, ProjectType} from '../command-line/affected-apps';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(
     options: IOptions,
     private readonly projectPath?: string,
     private readonly npmScope?: string,
-    private readonly libNames?: string[],
-    private readonly appNames?: string[],
-    private readonly roots?: string[]
+    private readonly projectNodes?: ProjectNode[],
+    private readonly deps?: { [projectName: string]: Dependency[] },
   ) {
     super(options);
     if (!projectPath) {
       this.projectPath = appRoot.path;
       const cliConfig = this.readCliConfig(this.projectPath);
       this.npmScope = cliConfig.project.npmScope;
-      this.libNames = cliConfig.apps.filter(p => p.root.startsWith('libs/')).map(a => a.name);
-      this.appNames = cliConfig.apps.filter(p => p.root.startsWith('apps/')).map(a => a.name);
-      this.roots = cliConfig.apps.map(a => path.dirname(a.root));
+      this.projectNodes = getProjectNodes(cliConfig);
+      this.deps = dependencies(this.npmScope, this.projectNodes, f => readFileSync(f).toString());
     }
   }
 
@@ -32,9 +32,8 @@ export class Rule extends Lint.Rules.AbstractRule {
         this.getOptions(),
         this.projectPath,
         this.npmScope,
-        this.libNames,
-        this.appNames,
-        this.roots
+        this.projectNodes,
+        this.deps
       )
     );
   }
@@ -48,11 +47,10 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
   constructor(
     sourceFile: ts.SourceFile,
     options: IOptions,
-    private projectPath: string,
-    private npmScope: string,
-    private libNames: string[],
-    private appNames: string[],
-    private roots: string[]
+    private readonly projectPath: string,
+    private readonly npmScope: string,
+    private readonly projectNodes: ProjectNode[],
+    private readonly deps: { [projectName: string]: Dependency[] }
   ) {
     super(sourceFile, options);
   }
@@ -62,25 +60,9 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     const allow: string[] = Array.isArray(this.getOptions()[0].allow)
       ? this.getOptions()[0].allow.map(a => `${a}`)
       : [];
-    const lazyLoad: string[] = Array.isArray(this.getOptions()[0].lazyLoad)
-      ? this.getOptions()[0].lazyLoad.map(a => `${a}`)
-      : [];
 
     // whitelisted import => return
     if (allow.indexOf(imp) > -1) {
-      super.visitImportDeclaration(node);
-      return;
-    }
-
-    const lazyLoaded = lazyLoad.filter(
-      l => imp.startsWith(`@${this.npmScope}/${l}/`) || imp === `@${this.npmScope}/${l}`
-    )[0];
-    if (lazyLoaded) {
-      this.addFailureAt(node.getStart(), node.getWidth(), 'imports of lazy-loaded libraries are forbidden');
-      return;
-    }
-
-    if (this.libNames.filter(l => imp === `@${this.npmScope}/${l}`).length > 0) {
       super.visitImportDeclaration(node);
       return;
     }
@@ -90,43 +72,79 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       return;
     }
 
-    const deepImport = this.libNames.filter(l => imp.startsWith(`@${this.npmScope}/${l}/`))[0];
-    if (deepImport) {
-      this.addFailureAt(node.getStart(), node.getWidth(), 'deep imports into libraries are forbidden');
-      return;
-    }
+    if (imp.startsWith(`@${this.npmScope}/`)) {
+      const name = imp.split('/')[1];
+      const sourceProject = this.findSourceProject();
+      const targetProject = this.findProjectUsingName(name);
 
-    const appImport = this.appNames.filter(
-      a => imp.startsWith(`@${this.npmScope}/${a}/`) || imp === `@${this.npmScope}/${a}`
-    )[0];
-    if (appImport) {
-      this.addFailureAt(node.getStart(), node.getWidth(), 'imports of apps are forbidden');
-      return;
+      if (sourceProject === targetProject || !targetProject) {
+        super.visitImportDeclaration(node);
+        return;
+      }
+
+      if (targetProject.type === ProjectType.app) {
+        this.addFailureAt(node.getStart(), node.getWidth(), 'imports of apps are forbidden');
+        return;
+      }
+
+      if (imp.split('/').length > 2) {
+        this.addFailureAt(node.getStart(), node.getWidth(), 'deep imports into libraries are forbidden');
+        return;
+      }
+
+      if (this.onlyLoadChildren(sourceProject.name, targetProject.name, [])) {
+        this.addFailureAt(node.getStart(), node.getWidth(), 'imports of lazy-loaded libraries are forbidden');
+        return;
+      }
     }
 
     super.visitImportDeclaration(node);
   }
 
+  private onlyLoadChildren(source: string, target: string, path: string[]) {
+    if (path.indexOf(source) > -1) return false;
+    return (this.deps[source] || []).filter(d => {
+      if (d.type !== DependencyType.loadChildren) return false;
+      if (d.projectName === target) return true;
+      return this.onlyLoadChildren(d.projectName, target, [...path, source]);
+    }).length > 0;
+  }
+
   private isRelativeImportIntoAnotherProject(imp: string): boolean {
     if (!this.isRelative(imp)) return false;
-    const sourceFile = this.getSourceFile().fileName.substring(this.projectPath.length);
-    /**
-     * include projectPath for resolve (windows compatibility, eg. c:\)
-     * and remove including leading slash afterwards for import comparison.
-     * be sure separator is '/' like at the import statements.
-     **/
+
     const targetFile = path
-      .resolve(this.projectPath + path.dirname(sourceFile), imp)
+      .resolve(path.join(this.projectPath, path.dirname(this.getSourceFilePath())), imp)
       .split(path.sep)
       .join('/')
       .substring(this.projectPath.length + 1);
-    if (!this.libraryRoot()) return false;
-    return !(targetFile.startsWith(`${this.libraryRoot()}/`) || targetFile === this.libraryRoot());
+    const sourceProject = this.findSourceProject();
+
+    let targetProject = this.findProjectUsingFile(targetFile);
+    if (!targetProject) {
+      targetProject = this.findProjectUsingFile(path.join(targetFile, 'index'));
+    }
+    return sourceProject !== targetProject || targetProject === undefined;
   }
 
-  private libraryRoot(): string {
-    const sourceFile = this.getSourceFile().fileName.substring(this.projectPath.length + 1);
-    return this.roots.filter(r => sourceFile.startsWith(`${r}/`))[0];
+  private findSourceProject() {
+    return this.projectNodes.filter(n => {
+     return n.files.filter(f => removeExt(f) === removeExt(this.getSourceFilePath()))[0];
+    })[0];
+  }
+
+  private getSourceFilePath() {
+    return this.getSourceFile().fileName.substring(this.projectPath.length + 1);
+  }
+
+  private findProjectUsingFile(file: string) {
+    return this.projectNodes.filter(n => {
+     return n.files.filter(f => removeExt(f) === file)[0];
+    })[0];
+  }
+
+  private findProjectUsingName(name: string) {
+    return this.projectNodes.filter(n => n.name === name)[0];
   }
 
   private isAbsoluteImportIntoAnotherProject(imp: string): boolean {
@@ -136,4 +154,8 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
   private isRelative(s: string): boolean {
     return s.startsWith('.');
   }
+}
+
+function removeExt(file:string): string {
+  return file.replace(/\.[^/.]+$/, "");
 }

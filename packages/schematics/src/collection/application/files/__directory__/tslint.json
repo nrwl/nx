@@ -94,7 +94,6 @@
     "nx-enforce-module-boundaries": [
       true,
       {
-        "lazyLoad": [],
         "allow": []
       }
     ]
