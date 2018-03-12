@@ -6,11 +6,11 @@ describe('Command line', () => {
     () => {
       newProject();
       newApp('myapp');
+      newApp('myapp2');
       newLib('mylib');
       newLib('lazylib');
 
       const tslint = JSON.parse(readFile('tslint.json'));
-      tslint.rules['nx-enforce-module-boundaries'][1].lazyLoad.push('lazylib');
       updateFile('tslint.json', JSON.stringify(tslint, null, 2));
 
       updateFile(
@@ -19,8 +19,9 @@ describe('Command line', () => {
       import '../../../libs/mylib';
       import '@proj/lazylib';
       import '@proj/mylib/deep';
-      import '@proj/myapp';
-      import '@proj/myapp/main';
+      import '@proj/myapp2';
+      
+      const s = {loadChildren: '@proj/lazylib'};
     `
       );
 

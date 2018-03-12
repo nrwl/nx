@@ -41,7 +41,7 @@ function getFilesFromShash(sha1: string, sha2: string): string[] {
     .filter(a => a.length > 0);
 }
 
-function getProjectNodes(config) {
+export function getProjectNodes(config) {
   return (config.apps ? config.apps : []).filter(p => p.name !== '$workspaceRoot').map(p => {
     return {
       name: p.name,

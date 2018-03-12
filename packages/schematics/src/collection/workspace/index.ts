@@ -187,7 +187,7 @@ function updateTsLintJson(options: Schema) {
         json[key] = undefined;
       });
       json.rulesDirectory.push('node_modules/@nrwl/schematics/src/tslint');
-      json['nx-enforce-module-boundaries'] = [true, { lazyLoad: [], allow: [] }];
+      json['nx-enforce-module-boundaries'] = [true, { allow: [] }];
     });
     return host;
   };
