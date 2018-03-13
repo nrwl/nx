@@ -11,4 +11,5 @@ export interface Schema {
   skipTests?: boolean;
   prefix?: string;
   style?: string;
+  tags?: string;
 }

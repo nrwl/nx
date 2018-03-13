@@ -30,6 +30,10 @@
     "parentModule": {
       "type": "string",
       "description": "Update the router configuration of the parent module using loadChildren or children, depending on what `lazy` is set to."
+    },
+    "tags": {
+      "type": "string",
+      "description": "Add tags to the library (used for linting)"
     }
   },
   "required": [

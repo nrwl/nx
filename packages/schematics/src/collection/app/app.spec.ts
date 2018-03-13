@@ -33,6 +33,7 @@ describe('app', () => {
           root: 'apps/my-app/src',
           scripts: [],
           styles: ['styles.css'],
+          tags: [],
           test: '../../../test.js',
           testTsconfig: '../../../tsconfig.spec.json',
           tsconfig: 'tsconfig.app.json'
@@ -88,6 +89,7 @@ describe('app', () => {
           root: 'apps/my-dir/my-app/src',
           scripts: [],
           styles: ['styles.css'],
+          tags: [],
           test: '../../../../test.js',
           testTsconfig: '../../../../tsconfig.spec.json',
           tsconfig: 'tsconfig.app.json'
@@ -167,6 +169,14 @@ describe('app', () => {
       expect(getFileContent(tree, 'apps/my-dir/my-app/src/app/app.component.ts')).toContain(
         'encapsulation: ViewEncapsulation.Native'
       );
+    });
+  });
+
+  describe('tags', () => {
+    it('should split tags by a comma', () => {
+      const tree = schematicRunner.runSchematic('app', { name: 'myApp', npmScope: 'nrwl', tags: 'one,two' }, appTree);
+      const updatedAngularCLIJson = JSON.parse(getFileContent(tree, '/.angular-cli.json'));
+      expect(updatedAngularCLIJson.apps[0].tags).toEqual(['one', 'two']);
     });
   });
 });

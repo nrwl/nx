@@ -47,6 +47,7 @@ export function getProjectNodes(config) {
       name: p.name,
       root: p.root,
       type: p.root.startsWith('apps/') ? ProjectType.app : ProjectType.lib,
+      tags: p.tags,
       files: allFilesInDir(path.dirname(p.root))
     };
   });

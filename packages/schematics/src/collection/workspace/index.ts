@@ -106,6 +106,7 @@ function updateAngularCLIJson(options: Schema) {
     app.test = '../../../test.js';
     app.testTsconfig = '../../../tsconfig.spec.json';
     app.scripts = app.scripts.map(p => path.join('../../', p));
+    app.tags = [];
     if (!angularCliJson.defaults) {
       angularCliJson.defaults = {};
     }
@@ -187,7 +188,15 @@ function updateTsLintJson(options: Schema) {
         json[key] = undefined;
       });
       json.rulesDirectory.push('node_modules/@nrwl/schematics/src/tslint');
-      json['nx-enforce-module-boundaries'] = [true, { allow: [] }];
+      json['nx-enforce-module-boundaries'] = [
+        true,
+        {
+          "allow": [],
+          "depConstraints": [
+            { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }
+          ]
+        }
+      ];
     });
     return host;
   };
