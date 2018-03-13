@@ -321,6 +321,41 @@ describe('Enforce Module Boundaries', () => {
     );
     expect(failures[0].getFailure()).toEqual('imports of apps are forbidden');
   });
+
+  it('should error when circular dependency detected', () => {
+    const failures = runRule(
+      {},
+      `${process.cwd()}/proj/libs/anotherlib/src/main.ts`,
+      'import "@mycompany/mylib"',
+      [
+        {
+          name: 'mylib',
+          root: 'libs/mylib/src',
+          type: ProjectType.lib,
+          tags: [],
+          files: [`libs/mylib/src/main.ts`]
+        },
+        {
+          name: 'anotherlib',
+          root: 'libs/anotherlib/src',
+          type: ProjectType.lib,
+          tags: [],
+          files: [`libs/anotherlib/src/main.ts`]
+        },
+        {
+          name: 'myapp',
+          root: 'apps/myapp/src',
+          type: ProjectType.app,
+          tags: [],
+          files: [`apps/myapp/index.ts`]
+        }
+      ],
+      {
+        mylib: [{ projectName: 'anotherlib', type: DependencyType.es6Import }]
+      }
+    );
+    expect(failures[0].getFailure()).toEqual('Circular dependency between \"anotherlib\" and \"mylib\" detected');
+  });
 });
 
 function runRule(

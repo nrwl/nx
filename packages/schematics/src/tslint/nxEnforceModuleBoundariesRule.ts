@@ -98,6 +98,13 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
         return;
       }
 
+      // check for circular dependency
+      if (this.isCircular(sourceProject, targetProject)) {
+        const error = `Circular dependency between "${sourceProject.name}" and "${targetProject.name}" detected`;
+        this.addFailureAt(node.getStart(), node.getWidth(), error);
+        return;
+      }
+
       // same project => allow
       if (sourceProject === targetProject) {
         super.visitImportDeclaration(node);
@@ -144,6 +151,11 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     }
 
     super.visitImportDeclaration(node);
+  }
+
+  private isCircular(sourceProject: ProjectNode, targetProject: ProjectNode): boolean {
+    if (!this.deps[targetProject.name]) return false;
+    return this.deps[targetProject.name].some(dep => dep.projectName == sourceProject.name);
   }
 
   private onlyLoadChildren(sourceProjectName: string, targetProjectName: string, visited: string[]) {
