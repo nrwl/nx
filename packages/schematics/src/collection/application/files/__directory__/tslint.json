@@ -94,7 +94,10 @@
     "nx-enforce-module-boundaries": [
       true,
       {
-        "allow": []
+        "allow": [],
+        "depConstraints": [
+          { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }
+        ]
       }
     ]
   }

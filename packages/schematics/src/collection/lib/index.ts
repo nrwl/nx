@@ -17,12 +17,14 @@ interface NormalizedSchema extends Schema {
 
 function addLibToAngularCliJson(options: NormalizedSchema): Rule {
   return (host: Tree) => {
+    const tags = options.tags ? options.tags.split(',').map(s => s.trim()) : [];
     const json = cliConfig(host);
     json.apps = addApp(json.apps, {
       name: options.fullName,
       root: options.fullPath,
       test: `${offsetFromRoot(options.fullPath)}test.js`,
-      appRoot: ''
+      appRoot: '',
+      tags
     });
 
     host.overwrite('.angular-cli.json', serializeJson(json));
@@ -141,22 +143,6 @@ function addChildren(schema: NormalizedSchema): Rule {
   };
 }
 
-function updateTsLint(schema: NormalizedSchema): Rule {
-  return (host: Tree) => {
-    const tsLint = JSON.parse(host.read('tslint.json')!.toString('utf-8'));
-    if (
-      tsLint['rules'] &&
-      tsLint['rules']['nx-enforce-module-boundaries'] &&
-      tsLint['rules']['nx-enforce-module-boundaries'][1] &&
-      tsLint['rules']['nx-enforce-module-boundaries'][1]['lazyLoad']
-    ) {
-      tsLint['rules']['nx-enforce-module-boundaries'][1]['lazyLoad'].push(toFileName(schema.fullName));
-      host.overwrite('tslint.json', serializeJson(tsLint));
-    }
-    return host;
-  };
-}
-
 export default function(schema: Schema): Rule {
   return wrapIntoFormat(() => {
     const options = normalizeOptions(schema);
@@ -185,7 +171,6 @@ export default function(schema: Schema): Rule {
       branchAndMerge(chain([mergeWith(templateSource)])),
       addLibToAngularCliJson(options),
       options.routing && options.lazy ? addLazyLoadedRouterConfiguration(modulePath) : noop(),
-      options.routing && options.lazy ? updateTsLint(options) : noop(),
       options.routing && options.lazy && options.parentModule ? addLoadChildren(options) : noop(),
 
       options.routing && !options.lazy ? addRouterConfiguration(options, indexFile, moduleFileName, modulePath) : noop(),

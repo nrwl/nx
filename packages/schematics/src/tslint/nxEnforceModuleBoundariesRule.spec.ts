@@ -2,7 +2,12 @@ import { RuleFailure } from 'tslint';
 import * as ts from 'typescript';
 
 import { Rule } from './nxEnforceModuleBoundariesRule';
-import {Dependency, DependencyType, ProjectNode, ProjectType} from '../command-line/affected-apps';
+import {
+  Dependency,
+  DependencyType,
+  ProjectNode,
+  ProjectType
+} from '../command-line/affected-apps';
 
 describe('Enforce Module Boundaries', () => {
   it('should not error when everything is in order', () => {
@@ -19,24 +24,133 @@ describe('Enforce Module Boundaries', () => {
           name: 'myapp',
           root: 'libs/myapp/src',
           type: ProjectType.app,
-          files: [
-            `apps/myapp/src/main.ts`,
-            `apps/myapp/blah.ts`
-          ]
+          tags: [],
+          files: [`apps/myapp/src/main.ts`, `apps/myapp/blah.ts`]
         },
         {
           name: 'mylib',
           root: 'libs/mylib/src',
           type: ProjectType.lib,
-          files: [
-            `libs/mylib/index.ts`,
-            `libs/mylib/deep.ts`
-          ]
+          tags: [],
+          files: [`libs/mylib/index.ts`, `libs/mylib/deep.ts`]
         }
       ]
     );
 
     expect(failures.length).toEqual(0);
+  });
+
+  describe('depConstraints', () => {
+    const projectNodes = [
+      {
+        name: 'api',
+        root: 'libs/api/src',
+        type: ProjectType.lib,
+        tags: ['api'],
+        files: [`libs/api/index.ts`]
+      },
+      {
+        name: 'impl',
+        root: 'libs/impl/src',
+        type: ProjectType.lib,
+        tags: ['impl'],
+        files: [`libs/impl/index.ts`]
+      },
+      {
+        name: 'impl2',
+        root: 'libs/impl2/src',
+        type: ProjectType.lib,
+        tags: ['impl'],
+        files: [`libs/impl2/index.ts`]
+      },
+      {
+        name: 'untagged',
+        root: 'libs/untagged/src',
+        type: ProjectType.lib,
+        tags: [],
+        files: [`libs/untagged/index.ts`]
+      }
+    ];
+
+    const depConstraints = {
+      depConstraints: [
+        { sourceTag: 'api', onlyDependOnLibsWithTags: ['api'] },
+        { sourceTag: 'impl', onlyDependOnLibsWithTags: ['api', 'impl'] }
+      ]
+    };
+
+    it('should error when the target library does not have the right tag', () => {
+      const failures = runRule(
+        depConstraints,
+        `${process.cwd()}/proj/libs/api/index.ts`,
+        `
+        import '@mycompany/impl';
+      `,
+        projectNodes
+      );
+
+      expect(failures[0].getFailure()).toEqual(
+        'A project tagged with "api" can only depend on libs tagged with "api"'
+      );
+    });
+
+    it('should error when the target library is untagged', () => {
+      const failures = runRule(
+        depConstraints,
+        `${process.cwd()}/proj/libs/api/index.ts`,
+        `
+        import '@mycompany/untagged';
+      `,
+        projectNodes
+      );
+
+      expect(failures[0].getFailure()).toEqual(
+        'A project tagged with "api" can only depend on libs tagged with "api"'
+      );
+    });
+
+    it('should error when the source library is untagged', () => {
+      const failures = runRule(
+        depConstraints,
+        `${process.cwd()}/proj/libs/untagged/index.ts`,
+        `
+        import '@mycompany/api';
+      `,
+        projectNodes
+      );
+
+      expect(failures[0].getFailure()).toEqual(
+        'A project without tags cannot depend on any libraries'
+      );
+    });
+
+    it('should not error when the constraints are satisfied', () => {
+      const failures = runRule(
+        depConstraints,
+        `${process.cwd()}/proj/libs/impl/index.ts`,
+        `
+        import '@mycompany/impl2';
+      `,
+        projectNodes
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
+    it('should support wild cards', () => {
+      const failures = runRule(
+        {
+          depConstraints: [{ sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }]
+        },
+        `${process.cwd()}/proj/libs/api/index.ts`,
+        `
+        import '@mycompany/impl';
+      `,
+        projectNodes
+      );
+
+      expect(failures.length).toEqual(0);
+    });
   });
 
   describe('relative imports', () => {
@@ -50,10 +164,8 @@ describe('Enforce Module Boundaries', () => {
             name: 'mylib',
             root: 'libs/mylib/src',
             type: ProjectType.lib,
-            files: [
-              `libs/mylib/src/main.ts`,
-              `libs/mylib/other.ts`
-            ]
+            tags: [],
+            files: [`libs/mylib/src/main.ts`, `libs/mylib/other.ts`]
           }
         ]
       );
@@ -70,10 +182,8 @@ describe('Enforce Module Boundaries', () => {
             name: 'mylib',
             root: 'libs/mylib/src',
             type: ProjectType.lib,
-            files: [
-              `libs/mylib/src/main.ts`,
-              `libs/mylib/other/index.ts`
-            ]
+            tags: [],
+            files: [`libs/mylib/src/main.ts`, `libs/mylib/other/index.ts`]
           }
         ]
       );
@@ -84,19 +194,21 @@ describe('Enforce Module Boundaries', () => {
       const failures = runRule(
         {},
         `${process.cwd()}/proj/libs/mylib/src/main.ts`,
-        'import "../other"',
+        'import "../../other"',
         [
           {
             name: 'mylib',
             root: 'libs/mylib/src',
             type: ProjectType.lib,
+            tags: [],
             files: [`libs/mylib/src/main.ts`]
           },
           {
             name: 'other',
             root: 'libs/other/src',
             type: ProjectType.lib,
-            files: []
+            tags: [],
+            files: ['libs/other/index.ts']
           }
         ]
       );
@@ -116,10 +228,8 @@ describe('Enforce Module Boundaries', () => {
           name: 'mylib',
           root: 'libs/mylib/src',
           type: ProjectType.lib,
-          files: [
-            `libs/mylib/src/main.ts`,
-            `libs/mylib/src/other.ts`
-          ]
+          tags: [],
+          files: [`libs/mylib/src/main.ts`, `libs/mylib/src/other.ts`]
         }
       ]
     );
@@ -140,12 +250,14 @@ describe('Enforce Module Boundaries', () => {
           name: 'mylib',
           root: 'libs/mylib/src',
           type: ProjectType.lib,
+          tags: [],
           files: [`libs/mylib/src/main.ts`]
         },
         {
           name: 'other',
           root: 'libs/other/src',
           type: ProjectType.lib,
+          tags: [],
           files: [`libs/other/blah.ts`]
         }
       ]
@@ -165,20 +277,24 @@ describe('Enforce Module Boundaries', () => {
           name: 'mylib',
           root: 'libs/mylib/src',
           type: ProjectType.lib,
+          tags: [],
           files: [`libs/mylib/src/main.ts`]
         },
         {
           name: 'other',
           root: 'libs/other/src',
           type: ProjectType.lib,
+          tags: [],
           files: [`libs/other/index.ts`]
         }
       ],
       {
-        mylib: [{projectName: 'other', type: DependencyType.loadChildren}]
+        mylib: [{ projectName: 'other', type: DependencyType.loadChildren }]
       }
     );
-    expect(failures[0].getFailure()).toEqual('imports of lazy-loaded libraries are forbidden');
+    expect(failures[0].getFailure()).toEqual(
+      'imports of lazy-loaded libraries are forbidden'
+    );
   });
 
   it('should error on importing an app', () => {
@@ -191,19 +307,19 @@ describe('Enforce Module Boundaries', () => {
           name: 'mylib',
           root: 'libs/mylib/src',
           type: ProjectType.lib,
+          tags: [],
           files: [`libs/mylib/src/main.ts`]
         },
         {
           name: 'myapp',
           root: 'apps/myapp/src',
           type: ProjectType.app,
+          tags: [],
           files: [`apps/myapp/index.ts`]
         }
       ]
     );
-    expect(failures[0].getFailure()).toEqual(
-      'imports of apps are forbidden'
-    );
+    expect(failures[0].getFailure()).toEqual('imports of apps are forbidden');
   });
 });
 
@@ -226,6 +342,12 @@ function runRule(
     ts.ScriptTarget.Latest,
     true
   );
-  const rule = new Rule(options, `${process.cwd()}/proj`, 'mycompany', projectNodes, deps);
+  const rule = new Rule(
+    options,
+    `${process.cwd()}/proj`,
+    'mycompany',
+    projectNodes,
+    deps
+  );
   return rule.apply(sourceFile);
 }

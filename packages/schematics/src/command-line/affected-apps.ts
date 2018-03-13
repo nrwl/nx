@@ -11,7 +11,7 @@ export enum DependencyType {
   loadChildren = 'loadChildren'
 }
 
-export type ProjectNode = { name: string; root: string; type: ProjectType; files: string[] };
+export type ProjectNode = { name: string; root: string; type: ProjectType; tags: string[]; files: string[] };
 export type Dependency = { projectName: string; type: DependencyType };
 
 export function touchedProjects(projects: ProjectNode[], touchedFiles: string[]) {

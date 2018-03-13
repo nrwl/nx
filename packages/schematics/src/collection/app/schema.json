@@ -59,6 +59,10 @@
       "description": "The file extension to be used for style files.",
       "type": "string",
       "default": "css"
+    },
+    "tags": {
+      "type": "string",
+      "description": "Add tags to the application (used for linting)"
     }
   },
   "required": [

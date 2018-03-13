@@ -5,12 +5,18 @@ describe('Command line', () => {
     'lint should ensure module boundaries',
     () => {
       newProject();
-      newApp('myapp');
+      newApp('myapp --tags=validtag');
       newApp('myapp2');
       newLib('mylib');
       newLib('lazylib');
+      newLib('invalidtaglib --tags=invalidtag');
+      newLib('validtaglib --tags=validtag');
 
       const tslint = JSON.parse(readFile('tslint.json'));
+      tslint.rules["nx-enforce-module-boundaries"][1].depConstraints = [
+        { "sourceTag": "validtag", "onlyDependOnLibsWithTags": ["validtag"] },
+        ...tslint.rules["nx-enforce-module-boundaries"][1].depConstraints
+      ];
       updateFile('tslint.json', JSON.stringify(tslint, null, 2));
 
       updateFile(
@@ -20,6 +26,8 @@ describe('Command line', () => {
       import '@proj/lazylib';
       import '@proj/mylib/deep';
       import '@proj/myapp2';
+      import '@proj/invalidtaglib';
+      import '@proj/validtaglib';
       
       const s = {loadChildren: '@proj/lazylib'};
     `
@@ -30,6 +38,7 @@ describe('Command line', () => {
       expect(out).toContain('imports of lazy-loaded libraries are forbidden');
       expect(out).toContain('deep imports into libraries are forbidden');
       expect(out).toContain('imports of apps are forbidden');
+      expect(out).toContain('A project tagged with "validtag" can only depend on libs tagged with "validtag"');
     },
     1000000
   );

@@ -11,4 +11,5 @@ export interface Schema {
   routing?: boolean;
   lazy?: boolean;
   parentModule?: string;
+  tags?: string;
 }

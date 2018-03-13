@@ -26,6 +26,7 @@ describe('lib', () => {
           appRoot: '',
           name: 'my-lib',
           root: 'libs/my-lib/src',
+          tags: [],
           test: '../../../test.js'
         }
       ]);
@@ -57,6 +58,7 @@ describe('lib', () => {
           appRoot: '',
           name: 'my-dir/my-lib',
           root: 'libs/my-dir/my-lib/src',
+          tags: [],
           test: '../../../../test.js'
         }
       ]);
@@ -148,16 +150,6 @@ describe('lib', () => {
           '../../../libs/my-dir/my-lib2/index.ts'
         ]);
       });
-
-      it('should register the module as lazy loaded in tslint.json', () => {
-        const tree = schematicRunner.runSchematic(
-          'lib',
-          { name: 'myLib', directory: 'myDir', routing: true, lazy: true },
-          appTree
-        );
-        const tslint = JSON.parse(getFileContent(tree, 'tslint.json'));
-        expect(tslint['rules']['nx-enforce-module-boundaries'][1]['lazyLoad']).toEqual(['my-dir/my-lib']);
-      });
     });
 
     describe('eager', () => {
@@ -190,6 +182,14 @@ describe('lib', () => {
         expect(getFileContent(tree2, 'apps/myapp/src/app/app.module.ts')).toContain(
           `RouterModule.forRoot([{path: 'my-lib', children: myLibRoutes}, {path: 'my-lib2', children: myLib2Routes}])`
         );
+      });
+    });
+
+    describe('tags', () => {
+      it('should split tags by a comma', () => {
+        const tree = schematicRunner.runSchematic('lib', { name: 'myLib', tags: 'one,two' }, appTree);
+        const updatedAngularCLIJson = JSON.parse(getFileContent(tree, '/.angular-cli.json'));
+        expect(updatedAngularCLIJson.apps[0].tags).toEqual(['one', 'two']);
       });
     });
   });

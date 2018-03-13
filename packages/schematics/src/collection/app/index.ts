@@ -62,6 +62,7 @@ function addAppToAngularCliJson(options: NormalizedSchema): Rule {
       throw new Error('Missing .angular-cli.json');
     }
 
+    const tags = options.tags ? options.tags.split(',').map(s => s.trim()) : [];
     const sourceText = host.read('.angular-cli.json')!.toString('utf-8');
     const json = JSON.parse(sourceText);
     json.apps = addApp(json.apps, {
@@ -82,7 +83,8 @@ function addAppToAngularCliJson(options: NormalizedSchema): Rule {
       environments: {
         dev: 'environments/environment.ts',
         prod: 'environments/environment.prod.ts'
-      }
+      },
+      tags
     });
 
     json.lint = [
