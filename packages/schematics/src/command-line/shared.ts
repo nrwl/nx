@@ -85,11 +85,15 @@ function allFilesInDir(dirName: string): string[] {
     const child = path.join(dirName, c);
     try {
       if (!fs.statSync(child).isDirectory()) {
-        res.push(child);
+        res.push(normalizePath(child));
       } else if (fs.statSync(child).isDirectory()) {
         res = [...res, ...allFilesInDir(child)];
       }
     } catch (e) {}
   });
   return res;
+}
+
+function normalizePath(file: string): string {
+  return file.split(path.sep).join('/');
 }
