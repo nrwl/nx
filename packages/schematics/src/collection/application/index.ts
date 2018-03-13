@@ -12,8 +12,8 @@ import {
 import {Schema} from './schema';
 import {strings} from '@angular-devkit/core';
 import {NodePackageInstallTask, RepositoryInitializerTask} from '@angular-devkit/schematics/tasks';
-import {libVersions} from '../../../../shared/lib-versions';
-import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../../../../shared/common';
+import {libVersions} from '../../lib-versions';
+import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../../utils/common';
 
 export default function(options: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {

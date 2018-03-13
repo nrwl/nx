@@ -16,14 +16,14 @@ import {
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import {strings} from '@angular-devkit/core';
-import { addImportToModule, insert, toFileName } from '@nrwl/schematics';
 import * as ts from 'typescript';
 import { addBootstrapToModule } from '@schematics/angular/utility/ast-utils';
 import { insertImport } from '@schematics/angular/utility/route-utils';
-import { addApp, serializeJson, cliConfig, readCliConfigFile } from '../../../../shared/fileutils';
-import { addImportToTestBed } from '../../../../shared/ast-utils';
-import { offsetFromRoot } from '../../../../shared/common';
-import {FormatFiles, wrapIntoFormat} from '../../../../shared/tasks';
+import { addApp, serializeJson, cliConfig, readCliConfigFile } from '../../utils/fileutils';
+import {addImportToModule, addImportToTestBed, insert} from '../../utils/ast-utils';
+import { offsetFromRoot } from '../../utils/common';
+import { wrapIntoFormat} from '../../utils/tasks';
+import {toFileName} from '../../utils/name-utils';
 
 interface NormalizedSchema extends Schema {
   fullName: string;

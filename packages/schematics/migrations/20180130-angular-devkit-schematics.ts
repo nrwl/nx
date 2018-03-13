@@ -1,9 +1,9 @@
-import { updateJsonFile } from '../../shared/fileutils';
+import { updateJsonFile } from '../src/utils/fileutils';
 import {
   devKitCoreVersion,
   devKitSchematicsVersion,
   schematicsAngularVersion
-} from '../../shared/lib-versions';
+} from '../src/lib-versions';
 
 export default {
   description: 'Add @angular-devkit/schematics as a dev dependency',

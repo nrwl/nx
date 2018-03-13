@@ -16,6 +16,9 @@
     "paths": {
       "@nrwl/schematics": [
         "./packages/schematics"
+      ],
+      "@nrwl/schematics/*": [
+        "./packages/schematics/*"
       ]
     }
   },

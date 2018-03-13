@@ -12,7 +12,7 @@ import {
 import {Schema} from './schema';
 import {strings} from '@angular-devkit/core';
 import {NodePackageInstallTask, RepositoryInitializerTask} from '@angular-devkit/schematics/tasks';
-import {libVersions} from '../../../../shared/lib-versions';
+import {libVersions} from '@nrwl/schematics/src/lib-versions';
 
 export default function(options: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {

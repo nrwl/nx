@@ -1,16 +1,5 @@
-import {
-  checkFilesExist,
-  cleanup,
-  runNgNew,
-  readFile,
-  runCLI,
-  runSchematic,
-  updateFile,
-  runCommand,
-  copyMissingPackages,
-  fileExists
-} from '../utils';
-import { angularCliSchema } from '../../packages/shared/lib-versions';
+import {checkFilesExist, cleanup, copyMissingPackages, readFile, runCLI, runNgNew, updateFile} from '../utils';
+import {angularCliSchema} from '../../packages/schematics/src/lib-versions';
 
 describe('Nrwl Convert to Nx Workspace', () => {
   beforeEach(cleanup);

@@ -11,15 +11,15 @@ import {
   url
 } from '@angular-devkit/schematics';
 
-import {names, toClassName, toFileName, toPropertyName} from '../../../../shared/name-utils';
+import {names, toClassName, toFileName, toPropertyName} from '../../utils/name-utils';
 import * as path from 'path';
 import * as ts from 'typescript';
-import {addImportToModule, addProviderToModule, insert} from '../../../../shared/ast-utils';
+import {addImportToModule, addProviderToModule, insert} from '../../utils/ast-utils';
 import {insertImport} from '@schematics/angular/utility/route-utils';
 import {Schema} from './schema';
-import {ngrxVersion, routerStoreVersion, ngrxStoreFreezeVersion} from '../../../../shared/lib-versions';
-import {serializeJson} from '../../../../shared/fileutils';
-import {wrapIntoFormat} from '../../../../shared/tasks';
+import {ngrxVersion, routerStoreVersion, ngrxStoreFreezeVersion} from '../../lib-versions';
+import {serializeJson} from '../../utils/fileutils';
+import {wrapIntoFormat} from '../../utils/tasks';
 
 function addImportsToModule(name: string, options: Schema): Rule {
   return (host: Tree) => {

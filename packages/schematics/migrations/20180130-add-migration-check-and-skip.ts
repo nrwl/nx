@@ -1,4 +1,4 @@
-import { updateJsonFile } from '../../shared/fileutils';
+import { updateJsonFile } from '../src/utils/fileutils';
 
 export default {
   description: 'Add nx-migrate:check and nx-migrate:skip to npm scripts',

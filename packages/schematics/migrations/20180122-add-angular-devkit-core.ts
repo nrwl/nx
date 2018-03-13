@@ -1,5 +1,5 @@
-import { updateJsonFile } from '../../shared/fileutils';
-import { devKitCoreVersion } from '../../shared/lib-versions';
+import { updateJsonFile } from '../src/utils/fileutils';
+import { devKitCoreVersion } from '../src/lib-versions';
 
 export default {
   description: 'Add @angular-devkit/core as a dev dependency',

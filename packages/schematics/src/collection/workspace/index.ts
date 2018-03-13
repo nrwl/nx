@@ -10,14 +10,14 @@ import {
   ngrxStoreFreezeVersion,
   nxVersion,
   prettierVersion, routerStoreVersion, schematicsVersion,
-} from '../../../../shared/lib-versions';
+} from '../../lib-versions';
 import * as fs from 'fs';
-import { copyFile, serializeJson, updateJsonFile } from '../../../../shared/fileutils';
-import { toFileName } from '@nrwl/schematics';
-import { resolveUserExistingPrettierConfig, DEFAULT_NRWL_PRETTIER_CONFIG } from '../../../../shared/common';
+import { copyFile, serializeJson, updateJsonFile } from '../../utils/fileutils';
+import { resolveUserExistingPrettierConfig, DEFAULT_NRWL_PRETTIER_CONFIG } from '../../utils/common';
 import { Observable } from 'rxjs/Observable';
 import { fromPromise } from 'rxjs/observable/fromPromise'
 import { tap, map } from 'rxjs/operators';
+import {toFileName} from '../../utils/name-utils';
 
 function updatePackageJson() {
   return (host: Tree) => {

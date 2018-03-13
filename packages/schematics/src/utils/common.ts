@@ -3,9 +3,9 @@ import { readdirSync, readFileSync } from 'fs';
 import { Options } from 'prettier';
 import * as cosmiconfig from 'cosmiconfig';
 
-import { angularJsVersion } from './lib-versions';
+import { angularJsVersion } from '../lib-versions';
 import { serializeJson } from './fileutils';
-import { Schema } from '../schematics/src/collection/app/schema';
+import { Schema } from '../collection/app/schema';
 
 export function addUpgradeToPackageJson(): Rule {
   return (host: Tree) => {
