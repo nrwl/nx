@@ -37,6 +37,14 @@
       "items": {
         "type": "object",
         "properties": {
+          "tags": {
+            "type": "array",
+            "description": "Project tags",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          },
           "name": {
             "type": "string",
             "description": "Name of the app."
@@ -45,6 +53,20 @@
             "type": "string",
             "description": "Directory where app files are placed.",
             "default": "app"
+          },
+          "appShell": {
+            "type": "object",
+            "description": "AppShell configuration.",
+            "properties": {
+              "app": {
+                "type": "string",
+                "description": "Index or name of the related AppShell app."
+              },
+              "route": {
+                "type": "string",
+                "description": "Default AppShell route to render."
+              }
+            }
           },
           "root": {
             "type": "string",
@@ -80,11 +102,63 @@
                       "type": "string",
                       "default": "",
                       "description": "The output path (relative to the outDir)."
+                    },
+                    "allowOutsideOutDir": {
+                      "type": "boolean",
+                      "description": "Allow assets to be copied outside the outDir.",
+                      "default": false
                     }
                   },
                   "additionalProperties": false
                 }
               ]
+            },
+            "default": []
+          },
+          "budgets": {
+            "type": "array",
+            "description": "Threshold definitions for bundle sizes.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["bundle", "initial", "allScript", "all", "anyScript", "any"],
+                  "description": "The type of budget"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name of the bundle"
+                },
+                "baseline": {
+                  "type": "string",
+                  "description": "The baseline size for comparison."
+                },
+                "maximumWarning": {
+                  "type": "string",
+                  "description": "The maximum threshold for warning relative to the baseline."
+                },
+                "maximumError": {
+                  "type": "string",
+                  "description": "The maximum threshold for error relative to the baseline."
+                },
+                "minimumWarning": {
+                  "type": "string",
+                  "description": "The minimum threshold for warning relative to the baseline."
+                },
+                "minimumError": {
+                  "type": "string",
+                  "description": "The minimum threshold for error relative to the baseline."
+                },
+                "warning": {
+                  "type": "string",
+                  "description": "The threshold for warning relative to the baseline (min & max)."
+                },
+                "error": {
+                  "type": "string",
+                  "description": "The threshold for error relative to the baseline (min & max)."
+                }
+              }
             },
             "default": []
           },
@@ -327,6 +401,144 @@
           "type": "boolean",
           "default": false
         },
+        "class": {
+          "description": "Options for generating a class.",
+          "type": "object",
+          "properties": {
+            "spec": {
+              "description": "Specifies if a spec file is generated.",
+              "type": "boolean",
+              "default": false
+            }
+          }
+        },
+        "component": {
+          "description": "Options for generating a component.",
+          "type": "object",
+          "properties": {
+            "flat": {
+              "description": "Flag to indicate if a dir is created.",
+              "type": "boolean",
+              "default": false
+            },
+            "spec": {
+              "description": "Specifies if a spec file is generated.",
+              "type": "boolean",
+              "default": true
+            },
+            "inlineStyle": {
+              "description": "Specifies if the style will be in the ts file.",
+              "type": "boolean",
+              "default": false
+            },
+            "inlineTemplate": {
+              "description": "Specifies if the template will be in the ts file.",
+              "type": "boolean",
+              "default": false
+            },
+            "viewEncapsulation": {
+              "description": "Specifies the view encapsulation strategy.",
+              "enum": ["Emulated", "Native", "None"],
+              "type": "string"
+            },
+            "changeDetection": {
+              "description": "Specifies the change detection strategy.",
+              "enum": ["Default", "OnPush"],
+              "type": "string"
+            }
+          }
+        },
+        "directive": {
+          "description": "Options for generating a directive.",
+          "type": "object",
+          "properties": {
+            "flat": {
+              "description": "Flag to indicate if a dir is created.",
+              "type": "boolean",
+              "default": true
+            },
+            "spec": {
+              "description": "Specifies if a spec file is generated.",
+              "type": "boolean",
+              "default": true
+            }
+          }
+        },
+        "guard": {
+          "description": "Options for generating a guard.",
+          "type": "object",
+          "properties": {
+            "flat": {
+              "description": "Flag to indicate if a dir is created.",
+              "type": "boolean",
+              "default": true
+            },
+            "spec": {
+              "description": "Specifies if a spec file is generated.",
+              "type": "boolean",
+              "default": true
+            }
+          }
+        },
+        "interface": {
+          "description": "Options for generating an interface.",
+          "type": "object",
+          "properties": {
+            "prefix": {
+              "description": "Prefix to apply to interface names. (i.e. I)",
+              "type": "string",
+              "default": ""
+            }
+          }
+        },
+        "module": {
+          "description": "Options for generating a module.",
+          "type": "object",
+          "properties": {
+            "flat": {
+              "description": "Flag to indicate if a dir is created.",
+              "type": "boolean",
+              "default": false
+            },
+            "spec": {
+              "description": "Specifies if a spec file is generated.",
+              "type": "boolean",
+              "default": false
+            }
+          }
+        },
+        "pipe": {
+          "description": "Options for generating a pipe.",
+          "type": "object",
+          "properties": {
+            "flat": {
+              "description": "Flag to indicate if a dir is created.",
+              "type": "boolean",
+              "default": true
+            },
+            "spec": {
+              "description": "Specifies if a spec file is generated.",
+              "type": "boolean",
+              "default": true
+            }
+          }
+        },
+        "service": {
+          "description": "Options for generating a service.",
+          "type": "object",
+          "properties": {
+            "flat": {
+              "description": "Flag to indicate if a dir is created.",
+              "type": "boolean",
+              "default": true
+            },
+            "spec": {
+              "description": "Specifies if a spec file is generated.",
+              "type": "boolean",
+              "default": true
+            }
+          }
+        },
         "build": {
           "description": "Properties to be passed to the build command.",
           "type": "object",
@@ -341,8 +553,7 @@
             },
             "progress": {
               "description": "The ssl key used by the server.",
-              "type": "boolean",
-              "default": true
+              "type": "boolean"
             },
             "poll": {
               "description": "Enable and define the file watching poll time period (milliseconds).",
@@ -425,17 +636,6 @@
               "description": "The new app schematic.",
               "type": "string",
               "default": "application"
-            },
-            "newProject": {
-              "description": "The new project schematic.",
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "postGenerate": {
-              "description": "Run a command after generate.",
-              "type": "string"
             }
           },
           "additionalProperties": false
@@ -475,6 +675,11 @@
         },
         "typescriptMismatch": {
           "description": "Show a warning when the TypeScript version is incompatible",
+          "type": "boolean",
+          "default": true
+        },
+        "servePathDefault": {
+          "description": "Show a warning when deploy-url/base-href use unsupported serve path values.",
           "type": "boolean",
           "default": true
         }
