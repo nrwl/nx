@@ -40,6 +40,41 @@ describe('Enforce Module Boundaries', () => {
     expect(failures.length).toEqual(0);
   });
 
+  it('should handle multiple projects starting with the same prefix properly', () => {
+    const failures = runRule(
+      {},
+      `${process.cwd()}/proj/apps/myapp/src/main.ts`,
+      `
+        import '@mycompany/myapp2/mylib';
+      `,
+      [
+        {
+          name: 'myapp',
+          root: 'libs/myapp/src',
+          type: ProjectType.app,
+          tags: [],
+          files: [`apps/myapp/src/main.ts`, `apps/myapp/blah.ts`]
+        },
+        {
+          name: 'myapp2',
+          root: 'libs/myapp2/src',
+          type: ProjectType.app,
+          tags: [],
+          files: []
+        },
+        {
+          name: 'myapp2/mylib',
+          root: 'libs/myapp2/mylib/src',
+          type: ProjectType.lib,
+          tags: [],
+          files: ['libs/myapp2/mylib/src/index.ts']
+        }
+      ]
+    );
+
+    expect(failures.length).toEqual(0);
+  });
+
   describe('depConstraints', () => {
     const projectNodes = [
       {
@@ -244,7 +279,10 @@ describe('Enforce Module Boundaries', () => {
     const failures = runRule(
       {},
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
-      'import "@mycompany/other/blah"',
+      `
+      import "@mycompany/other/blah"
+      import "@mycompany/other/sublib/blah"
+      `,
       [
         {
           name: 'mylib',
@@ -259,10 +297,20 @@ describe('Enforce Module Boundaries', () => {
           type: ProjectType.lib,
           tags: [],
           files: [`libs/other/blah.ts`]
+        },
+        {
+          name: 'other/sublib',
+          root: 'libs/other/sublib/src',
+          type: ProjectType.lib,
+          tags: [],
+          files: [`libs/other/sublib/blah.ts`]
         }
       ]
     );
     expect(failures[0].getFailure()).toEqual(
+      'deep imports into libraries are forbidden'
+    );
+    expect(failures[1].getFailure()).toEqual(
       'deep imports into libraries are forbidden'
     );
   });

@@ -173,6 +173,66 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
 
       expect(deps).toEqual({ aa: [{projectName: 'aa/bb', type: DependencyType.es6Import}], 'aa/bb': [] });
     });
+
+    it('should not add the same dependency twice', () => {
+      const deps = dependencies(
+        'nrwl',
+        [
+          {
+            name: 'aa',
+            root: '',
+            files: ['aa.ts'],
+            tags: [],
+            type: ProjectType.app
+          },
+          {
+            name: 'bb',
+            root: '',
+            files: ['bb.ts'],
+            tags: [],
+            type: ProjectType.app
+          }
+        ],
+        file => {
+          switch (file) {
+            case 'aa.ts':
+              return `
+              import '@nrwl/bb/bb'
+              import '@nrwl/bb/bb'
+              `;
+            case 'bb.ts':
+              return '';
+          }
+        }
+      );
+
+      expect(deps).toEqual({ aa: [{projectName: 'bb', type: DependencyType.es6Import}], bb: []});
+    });
+
+    it('should not add a dependency on self', () => {
+      const deps = dependencies(
+        'nrwl',
+        [
+          {
+            name: 'aa',
+            root: '',
+            files: ['aa.ts'],
+            tags: [],
+            type: ProjectType.app
+          }
+        ],
+        file => {
+          switch (file) {
+            case 'aa.ts':
+              return `
+              import '@nrwl/aa/aa'
+              `;
+          }
+        }
+      );
+
+      expect(deps).toEqual({ aa: []});
+    });
   });
 
   describe('affectedApps', () => {

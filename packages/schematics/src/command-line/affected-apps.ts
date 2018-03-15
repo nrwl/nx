@@ -143,7 +143,11 @@ class Deps {
     )[0];
 
     if (matchingProject) {
-      this.deps[projectName].push({projectName: matchingProject, type: depType});
+      const alreadyHasDep = this.deps[projectName].some(p => p.projectName === matchingProject && p.type === depType);
+      const depOnSelf = projectName === matchingProject;
+      if (!alreadyHasDep && !depOnSelf) {
+        this.deps[projectName].push({projectName: matchingProject, type: depType});
+      }
     }
   }
 
