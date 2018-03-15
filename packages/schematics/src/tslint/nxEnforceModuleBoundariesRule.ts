@@ -4,8 +4,8 @@ import { IOptions } from 'tslint';
 import * as ts from 'typescript';
 import { readFileSync } from 'fs';
 import * as appRoot from 'app-root-path';
-import {getProjectNodes} from '../command-line/shared';
-import {dependencies, Dependency, DependencyType, ProjectNode, ProjectType} from '../command-line/affected-apps';
+import {getProjectNodes, readDependencies} from '../command-line/shared';
+import {Dependency, DependencyType, ProjectNode, ProjectType} from '../command-line/affected-apps';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(
@@ -18,10 +18,15 @@ export class Rule extends Lint.Rules.AbstractRule {
     super(options);
     if (!projectPath) {
       this.projectPath = appRoot.path;
-      const cliConfig = this.readCliConfig(this.projectPath);
-      this.npmScope = cliConfig.project.npmScope;
-      this.projectNodes = getProjectNodes(cliConfig);
-      this.deps = dependencies(this.npmScope, this.projectNodes, f => readFileSync(f).toString());
+      if (!(global as any).projectNodes) {
+        const cliConfig = this.readCliConfig(this.projectPath);
+        (global as any).npmScope = cliConfig.project.npmScope;
+        (global as any).projectNodes = getProjectNodes(cliConfig);
+        (global as any).deps = readDependencies((global as any).npmScope, (global as any).projectNodes);
+      }
+      this.npmScope = (global as any).npmScope;
+      this.projectNodes = (global as any).projectNodes;
+      this.deps =(global as any).deps;
     }
   }
 
@@ -62,6 +67,12 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
   ) {
     super(sourceFile, options);
 
+    this.projectNodes.sort((a, b) => {
+      if (!a.name) return -1;
+      if (!b.name) return -1;
+      return a.name.length > b.name.length ? -1 : 1;
+    });
+
     this.allow = Array.isArray(this.getOptions()[0].allow)
       ? this.getOptions()[0].allow.map(a => `${a}`)
       : [];
@@ -88,9 +99,9 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
 
     // check constraints between libs and apps
     if (imp.startsWith(`@${this.npmScope}/`)) {
-      const name = imp.split('/')[1];
+      // we should find the name
       const sourceProject = this.findSourceProject();
-      const targetProject = this.findProjectUsingName(name);
+      const targetProject = this.findProjectUsingImport(imp); // findProjectUsingImport to take care of same prefix
 
       // something went wrong => return.
       if (!sourceProject || !targetProject) {
@@ -118,7 +129,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       }
 
       // deep imports aren't allowed
-      if (imp.split('/').length > 2) {
+      if (imp !== `@${this.npmScope}/${targetProject.name}`) {
         this.addFailureAt(node.getStart(), node.getWidth(), 'deep imports into libraries are forbidden');
         return;
       }
@@ -202,8 +213,9 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     return this.projectNodes.filter(n => containsFile(n.files, file))[0];
   }
 
-  private findProjectUsingName(name: string) {
-    return this.projectNodes.filter(n => n.name === name)[0];
+  private findProjectUsingImport(imp: string) {
+    const unscopedImport = imp.substring(this.npmScope.length + 2);
+    return this.projectNodes.filter(n => unscopedImport === n.name || unscopedImport.startsWith(`${n.name}/`))[0];
   }
 
   private isAbsoluteImportIntoAnotherProject(imp: string) {

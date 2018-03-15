@@ -1,7 +1,9 @@
 import { execSync } from 'child_process';
 import * as path from 'path';
-import {affectedApps, ProjectType, touchedProjects} from './affected-apps';
+import {affectedApps, ProjectNode, ProjectType, touchedProjects} from './affected-apps';
 import * as fs from 'fs';
+import {dependencies, Dependency} from '@nrwl/schematics/src/command-line/affected-apps';
+import {readFileSync, statSync} from "fs";
 
 export function parseFiles(args: string[]): { files: string[]; rest: string[] } {
   let unnamed = [];
@@ -94,6 +96,71 @@ function allFilesInDir(dirName: string): string[] {
   return res;
 }
 
+export function readDependencies(npmScope: string, projectNodes: ProjectNode[]): { [projectName: string]: Dependency[] } {
+  const m = lastModifiedAmongProjectFiles();
+  if (!directoryExists('./dist')) {
+    fs.mkdirSync('./dist');
+  }
+  if (!fileExists('./dist/nxdeps.json') || m > mtime('./dist/nxdeps.json')) {
+    const deps = dependencies(npmScope, projectNodes, f => fs.readFileSync(f, 'UTF-8'));
+    fs.writeFileSync('./dist/nxdeps.json', JSON.stringify(deps, null, 2), 'UTF-8');
+    return deps;
+  } else {
+    return JSON.parse(fs.readFileSync('./dist/nxdeps.json', 'UTF-8'));
+  }
+}
+
+export function lastModifiedAmongProjectFiles() {
+  return [
+    recursiveMtime('libs'),
+    recursiveMtime('apps'),
+    mtime('.angular-cli.json'),
+    mtime('tslint.json'),
+    mtime('package.json')
+  ].reduce((a, b) => a > b ? a : b, 0);
+}
+
+function recursiveMtime(dirName: string) {
+  let res = mtime(dirName);
+  fs.readdirSync(dirName).forEach(c => {
+    const child = path.join(dirName, c);
+    try {
+      if (!fs.statSync(child).isDirectory()) {
+        const c = mtime(child);
+        if (c > res) {
+          res = c;
+        }
+      } else if (fs.statSync(child).isDirectory()) {
+        const c = recursiveMtime(child);
+        if (c > res) {
+          res = c;
+        }
+      }
+    } catch (e) {}
+  });
+  return res;
+}
+
+function mtime(f: string): number {
+  return fs.fstatSync(fs.openSync(f, 'r')).mtime.getTime();
+}
+
 function normalizePath(file: string): string {
   return file.split(path.sep).join('/');
+}
+
+function directoryExists(filePath: string): boolean {
+  try {
+    return statSync(filePath).isDirectory();
+  } catch (err) {
+    return false;
+  }
+}
+
+function fileExists(filePath: string): boolean {
+  try {
+    return statSync(filePath).isFile();
+  } catch (err) {
+    return false;
+  }
 }
