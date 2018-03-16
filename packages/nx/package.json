@@ -2,8 +2,10 @@
   "name": "@nrwl/nx",
   "version": "0.0.1",
   "description": "Nrwl Extensions for Angular",
-  "main": "index.js",
-  "types": "index.d.js",
+  "main": "bundles/nrwl-nx.umd.js",
+  "types": "nrwl-nx.d.ts",
+  "module": "esm5/nrwl-nx.js",
+  "es2015": "esm2015/nrwl-nx.js",
   "dependencies": {
     "jasmine-marbles": "0.2.0"
   },

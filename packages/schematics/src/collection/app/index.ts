@@ -44,6 +44,7 @@ function addBootstrap(path: string): Rule {
     const modulePath = `${path}/app/app.module.ts`;
     const moduleSource = host.read(modulePath)!.toString('utf-8');
     const sourceFile = ts.createSourceFile(
+<<<<<<< HEAD
       modulePath,
       moduleSource,
       ts.ScriptTarget.Latest,
@@ -63,6 +64,15 @@ function addBootstrap(path: string): Rule {
         'AppComponent',
         './app.component'
       )
+=======
+        modulePath, moduleSource, ts.ScriptTarget.Latest, true);
+    insert(host, modulePath, [
+      insertImport(
+          sourceFile, modulePath, 'BrowserModule', '@angular/platform-browser'),
+      ...addImportToModule(sourceFile, modulePath, 'BrowserModule'),
+      ...addBootstrapToModule(
+          sourceFile, modulePath, 'AppComponent', './app.component')
+>>>>>>> Rebasing issues resolved
     ]);
     return host;
   };
@@ -73,11 +83,15 @@ function addNxModule(path: string): Rule {
     const modulePath = `${path}/app/app.module.ts`;
     const moduleSource = host.read(modulePath)!.toString('utf-8');
     const sourceFile = ts.createSourceFile(
+<<<<<<< HEAD
       modulePath,
       moduleSource,
       ts.ScriptTarget.Latest,
       true
     );
+=======
+        modulePath, moduleSource, ts.ScriptTarget.Latest, true);
+>>>>>>> Rebasing issues resolved
     insert(host, modulePath, [
       insertImport(sourceFile, modulePath, 'NxModule', '@nrwl/nx'),
       ...addImportToModule(sourceFile, modulePath, 'NxModule.forRoot()')
@@ -117,8 +131,7 @@ function addAppToAngularCliJson(options: NormalizedSchema): Rule {
     });
 
     json.lint = [
-      ...(json.lint || []),
-      {
+      ...(json.lint || []), {
         project: `${options.fullPath}/tsconfig.app.json`,
         exclude: '**/node_modules/**'
       },
@@ -138,6 +151,7 @@ function addRouterRootConfiguration(path: string): Rule {
     const modulePath = `${path}/app/app.module.ts`;
     const moduleSource = host.read(modulePath)!.toString('utf-8');
     const sourceFile = ts.createSourceFile(
+<<<<<<< HEAD
       modulePath,
       moduleSource,
       ts.ScriptTarget.Latest,
@@ -150,18 +164,23 @@ function addRouterRootConfiguration(path: string): Rule {
         modulePath,
         `RouterModule.forRoot([], {initialNavigation: 'enabled'})`
       )
+=======
+        modulePath, moduleSource, ts.ScriptTarget.Latest, true);
+    insert(host, modulePath, [
+      insertImport(sourceFile, modulePath, 'RouterModule', '@angular/router'),
+      ...addImportToModule(
+          sourceFile, modulePath,
+          `RouterModule.forRoot([], {initialNavigation: 'enabled'})`)
+>>>>>>> Rebasing issues resolved
     ]);
 
     const componentSpecPath = `${path}/app/app.component.spec.ts`;
     const componentSpecSource = host.read(componentSpecPath)!.toString('utf-8');
     const componentSpecSourceFile = ts.createSourceFile(
-      componentSpecPath,
-      componentSpecSource,
-      ts.ScriptTarget.Latest,
-      true
-    );
+        componentSpecPath, componentSpecSource, ts.ScriptTarget.Latest, true);
     insert(host, componentSpecPath, [
       insertImport(
+<<<<<<< HEAD
         componentSpecSourceFile,
         componentSpecPath,
         'RouterTestingModule',
@@ -172,6 +191,12 @@ function addRouterRootConfiguration(path: string): Rule {
         componentSpecPath,
         `RouterTestingModule`
       )
+=======
+          componentSpecSourceFile, componentSpecPath, 'RouterTestingModule',
+          '@angular/router/testing'),
+      ...addImportToTestBed(
+          componentSpecSourceFile, componentSpecPath, `RouterTestingModule`)
+>>>>>>> Rebasing issues resolved
     ]);
     return host;
   };
@@ -197,9 +222,9 @@ Nx is designed to help you create and build enterprise grade Angular application
 
 function updateComponentTemplate(options: NormalizedSchema): Rule {
   return (host: Tree) => {
-    const content = options.routing
-      ? `${staticComponentContent}\n<router-outlet></router-outlet>`
-      : staticComponentContent;
+    const content = options.routing ?
+        `${staticComponentContent}\n<router-outlet></router-outlet>` :
+        staticComponentContent;
     host.overwrite(`${options.fullPath}/app/app.component.html`, content);
   };
 }
@@ -212,16 +237,15 @@ export default function(schema: Schema): Rule {
     }
 
     const options = normalizeOptions(schema);
-    const templateSource = apply(url('./files'), [
-      template({
-        utils: strings,
-        dot: '.',
-        tmpl: '',
-        offsetFromRoot: offsetFromRoot(options.fullPath),
-        ...(options as object),
-        npmScope
-      })
-    ]);
+    const templateSource =
+        apply(url('./files'), [template({
+                utils: strings,
+                dot: '.',
+                tmpl: '',
+                offsetFromRoot: offsetFromRoot(options.fullPath),
+                ...(options as object),
+                npmScope
+              })]);
 
     const selector = `${options.prefix}-root`;
 
@@ -247,10 +271,8 @@ export default function(schema: Schema): Rule {
         viewEncapsulation: options.viewEncapsulation,
         changeDetection: options.changeDetection
       }),
-      updateComponentTemplate(options),
-      addBootstrap(options.fullPath),
-      addNxModule(options.fullPath),
-      addAppToAngularCliJson(options),
+      updateComponentTemplate(options), addBootstrap(options.fullPath),
+      addNxModule(options.fullPath), addAppToAngularCliJson(options),
       options.routing ? addRouterRootConfiguration(options.fullPath) : noop()
     ]);
   });
@@ -258,9 +280,14 @@ export default function(schema: Schema): Rule {
 
 function normalizeOptions(options: Schema): NormalizedSchema {
   const name = toFileName(options.name);
+<<<<<<< HEAD
   const fullName = options.directory
     ? `${toFileName(options.directory)}/${name}`
     : name;
+=======
+  const fullName =
+      options.directory ? `${toFileName(options.directory)}/${name}` : name;
+>>>>>>> Rebasing issues resolved
   const fullPath = `apps/${fullName}/src`;
-  return { ...options, sourceDir: 'src', name, fullName, fullPath };
+  return {...options, sourceDir: 'src', name, fullName, fullPath};
 }

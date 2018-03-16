@@ -11,6 +11,19 @@
       "factory": "./collection/app",
       "schema": "./collection/app/schema.json",
       "description": "Create an application."
+    },
+    "lib": {
+      "factory": "./collection/lib",
+      "schema": "./collection/lib/schema.json",
+      "description": "Create a library"
+    },
+    "module": {
+      "aliases": [
+        "m"
+      ],
+      "factory": "./collection/module",
+      "schema": "./collection/module/schema.json",
+      "description": "Create a Module"
     }
   }
 }

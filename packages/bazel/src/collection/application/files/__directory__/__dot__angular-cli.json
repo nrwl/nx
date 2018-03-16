@@ -30,7 +30,7 @@
   ],
   "defaults": {
     "schematics": {
-      "collection": "@nrwl/schematics"
+      "collection": "@nrwl/bazel"
     },
     "styleExt": "<%= style %>",<% if (!minimal) { %>
     "component": {}<% } else { %>

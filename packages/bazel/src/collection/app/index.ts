@@ -134,6 +134,7 @@ function addAppToAngularCliJson(options: NormalizedSchema): Rule {
 function addRouterRootConfiguration(path: string): Rule {
   return (host: Tree) => {
     const modulePath = `${path}/app/app.module.ts`;
+    console.log(modulePath);
     const moduleSource = host.read(modulePath)!.toString('utf-8');
     const sourceFile = ts.createSourceFile(
       modulePath,
@@ -202,6 +203,52 @@ function updateComponentTemplate(options: NormalizedSchema): Rule {
   };
 }
 
+function addBazelBuildFile(path: string): Rule {
+  return (host: Tree) => {
+    const ngModule = `package(default_visibility = ["//visibility:public"])
+
+load("@angular//:index.bzl", "ng_module")
+load("@build_bazel_rules_typescript//:defs.bzl", "ts_library", "ts_web_test")
+
+ng_module(
+    name = "app",
+    srcs = glob(
+        ["*.ts"],
+        exclude = ["*.spec.ts"],
+    ),
+    assets = [
+        "app.component.css",
+        "app.component.html",
+    ],
+    deps = [
+        "@rxjs",
+    ],
+)
+
+ts_library(
+    name = "test_lib",
+    testonly = 1,
+    srcs = glob(["*.spec.ts"]),
+    deps = [
+        ":app",
+    ],
+)
+
+ts_web_test(
+    name = "test",
+    bootstrap = ["//:angular_bootstrap_scripts"],
+    deps = [
+        ":test_lib",
+        "//:angular_bundles",
+        "//:angular_test_bundles",
+    ],
+)    
+`;
+
+    const sourceFile = host.create(`${path}/app/BUILD.bazel`, ngModule);
+  };
+}
+
 export default function(schema: Schema): Rule {
   return wrapIntoFormat(() => {
     let npmScope = schema.npmScope;
@@ -248,6 +295,8 @@ export default function(schema: Schema): Rule {
       updateComponentTemplate(options),
       addBootstrap(options.fullPath),
       addNxModule(options.fullPath),
+      addAppToAngularCliJson(options),
+      addBazelBuildFile(options.fullPath),
       addAppToAngularCliJson(options),
       options.routing ? addRouterRootConfiguration(options.fullPath) : noop()
     ]);

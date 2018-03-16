@@ -14,7 +14,7 @@ export function runNgNew(command?: string, silent?: boolean): string {
 export function newProject(): void {
   cleanup();
   if (!directoryExists('./tmp/proj_backup')) {
-    //TODO delete the try catch after 0.8.0 is released
+    // TODO delete the try catch after 0.8.0 is released
     try {
       runNgNew('--collection=@nrwl/schematics --npmScope=proj', true);
     } catch (e) {}
@@ -27,8 +27,8 @@ export function newProject(): void {
 
 export function newBazelProject(): void {
   cleanup();
-  if (!directoryExists('./tmp/proj_backup')) {
-    //TODO delete the try catch after 0.8.0 is released
+  if (!directoryExists('./tmp/proj_bazel_backup')) {
+    // TODO delete the try catch after 0.8.0 is released
     try {
       runNgNew('--collection=@nrwl/bazel --npmScope=proj', true);
     } catch (e) {}
@@ -36,16 +36,14 @@ export function newBazelProject(): void {
     execSync('npm run postinstall', { cwd: './tmp/proj' });
     execSync('mv ./tmp/proj ./tmp/proj_backup');
   }
-  execSync('cp -a ./tmp/proj_backup ./tmp/proj');
+  execSync('cp -a ./tmp/proj_bazel_backup ./tmp/proj');
 }
 
 export function createNxWorkspace(command: string): string {
   cleanup();
   return execSync(
-    `node ../node_modules/@nrwl/schematics/bin/create-nx-workspace.js ${command}`,
-    {
-      cwd: `./tmp`
-    }
+    `node ../node_modules/@nrwl/schematics/bin/create-nx-workspace.js --yarn ${command}`,
+    { cwd: `./tmp` }
   ).toString();
 }
 
@@ -98,6 +96,10 @@ export function newLib(name: string): string {
   return runCLI(`generate lib ${name}`);
 }
 
+export function newModule(name: string): string {
+  return runCLI(`generate module ${name}`);
+}
+
 export function runSchematic(command: string): string {
   return execSync(`./node_modules/.bin/schematics ${command}`, {
     cwd: `./tmp/${projectName}`
@@ -130,6 +132,10 @@ export function readFile(f: string) {
 
 export function cleanup() {
   execSync('rm -rf ./tmp/proj');
+}
+
+export function purge() {
+  execSync('rm -rf ./tmp');
 }
 
 export function getCwd(): string {
