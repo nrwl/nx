@@ -9,24 +9,21 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-
     "affected:apps": "./node_modules/.bin/nx affected apps",
     "affected:build": "./node_modules/.bin/nx affected build",
     "affected:e2e": "./node_modules/.bin/nx affected e2e",
-
     "format": "./node_modules/.bin/nx format write",
     "format:write": "./node_modules/.bin/nx format write",
     "format:check": "./node_modules/.bin/nx format check",
-
     "update": "./node_modules/.bin/nx update",
     "update:check": "./node_modules/.bin/nx update check",
     "update:skip": "./node_modules/.bin/nx update skip",
-
-    "postinstall": "./node_modules/.bin/nx postinstall"
+    "postinstall": "ngc -p ngc.tsconfig.json"
   },
   "private": true,
   "dependencies": {
     "@angular/animations": "<%= angularVersion %>",
+    "@angular/bazel": "angular/bazel-builds#d09df98b39658463fdfe3567b25a20cdd7130661",
     "@angular/common": "<%= angularVersion %>",
     "@angular/compiler": "<%= angularVersion %>",
     "@angular/core": "<%= angularVersion %>",
@@ -34,35 +31,39 @@
     "@angular/platform-browser": "<%= angularVersion %>",
     "@angular/platform-browser-dynamic": "<%= angularVersion %>",
     "@angular/router": "<%= angularVersion %>",
+    "concurrently": "3.5.1",
     "core-js": "^2.4.1",
     "rxjs": "<%= rxjsVersion %>",
     "zone.js": "^0.8.19",
     "@nrwl/nx": "<%= nxVersion %>",
-    "@ngrx/effects": "<%= ngrxVersion %>",
-    "@ngrx/router-store": "<%= routerStoreVersion %>",
-    "@ngrx/store": "<%= ngrxVersion %>",
-    "@ngrx/store-devtools": "<%= ngrxVersion %>"
+    "@ngrx/effects": "5.2.0",
+    "@ngrx/router-store": "5.2.0",
+    "@ngrx/store": "5.2.0",
+    "@ngrx/store-devtools": "5.2.0"
   },
   "devDependencies": {
     "@angular/cli": "<%= angularCliVersion %>",
     "@angular/compiler-cli": "<%= angularVersion %>",
     "@nrwl/schematics": "<%= schematicsVersion %>",
-    "@angular/language-service": "<%= angularVersion %>",<% if (!minimal) { %>
+    "@angular/language-service": "<%= angularVersion %>",
+    "@bazel/ibazel": "^0.3.1",<% if (!minimal) { %>
     "@types/jasmine": "~2.8.3",
-    "@types/jasminewd2": "~2.0.2",
-    "@types/node": "~6.0.60",
-    "codelyzer": "^4.0.1",
-    "jasmine-core": "~2.8.0",
-    "jasmine-spec-reporter": "~4.2.1",
-    "karma": "~2.0.0",
-    "karma-chrome-launcher": "~2.2.0",
-    "karma-coverage-istanbul-reporter": "^1.2.1",
-    "karma-jasmine": "~1.1.0",
-    "karma-jasmine-html-reporter": "^0.2.2",
-    "protractor": "~5.1.2",
-    "ts-node": "~4.1.0",
-    "tslint": "~5.9.1",<% } %>
+      "@types/jasminewd2": "~2.0.2",
+      "@types/node": "~6.0.60",
+      "codelyzer": "^4.0.1",
+      "jasmine-core": "~2.8.0",
+      "jasmine-spec-reporter": "~4.2.1",
+      "karma": "~2.0.0",
+      "karma-chrome-launcher": "~2.2.0",
+      "karma-coverage-istanbul-reporter": "^1.2.1",
+      "karma-jasmine": "~1.1.0",
+      "karma-jasmine-html-reporter": "^0.2.2",
+      "protractor": "~5.1.2",
+      "ts-node": "~4.1.0",
+      "tslint": "~5.9.1",<%
+    } %>
     "typescript": "<%= typescriptVersion %>",
-    "prettier": "<%= prettierVersion %>"
+    "prettier": "<%= prettierVersion %>",
+    "http-server": "0.11.1"
   }
 }

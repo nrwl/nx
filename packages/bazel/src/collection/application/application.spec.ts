@@ -31,9 +31,11 @@ describe('application', () => {
       '/my-app/apps/.gitkeep',
       '/my-app/karma.conf.js',
       '/my-app/libs/.gitkeep',
+      '/my-app/ngc.tsconfig.json',
       '/my-app/package.json',
       '/my-app/protractor.conf.js',
       '/my-app/test.js',
+      '/my-app/tools/bazel.rc',
       '/my-app/tsconfig.json',
       '/my-app/tsconfig.spec.json',
       '/my-app/tslint.json'
@@ -56,25 +58,5 @@ describe('application', () => {
     expect(packageJson.dependencies['@ngrx/effects']).toBeDefined();
     expect(packageJson.dependencies['@ngrx/router-store']).toBeDefined();
     expect(packageJson.dependencies['@ngrx/store-devtools']).toBeDefined();
-  });
-
-  it('should set right npmScope', () => {
-    const tree = schematicRunner.runSchematic(
-      'application',
-      { name: 'myApp', directory: 'my-app' },
-      appTree
-    );
-
-    const angularCliJson = JSON.parse(
-      getFileContent(tree, '/my-app/.angular-cli.json')
-    );
-    expect(angularCliJson.project.npmScope).toEqual('myApp');
-
-    const tsconfigJson = JSON.parse(
-      getFileContent(tree, '/my-app/tsconfig.json')
-    );
-    expect(tsconfigJson.compilerOptions.paths).toEqual({
-      '@myApp/*': ['libs/*']
-    });
   });
 });
