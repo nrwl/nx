@@ -5,7 +5,16 @@ import { ROUTER_NAVIGATION, RouterNavigationAction } from '@ngrx/router-store';
 import { Action, State, Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 import { of } from 'rxjs/observable/of';
-import { catchError, concatMap, filter, groupBy, map, mergeMap, switchMap, withLatestFrom } from 'rxjs/operators';
+import {
+  catchError,
+  concatMap,
+  filter,
+  groupBy,
+  map,
+  mergeMap,
+  switchMap,
+  withLatestFrom
+} from 'rxjs/operators';
 
 /**
  * See {@link DataPersistence.pessimisticUpdate} for more information.
@@ -92,10 +101,15 @@ export class DataPersistence<T> {
    * }
    * ```
    */
-  pessimisticUpdate<A extends Action = Action>(actionType: string, opts: PessimisticUpdateOpts<T, A>): Observable<any> {
+  pessimisticUpdate<A extends Action = Action>(
+    actionType: string,
+    opts: PessimisticUpdateOpts<T, A>
+  ): Observable<any> {
     const nav = this.actions.ofType<A>(actionType);
     const pairs = nav.pipe(withLatestFrom(this.store));
-    return pairs.pipe(concatMap(this.runWithErrorHandling(opts.run, opts.onError)));
+    return pairs.pipe(
+      concatMap(this.runWithErrorHandling(opts.run, opts.onError))
+    );
   }
 
   /**
@@ -144,10 +158,15 @@ export class DataPersistence<T> {
    * }
    * ```
    */
-  optimisticUpdate<A extends Action = Action>(actionType: string, opts: OptimisticUpdateOpts<T, A>): Observable<any> {
+  optimisticUpdate<A extends Action = Action>(
+    actionType: string,
+    opts: OptimisticUpdateOpts<T, A>
+  ): Observable<any> {
     const nav = this.actions.ofType<A>(actionType);
     const pairs = nav.pipe(withLatestFrom(this.store));
-    return pairs.pipe(concatMap(this.runWithErrorHandling(opts.run, opts.undoAction)));
+    return pairs.pipe(
+      concatMap(this.runWithErrorHandling(opts.run, opts.undoAction))
+    );
   }
 
   /**
@@ -217,17 +236,28 @@ export class DataPersistence<T> {
    * In addition, if DataPersistence notices that there are multiple requests for Todo 1 scheduled,
    * it will only run the last one.
    */
-  fetch<A extends Action = Action>(actionType: string, opts: FetchOpts<T, A>): Observable<any> {
+  fetch<A extends Action = Action>(
+    actionType: string,
+    opts: FetchOpts<T, A>
+  ): Observable<any> {
     const nav = this.actions.ofType<A>(actionType);
     const allPairs = nav.pipe(withLatestFrom(this.store));
 
     if (opts.id) {
-      const groupedFetches = allPairs.pipe(groupBy(([action, store]) => opts.id(action, store)));
+      const groupedFetches = allPairs.pipe(
+        groupBy(([action, store]) => opts.id(action, store))
+      );
       return groupedFetches.pipe(
-        mergeMap(pairs => pairs.pipe(switchMap(this.runWithErrorHandling(opts.run, opts.onError))))
+        mergeMap(pairs =>
+          pairs.pipe(
+            switchMap(this.runWithErrorHandling(opts.run, opts.onError))
+          )
+        )
       );
     } else {
-      return allPairs.pipe(concatMap(this.runWithErrorHandling(opts.run, opts.onError)));
+      return allPairs.pipe(
+        concatMap(this.runWithErrorHandling(opts.run, opts.onError))
+      );
     }
   }
 
@@ -264,16 +294,27 @@ export class DataPersistence<T> {
    * }
    * ```
    */
-  navigation(component: Type<any>, opts: HandleNavigationOpts<T>): Observable<any> {
+  navigation(
+    component: Type<any>,
+    opts: HandleNavigationOpts<T>
+  ): Observable<any> {
     const nav = this.actions
       .ofType<RouterNavigationAction<RouterStateSnapshot>>(ROUTER_NAVIGATION)
-      .pipe(map(a => findSnapshot(component, a.payload.routerState.root)), filter(s => !!s));
+      .pipe(
+        map(a => findSnapshot(component, a.payload.routerState.root)),
+        filter(s => !!s)
+      );
 
     const pairs = nav.pipe(withLatestFrom(this.store));
-    return pairs.pipe(switchMap(this.runWithErrorHandling(opts.run, opts.onError)));
+    return pairs.pipe(
+      switchMap(this.runWithErrorHandling(opts.run, opts.onError))
+    );
   }
 
-  private runWithErrorHandling<A, R>(run: (a: A, state?: T) => Observable<R> | R | void, onError: any) {
+  private runWithErrorHandling<A, R>(
+    run: (a: A, state?: T) => Observable<R> | R | void,
+    onError: any
+  ) {
     return ([action, state]: [A, T]): Observable<R> => {
       try {
         const r = wrapIntoObservable(run(action, state));
@@ -285,7 +326,10 @@ export class DataPersistence<T> {
   }
 }
 
-function findSnapshot(component: Type<any>, s: ActivatedRouteSnapshot): ActivatedRouteSnapshot {
+function findSnapshot(
+  component: Type<any>,
+  s: ActivatedRouteSnapshot
+): ActivatedRouteSnapshot {
   if (s.routeConfig && s.routeConfig.component === component) {
     return s;
   }

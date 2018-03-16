@@ -1,4 +1,8 @@
-import { cliConfig, readCliConfigFile, updateJsonFile } from '../src/utils/fileutils';
+import {
+  cliConfig,
+  readCliConfigFile,
+  updateJsonFile
+} from '../src/utils/fileutils';
 import { writeFileSync, unlinkSync } from 'fs';
 import { offsetFromRoot } from '../src/utils/common';
 import * as path from 'path';

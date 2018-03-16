@@ -1,4 +1,10 @@
-import {affectedApps, dependencies, DependencyType, ProjectType, touchedProjects} from './affected-apps';
+import {
+  affectedApps,
+  dependencies,
+  DependencyType,
+  ProjectType,
+  touchedProjects
+} from './affected-apps';
 
 describe('Calculates Dependencies Between Apps and Libs', () => {
   describe('dependencies', () => {
@@ -70,10 +76,11 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
 
       expect(deps).toEqual({
         app1: [
-          {projectName: 'lib1', type: DependencyType.es6Import},
-          {projectName: 'lib2', type: DependencyType.es6Import}
-          ],
-        lib1: [{projectName: 'lib2', type: DependencyType.es6Import}], lib2: []
+          { projectName: 'lib1', type: DependencyType.es6Import },
+          { projectName: 'lib2', type: DependencyType.es6Import }
+        ],
+        lib1: [{ projectName: 'lib2', type: DependencyType.es6Import }],
+        lib2: []
       });
     });
 
@@ -120,8 +127,14 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         }
       );
 
-      expect(deps).toEqual({ app1: [{projectName: 'lib1', type: DependencyType.loadChildren},
-          {projectName: 'lib2', type: DependencyType.loadChildren}], lib1: [], lib2: [] });
+      expect(deps).toEqual({
+        app1: [
+          { projectName: 'lib1', type: DependencyType.loadChildren },
+          { projectName: 'lib2', type: DependencyType.loadChildren }
+        ],
+        lib1: [],
+        lib2: []
+      });
     });
 
     it('should handle non-ts files', () => {
@@ -171,7 +184,10 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         }
       );
 
-      expect(deps).toEqual({ aa: [{projectName: 'aa/bb', type: DependencyType.es6Import}], 'aa/bb': [] });
+      expect(deps).toEqual({
+        aa: [{ projectName: 'aa/bb', type: DependencyType.es6Import }],
+        'aa/bb': []
+      });
     });
 
     it('should not add the same dependency twice', () => {
@@ -206,7 +222,10 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         }
       );
 
-      expect(deps).toEqual({ aa: [{projectName: 'bb', type: DependencyType.es6Import}], bb: []});
+      expect(deps).toEqual({
+        aa: [{ projectName: 'bb', type: DependencyType.es6Import }],
+        bb: []
+      });
     });
 
     it('should not add a dependency on self', () => {
@@ -231,7 +250,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         }
       );
 
-      expect(deps).toEqual({ aa: []});
+      expect(deps).toEqual({ aa: [] });
     });
   });
 

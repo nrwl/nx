@@ -1,18 +1,18 @@
-import {updateJsonFile} from '../src/utils/fileutils';
+import { updateJsonFile } from '../src/utils/fileutils';
 
 export default {
   description: 'Add tags to all app and libs',
   run: async () => {
     updateJsonFile('.angular-cli.json', json => {
-      json.apps = json.apps.map(app => ({...app, tags: []}));
+      json.apps = json.apps.map(app => ({ ...app, tags: [] }));
     });
 
     updateJsonFile('tslint.json', json => {
-      if (json.rules["nx-enforce-module-boundaries"]) {
-        json.rules["nx-enforce-module-boundaries"][1].depConstraints = [
-          { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }
+      if (json.rules['nx-enforce-module-boundaries']) {
+        json.rules['nx-enforce-module-boundaries'][1].depConstraints = [
+          { sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }
         ];
-        json.rules["nx-enforce-module-boundaries"][1].lazyLoad = undefined;
+        json.rules['nx-enforce-module-boundaries'][1].lazyLoad = undefined;
       }
     });
   }

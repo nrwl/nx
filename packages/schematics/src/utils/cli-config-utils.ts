@@ -2,7 +2,9 @@ import * as fs from 'fs';
 
 export function getAppDirectoryUsingCliConfig() {
   const appArg = findAppArg();
-  const cli = JSON.parse(fs.readFileSync(process.cwd() + '/.angular-cli.json', 'UTF-8'));
+  const cli = JSON.parse(
+    fs.readFileSync(process.cwd() + '/.angular-cli.json', 'UTF-8')
+  );
 
   if (appArg) {
     const appName = appArg.split('=')[1];

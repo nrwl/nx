@@ -5,7 +5,10 @@ import { createEmptyWorkspace } from '../../utils/testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
 
 describe('application', () => {
-  const schematicRunner = new SchematicTestRunner('@nrwl/schematics', path.join(__dirname, '../../collection.json'));
+  const schematicRunner = new SchematicTestRunner(
+    '@nrwl/schematics',
+    path.join(__dirname, '../../collection.json')
+  );
 
   let appTree: Tree;
 
@@ -14,7 +17,11 @@ describe('application', () => {
   });
 
   it('should generate files', () => {
-    const tree = schematicRunner.runSchematic('application', { name: 'myApp', directory: 'my-app' }, appTree);
+    const tree = schematicRunner.runSchematic(
+      'application',
+      { name: 'myApp', directory: 'my-app' },
+      appTree
+    );
     expect(tree.files).toEqual([
       '/my-app/.prettierrc',
       '/my-app/README.md',
@@ -34,8 +41,14 @@ describe('application', () => {
   });
 
   it('should update package.json', () => {
-    const tree = schematicRunner.runSchematic('application', { name: 'myApp', directory: 'my-app' }, appTree);
-    const packageJson = JSON.parse(getFileContent(tree, '/my-app/package.json'));
+    const tree = schematicRunner.runSchematic(
+      'application',
+      { name: 'myApp', directory: 'my-app' },
+      appTree
+    );
+    const packageJson = JSON.parse(
+      getFileContent(tree, '/my-app/package.json')
+    );
 
     expect(packageJson.devDependencies['@nrwl/schematics']).toBeDefined();
     expect(packageJson.dependencies['@nrwl/nx']).toBeDefined();
@@ -46,12 +59,22 @@ describe('application', () => {
   });
 
   it('should set right npmScope', () => {
-    const tree = schematicRunner.runSchematic('application', { name: 'myApp', directory: 'my-app' }, appTree);
+    const tree = schematicRunner.runSchematic(
+      'application',
+      { name: 'myApp', directory: 'my-app' },
+      appTree
+    );
 
-    const angularCliJson = JSON.parse(getFileContent(tree, '/my-app/.angular-cli.json'));
+    const angularCliJson = JSON.parse(
+      getFileContent(tree, '/my-app/.angular-cli.json')
+    );
     expect(angularCliJson.project.npmScope).toEqual('myApp');
 
-    const tsconfigJson = JSON.parse(getFileContent(tree, '/my-app/tsconfig.json'));
-    expect(tsconfigJson.compilerOptions.paths).toEqual({ '@myApp/*': ['libs/*'] });
+    const tsconfigJson = JSON.parse(
+      getFileContent(tree, '/my-app/tsconfig.json')
+    );
+    expect(tsconfigJson.compilerOptions.paths).toEqual({
+      '@myApp/*': ['libs/*']
+    });
   });
 });

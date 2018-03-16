@@ -1,11 +1,21 @@
 import { execSync } from 'child_process';
 import * as path from 'path';
-import {affectedApps, ProjectNode, ProjectType, touchedProjects} from './affected-apps';
+import {
+  affectedApps,
+  ProjectNode,
+  ProjectType,
+  touchedProjects
+} from './affected-apps';
 import * as fs from 'fs';
-import {dependencies, Dependency} from '@nrwl/schematics/src/command-line/affected-apps';
-import {readFileSync, statSync} from "fs";
+import {
+  dependencies,
+  Dependency
+} from '@nrwl/schematics/src/command-line/affected-apps';
+import { readFileSync, statSync } from 'fs';
 
-export function parseFiles(args: string[]): { files: string[]; rest: string[] } {
+export function parseFiles(
+  args: string[]
+): { files: string[]; rest: string[] } {
   let unnamed = [];
   let named = [];
   args.forEach(a => {
@@ -19,9 +29,15 @@ export function parseFiles(args: string[]): { files: string[]; rest: string[] } 
   const dashDashFiles = named.filter(a => a.startsWith('--files='))[0];
   if (dashDashFiles) {
     named.splice(named.indexOf(dashDashFiles), 1);
-    return { files: parseDashDashFiles(dashDashFiles), rest: [...unnamed, ...named] };
+    return {
+      files: parseDashDashFiles(dashDashFiles),
+      rest: [...unnamed, ...named]
+    };
   } else if (unnamed.length >= 2) {
-    return { files: getFilesFromShash(unnamed[0], unnamed[1]), rest: [...unnamed.slice(2), ...named] };
+    return {
+      files: getFilesFromShash(unnamed[0], unnamed[1]),
+      rest: [...unnamed.slice(2), ...named]
+    };
   } else {
     throw new Error('Invalid options provided');
   }
@@ -44,15 +60,17 @@ function getFilesFromShash(sha1: string, sha2: string): string[] {
 }
 
 export function getProjectNodes(config) {
-  return (config.apps ? config.apps : []).filter(p => p.name !== '$workspaceRoot').map(p => {
-    return {
-      name: p.name,
-      root: p.root,
-      type: p.root.startsWith('apps/') ? ProjectType.app : ProjectType.lib,
-      tags: p.tags,
-      files: allFilesInDir(path.dirname(p.root))
-    };
-  });
+  return (config.apps ? config.apps : [])
+    .filter(p => p.name !== '$workspaceRoot')
+    .map(p => {
+      return {
+        name: p.name,
+        root: p.root,
+        type: p.root.startsWith('apps/') ? ProjectType.app : ProjectType.lib,
+        tags: p.tags,
+        files: allFilesInDir(path.dirname(p.root))
+      };
+    });
 }
 
 export function getAffectedApps(touchedFiles: string[]): string[] {
@@ -63,7 +81,12 @@ export function getAffectedApps(touchedFiles: string[]): string[] {
     throw new Error(`.angular-cli.json must define the npmScope property.`);
   }
 
-  return affectedApps(config.project.npmScope, projects, f => fs.readFileSync(f, 'utf-8'), touchedFiles);
+  return affectedApps(
+    config.project.npmScope,
+    projects,
+    f => fs.readFileSync(f, 'utf-8'),
+    touchedFiles
+  );
 }
 
 export function getTouchedProjects(touchedFiles: string[]): string[] {
@@ -78,7 +101,9 @@ export function getTouchedProjects(touchedFiles: string[]): string[] {
 export function getProjectRoots(projectNames: string[]): string[] {
   const config = JSON.parse(fs.readFileSync('.angular-cli.json', 'utf-8'));
   const projects = getProjectNodes(config);
-  return projectNames.map(name => path.dirname(projects.filter(p => p.name === name)[0].root));
+  return projectNames.map(name =>
+    path.dirname(projects.filter(p => p.name === name)[0].root)
+  );
 }
 
 function allFilesInDir(dirName: string): string[] {
@@ -96,14 +121,23 @@ function allFilesInDir(dirName: string): string[] {
   return res;
 }
 
-export function readDependencies(npmScope: string, projectNodes: ProjectNode[]): { [projectName: string]: Dependency[] } {
+export function readDependencies(
+  npmScope: string,
+  projectNodes: ProjectNode[]
+): { [projectName: string]: Dependency[] } {
   const m = lastModifiedAmongProjectFiles();
   if (!directoryExists('./dist')) {
     fs.mkdirSync('./dist');
   }
   if (!fileExists('./dist/nxdeps.json') || m > mtime('./dist/nxdeps.json')) {
-    const deps = dependencies(npmScope, projectNodes, f => fs.readFileSync(f, 'UTF-8'));
-    fs.writeFileSync('./dist/nxdeps.json', JSON.stringify(deps, null, 2), 'UTF-8');
+    const deps = dependencies(npmScope, projectNodes, f =>
+      fs.readFileSync(f, 'UTF-8')
+    );
+    fs.writeFileSync(
+      './dist/nxdeps.json',
+      JSON.stringify(deps, null, 2),
+      'UTF-8'
+    );
     return deps;
   } else {
     return JSON.parse(fs.readFileSync('./dist/nxdeps.json', 'UTF-8'));
@@ -117,7 +151,7 @@ export function lastModifiedAmongProjectFiles() {
     mtime('.angular-cli.json'),
     mtime('tslint.json'),
     mtime('package.json')
-  ].reduce((a, b) => a > b ? a : b, 0);
+  ].reduce((a, b) => (a > b ? a : b), 0);
 }
 
 function recursiveMtime(dirName: string) {

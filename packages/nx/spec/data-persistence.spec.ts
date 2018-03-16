@@ -1,5 +1,10 @@
 import { Component, Injectable } from '@angular/core';
-import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import {
+  ComponentFixture,
+  fakeAsync,
+  TestBed,
+  tick
+} from '@angular/core/testing';
 import { ActivatedRouteSnapshot, Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Actions, Effect, EffectsModule } from '@ngrx/effects';
@@ -79,7 +84,9 @@ describe('DataPersistence', () => {
         imports: [
           StoreModule.forRoot({ todos: todosReducer, user: userReducer }),
           StoreRouterConnectingModule,
-          RouterTestingModule.withRoutes([{ path: 'todo/:id', component: TodoComponent }]),
+          RouterTestingModule.withRoutes([
+            { path: 'todo/:id', component: TodoComponent }
+          ]),
           NxModule.forRoot()
         ]
       });
@@ -163,7 +170,9 @@ describe('DataPersistence', () => {
           router.navigateByUrl('/todo/123');
           tick(0);
           root.detectChanges(false);
-          expect(root.elementRef.nativeElement.innerHTML).not.toContain('ID 123');
+          expect(root.elementRef.nativeElement.innerHTML).not.toContain(
+            'ID 123'
+          );
           expect(action.type).toEqual('ERROR');
           expect(action.payload.error.message).toEqual('boom');
 
@@ -215,7 +224,9 @@ describe('DataPersistence', () => {
           router.navigateByUrl('/todo/123');
           tick(0);
           root.detectChanges(false);
-          expect(root.elementRef.nativeElement.innerHTML).not.toContain('ID 123');
+          expect(root.elementRef.nativeElement.innerHTML).not.toContain(
+            'ID 123'
+          );
           expect(action.type).toEqual('ERROR');
           expect(action.payload.error).toEqual('boom');
 
@@ -271,7 +282,10 @@ describe('DataPersistence', () => {
       });
 
       it('should work', async done => {
-        actions = of({ type: 'GET_TODOS', payload: {} }, { type: 'GET_TODOS', payload: {} });
+        actions = of(
+          { type: 'GET_TODOS', payload: {} },
+          { type: 'GET_TODOS', payload: {} }
+        );
 
         expect(await readAll(TestBed.get(TodoEffects).loadTodos)).toEqual([
           { type: 'TODOS', payload: { user: 'bob', todos: 'some todos' } },
@@ -293,7 +307,8 @@ describe('DataPersistence', () => {
         @Effect()
         loadTodo = this.s.fetch<GetTodo>('GET_TODO', {
           id: (a, state) => a.payload.id,
-          run: (a, state) => of({ type: 'TODO', payload: a.payload }).pipe(delay(1)),
+          run: (a, state) =>
+            of({ type: 'TODO', payload: a.payload }).pipe(delay(1)),
           onError: (a, e: any) => null
         });
 

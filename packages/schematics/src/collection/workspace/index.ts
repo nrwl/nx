@@ -1,4 +1,12 @@
-import { apply, branchAndMerge, chain, mergeWith, Rule, Tree, url } from '@angular-devkit/schematics';
+import {
+  apply,
+  branchAndMerge,
+  chain,
+  mergeWith,
+  Rule,
+  Tree,
+  url
+} from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';
 import { join } from 'path';
@@ -9,22 +17,29 @@ import {
   ngrxVersion,
   ngrxStoreFreezeVersion,
   nxVersion,
-  prettierVersion, routerStoreVersion, schematicsVersion,
+  prettierVersion,
+  routerStoreVersion,
+  schematicsVersion
 } from '../../lib-versions';
 import * as fs from 'fs';
 import { copyFile, serializeJson, updateJsonFile } from '../../utils/fileutils';
-import { resolveUserExistingPrettierConfig, DEFAULT_NRWL_PRETTIER_CONFIG } from '../../utils/common';
+import {
+  resolveUserExistingPrettierConfig,
+  DEFAULT_NRWL_PRETTIER_CONFIG
+} from '../../utils/common';
 import { Observable } from 'rxjs/Observable';
-import { fromPromise } from 'rxjs/observable/fromPromise'
+import { fromPromise } from 'rxjs/observable/fromPromise';
 import { tap, map } from 'rxjs/operators';
-import {toFileName} from '../../utils/name-utils';
+import { toFileName } from '../../utils/name-utils';
 
 function updatePackageJson() {
   return (host: Tree) => {
     if (!host.exists('package.json')) {
       throw new Error('Cannot find package.json');
     }
-    const packageJson = JSON.parse(host.read('package.json')!.toString('utf-8'));
+    const packageJson = JSON.parse(
+      host.read('package.json')!.toString('utf-8')
+    );
     if (!packageJson.devDependencies) {
       packageJson.devDependencies = {};
     }
@@ -50,8 +65,8 @@ function updatePackageJson() {
       packageJson.dependencies['@ngrx/store-devtools'] = ngrxVersion;
     }
     if (!packageJson.dependencies['ngrx-store-freeze']) {
-          packageJson.dependencies['ngrx-store-freeze'] = ngrxStoreFreezeVersion;
-        }
+      packageJson.dependencies['ngrx-store-freeze'] = ngrxStoreFreezeVersion;
+    }
     if (!packageJson.devDependencies['@nrwl/schematics']) {
       packageJson.devDependencies['@nrwl/schematics'] = schematicsVersion;
     }
@@ -62,8 +77,10 @@ function updatePackageJson() {
       packageJson.devDependencies['prettier'] = prettierVersion;
     }
 
-    packageJson.scripts['affected:apps'] = './node_modules/.bin/nx affected apps';
-    packageJson.scripts['affected:build'] = './node_modules/.bin/nx affected build';
+    packageJson.scripts['affected:apps'] =
+      './node_modules/.bin/nx affected apps';
+    packageJson.scripts['affected:build'] =
+      './node_modules/.bin/nx affected build';
     packageJson.scripts['affected:e2e'] = './node_modules/.bin/nx affected e2e';
 
     packageJson.scripts['format'] = './node_modules/.bin/nx format write';
@@ -142,12 +159,16 @@ function updateTsConfigsJson(options: Schema) {
   return (host: Tree) => {
     const angularCliJson = readAngularCliJson(host);
     const app = angularCliJson.apps[0];
-    updateJsonFile('tsconfig.json', json => setUpCompilerOptions(json, npmScope(options), ''));
+    updateJsonFile('tsconfig.json', json =>
+      setUpCompilerOptions(json, npmScope(options), '')
+    );
 
     const offset = '../../../';
     updateJsonFile(`${app.root}/tsconfig.app.json`, json => {
       json.extends = `${offset}tsconfig.json`;
-      json.compilerOptions.outDir = `${offset}dist/out-tsc/apps/${options.name}`;
+      json.compilerOptions.outDir = `${offset}dist/out-tsc/apps/${
+        options.name
+      }`;
       if (!json.exclude) json.exclude = [];
       json.exclude = dedup(json.exclude.concat(['**/*.spec.ts']));
 
@@ -163,7 +184,13 @@ function updateTsConfigsJson(options: Schema) {
       json.files = ['test.js'];
       json.include = ['**/*.ts'];
       json.exclude = dedup(
-        json.exclude.concat(['**/e2e/*.ts', '**/*.e2e-spec.ts', '**/*.po.ts', 'node_modules', 'tmp'])
+        json.exclude.concat([
+          '**/e2e/*.ts',
+          '**/*.e2e-spec.ts',
+          '**/*.po.ts',
+          'node_modules',
+          'tmp'
+        ])
       );
     });
 
@@ -184,17 +211,21 @@ function updateTsConfigsJson(options: Schema) {
 function updateTsLintJson(options: Schema) {
   return (host: Tree) => {
     updateJsonFile('tslint.json', json => {
-      ['no-trailing-whitespace', 'one-line', 'quotemark', 'typedef-whitespace', 'whitespace'].forEach(key => {
+      [
+        'no-trailing-whitespace',
+        'one-line',
+        'quotemark',
+        'typedef-whitespace',
+        'whitespace'
+      ].forEach(key => {
         json[key] = undefined;
       });
       json.rulesDirectory.push('node_modules/@nrwl/schematics/src/tslint');
       json['nx-enforce-module-boundaries'] = [
         true,
         {
-          "allow": [],
-          "depConstraints": [
-            { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }
-          ]
+          allow: [],
+          depConstraints: [{ sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }]
         }
       ];
     });
@@ -230,7 +261,11 @@ exports.config = {
   };
 }
 
-function setUpCompilerOptions(tsconfig: any, npmScope: string, offset: string): void {
+function setUpCompilerOptions(
+  tsconfig: any,
+  npmScope: string,
+  offset: string
+): void {
   if (!tsconfig.compilerOptions.paths) {
     tsconfig.compilerOptions.paths = {};
   }
@@ -240,7 +275,9 @@ function setUpCompilerOptions(tsconfig: any, npmScope: string, offset: string): 
 
 function moveExistingFiles(options: Schema) {
   return (host: Tree) => {
-    const angularCliJson = JSON.parse(host.read('.angular-cli.json')!.toString('utf-8'));
+    const angularCliJson = JSON.parse(
+      host.read('.angular-cli.json')!.toString('utf-8')
+    );
     const app = angularCliJson.apps[0];
 
     fs.mkdirSync('apps');
@@ -259,15 +296,17 @@ function createAdditionalFiles(options: Schema) {
   return (host: Tree): Observable<Tree> => {
     // if the user does not already have a prettier configuration
     // of any kind, create one
-    return fromPromise(resolveUserExistingPrettierConfig())
-      .pipe(
-        tap((resolvedExistingConfig) => {
-          if (!resolvedExistingConfig) {
-            fs.writeFileSync('.prettierrc', JSON.stringify(DEFAULT_NRWL_PRETTIER_CONFIG, null, 2));
-          }
-        }),
-        map(() => host)
-      );
+    return fromPromise(resolveUserExistingPrettierConfig()).pipe(
+      tap(resolvedExistingConfig => {
+        if (!resolvedExistingConfig) {
+          fs.writeFileSync(
+            '.prettierrc',
+            JSON.stringify(DEFAULT_NRWL_PRETTIER_CONFIG, null, 2)
+          );
+        }
+      }),
+      map(() => host)
+    );
   };
 }
 
@@ -293,7 +332,9 @@ function checkCanConvertToWorkspace(options: Schema) {
     if (!host.exists('.angular-cli.json')) {
       throw new Error('Cannot find .angular-cli.json');
     }
-    const angularCliJson = JSON.parse(host.read('.angular-cli.json')!.toString('utf-8'));
+    const angularCliJson = JSON.parse(
+      host.read('.angular-cli.json')!.toString('utf-8')
+    );
     if (angularCliJson.apps.length !== 1) {
       throw new Error('Can only convert projects with one app');
     }

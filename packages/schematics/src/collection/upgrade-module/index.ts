@@ -12,7 +12,12 @@ import {
   url
 } from '@angular-devkit/schematics';
 
-import { names, toClassName, toFileName, toPropertyName } from '../../utils/name-utils';
+import {
+  names,
+  toClassName,
+  toFileName,
+  toPropertyName
+} from '../../utils/name-utils';
 import * as path from 'path';
 import * as ts from 'typescript';
 import {
@@ -31,11 +36,14 @@ import { insertImport } from '@schematics/angular/utility/route-utils';
 import { Schema } from './schema';
 import { angularJsVersion } from '../../lib-versions';
 import { addUpgradeToPackageJson } from '../../utils/common';
-import {wrapIntoFormat} from '../../utils/tasks';
+import { wrapIntoFormat } from '../../utils/tasks';
 
 function addImportsToModule(options: Schema): Rule {
   return (host: Tree) => {
-    const { moduleClassName, modulePath, moduleSource } = readBootstrapInfo(host, options.app);
+    const { moduleClassName, modulePath, moduleSource } = readBootstrapInfo(
+      host,
+      options.app
+    );
 
     insert(host, modulePath, [
       insertImport(
@@ -44,10 +52,23 @@ function addImportsToModule(options: Schema): Rule {
         `configure${toClassName(options.name)}, upgradedComponents`,
         `../${toFileName(options.name)}-setup`
       ),
-      insertImport(moduleSource, modulePath, 'UpgradeModule', '@angular/upgrade/static'),
+      insertImport(
+        moduleSource,
+        modulePath,
+        'UpgradeModule',
+        '@angular/upgrade/static'
+      ),
       ...addImportToModule(moduleSource, modulePath, 'UpgradeModule'),
-      ...addDeclarationToModule(moduleSource, modulePath, '...upgradedComponents'),
-      ...addEntryComponents(moduleSource, modulePath, getBootstrapComponent(moduleSource, moduleClassName))
+      ...addDeclarationToModule(
+        moduleSource,
+        modulePath,
+        '...upgradedComponents'
+      ),
+      ...addEntryComponents(
+        moduleSource,
+        modulePath,
+        getBootstrapComponent(moduleSource, moduleClassName)
+      )
     ]);
 
     return host;
@@ -56,7 +77,10 @@ function addImportsToModule(options: Schema): Rule {
 
 function addNgDoBootstrapToModule(options: Schema): Rule {
   return (host: Tree) => {
-    const { moduleClassName, modulePath, moduleSource } = readBootstrapInfo(host, options.app);
+    const { moduleClassName, modulePath, moduleSource } = readBootstrapInfo(
+      host,
+      options.app
+    );
 
     insert(host, modulePath, [
       ...addParameterToConstructor(moduleSource, modulePath, {
@@ -110,7 +134,9 @@ function createFiles(angularJsImport: string, options: Schema): Rule {
 
 export default function(options: Schema): Rule {
   return wrapIntoFormat(() => {
-    const angularJsImport = options.angularJsImport ? options.angularJsImport : options.name;
+    const angularJsImport = options.angularJsImport
+      ? options.angularJsImport
+      : options.name;
 
     return chain([
       createFiles(angularJsImport, options),

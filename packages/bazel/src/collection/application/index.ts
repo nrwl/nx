@@ -9,10 +9,13 @@ import {
   Tree,
   url
 } from '@angular-devkit/schematics';
-import {Schema} from './schema';
-import {strings} from '@angular-devkit/core';
-import {NodePackageInstallTask, RepositoryInitializerTask} from '@angular-devkit/schematics/tasks';
-import {libVersions} from '@nrwl/schematics/src/lib-versions';
+import { Schema } from './schema';
+import { strings } from '@angular-devkit/core';
+import {
+  NodePackageInstallTask,
+  RepositoryInitializerTask
+} from '@angular-devkit/schematics/tasks';
+import { libVersions } from '@nrwl/schematics/src/lib-versions';
 
 export default function(options: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
@@ -27,16 +30,24 @@ export default function(options: Schema): Rule {
         npmScope
       })
     ]);
-    return chain([branchAndMerge(chain([mergeWith(templateSource)]))])(host, context);
+    return chain([branchAndMerge(chain([mergeWith(templateSource)]))])(
+      host,
+      context
+    );
   };
 }
 
 function addTasks(options: Schema, context: SchematicContext) {
   let packageTask;
   if (!options.skipInstall) {
-     packageTask = context.addTask(new NodePackageInstallTask(options.directory));
+    packageTask = context.addTask(
+      new NodePackageInstallTask(options.directory)
+    );
   }
   if (!options.skipGit) {
-    context.addTask(new RepositoryInitializerTask(options.directory, options.commit), packageTask ? [packageTask] : []);
+    context.addTask(
+      new RepositoryInitializerTask(options.directory, options.commit),
+      packageTask ? [packageTask] : []
+    );
   }
 }

@@ -4,7 +4,10 @@ import { Tree, VirtualTree } from '@angular-devkit/schematics';
 import { getFileContent } from '@schematics/angular/utility/test';
 
 describe('workspace', () => {
-  const schematicRunner = new SchematicTestRunner('@nrwl/schematics', path.join(__dirname, '../../collection.json'));
+  const schematicRunner = new SchematicTestRunner(
+    '@nrwl/schematics',
+    path.join(__dirname, '../../collection.json')
+  );
 
   let appTree: Tree;
 
@@ -14,14 +17,22 @@ describe('workspace', () => {
 
   it('should error if no package.json is present', () => {
     expect(() => {
-      const tree = schematicRunner.runSchematic('workspace', { name: 'myApp' }, appTree);
+      const tree = schematicRunner.runSchematic(
+        'workspace',
+        { name: 'myApp' },
+        appTree
+      );
     }).toThrow('Cannot find package.json');
   });
 
   it('should error if no protractor.conf.js is present', () => {
     expect(() => {
       appTree.create('/package.json', JSON.stringify({}));
-      const tree = schematicRunner.runSchematic('workspace', { name: 'myApp' }, appTree);
+      const tree = schematicRunner.runSchematic(
+        'workspace',
+        { name: 'myApp' },
+        appTree
+      );
     }).toThrow('Cannot find protractor.conf.js');
   });
 
@@ -29,7 +40,11 @@ describe('workspace', () => {
     expect(() => {
       appTree.create('/package.json', JSON.stringify({}));
       appTree.create('/protractor.conf.js', '');
-      const tree = schematicRunner.runSchematic('workspace', { name: 'myApp' }, appTree);
+      const tree = schematicRunner.runSchematic(
+        'workspace',
+        { name: 'myApp' },
+        appTree
+      );
     }).toThrow('Cannot find .angular-cli.json');
   });
 
@@ -43,7 +58,11 @@ describe('workspace', () => {
           apps: [{}, {}]
         })
       );
-      const tree = schematicRunner.runSchematic('workspace', { name: 'myApp' }, appTree);
+      const tree = schematicRunner.runSchematic(
+        'workspace',
+        { name: 'myApp' },
+        appTree
+      );
     }).toThrow('Can only convert projects with one app');
   });
 });

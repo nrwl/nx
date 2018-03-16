@@ -5,7 +5,10 @@ import { createApp, createEmptyWorkspace } from '../../utils/testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
 
 describe('upgrade-module', () => {
-  const schematicRunner = new SchematicTestRunner('@nrwl/schematics', path.join(__dirname, '../../collection.json'));
+  const schematicRunner = new SchematicTestRunner(
+    '@nrwl/schematics',
+    path.join(__dirname, '../../collection.json')
+  );
 
   let appTree: Tree;
 
@@ -25,7 +28,9 @@ describe('upgrade-module', () => {
     );
 
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
-    expect(appModule).toContain(`this.upgrade.bootstrap(document.body, ['downgraded', 'legacy'])`);
+    expect(appModule).toContain(
+      `this.upgrade.bootstrap(document.body, ['downgraded', 'legacy'])`
+    );
     expect(appModule).not.toContain(`bootstrap:`);
 
     const legacySetup = getFileContent(tree, '/apps/myapp/src/legacy-setup.ts');

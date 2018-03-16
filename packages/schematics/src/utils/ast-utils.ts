@@ -12,7 +12,12 @@ import {
   getSourceNodes,
   insertAfterLastOccurrence
 } from '@schematics/angular/utility/ast-utils';
-import { Change, InsertChange, NoopChange, RemoveChange } from '@schematics/angular/utility/change';
+import {
+  Change,
+  InsertChange,
+  NoopChange,
+  RemoveChange
+} from '@schematics/angular/utility/change';
 import * as ts from 'typescript';
 import { toFileName } from './name-utils';
 import * as path from 'path';
@@ -66,12 +71,18 @@ function _addSymbolToNgModuleMetadata(
       // Get the indentation of the last element, if any.
       const text = node.getFullText(source);
       if (text.match('^\r?\r?\n')) {
-        toInsert = `,${text.match(/^\r?\n\s+/)[0]}${metadataField}: [${expression}]`;
+        toInsert = `,${
+          text.match(/^\r?\n\s+/)[0]
+        }${metadataField}: [${expression}]`;
       } else {
         toInsert = `, ${metadataField}: [${expression}]`;
       }
     }
-    const newMetadataProperty = new InsertChange(ngModulePath, position, toInsert);
+    const newMetadataProperty = new InsertChange(
+      ngModulePath,
+      position,
+      toInsert
+    );
     return [newMetadataProperty];
   }
 
@@ -91,7 +102,9 @@ function _addSymbolToNgModuleMetadata(
   }
 
   if (!node) {
-    console.log('No app module found. Please add your new class to your component.');
+    console.log(
+      'No app module found. Please add your new class to your component.'
+    );
 
     return [];
   }
@@ -121,7 +134,9 @@ function _addSymbolToNgModuleMetadata(
       // Get the indentation of the last element, if any.
       const text = node.getFullText(source);
       if (text.match('^\r?\r?\n')) {
-        toInsert = `,${text.match(/^\r?\n\s+/)[0]}${metadataField}: [${expression}]`;
+        toInsert = `,${
+          text.match(/^\r?\n\s+/)[0]
+        }${metadataField}: [${expression}]`;
       } else {
         toInsert = `, ${metadataField}: [${expression}]`;
       }
@@ -149,7 +164,9 @@ export function addParameterToConstructor(
   opts: { className: string; param: string }
 ): Change[] {
   const clazz = findClass(source, opts.className);
-  const constructor = clazz.members.filter(m => m.kind === ts.SyntaxKind.Constructor)[0];
+  const constructor = clazz.members.filter(
+    m => m.kind === ts.SyntaxKind.Constructor
+  )[0];
   if (constructor) {
     throw new Error('Should be tested');
   } else {
@@ -182,7 +199,11 @@ ${opts.methodHeader} {}
   return [new InsertChange(modulePath, clazz.end - 1, offset(body, 1, true))];
 }
 
-export function removeFromNgModule(source: ts.SourceFile, modulePath: string, property: string): Change[] {
+export function removeFromNgModule(
+  source: ts.SourceFile,
+  modulePath: string,
+  property: string
+): Change[] {
   const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
   let node: any = nodes[0]; // tslint:disable-line:no-any
 
@@ -194,17 +215,28 @@ export function removeFromNgModule(source: ts.SourceFile, modulePath: string, pr
   // Get all the children property assignment of object literals.
   const matchingProperty = getMatchingProperty(source, property);
   if (matchingProperty) {
-    return [new RemoveChange(modulePath, matchingProperty.pos, matchingProperty.getFullText(source))];
+    return [
+      new RemoveChange(
+        modulePath,
+        matchingProperty.pos,
+        matchingProperty.getFullText(source)
+      )
+    ];
   } else {
     return [];
   }
 }
 
-function findClass(source: ts.SourceFile, className: string): ts.ClassDeclaration {
+function findClass(
+  source: ts.SourceFile,
+  className: string
+): ts.ClassDeclaration {
   const nodes = getSourceNodes(source);
 
   const clazz = <any>nodes.filter(
-    n => n.kind === ts.SyntaxKind.ClassDeclaration && (<any>n).name.text === className
+    n =>
+      n.kind === ts.SyntaxKind.ClassDeclaration &&
+      (<any>n).name.text === className
   )[0];
 
   if (!clazz) {
@@ -214,7 +246,11 @@ function findClass(source: ts.SourceFile, className: string): ts.ClassDeclaratio
   return clazz;
 }
 
-export function offset(text: string, numberOfTabs: number, wrap: boolean): string {
+export function offset(
+  text: string,
+  numberOfTabs: number,
+  wrap: boolean
+): string {
   const lines = text
     .trim()
     .split('\n')
@@ -230,21 +266,48 @@ export function offset(text: string, numberOfTabs: number, wrap: boolean): strin
   return wrap ? `\n${lines}\n` : lines;
 }
 
-export function addImportToModule(source: ts.SourceFile, modulePath: string, symbolName: string): Change[] {
-  return _addSymbolToNgModuleMetadata(source, modulePath, 'imports', symbolName);
+export function addImportToModule(
+  source: ts.SourceFile,
+  modulePath: string,
+  symbolName: string
+): Change[] {
+  return _addSymbolToNgModuleMetadata(
+    source,
+    modulePath,
+    'imports',
+    symbolName
+  );
 }
 
-export function addImportToTestBed(source: ts.SourceFile, specPath: string, symbolName: string): Change[] {
-  const allCalls: ts.CallExpression[] = <any>findNodes(source, ts.SyntaxKind.CallExpression);
+export function addImportToTestBed(
+  source: ts.SourceFile,
+  specPath: string,
+  symbolName: string
+): Change[] {
+  const allCalls: ts.CallExpression[] = <any>findNodes(
+    source,
+    ts.SyntaxKind.CallExpression
+  );
 
   const configureTestingModuleObjectLiterals = allCalls
     .filter(c => c.expression.kind === ts.SyntaxKind.PropertyAccessExpression)
-    .filter((c: any) => c.expression.name.getText(source) === 'configureTestingModule')
-    .map(c => (c.arguments[0].kind === ts.SyntaxKind.ObjectLiteralExpression ? c.arguments[0] : null));
+    .filter(
+      (c: any) => c.expression.name.getText(source) === 'configureTestingModule'
+    )
+    .map(
+      c =>
+        c.arguments[0].kind === ts.SyntaxKind.ObjectLiteralExpression
+          ? c.arguments[0]
+          : null
+    );
 
   if (configureTestingModuleObjectLiterals.length > 0) {
-    const startPosition = configureTestingModuleObjectLiterals[0].getFirstToken(source).getEnd();
-    return [new InsertChange(specPath, startPosition, `imports: [${symbolName}], `)];
+    const startPosition = configureTestingModuleObjectLiterals[0]
+      .getFirstToken(source)
+      .getEnd();
+    return [
+      new InsertChange(specPath, startPosition, `imports: [${symbolName}], `)
+    ];
   } else {
     return [];
   }
@@ -259,17 +322,23 @@ export function addReexport(
   const allExports = findNodes(source, ts.SyntaxKind.ExportDeclaration);
   if (allExports.length > 0) {
     const m = allExports.filter(
-      (e: ts.ExportDeclaration) => e.moduleSpecifier.getText(source).indexOf(reexportedFileName) > -1
+      (e: ts.ExportDeclaration) =>
+        e.moduleSpecifier.getText(source).indexOf(reexportedFileName) > -1
     );
     if (m.length > 0) {
       const mm: ts.ExportDeclaration = <any>m[0];
-      return [new InsertChange(modulePath, mm.exportClause.end - 1, `, ${token} `)];
+      return [
+        new InsertChange(modulePath, mm.exportClause.end - 1, `, ${token} `)
+      ];
     }
   }
   return [];
 }
 
-export function getBootstrapComponent(source: ts.SourceFile, moduleClassName: string): string {
+export function getBootstrapComponent(
+  source: ts.SourceFile,
+  moduleClassName: string
+): string {
   const bootstrap = getMatchingProperty(source, 'bootstrap');
   if (!bootstrap) {
     throw new Error(`Cannot find bootstrap components in '${moduleClassName}'`);
@@ -285,7 +354,11 @@ export function getBootstrapComponent(source: ts.SourceFile, moduleClassName: st
   return bootstrapComponent.getText();
 }
 
-function getMatchingObjectLiteralElement(node: any, source: ts.SourceFile, property: string) {
+function getMatchingObjectLiteralElement(
+  node: any,
+  source: ts.SourceFile,
+  property: string
+) {
   return (
     (node as ts.ObjectLiteralExpression).properties
       .filter(prop => prop.kind == ts.SyntaxKind.PropertyAssignment)
@@ -304,7 +377,10 @@ function getMatchingObjectLiteralElement(node: any, source: ts.SourceFile, prope
   );
 }
 
-function getMatchingProperty(source: ts.SourceFile, property: string): ts.ObjectLiteralElement {
+function getMatchingProperty(
+  source: ts.SourceFile,
+  property: string
+): ts.ObjectLiteralElement {
   const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
   let node: any = nodes[0]; // tslint:disable-line:no-any
 
@@ -314,7 +390,11 @@ function getMatchingProperty(source: ts.SourceFile, property: string): ts.Object
   return getMatchingObjectLiteralElement(node, source, property);
 }
 
-export function addRoute(ngModulePath: string, source: ts.SourceFile, route: string): Change[] {
+export function addRoute(
+  ngModulePath: string,
+  source: ts.SourceFile,
+  route: string
+): Change[] {
   const routes = getListOfRoutes(source);
   if (!routes) return [];
 
@@ -325,7 +405,11 @@ export function addRoute(ngModulePath: string, source: ts.SourceFile, route: str
   }
 }
 
-export function addIncludeToTsConfig(tsConfigPath: string, source: ts.SourceFile, include: string): Change[] {
+export function addIncludeToTsConfig(
+  tsConfigPath: string,
+  source: ts.SourceFile,
+  include: string
+): Change[] {
   const includeKeywordPos = source.text.indexOf('"include":');
   if (includeKeywordPos > -1) {
     const includeArrayEndPos = source.text.indexOf(']', includeKeywordPos);
@@ -345,7 +429,11 @@ function getListOfRoutes(source: ts.SourceFile): ts.NodeArray<ts.Expression> {
       if (e.kind === 181) {
         const ee = e as ts.CallExpression;
         const text = ee.expression.getText(source);
-        if ((text === 'RouterModule.forRoot' || text === 'RouterModule.forChild') && ee.arguments.length > 0) {
+        if (
+          (text === 'RouterModule.forRoot' ||
+            text === 'RouterModule.forChild') &&
+          ee.arguments.length > 0
+        ) {
           const routes = ee.arguments[0];
           if (routes.kind === ts.SyntaxKind.ArrayLiteralExpression) {
             return (routes as ts.ArrayLiteralExpression).elements;
@@ -362,10 +450,14 @@ export function getImport(
   predicate: (a: any) => boolean
 ): { moduleSpec: string; bindings: string[] }[] {
   const allImports = findNodes(source, ts.SyntaxKind.ImportDeclaration);
-  const matching = allImports.filter((i: ts.ImportDeclaration) => predicate(i.moduleSpecifier.getText()));
+  const matching = allImports.filter((i: ts.ImportDeclaration) =>
+    predicate(i.moduleSpecifier.getText())
+  );
 
   return matching.map((i: ts.ImportDeclaration) => {
-    const moduleSpec = i.moduleSpecifier.getText().substring(1, i.moduleSpecifier.getText().length - 1);
+    const moduleSpec = i.moduleSpecifier
+      .getText()
+      .substring(1, i.moduleSpecifier.getText().length - 1);
     const t = i.importClause.namedBindings.getText();
     const bindings = t
       .replace('{', '')
@@ -376,23 +468,56 @@ export function getImport(
   });
 }
 
-export function addProviderToModule(source: ts.SourceFile, modulePath: string, symbolName: string): Change[] {
-  return _addSymbolToNgModuleMetadata(source, modulePath, 'providers', symbolName);
+export function addProviderToModule(
+  source: ts.SourceFile,
+  modulePath: string,
+  symbolName: string
+): Change[] {
+  return _addSymbolToNgModuleMetadata(
+    source,
+    modulePath,
+    'providers',
+    symbolName
+  );
 }
 
-export function addDeclarationToModule(source: ts.SourceFile, modulePath: string, symbolName: string): Change[] {
-  return _addSymbolToNgModuleMetadata(source, modulePath, 'declarations', symbolName);
+export function addDeclarationToModule(
+  source: ts.SourceFile,
+  modulePath: string,
+  symbolName: string
+): Change[] {
+  return _addSymbolToNgModuleMetadata(
+    source,
+    modulePath,
+    'declarations',
+    symbolName
+  );
 }
 
-export function addEntryComponents(source: ts.SourceFile, modulePath: string, symbolName: string): Change[] {
-  return _addSymbolToNgModuleMetadata(source, modulePath, 'entryComponents', symbolName);
+export function addEntryComponents(
+  source: ts.SourceFile,
+  modulePath: string,
+  symbolName: string
+): Change[] {
+  return _addSymbolToNgModuleMetadata(
+    source,
+    modulePath,
+    'entryComponents',
+    symbolName
+  );
 }
 
-export function addGlobal(source: ts.SourceFile, modulePath: string, statement: string): Change[] {
+export function addGlobal(
+  source: ts.SourceFile,
+  modulePath: string,
+  statement: string
+): Change[] {
   const allImports = findNodes(source, ts.SyntaxKind.ImportDeclaration);
   if (allImports.length > 0) {
     const lastImport = allImports[allImports.length - 1];
-    return [new InsertChange(modulePath, lastImport.end + 1, `\n${statement}\n`)];
+    return [
+      new InsertChange(modulePath, lastImport.end + 1, `\n${statement}\n`)
+    ];
   } else {
     return [new InsertChange(modulePath, 0, `${statement}\n`)];
   }
@@ -418,7 +543,9 @@ export function getAppConfig(host: Tree, name: string): any {
   if (!host.exists('.angular-cli.json')) {
     throw new Error('Missing .angular-cli.json');
   }
-  const angularCliJson = JSON.parse(host.read('.angular-cli.json')!.toString('utf-8'));
+  const angularCliJson = JSON.parse(
+    host.read('.angular-cli.json')!.toString('utf-8')
+  );
   const apps = angularCliJson.apps;
   if (!apps || apps.length === 0) {
     throw new Error(`Cannot find app '${name}'`);
@@ -453,26 +580,52 @@ export function readBootstrapInfo(
   }
 
   const mainSource = host.read(mainPath)!.toString('utf-8');
-  const main = ts.createSourceFile(mainPath, mainSource, ts.ScriptTarget.Latest, true);
-  const moduleImports = getImport(main, (s: string) => s.indexOf('.module') > -1);
+  const main = ts.createSourceFile(
+    mainPath,
+    mainSource,
+    ts.ScriptTarget.Latest,
+    true
+  );
+  const moduleImports = getImport(
+    main,
+    (s: string) => s.indexOf('.module') > -1
+  );
   if (moduleImports.length !== 1) {
     throw new Error(`main.ts can only import a single module`);
   }
   const moduleImport = moduleImports[0];
-  const moduleClassName = moduleImport.bindings.filter(b => b.endsWith('Module'))[0];
+  const moduleClassName = moduleImport.bindings.filter(b =>
+    b.endsWith('Module')
+  )[0];
 
-  const modulePath = `${path.join(path.dirname(mainPath), moduleImport.moduleSpec)}.ts`;
+  const modulePath = `${path.join(
+    path.dirname(mainPath),
+    moduleImport.moduleSpec
+  )}.ts`;
   if (!host.exists(modulePath)) {
     throw new Error(`Cannot find '${modulePath}'`);
   }
 
   const moduleSourceText = host.read(modulePath)!.toString('utf-8');
-  const moduleSource = ts.createSourceFile(modulePath, moduleSourceText, ts.ScriptTarget.Latest, true);
+  const moduleSource = ts.createSourceFile(
+    modulePath,
+    moduleSourceText,
+    ts.ScriptTarget.Latest,
+    true
+  );
 
-  const bootstrapComponentClassName = getBootstrapComponent(moduleSource, moduleClassName);
+  const bootstrapComponentClassName = getBootstrapComponent(
+    moduleSource,
+    moduleClassName
+  );
   const bootstrapComponentFileName = `./${path.join(
     path.dirname(moduleImport.moduleSpec),
-    `${toFileName(bootstrapComponentClassName.substring(0, bootstrapComponentClassName.length - 9))}.component`
+    `${toFileName(
+      bootstrapComponentClassName.substring(
+        0,
+        bootstrapComponentClassName.length - 9
+      )
+    )}.component`
   )}`;
 
   return {

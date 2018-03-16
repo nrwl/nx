@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import * as path from 'path';
 import * as resolve from 'resolve';
-import {getProjectRoots, getTouchedProjects, parseFiles} from './shared';
+import { getProjectRoots, getTouchedProjects, parseFiles } from './shared';
 
 export function format(args: string[]) {
   const command = args[0];
@@ -49,8 +49,12 @@ function getPatternsFromApps(affectedFiles: string[]): string[] {
 }
 
 function printError(command: string, e: any) {
-  console.error(`Pass the SHA range, as follows: npm run format:${command} -- SHA1 SHA2.`);
-  console.error(`Or pass the list of files, as follows: npm run format:${command} -- --files="libs/mylib/index.ts,libs/mylib2/index.ts".`);
+  console.error(
+    `Pass the SHA range, as follows: npm run format:${command} -- SHA1 SHA2.`
+  );
+  console.error(
+    `Or pass the list of files, as follows: npm run format:${command} -- --files="libs/mylib/index.ts,libs/mylib2/index.ts".`
+  );
   console.error(e.message);
 }
 
@@ -65,9 +69,12 @@ function write(patterns: string[]) {
 function check(patterns: string[]) {
   if (patterns.length > 0) {
     try {
-      execSync(`node ${prettierPath()} --list-different ${patterns.join(' ')}`, {
-        stdio: [0, 1, 2]
-      });
+      execSync(
+        `node ${prettierPath()} --list-different ${patterns.join(' ')}`,
+        {
+          stdio: [0, 1, 2]
+        }
+      );
     } catch (e) {
       process.exit(1);
     }
@@ -75,6 +82,8 @@ function check(patterns: string[]) {
 }
 
 function prettierPath() {
-  const basePath = path.dirname(resolve.sync('prettier', { basedir: __dirname }));
+  const basePath = path.dirname(
+    resolve.sync('prettier', { basedir: __dirname })
+  );
   return path.join(basePath, 'bin-prettier.js');
 }

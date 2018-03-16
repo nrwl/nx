@@ -8,7 +8,11 @@ export default {
       const rule = ruleName in json.rules ? json.rules[ruleName] : null;
 
       // Only modify when the rule is configured with optional arguments
-      if (Array.isArray(rule) && typeof rule[1] === 'object' && rule[1] !== null) {
+      if (
+        Array.isArray(rule) &&
+        typeof rule[1] === 'object' &&
+        rule[1] !== null
+      ) {
         rule[1].npmScope = undefined;
       }
     });

@@ -19,11 +19,9 @@ describe('fileutils', () => {
     });
 
     it('should put workspaceRoot last', () => {
-      expect(addApp([{ name: 'a' }, { name: 'z' }], { name: '$workspaceRoot' })).toEqual([
-        { name: 'a' },
-        { name: 'z' },
-        { name: '$workspaceRoot' }
-      ]);
+      expect(
+        addApp([{ name: 'a' }, { name: 'z' }], { name: '$workspaceRoot' })
+      ).toEqual([{ name: 'a' }, { name: 'z' }, { name: '$workspaceRoot' }]);
     });
 
     it('should prioritize apps with "main" defined', () => {
@@ -32,7 +30,12 @@ describe('fileutils', () => {
           name: 'b',
           main: 'b'
         })
-      ).toEqual([{ name: 'a', main: 'a' }, { name: 'b', main: 'b' }, { name: 'a' }, { name: 'c' }]);
+      ).toEqual([
+        { name: 'a', main: 'a' },
+        { name: 'b', main: 'b' },
+        { name: 'a' },
+        { name: 'c' }
+      ]);
     });
   });
 });

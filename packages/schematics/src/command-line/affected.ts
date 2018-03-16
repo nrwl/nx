@@ -30,8 +30,12 @@ export function affected(args: string[]): void {
 }
 
 function printError(command: string, e: any) {
-  console.error(`Pass the SHA range, as follows: npm run affected:${command} -- SHA1 SHA2.`);
-  console.error(`Or pass the list of files, as follows: npm run affected:${command} -- --files="libs/mylib/index.ts,libs/mylib2/index.ts".`);
+  console.error(
+    `Pass the SHA range, as follows: npm run affected:${command} -- SHA1 SHA2.`
+  );
+  console.error(
+    `Or pass the list of files, as follows: npm run affected:${command} -- --files="libs/mylib/index.ts,libs/mylib2/index.ts".`
+  );
   console.error(e.message);
 }
 
@@ -39,7 +43,9 @@ function build(apps: string[], rest: string[]) {
   if (apps.length > 0) {
     console.log(`Building ${apps.join(', ')}`);
     apps.forEach(app => {
-      execSync(`node ${ngPath()} build ${rest.join(' ')} -a=${app}`, { stdio: [0, 1, 2] });
+      execSync(`node ${ngPath()} build ${rest.join(' ')} -a=${app}`, {
+        stdio: [0, 1, 2]
+      });
     });
   } else {
     console.log('No apps to build');
@@ -50,7 +56,9 @@ function e2e(apps: string[], rest: string[]) {
   if (apps.length > 0) {
     console.log(`Testing ${apps.join(', ')}`);
     apps.forEach(app => {
-      execSync(`node ${ngPath()} e2e ${rest.join(' ')} -a=${app}`, { stdio: [0, 1, 2] });
+      execSync(`node ${ngPath()} e2e ${rest.join(' ')} -a=${app}`, {
+        stdio: [0, 1, 2]
+      });
     });
   } else {
     console.log('No apps to test');
@@ -58,6 +66,10 @@ function e2e(apps: string[], rest: string[]) {
 }
 
 function ngPath() {
-  const basePath = path.dirname(path.dirname(path.dirname(resolve.sync('@angular/cli', { basedir: __dirname }))));
+  const basePath = path.dirname(
+    path.dirname(
+      path.dirname(resolve.sync('@angular/cli', { basedir: __dirname }))
+    )
+  );
   return path.join(basePath, 'bin', 'ng');
 }

@@ -1,8 +1,14 @@
-import {chain, noop, Rule, Tree} from '@angular-devkit/schematics';
-import {addEntryComponents, addMethod, insert, readBootstrapInfo, removeFromNgModule} from '../../utils/ast-utils';
-import {Schema} from './schema';
-import {addUpgradeToPackageJson} from '../../utils/common';
-import {wrapIntoFormat} from '../../utils/tasks';
+import { chain, noop, Rule, Tree } from '@angular-devkit/schematics';
+import {
+  addEntryComponents,
+  addMethod,
+  insert,
+  readBootstrapInfo,
+  removeFromNgModule
+} from '../../utils/ast-utils';
+import { Schema } from './schema';
+import { addUpgradeToPackageJson } from '../../utils/common';
+import { wrapIntoFormat } from '../../utils/tasks';
 
 function updateMain(angularJsImport: string, options: Schema): Rule {
   return (host: Tree) => {
@@ -51,7 +57,10 @@ angular.bootstrap(document, ['${options.name}', downgraded.name]);`
 
 function rewriteBootstrapLogic(options: Schema): Rule {
   return (host: Tree) => {
-    const { modulePath, moduleSource, moduleClassName } = readBootstrapInfo(host, options.app);
+    const { modulePath, moduleSource, moduleClassName } = readBootstrapInfo(
+      host,
+      options.app
+    );
     insert(host, modulePath, [
       ...addMethod(moduleSource, modulePath, {
         className: moduleClassName,
@@ -65,15 +74,25 @@ function rewriteBootstrapLogic(options: Schema): Rule {
 }
 function addEntryComponentsToModule(options: Schema): Rule {
   return (host: Tree) => {
-    const { modulePath, moduleSource, bootstrapComponentClassName } = readBootstrapInfo(host, options.app);
-    insert(host, modulePath, addEntryComponents(moduleSource, modulePath, bootstrapComponentClassName));
+    const {
+      modulePath,
+      moduleSource,
+      bootstrapComponentClassName
+    } = readBootstrapInfo(host, options.app);
+    insert(
+      host,
+      modulePath,
+      addEntryComponents(moduleSource, modulePath, bootstrapComponentClassName)
+    );
     return host;
   };
 }
 
 export default function(options: Schema): Rule {
-  return  wrapIntoFormat(() => {
-    const angularJsImport = options.angularJsImport ? options.angularJsImport : options.name;
+  return wrapIntoFormat(() => {
+    const angularJsImport = options.angularJsImport
+      ? options.angularJsImport
+      : options.name;
 
     return chain([
       updateMain(angularJsImport, options),

@@ -7,7 +7,12 @@ export default {
       if (!json.exclude) {
         json.exclude = ['node_modules', 'tmp'];
       }
-      json.exclude = [...json.exclude, '**/e2e/*.ts', '**/*.e2e-spec.ts', '**/*.po.ts'];
+      json.exclude = [
+        ...json.exclude,
+        '**/e2e/*.ts',
+        '**/*.e2e-spec.ts',
+        '**/*.po.ts'
+      ];
     });
   }
 };

@@ -5,7 +5,10 @@ import { createApp, createEmptyWorkspace } from '../../utils/testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
 
 describe('downgrade-module', () => {
-  const schematicRunner = new SchematicTestRunner('@nrwl/schematics', path.join(__dirname, '../../collection.json'));
+  const schematicRunner = new SchematicTestRunner(
+    '@nrwl/schematics',
+    path.join(__dirname, '../../collection.json')
+  );
 
   let appTree: Tree;
 
@@ -27,7 +30,9 @@ describe('downgrade-module', () => {
     const main = getFileContent(tree, '/apps/myapp/src/main.ts');
     expect(main).toContain('downgradeModule(bootstrapAngular)');
     expect(main).toContain(`import 'legacy';`);
-    expect(main).toContain(`angular.bootstrap(document, ['legacy', downgraded.name]);`);
+    expect(main).toContain(
+      `angular.bootstrap(document, ['legacy', downgraded.name]);`
+    );
   });
 
   it('should update module', () => {

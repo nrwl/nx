@@ -15,15 +15,24 @@ import {
   SchematicContext
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
-import {strings} from '@angular-devkit/core';
+import { strings } from '@angular-devkit/core';
 import * as ts from 'typescript';
 import { addBootstrapToModule } from '@schematics/angular/utility/ast-utils';
 import { insertImport } from '@schematics/angular/utility/route-utils';
-import { addApp, serializeJson, cliConfig, readCliConfigFile } from '../../utils/fileutils';
-import {addImportToModule, addImportToTestBed, insert} from '../../utils/ast-utils';
+import {
+  addApp,
+  serializeJson,
+  cliConfig,
+  readCliConfigFile
+} from '../../utils/fileutils';
+import {
+  addImportToModule,
+  addImportToTestBed,
+  insert
+} from '../../utils/ast-utils';
 import { offsetFromRoot } from '../../utils/common';
-import { wrapIntoFormat} from '../../utils/tasks';
-import {toFileName} from '../../utils/name-utils';
+import { wrapIntoFormat } from '../../utils/tasks';
+import { toFileName } from '../../utils/name-utils';
 
 interface NormalizedSchema extends Schema {
   fullName: string;
@@ -34,11 +43,26 @@ function addBootstrap(path: string): Rule {
   return (host: Tree) => {
     const modulePath = `${path}/app/app.module.ts`;
     const moduleSource = host.read(modulePath)!.toString('utf-8');
-    const sourceFile = ts.createSourceFile(modulePath, moduleSource, ts.ScriptTarget.Latest, true);
+    const sourceFile = ts.createSourceFile(
+      modulePath,
+      moduleSource,
+      ts.ScriptTarget.Latest,
+      true
+    );
     insert(host, modulePath, [
-      insertImport(sourceFile, modulePath, 'BrowserModule', '@angular/platform-browser'),
+      insertImport(
+        sourceFile,
+        modulePath,
+        'BrowserModule',
+        '@angular/platform-browser'
+      ),
       ...addImportToModule(sourceFile, modulePath, 'BrowserModule'),
-      ...addBootstrapToModule(sourceFile, modulePath, 'AppComponent', './app.component')
+      ...addBootstrapToModule(
+        sourceFile,
+        modulePath,
+        'AppComponent',
+        './app.component'
+      )
     ]);
     return host;
   };
@@ -48,7 +72,12 @@ function addNxModule(path: string): Rule {
   return (host: Tree) => {
     const modulePath = `${path}/app/app.module.ts`;
     const moduleSource = host.read(modulePath)!.toString('utf-8');
-    const sourceFile = ts.createSourceFile(modulePath, moduleSource, ts.ScriptTarget.Latest, true);
+    const sourceFile = ts.createSourceFile(
+      modulePath,
+      moduleSource,
+      ts.ScriptTarget.Latest,
+      true
+    );
     insert(host, modulePath, [
       insertImport(sourceFile, modulePath, 'NxModule', '@nrwl/nx'),
       ...addImportToModule(sourceFile, modulePath, 'NxModule.forRoot()')
@@ -108,10 +137,19 @@ function addRouterRootConfiguration(path: string): Rule {
   return (host: Tree) => {
     const modulePath = `${path}/app/app.module.ts`;
     const moduleSource = host.read(modulePath)!.toString('utf-8');
-    const sourceFile = ts.createSourceFile(modulePath, moduleSource, ts.ScriptTarget.Latest, true);
+    const sourceFile = ts.createSourceFile(
+      modulePath,
+      moduleSource,
+      ts.ScriptTarget.Latest,
+      true
+    );
     insert(host, modulePath, [
       insertImport(sourceFile, modulePath, 'RouterModule', '@angular/router'),
-      ...addImportToModule(sourceFile, modulePath, `RouterModule.forRoot([], {initialNavigation: 'enabled'})`)
+      ...addImportToModule(
+        sourceFile,
+        modulePath,
+        `RouterModule.forRoot([], {initialNavigation: 'enabled'})`
+      )
     ]);
 
     const componentSpecPath = `${path}/app/app.component.spec.ts`;
@@ -123,8 +161,17 @@ function addRouterRootConfiguration(path: string): Rule {
       true
     );
     insert(host, componentSpecPath, [
-      insertImport(componentSpecSourceFile, componentSpecPath, 'RouterTestingModule', '@angular/router/testing'),
-      ...addImportToTestBed(componentSpecSourceFile, componentSpecPath, `RouterTestingModule`)
+      insertImport(
+        componentSpecSourceFile,
+        componentSpecPath,
+        'RouterTestingModule',
+        '@angular/router/testing'
+      ),
+      ...addImportToTestBed(
+        componentSpecSourceFile,
+        componentSpecPath,
+        `RouterTestingModule`
+      )
     ]);
     return host;
   };
@@ -211,7 +258,9 @@ export default function(schema: Schema): Rule {
 
 function normalizeOptions(options: Schema): NormalizedSchema {
   const name = toFileName(options.name);
-  const fullName = options.directory ? `${toFileName(options.directory)}/${name}` : name;
+  const fullName = options.directory
+    ? `${toFileName(options.directory)}/${name}`
+    : name;
   const fullPath = `apps/${fullName}/src`;
   return { ...options, sourceDir: 'src', name, fullName, fullPath };
 }

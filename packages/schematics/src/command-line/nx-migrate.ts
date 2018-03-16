@@ -7,10 +7,16 @@ type MigrationName = { name: string; migration: Migration };
 const allMigrations = fs
   .readdirSync(path.join(__dirname, '/../../migrations'))
   .filter(f => f.endsWith('.js') && !f.endsWith('.d.js'))
-  .map(file => ({ migration: require(`../../migrations/${file}`).default, name: path.parse(file).name }));
+  .map(file => ({
+    migration: require(`../../migrations/${file}`).default,
+    name: path.parse(file).name
+  }));
 
 const latestMigration = readLatestMigration();
-const migrationsToRun = calculateMigrationsToRun(allMigrations, latestMigration);
+const migrationsToRun = calculateMigrationsToRun(
+  allMigrations,
+  latestMigration
+);
 
 if (migrationsToRun.length === 0) {
   console.log('No migrations to run');
@@ -24,17 +30,29 @@ updateLatestMigration();
 console.log('All migrations run successfully');
 
 function readLatestMigration(): string {
-  const angularCli = JSON.parse(fs.readFileSync('.angular-cli.json').toString());
+  const angularCli = JSON.parse(
+    fs.readFileSync('.angular-cli.json').toString()
+  );
   return angularCli.project.latestMigration;
 }
 
-function calculateMigrationsToRun(migrations: MigrationName[], latestMigration: string) {
-  const startingWith = latestMigration ? migrations.findIndex(item => item.name === latestMigration) + 1 : 0;
+function calculateMigrationsToRun(
+  migrations: MigrationName[],
+  latestMigration: string
+) {
+  const startingWith = latestMigration
+    ? migrations.findIndex(item => item.name === latestMigration) + 1
+    : 0;
   return migrations.slice(startingWith);
 }
 
-function printMigrationsNames(latestMigration: string, migrations: MigrationName[]): void {
-  console.log(`Nx will run the following migrations (after ${latestMigration}):`);
+function printMigrationsNames(
+  latestMigration: string,
+  migrations: MigrationName[]
+): void {
+  console.log(
+    `Nx will run the following migrations (after ${latestMigration}):`
+  );
   migrations.forEach(m => {
     console.log(`- ${m.name}`);
   });
@@ -59,7 +77,13 @@ function runMigrations(migrations: MigrationName[]): void {
 
 function updateLatestMigration(): void {
   // we must reread .angular-cli.json because some of the migrations could have modified it
-  const angularCliJson = JSON.parse(fs.readFileSync('.angular-cli.json').toString());
-  angularCliJson.project.latestMigration = migrationsToRun[migrationsToRun.length - 1].name;
-  fs.writeFileSync('.angular-cli.json', JSON.stringify(angularCliJson, null, 2));
+  const angularCliJson = JSON.parse(
+    fs.readFileSync('.angular-cli.json').toString()
+  );
+  angularCliJson.project.latestMigration =
+    migrationsToRun[migrationsToRun.length - 1].name;
+  fs.writeFileSync(
+    '.angular-cli.json',
+    JSON.stringify(angularCliJson, null, 2)
+  );
 }

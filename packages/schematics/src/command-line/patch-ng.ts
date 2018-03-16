@@ -1,4 +1,4 @@
-import {readFileSync, statSync, writeFileSync} from "fs";
+import { readFileSync, statSync, writeFileSync } from 'fs';
 import * as path from 'path';
 
 const nxCheck = `

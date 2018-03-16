@@ -5,7 +5,10 @@ import { createApp, createEmptyWorkspace } from '../../utils/testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
 
 describe('ngrx', () => {
-  const schematicRunner = new SchematicTestRunner('@nrwl/schematics', path.join(__dirname, '../../collection.json'));
+  const schematicRunner = new SchematicTestRunner(
+    '@nrwl/schematics',
+    path.join(__dirname, '../../collection.json')
+  );
 
   let appTree: Tree;
 
@@ -27,7 +30,9 @@ describe('ngrx', () => {
     );
 
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
-    expect(appModule).toContain('StoreModule.forRoot({},{metaReducers: !environment.production ? [storeFreeze] : []})');
+    expect(appModule).toContain(
+      'StoreModule.forRoot({},{metaReducers: !environment.production ? [storeFreeze] : []})'
+    );
     expect(appModule).toContain('EffectsModule.forRoot');
 
     expect(tree.exists('apps/myapp/src/app/+state')).toBeFalsy();
@@ -49,14 +54,27 @@ describe('ngrx', () => {
     expect(appModule).toContain('EffectsModule.forRoot');
     expect(appModule).toContain('!environment.production ? [storeFreeze] : []');
 
-
-    expect(tree.exists(`/apps/myapp/src/app/+state/state.actions.ts`)).toBeTruthy();
-    expect(tree.exists(`/apps/myapp/src/app/+state/state.effects.ts`)).toBeTruthy();
-    expect(tree.exists(`/apps/myapp/src/app/+state/state.effects.spec.ts`)).toBeTruthy();
-    expect(tree.exists(`/apps/myapp/src/app/+state/state.init.ts`)).toBeTruthy();
-    expect(tree.exists(`/apps/myapp/src/app/+state/state.interfaces.ts`)).toBeTruthy();
-    expect(tree.exists(`/apps/myapp/src/app/+state/state.reducer.ts`)).toBeTruthy();
-    expect(tree.exists(`/apps/myapp/src/app/+state/state.reducer.spec.ts`)).toBeTruthy();
+    expect(
+      tree.exists(`/apps/myapp/src/app/+state/state.actions.ts`)
+    ).toBeTruthy();
+    expect(
+      tree.exists(`/apps/myapp/src/app/+state/state.effects.ts`)
+    ).toBeTruthy();
+    expect(
+      tree.exists(`/apps/myapp/src/app/+state/state.effects.spec.ts`)
+    ).toBeTruthy();
+    expect(
+      tree.exists(`/apps/myapp/src/app/+state/state.init.ts`)
+    ).toBeTruthy();
+    expect(
+      tree.exists(`/apps/myapp/src/app/+state/state.interfaces.ts`)
+    ).toBeTruthy();
+    expect(
+      tree.exists(`/apps/myapp/src/app/+state/state.reducer.ts`)
+    ).toBeTruthy();
+    expect(
+      tree.exists(`/apps/myapp/src/app/+state/state.reducer.spec.ts`)
+    ).toBeTruthy();
   });
 
   it('should add feature', () => {
@@ -72,9 +90,13 @@ describe('ngrx', () => {
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
     expect(appModule).toContain('StoreModule.forFeature');
     expect(appModule).toContain('EffectsModule.forFeature');
-    expect(appModule).not.toContain('!environment.production ? [storeFreeze] : []');
+    expect(appModule).not.toContain(
+      '!environment.production ? [storeFreeze] : []'
+    );
 
-    expect(tree.exists(`/apps/myapp/src/app/+state/state.actions.ts`)).toBeTruthy();
+    expect(
+      tree.exists(`/apps/myapp/src/app/+state/state.actions.ts`)
+    ).toBeTruthy();
   });
 
   it('should add with custom directoryName', () => {
@@ -91,9 +113,13 @@ describe('ngrx', () => {
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
     expect(appModule).toContain('StoreModule.forFeature');
     expect(appModule).toContain('EffectsModule.forFeature');
-    expect(appModule).not.toContain('!environment.production ? [storeFreeze] : []');
+    expect(appModule).not.toContain(
+      '!environment.production ? [storeFreeze] : []'
+    );
 
-    expect(tree.exists(`/apps/myapp/src/app/my-custom-state/state.actions.ts`)).toBeTruthy();
+    expect(
+      tree.exists(`/apps/myapp/src/app/my-custom-state/state.actions.ts`)
+    ).toBeTruthy();
   });
 
   it('should only add files', () => {
@@ -109,9 +135,13 @@ describe('ngrx', () => {
 
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
     expect(appModule).not.toContain('StoreModule');
-    expect(appModule).not.toContain('!environment.production ? [storeFreeze] : []');
+    expect(appModule).not.toContain(
+      '!environment.production ? [storeFreeze] : []'
+    );
 
-    expect(tree.exists(`/apps/myapp/src/app/+state/state.actions.ts`)).toBeTruthy();
+    expect(
+      tree.exists(`/apps/myapp/src/app/+state/state.actions.ts`)
+    ).toBeTruthy();
   });
 
   it('should update package.json', () => {
@@ -129,7 +159,6 @@ describe('ngrx', () => {
     expect(packageJson.dependencies['@ngrx/router-store']).toBeDefined();
     expect(packageJson.dependencies['@ngrx/effects']).toBeDefined();
     expect(packageJson.dependencies['ngrx-store-freeze']).toBeDefined();
-
   });
 
   it('should error when no module is provided', () => {

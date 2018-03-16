@@ -1,4 +1,9 @@
-import {TaskConfigurationGenerator, TaskConfiguration, Tree, SchematicContext} from "@angular-devkit/schematics";
+import {
+  TaskConfigurationGenerator,
+  TaskConfiguration,
+  Tree,
+  SchematicContext
+} from '@angular-devkit/schematics';
 
 export class FormatFiles implements TaskConfigurationGenerator<any> {
   toConfiguration(): TaskConfiguration<any> {
@@ -7,7 +12,7 @@ export class FormatFiles implements TaskConfigurationGenerator<any> {
       options: {
         command: 'run format',
         quiet: true
-      },
+      }
     };
   }
 }

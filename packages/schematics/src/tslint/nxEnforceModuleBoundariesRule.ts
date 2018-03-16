@@ -4,8 +4,13 @@ import { IOptions } from 'tslint';
 import * as ts from 'typescript';
 import { readFileSync } from 'fs';
 import * as appRoot from 'app-root-path';
-import {getProjectNodes, readDependencies} from '../command-line/shared';
-import {Dependency, DependencyType, ProjectNode, ProjectType} from '../command-line/affected-apps';
+import { getProjectNodes, readDependencies } from '../command-line/shared';
+import {
+  Dependency,
+  DependencyType,
+  ProjectNode,
+  ProjectType
+} from '../command-line/affected-apps';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(
@@ -13,7 +18,7 @@ export class Rule extends Lint.Rules.AbstractRule {
     private readonly projectPath?: string,
     private readonly npmScope?: string,
     private readonly projectNodes?: ProjectNode[],
-    private readonly deps?: { [projectName: string]: Dependency[] },
+    private readonly deps?: { [projectName: string]: Dependency[] }
   ) {
     super(options);
     if (!projectPath) {
@@ -22,11 +27,14 @@ export class Rule extends Lint.Rules.AbstractRule {
         const cliConfig = this.readCliConfig(this.projectPath);
         (global as any).npmScope = cliConfig.project.npmScope;
         (global as any).projectNodes = getProjectNodes(cliConfig);
-        (global as any).deps = readDependencies((global as any).npmScope, (global as any).projectNodes);
+        (global as any).deps = readDependencies(
+          (global as any).npmScope,
+          (global as any).projectNodes
+        );
       }
       this.npmScope = (global as any).npmScope;
       this.projectNodes = (global as any).projectNodes;
-      this.deps =(global as any).deps;
+      this.deps = (global as any).deps;
     }
   }
 
@@ -44,7 +52,9 @@ export class Rule extends Lint.Rules.AbstractRule {
   }
 
   private readCliConfig(projectPath: string): any {
-    return JSON.parse(readFileSync(`${projectPath}/.angular-cli.json`, 'UTF-8'));
+    return JSON.parse(
+      readFileSync(`${projectPath}/.angular-cli.json`, 'UTF-8')
+    );
   }
 }
 
@@ -83,7 +93,9 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
   }
 
   public visitImportDeclaration(node: ts.ImportDeclaration) {
-    const imp = node.moduleSpecifier.getText().substring(1, node.moduleSpecifier.getText().length - 1);
+    const imp = node.moduleSpecifier
+      .getText()
+      .substring(1, node.moduleSpecifier.getText().length - 1);
 
     // whitelisted import
     if (this.allow.indexOf(imp) > -1) {
@@ -92,8 +104,15 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     }
 
     // check for relative and absolute imports
-    if (this.isRelativeImportIntoAnotherProject(imp) || this.isAbsoluteImportIntoAnotherProject(imp)) {
-      this.addFailureAt(node.getStart(), node.getWidth(), `library imports must start with @${this.npmScope}/`);
+    if (
+      this.isRelativeImportIntoAnotherProject(imp) ||
+      this.isAbsoluteImportIntoAnotherProject(imp)
+    ) {
+      this.addFailureAt(
+        node.getStart(),
+        node.getWidth(),
+        `library imports must start with @${this.npmScope}/`
+      );
       return;
     }
 
@@ -111,7 +130,9 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
 
       // check for circular dependency
       if (this.isCircular(sourceProject, targetProject)) {
-        const error = `Circular dependency between "${sourceProject.name}" and "${targetProject.name}" detected`;
+        const error = `Circular dependency between "${
+          sourceProject.name
+        }" and "${targetProject.name}" detected`;
         this.addFailureAt(node.getStart(), node.getWidth(), error);
         return;
       }
@@ -124,19 +145,31 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
 
       // cannot import apps
       if (targetProject.type === ProjectType.app) {
-        this.addFailureAt(node.getStart(), node.getWidth(), 'imports of apps are forbidden');
+        this.addFailureAt(
+          node.getStart(),
+          node.getWidth(),
+          'imports of apps are forbidden'
+        );
         return;
       }
 
       // deep imports aren't allowed
       if (imp !== `@${this.npmScope}/${targetProject.name}`) {
-        this.addFailureAt(node.getStart(), node.getWidth(), 'deep imports into libraries are forbidden');
+        this.addFailureAt(
+          node.getStart(),
+          node.getWidth(),
+          'deep imports into libraries are forbidden'
+        );
         return;
       }
 
       // if we import a library using loadChildre, we should not import it using es6imports
       if (this.onlyLoadChildren(sourceProject.name, targetProject.name, [])) {
-        this.addFailureAt(node.getStart(), node.getWidth(), 'imports of lazy-loaded libraries are forbidden');
+        this.addFailureAt(
+          node.getStart(),
+          node.getWidth(),
+          'imports of lazy-loaded libraries are forbidden'
+        );
         return;
       }
 
@@ -146,15 +179,26 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
 
         // when no constrains found => error. Force the user to provision them.
         if (!constraint) {
-          this.addFailureAt(node.getStart(), node.getWidth(), `A project without tags cannot depend on any libraries`);
+          this.addFailureAt(
+            node.getStart(),
+            node.getWidth(),
+            `A project without tags cannot depend on any libraries`
+          );
           return;
         }
 
-        if (hasNoneOfTheseTags(targetProject, constraint.onlyDependOnLibsWithTags || [])) {
+        if (
+          hasNoneOfTheseTags(
+            targetProject,
+            constraint.onlyDependOnLibsWithTags || []
+          )
+        ) {
           const allowedTags = constraint.onlyDependOnLibsWithTags
             .map(s => `"${s}"`)
             .join(', ');
-          const error = `A project tagged with "${constraint.sourceTag}" can only depend on libs tagged with ${allowedTags}`;
+          const error = `A project tagged with "${
+            constraint.sourceTag
+          }" can only depend on libs tagged with ${allowedTags}`;
           this.addFailureAt(node.getStart(), node.getWidth(), error);
           return;
         }
@@ -164,25 +208,42 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     super.visitImportDeclaration(node);
   }
 
-  private isCircular(sourceProject: ProjectNode, targetProject: ProjectNode): boolean {
+  private isCircular(
+    sourceProject: ProjectNode,
+    targetProject: ProjectNode
+  ): boolean {
     if (!this.deps[targetProject.name]) return false;
-    return this.deps[targetProject.name].some(dep => dep.projectName == sourceProject.name);
+    return this.deps[targetProject.name].some(
+      dep => dep.projectName == sourceProject.name
+    );
   }
 
-  private onlyLoadChildren(sourceProjectName: string, targetProjectName: string, visited: string[]) {
+  private onlyLoadChildren(
+    sourceProjectName: string,
+    targetProjectName: string,
+    visited: string[]
+  ) {
     if (visited.indexOf(sourceProjectName) > -1) return false;
-    return (this.deps[sourceProjectName] || []).filter(d => {
-      if (d.type !== DependencyType.loadChildren) return false;
-      if (d.projectName === targetProjectName) return true;
-      return this.onlyLoadChildren(d.projectName, targetProjectName, [...visited, sourceProjectName]);
-    }).length > 0;
+    return (
+      (this.deps[sourceProjectName] || []).filter(d => {
+        if (d.type !== DependencyType.loadChildren) return false;
+        if (d.projectName === targetProjectName) return true;
+        return this.onlyLoadChildren(d.projectName, targetProjectName, [
+          ...visited,
+          sourceProjectName
+        ]);
+      }).length > 0
+    );
   }
 
   private isRelativeImportIntoAnotherProject(imp: string): boolean {
     if (!this.isRelative(imp)) return false;
 
     const targetFile = path
-      .resolve(path.join(this.projectPath, path.dirname(this.getSourceFilePath())), imp)
+      .resolve(
+        path.join(this.projectPath, path.dirname(this.getSourceFilePath())),
+        imp
+      )
       .split(path.sep)
       .join('/')
       .substring(this.projectPath.length + 1);
@@ -215,11 +276,17 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
 
   private findProjectUsingImport(imp: string) {
     const unscopedImport = imp.substring(this.npmScope.length + 2);
-    return this.projectNodes.filter(n => unscopedImport === n.name || unscopedImport.startsWith(`${n.name}/`))[0];
+    return this.projectNodes.filter(
+      n => unscopedImport === n.name || unscopedImport.startsWith(`${n.name}/`)
+    )[0];
   }
 
   private isAbsoluteImportIntoAnotherProject(imp: string) {
-    return imp.startsWith('libs/') || (imp.startsWith('/libs/') && imp.startsWith('apps/')) || imp.startsWith('/apps/');
+    return (
+      imp.startsWith('libs/') ||
+      (imp.startsWith('/libs/') && imp.startsWith('apps/')) ||
+      imp.startsWith('/apps/')
+    );
   }
 
   private isRelative(s: string) {
@@ -227,7 +294,9 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
   }
 
   private findConstraintFor(sourceProject: ProjectNode) {
-    return this.depConstraints.filter(f => hasTag(sourceProject, f.sourceTag))[0];
+    return this.depConstraints.filter(f =>
+      hasTag(sourceProject, f.sourceTag)
+    )[0];
   }
 }
 
@@ -239,10 +308,13 @@ function hasTag(proj: ProjectNode, tag: string) {
   return (proj.tags || []).indexOf(tag) > -1 || tag === '*';
 }
 
-function containsFile(files: string[], targetFileWithoutExtension: string): boolean {
+function containsFile(
+  files: string[],
+  targetFileWithoutExtension: string
+): boolean {
   return !!files.filter(f => removeExt(f) === targetFileWithoutExtension)[0];
 }
 
-function removeExt(file:string): string {
-  return file.replace(/\.[^/.]+$/, "");
+function removeExt(file: string): string {
+  return file.replace(/\.[^/.]+$/, '');
 }

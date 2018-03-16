@@ -402,7 +402,9 @@ describe('Enforce Module Boundaries', () => {
         mylib: [{ projectName: 'anotherlib', type: DependencyType.es6Import }]
       }
     );
-    expect(failures[0].getFailure()).toEqual('Circular dependency between \"anotherlib\" and \"mylib\" detected');
+    expect(failures[0].getFailure()).toEqual(
+      'Circular dependency between "anotherlib" and "mylib" detected'
+    );
   });
 });
 

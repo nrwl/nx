@@ -45,7 +45,16 @@ export default {
     });
 
     copyFile(
-      path.join(__dirname, '..', 'src', 'collection', 'application', 'files', '__directory__', '.angular_cli165.tgz'),
+      path.join(
+        __dirname,
+        '..',
+        'src',
+        'collection',
+        'application',
+        'files',
+        '__directory__',
+        '.angular_cli165.tgz'
+      ),
       '.'
     );
   }
