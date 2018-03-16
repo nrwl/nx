@@ -7,7 +7,7 @@ const projectName: string = 'proj';
 export function runNgNew(command?: string, silent?: boolean): string {
   return execSync(`../node_modules/.bin/ng new proj ${command}`, {
     cwd: `./tmp`,
-    ...(silent ? {stdio: ['ignore', 'ignore', 'ignore']} : {})
+    ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
   }).toString();
 }
 
@@ -17,10 +17,9 @@ export function newProject(): void {
     //TODO delete the try catch after 0.8.0 is released
     try {
       runNgNew('--collection=@nrwl/schematics --npmScope=proj', true);
-    } catch (e) {
-    }
+    } catch (e) {}
     copyMissingPackages();
-    execSync('npm run postinstall', {cwd: './tmp/proj'});
+    execSync('npm run postinstall', { cwd: './tmp/proj' });
     execSync('mv ./tmp/proj ./tmp/proj_backup');
   }
   execSync('cp -a ./tmp/proj_backup ./tmp/proj');
@@ -32,10 +31,9 @@ export function newBazelProject(): void {
     //TODO delete the try catch after 0.8.0 is released
     try {
       runNgNew('--collection=@nrwl/bazel --npmScope=proj', true);
-    } catch (e) {
-    }
+    } catch (e) {}
     copyMissingPackages();
-    execSync('npm run postinstall', {cwd: './tmp/proj'});
+    execSync('npm run postinstall', { cwd: './tmp/proj' });
     execSync('mv ./tmp/proj ./tmp/proj_backup');
   }
   execSync('cp -a ./tmp/proj_backup ./tmp/proj');
@@ -52,7 +50,13 @@ export function createNxWorkspace(command: string): string {
 }
 
 export function copyMissingPackages(): void {
-  const modulesToCopy = ['@ngrx', 'jasmine-marbles', '@nrwl', 'angular', '@angular/upgrade'];
+  const modulesToCopy = [
+    '@ngrx',
+    'jasmine-marbles',
+    '@nrwl',
+    'angular',
+    '@angular/upgrade'
+  ];
   modulesToCopy.forEach(m => copyNodeModule(projectName, m));
 }
 
@@ -72,7 +76,10 @@ export function runCLI(
       cwd: `./tmp/${projectName}`
     })
       .toString()
-      .replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
+      .replace(
+        /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
+        ''
+      );
   } catch (e) {
     if (opts.silenceError) {
       return e.stdout.toString();
@@ -107,7 +114,9 @@ export function updateFile(f: string, content: string): void {
 
 export function checkFilesExist(...expectedFiles: string[]) {
   expectedFiles.forEach(f => {
-    const ff = f.startsWith('/') ? f : path.join(getCwd(), 'tmp', projectName, f);
+    const ff = f.startsWith('/')
+      ? f
+      : path.join(getCwd(), 'tmp', projectName, f);
     if (!exists(ff)) {
       throw new Error(`File '${ff}' does not exist`);
     }

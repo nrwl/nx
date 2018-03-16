@@ -7,7 +7,10 @@ describe('DowngradeModule', () => {
       newProject();
       newApp('myapp');
 
-      updateFile('apps/myapp/src/legacy.js', `window.angular.module('legacy', []);`);
+      updateFile(
+        'apps/myapp/src/legacy.js',
+        `window.angular.module('legacy', []);`
+      );
 
       runCLI('generate downgrade-module legacy --angularJsImport=./legacy');
 

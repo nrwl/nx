@@ -6,7 +6,10 @@ import { getFileContent } from '@schematics/angular/utility/test';
 import * as stripJsonComments from 'strip-json-comments';
 
 describe('app', () => {
-  const schematicRunner = new SchematicTestRunner('@nrwl/bazel', path.join(__dirname, '../../collection.json'));
+  const schematicRunner = new SchematicTestRunner(
+    '@nrwl/bazel',
+    path.join(__dirname, '../../collection.json')
+  );
 
   let appTree: Tree;
 
@@ -17,13 +20,22 @@ describe('app', () => {
 
   describe('not nested', () => {
     it('should update angular-cli.json', () => {
-      const tree = schematicRunner.runSchematic('app', { name: 'myApp', npmScope: 'nrwl' }, appTree);
-      const updatedAngularCLIJson = JSON.parse(getFileContent(tree, '/.angular-cli.json'));
+      const tree = schematicRunner.runSchematic(
+        'app',
+        { name: 'myApp', npmScope: 'nrwl' },
+        appTree
+      );
+      const updatedAngularCLIJson = JSON.parse(
+        getFileContent(tree, '/.angular-cli.json')
+      );
       expect(updatedAngularCLIJson.apps).toEqual([
         {
           assets: ['assets', 'favicon.ico'],
           environmentSource: 'environments/environment.ts',
-          environments: { dev: 'environments/environment.ts', prod: 'environments/environment.prod.ts' },
+          environments: {
+            dev: 'environments/environment.ts',
+            prod: 'environments/environment.prod.ts'
+          },
           index: 'index.html',
           main: 'main.ts',
           name: 'my-app',
@@ -51,18 +63,36 @@ describe('app', () => {
     });
 
     it('should generate files', () => {
-      const tree = schematicRunner.runSchematic('app', { name: 'myApp', npmScope: 'nrwl' }, appTree);
+      const tree = schematicRunner.runSchematic(
+        'app',
+        { name: 'myApp', npmScope: 'nrwl' },
+        appTree
+      );
       expect(tree.exists('apps/my-app/src/main.ts')).toBeTruthy();
       expect(tree.exists('apps/my-app/src/app/app.module.ts')).toBeTruthy();
       expect(tree.exists('apps/my-app/src/app/app.component.ts')).toBeTruthy();
       expect(tree.exists('apps/my-app/e2e/app.po.ts')).toBeTruthy();
-      expect(getFileContent(tree, 'apps/my-app/src/app/app.module.ts')).toContain('class AppModule');
+      expect(
+        getFileContent(tree, 'apps/my-app/src/app/app.module.ts')
+      ).toContain('class AppModule');
 
-      const tsconfigApp = JSON.parse(stripJsonComments(getFileContent(tree, 'apps/my-app/src/tsconfig.app.json')));
-      expect(tsconfigApp.compilerOptions.outDir).toEqual('../../../dist/out-tsc/apps/my-app');
+      const tsconfigApp = JSON.parse(
+        stripJsonComments(
+          getFileContent(tree, 'apps/my-app/src/tsconfig.app.json')
+        )
+      );
+      expect(tsconfigApp.compilerOptions.outDir).toEqual(
+        '../../../dist/out-tsc/apps/my-app'
+      );
 
-      const tsconfigE2E = JSON.parse(stripJsonComments(getFileContent(tree, 'apps/my-app/e2e/tsconfig.e2e.json')));
-      expect(tsconfigE2E.compilerOptions.outDir).toEqual('../../../dist/out-tsc/e2e/my-app');
+      const tsconfigE2E = JSON.parse(
+        stripJsonComments(
+          getFileContent(tree, 'apps/my-app/e2e/tsconfig.e2e.json')
+        )
+      );
+      expect(tsconfigE2E.compilerOptions.outDir).toEqual(
+        '../../../dist/out-tsc/e2e/my-app'
+      );
     });
   });
 
@@ -73,12 +103,17 @@ describe('app', () => {
         { name: 'myApp', npmScope: 'nrwl', directory: 'myDir' },
         appTree
       );
-      const updatedAngularCLIJson = JSON.parse(getFileContent(tree, '/.angular-cli.json'));
+      const updatedAngularCLIJson = JSON.parse(
+        getFileContent(tree, '/.angular-cli.json')
+      );
       expect(updatedAngularCLIJson.apps).toEqual([
         {
           assets: ['assets', 'favicon.ico'],
           environmentSource: 'environments/environment.ts',
-          environments: { dev: 'environments/environment.ts', prod: 'environments/environment.prod.ts' },
+          environments: {
+            dev: 'environments/environment.ts',
+            prod: 'environments/environment.prod.ts'
+          },
           index: 'index.html',
           main: 'main.ts',
           name: 'my-dir/my-app',
@@ -113,26 +148,46 @@ describe('app', () => {
         appTree
       );
       expect(tree.exists('apps/my-dir/my-app/src/main.ts')).toBeTruthy();
-      expect(tree.exists('apps/my-dir/my-app/src/app/app.module.ts')).toBeTruthy();
-      expect(tree.exists('apps/my-dir/my-app/src/app/app.component.ts')).toBeTruthy();
+      expect(
+        tree.exists('apps/my-dir/my-app/src/app/app.module.ts')
+      ).toBeTruthy();
+      expect(
+        tree.exists('apps/my-dir/my-app/src/app/app.component.ts')
+      ).toBeTruthy();
       expect(tree.exists('apps/my-dir/my-app/e2e/app.po.ts')).toBeTruthy();
-      expect(getFileContent(tree, 'apps/my-dir/my-app/src/app/app.module.ts')).toContain('class AppModule');
+      expect(
+        getFileContent(tree, 'apps/my-dir/my-app/src/app/app.module.ts')
+      ).toContain('class AppModule');
 
       const tsconfigApp = JSON.parse(
-        stripJsonComments(getFileContent(tree, 'apps/my-dir/my-app/src/tsconfig.app.json'))
+        stripJsonComments(
+          getFileContent(tree, 'apps/my-dir/my-app/src/tsconfig.app.json')
+        )
       );
-      expect(tsconfigApp.compilerOptions.outDir).toEqual('../../../../dist/out-tsc/apps/my-dir/my-app');
+      expect(tsconfigApp.compilerOptions.outDir).toEqual(
+        '../../../../dist/out-tsc/apps/my-dir/my-app'
+      );
 
       const tsconfigE2E = JSON.parse(
-        stripJsonComments(getFileContent(tree, 'apps/my-dir/my-app/e2e/tsconfig.e2e.json'))
+        stripJsonComments(
+          getFileContent(tree, 'apps/my-dir/my-app/e2e/tsconfig.e2e.json')
+        )
       );
-      expect(tsconfigE2E.compilerOptions.outDir).toEqual('../../../../dist/out-tsc/e2e/my-dir/my-app');
+      expect(tsconfigE2E.compilerOptions.outDir).toEqual(
+        '../../../../dist/out-tsc/e2e/my-dir/my-app'
+      );
     });
   });
 
   it('should import NgModule', () => {
-    const tree = schematicRunner.runSchematic('app', { name: 'myApp', npmScope: 'nrwl', directory: 'myDir' }, appTree);
-    expect(getFileContent(tree, 'apps/my-dir/my-app/src/app/app.module.ts')).toContain('NxModule.forRoot()');
+    const tree = schematicRunner.runSchematic(
+      'app',
+      { name: 'myApp', npmScope: 'nrwl', directory: 'myDir' },
+      appTree
+    );
+    expect(
+      getFileContent(tree, 'apps/my-dir/my-app/src/app/app.module.ts')
+    ).toContain('NxModule.forRoot()');
   });
 
   describe('routing', () => {
@@ -142,10 +197,12 @@ describe('app', () => {
         { name: 'myApp', npmScope: 'nrwl', directory: 'myDir', routing: true },
         appTree
       );
-      expect(getFileContent(tree, 'apps/my-dir/my-app/src/app/app.module.ts')).toContain('RouterModule.forRoot');
-      expect(getFileContent(tree, 'apps/my-dir/my-app/src/app/app.component.spec.ts')).toContain(
-        'imports: [RouterTestingModule]'
-      );
+      expect(
+        getFileContent(tree, 'apps/my-dir/my-app/src/app/app.module.ts')
+      ).toContain('RouterModule.forRoot');
+      expect(
+        getFileContent(tree, 'apps/my-dir/my-app/src/app/app.component.spec.ts')
+      ).toContain('imports: [RouterTestingModule]');
     });
   });
 
@@ -156,17 +213,24 @@ describe('app', () => {
         { name: 'myApp', npmScope: 'nrwl', directory: 'myDir' },
         appTree
       );
-      expect(getFileContent(tree, 'apps/my-dir/my-app/src/app/app.component.ts')).not.toContain('encapsulation: ');
+      expect(
+        getFileContent(tree, 'apps/my-dir/my-app/src/app/app.component.ts')
+      ).not.toContain('encapsulation: ');
     });
     it('should set Component encapsulation metadata if option flag is included', () => {
       const tree = schematicRunner.runSchematic(
         'app',
-        { name: 'myApp', npmScope: 'nrwl', directory: 'myDir', viewEncapsulation: 'Native' },
+        {
+          name: 'myApp',
+          npmScope: 'nrwl',
+          directory: 'myDir',
+          viewEncapsulation: 'Native'
+        },
         appTree
       );
-      expect(getFileContent(tree, 'apps/my-dir/my-app/src/app/app.component.ts')).toContain(
-        'encapsulation: ViewEncapsulation.Native'
-      );
+      expect(
+        getFileContent(tree, 'apps/my-dir/my-app/src/app/app.component.ts')
+      ).toContain('encapsulation: ViewEncapsulation.Native');
     });
   });
 });

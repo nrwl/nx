@@ -37,7 +37,9 @@ describe('Nrwl Workspace', () => {
     () => {
       newProject();
       newApp('myApp --directory=myDir --routing');
-      newLib('myLib --directory=myDir --routing --lazy --parentModule=apps/my-dir/my-app/src/app/app.module.ts');
+      newLib(
+        'myLib --directory=myDir --routing --lazy --parentModule=apps/my-dir/my-app/src/app/app.module.ts'
+      );
 
       runCLI('build --aot -a=my-dir/my-app');
       expect(runCLI('test --single-run')).toContain('Executed 2 of 2 SUCCESS');
@@ -50,7 +52,9 @@ describe('Nrwl Workspace', () => {
     () => {
       newProject();
       newApp('myApp --directory=myDir --routing');
-      newLib('myLib --directory=myDir --routing --parentModule=apps/my-dir/my-app/src/app/app.module.ts');
+      newLib(
+        'myLib --directory=myDir --routing --parentModule=apps/my-dir/my-app/src/app/app.module.ts'
+      );
 
       runCLI('build --aot -a=my-dir/my-app');
       expect(runCLI('test --single-run')).toContain('Executed 2 of 2 SUCCESS');

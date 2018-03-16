@@ -61,7 +61,5 @@
       "default": "css"
     }
   },
-  "required": [
-    "name"
-  ]
+  "required": ["name"]
 }

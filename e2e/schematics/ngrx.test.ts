@@ -6,7 +6,9 @@ describe('ngrx', () => {
     () => {
       newProject();
       newApp('myapp');
-      runCLI('generate ngrx app --module=apps/myapp/src/app/app.module.ts --root --collection=@nrwl/schematics');
+      runCLI(
+        'generate ngrx app --module=apps/myapp/src/app/app.module.ts --root --collection=@nrwl/schematics'
+      );
       updateFile(
         'apps/myapp/src/app/+state/app.interfaces.ts',
         `

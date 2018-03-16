@@ -1,4 +1,11 @@
-import {checkFilesExist, newApp, newBazelProject, newLib, runCLI, updateFile} from '../utils';
+import {
+  checkFilesExist,
+  newApp,
+  newBazelProject,
+  newLib,
+  runCLI,
+  updateFile
+} from '../utils';
 
 xdescribe('Nrwl Workspace (Bazel)', () => {
   it(
