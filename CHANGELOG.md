@@ -2,6 +2,99 @@
 
 The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
 
+
+# 0.9.0
+
+A large workspace contains a lot of apps and libs. Because it is so easy to share code, create new libs and depend on libs, the dependencies between the apps and libs can quickly get out of hand. We need a way to impose constraints on the dependency graph. This release adds this capability.
+
+When creating an app or a lib, you can tag them:
+
+```
+ng g lib apilib --tags=api
+ng g lib utilslib --tags=utils
+ng g lib impllib --tags=impl
+ng g lib untaggedlib
+```
+
+You can also pass multiple tags `ng g lib apilib --tags=one,two` or modify `.angular-cli.json` after the fact.
+
+You can then define constraints in `tslint.json`, like this:
+
+```
+"nx-enforce-module-boundaries": [
+  true,
+  {
+    "allow": [],
+    "depConstraints": [
+      { "sourceTag": "utils", "onlyDependOnLibsWithTags": ["utils"] },
+      { "sourceTag": "api", "onlyDependOnLibsWithTags": ["api", "utils"] },
+      { "sourceTag": "impl", "onlyDependOnLibsWithTags": ["api", "utils", "impl"] },
+    ]
+  }
+]
+```
+
+With this configuration in place:
+
+* `utilslib` can depend on no libs.
+* `apilib` can depend on `utilslib`
+* `implib` can depend on both `utilslib` and `apilib`.
+* `untaggedlib` can depend on no libs.
+
+This gets really useful once you have multiple libs with the same tag.
+
+You can also use wildcards, like this:
+
+```
+{ "sourceTag": "impl", "onlyDependOnLibsWithTags": ["*"] } // impl can depend on anything
+{ "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] } // anything can depend on anything
+```
+
+The system goes through the constrains until it finds the first one matching the source file it's analyzing.
+
+If we change the configuration to the following:
+
+```
+"nx-enforce-module-boundaries": [
+  true,
+  {
+    "allow": [],
+    "depConstraints": [
+      { "sourceTag": "utils", "onlyDependOnLibsWithTags": ["utils"] },
+      { "sourceTag": "api", "onlyDependOnLibsWithTags": ["api", "utils"] },
+      { "sourceTag": "impl", "onlyDependOnLibsWithTags": ["api", "utils", "impl"] },
+      { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] },
+    ]
+  }
+]
+```
+
+The following will be true.
+
+* `utilslib` can depend on no libs.
+* `apilib` can depend on `utilslib`
+* `implib` can depend on both `utilslib` and `apilib`.
+* `untaggedlib` can depend on **all** libs.
+
+
+
+## Features
+
+* [Cache the dependency graph to speed up "ng lint"](https://github.com/nrwl/nx/commit/93ecf24bdadfa7ae28cf802b4f3193390858db90)
+* [Add lint check for circular deps](https://github.com/nrwl/nx/commit/53175f925e804539aacba8323af159d69205ddac)
+* [Add support for tagged libs](https://github.com/nrwl/nx/commit/2842cb9c387226c24c0a42a154f3c65059d730f3)
+* [Show warnings about importing lazy loadable libraries](https://github.com/nrwl/nx/commit/56788ba3d1a8220455b03f0c766963ae8179ce81)
+* [Allow users to set prettier config](https://github.com/nrwl/nx/commit/56a6611575fee7b111655d2223f3e30ea684d000)
+* [Add store-freeze support](https://github.com/nrwl/nx/commit/e21caa0143862059d4b1089ccf3a7e3799cef0f2)
+* [Extend the nrwl schematics from the angular cli schematics](https://github.com/nrwl/nx/commit/04f8e2fd4613aff4064123cacd8eb54e1da09a60)
+
+## Fixes
+
+* [Improve windows compatibility](https://github.com/nrwl/nx/commit/4f052bb3e60f20d0d676f283de2e2faece0dcef8)
+* [Dasherize the state folder](https://github.com/nrwl/nx/commit/b17b186186ea5617b1b953f1ddd4ab05ebfa7d92)
+* [Fix create-nx-workspace to respect the --directory](https://github.com/nrwl/nx/commit/da9310e9dbb4eb3294200ca72bfa70b14faec2c2)
+* [Fix protractor.conf.js schema](https://github.com/nrwl/nx/commit/37cabafb35980ce8e991abc1269387b3aaaf9f25)
+
 # 0.8.0
 
 ## Features
