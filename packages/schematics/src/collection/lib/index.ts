@@ -7,7 +7,8 @@ import {
   Rule,
   template,
   Tree,
-  url
+  url,
+  Source
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';

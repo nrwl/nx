@@ -44,7 +44,6 @@ function addBootstrap(path: string): Rule {
     const modulePath = `${path}/app/app.module.ts`;
     const moduleSource = host.read(modulePath)!.toString('utf-8');
     const sourceFile = ts.createSourceFile(
-<<<<<<< HEAD
       modulePath,
       moduleSource,
       ts.ScriptTarget.Latest,
@@ -64,15 +63,6 @@ function addBootstrap(path: string): Rule {
         'AppComponent',
         './app.component'
       )
-=======
-        modulePath, moduleSource, ts.ScriptTarget.Latest, true);
-    insert(host, modulePath, [
-      insertImport(
-          sourceFile, modulePath, 'BrowserModule', '@angular/platform-browser'),
-      ...addImportToModule(sourceFile, modulePath, 'BrowserModule'),
-      ...addBootstrapToModule(
-          sourceFile, modulePath, 'AppComponent', './app.component')
->>>>>>> Rebasing issues resolved
     ]);
     return host;
   };
@@ -83,15 +73,11 @@ function addNxModule(path: string): Rule {
     const modulePath = `${path}/app/app.module.ts`;
     const moduleSource = host.read(modulePath)!.toString('utf-8');
     const sourceFile = ts.createSourceFile(
-<<<<<<< HEAD
       modulePath,
       moduleSource,
       ts.ScriptTarget.Latest,
       true
     );
-=======
-        modulePath, moduleSource, ts.ScriptTarget.Latest, true);
->>>>>>> Rebasing issues resolved
     insert(host, modulePath, [
       insertImport(sourceFile, modulePath, 'NxModule', '@nrwl/nx'),
       ...addImportToModule(sourceFile, modulePath, 'NxModule.forRoot()')
@@ -151,7 +137,6 @@ function addRouterRootConfiguration(path: string): Rule {
     const modulePath = `${path}/app/app.module.ts`;
     const moduleSource = host.read(modulePath)!.toString('utf-8');
     const sourceFile = ts.createSourceFile(
-<<<<<<< HEAD
       modulePath,
       moduleSource,
       ts.ScriptTarget.Latest,
@@ -164,14 +149,6 @@ function addRouterRootConfiguration(path: string): Rule {
         modulePath,
         `RouterModule.forRoot([], {initialNavigation: 'enabled'})`
       )
-=======
-        modulePath, moduleSource, ts.ScriptTarget.Latest, true);
-    insert(host, modulePath, [
-      insertImport(sourceFile, modulePath, 'RouterModule', '@angular/router'),
-      ...addImportToModule(
-          sourceFile, modulePath,
-          `RouterModule.forRoot([], {initialNavigation: 'enabled'})`)
->>>>>>> Rebasing issues resolved
     ]);
 
     const componentSpecPath = `${path}/app/app.component.spec.ts`;
@@ -180,7 +157,6 @@ function addRouterRootConfiguration(path: string): Rule {
         componentSpecPath, componentSpecSource, ts.ScriptTarget.Latest, true);
     insert(host, componentSpecPath, [
       insertImport(
-<<<<<<< HEAD
         componentSpecSourceFile,
         componentSpecPath,
         'RouterTestingModule',
@@ -191,12 +167,6 @@ function addRouterRootConfiguration(path: string): Rule {
         componentSpecPath,
         `RouterTestingModule`
       )
-=======
-          componentSpecSourceFile, componentSpecPath, 'RouterTestingModule',
-          '@angular/router/testing'),
-      ...addImportToTestBed(
-          componentSpecSourceFile, componentSpecPath, `RouterTestingModule`)
->>>>>>> Rebasing issues resolved
     ]);
     return host;
   };
@@ -280,14 +250,9 @@ export default function(schema: Schema): Rule {
 
 function normalizeOptions(options: Schema): NormalizedSchema {
   const name = toFileName(options.name);
-<<<<<<< HEAD
   const fullName = options.directory
     ? `${toFileName(options.directory)}/${name}`
     : name;
-=======
-  const fullName =
-      options.directory ? `${toFileName(options.directory)}/${name}` : name;
->>>>>>> Rebasing issues resolved
   const fullPath = `apps/${fullName}/src`;
   return {...options, sourceDir: 'src', name, fullName, fullPath};
 }
