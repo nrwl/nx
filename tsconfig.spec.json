@@ -3,30 +3,16 @@
     "target": "es5",
     "module": "commonjs",
     "moduleResolution": "node",
-    "outDir": "build",
+    "outDir": "test",
     "typeRoots": ["node_modules/@types"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
-    "lib": [
-      "es2017"
-    ],
+    "lib": ["es2017"],
     "declaration": true,
-    "baseUrl": ".",
-    "paths": {
-      "@nrwl/schematics": [
-        "./packages/schematics"
-      ],
-      "@nrwl/schematics/*": [
-        "./packages/schematics/*"
-      ]
-    }
+    "baseUrl": "."
   },
-  "exclude": [
-    "tmp",
-    "node_modules",
-    "packages/schematics/src/*/files/**/*"
-  ],
+  "exclude": ["tmp", "node_modules"],
   "angularCompilerOptions": {
     "strictMetadataEmit": true,
     "skipTemplateCodegen": true,

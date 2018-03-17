@@ -1,15 +1,15 @@
 module.exports = function(config) {
   const webpackConfig = {
-    "node": {
-      "fs": "empty",
-      "global": true,
-      "crypto": "empty",
-      "tls": "empty",
-      "net": "empty",
-      "process": true,
-      "module": false,
-      "clearImmediate": false,
-      "setImmediate": false
+    node: {
+      fs: 'empty',
+      global: true,
+      crypto: 'empty',
+      tls: 'empty',
+      net: 'empty',
+      process: true,
+      module: false,
+      clearImmediate: false,
+      setImmediate: false
     }
   };
   config.set({
@@ -20,9 +20,7 @@ module.exports = function(config) {
     frameworks: ['jasmine'],
 
     // list of files / patterns to load in the browser
-    files: [
-      { pattern: 'build/test.js', watched: false}
-    ],
+    files: [{ pattern: 'test/test.js', watched: false }],
 
     // list of files to exclude
     exclude: [],
@@ -30,7 +28,7 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'build/test.js': ['webpack']
+      'test/test.js': ['webpack']
     },
 
     reporters: ['dots'],
@@ -54,7 +52,7 @@ module.exports = function(config) {
     colors: true,
 
     // level of logging
-    logLevel:config.LOG_INFO,
+    logLevel: config.LOG_INFO,
 
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: true,
@@ -66,7 +64,7 @@ module.exports = function(config) {
       }
     },
 
-    browsers: process.env.TRAVIS ?  ['Chrome_travis_ci'] : ['Chrome'],
+    browsers: process.env.TRAVIS ? ['Chrome_travis_ci'] : ['Chrome'],
 
     // Concurrency level
     // how many browser should be started simultaneous

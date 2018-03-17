@@ -13,9 +13,9 @@
     "release": "./scripts/release.sh",
     "copy": "./scripts/copy.sh",
     "test:schematics": "yarn linknpm && ./scripts/test_schematics.sh",
-    "test:nx": "./scripts/link-spec.sh && ./scripts/test_nx.sh",
+    "test:nx": "yarn linknpm && ./scripts/test_nx.sh",
     "test":
-      "./scripts/link-spec.sh && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
+      "yarn linknpm && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
     "checkformat": "echo 1",
     "publish_npm": "./scripts/publish.sh",
     "precommit": "yarn checkformat"

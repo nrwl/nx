@@ -3,6 +3,7 @@ node_modules
 .vscode
 dist
 build
+test
 .DS_Store
 tmp
 yarn-error
