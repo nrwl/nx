@@ -15,7 +15,7 @@ import {
   NodePackageInstallTask,
   RepositoryInitializerTask
 } from '@angular-devkit/schematics/tasks';
-import { libVersions } from '@nrwl/schematics/src/lib-versions';
+import { libVersions } from '../../lib-versions';
 
 export default function(options: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {

@@ -1,12 +1,45 @@
-import {normalize, strings} from '@angular-devkit/core';
-import {apply, branchAndMerge, chain, externalSchematic, mergeWith, move, Rule, SchematicsException, template, url,} from '@angular-devkit/schematics';
+import { normalize, strings } from '@angular-devkit/core';
+import {
+  apply,
+  branchAndMerge,
+  chain,
+  externalSchematic,
+  mergeWith,
+  move,
+  Rule,
+  SchematicContext,
+  SchematicsException,
+  template,
+  Tree,
+  url,
+  TaskConfigurationGenerator,
+  TaskConfiguration,
+} from '@angular-devkit/schematics';
 
-import {wrapIntoFormat} from '../../../../schematics/src/utils/tasks';
-import {Schema} from './schema';
+import { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
   fullName: string;
   fullPath: string;
+}
+
+class FormatFiles implements TaskConfigurationGenerator<any> {
+  toConfiguration(): TaskConfiguration<any> {
+    return {
+      name: 'node-package',
+      options: {
+        command: 'run format',
+        quiet: true
+      }
+    };
+  }
+}
+
+function wrapIntoFormat(fn: Function): any {
+  return (host: Tree, context: SchematicContext) => {
+    context.addTask(new FormatFiles());
+    return fn(context)(host, context);
+  };
 }
 
 export default function(schema: Schema): Rule {

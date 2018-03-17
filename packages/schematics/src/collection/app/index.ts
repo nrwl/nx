@@ -117,7 +117,8 @@ function addAppToAngularCliJson(options: NormalizedSchema): Rule {
     });
 
     json.lint = [
-      ...(json.lint || []), {
+      ...(json.lint || []),
+      {
         project: `${options.fullPath}/tsconfig.app.json`,
         exclude: '**/node_modules/**'
       },
@@ -154,7 +155,11 @@ function addRouterRootConfiguration(path: string): Rule {
     const componentSpecPath = `${path}/app/app.component.spec.ts`;
     const componentSpecSource = host.read(componentSpecPath)!.toString('utf-8');
     const componentSpecSourceFile = ts.createSourceFile(
-        componentSpecPath, componentSpecSource, ts.ScriptTarget.Latest, true);
+      componentSpecPath,
+      componentSpecSource,
+      ts.ScriptTarget.Latest,
+      true
+    );
     insert(host, componentSpecPath, [
       insertImport(
         componentSpecSourceFile,
@@ -192,9 +197,9 @@ Nx is designed to help you create and build enterprise grade Angular application
 
 function updateComponentTemplate(options: NormalizedSchema): Rule {
   return (host: Tree) => {
-    const content = options.routing ?
-        `${staticComponentContent}\n<router-outlet></router-outlet>` :
-        staticComponentContent;
+    const content = options.routing
+      ? `${staticComponentContent}\n<router-outlet></router-outlet>`
+      : staticComponentContent;
     host.overwrite(`${options.fullPath}/app/app.component.html`, content);
   };
 }
@@ -207,15 +212,16 @@ export default function(schema: Schema): Rule {
     }
 
     const options = normalizeOptions(schema);
-    const templateSource =
-        apply(url('./files'), [template({
-                utils: strings,
-                dot: '.',
-                tmpl: '',
-                offsetFromRoot: offsetFromRoot(options.fullPath),
-                ...(options as object),
-                npmScope
-              })]);
+    const templateSource = apply(url('./files'), [
+      template({
+        utils: strings,
+        dot: '.',
+        tmpl: '',
+        offsetFromRoot: offsetFromRoot(options.fullPath),
+        ...(options as object),
+        npmScope
+      })
+    ]);
 
     const selector = `${options.prefix}-root`;
 
@@ -241,8 +247,10 @@ export default function(schema: Schema): Rule {
         viewEncapsulation: options.viewEncapsulation,
         changeDetection: options.changeDetection
       }),
-      updateComponentTemplate(options), addBootstrap(options.fullPath),
-      addNxModule(options.fullPath), addAppToAngularCliJson(options),
+      updateComponentTemplate(options),
+      addBootstrap(options.fullPath),
+      addNxModule(options.fullPath),
+      addAppToAngularCliJson(options),
       options.routing ? addRouterRootConfiguration(options.fullPath) : noop()
     ]);
   });
@@ -254,5 +262,5 @@ function normalizeOptions(options: Schema): NormalizedSchema {
     ? `${toFileName(options.directory)}/${name}`
     : name;
   const fullPath = `apps/${fullName}/src`;
-  return {...options, sourceDir: 'src', name, fullName, fullPath};
+  return { ...options, sourceDir: 'src', name, fullName, fullPath };
 }

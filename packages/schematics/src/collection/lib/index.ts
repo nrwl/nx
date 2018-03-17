@@ -7,8 +7,7 @@ import {
   Rule,
   template,
   Tree,
-  url,
-  Source
+  url
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';
@@ -32,7 +31,7 @@ import {
   toPropertyName
 } from '../../utils/name-utils';
 
-export interface NormalizedSchema extends Schema {
+interface NormalizedSchema extends Schema {
   name: string;
   fullName: string;
   fullPath: string;
@@ -66,18 +65,25 @@ function addLazyLoadedRouterConfiguration(modulePath: string): Rule {
     );
     insert(host, modulePath, [
       insertImport(sourceFile, modulePath, 'RouterModule', '@angular/router'),
-      ...addImportToModule(sourceFile, modulePath, `
+      ...addImportToModule(
+        sourceFile,
+        modulePath,
+        `
         RouterModule.forChild([ 
         /* {path: '', pathMatch: 'full', component: InsertYourComponentHere} */ 
-       ]) `)
+       ]) `
+      )
     ]);
     return host;
   };
 }
 
 function addRouterConfiguration(
-    schema: NormalizedSchema, indexFilePath: string, moduleFileName: string,
-    modulePath: string): Rule {
+  schema: NormalizedSchema,
+  indexFilePath: string,
+  moduleFileName: string,
+  modulePath: string
+): Rule {
   return (host: Tree) => {
     const indexSource = host.read(indexFilePath)!.toString('utf-8');
     const indexSourceFile = ts.createSourceFile(
@@ -226,70 +232,49 @@ function addChildren(schema: NormalizedSchema): Rule {
   };
 }
 
-export interface LibSchema {
-  options: NormalizedSchema;
-  moduleFileName: string;
-  modulePath: string;
-  indexFile: string;
-  templateSource: Source;
-  routingRules: Rule[];
-}
-
-export function validateLibSchema(schema): LibSchema {
-  const options = normalizeOptions(schema);
-  const moduleFileName = `${toFileName(options.name)}.module`;
-  const modulePath = `${options.fullPath}/${moduleFileName}.ts`;
-  const indexFile = `libs/${toFileName(options.fullName)}/index.ts`;
-
-  if (options.routing && options.nomodule) {
-    throw new Error(`nomodule and routing cannot be used together`);
-  }
-
-  if (!options.routing && options.lazy) {
-    throw new Error(`routing must be set`);
-  }
-
-  const routingRules: Array<Rule> = [
-    options.routing && options.lazy ?
-        addLazyLoadedRouterConfiguration(modulePath) :
-        noop(),
-    options.routing && options.lazy && options.parentModule ?
-        addLoadChildren(options) :
-        noop(),
-
-    options.routing && !options.lazy ?
-        addRouterConfiguration(options, indexFile, moduleFileName, modulePath) :
-        noop(),
-    options.routing && !options.lazy && options.parentModule ?
-        addChildren(options) :
-        noop()
-  ];
-
-  const templateSource =
-      apply(url(options.nomodule ? './files' : './ngfiles'), [template({
-              ...names(options.name),
-              dot: '.',
-              tmpl: '',
-              ...(options as object)
-            })]);
-
-  return {
-    options,
-    moduleFileName,
-    modulePath,
-    indexFile,
-    templateSource,
-    routingRules
-  };
-}
-
 export default function(schema: Schema): Rule {
   return wrapIntoFormat(() => {
-    const {options, templateSource, routingRules} = validateLibSchema(schema);
+    const options = normalizeOptions(schema);
+    const moduleFileName = `${toFileName(options.name)}.module`;
+    const modulePath = `${options.fullPath}/${moduleFileName}.ts`;
+    const indexFile = `libs/${toFileName(options.fullName)}/index.ts`;
+
+    if (options.routing && options.nomodule) {
+      throw new Error(`nomodule and routing cannot be used together`);
+    }
+
+    if (!options.routing && options.lazy) {
+      throw new Error(`routing must be set`);
+    }
+
+    const templateSource = apply(
+      url(options.nomodule ? './files' : './ngfiles'),
+      [
+        template({
+          ...names(options.name),
+          dot: '.',
+          tmpl: '',
+          ...(options as object)
+        })
+      ]
+    );
 
     return chain([
       branchAndMerge(chain([mergeWith(templateSource)])),
-      addLibToAngularCliJson(options), ...routingRules
+      addLibToAngularCliJson(options),
+      options.routing && options.lazy
+        ? addLazyLoadedRouterConfiguration(modulePath)
+        : noop(),
+      options.routing && options.lazy && options.parentModule
+        ? addLoadChildren(options)
+        : noop(),
+
+      options.routing && !options.lazy
+        ? addRouterConfiguration(options, indexFile, moduleFileName, modulePath)
+        : noop(),
+      options.routing && !options.lazy && options.parentModule
+        ? addChildren(options)
+        : noop()
     ]);
   });
 }
@@ -300,5 +285,5 @@ function normalizeOptions(options: Schema): NormalizedSchema {
     ? `${toFileName(options.directory)}/${name}`
     : name;
   const fullPath = `libs/${fullName}/src`;
-  return {...options, sourceDir: 'src', name, fullName, fullPath};
+  return { ...options, sourceDir: 'src', name, fullName, fullPath };
 }
