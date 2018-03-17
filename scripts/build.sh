@@ -1,4 +1,5 @@
 #!/bin/bash
+npx ng-packagr -p packages/nx/ng-package.json
 
 rm -rf build
 ./node_modules/.bin/ngc
