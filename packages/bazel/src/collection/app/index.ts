@@ -20,8 +20,8 @@ import {
   addImportToModule,
   insert,
   addImportToTestBed
-} from '@nrwl/schematics/src/utils/ast-utils';
-import { toFileName } from '@nrwl/schematics/src/utils/name-utils';
+} from '../../utils/ast-utils';
+import { toFileName } from '../../utils/name-utils';
 import * as ts from 'typescript';
 import { addBootstrapToModule } from '@schematics/angular/utility/ast-utils';
 import { insertImport } from '@schematics/angular/utility/route-utils';
@@ -30,9 +30,9 @@ import {
   serializeJson,
   cliConfig,
   readCliConfigFile
-} from '@nrwl/schematics/src/utils/fileutils';
-import { offsetFromRoot } from '@nrwl/schematics/src/utils/common';
-import { FormatFiles, wrapIntoFormat } from '@nrwl/schematics/src/utils/tasks';
+} from '../../utils/fileutils';
+import { offsetFromRoot } from '../../utils/common';
+import { FormatFiles, wrapIntoFormat } from '../../utils/tasks';
 
 interface NormalizedSchema extends Schema {
   fullName: string;

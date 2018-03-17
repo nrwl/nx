@@ -8,15 +8,12 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
-    "lib": [
-      "es2017"
-    ],
+    "lib": ["es2017"],
     "declaration": true,
     "baseUrl": ".",
     "paths": {
-      "@nrwl/schematics": [
-        "./packages/schematics"
-      ]
+      "@nrwl/schematics": ["./packages/schematics"],
+      "@nrwl/schematics/*": ["./packages/schematics/*"]
     }
   },
   "exclude": [
