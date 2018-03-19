@@ -12,6 +12,7 @@ import {
   Dependency
 } from '@nrwl/schematics/src/command-line/affected-apps';
 import { readFileSync, statSync } from 'fs';
+import * as appRoot from 'app-root-path';
 
 export function parseFiles(
   args: string[]
@@ -68,39 +69,39 @@ export function getProjectNodes(config) {
         root: p.root,
         type: p.root.startsWith('apps/') ? ProjectType.app : ProjectType.lib,
         tags: p.tags,
-        files: allFilesInDir(path.dirname(p.root))
+        files: allFilesInDir(`${appRoot.path}/${path.dirname(p.root)}`)
       };
     });
 }
 
-export function getAffectedApps(touchedFiles: string[]): string[] {
-  const config = JSON.parse(fs.readFileSync('.angular-cli.json', 'utf-8'));
-  const projects = getProjectNodes(config);
+export function readCliConfig(): any {
+  const config = JSON.parse(fs.readFileSync(`${appRoot.path}/.angular-cli.json`, 'utf-8'));
 
   if (!config.project.npmScope) {
     throw new Error(`.angular-cli.json must define the npmScope property.`);
   }
 
+  return config;
+}
+
+export function getAffectedApps(touchedFiles: string[]): string[] {
+  const config = readCliConfig();
+  const projects = getProjectNodes(config);
+
   return affectedApps(
     config.project.npmScope,
     projects,
-    f => fs.readFileSync(f, 'utf-8'),
+    f => fs.readFileSync(`${appRoot.path}/${f}`, 'utf-8'),
     touchedFiles
   );
 }
 
 export function getTouchedProjects(touchedFiles: string[]): string[] {
-  const config = JSON.parse(fs.readFileSync('.angular-cli.json', 'utf-8'));
-  const projects = getProjectNodes(config);
-  if (!config.project.npmScope) {
-    throw new Error(`.angular-cli.json must define the npmScope property.`);
-  }
-  return touchedProjects(projects, touchedFiles).filter(p => !!p);
+  return touchedProjects(getProjectNodes(readCliConfig()), touchedFiles).filter(p => !!p);
 }
 
 export function getProjectRoots(projectNames: string[]): string[] {
-  const config = JSON.parse(fs.readFileSync('.angular-cli.json', 'utf-8'));
-  const projects = getProjectNodes(config);
+  const projects = getProjectNodes(readCliConfig());
   return projectNames.map(name =>
     path.dirname(projects.filter(p => p.name === name)[0].root)
   );
@@ -112,7 +113,8 @@ function allFilesInDir(dirName: string): string[] {
     const child = path.join(dirName, c);
     try {
       if (!fs.statSync(child).isDirectory()) {
-        res.push(normalizePath(child));
+        // add starting with "apps/myapp/..." or "libs/mylib/..."
+        res.push(normalizePath(child.substring(appRoot.path.length + 1)));
       } else if (fs.statSync(child).isDirectory()) {
         res = [...res, ...allFilesInDir(child)];
       }
@@ -126,31 +128,31 @@ export function readDependencies(
   projectNodes: ProjectNode[]
 ): { [projectName: string]: Dependency[] } {
   const m = lastModifiedAmongProjectFiles();
-  if (!directoryExists('./dist')) {
-    fs.mkdirSync('./dist');
+  if (!directoryExists(`${appRoot.path}/dist`)) {
+    fs.mkdirSync(`${appRoot.path}/dist`);
   }
-  if (!fileExists('./dist/nxdeps.json') || m > mtime('./dist/nxdeps.json')) {
+  if (!fileExists(`${appRoot.path}/dist/nxdeps.json`) || m > mtime(`${appRoot.path}/dist/nxdeps.json`)) {
     const deps = dependencies(npmScope, projectNodes, f =>
-      fs.readFileSync(f, 'UTF-8')
+      fs.readFileSync(`${appRoot.path}/${f}`, 'UTF-8')
     );
     fs.writeFileSync(
-      './dist/nxdeps.json',
+      `${appRoot.path}/dist/nxdeps.json`,
       JSON.stringify(deps, null, 2),
       'UTF-8'
     );
     return deps;
   } else {
-    return JSON.parse(fs.readFileSync('./dist/nxdeps.json', 'UTF-8'));
+    return JSON.parse(fs.readFileSync(`${appRoot.path}/dist/nxdeps.json`, 'UTF-8'));
   }
 }
 
 export function lastModifiedAmongProjectFiles() {
   return [
-    recursiveMtime('libs'),
-    recursiveMtime('apps'),
-    mtime('.angular-cli.json'),
-    mtime('tslint.json'),
-    mtime('package.json')
+    recursiveMtime(`${appRoot.path}/libs`),
+    recursiveMtime(`${appRoot.path}/apps`),
+    mtime(`${appRoot.path}/.angular-cli.json`),
+    mtime(`${appRoot.path}/tslint.json`),
+    mtime(`${appRoot.path}/package.json`)
   ].reduce((a, b) => (a > b ? a : b), 0);
 }
 
