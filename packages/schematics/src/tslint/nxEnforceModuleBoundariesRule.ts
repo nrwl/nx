@@ -284,7 +284,8 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
   private isAbsoluteImportIntoAnotherProject(imp: string) {
     return (
       imp.startsWith('libs/') ||
-      (imp.startsWith('/libs/') && imp.startsWith('apps/')) ||
+      imp.startsWith('/libs/') ||
+      imp.startsWith('apps/') ||
       imp.startsWith('/apps/')
     );
   }
