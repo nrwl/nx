@@ -51,6 +51,7 @@
     "karma-chrome-launcher": "~2.2.0",
     "karma-jasmine": "~1.1.0",
     "karma-webpack": "2.0.4",
+    "npm-run-all": "^4.1.2",
     "precise-commits": "1.0.0",
     "prettier": "1.10.2",
     "rxjs": "^5.5.6",

@@ -2,6 +2,7 @@ import { execSync } from 'child_process';
 import { getAffectedApps, parseFiles } from './shared';
 import * as path from 'path';
 import * as resolve from 'resolve';
+import * as runAll from 'npm-run-all';
 
 export function affected(args: string[]): void {
   const command = args[0];
@@ -42,11 +43,14 @@ function printError(command: string, e: any) {
 function build(apps: string[], rest: string[]) {
   if (apps.length > 0) {
     console.log(`Building ${apps.join(', ')}`);
-    apps.forEach(app => {
-      execSync(`node ${ngPath()} build ${rest.join(' ')} -a=${app}`, {
-        stdio: [0, 1, 2]
-      });
-    });
+    runAll(apps.map(app => `ng build -- ${rest.join(' ')} -a=${app}`), {
+      parallel: true,
+      stdin: process.stdin,
+      stdout: process.stdout,
+      stderr: process.stderr
+    })
+      .then(() => console.log('Build done!'))
+      .catch(err => console.error('Build failed!'));
   } else {
     console.log('No apps to build');
   }
