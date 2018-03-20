@@ -1,10 +1,18 @@
 #!/usr/bin/env node
+import * as yargsParser from 'yargs-parser';
+
 import { affected } from './affected';
 import { format } from './format';
 import { update } from './update';
 import { patchNg } from './patch-ng';
 
-const command = process.argv[2];
+const processedArgs = yargsParser(process.argv, {
+  alias: {
+    app: ['a']
+  },
+  string: ['app']
+});
+const command = processedArgs._[2];
 const args = process.argv.slice(3);
 
 switch (command) {

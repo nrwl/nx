@@ -10,8 +10,19 @@ import {
   writeFileSync
 } from 'fs';
 import * as path from 'path';
+import * as yargsParser from 'yargs-parser';
 
-const useYarn = process.argv.filter(p => p === '--yarn').length > 0;
+interface CommandOptions {
+  directory?: string;
+  yarn: boolean;
+}
+
+const parsedArgs = yargsParser(process.argv, {
+  string: ['directory'],
+  boolean: ['yarn']
+});
+
+const useYarn = parsedArgs.yarn;
 
 if (!useYarn) {
   try {
@@ -31,9 +42,7 @@ if (!useYarn) {
   }
 }
 
-const projectName = process.argv
-  .slice(2)
-  .filter(arg => !arg.startsWith('--'))[0];
+const projectName = parsedArgs._[2];
 
 // check that the workspace name is passed in
 if (!projectName) {
@@ -85,9 +94,8 @@ execSync(
   }
 );
 
-const dir = process.argv.filter(
-  a => a.startsWith('-dir') || a.startsWith('--directory')
-)[0];
+const dir = parsedArgs.directory;
+
 const cwd = dir ? dir.split('=')[1] : projectName;
 
 if (useYarn) {
