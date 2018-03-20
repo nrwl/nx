@@ -15,6 +15,7 @@
   "dependencies": {
     "app-root-path": "^2.0.1",
     "semver": "5.4.1",
-    "tmp": "0.0.33"
+    "tmp": "0.0.33",
+    "yargs-parser": "9.0.2"
   }
 }

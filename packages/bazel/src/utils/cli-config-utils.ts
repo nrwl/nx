@@ -1,14 +1,15 @@
 import * as fs from 'fs';
+import * as yargsParser from 'yargs-parser';
 
 export function getAppDirectoryUsingCliConfig() {
-  const appArg = findAppArg();
   const cli = JSON.parse(
     fs.readFileSync(process.cwd() + '/.angular-cli.json', 'UTF-8')
   );
 
-  if (appArg) {
-    const appName = appArg.split('=')[1];
-    const app = cli.apps.filter(a => a.name === appName)[0];
+  const appName = getAppName();
+
+  if (appName) {
+    const app = cli.apps.find(a => a.name === appName);
     if (!app) {
       console.error(`Cannot find app '${appName}'.`);
       process.exit(1);
@@ -25,7 +26,7 @@ export function getAppDirectoryUsingCliConfig() {
 }
 
 export function makeSureNoAppIsSelected() {
-  if (findAppArg()) {
+  if (getAppName()) {
     console.error('Nx only supports running unit tests for all apps and libs.');
     console.error('You cannot use -a or --app.');
     console.error('Use fdescribe or fit to select a subset of tests to run.');
@@ -33,14 +34,11 @@ export function makeSureNoAppIsSelected() {
   }
 }
 
-function findAppArg() {
-  return process.argv.filter(
-    a =>
-      a.startsWith(`-a=`) ||
-      a.startsWith(`--app=`) ||
-      a.startsWith(`"-a="`) ||
-      a.startsWith(`"--app="`) ||
-      a.startsWith(`'-a='`) ||
-      a.startsWith(`'--app='`)
-  )[0];
+function getAppName() {
+  return yargsParser(process.argv, {
+    alias: {
+      app: ['a']
+    },
+    string: ['app']
+  }).app;
 }
