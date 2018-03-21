@@ -69,14 +69,28 @@ describe('Command line', () => {
       `
       );
       const checkOut = runCommand('npm run update:check');
+      expect(checkOut)
+        .toContain('Your version (0.0.1) of @nrwl/schematics is not up to date.');
+      expect(checkOut)
+        .toContain('- "npm install @nrwl/schematics@latest" or');
+      expect(checkOut)
+        .toContain('- "yarn upgrade @nrwl/schematics@latest"');
       expect(checkOut).toContain(
         'Run "npm run update" to run the following migrations'
       );
       expect(checkOut).toContain('20200101-test-migration');
+      expect(checkOut).toContain('Update @nrwl/nx to');
 
       const migrateOut = runCommand('npm run update');
+      expect(migrateOut)
+        .toContain('Your version (0.0.1) of @nrwl/schematics is not up to date.');
+      expect(migrateOut)
+        .toContain('- "npm install @nrwl/schematics@latest" or');
+      expect(migrateOut)
+        .toContain('- "yarn upgrade @nrwl/schematics@latest"');
       expect(migrateOut).toContain('Test migration');
       expect(migrateOut).toContain('Running test migration');
+      expect(migrateOut).toContain('Updated @nrwl/nx to');
       expect(migrateOut).toContain(
         `The latestMigration property in .angular-cli.json has been set to "20200101-test-migration".`
       );
@@ -104,8 +118,13 @@ describe('Command line', () => {
         `The latestMigration property in .angular-cli.json has been set to "20200102-test-migration".`
       );
 
-      expect(runCommand('npm run update:check')).not.toContain('IMPORTANT');
-      expect(runCommand('npm run update')).toContain('No migrations to run');
+      const checkOut3 = runCommand('npm run update:check');
+      expect(checkOut3).not.toContain('IMPORTANT');
+      expect(checkOut3).toContain('No migrations to run');
+      expect(checkOut3).not.toContain('Update @nrwl/nx to');
+      const migrateOut2 = runCommand('npm run update');
+      expect(migrateOut2).toContain('No migrations to run');
+      expect(migrateOut2).not.toContain('Updated @nrwl/nx to');
     },
     1000000
   );

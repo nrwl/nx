@@ -1,5 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { execSync } from 'child_process';
+import { updateJsonFile } from '../utils/fileutils';
 
 type Migration = { description: string; run(): void };
 type MigrationName = { name: string; migration: Migration };
@@ -11,6 +13,8 @@ export function update(args: string[]) {
     allMigrations,
     latestMigration
   );
+
+  checkVersion();
 
   const command = args[0];
   switch (command) {
@@ -75,6 +79,7 @@ function skip(latestMigration: string, migrations: MigrationName[]): void {
 
 function check(latestMigration: string, migrations: MigrationName[]): void {
   if (migrations.length === 0) {
+    console.log('No migrations to run');
     process.exit(0);
   }
 
@@ -95,6 +100,8 @@ function check(latestMigration: string, migrations: MigrationName[]): void {
       '-----------------------------------------------------------------------------'
     );
   });
+
+  checkNxVersion();
 
   const target = migrations[migrations.length - 1].name;
   console.log(
@@ -125,6 +132,8 @@ function run(latestMigration: string, migrations: MigrationName[]): void {
     }
   });
 
+  updateNxVersion();
+
   updateLatestMigration(migrations);
 
   console.log(`The following migrations have been run:`);
@@ -149,4 +158,58 @@ function updateLatestMigration(migrations: MigrationName[]): void {
     '.angular-cli.json',
     JSON.stringify(angularCliJson, null, 2)
   );
+}
+
+function updateNxVersion() {
+  updateJsonFile('package.json', (json) => {
+    const currentVersion = json.dependencies['@nrwl/nx'];
+    const latestVersion = execSync('npm show @nrwl/nx version').toString().trim();
+    if (currentVersion !== latestVersion) {
+      console.log(`Updated @nrwl/nx to ${latestVersion}`);
+      console.log(
+        '-----------------------------------------------------------------------------'
+      );
+      json.dependencies['@nrwl/nx'] = latestVersion;
+    }
+  });
+}
+
+function checkNxVersion() {
+  updateJsonFile('package.json', json => {
+    try {
+      execSync('npm outdated @nrwl/nx --json')
+    } catch (outdatedError) {
+      try {
+        const result = JSON.parse(outdatedError.stdout.toString())['@nrwl/nx'];
+        console.log(`Update @nrwl/nx to v${result.latest}`);
+        console.log(
+          '-----------------------------------------------------------------------------'
+        );
+      } catch (parseError) {
+        console.error(outdatedError.message);
+        process.exit(1);
+      }
+      console.error();
+    }
+  });
+}
+
+function checkVersion() {
+  try {
+    execSync('npm outdated @nrwl/schematics --json')
+  } catch (outdatedError) {
+    try {
+      const result = JSON.parse(outdatedError.stdout.toString())['@nrwl/schematics'];
+      console.log(
+        '-----------------------------------------------------------------------------'
+      );
+      console.log(`Your version (${result.current}) of @nrwl/schematics is not up to date.\n`)
+      console.log(`Please update to ${result.latest} using:`);
+      console.log('- "npm install @nrwl/schematics@latest" or');
+      console.log('- "yarn upgrade @nrwl/schematics@latest"');
+      console.log(
+        '-----------------------------------------------------------------------------'
+      );
+    } catch (e) {}
+  }
 }
