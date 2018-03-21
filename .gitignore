@@ -6,5 +6,5 @@ build
 test
 .DS_Store
 tmp
-yarn-error
+*.log
 .ng_pkg_build
