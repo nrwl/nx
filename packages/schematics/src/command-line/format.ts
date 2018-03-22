@@ -60,7 +60,7 @@ function printError(command: string, e: any) {
 
 function write(patterns: string[]) {
   if (patterns.length > 0) {
-    execSync(`node ${prettierPath()} --write ${patterns.join(' ')}`, {
+    execSync(`node "${prettierPath()}" --write ${patterns.join(' ')}`, {
       stdio: [0, 1, 2]
     });
   }
@@ -70,7 +70,7 @@ function check(patterns: string[]) {
   if (patterns.length > 0) {
     try {
       execSync(
-        `node ${prettierPath()} --list-different ${patterns.join(' ')}`,
+        `node "${prettierPath()}" --list-different ${patterns.join(' ')}`,
         {
           stdio: [0, 1, 2]
         }
