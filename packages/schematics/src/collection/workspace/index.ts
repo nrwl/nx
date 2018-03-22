@@ -220,6 +220,7 @@ function updateTsLintJson(options: Schema) {
       ].forEach(key => {
         json[key] = undefined;
       });
+      json.rulesDirectory = json.rulesDirectory || [];
       json.rulesDirectory.push('node_modules/@nrwl/schematics/src/tslint');
       json['nx-enforce-module-boundaries'] = [
         true,
