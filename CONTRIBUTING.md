@@ -21,7 +21,7 @@ After that run `yarn linknpm`.
 
 To make sure you changes do not break any unit tests, run `yarn test`. You can also run `yarn test:schematics` and `yarn test:nx` to test the schematics and nx packages individually.
 
-> If you need to test only the collection ngrx test [for example], you can use an optional `$1` argument as follows:<br/> `yarn test:schematics schematics/src/collection/ngrx/ngrx`
+> If you need to test only the **collection/ngrx** test [for example], you can use an optional `$1` argument as follows:<br/> `yarn test:schematics schematics/src/collection/ngrx/ngrx`
 
 ### Running E2E Tests
 
