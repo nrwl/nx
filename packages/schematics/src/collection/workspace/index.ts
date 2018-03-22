@@ -144,7 +144,7 @@ function updateAngularCLIJson(options: Schema) {
         exclude: '**/node_modules/**'
       },
       {
-        project: `${options.name}/tsconfig.e2e.json`,
+        project: join('apps', options.name, 'e2e', 'tsconfig.e2e.json'),
         exclude: '**/node_modules/**'
       }
     ];
