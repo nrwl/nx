@@ -82,9 +82,15 @@ describe('Nrwl Convert to Nx Workspace', () => {
       '@nrwl/schematics'
     );
 
-    expect(updatedAngularCLIJson.lint[0].project).toEqual('apps/proj/src/tsconfig.app.json');
-    expect(updatedAngularCLIJson.lint[1].project).toEqual('./tsconfig.spec.json');
-    expect(updatedAngularCLIJson.lint[2].project).toEqual('apps/proj/e2e/tsconfig.e2e.json');
+    expect(updatedAngularCLIJson.lint[0].project).toEqual(
+      'apps/proj/src/tsconfig.app.json'
+    );
+    expect(updatedAngularCLIJson.lint[1].project).toEqual(
+      './tsconfig.spec.json'
+    );
+    expect(updatedAngularCLIJson.lint[2].project).toEqual(
+      'apps/proj/e2e/tsconfig.e2e.json'
+    );
 
     // check if tsconfig.json get merged
     const updatedTsConfig = JSON.parse(readFile('tsconfig.json'));

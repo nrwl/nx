@@ -75,7 +75,9 @@ export function getProjectNodes(config) {
 }
 
 export function readCliConfig(): any {
-  const config = JSON.parse(fs.readFileSync(`${appRoot.path}/.angular-cli.json`, 'utf-8'));
+  const config = JSON.parse(
+    fs.readFileSync(`${appRoot.path}/.angular-cli.json`, 'utf-8')
+  );
 
   if (!config.project.npmScope) {
     throw new Error(`.angular-cli.json must define the npmScope property.`);
@@ -97,7 +99,9 @@ export function getAffectedApps(touchedFiles: string[]): string[] {
 }
 
 export function getTouchedProjects(touchedFiles: string[]): string[] {
-  return touchedProjects(getProjectNodes(readCliConfig()), touchedFiles).filter(p => !!p);
+  return touchedProjects(getProjectNodes(readCliConfig()), touchedFiles).filter(
+    p => !!p
+  );
 }
 
 export function getProjectRoots(projectNames: string[]): string[] {
@@ -131,7 +135,10 @@ export function readDependencies(
   if (!directoryExists(`${appRoot.path}/dist`)) {
     fs.mkdirSync(`${appRoot.path}/dist`);
   }
-  if (!fileExists(`${appRoot.path}/dist/nxdeps.json`) || m > mtime(`${appRoot.path}/dist/nxdeps.json`)) {
+  if (
+    !fileExists(`${appRoot.path}/dist/nxdeps.json`) ||
+    m > mtime(`${appRoot.path}/dist/nxdeps.json`)
+  ) {
     const deps = dependencies(npmScope, projectNodes, f =>
       fs.readFileSync(`${appRoot.path}/${f}`, 'UTF-8')
     );
@@ -142,7 +149,9 @@ export function readDependencies(
     );
     return deps;
   } else {
-    return JSON.parse(fs.readFileSync(`${appRoot.path}/dist/nxdeps.json`, 'UTF-8'));
+    return JSON.parse(
+      fs.readFileSync(`${appRoot.path}/dist/nxdeps.json`, 'UTF-8')
+    );
   }
 }
 

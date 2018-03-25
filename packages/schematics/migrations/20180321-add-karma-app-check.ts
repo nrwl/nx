@@ -7,16 +7,22 @@ export default {
   description: 'Add makeSureNoAppIsSelected(); to karma conf',
   run: async () => {
     const contents = fs.readFileSync('karma.conf.js').toString();
-    const sourceFile = ts.createSourceFile('karma.conf.js', contents, ts.ScriptTarget.Latest);
+    const sourceFile = ts.createSourceFile(
+      'karma.conf.js',
+      contents,
+      ts.ScriptTarget.Latest
+    );
     const nodes = getSourceNodes(sourceFile);
     const isPresent = nodes
       .filter(ts.isCallExpression)
-      .filter((callExpr: ts.CallExpression) => ts.isIdentifier(callExpr.expression))
+      .filter((callExpr: ts.CallExpression) =>
+        ts.isIdentifier(callExpr.expression)
+      )
       .some((callExpr: ts.CallExpression) => {
         const identifier = callExpr.expression as ts.Identifier;
         return identifier.escapedText === 'makeSureNoAppIsSelected';
       });
-    
+
     if (isPresent) {
       return;
     }

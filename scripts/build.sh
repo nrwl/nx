@@ -7,6 +7,7 @@ rm -rf build
 #Nx client side lib
 cp -r packages/nx/dist build/packages/nx
 rm -rf build/packages/nx/dist
+rm -rf packages/nx/dist
 
 #TODO This is a temporary hack until we can publish named umds
 sed -i.bak "s/define(\[/define('@nrwl\/nx',\[/" build/packages/nx/bundles/nrwl-nx.umd.js

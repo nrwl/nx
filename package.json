@@ -7,7 +7,7 @@
   "scripts": {
     "build": "./scripts/build.sh",
     "e2e": "./scripts/e2e.sh",
-    "format": "precise-commits --whitelist=\"{packages,e2e}/**/*.ts\"",
+    "format": "prettier \"{packages,e2e}/**/*.ts\" --write",
     "linknpm": "./scripts/link.sh",
     "package": "./scripts/package.sh",
     "release": "./scripts/release.sh",
@@ -16,9 +16,8 @@
     "test:nx": "yarn linknpm fast && ./scripts/test_nx.sh",
     "test":
       "yarn linknpm && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
-    "checkformat": "yarn format --check-only",
-    "publish_npm": "./scripts/publish.sh",
-    "precommit": "yarn checkformat"
+    "checkformat": "prettier \"{packages,e2e}/**/*.ts\" --list-different",
+    "publish_npm": "./scripts/publish.sh"
   },
   "dependencies": {
     "jasmine-marbles": "0.2.0"
