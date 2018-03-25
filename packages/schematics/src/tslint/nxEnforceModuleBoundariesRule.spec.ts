@@ -81,22 +81,36 @@ describe('Enforce Module Boundaries', () => {
         name: 'api',
         root: 'libs/api/src',
         type: ProjectType.lib,
-        tags: ['api'],
+        tags: ['api', 'domain1'],
         files: [`libs/api/index.ts`]
       },
       {
         name: 'impl',
         root: 'libs/impl/src',
         type: ProjectType.lib,
-        tags: ['impl'],
+        tags: ['impl', 'domain1'],
         files: [`libs/impl/index.ts`]
       },
       {
         name: 'impl2',
         root: 'libs/impl2/src',
         type: ProjectType.lib,
-        tags: ['impl'],
+        tags: ['impl', 'domain1'],
         files: [`libs/impl2/index.ts`]
+      },
+      {
+        name: 'impl-domain2',
+        root: 'libs/impl-domain2/src',
+        type: ProjectType.lib,
+        tags: ['impl', 'domain2'],
+        files: [`libs/impl-domain2/index.ts`]
+      },
+      {
+        name: 'impl-both-domains',
+        root: 'libs/impl-both-domains/src',
+        type: ProjectType.lib,
+        tags: ['impl', 'domain1', 'domain2'],
+        files: [`libs/impl-both-domains/index.ts`]
       },
       {
         name: 'untagged',
@@ -110,7 +124,9 @@ describe('Enforce Module Boundaries', () => {
     const depConstraints = {
       depConstraints: [
         { sourceTag: 'api', onlyDependOnLibsWithTags: ['api'] },
-        { sourceTag: 'impl', onlyDependOnLibsWithTags: ['api', 'impl'] }
+        { sourceTag: 'impl', onlyDependOnLibsWithTags: ['api', 'impl'] },
+        { sourceTag: 'domain1', onlyDependOnLibsWithTags: ['domain1'] },
+        { sourceTag: 'domain2', onlyDependOnLibsWithTags: ['domain2'] }
       ]
     };
 
@@ -157,6 +173,47 @@ describe('Enforce Module Boundaries', () => {
       expect(failures[0].getFailure()).toEqual(
         'A project without tags cannot depend on any libraries'
       );
+    });
+
+    it('should check all tags', () => {
+      const failures = runRule(
+        depConstraints,
+        `${process.cwd()}/proj/libs/impl/index.ts`,
+        `
+        import '@mycompany/impl-domain2';
+      `,
+        projectNodes
+      );
+
+      expect(failures[0].getFailure()).toEqual(
+        'A project tagged with "domain1" can only depend on libs tagged with "domain1"'
+      );
+    });
+
+    it('should allow a domain1 project to depend on a project that is tagged with domain1 and domain2', () => {
+      const failures = runRule(
+        depConstraints,
+        `${process.cwd()}/proj/libs/impl/index.ts`,
+        `
+        import '@mycompany/impl-both-domains';
+      `,
+        projectNodes
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
+    it('should allow a domain1/domain2 project depend on domain1', () => {
+      const failures = runRule(
+        depConstraints,
+        `${process.cwd()}/proj/libs/impl-both-domain/index.ts`,
+        `
+        import '@mycompany/impl';
+      `,
+        projectNodes
+      );
+
+      expect(failures.length).toEqual(0);
     });
 
     it('should not error when the constraints are satisfied', () => {

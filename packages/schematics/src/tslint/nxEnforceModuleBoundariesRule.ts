@@ -175,10 +175,9 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
 
       // check that dependency constraints are satisfied
       if (this.depConstraints.length > 0) {
-        const constraint = this.findConstraintFor(sourceProject);
-
+        const constraints = this.findConstraintsFor(sourceProject);
         // when no constrains found => error. Force the user to provision them.
-        if (!constraint) {
+        if (constraints.length === 0) {
           this.addFailureAt(
             node.getStart(),
             node.getWidth(),
@@ -187,20 +186,22 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
           return;
         }
 
-        if (
-          hasNoneOfTheseTags(
-            targetProject,
-            constraint.onlyDependOnLibsWithTags || []
-          )
-        ) {
-          const allowedTags = constraint.onlyDependOnLibsWithTags
-            .map(s => `"${s}"`)
-            .join(', ');
-          const error = `A project tagged with "${
-            constraint.sourceTag
-          }" can only depend on libs tagged with ${allowedTags}`;
-          this.addFailureAt(node.getStart(), node.getWidth(), error);
-          return;
+        for (let constraint of constraints) {
+          if (
+            hasNoneOfTheseTags(
+              targetProject,
+              constraint.onlyDependOnLibsWithTags || []
+            )
+          ) {
+            const allowedTags = constraint.onlyDependOnLibsWithTags
+              .map(s => `"${s}"`)
+              .join(', ');
+            const error = `A project tagged with "${
+              constraint.sourceTag
+            }" can only depend on libs tagged with ${allowedTags}`;
+            this.addFailureAt(node.getStart(), node.getWidth(), error);
+            return;
+          }
         }
       }
     }
@@ -294,10 +295,8 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     return s.startsWith('.');
   }
 
-  private findConstraintFor(sourceProject: ProjectNode) {
-    return this.depConstraints.filter(f =>
-      hasTag(sourceProject, f.sourceTag)
-    )[0];
+  private findConstraintsFor(sourceProject: ProjectNode) {
+    return this.depConstraints.filter(f => hasTag(sourceProject, f.sourceTag));
   }
 }
 
