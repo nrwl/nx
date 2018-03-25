@@ -2,6 +2,8 @@ import { execSync } from 'child_process';
 import { getAffectedApps, parseFiles } from './shared';
 import * as path from 'path';
 import * as resolve from 'resolve';
+import * as runAll from 'npm-run-all';
+import * as yargsParser from 'yargs-parser';
 
 export function affected(args: string[]): void {
   const command = args[0];
@@ -41,12 +43,23 @@ function printError(command: string, e: any) {
 
 function build(apps: string[], rest: string[]) {
   if (apps.length > 0) {
+    const parallel = yargsParser(rest, {
+      default: {
+        parallel: true
+      },
+      boolean: ['parallel']
+    }).parallel;
+
     console.log(`Building ${apps.join(', ')}`);
-    apps.forEach(app => {
-      execSync(`node ${ngPath()} build ${rest.join(' ')} -a=${app}`, {
-        stdio: [0, 1, 2]
-      });
-    });
+    const buildCommands = rest.filter(a => !a.startsWith('--parallel'));
+    runAll(apps.map(app => `ng build -- ${buildCommands.join(' ')} -a=${app}`), {
+      parallel,
+      stdin: process.stdin,
+      stdout: process.stdout,
+      stderr: process.stderr
+    })
+      .then(() => console.log('Build succeeded.'))
+      .catch(err => console.error('Build failed.'));
   } else {
     console.log('No apps to build');
   }

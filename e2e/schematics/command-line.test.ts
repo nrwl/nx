@@ -36,7 +36,7 @@ describe('Command line', () => {
       import '@proj/myapp2';
       import '@proj/invalidtaglib';
       import '@proj/validtaglib';
-      
+
       const s = {loadChildren: '@proj/lazylib'};
     `
       );
