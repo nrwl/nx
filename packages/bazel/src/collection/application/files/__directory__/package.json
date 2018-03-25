@@ -45,6 +45,7 @@
     "@angular/cli": "<%= angularCliVersion %>",
     "@angular/compiler-cli": "<%= angularVersion %>",
     "@nrwl/schematics": "<%= schematicsVersion %>",
+    "@nrwl/bazel": "<%= schematicsVersion %>",
     "@angular/language-service": "<%= angularVersion %>",
     "@bazel/ibazel": "^0.3.1",<% if (!minimal) { %>
     "@types/jasmine": "~2.8.3",
