@@ -98,6 +98,15 @@ describe('Nrwl Convert to Nx Workspace', () => {
       a: ['b'],
       '@proj/*': ['libs/*']
     });
+
+    const karmaConf = readFile('karma.conf.js');
+    expect(karmaConf).toContain('makeSureNoAppIsSelected();');
+
+    const protractorConf = readFile('protractor.conf.js');
+    expect(protractorConf).toContain(
+      'const appDir = getAppDirectoryUsingCliConfig();'
+    );
+    expect(protractorConf).toContain(`appDir + '/e2e/**/*.e2e-spec.ts'`);
   });
 
   it('should generate a workspace and not change dependencies or devDependencies if they already exist', () => {
