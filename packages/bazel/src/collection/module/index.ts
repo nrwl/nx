@@ -13,7 +13,7 @@ import {
   Tree,
   url,
   TaskConfigurationGenerator,
-  TaskConfiguration,
+  TaskConfiguration
 } from '@angular-devkit/schematics';
 
 import { Schema } from './schema';

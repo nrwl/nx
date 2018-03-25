@@ -52,12 +52,15 @@ function build(apps: string[], rest: string[]) {
 
     console.log(`Building ${apps.join(', ')}`);
     const buildCommands = rest.filter(a => !a.startsWith('--parallel'));
-    runAll(apps.map(app => `ng build -- ${buildCommands.join(' ')} -a=${app}`), {
-      parallel,
-      stdin: process.stdin,
-      stdout: process.stdout,
-      stderr: process.stderr
-    })
+    runAll(
+      apps.map(app => `ng build -- ${buildCommands.join(' ')} -a=${app}`),
+      {
+        parallel,
+        stdin: process.stdin,
+        stdout: process.stdout,
+        stderr: process.stderr
+      }
+    )
       .then(() => console.log('Build succeeded.'))
       .catch(err => console.error('Build failed.'));
   } else {

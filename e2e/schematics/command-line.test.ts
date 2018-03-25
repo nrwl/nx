@@ -236,8 +236,9 @@ describe('Command line', () => {
     }, 1000000);
 
     it('should pass tests', () => {
-      expect(runCommand('npm run test -- --single-run').toString())
-        .toContain('Executed 1 of 1 SUCCESS');
+      expect(runCommand('npm run test -- --single-run').toString()).toContain(
+        'Executed 1 of 1 SUCCESS'
+      );
     });
 
     it('should not be able to run tests on an individual app', () => {
@@ -246,14 +247,16 @@ describe('Command line', () => {
         fail('boom');
       } catch (e) {
         const errorOutput = e.stderr.toString();
-        expect(errorOutput)
-          .toContain('Nx only supports running unit tests for all apps and libs.');
+        expect(errorOutput).toContain(
+          'Nx only supports running unit tests for all apps and libs.'
+        );
       }
     });
 
     it('should pass e2e tests', () => {
-      expect(runCommand('npm run e2e -- --app app1').toString())
-        .toContain('should display welcome message');
+      expect(runCommand('npm run e2e -- --app app1').toString()).toContain(
+        'should display welcome message'
+      );
     });
 
     it('should not be able to run e2e tests without specifying an app', () => {
@@ -262,8 +265,9 @@ describe('Command line', () => {
         fail('boom');
       } catch (e) {
         const errorOutput = e.stderr.toString();
-        expect(errorOutput)
-          .toContain('Please provide the app name using --app or -a.')
+        expect(errorOutput).toContain(
+          'Please provide the app name using --app or -a.'
+        );
       }
     });
   });

@@ -1,12 +1,34 @@
-import { apply, branchAndMerge, chain, mergeWith, noop, Rule, template, Tree, url } from '@angular-devkit/schematics';
+import {
+  apply,
+  branchAndMerge,
+  chain,
+  mergeWith,
+  noop,
+  Rule,
+  template,
+  Tree,
+  url
+} from '@angular-devkit/schematics';
 import { insertImport } from '@schematics/angular/utility/route-utils';
 import * as path from 'path';
 import * as ts from 'typescript';
 
-import { addGlobal, addImportToModule, addIncludeToTsConfig, addReexport, addRoute, insert } from '../../utils/ast-utils';
+import {
+  addGlobal,
+  addImportToModule,
+  addIncludeToTsConfig,
+  addReexport,
+  addRoute,
+  insert
+} from '../../utils/ast-utils';
 import { offsetFromRoot } from '../../utils/common';
 import { addApp, cliConfig, serializeJson } from '../../utils/fileutils';
-import { names, toClassName, toFileName, toPropertyName } from '../../utils/name-utils';
+import {
+  names,
+  toClassName,
+  toFileName,
+  toPropertyName
+} from '../../utils/name-utils';
 import { wrapIntoFormat } from '../../utils/tasks';
 import { Schema } from './schema';
 
@@ -236,28 +258,32 @@ function validateLibSchema(schema) {
   }
 
   const routingRules: Array<Rule> = [
-    options.routing && options.lazy ?
-        addLazyLoadedRouterConfiguration(modulePath) :
-        noop(),
-    options.routing && options.lazy && options.parentModule ?
-        addLoadChildren(options) :
-        noop(),
+    options.routing && options.lazy
+      ? addLazyLoadedRouterConfiguration(modulePath)
+      : noop(),
+    options.routing && options.lazy && options.parentModule
+      ? addLoadChildren(options)
+      : noop(),
 
-    options.routing && !options.lazy ?
-        addRouterConfiguration(options, indexFile, moduleFileName, modulePath) :
-        noop(),
-    options.routing && !options.lazy && options.parentModule ?
-        addChildren(options) :
-        noop()
+    options.routing && !options.lazy
+      ? addRouterConfiguration(options, indexFile, moduleFileName, modulePath)
+      : noop(),
+    options.routing && !options.lazy && options.parentModule
+      ? addChildren(options)
+      : noop()
   ];
 
-  const templateSource =
-      apply(url(options.nomodule ? './files' : './ngfiles'), [template({
-              ...names(options.name),
-              dot: '.',
-              tmpl: '',
-              ...(options as object)
-            })]);
+  const templateSource = apply(
+    url(options.nomodule ? './files' : './ngfiles'),
+    [
+      template({
+        ...names(options.name),
+        dot: '.',
+        tmpl: '',
+        ...(options as object)
+      })
+    ]
+  );
 
   return {
     options,
@@ -271,9 +297,11 @@ function validateLibSchema(schema) {
 
 export default function(schema: Schema): Rule {
   return wrapIntoFormat(() => {
-    const {templateSource, routingRules} = validateLibSchema(schema);
+    const { templateSource, routingRules } = validateLibSchema(schema);
 
-    return chain(
-        [branchAndMerge(chain([mergeWith(templateSource)])), ...routingRules]);
+    return chain([
+      branchAndMerge(chain([mergeWith(templateSource)])),
+      ...routingRules
+    ]);
   });
 }
