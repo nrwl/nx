@@ -5,7 +5,8 @@ import {
   mergeWith,
   Rule,
   Tree,
-  url
+  url,
+  SchematicContext
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';
@@ -31,7 +32,9 @@ import { Observable } from 'rxjs/Observable';
 import { fromPromise } from 'rxjs/observable/fromPromise';
 import { tap, map } from 'rxjs/operators';
 import { toFileName } from '../../utils/name-utils';
-import { updateJson, getAngularCliConfig } from '../../utils/ast-utils';
+import { updateJson, getAngularCliConfig, insert } from '../../utils/ast-utils';
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { InsertChange } from '@schematics/angular/utility/change';
 
 function updatePackageJson() {
   return updateJson('package.json', packageJson => {
@@ -226,6 +229,36 @@ function npmScope(options: Schema): string {
   return options && options.npmScope ? options.npmScope : options.name;
 }
 
+function updateKarmaConf() {
+  return (host: Tree, context: SchematicContext) => {
+    const angularCliJson = getAngularCliConfig(host);
+
+    const karmaConfig = angularCliJson.test!.karma;
+
+    if (!karmaConfig) {
+      return;
+    }
+
+    const karmaConfPath = karmaConfig.config;
+
+    const contents = host.read(karmaConfPath).toString();
+
+    const change = new InsertChange(
+      karmaConfPath,
+      contents.indexOf('module.exports ='),
+      stripIndents`
+        const { makeSureNoAppIsSelected } = require('@nrwl/schematics/src/utils/cli-config-utils');
+        // Nx only supports running unit tests for all apps and libs.
+        makeSureNoAppIsSelected();
+      ` + '\n\n'
+    );
+
+    insert(host, karmaConfPath, [change]);
+
+    return host;
+  };
+}
+
 function updateProtractorConf() {
   return (host: Tree) => {
     if (!host.exists('protractor.conf.js')) {
@@ -338,6 +371,7 @@ export default function(schema: Schema): Rule {
     updateTsLint(),
     updateTsConfig(options),
     updateTsConfigsJson(options),
+    updateKarmaConf(),
     updateProtractorConf()
   ]);
 }
