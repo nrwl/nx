@@ -1,4 +1,9 @@
-import { checkFilesExist, createNxWorkspace, readFile } from '../utils';
+import {
+  checkFilesExist,
+  createNxWorkspace,
+  readFile,
+  readJson
+} from '../utils';
 
 /**
  * Too slow to run on CI :(
@@ -10,7 +15,7 @@ xdescribe('CreateNxWorkspace', () => {
       const res = createNxWorkspace('proj --npmScope=myscope');
       expect(res).toContain("Project 'proj' successfully created.");
 
-      const config = JSON.parse(readFile('.angular-cli.json'));
+      const config = readJson('.angular-cli.json');
       expect(config.project.name).toEqual('proj');
       expect(config.project.npmScope).toEqual('myscope');
 
@@ -25,7 +30,7 @@ xdescribe('CreateNxWorkspace', () => {
       const res = createNxWorkspace('proj --npmScope=myscope --yarn');
       expect(res).toContain("Project 'proj' successfully created.");
 
-      const config = JSON.parse(readFile('.angular-cli.json'));
+      const config = readJson('.angular-cli.json');
       expect(config.project.name).toEqual('proj');
       expect(config.project.npmScope).toEqual('myscope');
 

@@ -11,7 +11,7 @@ import {
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';
-import { addApp, cliConfig, serializeJson } from '../../utils/fileutils';
+import { addApp, serializeJson } from '../../utils/fileutils';
 import { insertImport } from '@schematics/angular/utility/route-utils';
 import * as ts from 'typescript';
 import {
@@ -20,6 +20,8 @@ import {
   addIncludeToTsConfig,
   addReexport,
   addRoute,
+  getAngularCliConfig,
+  updateJson,
   insert
 } from '../../utils/ast-utils';
 import { offsetFromRoot } from '../../utils/common';
@@ -38,10 +40,9 @@ interface NormalizedSchema extends Schema {
 }
 
 function addLibToAngularCliJson(options: NormalizedSchema): Rule {
-  return (host: Tree) => {
+  return updateJson('.angular-cli.json', angularCliJson => {
     const tags = options.tags ? options.tags.split(',').map(s => s.trim()) : [];
-    const json = cliConfig(host);
-    json.apps = addApp(json.apps, {
+    angularCliJson.apps = addApp(angularCliJson.apps, {
       name: options.fullName,
       root: options.fullPath,
       test: `${offsetFromRoot(options.fullPath)}test.js`,
@@ -49,9 +50,8 @@ function addLibToAngularCliJson(options: NormalizedSchema): Rule {
       tags
     });
 
-    host.overwrite('.angular-cli.json', serializeJson(json));
-    return host;
-  };
+    return angularCliJson;
+  });
 }
 
 function addLazyLoadedRouterConfiguration(modulePath: string): Rule {
@@ -124,7 +124,7 @@ function addRouterConfiguration(
 
 function addLoadChildren(schema: NormalizedSchema): Rule {
   return (host: Tree) => {
-    const json = cliConfig(host);
+    const json = getAngularCliConfig(host);
 
     const moduleSource = host.read(schema.parentModule)!.toString('utf-8');
     const sourceFile = ts.createSourceFile(
@@ -206,7 +206,7 @@ function findClosestTsConfigApp(
 
 function addChildren(schema: NormalizedSchema): Rule {
   return (host: Tree) => {
-    const json = cliConfig(host);
+    const json = getAngularCliConfig(host);
 
     const moduleSource = host.read(schema.parentModule)!.toString('utf-8');
     const sourceFile = ts.createSourceFile(

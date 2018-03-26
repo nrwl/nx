@@ -5,7 +5,8 @@ import {
   readFile,
   runCLI,
   runNgNew,
-  updateFile
+  updateFile,
+  readJson
 } from '../utils';
 import { angularCliSchema } from '../../packages/schematics/src/lib-versions';
 
@@ -17,7 +18,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     copyMissingPackages();
 
     // update package.json
-    const packageJson = JSON.parse(readFile('package.json'));
+    const packageJson = readJson('package.json');
     packageJson.description = 'some description';
     updateFile('package.json', JSON.stringify(packageJson, null, 2));
     // confirm that @nrwl and @ngrx dependencies do not exist yet
@@ -29,12 +30,12 @@ describe('Nrwl Convert to Nx Workspace', () => {
     expect(packageJson.dependencies['@ngrx/store-devtools']).not.toBeDefined();
 
     // update tsconfig.json
-    const tsconfigJson = JSON.parse(readFile('tsconfig.json'));
+    const tsconfigJson = readJson('tsconfig.json');
     tsconfigJson.compilerOptions.paths = { a: ['b'] };
     updateFile('tsconfig.json', JSON.stringify(tsconfigJson, null, 2));
 
     // update angular-cli.json
-    const angularCLIJson = JSON.parse(readFile('.angular-cli.json'));
+    const angularCLIJson = readJson('.angular-cli.json');
     angularCLIJson.apps[0].scripts = ['../node_modules/x.js'];
     updateFile('.angular-cli.json', JSON.stringify(angularCLIJson, null, 2));
 
@@ -51,7 +52,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     );
 
     // check that package.json got merged
-    const updatedPackageJson = JSON.parse(readFile('package.json'));
+    const updatedPackageJson = readJson('package.json');
     expect(updatedPackageJson.description).toEqual('some description');
     expect(
       updatedPackageJson.devDependencies['@nrwl/schematics']
@@ -65,7 +66,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     ).toBeDefined();
 
     // check if angular-cli.json get merged
-    const updatedAngularCLIJson = JSON.parse(readFile('.angular-cli.json'));
+    const updatedAngularCLIJson = readJson('.angular-cli.json');
     expect(updatedAngularCLIJson.$schema).toEqual(angularCliSchema);
     expect(updatedAngularCLIJson.apps[0].name).toEqual('proj');
     expect(updatedAngularCLIJson.apps[0].root).toEqual('apps/proj/src');
@@ -93,7 +94,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     );
 
     // check if tsconfig.json get merged
-    const updatedTsConfig = JSON.parse(readFile('tsconfig.json'));
+    const updatedTsConfig = readJson('tsconfig.json');
     expect(updatedTsConfig.compilerOptions.paths).toEqual({
       a: ['b'],
       '@proj/*': ['libs/*']
@@ -107,7 +108,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     const schematicsVersion = '0.0.0';
     const ngrxVersion = '0.0.0';
     // update package.json
-    const existingPackageJson = JSON.parse(readFile('package.json'));
+    const existingPackageJson = readJson('package.json');
     existingPackageJson.devDependencies['@nrwl/schematics'] = schematicsVersion;
     existingPackageJson.dependencies['@nrwl/nx'] = nxVersion;
     existingPackageJson.dependencies['@ngrx/store'] = ngrxVersion;
@@ -118,7 +119,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     // run the command
     runCLI('generate workspace proj --collection=@nrwl/schematics');
     // check that dependencies and devDependencies remained the same
-    const packageJson = JSON.parse(readFile('package.json'));
+    const packageJson = readJson('package.json');
     expect(packageJson.devDependencies['@nrwl/schematics']).toEqual(
       schematicsVersion
     );

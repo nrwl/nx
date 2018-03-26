@@ -5,7 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import { Tree } from '@angular-devkit/schematics';
+import { Tree, Rule } from '@angular-devkit/schematics';
 import {
   findNodes,
   getDecoratorMetadata,
@@ -21,6 +21,7 @@ import {
 import * as ts from 'typescript';
 import { toFileName } from './name-utils';
 import * as path from 'path';
+import { serializeJson } from './fileutils';
 
 // This should be moved to @schematics/angular once it allows to pass custom expressions as providers
 function _addSymbolToNgModuleMetadata(
@@ -539,13 +540,34 @@ export function insert(host: Tree, modulePath: string, changes: Change[]) {
   host.commitUpdate(recorder);
 }
 
-export function getAppConfig(host: Tree, name: string): any {
-  if (!host.exists('.angular-cli.json')) {
-    throw new Error('Missing .angular-cli.json');
+export function readJson<T = any>(host: Tree, path: string): T {
+  if (!host.exists(path)) {
+    throw new Error(`Cannot find ${path}`);
   }
-  const angularCliJson = JSON.parse(
-    host.read('.angular-cli.json')!.toString('utf-8')
-  );
+  return JSON.parse(host.read(path)!.toString('utf-8'));
+}
+
+/**
+ * @param path path of JSON file
+ * @param callback Manipulation of the JSON data
+ * @returns A rule which updates a JSON file
+ */
+export function updateJson<T = any, O = T>(
+  path: string,
+  callback: (json: T) => O
+): Rule {
+  return (host: Tree): Tree => {
+    host.overwrite(path, serializeJson(callback(readJson(host, path))));
+    return host;
+  };
+}
+
+export function getAngularCliConfig(host: Tree) {
+  return readJson(host, '.angular-cli.json');
+}
+
+export function getAppConfig(host: Tree, name: string): any {
+  const angularCliJson = getAngularCliConfig(host);
   const apps = angularCliJson.apps;
   if (!apps || apps.length === 0) {
     throw new Error(`Cannot find app '${name}'`);

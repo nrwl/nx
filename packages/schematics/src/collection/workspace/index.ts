@@ -31,15 +31,10 @@ import { Observable } from 'rxjs/Observable';
 import { fromPromise } from 'rxjs/observable/fromPromise';
 import { tap, map } from 'rxjs/operators';
 import { toFileName } from '../../utils/name-utils';
+import { updateJson, getAngularCliConfig } from '../../utils/ast-utils';
 
 function updatePackageJson() {
-  return (host: Tree) => {
-    if (!host.exists('package.json')) {
-      throw new Error('Cannot find package.json');
-    }
-    const packageJson = JSON.parse(
-      host.read('package.json')!.toString('utf-8')
-    );
+  return updateJson('package.json', packageJson => {
     if (!packageJson.devDependencies) {
       packageJson.devDependencies = {};
     }
@@ -93,21 +88,12 @@ function updatePackageJson() {
 
     packageJson.scripts['postinstall'] = './node_modules/.bin/nx postinstall';
 
-    host.overwrite('package.json', serializeJson(packageJson));
-    return host;
-  };
+    return packageJson;
+  });
 }
 
-function readAngularCliJson(host: Tree): any {
-  if (!host.exists('.angular-cli.json')) {
-    throw new Error('Cannot find .angular-cli.json');
-  }
-  return JSON.parse(host.read('.angular-cli.json')!.toString('utf-8'));
-}
-
-function updateAngularCLIJson(options: Schema) {
-  return (host: Tree) => {
-    const angularCliJson = readAngularCliJson(host);
+function updateAngularCLIJson(options: Schema): Rule {
+  return updateJson('.angular-cli.json', angularCliJson => {
     angularCliJson.$schema = angularCliSchema;
     angularCliJson.project.npmScope = npmScope(options);
     angularCliJson.project.latestMigration = latestMigration;
@@ -149,20 +135,22 @@ function updateAngularCLIJson(options: Schema) {
       }
     ];
 
-    host.overwrite('.angular-cli.json', serializeJson(angularCliJson));
+    return angularCliJson;
+  });
+}
 
-    return host;
-  };
+function updateTsConfig(options: Schema): Rule {
+  return updateJson('tsconfig.json', tsConfigJson =>
+    setUpCompilerOptions(tsConfigJson, npmScope(options), '')
+  );
 }
 
 function updateTsConfigsJson(options: Schema) {
   return (host: Tree) => {
-    const angularCliJson = readAngularCliJson(host);
+    const angularCliJson = getAngularCliConfig(host);
     const app = angularCliJson.apps[0];
-    updateJsonFile('tsconfig.json', json =>
-      setUpCompilerOptions(json, npmScope(options), '')
-    );
 
+    // This has to stay using fs since it is created with fs
     const offset = '../../../';
     updateJsonFile(`${app.root}/tsconfig.app.json`, json => {
       json.extends = `${offset}tsconfig.json`;
@@ -176,6 +164,7 @@ function updateTsConfigsJson(options: Schema) {
       json.include = dedup(json.include.concat(['**/*.ts']));
     });
 
+    // This has to stay using fs since it is created with fs
     updateJsonFile('tsconfig.spec.json', json => {
       json.extends = './tsconfig.json';
       json.compilerOptions.outDir = `./dist/out-tsc/spec`;
@@ -194,6 +183,7 @@ function updateTsConfigsJson(options: Schema) {
       );
     });
 
+    // This has to stay using fs since it is created with fs
     updateJsonFile(`apps/${options.name}/e2e/tsconfig.e2e.json`, json => {
       json.extends = `${offset}tsconfig.json`;
       json.compilerOptions.outDir = `${offset}dist/out-tsc/e2e/${options.name}`;
@@ -208,30 +198,28 @@ function updateTsConfigsJson(options: Schema) {
   };
 }
 
-function updateTsLintJson(options: Schema) {
-  return (host: Tree) => {
-    updateJsonFile('tslint.json', json => {
-      [
-        'no-trailing-whitespace',
-        'one-line',
-        'quotemark',
-        'typedef-whitespace',
-        'whitespace'
-      ].forEach(key => {
-        json[key] = undefined;
-      });
-      json.rulesDirectory = json.rulesDirectory || [];
-      json.rulesDirectory.push('node_modules/@nrwl/schematics/src/tslint');
-      json['nx-enforce-module-boundaries'] = [
-        true,
-        {
-          allow: [],
-          depConstraints: [{ sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }]
-        }
-      ];
+function updateTsLint() {
+  return updateJson('tslint.json', tslintJson => {
+    [
+      'no-trailing-whitespace',
+      'one-line',
+      'quotemark',
+      'typedef-whitespace',
+      'whitespace'
+    ].forEach(key => {
+      tslintJson[key] = undefined;
     });
-    return host;
-  };
+    tslintJson.rulesDirectory = tslintJson.rulesDirectory || [];
+    tslintJson.rulesDirectory.push('node_modules/@nrwl/schematics/src/tslint');
+    tslintJson['nx-enforce-module-boundaries'] = [
+      true,
+      {
+        allow: [],
+        depConstraints: [{ sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }]
+      }
+    ];
+    return tslintJson;
+  });
 }
 
 function npmScope(options: Schema): string {
@@ -266,19 +254,19 @@ function setUpCompilerOptions(
   tsconfig: any,
   npmScope: string,
   offset: string
-): void {
+): any {
   if (!tsconfig.compilerOptions.paths) {
     tsconfig.compilerOptions.paths = {};
   }
   tsconfig.compilerOptions.baseUrl = '.';
   tsconfig.compilerOptions.paths[`@${npmScope}/*`] = [`${offset}libs/*`];
+
+  return tsconfig;
 }
 
 function moveExistingFiles(options: Schema) {
   return (host: Tree) => {
-    const angularCliJson = JSON.parse(
-      host.read('.angular-cli.json')!.toString('utf-8')
-    );
+    const angularCliJson = getAngularCliConfig(host);
     const app = angularCliJson.apps[0];
 
     fs.mkdirSync('apps');
@@ -330,12 +318,7 @@ function checkCanConvertToWorkspace(options: Schema) {
     if (!host.exists('protractor.conf.js')) {
       throw new Error('Cannot find protractor.conf.js');
     }
-    if (!host.exists('.angular-cli.json')) {
-      throw new Error('Cannot find .angular-cli.json');
-    }
-    const angularCliJson = JSON.parse(
-      host.read('.angular-cli.json')!.toString('utf-8')
-    );
+    const angularCliJson = getAngularCliConfig(host);
     if (angularCliJson.apps.length !== 1) {
       throw new Error('Can only convert projects with one app');
     }
@@ -352,8 +335,9 @@ export default function(schema: Schema): Rule {
     branchAndMerge(chain([mergeWith(apply(url('./files'), []))])),
     updatePackageJson(),
     updateAngularCLIJson(options),
+    updateTsLint(),
+    updateTsConfig(options),
     updateTsConfigsJson(options),
-    updateProtractorConf(),
-    updateTsLintJson(options)
+    updateProtractorConf()
   ]);
 }

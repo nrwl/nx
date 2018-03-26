@@ -4,6 +4,7 @@ import { Tree, VirtualTree } from '@angular-devkit/schematics';
 import { createApp, createEmptyWorkspace } from '../../utils/testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
 import * as stripJsonComments from 'strip-json-comments';
+import { readJson } from '../../utils/ast-utils';
 
 describe('lib', () => {
   const schematicRunner = new SchematicTestRunner(
@@ -27,9 +28,7 @@ describe('lib', () => {
         { name: 'myLib' },
         appTree
       );
-      const updatedAngularCLIJson = JSON.parse(
-        getFileContent(tree, '/.angular-cli.json')
-      );
+      const updatedAngularCLIJson = readJson(tree, '/.angular-cli.json');
       expect(updatedAngularCLIJson.apps).toEqual([
         {
           appRoot: '',
@@ -91,9 +90,7 @@ describe('lib', () => {
         { name: 'myLib', directory: 'myDir' },
         appTree
       );
-      const updatedAngularCLIJson = JSON.parse(
-        getFileContent(tree, '/.angular-cli.json')
-      );
+      const updatedAngularCLIJson = readJson(tree, '/.angular-cli.json');
       expect(updatedAngularCLIJson.apps).toEqual([
         {
           appRoot: '',
@@ -290,9 +287,7 @@ describe('lib', () => {
           { name: 'myLib', tags: 'one,two' },
           appTree
         );
-        const updatedAngularCLIJson = JSON.parse(
-          getFileContent(tree, '/.angular-cli.json')
-        );
+        const updatedAngularCLIJson = readJson(tree, '/.angular-cli.json');
         expect(updatedAngularCLIJson.apps[0].tags).toEqual(['one', 'two']);
       });
     });

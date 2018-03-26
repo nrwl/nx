@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 import * as yargsParser from 'yargs-parser';
 
+import { readJsonFile } from './fileutils';
+
 export function getAppDirectoryUsingCliConfig() {
-  const cli = JSON.parse(
-    fs.readFileSync(process.cwd() + '/.angular-cli.json', 'UTF-8')
-  );
+  const cli = readJsonFile(process.cwd() + '/.angular-cli.json');
 
   const appName = getAppName();
 

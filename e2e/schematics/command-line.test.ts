@@ -5,7 +5,8 @@ import {
   readFile,
   runCLI,
   runCommand,
-  updateFile
+  updateFile,
+  readJson
 } from '../utils';
 
 describe('Command line', () => {
@@ -20,7 +21,7 @@ describe('Command line', () => {
       newLib('invalidtaglib --tags=invalidtag');
       newLib('validtaglib --tags=validtag');
 
-      const tslint = JSON.parse(readFile('tslint.json'));
+      const tslint = readJson('tslint.json');
       tslint.rules['nx-enforce-module-boundaries'][1].depConstraints = [
         { sourceTag: 'validtag', onlyDependOnLibsWithTags: ['validtag'] },
         ...tslint.rules['nx-enforce-module-boundaries'][1].depConstraints

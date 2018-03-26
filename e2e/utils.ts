@@ -125,6 +125,10 @@ export function checkFilesExist(...expectedFiles: string[]) {
   });
 }
 
+export function readJson(f: string): any {
+  return JSON.parse(readFile(f));
+}
+
 export function readFile(f: string) {
   const ff = f.startsWith('/') ? f : path.join(getCwd(), 'tmp', projectName, f);
   return readFileSync(ff).toString();
