@@ -1,5 +1,6 @@
 export interface Schema {
   name: string;
+  moduleName: string;
   directory?: string;
   sourceDir?: string;
   nomodule: boolean;

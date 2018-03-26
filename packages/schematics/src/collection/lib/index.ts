@@ -235,7 +235,7 @@ function addChildren(schema: NormalizedSchema): Rule {
 export default function(schema: Schema): Rule {
   return wrapIntoFormat(() => {
     const options = normalizeOptions(schema);
-    const moduleFileName = `${toFileName(options.name)}.module`;
+    const moduleFileName = `${options.moduleName}.module`;
     const modulePath = `${options.fullPath}/${moduleFileName}.ts`;
     const indexFile = `libs/${toFileName(options.fullName)}/index.ts`;
 
@@ -251,7 +251,7 @@ export default function(schema: Schema): Rule {
       url(options.nomodule ? './files' : './ngfiles'),
       [
         template({
-          ...names(options.name),
+          ...names(options.moduleName),
           dot: '.',
           tmpl: '',
           ...(options as object)
@@ -284,6 +284,9 @@ function normalizeOptions(options: Schema): NormalizedSchema {
   const fullName = options.directory
     ? `${toFileName(options.directory)}/${name}`
     : name;
+  const moduleName = options.moduleName
+    ? toFileName(options.moduleName)
+    : toFileName(options.name);
   const fullPath = `libs/${fullName}/src`;
-  return { ...options, sourceDir: 'src', name, fullName, fullPath };
+  return { ...options, sourceDir: 'src', name, fullName, fullPath, moduleName };
 }
