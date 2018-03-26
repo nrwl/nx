@@ -3,7 +3,7 @@ import { Tree } from '@angular-devkit/schematics';
 import * as path from 'path';
 
 export function updateJsonFile(path: string, callback: (a: any) => any) {
-  const json = JSON.parse(fs.readFileSync(path, 'utf-8'));
+  const json = readJsonFile(path);
   callback(json);
   fs.writeFileSync(path, JSON.stringify(json, null, 2));
 }
@@ -30,17 +30,12 @@ export function serializeJson(json: any): string {
   return `${JSON.stringify(json, null, 2)}\n`;
 }
 
-export function cliConfig(host: Tree): any {
-  if (!host.exists('.angular-cli.json')) {
-    throw new Error('Missing .angular-cli.json');
-  }
-
-  const sourceText = host.read('.angular-cli.json')!.toString('utf-8');
-  return JSON.parse(sourceText);
+export function readJsonFile(path: string): any {
+  return JSON.parse(fs.readFileSync(path, 'utf-8'));
 }
 
 export function readCliConfigFile(): any {
-  return JSON.parse(fs.readFileSync('.angular-cli.json', 'utf-8'));
+  return readJsonFile('.angular-cli.json');
 }
 
 export function copyFile(file: string, target: string) {

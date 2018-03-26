@@ -3,6 +3,7 @@ import * as path from 'path';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
 import { createApp, createEmptyWorkspace } from '../../utils/testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
+import { readJson } from '../../utils/ast-utils';
 
 describe('ngrx', () => {
   const schematicRunner = new SchematicTestRunner(
@@ -153,7 +154,7 @@ describe('ngrx', () => {
       },
       appTree
     );
-    const packageJson = JSON.parse(getFileContent(tree, '/package.json'));
+    const packageJson = readJson(tree, 'package.json');
 
     expect(packageJson.dependencies['@ngrx/store']).toBeDefined();
     expect(packageJson.dependencies['@ngrx/router-store']).toBeDefined();

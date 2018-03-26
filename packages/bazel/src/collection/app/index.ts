@@ -19,7 +19,9 @@ import { strings } from '@angular-devkit/core';
 import {
   addImportToModule,
   insert,
-  addImportToTestBed
+  getAngularCliConfig,
+  addImportToTestBed,
+  updateJson
 } from '../../utils/ast-utils';
 import { toFileName } from '../../utils/name-utils';
 import * as ts from 'typescript';
@@ -28,7 +30,6 @@ import { insertImport } from '@schematics/angular/utility/route-utils';
 import {
   addApp,
   serializeJson,
-  cliConfig,
   readCliConfigFile
 } from '../../utils/fileutils';
 import { offsetFromRoot } from '../../utils/common';
@@ -86,14 +87,8 @@ function addNxModule(path: string): Rule {
   };
 }
 function addAppToAngularCliJson(options: NormalizedSchema): Rule {
-  return (host: Tree) => {
-    if (!host.exists('.angular-cli.json')) {
-      throw new Error('Missing .angular-cli.json');
-    }
-
-    const sourceText = host.read('.angular-cli.json')!.toString('utf-8');
-    const json = JSON.parse(sourceText);
-    json.apps = addApp(json.apps, {
+  return updateJson('.angular-cli.json', angularCliJson => {
+    angularCliJson.apps = addApp(angularCliJson.apps, {
       name: options.fullName,
       root: options.fullPath,
       outDir: `dist/apps/${options.fullName}`,
@@ -114,8 +109,8 @@ function addAppToAngularCliJson(options: NormalizedSchema): Rule {
       }
     });
 
-    json.lint = [
-      ...(json.lint || []),
+    angularCliJson.lint = [
+      ...(angularCliJson.lint || []),
       {
         project: `${options.fullPath}/tsconfig.app.json`,
         exclude: '**/node_modules/**'
@@ -126,9 +121,8 @@ function addAppToAngularCliJson(options: NormalizedSchema): Rule {
       }
     ];
 
-    host.overwrite('.angular-cli.json', serializeJson(json));
-    return host;
-  };
+    return angularCliJson;
+  });
 }
 
 function addRouterRootConfiguration(path: string): Rule {

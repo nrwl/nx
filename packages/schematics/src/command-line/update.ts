@@ -1,6 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { updateJsonFile, readCliConfigFile } from '../utils/fileutils';
+
 type Migration = { description: string; run(): void };
 type MigrationName = { name: string; migration: Migration };
 
@@ -39,9 +41,7 @@ function readAllMigrations() {
 }
 
 function readLatestMigration(): string {
-  const angularCli = JSON.parse(
-    fs.readFileSync('.angular-cli.json').toString()
-  );
+  const angularCli = readCliConfigFile();
   return angularCli.project.latestMigration;
 }
 
@@ -140,13 +140,8 @@ function run(latestMigration: string, migrations: MigrationName[]): void {
 
 function updateLatestMigration(migrations: MigrationName[]): void {
   // we must reread .angular-cli.json because some of the migrations could have modified it
-  const angularCliJson = JSON.parse(
-    fs.readFileSync('.angular-cli.json').toString()
-  );
-  angularCliJson.project.latestMigration =
-    migrations[migrations.length - 1].name;
-  fs.writeFileSync(
-    '.angular-cli.json',
-    JSON.stringify(angularCliJson, null, 2)
-  );
+  updateJsonFile('.angular-cli.json', angularCliJson => {
+    angularCliJson.project.latestMigration =
+      migrations[migrations.length - 1].name;
+  });
 }

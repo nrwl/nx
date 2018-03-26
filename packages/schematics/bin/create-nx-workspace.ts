@@ -12,6 +12,8 @@ import {
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 
+import { readJsonFile } from '../src/utils/fileutils';
+
 interface CommandOptions {
   directory?: string;
   yarn: boolean;
@@ -72,8 +74,8 @@ if (!projectName) {
 // creating the sandbox
 console.log('Creating a sandbox with the CLI and Nx Schematics...');
 const tmpDir = dirSync().name;
-const nxVersion = JSON.parse(
-  readFileSync(path.join(path.dirname(__dirname), 'package.json'), 'UTF-8')
+const nxVersion = readJsonFile(
+  path.join(path.dirname(__dirname), 'package.json')
 ).version;
 writeFileSync(
   path.join(tmpDir, 'package.json'),

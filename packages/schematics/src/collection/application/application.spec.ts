@@ -3,6 +3,7 @@ import * as path from 'path';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '../../utils/testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
+import { readJson } from '../../utils/ast-utils';
 
 describe('application', () => {
   const schematicRunner = new SchematicTestRunner(
@@ -46,9 +47,7 @@ describe('application', () => {
       { name: 'myApp', directory: 'my-app' },
       appTree
     );
-    const packageJson = JSON.parse(
-      getFileContent(tree, '/my-app/package.json')
-    );
+    const packageJson = readJson(tree, '/my-app/package.json');
 
     expect(packageJson.devDependencies['@nrwl/schematics']).toBeDefined();
     expect(packageJson.dependencies['@nrwl/nx']).toBeDefined();
@@ -65,14 +64,10 @@ describe('application', () => {
       appTree
     );
 
-    const angularCliJson = JSON.parse(
-      getFileContent(tree, '/my-app/.angular-cli.json')
-    );
+    const angularCliJson = readJson(tree, '/my-app/.angular-cli.json');
     expect(angularCliJson.project.npmScope).toEqual('myApp');
 
-    const tsconfigJson = JSON.parse(
-      getFileContent(tree, '/my-app/tsconfig.json')
-    );
+    const tsconfigJson = readJson(tree, '/my-app/tsconfig.json');
     expect(tsconfigJson.compilerOptions.paths).toEqual({
       '@myApp/*': ['libs/*']
     });

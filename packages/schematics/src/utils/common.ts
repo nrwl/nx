@@ -6,28 +6,24 @@ import * as cosmiconfig from 'cosmiconfig';
 import { angularJsVersion } from '../lib-versions';
 import { serializeJson } from './fileutils';
 import { Schema } from '../collection/app/schema';
+import { updateJson } from './ast-utils';
 
 export function addUpgradeToPackageJson(): Rule {
-  return (host: Tree) => {
-    if (!host.exists('package.json')) return host;
-
-    const sourceText = host.read('package.json')!.toString('utf-8');
-    const json = JSON.parse(sourceText);
-    if (!json['dependencies']) {
-      json['dependencies'] = {};
+  return updateJson('package.json', packageJson => {
+    if (!packageJson['dependencies']) {
+      packageJson['dependencies'] = {};
     }
 
-    if (!json['dependencies']['@angular/upgrade']) {
-      json['dependencies']['@angular/upgrade'] =
-        json['dependencies']['@angular/core'];
+    if (!packageJson['dependencies']['@angular/upgrade']) {
+      packageJson['dependencies']['@angular/upgrade'] =
+        packageJson['dependencies']['@angular/core'];
     }
-    if (!json['dependencies']['angular']) {
-      json['dependencies']['angular'] = angularJsVersion;
+    if (!packageJson['dependencies']['angular']) {
+      packageJson['dependencies']['angular'] = angularJsVersion;
     }
 
-    host.overwrite('package.json', serializeJson(json));
-    return host;
-  };
+    return packageJson;
+  });
 }
 
 export function offsetFromRoot(fullPathToSourceDir: string): string {

@@ -3,6 +3,7 @@ import * as path from 'path';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
 import { createApp, createEmptyWorkspace } from '../../utils/testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
+import { readJson } from '../../utils/ast-utils';
 
 describe('downgrade-module', () => {
   const schematicRunner = new SchematicTestRunner(
@@ -68,7 +69,7 @@ describe('downgrade-module', () => {
       appTree
     );
 
-    const packageJson = JSON.parse(getFileContent(tree, '/package.json'));
+    const packageJson = readJson(tree, '/package.json');
     expect(packageJson.dependencies['@angular/upgrade']).toEqual('4.4.4');
     expect(packageJson.dependencies['angular']).toBeDefined();
   });
@@ -92,7 +93,7 @@ describe('downgrade-module', () => {
       appTree
     );
 
-    const packageJson = JSON.parse(getFileContent(tree, '/package.json'));
+    const packageJson = readJson(tree, 'package.json');
     expect(packageJson.dependencies['@angular/upgrade']).not.toBeDefined();
   });
 

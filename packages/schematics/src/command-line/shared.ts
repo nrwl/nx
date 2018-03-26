@@ -13,6 +13,7 @@ import {
 } from '@nrwl/schematics/src/command-line/affected-apps';
 import { readFileSync, statSync } from 'fs';
 import * as appRoot from 'app-root-path';
+import { readJsonFile } from '../utils/fileutils';
 
 export function parseFiles(
   args: string[]
@@ -75,9 +76,7 @@ export function getProjectNodes(config) {
 }
 
 export function readCliConfig(): any {
-  const config = JSON.parse(
-    fs.readFileSync(`${appRoot.path}/.angular-cli.json`, 'utf-8')
-  );
+  const config = readJsonFile(`${appRoot.path}/.angular-cli.json`);
 
   if (!config.project.npmScope) {
     throw new Error(`.angular-cli.json must define the npmScope property.`);
@@ -149,9 +148,7 @@ export function readDependencies(
     );
     return deps;
   } else {
-    return JSON.parse(
-      fs.readFileSync(`${appRoot.path}/dist/nxdeps.json`, 'UTF-8')
-    );
+    return readJsonFile(`${appRoot.path}/dist/nxdeps.json`);
   }
 }
 
