@@ -12,6 +12,10 @@
       "type": "string",
       "description": "A directory where the app is placed"
     },
+    "moduleName": {
+      "type": "string",
+      "description": "A module name"
+    },
     "nomodule": {
       "type": "boolean",
       "default": false,

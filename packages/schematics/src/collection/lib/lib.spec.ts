@@ -41,7 +41,7 @@ describe('lib', () => {
       ]);
     });
 
-    it('should generate files', () => {
+    it('should generate files when nomodule = true', () => {
       const tree = schematicRunner.runSchematic(
         'lib',
         { name: 'myLib', nomodule: true },
@@ -67,6 +67,20 @@ describe('lib', () => {
       expect(
         getFileContent(tree, 'libs/my-lib/src/my-lib.module.ts')
       ).toContain('class MyLibModule');
+    });
+
+    it('should generate files when moduleName is set', () => {
+      const tree = schematicRunner.runSchematic(
+        'lib',
+        { name: 'myLib', moduleName: 'other' },
+        appTree
+      );
+      expect(tree.exists('libs/my-lib/src/other.module.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/other.module.spec.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/index.ts')).toBeTruthy();
+      expect(getFileContent(tree, 'libs/my-lib/src/other.module.ts')).toContain(
+        'class OtherModule'
+      );
     });
   });
 
