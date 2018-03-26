@@ -15,13 +15,30 @@ import * as yargsParser from 'yargs-parser';
 interface CommandOptions {
   directory?: string;
   yarn: boolean;
+  help: boolean;
 }
 
 const parsedArgs = yargsParser(process.argv, {
   string: ['directory'],
-  boolean: ['yarn']
+  boolean: ['yarn', 'help']
 });
 
+if (parsedArgs.help) {
+  console.log(`
+    Usage: create-nx-workspace <directory> [options] [ng new options]
+
+    Create a new Nx workspace (that is to say a new angular-cli project using @nrwl/schematics)
+
+    Options:
+
+      directory             path to the workspace root directory
+      --yarn                use yarn instead of npm (default to false)
+
+      [ng new options]      any 'ng new' options
+                            run 'ng help new' for more informations
+  `);
+  process.exit(0);
+}
 const useYarn = parsedArgs.yarn;
 
 if (!useYarn) {
