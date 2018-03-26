@@ -34,6 +34,11 @@ export function parseFiles(
       files: parseDashDashFiles(dashDashFiles),
       rest: [...unnamed, ...named]
     };
+  } else if (unnamed.length >= 1 && unnamed[0].includes('staged')) {
+    return {
+      files: getFilesFromLocalChanges(unnamed[0].startsWith('staged')),
+      rest: [...unnamed.slice(1), ...named]
+    };
   } else if (unnamed.length >= 2) {
     return {
       files: getFilesFromShash(unnamed[0], unnamed[1]),
@@ -50,6 +55,22 @@ function parseDashDashFiles(dashDashFiles: string): string[] {
     f = f.substring(1, f.length - 1);
   }
   return f.split(',').map(f => f.trim());
+}
+
+function getFilesFromLocalChanges(staged: boolean): string[] {
+  if (staged) {
+      return execSync(`git diff --name-only --cached`)
+      .toString('utf-8')
+      .split('\n')
+      .map(a => a.trim())
+      .filter(a => a.length > 0);
+  } else {
+      return execSync(`git diff --name-only`)
+      .toString('utf-8')
+      .split('\n')
+      .map(a => a.trim())
+      .filter(a => a.length > 0);
+  }
 }
 
 function getFilesFromShash(sha1: string, sha2: string): string[] {
