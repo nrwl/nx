@@ -5,8 +5,8 @@ import {
   runCLI,
   runNgNew,
   updateFile,
-  readJson,
-  readFile
+  readFile,
+  readJson
 } from '../utils';
 import { angularCliSchema } from '../../packages/schematics/src/lib-versions';
 

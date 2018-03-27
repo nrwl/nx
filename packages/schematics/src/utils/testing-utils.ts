@@ -1,5 +1,16 @@
 import { Tree } from '@angular-devkit/schematics';
 
+export interface AppConfig {
+  appName: string; // name of app or lib
+  appModule: string; // app/app.module.ts in the above sourceDir
+}
+
+var appConfig: AppConfig; // configure built in createApp()
+
+export function getAppConfig(): AppConfig {
+  return appConfig;
+}
+
 export function createEmptyWorkspace(tree: Tree): Tree {
   tree.create('/.angular-cli.json', JSON.stringify({}));
   tree.create('/package.json', JSON.stringify({}));
@@ -22,8 +33,14 @@ export function createEmptyWorkspace(tree: Tree): Tree {
 }
 
 export function createApp(tree: Tree, appName: string): Tree {
+  // save for getAppDir() lookup by external *.spec.ts tests
+  appConfig = {
+    appName,
+    appModule: `/apps/${appName}/src/app/app.module.ts`
+  };
+
   tree.create(
-    `/apps/${appName}/src/app/app.module.ts`,
+    appConfig.appModule,
     `
      import { NgModule } from '@angular/core';
      import { BrowserModule } from '@angular/platform-browser';
