@@ -53,7 +53,8 @@ export function copyMissingPackages(): void {
     'jasmine-marbles',
     '@nrwl',
     'angular',
-    '@angular/upgrade'
+    '@angular/upgrade',
+    'npm-run-all'
   ];
   modulesToCopy.forEach(m => copyNodeModule(projectName, m));
 }

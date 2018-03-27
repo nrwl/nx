@@ -2,21 +2,42 @@
   "name": "@nrwl/schematics",
   "version": "0.0.1",
   "description": "Nrwl Extensions for Angular: Schematics",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nrwl/nx.git"
+  },
+  "keywords": [
+    "RxJS",
+    "Angular",
+    "Workspace",
+    "NgRx",
+    "Schematics",
+    "Angular CLI"
+  ],
   "bin": {
     "create-nx-workspace": "./bin/create-nx-workspace.js",
     "nx": "./src/command-line/nx.js"
   },
   "main": "index.js",
   "types": "index.d.js",
-  "peerDependencies": {},
+  "peerDependencies": { },
   "author": "Victor Savkin",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://github.com/nrwl/nx#readme",
   "schematics": "./src/collection.json",
   "dependencies": {
+    "@ngrx/schematics": "5.2.0",
+    "@schematics/angular": "0.4.6",
     "app-root-path": "^2.0.1",
     "npm-run-all": "4.1.2",
     "semver": "5.4.1",
     "tmp": "0.0.33",
     "yargs-parser": "9.0.2"
+  },
+  "devDependencies": {
+    "@angular-devkit/schematics": "0.4.6"
   }
 }

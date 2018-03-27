@@ -1,13 +1,10 @@
-import { <%= propertyName %>Reducer } from './<%= fileName %>.reducer';
-import { <%= propertyName %>InitialState } from './<%= fileName %>.init';
-import { <%= className %> } from './<%= fileName %>.interfaces';
-import { DataLoaded } from './<%= fileName %>.actions';
+import { <%= className %>Loaded } from './<%= fileName %>.actions';
+import { <%= propertyName %>Reducer, initialState } from './<%= fileName %>.reducer';
 
 describe('<%= propertyName %>Reducer', () => {
   it('should work', () => {
-    const state: <%= className %> = {};
-    const action: DataLoaded = {type: 'DATA_LOADED', payload: {}};
-    const actual = <%= propertyName %>Reducer(state, action);
+    const action: <%= className %>Loaded = new <%= className %>Loaded({});
+    const actual = <%= fileName %>Reducer(initialState, action);
     expect(actual).toEqual({});
   });
 });
