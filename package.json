@@ -14,8 +14,7 @@
     "copy": "./scripts/copy.sh",
     "test:schematics": "yarn linknpm fast && ./scripts/test_schematics.sh",
     "test:nx": "yarn linknpm fast && ./scripts/test_nx.sh",
-    "test":
-      "yarn linknpm && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
+    "test": "yarn linknpm && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
     "checkformat": "prettier \"{packages,e2e}/**/*.ts\" --list-different",
     "publish_npm": "./scripts/publish.sh"
   },
@@ -34,6 +33,7 @@
     "@angular/upgrade": "5.2.7",
     "@ngrx/effects": "5.2.0",
     "@ngrx/router-store": "5.2.0",
+    "@ngrx/schematics": "^5.2.0",
     "@ngrx/store": "5.2.0",
     "@ngrx/store-devtools": "5.2.0",
     "@types/jasmine": "~2.8.3",
@@ -67,6 +67,9 @@
   "author": "Victor Savkin",
   "license": "MIT",
   "jest": {
-    "modulePathIgnorePatterns": ["tmp", "files"]
+    "modulePathIgnorePatterns": [
+      "tmp",
+      "files"
+    ]
   }
 }
