@@ -3,7 +3,7 @@ import * as path from 'path';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
 import { createApp, createEmptyWorkspace } from '../../utils/testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
-import { readJson } from '../../utils/ast-utils';
+import { readJsonInTree } from '../../utils/ast-utils';
 
 describe('upgrade-module', () => {
   const schematicRunner = new SchematicTestRunner(
@@ -58,7 +58,7 @@ describe('upgrade-module', () => {
       appTree
     );
 
-    const packageJson = readJson(tree, '/package.json');
+    const packageJson = readJsonInTree(tree, '/package.json');
     expect(packageJson.dependencies['@angular/upgrade']).toEqual('4.4.4');
     expect(packageJson.dependencies['angular']).toBeDefined();
   });
@@ -82,7 +82,7 @@ describe('upgrade-module', () => {
       appTree
     );
 
-    const packageJson = readJson(tree, '/package.json');
+    const packageJson = readJsonInTree(tree, '/package.json');
     expect(packageJson.dependencies['@angular/upgrade']).not.toBeDefined();
   });
 

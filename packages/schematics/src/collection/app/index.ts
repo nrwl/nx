@@ -20,7 +20,7 @@ import {
   addImportToModule,
   addImportToTestBed,
   insert,
-  updateJson
+  updateJsonInTree
 } from '../../utils/ast-utils';
 import { offsetFromRoot } from '../../utils/common';
 import { wrapIntoFormat } from '../../utils/tasks';
@@ -235,7 +235,7 @@ export default function(schema: Schema): Rule {
       updateComponentTemplate(options),
       addBootstrap(options.fullPath),
       addNxModule(options.fullPath),
-      updateJson('.angular-cli.json', addAppToAngularCliJson(options)),
+      updateJsonInTree('.angular-cli.json', addAppToAngularCliJson(options)),
       options.routing ? addRouterRootConfiguration(options.fullPath) : noop()
     ]);
   });

@@ -21,7 +21,7 @@ import {
   addReexport,
   addRoute,
   getAngularCliConfig,
-  updateJson,
+  updateJsonInTree,
   insert
 } from '../../utils/ast-utils';
 import { offsetFromRoot } from '../../utils/common';
@@ -40,7 +40,7 @@ interface NormalizedSchema extends Schema {
 }
 
 function addLibToAngularCliJson(options: NormalizedSchema): Rule {
-  return updateJson('.angular-cli.json', angularCliJson => {
+  return updateJsonInTree('.angular-cli.json', angularCliJson => {
     const tags = options.tags ? options.tags.split(',').map(s => s.trim()) : [];
     angularCliJson.apps = addApp(angularCliJson.apps, {
       name: options.fullName,

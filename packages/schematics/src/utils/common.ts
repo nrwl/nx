@@ -3,10 +3,10 @@ import { Options } from 'prettier';
 import * as cosmiconfig from 'cosmiconfig';
 
 import { angularJsVersion } from '../lib-versions';
-import { updateJson } from './ast-utils';
+import { updateJsonInTree } from './ast-utils';
 
 export function addUpgradeToPackageJson(): Rule {
-  return updateJson('package.json', packageJson => {
+  return updateJsonInTree('package.json', packageJson => {
     if (!packageJson['dependencies']) {
       packageJson['dependencies'] = {};
     }

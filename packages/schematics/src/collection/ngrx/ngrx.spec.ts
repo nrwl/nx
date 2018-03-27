@@ -4,7 +4,7 @@ import {
 } from '@angular-devkit/schematics/testing';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
 import { getFileContent } from '@schematics/angular/utility/test';
-import { readJson } from '../../utils/ast-utils';
+import { readJsonInTree } from '../../utils/ast-utils';
 
 import * as path from 'path';
 import { findModuleParent } from '../../utils/name-utils';
@@ -161,7 +161,7 @@ describe('ngrx', () => {
       },
       appTree
     );
-    const packageJson = readJson(tree, 'package.json');
+    const packageJson = readJsonInTree(tree, 'package.json');
 
     expect(packageJson.dependencies['@ngrx/store']).toBeDefined();
     expect(packageJson.dependencies['@ngrx/router-store']).toBeDefined();
