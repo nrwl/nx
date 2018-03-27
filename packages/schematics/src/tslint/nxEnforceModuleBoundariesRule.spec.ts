@@ -463,6 +463,56 @@ describe('Enforce Module Boundaries', () => {
       'Circular dependency between "anotherlib" and "mylib" detected'
     );
   });
+
+  it('should error when circular dependency detected (indirect)', () => {
+    const failures = runRule(
+      {},
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      'import "@mycompany/badcirclelib"',
+      [
+        {
+          name: 'mylib',
+          root: 'libs/mylib/src',
+          type: ProjectType.lib,
+          tags: [],
+          files: [`libs/mylib/src/main.ts`]
+        },
+        {
+          name: 'anotherlib',
+          root: 'libs/anotherlib/src',
+          type: ProjectType.lib,
+          tags: [],
+          files: [`libs/anotherlib/src/main.ts`]
+        },
+        {
+          name: 'badcirclelib',
+          root: 'libs/badcirclelib/src',
+          type: ProjectType.lib,
+          tags: [],
+          files: [`libs/badcirclelib/src/main.ts`]
+        },
+        {
+          name: 'myapp',
+          root: 'apps/myapp/src',
+          type: ProjectType.app,
+          tags: [],
+          files: [`apps/myapp/index.ts`]
+        }
+      ],
+      {
+        mylib: [
+          { projectName: 'badcirclelib', type: DependencyType.es6Import }
+        ],
+        badcirclelib: [
+          { projectName: 'anotherlib', type: DependencyType.es6Import }
+        ],
+        anotherlib: [{ projectName: 'mylib', type: DependencyType.es6Import }]
+      }
+    );
+    expect(failures[0].getFailure()).toEqual(
+      'Circular dependency between "mylib" and "badcirclelib" detected'
+    );
+  });
 });
 
 function runRule(
