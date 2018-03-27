@@ -2,7 +2,6 @@ import {
   checkFilesExist,
   cleanup,
   copyMissingPackages,
-  readFile,
   runCLI,
   runNgNew,
   updateFile,

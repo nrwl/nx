@@ -11,7 +11,7 @@ import {
   dependencies,
   Dependency
 } from '@nrwl/schematics/src/command-line/affected-apps';
-import { readFileSync, statSync } from 'fs';
+import { statSync } from 'fs';
 import * as appRoot from 'app-root-path';
 import { readJsonFile } from '../utils/fileutils';
 

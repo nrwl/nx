@@ -1,9 +1,4 @@
-import {
-  checkFilesExist,
-  createNxWorkspace,
-  readFile,
-  readJson
-} from '../utils';
+import { checkFilesExist, createNxWorkspace, readJson } from '../utils';
 
 /**
  * Too slow to run on CI :(

@@ -2,7 +2,6 @@ import {
   newApp,
   newLib,
   newProject,
-  readFile,
   runCLI,
   runCommand,
   updateFile,

@@ -1,4 +1,4 @@
-import { writeFileSync, readFileSync, readdirSync, unlinkSync } from 'fs';
+import { writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
 import { updateJsonFile } from '../src/utils/fileutils';

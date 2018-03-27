@@ -9,8 +9,7 @@ import { Tree, Rule } from '@angular-devkit/schematics';
 import {
   findNodes,
   getDecoratorMetadata,
-  getSourceNodes,
-  insertAfterLastOccurrence
+  getSourceNodes
 } from '@schematics/angular/utility/ast-utils';
 import {
   Change,
@@ -196,7 +195,6 @@ ${offset(opts.body, 1, false)}
 ${opts.methodHeader} {}
 `;
 
-  const pos = clazz.members.length > 0 ? clazz.members.end : clazz.end - 1;
   return [new InsertChange(modulePath, clazz.end - 1, offset(body, 1, true))];
 }
 

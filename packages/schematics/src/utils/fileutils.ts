@@ -1,5 +1,4 @@
 import * as fs from 'fs';
-import { Tree } from '@angular-devkit/schematics';
 import * as path from 'path';
 
 export function readJsonFile(path: string) {

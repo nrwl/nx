@@ -1,11 +1,8 @@
-import { Tree, Rule } from '@angular-devkit/schematics';
-import { readdirSync, readFileSync } from 'fs';
+import { Rule } from '@angular-devkit/schematics';
 import { Options } from 'prettier';
 import * as cosmiconfig from 'cosmiconfig';
 
 import { angularJsVersion } from '../lib-versions';
-import { serializeJson } from './fileutils';
-import { Schema } from '../collection/app/schema';
 import { updateJson } from './ast-utils';
 
 export function addUpgradeToPackageJson(): Rule {

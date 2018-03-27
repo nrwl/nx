@@ -1,11 +1,4 @@
-import {
-  newApp,
-  newLib,
-  newProject,
-  runCLI,
-  updateFile,
-  cleanup
-} from '../utils';
+import { newApp, newLib, newProject, runCLI, updateFile } from '../utils';
 
 describe('Nrwl Workspace', () => {
   it(

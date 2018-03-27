@@ -18,11 +18,6 @@ import {
 
 import { Schema } from './schema';
 
-interface NormalizedSchema extends Schema {
-  fullName: string;
-  fullPath: string;
-}
-
 class FormatFiles implements TaskConfigurationGenerator<any> {
   toConfiguration(): TaskConfiguration<any> {
     return {

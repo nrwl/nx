@@ -3,22 +3,11 @@
 import { execSync } from 'child_process';
 import { dirSync } from 'tmp';
 import { lt } from 'semver';
-import {
-  readFileSync,
-  createReadStream,
-  createWriteStream,
-  writeFileSync
-} from 'fs';
+import { writeFileSync } from 'fs';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 
 import { readJsonFile } from '../src/utils/fileutils';
-
-interface CommandOptions {
-  directory?: string;
-  yarn: boolean;
-  help: boolean;
-}
 
 const parsedArgs = yargsParser(process.argv, {
   string: ['directory'],

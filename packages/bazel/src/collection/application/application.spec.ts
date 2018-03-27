@@ -1,7 +1,6 @@
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
-import { getFileContent } from '@schematics/angular/utility/test';
 
 import { readJson } from '../../utils/ast-utils';
 
