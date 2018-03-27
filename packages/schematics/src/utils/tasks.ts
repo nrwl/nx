@@ -10,7 +10,7 @@ export class FormatFiles implements TaskConfigurationGenerator<any> {
     return {
       name: 'node-package',
       options: {
-        command: 'run format',
+        command: 'run format -- --untracked',
         quiet: true
       }
     };

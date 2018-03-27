@@ -29,10 +29,23 @@ export function parseFiles(
   });
 
   const dashDashFiles = named.filter(a => a.startsWith('--files='))[0];
+  const uncommitted = named.some(a => a === '--uncommitted');
+  const untracked = named.some(a => a === '--untracked');
+
   if (dashDashFiles) {
     named.splice(named.indexOf(dashDashFiles), 1);
     return {
       files: parseDashDashFiles(dashDashFiles),
+      rest: [...unnamed, ...named]
+    };
+  } else if (uncommitted) {
+    return {
+      files: getUncommittedFiles(),
+      rest: [...unnamed, ...named]
+    };
+  } else if (untracked) {
+    return {
+      files: getUntrackedFiles(),
       rest: [...unnamed, ...named]
     };
   } else if (unnamed.length >= 2) {
@@ -53,8 +66,20 @@ function parseDashDashFiles(dashDashFiles: string): string[] {
   return f.split(',').map(f => f.trim());
 }
 
+function getUncommittedFiles(): string[] {
+  return parseGitOutput(`git diff --name-only HEAD .`);
+}
+
+function getUntrackedFiles(): string[] {
+  return parseGitOutput(`git ls-files --others --exclude-standard`);
+}
+
 function getFilesFromShash(sha1: string, sha2: string): string[] {
-  return execSync(`git diff --name-only ${sha1} ${sha2}`)
+  return parseGitOutput(`git diff --name-only ${sha1} ${sha2}`);
+}
+
+function parseGitOutput(command: string): string[] {
+  return execSync(command)
     .toString('utf-8')
     .split('\n')
     .map(a => a.trim())
