@@ -546,7 +546,13 @@ export function insert(host: Tree, modulePath: string, changes: Change[]) {
   host.commitUpdate(recorder);
 }
 
-export function readJson<T = any>(host: Tree, path: string): T {
+/**
+ * This method is specifically for reading JSON files in a Tree
+ * @param host The host tree
+ * @param path The path to the JSON file
+ * @returns The JSON data in the file.
+ */
+export function readJsonInTree<T = any>(host: Tree, path: string): T {
   if (!host.exists(path)) {
     throw new Error(`Cannot find ${path}`);
   }
@@ -554,22 +560,27 @@ export function readJson<T = any>(host: Tree, path: string): T {
 }
 
 /**
- * @param path path of JSON file
+ * This method is specifically for updating JSON in a Tree
+ * @param path Path of JSON file in the Tree
  * @param callback Manipulation of the JSON data
- * @returns A rule which updates a JSON file
+ * @returns A rule which updates a JSON file file in a Tree
  */
-export function updateJson<T = any, O = T>(
+export function updateJsonInTree<T = any, O = T>(
   path: string,
   callback: (json: T) => O
 ): Rule {
   return (host: Tree): Tree => {
-    host.overwrite(path, serializeJson(callback(readJson(host, path))));
+    host.overwrite(path, serializeJson(callback(readJsonInTree(host, path))));
     return host;
   };
 }
 
+/**
+ * This method is specifically for getting the .angular-cli.json data from a Tree
+ * @param host The host tree
+ */
 export function getAngularCliConfig(host: Tree) {
-  return readJson(host, '.angular-cli.json');
+  return readJsonInTree(host, '.angular-cli.json');
 }
 
 export function getAppConfig(host: Tree, name: string): any {

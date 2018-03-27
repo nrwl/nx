@@ -16,7 +16,7 @@ import {
   addImportToModule,
   insert,
   addImportToTestBed,
-  updateJson
+  updateJsonInTree
 } from '../../utils/ast-utils';
 import { toFileName } from '../../utils/name-utils';
 import * as ts from 'typescript';
@@ -78,7 +78,7 @@ function addNxModule(path: string): Rule {
   };
 }
 function addAppToAngularCliJson(options: NormalizedSchema): Rule {
-  return updateJson('.angular-cli.json', angularCliJson => {
+  return updateJsonInTree('.angular-cli.json', angularCliJson => {
     angularCliJson.apps = addApp(angularCliJson.apps, {
       name: options.fullName,
       root: options.fullPath,

@@ -32,12 +32,16 @@ import { Observable } from 'rxjs/Observable';
 import { fromPromise } from 'rxjs/observable/fromPromise';
 import { tap, map } from 'rxjs/operators';
 import { toFileName } from '../../utils/name-utils';
-import { updateJson, getAngularCliConfig, insert } from '../../utils/ast-utils';
+import {
+  updateJsonInTree,
+  getAngularCliConfig,
+  insert
+} from '../../utils/ast-utils';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { InsertChange } from '@schematics/angular/utility/change';
 
 function updatePackageJson() {
-  return updateJson('package.json', packageJson => {
+  return updateJsonInTree('package.json', packageJson => {
     if (!packageJson.devDependencies) {
       packageJson.devDependencies = {};
     }
@@ -97,7 +101,7 @@ function updatePackageJson() {
 }
 
 function updateAngularCLIJson(options: Schema): Rule {
-  return updateJson('.angular-cli.json', angularCliJson => {
+  return updateJsonInTree('.angular-cli.json', angularCliJson => {
     angularCliJson.$schema = angularCliSchema;
     angularCliJson.project.npmScope = npmScope(options);
     angularCliJson.project.latestMigration = latestMigration;
@@ -144,7 +148,7 @@ function updateAngularCLIJson(options: Schema): Rule {
 }
 
 function updateTsConfig(options: Schema): Rule {
-  return updateJson('tsconfig.json', tsConfigJson =>
+  return updateJsonInTree('tsconfig.json', tsConfigJson =>
     setUpCompilerOptions(tsConfigJson, npmScope(options), '')
   );
 }
@@ -203,7 +207,7 @@ function updateTsConfigsJson(options: Schema) {
 }
 
 function updateTsLint() {
-  return updateJson('tslint.json', tslintJson => {
+  return updateJsonInTree('tslint.json', tslintJson => {
     [
       'no-trailing-whitespace',
       'one-line',

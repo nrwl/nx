@@ -1,41 +1,36 @@
-import { Rule, Tree } from '@angular-devkit/schematics';
+import { Rule } from '@angular-devkit/schematics';
 import {
   ngrxVersion,
   routerStoreVersion,
   ngrxStoreFreezeVersion
 } from '../../../lib-versions';
-import { serializeJson } from '../../../utils/fileutils';
+import { updateJsonInTree } from '@nrwl/schematics/src/utils/ast-utils';
 
 export function addNgRxToPackageJson(): Rule {
-  return (host: Tree) => {
-    if (!host.exists('package.json')) return host;
-
-    const sourceText = host.read('package.json')!.toString('utf-8');
-    const json = JSON.parse(sourceText);
-    if (!json['dependencies']) {
-      json['dependencies'] = {};
+  return updateJsonInTree('package.json', packageJson => {
+    if (!packageJson['dependencies']) {
+      packageJson['dependencies'] = {};
     }
 
-    if (!json['dependencies']['@ngrx/store']) {
-      json['dependencies']['@ngrx/store'] = ngrxVersion;
+    if (!packageJson['dependencies']['@ngrx/store']) {
+      packageJson['dependencies']['@ngrx/store'] = ngrxVersion;
     }
-    if (!json['dependencies']['@ngrx/effects']) {
-      json['dependencies']['@ngrx/effects'] = ngrxVersion;
+    if (!packageJson['dependencies']['@ngrx/effects']) {
+      packageJson['dependencies']['@ngrx/effects'] = ngrxVersion;
     }
-    if (!json['dependencies']['@ngrx/entity']) {
-      json['dependencies']['@ngrx/entity'] = ngrxVersion;
+    if (!packageJson['dependencies']['@ngrx/entity']) {
+      packageJson['dependencies']['@ngrx/entity'] = ngrxVersion;
     }
-    if (!json['dependencies']['@ngrx/store-devtools']) {
-      json['dependencies']['@ngrx/store-devtools'] = ngrxVersion;
+    if (!packageJson['dependencies']['@ngrx/store-devtools']) {
+      packageJson['dependencies']['@ngrx/store-devtools'] = ngrxVersion;
     }
-    if (!json['dependencies']['@ngrx/router-store']) {
-      json['dependencies']['@ngrx/router-store'] = routerStoreVersion;
+    if (!packageJson['dependencies']['@ngrx/router-store']) {
+      packageJson['dependencies']['@ngrx/router-store'] = routerStoreVersion;
     }
-    if (!json['dependencies']['ngrx-store-freeze']) {
-      json['dependencies']['ngrx-store-freeze'] = ngrxStoreFreezeVersion;
+    if (!packageJson['dependencies']['ngrx-store-freeze']) {
+      packageJson['dependencies']['ngrx-store-freeze'] = ngrxStoreFreezeVersion;
     }
 
-    host.overwrite('package.json', serializeJson(json));
-    return host;
-  };
+    return packageJson;
+  });
 }

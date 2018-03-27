@@ -2,7 +2,7 @@ import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
 
-import { readJson } from '../../utils/ast-utils';
+import { readJsonInTree } from '../../utils/ast-utils';
 
 describe('application', () => {
   const schematicRunner = new SchematicTestRunner(
@@ -49,7 +49,7 @@ describe('application', () => {
       { name: 'myApp', directory: 'my-app' },
       appTree
     );
-    const packageJson = readJson(tree, '/my-app/package.json');
+    const packageJson = readJsonInTree(tree, '/my-app/package.json');
 
     expect(packageJson.devDependencies['@nrwl/schematics']).toBeDefined();
     expect(packageJson.dependencies['@nrwl/nx']).toBeDefined();
