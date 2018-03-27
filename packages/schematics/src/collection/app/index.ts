@@ -3,27 +3,19 @@ import {
   branchAndMerge,
   chain,
   externalSchematic,
-  filter,
-  MergeStrategy,
   mergeWith,
-  move,
   noop,
   Rule,
   template,
   Tree,
-  url,
-  SchematicContext
+  url
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import { strings } from '@angular-devkit/core';
 import * as ts from 'typescript';
 import { addBootstrapToModule } from '@schematics/angular/utility/ast-utils';
 import { insertImport } from '@schematics/angular/utility/route-utils';
-import {
-  addApp,
-  serializeJson,
-  readCliConfigFile
-} from '../../utils/fileutils';
+import { addApp, readCliConfigFile } from '../../utils/fileutils';
 import {
   addImportToModule,
   addImportToTestBed,

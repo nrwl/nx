@@ -12,21 +12,14 @@ import {
   url
 } from '@angular-devkit/schematics';
 
-import {
-  names,
-  toClassName,
-  toFileName,
-  toPropertyName
-} from '../../utils/name-utils';
+import { names, toClassName, toFileName } from '../../utils/name-utils';
 import * as path from 'path';
-import * as ts from 'typescript';
 import {
   addDeclarationToModule,
   addEntryComponents,
   addImportToModule,
   addMethod,
   addParameterToConstructor,
-  addProviderToModule,
   getBootstrapComponent,
   insert,
   readBootstrapInfo,
@@ -34,7 +27,6 @@ import {
 } from '../../utils/ast-utils';
 import { insertImport } from '@schematics/angular/utility/route-utils';
 import { Schema } from './schema';
-import { angularJsVersion } from '../../lib-versions';
 import { addUpgradeToPackageJson } from '../../utils/common';
 import { wrapIntoFormat } from '../../utils/tasks';
 

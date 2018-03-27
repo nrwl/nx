@@ -1,4 +1,3 @@
-import * as fs from 'fs';
 import * as yargsParser from 'yargs-parser';
 
 import { readJsonFile } from './fileutils';

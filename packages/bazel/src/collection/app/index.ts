@@ -3,23 +3,18 @@ import {
   branchAndMerge,
   chain,
   externalSchematic,
-  filter,
-  MergeStrategy,
   mergeWith,
-  move,
   noop,
   Rule,
   template,
   Tree,
-  url,
-  SchematicContext
+  url
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import { strings } from '@angular-devkit/core';
 import {
   addImportToModule,
   insert,
-  getAngularCliConfig,
   addImportToTestBed,
   updateJson
 } from '../../utils/ast-utils';
@@ -27,13 +22,9 @@ import { toFileName } from '../../utils/name-utils';
 import * as ts from 'typescript';
 import { addBootstrapToModule } from '@schematics/angular/utility/ast-utils';
 import { insertImport } from '@schematics/angular/utility/route-utils';
-import {
-  addApp,
-  serializeJson,
-  readCliConfigFile
-} from '../../utils/fileutils';
+import { addApp, readCliConfigFile } from '../../utils/fileutils';
 import { offsetFromRoot } from '../../utils/common';
-import { FormatFiles, wrapIntoFormat } from '../../utils/tasks';
+import { wrapIntoFormat } from '../../utils/tasks';
 
 interface NormalizedSchema extends Schema {
   fullName: string;
@@ -239,7 +230,7 @@ ts_web_test(
 )    
 `;
 
-    const sourceFile = host.create(`${path}/app/BUILD.bazel`, ngModule);
+    host.create(`${path}/app/BUILD.bazel`, ngModule);
   };
 }
 

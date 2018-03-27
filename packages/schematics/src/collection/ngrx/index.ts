@@ -32,7 +32,6 @@ import {
   routerStoreVersion,
   ngrxStoreFreezeVersion
 } from '../../lib-versions';
-import { serializeJson } from '../../utils/fileutils';
 import { wrapIntoFormat } from '../../utils/tasks';
 
 function addImportsToModule(name: string, options: Schema): Rule {

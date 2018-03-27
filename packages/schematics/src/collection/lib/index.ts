@@ -11,7 +11,7 @@ import {
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';
-import { addApp, serializeJson } from '../../utils/fileutils';
+import { addApp } from '../../utils/fileutils';
 import { insertImport } from '@schematics/angular/utility/route-utils';
 import * as ts from 'typescript';
 import {

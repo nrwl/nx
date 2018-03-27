@@ -22,7 +22,7 @@ import {
   schematicsVersion
 } from '../../lib-versions';
 import * as fs from 'fs';
-import { copyFile, serializeJson, updateJsonFile } from '../../utils/fileutils';
+import { updateJsonFile } from '../../utils/fileutils';
 import {
   resolveUserExistingPrettierConfig,
   DEFAULT_NRWL_PRETTIER_CONFIG

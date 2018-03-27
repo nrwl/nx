@@ -20,11 +20,9 @@ import {
   addReexport,
   addRoute,
   getAngularCliConfig,
-  updateJson,
   insert
 } from '../../utils/ast-utils';
 import { offsetFromRoot } from '../../utils/common';
-import { addApp, serializeJson } from '../../utils/fileutils';
 import {
   names,
   toClassName,
@@ -48,21 +46,6 @@ function normalizeOptions(options: Schema): NormalizedSchema {
     : name;
   const fullPath = `libs/${fullName}/src`;
   return { ...options, sourceDir: 'src', name, fullName, fullPath };
-}
-
-function addLibToAngularCliJson(options: NormalizedSchema): Rule {
-  return updateJson('.angular-cli.json', angularCliJson => {
-    const tags = options.tags ? options.tags.split(',').map(s => s.trim()) : [];
-    angularCliJson.apps = addApp(angularCliJson.apps, {
-      name: options.fullName,
-      root: options.fullPath,
-      test: `${offsetFromRoot(options.fullPath)}test.js`,
-      appRoot: '',
-      tags
-    });
-
-    return angularCliJson;
-  });
 }
 
 function addLazyLoadedRouterConfiguration(modulePath: string): Rule {

@@ -1,6 +1,5 @@
 import { updateJsonFile } from '../src/utils/fileutils';
 import {
-  devKitCoreVersion,
   devKitSchematicsVersion,
   schematicsAngularVersion
 } from '../src/lib-versions';
