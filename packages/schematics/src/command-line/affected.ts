@@ -39,7 +39,7 @@ function printError(command: string, e: any) {
     `Or pass the list of files, as follows: npm run affected:${command} -- --files="libs/mylib/index.ts,libs/mylib2/index.ts".`
   );
   console.error(
-    `Or to get the list of files from staged or unstaged changes: npm run affected:${command} -- staged | unstaged".`
+    `Or to get the list of files from local changes: npm run affected:${command} -- --uncommitted | --untracked".`
   );
   console.error(e.message);
 }
