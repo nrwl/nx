@@ -1,7 +1,16 @@
-export interface <%= className %> {
-  // define state here
+/**
+ * Interface for '<%= className %>' data used in
+ *  - <%= propertyName %>Reducer, and
+ *  - <%= className %>State
+ */
+ export interface <%= className %> {
+   // define data properties here
 }
 
+/**
+ * Interface to the part of the Store containing '<%= className %>' State
+ * and other information related to <%= className %>.
+ */
 export interface <%= className %>State {
   readonly <%= propertyName %>: <%= className %>;
 }

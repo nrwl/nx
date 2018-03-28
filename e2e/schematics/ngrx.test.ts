@@ -25,7 +25,7 @@ describe('ngrx', () => {
         'apps/myapp/src/app/+state/app.init.ts',
         `
         import { App } from './app.interfaces';
-        export const appInitialState: App = {
+        export const initialState: App = {
           rootCount: 0
         };
       `
@@ -34,15 +34,15 @@ describe('ngrx', () => {
       updateFile(
         'apps/myapp/src/app/+state/app.reducer.spec.ts',
         `
+        import { App, AppState } from './app.interfaces';
         import { appReducer } from './app.reducer';
-        import { App } from './app.interfaces';
-        import { DataLoaded } from './app.actions';
+        import { AppLoaded } from './app.actions';
+        import { initialState } from './app.init';
         
         describe('appReducer', () => {
           it('should work', () => {
-            const state: App = {rootCount: 0};
-            const action: DataLoaded = {type: 'DATA_LOADED', payload: {}};
-            const actual = appReducer(state, action);
+            const action: AppLoaded = new AppLoaded({});
+            const actual = appReducer(initialState, action);
             expect(actual).toEqual({rootCount: 0});
           });
         });

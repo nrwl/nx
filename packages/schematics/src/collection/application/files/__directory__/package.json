@@ -47,6 +47,7 @@
   "devDependencies": {
     "@angular/cli": "<%= angularCliVersion %>",
     "@angular/compiler-cli": "<%= angularVersion %>",
+    "@ngrx/schematics": "<%= ngrxSchematicsVersion %>",
     "@nrwl/schematics": "<%= schematicsVersion %>",
     "@angular/language-service": "<%= angularVersion %>",<% if (!minimal) { %>
     "@types/jasmine": "~2.8.3",
