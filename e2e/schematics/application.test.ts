@@ -44,14 +44,22 @@ describe('Nrwl Workspace', () => {
     newApp('myapp');
 
     try {
-      runCommand('npm run test -- --app myapp --single-run', true);
+      runCommand('npm run test -- --app myapp --single-run');
       fail('boom');
-    } catch (e) {}
+    } catch (e) {
+      expect(e.stderr.toString()).toContain(
+        'Nx only supports running unit tests for all apps and libs.'
+      );
+    }
 
     try {
-      runCommand('npm run e2e', true);
+      runCommand('npm run e2e');
       fail('boom');
-    } catch (e) {}
+    } catch (e) {
+      expect(e.stderr.toString()).toContain(
+        'Please provide the app name using --app or -a.'
+      );
+    }
   });
 
   it(

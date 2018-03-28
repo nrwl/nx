@@ -53,6 +53,26 @@ describe('Command line', () => {
     1000000
   );
 
+  it('should run nx lint', () => {
+    newProject();
+    newApp('myapp');
+    newApp('app_before');
+    runCommand('mv apps/app-before apps/app-after');
+
+    try {
+      runCommand('npm run lint');
+      fail('Boom!');
+    } catch (e) {
+      const errorOutput = e.stderr.toString();
+      expect(errorOutput).toContain(
+        `Cannot find project 'app-before' in 'apps/app-before'`
+      );
+      expect(errorOutput).toContain(
+        `The 'apps/app-after/e2e/app.e2e-spec.ts' file doesn't belong to any project.`
+      );
+    }
+  });
+
   it(
     'update should run migrations',
     () => {

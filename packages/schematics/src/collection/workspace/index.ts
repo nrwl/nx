@@ -86,6 +86,7 @@ function updatePackageJson() {
     packageJson.scripts['update:check'] = './node_modules/.bin/nx update check';
     packageJson.scripts['update:skip'] = './node_modules/.bin/nx update skip';
 
+    packageJson.scripts['lint'] = './node_modules/.bin/nx lint && ng lint';
     packageJson.scripts['postinstall'] = './node_modules/.bin/nx postinstall';
 
     return packageJson;

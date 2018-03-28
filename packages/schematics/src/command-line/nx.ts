@@ -5,6 +5,7 @@ import { affected } from './affected';
 import { format } from './format';
 import { update } from './update';
 import { patchNg } from './patch-ng';
+import { lint } from './lint';
 
 const processedArgs = yargsParser(process.argv, {
   alias: {
@@ -27,6 +28,9 @@ switch (command) {
     break;
   case 'update':
     update(args);
+    break;
+  case 'lint':
+    lint();
     break;
   case 'postinstall':
     patchNg();

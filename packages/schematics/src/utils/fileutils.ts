@@ -25,7 +25,6 @@ export function addApp(apps: any[] | undefined, newApp: any): any[] {
     if (a.name > b.name) return 1;
     return -1;
   });
-
   return apps;
 }
 

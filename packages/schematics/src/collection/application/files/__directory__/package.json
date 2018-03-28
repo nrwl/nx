@@ -7,7 +7,7 @@
     "start": "ng serve",
     "build": "ng build",
     "test": "ng test",
-    "lint": "ng lint",
+    "lint": "./node_modules/.bin/nx lint && ng lint",
     "e2e": "ng e2e",
 
     "affected:apps": "./node_modules/.bin/nx affected apps",
