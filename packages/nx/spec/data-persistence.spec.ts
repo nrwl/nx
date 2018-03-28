@@ -1,11 +1,6 @@
 import { Component, Injectable } from '@angular/core';
-import {
-  ComponentFixture,
-  fakeAsync,
-  TestBed,
-  tick
-} from '@angular/core/testing';
-import { ActivatedRouteSnapshot, Router } from '@angular/router';
+import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Actions, Effect, EffectsModule } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
@@ -545,7 +540,3 @@ describe('DataPersistence', () => {
     });
   });
 });
-
-function createRoot(router: Router, type: any): ComponentFixture<any> {
-  return TestBed.createComponent(type);
-}

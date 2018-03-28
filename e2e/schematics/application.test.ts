@@ -1,4 +1,11 @@
-import { newApp, newLib, newProject, runCLI, updateFile } from '../utils';
+import {
+  newApp,
+  newLib,
+  newProject,
+  runCLI,
+  updateFile,
+  runCommand
+} from '../utils';
 
 describe('Nrwl Workspace', () => {
   it(
@@ -31,6 +38,21 @@ describe('Nrwl Workspace', () => {
     },
     1000000
   );
+
+  it('should only run unit tests for all apps and e2e tests for a single app', () => {
+    newProject();
+    newApp('myapp');
+
+    try {
+      runCommand('npm run test -- --app myapp --single-run', true);
+      fail('boom');
+    } catch (e) {}
+
+    try {
+      runCommand('npm run e2e', true);
+      fail('boom');
+    } catch (e) {}
+  });
 
   it(
     'should support router config generation (lazy)',
