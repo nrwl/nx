@@ -106,10 +106,10 @@ export function runSchematic(command: string): string {
   }).toString();
 }
 
-export function runCommand(command: string, silent?: boolean): string {
+export function runCommand(command: string): string {
   return execSync(command, {
     cwd: `./tmp/${projectName}`,
-    ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
+    stdio: ['pipe', 'pipe', 'pipe']
   }).toString();
 }
 

@@ -19,6 +19,7 @@
   },
   "exclude": [
     "tmp",
+    "build",
     "node_modules",
     "packages/schematics/src/*/files/**/*"
   ],

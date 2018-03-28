@@ -135,19 +135,21 @@ export function getProjectRoots(projectNames: string[]): string[] {
   );
 }
 
-function allFilesInDir(dirName: string): string[] {
+export function allFilesInDir(dirName: string): string[] {
   let res = [];
-  fs.readdirSync(dirName).forEach(c => {
-    const child = path.join(dirName, c);
-    try {
-      if (!fs.statSync(child).isDirectory()) {
-        // add starting with "apps/myapp/..." or "libs/mylib/..."
-        res.push(normalizePath(child.substring(appRoot.path.length + 1)));
-      } else if (fs.statSync(child).isDirectory()) {
-        res = [...res, ...allFilesInDir(child)];
-      }
-    } catch (e) {}
-  });
+  try {
+    fs.readdirSync(dirName).forEach(c => {
+      const child = path.join(dirName, c);
+      try {
+        if (!fs.statSync(child).isDirectory()) {
+          // add starting with "apps/myapp/..." or "libs/mylib/..."
+          res.push(normalizePath(child.substring(appRoot.path.length + 1)));
+        } else if (fs.statSync(child).isDirectory()) {
+          res = [...res, ...allFilesInDir(child)];
+        }
+      } catch (e) {}
+    });
+  } catch (e) {}
   return res;
 }
 

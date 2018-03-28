@@ -8,6 +8,11 @@ if (process.argv.indexOf('update') > -1) {
   console.log('Please run "npm run update" or "yarn update" instead.');
   process.exit(1);
 }
+if (process.argv.indexOf('lint') > -1) {
+  console.log("This is an Nx workspace, and it provides an enhanced 'lint' command.");
+  console.log('Please run "npm run lint" or "yarn lint" instead.');
+  process.exit(1);
+}
 // nx-check-end
 `;
 
