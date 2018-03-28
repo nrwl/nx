@@ -20,8 +20,7 @@
   "exclude": [
     "tmp",
     "node_modules",
-    "packages/schematics/src/*/files/**/*",
-    "packages/nx"
+    "packages/schematics/src/*/files/**/*"
   ],
   "angularCompilerOptions": {
     "strictMetadataEmit": true,

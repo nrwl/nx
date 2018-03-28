@@ -5,8 +5,8 @@ rm -rf build
 ./node_modules/.bin/ngc
 
 #Nx client side lib
+rm -rf build/packages/nx
 cp -r packages/nx/dist build/packages/nx
-rm -rf build/packages/nx/dist
 rm -rf packages/nx/dist
 
 #TODO This is a temporary hack until we can publish named umds

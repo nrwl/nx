@@ -228,47 +228,4 @@ describe('Command line', () => {
     },
     1000000
   );
-
-  describe('Testing:', () => {
-    beforeAll(() => {
-      newProject();
-      newApp('app1');
-    }, 1000000);
-
-    it('should pass tests', () => {
-      expect(runCommand('npm run test -- --single-run').toString()).toContain(
-        'Executed 1 of 1 SUCCESS'
-      );
-    });
-
-    it('should not be able to run tests on an individual app', () => {
-      try {
-        expect(runCommand('npm run test -- --app app1 --single-run'));
-        fail('boom');
-      } catch (e) {
-        const errorOutput = e.stderr.toString();
-        expect(errorOutput).toContain(
-          'Nx only supports running unit tests for all apps and libs.'
-        );
-      }
-    });
-
-    it('should pass e2e tests', () => {
-      expect(runCommand('npm run e2e -- --app app1').toString()).toContain(
-        'should display welcome message'
-      );
-    });
-
-    it('should not be able to run e2e tests without specifying an app', () => {
-      try {
-        expect(runCommand('npm run e2e'));
-        fail('boom');
-      } catch (e) {
-        const errorOutput = e.stderr.toString();
-        expect(errorOutput).toContain(
-          'Please provide the app name using --app or -a.'
-        );
-      }
-    });
-  });
 });

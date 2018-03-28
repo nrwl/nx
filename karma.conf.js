@@ -20,7 +20,7 @@ module.exports = function(config) {
     frameworks: ['jasmine'],
 
     // list of files / patterns to load in the browser
-    files: [{ pattern: 'test/test.js', watched: false }],
+    files: [{ pattern: 'build/test.js', watched: false }],
 
     // list of files to exclude
     exclude: [],
@@ -28,7 +28,7 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'test/test.js': ['webpack']
+      'build/test.js': ['webpack']
     },
 
     reporters: ['dots'],
