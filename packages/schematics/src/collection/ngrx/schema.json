@@ -6,16 +6,21 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "Name of the directory (e.g., state)."
+      "description": "Name of the ngrx feature (e.g., Products, User, etc.)."
     },
     "module": {
       "type": "string",
-      "description": "Path to an Angular module (e.g., src/app/app.module.ts)."
+      "description": "Path to ngModule; host directory will contain the new '+state' directory (e.g., src/libs/mylib/mylib.module.ts)."
     },
     "onlyAddFiles": {
       "type": "boolean",
       "default": false,
       "description": "Only add new NgRx files, without changing the module file (e.g., --onlyAddFiles)."
+    },
+    "directory": {
+      "type": "string",
+      "default": "+state",
+      "description": "The directory name for the ngrx files: contains actions, effects, reducers. (e.g., +state)"
     },
     "root": {
       "type": "boolean",
@@ -31,11 +36,6 @@
       "type": "boolean",
       "default": false,
       "description": "Do not add ngrx dependencies to package.json (e.g., --skipPackageJson)"
-    },
-    "directory": {
-      "type": "string",
-      "default": "+state",
-      "description": "The store directory name (e.g., +state)"
     }
   },
   "required": [

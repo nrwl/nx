@@ -34,6 +34,7 @@
     "@angular/upgrade": "5.2.7",
     "@ngrx/effects": "5.2.0",
     "@ngrx/router-store": "5.2.0",
+    "@ngrx/schematics": "^5.2.0",
     "@ngrx/store": "5.2.0",
     "@ngrx/store-devtools": "5.2.0",
     "@types/jasmine": "~2.8.3",
@@ -67,6 +68,9 @@
   "author": "Victor Savkin",
   "license": "MIT",
   "jest": {
-    "modulePathIgnorePatterns": ["tmp", "files"]
+    "modulePathIgnorePatterns": [
+      "tmp",
+      "files"
+    ]
   }
 }

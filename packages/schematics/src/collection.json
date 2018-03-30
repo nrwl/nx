@@ -1,7 +1,7 @@
 {
   "name": "nx",
   "version": "0.1",
-  "extends": "@schematics/angular",
+  "extends": "@ngrx/schematics",
   "schematics": {
     "workspace": {
       "factory": "./collection/workspace",
