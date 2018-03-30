@@ -1,5 +1,5 @@
 export const angularCliVersion = '1.7.1';
-export const angularVersion = '5.2.6';
+export const angularVersion = '5.2.7';
 export const angularJsVersion = '1.6.6';
 export const ngrxVersion = '5.2.0';
 export const ngrxStoreFreezeVersion = '^0.2.1';
