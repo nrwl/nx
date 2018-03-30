@@ -11,7 +11,7 @@ import { readJsonFile } from '../src/utils/fileutils';
 
 const parsedArgs = yargsParser(process.argv, {
   string: ['directory'],
-  boolean: ['yarn', 'help']
+  boolean: ['yarn', 'bazel', 'help']
 });
 
 if (parsedArgs.help) {
@@ -24,6 +24,7 @@ if (parsedArgs.help) {
 
       directory             path to the workspace root directory
       --yarn                use yarn instead of npm (default to false)
+      --bazel               use bazel instead of webpack (default to false)
 
       [ng new options]      any 'ng new' options
                             run 'ng help new' for more informations
@@ -31,6 +32,17 @@ if (parsedArgs.help) {
   process.exit(0);
 }
 const useYarn = parsedArgs.yarn;
+
+const schematicsTool = {
+  name: 'Schematics',
+  packageName: '@nrwl/schematics'
+};
+const bazelTool = {
+  name: 'Bazel',
+  packageName: '@nrwl/bazel'
+};
+
+const nxTool = parsedArgs.bazel ? bazelTool : schematicsTool;
 
 if (!useYarn) {
   try {
@@ -61,7 +73,7 @@ if (!projectName) {
 }
 
 // creating the sandbox
-console.log('Creating a sandbox with the CLI and Nx Schematics...');
+console.log(`Creating a sandbox with the CLI and Nx ${nxTool.name}...`);
 const tmpDir = dirSync().name;
 const nxVersion = readJsonFile(
   path.join(path.dirname(__dirname), 'package.json')
@@ -70,7 +82,7 @@ writeFileSync(
   path.join(tmpDir, 'package.json'),
   JSON.stringify({
     dependencies: {
-      '@nrwl/schematics': nxVersion,
+      [nxTool.packageName]: nxVersion,
       '@angular/cli': '1.7.1'
     },
     license: 'MIT'
@@ -86,17 +98,17 @@ if (useYarn) {
 // creating the app itself
 const args = process.argv
   .slice(2)
-  .filter(a => a !== '--yarn')
+  .filter(a => a !== '--yarn' && a !== '--bazel')
   .map(a => `"${a}"`)
   .join(' ');
-console.log(`ng new ${args} --collection=@nrwl/schematics`);
+console.log(`ng new ${args} --collection=${nxTool.packageName}`);
 execSync(
   `${path.join(
     tmpDir,
     'node_modules',
     '.bin',
     'ng'
-  )} new ${args} --skip-install --collection=@nrwl/schematics`,
+  )} new ${args} --skip-install --collection=${nxTool.packageName}`,
   {
     stdio: [0, 1, 2]
   }

@@ -47,6 +47,15 @@ xdescribe('CreateNxWorkspace', () => {
   );
 
   it(
+    'should create a new workspace with the --bazel option',
+    () => {
+      const res = createNxWorkspace('mybazelproj --bazel');
+      expect(res).toContain("Project 'mybazelproj' successfully created.");
+    },
+    1000000
+  );
+
+  it(
     'should error when no name is given',
     () => {
       expect(() => createNxWorkspace('')).toThrowError(
