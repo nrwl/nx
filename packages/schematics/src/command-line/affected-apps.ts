@@ -36,11 +36,13 @@ export function affectedApps(
   npmScope: string,
   projects: ProjectNode[],
   fileRead: (s: string) => string,
-  touchedFiles: string[]
+  touchedFiles: string[],
+  ignoreTouchedFilesWithNoScope: boolean = false
 ): string[] {
   projects = normalizeProjects(projects);
   const deps = dependencies(npmScope, projects, fileRead);
-  const tp = touchedProjects(projects, touchedFiles);
+  let tp = touchedProjects(projects, touchedFiles);
+  if(ignoreTouchedFilesWithNoScope) tp = tp.filter(project => project !== null);
   if (tp.indexOf(null) > -1) {
     return projects.filter(p => p.type === ProjectType.app).map(p => p.name);
   } else {

@@ -7,12 +7,13 @@ import * as yargsParser from 'yargs-parser';
 
 export function affected(args: string[]): void {
   const command = args[0];
+  const ignoreTouchedFilesWithNoScope = args[3] && args[3] === 'ignore-no-scope';
   let apps: string[];
   let rest: string[];
   try {
     const p = parseFiles(args.slice(1));
     rest = p.rest;
-    apps = getAffectedApps(p.files);
+    apps = getAffectedApps(p.files, ignoreTouchedFilesWithNoScope);
   } catch (e) {
     printError(command, e);
     process.exit(1);
