@@ -19,7 +19,7 @@ After that run `yarn linknpm`.
 
 ### Running Unit Tests
 
-To make sure you changes do not break any unit tests, run `yarn test`. You can also run `yarn test:schematics` and `yarn test:nx` to test the schematics and nx packages individually.
+To make sure your changes do not break any unit tests, run `yarn test`. You can also run `yarn test:schematics` and `yarn test:nx` to test the schematics and nx packages individually.
 
 > If you need to test only the **collection/ngrx.spec.ts** test [for example], you can use an optional `$1` argument as follows:<br/><br/> `yarn test:schematics schematics/src/collection/ngrx/ngrx`
 
