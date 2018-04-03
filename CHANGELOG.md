@@ -2,6 +2,31 @@
 
 The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
 
+# 0.10.0
+
+## Features
+
+* [Use npm-run-all to run build in parallel](https://github.com/nrwl/nx/commit/7b63de662e3aa99a8688681f0e26518ca05ffcbc)
+* [Enhance nxEnforceModuleBoundaries check to support projects tagged with multiple tags](https://github.com/nrwl/nx/commit/d416c580b5db181cedf45ed952d9b6db49bb084d)
+* [Add a usage information option to create-nx-workspace ](https://github.com/nrwl/nx/commit/2746f0399d0c729ff08420f46f2c2c6b4256f6a7)
+* [Add an option to pass a custom module name when creating libs](https://github.com/nrwl/nx/commit/c1ca7df014043d0e27517b26470067677c57efa3)
+* [Affected support for uncommitted changes](https://github.com/nrwl/nx/commit/113b51bd330c2af058675386e482d38f170a6688)
+* [Extend circular dependency check](https://github.com/nrwl/nx/commit/fff9659c3a108b613c6db89bcca4072494fbe85f)
+* [Add lint checks ensuring the integrity of the workspace](https://github.com/nrwl/nx/commit/ce553b732e8ca004e1ecf53cf54bcadb6ba1f7f3)
+* [Add ability to create bazel workspace](https://github.com/nrwl/nx/commit/5a26f241b1e8b8b87e2ab4da941d3d3c4c480046)
+
+## Fixes
+
+* [Fix the absolute import check](https://github.com/nrwl/nx/commit/de138bb26cb816b86afe6b8f14abb362cec2a20e)
+* [Use yargs-parser to allow more types of arguments](https://github.com/nrwl/nx/commit/c747a4a0a066975bdbbda10234b78e3c63c3b44d)
+* [Fix e2e lint config in angular cli json](https://github.com/nrwl/nx/commit/fc0bec90805217d03bf2008e9b241025cad72c05)
+* [Handle undefined rulesDirectory](https://github.com/nrwl/nx/commit/8beae9fa3d6d905778dd24c5e6b27fe7c534be13)
+* [Add appRoot.path for filesystem reads/writes](https://github.com/nrwl/nx/commit/809bdd4c270baf7fd883980db8d7171ebf09508e)
+* [Correct docstring for affected](https://github.com/nrwl/nx/commit/6394f9e1edf5a0b1f219050dc8b1e8269d5e5c2b)
+* [Update karma conf with app check](https://github.com/nrwl/nx/commit/fea4f48decdfa17feb5e020318abf2ac319d05da)
+* [Fix typo in CONTIRBUTING.md](https://github.com/nrwl/nx/commit/bd50643d60b3c2a8e8ace6ceaab5834d897b4aa3)
+* [Match ng lib and update versions ](https://github.com/nrwl/nx/commit/8482177b7373844d833aaad55e15a2a10d4ae116)
+
 
 # 0.9.0
 
@@ -176,10 +201,10 @@ Nx no longer uses a patched version of the CLI--we switched to using `@angular/c
 ## Bug Fixes
 
 * [Handle circular deps between apps and libs](https://github.com/nrwl/nx/commit/3531323fb5210b995b1296a198c8e76ee8bf9a07)
-* [Handle projects that have similar names](https://github.com/nrwl/nx/commit/fe7032d29f4dcd66b51dbb889a1cf1751cd1d20a) 
-* [Update workspace to set $schema and app name](https://github.com/nrwl/nx/commit/df5bd089b6515ea747f891bf590b46a4e00d0a92) 
-* [Update workspace to copy the cli file](https://github.com/nrwl/nx/commit/ddd8de3813f374a752b0e6f47deaa58c2e9f40c8) 
-* [Disallow importing apps](https://github.com/nrwl/nx/commit/912fc81708d381f49950255eeff746a2dfd46c7b) 
+* [Handle projects that have similar names](https://github.com/nrwl/nx/commit/fe7032d29f4dcd66b51dbb889a1cf1751cd1d20a)
+* [Update workspace to set $schema and app name](https://github.com/nrwl/nx/commit/df5bd089b6515ea747f891bf590b46a4e00d0a92)
+* [Update workspace to copy the cli file](https://github.com/nrwl/nx/commit/ddd8de3813f374a752b0e6f47deaa58c2e9f40c8)
+* [Disallow importing apps](https://github.com/nrwl/nx/commit/912fc81708d381f49950255eeff746a2dfd46c7b)
 
 # 0.6.5
 
@@ -201,7 +226,7 @@ npm run format:write -- --files="libs/mylib/index.ts,libs/mylib2/index.ts"
 npm run format:check -- --files="libs/mylib/index.ts,libs/mylib2/index.ts"
 ```
 
-You can add `--libs-and-apps` flag to always run the formatter on apps and libs instead of individual files. 
+You can add `--libs-and-apps` flag to always run the formatter on apps and libs instead of individual files.
 
 ```
 npm run format:write -- SHA1 SHA2 --libs-and-apps
@@ -236,9 +261,9 @@ npm run build:affected -- SHA1 SHA2
 npm run e2e:affected -- SHA1 SHA2
 ```
 
-The `apps:affected` prints the apps that are affected by the commits between the given SHAs. The `build:affected` builds them, and `e2e:affected` runs their e2e tests. 
+The `apps:affected` prints the apps that are affected by the commits between the given SHAs. The `build:affected` builds them, and `e2e:affected` runs their e2e tests.
 
-To be able to do that, Nx analyzes your monorepo to figure out the dependency graph or your libs and apps. Next, it looks at the files touched by the commits to figure out what apps and libs they belong to. Finally, it uses all this information to generate the list of apps that can be affected by the commits. 
+To be able to do that, Nx analyzes your monorepo to figure out the dependency graph or your libs and apps. Next, it looks at the files touched by the commits to figure out what apps and libs they belong to. Finally, it uses all this information to generate the list of apps that can be affected by the commits.
 
 Instead of passing the two SHAs, you can also pass the list of files, like this:
 
@@ -260,9 +285,9 @@ npm run e2e:affected ----files="libs/mylib/index.ts,libs/mylib2/index.ts"
 
 # 0.5.3
 
-`ng new myproj --collection=@nrwl/schematics` creates a new workspace. 
+`ng new myproj --collection=@nrwl/schematics` creates a new workspace.
 
-For this to work `@nrwl/schematics` and `@angular/cli` have to be installed globally, and they have to be compatible. This is error prone, and it often results in hard to debug errors. And it is impossible for Nx to solve this problem because we do not control your globally installed npm modules. 
+For this to work `@nrwl/schematics` and `@angular/cli` have to be installed globally, and they have to be compatible. This is error prone, and it often results in hard to debug errors. And it is impossible for Nx to solve this problem because we do not control your globally installed npm modules.
 
 That is why we provided a way to create a new workspace using a sandbox that does not depend on any global modules, like this:
 
@@ -324,7 +349,7 @@ Some folks also reported having problems running Nx behind a firewall, in a corp
 * [Update NgRx schematic to allow the customization of the state folder](https://github.com/nrwl/nx/commit/a2d02652665f497be8958efc403d7a44bd831088)
 
 ## Bug Fixes
- 
+
 * [Only begin converting to workspace once files have been checked](https://github.com/nrwl/nx/commit/e7fd6b1e04f3f3387a91c53a7ac479fe72bdd72e)
 * ["ng build" should only recompile the selected app](https://github.com/nrwl/nx/commit/550de7bb80f4d3f306c23fac70db52c98dadcd05)
 
@@ -334,7 +359,7 @@ Some folks also reported having problems running Nx behind a firewall, in a corp
 
 # 0.3.0
 
-We want to be able to add new features to Nx without breaking existing workspaces. Say, you created an Nx Workspace using Nx 0.2.0. Then, half a year later, you decided to upgrade the version of Nx to 0.5.0. Imagine the 0.5.0 release requires you to have more information in your `.angular-cli.json`. Until now, you would have to manually go through the changelog and modify your `.angular-cli.json`. This release adds the `nx-migrate` command that does it for you. Run `npm run nx-migrate` after upgrading `@nrwl/schematics`, and it will upgrade your workspace to be 0.5.0 compatible. 
+We want to be able to add new features to Nx without breaking existing workspaces. Say, you created an Nx Workspace using Nx 0.2.0. Then, half a year later, you decided to upgrade the version of Nx to 0.5.0. Imagine the 0.5.0 release requires you to have more information in your `.angular-cli.json`. Until now, you would have to manually go through the changelog and modify your `.angular-cli.json`. This release adds the `nx-migrate` command that does it for you. Run `npm run nx-migrate` after upgrading `@nrwl/schematics`, and it will upgrade your workspace to be 0.5.0 compatible.
 
 ## Features
 
