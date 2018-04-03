@@ -16,10 +16,6 @@ import { RequestContext } from './request-context';
 
 export function addImportsToModule(context: RequestContext): Rule {
   return (host: Tree) => {
-    if (context.options.onlyAddFiles) {
-      return host;
-    }
-
     if (!host.exists(context.options.module)) {
       throw new Error('Specified module does not exist');
     }
@@ -50,16 +46,16 @@ export function addImportsToModule(context: RequestContext): Rule {
     const storeMetaReducers = `metaReducers : !environment.production ? [storeFreeze] : []`;
 
     const storeForRoot = `StoreModule.forRoot(
-  ${storeReducers}, 
-  { 
-    ${storeInitState}, 
-    ${storeMetaReducers} 
+  ${storeReducers},
+  {
+    ${storeInitState},
+    ${storeMetaReducers}
   }
 )`;
     const storeForEmptyRoot = `StoreModule.forRoot({},{ ${storeMetaReducers} })`;
     const effectsForRoot = `EffectsModule.forRoot([${effectsName}])`;
     const effectsForEmptyRoot = `EffectsModule.forRoot([])`;
-    const storeForFeature = `StoreModule.forFeature('${featureName}', ${reducerName}, { ${storeInitState} })`;
+    const storeForFeature = `StoreModule.forFeature('${featureName}', ${reducerName}, { initialState: ${featureName}InitialState })`;
     const effectsForFeature = `EffectsModule.forFeature([${effectsName}])`;
     const devTools = `!environment.production ? StoreDevtoolsModule.instrument() : []`;
     const storeRouterModule = 'StoreRouterConnectingModule';
@@ -72,18 +68,23 @@ export function addImportsToModule(context: RequestContext): Rule {
     const storeRouter = ['StoreRouterConnectingModule', '@ngrx/router-store'];
     const storeFreeze = ['storeFreeze', 'ngrx-store-freeze'];
 
+    // this is just a heuristic
+    const hasRouter = sourceText.indexOf('RouterModule') > -1;
+
     if (context.options.onlyEmptyRoot) {
       insert(host, modulePath, [
         addImport.apply(this, storeModule),
         addImport.apply(this, effectsModule),
         addImport.apply(this, storeDevTools),
         addImport.apply(this, environment),
-        addImport.apply(this, storeRouter),
+        ...(hasRouter ? [addImport.apply(this, storeRouter)] : []),
         addImport.apply(this, storeFreeze),
         ...addImportToModule(source, modulePath, storeForEmptyRoot),
         ...addImportToModule(source, modulePath, effectsForEmptyRoot),
         ...addImportToModule(source, modulePath, devTools),
-        ...addImportToModule(source, modulePath, storeRouterModule)
+        ...(hasRouter
+          ? addImportToModule(source, modulePath, storeRouterModule)
+          : [])
       ]);
     } else {
       const common = [
@@ -99,12 +100,14 @@ export function addImportsToModule(context: RequestContext): Rule {
           ...common,
           addImport.apply(this, storeDevTools),
           addImport.apply(this, environment),
-          addImport.apply(this, storeRouter),
+          ...(hasRouter ? [addImport.apply(this, storeRouter)] : []),
           addImport.apply(this, storeFreeze),
           ...addImportToModule(source, modulePath, storeForRoot),
           ...addImportToModule(source, modulePath, effectsForRoot),
           ...addImportToModule(source, modulePath, devTools),
-          ...addImportToModule(source, modulePath, storeRouterModule)
+          ...(hasRouter
+            ? addImportToModule(source, modulePath, storeRouterModule)
+            : [])
         ]);
       } else {
         insert(host, modulePath, [

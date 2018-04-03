@@ -41,14 +41,14 @@ describe('ngrx', () => {
     );
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
 
-    expect(tree.exists('apps/myapp/src/app/+state')).toBeFalsy();
+    expect(
+      tree.exists('apps/myapp/src/app/+state/state.actions.ts')
+    ).toBeFalsy();
 
-    [
-      'StoreModule.forRoot({},{ metaReducers : !environment.production ? [storeFreeze] : [] })',
-      'EffectsModule.forRoot'
-    ].forEach(text => {
-      expect(appModule).toContain(text);
-    });
+    expect(appModule).toContain(
+      'StoreModule.forRoot({},{ metaReducers : !environment.production ? [storeFreeze] : [] })'
+    );
+    expect(appModule).toContain('EffectsModule.forRoot');
   });
 
   it('should add root', () => {
@@ -63,8 +63,6 @@ describe('ngrx', () => {
     );
 
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
-
-    console.log(appModule);
 
     expect(appModule).toContain('StoreModule.forRoot');
     expect(appModule).toContain('EffectsModule.forRoot');
@@ -85,6 +83,24 @@ describe('ngrx', () => {
     });
   });
 
+  it('should not add RouterStoreModule only if the module does not reference the router', () => {
+    const newTree = createApp(appTree, 'myapp-norouter', false);
+    const tree = schematicRunner.runSchematic(
+      'ngrx',
+      {
+        name: 'app',
+        module: 'apps/myapp-norouter/src/app/app.module.ts',
+        root: true
+      },
+      newTree
+    );
+    const appModule = getFileContent(
+      tree,
+      '/apps/myapp-norouter/src/app/app.module.ts'
+    );
+    expect(appModule).not.toContain('StoreRouterConnectingModule');
+  });
+
   it('should add feature', () => {
     const tree = schematicRunner.runSchematic(
       'ngrx',
@@ -98,6 +114,7 @@ describe('ngrx', () => {
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
     expect(appModule).toContain('StoreModule.forFeature');
     expect(appModule).toContain('EffectsModule.forFeature');
+    expect(appModule).toContain('initialState: stateInitialState');
     expect(appModule).not.toContain(
       '!environment.production ? [storeFreeze] : []'
     );
