@@ -15,7 +15,14 @@ if (options.cliArgs.indexOf('update') > -1) {
 `;
 
 export function patchNg() {
-  const cli = path.join('node_modules', '@angular', 'cli', 'lib', 'cli', 'index.js');
+  const cli = path.join(
+    'node_modules',
+    '@angular',
+    'cli',
+    'lib',
+    'cli',
+    'index.js'
+  );
   if (fileExists(cli)) {
     const file = readFileSync(cli).toString();
     writeFileSync(cli, addNxCheck(file));
