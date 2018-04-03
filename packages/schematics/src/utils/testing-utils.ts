@@ -32,7 +32,11 @@ export function createEmptyWorkspace(tree: Tree): Tree {
   return tree;
 }
 
-export function createApp(tree: Tree, appName: string): Tree {
+export function createApp(
+  tree: Tree,
+  appName: string,
+  routing: boolean = true
+): Tree {
   // save for getAppDir() lookup by external *.spec.ts tests
   appConfig = {
     appName,
@@ -44,10 +48,10 @@ export function createApp(tree: Tree, appName: string): Tree {
     `
      import { NgModule } from '@angular/core';
      import { BrowserModule } from '@angular/platform-browser';
-     import { RouterModule } from '@angular/router';
+     ${routing ? "import { RouterModule } from '@angular/router'" : ''};
      import { AppComponent } from './app.component';
      @NgModule({
-       imports: [BrowserModule, RouterModule.forRoot([])],
+       imports: [BrowserModule, ${routing ? 'RouterModule.forRoot([])' : ''}],
        declarations: [AppComponent],
        bootstrap: [AppComponent]
      })

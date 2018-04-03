@@ -5,7 +5,6 @@ import {
   externalSchematic,
   mergeWith,
   move,
-  noop,
   Rule,
   template,
   url
@@ -41,17 +40,27 @@ export default function generateNgrxCollection(_options: Schema): Rule {
       host
     };
 
+    const fileGeneration = options.onlyEmptyRoot
+      ? []
+      : [
+          branchAndMerge(generateNgrxFiles(context)),
+          branchAndMerge(generateNxFiles(context)),
+          updateNgrxActions(context),
+          updateNgrxReducers(context),
+          updateNgrxEffects(context)
+        ];
+
+    const moduleModification = options.onlyAddFiles
+      ? []
+      : [addImportsToModule(context)];
+    const packageJsonModification = options.skipPackageJson
+      ? []
+      : [addNgRxToPackageJson()];
+
     return chain([
-      branchAndMerge(generateNgrxFiles(context)),
-      branchAndMerge(generateNxFiles(context)),
-
-      addImportsToModule(context),
-
-      updateNgrxActions(context),
-      updateNgrxReducers(context),
-      updateNgrxEffects(context),
-
-      options.skipPackageJson ? noop() : addNgRxToPackageJson()
+      ...fileGeneration,
+      ...moduleModification,
+      ...packageJsonModification
     ]);
   });
 }
