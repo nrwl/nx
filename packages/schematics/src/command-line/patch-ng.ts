@@ -3,30 +3,28 @@ import * as path from 'path';
 
 const nxCheck = `
 // nx-check
-if (process.argv.indexOf('update') > -1) {
+if (options.cliArgs.indexOf('update') > -1) {
   console.log("This is an Nx workspace, and it provides an enhanced 'update' command.");
   console.log('Please run "npm run update" or "yarn update" instead.');
   process.exit(1);
-}
-if (process.argv.indexOf('lint') > -1) {
-  console.log("This is an Nx workspace, and it provides an enhanced 'lint' command.");
-  console.log('Please run "npm run lint" or "yarn lint" instead.');
-  process.exit(1);
+
+} else {
+  return cli(options);
 }
 // nx-check-end
 `;
 
 export function patchNg() {
-  const ngBin = path.join('node_modules', '@angular', 'cli', 'bin', 'ng');
-  if (fileExists(ngBin)) {
-    const file = readFileSync(ngBin).toString();
-    writeFileSync(ngBin, addNxCheck(file));
+  const cli = path.join('node_modules', '@angular', 'cli', 'lib', 'cli', 'index.js');
+  if (fileExists(cli)) {
+    const file = readFileSync(cli).toString();
+    writeFileSync(cli, addNxCheck(file));
   }
 }
 
 function addNxCheck(file: string): string {
   if (file.indexOf('nx-check') > -1) return file;
-  return file.replace(`'use strict';`, `'use strict';${nxCheck}`);
+  return file.replace(`return cli(options);`, nxCheck);
 }
 
 function fileExists(filePath: string): boolean {
