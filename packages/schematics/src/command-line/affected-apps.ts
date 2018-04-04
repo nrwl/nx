@@ -20,10 +20,8 @@ export type ProjectNode = {
 };
 export type Dependency = { projectName: string; type: DependencyType };
 
-export function touchedProjects(
-  projects: ProjectNode[],
-  touchedFiles: string[]
-) {
+export function touchedProjects(projects: ProjectNode[],
+                                touchedFiles: string[]) {
   projects = normalizeProjects(projects);
   touchedFiles = normalizeFiles(touchedFiles);
   return touchedFiles.map(f => {
@@ -32,17 +30,15 @@ export function touchedProjects(
   });
 }
 
-export function affectedApps(
-  npmScope: string,
-  projects: ProjectNode[],
-  fileRead: (s: string) => string,
-  touchedFiles: string[],
-  ignoreTouchedFilesWithNoScope: boolean = false
-): string[] {
+export function affectedApps(npmScope: string,
+                             projects: ProjectNode[],
+                             fileRead: (s: string) => string,
+                             touchedFiles: string[],
+                             ignoreTouchedFilesWithNoScope: boolean = false): string[] {
   projects = normalizeProjects(projects);
   const deps = dependencies(npmScope, projects, fileRead);
   let tp = touchedProjects(projects, touchedFiles);
-  if(ignoreTouchedFilesWithNoScope) tp = tp.filter(project => project !== null);
+  if (ignoreTouchedFilesWithNoScope) tp = tp.filter(project => project !== null);
   if (tp.indexOf(null) > -1) {
     return projects.filter(p => p.type === ProjectType.app).map(p => p.name);
   } else {
@@ -53,12 +49,10 @@ export function affectedApps(
   }
 }
 
-function hasDependencyOnTouchedProjects(
-  project: string,
-  touchedProjects: string[],
-  deps: { [projectName: string]: Dependency[] },
-  visisted: string[]
-) {
+function hasDependencyOnTouchedProjects(project: string,
+                                        touchedProjects: string[],
+                                        deps: { [projectName: string]: Dependency[] },
+                                        visisted: string[]) {
   if (touchedProjects.indexOf(project) > -1) return true;
   if (visisted.indexOf(project) > -1) return false;
   return (
@@ -88,36 +82,32 @@ function normalizeFiles(files: string[]): string[] {
   return files.map(f => f.replace(/[\\\/]+/g, '/'));
 }
 
-export function dependencies(
-  npmScope: string,
-  projects: ProjectNode[],
-  fileRead: (s: string) => string
-): { [projectName: string]: Dependency[] } {
+export function dependencies(npmScope: string,
+                             projects: ProjectNode[],
+                             fileRead: (s: string) => string): { [projectName: string]: Dependency[] } {
   return new Deps(npmScope, projects, fileRead).calculateDeps();
 }
 
 class Deps {
   private deps: { [projectName: string]: Dependency[] };
-
-  constructor(
-    private npmScope: string,
-    private projects: ProjectNode[],
-    private fileRead: (s: string) => string
-  ) {
+  
+  constructor(private npmScope: string,
+              private projects: ProjectNode[],
+              private fileRead: (s: string) => string) {
     this.projects.sort((a, b) => {
       if (!a.name) return -1;
       if (!b.name) return -1;
       return a.name.length > b.name.length ? -1 : 1;
     });
   }
-
+  
   calculateDeps() {
-    this.deps = this.projects.reduce((m, c) => ({ ...m, [c.name]: [] }), {});
+    this.deps = this.projects.reduce((m, c) => ({...m, [c.name]: []}), {});
     this.processAllFiles();
     return this.deps;
     // return this.includeTransitive();
   }
-
+  
   private processAllFiles() {
     this.projects.forEach(p => {
       p.files.forEach(f => {
@@ -125,7 +115,7 @@ class Deps {
       });
     });
   }
-
+  
   private processFile(projectName: string, filePath: string): void {
     if (path.extname(filePath) === '.ts') {
       const tsFile = ts.createSourceFile(
@@ -137,7 +127,7 @@ class Deps {
       this.processNode(projectName, tsFile);
     }
   }
-
+  
   private processNode(projectName: string, node: ts.Node): void {
     if (node.kind === ts.SyntaxKind.ImportDeclaration) {
       const imp = this.getStringLiteralValue(
@@ -146,7 +136,7 @@ class Deps {
       this.addDepIfNeeded(imp, projectName, DependencyType.es6Import);
       return; // stop traversing downwards
     }
-
+    
     if (node.kind === ts.SyntaxKind.PropertyAssignment) {
       const name = this.getPropertyAssignmentName(
         (node as ts.PropertyAssignment).name
@@ -169,7 +159,7 @@ class Deps {
      */
     ts.forEachChild(node, child => this.processNode(projectName, child));
   }
-
+  
   private getPropertyAssignmentName(nameNode: ts.PropertyName) {
     switch (nameNode.kind) {
       case ts.SyntaxKind.Identifier:
@@ -180,19 +170,17 @@ class Deps {
         return null;
     }
   }
-
-  private addDepIfNeeded(
-    expr: string,
-    projectName: string,
-    depType: DependencyType
-  ) {
+  
+  private addDepIfNeeded(expr: string,
+                         projectName: string,
+                         depType: DependencyType) {
     const matchingProject = this.projectNames.filter(
       a =>
         expr === `@${this.npmScope}/${a}` ||
         expr.startsWith(`@${this.npmScope}/${a}#`) ||
         expr.startsWith(`@${this.npmScope}/${a}/`)
     )[0];
-
+    
     if (matchingProject) {
       const alreadyHasDep = this.deps[projectName].some(
         p => p.projectName === matchingProject && p.type === depType
@@ -206,11 +194,11 @@ class Deps {
       }
     }
   }
-
+  
   private getStringLiteralValue(node: ts.Node): string {
     return node.getText().substr(1, node.getText().length - 2);
   }
-
+  
   private get projectNames(): string[] {
     return this.projects.map(p => p.name);
   }
