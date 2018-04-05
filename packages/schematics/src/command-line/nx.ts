@@ -7,6 +7,7 @@ import { update } from './update';
 import { patchNg } from './patch-ng';
 import { lint } from './lint';
 import { workspaceSchematic } from './workspace-schematic';
+import { generateGraph } from './dep-graph';
 
 const processedArgs = yargsParser(process.argv, {
   alias: {
@@ -20,6 +21,9 @@ const args = process.argv.slice(3);
 switch (command) {
   case 'affected':
     affected(args);
+    break;
+  case 'dep-graph':
+    generateGraph(yargsParser(args));
     break;
   case 'format':
     format(args);

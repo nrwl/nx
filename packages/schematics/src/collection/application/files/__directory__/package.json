@@ -9,20 +9,18 @@
     "test": "ng test",
     "lint": "./node_modules/.bin/nx lint && ng lint",
     "e2e": "ng e2e",
-
     "affected:apps": "./node_modules/.bin/nx affected apps",
     "affected:build": "./node_modules/.bin/nx affected build",
     "affected:e2e": "./node_modules/.bin/nx affected e2e",
-
+    "affected:dep-graph": "./node_modules/.bin/nx affected dep-graph",
     "format": "./node_modules/.bin/nx format write",
     "format:write": "./node_modules/.bin/nx format write",
     "format:check": "./node_modules/.bin/nx format check",
-
     "update": "./node_modules/.bin/nx update",
     "update:check": "./node_modules/.bin/nx update check",
     "update:skip": "./node_modules/.bin/nx update skip",
-
     "workspace-schematic": "./node_modules/.bin/nx workspace-schematic",
+    "dep-graph": "./node_modules/.bin/nx dep-graph",
     "postinstall": "./node_modules/.bin/nx postinstall"
   },
   "private": true,
@@ -43,7 +41,8 @@
     "@ngrx/router-store": "<%= routerStoreVersion %>",
     "@ngrx/store": "<%= ngrxVersion %>",
     "@ngrx/store-devtools": "<%= ngrxVersion %>",
-    "ngrx-store-freeze": "<%= ngrxStoreFreezeVersion %>"
+    "ngrx-store-freeze": "<%= ngrxStoreFreezeVersion %>",
+    "viz": "^0.0.1"
   },
   "devDependencies": {
     "@angular/cli": "<%= angularCliVersion %>",
@@ -52,19 +51,20 @@
     "@nrwl/schematics": "<%= schematicsVersion %>",
     "@angular/language-service": "<%= angularVersion %>",<% if (!minimal) { %>
     "@types/jasmine": "~2.8.3",
-    "@types/jasminewd2": "~2.0.2",
-    "@types/node": "~6.0.60",
-    "codelyzer": "^4.0.1",
-    "jasmine-core": "~2.8.0",
-    "jasmine-spec-reporter": "~4.2.1",
-    "karma": "~2.0.0",
-    "karma-chrome-launcher": "~2.2.0",
-    "karma-coverage-istanbul-reporter": "^1.2.1",
-    "karma-jasmine": "~1.1.0",
-    "karma-jasmine-html-reporter": "^0.2.2",
-    "protractor": "~5.1.2",
-    "ts-node": "~4.1.0",
-    "tslint": "~5.9.1",<% } %>
+      "@types/jasminewd2": "~2.0.2",
+      "@types/node": "~6.0.60",
+      "codelyzer": "^4.0.1",
+      "jasmine-core": "~2.8.0",
+      "jasmine-spec-reporter": "~4.2.1",
+      "karma": "~2.0.0",
+      "karma-chrome-launcher": "~2.2.0",
+      "karma-coverage-istanbul-reporter": "^1.2.1",
+      "karma-jasmine": "~1.1.0",
+      "karma-jasmine-html-reporter": "^0.2.2",
+      "protractor": "~5.1.2",
+      "ts-node": "~4.1.0",
+      "tslint": "~5.9.1",<%
+    } %>
     "typescript": "<%= typescriptVersion %>",
     "prettier": "<%= prettierVersion %>"
   }

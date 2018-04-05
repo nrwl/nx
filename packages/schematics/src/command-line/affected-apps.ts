@@ -8,7 +8,8 @@ export enum ProjectType {
 
 export enum DependencyType {
   es6Import = 'es6Import',
-  loadChildren = 'loadChildren'
+  loadChildren = 'loadChildren',
+  implicit = 'implicit'
 }
 
 export type ProjectNode = {
@@ -32,23 +33,51 @@ export function touchedProjects(
   });
 }
 
-export function affectedApps(
+function affectedProjects(
+  npmScope: string,
+  projects: ProjectNode[],
+  fileRead: (s: string) => string,
+  touchedFiles: string[]
+): ProjectNode[] {
+  projects = normalizeProjects(projects);
+  const deps = dependencies(npmScope, projects, fileRead);
+  const tp = touchedProjects(projects, touchedFiles);
+  if (tp.indexOf(null) > -1) {
+    return projects;
+  } else {
+    return projects.filter(proj =>
+      hasDependencyOnTouchedProjects(proj.name, tp, deps, [])
+    );
+  }
+}
+
+export type AffectedFetcher = (
+  npmScope: string,
+  projects: ProjectNode[],
+  fileRead: (s: string) => string,
+  touchedFiles: string[]
+) => string[];
+
+export function affectedAppNames(
   npmScope: string,
   projects: ProjectNode[],
   fileRead: (s: string) => string,
   touchedFiles: string[]
 ): string[] {
-  projects = normalizeProjects(projects);
-  const deps = dependencies(npmScope, projects, fileRead);
-  const tp = touchedProjects(projects, touchedFiles);
-  if (tp.indexOf(null) > -1) {
-    return projects.filter(p => p.type === ProjectType.app).map(p => p.name);
-  } else {
-    return projects
-      .filter(p => p.type === ProjectType.app)
-      .map(p => p.name)
-      .filter(name => hasDependencyOnTouchedProjects(name, tp, deps, []));
-  }
+  return affectedProjects(npmScope, projects, fileRead, touchedFiles)
+    .filter(p => p.type === ProjectType.app)
+    .map(p => p.name);
+}
+
+export function affectedProjectNames(
+  npmScope: string,
+  projects: ProjectNode[],
+  fileRead: (s: string) => string,
+  touchedFiles: string[]
+): string[] {
+  return affectedProjects(npmScope, projects, fileRead, touchedFiles).map(
+    p => p.name
+  );
 }
 
 function hasDependencyOnTouchedProjects(
@@ -86,16 +115,18 @@ function normalizeFiles(files: string[]): string[] {
   return files.map(f => f.replace(/[\\\/]+/g, '/'));
 }
 
+export type Deps = { [projectName: string]: Dependency[] };
+
 export function dependencies(
   npmScope: string,
   projects: ProjectNode[],
   fileRead: (s: string) => string
-): { [projectName: string]: Dependency[] } {
-  return new Deps(npmScope, projects, fileRead).calculateDeps();
+): Deps {
+  return new DepsCalculator(npmScope, projects, fileRead).calculateDeps();
 }
 
-class Deps {
-  private deps: { [projectName: string]: Dependency[] };
+class DepsCalculator {
+  private deps: Deps;
 
   constructor(
     private npmScope: string,
