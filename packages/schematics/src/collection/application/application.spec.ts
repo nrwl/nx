@@ -33,6 +33,8 @@ describe('application', () => {
       '/my-app/package.json',
       '/my-app/protractor.conf.js',
       '/my-app/test.js',
+      '/my-app/tools/schematics/.gitkeep',
+      '/my-app/tools/tsconfig.tools.json',
       '/my-app/tsconfig.json',
       '/my-app/tsconfig.spec.json',
       '/my-app/tslint.json'

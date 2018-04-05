@@ -95,6 +95,8 @@ function updatePackageJson() {
 
     packageJson.scripts['lint'] = './node_modules/.bin/nx lint && ng lint';
     packageJson.scripts['postinstall'] = './node_modules/.bin/nx postinstall';
+    packageJson.scripts['workspace-schematic'] =
+      './node_modules/.bin/nx workspace-schematic';
 
     return packageJson;
   });

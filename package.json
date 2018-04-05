@@ -63,7 +63,8 @@
     "tslint": "5.9.1",
     "typescript": "2.6.2",
     "yargs-parser": "9.0.2",
-    "zone.js": "^0.8.19"
+    "zone.js": "^0.8.19",
+    "fs-extra": "5.0.0"
   },
   "author": "Victor Savkin",
   "license": "MIT",

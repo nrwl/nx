@@ -6,6 +6,7 @@ import { format } from './format';
 import { update } from './update';
 import { patchNg } from './patch-ng';
 import { lint } from './lint';
+import { workspaceSchematic } from './workspace-schematic';
 
 const processedArgs = yargsParser(process.argv, {
   alias: {
@@ -35,6 +36,9 @@ switch (command) {
   case 'postinstall':
     patchNg();
     update(['check']);
+    break;
+  case 'workspace-schematic':
+    workspaceSchematic(args);
     break;
   default:
     throw new Error(`Unrecognized command '${command}'`);

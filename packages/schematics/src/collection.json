@@ -43,6 +43,12 @@
       "factory": "./collection/downgrade-module",
       "schema": "./collection/downgrade-module/schema.json",
       "description": "Generates downgradeModule setup"
+    },
+
+    "workspace-schematic": {
+      "factory": "./collection/workspace-schematic",
+      "schema": "./collection/workspace-schematic/schema.json",
+      "description": "Generates a custom schematic"
     }
   }
 }

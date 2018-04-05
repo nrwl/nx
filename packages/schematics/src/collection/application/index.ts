@@ -26,6 +26,7 @@ export default function(options: Schema): Rule {
       template({
         utils: strings,
         dot: '.',
+        tmpl: '',
         ...libVersions,
         ...(options as object),
         npmScope,

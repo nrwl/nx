@@ -8,7 +8,7 @@ export const nxVersion = '*';
 export const schematicsVersion = '*';
 export const angularCliSchema =
   './node_modules/@nrwl/schematics/src/schema.json';
-export const latestMigration = '20180328-add-nx-lint';
+export const latestMigration = '20180405-add-workspace-schematic-command';
 export const prettierVersion = '1.10.2';
 export const typescriptVersion = '2.6.2';
 export const rxjsVersion = '^5.5.6';
