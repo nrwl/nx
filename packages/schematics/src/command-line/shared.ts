@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import {execSync} from 'child_process';
 import * as path from 'path';
 import {
   affectedApps,
@@ -11,13 +11,11 @@ import {
   dependencies,
   Dependency
 } from '@nrwl/schematics/src/command-line/affected-apps';
-import { statSync } from 'fs';
+import {statSync} from 'fs';
 import * as appRoot from 'app-root-path';
-import { readJsonFile } from '../utils/fileutils';
+import {readJsonFile} from '../utils/fileutils';
 
-export function parseFiles(
-  args: string[]
-): { files: string[]; rest: string[] } {
+export function parseFiles(args: string[]): { files: string[]; rest: string[] } {
   let unnamed = [];
   let named = [];
   args.forEach(a => {
@@ -27,11 +25,11 @@ export function parseFiles(
       unnamed.push(a);
     }
   });
-
+  
   const dashDashFiles = named.filter(a => a.startsWith('--files='))[0];
   const uncommitted = named.some(a => a === '--uncommitted');
   const untracked = named.some(a => a === '--untracked');
-
+  
   if (dashDashFiles) {
     named.splice(named.indexOf(dashDashFiles), 1);
     return {
@@ -102,23 +100,24 @@ export function getProjectNodes(config) {
 
 export function readCliConfig(): any {
   const config = readJsonFile(`${appRoot.path}/.angular-cli.json`);
-
+  
   if (!config.project.npmScope) {
     throw new Error(`.angular-cli.json must define the npmScope property.`);
   }
-
+  
   return config;
 }
 
-export function getAffectedApps(touchedFiles: string[]): string[] {
+export function getAffectedApps(touchedFiles: string[], ignoreTouchedFilesWithNoScope: boolean = false): string[] {
   const config = readCliConfig();
   const projects = getProjectNodes(config);
-
+  
   return affectedApps(
     config.project.npmScope,
     projects,
     f => fs.readFileSync(`${appRoot.path}/${f}`, 'utf-8'),
-    touchedFiles
+    touchedFiles,
+    ignoreTouchedFilesWithNoScope
   );
 }
 
@@ -147,16 +146,16 @@ export function allFilesInDir(dirName: string): string[] {
         } else if (fs.statSync(child).isDirectory()) {
           res = [...res, ...allFilesInDir(child)];
         }
-      } catch (e) {}
+      } catch (e) {
+      }
     });
-  } catch (e) {}
+  } catch (e) {
+  }
   return res;
 }
 
-export function readDependencies(
-  npmScope: string,
-  projectNodes: ProjectNode[]
-): { [projectName: string]: Dependency[] } {
+export function readDependencies(npmScope: string,
+                                 projectNodes: ProjectNode[]): { [projectName: string]: Dependency[] } {
   const m = lastModifiedAmongProjectFiles();
   if (!directoryExists(`${appRoot.path}/dist`)) {
     fs.mkdirSync(`${appRoot.path}/dist`);
@@ -205,7 +204,8 @@ function recursiveMtime(dirName: string) {
           res = c;
         }
       }
-    } catch (e) {}
+    } catch (e) {
+    }
   });
   return res;
 }

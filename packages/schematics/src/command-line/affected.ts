@@ -1,5 +1,5 @@
-import { execSync } from 'child_process';
-import { getAffectedApps, parseFiles } from './shared';
+import {execSync} from 'child_process';
+import {getAffectedApps, parseFiles} from './shared';
 import * as path from 'path';
 import * as resolve from 'resolve';
 import * as runAll from 'npm-run-all';
@@ -7,17 +7,18 @@ import * as yargsParser from 'yargs-parser';
 
 export function affected(args: string[]): void {
   const command = args[0];
+  const ignoreTouchedFilesWithNoScope = args[3] && args[3] === 'ignore-no-scope';
   let apps: string[];
   let rest: string[];
   try {
     const p = parseFiles(args.slice(1));
     rest = p.rest;
-    apps = getAffectedApps(p.files);
+    apps = getAffectedApps(p.files, ignoreTouchedFilesWithNoScope);
   } catch (e) {
     printError(command, e);
     process.exit(1);
   }
-
+  
   switch (command) {
     case 'apps':
       console.log(apps.join(' '));
@@ -52,7 +53,7 @@ function build(apps: string[], rest: string[]) {
       },
       boolean: ['parallel']
     }).parallel;
-
+    
     console.log(`Building ${apps.join(', ')}`);
     const buildCommands = rest.filter(a => !a.startsWith('--parallel'));
     runAll(
@@ -87,7 +88,7 @@ function e2e(apps: string[], rest: string[]) {
 function ngPath() {
   const basePath = path.dirname(
     path.dirname(
-      path.dirname(resolve.sync('@angular/cli', { basedir: __dirname }))
+      path.dirname(resolve.sync('@angular/cli', {basedir: __dirname}))
     )
   );
   return path.join(basePath, 'bin', 'ng');
