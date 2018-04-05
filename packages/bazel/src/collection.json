@@ -1,6 +1,7 @@
 {
   "name": "nx-bazel",
   "version": "0.1",
+  "extends": "@ngrx/schematics",
   "schematics": {
     "application": {
       "factory": "./collection/application",
@@ -18,9 +19,7 @@
       "description": "Create a library"
     },
     "module": {
-      "aliases": [
-        "m"
-      ],
+      "aliases": ["m"],
       "factory": "./collection/module",
       "schema": "./collection/module/schema.json",
       "description": "Create a Module"
