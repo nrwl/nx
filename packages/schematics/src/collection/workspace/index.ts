@@ -85,6 +85,9 @@ function updatePackageJson() {
       './node_modules/.bin/nx affected build';
     packageJson.scripts['affected:e2e'] = './node_modules/.bin/nx affected e2e';
 
+    packageJson.scripts['affected:dep-graph'] =
+      './node_modules/.bin/nx affected dep-graph';
+
     packageJson.scripts['format'] = './node_modules/.bin/nx format write';
     packageJson.scripts['format:write'] = './node_modules/.bin/nx format write';
     packageJson.scripts['format:check'] = './node_modules/.bin/nx format check';
@@ -94,6 +97,9 @@ function updatePackageJson() {
     packageJson.scripts['update:skip'] = './node_modules/.bin/nx update skip';
 
     packageJson.scripts['lint'] = './node_modules/.bin/nx lint && ng lint';
+
+    packageJson.scripts['dep-graph'] = './node_modules/.bin/nx dep-graph';
+
     packageJson.scripts['postinstall'] = './node_modules/.bin/nx postinstall';
     packageJson.scripts['workspace-schematic'] =
       './node_modules/.bin/nx workspace-schematic';

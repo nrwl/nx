@@ -286,4 +286,153 @@ describe('Command line', () => {
     },
     1000000
   );
+  describe('dep-graph', () => {
+    beforeEach(() => {
+      newProject();
+      newApp('myapp');
+      newApp('myapp2');
+      newApp('myapp3');
+      newLib('mylib');
+      newLib('mylib2');
+
+      updateFile(
+        'apps/myapp/src/main.ts',
+        `
+      import '@proj/mylib';
+
+      const s = {loadChildren: '@proj/mylib2'};
+    `
+      );
+
+      updateFile(
+        'apps/myapp2/src/app/app.component.spec.ts',
+        `import '@proj/mylib';`
+      );
+
+      updateFile(
+        'libs/mylib/src/mylib.module.spec.ts',
+        `import '@proj/mylib2';`
+      );
+    });
+
+    it(
+      'dep-graph should output json (without critical path) to file',
+      () => {
+        const file = '.vis/dep-graph.json';
+
+        runCommand(`npm run dep-graph -- --file="${file}" --no-open`);
+
+        expect(() => checkFilesExist(file)).not.toThrow();
+
+        const jsonFileContents = readJson(file);
+
+        expect(jsonFileContents).toEqual({
+          deps: {
+            mylib2: [],
+            myapp3: [],
+            myapp2: [
+              {
+                projectName: 'mylib',
+                type: 'es6Import'
+              }
+            ],
+            mylib: [
+              {
+                projectName: 'mylib2',
+                type: 'es6Import'
+              }
+            ],
+            myapp: [
+              {
+                projectName: 'mylib',
+                type: 'es6Import'
+              },
+              {
+                projectName: 'mylib2',
+                type: 'loadChildren'
+              }
+            ]
+          },
+          criticalPath: []
+        });
+      },
+      1000000
+    );
+
+    it(
+      'dep-graph should output json with critical path to file',
+      () => {
+        const file = '.vis/dep-graph.json';
+
+        runCommand(
+          `npm run affected:dep-graph -- --files="libs/mylib/index.ts" --file="${file}" --no-open`
+        );
+
+        expect(() => checkFilesExist(file)).not.toThrow();
+
+        const jsonFileContents = readJson(file);
+
+        expect(jsonFileContents.criticalPath).toContain('myapp');
+        expect(jsonFileContents.criticalPath).toContain('myapp2');
+        expect(jsonFileContents.criticalPath).toContain('mylib');
+        expect(jsonFileContents.criticalPath).not.toContain('mylib2');
+      },
+      1000000
+    );
+
+    it(
+      'dep-graph should output dot to file',
+      () => {
+        const file = '.vis/dep-graph.dot';
+
+        runCommand(
+          `npm run dep-graph -- --files="libs/mylib/index.ts" --file="${file}" --no-open`
+        );
+
+        expect(() => checkFilesExist(file)).not.toThrow();
+
+        const fileContents = readFile(file);
+        expect(fileContents).toContain('"myapp" -> "mylib"');
+        expect(fileContents).toContain('"myapp2" -> "mylib"');
+        expect(fileContents).toContain('"mylib" -> "mylib2"');
+      },
+      1000000
+    );
+
+    it(
+      'dep-graph should output html to file',
+      () => {
+        const file = '.vis/dep-graph.html';
+        runCommand(
+          `npm run dep-graph -- --files="libs/mylib/index.ts" --file="${file}" --no-open`
+        );
+
+        expect(() => checkFilesExist(file)).not.toThrow();
+
+        const fileContents = readFile(file);
+        expect(fileContents).toContain('<html>');
+        expect(fileContents).toContain('<title>myapp&#45;&gt;mylib</title>');
+        expect(fileContents).toContain('<title>myapp&#45;&gt;mylib2</title>');
+        expect(fileContents).toContain('<title>mylib&#45;&gt;mylib2</title>');
+      },
+      1000000
+    );
+
+    it(
+      'dep-graph should output html to file by default',
+      () => {
+        const file = '.vis/dep-graph.html';
+        runCommand(`npm run dep-graph -- --no-open`);
+
+        expect(() => checkFilesExist(file)).not.toThrow();
+
+        const fileContents = readFile(file);
+        expect(fileContents).toContain('<html>');
+        expect(fileContents).toContain('<title>myapp&#45;&gt;mylib</title>');
+        expect(fileContents).toContain('<title>myapp&#45;&gt;mylib2</title>');
+        expect(fileContents).toContain('<title>mylib&#45;&gt;mylib2</title>');
+      },
+      1000000
+    );
+  });
 });

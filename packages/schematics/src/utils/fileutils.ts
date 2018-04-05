@@ -1,6 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+export function writeToFile(path: string, str: string) {
+  fs.writeFileSync(path, str);
+}
+
 /**
  * This method is specifically for updating a JSON file using the filesystem
  *
@@ -12,7 +16,7 @@ import * as path from 'path';
 export function updateJsonFile(path: string, callback: (a: any) => any) {
   const json = readJsonFile(path);
   callback(json);
-  fs.writeFileSync(path, serializeJson(json));
+  writeToFile(path, serializeJson(json));
 }
 
 export function addApp(apps: any[] | undefined, newApp: any): any[] {
@@ -57,4 +61,18 @@ export function copyFile(file: string, target: string) {
   const dest = fs.createWriteStream(path.resolve(target, f));
   source.pipe(dest);
   source.on('error', e => console.error(e));
+}
+
+function directoryExists(name) {
+  try {
+    return fs.statSync(name).isDirectory();
+  } catch (e) {
+    return false;
+  }
+}
+
+export function createDirectory(name: string) {
+  if (!directoryExists(name)) {
+    fs.mkdirSync(name);
+  }
 }
