@@ -29,6 +29,7 @@ import { wrapIntoFormat } from '../../utils/tasks';
 interface NormalizedSchema extends Schema {
   fullName: string;
   fullPath: string;
+  workspaceName: string;
 }
 
 function addBootstrap(path: string): Rule {
@@ -294,5 +295,13 @@ function normalizeOptions(options: Schema): NormalizedSchema {
     ? `${toFileName(options.directory)}/${name}`
     : name;
   const fullPath = `apps/${fullName}/src`;
-  return { ...options, sourceDir: 'src', name, fullName, fullPath };
+  const workspaceName = readCliConfigFile().project.name;
+  return {
+    ...options,
+    sourceDir: 'src',
+    name,
+    fullName,
+    fullPath,
+    workspaceName
+  };
 }

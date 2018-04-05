@@ -31,7 +31,7 @@ STATIC_FILES = [
 ts_devserver(
     name = "devserver",
     data = ["//apps/<%= fullName %>/src/assets"],
-    entry_module = "proj/apps/<%= fullName %>/src/main",
+    entry_module = "<%= workspaceName %>/apps/<%= fullName %>/src/main",
     scripts = ["//:angular_bundles"],
     serving_path = "/bundle.min.js",
     static_files = STATIC_FILES,
@@ -42,7 +42,7 @@ load("@build_bazel_rules_nodejs//:defs.bzl", "rollup_bundle", "nodejs_binary")
 
 rollup_bundle(
     name = "bundle",
-    entry_point = "proj/apps/<%= fullName %>/src/main",
+    entry_point = "<%= workspaceName %>/apps/<%= fullName %>/src/main",
     deps = [":<%= sourceDir %>"],
 )
 
