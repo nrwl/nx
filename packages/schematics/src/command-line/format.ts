@@ -33,7 +33,7 @@ function getPatterns(args: string[]) {
     const libsAndApp = rest.filter(a => a.startsWith('--libs-and-apps'))[0];
     return libsAndApp ? getPatternsFromApps(patterns) : patterns;
   } catch (e) {
-    return ['"{apps,libs}/**/*.ts"'];
+    return ['"{apps,libs,tools}/**/*.ts"'];
   }
 }
 

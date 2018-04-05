@@ -101,12 +101,6 @@ export function newModule(name: string): string {
   return runCLI(`generate module ${name}`);
 }
 
-export function runSchematic(command: string): string {
-  return execSync(`./node_modules/.bin/schematics ${command}`, {
-    cwd: `./tmp/${projectName}`
-  }).toString();
-}
-
 export function runCommand(command: string): string {
   return execSync(command, {
     cwd: `./tmp/${projectName}`,

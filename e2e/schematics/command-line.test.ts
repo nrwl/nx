@@ -1,11 +1,13 @@
 import {
+  checkFilesExist,
   newApp,
   newLib,
   newProject,
+  readFile,
+  readJson,
   runCLI,
   runCommand,
-  updateFile,
-  readJson
+  updateFile
 } from '../utils';
 
 describe('Command line', () => {
@@ -245,6 +247,42 @@ describe('Command line', () => {
 
       runCommand('npm run format:write');
       expect(runCommand('npm run -s format:check')).toEqual('');
+    },
+    1000000
+  );
+
+  it(
+    'should support workspace-specific schematics',
+    () => {
+      newProject();
+      runCLI('g workspace-schematic custom');
+      checkFilesExist(
+        'tools/schematics/custom/index.ts',
+        'tools/schematics/custom/schema.json'
+      );
+
+      const json = readJson('tools/schematics/custom/schema.json');
+      json.properties['directory'] = {
+        type: 'string',
+        description: 'lib directory'
+      };
+      updateFile('tools/schematics/custom/schema.json', JSON.stringify(json));
+
+      const indexFile = readFile('tools/schematics/custom/index.ts');
+      updateFile(
+        'tools/schematics/custom/index.ts',
+        indexFile.replace(
+          'name: schema.name',
+          'name: schema.name, directory: schema.directory'
+        )
+      );
+
+      const output = runCommand(
+        'npm run workspace-schematic -- custom mylib --directory=dir'
+      );
+      checkFilesExist('libs/dir/mylib/index.ts');
+      expect(output).toContain('create libs/dir/mylib/src/mylib.module.ts');
+      expect(output).toContain('update .angular-cli.json');
     },
     1000000
   );

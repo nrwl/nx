@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "schematics",
+  "title": "Create a custom schematic",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Schematic name"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

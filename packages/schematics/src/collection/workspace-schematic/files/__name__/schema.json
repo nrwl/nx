@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "<%= name %>",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Library name"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
