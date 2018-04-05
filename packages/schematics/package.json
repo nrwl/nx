@@ -20,7 +20,7 @@
   },
   "main": "index.js",
   "types": "index.d.js",
-  "peerDependencies": { },
+  "peerDependencies": {},
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -32,9 +32,12 @@
     "@ngrx/schematics": "5.2.0",
     "@schematics/angular": "0.4.6",
     "app-root-path": "^2.0.1",
+    "graphviz": "0.0.8",
     "npm-run-all": "4.1.2",
+    "opn": "^5.3.0",
     "semver": "5.4.1",
     "tmp": "0.0.33",
+    "viz.js": "^1.8.1",
     "yargs-parser": "9.0.2"
   },
   "devDependencies": {

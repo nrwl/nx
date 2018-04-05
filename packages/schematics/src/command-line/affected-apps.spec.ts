@@ -1,5 +1,5 @@
 import {
-  affectedApps,
+  affectedAppNames,
   dependencies,
   DependencyType,
   ProjectType,
@@ -254,9 +254,9 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
     });
   });
 
-  describe('affectedApps', () => {
+  describe('affectedAppNames', () => {
     it('should return the list of affected files', () => {
-      const affected = affectedApps(
+      const affected = affectedAppNames(
         'nrwl',
         [
           {
@@ -309,7 +309,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
     });
 
     it('should return app app names if a touched file is not part of a project', () => {
-      const affected = affectedApps(
+      const affected = affectedAppNames(
         'nrwl',
         [
           {
@@ -353,7 +353,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
     });
 
     it('should handle slashes', () => {
-      const affected = affectedApps(
+      const affected = affectedAppNames(
         'nrwl',
         [
           {
@@ -379,7 +379,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
     });
 
     it('should handle circular dependencies', () => {
-      const affected = affectedApps(
+      const affected = affectedAppNames(
         'nrwl',
         [
           {

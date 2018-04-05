@@ -1,16 +1,16 @@
 import { execSync } from 'child_process';
 import * as path from 'path';
 import {
-  affectedApps,
+  AffectedFetcher,
+  affectedAppNames,
   ProjectNode,
   ProjectType,
-  touchedProjects
+  touchedProjects,
+  dependencies,
+  Dependency,
+  affectedProjectNames
 } from './affected-apps';
 import * as fs from 'fs';
-import {
-  dependencies,
-  Dependency
-} from '@nrwl/schematics/src/command-line/affected-apps';
 import { statSync } from 'fs';
 import * as appRoot from 'app-root-path';
 import { readJsonFile } from '../utils/fileutils';
@@ -110,17 +110,22 @@ export function readCliConfig(): any {
   return config;
 }
 
-export function getAffectedApps(touchedFiles: string[]): string[] {
+export const getAffected = (affectedNamesFetcher: AffectedFetcher) => (
+  touchedFiles: string[]
+): string[] => {
   const config = readCliConfig();
   const projects = getProjectNodes(config);
 
-  return affectedApps(
+  return affectedNamesFetcher(
     config.project.npmScope,
     projects,
     f => fs.readFileSync(`${appRoot.path}/${f}`, 'utf-8'),
     touchedFiles
   );
-}
+};
+
+export const getAffectedApps = getAffected(affectedAppNames);
+export const getAffectedProjects = getAffected(affectedProjectNames);
 
 export function getTouchedProjects(touchedFiles: string[]): string[] {
   return touchedProjects(getProjectNodes(readCliConfig()), touchedFiles).filter(

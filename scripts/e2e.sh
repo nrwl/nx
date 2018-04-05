@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-npm run build
 ./scripts/link.sh
 rm -rf tmp
 mkdir tmp
