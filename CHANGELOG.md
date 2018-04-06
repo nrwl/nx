@@ -2,6 +2,16 @@
 
 The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
 
+# 0.10.1
+
+## Features
+
+* [Add support for workspace-specific schematics](https://github.com/nrwl/nx/commit/bc559575f524aacbe3d25eb97210101e60de4526)
+
+## Fixes
+
+* [Extend ngrx and Angular schematics](https://github.com/nrwl/nx/commit/0c2b01bda6904e09f0c4f997ef4a98818723b795)
+
 # 0.10.0
 
 ## Features
