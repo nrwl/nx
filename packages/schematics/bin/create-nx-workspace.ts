@@ -64,6 +64,16 @@ if (!useYarn) {
 
 const projectName = parsedArgs._[2];
 
+if (parsedArgs.bazel) {
+  if (!/^\w+$/.test(projectName)) {
+    console.error(
+      `${projectName} is invalid for a bazel workspace.\n` +
+        'Your workspace name must contain only alphanumeric characters and underscores.'
+    );
+    process.exit(1);
+  }
+}
+
 // check that the workspace name is passed in
 if (!projectName) {
   console.error(
