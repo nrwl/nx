@@ -18,6 +18,13 @@ import {
 import { libVersions } from '../../lib-versions';
 
 export default function(options: Schema): Rule {
+  if (!/^\w+$/.test(options.name)) {
+    throw new Error(
+      `${options.name} is invalid for a bazel workspace.\n` +
+        'Your workspace name must contain only alphanumeric characters and underscores.'
+    );
+  }
+
   return (host: Tree, context: SchematicContext) => {
     addTasks(options, context);
     const npmScope = options.npmScope ? options.npmScope : options.name;
