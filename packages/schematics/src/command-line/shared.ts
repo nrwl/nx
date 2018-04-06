@@ -211,7 +211,12 @@ function recursiveMtime(dirName: string) {
 }
 
 function mtime(f: string): number {
-  return fs.fstatSync(fs.openSync(f, 'r')).mtime.getTime();
+  let fd = fs.openSync(f, 'r');
+  try {
+    return fs.fstatSync(fd).mtime.getTime();
+  } finally {
+    fs.closeSync(fd);
+  }
 }
 
 function normalizePath(file: string): string {
