@@ -14,8 +14,7 @@
     "copy": "./scripts/copy.sh",
     "test:schematics": "yarn linknpm fast && ./scripts/test_schematics.sh",
     "test:nx": "yarn linknpm fast && ./scripts/test_nx.sh",
-    "test":
-      "yarn linknpm fast && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
+    "test": "yarn linknpm fast && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
     "checkformat": "prettier \"{packages,e2e}/**/*.ts\" --list-different",
     "publish_npm": "./scripts/publish.sh"
   },
@@ -44,6 +43,7 @@
     "angular": "1.6.6",
     "app-root-path": "^2.0.1",
     "cosmiconfig": "^4.0.0",
+    "graphviz": "^0.0.8",
     "husky": "^0.14.3",
     "jasmine-core": "~2.8.0",
     "jasmine-spec-reporter": "~4.2.1",
@@ -52,8 +52,9 @@
     "karma-chrome-launcher": "~2.2.0",
     "karma-jasmine": "~1.1.0",
     "karma-webpack": "2.0.4",
-    "npm-run-all": "4.1.2",
     "ng-packagr": "2.2.0",
+    "npm-run-all": "4.1.2",
+    "opn": "^5.3.0",
     "precise-commits": "1.0.0",
     "prettier": "1.10.2",
     "rxjs": "^5.5.6",
@@ -62,6 +63,7 @@
     "tmp": "0.0.33",
     "tslint": "5.9.1",
     "typescript": "2.6.2",
+    "viz.js": "^1.8.1",
     "yargs-parser": "9.0.2",
     "zone.js": "^0.8.19",
     "fs-extra": "5.0.0"

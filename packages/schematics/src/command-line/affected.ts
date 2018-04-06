@@ -1,18 +1,21 @@
 import { execSync } from 'child_process';
-import { getAffectedApps, parseFiles } from './shared';
+import { getAffectedApps, getAffectedProjects, parseFiles } from './shared';
 import * as path from 'path';
 import * as resolve from 'resolve';
 import * as runAll from 'npm-run-all';
 import * as yargsParser from 'yargs-parser';
+import { generateGraph } from './dep-graph';
 
 export function affected(args: string[]): void {
   const command = args[0];
   let apps: string[];
+  let projects: string[];
   let rest: string[];
   try {
     const p = parseFiles(args.slice(1));
     rest = p.rest;
     apps = getAffectedApps(p.files);
+    projects = getAffectedProjects(p.files);
   } catch (e) {
     printError(command, e);
     process.exit(1);
@@ -28,6 +31,9 @@ export function affected(args: string[]): void {
     case 'e2e':
       e2e(apps, rest);
       break;
+    case 'dep-graph':
+      generateGraph(yargsParser(rest), projects);
+      break;
   }
 }
 
@@ -39,7 +45,10 @@ function printError(command: string, e: any) {
     `Or pass the list of files, as follows: npm run affected:${command} -- --files="libs/mylib/index.ts,libs/mylib2/index.ts".`
   );
   console.error(
-    `Or to get the list of files from local changes: npm run affected:${command} -- --uncommitted | --untracked".`
+    `Or to get the list of files from local changes: npm run affected:${command} -- --uncommitted | --untracked.`
+  );
+  console.error(
+    `Or to view a dependency graph: npm run affected:${command} --.`
   );
   console.error(e.message);
 }
