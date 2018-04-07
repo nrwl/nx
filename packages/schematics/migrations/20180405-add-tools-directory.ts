@@ -4,8 +4,12 @@ import * as path from 'path';
 export default {
   description: 'Add tools directory',
   run: () => {
-    mkdirSync('tools');
-    mkdirSync(path.join('tools', 'schematics'));
+    try {
+      mkdirSync('tools');
+    } catch (e) {}
+    try {
+      mkdirSync(path.join('tools', 'schematics'));
+    } catch (e) {}
     writeFileSync(path.join('tools', 'schematics', '.gitkeep'), '');
   }
 };
