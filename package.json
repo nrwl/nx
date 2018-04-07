@@ -1,6 +1,6 @@
 {
   "name": "@nrwl/nx-source",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "description": "Nrwl Extensions for Angular",
   "main": "index.js",
   "private": true,
