@@ -2,6 +2,12 @@
 
 The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
 
+# 0.11.0
+
+## Features
+
+* [Support to generate visualization graph](https://github.com/nrwl/nx/commit/49525efe3e31ff93dccf68499300fe35deaac78f)
+
 # 0.10.1
 
 ## Features
