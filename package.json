@@ -12,7 +12,7 @@
     "package": "./scripts/package.sh",
     "release": "./scripts/release.sh",
     "copy": "./scripts/copy.sh",
-    "watch": "nodemon -e ts --exec ./scripts/build.sh --watch packages/nx/src --watch packages/schematics/src",
+    "watch": "nodemon -e ts --exec ./scripts/link.sh --watch packages/nx/src --watch packages/schematics/src",
     "test:schematics": "yarn linknpm fast && ./scripts/test_schematics.sh",
     "test:nx": "yarn linknpm fast && ./scripts/test_nx.sh",
     "test": "yarn linknpm fast && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
