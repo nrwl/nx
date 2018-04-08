@@ -12,6 +12,7 @@
     "package": "./scripts/package.sh",
     "release": "./scripts/release.sh",
     "copy": "./scripts/copy.sh",
+    "watch": "nodemon -e ts --exec ./scripts/build.sh --watch packages/nx/src --watch packages/schematics/src",
     "test:schematics": "yarn linknpm fast && ./scripts/test_schematics.sh",
     "test:nx": "yarn linknpm fast && ./scripts/test_nx.sh",
     "test": "yarn linknpm fast && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
@@ -43,6 +44,7 @@
     "angular": "1.6.6",
     "app-root-path": "^2.0.1",
     "cosmiconfig": "^4.0.0",
+    "fs-extra": "5.0.0",
     "graphviz": "^0.0.8",
     "husky": "^0.14.3",
     "jasmine-core": "~2.8.0",
@@ -66,7 +68,7 @@
     "viz.js": "^1.8.1",
     "yargs-parser": "9.0.2",
     "zone.js": "^0.8.19",
-    "fs-extra": "5.0.0"
+    "nodemon": "^1.17.3"
   },
   "author": "Victor Savkin",
   "license": "MIT",
