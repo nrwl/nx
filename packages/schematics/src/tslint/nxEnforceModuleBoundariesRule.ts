@@ -3,7 +3,7 @@ import * as Lint from 'tslint';
 import { IOptions } from 'tslint';
 import * as ts from 'typescript';
 import { readFileSync } from 'fs';
-import * as appRoot from 'app-root-path';
+import { getAppRootPath } from '../utils/app-root-path';
 import { getProjectNodes, readDependencies } from '../command-line/shared';
 import {
   Dependency,
@@ -22,7 +22,7 @@ export class Rule extends Lint.Rules.AbstractRule {
   ) {
     super(options);
     if (!projectPath) {
-      this.projectPath = appRoot.path;
+      this.projectPath = getAppRootPath();
       if (!(global as any).projectNodes) {
         const cliConfig = this.readCliConfig(this.projectPath);
         (global as any).npmScope = cliConfig.project.npmScope;

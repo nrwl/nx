@@ -1,6 +1,6 @@
 import { writeToFile } from '../utils/fileutils';
 import * as graphviz from 'graphviz';
-import * as appRoot from 'app-root-path';
+import { getAppRootPath } from '../utils/app-root-path';
 import * as opn from 'opn';
 import { readFileSync } from 'fs';
 import {
@@ -268,7 +268,7 @@ function generateGraphJson(criticalPath?: string[]): JSONOutput {
 
   // fetch all apps and libs
   const deps = dependencies(npmScope, projects, f =>
-    readFileSync(`${appRoot.path}/${f}`, 'utf-8')
+    readFileSync(`${getAppRootPath()}/${f}`, 'utf-8')
   );
 
   return {

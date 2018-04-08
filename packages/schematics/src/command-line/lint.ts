@@ -1,13 +1,13 @@
 import { getProjectNodes, readCliConfig, allFilesInDir } from './shared';
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
-import * as appRoot from 'app-root-path';
+import { getAppRootPath } from '../utils/app-root-path';
 import * as path from 'path';
 import * as fs from 'fs';
 
 export function lint() {
   const nodes = getProjectNodes(readCliConfig());
   const packageJson = JSON.parse(
-    fs.readFileSync(`${appRoot.path}/package.json`, 'utf-8')
+    fs.readFileSync(`${getAppRootPath()}/package.json`, 'utf-8')
   );
 
   const errorGroups = new WorkspaceIntegrityChecks(
@@ -27,7 +27,7 @@ export function lint() {
 
 function readAllFilesFromAppsAndLibs() {
   return [
-    ...allFilesInDir(`${appRoot.path}/apps`),
-    ...allFilesInDir(`${appRoot.path}/libs`)
+    ...allFilesInDir(`${getAppRootPath()}/apps`),
+    ...allFilesInDir(`${getAppRootPath()}/libs`)
   ].filter(f => !path.basename(f).startsWith('.'));
 }

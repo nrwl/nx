@@ -12,7 +12,7 @@ import {
 } from './affected-apps';
 import * as fs from 'fs';
 import { statSync } from 'fs';
-import * as appRoot from 'app-root-path';
+import { getAppRootPath } from '../utils/app-root-path';
 import { readJsonFile } from '../utils/fileutils';
 
 export function parseFiles(
@@ -95,13 +95,13 @@ export function getProjectNodes(config) {
         root: p.root,
         type: p.root.startsWith('apps/') ? ProjectType.app : ProjectType.lib,
         tags: p.tags,
-        files: allFilesInDir(`${appRoot.path}/${path.dirname(p.root)}`)
+        files: allFilesInDir(`${getAppRootPath()}/${path.dirname(p.root)}`)
       };
     });
 }
 
 export function readCliConfig(): any {
-  const config = readJsonFile(`${appRoot.path}/.angular-cli.json`);
+  const config = readJsonFile(`${getAppRootPath()}/.angular-cli.json`);
 
   if (!config.project.npmScope) {
     throw new Error(`.angular-cli.json must define the npmScope property.`);
@@ -119,7 +119,7 @@ export const getAffected = (affectedNamesFetcher: AffectedFetcher) => (
   return affectedNamesFetcher(
     config.project.npmScope,
     projects,
-    f => fs.readFileSync(`${appRoot.path}/${f}`, 'utf-8'),
+    f => fs.readFileSync(`${getAppRootPath()}/${f}`, 'utf-8'),
     touchedFiles
   );
 };
@@ -148,7 +148,7 @@ export function allFilesInDir(dirName: string): string[] {
       try {
         if (!fs.statSync(child).isDirectory()) {
           // add starting with "apps/myapp/..." or "libs/mylib/..."
-          res.push(normalizePath(child.substring(appRoot.path.length + 1)));
+          res.push(normalizePath(child.substring(getAppRootPath().length + 1)));
         } else if (fs.statSync(child).isDirectory()) {
           res = [...res, ...allFilesInDir(child)];
         }
@@ -163,34 +163,34 @@ export function readDependencies(
   projectNodes: ProjectNode[]
 ): { [projectName: string]: Dependency[] } {
   const m = lastModifiedAmongProjectFiles();
-  if (!directoryExists(`${appRoot.path}/dist`)) {
-    fs.mkdirSync(`${appRoot.path}/dist`);
+  if (!directoryExists(`${getAppRootPath()}/dist`)) {
+    fs.mkdirSync(`${getAppRootPath()}/dist`);
   }
   if (
-    !fileExists(`${appRoot.path}/dist/nxdeps.json`) ||
-    m > mtime(`${appRoot.path}/dist/nxdeps.json`)
+    !fileExists(`${getAppRootPath()}/dist/nxdeps.json`) ||
+    m > mtime(`${getAppRootPath()}/dist/nxdeps.json`)
   ) {
     const deps = dependencies(npmScope, projectNodes, f =>
-      fs.readFileSync(`${appRoot.path}/${f}`, 'UTF-8')
+      fs.readFileSync(`${getAppRootPath()}/${f}`, 'UTF-8')
     );
     fs.writeFileSync(
-      `${appRoot.path}/dist/nxdeps.json`,
+      `${getAppRootPath()}/dist/nxdeps.json`,
       JSON.stringify(deps, null, 2),
       'UTF-8'
     );
     return deps;
   } else {
-    return readJsonFile(`${appRoot.path}/dist/nxdeps.json`);
+    return readJsonFile(`${getAppRootPath()}/dist/nxdeps.json`);
   }
 }
 
 export function lastModifiedAmongProjectFiles() {
   return [
-    recursiveMtime(`${appRoot.path}/libs`),
-    recursiveMtime(`${appRoot.path}/apps`),
-    mtime(`${appRoot.path}/.angular-cli.json`),
-    mtime(`${appRoot.path}/tslint.json`),
-    mtime(`${appRoot.path}/package.json`)
+    recursiveMtime(`${getAppRootPath()}/libs`),
+    recursiveMtime(`${getAppRootPath()}/apps`),
+    mtime(`${getAppRootPath()}/.angular-cli.json`),
+    mtime(`${getAppRootPath()}/tslint.json`),
+    mtime(`${getAppRootPath()}/package.json`)
   ].reduce((a, b) => (a > b ? a : b), 0);
 }
 
