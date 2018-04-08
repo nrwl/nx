@@ -17,6 +17,11 @@ After that run `yarn build` to build the `bazel`, `nx`, and `schematics` package
 
 After that run `yarn linknpm`.
 
+### Automatic rebuild
+
+You can run `yarn watch` in order to repeat this operations (build and link) on any changes you make on typescript files.
+This can be use along with (for example) `cd build/packages/schematics && yarn link` if you need to test it on a project.
+
 ### Running Unit Tests
 
 To make sure your changes do not break any unit tests, run `yarn test`. You can also run `yarn test:schematics` and `yarn test:nx` to test the schematics and nx packages individually.
