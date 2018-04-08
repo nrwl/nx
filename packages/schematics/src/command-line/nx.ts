@@ -8,15 +8,15 @@ import { patchNg } from './patch-ng';
 import { lint } from './lint';
 import { workspaceSchematic } from './workspace-schematic';
 import { generateGraph } from './dep-graph';
+import { parseArgs } from '../utils/cli-config-utils';
+import { setAppRootPath } from '../utils/app-root-path';
 
-const processedArgs = yargsParser(process.argv, {
-  alias: {
-    app: ['a']
-  },
-  string: ['app']
-});
-const command = processedArgs._[2];
+const { command, appRoot } = parseArgs();
 const args = process.argv.slice(3);
+
+if (appRoot) {
+  setAppRootPath(appRoot);
+}
 
 switch (command) {
   case 'affected':

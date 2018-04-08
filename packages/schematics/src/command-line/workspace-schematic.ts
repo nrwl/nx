@@ -30,9 +30,9 @@ import { Url } from 'url';
 import * as yargsParser from 'yargs-parser';
 import { CoreSchemaRegistry } from '@angular-devkit/core/src/json/schema';
 import { standardFormats } from '@angular-devkit/schematics/src/formats';
-import * as appRoot from 'app-root-path';
+import { getAppRootPath } from '../utils/app-root-path';
 
-const rootDirectory = appRoot.path;
+const rootDirectory = getAppRootPath();
 
 export function workspaceSchematic(args: string[]) {
   const outDir = compileTools();
