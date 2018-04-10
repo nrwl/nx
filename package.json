@@ -19,20 +19,20 @@
     "publish_npm": "./scripts/publish.sh"
   },
   "devDependencies": {
-    "@angular/cli": "6.0.0-rc.2",
-    "@angular/common": "6.0.0-rc.3",
-    "@angular/compiler": "6.0.0-rc.3",
-    "@angular/compiler-cli": "6.0.0-rc.3",
-    "@angular/core": "6.0.0-rc.3",
-    "@angular/platform-browser": "6.0.0-rc.3",
-    "@angular/platform-browser-dynamic": "6.0.0-rc.3",
-    "@angular/router": "6.0.0-rc.3",
-    "@angular/upgrade": "6.0.0-rc.3",
-    "@ngrx/effects": "6.0.0-beta.1",
-    "@ngrx/router-store": "6.0.0-beta.1",
-    "@ngrx/schematics": "6.0.0-beta.0",
-    "@ngrx/store": "6.0.0-beta.1",
-    "@ngrx/store-devtools": "6.0.0-beta.1",
+    "@angular/cli": "angular/cli-builds",
+    "@angular/common": "angular/common-builds",
+    "@angular/compiler": "angular/compiler-builds",
+    "@angular/compiler-cli": "angular/compiler-cli-builds",
+    "@angular/core": "angular/core-builds",
+    "@angular/platform-browser": "angular/platform-browser-builds",
+    "@angular/platform-browser-dynamic": "angular/platform-browser-dynamic-builds",
+    "@angular/router": "angular/router-builds",
+    "@angular/upgrade": "angular/upgrade-builds",
+    "@ngrx/effects": "next",
+    "@ngrx/router-store": "next",
+    "@ngrx/schematics": "next",
+    "@ngrx/store": "next",
+    "@ngrx/store-devtools": "next",
     "@types/jasmine": "~2.8.3",
     "@types/jasminewd2": "~2.0.2",
     "@types/node": "~6.0.60",
@@ -73,5 +73,8 @@
       "tmp",
       "files"
     ]
+  },
+  "resolutions": {
+    "@schematics/angular": "angular/schematics-angular-builds"
   }
 }
