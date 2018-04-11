@@ -102,10 +102,14 @@ export function newModule(name: string): string {
 }
 
 export function runCommand(command: string): string {
-  return execSync(command, {
-    cwd: `./tmp/${projectName}`,
-    stdio: ['pipe', 'pipe', 'pipe']
-  }).toString();
+  try {
+    return execSync(command, {
+      cwd: `./tmp/${projectName}`,
+      stdio: ['pipe', 'pipe', 'pipe']
+    }).toString();
+  } catch (e) {
+    return e.stdout.toString() + e.stderr.toString();
+  }
 }
 
 export function updateFile(f: string, content: string): void {

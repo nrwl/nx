@@ -11,6 +11,7 @@ export function affected(args: string[]): void {
   let apps: string[];
   let projects: string[];
   let rest: string[];
+
   try {
     const p = parseFiles(args.slice(1));
     rest = p.rest;
@@ -38,15 +39,6 @@ export function affected(args: string[]): void {
 }
 
 function printError(command: string, e: any) {
-  console.error(
-    `Pass the SHA range, as follows: npm run affected:${command} -- SHA1 SHA2.`
-  );
-  console.error(
-    `Or pass the list of files, as follows: npm run affected:${command} -- --files="libs/mylib/index.ts,libs/mylib2/index.ts".`
-  );
-  console.error(
-    `Or to get the list of files from local changes: npm run affected:${command} -- --uncommitted | --untracked.`
-  );
   console.error(e.message);
 }
 
