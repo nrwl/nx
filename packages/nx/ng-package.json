@@ -7,5 +7,8 @@
       "@ngrx/router-store": "ngrx.routerStore",
       "@ngrx/store": "ngrx.store"
     }
-  }
+  },
+  "whitelistedNonPeerDependencies": [
+    "jasmine-marbles"
+  ]
 }
