@@ -51,6 +51,7 @@
     "karma-chrome-launcher": "~2.2.0",
     "karma-jasmine": "~1.1.0",
     "karma-webpack": "2.0.4",
+    "karma-webpack-preprocessor": "^1.0.1",
     "ng-packagr": "2.4.2",
     "npm-run-all": "4.1.2",
     "opn": "^5.3.0",
