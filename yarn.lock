@@ -3968,9 +3968,9 @@ netmask@~1.0.4:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/netmask/-/netmask-1.0.6.tgz#20297e89d86f6f6400f250d9f4f6b4c1945fcd35"
 
-ng-packagr@2.4.1:
-  version "2.4.1"
-  resolved "https://registry.yarnpkg.com/ng-packagr/-/ng-packagr-2.4.1.tgz#27ab5ad933725a489c5eda7e5656ce5a945c39c2"
+ng-packagr@2.4.2:
+  version "2.4.2"
+  resolved "https://registry.yarnpkg.com/ng-packagr/-/ng-packagr-2.4.2.tgz#e74b744cad9e44aa7ddfdee5901b097527d03d23"
   dependencies:
     "@ngtools/json-schema" "^1.1.0"
     autoprefixer "^7.1.1"
@@ -3999,7 +3999,7 @@ ng-packagr@2.4.1:
     strip-bom "^3.0.0"
     stylus "^0.54.5"
     tar "^4.4.1"
-    uglify-js "^3.0.7"
+    uglify-js "^3.3.20"
     update-notifier "^2.3.0"
 
 node-gyp@^3.3.1:
@@ -6016,7 +6016,7 @@ uglify-js@^2.6:
   optionalDependencies:
     uglify-to-browserify "~1.0.0"
 
-uglify-js@^3.0.7:
+uglify-js@^3.3.20:
   version "3.3.20"
   resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.3.20.tgz#dc8bdee7d454c7d31dddc36f922d170bfcee3a0a"
   dependencies:
