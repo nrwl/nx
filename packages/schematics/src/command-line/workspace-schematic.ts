@@ -20,7 +20,8 @@ import {
   SchematicDescription,
   SchematicEngine,
   Tree,
-  DryRunSink
+  DryRunSink,
+  TypedSchematicContext
 } from '@angular-devkit/schematics';
 import { concat, concatMap, ignoreElements, map } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
@@ -196,6 +197,7 @@ function executeSchematic(
  * for everything else.
  */
 class EngineHostHandlingWorkspaceSchematics implements EngineHost<any, any> {
+  
   readonly toolsHost: FileSystemEngineHost;
   readonly defaultHost: NodeModulesEngineHost;
 
@@ -252,6 +254,10 @@ class EngineHostHandlingWorkspaceSchematics implements EngineHost<any, any> {
       schematic,
       options
     );
+  }
+
+  transformContext(context: TypedSchematicContext<any, any>): void | TypedSchematicContext<any, any> {
+    return context;
   }
 
   listSchematics(collection: any): string[] {
