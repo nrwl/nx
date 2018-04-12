@@ -1,4 +1,4 @@
-import { from } from 'rxjs/observable/from';
+import { from } from 'rxjs';
 import { readAll, readFirst } from '../testing/src/testing-utils';
 
 describe('TestingUtils', () => {

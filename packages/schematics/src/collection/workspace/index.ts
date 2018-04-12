@@ -28,8 +28,7 @@ import {
   resolveUserExistingPrettierConfig,
   DEFAULT_NRWL_PRETTIER_CONFIG
 } from '../../utils/common';
-import { Observable } from 'rxjs/Observable';
-import { fromPromise } from 'rxjs/observable/fromPromise';
+import { Observable, from } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { toFileName } from '../../utils/name-utils';
 import {
@@ -331,7 +330,7 @@ function createAdditionalFiles(options: Schema) {
   return (host: Tree): Observable<Tree> => {
     // if the user does not already have a prettier configuration
     // of any kind, create one
-    return fromPromise(resolveUserExistingPrettierConfig()).pipe(
+    return from(resolveUserExistingPrettierConfig()).pipe(
       tap(resolvedExistingConfig => {
         if (!resolvedExistingConfig) {
           fs.writeFileSync(

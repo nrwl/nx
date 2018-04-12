@@ -29,10 +29,10 @@
   "homepage": "https://github.com/nrwl/nx#readme",
   "schematics": "./src/collection.json",
   "dependencies": {
-    "@ngrx/schematics": "5.2.0",
-    "@schematics/angular": "0.4.6",
+    "@ngrx/schematics": "ngrx/schematics-builds",
+    "@schematics/angular": "angular/schematics-angular-builds",
     "app-root-path": "^2.0.1",
-    "graphviz": "0.0.8",
+    "graphviz": "0.0.8",  
     "npm-run-all": "4.1.2",
     "opn": "^5.3.0",
     "semver": "5.4.1",
@@ -41,6 +41,6 @@
     "yargs-parser": "9.0.2"
   },
   "devDependencies": {
-    "@angular-devkit/schematics": "0.4.6"
+    "@angular-devkit/schematics": "angular/angular-devkit-schematics-builds"
   }
 }
