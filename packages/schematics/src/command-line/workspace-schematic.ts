@@ -200,6 +200,8 @@ class EngineHostHandlingWorkspaceSchematics implements EngineHost<any, any> {
   readonly toolsHost: FileSystemEngineHost;
   readonly defaultHost: NodeModulesEngineHost;
 
+  transformContext(): void {}
+
   constructor(outDir: string) {
     const transforms = validateOptionsWithSchema(
       new CoreSchemaRegistry(standardFormats)
@@ -278,9 +280,6 @@ class EngineHostHandlingWorkspaceSchematics implements EngineHost<any, any> {
 
 function parseOptions(args: string[]): { [k: string]: any } {
   const parsed = yargsParser(args);
-  if (parsed._ && parsed._.length > 1) {
-    parsed.name = parsed._[1];
-  }
   delete parsed._;
   return parsed;
 }

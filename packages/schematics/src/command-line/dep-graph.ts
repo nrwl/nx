@@ -11,6 +11,7 @@ import {
   Dependency,
   DependencyType
 } from './affected-apps';
+import * as yargs from 'yargs';
 
 import { readCliConfig, getProjectNodes } from './shared';
 import * as path from 'path';
@@ -62,11 +63,11 @@ export enum OutputType {
   'dot' = 'dot'
 }
 
-export type UserOptions = {
+export interface UserOptions extends yargs.Arguments {
   file?: string;
   output?: string;
   files?: string;
-};
+}
 
 type ParsedUserOptions = {
   isFilePresent?: boolean;

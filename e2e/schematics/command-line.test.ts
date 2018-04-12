@@ -61,18 +61,14 @@ describe('Command line', () => {
     newApp('app_before');
     runCommand('mv apps/app-before apps/app-after');
 
-    try {
-      runCommand('npm run lint');
-      fail('Boom!');
-    } catch (e) {
-      const errorOutput = e.stderr.toString();
-      expect(errorOutput).toContain(
-        `Cannot find project 'app-before' in 'apps/app-before'`
-      );
-      expect(errorOutput).toContain(
-        `The 'apps/app-after/e2e/app.e2e-spec.ts' file doesn't belong to any project.`
-      );
-    }
+    const stdout = runCommand('npm run lint');
+
+    expect(stdout).toContain(
+      `Cannot find project 'app-before' in 'apps/app-before'`
+    );
+    expect(stdout).toContain(
+      `The 'apps/app-after/e2e/app.e2e-spec.ts' file doesn't belong to any project.`
+    );
   });
 
   it(
@@ -204,46 +200,26 @@ describe('Command line', () => {
     `
       );
 
-      try {
-        // this will group it by lib, so all three files will be "marked"
-        runCommand(
-          'npm run -s format:check -- --files="libs/mylib/index.ts" --libs-and-apps'
-        );
-        fail('boom');
-      } catch (e) {
-        expect(e.stdout.toString()).toContain('libs/mylib/index.ts');
-        expect(e.stdout.toString()).toContain('libs/mylib/src/mylib.module.ts');
-      }
+      let stdout = runCommand(
+        'npm run -s format:check -- --files="libs/mylib/index.ts" --libs-and-apps'
+      );
+      expect(stdout).toContain('libs/mylib/index.ts');
+      expect(stdout).toContain('libs/mylib/src/mylib.module.ts');
 
-      try {
-        // this is a global run
-        runCommand('npm run -s format:check');
-        fail('boom');
-      } catch (e) {
-        expect(e.stdout.toString()).toContain('apps/myapp/src/main.ts');
-        expect(e.stdout.toString()).toContain(
-          'apps/myapp/src/app/app.module.ts'
-        );
-        expect(e.stdout.toString()).toContain(
-          'apps/myapp/src/app/app.component.ts'
-        );
-      }
+      stdout = runCommand('npm run -s format:check');
+      expect(stdout).toContain('apps/myapp/src/main.ts');
+      expect(stdout).toContain('apps/myapp/src/app/app.module.ts');
+      expect(stdout).toContain('apps/myapp/src/app/app.component.ts');
+
       runCommand(
         'npm run format:write -- --files="apps/myapp/src/app/app.module.ts,apps/myapp/src/app/app.component.ts"'
       );
 
-      try {
-        runCommand('npm run -s format:check');
-        fail('boom');
-      } catch (e) {
-        expect(e.stdout.toString()).toContain('apps/myapp/src/main.ts');
-        expect(e.stdout.toString()).not.toContain(
-          'apps/myapp/src/app/app.module.ts'
-        );
-        expect(e.stdout.toString()).not.toContain(
-          'apps/myapp/src/app/app.component.ts'
-        );
-      }
+      stdout = runCommand('npm run -s format:check');
+
+      expect(stdout).toContain('apps/myapp/src/main.ts');
+      expect(stdout).not.toContain('apps/myapp/src/app/app.module.ts');
+      expect(stdout).not.toContain('apps/myapp/src/app/app.component.ts');
 
       runCommand('npm run format:write');
       expect(runCommand('npm run -s format:check')).toEqual('');

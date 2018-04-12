@@ -15,6 +15,6 @@
     "npm-run-all": "4.1.2",
     "semver": "5.4.1",
     "tmp": "0.0.33",
-    "yargs-parser": "9.0.2"
+    "yargs-parser": "10.0.0"
   }
 }
