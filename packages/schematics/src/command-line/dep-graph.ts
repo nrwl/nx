@@ -219,7 +219,11 @@ export function createGraphviz(
         dependencies.forEach((dep: Dependency, i: number) => {
           g.addNode(
             dep.projectName,
-            getNodeProps(config.nodes, projectNode, criticalPath)
+            getNodeProps(
+              config.nodes,
+              projectMap[dep.projectName],
+              criticalPath
+            )
           ); // child node
 
           g.addEdge(
