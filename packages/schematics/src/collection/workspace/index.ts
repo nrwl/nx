@@ -80,21 +80,21 @@ function updatePackageJson() {
     }
 
     packageJson.scripts['affected:apps'] =
-      './node_modules/.bin/nx affected apps';
+      './node_modules/.bin/nx affected:apps';
     packageJson.scripts['affected:build'] =
-      './node_modules/.bin/nx affected build';
-    packageJson.scripts['affected:e2e'] = './node_modules/.bin/nx affected e2e';
+      './node_modules/.bin/nx affected:build';
+    packageJson.scripts['affected:e2e'] = './node_modules/.bin/nx affected:e2e';
 
     packageJson.scripts['affected:dep-graph'] =
-      './node_modules/.bin/nx affected dep-graph';
+      './node_modules/.bin/nx affected:dep-graph';
 
-    packageJson.scripts['format'] = './node_modules/.bin/nx format write';
-    packageJson.scripts['format:write'] = './node_modules/.bin/nx format write';
-    packageJson.scripts['format:check'] = './node_modules/.bin/nx format check';
+    packageJson.scripts['format'] = './node_modules/.bin/nx format:write';
+    packageJson.scripts['format:write'] = './node_modules/.bin/nx format:write';
+    packageJson.scripts['format:check'] = './node_modules/.bin/nx format:check';
 
     packageJson.scripts['update'] = './node_modules/.bin/nx update';
-    packageJson.scripts['update:check'] = './node_modules/.bin/nx update check';
-    packageJson.scripts['update:skip'] = './node_modules/.bin/nx update skip';
+    packageJson.scripts['update:check'] = './node_modules/.bin/nx update:check';
+    packageJson.scripts['update:skip'] = './node_modules/.bin/nx update:skip';
 
     packageJson.scripts['lint'] = './node_modules/.bin/nx lint && ng lint';
 

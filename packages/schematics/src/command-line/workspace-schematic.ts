@@ -200,6 +200,8 @@ class EngineHostHandlingWorkspaceSchematics implements EngineHost<any, any> {
   readonly toolsHost: FileSystemEngineHost;
   readonly defaultHost: NodeModulesEngineHost;
 
+  transformContext(): void {}
+
   constructor(outDir: string) {
     const transforms = validateOptionsWithSchema(
       new CoreSchemaRegistry(standardFormats)

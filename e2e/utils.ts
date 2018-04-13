@@ -42,7 +42,7 @@ export function newBazelProject(): void {
 export function createNxWorkspace(command: string): string {
   cleanup();
   return execSync(
-    `node ../node_modules/@nrwl/schematics/bin/create-nx-workspace.js --yarn ${command}`,
+    `node ../node_modules/@nrwl/schematics/bin/create-nx-workspace.js ${command}`,
     { cwd: `./tmp` }
   ).toString();
 }
@@ -54,7 +54,9 @@ export function copyMissingPackages(): void {
     '@nrwl',
     'angular',
     '@angular/upgrade',
-    'npm-run-all'
+    'npm-run-all',
+    'yargs',
+    'yargs-parser'
   ];
   modulesToCopy.forEach(m => copyNodeModule(projectName, m));
 }
@@ -102,10 +104,14 @@ export function newModule(name: string): string {
 }
 
 export function runCommand(command: string): string {
-  return execSync(command, {
-    cwd: `./tmp/${projectName}`,
-    stdio: ['pipe', 'pipe', 'pipe']
-  }).toString();
+  try {
+    return execSync(command, {
+      cwd: `./tmp/${projectName}`,
+      stdio: ['pipe', 'pipe', 'pipe']
+    }).toString();
+  } catch (e) {
+    return e.stdout.toString() + e.stderr.toString();
+  }
 }
 
 export function updateFile(f: string, content: string): void {

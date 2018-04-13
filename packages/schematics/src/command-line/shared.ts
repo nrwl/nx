@@ -31,8 +31,12 @@ export function parseFiles(
   const dashDashFiles = named.filter(a => a.startsWith('--files='))[0];
   const uncommitted = named.some(a => a === '--uncommitted');
   const untracked = named.some(a => a === '--untracked');
-  const base = named.filter(a => a === '--base')[0];
-  const head = named.filter(a => a === '--head')[0];
+  const base = named
+    .filter(a => a.startsWith('--base'))
+    .map(a => a.substring(7))[0];
+  const head = named
+    .filter(a => a.startsWith('--head'))
+    .map(a => a.substring(7))[0];
 
   if (dashDashFiles) {
     named.splice(named.indexOf(dashDashFiles), 1);
@@ -82,7 +86,9 @@ function getUntrackedFiles(): string[] {
 }
 
 function getFilesUsingBaseAndHead(base: string, head: string): string[] {
-  const mergeBase = execSync(`git merge-base ${base} ${head}`);
+  const mergeBase = execSync(`git merge-base ${base} ${head}`)
+    .toString()
+    .trim();
   return parseGitOutput(`git diff --name-only ${mergeBase} ${head}`);
 }
 
