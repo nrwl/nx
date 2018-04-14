@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+##################################################
+# This shell script is executed by nx-release.js #
+##################################################
 
 SCHEMATICS_VERSION=$1
 NX_VERSION=$2

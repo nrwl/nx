@@ -9,15 +9,12 @@
     "e2e": "./scripts/e2e.sh",
     "format": "prettier \"{packages,e2e}/**/*.ts\" --write",
     "linknpm": "./scripts/link.sh",
-    "package": "./scripts/package.sh",
-    "release": "./scripts/release.sh",
+    "nx-release": "./scripts/nx-release.js",
     "copy": "./scripts/copy.sh",
     "test:schematics": "yarn linknpm fast && ./scripts/test_schematics.sh",
     "test:nx": "yarn linknpm fast && ./scripts/test_nx.sh",
-    "test":
-      "yarn linknpm fast && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
-    "checkformat": "prettier \"{packages,e2e}/**/*.ts\" --list-different",
-    "publish_npm": "./scripts/publish.sh"
+    "test": "yarn linknpm fast && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
+    "checkformat": "prettier \"{packages,e2e}/**/*.ts\" --list-different"
   },
   "dependencies": {
     "jasmine-marbles": "0.2.0"
@@ -44,7 +41,9 @@
     "@types/yargs": "^11.0.0",
     "angular": "1.6.6",
     "app-root-path": "^2.0.1",
+    "conventional-changelog-cli": "^1.3.21",
     "cosmiconfig": "^4.0.0",
+    "fs-extra": "5.0.0",
     "graphviz": "^0.0.8",
     "husky": "^0.14.3",
     "jasmine-core": "~2.8.0",
@@ -59,6 +58,7 @@
     "opn": "^5.3.0",
     "precise-commits": "1.0.0",
     "prettier": "1.10.2",
+    "release-it": "^7.4.0",
     "rxjs": "^5.5.6",
     "semver": "5.4.1",
     "strip-json-comments": "2.0.1",
@@ -66,14 +66,16 @@
     "tslint": "5.9.1",
     "typescript": "2.6.2",
     "viz.js": "^1.8.1",
-    "yargs-parser": "10.0.0",
     "yargs": "^11.0.0",
-    "zone.js": "^0.8.19",
-    "fs-extra": "5.0.0"
+    "yargs-parser": "10.0.0",
+    "zone.js": "^0.8.19"
   },
   "author": "Victor Savkin",
   "license": "MIT",
   "jest": {
-    "modulePathIgnorePatterns": ["tmp", "files"]
+    "modulePathIgnorePatterns": [
+      "tmp",
+      "files"
+    ]
   }
 }
