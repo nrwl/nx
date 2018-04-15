@@ -64,6 +64,8 @@ describe('ngrx', () => {
 
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
 
+    expect(appModule).toContain(`import { NxModule } from '@nrwl/nx';`);
+    expect(appModule).toContain('NxModule.forRoot');
     expect(appModule).toContain('StoreModule.forRoot');
     expect(appModule).toContain('EffectsModule.forRoot');
     expect(appModule).toContain('!environment.production ? [storeFreeze] : []');

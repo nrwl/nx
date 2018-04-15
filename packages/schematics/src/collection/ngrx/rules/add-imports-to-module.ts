@@ -52,6 +52,7 @@ export function addImportsToModule(context: RequestContext): Rule {
     ${storeMetaReducers}
   }
 )`;
+    const nxModule = 'NxModule.forRoot()';
     const storeForEmptyRoot = `StoreModule.forRoot({},{ ${storeMetaReducers} })`;
     const effectsForRoot = `EffectsModule.forRoot([${effectsName}])`;
     const effectsForEmptyRoot = `EffectsModule.forRoot([])`;
@@ -61,6 +62,7 @@ export function addImportsToModule(context: RequestContext): Rule {
     const storeRouterModule = 'StoreRouterConnectingModule';
 
     // InsertImport [symbol,source] value pairs
+    const nxModuleImport = ['NxModule', '@nrwl/nx'];
     const storeModule = ['StoreModule', '@ngrx/store'];
     const effectsModule = ['EffectsModule', '@ngrx/effects'];
     const storeDevTools = ['StoreDevtoolsModule', '@ngrx/store-devtools'];
@@ -70,6 +72,7 @@ export function addImportsToModule(context: RequestContext): Rule {
 
     // this is just a heuristic
     const hasRouter = sourceText.indexOf('RouterModule') > -1;
+    const hasNxModule = sourceText.includes('NxModule.forRoot()');
 
     if (context.options.onlyEmptyRoot) {
       insert(host, modulePath, [
@@ -98,10 +101,14 @@ export function addImportsToModule(context: RequestContext): Rule {
       if (context.options.root) {
         insert(host, modulePath, [
           ...common,
+          ...(!hasNxModule ? [addImport.apply(this, nxModuleImport)] : []),
           addImport.apply(this, storeDevTools),
           addImport.apply(this, environment),
           ...(hasRouter ? [addImport.apply(this, storeRouter)] : []),
           addImport.apply(this, storeFreeze),
+          ...(!hasNxModule
+            ? addImportToModule(source, modulePath, nxModule)
+            : []),
           ...addImportToModule(source, modulePath, storeForRoot),
           ...addImportToModule(source, modulePath, effectsForRoot),
           ...addImportToModule(source, modulePath, devTools),
