@@ -120,7 +120,6 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
 
 function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
-    .demandOption(['file'])
     .describe('file', 'output file (e.g. --file=.vis/output.json)')
     .choices('output', [OutputType.json, OutputType.dot, OutputType.html]);
 }
