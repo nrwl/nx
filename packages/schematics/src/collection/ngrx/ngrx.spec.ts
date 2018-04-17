@@ -269,6 +269,47 @@ describe('ngrx', () => {
     });
   });
 
+  it('should produce proper specs for the ngrx reducer', () => {
+    const appConfig = getAppConfig();
+    const tree = buildNgrxTree(appConfig);
+
+    const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+    const contents = tree.readContent(`${statePath}/user.reducer.spec.ts`);
+
+    expect(contents).toContain(`describe('userReducer', () => {`);
+    expect(contents).toContain(
+      `const action: UserLoaded = new UserLoaded({});`
+    );
+    expect(contents).toContain(
+      `const actual = userReducer(initialState, action);`
+    );
+  });
+
+  it('should produce proper specs for the ngrx reducer for a name with a dash', () => {
+    const appConfig = getAppConfig();
+    const tree = schematicRunner.runSchematic(
+      'ngrx',
+      {
+        name: 'super-user',
+        module: appConfig.appModule
+      },
+      appTree
+    );
+
+    const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+    const contents = tree.readContent(
+      `${statePath}/super-user.reducer.spec.ts`
+    );
+
+    expect(contents).toContain(`describe('superUserReducer', () => {`);
+    expect(contents).toContain(
+      `const action: SuperUserLoaded = new SuperUserLoaded({});`
+    );
+    expect(contents).toContain(
+      `const actual = superUserReducer(initialState, action);`
+    );
+  });
+
   it('should enhance the ngrx effects', () => {
     const appConfig = getAppConfig();
     const tree = buildNgrxTree(appConfig);

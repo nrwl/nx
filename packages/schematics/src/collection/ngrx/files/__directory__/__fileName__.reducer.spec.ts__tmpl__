@@ -4,7 +4,7 @@ import { <%= propertyName %>Reducer, initialState } from './<%= fileName %>.redu
 describe('<%= propertyName %>Reducer', () => {
   it('should work', () => {
     const action: <%= className %>Loaded = new <%= className %>Loaded({});
-    const actual = <%= fileName %>Reducer(initialState, action);
+    const actual = <%= propertyName %>Reducer(initialState, action);
     expect(actual).toEqual({});
   });
 });
