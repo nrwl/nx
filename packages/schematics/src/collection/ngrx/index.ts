@@ -44,7 +44,7 @@ export default function generateNgrxCollection(_options: Schema): Rule {
       ? []
       : [
           branchAndMerge(generateNgrxFiles(context)),
-          branchAndMerge(generateNxFiles(context)),
+          generateNxFiles(context),
           updateNgrxActions(context),
           updateNgrxReducers(context),
           updateNgrxEffects(context)
