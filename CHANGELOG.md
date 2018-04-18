@@ -2,6 +2,17 @@
 
 The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
 
+# 1.0.0
+
+## Fixes
+
+* **schematics:** dep-graph visual style for affected lib ([8ca8548](https://github.com/nrwl/nx/commit/8ca8548))
+* **schematics:** remove strict check for "file" option for dep-graph ([6aa6702](https://github.com/nrwl/nx/commit/6aa6702))
+* **schematics:** add nxmodule forroot if not existing when generating ngrx for root ([e748e81](https://github.com/nrwl/nx/commit/e748e81))
+* **schematics:** don't leak file descriptor in shared.ts/mtime ([aa1ff78](https://github.com/nrwl/nx/commit/aa1ff78)), closes [#403](https://github.com/nrwl/nx/issues/403)
+* **schematics:** ignore errors when the tools directory already exists ([2a377fe](https://github.com/nrwl/nx/commit/2a377fe))
+
+
 # 0.11.0
 
 ## Features
