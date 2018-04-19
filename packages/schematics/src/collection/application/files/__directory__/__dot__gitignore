@@ -36,6 +36,7 @@ testem.log
 # e2e
 /e2e/*.js
 /e2e/*.map
+/e2e/**/current-screenshots/
 
 # System Files
 .DS_Store

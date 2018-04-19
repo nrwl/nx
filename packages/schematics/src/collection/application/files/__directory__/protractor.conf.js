@@ -22,6 +22,16 @@ exports.config = {
     print: function() {}
   },
   onPrepare() {
+    const protractorImageComparison = require('protractor-image-comparison');
+    browser.protractorImageComparison = new protractorImageComparison({
+      baselineFolder: appDir + '/e2e/baseline-screenshots',
+      screenshotPath: appDir + '/e2e/current-screenshots',
+      autoSaveBaseline: true,
+      disableCSSAnimation: true,
+      hideScrollBars: true,
+      ignoreAntialiasing: true,
+      autoSaveBaseline: true
+    });
     require('ts-node').register({
       project: appDir + '/e2e/tsconfig.e2e.json'
     });
