@@ -7,14 +7,15 @@
   "scripts": {
     "build": "./scripts/build.sh",
     "e2e": "./scripts/e2e.sh",
-    "format": "prettier \"{packages,e2e}/**/*.ts\" --write",
+    "format": "precise-commits --whitelist=\"{packages,e2e}/**/*.ts\"",
     "linknpm": "./scripts/link.sh",
     "nx-release": "./scripts/nx-release.js",
     "copy": "./scripts/copy.sh",
     "test:schematics": "yarn linknpm fast && ./scripts/test_schematics.sh",
     "test:nx": "yarn linknpm fast && ./scripts/test_nx.sh",
     "test": "yarn linknpm fast && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
-    "checkformat": "prettier \"{packages,e2e}/**/*.ts\" --list-different"
+    "checkformat": "yarn format --check-only",
+    "precommit": "yarn checkformat"
   },
   "dependencies": {
     "jasmine-marbles": "0.2.0"
@@ -56,7 +57,7 @@
     "ng-packagr": "2.2.0",
     "npm-run-all": "4.1.2",
     "opn": "^5.3.0",
-    "precise-commits": "1.0.0",
+    "precise-commits": "1.0.2",
     "prettier": "1.10.2",
     "release-it": "^7.4.0",
     "rxjs": "^5.5.6",
