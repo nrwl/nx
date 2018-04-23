@@ -32,7 +32,7 @@ export interface OptimisticUpdateOpts<T, A> {
 }
 
 /**
- * See {@link DataPersistence.navigation} for more information.
+ * See {@link DataPersistence.fetch} for more information.
  */
 export interface FetchOpts<T, A> {
   id?(a: A, state?: T): any;
