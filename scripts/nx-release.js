@@ -78,7 +78,7 @@ if (!parsedVersion.isValid) {
 }
 
 console.log('Executing build script:');
-const buildCommand = './scripts/package.sh';
+const buildCommand = `./scripts/package.sh ${parsedVersion.version} ${parsedVersion.version}`;
 console.log(`> ${buildCommand}`);
 childProcess.execSync(buildCommand, {
   stdio: [0, 1, 2]
