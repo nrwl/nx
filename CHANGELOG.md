@@ -2,6 +2,12 @@
 
 The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
 
+# 1.0.1
+
+## Fixes
+
+* **schematic:** add a migration to add tsconfig.tools.json ([c18baf0](https://github.com/nrwl/nx/commit/c18baf0))
+
 # 1.0.0
 
 ## Fixes
