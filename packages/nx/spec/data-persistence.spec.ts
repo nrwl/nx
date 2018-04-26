@@ -6,11 +6,8 @@ import { Actions, Effect, EffectsModule } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { StoreRouterConnectingModule } from '@ngrx/router-store';
 import { Store, StoreModule } from '@ngrx/store';
-import { Observable } from 'rxjs/Observable';
-import { of } from 'rxjs/observable/of';
-import { _throw } from 'rxjs/observable/throw';
+import { Observable, of, Subject, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
-import { Subject } from 'rxjs/Subject';
 
 import { DataPersistence } from '../index';
 import { NxModule } from '../src/nx.module';
@@ -187,7 +184,7 @@ describe('DataPersistence', () => {
         loadTodo = this.s.navigation(TodoComponent, {
           run: (a, state) => {
             if (a.params['id'] === '123') {
-              return _throw('boom');
+              return throwError('boom');
             } else {
               return {
                 type: 'TODO_LOADED',
@@ -445,7 +442,7 @@ describe('DataPersistence', () => {
         @Effect()
         loadTodo = this.s.pessimisticUpdate<UpdateTodo>('UPDATE_TODO', {
           run: (a, state) => {
-            return _throw('boom');
+            return throwError('boom');
           },
 
           onError: (a, e: any) => ({

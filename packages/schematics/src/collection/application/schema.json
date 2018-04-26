@@ -1,61 +1,47 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "workspace",
-  "title": "Create an empty workspace",
+  "id": "SchematicsNxApp",
+  "title": "Nx Application Options Schema",
   "type": "object",
   "properties": {
-    "name": {
-      "type": "string",
-      "description": "Workspace name"
-    },
     "directory": {
+      "description": "The directory of the new application.",
       "type": "string",
-      "description": "The directory name to create the app in.",
-      "alias": "dir"
+      "visible": false
     },
-    "npmScope": {
+    "name": {
+      "description": "The name of the application.",
       "type": "string",
-      "description": "Npm scope for importing libs."
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
     },
-    "skipInstall": {
-      "description": "Skip installing dependency packages.",
-      "type": "boolean",
-      "default": false
-    },
-    "skipGit": {
-      "description": "Skip initializing a git repository.",
+    "inlineStyle": {
+      "description": "Specifies if the style will be in the ts file.",
       "type": "boolean",
       "default": false,
-      "alias": "sg"
+      "alias": "s"
     },
-    "commit": {
-      "description": "Initial repository commit information.",
-      "default": null,
-      "oneOf": [
-        { "type": "null" },
-        {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string"
-            },
-            "email": {
-              "type": "string",
-              "format": "email"
-            },
-            "message": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "name",
-            "email"
-          ]
-        }
-      ]
+    "inlineTemplate": {
+      "description": "Specifies if the template will be in the ts file.",
+      "type": "boolean",
+      "default": false,
+      "alias": "t"
+    },
+    "viewEncapsulation": {
+      "description": "Specifies the view encapsulation strategy.",
+      "enum": ["Emulated", "Native", "None"],
+      "type": "string"
+    },
+    "routing": {
+      "type": "boolean",
+      "description": "Generates a routing module.",
+      "default": false
     },
     "prefix": {
       "type": "string",
+      "format": "html-selector",
       "description": "The prefix to apply to generated selectors.",
       "default": "app",
       "alias": "p"
@@ -65,14 +51,21 @@
       "type": "string",
       "default": "css"
     },
-    "minimal": {
-      "description": "Should create a minimal app.",
+    "skipTests": {
+      "description": "Skip creating spec files.",
       "type": "boolean",
-      "default": false
+      "default": false,
+      "alias": "S"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to package.json."
+    },
+    "tags": {
+      "type": "string",
+      "description": "Add tags to the application (used for linting)"
     }
   },
-  "required": [
-    "name",
-    "directory"
-  ]
+  "required": []
 }

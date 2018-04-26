@@ -2,9 +2,13 @@ import * as path from 'path';
 import * as Lint from 'tslint';
 import { IOptions } from 'tslint';
 import * as ts from 'typescript';
-import { readFileSync } from 'fs';
 import * as appRoot from 'app-root-path';
-import { getProjectNodes, readDependencies } from '../command-line/shared';
+import {
+  getProjectNodes,
+  readAngularJson,
+  readDependencies,
+  readNxJson
+} from '../command-line/shared';
 import {
   Dependency,
   DependencyType,
@@ -24,9 +28,10 @@ export class Rule extends Lint.Rules.AbstractRule {
     if (!projectPath) {
       this.projectPath = appRoot.path;
       if (!(global as any).projectNodes) {
-        const cliConfig = this.readCliConfig(this.projectPath);
-        (global as any).npmScope = cliConfig.project.npmScope;
-        (global as any).projectNodes = getProjectNodes(cliConfig);
+        const angularJson = readAngularJson();
+        const nxJson = readNxJson();
+        (global as any).npmScope = nxJson.npmScope;
+        (global as any).projectNodes = getProjectNodes(angularJson, nxJson);
         (global as any).deps = readDependencies(
           (global as any).npmScope,
           (global as any).projectNodes
@@ -48,12 +53,6 @@ export class Rule extends Lint.Rules.AbstractRule {
         this.projectNodes,
         this.deps
       )
-    );
-  }
-
-  private readCliConfig(projectPath: string): any {
-    return JSON.parse(
-      readFileSync(`${projectPath}/.angular-cli.json`, 'UTF-8')
     );
   }
 }
@@ -144,7 +143,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       }
 
       // cannot import apps
-      if (targetProject.type === ProjectType.app) {
+      if (targetProject.type !== ProjectType.lib) {
         this.addFailureAt(
           node.getStart(),
           node.getWidth(),
@@ -284,7 +283,9 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
   private findTargetProject(targetFile: string) {
     let targetProject = this.findProjectUsingFile(targetFile);
     if (!targetProject) {
-      targetProject = this.findProjectUsingFile(path.join(targetFile, 'index'));
+      targetProject = this.findProjectUsingFile(
+        path.join(targetFile, 'src', 'index')
+      );
     }
     return targetProject;
   }

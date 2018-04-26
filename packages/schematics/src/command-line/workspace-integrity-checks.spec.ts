@@ -18,12 +18,12 @@ describe('WorkspaceIntegrityChecks', () => {
           {
             name: 'project1',
             type: ProjectType.lib,
-            root: 'libs/project1/src',
+            root: 'libs/project1',
             tags: [],
-            files: ['libs/project1/index.ts']
+            files: ['libs/project1/src/index.ts']
           }
         ],
-        ['libs/project1/index.ts'],
+        ['libs/project1/src/index.ts'],
         packageJson
       );
       expect(c.run().length).toEqual(0);
@@ -35,19 +35,19 @@ describe('WorkspaceIntegrityChecks', () => {
           {
             name: 'project1',
             type: ProjectType.lib,
-            root: 'libs/project1/src',
+            root: 'libs/project1',
             tags: [],
             files: []
           },
           {
             name: 'project2',
             type: ProjectType.lib,
-            root: 'libs/project2/src',
+            root: 'libs/project2',
             tags: [],
-            files: ['libs/project2/index.ts']
+            files: ['libs/project2/src/index.ts']
           }
         ],
-        ['libs/project2/index.ts'],
+        ['libs/project2/src/index.ts'],
         packageJson
       );
 
@@ -64,19 +64,19 @@ describe('WorkspaceIntegrityChecks', () => {
           {
             name: 'project1',
             type: ProjectType.lib,
-            root: 'libs/project1/src',
+            root: 'libs/project1',
             tags: [],
-            files: ['libs/project1/index.ts']
+            files: ['libs/project1/src/index.ts']
           }
         ],
-        ['libs/project1/index.ts', 'libs/project2/index.ts'],
+        ['libs/project1/src/index.ts', 'libs/project2/src/index.ts'],
         packageJson
       );
 
       const errors = c.run();
       expect(errors.length).toEqual(1);
       expect(errors[0].errors[0]).toEqual(
-        `The 'libs/project2/index.ts' file doesn't belong to any project.`
+        `The 'libs/project2/src/index.ts' file doesn't belong to any project.`
       );
     });
   });

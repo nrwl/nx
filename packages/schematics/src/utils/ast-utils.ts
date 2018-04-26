@@ -429,7 +429,7 @@ function getListOfRoutes(source: ts.SourceFile): ts.NodeArray<ts.Expression> {
     const a = imports.initializer as ts.ArrayLiteralExpression;
 
     for (let e of a.elements) {
-      if (e.kind === 181) {
+      if (e.kind === ts.SyntaxKind.CallExpression) {
         const ee = e as ts.CallExpression;
         const text = ee.expression.getText(source);
         if (
@@ -575,6 +575,7 @@ export function updateJsonInTree<T = any, O = T>(
   };
 }
 
+// TODO DELETE THIS
 /**
  * This method is specifically for getting the .angular-cli.json data from a Tree
  * @param host The host tree
@@ -583,6 +584,7 @@ export function getAngularCliConfig(host: Tree) {
   return readJsonInTree(host, '.angular-cli.json');
 }
 
+// TODO DELETE THIS
 export function getAppConfig(host: Tree, name: string): any {
   const angularCliJson = getAngularCliConfig(host);
   const apps = angularCliJson.apps;

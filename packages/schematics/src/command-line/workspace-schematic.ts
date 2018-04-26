@@ -22,9 +22,8 @@ import {
   Tree,
   DryRunSink
 } from '@angular-devkit/schematics';
-import { of } from 'rxjs/observable/of';
+import { of, Observable } from 'rxjs';
 import { concat, concatMap, ignoreElements, map } from 'rxjs/operators';
-import { Observable } from 'rxjs/Observable';
 import { Url } from 'url';
 
 import * as yargsParser from 'yargs-parser';
@@ -166,19 +165,23 @@ function executeSchematic(
   const fsSink = new FileSystemSink(rootDirectory, true);
 
   schematic
-    .call(options, host)
+    .call(options, host as any)
     .pipe(
-      map((tree: Tree) => Tree.optimize(tree)),
-      concatMap((tree: Tree) =>
-        dryRunSink.commit(tree).pipe(ignoreElements(), concat(of(tree)))
-      ),
+      map((tree: any) => Tree.optimize(tree)) as any,
+      concatMap((tree: any) =>
+        dryRunSink
+          .commit(tree)
+          .pipe(ignoreElements() as any, concat(of(tree)) as any)
+      ) as any,
       concatMap(
-        (tree: Tree) =>
+        (tree: any) =>
           error
             ? of(tree)
-            : fsSink.commit(tree).pipe(ignoreElements(), concat(of(tree)))
-      ),
-      concatMap(() => (error ? [] : engine.executePostTasks()))
+            : fsSink
+                .commit(tree)
+                .pipe(ignoreElements() as any, concat(of(tree)) as any)
+      ) as any,
+      concatMap(() => (error ? [] : engine.executePostTasks())) as any
     )
     .subscribe(
       () => {},
@@ -247,10 +250,10 @@ class EngineHostHandlingWorkspaceSchematics implements EngineHost<any, any> {
     );
   }
 
-  transformOptions<OptionT extends object, ResultT extends object>(
+  transformOptions<OptionT extends object>(
     schematic: SchematicDescription<any, any>,
     options: OptionT
-  ): Observable<ResultT> {
+  ): any {
     return this.hostFor(schematic.collection.name).transformOptions(
       schematic,
       options
@@ -265,7 +268,7 @@ class EngineHostHandlingWorkspaceSchematics implements EngineHost<any, any> {
     return this.hostFor(collection.name).listSchematicNames(collection);
   }
 
-  createTaskExecutor(name: string): Observable<any> {
+  createTaskExecutor(name: string): any {
     return this.defaultHost.createTaskExecutor(name);
   }
 

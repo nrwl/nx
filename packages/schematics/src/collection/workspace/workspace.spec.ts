@@ -2,7 +2,7 @@ import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
 
-describe('workspace', () => {
+xdescribe('workspace', () => {
   const schematicRunner = new SchematicTestRunner(
     '@nrwl/schematics',
     path.join(__dirname, '../../collection.json')

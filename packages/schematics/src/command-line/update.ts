@@ -139,9 +139,11 @@ function run(latestMigration: string, migrations: MigrationName[]): void {
 }
 
 function updateLatestMigration(migrations: MigrationName[]): void {
-  // we must reread .angular-cli.json because some of the migrations could have modified it
-  updateJsonFile('.angular-cli.json', angularCliJson => {
-    angularCliJson.project.latestMigration =
-      migrations[migrations.length - 1].name;
-  });
+  try {
+    // we must reread .angular-cli.json because some of the migrations could have modified it
+    updateJsonFile('.angular-cli.json', angularCliJson => {
+      angularCliJson.project.latestMigration =
+        migrations[migrations.length - 1].name;
+    });
+  } catch (e) {}
 }

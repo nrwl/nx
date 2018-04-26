@@ -1,43 +1,34 @@
-import * as yargsParser from 'yargs-parser';
+export function getWorkspacePath(host) {
+  const possibleFiles = ['/angular.json', '/.angular.json'];
+  return possibleFiles.filter(path => host.exists(path))[0];
+}
 
-import { readJsonFile } from './fileutils';
+export function getNpmScope(host) {
+  return 'proj';
+}
 
-export function getAppDirectoryUsingCliConfig() {
-  const cli = readJsonFile(process.cwd() + '/.angular-cli.json');
-
-  const appName = getAppName();
-
-  if (appName) {
-    const app = cli.apps.find(a => a.name === appName);
-    if (!app) {
-      console.error(`Cannot find app '${appName}'.`);
-      process.exit(1);
-    } else if (app.root.startsWith('libs')) {
-      console.error(`Cannot run e2e tests for a library.`);
-      process.exit(1);
+export function replaceAppNameWithPath(
+  node: any,
+  appName: string,
+  root: string
+): any {
+  if (typeof node === 'string') {
+    if (node.indexOf(appName) > -1 && node.indexOf(`${appName}:`) === -1) {
+      const r = node.replace(appName, root);
+      return r.startsWith('/apps') || r.startsWith('/libs')
+        ? r.substring(1)
+        : r;
     } else {
-      return `apps/${appName}`;
+      return node;
     }
+  } else if (Array.isArray(node)) {
+    return node.map(j => replaceAppNameWithPath(j, appName, root));
+  } else if (typeof node === 'object' && node) {
+    return Object.keys(node).reduce(
+      (m, c) => ((m[c] = replaceAppNameWithPath(node[c], appName, root)), m),
+      {} as any
+    );
   } else {
-    console.error(`Please provide the app name using --app or -a.`);
-    process.exit(1);
+    return node;
   }
-}
-
-export function makeSureNoAppIsSelected() {
-  if (getAppName()) {
-    console.error('Nx only supports running unit tests for all apps and libs.');
-    console.error('You cannot use -a or --app.');
-    console.error('Use fdescribe or fit to select a subset of tests to run.');
-    process.exit(1);
-  }
-}
-
-function getAppName() {
-  return yargsParser(process.argv, {
-    alias: {
-      app: ['a']
-    },
-    string: ['app']
-  }).app;
 }

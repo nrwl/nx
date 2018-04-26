@@ -6,10 +6,13 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "Schematic name"
+      "description": "Schematic name",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
     }
   },
   "required": [
-    "name"
   ]
 }

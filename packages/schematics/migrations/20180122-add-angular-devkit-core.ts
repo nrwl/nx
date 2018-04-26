@@ -1,5 +1,4 @@
 import { updateJsonFile } from '../src/utils/fileutils';
-import { devKitCoreVersion } from '../src/lib-versions';
 
 export default {
   description: 'Add @angular-devkit/core as a dev dependency',
@@ -7,7 +6,7 @@ export default {
     updateJsonFile('package.json', json => {
       json.devDependencies = {
         ...json.devDependencies,
-        ['@angular-devkit/core']: devKitCoreVersion
+        ['@angular-devkit/core']: '^0.0.29'
       };
     });
   }

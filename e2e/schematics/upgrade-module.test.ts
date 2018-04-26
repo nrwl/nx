@@ -1,6 +1,6 @@
 import { newApp, newProject, runCLI, updateFile } from '../utils';
 
-describe('Upgrade', () => {
+xdescribe('Upgrade', () => {
   it(
     'should generate an UpgradeModule setup',
     () => {

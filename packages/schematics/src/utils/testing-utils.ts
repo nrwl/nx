@@ -12,8 +12,16 @@ export function getAppConfig(): AppConfig {
 }
 
 export function createEmptyWorkspace(tree: Tree): Tree {
-  tree.create('/.angular-cli.json', JSON.stringify({}));
+  tree.create(
+    '/angular.json',
+    JSON.stringify({ projects: {}, newProjectRoot: '' })
+  );
   tree.create('/package.json', JSON.stringify({}));
+  tree.create('/nx.json', JSON.stringify({ npmScope: 'proj', projects: {} }));
+  tree.create(
+    '/tsconfig.json',
+    JSON.stringify({ compilerOptions: { paths: {} } })
+  );
   tree.create(
     '/tslint.json',
     JSON.stringify({
@@ -77,33 +85,32 @@ export function createApp(
   `
   );
   tree.create(
-    `/apps/${appName}/src/tsconfig.app.json`,
+    `/apps/${appName}/tsconfig.app.json`,
     JSON.stringify({
       include: ['**/*.ts']
     })
   );
   tree.create(
-    `/apps/${appName}/e2e/tsconfig.e2e.json`,
+    `/apps/${appName}-e2e/tsconfig.e2e.json`,
     JSON.stringify({
       include: ['../**/*.ts']
     })
   );
-  tree.overwrite(
-    '/.angular-cli.json',
-    JSON.stringify({
-      project: {
-        name: 'proj',
-        npmScope: 'proj'
-      },
-      apps: [
-        {
-          name: appName,
-          root: `apps/${appName}/src`,
-          main: 'main.ts',
-          index: 'index.html'
-        }
-      ]
-    })
-  );
+  // tree.overwrite(
+  //   '/angular.json',
+  //   JSON.stringify({
+  //     projects: {
+  //
+  //     },
+  //     apps: [
+  //       {
+  //         name: appName,
+  //         root: `apps/${appName}/src`,
+  //         main: 'main.ts',
+  //         index: 'index.html'
+  //       }
+  //     ]
+  //   })
+  // );
   return tree;
 }

@@ -1,11 +1,12 @@
 export interface Schema {
   name: string;
-  directory: string;
-  npmScope?: string;
+  inlineStyle?: boolean;
+  inlineTemplate?: boolean;
+  viewEncapsulation?: 'Emulated' | 'Native' | 'None';
+  routing?: boolean;
   prefix?: string;
   style?: string;
-  minimal?: boolean;
-  skipInstall?: boolean;
-  commit?: { name: string; email: string; message?: string };
-  skipGit?: boolean;
+  skipTests?: boolean;
+  directory?: string;
+  tags?: string;
 }

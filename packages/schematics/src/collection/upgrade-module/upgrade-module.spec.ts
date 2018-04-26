@@ -5,7 +5,7 @@ import { createApp, createEmptyWorkspace } from '../../utils/testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
 import { readJsonInTree } from '../../utils/ast-utils';
 
-describe('upgrade-module', () => {
+xdescribe('upgrade-module', () => {
   const schematicRunner = new SchematicTestRunner(
     '@nrwl/schematics',
     path.join(__dirname, '../../collection.json')
