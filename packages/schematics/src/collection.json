@@ -9,21 +9,23 @@
       "description": "Convert an existing CLI project into an Nx Workspace"
     },
 
-    "application": {
-      "factory": "./collection/application",
-      "schema": "./collection/application/schema.json",
+    "ng-new": {
+      "factory": "./collection/ng-new",
+      "schema": "./collection/ng-new/schema.json",
       "description": "Create an empty workspace"
     },
 
-    "app": {
-      "factory": "./collection/app",
-      "schema": "./collection/app/schema.json",
+    "application": {
+      "factory": "./collection/application",
+      "schema": "./collection/application/schema.json",
+      "aliases": ["app"],
       "description": "Create an application"
     },
 
-    "lib": {
-      "factory": "./collection/lib",
-      "schema": "./collection/lib/schema.json",
+    "library": {
+      "factory": "./collection/library",
+      "schema": "./collection/library/schema.json",
+      "aliases": ["lib"],
       "description": "Create a library"
     },
 

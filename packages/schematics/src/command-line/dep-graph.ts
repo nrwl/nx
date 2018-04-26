@@ -13,7 +13,7 @@ import {
 } from './affected-apps';
 import * as yargs from 'yargs';
 
-import { readCliConfig, getProjectNodes } from './shared';
+import { getProjectNodes, readAngularJson, readNxJson } from './shared';
 import * as path from 'path';
 import { tmpNameSync } from 'tmp';
 
@@ -108,6 +108,19 @@ export const graphvizConfig: GraphvizConfig = {
     }
   ],
   nodes: {
+    [ProjectType.e2e]: {
+      [NodeEdgeVariant.default]: {
+        fontname: 'Arial',
+        fontsize: 14,
+        shape: 'box'
+      },
+      [NodeEdgeVariant.highlighted]: {
+        fontname: 'Arial',
+        fontsize: 14,
+        shape: 'box',
+        color: '#FF0033'
+      }
+    },
     [ProjectType.app]: {
       [NodeEdgeVariant.default]: {
         fontname: 'Arial',
@@ -267,9 +280,10 @@ function applyHTMLTemplate(svg: string) {
 }
 
 function generateGraphJson(criticalPath?: string[]): JSONOutput {
-  const config = readCliConfig();
-  const npmScope = config.project.npmScope;
-  const projects: ProjectNode[] = getProjectNodes(config);
+  const angularJson = readAngularJson();
+  const nxJson = readNxJson();
+  const npmScope = nxJson.npmScope;
+  const projects: ProjectNode[] = getProjectNodes(angularJson, nxJson);
 
   // fetch all apps and libs
   const deps = dependencies(npmScope, projects, f =>
@@ -283,8 +297,9 @@ function generateGraphJson(criticalPath?: string[]): JSONOutput {
 }
 
 function getDot(json: JSONOutput) {
-  const config = readCliConfig();
-  const projects: ProjectNode[] = getProjectNodes(config);
+  const angularJson = readAngularJson();
+  const nxJson = readNxJson();
+  const projects: ProjectNode[] = getProjectNodes(angularJson, nxJson);
 
   return createGraphviz(
     graphvizConfig,

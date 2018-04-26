@@ -3,6 +3,7 @@ import * as path from 'path';
 
 export enum ProjectType {
   app = 'app',
+  e2e = 'e2e',
   lib = 'lib'
 }
 
@@ -66,6 +67,17 @@ export function affectedAppNames(
 ): string[] {
   return affectedProjects(npmScope, projects, fileRead, touchedFiles)
     .filter(p => p.type === ProjectType.app)
+    .map(p => p.name);
+}
+
+export function affectedE2eNames(
+  npmScope: string,
+  projects: ProjectNode[],
+  fileRead: (s: string) => string,
+  touchedFiles: string[]
+): string[] {
+  return affectedProjects(npmScope, projects, fileRead, touchedFiles)
+    .filter(p => p.type === ProjectType.e2e)
     .map(p => p.name);
 }
 
@@ -142,9 +154,25 @@ class DepsCalculator {
 
   calculateDeps() {
     this.deps = this.projects.reduce((m, c) => ({ ...m, [c.name]: [] }), {});
+    this.createImplicitDepsFromE2eToApps();
     this.processAllFiles();
     return this.deps;
     // return this.includeTransitive();
+  }
+
+  private createImplicitDepsFromE2eToApps() {
+    this.projects.filter(p => p.type === ProjectType.e2e).forEach(e2e => {
+      const appName = e2e.name.substring(0, e2e.name.length - 4);
+      if (
+        this.projects.find(
+          a => a.name === appName && a.type === ProjectType.app
+        )
+      ) {
+        this.deps[e2e.name] = [
+          { projectName: appName, type: DependencyType.implicit }
+        ];
+      }
+    });
   }
 
   private processAllFiles() {

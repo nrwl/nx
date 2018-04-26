@@ -33,6 +33,34 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
       expect(deps).toEqual({ app1: [], app2: [] });
     });
 
+    it('should create implicit dependencies between e2e an apps', () => {
+      const deps = dependencies(
+        'nrwl',
+        [
+          {
+            name: 'app1',
+            root: '',
+            files: [],
+            tags: [],
+            type: ProjectType.app
+          },
+          {
+            name: 'app1-e2e',
+            root: '',
+            files: [],
+            tags: [],
+            type: ProjectType.e2e
+          }
+        ],
+        () => null
+      );
+
+      expect(deps).toEqual({
+        app1: [],
+        'app1-e2e': [{ projectName: 'app1', type: DependencyType.implicit }]
+      });
+    });
+
     it('should infer deps between projects based on imports', () => {
       const deps = dependencies(
         'nrwl',

@@ -10,7 +10,7 @@ import {
 } from '../utils';
 import { angularCliSchema } from '../../packages/schematics/src/lib-versions';
 
-describe('Nrwl Convert to Nx Workspace', () => {
+xdescribe('Nrwl Convert to Nx Workspace', () => {
   beforeEach(cleanup);
 
   it('should generate a workspace', () => {

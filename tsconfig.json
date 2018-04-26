@@ -21,6 +21,7 @@
     "tmp",
     "build",
     "node_modules",
+    "packages/bazel",
     "packages/schematics/src/*/files/**/*"
   ],
   "angularCompilerOptions": {

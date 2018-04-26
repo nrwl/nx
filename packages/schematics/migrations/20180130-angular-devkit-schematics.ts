@@ -1,8 +1,4 @@
 import { updateJsonFile } from '../src/utils/fileutils';
-import {
-  devKitSchematicsVersion,
-  schematicsAngularVersion
-} from '../src/lib-versions';
 
 export default {
   description: 'Add @angular-devkit/schematics as a dev dependency',
@@ -10,8 +6,8 @@ export default {
     updateJsonFile('package.json', json => {
       json.devDependencies = {
         ...json.devDependencies,
-        ['@angular-devkit/schematics']: devKitSchematicsVersion,
-        ['@schematics/angular']: schematicsAngularVersion
+        ['@angular-devkit/schematics']: '0.0.52',
+        ['@schematics/angular']: '0.1.17'
       };
     });
   }

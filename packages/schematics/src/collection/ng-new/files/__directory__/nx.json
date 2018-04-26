@@ -1,0 +1,5 @@
+{
+  "npmScope": "<%= npmScope %>",
+  "projects": {
+  }
+}

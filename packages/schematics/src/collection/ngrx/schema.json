@@ -6,7 +6,11 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "Name of the ngrx feature (e.g., Products, User, etc.)."
+      "description": "Name of the ngrx feature (e.g., Products, User, etc.).",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
     },
     "module": {
       "type": "string",
@@ -39,7 +43,6 @@
     }
   },
   "required": [
-    "name",
     "module"
   ]
 }

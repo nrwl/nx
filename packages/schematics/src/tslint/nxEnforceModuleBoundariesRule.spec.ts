@@ -32,7 +32,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'libs/mylib/src',
           type: ProjectType.lib,
           tags: [],
-          files: [`libs/mylib/index.ts`, `libs/mylib/deep.ts`]
+          files: [`libs/mylib/index.ts`, `libs/mylib/dee1p.ts`]
         }
       ]
     );
@@ -300,7 +300,7 @@ describe('Enforce Module Boundaries', () => {
             root: 'libs/other/src',
             type: ProjectType.lib,
             tags: [],
-            files: ['libs/other/index.ts']
+            files: ['libs/other/src/index.ts']
           }
         ]
       );

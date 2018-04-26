@@ -4,9 +4,9 @@ import {
   chain,
   mergeWith,
   Rule,
+  SchematicContext,
   Tree,
-  url,
-  SchematicContext
+  url
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';
@@ -15,8 +15,8 @@ import {
   angularCliSchema,
   angularCliVersion,
   latestMigration,
-  ngrxVersion,
   ngrxStoreFreezeVersion,
+  ngrxVersion,
   nxVersion,
   prettierVersion,
   routerStoreVersion,
@@ -24,18 +24,11 @@ import {
 } from '../../lib-versions';
 import * as fs from 'fs';
 import { updateJsonFile } from '../../utils/fileutils';
-import {
-  resolveUserExistingPrettierConfig,
-  DEFAULT_NRWL_PRETTIER_CONFIG
-} from '../../utils/common';
-import { Observable } from 'rxjs/Observable';
-import { fromPromise } from 'rxjs/observable/fromPromise';
-import { tap, map } from 'rxjs/operators';
 import { toFileName } from '../../utils/name-utils';
 import {
-  updateJsonInTree,
   getAngularCliConfig,
-  insert
+  insert,
+  updateJsonInTree
 } from '../../utils/ast-utils';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { InsertChange } from '@schematics/angular/utility/change';
@@ -328,20 +321,20 @@ function moveExistingFiles(options: Schema) {
 }
 
 function createAdditionalFiles(options: Schema) {
-  return (host: Tree): Observable<Tree> => {
+  return (host: Tree, _context: SchematicContext) => {
     // if the user does not already have a prettier configuration
     // of any kind, create one
-    return fromPromise(resolveUserExistingPrettierConfig()).pipe(
-      tap(resolvedExistingConfig => {
-        if (!resolvedExistingConfig) {
-          fs.writeFileSync(
-            '.prettierrc',
-            JSON.stringify(DEFAULT_NRWL_PRETTIER_CONFIG, null, 2)
-          );
-        }
-      }),
-      map(() => host)
-    );
+    // return fromPromise(resolveUserExistingPrettierConfig()).pipe(
+    //   tap(resolvedExistingConfig => {
+    //     if (!resolvedExistingConfig) {
+    //       fs.writeFileSync(
+    //         '.prettierrc',
+    //         JSON.stringify(DEFAULT_NRWL_PRETTIER_CONFIG, null, 2)
+    //       );
+    //     }
+    //   }),
+    //   map(() => host)
+    // );
   };
 }
 

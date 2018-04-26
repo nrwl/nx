@@ -1,9 +1,8 @@
 export interface Schema {
   name: string;
-  moduleName: string;
   directory?: string;
   sourceDir?: string;
-  nomodule: boolean;
+  publishable: boolean;
 
   spec?: boolean;
   flat?: boolean;

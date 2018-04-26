@@ -1,25 +1,42 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "library",
+  "id": "Nx Application Options Schema",
   "title": "Create a library",
   "type": "object",
   "properties": {
     "name": {
       "type": "string",
-      "description": "Library name"
+      "description": "Library name",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
     },
     "directory": {
       "type": "string",
       "description": "A directory where the app is placed"
     },
-    "moduleName": {
-      "type": "string",
-      "description": "A module name"
-    },
-    "nomodule": {
+    "publishable": {
       "type": "boolean",
       "default": false,
       "description": "Generate a simple TS library when set to true."
+    },
+    "prefix": {
+      "type": "string",
+      "format": "html-selector",
+      "description": "The prefix to apply to generated selectors.",
+      "default": "lib",
+      "alias": "p"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to package.json."
+    },
+    "skipTsConfig": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not update tsconfig.json for development experience."
     },
     "routing": {
       "type": "boolean",
@@ -40,7 +57,5 @@
       "description": "Add tags to the library (used for linting)"
     }
   },
-  "required": [
-    "name"
-  ]
+  "required": []
 }

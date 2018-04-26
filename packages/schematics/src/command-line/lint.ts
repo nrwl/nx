@@ -1,11 +1,16 @@
-import { getProjectNodes, readCliConfig, allFilesInDir } from './shared';
+import {
+  getProjectNodes,
+  allFilesInDir,
+  readAngularJson,
+  readNxJson
+} from './shared';
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
 import * as appRoot from 'app-root-path';
 import * as path from 'path';
 import * as fs from 'fs';
 
 export function lint() {
-  const nodes = getProjectNodes(readCliConfig());
+  const nodes = getProjectNodes(readAngularJson(), readNxJson());
   const packageJson = JSON.parse(
     fs.readFileSync(`${appRoot.path}/package.json`, 'utf-8')
   );

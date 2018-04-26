@@ -1,6 +1,6 @@
 import { newApp, newProject, runCLI, updateFile } from '../utils';
 
-describe('DowngradeModule', () => {
+xdescribe('DowngradeModule', () => {
   it(
     'should generate a downgradeModule setup',
     () => {
@@ -15,7 +15,7 @@ describe('DowngradeModule', () => {
       runCLI('generate downgrade-module legacy --angularJsImport=./legacy');
 
       runCLI('build');
-      expect(runCLI('test --single-run')).toContain('Executed 1 of 1 SUCCESS');
+      expect(runCLI('test --no-watch')).toContain('Executed 1 of 1 SUCCESS');
     },
     1000000
   );
