@@ -44,26 +44,39 @@ function printError(command: string, e: any) {
 
 function build(apps: string[], rest: string[]) {
   if (apps.length > 0) {
+    console.log(`Building ${apps.join(', ')}`);
+
     const parallel = yargsParser(rest, {
       default: {
-        parallel: true
+        parallel: false
       },
       boolean: ['parallel']
     }).parallel;
 
-    console.log(`Building ${apps.join(', ')}`);
-    const buildCommands = rest.filter(a => !a.startsWith('--parallel'));
-    runAll(
-      apps.map(app => `ng build -- ${buildCommands.join(' ')} -a=${app}`),
-      {
-        parallel,
-        stdin: process.stdin,
-        stdout: process.stdout,
-        stderr: process.stderr
-      }
-    )
-      .then(() => console.log('Build succeeded.'))
-      .catch(err => console.error('Build failed.'));
+    const buildCommands = rest.filter(a => !a.startsWith('--parallel') && !a.startsWith('--no-parallel'));
+    if (parallel) {
+      runAll(
+        apps.map(app => `ng build -- ${buildCommands.join(' ')} -a=${app}`),
+        {
+          parallel,
+          stdin: process.stdin,
+          stdout: process.stdout,
+          stderr: process.stderr
+        }
+      )
+        .then(() => console.log('Build succeeded.'))
+        .catch(err => console.error('Build failed.'));
+    } else {
+      apps.forEach(app => {
+        execSync(
+          `node ${ngPath()} build ${buildCommands.join(' ')} -a=${app}`,
+          {
+            stdio: [0, 1, 2]
+          }
+        );
+      });
+    }
+
   } else {
     console.log('No apps to build');
   }
