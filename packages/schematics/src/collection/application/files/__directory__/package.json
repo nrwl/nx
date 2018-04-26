@@ -42,8 +42,7 @@
     "@ngrx/router-store": "<%= routerStoreVersion %>",
     "@ngrx/store": "<%= ngrxVersion %>",
     "@ngrx/store-devtools": "<%= ngrxVersion %>",
-    "ngrx-store-freeze": "<%= ngrxStoreFreezeVersion %>",
-    "viz": "^0.0.1"
+    "ngrx-store-freeze": "<%= ngrxStoreFreezeVersion %>"
   },
   "devDependencies": {
     "@angular/cli": "<%= angularCliVersion %>",
