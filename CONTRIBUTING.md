@@ -67,6 +67,7 @@ The scope must be one of the following:
 * bazel
 * nx
 * schematics
+* cli
 
 #### Subject
 
