@@ -11,7 +11,9 @@ NX_VERSION=$2
 cd build/packages
 sed -i "" "s|exports.nxVersion = '\*';|exports.nxVersion = '$NX_VERSION';|g" schematics/src/lib-versions.js
 sed -i "" "s|exports.schematicsVersion = '\*';|exports.schematicsVersion = '$SCHEMATICS_VERSION';|g" schematics/src/lib-versions.js
+sed -i "" "s|exports.cliVersion = '\*';|exports.cliVersion = '$SCHEMATICS_VERSION';|g" schematics/src/lib-versions.js
 
 
 tar -czf nx.tgz nx
 tar -czf schematics.tgz schematics
+tar -czf cli.tgz cli
