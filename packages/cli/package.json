@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/nrwl/nx#readme",
   "dependencies": {
+    "resolve": "^1.7.1",
     "app-root-path": "^2.0.1",
     "graphviz": "0.0.8",
     "npm-run-all": "4.1.2",
