@@ -13,7 +13,7 @@ import {
 import * as fs from 'fs';
 import { statSync } from 'fs';
 import * as appRoot from 'app-root-path';
-import { readJsonFile } from '../utils/fileutils';
+import { readJsonFile } from './fileutils';
 
 export function parseFiles(
   args: string[]

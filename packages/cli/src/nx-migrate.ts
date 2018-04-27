@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { readCliConfigFile, updateJsonFile } from '../utils/fileutils';
+import { readCliConfigFile, updateJsonFile } from './fileutils';
 
 type Migration = { description: string; run(): void };
 type MigrationName = { name: string; migration: Migration };

@@ -72,6 +72,9 @@ function updatePackageJson() {
     if (!packageJson.devDependencies['@nrwl/schematics']) {
       packageJson.devDependencies['@nrwl/schematics'] = schematicsVersion;
     }
+    if (!packageJson.devDependencies['@nrwl/cli']) {
+      packageJson.devDependencies['@nrwl/cli'] = schematicsVersion;
+    }
     if (!packageJson.dependencies['@angular/cli']) {
       packageJson.dependencies['@angular/cli'] = angularCliVersion;
     }

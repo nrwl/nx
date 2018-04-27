@@ -53,7 +53,9 @@ function build(apps: string[], rest: string[]) {
       boolean: ['parallel']
     }).parallel;
 
-    const buildCommands = rest.filter(a => !a.startsWith('--parallel') && !a.startsWith('--no-parallel'));
+    const buildCommands = rest.filter(
+      a => !a.startsWith('--parallel') && !a.startsWith('--no-parallel')
+    );
     if (parallel) {
       runAll(
         apps.map(app => `ng build -- ${buildCommands.join(' ')} -a=${app}`),
@@ -76,7 +78,6 @@ function build(apps: string[], rest: string[]) {
         );
       });
     }
-
   } else {
     console.log('No apps to build');
   }
