@@ -25,7 +25,7 @@ rm -rf build/packages/nx/bundles/nrwl-nx-testing.umd.min.js.bak
 rsync -a --exclude=*.ts packages/ build/packages
 
 chmod +x build/packages/schematics/bin/create-nx-workspace.js
-chmod +x build/packages/schematics/src/command-line/nx.js
+chmod +x build/packages/cli/index.js
 rm -rf build/packages/install
 rm -rf build/packages/nx/dist
 rm -rf build/packages/nx/spec

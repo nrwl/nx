@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 import * as yargs from 'yargs';
 
-import { affected } from './affected';
-import { format } from './format';
-import { update } from './update';
-import { patchNg } from './patch-ng';
-import { lint } from './lint';
-import { workspaceSchematic } from './workspace-schematic';
-import { generateGraph, OutputType } from './dep-graph';
+import { affected } from './src/affected';
+import { format } from './src/format';
+import { update } from './src/update';
+import { patchNg } from './src/patch-ng';
+import { lint } from './src/lint';
+import { workspaceSchematic } from './src/workspace-schematic';
+import { generateGraph, OutputType } from './src/dep-graph';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 

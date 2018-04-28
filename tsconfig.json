@@ -14,7 +14,9 @@
     "baseUrl": ".",
     "paths": {
       "@nrwl/schematics": ["./packages/schematics"],
-      "@nrwl/schematics/*": ["./packages/schematics/*"]
+      "@nrwl/schematics/*": ["./packages/schematics/*"],
+      "@nrwl/cli": ["./packages/cli"],
+      "@nrwl/cli/*": ["./packages/cli/*"]
     }
   },
   "exclude": [

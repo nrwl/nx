@@ -1,4 +1,4 @@
-import { writeToFile } from '../utils/fileutils';
+import { writeToFile } from './fileutils';
 import * as graphviz from 'graphviz';
 import * as appRoot from 'app-root-path';
 import * as opn from 'opn';

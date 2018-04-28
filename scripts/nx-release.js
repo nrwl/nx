@@ -126,7 +126,8 @@ const options = {
     'package.json',
     'build/npm/bazel/package.json',
     'build/npm/nx/package.json',
-    'build/npm/schematics/package.json'
+    'build/npm/schematics/package.json',
+    'build/npm/cli/package.json'
   ],
   increment: parsedVersion.version,
   github: {

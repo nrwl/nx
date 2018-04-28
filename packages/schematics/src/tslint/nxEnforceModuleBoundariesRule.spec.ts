@@ -7,7 +7,7 @@ import {
   DependencyType,
   ProjectNode,
   ProjectType
-} from '../command-line/affected-apps';
+} from '@nrwl/cli';
 
 describe('Enforce Module Boundaries', () => {
   it('should not error when everything is in order', () => {

@@ -23,6 +23,7 @@
         "node_modules/@angular/tsc-wrapped/**",
         "node_modules/@nrwl/bazel/**",
         "node_modules/@nrwl/schematics/**",
+        "node_modules/@nrwl/cli/**",
         "node_modules/@ngrx/schematics/**",
     ]
 }
