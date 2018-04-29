@@ -17,31 +17,31 @@ yargs
     'affected:apps',
     'Print applications affected by changes',
     withAffectedOptions,
-    () => affected(['apps', ...process.argv.slice(3)])
+    args => affected('apps', args, process.argv.slice(3))
   )
   .command(
     'affected:test',
     'Test applications affected by the change',
     yargs => withAffectedOptions(withParallel(yargs)),
-    () => affected(['test', ...process.argv.slice(3)])
+    args => affected('test', args, process.argv.slice(3))
   )
   .command(
     'affected:build',
     'Build applications affected by changes',
     yargs => withAffectedOptions(withParallel(yargs)),
-    () => affected(['build', ...process.argv.slice(3)])
+    args => affected('build', args, process.argv.slice(3))
   )
   .command(
     'affected:e2e',
     'Run e2e tests for the applications affected by changes',
     withAffectedOptions,
-    () => affected(['e2e', ...process.argv.slice(3)])
+    args => affected('e2e', args, process.argv.slice(3))
   )
   .command(
     'affected:dep-graph',
     'Graph dependencies affected by changes',
     yargs => withAffectedOptions(withDepGraphOptions(yargs)),
-    () => affected(['dep-graph', ...process.argv.slice(3)])
+    args => affected('dep-graph', args, process.argv.slice(3))
   )
   .command(
     'dep-graph',
