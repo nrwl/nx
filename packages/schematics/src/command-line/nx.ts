@@ -1,13 +1,19 @@
 #!/usr/bin/env node
 import * as yargs from 'yargs';
 
-import { affected } from './affected';
+import { affected, YargsAffectedOptions } from './affected';
 import { format } from './format';
 import { update } from './update';
 import { patchNg } from './patch-ng';
 import { lint } from './lint';
 import { workspaceSchematic } from './workspace-schematic';
 import { generateGraph, OutputType } from './dep-graph';
+
+export interface GlobalNxArgs {
+  help: boolean;
+  version: boolean;
+  quiet: boolean;
+}
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
@@ -17,25 +23,28 @@ yargs
     'affected:apps',
     'Print applications affected by changes',
     withAffectedOptions,
-    args => affected('apps', args, process.argv.slice(3))
+    (args: YargsAffectedOptions) =>
+      affected('apps', args, process.argv.slice(3))
   )
   .command(
     'affected:build',
     'Build applications affected by changes',
     withAffectedOptions,
-    args => affected('build', args, process.argv.slice(3))
+    (args: YargsAffectedOptions) =>
+      affected('build', args, process.argv.slice(3))
   )
   .command(
     'affected:e2e',
     'Test  applications affected by changes',
     withAffectedOptions,
-    args => affected('e2e', args, process.argv.slice(3))
+    (args: YargsAffectedOptions) => affected('e2e', args, process.argv.slice(3))
   )
   .command(
     'affected:dep-graph',
     'Graph dependencies affected by changes',
     yargs => withAffectedOptions(withDepGraphOptions(yargs)),
-    args => affected('dep-graph', args, process.argv.slice(3))
+    (args: YargsAffectedOptions) =>
+      affected('dep-graph', args, process.argv.slice(3))
   )
   .command(
     'dep-graph',
@@ -89,10 +98,19 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     .option('files', {
       describe: 'A list of files delimited by commas',
       type: 'array',
+      coerce: parseCSV,
       requiresArg: true
     })
-    .option('uncommitted', { describe: 'Uncommitted changes' })
-    .option('untracked', { describe: 'Untracked changes' })
+    .option('uncommitted', {
+      describe: 'Uncommitted changes',
+      type: 'boolean',
+      default: undefined
+    })
+    .option('untracked', {
+      describe: 'Untracked changes',
+      type: 'boolean',
+      default: undefined
+    })
     .option('base', {
       describe: 'Base of the current branch (usually master)',
       type: 'string',
@@ -110,16 +128,22 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     .implies('base', 'head')
     .nargs('uncommitted', 0)
     .nargs('untracked', 0)
-    .option('parallel', {
-      describe: 'Build the affected apps in parallel',
-      type: 'boolean',
-      default: false
-    })
     .conflicts({
       SHA1: ['files', 'untracked', 'uncommitted', 'base', 'head'],
       files: ['uncommitted', 'untracked', 'base', 'head'],
       untracked: ['uncommitted', 'files', 'base', 'head'],
       uncommitted: ['files', 'untracked', 'base', 'head']
+    })
+    .option('parallel', {
+      describe: 'Build the affected apps in parallel',
+      type: 'boolean',
+      default: false
+    })
+    .option('exclude', {
+      describe: 'Exclude certain apps from being processed',
+      type: 'array',
+      coerce: parseCSV,
+      default: []
     });
 }
 
@@ -127,4 +151,13 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .describe('file', 'output file (e.g. --file=.vis/output.json)')
     .choices('output', [OutputType.json, OutputType.dot, OutputType.html]);
+}
+
+function parseCSV(args: string[]) {
+  return args.map(arg => arg.split(',')).reduce(
+    (acc, value) => {
+      return [...acc, ...value];
+    },
+    [] as string[]
+  );
 }
