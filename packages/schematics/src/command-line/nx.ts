@@ -17,25 +17,25 @@ yargs
     'affected:apps',
     'Print applications affected by changes',
     withAffectedOptions,
-    () => affected(['apps', ...process.argv.slice(3)])
+    args => affected('apps', args, process.argv.slice(3))
   )
   .command(
     'affected:build',
     'Build applications affected by changes',
     withAffectedOptions,
-    () => affected(['build', ...process.argv.slice(3)])
+    args => affected('build', args, process.argv.slice(3))
   )
   .command(
     'affected:e2e',
     'Test  applications affected by changes',
     withAffectedOptions,
-    () => affected(['e2e', ...process.argv.slice(3)])
+    args => affected('e2e', args, process.argv.slice(3))
   )
   .command(
     'affected:dep-graph',
     'Graph dependencies affected by changes',
     yargs => withAffectedOptions(withDepGraphOptions(yargs)),
-    () => affected(['dep-graph', ...process.argv.slice(3)])
+    args => affected('dep-graph', args, process.argv.slice(3))
   )
   .command(
     'dep-graph',
@@ -110,6 +110,11 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     .implies('base', 'head')
     .nargs('uncommitted', 0)
     .nargs('untracked', 0)
+    .option('parallel', {
+      describe: 'Build the affected apps in parallel',
+      type: 'boolean',
+      default: false
+    })
     .conflicts({
       SHA1: ['files', 'untracked', 'uncommitted', 'base', 'head'],
       files: ['uncommitted', 'untracked', 'base', 'head'],

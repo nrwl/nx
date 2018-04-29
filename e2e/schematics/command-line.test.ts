@@ -151,11 +151,13 @@ describe('Command line', () => {
         'npm run affected:build -- --files="libs/mylib/index.ts"'
       );
       expect(build).toContain('Building myapp');
+      expect(build).not.toContain('is not registered with the build command');
 
       const e2e = runCommand(
         'npm run affected:e2e -- --files="libs/mylib/index.ts"'
       );
       expect(e2e).toContain('should display welcome message');
+      expect(e2e).not.toContain('is not registered with the build command');
     },
     1000000
   );
