@@ -17,15 +17,18 @@ import {
   ProjectType
 } from '@nrwl/schematics/src/command-line/affected-apps';
 
-export function affected(args: string[]): void {
-  const command = args[0];
+export function affected(
+  command: string,
+  parsedArgs: any,
+  args: string[]
+): void {
   let apps: string[];
   let e2eProjects: string[];
   let projects: string[];
   let rest: string[];
 
   try {
-    const p = parseFiles(args.slice(1));
+    const p = parseFiles(args);
     rest = p.rest;
     apps = getAffectedApps(p.files);
     e2eProjects = getAffectedE2e(p.files);
@@ -40,10 +43,10 @@ export function affected(args: string[]): void {
       console.log(apps.join(' '));
       break;
     case 'build':
-      build(apps, rest);
+      build(apps, rest, parsedArgs.parallel);
       break;
     case 'test':
-      test(projects, rest);
+      test(projects, rest, parsedArgs.parallel);
       break;
     case 'e2e':
       e2e(e2eProjects, rest);
@@ -58,13 +61,14 @@ function printError(command: string, e: any) {
   console.error(e.message);
 }
 
-function build(apps: string[], rest: string[]) {
+function build(apps: string[], rest: string[], parallel: boolean) {
   if (apps.length > 0) {
     console.log(`Building ${apps.join(', ')}`);
     runCommand(
       'build',
       apps,
       rest,
+      parallel,
       'Building ',
       'Build succeeded.',
       'Build failed.'
@@ -74,7 +78,7 @@ function build(apps: string[], rest: string[]) {
   }
 }
 
-function test(projects: string[], rest: string[]) {
+function test(projects: string[], rest: string[], parallel: boolean) {
   const depGraph = readDepGraph();
   const sortedProjects = topologicallySortProjects(depGraph);
   const sortedAffectedProjects = sortedProjects.filter(
@@ -90,6 +94,7 @@ function test(projects: string[], rest: string[]) {
       'test',
       projectsToTest,
       rest,
+      parallel,
       'Testing ',
       'Tests passed.',
       'Tests failed.'
@@ -103,20 +108,12 @@ function runCommand(
   command: string,
   projects: string[],
   args: string[],
+  parallel: boolean,
   iterationMessage: string,
   successMessage: string,
   errorMessage: string
 ) {
-  const parallel = yargsParser(args, {
-    default: {
-      parallel: false
-    },
-    boolean: ['parallel']
-  }).parallel;
-
-  const normalizedArgs = args.filter(
-    a => !a.startsWith('--parallel') && !a.startsWith('--no-parallel')
-  );
+  const normalizedArgs = filterNxSpecificArgs(args);
   if (parallel) {
     runAll(
       projects.map(
@@ -180,6 +177,22 @@ function e2e(apps: string[], rest: string[]) {
   } else {
     console.log('No apps to test');
   }
+}
+
+function filterNxSpecificArgs(args: string[]): string[] {
+  const nxSpecificFlags = [
+    '--parallel',
+    '--no-parallel',
+    '--base',
+    '--head',
+    '--files',
+    '--uncommitted',
+    '--untracked'
+  ];
+
+  return args.filter(
+    arg => !nxSpecificFlags.some(flag => arg.startsWith(flag))
+  );
 }
 
 function ngPath() {
