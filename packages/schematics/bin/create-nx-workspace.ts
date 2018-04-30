@@ -93,8 +93,7 @@ writeFileSync(
   JSON.stringify({
     dependencies: {
       [nxTool.packageName]: nxVersion,
-      '@angular/cli': '6.0.0',
-      cosmiconfig: '5.0.1'
+      '@angular/cli': '6.0.0'
     },
     license: 'MIT'
   })
