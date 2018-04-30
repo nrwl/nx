@@ -33,6 +33,7 @@
     "@schematics/angular": "0.4.6",
     "@types/yargs": "^11.0.0",
     "app-root-path": "^2.0.1",
+    "cosmiconfig": "^4.0.0",
     "graphviz": "0.0.8",
     "npm-run-all": "4.1.2",
     "opn": "^5.3.0",
