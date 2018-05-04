@@ -88,7 +88,7 @@ function addAppToAngularCliJson(options: NormalizedSchema): Rule {
       index: 'index.html',
       main: 'main.ts',
       polyfills: 'polyfills.ts',
-      test: `${offsetFromRoot(options.fullPath)}test.js`,
+      test: `${offsetFromRoot(options.fullPath)}test.ts`,
       tsconfig: `tsconfig.app.json`,
       testTsconfig: `${offsetFromRoot(options.fullPath)}tsconfig.spec.json`,
       prefix: options.prefix,
@@ -228,7 +228,7 @@ ts_web_test(
         "//:angular_bundles",
         "//:angular_test_bundles",
     ],
-)    
+)
 `;
 
     host.create(`${path}/app/BUILD.bazel`, ngModule);
