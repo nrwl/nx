@@ -58,7 +58,7 @@
     "precise-commits": "1.0.2",
     "prettier": "1.10.2",
     "release-it": "^7.4.0",
-    "rxjs": "^6.0.0-rc.0",
+    "rxjs": "^6.0.0",
     "semver": "5.4.1",
     "strip-json-comments": "2.0.1",
     "tmp": "0.0.33",
@@ -72,9 +72,6 @@
   "author": "Victor Savkin",
   "license": "MIT",
   "jest": {
-    "modulePathIgnorePatterns": [
-      "tmp",
-      "files"
-    ]
+    "modulePathIgnorePatterns": ["tmp", "files"]
   }
 }

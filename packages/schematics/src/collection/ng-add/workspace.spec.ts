@@ -16,36 +16,41 @@ xdescribe('workspace', () => {
 
   it('should error if no package.json is present', () => {
     expect(() => {
-      schematicRunner.runSchematic('workspace', { name: 'myApp' }, appTree);
+      schematicRunner.runSchematic('ng-add', { name: 'myApp' }, appTree);
     }).toThrow('Cannot find package.json');
   });
 
-  it('should error if no protractor.conf.js is present', () => {
+  it('should error if no e2e/protractor.conf.js is present', () => {
     expect(() => {
       appTree.create('/package.json', JSON.stringify({}));
-      schematicRunner.runSchematic('workspace', { name: 'myApp' }, appTree);
-    }).toThrow('Cannot find protractor.conf.js');
+      schematicRunner.runSchematic('ng-add', { name: 'myApp' }, appTree);
+    }).toThrow('Cannot find e2e/protractor.conf.js');
   });
 
-  it('should error if no .angular-cli.json is present', () => {
+  it('should error if no angular.json is present', () => {
     expect(() => {
       appTree.create('/package.json', JSON.stringify({}));
-      appTree.create('/protractor.conf.js', '');
-      schematicRunner.runSchematic('workspace', { name: 'myApp' }, appTree);
-    }).toThrow('Cannot find .angular-cli.json');
+      appTree.create('/e2e/protractor.conf.js', '');
+      schematicRunner.runSchematic('ng-add', { name: 'myApp' }, appTree);
+    }).toThrow('Cannot find angular.json');
   });
 
-  it('should error if the .angular-cli.json specifies more than one app', () => {
+  it('should error if the angular.json specifies more than one app', () => {
     expect(() => {
       appTree.create('/package.json', JSON.stringify({}));
-      appTree.create('/protractor.conf.js', '');
+      appTree.create('/e2e/protractor.conf.js', '');
       appTree.create(
-        '/.angular-cli.json',
+        '/angular.json',
         JSON.stringify({
-          apps: [{}, {}]
+          projects: {
+            proj1: {},
+            'proj1-e2e': {},
+            proj2: {},
+            'proj2-e2e': {}
+          }
         })
       );
-      schematicRunner.runSchematic('workspace', { name: 'myApp' }, appTree);
+      schematicRunner.runSchematic('ng-add', { name: 'myApp' }, appTree);
     }).toThrow('Can only convert projects with one app');
   });
 });

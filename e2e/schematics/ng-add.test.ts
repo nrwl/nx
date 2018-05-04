@@ -5,12 +5,10 @@ import {
   runCLI,
   runNgNew,
   updateFile,
-  readFile,
   readJson
 } from '../utils';
-import { angularCliSchema } from '../../packages/schematics/src/lib-versions';
 
-xdescribe('Nrwl Convert to Nx Workspace', () => {
+describe('Nrwl Convert to Nx Workspace', () => {
   beforeEach(cleanup);
 
   it('should generate a workspace', () => {
@@ -35,14 +33,17 @@ xdescribe('Nrwl Convert to Nx Workspace', () => {
     updateFile('tsconfig.json', JSON.stringify(tsconfigJson, null, 2));
 
     // update angular-cli.json
-    const angularCLIJson = readJson('.angular-cli.json');
-    angularCLIJson.apps[0].scripts = ['../node_modules/x.js'];
-    updateFile('.angular-cli.json', JSON.stringify(angularCLIJson, null, 2));
+    const angularCLIJson = readJson('angular.json');
+    angularCLIJson.projects.proj.architect.build.options.scripts = [
+      'node_modules/x.js'
+    ];
+    angularCLIJson.projects.proj.architect.test.options.styles = [
+      'src/styles.css'
+    ];
+    updateFile('angular.json', JSON.stringify(angularCLIJson, null, 2));
 
     // run the command
-    runCLI(
-      'generate workspace proj --npmScope=proj --collection=@nrwl/schematics'
-    );
+    runCLI('add @nrwl/schematics --npmScope projscope --skip-install');
 
     // check that prettier config exits and that files have been moved!
     checkFilesExist(
@@ -65,49 +66,118 @@ xdescribe('Nrwl Convert to Nx Workspace', () => {
       updatedPackageJson.dependencies['@ngrx/store-devtools']
     ).toBeDefined();
 
+    const nxJson = readJson('nx.json');
+    expect(nxJson).toEqual({
+      npmScope: 'projscope',
+      projects: {
+        proj: {
+          tags: []
+        },
+        'proj-e2e': {
+          tags: []
+        }
+      }
+    });
+
     // check if angular-cli.json get merged
-    const updatedAngularCLIJson = readJson('.angular-cli.json');
-    expect(updatedAngularCLIJson.$schema).toEqual(angularCliSchema);
-    expect(updatedAngularCLIJson.apps[0].name).toEqual('proj');
-    expect(updatedAngularCLIJson.apps[0].root).toEqual('apps/proj/src');
-    expect(updatedAngularCLIJson.apps[0].outDir).toEqual('dist/apps/proj');
-    expect(updatedAngularCLIJson.apps[0].test).toEqual('../../../test.js');
-    expect(updatedAngularCLIJson.apps[0].tsconfig).toEqual('tsconfig.app.json');
-    expect(updatedAngularCLIJson.apps[0].testTsconfig).toEqual(
-      '../../../tsconfig.spec.json'
-    );
-    expect(updatedAngularCLIJson.apps[0].scripts[0]).toEqual(
-      '../../../node_modules/x.js'
-    );
-    expect(updatedAngularCLIJson.defaults.schematics.collection).toEqual(
-      '@nrwl/schematics'
+    const updatedAngularCLIJson = readJson('angular.json');
+    expect(updatedAngularCLIJson.projects.proj.root).toEqual('apps/proj');
+    expect(updatedAngularCLIJson.projects.proj.sourceRoot).toEqual(
+      'apps/proj/src'
     );
 
-    expect(updatedAngularCLIJson.lint[0].project).toEqual(
-      'apps/proj/src/tsconfig.app.json'
+    expect(updatedAngularCLIJson.projects.proj.architect.build).toEqual({
+      builder: '@angular-devkit/build-angular:browser',
+      options: {
+        outputPath: 'dist/apps/proj',
+        index: 'apps/proj/src/index.html',
+        main: 'apps/proj/src/main.ts',
+        polyfills: 'apps/proj/src/polyfills.ts',
+        tsConfig: 'apps/proj/tsconfig.app.json',
+        assets: ['apps/proj/src/favicon.ico', 'apps/proj/src/assets'],
+        styles: ['apps/proj/src/styles.css'],
+        scripts: ['node_modules/x.js']
+      },
+      configurations: {
+        production: {
+          fileReplacements: [
+            {
+              replace: 'apps/proj/src/environments/environment.ts',
+              with: 'apps/proj/src/environments/environment.prod.ts'
+            }
+          ],
+          optimization: true,
+          outputHashing: 'all',
+          sourceMap: false,
+          extractCss: true,
+          namedChunks: false,
+          aot: true,
+          extractLicenses: true,
+          vendorChunk: false,
+          buildOptimizer: true
+        }
+      }
+    });
+    expect(updatedAngularCLIJson.projects.proj.architect.serve).toEqual({
+      builder: '@angular-devkit/build-angular:dev-server',
+      options: {
+        browserTarget: 'proj:build'
+      },
+      configurations: {
+        production: {
+          browserTarget: 'proj:build:production'
+        }
+      }
+    });
+
+    expect(updatedAngularCLIJson.projects.proj.architect.test).toEqual({
+      builder: '@angular-devkit/build-angular:karma',
+      options: {
+        main: 'apps/proj/src/test.ts',
+        polyfills: 'apps/proj/src/polyfills.ts',
+        tsConfig: 'apps/proj/tsconfig.spec.json',
+        karmaConfig: 'apps/proj/karma.conf.js',
+        styles: ['apps/proj/src/styles.css'],
+        scripts: [],
+        assets: ['apps/proj/src/favicon.ico', 'apps/proj/src/assets']
+      }
+    });
+
+    expect(updatedAngularCLIJson.projects.proj.architect.lint).toEqual({
+      builder: '@angular-devkit/build-angular:tslint',
+      options: {
+        tsConfig: [
+          'apps/proj/tsconfig.app.json',
+          'apps/proj/tsconfig.spec.json'
+        ],
+        exclude: ['**/node_modules/**']
+      }
+    });
+
+    expect(updatedAngularCLIJson.projects['proj-e2e'].root).toEqual(
+      'apps/proj-e2e'
     );
-    expect(updatedAngularCLIJson.lint[1].project).toEqual(
-      './tsconfig.spec.json'
-    );
-    expect(updatedAngularCLIJson.lint[2].project).toEqual(
-      'apps/proj/e2e/tsconfig.e2e.json'
-    );
+    expect(updatedAngularCLIJson.projects['proj-e2e'].architect.e2e).toEqual({
+      builder: '@angular-devkit/build-angular:protractor',
+      options: {
+        protractorConfig: 'apps/proj-e2e/protractor.conf.js',
+        devServerTarget: 'proj:serve'
+      }
+    });
+    expect(updatedAngularCLIJson.projects['proj-e2e'].architect.lint).toEqual({
+      builder: '@angular-devkit/build-angular:tslint',
+      options: {
+        tsConfig: 'apps/proj-e2e/tsconfig.e2e.json',
+        exclude: ['**/node_modules/**']
+      }
+    });
 
     // check if tsconfig.json get merged
     const updatedTsConfig = readJson('tsconfig.json');
     expect(updatedTsConfig.compilerOptions.paths).toEqual({
       a: ['b'],
-      '@proj/*': ['libs/*']
+      '@projscope/*': ['libs/*']
     });
-
-    const karmaConf = readFile('karma.conf.js');
-    expect(karmaConf).toContain('makeSureNoAppIsSelected();');
-
-    const protractorConf = readFile('protractor.conf.js');
-    expect(protractorConf).toContain(
-      'const appDir = getAppDirectoryUsingCliConfig();'
-    );
-    expect(protractorConf).toContain(`appDir + '/e2e/**/*.e2e-spec.ts'`);
   });
 
   it('should generate a workspace and not change dependencies or devDependencies if they already exist', () => {
@@ -126,7 +196,7 @@ xdescribe('Nrwl Convert to Nx Workspace', () => {
     existingPackageJson.dependencies['@ngrx/store-devtools'] = ngrxVersion;
     updateFile('package.json', JSON.stringify(existingPackageJson, null, 2));
     // run the command
-    runCLI('generate workspace proj --collection=@nrwl/schematics');
+    runCLI('add @nrwl/schematics --npmScope projscope --skip-install');
     // check that dependencies and devDependencies remained the same
     const packageJson = readJson('package.json');
     expect(packageJson.devDependencies['@nrwl/schematics']).toEqual(

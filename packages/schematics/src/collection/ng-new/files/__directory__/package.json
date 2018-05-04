@@ -51,7 +51,7 @@
     "@angular/language-service": "<%= angularVersion %>",
     "@ngrx/schematics": "<%= ngrxSchematicsVersion %>",
     "@nrwl/schematics": "<%= schematicsVersion %>",
-    "jasmine-marbles": "0.3.1",
+    "jasmine-marbles": "<%= jasmineMarblesVersion %>",
     "@types/jasmine": "~2.8.6",
     "@types/jasminewd2": "~2.0.3",
     "@types/node": "~8.9.4",
