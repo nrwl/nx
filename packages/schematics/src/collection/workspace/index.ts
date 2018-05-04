@@ -122,7 +122,7 @@ function updateAngularCLIJson(options: Schema): Rule {
     app.name = options.name;
     app.root = path.join('apps', options.name, app.root);
     app.outDir = path.join('dist', 'apps', options.name);
-    app.test = '../../../test.js';
+    app.test = '../../../test.ts';
     app.testTsconfig = '../../../tsconfig.spec.json';
     app.scripts = app.scripts.map(p => path.join('../../', p));
     app.tags = [];
@@ -186,7 +186,7 @@ function updateTsConfigsJson(options: Schema) {
       json.compilerOptions.outDir = `./dist/out-tsc/spec`;
 
       if (!json.exclude) json.exclude = [];
-      json.files = ['test.js'];
+      json.files = ['test.ts'];
       json.include = ['**/*.ts'];
       json.exclude = dedup(
         json.exclude.concat([

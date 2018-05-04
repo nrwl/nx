@@ -35,7 +35,7 @@ describe('lib', () => {
           name: 'my-lib',
           root: 'libs/my-lib/src',
           tags: [],
-          test: '../../../test.js'
+          test: '../../../test.ts'
         }
       ]);
     });
@@ -97,7 +97,7 @@ describe('lib', () => {
           name: 'my-dir/my-lib',
           root: 'libs/my-dir/my-lib/src',
           tags: [],
-          test: '../../../../test.js'
+          test: '../../../../test.ts'
         }
       ]);
     });

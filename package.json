@@ -7,13 +7,14 @@
   "scripts": {
     "build": "./scripts/build.sh",
     "e2e": "./scripts/e2e.sh",
-    "format": "precise-commits --whitelist=\"{packages,e2e}/**/*.ts\"",
+    "format": "precise-commits --whitelist=\"{packages,e2e}/**/!(test).ts\"",
     "linknpm": "./scripts/link.sh",
     "nx-release": "./scripts/nx-release.js",
     "copy": "./scripts/copy.sh",
     "test:schematics": "yarn linknpm fast && ./scripts/test_schematics.sh",
     "test:nx": "yarn linknpm fast && ./scripts/test_nx.sh",
-    "test": "yarn linknpm fast && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
+    "test":
+      "yarn linknpm fast && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
     "checkformat": "yarn format --check-only",
     "precommit": "yarn checkformat"
   },
@@ -74,9 +75,6 @@
   "author": "Victor Savkin",
   "license": "MIT",
   "jest": {
-    "modulePathIgnorePatterns": [
-      "tmp",
-      "files"
-    ]
+    "modulePathIgnorePatterns": ["tmp", "files"]
   }
 }
