@@ -32,6 +32,7 @@ describe('application', () => {
       '/my-app/libs/.gitkeep',
       '/my-app/package.json',
       '/my-app/protractor.conf.js',
+      '/my-app/test.d.ts',
       '/my-app/test.js',
       '/my-app/tools/schematics/.gitkeep',
       '/my-app/tools/tsconfig.tools.json',

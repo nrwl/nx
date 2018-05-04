@@ -45,7 +45,7 @@ function addLibToAngularCliJson(options: NormalizedSchema): Rule {
     angularCliJson.apps = addApp(angularCliJson.apps, {
       name: options.fullName,
       root: options.fullPath,
-      test: `${offsetFromRoot(options.fullPath)}test.js`,
+      test: `${offsetFromRoot(options.fullPath)}test.ts`,
       appRoot: '',
       tags
     });
@@ -69,8 +69,8 @@ function addLazyLoadedRouterConfiguration(modulePath: string): Rule {
         sourceFile,
         modulePath,
         `
-        RouterModule.forChild([ 
-        /* {path: '', pathMatch: 'full', component: InsertYourComponentHere} */ 
+        RouterModule.forChild([
+        /* {path: '', pathMatch: 'full', component: InsertYourComponentHere} */
        ]) `
       )
     ]);

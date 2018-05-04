@@ -45,7 +45,7 @@ describe('app', () => {
           scripts: [],
           styles: ['styles.css'],
           tags: [],
-          test: '../../../test.js',
+          test: '../../../test.ts',
           testTsconfig: '../../../tsconfig.spec.json',
           tsconfig: 'tsconfig.app.json'
         }
@@ -122,7 +122,7 @@ describe('app', () => {
           scripts: [],
           styles: ['styles.css'],
           tags: [],
-          test: '../../../../test.js',
+          test: '../../../../test.ts',
           testTsconfig: '../../../../tsconfig.spec.json',
           tsconfig: 'tsconfig.app.json'
         }
