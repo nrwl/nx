@@ -3,10 +3,11 @@
   "version": "0.1",
   "extends": "@ngrx/schematics",
   "schematics": {
-    "workspace": {
-      "factory": "./collection/workspace",
-      "schema": "./collection/workspace/schema.json",
-      "description": "Convert an existing CLI project into an Nx Workspace"
+    "ng-add": {
+      "factory": "./collection/ng-add",
+      "schema": "./collection/ng-add/schema.json",
+      "description": "Convert an existing CLI project into an Nx Workspace",
+      "hidden": true
     },
 
     "ng-new": {

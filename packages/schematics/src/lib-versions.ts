@@ -12,6 +12,7 @@ export const latestMigration = '20180424-add-tsconfig-tools';
 export const prettierVersion = '1.10.2';
 export const typescriptVersion = '2.7.2';
 export const rxjsVersion = '6.0.0';
+export const jasmineMarblesVersion = '0.3.1';
 export const ngrxSchematicsVersion = '6.0.0-beta.0';
 
 export const libVersions = {
@@ -27,6 +28,7 @@ export const libVersions = {
   latestMigration,
   typescriptVersion,
   rxjsVersion,
+  jasmineMarblesVersion,
   ngrxSchematicsVersion,
   routerStoreVersion
 };
