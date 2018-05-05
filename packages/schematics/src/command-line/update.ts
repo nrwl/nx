@@ -32,15 +32,18 @@ export function update(args: string[]) {
 
 function readAllMigrations() {
   return fs
-    .readdirSync(path.join(__dirname, '/../../migrations'))
+    .readdirSync(path.join(__dirname, '/../../migrations/legacy-migrations'))
     .filter(f => f.endsWith('.js') && !f.endsWith('.d.js'))
     .map(file => ({
-      migration: require(`../../migrations/${file}`).default,
+      migration: require(`../../migrations/legacy-migrations/${file}`).default,
       name: path.parse(file).name
     }));
 }
 
 function readLatestMigration(): string {
+  if (!fs.existsSync('.angular-cli.json') && fs.existsSync('angular.json')) {
+    return 'ANGULAR CLI 6';
+  }
   const angularCli = readCliConfigFile();
   return angularCli.project.latestMigration;
 }
@@ -49,6 +52,9 @@ function calculateMigrationsToRun(
   migrations: MigrationName[],
   latestMigration: string
 ) {
+  if (latestMigration === 'ANGULAR CLI 6') {
+    return [];
+  }
   const startingWith = latestMigration
     ? migrations.findIndex(item => item.name === latestMigration) + 1
     : 0;

@@ -28,6 +28,11 @@ import {
 import { updateJsonFile, serializeJson } from '../../utils/fileutils';
 import { toFileName } from '../../utils/name-utils';
 import { updateJsonInTree, readJsonInTree } from '../../utils/ast-utils';
+import {
+  parseTarget,
+  serializeTarget,
+  editTarget
+} from '../../utils/cli-config-utils';
 import { from } from 'rxjs';
 import { tap, mapTo } from 'rxjs/operators';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
@@ -99,24 +104,6 @@ function updatePackageJson() {
 
 function convertPath(name: string, originalPath: string) {
   return `apps/${name}/${originalPath}`;
-}
-
-function parseTarget(targetString: string) {
-  const [project, target, config] = targetString.split(':');
-  return {
-    project,
-    target,
-    config
-  };
-}
-
-function editTarget(targetString: string, callback) {
-  const parsedTarget = parseTarget(targetString);
-  return serializeTarget(callback(parsedTarget));
-}
-
-function serializeTarget({ project, target, config }) {
-  return [project, target, config].filter(part => !!part).join(':');
 }
 
 function updateAngularCLIJson(options: Schema): Rule {

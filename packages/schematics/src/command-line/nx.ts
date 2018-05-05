@@ -4,7 +4,6 @@ import * as yargs from 'yargs';
 import { affected } from './affected';
 import { format } from './format';
 import { update } from './update';
-import { patchNg } from './patch-ng';
 import { lint } from './lint';
 import { workspaceSchematic } from './workspace-schematic';
 import { generateGraph, OutputType } from './dep-graph';
@@ -78,7 +77,6 @@ yargs
   .command('update', 'Update workspace', noop, _ => update([]))
   .alias('update', 'migrates') // TODO: Remove after 1.0
   .command('postinstall', false, noop, _ => {
-    patchNg();
     update(['check']);
   })
   .command(
