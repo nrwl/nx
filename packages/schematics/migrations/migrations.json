@@ -1,0 +1,9 @@
+{
+  "schematics": {
+    "migration-01": {
+      "version": "6",
+      "description": " ",
+      "factory": "./update-6-0-0/update-6-0-0"
+    }
+  }
+}
