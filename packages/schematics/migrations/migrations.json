@@ -1,0 +1,9 @@
+{
+  "schematics": {
+    "update-to-6.0.0": {
+      "version": "6",
+      "description": " ",
+      "factory": "./update-6-0-0/update-6-0-0"
+    }
+  }
+}

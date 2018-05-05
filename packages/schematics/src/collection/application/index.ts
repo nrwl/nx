@@ -4,8 +4,7 @@ import {
   move,
   noop,
   Rule,
-  Tree,
-  SchematicContext
+  Tree
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as ts from 'typescript';
@@ -24,7 +23,7 @@ import {
   getWorkspacePath,
   replaceAppNameWithPath
 } from '@nrwl/schematics/src/utils/cli-config-utils';
-import { updateFile } from '../../../../../e2e/utils';
+import { k } from '@angular/core/src/render3';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -177,7 +176,19 @@ function updateProject(options: NormalizedSchema): Rule {
             [options.e2eProjectName]: { tags: [] }
           }
         };
-      })
+      }),
+      host => {
+        const karma = host
+          .read(`${options.appProjectRoot}/karma.conf.js`)
+          .toString();
+        host.overwrite(
+          `${options.appProjectRoot}/karma.conf.js`,
+          karma.replace(
+            `'../../coverage'`,
+            `'${offsetFromRoot(options.appProjectRoot)}coverage'`
+          )
+        );
+      }
     ])(host, null);
   };
 }

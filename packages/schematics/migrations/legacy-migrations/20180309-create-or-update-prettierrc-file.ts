@@ -1,11 +1,11 @@
 import { writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
-import { updateJsonFile } from '../src/utils/fileutils';
+import { updateJsonFile } from '../../src/utils/fileutils';
 import {
   ExistingPrettierConfig,
   resolveUserExistingPrettierConfig
-} from '../src/utils/common';
+} from '../../src/utils/common';
 
 export default {
   description: 'Create or update prettier configuration',

@@ -1,4 +1,4 @@
-import { updateJsonFile } from '../src/utils/fileutils';
+import { updateJsonFile } from '../../src/utils/fileutils';
 
 export default {
   description: 'Add @angular-devkit/schematics as a dev dependency',

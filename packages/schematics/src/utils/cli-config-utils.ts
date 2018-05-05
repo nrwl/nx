@@ -9,6 +9,24 @@ export function getNpmScope(host: Tree) {
   return JSON.parse(host.read('nx.json')!.toString('utf-8')).npmScope;
 }
 
+export function parseTarget(targetString: string) {
+  const [project, target, config] = targetString.split(':');
+  return {
+    project,
+    target,
+    config
+  };
+}
+
+export function editTarget(targetString: string, callback) {
+  const parsedTarget = parseTarget(targetString);
+  return serializeTarget(callback(parsedTarget));
+}
+
+export function serializeTarget({ project, target, config }) {
+  return [project, target, config].filter(part => !!part).join(':');
+}
+
 export function replaceAppNameWithPath(
   node: any,
   appName: string,

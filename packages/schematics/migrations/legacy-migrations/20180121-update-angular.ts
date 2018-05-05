@@ -1,4 +1,4 @@
-import { copyFile, updateJsonFile } from '../src/utils/fileutils';
+import { copyFile, updateJsonFile } from '../../src/utils/fileutils';
 import * as path from 'path';
 
 export default {

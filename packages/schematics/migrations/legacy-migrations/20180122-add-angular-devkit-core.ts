@@ -1,4 +1,4 @@
-import { updateJsonFile } from '../src/utils/fileutils';
+import { updateJsonFile } from '../../src/utils/fileutils';
 
 export default {
   description: 'Add @angular-devkit/core as a dev dependency',

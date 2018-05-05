@@ -268,7 +268,13 @@ describe('${options.moduleName}', () => {
       updateJsonInTree(`${options.projectRoot}/tsconfig.lib.json`, json => {
         return {
           ...json,
-          extends: `${offsetFromRoot(options.projectRoot)}tsconfig.json`
+          extends: `${offsetFromRoot(options.projectRoot)}tsconfig.json`,
+          compilerOptions: {
+            ...json.compilerOptions,
+            outDir: `${offsetFromRoot(options.projectRoot)}dist/out-tsc/${
+              options.projectRoot
+            }`
+          }
         };
       }),
       updateJsonInTree(`${options.projectRoot}/tsconfig.spec.json`, json => {
@@ -297,7 +303,19 @@ describe('${options.moduleName}', () => {
             [options.name]: { tags: options.parsedTags }
           }
         };
-      })
+      }),
+      host => {
+        const karma = host
+          .read(`${options.projectRoot}/karma.conf.js`)
+          .toString();
+        host.overwrite(
+          `${options.projectRoot}/karma.conf.js`,
+          karma.replace(
+            `'../../coverage'`,
+            `'${offsetFromRoot(options.projectRoot)}coverage'`
+          )
+        );
+      }
     ])(host, null);
   };
 }
