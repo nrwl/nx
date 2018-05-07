@@ -20,14 +20,20 @@ yargs
     () => affected(['apps', ...process.argv.slice(3)])
   )
   .command(
+    'affected:test',
+    'Test applications affected by the change',
+    yargs => withAffectedOptions(withParallel(yargs)),
+    () => affected(['test', ...process.argv.slice(3)])
+  )
+  .command(
     'affected:build',
     'Build applications affected by changes',
-    withAffectedOptions,
+    yargs => withAffectedOptions(withParallel(yargs)),
     () => affected(['build', ...process.argv.slice(3)])
   )
   .command(
     'affected:e2e',
-    'Test  applications affected by changes',
+    'Run e2e tests for the applications affected by changes',
     withAffectedOptions,
     () => affected(['e2e', ...process.argv.slice(3)])
   )
@@ -122,4 +128,12 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .describe('file', 'output file (e.g. --file=.vis/output.json)')
     .choices('output', [OutputType.json, OutputType.dot, OutputType.html]);
+}
+
+function withParallel(yargs: yargs.Argv): yargs.Argv {
+  return yargs.option('parallel', {
+    describe: 'Parallelize the command',
+    type: 'boolean',
+    default: false
+  });
 }

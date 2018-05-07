@@ -22,6 +22,12 @@ export type ProjectNode = {
 };
 export type Dependency = { projectName: string; type: DependencyType };
 
+export type DepGraph = {
+  projects: ProjectNode[];
+  deps: { [projectName: string]: Dependency[] };
+  npmScope: string;
+};
+
 export function touchedProjects(
   projects: ProjectNode[],
   touchedFiles: string[]

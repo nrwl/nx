@@ -139,7 +139,14 @@ describe('Command line', () => {
 
       updateFile(
         'apps/myapp/src/app/app.component.spec.ts',
-        `import '@proj/mylib';`
+        `
+          import '@proj/mylib';
+          describe('sample test', () => {
+            it('should test', () => {
+              expect(1).toEqual(1);
+            });
+          });
+        `
       );
 
       const affectedApps = runCommand(
@@ -158,6 +165,11 @@ describe('Command line', () => {
         'npm run affected:e2e -- --files="libs/mylib/src/index.ts"'
       );
       expect(e2e).toContain('should display welcome message');
+
+      const unitTests = runCommand(
+        'npm run affected:test -- --files="libs/mylib/src/index.ts"'
+      );
+      expect(unitTests).toContain('Testing mylib, myapp');
     },
     1000000
   );
