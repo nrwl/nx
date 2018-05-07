@@ -7,6 +7,7 @@ import {
   affectedProjectNames,
   dependencies,
   Dependency,
+  DepGraph,
   ProjectNode,
   ProjectType,
   touchedProjects
@@ -237,6 +238,17 @@ export function readDependencies(
   } else {
     return readJsonFile(`${appRoot.path}/dist/nxdeps.json`);
   }
+}
+
+export function readDepGraph(): DepGraph {
+  const angularJson = readAngularJson();
+  const nxJson = readNxJson();
+  const projectNodes = getProjectNodes(angularJson, nxJson);
+  return {
+    npmScope: nxJson.npmScope,
+    projects: projectNodes,
+    deps: readDependencies(nxJson.npmScope, projectNodes)
+  };
 }
 
 export function lastModifiedAmongProjectFiles() {
