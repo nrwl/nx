@@ -67,6 +67,8 @@
     "ts-node": "~5.0.1",
     "tslint": "~5.9.1",
     "typescript": "<%= typescriptVersion %>",
-    "prettier": "<%= prettierVersion %>"
+    "prettier": "<%= prettierVersion %>",
+    "cosmiconfig": "5.0.1",
+    "fs-extra": "6.0.0"
   }
 }
