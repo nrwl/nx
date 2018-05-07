@@ -75,6 +75,8 @@ if (!parsedVersion.isValid) {
     `Please run "yarn nx-release --help" for details on the acceptable version format.\n`
   );
   return process.exit(1);
+} else {
+  console.log('parsed version: ', JSON.stringify(parsedVersion));
 }
 
 console.log('Executing build script:');
