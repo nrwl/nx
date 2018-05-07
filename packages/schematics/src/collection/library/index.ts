@@ -4,7 +4,8 @@ import {
   move,
   noop,
   Rule,
-  Tree
+  Tree,
+  SchematicContext
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';
@@ -300,14 +301,17 @@ describe('${options.moduleName}', () => {
 
 function updateTsConfig(options: NormalizedSchema): Rule {
   return chain([
-    updateJsonInTree('tsconfig.json', json => {
-      const c = json.compilerOptions;
-      delete c.paths[options.name];
-      c.paths[`@proj/${options.projectDirectory}`] = [
-        `libs/${options.projectDirectory}/src/index.ts`
-      ];
-      return json;
-    })
+    (host: Tree, context: SchematicContext) => {
+      const nxJson = JSON.parse(host.read('nx.json').toString());
+      return updateJsonInTree('tsconfig.json', json => {
+        const c = json.compilerOptions;
+        delete c.paths[options.name];
+        c.paths[`@${nxJson.npmScope}/${options.projectDirectory}`] = [
+          `libs/${options.projectDirectory}/src/index.ts`
+        ];
+        return json;
+      })(host, context);
+    }
   ]);
 }
 
