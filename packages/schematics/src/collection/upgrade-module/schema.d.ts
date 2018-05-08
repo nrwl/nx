@@ -1,5 +1,5 @@
 export interface Schema {
-  app: string;
+  project: string;
   angularJsImport: string;
   angularJsCmpSelector: string;
   name: string;

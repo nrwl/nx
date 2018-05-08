@@ -4,13 +4,17 @@
   "title": "Generates downgradeModule setup",
   "type": "object",
   "properties": {
-    "app": {
+    "project": {
       "type": "string",
-      "description": "The name of the application"
+      "description": "The name of the project"
     },
     "name": {
       "type": "string",
-      "description": "The name of the main AngularJS module."
+      "description": "The name of the main AngularJS module.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
     },
     "angularJsImport": {
       "type": "string",
@@ -23,6 +27,6 @@
     }
   },
   "required": [
-    "name"
+    "project"
   ]
 }

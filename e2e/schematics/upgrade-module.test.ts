@@ -1,7 +1,7 @@
 import { newApp, newProject, runCLI, updateFile } from '../utils';
 
-xdescribe('Upgrade', () => {
-  it(
+describe('Upgrade', () => {
+  fit(
     'should generate an UpgradeModule setup',
     () => {
       newProject();
@@ -28,7 +28,7 @@ xdescribe('Upgrade', () => {
 
       runCLI(
         'generate upgrade-module legacy --angularJsImport=./legacy ' +
-          '--angularJsCmpSelector=rootLegacyCmp'
+          '--angularJsCmpSelector=rootLegacyCmp --project=myapp'
       );
 
       runCLI('build');
