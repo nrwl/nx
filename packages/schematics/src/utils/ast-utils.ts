@@ -5,7 +5,7 @@
  * Use of this source code is governed by an MIT- style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import { Tree, Rule } from '@angular-devkit/schematics';
+import { Rule, Tree } from '@angular-devkit/schematics';
 import {
   findNodes,
   getDecoratorMetadata,
@@ -575,31 +575,14 @@ export function updateJsonInTree<T = any, O = T>(
   };
 }
 
-// TODO DELETE THIS
-/**
- * This method is specifically for getting the .angular-cli.json data from a Tree
- * @param host The host tree
- */
-export function getAngularCliConfig(host: Tree) {
-  return readJsonInTree(host, '.angular-cli.json');
-}
-
-// TODO DELETE THIS
-export function getAppConfig(host: Tree, name: string): any {
-  const angularCliJson = getAngularCliConfig(host);
-  const apps = angularCliJson.apps;
-  if (!apps || apps.length === 0) {
-    throw new Error(`Cannot find app '${name}'`);
+function getProjectConfig(host: Tree, name: string): any {
+  const angularJson = readJsonInTree(host, '/angular.json');
+  const projectConfig = angularJson.projects[name];
+  if (!projectConfig) {
+    throw new Error(`Cannot find project '${name}'`);
+  } else {
+    return projectConfig;
   }
-  if (name) {
-    const appConfig = apps.filter(a => a.name === name)[0];
-    if (!appConfig) {
-      throw new Error(`Cannot find app '${name}'`);
-    } else {
-      return appConfig;
-    }
-  }
-  return apps[0];
 }
 
 export function readBootstrapInfo(
@@ -614,8 +597,15 @@ export function readBootstrapInfo(
   bootstrapComponentClassName: string;
   bootstrapComponentFileName: string;
 } {
-  const config = getAppConfig(host, app);
-  const mainPath = path.join(config.root, config.main);
+  const config = getProjectConfig(host, app);
+
+  let mainPath;
+  try {
+    mainPath = config.architect.build.options.main;
+  } catch (e) {
+    throw new Error('Main file cannot be located');
+  }
+
   if (!host.exists(mainPath)) {
     throw new Error('Main file cannot be located');
   }

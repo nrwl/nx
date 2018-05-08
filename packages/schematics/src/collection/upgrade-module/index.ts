@@ -34,7 +34,7 @@ function addImportsToModule(options: Schema): Rule {
   return (host: Tree) => {
     const { moduleClassName, modulePath, moduleSource } = readBootstrapInfo(
       host,
-      options.app
+      options.project
     );
 
     insert(host, modulePath, [
@@ -71,7 +71,7 @@ function addNgDoBootstrapToModule(options: Schema): Rule {
   return (host: Tree) => {
     const { moduleClassName, modulePath, moduleSource } = readBootstrapInfo(
       host,
-      options.app
+      options.project
     );
 
     insert(host, modulePath, [
@@ -102,7 +102,7 @@ function createFiles(angularJsImport: string, options: Schema): Rule {
       moduleSpec,
       bootstrapComponentClassName,
       bootstrapComponentFileName
-    } = readBootstrapInfo(host, options.app);
+    } = readBootstrapInfo(host, options.project);
 
     const dir = path.dirname(mainPath);
     const templateSource = apply(url('./files'), [

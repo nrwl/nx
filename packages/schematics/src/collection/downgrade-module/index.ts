@@ -18,7 +18,7 @@ function updateMain(angularJsImport: string, options: Schema): Rule {
       moduleSpec,
       bootstrapComponentClassName,
       bootstrapComponentFileName
-    } = readBootstrapInfo(host, options.app);
+    } = readBootstrapInfo(host, options.project);
 
     host.overwrite(
       mainPath,
@@ -27,7 +27,7 @@ function updateMain(angularJsImport: string, options: Schema): Rule {
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 
 import * as angular from 'angular';
-import { downgradeComponent, downgradeModule, setAngularLib } from '@angular/upgrade/static';
+import { downgradeComponent, downgradeModule, setAngularJSGlobal } from '@angular/upgrade/static';
 
 import { ${moduleClassName} } from '${moduleSpec}';
 import { environment } from './environments/environment';
@@ -35,7 +35,7 @@ import '${angularJsImport}';
 import { ${bootstrapComponentClassName} } from '${bootstrapComponentFileName}';
 
 export function bootstrapAngular(extra: StaticProvider[]): any {
-  setAngularLib(angular);
+  setAngularJSGlobal(angular);
   if (environment.production) {
     enableProdMode();
   }
@@ -59,7 +59,7 @@ function rewriteBootstrapLogic(options: Schema): Rule {
   return (host: Tree) => {
     const { modulePath, moduleSource, moduleClassName } = readBootstrapInfo(
       host,
-      options.app
+      options.project
     );
     insert(host, modulePath, [
       ...addMethod(moduleSource, modulePath, {
@@ -78,7 +78,7 @@ function addEntryComponentsToModule(options: Schema): Rule {
       modulePath,
       moduleSource,
       bootstrapComponentClassName
-    } = readBootstrapInfo(host, options.app);
+    } = readBootstrapInfo(host, options.project);
     insert(
       host,
       modulePath,

@@ -5,7 +5,7 @@ import { createApp, createEmptyWorkspace } from '../../utils/testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
 import { readJsonInTree } from '../../utils/ast-utils';
 
-xdescribe('upgrade-module', () => {
+describe('upgrade-module', () => {
   const schematicRunner = new SchematicTestRunner(
     '@nrwl/schematics',
     path.join(__dirname, '../../collection.json')
@@ -23,7 +23,8 @@ xdescribe('upgrade-module', () => {
     const tree = schematicRunner.runSchematic(
       'upgrade-module',
       {
-        name: 'legacy'
+        name: 'legacy',
+        project: 'myapp'
       },
       appTree
     );
@@ -53,7 +54,8 @@ xdescribe('upgrade-module', () => {
     const tree = schematicRunner.runSchematic(
       'upgrade-module',
       {
-        name: 'legacy'
+        name: 'legacy',
+        project: 'myapp'
       },
       appTree
     );
@@ -77,7 +79,8 @@ xdescribe('upgrade-module', () => {
       'upgrade-module',
       {
         name: 'legacy',
-        skipPackageJson: true
+        skipPackageJson: true,
+        project: 'myapp'
       },
       appTree
     );
@@ -91,7 +94,8 @@ xdescribe('upgrade-module', () => {
       'upgrade-module',
       {
         name: 'legacy',
-        router: true
+        router: true,
+        project: 'myapp'
       },
       appTree
     );
@@ -105,7 +109,8 @@ xdescribe('upgrade-module', () => {
       'upgrade-module',
       {
         name: 'legacy',
-        angularJsImport: 'legacy-app'
+        angularJsImport: 'legacy-app',
+        project: 'myapp'
       },
       appTree
     );

@@ -5,7 +5,7 @@ import { createApp, createEmptyWorkspace } from '../../utils/testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
 import { readJsonInTree } from '../../utils/ast-utils';
 
-xdescribe('downgrade-module', () => {
+describe('downgrade-module', () => {
   const schematicRunner = new SchematicTestRunner(
     '@nrwl/schematics',
     path.join(__dirname, '../../collection.json')
@@ -23,7 +23,8 @@ xdescribe('downgrade-module', () => {
     const tree = schematicRunner.runSchematic(
       'downgrade-module',
       {
-        name: 'legacy'
+        name: 'legacy',
+        project: 'myapp'
       },
       appTree
     );
@@ -40,7 +41,8 @@ xdescribe('downgrade-module', () => {
     const tree = schematicRunner.runSchematic(
       'downgrade-module',
       {
-        name: 'legacy'
+        name: 'legacy',
+        project: 'myapp'
       },
       appTree
     );
@@ -64,7 +66,8 @@ xdescribe('downgrade-module', () => {
     const tree = schematicRunner.runSchematic(
       'downgrade-module',
       {
-        name: 'legacy'
+        name: 'legacy',
+        project: 'myapp'
       },
       appTree
     );
@@ -88,7 +91,8 @@ xdescribe('downgrade-module', () => {
       'downgrade-module',
       {
         name: 'legacy',
-        skipPackageJson: true
+        skipPackageJson: true,
+        project: 'myapp'
       },
       appTree
     );
@@ -102,7 +106,8 @@ xdescribe('downgrade-module', () => {
       'downgrade-module',
       {
         name: 'legacy',
-        angularJsImport: 'legacy-app'
+        angularJsImport: 'legacy-app',
+        project: 'myapp'
       },
       appTree
     );

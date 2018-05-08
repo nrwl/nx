@@ -96,21 +96,23 @@ export function createApp(
       include: ['../**/*.ts']
     })
   );
-  // tree.overwrite(
-  //   '/angular.json',
-  //   JSON.stringify({
-  //     projects: {
-  //
-  //     },
-  //     apps: [
-  //       {
-  //         name: appName,
-  //         root: `apps/${appName}/src`,
-  //         main: 'main.ts',
-  //         index: 'index.html'
-  //       }
-  //     ]
-  //   })
-  // );
+  tree.overwrite(
+    '/angular.json',
+    JSON.stringify({
+      newProjectRoot: '',
+      projects: {
+        [appName]: {
+          root: `apps/${appName}/src`,
+          architect: {
+            build: {
+              options: {
+                main: `apps/${appName}/src/main.ts`
+              }
+            }
+          }
+        }
+      }
+    })
+  );
   return tree;
 }
