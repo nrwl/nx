@@ -9,6 +9,12 @@ import { lint } from './lint';
 import { workspaceSchematic } from './workspace-schematic';
 import { generateGraph, OutputType } from './dep-graph';
 
+export interface GlobalNxArgs {
+  help: boolean;
+  version: boolean;
+  quiet: boolean;
+}
+
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
 yargs
@@ -20,16 +26,16 @@ yargs
     args => affected('apps', args, process.argv.slice(3))
   )
   .command(
-    'affected:test',
-    'Test applications affected by the change',
-    yargs => withAffectedOptions(withParallel(yargs)),
-    args => affected('test', args, process.argv.slice(3))
-  )
-  .command(
     'affected:build',
     'Build applications affected by changes',
     yargs => withAffectedOptions(withParallel(yargs)),
     args => affected('build', args, process.argv.slice(3))
+  )
+  .command(
+    'affected:test',
+    'Test projects affected by changes',
+    yargs => withAffectedOptions(withParallel(yargs)),
+    args => affected('test', args, process.argv.slice(3))
   )
   .command(
     'affected:e2e',
@@ -116,6 +122,12 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     .implies('base', 'head')
     .nargs('uncommitted', 0)
     .nargs('untracked', 0)
+    .option('exclude', {
+      describe: 'Exclude certain projects from being processed',
+      type: 'array',
+      coerce: parseCSV,
+      default: []
+    })
     .conflicts({
       SHA1: ['files', 'untracked', 'uncommitted', 'base', 'head'],
       files: ['uncommitted', 'untracked', 'base', 'head'],
@@ -128,6 +140,15 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .describe('file', 'output file (e.g. --file=.vis/output.json)')
     .choices('output', [OutputType.json, OutputType.dot, OutputType.html]);
+}
+
+function parseCSV(args: string[]) {
+  return args.map(arg => arg.split(',')).reduce(
+    (acc, value) => {
+      return [...acc, ...value];
+    },
+    [] as string[]
+  );
 }
 
 function withParallel(yargs: yargs.Argv): yargs.Argv {

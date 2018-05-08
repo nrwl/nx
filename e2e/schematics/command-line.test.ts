@@ -161,6 +161,31 @@ describe('Command line', () => {
       );
       expect(build).toContain('Building myapp');
       expect(build).not.toContain('is not registered with the build command');
+      expect(build).not.toContain('with flags:');
+
+      // Should work in parallel
+      const buildParallel = runCommand(
+        'npm run affected:build -- --files="libs/mylib/src/index.ts" --parallel'
+      );
+      expect(buildParallel).toContain('Building myapp');
+
+      const buildExcluded = runCommand(
+        'npm run affected:build -- --files="libs/mylib/src/index.ts" --exclude myapp'
+      );
+      expect(buildExcluded).toContain('No apps to build');
+
+      const buildExcludedCsv = runCommand(
+        'npm run affected:build -- --files="package.json" --exclude myapp,myapp2'
+      );
+      expect(buildExcludedCsv).toContain('No apps to build');
+
+      // affected:build should pass non-nx flags to the CLI
+      const buildWithFlags = runCommand(
+        'npm run affected:build -- --files="libs/mylib/src/index.ts" --stats-json'
+      );
+      expect(buildWithFlags).toContain(
+        'Building myapp with flags: --stats-json=true'
+      );
 
       const e2e = runCommand(
         'npm run affected:e2e -- --files="libs/mylib/src/index.ts"'
@@ -171,6 +196,11 @@ describe('Command line', () => {
         'npm run affected:test -- --files="libs/mylib/src/index.ts"'
       );
       expect(unitTests).toContain('Testing mylib, myapp');
+
+      const unitTestsExcluded = runCommand(
+        'npm run affected:test -- --files="libs/mylib/src/index.ts" --exclude=myapp'
+      );
+      expect(unitTestsExcluded).toContain('Testing mylib');
     },
     1000000
   );
