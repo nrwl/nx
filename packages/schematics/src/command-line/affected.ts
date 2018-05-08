@@ -16,6 +16,20 @@ import {
   ProjectNode,
   ProjectType
 } from '@nrwl/schematics/src/command-line/affected-apps';
+import { GlobalNxArgs } from './nx';
+import * as yargs from 'yargs';
+
+export interface YargsAffectedOptions extends yargs.Arguments {}
+
+export interface AffectedOptions extends GlobalNxArgs {
+  parallel: boolean;
+  untracked: boolean;
+  uncommitted: boolean;
+  base: string;
+  head: string;
+  exclude: string[];
+  files: string[];
+}
 
 export function affected(
   command: string,
@@ -30,9 +44,13 @@ export function affected(
   try {
     const p = parseFiles(args);
     rest = p.rest;
-    apps = getAffectedApps(p.files);
+    apps = getAffectedApps(p.files).filter(
+      app => !parsedArgs.exclude.includes(app)
+    );
     e2eProjects = getAffectedE2e(p.files);
-    projects = getAffectedProjects(p.files);
+    projects = getAffectedProjects(p.files).filter(
+      project => !parsedArgs.exclude.includes(project)
+    );
   } catch (e) {
     printError(command, e);
     process.exit(1);
@@ -43,10 +61,10 @@ export function affected(
       console.log(apps.join(' '));
       break;
     case 'build':
-      build(apps, rest, parsedArgs.parallel);
+      build(apps, parsedArgs);
       break;
     case 'test':
-      test(projects, rest, parsedArgs.parallel);
+      test(projects, parsedArgs);
       break;
     case 'e2e':
       e2e(e2eProjects, rest);
@@ -61,14 +79,20 @@ function printError(command: string, e: any) {
   console.error(e.message);
 }
 
-function build(apps: string[], rest: string[], parallel: boolean) {
+function build(apps: string[], parsedArgs: YargsAffectedOptions) {
   if (apps.length > 0) {
-    console.log(`Building ${apps.join(', ')}`);
+    const normalizedArgs = filterNxSpecificArgs(parsedArgs);
+    let message = `Building ${apps.join(', ')}`;
+    if (normalizedArgs.length > 0) {
+      message += ` with flags: ${normalizedArgs.join(' ')}`;
+    }
+    console.log(message);
+
     runCommand(
       'build',
       apps,
-      rest,
-      parallel,
+      parsedArgs,
+      normalizedArgs,
       'Building ',
       'Build succeeded.',
       'Build failed.'
@@ -78,7 +102,7 @@ function build(apps: string[], rest: string[], parallel: boolean) {
   }
 }
 
-function test(projects: string[], rest: string[], parallel: boolean) {
+function test(projects: string[], parsedArgs: YargsAffectedOptions) {
   const depGraph = readDepGraph();
   const sortedProjects = topologicallySortProjects(depGraph);
   const sortedAffectedProjects = sortedProjects.filter(
@@ -89,12 +113,18 @@ function test(projects: string[], rest: string[], parallel: boolean) {
   );
 
   if (projectsToTest.length > 0) {
-    console.log(`Testing ${projectsToTest.join(', ')}`);
+    const normalizedArgs = filterNxSpecificArgs(parsedArgs);
+    let message = `Testing ${projectsToTest.join(', ')}`;
+    if (normalizedArgs.length > 0) {
+      message += ` with flags: ${normalizedArgs.join(' ')}`;
+    }
+    console.log(message);
+
     runCommand(
       'test',
       projectsToTest,
-      rest,
-      parallel,
+      parsedArgs,
+      normalizedArgs,
       'Testing ',
       'Tests passed.',
       'Tests failed.'
@@ -107,20 +137,19 @@ function test(projects: string[], rest: string[], parallel: boolean) {
 function runCommand(
   command: string,
   projects: string[],
+  parsedArgs: YargsAffectedOptions,
   args: string[],
-  parallel: boolean,
   iterationMessage: string,
   successMessage: string,
   errorMessage: string
 ) {
-  const normalizedArgs = filterNxSpecificArgs(args);
-  if (parallel) {
+  if (parsedArgs.parallel) {
     runAll(
       projects.map(
-        app => `ng ${command} -- ${normalizedArgs.join(' ')} --project=${app}`
+        app => `ng ${command} -- ${args.join(' ')} --project=${app}`
       ),
       {
-        parallel,
+        parallel: parsedArgs.parallel,
         stdin: process.stdin,
         stdout: process.stdout,
         stderr: process.stderr
@@ -132,9 +161,7 @@ function runCommand(
     projects.forEach(project => {
       console.log(iterationMessage + project);
       execSync(
-        `node ${ngPath()} ${command} ${normalizedArgs.join(
-          ' '
-        )} --project=${project}`,
+        `node ${ngPath()} ${command} ${args.join(' ')} --project=${project}`,
         {
           stdio: [0, 1, 2]
         }
@@ -179,20 +206,30 @@ function e2e(apps: string[], rest: string[]) {
   }
 }
 
-function filterNxSpecificArgs(args: string[]): string[] {
-  const nxSpecificFlags = [
-    '--parallel',
-    '--no-parallel',
-    '--base',
-    '--head',
-    '--files',
-    '--uncommitted',
-    '--untracked'
-  ];
+function filterNxSpecificArgs(parsedArgs: YargsAffectedOptions): string[] {
+  const filteredArgs = { ...parsedArgs };
+  // Delete Nx arguments from parsed Args
+  nxSpecificFlags.forEach(flag => {
+    delete filteredArgs[flag];
+  });
 
-  return args.filter(
-    arg => !nxSpecificFlags.some(flag => arg.startsWith(flag))
-  );
+  // These would be arguments such as app2 in  --app app1 app2 which the CLI does not accept
+  delete filteredArgs._;
+  // Also remove the node path
+  delete filteredArgs.$0;
+
+  // Re-serialize into a list of args
+  return Object.keys(filteredArgs).map(filteredArg => {
+    if (!Array.isArray(filteredArgs[filteredArg])) {
+      filteredArgs[filteredArg] = [filteredArgs[filteredArg]];
+    }
+
+    return filteredArgs[filteredArg]
+      .map(value => {
+        return `--${filteredArg}=${value}`;
+      })
+      .join(' ');
+  });
 }
 
 function ngPath() {
@@ -203,3 +240,23 @@ function ngPath() {
   );
   return path.join(basePath, 'bin', 'ng');
 }
+
+/**
+ * These options are only for getting an array with properties of AffectedOptions.
+ *
+ * @remark They are not defaults or useful for anything else
+ */
+const dummyOptions: AffectedOptions = {
+  parallel: false,
+  untracked: false,
+  uncommitted: false,
+  help: false,
+  version: false,
+  quiet: false,
+  base: 'base',
+  head: 'head',
+  exclude: ['exclude'],
+  files: ['']
+};
+
+const nxSpecificFlags = Object.keys(dummyOptions);
