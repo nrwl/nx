@@ -1,6 +1,6 @@
 {
   "name": "@nrwl/nx-source",
-  "version": "2.0.0-alpha.2",
+  "version": "6.0.0-alpha.1",
   "description": "Nrwl Extensions for Angular",
   "main": "index.js",
   "private": true,
@@ -72,6 +72,9 @@
   "author": "Victor Savkin",
   "license": "MIT",
   "jest": {
-    "modulePathIgnorePatterns": ["tmp", "files"]
+    "modulePathIgnorePatterns": [
+      "tmp",
+      "files"
+    ]
   }
 }
