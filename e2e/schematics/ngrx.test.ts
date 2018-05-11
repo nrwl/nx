@@ -1,7 +1,7 @@
 import { newApp, newProject, runCLI } from '../utils';
 
 describe('ngrx', () => {
-  fit(
+  it(
     'should work',
     () => {
       newProject();

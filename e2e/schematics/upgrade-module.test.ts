@@ -1,7 +1,7 @@
 import { newApp, newProject, runCLI, updateFile } from '../utils';
 
 describe('Upgrade', () => {
-  fit(
+  it(
     'should generate an UpgradeModule setup',
     () => {
       newProject();
