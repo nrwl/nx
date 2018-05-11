@@ -6,34 +6,35 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "Name of the ngrx feature (e.g., Products, User, etc.).",
+      "description": "Name of the NgRx feature (e.g., Products, Users, etc.). Recommended to use plural form for name.",
       "$default": {
         "$source": "argv",
         "index": 0
       }
     },
+    "directory": {
+      "type": "string",
+      "default": "+state",
+      "description":
+        "Override the name of the folder used to contain/group the NgRx files: contains actions, effects, reducers. selectors. (e.g., +state)"
+    },
     "module": {
       "type": "string",
+      "default": "",
       "description":
-        "Path to ngModule; host directory will contain the new '+state' directory (e.g., src/libs/mylib/mylib.module.ts)."
+        "Path to ngModule; host directory will contain the new '+state' directory (e.g., libs/comments/src/lib/comments-state.module.ts)."
+    },
+    "root": {
+      "type": "boolean",
+      "default": false,
+      "description":
+        "Add StoreModule.forRoot and EffectsModule.forRoot() instead of forFeature (e.g., --root)."
     },
     "onlyAddFiles": {
       "type": "boolean",
       "default": false,
       "description":
         "Only add new NgRx files, without changing the module file (e.g., --onlyAddFiles)."
-    },
-    "directory": {
-      "type": "string",
-      "default": "+state",
-      "description":
-        "The directory name for the ngrx files: contains actions, effects, reducers. (e.g., +state)"
-    },
-    "root": {
-      "type": "boolean",
-      "default": false,
-      "description":
-        "Add StoreModule.forRoot and EffectsModule.forRoot instead of forFeature (e.g., --root)."
     },
     "onlyEmptyRoot": {
       "type": "boolean",
@@ -50,7 +51,7 @@
       "type": "boolean",
       "default": false,
       "description":
-        "Do not add ngrx dependencies to package.json (e.g., --skipPackageJson)"
+        "Do not add NgRx dependencies to package.json (e.g., --skipPackageJson)"
     }
   },
   "required": ["module"]

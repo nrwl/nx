@@ -38,10 +38,10 @@
     "rxjs": "<%= rxjsVersion %>",
     "zone.js": "^0.8.19",
     "@nrwl/nx": "<%= nxVersion %>",
-    "@ngrx/effects": "5.2.0",
-    "@ngrx/router-store": "5.2.0",
-    "@ngrx/store": "5.2.0",
-    "@ngrx/store-devtools": "5.2.0"
+    "@ngrx/effects": "<%= ngrxVersion %>",
+    "@ngrx/router-store": "<%= ngrxVersion %>",
+    "@ngrx/store": "<%= ngrxVersion %>",
+    "@ngrx/store-devtools": "<%= ngrxVersion %>"
   },
   "devDependencies": {
     "@angular/cli": "<%= angularCliVersion %>",

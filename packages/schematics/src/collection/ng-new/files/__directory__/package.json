@@ -51,7 +51,6 @@
     "@angular/compiler-cli": "<%= angularVersion %>",
     "@angular/language-service": "<%= angularVersion %>",
     "@angular-devkit/build-angular": "~0.6.1",
-    "@ngrx/schematics": "<%= ngrxSchematicsVersion %>",
     "@nrwl/schematics": "<%= schematicsVersion %>",
     "jasmine-marbles": "<%= jasmineMarblesVersion %>",
     "@types/jasmine": "~2.8.6",

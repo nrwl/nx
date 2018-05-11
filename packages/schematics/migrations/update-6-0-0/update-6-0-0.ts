@@ -385,10 +385,10 @@ const updatePackageJson = updateJsonInTree('package.json', json => {
     'zone.js': '^0.8.26',
     'core-js': '^2.5.4',
     // End Angular Versions
-    '@ngrx/effects': '5.2.0',
-    '@ngrx/router-store': '5.2.0',
-    '@ngrx/store': '5.2.0',
-    '@ngrx/store-devtools': '5.2.0',
+    '@ngrx/effects': '6.0.1',
+    '@ngrx/router-store': '6.0.1',
+    '@ngrx/store': '6.0.1',
+    '@ngrx/store-devtools': '6.0.1',
     '@nrwl/nx': '6.0.2'
   };
   json.devDependencies = {
@@ -397,7 +397,6 @@ const updatePackageJson = updateJsonInTree('package.json', json => {
     '@angular/compiler-cli': '6.0.1',
     '@angular/language-service': '6.0.1',
     // End Angular Versions
-    '@ngrx/schematics': '5.2.0',
     typescript: '2.7.2',
     'jasmine-marbles': '0.3.1',
     '@types/jasmine': '~2.8.6',

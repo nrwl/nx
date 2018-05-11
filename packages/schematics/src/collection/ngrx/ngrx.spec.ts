@@ -10,8 +10,10 @@ import * as path from 'path';
 import { findModuleParent } from '../../utils/name-utils';
 import {
   createApp,
+  createLib,
   createEmptyWorkspace,
   AppConfig,
+  getLibConfig,
   getAppConfig
 } from '../../utils/testing-utils';
 
@@ -70,16 +72,16 @@ describe('ngrx', () => {
     expect(appModule).toContain('EffectsModule.forRoot');
     expect(appModule).toContain('!environment.production ? [storeFreeze] : []');
 
-    expect(appModule).toContain('appReducer, initialState');
-    expect(appModule).not.toContain('AppData');
-    expect(appModule).not.toContain('AppState');
+    expect(appModule).toContain('app: appReducer');
+    expect(appModule).toContain('initialState : { app : appInitialState }');
 
     [
       '/apps/myapp/src/app/+state/app.actions.ts',
       '/apps/myapp/src/app/+state/app.effects.ts',
       '/apps/myapp/src/app/+state/app.effects.spec.ts',
       '/apps/myapp/src/app/+state/app.reducer.ts',
-      '/apps/myapp/src/app/+state/app.reducer.spec.ts'
+      '/apps/myapp/src/app/+state/app.reducer.spec.ts',
+      '/apps/myapp/src/app/+state/app.selectors.ts'
     ].forEach(fileName => {
       expect(tree.exists(fileName)).toBeTruthy();
     });
@@ -116,7 +118,8 @@ describe('ngrx', () => {
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
     expect(appModule).toContain('StoreModule.forFeature');
     expect(appModule).toContain('EffectsModule.forFeature');
-    expect(appModule).toContain('initialState: stateInitialState');
+    expect(appModule).toContain("'state', stateReducer");
+    expect(appModule).toContain('{ initialState: stateInitialState }');
     expect(appModule).not.toContain(
       '!environment.production ? [storeFreeze] : []'
     );
@@ -166,9 +169,13 @@ describe('ngrx', () => {
       '!environment.production ? [storeFreeze] : []'
     );
 
-    expect(
-      tree.exists(`/apps/myapp/src/app/+state/state.actions.ts`)
-    ).toBeTruthy();
+    [
+      '/apps/myapp/src/app/+state/state.effects.ts',
+      '/apps/myapp/src/app/+state/state.reducer.ts',
+      '/apps/myapp/src/app/+state/state.selectors.ts'
+    ].forEach(fileName => {
+      expect(tree.exists(fileName)).toBeTruthy();
+    });
   });
 
   it('should update package.json', () => {
@@ -197,142 +204,169 @@ describe('ngrx', () => {
         },
         appTree
       )
-    ).toThrow("should have required property 'module'");
+    ).toThrow('Specified module does not exist');
   });
 
-  it('should create the ngrx files', () => {
-    const appConfig = getAppConfig();
-    const hasFile = file => expect(tree.exists(file)).toBeTruthy();
-    const tree = buildNgrxTree(appConfig);
-    const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+  describe('code generation', () => {
+    it('should scaffold the ngrx "user" files', () => {
+      const appConfig = getAppConfig();
+      const hasFile = file => expect(tree.exists(file)).toBeTruthy();
+      const tree = buildNgrxTree(appConfig);
+      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
 
-    hasFile(`${statePath}/user.actions.ts`);
-    hasFile(`${statePath}/user.effects.ts`);
-    hasFile(`${statePath}/user.effects.spec.ts`);
-    hasFile(`${statePath}/user.reducer.ts`);
-    hasFile(`${statePath}/user.reducer.spec.ts`);
-  });
+      hasFile(`${statePath}/user.actions.ts`);
+      hasFile(`${statePath}/user.effects.ts`);
+      hasFile(`${statePath}/user.effects.spec.ts`);
+      hasFile(`${statePath}/user.reducer.ts`);
+      hasFile(`${statePath}/user.reducer.spec.ts`);
+      hasFile(`${statePath}/user.selectors.ts`);
+    });
 
-  it('should create ngrx action enums', () => {
-    const appConfig = getAppConfig();
-    const tree = buildNgrxTree(appConfig);
+    it('should build the ngrx actions', () => {
+      const appConfig = getAppConfig();
+      const tree = buildNgrxTree(appConfig, 'users');
 
-    const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
-    const content = getFileContent(tree, `${statePath}/user.actions.ts`);
+      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+      const content = getFileContent(tree, `${statePath}/users.actions.ts`);
 
-    expect(content).toContain('UserActionTypes');
-    expect(content).toContain("LoadUser = '[User] Load Data'");
-    expect(content).toContain("UserLoaded = '[User] Data Loaded'");
-  });
+      expect(content).toContain('UsersActionTypes');
 
-  it('should create ngrx action classes', () => {
-    const appConfig = getAppConfig();
-    const tree = buildNgrxTree(appConfig);
+      expect(content).toContain('LoadUsers = "[Users] Load Users"');
+      expect(content).toContain('UsersLoaded = "[Users] Users Loaded"');
+      expect(content).toContain('UsersLoadError = "[Users] Users Load Error"');
 
-    const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
-    const content = getFileContent(tree, `${statePath}/user.actions.ts`);
+      expect(content).toContain('class LoadUsers implements Action');
+      expect(content).toContain('class UsersLoaded implements Action');
+      expect(content).toContain(
+        'type UsersAction = LoadUsers | UsersLoaded | UsersLoadError'
+      );
+      expect(content).toContain('export const fromUsersActions');
+    });
 
-    expect(content).toContain('class LoadUser implements Action');
-    expect(content).toContain('class UserLoaded implements Action');
-  });
+    it('should build the ngrx selectors', () => {
+      const appConfig = getAppConfig();
+      const tree = buildNgrxTree(appConfig, 'users');
 
-  it('should enhance the ngrx action type', () => {
-    const appConfig = getAppConfig();
-    const tree = buildNgrxTree(appConfig);
+      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+      const content = getFileContent(tree, `${statePath}/users.selectors.ts`);
 
-    const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
-    const content = getFileContent(tree, `${statePath}/user.actions.ts`);
-    expect(content).toContain(
-      'type UserActions = User | LoadUser | UserLoaded'
-    );
-  });
+      [
+        `import { UsersState } from './users.reducer'`,
+        `export const usersQuery`
+      ].forEach(text => {
+        expect(content).toContain(text);
+      });
+    });
 
-  it('should enhance the ngrx reducer', () => {
-    const appConfig = getAppConfig();
-    const tree = buildNgrxTree(appConfig);
+    it('should build the ngrx reducer', () => {
+      const appConfig = getAppConfig();
+      const tree = buildNgrxTree(appConfig, 'user');
 
-    const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
-    const content = getFileContent(tree, `${statePath}/user.reducer.ts`);
+      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+      const content = getFileContent(tree, `${statePath}/user.reducer.ts`);
 
-    expect(content).not.toContain('function reducer');
+      expect(content).not.toContain('function reducer');
 
-    [
-      `import { UserActions, UserActionTypes } from \'./user.actions\'`,
-      `export interface UserData`,
-      `export interface UserState`,
-      `readonly user: UserData`,
-      `const initialState: UserData`,
-      'function userReducer(state = initialState, action: UserActions): UserData',
-      'case UserActionTypes.UserLoaded'
-    ].forEach(text => {
-      expect(content).toContain(text);
+      [
+        `import { UserAction, UserActionTypes } from \'./user.actions\'`,
+        `export interface User`,
+        `export interface UserState`,
+        'export function userReducer',
+        'state: UserState = initialState',
+        'action: UserAction): UserState',
+        'case UserActionTypes.UserLoaded'
+      ].forEach(text => {
+        expect(content).toContain(text);
+      });
+    });
+
+    it('should build the ngrx effects', () => {
+      const appConfig = getAppConfig();
+      const tree = buildNgrxTree(appConfig, 'users');
+      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+      const content = getFileContent(tree, `${statePath}/users.effects.ts`);
+
+      [
+        `import { DataPersistence } from \'@nrwl/nx\'`,
+        `import { LoadUsers, UsersLoaded, UsersLoadError, UsersActionTypes } from \'./users.actions\'`,
+        `loadUsers$`,
+        `run: (action: LoadUsers, state: UsersState)`,
+        `return new UsersLoaded([])`,
+        `return new UsersLoadError(error)`,
+        'private actions$: Actions',
+        'private dataPersistence: DataPersistence<UsersState>)'
+      ].forEach(text => {
+        expect(content).toContain(text);
+      });
     });
   });
 
-  it('should produce proper specs for the ngrx reducer', () => {
-    const appConfig = getAppConfig();
-    const tree = buildNgrxTree(appConfig);
+  describe('spec test', () => {
+    it('should produce proper specs for the ngrx reducer', () => {
+      const appConfig = getAppConfig();
+      const tree = buildNgrxTree(appConfig);
 
-    const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
-    const contents = tree.readContent(`${statePath}/user.reducer.spec.ts`);
+      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+      const contents = tree.readContent(`${statePath}/user.reducer.spec.ts`);
 
-    expect(contents).toContain(`describe('userReducer', () => {`);
-    expect(contents).toContain(
-      `const action: UserLoaded = new UserLoaded({});`
-    );
-    expect(contents).toContain(
-      `const actual = userReducer(initialState, action);`
-    );
-  });
+      expect(contents).toContain(`describe('User Reducer', () => {`);
+      expect(contents).toContain(
+        'const result = userReducer(initialState, action);'
+      );
+    });
 
-  it('should produce proper specs for the ngrx reducer for a name with a dash', () => {
-    const appConfig = getAppConfig();
-    const tree = schematicRunner.runSchematic(
-      'ngrx',
-      {
-        name: 'super-user',
-        module: appConfig.appModule
-      },
-      appTree
-    );
+    it('should update the barrel API with exports for ngrx selector, and reducer', () => {
+      appTree = createLib(appTree, 'flights');
+      let libConfig = getLibConfig();
+      let tree = schematicRunner.runSchematic(
+        'ngrx',
+        {
+          name: 'super-users',
+          module: libConfig.module
+        },
+        appTree
+      );
 
-    const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
-    const contents = tree.readContent(
-      `${statePath}/super-user.reducer.spec.ts`
-    );
+      const barrel = tree.readContent(libConfig.barrel);
+      expect(barrel).toContain(
+        `export * from './lib/+state/super-users.selectors';`
+      );
+      expect(barrel).toContain(
+        `export * from './lib/+state/super-users.reducer';`
+      );
+    });
 
-    expect(contents).toContain(`describe('superUserReducer', () => {`);
-    expect(contents).toContain(
-      `const action: SuperUserLoaded = new SuperUserLoaded({});`
-    );
-    expect(contents).toContain(
-      `const actual = superUserReducer(initialState, action);`
-    );
-  });
+    it('should produce proper specs for the ngrx reducer for a name with a dash', () => {
+      const appConfig = getAppConfig();
+      const tree = schematicRunner.runSchematic(
+        'ngrx',
+        {
+          name: 'super-users',
+          module: appConfig.appModule
+        },
+        appTree
+      );
 
-  it('should enhance the ngrx effects', () => {
-    const appConfig = getAppConfig();
-    const tree = buildNgrxTree(appConfig);
-    const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
-    const content = getFileContent(tree, `${statePath}/user.effects.ts`);
+      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+      const contents = tree.readContent(
+        `${statePath}/super-users.reducer.spec.ts`
+      );
 
-    [
-      `import { DataPersistence } from \'@nrwl/nx\'`,
-      `import { UserActions, UserActionTypes, LoadUser, UserLoaded } from \'./user.actions\'`,
-      `loadUser$`,
-      `run: (action: LoadUser, state: UserState)`,
-      `return new UserLoaded(state)`,
-      'constructor(private actions$: Actions, private dataPersistence: DataPersistence<UserState>)'
-    ].forEach(text => {
-      expect(content).toContain(text);
+      expect(contents).toContain(`describe('SuperUsers Reducer', () => {`);
+      expect(contents).toContain(
+        `const result = superUsersReducer(initialState, action);`
+      );
     });
   });
 
-  function buildNgrxTree(appConfig: AppConfig): UnitTestTree {
+  function buildNgrxTree(
+    appConfig: AppConfig,
+    featureName: string = 'user'
+  ): UnitTestTree {
     return schematicRunner.runSchematic(
       'ngrx',
       {
-        name: 'user',
+        name: featureName,
         module: appConfig.appModule
       },
       appTree

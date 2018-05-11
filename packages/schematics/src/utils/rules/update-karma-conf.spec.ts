@@ -17,36 +17,42 @@ describe('updateKarmaConf', () => {
     );
     tree = createEmptyWorkspace(Tree.empty());
     tree.create('apps/projectName/karma.conf.js', '');
-    schematicRunner
-      .callRule(
-        updateJsonInTree('/angular.json', angularJson => {
-          angularJson.projects.projectName = {
-            root: 'apps/projectName',
-            architect: {
-              test: {
-                options: {
-                  karmaConfig: 'apps/projectName/karma.conf.js'
-                }
+    const process$ = schematicRunner.callRule(
+      updateJsonInTree('/angular.json', angularJson => {
+        angularJson.projects.projectName = {
+          root: 'apps/projectName',
+          architect: {
+            test: {
+              options: {
+                karmaConfig: 'apps/projectName/karma.conf.js'
               }
             }
-          };
-          return angularJson;
-        }),
-        tree
-      )
-      .subscribe(done);
+          }
+        };
+        return angularJson;
+      }),
+      tree
+    );
+
+    process$.subscribe(
+      _ => done(),
+      error => {
+        console.log(error);
+      }
+    );
   });
 
   it('should overwrite the karma.conf.js', done => {
-    schematicRunner
-      .callRule(updateKarmaConf({ projectName: 'projectName' }), tree)
-      .subscribe(result => {
-        const contents = result
-          .read('apps/projectName/karma.conf.js')
-          .toString();
+    const replaceKarmaConf = updateKarmaConf({ projectName: 'projectName' });
+    schematicRunner.callRule(replaceKarmaConf, tree).subscribe(result => {
+      const contents = result.read('apps/projectName/karma.conf.js');
+      expect(contents.toString()).toEqual(UPDATED_KARMA_CONF);
+      done();
+    });
+  });
+});
 
-        expect(contents).toEqual(
-          `// Karma configuration file, see link for more information
+const UPDATED_KARMA_CONF = `// Karma configuration file, see link for more information
 // https://karma-runner.github.io/1.0/config/configuration-file.html
 
 const { join } = require('path');
@@ -62,9 +68,4 @@ module.exports = function(config) {
     }
   });
 };
-`
-        );
-        done();
-      });
-  });
-});
+`;

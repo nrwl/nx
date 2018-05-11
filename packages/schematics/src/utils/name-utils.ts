@@ -1,5 +1,8 @@
 import * as path from 'path';
 
+/**
+ * Build dictionary of names:
+ */
 export function names(name: string): any {
   return {
     name,
@@ -9,10 +12,16 @@ export function names(name: string): any {
   };
 }
 
+/**
+ * hypenated to UpperCamelCase
+ */
 export function toClassName(str: string): string {
   return toCapitalCase(toPropertyName(str));
 }
 
+/**
+ * Hypenated to lowerCamelCase
+ */
 export function toPropertyName(s: string): string {
   return s
     .replace(
@@ -22,6 +31,9 @@ export function toPropertyName(s: string): string {
     .replace(/^([A-Z])/, m => m.toLowerCase());
 }
 
+/**
+ * Upper camelCase to lowercase, hypenated
+ */
 export function toFileName(s: string): string {
   return s
     .replace(/([a-z\d])([A-Z])/g, '$1_$2')

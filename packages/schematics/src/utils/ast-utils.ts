@@ -26,6 +26,28 @@ import { toFileName } from './name-utils';
 import { serializeJson } from './fileutils';
 import * as stripJsonComments from 'strip-json-comments';
 
+export function addReexport(
+  source: ts.SourceFile,
+  modulePath: string,
+  reexportedFileName: string,
+  token: string
+): Change[] {
+  const allExports = findNodes(source, ts.SyntaxKind.ExportDeclaration);
+  if (allExports.length > 0) {
+    const m = allExports.filter(
+      (e: ts.ExportDeclaration) =>
+        e.moduleSpecifier.getText(source).indexOf(reexportedFileName) > -1
+    );
+    if (m.length > 0) {
+      const mm: ts.ExportDeclaration = <any>m[0];
+      return [
+        new InsertChange(modulePath, mm.exportClause.end - 1, `, ${token} `)
+      ];
+    }
+  }
+  return [];
+}
+
 // This should be moved to @schematics/angular once it allows to pass custom expressions as providers
 function _addSymbolToNgModuleMetadata(
   source: ts.SourceFile,
@@ -315,28 +337,6 @@ export function addImportToTestBed(
   } else {
     return [];
   }
-}
-
-export function addReexport(
-  source: ts.SourceFile,
-  modulePath: string,
-  reexportedFileName: string,
-  token: string
-): Change[] {
-  const allExports = findNodes(source, ts.SyntaxKind.ExportDeclaration);
-  if (allExports.length > 0) {
-    const m = allExports.filter(
-      (e: ts.ExportDeclaration) =>
-        e.moduleSpecifier.getText(source).indexOf(reexportedFileName) > -1
-    );
-    if (m.length > 0) {
-      const mm: ts.ExportDeclaration = <any>m[0];
-      return [
-        new InsertChange(modulePath, mm.exportClause.end - 1, `, ${token} `)
-      ];
-    }
-  }
-  return [];
 }
 
 export function getBootstrapComponent(
@@ -698,6 +698,12 @@ export function addClass(
   return new NoopChange();
 }
 
+/**
+ * e.g
+ * ```ts
+ *   export type <Feature>Actions = <Feature> | Load<Feature>s | <Feature>sLoaded | <Feature>sLoadError;
+ * ```
+ */
 export function addUnionTypes(
   source: ts.SourceFile,
   modulePath: string,

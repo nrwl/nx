@@ -1,6 +1,6 @@
 {
   "name": "@nrwl/schematics",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Nrwl Extensions for Angular: Schematics",
   "repository": {
     "type": "git",
@@ -20,7 +20,6 @@
   },
   "main": "index.js",
   "types": "index.d.js",
-  "peerDependencies": {},
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -34,7 +33,6 @@
     "migrations": "./migrations/migrations.json"
   },
   "dependencies": {
-    "@ngrx/schematics": "5.2.0",
     "@types/yargs": "^11.0.0",
     "app-root-path": "^2.0.1",
     "cosmiconfig": "4.0.0",
@@ -50,7 +48,8 @@
     "yargs": "^11.0.0"
   },
   "peerDependencies": {
-    "@schematics/angular": "^0.6.0",
-    "@angular-devkit/schematics": "^0.6.0"
+    "@schematics/angular": "^0.6.8",
+    "@angular-devkit/core": "^0.6.8",
+    "@angular-devkit/schematics": "^0.6.8"
   }
 }

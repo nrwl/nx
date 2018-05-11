@@ -1,14 +1,24 @@
 import { Tree } from '@angular-devkit/schematics';
+import { names } from './name-utils';
 
 export interface AppConfig {
-  appName: string; // name of app or lib
+  appName: string; // name of app
   appModule: string; // app/app.module.ts in the above sourceDir
+}
+export interface LibConfig {
+  name: string;
+  module: string;
+  barrel: string;
 }
 
 var appConfig: AppConfig; // configure built in createApp()
+var libConfig: LibConfig;
 
 export function getAppConfig(): AppConfig {
   return appConfig;
+}
+export function getLibConfig(): LibConfig {
+  return libConfig;
 }
 
 export function createEmptyWorkspace(tree: Tree): Tree {
@@ -113,6 +123,38 @@ export function createApp(
         }
       }
     })
+  );
+  return tree;
+}
+
+export function createLib(tree: Tree, libName: string): Tree {
+  const { name, className, fileName, propertyName } = names(libName);
+
+  libConfig = {
+    name,
+    module: `/libs/${propertyName}/src/lib/${fileName}.module.ts`,
+    barrel: `/libs/${propertyName}/src/index.ts`
+  };
+
+  tree.create(
+    libConfig.module,
+    `
+      import { NgModule } from '@angular/core';
+      import { CommonModule } from '@angular/common';
+      @NgModule({
+        imports: [
+          CommonModule
+        ],
+        providers: []
+      })
+      export class ${className}Module { }
+  `
+  );
+  tree.create(
+    libConfig.barrel,
+    `
+    export * from './lib/${fileName}.module';
+  `
   );
   return tree;
 }

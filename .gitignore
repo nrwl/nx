@@ -8,3 +8,4 @@ test
 tmp
 *.log
 .ng_pkg_build
+jest.debug.config.js
