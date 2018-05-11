@@ -97,10 +97,6 @@ describe('Nrwl Convert to Nx Workspace', () => {
       updatedPackageJson.dependencies['@ngrx/store-devtools']
     ).toBeDefined();
     expect(updatedPackageJson.dependencies['rxjs-compat']).toBeDefined();
-
-    expect(
-      updatedPackageJson.devDependencies['@ngrx/schematics']
-    ).toBeDefined();
     expect(updatedPackageJson.devDependencies['@angular/cli']).toBeDefined();
 
     const nxJson = readJson('nx.json');
@@ -203,6 +199,11 @@ describe('Nrwl Convert to Nx Workspace', () => {
     );
     expect(updatedAngularCLIJson.projects['proj-e2e'].architect.e2e).toEqual({
       builder: '@angular-devkit/build-angular:protractor',
+      configurations: {
+        production: {
+          devServerTarget: 'proj:serve:production'
+        }
+      },
       options: {
         protractorConfig: 'apps/proj-e2e/protractor.conf.js',
         devServerTarget: 'proj:serve'

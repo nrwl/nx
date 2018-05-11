@@ -65,6 +65,11 @@ export function copyMissingPackages(): void {
     `rm -rf tmp/${projectName}/node_modules/@angular-devkit/core/node_modules`
   );
 
+  execSync(`rm tmp/${projectName}/node_modules/.bin/semver`);
+  execSync(
+    `cp -a node_modules/.bin/semver tmp/${projectName}/node_modules/.bin/semver`
+  );
+
   const libIndex = `./tmp/${projectName}/node_modules/@schematics/angular/library/index.js`;
   const content = readFileSync(libIndex).toString();
   const updatedContent = content.replace(

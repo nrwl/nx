@@ -1,0 +1,29 @@
+import {Action} from "@ngrx/store";
+
+export enum <%= className %>ActionTypes {
+ Load<%= className %> = "[<%= className %>] Load <%= className %>",
+ <%= className %>Loaded = "[<%= className %>] <%= className %> Loaded",
+ <%= className %>LoadError = "[<%= className %>] <%= className %> Load Error"
+}
+
+export class Load<%= className %> implements Action {
+ readonly type = <%= className %>ActionTypes.Load<%= className %>;
+}
+
+export class <%= className %>LoadError implements Action {
+ readonly type = <%= className %>ActionTypes.Load<%= className %>;
+ constructor(public payload: any) { }
+}
+
+export class <%= className %>Loaded implements Action {
+ readonly type = <%= className %>ActionTypes.<%= className %>Loaded;
+ constructor(public payload: any[]) { }
+}
+
+export type <%= className %>Action = Load<%= className %> | <%= className %>Loaded | <%= className %>LoadError;
+
+export const from<%= className %>Actions = {
+  Load<%= className %>,
+  <%= className %>Loaded,
+  <%= className %>LoadError
+}

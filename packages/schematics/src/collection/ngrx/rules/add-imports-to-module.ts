@@ -1,5 +1,5 @@
 import { Rule, Tree } from '@angular-devkit/schematics';
-import { Change } from '@ngrx/schematics/src/utility/change';
+import { Change } from '@schematics/angular/utility/change';
 import { insertImport } from '@schematics/angular/utility/route-utils';
 import * as ts from 'typescript';
 import {
@@ -39,7 +39,7 @@ export function addImportsToModule(context: RequestContext): Rule {
     const featureName = `${toPropertyName(context.featureName)}`;
     const reducerName = `${toPropertyName(context.featureName)}Reducer`;
     const effectsName = `${toClassName(context.featureName)}Effects`;
-    const reducerImports = `${reducerName}, initialState as ${featureName}InitialState`;
+    const reducerImports = `initialState as ${featureName}InitialState, ${reducerName}`;
 
     const storeReducers = `{ ${featureName}: ${reducerName} }`;
     const storeInitState = `initialState : { ${featureName} : ${featureName}InitialState }`;
@@ -95,7 +95,7 @@ export function addImportsToModule(context: RequestContext): Rule {
         addImport.apply(this, effectsModule),
         addImport(reducerImports, reducerPath),
         addImport(effectsName, effectsPath),
-        ...addProviderToModule(source, modulePath, effectsName)
+        ...addProviderToModule(source, modulePath, `${effectsName}`)
       ];
 
       if (context.options.root) {

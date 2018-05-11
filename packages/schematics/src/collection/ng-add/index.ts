@@ -99,9 +99,6 @@ function updatePackageJson() {
     if (!packageJson.dependencies['rxjs-compat']) {
       packageJson.dependencies['rxjs-compat'] = rxjsVersion;
     }
-    if (!packageJson.devDependencies['@ngrx/schematics']) {
-      packageJson.devDependencies['@ngrx/schematics'] = ngrxSchematicsVersion;
-    }
     if (!packageJson.devDependencies['@nrwl/schematics']) {
       packageJson.devDependencies['@nrwl/schematics'] = schematicsVersion;
     }

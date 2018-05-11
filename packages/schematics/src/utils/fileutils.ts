@@ -1,3 +1,4 @@
+import { statSync } from 'fs';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -71,6 +72,14 @@ function directoryExists(name) {
   try {
     return fs.statSync(name).isDirectory();
   } catch (e) {
+    return false;
+  }
+}
+
+export function fileExists(filePath: string): boolean {
+  try {
+    return statSync(filePath).isFile();
+  } catch (err) {
     return false;
   }
 }

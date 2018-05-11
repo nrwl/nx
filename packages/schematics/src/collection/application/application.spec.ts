@@ -99,27 +99,33 @@ describe('app', () => {
         { name: 'myApp' },
         appTree
       );
-      expect(
-        JSON.parse(noPrefix.read('angular.json').toString()).projects['my-app']
-          .prefix
-      ).toEqual('proj');
-      expect(
-        noPrefix.read('apps/my-app-e2e/src/app.e2e-spec.ts').toString()
-      ).toContain('Welcome to proj!');
-
       const withPrefix = schematicRunner.runSchematic(
         'app',
         { name: 'myApp', prefix: 'custom' },
         appTree
       );
-      expect(
-        JSON.parse(withPrefix.read('angular.json').toString()).projects[
-          'my-app'
-        ].prefix
-      ).toEqual('custom');
-      expect(
-        withPrefix.read('apps/my-app-e2e/src/app.e2e-spec.ts').toString()
-      ).toContain('Welcome to custom!');
+
+      // Testing without prefix
+
+      let appE2eSpec = noPrefix
+        .read('apps/my-app-e2e/src/app.e2e-spec.ts')
+        .toString();
+      let angularJson = JSON.parse(noPrefix.read('angular.json').toString());
+      let myAppPrefix = angularJson.projects['my-app'].prefix;
+
+      expect(myAppPrefix).toEqual('proj');
+      expect(appE2eSpec).toContain('Welcome to my-app!');
+
+      // Testing WITH prefix
+
+      appE2eSpec = withPrefix
+        .read('apps/my-app-e2e/src/app.e2e-spec.ts')
+        .toString();
+      angularJson = JSON.parse(withPrefix.read('angular.json').toString());
+      myAppPrefix = angularJson.projects['my-app'].prefix;
+
+      expect(myAppPrefix).toEqual('custom');
+      expect(appE2eSpec).toContain('Welcome to my-app!');
     });
   });
 
@@ -161,48 +167,50 @@ describe('app', () => {
     });
 
     it('should generate files', () => {
+      const hasJsonValue = ({ path, expectedValue, lookupFn }) => {
+        const content = getFileContent(tree, path);
+        const config = JSON.parse(stripJsonComments(content));
+
+        expect(lookupFn(config)).toEqual(expectedValue);
+      };
       const tree = schematicRunner.runSchematic(
         'app',
         { name: 'myApp', directory: 'myDir' },
         appTree
       );
-      expect(tree.exists(`apps/my-dir/my-app/karma.conf.js`)).toBeTruthy();
-      expect(tree.exists('apps/my-dir/my-app/src/main.ts')).toBeTruthy();
-      expect(
-        tree.exists('apps/my-dir/my-app/src/app/app.module.ts')
-      ).toBeTruthy();
-      expect(
-        tree.exists('apps/my-dir/my-app/src/app/app.component.ts')
-      ).toBeTruthy();
-      expect(
-        getFileContent(tree, 'apps/my-dir/my-app/src/app/app.module.ts')
-      ).toContain('class AppModule');
 
-      const tsconfigApp = JSON.parse(
-        stripJsonComments(
-          getFileContent(tree, 'apps/my-dir/my-app/tsconfig.app.json')
-        )
-      );
-      expect(tsconfigApp.compilerOptions.outDir).toEqual(
-        '../../../dist/out-tsc/apps/my-dir/my-app'
-      );
+      const appModulePath = 'apps/my-dir/my-app/src/app/app.module.ts';
+      expect(getFileContent(tree, appModulePath)).toContain('class AppModule');
 
-      const tslintJson = JSON.parse(
-        stripJsonComments(
-          getFileContent(tree, 'apps/my-dir/my-app/tslint.json')
-        )
-      );
-      expect(tslintJson.extends).toEqual('../../../tslint.json');
+      // Make sure these exist
+      [
+        `apps/my-dir/my-app/karma.conf.js`,
+        'apps/my-dir/my-app/src/main.ts',
+        'apps/my-dir/my-app/src/app/app.module.ts',
+        'apps/my-dir/my-app/src/app/app.component.ts',
+        'apps/my-dir/my-app-e2e/src/app.po.ts'
+      ].forEach(path => {
+        expect(tree.exists(path)).toBeTruthy();
+      });
 
-      expect(tree.exists('apps/my-dir/my-app-e2e/src/app.po.ts')).toBeTruthy();
-      const tsconfigE2E = JSON.parse(
-        stripJsonComments(
-          getFileContent(tree, 'apps/my-dir/my-app-e2e/tsconfig.e2e.json')
-        )
-      );
-      expect(tsconfigE2E.compilerOptions.outDir).toEqual(
-        '../../../dist/out-tsc/apps/my-dir/my-app-e2e'
-      );
+      // Make sure these have properties
+      [
+        {
+          path: 'apps/my-dir/my-app/tsconfig.app.json',
+          lookupFn: json => json.compilerOptions.outDir,
+          expectedValue: '../../../dist/out-tsc/apps/my-dir/my-app'
+        },
+        {
+          path: 'apps/my-dir/my-app-e2e/tsconfig.e2e.json',
+          lookupFn: json => json.compilerOptions.outDir,
+          expectedValue: '../../../dist/out-tsc/apps/my-dir/my-app-e2e'
+        },
+        {
+          path: 'apps/my-dir/my-app/tslint.json',
+          lookupFn: json => json.extends,
+          expectedValue: '../../../tslint.json'
+        }
+      ].forEach(hasJsonValue);
     });
   });
 

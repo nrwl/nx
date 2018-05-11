@@ -1,7 +1,7 @@
 {
   "name": "nx-bazel",
   "version": "0.1",
-  "extends": "@ngrx/schematics",
+  "extends": "@schematics/angular",
   "schematics": {
     "application": {
       "factory": "./collection/application",
