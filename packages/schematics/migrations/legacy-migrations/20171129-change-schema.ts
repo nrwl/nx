@@ -1,4 +1,4 @@
-import { updateJsonFile } from '../src/utils/fileutils';
+import { updateJsonFile } from '../../src/utils/fileutils';
 
 export default {
   description: 'Update the schema file to point to the nrwl schema.',

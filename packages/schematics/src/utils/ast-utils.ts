@@ -24,6 +24,7 @@ import * as ts from 'typescript';
 import * as path from 'path';
 import { toFileName } from './name-utils';
 import { serializeJson } from './fileutils';
+import * as stripJsonComments from 'strip-json-comments';
 
 // This should be moved to @schematics/angular once it allows to pass custom expressions as providers
 function _addSymbolToNgModuleMetadata(
@@ -556,7 +557,8 @@ export function readJsonInTree<T = any>(host: Tree, path: string): T {
   if (!host.exists(path)) {
     throw new Error(`Cannot find ${path}`);
   }
-  return JSON.parse(host.read(path)!.toString('utf-8'));
+
+  return JSON.parse(stripJsonComments(host.read(path)!.toString('utf-8')));
 }
 
 /**
@@ -575,7 +577,7 @@ export function updateJsonInTree<T = any, O = T>(
   };
 }
 
-function getProjectConfig(host: Tree, name: string): any {
+export function getProjectConfig(host: Tree, name: string): any {
   const angularJson = readJsonInTree(host, '/angular.json');
   const projectConfig = angularJson.projects[name];
   if (!projectConfig) {
