@@ -22,7 +22,6 @@
     "update:skip": "./node_modules/.bin/nx update:skip",
     "workspace-schematic": "./node_modules/.bin/nx workspace-schematic",
     "dep-graph": "./node_modules/.bin/nx dep-graph",
-    "postinstall": "echo 1",
     "help": "./node_modules/.bin/nx help"
   },
   "private": true,
@@ -50,6 +49,7 @@
     "@angular/cli": "<%= angularCliVersion %>",
     "@angular/compiler-cli": "<%= angularVersion %>",
     "@angular/language-service": "<%= angularVersion %>",
+    "@angular-devkit/build-angular": "~0.6.1",
     "@ngrx/schematics": "<%= ngrxSchematicsVersion %>",
     "@nrwl/schematics": "<%= schematicsVersion %>",
     "jasmine-marbles": "<%= jasmineMarblesVersion %>",
