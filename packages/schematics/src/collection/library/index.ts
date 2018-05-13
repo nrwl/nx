@@ -245,9 +245,6 @@ describe('${options.moduleName}', () => {
     host.overwrite(
       `${options.projectRoot}/src/index.ts`,
       `
-      /*
-       * Public API Surface of mylib
-       */
       export * from './lib/${options.name}.module';
       `
     );
