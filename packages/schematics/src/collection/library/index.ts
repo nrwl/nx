@@ -148,7 +148,7 @@ function addLoadChildren(options: NormalizedSchema): Rule {
         ...addIncludeToTsConfig(
           tsConfig,
           tsConfigAppFile,
-          `\n    , "${offset}${options.projectRoot}/index.ts"\n`
+          `\n    , "${offset}${options.projectRoot}/src/index.ts"\n`
         )
       ]);
     } else {

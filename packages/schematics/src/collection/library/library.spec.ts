@@ -169,7 +169,7 @@ describe('lib', () => {
         );
         expect(tsConfigAppJson.include).toEqual([
           '**/*.ts',
-          '../../libs/my-dir/my-lib/index.ts'
+          '../../libs/my-dir/my-lib/src/index.ts'
         ]);
 
         const tree2 = schematicRunner.runSchematic(
@@ -196,8 +196,8 @@ describe('lib', () => {
         );
         expect(tsConfigAppJson2.include).toEqual([
           '**/*.ts',
-          '../../libs/my-dir/my-lib/index.ts',
-          '../../libs/my-dir/my-lib2/index.ts'
+          '../../libs/my-dir/my-lib/src/index.ts',
+          '../../libs/my-dir/my-lib2/src/index.ts'
         ]);
       });
     });

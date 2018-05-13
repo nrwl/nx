@@ -144,7 +144,8 @@ function updateProject(options: NormalizedSchema): Rule {
             outDir: `${offsetFromRoot(options.appProjectRoot)}dist/out-tsc/${
               options.appProjectRoot
             }`
-          }
+          },
+          include: ['**/*.ts']
         };
       }),
       updateJsonInTree(`${options.appProjectRoot}/tsconfig.spec.json`, json => {
