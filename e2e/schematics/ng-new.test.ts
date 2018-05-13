@@ -24,7 +24,6 @@ describe('Nrwl Workspace', () => {
         export class AppModule {}
       `
       );
-
       runCLI('build --aot --project=my-dir-my-app');
 
       // running tests for the app
@@ -36,8 +35,6 @@ describe('Nrwl Workspace', () => {
       expect(runCLI('test --project=my-dir-my-lib --no-watch')).toContain(
         'Executed 1 of 1 SUCCESS'
       );
-
-      expect(runCLI('test')).toContain('SUCCESS');
 
       // e2e tests
       expect(runCLI('e2e --project=my-dir-my-app-e2e')).toContain(
