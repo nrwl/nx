@@ -1,10 +1,12 @@
-export function getWorkspacePath(host) {
+import { Tree } from '@angular-devkit/schematics';
+
+export function getWorkspacePath(host: Tree) {
   const possibleFiles = ['/angular.json', '/.angular.json'];
   return possibleFiles.filter(path => host.exists(path))[0];
 }
 
-export function getNpmScope(host) {
-  return 'proj';
+export function getNpmScope(host: Tree) {
+  return JSON.parse(host.read('nx.json')!.toString('utf-8')).npmScope;
 }
 
 export function replaceAppNameWithPath(
