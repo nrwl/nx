@@ -1,5 +1,6 @@
 import * as ts from 'typescript';
 import * as path from 'path';
+import { normalizedProjectRoot } from '@nrwl/schematics/src/command-line/shared';
 
 export enum ProjectType {
   app = 'app',
@@ -152,9 +153,9 @@ class DepsCalculator {
     private fileRead: (s: string) => string
   ) {
     this.projects.sort((a, b) => {
-      if (!a.name) return -1;
-      if (!b.name) return -1;
-      return a.name.length > b.name.length ? -1 : 1;
+      if (!a.root) return -1;
+      if (!b.root) return -1;
+      return a.root.length > b.root.length ? -1 : 1;
     });
   }
 
@@ -249,21 +250,23 @@ class DepsCalculator {
     projectName: string,
     depType: DependencyType
   ) {
-    const matchingProject = this.projectNames.filter(
-      a =>
-        expr === `@${this.npmScope}/${a}` ||
-        expr.startsWith(`@${this.npmScope}/${a}#`) ||
-        expr.startsWith(`@${this.npmScope}/${a}/`)
-    )[0];
+    const matchingProject = this.projects.filter(a => {
+      const normalizedRoot = normalizedProjectRoot(a);
+      return (
+        expr === `@${this.npmScope}/${normalizedRoot}` ||
+        expr.startsWith(`@${this.npmScope}/${normalizedRoot}#`) ||
+        expr.startsWith(`@${this.npmScope}/${normalizedRoot}/`)
+      );
+    })[0];
 
     if (matchingProject) {
       const alreadyHasDep = this.deps[projectName].some(
-        p => p.projectName === matchingProject && p.type === depType
+        p => p.projectName === matchingProject.name && p.type === depType
       );
-      const depOnSelf = projectName === matchingProject;
+      const depOnSelf = projectName === matchingProject.name;
       if (!alreadyHasDep && !depOnSelf) {
         this.deps[projectName].push({
-          projectName: matchingProject,
+          projectName: matchingProject.name,
           type: depType
         });
       }
@@ -272,9 +275,5 @@ class DepsCalculator {
 
   private getStringLiteralValue(node: ts.Node): string {
     return node.getText().substr(1, node.getText().length - 2);
-  }
-
-  private get projectNames(): string[] {
-    return this.projects.map(p => p.name);
   }
 }

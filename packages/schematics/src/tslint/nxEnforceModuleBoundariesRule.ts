@@ -5,6 +5,7 @@ import * as ts from 'typescript';
 import * as appRoot from 'app-root-path';
 import {
   getProjectNodes,
+  normalizedProjectRoot,
   readAngularJson,
   readDependencies,
   readNxJson
@@ -77,9 +78,9 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     super(sourceFile, options);
 
     this.projectNodes.sort((a, b) => {
-      if (!a.name) return -1;
-      if (!b.name) return -1;
-      return a.name.length > b.name.length ? -1 : 1;
+      if (!a.root) return -1;
+      if (!b.root) return -1;
+      return a.root.length > b.root.length ? -1 : 1;
     });
 
     this.allow = Array.isArray(this.getOptions()[0].allow)
@@ -153,7 +154,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       }
 
       // deep imports aren't allowed
-      if (imp !== `@${this.npmScope}/${targetProject.name}`) {
+      if (imp !== `@${this.npmScope}/${normalizedProjectRoot(targetProject)}`) {
         this.addFailureAt(
           node.getStart(),
           node.getWidth(),
@@ -296,9 +297,13 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
 
   private findProjectUsingImport(imp: string) {
     const unscopedImport = imp.substring(this.npmScope.length + 2);
-    return this.projectNodes.filter(
-      n => unscopedImport === n.name || unscopedImport.startsWith(`${n.name}/`)
-    )[0];
+    return this.projectNodes.filter(n => {
+      const normalizedRoot = normalizedProjectRoot(n);
+      return (
+        unscopedImport === normalizedRoot ||
+        unscopedImport.startsWith(`${normalizedRoot}/`)
+      );
+    })[0];
   }
 
   private isAbsoluteImportIntoAnotherProject(imp: string) {
