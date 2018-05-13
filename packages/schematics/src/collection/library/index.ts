@@ -109,7 +109,7 @@ function addLoadChildren(options: NormalizedSchema): Rule {
   return (host: Tree) => {
     const npmScope = getNpmScope(host);
 
-    if (! host.exists(options.parentModule)) {
+    if (!host.exists(options.parentModule)) {
       throw new Error(`Cannot find '${options.parentModule}'`);
     }
 
@@ -176,7 +176,7 @@ function findClosestTsConfigApp(
 function addChildren(options: NormalizedSchema): Rule {
   return (host: Tree) => {
     const npmScope = getNpmScope(host);
-    if (! host.exists(options.parentModule)) {
+    if (!host.exists(options.parentModule)) {
       throw new Error(`Cannot find '${options.parentModule}'`);
     }
     const moduleSource = host.read(options.parentModule)!.toString('utf-8');

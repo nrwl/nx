@@ -311,3 +311,11 @@ function fileExists(filePath: string): boolean {
     return false;
   }
 }
+
+export function normalizedProjectRoot(p: ProjectNode): string {
+  return p.root
+    .split('/')
+    .filter(v => !!v)
+    .slice(1)
+    .join('/');
+}

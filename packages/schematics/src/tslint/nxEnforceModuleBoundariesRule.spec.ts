@@ -21,18 +21,18 @@ describe('Enforce Module Boundaries', () => {
       `,
       [
         {
-          name: 'myapp',
-          root: 'libs/myapp/src',
+          name: 'myappName',
+          root: 'libs/myapp',
           type: ProjectType.app,
           tags: [],
           files: [`apps/myapp/src/main.ts`, `apps/myapp/blah.ts`]
         },
         {
-          name: 'mylib',
-          root: 'libs/mylib/src',
+          name: 'mylibName',
+          root: 'libs/mylib',
           type: ProjectType.lib,
           tags: [],
-          files: [`libs/mylib/index.ts`, `libs/mylib/dee1p.ts`]
+          files: [`libs/mylib/src/index.ts`, `libs/mylib/src/deep.ts`]
         }
       ]
     );
@@ -49,22 +49,22 @@ describe('Enforce Module Boundaries', () => {
       `,
       [
         {
-          name: 'myapp',
-          root: 'libs/myapp/src',
+          name: 'myappName',
+          root: 'libs/myapp',
           type: ProjectType.app,
           tags: [],
-          files: [`apps/myapp/src/main.ts`, `apps/myapp/blah.ts`]
+          files: [`apps/myapp/src/main.ts`, `apps/myapp/src/blah.ts`]
         },
         {
-          name: 'myapp2',
-          root: 'libs/myapp2/src',
+          name: 'myapp2Name',
+          root: 'libs/myapp2',
           type: ProjectType.app,
           tags: [],
           files: []
         },
         {
-          name: 'myapp2/mylib',
-          root: 'libs/myapp2/mylib/src',
+          name: 'myapp2-mylib',
+          root: 'libs/myapp2/mylib',
           type: ProjectType.lib,
           tags: [],
           files: ['libs/myapp2/mylib/src/index.ts']
@@ -78,46 +78,46 @@ describe('Enforce Module Boundaries', () => {
   describe('depConstraints', () => {
     const projectNodes = [
       {
-        name: 'api',
-        root: 'libs/api/src',
+        name: 'apiName',
+        root: 'libs/api',
         type: ProjectType.lib,
         tags: ['api', 'domain1'],
-        files: [`libs/api/index.ts`]
+        files: [`libs/api/src/index.ts`]
       },
       {
-        name: 'impl',
-        root: 'libs/impl/src',
+        name: 'implName',
+        root: 'libs/impl',
         type: ProjectType.lib,
         tags: ['impl', 'domain1'],
-        files: [`libs/impl/index.ts`]
+        files: [`libs/impl/src/index.ts`]
       },
       {
-        name: 'impl2',
-        root: 'libs/impl2/src',
+        name: 'impl2Name',
+        root: 'libs/impl2',
         type: ProjectType.lib,
         tags: ['impl', 'domain1'],
-        files: [`libs/impl2/index.ts`]
+        files: [`libs/impl2/src/index.ts`]
       },
       {
-        name: 'impl-domain2',
-        root: 'libs/impl-domain2/src',
+        name: 'impl-domain2Name',
+        root: 'libs/impl-domain2',
         type: ProjectType.lib,
         tags: ['impl', 'domain2'],
-        files: [`libs/impl-domain2/index.ts`]
+        files: [`libs/impl-domain2/src/index.ts`]
       },
       {
-        name: 'impl-both-domains',
-        root: 'libs/impl-both-domains/src',
+        name: 'impl-both-domainsName',
+        root: 'libs/impl-both-domains',
         type: ProjectType.lib,
         tags: ['impl', 'domain1', 'domain2'],
-        files: [`libs/impl-both-domains/index.ts`]
+        files: [`libs/impl-both-domains/src/index.ts`]
       },
       {
-        name: 'untagged',
-        root: 'libs/untagged/src',
+        name: 'untaggedName',
+        root: 'libs/untagged',
         type: ProjectType.lib,
         tags: [],
-        files: [`libs/untagged/index.ts`]
+        files: [`libs/untagged/src/index.ts`]
       }
     ];
 
@@ -133,7 +133,7 @@ describe('Enforce Module Boundaries', () => {
     it('should error when the target library does not have the right tag', () => {
       const failures = runRule(
         depConstraints,
-        `${process.cwd()}/proj/libs/api/index.ts`,
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
         `
         import '@mycompany/impl';
       `,
@@ -148,7 +148,7 @@ describe('Enforce Module Boundaries', () => {
     it('should error when the target library is untagged', () => {
       const failures = runRule(
         depConstraints,
-        `${process.cwd()}/proj/libs/api/index.ts`,
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
         `
         import '@mycompany/untagged';
       `,
@@ -163,7 +163,7 @@ describe('Enforce Module Boundaries', () => {
     it('should error when the source library is untagged', () => {
       const failures = runRule(
         depConstraints,
-        `${process.cwd()}/proj/libs/untagged/index.ts`,
+        `${process.cwd()}/proj/libs/untagged/src/index.ts`,
         `
         import '@mycompany/api';
       `,
@@ -178,7 +178,7 @@ describe('Enforce Module Boundaries', () => {
     it('should check all tags', () => {
       const failures = runRule(
         depConstraints,
-        `${process.cwd()}/proj/libs/impl/index.ts`,
+        `${process.cwd()}/proj/libs/impl/src/index.ts`,
         `
         import '@mycompany/impl-domain2';
       `,
@@ -193,7 +193,7 @@ describe('Enforce Module Boundaries', () => {
     it('should allow a domain1 project to depend on a project that is tagged with domain1 and domain2', () => {
       const failures = runRule(
         depConstraints,
-        `${process.cwd()}/proj/libs/impl/index.ts`,
+        `${process.cwd()}/proj/libs/impl/src/index.ts`,
         `
         import '@mycompany/impl-both-domains';
       `,
@@ -206,7 +206,7 @@ describe('Enforce Module Boundaries', () => {
     it('should allow a domain1/domain2 project depend on domain1', () => {
       const failures = runRule(
         depConstraints,
-        `${process.cwd()}/proj/libs/impl-both-domain/index.ts`,
+        `${process.cwd()}/proj/libs/impl-both-domain/src/index.ts`,
         `
         import '@mycompany/impl';
       `,
@@ -219,7 +219,7 @@ describe('Enforce Module Boundaries', () => {
     it('should not error when the constraints are satisfied', () => {
       const failures = runRule(
         depConstraints,
-        `${process.cwd()}/proj/libs/impl/index.ts`,
+        `${process.cwd()}/proj/libs/impl/src/index.ts`,
         `
         import '@mycompany/impl2';
       `,
@@ -234,7 +234,7 @@ describe('Enforce Module Boundaries', () => {
         {
           depConstraints: [{ sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }]
         },
-        `${process.cwd()}/proj/libs/api/index.ts`,
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
         `
         import '@mycompany/impl';
       `,
@@ -253,8 +253,8 @@ describe('Enforce Module Boundaries', () => {
         'import "../other"',
         [
           {
-            name: 'mylib',
-            root: 'libs/mylib/src',
+            name: 'mylibName',
+            root: 'libs/mylib',
             type: ProjectType.lib,
             tags: [],
             files: [`libs/mylib/src/main.ts`, `libs/mylib/other.ts`]
@@ -271,8 +271,8 @@ describe('Enforce Module Boundaries', () => {
         'import "../other"',
         [
           {
-            name: 'mylib',
-            root: 'libs/mylib/src',
+            name: 'mylibName',
+            root: 'libs/mylib',
             type: ProjectType.lib,
             tags: [],
             files: [`libs/mylib/src/main.ts`, `libs/mylib/other/index.ts`]
@@ -289,15 +289,15 @@ describe('Enforce Module Boundaries', () => {
         'import "../../other"',
         [
           {
-            name: 'mylib',
-            root: 'libs/mylib/src',
+            name: 'mylibName',
+            root: 'libs/mylib',
             type: ProjectType.lib,
             tags: [],
             files: [`libs/mylib/src/main.ts`]
           },
           {
-            name: 'other',
-            root: 'libs/other/src',
+            name: 'otherName',
+            root: 'libs/other',
             type: ProjectType.lib,
             tags: [],
             files: ['libs/other/src/index.ts']
@@ -317,8 +317,8 @@ describe('Enforce Module Boundaries', () => {
       'import "libs/src/other.ts"',
       [
         {
-          name: 'mylib',
-          root: 'libs/mylib/src',
+          name: 'mylibName',
+          root: 'libs/mylib',
           type: ProjectType.lib,
           tags: [],
           files: [`libs/mylib/src/main.ts`, `libs/mylib/src/other.ts`]
@@ -337,30 +337,30 @@ describe('Enforce Module Boundaries', () => {
       {},
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
       `
-      import "@mycompany/other/blah"
-      import "@mycompany/other/sublib/blah"
+      import "@mycompany/other/src/blah"
+      import "@mycompany/other/src/sublib/blah"
       `,
       [
         {
-          name: 'mylib',
-          root: 'libs/mylib/src',
+          name: 'mylibName',
+          root: 'libs/mylib',
           type: ProjectType.lib,
           tags: [],
           files: [`libs/mylib/src/main.ts`]
         },
         {
-          name: 'other',
-          root: 'libs/other/src',
+          name: 'otherName',
+          root: 'libs/other',
           type: ProjectType.lib,
           tags: [],
-          files: [`libs/other/blah.ts`]
+          files: [`libs/other/src/blah.ts`]
         },
         {
-          name: 'other/sublib',
-          root: 'libs/other/sublib/src',
+          name: 'otherSublibName',
+          root: 'libs/other/sublib',
           type: ProjectType.lib,
           tags: [],
-          files: [`libs/other/sublib/blah.ts`]
+          files: [`libs/other/sublib/src/blah.ts`]
         }
       ]
     );
@@ -379,22 +379,24 @@ describe('Enforce Module Boundaries', () => {
       'import "@mycompany/other";',
       [
         {
-          name: 'mylib',
-          root: 'libs/mylib/src',
+          name: 'mylibName',
+          root: 'libs/mylib',
           type: ProjectType.lib,
           tags: [],
           files: [`libs/mylib/src/main.ts`]
         },
         {
-          name: 'other',
-          root: 'libs/other/src',
+          name: 'otherName',
+          root: 'libs/other',
           type: ProjectType.lib,
           tags: [],
           files: [`libs/other/index.ts`]
         }
       ],
       {
-        mylib: [{ projectName: 'other', type: DependencyType.loadChildren }]
+        mylibName: [
+          { projectName: 'otherName', type: DependencyType.loadChildren }
+        ]
       }
     );
     expect(failures[0].getFailure()).toEqual(
@@ -409,18 +411,18 @@ describe('Enforce Module Boundaries', () => {
       'import "@mycompany/myapp"',
       [
         {
-          name: 'mylib',
-          root: 'libs/mylib/src',
+          name: 'mylibName',
+          root: 'libs/mylib',
           type: ProjectType.lib,
           tags: [],
           files: [`libs/mylib/src/main.ts`]
         },
         {
-          name: 'myapp',
-          root: 'apps/myapp/src',
+          name: 'myappName',
+          root: 'apps/myapp',
           type: ProjectType.app,
           tags: [],
-          files: [`apps/myapp/index.ts`]
+          files: [`apps/myapp/src/index.ts`]
         }
       ]
     );
@@ -434,33 +436,35 @@ describe('Enforce Module Boundaries', () => {
       'import "@mycompany/mylib"',
       [
         {
-          name: 'mylib',
-          root: 'libs/mylib/src',
+          name: 'mylibName',
+          root: 'libs/mylib',
           type: ProjectType.lib,
           tags: [],
           files: [`libs/mylib/src/main.ts`]
         },
         {
-          name: 'anotherlib',
-          root: 'libs/anotherlib/src',
+          name: 'anotherlibName',
+          root: 'libs/anotherlib',
           type: ProjectType.lib,
           tags: [],
           files: [`libs/anotherlib/src/main.ts`]
         },
         {
-          name: 'myapp',
-          root: 'apps/myapp/src',
+          name: 'myappName',
+          root: 'apps/myapp',
           type: ProjectType.app,
           tags: [],
-          files: [`apps/myapp/index.ts`]
+          files: [`apps/myapp/src/index.ts`]
         }
       ],
       {
-        mylib: [{ projectName: 'anotherlib', type: DependencyType.es6Import }]
+        mylibName: [
+          { projectName: 'anotherlibName', type: DependencyType.es6Import }
+        ]
       }
     );
     expect(failures[0].getFailure()).toEqual(
-      'Circular dependency between "anotherlib" and "mylib" detected'
+      'Circular dependency between "anotherlibName" and "mylibName" detected'
     );
   });
 
@@ -471,46 +475,48 @@ describe('Enforce Module Boundaries', () => {
       'import "@mycompany/badcirclelib"',
       [
         {
-          name: 'mylib',
-          root: 'libs/mylib/src',
+          name: 'mylibName',
+          root: 'libs/mylib',
           type: ProjectType.lib,
           tags: [],
           files: [`libs/mylib/src/main.ts`]
         },
         {
-          name: 'anotherlib',
-          root: 'libs/anotherlib/src',
+          name: 'anotherlibName',
+          root: 'libs/anotherlib',
           type: ProjectType.lib,
           tags: [],
           files: [`libs/anotherlib/src/main.ts`]
         },
         {
-          name: 'badcirclelib',
-          root: 'libs/badcirclelib/src',
+          name: 'badcirclelibName',
+          root: 'libs/badcirclelib',
           type: ProjectType.lib,
           tags: [],
           files: [`libs/badcirclelib/src/main.ts`]
         },
         {
-          name: 'myapp',
-          root: 'apps/myapp/src',
+          name: 'myappName',
+          root: 'apps/myapp',
           type: ProjectType.app,
           tags: [],
           files: [`apps/myapp/index.ts`]
         }
       ],
       {
-        mylib: [
-          { projectName: 'badcirclelib', type: DependencyType.es6Import }
+        mylibName: [
+          { projectName: 'badcirclelibName', type: DependencyType.es6Import }
         ],
-        badcirclelib: [
-          { projectName: 'anotherlib', type: DependencyType.es6Import }
+        badcirclelibName: [
+          { projectName: 'anotherlibName', type: DependencyType.es6Import }
         ],
-        anotherlib: [{ projectName: 'mylib', type: DependencyType.es6Import }]
+        anotherlibName: [
+          { projectName: 'mylibName', type: DependencyType.es6Import }
+        ]
       }
     );
     expect(failures[0].getFailure()).toEqual(
-      'Circular dependency between "mylib" and "badcirclelib" detected'
+      'Circular dependency between "mylibName" and "badcirclelibName" detected'
     );
   });
 });

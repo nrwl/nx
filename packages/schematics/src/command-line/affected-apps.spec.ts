@@ -13,15 +13,15 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         'nrwl',
         [
           {
-            name: 'app1',
-            root: '',
+            name: 'app1Name',
+            root: 'apps/app1',
             files: [],
             tags: [],
             type: ProjectType.app
           },
           {
-            name: 'app2',
-            root: '',
+            name: 'app2Name',
+            root: 'apps/app2',
             files: [],
             tags: [],
             type: ProjectType.app
@@ -30,7 +30,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         () => null
       );
 
-      expect(deps).toEqual({ app1: [], app2: [] });
+      expect(deps).toEqual({ app1Name: [], app2Name: [] });
     });
 
     it('should create implicit dependencies between e2e an apps', () => {
@@ -38,15 +38,15 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         'nrwl',
         [
           {
-            name: 'app1',
-            root: '',
+            name: 'app1Name',
+            root: 'apps/app1',
             files: [],
             tags: [],
             type: ProjectType.app
           },
           {
-            name: 'app1-e2e',
-            root: '',
+            name: 'app1Name-e2e',
+            root: 'apps/app1Name-e2e',
             files: [],
             tags: [],
             type: ProjectType.e2e
@@ -56,8 +56,10 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
       );
 
       expect(deps).toEqual({
-        app1: [],
-        'app1-e2e': [{ projectName: 'app1', type: DependencyType.implicit }]
+        app1Name: [],
+        'app1Name-e2e': [
+          { projectName: 'app1Name', type: DependencyType.implicit }
+        ]
       });
     });
 
@@ -66,22 +68,22 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         'nrwl',
         [
           {
-            name: 'app1',
-            root: '',
+            name: 'app1Name',
+            root: 'apps/app1',
             files: ['app1.ts'],
             tags: [],
             type: ProjectType.app
           },
           {
-            name: 'lib1',
-            root: '',
+            name: 'lib1Name',
+            root: 'libs/lib1',
             files: ['lib1.ts'],
             tags: [],
             type: ProjectType.lib
           },
           {
-            name: 'lib2',
-            root: '',
+            name: 'lib2Name',
+            root: 'libs/lib2',
             files: ['lib2.ts'],
             tags: [],
             type: ProjectType.lib
@@ -103,12 +105,12 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
       );
 
       expect(deps).toEqual({
-        app1: [
-          { projectName: 'lib1', type: DependencyType.es6Import },
-          { projectName: 'lib2', type: DependencyType.es6Import }
+        app1Name: [
+          { projectName: 'lib1Name', type: DependencyType.es6Import },
+          { projectName: 'lib2Name', type: DependencyType.es6Import }
         ],
-        lib1: [{ projectName: 'lib2', type: DependencyType.es6Import }],
-        lib2: []
+        lib1Name: [{ projectName: 'lib2Name', type: DependencyType.es6Import }],
+        lib2Name: []
       });
     });
 
@@ -117,22 +119,22 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         'nrwl',
         [
           {
-            name: 'app1',
-            root: '',
+            name: 'app1Name',
+            root: 'apps/app1',
             files: ['app1.ts'],
             tags: [],
             type: ProjectType.app
           },
           {
-            name: 'lib1',
-            root: '',
+            name: 'lib1Name',
+            root: 'libs/lib1',
             files: ['lib1.ts'],
             tags: [],
             type: ProjectType.lib
           },
           {
-            name: 'lib2',
-            root: '',
+            name: 'lib2Name',
+            root: 'libs/lib2',
             files: ['lib2.ts'],
             tags: [],
             type: ProjectType.lib
@@ -156,12 +158,12 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
       );
 
       expect(deps).toEqual({
-        app1: [
-          { projectName: 'lib1', type: DependencyType.loadChildren },
-          { projectName: 'lib2', type: DependencyType.loadChildren }
+        app1Name: [
+          { projectName: 'lib1Name', type: DependencyType.loadChildren },
+          { projectName: 'lib2Name', type: DependencyType.loadChildren }
         ],
-        lib1: [],
-        lib2: []
+        lib1Name: [],
+        lib2Name: []
       });
     });
 
@@ -170,8 +172,8 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         'nrwl',
         [
           {
-            name: 'app1',
-            root: '',
+            name: 'app1Name',
+            root: 'apps/app1',
             files: ['index.html'],
             tags: [],
             type: ProjectType.app
@@ -180,7 +182,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         () => null
       );
 
-      expect(deps).toEqual({ app1: [] });
+      expect(deps).toEqual({ app1Name: [] });
     });
 
     it('should handle projects with the names starting with the same string', () => {
@@ -188,15 +190,15 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         'nrwl',
         [
           {
-            name: 'aa',
-            root: '',
+            name: 'aaName',
+            root: 'libs/aa',
             files: ['aa.ts'],
             tags: [],
             type: ProjectType.app
           },
           {
-            name: 'aa/bb',
-            root: '',
+            name: 'aaBbName',
+            root: 'libs/aa/bb',
             files: ['bb.ts'],
             tags: [],
             type: ProjectType.app
@@ -213,8 +215,8 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
       );
 
       expect(deps).toEqual({
-        aa: [{ projectName: 'aa/bb', type: DependencyType.es6Import }],
-        'aa/bb': []
+        aaBbName: [],
+        aaName: [{ projectName: 'aaBbName', type: DependencyType.es6Import }]
       });
     });
 
@@ -223,15 +225,15 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         'nrwl',
         [
           {
-            name: 'aa',
-            root: '',
+            name: 'aaName',
+            root: 'libs/aa',
             files: ['aa.ts'],
             tags: [],
             type: ProjectType.app
           },
           {
-            name: 'bb',
-            root: '',
+            name: 'bbName',
+            root: 'libs/bb',
             files: ['bb.ts'],
             tags: [],
             type: ProjectType.app
@@ -251,8 +253,8 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
       );
 
       expect(deps).toEqual({
-        aa: [{ projectName: 'bb', type: DependencyType.es6Import }],
-        bb: []
+        aaName: [{ projectName: 'bbName', type: DependencyType.es6Import }],
+        bbName: []
       });
     });
 
@@ -261,8 +263,8 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         'nrwl',
         [
           {
-            name: 'aa',
-            root: '',
+            name: 'aaName',
+            root: 'libs/aa',
             files: ['aa.ts'],
             tags: [],
             type: ProjectType.app
@@ -278,7 +280,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         }
       );
 
-      expect(deps).toEqual({ aa: [] });
+      expect(deps).toEqual({ aaName: [] });
     });
   });
 
@@ -288,29 +290,29 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         'nrwl',
         [
           {
-            name: 'app1',
-            root: '',
+            name: 'app1Name',
+            root: 'apps/app1',
             files: ['app1.ts'],
             tags: [],
             type: ProjectType.app
           },
           {
-            name: 'app2',
-            root: '',
+            name: 'app2Name',
+            root: 'apps/app2',
             files: ['app2.ts'],
             tags: [],
             type: ProjectType.app
           },
           {
-            name: 'lib1',
-            root: '',
+            name: 'lib1Name',
+            root: 'libs/lib1',
             files: ['lib1.ts'],
             tags: [],
             type: ProjectType.lib
           },
           {
-            name: 'lib2',
-            root: '',
+            name: 'lib2Name',
+            root: 'libs/lib2',
             files: ['lib2.ts'],
             tags: [],
             type: ProjectType.lib
@@ -333,7 +335,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         ['lib2.ts']
       );
 
-      expect(affected).toEqual(['app1']);
+      expect(affected).toEqual(['app1Name']);
     });
 
     it('should return app app names if a touched file is not part of a project', () => {
@@ -341,22 +343,22 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         'nrwl',
         [
           {
-            name: 'app1',
-            root: '',
+            name: 'app1Name',
+            root: 'apps/app1',
             files: ['app1.ts'],
             tags: [],
             type: ProjectType.app
           },
           {
-            name: 'app2',
-            root: '',
+            name: 'app2Name',
+            root: 'apps/app2',
             files: ['app2.ts'],
             tags: [],
             type: ProjectType.app
           },
           {
-            name: 'lib1',
-            root: '',
+            name: 'lib1Name',
+            root: 'libs/lib1',
             files: ['lib1.ts'],
             tags: [],
             type: ProjectType.lib
@@ -377,7 +379,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         ['package.json']
       );
 
-      expect(affected).toEqual(['app2', 'app1']);
+      expect(affected).toEqual(['app2Name', 'app1Name']);
     });
 
     it('should handle slashes', () => {
@@ -385,8 +387,8 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         'nrwl',
         [
           {
-            name: 'app1',
-            root: '',
+            name: 'app1Name',
+            root: 'apps/app1',
             files: ['one\\app1.ts', 'two/app1.ts'],
             tags: [],
             type: ProjectType.app
@@ -403,7 +405,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         ['one/app1.ts', 'two/app1.ts']
       );
 
-      expect(affected).toEqual(['app1']);
+      expect(affected).toEqual(['app1Name']);
     });
 
     it('should handle circular dependencies', () => {
@@ -411,15 +413,15 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         'nrwl',
         [
           {
-            name: 'app1',
-            root: '',
+            name: 'app1Name',
+            root: 'apps/app1',
             files: ['app1.ts'],
             tags: [],
             type: ProjectType.app
           },
           {
-            name: 'app2',
-            root: '',
+            name: 'app2Name',
+            root: 'apps/app2',
             files: ['app2.ts'],
             tags: [],
             type: ProjectType.app
@@ -436,7 +438,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         ['app1.ts']
       );
 
-      expect(affected).toEqual(['app2', 'app1']);
+      expect(affected).toEqual(['app2Name', 'app1Name']);
     });
   });
 
@@ -445,29 +447,29 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
       const tp = touchedProjects(
         [
           {
-            name: 'app1',
-            root: '',
+            name: 'app1Name',
+            root: 'apps/app1',
             files: ['app1.ts'],
             tags: [],
             type: ProjectType.app
           },
           {
-            name: 'app2',
-            root: '',
+            name: 'app2Name',
+            root: 'apps/app2',
             files: ['app2.ts'],
             tags: [],
             type: ProjectType.app
           },
           {
-            name: 'lib1',
-            root: '',
+            name: 'lib1Name',
+            root: 'libs/lib1',
             files: ['lib1.ts'],
             tags: [],
             type: ProjectType.lib
           },
           {
-            name: 'lib2',
-            root: '',
+            name: 'lib2Name',
+            root: 'libs/lib2',
             files: ['lib2.ts'],
             tags: [],
             type: ProjectType.lib
@@ -476,7 +478,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         ['lib2.ts', 'app2.ts', 'package.json']
       );
 
-      expect(tp).toEqual(['lib2', 'app2', null]);
+      expect(tp).toEqual(['lib2Name', 'app2Name', null]);
     });
   });
 });
