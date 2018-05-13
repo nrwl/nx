@@ -97,7 +97,7 @@ function addRouterRootConfiguration(options: NormalizedSchema): Rule {
 const staticComponentContent = `
 <div style="text-align:center">
   <h1>Welcome to app!</h1>
-  <img width="300" src="assets/nx-logo.png">
+  <img width="300" src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png">
 </div>
 
 <h2>This is an Angular CLI app built with Nrwl Nx!</h2>
