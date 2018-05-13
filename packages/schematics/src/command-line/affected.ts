@@ -67,7 +67,7 @@ export function affected(
       test(projects, parsedArgs);
       break;
     case 'e2e':
-      e2e(e2eProjects, rest);
+      e2e(e2eProjects, parsedArgs);
       break;
     case 'dep-graph':
       generateGraph(yargsParser(rest), projects);
@@ -113,7 +113,7 @@ function test(projects: string[], parsedArgs: YargsAffectedOptions) {
   );
 
   if (projectsToTest.length > 0) {
-    const normalizedArgs = filterNxSpecificArgs(parsedArgs);
+    const normalizedArgs = ['--no-watch', ...filterNxSpecificArgs(parsedArgs)];
     let message = `Testing ${projectsToTest.join(', ')}`;
     if (normalizedArgs.length > 0) {
       message += ` with flags: ${normalizedArgs.join(' ')}`;
@@ -193,11 +193,12 @@ function topologicallySortProjects(deps: DepGraph): string[] {
   return res;
 }
 
-function e2e(apps: string[], rest: string[]) {
+function e2e(apps: string[], parsedArgs: YargsAffectedOptions) {
   if (apps.length > 0) {
+    const args = filterNxSpecificArgs(parsedArgs);
     console.log(`Testing ${apps.join(', ')}`);
     apps.forEach(app => {
-      execSync(`node ${ngPath()} e2e ${rest.join(' ')} --project=${app}`, {
+      execSync(`node ${ngPath()} e2e ${args.join(' ')} --project=${app}`, {
         stdio: [0, 1, 2]
       });
     });
