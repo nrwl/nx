@@ -19,7 +19,6 @@ export function newProject(): void {
       runNgNew('--collection=@nrwl/schematics --npmScope=proj', true);
     } catch (e) {}
     copyMissingPackages();
-    execSync('npm run postinstall', { cwd: './tmp/proj' });
     execSync('mv ./tmp/proj ./tmp/proj_backup');
   }
   execSync('cp -a ./tmp/proj_backup ./tmp/proj');
@@ -33,7 +32,6 @@ export function newBazelProject(): void {
       runNgNew('--collection=@nrwl/bazel --npmScope=proj', true);
     } catch (e) {}
     copyMissingPackages();
-    execSync('npm run postinstall', { cwd: './tmp/proj' });
     execSync('mv ./tmp/proj ./tmp/proj_backup');
   }
   execSync('cp -a ./tmp/proj_bazel_backup ./tmp/proj');
