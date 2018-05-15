@@ -1,239 +1,158 @@
 import {
-  Rule,
+  chain,
   SchematicContext,
   Tree,
-  chain
+  Rule
 } from '@angular-devkit/schematics';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
-import {
-  updateJsonInTree,
-  readJsonInTree,
-  getProjectConfig
-} from '../../src/utils/ast-utils';
+import { readJsonInTree, updateJsonInTree } from '../../src/utils/ast-utils';
 import { FormatFiles } from '../../src/utils/tasks';
 import { serializeJson } from '../../src/utils/fileutils';
-import { getSourceNodes } from '@schematics/angular/utility/ast-utils';
-import {
-  ngrxSchematicsVersion,
-  ngrxVersion,
-  angularVersion,
-  rxjsVersion
-} from '../../src/lib-versions';
-import { parseTarget } from '../../src/utils/cli-config-utils';
-import {
-  findFunctionCallExpressionStatement,
-  findRequireStatement,
-  findFunctionCalls,
-  findSpecDeclaration,
-  findTsNodeRegisterExpression
-} from './helpers';
-
-import * as ts from 'typescript';
-import * as path from 'path';
+import { parseTarget, serializeTarget } from '../../src/utils/cli-config-utils';
 import * as fs from 'fs';
+import { offsetFromRoot } from '@nrwl/schematics/src/utils/common';
 
-function updateKarmaConfigs(host: Tree, context: SchematicContext) {
-  const angularJson = readJsonInTree(host, 'angular.json');
+function createKarma(host: Tree, project: any) {
+  const offset = offsetFromRoot(project.root);
 
-  const karmaPath =
-    angularJson.projects[angularJson.defaultProject].architect.test.options
-      .karmaConfig;
-  const contents = host.read(karmaPath).toString();
-  let newContents = contents;
-  const sourceFile = ts.createSourceFile(
-    karmaPath,
-    contents,
-    ts.ScriptTarget.Latest
-  );
-
-  const nodes = getSourceNodes(sourceFile);
-  const functionCall = findFunctionCallExpressionStatement(
-    nodes,
-    'makeSureNoAppIsSelected'
-  );
-
-  if (functionCall) {
-    const hasComment = functionCall
-      .getFullText(sourceFile)
-      .includes(
-        '// Nx only supports running unit tests for all apps and libs.'
-      );
-
-    const text = hasComment
-      ? functionCall.getFullText(sourceFile)
-      : functionCall.getText(sourceFile);
-
-    newContents = newContents.replace(text, '');
-
-    const requireStatement = findRequireStatement(nodes);
-
-    if (requireStatement) {
-      newContents = newContents.replace(
-        requireStatement.getText(sourceFile),
-        ''
-      );
-    }
-  }
-  host.delete(karmaPath);
-
-  Object.entries<any>(angularJson.projects)
-    .filter(
-      ([key, project]) => project.architect.test && key !== '$workspaceRoot'
-    )
-    .forEach(([key, project]) => {
-      const projectRoot = project.architect.build.options.main.startsWith(
-        'apps'
-      )
-        ? 'apps'
-        : 'libs';
-      host.create(`${projectRoot}/${key}/karma.conf.js`, newContents);
-    });
-
-  return host;
-}
-
-// Todo we have to fix specs
-function updateProtractorConfigs(host: Tree, context: SchematicContext) {
-  const angularJson = readJsonInTree(host, 'angular.json');
-
-  const protractorPath = getProjectConfig(
-    host,
-    angularJson.defaultProject + '-e2e'
-  ).architect.e2e.options.protractorConfig;
-  const contents = host.read(protractorPath).toString();
-  let newContents = contents;
-  const sourceFile = ts.createSourceFile(
-    protractorPath,
-    contents,
-    ts.ScriptTarget.Latest
-  );
-
-  const nodes = getSourceNodes(sourceFile);
-  const functionCalls = findFunctionCalls(
-    sourceFile,
-    'getAppDirectoryUsingCliConfig'
-  );
-
-  functionCalls.forEach(statement => {
-    if (statement.declarationList.declarations.length === 1) {
-      newContents = newContents.replace(statement.getText(sourceFile), '');
-    } else {
-      statement.declarationList.declarations.forEach(declaration => {
-        if (
-          ts.isCallExpression(declaration.initializer) &&
-          ts.isIdentifier(declaration.initializer.expression) &&
-          declaration.initializer.expression.text ===
-            'getAppDirectoryUsingCliConfig'
-        ) {
-          // Remove the full text (includes trailing whitespace) up to the next comma
-          const regex = new RegExp(
-            declaration.getFullText(sourceFile).replace('()', '\\(\\)') +
-              '\\s*,?'
-          );
-          newContents = newContents.replace(regex, '');
-        }
-      });
-    }
-  });
-  const requireStatement = findRequireStatement(nodes);
-
-  if (requireStatement) {
-    newContents = newContents.replace(requireStatement.getText(sourceFile), '');
-  }
-
-  const specDeclaration = findSpecDeclaration(nodes);
-  if (specDeclaration) {
-    newContents = newContents.replace(
-      specDeclaration.initializer.getText(sourceFile),
-      `['./**/*.e2e-spec.ts']`
-    );
-  }
-
-  const tsNodeRegisterExpression = findTsNodeRegisterExpression(nodes);
-  if (tsNodeRegisterExpression) {
-    if (!ts.isObjectLiteralExpression(tsNodeRegisterExpression.arguments[0])) {
-      console.warn('');
-    } else {
-      const objectLiteral = tsNodeRegisterExpression
-        .arguments[0] as ts.ObjectLiteralExpression;
-      const projectProperty = objectLiteral.properties.find(
-        property =>
-          ts.isPropertyAssignment(property) &&
-          ts.isIdentifier(property.name) &&
-          property.name.text === 'project'
-      ) as ts.PropertyAssignment;
-      if (projectProperty) {
-        newContents = newContents.replace(
-          projectProperty.initializer.getText(sourceFile),
-          `require('path').join(__dirname, './tsconfig.e2e.json')`
-        );
-      }
-    }
-  }
-
-  host.delete(protractorPath);
-
-  Object.entries<any>(angularJson.projects)
-    .filter(([key, project]) => {
-      if (!project.architect.e2e || key === '$workspaceRoot-e2e') {
-        return false;
-      }
-
-      const srcProjectKey = parseTarget(
-        project.architect.e2e.options.devServerTarget
-      ).project;
-
-      const srcProject = getProjectConfig(host, srcProjectKey);
-
-      return srcProject.architect.build.options.main.startsWith('apps');
-    })
-    .forEach(([key, project]) => {
-      host.create(`apps/${key}/protractor.conf.js`, newContents);
-    });
-
-  return host;
-}
-
-function createTestTs(host: Tree, project: any) {
   host.create(
-    `${project.sourceRoot}/test.ts`,
-    stripIndents`
-      // This file is required by karma.conf.js and loads recursively all the .spec and framework files
+    `${project.root}/karma.conf.js`,
+    `
+// Karma configuration file, see link for more information
+// https://karma-runner.github.io/1.0/config/configuration-file.html
 
-      ${
-        project.projectType === 'library'
-          ? stripIndents`
-            import 'core-js/es7/reflect';
-            import 'zone.js/dist/zone';`
-          : ''
-      }
-      import 'zone.js/dist/zone-testing';
-      import { getTestBed } from '@angular/core/testing';
-      import {
-        BrowserDynamicTestingModule,
-        platformBrowserDynamicTesting
-      } from '@angular/platform-browser-dynamic/testing';
-
-      declare const require: any;
-
-      // First, initialize the Angular testing environment.
-      getTestBed().initTestEnvironment(
-        BrowserDynamicTestingModule,
-        platformBrowserDynamicTesting()
-      );
-      // Then we find all the tests.
-      const context = require.context('./', true, /\.spec\.ts$/);
-      // And load the modules.
-      context.keys().map(context);
+module.exports = function (config) {
+  config.set({
+    basePath: '',
+    frameworks: ['jasmine', '@angular-devkit/build-angular'],
+    plugins: [
+      require('karma-jasmine'),
+      require('karma-chrome-launcher'),
+      require('karma-jasmine-html-reporter'),
+      require('karma-coverage-istanbul-reporter'),
+      require('@angular-devkit/build-angular/plugins/karma')
+    ],
+    client: {
+      clearContext: false // leave Jasmine Spec Runner output visible in browser
+    },
+    coverageIstanbulReporter: {
+      dir: require('path').join(__dirname, '${offset}coverage'),
+      reports: ['html', 'lcovonly'],
+      fixWebpackSourcePaths: true
+    },
+    reporters: ['progress', 'kjhtml'],
+    port: 9876,
+    colors: true,
+    logLevel: config.LOG_INFO,
+    autoWatch: true,
+    browsers: ['Chrome'],
+    singleRun: false
+  });
+};
     `
   );
 }
 
-function createBrowserlist(host: Tree, path: string) {
+function createProtractor(host: Tree, project: any) {
   host.create(
-    path,
+    `${project.root}/protractor.conf.js`,
+    `
+// Protractor configuration file, see link for more information
+// https://github.com/angular/protractor/blob/master/lib/config.ts
+
+const { SpecReporter } = require('jasmine-spec-reporter');
+
+exports.config = {
+  allScriptsTimeout: 11000,
+  specs: [
+    './src/**/*.e2e-spec.ts'
+  ],
+  capabilities: {
+    'browserName': 'chrome'
+  },
+  directConnect: true,
+  baseUrl: 'http://localhost:4200/',
+  framework: 'jasmine',
+  jasmineNodeOpts: {
+    showColors: true,
+    defaultTimeoutInterval: 30000,
+    print: function() {}
+  },
+  onPrepare() {
+    require('ts-node').register({
+      project: require('path').join(__dirname, './tsconfig.e2e.json')
+    });
+    jasmine.getEnv().addReporter(new SpecReporter({ spec: { displayStacktrace: true } }));
+  }
+};
+    `
+  );
+}
+
+function createTestTs(host: Tree, project: any) {
+  if (project.projectType === 'library') {
+    host.create(
+      `${project.sourceRoot}/test.ts`,
+      `
+// This file is required by karma.conf.js and loads recursively all the .spec and framework files
+
+import 'core-js/es7/reflect';
+import 'zone.js/dist/zone';
+import 'zone.js/dist/zone-testing';
+import { getTestBed } from '@angular/core/testing';
+import {
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting
+} from '@angular/platform-browser-dynamic/testing';
+
+declare const require: any;
+
+// First, initialize the Angular testing environment.
+getTestBed().initTestEnvironment(
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting()
+);
+// Then we find all the tests.
+const context = require.context('./', true, /\\.spec\\.ts$/);
+// And load the modules.
+context.keys().map(context);    
+    `
+    );
+  } else {
+    host.create(
+      `${project.sourceRoot}/test.ts`,
+      `
+// This file is required by karma.conf.js and loads recursively all the .spec and framework files
+
+  import 'zone.js/dist/zone-testing';
+  import { getTestBed } from '@angular/core/testing';
+  import {
+    BrowserDynamicTestingModule,
+    platformBrowserDynamicTesting
+  } from '@angular/platform-browser-dynamic/testing';
+
+  declare const require: any;
+
+// First, initialize the Angular testing environment.
+  getTestBed().initTestEnvironment(
+    BrowserDynamicTestingModule,
+    platformBrowserDynamicTesting()
+  );
+// Then we find all the tests.
+  const context = require.context('./', true, /\.spec\.ts$/);
+// And load the modules.
+  context.keys().map(context);
+    `
+    );
+  }
+  return host;
+}
+
+function createBrowserlist(host: Tree, project: any) {
+  host.create(
+    `${project.root}/browserlist`,
     stripIndents`
       # This file is currently used by autoprefixer to adjust CSS to support the below specified browsers
       # For additional information regarding the format and rule options, please see:
@@ -248,46 +167,56 @@ function createBrowserlist(host: Tree, path: string) {
   );
 }
 
-function createTsconfigSpecJson(host: Tree, project: any, projectKey: string) {
+function createTsconfigSpecJson(host: Tree, project: any) {
   const files = ['src/test.ts'];
+
+  const offset = offsetFromRoot(project.root);
+
+  const compilerOptions = {
+    outDir: `${offset}dist/out-tsc/${project.root}`,
+    types: ['jasmine', 'node']
+  };
+
   if (project.projectType === 'application') {
     files.push('src/polyfills.ts');
+    compilerOptions['module'] = 'commonjs';
   }
+
   host.create(
     `${project.root}/tsconfig.spec.json`,
     serializeJson({
-      extends: '../../tsconfig.json',
-      compilerOptions: {
-        outDir: `../../dist/out-tsc/apps/${projectKey}`,
-        module: 'commonjs',
-        types: ['jasmine', 'node']
-      },
+      extends: `${offset}tsconfig.json`,
+      compilerOptions,
       files,
       include: ['**/*.spec.ts', '**/*.d.ts']
     })
   );
 }
 
-function createTslintJson(host: Tree, path: string, prefix: string) {
+function createTslintJson(host: Tree, project: any) {
+  const offset = offsetFromRoot(project.root);
+
   host.create(
-    path,
+    `${project.root}/tslint.json`,
     serializeJson({
-      extends: '../../tslint.json',
+      extends: `${offset}tslint.json`,
       rules: {
-        'directive-selector': [true, 'attribute', prefix, 'camelCase'],
-        'component-selector': [true, 'element', prefix, 'kebab-case']
+        'directive-selector': [true, 'attribute', project.root, 'camelCase'],
+        'component-selector': [true, 'element', project.root, 'kebab-case']
       }
     })
   );
 }
 
-function createTsconfigLibJson(host: Tree, path: string, projectKey: string) {
+function createTsconfigLibJson(host: Tree, project: any) {
+  const offset = offsetFromRoot(project.root);
+
   host.create(
-    path,
+    `${project.root}/tsconfig.lib.json`,
     serializeJson({
-      extends: '../../tsconfig.json',
+      extends: `${offset}tsconfig.json`,
       compilerOptions: {
-        outDir: `../../out-tsc/${projectKey}`,
+        outDir: `${offset}out-tsc/${project.root}`,
         target: 'es2015',
         module: 'es2015',
         moduleResolution: 'node',
@@ -314,59 +243,70 @@ function createTsconfigLibJson(host: Tree, path: string, projectKey: string) {
   );
 }
 
-function createAdditionalFiles(host: Tree, context: SchematicContext) {
+function createAdditionalFiles(host: Tree) {
   const angularJson = readJsonInTree(host, 'angular.json');
   Object.entries<any>(angularJson.projects).forEach(([key, project]) => {
     if (project.architect.test) {
-      createTsconfigSpecJson(host, project, key);
+      createTsconfigSpecJson(host, project);
+      createKarma(host, project);
       createTestTs(host, project);
     }
 
     if (project.projectType === 'application' && !project.architect.e2e) {
-      createBrowserlist(host, `${project.root}/browserslist`);
+      createBrowserlist(host, project);
+      createTslintJson(host, project);
     }
+
+    if (project.projectType === 'application' && project.architect.e2e) {
+      createProtractor(host, project);
+    }
+
     if (project.projectType === 'library') {
-      createTsconfigLibJson(
-        host,
-        `${project.root}/tsconfig.lib.json`,
-        project.key
-      );
-    }
-    if (!project.architect.e2e) {
-      createTslintJson(host, `${project.root}/tslint.json`, project.prefix);
+      createTsconfigLibJson(host, project);
     }
   });
   return host;
 }
 
-function moveFiles(host: Tree, context: SchematicContext) {
+function moveE2eTests(host: Tree, context: SchematicContext) {
   const angularJson = readJsonInTree(host, 'angular.json');
-  Object.entries<any>(angularJson.projects)
-    .filter(([key, project]) => {
-      if (!project.architect.e2e || key === '$workspaceRoot-e2e') {
-        return false;
-      }
 
-      const srcProjectKey = parseTarget(
-        project.architect.e2e.options.devServerTarget
-      ).project;
+  Object.values(angularJson.projects).forEach((p: any) => {
+    if (p.projectType === 'application' && !p.architect.e2e) {
+      fs.mkdirSync(`${p.root}-e2e`);
+      fs.renameSync(`${p.root}/e2e`, `${p.root}-e2e/src`);
+    }
+  });
+}
 
-      const srcProject = getProjectConfig(host, srcProjectKey);
-
-      return srcProject.architect.build.options.main.startsWith('apps');
-    })
-    .forEach(([key, project]) => {
-      fs.mkdirSync(`apps/${key}`);
-      fs.renameSync(`apps/${key.replace('-e2e', '')}/e2e`, `apps/${key}/src`);
-    });
+function deleteUnneededFiles(host: Tree) {
+  try {
+    host.delete('karma.conf.js');
+    host.delete('protractor.conf.js');
+    host.delete('tsconfig.spec.json');
+    host.delete('test.js');
+  } catch (e) {}
   return host;
 }
 
-function deleteUnneededFiles(host: Tree, context: SchematicContext) {
+function patchLibIndexFiles(host: Tree) {
   const angularJson = readJsonInTree(host, 'angular.json');
-  const defaultProject = getProjectConfig(host, angularJson.defaultProject);
-  host.delete(defaultProject.architect.test.options.main);
-  host.delete(defaultProject.architect.test.options.tsConfig);
+
+  Object.values(angularJson.projects).forEach((p: any) => {
+    if (p.projectType === 'library') {
+      fs.renameSync(p.sourceRoot, `${p.root}/lib`);
+      fs.mkdirSync(p.sourceRoot);
+      fs.renameSync(`${p.root}/lib`, `${p.sourceRoot}/lib`);
+      const content = host.read(`${p.root}/index.ts`).toString();
+      host.create(
+        `${p.sourceRoot}/index.ts`,
+        content.replace(new RegExp('/src/', 'g'), '/lib/')
+      );
+      host.delete(`${p.root}/index.ts`);
+    }
+  });
+
+  return host;
 }
 
 const updatePackageJson = updateJsonInTree('package.json', json => {
@@ -376,89 +316,113 @@ const updatePackageJson = updateJsonInTree('package.json', json => {
   json.dependencies = {
     ...json.dependencies,
     // Migrating Angular Dependencies because ng update @angular/core doesn't work well right now
-    '@angular/common': angularVersion,
-    '@angular/compiler': angularVersion,
-    '@angular/core': angularVersion,
-    '@angular/forms': angularVersion,
-    '@angular/platform-browser': angularVersion,
-    '@angular/platform-browser-dynamic': angularVersion,
-    '@angular/router': angularVersion,
-    rxjs: rxjsVersion,
-    'rxjs-compat': rxjsVersion,
+    '@angular/animations': '6.0.1',
+    '@angular/common': '6.0.1',
+    '@angular/compiler': '6.0.1',
+    '@angular/core': '6.0.1',
+    '@angular/forms': '6.0.1',
+    '@angular/platform-browser': '6.0.1',
+    '@angular/platform-browser-dynamic': '6.0.1',
+    '@angular/router': '6.0.1',
+    rxjs: '6.0.0',
+    'rxjs-compat': '6.0.0',
     'zone.js': '^0.8.26',
+    'core-js': '^2.5.4',
     // End Angular Versions
-    '@ngrx/effects': ngrxVersion,
-    '@ngrx/router-store': ngrxVersion,
-    '@ngrx/store': ngrxVersion,
-    '@ngrx/store-devtools': ngrxVersion
+    '@ngrx/effects': '5.2.0',
+    '@ngrx/router-store': '5.2.0',
+    '@ngrx/store': '5.2.0',
+    '@ngrx/store-devtools': '5.2.0',
+
+    '@nrwl/nx': '6.0.0'
   };
   json.devDependencies = {
     ...json.devDependencies,
     // Migrating Angular Dependencies because ng update @angular/core doesn't work well right now
-    '@angular/compiler-cli': angularVersion,
-    '@angular/language-service': angularVersion,
+    '@angular/compiler-cli': '6.0.1',
+    '@angular/language-service': '6.0.1',
     // End Angular Versions
-    '@ngrx/schematics': ngrxSchematicsVersion,
-    typescript: '~2.7.2'
+    '@ngrx/schematics': '5.2.0',
+    typescript: '2.7.2',
+    'jasmine-marbles': '0.3.1',
+    '@types/jasmine': '~2.8.6',
+    '@types/jasminewd2': '~2.0.3',
+    '@types/node': '~8.9.4',
+    codelyzer: '~4.2.1',
+    'jasmine-core': '~2.99.1',
+    'jasmine-spec-reporter': '~4.2.1',
+    karma: '~2.0.0',
+    'karma-chrome-launcher': '~2.2.0',
+    'karma-coverage-istanbul-reporter': '~1.4.2',
+    'karma-jasmine': '~1.1.0',
+    'karma-jasmine-html-reporter': '^0.2.2',
+    protractor: '~5.3.0',
+    'ts-node': '~5.0.1',
+    tslint: '~5.9.1',
+    prettier: '1.10.2'
   };
-
-  json.scripts.postinstall = './node_modules/.bin/nx postinstall';
 
   return json;
 });
 
-function createDefaultAppTsConfig(host: Tree, projectName: string) {
+function createDefaultAppTsConfig(host: Tree, project: any) {
+  const offset = offsetFromRoot(project.root);
+
   const defaultAppTsConfig = {
-    extends: '../../tsconfig.json',
+    extends: `${offset}tsconfig.json`,
     compilerOptions: {
-      outDir: '../../../dist/out-tsc/apps/' + projectName,
+      outDir: `${offset}dist/out-tsc/${project.root}`,
       module: 'es2015'
     },
     include: ['**/*.ts'],
     exclude: ['**/*.spec.ts']
   };
   host.create(
-    `apps/${projectName}/tsconfig.app.json`,
+    `${project.root}/tsconfig.app.json`,
     serializeJson(defaultAppTsConfig)
   );
 }
 
-function createDefaultE2eTsConfig(host: Tree, projectName: string) {
+function createDefaultE2eTsConfig(host: Tree, project: any) {
+  const offset = offsetFromRoot(project.root);
+
   const defaultE2eTsConfig = {
-    extends: '../../tsconfig.json',
+    extends: `${offset}tsconfig.json`,
     compilerOptions: {
-      outDir: '../../dist/out-tsc/apps/' + projectName,
+      outDir: `${offset}dist/out-tsc/${project.root}`,
       module: 'commonjs',
       target: 'es5',
       types: ['jasmine', 'jasminewd2', 'node']
     }
   };
   host.create(
-    `apps/${projectName}/tsconfig.e2e.json`,
+    `${project.root}/tsconfig.e2e.json`,
     serializeJson(defaultE2eTsConfig)
   );
 }
 
-function updateTsConfigs(host: Tree, context: SchematicContext) {
+function updateTsConfigs(host: Tree) {
   const angularJson = readJsonInTree(host, 'angular.json');
   Object.entries<any>(angularJson.projects).forEach(([key, project]) => {
     if (
       project.architect.build &&
       project.architect.build.options.main.startsWith('apps')
     ) {
-      if (host.exists(project.architect.build.options.tsConfig)) {
+      const offset = offsetFromRoot(project.root);
+
+      if (host.exists(`${project.root}/src/tsconfig.app.json`)) {
         const tsConfig = readJsonInTree(
           host,
-          project.architect.build.options.tsConfig
+          `${project.root}/src/tsconfig.app.json`
         );
         host.create(
-          `apps/${key}/tsconfig.app.json`,
+          `${project.root}/tsconfig.app.json`,
           serializeJson({
             ...tsConfig,
-            extends: '../../tsconfig.json',
+            extends: `${offset}tsconfig.json`,
             compilerOptions: {
               ...tsConfig.compilerOptions,
-              outDir: '../../dist/out-tsc/apps/' + key
+              outDir: `${offset}dist/out-tsc/${project.root}`
             },
             include: tsConfig.include.map((path: string) => {
               if (path.startsWith('../../../')) {
@@ -469,57 +433,38 @@ function updateTsConfigs(host: Tree, context: SchematicContext) {
             })
           })
         );
-        host.delete(project.architect.build.options.tsConfig);
+        host.delete(`${project.root}/src/tsconfig.app.json`);
       } else {
-        createDefaultAppTsConfig(host, key);
+        createDefaultAppTsConfig(host, project);
       }
     }
 
-    if (!project.architect.e2e || key === '$workspaceRoot-e2e') {
-      return;
-    }
+    if (project.architect.e2e) {
+      const offset = offsetFromRoot(project.root);
 
-    const srcProjectKey = parseTarget(
-      project.architect.e2e.options.devServerTarget
-    ).project;
-
-    const srcProject = getProjectConfig(host, srcProjectKey);
-
-    if (srcProject.architect.build.options.main.startsWith('apps')) {
-      if (host.exists(`apps/${key}/src/tsconfig.e2e.json`)) {
+      if (host.exists(`${project.root}/src/tsconfig.e2e.json`)) {
         const tsConfig = readJsonInTree(
           host,
-          `apps/${key}/src/tsconfig.e2e.json`
+          `${project.root}/src/tsconfig.e2e.json`
         );
-        tsConfig.extends = '../../tsconfig.json';
+        tsConfig.extends = `${offset}tsconfig.json`;
         tsConfig.compilerOptions = {
           ...tsConfig.compilerOptions,
-          outDir: '../../dist/out-tsc/apps/' + key
+          outDir: `${offset}dist/out-tsc/${project.root}`
         };
         delete tsConfig.include;
         delete tsConfig.exclude;
-        host.create(`apps/${key}/tsconfig.e2e.json`, serializeJson(tsConfig));
-        host.delete(`apps/${key}/src/tsconfig.e2e.json`);
+        host.create(
+          `${project.root}/tsconfig.e2e.json`,
+          serializeJson(tsConfig)
+        );
+        host.delete(`${project.root}/src/tsconfig.e2e.json`);
       } else {
-        createDefaultE2eTsConfig(host, key);
+        createDefaultE2eTsConfig(host, project);
       }
     }
   });
   return host;
-}
-
-function updateNxJson(host: Tree, context: SchematicContext) {
-  const angularJson = readJsonInTree(host, 'angular.json');
-  return updateJsonInTree('nx.json', json => {
-    Object.entries<any>(angularJson.projects).forEach(([key, project]) => {
-      if (project.architect.e2e) {
-        json.projects[key] = {
-          tags: []
-        };
-      }
-    });
-    return json;
-  })(host, context);
 }
 
 const updateAngularJson = updateJsonInTree('angular.json', json => {
@@ -530,6 +475,12 @@ const updateAngularJson = updateJsonInTree('angular.json', json => {
   };
   delete json.projects.$workspaceRoot;
   delete json.projects['$workspaceRoot-e2e'];
+  const prefix = json.schematics['@nrwl/schematics:component'].prefix;
+  delete json.schematics;
+  json.defaultProject = pathToName(json.defaultProject);
+
+  const projects = {};
+
   Object.entries<any>(json.projects).forEach(([key, project]) => {
     const type = !project.architect.build
       ? 'e2e'
@@ -539,32 +490,53 @@ const updateAngularJson = updateJsonInTree('angular.json', json => {
     if (type !== 'e2e') {
       project.projectType = type;
     }
+
     switch (type) {
       case 'application':
         project.root = `apps/${key}`;
         project.sourceRoot = `apps/${key}/src`;
+        project.prefix = prefix;
 
         project.architect.build.options.tsConfig = `${
           project.root
         }/tsconfig.app.json`;
-
         project.architect.test.options.karmaConfig = `${
           project.root
         }/karma.conf.js`;
         project.architect.test.options.tsConfig = `${
           project.root
         }/tsconfig.spec.json`;
+
         project.architect.test.options.main = `${project.sourceRoot}/test.ts`;
 
         project.architect.lint.options.tsConfig = [
           `${project.root}/tsconfig.app.json`,
           `${project.root}/tsconfig.spec.json`
         ];
+
+        project.architect.serve.options.browserTarget = serializeTarget(
+          parseAndNormalizeTarget(project.architect.serve.options.browserTarget)
+        );
+        project.architect.serve.configurations.production.browserTarget = serializeTarget(
+          parseAndNormalizeTarget(
+            project.architect.serve.configurations.production.browserTarget
+          )
+        );
+        project.architect[
+          'extract-i18n'
+        ].options.browserTarget = serializeTarget(
+          parseAndNormalizeTarget(
+            project.architect['extract-i18n'].options.browserTarget
+          )
+        );
+        projects[pathToName(key)] = project;
         break;
 
       case 'library':
         project.root = `libs/${key}`;
         project.sourceRoot = `libs/${key}/src`;
+        project.prefix = prefix;
+
         project.projectType = 'library';
         project.architect.test.options.karmaConfig = `${
           project.root
@@ -578,18 +550,23 @@ const updateAngularJson = updateJsonInTree('angular.json', json => {
           `${project.root}/tsconfig.lib.json`,
           `${project.root}/tsconfig.spec.json`
         ];
+        delete project.architect.build;
+        delete project.architect.serve;
+        delete project.architect['extract-i18n'];
+        projects[pathToName(key)] = project;
         break;
+
       case 'e2e':
         const appProjectKey = parseTarget(
           project.architect.e2e.options.devServerTarget
         ).project;
         const appProject = json.projects[appProjectKey];
         if (appProject.projectType === 'library') {
-          delete json.projects[key];
           break;
         }
         project.root = `apps/${key}`;
         project.sourceRoot = `apps/${key}/src`;
+        project.prefix = prefix;
 
         project.architect.e2e.options.protractorConfig = `${
           project.root
@@ -597,9 +574,14 @@ const updateAngularJson = updateJsonInTree('angular.json', json => {
         project.architect.lint.options.tsConfig = [
           `${project.root}/tsconfig.e2e.json`
         ];
+        project.architect.e2e.options.devServerTarget = serializeTarget(
+          parseAndNormalizeTarget(project.architect.e2e.options.devServerTarget)
+        );
+        projects[pathToName(key)] = project;
         break;
     }
   });
+  json.projects = projects;
   return json;
 });
 
@@ -616,18 +598,25 @@ function checkCli6Upgraded(host: Tree) {
   }
 }
 
-export default (options: any): Rule => {
+function parseAndNormalizeTarget(s: string) {
+  const r = parseTarget(s);
+  return { ...r, project: pathToName(r.project) };
+}
+
+function pathToName(s: string) {
+  return s.replace(new RegExp('/', 'g'), '-');
+}
+
+export default function(): Rule {
   return chain([
     checkCli6Upgraded,
     updatePackageJson,
-    moveFiles,
-    updateKarmaConfigs,
-    updateProtractorConfigs,
-    deleteUnneededFiles,
-    updateTsConfigs,
     updateAngularJson,
-    updateNxJson,
+    moveE2eTests,
+    updateTsConfigs,
     createAdditionalFiles,
+    deleteUnneededFiles,
+    patchLibIndexFiles,
     addTasks
   ]);
-};
+}

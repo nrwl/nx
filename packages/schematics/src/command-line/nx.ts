@@ -4,7 +4,6 @@ import * as yargs from 'yargs';
 import { affected } from './affected';
 import { format } from './format';
 import { update } from './update';
-import { patchNg } from './patch-ng';
 import { lint } from './lint';
 import { workspaceSchematic } from './workspace-schematic';
 import { generateGraph, OutputType } from './dep-graph';

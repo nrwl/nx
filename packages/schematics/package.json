@@ -36,6 +36,7 @@
   "dependencies": {
     "@ngrx/schematics": "5.2.0",
     "@schematics/angular": "0.6.1",
+    "@angular-devkit/schematics": "0.6.1",
     "@types/yargs": "^11.0.0",
     "app-root-path": "^2.0.1",
     "cosmiconfig": "5.0.2",
@@ -48,8 +49,5 @@
     "viz.js": "^1.8.1",
     "yargs-parser": "10.0.0",
     "yargs": "^11.0.0"
-  },
-  "devDependencies": {
-    "@angular-devkit/schematics": "0.6.1"
   }
 }

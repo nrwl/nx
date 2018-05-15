@@ -1,7 +1,7 @@
 import { newApp, newLib, newProject, runCLI, updateFile } from '../utils';
 
 describe('Nrwl Workspace', () => {
-  it(
+  fit(
     'should work',
     () => {
       newProject();
