@@ -84,6 +84,29 @@ describe('lib', () => {
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
     });
+
+    it('should default the prefix to npmScope', () => {
+      const noPrefix = schematicRunner.runSchematic(
+        'lib',
+        { name: 'myLib' },
+        appTree
+      );
+      expect(
+        JSON.parse(noPrefix.read('angular.json').toString()).projects['my-lib']
+          .prefix
+      ).toEqual('proj');
+
+      const withPrefix = schematicRunner.runSchematic(
+        'app',
+        { name: 'myLib', prefix: 'custom' },
+        appTree
+      );
+      expect(
+        JSON.parse(withPrefix.read('angular.json').toString()).projects[
+          'my-lib'
+        ].prefix
+      ).toEqual('custom');
+    });
   });
 
   describe('nested', () => {

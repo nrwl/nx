@@ -91,6 +91,35 @@ describe('app', () => {
       );
       expect(tsconfigE2E.extends).toEqual('../../tsconfig.json');
     });
+
+    it('should default the prefix to npmScope', () => {
+      const noPrefix = schematicRunner.runSchematic(
+        'app',
+        { name: 'myApp' },
+        appTree
+      );
+      expect(
+        JSON.parse(noPrefix.read('angular.json').toString()).projects['my-app']
+          .prefix
+      ).toEqual('proj');
+      expect(
+        noPrefix.read('apps/my-app-e2e/src/app.e2e-spec.ts').toString()
+      ).toContain('Welcome to proj!');
+
+      const withPrefix = schematicRunner.runSchematic(
+        'app',
+        { name: 'myApp', prefix: 'custom' },
+        appTree
+      );
+      expect(
+        JSON.parse(withPrefix.read('angular.json').toString()).projects[
+          'my-app'
+        ].prefix
+      ).toEqual('custom');
+      expect(
+        withPrefix.read('apps/my-app-e2e/src/app.e2e-spec.ts').toString()
+      ).toContain('Welcome to custom!');
+    });
   });
 
   describe('nested', () => {
