@@ -27,7 +27,7 @@ if (parsedArgs.help) {
       --bazel               use bazel instead of webpack (default to false)
 
       [ng new options]      any 'ng new' options
-                            run 'ng help new' for more informations
+                            run 'ng new --help' for more information
   `);
   process.exit(0);
 }
