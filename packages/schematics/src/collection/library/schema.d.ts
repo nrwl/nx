@@ -8,6 +8,7 @@ export interface Schema {
   flat?: boolean;
   commonModule?: boolean;
 
+  prefix?: string;
   routing?: boolean;
   lazy?: boolean;
   parentModule?: string;

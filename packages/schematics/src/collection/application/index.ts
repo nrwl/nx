@@ -4,7 +4,8 @@ import {
   move,
   noop,
   Rule,
-  Tree
+  Tree,
+  SchematicContext
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as ts from 'typescript';
@@ -19,9 +20,11 @@ import { wrapIntoFormat } from '../../utils/tasks';
 import { toFileName } from '../../utils/name-utils';
 import { offsetFromRoot } from '@nrwl/schematics/src/utils/common';
 import {
+  getNpmScope,
   getWorkspacePath,
   replaceAppNameWithPath
 } from '@nrwl/schematics/src/utils/cli-config-utils';
+import { updateFile } from '../../../../../e2e/utils';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -94,9 +97,11 @@ function addRouterRootConfiguration(options: NormalizedSchema): Rule {
   };
 }
 
-const staticComponentContent = `
+function updateComponentTemplate(options: NormalizedSchema): Rule {
+  return (host: Tree) => {
+    const baseContent = `
 <div style="text-align:center">
-  <h1>Welcome to app!</h1>
+  <h1>Welcome to ${getNpmScope(host)}!</h1>
   <img width="300" src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png">
 </div>
 
@@ -109,12 +114,9 @@ Nx is designed to help you create and build enterprise grade Angular application
 <h2>Quick Start & Documentation</h2>
 
 <a href="https://nrwl.io/nx">Watch a 5-minute video on how to get started with Nx.</a>`;
-
-function updateComponentTemplate(options: NormalizedSchema): Rule {
-  return (host: Tree) => {
     const content = options.routing
-      ? `${staticComponentContent}\n<router-outlet></router-outlet>`
-      : staticComponentContent;
+      ? `${baseContent}\n<router-outlet></router-outlet>`
+      : baseContent;
     host.overwrite(
       `${options.appProjectRoot}/src/app/app.component.html`,
       content
@@ -182,6 +184,15 @@ function updateProject(options: NormalizedSchema): Rule {
 
 function updateE2eProject(options: NormalizedSchema): Rule {
   return (host: Tree) => {
+    // patching the spec file because of a bug in the CLI application schematic
+    // it hardcodes "app" in the e2e tests
+    const spec = `${options.e2eProjectRoot}/src/app.e2e-spec.ts`;
+    const content = host.read(spec).toString();
+    host.overwrite(
+      spec,
+      content.replace('Welcome to app!', `Welcome to ${options.prefix}!`)
+    );
+
     return chain([
       updateJsonInTree(getWorkspacePath(host), json => {
         const project = json.projects[options.e2eProjectName];
@@ -210,8 +221,8 @@ function updateE2eProject(options: NormalizedSchema): Rule {
 }
 
 export default function(schema: Schema): Rule {
-  return wrapIntoFormat(() => {
-    const options = normalizeOptions(schema);
+  return wrapIntoFormat((host: Tree) => {
+    const options = normalizeOptions(host, schema);
     return chain([
       externalSchematic('@schematics/angular', 'application', {
         ...options,
@@ -231,7 +242,7 @@ export default function(schema: Schema): Rule {
   });
 }
 
-function normalizeOptions(options: Schema): NormalizedSchema {
+function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appDirectory = options.directory
     ? `${toFileName(options.directory)}/${toFileName(options.name)}`
     : toFileName(options.name);
@@ -246,8 +257,10 @@ function normalizeOptions(options: Schema): NormalizedSchema {
     ? options.tags.split(',').map(s => s.trim())
     : [];
 
+  const defaultPrefix = getNpmScope(host);
   return {
     ...options,
+    prefix: options.prefix ? options.prefix : defaultPrefix,
     name: appProjectName,
     appProjectRoot,
     e2eProjectRoot,

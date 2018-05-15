@@ -319,8 +319,8 @@ function updateTsConfig(options: NormalizedSchema): Rule {
 }
 
 export default function(schema: Schema): Rule {
-  return wrapIntoFormat(() => {
-    const options = normalizeOptions(schema);
+  return wrapIntoFormat((host: Tree) => {
+    const options = normalizeOptions(host, schema);
     if (!options.routing && options.lazy) {
       throw new Error(`routing must be set`);
     }
@@ -389,7 +389,7 @@ export default function(schema: Schema): Rule {
   });
 }
 
-function normalizeOptions(options: Schema): NormalizedSchema {
+function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const projectDirectory = options.directory
     ? `${toFileName(options.directory)}/${toFileName(options.name)}`
     : toFileName(options.name);
@@ -401,8 +401,11 @@ function normalizeOptions(options: Schema): NormalizedSchema {
     ? options.tags.split(',').map(s => s.trim())
     : [];
   const modulePath = `${projectRoot}/src/lib/${projectName}.module.ts`;
+  const defaultPrefix = getNpmScope(host);
+
   return {
     ...options,
+    prefix: options.prefix ? options.prefix : defaultPrefix,
     name: projectName,
     projectRoot,
     entryFile: 'index',
