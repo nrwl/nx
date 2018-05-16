@@ -12,6 +12,7 @@ import { FormatFiles } from '../../src/utils/tasks';
 import { serializeJson } from '../../src/utils/fileutils';
 import { parseTarget, serializeTarget } from '../../src/utils/cli-config-utils';
 import * as fs from 'fs';
+import * as path from 'path';
 import { offsetFromRoot } from '@nrwl/schematics/src/utils/common';
 
 function createKarma(host: Tree, project: any) {
@@ -289,7 +290,7 @@ function deleteUnneededFiles(host: Tree) {
   return host;
 }
 
-function patchLibIndexFiles(host: Tree) {
+function patchLibIndexFiles(host: Tree, context: SchematicContext) {
   const angularJson = readJsonInTree(host, 'angular.json');
 
   Object.values(angularJson.projects).forEach((p: any) => {
@@ -297,6 +298,14 @@ function patchLibIndexFiles(host: Tree) {
       fs.renameSync(p.sourceRoot, `${p.root}/lib`);
       fs.mkdirSync(p.sourceRoot);
       fs.renameSync(`${p.root}/lib`, `${p.sourceRoot}/lib`);
+      const npmScope = readJsonInTree(host, 'nx.json').npmScope;
+      host = updateJsonInTree('tsconfig.json', json => {
+        json.compilerOptions.paths = json.compilerOptions.paths || {};
+        json.compilerOptions.paths[
+          `@${npmScope}/${p.root.replace('libs/', '')}`
+        ] = [`${p.sourceRoot}/index.ts`];
+        return json;
+      })(host, context) as Tree;
       const content = host.read(`${p.root}/index.ts`).toString();
       host.create(
         `${p.sourceRoot}/index.ts`,
@@ -409,12 +418,9 @@ function updateTsConfigs(host: Tree) {
       project.architect.build.options.main.startsWith('apps')
     ) {
       const offset = offsetFromRoot(project.root);
-
-      if (host.exists(`${project.root}/src/tsconfig.app.json`)) {
-        const tsConfig = readJsonInTree(
-          host,
-          `${project.root}/src/tsconfig.app.json`
-        );
+      const originalTsConfigPath = `${project.root}/src/tsconfig.app.json`;
+      if (host.exists(originalTsConfigPath)) {
+        const tsConfig = readJsonInTree(host, originalTsConfigPath);
         host.create(
           `${project.root}/tsconfig.app.json`,
           serializeJson({
@@ -424,12 +430,15 @@ function updateTsConfigs(host: Tree) {
               ...tsConfig.compilerOptions,
               outDir: `${offset}dist/out-tsc/${project.root}`
             },
-            include: tsConfig.include.map((path: string) => {
-              if (path.startsWith('../../../')) {
-                return path.substring(3);
-              } else {
-                return path;
+            include: tsConfig.include.map((include: string) => {
+              if (include.startsWith('../../../')) {
+                include = include.substring(3);
               }
+
+              if (include.includes('/libs/') && include.endsWith('index.ts')) {
+                include = include.replace('index.ts', 'src/index.ts');
+              }
+              return include;
             })
           })
         );
