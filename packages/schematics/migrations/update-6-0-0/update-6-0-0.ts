@@ -385,7 +385,7 @@ function createDefaultAppTsConfig(host: Tree, project: any) {
       module: 'es2015'
     },
     include: ['**/*.ts'],
-    exclude: ['**/*.spec.ts']
+    exclude: ['src/test.ts', '**/*.spec.ts']
   };
   host.create(
     `${project.root}/tsconfig.app.json`,
@@ -422,6 +422,10 @@ function updateTsConfigs(host: Tree) {
       const originalTsConfigPath = `${project.root}/src/tsconfig.app.json`;
       if (host.exists(originalTsConfigPath)) {
         const tsConfig = readJsonInTree(host, originalTsConfigPath);
+        if (!(tsConfig.exclude as string[]).includes('src/test.ts')) {
+          tsConfig.exclude.push('src/test.ts');
+        }
+
         host.create(
           `${project.root}/tsconfig.app.json`,
           serializeJson({
