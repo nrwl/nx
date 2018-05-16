@@ -202,8 +202,8 @@ function createTslintJson(host: Tree, project: any) {
     serializeJson({
       extends: `${offset}tslint.json`,
       rules: {
-        'directive-selector': [true, 'attribute', project.root, 'camelCase'],
-        'component-selector': [true, 'element', project.root, 'kebab-case']
+        'directive-selector': [true, 'attribute', project.prefix, 'camelCase'],
+        'component-selector': [true, 'element', project.prefix, 'kebab-case']
       }
     })
   );
@@ -264,6 +264,7 @@ function createAdditionalFiles(host: Tree) {
 
     if (project.projectType === 'library') {
       createTsconfigLibJson(host, project);
+      createTslintJson(host, project);
     }
   });
   return host;
