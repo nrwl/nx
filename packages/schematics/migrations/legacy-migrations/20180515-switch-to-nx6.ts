@@ -24,7 +24,6 @@ export default {
     });
 
     updateJsonFile('package.json', json => {
-      delete json.scripts.update;
       delete json.scripts.postinstall;
     });
 
