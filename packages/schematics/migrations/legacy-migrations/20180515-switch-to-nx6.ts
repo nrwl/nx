@@ -34,8 +34,13 @@ export default {
         execSync('npm install', { stdio: [0, 1, 2] });
       }
 
-      execSync('ng update @angular/cli@6.0.1', { stdio: [0, 1, 2] });
-      execSync('ng update @nrwl/schematics@6.0.0', { stdio: [0, 1, 2] });
+      execSync('ng update @angular/cli --from 1.7.4 --to 6.0.1', {
+        stdio: [0, 1, 2]
+      });
+      // TODO: remove --next before releasing 6.0.0 final
+      execSync('ng update @nrwl/schematics --from 1.0.3 --to 6.0.0 --next', {
+        stdio: [0, 1, 2]
+      });
     } catch (e) {
       console.warn(stripIndents`
         The automatic upgrade to Nx 6 has failed with the following error: ${e}.
