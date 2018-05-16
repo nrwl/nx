@@ -153,7 +153,7 @@ context.keys().map(context);
 
 function createBrowserlist(host: Tree, project: any) {
   host.create(
-    `${project.root}/browserlist`,
+    `${project.root}/browserslist`,
     stripIndents`
       # This file is currently used by autoprefixer to adjust CSS to support the below specified browsers
       # For additional information regarding the format and rule options, please see:
