@@ -1,9 +1,4 @@
-import {
-  chain,
-  SchematicContext,
-  Tree,
-  Rule
-} from '@angular-devkit/schematics';
+import { chain, Rule, SchematicContext, Tree } from '@angular-devkit/schematics';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
@@ -12,13 +7,13 @@ import { FormatFiles } from '../../src/utils/tasks';
 import { serializeJson } from '../../src/utils/fileutils';
 import { parseTarget, serializeTarget } from '../../src/utils/cli-config-utils';
 import * as fs from 'fs';
-import * as path from 'path';
 import { offsetFromRoot } from '@nrwl/schematics/src/utils/common';
 
 function createKarma(host: Tree, project: any) {
   const offset = offsetFromRoot(project.root);
 
-  host.create(
+  createOrUpdate(
+    host,
     `${project.root}/karma.conf.js`,
     `
 // Karma configuration file, see link for more information
@@ -57,7 +52,8 @@ module.exports = function (config) {
 }
 
 function createProtractor(host: Tree, project: any) {
-  host.create(
+  createOrUpdate(
+    host,
     `${project.root}/protractor.conf.js`,
     `
 // Protractor configuration file, see link for more information
@@ -94,7 +90,8 @@ exports.config = {
 
 function createTestTs(host: Tree, project: any) {
   if (project.projectType === 'library') {
-    host.create(
+    createOrUpdate(
+      host,
       `${project.sourceRoot}/test.ts`,
       `
 // This file is required by karma.conf.js and loads recursively all the .spec and framework files
@@ -122,7 +119,8 @@ context.keys().map(context);
     `
     );
   } else {
-    host.create(
+    createOrUpdate(
+      host,
       `${project.sourceRoot}/test.ts`,
       `
 // This file is required by karma.conf.js and loads recursively all the .spec and framework files
@@ -152,7 +150,8 @@ context.keys().map(context);
 }
 
 function createBrowserlist(host: Tree, project: any) {
-  host.create(
+  createOrUpdate(
+    host,
     `${project.root}/browserslist`,
     stripIndents`
       # This file is currently used by autoprefixer to adjust CSS to support the below specified browsers
@@ -183,7 +182,8 @@ function createTsconfigSpecJson(host: Tree, project: any) {
     compilerOptions['module'] = 'commonjs';
   }
 
-  host.create(
+  createOrUpdate(
+    host,
     `${project.root}/tsconfig.spec.json`,
     serializeJson({
       extends: `${offset}tsconfig.json`,
@@ -197,7 +197,8 @@ function createTsconfigSpecJson(host: Tree, project: any) {
 function createTslintJson(host: Tree, project: any) {
   const offset = offsetFromRoot(project.root);
 
-  host.create(
+  createOrUpdate(
+    host,
     `${project.root}/tslint.json`,
     serializeJson({
       extends: `${offset}tslint.json`,
@@ -212,7 +213,8 @@ function createTslintJson(host: Tree, project: any) {
 function createTsconfigLibJson(host: Tree, project: any) {
   const offset = offsetFromRoot(project.root);
 
-  host.create(
+  createOrUpdate(
+    host,
     `${project.root}/tsconfig.lib.json`,
     serializeJson({
       extends: `${offset}tsconfig.json`,
@@ -296,23 +298,29 @@ function patchLibIndexFiles(host: Tree, context: SchematicContext) {
 
   Object.values(angularJson.projects).forEach((p: any) => {
     if (p.projectType === 'library') {
-      fs.renameSync(p.sourceRoot, `${p.root}/lib`);
-      fs.mkdirSync(p.sourceRoot);
-      fs.renameSync(`${p.root}/lib`, `${p.sourceRoot}/lib`);
-      const npmScope = readJsonInTree(host, 'nx.json').npmScope;
-      host = updateJsonInTree('tsconfig.json', json => {
-        json.compilerOptions.paths = json.compilerOptions.paths || {};
-        json.compilerOptions.paths[
-          `@${npmScope}/${p.root.replace('libs/', '')}`
-        ] = [`${p.sourceRoot}/index.ts`];
-        return json;
-      })(host, context) as Tree;
-      const content = host.read(`${p.root}/index.ts`).toString();
-      host.create(
-        `${p.sourceRoot}/index.ts`,
-        content.replace(new RegExp('/src/', 'g'), '/lib/')
-      );
-      host.delete(`${p.root}/index.ts`);
+      try {
+        fs.renameSync(p.sourceRoot, `${p.root}/lib`);
+        fs.mkdirSync(p.sourceRoot);
+        fs.renameSync(`${p.root}/lib`, `${p.sourceRoot}/lib`);
+        const npmScope = readJsonInTree(host, 'nx.json').npmScope;
+        host = updateJsonInTree('tsconfig.json', json => {
+          json.compilerOptions.paths = json.compilerOptions.paths || {};
+          json.compilerOptions.paths[
+            `@${npmScope}/${p.root.replace('libs/', '')}`
+          ] = [`${p.sourceRoot}/index.ts`];
+          return json;
+        })(host, context) as Tree;
+        const content = host.read(`${p.root}/index.ts`).toString();
+        host.create(
+          `${p.sourceRoot}/index.ts`,
+          content.replace(new RegExp('/src/', 'g'), '/lib/')
+        );
+        host.delete(`${p.root}/index.ts`);
+      } catch (e) {
+        console.warn(`Nx failed to successfully update '${p.root}'.`);
+        console.warn(`Error message: ${e.message}`);
+        console.warn(`PLease update the library manually.`);
+      }
     }
   });
 
@@ -322,6 +330,11 @@ function patchLibIndexFiles(host: Tree, context: SchematicContext) {
 const updatePackageJson = updateJsonInTree('package.json', json => {
   json.dependencies = json.dependencies || {};
   json.devDependencies = json.devDependencies || {};
+
+  json.scripts = {
+    ...json.scripts,
+    'affected:test': './node_modules/.bin/nx affected:test'
+  };
 
   json.dependencies = {
     ...json.dependencies,
@@ -388,7 +401,8 @@ function createDefaultAppTsConfig(host: Tree, project: any) {
     include: ['**/*.ts'],
     exclude: ['src/test.ts', '**/*.spec.ts']
   };
-  host.create(
+  createOrUpdate(
+    host,
     `${project.root}/tsconfig.app.json`,
     serializeJson(defaultAppTsConfig)
   );
@@ -406,7 +420,9 @@ function createDefaultE2eTsConfig(host: Tree, project: any) {
       types: ['jasmine', 'jasminewd2', 'node']
     }
   };
-  host.create(
+  createOrUpdate(
+    host,
+
     `${project.root}/tsconfig.e2e.json`,
     serializeJson(defaultE2eTsConfig)
   );
@@ -427,7 +443,9 @@ function updateTsConfigs(host: Tree) {
           tsConfig.exclude.push('src/test.ts');
         }
 
-        host.create(
+        createOrUpdate(
+          host,
+
           `${project.root}/tsconfig.app.json`,
           serializeJson({
             ...tsConfig,
@@ -469,7 +487,9 @@ function updateTsConfigs(host: Tree) {
         };
         delete tsConfig.include;
         delete tsConfig.exclude;
-        host.create(
+        createOrUpdate(
+          host,
+
           `${project.root}/tsconfig.e2e.json`,
           serializeJson(tsConfig)
         );
@@ -620,6 +640,14 @@ function parseAndNormalizeTarget(s: string) {
 
 function pathToName(s: string) {
   return s.replace(new RegExp('/', 'g'), '-');
+}
+
+function createOrUpdate(host: Tree, path: string, content: string) {
+  if (host.exists(path)) {
+    host.overwrite(path, content);
+  } else {
+    host.create(path, content);
+  }
 }
 
 export default function(): Rule {
