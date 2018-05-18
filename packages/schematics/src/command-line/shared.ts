@@ -120,8 +120,8 @@ export function getProjectNodes(angularJson, nxJson) {
   if (minus(nxJsonProjects, angularJsonProjects).length > 0) {
     throw new Error(
       `angular.json and nx.json are out of sync. The following projects are missing in angular.json: ${minus(
-        angularJsonProjects,
-        nxJsonProjects
+        nxJsonProjects,
+        angularJsonProjects
       ).join(', ')}`
     );
   }
