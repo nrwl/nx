@@ -337,6 +337,7 @@ describe('Enforce Module Boundaries', () => {
       {},
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
       `
+      import "@mycompany/mylib/src/another-file"
       import "@mycompany/other/src/blah"
       import "@mycompany/other/src/sublib/blah"
       `,
@@ -346,7 +347,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'libs/mylib',
           type: ProjectType.lib,
           tags: [],
-          files: [`libs/mylib/src/main.ts`]
+          files: [`libs/mylib/src/main.ts`, `libs/mylib/src/another-file.ts`]
         },
         {
           name: 'otherName',
@@ -368,6 +369,9 @@ describe('Enforce Module Boundaries', () => {
       'deep imports into libraries are forbidden'
     );
     expect(failures[1].getFailure()).toEqual(
+      'deep imports into libraries are forbidden'
+    );
+    expect(failures[2].getFailure()).toEqual(
       'deep imports into libraries are forbidden'
     );
   });
