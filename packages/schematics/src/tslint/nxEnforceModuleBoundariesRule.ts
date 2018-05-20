@@ -137,12 +137,6 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
         return;
       }
 
-      // same project => allow
-      if (sourceProject === targetProject) {
-        super.visitImportDeclaration(node);
-        return;
-      }
-
       // cannot import apps
       if (targetProject.type !== ProjectType.lib) {
         this.addFailureAt(
