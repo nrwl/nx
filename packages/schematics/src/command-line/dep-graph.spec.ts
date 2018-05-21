@@ -27,6 +27,7 @@ describe('dep-graph', () => {
         root: 'apps/app1',
         type: ProjectType.app,
         tags: [],
+        architect: {},
         files: []
       },
       {
@@ -34,6 +35,7 @@ describe('dep-graph', () => {
         root: 'apps/app2',
         type: ProjectType.app,
         tags: [],
+        architect: {},
         files: []
       },
       {
@@ -41,6 +43,7 @@ describe('dep-graph', () => {
         root: 'libs/lib1',
         type: ProjectType.lib,
         tags: [],
+        architect: {},
         files: []
       },
       {
@@ -48,6 +51,7 @@ describe('dep-graph', () => {
         root: 'libs/lib2',
         type: ProjectType.lib,
         tags: [],
+        architect: {},
         files: []
       },
       {
@@ -55,6 +59,7 @@ describe('dep-graph', () => {
         root: 'libs/lib3',
         type: ProjectType.lib,
         tags: [],
+        architect: {},
         files: []
       }
     ];

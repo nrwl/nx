@@ -20,6 +20,7 @@ export type ProjectNode = {
   type: ProjectType;
   tags: string[];
   files: string[];
+  architect: { [k: string]: any };
 };
 export type Dependency = { projectName: string; type: DependencyType };
 

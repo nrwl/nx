@@ -20,6 +20,7 @@ describe('WorkspaceIntegrityChecks', () => {
             type: ProjectType.lib,
             root: 'libs/project1',
             tags: [],
+            architect: {},
             files: ['libs/project1/src/index.ts']
           }
         ],
@@ -37,6 +38,7 @@ describe('WorkspaceIntegrityChecks', () => {
             type: ProjectType.lib,
             root: 'libs/project1',
             tags: [],
+            architect: {},
             files: []
           },
           {
@@ -44,6 +46,7 @@ describe('WorkspaceIntegrityChecks', () => {
             type: ProjectType.lib,
             root: 'libs/project2',
             tags: [],
+            architect: {},
             files: ['libs/project2/src/index.ts']
           }
         ],
@@ -66,6 +69,7 @@ describe('WorkspaceIntegrityChecks', () => {
             type: ProjectType.lib,
             root: 'libs/project1',
             tags: [],
+            architect: {},
             files: ['libs/project1/src/index.ts']
           }
         ],

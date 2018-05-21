@@ -108,9 +108,13 @@ function test(projects: string[], parsedArgs: YargsAffectedOptions) {
   const sortedAffectedProjects = sortedProjects.filter(
     pp => projects.indexOf(pp) > -1
   );
-  const projectsToTest = sortedAffectedProjects.filter(
-    p => depGraph.projects.find(pp => pp.name === p).type !== ProjectType.e2e
-  );
+  const projectsToTest = sortedAffectedProjects.filter(p => {
+    const matchingProject = depGraph.projects.find(pp => pp.name === p);
+    return (
+      matchingProject.type !== ProjectType.e2e &&
+      !!matchingProject.architect['test']
+    );
+  });
 
   if (projectsToTest.length > 0) {
     const normalizedArgs = ['--no-watch', ...filterNxSpecificArgs(parsedArgs)];
