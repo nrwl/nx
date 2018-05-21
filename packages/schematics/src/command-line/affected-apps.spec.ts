@@ -17,6 +17,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: [],
             tags: [],
+            architect: {},
             type: ProjectType.app
           },
           {
@@ -24,6 +25,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app2',
             files: [],
             tags: [],
+            architect: {},
             type: ProjectType.app
           }
         ],
@@ -42,6 +44,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: [],
             tags: [],
+            architect: {},
             type: ProjectType.app
           },
           {
@@ -49,6 +52,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1Name-e2e',
             files: [],
             tags: [],
+            architect: {},
             type: ProjectType.e2e
           }
         ],
@@ -72,6 +76,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: ['app1.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.app
           },
           {
@@ -79,6 +84,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/lib1',
             files: ['lib1.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.lib
           },
           {
@@ -86,6 +92,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/lib2',
             files: ['lib2.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.lib
           }
         ],
@@ -123,6 +130,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: ['app1.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.app
           },
           {
@@ -130,6 +138,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/lib1',
             files: ['lib1.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.lib
           },
           {
@@ -137,6 +146,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/lib2',
             files: ['lib2.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.lib
           }
         ],
@@ -176,6 +186,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: ['index.html'],
             tags: [],
+            architect: {},
             type: ProjectType.app
           }
         ],
@@ -194,6 +205,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/aa',
             files: ['aa.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.app
           },
           {
@@ -201,6 +213,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/aa/bb',
             files: ['bb.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.app
           }
         ],
@@ -229,6 +242,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/aa',
             files: ['aa.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.app
           },
           {
@@ -236,6 +250,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/bb',
             files: ['bb.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.app
           }
         ],
@@ -267,6 +282,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/aa',
             files: ['aa.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.app
           }
         ],
@@ -294,6 +310,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: ['app1.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.app
           },
           {
@@ -301,6 +318,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app2',
             files: ['app2.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.app
           },
           {
@@ -308,6 +326,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/lib1',
             files: ['lib1.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.lib
           },
           {
@@ -315,6 +334,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/lib2',
             files: ['lib2.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.lib
           }
         ],
@@ -347,6 +367,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: ['app1.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.app
           },
           {
@@ -354,6 +375,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app2',
             files: ['app2.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.app
           },
           {
@@ -361,6 +383,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/lib1',
             files: ['lib1.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.lib
           }
         ],
@@ -391,6 +414,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: ['one\\app1.ts', 'two/app1.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.app
           }
         ],
@@ -417,6 +441,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: ['app1.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.app
           },
           {
@@ -424,6 +449,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app2',
             files: ['app2.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.app
           }
         ],
@@ -451,6 +477,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: ['app1.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.app
           },
           {
@@ -458,6 +485,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app2',
             files: ['app2.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.app
           },
           {
@@ -465,6 +493,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/lib1',
             files: ['lib1.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.lib
           },
           {
@@ -472,6 +501,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/lib2',
             files: ['lib2.ts'],
             tags: [],
+            architect: {},
             type: ProjectType.lib
           }
         ],

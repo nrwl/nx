@@ -137,6 +137,7 @@ export function getProjectNodes(angularJson, nxJson) {
           ? key.endsWith('-e2e') ? ProjectType.e2e : ProjectType.app
           : ProjectType.lib,
       tags,
+      architect: p.architect,
       files: allFilesInDir(`${appRoot.path}/${p.root}`)
     };
   });
