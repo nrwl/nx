@@ -361,7 +361,7 @@ const updatePackageJson = updateJsonInTree('package.json', json => {
     '@ngrx/router-store': '5.2.0',
     '@ngrx/store': '5.2.0',
     '@ngrx/store-devtools': '5.2.0',
-    '@nrwl/nx': '6.0.1'
+    '@nrwl/nx': '6.0.2'
   };
   json.devDependencies = {
     ...json.devDependencies,
