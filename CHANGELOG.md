@@ -1,6 +1,7 @@
-# On Release Process
+# Changelog
 
-The `nrwl/nx` and `nrwl/schematics` packages are released together. You must use the same version of the two packages.
+## Please use the [Github Releases](https://github.com/nrwl/nx/releases) page to see the changelog.
+
 
 # 1.0.1
 
