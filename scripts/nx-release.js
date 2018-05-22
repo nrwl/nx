@@ -4,12 +4,14 @@ const releaseIt = require('release-it');
 const childProcess = require('child_process');
 
 const parsedArgs = yargsParser(process.argv, {
-  boolean: ['dry-run'],
+  boolean: ['dry-run', 'nobazel'],
   alias: {
     d: 'dry-run',
     h: 'help'
   }
 });
+
+console.log('parsedArgs', parsedArgs)
 
 if (parsedArgs.help) {
   console.log(`
@@ -156,6 +158,12 @@ releaseIt(options)
       process.exit(0);
       return;
     }
+
+    if (parsedArgs.nobazel) {
+      childProcess.execSync('rm -rf ./build/packages/bazel');
+      childProcess.execSync('rm -rf ./build/npm/bazel');
+    }
+
     /**
      * We always use either "latest" or "next" (i.e. no separate tags for alpha, beta etc)
      */
