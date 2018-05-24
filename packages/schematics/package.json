@@ -39,7 +39,7 @@
     "@angular-devkit/schematics": "0.6.1",
     "@types/yargs": "^11.0.0",
     "app-root-path": "^2.0.1",
-    "cosmiconfig": "5.0.2",
+    "cosmiconfig": "4.0.0",
     "fs-extra": "6.0.0",
     "graphviz": "0.0.8",
     "npm-run-all": "4.1.2",
