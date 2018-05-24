@@ -17,7 +17,8 @@ import {
   prettierVersion,
   routerStoreVersion,
   schematicsVersion,
-  jasmineMarblesVersion
+  jasmineMarblesVersion,
+  ngrxSchematicsVersion
 } from '../../lib-versions';
 import * as fs from 'fs';
 import {
@@ -45,6 +46,7 @@ function updatePackageJson() {
       'affected:apps': './node_modules/.bin/nx affected:apps',
       'affected:build': './node_modules/.bin/nx affected:build',
       'affected:e2e': './node_modules/.bin/nx affected:e2e',
+      'affected:test': './node_modules/.bin/nx affected:test',
       'affected:dep-graph': './node_modules/.bin/nx affected:dep-graph',
       format: './node_modules/.bin/nx format:write',
       'format:write': './node_modules/.bin/nx format:write',
@@ -55,7 +57,7 @@ function updatePackageJson() {
       lint: './node_modules/.bin/nx lint && ng lint',
       'dep-graph': './node_modules/.bin/nx dep-graph',
       'workspace-schematic': './node_modules/.bin/nx workspace-schematic',
-      postinstall: 'echo 1'
+      help: './node_modules/.bin/nx help'
     };
     packageJson.devDependencies = packageJson.devDependencies || {};
     if (!packageJson.dependencies) {
@@ -82,15 +84,16 @@ function updatePackageJson() {
     if (!packageJson.dependencies['ngrx-store-freeze']) {
       packageJson.dependencies['ngrx-store-freeze'] = ngrxStoreFreezeVersion;
     }
+    if (!packageJson.devDependencies['@ngrx/schematics']) {
+      packageJson.devDependencies['@ngrx/schematics'] = ngrxSchematicsVersion;
+    }
     if (!packageJson.devDependencies['@nrwl/schematics']) {
       packageJson.devDependencies['@nrwl/schematics'] = schematicsVersion;
     }
-    if (!packageJson.dependencies['@angular/cli']) {
-      packageJson.dependencies['@angular/cli'] = angularCliVersion;
+    if (!packageJson.devDependencies['@angular/cli']) {
+      packageJson.devDependencies['@angular/cli'] = angularCliVersion;
     }
-    if (!packageJson.dependencies['karma']) {
-      packageJson.dependencies['karma'] = '~2.0.0';
-    }
+    packageJson.devDependencies['karma'] = '~2.0.0';
     if (!packageJson.devDependencies['jasmine-marbles']) {
       packageJson.devDependencies['jasmine-marbles'] = jasmineMarblesVersion;
     }
