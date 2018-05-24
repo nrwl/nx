@@ -55,6 +55,28 @@ describe('Nrwl Convert to Nx Workspace', () => {
     // check that package.json got merged
     const updatedPackageJson = readJson('package.json');
     expect(updatedPackageJson.description).toEqual('some description');
+    expect(updatedPackageJson.scripts).toEqual({
+      ng: 'ng',
+      start: 'ng serve',
+      build: 'ng build',
+      test: 'ng test',
+      lint: './node_modules/.bin/nx lint && ng lint',
+      e2e: 'ng e2e',
+      'affected:apps': './node_modules/.bin/nx affected:apps',
+      'affected:build': './node_modules/.bin/nx affected:build',
+      'affected:e2e': './node_modules/.bin/nx affected:e2e',
+      'affected:test': './node_modules/.bin/nx affected:test',
+      'affected:dep-graph': './node_modules/.bin/nx affected:dep-graph',
+      format: './node_modules/.bin/nx format:write',
+      'format:write': './node_modules/.bin/nx format:write',
+      'format:check': './node_modules/.bin/nx format:check',
+      update: './node_modules/.bin/nx update',
+      'update:check': './node_modules/.bin/nx update:check',
+      'update:skip': './node_modules/.bin/nx update:skip',
+      'dep-graph': './node_modules/.bin/nx dep-graph',
+      'workspace-schematic': './node_modules/.bin/nx workspace-schematic',
+      help: './node_modules/.bin/nx help'
+    });
     expect(
       updatedPackageJson.devDependencies['@nrwl/schematics']
     ).toBeDefined();
@@ -65,6 +87,11 @@ describe('Nrwl Convert to Nx Workspace', () => {
     expect(
       updatedPackageJson.dependencies['@ngrx/store-devtools']
     ).toBeDefined();
+
+    expect(
+      updatedPackageJson.devDependencies['@ngrx/schematics']
+    ).toBeDefined();
+    expect(updatedPackageJson.devDependencies['@angular/cli']).toBeDefined();
 
     const nxJson = readJson('nx.json');
     expect(nxJson).toEqual({
