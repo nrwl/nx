@@ -5,7 +5,8 @@ import {
   runCLI,
   runNgNew,
   updateFile,
-  readJson
+  readJson,
+  readFile
 } from '../utils';
 
 describe('Nrwl Convert to Nx Workspace', () => {
@@ -51,6 +52,10 @@ describe('Nrwl Convert to Nx Workspace', () => {
       'apps/proj/src/main.ts',
       'apps/proj/src/app/app.module.ts'
     );
+
+    const appModuleContents = readFile('apps/proj/src/app/app.module.ts');
+    expect(appModuleContents).toContain(`import { NxModule } from '@nrwl/nx';`);
+    expect(appModuleContents).toContain(`NxModule.forRoot()`);
 
     // check that package.json got merged
     const updatedPackageJson = readJson('package.json');

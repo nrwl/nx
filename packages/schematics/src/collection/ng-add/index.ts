@@ -21,6 +21,7 @@ import {
   ngrxSchematicsVersion
 } from '../../lib-versions';
 import * as fs from 'fs';
+import * as ts from 'typescript';
 import {
   offsetFromRoot,
   resolveUserExistingPrettierConfig,
@@ -28,7 +29,11 @@ import {
 } from '../../utils/common';
 import { updateJsonFile, serializeJson } from '../../utils/fileutils';
 import { toFileName } from '../../utils/name-utils';
-import { updateJsonInTree, readJsonInTree } from '../../utils/ast-utils';
+import {
+  updateJsonInTree,
+  readJsonInTree,
+  addImportToModule
+} from '../../utils/ast-utils';
 import {
   parseTarget,
   serializeTarget,
@@ -37,6 +42,9 @@ import {
 import { from } from 'rxjs';
 import { tap, mapTo } from 'rxjs/operators';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
+import { getAppModulePath } from '@schematics/angular/utility/ng-ast-utils';
+import { insertImport } from '@schematics/angular/utility/route-utils';
+import { InsertChange } from '@schematics/angular/utility/change';
 
 function updatePackageJson() {
   return updateJsonInTree('package.json', packageJson => {
@@ -460,6 +468,61 @@ function dedup(array: any[]): any[] {
   return res;
 }
 
+function insertInToString(originalString: string, pos: number, toAdd: string) {
+  return originalString.slice(0, pos) + toAdd + originalString.slice(pos);
+}
+
+function addNxModule(options: Schema) {
+  return (host: Tree, context: SchematicContext) => {
+    const angularJson = readJsonInTree(host, 'angular.json');
+    const app = angularJson.projects[options.name];
+    const modulePath = path.resolve(
+      '.',
+      getAppModulePath(host, app.architect.build.options.main).slice(1)
+    );
+    let content = fs.readFileSync(modulePath).toString();
+
+    // Bail if the module already cotains the import
+    if (content.includes('NxModule.forRoot()')) {
+      return host;
+    }
+
+    let moduleSource = ts.createSourceFile(
+      modulePath,
+      content,
+      ts.ScriptTarget.Latest,
+      true
+    );
+    const importChange: InsertChange = insertImport(
+      moduleSource,
+      modulePath,
+      'NxModule',
+      '@nrwl/nx'
+    ) as InsertChange;
+    content = insertInToString(content, importChange.pos, importChange.toAdd);
+
+    moduleSource = ts.createSourceFile(
+      modulePath,
+      content,
+      ts.ScriptTarget.Latest,
+      true
+    );
+
+    const ngModuleChange: InsertChange = addImportToModule(
+      moduleSource,
+      modulePath,
+      'NxModule.forRoot()'
+    )[0] as InsertChange;
+    content = insertInToString(
+      content,
+      ngModuleChange.pos,
+      ngModuleChange.toAdd
+    );
+    fs.writeFileSync(modulePath, content);
+    return host;
+  };
+}
+
 function checkCanConvertToWorkspace(options: Schema) {
   return (host: Tree) => {
     if (!host.exists('package.json')) {
@@ -504,6 +567,7 @@ export default function(schema: Schema): Rule {
     updateProjectTsLint(options),
     updateTsConfig(options),
     updateTsConfigsJson(options),
+    addNxModule(options),
     addInstallTask(options)
   ]);
 }
