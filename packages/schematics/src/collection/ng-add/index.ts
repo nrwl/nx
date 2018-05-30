@@ -240,6 +240,19 @@ function updateAngularCLIJson(options: Schema): Rule {
       tsConfig: [buildConfig.options.tsConfig, testConfig.options.tsConfig]
     };
 
+    if (app.architect.server) {
+      const serverConfig = app.architect.server;
+      serverConfig.options = {
+        ...serverConfig.options,
+        outputPath: path.join('dist/apps', options.name + '-server'),
+        main: convertPath(options.name, serverConfig.options.main),
+        tsConfig: path.join(
+          app.root,
+          getFilename(serverConfig.options.tsConfig)
+        )
+      };
+    }
+
     const e2eConfig = e2eProject.architect.e2e;
     e2eConfig.options = {
       ...e2eConfig.options,
@@ -278,6 +291,24 @@ function updateTsConfig(options: Schema): Rule {
   );
 }
 
+function parseLoadChildren(loadChildrenString: string) {
+  const [path, className] = loadChildrenString.split('#');
+  return {
+    path,
+    className
+  };
+}
+
+function serializeLoadChildren({
+  path,
+  className
+}: {
+  path: string;
+  className: string;
+}) {
+  return `${path}#${className}`;
+}
+
 function updateTsConfigsJson(options: Schema) {
   return (host: Tree) => {
     const angularJson = readJsonInTree(host, 'angular.json');
@@ -305,6 +336,22 @@ function updateTsConfigsJson(options: Schema) {
         );
       }
     });
+
+    if (app.architect.server) {
+      updateJsonFile(`${app.root}/tsconfig.server.json`, json => {
+        json.compilerOptions.outDir = `${offset}dist/out-tsc/apps/${
+          options.name
+        }-server`;
+        const loadChildrenConfig = parseLoadChildren(
+          json.angularCompilerOptions.entryModule
+        );
+        loadChildrenConfig.path = path.join('src', loadChildrenConfig.path);
+        json.angularCompilerOptions = {
+          ...json.angularCompilerOptions,
+          entryModule: serializeLoadChildren(loadChildrenConfig)
+        };
+      });
+    }
 
     // This has to stay using fs since it is created with fs
     updateJsonFile(`${e2eProject.root}/tsconfig.e2e.json`, json => {
@@ -407,6 +454,13 @@ function moveExistingFiles(options: Schema) {
       options.name,
       getFilename(app.architect.test.options.tsConfig)
     );
+    if (app.architect.server) {
+      moveOutOfSrc(
+        app.sourceRoot,
+        options.name,
+        getFilename(app.architect.server.options.tsConfig)
+      );
+    }
     moveOutOfSrc(app.sourceRoot, options.name, 'tslint.json');
     fs.renameSync(app.sourceRoot, join('apps', options.name, app.sourceRoot));
     fs.renameSync('e2e', join('apps', options.name + '-e2e'));

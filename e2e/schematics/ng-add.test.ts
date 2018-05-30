@@ -237,4 +237,45 @@ describe('Nrwl Convert to Nx Workspace', () => {
       ngrxVersion
     );
   });
+
+  it('should generate a workspace from a universal cli project', () => {
+    // create a new AngularCLI app
+    runNgNew();
+
+    // Add Universal
+    runCLI('generate universal --client-project proj');
+
+    // Add @nrwl/schematics
+    runCLI('add @nrwl/schematics --npmScope projscope --skip-install');
+
+    checkFilesExist('apps/proj/tsconfig.server.json');
+
+    const serverTsConfig = readJson('apps/proj/tsconfig.server.json');
+
+    expect(serverTsConfig).toEqual({
+      extends: './tsconfig.app.json',
+      compilerOptions: {
+        outDir: '../../dist/out-tsc/apps/proj-server',
+        baseUrl: '.',
+        module: 'commonjs'
+      },
+      angularCompilerOptions: {
+        entryModule: 'src/app/app.server.module#AppServerModule'
+      }
+    });
+
+    const updatedAngularCLIJson = readJson('angular.json');
+
+    expect(updatedAngularCLIJson.projects.proj.architect.server).toEqual({
+      builder: '@angular-devkit/build-angular:server',
+      options: {
+        outputPath: 'dist/apps/proj-server',
+        main: 'apps/proj/src/main.server.ts',
+        tsConfig: 'apps/proj/tsconfig.server.json'
+      }
+    });
+
+    runCLI('run proj:server');
+    checkFilesExist('dist/apps/proj-server/main.js');
+  });
 });
