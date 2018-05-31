@@ -67,6 +67,9 @@ export function affected(
     case 'test':
       test(projects, parsedArgs);
       break;
+    case 'lint':
+      lint(projects, parsedArgs);
+      break;
     case 'e2e':
       e2e(e2eProjects, parsedArgs);
       break;
@@ -138,6 +141,40 @@ function test(projects: string[], parsedArgs: YargsAffectedOptions) {
     console.log('No projects to test');
   }
 }
+
+function lint(projects: string[], parsedArgs: YargsAffectedOptions) {
+  const depGraph = readDepGraph();
+  const sortedProjects = topologicallySortProjects(depGraph);
+  const sortedAffectedProjects = sortedProjects.filter(
+    pp => projects.indexOf(pp) > -1
+  );
+  const projectsToLint = sortedAffectedProjects.filter(p => {
+    const matchingProject = depGraph.projects.find(pp => pp.name === p);
+    return (!!matchingProject.architect['lint']);
+  });
+
+  if (projectsToLint.length > 0) {
+    const normalizedArgs = filterNxSpecificArgs(parsedArgs);
+    let message = `Linting ${projectsToLint.join(', ')}`;
+    if (normalizedArgs.length > 0) {
+      message += ` with flags: ${normalizedArgs.join(' ')}`;
+    }
+    console.log(message);
+
+    runCommand(
+      'lint',
+      projectsToLint,
+      parsedArgs,
+      normalizedArgs,
+      'Linting ',
+      'Linting passed.',
+      'Linting failed.'
+    );
+  } else {
+    console.log('No projects to lint');
+  }
+}
+
 
 function runCommand(
   command: string,

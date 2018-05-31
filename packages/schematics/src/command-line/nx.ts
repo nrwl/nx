@@ -49,6 +49,12 @@ yargs
     args => affected('dep-graph', args, process.argv.slice(3))
   )
   .command(
+    'affected:lint',
+    'Lint projects affected by changes',
+    yargs => withAffectedOptions(withParallel(yargs)),
+    args => affected('lint', args, process.argv.slice(3))
+  )
+  .command(
     'dep-graph',
     'Graph dependencies within workspace',
     yargs => withAffectedOptions(withDepGraphOptions(yargs)),
