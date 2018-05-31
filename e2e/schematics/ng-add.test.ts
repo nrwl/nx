@@ -6,7 +6,8 @@ import {
   runNgNew,
   updateFile,
   readJson,
-  readFile
+  readFile,
+  runCommand
 } from '../utils';
 
 describe('Nrwl Convert to Nx Workspace', () => {
@@ -283,5 +284,76 @@ describe('Nrwl Convert to Nx Workspace', () => {
 
     runCLI('run proj:server');
     checkFilesExist('dist/apps/proj-server/main.js');
+  });
+
+  it('should handle workspaces with no e2e project', () => {
+    // create a new AngularCLI app
+    runNgNew();
+
+    // Remove e2e
+    runCommand('rm -rf e2e');
+    const existingAngularJson = readJson('angular.json');
+    delete existingAngularJson.projects['proj-e2e'];
+    updateFile('angular.json', JSON.stringify(existingAngularJson, null, 2));
+
+    // Add @nrwl/schematics
+    const result = runCLI(
+      'add @nrwl/schematics --npmScope projscope --skip-install'
+    );
+
+    checkFilesExist(
+      '.prettierrc',
+      'apps/proj/src/main.ts',
+      'apps/proj/src/app/app.module.ts'
+    );
+
+    expect(result).toContain(
+      'No e2e project was migrated because there was none declared in angular.json'
+    );
+  });
+
+  fit('should handle different types of errors', () => {
+    // create a new AngularCLI app
+    runNgNew();
+
+    // Only remove e2e directory
+    runCommand('mv e2e e2e-bak');
+    try {
+      runCLI('add @nrwl/schematics --npmScope projscope --skip-install');
+      fail('Did not handle not having a e2e directory');
+    } catch (e) {
+      expect(e.stderr.toString()).toContain(
+        'Your workspace could not be converted into an Nx Workspace because of the above error.'
+      );
+    }
+
+    // Put e2e back
+    runCommand('mv e2e-bak e2e');
+
+    // Remove package.json
+    runCommand('mv package.json package.json.bak');
+    try {
+      runCLI('add @nrwl/schematics --npmScope projscope --skip-install');
+      fail('Did not handle not having a package.json');
+    } catch (e) {
+      expect(e.stderr.toString()).toContain(
+        'Your workspace could not be converted into an Nx Workspace because of the above error.'
+      );
+    }
+
+    // Put package.json back
+    runCommand('mv package.json.bak package.json');
+
+    // Remove src
+    runCommand('mv src src-bak');
+    try {
+      runCLI('add @nrwl/schematics --npmScope projscope --skip-install');
+      fail('Did not handle not having a src directory');
+    } catch (e) {
+      expect(e.stderr.toString()).toContain('Path: src does not exist');
+    }
+
+    // Put src back
+    runCommand('mv src-bak src');
   });
 });

@@ -27,7 +27,11 @@ import {
   resolveUserExistingPrettierConfig,
   DEFAULT_NRWL_PRETTIER_CONFIG
 } from '../../utils/common';
-import { updateJsonFile, serializeJson } from '../../utils/fileutils';
+import {
+  updateJsonFile,
+  serializeJson,
+  renameSync
+} from '../../utils/fileutils';
 import { toFileName } from '../../utils/name-utils';
 import {
   updateJsonInTree,
@@ -129,7 +133,7 @@ function updateAngularCLIJson(options: Schema): Rule {
     };
 
     let app = angularJson.projects[options.name];
-    let e2eProject = angularJson.projects[`${options.name}-e2e`];
+    let e2eProject = getE2eProject(angularJson);
 
     const oldSourceRoot = app.sourceRoot;
 
@@ -138,7 +142,6 @@ function updateAngularCLIJson(options: Schema): Rule {
       root: path.join('apps', options.name),
       sourceRoot: convertPath(options.name, app.sourceRoot)
     };
-    e2eProject.root = path.join('apps', options.name + '-e2e');
 
     const buildConfig = app.architect.build;
 
@@ -262,33 +265,38 @@ function updateAngularCLIJson(options: Schema): Rule {
       };
     }
 
-    const e2eConfig = e2eProject.architect.e2e;
-    e2eConfig.options = {
-      ...e2eConfig.options,
-      protractorConfig: path.join(
-        e2eProject.root,
-        getFilename(e2eConfig.options.protractorConfig)
-      )
-    };
-
-    e2eConfig.options.devServerTarget = editTarget(
-      e2eConfig.options.devServerTarget,
-      parsedTarget => {
-        return {
-          ...parsedTarget,
-          project: options.name
-        };
-      }
-    );
-
-    const e2eLintConfig = e2eProject.architect.lint;
-    e2eLintConfig.options.tsConfig = path.join(
-      e2eProject.root,
-      getFilename(e2eLintConfig.options.tsConfig)
-    );
-
     angularJson.projects[options.name] = app;
-    angularJson.projects[`${options.name}-e2e`] = e2eProject;
+
+    if (e2eProject) {
+      e2eProject.root = path.join('apps', getE2eKey(angularJson));
+
+      const e2eConfig = e2eProject.architect.e2e;
+      e2eConfig.options = {
+        ...e2eConfig.options,
+        protractorConfig: path.join(
+          e2eProject.root,
+          getFilename(e2eConfig.options.protractorConfig)
+        )
+      };
+
+      e2eConfig.options.devServerTarget = editTarget(
+        e2eConfig.options.devServerTarget,
+        parsedTarget => {
+          return {
+            ...parsedTarget,
+            project: options.name
+          };
+        }
+      );
+
+      const e2eLintConfig = e2eProject.architect.lint;
+      e2eLintConfig.options.tsConfig = path.join(
+        e2eProject.root,
+        getFilename(e2eLintConfig.options.tsConfig)
+      );
+
+      angularJson.projects[getE2eKey(angularJson)] = e2eProject;
+    }
 
     return angularJson;
   });
@@ -322,7 +330,7 @@ function updateTsConfigsJson(options: Schema) {
   return (host: Tree) => {
     const angularJson = readJsonInTree(host, 'angular.json');
     const app = angularJson.projects[options.name];
-    const e2eProject = angularJson.projects[`${options.name}-e2e`];
+    const e2eProject = getE2eProject(angularJson);
 
     // This has to stay using fs since it is created with fs
     const offset = '../../';
@@ -362,16 +370,18 @@ function updateTsConfigsJson(options: Schema) {
       });
     }
 
-    // This has to stay using fs since it is created with fs
-    updateJsonFile(`${e2eProject.root}/tsconfig.e2e.json`, json => {
-      json.extends = `${offsetFromRoot(e2eProject.root)}tsconfig.json`;
-      json.compilerOptions = {
-        ...json.compilerOptions,
-        outDir: `${offsetFromRoot(e2eProject.root)}dist/out-tsc/${
-          e2eProject.root
-        }`
-      };
-    });
+    if (e2eProject) {
+      // This has to stay using fs since it is created with fs
+      updateJsonFile(`${e2eProject.root}/tsconfig.e2e.json`, json => {
+        json.extends = `${offsetFromRoot(e2eProject.root)}tsconfig.json`;
+        json.compilerOptions = {
+          ...json.compilerOptions,
+          outDir: `${offsetFromRoot(e2eProject.root)}dist/out-tsc/${
+            e2eProject.root
+          }`
+        };
+      });
+    }
 
     return host;
   };
@@ -429,50 +439,108 @@ function setUpCompilerOptions(
   return tsconfig;
 }
 
-function moveOutOfSrc(sourceRoot: string, appName: string, filename: string) {
-  fs.renameSync(
-    path.join(sourceRoot, filename),
-    path.join('apps', appName, filename)
-  );
+function moveOutOfSrc(
+  sourceRoot: string,
+  appName: string,
+  filename: string,
+  context?: SchematicContext
+) {
+  const from = path.join(sourceRoot, filename);
+  const to = path.join('apps', appName, filename);
+  renameSync(from, to, err => {
+    if (!context) {
+      return;
+    } else if (!err) {
+      context.logger.info(`Renamed ${from} -> ${to}`);
+    } else {
+      context.logger.warn(err.message);
+    }
+  });
 }
 
 function getFilename(path: string) {
   return path.split('/').pop();
 }
 
+function getE2eKey(angularJson: any) {
+  return Object.keys(angularJson.projects).find(key => {
+    return !!angularJson.projects[key].architect.e2e;
+  });
+}
+
+function getE2eProject(angularJson: any) {
+  const key = getE2eKey(angularJson);
+  if (key) {
+    return angularJson.projects[key];
+  } else {
+    return null;
+  }
+}
+
 function moveExistingFiles(options: Schema) {
-  return (host: Tree) => {
+  return (host: Tree, context: SchematicContext) => {
     const angularJson = readJsonInTree(host, 'angular.json');
     const app = angularJson.projects[options.name];
+    const e2eApp = getE2eProject(angularJson);
 
-    fs.mkdirSync('apps');
-    fs.mkdirSync(path.join('apps', options.name));
+    // No context is passed because it should not be required to have a browserslist
     moveOutOfSrc(app.sourceRoot, options.name, 'browserslist');
     moveOutOfSrc(
       app.sourceRoot,
       options.name,
-      getFilename(app.architect.test.options.karmaConfig)
+      getFilename(app.architect.test.options.karmaConfig),
+      context
     );
     moveOutOfSrc(
       app.sourceRoot,
       options.name,
-      getFilename(app.architect.build.options.tsConfig)
+      getFilename(app.architect.build.options.tsConfig),
+      context
     );
     moveOutOfSrc(
       app.sourceRoot,
       options.name,
-      getFilename(app.architect.test.options.tsConfig)
+      getFilename(app.architect.test.options.tsConfig),
+      context
     );
     if (app.architect.server) {
       moveOutOfSrc(
         app.sourceRoot,
         options.name,
-        getFilename(app.architect.server.options.tsConfig)
+        getFilename(app.architect.server.options.tsConfig),
+        context
       );
     }
-    moveOutOfSrc(app.sourceRoot, options.name, 'tslint.json');
-    fs.renameSync(app.sourceRoot, join('apps', options.name, app.sourceRoot));
-    fs.renameSync('e2e', join('apps', options.name + '-e2e'));
+    moveOutOfSrc(app.sourceRoot, options.name, 'tslint.json', context);
+    const oldAppSourceRoot = app.sourceRoot;
+    const newAppSourceRoot = join('apps', options.name, app.sourceRoot);
+    renameSync(oldAppSourceRoot, newAppSourceRoot, err => {
+      if (!err) {
+        context.logger.info(
+          `Renamed ${oldAppSourceRoot} -> ${newAppSourceRoot}`
+        );
+      } else {
+        context.logger.error(err.message);
+        throw err;
+      }
+    });
+
+    if (e2eApp) {
+      const oldE2eRoot = e2eApp.root;
+      const newE2eRoot = join('apps', getE2eKey(angularJson));
+      renameSync(oldE2eRoot, newE2eRoot, err => {
+        if (!err) {
+          context.logger.info(`Renamed ${oldE2eRoot} -> ${newE2eRoot}`);
+        } else {
+          context.logger.error(err.message);
+          throw err;
+        }
+      });
+    } else {
+      context.logger.warn(
+        'No e2e project was migrated because there was none declared in angular.json'
+      );
+    }
 
     return host;
   };
@@ -480,6 +548,7 @@ function moveExistingFiles(options: Schema) {
 
 function createAdditionalFiles(options: Schema): Rule {
   return (host: Tree, _context: SchematicContext) => {
+    const angularJson = readJsonInTree(host, 'angular.json');
     host.create(
       'nx.json',
       serializeJson({
@@ -488,7 +557,7 @@ function createAdditionalFiles(options: Schema): Rule {
           [options.name]: {
             tags: []
           },
-          [`${options.name}-e2e`]: {
+          [getE2eKey(angularJson)]: {
             tags: []
           }
         }
@@ -579,20 +648,42 @@ function addNxModule(options: Schema) {
 }
 
 function checkCanConvertToWorkspace(options: Schema) {
-  return (host: Tree) => {
-    if (!host.exists('package.json')) {
-      throw new Error('Cannot find package.json');
-    }
-    if (!host.exists('e2e/protractor.conf.js')) {
-      throw new Error('Cannot find e2e/protractor.conf.js');
-    }
+  return (host: Tree, context: SchematicContext) => {
+    try {
+      if (!host.exists('package.json')) {
+        throw new Error('Cannot find package.json');
+      }
 
-    // TODO: This restriction should be lited
-    const angularJson = readJsonInTree(host, 'angular.json');
-    if (Object.keys(angularJson.projects).length > 2) {
-      throw new Error('Can only convert projects with one app');
+      // TODO: This restriction should be lited
+      const angularJson = readJsonInTree(host, 'angular.json');
+      if (Object.keys(angularJson.projects).length > 2) {
+        throw new Error('Can only convert projects with one app');
+      }
+      const e2eKey = getE2eKey(angularJson);
+      const e2eApp = getE2eProject(angularJson);
+
+      if (
+        e2eApp &&
+        !host.exists(e2eApp.architect.e2e.options.protractorConfig)
+      ) {
+        context.logger.info(
+          `Make sure the ${e2eKey}.architect.e2e.options.protractorConfig is valid or the ${e2eKey} project is removed from angular.json.`
+        );
+        throw new Error(
+          `An e2e project was specified but ${
+            e2eApp.architect.e2e.options.protractorConfig
+          } could not be found.`
+        );
+      }
+
+      return host;
+    } catch (e) {
+      context.logger.error(e.message);
+      context.logger.error(
+        'Your workspace could not be converted into an Nx Workspace because of the above error.'
+      );
+      throw new Error();
     }
-    return host;
   };
 }
 

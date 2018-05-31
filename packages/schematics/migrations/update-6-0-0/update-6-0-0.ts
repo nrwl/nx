@@ -9,7 +9,7 @@ import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
 import { readJsonInTree, updateJsonInTree } from '../../src/utils/ast-utils';
 import { FormatFiles } from '../../src/utils/tasks';
-import { serializeJson } from '../../src/utils/fileutils';
+import { serializeJson, renameSync } from '../../src/utils/fileutils';
 import { parseTarget, serializeTarget } from '../../src/utils/cli-config-utils';
 import * as fs from 'fs';
 import { offsetFromRoot } from '@nrwl/schematics/src/utils/common';
@@ -280,10 +280,26 @@ function createAdditionalFiles(host: Tree) {
 function moveE2eTests(host: Tree, context: SchematicContext) {
   const angularJson = readJsonInTree(host, 'angular.json');
 
-  Object.values(angularJson.projects).forEach((p: any) => {
+  Object.entries<any>(angularJson.projects).forEach(([key, p]) => {
     if (p.projectType === 'application' && !p.architect.e2e) {
-      fs.mkdirSync(`${p.root}-e2e`);
-      fs.renameSync(`${p.root}/e2e`, `${p.root}-e2e/src`);
+      renameSync(`${p.root}/e2e`, `${p.root}-e2e/src`, err => {
+        if (!err) {
+          return;
+        }
+
+        context.logger.info(
+          `We could not find e2e tests for the ${key} project.`
+        );
+        context.logger.info(
+          `Ignore this if there are no e2e tests for ${key} project.`
+        );
+        context.logger.warn(err.message);
+        context.logger.warn(
+          `If there are e2e tests for the ${key} project, we recommend manually moving them to ${
+            p.root
+          }-e2e/src.`
+        );
+      });
     }
   });
 }
@@ -301,12 +317,21 @@ function deleteUnneededFiles(host: Tree) {
 function patchLibIndexFiles(host: Tree, context: SchematicContext) {
   const angularJson = readJsonInTree(host, 'angular.json');
 
-  Object.values(angularJson.projects).forEach((p: any) => {
+  Object.entries<any>(angularJson.projects).forEach(([key, p]) => {
     if (p.projectType === 'library') {
       try {
-        fs.renameSync(p.sourceRoot, `${p.root}/lib`);
-        fs.mkdirSync(p.sourceRoot);
-        fs.renameSync(`${p.root}/lib`, `${p.sourceRoot}/lib`);
+        // TODO: incorporate this into fileutils.renameSync
+        renameSync(p.sourceRoot, `${p.root}/lib`, err => {
+          if (err) {
+            context.logger.warn(
+              `We could not resolve the "sourceRoot" of the ${key} library.`
+            );
+            throw err;
+          }
+          renameSync(`${p.root}/lib`, `${p.sourceRoot}/lib`, err => {
+            // This should never error
+          });
+        });
         const npmScope = readJsonInTree(host, 'nx.json').npmScope;
         host = updateJsonInTree('tsconfig.json', json => {
           json.compilerOptions.paths = json.compilerOptions.paths || {};
@@ -322,9 +347,9 @@ function patchLibIndexFiles(host: Tree, context: SchematicContext) {
         );
         host.delete(`${p.root}/index.ts`);
       } catch (e) {
-        console.warn(`Nx failed to successfully update '${p.root}'.`);
-        console.warn(`Error message: ${e.message}`);
-        console.warn(`PLease update the library manually.`);
+        context.logger.warn(`Nx failed to successfully update '${p.root}'.`);
+        context.logger.warn(`Error message: ${e.message}`);
+        context.logger.warn(`Please update the library manually.`);
       }
     }
   });

@@ -1,4 +1,6 @@
-import { addApp } from './fileutils';
+import { addApp, createDirectory } from './fileutils';
+
+import * as fs from 'fs';
 
 describe('fileutils', () => {
   describe('sortApps', () => {
@@ -36,6 +38,29 @@ describe('fileutils', () => {
         { name: 'a' },
         { name: 'c' }
       ]);
+    });
+  });
+
+  describe('createDirectory', () => {
+    let fakeExistingDirectories: Set<string>;
+
+    beforeEach(() => {
+      fakeExistingDirectories = new Set<string>();
+      fakeExistingDirectories.add('/a');
+      spyOn(fs, 'mkdirSync').and.callFake(path => {
+        fakeExistingDirectories.add(path);
+      });
+      spyOn(fs, 'statSync').and.callFake(path => {
+        return {
+          isDirectory: () => fakeExistingDirectories.has(path)
+        };
+      });
+    });
+
+    it('should recursively create the directory', () => {
+      createDirectory('/a/b/c');
+      const expectedSet = new Set<string>(['/a', '/a/b', '/a/b/c']);
+      expect(fakeExistingDirectories).toEqual(expectedSet);
     });
   });
 });
