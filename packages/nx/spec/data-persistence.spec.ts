@@ -1,17 +1,23 @@
 import { Component, Injectable } from '@angular/core';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { Router, RouterStateSnapshot } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Actions, Effect, EffectsModule } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { StoreRouterConnectingModule } from '@ngrx/router-store';
 import { Store, StoreModule } from '@ngrx/store';
 import { Observable, of, Subject, throwError } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { delay, withLatestFrom } from 'rxjs/operators';
 
 import { DataPersistence } from '../index';
 import { NxModule } from '../src/nx.module';
 import { readAll } from '../testing';
+import {
+  FetchOpts,
+  pessimisticUpdate,
+  optimisticUpdate,
+  fetch
+} from '../src/data-persistence';
 
 // interfaces
 type Todo = {
@@ -97,6 +103,7 @@ describe('DataPersistence', () => {
           },
           onError: () => null
         });
+
         constructor(private s: DataPersistence<TodosState>) {}
       }
 
@@ -241,6 +248,10 @@ describe('DataPersistence', () => {
         type: 'GET_TODOS';
       };
 
+      type GetTodo = {
+        type: 'GET_TODO';
+      };
+
       @Injectable()
       class TodoEffects {
         @Effect()
@@ -255,6 +266,21 @@ describe('DataPersistence', () => {
 
           onError: (a, e: any) => null
         });
+
+        @Effect()
+        loadTodosWithOperator = this.s.actions
+          .ofType<GetTodos>('GET_TODOS')
+          .pipe(
+            withLatestFrom(this.s.store),
+            fetch({
+              run: (action, state) => {
+                return of({
+                  type: 'TODOS',
+                  payload: { user: state.user, todos: 'some todos' }
+                }).pipe(delay(1));
+              }
+            })
+          );
 
         constructor(private s: DataPersistence<TodosState>) {}
       }
@@ -280,6 +306,22 @@ describe('DataPersistence', () => {
         );
 
         expect(await readAll(TestBed.get(TodoEffects).loadTodos)).toEqual([
+          { type: 'TODOS', payload: { user: 'bob', todos: 'some todos' } },
+          { type: 'TODOS', payload: { user: 'bob', todos: 'some todos' } }
+        ]);
+
+        done();
+      });
+
+      it('should work with an operator', async done => {
+        actions = of(
+          { type: 'GET_TODOS', payload: {} },
+          { type: 'GET_TODOS', payload: {} }
+        );
+
+        expect(
+          await readAll(TestBed.get(TodoEffects).loadTodosWithOperator)
+        ).toEqual([
           { type: 'TODOS', payload: { user: 'bob', todos: 'some todos' } },
           { type: 'TODOS', payload: { user: 'bob', todos: 'some todos' } }
         ]);
@@ -355,6 +397,20 @@ describe('DataPersistence', () => {
           onError: (a, e: any) => null
         });
 
+        @Effect()
+        loadTodoWithOperator = this.s.actions
+          .ofType<UpdateTodo>('UPDATE_TODO')
+          .pipe(
+            withLatestFrom(this.s.store),
+            pessimisticUpdate({
+              run: (a, state) => ({
+                type: 'TODO_UPDATED',
+                payload: { user: state.user, newTitle: a.payload.newTitle }
+              }),
+              onError: (a, e: any) => null
+            })
+          );
+
         constructor(private s: DataPersistence<TodosState>) {}
       }
 
@@ -379,6 +435,24 @@ describe('DataPersistence', () => {
         });
 
         expect(await readAll(TestBed.get(TodoEffects).loadTodo)).toEqual([
+          {
+            type: 'TODO_UPDATED',
+            payload: { user: 'bob', newTitle: 'newTitle' }
+          }
+        ]);
+
+        done();
+      });
+
+      it('should work with an operator', async done => {
+        actions = of({
+          type: 'UPDATE_TODO',
+          payload: { newTitle: 'newTitle' }
+        });
+
+        expect(
+          await readAll(TestBed.get(TodoEffects).loadTodoWithOperator)
+        ).toEqual([
           {
             type: 'TODO_UPDATED',
             payload: { user: 'bob', newTitle: 'newTitle' }
@@ -504,6 +578,23 @@ describe('DataPersistence', () => {
           })
         });
 
+        @Effect()
+        loadTodoWithOperator = this.s.actions
+          .ofType<UpdateTodo>('UPDATE_TODO')
+          .pipe(
+            withLatestFrom(this.s.store),
+            optimisticUpdate({
+              run: (a, state) => {
+                throw new Error('boom');
+              },
+
+              undoAction: (a, e: any) => ({
+                type: 'UNDO_UPDATE_TODO',
+                payload: a.payload
+              })
+            })
+          );
+
         constructor(private s: DataPersistence<TodosState>) {}
       }
 
@@ -528,6 +619,22 @@ describe('DataPersistence', () => {
         });
 
         const [a]: any = await readAll(TestBed.get(TodoEffects).loadTodo);
+
+        expect(a.type).toEqual('UNDO_UPDATE_TODO');
+        expect(a.payload.newTitle).toEqual('newTitle');
+
+        done();
+      });
+
+      it('should work with an operator', async done => {
+        actions = of({
+          type: 'UPDATE_TODO',
+          payload: { newTitle: 'newTitle' }
+        });
+
+        const [a]: any = await readAll(
+          TestBed.get(TodoEffects).loadTodoWithOperator
+        );
 
         expect(a.type).toEqual('UNDO_UPDATE_TODO');
         expect(a.payload.newTitle).toEqual('newTitle');

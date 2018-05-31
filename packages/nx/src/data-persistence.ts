@@ -1,9 +1,13 @@
 import { Injectable, Type } from '@angular/core';
-import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import {
+  ActivatedRouteSnapshot,
+  RouterStateSnapshot,
+  RouterState
+} from '@angular/router';
 import { Actions } from '@ngrx/effects';
 import { ROUTER_NAVIGATION, RouterNavigationAction } from '@ngrx/router-store';
 import { Action, Store } from '@ngrx/store';
-import { Observable, of } from 'rxjs';
+import { Observable, of, OperatorFunction } from 'rxjs';
 import {
   catchError,
   concatMap,
@@ -45,6 +49,135 @@ export interface FetchOpts<T, A> {
 export interface HandleNavigationOpts<T> {
   run(a: ActivatedRouteSnapshot, state?: T): Observable<Action> | Action | void;
   onError?(a: ActivatedRouteSnapshot, e: any): Observable<any> | any;
+}
+
+export type ActionOrActionWithState<T, A> = A | [A, T];
+export type ActionStateStream<T, A> = Observable<ActionOrActionWithState<T, A>>;
+
+export function pessimisticUpdate<T, A extends Action>(
+  opts: PessimisticUpdateOpts<T, A>
+) {
+  return (source: ActionStateStream<T, A>): Observable<Action> => {
+    return source.pipe(
+      mapActionAndState(),
+      concatMap(runWithErrorHandling(opts.run, opts.onError))
+    );
+  };
+}
+
+export function optimisticUpdate<T, A extends Action>(
+  opts: OptimisticUpdateOpts<T, A>
+) {
+  return (source: ActionStateStream<T, A>): Observable<Action> => {
+    return source.pipe(
+      mapActionAndState(),
+      concatMap(runWithErrorHandling(opts.run, opts.undoAction))
+    );
+  };
+}
+
+export function fetch<T, A extends Action>(opts: FetchOpts<T, A>) {
+  return (source: ActionStateStream<T, A>): Observable<Action> => {
+    if (opts.id) {
+      const groupedFetches = source.pipe(
+        mapActionAndState(),
+        groupBy(([action, store]) => {
+          return opts.id(action, store);
+        })
+      );
+
+      return groupedFetches.pipe(
+        mergeMap(pairs =>
+          pairs.pipe(switchMap(runWithErrorHandling(opts.run, opts.onError)))
+        )
+      );
+    }
+
+    return source.pipe(
+      mapActionAndState(),
+      concatMap(runWithErrorHandling(opts.run, opts.onError))
+    );
+  };
+}
+
+export function navigation<T, A extends Action>(
+  component: Type<any>,
+  opts: HandleNavigationOpts<T>
+) {
+  return (source: ActionStateStream<T, A>) => {
+    const nav = source.pipe(
+      mapActionAndState(),
+      filter(([action, state]) => isStateSnapshot(action)),
+      map(([action, state]) => {
+        if (!isStateSnapshot(action)) {
+          // Because of the above filter we'll never get here,
+          // but this properly type narrows `action`
+          return;
+        }
+
+        return [
+          findSnapshot(component, action.payload.routerState.root),
+          state
+        ] as [ActivatedRouteSnapshot, T];
+      }),
+      filter(([snapshot, state]) => !!snapshot)
+    );
+
+    return nav.pipe(switchMap(runWithErrorHandling(opts.run, opts.onError)));
+  };
+}
+
+function isStateSnapshot(
+  action: any
+): action is RouterNavigationAction<RouterStateSnapshot> {
+  return action.type === ROUTER_NAVIGATION;
+}
+
+function runWithErrorHandling<T, A, R>(
+  run: (a: A, state?: T) => Observable<R> | R | void,
+  onError: any
+) {
+  return ([action, state]: [A, T]): Observable<R> => {
+    try {
+      const r = wrapIntoObservable(run(action, state));
+      return r.pipe(catchError(e => wrapIntoObservable(onError(action, e))));
+    } catch (e) {
+      return wrapIntoObservable(onError(action, e));
+    }
+  };
+}
+
+/**
+ * @whatItDoes maps Observable<Action | [Action, State]> to
+ * Observable<[Action, State]>
+ */
+function mapActionAndState<T, A>() {
+  return (source: Observable<ActionOrActionWithState<T, A>>) => {
+    return source.pipe(
+      map(value => {
+        const [action, store] = normalizeActionAndState(value);
+        return [action, store] as [A, T];
+      })
+    );
+  };
+}
+
+/**
+ * @whatItDoes Normalizes either a bare action or an array of action and state
+ * into an array of action and state (or undefined)
+ */
+function normalizeActionAndState<T, A>(
+  args: ActionOrActionWithState<T, A>
+): [A, T] {
+  let action: A, state: T;
+
+  if (args instanceof Array) {
+    [action, state] = args;
+  } else {
+    action = args;
+  }
+
+  return [action, state];
 }
 
 /**
@@ -106,9 +239,7 @@ export class DataPersistence<T> {
   ): Observable<any> {
     const nav = this.actions.ofType<A>(actionType);
     const pairs = nav.pipe(withLatestFrom(this.store));
-    return pairs.pipe(
-      concatMap(this.runWithErrorHandling(opts.run, opts.onError))
-    );
+    return pairs.pipe(pessimisticUpdate(opts));
   }
 
   /**
@@ -163,9 +294,7 @@ export class DataPersistence<T> {
   ): Observable<any> {
     const nav = this.actions.ofType<A>(actionType);
     const pairs = nav.pipe(withLatestFrom(this.store));
-    return pairs.pipe(
-      concatMap(this.runWithErrorHandling(opts.run, opts.undoAction))
-    );
+    return pairs.pipe(optimisticUpdate(opts));
   }
 
   /**
@@ -242,22 +371,7 @@ export class DataPersistence<T> {
     const nav = this.actions.ofType<A>(actionType);
     const allPairs = nav.pipe(withLatestFrom(this.store));
 
-    if (opts.id) {
-      const groupedFetches = allPairs.pipe(
-        groupBy(([action, store]) => opts.id(action, store))
-      );
-      return groupedFetches.pipe(
-        mergeMap(pairs =>
-          pairs.pipe(
-            switchMap(this.runWithErrorHandling(opts.run, opts.onError))
-          )
-        )
-      );
-    } else {
-      return allPairs.pipe(
-        concatMap(this.runWithErrorHandling(opts.run, opts.onError))
-      );
-    }
+    return allPairs.pipe(fetch(opts));
   }
 
   /**
@@ -297,31 +411,12 @@ export class DataPersistence<T> {
     component: Type<any>,
     opts: HandleNavigationOpts<T>
   ): Observable<any> {
-    const nav = this.actions
-      .ofType<RouterNavigationAction<RouterStateSnapshot>>(ROUTER_NAVIGATION)
-      .pipe(
-        map(a => findSnapshot(component, a.payload.routerState.root)),
-        filter(s => !!s)
-      );
+    const nav = this.actions.ofType<
+      RouterNavigationAction<RouterStateSnapshot>
+    >(ROUTER_NAVIGATION);
 
     const pairs = nav.pipe(withLatestFrom(this.store));
-    return pairs.pipe(
-      switchMap(this.runWithErrorHandling(opts.run, opts.onError))
-    );
-  }
-
-  private runWithErrorHandling<A, R>(
-    run: (a: A, state?: T) => Observable<R> | R | void,
-    onError: any
-  ) {
-    return ([action, state]: [A, T]): Observable<R> => {
-      try {
-        const r = wrapIntoObservable(run(action, state));
-        return r.pipe(catchError(e => wrapIntoObservable(onError(action, e))));
-      } catch (e) {
-        return wrapIntoObservable(onError(action, e));
-      }
-    };
+    return pairs.pipe(navigation(component, opts));
   }
 }
 
