@@ -23,6 +23,7 @@ export interface YargsAffectedOptions extends yargs.Arguments {}
 
 export interface AffectedOptions extends GlobalNxArgs {
   parallel: boolean;
+  maxParallel: number;
   untracked: boolean;
   uncommitted: boolean;
   base: string;
@@ -154,6 +155,7 @@ function runCommand(
       ),
       {
         parallel: parsedArgs.parallel,
+        maxParallel: parsedArgs.maxParallel,
         stdin: process.stdin,
         stdout: process.stdout,
         stderr: process.stderr
@@ -253,6 +255,7 @@ function ngPath() {
  */
 const dummyOptions: AffectedOptions = {
   parallel: false,
+  maxParallel: 3,
   untracked: false,
   uncommitted: false,
   help: false,
