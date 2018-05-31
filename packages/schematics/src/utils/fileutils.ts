@@ -71,8 +71,35 @@ function directoryExists(name) {
   }
 }
 
-export function createDirectory(name: string) {
-  if (!directoryExists(name)) {
-    fs.mkdirSync(name);
+export function createDirectory(directoryPath: string) {
+  const parentPath = path.resolve(directoryPath, '..');
+  if (!directoryExists(parentPath)) {
+    createDirectory(parentPath);
+  }
+  if (!directoryExists(directoryPath)) {
+    fs.mkdirSync(directoryPath);
+  }
+}
+
+export function renameSync(
+  from: string,
+  to: string,
+  cb: (err: Error | null) => void
+) {
+  try {
+    if (!fs.existsSync(from)) {
+      throw new Error(`Path: ${from} does not exist`);
+    } else if (fs.existsSync(to)) {
+      throw new Error(`Path: ${to} already exists`);
+    }
+
+    // Make sure parent path exists
+    const parentPath = path.resolve(to, '..');
+    createDirectory(parentPath);
+
+    fs.renameSync(from, to);
+    cb(null);
+  } catch (e) {
+    cb(e);
   }
 }
