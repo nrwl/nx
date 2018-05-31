@@ -15,7 +15,6 @@ describe('Nrwl Convert to Nx Workspace', () => {
 
   it('should generate a workspace', () => {
     runNgNew();
-    copyMissingPackages();
 
     // update package.json
     const packageJson = readJson('package.json');
@@ -34,10 +33,12 @@ describe('Nrwl Convert to Nx Workspace', () => {
     tsconfigJson.compilerOptions.paths = { a: ['b'] };
     updateFile('tsconfig.json', JSON.stringify(tsconfigJson, null, 2));
 
+    updateFile('src/scripts.ts', '');
+
     // update angular-cli.json
     const angularCLIJson = readJson('angular.json');
-    angularCLIJson.projects.proj.architect.build.options.scripts = [
-      'node_modules/x.js'
+    angularCLIJson.projects.proj.architect.build.options.scripts = angularCLIJson.projects.proj.architect.test.options.scripts = [
+      'src/scripts.ts'
     ];
     angularCLIJson.projects.proj.architect.test.options.styles = [
       'src/styles.css'
@@ -45,7 +46,8 @@ describe('Nrwl Convert to Nx Workspace', () => {
     updateFile('angular.json', JSON.stringify(angularCLIJson, null, 2));
 
     // run the command
-    runCLI('add @nrwl/schematics --npmScope projscope --skip-install');
+    runCLI('add @nrwl/schematics --npmScope projscope');
+    copyMissingPackages();
 
     // check that prettier config exits and that files have been moved!
     checkFilesExist(
@@ -94,6 +96,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     expect(
       updatedPackageJson.dependencies['@ngrx/store-devtools']
     ).toBeDefined();
+    expect(updatedPackageJson.dependencies['rxjs-compat']).toBeDefined();
 
     expect(
       updatedPackageJson.devDependencies['@ngrx/schematics']
@@ -130,7 +133,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
         tsConfig: 'apps/proj/tsconfig.app.json',
         assets: ['apps/proj/src/favicon.ico', 'apps/proj/src/assets'],
         styles: ['apps/proj/src/styles.css'],
-        scripts: ['node_modules/x.js']
+        scripts: ['apps/proj/src/scripts.ts']
       },
       configurations: {
         production: {
@@ -172,7 +175,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
         tsConfig: 'apps/proj/tsconfig.spec.json',
         karmaConfig: 'apps/proj/karma.conf.js',
         styles: ['apps/proj/src/styles.css'],
-        scripts: [],
+        scripts: ['apps/proj/src/scripts.ts'],
         assets: ['apps/proj/src/favicon.ico', 'apps/proj/src/assets']
       }
     });
@@ -212,6 +215,9 @@ describe('Nrwl Convert to Nx Workspace', () => {
       a: ['b'],
       '@projscope/*': ['libs/*']
     });
+
+    runCLI('build --prod --outputHashing none');
+    checkFilesExist('dist/apps/proj/main.js');
   });
 
   it('should generate a workspace and not change dependencies or devDependencies if they already exist', () => {
@@ -245,7 +251,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     );
   });
 
-  xit('should generate a workspace from a universal cli project', () => {
+  it('should generate a workspace from a universal cli project', () => {
     // create a new AngularCLI app
     runNgNew();
 
@@ -253,7 +259,8 @@ describe('Nrwl Convert to Nx Workspace', () => {
     runCLI('generate universal --client-project proj');
 
     // Add @nrwl/schematics
-    runCLI('add @nrwl/schematics --npmScope projscope --skip-install');
+    runCLI('add @nrwl/schematics --npmScope projscope');
+    copyMissingPackages();
 
     checkFilesExist('apps/proj/tsconfig.server.json');
 
