@@ -147,9 +147,15 @@ function parseCSV(args: string[]) {
 }
 
 function withParallel(yargs: yargs.Argv): yargs.Argv {
-  return yargs.option('parallel', {
-    describe: 'Parallelize the command',
-    type: 'boolean',
-    default: false
-  });
+  return yargs
+    .option('parallel', {
+      describe: 'Parallelize the command',
+      type: 'boolean',
+      default: false
+    })
+    .option('maxParallel', {
+      describe: 'Max number of parallel processes',
+      type: 'number',
+      default: 3
+    });
 }
