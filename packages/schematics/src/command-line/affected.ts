@@ -150,7 +150,7 @@ function lint(projects: string[], parsedArgs: YargsAffectedOptions) {
   );
   const projectsToLint = sortedAffectedProjects.filter(p => {
     const matchingProject = depGraph.projects.find(pp => pp.name === p);
-    return (!!matchingProject.architect['lint']);
+    return !!matchingProject.architect['lint'];
   });
 
   if (projectsToLint.length > 0) {
@@ -175,7 +175,6 @@ function lint(projects: string[], parsedArgs: YargsAffectedOptions) {
   }
 }
 
-
 function runCommand(
   command: string,
   projects: string[],
@@ -198,8 +197,14 @@ function runCommand(
         stderr: process.stderr
       }
     )
-      .then(() => console.log(successMessage))
-      .catch(err => console.error(errorMessage));
+      .then(() => {
+        console.log(successMessage);
+        process.exit(0);
+      })
+      .catch(err => {
+        console.error(errorMessage);
+        process.exit(1);
+      });
   } else {
     projects.forEach(project => {
       console.log(iterationMessage + project);
