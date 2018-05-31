@@ -129,7 +129,7 @@ describe('Command line', () => {
     1000000
   );
 
-  it(
+  fit(
     'affected should print, build, and test affected apps',
     () => {
       newProject();
@@ -196,6 +196,11 @@ describe('Command line', () => {
         'npm run affected:test -- --files="libs/mylib/src/index.ts"'
       );
       expect(unitTests).toContain('Testing mylib, myapp');
+
+      const linting = runCommand(
+        'npm run affected:lint -- --files="libs/mylib/src/index.ts"'
+      );
+      expect(linting).toContain('Linting mylib, myapp, myapp-e2e');
 
       const unitTestsExcluded = runCommand(
         'npm run affected:test -- --files="libs/mylib/src/index.ts" --exclude=myapp'
