@@ -243,7 +243,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     );
   });
 
-  it('should generate a workspace from a universal cli project', () => {
+  xit('should generate a workspace from a universal cli project', () => {
     // create a new AngularCLI app
     runNgNew();
 
