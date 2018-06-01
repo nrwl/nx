@@ -338,6 +338,9 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             type: ProjectType.lib
           }
         ],
+        {
+          'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+        },
         file => {
           switch (file) {
             case 'app1.ts':
@@ -387,6 +390,9 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             type: ProjectType.lib
           }
         ],
+        {
+          'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+        },
         file => {
           switch (file) {
             case 'app1.ts':
@@ -418,6 +424,9 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             type: ProjectType.app
           }
         ],
+        {
+          'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+        },
         file => {
           switch (file) {
             case 'one/app1.ts':
@@ -453,6 +462,9 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             type: ProjectType.app
           }
         ],
+        {
+          'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+        },
         file => {
           switch (file) {
             case 'app1.ts':
@@ -471,6 +483,9 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
   describe('touchedProjects', () => {
     it('should return the list of touchedProjects', () => {
       const tp = touchedProjects(
+        {
+          'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+        },
         [
           {
             name: 'app1Name',
@@ -508,7 +523,53 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         ['lib2.ts', 'app2.ts', 'package.json']
       );
 
-      expect(tp).toEqual(['lib2Name', 'app2Name', null]);
+      expect(tp).toEqual(['lib2Name', 'app2Name', 'app1Name', 'lib1Name']);
+    });
+
+    it('should return the list of implicitly touched projects', () => {
+      const tp = touchedProjects(
+        {
+          'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name'],
+          Jenkinsfile: ['app1Name', 'app2Name']
+        },
+        [
+          {
+            name: 'app1Name',
+            root: 'apps/app1',
+            files: ['app1.ts'],
+            tags: [],
+            architect: {},
+            type: ProjectType.app
+          },
+          {
+            name: 'app2Name',
+            root: 'apps/app2',
+            files: ['app2.ts'],
+            tags: [],
+            architect: {},
+            type: ProjectType.app
+          },
+          {
+            name: 'lib1Name',
+            root: 'libs/lib1',
+            files: ['lib1.ts'],
+            tags: [],
+            architect: {},
+            type: ProjectType.lib
+          },
+          {
+            name: 'lib2Name',
+            root: 'libs/lib2',
+            files: ['lib2.ts'],
+            tags: [],
+            architect: {},
+            type: ProjectType.lib
+          }
+        ],
+        ['Jenkinsfile']
+      );
+
+      expect(tp).toEqual(['app1Name', 'app2Name']);
     });
   });
 });
