@@ -17,8 +17,6 @@ describe('lib', () => {
   beforeEach(() => {
     appTree = new VirtualTree();
     appTree = createEmptyWorkspace(appTree);
-
-    schematicRunner.logger.subscribe(s => console.log(s));
   });
 
   describe('not nested', () => {

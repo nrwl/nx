@@ -3,6 +3,7 @@ export interface Schema {
   angularJsImport: string;
   angularJsCmpSelector: string;
   name: string;
+  skipFormat: boolean;
   skipPackageJson: boolean;
   router: boolean;
 }

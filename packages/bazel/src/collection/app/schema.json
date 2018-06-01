@@ -43,6 +43,11 @@
       "type": "boolean",
       "default": false
     },
+    "skipFormat": {
+      "description": "Skip formatting files",
+      "type": "boolean",
+      "default": false
+    },
     "skipTests": {
       "description": "Skip creating spec files.",
       "type": "boolean",

@@ -1,5 +1,6 @@
 export interface Schema {
   name: string;
+  skipFormat: boolean;
   npmScope?: string;
   directory?: string;
   sourceDir?: string;

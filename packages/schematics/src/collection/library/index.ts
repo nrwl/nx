@@ -20,7 +20,6 @@ import {
   updateJsonInTree
 } from '../../utils/ast-utils';
 import { offsetFromRoot } from '../../utils/common';
-import { wrapIntoFormat } from '../../utils/tasks';
 import {
   toClassName,
   toFileName,
@@ -32,6 +31,7 @@ import {
   replaceAppNameWithPath
 } from '@nrwl/schematics/src/utils/cli-config-utils';
 import * as fs from 'fs';
+import { formatFiles } from '../../utils/rules/format-files';
 
 interface NormalizedSchema extends Schema {
   name: string;
@@ -337,7 +337,7 @@ function updateTsConfig(options: NormalizedSchema): Rule {
 }
 
 export default function(schema: Schema): Rule {
-  return wrapIntoFormat((host: Tree) => {
+  return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
     if (!options.routing && options.lazy) {
       throw new Error(`routing must be set`);
@@ -402,9 +402,10 @@ export default function(schema: Schema): Rule {
         : noop(),
       options.routing && !options.lazy && options.parentModule
         ? addChildren(options)
-        : noop()
-    ]);
-  });
+        : noop(),
+      formatFiles(options)
+    ])(host, context);
+  };
 }
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {

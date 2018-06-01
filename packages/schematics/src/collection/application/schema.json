@@ -55,6 +55,11 @@
       "default": false,
       "alias": "S"
     },
+    "skipFormat": {
+      "description": "Skip formatting files",
+      "type": "boolean",
+      "default": false
+    },
     "skipPackageJson": {
       "type": "boolean",
       "default": false,

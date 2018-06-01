@@ -24,7 +24,7 @@ import { addBootstrapToModule } from '@schematics/angular/utility/ast-utils';
 import { insertImport } from '@schematics/angular/utility/route-utils';
 import { addApp, readCliConfigFile } from '../../utils/fileutils';
 import { offsetFromRoot } from '../../utils/common';
-import { wrapIntoFormat } from '../../utils/tasks';
+import { formatFiles } from '../../utils/rules/format-files';
 
 interface NormalizedSchema extends Schema {
   fullName: string;
@@ -236,57 +236,56 @@ ts_web_test(
 }
 
 export default function(schema: Schema): Rule {
-  return wrapIntoFormat(() => {
-    let npmScope = schema.npmScope;
-    if (!npmScope) {
-      npmScope = readCliConfigFile().project.npmScope;
-    }
+  let npmScope = schema.npmScope;
+  if (!npmScope) {
+    npmScope = readCliConfigFile().project.npmScope;
+  }
 
-    const options = normalizeOptions(schema);
-    const templateSource = apply(url('./files'), [
-      template({
-        utils: strings,
-        dot: '.',
-        tmpl: '',
-        offsetFromRoot: offsetFromRoot(options.fullPath),
-        ...(options as object),
-        npmScope
-      })
-    ]);
+  const options = normalizeOptions(schema);
+  const templateSource = apply(url('./files'), [
+    template({
+      utils: strings,
+      dot: '.',
+      tmpl: '',
+      offsetFromRoot: offsetFromRoot(options.fullPath),
+      ...(options as object),
+      npmScope
+    })
+  ]);
 
-    const selector = `${options.prefix}-root`;
+  const selector = `${options.prefix}-root`;
 
-    return chain([
-      branchAndMerge(chain([mergeWith(templateSource)])),
-      externalSchematic('@schematics/angular', 'module', {
-        name: 'app',
-        commonModule: false,
-        flat: true,
-        routing: false,
-        sourceDir: options.fullPath,
-        spec: false
-      }),
-      externalSchematic('@schematics/angular', 'component', {
-        name: 'app',
-        selector: selector,
-        sourceDir: options.fullPath,
-        flat: true,
-        inlineStyle: options.inlineStyle,
-        inlineTemplate: options.inlineTemplate,
-        spec: !options.skipTests,
-        styleext: options.style,
-        viewEncapsulation: options.viewEncapsulation,
-        changeDetection: options.changeDetection
-      }),
-      updateComponentTemplate(options),
-      addBootstrap(options.fullPath),
-      addNxModule(options.fullPath),
-      addAppToAngularCliJson(options),
-      addBazelBuildFile(options.fullPath),
-      addAppToAngularCliJson(options),
-      options.routing ? addRouterRootConfiguration(options.fullPath) : noop()
-    ]);
-  });
+  return chain([
+    branchAndMerge(chain([mergeWith(templateSource)])),
+    externalSchematic('@schematics/angular', 'module', {
+      name: 'app',
+      commonModule: false,
+      flat: true,
+      routing: false,
+      sourceDir: options.fullPath,
+      spec: false
+    }),
+    externalSchematic('@schematics/angular', 'component', {
+      name: 'app',
+      selector: selector,
+      sourceDir: options.fullPath,
+      flat: true,
+      inlineStyle: options.inlineStyle,
+      inlineTemplate: options.inlineTemplate,
+      spec: !options.skipTests,
+      styleext: options.style,
+      viewEncapsulation: options.viewEncapsulation,
+      changeDetection: options.changeDetection
+    }),
+    updateComponentTemplate(options),
+    addBootstrap(options.fullPath),
+    addNxModule(options.fullPath),
+    addAppToAngularCliJson(options),
+    addBazelBuildFile(options.fullPath),
+    addAppToAngularCliJson(options),
+    options.routing ? addRouterRootConfiguration(options.fullPath) : noop(),
+    formatFiles(options)
+  ]);
 }
 
 function normalizeOptions(options: Schema): NormalizedSchema {

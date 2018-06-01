@@ -8,11 +8,11 @@ import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
 import { readJsonInTree, updateJsonInTree } from '../../src/utils/ast-utils';
-import { FormatFiles } from '../../src/utils/tasks';
 import { serializeJson, renameSync } from '../../src/utils/fileutils';
 import { parseTarget, serializeTarget } from '../../src/utils/cli-config-utils';
 import * as fs from 'fs';
-import { offsetFromRoot } from '@nrwl/schematics/src/utils/common';
+import { offsetFromRoot } from '../../src/utils/common';
+import { formatFiles } from '../../src/utils/rules/format-files';
 
 function createKarma(host: Tree, project: any) {
   const offset = offsetFromRoot(project.root);
@@ -648,9 +648,8 @@ const updateAngularJson = updateJsonInTree('angular.json', json => {
   return json;
 });
 
-function addTasks(host: Tree, context: SchematicContext) {
+function addInstallTask(host: Tree, context: SchematicContext) {
   context.addTask(new NodePackageInstallTask());
-  context.addTask(new FormatFiles());
 }
 
 function checkCli6Upgraded(host: Tree) {
@@ -688,6 +687,7 @@ export default function(): Rule {
     createAdditionalFiles,
     deleteUnneededFiles,
     patchLibIndexFiles,
-    addTasks
+    addInstallTask,
+    formatFiles()
   ]);
 }
