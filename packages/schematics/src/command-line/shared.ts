@@ -17,6 +17,10 @@ import { statSync } from 'fs';
 import * as appRoot from 'app-root-path';
 import { readJsonFile } from '../utils/fileutils';
 
+export type ImplicitDependencies = {
+  [key: string]: string[];
+};
+
 export function parseFiles(
   args: string[]
 ): { files: string[]; rest: string[] } {
@@ -106,9 +110,32 @@ function parseGitOutput(command: string): string[] {
     .filter(a => a.length > 0);
 }
 
-export function getProjectNodes(angularJson, nxJson) {
+export function getImplicitDependencies(
+  angularJson: any,
+  nxJson: any
+): ImplicitDependencies {
+  assertWorkspaceValidity(angularJson, nxJson);
+
+  if (!nxJson.implicitDependencies) {
+    return {};
+  }
+
+  const projects = getProjectNodes(angularJson, nxJson);
+
+  Object.entries<'*' | string[]>(nxJson.implicitDependencies).forEach(
+    ([key, value]) => {
+      if (value === '*') {
+        nxJson.implicitDependencies[key] = projects.map(p => p.name);
+      }
+    }
+  );
+  return nxJson.implicitDependencies;
+}
+
+export function assertWorkspaceValidity(angularJson, nxJson) {
   const angularJsonProjects = Object.keys(angularJson.projects);
   const nxJsonProjects = Object.keys(nxJson.projects);
+
   if (minus(angularJsonProjects, nxJsonProjects).length > 0) {
     throw new Error(
       `angular.json and nx.json are out of sync. The following projects are missing in nx.json: ${minus(
@@ -117,6 +144,7 @@ export function getProjectNodes(angularJson, nxJson) {
       ).join(', ')}`
     );
   }
+
   if (minus(nxJsonProjects, angularJsonProjects).length > 0) {
     throw new Error(
       `angular.json and nx.json are out of sync. The following projects are missing in angular.json: ${minus(
@@ -125,6 +153,46 @@ export function getProjectNodes(angularJson, nxJson) {
       ).join(', ')}`
     );
   }
+
+  const projects = {
+    ...angularJson.projects,
+    ...nxJson.projects
+  };
+
+  const invalidImplicitDependencies = Object.entries<'*' | string[]>(
+    nxJson.implicitDependencies || {}
+  )
+    .filter(([filename, val]) => val !== '*') // These are valid since it is calculated
+    .reduce((map, [filename, projectNames]: [string, string[]]) => {
+      const invalidProjects = projectNames.filter(
+        projectName => !projects[projectName]
+      );
+      if (invalidProjects.length > 0) {
+        map.set(filename, invalidProjects);
+      }
+      return map;
+    }, new Map<string, string[]>());
+
+  if (invalidImplicitDependencies.size === 0) {
+    return;
+  }
+
+  let message = `The following implicitDependencies specified in nx.json are invalid:
+  `;
+  invalidImplicitDependencies.forEach((projectNames, key) => {
+    const str = `  ${key}
+    ${projectNames.map(projectName => `    ${projectName}`).join('\n')}`;
+    message += str;
+  });
+
+  throw new Error(message);
+}
+
+export function getProjectNodes(angularJson, nxJson) {
+  assertWorkspaceValidity(angularJson, nxJson);
+
+  const angularJsonProjects = Object.keys(angularJson.projects);
+  const nxJsonProjects = Object.keys(nxJson.projects);
 
   return angularJsonProjects.map(key => {
     const p = angularJson.projects[key];
@@ -168,12 +236,14 @@ export function readNxJson(): any {
 export const getAffected = (affectedNamesFetcher: AffectedFetcher) => (
   touchedFiles: string[]
 ): string[] => {
+  const angularJson = readAngularJson();
   const nxJson = readNxJson();
-  const projects = getProjectNodes(readAngularJson(), nxJson);
-
+  const projects = getProjectNodes(angularJson, nxJson);
+  const implicitDeps = getImplicitDependencies(angularJson, nxJson);
   return affectedNamesFetcher(
     nxJson.npmScope,
     projects,
+    implicitDeps,
     f => fs.readFileSync(`${appRoot.path}/${f}`, 'utf-8'),
     touchedFiles
   );
@@ -184,10 +254,11 @@ export const getAffectedE2e = getAffected(affectedE2eNames);
 export const getAffectedProjects = getAffected(affectedProjectNames);
 
 export function getTouchedProjects(touchedFiles: string[]): string[] {
-  return touchedProjects(
-    getProjectNodes(readAngularJson(), readNxJson()),
-    touchedFiles
-  ).filter(p => !!p);
+  const angularJson = readAngularJson();
+  const nxJson = readNxJson();
+  const projects = getProjectNodes(angularJson, nxJson);
+  const implicitDeps = getImplicitDependencies(angularJson, nxJson);
+  return touchedProjects(implicitDeps, projects, touchedFiles).filter(p => !!p);
 }
 
 export function getProjectRoots(projectNames: string[]): string[] {

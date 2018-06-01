@@ -1,6 +1,10 @@
 import * as ts from 'typescript';
 import * as path from 'path';
-import { normalizedProjectRoot } from '@nrwl/schematics/src/command-line/shared';
+import {
+  readNxJson,
+  normalizedProjectRoot,
+  ImplicitDependencies
+} from './shared';
 
 export enum ProjectType {
   app = 'app',
@@ -31,38 +35,51 @@ export type DepGraph = {
 };
 
 export function touchedProjects(
+  implicitDependencies: ImplicitDependencies,
   projects: ProjectNode[],
   touchedFiles: string[]
 ) {
   projects = normalizeProjects(projects);
   touchedFiles = normalizeFiles(touchedFiles);
-  return touchedFiles.map(f => {
-    const p = projects.filter(project => project.files.indexOf(f) > -1)[0];
-    return p ? p.name : null;
-  });
+  return Array.from(
+    touchedFiles
+      .map(f => {
+        const p = projects.find(project => {
+          return project.files.indexOf(f) > -1;
+        });
+        if (p) {
+          return [p.name];
+        }
+        return (implicitDependencies[f] as string[]) || [];
+      })
+      .reduce((touchedProjects, items) => {
+        items.forEach(item => {
+          touchedProjects.add(item);
+        });
+        return touchedProjects;
+      }, new Set<string>())
+  );
 }
 
 function affectedProjects(
   npmScope: string,
   projects: ProjectNode[],
+  implicitDependencies: ImplicitDependencies,
   fileRead: (s: string) => string,
   touchedFiles: string[]
 ): ProjectNode[] {
   projects = normalizeProjects(projects);
   const deps = dependencies(npmScope, projects, fileRead);
-  const tp = touchedProjects(projects, touchedFiles);
-  if (tp.indexOf(null) > -1) {
-    return projects;
-  } else {
-    return projects.filter(proj =>
-      hasDependencyOnTouchedProjects(proj.name, tp, deps, [])
-    );
-  }
+  const tp = touchedProjects(implicitDependencies, projects, touchedFiles);
+  return projects.filter(proj =>
+    hasDependencyOnTouchedProjects(proj.name, tp, deps, [])
+  );
 }
 
 export type AffectedFetcher = (
   npmScope: string,
   projects: ProjectNode[],
+  implicitDependencies: ImplicitDependencies,
   fileRead: (s: string) => string,
   touchedFiles: string[]
 ) => string[];
@@ -70,10 +87,17 @@ export type AffectedFetcher = (
 export function affectedAppNames(
   npmScope: string,
   projects: ProjectNode[],
+  implicitDependencies: ImplicitDependencies,
   fileRead: (s: string) => string,
   touchedFiles: string[]
 ): string[] {
-  return affectedProjects(npmScope, projects, fileRead, touchedFiles)
+  return affectedProjects(
+    npmScope,
+    projects,
+    implicitDependencies,
+    fileRead,
+    touchedFiles
+  )
     .filter(p => p.type === ProjectType.app)
     .map(p => p.name);
 }
@@ -81,10 +105,17 @@ export function affectedAppNames(
 export function affectedE2eNames(
   npmScope: string,
   projects: ProjectNode[],
+  implicitDependencies: ImplicitDependencies,
   fileRead: (s: string) => string,
   touchedFiles: string[]
 ): string[] {
-  return affectedProjects(npmScope, projects, fileRead, touchedFiles)
+  return affectedProjects(
+    npmScope,
+    projects,
+    implicitDependencies,
+    fileRead,
+    touchedFiles
+  )
     .filter(p => p.type === ProjectType.e2e)
     .map(p => p.name);
 }
@@ -92,12 +123,17 @@ export function affectedE2eNames(
 export function affectedProjectNames(
   npmScope: string,
   projects: ProjectNode[],
+  implicitDependencies: ImplicitDependencies,
   fileRead: (s: string) => string,
   touchedFiles: string[]
 ): string[] {
-  return affectedProjects(npmScope, projects, fileRead, touchedFiles).map(
-    p => p.name
-  );
+  return affectedProjects(
+    npmScope,
+    projects,
+    implicitDependencies,
+    fileRead,
+    touchedFiles
+  ).map(p => p.name);
 }
 
 function hasDependencyOnTouchedProjects(
