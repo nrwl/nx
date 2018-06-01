@@ -4,7 +4,8 @@ import {
   move,
   noop,
   Rule,
-  Tree
+  Tree,
+  SchematicContext
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as ts from 'typescript';
@@ -15,7 +16,6 @@ import {
   insert,
   updateJsonInTree
 } from '../../utils/ast-utils';
-import { wrapIntoFormat } from '../../utils/tasks';
 import { toFileName } from '../../utils/name-utils';
 import { offsetFromRoot } from '@nrwl/schematics/src/utils/common';
 import {
@@ -23,7 +23,7 @@ import {
   getWorkspacePath,
   replaceAppNameWithPath
 } from '@nrwl/schematics/src/utils/cli-config-utils';
-import { k } from '@angular/core/src/render3';
+import { formatFiles } from '../../utils/rules/format-files';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -232,7 +232,7 @@ function updateE2eProject(options: NormalizedSchema): Rule {
 }
 
 export default function(schema: Schema): Rule {
-  return wrapIntoFormat((host: Tree) => {
+  return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
     return chain([
       externalSchematic('@schematics/angular', 'application', {
@@ -248,9 +248,10 @@ export default function(schema: Schema): Rule {
 
       updateComponentTemplate(options),
       addNxModule(options),
-      options.routing ? addRouterRootConfiguration(options) : noop()
-    ]);
-  });
+      options.routing ? addRouterRootConfiguration(options) : noop(),
+      formatFiles(options)
+    ])(host, context);
+  };
 }
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {

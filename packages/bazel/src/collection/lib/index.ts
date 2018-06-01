@@ -29,8 +29,8 @@ import {
   toFileName,
   toPropertyName
 } from '../../utils/name-utils';
-import { wrapIntoFormat } from '../../utils/tasks';
 import { Schema } from './schema';
+import { formatFiles } from '../../utils/rules/format-files';
 
 interface NormalizedSchema extends Schema {
   name: string;
@@ -279,12 +279,11 @@ function validateLibSchema(schema) {
 }
 
 export default function(schema: Schema): Rule {
-  return wrapIntoFormat(() => {
-    const { templateSource, routingRules } = validateLibSchema(schema);
+  const { templateSource, routingRules } = validateLibSchema(schema);
 
-    return chain([
-      branchAndMerge(chain([mergeWith(templateSource)])),
-      ...routingRules
-    ]);
-  });
+  return chain([
+    branchAndMerge(chain([mergeWith(templateSource)])),
+    ...routingRules,
+    formatFiles(schema)
+  ]);
 }

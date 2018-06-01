@@ -75,7 +75,7 @@
   "jest": {
     "modulePathIgnorePatterns": [
       "tmp",
-      "files"
+      "collection/.*/files"
     ]
   }
 }

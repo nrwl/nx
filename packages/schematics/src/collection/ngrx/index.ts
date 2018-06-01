@@ -3,14 +3,14 @@ import {
   externalSchematic,
   move,
   Rule,
-  Tree
+  Tree,
+  SchematicContext
 } from '@angular-devkit/schematics';
 
 import { Schema } from './schema';
 import * as path from 'path';
 
 import { names, toFileName } from '../../utils/name-utils';
-import { wrapIntoFormat } from '../../utils/tasks';
 
 import {
   addImportsToModule,
@@ -20,6 +20,7 @@ import {
   updateNgrxEffects,
   updateNgrxReducers
 } from './rules';
+import { formatFiles } from '../../utils/rules/format-files';
 
 function effectsSpec(className: string, fileName: string) {
   return `
@@ -88,9 +89,9 @@ describe('${propertyName}Reducer', () => {
  * Rule to generate the Nx 'ngrx' Collection
  */
 export default function generateNgrxCollection(_options: Schema): Rule {
-  return wrapIntoFormat((host: Tree) => {
+  return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(_options);
-    const context: RequestContext = {
+    const requestContext: RequestContext = {
       featureName: options.name,
       moduleDir: path.dirname(options.module),
       options,
@@ -100,16 +101,16 @@ export default function generateNgrxCollection(_options: Schema): Rule {
     const fileGeneration = options.onlyEmptyRoot
       ? []
       : [
-          generateNgrxFiles(context),
-          generateNxFiles(context),
-          updateNgrxActions(context),
-          updateNgrxReducers(context),
-          updateNgrxEffects(context)
+          generateNgrxFiles(requestContext),
+          generateNxFiles(requestContext),
+          updateNgrxActions(requestContext),
+          updateNgrxReducers(requestContext),
+          updateNgrxEffects(requestContext)
         ];
 
     const moduleModification = options.onlyAddFiles
       ? []
-      : [addImportsToModule(context)];
+      : [addImportsToModule(requestContext)];
     const packageJsonModification = options.skipPackageJson
       ? []
       : [addNgRxToPackageJson()];
@@ -117,9 +118,10 @@ export default function generateNgrxCollection(_options: Schema): Rule {
     return chain([
       ...fileGeneration,
       ...moduleModification,
-      ...packageJsonModification
-    ]);
-  });
+      ...packageJsonModification,
+      formatFiles(options)
+    ])(host, context);
+  };
 }
 
 // ********************************************************

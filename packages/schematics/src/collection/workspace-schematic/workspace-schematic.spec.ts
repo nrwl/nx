@@ -14,8 +14,6 @@ describe('workspace-schematic', () => {
   beforeEach(() => {
     appTree = new VirtualTree();
     appTree = createEmptyWorkspace(appTree);
-
-    schematicRunner.logger.subscribe(s => console.log(s));
   });
 
   it('should generate files', () => {

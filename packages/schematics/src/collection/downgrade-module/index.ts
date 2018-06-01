@@ -8,7 +8,7 @@ import {
 } from '../../utils/ast-utils';
 import { Schema } from './schema';
 import { addUpgradeToPackageJson } from '../../utils/common';
-import { wrapIntoFormat } from '../../utils/tasks';
+import { formatFiles } from '../../utils/rules/format-files';
 
 function updateMain(angularJsImport: string, options: Schema): Rule {
   return (host: Tree) => {
@@ -89,16 +89,15 @@ function addEntryComponentsToModule(options: Schema): Rule {
 }
 
 export default function(options: Schema): Rule {
-  return wrapIntoFormat(() => {
-    const angularJsImport = options.angularJsImport
-      ? options.angularJsImport
-      : options.name;
+  const angularJsImport = options.angularJsImport
+    ? options.angularJsImport
+    : options.name;
 
-    return chain([
-      updateMain(angularJsImport, options),
-      addEntryComponentsToModule(options),
-      rewriteBootstrapLogic(options),
-      options.skipPackageJson ? noop() : addUpgradeToPackageJson()
-    ]);
-  });
+  return chain([
+    updateMain(angularJsImport, options),
+    addEntryComponentsToModule(options),
+    rewriteBootstrapLogic(options),
+    options.skipPackageJson ? noop() : addUpgradeToPackageJson(),
+    formatFiles(options)
+  ]);
 }

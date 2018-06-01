@@ -11,6 +11,11 @@ export interface Schema {
    * The name of the module.
    */
   name: string;
+
+  /**
+   * Skip formatting of files
+   */
+  skipFormat: boolean;
   /**
    * The path to create the module.
    */
