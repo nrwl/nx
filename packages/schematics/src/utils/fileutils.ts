@@ -16,7 +16,7 @@ export function writeToFile(path: string, str: string) {
 export function updateJsonFile(path: string, callback: (a: any) => any) {
   const json = readJsonFile(path);
   callback(json);
-  writeToFile(path, serializeJson(json));
+  writeJsonFile(path, json);
 }
 
 export function addApp(apps: any[] | undefined, newApp: any): any[] {
@@ -49,6 +49,10 @@ export function serializeJson(json: any): string {
  */
 export function readJsonFile(path: string) {
   return JSON.parse(fs.readFileSync(path, 'utf-8'));
+}
+
+export function writeJsonFile(path: string, json: any) {
+  writeToFile(path, serializeJson(json));
 }
 
 export function readCliConfigFile(): any {
