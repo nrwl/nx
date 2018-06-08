@@ -129,7 +129,7 @@ describe('Command line', () => {
     1000000
   );
 
-  fit(
+  it(
     'affected should print, build, and test affected apps',
     () => {
       newProject();

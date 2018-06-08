@@ -319,7 +319,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     );
   });
 
-  fit('should handle different types of errors', () => {
+  it('should handle different types of errors', () => {
     // create a new AngularCLI app
     runNgNew();
 
