@@ -106,6 +106,12 @@ describe('Nrwl Convert to Nx Workspace', () => {
     const nxJson = readJson('nx.json');
     expect(nxJson).toEqual({
       npmScope: 'projscope',
+      implicitDependencies: {
+        'angular.json': '*',
+        'package.json': '*',
+        'tslint.json': '*',
+        'tsconfig.json': '*'
+      },
       projects: {
         proj: {
           tags: []
