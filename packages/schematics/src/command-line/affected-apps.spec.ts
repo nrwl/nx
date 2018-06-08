@@ -3,8 +3,44 @@ import {
   dependencies,
   DependencyType,
   ProjectType,
-  touchedProjects
+  touchedProjects,
+  ProjectNode
 } from './affected-apps';
+
+const projects: ProjectNode[] = [
+  {
+    name: 'app1Name',
+    root: 'apps/app1',
+    files: ['apps/app1/app1.ts'],
+    tags: [],
+    architect: {},
+    type: ProjectType.app
+  },
+  {
+    name: 'app2Name',
+    root: 'apps/app2',
+    files: ['apps/app2/app2.ts'],
+    tags: [],
+    architect: {},
+    type: ProjectType.app
+  },
+  {
+    name: 'lib1Name',
+    root: 'libs/lib1',
+    files: ['libs/lib1/lib1.ts'],
+    tags: [],
+    architect: {},
+    type: ProjectType.lib
+  },
+  {
+    name: 'lib2Name',
+    root: 'libs/lib2',
+    files: ['libs/lib2/lib2.ts'],
+    tags: [],
+    architect: {},
+    type: ProjectType.lib
+  }
+];
 
 describe('Calculates Dependencies Between Apps and Libs', () => {
   describe('dependencies', () => {
@@ -301,108 +337,52 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
   });
 
   describe('affectedAppNames', () => {
-    it('should return the list of affected files', () => {
+    it('should return the list of affected apps', () => {
       const affected = affectedAppNames(
         'nrwl',
-        [
-          {
-            name: 'app1Name',
-            root: 'apps/app1',
-            files: ['app1.ts'],
-            tags: [],
-            architect: {},
-            type: ProjectType.app
-          },
-          {
-            name: 'app2Name',
-            root: 'apps/app2',
-            files: ['app2.ts'],
-            tags: [],
-            architect: {},
-            type: ProjectType.app
-          },
-          {
-            name: 'lib1Name',
-            root: 'libs/lib1',
-            files: ['lib1.ts'],
-            tags: [],
-            architect: {},
-            type: ProjectType.lib
-          },
-          {
-            name: 'lib2Name',
-            root: 'libs/lib2',
-            files: ['lib2.ts'],
-            tags: [],
-            architect: {},
-            type: ProjectType.lib
-          }
-        ],
+        projects,
         {
           'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
         },
         file => {
           switch (file) {
-            case 'app1.ts':
+            case 'apps/app1/app1.ts':
               return `
             import '@nrwl/lib1';
           `;
-            case 'app2.ts':
+            case 'apps/app2/app2.ts':
               return ``;
-            case 'lib1.ts':
+            case 'libs/lib1/lib1.ts':
               return `import '@nrwl/lib2'`;
-            case 'lib2.ts':
+            case 'libs/lib2/lib2.ts':
               return '';
           }
         },
-        ['lib2.ts']
+        ['libs/lib2/lib2.ts']
       );
 
       expect(affected).toEqual(['app1Name']);
     });
 
-    it('should return app app names if a touched file is not part of a project', () => {
+    it('should return all app names if a touched file is not part of a project', () => {
       const affected = affectedAppNames(
         'nrwl',
-        [
-          {
-            name: 'app1Name',
-            root: 'apps/app1',
-            files: ['app1.ts'],
-            tags: [],
-            architect: {},
-            type: ProjectType.app
-          },
-          {
-            name: 'app2Name',
-            root: 'apps/app2',
-            files: ['app2.ts'],
-            tags: [],
-            architect: {},
-            type: ProjectType.app
-          },
-          {
-            name: 'lib1Name',
-            root: 'libs/lib1',
-            files: ['lib1.ts'],
-            tags: [],
-            architect: {},
-            type: ProjectType.lib
-          }
-        ],
+        projects,
         {
           'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
         },
         file => {
           switch (file) {
-            case 'app1.ts':
+            case 'apps/app1/app1.ts':
               return `
             import '@nrwl/lib1';
           `;
-            case 'app2.ts':
+            case 'apps/app2/app2.ts':
               return ``;
-            case 'lib1.ts':
+            case 'libs/lib1/lib1.ts':
               return `import '@nrwl/lib2'`;
+            case 'libs/lib2/lib2.ts':
+              return ``;
           }
         },
         ['package.json']
@@ -418,7 +398,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
           {
             name: 'app1Name',
             root: 'apps/app1',
-            files: ['one\\app1.ts', 'two/app1.ts'],
+            files: ['apps\\app1\\one\\app1.ts', 'apps\\app1\\two\\app1.ts'],
             tags: [],
             architect: {},
             type: ProjectType.app
@@ -429,13 +409,13 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         },
         file => {
           switch (file) {
-            case 'one/app1.ts':
+            case 'apps/app1/one/app1.ts':
               return '';
-            case 'two/app1.ts':
+            case 'apps/app1/two/app1.ts':
               return '';
           }
         },
-        ['one/app1.ts', 'two/app1.ts']
+        ['apps\\app1\\one\\app1.ts', 'apps\\app2\\two\\app1.ts']
       );
 
       expect(affected).toEqual(['app1Name']);
@@ -448,7 +428,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
           {
             name: 'app1Name',
             root: 'apps/app1',
-            files: ['app1.ts'],
+            files: ['apps/app1/app1.ts'],
             tags: [],
             architect: {},
             type: ProjectType.app
@@ -456,7 +436,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
           {
             name: 'app2Name',
             root: 'apps/app2',
-            files: ['app2.ts'],
+            files: ['apps/app2/app2.ts'],
             tags: [],
             architect: {},
             type: ProjectType.app
@@ -467,13 +447,13 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         },
         file => {
           switch (file) {
-            case 'app1.ts':
+            case 'apps/app1/app1.ts':
               return `import '@nrwl/app2';`;
-            case 'app2.ts':
+            case 'apps/app2/app2.ts':
               return `import '@nrwl/app1';`;
           }
         },
-        ['app1.ts']
+        ['apps/app1/app1.ts']
       );
 
       expect(affected).toEqual(['app2Name', 'app1Name']);
@@ -523,7 +503,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         ['lib2.ts', 'app2.ts', 'package.json']
       );
 
-      expect(tp).toEqual(['lib2Name', 'app2Name', 'app1Name', 'lib1Name']);
+      expect(tp).toEqual(['app1Name', 'app2Name', 'lib1Name', 'lib2Name']);
     });
 
     it('should return the list of implicitly touched projects', () => {
