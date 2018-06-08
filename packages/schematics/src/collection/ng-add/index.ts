@@ -557,6 +557,12 @@ function createAdditionalFiles(options: Schema): Rule {
       'nx.json',
       serializeJson({
         npmScope: options.npmScope,
+        implicitDependencies: {
+          'angular.json': '*',
+          'package.json': '*',
+          'tsconfig.json': '*',
+          'tslint.json': '*'
+        },
         projects: {
           [options.name]: {
             tags: []

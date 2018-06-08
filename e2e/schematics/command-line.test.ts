@@ -156,6 +156,18 @@ describe('Command line', () => {
       expect(affectedApps).not.toContain('myapp2');
       expect(affectedApps).not.toContain('myapp-e2e');
 
+      const implicitlyAffectedApps = runCommand(
+        'npm run affected:apps -- --files="package.json"'
+      );
+      expect(implicitlyAffectedApps).toContain('myapp');
+      expect(implicitlyAffectedApps).toContain('myapp2');
+
+      const noAffectedApps = runCommand(
+        'npm run affected:apps -- --files="README.md"'
+      );
+      expect(noAffectedApps).not.toContain('myapp');
+      expect(noAffectedApps).not.toContain('myapp2');
+
       const build = runCommand(
         'npm run affected:build -- --files="libs/mylib/src/index.ts"'
       );
