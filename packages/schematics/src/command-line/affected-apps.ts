@@ -34,31 +34,54 @@ export type DepGraph = {
   npmScope: string;
 };
 
+function implicitlyTouchedProjects(
+  implicitDependencies: ImplicitDependencies,
+  touchedFiles: string[]
+): string[] {
+  return Array.from(
+    Object.entries(implicitDependencies).reduce(
+      (projectSet, [file, projectNames]) => {
+        if (touchedFiles.includes(file)) {
+          projectNames.forEach(projectName => {
+            projectSet.add(projectName);
+          });
+        }
+        return projectSet;
+      },
+      new Set<string>()
+    )
+  );
+}
+
+function directlyTouchedProjects(
+  projects: ProjectNode[],
+  touchedFiles: string[]
+) {
+  return projects
+    .filter(project => {
+      return touchedFiles.some(file => {
+        return file.startsWith(project.root);
+      });
+    })
+    .map(project => project.name);
+}
+
 export function touchedProjects(
   implicitDependencies: ImplicitDependencies,
   projects: ProjectNode[],
   touchedFiles: string[]
-) {
+): string[] {
   projects = normalizeProjects(projects);
   touchedFiles = normalizeFiles(touchedFiles);
-  return Array.from(
-    touchedFiles
-      .map(f => {
-        const p = projects.find(project => {
-          return project.files.indexOf(f) > -1;
-        });
-        if (p) {
-          return [p.name];
-        }
-        return (implicitDependencies[f] as string[]) || [];
-      })
-      .reduce((touchedProjects, items) => {
-        items.forEach(item => {
-          touchedProjects.add(item);
-        });
-        return touchedProjects;
-      }, new Set<string>())
-  );
+  const itp = implicitlyTouchedProjects(implicitDependencies, touchedFiles);
+  // Return if all projects were implicitly touched
+  if (itp.length === projects.length) {
+    return itp;
+  }
+  const dtp = directlyTouchedProjects(projects, touchedFiles);
+  return projects
+    .filter(project => itp.includes(project.name) || dtp.includes(project.name))
+    .map(project => project.name);
 }
 
 function affectedProjects(
