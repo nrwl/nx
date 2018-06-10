@@ -411,10 +411,7 @@ export class DataPersistence<T> {
     component: Type<any>,
     opts: HandleNavigationOpts<T>
   ): Observable<any> {
-    const nav = this.actions.ofType<
-      RouterNavigationAction<RouterStateSnapshot>
-    >(ROUTER_NAVIGATION);
-
+    const nav = this.actions;
     const pairs = nav.pipe(withLatestFrom(this.store));
     return pairs.pipe(navigation(component, opts));
   }
