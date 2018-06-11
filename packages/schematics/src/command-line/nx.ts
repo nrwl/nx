@@ -106,6 +106,7 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     })
     .option('uncommitted', { describe: 'Uncommitted changes' })
     .option('untracked', { describe: 'Untracked changes' })
+    .option('all', { describe: 'All projects' })
     .option('base', {
       describe: 'Base of the current branch (usually master)',
       type: 'string',
@@ -123,6 +124,7 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     .implies('base', 'head')
     .nargs('uncommitted', 0)
     .nargs('untracked', 0)
+    .nargs('all', 0)
     .option('exclude', {
       describe: 'Exclude certain projects from being processed',
       type: 'array',
@@ -130,10 +132,11 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       default: []
     })
     .conflicts({
-      SHA1: ['files', 'untracked', 'uncommitted', 'base', 'head'],
-      files: ['uncommitted', 'untracked', 'base', 'head'],
-      untracked: ['uncommitted', 'files', 'base', 'head'],
-      uncommitted: ['files', 'untracked', 'base', 'head']
+      SHA1: ['files', 'untracked', 'uncommitted', 'base', 'head', 'all'],
+      files: ['uncommitted', 'untracked', 'base', 'head', 'all'],
+      untracked: ['uncommitted', 'files', 'base', 'head', 'all'],
+      uncommitted: ['files', 'untracked', 'base', 'head', 'all'],
+      all: ['files', 'untracked', 'uncommitted', 'base', 'head']
     });
 }
 

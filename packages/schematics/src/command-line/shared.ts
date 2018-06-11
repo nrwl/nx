@@ -261,6 +261,21 @@ export function getTouchedProjects(touchedFiles: string[]): string[] {
   return touchedProjects(implicitDeps, projects, touchedFiles).filter(p => !!p);
 }
 
+export function getAllAppNames() {
+  const projects = getProjectNodes(readAngularJson(), readNxJson());
+  return projects.filter(p => p.type === ProjectType.app).map(p => p.name);
+}
+
+export function getAllE2ENames() {
+  const projects = getProjectNodes(readAngularJson(), readNxJson());
+  return projects.filter(p => p.type === ProjectType.e2e).map(p => p.name);
+}
+
+export function getAllProjectNames() {
+  const projects = getProjectNodes(readAngularJson(), readNxJson());
+  return projects.map(p => p.name);
+}
+
 export function getProjectRoots(projectNames: string[]): string[] {
   const projects = getProjectNodes(readAngularJson(), readNxJson());
   return projectNames.map(name =>

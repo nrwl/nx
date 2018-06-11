@@ -290,6 +290,38 @@ describe('Command line', () => {
   );
 
   it(
+    'affected should print, build, and test all apps',
+    () => {
+      newProject();
+      newApp('myapp');
+      newApp('myapp2');
+      newLib('mylib');
+
+      const affectedApps = runCommand('npm run affected:apps -- --all');
+      expect(affectedApps).toContain('myapp');
+      expect(affectedApps).toContain('myapp2');
+      expect(affectedApps).not.toContain('myapp-e2e');
+
+      const build = runCommand('npm run affected:build -- --all');
+      expect(build).toContain('Building myapp');
+      expect(build).toContain('Building myapp2');
+      expect(build).not.toContain('is not registered with the build command');
+
+      const buildExcluded = runCommand(
+        'npm run affected:build -- --files="libs/mylib/src/index.ts" --exclude myapp,myapp2'
+      );
+      expect(buildExcluded).toContain('No apps to build');
+
+      const e2e = runCommand('npm run affected:e2e -- --all');
+      expect(e2e).toContain('Testing myapp-e2e, myapp2-e2e');
+
+      const unitTests = runCommand('npm run affected:test -- --all');
+      expect(unitTests).toContain('Testing myapp2, myapp, mylib');
+    },
+    1000000
+  );
+
+  it(
     'should support workspace-specific schematics',
     () => {
       newProject();
