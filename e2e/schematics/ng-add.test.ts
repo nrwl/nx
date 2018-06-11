@@ -110,7 +110,8 @@ describe('Nrwl Convert to Nx Workspace', () => {
         'angular.json': '*',
         'package.json': '*',
         'tslint.json': '*',
-        'tsconfig.json': '*'
+        'tsconfig.json': '*',
+        'nx.json': '*'
       },
       projects: {
         proj: {

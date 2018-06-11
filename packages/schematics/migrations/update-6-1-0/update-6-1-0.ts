@@ -30,7 +30,8 @@ export default function(): Rule {
           'angular.json': '*',
           'package.json': '*',
           'tsconfig.json': '*',
-          'tslint.json': '*'
+          'tslint.json': '*',
+          'nx.json': '*'
         }
       };
     })

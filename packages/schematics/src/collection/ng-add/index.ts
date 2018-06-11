@@ -561,7 +561,8 @@ function createAdditionalFiles(options: Schema): Rule {
           'angular.json': '*',
           'package.json': '*',
           'tsconfig.json': '*',
-          'tslint.json': '*'
+          'tslint.json': '*',
+          'nx.json': '*'
         },
         projects: {
           [options.name]: {
