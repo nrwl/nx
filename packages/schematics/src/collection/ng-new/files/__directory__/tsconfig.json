@@ -16,9 +16,6 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@<%= npmScope %>/*": [
-        "libs/*"
-      ]
     }
   },
   "exclude": [
