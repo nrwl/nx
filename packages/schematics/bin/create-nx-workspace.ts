@@ -85,15 +85,19 @@ if (!projectName) {
 // creating the sandbox
 console.log(`Creating a sandbox with the CLI and Nx ${nxTool.name}...`);
 const tmpDir = dirSync().name;
-const nxVersion = readJsonFile(
-  path.join(path.dirname(__dirname), 'package.json')
-).version;
+
+// we haven't updated bazel to CLI6 yet
+const nxVersion = parsedArgs.bazel
+  ? '1.0.3'
+  : readJsonFile(path.join(path.dirname(__dirname), 'package.json')).version;
+
+const cliVersion = parsedArgs.bazel ? '1.7.2' : '6.0.0';
 writeFileSync(
   path.join(tmpDir, 'package.json'),
   JSON.stringify({
     dependencies: {
       [nxTool.packageName]: nxVersion,
-      '@angular/cli': '6.0.0'
+      '@angular/cli': cliVersion
     },
     license: 'MIT'
   })
