@@ -117,11 +117,16 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'string',
       requiresArg: true
     })
-    .group(['base', 'head'], 'Run command using --base=[SHA1] --head=[SHA2]:')
+    .group(
+      ['base'],
+      'Run command using --base=[SHA1] (affected by the committed, uncommitted and untracked changes):'
+    )
+    .group(
+      ['base', 'head'],
+      'or using --base=[SHA1] --head=[SHA2] (affected by the committed changes):'
+    )
     .group(['files', 'uncommitted', 'untracked'], 'or using:')
-    .implies('SHA1', 'SHA2')
     .implies('head', 'base')
-    .implies('base', 'head')
     .nargs('uncommitted', 0)
     .nargs('untracked', 0)
     .nargs('all', 0)
@@ -132,7 +137,6 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       default: []
     })
     .conflicts({
-      SHA1: ['files', 'untracked', 'uncommitted', 'base', 'head', 'all'],
       files: ['uncommitted', 'untracked', 'base', 'head', 'all'],
       untracked: ['uncommitted', 'files', 'base', 'head', 'all'],
       uncommitted: ['files', 'untracked', 'base', 'head', 'all'],

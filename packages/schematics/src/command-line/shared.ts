@@ -65,6 +65,17 @@ export function parseFiles(
       files: getFilesUsingBaseAndHead(base, head),
       rest: [...unnamed, ...named]
     };
+  } else if (base) {
+    return {
+      files: Array.from(
+        new Set([
+          ...getFilesUsingBaseAndHead(base, 'HEAD'),
+          ...getUncommittedFiles(),
+          ...getUntrackedFiles()
+        ])
+      ),
+      rest: [...unnamed, ...named]
+    };
   } else if (unnamed.length >= 2) {
     return {
       files: getFilesFromShash(unnamed[0], unnamed[1]),
