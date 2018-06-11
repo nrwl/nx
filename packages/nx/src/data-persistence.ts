@@ -237,9 +237,9 @@ export class DataPersistence<T> {
     actionType: string,
     opts: PessimisticUpdateOpts<T, A>
   ): Observable<any> {
-    const nav = this.actions.ofType<A>(actionType);
-    const pairs = nav.pipe(withLatestFrom(this.store));
-    return pairs.pipe(pessimisticUpdate(opts));
+    return this.actions
+      .ofType<A>(actionType)
+      .pipe(withLatestFrom(this.store), pessimisticUpdate(opts));
   }
 
   /**
@@ -292,9 +292,9 @@ export class DataPersistence<T> {
     actionType: string,
     opts: OptimisticUpdateOpts<T, A>
   ): Observable<any> {
-    const nav = this.actions.ofType<A>(actionType);
-    const pairs = nav.pipe(withLatestFrom(this.store));
-    return pairs.pipe(optimisticUpdate(opts));
+    return this.actions
+      .ofType<A>(actionType)
+      .pipe(withLatestFrom(this.store), optimisticUpdate(opts));
   }
 
   /**
@@ -368,10 +368,9 @@ export class DataPersistence<T> {
     actionType: string,
     opts: FetchOpts<T, A>
   ): Observable<any> {
-    const nav = this.actions.ofType<A>(actionType);
-    const allPairs = nav.pipe(withLatestFrom(this.store));
-
-    return allPairs.pipe(fetch(opts));
+    return this.actions
+      .ofType<A>(actionType)
+      .pipe(withLatestFrom(this.store), fetch(opts));
   }
 
   /**
@@ -411,9 +410,10 @@ export class DataPersistence<T> {
     component: Type<any>,
     opts: HandleNavigationOpts<T>
   ): Observable<any> {
-    const nav = this.actions;
-    const pairs = nav.pipe(withLatestFrom(this.store));
-    return pairs.pipe(navigation(component, opts));
+    return this.actions.pipe(
+      withLatestFrom(this.store),
+      navigation(component, opts)
+    );
   }
 }
 
