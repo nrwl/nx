@@ -3,6 +3,9 @@ import {
   getAffectedApps,
   getAffectedE2e,
   getAffectedProjects,
+  getAllAppNames,
+  getAllE2ENames,
+  getAllProjectNames,
   parseFiles,
   readDepGraph
 } from './shared';
@@ -26,6 +29,7 @@ export interface AffectedOptions extends GlobalNxArgs {
   maxParallel: number;
   untracked: boolean;
   uncommitted: boolean;
+  all: boolean;
   base: string;
   head: string;
   exclude: string[];
@@ -43,15 +47,24 @@ export function affected(
   let rest: string[];
 
   try {
-    const p = parseFiles(args);
-    rest = p.rest;
-    apps = getAffectedApps(p.files).filter(
-      app => !parsedArgs.exclude.includes(app)
-    );
-    e2eProjects = getAffectedE2e(p.files);
-    projects = getAffectedProjects(p.files).filter(
-      project => !parsedArgs.exclude.includes(project)
-    );
+    if (parsedArgs.all) {
+      rest = args;
+      apps = getAllAppNames().filter(app => !parsedArgs.exclude.includes(app));
+      e2eProjects = getAllE2ENames();
+      projects = getAllProjectNames().filter(
+        project => !parsedArgs.exclude.includes(project)
+      );
+    } else {
+      const p = parseFiles(args);
+      rest = p.rest;
+      apps = getAffectedApps(p.files).filter(
+        app => !parsedArgs.exclude.includes(app)
+      );
+      e2eProjects = getAffectedE2e(p.files);
+      projects = getAffectedProjects(p.files).filter(
+        project => !parsedArgs.exclude.includes(project)
+      );
+    }
   } catch (e) {
     printError(command, e);
     process.exit(1);
@@ -303,6 +316,7 @@ const dummyOptions: AffectedOptions = {
   help: false,
   version: false,
   quiet: false,
+  all: false,
   base: 'base',
   head: 'head',
   exclude: ['exclude'],
