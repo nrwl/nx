@@ -21,6 +21,7 @@ import {
 } from '@nrwl/schematics/src/command-line/affected-apps';
 import { GlobalNxArgs } from './nx';
 import * as yargs from 'yargs';
+import { WorkspaceResults } from './workspace-results';
 
 export interface YargsAffectedOptions extends yargs.Arguments {}
 
@@ -34,6 +35,9 @@ export interface AffectedOptions extends GlobalNxArgs {
   head: string;
   exclude: string[];
   files: string[];
+  onlyFailed: boolean;
+  'only-failed': boolean;
+  'max-parallel': boolean;
 }
 
 export function affected(
@@ -45,28 +49,53 @@ export function affected(
   let e2eProjects: string[];
   let projects: string[];
   let rest: string[];
+  const workspaceResults = new WorkspaceResults(command);
 
   try {
     if (parsedArgs.all) {
       rest = args;
-      apps = getAllAppNames().filter(app => !parsedArgs.exclude.includes(app));
-      e2eProjects = getAllE2ENames();
-      projects = getAllProjectNames().filter(
-        project => !parsedArgs.exclude.includes(project)
-      );
+      apps = getAllAppNames()
+        .filter(app => !parsedArgs.exclude.includes(app))
+        .filter(
+          project =>
+            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+        );
+      e2eProjects = getAllE2ENames()
+        .filter(app => !parsedArgs.exclude.includes(app))
+        .filter(
+          project =>
+            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+        );
+      projects = getAllProjectNames()
+        .filter(project => !parsedArgs.exclude.includes(project))
+        .filter(
+          project =>
+            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+        );
     } else {
       const p = parseFiles(args);
       rest = p.rest;
-      apps = getAffectedApps(p.files).filter(
-        app => !parsedArgs.exclude.includes(app)
-      );
-      e2eProjects = getAffectedE2e(p.files);
-      projects = getAffectedProjects(p.files).filter(
-        project => !parsedArgs.exclude.includes(project)
-      );
+      apps = getAffectedApps(p.files)
+        .filter(project => !parsedArgs.exclude.includes(project))
+        .filter(
+          project =>
+            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+        );
+      e2eProjects = getAffectedE2e(p.files)
+        .filter(project => !parsedArgs.exclude.includes(project))
+        .filter(
+          project =>
+            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+        );
+      projects = getAffectedProjects(p.files)
+        .filter(project => !parsedArgs.exclude.includes(project))
+        .filter(
+          project =>
+            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+        );
     }
   } catch (e) {
-    printError(command, e);
+    printError(e);
     process.exit(1);
   }
 
@@ -75,16 +104,16 @@ export function affected(
       console.log(apps.join(' '));
       break;
     case 'build':
-      build(apps, parsedArgs);
+      build(apps, parsedArgs, workspaceResults);
       break;
     case 'test':
-      test(projects, parsedArgs);
+      test(projects, parsedArgs, workspaceResults);
       break;
     case 'lint':
-      lint(projects, parsedArgs);
+      lint(projects, parsedArgs, workspaceResults);
       break;
     case 'e2e':
-      e2e(e2eProjects, parsedArgs);
+      e2e(e2eProjects, parsedArgs, workspaceResults);
       break;
     case 'dep-graph':
       generateGraph(yargsParser(rest), projects);
@@ -92,11 +121,15 @@ export function affected(
   }
 }
 
-function printError(command: string, e: any) {
+function printError(e: any) {
   console.error(e.message);
 }
 
-function build(apps: string[], parsedArgs: YargsAffectedOptions) {
+function build(
+  apps: string[],
+  parsedArgs: YargsAffectedOptions,
+  workspaceResults: WorkspaceResults
+) {
   if (apps.length > 0) {
     const normalizedArgs = filterNxSpecificArgs(parsedArgs);
     let message = `Building ${apps.join(', ')}`;
@@ -110,6 +143,7 @@ function build(apps: string[], parsedArgs: YargsAffectedOptions) {
       apps,
       parsedArgs,
       normalizedArgs,
+      workspaceResults,
       'Building ',
       'Build succeeded.',
       'Build failed.'
@@ -119,7 +153,11 @@ function build(apps: string[], parsedArgs: YargsAffectedOptions) {
   }
 }
 
-function test(projects: string[], parsedArgs: YargsAffectedOptions) {
+function test(
+  projects: string[],
+  parsedArgs: YargsAffectedOptions,
+  workspaceResults: WorkspaceResults
+) {
   const depGraph = readDepGraph();
   const sortedProjects = topologicallySortProjects(depGraph);
   const sortedAffectedProjects = sortedProjects.filter(
@@ -146,6 +184,7 @@ function test(projects: string[], parsedArgs: YargsAffectedOptions) {
       projectsToTest,
       parsedArgs,
       normalizedArgs,
+      workspaceResults,
       'Testing ',
       'Tests passed.',
       'Tests failed.'
@@ -155,7 +194,11 @@ function test(projects: string[], parsedArgs: YargsAffectedOptions) {
   }
 }
 
-function lint(projects: string[], parsedArgs: YargsAffectedOptions) {
+function lint(
+  projects: string[],
+  parsedArgs: YargsAffectedOptions,
+  workspaceResults: WorkspaceResults
+) {
   const depGraph = readDepGraph();
   const sortedProjects = topologicallySortProjects(depGraph);
   const sortedAffectedProjects = sortedProjects.filter(
@@ -179,6 +222,7 @@ function lint(projects: string[], parsedArgs: YargsAffectedOptions) {
       projectsToLint,
       parsedArgs,
       normalizedArgs,
+      workspaceResults,
       'Linting ',
       'Linting passed.',
       'Linting failed.'
@@ -188,46 +232,81 @@ function lint(projects: string[], parsedArgs: YargsAffectedOptions) {
   }
 }
 
-function runCommand(
+async function runCommand(
   command: string,
   projects: string[],
   parsedArgs: YargsAffectedOptions,
   args: string[],
+  workspaceResults: WorkspaceResults,
   iterationMessage: string,
   successMessage: string,
   errorMessage: string
 ) {
   if (parsedArgs.parallel) {
-    runAll(
-      projects.map(
-        app => `ng ${command} -- ${args.join(' ')} --project=${app}`
-      ),
-      {
-        parallel: parsedArgs.parallel,
-        maxParallel: parsedArgs.maxParallel,
-        stdin: process.stdin,
-        stdout: process.stdout,
-        stderr: process.stderr
-      }
-    )
-      .then(() => {
-        console.log(successMessage);
-        process.exit(0);
-      })
-      .catch(err => {
-        console.error(errorMessage);
-        process.exit(1);
-      });
-  } else {
-    projects.forEach(project => {
-      console.log(iterationMessage + project);
-      execSync(
-        `node ${ngPath()} ${command} ${args.join(' ')} --project=${project}`,
+    try {
+      await runAll(
+        projects.map(
+          app => `ng ${command} -- ${args.join(' ')} --project=${app}`
+        ),
         {
-          stdio: [0, 1, 2]
+          parallel: parsedArgs.parallel,
+          maxParallel: parsedArgs.maxParallel,
+          continueOnError: true,
+          stdin: process.stdin,
+          stdout: process.stdout,
+          stderr: process.stderr
         }
       );
+      projects.forEach(project => {
+        workspaceResults.success(project);
+      });
+    } catch (e) {
+      e.results.forEach((result, i) => {
+        if (result.code === 0) {
+          workspaceResults.success(projects[i]);
+        } else {
+          workspaceResults.fail(projects[i]);
+        }
+      });
+    }
+    workspaceResults.saveResults();
+    workspaceResults.printResults(
+      parsedArgs.onlyFailed,
+      successMessage,
+      errorMessage
+    );
+
+    if (workspaceResults.hasFailure) {
+      process.exit(1);
+    }
+  } else {
+    let failedProjects = [];
+    projects.forEach(project => {
+      console.log(iterationMessage + project);
+      try {
+        execSync(
+          `node ${ngPath()} ${command} ${args.join(' ')} --project=${project}`,
+          {
+            stdio: [0, 1, 2]
+          }
+        );
+        workspaceResults.success(project);
+      } catch (e) {
+        failedProjects.push(project);
+        workspaceResults.fail(project);
+      }
     });
+
+    workspaceResults.saveResults();
+    workspaceResults.printResults(
+      parsedArgs.onlyFailed,
+      successMessage,
+      errorMessage
+    );
+
+    if (workspaceResults.hasFailure) {
+      process.exit(1);
+    }
   }
 }
 
@@ -254,15 +333,35 @@ function topologicallySortProjects(deps: DepGraph): string[] {
   return res;
 }
 
-function e2e(apps: string[], parsedArgs: YargsAffectedOptions) {
+function e2e(
+  apps: string[],
+  parsedArgs: YargsAffectedOptions,
+  workspaceResults: WorkspaceResults
+) {
   if (apps.length > 0) {
     const args = filterNxSpecificArgs(parsedArgs);
     console.log(`Testing ${apps.join(', ')}`);
     apps.forEach(app => {
-      execSync(`node ${ngPath()} e2e ${args.join(' ')} --project=${app}`, {
-        stdio: [0, 1, 2]
-      });
+      try {
+        execSync(`node ${ngPath()} e2e ${args.join(' ')} --project=${app}`, {
+          stdio: [0, 1, 2]
+        });
+        workspaceResults.success(app);
+      } catch (e) {
+        workspaceResults.fail(app);
+      }
     });
+
+    workspaceResults.saveResults();
+    workspaceResults.printResults(
+      parsedArgs.onlyFailed,
+      'E2E Tests passed.',
+      'E2E Tests failed.'
+    );
+
+    if (workspaceResults.hasFailure) {
+      process.exit(1);
+    }
   } else {
     console.log('No apps to test');
   }
@@ -311,6 +410,9 @@ function ngPath() {
 const dummyOptions: AffectedOptions = {
   parallel: false,
   maxParallel: 3,
+  'max-parallel': false,
+  onlyFailed: false,
+  'only-failed': false,
   untracked: false,
   uncommitted: false,
   help: false,

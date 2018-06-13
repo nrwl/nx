@@ -7,7 +7,8 @@ import {
   readJson,
   runCLI,
   runCommand,
-  updateFile
+  updateFile,
+  exists
 } from '../utils';
 
 describe('Command line', () => {
@@ -208,6 +209,46 @@ describe('Command line', () => {
         'npm run affected:test -- --files="libs/mylib/src/index.ts"'
       );
       expect(unitTests).toContain('Testing mylib, myapp');
+
+      // Fail a Unit Test
+      updateFile(
+        'apps/myapp/src/app/app.component.spec.ts',
+        readFile('apps/myapp/src/app/app.component.spec.ts').replace(
+          '.toEqual(1)',
+          '.toEqual(2)'
+        )
+      );
+
+      const failedTests = runCommand(
+        'npm run affected:test -- --files="libs/mylib/src/index.ts"'
+      );
+
+      expect(failedTests).toContain('Testing mylib, myapp');
+      expect(failedTests).toContain('Failed projects: myapp');
+      expect(failedTests).toContain(
+        'You can isolate the above projects by passing --only-failed'
+      );
+      expect(readJson('dist/.nx-results')).toEqual({
+        command: 'test',
+        results: {
+          myapp: false,
+          mylib: true
+        }
+      });
+
+      // Fix failing Unit Test
+      updateFile(
+        'apps/myapp/src/app/app.component.spec.ts',
+        readFile('apps/myapp/src/app/app.component.spec.ts').replace(
+          '.toEqual(2)',
+          '.toEqual(1)'
+        )
+      );
+
+      const isolatedTests = runCommand(
+        'npm run affected:test -- --files="libs/mylib/src/index.ts" --only-failed'
+      );
+      expect(isolatedTests).toContain('Testing myapp');
 
       const linting = runCommand(
         'npm run affected:lint -- --files="libs/mylib/src/index.ts"'
