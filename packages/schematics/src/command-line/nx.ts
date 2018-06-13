@@ -136,6 +136,11 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       coerce: parseCSV,
       default: []
     })
+    .options('only-failed', {
+      describe: 'Isolate projects which previously failed',
+      type: 'boolean',
+      default: false
+    })
     .conflicts({
       files: ['uncommitted', 'untracked', 'base', 'head', 'all'],
       untracked: ['uncommitted', 'files', 'base', 'head', 'all'],
