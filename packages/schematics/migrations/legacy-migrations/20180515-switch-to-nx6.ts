@@ -41,7 +41,7 @@ export default {
         }
       );
       execSync(
-        'ng generate @schematics/update:migrate --package @nrwl/schematics --collection @nrwl/schematics/migrations/migrations.json --from 1.0.3 --to 6.0.0',
+        'ng generate @schematics/update:migrate --package @nrwl/schematics --collection @nrwl/schematics/migrations/migrations.json --from 1.0.3 --to 6.1.0',
         {
           stdio: [0, 1, 2]
         }
