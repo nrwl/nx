@@ -20,20 +20,30 @@ function displayInformation(host: Tree, context: SchematicContext) {
   `);
 }
 
+const addImplicitDependencies = updateJsonInTree('nx.json', nxJson => {
+  return {
+    ...nxJson,
+    implicitDependencies: {
+      'angular.json': '*',
+      'package.json': '*',
+      'tsconfig.json': '*',
+      'tslint.json': '*',
+      'nx.json': '*'
+    }
+  };
+});
+
+const changeNpmRunUpdate = updateJsonInTree('package.json', packageJson => {
+  packageJson.scripts.update = 'ng update @nrwl/schematics';
+  packageJson.scripts['update:check'] = 'ng update';
+  delete packageJson.scripts['update:skip'];
+  return packageJson;
+});
+
 export default function(): Rule {
   return chain([
     displayInformation,
-    updateJsonInTree('nx.json', nxJson => {
-      return {
-        ...nxJson,
-        implicitDependencies: {
-          'angular.json': '*',
-          'package.json': '*',
-          'tsconfig.json': '*',
-          'tslint.json': '*',
-          'nx.json': '*'
-        }
-      };
-    })
+    addImplicitDependencies,
+    changeNpmRunUpdate
   ]);
 }

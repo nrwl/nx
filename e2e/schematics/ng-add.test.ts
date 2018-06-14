@@ -79,9 +79,8 @@ describe('Nrwl Convert to Nx Workspace', () => {
       format: './node_modules/.bin/nx format:write',
       'format:write': './node_modules/.bin/nx format:write',
       'format:check': './node_modules/.bin/nx format:check',
-      update: './node_modules/.bin/nx update',
-      'update:check': './node_modules/.bin/nx update:check',
-      'update:skip': './node_modules/.bin/nx update:skip',
+      update: 'ng update @nrwl/schematics',
+      'update:check': 'ng update',
       'dep-graph': './node_modules/.bin/nx dep-graph',
       'workspace-schematic': './node_modules/.bin/nx workspace-schematic',
       help: './node_modules/.bin/nx help'
