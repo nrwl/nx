@@ -1,6 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+
 import { updateJsonFile, readCliConfigFile } from '../utils/fileutils';
 
 type Migration = { description: string; run(): void };
@@ -53,7 +55,11 @@ function calculateMigrationsToRun(
   latestMigration: string
 ) {
   if (latestMigration === 'ANGULAR CLI 6') {
-    return [];
+    console.error(stripIndents`
+      Nx update is now deprecated.
+      Please use "ng update @nrwl/schematics" instead.
+    `);
+    process.exit(1);
   }
   const startingWith = latestMigration
     ? migrations.findIndex(item => item.name === latestMigration) + 1

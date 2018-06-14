@@ -72,63 +72,14 @@ describe('Command line', () => {
     );
   });
 
-  // TODO reenable
-  xit(
-    'update should run migrations',
-    () => {
-      newProject();
-      updateFile(
-        'node_modules/@nrwl/schematics/migrations/20200101-test-migration.js',
-        `
-        exports.default = {
-          description: 'Test migration',
-          run: function() {
-            console.log('Running test migration');
-          }
-        };
-      `
-      );
-      const checkOut = runCommand('npm run update:check');
-      expect(checkOut).toContain(
-        'Run "npm run update" to run the following migrations'
-      );
-      expect(checkOut).toContain('20200101-test-migration');
-
-      const migrateOut = runCommand('npm run update');
-      expect(migrateOut).toContain('Test migration');
-      expect(migrateOut).toContain('Running test migration');
-      expect(migrateOut).toContain(
-        `The latestMigration property in .angular-cli.json has been set to "20200101-test-migration".`
-      );
-
-      updateFile(
-        'node_modules/@nrwl/schematics/migrations/20200102-test-migration.js',
-        `
-        exports.default = {
-          description: 'Test migration2',
-          run: function() {
-            console.log('Running test migration');
-          }
-        };
-      `
-      );
-
-      const checkOut2 = runCommand('npm run update:check');
-      expect(checkOut2).toContain(
-        'Run "npm run update" to run the following migrations'
-      );
-      expect(checkOut2).toContain('20200102-test-migration');
-
-      const skipOut = runCommand('npm run update:skip');
-      expect(skipOut).toContain(
-        `The latestMigration property in .angular-cli.json has been set to "20200102-test-migration".`
-      );
-
-      expect(runCommand('npm run update:check')).not.toContain('IMPORTANT');
-      expect(runCommand('npm run update')).toContain('No migrations to run');
-    },
-    1000000
-  );
+  it('update should print deprecation information', () => {
+    newProject();
+    const update = runCommand('./node_modules/.bin/nx update');
+    expect(update).toContain('Nx update is now deprecated.');
+    expect(update).toContain(
+      'Please use "ng update @nrwl/schematics" instead.'
+    );
+  });
 
   it(
     'affected should print, build, and test affected apps',
