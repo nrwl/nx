@@ -60,6 +60,7 @@ describe('app', () => {
         { name: 'myApp' },
         appTree
       );
+      expect(tree.exists(`apps/my-app/karma.conf.js`)).toBeTruthy();
       expect(tree.exists('apps/my-app/src/main.ts')).toBeTruthy();
       expect(tree.exists('apps/my-app/src/app/app.module.ts')).toBeTruthy();
       expect(tree.exists('apps/my-app/src/app/app.component.ts')).toBeTruthy();
@@ -165,6 +166,7 @@ describe('app', () => {
         { name: 'myApp', directory: 'myDir' },
         appTree
       );
+      expect(tree.exists(`apps/my-dir/my-app/karma.conf.js`)).toBeTruthy();
       expect(tree.exists('apps/my-dir/my-app/src/main.ts')).toBeTruthy();
       expect(
         tree.exists('apps/my-dir/my-app/src/app/app.module.ts')

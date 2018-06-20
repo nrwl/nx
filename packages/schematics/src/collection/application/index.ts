@@ -24,6 +24,7 @@ import {
   replaceAppNameWithPath
 } from '@nrwl/schematics/src/utils/cli-config-utils';
 import { formatFiles } from '../../utils/rules/format-files';
+import { updateKarmaConf } from '../../utils/rules/update-karma-conf';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -137,6 +138,7 @@ function updateProject(options: NormalizedSchema): Rule {
         return json;
       }),
       updateJsonInTree(`${options.appProjectRoot}/tsconfig.app.json`, json => {
+        json.exclude = json.exclude || [];
         return {
           ...json,
           extends: `${offsetFromRoot(options.appProjectRoot)}tsconfig.json`,
@@ -146,7 +148,8 @@ function updateProject(options: NormalizedSchema): Rule {
               options.appProjectRoot
             }`
           },
-          include: ['**/*.ts']
+          include: ['**/*.ts'],
+          exclude: [...json.exclude, 'karma.conf.ts']
         };
       }),
       updateJsonInTree(`${options.appProjectRoot}/tsconfig.spec.json`, json => {
@@ -184,7 +187,7 @@ function updateProject(options: NormalizedSchema): Rule {
         host.overwrite(
           `${options.appProjectRoot}/karma.conf.js`,
           karma.replace(
-            `'../../coverage'`,
+            `'../../coverage${options.appProjectRoot}'`,
             `'${offsetFromRoot(options.appProjectRoot)}coverage'`
           )
         );
@@ -249,6 +252,9 @@ export default function(schema: Schema): Rule {
       updateComponentTemplate(options),
       addNxModule(options),
       options.routing ? addRouterRootConfiguration(options) : noop(),
+      updateKarmaConf({
+        projectName: options.name
+      }),
       formatFiles(options)
     ])(host, context);
   };

@@ -32,6 +32,7 @@ import {
 } from '@nrwl/schematics/src/utils/cli-config-utils';
 import * as fs from 'fs';
 import { formatFiles } from '../../utils/rules/format-files';
+import { updateKarmaConf } from '../../utils/rules/update-karma-conf';
 
 interface NormalizedSchema extends Schema {
   name: string;
@@ -289,6 +290,7 @@ describe('${options.moduleName}', () => {
         return json;
       }),
       updateJsonInTree(`${options.projectRoot}/tsconfig.lib.json`, json => {
+        json.exclude = json.exclude || [];
         return {
           ...json,
           extends: `${offsetFromRoot(options.projectRoot)}tsconfig.json`,
@@ -297,7 +299,8 @@ describe('${options.moduleName}', () => {
             outDir: `${offsetFromRoot(options.projectRoot)}dist/out-tsc/${
               options.projectRoot
             }`
-          }
+          },
+          exclude: [...json.exclude, 'karma.conf.ts']
         };
       }),
       updateJsonInTree(`${options.projectRoot}/tsconfig.spec.json`, json => {
@@ -335,7 +338,7 @@ describe('${options.moduleName}', () => {
         host.overwrite(
           `${options.projectRoot}/karma.conf.js`,
           karma.replace(
-            `'../../coverage'`,
+            `'../../coverage${options.projectRoot}'`,
             `'${offsetFromRoot(options.projectRoot)}coverage'`
           )
         );
@@ -413,6 +416,9 @@ export default function(schema: Schema): Rule {
       externalSchematic('@schematics/angular', 'library', options),
       move(options.name, options.projectRoot),
       updateProject(options),
+      updateKarmaConf({
+        projectName: options.name
+      }),
       updateTsConfig(options),
 
       options.routing && options.lazy

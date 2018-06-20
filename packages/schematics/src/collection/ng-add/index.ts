@@ -4,7 +4,9 @@ import {
   SchematicContext,
   Tree,
   url,
-  mergeWith
+  mergeWith,
+  apply,
+  template
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';
@@ -39,11 +41,7 @@ import {
   readJsonInTree,
   addImportToModule
 } from '../../utils/ast-utils';
-import {
-  parseTarget,
-  serializeTarget,
-  editTarget
-} from '../../utils/cli-config-utils';
+import { editTarget } from '../../utils/cli-config-utils';
 import { from } from 'rxjs';
 import { tap, mapTo } from 'rxjs/operators';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
@@ -713,9 +711,14 @@ export default function(schema: Schema): Rule {
     name: toFileName(schema.name),
     npmScope: toFileName(schema.npmScope || schema.name)
   };
+  const templateSource = apply(url('./files'), [
+    template({
+      tmpl: ''
+    })
+  ]);
   return chain([
     checkCanConvertToWorkspace(options),
-    mergeWith(url('./files')),
+    mergeWith(templateSource),
     moveExistingFiles(options),
     createAdditionalFiles(options),
     updatePackageJson(),
