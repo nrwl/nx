@@ -7,10 +7,13 @@ import {
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
-import { readJsonInTree, updateJsonInTree } from '../../src/utils/ast-utils';
+import {
+  createOrUpdate,
+  readJsonInTree,
+  updateJsonInTree
+} from '../../src/utils/ast-utils';
 import { serializeJson, renameSync } from '../../src/utils/fileutils';
 import { parseTarget, serializeTarget } from '../../src/utils/cli-config-utils';
-import * as fs from 'fs';
 import { offsetFromRoot } from '../../src/utils/common';
 import { formatFiles } from '../../src/utils/rules/format-files';
 
@@ -667,14 +670,6 @@ function parseAndNormalizeTarget(s: string) {
 
 function pathToName(s: string) {
   return s.replace(new RegExp('/', 'g'), '-');
-}
-
-function createOrUpdate(host: Tree, path: string, content: string) {
-  if (host.exists(path)) {
-    host.overwrite(path, content);
-  } else {
-    host.create(path, content);
-  }
 }
 
 export default function(): Rule {

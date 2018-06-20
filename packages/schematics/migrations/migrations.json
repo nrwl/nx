@@ -14,6 +14,11 @@
       "version": "6.1.0",
       "description": "Add implicitDependencies to nx.json",
       "factory": "./update-6-1-0/update-6-1-0"
+    },
+    "update-to-6.2.0": {
+      "version": "6.2.0",
+      "description": "Add Global Karma Conf",
+      "factory": "./update-6-2-0/update-6-2-0"
     }
   }
 }

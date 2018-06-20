@@ -587,6 +587,13 @@ export function getProjectConfig(host: Tree, name: string): any {
   }
 }
 
+export function updateProjectConfig(name: string, projectConfig: any): Rule {
+  return updateJsonInTree('/angular.json', angularJson => {
+    angularJson.projects[name] = projectConfig;
+    return angularJson;
+  });
+}
+
 export function readBootstrapInfo(
   host: Tree,
   app: string
@@ -776,6 +783,14 @@ export function findNodesOfType(
 export interface NameValue {
   name: string;
   value?: string;
+}
+
+export function createOrUpdate(host: Tree, path: string, content: string) {
+  if (host.exists(path)) {
+    host.overwrite(path, content);
+  } else {
+    host.create(path, content);
+  }
 }
 
 export function insertImport(

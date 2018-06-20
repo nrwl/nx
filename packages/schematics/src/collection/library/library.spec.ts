@@ -99,6 +99,7 @@ describe('lib', () => {
         { name: 'myLib' },
         appTree
       );
+      expect(tree.exists(`libs/my-lib/karma.conf.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
     });
@@ -128,6 +129,19 @@ describe('lib', () => {
   });
 
   describe('nested', () => {
+    it('should generate files', () => {
+      const tree = schematicRunner.runSchematic(
+        'lib',
+        { name: 'myLib', directory: 'myDir' },
+        appTree
+      );
+      expect(tree.exists(`libs/my-dir/my-lib/karma.conf.js`)).toBeTruthy();
+      expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
+      ).toBeTruthy();
+    });
+
     it('should update ng-package.json', () => {
       const publishableTree = schematicRunner.runSchematic(
         'lib',
