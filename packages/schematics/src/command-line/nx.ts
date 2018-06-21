@@ -37,6 +37,12 @@ yargs
     args => affected('test', args, process.argv.slice(3))
   )
   .command(
+    'affected:lib',
+    'Build libraries affected by changes',
+    yargs => withAffectedOptions(withParallel(yargs)),
+    args => affected('lib', args, process.argv.slice(3))
+  )
+  .command(
     'affected:e2e',
     'Run e2e tests for the applications affected by changes',
     withAffectedOptions,

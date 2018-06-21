@@ -7,7 +7,9 @@ import {
   getAllE2ENames,
   getAllProjectNames,
   parseFiles,
-  readDepGraph
+  readDepGraph,
+  getAffectedLibs,
+  getAllLibNames
 } from './shared';
 import * as path from 'path';
 import * as resolve from 'resolve';
@@ -47,6 +49,7 @@ export function affected(
 ): void {
   let apps: string[];
   let e2eProjects: string[];
+  let libs: string[];
   let projects: string[];
   let rest: string[];
   const workspaceResults = new WorkspaceResults(command);
@@ -61,6 +64,12 @@ export function affected(
             !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
         );
       e2eProjects = getAllE2ENames()
+        .filter(app => !parsedArgs.exclude.includes(app))
+        .filter(
+          project =>
+            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+        );
+      libs = getAllLibNames()
         .filter(app => !parsedArgs.exclude.includes(app))
         .filter(
           project =>
@@ -87,12 +96,19 @@ export function affected(
           project =>
             !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
         );
+      libs = getAffectedLibs(p.files)
+        .filter(project => !parsedArgs.exclude.includes(project))
+        .filter(
+          project => 
+            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+        )
       projects = getAffectedProjects(p.files)
         .filter(project => !parsedArgs.exclude.includes(project))
         .filter(
           project =>
             !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
         );
+
     }
   } catch (e) {
     printError(e);
@@ -118,6 +134,8 @@ export function affected(
     case 'dep-graph':
       generateGraph(yargsParser(rest), projects);
       break;
+    case 'lib':
+      build(libs, parsedArgs, workspaceResults);
   }
 }
 
