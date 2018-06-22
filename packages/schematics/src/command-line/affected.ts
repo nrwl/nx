@@ -99,7 +99,7 @@ export function affected(
       libs = getAffectedLibs(p.files)
         .filter(project => !parsedArgs.exclude.includes(project))
         .filter(
-          project => 
+          project =>
             !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
         )
       projects = getAffectedProjects(p.files)
@@ -120,7 +120,7 @@ export function affected(
       console.log(apps.join(' '));
       break;
     case 'build':
-      build(apps, parsedArgs, workspaceResults);
+      build(projects, parsedArgs, workspaceResults);
       break;
     case 'test':
       test(projects, parsedArgs, workspaceResults);
@@ -135,7 +135,8 @@ export function affected(
       generateGraph(yargsParser(rest), projects);
       break;
     case 'lib':
-      build(libs, parsedArgs, workspaceResults);
+      console.log(libs.join(' '))
+      break;
   }
 }
 
@@ -144,13 +145,24 @@ function printError(e: any) {
 }
 
 function build(
-  apps: string[],
+  projects: string[],
   parsedArgs: YargsAffectedOptions,
   workspaceResults: WorkspaceResults
 ) {
-  if (apps.length > 0) {
+
+  const depGraph = readDepGraph();
+  const sortedProjects = topologicallySortProjects(depGraph);
+  const sortedAffectedProjects = sortedProjects.filter(
+    pp => projects.indexOf(pp) > -1
+  );
+  const projectsToBuild = sortedAffectedProjects.filter(p => {
+    const matchingProject = depGraph.projects.find(pp => pp.name === p);
+    return !!matchingProject.architect['build'];
+  });
+
+  if (projectsToBuild.length > 0) {
     const normalizedArgs = filterNxSpecificArgs(parsedArgs);
-    let message = `Building ${apps.join(', ')}`;
+    let message = `Building ${projectsToBuild.join(', ')}`;
     if (normalizedArgs.length > 0) {
       message += ` with flags: ${normalizedArgs.join(' ')}`;
     }
@@ -158,7 +170,7 @@ function build(
 
     runCommand(
       'build',
-      apps,
+      projectsToBuild,
       parsedArgs,
       normalizedArgs,
       workspaceResults,
@@ -167,7 +179,7 @@ function build(
       'Build failed.'
     );
   } else {
-    console.log('No apps to build');
+    console.log('No projects to build');
   }
 }
 
