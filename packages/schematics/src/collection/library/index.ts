@@ -304,6 +304,10 @@ describe('${options.moduleName}', () => {
           }
         };
       }),
+      updateJsonInTree(`${options.projectRoot}/ng-package.prod.json`, json => {
+        json['dest'] = `${offsetFromRoot(options.projectRoot)}dist/@${options.prefix}/${options.name}`;
+        return json;
+      }),
       host => {
         const karma = host
           .read(`${options.projectRoot}/karma.conf.js`)
