@@ -123,7 +123,7 @@ function addLoadChildren(options: NormalizedSchema): Rule {
 
     const loadChildren = `@${npmScope}/${options.projectDirectory}#${
       options.moduleName
-      }`;
+    }`;
 
     insert(host, options.parentModule, [
       ...addRoute(
@@ -273,7 +273,7 @@ describe('${options.moduleName}', () => {
             ...json.compilerOptions,
             outDir: `${offsetFromRoot(options.projectRoot)}dist/out-tsc/${
               options.projectRoot
-              }`
+            }`
           }
         };
       }),
@@ -285,7 +285,7 @@ describe('${options.moduleName}', () => {
             ...json.compilerOptions,
             outDir: `${offsetFromRoot(options.projectRoot)}dist/out-tsc/${
               options.projectRoot
-              }`
+            }`
           }
         };
       }),
@@ -305,12 +305,17 @@ describe('${options.moduleName}', () => {
         };
       }),
       options.publishable
-        ? updateJsonInTree(`${options.projectRoot}/ng-package.prod.json`, json => {
-          return {
-            ...json,
-            dest: `${offsetFromRoot(options.projectRoot)}dist/@${options.prefix}/${options.projectDirectory}`
-          }
-        })
+        ? updateJsonInTree(
+            `${options.projectRoot}/ng-package.prod.json`,
+            json => {
+              return {
+                ...json,
+                dest: `${offsetFromRoot(options.projectRoot)}dist/@${
+                  options.prefix
+                }/${options.projectDirectory}`
+              };
+            }
+          )
         : noop(),
       host => {
         const karma = host
@@ -344,7 +349,7 @@ function updateTsConfig(options: NormalizedSchema): Rule {
   ]);
 }
 
-export default function (schema: Schema): Rule {
+export default function(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
     if (!options.routing && options.lazy) {
