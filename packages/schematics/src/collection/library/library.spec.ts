@@ -20,6 +20,17 @@ describe('lib', () => {
   });
 
   describe('not nested', () => {
+
+    it('should update ng-package.prod.json', () => {
+      const publishableTree = schematicRunner.runSchematic(
+        'lib',
+        { name: 'myLib', publishable: true },
+        appTree
+      );
+      let ngPackage = readJsonInTree(publishableTree, 'libs/my-lib/ng-package.prod.json');
+      expect(ngPackage.dest).toEqual('../../dist/@proj/my-lib');
+    });
+
     it('should update angular.json', () => {
       const tree = schematicRunner.runSchematic(
         'lib',
@@ -108,6 +119,16 @@ describe('lib', () => {
   });
 
   describe('nested', () => {
+    it('should update ng-package.prod.json', () => {
+      const publishableTree = schematicRunner.runSchematic(
+        'lib',
+        { name: 'myLib', directory: 'myDir', publishable: true },
+        appTree
+      );
+      let ngPackage = readJsonInTree(publishableTree, 'libs/my-dir/my-lib/ng-package.prod.json');
+      expect(ngPackage.dest).toEqual('../../../dist/@proj/my-dir/my-lib');
+    });
+
     it('should update angular.json', () => {
       const tree = schematicRunner.runSchematic(
         'lib',
