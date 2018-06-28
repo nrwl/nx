@@ -112,7 +112,7 @@ describe('Command line', () => {
             });
           });
         `
-      )
+      );
 
       const affectedApps = runCommand(
         'npm run affected:apps -- --files="libs/mylib/src/index.ts"'
@@ -239,7 +239,9 @@ describe('Command line', () => {
       const linting = runCommand(
         'npm run affected:lint -- --files="libs/mylib/src/index.ts"'
       );
-      expect(linting).toContain('Linting mylib, myapp, myapp-e2e, mypublishablelib');
+      expect(linting).toContain(
+        'Linting mylib, myapp, myapp-e2e, mypublishablelib'
+      );
 
       const unitTestsExcluded = runCommand(
         'npm run affected:test -- --files="libs/mylib/src/index.ts" --exclude=myapp,mypublishablelib'
@@ -323,7 +325,7 @@ describe('Command line', () => {
       newApp('myapp');
       newApp('myapp2');
       newLib('mylib');
-      newLib('mypublishablelib --publishable')
+      newLib('mypublishablelib --publishable');
 
       const affectedApps = runCommand('npm run affected:apps -- --all');
       expect(affectedApps).toContain('myapp');
@@ -345,7 +347,9 @@ describe('Command line', () => {
       expect(e2e).toContain('Testing myapp-e2e, myapp2-e2e');
 
       const unitTests = runCommand('npm run affected:test -- --all');
-      expect(unitTests).toContain('Testing mypublishablelib, myapp2, myapp, mylib');
+      expect(unitTests).toContain(
+        'Testing mypublishablelib, myapp2, myapp, mylib'
+      );
     },
     1000000
   );
