@@ -2,6 +2,7 @@ import { execSync } from 'child_process';
 import * as path from 'path';
 import {
   affectedAppNames,
+  affectedBuildableNames,
   affectedE2eNames,
   AffectedFetcher,
   affectedLibNames,
@@ -265,6 +266,7 @@ export const getAffectedApps = getAffected(affectedAppNames);
 export const getAffectedE2e = getAffected(affectedE2eNames);
 export const getAffectedProjects = getAffected(affectedProjectNames);
 export const getAffectedLibs = getAffected(affectedLibNames);
+export const getAffectedBuildables = getAffected(affectedBuildableNames);
 
 export function getTouchedProjects(touchedFiles: string[]): string[] {
   const angularJson = readAngularJson();
@@ -287,6 +289,11 @@ export function getAllE2ENames() {
 export function getAllLibNames() {
   const projects = getProjectNodes(readAngularJson(), readNxJson());
   return projects.filter(p => p.type == ProjectType.lib).map(p => p.name);
+}
+
+export function getAllBuildables() {
+  const projects = getProjectNodes(readAngularJson(), readNxJson());
+  return projects.filter(p => p.architect.build).map(p => p.name);
 }
 
 export function getAllProjectNames() {
