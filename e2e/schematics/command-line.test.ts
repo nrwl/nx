@@ -82,7 +82,7 @@ describe('Command line', () => {
   });
 
   it(
-    'affected should print, build, and test affected apps and libraries',
+    'affected should print, build, and test affected apps',
     () => {
       newProject();
       newApp('myapp');
@@ -319,7 +319,7 @@ describe('Command line', () => {
   );
 
   it(
-    'affected should print, build, and test all apps and publishable libraries',
+    'affected should print, build, and test all apps',
     () => {
       newProject();
       newApp('myapp');
