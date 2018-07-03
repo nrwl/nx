@@ -288,7 +288,7 @@ export function getAllE2ENames() {
 
 export function getAllLibNames() {
   const projects = getProjectNodes(readAngularJson(), readNxJson());
-  return projects.filter(p => p.type == ProjectType.lib).map(p => p.name);
+  return projects.filter(p => p.type === ProjectType.lib).map(p => p.name);
 }
 
 export function getAllBuildables() {
