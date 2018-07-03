@@ -175,7 +175,7 @@ export function affectedLibNames(
     fileRead,
     touchedFiles
   )
-    .filter(p => p.type == ProjectType.lib)
+    .filter(p => p.type === ProjectType.lib)
     .map(p => p.name);
 }
 
