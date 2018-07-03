@@ -36,8 +36,8 @@ describe('lib', () => {
         'libs/my-lib/ng-package.json'
       );
 
-      expect(ngPackageProd.dest).toEqual('../../dist/@proj/my-lib');
-      expect(ngPackage.dest).toEqual('../../dist/@proj/my-lib');
+      expect(ngPackageProd.dest).toEqual('../../dist/libs/@proj/my-lib');
+      expect(ngPackage.dest).toEqual('../../dist/libs/@proj/my-lib');
     });
 
     it('should update angular.json', () => {
@@ -142,8 +142,10 @@ describe('lib', () => {
         publishableTree,
         'libs/my-dir/my-lib/ng-package.json'
       );
-      expect(ngPackageProd.dest).toEqual('../../../dist/@proj/my-dir/my-lib');
-      expect(ngPackage.dest).toEqual('../../../dist/@proj/my-dir/my-lib');
+      expect(ngPackageProd.dest).toEqual(
+        '../../../dist/libs/@proj/my-dir/my-lib'
+      );
+      expect(ngPackage.dest).toEqual('../../../dist/libs/@proj/my-dir/my-lib');
     });
 
     it('should update angular.json', () => {
