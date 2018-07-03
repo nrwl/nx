@@ -205,7 +205,7 @@ function updateNgPackage(options: NormalizedSchema): Rule {
   if (!options.publishable) {
     return noop();
   }
-  const dest = `${offsetFromRoot(options.projectRoot)}dist/@${options.prefix}/${
+  const dest = `${offsetFromRoot(options.projectRoot)}dist/libs/@${options.prefix}/${
     options.projectDirectory
   }`;
   return chain([
