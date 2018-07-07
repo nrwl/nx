@@ -205,9 +205,9 @@ function updateNgPackage(options: NormalizedSchema): Rule {
   if (!options.publishable) {
     return noop();
   }
-  const dest = `${offsetFromRoot(options.projectRoot)}dist/libs/@${
-    options.prefix
-  }/${options.projectDirectory}`;
+  const dest = `${offsetFromRoot(options.projectRoot)}dist/libs/${
+    options.projectDirectory
+  }`;
   return chain([
     updateJsonInTree(`${options.projectRoot}/ng-package.prod.json`, json => {
       return {
