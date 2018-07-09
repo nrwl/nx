@@ -500,7 +500,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             type: ProjectType.lib
           }
         ],
-        ['lib2.ts', 'app2.ts', 'package.json']
+        ['gitrepo/some/path/inside/nx/libs/lib2/lib2.ts', 'app2.ts', 'package.json']
       );
 
       expect(tp).toEqual(['app1Name', 'app2Name', 'lib1Name', 'lib2Name']);
