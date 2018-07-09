@@ -60,7 +60,9 @@ function directlyTouchedProjects(
   return projects
     .filter(project => {
       return touchedFiles.some(file => {
-        return file.startsWith(project.root);
+        return project.files.some(projectFile => {
+          return file.endsWith(projectFile);
+        });
       });
     })
     .map(project => project.name);
