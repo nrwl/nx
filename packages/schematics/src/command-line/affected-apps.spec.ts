@@ -506,7 +506,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
       expect(tp).toEqual(['app1Name', 'app2Name', 'lib1Name', 'lib2Name']);
     });
 
-    it('should return the list of touchedProjects independend from the git structure', () => {
+    it('should return the list of touchedProjects independent from the git structure', () => {
       const tp = touchedProjects(
         {
           'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
