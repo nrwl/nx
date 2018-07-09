@@ -500,10 +500,55 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             type: ProjectType.lib
           }
         ],
-        ['gitrepo/some/path/inside/nx/libs/lib2/lib2.ts', 'app2.ts', 'package.json']
+        ['lib2.ts', 'app2.ts', 'package.json']
       );
 
       expect(tp).toEqual(['app1Name', 'app2Name', 'lib1Name', 'lib2Name']);
+    });
+
+    it('should return the list of touchedProjects independend from the git structure', () => {
+      const tp = touchedProjects(
+        {
+          'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+        },
+        [
+          {
+            name: 'app1Name',
+            root: 'apps/app1',
+            files: ['app1.ts'],
+            tags: [],
+            architect: {},
+            type: ProjectType.app
+          },
+          {
+            name: 'app2Name',
+            root: 'apps/app2',
+            files: ['app2.ts'],
+            tags: [],
+            architect: {},
+            type: ProjectType.app
+          },
+          {
+            name: 'lib1Name',
+            root: 'libs/lib1',
+            files: ['lib1.ts'],
+            tags: [],
+            architect: {},
+            type: ProjectType.lib
+          },
+          {
+            name: 'lib2Name',
+            root: 'libs/lib2',
+            files: ['lib2.ts'],
+            tags: [],
+            architect: {},
+            type: ProjectType.lib
+          }
+        ],
+        ['gitrepo/some/path/inside/nx/libs/lib2/lib2.ts', 'apps/app2/app2.ts']
+      );
+
+      expect(tp).toEqual(['app2Name', 'lib2Name']);
     });
 
     it('should return the list of implicitly touched projects', () => {
