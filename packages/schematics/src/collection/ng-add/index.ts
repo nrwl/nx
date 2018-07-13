@@ -57,6 +57,7 @@ function updatePackageJson() {
     packageJson.scripts = {
       ...packageJson.scripts,
       'affected:apps': './node_modules/.bin/nx affected:apps',
+      'affected:libs': './node_modules/.bin/nx affected:libs',
       'affected:build': './node_modules/.bin/nx affected:build',
       'affected:e2e': './node_modules/.bin/nx affected:e2e',
       'affected:test': './node_modules/.bin/nx affected:test',

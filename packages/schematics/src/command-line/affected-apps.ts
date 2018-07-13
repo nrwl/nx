@@ -145,6 +145,42 @@ export function affectedE2eNames(
     .map(p => p.name);
 }
 
+export function affectedBuildableNames(
+  npmScope: string,
+  projects: ProjectNode[],
+  implicitDependencies: ImplicitDependencies,
+  fileRead: (s: string) => string,
+  touchedFiles: string[]
+): string[] {
+  return affectedProjects(
+    npmScope,
+    projects,
+    implicitDependencies,
+    fileRead,
+    touchedFiles
+  )
+    .filter(p => p.architect.build)
+    .map(p => p.name);
+}
+
+export function affectedLibNames(
+  npmScope: string,
+  projects: ProjectNode[],
+  implicitDependencies: ImplicitDependencies,
+  fileRead: (s: string) => string,
+  touchedFiles: string[]
+): string[] {
+  return affectedProjects(
+    npmScope,
+    projects,
+    implicitDependencies,
+    fileRead,
+    touchedFiles
+  )
+    .filter(p => p.type === ProjectType.lib)
+    .map(p => p.name);
+}
+
 export function affectedProjectNames(
   npmScope: string,
   projects: ProjectNode[],

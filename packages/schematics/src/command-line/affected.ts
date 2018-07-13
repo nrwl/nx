@@ -1,10 +1,14 @@
 import { execSync } from 'child_process';
 import {
   getAffectedApps,
+  getAffectedBuildables,
   getAffectedE2e,
+  getAffectedLibs,
   getAffectedProjects,
   getAllAppNames,
+  getAllBuildables,
   getAllE2ENames,
+  getAllLibNames,
   getAllProjectNames,
   parseFiles,
   readDepGraph
@@ -22,6 +26,7 @@ import {
 import { GlobalNxArgs } from './nx';
 import * as yargs from 'yargs';
 import { WorkspaceResults } from './workspace-results';
+import { workspace } from '@angular-devkit/core/src/experimental';
 
 export interface YargsAffectedOptions extends yargs.Arguments {}
 
@@ -47,7 +52,9 @@ export function affected(
 ): void {
   let apps: string[];
   let e2eProjects: string[];
+  let libs: string[];
   let projects: string[];
+  let buildables: string[];
   let rest: string[];
   const workspaceResults = new WorkspaceResults(command);
 
@@ -66,7 +73,19 @@ export function affected(
           project =>
             !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
         );
+      libs = getAllLibNames()
+        .filter(app => !parsedArgs.exclude.includes(app))
+        .filter(
+          project =>
+            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+        );
       projects = getAllProjectNames()
+        .filter(project => !parsedArgs.exclude.includes(project))
+        .filter(
+          project =>
+            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+        );
+      buildables = getAllBuildables()
         .filter(project => !parsedArgs.exclude.includes(project))
         .filter(
           project =>
@@ -87,7 +106,19 @@ export function affected(
           project =>
             !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
         );
+      libs = getAffectedLibs(p.files)
+        .filter(project => !parsedArgs.exclude.includes(project))
+        .filter(
+          project =>
+            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+        );
       projects = getAffectedProjects(p.files)
+        .filter(project => !parsedArgs.exclude.includes(project))
+        .filter(
+          project =>
+            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+        );
+      buildables = getAffectedBuildables(p.files)
         .filter(project => !parsedArgs.exclude.includes(project))
         .filter(
           project =>
@@ -104,7 +135,7 @@ export function affected(
       console.log(apps.join(' '));
       break;
     case 'build':
-      build(apps, parsedArgs, workspaceResults);
+      build(buildables, parsedArgs, workspaceResults);
       break;
     case 'test':
       test(projects, parsedArgs, workspaceResults);
@@ -118,6 +149,9 @@ export function affected(
     case 'dep-graph':
       generateGraph(yargsParser(rest), projects);
       break;
+    case 'lib':
+      console.log(libs.join(' '));
+      break;
   }
 }
 
@@ -126,13 +160,13 @@ function printError(e: any) {
 }
 
 function build(
-  apps: string[],
+  projects: string[],
   parsedArgs: YargsAffectedOptions,
   workspaceResults: WorkspaceResults
 ) {
-  if (apps.length > 0) {
+  if (projects.length > 0) {
     const normalizedArgs = filterNxSpecificArgs(parsedArgs);
-    let message = `Building ${apps.join(', ')}`;
+    let message = `Building ${projects.join(', ')}`;
     if (normalizedArgs.length > 0) {
       message += ` with flags: ${normalizedArgs.join(' ')}`;
     }
@@ -140,7 +174,7 @@ function build(
 
     runCommand(
       'build',
-      apps,
+      projects,
       parsedArgs,
       normalizedArgs,
       workspaceResults,
@@ -149,7 +183,7 @@ function build(
       'Build failed.'
     );
   } else {
-    console.log('No apps to build');
+    console.log('No projects to build');
   }
 }
 

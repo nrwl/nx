@@ -26,7 +26,7 @@ yargs
   )
   .command(
     'affected:build',
-    'Build applications affected by changes',
+    'Build applications and publishable libraries affected by changes',
     yargs => withAffectedOptions(withParallel(yargs)),
     args => affected('build', args, process.argv.slice(3))
   )
@@ -35,6 +35,12 @@ yargs
     'Test projects affected by changes',
     yargs => withAffectedOptions(withParallel(yargs)),
     args => affected('test', args, process.argv.slice(3))
+  )
+  .command(
+    'affected:libs',
+    'Print libraries affected by changes',
+    withAffectedOptions,
+    args => affected('lib', args, process.argv.slice(3))
   )
   .command(
     'affected:e2e',

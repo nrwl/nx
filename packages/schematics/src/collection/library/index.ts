@@ -201,6 +201,29 @@ function addChildren(options: NormalizedSchema): Rule {
   };
 }
 
+function updateNgPackage(options: NormalizedSchema): Rule {
+  if (!options.publishable) {
+    return noop();
+  }
+  const dest = `${offsetFromRoot(options.projectRoot)}dist/libs/${
+    options.projectDirectory
+  }`;
+  return chain([
+    updateJsonInTree(`${options.projectRoot}/ng-package.prod.json`, json => {
+      return {
+        ...json,
+        dest
+      };
+    }),
+    updateJsonInTree(`${options.projectRoot}/ng-package.json`, json => {
+      return {
+        ...json,
+        dest
+      };
+    })
+  ]);
+}
+
 function updateProject(options: NormalizedSchema): Rule {
   return (host: Tree) => {
     // Bug in @angular-devkit/core. Cannot delete these files here.
@@ -304,6 +327,7 @@ describe('${options.moduleName}', () => {
           }
         };
       }),
+      updateNgPackage(options),
       host => {
         const karma = host
           .read(`${options.projectRoot}/karma.conf.js`)
