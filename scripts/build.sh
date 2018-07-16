@@ -29,8 +29,10 @@ chmod +x build/packages/schematics/src/command-line/nx.js
 rm -rf build/packages/install
 rm -rf build/packages/nx/dist
 rm -rf build/packages/nx/spec
+cp README.md build/packages/builders
 cp README.md build/packages/schematics
 cp README.md build/packages/nx
 cp LICENSE build/packages/bazel
+cp LICENSE build/packages/builders
 cp LICENSE build/packages/schematics
 cp LICENSE build/packages/nx

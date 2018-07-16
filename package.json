@@ -37,6 +37,7 @@
     "@schematics/angular": "^0.7.2",
     "@types/jasmine": "~2.8.6",
     "@types/jasminewd2": "~2.0.3",
+    "@types/jest": "^23.3.1",
     "@types/node": "~8.9.4",
     "@types/prettier": "^1.10.0",
     "@types/yargs": "^11.0.0",
