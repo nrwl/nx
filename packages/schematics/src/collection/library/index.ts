@@ -5,7 +5,8 @@ import {
   noop,
   Rule,
   Tree,
-  SchematicContext
+  SchematicContext,
+  schematic
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';
@@ -33,6 +34,7 @@ import {
 import { formatFiles } from '../../utils/rules/format-files';
 import { updateKarmaConf } from '../../utils/rules/update-karma-conf';
 import { excludeUnnecessaryFiles } from '@nrwl/schematics/src/utils/rules/filter-tree';
+import { join, normalize } from '@angular-devkit/core';
 
 interface NormalizedSchema extends Schema {
   name: string;
@@ -240,6 +242,12 @@ function updateProject(options: NormalizedSchema): Rule {
       host.delete(path.join(options.projectRoot, 'package.json'));
     }
 
+    if (options.unitTestRunner !== 'karma') {
+      host.delete(path.join(options.projectRoot, 'karma.conf.js'));
+      host.delete(path.join(options.projectRoot, 'src/test.ts'));
+      host.delete(path.join(options.projectRoot, 'tsconfig.spec.json'));
+    }
+
     host.overwrite(
       path.join(libRoot, `${options.name}.module.ts`),
       `
@@ -253,26 +261,29 @@ function updateProject(options: NormalizedSchema): Rule {
       export class ${options.moduleName} { }
       `
     );
-    host.create(
-      path.join(libRoot, `${options.name}.module.spec.ts`),
-      `
-import { async, TestBed } from '@angular/core/testing';
-import { ${options.moduleName} } from './${options.name}.module';
 
-describe('${options.moduleName}', () => {
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      imports: [ ${options.moduleName} ]
-    })
-    .compileComponents();
-  }));
-
-  it('should create', () => {
-    expect(${options.moduleName}).toBeDefined();
+    if (options.unitTestRunner !== 'none') {
+      host.create(
+        path.join(libRoot, `${options.name}.module.spec.ts`),
+        `
+  import { async, TestBed } from '@angular/core/testing';
+  import { ${options.moduleName} } from './${options.name}.module';
+  
+  describe('${options.moduleName}', () => {
+    beforeEach(async(() => {
+      TestBed.configureTestingModule({
+        imports: [ ${options.moduleName} ]
+      })
+      .compileComponents();
+    }));
+  
+    it('should create', () => {
+      expect(${options.moduleName}).toBeDefined();
+    });
   });
-});
-      `
-    );
+        `
+      );
+    }
     host.overwrite(
       `${options.projectRoot}/src/index.ts`,
       `
@@ -293,23 +304,21 @@ describe('${options.moduleName}', () => {
           delete fixedProject.architect.build;
         }
 
+        if (options.unitTestRunner !== 'karma') {
+          delete fixedProject.architect.test;
+
+          fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
+            path =>
+              path !==
+              join(normalize(options.projectRoot), 'tsconfig.spec.json')
+          );
+        }
+
         json.projects[options.name] = fixedProject;
         return json;
       }),
       updateJsonInTree(`${options.projectRoot}/tsconfig.lib.json`, json => {
         json.exclude = json.exclude || [];
-        return {
-          ...json,
-          extends: `${offsetFromRoot(options.projectRoot)}tsconfig.json`,
-          compilerOptions: {
-            ...json.compilerOptions,
-            outDir: `${offsetFromRoot(options.projectRoot)}dist/out-tsc/${
-              options.projectRoot
-            }`
-          }
-        };
-      }),
-      updateJsonInTree(`${options.projectRoot}/tsconfig.spec.json`, json => {
         return {
           ...json,
           extends: `${offsetFromRoot(options.projectRoot)}tsconfig.json`,
@@ -337,20 +346,41 @@ describe('${options.moduleName}', () => {
         };
       }),
       updateNgPackage(options),
-      host => {
-        const karma = host
-          .read(`${options.projectRoot}/karma.conf.js`)
-          .toString();
-        host.overwrite(
-          `${options.projectRoot}/karma.conf.js`,
-          karma.replace(
-            `'../../coverage${options.projectRoot}'`,
-            `'${offsetFromRoot(options.projectRoot)}coverage'`
-          )
-        );
-      }
+      options.unitTestRunner === 'karma' ? updateKarmaConfig(options) : noop()
     ])(host, null);
   };
+}
+
+function updateKarmaConfig(options: NormalizedSchema) {
+  return chain([
+    host => {
+      const karma = host
+        .read(`${options.projectRoot}/karma.conf.js`)
+        .toString();
+      host.overwrite(
+        `${options.projectRoot}/karma.conf.js`,
+        karma.replace(
+          `'../../coverage${options.projectRoot}'`,
+          `'${offsetFromRoot(options.projectRoot)}coverage'`
+        )
+      );
+    },
+    updateJsonInTree(`${options.projectRoot}/tsconfig.spec.json`, json => {
+      return {
+        ...json,
+        extends: `${offsetFromRoot(options.projectRoot)}tsconfig.json`,
+        compilerOptions: {
+          ...json.compilerOptions,
+          outDir: `${offsetFromRoot(options.projectRoot)}dist/out-tsc/${
+            options.projectRoot
+          }`
+        }
+      };
+    }),
+    updateKarmaConf({
+      projectName: options.name
+    })
+  ]);
 }
 
 function updateTsConfig(options: NormalizedSchema): Rule {
@@ -396,10 +426,12 @@ export default function(schema: Schema): Rule {
 
       move(options.name, options.projectRoot),
       updateProject(options),
-      updateKarmaConf({
-        projectName: options.name
-      }),
       updateTsConfig(options),
+      options.unitTestRunner === 'jest'
+        ? schematic('jest-project', {
+            project: options.name
+          })
+        : noop(),
 
       options.publishable ? updateLibPackageNpmScope(options) : noop(),
       options.routing && options.lazy

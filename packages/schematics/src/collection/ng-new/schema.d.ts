@@ -1,3 +1,5 @@
+import { UnitTestRunner } from '../../utils/test-runners';
+
 export interface Schema {
   directory: string;
   name: string;
