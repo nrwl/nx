@@ -1,0 +1,10 @@
+{
+  "$schema": "../architect/src/builders-schema.json",
+  "builders": {
+    "jest": {
+      "class": "./jest/jest.builder",
+      "schema": "./jest/schema.json",
+      "description": "Run Jest unit tests"
+    }
+  }
+}

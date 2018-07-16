@@ -1,0 +1,25 @@
+{
+  "title": "Jest Target",
+  "description": "Jest target options for Build Facade",
+  "type": "object",
+  "properties": {
+    "jestConfig": {
+      "type": "string",
+      "description": "The path of the Jest configuration. (https://jestjs.io/docs/en/configuration.html)"
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "The name of the Typescript configuration file."
+    },
+    "setupFile": {
+      "type": "string",
+      "description": "The name of a setup file used by Jest. (https://jestjs.io/docs/en/configuration.html#setuptestframeworkscriptfile-string)"
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Run tests when files change.",
+      "default": false
+    }
+  },
+  "required": ["jestConfig", "tsConfig"]
+}

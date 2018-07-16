@@ -29,7 +29,7 @@
   "schematics": "./src/collection.json",
   "ng-update": {
     "requirements": {},
-    "packageGroup": ["@nrwl/nx", "@nrwl/schematics"],
+    "packageGroup": ["@nrwl/nx", "@nrwl/schematics", "@nrwl/builders"],
     "migrations": "./migrations/migrations.json"
   },
   "dependencies": {
