@@ -19,8 +19,25 @@
     },
     "watch": {
       "type": "boolean",
-      "description": "Run tests when files change.",
+      "description":
+        "Run tests when files change. (https://jestjs.io/docs/en/cli#watch)",
       "default": false
+    },
+    "codeCoverage": {
+      "type": "boolean",
+      "description":
+        "Export a code coverage report. (https://jestjs.io/docs/en/cli#coverage)"
+    },
+    "updateSnapshot": {
+      "type": "boolean",
+      "alias": "u",
+      "description":
+        "Re-record all failing snapshots. (https://jestjs.io/docs/en/cli#updatesnapshot)"
+    },
+    "ci": {
+      "type": "boolean",
+      "description":
+        "Fail on missing snapshots. (https://jestjs.io/docs/en/cli#ci)"
     }
   },
   "required": ["jestConfig", "tsConfig"]

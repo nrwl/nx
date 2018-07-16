@@ -45,7 +45,48 @@ describe('Jest Builder', () => {
     );
   });
 
-  it('should send the setupFile to jestCLI', () => {
+  it('should send other options to jestCLI', () => {
+    const runCLI = spyOn(jestCLI, 'runCLI').and.returnValue(
+      Promise.resolve({
+        results: {
+          success: true
+        }
+      })
+    );
+    const root = normalize('/root');
+    builder
+      .run({
+        root,
+        builder: '',
+        projectType: 'application',
+        options: {
+          jestConfig: './jest.config.js',
+          tsConfig: './tsconfig.test.json',
+          watch: false,
+          codeCoverage: true,
+          ci: true,
+          updateSnapshot: true
+        }
+      })
+      .toPromise();
+    expect(runCLI).toHaveBeenCalledWith(
+      {
+        globals: JSON.stringify({
+          'ts-jest': {
+            tsConfigFile: path.relative(root, './tsconfig.test.json')
+          },
+          __TRANSFORM_HTML__: true
+        }),
+        watch: false,
+        coverage: true,
+        ci: true,
+        updateSnapshot: true
+      },
+      ['./jest.config.js']
+    );
+  });
+
+  it('should send the main to jestCLI', () => {
     const runCLI = spyOn(jestCLI, 'runCLI').and.returnValue(
       Promise.resolve({
         results: {
