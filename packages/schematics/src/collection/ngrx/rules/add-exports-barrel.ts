@@ -19,6 +19,7 @@ export function addExportsToBarrel(options: Schema): Rule {
     if (options.root != true) {
       const moduleDir = path.dirname(options.module);
       const indexFilePath = path.join(moduleDir, '../index.ts');
+      const hasFacade = options.facade == true;
 
       const buffer = host.read(indexFilePath);
       if (!!buffer) {
@@ -31,11 +32,18 @@ export function addExportsToBarrel(options: Schema): Rule {
           true
         );
 
-        // Public API for the feature interfaces, selectors
+        // Public API for the feature interfaces, selectors, and facade
         const { fileName } = names(options.name);
         const statePath = `./lib/${options.directory}/${fileName}`;
 
         insert(host, indexFilePath, [
+          ...(hasFacade
+            ? addGlobal(
+                indexSourceFile,
+                indexFilePath,
+                `export * from '${statePath}.facade';`
+              )
+            : []),
           ...addGlobal(
             indexSourceFile,
             indexFilePath,

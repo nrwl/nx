@@ -30,6 +30,12 @@
       "description":
         "Add StoreModule.forRoot and EffectsModule.forRoot() instead of forFeature (e.g., --root)."
     },
+    "facade": {
+      "type": "boolean",
+      "default": false,
+      "description":
+        "Create a Facade class for the the Feature (e.g., --facade)."
+    },
     "onlyAddFiles": {
       "type": "boolean",
       "default": false,
