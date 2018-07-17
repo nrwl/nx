@@ -5,6 +5,8 @@ import {
   mergeWith,
   template,
   move,
+  noop,
+  filter,
   Rule,
   Tree,
   SchematicContext
@@ -36,6 +38,7 @@ export default function generateNgrxCollection(_options: Schema): Rule {
       options,
       host
     };
+
     const fileGeneration = !options.onlyEmptyRoot
       ? [generateNgrxFilesFromTemplates(options)]
       : [];
@@ -64,12 +67,15 @@ export default function generateNgrxCollection(_options: Schema): Rule {
 // ********************************************************
 
 /**
- * Generate 'feature' scaffolding: actions, reducer, effects, interfaces, selectors
+ * Generate 'feature' scaffolding: actions, reducer, effects, interfaces, selectors, facade
  */
 function generateNgrxFilesFromTemplates(options: Schema) {
   const name = options.name;
   const moduleDir = path.dirname(options.module);
+  const excludeFacade = path => path.match(/^((?!facade).)*$/);
+
   const templateSource = apply(url('./files'), [
+    !options.facade ? filter(excludeFacade) : noop(),
     template({ ...options, tmpl: '', ...names(name) }),
     move(moduleDir)
   ]);

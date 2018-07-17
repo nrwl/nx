@@ -5,17 +5,17 @@ import { <%= className %>Action, <%= className %>ActionTypes } from './<%= fileN
  *  - <%= className %>State, and
  *  - <%= propertyName %>Reducer
  *
- *  Note: remove if already defined in another module
+ *  Note: replace if already defined in another module
  */
 
 /* tslint:disable:no-empty-interface */
-export interface <%= className %> {
+export interface Entity {
 };
 
 export interface <%= className %>State {
-  list        : <%= className %>[];   // analogous to a sql normalized table
-  loaded      : boolean;              // has the <%= className %> list been loaded
+  list        : Entity[];             // list of <%= className %>; analogous to a sql normalized table
   selectedId ?: string | number;      // which <%= className %> record has been selected
+  loaded      : boolean;              // has the <%= className %> list been loaded
   error      ?: any;                  // last none error (if any)
 };
 

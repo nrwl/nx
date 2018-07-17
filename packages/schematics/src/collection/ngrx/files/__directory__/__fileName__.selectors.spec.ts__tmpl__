@@ -1,4 +1,4 @@
-import { <%= className %>, <%= className %>State  } from './<%= fileName %>.reducer';
+import { Entity, <%= className %>State  } from './<%= fileName %>.reducer';
 import { <%= propertyName %>Query } from './<%= fileName %>.selectors';
 
 describe('<%= className %> Selectors', () => {
@@ -8,7 +8,7 @@ describe('<%= className %> Selectors', () => {
   let storeState;
 
   beforeEach(() => {
-     const create<%= className %> = ( id:string, name = '' ): <%= className %> => ({
+     const create<%= className %> = ( id:string, name = '' ): Entity => ({
        id,
        name: name || `name-${id}`
      });
@@ -36,7 +36,7 @@ describe('<%= className %> Selectors', () => {
       expect(selId).toBe('PRODUCT-BBB');
     });
 
-    it('getSelected<%= className %>() should return the selected <%= className %>', () => {
+    it('getSelected<%= className %>() should return the selected Entity', () => {
       const result = <%= propertyName %>Query.getSelected<%= className %>(storeState);
       const selId = get<%= className %>Id(result);
 
