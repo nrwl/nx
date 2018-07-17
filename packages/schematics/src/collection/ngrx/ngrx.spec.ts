@@ -64,6 +64,24 @@ describe('ngrx', () => {
       appTree
     );
 
+    [
+      '/apps/myapp/src/app/+state/app.actions.ts',
+      '/apps/myapp/src/app/+state/app.effects.ts',
+      '/apps/myapp/src/app/+state/app.effects.spec.ts',
+      '/apps/myapp/src/app/+state/app.reducer.ts',
+      '/apps/myapp/src/app/+state/app.reducer.spec.ts',
+      '/apps/myapp/src/app/+state/app.selectors.ts',
+      '/apps/myapp/src/app/+state/app.selectors.spec.ts'
+    ].forEach(fileName => {
+      expect(tree.exists(fileName)).toBeTruthy();
+    });
+
+    // Since we did not include the `--facade` option
+    expect(tree.exists('/apps/myapp/src/app/+state/app.facade.ts')).toBeFalsy();
+    expect(
+      tree.exists('/apps/myapp/src/app/+state/app.facade.spec.ts')
+    ).toBeFalsy();
+
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
 
     expect(appModule).toContain(`import { NxModule } from '@nrwl/nx';`);
@@ -74,6 +92,33 @@ describe('ngrx', () => {
 
     expect(appModule).toContain('app: appReducer');
     expect(appModule).toContain('initialState : { app : appInitialState }');
+  });
+
+  it('should add facade to root', () => {
+    const tree = schematicRunner.runSchematic(
+      'ngrx',
+      {
+        name: 'app',
+        module: 'apps/myapp/src/app/app.module.ts',
+        root: true,
+        facade: true
+      },
+      appTree
+    );
+
+    const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
+
+    expect(appModule).toContain(`import { NxModule } from '@nrwl/nx';`);
+    expect(appModule).toContain('NxModule.forRoot');
+    expect(appModule).toContain('StoreModule.forRoot');
+    expect(appModule).toContain('EffectsModule.forRoot');
+    expect(appModule).toContain('!environment.production ? [storeFreeze] : []');
+
+    // Do not add Effects file to providers; already registered in EffectsModule
+    expect(appModule).toContain('providers: [AppFacade]');
+
+    expect(appModule).toContain('app: appReducer');
+    expect(appModule).toContain('initialState : { app : appInitialState }');
 
     [
       '/apps/myapp/src/app/+state/app.actions.ts',
@@ -81,7 +126,10 @@ describe('ngrx', () => {
       '/apps/myapp/src/app/+state/app.effects.spec.ts',
       '/apps/myapp/src/app/+state/app.reducer.ts',
       '/apps/myapp/src/app/+state/app.reducer.spec.ts',
-      '/apps/myapp/src/app/+state/app.selectors.ts'
+      '/apps/myapp/src/app/+state/app.facade.ts',
+      '/apps/myapp/src/app/+state/app.facade.spec.ts',
+      '/apps/myapp/src/app/+state/app.selectors.ts',
+      '/apps/myapp/src/app/+state/app.selectors.spec.ts'
     ].forEach(fileName => {
       expect(tree.exists(fileName)).toBeTruthy();
     });
@@ -158,7 +206,8 @@ describe('ngrx', () => {
       {
         name: 'state',
         module: 'apps/myapp/src/app/app.module.ts',
-        onlyAddFiles: true
+        onlyAddFiles: true,
+        facade: true
       },
       appTree
     );
@@ -171,8 +220,12 @@ describe('ngrx', () => {
 
     [
       '/apps/myapp/src/app/+state/state.effects.ts',
+      '/apps/myapp/src/app/+state/state.facade.ts',
       '/apps/myapp/src/app/+state/state.reducer.ts',
-      '/apps/myapp/src/app/+state/state.selectors.ts'
+      '/apps/myapp/src/app/+state/state.selectors.ts',
+      '/apps/myapp/src/app/+state/state.effects.spec.ts',
+      '/apps/myapp/src/app/+state/state.facade.spec.ts',
+      '/apps/myapp/src/app/+state/state.selectors.spec.ts'
     ].forEach(fileName => {
       expect(tree.exists(fileName)).toBeTruthy();
     });
@@ -209,18 +262,40 @@ describe('ngrx', () => {
   });
 
   describe('code generation', () => {
-    it('should scaffold the ngrx "user" files', () => {
+    it('should scaffold the ngrx "user" files without a facade', () => {
       const appConfig = getAppConfig();
       const hasFile = file => expect(tree.exists(file)).toBeTruthy();
-      const tree = buildNgrxTree(appConfig);
+      const missingFile = file => expect(tree.exists(file)).not.toBeTruthy();
       const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+
+      const tree = buildNgrxTree(appConfig);
 
       hasFile(`${statePath}/user.actions.ts`);
       hasFile(`${statePath}/user.effects.ts`);
       hasFile(`${statePath}/user.effects.spec.ts`);
+      missingFile(`${statePath}/user.facade.ts`);
+      missingFile(`${statePath}/user.facade.spec.ts`);
       hasFile(`${statePath}/user.reducer.ts`);
       hasFile(`${statePath}/user.reducer.spec.ts`);
       hasFile(`${statePath}/user.selectors.ts`);
+    });
+
+    it('should scaffold the ngrx "user" files WITH a facade', () => {
+      const appConfig = getAppConfig();
+      const hasFile = file => expect(tree.exists(file)).toBeTruthy();
+      const tree = buildNgrxTree(appConfig, 'user', true);
+      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+
+      hasFile(`${statePath}/user.actions.ts`);
+      hasFile(`${statePath}/user.effects.ts`);
+      hasFile(`${statePath}/user.facade.ts`);
+      hasFile(`${statePath}/user.reducer.ts`);
+      hasFile(`${statePath}/user.selectors.ts`);
+
+      hasFile(`${statePath}/user.reducer.spec.ts`);
+      hasFile(`${statePath}/user.effects.spec.ts`);
+      hasFile(`${statePath}/user.selectors.spec.ts`);
+      hasFile(`${statePath}/user.facade.spec.ts`);
     });
 
     it('should build the ngrx actions', () => {
@@ -254,6 +329,23 @@ describe('ngrx', () => {
       [
         `import { UsersState } from './users.reducer'`,
         `export const usersQuery`
+      ].forEach(text => {
+        expect(content).toContain(text);
+      });
+    });
+
+    it('should build the ngrx facade', () => {
+      const appConfig = getAppConfig();
+      const includeFacade = true;
+      const tree = buildNgrxTree(appConfig, 'users', includeFacade);
+
+      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+      const content = getFileContent(tree, `${statePath}/users.facade.ts`);
+
+      [
+        `import { UsersState } from './users.reducer'`,
+        `import { usersQuery } from './users.selectors'`,
+        `export class UsersFacade`
       ].forEach(text => {
         expect(content).toContain(text);
       });
@@ -302,7 +394,7 @@ describe('ngrx', () => {
     });
   });
 
-  describe('spec test', () => {
+  describe('unit tests', () => {
     it('should produce proper specs for the ngrx reducer', () => {
       const appConfig = getAppConfig();
       const tree = buildNgrxTree(appConfig);
@@ -316,28 +408,45 @@ describe('ngrx', () => {
       );
     });
 
-    it('should update the barrel API with exports for ngrx selector, and reducer', () => {
+    it('should update the barrel API with exports for ngrx facade, selector, and reducer', () => {
       appTree = createLib(appTree, 'flights');
       let libConfig = getLibConfig();
       let tree = schematicRunner.runSchematic(
         'ngrx',
         {
           name: 'super-users',
-          module: libConfig.module
+          module: libConfig.module,
+          facade: true
         },
         appTree
       );
 
       const barrel = tree.readContent(libConfig.barrel);
       expect(barrel).toContain(
-        `export * from './lib/+state/super-users.selectors';`
-      );
-      expect(barrel).toContain(
-        `export * from './lib/+state/super-users.reducer';`
+        `export * from './lib/+state/super-users.facade';`
       );
     });
 
-    it('should produce proper specs for the ngrx reducer for a name with a dash', () => {
+    it('should not update the barrel API with a facade', () => {
+      appTree = createLib(appTree, 'flights');
+      let libConfig = getLibConfig();
+      let tree = schematicRunner.runSchematic(
+        'ngrx',
+        {
+          name: 'super-users',
+          module: libConfig.module,
+          facade: false
+        },
+        appTree
+      );
+
+      const barrel = tree.readContent(libConfig.barrel);
+      expect(barrel).not.toContain(
+        `export * from './lib/+state/super-users.facade';`
+      );
+    });
+
+    it('should produce proper tests for the ngrx reducer for a name with a dash', () => {
       const appConfig = getAppConfig();
       const tree = schematicRunner.runSchematic(
         'ngrx',
@@ -362,13 +471,15 @@ describe('ngrx', () => {
 
   function buildNgrxTree(
     appConfig: AppConfig,
-    featureName: string = 'user'
+    featureName: string = 'user',
+    withFacade = false
   ): UnitTestTree {
     return schematicRunner.runSchematic(
       'ngrx',
       {
         name: featureName,
-        module: appConfig.appModule
+        module: appConfig.appModule,
+        facade: withFacade
       },
       appTree
     );

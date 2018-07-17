@@ -1,12 +1,12 @@
 import { <%= className %>Loaded } from './<%= fileName %>.actions';
-import { <%= className %>State, <%= className %>, initialState, <%= propertyName %>Reducer } from './<%= fileName %>.reducer';
+import { <%= className %>State, Entity, initialState, <%= propertyName %>Reducer } from './<%= fileName %>.reducer';
 
 describe('<%= className %> Reducer', () => {
   const get<%= className %>Id = (it) => it['id'];
   let create<%= className %>;
 
   beforeEach(() => {
-     create<%= className %> = ( id:string, name = '' ): <%= className %> => ({
+     create<%= className %> = ( id:string, name = '' ): Entity => ({
        id,
        name: name || `name-${id}`
      });

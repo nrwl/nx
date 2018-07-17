@@ -35,10 +35,12 @@ export function addImportsToModule(context: RequestContext): Rule {
     const pathPrefix = `${dir}/${toFileName(context.featureName)}`;
     const reducerPath = `${pathPrefix}.reducer`;
     const effectsPath = `${pathPrefix}.effects`;
+    const facadePath = `${pathPrefix}.facade`;
 
     const featureName = `${toPropertyName(context.featureName)}`;
     const reducerName = `${toPropertyName(context.featureName)}Reducer`;
     const effectsName = `${toClassName(context.featureName)}Effects`;
+    const facadeName = `${toClassName(context.featureName)}Facade`;
     const reducerImports = `initialState as ${featureName}InitialState, ${reducerName}`;
 
     const storeReducers = `{ ${featureName}: ${reducerName} }`;
@@ -90,13 +92,19 @@ export function addImportsToModule(context: RequestContext): Rule {
           : [])
       ]);
     } else {
-      const common = [
+      let common = [
         addImport.apply(this, storeModule),
         addImport.apply(this, effectsModule),
         addImport(reducerImports, reducerPath),
-        addImport(effectsName, effectsPath),
-        ...addProviderToModule(source, modulePath, `${effectsName}`)
+        addImport(effectsName, effectsPath)
       ];
+      if (context.options.facade) {
+        common = [
+          ...common,
+          addImport(facadeName, facadePath),
+          ...addProviderToModule(source, modulePath, `${facadeName}`)
+        ];
+      }
 
       if (context.options.root) {
         insert(host, modulePath, [
