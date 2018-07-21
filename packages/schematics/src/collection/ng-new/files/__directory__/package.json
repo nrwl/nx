@@ -42,15 +42,15 @@
     "@nrwl/nx": "<%= nxVersion %>",
     "@ngrx/effects": "<%= ngrxVersion %>",
     "@ngrx/router-store": "<%= routerStoreVersion %>",
-    "@ngrx/store": "<%= ngrxVersion %>",
-    "@ngrx/store-devtools": "<%= ngrxVersion %>",
-    "ngrx-store-freeze": "<%= ngrxStoreFreezeVersion %>"
+    "@ngrx/store": "<%= ngrxVersion %>"
   },
   "devDependencies": {
     "@angular/cli": "<%= angularCliVersion %>",
     "@angular/compiler-cli": "<%= angularVersion %>",
     "@angular/language-service": "<%= angularVersion %>",
     "@angular-devkit/build-angular": "~0.6.1",
+    "@ngrx/store-devtools": "<%= ngrxVersion %>",
+    "ngrx-store-freeze": "<%= ngrxStoreFreezeVersion %>",
     "@nrwl/schematics": "<%= schematicsVersion %>",
     "jasmine-marbles": "<%= jasmineMarblesVersion %>",
     "@types/jasmine": "~2.8.6",

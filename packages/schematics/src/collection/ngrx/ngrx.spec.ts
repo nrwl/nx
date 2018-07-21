@@ -192,7 +192,8 @@ describe('ngrx', () => {
     expect(packageJson.dependencies['@ngrx/store']).toBeDefined();
     expect(packageJson.dependencies['@ngrx/router-store']).toBeDefined();
     expect(packageJson.dependencies['@ngrx/effects']).toBeDefined();
-    expect(packageJson.dependencies['ngrx-store-freeze']).toBeDefined();
+    expect(packageJson.devDependencies['@ngrx/store-devtools']).toBeDefined();
+    expect(packageJson.devDependencies['ngrx-store-freeze']).toBeDefined();
   });
 
   it('should error when no module is provided', () => {

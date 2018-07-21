@@ -90,11 +90,11 @@ function updatePackageJson() {
     if (!packageJson.dependencies['@ngrx/effects']) {
       packageJson.dependencies['@ngrx/effects'] = ngrxVersion;
     }
-    if (!packageJson.dependencies['@ngrx/store-devtools']) {
-      packageJson.dependencies['@ngrx/store-devtools'] = ngrxVersion;
+    if (!packageJson.devDependencies['@ngrx/store-devtools']) {
+      packageJson.devDependencies['@ngrx/store-devtools'] = ngrxVersion;
     }
-    if (!packageJson.dependencies['ngrx-store-freeze']) {
-      packageJson.dependencies['ngrx-store-freeze'] = ngrxStoreFreezeVersion;
+    if (!packageJson.devDependencies['ngrx-store-freeze']) {
+      packageJson.devDependencies['ngrx-store-freeze'] = ngrxStoreFreezeVersion;
     }
     if (!packageJson.dependencies['rxjs-compat']) {
       packageJson.dependencies['rxjs-compat'] = rxjsVersion;

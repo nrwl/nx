@@ -11,6 +11,9 @@ export function addNgRxToPackageJson(): Rule {
     if (!packageJson['dependencies']) {
       packageJson['dependencies'] = {};
     }
+    if (!packageJson['devDependencies']) {
+      packageJson['devDependencies'] = {};
+    }
 
     if (!packageJson['dependencies']['@ngrx/store']) {
       packageJson['dependencies']['@ngrx/store'] = ngrxVersion;
@@ -21,14 +24,16 @@ export function addNgRxToPackageJson(): Rule {
     if (!packageJson['dependencies']['@ngrx/entity']) {
       packageJson['dependencies']['@ngrx/entity'] = ngrxVersion;
     }
-    if (!packageJson['dependencies']['@ngrx/store-devtools']) {
-      packageJson['dependencies']['@ngrx/store-devtools'] = ngrxVersion;
+    if (!packageJson['devDependencies']['@ngrx/store-devtools']) {
+      packageJson['devDependencies']['@ngrx/store-devtools'] = ngrxVersion;
     }
     if (!packageJson['dependencies']['@ngrx/router-store']) {
       packageJson['dependencies']['@ngrx/router-store'] = routerStoreVersion;
     }
-    if (!packageJson['dependencies']['ngrx-store-freeze']) {
-      packageJson['dependencies']['ngrx-store-freeze'] = ngrxStoreFreezeVersion;
+    if (!packageJson['devDependencies']['ngrx-store-freeze']) {
+      packageJson['devDependencies'][
+        'ngrx-store-freeze'
+      ] = ngrxStoreFreezeVersion;
     }
 
     return packageJson;
