@@ -109,7 +109,6 @@ describe('DataPersistence', () => {
 
       beforeEach(() => {
         TestBed.configureTestingModule({
-          providers: [TodoEffects],
           imports: [EffectsModule.forRoot([TodoEffects])]
         });
       });
@@ -152,7 +151,6 @@ describe('DataPersistence', () => {
 
       beforeEach(() => {
         TestBed.configureTestingModule({
-          providers: [TodoEffects],
           imports: [EffectsModule.forRoot([TodoEffects])]
         });
       });
@@ -206,7 +204,6 @@ describe('DataPersistence', () => {
 
       beforeEach(() => {
         TestBed.configureTestingModule({
-          providers: [TodoEffects],
           imports: [EffectsModule.forRoot([TodoEffects])]
         });
       });
