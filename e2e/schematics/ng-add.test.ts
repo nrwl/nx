@@ -26,7 +26,9 @@ describe('Nrwl Convert to Nx Workspace', () => {
     expect(packageJson.dependencies['@ngrx/store']).not.toBeDefined();
     expect(packageJson.dependencies['@ngrx/effects']).not.toBeDefined();
     expect(packageJson.dependencies['@ngrx/router-store']).not.toBeDefined();
-    expect(packageJson.dependencies['@ngrx/store-devtools']).not.toBeDefined();
+    expect(
+      packageJson.devDependencies['@ngrx/store-devtools']
+    ).not.toBeDefined();
 
     // update tsconfig.json
     const tsconfigJson = readJson('tsconfig.json');
@@ -94,7 +96,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     expect(updatedPackageJson.dependencies['@ngrx/effects']).toBeDefined();
     expect(updatedPackageJson.dependencies['@ngrx/router-store']).toBeDefined();
     expect(
-      updatedPackageJson.dependencies['@ngrx/store-devtools']
+      updatedPackageJson.devDependencies['@ngrx/store-devtools']
     ).toBeDefined();
     expect(updatedPackageJson.dependencies['rxjs-compat']).toBeDefined();
     expect(updatedPackageJson.devDependencies['@angular/cli']).toBeDefined();
@@ -241,7 +243,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     existingPackageJson.dependencies['@ngrx/store'] = ngrxVersion;
     existingPackageJson.dependencies['@ngrx/effects'] = ngrxVersion;
     existingPackageJson.dependencies['@ngrx/router-store'] = ngrxVersion;
-    existingPackageJson.dependencies['@ngrx/store-devtools'] = ngrxVersion;
+    existingPackageJson.devDependencies['@ngrx/store-devtools'] = ngrxVersion;
     updateFile('package.json', JSON.stringify(existingPackageJson, null, 2));
     // run the command
     runCLI('add @nrwl/schematics --npmScope projscope --skip-install');
@@ -254,7 +256,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     expect(packageJson.dependencies['@ngrx/store']).toEqual(ngrxVersion);
     expect(packageJson.dependencies['@ngrx/effects']).toEqual(ngrxVersion);
     expect(packageJson.dependencies['@ngrx/router-store']).toEqual(ngrxVersion);
-    expect(packageJson.dependencies['@ngrx/store-devtools']).toEqual(
+    expect(packageJson.devDependencies['@ngrx/store-devtools']).toEqual(
       ngrxVersion
     );
   });
