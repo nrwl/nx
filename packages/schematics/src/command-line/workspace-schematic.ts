@@ -129,8 +129,10 @@ function executeSchematic(
   host: Observable<FileSystemTree>,
   engine: SchematicEngine<any, object>
 ) {
-  const dryRunSink = new DryRunSink(rootDirectory, true);
   let error = false;
+  const fsSink = new FileSystemSink(rootDirectory, true);
+  const dryRunSink = new DryRunSink(rootDirectory, true);
+
   dryRunSink.reporter.subscribe((event: any) => {
     const eventPath = event.path.startsWith('/')
       ? event.path.substr(1)
@@ -161,8 +163,6 @@ function executeSchematic(
         break;
     }
   });
-
-  const fsSink = new FileSystemSink(rootDirectory, true);
 
   schematic
     .call(options, host as any)

@@ -16,6 +16,10 @@
       "description": "Skip formatting files",
       "type": "boolean",
       "default": false
+    },
+    "directory": {
+      "type": "string",
+      "description": "A container directory for the library that will be created."
     }
   },
   "required": []

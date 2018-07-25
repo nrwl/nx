@@ -6,6 +6,10 @@
     "name": {
       "type": "string",
       "description": "Library name"
+    },
+    "directory": {
+      "type": "string",
+      "description": "The container directory for the '<%= name %>' library that will be created."
     }
   },
   "required": [

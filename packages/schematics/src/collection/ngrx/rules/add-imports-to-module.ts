@@ -16,8 +16,12 @@ import { RequestContext } from './request-context';
 
 export function addImportsToModule(context: RequestContext): Rule {
   return (host: Tree) => {
-    if (!host.exists(context.options.module)) {
-      throw new Error('Specified module does not exist');
+    if (!context.options.module) {
+      throw new Error(`Required option 'module' was not specified`);
+    } else if (!host.exists(context.options.module)) {
+      throw new Error(
+        `Specified module '${context.options.module}' does not exist`
+      );
     }
     const modulePath = context.options.module;
     const sourceText = host.read(modulePath)!.toString('utf-8');
