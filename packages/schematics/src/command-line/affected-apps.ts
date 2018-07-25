@@ -265,7 +265,8 @@ class DepsCalculator {
 
   private createImplicitDepsFromE2eToApps() {
     this.projects.filter(p => p.type === ProjectType.e2e).forEach(e2e => {
-      const appName = e2e.name.substring(0, e2e.name.length - 4);
+      // e.g. 'myApp:serve' => 'myApp'
+      const appName = e2e.architect.e2e.options.devServerTarget.split(':')[0];
       if (
         this.projects.find(
           a => a.name === appName && a.type === ProjectType.app
