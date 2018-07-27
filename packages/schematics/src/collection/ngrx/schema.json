@@ -20,7 +20,6 @@
     },
     "module": {
       "type": "string",
-      "default": "",
       "description":
         "Path to ngModule; host directory will contain the new '+state' directory (e.g., libs/comments/src/lib/comments-state.module.ts)."
     },

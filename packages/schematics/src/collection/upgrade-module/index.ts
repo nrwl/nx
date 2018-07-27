@@ -25,7 +25,7 @@ import {
   readBootstrapInfo,
   removeFromNgModule
 } from '../../utils/ast-utils';
-import { insertImport } from '@schematics/angular/utility/route-utils';
+import { insertImport } from '@schematics/angular/utility/ast-utils';
 import { Schema } from './schema';
 import { addUpgradeToPackageJson } from '../../utils/common';
 import { formatFiles } from '../../utils/rules/format-files';
