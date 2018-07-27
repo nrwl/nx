@@ -1,6 +1,6 @@
 import { Rule, Tree } from '@angular-devkit/schematics';
 import { Change } from '@schematics/angular/utility/change';
-import { insertImport } from '@schematics/angular/utility/route-utils';
+import { insertImport } from '@schematics/angular/utility/ast-utils';
 import * as ts from 'typescript';
 import {
   toClassName,
@@ -16,9 +16,6 @@ import { RequestContext } from './request-context';
 
 export function addImportsToModule(context: RequestContext): Rule {
   return (host: Tree) => {
-    if (!host.exists(context.options.module)) {
-      throw new Error('Specified module does not exist');
-    }
     const modulePath = context.options.module;
     const sourceText = host.read(modulePath)!.toString('utf-8');
     const source = ts.createSourceFile(

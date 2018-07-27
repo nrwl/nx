@@ -9,7 +9,7 @@ import {
   Tree,
   url
 } from '@angular-devkit/schematics';
-import { insertImport } from '@schematics/angular/utility/route-utils';
+import { insertImport } from '@schematics/angular/utility/ast-utils';
 import * as path from 'path';
 import * as ts from 'typescript';
 

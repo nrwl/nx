@@ -254,11 +254,25 @@ describe('ngrx', () => {
       schematicRunner.runSchematic(
         'ngrx',
         {
-          name: 'state'
+          name: 'state',
+          module: ''
         },
         appTree
       )
-    ).toThrow('Specified module does not exist');
+    ).toThrow('The required --module option must be passed');
+  });
+
+  it('should error the module could not be found', () => {
+    expect(() =>
+      schematicRunner.runSchematic(
+        'ngrx',
+        {
+          name: 'state',
+          module: 'does-not-exist.ts'
+        },
+        appTree
+      )
+    ).toThrow('Path does not exist: does-not-exist.ts');
   });
 
   describe('code generation', () => {

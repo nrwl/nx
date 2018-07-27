@@ -32,6 +32,13 @@ import { formatFiles } from '../../utils/rules/format-files';
 export default function generateNgrxCollection(_options: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(_options);
+
+    if (!options.module) {
+      throw new Error(`The required --module option must be passed`);
+    } else if (!host.exists(options.module)) {
+      throw new Error(`Path does not exist: ${options.module}`);
+    }
+
     const requestContext: RequestContext = {
       featureName: options.name,
       moduleDir: path.dirname(options.module),
