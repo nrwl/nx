@@ -1,4 +1,4 @@
-import {Directive, ElementRef, Injector} from '@angular/core';
+import {Component, ElementRef, Injector} from '@angular/core';
 import {setAngularJSGlobal, UpgradeComponent, downgradeComponent, UpgradeModule} from '@angular/upgrade/static';
 <% if (router) { %>
 import {Router} from '@angular/router';
@@ -20,7 +20,10 @@ angular.module('downgraded', []).
 
 <% if (angularJsCmpSelector) { %>
 // all components upgraded from AngularJS to Angular go here
-@Directive({selector: '<%= angularJsCmpSelector %>'})
+@Component({
+  selector: '<%= angularJsCmpSelector %>',
+  template: '',
+})
 export class <%= className %>Component extends UpgradeComponent {
   constructor(ref: ElementRef, inj: Injector) {
     super('<%= angularJsCmpSelector %>', ref, inj);
