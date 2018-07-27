@@ -280,8 +280,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
       extends: './tsconfig.app.json',
       compilerOptions: {
         outDir: '../../dist/out-tsc/apps/proj-server',
-        baseUrl: '.',
-        module: 'commonjs'
+        baseUrl: '.'
       },
       angularCompilerOptions: {
         entryModule: 'src/app/app.server.module#AppServerModule'

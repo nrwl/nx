@@ -20,7 +20,6 @@ import {
   routerStoreVersion,
   schematicsVersion,
   jasmineMarblesVersion,
-  ngrxSchematicsVersion,
   rxjsVersion
 } from '../../lib-versions';
 import * as fs from 'fs';
@@ -46,7 +45,7 @@ import { from } from 'rxjs';
 import { tap, mapTo } from 'rxjs/operators';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { getAppModulePath } from '@schematics/angular/utility/ng-ast-utils';
-import { insertImport } from '@schematics/angular/utility/route-utils';
+import { insertImport } from '@schematics/angular/utility/ast-utils';
 import { InsertChange } from '@schematics/angular/utility/change';
 
 function updatePackageJson() {

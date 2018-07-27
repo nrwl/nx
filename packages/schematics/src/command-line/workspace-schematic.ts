@@ -5,7 +5,6 @@ import * as path from 'path';
 import { copySync } from 'fs-extra';
 import {
   FileSystemEngineHost,
-  FileSystemHost,
   NodeModulesEngineHost,
   validateOptionsWithSchema
 } from '@angular-devkit/schematics/tools';
@@ -13,16 +12,17 @@ import { BuiltinTaskExecutor } from '@angular-devkit/schematics/tasks/node';
 import {
   CollectionDescription,
   EngineHost,
-  FileSystemSink,
-  FileSystemTree,
   RuleFactory,
   Schematic,
   SchematicDescription,
   SchematicEngine,
   Tree,
-  DryRunSink
+  DryRunSink,
+  TypedSchematicContext,
+  HostSink,
+  HostTree
 } from '@angular-devkit/schematics';
-import { of, Observable } from 'rxjs';
+import { of } from 'rxjs';
 import { concat, concatMap, ignoreElements, map } from 'rxjs/operators';
 import { Url } from 'url';
 
@@ -30,6 +30,8 @@ import * as yargsParser from 'yargs-parser';
 import { CoreSchemaRegistry } from '@angular-devkit/core/src/json/schema';
 import { standardFormats } from '@angular-devkit/schematics/src/formats';
 import * as appRoot from 'app-root-path';
+import { virtualFs, normalize } from '@angular-devkit/core';
+import { NodeJsSyncHost } from '@angular-devkit/core/node';
 
 const rootDirectory = appRoot.path;
 
@@ -117,7 +119,10 @@ function prepareExecutionContext(outDir: string, schematicName: string) {
   const schematic = engine
     .createCollection('workspace-schematics')
     .createSchematic(schematicName);
-  const host = of(new FileSystemTree(new FileSystemHost(rootDirectory)));
+  const host = new virtualFs.ScopedHost(
+    new NodeJsSyncHost(),
+    normalize(rootDirectory)
+  );
   return { schematic, host, engine };
 }
 
@@ -126,10 +131,10 @@ function executeSchematic(
   schematicName: string,
   options: { [p: string]: any },
   schematic: Schematic<any, any>,
-  host: Observable<FileSystemTree>,
+  host: virtualFs.Host,
   engine: SchematicEngine<any, object>
 ) {
-  const dryRunSink = new DryRunSink(rootDirectory, true);
+  const dryRunSink = new DryRunSink(host, true);
   let error = false;
   dryRunSink.reporter.subscribe((event: any) => {
     const eventPath = event.path.startsWith('/')
@@ -162,10 +167,10 @@ function executeSchematic(
     }
   });
 
-  const fsSink = new FileSystemSink(rootDirectory, true);
+  const fsSink = new HostSink(host, true);
 
   schematic
-    .call(options, host as any)
+    .call(options, of(new HostTree(host)))
     .pipe(
       map((tree: any) => Tree.optimize(tree)) as any,
       concatMap((tree: any) =>

@@ -48,8 +48,8 @@
     "yargs": "^11.0.0"
   },
   "peerDependencies": {
-    "@schematics/angular": "^0.6.8",
-    "@angular-devkit/core": "^0.6.8",
-    "@angular-devkit/schematics": "^0.6.8"
+    "@schematics/angular": "^0.7.1",
+    "@angular-devkit/core": "^0.7.1",
+    "@angular-devkit/schematics": "^0.7.1"
   }
 }

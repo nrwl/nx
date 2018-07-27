@@ -12,7 +12,9 @@ import { Schema } from '../schema';
 export function addExportsToBarrel(options: Schema): Rule {
   return (host: Tree) => {
     if (!host.exists(options.module)) {
-      throw new Error('Specified module does not exist');
+      throw new Error(
+        `Specified module path (${options.module}) does not exist`
+      );
     }
 
     // Only update the public barrel for feature libraries

@@ -1,5 +1,5 @@
-export const angularCliVersion = '6.0.1';
-export const angularVersion = '6.0.1';
+export const angularCliVersion = '6.1.0';
+export const angularVersion = '6.1.0';
 export const angularJsVersion = '1.6.6';
 export const ngrxVersion = '6.0.1';
 export const routerStoreVersion = '6.0.1';

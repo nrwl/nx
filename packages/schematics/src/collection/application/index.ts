@@ -9,7 +9,7 @@ import {
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as ts from 'typescript';
-import { insertImport } from '@schematics/angular/utility/route-utils';
+import { insertImport } from '@schematics/angular/utility/ast-utils';
 import {
   addImportToModule,
   addImportToTestBed,
@@ -101,7 +101,7 @@ function updateComponentTemplate(options: NormalizedSchema): Rule {
   return (host: Tree) => {
     const baseContent = `
 <div style="text-align:center">
-  <h1>Welcome to ${getNpmScope(host)}!</h1>
+  <h1>Welcome to {{title}}!</h1>
   <img width="300" src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png">
 </div>
 
@@ -239,7 +239,13 @@ export default function(schema: Schema): Rule {
     const options = normalizeOptions(host, schema);
     return chain([
       externalSchematic('@schematics/angular', 'application', {
-        ...options,
+        name: options.name,
+        inlineStyle: options.inlineStyle,
+        inlineTemplate: options.inlineTemplate,
+        prefix: options.prefix,
+        skipTests: options.skipTests,
+        style: options.style,
+        viewEncapsulation: options.viewEncapsulation,
         routing: false
       }),
 

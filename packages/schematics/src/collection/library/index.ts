@@ -9,7 +9,7 @@ import {
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';
-import { insertImport } from '@schematics/angular/utility/route-utils';
+import { insertImport } from '@schematics/angular/utility/ast-utils';
 import * as ts from 'typescript';
 import {
   addGlobal,
@@ -413,7 +413,11 @@ export default function(schema: Schema): Rule {
     }, 0);
 
     return chain([
-      externalSchematic('@schematics/angular', 'library', options),
+      externalSchematic('@schematics/angular', 'library', {
+        name: options.name,
+        prefix: options.prefix,
+        entryFile: 'index'
+      }),
       move(options.name, options.projectRoot),
       updateProject(options),
       updateKarmaConf({
