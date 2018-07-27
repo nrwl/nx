@@ -26,4 +26,4 @@ export const from<%= className %>Actions = {
   Load<%= className %>,
   <%= className %>Loaded,
   <%= className %>LoadError
-}
+};

@@ -18,6 +18,8 @@ describe('ngrx', () => {
         'generate ngrx flights --module=libs/feature-flights/src/lib/feature-flights.module.ts --collection=@nrwl/schematics'
       );
 
+      expect(runCLI('lint', { silenceError: true })).not.toContain('ERROR');
+
       expect(runCLI('build')).toContain('chunk {main} main.js,');
       expect(runCLI('test myapp --no-watch')).toContain(
         'Executed 10 of 10 SUCCESS'

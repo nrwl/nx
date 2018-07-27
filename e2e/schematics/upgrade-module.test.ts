@@ -11,7 +11,7 @@ describe('Upgrade', () => {
         'apps/myapp/src/legacy.js',
         `
       const angular = window.angular.module('legacy', []);
-      angular.component('rootLegacyCmp', {
+      angular.component('proj-root-legacy', {
         template: 'Expected Value'
       });
     `
@@ -20,7 +20,7 @@ describe('Upgrade', () => {
       updateFile(
         'apps/myapp/src/app/app.component.html',
         `
-      EXPECTED [<rootLegacyCmp></rootLegacyCmp>]
+      EXPECTED [<proj-root-legacy></proj-root-legacy>]
     `
       );
 
@@ -28,8 +28,10 @@ describe('Upgrade', () => {
 
       runCLI(
         'generate upgrade-module legacy --angularJsImport=./legacy ' +
-          '--angularJsCmpSelector=rootLegacyCmp --project=myapp'
+          '--angularJsCmpSelector=proj-root-legacy --project=myapp'
       );
+
+      expect(runCLI('lint', { silenceError: true })).not.toContain('ERROR');
 
       runCLI('build');
       runCLI('test --single-run');

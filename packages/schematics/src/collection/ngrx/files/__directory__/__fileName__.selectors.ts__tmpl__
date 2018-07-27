@@ -12,7 +12,7 @@ const getAll<%= className %> = createSelector( get<%= className %>State, getLoad
 });
 const getSelectedId = createSelector( get<%= className %>State, (state:<%= className %>State) => state.selectedId );
 const getSelected<%= className %> = createSelector( getAll<%= className %>, getSelectedId, (<%= propertyName %>, id) => {
-    let result = <%= propertyName %>.find(<%= propertyName %> => <%= propertyName %>['id'] == id);
+    const result = <%= propertyName %>.find(it => it['id'] === id);
     return result ? Object.assign({}, result) : undefined;
 });
 

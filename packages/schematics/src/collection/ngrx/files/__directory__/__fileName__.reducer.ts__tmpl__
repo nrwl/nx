@@ -7,8 +7,10 @@ import { <%= className %>Action, <%= className %>ActionTypes } from './<%= fileN
  *
  *  Note: remove if already defined in another module
  */
+
+/* tslint:disable:no-empty-interface */
 export interface <%= className %> {
-}
+};
 
 export interface <%= className %>State {
   list        : <%= className %>[];   // analogous to a sql normalized table
