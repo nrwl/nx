@@ -17,7 +17,10 @@ describe('assertWorkspaceValidity', () => {
           tags: []
         },
         'app2-e2e': {
-          tags: []
+          tags: [],
+          architect: {
+            e2e: {}
+          }
         },
         lib1: {
           tags: []

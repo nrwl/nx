@@ -215,7 +215,7 @@ export function getProjectNodes(angularJson, nxJson) {
       root: p.root,
       type:
         p.projectType === 'application'
-          ? key.endsWith('-e2e') ? ProjectType.e2e : ProjectType.app
+          ? p.architect.e2e ? ProjectType.e2e : ProjectType.app
           : ProjectType.lib,
       tags,
       architect: p.architect,

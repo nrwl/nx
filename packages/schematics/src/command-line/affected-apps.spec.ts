@@ -88,7 +88,13 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1Name-e2e',
             files: [],
             tags: [],
-            architect: {},
+            architect: {
+              e2e: {
+                options: {
+                  devServerTarget: 'app1Name:serve'
+                }
+              }
+            },
             type: ProjectType.e2e
           }
         ],
