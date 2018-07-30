@@ -364,24 +364,8 @@ describe('Command line', () => {
         'tools/schematics/custom/schema.json'
       );
 
-      const json = readJson('tools/schematics/custom/schema.json');
-      json.properties['directory'] = {
-        type: 'string',
-        description: 'lib directory'
-      };
-      updateFile('tools/schematics/custom/schema.json', JSON.stringify(json));
-
-      const indexFile = readFile('tools/schematics/custom/index.ts');
-      updateFile(
-        'tools/schematics/custom/index.ts',
-        indexFile.replace(
-          'name: schema.name',
-          'name: schema.name, directory: schema.directory'
-        )
-      );
-
       const output = runCommand(
-        'npm run workspace-schematic -- custom mylib --directory=dir'
+        'npm run workspace-schematic custom mylib -- --directory=dir'
       );
       checkFilesExist('libs/dir/mylib/src/index.ts');
       expect(output).toContain(

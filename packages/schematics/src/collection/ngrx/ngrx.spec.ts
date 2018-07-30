@@ -258,7 +258,7 @@ describe('ngrx', () => {
         },
         appTree
       )
-    ).toThrow('Specified module does not exist');
+    ).toThrow(`Required option 'module' was not specified`);
   });
 
   describe('code generation', () => {
