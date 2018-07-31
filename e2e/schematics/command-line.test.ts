@@ -175,7 +175,7 @@ describe('Command line', () => {
       );
 
       const output = runCommand(
-        'npm run workspace-schematic -- custom mylib --directory=dir'
+        'npm run workspace-schematic custom mylib -- --directory=dir'
       );
       checkFilesExist('libs/dir/mylib/src/index.ts');
       expect(output).toContain(
