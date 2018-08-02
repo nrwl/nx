@@ -254,11 +254,12 @@ describe('ngrx', () => {
       schematicRunner.runSchematic(
         'ngrx',
         {
-          name: 'state'
+          name: 'state',
+          module: 'does-not-exist.ts'
         },
         appTree
       )
-    ).toThrow('Specified module does not exist');
+    ).toThrow('Path does not exist: does-not-exist.ts');
   });
 
   describe('code generation', () => {

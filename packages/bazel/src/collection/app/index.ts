@@ -20,8 +20,10 @@ import {
 } from '../../utils/ast-utils';
 import { toFileName } from '../../utils/name-utils';
 import * as ts from 'typescript';
-import { addBootstrapToModule } from '@schematics/angular/utility/ast-utils';
-import { insertImport } from '@schematics/angular/utility/route-utils';
+import {
+  addBootstrapToModule,
+  insertImport
+} from '@schematics/angular/utility/ast-utils';
 import { addApp, readCliConfigFile } from '../../utils/fileutils';
 import { offsetFromRoot } from '../../utils/common';
 import { formatFiles } from '../../utils/rules/format-files';

@@ -9,7 +9,7 @@ import {
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';
-import { insertImport } from '@schematics/angular/utility/route-utils';
+import { insertImport } from '@schematics/angular/utility/ast-utils';
 import * as ts from 'typescript';
 import {
   addGlobal,
@@ -225,16 +225,23 @@ function updateNgPackage(options: NormalizedSchema): Rule {
   ]);
 }
 
-function updateProject(options: NormalizedSchema): Rule {
+function updateProject(options: NormalizedSchema, publishable = false): Rule {
   return (host: Tree) => {
-    // Bug in @angular-devkit/core. Cannot delete these files here.
-    // host.delete(`${options.projectRoot}/src/lib/${options.name}.service.ts`);
-    // host.delete(`${options.projectRoot}/src/lib/${options.name}.service.spec.ts`);
-    // host.delete(`${options.projectRoot}/src/lib/${options.name}.component.ts`);
-    // host.delete(`${options.projectRoot}/src/lib/${options.name}.component.spec.ts`);
+    const libRoot = `${options.projectRoot}/src/lib/`;
+
+    host.delete(path.join(libRoot, `${options.name}.service.ts`));
+    host.delete(path.join(libRoot, `${options.name}.service.spec.ts`));
+    host.delete(path.join(libRoot, `${options.name}.component.ts`));
+    host.delete(path.join(libRoot, `${options.name}.component.spec.ts`));
+
+    if (!publishable) {
+      host.delete(path.join(options.projectRoot, 'ng-package.json'));
+      host.delete(path.join(options.projectRoot, 'ng-package.prod.json'));
+      host.delete(path.join(options.projectRoot, 'package.json'));
+    }
 
     host.overwrite(
-      `${options.projectRoot}/src/lib/${options.name}.module.ts`,
+      path.join(libRoot, `${options.name}.module.ts`),
       `
       import { NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
@@ -247,7 +254,7 @@ function updateProject(options: NormalizedSchema): Rule {
       `
     );
     host.create(
-      `${options.projectRoot}/src/lib/${options.name}.module.spec.ts`,
+      path.join(libRoot, `${options.name}.module.spec.ts`),
       `
 import { async, TestBed } from '@angular/core/testing';
 import { ${options.moduleName} } from './${options.name}.module';
@@ -370,52 +377,14 @@ export default function(schema: Schema): Rule {
       throw new Error(`routing must be set`);
     }
 
-    // @angular-devkit/core doesn't allow us to delete files
-    setTimeout(() => {
-      fs.unlinkSync(
-        path.join(
-          options.projectRoot,
-          'src',
-          'lib',
-          `${options.name}.service.ts`
-        )
-      );
-      fs.unlinkSync(
-        path.join(
-          options.projectRoot,
-          'src',
-          'lib',
-          `${options.name}.service.spec.ts`
-        )
-      );
-      fs.unlinkSync(
-        path.join(
-          options.projectRoot,
-          'src',
-          'lib',
-          `${options.name}.component.ts`
-        )
-      );
-      fs.unlinkSync(
-        path.join(
-          options.projectRoot,
-          'src',
-          'lib',
-          `${options.name}.component.spec.ts`
-        )
-      );
-
-      if (!schema.publishable) {
-        fs.unlinkSync(path.join(options.projectRoot, 'ng-package.json'));
-        fs.unlinkSync(path.join(options.projectRoot, 'ng-package.prod.json'));
-        fs.unlinkSync(path.join(options.projectRoot, 'package.json'));
-      }
-    }, 0);
-
     return chain([
-      externalSchematic('@schematics/angular', 'library', options),
+      externalSchematic('@schematics/angular', 'library', {
+        name: options.name,
+        prefix: options.prefix,
+        entryFile: 'index'
+      }),
       move(options.name, options.projectRoot),
-      updateProject(options),
+      updateProject(options, schema.publishable),
       updateKarmaConf({
         projectName: options.name
       }),

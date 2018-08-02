@@ -34,7 +34,7 @@ describe('Upgrade', () => {
       expect(runCLI('lint', { silenceError: true })).not.toContain('ERROR');
 
       runCLI('build');
-      runCLI('test --single-run');
+      runCLI('test --no-watch');
     },
     1000000
   );
