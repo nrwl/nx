@@ -46,10 +46,5 @@
     "viz.js": "^1.8.1",
     "yargs-parser": "10.0.0",
     "yargs": "^11.0.0"
-  },
-  "peerDependencies": {
-    "@schematics/angular": "^0.7.1",
-    "@angular-devkit/core": "^0.7.1",
-    "@angular-devkit/schematics": "^0.7.1"
   }
 }
