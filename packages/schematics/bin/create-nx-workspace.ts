@@ -23,7 +23,7 @@ if (parsedArgs.help) {
     Options:
 
       directory             path to the workspace root directory
-      --yarn                use yarn instead of npm (default to false)
+      --yarn                use yarn (default to false)
       --bazel               use bazel instead of webpack (default to false)
 
       [ng new options]      any 'ng new' options
@@ -109,31 +109,25 @@ if (useYarn) {
   execSync('npm install --silent', { cwd: tmpDir, stdio: [0, 1, 2] });
 }
 
+const packageManagerOption = useYarn ? '--packageManager=yarn' : '';
+
 // creating the app itself
 const args = process.argv
   .slice(2)
   .filter(a => a !== '--yarn' && a !== '--bazel')
   .map(a => `"${a}"`)
   .join(' ');
-console.log(`ng new ${args} --collection=${nxTool.packageName}`);
+console.log(
+  `ng new ${args} --collection=${nxTool.packageName} ${packageManagerOption}`
+);
 execSync(
   `${path.join(
     tmpDir,
     'node_modules',
     '.bin',
     'ng'
-  )} new ${args} --skip-install --collection=${nxTool.packageName}`,
+  )} new ${args} --collection=${nxTool.packageName} ${packageManagerOption}`,
   {
     stdio: [0, 1, 2]
   }
 );
-
-const dir = parsedArgs.directory;
-
-const cwd = dir ? dir.split('=')[1] : projectName;
-
-if (useYarn) {
-  execSync(`yarn install`, { stdio: [0, 1, 2], cwd });
-} else {
-  execSync(`npm install`, { stdio: [0, 1, 2], cwd });
-}

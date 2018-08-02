@@ -34,6 +34,10 @@
       "default": false,
       "alias": "g"
     },
+    "packageManager": {
+      "type": "string",
+      "description": "Package manager used in the project."
+    },
     "commit": {
       "description": "Initial repository commit information.",
       "oneOf": [
