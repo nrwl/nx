@@ -1,10 +1,6 @@
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
-import { Tree, VirtualTree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '../../utils/testing-utils';
-import { getFileContent } from '@schematics/angular/utility/test';
-import * as stripJsonComments from 'strip-json-comments';
-import { readJsonInTree } from '../../utils/ast-utils';
+import { Tree } from '@angular-devkit/schematics';
 
 describe('app', () => {
   const schematicRunner = new SchematicTestRunner(
@@ -62,5 +58,28 @@ module.exports = () => {
 };
 `
     );
+  });
+
+  it('should not set package manager by default', () => {
+    const treeNoPackages = schematicRunner.runSchematic(
+      'ng-new',
+      { name: 'proj' },
+      projectTree
+    );
+    expect(
+      JSON.parse(treeNoPackages.readContent('/proj/angular.json')).cli
+        .packageManager
+    ).toBeUndefined();
+  });
+
+  it('should set package manager when provided', () => {
+    const tree = schematicRunner.runSchematic(
+      'ng-new',
+      { name: 'proj', packageManager: 'yarn' },
+      projectTree
+    );
+    expect(
+      JSON.parse(tree.readContent('/proj/angular.json')).cli.packageManager
+    ).toEqual('yarn');
   });
 });

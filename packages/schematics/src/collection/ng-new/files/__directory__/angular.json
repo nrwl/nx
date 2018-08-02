@@ -8,6 +8,7 @@
       "typescriptMismatch": false,
       "versionMismatch": false
     },
-    "defaultCollection": "@nrwl/schematics"
+    "defaultCollection": "@nrwl/schematics"<% if(packageManager) { %>,<% } %>
+    <% if(packageManager) { %>"packageManager": "<%= packageManager %>"<% } %>
   }
 }
