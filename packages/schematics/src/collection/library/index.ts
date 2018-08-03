@@ -381,7 +381,9 @@ export default function(schema: Schema): Rule {
       externalSchematic('@schematics/angular', 'library', {
         name: options.name,
         prefix: options.prefix,
-        entryFile: 'index'
+        entryFile: 'index',
+        skipPackageJson: !options.publishable,
+        skipTsConfig: true
       }),
       move(options.name, options.projectRoot),
       updateProject(options),
