@@ -17,10 +17,8 @@ import {
   ngrxVersion,
   nxVersion,
   prettierVersion,
-  routerStoreVersion,
   schematicsVersion,
-  jasmineMarblesVersion,
-  rxjsVersion
+  jasmineMarblesVersion
 } from '../../lib-versions';
 import * as fs from 'fs';
 import * as ts from 'typescript';
@@ -84,7 +82,7 @@ function updatePackageJson() {
       packageJson.dependencies['@ngrx/store'] = ngrxVersion;
     }
     if (!packageJson.dependencies['@ngrx/router-store']) {
-      packageJson.dependencies['@ngrx/router-store'] = routerStoreVersion;
+      packageJson.dependencies['@ngrx/router-store'] = ngrxVersion;
     }
     if (!packageJson.dependencies['@ngrx/effects']) {
       packageJson.dependencies['@ngrx/effects'] = ngrxVersion;
@@ -94,9 +92,6 @@ function updatePackageJson() {
     }
     if (!packageJson.devDependencies['ngrx-store-freeze']) {
       packageJson.devDependencies['ngrx-store-freeze'] = ngrxStoreFreezeVersion;
-    }
-    if (!packageJson.dependencies['rxjs-compat']) {
-      packageJson.dependencies['rxjs-compat'] = rxjsVersion;
     }
     if (!packageJson.devDependencies['@nrwl/schematics']) {
       packageJson.devDependencies['@nrwl/schematics'] = schematicsVersion;

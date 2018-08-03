@@ -1,9 +1,5 @@
 import { Rule } from '@angular-devkit/schematics';
-import {
-  ngrxVersion,
-  routerStoreVersion,
-  ngrxStoreFreezeVersion
-} from '../../../lib-versions';
+import { ngrxVersion, ngrxStoreFreezeVersion } from '../../../lib-versions';
 import { updateJsonInTree } from '@nrwl/schematics/src/utils/ast-utils';
 
 export function addNgRxToPackageJson(): Rule {
@@ -28,7 +24,7 @@ export function addNgRxToPackageJson(): Rule {
       packageJson['devDependencies']['@ngrx/store-devtools'] = ngrxVersion;
     }
     if (!packageJson['dependencies']['@ngrx/router-store']) {
-      packageJson['dependencies']['@ngrx/router-store'] = routerStoreVersion;
+      packageJson['dependencies']['@ngrx/router-store'] = ngrxVersion;
     }
     if (!packageJson['devDependencies']['ngrx-store-freeze']) {
       packageJson['devDependencies'][
