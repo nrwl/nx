@@ -1,4 +1,4 @@
-export const angularCliVersion = '6.1.0';
+export const angularCliVersion = '6.1.1';
 export const angularVersion = '6.1.0';
 export const angularJsVersion = '1.6.6';
 export const ngrxVersion = '6.0.1';

@@ -91,7 +91,7 @@ const nxVersion = parsedArgs.bazel
   ? '1.0.3'
   : readJsonFile(path.join(path.dirname(__dirname), 'package.json')).version;
 
-const cliVersion = parsedArgs.bazel ? '1.7.2' : '6.0.0';
+const cliVersion = parsedArgs.bazel ? '1.7.2' : '6.1.1';
 writeFileSync(
   path.join(tmpDir, 'package.json'),
   JSON.stringify({
