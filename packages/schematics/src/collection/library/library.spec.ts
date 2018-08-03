@@ -40,6 +40,26 @@ describe('lib', () => {
       expect(ngPackage.dest).toEqual('../../dist/libs/my-lib');
     });
 
+    it('should not update package.json by default', () => {
+      const tree = schematicRunner.runSchematic(
+        'lib',
+        { name: 'myLib' },
+        appTree
+      );
+      const packageJson = readJsonInTree(tree, '/package.json');
+      expect(packageJson.devDependencies).toBeUndefined();
+    });
+
+    it('should update package.json when publishable', () => {
+      const tree = schematicRunner.runSchematic(
+        'lib',
+        { name: 'myLib', publishable: true },
+        appTree
+      );
+      const packageJson = readJsonInTree(tree, '/package.json');
+      expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
+    });
+
     it('should update angular.json', () => {
       const tree = schematicRunner.runSchematic(
         'lib',
@@ -102,6 +122,17 @@ describe('lib', () => {
       expect(tree.exists(`libs/my-lib/karma.conf.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
+
+      expect(
+        tree.exists('libs/my-lib/src/lib/my-lib.component.ts')
+      ).toBeFalsy();
+      expect(
+        tree.exists('libs/my-lib/src/lib/my-lib.component.spec.ts')
+      ).toBeFalsy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.service.ts')).toBeFalsy();
+      expect(
+        tree.exists('libs/my-lib/src/lib/my-lib.service.spec.ts')
+      ).toBeFalsy();
     });
 
     it('should default the prefix to npmScope', () => {
@@ -140,6 +171,19 @@ describe('lib', () => {
       expect(
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
       ).toBeTruthy();
+
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-lib.component.ts')
+      ).toBeFalsy();
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-lib.component.spec.ts')
+      ).toBeFalsy();
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-lib.service.ts')
+      ).toBeFalsy();
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-lib.service.spec.ts')
+      ).toBeFalsy();
     });
 
     it('should update ng-package.json', () => {
@@ -183,6 +227,9 @@ describe('lib', () => {
       expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
         ['libs/my-dir/my-lib/src/index.ts']
       );
+      expect(
+        tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
+      ).toBeUndefined();
     });
   });
 
