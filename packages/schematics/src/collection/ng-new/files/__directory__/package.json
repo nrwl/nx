@@ -37,11 +37,10 @@
     "@angular/router": "<%= angularVersion %>",
     "core-js": "^2.5.4",
     "rxjs": "<%= rxjsVersion %>",
-    "rxjs-compat": "<%= rxjsVersion %>",
     "zone.js": "^0.8.26",
     "@nrwl/nx": "<%= nxVersion %>",
     "@ngrx/effects": "<%= ngrxVersion %>",
-    "@ngrx/router-store": "<%= routerStoreVersion %>",
+    "@ngrx/router-store": "<%= ngrxVersion %>",
     "@ngrx/store": "<%= ngrxVersion %>"
   },
   "devDependencies": {

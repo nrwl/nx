@@ -72,7 +72,7 @@ function updateDependencies() {
         '@angular/platform-server',
         '@angular/router'
       ],
-      '6.1.0',
+      '^6.1.0',
       false
     ),
     setDependencyVersionIfExisting(['rxjs'], '6.2.2', false),
@@ -81,20 +81,20 @@ function updateDependencies() {
       '6.0.1',
       false
     ),
-    setDependencyVersionIfExisting(['@angular/cli'], '6.1.1', true),
-    setDependencyVersionIfExisting(['codelyzer'], '~4.4.2', true),
+    setDependencyVersionIfExisting(['@angular/cli'], '6.1.2', true),
     setDependencyVersionIfExisting(
       ['@angular/compiler-cli', '@angular/language-service'],
-      '6.1.0',
+      '^6.1.0',
       true
     ),
     setDependencyVersionIfExisting(
       ['@angular-devkit/build-angular'],
-      '~0.7.1',
+      '~0.7.0',
       true
     ),
     setDependencyVersionIfExisting(['ngrx-store-freeze'], '0.2.4', true),
-    setDependencyVersionIfExisting(['@ngrx/store-devtools'], '6.0.1', true)
+    setDependencyVersionIfExisting(['@ngrx/store-devtools'], '6.0.1', true),
+    setDependencyVersionIfExisting(['typescript'], '~2.7.2', true)
   ]);
 }
 

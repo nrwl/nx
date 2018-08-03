@@ -98,7 +98,6 @@ describe('Nrwl Convert to Nx Workspace', () => {
     expect(
       updatedPackageJson.devDependencies['@ngrx/store-devtools']
     ).toBeDefined();
-    expect(updatedPackageJson.dependencies['rxjs-compat']).toBeDefined();
     expect(updatedPackageJson.devDependencies['@angular/cli']).toBeDefined();
 
     const nxJson = readJson('nx.json');

@@ -1,8 +1,7 @@
-import { Tree, callRule } from '@angular-devkit/schematics';
+import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { serializeJson } from '../../src/utils/fileutils';
 
-import * as update from './update-6-2-0';
 import * as path from 'path';
 
 describe('Update 6.2.0', () => {
@@ -25,7 +24,6 @@ describe('Update 6.2.0', () => {
           '@angular/router': '6.0.1',
           'core-js': '^2.5.4',
           rxjs: '6.0.0',
-          'rxjs-compat': '6.0.0',
           'zone.js': '^0.8.26',
           '@nrwl/nx': '6.1.0',
           '@ngrx/effects': '5.2.0',
@@ -88,17 +86,16 @@ describe('Update 6.2.0', () => {
         'affected:libs': './node_modules/.bin/nx affected:libs'
       },
       dependencies: {
-        '@angular/animations': '6.1.0',
-        '@angular/common': '6.1.0',
-        '@angular/compiler': '6.1.0',
-        '@angular/core': '6.1.0',
-        '@angular/forms': '6.1.0',
-        '@angular/platform-browser': '6.1.0',
-        '@angular/platform-browser-dynamic': '6.1.0',
-        '@angular/router': '6.1.0',
+        '@angular/animations': '^6.1.0',
+        '@angular/common': '^6.1.0',
+        '@angular/compiler': '^6.1.0',
+        '@angular/core': '^6.1.0',
+        '@angular/forms': '^6.1.0',
+        '@angular/platform-browser': '^6.1.0',
+        '@angular/platform-browser-dynamic': '^6.1.0',
+        '@angular/router': '^6.1.0',
         'core-js': '^2.5.4',
         rxjs: '6.2.2',
-        'rxjs-compat': '6.0.0',
         'zone.js': '^0.8.26',
         '@nrwl/nx': '6.1.0',
         '@ngrx/effects': '6.0.1',
@@ -106,17 +103,17 @@ describe('Update 6.2.0', () => {
         '@ngrx/router-store': '6.0.1'
       },
       devDependencies: {
-        '@angular/cli': '6.1.1',
-        '@angular/compiler-cli': '6.1.0',
-        '@angular/language-service': '6.1.0',
-        '@angular-devkit/build-angular': '~0.7.1',
+        '@angular/cli': '6.1.2',
+        '@angular/compiler-cli': '^6.1.0',
+        '@angular/language-service': '^6.1.0',
+        '@angular-devkit/build-angular': '~0.7.0',
         '@ngrx/store-devtools': '6.0.1',
         '@nrwl/schematics': '6.1.0',
         'jasmine-marbles': '0.3.1',
         '@types/jasmine': '~2.8.6',
         '@types/jasminewd2': '~2.0.3',
         '@types/node': '~8.9.4',
-        codelyzer: '~4.4.2',
+        codelyzer: '~4.2.1',
         'jasmine-core': '~2.99.1',
         'jasmine-spec-reporter': '~4.2.1',
         karma: '~2.0.0',
@@ -128,7 +125,7 @@ describe('Update 6.2.0', () => {
         protractor: '~5.3.0',
         'ts-node': '~5.0.1',
         tslint: '~5.9.1',
-        typescript: '2.7.2',
+        typescript: '~2.7.2',
         prettier: '1.10.2'
       }
     });
