@@ -10,7 +10,7 @@ export const angularCliSchema =
   './node_modules/@nrwl/schematics/src/schema.json';
 export const latestMigration = '20180507-create-nx-json';
 export const prettierVersion = '1.13.7';
-export const typescriptVersion = '2.7.2';
+export const typescriptVersion = '~2.7.2';
 export const rxjsVersion = '^6.0.0';
 export const jasmineMarblesVersion = '0.3.1';
 
