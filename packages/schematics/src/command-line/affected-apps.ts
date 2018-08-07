@@ -1,10 +1,6 @@
 import * as ts from 'typescript';
 import * as path from 'path';
-import {
-  readNxJson,
-  normalizedProjectRoot,
-  ImplicitDependencies
-} from './shared';
+import { normalizedProjectRoot, ImplicitDependencies } from './shared';
 
 export enum ProjectType {
   app = 'app',
@@ -25,6 +21,7 @@ export type ProjectNode = {
   tags: string[];
   files: string[];
   architect: { [k: string]: any };
+  implicitDependencies: string[];
 };
 export type Dependency = { projectName: string; type: DependencyType };
 
@@ -39,7 +36,7 @@ function implicitlyTouchedProjects(
   touchedFiles: string[]
 ): string[] {
   return Array.from(
-    Object.entries(implicitDependencies).reduce(
+    Object.entries(implicitDependencies.files).reduce(
       (projectSet, [file, projectNames]) => {
         if (touchedFiles.includes(file)) {
           projectNames.forEach(projectName => {
@@ -259,24 +256,26 @@ class DepsCalculator {
 
   calculateDeps() {
     this.deps = this.projects.reduce((m, c) => ({ ...m, [c.name]: [] }), {});
-    this.createImplicitDepsFromE2eToApps();
+    this.setImplicitDepsFromProjects(this.deps, this.projects);
     this.processAllFiles();
     return this.deps;
     // return this.includeTransitive();
   }
 
-  private createImplicitDepsFromE2eToApps() {
-    this.projects.filter(p => p.type === ProjectType.e2e).forEach(e2e => {
-      const appName = e2e.name.substring(0, e2e.name.length - 4);
-      if (
-        this.projects.find(
-          a => a.name === appName && a.type === ProjectType.app
-        )
-      ) {
-        this.deps[e2e.name] = [
-          { projectName: appName, type: DependencyType.implicit }
-        ];
+  private setImplicitDepsFromProjects(deps: Deps, projects: ProjectNode[]) {
+    projects.forEach(project => {
+      if (project.implicitDependencies.length === 0) {
+        return;
       }
+
+      project.implicitDependencies.forEach(depName => {
+        this.setDependencyIfNotAlreadySet(
+          deps,
+          project.name,
+          depName,
+          DependencyType.implicit
+        );
+      });
     });
   }
 
@@ -358,16 +357,28 @@ class DepsCalculator {
     })[0];
 
     if (matchingProject) {
-      const alreadyHasDep = this.deps[projectName].some(
-        p => p.projectName === matchingProject.name && p.type === depType
+      this.setDependencyIfNotAlreadySet(
+        this.deps,
+        projectName,
+        matchingProject.name,
+        depType
       );
-      const depOnSelf = projectName === matchingProject.name;
-      if (!alreadyHasDep && !depOnSelf) {
-        this.deps[projectName].push({
-          projectName: matchingProject.name,
-          type: depType
-        });
-      }
+    }
+  }
+
+  private setDependencyIfNotAlreadySet(
+    deps: Deps,
+    depSource: string,
+    depTarget: string,
+    depType: DependencyType
+  ) {
+    const alreadyHasDep = deps[depSource].some(
+      p => p.projectName === depTarget && p.type === depType
+    );
+    const depOnSelf = depSource === depTarget;
+    if (!alreadyHasDep && !depOnSelf) {
+      const dep = { projectName: depTarget, type: depType };
+      deps[depSource].push(dep);
     }
   }
 

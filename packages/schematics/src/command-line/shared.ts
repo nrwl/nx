@@ -19,8 +19,10 @@ import { statSync } from 'fs';
 import * as appRoot from 'app-root-path';
 import { readJsonFile } from '../utils/fileutils';
 
+export type ImplicitDependencyEntry = { [key: string]: string[] };
 export type ImplicitDependencies = {
-  [key: string]: string[];
+  files: ImplicitDependencyEntry;
+  projects: ImplicitDependencyEntry;
 };
 
 export function parseFiles(
@@ -123,12 +125,10 @@ function parseGitOutput(command: string): string[] {
     .filter(a => a.length > 0);
 }
 
-export function getImplicitDependencies(
+function getFileLevelImplicitDependencies(
   angularJson: any,
   nxJson: any
-): ImplicitDependencies {
-  assertWorkspaceValidity(angularJson, nxJson);
-
+): ImplicitDependencyEntry {
   if (!nxJson.implicitDependencies) {
     return {};
   }
@@ -143,6 +143,65 @@ export function getImplicitDependencies(
     }
   );
   return nxJson.implicitDependencies;
+}
+
+function getProjectLevelImplicitDependencies(
+  angularJson: any,
+  nxJson: any
+): ImplicitDependencyEntry {
+  const projects = getProjectNodes(angularJson, nxJson);
+
+  const implicitDependencies = projects.reduce(
+    (memo, project) => {
+      project.implicitDependencies.forEach(dep => {
+        if (memo[dep]) {
+          memo[dep].add(project.name);
+        } else {
+          memo[dep] = new Set([project.name]);
+        }
+      });
+
+      return memo;
+    },
+    {} as { [key: string]: Set<string> }
+  );
+
+  return Object.entries(implicitDependencies).reduce(
+    (memo, [key, val]) => {
+      memo[key] = Array.from(val);
+      return memo;
+    },
+    {} as ImplicitDependencyEntry
+  );
+}
+
+function detectAndSetInvalidProjectValues(
+  map: Map<string, string[]>,
+  sourceName: string,
+  desiredProjectNames: string[],
+  validProjects: any
+) {
+  const invalidProjects = desiredProjectNames.filter(
+    projectName => !validProjects[projectName]
+  );
+  if (invalidProjects.length > 0) {
+    map.set(sourceName, invalidProjects);
+  }
+}
+
+export function getImplicitDependencies(
+  angularJson: any,
+  nxJson: any
+): ImplicitDependencies {
+  assertWorkspaceValidity(angularJson, nxJson);
+
+  const files = getFileLevelImplicitDependencies(angularJson, nxJson);
+  const projects = getProjectLevelImplicitDependencies(angularJson, nxJson);
+
+  return {
+    files,
+    projects
+  };
 }
 
 export function assertWorkspaceValidity(angularJson, nxJson) {
@@ -172,19 +231,30 @@ export function assertWorkspaceValidity(angularJson, nxJson) {
     ...nxJson.projects
   };
 
-  const invalidImplicitDependencies = Object.entries<'*' | string[]>(
-    nxJson.implicitDependencies || {}
-  )
-    .filter(([filename, val]) => val !== '*') // These are valid since it is calculated
+  const invalidImplicitDependencies = new Map<string, string[]>();
+
+  Object.entries<'*' | string[]>(nxJson.implicitDependencies || {})
+    .filter(([_, val]) => val !== '*') // These are valid since it is calculated
     .reduce((map, [filename, projectNames]: [string, string[]]) => {
-      const invalidProjects = projectNames.filter(
-        projectName => !projects[projectName]
-      );
-      if (invalidProjects.length > 0) {
-        map.set(filename, invalidProjects);
-      }
+      detectAndSetInvalidProjectValues(map, filename, projectNames, projects);
       return map;
-    }, new Map<string, string[]>());
+    }, invalidImplicitDependencies);
+
+  nxJsonProjects
+    .filter(nxJsonProjectName => {
+      const project = nxJson.projects[nxJsonProjectName];
+      return !!project.implicitDependencies;
+    })
+    .reduce((map, nxJsonProjectName) => {
+      const project = nxJson.projects[nxJsonProjectName];
+      detectAndSetInvalidProjectValues(
+        map,
+        nxJsonProjectName,
+        project.implicitDependencies,
+        projects
+      );
+      return map;
+    }, invalidImplicitDependencies);
 
   if (invalidImplicitDependencies.size === 0) {
     return;
@@ -201,7 +271,7 @@ export function assertWorkspaceValidity(angularJson, nxJson) {
   throw new Error(message);
 }
 
-export function getProjectNodes(angularJson, nxJson) {
+export function getProjectNodes(angularJson, nxJson): ProjectNode[] {
   assertWorkspaceValidity(angularJson, nxJson);
 
   const angularJsonProjects = Object.keys(angularJson.projects);
@@ -210,16 +280,25 @@ export function getProjectNodes(angularJson, nxJson) {
   return angularJsonProjects.map(key => {
     const p = angularJson.projects[key];
     const tags = nxJson.projects[key].tags;
+
+    const projectType =
+      p.projectType === 'application'
+        ? key.endsWith('-e2e') ? ProjectType.e2e : ProjectType.app
+        : ProjectType.lib;
+
+    let implicitDependencies = nxJson.projects[key].implicitDependencies || [];
+    if (projectType === ProjectType.e2e && implicitDependencies.length === 0) {
+      implicitDependencies = [key.replace(/-e2e$/, '')];
+    }
+
     return {
       name: key,
       root: p.root,
-      type:
-        p.projectType === 'application'
-          ? key.endsWith('-e2e') ? ProjectType.e2e : ProjectType.app
-          : ProjectType.lib,
+      type: projectType,
       tags,
       architect: p.architect,
-      files: allFilesInDir(`${appRoot.path}/${p.root}`)
+      files: allFilesInDir(`${appRoot.path}/${p.root}`),
+      implicitDependencies
     };
   });
 }
