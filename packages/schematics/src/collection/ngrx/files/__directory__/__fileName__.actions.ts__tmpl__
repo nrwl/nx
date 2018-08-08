@@ -12,7 +12,7 @@ export class Load<%= className %> implements Action {
 }
 
 export class <%= className %>LoadError implements Action {
- readonly type = <%= className %>ActionTypes.Load<%= className %>;
+ readonly type = <%= className %>ActionTypes.<%= className %>LoadError;
  constructor(public payload: any) { }
 }
 
