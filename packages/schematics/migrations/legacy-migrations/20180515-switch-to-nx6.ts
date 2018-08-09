@@ -1,12 +1,8 @@
-import { existsSync, writeFileSync } from 'fs';
-import { dependencies } from '../../src/command-line/affected-apps';
-import {
-  readJsonFile,
-  serializeJson,
-  updateJsonFile
-} from '../../src/utils/fileutils';
+import { existsSync } from 'fs';
+import { readJsonFile, updateJsonFile } from '../../src/utils/fileutils';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { execSync } from 'child_process';
+import { join } from 'path';
 
 export default {
   description: `Switch to Nx 6.0`,
@@ -40,8 +36,12 @@ export default {
           stdio: [0, 1, 2]
         }
       );
+
+      const currentVersion = readJsonFile(
+        join(__dirname, '../../package.json')
+      );
       execSync(
-        'ng generate @schematics/update:migrate --package @nrwl/schematics --collection @nrwl/schematics/migrations/migrations.json --from 1.0.3 --to 6.1.0',
+        `ng generate @schematics/update:migrate --package @nrwl/schematics --collection @nrwl/schematics/migrations/migrations.json --from 1.0.3 --to ${currentVersion}`,
         {
           stdio: [0, 1, 2]
         }
