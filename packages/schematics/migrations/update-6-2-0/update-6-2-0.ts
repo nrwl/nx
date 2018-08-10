@@ -67,10 +67,15 @@ function updateDependencies() {
         '@angular/compiler',
         '@angular/core',
         '@angular/forms',
+        '@angular/http',
         '@angular/platform-browser',
         '@angular/platform-browser-dynamic',
         '@angular/platform-server',
-        '@angular/router'
+        '@angular/platform-webworker',
+        '@angular/platform-webworker-dynamic',
+        '@angular/router',
+        '@angular/service-worker',
+        '@angular/upgrade'
       ],
       '^6.1.0',
       false
