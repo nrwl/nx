@@ -416,6 +416,30 @@ const updatePackageJson = updateJsonInTree('package.json', json => {
     prettier: '1.10.2'
   };
 
+  if (json.dependencies['@angular/http']) {
+    json.dependencies['@angular/http'] = '6.0.1';
+  }
+
+  if (json.dependencies['@angular/platform-server']) {
+    json.dependencies['@angular/platform-server'] = '6.0.1';
+  }
+
+  if (json.dependencies['@angular/service-worker']) {
+    json.dependencies['@angular/service-worker'] = '6.0.1';
+  }
+
+  if (json.dependencies['@angular/platform-webworker']) {
+    json.dependencies['@angular/platform-webworker'] = '6.0.1';
+  }
+
+  if (json.dependencies['@angular/platform-webworker-dynamic']) {
+    json.dependencies['@angular/platform-webworker-dynamic'] = '6.0.1';
+  }
+
+  if (json.dependencies['@angular/upgrade']) {
+    json.dependencies['@angular/upgrade'] = '6.0.1';
+  }
+
   return json;
 });
 
