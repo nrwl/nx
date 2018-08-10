@@ -306,8 +306,7 @@ describe('${options.moduleName}', () => {
             outDir: `${offsetFromRoot(options.projectRoot)}dist/out-tsc/${
               options.projectRoot
             }`
-          },
-          exclude: [...json.exclude, 'karma.conf.ts']
+          }
         };
       }),
       updateJsonInTree(`${options.projectRoot}/tsconfig.spec.json`, json => {

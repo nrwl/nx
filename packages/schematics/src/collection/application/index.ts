@@ -148,8 +148,7 @@ function updateProject(options: NormalizedSchema): Rule {
               options.appProjectRoot
             }`
           },
-          include: ['**/*.ts'],
-          exclude: [...json.exclude, 'karma.conf.ts']
+          include: ['**/*.ts']
         };
       }),
       updateJsonInTree(`${options.appProjectRoot}/tsconfig.spec.json`, json => {
