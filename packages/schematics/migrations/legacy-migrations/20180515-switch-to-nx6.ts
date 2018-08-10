@@ -20,7 +20,7 @@ export default {
     }
 
     updateJsonFile('package.json', json => {
-      json.devDependencies['@angular/cli'] = '6.0.1';
+      json.devDependencies['@angular/cli'] = '6.1.2';
     });
 
     updateJsonFile('package.json', json => {
