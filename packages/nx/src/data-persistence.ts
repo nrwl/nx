@@ -1,13 +1,9 @@
 import { Injectable, Type } from '@angular/core';
-import {
-  ActivatedRouteSnapshot,
-  RouterStateSnapshot,
-  RouterState
-} from '@angular/router';
+import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { Actions } from '@ngrx/effects';
 import { ROUTER_NAVIGATION, RouterNavigationAction } from '@ngrx/router-store';
 import { Action, Store } from '@ngrx/store';
-import { Observable, of, OperatorFunction } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import {
   catchError,
   concatMap,
@@ -331,7 +327,7 @@ export class DataPersistence<T> {
    *
    * This is correct, but because it set the concurrency to 1, it may not be performant.
    *
-   * To fix that, you can provide the `id` function, li ke this:
+   * To fix that, you can provide the `id` function, like this:
    *
    * ```typescript
    * @Injectable()
