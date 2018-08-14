@@ -13,7 +13,9 @@ import { insertImport } from '@schematics/angular/utility/ast-utils';
 import {
   addImportToModule,
   addImportToTestBed,
+  getDecoratorPropertyValueNode,
   insert,
+  replaceNodeValue,
   updateJsonInTree
 } from '../../utils/ast-utils';
 import { toFileName } from '../../utils/name-utils';
@@ -117,9 +119,27 @@ Nx is designed to help you create and build enterprise grade Angular application
     const content = options.routing
       ? `${baseContent}\n<router-outlet></router-outlet>`
       : baseContent;
-    host.overwrite(
-      `${options.appProjectRoot}/src/app/app.component.html`,
-      content
+
+    if (!options.inlineTemplate) {
+      return host.overwrite(
+        `${options.appProjectRoot}/src/app/app.component.html`,
+        content
+      );
+    }
+
+    const modulePath = `${options.appProjectRoot}/src/app/app.component.ts`;
+    const templateNodeValue = getDecoratorPropertyValueNode(
+      host,
+      modulePath,
+      'Component',
+      'template',
+      '@angular/core'
+    );
+    replaceNodeValue(
+      host,
+      modulePath,
+      templateNodeValue,
+      `\`\n${baseContent}\n\`,\n`
     );
   };
 }
