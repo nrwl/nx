@@ -240,4 +240,31 @@ describe('app', () => {
       ).toContain('imports: [RouterTestingModule]');
     });
   });
+
+  describe('template generation mode', () => {
+    it('should create Nx specific `app.component.html` template', () => {
+      const tree = schematicRunner.runSchematic(
+        'app',
+        { name: 'myApp', directory: 'myDir' },
+        appTree
+      );
+      expect(
+        getFileContent(tree, 'apps/my-dir/my-app/src/app/app.component.html')
+      ).toBeTruthy();
+      expect(
+        getFileContent(tree, 'apps/my-dir/my-app/src/app/app.component.html')
+      ).toContain('This is an Angular CLI app built with Nrwl Nx!');
+    });
+
+    it("should update `template`'s property of AppComponent with Nx content", () => {
+      const tree = schematicRunner.runSchematic(
+        'app',
+        { name: 'myApp', directory: 'myDir', inlineTemplate: true },
+        appTree
+      );
+      expect(
+        getFileContent(tree, 'apps/my-dir/my-app/src/app/app.component.ts')
+      ).toContain('This is an Angular CLI app built with Nrwl Nx!');
+    });
+  });
 });
