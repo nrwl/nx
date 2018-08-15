@@ -13,7 +13,7 @@ export class <%= className %>Facade {
   all<%= className %>$ = this.store.select(<%= propertyName %>Query.getAll<%= className %>);
   selected<%= className %>$ = this.store.select(<%= propertyName %>Query.getSelected<%= className %>);
   
-  constructor( private store: Store<<%= className %>State> ) { }
+  constructor( private store: Store<{<%= propertyName %>: <%= className %>State}> ) { }
  
   loadAll() {
     this.store.dispatch(new Load<%= className %>());
