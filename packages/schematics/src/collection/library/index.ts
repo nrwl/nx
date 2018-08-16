@@ -30,9 +30,9 @@ import {
   getWorkspacePath,
   replaceAppNameWithPath
 } from '@nrwl/schematics/src/utils/cli-config-utils';
-import * as fs from 'fs';
 import { formatFiles } from '../../utils/rules/format-files';
 import { updateKarmaConf } from '../../utils/rules/update-karma-conf';
+import { excludeUnnecessaryFiles } from '@nrwl/schematics/src/utils/rules/filter-tree';
 
 interface NormalizedSchema extends Schema {
   name: string;
@@ -384,6 +384,9 @@ export default function(schema: Schema): Rule {
         skipPackageJson: !options.publishable,
         skipTsConfig: true
       }),
+
+      excludeUnnecessaryFiles(),
+
       move(options.name, options.projectRoot),
       updateProject(options),
       updateKarmaConf({
