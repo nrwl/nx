@@ -27,6 +27,7 @@ import {
 } from '@nrwl/schematics/src/utils/cli-config-utils';
 import { formatFiles } from '../../utils/rules/format-files';
 import { updateKarmaConf } from '../../utils/rules/update-karma-conf';
+import { excludeUnnecessaryFiles } from '@nrwl/schematics/src/utils/rules/filter-tree';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -267,6 +268,8 @@ export default function(schema: Schema): Rule {
         viewEncapsulation: options.viewEncapsulation,
         routing: false
       }),
+
+      excludeUnnecessaryFiles(),
 
       move(options.e2eProjectName, options.e2eProjectRoot),
       updateE2eProject(options),
