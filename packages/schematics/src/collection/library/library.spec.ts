@@ -60,6 +60,16 @@ describe('lib', () => {
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
     });
 
+    it("should update npmScope of lib's package.json when publishable", () => {
+      const tree = schematicRunner.runSchematic(
+        'lib',
+        { name: 'myLib', publishable: true },
+        appTree
+      );
+      const packageJson = readJsonInTree(tree, '/libs/my-lib/package.json');
+      expect(packageJson.name).toEqual('@proj/my-lib');
+    });
+
     it('should update angular.json', () => {
       const tree = schematicRunner.runSchematic(
         'lib',

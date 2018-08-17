@@ -369,6 +369,14 @@ function updateTsConfig(options: NormalizedSchema): Rule {
   ]);
 }
 
+function updateLibPackageNpmScope(options: NormalizedSchema): Rule {
+  return updateJsonInTree(`${options.projectRoot}/package.json`, json => {
+    console.log(json);
+    json.name = `@${options.prefix}/${options.name}`;
+    return json;
+  });
+}
+
 export default function(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
@@ -391,6 +399,7 @@ export default function(schema: Schema): Rule {
       }),
       updateTsConfig(options),
 
+      options.publishable ? updateLibPackageNpmScope(options) : noop(),
       options.routing && options.lazy
         ? addLazyLoadedRouterConfiguration(options)
         : noop(),
