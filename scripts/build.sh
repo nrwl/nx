@@ -31,3 +31,6 @@ rm -rf build/packages/nx/dist
 rm -rf build/packages/nx/spec
 cp README.md build/packages/schematics
 cp README.md build/packages/nx
+cp LICENSE build/packages/bazel
+cp LICENSE build/packages/schematics
+cp LICENSE build/packages/nx
