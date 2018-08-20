@@ -80,6 +80,11 @@ feat(schematics): add an option to generate lazy-loadable modules
 `ng generate lib mylib --lazy` provisions the mylib project in tslint.json
 ```
 
+#### Commitizen
+
+To simplify and automate the process of commiting with this format, 
+**Nx is a [Commitizen](https://github.com/commitizen/cz-cli) friendly repository**, just do `git add` and execute `yarn commit`.
+
 ## Migrations
 
 Nx allows users to automatically upgrade to the newest version of the package. If you are introducing a change that would require the users to upgrade their workspace, add a migration to `packages/schematics/migrations`.
