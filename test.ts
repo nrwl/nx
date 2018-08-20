@@ -13,8 +13,8 @@ import {
 declare const require: any;
 
 // Prevent Karma from running prematurely.
-declare const  __karma__: any;
-__karma__.loaded = function () {};
+declare const __karma__: any;
+__karma__.loaded = function() {};
 
 // First, initialize the Angular testing environment.
 getTestBed().initTestEnvironment(

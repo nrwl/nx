@@ -6,7 +6,8 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "Name of the NgRx feature (e.g., Products, Users, etc.). Recommended to use plural form for name.",
+      "description":
+        "Name of the NgRx feature (e.g., Products, Users, etc.). Recommended to use plural form for name.",
       "$default": {
         "$source": "argv",
         "index": 0

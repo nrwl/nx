@@ -2,7 +2,6 @@
 
 ## Please use the [Github Releases](https://github.com/nrwl/nx/releases) page to see the changelog.
 
-
 # 1.0.1
 
 ## Fixes
@@ -18,7 +17,6 @@
 * **schematics:** add nxmodule forroot if not existing when generating ngrx for root ([e748e81](https://github.com/nrwl/nx/commit/e748e81))
 * **schematics:** don't leak file descriptor in shared.ts/mtime ([aa1ff78](https://github.com/nrwl/nx/commit/aa1ff78)), closes [#403](https://github.com/nrwl/nx/issues/403)
 * **schematics:** ignore errors when the tools directory already exists ([2a377fe](https://github.com/nrwl/nx/commit/2a377fe))
-
 
 # 0.11.0
 
@@ -60,7 +58,6 @@
 * [Update karma conf with app check](https://github.com/nrwl/nx/commit/fea4f48decdfa17feb5e020318abf2ac319d05da)
 * [Fix typo in CONTIRBUTING.md](https://github.com/nrwl/nx/commit/bd50643d60b3c2a8e8ace6ceaab5834d897b4aa3)
 * [Match ng lib and update versions ](https://github.com/nrwl/nx/commit/8482177b7373844d833aaad55e15a2a10d4ae116)
-
 
 # 0.9.0
 
@@ -134,8 +131,6 @@ The following will be true.
 * `apilib` can depend on `utilslib`
 * `implib` can depend on both `utilslib` and `apilib`.
 * `untaggedlib` can depend on **all** libs.
-
-
 
 ## Features
 
@@ -276,12 +271,9 @@ npm run format:check
 
 * [Add format:check and format:write commands](https://github.com/nrwl/nx/commit/826a0b1056f9000425e189bad5a5d63966c3a704)
 
-
 ## Bug Fixes
 
 * [Only allow importing libs using the configured npm scope](https://github.com/nrwl/nx/commit/c836668541532e64db088ef9a984678022abb3bd)
-
-
 
 # 0.6.0
 
@@ -307,15 +299,11 @@ npm run build:affected ----files="libs/mylib/index.ts,libs/mylib2/index.ts"
 npm run e2e:affected ----files="libs/mylib/index.ts,libs/mylib2/index.ts"
 ```
 
-
-
-
 * [Add support for building and testing only the apps affected by a commit](https://github.com/nrwl/nx/commit/428762664acc5fd155dd7be630dab09101d23542)
 
 ## Bug Fixes
 
 * [Make deep import check work for libs with same prefix](https://github.com/nrwl/nx/commit/3c55f34ca12a4d5338099586ffe9455c81a3b199)
-
 
 # 0.5.3
 
@@ -339,7 +327,6 @@ create-nx-workspace myproj
 ```
 
 Some folks also reported having problems running Nx behind a firewall, in a corporate environment. We fixed them as well.
-
 
 ## Features
 
@@ -477,4 +464,3 @@ Finally, you can pass `--parentModule` and the schematic will wire up the genera
 ng generate lib mylib --routing --parentModule=apps/myapp/src/myapp.module.ts
 ng generate lib mylib --routing --lazy --parentModule=apps/myapp/src/myapp.module.ts
 ```
-

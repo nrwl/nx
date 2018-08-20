@@ -11,7 +11,7 @@ const parsedArgs = yargsParser(process.argv, {
   }
 });
 
-console.log('parsedArgs', parsedArgs)
+console.log('parsedArgs', parsedArgs);
 
 if (parsedArgs.help) {
   console.log(`
@@ -71,7 +71,9 @@ function parseVersion(version) {
 const parsedVersion = parseVersion(parsedArgs._[2]);
 if (!parsedVersion.isValid) {
   console.error(
-    `\nError:\nThe specified version is not valid. You specified: "${parsedVersion.version}"`
+    `\nError:\nThe specified version is not valid. You specified: "${
+      parsedVersion.version
+    }"`
   );
   console.error(
     `Please run "yarn nx-release --help" for details on the acceptable version format.\n`
@@ -82,7 +84,9 @@ if (!parsedVersion.isValid) {
 }
 
 console.log('Executing build script:');
-const buildCommand = `./scripts/package.sh ${parsedVersion.version} ${parsedVersion.version}`;
+const buildCommand = `./scripts/package.sh ${parsedVersion.version} ${
+  parsedVersion.version
+}`;
 console.log(`> ${buildCommand}`);
 childProcess.execSync(buildCommand, {
   stdio: [0, 1, 2]

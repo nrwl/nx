@@ -3,7 +3,7 @@
   "lib": {
     "entryFile": "index.ts",
     "umdModuleIds": {
-      "@ngrx/effects" : "ngrx.effects",
+      "@ngrx/effects": "ngrx.effects",
       "@ngrx/router-store": "ngrx.routerStore",
       "@ngrx/store": "ngrx.store"
     }

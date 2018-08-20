@@ -8,7 +8,7 @@
     "lib": {
       "entryFile": "index.ts",
       "umdModuleIds": {
-        "jasmine-marbles" : "jasmine-marbles"
+        "jasmine-marbles": "jasmine-marbles"
       }
     }
   }

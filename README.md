@@ -14,15 +14,11 @@
 
 <hr>
 
-
-
 # What is Nx?
 
 🔎 **Nx is an open source toolkit for enterprise Angular applications**, which is based on our experience working at Google and helping the Fortune 500 build ambitious Angular applications. It provides an opinionated approach to application project structure and patterns.
 
 Nx is an extension for the the Angular CLI implementing the monorepo-style development. It is also a collection of runtime libraries, linters, and code generators helping large teams build better with Angular.
-
-
 
 # Why Nx?
 
@@ -34,8 +30,6 @@ What’s different about large organizations is that they have hundreds of Angul
 * With three (3) projects developers will know what needs to be retested after making a change, with thirty (30) projects, however, this is no longer a simple process. Informal team rules to manage change will no longer work with large teams and multi-team, multi-project efforts. **You have to rely on the automated CI process instead.** …
 
 In other words, small organizations can often get by with informal ad-hoc processes, whereas large organizations cannot. **Large organizations must rely on tooling to enable that. Nx is this tooling.**
-
-
 
 # Getting Started
 
@@ -67,7 +61,6 @@ ng add @nrwl/schematics
 
 You are good to go!
 
-
 ## Quick Start & Documentation
 
 ### Documentation
@@ -90,7 +83,6 @@ You are good to go!
 
 * [ngAir 140: Nx for Enterprise Angular Development](https://www.youtube.com/watch?v=qYNiOKDno_I)
 * [ngHouston: NX Demo](https://www.youtube.com/watch?v=E_UlU2Yv4G0)
-
 
 ## Misc
 
