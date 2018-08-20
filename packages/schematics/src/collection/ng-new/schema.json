@@ -56,10 +56,7 @@
               "type": "string"
             }
           },
-          "required": [
-            "name",
-            "email"
-          ]
+          "required": ["name", "email"]
         }
       ],
       "default": true

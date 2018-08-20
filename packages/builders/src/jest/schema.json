@@ -5,7 +5,8 @@
   "properties": {
     "jestConfig": {
       "type": "string",
-      "description": "The path of the Jest configuration. (https://jestjs.io/docs/en/configuration.html)"
+      "description":
+        "The path of the Jest configuration. (https://jestjs.io/docs/en/configuration.html)"
     },
     "tsConfig": {
       "type": "string",
@@ -13,7 +14,8 @@
     },
     "setupFile": {
       "type": "string",
-      "description": "The name of a setup file used by Jest. (https://jestjs.io/docs/en/configuration.html#setuptestframeworkscriptfile-string)"
+      "description":
+        "The name of a setup file used by Jest. (https://jestjs.io/docs/en/configuration.html#setuptestframeworkscriptfile-string)"
     },
     "watch": {
       "type": "boolean",
