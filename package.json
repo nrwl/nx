@@ -6,6 +6,8 @@
   "private": true,
   "scripts": {
     "build": "./scripts/build.sh",
+    "commit": "git-cz",
+    "checkcommit": "./scripts/commit-lint.js",
     "e2e": "./scripts/e2e.sh",
     "format": "prettier \"{packages,e2e}/**/*.ts\" --write",
     "linknpm": "./scripts/link.sh",
@@ -42,8 +44,10 @@
     "@types/yargs": "^11.0.0",
     "angular": "1.6.6",
     "app-root-path": "^2.0.1",
+    "commitizen": "^2.10.1",
     "conventional-changelog-cli": "^1.3.21",
     "cosmiconfig": "^4.0.0",
+    "cz-conventional-changelog": "^2.1.0",
     "fs-extra": "5.0.0",
     "graphviz": "^0.0.8",
     "husky": "^0.14.3",
@@ -80,5 +84,10 @@
       "tmp",
       "collection/.*/files"
     ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
