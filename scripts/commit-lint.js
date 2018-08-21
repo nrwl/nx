@@ -5,7 +5,7 @@ const gitMessage = require('child_process')
   .execSync('git log -1 --no-merges')
   .toString()
   .trim();
-const matchTest = /([a-z]){0,8}\([a-z.0-9]+\):\s(([a-z0-9:\-\s])+)/g.test(
+const matchTest = /([a-z]){0,8}\([a-z.0-9\-]+\):\s(([a-z0-9:\-\s])+)/g.test(
   gitMessage
 );
 const exitCode = +!matchTest;
