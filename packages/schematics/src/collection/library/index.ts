@@ -371,7 +371,6 @@ function updateTsConfig(options: NormalizedSchema): Rule {
 
 function updateLibPackageNpmScope(options: NormalizedSchema): Rule {
   return updateJsonInTree(`${options.projectRoot}/package.json`, json => {
-    console.log(json);
     json.name = `@${options.prefix}/${options.name}`;
     return json;
   });
