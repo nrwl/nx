@@ -14,12 +14,15 @@ export function format(args: string[]) {
     process.exit(1);
   }
 
+  // Chunkify the patterns array to prevent crashing the windows terminal
+  const chunkList: string[][] = chunkify(patterns, 70);
+
   switch (command) {
     case 'write':
-      write(patterns);
+      chunkList.forEach(chunk => write(chunk));
       break;
     case 'check':
-      check(patterns);
+      chunkList.forEach(chunk => check(chunk));
       break;
   }
 }
@@ -46,6 +49,14 @@ function getPatternsFromApps(affectedFiles: string[]): string[] {
   } else {
     return [`\"{${roots.join(',')}}/**/*.ts\"`];
   }
+}
+
+function chunkify(target: string[], size: number): string[][] {
+  return target.reduce((current: string[][], value: string, index: number) => {
+    if (index % size === 0) current.push([]);
+    current[current.length - 1].push(value);
+    return current;
+  }, []);
 }
 
 function printError(command: string, e: any) {
