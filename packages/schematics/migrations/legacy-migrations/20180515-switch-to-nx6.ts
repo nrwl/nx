@@ -37,9 +37,8 @@ export default {
         }
       );
 
-      const currentVersion = readJsonFile(
-        join(__dirname, '../../package.json')
-      );
+      const currentVersion = readJsonFile(join(__dirname, '../../package.json'))
+        .version;
       execSync(
         `ng generate @schematics/update:migrate --package @nrwl/schematics --collection @nrwl/schematics/migrations/migrations.json --from 1.0.3 --to ${currentVersion}`,
         {
