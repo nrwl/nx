@@ -9,7 +9,7 @@ import { map } from 'rxjs/operators';
 
 import * as path from 'path';
 
-import { runCLI as runJest } from 'jest';
+const { runCLI } = require('jest');
 
 export interface JestBuilderOptions {
   jestConfig: string;
@@ -61,7 +61,7 @@ export default class JestBuilder implements Builder<JestBuilderOptions> {
       );
     }
 
-    return from(runJest(config, [options.jestConfig])).pipe(
+    return from(runCLI(config, [options.jestConfig])).pipe(
       map((results: any) => {
         return {
           success: results.results.success
