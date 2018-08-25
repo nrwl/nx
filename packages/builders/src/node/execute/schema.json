@@ -1,0 +1,26 @@
+{
+  "title": "Schema for Executing NodeJS apps",
+  "description": "NodeJS execution options",
+  "type": "object",
+  "properties": {
+    "buildTarget": {
+      "type": "string",
+      "description": "The target to run to build you the app"
+    },
+    "inspect": {
+      "type": "boolean",
+      "description": "Ensures the app is starting with debugging",
+      "default": true
+    },
+    "args": {
+      "type": "array",
+      "description": "Extra args when starting the app",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": ["buildTarget"]
+}

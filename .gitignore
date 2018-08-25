@@ -2,7 +2,7 @@ node_modules
 .idea
 .vscode
 dist
-build
+/build
 test
 .DS_Store
 tmp

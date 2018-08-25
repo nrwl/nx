@@ -1,6 +1,7 @@
 import JestBuilder from './jest.builder';
 import { normalize } from '@angular-devkit/core';
-import * as jestCLI from 'jest';
+jest.mock('jest');
+const { runCLI } = require('jest');
 import * as path from 'path';
 
 describe('Jest Builder', () => {
@@ -8,16 +9,16 @@ describe('Jest Builder', () => {
 
   beforeEach(() => {
     builder = new JestBuilder();
-  });
-
-  it('should send appropriate options to jestCLI', () => {
-    const runCLI = spyOn(jestCLI, 'runCLI').and.returnValue(
+    runCLI.mockReturnValue(
       Promise.resolve({
         results: {
           success: true
         }
       })
     );
+  });
+
+  it('should send appropriate options to jestCLI', () => {
     const root = normalize('/root');
     builder
       .run({
@@ -46,13 +47,6 @@ describe('Jest Builder', () => {
   });
 
   it('should send other options to jestCLI', () => {
-    const runCLI = spyOn(jestCLI, 'runCLI').and.returnValue(
-      Promise.resolve({
-        results: {
-          success: true
-        }
-      })
-    );
     const root = normalize('/root');
     builder
       .run({
@@ -98,19 +92,12 @@ describe('Jest Builder', () => {
     );
   });
 
-  it('should send the main to jestCLI', () => {
-    const runCLI = spyOn(jestCLI, 'runCLI').and.returnValue(
-      Promise.resolve({
-        results: {
-          success: true
-        }
-      })
-    );
+  it('should send the main to runCLI', () => {
     const root = normalize('/root');
     builder
       .run({
         root,
-        builder: '',
+        builder: '@nrwl/builders:jest',
         projectType: 'application',
         options: {
           jestConfig: './jest.config.js',
@@ -139,13 +126,6 @@ describe('Jest Builder', () => {
   });
 
   it('should return the proper result', async done => {
-    spyOn(jestCLI, 'runCLI').and.returnValue(
-      Promise.resolve({
-        results: {
-          success: true
-        }
-      })
-    );
     const root = normalize('/root');
     const result = await builder
       .run({
