@@ -23,6 +23,17 @@
         "Run tests when files change. (https://jestjs.io/docs/en/cli#watch)",
       "default": false
     },
+    "onlyChanged": {
+      "type": "boolean",
+      "alias": "o",
+      "description":
+        "Isolate tests affected by uncommitted changes. (https://jestjs.io/docs/en/cli#onlychanged)"
+    },
+    "passWithNoTests": {
+      "type": "boolean",
+      "description":
+        "Allow test suite to pass when no test files are found. (https://jestjs.io/docs/en/cli#passwithnotests)"
+    },
     "codeCoverage": {
       "type": "boolean",
       "description":
