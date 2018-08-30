@@ -1,6 +1,6 @@
 import JestBuilder from './jest.builder';
 import { normalize } from '@angular-devkit/core';
-import * as jestCLI from 'jest-cli';
+import * as jestCLI from 'jest';
 import * as path from 'path';
 
 describe('Jest Builder', () => {
