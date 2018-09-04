@@ -73,29 +73,34 @@ function addRouterRootConfiguration(options: NormalizedSchema): Rule {
       )
     ]);
 
-    const componentSpecPath = `${
-      options.appProjectRoot
-    }/src/app/app.component.spec.ts`;
-    const componentSpecSource = host.read(componentSpecPath)!.toString('utf-8');
-    const componentSpecSourceFile = ts.createSourceFile(
-      componentSpecPath,
-      componentSpecSource,
-      ts.ScriptTarget.Latest,
-      true
-    );
-    insert(host, componentSpecPath, [
-      insertImport(
-        componentSpecSourceFile,
+    if (options.skipTests !== true) {
+      const componentSpecPath = `${
+        options.appProjectRoot
+      }/src/app/app.component.spec.ts`;
+      const componentSpecSource = host.read(componentSpecPath)!.toString(
+        'utf-8'
+      );
+      const componentSpecSourceFile = ts.createSourceFile(
         componentSpecPath,
-        'RouterTestingModule',
-        '@angular/router/testing'
-      ),
-      ...addImportToTestBed(
-        componentSpecSourceFile,
-        componentSpecPath,
-        `RouterTestingModule`
-      )
-    ]);
+        componentSpecSource,
+        ts.ScriptTarget.Latest,
+        true
+      );
+      insert(host, componentSpecPath, [
+        insertImport(
+          componentSpecSourceFile,
+          componentSpecPath,
+          'RouterTestingModule',
+          '@angular/router/testing'
+        ),
+        ...addImportToTestBed(
+          componentSpecSourceFile,
+          componentSpecPath,
+          `RouterTestingModule`
+        )
+      ]);
+    }
+
     return host;
   };
 }
