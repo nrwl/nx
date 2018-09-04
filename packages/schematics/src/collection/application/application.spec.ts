@@ -239,6 +239,17 @@ describe('app', () => {
         getFileContent(tree, 'apps/my-dir/my-app/src/app/app.component.spec.ts')
       ).toContain('imports: [RouterTestingModule]');
     });
+
+    it('should not modify tests when --skip-tests is set', () => {
+      const tree = schematicRunner.runSchematic(
+        'app',
+        { name: 'myApp', directory: 'myDir', routing: true, skipTests: true },
+        appTree
+      );
+      expect(
+        tree.exists('apps/my-dir/my-app/src/app/app.component.spec.ts')
+      ).toBeFalsy();
+    });
   });
 
   describe('template generation mode', () => {
