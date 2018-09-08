@@ -25,6 +25,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'libs/myapp',
           type: ProjectType.app,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: [`apps/myapp/src/main.ts`, `apps/myapp/blah.ts`]
         },
@@ -33,6 +34,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'libs/mylib',
           type: ProjectType.lib,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: [`libs/mylib/src/index.ts`, `libs/mylib/src/deep.ts`]
         }
@@ -55,6 +57,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'libs/myapp',
           type: ProjectType.app,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: [`apps/myapp/src/main.ts`, `apps/myapp/src/blah.ts`]
         },
@@ -63,6 +66,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'libs/myapp2',
           type: ProjectType.app,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: []
         },
@@ -71,6 +75,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'libs/myapp2/mylib',
           type: ProjectType.lib,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: ['libs/myapp2/mylib/src/index.ts']
         }
@@ -81,12 +86,13 @@ describe('Enforce Module Boundaries', () => {
   });
 
   describe('depConstraints', () => {
-    const projectNodes = [
+    const projectNodes: ProjectNode[] = [
       {
         name: 'apiName',
         root: 'libs/api',
         type: ProjectType.lib,
         tags: ['api', 'domain1'],
+        implicitDependencies: [],
         architect: {},
         files: [`libs/api/src/index.ts`]
       },
@@ -95,6 +101,7 @@ describe('Enforce Module Boundaries', () => {
         root: 'libs/impl',
         type: ProjectType.lib,
         tags: ['impl', 'domain1'],
+        implicitDependencies: [],
         architect: {},
         files: [`libs/impl/src/index.ts`]
       },
@@ -103,6 +110,7 @@ describe('Enforce Module Boundaries', () => {
         root: 'libs/impl2',
         type: ProjectType.lib,
         tags: ['impl', 'domain1'],
+        implicitDependencies: [],
         architect: {},
         files: [`libs/impl2/src/index.ts`]
       },
@@ -111,6 +119,7 @@ describe('Enforce Module Boundaries', () => {
         root: 'libs/impl-domain2',
         type: ProjectType.lib,
         tags: ['impl', 'domain2'],
+        implicitDependencies: [],
         architect: {},
         files: [`libs/impl-domain2/src/index.ts`]
       },
@@ -119,6 +128,7 @@ describe('Enforce Module Boundaries', () => {
         root: 'libs/impl-both-domains',
         type: ProjectType.lib,
         tags: ['impl', 'domain1', 'domain2'],
+        implicitDependencies: [],
         architect: {},
         files: [`libs/impl-both-domains/src/index.ts`]
       },
@@ -127,6 +137,7 @@ describe('Enforce Module Boundaries', () => {
         root: 'libs/untagged',
         type: ProjectType.lib,
         tags: [],
+        implicitDependencies: [],
         architect: {},
         files: [`libs/untagged/src/index.ts`]
       }
@@ -268,6 +279,7 @@ describe('Enforce Module Boundaries', () => {
             root: 'libs/mylib',
             type: ProjectType.lib,
             tags: [],
+            implicitDependencies: [],
             architect: {},
             files: [`libs/mylib/src/main.ts`, `libs/mylib/other.ts`]
           }
@@ -287,6 +299,7 @@ describe('Enforce Module Boundaries', () => {
             root: 'libs/mylib',
             type: ProjectType.lib,
             tags: [],
+            implicitDependencies: [],
             architect: {},
             files: [`libs/mylib/src/main.ts`, `libs/mylib/other/index.ts`]
           }
@@ -306,6 +319,7 @@ describe('Enforce Module Boundaries', () => {
             root: 'libs/mylib',
             type: ProjectType.lib,
             tags: [],
+            implicitDependencies: [],
             architect: {},
             files: [`libs/mylib/src/main.ts`]
           },
@@ -314,6 +328,7 @@ describe('Enforce Module Boundaries', () => {
             root: 'libs/other',
             type: ProjectType.lib,
             tags: [],
+            implicitDependencies: [],
             architect: {},
             files: ['libs/other/src/index.ts']
           }
@@ -336,6 +351,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'libs/mylib',
           type: ProjectType.lib,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: [`libs/mylib/src/main.ts`, `libs/mylib/src/other.ts`]
         }
@@ -362,6 +378,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'libs/mylib',
           type: ProjectType.lib,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: [`libs/mylib/src/main.ts`, `libs/mylib/src/another-file.ts`]
         },
@@ -370,6 +387,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'libs/other',
           type: ProjectType.lib,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: [`libs/other/src/blah.ts`]
         },
@@ -378,6 +396,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'libs/other/sublib',
           type: ProjectType.lib,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: [`libs/other/sublib/src/blah.ts`]
         }
@@ -402,6 +421,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'libs/mylib',
           type: ProjectType.lib,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: [`libs/mylib/src/main.ts`]
         },
@@ -410,6 +430,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'libs/other',
           type: ProjectType.lib,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: [`libs/other/index.ts`]
         }
@@ -436,6 +457,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'libs/mylib',
           type: ProjectType.lib,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: [`libs/mylib/src/main.ts`]
         },
@@ -444,6 +466,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'apps/myapp',
           type: ProjectType.app,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: [`apps/myapp/src/index.ts`]
         }
@@ -463,6 +486,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'libs/mylib',
           type: ProjectType.lib,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: [`libs/mylib/src/main.ts`]
         },
@@ -471,6 +495,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'libs/anotherlib',
           type: ProjectType.lib,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: [`libs/anotherlib/src/main.ts`]
         },
@@ -479,6 +504,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'apps/myapp',
           type: ProjectType.app,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: [`apps/myapp/src/index.ts`]
         }
@@ -505,6 +531,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'libs/mylib',
           type: ProjectType.lib,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: [`libs/mylib/src/main.ts`]
         },
@@ -513,6 +540,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'libs/anotherlib',
           type: ProjectType.lib,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: [`libs/anotherlib/src/main.ts`]
         },
@@ -521,6 +549,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'libs/badcirclelib',
           type: ProjectType.lib,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: [`libs/badcirclelib/src/main.ts`]
         },
@@ -529,6 +558,7 @@ describe('Enforce Module Boundaries', () => {
           root: 'apps/myapp',
           type: ProjectType.app,
           tags: [],
+          implicitDependencies: [],
           architect: {},
           files: [`apps/myapp/index.ts`]
         }

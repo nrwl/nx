@@ -287,6 +287,7 @@ function moveE2eTests(host: Tree, context: SchematicContext) {
     if (p.projectType === 'application' && !p.architect.e2e) {
       renameSync(`${p.root}/e2e`, `${p.root}-e2e/src`, err => {
         if (!err) {
+          context.logger.info(`Moved ${p.root}/e2e to ${p.root}-e2e/src`);
           return;
         }
 
@@ -333,6 +334,10 @@ function patchLibIndexFiles(host: Tree, context: SchematicContext) {
           }
           renameSync(`${p.root}/lib`, `${p.sourceRoot}/lib`, err => {
             // This should never error
+            context.logger.info(`Moved ${p.sourceRoot} to ${p.sourceRoot}/lib`);
+            context.logger.warn(
+              'Deep imports may have been affected. Always try to import from the index of the lib.'
+            );
           });
         });
         const npmScope = readJsonInTree(host, 'nx.json').npmScope;
@@ -415,6 +420,30 @@ const updatePackageJson = updateJsonInTree('package.json', json => {
     tslint: '~5.9.1',
     prettier: '1.10.2'
   };
+
+  if (json.dependencies['@angular/http']) {
+    json.dependencies['@angular/http'] = '6.0.1';
+  }
+
+  if (json.dependencies['@angular/platform-server']) {
+    json.dependencies['@angular/platform-server'] = '6.0.1';
+  }
+
+  if (json.dependencies['@angular/service-worker']) {
+    json.dependencies['@angular/service-worker'] = '6.0.1';
+  }
+
+  if (json.dependencies['@angular/platform-webworker']) {
+    json.dependencies['@angular/platform-webworker'] = '6.0.1';
+  }
+
+  if (json.dependencies['@angular/platform-webworker-dynamic']) {
+    json.dependencies['@angular/platform-webworker-dynamic'] = '6.0.1';
+  }
+
+  if (json.dependencies['@angular/upgrade']) {
+    json.dependencies['@angular/upgrade'] = '6.0.1';
+  }
 
   return json;
 });
@@ -558,8 +587,6 @@ const updateAngularJson = updateJsonInTree('angular.json', json => {
 
     switch (type) {
       case 'application':
-        project.root = `apps/${key}`;
-        project.sourceRoot = `apps/${key}/src`;
         project.prefix = prefix;
 
         project.architect.build.options.tsConfig = `${
@@ -598,8 +625,6 @@ const updateAngularJson = updateJsonInTree('angular.json', json => {
         break;
 
       case 'library':
-        project.root = `libs/${key}`;
-        project.sourceRoot = `libs/${key}/src`;
         project.prefix = prefix;
 
         project.projectType = 'library';
@@ -629,8 +654,8 @@ const updateAngularJson = updateJsonInTree('angular.json', json => {
         if (appProject.projectType === 'library') {
           break;
         }
-        project.root = `apps/${key}`;
-        project.sourceRoot = `apps/${key}/src`;
+        project.root = `${appProject.root}-e2e`;
+        project.sourceRoot = `${project.root}/src`;
         project.prefix = prefix;
 
         project.architect.e2e.options.protractorConfig = `${

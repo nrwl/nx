@@ -47,7 +47,7 @@ describe('lib', () => {
         appTree
       );
       const packageJson = readJsonInTree(tree, '/package.json');
-      expect(packageJson.devDependencies).toBeUndefined();
+      expect(packageJson.devDependencies['ng-packagr']).toBeUndefined();
     });
 
     it('should update package.json when publishable', () => {
@@ -58,6 +58,16 @@ describe('lib', () => {
       );
       const packageJson = readJsonInTree(tree, '/package.json');
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
+    });
+
+    it("should update npmScope of lib's package.json when publishable", () => {
+      const tree = schematicRunner.runSchematic(
+        'lib',
+        { name: 'myLib', publishable: true },
+        appTree
+      );
+      const packageJson = readJsonInTree(tree, '/libs/my-lib/package.json');
+      expect(packageJson.name).toEqual('@proj/my-lib');
     });
 
     it('should update angular.json', () => {
@@ -380,6 +390,44 @@ describe('lib', () => {
           `RouterModule.forRoot([{path: 'my-dir-my-lib', children: myDirMyLibRoutes}, {path: 'my-dir-my-lib2', children: myDirMyLib2Routes}])`
         );
       });
+    });
+  });
+
+  describe('--unit-test-runner jest', () => {
+    beforeEach(() => {
+      appTree = schematicRunner.runSchematic('jest', {}, appTree);
+    });
+
+    it('should generate jest configuration', () => {
+      const resultTree = schematicRunner.runSchematic(
+        'lib',
+        { name: 'myLib', unitTestRunner: 'jest' },
+        appTree
+      );
+      expect(resultTree.exists('libs/my-lib/src/test-setup.ts')).toBeTruthy();
+      expect(resultTree.exists('libs/my-lib/jest.config.js')).toBeTruthy();
+      const angularJson = readJsonInTree(resultTree, 'angular.json');
+      expect(angularJson.projects['my-lib'].architect.test.builder).toEqual(
+        '@nrwl/builders:jest'
+      );
+    });
+  });
+
+  describe('--unit-test-runner none', () => {
+    it('should not generate test configuration', () => {
+      const resultTree = schematicRunner.runSchematic(
+        'lib',
+        { name: 'myLib', unitTestRunner: 'none' },
+        appTree
+      );
+      expect(
+        resultTree.exists('libs/my-lib/src/lib/my-lib.module.spec.ts')
+      ).toBeFalsy();
+      expect(resultTree.exists('libs/my-lib/tsconfig.spec.json')).toBeFalsy();
+      expect(resultTree.exists('libs/my-lib/jest.config.js')).toBeFalsy();
+      expect(resultTree.exists('libs/my-lib/karma.config.js')).toBeFalsy();
+      const angularJson = readJsonInTree(resultTree, 'angular.json');
+      expect(angularJson.projects['my-lib'].architect.test).toBeUndefined();
     });
   });
 });

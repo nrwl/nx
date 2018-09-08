@@ -47,10 +47,7 @@
               "type": "string"
             }
           },
-          "required": [
-            "name",
-            "email"
-          ]
+          "required": ["name", "email"]
         }
       ]
     },
@@ -71,8 +68,5 @@
       "default": false
     }
   },
-  "required": [
-    "name",
-    "directory"
-  ]
+  "required": ["name", "directory"]
 }

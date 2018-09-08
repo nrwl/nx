@@ -13,7 +13,9 @@ import { insertImport } from '@schematics/angular/utility/ast-utils';
 import {
   addImportToModule,
   addImportToTestBed,
+  getDecoratorPropertyValueNode,
   insert,
+  replaceNodeValue,
   updateJsonInTree
 } from '../../utils/ast-utils';
 import { toFileName } from '../../utils/name-utils';
@@ -25,6 +27,7 @@ import {
 } from '@nrwl/schematics/src/utils/cli-config-utils';
 import { formatFiles } from '../../utils/rules/format-files';
 import { updateKarmaConf } from '../../utils/rules/update-karma-conf';
+import { excludeUnnecessaryFiles } from '@nrwl/schematics/src/utils/rules/filter-tree';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -117,9 +120,27 @@ Nx is designed to help you create and build enterprise grade Angular application
     const content = options.routing
       ? `${baseContent}\n<router-outlet></router-outlet>`
       : baseContent;
-    host.overwrite(
-      `${options.appProjectRoot}/src/app/app.component.html`,
-      content
+
+    if (!options.inlineTemplate) {
+      return host.overwrite(
+        `${options.appProjectRoot}/src/app/app.component.html`,
+        content
+      );
+    }
+
+    const modulePath = `${options.appProjectRoot}/src/app/app.component.ts`;
+    const templateNodeValue = getDecoratorPropertyValueNode(
+      host,
+      modulePath,
+      'Component',
+      'template',
+      '@angular/core'
+    );
+    replaceNodeValue(
+      host,
+      modulePath,
+      templateNodeValue,
+      `\`\n${baseContent}\n\`,\n`
     );
   };
 }
@@ -148,8 +169,7 @@ function updateProject(options: NormalizedSchema): Rule {
               options.appProjectRoot
             }`
           },
-          include: ['**/*.ts'],
-          exclude: [...json.exclude, 'karma.conf.ts']
+          include: ['**/*.ts']
         };
       }),
       updateJsonInTree(`${options.appProjectRoot}/tsconfig.spec.json`, json => {
@@ -248,6 +268,8 @@ export default function(schema: Schema): Rule {
         viewEncapsulation: options.viewEncapsulation,
         routing: false
       }),
+
+      excludeUnnecessaryFiles(),
 
       move(options.e2eProjectName, options.e2eProjectRoot),
       updateE2eProject(options),

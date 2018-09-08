@@ -26,7 +26,7 @@ import {
 import { GlobalNxArgs } from './nx';
 import * as yargs from 'yargs';
 import { WorkspaceResults } from './workspace-results';
-import { workspace } from '@angular-devkit/core/src/experimental';
+import * as fs from 'fs';
 
 export interface YargsAffectedOptions extends yargs.Arguments {}
 
@@ -277,6 +277,16 @@ async function runCommand(
   errorMessage: string
 ) {
   if (parsedArgs.parallel) {
+    // Make sure the `package.json` has the `ng: "ng"` command needed by `npm-run-all`
+    const packageJson = JSON.parse(
+      fs.readFileSync('./package.json').toString('utf-8')
+    );
+    if (!packageJson.scripts || !packageJson.scripts.ng) {
+      console.error(
+        '\nError: Your `package.json` file should contain the `ng: "ng"` command in the `scripts` section.\n'
+      );
+      return process.exit(1);
+    }
     try {
       await runAll(
         projects.map(

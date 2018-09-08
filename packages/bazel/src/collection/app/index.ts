@@ -122,7 +122,6 @@ function addAppToAngularCliJson(options: NormalizedSchema): Rule {
 function addRouterRootConfiguration(path: string): Rule {
   return (host: Tree) => {
     const modulePath = `${path}/app/app.module.ts`;
-    console.log(modulePath);
     const moduleSource = host.read(modulePath)!.toString('utf-8');
     const sourceFile = ts.createSourceFile(
       modulePath,

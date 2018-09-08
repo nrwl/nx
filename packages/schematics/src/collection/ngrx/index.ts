@@ -24,6 +24,8 @@ import {
   RequestContext
 } from './rules';
 import { formatFiles } from '../../utils/rules/format-files';
+import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
+import { excludeUnnecessaryFiles } from '@nrwl/schematics/src/utils/rules/filter-tree';
 
 /**
  * Rule to generate the Nx 'ngrx' Collection
@@ -57,7 +59,7 @@ export default function generateNgrxCollection(_options: Schema): Rule {
         ]
       : [];
     const packageJsonModification = !options.skipPackageJson
-      ? [addNgRxToPackageJson()]
+      ? [addNgRxToPackageJson(), addInstallTask]
       : [];
 
     return chain([
@@ -67,6 +69,10 @@ export default function generateNgrxCollection(_options: Schema): Rule {
       formatFiles(options)
     ])(host, context);
   };
+}
+
+function addInstallTask(_, context: SchematicContext) {
+  context.addTask(new NodePackageInstallTask());
 }
 
 // ********************************************************
@@ -83,6 +89,7 @@ function generateNgrxFilesFromTemplates(options: Schema) {
 
   const templateSource = apply(url('./files'), [
     !options.facade ? filter(excludeFacade) : noop(),
+    excludeUnnecessaryFiles(),
     template({ ...options, tmpl: '', ...names(name) }),
     move(moduleDir)
   ]);

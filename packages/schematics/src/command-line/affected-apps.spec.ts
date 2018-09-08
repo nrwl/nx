@@ -13,6 +13,7 @@ const projects: ProjectNode[] = [
     root: 'apps/app1',
     files: ['apps/app1/app1.ts'],
     tags: [],
+    implicitDependencies: [],
     architect: {},
     type: ProjectType.app
   },
@@ -21,6 +22,7 @@ const projects: ProjectNode[] = [
     root: 'apps/app2',
     files: ['apps/app2/app2.ts'],
     tags: [],
+    implicitDependencies: [],
     architect: {},
     type: ProjectType.app
   },
@@ -29,6 +31,7 @@ const projects: ProjectNode[] = [
     root: 'libs/lib1',
     files: ['libs/lib1/lib1.ts'],
     tags: [],
+    implicitDependencies: [],
     architect: {},
     type: ProjectType.lib
   },
@@ -37,6 +40,7 @@ const projects: ProjectNode[] = [
     root: 'libs/lib2',
     files: ['libs/lib2/lib2.ts'],
     tags: [],
+    implicitDependencies: [],
     architect: {},
     type: ProjectType.lib
   }
@@ -53,6 +57,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: [],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           },
@@ -61,6 +66,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app2',
             files: [],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           }
@@ -71,7 +77,8 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
       expect(deps).toEqual({ app1Name: [], app2Name: [] });
     });
 
-    it('should create implicit dependencies between e2e an apps', () => {
+    // NOTE: previously we did create an implicit dependency here, but that is now handled in `getProjectNodes`
+    it('should not create implicit dependencies between e2e and apps', () => {
       const deps = dependencies(
         'nrwl',
         [
@@ -80,6 +87,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: [],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           },
@@ -88,6 +96,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1Name-e2e',
             files: [],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.e2e
           }
@@ -97,8 +106,84 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
 
       expect(deps).toEqual({
         app1Name: [],
-        'app1Name-e2e': [
+        'app1Name-e2e': []
+      });
+    });
+
+    it('should support providing implicit deps for e2e project with custom name', () => {
+      const deps = dependencies(
+        'nrwl',
+        [
+          {
+            name: 'app1Name',
+            root: 'apps/app1',
+            files: [],
+            tags: [],
+            implicitDependencies: [],
+            architect: {},
+            type: ProjectType.app
+          },
+          {
+            name: 'customName-e2e',
+            root: 'apps/customName-e2e',
+            files: [],
+            tags: [],
+            implicitDependencies: ['app1Name'],
+            architect: {},
+            type: ProjectType.e2e
+          }
+        ],
+        () => null
+      );
+
+      expect(deps).toEqual({
+        app1Name: [],
+        'customName-e2e': [
           { projectName: 'app1Name', type: DependencyType.implicit }
+        ]
+      });
+    });
+
+    it('should support providing implicit deps for e2e project with standard name', () => {
+      const deps = dependencies(
+        'nrwl',
+        [
+          {
+            name: 'app1Name',
+            root: 'apps/app1',
+            files: [],
+            tags: [],
+            implicitDependencies: [],
+            architect: {},
+            type: ProjectType.app
+          },
+          {
+            name: 'app2Name',
+            root: 'apps/app2',
+            files: [],
+            tags: [],
+            implicitDependencies: [],
+            architect: {},
+            type: ProjectType.app
+          },
+          {
+            name: 'app1Name-e2e',
+            root: 'apps/app1Name-e2e',
+            files: [],
+            tags: [],
+            implicitDependencies: ['app2Name'],
+            architect: {},
+            type: ProjectType.e2e
+          }
+        ],
+        () => null
+      );
+
+      expect(deps).toEqual({
+        app1Name: [],
+        app2Name: [],
+        'app1Name-e2e': [
+          { projectName: 'app2Name', type: DependencyType.implicit }
         ]
       });
     });
@@ -112,6 +197,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: ['app1.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           },
@@ -120,6 +206,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/lib1',
             files: ['lib1.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.lib
           },
@@ -128,6 +215,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/lib2',
             files: ['lib2.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.lib
           }
@@ -166,6 +254,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: ['app1.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           },
@@ -174,6 +263,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/lib1',
             files: ['lib1.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.lib
           },
@@ -182,6 +272,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/lib2',
             files: ['lib2.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.lib
           }
@@ -222,6 +313,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: ['index.html'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           }
@@ -241,6 +333,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/aa',
             files: ['aa.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           },
@@ -249,6 +342,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/aa/bb',
             files: ['bb.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           }
@@ -278,6 +372,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/aa',
             files: ['aa.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           },
@@ -286,6 +381,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/bb',
             files: ['bb.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           }
@@ -318,6 +414,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/aa',
             files: ['aa.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           }
@@ -342,7 +439,10 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         'nrwl',
         projects,
         {
-          'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+          files: {
+            'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+          },
+          projects: {}
         },
         file => {
           switch (file) {
@@ -369,7 +469,10 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
         'nrwl',
         projects,
         {
-          'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+          files: {
+            'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+          },
+          projects: {}
         },
         file => {
           switch (file) {
@@ -391,6 +494,76 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
       expect(affected).toEqual(['app2Name', 'app1Name']);
     });
 
+    it('should return list of affected apps if a touched file is part of a project-level implicit dependency', () => {
+      const projects = [
+        {
+          name: 'app1Name',
+          root: 'apps/app1',
+          files: ['apps/app1/app1.ts'],
+          tags: [],
+          implicitDependencies: [],
+          architect: {},
+          type: ProjectType.app
+        },
+        {
+          name: 'app2Name',
+          root: 'apps/app2',
+          files: ['apps/app2/app2.ts'],
+          tags: [],
+          implicitDependencies: [],
+          architect: {},
+          type: ProjectType.app
+        },
+        {
+          name: 'lib1Name',
+          root: 'libs/lib1',
+          files: ['libs/lib1/lib1.ts'],
+          tags: [],
+          implicitDependencies: ['lib2Name'],
+          architect: {},
+          type: ProjectType.lib
+        },
+        {
+          name: 'lib2Name',
+          root: 'libs/lib2',
+          files: ['libs/lib2/lib2.ts'],
+          tags: [],
+          implicitDependencies: [],
+          architect: {},
+          type: ProjectType.lib
+        }
+      ];
+      const affected = affectedAppNames(
+        'nrwl',
+        projects,
+        {
+          files: {
+            'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+          },
+          projects: {
+            lib2Name: ['lib1Name']
+          }
+        },
+        file => {
+          switch (file) {
+            case 'apps/app1/app1.ts':
+              return `
+            import '@nrwl/lib1';
+          `;
+            case 'apps/app2/app2.ts':
+              return ``;
+            case 'libs/lib1/lib1.ts':
+              return ``;
+            case 'libs/lib2/lib2.ts':
+              return ``;
+          }
+        },
+        ['libs/lib2/lib2.ts']
+      );
+
+      expect(affected).toEqual(['app1Name']);
+    });
+
     it('should handle slashes', () => {
       const affected = affectedAppNames(
         'nrwl',
@@ -400,12 +573,16 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: ['apps\\app1\\one\\app1.ts', 'apps\\app1\\two\\app1.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           }
         ],
         {
-          'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+          files: {
+            'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+          },
+          projects: {}
         },
         file => {
           switch (file) {
@@ -430,6 +607,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: ['apps/app1/app1.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           },
@@ -438,12 +616,16 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app2',
             files: ['apps/app2/app2.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           }
         ],
         {
-          'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+          files: {
+            'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+          },
+          projects: {}
         },
         file => {
           switch (file) {
@@ -458,13 +640,62 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
 
       expect(affected).toEqual(['app2Name', 'app1Name']);
     });
+
+    it('should handle circular dependencies for project-level implicit dependencies', () => {
+      const affected = affectedAppNames(
+        'nrwl',
+        [
+          {
+            name: 'app1Name',
+            root: 'apps/app1',
+            files: ['apps/app1/app1.ts'],
+            tags: [],
+            implicitDependencies: ['app2Name'],
+            architect: {},
+            type: ProjectType.app
+          },
+          {
+            name: 'app2Name',
+            root: 'apps/app2',
+            files: ['apps/app2/app2.ts'],
+            tags: [],
+            implicitDependencies: ['app1Name'],
+            architect: {},
+            type: ProjectType.app
+          }
+        ],
+        {
+          files: {
+            'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+          },
+          projects: {
+            app1Name: ['app2Name'],
+            app2Name: ['app1Name']
+          }
+        },
+        file => {
+          switch (file) {
+            case 'apps/app1/app1.ts':
+              return ``;
+            case 'apps/app2/app2.ts':
+              return ``;
+          }
+        },
+        ['apps/app1/app1.ts']
+      );
+
+      expect(affected).toEqual(['app2Name', 'app1Name']);
+    });
   });
 
   describe('touchedProjects', () => {
     it('should return the list of touchedProjects', () => {
       const tp = touchedProjects(
         {
-          'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+          files: {
+            'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+          },
+          projects: {}
         },
         [
           {
@@ -472,6 +703,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: ['app1.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           },
@@ -480,6 +712,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app2',
             files: ['app2.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           },
@@ -488,6 +721,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/lib1',
             files: ['lib1.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.lib
           },
@@ -496,6 +730,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/lib2',
             files: ['lib2.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.lib
           }
@@ -509,7 +744,10 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
     it('should return the list of touchedProjects independent from the git structure', () => {
       const tp = touchedProjects(
         {
-          'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+          files: {
+            'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name']
+          },
+          projects: {}
         },
         [
           {
@@ -517,6 +755,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: ['app1.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           },
@@ -525,6 +764,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app2',
             files: ['app2.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           },
@@ -533,6 +773,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/lib1',
             files: ['lib1.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.lib
           },
@@ -541,6 +782,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/lib2',
             files: ['lib2.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.lib
           }
@@ -554,8 +796,11 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
     it('should return the list of implicitly touched projects', () => {
       const tp = touchedProjects(
         {
-          'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name'],
-          Jenkinsfile: ['app1Name', 'app2Name']
+          files: {
+            'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name'],
+            Jenkinsfile: ['app1Name', 'app2Name']
+          },
+          projects: {}
         },
         [
           {
@@ -563,6 +808,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app1',
             files: ['app1.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           },
@@ -571,6 +817,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'apps/app2',
             files: ['app2.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.app
           },
@@ -579,6 +826,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/lib1',
             files: ['lib1.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.lib
           },
@@ -587,6 +835,7 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
             root: 'libs/lib2',
             files: ['lib2.ts'],
             tags: [],
+            implicitDependencies: [],
             architect: {},
             type: ProjectType.lib
           }

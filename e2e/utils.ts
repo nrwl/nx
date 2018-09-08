@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execSync, exec } from 'child_process';
 import { readFileSync, statSync, writeFileSync } from 'fs';
 import * as path from 'path';
 
@@ -82,6 +82,37 @@ export function copyMissingPackages(): void {
 function copyNodeModule(path: string, name: string) {
   execSync(`rm -rf tmp/${path}/node_modules/${name}`);
   execSync(`cp -a node_modules/${name} tmp/${path}/node_modules/${name}`);
+}
+
+export function runCommandAsync(
+  command: string,
+  opts = {
+    silenceError: false
+  }
+): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolve, reject) => {
+    exec(
+      command,
+      {
+        cwd: `./tmp/proj`
+      },
+      (err, stdout, stderr) => {
+        if (!opts.silenceError && err) {
+          reject(err);
+        }
+        resolve({ stdout, stderr });
+      }
+    );
+  });
+}
+
+export function runCLIAsync(
+  command: string,
+  opts = {
+    silenceError: false
+  }
+): Promise<{ stdout: string; stderr: string }> {
+  return runCommandAsync(`./node_modules/.bin/ng ${command}`, opts);
 }
 
 export function runCLI(

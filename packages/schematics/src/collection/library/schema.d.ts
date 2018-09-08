@@ -1,3 +1,5 @@
+import { UnitTestRunner } from '../../utils/test-runners';
+
 export interface Schema {
   name: string;
   skipFormat: boolean;
@@ -14,4 +16,6 @@ export interface Schema {
   lazy?: boolean;
   parentModule?: string;
   tags?: string;
+
+  unitTestRunner: UnitTestRunner;
 }

@@ -1,0 +1,4 @@
+tmp
+build
+node_modules
+packages/schematics/src/collection/**/files/*.json

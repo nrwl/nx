@@ -238,7 +238,12 @@ export function removeFromNgModule(
   }
 
   // Get all the children property assignment of object literals.
-  const matchingProperty = getMatchingProperty(source, property);
+  const matchingProperty = getMatchingProperty(
+    source,
+    property,
+    'NgModule',
+    '@angular/core'
+  );
   if (matchingProperty) {
     return [
       new RemoveChange(
@@ -343,7 +348,12 @@ export function getBootstrapComponent(
   source: ts.SourceFile,
   moduleClassName: string
 ): string {
-  const bootstrap = getMatchingProperty(source, 'bootstrap');
+  const bootstrap = getMatchingProperty(
+    source,
+    'bootstrap',
+    'NgModule',
+    '@angular/core'
+  );
   if (!bootstrap) {
     throw new Error(`Cannot find bootstrap components in '${moduleClassName}'`);
   }
@@ -383,9 +393,11 @@ function getMatchingObjectLiteralElement(
 
 function getMatchingProperty(
   source: ts.SourceFile,
-  property: string
+  property: string,
+  identifier: string,
+  module: string
 ): ts.ObjectLiteralElement {
-  const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
+  const nodes = getDecoratorMetadata(source, identifier, module);
   let node: any = nodes[0]; // tslint:disable-line:no-any
 
   if (!node) return null;
@@ -424,7 +436,12 @@ export function addIncludeToTsConfig(
 }
 
 function getListOfRoutes(source: ts.SourceFile): ts.NodeArray<ts.Expression> {
-  const imports: any = getMatchingProperty(source, 'imports');
+  const imports: any = getMatchingProperty(
+    source,
+    'imports',
+    'NgModule',
+    '@angular/core'
+  );
 
   if (imports.initializer.kind === ts.SyntaxKind.ArrayLiteralExpression) {
     const a = imports.initializer as ts.ArrayLiteralExpression;
@@ -887,4 +904,39 @@ export function insertImport(
     fallbackPos,
     ts.SyntaxKind.StringLiteral
   );
+}
+
+export function getDecoratorPropertyValueNode(
+  host: Tree,
+  modulePath: string,
+  identifier: string,
+  property: string,
+  module: string
+) {
+  const moduleSourceText = host.read(modulePath)!.toString('utf-8');
+  const moduleSource = ts.createSourceFile(
+    modulePath,
+    moduleSourceText,
+    ts.ScriptTarget.Latest,
+    true
+  );
+  const templateNode = getMatchingProperty(
+    moduleSource,
+    property,
+    identifier,
+    module
+  );
+
+  return templateNode.getChildAt(templateNode.getChildCount() - 1);
+}
+
+export function replaceNodeValue(
+  host: Tree,
+  modulePath: string,
+  node: ts.Node,
+  content: string
+) {
+  insert(host, modulePath, [
+    new ReplaceChange(modulePath, node.pos, node.getFullText(), content)
+  ]);
 }

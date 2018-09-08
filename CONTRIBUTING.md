@@ -2,12 +2,9 @@
 
 We would love for you to contribute to Nx! Read this document to see how to do it.
 
-
 ## Got a Question?
 
 We are trying to keep GitHub issues for bug reports and feature requests. Stack Overflow is a much better place to ask general questions about how to use Nx.
-
-
 
 ## Building the Project
 
@@ -26,8 +23,6 @@ To make sure your changes do not break any unit tests, run `yarn test`. You can 
 ### Running E2E Tests
 
 To make sure you changes do not break any unit tests, run `yarn e2e`. Running e2e tests can take some time, so if it often useful to run a single test. You can do it as follows: `yarn e2e lint`
-
-
 
 ## Submitting a PR
 
@@ -79,6 +74,11 @@ feat(schematics): add an option to generate lazy-loadable modules
 
 `ng generate lib mylib --lazy` provisions the mylib project in tslint.json
 ```
+
+#### Commitizen
+
+To simplify and automate the process of commiting with this format,
+**Nx is a [Commitizen](https://github.com/commitizen/cz-cli) friendly repository**, just do `git add` and execute `yarn commit`.
 
 ## Migrations
 

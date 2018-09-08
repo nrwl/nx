@@ -1,20 +1,22 @@
 {
   "name": "@nrwl/nx-source",
-  "version": "6.2.0",
+  "version": "6.3.0",
   "description": "Nrwl Extensions for Angular",
   "main": "index.js",
   "private": true,
   "scripts": {
     "build": "./scripts/build.sh",
+    "commit": "git-cz",
+    "checkcommit": "./scripts/commit-lint.js",
     "e2e": "./scripts/e2e.sh",
-    "format": "prettier \"{packages,e2e}/**/*.ts\" --write",
+    "format": "prettier \"./**/*.{ts,js,json,css,md}\" \"!./**/{__name__,__directory__}/**\" --write",
     "linknpm": "./scripts/link.sh",
     "nx-release": "./scripts/nx-release.js",
     "copy": "./scripts/copy.sh",
     "test:schematics": "yarn linknpm fast && ./scripts/test_schematics.sh",
     "test:nx": "yarn linknpm fast && ./scripts/test_nx.sh",
     "test": "yarn linknpm fast && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
-    "checkformat": "prettier \"{packages,e2e}/**/*.ts\" --list-different"
+    "checkformat": "prettier \"./**/*.{ts,js,json,css,md}\" \"!./**/{__name__,__directory__}/**\" --list-different"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^0.7.2",
@@ -42,11 +44,13 @@
     "@types/yargs": "^11.0.0",
     "angular": "1.6.6",
     "app-root-path": "^2.0.1",
+    "commitizen": "^2.10.1",
     "conventional-changelog-cli": "^1.3.21",
     "cosmiconfig": "^4.0.0",
+    "cz-conventional-changelog": "^2.1.0",
     "fs-extra": "5.0.0",
     "graphviz": "^0.0.8",
-    "husky": "^0.14.3",
+    "husky": "^1.0.0-rc.13",
     "jasmine-core": "~2.99.1",
     "jasmine-marbles": "0.3.1",
     "jasmine-spec-reporter": "~4.2.1",
@@ -56,6 +60,7 @@
     "karma-chrome-launcher": "~2.2.0",
     "karma-jasmine": "~1.1.1",
     "karma-webpack": "2.0.4",
+    "lint-staged": "^7.2.2",
     "ng-packagr": "3.0.6",
     "npm-run-all": "4.1.2",
     "opn": "^5.3.0",
@@ -80,5 +85,21 @@
       "tmp",
       "collection/.*/files"
     ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "./**/*.{ts,js,json,css,md}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
