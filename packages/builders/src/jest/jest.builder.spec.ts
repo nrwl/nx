@@ -69,7 +69,9 @@ describe('Jest Builder', () => {
           onlyChanged: true,
           passWithNoTests: true,
           bail: true,
-          silent: true
+          silent: true,
+          runInBand: true,
+          maxWorkers: 2
         }
       })
       .toPromise();
@@ -88,7 +90,9 @@ describe('Jest Builder', () => {
         onlyChanged: true,
         passWithNoTests: true,
         bail: true,
-        silent: true
+        silent: true,
+        runInBand: true,
+        maxWorkers: 2
       },
       ['./jest.config.js']
     );

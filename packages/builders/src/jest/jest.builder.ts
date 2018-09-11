@@ -19,7 +19,9 @@ export interface JestBuilderOptions {
   ci?: boolean;
   codeCoverage?: boolean;
   onlyChanged?: boolean;
+  maxWorkers?: number;
   passWithNoTests?: boolean;
+  runInBand?: boolean;
   setupFile?: string;
   silent?: boolean;
   updateSnapshot?: boolean;
@@ -39,6 +41,7 @@ export default class JestBuilder implements Builder<JestBuilderOptions> {
       onlyChanged: options.onlyChanged,
       passWithNoTests: options.passWithNoTests,
       silent: options.silent,
+      runInBand: options.runInBand,
       globals: JSON.stringify({
         'ts-jest': {
           tsConfigFile: path.relative(builderConfig.root, options.tsConfig)
@@ -46,6 +49,10 @@ export default class JestBuilder implements Builder<JestBuilderOptions> {
         __TRANSFORM_HTML__: true
       })
     };
+
+    if (options.maxWorkers) {
+      config.maxWorkers = options.maxWorkers;
+    }
 
     if (options.setupFile) {
       config.setupTestFrameworkScriptFile = path.join(
