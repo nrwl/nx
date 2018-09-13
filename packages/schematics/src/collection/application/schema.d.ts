@@ -10,4 +10,5 @@ export interface Schema {
   skipTests?: boolean;
   directory?: string;
   tags?: string;
+  nestE2e?: boolean;
 }

@@ -244,9 +244,9 @@ function updateE2eProject(options: NormalizedSchema): Rule {
           extends: `${offsetFromRoot(options.e2eProjectRoot)}tsconfig.json`,
           compilerOptions: {
             ...json.compilerOptions,
-            outDir: `${offsetFromRoot(options.e2eProjectRoot)}dist/out-tsc/${
+            outDir: `${offsetFromRoot(
               options.e2eProjectRoot
-            }`
+            )}dist/out-tsc/${options.e2eProjectRoot.slice(0, -4) + '-e2e'}`
           }
         };
       })
@@ -297,7 +297,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const e2eProjectName = `${appProjectName}-e2e`;
 
   const appProjectRoot = `apps/${appDirectory}`;
-  const e2eProjectRoot = `apps/${appDirectory}-e2e`;
+  let e2eProjectRoot = `apps/${appDirectory}-e2e`;
+  if (options.nestE2e) e2eProjectRoot = `apps/${appDirectory}/e2e`;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map(s => s.trim())
