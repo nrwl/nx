@@ -49,6 +49,16 @@
       "type": "boolean",
       "description":
         "Fail on missing snapshots. (https://jestjs.io/docs/en/cli#ci)"
+    },
+    "bail": {
+      "type": "boolean",
+      "description":
+        "Exit the test suite immediately upon the first failing test suite. (https://jestjs.io/docs/en/cli#bail)"
+    },
+    "silent": {
+      "type": "boolean",
+      "description":
+        "Prevent tests from printing messages through the console. (https://jestjs.io/docs/en/cli#silent)"
     }
   },
   "required": ["jestConfig", "tsConfig"]

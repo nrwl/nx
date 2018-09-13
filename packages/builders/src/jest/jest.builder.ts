@@ -15,11 +15,13 @@ export interface JestBuilderOptions {
   jestConfig: string;
   tsConfig: string;
   watch: boolean;
+  bail?: boolean;
   ci?: boolean;
   codeCoverage?: boolean;
   onlyChanged?: boolean;
   passWithNoTests?: boolean;
   setupFile?: string;
+  silent?: boolean;
   updateSnapshot?: boolean;
 }
 
@@ -31,10 +33,12 @@ export default class JestBuilder implements Builder<JestBuilderOptions> {
     const config: any = {
       watch: options.watch,
       coverage: options.codeCoverage,
+      bail: options.bail,
       ci: options.ci,
       updateSnapshot: options.updateSnapshot,
       onlyChanged: options.onlyChanged,
       passWithNoTests: options.passWithNoTests,
+      silent: options.silent,
       globals: JSON.stringify({
         'ts-jest': {
           tsConfigFile: path.relative(builderConfig.root, options.tsConfig)
