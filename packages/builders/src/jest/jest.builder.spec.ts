@@ -67,7 +67,9 @@ describe('Jest Builder', () => {
           ci: true,
           updateSnapshot: true,
           onlyChanged: true,
-          passWithNoTests: true
+          passWithNoTests: true,
+          bail: true,
+          silent: true
         }
       })
       .toPromise();
@@ -84,7 +86,9 @@ describe('Jest Builder', () => {
         ci: true,
         updateSnapshot: true,
         onlyChanged: true,
-        passWithNoTests: true
+        passWithNoTests: true,
+        bail: true,
+        silent: true
       },
       ['./jest.config.js']
     );
