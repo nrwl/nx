@@ -404,7 +404,9 @@ describe('lib', () => {
         { name: 'myLib', unitTestRunner: 'jest' },
         appTree
       );
+      expect(resultTree.exists('libs/my-lib/src/test.ts')).toBeFalsy();
       expect(resultTree.exists('libs/my-lib/src/test-setup.ts')).toBeTruthy();
+      expect(resultTree.exists('libs/my-lib/tsconfig.spec.json')).toBeTruthy();
       expect(resultTree.exists('libs/my-lib/jest.config.js')).toBeTruthy();
       const angularJson = readJsonInTree(resultTree, 'angular.json');
       expect(angularJson.projects['my-lib'].architect.test.builder).toEqual(
@@ -423,6 +425,8 @@ describe('lib', () => {
       expect(
         resultTree.exists('libs/my-lib/src/lib/my-lib.module.spec.ts')
       ).toBeFalsy();
+      expect(resultTree.exists('libs/my-lib/src/test.ts')).toBeFalsy();
+      expect(resultTree.exists('libs/my-lib/src/test.ts')).toBeFalsy();
       expect(resultTree.exists('libs/my-lib/tsconfig.spec.json')).toBeFalsy();
       expect(resultTree.exists('libs/my-lib/jest.config.js')).toBeFalsy();
       expect(resultTree.exists('libs/my-lib/karma.config.js')).toBeFalsy();

@@ -68,6 +68,12 @@
     "tags": {
       "type": "string",
       "description": "Add tags to the application (used for linting)"
+    },
+    "unitTestRunner": {
+      "type": "string",
+      "enum": ["karma", "jest", "none"],
+      "description": "Test runner to use for unit tests",
+      "default": "karma"
     }
   },
   "required": []

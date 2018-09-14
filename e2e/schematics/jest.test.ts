@@ -2,25 +2,15 @@ import {
   newProject,
   runCLI,
   newLib,
-  copyMissingPackages,
-  updateFile,
-  readJson,
-  runCommand,
-  runCLIAsync
+  runCLIAsync,
+  newApp,
+  copyMissingPackages
 } from '../utils';
 
 describe('Jest', () => {
   beforeAll(() => {
     newProject();
-    runCLI('generate jest', {
-      silenceError: true
-    });
-    // TODO: remove this hack after there's a version of @nrwl/builders published
-    const packageJson = readJson('package.json');
-    packageJson.devDependencies['@nrwl/builders'] =
-      '../../build/packages/builders';
-    updateFile('package.json', JSON.stringify(packageJson));
-    runCommand('npm install');
+    runCLI('generate jest');
     copyMissingPackages();
   });
 
@@ -35,6 +25,20 @@ describe('Jest', () => {
       const jestResult = await runCLIAsync('test jestlib');
       expect(jestResult.stderr).toContain('Test Suites: 3 passed, 3 total');
       done();
+    },
+    10000
+  );
+
+  it(
+    'should be able to generate a testable application using jest',
+    async () => {
+      newApp('jestapp --unit-test-runner jest');
+      await Promise.all([
+        runCLIAsync('generate service test --project jestapp'),
+        runCLIAsync('generate component test --project jestapp')
+      ]);
+      const jestResult = await runCLIAsync('test jestapp');
+      expect(jestResult.stderr).toContain('Test Suites: 3 passed, 3 total');
     },
     10000
   );

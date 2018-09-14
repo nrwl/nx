@@ -5,7 +5,8 @@ import {
   noop,
   Rule,
   Tree,
-  SchematicContext
+  SchematicContext,
+  schematic
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as ts from 'typescript';
@@ -150,11 +151,14 @@ function updateProject(options: NormalizedSchema): Rule {
     return chain([
       updateJsonInTree(getWorkspacePath(host), json => {
         const project = json.projects[options.name];
-        const fixedProject = replaceAppNameWithPath(
+        let fixedProject = replaceAppNameWithPath(
           project,
           options.name,
           options.appProjectRoot
         );
+        if (options.unitTestRunner !== 'karma') {
+          delete fixedProject.architect.test;
+        }
         json.projects[options.name] = fixedProject;
         return json;
       }),
@@ -172,18 +176,28 @@ function updateProject(options: NormalizedSchema): Rule {
           include: ['**/*.ts']
         };
       }),
-      updateJsonInTree(`${options.appProjectRoot}/tsconfig.spec.json`, json => {
-        return {
-          ...json,
-          extends: `${offsetFromRoot(options.appProjectRoot)}tsconfig.json`,
-          compilerOptions: {
-            ...json.compilerOptions,
-            outDir: `${offsetFromRoot(options.appProjectRoot)}dist/out-tsc/${
-              options.appProjectRoot
-            }`
-          }
-        };
-      }),
+      options.unitTestRunner === 'karma'
+        ? updateJsonInTree(
+            `${options.appProjectRoot}/tsconfig.spec.json`,
+            json => {
+              return {
+                ...json,
+                extends: `${offsetFromRoot(
+                  options.appProjectRoot
+                )}tsconfig.json`,
+                compilerOptions: {
+                  ...json.compilerOptions,
+                  outDir: `${offsetFromRoot(
+                    options.appProjectRoot
+                  )}dist/out-tsc/${options.appProjectRoot}`
+                }
+              };
+            }
+          )
+        : host => {
+            host.delete(`${options.appProjectRoot}/tsconfig.spec.json`);
+            return host;
+          },
       updateJsonInTree(`${options.appProjectRoot}/tslint.json`, json => {
         return {
           ...json,
@@ -201,6 +215,12 @@ function updateProject(options: NormalizedSchema): Rule {
         };
       }),
       host => {
+        if (options.unitTestRunner !== 'karma') {
+          host.delete(`${options.appProjectRoot}/karma.conf.js`);
+          host.delete(`${options.appProjectRoot}/src/test.ts`);
+          return host;
+        }
+
         const karma = host
           .read(`${options.appProjectRoot}/karma.conf.js`)
           .toString();
@@ -280,9 +300,16 @@ export default function(schema: Schema): Rule {
       updateComponentTemplate(options),
       addNxModule(options),
       options.routing ? addRouterRootConfiguration(options) : noop(),
-      updateKarmaConf({
-        projectName: options.name
-      }),
+      options.unitTestRunner === 'karma'
+        ? updateKarmaConf({
+            projectName: options.name
+          })
+        : noop(),
+      options.unitTestRunner === 'jest'
+        ? schematic('jest-project', {
+            project: options.name
+          })
+        : noop(),
       formatFiles(options)
     ])(host, context);
   };

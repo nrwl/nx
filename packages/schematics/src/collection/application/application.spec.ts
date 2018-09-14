@@ -267,4 +267,42 @@ describe('app', () => {
       ).toContain('This is an Angular CLI app built with Nrwl Nx!');
     });
   });
+
+  describe('--unit-test-runner jest', () => {
+    beforeEach(() => {
+      appTree = schematicRunner.runSchematic('jest', {}, appTree);
+    });
+    it('should generate a jest config', () => {
+      const tree = schematicRunner.runSchematic(
+        'app',
+        { name: 'myApp', unitTestRunner: 'jest' },
+        appTree
+      );
+      expect(tree.exists('apps/my-app/src/test.ts')).toBeFalsy();
+      expect(tree.exists('apps/my-app/src/test-setup.ts')).toBeTruthy();
+      expect(tree.exists('apps/my-app/tsconfig.spec.json')).toBeTruthy();
+      expect(tree.exists('apps/my-app/jest.config.js')).toBeTruthy();
+      const angularJson = readJsonInTree(tree, 'angular.json');
+      expect(angularJson.projects['my-app'].architect.test.builder).toEqual(
+        '@nrwl/builders:jest'
+      );
+    });
+  });
+
+  describe('--unit-test-runner none', () => {
+    it('should not generate test configuration', () => {
+      const tree = schematicRunner.runSchematic(
+        'app',
+        { name: 'myApp', unitTestRunner: 'none' },
+        appTree
+      );
+      expect(tree.exists('apps/my-app/src/test-setup.ts')).toBeFalsy();
+      expect(tree.exists('apps/my-app/src/test.ts')).toBeFalsy();
+      expect(tree.exists('apps/my-app/tsconfig.spec.json')).toBeFalsy();
+      expect(tree.exists('apps/my-app/jest.config.js')).toBeFalsy();
+      expect(tree.exists('apps/my-app/karma.config.js')).toBeFalsy();
+      const angularJson = readJsonInTree(tree, 'angular.json');
+      expect(angularJson.projects['my-app'].architect.test).toBeUndefined();
+    });
+  });
 });
