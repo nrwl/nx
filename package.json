@@ -78,6 +78,7 @@
     "semver": "5.4.1",
     "strip-json-comments": "2.0.1",
     "tmp": "0.0.33",
+    "ts-loader": "^5.2.1",
     "tslint": "5.11.0",
     "typescript": "~2.9.2",
     "viz.js": "^1.8.1",

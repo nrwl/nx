@@ -9581,6 +9581,16 @@ trim-right@^1.0.1:
   dependencies:
     glob "^6.0.4"
 
+ts-loader@^5.2.1:
+  version "5.2.1"
+  resolved "https://registry.yarnpkg.com/ts-loader/-/ts-loader-5.2.1.tgz#e6815c631dcafc24319ce8be6f8af94908749cf3"
+  dependencies:
+    chalk "^2.3.0"
+    enhanced-resolve "^4.0.0"
+    loader-utils "^1.0.2"
+    micromatch "^3.1.4"
+    semver "^5.0.1"
+
 tsickle@^0.32.1:
   version "0.32.1"
   resolved "https://registry.yarnpkg.com/tsickle/-/tsickle-0.32.1.tgz#f16e94ba80b32fc9ebe320dc94fbc2ca7f3521a5"
