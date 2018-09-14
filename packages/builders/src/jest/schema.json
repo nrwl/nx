@@ -59,6 +59,16 @@
       "type": "boolean",
       "description":
         "Prevent tests from printing messages through the console. (https://jestjs.io/docs/en/cli#silent)"
+    },
+    "runInBand": {
+      "type": "boolean",
+      "description":
+        "Run tests in a single process as opposed to multiple workers. Useful for CI. (https://jestjs.io/docs/en/cli.html#runinband)"
+    },
+    "maxWorkers": {
+      "type": "number",
+      "description":
+        "Max number of workers to run tests across. Useful for CI. (https://jestjs.io/docs/en/cli.html#maxworkers-num)"
     }
   },
   "required": ["jestConfig", "tsConfig"]
