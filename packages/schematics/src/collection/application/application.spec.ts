@@ -192,6 +192,15 @@ describe('app', () => {
       expect(tslintJson.extends).toEqual('../../tslint.json');
 
       expect(tree.exists('apps/my-app/e2e/src/app.po.ts')).toBeTruthy();
+
+      // check e2e spec file patching was successful
+      const e2eSpec = getFileContent(
+        tree,
+        'apps/my-app/e2e/src/app.e2e-spec.ts'
+      );
+      expect(e2eSpec.indexOf('<any>')).toBeGreaterThan(-1);
+      expect(e2eSpec.indexOf('jasmine')).toBeGreaterThan(-1);
+
       const tsconfigE2E = JSON.parse(
         stripJsonComments(
           getFileContent(tree, 'apps/my-app/e2e/tsconfig.e2e.json')
@@ -387,6 +396,14 @@ describe('app', () => {
       ].forEach(path => {
         expect(tree.exists(path)).toBeTruthy();
       });
+
+      // check e2e spec file patching was successful
+      const e2eSpec = getFileContent(
+        tree,
+        'apps/my-dir/my-app/e2e/src/app.e2e-spec.ts'
+      );
+      expect(e2eSpec.indexOf('<any>')).toBeGreaterThan(-1);
+      expect(e2eSpec.indexOf('jasmine')).toBeGreaterThan(-1);
 
       // Make sure these have properties
       [
