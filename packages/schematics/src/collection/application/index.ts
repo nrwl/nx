@@ -29,6 +29,7 @@ import {
 import { formatFiles } from '../../utils/rules/format-files';
 import { updateKarmaConf } from '../../utils/rules/update-karma-conf';
 import { excludeUnnecessaryFiles } from '@nrwl/schematics/src/utils/rules/filter-tree';
+import { join, normalize } from '@angular-devkit/core';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -163,6 +164,12 @@ function updateProject(options: NormalizedSchema): Rule {
         );
         if (options.unitTestRunner !== 'karma') {
           delete fixedProject.architect.test;
+
+          fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
+            path =>
+              path !==
+              join(normalize(options.appProjectRoot), 'tsconfig.spec.json')
+          );
         }
         json.projects[options.name] = fixedProject;
         return json;

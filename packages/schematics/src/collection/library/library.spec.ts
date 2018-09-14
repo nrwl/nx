@@ -412,6 +412,12 @@ describe('lib', () => {
       expect(angularJson.projects['my-lib'].architect.test.builder).toEqual(
         '@nrwl/builders:jest'
       );
+      expect(
+        angularJson.projects['my-lib'].architect.lint.options.tsConfig
+      ).toEqual([
+        'libs/my-lib/tsconfig.lib.json',
+        'libs/my-lib/tsconfig.spec.json'
+      ]);
     });
   });
 
@@ -432,6 +438,9 @@ describe('lib', () => {
       expect(resultTree.exists('libs/my-lib/karma.config.js')).toBeFalsy();
       const angularJson = readJsonInTree(resultTree, 'angular.json');
       expect(angularJson.projects['my-lib'].architect.test).toBeUndefined();
+      expect(
+        angularJson.projects['my-lib'].architect.lint.options.tsConfig
+      ).toEqual(['libs/my-lib/tsconfig.lib.json']);
     });
   });
 });

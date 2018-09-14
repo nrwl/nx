@@ -297,6 +297,12 @@ describe('app', () => {
       expect(angularJson.projects['my-app'].architect.test.builder).toEqual(
         '@nrwl/builders:jest'
       );
+      expect(
+        angularJson.projects['my-app'].architect.lint.options.tsConfig
+      ).toEqual([
+        'apps/my-app/tsconfig.app.json',
+        'apps/my-app/tsconfig.spec.json'
+      ]);
     });
   });
 
@@ -314,6 +320,9 @@ describe('app', () => {
       expect(tree.exists('apps/my-app/karma.config.js')).toBeFalsy();
       const angularJson = readJsonInTree(tree, 'angular.json');
       expect(angularJson.projects['my-app'].architect.test).toBeUndefined();
+      expect(
+        angularJson.projects['my-app'].architect.lint.options.tsConfig
+      ).toEqual(['apps/my-app/tsconfig.app.json']);
     });
   });
 });
