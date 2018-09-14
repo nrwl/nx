@@ -165,14 +165,23 @@ function updateAngularCLIJson(options: Schema): Rule {
       )
     };
 
-    buildConfig.configurations.production.fileReplacements = buildConfig.configurations.production.fileReplacements.map(
-      replacement => {
-        return {
-          replace: convertPath(options.name, replacement.replace),
-          with: convertPath(options.name, replacement.with)
-        };
-      }
-    );
+    Object.keys(buildConfig.configurations)
+      .filter(
+        configurationName =>
+          buildConfig.configurations[configurationName].fileReplacements
+      )
+      .forEach(configurationName => {
+        buildConfig.configurations[
+          configurationName
+        ].fileReplacements = buildConfig.configurations[
+          configurationName
+        ].fileReplacements.map(replacement => {
+          return {
+            replace: convertPath(options.name, replacement.replace),
+            with: convertPath(options.name, replacement.with)
+          };
+        });
+      });
 
     const serveConfig = app.architect.serve;
 
