@@ -16,9 +16,6 @@ describe('lib', () => {
     appTree = new VirtualTree();
     appTree = createEmptyWorkspace(appTree);
     appTree = schematicRunner.runSchematic('jest', {}, appTree);
-  });
-
-  it('should generate files', () => {
     appTree = schematicRunner.runSchematic(
       'lib',
       {
@@ -27,6 +24,9 @@ describe('lib', () => {
       },
       appTree
     );
+  });
+
+  it('should generate files', () => {
     const resultTree = schematicRunner.runSchematic(
       'jest-project',
       {
@@ -40,14 +40,6 @@ describe('lib', () => {
   });
 
   it('should alter angular.json', () => {
-    appTree = schematicRunner.runSchematic(
-      'lib',
-      {
-        name: 'lib1',
-        unitTestRunner: 'none'
-      },
-      appTree
-    );
     const resultTree = schematicRunner.runSchematic(
       'jest-project',
       {
@@ -69,15 +61,24 @@ describe('lib', () => {
     );
   });
 
-  it('should create a tsconfig.spec.json', () => {
-    appTree = schematicRunner.runSchematic(
-      'lib',
+  it('should create a jest.config.js', () => {
+    const resultTree = schematicRunner.runSchematic(
+      'jest-project',
       {
-        name: 'lib1',
-        unitTestRunner: 'none'
+        project: 'lib1'
       },
       appTree
     );
+    expect(resultTree.readContent('libs/lib1/jest.config.js'))
+      .toBe(`module.exports = {
+  name: 'lib1',
+  preset: '../../jest.config.js',
+  coverageDirectory: '../../coverage/libs/lib1'
+};
+`);
+  });
+
+  it('should create a tsconfig.spec.json', () => {
     const resultTree = schematicRunner.runSchematic(
       'jest-project',
       {
@@ -100,14 +101,6 @@ describe('lib', () => {
 
   describe('--skip-setup-file', () => {
     it('should generate src/test-setup.ts', () => {
-      appTree = schematicRunner.runSchematic(
-        'lib',
-        {
-          name: 'lib1',
-          unitTestRunner: 'none'
-        },
-        appTree
-      );
       const resultTree = schematicRunner.runSchematic(
         'jest-project',
         {
@@ -120,14 +113,6 @@ describe('lib', () => {
     });
 
     it('should not list the setup file in angular.json', () => {
-      appTree = schematicRunner.runSchematic(
-        'lib',
-        {
-          name: 'lib1',
-          unitTestRunner: 'none'
-        },
-        appTree
-      );
       const resultTree = schematicRunner.runSchematic(
         'jest-project',
         {
@@ -143,14 +128,6 @@ describe('lib', () => {
     });
 
     it('should not list the setup file in tsconfig.spec.json', () => {
-      appTree = schematicRunner.runSchematic(
-        'lib',
-        {
-          name: 'lib1',
-          unitTestRunner: 'none'
-        },
-        appTree
-      );
       const resultTree = schematicRunner.runSchematic(
         'jest-project',
         {

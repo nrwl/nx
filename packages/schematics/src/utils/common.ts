@@ -4,6 +4,7 @@ import * as cosmiconfig from 'cosmiconfig';
 
 import { angularJsVersion } from '../lib-versions';
 import { updateJsonInTree } from './ast-utils';
+import { normalize } from '@angular-devkit/core';
 
 export function addUpgradeToPackageJson(): Rule {
   return updateJsonInTree('package.json', packageJson => {
@@ -24,7 +25,7 @@ export function addUpgradeToPackageJson(): Rule {
 }
 
 export function offsetFromRoot(fullPathToSourceDir: string): string {
-  const parts = fullPathToSourceDir.split('/');
+  const parts = normalize(fullPathToSourceDir).split('/');
   let offset = '';
   for (let i = 0; i < parts.length; ++i) {
     offset += '../';
