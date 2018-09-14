@@ -23,6 +23,13 @@
       "description": "Create an application"
     },
 
+    "node-application": {
+      "factory": "./collection/node-application",
+      "schema": "./collection/node-application/schema.json",
+      "aliases": ["node-app"],
+      "description": "Create a NodeJS Application"
+    },
+
     "library": {
       "factory": "./collection/library",
       "schema": "./collection/library/schema.json",

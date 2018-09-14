@@ -29,7 +29,7 @@
     "fork-ts-checker-webpack-plugin": "0.4.9",
     "license-webpack-plugin": "^1.4.0",
     "rxjs": "6.2.2",
-    "ts-loader": "4.5.0",
+    "ts-loader": "5.2.1",
     "webpack": "4.9.2",
     "webpack-node-externals": "1.7.2"
   }
