@@ -5,6 +5,6 @@
     "module": "commonjs",
     "types": ["jest", "node"]
   },
-  "files": [<% if(!skipSetupFile) { %>"src/test-setup.ts", <% } %>"src/polyfills.ts"],
+  <% if(!skipSetupFile) { %>"files": ["src/test-setup.ts"],<% } %>
   "include": ["**/*.spec.ts", "**/*.d.ts"]
 }
