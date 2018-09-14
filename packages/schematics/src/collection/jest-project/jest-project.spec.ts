@@ -94,7 +94,7 @@ describe('lib', () => {
         outDir: '../../dist/out-tsc/libs/lib1',
         types: ['jest', 'node']
       },
-      files: ['src/test-setup.ts', 'src/polyfills.ts'],
+      files: ['src/test-setup.ts'],
       include: ['**/*.spec.ts', '**/*.d.ts']
     });
   });
@@ -140,7 +140,7 @@ describe('lib', () => {
         resultTree,
         'libs/lib1/tsconfig.spec.json'
       );
-      expect(tsConfig.files).not.toContain('src/test-setup.ts');
+      expect(tsConfig.files).toBeUndefined();
     });
   });
 });
