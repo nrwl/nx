@@ -74,6 +74,12 @@
       "description":
         "Specifies if the e2e project will be nested in the app directory",
       "default": false
+    },
+    "unitTestRunner": {
+      "type": "string",
+      "enum": ["karma", "jest", "none"],
+      "description": "Test runner to use for unit tests",
+      "default": "karma"
     }
   },
   "required": []

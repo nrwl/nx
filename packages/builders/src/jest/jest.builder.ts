@@ -15,11 +15,15 @@ export interface JestBuilderOptions {
   jestConfig: string;
   tsConfig: string;
   watch: boolean;
+  bail?: boolean;
   ci?: boolean;
   codeCoverage?: boolean;
   onlyChanged?: boolean;
+  maxWorkers?: number;
   passWithNoTests?: boolean;
+  runInBand?: boolean;
   setupFile?: string;
+  silent?: boolean;
   updateSnapshot?: boolean;
 }
 
@@ -31,10 +35,13 @@ export default class JestBuilder implements Builder<JestBuilderOptions> {
     const config: any = {
       watch: options.watch,
       coverage: options.codeCoverage,
+      bail: options.bail,
       ci: options.ci,
       updateSnapshot: options.updateSnapshot,
       onlyChanged: options.onlyChanged,
       passWithNoTests: options.passWithNoTests,
+      silent: options.silent,
+      runInBand: options.runInBand,
       globals: JSON.stringify({
         'ts-jest': {
           tsConfigFile: path.relative(builderConfig.root, options.tsConfig)
@@ -42,6 +49,10 @@ export default class JestBuilder implements Builder<JestBuilderOptions> {
         __TRANSFORM_HTML__: true
       })
     };
+
+    if (options.maxWorkers) {
+      config.maxWorkers = options.maxWorkers;
+    }
 
     if (options.setupFile) {
       config.setupTestFrameworkScriptFile = path.join(

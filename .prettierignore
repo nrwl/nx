@@ -1,4 +1,5 @@
 tmp
 build
 node_modules
+/package.json
 packages/schematics/src/collection/**/files/*.json

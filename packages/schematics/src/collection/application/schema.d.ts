@@ -1,3 +1,5 @@
+import { UnitTestRunner } from '../../utils/test-runners';
+
 export interface Schema {
   name: string;
   skipFormat: boolean;
@@ -11,4 +13,5 @@ export interface Schema {
   directory?: string;
   tags?: string;
   nestE2e?: boolean;
+  unitTestRunner: UnitTestRunner;
 }
