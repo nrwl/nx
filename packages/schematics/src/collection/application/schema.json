@@ -69,6 +69,12 @@
       "type": "string",
       "description": "Add tags to the application (used for linting)"
     },
+    "nestE2e": {
+      "type": "boolean",
+      "description":
+        "Specifies if the e2e project will be nested in the app directory",
+      "default": false
+    },
     "unitTestRunner": {
       "type": "string",
       "enum": ["karma", "jest", "none"],
