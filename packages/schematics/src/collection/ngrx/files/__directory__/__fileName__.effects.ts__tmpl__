@@ -2,13 +2,13 @@ import { Injectable } from '@angular/core';
 import { Effect, Actions } from '@ngrx/effects';
 import { DataPersistence } from '@nrwl/nx';
 
-import { <%= className %>State  } from './<%= fileName %>.reducer';
+import { <%= className %>PartialState  } from './<%= fileName %>.reducer';
 import { Load<%= className %>, <%= className %>Loaded, <%= className %>LoadError, <%= className %>ActionTypes } from './<%= fileName %>.actions';
 
 @Injectable()
 export class <%= className %>Effects {
  @Effect() load<%= className %>$ = this.dataPersistence.fetch(<%= className %>ActionTypes.Load<%= className %>, {
-   run: (action: Load<%= className %>, state: <%= className %>State) => {
+   run: (action: Load<%= className %>, state: <%= className %>PartialState) => {
      // Your custom REST 'load' logic goes here. For now just return an empty list...
      return new <%= className %>Loaded([]);
    },
@@ -21,5 +21,5 @@ export class <%= className %>Effects {
 
  constructor(
    private actions$: Actions,
-   private dataPersistence: DataPersistence<<%= className %>State>) { }
+   private dataPersistence: DataPersistence<<%= className %>PartialState>) { }
 }

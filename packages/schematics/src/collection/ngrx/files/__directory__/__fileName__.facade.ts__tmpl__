@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 
 import { Store } from '@ngrx/store';
 
-import { <%= className %>State } from './<%= fileName %>.reducer';
+import { <%= className %>PartialState } from './<%= fileName %>.reducer';
 import { <%= propertyName %>Query } from './<%= fileName %>.selectors';
 import { Load<%= className %> } from './<%= fileName %>.actions';
 
@@ -13,7 +13,7 @@ export class <%= className %>Facade {
   all<%= className %>$ = this.store.select(<%= propertyName %>Query.getAll<%= className %>);
   selected<%= className %>$ = this.store.select(<%= propertyName %>Query.getSelected<%= className %>);
   
-  constructor( private store: Store<{<%= propertyName %>: <%= className %>State}> ) { }
+  constructor(private store: Store<<%= className %>PartialState>) { }
  
   loadAll() {
     this.store.dispatch(new Load<%= className %>());

@@ -166,7 +166,7 @@ describe('ngrx', () => {
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
     expect(appModule).toContain('StoreModule.forFeature');
     expect(appModule).toContain('EffectsModule.forFeature');
-    expect(appModule).toContain("'state', stateReducer");
+    expect(appModule).toContain('STATE_FEATURE_KEY, stateReducer');
     expect(appModule).toContain('{ initialState: stateInitialState }');
     expect(appModule).not.toContain(
       '!environment.production ? [storeFreeze] : []'
@@ -357,7 +357,7 @@ describe('ngrx', () => {
       const content = getFileContent(tree, `${statePath}/users.facade.ts`);
 
       [
-        `import { UsersState } from './users.reducer'`,
+        `import { UsersPartialState } from './users.reducer'`,
         `import { usersQuery } from './users.selectors'`,
         `export class UsersFacade`
       ].forEach(text => {
@@ -397,11 +397,11 @@ describe('ngrx', () => {
         `import { DataPersistence } from \'@nrwl/nx\'`,
         `import { LoadUsers, UsersLoaded, UsersLoadError, UsersActionTypes } from \'./users.actions\'`,
         `loadUsers$`,
-        `run: (action: LoadUsers, state: UsersState)`,
+        `run: (action: LoadUsers, state: UsersPartialState)`,
         `return new UsersLoaded([])`,
         `return new UsersLoadError(error)`,
         'private actions$: Actions',
-        'private dataPersistence: DataPersistence<UsersState>)'
+        'private dataPersistence: DataPersistence<UsersPartialState>)'
       ].forEach(text => {
         expect(content).toContain(text);
       });
