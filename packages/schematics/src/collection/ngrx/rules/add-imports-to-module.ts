@@ -38,7 +38,7 @@ export function addImportsToModule(context: RequestContext): Rule {
     const reducerName = `${toPropertyName(context.featureName)}Reducer`;
     const effectsName = `${toClassName(context.featureName)}Effects`;
     const facadeName = `${toClassName(context.featureName)}Facade`;
-    const reducerImports = `initialState as ${featureName}InitialState, ${reducerName}`;
+    const reducerImports = `${featureName.toUpperCase()}_FEATURE_KEY, initialState as ${featureName}InitialState, ${reducerName}`;
 
     const storeReducers = `{ ${featureName}: ${reducerName} }`;
     const storeInitState = `initialState : { ${featureName} : ${featureName}InitialState }`;
@@ -55,7 +55,7 @@ export function addImportsToModule(context: RequestContext): Rule {
     const storeForEmptyRoot = `StoreModule.forRoot({},{ ${storeMetaReducers} })`;
     const effectsForRoot = `EffectsModule.forRoot([${effectsName}])`;
     const effectsForEmptyRoot = `EffectsModule.forRoot([])`;
-    const storeForFeature = `StoreModule.forFeature('${featureName}', ${reducerName}, { initialState: ${featureName}InitialState })`;
+    const storeForFeature = `StoreModule.forFeature(${featureName.toUpperCase()}_FEATURE_KEY, ${reducerName}, { initialState: ${featureName}InitialState })`;
     const effectsForFeature = `EffectsModule.forFeature([${effectsName}])`;
     const devTools = `!environment.production ? StoreDevtoolsModule.instrument() : []`;
     const storeRouterModule = 'StoreRouterConnectingModule';

@@ -1,5 +1,7 @@
 import { <%= className %>Action, <%= className %>ActionTypes } from './<%= fileName %>.actions';
 
+export const <%= className.toUpperCase() %>_FEATURE_KEY = '<%= propertyName %>';
+
 /**
  * Interface for the '<%= className %>' data used in
  *  - <%= className %>State, and
@@ -18,6 +20,10 @@ export interface <%= className %>State {
   loaded      : boolean;              // has the <%= className %> list been loaded
   error      ?: any;                  // last none error (if any)
 };
+
+export interface <%= className %>PartialState {
+  readonly [<%= className.toUpperCase() %>_FEATURE_KEY]: <%= className %>State;
+}
 
 export const initialState: <%= className %>State = {
   list : [ ],
