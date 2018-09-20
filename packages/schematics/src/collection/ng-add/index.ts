@@ -654,6 +654,10 @@ function checkCanConvertToWorkspace(options: Schema) {
         throw new Error('Cannot find package.json');
       }
 
+      if (!host.exists('angular.json')) {
+        throw new Error('Cannot find angular.json');
+      }
+
       // TODO: This restriction should be lited
       const angularJson = readJsonInTree(host, 'angular.json');
       if (Object.keys(angularJson.projects).length > 2) {
@@ -682,7 +686,7 @@ function checkCanConvertToWorkspace(options: Schema) {
       context.logger.error(
         'Your workspace could not be converted into an Nx Workspace because of the above error.'
       );
-      throw new Error();
+      throw e;
     }
   };
 }
