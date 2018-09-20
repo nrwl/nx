@@ -13,6 +13,7 @@ export const prettierVersion = '1.13.7';
 export const typescriptVersion = '~2.7.2';
 export const rxjsVersion = '^6.0.0';
 export const jestVersion = '^23.0.0';
+export const jestPresetAngularVersion = '6.0.1';
 export const jasmineMarblesVersion = '0.3.1';
 
 export const libVersions = {
