@@ -6,7 +6,11 @@ import {
 } from '@angular-devkit/schematics';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { updateJsonInTree } from '../../utils/ast-utils';
-import { jestVersion, nxVersion } from '../../lib-versions';
+import {
+  jestVersion,
+  nxVersion,
+  jestPresetAngularVersion
+} from '../../lib-versions';
 import { Rule } from '@angular-devkit/schematics';
 
 const updatePackageJson = updateJsonInTree('package.json', json => {
@@ -15,7 +19,7 @@ const updatePackageJson = updateJsonInTree('package.json', json => {
     '@nrwl/builders': nxVersion,
     jest: jestVersion,
     '@types/jest': jestVersion,
-    'jest-preset-angular': '6.0.0'
+    'jest-preset-angular': jestPresetAngularVersion
   };
   return json;
 });

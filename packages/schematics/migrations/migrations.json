@@ -19,6 +19,11 @@
       "version": "6.2.0",
       "description": "Add Global Karma Conf",
       "factory": "./update-6-2-0/update-6-2-0"
+    },
+    "update-6.3.2": {
+      "version": "6.3.2",
+      "description": "Update jest-preset-angular",
+      "factory": "./update-6-3-2/update-6-3-2"
     }
   }
 }
