@@ -2,7 +2,7 @@ import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
 
-xdescribe('workspace', () => {
+describe('workspace', () => {
   const schematicRunner = new SchematicTestRunner(
     '@nrwl/schematics',
     path.join(__dirname, '../../collection.json')
@@ -23,8 +23,29 @@ xdescribe('workspace', () => {
   it('should error if no e2e/protractor.conf.js is present', () => {
     expect(() => {
       appTree.create('/package.json', JSON.stringify({}));
-      schematicRunner.runSchematic('ng-add', { name: 'myApp' }, appTree);
-    }).toThrow('Cannot find e2e/protractor.conf.js');
+      appTree.create(
+        '/angular.json',
+        JSON.stringify({
+          projects: {
+            proj1: {
+              architect: {}
+            },
+            'proj1-e2e': {
+              architect: {
+                e2e: {
+                  options: {
+                    protractorConfig: 'e2e/protractor.conf.js'
+                  }
+                }
+              }
+            }
+          }
+        })
+      );
+      schematicRunner.runSchematic('ng-add', { name: 'proj1' }, appTree);
+    }).toThrow(
+      'An e2e project was specified but e2e/protractor.conf.js could not be found.'
+    );
   });
 
   it('should error if no angular.json is present', () => {
@@ -36,20 +57,20 @@ xdescribe('workspace', () => {
   });
 
   it('should error if the angular.json specifies more than one app', () => {
+    appTree.create('/package.json', JSON.stringify({}));
+    appTree.create('/e2e/protractor.conf.js', '');
+    appTree.create(
+      '/angular.json',
+      JSON.stringify({
+        projects: {
+          proj1: {},
+          'proj1-e2e': {},
+          proj2: {},
+          'proj2-e2e': {}
+        }
+      })
+    );
     expect(() => {
-      appTree.create('/package.json', JSON.stringify({}));
-      appTree.create('/e2e/protractor.conf.js', '');
-      appTree.create(
-        '/angular.json',
-        JSON.stringify({
-          projects: {
-            proj1: {},
-            'proj1-e2e': {},
-            proj2: {},
-            'proj2-e2e': {}
-          }
-        })
-      );
       schematicRunner.runSchematic('ng-add', { name: 'myApp' }, appTree);
     }).toThrow('Can only convert projects with one app');
   });
