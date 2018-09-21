@@ -24,6 +24,11 @@
       "version": "6.3.2",
       "description": "Update jest-preset-angular",
       "factory": "./update-6-3-2/update-6-3-2"
+    },
+    "update-6.4.0": {
+      "version": "6.4.0",
+      "description": "Update to @angular/cli@6.2.3",
+      "factory": "./update-6-4-0/update-6-4-0"
     }
   }
 }

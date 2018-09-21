@@ -24,7 +24,7 @@
   "homepage": "https://github.com/nrwl/nx#readme",
   "builders": "./src/builders.json",
   "dependencies": {
-    "@angular-devkit/architect": "~0.7.0",
+    "@angular-devkit/architect": "~0.8.0",
     "rxjs": "6.2.2"
   }
 }
