@@ -13,4 +13,5 @@ export interface Schema {
   directory?: string;
   tags?: string;
   unitTestRunner: UnitTestRunner;
+  nestE2e?: boolean;
 }

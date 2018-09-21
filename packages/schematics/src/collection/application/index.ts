@@ -259,6 +259,21 @@ function updateE2eProject(options: NormalizedSchema): Rule {
       content.replace('Welcome to app!', `Welcome to ${options.prefix}!`)
     );
 
+    // also patching the spec file for nested e2e projects.
+    if (options.nestE2e) {
+      // fix for jasmine types error 'string not assignable'
+      host.overwrite(spec, content.replace('expect', 'expect<any>'));
+      // tsconfig typeRoots aren't respected
+      // workaround: add "import {} from 'jasmine'"
+      const specFile = ts.createSourceFile(
+        spec,
+        content,
+        ts.ScriptTarget.Latest,
+        true
+      );
+      insert(host, spec, [insertImport(specFile, spec, '', 'jasmine')]);
+    }
+
     return chain([
       updateJsonInTree(getWorkspacePath(host), json => {
         const project = json.projects[options.e2eProjectName];
@@ -276,9 +291,9 @@ function updateE2eProject(options: NormalizedSchema): Rule {
           extends: `${offsetFromRoot(options.e2eProjectRoot)}tsconfig.json`,
           compilerOptions: {
             ...json.compilerOptions,
-            outDir: `${offsetFromRoot(options.e2eProjectRoot)}dist/out-tsc/${
+            outDir: `${offsetFromRoot(
               options.e2eProjectRoot
-            }`
+            )}dist/out-tsc/${options.e2eProjectRoot.slice(0, -4) + '-e2e'}`
           }
         };
       })
@@ -336,7 +351,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const e2eProjectName = `${appProjectName}-e2e`;
 
   const appProjectRoot = `apps/${appDirectory}`;
-  const e2eProjectRoot = `apps/${appDirectory}-e2e`;
+  let e2eProjectRoot = `apps/${appDirectory}-e2e`;
+  if (options.nestE2e) e2eProjectRoot = `apps/${appDirectory}/e2e`;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map(s => s.trim())
