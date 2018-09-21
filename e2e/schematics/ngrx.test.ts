@@ -1,4 +1,4 @@
-import { newApp, newProject, runCLI } from '../utils';
+import { newApp, newProject, runCLI, copyMissingPackages } from '../utils';
 
 describe('ngrx', () => {
   it(
@@ -11,6 +11,7 @@ describe('ngrx', () => {
       runCLI(
         'generate ngrx users --module=apps/myapp/src/app/app.module.ts --root --collection=@nrwl/schematics'
       );
+      copyMissingPackages();
 
       // Generate feature library and ngrx state within that library
       runCLI('g @nrwl/schematics:lib feature-flights --prefix=fl');

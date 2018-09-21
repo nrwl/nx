@@ -212,12 +212,6 @@ function updateNgPackage(options: NormalizedSchema): Rule {
     options.projectDirectory
   }`;
   return chain([
-    updateJsonInTree(`${options.projectRoot}/ng-package.prod.json`, json => {
-      return {
-        ...json,
-        dest
-      };
-    }),
     updateJsonInTree(`${options.projectRoot}/ng-package.json`, json => {
       return {
         ...json,
@@ -238,7 +232,6 @@ function updateProject(options: NormalizedSchema): Rule {
 
     if (!options.publishable) {
       host.delete(path.join(options.projectRoot, 'ng-package.json'));
-      host.delete(path.join(options.projectRoot, 'ng-package.prod.json'));
       host.delete(path.join(options.projectRoot, 'package.json'));
     }
 

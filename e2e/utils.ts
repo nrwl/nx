@@ -48,27 +48,14 @@ export function createNxWorkspace(command: string): string {
 export function copyMissingPackages(): void {
   const modulesToCopy = [
     '@ngrx',
-    'jasmine-marbles',
     '@nrwl',
     'angular',
-    '@angular-devkit',
     '@angular/upgrade',
     'npm-run-all',
     'yargs',
     'yargs-parser'
   ];
   modulesToCopy.forEach(m => copyNodeModule(projectName, m));
-  execSync(
-    `rm -rf tmp/${projectName}/node_modules/@angular-devkit/build-angular/node_modules`
-  );
-  execSync(
-    `rm -rf tmp/${projectName}/node_modules/@angular-devkit/core/node_modules`
-  );
-
-  execSync(`rm tmp/${projectName}/node_modules/.bin/semver`);
-  execSync(
-    `cp -a node_modules/.bin/semver tmp/${projectName}/node_modules/.bin/semver`
-  );
 
   const libIndex = `./tmp/${projectName}/node_modules/@schematics/angular/library/index.js`;
   const content = readFileSync(libIndex).toString();
