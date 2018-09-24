@@ -175,7 +175,6 @@ function updateProject(options: NormalizedSchema): Rule {
         return json;
       }),
       updateJsonInTree(`${options.appProjectRoot}/tsconfig.app.json`, json => {
-        json.exclude = json.exclude || [];
         return {
           ...json,
           extends: `${offsetFromRoot(options.appProjectRoot)}tsconfig.json`,
@@ -185,6 +184,10 @@ function updateProject(options: NormalizedSchema): Rule {
               options.appProjectRoot
             }`
           },
+          exclude:
+            options.unitTestRunner === 'jest'
+              ? ['src/test-setup.ts', '**/*.spec.ts']
+              : json.exclude || [],
           include: ['**/*.ts']
         };
       }),
