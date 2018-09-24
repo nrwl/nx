@@ -303,6 +303,17 @@ describe('app', () => {
         'apps/my-app/tsconfig.app.json',
         'apps/my-app/tsconfig.spec.json'
       ]);
+      const tsconfigAppJson = readJsonInTree(
+        tree,
+        'apps/my-app/tsconfig.app.json'
+      );
+      expect(tsconfigAppJson.exclude).toEqual([
+        'src/test-setup.ts',
+        '**/*.spec.ts'
+      ]);
+      expect(tsconfigAppJson.compilerOptions.outDir).toEqual(
+        '../../dist/out-tsc/apps/my-app'
+      );
     });
   });
 
