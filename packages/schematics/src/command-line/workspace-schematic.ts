@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 import * as fs from 'fs';
 import { readFileSync, statSync, writeFileSync } from 'fs';
 import * as path from 'path';
-import { copySync } from 'fs-extra';
+import { copySync, removeSync } from 'fs-extra';
 import {
   FileSystemEngineHost,
   NodeModulesEngineHost,
@@ -48,6 +48,7 @@ export function workspaceSchematic(args: string[]) {
 // compile tools
 function compileTools() {
   const toolsOutDir = getToolsOutDir();
+  removeSync(toolsOutDir);
   compileToolsDir(toolsOutDir);
 
   const schematicsOutDir = path.join(toolsOutDir, 'schematics');
