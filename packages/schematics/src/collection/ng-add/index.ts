@@ -72,9 +72,6 @@ function updatePackageJson() {
     if (!packageJson.dependencies) {
       packageJson.dependencies = {};
     }
-    if (!packageJson.scripts) {
-      packageJson.scripts = {};
-    }
     if (!packageJson.dependencies['@nrwl/nx']) {
       packageJson.dependencies['@nrwl/nx'] = nxVersion;
     }
@@ -92,6 +89,9 @@ function updatePackageJson() {
     }
     if (!packageJson.devDependencies['ngrx-store-freeze']) {
       packageJson.devDependencies['ngrx-store-freeze'] = ngrxStoreFreezeVersion;
+    }
+    if (packageJson.dependencies['@nrwl/schematics']) {
+      delete packageJson.dependencies['@nrwl/schematics'];
     }
     if (!packageJson.devDependencies['@nrwl/schematics']) {
       packageJson.devDependencies['@nrwl/schematics'] = schematicsVersion;
