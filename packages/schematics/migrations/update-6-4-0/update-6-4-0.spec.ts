@@ -91,7 +91,7 @@ describe('Update 6.4.0', () => {
         '@ngrx/router-store': '6.1.0'
       },
       devDependencies: {
-        '@angular/cli': '6.2.3',
+        '@angular/cli': '6.2.4',
         '@angular/compiler-cli': '^6.1.0',
         '@angular/language-service': '^6.1.0',
         '@angular-devkit/build-angular': '~0.8.0',

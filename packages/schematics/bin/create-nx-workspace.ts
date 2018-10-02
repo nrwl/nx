@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 
 import { readJsonFile } from '../src/utils/fileutils';
+import { angularCliVersion } from '../src/lib-versions';
 
 const parsedArgs = yargsParser(process.argv, {
   string: ['directory'],
@@ -91,7 +92,7 @@ const nxVersion = parsedArgs.bazel
   ? '1.0.3'
   : readJsonFile(path.join(path.dirname(__dirname), 'package.json')).version;
 
-const cliVersion = parsedArgs.bazel ? '1.7.2' : '6.1.1';
+const cliVersion = parsedArgs.bazel ? '1.7.2' : angularCliVersion;
 writeFileSync(
   path.join(tmpDir, 'package.json'),
   JSON.stringify({
