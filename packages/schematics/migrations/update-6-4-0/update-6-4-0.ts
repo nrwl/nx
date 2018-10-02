@@ -23,7 +23,7 @@ function updateDependencies() {
     json.devDependencies = json.devDependencies || {};
     json.devDependencies = {
       ...json.devDependencies,
-      '@angular/cli': '6.2.3',
+      '@angular/cli': '6.2.4',
       '@angular-devkit/build-angular': '~0.8.0',
       '@ngrx/store-devtools': '6.1.0',
       karma: '~3.0.0',
