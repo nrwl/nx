@@ -363,4 +363,32 @@ describe('getProjectNodes', () => {
       }
     ]);
   });
+
+  it('should normalize missing architect configurations to an empty object', () => {
+    const result = getProjectNodes(mockAngularJson, mockNxJson).map(node => {
+      return { name: node.name, architect: node.architect };
+    });
+    expect(result).toEqual([
+      {
+        name: 'app1',
+        architect: {}
+      },
+      {
+        name: 'app1-e2e',
+        architect: {}
+      },
+      {
+        name: 'customName-e2e',
+        architect: {}
+      },
+      {
+        name: 'lib1',
+        architect: {}
+      },
+      {
+        name: 'lib2',
+        architect: {}
+      }
+    ]);
+  });
 });

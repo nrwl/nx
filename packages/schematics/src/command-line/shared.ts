@@ -296,7 +296,7 @@ export function getProjectNodes(angularJson, nxJson): ProjectNode[] {
       root: p.root,
       type: projectType,
       tags,
-      architect: p.architect,
+      architect: p.architect || {},
       files: allFilesInDir(`${appRoot.path}/${p.root}`),
       implicitDependencies
     };
