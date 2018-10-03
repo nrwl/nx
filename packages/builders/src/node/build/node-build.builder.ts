@@ -4,11 +4,11 @@ import {
   BuilderConfiguration,
   BuilderContext
 } from '@angular-devkit/architect';
-import { virtualFs, Path } from '@angular-devkit/core';
+import { getSystemPath } from '@angular-devkit/core';
 import { WebpackBuilder } from '@angular-devkit/build-webpack';
 
 import { Observable } from 'rxjs';
-import { Stats, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import { getWebpackConfig, OUT_FILENAME } from './webpack/config';
 import { resolve } from 'path';
 import { map } from 'rxjs/operators';
@@ -29,7 +29,7 @@ export interface BuildNodeBuilderOptions {
   statsJson?: boolean;
   extractLicenses?: boolean;
 
-  root?: Path;
+  root?: string;
 }
 
 export interface FileReplacement {
@@ -45,12 +45,11 @@ export default class BuildNodeBuilder
   implements Builder<BuildNodeBuilderOptions> {
   webpackBuilder: WebpackBuilder;
 
-  private get root() {
-    return this.context.workspace.root;
-  }
+  root: string;
 
   constructor(private context: BuilderContext) {
     this.webpackBuilder = new WebpackBuilder(this.context);
+    this.root = getSystemPath(this.context.workspace.root);
   }
 
   run(

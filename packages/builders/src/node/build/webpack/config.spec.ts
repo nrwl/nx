@@ -1,6 +1,6 @@
 import { getWebpackConfig } from './config';
 import { BuildNodeBuilderOptions } from '../node-build.builder';
-import { normalize } from '@angular-devkit/core';
+import { normalize, getSystemPath } from '@angular-devkit/core';
 
 import * as ts from 'typescript';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
@@ -17,7 +17,7 @@ describe('getWebpackConfig', () => {
       tsConfig: 'tsconfig.json',
       externalDependencies: 'all',
       fileReplacements: [],
-      root: normalize('/root')
+      root: getSystemPath(normalize('/root'))
     };
   });
 

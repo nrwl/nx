@@ -109,6 +109,60 @@ describe('NodeExecuteBuilder', () => {
     expect(fork).toHaveBeenCalledTimes(2);
   });
 
+  it('should log errors from killing the process', () => {
+    treeKill.mockImplementation((pid, signal, callback) => {
+      callback(new Error('Error Message'));
+    });
+    const loggerError = spyOn(logger, 'error');
+    expect(
+      builder.run({
+        root: normalize('/root'),
+        projectType: 'application',
+        builder: '@nrwl/builders:node-execute',
+        options: testOptions
+      })
+    ).toBeObservable(
+      cold('--a--b--a', {
+        a: {
+          success: true,
+          outfile: 'outfile.js'
+        },
+        b: {
+          success: false,
+          outfile: 'outfile.js'
+        }
+      })
+    );
+    expect(loggerError.calls.argsFor(1)).toEqual(['Error Message']);
+  });
+
+  it('should log errors from killing the process on windows', () => {
+    treeKill.mockImplementation((pid, signal, callback) => {
+      callback([new Error('error'), '', 'Error Message']);
+    });
+    const loggerError = spyOn(logger, 'error');
+    expect(
+      builder.run({
+        root: normalize('/root'),
+        projectType: 'application',
+        builder: '@nrwl/builders:node-execute',
+        options: testOptions
+      })
+    ).toBeObservable(
+      cold('--a--b--a', {
+        a: {
+          success: true,
+          outfile: 'outfile.js'
+        },
+        b: {
+          success: false,
+          outfile: 'outfile.js'
+        }
+      })
+    );
+    expect(loggerError.calls.argsFor(1)).toEqual(['Error Message']);
+  });
+
   it('should build the application and start the built file with options', () => {
     expect(
       builder.run({

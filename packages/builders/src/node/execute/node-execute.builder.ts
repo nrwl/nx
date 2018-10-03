@@ -72,10 +72,14 @@ export class NodeExecuteBuilder implements Builder<NodeExecuteBuilderOptions> {
     const observableTreeKill = bindCallback(treeKill);
     return observableTreeKill(this.subProcess.pid, 'SIGTERM').pipe(
       tap(err => {
+        this.subProcess = null;
         if (err) {
-          throw err;
-        } else {
-          this.subProcess = null;
+          if (Array.isArray(err) && err[0] && err[2]) {
+            const errorMessage = err[2];
+            this.context.logger.error(errorMessage);
+          } else if (err.message) {
+            this.context.logger.error(err.message);
+          }
         }
       })
     );
