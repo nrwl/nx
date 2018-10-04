@@ -16,6 +16,10 @@ export const OUT_FILENAME = 'main.js';
 export function getWebpackConfig(
   options: BuildNodeBuilderOptions
 ): Configuration {
+  const compilerOptions = getCompilerOptions(options.tsConfig);
+  const supportsEs2015 =
+    compilerOptions.target !== ts.ScriptTarget.ES3 &&
+    compilerOptions.target !== ts.ScriptTarget.ES5;
   const webpackConfig: Configuration = {
     entry: [options.main],
     mode: options.optimization ? 'production' : 'development',
@@ -40,7 +44,8 @@ export function getWebpackConfig(
     },
     resolve: {
       extensions: ['.ts', '.js'],
-      alias: getAliases(options)
+      alias: getAliases(options, compilerOptions),
+      mainFields: [...(supportsEs2015 ? ['es2015'] : []), 'module', 'main']
     },
     target: 'node',
     node: false,
@@ -109,15 +114,9 @@ export function getWebpackConfig(
 }
 
 function getAliases(
-  options: BuildNodeBuilderOptions
+  options: BuildNodeBuilderOptions,
+  compilerOptions: ts.CompilerOptions
 ): { [key: string]: string } {
-  const readResult = ts.readConfigFile(options.tsConfig, ts.sys.readFile);
-  const tsConfig = ts.parseJsonConfigFileContent(
-    readResult.config,
-    ts.sys,
-    dirname(options.tsConfig)
-  );
-  const compilerOptions = tsConfig.options;
   const replacements = [
     ...options.fileReplacements,
     ...(compilerOptions.paths
@@ -134,4 +133,14 @@ function getAliases(
     }),
     {}
   );
+}
+
+function getCompilerOptions(tsConfigPath: string) {
+  const readResult = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
+  const tsConfig = ts.parseJsonConfigFileContent(
+    readResult.config,
+    ts.sys,
+    dirname(tsConfigPath)
+  );
+  return tsConfig.options;
 }
