@@ -139,6 +139,21 @@ describe('lib', () => {
       ).toBeFalsy();
     });
 
+    it('should not generate a module for --module false', () => {
+      const tree = schematicRunner.runSchematic(
+        'lib',
+        { name: 'myLib', module: false },
+        appTree
+      );
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toEqual(
+        false
+      );
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.module.spec.ts')).toEqual(
+        false
+      );
+      expect(tree.exists('libs/my-lib/src/lib/.gitkeep')).toEqual(true);
+    });
+
     it('should default the prefix to npmScope', () => {
       const noPrefix = schematicRunner.runSchematic(
         'lib',
@@ -230,6 +245,21 @@ describe('lib', () => {
       expect(
         tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
       ).toBeUndefined();
+    });
+
+    it('should not generate a module for --module false', () => {
+      const tree = schematicRunner.runSchematic(
+        'lib',
+        { name: 'myLib', directory: 'myDir', module: false },
+        appTree
+      );
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
+      ).toEqual(false);
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.spec.ts')
+      ).toEqual(false);
+      expect(tree.exists('libs/my-dir/my-lib/src/lib/.gitkeep')).toEqual(true);
     });
   });
 

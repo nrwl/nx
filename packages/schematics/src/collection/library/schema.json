@@ -53,6 +53,11 @@
       "description":
         "Add RouterModule.forChild when set to true, and a simple array of routes when set to false."
     },
+    "module": {
+      "type": "boolean",
+      "default": true,
+      "description": "Include an NgModule in the library."
+    },
     "parentModule": {
       "type": "string",
       "description":

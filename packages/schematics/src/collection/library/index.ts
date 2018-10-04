@@ -241,49 +241,55 @@ function updateProject(options: NormalizedSchema): Rule {
       host.delete(path.join(options.projectRoot, 'tsconfig.spec.json'));
     }
 
-    host.overwrite(
-      path.join(libRoot, `${options.name}.module.ts`),
-      `
-      import { NgModule } from '@angular/core';
-      import { CommonModule } from '@angular/common';
-      
-      @NgModule({
-        imports: [
-          CommonModule
-        ]
-      })
-      export class ${options.moduleName} { }
-      `
-    );
-
-    if (options.unitTestRunner !== 'none') {
-      host.create(
-        path.join(libRoot, `${options.name}.module.spec.ts`),
+    if (options.module) {
+      host.overwrite(
+        path.join(libRoot, `${options.name}.module.ts`),
         `
-  import { async, TestBed } from '@angular/core/testing';
-  import { ${options.moduleName} } from './${options.name}.module';
-  
-  describe('${options.moduleName}', () => {
-    beforeEach(async(() => {
-      TestBed.configureTestingModule({
-        imports: [ ${options.moduleName} ]
-      })
-      .compileComponents();
-    }));
-  
-    it('should create', () => {
-      expect(${options.moduleName}).toBeDefined();
-    });
-  });
+        import { NgModule } from '@angular/core';
+        import { CommonModule } from '@angular/common';
+        
+        @NgModule({
+          imports: [
+            CommonModule
+          ]
+        })
+        export class ${options.moduleName} { }
         `
       );
+
+      if (options.unitTestRunner !== 'none') {
+        host.create(
+          path.join(libRoot, `${options.name}.module.spec.ts`),
+          `
+    import { async, TestBed } from '@angular/core/testing';
+    import { ${options.moduleName} } from './${options.name}.module';
+    
+    describe('${options.moduleName}', () => {
+      beforeEach(async(() => {
+        TestBed.configureTestingModule({
+          imports: [ ${options.moduleName} ]
+        })
+        .compileComponents();
+      }));
+    
+      it('should create', () => {
+        expect(${options.moduleName}).toBeDefined();
+      });
+    });
+          `
+        );
+      }
+      host.overwrite(
+        `${options.projectRoot}/src/index.ts`,
+        `
+        export * from './lib/${options.name}.module';
+        `
+      );
+    } else {
+      host.delete(path.join(libRoot, `${options.name}.module.ts`));
+      host.create(path.join(libRoot, `.gitkeep`), '');
+      host.overwrite(`${options.projectRoot}/src/index.ts`, '');
     }
-    host.overwrite(
-      `${options.projectRoot}/src/index.ts`,
-      `
-      export * from './lib/${options.name}.module';
-      `
-    );
 
     return chain([
       updateJsonInTree(getWorkspacePath(host), json => {
@@ -400,6 +406,21 @@ function updateLibPackageNpmScope(options: NormalizedSchema): Rule {
   });
 }
 
+function addModule(options: NormalizedSchema): Rule {
+  return chain([
+    options.routing && options.lazy
+      ? addLazyLoadedRouterConfiguration(options)
+      : noop(),
+    options.routing && options.lazy && options.parentModule
+      ? addLoadChildren(options)
+      : noop(),
+    options.routing && !options.lazy ? addRouterConfiguration(options) : noop(),
+    options.routing && !options.lazy && options.parentModule
+      ? addChildren(options)
+      : noop()
+  ]);
+}
+
 export default function(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
@@ -428,18 +449,7 @@ export default function(schema: Schema): Rule {
         : noop(),
 
       options.publishable ? updateLibPackageNpmScope(options) : noop(),
-      options.routing && options.lazy
-        ? addLazyLoadedRouterConfiguration(options)
-        : noop(),
-      options.routing && options.lazy && options.parentModule
-        ? addLoadChildren(options)
-        : noop(),
-      options.routing && !options.lazy
-        ? addRouterConfiguration(options)
-        : noop(),
-      options.routing && !options.lazy && options.parentModule
-        ? addChildren(options)
-        : noop(),
+      options.module ? addModule(options) : noop(),
       formatFiles(options)
     ])(host, context);
   };
