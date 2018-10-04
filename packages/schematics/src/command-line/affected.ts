@@ -443,7 +443,7 @@ function ngPath() {
       path.dirname(resolve.sync('@angular/cli', { basedir: __dirname }))
     )
   );
-  return path.join(basePath, 'bin', 'ng');
+  return `"${path.join(basePath, 'bin', 'ng')}"`;
 }
 
 /**
