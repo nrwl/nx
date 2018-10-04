@@ -69,6 +69,18 @@ describe('getWebpackConfig', () => {
       expect(result.resolve.extensions).toEqual(['.ts', '.js']);
     });
 
+    it('should include module and main in mainFields', () => {
+      spyOn(ts, 'parseJsonConfigFileContent').and.returnValue({
+        options: {
+          target: 'es5'
+        }
+      });
+
+      const result = getWebpackConfig(input);
+      expect(result.resolve.mainFields).toContain('module');
+      expect(result.resolve.mainFields).toContain('main');
+    });
+
     it('should not polyfill node apis', () => {
       const result = getWebpackConfig(input);
 
@@ -127,6 +139,17 @@ describe('getWebpackConfig', () => {
       expect(result.resolve.alias).toEqual({
         '@npmScope/libraryName': '/root/libs/libraryName/src/index.ts'
       });
+    });
+
+    it('should include es2015 in mainFields if typescript is set es2015', () => {
+      spyOn(ts, 'parseJsonConfigFileContent').and.returnValue({
+        options: {
+          target: 'es2015'
+        }
+      });
+
+      const result = getWebpackConfig(input);
+      expect(result.resolve.mainFields).toContain('es2015');
     });
   });
 
