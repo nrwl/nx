@@ -130,6 +130,22 @@ function updateAngularCLIJson(options: Schema): Rule {
 
     const oldSourceRoot = app.sourceRoot;
 
+    function convertAsset(asset: string | any) {
+      if (typeof asset === 'string') {
+        return asset.startsWith(oldSourceRoot)
+          ? convertPath(options.name, asset)
+          : asset;
+      } else {
+        return {
+          ...asset,
+          input:
+            asset.input && asset.input.startsWith(oldSourceRoot)
+              ? convertPath(options.name, asset.input)
+              : asset.input
+        };
+      }
+    }
+
     app = {
       ...app,
       root: path.join('apps', options.name),
@@ -143,26 +159,19 @@ function updateAngularCLIJson(options: Schema): Rule {
       outputPath: path.join('dist/apps', options.name),
       index: convertPath(options.name, buildConfig.options.index),
       main: convertPath(options.name, buildConfig.options.main),
-      polyfills: convertPath(options.name, buildConfig.options.polyfills),
       tsConfig: path.join(app.root, getFilename(buildConfig.options.tsConfig)),
-      assets: buildConfig.options.assets.map(
-        asset =>
-          asset.startsWith(oldSourceRoot)
-            ? convertPath(options.name, asset)
-            : asset
-      ),
-      styles: buildConfig.options.styles.map(
-        style =>
-          style.startsWith(oldSourceRoot)
-            ? convertPath(options.name, style)
-            : style
-      ),
-      scripts: buildConfig.options.scripts.map(
-        script =>
-          script.startsWith(oldSourceRoot)
-            ? convertPath(options.name, script)
-            : script
-      )
+      polyfills:
+        buildConfig.options.polyfills &&
+        convertPath(options.name, buildConfig.options.polyfills),
+      assets:
+        buildConfig.options.assets &&
+        buildConfig.options.assets.map(convertAsset),
+      styles:
+        buildConfig.options.styles &&
+        buildConfig.options.styles.map(convertAsset),
+      scripts:
+        buildConfig.options.scripts &&
+        buildConfig.options.scripts.map(convertAsset)
     };
 
     Object.keys(buildConfig.configurations)
@@ -222,30 +231,23 @@ function updateAngularCLIJson(options: Schema): Rule {
     testConfig.options = {
       ...testConfig.options,
       main: convertPath(options.name, testConfig.options.main),
-      polyfills: convertPath(options.name, testConfig.options.polyfills),
       tsConfig: path.join(app.root, getFilename(testConfig.options.tsConfig)),
       karmaConfig: path.join(
         app.root,
         getFilename(testConfig.options.karmaConfig)
       ),
-      assets: testConfig.options.assets.map(
-        asset =>
-          asset.startsWith(oldSourceRoot)
-            ? convertPath(options.name, asset)
-            : asset
-      ),
-      styles: testConfig.options.styles.map(
-        style =>
-          style.startsWith(oldSourceRoot)
-            ? convertPath(options.name, style)
-            : style
-      ),
-      scripts: testConfig.options.scripts.map(
-        script =>
-          script.startsWith(oldSourceRoot)
-            ? convertPath(options.name, script)
-            : script
-      )
+      polyfills:
+        testConfig.options.polyfills &&
+        convertPath(options.name, testConfig.options.polyfills),
+      assets:
+        testConfig.options.assets &&
+        testConfig.options.assets.map(convertAsset),
+      styles:
+        testConfig.options.styles &&
+        testConfig.options.styles.map(convertAsset),
+      scripts:
+        testConfig.options.scripts &&
+        testConfig.options.scripts.map(convertAsset)
     };
 
     const lintConfig = app.architect.lint;

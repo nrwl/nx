@@ -301,6 +301,21 @@ describe('Nrwl Convert to Nx Workspace', () => {
     checkFilesExist('dist/apps/proj-server/main.js');
   });
 
+  it('should convert a project with common libraries in the ecosystem', () => {
+    // create a new AngularCLI app
+    runNgNew();
+
+    // Add some Angular libraries
+    runCLI('add @angular/elements');
+    runCLI('add @angular/material');
+    runCLI('add @angular/pwa');
+    runCLI('add @ngrx/store');
+    runCLI('add @ngrx/effects');
+    copyMissingPackages();
+    // Add Nx
+    runCLI('add @nrwl/schematics');
+  });
+
   it('should handle workspaces with no e2e project', () => {
     // create a new AngularCLI app
     runNgNew();
