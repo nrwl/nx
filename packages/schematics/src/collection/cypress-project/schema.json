@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "Nx Cypress Project Schematics Schema",
+  "title": "Create Cypress Configuration for the workspace",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project.",
+      "$default": {
+        "$source": "projectName"
+      }
+    }
+  },
+  "required": []
+}

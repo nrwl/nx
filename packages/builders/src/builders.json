@@ -15,6 +15,11 @@
       "class": "./jest/jest.builder",
       "schema": "./jest/schema.json",
       "description": "Run Jest unit tests"
+    },
+    "cypress": {
+      "class": "./cypress/cypress.builder",
+      "schema": "./cypress/schema.json",
+      "description": "Run Cypress e2e tests"
     }
   }
 }

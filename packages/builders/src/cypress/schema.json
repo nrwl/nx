@@ -1,0 +1,27 @@
+{
+  "title": "Cypress Target",
+  "description": "Cypress target option for Build Facade",
+  "type": "object",
+  "properties": {
+    "cypressConfig": {
+      "type": "string",
+      "description": "The path of the Cypress configuration json file."
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "The path of the Cypress tsconfig configuration json file."
+    },
+    "devServerTarget": {
+      "type": "string",
+      "description": "Dev server target to run tests against."
+    },
+    "headless": {
+      "type": "boolean",
+      "description":
+        "Whether or not the open the Cypress application to run the tests. If set to 'true', will run in headless mode",
+      "default": false
+    }
+  },
+  "additionalProperties": false,
+  "required": ["cypressConfig", "tsConfig", "devServerTarget"]
+}

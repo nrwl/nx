@@ -1,0 +1,10 @@
+{
+  "fileServerFolder": "../../dist/apps/<%= projectName %>",
+  "fixturesFolder": "../../dist/apps/<%= projectName %>/src/fixtures",
+  "integrationFolder": "../../dist/apps/<%= projectName %>/src/integration",
+  "pluginsFile": "../../dist/apps/<%= projectName %>/src/plugins/index.js",
+  "video": true,
+  "videosFolder": "../../dist/apps/<%= projectName %>/videos",
+  "screenshotsFolder": "../../dist/apps/<%= projectName %>/screenshots",
+  "chromeWebSecurity": false
+}
