@@ -18,7 +18,7 @@
     },
     "framework": {
       "type": "string",
-      "enum": ["express", "none"],
+      "enum": ["express", "nestjs", "none"],
       "description": "Node Framework to use for application.",
       "default": "express"
     },

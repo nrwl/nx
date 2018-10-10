@@ -239,4 +239,35 @@ describe('node-app', () => {
       expect(tree.exists('apps/my-node-app/src/app/.gitkeep')).toBeTruthy();
     });
   });
+
+  describe('--framework nestjs', () => {
+    it('should generate files', () => {
+      const tree = schematicRunner.runSchematic(
+        'node-app',
+        { name: 'myNodeApp', framework: 'nestjs' },
+        appTree
+      );
+      expect(tree.readContent('apps/my-node-app/src/main.ts')).toContain(
+        'await app.listen(port);'
+      );
+      expect(
+        tree.readContent('apps/my-node-app/src/app/app.controller.ts')
+      ).toContain('return this.appService.root();');
+      expect(
+        tree.readContent('apps/my-node-app/src/app/app.service.ts')
+      ).toContain("return 'Hello World!';");
+    });
+
+    it('should add dependencies', () => {
+      const tree = schematicRunner.runSchematic(
+        'node-app',
+        { name: 'myNodeApp', framework: 'nestjs' },
+        appTree
+      );
+      const packageJson = readJsonInTree(tree, 'package.json');
+      expect(packageJson.dependencies['@nestjs/common']).toBeDefined();
+      expect(packageJson.dependencies['@nestjs/core']).toBeDefined();
+      expect(packageJson.devDependencies['@nestjs/testing']).toBeDefined();
+    });
+  });
 });

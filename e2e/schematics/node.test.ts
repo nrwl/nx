@@ -120,4 +120,92 @@ describe('Node Applications', () => {
     },
     30000
   );
+
+  it(
+    'should be able to generate a nestjs application',
+    async done => {
+      runCLI('generate node-app node-app3 --framework nestjs');
+      copyMissingPackages();
+
+      updateFile(
+        'apps/node-app3/src/app/test.spec.ts',
+        `
+          describe('test', () => {
+            it('should work', () => {
+              expect(true).toEqual(true);
+            })
+          })
+        `
+      );
+      // const jestResult = await runCLIAsync('test node-app3');
+      // expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
+
+      function getData() {
+        return new Promise(resolve => {
+          http.get('http://localhost:3333', res => {
+            expect(res.statusCode).toEqual(200);
+            let data = '';
+            res.on('data', chunk => {
+              data += chunk;
+            });
+            res.once('end', () => {
+              resolve(data);
+            });
+          });
+        });
+      }
+
+      await runCLIAsync('build node-app3');
+      expect(exists('./tmp/proj/dist/apps/node-app3/main.js')).toBeTruthy();
+      const server = fork(
+        path.join(
+          __dirname,
+          '../../../tmp/proj',
+          `./dist/apps/node-app3/main.js`
+        ),
+        [],
+        {
+          cwd: './tmp/proj',
+          silent: true
+        }
+      );
+      expect(server).toBeTruthy();
+
+      await new Promise(resolve => {
+        server.stdout.once('data', async data => {
+          expect(data.toString()).toContain(
+            'Listening at http://localhost:3333'
+          );
+          const result = await getData();
+
+          expect(result).toEqual('Hello World!');
+          treeKill(server.pid, 'SIGTERM', err => {
+            expect(err).toBeFalsy();
+            resolve();
+          });
+        });
+      });
+
+      const process = spawn(
+        'node',
+        ['./node_modules/.bin/ng', 'serve', 'node-app3'],
+        {
+          cwd: './tmp/proj'
+        }
+      );
+
+      process.stdout.on('data', async (data: Buffer) => {
+        if (!data.toString().includes('Listening at http://localhost:3333')) {
+          return;
+        }
+        const result = await getData();
+        expect(result).toEqual('Hello World!');
+        treeKill(process.pid, 'SIGTERM', err => {
+          expect(err).toBeFalsy();
+          done();
+        });
+      });
+    },
+    30000
+  );
 });

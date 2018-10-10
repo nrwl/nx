@@ -17,7 +17,11 @@ import { Schema } from './schema';
 import { offsetFromRoot } from '../../utils/common';
 import { updateJsonInTree } from '../../utils/ast-utils';
 import { toFileName } from '../../utils/name-utils';
-import { expressVersion, expressTypingsVersion } from '../../lib-versions';
+import {
+  expressVersion,
+  expressTypingsVersion,
+  nestjsVersion
+} from '../../lib-versions';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -41,6 +45,17 @@ function addDependencies(options: NormalizedSchema): Rule {
         json.devDependencies = {
           ...json.devDependencies,
           '@types/express': expressTypingsVersion
+        };
+      } else if (options.framework === 'nestjs') {
+        json.dependencies = {
+          ...json.dependencies,
+          '@nestjs/common': nestjsVersion,
+          '@nestjs/core': nestjsVersion
+        };
+
+        json.devDependencies = {
+          ...json.devDependencies,
+          '@nestjs/testing': nestjsVersion
         };
       }
       return json;
