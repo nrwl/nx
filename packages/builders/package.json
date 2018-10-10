@@ -12,7 +12,8 @@
     "Angular",
     "Workspace",
     "Builders",
-    "Angular CLI"
+    "Angular CLI",
+    "Cypress"
   ],
   "main": "index.js",
   "types": "index.d.js",

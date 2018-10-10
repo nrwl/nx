@@ -57,6 +57,13 @@
       "hidden": true
     },
 
+    "cypress-project": {
+      "factory": "./collection/cypress-project",
+      "schema": "./collection/cypress-project/schema.json",
+      "description": "Add Cypress configuration to a project",
+      "hidden": true
+    },
+
     "upgrade-module": {
       "factory": "./collection/upgrade-module",
       "schema": "./collection/upgrade-module/schema.json",
