@@ -1,4 +1,4 @@
-import { UnitTestRunner } from '../../utils/test-runners';
+import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 
 export interface Schema {
   name: string;
@@ -13,4 +13,5 @@ export interface Schema {
   directory?: string;
   tags?: string;
   unitTestRunner: UnitTestRunner;
+  e2eTestRunner: E2eTestRunner;
 }
