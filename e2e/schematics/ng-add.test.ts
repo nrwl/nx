@@ -7,7 +7,8 @@ import {
   updateFile,
   readJson,
   readFile,
-  runCommand
+  runCommand,
+  runCLIAsync
 } from '../utils';
 
 describe('Nrwl Convert to Nx Workspace', () => {
@@ -145,6 +146,13 @@ describe('Nrwl Convert to Nx Workspace', () => {
             {
               replace: 'apps/proj/src/environments/environment.ts',
               with: 'apps/proj/src/environments/environment.prod.ts'
+            }
+          ],
+          budgets: [
+            {
+              maximumError: '5mb',
+              maximumWarning: '2mb',
+              type: 'initial'
             }
           ],
           optimization: true,
@@ -294,6 +302,16 @@ describe('Nrwl Convert to Nx Workspace', () => {
         outputPath: 'dist/apps/proj-server',
         main: 'apps/proj/src/main.server.ts',
         tsConfig: 'apps/proj/tsconfig.server.json'
+      },
+      configurations: {
+        production: {
+          fileReplacements: [
+            {
+              replace: 'src/environments/environment.ts',
+              with: 'src/environments/environment.prod.ts'
+            }
+          ]
+        }
       }
     });
 
@@ -316,7 +334,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     runCLI('add @nrwl/schematics');
   });
 
-  it('should handle workspaces with no e2e project', () => {
+  it('should handle workspaces with no e2e project', async () => {
     // create a new AngularCLI app
     runNgNew();
 
@@ -327,7 +345,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     updateFile('angular.json', JSON.stringify(existingAngularJson, null, 2));
 
     // Add @nrwl/schematics
-    const result = runCLI(
+    const result = await runCLIAsync(
       'add @nrwl/schematics --npmScope projscope --skip-install'
     );
 
@@ -337,7 +355,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
       'apps/proj/src/app/app.module.ts'
     );
 
-    expect(result).toContain(
+    expect(result.stderr).toContain(
       'No e2e project was migrated because there was none declared in angular.json'
     );
   });
