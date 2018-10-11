@@ -4,7 +4,7 @@ import { Tree, VirtualTree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '../../utils/testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
 import * as stripJsonComments from 'strip-json-comments';
-import { readJsonInTree } from '../../utils/ast-utils';
+import { readJsonInTree, updateJsonInTree } from '../../utils/ast-utils';
 
 describe('app', () => {
   const schematicRunner = new SchematicTestRunner(
@@ -30,7 +30,7 @@ describe('app', () => {
 
       expect(angularJson.projects['my-app'].root).toEqual('apps/my-app/');
       expect(angularJson.projects['my-app-e2e'].root).toEqual(
-        'apps/my-app-e2e/'
+        'apps/my-app-e2e'
       );
     });
 
@@ -127,6 +127,27 @@ describe('app', () => {
       expect(myAppPrefix).toEqual('custom');
       expect(appE2eSpec).toContain('Welcome to my-app!');
     });
+
+    it('should work if the new project root is changed', async () => {
+      appTree = await schematicRunner
+        .callRule(
+          updateJsonInTree('/angular.json', json => ({
+            ...json,
+            newProjectRoot: 'newProjectRoot'
+          })),
+          appTree
+        )
+        .toPromise();
+
+      const result = schematicRunner.runSchematic(
+        'app',
+        { name: 'myApp' },
+        appTree
+      );
+
+      expect(result.exists('apps/my-app/src/main.ts')).toEqual(true);
+      expect(result.exists('apps/my-app-e2e/protractor.conf.js')).toEqual(true);
+    });
   });
 
   describe('nested', () => {
@@ -142,7 +163,7 @@ describe('app', () => {
         'apps/my-dir/my-app/'
       );
       expect(angularJson.projects['my-dir-my-app-e2e'].root).toEqual(
-        'apps/my-dir/my-app-e2e/'
+        'apps/my-dir/my-app-e2e'
       );
     });
 

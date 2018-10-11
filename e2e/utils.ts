@@ -5,10 +5,13 @@ import * as path from 'path';
 const projectName: string = 'proj';
 
 export function runNgNew(command?: string, silent?: boolean): string {
-  return execSync(`../node_modules/.bin/ng new proj ${command}`, {
-    cwd: `./tmp`,
-    ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
-  }).toString();
+  return execSync(
+    `../node_modules/.bin/ng new proj --no-interactive ${command}`,
+    {
+      cwd: `./tmp`,
+      ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
+    }
+  ).toString();
 }
 
 export function newProject(): void {
@@ -56,6 +59,10 @@ export function copyMissingPackages(): void {
     'yargs-parser'
   ];
   modulesToCopy.forEach(m => copyNodeModule(projectName, m));
+  execSync('rm -rf tmp/proj/node_modules/.bin/webpack');
+  execSync(
+    `cp -a node_modules/.bin/webpack tmp/proj/node_modules/.bin/webpack`
+  );
 
   const libIndex = `./tmp/${projectName}/node_modules/@schematics/angular/library/index.js`;
   const content = readFileSync(libIndex).toString();
@@ -128,11 +135,11 @@ export function runCLI(
 }
 
 export function newApp(name: string): string {
-  return runCLI(`generate app ${name}`);
+  return runCLI(`generate app --no-interactive ${name}`);
 }
 
 export function newLib(name: string): string {
-  return runCLI(`generate lib ${name}`);
+  return runCLI(`generate lib --no-interactive ${name}`);
 }
 
 export function newModule(name: string): string {

@@ -17,7 +17,8 @@ import {
   getDecoratorPropertyValueNode,
   insert,
   replaceNodeValue,
-  updateJsonInTree
+  updateJsonInTree,
+  readJsonInTree
 } from '../../utils/ast-utils';
 import { toFileName } from '../../utils/name-utils';
 import { offsetFromRoot } from '@nrwl/schematics/src/utils/common';
@@ -265,12 +266,17 @@ function updateE2eProject(options: NormalizedSchema): Rule {
     return chain([
       updateJsonInTree(getWorkspacePath(host), json => {
         const project = json.projects[options.e2eProjectName];
-        const fixedProject = replaceAppNameWithPath(
-          project,
-          options.e2eProjectName,
+
+        project.root = options.e2eProjectRoot;
+
+        project.architect.e2e.options.protractorConfig = `${
           options.e2eProjectRoot
-        );
-        json.projects[options.e2eProjectName] = fixedProject;
+        }/protractor.conf.js`;
+        project.architect.lint.options.tsConfig = `${
+          options.e2eProjectRoot
+        }/tsconfig.e2e.json`;
+
+        json.projects[options.e2eProjectName] = project;
         return json;
       }),
       updateJsonInTree(`${options.e2eProjectRoot}/tsconfig.e2e.json`, json => {
@@ -292,6 +298,17 @@ function updateE2eProject(options: NormalizedSchema): Rule {
 export default function(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
+
+    // Determine the roots where @schematics/angular will place the projects
+    // This is not where the projects actually end up
+    const angularJson = readJsonInTree(host, getWorkspacePath(host));
+    const appProjectRoot = angularJson.newProjectRoot
+      ? `${angularJson.newProjectRoot}/${options.name}`
+      : options.name;
+    const e2eProjectRoot = angularJson.newProjectRoot
+      ? `${angularJson.newProjectRoot}/${options.e2eProjectName}`
+      : 'e2e';
+
     return chain([
       externalSchematic('@schematics/angular', 'application', {
         name: options.name,
@@ -306,10 +323,10 @@ export default function(schema: Schema): Rule {
 
       excludeUnnecessaryFiles(),
 
-      move(options.e2eProjectName, options.e2eProjectRoot),
+      move(e2eProjectRoot, options.e2eProjectRoot),
       updateE2eProject(options),
 
-      move(options.name, options.appProjectRoot),
+      move(appProjectRoot, options.appProjectRoot),
       updateProject(options),
 
       updateComponentTemplate(options),

@@ -24,13 +24,13 @@
   "homepage": "https://github.com/nrwl/nx#readme",
   "builders": "./src/builders.json",
   "dependencies": {
-    "@angular-devkit/architect": "~0.8.0",
-    "@angular-devkit/build-webpack": "~0.8.0",
+    "@angular-devkit/architect": "~0.10.1",
+    "@angular-devkit/build-webpack": "~0.10.1",
     "fork-ts-checker-webpack-plugin": "0.4.9",
     "license-webpack-plugin": "^1.4.0",
-    "rxjs": "6.2.2",
+    "rxjs": "6.3.3",
     "ts-loader": "5.2.1",
-    "webpack": "4.9.2",
+    "webpack": "4.19.1",
     "webpack-node-externals": "1.7.2"
   }
 }

@@ -1,48 +1,23 @@
 import { execSync } from 'child_process';
 import * as fs from 'fs';
-import { readFileSync, statSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, statSync } from 'fs';
 import * as path from 'path';
 import { copySync, removeSync } from 'fs-extra';
-import {
-  FileSystemEngineHost,
-  NodeModulesEngineHost,
-  validateOptionsWithSchema
-} from '@angular-devkit/schematics/tools';
-import { BuiltinTaskExecutor } from '@angular-devkit/schematics/tasks/node';
-import {
-  CollectionDescription,
-  EngineHost,
-  RuleFactory,
-  Schematic,
-  SchematicDescription,
-  SchematicEngine,
-  Tree,
-  DryRunSink,
-  TypedSchematicContext,
-  HostSink,
-  HostTree
-} from '@angular-devkit/schematics';
-import { of } from 'rxjs';
-import { concat, concatMap, ignoreElements, map } from 'rxjs/operators';
-import { Url } from 'url';
+import { NodeWorkflow } from '@angular-devkit/schematics/tools';
+import { UnsuccessfulWorkflowExecution } from '@angular-devkit/schematics';
 
 import * as yargsParser from 'yargs-parser';
-import { CoreSchemaRegistry } from '@angular-devkit/core/src/json/schema';
-import { standardFormats } from '@angular-devkit/schematics/src/formats';
 import * as appRoot from 'app-root-path';
-import { virtualFs, normalize } from '@angular-devkit/core';
-import { NodeJsSyncHost } from '@angular-devkit/core/node';
+import { virtualFs, normalize, JsonObject } from '@angular-devkit/core';
+import { NodeJsSyncHost, createConsoleLogger } from '@angular-devkit/core/node';
 
 const rootDirectory = appRoot.path;
 
 export function workspaceSchematic(args: string[]) {
   const outDir = compileTools();
   const schematicName = args[0];
-  const { schematic, host, engine } = prepareExecutionContext(
-    outDir,
-    schematicName
-  );
-  executeSchematic(schematicName, parseOptions(args), schematic, host, engine);
+  const workflow = createWorkflow();
+  executeSchematic(schematicName, parseOptions(args), workflow, outDir);
 }
 
 // compile tools
@@ -112,32 +87,25 @@ function schematicsDir() {
   return path.join('tools', 'schematics');
 }
 
-// prepareExecutionContext
-function prepareExecutionContext(outDir: string, schematicName: string) {
-  const engineHost = new EngineHostHandlingWorkspaceSchematics(outDir);
-  const engine = new SchematicEngine(engineHost);
-
-  const schematic = engine
-    .createCollection('workspace-schematics')
-    .createSchematic(schematicName);
-  const host = new virtualFs.ScopedHost(
-    new NodeJsSyncHost(),
-    normalize(rootDirectory)
-  );
-  return { schematic, host, engine };
+function createWorkflow() {
+  const root = normalize(rootDirectory);
+  const host = new virtualFs.ScopedHost(new NodeJsSyncHost(), root);
+  return new NodeWorkflow(host, {
+    packageManager: fileExists('yarn.lock') ? 'yarn' : 'npm',
+    root
+  });
 }
 
 // execute schematic
-function executeSchematic(
+async function executeSchematic(
   schematicName: string,
   options: { [p: string]: any },
-  schematic: Schematic<any, any>,
-  host: virtualFs.Host,
-  engine: SchematicEngine<any, object>
+  workflow: NodeWorkflow,
+  outDir: string
 ) {
-  const dryRunSink = new DryRunSink(host, true);
-  let error = false;
-  dryRunSink.reporter.subscribe((event: any) => {
+  let nothingDone = true;
+  workflow.reporter.subscribe((event: any) => {
+    nothingDone = false;
     const eventPath = event.path.startsWith('/')
       ? event.path.substr(1)
       : event.path;
@@ -148,7 +116,6 @@ function executeSchematic(
             ? 'already exists'
             : 'does not exist.';
         console.error(`error! ${eventPath} ${desc}.`);
-        error = true;
         break;
       case 'update':
         console.log(`update ${eventPath} (${event.content.length} bytes)`);
@@ -168,132 +135,42 @@ function executeSchematic(
     }
   });
 
-  const fsSink = new HostSink(host, true);
+  const args = options._.slice(1);
+  workflow.registry.addSmartDefaultProvider('argv', (schema: JsonObject) => {
+    if ('index' in schema) {
+      return args[+schema.index];
+    } else {
+      return args;
+    }
+  });
+  delete options._;
+  const logger = createConsoleLogger(true, process.stdout, process.stderr);
 
-  schematic
-    .call(options, of(new HostTree(host)))
-    .pipe(
-      map((tree: any) => Tree.optimize(tree)) as any,
-      concatMap((tree: any) =>
-        dryRunSink
-          .commit(tree)
-          .pipe(ignoreElements() as any, concat(of(tree)) as any)
-      ) as any,
-      concatMap(
-        (tree: any) =>
-          error
-            ? of(tree)
-            : fsSink
-                .commit(tree)
-                .pipe(ignoreElements() as any, concat(of(tree)) as any)
-      ) as any,
-      concatMap(() => (error ? [] : engine.executePostTasks())) as any
-    )
-    .subscribe(
-      () => {},
-      e => {
-        console.error(`Error occurred while executing '${schematicName}':`);
-        console.error(e);
-      },
-      () => {
-        console.log(`'${schematicName}' completed.`);
-      }
-    );
-}
+  try {
+    await workflow
+      .execute({
+        collection: path.join(outDir, 'workspace-schematics.json'),
+        schematic: schematicName,
+        options: options,
+        logger: logger
+      })
+      .toPromise();
 
-/**
- * It uses FileSystemEngineHost for collection named "workspace-tools" and NodeModulesEngineHost
- * for everything else.
- */
-class EngineHostHandlingWorkspaceSchematics implements EngineHost<any, any> {
-  readonly toolsHost: FileSystemEngineHost;
-  readonly defaultHost: NodeModulesEngineHost;
-
-  transformContext(): void {}
-
-  constructor(outDir: string) {
-    const transforms = validateOptionsWithSchema(
-      new CoreSchemaRegistry(standardFormats)
-    );
-    this.toolsHost = new FileSystemEngineHost(outDir);
-    this.toolsHost.registerOptionsTransform(transforms);
-
-    this.defaultHost = new NodeModulesEngineHost();
-    this.defaultHost.registerOptionsTransform(transforms);
-    this.defaultHost.registerTaskExecutor(BuiltinTaskExecutor.NodePackage, {
-      rootDirectory,
-      packageManager: fileExists('yarn.lock') ? 'yarn' : 'npm'
-    });
-  }
-
-  createCollectionDescription(name: string): CollectionDescription<any> {
-    return this.hostFor(name).createCollectionDescription(name);
-  }
-
-  createSchematicDescription(
-    name: string,
-    collection: CollectionDescription<any>
-  ): SchematicDescription<any, any> | null {
-    return this.hostFor(collection.name).createSchematicDescription(
-      name,
-      collection
-    );
-  }
-
-  getSchematicRuleFactory<OptionT extends object>(
-    schematic: SchematicDescription<any, any>,
-    collection: CollectionDescription<any>
-  ): RuleFactory<OptionT> {
-    return this.hostFor(collection.name).getSchematicRuleFactory(
-      schematic,
-      collection
-    );
-  }
-
-  createSourceFromUrl(url: Url, context: any): any {
-    return this.hostFor(context.schematic.collection.name).createSourceFromUrl(
-      url
-    );
-  }
-
-  transformOptions<OptionT extends object>(
-    schematic: SchematicDescription<any, any>,
-    options: OptionT
-  ): any {
-    return this.hostFor(schematic.collection.name).transformOptions(
-      schematic,
-      options
-    );
-  }
-
-  listSchematics(collection: any): string[] {
-    return this.listSchematicNames(collection.description);
-  }
-
-  listSchematicNames(collection: CollectionDescription<any>): string[] {
-    return this.hostFor(collection.name).listSchematicNames(collection);
-  }
-
-  createTaskExecutor(name: string): any {
-    return this.defaultHost.createTaskExecutor(name);
-  }
-
-  hasTaskExecutor(name: string): boolean {
-    return this.defaultHost.hasTaskExecutor(name);
-  }
-
-  private hostFor(name: string) {
-    return name === 'workspace-schematics' ? this.toolsHost : this.defaultHost;
+    if (nothingDone) {
+      logger.info('Nothing to be done.');
+    }
+  } catch (err) {
+    if (err instanceof UnsuccessfulWorkflowExecution) {
+      // "See above" because we already printed the error.
+      logger.fatal('The Schematic workflow failed. See above.');
+    } else {
+      logger.fatal(err.stack || err.message);
+    }
   }
 }
 
 function parseOptions(args: string[]): { [k: string]: any } {
-  const parsed = yargsParser(args);
-  if (parsed._ && parsed._.length > 1) {
-    parsed.name = parsed._[1];
-  }
-  delete parsed._;
-  return parsed;
+  return yargsParser(args);
 }
 
 function exists(file: string): boolean {

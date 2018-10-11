@@ -29,6 +29,11 @@
       "version": "6.4.0",
       "description": "Update to @angular/cli@6.2.3",
       "factory": "./update-6-4-0/update-6-4-0"
+    },
+    "update-7.0.0": {
+      "version": "7.0.0",
+      "description": "Update to @angular v7",
+      "factory": "./update-7-0-0/update-7-0-0"
     }
   }
 }
