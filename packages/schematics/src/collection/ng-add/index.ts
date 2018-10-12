@@ -421,9 +421,11 @@ function updateProjectTsLint(options: Schema) {
     const app = angularJson.projects[options.name];
     const offset = '../../';
 
-    updateJsonFile(`${app.root}/tslint.json`, json => {
-      json.extends = `${offset}tslint.json`;
-    });
+    if (host.exists(`${app.root}/tslint.json`)) {
+      updateJsonFile(`${app.root}/tslint.json`, json => {
+        json.extends = `${offset}tslint.json`;
+      });
+    }
 
     return host;
   };
