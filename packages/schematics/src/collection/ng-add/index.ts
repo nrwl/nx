@@ -294,10 +294,16 @@ function updateAngularCLIJson(options: Schema): Rule {
       );
 
       const e2eLintConfig = e2eProject.architect.lint;
-      e2eLintConfig.options.tsConfig = path.join(
-        e2eProject.root,
-        getFilename(e2eLintConfig.options.tsConfig)
-      );
+      e2eLintConfig.options.tsConfig = Array.isArray(
+        e2eLintConfig.options.tsConfig
+      )
+        ? e2eLintConfig.options.tsConfig.map(tsConfigPath =>
+            path.join(e2eProject.root, getFilename(tsConfigPath))
+          )
+        : path.join(
+            e2eProject.root,
+            getFilename(e2eLintConfig.options.tsConfig)
+          );
 
       angularJson.projects[getE2eKey(angularJson)] = e2eProject;
     }

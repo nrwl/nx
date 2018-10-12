@@ -342,6 +342,31 @@ describe('Nrwl Convert to Nx Workspace', () => {
     );
   });
 
+  it('should handle type array at tslint builder options.tsConfig (e2e project)', () => {
+    // create a new AngularCLI app
+    runNgNew();
+
+    // set array at tslint builder options.tsConfig
+    const existingAngularJson = readJson('angular.json');
+    existingAngularJson.projects['proj-e2e'].architect.lint.options.tsConfig = [
+      'e2e/tsconfig.e2e.json'
+    ];
+    updateFile('angular.json', JSON.stringify(existingAngularJson, null, 2));
+
+    // Add @nrwl/schematics
+    runCLI('add @nrwl/schematics --npmScope projscope --skip-install');
+
+    const updatedAngularCLIJson = readJson('angular.json');
+
+    expect(updatedAngularCLIJson.projects['proj-e2e'].architect.lint).toEqual({
+      builder: '@angular-devkit/build-angular:tslint',
+      options: {
+        tsConfig: ['apps/proj-e2e/tsconfig.e2e.json'],
+        exclude: ['**/node_modules/**']
+      }
+    });
+  });
+
   it('should handle different types of errors', () => {
     // create a new AngularCLI app
     runNgNew();
