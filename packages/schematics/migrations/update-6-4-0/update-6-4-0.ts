@@ -1,13 +1,4 @@
-import {
-  Rule,
-  SchematicContext,
-  chain,
-  template,
-  apply,
-  mergeWith,
-  url
-} from '@angular-devkit/schematics';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { Rule, SchematicContext, chain } from '@angular-devkit/schematics';
 import { updateJsonInTree } from '../../src/utils/ast-utils';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
@@ -26,6 +17,7 @@ function updateDependencies() {
       '@angular/cli': '6.2.4',
       '@angular-devkit/build-angular': '~0.8.0',
       '@ngrx/store-devtools': '6.1.0',
+      'jasmine-marbles': '0.4.0',
       karma: '~3.0.0',
       'karma-coverage-istanbul-reporter': '~2.0.1',
       protractor: '~5.4.0',
