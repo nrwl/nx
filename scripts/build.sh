@@ -36,3 +36,6 @@ cp LICENSE build/packages/bazel
 cp LICENSE build/packages/builders
 cp LICENSE build/packages/schematics
 cp LICENSE build/packages/nx
+
+echo "Nx libraries available at build/packages:"
+ls build/packages
