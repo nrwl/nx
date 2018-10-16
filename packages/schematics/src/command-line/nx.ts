@@ -158,7 +158,12 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
 function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .describe('file', 'output file (e.g. --file=.vis/output.json)')
-    .choices('output', [OutputType.json, OutputType.dot, OutputType.html]);
+    .choices('output', [
+      OutputType.json,
+      OutputType.dot,
+      OutputType.html,
+      OutputType.svg
+    ]);
 }
 
 function parseCSV(args: string[]) {
