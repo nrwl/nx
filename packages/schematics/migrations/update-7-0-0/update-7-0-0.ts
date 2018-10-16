@@ -7,7 +7,8 @@ export default function(): Rule {
       json.devDependencies = json.devDependencies || {};
       json.devDependencies = {
         ...json.devDependencies,
-        codelyzer: '~4.5.0'
+        codelyzer: '~4.5.0',
+        'jasmine-marbles': '0.4.0'
       };
 
       return json;
