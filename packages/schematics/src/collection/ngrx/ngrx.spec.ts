@@ -341,7 +341,7 @@ describe('ngrx', () => {
       const content = getFileContent(tree, `${statePath}/users.selectors.ts`);
 
       [
-        `import { UsersState } from './users.reducer'`,
+        `import { USERS_FEATURE_KEY, UsersState } from './users.reducer'`,
         `export const usersQuery`
       ].forEach(text => {
         expect(content).toContain(text);
