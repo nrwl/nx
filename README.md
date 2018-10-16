@@ -1,7 +1,7 @@
 <h1 align="center">Nrwl Extensions for Angular (Nx)</h1>
-<img src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png" align="center">
+<p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png"></p>
 
-<p align="center">
+<div align="center">
 
 [![Build Status](https://travis-ci.org/nrwl/nx.svg?branch=master)](https://travis-ci.org/nrwl/nx)
 [![License](https://img.shields.io/npm/l/@nrwl/schematics.svg?style=flat-square)]()
@@ -10,7 +10,7 @@
 [![Semantic Release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat-square)]()
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 
-</p>
+</div>
 
 <hr>
 
@@ -19,6 +19,22 @@
 🔎 **Nx is an open source toolkit for enterprise Angular applications**, which is based on our experience working at Google and helping the Fortune 500 build ambitious Angular applications. It provides an opinionated approach to application project structure and patterns.
 
 Nx is an extension for the the Angular CLI implementing the monorepo-style development. It is also a collection of runtime libraries, linters, and code generators helping large teams build better with Angular.
+
+## Features
+
+Because Nx is built on top of the Angular CLI, you get all the conventional and loved features plus:
+
+* Nx Workspace
+* Workspace-Specific Schematics
+* Intelligent Builds and Unit Testing
+* State Management
+* NgRx
+* Data Persistence
+* Linters
+* Code Formatter
+* UpgradeModule and downgradeModule helpers
+* Jest unit tests integration
+* Node build tooling
 
 # Why Nx?
 
@@ -66,6 +82,7 @@ You are good to go!
 ### Documentation
 
 * [Nx Documentation and Guides](https://nrwl.io/nx)
+* [Nx blog posts](https://blog.nrwl.io/nx/home)
 
 ### Videos
 
@@ -95,7 +112,7 @@ If you want to file a bug or submit a PR, read up on our [guidelines for contrib
 
 ## Core Team
 
-Victor Savkin | Jason Jean | Benjamin Cabanes
------------- | ------------- | ------------- 
-![Victor Savkin](https://github.com/nrwl/nx/blob/master/static/victor_pic.jpg) | ![Jason Jean](https://github.com/nrwl/nx/blob/master/static/jason_pic.jpg) | ![Benjamin Cabanes](https://github.com/nrwl/nx/blob/master/static/ben_pic.jpg)
-[vsavkin](https://github.com/vsavkin)|[FrozenPandaz](https://github.com/FrozenPandaz)|[bcabanes](https://github.com/bcabanes)
+| Victor Savkin                                                                  | Jason Jean                                                                 | Benjamin Cabanes                                                               |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| ![Victor Savkin](https://github.com/nrwl/nx/blob/master/static/victor_pic.jpg) | ![Jason Jean](https://github.com/nrwl/nx/blob/master/static/jason_pic.jpg) | ![Benjamin Cabanes](https://github.com/nrwl/nx/blob/master/static/ben_pic.jpg) |
+| [vsavkin](https://github.com/vsavkin)                                          | [FrozenPandaz](https://github.com/FrozenPandaz)                            | [bcabanes](https://github.com/bcabanes)                                        |
