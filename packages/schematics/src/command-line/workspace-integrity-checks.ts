@@ -44,7 +44,7 @@ export class WorkspaceIntegrityChecks {
 
     return errors.length === 0
       ? []
-      : [{ header: 'The .angular-cli.json file is out of sync', errors }];
+      : [{ header: 'The angular.json file is out of sync', errors }];
   }
 
   private filesWithoutProjects(): ErrorGroup[] {
