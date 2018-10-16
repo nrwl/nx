@@ -1,13 +1,4 @@
-import {
-  Rule,
-  SchematicContext,
-  chain,
-  template,
-  apply,
-  mergeWith,
-  url
-} from '@angular-devkit/schematics';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { Rule, SchematicContext, chain } from '@angular-devkit/schematics';
 import { updateJsonInTree } from '../../src/utils/ast-utils';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 

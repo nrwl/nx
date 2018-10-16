@@ -29,9 +29,10 @@ describe('Update 7.0.0', () => {
       .runSchematicAsync('update-7.0.0', {}, initialTree)
       .toPromise();
 
-    const codelyzerVersion = JSON.parse(result.readContent('package.json'))
-      .devDependencies.codelyzer;
+    const devDependencies = JSON.parse(result.readContent('package.json'))
+      .devDependencies;
 
-    expect(codelyzerVersion).toEqual('~4.5.0');
+    expect(devDependencies.codelyzer).toEqual('~4.5.0');
+    expect(devDependencies['jasmine-marbles']).toEqual('0.4.0');
   });
 });
