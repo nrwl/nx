@@ -60,7 +60,8 @@ export type CriticalPathMap = {
 export enum OutputType {
   'json' = 'json',
   'html' = 'html',
-  'dot' = 'dot'
+  'dot' = 'dot',
+  'svg' = 'svg'
 }
 
 export interface UserOptions extends yargs.Arguments {
@@ -339,6 +340,8 @@ function extractDataFromJson(json, type) {
       return getDot(json);
     case OutputType.html:
       return applyHTMLTemplate(viz(getDot(json)));
+    case OutputType.svg:
+      return viz(getDot(json));
     default:
       throw new Error(
         'Unrecognized file extension. Supported extensions are "json", "html", and "dot"'
