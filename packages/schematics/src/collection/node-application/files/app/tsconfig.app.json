@@ -2,7 +2,7 @@
   "extends": "<%= offset %>tsconfig.json",
   "compilerOptions": {
     "outDir": "<%= offset %>dist/out-tsc/<%= root %>",
-    "types": []
+    "types": ["node"]
   },
   "exclude": ["**/*.spec.ts"],
   "include": ["**/*.ts"]

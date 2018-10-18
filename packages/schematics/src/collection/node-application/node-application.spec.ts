@@ -186,6 +186,11 @@ describe('node-app', () => {
           expectedValue: '../../../dist/out-tsc/apps/my-dir/my-node-app'
         },
         {
+          path: 'apps/my-dir/my-node-app/tsconfig.app.json',
+          lookupFn: json => json.compilerOptions.types,
+          expectedValue: ['node']
+        },
+        {
           path: 'apps/my-dir/my-node-app/tslint.json',
           lookupFn: json => json.extends,
           expectedValue: '../../../tslint.json'
