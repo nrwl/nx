@@ -105,12 +105,7 @@ function generateFiles(options: CypressProjectSchema): Rule {
 function updateAngularJson(options: CypressProjectSchema): Rule {
   return updateJsonInTree('angular.json', json => {
     const projectConfig = json.projects[options.e2eProjectName];
-    const fixedProjectConfig = replaceAppNameWithPath(
-      projectConfig,
-      options.e2eProjectName,
-      options.e2eProjectRoot
-    );
-    fixedProjectConfig.architect.e2e = {
+    projectConfig.architect.e2e = {
       builder: '@nrwl/builders:cypress',
       options: {
         cypressConfig: join(normalize(options.e2eProjectRoot), 'cypress.json'),
@@ -123,7 +118,7 @@ function updateAngularJson(options: CypressProjectSchema): Rule {
         }
       }
     };
-    json.projects[options.e2eProjectName] = fixedProjectConfig;
+    json.projects[options.e2eProjectName] = projectConfig;
     return json;
   });
 }
