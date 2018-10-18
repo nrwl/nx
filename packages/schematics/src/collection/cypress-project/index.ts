@@ -20,6 +20,7 @@ import {
 } from '../../utils/ast-utils';
 import { cypressVersion, nxVersion } from '../../lib-versions';
 import { replaceAppNameWithPath } from '../../utils/cli-config-utils';
+import { offsetFromRoot } from '../../utils/common';
 import { Schema } from '../application/schema';
 
 export interface CypressProjectSchema extends Schema {
@@ -92,7 +93,8 @@ function generateFiles(options: CypressProjectSchema): Rule {
         template({
           tmpl: '',
           projectName: options.e2eProjectName,
-          relatedProjectName: options.name
+          relatedProjectName: options.name,
+          offsetFromRoot: offsetFromRoot(projectConfig.root)
         }),
         move(projectConfig.root)
       ])
