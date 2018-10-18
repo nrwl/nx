@@ -7,7 +7,9 @@
   "properties": {
     "npmScope": {
       "type": "string",
-      "description": "Npm scope for importing libs."
+      "description": "Npm scope for importing libs.",
+      "x-prompt":
+        "What is the npm scope you would like to use for your Nx Workspace?"
     },
     "skipInstall": {
       "type": "boolean",

@@ -4,17 +4,19 @@
   "title": "Nx Application Options Schema",
   "type": "object",
   "properties": {
-    "directory": {
-      "description": "The directory of the new application.",
-      "type": "string"
-    },
     "name": {
       "description": "The name of the application.",
       "type": "string",
       "$default": {
         "$source": "argv",
         "index": 0
-      }
+      },
+      "x-prompt": "What name would you like to use for the application?"
+    },
+    "directory": {
+      "description": "The directory of the new application.",
+      "type": "string",
+      "x-prompt": "In which directory should the application be generated?"
     },
     "inlineStyle": {
       "description": "Specifies if the style will be in the ts file.",
@@ -36,7 +38,8 @@
     "routing": {
       "type": "boolean",
       "description": "Generates a routing module.",
-      "default": false
+      "default": false,
+      "x-prompt": "Would you like to add Angular routing?"
     },
     "prefix": {
       "type": "string",
@@ -47,7 +50,18 @@
     "style": {
       "description": "The file extension to be used for style files.",
       "type": "string",
-      "default": "css"
+      "default": "css",
+      "x-prompt": {
+        "message": "Which stylesheet format would you like to use?",
+        "type": "list",
+        "items": [
+          { "value": "css", "label": "CSS" },
+          { "value": "scss", "label": "SCSS   [ http://sass-lang.com   ]" },
+          { "value": "sass", "label": "SASS   [ http://sass-lang.com   ]" },
+          { "value": "less", "label": "LESS   [ http://lesscss.org     ]" },
+          { "value": "styl", "label": "Stylus [ http://stylus-lang.com ]" }
+        ]
+      }
     },
     "skipTests": {
       "description": "Skip creating spec files.",
@@ -65,15 +79,26 @@
       "default": false,
       "description": "Do not add dependencies to package.json."
     },
-    "tags": {
-      "type": "string",
-      "description": "Add tags to the application (used for linting)"
-    },
     "unitTestRunner": {
       "type": "string",
       "enum": ["karma", "jest", "none"],
       "description": "Test runner to use for unit tests",
-      "default": "karma"
+      "default": "karma",
+      "x-prompt": {
+        "message":
+          "Which Unit Test Runner would you like to use for the application?",
+        "type": "list",
+        "items": [
+          { "value": "karma", "label": "Karma" },
+          { "value": "jest", "label": "Jest (https://jestjs.io/)" }
+        ]
+      }
+    },
+    "tags": {
+      "type": "string",
+      "description": "Add tags to the application (used for linting)",
+      "x-prompt":
+        "Which tags would you like to add to the application? (used for linting)"
     }
   },
   "required": []

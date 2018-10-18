@@ -10,11 +10,13 @@
       "$default": {
         "$source": "argv",
         "index": 0
-      }
+      },
+      "x-prompt": "What name would you like to use for the library?"
     },
     "directory": {
       "type": "string",
-      "description": "A directory where the app is placed"
+      "description": "A directory where the app is placed",
+      "x-prompt": "In which directory should the library be generated?"
     },
     "publishable": {
       "type": "boolean",
@@ -42,36 +44,52 @@
       "default": false,
       "description": "Do not update tsconfig.json for development experience."
     },
+    "parentModule": {
+      "type": "string",
+      "description":
+        "Update the router configuration of the parent module using loadChildren or children, depending on what `lazy` is set to.",
+      "x-prompt": "Which module should import the library?"
+    },
     "routing": {
       "type": "boolean",
       "default": false,
-      "description": "Add router configuration. See lazy for more information."
+      "description": "Add router configuration. See lazy for more information.",
+      "x-prompt":
+        "Would you like to add a routing configuration to the library?"
     },
     "lazy": {
       "type": "boolean",
       "default": false,
       "description":
-        "Add RouterModule.forChild when set to true, and a simple array of routes when set to false."
+        "Add RouterModule.forChild when set to true, and a simple array of routes when set to false.",
+      "x-prompt": "Will this library be lazy loaded?"
     },
     "module": {
       "type": "boolean",
       "default": true,
-      "description": "Include an NgModule in the library."
-    },
-    "parentModule": {
-      "type": "string",
-      "description":
-        "Update the router configuration of the parent module using loadChildren or children, depending on what `lazy` is set to."
+      "description": "Include an NgModule in the library.",
+      "x-prompt": "Would you like to generate an NgModule within the library?"
     },
     "tags": {
       "type": "string",
-      "description": "Add tags to the library (used for linting)"
+      "description": "Add tags to the library (used for linting)",
+      "x-prompt":
+        "Which tags would you like to add to the library? (used for linting)"
     },
     "unitTestRunner": {
       "type": "string",
       "enum": ["karma", "jest", "none"],
       "description": "Test runner to use for unit tests",
-      "default": "karma"
+      "default": "karma",
+      "x-prompt": {
+        "message":
+          "Which Unit Test Runner would you like to use for the library?",
+        "type": "list",
+        "items": [
+          { "value": "karma", "label": "Karma" },
+          { "value": "jest", "label": "Jest (https://jestjs.io/)" }
+        ]
+      }
     }
   },
   "required": []
