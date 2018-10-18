@@ -24,13 +24,12 @@ describe('Cypress E2E Test runner', () => {
         checkFilesExist('apps/my-app-e2e/cypress.json');
         checkFilesExist('apps/my-app-e2e/tsconfig.json');
 
-        checkFilesExist('apps/my-app-e2e/cypress/support/index.ts');
-        checkFilesExist('apps/my-app-e2e/cypress/support/commands.ts');
-
         checkFilesExist('apps/my-app-e2e/src/fixtures/example.json');
         checkFilesExist('apps/my-app-e2e/src/integration/app.spec.ts');
         checkFilesExist('apps/my-app-e2e/src/plugins/index.ts');
         checkFilesExist('apps/my-app-e2e/src/support/app.po.ts');
+        checkFilesExist('apps/my-app-e2e/src/support/index.ts');
+        checkFilesExist('apps/my-app-e2e/src/support/commands.ts');
       },
       1000000
     );

@@ -49,13 +49,6 @@ describe('schematic:cypres-project', () => {
       expect(tree.exists('apps/my-app-e2e/tsconfig.json')).toBeTruthy();
 
       expect(
-        tree.exists('apps/my-app-e2e/cypress/support/commands.ts')
-      ).toBeTruthy();
-      expect(
-        tree.exists('apps/my-app-e2e/cypress/support/index.ts')
-      ).toBeTruthy();
-
-      expect(
         tree.exists('apps/my-app-e2e/src/fixtures/example.json')
       ).toBeTruthy();
       expect(
@@ -63,6 +56,10 @@ describe('schematic:cypres-project', () => {
       ).toBeTruthy();
       expect(tree.exists('apps/my-app-e2e/src/plugins/index.ts')).toBeTruthy();
       expect(tree.exists('apps/my-app-e2e/src/support/app.po.ts')).toBeTruthy();
+      expect(
+        tree.exists('apps/my-app-e2e/src/support/commands.ts')
+      ).toBeTruthy();
+      expect(tree.exists('apps/my-app-e2e/src/support/index.ts')).toBeTruthy();
     });
 
     it('should add dependencies into `package.json` file', () => {

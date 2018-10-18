@@ -123,7 +123,7 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
           `${path.resolve(
             path.dirname(tsConfigPath),
             tsconfigJson.compilerOptions.outDir
-          )}/src/fixtures`,
+          )}/fixtures`,
           { overwrite: true }
         );
         subscriber.next({ success: true });
