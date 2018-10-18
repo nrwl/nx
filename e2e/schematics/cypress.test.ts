@@ -38,7 +38,7 @@ describe('Cypress E2E Test runner', () => {
 
   describe('running Cypress', () => {
     it(
-      'should run an app and executing e2e tests with Cypress',
+      'should execute e2e tests using Cypress',
       () => {
         newProject();
         newApp('myApp --e2eTestRunner=cypress');
