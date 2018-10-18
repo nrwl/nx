@@ -11,7 +11,15 @@
       "$default": {
         "$source": "argv",
         "index": 0
-      }
+      },
+      "x-prompt": "What name would you like to use for the ngrx state?"
+    },
+    "module": {
+      "type": "string",
+      "description":
+        "Path to ngModule; host directory will contain the new '+state' directory (e.g., libs/comments/src/lib/comments-state.module.ts).",
+      "x-prompt":
+        "What is the path to the module where this ngrx state should be added to?"
     },
     "directory": {
       "type": "string",
@@ -19,22 +27,19 @@
       "description":
         "Override the name of the folder used to contain/group the NgRx files: contains actions, effects, reducers. selectors. (e.g., +state)"
     },
-    "module": {
-      "type": "string",
-      "description":
-        "Path to ngModule; host directory will contain the new '+state' directory (e.g., libs/comments/src/lib/comments-state.module.ts)."
-    },
     "root": {
       "type": "boolean",
       "default": false,
       "description":
-        "Add StoreModule.forRoot and EffectsModule.forRoot() instead of forFeature (e.g., --root)."
+        "Add StoreModule.forRoot and EffectsModule.forRoot() instead of forFeature (e.g., --root).",
+      "x-prompt": "Is this the root state of the application?"
     },
     "facade": {
       "type": "boolean",
       "default": false,
       "description":
-        "Create a Facade class for the the Feature (e.g., --facade)."
+        "Create a Facade class for the the Feature (e.g., --facade).",
+      "x-prompt": "Would you like to add a Facade to your ngrx state"
     },
     "onlyAddFiles": {
       "type": "boolean",

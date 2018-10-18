@@ -4,12 +4,6 @@
   "title": "Create an empty workspace",
   "type": "object",
   "properties": {
-    "directory": {
-      "type": "string",
-      "format": "path",
-      "description": "The directory name to create the workspace in.",
-      "default": ""
-    },
     "name": {
       "description": "The name of the workspace.",
       "type": "string",
@@ -17,11 +11,20 @@
       "$default": {
         "$source": "argv",
         "index": 0
-      }
+      },
+      "x-prompt": "What name would you like to use for the workspace?"
+    },
+    "directory": {
+      "type": "string",
+      "format": "path",
+      "description": "The directory name to create the workspace in.",
+      "default": ""
     },
     "npmScope": {
       "type": "string",
-      "description": "Npm scope for importing libs."
+      "description": "Npm scope for importing libs.",
+      "x-prompt":
+        "What is the npm scope you would like to use for your Nx Workspace?"
     },
     "skipInstall": {
       "description": "Skip installing dependency packages.",
@@ -36,7 +39,16 @@
     },
     "packageManager": {
       "type": "string",
-      "description": "Package manager used in the project."
+      "description": "Package manager used in the project.",
+      "x-prompt": {
+        "message":
+          "Which Package Manager would you like to use for your workspace?",
+        "type": "list",
+        "items": [
+          { "value": "npm", "label": "" },
+          { "value": "yarn", "label": "Yarn (https://yarnpkg.com/)" }
+        ]
+      }
     },
     "commit": {
       "description": "Initial repository commit information.",
