@@ -172,6 +172,9 @@ function updateProject(options: NormalizedSchema): Rule {
               join(normalize(options.appProjectRoot), 'tsconfig.spec.json')
           );
         }
+        if (options.e2eTestRunner === 'none') {
+          delete json.projects[options.e2eProjectName];
+        }
         json.projects[options.name] = fixedProject;
         return json;
       }),
@@ -221,14 +224,17 @@ function updateProject(options: NormalizedSchema): Rule {
         };
       }),
       updateJsonInTree(`/nx.json`, json => {
-        return {
+        const resultJson = {
           ...json,
           projects: {
             ...json.projects,
-            [options.name]: { tags: options.parsedTags },
-            [options.e2eProjectName]: { tags: [] }
+            [options.name]: { tags: options.parsedTags }
           }
         };
+        if (options.e2eTestRunner !== 'none') {
+          resultJson.projects[options.e2eProjectName] = { tags: [] };
+        }
+        return resultJson;
       }),
       host => {
         if (options.unitTestRunner !== 'karma') {
@@ -237,7 +243,7 @@ function updateProject(options: NormalizedSchema): Rule {
           return host;
         }
 
-        if (options.e2eTestRunner === 'cypress') {
+        if (options.e2eTestRunner !== 'protractor') {
           host.delete(`${options.e2eProjectRoot}/src/app.e2e-spec.ts`);
           host.delete(`${options.e2eProjectRoot}/src/app.po.ts`);
           host.delete(`${options.e2eProjectRoot}/protractor.conf.js`);

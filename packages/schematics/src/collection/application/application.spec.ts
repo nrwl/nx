@@ -354,4 +354,17 @@ describe('app', () => {
       ).toEqual(['apps/my-app/tsconfig.app.json']);
     });
   });
+
+  describe('--e2e-test-runner none', () => {
+    it('should not generate test configuration', () => {
+      const tree = schematicRunner.runSchematic(
+        'app',
+        { name: 'myApp', e2eTestRunner: 'none' },
+        appTree
+      );
+      expect(tree.exists('apps/my-app-e2e')).toBeFalsy();
+      const angularJson = readJsonInTree(tree, 'angular.json');
+      expect(angularJson.projects['my-app-e2e']).toBeUndefined();
+    });
+  });
 });

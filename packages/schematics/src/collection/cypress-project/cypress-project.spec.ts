@@ -119,7 +119,7 @@ describe('schematic:cypres-project', () => {
       );
 
       expect(tsconfigJson.compilerOptions.outDir).toEqual(
-        '../../dist/apps/my-app-e2e'
+        '../../dist/apps/my-app-e2e/src'
       );
     });
   });

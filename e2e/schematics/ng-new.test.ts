@@ -1,4 +1,12 @@
-import { newApp, newLib, newProject, runCLI, updateFile } from '../utils';
+import {
+  newApp,
+  newLib,
+  newProject,
+  readJson,
+  runCLI,
+  updateFile,
+  fileExists
+} from '../utils';
 
 describe('Nrwl Workspace', () => {
   it(
@@ -74,6 +82,26 @@ describe('Nrwl Workspace', () => {
       expect(runCLI('test  --project=my-dir-my-app --no-watch')).toContain(
         'Executed 3 of 3 SUCCESS'
       );
+    },
+    1000000
+  );
+
+  it(
+    'should not generate e2e configuration',
+    () => {
+      newProject();
+      newApp('myApp --e2eTestRunner=none');
+
+      // Making sure the angular.json file doesn't contain e2e project
+      const angularJson = readJson('angular.json');
+      expect(angularJson['my-app-e2e']).toBeUndefined();
+
+      // Making sure the nx.json file doesn't contain e2e project
+      const nxJson = readJson('angular.json');
+      expect(nxJson.projects['my-app-e2e']).toBeUndefined();
+
+      // Making sure the e2e folder is not created
+      expect(fileExists('apps/my-app-e2e')).toBeFalsy();
     },
     1000000
   );
