@@ -20,8 +20,13 @@
       "description":
         "Whether or not the open the Cypress application to run the tests. If set to 'true', will run in headless mode",
       "default": false
+    },
+    "baseUrl": {
+      "type": "string",
+      "description":
+        "Use this to pass directly the address of your distant server address with the port running your application"
     }
   },
   "additionalProperties": false,
-  "required": ["cypressConfig", "tsConfig", "devServerTarget"]
+  "required": ["cypressConfig", "tsConfig"]
 }

@@ -12,7 +12,8 @@ describe('Cypress builder', () => {
     cypressConfig: 'apps/my-app-e2e/cypress.json',
     tsConfig: 'apps/my-app-e2e/tsconfig.json',
     devServerTarget: 'my-app:serve',
-    headless: true
+    headless: true,
+    baseUrl: undefined
   };
 
   beforeEach(() => {
@@ -94,6 +95,57 @@ describe('Cypress builder', () => {
             project: path.dirname(cypressBuilderOptions.cypressConfig)
           });
           expect(cypressRun).not.toHaveBeenCalled();
+        });
+
+      fakeEventEmitter.emit('exit'); // Passing tsc command
+    });
+
+    it('should call `Cypress.run` with provided baseUrl', () => {
+      const fakeEventEmitter = new EventEmitter();
+      spyOn(child_process, 'spawn').and.returnValue(fakeEventEmitter);
+      const cypressRun = spyOn(Cypress, 'run');
+
+      builder
+        .run({
+          root: normalize('/root'),
+          projectType: 'application',
+          builder: '@nrwl/builders:cypress',
+          options: Object.assign(cypressBuilderOptions, {
+            baseUrl: 'http://my-distant-host.com'
+          })
+        })
+        .subscribe(() => {
+          expect(cypressRun).toHaveBeenCalledWith({
+            config: { baseUrl: 'http://my-distant-host.com' },
+            project: path.dirname(cypressBuilderOptions.cypressConfig)
+          });
+        });
+
+      fakeEventEmitter.emit('exit'); // Passing tsc command
+    });
+
+    it('should call `Cypress.run` without baseUrl nor dev server target value', () => {
+      const fakeEventEmitter = new EventEmitter();
+      spyOn(child_process, 'spawn').and.returnValue(fakeEventEmitter);
+      const cypressRun = spyOn(Cypress, 'run');
+
+      builder
+        .run({
+          root: normalize('/root'),
+          projectType: 'application',
+          builder: '@nrwl/builders:cypress',
+          options: {
+            cypressConfig: 'apps/my-app-e2e/cypress.json',
+            tsConfig: 'apps/my-app-e2e/tsconfig.json',
+            devServerTarget: undefined,
+            headless: true,
+            baseUrl: undefined
+          }
+        })
+        .subscribe(() => {
+          expect(cypressRun).toHaveBeenCalledWith({
+            project: path.dirname(cypressBuilderOptions.cypressConfig)
+          });
         });
 
       fakeEventEmitter.emit('exit'); // Passing tsc command
