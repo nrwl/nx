@@ -280,9 +280,6 @@ describe('app', () => {
   });
 
   describe('--unit-test-runner jest', () => {
-    beforeEach(() => {
-      appTree = schematicRunner.runSchematic('jest', {}, appTree);
-    });
     it('should generate a jest config', () => {
       const tree = schematicRunner.runSchematic(
         'app',

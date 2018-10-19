@@ -9,7 +9,8 @@ import {
   move,
   template,
   noop,
-  filter
+  filter,
+  schematic
 } from '@angular-devkit/schematics';
 import {
   getProjectConfig,
@@ -70,7 +71,7 @@ function updateAngularJson(options: JestProjectSchema): Rule {
   });
 }
 
-function check(options: JestProjectSchema) {
+function check(options: JestProjectSchema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const projectConfig = getProjectConfig(host, options.project);
     if (projectConfig.architect.test) {
@@ -80,9 +81,7 @@ function check(options: JestProjectSchema) {
     }
     const packageJson = readJsonInTree(host, 'package.json');
     if (!packageJson.devDependencies.jest) {
-      throw new Error(
-        `Your workspace does not have jest installed. Please run "ng generate jest" to setup your workspace to run tests with jest.`
-      );
+      return schematic('jest', {});
     }
   };
 }

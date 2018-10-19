@@ -46,7 +46,8 @@
     "jest": {
       "factory": "./collection/jest",
       "schema": "./collection/jest/schema.json",
-      "description": "Add Jest configuration to the workspace"
+      "description": "Add Jest configuration to the workspace",
+      "hidden": true
     },
 
     "jest-project": {
