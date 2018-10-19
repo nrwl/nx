@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "Nx Jest Project Schematics Schema",
+  "id": "SchematicsNxJestProject",
   "title": "Create Jest Configuration for the workspace",
   "type": "object",
   "properties": {

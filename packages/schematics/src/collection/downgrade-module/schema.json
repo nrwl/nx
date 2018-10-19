@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "downgrade-module",
+  "id": "SchematicsNxDowngradeModule",
   "title": "Generates downgradeModule setup",
   "type": "object",
   "properties": {
