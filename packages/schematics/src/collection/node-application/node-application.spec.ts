@@ -17,7 +17,6 @@ describe('node-app', () => {
   beforeEach(() => {
     appTree = new VirtualTree();
     appTree = createEmptyWorkspace(appTree);
-    appTree = schematicRunner.runSchematic('jest', {}, appTree);
   });
 
   describe('not nested', () => {

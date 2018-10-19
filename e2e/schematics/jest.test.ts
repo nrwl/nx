@@ -10,14 +10,13 @@ import {
 describe('Jest', () => {
   beforeAll(() => {
     newProject();
-    runCLI('generate jest');
-    copyMissingPackages();
   });
 
   it(
     'should be able to generate a testable library using jest',
     async done => {
       newLib('jestlib --unit-test-runner jest');
+      copyMissingPackages();
       await Promise.all([
         runCLIAsync('generate service test --project jestlib'),
         runCLIAsync('generate component test --project jestlib')
@@ -33,6 +32,7 @@ describe('Jest', () => {
     'should be able to generate a testable application using jest',
     async () => {
       newApp('jestapp --unit-test-runner jest');
+      copyMissingPackages();
       await Promise.all([
         runCLIAsync('generate service test --project jestapp'),
         runCLIAsync('generate component test --project jestapp')

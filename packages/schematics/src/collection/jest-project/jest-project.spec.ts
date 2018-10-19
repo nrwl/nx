@@ -15,7 +15,6 @@ describe('lib', () => {
   beforeEach(() => {
     appTree = new VirtualTree();
     appTree = createEmptyWorkspace(appTree);
-    appTree = schematicRunner.runSchematic('jest', {}, appTree);
     appTree = schematicRunner.runSchematic(
       'lib',
       {

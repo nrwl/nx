@@ -414,10 +414,6 @@ describe('lib', () => {
   });
 
   describe('--unit-test-runner jest', () => {
-    beforeEach(() => {
-      appTree = schematicRunner.runSchematic('jest', {}, appTree);
-    });
-
     it('should generate jest configuration', () => {
       const resultTree = schematicRunner.runSchematic(
         'lib',
