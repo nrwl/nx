@@ -33,9 +33,10 @@ function checkArchitectTarget(options: CypressProjectSchema): Rule {
   return (host: Tree): Rule => {
     const projectConfig = getProjectConfig(host, options.e2eProjectName);
     if (!projectConfig.architect.e2e) {
-      throw new Error(
-        `${options.e2eProjectName} has no test architect option.`
-      );
+      return updateJsonInTree('angular.json', json => {
+        json.projects[options.e2eProjectName] = {};
+        return json;
+      });
     }
 
     return noop();
