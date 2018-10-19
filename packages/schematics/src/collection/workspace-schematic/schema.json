@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "schematics",
+  "id": "SchematicsNxWorkspaceSchematic",
   "title": "Create a custom schematic",
   "type": "object",
   "properties": {
