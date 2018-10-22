@@ -3,6 +3,7 @@
   "fixturesFolder": "<%= offsetFromRoot %>dist/apps/<%= projectName %>/src/fixtures",
   "integrationFolder": "<%= offsetFromRoot %>dist/apps/<%= projectName %>/src/integration",
   "pluginsFile": "<%= offsetFromRoot %>dist/apps/<%= projectName %>/src/plugins/index.js",
+  "supportFile":  "<%= offsetFromRoot %>dist/apps/<%= projectName %>/src/support/index.js",
   "video": true,
   "videosFolder": "<%= offsetFromRoot %>dist/apps/<%= projectName %>/videos",
   "screenshotsFolder": "<%= offsetFromRoot %>dist/apps/<%= projectName %>/screenshots",
