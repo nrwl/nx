@@ -7,7 +7,7 @@ import {
 } from '@angular-devkit/architect';
 import { Observable, of } from 'rxjs';
 import { catchError, concatMap, mapTo, tap } from 'rxjs/operators';
-import { spawn } from 'child_process';
+import { ChildProcess, fork, spawn } from 'child_process';
 import { copySync } from 'fs-extra';
 import { fromPromise } from 'rxjs/internal-compatibility';
 import { DevServerBuilderOptions } from '@angular-devkit/build-angular';
@@ -22,6 +22,7 @@ export interface CypressBuilderOptions {
   devServerTarget: string;
   headless: boolean;
   tsConfig: string;
+  watch: boolean;
 }
 
 /**
@@ -54,6 +55,7 @@ export interface CypressBuilderOptions {
  */
 export default class CypressBuilder implements Builder<CypressBuilderOptions> {
   private computedCypressBaseUrl: string;
+  private tscProcess: ChildProcess = null;
 
   constructor(public context: BuilderContext) {}
 
@@ -66,12 +68,12 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
   ): Observable<BuildEvent> {
     const options = builderConfig.options;
 
-    return this.compileTypescriptFiles(options.tsConfig).pipe(
+    return this.compileTypescriptFiles(options.tsConfig, options.watch).pipe(
       concatMap(() => this.copyCypressFixtures(options.tsConfig)),
       concatMap(
         () =>
           !options.baseUrl && options.devServerTarget
-            ? this.startDevServer(options.devServerTarget)
+            ? this.startDevServer(options.devServerTarget, options.watch)
             : of(null)
       ),
       concatMap(() =>
@@ -91,17 +93,44 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
    * @whatItDoes Compile typescript spec files to be able to run Cypress.
    * The compilation is done via executing the `tsc` command line/
    * @param tsConfigPath
+   * @param isWatching
    */
-  private compileTypescriptFiles(tsConfigPath: string): Observable<BuildEvent> {
+  private compileTypescriptFiles(
+    tsConfigPath: string,
+    isWatching: boolean
+  ): Observable<BuildEvent> {
+    if (this.tscProcess) {
+      this.tscProcess.kill();
+    }
     return Observable.create(subscriber => {
       try {
-        const output = spawn(
-          `${path.resolve(this.context.workspace.root)}/node_modules/.bin/tsc`,
-          ['-p', tsConfigPath],
-          { stdio: [0, 1, 2] }
-        );
-        output.on('exit', code => subscriber.next({ success: code === 0 }));
+        let args = ['-p', tsConfigPath];
+        if (isWatching) {
+          args.push('--watch');
+          this.tscProcess = fork(
+            `${path.resolve(
+              this.context.workspace.root
+            )}/node_modules/.bin/tsc`,
+            args,
+            { stdio: [0, 1, 2, 'ipc'] }
+          );
+          subscriber.next({ success: true });
+        } else {
+          this.tscProcess = spawn(
+            `${path.resolve(
+              this.context.workspace.root
+            )}/node_modules/.bin/tsc`,
+            args,
+            { stdio: [0, 1, 2] }
+          );
+          this.tscProcess.on('exit', code =>
+            subscriber.next({ success: code === 0 })
+          );
+        }
       } catch (error) {
+        if (this.tscProcess) {
+          this.tscProcess.kill();
+        }
         subscriber.error(
           new Error(`Could not compile Typescript files: \n ${error}`)
         );
@@ -163,19 +192,31 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
 
     return fromPromise(
       headless ? Cypress.run(options) : Cypress.open(options)
-    ).pipe(tap(() => process.exit()), mapTo({ success: true }));
+    ).pipe(
+      tap(() => {
+        if (this.tscProcess) {
+          this.tscProcess.kill();
+        }
+        process.exit();
+      }),
+      mapTo({ success: true })
+    );
   }
 
   /**
    * @whatItDoes Compile the application using the webpack builder.
    * @param devServerTarget
+   * @param isWatching
    * @private
    */
-  private startDevServer(devServerTarget: string): Observable<BuildEvent> {
+  private startDevServer(
+    devServerTarget: string,
+    isWatching: boolean
+  ): Observable<BuildEvent> {
     const architect = this.context.architect;
     const [project, targetName, configuration] = devServerTarget.split(':');
     // Override dev server watch setting.
-    const overrides: Partial<DevServerBuilderOptions> = { watch: false };
+    const overrides: Partial<DevServerBuilderOptions> = { watch: isWatching };
     const targetSpec = {
       project,
       target: targetName,

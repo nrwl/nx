@@ -7,6 +7,11 @@
       "type": "string",
       "description": "The path of the Cypress configuration json file."
     },
+    "watch": {
+      "type": "boolean",
+      "description": "Recompile and run tests when files change.",
+      "default": false
+    },
     "tsConfig": {
       "type": "string",
       "description": "The path of the Cypress tsconfig configuration json file."

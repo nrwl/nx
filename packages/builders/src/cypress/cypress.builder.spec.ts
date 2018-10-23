@@ -13,7 +13,8 @@ describe('Cypress builder', () => {
     tsConfig: 'apps/my-app-e2e/tsconfig.json',
     devServerTarget: 'my-app:serve',
     headless: true,
-    baseUrl: undefined
+    baseUrl: undefined,
+    watch: false
   };
 
   beforeEach(() => {
@@ -139,7 +140,8 @@ describe('Cypress builder', () => {
             tsConfig: 'apps/my-app-e2e/tsconfig.json',
             devServerTarget: undefined,
             headless: true,
-            baseUrl: undefined
+            baseUrl: undefined,
+            watch: false
           }
         })
         .subscribe(() => {

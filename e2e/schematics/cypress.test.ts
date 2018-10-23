@@ -13,7 +13,7 @@ describe('Cypress E2E Test runner', () => {
       'should generate an app with the Cypress as e2e test runner',
       () => {
         newProject();
-        newApp('myApp --e2eTestRunner=cypress');
+        newApp('myApp --e2eTestRunner=cypress --watch=false');
         copyMissingPackages();
 
         // Making sure the package.json file contains the Cypress dependency
@@ -43,9 +43,9 @@ describe('Cypress E2E Test runner', () => {
         newApp('myApp --e2eTestRunner=cypress');
         copyMissingPackages();
 
-        expect(runCLI('e2e --project=my-app-e2e --headless')).toContain(
-          'All specs passed!'
-        );
+        expect(
+          runCLI('e2e --project=my-app-e2e --headless --watch=false')
+        ).toContain('All specs passed!');
       },
       1000000
     );
