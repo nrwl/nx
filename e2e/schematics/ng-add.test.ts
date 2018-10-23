@@ -233,6 +233,15 @@ describe('Nrwl Convert to Nx Workspace', () => {
       '@projscope/*': ['libs/*']
     });
 
+    const updatedTslint = readJson('tslint.json');
+    expect(updatedTslint.rules['nx-enforce-module-boundaries']).toEqual([
+      true,
+      {
+        allow: [],
+        depConstraints: [{ sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }]
+      }
+    ]);
+
     runCLI('build --prod --outputHashing none');
     checkFilesExist('dist/apps/proj/main.js');
   });

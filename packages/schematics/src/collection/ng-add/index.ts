@@ -410,7 +410,7 @@ function updateTsLint() {
     });
     tslintJson.rulesDirectory = tslintJson.rulesDirectory || [];
     tslintJson.rulesDirectory.push('node_modules/@nrwl/schematics/src/tslint');
-    tslintJson['nx-enforce-module-boundaries'] = [
+    tslintJson.rules['nx-enforce-module-boundaries'] = [
       true,
       {
         allow: [],
