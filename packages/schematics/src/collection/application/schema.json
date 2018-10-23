@@ -89,8 +89,34 @@
           "Which Unit Test Runner would you like to use for the application?",
         "type": "list",
         "items": [
-          { "value": "karma", "label": "Karma" },
-          { "value": "jest", "label": "Jest (https://jestjs.io/)" }
+          {
+            "value": "karma",
+            "label": "Karma [ https://karma-runner.github.io ]"
+          },
+          { "value": "jest", "label": "Jest   [ https://jestjs.io ]" },
+          { "value": "none", "label": "None" }
+        ]
+      }
+    },
+    "e2eTestRunner": {
+      "type": "string",
+      "enum": ["protractor", "cypress", "none"],
+      "description": "Test runner to use for end to end (e2e) tests",
+      "default": "protractor",
+      "x-prompt": {
+        "message":
+          "Which E2E Test Runner would you like to use for the application?",
+        "type": "list",
+        "items": [
+          {
+            "value": "cypress",
+            "label": "Cypress       [ https://www.cypress.io ]"
+          },
+          {
+            "value": "protractor",
+            "label": "Protractor [ https://www.protractortest.org ]"
+          },
+          { "value": "none", "label": "None" }
         ]
       }
     },
@@ -99,13 +125,6 @@
       "description": "Add tags to the application (used for linting)",
       "x-prompt":
         "Which tags would you like to add to the application? (used for linting)"
-      "default": "karma"
-    },
-    "e2eTestRunner": {
-      "type": "string",
-      "enum": ["protractor", "cypress", "none"],
-      "description": "Test runner to use for end to end (e2e) tests",
-      "default": "protractor"
     }
   },
   "required": []
