@@ -100,6 +100,7 @@ describe('schematic:cypres-project', () => {
         fixturesFolder: '../../dist/apps/my-app-e2e/src/fixtures',
         integrationFolder: '../../dist/apps/my-app-e2e/src/integration',
         pluginsFile: '../../dist/apps/my-app-e2e/src/plugins/index.js',
+        supportFile: '../../dist/apps/my-app-e2e/src/support/index.js',
         video: true,
         videosFolder: '../../dist/apps/my-app-e2e/videos',
         screenshotsFolder: '../../dist/apps/my-app-e2e/screenshots',
