@@ -444,7 +444,8 @@ export default function(schema: Schema): Rule {
       updateTsConfig(options),
       options.unitTestRunner === 'jest'
         ? schematic('jest-project', {
-            project: options.name
+            project: options.name,
+            skipSetupFile: !options.module
           })
         : noop(),
 
