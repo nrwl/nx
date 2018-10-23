@@ -435,6 +435,15 @@ describe('lib', () => {
         'libs/my-lib/tsconfig.spec.json'
       ]);
     });
+
+    it('should skip the setup file if no module is generated', () => {
+      const resultTree = schematicRunner.runSchematic(
+        'lib',
+        { name: 'myLib', unitTestRunner: 'jest', module: false },
+        appTree
+      );
+      expect(resultTree.exists('libs/my-lib/src/test-setup.ts')).toBeFalsy();
+    });
   });
 
   describe('--unit-test-runner none', () => {
