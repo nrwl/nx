@@ -93,8 +93,7 @@
             "value": "karma",
             "label": "Karma [ https://karma-runner.github.io ]"
           },
-          { "value": "jest", "label": "Jest   [ https://jestjs.io ]" },
-          { "value": "none", "label": "None" }
+          { "value": "jest", "label": "Jest   [ https://jestjs.io ]" }
         ]
       }
     },
@@ -115,8 +114,7 @@
           {
             "value": "protractor",
             "label": "Protractor [ https://www.protractortest.org ]"
-          },
-          { "value": "none", "label": "None" }
+          }
         ]
       }
     },
