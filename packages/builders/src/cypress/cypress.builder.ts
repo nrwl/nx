@@ -191,6 +191,7 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
     return fromPromise<any>(
       !isWatching || headless ? Cypress.run(options) : Cypress.open(options)
     ).pipe(
+      tap(() => (isWatching && !headless ? process.exit() : null)), // Forcing `cypress.open` to give back the terminal
       map(result => ({
         /**
          * `cypress.open` is returning `0` and is not of the same type as `cypress.run`.
