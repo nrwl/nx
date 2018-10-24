@@ -85,7 +85,6 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
         )
       ),
       options.watch ? tap(noop) : take(1),
-      tap(console.log),
       catchError(error => {
         throw new Error(error);
       })
