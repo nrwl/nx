@@ -2,7 +2,6 @@ import {
   Builder,
   BuilderConfiguration,
   BuilderContext,
-  BuilderDescription,
   BuildEvent
 } from '@angular-devkit/architect';
 import { Observable, of, Subscriber, noop } from 'rxjs';
@@ -85,6 +84,7 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
         )
       ),
       options.watch ? tap(noop) : take(1),
+      tap(console.log),
       catchError(error => {
         throw new Error(error);
       })
@@ -167,6 +167,7 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
    * @param cypressConfig
    * @param headless
    * @param baseUrl
+   * @param isWatching
    */
   private initCypress(
     cypressConfig: string,
@@ -188,8 +189,19 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
     options.headed = !headless;
 
     return fromPromise<any>(
-      !isWatching ? Cypress.run(options) : Cypress.open(options)
-    ).pipe(map(result => ({ success: result.failedTests === 0 })));
+      !isWatching || headless ? Cypress.run(options) : Cypress.open(options)
+    ).pipe(
+      map(result => ({
+        /**
+         * `cypress.open` is returning `0` and is not of the same type as `cypress.run`.
+         * `cypress.open` is the graphical UI, so it will be obvious to know what wasn't
+         * working. Forcing the build to success when `cypress.open` is used.
+         */
+        success: result.hasOwnProperty(`totalFailed`)
+          ? result.totalFailed === 0
+          : true
+      }))
+    );
   }
 
   /**
