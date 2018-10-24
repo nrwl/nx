@@ -83,7 +83,7 @@ describe('schematic:cypres-project', () => {
       const angularJson = readJsonInTree(tree, 'angular.json');
 
       expect(angularJson.projects['my-app-e2e'].root).toEqual(
-        'apps/my-app-e2e/'
+        'apps/my-app-e2e'
       );
     });
 
@@ -96,14 +96,14 @@ describe('schematic:cypres-project', () => {
       const cypressJson = readJsonInTree(tree, 'apps/my-app-e2e/cypress.json');
 
       expect(cypressJson).toEqual({
-        fileServerFolder: '../../dist/apps/my-app-e2e',
-        fixturesFolder: '../../dist/apps/my-app-e2e/src/fixtures',
-        integrationFolder: '../../dist/apps/my-app-e2e/src/integration',
-        pluginsFile: '../../dist/apps/my-app-e2e/src/plugins/index.js',
-        supportFile: '../../dist/apps/my-app-e2e/src/support/index.js',
+        fileServerFolder: '../../dist/out-tsc/apps/my-app-e2e',
+        fixturesFolder: '../../dist/out-tsc/apps/my-app-e2e/src/fixtures',
+        integrationFolder: '../../dist/out-tsc/apps/my-app-e2e/src/integration',
+        pluginsFile: '../../dist/out-tsc/apps/my-app-e2e/src/plugins/index.js',
+        supportFile: '../../dist/out-tsc/apps/my-app-e2e/src/support/index.js',
         video: true,
-        videosFolder: '../../dist/apps/my-app-e2e/videos',
-        screenshotsFolder: '../../dist/apps/my-app-e2e/screenshots',
+        videosFolder: '../../dist/out-tsc/apps/my-app-e2e/videos',
+        screenshotsFolder: '../../dist/out-tsc/apps/my-app-e2e/screenshots',
         chromeWebSecurity: false
       });
     });
@@ -120,7 +120,54 @@ describe('schematic:cypres-project', () => {
       );
 
       expect(tsconfigJson.compilerOptions.outDir).toEqual(
-        '../../dist/apps/my-app-e2e/src'
+        '../../dist/out-tsc/apps/my-app-e2e/src'
+      );
+    });
+  });
+
+  describe('generate app --e2e-test-runner=cypress --directory=my-dir', () => {
+    it('should set right path names in `cypress.json`', () => {
+      const tree = schematicRunner.runSchematic(
+        'application',
+        { name: 'myApp', e2eTestRunner: 'cypress', directory: 'my-dir' },
+        appTree
+      );
+      const cypressJson = readJsonInTree(
+        tree,
+        'apps/my-dir/my-app-e2e/cypress.json'
+      );
+
+      expect(cypressJson).toEqual({
+        fileServerFolder: '../../../dist/out-tsc/apps/my-dir/my-app-e2e',
+        fixturesFolder:
+          '../../../dist/out-tsc/apps/my-dir/my-app-e2e/src/fixtures',
+        integrationFolder:
+          '../../../dist/out-tsc/apps/my-dir/my-app-e2e/src/integration',
+        pluginsFile:
+          '../../../dist/out-tsc/apps/my-dir/my-app-e2e/src/plugins/index.js',
+        supportFile:
+          '../../../dist/out-tsc/apps/my-dir/my-app-e2e/src/support/index.js',
+        video: true,
+        videosFolder: '../../../dist/out-tsc/apps/my-dir/my-app-e2e/videos',
+        screenshotsFolder:
+          '../../../dist/out-tsc/apps/my-dir/my-app-e2e/screenshots',
+        chromeWebSecurity: false
+      });
+    });
+
+    it('should set right path names in `tsconfig.e2e.json`', () => {
+      const tree = schematicRunner.runSchematic(
+        'application',
+        { name: 'myApp', e2eTestRunner: 'cypress', directory: 'my-dir' },
+        appTree
+      );
+      const tsconfigJson = readJsonInTree(
+        tree,
+        'apps/my-dir/my-app-e2e/tsconfig.e2e.json'
+      );
+
+      expect(tsconfigJson.compilerOptions.outDir).toEqual(
+        '../../../dist/out-tsc/apps/my-dir/my-app-e2e/src'
       );
     });
   });

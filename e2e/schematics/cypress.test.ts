@@ -13,7 +13,7 @@ describe('Cypress E2E Test runner', () => {
       'should generate an app with the Cypress as e2e test runner',
       () => {
         newProject();
-        newApp('myApp --e2eTestRunner=cypress --watch=false');
+        newApp('myApp --e2eTestRunner=cypress');
         copyMissingPackages();
 
         // Making sure the package.json file contains the Cypress dependency

@@ -1,11 +1,11 @@
 {
-  "fileServerFolder": "<%= offsetFromRoot %>dist/apps/<%= projectName %>",
-  "fixturesFolder": "<%= offsetFromRoot %>dist/apps/<%= projectName %>/src/fixtures",
-  "integrationFolder": "<%= offsetFromRoot %>dist/apps/<%= projectName %>/src/integration",
-  "pluginsFile": "<%= offsetFromRoot %>dist/apps/<%= projectName %>/src/plugins/index.js",
-  "supportFile":  "<%= offsetFromRoot %>dist/apps/<%= projectName %>/src/support/index.js",
+  "fileServerFolder": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>",
+  "fixturesFolder": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>/src/fixtures",
+  "integrationFolder": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>/src/integration",
+  "pluginsFile": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>/src/plugins/index.js",
+  "supportFile":  "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>/src/support/index.js",
   "video": true,
-  "videosFolder": "<%= offsetFromRoot %>dist/apps/<%= projectName %>/videos",
-  "screenshotsFolder": "<%= offsetFromRoot %>dist/apps/<%= projectName %>/screenshots",
+  "videosFolder": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>/videos",
+  "screenshotsFolder": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>/screenshots",
   "chromeWebSecurity": false
 }

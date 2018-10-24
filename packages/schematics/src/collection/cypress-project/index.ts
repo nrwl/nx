@@ -88,6 +88,7 @@ function checkDependenciesInstalled(): Rule {
 
 function generateFiles(options: CypressProjectSchema): Rule {
   return (host: Tree): Rule => {
+    host.delete(`${options.e2eProjectRoot}/tsconfig.e2e.json`);
     const projectConfig = getProjectConfig(host, options.e2eProjectName);
     return mergeWith(
       apply(url('./files'), [
@@ -95,26 +96,21 @@ function generateFiles(options: CypressProjectSchema): Rule {
           tmpl: '',
           projectName: options.e2eProjectName,
           relatedProjectName: options.name,
+          projectRoot: projectConfig.root,
           offsetFromRoot: offsetFromRoot(projectConfig.root)
         }),
         move(projectConfig.root)
-      ]),
-      14
-    ); // Overriding the existing `tsconfig.e2e.json` from Protractor
+      ])
+    );
   };
 }
 
 function updateAngularJson(options: CypressProjectSchema): Rule {
   return updateJsonInTree('angular.json', json => {
     const projectConfig = json.projects[options.e2eProjectName];
+    projectConfig.root = options.e2eProjectRoot;
 
-    const fixedProjectConfig = replaceAppNameWithPath(
-      projectConfig,
-      options.e2eProjectName,
-      options.e2eProjectRoot
-    );
-
-    fixedProjectConfig.architect.e2e = {
+    projectConfig.architect.e2e = {
       builder: '@nrwl/builders:cypress',
       options: {
         cypressConfig: join(normalize(options.e2eProjectRoot), 'cypress.json'),
@@ -127,7 +123,7 @@ function updateAngularJson(options: CypressProjectSchema): Rule {
         }
       }
     };
-    json.projects[options.e2eProjectName] = fixedProjectConfig;
+    json.projects[options.e2eProjectName] = projectConfig;
     return json;
   });
 }

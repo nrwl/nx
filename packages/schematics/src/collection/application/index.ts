@@ -341,7 +341,10 @@ export default function(schema: Schema): Rule {
         ? updateE2eProject(options)
         : noop(),
       options.e2eTestRunner === 'cypress'
-        ? schematic('cypress-project', options)
+        ? schematic('cypress-project', {
+            ...options,
+            project: options.name
+          })
         : noop(),
 
       move(appProjectRoot, options.appProjectRoot),
