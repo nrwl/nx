@@ -127,6 +127,17 @@ describe('WorkspacesResults', () => {
       expect(results.getResult('proj')).toBe(false);
     });
 
+    it('should handle a corrupted results file', () => {
+      spyOn(fs, 'readFileSync').and.returnValue('invalid json');
+
+      const runTests = () => {
+        results = new WorkspaceResults('test');
+      };
+
+      expect(runTests).not.toThrow();
+      expect((<any>results).startedWithFailedProjects).toBeFalsy();
+    });
+
     it('should not read the existing results when the previous command was different', () => {
       spyOn(fs, 'readFileSync').and.returnValue(
         serializeJson({
