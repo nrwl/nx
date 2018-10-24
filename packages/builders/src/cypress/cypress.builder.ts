@@ -4,7 +4,7 @@ import {
   BuilderContext,
   BuildEvent
 } from '@angular-devkit/architect';
-import { Observable, of, Subscriber, noop } from 'rxjs';
+import { Observable, of, Subscriber, noop, bindCallback } from 'rxjs';
 import { catchError, concatMap, tap, map, take } from 'rxjs/operators';
 import { ChildProcess, fork, spawn } from 'child_process';
 import { copySync } from 'fs-extra';
@@ -13,6 +13,7 @@ import { DevServerBuilderOptions } from '@angular-devkit/build-angular';
 import { readFile } from '@angular-devkit/schematics/tools/file-system-utility';
 import * as path from 'path';
 import * as url from 'url';
+import * as treeKill from 'tree-kill';
 const Cypress = require('cypress'); // @NOTE: Importing via ES6 messes the whole test dependencies.
 
 export interface CypressBuilderOptions {
@@ -102,7 +103,7 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
     isWatching: boolean
   ): Observable<BuildEvent> {
     if (this.tscProcess) {
-      this.tscProcess.kill();
+      this.killProcess();
     }
     return Observable.create((subscriber: Subscriber<BuildEvent>) => {
       try {
@@ -132,7 +133,7 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
         }
       } catch (error) {
         if (this.tscProcess) {
-          this.tscProcess.kill();
+          this.killProcess();
         }
         subscriber.error(
           new Error(`Could not compile Typescript files: \n ${error}`)
@@ -216,13 +217,13 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
   ): Observable<BuildEvent> {
     const architect = this.context.architect;
     const [project, targetName, configuration] = devServerTarget.split(':');
-    // Override dev server watch setting.
+    // Overrides dev server watch setting.
     const overrides: Partial<DevServerBuilderOptions> = { watch: isWatching };
     const targetSpec = {
       project,
       target: targetName,
       configuration,
-      overrides
+      overrides: overrides
     };
     const builderConfig = architect.getBuilderConfiguration<
       DevServerBuilderOptions
@@ -252,5 +253,19 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
       }),
       concatMap(builderConfig => architect.run(builderConfig, this.context))
     );
+  }
+
+  private killProcess(): void {
+    return treeKill(this.tscProcess.pid, 'SIGTERM', error => {
+      this.tscProcess = null;
+      if (error) {
+        if (Array.isArray(error) && error[0] && error[2]) {
+          const errorMessage = error[2];
+          this.context.logger.error(errorMessage);
+        } else if (error.message) {
+          this.context.logger.error(error.message);
+        }
+      }
+    });
   }
 }
