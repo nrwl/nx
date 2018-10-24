@@ -5,8 +5,8 @@ import {
   BuilderDescription,
   BuildEvent
 } from '@angular-devkit/architect';
-import { Observable, of } from 'rxjs';
-import { catchError, concatMap, mapTo, tap } from 'rxjs/operators';
+import { Observable, of, Subscriber, noop } from 'rxjs';
+import { catchError, concatMap, tap, map, take } from 'rxjs/operators';
 import { ChildProcess, fork, spawn } from 'child_process';
 import { copySync } from 'fs-extra';
 import { fromPromise } from 'rxjs/internal-compatibility';
@@ -69,7 +69,7 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
     const options = builderConfig.options;
 
     return this.compileTypescriptFiles(options.tsConfig, options.watch).pipe(
-      concatMap(() => this.copyCypressFixtures(options.tsConfig)),
+      tap(() => this.copyCypressFixtures(options.tsConfig)),
       concatMap(
         () =>
           !options.baseUrl && options.devServerTarget
@@ -80,9 +80,11 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
         this.initCypress(
           options.cypressConfig,
           options.headless,
+          options.watch,
           options.baseUrl
         )
       ),
+      options.watch ? tap(noop) : take(1),
       catchError(error => {
         throw new Error(error);
       })
@@ -102,7 +104,7 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
     if (this.tscProcess) {
       this.tscProcess.kill();
     }
-    return Observable.create(subscriber => {
+    return Observable.create((subscriber: Subscriber<BuildEvent>) => {
       try {
         let args = ['-p', tsConfigPath];
         if (isWatching) {
@@ -123,9 +125,10 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
             args,
             { stdio: [0, 1, 2] }
           );
-          this.tscProcess.on('exit', code =>
-            subscriber.next({ success: code === 0 })
-          );
+          this.tscProcess.on('exit', code => {
+            subscriber.next({ success: code === 0 });
+            subscriber.complete();
+          });
         }
       } catch (error) {
         if (this.tscProcess) {
@@ -145,23 +148,14 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
    */
   private copyCypressFixtures(tsConfigPath: string) {
     const tsconfigJson = JSON.parse(readFile(tsConfigPath));
-    return Observable.create(subscriber => {
-      try {
-        copySync(
-          `${path.dirname(tsConfigPath)}/src/fixtures`,
-          `${path.resolve(
-            path.dirname(tsConfigPath),
-            tsconfigJson.compilerOptions.outDir
-          )}/fixtures`,
-          { overwrite: true }
-        );
-        subscriber.next({ success: true });
-      } catch (error) {
-        subscriber.error(
-          new Error(`Could not copy Fixtures files: \n ${error}`)
-        );
-      }
-    });
+    copySync(
+      `${path.dirname(tsConfigPath)}/src/fixtures`,
+      `${path.resolve(
+        path.dirname(tsConfigPath),
+        tsconfigJson.compilerOptions.outDir
+      )}/fixtures`,
+      { overwrite: true }
+    );
   }
 
   /**
@@ -177,30 +171,25 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
   private initCypress(
     cypressConfig: string,
     headless: boolean,
+    isWatching: boolean,
     baseUrl: string
   ): Observable<BuildEvent> {
     // Cypress expects the folder where a `cypress.json` is present
     const projectFolderPath = path.dirname(cypressConfig);
-    const options = {
+    const options: any = {
       project: projectFolderPath
     };
 
     // If not, will use the `baseUrl` normally from `cypress.json`
     if (baseUrl || this.computedCypressBaseUrl) {
-      options['config'] = { baseUrl: baseUrl || this.computedCypressBaseUrl };
+      options.config = { baseUrl: baseUrl || this.computedCypressBaseUrl };
     }
 
-    return fromPromise(
-      headless ? Cypress.run(options) : Cypress.open(options)
-    ).pipe(
-      tap(() => {
-        if (this.tscProcess) {
-          this.tscProcess.kill();
-        }
-        process.exit();
-      }),
-      mapTo({ success: true })
-    );
+    options.headed = !headless;
+
+    return fromPromise<any>(
+      !isWatching ? Cypress.run(options) : Cypress.open(options)
+    ).pipe(map(result => ({ success: result.failedTests === 0 })));
   }
 
   /**
@@ -226,15 +215,12 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
     const builderConfig = architect.getBuilderConfiguration<
       DevServerBuilderOptions
     >(targetSpec);
-    let devServerDescription: BuilderDescription;
-    let baseUrl: string;
 
     return architect.getBuilderDescription(builderConfig).pipe(
-      tap(description => (devServerDescription = description)),
       concatMap(devServerDescription =>
         architect.validateBuilderOptions(builderConfig, devServerDescription)
       ),
-      concatMap(() => {
+      tap(builderConfig => {
         if (devServerTarget && builderConfig.options.publicHost) {
           let publicHost = builderConfig.options.publicHost;
           if (!/^\w+:\/\//.test(publicHost)) {
@@ -243,23 +229,16 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
             }://${publicHost}`;
           }
           const clientUrl = url.parse(publicHost);
-          baseUrl = url.format(clientUrl);
+          this.computedCypressBaseUrl = url.format(clientUrl);
         } else if (devServerTarget) {
-          baseUrl = url.format({
+          this.computedCypressBaseUrl = url.format({
             protocol: builderConfig.options.ssl ? 'https' : 'http',
             hostname: builderConfig.options.host,
             port: builderConfig.options.port.toString()
           });
         }
-
-        // Save the computed baseUrl back so that Cypress can use it.
-        this.computedCypressBaseUrl = baseUrl;
-
-        return of(
-          this.context.architect.getBuilder(devServerDescription, this.context)
-        );
       }),
-      concatMap(builder => builder.run(builderConfig))
+      concatMap(builderConfig => architect.run(builderConfig, this.context))
     );
   }
 }
