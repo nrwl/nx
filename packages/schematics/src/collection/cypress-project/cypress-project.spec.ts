@@ -108,7 +108,7 @@ describe('schematic:cypres-project', () => {
       });
     });
 
-    it('should set right path names in `tsconfig.json`', () => {
+    it('should set right path names in `tsconfig.e2e.json`', () => {
       const tree = schematicRunner.runSchematic(
         'application',
         { name: 'myApp', e2eTestRunner: 'cypress' },
@@ -116,7 +116,7 @@ describe('schematic:cypres-project', () => {
       );
       const tsconfigJson = readJsonInTree(
         tree,
-        'apps/my-app-e2e/tsconfig.json'
+        'apps/my-app-e2e/tsconfig.e2e.json'
       );
 
       expect(tsconfigJson.compilerOptions.outDir).toEqual(

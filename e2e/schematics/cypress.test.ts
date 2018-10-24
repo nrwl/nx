@@ -22,7 +22,7 @@ describe('Cypress E2E Test runner', () => {
 
         // Making sure the cypress folders & files are created
         checkFilesExist('apps/my-app-e2e/cypress.json');
-        checkFilesExist('apps/my-app-e2e/tsconfig.json');
+        checkFilesExist('apps/my-app-e2e/tsconfig.e2e.json');
 
         checkFilesExist('apps/my-app-e2e/src/fixtures/example.json');
         checkFilesExist('apps/my-app-e2e/src/integration/app.spec.ts');
