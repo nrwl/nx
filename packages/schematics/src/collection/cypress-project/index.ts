@@ -98,8 +98,9 @@ function generateFiles(options: CypressProjectSchema): Rule {
           offsetFromRoot: offsetFromRoot(projectConfig.root)
         }),
         move(projectConfig.root)
-      ])
-    );
+      ]),
+      14
+    ); // Overriding the existing `tsconfig.e2e.json` from Protractor
   };
 }
 
@@ -117,7 +118,7 @@ function updateAngularJson(options: CypressProjectSchema): Rule {
       builder: '@nrwl/builders:cypress',
       options: {
         cypressConfig: join(normalize(options.e2eProjectRoot), 'cypress.json'),
-        tsConfig: join(normalize(options.e2eProjectRoot), 'tsconfig.json'),
+        tsConfig: join(normalize(options.e2eProjectRoot), 'tsconfig.e2e.json'),
         devServerTarget: `${options.name}:serve`
       },
       configurations: {

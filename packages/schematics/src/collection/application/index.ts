@@ -247,7 +247,6 @@ function updateProject(options: NormalizedSchema): Rule {
           host.delete(`${options.e2eProjectRoot}/src/app.e2e-spec.ts`);
           host.delete(`${options.e2eProjectRoot}/src/app.po.ts`);
           host.delete(`${options.e2eProjectRoot}/protractor.conf.js`);
-          host.delete(`${options.e2eProjectRoot}/tsconfig.e2e.json`);
         }
 
         const karma = host

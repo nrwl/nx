@@ -46,7 +46,7 @@ describe('schematic:cypres-project', () => {
       );
 
       expect(tree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
-      expect(tree.exists('apps/my-app-e2e/tsconfig.json')).toBeTruthy();
+      expect(tree.exists('apps/my-app-e2e/tsconfig.e2e.json')).toBeTruthy();
 
       expect(
         tree.exists('apps/my-app-e2e/src/fixtures/example.json')
