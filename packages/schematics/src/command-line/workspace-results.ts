@@ -29,14 +29,18 @@ export class WorkspaceResults {
 
   constructor(private command: string) {
     const resultsExists = fs.existsSync(RESULTS_FILE);
-    if (!resultsExists) {
-      this.startedWithFailedProjects = false;
-    } else {
-      const commandResults = readJsonFile(RESULTS_FILE);
-      this.startedWithFailedProjects = commandResults.command === command;
-
-      if (this.startedWithFailedProjects) {
-        this.commandResults = commandResults;
+    this.startedWithFailedProjects = false;
+    if (resultsExists) {
+      try {
+        const commandResults = readJsonFile(RESULTS_FILE);
+        this.startedWithFailedProjects = commandResults.command === command;
+        if (this.startedWithFailedProjects) {
+          this.commandResults = commandResults;
+        }
+      } catch (e) {
+        // RESULTS_FILE is likely not valid JSON
+        console.error('Error: .nx-results file is corrupted.');
+        console.error(e);
       }
     }
   }
