@@ -38,7 +38,7 @@ function implicitlyTouchedProjects(
   return Array.from(
     Object.entries(implicitDependencies.files).reduce(
       (projectSet, [file, projectNames]) => {
-        if (touchedFiles.includes(file)) {
+        if (touchedFiles.find(tf => tf.endsWith(file))) {
           projectNames.forEach(projectName => {
             projectSet.add(projectName);
           });
