@@ -100,7 +100,7 @@ describe('schematic:cypres-project', () => {
         fixturesFolder: '../../dist/out-tsc/apps/my-app-e2e/src/fixtures',
         integrationFolder: '../../dist/out-tsc/apps/my-app-e2e/src/integration',
         pluginsFile: '../../dist/out-tsc/apps/my-app-e2e/src/plugins/index.js',
-        supportFile: '../../dist/out-tsc/apps/my-app-e2e/src/support/index.js',
+        supportFile: false,
         video: true,
         videosFolder: '../../dist/out-tsc/apps/my-app-e2e/videos',
         screenshotsFolder: '../../dist/out-tsc/apps/my-app-e2e/screenshots',
@@ -145,8 +145,7 @@ describe('schematic:cypres-project', () => {
           '../../../dist/out-tsc/apps/my-dir/my-app-e2e/src/integration',
         pluginsFile:
           '../../../dist/out-tsc/apps/my-dir/my-app-e2e/src/plugins/index.js',
-        supportFile:
-          '../../../dist/out-tsc/apps/my-dir/my-app-e2e/src/support/index.js',
+        supportFile: false,
         video: true,
         videosFolder: '../../../dist/out-tsc/apps/my-dir/my-app-e2e/videos',
         screenshotsFolder:
