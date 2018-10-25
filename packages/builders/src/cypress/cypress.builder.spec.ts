@@ -4,6 +4,7 @@ import { normalize } from '@angular-devkit/core';
 import { EventEmitter } from 'events';
 import * as child_process from 'child_process';
 import * as path from 'path';
+import * as fsUtility from '@angular-devkit/schematics/tools/file-system-utility';
 const Cypress = require('cypress');
 
 describe('Cypress builder', () => {
@@ -29,9 +30,14 @@ describe('Cypress builder', () => {
   });
 
   describe('run', () => {
-    it('should call `spawn.child_process` with the tsc command', () => {
+    it('should call `fork.child_process` with the tsc command', () => {
+      spyOn(fsUtility, 'readFile').and.returnValue(
+        JSON.stringify({
+          compilerOptions: { outDir: '../../dist/out-tsc/apps/my-app-e2e/src' }
+        })
+      );
       const fakeEventEmitter = new EventEmitter();
-      const spawn = spyOn(child_process, 'spawn').and.returnValue(
+      const fork = spyOn(child_process, 'fork').and.returnValue(
         fakeEventEmitter
       );
 
@@ -43,7 +49,7 @@ describe('Cypress builder', () => {
           options: cypressBuilderOptions
         })
         .subscribe(() => {
-          expect(spawn).toHaveBeenCalledWith(
+          expect(fork).toHaveBeenCalledWith(
             '/root/node_modules/.bin/tsc',
             cypressBuilderOptions.tsConfig,
             { stdio: [0, 1, 2] }
@@ -54,8 +60,13 @@ describe('Cypress builder', () => {
     });
 
     it('should call `Cypress.run` if headless mode is `true`', () => {
+      spyOn(fsUtility, 'readFile').and.returnValue(
+        JSON.stringify({
+          compilerOptions: { outDir: '../../dist/out-tsc/apps/my-app-e2e/src' }
+        })
+      );
       const fakeEventEmitter = new EventEmitter();
-      spyOn(child_process, 'spawn').and.returnValue(fakeEventEmitter);
+      spyOn(child_process, 'fork').and.returnValue(fakeEventEmitter);
       const cypressRun = spyOn(Cypress, 'run');
       const cypressOpen = spyOn(Cypress, 'open');
 
@@ -78,8 +89,13 @@ describe('Cypress builder', () => {
     });
 
     it('should call `Cypress.open` if headless mode is `false`', () => {
+      spyOn(fsUtility, 'readFile').and.returnValue(
+        JSON.stringify({
+          compilerOptions: { outDir: '../../dist/out-tsc/apps/my-app-e2e/src' }
+        })
+      );
       const fakeEventEmitter = new EventEmitter();
-      spyOn(child_process, 'spawn').and.returnValue(fakeEventEmitter);
+      spyOn(child_process, 'fork').and.returnValue(fakeEventEmitter);
       const cypressRun = spyOn(Cypress, 'run');
       const cypressOpen = spyOn(Cypress, 'open');
 
@@ -102,8 +118,13 @@ describe('Cypress builder', () => {
     });
 
     it('should call `Cypress.run` with provided baseUrl', () => {
+      spyOn(fsUtility, 'readFile').and.returnValue(
+        JSON.stringify({
+          compilerOptions: { outDir: '../../dist/out-tsc/apps/my-app-e2e/src' }
+        })
+      );
       const fakeEventEmitter = new EventEmitter();
-      spyOn(child_process, 'spawn').and.returnValue(fakeEventEmitter);
+      spyOn(child_process, 'fork').and.returnValue(fakeEventEmitter);
       const cypressRun = spyOn(Cypress, 'run');
 
       builder
@@ -126,8 +147,13 @@ describe('Cypress builder', () => {
     });
 
     it('should call `Cypress.run` without baseUrl nor dev server target value', () => {
+      spyOn(fsUtility, 'readFile').and.returnValue(
+        JSON.stringify({
+          compilerOptions: { outDir: '../../dist/out-tsc/apps/my-app-e2e/src' }
+        })
+      );
       const fakeEventEmitter = new EventEmitter();
-      spyOn(child_process, 'spawn').and.returnValue(fakeEventEmitter);
+      spyOn(child_process, 'fork').and.returnValue(fakeEventEmitter);
       const cypressRun = spyOn(Cypress, 'run');
 
       builder

@@ -4,13 +4,14 @@ import {
   BuilderContext,
   BuildEvent
 } from '@angular-devkit/architect';
-import { Observable, of, Subscriber, noop, bindCallback } from 'rxjs';
+import { Observable, of, Subscriber, noop } from 'rxjs';
 import { catchError, concatMap, tap, map, take } from 'rxjs/operators';
-import { ChildProcess, fork, spawn } from 'child_process';
-import { copySync } from 'fs-extra';
+import { ChildProcess, fork } from 'child_process';
+import { copySync, removeSync } from 'fs-extra';
 import { fromPromise } from 'rxjs/internal-compatibility';
 import { DevServerBuilderOptions } from '@angular-devkit/build-angular';
 import { readFile } from '@angular-devkit/schematics/tools/file-system-utility';
+import { getSystemPath, join } from '@angular-devkit/core';
 import * as path from 'path';
 import * as url from 'url';
 import * as treeKill from 'tree-kill';
@@ -67,6 +68,15 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
     builderConfig: BuilderConfiguration<CypressBuilderOptions>
   ): Observable<BuildEvent> {
     const options = builderConfig.options;
+    const tsconfigJson = JSON.parse(readFile(options.tsConfig));
+
+    // Cleaning the /dist folder
+    removeSync(
+      path.join(
+        path.dirname(options.tsConfig),
+        tsconfigJson.compilerOptions.outDir
+      )
+    );
 
     return this.compileTypescriptFiles(options.tsConfig, options.watch).pipe(
       tap(() => this.copyCypressFixtures(options.tsConfig)),
@@ -107,24 +117,15 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
     return Observable.create((subscriber: Subscriber<BuildEvent>) => {
       try {
         let args = ['-p', tsConfigPath];
+        const tscPath = getSystemPath(
+          join(this.context.workspace.root, '/node_modules/typescript/bin/tsc')
+        );
         if (isWatching) {
           args.push('--watch');
-          this.tscProcess = fork(
-            `${path.resolve(
-              this.context.workspace.root
-            )}/node_modules/.bin/tsc`,
-            args,
-            { stdio: [0, 1, 2, 'ipc'] }
-          );
+          this.tscProcess = fork(tscPath, args, { stdio: [0, 1, 2, 'ipc'] });
           subscriber.next({ success: true });
         } else {
-          this.tscProcess = spawn(
-            `${path.resolve(
-              this.context.workspace.root
-            )}/node_modules/.bin/tsc`,
-            args,
-            { stdio: [0, 1, 2] }
-          );
+          this.tscProcess = fork(tscPath, args, { stdio: [0, 1, 2, 'ipc'] });
           this.tscProcess.on('exit', code => {
             subscriber.next({ success: code === 0 });
             subscriber.complete();
