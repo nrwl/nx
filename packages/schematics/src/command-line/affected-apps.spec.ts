@@ -845,5 +845,58 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
 
       expect(tp).toEqual(['app1Name', 'app2Name']);
     });
+
+    it('should return the list of implicitly touched projects independent from the git structure', () => {
+      const tp = touchedProjects(
+        {
+          files: {
+            'package.json': ['app1Name', 'app2Name', 'lib1Name', 'lib2Name'],
+            Jenkinsfile: ['app1Name', 'app2Name']
+          },
+          projects: {}
+        },
+        [
+          {
+            name: 'app1Name',
+            root: 'apps/app1',
+            files: ['app1.ts'],
+            tags: [],
+            implicitDependencies: [],
+            architect: {},
+            type: ProjectType.app
+          },
+          {
+            name: 'app2Name',
+            root: 'apps/app2',
+            files: ['app2.ts'],
+            tags: [],
+            implicitDependencies: [],
+            architect: {},
+            type: ProjectType.app
+          },
+          {
+            name: 'lib1Name',
+            root: 'libs/lib1',
+            files: ['lib1.ts'],
+            tags: [],
+            implicitDependencies: [],
+            architect: {},
+            type: ProjectType.lib
+          },
+          {
+            name: 'lib2Name',
+            root: 'libs/lib2',
+            files: ['lib2.ts'],
+            tags: [],
+            implicitDependencies: [],
+            architect: {},
+            type: ProjectType.lib
+          }
+        ],
+        ['gitrepo/some/path/Jenkinsfile']
+      );
+
+      expect(tp).toEqual(['app1Name', 'app2Name']);
+    });
   });
 });
