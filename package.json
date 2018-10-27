@@ -7,16 +7,16 @@
   "scripts": {
     "build": "./scripts/build.sh",
     "commit": "git-cz",
-    "checkcommit": "./scripts/commit-lint.js",
+    "checkcommit": "node ./scripts/commit-lint.js",
     "e2e": "./scripts/e2e.sh",
-    "format": "prettier \"**/*.{ts,js,json,css,md}\" \"!**/{__name__,__directory__}/**\" --write",
+    "format": "prettier \"**/*.{ts,js,json,css,scss,md}\" \"!**/{__name__,__directory__}/**\" --write",
     "linknpm": "./scripts/link.sh",
     "nx-release": "./scripts/nx-release.js",
     "copy": "./scripts/copy.sh",
     "test:schematics": "yarn linknpm fast && ./scripts/test_schematics.sh",
     "test:nx": "yarn linknpm fast && ./scripts/test_nx.sh",
     "test": "yarn linknpm fast && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
-    "checkformat": "prettier \"**/*.{ts,js,json,css,md}\" \"!**/{__name__,__directory__}/**\" --list-different"
+    "checkformat": "prettier \"**/*.{ts,js,json,css,scss}\" \"!**/{__name__,__directory__}/**\" --list-different"
   },
   "devDependencies": {
     "@angular-devkit/architect": "0.10.1",
