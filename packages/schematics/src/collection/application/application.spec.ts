@@ -367,4 +367,16 @@ describe('app', () => {
       expect(angularJson.projects['my-app-e2e']).toBeUndefined();
     });
   });
+
+  describe('replaceAppNameWithPath', () => {
+    it('should protect `angular.json` commands and properties', () => {
+      const tree = schematicRunner.runSchematic('app', { name: 'ui' }, appTree);
+
+      const angularJson = readJsonInTree(tree, 'angular.json');
+      expect(angularJson.projects['ui']).toBeDefined();
+      expect(
+        angularJson.projects['ui']['architect']['build']['builder']
+      ).toEqual('@angular-devkit/build-angular:browser');
+    });
+  });
 });
