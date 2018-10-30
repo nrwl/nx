@@ -7,7 +7,7 @@
   "module": "esm5/nrwl-nx.js",
   "es2015": "esm2015/nrwl-nx.js",
   "peerDependencies": {
-    "jasmine-marbles": "0.3.1"
+    "jasmine-marbles": "0.4.0"
   },
   "author": "Victor Savkin",
   "license": "MIT"
