@@ -38,6 +38,7 @@ import { join, normalize } from '@angular-devkit/core';
 
 interface NormalizedSchema extends Schema {
   name: string;
+  fileName: string;
   projectRoot: string;
   entryFile: string;
   modulePath: string;
@@ -84,7 +85,7 @@ function addRouterConfiguration(options: NormalizedSchema): Rule {
       ts.ScriptTarget.Latest,
       true
     );
-    const constName = `${toPropertyName(options.name)}Routes`;
+    const constName = `${toPropertyName(options.fileName)}Routes`;
 
     insert(host, options.modulePath, [
       insertImport(
@@ -132,7 +133,9 @@ function addLoadChildren(options: NormalizedSchema): Rule {
       ...addRoute(
         options.parentModule,
         sourceFile,
-        `{path: '${toFileName(options.name)}', loadChildren: '${loadChildren}'}`
+        `{path: '${toFileName(
+          options.fileName
+        )}', loadChildren: '${loadChildren}'}`
       )
     ]);
 
@@ -189,7 +192,7 @@ function addChildren(options: NormalizedSchema): Rule {
       ts.ScriptTarget.Latest,
       true
     );
-    const constName = `${toPropertyName(options.name)}Routes`;
+    const constName = `${toPropertyName(options.fileName)}Routes`;
     const importPath = `@${npmScope}/${options.projectDirectory}`;
 
     insert(host, options.parentModule, [
@@ -197,7 +200,7 @@ function addChildren(options: NormalizedSchema): Rule {
       ...addRoute(
         options.parentModule,
         sourceFile,
-        `{path: '${toFileName(options.name)}', children: ${constName}}`
+        `{path: '${toFileName(options.fileName)}', children: ${constName}}`
       )
     ]);
     return host;
@@ -242,8 +245,9 @@ function updateProject(options: NormalizedSchema): Rule {
     }
 
     if (options.module) {
-      host.overwrite(
-        path.join(libRoot, `${options.name}.module.ts`),
+      host.delete(path.join(libRoot, `${options.name}.module.ts`));
+      host.create(
+        path.join(libRoot, `${options.fileName}.module.ts`),
         `
         import { NgModule } from '@angular/core';
         import { CommonModule } from '@angular/common';
@@ -259,10 +263,10 @@ function updateProject(options: NormalizedSchema): Rule {
 
       if (options.unitTestRunner !== 'none') {
         host.create(
-          path.join(libRoot, `${options.name}.module.spec.ts`),
+          path.join(libRoot, `${options.fileName}.module.spec.ts`),
           `
     import { async, TestBed } from '@angular/core/testing';
-    import { ${options.moduleName} } from './${options.name}.module';
+    import { ${options.moduleName} } from './${options.fileName}.module';
     
     describe('${options.moduleName}', () => {
       beforeEach(async(() => {
@@ -282,11 +286,11 @@ function updateProject(options: NormalizedSchema): Rule {
       host.overwrite(
         `${options.projectRoot}/src/index.ts`,
         `
-        export * from './lib/${options.name}.module';
+        export * from './lib/${options.fileName}.module';
         `
       );
     } else {
-      host.delete(path.join(libRoot, `${options.name}.module.ts`));
+      host.delete(path.join(libRoot, `${options.fileName}.module.ts`));
       host.create(path.join(libRoot, `.gitkeep`), '');
       host.overwrite(`${options.projectRoot}/src/index.ts`, '');
     }
@@ -457,17 +461,20 @@ export default function(schema: Schema): Rule {
 }
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
+  const name = toFileName(options.name);
   const projectDirectory = options.directory
-    ? `${toFileName(options.directory)}/${toFileName(options.name)}`
-    : toFileName(options.name);
+    ? `${toFileName(options.directory)}/${name}`
+    : name;
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
+  const fileName = options.skipModulePrefix ? name : projectName;
   const projectRoot = `libs/${projectDirectory}`;
-  const moduleName = `${toClassName(projectName)}Module`;
+
+  const moduleName = `${toClassName(fileName)}Module`;
   const parsedTags = options.tags
     ? options.tags.split(',').map(s => s.trim())
     : [];
-  const modulePath = `${projectRoot}/src/lib/${projectName}.module.ts`;
+  const modulePath = `${projectRoot}/src/lib/${fileName}.module.ts`;
   const defaultPrefix = getNpmScope(host);
 
   return {
@@ -479,6 +486,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     moduleName,
     projectDirectory,
     modulePath,
-    parsedTags
+    parsedTags,
+    fileName
   };
 }
