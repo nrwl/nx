@@ -388,6 +388,11 @@ export function getProjectRoots(projectNames: string[]): string[] {
 }
 
 export function allFilesInDir(dirName: string): string[] {
+  // Ignore files in nested node_modules directories
+  if (dirName.endsWith('node_modules')) {
+    return [];
+  }
+
   let res = [];
   try {
     fs.readdirSync(dirName).forEach(c => {
