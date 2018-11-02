@@ -1,7 +1,6 @@
 import {
   chain,
   externalSchematic,
-  move,
   noop,
   Rule,
   Tree,
@@ -28,8 +27,8 @@ import {
   replaceAppNameWithPath
 } from '@nrwl/schematics/src/utils/cli-config-utils';
 import { formatFiles } from '../../utils/rules/format-files';
+import { move } from '../../utils/rules/move';
 import { updateKarmaConf } from '../../utils/rules/update-karma-conf';
-import { excludeUnnecessaryFiles } from '@nrwl/schematics/src/utils/rules/filter-tree';
 import { join, normalize } from '@angular-devkit/core';
 
 interface NormalizedSchema extends Schema {
@@ -331,8 +330,6 @@ export default function(schema: Schema): Rule {
         viewEncapsulation: options.viewEncapsulation,
         routing: false
       }),
-
-      excludeUnnecessaryFiles(),
 
       move(e2eProjectRoot, options.e2eProjectRoot),
 
