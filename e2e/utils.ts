@@ -63,14 +63,6 @@ export function copyMissingPackages(): void {
   execSync(
     `cp -a node_modules/.bin/webpack tmp/proj/node_modules/.bin/webpack`
   );
-
-  const libIndex = `./tmp/${projectName}/node_modules/@schematics/angular/library/index.js`;
-  const content = readFileSync(libIndex).toString();
-  const updatedContent = content.replace(
-    'context.addTask(new tasks_1.NodePackageInstallTask());',
-    ''
-  );
-  writeFileSync(libIndex, updatedContent);
 }
 
 function copyNodeModule(path: string, name: string) {

@@ -1,73 +1,65 @@
 import { execSync } from 'child_process';
 import {
   getAffectedApps,
-  getAffectedBuildables,
-  getAffectedE2e,
   getAffectedLibs,
   getAffectedProjects,
   getAllAppNames,
-  getAllBuildables,
-  getAllE2ENames,
   getAllLibNames,
   getAllProjectNames,
   parseFiles,
-  readDepGraph
+  readDepGraph,
+  getAllProjectNamesWithTarget,
+  getAffectedProjectsWithTarget
 } from './shared';
 import * as path from 'path';
 import * as resolve from 'resolve';
 import * as runAll from 'npm-run-all';
 import * as yargsParser from 'yargs-parser';
 import { generateGraph } from './dep-graph';
-import {
-  DepGraph,
-  ProjectNode,
-  ProjectType
-} from '@nrwl/schematics/src/command-line/affected-apps';
+import { DepGraph, ProjectNode } from './affected-apps';
 import { GlobalNxArgs } from './nx';
 import * as yargs from 'yargs';
 import { WorkspaceResults } from './workspace-results';
 import * as fs from 'fs';
 
-export interface YargsAffectedOptions extends yargs.Arguments {}
+export interface YargsAffectedOptions
+  extends yargs.Arguments,
+    AffectedOptions {}
 
 export interface AffectedOptions extends GlobalNxArgs {
-  parallel: boolean;
-  maxParallel: number;
-  untracked: boolean;
-  uncommitted: boolean;
-  all: boolean;
-  base: string;
-  head: string;
-  exclude: string[];
-  files: string[];
-  onlyFailed: boolean;
-  'only-failed': boolean;
-  'max-parallel': boolean;
+  target?: string;
+  parallel?: boolean;
+  maxParallel?: number;
+  untracked?: boolean;
+  uncommitted?: boolean;
+  all?: boolean;
+  base?: string;
+  head?: string;
+  exclude?: string[];
+  files?: string[];
+  onlyFailed?: boolean;
+  'only-failed'?: boolean;
+  'max-parallel'?: boolean;
 }
 
-export function affected(
-  command: string,
-  parsedArgs: any,
-  args: string[]
-): void {
+// Commands that can do `ng [command]`
+const ngCommands = ['build', 'test', 'lint', 'e2e'];
+
+export function affected(parsedArgs: YargsAffectedOptions): void {
   let apps: string[];
-  let e2eProjects: string[];
   let libs: string[];
   let projects: string[];
-  let buildables: string[];
-  let rest: string[];
-  const workspaceResults = new WorkspaceResults(command);
+  const target = parsedArgs.target;
+  const rest: string[] = [
+    ...parsedArgs._.slice(1, parsedArgs._.length - 1),
+    ...filterNxSpecificArgs(parsedArgs)
+  ];
+
+  const workspaceResults = new WorkspaceResults(target);
 
   try {
     if (parsedArgs.all) {
-      rest = args;
       apps = getAllAppNames()
-        .filter(app => !parsedArgs.exclude.includes(app))
-        .filter(
-          project =>
-            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
-        );
-      e2eProjects = getAllE2ENames()
         .filter(app => !parsedArgs.exclude.includes(app))
         .filter(
           project =>
@@ -85,22 +77,9 @@ export function affected(
           project =>
             !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
         );
-      buildables = getAllBuildables()
-        .filter(project => !parsedArgs.exclude.includes(project))
-        .filter(
-          project =>
-            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
-        );
     } else {
-      const p = parseFiles(args);
-      rest = p.rest;
+      const p = parseFiles(parsedArgs);
       apps = getAffectedApps(p.files)
-        .filter(project => !parsedArgs.exclude.includes(project))
-        .filter(
-          project =>
-            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
-        );
-      e2eProjects = getAffectedE2e(p.files)
         .filter(project => !parsedArgs.exclude.includes(project))
         .filter(
           project =>
@@ -118,152 +97,62 @@ export function affected(
           project =>
             !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
         );
-      buildables = getAffectedBuildables(p.files)
-        .filter(project => !parsedArgs.exclude.includes(project))
-        .filter(
-          project =>
-            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
-        );
     }
   } catch (e) {
     printError(e);
     process.exit(1);
   }
 
-  switch (command) {
+  switch (target) {
     case 'apps':
       console.log(apps.join(' '));
       break;
-    case 'build':
-      build(buildables, parsedArgs, workspaceResults);
-      break;
-    case 'test':
-      test(projects, parsedArgs, workspaceResults);
-      break;
-    case 'lint':
-      lint(projects, parsedArgs, workspaceResults);
-      break;
-    case 'e2e':
-      e2e(e2eProjects, parsedArgs, workspaceResults);
+    case 'libs':
+      console.log(libs.join(' '));
       break;
     case 'dep-graph':
       generateGraph(yargsParser(rest), projects);
       break;
-    case 'lib':
-      console.log(libs.join(' '));
+    default:
+      const targetProjects = getProjects(
+        target,
+        parsedArgs,
+        workspaceResults,
+        parsedArgs.all
+      );
+      runCommand(
+        target,
+        targetProjects,
+        parsedArgs,
+        rest,
+        workspaceResults,
+        `Running ${target} for`,
+        `Running ${target} for affected projects succeeded.`,
+        `Running ${target} for affected projects failed.`
+      );
       break;
   }
 }
 
+function getProjects(
+  target: string,
+  parsedArgs: YargsAffectedOptions,
+  workspaceResults: WorkspaceResults,
+  all: boolean
+) {
+  const projects = all
+    ? getAllProjectNamesWithTarget(target)
+    : getAffectedProjectsWithTarget(target)(parseFiles(parsedArgs).files);
+
+  return projects
+    .filter(project => !parsedArgs.exclude.includes(project))
+    .filter(
+      project => !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+    );
+}
+
 function printError(e: any) {
   console.error(e.message);
-}
-
-function build(
-  projects: string[],
-  parsedArgs: YargsAffectedOptions,
-  workspaceResults: WorkspaceResults
-) {
-  if (projects.length > 0) {
-    const normalizedArgs = filterNxSpecificArgs(parsedArgs);
-    let message = `Building ${projects.join(', ')}`;
-    if (normalizedArgs.length > 0) {
-      message += ` with flags: ${normalizedArgs.join(' ')}`;
-    }
-    console.log(message);
-
-    runCommand(
-      'build',
-      projects,
-      parsedArgs,
-      normalizedArgs,
-      workspaceResults,
-      'Building ',
-      'Build succeeded.',
-      'Build failed.'
-    );
-  } else {
-    console.log('No projects to build');
-  }
-}
-
-function test(
-  projects: string[],
-  parsedArgs: YargsAffectedOptions,
-  workspaceResults: WorkspaceResults
-) {
-  const depGraph = readDepGraph();
-  const sortedProjects = topologicallySortProjects(depGraph);
-  const sortedAffectedProjects = sortedProjects.filter(
-    pp => projects.indexOf(pp) > -1
-  );
-  const projectsToTest = sortedAffectedProjects.filter(p => {
-    const matchingProject = depGraph.projects.find(pp => pp.name === p);
-    return (
-      matchingProject.type !== ProjectType.e2e &&
-      !!matchingProject.architect['test']
-    );
-  });
-
-  if (projectsToTest.length > 0) {
-    const normalizedArgs = ['--no-watch', ...filterNxSpecificArgs(parsedArgs)];
-    let message = `Testing ${projectsToTest.join(', ')}`;
-    if (normalizedArgs.length > 0) {
-      message += ` with flags: ${normalizedArgs.join(' ')}`;
-    }
-    console.log(message);
-
-    runCommand(
-      'test',
-      projectsToTest,
-      parsedArgs,
-      normalizedArgs,
-      workspaceResults,
-      'Testing ',
-      'Tests passed.',
-      'Tests failed.'
-    );
-  } else {
-    console.log('No projects to test');
-  }
-}
-
-function lint(
-  projects: string[],
-  parsedArgs: YargsAffectedOptions,
-  workspaceResults: WorkspaceResults
-) {
-  const depGraph = readDepGraph();
-  const sortedProjects = topologicallySortProjects(depGraph);
-  const sortedAffectedProjects = sortedProjects.filter(
-    pp => projects.indexOf(pp) > -1
-  );
-  const projectsToLint = sortedAffectedProjects.filter(p => {
-    const matchingProject = depGraph.projects.find(pp => pp.name === p);
-    return !!matchingProject.architect['lint'];
-  });
-
-  if (projectsToLint.length > 0) {
-    const normalizedArgs = filterNxSpecificArgs(parsedArgs);
-    let message = `Linting ${projectsToLint.join(', ')}`;
-    if (normalizedArgs.length > 0) {
-      message += ` with flags: ${normalizedArgs.join(' ')}`;
-    }
-    console.log(message);
-
-    runCommand(
-      'lint',
-      projectsToLint,
-      parsedArgs,
-      normalizedArgs,
-      workspaceResults,
-      'Linting ',
-      'Linting passed.',
-      'Linting failed.'
-    );
-  } else {
-    console.log('No projects to lint');
-  }
 }
 
 async function runCommand(
@@ -276,6 +165,20 @@ async function runCommand(
   successMessage: string,
   errorMessage: string
 ) {
+  if (projects.length <= 0) {
+    console.log(`No projects to run ${command}`);
+    return;
+  }
+
+  const depGraph = readDepGraph();
+  const sortedProjects = topologicallySortProjects(depGraph);
+  projects = sortedProjects.filter(p => projects.includes(p));
+
+  let message = `${iterationMessage} projects:\n  ${projects.join(',\n  ')}`;
+  console.log(message);
+  if (args.length > 0) {
+    console.log(`With flags: ${args.join(' ')}`);
+  }
   if (parsedArgs.parallel) {
     // Make sure the `package.json` has the `ng: "ng"` command needed by `npm-run-all`
     const packageJson = JSON.parse(
@@ -289,9 +192,11 @@ async function runCommand(
     }
     try {
       await runAll(
-        projects.map(
-          app => `ng ${command} -- ${args.join(' ')} --project=${app}`
-        ),
+        projects.map(app => {
+          return ngCommands.includes(command)
+            ? `ng -- ${command} --project=${app} ${args.join(' ')} `
+            : `ng -- run ${app}:${command} ${args.join(' ')} `;
+        }),
         {
           parallel: parsedArgs.parallel,
           maxParallel: parsedArgs.maxParallel,
@@ -326,14 +231,14 @@ async function runCommand(
   } else {
     let failedProjects = [];
     projects.forEach(project => {
-      console.log(iterationMessage + project);
+      console.log(`${iterationMessage} ${project}`);
+      const task = ngCommands.includes(command)
+        ? `node ${ngPath()} ${command} --project=${project} ${args.join(' ')} `
+        : `node ${ngPath()} run ${project}:${command} ${args.join(' ')} `;
       try {
-        execSync(
-          `node ${ngPath()} ${command} ${args.join(' ')} --project=${project}`,
-          {
-            stdio: [0, 1, 2]
-          }
-        );
+        execSync(task, {
+          stdio: [0, 1, 2]
+        });
         workspaceResults.success(project);
       } catch (e) {
         failedProjects.push(project);
@@ -377,40 +282,6 @@ function topologicallySortProjects(deps: DepGraph): string[] {
   return res;
 }
 
-function e2e(
-  apps: string[],
-  parsedArgs: YargsAffectedOptions,
-  workspaceResults: WorkspaceResults
-) {
-  if (apps.length > 0) {
-    const args = filterNxSpecificArgs(parsedArgs);
-    console.log(`Testing ${apps.join(', ')}`);
-    apps.forEach(app => {
-      try {
-        execSync(`node ${ngPath()} e2e ${args.join(' ')} --project=${app}`, {
-          stdio: [0, 1, 2]
-        });
-        workspaceResults.success(app);
-      } catch (e) {
-        workspaceResults.fail(app);
-      }
-    });
-
-    workspaceResults.saveResults();
-    workspaceResults.printResults(
-      parsedArgs.onlyFailed,
-      'E2E Tests passed.',
-      'E2E Tests failed.'
-    );
-
-    if (workspaceResults.hasFailure) {
-      process.exit(1);
-    }
-  } else {
-    console.log('No apps to test');
-  }
-}
-
 function filterNxSpecificArgs(parsedArgs: YargsAffectedOptions): string[] {
   const filteredArgs = { ...parsedArgs };
   // Delete Nx arguments from parsed Args
@@ -452,6 +323,7 @@ function ngPath() {
  * @remark They are not defaults or useful for anything else
  */
 const dummyOptions: AffectedOptions = {
+  target: '',
   parallel: false,
   maxParallel: 3,
   'max-parallel': false,

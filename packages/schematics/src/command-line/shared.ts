@@ -2,8 +2,6 @@ import { execSync } from 'child_process';
 import * as path from 'path';
 import {
   affectedAppNames,
-  affectedBuildableNames,
-  affectedE2eNames,
   AffectedFetcher,
   affectedLibNames,
   affectedProjectNames,
@@ -12,12 +10,14 @@ import {
   DepGraph,
   ProjectNode,
   ProjectType,
-  touchedProjects
+  touchedProjects,
+  affectedProjectNamesWithTarget
 } from './affected-apps';
 import * as fs from 'fs';
 import { statSync } from 'fs';
 import * as appRoot from 'app-root-path';
 import { readJsonFile } from '../utils/fileutils';
+import { YargsAffectedOptions } from './affected';
 
 export type ImplicitDependencyEntry = { [key: string]: string[] };
 export type ImplicitDependencies = {
@@ -25,49 +25,24 @@ export type ImplicitDependencies = {
   projects: ImplicitDependencyEntry;
 };
 
-export function parseFiles(
-  args: string[]
-): { files: string[]; rest: string[] } {
-  let unnamed = [];
-  let named = [];
-  args.forEach(a => {
-    if (a.startsWith('--') || a.startsWith('-')) {
-      named.push(a);
-    } else {
-      unnamed.push(a);
-    }
-  });
+export function parseFiles(options: YargsAffectedOptions): { files: string[] } {
+  const { files, uncommitted, untracked, base, head } = options;
 
-  const dashDashFiles = named.filter(a => a.startsWith('--files='))[0];
-  const uncommitted = named.some(a => a === '--uncommitted');
-  const untracked = named.some(a => a === '--untracked');
-  const base = named
-    .filter(a => a.startsWith('--base'))
-    .map(a => a.substring(7))[0];
-  const head = named
-    .filter(a => a.startsWith('--head'))
-    .map(a => a.substring(7))[0];
-
-  if (dashDashFiles) {
-    named.splice(named.indexOf(dashDashFiles), 1);
+  if (files) {
     return {
-      files: parseDashDashFiles(dashDashFiles),
-      rest: [...unnamed, ...named]
+      files
     };
   } else if (uncommitted) {
     return {
-      files: getUncommittedFiles(),
-      rest: [...unnamed, ...named]
+      files: getUncommittedFiles()
     };
   } else if (untracked) {
     return {
-      files: getUntrackedFiles(),
-      rest: [...unnamed, ...named]
+      files: getUntrackedFiles()
     };
   } else if (base && head) {
     return {
-      files: getFilesUsingBaseAndHead(base, head),
-      rest: [...unnamed, ...named]
+      files: getFilesUsingBaseAndHead(base, head)
     };
   } else if (base) {
     return {
@@ -77,25 +52,15 @@ export function parseFiles(
           ...getUncommittedFiles(),
           ...getUntrackedFiles()
         ])
-      ),
-      rest: [...unnamed, ...named]
+      )
     };
-  } else if (unnamed.length >= 2) {
+  } else if (options._.length >= 2) {
     return {
-      files: getFilesFromShash(unnamed[0], unnamed[1]),
-      rest: [...unnamed.slice(2), ...named]
+      files: getFilesFromShash(options._[1], options._[2])
     };
   } else {
     throw new Error('Invalid options provided');
   }
-}
-
-function parseDashDashFiles(dashDashFiles: string): string[] {
-  let f = dashDashFiles.substring(8); // remove --files=
-  if (f.startsWith('"') || f.startsWith("'")) {
-    f = f.substring(1, f.length - 1);
-  }
-  return f.split(',').map(f => f.trim());
 }
 
 function getUncommittedFiles(): string[] {
@@ -275,7 +240,6 @@ export function getProjectNodes(angularJson, nxJson): ProjectNode[] {
   assertWorkspaceValidity(angularJson, nxJson);
 
   const angularJsonProjects = Object.keys(angularJson.projects);
-  const nxJsonProjects = Object.keys(nxJson.projects);
 
   return angularJsonProjects.map(key => {
     const p = angularJson.projects[key];
@@ -341,11 +305,12 @@ export const getAffected = (affectedNamesFetcher: AffectedFetcher) => (
   );
 };
 
+export function getAffectedProjectsWithTarget(target: string) {
+  return getAffected(affectedProjectNamesWithTarget(target));
+}
 export const getAffectedApps = getAffected(affectedAppNames);
-export const getAffectedE2e = getAffected(affectedE2eNames);
 export const getAffectedProjects = getAffected(affectedProjectNames);
 export const getAffectedLibs = getAffected(affectedLibNames);
-export const getAffectedBuildables = getAffected(affectedBuildableNames);
 
 export function getTouchedProjects(touchedFiles: string[]): string[] {
   const angularJson = readAngularJson();
@@ -360,19 +325,14 @@ export function getAllAppNames() {
   return projects.filter(p => p.type === ProjectType.app).map(p => p.name);
 }
 
-export function getAllE2ENames() {
-  const projects = getProjectNodes(readAngularJson(), readNxJson());
-  return projects.filter(p => p.type === ProjectType.e2e).map(p => p.name);
-}
-
 export function getAllLibNames() {
   const projects = getProjectNodes(readAngularJson(), readNxJson());
   return projects.filter(p => p.type === ProjectType.lib).map(p => p.name);
 }
 
-export function getAllBuildables() {
+export function getAllProjectNamesWithTarget(target: string) {
   const projects = getProjectNodes(readAngularJson(), readNxJson());
-  return projects.filter(p => p.architect.build).map(p => p.name);
+  return projects.filter(p => p.architect[target]).map(p => p.name);
 }
 
 export function getAllProjectNames() {

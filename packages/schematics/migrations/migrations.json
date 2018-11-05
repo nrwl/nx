@@ -39,6 +39,11 @@
       "version": "7.0.2",
       "description": "Fix karma conf",
       "factory": "./update-7-0-2/update-7-0-2"
+    },
+    "update-7.1.0": {
+      "version": "7.1.0",
+      "description": "Add generic affected command",
+      "factory": "./update-7-1-0/update-7-1-0"
     }
   }
 }

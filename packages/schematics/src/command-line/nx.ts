@@ -9,9 +9,9 @@ import { workspaceSchematic } from './workspace-schematic';
 import { generateGraph, OutputType } from './dep-graph';
 
 export interface GlobalNxArgs {
-  help: boolean;
-  version: boolean;
-  quiet: boolean;
+  help?: boolean;
+  version?: boolean;
+  quiet?: boolean;
 }
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
@@ -19,46 +19,80 @@ const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 yargs
   .usage('Nrwl Extensions for Angular')
   .command(
+    'affected',
+    'Run task for affected projects',
+    yargs => withAffectedOptions(withParallel(yargs)),
+    args => affected(args)
+  )
+  .command(
     'affected:apps',
     'Print applications affected by changes',
     withAffectedOptions,
-    args => affected('apps', args, process.argv.slice(3))
-  )
-  .command(
-    'affected:build',
-    'Build applications and publishable libraries affected by changes',
-    yargs => withAffectedOptions(withParallel(yargs)),
-    args => affected('build', args, process.argv.slice(3))
-  )
-  .command(
-    'affected:test',
-    'Test projects affected by changes',
-    yargs => withAffectedOptions(withParallel(yargs)),
-    args => affected('test', args, process.argv.slice(3))
+    args =>
+      affected({
+        ...args,
+        target: 'apps'
+      })
   )
   .command(
     'affected:libs',
     'Print libraries affected by changes',
     withAffectedOptions,
-    args => affected('lib', args, process.argv.slice(3))
+    args =>
+      affected({
+        ...args,
+        target: 'libs'
+      })
+  )
+  .command(
+    'affected:build',
+    'Build applications and publishable libraries affected by changes',
+    yargs => withAffectedOptions(withParallel(yargs)),
+    args =>
+      affected({
+        ...args,
+        target: 'build'
+      })
+  )
+  .command(
+    'affected:test',
+    'Test projects affected by changes',
+    yargs => withAffectedOptions(withParallel(yargs)),
+    args =>
+      affected({
+        ...args,
+        target: 'test'
+      })
   )
   .command(
     'affected:e2e',
     'Run e2e tests for the applications affected by changes',
     withAffectedOptions,
-    args => affected('e2e', args, process.argv.slice(3))
+    args =>
+      affected({
+        ...args,
+        target: 'e2e'
+      })
   )
   .command(
     'affected:dep-graph',
     'Graph dependencies affected by changes',
     yargs => withAffectedOptions(withDepGraphOptions(yargs)),
-    args => affected('dep-graph', args, process.argv.slice(3))
+    args =>
+      affected({
+        ...args,
+        target: 'dep-graph'
+      })
   )
   .command(
     'affected:lint',
     'Lint projects affected by changes',
     yargs => withAffectedOptions(withParallel(yargs)),
-    args => affected('lint', args, process.argv.slice(3))
+    args =>
+      affected({
+        ...args,
+        target: 'lint'
+      })
   )
   .command(
     'dep-graph',
@@ -70,13 +104,13 @@ yargs
     'format:check',
     'Check for un-formatted files',
     withAffectedOptions,
-    _ => format(['check', ...process.argv.slice(3)])
+    args => format('check', args)
   )
   .command(
     'format:write',
     'Overwrite un-formatted files',
     withAffectedOptions,
-    _ => format(['write', ...process.argv.slice(3)])
+    args => format('write', args)
   )
   .alias('format:write', 'format')
   .command('lint [files..]', 'Lint workspace or list of files', noop, _ =>
@@ -108,7 +142,8 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     .option('files', {
       describe: 'A list of files delimited by commas',
       type: 'array',
-      requiresArg: true
+      requiresArg: true,
+      coerce: parseCSV
     })
     .option('uncommitted', { describe: 'Uncommitted changes' })
     .option('untracked', { describe: 'Untracked changes' })

@@ -58,6 +58,7 @@ function updatePackageJson() {
       'affected:test': './node_modules/.bin/nx affected:test',
       'affected:lint': './node_modules/.bin/nx affected:lint',
       'affected:dep-graph': './node_modules/.bin/nx affected:dep-graph',
+      affected: './node_modules/.bin/nx affected',
       format: './node_modules/.bin/nx format:write',
       'format:write': './node_modules/.bin/nx format:write',
       'format:check': './node_modules/.bin/nx format:check',
