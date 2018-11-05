@@ -3,10 +3,7 @@ import {
   assertWorkspaceValidity,
   getProjectNodes
 } from './shared';
-import {
-  ProjectType,
-  ProjectNode
-} from '@nrwl/schematics/src/command-line/affected-apps';
+import { ProjectType, ProjectNode } from './affected-apps';
 
 describe('assertWorkspaceValidity', () => {
   let mockNxJson;

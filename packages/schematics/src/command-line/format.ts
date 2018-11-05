@@ -2,6 +2,11 @@ import { execSync } from 'child_process';
 import * as path from 'path';
 import * as resolve from 'resolve';
 import { getProjectRoots, getTouchedProjects, parseFiles } from './shared';
+import { YargsAffectedOptions } from './affected';
+
+export interface YargsFormatOptions extends YargsAffectedOptions {
+  libsAndApps?: boolean;
+}
 
 /*
 * HTML formatting could be added here once Prettier supports it
@@ -9,8 +14,7 @@ import { getProjectRoots, getTouchedProjects, parseFiles } from './shared';
 */
 const PRETTIER_EXTENSIONS = ['.ts', '.scss', '.css'];
 
-export function format(args: string[]) {
-  const command = args[0];
+export function format(command: 'check' | 'write', args: YargsFormatOptions) {
   let patterns: string[];
 
   try {
@@ -33,15 +37,14 @@ export function format(args: string[]) {
   }
 }
 
-function getPatterns(args: string[]) {
+function getPatterns(args: YargsAffectedOptions) {
   try {
-    const p = parseFiles(args.slice(1));
+    const p = parseFiles(args);
     let patterns = p.files.filter(
       f => PRETTIER_EXTENSIONS.indexOf(path.extname(f)) > -1
     );
-    let rest = p.rest;
 
-    const libsAndApp = rest.filter(a => a.startsWith('--libs-and-apps'))[0];
+    const libsAndApp = args.libsAndApps;
     return libsAndApp ? getPatternsFromApps(patterns) : patterns;
   } catch (e) {
     return getPatternsWithPathPrefix('{apps,libs,tools}');

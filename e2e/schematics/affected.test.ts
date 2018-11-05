@@ -1,4 +1,5 @@
 import {
+  copyMissingPackages,
   newApp,
   newLib,
   newProject,
@@ -18,6 +19,7 @@ describe('Affected', () => {
       newLib('mylib');
       newLib('mylib2');
       newLib('mypublishablelib --publishable');
+      copyMissingPackages();
 
       updateFile(
         'apps/myapp/src/app/app.component.spec.ts',
@@ -85,7 +87,8 @@ describe('Affected', () => {
       const build = runCommand(
         'npm run affected:build -- --files="libs/mylib/src/index.ts"'
       );
-      expect(build).toContain('Building mypublishablelib, myapp');
+      expect(build).toContain('Running build for mypublishablelib');
+      expect(build).toContain('Running build for myapp');
       expect(build).not.toContain('is not registered with the build command');
       expect(build).not.toContain('with flags:');
 
@@ -93,25 +96,30 @@ describe('Affected', () => {
       const buildParallel = runCommand(
         'npm run affected:build -- --files="libs/mylib/src/index.ts" --parallel'
       );
-      expect(buildParallel).toContain('Building mypublishablelib, myapp');
+      expect(buildParallel).toContain(
+        'Running build for projects:\n  myapp,\n  mypublishablelib'
+      );
+      expect(buildParallel).toContain(
+        'Running build for affected projects succeeded.'
+      );
 
       const buildExcluded = runCommand(
         'npm run affected:build -- --files="libs/mylib/src/index.ts" --exclude myapp'
       );
-      expect(buildExcluded).toContain('Building mypublishablelib');
+      expect(buildExcluded).toContain('Running build for mypublishablelib');
 
       const buildExcludedCsv = runCommand(
         'npm run affected:build -- --files="package.json" --exclude myapp,myapp2,mypublishablelib'
       );
-      expect(buildExcludedCsv).toContain('No projects to build');
+      expect(buildExcludedCsv).toContain('No projects to run build');
 
       // affected:build should pass non-nx flags to the CLI
       const buildWithFlags = runCommand(
         'npm run affected:build -- --files="libs/mylib/src/index.ts" --stats-json'
       );
-      expect(buildWithFlags).toContain(
-        'Building mypublishablelib, myapp with flags: --stats-json=true'
-      );
+      expect(buildWithFlags).toContain('Running build for mypublishablelib');
+      expect(buildWithFlags).toContain('Running build for myapp');
+      expect(buildWithFlags).toContain('With flags: --stats-json=true');
 
       const e2e = runCommand(
         'npm run affected:e2e -- --files="libs/mylib/src/index.ts"'
@@ -121,7 +129,9 @@ describe('Affected', () => {
       const unitTests = runCommand(
         'npm run affected:test -- --files="libs/mylib/src/index.ts"'
       );
-      expect(unitTests).toContain('Testing mylib, mypublishablelib, myapp');
+      expect(unitTests).toContain('Running test for mylib');
+      expect(unitTests).toContain('Running test for mypublishablelib');
+      expect(unitTests).toContain('Running test for myapp');
 
       // Fail a Unit Test
       updateFile(
@@ -136,7 +146,9 @@ describe('Affected', () => {
         'npm run affected:test -- --files="libs/mylib/src/index.ts"'
       );
 
-      expect(failedTests).toContain('Testing mylib, mypublishablelib, myapp');
+      expect(failedTests).toContain('Running test for mylib');
+      expect(failedTests).toContain('Running test for mypublishablelib');
+      expect(failedTests).toContain('Running test for myapp');
       expect(failedTests).toContain('Failed projects: myapp');
       expect(failedTests).toContain(
         'You can isolate the above projects by passing --only-failed'
@@ -162,19 +174,25 @@ describe('Affected', () => {
       const isolatedTests = runCommand(
         'npm run affected:test -- --files="libs/mylib/src/index.ts" --only-failed'
       );
-      expect(isolatedTests).toContain('Testing myapp');
+      expect(isolatedTests).toContain('Running test for myapp');
 
       const linting = runCommand(
         'npm run affected:lint -- --files="libs/mylib/src/index.ts"'
       );
-      expect(linting).toContain(
-        'Linting mylib, myapp, myapp-e2e, mypublishablelib'
-      );
+      expect(linting).toContain('Running lint for mylib');
+      expect(linting).toContain('Running lint for myapp');
+      expect(linting).toContain('Running lint for myapp-e2e');
+      expect(linting).toContain('Running lint for mypublishablelib');
 
       const unitTestsExcluded = runCommand(
         'npm run affected:test -- --files="libs/mylib/src/index.ts" --exclude=myapp,mypublishablelib'
       );
-      expect(unitTestsExcluded).toContain('Testing mylib');
+      expect(unitTestsExcluded).toContain('Running test for mylib');
+
+      const i18n = runCommand(
+        'npm run affected -- --target extract-i18n --files="libs/mylib/src/index.ts"'
+      );
+      expect(i18n).toContain('Running extract-i18n for myapp');
     },
     1000000
   );
@@ -187,6 +205,7 @@ describe('Affected', () => {
       newApp('myapp2');
       newLib('mylib');
       newLib('mypublishablelib --publishable');
+      copyMissingPackages();
 
       const affectedApps = runCommand('npm run affected:apps -- --all');
       expect(affectedApps).toContain('myapp');
@@ -194,23 +213,31 @@ describe('Affected', () => {
       expect(affectedApps).not.toContain('myapp-e2e');
 
       const build = runCommand('npm run affected:build -- --all');
-      expect(build).toContain('Building myapp');
-      expect(build).toContain('Building myapp2');
-      expect(build).toContain('Building mypublishablelib');
+      expect(build).toContain('Running build for myapp');
+      expect(build).toContain('Running build for myapp2');
+      expect(build).toContain('Running build for mypublishablelib');
       expect(build).not.toContain('is not registered with the build command');
 
       const buildExcluded = runCommand(
         'npm run affected:build -- --files="libs/mylib/src/index.ts" --exclude myapp,myapp2,mypublishablelib'
       );
-      expect(buildExcluded).toContain('No projects to build');
+      expect(buildExcluded).toContain('No projects to run build');
 
       const e2e = runCommand('npm run affected:e2e -- --all');
-      expect(e2e).toContain('Testing myapp-e2e, myapp2-e2e');
+      expect(e2e).toContain('Running e2e for myapp-e2e');
+      expect(e2e).toContain('Running e2e for myapp2-e2e');
 
       const unitTests = runCommand('npm run affected:test -- --all');
-      expect(unitTests).toContain(
-        'Testing mypublishablelib, myapp2, myapp, mylib'
+      expect(unitTests).toContain('Running test for mypublishablelib');
+      expect(unitTests).toContain('Running test for myapp2');
+      expect(unitTests).toContain('Running test for myapp');
+      expect(unitTests).toContain('Running test for mylib');
+
+      const i18n = runCommand(
+        'npm run affected -- --target extract-i18n --all'
       );
+      expect(i18n).toContain('Running extract-i18n for myapp2');
+      expect(i18n).toContain('Running extract-i18n for myapp');
     },
     1000000
   );

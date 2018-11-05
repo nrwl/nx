@@ -124,42 +124,6 @@ export function affectedAppNames(
     .map(p => p.name);
 }
 
-export function affectedE2eNames(
-  npmScope: string,
-  projects: ProjectNode[],
-  implicitDependencies: ImplicitDependencies,
-  fileRead: (s: string) => string,
-  touchedFiles: string[]
-): string[] {
-  return affectedProjects(
-    npmScope,
-    projects,
-    implicitDependencies,
-    fileRead,
-    touchedFiles
-  )
-    .filter(p => p.type === ProjectType.e2e)
-    .map(p => p.name);
-}
-
-export function affectedBuildableNames(
-  npmScope: string,
-  projects: ProjectNode[],
-  implicitDependencies: ImplicitDependencies,
-  fileRead: (s: string) => string,
-  touchedFiles: string[]
-): string[] {
-  return affectedProjects(
-    npmScope,
-    projects,
-    implicitDependencies,
-    fileRead,
-    touchedFiles
-  )
-    .filter(p => p.architect.build)
-    .map(p => p.name);
-}
-
 export function affectedLibNames(
   npmScope: string,
   projects: ProjectNode[],
@@ -192,6 +156,28 @@ export function affectedProjectNames(
     fileRead,
     touchedFiles
   ).map(p => p.name);
+}
+
+export function affectedProjectNamesWithTarget(
+  target: string
+): AffectedFetcher {
+  return (
+    npmScope: string,
+    projects: ProjectNode[],
+    implicitDependencies: ImplicitDependencies,
+    fileRead: (s: string) => string,
+    touchedFiles: string[]
+  ) => {
+    return affectedProjects(
+      npmScope,
+      projects,
+      implicitDependencies,
+      fileRead,
+      touchedFiles
+    )
+      .filter(p => p.architect[target])
+      .map(p => p.name);
+  };
 }
 
 function hasDependencyOnTouchedProjects(
