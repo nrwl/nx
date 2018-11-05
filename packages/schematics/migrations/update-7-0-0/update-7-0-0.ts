@@ -11,17 +11,23 @@ export default function(): Rule {
         'jasmine-marbles': '0.4.0'
       };
 
+      if (json.devDependencies['ng-packagr']) {
+        json.devDependencies['ng-packagr'] = '^4.2.0';
+      }
+
       return json;
     }),
     externalSchematic('@schematics/update', 'update', {
       packages: ['@angular/core'],
       from: '6.1.0',
-      to: '7.0.0'
+      to: '7.0.0',
+      force: true
     }),
     externalSchematic('@schematics/update', 'update', {
       packages: ['@angular/cli'],
       from: '6.2.0',
-      to: '7.0.1'
+      to: '7.0.1',
+      force: true
     })
   ]);
 }
