@@ -34,6 +34,11 @@
       "version": "7.0.0",
       "description": "Update to @angular v7",
       "factory": "./update-7-0-0/update-7-0-0"
+    },
+    "update-7.0.2": {
+      "version": "7.0.2",
+      "description": "Fix karma conf",
+      "factory": "./update-7-0-2/update-7-0-2"
     }
   }
 }
