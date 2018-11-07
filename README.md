@@ -66,7 +66,7 @@ npm install -g @nrwl/schematics
 After installing it you can create a new Nx workspace by running:
 
 ```
-ng new myworkspacename --collection=@nrwl/schematics
+create-nx-workspace myworkspacename
 ```
 
 You can also add Nx capabilities to an existing CLI project by running:
