@@ -341,10 +341,8 @@ export function getAllProjectNames() {
 }
 
 export function getProjectRoots(projectNames: string[]): string[] {
-  const projects = getProjectNodes(readAngularJson(), readNxJson());
-  return projectNames.map(name =>
-    path.dirname(projects.filter(p => p.name === name)[0].root)
-  );
+  const { projects } = readAngularJson();
+  return projectNames.map(name => projects[name].root);
 }
 
 export function allFilesInDir(dirName: string): string[] {

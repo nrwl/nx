@@ -20,7 +20,27 @@ describe('app', () => {
       { name: 'proj' },
       projectTree
     );
+  });
+
+  it('should create files', () => {
+    const tree = schematicRunner.runSchematic(
+      'ng-new',
+      { name: 'proj' },
+      projectTree
+    );
+    expect(tree.exists('/proj/nx.json')).toBe(true);
+    expect(tree.exists('/proj/angular.json')).toBe(true);
+    expect(tree.exists('/proj/.prettierrc')).toBe(true);
+    expect(tree.exists('/proj/.prettierignore')).toBe(true);
     expect(tree.exists('/proj/karma.conf.js')).toBe(true);
+  });
+
+  it('should create a root karma configuration', () => {
+    const tree = schematicRunner.runSchematic(
+      'ng-new',
+      { name: 'proj' },
+      projectTree
+    );
     expect(tree.readContent('/proj/karma.conf.js')).toBe(
       `// Karma configuration file, see link for more information
 // https://karma-runner.github.io/1.0/config/configuration-file.html
