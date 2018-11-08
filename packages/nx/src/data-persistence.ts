@@ -1,6 +1,6 @@
 import { Injectable, Type } from '@angular/core';
 import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
-import { Actions } from '@ngrx/effects';
+import { Actions, ofType } from '@ngrx/effects';
 import { ROUTER_NAVIGATION, RouterNavigationAction } from '@ngrx/router-store';
 import { Action, Store } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
@@ -233,9 +233,11 @@ export class DataPersistence<T> {
     actionType: string,
     opts: PessimisticUpdateOpts<T, A>
   ): Observable<any> {
-    return this.actions
-      .ofType<A>(actionType)
-      .pipe(withLatestFrom(this.store), pessimisticUpdate(opts));
+    return this.actions.pipe(
+      ofType<A>(actionType),
+      withLatestFrom(this.store),
+      pessimisticUpdate(opts)
+    );
   }
 
   /**
@@ -288,9 +290,11 @@ export class DataPersistence<T> {
     actionType: string,
     opts: OptimisticUpdateOpts<T, A>
   ): Observable<any> {
-    return this.actions
-      .ofType<A>(actionType)
-      .pipe(withLatestFrom(this.store), optimisticUpdate(opts));
+    return this.actions.pipe(
+      ofType<A>(actionType),
+      withLatestFrom(this.store),
+      optimisticUpdate(opts)
+    );
   }
 
   /**
@@ -364,9 +368,11 @@ export class DataPersistence<T> {
     actionType: string,
     opts: FetchOpts<T, A>
   ): Observable<any> {
-    return this.actions
-      .ofType<A>(actionType)
-      .pipe(withLatestFrom(this.store), fetch(opts));
+    return this.actions.pipe(
+      ofType<A>(actionType),
+      withLatestFrom(this.store),
+      fetch(opts)
+    );
   }
 
   /**
