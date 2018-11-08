@@ -55,10 +55,13 @@ describe('Node Applications', () => {
       }
 
       await runCLIAsync('build node-app1');
+
       expect(exists('./tmp/proj/dist/apps/node-app1/main.js')).toBeTruthy();
       expect(
         exists('./tmp/proj/dist/apps/node-app1/assets/file.txt')
       ).toBeTruthy();
+      expect(exists('./tmp/proj/dist/apps/node-app1/main.js.map')).toBeTruthy();
+
       const server = fork(
         path.join(
           __dirname,

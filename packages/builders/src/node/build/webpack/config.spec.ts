@@ -217,6 +217,26 @@ describe('getWebpackConfig', () => {
     });
   });
 
+  describe('the source map option', () => {
+    it('should enable source-map devtool', () => {
+      const result = getWebpackConfig({
+        ...input,
+        sourceMap: true
+      });
+
+      expect(result.devtool).toEqual('source-map');
+    });
+
+    it('should enable source-map devtool', () => {
+      const result = getWebpackConfig({
+        ...input,
+        sourceMap: false
+      });
+
+      expect(result.devtool).toEqual('eval');
+    });
+  });
+
   describe('the optimization option', () => {
     describe('by default', () => {
       it('should set the mode to development', () => {
