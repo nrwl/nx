@@ -2,7 +2,7 @@ import { Component, Injectable } from '@angular/core';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { Router, RouterStateSnapshot } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { Actions, Effect, EffectsModule } from '@ngrx/effects';
+import { Actions, Effect, EffectsModule, ofType } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { StoreRouterConnectingModule } from '@ngrx/router-store';
 import { Store, StoreModule } from '@ngrx/store';
@@ -265,19 +265,18 @@ describe('DataPersistence', () => {
         });
 
         @Effect()
-        loadTodosWithOperator = this.s.actions
-          .ofType<GetTodos>('GET_TODOS')
-          .pipe(
-            withLatestFrom(this.s.store),
-            fetch({
-              run: (action, state) => {
-                return of({
-                  type: 'TODOS',
-                  payload: { user: state.user, todos: 'some todos' }
-                }).pipe(delay(1));
-              }
-            })
-          );
+        loadTodosWithOperator = this.s.actions.pipe(
+          ofType<GetTodos>('GET_TODOS'),
+          withLatestFrom(this.s.store),
+          fetch({
+            run: (action, state) => {
+              return of({
+                type: 'TODOS',
+                payload: { user: state.user, todos: 'some todos' }
+              }).pipe(delay(1));
+            }
+          })
+        );
 
         constructor(private s: DataPersistence<TodosState>) {}
       }
@@ -395,18 +394,17 @@ describe('DataPersistence', () => {
         });
 
         @Effect()
-        loadTodoWithOperator = this.s.actions
-          .ofType<UpdateTodo>('UPDATE_TODO')
-          .pipe(
-            withLatestFrom(this.s.store),
-            pessimisticUpdate({
-              run: (a, state) => ({
-                type: 'TODO_UPDATED',
-                payload: { user: state.user, newTitle: a.payload.newTitle }
-              }),
-              onError: (a, e: any) => null
-            })
-          );
+        loadTodoWithOperator = this.s.actions.pipe(
+          ofType<UpdateTodo>('UPDATE_TODO'),
+          withLatestFrom(this.s.store),
+          pessimisticUpdate({
+            run: (a, state) => ({
+              type: 'TODO_UPDATED',
+              payload: { user: state.user, newTitle: a.payload.newTitle }
+            }),
+            onError: (a, e: any) => null
+          })
+        );
 
         constructor(private s: DataPersistence<TodosState>) {}
       }
@@ -576,21 +574,20 @@ describe('DataPersistence', () => {
         });
 
         @Effect()
-        loadTodoWithOperator = this.s.actions
-          .ofType<UpdateTodo>('UPDATE_TODO')
-          .pipe(
-            withLatestFrom(this.s.store),
-            optimisticUpdate({
-              run: (a, state) => {
-                throw new Error('boom');
-              },
+        loadTodoWithOperator = this.s.actions.pipe(
+          ofType<UpdateTodo>('UPDATE_TODO'),
+          withLatestFrom(this.s.store),
+          optimisticUpdate({
+            run: (a, state) => {
+              throw new Error('boom');
+            },
 
-              undoAction: (a, e: any) => ({
-                type: 'UNDO_UPDATE_TODO',
-                payload: a.payload
-              })
+            undoAction: (a, e: any) => ({
+              type: 'UNDO_UPDATE_TODO',
+              payload: a.payload
             })
-          );
+          })
+        );
 
         constructor(private s: DataPersistence<TodosState>) {}
       }
