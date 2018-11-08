@@ -8,11 +8,7 @@ export interface YargsFormatOptions extends YargsAffectedOptions {
   libsAndApps?: boolean;
 }
 
-/*
-* HTML formatting could be added here once Prettier supports it
-* https://github.com/prettier/prettier/issues/1882
-*/
-const PRETTIER_EXTENSIONS = ['.ts', '.scss', '.css'];
+const PRETTIER_EXTENSIONS = ['ts', 'js', 'scss', 'css', 'html', 'json', 'md'];
 
 export function format(command: 'check' | 'write', args: YargsFormatOptions) {
   let patterns: string[];
@@ -39,27 +35,25 @@ export function format(command: 'check' | 'write', args: YargsFormatOptions) {
 
 function getPatterns(args: YargsAffectedOptions) {
   try {
+    if (args.all) {
+      return getPatternsWithPathPrefix(['{apps,libs,tools}']);
+    }
+
     const p = parseFiles(args);
-    let patterns = p.files.filter(
-      f => PRETTIER_EXTENSIONS.indexOf(path.extname(f)) > -1
+    let patterns = p.files.filter(f =>
+      PRETTIER_EXTENSIONS.map(ext => '.' + ext).includes(path.extname(f))
     );
 
     const libsAndApp = args.libsAndApps;
     return libsAndApp ? getPatternsFromApps(patterns) : patterns;
   } catch (e) {
-    return getPatternsWithPathPrefix('{apps,libs,tools}');
+    return getPatternsWithPathPrefix(['{apps,libs,tools}']);
   }
 }
 
 function getPatternsFromApps(affectedFiles: string[]): string[] {
   const roots = getProjectRoots(getTouchedProjects(affectedFiles));
-  if (roots.length === 0) {
-    return [];
-  } else if (roots.length === 1) {
-    return getPatternsWithPathPrefix(roots[0]);
-  } else {
-    return getPatternsWithPathPrefix(roots.join(','));
-  }
+  return getPatternsWithPathPrefix(roots);
 }
 
 function chunkify(target: string[], size: number): string[][] {
@@ -70,8 +64,10 @@ function chunkify(target: string[], size: number): string[][] {
   }, []);
 }
 
-function getPatternsWithPathPrefix(prefix: string): string[] {
-  return PRETTIER_EXTENSIONS.map(extension => `"${prefix}/**/*${extension}"`);
+function getPatternsWithPathPrefix(prefixes: string[]): string[] {
+  return prefixes.map(
+    prefix => `"${prefix}/**/*.{${PRETTIER_EXTENSIONS.join(',')}}"`
+  );
 }
 
 function printError(command: string, e: any) {

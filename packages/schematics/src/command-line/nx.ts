@@ -103,13 +103,13 @@ yargs
   .command(
     'format:check',
     'Check for un-formatted files',
-    withAffectedOptions,
+    withFormatOptions,
     args => format('check', args)
   )
   .command(
     'format:write',
     'Overwrite un-formatted files',
-    withAffectedOptions,
+    withFormatOptions,
     args => format('write', args)
   )
   .alias('format:write', 'format')
@@ -136,6 +136,12 @@ yargs
   .version()
   .option('quiet', { type: 'boolean', hidden: true })
   .demandCommand().argv; // .argv bootstraps the CLI creation;
+
+function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
+  return withAffectedOptions(yargs).option('apps-and-libs', {
+    type: 'boolean'
+  });
+}
 
 function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
