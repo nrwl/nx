@@ -16,6 +16,11 @@
       "description": "Run build when files change.",
       "default": false
     },
+    "sourceMap": {
+      "type": "boolean",
+      "description": "Produce source maps.",
+      "default": true
+    },
     "progress": {
       "type": "boolean",
       "description": "Log progress to the console while building.",

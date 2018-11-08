@@ -24,6 +24,7 @@ export function getWebpackConfig(
     compilerOptions.target !== ts.ScriptTarget.ES5;
   const webpackConfig: Configuration = {
     entry: [options.main],
+    devtool: options.sourceMap ? 'source-map' : 'eval',
     mode: options.optimization ? 'production' : 'development',
     output: {
       path: options.outputPath,

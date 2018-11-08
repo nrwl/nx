@@ -22,6 +22,7 @@ export interface BuildNodeBuilderOptions {
   outputPath: string;
   tsConfig: string;
   watch?: boolean;
+  sourceMap?: boolean;
   optimization?: boolean;
   externalDependencies: 'all' | 'none' | string[];
   showCircularDependencies?: boolean;
