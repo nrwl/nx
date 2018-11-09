@@ -125,6 +125,10 @@ function updateAngularJson(options: CypressProjectSchema): Rule {
         }
       }
     };
+    projectConfig.architect.lint.options.tsConfig = join(
+      normalize(options.e2eProjectRoot),
+      'tsconfig.e2e.json'
+    );
     json.projects[options.e2eProjectName] = projectConfig;
     return json;
   });

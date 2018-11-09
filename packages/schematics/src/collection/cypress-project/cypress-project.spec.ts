@@ -81,9 +81,13 @@ describe('schematic:cypres-project', () => {
         appTree
       );
       const angularJson = readJsonInTree(tree, 'angular.json');
+      const project = angularJson.projects['my-app-e2e'];
 
-      expect(angularJson.projects['my-app-e2e'].root).toEqual(
-        'apps/my-app-e2e'
+      expect(project.root).toEqual('apps/my-app-e2e');
+
+      expect(project.architect.e2e.builder).toEqual('@nrwl/builders:cypress');
+      expect(project.architect.lint.options.tsConfig).toEqual(
+        'apps/my-app-e2e/tsconfig.e2e.json'
       );
     });
 
