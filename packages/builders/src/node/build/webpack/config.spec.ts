@@ -6,6 +6,7 @@ import * as ts from 'typescript';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import { ProgressPlugin } from 'webpack';
 
 describe('getWebpackConfig', () => {
@@ -266,6 +267,33 @@ describe('getWebpackConfig', () => {
         plugin => plugin instanceof ForkTsCheckerWebpackPlugin
       ) as ForkTsCheckerWebpackPlugin;
       expect(typeCheckerPlugin.options.workers).toEqual(1);
+    });
+  });
+
+  describe('the assets option', () => {
+    it('should add a copy-webpack-plugin', () => {
+      const result = getWebpackConfig({
+        ...input,
+        assets: [
+          {
+            input: 'assets',
+            glob: '**/*',
+            output: 'assets'
+          },
+          {
+            input: '',
+            glob: 'file.txt',
+            output: ''
+          }
+        ]
+      });
+
+      // This test isn't great because it's hard to find CopyWebpackPlugin
+      expect(
+        result.plugins.some(
+          plugin => !(plugin instanceof ForkTsCheckerWebpackPlugin)
+        )
+      ).toBeTruthy();
     });
   });
 

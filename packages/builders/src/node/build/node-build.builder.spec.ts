@@ -8,6 +8,7 @@ import * as fs from 'fs';
 describe('NodeBuildBuilder', () => {
   let builder: BuildNodeBuilder;
   let testOptions: BuildNodeBuilderOptions;
+  let sourceRoot: string;
 
   beforeEach(() => {
     builder = new BuildNodeBuilder({
@@ -18,6 +19,7 @@ describe('NodeBuildBuilder', () => {
       },
       architect: <any>{}
     });
+    sourceRoot = '/root/apps/nodeapp/src';
     testOptions = {
       main: 'apps/nodeapp/src/main.ts',
       tsConfig: 'apps/nodeapp/tsconfig.app.json',
@@ -32,7 +34,8 @@ describe('NodeBuildBuilder', () => {
           replace: 'module1.ts',
           with: 'module2.ts'
         }
-      ]
+      ],
+      assets: []
     };
   });
 
@@ -126,27 +129,61 @@ describe('NodeBuildBuilder', () => {
 
   describe('options normalization', () => {
     it('should add the root', () => {
-      const result = (<any>builder).normalizeOptions(testOptions);
+      const result = (<any>builder).normalizeOptions(testOptions, sourceRoot);
       expect(result.root).toEqual('/root');
     });
 
     it('should resolve main from root', () => {
-      const result = (<any>builder).normalizeOptions(testOptions);
+      const result = (<any>builder).normalizeOptions(testOptions, sourceRoot);
       expect(result.main).toEqual('/root/apps/nodeapp/src/main.ts');
     });
 
     it('should resolve the output path', () => {
-      const result = (<any>builder).normalizeOptions(testOptions);
+      const result = (<any>builder).normalizeOptions(testOptions, sourceRoot);
       expect(result.outputPath).toEqual('/root/dist/apps/nodeapp');
     });
 
     it('should resolve the tsConfig path', () => {
-      const result = (<any>builder).normalizeOptions(testOptions);
+      const result = (<any>builder).normalizeOptions(testOptions, sourceRoot);
       expect(result.tsConfig).toEqual('/root/apps/nodeapp/tsconfig.app.json');
     });
 
+    it('should normalize asset patterns', () => {
+      spyOn(fs, 'statSync').and.returnValue({
+        isDirectory: () => true
+      });
+      const result = (<any>builder).normalizeOptions(
+        {
+          ...testOptions,
+          assets: [
+            'apps/nodeapp/src/assets',
+            {
+              input: '/outsideroot',
+              output: 'output',
+              glob: '**/*',
+              ignore: ['**/*.json']
+            }
+          ]
+        },
+        sourceRoot
+      );
+      expect(result.assets).toEqual([
+        {
+          input: '/root/apps/nodeapp/src/assets',
+          output: 'assets',
+          glob: '**/*'
+        },
+        {
+          input: '/outsideroot',
+          output: 'output',
+          glob: '**/*',
+          ignore: ['**/*.json']
+        }
+      ]);
+    });
+
     it('should resolve the file replacement paths', () => {
-      const result = (<any>builder).normalizeOptions(testOptions);
+      const result = (<any>builder).normalizeOptions(testOptions, sourceRoot);
       expect(result.fileReplacements).toEqual([
         {
           replace: '/root/apps/environment/environment.ts',

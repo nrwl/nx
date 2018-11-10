@@ -7,9 +7,11 @@ import { dirname, resolve } from 'path';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 
 import { BuildNodeBuilderOptions } from '../node-build.builder';
 import * as nodeExternals from 'webpack-node-externals';
+import { AssetPatternObject } from '@angular-devkit/build-angular';
 
 export const OUT_FILENAME = 'main.js';
 
@@ -98,6 +100,34 @@ export function getWebpackConfig(
         callback();
       }
     ];
+  }
+
+  // process asset entries
+  if (options.assets) {
+    const copyWebpackPluginPatterns = options.assets.map(
+      (asset: AssetPatternObject) => {
+        return {
+          context: asset.input,
+          // Now we remove starting slash to make Webpack place it from the output root.
+          to: asset.output,
+          ignore: asset.ignore,
+          from: {
+            glob: asset.glob,
+            dot: true
+          }
+        };
+      }
+    );
+
+    const copyWebpackPluginOptions = {
+      ignore: ['.gitkeep', '**/.DS_Store', '**/Thumbs.db']
+    };
+
+    const copyWebpackPluginInstance = new CopyWebpackPlugin(
+      copyWebpackPluginPatterns,
+      copyWebpackPluginOptions
+    );
+    extraPlugins.push(copyWebpackPluginInstance);
   }
 
   if (options.showCircularDependencies) {

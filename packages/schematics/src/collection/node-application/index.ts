@@ -89,7 +89,8 @@ function getBuildConfig(project: any, options: NormalizedSchema) {
     options: {
       outputPath: join(normalize('dist'), options.appProjectRoot),
       main: join(project.sourceRoot, 'main.ts'),
-      tsConfig: join(options.appProjectRoot, 'tsconfig.app.json')
+      tsConfig: join(options.appProjectRoot, 'tsconfig.app.json'),
+      assets: [join(project.sourceRoot, 'assets')]
     },
     configurations: {
       production: {

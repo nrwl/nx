@@ -36,7 +36,8 @@ describe('node-app', () => {
             options: {
               outputPath: 'dist/apps/my-node-app',
               main: 'apps/my-node-app/src/main.ts',
-              tsConfig: 'apps/my-node-app/tsconfig.app.json'
+              tsConfig: 'apps/my-node-app/tsconfig.app.json',
+              assets: ['apps/my-node-app/src/assets']
             },
             configurations: {
               production: {

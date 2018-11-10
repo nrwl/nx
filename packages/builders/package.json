@@ -27,6 +27,7 @@
   "dependencies": {
     "@angular-devkit/architect": "~0.10.1",
     "@angular-devkit/build-webpack": "~0.10.1",
+    "copy-webpack-plugin": "4.6.0",
     "fork-ts-checker-webpack-plugin": "0.4.9",
     "license-webpack-plugin": "^1.4.0",
     "rxjs": "6.3.3",
