@@ -34,6 +34,8 @@ describe('Node Applications', () => {
           })
         `
       );
+
+      updateFile('apps/node-app1/src/assets/file.txt', ``);
       const jestResult = await runCLIAsync('test node-app1');
       expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
 
@@ -54,6 +56,9 @@ describe('Node Applications', () => {
 
       await runCLIAsync('build node-app1');
       expect(exists('./tmp/proj/dist/apps/node-app1/main.js')).toBeTruthy();
+      expect(
+        exists('./tmp/proj/dist/apps/node-app1/assets/file.txt')
+      ).toBeTruthy();
       const server = fork(
         path.join(
           __dirname,
