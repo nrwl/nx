@@ -34,7 +34,7 @@
       "type": "boolean",
       "default": false
     },
-    "skipModulePrefix": {
+    "simpleModuleName": {
       "description": "Skip module prefix when using --directory",
       "type": "boolean",
       "default": false

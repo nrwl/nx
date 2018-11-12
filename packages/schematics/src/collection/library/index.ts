@@ -464,7 +464,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     : name;
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
-  const fileName = options.skipModulePrefix ? name : projectName;
+  const fileName = options.simpleModuleName ? name : projectName;
   const projectRoot = `libs/${projectDirectory}`;
 
   const moduleName = `${toClassName(fileName)}Module`;
