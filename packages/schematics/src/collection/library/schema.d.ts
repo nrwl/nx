@@ -3,7 +3,7 @@ import { UnitTestRunner } from '../../utils/test-runners';
 export interface Schema {
   name: string;
   skipFormat: boolean;
-  skipModulePrefix: boolean;
+  simpleModuleName: boolean;
   directory?: string;
   sourceDir?: string;
   publishable: boolean;

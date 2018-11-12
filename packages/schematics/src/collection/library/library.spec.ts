@@ -140,7 +140,7 @@ describe('lib', () => {
 
       const tree2 = schematicRunner.runSchematic(
         'lib',
-        { name: 'myLib2', skipModulePrefix: true },
+        { name: 'myLib2', simpleModuleName: true },
         tree
       );
       expect(tree2.exists(`libs/my-lib2/karma.conf.js`)).toBeTruthy();
@@ -225,7 +225,7 @@ describe('lib', () => {
           name: 'myLib2',
           directory: 'myDir',
           tags: 'one,two',
-          skipModulePrefix: true
+          simpleModuleName: true
         },
         tree
       );
@@ -270,7 +270,7 @@ describe('lib', () => {
 
       const tree2 = schematicRunner.runSchematic(
         'lib',
-        { name: 'myLib2', directory: 'myDir', skipModulePrefix: true },
+        { name: 'myLib2', directory: 'myDir', simpleModuleName: true },
         tree
       );
       expect(tree2.exists(`libs/my-dir/my-lib2/karma.conf.js`)).toBeTruthy();
@@ -387,7 +387,7 @@ describe('lib', () => {
             directory: 'myDir',
             routing: true,
             lazy: true,
-            skipModulePrefix: true
+            simpleModuleName: true
           },
           tree
         );
@@ -465,7 +465,7 @@ describe('lib', () => {
             routing: true,
             lazy: true,
             parentModule: 'apps/myapp/src/app/app.module.ts',
-            skipModulePrefix: true
+            simpleModuleName: true
           },
           tree2
         );
@@ -518,7 +518,7 @@ describe('lib', () => {
             name: 'myLib2',
             directory: 'myDir',
             routing: true,
-            skipModulePrefix: true
+            simpleModuleName: true
           },
           tree
         );
@@ -574,7 +574,7 @@ describe('lib', () => {
             directory: 'myDir',
             routing: true,
             parentModule: 'apps/myapp/src/app/app.module.ts',
-            skipModulePrefix: true
+            simpleModuleName: true
           },
           tree2
         );
