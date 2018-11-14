@@ -21,6 +21,7 @@ export interface BuildNodeBuilderOptions {
   main: string;
   outputPath: string;
   tsConfig: string;
+  devtool?: string | boolean;
   watch?: boolean;
   optimization?: boolean;
   externalDependencies: 'all' | 'none' | string[];

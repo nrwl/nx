@@ -24,6 +24,7 @@ describe('NodeBuildBuilder', () => {
       main: 'apps/nodeapp/src/main.ts',
       tsConfig: 'apps/nodeapp/tsconfig.app.json',
       outputPath: 'dist/apps/nodeapp',
+      devtool: 'inline-source-map',
       externalDependencies: 'all',
       fileReplacements: [
         {

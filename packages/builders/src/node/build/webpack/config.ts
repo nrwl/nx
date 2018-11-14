@@ -25,6 +25,9 @@ export function getWebpackConfig(
   const webpackConfig: Configuration = {
     entry: [options.main],
     mode: options.optimization ? 'production' : 'development',
+    devtool: options.devtool
+      ? (options.devtool as webpack.Options.Devtool)
+      : false,
     output: {
       path: options.outputPath,
       filename: OUT_FILENAME,

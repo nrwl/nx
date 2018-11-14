@@ -154,6 +154,27 @@ describe('getWebpackConfig', () => {
     });
   });
 
+  describe('the devtool option', () => {
+    describe('by default', () => {
+      it('should set the mode to false', () => {
+        const result = getWebpackConfig(input);
+
+        expect(result.devtool).toBeFalsy();
+      });
+    });
+
+    describe('when set', () => {
+      it('should set the correct devtool options', () => {
+        const result = getWebpackConfig({
+          ...input,
+          devtool: 'inline-source-map'
+        });
+
+        expect(result.devtool).toEqual('inline-source-map');
+      });
+    });
+  });
+
   describe('the file replacements option', () => {
     it('should set aliases', () => {
       spyOn(ts, 'parseJsonConfigFileContent').and.returnValue({
