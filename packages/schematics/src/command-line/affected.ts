@@ -51,7 +51,7 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
   let projects: string[];
   const target = parsedArgs.target;
   const rest: string[] = [
-    ...parsedArgs._.slice(1, parsedArgs._.length - 1),
+    ...parsedArgs._.slice(1),
     ...filterNxSpecificArgs(parsedArgs)
   ];
 
