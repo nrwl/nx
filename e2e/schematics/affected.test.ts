@@ -184,6 +184,12 @@ describe('Affected', () => {
       expect(linting).toContain('Running lint for myapp-e2e');
       expect(linting).toContain('Running lint for mypublishablelib');
 
+      const lintWithJsonFormating = runCommand(
+        'npm run affected:lint -- --files="libs/mylib/src/index.ts" -- --format json'
+      );
+      expect(lintWithJsonFormating).toContain('With flags: --format json');
+      expect(lintWithJsonFormating).toContain('[]');
+
       const unitTestsExcluded = runCommand(
         'npm run affected:test -- --files="libs/mylib/src/index.ts" --exclude=myapp,mypublishablelib'
       );
