@@ -30,6 +30,11 @@
       "type": "string",
       "description":
         "Use this to pass directly the address of your distant server address with the port running your application"
+    },
+    "browser": {
+      "type": "string",
+      "description":
+        "Use this to specify the browser to run tests in. The browser needs to be installed on your system."
     }
   },
   "additionalProperties": false,
