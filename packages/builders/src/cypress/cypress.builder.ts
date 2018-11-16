@@ -24,6 +24,7 @@ export interface CypressBuilderOptions {
   headless: boolean;
   tsConfig: string;
   watch: boolean;
+  browser?: string;
 }
 
 /**
@@ -93,7 +94,8 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
           options.cypressConfig,
           options.headless,
           options.watch,
-          options.baseUrl
+          options.baseUrl,
+          options.browser
         )
       ),
       options.watch ? tap(noop) : take(1),
@@ -178,7 +180,8 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
     cypressConfig: string,
     headless: boolean,
     isWatching: boolean,
-    baseUrl: string
+    baseUrl: string,
+    browser?: string
   ): Observable<BuildEvent> {
     // Cypress expects the folder where a `cypress.json` is present
     const projectFolderPath = path.dirname(cypressConfig);
@@ -189,6 +192,10 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
     // If not, will use the `baseUrl` normally from `cypress.json`
     if (baseUrl || this.computedCypressBaseUrl) {
       options.config = { baseUrl: baseUrl || this.computedCypressBaseUrl };
+    }
+
+    if (browser) {
+      options.browser = browser;
     }
 
     options.headed = !headless;

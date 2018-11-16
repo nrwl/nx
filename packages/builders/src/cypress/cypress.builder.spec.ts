@@ -147,6 +147,35 @@ describe('Cypress builder', () => {
       fakeEventEmitter.emit('exit'); // Passing tsc command
     });
 
+    it('should call `Cypress.run` with provided browser', () => {
+      spyOn(fsUtility, 'readFile').and.returnValue(
+        JSON.stringify({
+          compilerOptions: { outDir: '../../dist/out-tsc/apps/my-app-e2e/src' }
+        })
+      );
+      const fakeEventEmitter = new EventEmitter();
+      spyOn(child_process, 'fork').and.returnValue(fakeEventEmitter);
+      const cypressRun = spyOn(Cypress, 'run');
+
+      builder
+        .run({
+          root: normalize('/root'),
+          projectType: 'application',
+          builder: '@nrwl/builders:cypress',
+          options: Object.assign(cypressBuilderOptions, {
+            browser: 'chrome'
+          })
+        })
+        .subscribe(() => {
+          expect(cypressRun).toHaveBeenCalledWith({
+            config: { browser: 'chrome' },
+            project: path.dirname(cypressBuilderOptions.cypressConfig)
+          });
+        });
+
+      fakeEventEmitter.emit('exit'); // Passing tsc command
+    });
+
     it('should call `Cypress.run` without baseUrl nor dev server target value', () => {
       spyOn(fsUtility, 'readFile').and.returnValue(
         JSON.stringify({
