@@ -79,7 +79,9 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
     );
 
     return this.compileTypescriptFiles(options.tsConfig, options.watch).pipe(
-      tap(() => this.copyCypressFixtures(options.tsConfig)),
+      tap(() =>
+        this.copyCypressFixtures(options.tsConfig, options.cypressConfig)
+      ),
       concatMap(
         () =>
           !options.baseUrl && options.devServerTarget
@@ -147,14 +149,16 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
    * This is done because `tsc` doesn't handle `json` files.
    * @param tsConfigPath
    */
-  private copyCypressFixtures(tsConfigPath: string) {
-    const tsconfigJson = JSON.parse(readFile(tsConfigPath));
+  private copyCypressFixtures(tsConfigPath: string, cypressConfigPath: string) {
+    const cypressConfig = JSON.parse(readFile(cypressConfigPath));
+    // DOn't copy fixtures if cypress config does not have it set
+    if (!cypressConfig.fixtures) {
+      return;
+    }
+
     copySync(
       `${path.dirname(tsConfigPath)}/src/fixtures`,
-      `${path.resolve(
-        path.dirname(tsConfigPath),
-        tsconfigJson.compilerOptions.outDir
-      )}/fixtures`,
+      path.join(path.dirname(cypressConfigPath), cypressConfig.fixtures),
       { overwrite: true }
     );
   }

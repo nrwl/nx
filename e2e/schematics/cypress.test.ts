@@ -4,7 +4,9 @@ import {
   newApp,
   newProject,
   readJson,
-  runCLI
+  runCLI,
+  updateFile,
+  readFile
 } from '../utils';
 
 describe('Cypress E2E Test runner', () => {
@@ -42,6 +44,19 @@ describe('Cypress E2E Test runner', () => {
         newProject();
         newApp('myApp --e2eTestRunner=cypress');
         copyMissingPackages();
+
+        expect(
+          runCLI('e2e --project=my-app-e2e --headless --watch=false')
+        ).toContain('All specs passed!');
+
+        const originalContents = JSON.parse(
+          readFile('apps/my-app-e2e/cypress.json')
+        );
+        delete originalContents.fixtures;
+        updateFile(
+          'apps/my-app-e2e/cypress.json',
+          JSON.stringify(originalContents)
+        );
 
         expect(
           runCLI('e2e --project=my-app-e2e --headless --watch=false')

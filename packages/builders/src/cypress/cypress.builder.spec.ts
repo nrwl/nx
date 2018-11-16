@@ -5,6 +5,7 @@ import { EventEmitter } from 'events';
 import * as child_process from 'child_process';
 import * as path from 'path';
 import * as fsUtility from '@angular-devkit/schematics/tools/file-system-utility';
+import * as fsExtras from 'fs-extra';
 const Cypress = require('cypress');
 
 describe('Cypress builder', () => {
@@ -174,6 +175,83 @@ describe('Cypress builder', () => {
           expect(cypressRun).toHaveBeenCalledWith({
             project: path.dirname(cypressBuilderOptions.cypressConfig)
           });
+        });
+
+      fakeEventEmitter.emit('exit'); // Passing tsc command
+    });
+
+    it('should copy fixtures files to out-dir', () => {
+      spyOn(fsUtility, 'readFile').and.callFake((path: string) => {
+        return path.endsWith('tsconfig.e2e.json')
+          ? JSON.stringify({
+              compilerOptions: {
+                outDir: '../../dist/out-tsc/apps/my-app-e2e/src'
+              }
+            })
+          : JSON.stringify({
+              fixtures: '../../dist/out-tsc/apps/my-app-e2e/src/fixtures'
+            });
+      });
+      const fakeEventEmitter = new EventEmitter();
+      spyOn(child_process, 'fork').and.returnValue(fakeEventEmitter);
+      spyOn(Cypress, 'run');
+      spyOn(fsExtras, 'copySync');
+
+      builder
+        .run({
+          root: normalize('/root'),
+          projectType: 'application',
+          builder: '@nrwl/builders:cypress',
+          options: {
+            cypressConfig: 'apps/my-app-e2e/cypress.json',
+            tsConfig: 'apps/my-app-e2e/tsconfig.e2e.json',
+            devServerTarget: undefined,
+            headless: true,
+            baseUrl: undefined,
+            watch: false
+          }
+        })
+        .subscribe(() => {
+          expect(fsExtras.copySync).toHaveBeenCalledWith(
+            'apps/my-app-e2e/src/fixtures',
+            'dist/out-tsc/my-app-e2e/src/fixtures'
+          );
+        });
+
+      fakeEventEmitter.emit('exit'); // Passing tsc command
+    });
+
+    it('should copy not fixtures files if they are not defined in the cypress config', () => {
+      spyOn(fsUtility, 'readFile').and.callFake((path: string) => {
+        return path.endsWith('tsconfig.e2e.json')
+          ? JSON.stringify({
+              compilerOptions: {
+                outDir: '../../dist/out-tsc/apps/my-app-e2e/src'
+              }
+            })
+          : JSON.stringify({});
+      });
+      const fakeEventEmitter = new EventEmitter();
+      spyOn(child_process, 'fork').and.returnValue(fakeEventEmitter);
+      spyOn(Cypress, 'run');
+      spyOn(fsExtras, 'copySync');
+
+      builder
+        .run({
+          root: normalize('/root'),
+          projectType: 'application',
+          builder: '@nrwl/builders:cypress',
+          options: {
+            cypressConfig: 'apps/my-app-e2e/cypress.json',
+            tsConfig: 'apps/my-app-e2e/tsconfig.e2e.json',
+            devServerTarget: undefined,
+            headless: true,
+            baseUrl: undefined,
+            watch: false
+          }
+        })
+        .subscribe(() => {
+          expect(fsExtras.copySync).not.toHaveBeenCalled();
         });
 
       fakeEventEmitter.emit('exit'); // Passing tsc command
