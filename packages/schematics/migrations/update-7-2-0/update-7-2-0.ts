@@ -155,6 +155,18 @@ function displayInformation(host: Tree, context: SchematicContext) {
     To find out more, visit our wiki: https://github.com/nrwl/nx/wiki/Workspace-Organization#tsconfigs`);
 }
 
+function switchToEs2015(host: Tree, context: SchematicContext) {
+  return updateJsonInTree('tsconfig.json', json => {
+    json.compilerOptions = json.compilerOptions || {};
+    json.compilerOptions.module = 'es2015';
+
+    context.logger.info(
+      'Typescript has been set to compile with es2015 modules'
+    );
+    return json;
+  });
+}
+
 export default function(): Rule {
-  return chain([updateProjects, displayInformation]);
+  return chain([switchToEs2015, updateProjects, displayInformation]);
 }

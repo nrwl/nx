@@ -204,3 +204,7 @@ export function fileExists(filePath: string): boolean {
 export function exists(filePath: string): boolean {
   return directoryExists(filePath) || fileExists(filePath);
 }
+
+export function getSize(filePath: string): number {
+  return statSync(filePath).size;
+}

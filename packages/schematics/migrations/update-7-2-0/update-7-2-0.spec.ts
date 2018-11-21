@@ -395,4 +395,15 @@ describe('Update 7.2.0', () => {
 
     expect(getTypes('apps/app1/tsconfig.json')).toBeUndefined();
   });
+
+  describe('tsconfig.json', () => {
+    it('should be updated with es2015 modules', async () => {
+      const result = await schematicRunner
+        .runSchematicAsync('update-7.2.0', {}, initialTree)
+        .toPromise();
+
+      const tsConfig = readJsonInTree(result, 'tsconfig.json');
+      expect(tsConfig.compilerOptions.module).toEqual('es2015');
+    });
+  });
 });
