@@ -300,6 +300,35 @@ describe('app', () => {
     });
   });
 
+  describe('--style scss', () => {
+    it('should generate scss styles', () => {
+      const result = schematicRunner.runSchematic(
+        'app',
+        { name: 'myApp', style: 'scss' },
+        appTree
+      );
+      expect(result.exists('apps/my-app/src/app/app.component.scss')).toEqual(
+        true
+      );
+    });
+
+    it('should set it as default', () => {
+      const result = schematicRunner.runSchematic(
+        'app',
+        { name: 'myApp', style: 'scss' },
+        appTree
+      );
+
+      const angularJson = readJsonInTree(result, 'angular.json');
+
+      expect(angularJson.projects['my-app'].schematics).toEqual({
+        '@nrwl/schematics:component': {
+          styleext: 'scss'
+        }
+      });
+    });
+  });
+
   describe('--unit-test-runner jest', () => {
     it('should generate a jest config', () => {
       const tree = schematicRunner.runSchematic(

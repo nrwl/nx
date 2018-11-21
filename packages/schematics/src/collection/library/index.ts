@@ -303,6 +303,16 @@ function updateProject(options: NormalizedSchema): Rule {
           options.projectRoot
         );
 
+        fixedProject.schematics = fixedProject.schematics || {};
+        if (options.style !== 'css') {
+          fixedProject.schematics = {
+            ...fixedProject.schematics,
+            '@nrwl/schematics:component': {
+              styleext: options.style
+            }
+          };
+        }
+
         if (!options.publishable) {
           delete fixedProject.architect.build;
         }
@@ -435,6 +445,7 @@ export default function(schema: Schema): Rule {
       externalSchematic('@schematics/angular', 'library', {
         name: options.name,
         prefix: options.prefix,
+        style: options.style,
         entryFile: 'index',
         skipPackageJson: !options.publishable,
         skipTsConfig: true

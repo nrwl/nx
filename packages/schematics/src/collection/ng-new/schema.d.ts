@@ -7,5 +7,6 @@ export interface Schema {
   skipInstall?: boolean;
   skipGit?: boolean;
   packageManager?: string;
+  style?: string;
   commit?: { name: string; email: string; message?: string };
 }
