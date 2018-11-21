@@ -10,5 +10,13 @@
     },
     "defaultCollection": "@nrwl/schematics"<% if(packageManager) { %>,<% } %>
     <% if(packageManager) { %>"packageManager": "<%= packageManager %>"<% } %>
-  }
+  },
+  "schematics": {<% if (style !== 'css') { %>
+    "@nrwl/schematics:application": {
+      "style": "<%= style %>"
+    },
+    "@nrwl/schematics:library": {
+      "style": "<%= style %>"
+    }
+  <% } %>}
 }

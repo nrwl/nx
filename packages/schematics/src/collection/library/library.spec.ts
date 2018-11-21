@@ -587,6 +587,24 @@ describe('lib', () => {
     });
   });
 
+  describe('--style scss', () => {
+    it('should set it as default', () => {
+      const result = schematicRunner.runSchematic(
+        'lib',
+        { name: 'myLib', style: 'scss' },
+        appTree
+      );
+
+      const angularJson = readJsonInTree(result, 'angular.json');
+
+      expect(angularJson.projects['my-lib'].schematics).toEqual({
+        '@nrwl/schematics:component': {
+          styleext: 'scss'
+        }
+      });
+    });
+  });
+
   describe('--unit-test-runner jest', () => {
     it('should generate jest configuration', () => {
       const resultTree = schematicRunner.runSchematic(

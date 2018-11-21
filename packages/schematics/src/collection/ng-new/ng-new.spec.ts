@@ -102,4 +102,22 @@ module.exports = () => {
       JSON.parse(tree.readContent('/proj/angular.json')).cli.packageManager
     ).toEqual('yarn');
   });
+
+  it('should configure the project to use style argument', () => {
+    const tree = schematicRunner.runSchematic(
+      'ng-new',
+      { name: 'proj', packageManager: 'yarn', style: 'scss' },
+      projectTree
+    );
+    expect(
+      JSON.parse(tree.readContent('/proj/angular.json')).schematics
+    ).toEqual({
+      '@nrwl/schematics:application': {
+        style: 'scss'
+      },
+      '@nrwl/schematics:library': {
+        style: 'scss'
+      }
+    });
+  });
 });

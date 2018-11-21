@@ -13,6 +13,7 @@ export interface Schema {
   flat?: boolean;
   commonModule?: boolean;
 
+  style?: string;
   prefix?: string;
   routing?: boolean;
   lazy?: boolean;

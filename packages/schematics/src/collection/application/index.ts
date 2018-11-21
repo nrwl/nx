@@ -20,12 +20,13 @@ import {
   readJsonInTree
 } from '../../utils/ast-utils';
 import { toFileName } from '../../utils/name-utils';
-import { offsetFromRoot } from '@nrwl/schematics/src/utils/common';
+import { offsetFromRoot } from '../../utils/common';
 import {
   getNpmScope,
   getWorkspacePath,
-  replaceAppNameWithPath
-} from '@nrwl/schematics/src/utils/cli-config-utils';
+  replaceAppNameWithPath,
+  angularSchematicNames
+} from '../../utils/cli-config-utils';
 import { formatFiles } from '../../utils/rules/format-files';
 import { move } from '../../utils/rules/move';
 import { updateKarmaConf } from '../../utils/rules/update-karma-conf';
@@ -162,6 +163,18 @@ function updateProject(options: NormalizedSchema): Rule {
           options.name,
           options.appProjectRoot
         );
+
+        if (fixedProject.schematics) {
+          angularSchematicNames.forEach(type => {
+            const schematic = `@schematics/angular:${type}`;
+            if (schematic in fixedProject.schematics) {
+              fixedProject.schematics[`@nrwl/schematics:${type}`] =
+                fixedProject.schematics[schematic];
+              delete fixedProject.schematics[schematic];
+            }
+          });
+        }
+
         if (options.unitTestRunner !== 'karma') {
           delete fixedProject.architect.test;
 

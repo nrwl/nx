@@ -5,7 +5,11 @@ import {
   readJson,
   runCLI,
   updateFile,
-  fileExists
+  fileExists,
+  exists,
+  runNgNew,
+  cleanup,
+  copyMissingPackages
 } from '../utils';
 
 describe('Nrwl Workspace', () => {
@@ -85,6 +89,25 @@ describe('Nrwl Workspace', () => {
     },
     1000000
   );
+
+  it('should support scss for styles', () => {
+    cleanup();
+    runNgNew('--collection=@nrwl/schematics --npmScope=proj --style scss');
+    copyMissingPackages();
+    newApp('myApp --directory=myDir');
+    newLib(
+      'myLib --directory=myDir --routing --parentModule=apps/my-dir/my-app/src/app/app.module.ts'
+    );
+    runCLI('generate component comp --project my-dir-my-app');
+    runCLI('generate component comp --project my-dir-my-lib');
+
+    expect(
+      exists('./tmp/proj/apps/my-dir/my-app/src/app/comp/comp.component.scss')
+    ).toEqual(true);
+    expect(
+      exists('./tmp/proj/libs/my-dir/my-lib/src/lib/comp/comp.component.scss')
+    ).toEqual(true);
+  });
 
   it(
     'should not generate e2e configuration',

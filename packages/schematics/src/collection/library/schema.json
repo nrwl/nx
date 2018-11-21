@@ -55,6 +55,22 @@
         "Update the router configuration of the parent module using loadChildren or children, depending on what `lazy` is set to.",
       "x-prompt": "Which module should import the library?"
     },
+    "style": {
+      "description": "The file extension to be used for style files.",
+      "type": "string",
+      "default": "css",
+      "x-prompt": {
+        "message": "Which stylesheet format would you like to use?",
+        "type": "list",
+        "items": [
+          { "value": "css", "label": "CSS" },
+          { "value": "scss", "label": "SCSS   [ http://sass-lang.com   ]" },
+          { "value": "sass", "label": "SASS   [ http://sass-lang.com   ]" },
+          { "value": "less", "label": "LESS   [ http://lesscss.org     ]" },
+          { "value": "styl", "label": "Stylus [ http://stylus-lang.com ]" }
+        ]
+      }
+    },
     "routing": {
       "type": "boolean",
       "default": false,

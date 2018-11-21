@@ -1,5 +1,15 @@
 import { Tree } from '@angular-devkit/schematics';
 
+export const angularSchematicNames = [
+  'class',
+  'component',
+  'directive',
+  'guard',
+  'module',
+  'pipe',
+  'service'
+];
+
 export function getWorkspacePath(host: Tree) {
   const possibleFiles = ['/angular.json', '/.angular.json'];
   return possibleFiles.filter(path => host.exists(path))[0];
