@@ -14,7 +14,6 @@ import {
 import * as path from 'path';
 import * as resolve from 'resolve';
 import * as runAll from 'npm-run-all';
-import * as yargsParser from 'yargs-parser';
 import { generateGraph } from './dep-graph';
 import { DepGraph, ProjectNode } from './affected-apps';
 import { GlobalNxArgs } from './nx';
@@ -111,7 +110,7 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
       console.log(libs.join(' '));
       break;
     case 'dep-graph':
-      generateGraph(yargsParser(rest), projects);
+      generateGraph(parsedArgs, projects);
       break;
     default:
       const targetProjects = getProjects(
