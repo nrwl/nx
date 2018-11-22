@@ -67,7 +67,6 @@ export enum OutputType {
 export interface UserOptions extends yargs.Arguments {
   file?: string;
   output?: string;
-  files?: string;
 }
 
 type ParsedUserOptions = {
