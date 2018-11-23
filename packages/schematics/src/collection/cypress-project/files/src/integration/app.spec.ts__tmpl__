@@ -1,5 +1,3 @@
-/// <reference types="cypress" />
-
 import { getGreeting } from '../support/app.po';
 
 describe('Hello Nx', () => {

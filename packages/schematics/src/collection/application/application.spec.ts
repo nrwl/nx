@@ -68,13 +68,17 @@ describe('app', () => {
         getFileContent(tree, 'apps/my-app/src/app/app.module.ts')
       ).toContain('class AppModule');
 
+      const tsconfig = readJsonInTree(tree, 'apps/my-app/tsconfig.json');
+      expect(tsconfig.extends).toEqual('../../tsconfig.json');
+      expect(tsconfig.compilerOptions.types).toContain('jasmine');
+
       const tsconfigApp = JSON.parse(
         stripJsonComments(getFileContent(tree, 'apps/my-app/tsconfig.app.json'))
       );
       expect(tsconfigApp.compilerOptions.outDir).toEqual(
         '../../dist/out-tsc/apps/my-app'
       );
-      expect(tsconfigApp.extends).toEqual('../../tsconfig.json');
+      expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
       const tslintJson = JSON.parse(
         stripJsonComments(getFileContent(tree, 'apps/my-app/tslint.json'))
@@ -90,7 +94,7 @@ describe('app', () => {
       expect(tsconfigE2E.compilerOptions.outDir).toEqual(
         '../../dist/out-tsc/apps/my-app-e2e'
       );
-      expect(tsconfigE2E.extends).toEqual('../../tsconfig.json');
+      expect(tsconfigE2E.extends).toEqual('./tsconfig.json');
     });
 
     it('should default the prefix to npmScope', () => {
@@ -217,9 +221,19 @@ describe('app', () => {
       // Make sure these have properties
       [
         {
+          path: 'apps/my-dir/my-app/tsconfig.json',
+          lookupFn: json => json.extends,
+          expectedValue: '../../../tsconfig.json'
+        },
+        {
           path: 'apps/my-dir/my-app/tsconfig.app.json',
           lookupFn: json => json.compilerOptions.outDir,
           expectedValue: '../../../dist/out-tsc/apps/my-dir/my-app'
+        },
+        {
+          path: 'apps/my-dir/my-app-e2e/tsconfig.json',
+          lookupFn: json => json.extends,
+          expectedValue: '../../../tsconfig.json'
         },
         {
           path: 'apps/my-dir/my-app-e2e/tsconfig.e2e.json',

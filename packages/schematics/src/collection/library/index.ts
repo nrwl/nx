@@ -5,7 +5,12 @@ import {
   Rule,
   Tree,
   SchematicContext,
-  schematic
+  schematic,
+  url,
+  apply,
+  mergeWith,
+  move as devkitMove,
+  template
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';
@@ -224,7 +229,7 @@ function updateNgPackage(options: NormalizedSchema): Rule {
 }
 
 function updateProject(options: NormalizedSchema): Rule {
-  return (host: Tree) => {
+  return (host: Tree, context: SchematicContext) => {
     const libRoot = `${options.projectRoot}/src/lib/`;
 
     host.delete(path.join(libRoot, `${options.name}.service.ts`));
@@ -295,6 +300,14 @@ function updateProject(options: NormalizedSchema): Rule {
     }
 
     return chain([
+      mergeWith(
+        apply(url('./files'), [
+          template({
+            offsetFromRoot: offsetFromRoot(options.projectRoot)
+          }),
+          devkitMove(options.projectRoot)
+        ])
+      ),
       updateJsonInTree(getWorkspacePath(host), json => {
         const project = json.projects[options.name];
         const fixedProject = replaceAppNameWithPath(
@@ -334,7 +347,7 @@ function updateProject(options: NormalizedSchema): Rule {
         json.exclude = json.exclude || [];
         return {
           ...json,
-          extends: `${offsetFromRoot(options.projectRoot)}tsconfig.json`,
+          extends: `./tsconfig.json`,
           compilerOptions: {
             ...json.compilerOptions,
             outDir: `${offsetFromRoot(options.projectRoot)}dist/out-tsc/${
@@ -360,7 +373,7 @@ function updateProject(options: NormalizedSchema): Rule {
       }),
       updateNgPackage(options),
       options.unitTestRunner === 'karma' ? updateKarmaConfig(options) : noop()
-    ])(host, null);
+    ])(host, context);
   };
 }
 
@@ -378,10 +391,19 @@ function updateKarmaConfig(options: NormalizedSchema) {
         )
       );
     },
+    updateJsonInTree(`${options.projectRoot}/tsconfig.json`, json => {
+      return {
+        ...json,
+        compilerOptions: {
+          ...json.compilerOptions,
+          types: [...json.compilerOptions.types, 'jasmine']
+        }
+      };
+    }),
     updateJsonInTree(`${options.projectRoot}/tsconfig.spec.json`, json => {
       return {
         ...json,
-        extends: `${offsetFromRoot(options.projectRoot)}tsconfig.json`,
+        extends: `./tsconfig.json`,
         compilerOptions: {
           ...json.compilerOptions,
           outDir: `${offsetFromRoot(options.projectRoot)}dist/out-tsc/${

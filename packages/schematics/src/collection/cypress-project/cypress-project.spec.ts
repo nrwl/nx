@@ -4,7 +4,7 @@ import { createEmptyWorkspace } from '@nrwl/schematics/src/utils/testing-utils';
 import { readJsonInTree } from '@nrwl/schematics/src/utils/ast-utils';
 import * as path from 'path';
 
-describe('schematic:cypres-project', () => {
+describe('schematic:cypress-project', () => {
   const schematicRunner = new SchematicTestRunner(
     '@nrwl/schematics',
     path.join(__dirname, '../../collection.json')
@@ -123,6 +123,7 @@ describe('schematic:cypres-project', () => {
         'apps/my-app-e2e/tsconfig.e2e.json'
       );
 
+      expect(tsconfigJson.extends).toEqual('./tsconfig.json');
       expect(tsconfigJson.compilerOptions.outDir).toEqual(
         '../../dist/out-tsc/apps/my-app-e2e/src'
       );

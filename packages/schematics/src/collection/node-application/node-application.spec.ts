@@ -97,6 +97,12 @@ describe('node-app', () => {
         'res.send(`Welcome to my-node-app!`);'
       );
 
+      const tsconfig = readJsonInTree(tree, 'apps/my-node-app/tsconfig.json');
+      expect(tsconfig.extends).toEqual('../../tsconfig.json');
+      expect(tsconfig.compilerOptions.types).toContain('node');
+      expect(tsconfig.compilerOptions.types).toContain('express');
+      expect(tsconfig.compilerOptions.types).toContain('jest');
+
       const tsconfigApp = JSON.parse(
         stripJsonComments(
           getFileContent(tree, 'apps/my-node-app/tsconfig.app.json')
@@ -105,7 +111,7 @@ describe('node-app', () => {
       expect(tsconfigApp.compilerOptions.outDir).toEqual(
         '../../dist/out-tsc/apps/my-node-app'
       );
-      expect(tsconfigApp.extends).toEqual('../../tsconfig.json');
+      expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
       const tslintJson = JSON.parse(
         stripJsonComments(getFileContent(tree, 'apps/my-node-app/tslint.json'))
@@ -180,6 +186,11 @@ describe('node-app', () => {
 
       // Make sure these have properties
       [
+        {
+          path: 'apps/my-dir/my-node-app/tsconfig.json',
+          lookupFn: json => json.extends,
+          expectedValue: '../../../tsconfig.json'
+        },
         {
           path: 'apps/my-dir/my-node-app/tsconfig.app.json',
           lookupFn: json => json.compilerOptions.outDir,
