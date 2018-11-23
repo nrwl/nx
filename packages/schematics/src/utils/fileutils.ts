@@ -70,7 +70,7 @@ export function copyFile(file: string, target: string) {
   source.on('error', e => console.error(e));
 }
 
-function directoryExists(name) {
+export function directoryExists(name) {
   try {
     return fs.statSync(name).isDirectory();
   } catch (e) {

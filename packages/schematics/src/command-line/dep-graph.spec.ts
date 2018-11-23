@@ -1,7 +1,13 @@
-import { ProjectType, DependencyType } from './affected-apps';
+import { ProjectType, ProjectNode } from './affected-apps';
 import { createGraphviz, NodeEdgeVariant } from './dep-graph';
+import { DependencyType } from './deps-calculator';
+import * as fs from 'fs';
 
 describe('dep-graph', () => {
+  beforeEach(() => {
+    spyOn(fs, 'writeFileSync');
+  });
+
   describe('getNodeProps', () => {
     const deps = {
       app1: [],
@@ -21,7 +27,7 @@ describe('dep-graph', () => {
       lib3: []
     };
 
-    const projects = [
+    const projects: ProjectNode[] = [
       {
         name: 'app1',
         root: 'apps/app1',
@@ -29,7 +35,8 @@ describe('dep-graph', () => {
         tags: [],
         implicitDependencies: [],
         architect: {},
-        files: []
+        files: [],
+        fileMTimes: {}
       },
       {
         name: 'app2',
@@ -38,7 +45,8 @@ describe('dep-graph', () => {
         tags: [],
         implicitDependencies: [],
         architect: {},
-        files: []
+        files: [],
+        fileMTimes: {}
       },
       {
         name: 'lib1',
@@ -47,7 +55,8 @@ describe('dep-graph', () => {
         tags: [],
         implicitDependencies: [],
         architect: {},
-        files: []
+        files: [],
+        fileMTimes: {}
       },
       {
         name: 'lib2',
@@ -56,7 +65,8 @@ describe('dep-graph', () => {
         tags: [],
         implicitDependencies: [],
         architect: {},
-        files: []
+        files: [],
+        fileMTimes: {}
       },
       {
         name: 'lib3',
@@ -65,7 +75,8 @@ describe('dep-graph', () => {
         tags: [],
         implicitDependencies: [],
         architect: {},
-        files: []
+        files: [],
+        fileMTimes: {}
       }
     ];
 

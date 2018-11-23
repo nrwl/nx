@@ -5,19 +5,16 @@ import {
   AffectedFetcher,
   affectedLibNames,
   affectedProjectNames,
-  dependencies,
-  Dependency,
-  DepGraph,
   ProjectNode,
   ProjectType,
-  touchedProjects,
   affectedProjectNamesWithTarget
 } from './affected-apps';
 import * as fs from 'fs';
-import { statSync } from 'fs';
 import * as appRoot from 'app-root-path';
 import { readJsonFile } from '../utils/fileutils';
 import { YargsAffectedOptions } from './affected';
+import { readDependencies } from './deps-calculator';
+import { touchedProjects } from './touched';
 
 export type ImplicitDependencyEntry = { [key: string]: string[] };
 export type ImplicitDependencies = {
@@ -255,14 +252,27 @@ export function getProjectNodes(angularJson, nxJson): ProjectNode[] {
       implicitDependencies = [key.replace(/-e2e$/, '')];
     }
 
+    const files = allFilesInDir(`${appRoot.path}/${p.root}`);
+
+    const fileMTimes: {
+      [filePath: string]: number;
+    } = files.reduce(
+      (obj, file) => ({
+        ...obj,
+        [file]: mtime(file)
+      }),
+      {}
+    );
+
     return {
       name: key,
       root: p.root,
       type: projectType,
       tags,
       architect: p.architect || {},
-      files: allFilesInDir(`${appRoot.path}/${p.root}`),
-      implicitDependencies
+      files,
+      implicitDependencies,
+      fileMTimes
     };
   });
 }
@@ -296,13 +306,9 @@ export const getAffected = (affectedNamesFetcher: AffectedFetcher) => (
   const nxJson = readNxJson();
   const projects = getProjectNodes(angularJson, nxJson);
   const implicitDeps = getImplicitDependencies(angularJson, nxJson);
-  return affectedNamesFetcher(
-    nxJson.npmScope,
-    projects,
-    implicitDeps,
-    f => fs.readFileSync(`${appRoot.path}/${f}`, 'utf-8'),
-    touchedFiles
-  );
+  const dependencies = readDependencies(nxJson.npmScope, projects);
+  const tp = touchedProjects(implicitDeps, projects, touchedFiles);
+  return affectedNamesFetcher(projects, dependencies, tp);
 };
 
 export function getAffectedProjectsWithTarget(target: string) {
@@ -311,14 +317,6 @@ export function getAffectedProjectsWithTarget(target: string) {
 export const getAffectedApps = getAffected(affectedAppNames);
 export const getAffectedProjects = getAffected(affectedProjectNames);
 export const getAffectedLibs = getAffected(affectedLibNames);
-
-export function getTouchedProjects(touchedFiles: string[]): string[] {
-  const angularJson = readAngularJson();
-  const nxJson = readNxJson();
-  const projects = getProjectNodes(angularJson, nxJson);
-  const implicitDeps = getImplicitDependencies(angularJson, nxJson);
-  return touchedProjects(implicitDeps, projects, touchedFiles).filter(p => !!p);
-}
 
 export function getAllAppNames() {
   const projects = getProjectNodes(readAngularJson(), readNxJson());
@@ -368,77 +366,31 @@ export function allFilesInDir(dirName: string): string[] {
   return res;
 }
 
-export function readDependencies(
-  npmScope: string,
-  projectNodes: ProjectNode[]
-): { [projectName: string]: Dependency[] } {
-  const m = lastModifiedAmongProjectFiles();
-  if (!directoryExists(`${appRoot.path}/dist`)) {
-    fs.mkdirSync(`${appRoot.path}/dist`);
+export function lastModifiedAmongProjectFiles(projects: ProjectNode[]) {
+  return Math.max(
+    ...[
+      ...projects.map(project => getProjectMTime(project)),
+      mtime(`${appRoot.path}/angular.json`),
+      mtime(`${appRoot.path}/nx.json`),
+      mtime(`${appRoot.path}/tslint.json`),
+      mtime(`${appRoot.path}/package.json`)
+    ]
+  );
+}
+
+export function getProjectMTime(project: ProjectNode): number {
+  return Math.max(...Object.values(project.fileMTimes));
+}
+
+/**
+ * Returns the time when file was last modified
+ * Returns -Infinity for a non-existent file
+ */
+export function mtime(filePath: string): number {
+  if (!fs.existsSync(filePath)) {
+    return -Infinity;
   }
-  if (
-    !fileExists(`${appRoot.path}/dist/nxdeps.json`) ||
-    m > mtime(`${appRoot.path}/dist/nxdeps.json`)
-  ) {
-    const deps = dependencies(npmScope, projectNodes, f =>
-      fs.readFileSync(`${appRoot.path}/${f}`, 'UTF-8')
-    );
-    fs.writeFileSync(
-      `${appRoot.path}/dist/nxdeps.json`,
-      JSON.stringify(deps, null, 2),
-      'UTF-8'
-    );
-    return deps;
-  } else {
-    return readJsonFile(`${appRoot.path}/dist/nxdeps.json`);
-  }
-}
-
-export function readDepGraph(): DepGraph {
-  const angularJson = readAngularJson();
-  const nxJson = readNxJson();
-  const projectNodes = getProjectNodes(angularJson, nxJson);
-  return {
-    npmScope: nxJson.npmScope,
-    projects: projectNodes,
-    deps: readDependencies(nxJson.npmScope, projectNodes)
-  };
-}
-
-export function lastModifiedAmongProjectFiles() {
-  return [
-    recursiveMtime(`${appRoot.path}/libs`),
-    recursiveMtime(`${appRoot.path}/apps`),
-    mtime(`${appRoot.path}/angular.json`),
-    mtime(`${appRoot.path}/nx.json`),
-    mtime(`${appRoot.path}/tslint.json`),
-    mtime(`${appRoot.path}/package.json`)
-  ].reduce((a, b) => (a > b ? a : b), 0);
-}
-
-function recursiveMtime(dirName: string) {
-  let res = mtime(dirName);
-  fs.readdirSync(dirName).forEach(c => {
-    const child = path.join(dirName, c);
-    try {
-      if (!fs.statSync(child).isDirectory()) {
-        const c = mtime(child);
-        if (c > res) {
-          res = c;
-        }
-      } else if (fs.statSync(child).isDirectory()) {
-        const c = recursiveMtime(child);
-        if (c > res) {
-          res = c;
-        }
-      }
-    } catch (e) {}
-  });
-  return res;
-}
-
-function mtime(f: string): number {
-  let fd = fs.openSync(f, 'r');
+  let fd = fs.openSync(filePath, 'r');
   try {
     return fs.fstatSync(fd).mtime.getTime();
   } finally {
@@ -448,22 +400,6 @@ function mtime(f: string): number {
 
 function normalizePath(file: string): string {
   return file.split(path.sep).join('/');
-}
-
-function directoryExists(filePath: string): boolean {
-  try {
-    return statSync(filePath).isDirectory();
-  } catch (err) {
-    return false;
-  }
-}
-
-function fileExists(filePath: string): boolean {
-  try {
-    return statSync(filePath).isFile();
-  } catch (err) {
-    return false;
-  }
 }
 
 export function normalizedProjectRoot(p: ProjectNode): string {

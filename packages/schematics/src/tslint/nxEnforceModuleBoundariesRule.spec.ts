@@ -1,15 +1,16 @@
 import { RuleFailure } from 'tslint';
 import * as ts from 'typescript';
+import * as fs from 'fs';
 
 import { Rule } from './nxEnforceModuleBoundariesRule';
-import {
-  Dependency,
-  DependencyType,
-  ProjectNode,
-  ProjectType
-} from '../command-line/affected-apps';
+import { ProjectNode, ProjectType } from '../command-line/affected-apps';
+import { DependencyType, Dependency } from '../command-line/deps-calculator';
 
 describe('Enforce Module Boundaries', () => {
+  beforeEach(() => {
+    spyOn(fs, 'writeFileSync');
+  });
+
   it('should not error when everything is in order', () => {
     const failures = runRule(
       { allow: ['@mycompany/mylib/deep'] },
@@ -27,7 +28,11 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: [`apps/myapp/src/main.ts`, `apps/myapp/blah.ts`]
+          files: [`apps/myapp/src/main.ts`, `apps/myapp/blah.ts`],
+          fileMTimes: {
+            'apps/myapp/src/main.ts': 0,
+            'apps/myapp/blah.ts': 1
+          }
         },
         {
           name: 'mylibName',
@@ -36,7 +41,11 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: [`libs/mylib/src/index.ts`, `libs/mylib/src/deep.ts`]
+          files: [`libs/mylib/src/index.ts`, `libs/mylib/src/deep.ts`],
+          fileMTimes: {
+            'apps/mylib/src/index.ts': 0,
+            'apps/mylib/src/deep.ts': 1
+          }
         }
       ]
     );
@@ -59,7 +68,11 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: [`apps/myapp/src/main.ts`, `apps/myapp/src/blah.ts`]
+          files: [`apps/myapp/src/main.ts`, `apps/myapp/src/blah.ts`],
+          fileMTimes: {
+            'apps/myapp/src/main.ts': 0,
+            'apps/myapp/src/blah.ts': 1
+          }
         },
         {
           name: 'myapp2Name',
@@ -68,7 +81,8 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: []
+          files: [],
+          fileMTimes: {}
         },
         {
           name: 'myapp2-mylib',
@@ -77,7 +91,10 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: ['libs/myapp2/mylib/src/index.ts']
+          files: ['libs/myapp2/mylib/src/index.ts'],
+          fileMTimes: {
+            'libs/myapp2/mylib/src/index.ts': 1
+          }
         }
       ]
     );
@@ -94,7 +111,10 @@ describe('Enforce Module Boundaries', () => {
         tags: ['api', 'domain1'],
         implicitDependencies: [],
         architect: {},
-        files: [`libs/api/src/index.ts`]
+        files: [`libs/api/src/index.ts`],
+        fileMTimes: {
+          'libs/api/src/index.ts': 1
+        }
       },
       {
         name: 'implName',
@@ -103,7 +123,10 @@ describe('Enforce Module Boundaries', () => {
         tags: ['impl', 'domain1'],
         implicitDependencies: [],
         architect: {},
-        files: [`libs/impl/src/index.ts`]
+        files: [`libs/impl/src/index.ts`],
+        fileMTimes: {
+          'libs/impl/src/index.ts': 1
+        }
       },
       {
         name: 'impl2Name',
@@ -112,7 +135,10 @@ describe('Enforce Module Boundaries', () => {
         tags: ['impl', 'domain1'],
         implicitDependencies: [],
         architect: {},
-        files: [`libs/impl2/src/index.ts`]
+        files: [`libs/impl2/src/index.ts`],
+        fileMTimes: {
+          'libs/impl2/src/index.ts': 1
+        }
       },
       {
         name: 'impl-domain2Name',
@@ -121,7 +147,10 @@ describe('Enforce Module Boundaries', () => {
         tags: ['impl', 'domain2'],
         implicitDependencies: [],
         architect: {},
-        files: [`libs/impl-domain2/src/index.ts`]
+        files: [`libs/impl-domain2/src/index.ts`],
+        fileMTimes: {
+          'libs/impl-domain2/src/index.ts': 1
+        }
       },
       {
         name: 'impl-both-domainsName',
@@ -130,7 +159,10 @@ describe('Enforce Module Boundaries', () => {
         tags: ['impl', 'domain1', 'domain2'],
         implicitDependencies: [],
         architect: {},
-        files: [`libs/impl-both-domains/src/index.ts`]
+        files: [`libs/impl-both-domains/src/index.ts`],
+        fileMTimes: {
+          'libs/impl-both-domains/src/index.ts': 1
+        }
       },
       {
         name: 'untaggedName',
@@ -139,7 +171,10 @@ describe('Enforce Module Boundaries', () => {
         tags: [],
         implicitDependencies: [],
         architect: {},
-        files: [`libs/untagged/src/index.ts`]
+        files: [`libs/untagged/src/index.ts`],
+        fileMTimes: {
+          'libs/untagged/src/index.ts': 1
+        }
       }
     ];
 
@@ -281,7 +316,11 @@ describe('Enforce Module Boundaries', () => {
             tags: [],
             implicitDependencies: [],
             architect: {},
-            files: [`libs/mylib/src/main.ts`, `libs/mylib/other.ts`]
+            files: [`libs/mylib/src/main.ts`, `libs/mylib/other.ts`],
+            fileMTimes: {
+              'libs/mylib/src/main.ts': 1,
+              'libs/mylib/other.ts': 1
+            }
           }
         ]
       );
@@ -301,7 +340,11 @@ describe('Enforce Module Boundaries', () => {
             tags: [],
             implicitDependencies: [],
             architect: {},
-            files: [`libs/mylib/src/main.ts`, `libs/mylib/other/index.ts`]
+            files: [`libs/mylib/src/main.ts`, `libs/mylib/other/index.ts`],
+            fileMTimes: {
+              'libs/mylib/src/main.ts': 1,
+              'libs/mylib/other/index.ts': 1
+            }
           }
         ]
       );
@@ -321,7 +364,10 @@ describe('Enforce Module Boundaries', () => {
             tags: [],
             implicitDependencies: [],
             architect: {},
-            files: [`libs/mylib/src/main.ts`]
+            files: [`libs/mylib/src/main.ts`],
+            fileMTimes: {
+              'libs/mylib/src/main.ts': 1
+            }
           },
           {
             name: 'otherName',
@@ -330,7 +376,10 @@ describe('Enforce Module Boundaries', () => {
             tags: [],
             implicitDependencies: [],
             architect: {},
-            files: ['libs/other/src/index.ts']
+            files: ['libs/other/src/index.ts'],
+            fileMTimes: {
+              'libs/other/src/main.ts': 1
+            }
           }
         ]
       );
@@ -353,7 +402,11 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: [`libs/mylib/src/main.ts`, `libs/mylib/src/other.ts`]
+          files: [`libs/mylib/src/main.ts`, `libs/mylib/src/other.ts`],
+          fileMTimes: {
+            'libs/mylib/src/main.ts': 1,
+            'libs/mylib/src/other/index.ts': 1
+          }
         }
       ]
     );
@@ -380,7 +433,11 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: [`libs/mylib/src/main.ts`, `libs/mylib/src/another-file.ts`]
+          files: [`libs/mylib/src/main.ts`, `libs/mylib/src/another-file.ts`],
+          fileMTimes: {
+            'libs/mylib/src/main.ts': 1,
+            'libs/mylib/src/another-file.ts': 1
+          }
         },
         {
           name: 'otherName',
@@ -389,7 +446,10 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: [`libs/other/src/blah.ts`]
+          files: [`libs/other/src/blah.ts`],
+          fileMTimes: {
+            'libs/other/src/blah.ts': 1
+          }
         },
         {
           name: 'otherSublibName',
@@ -398,7 +458,10 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: [`libs/other/sublib/src/blah.ts`]
+          files: [`libs/other/sublib/src/blah.ts`],
+          fileMTimes: {
+            'libs/other/sublib/src/blah.ts': 1
+          }
         }
       ]
     );
@@ -423,7 +486,10 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: [`libs/mylib/src/main.ts`]
+          files: [`libs/mylib/src/main.ts`],
+          fileMTimes: {
+            'libs/mylib/src/main.ts': 1
+          }
         },
         {
           name: 'otherName',
@@ -432,7 +498,10 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: [`libs/other/index.ts`]
+          files: [`libs/other/index.ts`],
+          fileMTimes: {
+            'libs/other/index.ts': 1
+          }
         }
       ],
       {
@@ -459,7 +528,10 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: [`libs/mylib/src/main.ts`]
+          files: [`libs/mylib/src/main.ts`],
+          fileMTimes: {
+            'libs/mylib/src/main.ts': 1
+          }
         },
         {
           name: 'myappName',
@@ -468,7 +540,10 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: [`apps/myapp/src/index.ts`]
+          files: [`apps/myapp/src/index.ts`],
+          fileMTimes: {
+            'apps/myapp/src/index.ts': 1
+          }
         }
       ]
     );
@@ -488,7 +563,10 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: [`libs/mylib/src/main.ts`]
+          files: [`libs/mylib/src/main.ts`],
+          fileMTimes: {
+            'libs/mylib/src/main.ts': 1
+          }
         },
         {
           name: 'anotherlibName',
@@ -497,7 +575,10 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: [`libs/anotherlib/src/main.ts`]
+          files: [`libs/anotherlib/src/main.ts`],
+          fileMTimes: {
+            'libs/anotherlib/src/main.ts': 1
+          }
         },
         {
           name: 'myappName',
@@ -506,7 +587,10 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: [`apps/myapp/src/index.ts`]
+          files: [`apps/myapp/src/index.ts`],
+          fileMTimes: {
+            'apps/myapp/src/index.ts': 1
+          }
         }
       ],
       {
@@ -533,7 +617,10 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: [`libs/mylib/src/main.ts`]
+          files: [`libs/mylib/src/main.ts`],
+          fileMTimes: {
+            'libs/mylib/src/main.ts': 1
+          }
         },
         {
           name: 'anotherlibName',
@@ -542,7 +629,10 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: [`libs/anotherlib/src/main.ts`]
+          files: [`libs/anotherlib/src/main.ts`],
+          fileMTimes: {
+            'libs/mylib/src/main.ts': 1
+          }
         },
         {
           name: 'badcirclelibName',
@@ -551,7 +641,10 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: [`libs/badcirclelib/src/main.ts`]
+          files: [`libs/badcirclelib/src/main.ts`],
+          fileMTimes: {
+            'libs/badcirclelib/src/main.ts': 1
+          }
         },
         {
           name: 'myappName',
@@ -560,7 +653,10 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: [`apps/myapp/index.ts`]
+          files: [`apps/myapp/index.ts`],
+          fileMTimes: {
+            'apps/myapp/index.ts': 1
+          }
         }
       ],
       {

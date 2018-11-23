@@ -1,8 +1,9 @@
 import { execSync } from 'child_process';
 import * as path from 'path';
 import * as resolve from 'resolve';
-import { getProjectRoots, getTouchedProjects, parseFiles } from './shared';
+import { getProjectRoots, parseFiles } from './shared';
 import { YargsAffectedOptions } from './affected';
+import { getTouchedProjects } from './touched';
 
 export interface YargsFormatOptions extends YargsAffectedOptions {
   libsAndApps?: boolean;

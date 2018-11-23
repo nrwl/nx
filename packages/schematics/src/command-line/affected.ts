@@ -1,4 +1,10 @@
 import { execSync } from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as resolve from 'resolve';
+import * as runAll from 'npm-run-all';
+import * as yargs from 'yargs';
+
 import {
   getAffectedApps,
   getAffectedLibs,
@@ -7,19 +13,14 @@ import {
   getAllLibNames,
   getAllProjectNames,
   parseFiles,
-  readDepGraph,
   getAllProjectNamesWithTarget,
   getAffectedProjectsWithTarget
 } from './shared';
-import * as path from 'path';
-import * as resolve from 'resolve';
-import * as runAll from 'npm-run-all';
 import { generateGraph } from './dep-graph';
-import { DepGraph, ProjectNode } from './affected-apps';
+import { ProjectNode } from './affected-apps';
 import { GlobalNxArgs } from './nx';
-import * as yargs from 'yargs';
 import { WorkspaceResults } from './workspace-results';
-import * as fs from 'fs';
+import { readDepGraph, DepGraph } from './deps-calculator';
 
 export interface YargsAffectedOptions
   extends yargs.Arguments,
@@ -58,44 +59,52 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
 
   try {
     if (parsedArgs.all) {
-      apps = getAllAppNames()
-        .filter(app => !parsedArgs.exclude.includes(app))
-        .filter(
-          project =>
-            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
-        );
-      libs = getAllLibNames()
-        .filter(app => !parsedArgs.exclude.includes(app))
-        .filter(
-          project =>
-            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
-        );
-      projects = getAllProjectNames()
-        .filter(project => !parsedArgs.exclude.includes(project))
-        .filter(
-          project =>
-            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
-        );
+      if (target === 'apps') {
+        apps = getAllAppNames()
+          .filter(app => !parsedArgs.exclude.includes(app))
+          .filter(
+            project =>
+              !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+          );
+      } else if (target === 'libs') {
+        libs = getAllLibNames()
+          .filter(app => !parsedArgs.exclude.includes(app))
+          .filter(
+            project =>
+              !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+          );
+      } else {
+        projects = getAllProjectNames()
+          .filter(project => !parsedArgs.exclude.includes(project))
+          .filter(
+            project =>
+              !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+          );
+      }
     } else {
       const p = parseFiles(parsedArgs);
-      apps = getAffectedApps(p.files)
-        .filter(project => !parsedArgs.exclude.includes(project))
-        .filter(
-          project =>
-            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
-        );
-      libs = getAffectedLibs(p.files)
-        .filter(project => !parsedArgs.exclude.includes(project))
-        .filter(
-          project =>
-            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
-        );
-      projects = getAffectedProjects(p.files)
-        .filter(project => !parsedArgs.exclude.includes(project))
-        .filter(
-          project =>
-            !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
-        );
+      if (target === 'apps') {
+        apps = getAffectedApps(p.files)
+          .filter(project => !parsedArgs.exclude.includes(project))
+          .filter(
+            project =>
+              !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+          );
+      } else if (target === 'libs') {
+        libs = getAffectedLibs(p.files)
+          .filter(project => !parsedArgs.exclude.includes(project))
+          .filter(
+            project =>
+              !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+          );
+      } else {
+        projects = getAffectedProjects(p.files)
+          .filter(project => !parsedArgs.exclude.includes(project))
+          .filter(
+            project =>
+              !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+          );
+      }
     }
   } catch (e) {
     printError(e);

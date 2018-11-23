@@ -1,10 +1,5 @@
 import { existsSync, writeFileSync } from 'fs';
-import { dependencies } from '../../src/command-line/affected-apps';
-import {
-  readJsonFile,
-  serializeJson,
-  updateJsonFile
-} from '../../src/utils/fileutils';
+import { readJsonFile, serializeJson } from '../../src/utils/fileutils';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 export default {

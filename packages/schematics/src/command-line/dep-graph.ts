@@ -1,21 +1,18 @@
 import { writeToFile } from '../utils/fileutils';
 import * as graphviz from 'graphviz';
-import * as appRoot from 'app-root-path';
 import * as opn from 'opn';
-import { readFileSync } from 'fs';
-import {
-  ProjectNode,
-  ProjectType,
-  dependencies,
-  Deps,
-  Dependency,
-  DependencyType
-} from './affected-apps';
+import { ProjectNode, ProjectType } from './affected-apps';
 import * as yargs from 'yargs';
 
 import { getProjectNodes, readAngularJson, readNxJson } from './shared';
 import * as path from 'path';
 import { tmpNameSync } from 'tmp';
+import {
+  Deps,
+  DependencyType,
+  Dependency,
+  readDependencies
+} from './deps-calculator';
 
 const viz = require('viz.js'); // typings are incorrect in viz.js library - need to use `require`
 
@@ -229,7 +226,7 @@ export function createGraphviz(
       g.addNode(key, getNodeProps(config.nodes, projectNode, criticalPath));
 
       if (dependencies.length > 0) {
-        dependencies.forEach((dep: Dependency, i: number) => {
+        dependencies.forEach((dep: Dependency) => {
           g.addNode(
             dep.projectName,
             getNodeProps(
@@ -286,9 +283,7 @@ function generateGraphJson(criticalPath?: string[]): JSONOutput {
   const projects: ProjectNode[] = getProjectNodes(angularJson, nxJson);
 
   // fetch all apps and libs
-  const deps = dependencies(npmScope, projects, f =>
-    readFileSync(`${appRoot.path}/${f}`, 'utf-8')
-  );
+  const deps = readDependencies(npmScope, projects);
 
   return {
     deps,
