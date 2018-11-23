@@ -403,10 +403,12 @@ function updateTsConfig(options: NormalizedSchema): Rule {
 }
 
 function updateLibPackageNpmScope(options: NormalizedSchema): Rule {
-  return updateJsonInTree(`${options.projectRoot}/package.json`, json => {
-    json.name = `@${options.prefix}/${options.name}`;
-    return json;
-  });
+  return (host: Tree) => {
+    return updateJsonInTree(`${options.projectRoot}/package.json`, json => {
+      json.name = `@${getNpmScope(host)}/${options.name}`;
+      return json;
+    });
+  };
 }
 
 function addModule(options: NormalizedSchema): Rule {
