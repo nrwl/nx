@@ -44,6 +44,11 @@
       "version": "7.1.0",
       "description": "Add generic affected command",
       "factory": "./update-7-1-0/update-7-1-0"
+    },
+    "update-7.2.0": {
+      "version": "7.2.0",
+      "description": "Create tsconfig.jsons in project roots",
+      "factory": "./update-7-2-0/update-7-2-0"
     }
   }
 }

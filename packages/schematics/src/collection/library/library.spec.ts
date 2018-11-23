@@ -105,7 +105,7 @@ describe('lib', () => {
       });
     });
 
-    it('should update tsconfig.json', () => {
+    it('should update root tsconfig.json', () => {
       const tree = schematicRunner.runSchematic(
         'lib',
         { name: 'myLib' },
@@ -115,6 +115,51 @@ describe('lib', () => {
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
         'libs/my-lib/src/index.ts'
       ]);
+    });
+
+    it('should create a local tsconfig.json', () => {
+      const tree = schematicRunner.runSchematic(
+        'lib',
+        { name: 'myLib' },
+        appTree
+      );
+
+      const tsconfigJson = readJsonInTree(tree, 'libs/my-lib/tsconfig.json');
+      expect(tsconfigJson).toEqual({
+        extends: '../../tsconfig.json',
+        compilerOptions: {
+          types: ['jasmine']
+        },
+        include: ['**/*.ts']
+      });
+    });
+
+    it('should extend the local tsconfig.json with tsconfig.spec.json', () => {
+      const tree = schematicRunner.runSchematic(
+        'lib',
+        { name: 'myLib' },
+        appTree
+      );
+
+      const tsconfigJson = readJsonInTree(
+        tree,
+        'libs/my-lib/tsconfig.spec.json'
+      );
+      expect(tsconfigJson.extends).toEqual('./tsconfig.json');
+    });
+
+    it('should extend the local tsconfig.json with tsconfig.lib.json', () => {
+      const tree = schematicRunner.runSchematic(
+        'lib',
+        { name: 'myLib' },
+        appTree
+      );
+
+      const tsconfigJson = readJsonInTree(
+        tree,
+        'libs/my-lib/tsconfig.lib.json'
+      );
+      expect(tsconfigJson.extends).toEqual('./tsconfig.json');
     });
 
     it('should generate files', () => {
@@ -333,6 +378,26 @@ describe('lib', () => {
       expect(
         tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
       ).toBeUndefined();
+    });
+
+    it('should create a local tsconfig.json', () => {
+      const tree = schematicRunner.runSchematic(
+        'lib',
+        { name: 'myLib', directory: 'myDir' },
+        appTree
+      );
+
+      const tsconfigJson = readJsonInTree(
+        tree,
+        'libs/my-dir/my-lib/tsconfig.json'
+      );
+      expect(tsconfigJson).toEqual({
+        extends: '../../../tsconfig.json',
+        compilerOptions: {
+          types: ['jasmine']
+        },
+        include: ['**/*.ts']
+      });
     });
 
     it('should not generate a module for --module false', () => {

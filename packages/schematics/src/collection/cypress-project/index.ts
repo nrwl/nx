@@ -19,7 +19,6 @@ import {
   updateJsonInTree
 } from '../../utils/ast-utils';
 import { cypressVersion, nxVersion } from '../../lib-versions';
-import { replaceAppNameWithPath } from '../../utils/cli-config-utils';
 import { offsetFromRoot } from '../../utils/common';
 import { Schema } from '../application/schema';
 
@@ -107,6 +106,21 @@ function generateFiles(options: CypressProjectSchema): Rule {
   };
 }
 
+function updateTsConfig(options: CypressProjectSchema): Rule {
+  return updateJsonInTree(
+    join(normalize(options.e2eProjectRoot), 'tsconfig.json'),
+    json => {
+      return {
+        ...json,
+        compilerOptions: {
+          ...json.compilerOptions,
+          types: [...json.compilerOptions.types, 'cypress']
+        }
+      };
+    }
+  );
+}
+
 function updateAngularJson(options: CypressProjectSchema): Rule {
   return updateJsonInTree('angular.json', json => {
     const projectConfig = json.projects[options.e2eProjectName];
@@ -139,6 +153,7 @@ export default function(options: CypressProjectSchema): Rule {
     checkArchitectTarget(options),
     checkDependenciesInstalled(),
     updateAngularJson(options),
+    updateTsConfig(options),
     generateFiles(options)
   ]);
 }

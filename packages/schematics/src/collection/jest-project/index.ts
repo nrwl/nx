@@ -45,6 +45,21 @@ function generateFiles(options: JestProjectSchema): Rule {
   };
 }
 
+function updateTsConfig(options: JestProjectSchema): Rule {
+  return (host: Tree, context: SchematicContext) => {
+    const projectConfig = getProjectConfig(host, options.project);
+    return updateJsonInTree(join(projectConfig.root, 'tsconfig.json'), json => {
+      return {
+        ...json,
+        compilerOptions: {
+          ...json.compilerOptions,
+          types: [...json.compilerOptions.types, 'node', 'jest']
+        }
+      };
+    });
+  };
+}
+
 function updateAngularJson(options: JestProjectSchema): Rule {
   return updateJsonInTree('angular.json', json => {
     const projectConfig = json.projects[options.project];
@@ -90,6 +105,7 @@ export default function(options: JestProjectSchema): Rule {
   return chain([
     check(options),
     generateFiles(options),
+    updateTsConfig(options),
     updateAngularJson(options)
   ]);
 }

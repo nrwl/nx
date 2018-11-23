@@ -5,7 +5,12 @@ import {
   Rule,
   Tree,
   SchematicContext,
-  schematic
+  schematic,
+  mergeWith,
+  apply,
+  template,
+  move as devkitMove,
+  url
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as ts from 'typescript';
@@ -153,6 +158,27 @@ Nx is designed to help you create and build enterprise grade Angular application
   };
 }
 
+function addTsconfigs(options: NormalizedSchema): Rule {
+  return chain([
+    mergeWith(
+      apply(url('./files'), [
+        template({
+          offsetFromRoot: offsetFromRoot(options.appProjectRoot)
+        }),
+        devkitMove(options.appProjectRoot)
+      ])
+    ),
+    mergeWith(
+      apply(url('./files'), [
+        template({
+          offsetFromRoot: offsetFromRoot(options.e2eProjectRoot)
+        }),
+        devkitMove(options.e2eProjectRoot)
+      ])
+    )
+  ]);
+}
+
 function updateProject(options: NormalizedSchema): Rule {
   return (host: Tree) => {
     return chain([
@@ -193,7 +219,7 @@ function updateProject(options: NormalizedSchema): Rule {
       updateJsonInTree(`${options.appProjectRoot}/tsconfig.app.json`, json => {
         return {
           ...json,
-          extends: `${offsetFromRoot(options.appProjectRoot)}tsconfig.json`,
+          extends: `./tsconfig.json`,
           compilerOptions: {
             ...json.compilerOptions,
             outDir: `${offsetFromRoot(options.appProjectRoot)}dist/out-tsc/${
@@ -208,23 +234,35 @@ function updateProject(options: NormalizedSchema): Rule {
         };
       }),
       options.unitTestRunner === 'karma'
-        ? updateJsonInTree(
-            `${options.appProjectRoot}/tsconfig.spec.json`,
-            json => {
-              return {
-                ...json,
-                extends: `${offsetFromRoot(
-                  options.appProjectRoot
-                )}tsconfig.json`,
-                compilerOptions: {
-                  ...json.compilerOptions,
-                  outDir: `${offsetFromRoot(
-                    options.appProjectRoot
-                  )}dist/out-tsc/${options.appProjectRoot}`
-                }
-              };
-            }
-          )
+        ? chain([
+            updateJsonInTree(
+              `${options.appProjectRoot}/tsconfig.json`,
+              json => {
+                return {
+                  ...json,
+                  compilerOptions: {
+                    ...json.compilerOptions,
+                    types: [...json.compilerOptions.types, 'jasmine']
+                  }
+                };
+              }
+            ),
+            updateJsonInTree(
+              `${options.appProjectRoot}/tsconfig.spec.json`,
+              json => {
+                return {
+                  ...json,
+                  extends: `./tsconfig.json`,
+                  compilerOptions: {
+                    ...json.compilerOptions,
+                    outDir: `${offsetFromRoot(
+                      options.appProjectRoot
+                    )}dist/out-tsc/${options.appProjectRoot}`
+                  }
+                };
+              }
+            )
+          ])
         : host => {
             host.delete(`${options.appProjectRoot}/tsconfig.spec.json`);
             return host;
@@ -271,7 +309,7 @@ function updateProject(options: NormalizedSchema): Rule {
           host.delete(`${options.e2eProjectRoot}/protractor.conf.js`);
         }
       }
-    ])(host, null);
+    ]);
   };
 }
 
@@ -302,10 +340,19 @@ function updateE2eProject(options: NormalizedSchema): Rule {
         json.projects[options.e2eProjectName] = project;
         return json;
       }),
+      updateJsonInTree(`${options.e2eProjectRoot}/tsconfig.json`, json => {
+        return {
+          ...json,
+          compilerOptions: {
+            ...json.compilerOptions,
+            types: [...json.compilerOptions.types, 'jasmine', 'jasminewd2']
+          }
+        };
+      }),
       updateJsonInTree(`${options.e2eProjectRoot}/tsconfig.e2e.json`, json => {
         return {
           ...json,
-          extends: `${offsetFromRoot(options.e2eProjectRoot)}tsconfig.json`,
+          extends: `./tsconfig.json`,
           compilerOptions: {
             ...json.compilerOptions,
             outDir: `${offsetFromRoot(options.e2eProjectRoot)}dist/out-tsc/${
@@ -314,7 +361,7 @@ function updateE2eProject(options: NormalizedSchema): Rule {
           }
         };
       })
-    ])(host, null);
+    ]);
   };
 }
 
@@ -343,6 +390,7 @@ export default function(schema: Schema): Rule {
         viewEncapsulation: options.viewEncapsulation,
         routing: false
       }),
+      addTsconfigs(options),
 
       move(e2eProjectRoot, options.e2eProjectRoot),
 

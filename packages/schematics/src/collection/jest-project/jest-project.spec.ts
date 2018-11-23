@@ -77,6 +77,19 @@ describe('lib', () => {
 `);
   });
 
+  it('should update the local tsconfig.json', () => {
+    const resultTree = schematicRunner.runSchematic(
+      'jest-project',
+      {
+        project: 'lib1'
+      },
+      appTree
+    );
+    const tsConfig = readJsonInTree(resultTree, 'libs/lib1/tsconfig.json');
+    expect(tsConfig.compilerOptions.types).toContain('jest');
+    expect(tsConfig.compilerOptions.types).toContain('node');
+  });
+
   it('should create a tsconfig.spec.json', () => {
     const resultTree = schematicRunner.runSchematic(
       'jest-project',
@@ -87,7 +100,7 @@ describe('lib', () => {
     );
     const tsConfig = readJsonInTree(resultTree, 'libs/lib1/tsconfig.spec.json');
     expect(tsConfig).toEqual({
-      extends: '../../tsconfig.json',
+      extends: './tsconfig.json',
       compilerOptions: {
         module: 'commonjs',
         outDir: '../../dist/out-tsc/libs/lib1',
