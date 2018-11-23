@@ -7,15 +7,14 @@ import {
   getProjectNodes,
   normalizedProjectRoot,
   readAngularJson,
-  readDependencies,
   readNxJson
 } from '../command-line/shared';
+import { ProjectNode, ProjectType } from '../command-line/affected-apps';
 import {
   Dependency,
   DependencyType,
-  ProjectNode,
-  ProjectType
-} from '../command-line/affected-apps';
+  readDependencies
+} from '../command-line/deps-calculator';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(

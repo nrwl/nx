@@ -22,7 +22,10 @@ describe('WorkspaceIntegrityChecks', () => {
             tags: [],
             implicitDependencies: [],
             architect: {},
-            files: ['libs/project1/src/index.ts']
+            files: ['libs/project1/src/index.ts'],
+            fileMTimes: {
+              'libs/project1/src/index.ts': 1
+            }
           }
         ],
         ['libs/project1/src/index.ts'],
@@ -41,7 +44,8 @@ describe('WorkspaceIntegrityChecks', () => {
             tags: [],
             implicitDependencies: [],
             architect: {},
-            files: []
+            files: [],
+            fileMTimes: {}
           },
           {
             name: 'project2',
@@ -50,7 +54,10 @@ describe('WorkspaceIntegrityChecks', () => {
             tags: [],
             implicitDependencies: [],
             architect: {},
-            files: ['libs/project2/src/index.ts']
+            files: ['libs/project2/src/index.ts'],
+            fileMTimes: {
+              'libs/project2/src/index.ts': 1
+            }
           }
         ],
         ['libs/project2/src/index.ts'],
@@ -71,6 +78,9 @@ describe('WorkspaceIntegrityChecks', () => {
             name: 'project1',
             type: ProjectType.lib,
             root: 'libs/project1',
+            fileMTimes: {
+              'libs/project1/src/index.ts': 1
+            },
             tags: [],
             implicitDependencies: [],
             architect: {},
