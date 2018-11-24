@@ -58,8 +58,14 @@ export function replaceAppNameWithPath(
   } else if (Array.isArray(node)) {
     return node.map(j => replaceAppNameWithPath(j, appName, root));
   } else if (typeof node === 'object' && node) {
+    const forbiddenPropertyList: string[] = ['prefix']; // Some of the properties should not be renamed
     return Object.keys(node).reduce(
-      (m, c) => ((m[c] = replaceAppNameWithPath(node[c], appName, root)), m),
+      (m, c) => (
+        (m[c] = !forbiddenPropertyList.includes(c)
+          ? replaceAppNameWithPath(node[c], appName, root)
+          : node[c]),
+        m
+      ),
       {} as any
     );
   } else {
