@@ -407,5 +407,16 @@ describe('app', () => {
         angularJson.projects['ui']['architect']['build']['builder']
       ).toEqual('@angular-devkit/build-angular:browser');
     });
+
+    it('should protect `angular.json` sensible properties value to be renamed', () => {
+      const tree = schematicRunner.runSchematic(
+        'app',
+        { name: 'ui', prefix: 'ui' },
+        appTree
+      );
+
+      const angularJson = readJsonInTree(tree, 'angular.json');
+      expect(angularJson.projects['ui'].prefix).toEqual('ui');
+    });
   });
 });
