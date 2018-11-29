@@ -358,7 +358,7 @@ export function allFilesInDir(dirName: string): string[] {
       try {
         if (!fs.statSync(child).isDirectory()) {
           // add starting with "apps/myapp/..." or "libs/mylib/..."
-          res.push(normalizePath(child.substring(appRoot.path.length + 1)));
+          res.push(normalizePath(path.relative(appRoot.path, child)));
         } else if (fs.statSync(child).isDirectory()) {
           res = [...res, ...allFilesInDir(child)];
         }
