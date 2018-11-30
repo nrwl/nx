@@ -406,4 +406,18 @@ describe('Update 7.2.0', () => {
       expect(tsConfig.compilerOptions.module).toEqual('es2015');
     });
   });
+
+  it('should update @ngrx dependencies to 6.1.2', async () => {
+    const result = await schematicRunner
+      .runSchematicAsync('update-7.2.0', {}, initialTree)
+      .toPromise();
+
+    const { devDependencies } = JSON.parse(result.readContent('package.json'));
+
+    expect(devDependencies['@ngrx/effects']).toEqual('6.1.2');
+    expect(devDependencies['@ngrx/router-store']).toEqual('6.1.2');
+    expect(devDependencies['@ngrx/schematics']).toEqual('6.1.2');
+    expect(devDependencies['@ngrx/store']).toEqual('6.1.2');
+    expect(devDependencies['@ngrx/store-devtools']).toEqual('6.1.2');
+  });
 });

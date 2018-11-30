@@ -177,6 +177,19 @@ const updateAngularCLI = externalSchematic('@schematics/update', 'update', {
 
 export default function(): Rule {
   return chain([
+    updateJsonInTree('package.json', json => {
+      json.devDependencies = json.devDependencies || {};
+      json.devDependencies = {
+        ...json.devDependencies,
+        '@ngrx/effects': '6.1.2',
+        '@ngrx/router-store': '6.1.2',
+        '@ngrx/schematics': '6.1.2',
+        '@ngrx/store': '6.1.2',
+        '@ngrx/store-devtools': '6.1.2'
+      };
+
+      return json;
+    }),
     switchToEs2015,
     updateProjects,
     displayInformation,
