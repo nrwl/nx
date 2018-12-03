@@ -16,12 +16,10 @@ describe('workspace-schematic', () => {
     appTree = createEmptyWorkspace(appTree);
   });
 
-  it('should generate files', () => {
-    const tree = schematicRunner.runSchematic(
-      'workspace-schematic',
-      { name: 'custom' },
-      appTree
-    );
+  it('should generate files', async () => {
+    const tree = await schematicRunner
+      .runSchematicAsync('workspace-schematic', { name: 'custom' }, appTree)
+      .toPromise();
     expect(tree.exists('tools/schematics/custom/index.ts')).toBeTruthy();
     expect(tree.exists('tools/schematics/custom/schema.json')).toBeTruthy();
   });

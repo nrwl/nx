@@ -5,10 +5,10 @@ _[Please make sure you have read the submission guidelines before posting an iss
 Please answer the following questions for yourself before submitting an issue.
 **YOU MAY DELETE THE PREREQUISITES SECTION.**
 
-* [ ] I am running the latest version
-* [ ] I checked the documentation and found no answer
-* [ ] I checked to make sure that this issue has not already been filed
-* [ ] I'm reporting the issue to the correct repository (not related to Angular, AngularCLI or any dependency)
+- [ ] I am running the latest version
+- [ ] I checked the documentation and found no answer
+- [ ] I checked to make sure that this issue has not already been filed
+- [ ] I'm reporting the issue to the correct repository (not related to Angular, AngularCLI or any dependency)
 
 ## Expected Behavior
 
@@ -34,12 +34,12 @@ Please provide detailed steps for reproducing the issue.
 
 Please provide any relevant information about your setup:
 
-* version of Nx used
-* version of Angular CLI used
-* `angular.json` configuration
-* version of Angular DevKit used
-* 3rd-party libraries and their versions
-* and most importantly - a use-case that fails
+- version of Nx used
+- version of Angular CLI used
+- `angular.json` configuration
+- version of Angular DevKit used
+- 3rd-party libraries and their versions
+- and most importantly - a use-case that fails
 
 **A minimal reproduce scenario using allows us to quickly confirm a bug (or point out coding problem) as well as confirm that we are fixing the right problem.**
 

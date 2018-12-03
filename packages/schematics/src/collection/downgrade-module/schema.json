@@ -18,8 +18,7 @@
     },
     "angularJsImport": {
       "type": "string",
-      "description":
-        "Import expression of the AngularJS application (e.g., --angularJsImport=some_node_module/my_app)."
+      "description": "Import expression of the AngularJS application (e.g., --angularJsImport=some_node_module/my_app)."
     },
     "skipFormat": {
       "description": "Skip formatting files",
@@ -29,8 +28,7 @@
     "skipPackageJson": {
       "type": "boolean",
       "default": false,
-      "description":
-        "Do not add @angular/upgrade to package.json (e.g., --skipPackageJson)"
+      "description": "Do not add @angular/upgrade to package.json (e.g., --skipPackageJson)"
     }
   },
   "required": ["project"]

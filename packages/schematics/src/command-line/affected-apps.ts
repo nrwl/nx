@@ -91,12 +91,10 @@ function hasDependencyOnTouchedProjects(
     deps[project]
       .map(d => d.projectName)
       .filter(k =>
-        hasDependencyOnTouchedProjects(
-          k,
-          touchedProjects,
-          deps,
-          [...visisted, project]
-        )
+        hasDependencyOnTouchedProjects(k, touchedProjects, deps, [
+          ...visisted,
+          project
+        ])
       ).length > 0
   );
 }

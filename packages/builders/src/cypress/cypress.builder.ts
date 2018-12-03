@@ -83,11 +83,10 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
       tap(() =>
         this.copyCypressFixtures(options.tsConfig, options.cypressConfig)
       ),
-      concatMap(
-        () =>
-          !options.baseUrl && options.devServerTarget
-            ? this.startDevServer(options.devServerTarget, options.watch)
-            : of(null)
+      concatMap(() =>
+        !options.baseUrl && options.devServerTarget
+          ? this.startDevServer(options.devServerTarget, options.watch)
+          : of(null)
       ),
       concatMap(() =>
         this.initCypress(

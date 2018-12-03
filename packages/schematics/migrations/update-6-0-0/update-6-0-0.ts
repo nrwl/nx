@@ -580,8 +580,8 @@ const updateAngularJson = updateJsonInTree('angular.json', json => {
     const type = !project.architect.build
       ? 'e2e'
       : project.architect.build.options.main.startsWith('apps')
-        ? 'application'
-        : 'library';
+      ? 'application'
+      : 'library';
     if (type !== 'e2e') {
       project.projectType = type;
     }

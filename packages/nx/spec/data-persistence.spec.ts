@@ -56,18 +56,19 @@ function userReducer(state: string, action: Action): string {
   return 'bob';
 }
 
-@Component({ template: `ROOT[<router-outlet></router-outlet>]` })
+@Component({
+  template: `
+    ROOT[<router-outlet></router-outlet>]
+  `
+})
 class RootCmp {}
 
 @Component({
   template: `
-      Todo [
-        <div *ngIf="(todo|async) as t">
-           ID {{t.id}}
-           User {{t.user}}
-        </div>
-      ]
-    `
+    Todo [
+    <div *ngIf="(todo | async) as t">ID {{ t.id }} User {{ t.user }}</div>
+    ]
+  `
 })
 class TodoComponent {
   todo = this.store.select('todos', 'selected');
@@ -113,20 +114,17 @@ describe('DataPersistence', () => {
         });
       });
 
-      it(
-        'should work',
-        fakeAsync(() => {
-          const root = TestBed.createComponent(RootCmp);
+      it('should work', fakeAsync(() => {
+        const root = TestBed.createComponent(RootCmp);
 
-          const router: Router = TestBed.get(Router);
-          router.navigateByUrl('/todo/123');
-          tick(0);
-          root.detectChanges(false);
+        const router: Router = TestBed.get(Router);
+        router.navigateByUrl('/todo/123');
+        tick(0);
+        root.detectChanges(false);
 
-          expect(root.elementRef.nativeElement.innerHTML).toContain('ID 123');
-          expect(root.elementRef.nativeElement.innerHTML).toContain('User bob');
-        })
-      );
+        expect(root.elementRef.nativeElement.innerHTML).toContain('ID 123');
+        expect(root.elementRef.nativeElement.innerHTML).toContain('User bob');
+      }));
     });
 
     describe('`run` throwing an error', () => {
@@ -155,31 +153,26 @@ describe('DataPersistence', () => {
         });
       });
 
-      it(
-        'should work',
-        fakeAsync(() => {
-          const root = TestBed.createComponent(RootCmp);
+      it('should work', fakeAsync(() => {
+        const root = TestBed.createComponent(RootCmp);
 
-          const router: Router = TestBed.get(Router);
-          let action;
-          TestBed.get(Actions).subscribe(a => (action = a));
+        const router: Router = TestBed.get(Router);
+        let action;
+        TestBed.get(Actions).subscribe(a => (action = a));
 
-          router.navigateByUrl('/todo/123');
-          tick(0);
-          root.detectChanges(false);
-          expect(root.elementRef.nativeElement.innerHTML).not.toContain(
-            'ID 123'
-          );
-          expect(action.type).toEqual('ERROR');
-          expect(action.payload.error.message).toEqual('boom');
+        router.navigateByUrl('/todo/123');
+        tick(0);
+        root.detectChanges(false);
+        expect(root.elementRef.nativeElement.innerHTML).not.toContain('ID 123');
+        expect(action.type).toEqual('ERROR');
+        expect(action.payload.error.message).toEqual('boom');
 
-          // can recover after an error
-          router.navigateByUrl('/todo/456');
-          tick(0);
-          root.detectChanges(false);
-          expect(root.elementRef.nativeElement.innerHTML).toContain('ID 456');
-        })
-      );
+        // can recover after an error
+        router.navigateByUrl('/todo/456');
+        tick(0);
+        root.detectChanges(false);
+        expect(root.elementRef.nativeElement.innerHTML).toContain('ID 456');
+      }));
     });
 
     describe('`run` returning an error observable', () => {
@@ -208,30 +201,25 @@ describe('DataPersistence', () => {
         });
       });
 
-      it(
-        'should work',
-        fakeAsync(() => {
-          const root = TestBed.createComponent(RootCmp);
+      it('should work', fakeAsync(() => {
+        const root = TestBed.createComponent(RootCmp);
 
-          const router: Router = TestBed.get(Router);
-          let action;
-          TestBed.get(Actions).subscribe(a => (action = a));
+        const router: Router = TestBed.get(Router);
+        let action;
+        TestBed.get(Actions).subscribe(a => (action = a));
 
-          router.navigateByUrl('/todo/123');
-          tick(0);
-          root.detectChanges(false);
-          expect(root.elementRef.nativeElement.innerHTML).not.toContain(
-            'ID 123'
-          );
-          expect(action.type).toEqual('ERROR');
-          expect(action.payload.error).toEqual('boom');
+        router.navigateByUrl('/todo/123');
+        tick(0);
+        root.detectChanges(false);
+        expect(root.elementRef.nativeElement.innerHTML).not.toContain('ID 123');
+        expect(action.type).toEqual('ERROR');
+        expect(action.payload.error).toEqual('boom');
 
-          router.navigateByUrl('/todo/456');
-          tick(0);
-          root.detectChanges(false);
-          expect(root.elementRef.nativeElement.innerHTML).toContain('ID 456');
-        })
-      );
+        router.navigateByUrl('/todo/456');
+        tick(0);
+        root.detectChanges(false);
+        expect(root.elementRef.nativeElement.innerHTML).toContain('ID 456');
+      }));
     });
   });
 

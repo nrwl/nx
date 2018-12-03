@@ -1,11 +1,13 @@
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { Tree } from '@angular-devkit/schematics';
 
+import * as prettier from 'prettier';
 import * as path from 'path';
 
 import { createEmptyWorkspace } from '../testing-utils';
 import { formatFiles } from './format-files';
 import { serializeJson } from '../fileutils';
+import * as appRoot from 'app-root-path';
 
 describe('formatFiles', () => {
   let tree: Tree;
@@ -15,52 +17,89 @@ describe('formatFiles', () => {
       '@nrwl/schematics',
       path.join(__dirname, '../../collection.json')
     );
-    tree = createEmptyWorkspace(Tree.empty());
-    tree.overwrite(
-      'package.json',
-      serializeJson({
-        scripts: {
-          format: 'prettier'
-        }
+    spyOn(prettier, 'format').and.callFake(input => 'formated :: ' + input);
+    tree = Tree.empty();
+  });
+
+  it('should format created files', async () => {
+    spyOn(prettier, 'resolveConfig').and.returnValue(
+      Promise.resolve({
+        printWidth: 80
       })
+    );
+    tree.create('a.ts', 'const a=a');
+    const result = await schematicRunner
+      .callRule(formatFiles(), tree)
+      .toPromise();
+    expect(prettier.format).toHaveBeenCalledWith('const a=a', {
+      printWidth: 80,
+      filepath: appRoot.resolve('a.ts')
+    });
+    expect(result.read('a.ts').toString()).toEqual('formated :: const a=a');
+  });
+
+  it('should not format deleted files', async () => {
+    spyOn(prettier, 'resolveConfig').and.returnValue(
+      Promise.resolve({
+        printWidth: 80
+      })
+    );
+    tree.create('b.ts', '');
+    tree.delete('b.ts');
+    await schematicRunner.callRule(formatFiles(), tree).toPromise();
+    expect(prettier.format).not.toHaveBeenCalledWith(
+      'const b=b',
+      jasmine.anything()
     );
   });
 
-  it('should format files', done => {
-    schematicRunner.callRule(formatFiles(), tree).subscribe(result => {
-      expect(schematicRunner.tasks.length).toBe(1);
-      expect(schematicRunner.tasks[0]).toEqual({
-        name: 'node-package',
-        options: {
-          packageName: 'run format -- --untracked',
-          quiet: true
-        }
-      });
-      done();
+  it('should format overwritten files', async () => {
+    spyOn(prettier, 'resolveConfig').and.returnValue(Promise.resolve(null));
+    tree.create('a.ts', 'const a=a');
+    tree.overwrite('a.ts', 'const a=b');
+    const result = await schematicRunner
+      .callRule(formatFiles(), tree)
+      .toPromise();
+    expect(prettier.format).toHaveBeenCalledWith('const a=b', {
+      filepath: appRoot.resolve('a.ts')
     });
+    expect(result.read('a.ts').toString()).toEqual('formated :: const a=b');
   });
 
-  it('should not format files if there is no format npm script', done => {
-    tree.overwrite(
-      'package.json',
-      serializeJson({
-        scripts: {}
-      })
-    );
-    schematicRunner.callRule(formatFiles(), tree).subscribe(result => {
-      expect(schematicRunner.tasks.length).toBe(0);
-      //TODO: test that a warning is emitted.
-      done();
+  it('should not format renamed files', async () => {
+    spyOn(prettier, 'resolveConfig').and.returnValue(Promise.resolve(null));
+    tree.create('a.ts', 'const a=a');
+    tree.rename('a.ts', 'b.ts');
+    const result = await schematicRunner
+      .callRule(formatFiles(), tree)
+      .toPromise();
+    expect(prettier.format).toHaveBeenCalledWith('const a=a', {
+      filepath: appRoot.resolve('b.ts')
     });
+    expect(result.read('b.ts').toString()).toEqual('formated :: const a=a');
   });
 
-  it('should not format files if skipFormat is passed', done => {
-    schematicRunner
-      .callRule(formatFiles({ skipFormat: true }), tree)
-      .subscribe(result => {
-        expect(schematicRunner.tasks.length).toBe(0);
-        //TODO: test that a warning is not emitted.
-        done();
+  describe('--skip-format', () => {
+    it('should not format created files', async () => {
+      spyOn(prettier, 'resolveConfig').and.returnValue(
+        Promise.resolve({
+          printWidth: 80
+        })
+      );
+      tree.create('a.ts', 'const a=a');
+      const result = await schematicRunner
+        .callRule(
+          formatFiles({
+            skipFormat: true
+          }),
+          tree
+        )
+        .toPromise();
+      expect(prettier.format).not.toHaveBeenCalledWith('const a=a', {
+        printWidth: 80,
+        filepath: appRoot.resolve('a.ts')
       });
+      expect(result.read('a.ts').toString()).toEqual('const a=a');
+    });
   });
 });

@@ -62,7 +62,9 @@ function addTasks(options: Schema, context: SchematicContext) {
     const commit =
       typeof options.commit == 'object'
         ? options.commit
-        : !!options.commit ? {} : false;
+        : !!options.commit
+        ? {}
+        : false;
     context.addTask(
       new RepositoryInitializerTask(options.directory, commit),
       packageTask ? [packageTask] : []

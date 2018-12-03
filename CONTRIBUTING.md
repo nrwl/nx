@@ -56,12 +56,12 @@ Before you submit an issue, please search the issue tracker, maybe an issue for 
 
 We want to fix all the issues as soon as possible, but before fixing a bug we need to reproduce and confirm it. Having a reproducible scenario gives us wealth of important information without going back & forth to you with additional questions like:
 
-* version of Nx used
-* version of Angular CLI used
-* `angular.json` configuration
-* version of Angular DevKit used
-* 3rd-party libraries and their versions
-* and most importantly - a use-case that fails
+- version of Nx used
+- version of Angular CLI used
+- `angular.json` configuration
+- version of Angular DevKit used
+- 3rd-party libraries and their versions
+- and most importantly - a use-case that fails
 
 A minimal reproduce scenario using allows us to quickly confirm a bug (or point out coding problem) as well as confirm that we are fixing the right problem.
 
@@ -73,10 +73,10 @@ You can file new issues by filling out our [issue form](https://github.com/nrwl/
 
 Please follow the following guidelines:
 
-* Make sure unit tests pass
-* Make sure e2e tests pass
-* Make sure you run `yarn format`
-* Update your commit message to follow the guidelines below
+- Make sure unit tests pass
+- Make sure e2e tests pass
+- Make sure you run `yarn format`
+- Update your commit message to follow the guidelines below
 
 #### Commit Message Guidelines
 
@@ -92,21 +92,21 @@ body
 
 The type must be one of the following:
 
-* build
-* feat
-* fix
-* refactor
-* style
-* docs
-* test
+- build
+- feat
+- fix
+- refactor
+- style
+- docs
+- test
 
 ##### Scope
 
 The scope must be one of the following:
 
-* bazel
-* nx
-* schematics
+- bazel
+- nx
+- schematics
 
 ##### Subject
 

@@ -51,8 +51,7 @@
     },
     "parentModule": {
       "type": "string",
-      "description":
-        "Update the router configuration of the parent module using loadChildren or children, depending on what `lazy` is set to.",
+      "description": "Update the router configuration of the parent module using loadChildren or children, depending on what `lazy` is set to.",
       "x-prompt": "Which module should import the library?"
     },
     "style": {
@@ -75,14 +74,12 @@
       "type": "boolean",
       "default": false,
       "description": "Add router configuration. See lazy for more information.",
-      "x-prompt":
-        "Would you like to add a routing configuration to the library?"
+      "x-prompt": "Would you like to add a routing configuration to the library?"
     },
     "lazy": {
       "type": "boolean",
       "default": false,
-      "description":
-        "Add RouterModule.forChild when set to true, and a simple array of routes when set to false.",
+      "description": "Add RouterModule.forChild when set to true, and a simple array of routes when set to false.",
       "x-prompt": "Will this library be lazy loaded?"
     },
     "module": {
@@ -94,8 +91,7 @@
     "tags": {
       "type": "string",
       "description": "Add tags to the library (used for linting)",
-      "x-prompt":
-        "Which tags would you like to add to the library? (used for linting)"
+      "x-prompt": "Which tags would you like to add to the library? (used for linting)"
     },
     "unitTestRunner": {
       "type": "string",
@@ -103,8 +99,7 @@
       "description": "Test runner to use for unit tests",
       "default": "karma",
       "x-prompt": {
-        "message":
-          "Which Unit Test Runner would you like to use for the library?",
+        "message": "Which Unit Test Runner would you like to use for the library?",
         "type": "list",
         "items": [
           { "value": "karma", "label": "Karma" },

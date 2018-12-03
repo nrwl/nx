@@ -24,9 +24,8 @@ export function toClassName(str: string): string {
  */
 export function toPropertyName(s: string): string {
   return s
-    .replace(
-      /(-|_|\.|\s)+(.)?/g,
-      (_, __, chr) => (chr ? chr.toUpperCase() : '')
+    .replace(/(-|_|\.|\s)+(.)?/g, (_, __, chr) =>
+      chr ? chr.toUpperCase() : ''
     )
     .replace(/^([A-Z])/, m => m.toLowerCase());
 }

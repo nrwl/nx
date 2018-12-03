@@ -12,7 +12,7 @@ node_modules/.bin/ng generate component [name] --directory=[dir]
 
 Example: node_modules/.bin/ng generate component friends --directory=myDir
 
-* must manually import the component's Bazel rule in the consuming Bazel rule
+- must manually import the component's Bazel rule in the consuming Bazel rule
 
 ## Add new lib
 
@@ -20,7 +20,7 @@ node_modules/.bin/ng generate lib [name]
 
 Example: node_modules/.bin/ng generate lib mylib
 
-* must manually import the lib's Bazel rule in the consuming Bazel rule
+- must manually import the lib's Bazel rule in the consuming Bazel rule
 
 ## Run dev server
 
@@ -38,4 +38,4 @@ Example: bazel run apps/my-dir/my-app/src:prodserver
 
 ibazel test //libs/mylib/src:test
 
-* currently works for libs
+- currently works for libs

@@ -267,7 +267,9 @@ export function getProjectNodes(angularJson, nxJson): ProjectNode[] {
 
     const projectType =
       p.projectType === 'application'
-        ? key.endsWith('-e2e') ? ProjectType.e2e : ProjectType.app
+        ? key.endsWith('-e2e')
+          ? ProjectType.e2e
+          : ProjectType.app
         : ProjectType.lib;
 
     let implicitDependencies = nxJson.projects[key].implicitDependencies || [];

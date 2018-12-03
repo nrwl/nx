@@ -21,12 +21,10 @@ describe('app', () => {
   });
 
   describe('not nested', () => {
-    it('should update angular.json', () => {
-      const tree = schematicRunner.runSchematic(
-        'app',
-        { name: 'myApp' },
-        appTree
-      );
+    it('should update angular.json', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync('app', { name: 'myApp' }, appTree)
+        .toPromise();
       const angularJson = readJsonInTree(tree, '/angular.json');
 
       expect(angularJson.projects['my-app'].root).toEqual('apps/my-app/');
@@ -35,12 +33,10 @@ describe('app', () => {
       );
     });
 
-    it('should update nx.json', () => {
-      const tree = schematicRunner.runSchematic(
-        'app',
-        { name: 'myApp', tags: 'one,two' },
-        appTree
-      );
+    it('should update nx.json', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync('app', { name: 'myApp', tags: 'one,two' }, appTree)
+        .toPromise();
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson).toEqual({
         npmScope: 'proj',
@@ -55,12 +51,10 @@ describe('app', () => {
       });
     });
 
-    it('should generate files', () => {
-      const tree = schematicRunner.runSchematic(
-        'app',
-        { name: 'myApp' },
-        appTree
-      );
+    it('should generate files', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync('app', { name: 'myApp' }, appTree)
+        .toPromise();
       expect(tree.exists(`apps/my-app/karma.conf.js`)).toBeTruthy();
       expect(tree.exists('apps/my-app/src/main.ts')).toBeTruthy();
       expect(tree.exists('apps/my-app/src/app/app.module.ts')).toBeTruthy();
@@ -98,17 +92,13 @@ describe('app', () => {
       expect(tsconfigE2E.extends).toEqual('./tsconfig.json');
     });
 
-    it('should default the prefix to npmScope', () => {
-      const noPrefix = schematicRunner.runSchematic(
-        'app',
-        { name: 'myApp' },
-        appTree
-      );
-      const withPrefix = schematicRunner.runSchematic(
-        'app',
-        { name: 'myApp', prefix: 'custom' },
-        appTree
-      );
+    it('should default the prefix to npmScope', async () => {
+      const noPrefix = await schematicRunner
+        .runSchematicAsync('app', { name: 'myApp' }, appTree)
+        .toPromise();
+      const withPrefix = await schematicRunner
+        .runSchematicAsync('app', { name: 'myApp', prefix: 'custom' }, appTree)
+        .toPromise();
 
       // Testing without prefix
 
@@ -144,11 +134,9 @@ describe('app', () => {
         )
         .toPromise();
 
-      const result = schematicRunner.runSchematic(
-        'app',
-        { name: 'myApp' },
-        appTree
-      );
+      const result = await schematicRunner
+        .runSchematicAsync('app', { name: 'myApp' }, appTree)
+        .toPromise();
 
       expect(result.exists('apps/my-app/src/main.ts')).toEqual(true);
       expect(result.exists('apps/my-app-e2e/protractor.conf.js')).toEqual(true);
@@ -156,12 +144,14 @@ describe('app', () => {
   });
 
   describe('nested', () => {
-    it('should update angular.json', () => {
-      const tree = schematicRunner.runSchematic(
-        'app',
-        { name: 'myApp', directory: 'myDir' },
-        appTree
-      );
+    it('should update angular.json', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'app',
+          { name: 'myApp', directory: 'myDir' },
+          appTree
+        )
+        .toPromise();
       const angularJson = readJsonInTree(tree, '/angular.json');
 
       expect(angularJson.projects['my-dir-my-app'].root).toEqual(
@@ -172,12 +162,14 @@ describe('app', () => {
       );
     });
 
-    it('should update nx.json', () => {
-      const tree = schematicRunner.runSchematic(
-        'app',
-        { name: 'myApp', directory: 'myDir', tags: 'one,two' },
-        appTree
-      );
+    it('should update nx.json', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'app',
+          { name: 'myApp', directory: 'myDir', tags: 'one,two' },
+          appTree
+        )
+        .toPromise();
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson).toEqual({
         npmScope: 'proj',
@@ -192,18 +184,20 @@ describe('app', () => {
       });
     });
 
-    it('should generate files', () => {
+    it('should generate files', async () => {
       const hasJsonValue = ({ path, expectedValue, lookupFn }) => {
         const content = getFileContent(tree, path);
         const config = JSON.parse(stripJsonComments(content));
 
         expect(lookupFn(config)).toEqual(expectedValue);
       };
-      const tree = schematicRunner.runSchematic(
-        'app',
-        { name: 'myApp', directory: 'myDir' },
-        appTree
-      );
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'app',
+          { name: 'myApp', directory: 'myDir' },
+          appTree
+        )
+        .toPromise();
 
       const appModulePath = 'apps/my-dir/my-app/src/app/app.module.ts';
       expect(getFileContent(tree, appModulePath)).toContain('class AppModule');
@@ -250,24 +244,24 @@ describe('app', () => {
     });
   });
 
-  it('should import NgModule', () => {
-    const tree = schematicRunner.runSchematic(
-      'app',
-      { name: 'myApp', directory: 'myDir' },
-      appTree
-    );
+  it('should import NgModule', async () => {
+    const tree = await schematicRunner
+      .runSchematicAsync('app', { name: 'myApp', directory: 'myDir' }, appTree)
+      .toPromise();
     expect(
       getFileContent(tree, 'apps/my-dir/my-app/src/app/app.module.ts')
     ).toContain('NxModule.forRoot()');
   });
 
   describe('routing', () => {
-    it('should include RouterTestingModule', () => {
-      const tree = schematicRunner.runSchematic(
-        'app',
-        { name: 'myApp', directory: 'myDir', routing: true },
-        appTree
-      );
+    it('should include RouterTestingModule', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'app',
+          { name: 'myApp', directory: 'myDir', routing: true },
+          appTree
+        )
+        .toPromise();
       expect(
         getFileContent(tree, 'apps/my-dir/my-app/src/app/app.module.ts')
       ).toContain('RouterModule.forRoot');
@@ -276,12 +270,14 @@ describe('app', () => {
       ).toContain('imports: [RouterTestingModule]');
     });
 
-    it('should not modify tests when --skip-tests is set', () => {
-      const tree = schematicRunner.runSchematic(
-        'app',
-        { name: 'myApp', directory: 'myDir', routing: true, skipTests: true },
-        appTree
-      );
+    it('should not modify tests when --skip-tests is set', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'app',
+          { name: 'myApp', directory: 'myDir', routing: true, skipTests: true },
+          appTree
+        )
+        .toPromise();
       expect(
         tree.exists('apps/my-dir/my-app/src/app/app.component.spec.ts')
       ).toBeFalsy();
@@ -289,12 +285,14 @@ describe('app', () => {
   });
 
   describe('template generation mode', () => {
-    it('should create Nx specific `app.component.html` template', () => {
-      const tree = schematicRunner.runSchematic(
-        'app',
-        { name: 'myApp', directory: 'myDir' },
-        appTree
-      );
+    it('should create Nx specific `app.component.html` template', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'app',
+          { name: 'myApp', directory: 'myDir' },
+          appTree
+        )
+        .toPromise();
       expect(
         getFileContent(tree, 'apps/my-dir/my-app/src/app/app.component.html')
       ).toBeTruthy();
@@ -303,12 +301,14 @@ describe('app', () => {
       ).toContain('This is an Angular CLI app built with Nrwl Nx!');
     });
 
-    it("should update `template`'s property of AppComponent with Nx content", () => {
-      const tree = schematicRunner.runSchematic(
-        'app',
-        { name: 'myApp', directory: 'myDir', inlineTemplate: true },
-        appTree
-      );
+    it("should update `template`'s property of AppComponent with Nx content", async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'app',
+          { name: 'myApp', directory: 'myDir', inlineTemplate: true },
+          appTree
+        )
+        .toPromise();
       expect(
         getFileContent(tree, 'apps/my-dir/my-app/src/app/app.component.ts')
       ).toContain('This is an Angular CLI app built with Nrwl Nx!');
@@ -316,23 +316,19 @@ describe('app', () => {
   });
 
   describe('--style scss', () => {
-    it('should generate scss styles', () => {
-      const result = schematicRunner.runSchematic(
-        'app',
-        { name: 'myApp', style: 'scss' },
-        appTree
-      );
+    it('should generate scss styles', async () => {
+      const result = await schematicRunner
+        .runSchematicAsync('app', { name: 'myApp', style: 'scss' }, appTree)
+        .toPromise();
       expect(result.exists('apps/my-app/src/app/app.component.scss')).toEqual(
         true
       );
     });
 
-    it('should set it as default', () => {
-      const result = schematicRunner.runSchematic(
-        'app',
-        { name: 'myApp', style: 'scss' },
-        appTree
-      );
+    it('should set it as default', async () => {
+      const result = await schematicRunner
+        .runSchematicAsync('app', { name: 'myApp', style: 'scss' }, appTree)
+        .toPromise();
 
       const angularJson = readJsonInTree(result, 'angular.json');
 
@@ -345,12 +341,14 @@ describe('app', () => {
   });
 
   describe('--unit-test-runner jest', () => {
-    it('should generate a jest config', () => {
-      const tree = schematicRunner.runSchematic(
-        'app',
-        { name: 'myApp', unitTestRunner: 'jest' },
-        appTree
-      );
+    it('should generate a jest config', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'app',
+          { name: 'myApp', unitTestRunner: 'jest' },
+          appTree
+        )
+        .toPromise();
       expect(tree.exists('apps/my-app/src/test.ts')).toBeFalsy();
       expect(tree.exists('apps/my-app/src/test-setup.ts')).toBeTruthy();
       expect(tree.exists('apps/my-app/tsconfig.spec.json')).toBeTruthy();
@@ -380,12 +378,14 @@ describe('app', () => {
   });
 
   describe('--unit-test-runner none', () => {
-    it('should not generate test configuration', () => {
-      const tree = schematicRunner.runSchematic(
-        'app',
-        { name: 'myApp', unitTestRunner: 'none' },
-        appTree
-      );
+    it('should not generate test configuration', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'app',
+          { name: 'myApp', unitTestRunner: 'none' },
+          appTree
+        )
+        .toPromise();
       expect(tree.exists('apps/my-app/src/test-setup.ts')).toBeFalsy();
       expect(tree.exists('apps/my-app/src/test.ts')).toBeFalsy();
       expect(tree.exists('apps/my-app/tsconfig.spec.json')).toBeFalsy();
@@ -400,12 +400,14 @@ describe('app', () => {
   });
 
   describe('--e2e-test-runner none', () => {
-    it('should not generate test configuration', () => {
-      const tree = schematicRunner.runSchematic(
-        'app',
-        { name: 'myApp', e2eTestRunner: 'none' },
-        appTree
-      );
+    it('should not generate test configuration', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'app',
+          { name: 'myApp', e2eTestRunner: 'none' },
+          appTree
+        )
+        .toPromise();
       expect(tree.exists('apps/my-app-e2e')).toBeFalsy();
       const angularJson = readJsonInTree(tree, 'angular.json');
       expect(angularJson.projects['my-app-e2e']).toBeUndefined();
@@ -413,8 +415,10 @@ describe('app', () => {
   });
 
   describe('replaceAppNameWithPath', () => {
-    it('should protect `angular.json` commands and properties', () => {
-      const tree = schematicRunner.runSchematic('app', { name: 'ui' }, appTree);
+    it('should protect `angular.json` commands and properties', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync('app', { name: 'ui' }, appTree)
+        .toPromise();
 
       const angularJson = readJsonInTree(tree, 'angular.json');
       expect(angularJson.projects['ui']).toBeDefined();
@@ -423,12 +427,10 @@ describe('app', () => {
       ).toEqual('@angular-devkit/build-angular:browser');
     });
 
-    it('should protect `angular.json` sensible properties value to be renamed', () => {
-      const tree = schematicRunner.runSchematic(
-        'app',
-        { name: 'ui', prefix: 'ui' },
-        appTree
-      );
+    it('should protect `angular.json` sensible properties value to be renamed', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync('app', { name: 'ui', prefix: 'ui' }, appTree)
+        .toPromise();
 
       const angularJson = readJsonInTree(tree, 'angular.json');
       expect(angularJson.projects['ui'].prefix).toEqual('ui');

@@ -85,8 +85,7 @@
       "description": "Test runner to use for unit tests",
       "default": "karma",
       "x-prompt": {
-        "message":
-          "Which Unit Test Runner would you like to use for the application?",
+        "message": "Which Unit Test Runner would you like to use for the application?",
         "type": "list",
         "items": [
           {
@@ -103,8 +102,7 @@
       "description": "Test runner to use for end to end (e2e) tests",
       "default": "protractor",
       "x-prompt": {
-        "message":
-          "Which E2E Test Runner would you like to use for the application?",
+        "message": "Which E2E Test Runner would you like to use for the application?",
         "type": "list",
         "items": [
           {
@@ -121,8 +119,7 @@
     "tags": {
       "type": "string",
       "description": "Add tags to the application (used for linting)",
-      "x-prompt":
-        "Which tags would you like to add to the application? (used for linting)"
+      "x-prompt": "Which tags would you like to add to the application? (used for linting)"
     }
   },
   "required": []

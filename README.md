@@ -24,17 +24,17 @@ Nx is an extension for the the Angular CLI implementing the monorepo-style devel
 
 Because Nx is built on top of the Angular CLI, you get all the conventional and loved features plus:
 
-* Nx Workspace
-* Workspace-Specific Schematics
-* Intelligent Builds and Unit Testing
-* State Management
-* NgRx
-* Data Persistence
-* Linters
-* Code Formatter
-* UpgradeModule and downgradeModule helpers
-* Jest unit tests integration
-* Node build tooling
+- Nx Workspace
+- Workspace-Specific Schematics
+- Intelligent Builds and Unit Testing
+- State Management
+- NgRx
+- Data Persistence
+- Linters
+- Code Formatter
+- UpgradeModule and downgradeModule helpers
+- Jest unit tests integration
+- Node build tooling
 
 # Why Nx?
 
@@ -42,8 +42,8 @@ On the surface, large and small organizations care about the same things: consis
 
 What’s different about large organizations is that they have hundreds of Angular engineers building dozens of apps. So they have a lot of code, which changes everything.
 
-* While ten (10) developers can reach a consensus on best practices by chatting over lunch, five hundred (500) developers cannot. You have to establish best practices, team standards, **and use tools to promote them**.
-* With three (3) projects developers will know what needs to be retested after making a change, with thirty (30) projects, however, this is no longer a simple process. Informal team rules to manage change will no longer work with large teams and multi-team, multi-project efforts. **You have to rely on the automated CI process instead.** …
+- While ten (10) developers can reach a consensus on best practices by chatting over lunch, five hundred (500) developers cannot. You have to establish best practices, team standards, **and use tools to promote them**.
+- With three (3) projects developers will know what needs to be retested after making a change, with thirty (30) projects, however, this is no longer a simple process. Informal team rules to manage change will no longer work with large teams and multi-team, multi-project efforts. **You have to rely on the automated CI process instead.** …
 
 In other words, small organizations can often get by with informal ad-hoc processes, whereas large organizations cannot. **Large organizations must rely on tooling to enable that. Nx is this tooling.**
 
@@ -81,30 +81,30 @@ You are good to go!
 
 ### Documentation
 
-* [Nx Documentation and Guides](https://nrwl.io/nx)
-* [Nx blog posts](https://blog.nrwl.io/nx/home)
+- [Nx Documentation and Guides](https://nrwl.io/nx)
+- [Nx blog posts](https://blog.nrwl.io/nx/home)
 
 ### Videos
 
-* [5-minute video on how to get started with Nx.](http://nrwl.io/nx)
-* [Video course on using Nx Workspaces](https://angularplaybook.com/p/nx-workspaces)
+- [5-minute video on how to get started with Nx.](http://nrwl.io/nx)
+- [Video course on using Nx Workspaces](https://angularplaybook.com/p/nx-workspaces)
 
 ### Talks
 
-* [Angular at Large Organizations](https://www.youtube.com/watch?v=piQ0EZhtus0)
-* [Nx: The New Way to Build Enterprise Angular Apps](https://www.youtube.com/watch?v=xo-1SDmvM8Y)
-* [Supercharging the Angular CLI](https://www.youtube.com/watch?v=bMkKz8AedHc)
-* [Hands on Full Stack development with Nx and Bazel](https://www.youtube.com/watch?v=1KDDIhcQORM)
+- [Angular at Large Organizations](https://www.youtube.com/watch?v=piQ0EZhtus0)
+- [Nx: The New Way to Build Enterprise Angular Apps](https://www.youtube.com/watch?v=xo-1SDmvM8Y)
+- [Supercharging the Angular CLI](https://www.youtube.com/watch?v=bMkKz8AedHc)
+- [Hands on Full Stack development with Nx and Bazel](https://www.youtube.com/watch?v=1KDDIhcQORM)
 
 ### Podcasts and Shows
 
-* [ngAir 140: Nx for Enterprise Angular Development](https://www.youtube.com/watch?v=qYNiOKDno_I)
-* [ngHouston: NX Demo](https://www.youtube.com/watch?v=E_UlU2Yv4G0)
+- [ngAir 140: Nx for Enterprise Angular Development](https://www.youtube.com/watch?v=qYNiOKDno_I)
+- [ngHouston: NX Demo](https://www.youtube.com/watch?v=E_UlU2Yv4G0)
 
 ## Misc
 
-* [nx-examples](https://github.com/nrwl/nx-examples) repo has branches for different nx comments to display expected behavior and example app and libraries. Check out the branch (workspace, ngrx...) to see what gets created for you. More info on readme.
-* [xplat - Cross-platform tools for Nx workspaces](https://nstudio.io/xplat/)
+- [nx-examples](https://github.com/nrwl/nx-examples) repo has branches for different nx comments to display expected behavior and example app and libraries. Check out the branch (workspace, ngrx...) to see what gets created for you. More info on readme.
+- [xplat - Cross-platform tools for Nx workspaces](https://nstudio.io/xplat/)
 
 ## Want to help?
 

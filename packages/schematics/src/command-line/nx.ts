@@ -208,12 +208,14 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
 }
 
 function parseCSV(args: string[]) {
-  return args.map(arg => arg.split(',')).reduce(
-    (acc, value) => {
-      return [...acc, ...value];
-    },
-    [] as string[]
-  );
+  return args
+    .map(arg => arg.split(','))
+    .reduce(
+      (acc, value) => {
+        return [...acc, ...value];
+      },
+      [] as string[]
+    );
 }
 
 function withParallel(yargs: yargs.Argv): yargs.Argv {

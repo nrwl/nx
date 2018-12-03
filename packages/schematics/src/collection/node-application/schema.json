@@ -43,8 +43,7 @@
     "tags": {
       "type": "string",
       "description": "Add tags to the application (used for linting)",
-      "x-prompt":
-        "Which tags would you like to add to the node application? (used for linting)"
+      "x-prompt": "Which tags would you like to add to the node application? (used for linting)"
     }
   },
   "required": []
