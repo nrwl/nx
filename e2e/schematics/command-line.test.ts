@@ -174,6 +174,16 @@ describe('Command line', () => {
         )
       );
 
+      const dryRunOutput = runCommand(
+        'npm run workspace-schematic custom mylib -- --directory=dir -d'
+      );
+      expect(exists('libs/dir/mylib/src/index.ts')).toEqual(false);
+      expect(dryRunOutput).toContain(
+        'create libs/dir/mylib/src/lib/dir-mylib.module.ts'
+      );
+      expect(dryRunOutput).toContain('update angular.json');
+      expect(dryRunOutput).toContain('update nx.json');
+
       const output = runCommand(
         'npm run workspace-schematic custom mylib -- --directory=dir'
       );
