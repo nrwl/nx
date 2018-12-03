@@ -3,7 +3,8 @@ import {
   chain,
   noop,
   SchematicContext,
-  Tree
+  Tree,
+  externalSchematic
 } from '@angular-devkit/schematics';
 import { normalize, join, Path, dirname } from '@angular-devkit/core';
 
@@ -167,6 +168,18 @@ function switchToEs2015(host: Tree, context: SchematicContext) {
   });
 }
 
+const updateAngularCLI = externalSchematic('@schematics/update', 'update', {
+  packages: ['@angular/cli'],
+  from: '7.0.1',
+  to: '7.1.0',
+  force: true
+});
+
 export default function(): Rule {
-  return chain([switchToEs2015, updateProjects, displayInformation]);
+  return chain([
+    switchToEs2015,
+    updateProjects,
+    displayInformation,
+    updateAngularCLI
+  ]);
 }
