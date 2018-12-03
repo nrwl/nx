@@ -14,10 +14,11 @@ import { NodeJsSyncHost, createConsoleLogger } from '@angular-devkit/core/node';
 const rootDirectory = appRoot.path;
 
 export function workspaceSchematic(args: string[]) {
+  const parsedArgs = parseOptions(args);
   const outDir = compileTools();
   const schematicName = args[0];
-  const workflow = createWorkflow();
-  executeSchematic(schematicName, parseOptions(args), workflow, outDir);
+  const workflow = createWorkflow(parsedArgs.dryRun);
+  executeSchematic(schematicName, parsedArgs, workflow, outDir);
 }
 
 // compile tools
@@ -87,12 +88,13 @@ function schematicsDir() {
   return path.join('tools', 'schematics');
 }
 
-function createWorkflow() {
+function createWorkflow(dryRun: boolean) {
   const root = normalize(rootDirectory);
   const host = new virtualFs.ScopedHost(new NodeJsSyncHost(), root);
   return new NodeWorkflow(host, {
     packageManager: fileExists('yarn.lock') ? 'yarn' : 'npm',
-    root
+    root,
+    dryRun
   });
 }
 
@@ -170,7 +172,12 @@ async function executeSchematic(
 }
 
 function parseOptions(args: string[]): { [k: string]: any } {
-  return yargsParser(args);
+  return yargsParser(args, {
+    boolean: ['dryRun'],
+    alias: {
+      dryRun: ['d']
+    }
+  });
 }
 
 function exists(file: string): boolean {
