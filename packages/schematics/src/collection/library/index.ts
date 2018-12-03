@@ -9,7 +9,7 @@ import {
   url,
   apply,
   mergeWith,
-  move as devkitMove,
+  move,
   template
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
@@ -38,7 +38,6 @@ import {
 import { formatFiles } from '../../utils/rules/format-files';
 import { updateKarmaConf } from '../../utils/rules/update-karma-conf';
 import { join, normalize } from '@angular-devkit/core';
-import { move } from '../../utils/rules/move';
 
 interface NormalizedSchema extends Schema {
   name: string;
@@ -305,7 +304,7 @@ function updateProject(options: NormalizedSchema): Rule {
           template({
             offsetFromRoot: offsetFromRoot(options.projectRoot)
           }),
-          devkitMove(options.projectRoot)
+          move(options.projectRoot)
         ])
       ),
       updateJsonInTree(getWorkspacePath(host), json => {

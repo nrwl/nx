@@ -9,7 +9,7 @@ import {
   mergeWith,
   apply,
   template,
-  move as devkitMove,
+  move,
   url
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
@@ -33,7 +33,6 @@ import {
   angularSchematicNames
 } from '../../utils/cli-config-utils';
 import { formatFiles } from '../../utils/rules/format-files';
-import { move } from '../../utils/rules/move';
 import { updateKarmaConf } from '../../utils/rules/update-karma-conf';
 import { join, normalize } from '@angular-devkit/core';
 
@@ -165,7 +164,7 @@ function addTsconfigs(options: NormalizedSchema): Rule {
         template({
           offsetFromRoot: offsetFromRoot(options.appProjectRoot)
         }),
-        devkitMove(options.appProjectRoot)
+        move(options.appProjectRoot)
       ])
     ),
     mergeWith(
@@ -173,7 +172,7 @@ function addTsconfigs(options: NormalizedSchema): Rule {
         template({
           offsetFromRoot: offsetFromRoot(options.e2eProjectRoot)
         }),
-        devkitMove(options.e2eProjectRoot)
+        move(options.e2eProjectRoot)
       ])
     )
   ]);
@@ -388,7 +387,8 @@ export default function(schema: Schema): Rule {
         skipTests: options.skipTests,
         style: options.style,
         viewEncapsulation: options.viewEncapsulation,
-        routing: false
+        routing: false,
+        skipInstall: true
       }),
       addTsconfigs(options),
 
