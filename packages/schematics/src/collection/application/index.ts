@@ -84,9 +84,9 @@ function addRouterRootConfiguration(options: NormalizedSchema): Rule {
       const componentSpecPath = `${
         options.appProjectRoot
       }/src/app/app.component.spec.ts`;
-      const componentSpecSource = host.read(componentSpecPath)!.toString(
-        'utf-8'
-      );
+      const componentSpecSource = host
+        .read(componentSpecPath)!
+        .toString('utf-8');
       const componentSpecSourceFile = ts.createSourceFile(
         componentSpecPath,
         componentSpecSource,

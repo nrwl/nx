@@ -1,17 +1,13 @@
 import { checkFilesExist, newApp, newBazelProject, newLib } from '../utils';
 
 xdescribe('Nrwl Workspace (Bazel)', () => {
-  it(
-    'should work',
-    () => {
-      newBazelProject();
-      newApp('myApp --directory=myDir');
-      newLib('myLib --directory=myDir');
+  it('should work', () => {
+    newBazelProject();
+    newApp('myApp --directory=myDir');
+    newLib('myLib --directory=myDir');
 
-      checkFilesExist('WORKSPACE', 'BUILD.bazel');
-    },
-    1000000
-  );
+    checkFilesExist('WORKSPACE', 'BUILD.bazel');
+  }, 1000000);
 });
 
 //   afterEach(() => {

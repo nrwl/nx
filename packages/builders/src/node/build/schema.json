@@ -47,20 +47,17 @@
           }
         }
       ],
-      "description":
-        "Dependencies to keep external to the bundle. (\"all\" (default), \"none\", or an array of module names)",
+      "description": "Dependencies to keep external to the bundle. (\"all\" (default), \"none\", or an array of module names)",
       "default": "all"
     },
     "statsJson": {
       "type": "boolean",
-      "description":
-        "Generates a 'stats.json' file which can be analyzed using tools such as: #webpack-bundle-analyzer' or https: //webpack.github.io/analyse.",
+      "description": "Generates a 'stats.json' file which can be analyzed using tools such as: #webpack-bundle-analyzer' or https: //webpack.github.io/analyse.",
       "default": false
     },
     "extractLicenses": {
       "type": "boolean",
-      "description":
-        "Extract all licenses in a separate file, in the case of production builds only.",
+      "description": "Extract all licenses in a separate file, in the case of production builds only.",
       "default": false
     },
     "optimization": {
@@ -75,8 +72,7 @@
     },
     "maxWorkers": {
       "type": "number",
-      "description":
-        "Number of workers to use for type checking. (defaults to # of CPUS - 2)"
+      "description": "Number of workers to use for type checking. (defaults to # of CPUS - 2)"
     },
     "fileReplacements": {
       "description": "Replace files with other files in the build.",
@@ -111,8 +107,7 @@
             },
             "input": {
               "type": "string",
-              "description":
-                "The input directory path in which to apply 'glob'. Defaults to the project root."
+              "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
             },
             "ignore": {
               "description": "An array of globs to ignore.",

@@ -1,25 +1,15 @@
-import { readJsonInTree } from '../ast-utils';
 import {
-  TaskConfigurationGenerator,
-  TaskConfiguration,
   Tree,
   SchematicContext,
   Rule,
-  noop
+  noop,
+  OverwriteFileAction,
+  CreateFileAction
 } from '@angular-devkit/schematics';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-
-class FormatFiles implements TaskConfigurationGenerator<any> {
-  toConfiguration(): TaskConfiguration<any> {
-    return {
-      name: 'node-package',
-      options: {
-        packageName: 'run format -- --untracked', // workaround. we should define a custom task executor.
-        quiet: true
-      }
-    };
-  }
-}
+import { format, resolveConfig, getFileInfo } from 'prettier';
+import * as appRoot from 'app-root-path';
+import { from } from 'rxjs';
+import { filter, map, mergeMap } from 'rxjs/operators';
 
 export function formatFiles(
   options: { skipFormat: boolean } = { skipFormat: false }
@@ -28,15 +18,45 @@ export function formatFiles(
     return noop();
   }
   return (host: Tree, context: SchematicContext) => {
-    const packageJson = readJsonInTree(host, 'package.json');
-    if (packageJson.scripts && packageJson.scripts.format) {
-      context.addTask(new FormatFiles());
-    } else {
-      context.logger.warn(stripIndents`
-        Files were not formated during this code generation.
-        The "format" npm script is missing in your package.json.
-        Please either add a format script or pass --skip-format.
-      `);
+    const files = new Set(
+      host.actions
+        .filter(action => action.kind !== 'd' && action.kind !== 'r')
+        .map((action: OverwriteFileAction | CreateFileAction) => ({
+          path: action.path,
+          content: action.content.toString()
+        }))
+    );
+    if (files.size === 0) {
+      return host;
     }
+    return from(files).pipe(
+      filter(file => host.exists(file.path)),
+      mergeMap(async file => {
+        const systemPath = appRoot.resolve(file.path);
+        let options: any = {
+          filepath: systemPath
+        };
+        const resolvedOptions = await resolveConfig(systemPath);
+        if (resolvedOptions) {
+          options = {
+            ...options,
+            ...resolvedOptions
+          };
+        }
+        const support = await getFileInfo(systemPath, options);
+        if (support.ignored || !support.inferredParser) {
+          return;
+        }
+
+        try {
+          host.overwrite(file.path, format(file.content, options));
+        } catch (e) {
+          context.logger.warn(
+            `Could not format ${file.path} because ${e.message}`
+          );
+        }
+      }),
+      map(() => host)
+    );
   };
 }

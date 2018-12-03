@@ -28,8 +28,7 @@
       "additionalProperties": false
     },
     "apps": {
-      "description":
-        "Properties of the different applications in this project.",
+      "description": "Properties of the different applications in this project.",
       "type": "array",
       "items": {
         "type": "object",
@@ -102,8 +101,7 @@
                     },
                     "allowOutsideOutDir": {
                       "type": "boolean",
-                      "description":
-                        "Allow assets to be copied outside the outDir.",
+                      "description": "Allow assets to be copied outside the outDir.",
                       "default": false
                     }
                   },
@@ -141,33 +139,27 @@
                 },
                 "maximumWarning": {
                   "type": "string",
-                  "description":
-                    "The maximum threshold for warning relative to the baseline."
+                  "description": "The maximum threshold for warning relative to the baseline."
                 },
                 "maximumError": {
                   "type": "string",
-                  "description":
-                    "The maximum threshold for error relative to the baseline."
+                  "description": "The maximum threshold for error relative to the baseline."
                 },
                 "minimumWarning": {
                   "type": "string",
-                  "description":
-                    "The minimum threshold for warning relative to the baseline."
+                  "description": "The minimum threshold for warning relative to the baseline."
                 },
                 "minimumError": {
                   "type": "string",
-                  "description":
-                    "The minimum threshold for error relative to the baseline."
+                  "description": "The minimum threshold for error relative to the baseline."
                 },
                 "warning": {
                   "type": "string",
-                  "description":
-                    "The threshold for warning relative to the baseline (min & max)."
+                  "description": "The threshold for warning relative to the baseline (min & max)."
                 },
                 "error": {
                   "type": "string",
-                  "description":
-                    "The threshold for error relative to the baseline (min & max)."
+                  "description": "The threshold for error relative to the baseline (min & max)."
                 }
               }
             },
@@ -211,16 +203,14 @@
           },
           "testTsconfig": {
             "type": "string",
-            "description":
-              "The name of the TypeScript configuration file for unit tests."
+            "description": "The name of the TypeScript configuration file for unit tests."
           },
           "prefix": {
             "type": "string",
             "description": "The prefix to apply to generated selectors."
           },
           "serviceWorker": {
-            "description":
-              "Experimental support for a service worker from @angular/service-worker.",
+            "description": "Experimental support for a service worker from @angular/service-worker.",
             "type": "boolean",
             "default": false
           },
@@ -250,8 +240,7 @@
             "type": "object",
             "properties": {
               "includePaths": {
-                "description":
-                  "Paths to include. Paths will be resolved to project root.",
+                "description": "Paths to include. Paths will be resolved to project root.",
                 "type": "array",
                 "items": {
                   "type": "string"
@@ -288,8 +277,7 @@
             "type": "string"
           },
           "environments": {
-            "description":
-              "Name and corresponding file for environment config.",
+            "description": "Name and corresponding file for environment config.",
             "type": "object",
             "additionalProperties": true
           }
@@ -337,8 +325,7 @@
             "default": []
           },
           "project": {
-            "description":
-              "Location of the tsconfig.json project file. Will also use as files to lint if 'files' property not present.",
+            "description": "Location of the tsconfig.json project file. Will also use as files to lint if 'files' property not present.",
             "type": "string"
           },
           "tslintConfig": {
@@ -444,8 +431,7 @@
               "default": false
             },
             "inlineTemplate": {
-              "description":
-                "Specifies if the template will be in the ts file.",
+              "description": "Specifies if the template will be in the ts file.",
               "type": "boolean",
               "default": false
             },
@@ -569,8 +555,7 @@
               "type": "boolean"
             },
             "poll": {
-              "description":
-                "Enable and define the file watching poll time period (milliseconds).",
+              "description": "Enable and define the file watching poll time period (milliseconds).",
               "type": "number"
             },
             "deleteOutputPath": {
@@ -589,8 +574,7 @@
               "default": true
             },
             "commonChunk": {
-              "description":
-                "Use a separate bundle containing code used across multiple bundles.",
+              "description": "Use a separate bundle containing code used across multiple bundles.",
               "type": "boolean",
               "default": true
             },
@@ -666,14 +650,12 @@
       "type": "object",
       "properties": {
         "hmrWarning": {
-          "description":
-            "Show a warning when the user enabled the --hmr option.",
+          "description": "Show a warning when the user enabled the --hmr option.",
           "type": "boolean",
           "default": true
         },
         "nodeDeprecation": {
-          "description":
-            "Show a warning when the node version is incompatible.",
+          "description": "Show a warning when the node version is incompatible.",
           "type": "boolean",
           "default": true
         },
@@ -683,20 +665,17 @@
           "default": true
         },
         "versionMismatch": {
-          "description":
-            "Show a warning when the global version is newer than the local one.",
+          "description": "Show a warning when the global version is newer than the local one.",
           "type": "boolean",
           "default": true
         },
         "typescriptMismatch": {
-          "description":
-            "Show a warning when the TypeScript version is incompatible",
+          "description": "Show a warning when the TypeScript version is incompatible",
           "type": "boolean",
           "default": true
         },
         "servePathDefault": {
-          "description":
-            "Show a warning when deploy-url/base-href use unsupported serve path values.",
+          "description": "Show a warning when deploy-url/base-href use unsupported serve path values.",
           "type": "boolean",
           "default": true
         }

@@ -12,40 +12,46 @@ describe('lib', () => {
 
   let appTree: Tree;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     appTree = new VirtualTree();
     appTree = createEmptyWorkspace(appTree);
-    appTree = schematicRunner.runSchematic(
-      'lib',
-      {
-        name: 'lib1',
-        unitTestRunner: 'none'
-      },
-      appTree
-    );
+    appTree = await schematicRunner
+      .runSchematicAsync(
+        'lib',
+        {
+          name: 'lib1',
+          unitTestRunner: 'none'
+        },
+        appTree
+      )
+      .toPromise();
   });
 
-  it('should generate files', () => {
-    const resultTree = schematicRunner.runSchematic(
-      'jest-project',
-      {
-        project: 'lib1'
-      },
-      appTree
-    );
+  it('should generate files', async () => {
+    const resultTree = await schematicRunner
+      .runSchematicAsync(
+        'jest-project',
+        {
+          project: 'lib1'
+        },
+        appTree
+      )
+      .toPromise();
     expect(resultTree.exists('/libs/lib1/src/test-setup.ts')).toBeTruthy();
     expect(resultTree.exists('/libs/lib1/jest.config.js')).toBeTruthy();
     expect(resultTree.exists('/libs/lib1/tsconfig.spec.json')).toBeTruthy();
   });
 
-  it('should alter angular.json', () => {
-    const resultTree = schematicRunner.runSchematic(
-      'jest-project',
-      {
-        project: 'lib1'
-      },
-      appTree
-    );
+  it('should alter angular.json', async () => {
+    const resultTree = await schematicRunner
+      .runSchematicAsync(
+        'jest-project',
+        {
+          project: 'lib1'
+        },
+        appTree
+      )
+      .toPromise();
     const angularJson = readJsonInTree(resultTree, 'angular.json');
     expect(angularJson.projects.lib1.architect.test).toEqual({
       builder: '@nrwl/builders:jest',
@@ -60,14 +66,16 @@ describe('lib', () => {
     );
   });
 
-  it('should create a jest.config.js', () => {
-    const resultTree = schematicRunner.runSchematic(
-      'jest-project',
-      {
-        project: 'lib1'
-      },
-      appTree
-    );
+  it('should create a jest.config.js', async () => {
+    const resultTree = await schematicRunner
+      .runSchematicAsync(
+        'jest-project',
+        {
+          project: 'lib1'
+        },
+        appTree
+      )
+      .toPromise();
     expect(resultTree.readContent('libs/lib1/jest.config.js'))
       .toBe(`module.exports = {
   name: 'lib1',
@@ -77,27 +85,31 @@ describe('lib', () => {
 `);
   });
 
-  it('should update the local tsconfig.json', () => {
-    const resultTree = schematicRunner.runSchematic(
-      'jest-project',
-      {
-        project: 'lib1'
-      },
-      appTree
-    );
+  it('should update the local tsconfig.json', async () => {
+    const resultTree = await schematicRunner
+      .runSchematicAsync(
+        'jest-project',
+        {
+          project: 'lib1'
+        },
+        appTree
+      )
+      .toPromise();
     const tsConfig = readJsonInTree(resultTree, 'libs/lib1/tsconfig.json');
     expect(tsConfig.compilerOptions.types).toContain('jest');
     expect(tsConfig.compilerOptions.types).toContain('node');
   });
 
-  it('should create a tsconfig.spec.json', () => {
-    const resultTree = schematicRunner.runSchematic(
-      'jest-project',
-      {
-        project: 'lib1'
-      },
-      appTree
-    );
+  it('should create a tsconfig.spec.json', async () => {
+    const resultTree = await schematicRunner
+      .runSchematicAsync(
+        'jest-project',
+        {
+          project: 'lib1'
+        },
+        appTree
+      )
+      .toPromise();
     const tsConfig = readJsonInTree(resultTree, 'libs/lib1/tsconfig.spec.json');
     expect(tsConfig).toEqual({
       extends: './tsconfig.json',
@@ -112,42 +124,48 @@ describe('lib', () => {
   });
 
   describe('--skip-setup-file', () => {
-    it('should generate src/test-setup.ts', () => {
-      const resultTree = schematicRunner.runSchematic(
-        'jest-project',
-        {
-          project: 'lib1',
-          skipSetupFile: true
-        },
-        appTree
-      );
+    it('should generate src/test-setup.ts', async () => {
+      const resultTree = await schematicRunner
+        .runSchematicAsync(
+          'jest-project',
+          {
+            project: 'lib1',
+            skipSetupFile: true
+          },
+          appTree
+        )
+        .toPromise();
       expect(resultTree.exists('src/test-setup.ts')).toBeFalsy();
     });
 
-    it('should not list the setup file in angular.json', () => {
-      const resultTree = schematicRunner.runSchematic(
-        'jest-project',
-        {
-          project: 'lib1',
-          skipSetupFile: true
-        },
-        appTree
-      );
+    it('should not list the setup file in angular.json', async () => {
+      const resultTree = await schematicRunner
+        .runSchematicAsync(
+          'jest-project',
+          {
+            project: 'lib1',
+            skipSetupFile: true
+          },
+          appTree
+        )
+        .toPromise();
       const angularJson = readJsonInTree(resultTree, 'angular.json');
       expect(
         angularJson.projects.lib1.architect.test.options.setupFile
       ).toBeUndefined();
     });
 
-    it('should not list the setup file in tsconfig.spec.json', () => {
-      const resultTree = schematicRunner.runSchematic(
-        'jest-project',
-        {
-          project: 'lib1',
-          skipSetupFile: true
-        },
-        appTree
-      );
+    it('should not list the setup file in tsconfig.spec.json', async () => {
+      const resultTree = await schematicRunner
+        .runSchematicAsync(
+          'jest-project',
+          {
+            project: 'lib1',
+            skipSetupFile: true
+          },
+          appTree
+        )
+        .toPromise();
       const tsConfig = readJsonInTree(
         resultTree,
         'libs/lib1/tsconfig.spec.json'

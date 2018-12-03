@@ -19,15 +19,17 @@ describe('upgrade-module', () => {
     appTree = createApp(appTree, 'myapp');
   });
 
-  it('should update the bootstrap logic', () => {
-    const tree = schematicRunner.runSchematic(
-      'upgrade-module',
-      {
-        name: 'legacy',
-        project: 'myapp'
-      },
-      appTree
-    );
+  it('should update the bootstrap logic', async () => {
+    const tree = await schematicRunner
+      .runSchematicAsync(
+        'upgrade-module',
+        {
+          name: 'legacy',
+          project: 'myapp'
+        },
+        appTree
+      )
+      .toPromise();
 
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
     expect(appModule).toContain(
@@ -41,7 +43,7 @@ describe('upgrade-module', () => {
     expect(tree.exists('/apps/myapp/src/hybrid.spec.ts')).toBeTruthy();
   });
 
-  it('should update package.json by default', () => {
+  it('should update package.json by default', async () => {
     appTree.overwrite(
       `/package.json`,
       JSON.stringify({
@@ -51,21 +53,23 @@ describe('upgrade-module', () => {
       })
     );
 
-    const tree = schematicRunner.runSchematic(
-      'upgrade-module',
-      {
-        name: 'legacy',
-        project: 'myapp'
-      },
-      appTree
-    );
+    const tree = await schematicRunner
+      .runSchematicAsync(
+        'upgrade-module',
+        {
+          name: 'legacy',
+          project: 'myapp'
+        },
+        appTree
+      )
+      .toPromise();
 
     const packageJson = readJsonInTree(tree, '/package.json');
     expect(packageJson.dependencies['@angular/upgrade']).toEqual('4.4.4');
     expect(packageJson.dependencies['angular']).toBeDefined();
   });
 
-  it('should not package.json when --skipPackageJson=true', () => {
+  it('should not package.json when --skipPackageJson=true', async () => {
     appTree.overwrite(
       `/package.json`,
       JSON.stringify({
@@ -75,45 +79,51 @@ describe('upgrade-module', () => {
       })
     );
 
-    const tree = schematicRunner.runSchematic(
-      'upgrade-module',
-      {
-        name: 'legacy',
-        skipPackageJson: true,
-        project: 'myapp'
-      },
-      appTree
-    );
+    const tree = await schematicRunner
+      .runSchematicAsync(
+        'upgrade-module',
+        {
+          name: 'legacy',
+          skipPackageJson: true,
+          project: 'myapp'
+        },
+        appTree
+      )
+      .toPromise();
 
     const packageJson = readJsonInTree(tree, '/package.json');
     expect(packageJson.dependencies['@angular/upgrade']).not.toBeDefined();
   });
 
-  it('should add router configuration when --router=true', () => {
-    const tree = schematicRunner.runSchematic(
-      'upgrade-module',
-      {
-        name: 'legacy',
-        router: true,
-        project: 'myapp'
-      },
-      appTree
-    );
+  it('should add router configuration when --router=true', async () => {
+    const tree = await schematicRunner
+      .runSchematicAsync(
+        'upgrade-module',
+        {
+          name: 'legacy',
+          router: true,
+          project: 'myapp'
+        },
+        appTree
+      )
+      .toPromise();
 
     const legacySetup = getFileContent(tree, '/apps/myapp/src/legacy-setup.ts');
     expect(legacySetup).toContain(`setUpLocationSync`);
   });
 
-  it('should support custom angularJsImport', () => {
-    const tree = schematicRunner.runSchematic(
-      'upgrade-module',
-      {
-        name: 'legacy',
-        angularJsImport: 'legacy-app',
-        project: 'myapp'
-      },
-      appTree
-    );
+  it('should support custom angularJsImport', async () => {
+    const tree = await schematicRunner
+      .runSchematicAsync(
+        'upgrade-module',
+        {
+          name: 'legacy',
+          angularJsImport: 'legacy-app',
+          project: 'myapp'
+        },
+        appTree
+      )
+      .toPromise();
 
     const legacySetup = getFileContent(tree, '/apps/myapp/src/legacy-setup.ts');
     expect(legacySetup).toContain(`import 'legacy-app';`);

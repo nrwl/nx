@@ -74,7 +74,7 @@
     "npm-run-all": "^4.1.5",
     "opn": "^5.3.0",
     "precise-commits": "1.0.2",
-    "prettier": "1.10.2",
+    "prettier": "1.15.3",
     "release-it": "^7.4.0",
     "rxjs": "6.3.3",
     "semver": "5.4.1",

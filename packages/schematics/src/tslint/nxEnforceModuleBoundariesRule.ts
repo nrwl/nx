@@ -224,14 +224,13 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     if (done[sourceProjectName]) return false;
     if (!this.deps[sourceProjectName]) return false;
     return this.deps[sourceProjectName]
-      .map(
-        dep =>
-          dep.projectName === targetProjectName
-            ? true
-            : this.isDependingOn(dep.projectName, targetProjectName, {
-                ...done,
-                [`${sourceProjectName}`]: true
-              })
+      .map(dep =>
+        dep.projectName === targetProjectName
+          ? true
+          : this.isDependingOn(dep.projectName, targetProjectName, {
+              ...done,
+              [`${sourceProjectName}`]: true
+            })
       )
       .some(result => result);
   }

@@ -21,12 +21,10 @@ describe('lib', () => {
   });
 
   describe('not nested', () => {
-    it('should update ng-package.json', () => {
-      const publishableTree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib', publishable: true },
-        appTree
-      );
+    it('should update ng-package.json', async () => {
+      const publishableTree = await schematicRunner
+        .runSchematicAsync('lib', { name: 'myLib', publishable: true }, appTree)
+        .toPromise();
       let ngPackage = readJsonInTree(
         publishableTree,
         'libs/my-lib/ng-package.json'
@@ -35,76 +33,70 @@ describe('lib', () => {
       expect(ngPackage.dest).toEqual('../../dist/libs/my-lib');
     });
 
-    it('should not update package.json by default', () => {
-      const tree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib' },
-        appTree
-      );
+    it('should not update package.json by default', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync('lib', { name: 'myLib' }, appTree)
+        .toPromise();
       const packageJson = readJsonInTree(tree, '/package.json');
       expect(packageJson.devDependencies['ng-packagr']).toBeUndefined();
     });
 
-    it('should update package.json when publishable', () => {
-      const tree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib', publishable: true },
-        appTree
-      );
+    it('should update package.json when publishable', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync('lib', { name: 'myLib', publishable: true }, appTree)
+        .toPromise();
       const packageJson = readJsonInTree(tree, '/package.json');
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
     });
 
-    it("should update npmScope of lib's package.json when publishable", () => {
-      const tree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib', publishable: true },
-        appTree
-      );
+    it("should update npmScope of lib's package.json when publishable", async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync('lib', { name: 'myLib', publishable: true }, appTree)
+        .toPromise();
       const packageJson = readJsonInTree(tree, '/libs/my-lib/package.json');
       expect(packageJson.name).toEqual('@proj/my-lib');
     });
 
-    it("should update npmScope of lib's package.json when publishable", () => {
-      const tree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib', publishable: true, prefix: 'lib' },
-        appTree
-      );
+    it("should update npmScope of lib's package.json when publishable", async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'lib',
+          { name: 'myLib', publishable: true, prefix: 'lib' },
+          appTree
+        )
+        .toPromise();
       const packageJson = readJsonInTree(tree, '/libs/my-lib/package.json');
       expect(packageJson.name).toEqual('@proj/my-lib');
     });
 
-    it('should update angular.json', () => {
-      const tree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib', publishable: true },
-        appTree
-      );
+    it('should update angular.json', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync('lib', { name: 'myLib', publishable: true }, appTree)
+        .toPromise();
       const angularJson = readJsonInTree(tree, '/angular.json');
 
       expect(angularJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(angularJson.projects['my-lib'].architect.build).toBeDefined();
     });
 
-    it('should remove "build" target from angular.json when a library is not publishable', () => {
-      const tree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib', publishable: false },
-        appTree
-      );
+    it('should remove "build" target from angular.json when a library is not publishable', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'lib',
+          { name: 'myLib', publishable: false },
+          appTree
+        )
+        .toPromise();
       const angularJson = readJsonInTree(tree, '/angular.json');
 
       expect(angularJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(angularJson.projects['my-lib'].architect.build).not.toBeDefined();
     });
 
-    it('should update nx.json', () => {
-      const tree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib', tags: 'one,two' },
-        appTree
-      );
+    it('should update nx.json', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync('lib', { name: 'myLib', tags: 'one,two' }, appTree)
+        .toPromise();
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson).toEqual({
         npmScope: 'proj',
@@ -116,24 +108,20 @@ describe('lib', () => {
       });
     });
 
-    it('should update root tsconfig.json', () => {
-      const tree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib' },
-        appTree
-      );
+    it('should update root tsconfig.json', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync('lib', { name: 'myLib' }, appTree)
+        .toPromise();
       const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
         'libs/my-lib/src/index.ts'
       ]);
     });
 
-    it('should create a local tsconfig.json', () => {
-      const tree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib' },
-        appTree
-      );
+    it('should create a local tsconfig.json', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync('lib', { name: 'myLib' }, appTree)
+        .toPromise();
 
       const tsconfigJson = readJsonInTree(tree, 'libs/my-lib/tsconfig.json');
       expect(tsconfigJson).toEqual({
@@ -145,12 +133,10 @@ describe('lib', () => {
       });
     });
 
-    it('should extend the local tsconfig.json with tsconfig.spec.json', () => {
-      const tree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib' },
-        appTree
-      );
+    it('should extend the local tsconfig.json with tsconfig.spec.json', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync('lib', { name: 'myLib' }, appTree)
+        .toPromise();
 
       const tsconfigJson = readJsonInTree(
         tree,
@@ -159,12 +145,10 @@ describe('lib', () => {
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
     });
 
-    it('should extend the local tsconfig.json with tsconfig.lib.json', () => {
-      const tree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib' },
-        appTree
-      );
+    it('should extend the local tsconfig.json with tsconfig.lib.json', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync('lib', { name: 'myLib' }, appTree)
+        .toPromise();
 
       const tsconfigJson = readJsonInTree(
         tree,
@@ -173,12 +157,10 @@ describe('lib', () => {
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
     });
 
-    it('should generate files', () => {
-      const tree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib' },
-        appTree
-      );
+    it('should generate files', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync('lib', { name: 'myLib' }, appTree)
+        .toPromise();
       expect(tree.exists(`libs/my-lib/karma.conf.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
@@ -194,11 +176,13 @@ describe('lib', () => {
         tree.exists('libs/my-lib/src/lib/my-lib.service.spec.ts')
       ).toBeFalsy();
 
-      const tree2 = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib2', simpleModuleName: true },
-        tree
-      );
+      const tree2 = await schematicRunner
+        .runSchematicAsync(
+          'lib',
+          { name: 'myLib2', simpleModuleName: true },
+          tree
+        )
+        .toPromise();
       expect(tree2.exists(`libs/my-lib2/karma.conf.js`)).toBeTruthy();
       expect(tree2.exists('libs/my-lib2/src/index.ts')).toBeTruthy();
       expect(
@@ -219,12 +203,10 @@ describe('lib', () => {
       ).toBeFalsy();
     });
 
-    it('should not generate a module for --module false', () => {
-      const tree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib', module: false },
-        appTree
-      );
+    it('should not generate a module for --module false', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync('lib', { name: 'myLib', module: false }, appTree)
+        .toPromise();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toEqual(
         false
       );
@@ -234,22 +216,18 @@ describe('lib', () => {
       expect(tree.exists('libs/my-lib/src/lib/.gitkeep')).toEqual(true);
     });
 
-    it('should default the prefix to npmScope', () => {
-      const noPrefix = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib' },
-        appTree
-      );
+    it('should default the prefix to npmScope', async () => {
+      const noPrefix = await schematicRunner
+        .runSchematicAsync('lib', { name: 'myLib' }, appTree)
+        .toPromise();
       expect(
         JSON.parse(noPrefix.read('angular.json').toString()).projects['my-lib']
           .prefix
       ).toEqual('proj');
 
-      const withPrefix = schematicRunner.runSchematic(
-        'app',
-        { name: 'myLib', prefix: 'custom' },
-        appTree
-      );
+      const withPrefix = await schematicRunner
+        .runSchematicAsync('lib', { name: 'myLib', prefix: 'custom' }, appTree)
+        .toPromise();
       expect(
         JSON.parse(withPrefix.read('angular.json').toString()).projects[
           'my-lib'
@@ -259,12 +237,14 @@ describe('lib', () => {
   });
 
   describe('nested', () => {
-    it('should update nx.json', () => {
-      const tree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib', directory: 'myDir', tags: 'one' },
-        appTree
-      );
+    it('should update nx.json', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'lib',
+          { name: 'myLib', directory: 'myDir', tags: 'one' },
+          appTree
+        )
+        .toPromise();
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson).toEqual({
         npmScope: 'proj',
@@ -275,16 +255,18 @@ describe('lib', () => {
         }
       });
 
-      const tree2 = schematicRunner.runSchematic(
-        'lib',
-        {
-          name: 'myLib2',
-          directory: 'myDir',
-          tags: 'one,two',
-          simpleModuleName: true
-        },
-        tree
-      );
+      const tree2 = await schematicRunner
+        .runSchematicAsync(
+          'lib',
+          {
+            name: 'myLib2',
+            directory: 'myDir',
+            tags: 'one,two',
+            simpleModuleName: true
+          },
+          tree
+        )
+        .toPromise();
       const nxJson2 = readJsonInTree<NxJson>(tree2, '/nx.json');
       expect(nxJson2).toEqual({
         npmScope: 'proj',
@@ -299,12 +281,14 @@ describe('lib', () => {
       });
     });
 
-    it('should generate files', () => {
-      const tree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib', directory: 'myDir' },
-        appTree
-      );
+    it('should generate files', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'lib',
+          { name: 'myLib', directory: 'myDir' },
+          appTree
+        )
+        .toPromise();
       expect(tree.exists(`libs/my-dir/my-lib/karma.conf.js`)).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
@@ -324,11 +308,13 @@ describe('lib', () => {
         tree.exists('libs/my-dir/my-lib/src/lib/my-lib.service.spec.ts')
       ).toBeFalsy();
 
-      const tree2 = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib2', directory: 'myDir', simpleModuleName: true },
-        tree
-      );
+      const tree2 = await schematicRunner
+        .runSchematicAsync(
+          'lib',
+          { name: 'myLib2', directory: 'myDir', simpleModuleName: true },
+          tree
+        )
+        .toPromise();
       expect(tree2.exists(`libs/my-dir/my-lib2/karma.conf.js`)).toBeTruthy();
       expect(tree2.exists('libs/my-dir/my-lib2/src/index.ts')).toBeTruthy();
       expect(
@@ -349,12 +335,14 @@ describe('lib', () => {
       ).toBeFalsy();
     });
 
-    it('should update ng-package.json', () => {
-      const publishableTree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib', directory: 'myDir', publishable: true },
-        appTree
-      );
+    it('should update ng-package.json', async () => {
+      const publishableTree = await schematicRunner
+        .runSchematicAsync(
+          'lib',
+          { name: 'myLib', directory: 'myDir', publishable: true },
+          appTree
+        )
+        .toPromise();
 
       let ngPackage = readJsonInTree(
         publishableTree,
@@ -363,12 +351,14 @@ describe('lib', () => {
       expect(ngPackage.dest).toEqual('../../../dist/libs/my-dir/my-lib');
     });
 
-    it('should update angular.json', () => {
-      const tree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib', directory: 'myDir' },
-        appTree
-      );
+    it('should update angular.json', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'lib',
+          { name: 'myLib', directory: 'myDir' },
+          appTree
+        )
+        .toPromise();
       const angularJson = readJsonInTree(tree, '/angular.json');
 
       expect(angularJson.projects['my-dir-my-lib'].root).toEqual(
@@ -376,12 +366,14 @@ describe('lib', () => {
       );
     });
 
-    it('should update tsconfig.json', () => {
-      const tree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib', directory: 'myDir' },
-        appTree
-      );
+    it('should update tsconfig.json', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'lib',
+          { name: 'myLib', directory: 'myDir' },
+          appTree
+        )
+        .toPromise();
       const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
         ['libs/my-dir/my-lib/src/index.ts']
@@ -391,12 +383,14 @@ describe('lib', () => {
       ).toBeUndefined();
     });
 
-    it('should create a local tsconfig.json', () => {
-      const tree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib', directory: 'myDir' },
-        appTree
-      );
+    it('should create a local tsconfig.json', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'lib',
+          { name: 'myLib', directory: 'myDir' },
+          appTree
+        )
+        .toPromise();
 
       const tsconfigJson = readJsonInTree(
         tree,
@@ -411,12 +405,14 @@ describe('lib', () => {
       });
     });
 
-    it('should not generate a module for --module false', () => {
-      const tree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib', directory: 'myDir', module: false },
-        appTree
-      );
+    it('should not generate a module for --module false', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'lib',
+          { name: 'myLib', directory: 'myDir', module: false },
+          appTree
+        )
+        .toPromise();
       expect(
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
       ).toEqual(false);
@@ -428,23 +424,26 @@ describe('lib', () => {
   });
 
   describe('router', () => {
-    it('should error when lazy is set without routing', () => {
-      expect(() =>
-        schematicRunner.runSchematic(
-          'lib',
-          { name: 'myLib', lazy: true },
-          appTree
-        )
-      ).toThrow('routing must be set');
+    it('should error when lazy is set without routing', async () => {
+      try {
+        await schematicRunner
+          .runSchematicAsync('lib', { name: 'myLib', lazy: true }, appTree)
+          .toPromise();
+        fail();
+      } catch (e) {
+        expect(e.message).toEqual('routing must be set');
+      }
     });
 
     describe('lazy', () => {
-      it('should add RouterModule.forChild', () => {
-        const tree = schematicRunner.runSchematic(
-          'lib',
-          { name: 'myLib', directory: 'myDir', routing: true, lazy: true },
-          appTree
-        );
+      it('should add RouterModule.forChild', async () => {
+        const tree = await schematicRunner
+          .runSchematicAsync(
+            'lib',
+            { name: 'myLib', directory: 'myDir', routing: true, lazy: true },
+            appTree
+          )
+          .toPromise();
 
         expect(
           tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
@@ -456,17 +455,19 @@ describe('lib', () => {
           )
         ).toContain('RouterModule.forChild');
 
-        const tree2 = schematicRunner.runSchematic(
-          'lib',
-          {
-            name: 'myLib2',
-            directory: 'myDir',
-            routing: true,
-            lazy: true,
-            simpleModuleName: true
-          },
-          tree
-        );
+        const tree2 = await schematicRunner
+          .runSchematicAsync(
+            'lib',
+            {
+              name: 'myLib2',
+              directory: 'myDir',
+              routing: true,
+              lazy: true,
+              simpleModuleName: true
+            },
+            tree
+          )
+          .toPromise();
 
         expect(
           tree2.exists('libs/my-dir/my-lib2/src/lib/my-lib2.module.ts')
@@ -476,24 +477,30 @@ describe('lib', () => {
         ).toContain('RouterModule.forChild');
       });
 
-      it('should update the parent module', () => {
+      it('should update the parent module', async () => {
         appTree = createApp(appTree, 'myapp');
-        const tree = schematicRunner.runSchematic(
-          'lib',
-          {
-            name: 'myLib',
-            directory: 'myDir',
-            routing: true,
-            lazy: true,
-            parentModule: 'apps/myapp/src/app/app.module.ts'
-          },
-          appTree
+        const tree = await schematicRunner
+          .runSchematicAsync(
+            'lib',
+            {
+              name: 'myLib',
+              directory: 'myDir',
+              routing: true,
+              lazy: true,
+              parentModule: 'apps/myapp/src/app/app.module.ts'
+            },
+            appTree
+          )
+          .toPromise();
+        const moduleContents = getFileContent(
+          tree,
+          'apps/myapp/src/app/app.module.ts'
         );
-        expect(
-          getFileContent(tree, 'apps/myapp/src/app/app.module.ts')
-        ).toContain(
-          `RouterModule.forRoot([{path: 'my-dir-my-lib', loadChildren: '@proj/my-dir/my-lib#MyDirMyLibModule'}])`
-        );
+        expect(moduleContents).toContain('RouterModule.forRoot([');
+        expect(moduleContents).toContain(`{
+        path: 'my-dir-my-lib',
+        loadChildren: '@proj/my-dir/my-lib#MyDirMyLibModule'
+      }`);
 
         const tsConfigAppJson = JSON.parse(
           stripJsonComments(
@@ -505,22 +512,32 @@ describe('lib', () => {
           '../../libs/my-dir/my-lib/src/index.ts'
         ]);
 
-        const tree2 = schematicRunner.runSchematic(
-          'lib',
-          {
-            name: 'myLib2',
-            directory: 'myDir',
-            routing: true,
-            lazy: true,
-            parentModule: 'apps/myapp/src/app/app.module.ts'
-          },
-          tree
+        const tree2 = await schematicRunner
+          .runSchematicAsync(
+            'lib',
+            {
+              name: 'myLib2',
+              directory: 'myDir',
+              routing: true,
+              lazy: true,
+              parentModule: 'apps/myapp/src/app/app.module.ts'
+            },
+            tree
+          )
+          .toPromise();
+        const moduleContents2 = getFileContent(
+          tree2,
+          'apps/myapp/src/app/app.module.ts'
         );
-        expect(
-          getFileContent(tree2, 'apps/myapp/src/app/app.module.ts')
-        ).toContain(
-          `RouterModule.forRoot([{path: 'my-dir-my-lib', loadChildren: '@proj/my-dir/my-lib#MyDirMyLibModule'}, {path: 'my-dir-my-lib2', loadChildren: '@proj/my-dir/my-lib2#MyDirMyLib2Module'}])`
-        );
+        expect(moduleContents2).toContain('RouterModule.forRoot([');
+        expect(moduleContents2).toContain(`{
+        path: 'my-dir-my-lib',
+        loadChildren: '@proj/my-dir/my-lib#MyDirMyLibModule'
+      }`);
+        expect(moduleContents2).toContain(`{
+        path: 'my-dir-my-lib2',
+        loadChildren: '@proj/my-dir/my-lib2#MyDirMyLib2Module'
+      }`);
 
         const tsConfigAppJson2 = JSON.parse(
           stripJsonComments(
@@ -533,22 +550,35 @@ describe('lib', () => {
           '../../libs/my-dir/my-lib2/src/index.ts'
         ]);
 
-        const tree3 = schematicRunner.runSchematic(
-          'lib',
-          {
-            name: 'myLib3',
-            directory: 'myDir',
-            routing: true,
-            lazy: true,
-            parentModule: 'apps/myapp/src/app/app.module.ts',
-            simpleModuleName: true
-          },
-          tree2
+        const tree3 = await schematicRunner
+          .runSchematicAsync(
+            'lib',
+            {
+              name: 'myLib3',
+              directory: 'myDir',
+              routing: true,
+              lazy: true,
+              parentModule: 'apps/myapp/src/app/app.module.ts',
+              simpleModuleName: true
+            },
+            tree2
+          )
+          .toPromise();
+        const moduleContents3 = getFileContent(
+          tree3,
+          'apps/myapp/src/app/app.module.ts'
         );
-        expect(
-          getFileContent(tree3, 'apps/myapp/src/app/app.module.ts')
-        ).toContain(
-          `RouterModule.forRoot([{path: 'my-dir-my-lib', loadChildren: '@proj/my-dir/my-lib#MyDirMyLibModule'}, {path: 'my-dir-my-lib2', loadChildren: '@proj/my-dir/my-lib2#MyDirMyLib2Module'}, {path: 'my-lib3', loadChildren: '@proj/my-dir/my-lib3#MyLib3Module'}])`
+        expect(moduleContents3).toContain('RouterModule.forRoot([');
+        expect(moduleContents3).toContain(`{
+        path: 'my-dir-my-lib',
+        loadChildren: '@proj/my-dir/my-lib#MyDirMyLibModule'
+      }`);
+        expect(moduleContents3).toContain(`{
+        path: 'my-dir-my-lib2',
+        loadChildren: '@proj/my-dir/my-lib2#MyDirMyLib2Module'
+      }`);
+        expect(moduleContents3).toContain(
+          `{ path: 'my-lib3', loadChildren: '@proj/my-dir/my-lib3#MyLib3Module' }`
         );
 
         const tsConfigAppJson3 = JSON.parse(
@@ -566,12 +596,14 @@ describe('lib', () => {
     });
 
     describe('eager', () => {
-      it('should add RouterModule and define an array of routes', () => {
-        const tree = schematicRunner.runSchematic(
-          'lib',
-          { name: 'myLib', directory: 'myDir', routing: true },
-          appTree
-        );
+      it('should add RouterModule and define an array of routes', async () => {
+        const tree = await schematicRunner
+          .runSchematicAsync(
+            'lib',
+            { name: 'myLib', directory: 'myDir', routing: true },
+            appTree
+          )
+          .toPromise();
         expect(
           tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
         ).toBeTruthy();
@@ -588,16 +620,18 @@ describe('lib', () => {
           )
         ).toContain('const myDirMyLibRoutes: Route[] = ');
 
-        const tree2 = schematicRunner.runSchematic(
-          'lib',
-          {
-            name: 'myLib2',
-            directory: 'myDir',
-            routing: true,
-            simpleModuleName: true
-          },
-          tree
-        );
+        const tree2 = await schematicRunner
+          .runSchematicAsync(
+            'lib',
+            {
+              name: 'myLib2',
+              directory: 'myDir',
+              routing: true,
+              simpleModuleName: true
+            },
+            tree
+          )
+          .toPromise();
         expect(
           tree2.exists('libs/my-dir/my-lib2/src/lib/my-lib2.module.ts')
         ).toBeTruthy();
@@ -609,67 +643,89 @@ describe('lib', () => {
         ).toContain('const myLib2Routes: Route[] = ');
       });
 
-      it('should update the parent module', () => {
+      it('should update the parent module', async () => {
         appTree = createApp(appTree, 'myapp');
-        const tree = schematicRunner.runSchematic(
-          'lib',
-          {
-            name: 'myLib',
-            directory: 'myDir',
-            routing: true,
-            parentModule: 'apps/myapp/src/app/app.module.ts'
-          },
-          appTree
+        const tree = await schematicRunner
+          .runSchematicAsync(
+            'lib',
+            {
+              name: 'myLib',
+              directory: 'myDir',
+              routing: true,
+              parentModule: 'apps/myapp/src/app/app.module.ts'
+            },
+            appTree
+          )
+          .toPromise();
+        const moduleContents = getFileContent(
+          tree,
+          'apps/myapp/src/app/app.module.ts'
         );
-        expect(
-          getFileContent(tree, 'apps/myapp/src/app/app.module.ts')
-        ).toContain(
-          `RouterModule.forRoot([{path: 'my-dir-my-lib', children: myDirMyLibRoutes}])`
-        );
-
-        const tree2 = schematicRunner.runSchematic(
-          'lib',
-          {
-            name: 'myLib2',
-            directory: 'myDir',
-            routing: true,
-            parentModule: 'apps/myapp/src/app/app.module.ts'
-          },
-          tree
-        );
-        expect(
-          getFileContent(tree2, 'apps/myapp/src/app/app.module.ts')
-        ).toContain(
-          `RouterModule.forRoot([{path: 'my-dir-my-lib', children: myDirMyLibRoutes}, {path: 'my-dir-my-lib2', children: myDirMyLib2Routes}])`
+        expect(moduleContents).toContain('RouterModule.forRoot([');
+        expect(moduleContents).toContain(
+          "{ path: 'my-dir-my-lib', children: myDirMyLibRoutes }"
         );
 
-        const tree3 = schematicRunner.runSchematic(
-          'lib',
-          {
-            name: 'myLib3',
-            directory: 'myDir',
-            routing: true,
-            parentModule: 'apps/myapp/src/app/app.module.ts',
-            simpleModuleName: true
-          },
-          tree2
+        const tree2 = await schematicRunner
+          .runSchematicAsync(
+            'lib',
+            {
+              name: 'myLib2',
+              directory: 'myDir',
+              routing: true,
+              parentModule: 'apps/myapp/src/app/app.module.ts'
+            },
+            tree
+          )
+          .toPromise();
+        const moduleContents2 = getFileContent(
+          tree2,
+          'apps/myapp/src/app/app.module.ts'
         );
-        expect(
-          getFileContent(tree3, 'apps/myapp/src/app/app.module.ts')
-        ).toContain(
-          `RouterModule.forRoot([{path: 'my-dir-my-lib', children: myDirMyLibRoutes}, {path: 'my-dir-my-lib2', children: myDirMyLib2Routes}, {path: 'my-lib3', children: myLib3Routes}])`
+        expect(moduleContents2).toContain('RouterModule.forRoot([');
+        expect(moduleContents2).toContain(
+          "{ path: 'my-dir-my-lib', children: myDirMyLibRoutes }"
+        );
+        expect(moduleContents2).toContain(
+          "{ path: 'my-dir-my-lib2', children: myDirMyLib2Routes }"
+        );
+
+        const tree3 = await schematicRunner
+          .runSchematicAsync(
+            'lib',
+            {
+              name: 'myLib3',
+              directory: 'myDir',
+              routing: true,
+              parentModule: 'apps/myapp/src/app/app.module.ts',
+              simpleModuleName: true
+            },
+            tree2
+          )
+          .toPromise();
+        const moduleContents3 = getFileContent(
+          tree3,
+          'apps/myapp/src/app/app.module.ts'
+        );
+        expect(moduleContents3).toContain('RouterModule.forRoot([');
+        expect(moduleContents3).toContain(
+          "{ path: 'my-dir-my-lib', children: myDirMyLibRoutes }"
+        );
+        expect(moduleContents3).toContain(
+          "{ path: 'my-dir-my-lib2', children: myDirMyLib2Routes }"
+        );
+        expect(moduleContents3).toContain(
+          "{ path: 'my-lib3', children: myLib3Routes }"
         );
       });
     });
   });
 
   describe('--style scss', () => {
-    it('should set it as default', () => {
-      const result = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib', style: 'scss' },
-        appTree
-      );
+    it('should set it as default', async () => {
+      const result = await schematicRunner
+        .runSchematicAsync('lib', { name: 'myLib', style: 'scss' }, appTree)
+        .toPromise();
 
       const angularJson = readJsonInTree(result, 'angular.json');
 
@@ -682,12 +738,14 @@ describe('lib', () => {
   });
 
   describe('--unit-test-runner jest', () => {
-    it('should generate jest configuration', () => {
-      const resultTree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib', unitTestRunner: 'jest' },
-        appTree
-      );
+    it('should generate jest configuration', async () => {
+      const resultTree = await schematicRunner
+        .runSchematicAsync(
+          'lib',
+          { name: 'myLib', unitTestRunner: 'jest' },
+          appTree
+        )
+        .toPromise();
       expect(resultTree.exists('libs/my-lib/src/test.ts')).toBeFalsy();
       expect(resultTree.exists('libs/my-lib/src/test-setup.ts')).toBeTruthy();
       expect(resultTree.exists('libs/my-lib/tsconfig.spec.json')).toBeTruthy();
@@ -704,23 +762,27 @@ describe('lib', () => {
       ]);
     });
 
-    it('should skip the setup file if no module is generated', () => {
-      const resultTree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib', unitTestRunner: 'jest', module: false },
-        appTree
-      );
+    it('should skip the setup file if no module is generated', async () => {
+      const resultTree = await schematicRunner
+        .runSchematicAsync(
+          'lib',
+          { name: 'myLib', unitTestRunner: 'jest', module: false },
+          appTree
+        )
+        .toPromise();
       expect(resultTree.exists('libs/my-lib/src/test-setup.ts')).toBeFalsy();
     });
   });
 
   describe('--unit-test-runner none', () => {
-    it('should not generate test configuration', () => {
-      const resultTree = schematicRunner.runSchematic(
-        'lib',
-        { name: 'myLib', unitTestRunner: 'none' },
-        appTree
-      );
+    it('should not generate test configuration', async () => {
+      const resultTree = await schematicRunner
+        .runSchematicAsync(
+          'lib',
+          { name: 'myLib', unitTestRunner: 'none' },
+          appTree
+        )
+        .toPromise();
       expect(
         resultTree.exists('libs/my-lib/src/lib/my-lib.module.spec.ts')
       ).toBeFalsy();

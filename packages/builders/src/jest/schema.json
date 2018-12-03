@@ -5,8 +5,7 @@
   "properties": {
     "jestConfig": {
       "type": "string",
-      "description":
-        "The path of the Jest configuration. (https://jestjs.io/docs/en/configuration.html)"
+      "description": "The path of the Jest configuration. (https://jestjs.io/docs/en/configuration.html)"
     },
     "tsConfig": {
       "type": "string",
@@ -14,67 +13,55 @@
     },
     "setupFile": {
       "type": "string",
-      "description":
-        "The name of a setup file used by Jest. (https://jestjs.io/docs/en/configuration.html#setuptestframeworkscriptfile-string)"
+      "description": "The name of a setup file used by Jest. (https://jestjs.io/docs/en/configuration.html#setuptestframeworkscriptfile-string)"
     },
     "watch": {
       "type": "boolean",
-      "description":
-        "Run tests when files change. (https://jestjs.io/docs/en/cli#watch)",
+      "description": "Run tests when files change. (https://jestjs.io/docs/en/cli#watch)",
       "default": false
     },
     "onlyChanged": {
       "type": "boolean",
       "alias": "o",
-      "description":
-        "Isolate tests affected by uncommitted changes. (https://jestjs.io/docs/en/cli#onlychanged)"
+      "description": "Isolate tests affected by uncommitted changes. (https://jestjs.io/docs/en/cli#onlychanged)"
     },
     "passWithNoTests": {
       "type": "boolean",
-      "description":
-        "Allow test suite to pass when no test files are found. (https://jestjs.io/docs/en/cli#passwithnotests)"
+      "description": "Allow test suite to pass when no test files are found. (https://jestjs.io/docs/en/cli#passwithnotests)"
     },
     "codeCoverage": {
       "type": "boolean",
-      "description":
-        "Export a code coverage report. (https://jestjs.io/docs/en/cli#coverage)"
+      "description": "Export a code coverage report. (https://jestjs.io/docs/en/cli#coverage)"
     },
     "updateSnapshot": {
       "type": "boolean",
       "alias": "u",
-      "description":
-        "Re-record all failing snapshots. (https://jestjs.io/docs/en/cli#updatesnapshot)"
+      "description": "Re-record all failing snapshots. (https://jestjs.io/docs/en/cli#updatesnapshot)"
     },
     "ci": {
       "type": "boolean",
-      "description":
-        "Fail on missing snapshots. (https://jestjs.io/docs/en/cli#ci)"
+      "description": "Fail on missing snapshots. (https://jestjs.io/docs/en/cli#ci)"
     },
     "bail": {
       "type": "boolean",
-      "description":
-        "Exit the test suite immediately upon the first failing test suite. (https://jestjs.io/docs/en/cli#bail)"
+      "description": "Exit the test suite immediately upon the first failing test suite. (https://jestjs.io/docs/en/cli#bail)"
     },
     "silent": {
       "type": "boolean",
-      "description":
-        "Prevent tests from printing messages through the console. (https://jestjs.io/docs/en/cli#silent)"
+      "description": "Prevent tests from printing messages through the console. (https://jestjs.io/docs/en/cli#silent)"
     },
     "runInBand": {
       "type": "boolean",
-      "description":
-        "Run tests in a single process as opposed to multiple workers. Useful for CI. (https://jestjs.io/docs/en/cli.html#runinband)"
+      "description": "Run tests in a single process as opposed to multiple workers. Useful for CI. (https://jestjs.io/docs/en/cli.html#runinband)"
     },
     "maxWorkers": {
       "type": "number",
-      "description":
-        "Max number of workers to run tests across. Useful for CI. (https://jestjs.io/docs/en/cli.html#maxworkers-num)"
+      "description": "Max number of workers to run tests across. Useful for CI. (https://jestjs.io/docs/en/cli.html#maxworkers-num)"
     },
     "testNamePattern": {
       "type": "string",
       "alias": "t",
-      "description":
-        "Run only tests with a name that matches the regex. (https://jestjs.io/docs/en/cli.html#testnamepattern-regex)"
+      "description": "Run only tests with a name that matches the regex. (https://jestjs.io/docs/en/cli.html#testnamepattern-regex)"
     }
   },
   "required": ["jestConfig", "tsConfig"]

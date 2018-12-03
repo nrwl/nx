@@ -13,16 +13,14 @@ import {
 } from '../utils';
 
 describe('Nrwl Workspace', () => {
-  it(
-    'should work',
-    () => {
-      newProject();
-      newApp('myApp --directory=myDir');
-      newLib('myLib --directory=myDir');
+  it('should work', () => {
+    newProject();
+    newApp('myApp --directory=myDir');
+    newLib('myLib --directory=myDir');
 
-      updateFile(
-        'apps/my-dir/my-app/src/app/app.module.ts',
-        `
+    updateFile(
+      'apps/my-dir/my-app/src/app/app.module.ts',
+      `
         import { NgModule } from '@angular/core';
         import { BrowserModule } from '@angular/platform-browser';
         import { MyDirMyLibModule } from '@proj/my-dir/my-lib';
@@ -35,69 +33,57 @@ describe('Nrwl Workspace', () => {
         })
         export class AppModule {}
       `
-      );
-      runCLI('build --prod --project=my-dir-my-app --output-hashing none');
-      expect(exists('./tmp/proj/dist/apps/my-dir/my-app/main.js')).toEqual(
-        true
-      );
+    );
+    runCLI('build --prod --project=my-dir-my-app --output-hashing none');
+    expect(exists('./tmp/proj/dist/apps/my-dir/my-app/main.js')).toEqual(true);
 
-      // This is a loose requirement because there are a lot of
-      // influences external from this project that affect this.
-      const bundleSize = getSize('./tmp/proj/dist/apps/my-dir/my-app/main.js');
-      console.log(`The current bundle size is ${bundleSize} KB`);
-      expect(bundleSize).toBeLessThanOrEqual(200000);
+    // This is a loose requirement because there are a lot of
+    // influences external from this project that affect this.
+    const bundleSize = getSize('./tmp/proj/dist/apps/my-dir/my-app/main.js');
+    console.log(`The current bundle size is ${bundleSize} KB`);
+    expect(bundleSize).toBeLessThanOrEqual(200000);
 
-      // running tests for the app
-      expect(runCLI('test --project=my-dir-my-app --no-watch')).toContain(
-        'Executed 3 of 3 SUCCESS'
-      );
+    // running tests for the app
+    expect(runCLI('test --project=my-dir-my-app --no-watch')).toContain(
+      'Executed 3 of 3 SUCCESS'
+    );
 
-      // running tests for the lib
-      expect(runCLI('test --project=my-dir-my-lib --no-watch')).toContain(
-        'Executed 1 of 1 SUCCESS'
-      );
+    // running tests for the lib
+    expect(runCLI('test --project=my-dir-my-lib --no-watch')).toContain(
+      'Executed 1 of 1 SUCCESS'
+    );
 
-      // e2e tests
-      expect(runCLI('e2e --project=my-dir-my-app-e2e')).toContain(
-        'Executed 1 of 1 spec SUCCESS'
-      );
-    },
-    1000000
-  );
+    // e2e tests
+    expect(runCLI('e2e --project=my-dir-my-app-e2e')).toContain(
+      'Executed 1 of 1 spec SUCCESS'
+    );
+  }, 1000000);
 
-  it(
-    'should support router config generation (lazy)',
-    () => {
-      newProject();
-      newApp('myApp --directory=myDir --routing');
-      newLib(
-        'myLib --directory=myDir --routing --lazy --parentModule=apps/my-dir/my-app/src/app/app.module.ts'
-      );
+  it('should support router config generation (lazy)', () => {
+    newProject();
+    newApp('myApp --directory=myDir --routing');
+    newLib(
+      'myLib --directory=myDir --routing --lazy --parentModule=apps/my-dir/my-app/src/app/app.module.ts'
+    );
 
-      runCLI('build --aot --project=my-dir-my-app');
-      expect(runCLI('test --project=my-dir-my-app --no-watch')).toContain(
-        'Executed 3 of 3 SUCCESS'
-      );
-    },
-    1000000
-  );
+    runCLI('build --aot --project=my-dir-my-app');
+    expect(runCLI('test --project=my-dir-my-app --no-watch')).toContain(
+      'Executed 3 of 3 SUCCESS'
+    );
+  }, 1000000);
 
-  it(
-    'should support router config generation (eager)',
-    () => {
-      newProject();
-      newApp('myApp --directory=myDir --routing');
-      newLib(
-        'myLib --directory=myDir --routing --parentModule=apps/my-dir/my-app/src/app/app.module.ts'
-      );
+  it('should support router config generation (eager)', () => {
+    newProject();
+    newApp('myApp --directory=myDir --routing');
+    newLib(
+      'myLib --directory=myDir --routing --parentModule=apps/my-dir/my-app/src/app/app.module.ts'
+    );
 
-      runCLI('build --aot --project=my-dir-my-app');
-      expect(runCLI('test  --project=my-dir-my-app --no-watch')).toContain(
-        'Executed 3 of 3 SUCCESS'
-      );
-    },
-    1000000
-  );
+    runCLI('build --aot --project=my-dir-my-app');
+    expect(runCLI('test  --project=my-dir-my-app --no-watch')).toContain(
+      'Executed 3 of 3 SUCCESS'
+    );
+  }, 1000000);
 
   it('should support scss for styles', () => {
     cleanup();
@@ -119,23 +105,19 @@ describe('Nrwl Workspace', () => {
   });
 
   // TODO: Fix this test. This test was incorrect before.. and fails after fixing it.
-  xit(
-    'should not generate e2e configuration',
-    () => {
-      newProject();
-      newApp('myApp --e2eTestRunner=none');
+  xit('should not generate e2e configuration', () => {
+    newProject();
+    newApp('myApp --e2eTestRunner=none');
 
-      // Making sure the angular.json file doesn't contain e2e project
-      const angularJson = readJson('angular.json');
-      expect(angularJson.projects['my-app-e2e']).toBeUndefined();
+    // Making sure the angular.json file doesn't contain e2e project
+    const angularJson = readJson('angular.json');
+    expect(angularJson.projects['my-app-e2e']).toBeUndefined();
 
-      // Making sure the nx.json file doesn't contain e2e project
-      const nxJson = readJson('angular.json');
-      expect(nxJson.projects['my-app-e2e']).toBeUndefined();
+    // Making sure the nx.json file doesn't contain e2e project
+    const nxJson = readJson('angular.json');
+    expect(nxJson.projects['my-app-e2e']).toBeUndefined();
 
-      // Making sure the e2e folder is not created
-      expect(exists('./tmp/proj/apps/my-app-e2e')).toBeFalsy();
-    },
-    1000000
-  );
+    // Making sure the e2e folder is not created
+    expect(exists('./tmp/proj/apps/my-app-e2e')).toBeFalsy();
+  }, 1000000);
 });

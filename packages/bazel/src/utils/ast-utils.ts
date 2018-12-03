@@ -232,11 +232,13 @@ function findClass(
 ): ts.ClassDeclaration {
   const nodes = getSourceNodes(source);
 
-  const clazz = <any>nodes.filter(
-    n =>
-      n.kind === ts.SyntaxKind.ClassDeclaration &&
-      (<any>n).name.text === className
-  )[0];
+  const clazz = <any>(
+    nodes.filter(
+      n =>
+        n.kind === ts.SyntaxKind.ClassDeclaration &&
+        (<any>n).name.text === className
+    )[0]
+  );
 
   if (!clazz) {
     throw new Error(`Cannot find class '${className}'`);
@@ -283,9 +285,8 @@ export function addImportToTestBed(
   specPath: string,
   symbolName: string
 ): Change[] {
-  const allCalls: ts.CallExpression[] = <any>findNodes(
-    source,
-    ts.SyntaxKind.CallExpression
+  const allCalls: ts.CallExpression[] = <any>(
+    findNodes(source, ts.SyntaxKind.CallExpression)
   );
 
   const configureTestingModuleObjectLiterals = allCalls
@@ -293,11 +294,10 @@ export function addImportToTestBed(
     .filter(
       (c: any) => c.expression.name.getText(source) === 'configureTestingModule'
     )
-    .map(
-      c =>
-        c.arguments[0].kind === ts.SyntaxKind.ObjectLiteralExpression
-          ? c.arguments[0]
-          : null
+    .map(c =>
+      c.arguments[0].kind === ts.SyntaxKind.ObjectLiteralExpression
+        ? c.arguments[0]
+        : null
     );
 
   if (configureTestingModuleObjectLiterals.length > 0) {
