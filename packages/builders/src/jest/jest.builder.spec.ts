@@ -65,7 +65,8 @@ describe('Jest Builder', () => {
           bail: true,
           silent: true,
           runInBand: true,
-          maxWorkers: 2
+          maxWorkers: 2,
+          testNamePattern: 'test'
         }
       })
       .toPromise();
@@ -86,7 +87,8 @@ describe('Jest Builder', () => {
         bail: true,
         silent: true,
         runInBand: true,
-        maxWorkers: 2
+        maxWorkers: 2,
+        testNamePattern: 'test'
       },
       ['./jest.config.js']
     );
