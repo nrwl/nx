@@ -25,6 +25,7 @@ export interface JestBuilderOptions {
   setupFile?: string;
   silent?: boolean;
   updateSnapshot?: boolean;
+  testNamePattern?: string;
 }
 
 export default class JestBuilder implements Builder<JestBuilderOptions> {
@@ -52,6 +53,10 @@ export default class JestBuilder implements Builder<JestBuilderOptions> {
 
     if (options.maxWorkers) {
       config.maxWorkers = options.maxWorkers;
+    }
+
+    if (options.testNamePattern) {
+      config.testNamePattern = options.testNamePattern;
     }
 
     if (options.setupFile) {
