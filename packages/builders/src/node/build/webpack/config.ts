@@ -46,7 +46,7 @@ export function getWebpackConfig(
       ]
     },
     resolve: {
-      extensions: ['.ts', '.js'],
+      extensions: ['.ts', '.js', '.mjs'],
       alias: getAliases(options, compilerOptions),
       mainFields: [...(supportsEs2015 ? ['es2015'] : []), 'module', 'main']
     },
