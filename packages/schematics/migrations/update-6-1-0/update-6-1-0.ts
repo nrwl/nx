@@ -6,6 +6,7 @@ import {
 } from '@angular-devkit/schematics';
 import { updateJsonInTree } from '../../src/utils/ast-utils';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { NxJson } from '../../src/command-line/shared';
 
 function displayInformation(host: Tree, context: SchematicContext) {
   context.logger.info(stripIndents`
@@ -20,7 +21,7 @@ function displayInformation(host: Tree, context: SchematicContext) {
   `);
 }
 
-const addImplicitDependencies = updateJsonInTree('nx.json', nxJson => {
+const addImplicitDependencies = updateJsonInTree<NxJson>('nx.json', nxJson => {
   return {
     ...nxJson,
     implicitDependencies: {

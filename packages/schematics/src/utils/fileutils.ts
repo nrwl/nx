@@ -50,7 +50,7 @@ export function serializeJson(json: any): string {
  * If you are looking to read a JSON file in a Tree, use ./ast-utils#readJsonInTree
  * @param path Path of the JSON file on the filesystem
  */
-export function readJsonFile(path: string) {
+export function readJsonFile<T = any>(path: string): T {
   return JSON.parse(fs.readFileSync(path, 'utf-8'));
 }
 

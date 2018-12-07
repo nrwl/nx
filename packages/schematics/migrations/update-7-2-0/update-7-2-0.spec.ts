@@ -11,12 +11,9 @@ describe('Update 7.2.0', () => {
 
   beforeEach(() => {
     initialTree = Tree.empty();
-    initialTree.create(
-      'package.json',
-      serializeJson({
-        scripts: {}
-      })
-    );
+    createJson('package.json', {
+      scripts: {}
+    });
     createJson('tsconfig.json', {});
     createJson('angular.json', {
       projects: {

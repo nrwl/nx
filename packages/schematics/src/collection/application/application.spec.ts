@@ -5,6 +5,7 @@ import { createEmptyWorkspace } from '../../utils/testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
 import * as stripJsonComments from 'strip-json-comments';
 import { readJsonInTree, updateJsonInTree } from '../../utils/ast-utils';
+import { NxJson } from '../../command-line/shared';
 
 describe('app', () => {
   const schematicRunner = new SchematicTestRunner(
@@ -40,7 +41,7 @@ describe('app', () => {
         { name: 'myApp', tags: 'one,two' },
         appTree
       );
-      const nxJson = readJsonInTree(tree, '/nx.json');
+      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson).toEqual({
         npmScope: 'proj',
         projects: {
@@ -177,7 +178,7 @@ describe('app', () => {
         { name: 'myApp', directory: 'myDir', tags: 'one,two' },
         appTree
       );
-      const nxJson = readJsonInTree(tree, '/nx.json');
+      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson).toEqual({
         npmScope: 'proj',
         projects: {

@@ -1,5 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
 import { names } from './name-utils';
+import { NxJson } from '../command-line/shared';
 
 export interface AppConfig {
   appName: string; // name of app
@@ -33,7 +34,10 @@ export function createEmptyWorkspace(tree: Tree): Tree {
       devDependencies: {}
     })
   );
-  tree.create('/nx.json', JSON.stringify({ npmScope: 'proj', projects: {} }));
+  tree.create(
+    '/nx.json',
+    JSON.stringify(<NxJson>{ npmScope: 'proj', projects: {} })
+  );
   tree.create(
     '/tsconfig.json',
     JSON.stringify({ compilerOptions: { paths: {} } })

@@ -1,4 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
+import { readJsonInTree } from './ast-utils';
+import { NxJson } from '../command-line/shared';
 
 export const angularSchematicNames = [
   'class',
@@ -16,7 +18,7 @@ export function getWorkspacePath(host: Tree) {
 }
 
 export function getNpmScope(host: Tree) {
-  return JSON.parse(host.read('nx.json')!.toString('utf-8')).npmScope;
+  return readJsonInTree<NxJson>(host, 'nx.json').npmScope;
 }
 
 export function parseTarget(targetString: string) {
