@@ -5,6 +5,7 @@ import { createApp, createEmptyWorkspace } from '../../utils/testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
 import * as stripJsonComments from 'strip-json-comments';
 import { readJsonInTree } from '../../utils/ast-utils';
+import { NxJson } from '../../command-line/shared';
 
 describe('lib', () => {
   const schematicRunner = new SchematicTestRunner(
@@ -104,7 +105,7 @@ describe('lib', () => {
         { name: 'myLib', tags: 'one,two' },
         appTree
       );
-      const nxJson = readJsonInTree(tree, '/nx.json');
+      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson).toEqual({
         npmScope: 'proj',
         projects: {
@@ -264,7 +265,7 @@ describe('lib', () => {
         { name: 'myLib', directory: 'myDir', tags: 'one' },
         appTree
       );
-      const nxJson = readJsonInTree(tree, '/nx.json');
+      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson).toEqual({
         npmScope: 'proj',
         projects: {
@@ -284,7 +285,7 @@ describe('lib', () => {
         },
         tree
       );
-      const nxJson2 = readJsonInTree(tree2, '/nx.json');
+      const nxJson2 = readJsonInTree<NxJson>(tree2, '/nx.json');
       expect(nxJson2).toEqual({
         npmScope: 'proj',
         projects: {

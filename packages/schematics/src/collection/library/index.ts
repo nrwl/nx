@@ -1,3 +1,4 @@
+import { join, normalize } from '@angular-devkit/core';
 import {
   chain,
   externalSchematic,
@@ -16,13 +17,16 @@ import { Schema } from './schema';
 import * as path from 'path';
 import { insertImport } from '@schematics/angular/utility/ast-utils';
 import * as ts from 'typescript';
+
+import { NxJson } from '../../command-line/shared';
 import {
   addGlobal,
   addImportToModule,
   addIncludeToTsConfig,
   addRoute,
   insert,
-  updateJsonInTree
+  updateJsonInTree,
+  readJsonInTree
 } from '../../utils/ast-utils';
 import { offsetFromRoot } from '../../utils/common';
 import {
@@ -34,10 +38,9 @@ import {
   getNpmScope,
   getWorkspacePath,
   replaceAppNameWithPath
-} from '@nrwl/schematics/src/utils/cli-config-utils';
+} from '../../utils/cli-config-utils';
 import { formatFiles } from '../../utils/rules/format-files';
 import { updateKarmaConf } from '../../utils/rules/update-karma-conf';
-import { join, normalize } from '@angular-devkit/core';
 
 interface NormalizedSchema extends Schema {
   name: string;
@@ -420,7 +423,7 @@ function updateKarmaConfig(options: NormalizedSchema) {
 function updateTsConfig(options: NormalizedSchema): Rule {
   return chain([
     (host: Tree, context: SchematicContext) => {
-      const nxJson = JSON.parse(host.read('nx.json').toString());
+      const nxJson = readJsonInTree<NxJson>(host, 'nx.json');
       return updateJsonInTree('tsconfig.json', json => {
         const c = json.compilerOptions;
         delete c.paths[options.name];

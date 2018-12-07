@@ -1,6 +1,8 @@
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
 import { Tree } from '@angular-devkit/schematics';
+import { readJsonInTree } from '../../utils/ast-utils';
+import { NxJson } from '../../command-line/shared';
 
 describe('app', () => {
   const schematicRunner = new SchematicTestRunner(
@@ -33,6 +35,26 @@ describe('app', () => {
     expect(tree.exists('/proj/.prettierrc')).toBe(true);
     expect(tree.exists('/proj/.prettierignore')).toBe(true);
     expect(tree.exists('/proj/karma.conf.js')).toBe(true);
+  });
+
+  it('should create nx.json', () => {
+    const tree = schematicRunner.runSchematic(
+      'ng-new',
+      { name: 'proj' },
+      projectTree
+    );
+    const nxJson = readJsonInTree<NxJson>(tree, '/proj/nx.json');
+    expect(nxJson).toEqual({
+      npmScope: 'proj',
+      implicitDependencies: {
+        'angular.json': '*',
+        'package.json': '*',
+        'tsconfig.json': '*',
+        'tslint.json': '*',
+        'nx.json': '*'
+      },
+      projects: {}
+    });
   });
 
   it('should create a root karma configuration', () => {

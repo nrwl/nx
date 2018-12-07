@@ -16,11 +16,34 @@ import { YargsAffectedOptions } from './affected';
 import { readDependencies } from './deps-calculator';
 import { touchedProjects } from './touched';
 
-export type ImplicitDependencyEntry = { [key: string]: string[] };
+const ignore = require('ignore');
+
+export type ImplicitDependencyEntry = { [key: string]: '*' | string[] };
+export type NormalizedImplicitDependencyEntry = { [key: string]: string[] };
 export type ImplicitDependencies = {
-  files: ImplicitDependencyEntry;
-  projects: ImplicitDependencyEntry;
+  files: NormalizedImplicitDependencyEntry;
+  projects: NormalizedImplicitDependencyEntry;
 };
+
+export interface NxJson {
+  implicitDependencies?: ImplicitDependencyEntry;
+  npmScope: string;
+  projects: {
+    [projectName: string]: NxJsonProjectConfig;
+  };
+}
+
+export interface NxJsonProjectConfig {
+  implicitDependencies?: string[];
+  tags?: string[];
+}
+
+function readFileIfExisting(path: string) {
+  return fs.existsSync(path) ? fs.readFileSync(path, 'UTF-8').toString() : '';
+}
+
+const ig = ignore();
+ig.add(readFileIfExisting(`${appRoot.path}/.gitignore`));
 
 export function parseFiles(options: YargsAffectedOptions): { files: string[] } {
   const { files, uncommitted, untracked, base, head } = options;
@@ -89,8 +112,8 @@ function parseGitOutput(command: string): string[] {
 
 function getFileLevelImplicitDependencies(
   angularJson: any,
-  nxJson: any
-): ImplicitDependencyEntry {
+  nxJson: NxJson
+): NormalizedImplicitDependencyEntry {
   if (!nxJson.implicitDependencies) {
     return {};
   }
@@ -104,13 +127,13 @@ function getFileLevelImplicitDependencies(
       }
     }
   );
-  return nxJson.implicitDependencies;
+  return <NormalizedImplicitDependencyEntry>nxJson.implicitDependencies;
 }
 
 function getProjectLevelImplicitDependencies(
   angularJson: any,
   nxJson: any
-): ImplicitDependencyEntry {
+): NormalizedImplicitDependencyEntry {
   const projects = getProjectNodes(angularJson, nxJson);
 
   const implicitDependencies = projects.reduce(
@@ -133,7 +156,7 @@ function getProjectLevelImplicitDependencies(
       memo[key] = Array.from(val);
       return memo;
     },
-    {} as ImplicitDependencyEntry
+    {} as NormalizedImplicitDependencyEntry
   );
 }
 
@@ -153,7 +176,7 @@ function detectAndSetInvalidProjectValues(
 
 export function getImplicitDependencies(
   angularJson: any,
-  nxJson: any
+  nxJson: NxJson
 ): ImplicitDependencies {
   assertWorkspaceValidity(angularJson, nxJson);
 
@@ -291,8 +314,8 @@ export function readAngularJson(): any {
   return readJsonFile(`${appRoot.path}/angular.json`);
 }
 
-export function readNxJson(): any {
-  const config = readJsonFile(`${appRoot.path}/nx.json`);
+export function readNxJson(): NxJson {
+  const config = readJsonFile<NxJson>(`${appRoot.path}/nx.json`);
   if (!config.npmScope) {
     throw new Error(`nx.json must define the npmScope property.`);
   }
@@ -344,8 +367,8 @@ export function getProjectRoots(projectNames: string[]): string[] {
 }
 
 export function allFilesInDir(dirName: string): string[] {
-  // Ignore files in nested node_modules directories
-  if (dirName.endsWith('node_modules')) {
+  // Ignore .gitignored files
+  if (ig.ignores(path.relative(appRoot.path, dirName))) {
     return [];
   }
 
@@ -353,6 +376,9 @@ export function allFilesInDir(dirName: string): string[] {
   try {
     fs.readdirSync(dirName).forEach(c => {
       const child = path.join(dirName, c);
+      if (ig.ignores(path.relative(appRoot.path, child))) {
+        return;
+      }
       try {
         if (!fs.statSync(child).isDirectory()) {
           // add starting with "apps/myapp/..." or "libs/mylib/..."

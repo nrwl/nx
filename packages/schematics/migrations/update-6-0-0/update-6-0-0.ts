@@ -16,6 +16,7 @@ import { serializeJson, renameSync } from '../../src/utils/fileutils';
 import { parseTarget, serializeTarget } from '../../src/utils/cli-config-utils';
 import { offsetFromRoot } from '../../src/utils/common';
 import { formatFiles } from '../../src/utils/rules/format-files';
+import { NxJson } from '../../src/command-line/shared';
 
 function createKarma(host: Tree, project: any) {
   const offset = offsetFromRoot(project.root);
@@ -340,7 +341,7 @@ function patchLibIndexFiles(host: Tree, context: SchematicContext) {
             );
           });
         });
-        const npmScope = readJsonInTree(host, 'nx.json').npmScope;
+        const npmScope = readJsonInTree<NxJson>(host, 'nx.json').npmScope;
         host = updateJsonInTree('tsconfig.json', json => {
           json.compilerOptions.paths = json.compilerOptions.paths || {};
           json.compilerOptions.paths[
