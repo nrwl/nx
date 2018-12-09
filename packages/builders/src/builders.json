@@ -9,7 +9,7 @@
     "node-execute": {
       "class": "./node/execute/node-execute.builder",
       "schema": "./node/execute/schema.json",
-      "description": "Build a Node application"
+      "description": "Execute a Node application"
     },
     "jest": {
       "class": "./jest/jest.builder",
