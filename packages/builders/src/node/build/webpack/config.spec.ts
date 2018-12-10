@@ -67,7 +67,7 @@ describe('getWebpackConfig', () => {
     it('should resolve typescript and javascript', () => {
       const result = getWebpackConfig(input);
 
-      expect(result.resolve.extensions).toEqual(['.ts', '.js']);
+      expect(result.resolve.extensions).toEqual(['.ts', '.mjs', '.js']);
     });
 
     it('should include module and main in mainFields', () => {
