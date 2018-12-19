@@ -713,13 +713,20 @@ describe('lib', () => {
       ]);
     });
 
-    it('should skip the setup file if no module is generated', async () => {
+    it('should skip the setup file and serializers if no module is generated', async () => {
       const resultTree = await runSchematic(
         'lib',
         { name: 'myLib', unitTestRunner: 'jest', module: false },
         appTree
       );
       expect(resultTree.exists('libs/my-lib/src/test-setup.ts')).toBeFalsy();
+      expect(resultTree.readContent('libs/my-lib/jest.config.js')).not
+        .toContain(`
+  snapshotSerializers: [
+    'jest-preset-angular/AngularSnapshotSerializer.js',
+    'jest-preset-angular/HTMLCommentSerializer.js'
+  ]
+`);
     });
   });
 

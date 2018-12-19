@@ -1,0 +1,9 @@
+module.exports = {
+  name: '<%= project %>',
+  preset: '<%= offsetFromRoot %>jest.config.js',
+  coverageDirectory: '<%= offsetFromRoot %>coverage/<%= projectRoot %>'<% if(!skipSerializers) { %>,
+  snapshotSerializers: [
+    'jest-preset-angular/AngularSnapshotSerializer.js',
+    'jest-preset-angular/HTMLCommentSerializer.js'
+  ]<% } %>
+};

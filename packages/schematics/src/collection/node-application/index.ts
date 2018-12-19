@@ -204,7 +204,8 @@ export default function(schema: Schema): Rule {
       options.unitTestRunner === 'jest'
         ? schematic('jest-project', {
             project: options.name,
-            skipSetupFile: true
+            skipSetupFile: true,
+            skipSerializers: true
           })
         : noop(),
       addTypes(options)

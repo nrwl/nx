@@ -23,6 +23,7 @@ import { join, normalize } from '@angular-devkit/core';
 export interface JestProjectSchema {
   project: string;
   skipSetupFile: boolean;
+  skipSerializers: boolean;
 }
 
 function generateFiles(options: JestProjectSchema): Rule {

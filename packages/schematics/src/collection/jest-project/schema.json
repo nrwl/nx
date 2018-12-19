@@ -15,6 +15,11 @@
       "type": "boolean",
       "description": "Skips the setup file required for angular",
       "default": false
+    },
+    "skipSerializers": {
+      "type": "boolean",
+      "description": "Skips the serializers required to snapshot angular templates",
+      "default": false
     }
   },
   "required": []
