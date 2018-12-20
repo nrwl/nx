@@ -94,6 +94,12 @@ describe('Update 7.2.0', () => {
               options: {
                 tsConfig: 'apps/app2-e2e/tsconfig.e2e.json'
               }
+            },
+            lint: {
+              builder: '@angular-devkit/build-angular:tslint',
+              options: {
+                tsConfig: 'apps/app2-e2e/tsconfig.e2e.json'
+              }
             }
           }
         },
@@ -310,6 +316,59 @@ describe('Update 7.2.0', () => {
     expect(
       readJsonInTree(result, 'apps/weird/app/tsconfig.json').extends
     ).toEqual('../../../tsconfig.json');
+  });
+
+  it('should fix cypress lint configs', async () => {
+    initialTree = await schematicRunner
+      .callRule(
+        updateJsonInTree('angular.json', json => {
+          json.projects['app2-e2e'].architect.lint.options.tsConfig =
+            'e2e/tsconfig.e2e.json';
+          return json;
+        }),
+        initialTree
+      )
+      .toPromise();
+    const result = await schematicRunner
+      .runSchematicAsync('update-7.2.0', {}, initialTree)
+      .toPromise();
+    expect(
+      readJsonInTree(result, 'angular.json').projects['app2-e2e'].architect.lint
+        .options.tsConfig
+    ).toEqual('apps/app2-e2e/tsconfig.e2e.json');
+    [
+      '/apps/app1/tsconfig.app.json',
+      '/apps/app1/tsconfig.spec.json',
+      '/apps/app1-e2e/tsconfig.e2e.json',
+      '/apps/app2/tsconfig.app.json',
+      '/apps/app2/tsconfig.spec.json',
+      '/apps/app2-e2e/tsconfig.e2e.json',
+      '/apps/node-app/tsconfig.app.json',
+      '/apps/node-app/tsconfig.spec.json',
+      '/libs/lib1/tsconfig.lib.json',
+      '/libs/lib1/tsconfig.spec.json',
+      '/libs/lib2/tsconfig.lib.json',
+      '/libs/lib2/tsconfig.spec.json'
+    ].forEach(tsConfig => {
+      const value = readJsonInTree(result, tsConfig);
+      expect(value.extends).toEqual('./tsconfig.json');
+    });
+  });
+
+  it('should not fail for non-existing tsconfigs', async () => {
+    initialTree = await schematicRunner
+      .callRule(
+        updateJsonInTree('angular.json', json => {
+          json.projects['app2'].architect.lint.options.tsConfig =
+            'apps/nonexistent/tsconfig.app.json';
+          return json;
+        }),
+        initialTree
+      )
+      .toPromise();
+    await schematicRunner
+      .runSchematicAsync('update-7.2.0', {}, initialTree)
+      .toPromise();
   });
 
   it('should edit existing tsconfigs to extend the new one', async () => {
