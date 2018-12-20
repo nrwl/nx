@@ -31,11 +31,13 @@ const builderTypes: { [key: string]: string[] } = {
 function getTypes(host: Tree, project: any, context: SchematicContext) {
   let types = [];
 
-  const tsConfigs = getTsConfigs(project).map(tsconfigPath =>
+  const tsConfigPaths = getTsConfigs(project, host);
+
+  const tsConfigs = tsConfigPaths.map(tsconfigPath =>
     readJsonInTree(host, tsconfigPath)
   );
 
-  const tsConfigsWithNoTypes = getTsConfigs(project).filter(tsconfigPath => {
+  const tsConfigsWithNoTypes = tsConfigPaths.filter(tsconfigPath => {
     const tsconfig = readJsonInTree(host, tsconfigPath);
     return !tsconfig.compilerOptions.types;
   });
@@ -86,7 +88,11 @@ function createTsConfig(project: any): Rule {
   };
 }
 
-function getTsConfigs(project: any): Path[] {
+function getTsConfigs(
+  project: any,
+  host: Tree,
+  context?: SchematicContext
+): Path[] {
   return Array.from(
     new Set<Path>(
       Object.values<any>(project.architect)
@@ -114,6 +120,18 @@ function getTsConfigs(project: any): Path[] {
             ...options.tsConfig.filter(tsconfig => !arr.includes(tsconfig))
           ];
         }, [])
+        .filter(tsconfig => {
+          if (!host.exists(tsconfig)) {
+            if (context) {
+              console.log(tsconfig);
+              context.logger.warn(
+                `${tsconfig} does not exist but is set as a "tsConfig" in /angular.json`
+              );
+            }
+            return false;
+          }
+          return true;
+        })
         .map(tsconfig => {
           return normalize(tsconfig);
         })
@@ -134,15 +152,43 @@ function updateTsConfig(project: any, tsconfig: Path): Rule {
 function updateTsConfigs(project: any): Rule {
   return (host: Tree, context: SchematicContext) => {
     return chain(
-      getTsConfigs(project).map(tsconfig => updateTsConfig(project, tsconfig))
+      getTsConfigs(project, host, context).map(tsconfig =>
+        updateTsConfig(project, tsconfig)
+      )
     );
   };
+}
+
+function fixCypressConfigs(host: Tree, context: SchematicContext): Rule {
+  const angularJson = readJsonInTree(host, 'angular.json');
+  return chain(
+    Object.entries<any>(angularJson.projects)
+      .filter(
+        ([key, project]) =>
+          project.architect.e2e &&
+          project.architect.e2e.builder === '@nrwl/builders:cypress' &&
+          project.architect.lint &&
+          !host.exists(project.architect.lint.options.tsConfig) &&
+          host.exists(join(project.root, 'tsconfig.e2e.json'))
+      )
+      .map(([key, project]) => fixCypressConfig(project, key))
+  );
+}
+
+function fixCypressConfig(project: any, projectKey: string): Rule {
+  return updateJsonInTree('angular.json', angularJson => {
+    angularJson.projects[projectKey].architect.lint.options.tsConfig = join(
+      project.root,
+      'tsconfig.e2e.json'
+    );
+    return angularJson;
+  });
 }
 
 function updateProjects(host: Tree) {
   const { projects } = readJsonInTree(host, getWorkspacePath(host));
   return chain(
-    Object.values<any>(projects).map(project => {
+    Object.entries<any>(projects).map(([key, project]) => {
       return chain([createTsConfig(project), updateTsConfigs(project)]);
     })
   );
@@ -190,6 +236,7 @@ export default function(): Rule {
 
       return json;
     }),
+    fixCypressConfigs,
     switchToEs2015,
     updateProjects,
     displayInformation,
