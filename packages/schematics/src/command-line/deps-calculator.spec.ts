@@ -288,6 +288,23 @@ describe('DepsCalculator', () => {
         lib2Name: []
       });
     });
+
+    it('should not be incremental if a legacy existing dependencies exists', () => {
+      delete initialDeps.dependencies;
+      delete initialDeps.files;
+      const result = new DepsCalculator(
+        'nrwl',
+        projects,
+        initialDeps,
+        fileRead
+      );
+      expect(result.incrementalEnabled).toEqual(false);
+      expect(result.getDeps()).toEqual({
+        app1Name: [],
+        lib1Name: [],
+        lib2Name: []
+      });
+    });
   });
 
   describe('incremental', () => {

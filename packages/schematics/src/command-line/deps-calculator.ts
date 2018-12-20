@@ -206,8 +206,12 @@ export class DepsCalculator {
     this.processNode(filePath, tsFile);
   }
 
+  private isLegacyFormat(existingDeps: any): boolean {
+    return !existingDeps.dependencies && !existingDeps.files;
+  }
+
   private shouldIncrementallyRecalculate(): boolean {
-    if (!this.existingDeps) {
+    if (!this.existingDeps || this.isLegacyFormat(this.existingDeps)) {
       return false;
     }
     const currentProjects = this.projects.map(p => p.name).sort();
