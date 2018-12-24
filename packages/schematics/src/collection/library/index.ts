@@ -202,7 +202,17 @@ function addChildren(options: NormalizedSchema): Rule {
     const importPath = `@${npmScope}/${options.projectDirectory}`;
 
     insert(host, options.parentModule, [
-      insertImport(sourceFile, options.parentModule, constName, importPath),
+      insertImport(
+        sourceFile,
+        options.parentModule,
+        `${options.moduleName}, ${constName}`,
+        importPath
+      ),
+      ...addImportToModule(
+        sourceFile,
+        options.parentModule,
+        options.moduleName
+      ),
       ...addRoute(
         options.parentModule,
         sourceFile,

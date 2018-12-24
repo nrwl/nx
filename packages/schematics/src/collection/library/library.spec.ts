@@ -661,6 +661,7 @@ describe('lib', () => {
           tree,
           'apps/myapp/src/app/app.module.ts'
         );
+        expect(moduleContents).toContain('MyDirMyLibModule');
         expect(moduleContents).toContain('RouterModule.forRoot([');
         expect(moduleContents).toContain(
           "{ path: 'my-dir-my-lib', children: myDirMyLibRoutes }"
@@ -682,6 +683,7 @@ describe('lib', () => {
           tree2,
           'apps/myapp/src/app/app.module.ts'
         );
+        expect(moduleContents2).toContain('MyDirMyLib2Module');
         expect(moduleContents2).toContain('RouterModule.forRoot([');
         expect(moduleContents2).toContain(
           "{ path: 'my-dir-my-lib', children: myDirMyLibRoutes }"
@@ -707,6 +709,7 @@ describe('lib', () => {
           tree3,
           'apps/myapp/src/app/app.module.ts'
         );
+        expect(moduleContents3).toContain('MyLib3Module');
         expect(moduleContents3).toContain('RouterModule.forRoot([');
         expect(moduleContents3).toContain(
           "{ path: 'my-dir-my-lib', children: myDirMyLibRoutes }"
