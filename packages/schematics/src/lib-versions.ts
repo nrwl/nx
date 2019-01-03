@@ -18,6 +18,9 @@ export const cypressVersion = '^3.1.0';
 export const expressVersion = '4.16.3';
 export const expressTypingsVersion = '4.16.0';
 
+export const nestJsVersion = '5.5.0';
+export const nestJsSchematicsVersion = '5.11.2';
+
 export const libVersions = {
   angularVersion,
   angularDevkitVersion,

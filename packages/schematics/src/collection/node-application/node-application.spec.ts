@@ -245,6 +245,39 @@ describe('node-app', () => {
     });
   });
 
+  describe('--framework nest', () => {
+    it('should create a main file', () => {
+      const tree = schematicRunner.runSchematic(
+        'node-app',
+        {
+          name: 'myNestApp',
+          framework: 'nestjs'
+        },
+        appTree
+      );
+      expect(tree.exists('apps/my-nest-app/src/main.ts')).toEqual(true);
+    });
+
+    it('should update dependencies', () => {
+      const tree = schematicRunner.runSchematic(
+        'node-app',
+        {
+          name: 'myNestApp',
+          framework: 'nestjs'
+        },
+        appTree
+      );
+      const { dependencies, devDependencies } = readJsonInTree(
+        tree,
+        'package.json'
+      );
+      expect(dependencies['@nestjs/common']).toBeDefined();
+      expect(dependencies['@nestjs/core']).toBeDefined();
+      expect(devDependencies['@nestjs/testing']).toBeDefined();
+      expect(devDependencies['@nestjs/schematics']).toBeDefined();
+    });
+  });
+
   describe('--framework none', () => {
     it('should not generate any files', () => {
       const tree = schematicRunner.runSchematic(

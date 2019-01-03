@@ -17,13 +17,31 @@ import { Schema } from './schema';
 import { offsetFromRoot } from '../../utils/common';
 import { updateJsonInTree } from '../../utils/ast-utils';
 import { toFileName } from '../../utils/name-utils';
-import { expressVersion, expressTypingsVersion } from '../../lib-versions';
+import {
+  expressVersion,
+  expressTypingsVersion,
+  nestJsVersion,
+  nestJsSchematicsVersion
+} from '../../lib-versions';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
-  e2eProjectName: string;
-  e2eProjectRoot: Path;
   parsedTags: string[];
+}
+
+function addTypes(options: NormalizedSchema): Rule {
+  const tsConfigPath = join(options.appProjectRoot, 'tsconfig.json');
+
+  switch (options.framework) {
+    case 'express':
+      return updateJsonInTree(tsConfigPath, json => {
+        json.compilerOptions.types = [...json.compilerOptions.types, 'express'];
+        return json;
+      });
+
+    default:
+      return noop();
+  }
 }
 
 function addDependencies(options: NormalizedSchema): Rule {
@@ -32,16 +50,30 @@ function addDependencies(options: NormalizedSchema): Rule {
       json.dependencies = json.dependencies || {};
       json.devDependencies = json.devDependencies || {};
 
-      if (options.framework === 'express') {
-        json.dependencies = {
-          ...json.dependencies,
-          express: expressVersion
-        };
+      switch (options.framework) {
+        case 'express':
+          json.dependencies = {
+            ...json.dependencies,
+            express: expressVersion
+          };
 
-        json.devDependencies = {
-          ...json.devDependencies,
-          '@types/express': expressTypingsVersion
-        };
+          json.devDependencies = {
+            ...json.devDependencies,
+            '@types/express': expressTypingsVersion
+          };
+
+        case 'nestjs':
+          json.dependencies = {
+            ...json.dependencies,
+            '@nestjs/common': nestJsVersion,
+            '@nestjs/core': nestJsVersion
+          };
+
+          json.devDependencies = {
+            ...json.devDependencies,
+            '@nestjs/schematics': nestJsSchematicsVersion,
+            '@nestjs/testing': nestJsVersion
+          };
       }
       return json;
     }),
@@ -173,7 +205,8 @@ export default function(schema: Schema): Rule {
             project: options.name,
             skipSetupFile: true
           })
-        : noop()
+        : noop(),
+      addTypes(options)
     ])(host, context);
   };
 }
@@ -184,10 +217,8 @@ function normalizeOptions(options: Schema): NormalizedSchema {
     : toFileName(options.name);
 
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
-  const e2eProjectName = `${appProjectName}-e2e`;
 
   const appProjectRoot = join(normalize('apps'), appDirectory);
-  const e2eProjectRoot = join(normalize('apps'), appDirectory + '-e2e');
 
   const parsedTags = options.tags
     ? options.tags.split(',').map(s => s.trim())
@@ -197,8 +228,6 @@ function normalizeOptions(options: Schema): NormalizedSchema {
     ...options,
     name: appProjectName,
     appProjectRoot,
-    e2eProjectRoot,
-    e2eProjectName,
     parsedTags
   };
 }

@@ -20,8 +20,20 @@
     },
     "framework": {
       "type": "string",
-      "enum": ["express", "none"],
+      "enum": ["express", "nestjs", "none"],
       "description": "Node Framework to use for application.",
+      "x-prompt": {
+        "message": "In which directory should the node application be generated?",
+        "type": "list",
+        "items": [
+          { "value": "nestjs", "label": "NestJS [ https://nestjs.com/ ]" },
+          {
+            "value": "express",
+            "label": "Express [ https://expressjs.com/   ]"
+          }
+        ]
+      },
+
       "default": "express"
     },
     "skipFormat": {

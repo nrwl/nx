@@ -11,6 +11,21 @@ import * as http from 'http';
 import * as path from 'path';
 import * as treeKill from 'tree-kill';
 
+function getData() {
+  return new Promise(resolve => {
+    http.get('http://localhost:3333', res => {
+      expect(res.statusCode).toEqual(200);
+      let data = '';
+      res.on('data', chunk => {
+        data += chunk;
+      });
+      res.once('end', () => {
+        resolve(data);
+      });
+    });
+  });
+}
+
 describe('Node Applications', () => {
   beforeAll(() => {
     newProject();
@@ -101,6 +116,68 @@ describe('Node Applications', () => {
       }
       const result = await getData();
       expect(result).toEqual('Welcome to node-app1!');
+      treeKill(process.pid, 'SIGTERM', err => {
+        expect(err).toBeFalsy();
+        done();
+      });
+    });
+  }, 30000);
+
+  it('should be able to generate a nest application', async done => {
+    runCLI('generate node-app nest-app --framework nestjs');
+    copyMissingPackages();
+
+    updateFile('apps/nest-app/src/assets/file.txt', ``);
+    const jestResult = await runCLIAsync('test nest-app');
+    expect(jestResult.stderr).toContain('Test Suites: 2 passed, 2 total');
+
+    await runCLIAsync('build nest-app');
+
+    expect(exists('./tmp/proj/dist/apps/nest-app/main.js')).toBeTruthy();
+    expect(
+      exists('./tmp/proj/dist/apps/nest-app/assets/file.txt')
+    ).toBeTruthy();
+    expect(exists('./tmp/proj/dist/apps/nest-app/main.js.map')).toBeTruthy();
+
+    const server = fork(
+      path.join(__dirname, '../../../tmp/proj', `./dist/apps/nest-app/main.js`),
+      [],
+      {
+        cwd: './tmp/proj',
+        silent: true
+      }
+    );
+    expect(server).toBeTruthy();
+
+    await new Promise(resolve => {
+      server.stdout.on('data', async data => {
+        const message = data.toString();
+        if (message.includes('Listening at http://localhost:3333')) {
+          const result = await getData();
+
+          expect(result).toEqual('Welcome to nest-app!');
+          treeKill(server.pid, 'SIGTERM', err => {
+            expect(err).toBeFalsy();
+            resolve();
+          });
+        }
+      });
+    });
+
+    const process = spawn(
+      'node',
+      ['./node_modules/.bin/ng', 'serve', 'nest-app'],
+      {
+        cwd: './tmp/proj'
+      }
+    );
+
+    process.stdout.on('data', async (data: Buffer) => {
+      if (!data.toString().includes('Listening at http://localhost:3333')) {
+        return;
+      }
+      const result = await getData();
+      expect(result).toEqual('Welcome to nest-app!');
       treeKill(process.pid, 'SIGTERM', err => {
         expect(err).toBeFalsy();
         done();
