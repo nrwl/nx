@@ -468,12 +468,14 @@ describe('Update 7.2.0', () => {
       .runSchematicAsync('update-7.2.0', {}, initialTree)
       .toPromise();
 
-    const { devDependencies } = JSON.parse(result.readContent('package.json'));
+    const { dependencies, devDependencies } = JSON.parse(
+      result.readContent('package.json')
+    );
 
-    expect(devDependencies['@ngrx/effects']).toEqual('6.1.2');
-    expect(devDependencies['@ngrx/router-store']).toEqual('6.1.2');
+    expect(dependencies['@ngrx/effects']).toEqual('6.1.2');
+    expect(dependencies['@ngrx/router-store']).toEqual('6.1.2');
+    expect(dependencies['@ngrx/store']).toEqual('6.1.2');
     expect(devDependencies['@ngrx/schematics']).toEqual('6.1.2');
-    expect(devDependencies['@ngrx/store']).toEqual('6.1.2');
     expect(devDependencies['@ngrx/store-devtools']).toEqual('6.1.2');
   });
 });
