@@ -33,7 +33,7 @@
     "rxjs": "6.3.3",
     "ts-loader": "5.3.1",
     "webpack": "4.27.1",
-    "webpack-dev-server": "3.1.10",
+    "webpack-dev-server": "3.1.14",
     "webpack-node-externals": "1.7.2"
   }
 }
