@@ -23,7 +23,7 @@
       "enum": ["express", "nestjs", "none"],
       "description": "Node Framework to use for application.",
       "x-prompt": {
-        "message": "In which directory should the node application be generated?",
+        "message": "Which framework would you like to use for the node application?",
         "type": "list",
         "items": [
           { "value": "nestjs", "label": "NestJS [ https://nestjs.com/ ]" },
