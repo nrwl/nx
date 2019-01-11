@@ -258,7 +258,8 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
           this.computedCypressBaseUrl = url.format({
             protocol: builderConfig.options.ssl ? 'https' : 'http',
             hostname: builderConfig.options.host,
-            port: builderConfig.options.port.toString()
+            port: builderConfig.options.port.toString(),
+            pathname: builderConfig.options.servePath || ''
           });
         }
       }),
