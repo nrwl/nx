@@ -1,13 +1,9 @@
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
+import { schematicRunner } from '@nrwl/schematics/src/utils/testing-utils';
 
 describe('workspace', () => {
-  const schematicRunner = new SchematicTestRunner(
-    '@nrwl/schematics',
-    path.join(__dirname, '../../collection.json')
-  );
-
   let appTree: Tree;
 
   beforeEach(() => {

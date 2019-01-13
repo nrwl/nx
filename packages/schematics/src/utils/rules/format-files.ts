@@ -8,8 +8,8 @@ import {
 } from '@angular-devkit/schematics';
 import { format, resolveConfig, getFileInfo } from 'prettier';
 import * as appRoot from 'app-root-path';
-import { from } from 'rxjs';
-import { filter, map, mergeMap } from 'rxjs/operators';
+import { from, Observable } from 'rxjs';
+import { concatMap, delay, filter, map, mergeMap } from 'rxjs/operators';
 
 export function formatFiles(
   options: { skipFormat: boolean } = { skipFormat: false }

@@ -48,6 +48,13 @@ Running e2e tests can take some time, so if it often useful to run a single test
 yarn e2e affected
 ```
 
+### Developing on Windows
+
+To build Nx on Windows, you need to use WSL.
+
+- Run `yarn install` in WSL. Yarn will compile several dependencies. If you don't run `install` in WSL, they will be compiled for Windows.
+- Run `yarn test:scheamtics` and other commands in WSL.
+
 ## Submission Guidelines
 
 ### <a name="submit-issue"></a> Submitting an Issue

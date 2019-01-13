@@ -1,15 +1,14 @@
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace, createLib } from '../../utils/testing-utils';
+import {
+  createEmptyWorkspace,
+  createLib,
+  runSchematic
+} from '../../utils/testing-utils';
 import { readJsonInTree } from '@nrwl/schematics/src/utils/ast-utils';
 
 describe('lib', () => {
-  const schematicRunner = new SchematicTestRunner(
-    '@nrwl/schematics',
-    path.join(__dirname, '../../collection.json')
-  );
-
   let appTree: Tree;
 
   beforeEach(() => {
@@ -17,13 +16,13 @@ describe('lib', () => {
     appTree = createEmptyWorkspace(appTree);
   });
 
-  it('should generate files', () => {
-    const resultTree = schematicRunner.runSchematic('jest', {}, appTree);
+  it('should generate files', async () => {
+    const resultTree = await runSchematic('jest', {}, appTree);
     expect(resultTree.exists('jest.config.js')).toBeTruthy();
   });
 
-  it('should add dependencies', () => {
-    const resultTree = schematicRunner.runSchematic('jest', {}, appTree);
+  it('should add dependencies', async () => {
+    const resultTree = await runSchematic('jest', {}, appTree);
     const packageJson = readJsonInTree(resultTree, 'package.json');
     expect(packageJson.devDependencies.jest).toBeDefined();
     expect(packageJson.devDependencies['@nrwl/builders']).toBeDefined();

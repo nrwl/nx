@@ -1,6 +1,11 @@
 import { Tree } from '@angular-devkit/schematics';
 import { names } from './name-utils';
 import { NxJson } from '../command-line/shared';
+import {
+  SchematicTestRunner,
+  UnitTestTree
+} from '@angular-devkit/schematics/testing';
+import * as path from 'path';
 
 export interface AppConfig {
   appName: string; // name of app
@@ -20,6 +25,21 @@ export function getAppConfig(): AppConfig {
 }
 export function getLibConfig(): LibConfig {
   return libConfig;
+}
+
+export const schematicRunner = new SchematicTestRunner(
+  '@nrwl/schematics',
+  path.join(__dirname, '../collection.json')
+);
+
+export function runSchematic(
+  name: string,
+  options: any,
+  tree: Tree
+): Promise<UnitTestTree> {
+  return schematicRunner
+    .runSchematicAsync(name, { ...options, skipFormat: true }, tree)
+    .toPromise();
 }
 
 export function createEmptyWorkspace(tree: Tree): Tree {
