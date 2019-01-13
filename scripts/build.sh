@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 npx ng-packagr -p packages/nx/ng-package.json
 
 rm -rf build
