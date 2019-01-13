@@ -20,6 +20,11 @@
       "class": "./cypress/cypress.builder",
       "schema": "./cypress/schema.json",
       "description": "Run Cypress e2e tests"
+    },
+    "command-runner": {
+      "class": "./command-runner/command-runner.builder",
+      "schema": "./command-runner/schema.json",
+      "description": "Run a command in a child process"
     }
   }
 }
