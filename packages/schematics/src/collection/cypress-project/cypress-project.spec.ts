@@ -1,15 +1,13 @@
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/schematics/src/utils/testing-utils';
+import {
+  createEmptyWorkspace,
+  runSchematic
+} from '@nrwl/schematics/src/utils/testing-utils';
 import { readJsonInTree } from '@nrwl/schematics/src/utils/ast-utils';
 import * as path from 'path';
 
 describe('schematic:cypress-project', () => {
-  const schematicRunner = new SchematicTestRunner(
-    '@nrwl/schematics',
-    path.join(__dirname, '../../collection.json')
-  );
-
   let appTree: Tree;
 
   beforeEach(() => {
@@ -19,13 +17,11 @@ describe('schematic:cypress-project', () => {
 
   describe('generate app --e2e-test-runner=cypress', () => {
     it('should not contain any protractor files', async () => {
-      const tree = await schematicRunner
-        .runSchematicAsync(
-          'application',
-          { name: 'myApp', e2eTestRunner: 'cypress' },
-          appTree
-        )
-        .toPromise();
+      const tree = await runSchematic(
+        'application',
+        { name: 'myApp', e2eTestRunner: 'cypress' },
+        appTree
+      );
 
       expect(
         tree.exists('apps/my-app-e2e/protractor.e2e.json')
@@ -41,13 +37,11 @@ describe('schematic:cypress-project', () => {
     });
 
     it('should generate files', async () => {
-      const tree = await schematicRunner
-        .runSchematicAsync(
-          'application',
-          { name: 'myApp', e2eTestRunner: 'cypress' },
-          appTree
-        )
-        .toPromise();
+      const tree = await runSchematic(
+        'application',
+        { name: 'myApp', e2eTestRunner: 'cypress' },
+        appTree
+      );
 
       expect(tree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
       expect(tree.exists('apps/my-app-e2e/tsconfig.e2e.json')).toBeTruthy();
@@ -67,13 +61,11 @@ describe('schematic:cypress-project', () => {
     });
 
     it('should add dependencies into `package.json` file', async () => {
-      const tree = await schematicRunner
-        .runSchematicAsync(
-          'application',
-          { name: 'myApp', e2eTestRunner: 'cypress' },
-          appTree
-        )
-        .toPromise();
+      const tree = await runSchematic(
+        'application',
+        { name: 'myApp', e2eTestRunner: 'cypress' },
+        appTree
+      );
       const packageJson = readJsonInTree(tree, 'package.json');
 
       expect(packageJson.devDependencies.cypress).toBeDefined();
@@ -81,13 +73,11 @@ describe('schematic:cypress-project', () => {
     });
 
     it('should add update `angular.json` file', async () => {
-      const tree = await schematicRunner
-        .runSchematicAsync(
-          'application',
-          { name: 'myApp', e2eTestRunner: 'cypress' },
-          appTree
-        )
-        .toPromise();
+      const tree = await runSchematic(
+        'application',
+        { name: 'myApp', e2eTestRunner: 'cypress' },
+        appTree
+      );
       const angularJson = readJsonInTree(tree, 'angular.json');
       const project = angularJson.projects['my-app-e2e'];
 
@@ -100,13 +90,11 @@ describe('schematic:cypress-project', () => {
     });
 
     it('should set right path names in `cypress.json`', async () => {
-      const tree = await schematicRunner
-        .runSchematicAsync(
-          'application',
-          { name: 'myApp', e2eTestRunner: 'cypress' },
-          appTree
-        )
-        .toPromise();
+      const tree = await runSchematic(
+        'application',
+        { name: 'myApp', e2eTestRunner: 'cypress' },
+        appTree
+      );
       const cypressJson = readJsonInTree(tree, 'apps/my-app-e2e/cypress.json');
 
       expect(cypressJson).toEqual({
@@ -123,13 +111,11 @@ describe('schematic:cypress-project', () => {
     });
 
     it('should set right path names in `tsconfig.e2e.json`', async () => {
-      const tree = await schematicRunner
-        .runSchematicAsync(
-          'application',
-          { name: 'myApp', e2eTestRunner: 'cypress' },
-          appTree
-        )
-        .toPromise();
+      const tree = await runSchematic(
+        'application',
+        { name: 'myApp', e2eTestRunner: 'cypress' },
+        appTree
+      );
       const tsconfigJson = readJsonInTree(
         tree,
         'apps/my-app-e2e/tsconfig.e2e.json'
@@ -144,13 +130,11 @@ describe('schematic:cypress-project', () => {
 
   describe('generate app --e2e-test-runner=cypress --directory=my-dir', () => {
     it('should set right path names in `cypress.json`', async () => {
-      const tree = await schematicRunner
-        .runSchematicAsync(
-          'application',
-          { name: 'myApp', e2eTestRunner: 'cypress', directory: 'my-dir' },
-          appTree
-        )
-        .toPromise();
+      const tree = await runSchematic(
+        'application',
+        { name: 'myApp', e2eTestRunner: 'cypress', directory: 'my-dir' },
+        appTree
+      );
       const cypressJson = readJsonInTree(
         tree,
         'apps/my-dir/my-app-e2e/cypress.json'
@@ -174,13 +158,11 @@ describe('schematic:cypress-project', () => {
     });
 
     it('should set right path names in `tsconfig.e2e.json`', async () => {
-      const tree = await schematicRunner
-        .runSchematicAsync(
-          'application',
-          { name: 'myApp', e2eTestRunner: 'cypress', directory: 'my-dir' },
-          appTree
-        )
-        .toPromise();
+      const tree = await runSchematic(
+        'application',
+        { name: 'myApp', e2eTestRunner: 'cypress', directory: 'my-dir' },
+        appTree
+      );
       const tsconfigJson = readJsonInTree(
         tree,
         'apps/my-dir/my-app-e2e/tsconfig.e2e.json'

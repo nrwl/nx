@@ -14,15 +14,11 @@ import {
   createEmptyWorkspace,
   AppConfig,
   getLibConfig,
-  getAppConfig
+  getAppConfig,
+  runSchematic
 } from '../../utils/testing-utils';
 
 describe('ngrx', () => {
-  const schematicRunner = new SchematicTestRunner(
-    '@nrwl/schematics',
-    path.join(__dirname, '../../collection.json')
-  );
-
   let appTree: Tree;
 
   beforeEach(() => {
@@ -32,17 +28,15 @@ describe('ngrx', () => {
   });
 
   it('should add empty root', async () => {
-    const tree = await schematicRunner
-      .runSchematicAsync(
-        'ngrx',
-        {
-          name: 'state',
-          module: 'apps/myapp/src/app/app.module.ts',
-          onlyEmptyRoot: true
-        },
-        appTree
-      )
-      .toPromise();
+    const tree = await runSchematic(
+      'ngrx',
+      {
+        name: 'state',
+        module: 'apps/myapp/src/app/app.module.ts',
+        onlyEmptyRoot: true
+      },
+      appTree
+    );
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
 
     expect(
@@ -51,23 +45,21 @@ describe('ngrx', () => {
 
     expect(appModule).toContain('StoreModule.forRoot(');
     expect(appModule).toContain(
-      '{ metaReducers: !environment.production ? [storeFreeze] : [] }'
+      '{ metaReducers : !environment.production ? [storeFreeze] : [] }'
     );
     expect(appModule).toContain('EffectsModule.forRoot');
   });
 
   it('should add root', async () => {
-    const tree = await schematicRunner
-      .runSchematicAsync(
-        'ngrx',
-        {
-          name: 'app',
-          module: 'apps/myapp/src/app/app.module.ts',
-          root: true
-        },
-        appTree
-      )
-      .toPromise();
+    const tree = await runSchematic(
+      'ngrx',
+      {
+        name: 'app',
+        module: 'apps/myapp/src/app/app.module.ts',
+        root: true
+      },
+      appTree
+    );
 
     [
       '/apps/myapp/src/app/+state/app.actions.ts',
@@ -96,22 +88,20 @@ describe('ngrx', () => {
     expect(appModule).toContain('!environment.production ? [storeFreeze] : []');
 
     expect(appModule).toContain('app: appReducer');
-    expect(appModule).toContain('initialState: { app: appInitialState }');
+    expect(appModule).toContain('initialState : { app : appInitialState }');
   });
 
   it('should add facade to root', async () => {
-    const tree = await schematicRunner
-      .runSchematicAsync(
-        'ngrx',
-        {
-          name: 'app',
-          module: 'apps/myapp/src/app/app.module.ts',
-          root: true,
-          facade: true
-        },
-        appTree
-      )
-      .toPromise();
+    const tree = await runSchematic(
+      'ngrx',
+      {
+        name: 'app',
+        module: 'apps/myapp/src/app/app.module.ts',
+        root: true,
+        facade: true
+      },
+      appTree
+    );
 
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
 
@@ -125,7 +115,7 @@ describe('ngrx', () => {
     expect(appModule).toContain('providers: [AppFacade]');
 
     expect(appModule).toContain('app: appReducer');
-    expect(appModule).toContain('initialState: { app: appInitialState }');
+    expect(appModule).toContain('initialState : { app : appInitialState }');
 
     [
       '/apps/myapp/src/app/+state/app.actions.ts',
@@ -144,17 +134,15 @@ describe('ngrx', () => {
 
   it('should not add RouterStoreModule only if the module does not reference the router', async () => {
     const newTree = createApp(appTree, 'myapp-norouter', false);
-    const tree = await schematicRunner
-      .runSchematicAsync(
-        'ngrx',
-        {
-          name: 'app',
-          module: 'apps/myapp-norouter/src/app/app.module.ts',
-          root: true
-        },
-        newTree
-      )
-      .toPromise();
+    const tree = await runSchematic(
+      'ngrx',
+      {
+        name: 'app',
+        module: 'apps/myapp-norouter/src/app/app.module.ts',
+        root: true
+      },
+      newTree
+    );
     const appModule = getFileContent(
       tree,
       '/apps/myapp-norouter/src/app/app.module.ts'
@@ -163,16 +151,14 @@ describe('ngrx', () => {
   });
 
   it('should add feature', async () => {
-    const tree = await schematicRunner
-      .runSchematicAsync(
-        'ngrx',
-        {
-          name: 'state',
-          module: 'apps/myapp/src/app/app.module.ts'
-        },
-        appTree
-      )
-      .toPromise();
+    const tree = await runSchematic(
+      'ngrx',
+      {
+        name: 'state',
+        module: 'apps/myapp/src/app/app.module.ts'
+      },
+      appTree
+    );
 
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
     expect(appModule).toContain('StoreModule.forFeature');
@@ -189,17 +175,15 @@ describe('ngrx', () => {
   });
 
   it('should add with custom directoryName', async () => {
-    const tree = await schematicRunner
-      .runSchematicAsync(
-        'ngrx',
-        {
-          name: 'state',
-          module: 'apps/myapp/src/app/app.module.ts',
-          directory: 'myCustomState'
-        },
-        appTree
-      )
-      .toPromise();
+    const tree = await runSchematic(
+      'ngrx',
+      {
+        name: 'state',
+        module: 'apps/myapp/src/app/app.module.ts',
+        directory: 'myCustomState'
+      },
+      appTree
+    );
 
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
     expect(appModule).toContain('StoreModule.forFeature');
@@ -214,18 +198,16 @@ describe('ngrx', () => {
   });
 
   it('should only add files', async () => {
-    const tree = await schematicRunner
-      .runSchematicAsync(
-        'ngrx',
-        {
-          name: 'state',
-          module: 'apps/myapp/src/app/app.module.ts',
-          onlyAddFiles: true,
-          facade: true
-        },
-        appTree
-      )
-      .toPromise();
+    const tree = await runSchematic(
+      'ngrx',
+      {
+        name: 'state',
+        module: 'apps/myapp/src/app/app.module.ts',
+        onlyAddFiles: true,
+        facade: true
+      },
+      appTree
+    );
 
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
     expect(appModule).not.toContain('StoreModule');
@@ -247,16 +229,14 @@ describe('ngrx', () => {
   });
 
   it('should update package.json', async () => {
-    const tree = await schematicRunner
-      .runSchematicAsync(
-        'ngrx',
-        {
-          name: 'state',
-          module: 'apps/myapp/src/app/app.module.ts'
-        },
-        appTree
-      )
-      .toPromise();
+    const tree = await runSchematic(
+      'ngrx',
+      {
+        name: 'state',
+        module: 'apps/myapp/src/app/app.module.ts'
+      },
+      appTree
+    );
     const packageJson = readJsonInTree(tree, 'package.json');
 
     expect(packageJson.dependencies['@ngrx/store']).toBeDefined();
@@ -268,16 +248,14 @@ describe('ngrx', () => {
 
   it('should error when no module is provided', async () => {
     try {
-      await schematicRunner
-        .runSchematicAsync(
-          'ngrx',
-          {
-            name: 'state',
-            module: ''
-          },
-          appTree
-        )
-        .toPromise();
+      await runSchematic(
+        'ngrx',
+        {
+          name: 'state',
+          module: ''
+        },
+        appTree
+      );
       fail();
     } catch (e) {
       expect(e.message).toEqual('The required --module option must be passed');
@@ -286,16 +264,14 @@ describe('ngrx', () => {
 
   it('should error the module could not be found', async () => {
     try {
-      await schematicRunner
-        .runSchematicAsync(
-          'ngrx',
-          {
-            name: 'state',
-            module: 'does-not-exist.ts'
-          },
-          appTree
-        )
-        .toPromise();
+      await runSchematic(
+        'ngrx',
+        {
+          name: 'state',
+          module: 'does-not-exist.ts'
+        },
+        appTree
+      );
     } catch (e) {
       expect(e.message).toEqual('Path does not exist: does-not-exist.ts');
     }
@@ -347,9 +323,9 @@ describe('ngrx', () => {
 
       expect(content).toContain('UsersActionTypes');
 
-      expect(content).toContain("LoadUsers = '[Users] Load Users'");
-      expect(content).toContain("UsersLoaded = '[Users] Users Loaded'");
-      expect(content).toContain("UsersLoadError = '[Users] Users Load Error'");
+      expect(content).toContain(`LoadUsers = "[Users] Load Users"`);
+      expect(content).toContain(`UsersLoaded = "[Users] Users Loaded"`);
+      expect(content).toContain(`UsersLoadError = "[Users] Users Load Error"`);
 
       expect(content).toContain('class LoadUsers implements Action');
       expect(content).toContain('class UsersLoaded implements Action');
@@ -422,12 +398,7 @@ describe('ngrx', () => {
 
       [
         `import { DataPersistence } from \'@nrwl/nx\'`,
-        `import {
-  LoadUsers,
-  UsersLoaded,
-  UsersLoadError,
-  UsersActionTypes
-} from \'./users.actions\';`,
+        `import { LoadUsers, UsersLoaded, UsersLoadError, UsersActionTypes } from './users.actions';`,
         `loadUsers$`,
         `run: (action: LoadUsers, state: UsersPartialState)`,
         `return new UsersLoaded([])`,
@@ -457,17 +428,15 @@ describe('ngrx', () => {
     it('should update the barrel API with exports for ngrx facade, selector, and reducer', async () => {
       appTree = createLib(appTree, 'flights');
       let libConfig = getLibConfig();
-      let tree = await schematicRunner
-        .runSchematicAsync(
-          'ngrx',
-          {
-            name: 'super-users',
-            module: libConfig.module,
-            facade: true
-          },
-          appTree
-        )
-        .toPromise();
+      let tree = await runSchematic(
+        'ngrx',
+        {
+          name: 'super-users',
+          module: libConfig.module,
+          facade: true
+        },
+        appTree
+      );
 
       const barrel = tree.readContent(libConfig.barrel);
       expect(barrel).toContain(
@@ -478,17 +447,15 @@ describe('ngrx', () => {
     it('should not update the barrel API with a facade', async () => {
       appTree = createLib(appTree, 'flights');
       let libConfig = getLibConfig();
-      let tree = await schematicRunner
-        .runSchematicAsync(
-          'ngrx',
-          {
-            name: 'super-users',
-            module: libConfig.module,
-            facade: false
-          },
-          appTree
-        )
-        .toPromise();
+      let tree = await runSchematic(
+        'ngrx',
+        {
+          name: 'super-users',
+          module: libConfig.module,
+          facade: false
+        },
+        appTree
+      );
 
       const barrel = tree.readContent(libConfig.barrel);
       expect(barrel).not.toContain(
@@ -498,16 +465,14 @@ describe('ngrx', () => {
 
     it('should produce proper tests for the ngrx reducer for a name with a dash', async () => {
       const appConfig = getAppConfig();
-      const tree = await schematicRunner
-        .runSchematicAsync(
-          'ngrx',
-          {
-            name: 'super-users',
-            module: appConfig.appModule
-          },
-          appTree
-        )
-        .toPromise();
+      const tree = await runSchematic(
+        'ngrx',
+        {
+          name: 'super-users',
+          module: appConfig.appModule
+        },
+        appTree
+      );
 
       const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
       const contents = tree.readContent(
@@ -526,16 +491,14 @@ describe('ngrx', () => {
     featureName: string = 'user',
     withFacade = false
   ): Promise<UnitTestTree> {
-    return await schematicRunner
-      .runSchematicAsync(
-        'ngrx',
-        {
-          name: featureName,
-          module: appConfig.appModule,
-          facade: withFacade
-        },
-        appTree
-      )
-      .toPromise();
+    return await runSchematic(
+      'ngrx',
+      {
+        name: featureName,
+        module: appConfig.appModule,
+        facade: withFacade
+      },
+      appTree
+    );
   }
 });

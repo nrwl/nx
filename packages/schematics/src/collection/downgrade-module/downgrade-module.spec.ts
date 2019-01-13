@@ -1,16 +1,15 @@
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
-import { createApp, createEmptyWorkspace } from '../../utils/testing-utils';
+import {
+  createApp,
+  createEmptyWorkspace,
+  runSchematic
+} from '../../utils/testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
 import { readJsonInTree } from '../../utils/ast-utils';
 
 describe('downgrade-module', () => {
-  const schematicRunner = new SchematicTestRunner(
-    '@nrwl/schematics',
-    path.join(__dirname, '../../collection.json')
-  );
-
   let appTree: Tree;
 
   beforeEach(() => {
@@ -20,16 +19,14 @@ describe('downgrade-module', () => {
   });
 
   it('should update main.ts', async () => {
-    const tree = await schematicRunner
-      .runSchematicAsync(
-        'downgrade-module',
-        {
-          name: 'legacy',
-          project: 'myapp'
-        },
-        appTree
-      )
-      .toPromise();
+    const tree = await runSchematic(
+      'downgrade-module',
+      {
+        name: 'legacy',
+        project: 'myapp'
+      },
+      appTree
+    );
 
     const main = getFileContent(tree, '/apps/myapp/src/main.ts');
     expect(main).toContain('downgradeModule(bootstrapAngular)');
@@ -40,16 +37,14 @@ describe('downgrade-module', () => {
   });
 
   it('should update module', async () => {
-    const tree = await schematicRunner
-      .runSchematicAsync(
-        'downgrade-module',
-        {
-          name: 'legacy',
-          project: 'myapp'
-        },
-        appTree
-      )
-      .toPromise();
+    const tree = await runSchematic(
+      'downgrade-module',
+      {
+        name: 'legacy',
+        project: 'myapp'
+      },
+      appTree
+    );
 
     const appModule = getFileContent(tree, 'apps/myapp/src/app/app.module.ts');
     expect(appModule).not.toContain('bootstrap:');
@@ -67,16 +62,14 @@ describe('downgrade-module', () => {
       })
     );
 
-    const tree = await schematicRunner
-      .runSchematicAsync(
-        'downgrade-module',
-        {
-          name: 'legacy',
-          project: 'myapp'
-        },
-        appTree
-      )
-      .toPromise();
+    const tree = await runSchematic(
+      'downgrade-module',
+      {
+        name: 'legacy',
+        project: 'myapp'
+      },
+      appTree
+    );
 
     const packageJson = readJsonInTree(tree, '/package.json');
     expect(packageJson.dependencies['@angular/upgrade']).toEqual('4.4.4');
@@ -93,34 +86,30 @@ describe('downgrade-module', () => {
       })
     );
 
-    const tree = await schematicRunner
-      .runSchematicAsync(
-        'downgrade-module',
-        {
-          name: 'legacy',
-          skipPackageJson: true,
-          project: 'myapp'
-        },
-        appTree
-      )
-      .toPromise();
+    const tree = await runSchematic(
+      'downgrade-module',
+      {
+        name: 'legacy',
+        skipPackageJson: true,
+        project: 'myapp'
+      },
+      appTree
+    );
 
     const packageJson = readJsonInTree(tree, 'package.json');
     expect(packageJson.dependencies['@angular/upgrade']).not.toBeDefined();
   });
 
   it('should support custom angularJsImport', async () => {
-    const tree = await schematicRunner
-      .runSchematicAsync(
-        'downgrade-module',
-        {
-          name: 'legacy',
-          angularJsImport: 'legacy-app',
-          project: 'myapp'
-        },
-        appTree
-      )
-      .toPromise();
+    const tree = await runSchematic(
+      'downgrade-module',
+      {
+        name: 'legacy',
+        angularJsImport: 'legacy-app',
+        project: 'myapp'
+      },
+      appTree
+    );
 
     const main = getFileContent(tree, '/apps/myapp/src/main.ts');
     expect(main).toContain(`import 'legacy-app';`);

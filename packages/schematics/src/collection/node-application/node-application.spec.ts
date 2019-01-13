@@ -1,18 +1,16 @@
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '../../utils/testing-utils';
+import {
+  createEmptyWorkspace,
+  schematicRunner
+} from '../../utils/testing-utils';
 import { getFileContent } from '@schematics/angular/utility/test';
 import * as stripJsonComments from 'strip-json-comments';
 import { readJsonInTree } from '../../utils/ast-utils';
 import { NxJson } from '../../command-line/shared';
 
 describe('node-app', () => {
-  const schematicRunner = new SchematicTestRunner(
-    '@nrwl/schematics',
-    path.join(__dirname, '../../collection.json')
-  );
-
   let appTree: Tree;
 
   beforeEach(() => {

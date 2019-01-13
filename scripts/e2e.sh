@@ -9,3 +9,5 @@ if [ -n "$1" ]; then
 else
   jest --maxWorkers=1 ./build/e2e/schematics
 fi
+
+
