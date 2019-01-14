@@ -1,7 +1,8 @@
 import {
   getImplicitDependencies,
   assertWorkspaceValidity,
-  getProjectNodes
+  getProjectNodes,
+  NxJson
 } from './shared';
 import { ProjectType, ProjectNode } from './affected-apps';
 
@@ -101,11 +102,12 @@ describe('assertWorkspaceValidity', () => {
 });
 
 describe('getImplicitDependencies', () => {
-  let mockNxJson;
-  let mockAngularJson;
+  let mockNxJson: NxJson;
+  let mockAngularJson: any;
 
   beforeEach(() => {
     mockNxJson = {
+      npmScope: 'proj',
       projects: {
         app1: {
           tags: []
@@ -157,7 +159,11 @@ describe('getImplicitDependencies', () => {
         Jenkinsfile: ['app1', 'app2']
       };
 
-      const result = getImplicitDependencies(mockAngularJson, mockNxJson);
+      const result = getImplicitDependencies(
+        getProjectNodes(mockAngularJson, mockNxJson),
+        mockAngularJson,
+        mockNxJson
+      );
 
       expect(result).toEqual({
         files: {
@@ -175,7 +181,11 @@ describe('getImplicitDependencies', () => {
         'package.json': '*'
       };
 
-      const result = getImplicitDependencies(mockAngularJson, mockNxJson);
+      const result = getImplicitDependencies(
+        getProjectNodes(mockAngularJson, mockNxJson),
+        mockAngularJson,
+        mockNxJson
+      );
 
       expect(result).toEqual({
         files: {
@@ -198,7 +208,11 @@ describe('getImplicitDependencies', () => {
     it('should call throw for an invalid workspace', () => {
       delete mockNxJson.projects.app1;
       try {
-        getImplicitDependencies(mockAngularJson, mockNxJson);
+        getImplicitDependencies(
+          getProjectNodes(mockAngularJson, mockNxJson),
+          mockAngularJson,
+          mockNxJson
+        );
         fail('did not throw');
       } catch (e) {}
     });
@@ -206,7 +220,11 @@ describe('getImplicitDependencies', () => {
 
   describe('project-based implicit dependencies', () => {
     it('should default appropriately', () => {
-      const result = getImplicitDependencies(mockAngularJson, mockNxJson);
+      const result = getImplicitDependencies(
+        getProjectNodes(mockAngularJson, mockNxJson),
+        mockAngularJson,
+        mockNxJson
+      );
 
       expect(result).toEqual({
         files: {},
@@ -221,7 +239,11 @@ describe('getImplicitDependencies', () => {
       mockNxJson.projects.app2.implicitDependencies = ['app1'];
       mockNxJson.projects.lib2.implicitDependencies = ['lib1'];
 
-      const result = getImplicitDependencies(mockAngularJson, mockNxJson);
+      const result = getImplicitDependencies(
+        getProjectNodes(mockAngularJson, mockNxJson),
+        mockAngularJson,
+        mockNxJson
+      );
 
       expect(result).toEqual({
         files: {},
@@ -238,7 +260,11 @@ describe('getImplicitDependencies', () => {
     it('should override magic e2e dependencies if specified', () => {
       mockNxJson.projects['app1-e2e'].implicitDependencies = ['app2'];
 
-      const result = getImplicitDependencies(mockAngularJson, mockNxJson);
+      const result = getImplicitDependencies(
+        getProjectNodes(mockAngularJson, mockNxJson),
+        mockAngularJson,
+        mockNxJson
+      );
 
       expect(result).toEqual({
         files: {},
@@ -251,7 +277,11 @@ describe('getImplicitDependencies', () => {
     it('should fallback to magic e2e dependencies if empty array specified', () => {
       mockNxJson.projects['app1-e2e'].implicitDependencies = [];
 
-      const result = getImplicitDependencies(mockAngularJson, mockNxJson);
+      const result = getImplicitDependencies(
+        getProjectNodes(mockAngularJson, mockNxJson),
+        mockAngularJson,
+        mockNxJson
+      );
 
       expect(result).toEqual({
         files: {},
@@ -270,7 +300,11 @@ describe('getImplicitDependencies', () => {
       };
       mockNxJson.projects.app2.implicitDependencies = ['app1'];
 
-      const result = getImplicitDependencies(mockAngularJson, mockNxJson);
+      const result = getImplicitDependencies(
+        getProjectNodes(mockAngularJson, mockNxJson),
+        mockAngularJson,
+        mockNxJson
+      );
 
       expect(result).toEqual({
         files: {

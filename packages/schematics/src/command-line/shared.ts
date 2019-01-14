@@ -13,7 +13,7 @@ import * as fs from 'fs';
 import * as appRoot from 'app-root-path';
 import { readJsonFile } from '../utils/fileutils';
 import { YargsAffectedOptions } from './affected';
-import { readDependencies } from './deps-calculator';
+import { readDependencies, DepGraph, Deps } from './deps-calculator';
 import { touchedProjects } from './touched';
 
 const ignore = require('ignore');
@@ -111,14 +111,12 @@ function parseGitOutput(command: string): string[] {
 }
 
 function getFileLevelImplicitDependencies(
-  angularJson: any,
+  projects: ProjectNode[],
   nxJson: NxJson
 ): NormalizedImplicitDependencyEntry {
   if (!nxJson.implicitDependencies) {
     return {};
   }
-
-  const projects = getProjectNodes(angularJson, nxJson);
 
   Object.entries<'*' | string[]>(nxJson.implicitDependencies).forEach(
     ([key, value]) => {
@@ -131,11 +129,8 @@ function getFileLevelImplicitDependencies(
 }
 
 function getProjectLevelImplicitDependencies(
-  angularJson: any,
-  nxJson: any
+  projects: ProjectNode[]
 ): NormalizedImplicitDependencyEntry {
-  const projects = getProjectNodes(angularJson, nxJson);
-
   const implicitDependencies = projects.reduce(
     (memo, project) => {
       project.implicitDependencies.forEach(dep => {
@@ -175,17 +170,18 @@ function detectAndSetInvalidProjectValues(
 }
 
 export function getImplicitDependencies(
+  projects: ProjectNode[],
   angularJson: any,
   nxJson: NxJson
 ): ImplicitDependencies {
   assertWorkspaceValidity(angularJson, nxJson);
 
-  const files = getFileLevelImplicitDependencies(angularJson, nxJson);
-  const projects = getProjectLevelImplicitDependencies(angularJson, nxJson);
+  const implicitFileDeps = getFileLevelImplicitDependencies(projects, nxJson);
+  const implicitProjectDeps = getProjectLevelImplicitDependencies(projects);
 
   return {
-    files,
-    projects
+    files: implicitFileDeps,
+    projects: implicitProjectDeps
   };
 }
 
@@ -256,7 +252,10 @@ export function assertWorkspaceValidity(angularJson, nxJson) {
   throw new Error(message);
 }
 
-export function getProjectNodes(angularJson, nxJson): ProjectNode[] {
+export function getProjectNodes(
+  angularJson: any,
+  nxJson: NxJson
+): ProjectNode[] {
   assertWorkspaceValidity(angularJson, nxJson);
 
   const angularJsonProjects = Object.keys(angularJson.projects);
@@ -330,10 +329,11 @@ export const getAffected = (affectedNamesFetcher: AffectedFetcher) => (
   const angularJson = readAngularJson();
   const nxJson = readNxJson();
   const projects = getProjectNodes(angularJson, nxJson);
-  const implicitDeps = getImplicitDependencies(angularJson, nxJson);
+  const implicitDeps = getImplicitDependencies(projects, angularJson, nxJson);
   const dependencies = readDependencies(nxJson.npmScope, projects);
+  const sortedProjects = topologicallySortProjects(projects, dependencies);
   const tp = touchedProjects(implicitDeps, projects, touchedFiles);
-  return affectedNamesFetcher(projects, dependencies, tp);
+  return affectedNamesFetcher(sortedProjects, dependencies, tp);
 };
 
 export function getAffectedProjectsWithTarget(target: string) {
@@ -344,22 +344,25 @@ export const getAffectedProjects = getAffected(affectedProjectNames);
 export const getAffectedLibs = getAffected(affectedLibNames);
 
 export function getAllAppNames() {
-  const projects = getProjectNodes(readAngularJson(), readNxJson());
-  return projects.filter(p => p.type === ProjectType.app).map(p => p.name);
+  return getProjectNames(p => p.type === ProjectType.app);
 }
 
 export function getAllLibNames() {
-  const projects = getProjectNodes(readAngularJson(), readNxJson());
-  return projects.filter(p => p.type === ProjectType.lib).map(p => p.name);
+  return getProjectNames(p => p.type === ProjectType.lib);
 }
 
 export function getAllProjectNamesWithTarget(target: string) {
-  const projects = getProjectNodes(readAngularJson(), readNxJson());
-  return projects.filter(p => p.architect[target]).map(p => p.name);
+  return getProjectNames(p => p.architect[target]);
 }
 
-export function getAllProjectNames() {
-  const projects = getProjectNodes(readAngularJson(), readNxJson());
+export function getProjectNames(
+  predicate?: (projectNode: ProjectNode) => boolean
+): string[] {
+  let projects = getProjectNodes(readAngularJson(), readNxJson());
+  if (predicate) {
+    projects = projects.filter(predicate);
+  }
+
   return projects.map(p => p.name);
 }
 
@@ -436,4 +439,30 @@ export function normalizedProjectRoot(p: ProjectNode): string {
     .filter(v => !!v)
     .slice(1)
     .join('/');
+}
+
+function topologicallySortProjects(
+  projects: ProjectNode[],
+  deps: Deps
+): ProjectNode[] {
+  const temporary = {};
+  const marked = {};
+  const res: ProjectNode[] = [];
+
+  while (Object.keys(marked).length !== projects.length) {
+    visit(projects.find(p => !marked[p.name]));
+  }
+
+  function visit(n: ProjectNode) {
+    if (marked[n.name]) return;
+    if (temporary[n.name]) return;
+    temporary[n.name] = true;
+    deps[n.name].forEach(e => {
+      visit(projects.find(pp => pp.name === e.projectName));
+    });
+    marked[n.name] = true;
+    res.push(n);
+  }
+
+  return res;
 }

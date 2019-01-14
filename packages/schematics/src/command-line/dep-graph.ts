@@ -69,7 +69,7 @@ export interface UserOptions extends yargs.Arguments {
 type ParsedUserOptions = {
   isFilePresent?: boolean;
   filename?: string;
-  type?: string;
+  type?: OutputType;
   output?: string;
   shouldOpen: boolean;
 };
@@ -276,11 +276,12 @@ function applyHTMLTemplate(svg: string) {
   `;
 }
 
-function generateGraphJson(criticalPath?: string[]): JSONOutput {
-  const angularJson = readAngularJson();
+function generateGraphJson(
+  projects: ProjectNode[],
+  criticalPath?: string[]
+): JSONOutput {
   const nxJson = readNxJson();
   const npmScope = nxJson.npmScope;
-  const projects: ProjectNode[] = getProjectNodes(angularJson, nxJson);
 
   // fetch all apps and libs
   const deps = readDependencies(npmScope, projects);
@@ -291,11 +292,7 @@ function generateGraphJson(criticalPath?: string[]): JSONOutput {
   };
 }
 
-function getDot(json: JSONOutput) {
-  const angularJson = readAngularJson();
-  const nxJson = readNxJson();
-  const projects: ProjectNode[] = getProjectNodes(angularJson, nxJson);
-
+function getDot(projects: ProjectNode[], json: JSONOutput) {
   return createGraphviz(
     graphvizConfig,
     json.deps,
@@ -314,9 +311,9 @@ function getConfigFromUserInput(cmdOpts: UserOptions): ParsedUserOptions {
     );
   }
 
-  const extension = !!filename
-    ? path.extname(filename).substring(1)
-    : output || OutputType.html;
+  const extension: OutputType = !!filename
+    ? (path.extname(filename).substring(1) as OutputType)
+    : (output as OutputType) || OutputType.html;
   return {
     isFilePresent: !output,
     type: extension,
@@ -326,16 +323,20 @@ function getConfigFromUserInput(cmdOpts: UserOptions): ParsedUserOptions {
   };
 }
 
-function extractDataFromJson(json, type) {
+function extractDataFromJson(
+  projects: ProjectNode[],
+  json: { deps: Deps; criticalPath: string[] },
+  type: OutputType
+) {
   switch (type) {
     case OutputType.json:
       return JSON.stringify(json, null, 2);
     case OutputType.dot:
-      return getDot(json);
+      return getDot(projects, json);
     case OutputType.html:
-      return applyHTMLTemplate(viz(getDot(json)));
+      return applyHTMLTemplate(viz(getDot(projects, json)));
     case OutputType.svg:
-      return viz(getDot(json));
+      return viz(getDot(projects, json));
     default:
       throw new Error(
         'Unrecognized file extension. Supported extensions are "json", "html", and "dot"'
@@ -347,7 +348,10 @@ export function generateGraph(
   args: UserOptions,
   criticalPath?: string[]
 ): void {
-  const json = generateGraphJson(criticalPath || []);
+  const angularJson = readAngularJson();
+  const nxJson = readNxJson();
+  const projects: ProjectNode[] = getProjectNodes(angularJson, nxJson);
+  const json = generateGraphJson(projects, criticalPath || []);
 
   const config = {
     ...defaultConfig,
@@ -355,7 +359,7 @@ export function generateGraph(
   };
 
   handleOutput({
-    data: extractDataFromJson(json, config.type),
+    data: extractDataFromJson(projects, json, config.type),
     filename: config.filename,
     shouldWriteToFile: config.isFilePresent,
     shouldOpen: config.shouldOpen

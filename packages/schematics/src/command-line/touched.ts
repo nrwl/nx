@@ -29,7 +29,7 @@ export function getTouchedProjects(touchedFiles: string[]): string[] {
   const angularJson = readAngularJson();
   const nxJson = readNxJson();
   const projects = getProjectNodes(angularJson, nxJson);
-  const implicitDeps = getImplicitDependencies(angularJson, nxJson);
+  const implicitDeps = getImplicitDependencies(projects, angularJson, nxJson);
   return touchedProjects(implicitDeps, projects, touchedFiles).filter(p => !!p);
 }
 

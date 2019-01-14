@@ -11,16 +11,14 @@ import {
   getAffectedProjects,
   getAllAppNames,
   getAllLibNames,
-  getAllProjectNames,
+  getProjectNames,
   parseFiles,
   getAllProjectNamesWithTarget,
   getAffectedProjectsWithTarget
 } from './shared';
 import { generateGraph } from './dep-graph';
-import { ProjectNode } from './affected-apps';
 import { GlobalNxArgs } from './nx';
 import { WorkspaceResults } from './workspace-results';
-import { readDepGraph, DepGraph } from './deps-calculator';
 
 export interface YargsAffectedOptions
   extends yargs.Arguments,
@@ -46,9 +44,6 @@ export interface AffectedOptions extends GlobalNxArgs {
 const ngCommands = ['build', 'test', 'lint', 'e2e'];
 
 export function affected(parsedArgs: YargsAffectedOptions): void {
-  let apps: string[];
-  let libs: string[];
-  let projects: string[];
   const target = parsedArgs.target;
   const rest: string[] = [
     ...parsedArgs._.slice(1),
@@ -58,87 +53,64 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
   const workspaceResults = new WorkspaceResults(target);
 
   try {
-    if (parsedArgs.all) {
-      if (target === 'apps') {
-        apps = getAllAppNames()
+    switch (target) {
+      case 'apps':
+        const apps = (parsedArgs.all
+          ? getAllAppNames()
+          : getAffectedApps(parseFiles(parsedArgs).files)
+        )
           .filter(app => !parsedArgs.exclude.includes(app))
           .filter(
             project =>
               !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
           );
-      } else if (target === 'libs') {
-        libs = getAllLibNames()
+        console.log(apps.join(' '));
+        break;
+      case 'libs':
+        const libs = (parsedArgs.all
+          ? getAllLibNames()
+          : getAffectedLibs(parseFiles(parsedArgs).files)
+        )
           .filter(app => !parsedArgs.exclude.includes(app))
           .filter(
             project =>
               !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
           );
-      } else {
-        projects = getAllProjectNames()
-          .filter(project => !parsedArgs.exclude.includes(project))
-          .filter(
-            project =>
-              !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
-          );
-      }
-    } else {
-      const p = parseFiles(parsedArgs);
-      if (target === 'apps') {
-        apps = getAffectedApps(p.files)
-          .filter(project => !parsedArgs.exclude.includes(project))
-          .filter(
-            project =>
-              !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
-          );
-      } else if (target === 'libs') {
-        libs = getAffectedLibs(p.files)
-          .filter(project => !parsedArgs.exclude.includes(project))
-          .filter(
-            project =>
-              !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
-          );
-      } else {
-        projects = getAffectedProjects(p.files)
-          .filter(project => !parsedArgs.exclude.includes(project))
-          .filter(
-            project =>
-              !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
-          );
-      }
+        console.log(libs.join(' '));
+        break;
+      case 'dep-graph':
+        const projects = parsedArgs.all
+          ? getProjectNames()
+          : getAffectedProjects(parseFiles(parsedArgs).files)
+              .filter(app => !parsedArgs.exclude.includes(app))
+              .filter(
+                project =>
+                  !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+              );
+        generateGraph(parsedArgs, projects);
+        break;
+      default:
+        const targetProjects = getProjects(
+          target,
+          parsedArgs,
+          workspaceResults,
+          parsedArgs.all
+        );
+        runCommand(
+          target,
+          targetProjects,
+          parsedArgs,
+          rest,
+          workspaceResults,
+          `Running ${target} for`,
+          `Running ${target} for affected projects succeeded.`,
+          `Running ${target} for affected projects failed.`
+        );
+        break;
     }
   } catch (e) {
     printError(e);
     process.exit(1);
-  }
-
-  switch (target) {
-    case 'apps':
-      console.log(apps.join(' '));
-      break;
-    case 'libs':
-      console.log(libs.join(' '));
-      break;
-    case 'dep-graph':
-      generateGraph(parsedArgs, projects);
-      break;
-    default:
-      const targetProjects = getProjects(
-        target,
-        parsedArgs,
-        workspaceResults,
-        parsedArgs.all
-      );
-      runCommand(
-        target,
-        targetProjects,
-        parsedArgs,
-        rest,
-        workspaceResults,
-        `Running ${target} for`,
-        `Running ${target} for affected projects succeeded.`,
-        `Running ${target} for affected projects failed.`
-      );
-      break;
   }
 }
 
@@ -177,10 +149,6 @@ async function runCommand(
     console.log(`No projects to run ${command}`);
     return;
   }
-
-  const depGraph = readDepGraph();
-  const sortedProjects = topologicallySortProjects(depGraph);
-  projects = sortedProjects.filter(p => projects.includes(p));
 
   let message = `${iterationMessage} projects:\n  ${projects.join(',\n  ')}`;
   console.log(message);
@@ -265,29 +233,6 @@ async function runCommand(
       process.exit(1);
     }
   }
-}
-
-function topologicallySortProjects(deps: DepGraph): string[] {
-  const temporary = {};
-  const marked = {};
-  const res = [];
-
-  while (Object.keys(marked).length !== deps.projects.length) {
-    visit(deps.projects.find(p => !marked[p.name]));
-  }
-
-  function visit(n: ProjectNode) {
-    if (marked[n.name]) return;
-    if (temporary[n.name]) return;
-    temporary[n.name] = true;
-    deps.deps[n.name].forEach(e => {
-      visit(deps.projects.find(pp => pp.name === e.projectName));
-    });
-    marked[n.name] = true;
-    res.push(n.name);
-  }
-
-  return res;
 }
 
 function filterNxSpecificArgs(parsedArgs: YargsAffectedOptions): string[] {
