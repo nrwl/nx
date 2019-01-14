@@ -6,10 +6,7 @@ import {
   normalizedProjectRoot,
   getProjectMTime,
   mtime,
-  lastModifiedAmongProjectFiles,
-  readAngularJson,
-  readNxJson,
-  getProjectNodes
+  lastModifiedAmongProjectFiles
 } from './shared';
 import { ProjectNode } from './affected-apps';
 import { mkdirSync, readFileSync } from 'fs';
@@ -23,7 +20,6 @@ import {
 export type DepGraph = {
   projects: ProjectNode[];
   deps: Deps;
-  npmScope: string;
 };
 export type NxDepsJson = {
   dependencies: Deps;
@@ -103,17 +99,6 @@ export function dependencies(
     });
   calculator.commitDeps(nxDepsPath);
   return calculator.getDeps();
-}
-
-export function readDepGraph(): DepGraph {
-  const angularJson = readAngularJson();
-  const nxJson = readNxJson();
-  const projectNodes = getProjectNodes(angularJson, nxJson);
-  return {
-    npmScope: nxJson.npmScope,
-    projects: projectNodes,
-    deps: readDependencies(nxJson.npmScope, projectNodes)
-  };
 }
 
 /**
