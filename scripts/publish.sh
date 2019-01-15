@@ -10,7 +10,7 @@ NPM_DEST=build/npm
 ORIG_DIRECTORY=`pwd`
 
 # Get rid of tarballs at top of copied directory (made with npm pack)
-find $NPM_DEST -name *.tgz -maxdepth 1 -delete
+find $NPM_DEST -maxdepth 1 -name *.tgz -delete
 
 # We are running inside of a child_process, so we need to reauth
 npm adduser

@@ -104,7 +104,7 @@ childProcess.execSync('cp -R build/packages/* build/npm', {
 /**
  * Get rid of tarballs at top of copied directory (made with npm pack)
  */
-childProcess.execSync(`find build/npm -name "*.tgz" -maxdepth 1 -delete`, {
+childProcess.execSync(`find build/npm -maxdepth 1 -name "*.tgz" -delete`, {
   stdio: [0, 1, 2]
 });
 
