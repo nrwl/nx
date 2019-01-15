@@ -276,7 +276,8 @@ function topologicallySortProjects(deps: DepGraph): string[] {
     visit(deps.projects.find(p => !marked[p.name]));
   }
 
-  function visit(n: ProjectNode) {
+  function visit(n: ProjectNode|undefined) {
+    if (!n) return;
     if (marked[n.name]) return;
     if (temporary[n.name]) return;
     temporary[n.name] = true;
