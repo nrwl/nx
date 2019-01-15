@@ -1,31 +1,13 @@
-<h1 align="center">Nrwl Extensions for Angular (Nx)</h1>
 <p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png"></p>
 
 <div align="center">
 
 [![Build Status](https://travis-ci.org/nrwl/nx.svg?branch=master)](https://travis-ci.org/nrwl/nx)
-
 [![License](https://img.shields.io/npm/l/@nrwl/schematics.svg?style=flat-square)]()
-
 [![NPM Version](https://badge.fury.io/js/%40nrwl%2Fnx.svg)](https://www.npmjs.com/@nrwl/nx)
-
-</div>
-
-<hr>
-
-# What is Nx?
-
-🔎 **Nx is an open source toolkit for enterprise Angular applications**, which is b
-
-<hr>
-
-# What is Nx?
-
-🔎 **Nx is an open source toolkit for enterprise Angular applications**, which is based on our experienc
-
-# What is Nx?
-
-🔎 **Nx is an open source toolkit for enterprise Angular applications**, which is based on our experience wo
+[![NPM Downloads](https://img.shields.io/npm/dt/@nrwl/schematics.svg?style=flat-square)](https://www.npmjs.com/@nrwl/nx)
+[![Semantic Release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat-square)]()
+[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 
 </div>
 
@@ -69,9 +51,7 @@ In other words, small organizations can often get by with informal ad-hoc proces
 An Nx workspace is an Angular CLI project that has been enhanced to be enterprise ready. Being an Angular CLI project means it will be handy to have the Angular CLI installed globally, which can be done via npm or yarn as well.
 
 ```
-After you have installed the Angular CLI, install `@nrwl/schematics`.
-
-`
+npm install -g @angular/cli
 ```
 
 > Note: If you do not have the Angular CLI installed globally you may not be able to use ng from the terminal to run CLI commands within the project. But the package.json file comes with npm scripts to run ng commands, so you can run npm start to ng serve and you can run npm run ng <command> to run any of the ng commands.
@@ -79,27 +59,19 @@ After you have installed the Angular CLI, install `@nrwl/schematics`.
 After you have installed the Angular CLI, install `@nrwl/schematics`.
 
 ```
-
-```
-
-cre
-
+npm install -g @nrwl/schematics
 ```
 
 After installing it you can create a new Nx workspace by running:
 
 ```
-
-```
-ng
+create-nx-workspace myworkspacename
 ```
 
 You can also add Nx capabilities to an existing CLI project by running:
 
 ```
-## Quick Start & Documentation
-
-#
+ng add @nrwl/schematics
 ```
 
 You are good to go!
@@ -118,10 +90,8 @@ You are good to go!
 
 ### Talks
 
-- # Podcasts and Shows
-
-- [ngAir 140: Nx for Enterprise Angular Development](
-- - [ngAir 140: Nx for Enterprise Angular Development](https://www.youtube.com/watch?v=qYNiOKDno_
+- [Angular at Large Organizations](https://www.youtube.com/watch?v=piQ0EZhtus0)
+- [Nx: The New Way to Build Enterprise Angular Apps](https://www.youtube.com/watch?v=xo-1SDmvM8Y)
 - [Supercharging the Angular CLI](https://www.youtube.com/watch?v=bMkKz8AedHc)
 - [Hands on Full Stack development with Nx and Bazel](https://www.youtube.com/watch?v=1KDDIhcQORM)
 
@@ -132,18 +102,16 @@ You are good to go!
 
 ## Misc
 
-- you want to file a bug or submit a PR, read up on repo has branches for different nx comments to display expected behavior and example app and libraries. Check out the branch (workspace, ngrx...) to see what gets created for you. More info on readme.
-- ## Core Team
-
-| Victor Savkin
+- [nx-examples](https://github.com/nrwl/nx-examples) repo has branches for different nx comments to display expected behavior and example app and libraries. Check out the branch (workspace, ngrx...) to see what gets created for you. More info on readme.
+- [xplat - Cross-platform tools for Nx workspaces](https://nstudio.io/xplat/)
 
 ## Want to help?
 
-If you want to file a bug or submit a PR, read up on our ----------------------- | -----------------------------------------------------------.
+If you want to file a bug or submit a PR, read up on our [guidelines for contributing](https://github.com/nrwl/nx/blob/master/CONTRIBUTING.md).
 
 ## Core Team
 
 | Victor Savkin                                                                  | Jason Jean                                                                 | Benjamin Cabanes                                                               |
 | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | ![Victor Savkin](https://github.com/nrwl/nx/blob/master/static/victor_pic.jpg) | ![Jason Jean](https://github.com/nrwl/nx/blob/master/static/jason_pic.jpg) | ![Benjamin Cabanes](https://github.com/nrwl/nx/blob/master/static/ben_pic.jpg) |
-|                                                                                |                                                                            |                                                                                |
+| [vsavkin](https://github.com/vsavkin)                                          | [FrozenPandaz](https://github.com/FrozenPandaz)                            | [bcabanes](https://github.com/bcabanes)                                        |
