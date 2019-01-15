@@ -22,6 +22,7 @@ export interface CypressBuilderOptions {
   cypressConfig: string;
   devServerTarget: string;
   headless: boolean;
+  record: boolean;
   tsConfig: string;
   watch: boolean;
   browser?: string;
@@ -92,6 +93,7 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
         this.initCypress(
           options.cypressConfig,
           options.headless,
+          options.record,
           options.watch,
           options.baseUrl,
           options.browser
@@ -178,6 +180,7 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
   private initCypress(
     cypressConfig: string,
     headless: boolean,
+    record: boolean,
     isWatching: boolean,
     baseUrl: string,
     browser?: string
@@ -198,6 +201,7 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
     }
 
     options.headed = !headless;
+    options.record = record;
 
     return fromPromise<any>(
       !isWatching || headless ? Cypress.run(options) : Cypress.open(options)
