@@ -13,6 +13,19 @@
 
 <hr>
 
+<p align="center">
+  <a href="https://hubs.ly/H0g97pW0" target="_blank">  
+    <img 
+         width="728" 
+         height="90" 
+         src="https://images.ctfassets.net/8eyogtwep6d2/77nvAJVU9yTDmbUj2zjqS5/3cae7d978f6502fffd0130a5644bb055/monorepo-book-banner_2x.jpg?w=728" 
+         srcset="https://images.ctfassets.net/8eyogtwep6d2/77nvAJVU9yTDmbUj2zjqS5/3cae7d978f6502fffd0130a5644bb055/monorepo-book-banner_2x.jpg 2x" 
+         alt="Our Newest Enterprise Angular Book">
+  </a>
+</p>
+
+<hr>
+
 # What is Nx?
 
 🔎 **Nx is an open source toolkit for enterprise Angular applications**, which is based on our experience working at Google and helping the Fortune 500 build ambitious Angular applications. It provides an opinionated approach to application project structure and patterns.
