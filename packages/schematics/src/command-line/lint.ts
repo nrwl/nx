@@ -32,7 +32,7 @@ export function lint() {
 
 function readAllFilesFromAppsAndLibs() {
   return [
-    ...allFilesInDir(`${appRoot.path}/apps`),
-    ...allFilesInDir(`${appRoot.path}/libs`)
+    ...allFilesInDir(`${appRoot.path}/apps`).map(f => f.file),
+    ...allFilesInDir(`${appRoot.path}/libs`).map(f => f.file)
   ].filter(f => !path.basename(f).startsWith('.'));
 }

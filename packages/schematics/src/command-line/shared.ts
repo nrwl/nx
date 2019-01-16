@@ -276,17 +276,11 @@ export function getProjectNodes(
       implicitDependencies = [key.replace(/-e2e$/, '')];
     }
 
-    const files = allFilesInDir(`${appRoot.path}/${p.root}`);
-
-    const fileMTimes: {
-      [filePath: string]: number;
-    } = files.reduce(
-      (obj, file) => ({
-        ...obj,
-        [file]: mtime(file)
-      }),
-      {}
-    );
+    const filesWithMTimes = allFilesInDir(`${appRoot.path}/${p.root}`);
+    const fileMTimes = {};
+    filesWithMTimes.forEach(f => {
+      fileMTimes[f.file] = f.mtime;
+    });
 
     return {
       name: key,
@@ -294,7 +288,7 @@ export function getProjectNodes(
       type: projectType,
       tags,
       architect: p.architect || {},
-      files,
+      files: filesWithMTimes.map(f => f.file),
       implicitDependencies,
       fileMTimes
     };
@@ -371,7 +365,9 @@ export function getProjectRoots(projectNames: string[]): string[] {
   return projectNames.map(name => projects[name].root);
 }
 
-export function allFilesInDir(dirName: string): string[] {
+export function allFilesInDir(
+  dirName: string
+): { file: string; mtime: number }[] {
   // Ignore .gitignored files
   if (ig.ignores(path.relative(appRoot.path, dirName))) {
     return [];
@@ -385,10 +381,14 @@ export function allFilesInDir(dirName: string): string[] {
         return;
       }
       try {
-        if (!fs.statSync(child).isDirectory()) {
+        const s = fs.statSync(child);
+        if (!s.isDirectory()) {
           // add starting with "apps/myapp/..." or "libs/mylib/..."
-          res.push(normalizePath(path.relative(appRoot.path, child)));
-        } else if (fs.statSync(child).isDirectory()) {
+          res.push({
+            file: normalizePath(path.relative(appRoot.path, child)),
+            mtime: s.mtimeMs
+          });
+        } else if (s.isDirectory()) {
           res = [...res, ...allFilesInDir(child)];
         }
       } catch (e) {}
@@ -421,12 +421,7 @@ export function mtime(filePath: string): number {
   if (!fs.existsSync(filePath)) {
     return -Infinity;
   }
-  let fd = fs.openSync(filePath, 'r');
-  try {
-    return fs.fstatSync(fd).mtime.getTime();
-  } finally {
-    fs.closeSync(fd);
-  }
+  return fs.statSync(filePath).mtimeMs;
 }
 
 function normalizePath(file: string): string {

@@ -208,22 +208,24 @@ export class DepsCalculator {
   }
 
   private initializeDeps(): NxDepsJson {
-    const files = this.projects
-      .map(project => project.files)
-      .reduce((allFiles, files) => [...allFiles, ...files], []);
+    const files = [];
+    this.projects.forEach(p => {
+      files.push(...p.files);
+    });
+
     const dependencies = this.projects.reduce(
       (m, c) => ({ ...m, [c.name]: [] }),
       {}
     );
-    const fileDependencies = files.reduce(
-      (m, file) => ({
-        ...m,
-        [file]: this.incrementalEnabled
-          ? this.existingDeps.files[file] || []
-          : []
-      }),
-      {}
-    );
+
+    const fileDependencies = {} as any;
+
+    files.forEach(file => {
+      fileDependencies[file] = this.incrementalEnabled
+        ? this.existingDeps.files[file] || []
+        : [];
+    });
+
     return {
       dependencies,
       files: fileDependencies
