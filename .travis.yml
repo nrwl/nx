@@ -5,9 +5,6 @@ matrix:
       node_js: 8.9.3
       dist: trusty
       sudo: required
-    - os: windows
-      language: node_js
-      node_js: 8.9.3
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "linux"  ]; then
@@ -19,9 +16,9 @@ install:
   - yarn install --network-timeout 1000000 # Timeout needed for Windows (really slow)
 
 script:
+  - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then yarn checkformat --head=$TRAVIS_PULL_REQUEST_SHA --base=$(git merge-base HEAD $TRAVIS_BRANCH); fi'
   - yarn test
   - yarn e2e
-  - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then yarn checkformat --head=$TRAVIS_PULL_REQUEST_SHA --base=$(git merge-base HEAD $TRAVIS_BRANCH); fi'
   - yarn checkcommit
 
 addons:

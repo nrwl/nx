@@ -20,7 +20,11 @@
     "parallel": {
       "type": "boolean",
       "description": "Run commands in parallel",
-      "default": false
+      "default": true
+    },
+    "readyWhen": {
+      "type": "string",
+      "description": "String to appear in stdout or stderr that indicates that the task is done. This option can only be used when parallel is set to true. If not specified, the task is one when all the child processes complete."
     }
   },
   "required": ["command"]
