@@ -49,6 +49,11 @@
       "version": "7.2.0",
       "description": "Create tsconfig.jsons in project roots",
       "factory": "./update-7-2-0/update-7-2-0"
+    },
+    "update-7.4.0": {
+      "version": "7.4.0",
+      "description": "Updated Angular CLI and Typescript",
+      "factory": "./update-7-4-0/update-7-4-0"
     }
   }
 }

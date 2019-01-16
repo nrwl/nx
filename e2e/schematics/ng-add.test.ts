@@ -315,6 +315,11 @@ describe('Nrwl Convert to Nx Workspace', () => {
       },
       configurations: {
         production: {
+          optimization: {
+            scripts: false,
+            styles: true
+          },
+          sourceMap: false,
           fileReplacements: [
             {
               replace: 'src/environments/environment.ts',
