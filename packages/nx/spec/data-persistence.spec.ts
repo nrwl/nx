@@ -157,15 +157,17 @@ describe('DataPersistence', () => {
         const root = TestBed.createComponent(RootCmp);
 
         const router: Router = TestBed.get(Router);
-        let action;
-        TestBed.get(Actions).subscribe(a => (action = a));
+        let actions: any[] = [];
+        TestBed.get(Actions).subscribe((a: any) => actions.push(a));
 
         router.navigateByUrl('/todo/123');
         tick(0);
         root.detectChanges(false);
         expect(root.elementRef.nativeElement.innerHTML).not.toContain('ID 123');
-        expect(action.type).toEqual('ERROR');
-        expect(action.payload.error.message).toEqual('boom');
+        expect(actions.map(a => a.type)).toContain('ERROR');
+        expect(
+          actions.find(a => a.type === 'ERROR').payload.error.message
+        ).toEqual('boom');
 
         // can recover after an error
         router.navigateByUrl('/todo/456');
@@ -205,15 +207,17 @@ describe('DataPersistence', () => {
         const root = TestBed.createComponent(RootCmp);
 
         const router: Router = TestBed.get(Router);
-        let action;
-        TestBed.get(Actions).subscribe(a => (action = a));
+        let actions: any[] = [];
+        TestBed.get(Actions).subscribe((a: any) => actions.push(a));
 
         router.navigateByUrl('/todo/123');
         tick(0);
         root.detectChanges(false);
         expect(root.elementRef.nativeElement.innerHTML).not.toContain('ID 123');
-        expect(action.type).toEqual('ERROR');
-        expect(action.payload.error).toEqual('boom');
+        expect(actions.map(a => a.type)).toContain('ERROR');
+        expect(actions.find(a => a.type === 'ERROR').payload.error).toEqual(
+          'boom'
+        );
 
         router.navigateByUrl('/todo/456');
         tick(0);

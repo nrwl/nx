@@ -248,7 +248,7 @@ export function removeFromNgModule(
     return [
       new RemoveChange(
         modulePath,
-        matchingProperty.pos,
+        matchingProperty.getStart(source),
         matchingProperty.getFullText(source)
       )
     ];
@@ -545,6 +545,9 @@ export function addGlobal(
 }
 
 export function insert(host: Tree, modulePath: string, changes: Change[]) {
+  if (changes.length < 1) {
+    return;
+  }
   const recorder = host.beginUpdate(modulePath);
   for (const change of changes) {
     if (change instanceof InsertChange) {
@@ -555,8 +558,8 @@ export function insert(host: Tree, modulePath: string, changes: Change[]) {
       // do nothing
     } else if (change instanceof ReplaceChange) {
       const action = <any>change;
-      recorder.remove(action.pos + 1, action.oldText.length);
-      recorder.insertLeft(action.pos + 1, action.newText);
+      recorder.remove(action.pos, action.oldText.length);
+      recorder.insertLeft(action.pos, action.newText);
     } else {
       throw new Error(`Unexpected Change '${change}'`);
     }
@@ -941,6 +944,11 @@ export function replaceNodeValue(
   content: string
 ) {
   insert(host, modulePath, [
-    new ReplaceChange(modulePath, node.pos, node.getFullText(), content)
+    new ReplaceChange(
+      modulePath,
+      node.getStart(node.getSourceFile()),
+      node.getFullText(),
+      content
+    )
   ]);
 }
