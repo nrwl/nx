@@ -57,7 +57,7 @@
     },
     "update-7.6.0": {
       "version": "7.6.0",
-      "description": "Add VSCode Extensions",
+      "description": "Add VSCode Extensions and Update NgRx",
       "factory": "./update-7-6-0/update-7-6-0"
     }
   }
