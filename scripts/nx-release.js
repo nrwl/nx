@@ -33,6 +33,11 @@ if (parsedArgs.help) {
   process.exit(0);
 }
 
+console.log('> git fetch --all');
+childProcess.execSync('git fetch --all', {
+  stdio: [0, 1, 2]
+});
+
 function parseVersion(version) {
   if (!version || !version.length) {
     return {
