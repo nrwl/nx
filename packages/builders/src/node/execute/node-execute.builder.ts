@@ -16,10 +16,16 @@ import {
 } from '../build/node-build.builder';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
+export const enum InspectType {
+  Inspect = 'inspect',
+  InspectBrk = 'inspect-brk'
+}
+
 export interface NodeExecuteBuilderOptions {
-  inspect: boolean;
+  inspect: boolean | InspectType;
   args: string[];
   buildTarget: string;
+  port: number;
 }
 
 export class NodeExecuteBuilder implements Builder<NodeExecuteBuilderOptions> {
@@ -52,8 +58,20 @@ export class NodeExecuteBuilder implements Builder<NodeExecuteBuilderOptions> {
       throw new Error('Already running');
     }
     this.subProcess = fork(file, options.args, {
-      execArgv: options.inspect ? ['--inspect'] : []
+      execArgv: this.getExecArgv(options)
     });
+  }
+
+  private getExecArgv(options: NodeExecuteBuilderOptions) {
+    if (!options.inspect) {
+      return [];
+    }
+
+    if (options.inspect === true) {
+      options.inspect = InspectType.Inspect;
+    }
+
+    return [`--${options.inspect}=localhost:${options.port}`];
   }
 
   private restartProcess(file: string, options: NodeExecuteBuilderOptions) {

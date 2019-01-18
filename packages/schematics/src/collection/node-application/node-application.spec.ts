@@ -42,6 +42,7 @@ describe('node-app', () => {
               production: {
                 optimization: true,
                 extractLicenses: true,
+                inspect: false,
                 fileReplacements: [
                   {
                     replace: 'apps/my-node-app/src/environments/environment.ts',
