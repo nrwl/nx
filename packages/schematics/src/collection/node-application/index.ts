@@ -128,6 +128,7 @@ function getBuildConfig(project: any, options: NormalizedSchema) {
       production: {
         optimization: true,
         extractLicenses: true,
+        inspect: false,
         fileReplacements: [
           {
             replace: join(project.sourceRoot, 'environments/environment.ts'),

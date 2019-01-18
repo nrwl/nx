@@ -7,10 +7,23 @@
       "type": "string",
       "description": "The target to run to build you the app"
     },
+    "port": {
+      "type": "number",
+      "default": 7777,
+      "description": "The port to inspect the process on"
+    },
     "inspect": {
-      "type": "boolean",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["inspect", "inspect-brk"]
+        },
+        {
+          "type": "boolean"
+        }
+      ],
       "description": "Ensures the app is starting with debugging",
-      "default": true
+      "default": "inspect"
     },
     "args": {
       "type": "array",

@@ -1,6 +1,7 @@
 import {
   NodeExecuteBuilder,
-  NodeExecuteBuilderOptions
+  NodeExecuteBuilderOptions,
+  InspectType
 } from './node-execute.builder';
 import { TestLogger } from '@angular-devkit/architect/testing';
 import { normalize } from '@angular-devkit/core';
@@ -67,7 +68,8 @@ describe('NodeExecuteBuilder', () => {
     testOptions = {
       inspect: true,
       args: [],
-      buildTarget: 'nodeapp:build'
+      buildTarget: 'nodeapp:build',
+      port: 9229
     };
   });
 
@@ -103,10 +105,104 @@ describe('NodeExecuteBuilder', () => {
       }
     });
     expect(fork).toHaveBeenCalledWith('outfile.js', [], {
-      execArgv: ['--inspect']
+      execArgv: ['--inspect=localhost:9229']
     });
     expect(treeKill).toHaveBeenCalledTimes(1);
     expect(fork).toHaveBeenCalledTimes(2);
+  });
+
+  describe('--inspect', () => {
+    describe('inspect', () => {
+      it('should inspect the process', () => {
+        expect(
+          builder.run({
+            root: normalize('/root'),
+            projectType: 'application',
+            builder: '@nrwl/builders:node-execute',
+            options: {
+              ...testOptions,
+              inspect: InspectType.Inspect
+            }
+          })
+        ).toBeObservable(
+          cold('--a--b--a', {
+            a: {
+              success: true,
+              outfile: 'outfile.js'
+            },
+            b: {
+              success: false,
+              outfile: 'outfile.js'
+            }
+          })
+        );
+        expect(fork).toHaveBeenCalledWith('outfile.js', [], {
+          execArgv: ['--inspect=localhost:9229']
+        });
+      });
+    });
+
+    describe('inspect-brk', () => {
+      it('should inspect and break at beginning of execution', () => {
+        expect(
+          builder.run({
+            root: normalize('/root'),
+            projectType: 'application',
+            builder: '@nrwl/builders:node-execute',
+            options: {
+              ...testOptions,
+              inspect: InspectType.InspectBrk
+            }
+          })
+        ).toBeObservable(
+          cold('--a--b--a', {
+            a: {
+              success: true,
+              outfile: 'outfile.js'
+            },
+            b: {
+              success: false,
+              outfile: 'outfile.js'
+            }
+          })
+        );
+        expect(fork).toHaveBeenCalledWith('outfile.js', [], {
+          execArgv: ['--inspect-brk=localhost:9229']
+        });
+      });
+    });
+  });
+
+  describe('--port', () => {
+    describe('1234', () => {
+      it('should inspect the process on port 1234', () => {
+        expect(
+          builder.run({
+            root: normalize('/root'),
+            projectType: 'application',
+            builder: '@nrwl/builders:node-execute',
+            options: {
+              ...testOptions,
+              port: 1234
+            }
+          })
+        ).toBeObservable(
+          cold('--a--b--a', {
+            a: {
+              success: true,
+              outfile: 'outfile.js'
+            },
+            b: {
+              success: false,
+              outfile: 'outfile.js'
+            }
+          })
+        );
+        expect(fork).toHaveBeenCalledWith('outfile.js', [], {
+          execArgv: ['--inspect=localhost:1234']
+        });
+      });
+    });
   });
 
   it('should log errors from killing the process', () => {
