@@ -153,7 +153,8 @@ const options = {
      * able to understand our multi-package setup.
      */
     release: false
-  }
+  },
+  requireCleanWorkingDir: false
 };
 
 releaseIt(options)
