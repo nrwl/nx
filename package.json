@@ -9,6 +9,7 @@
     "commit": "git-cz",
     "checkcommit": "node ./scripts/commit-lint.js",
     "e2e": "./scripts/e2e.sh",
+    "create-workspace": "./scripts/create-workspace.sh",
     "format": "./scripts/format.sh",
     "linknpm": "./scripts/link.sh",
     "nx-release": "./scripts/nx-release.js",

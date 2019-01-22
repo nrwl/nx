@@ -91,6 +91,20 @@
         "required": ["replace", "with"]
       },
       "default": []
+    },
+    "buildProjects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string"
+          },
+          "directory": {
+            "type": "string"
+          }
+        }
+      }
     }
   },
   "required": ["tsConfig", "main"],

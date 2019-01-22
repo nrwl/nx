@@ -1,0 +1,13 @@
+{
+  "name": "azure",
+  "version": "0.1",
+  "extends": "@schematics/angular",
+  "schematics": {
+    "appconfig": {
+      "factory": "./appconfig",
+      "schema": "./appconfig/schema.json",
+      "description": "Create an Azure ap config",
+      "hidden": false
+    }
+  }
+}

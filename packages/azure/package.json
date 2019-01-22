@@ -1,0 +1,23 @@
+{
+  "name": "@nrwl/azure",
+  "version": "0.0.1",
+  "description": "Azure Integration",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nrwl/nx.git"
+  },
+  "main": "index.js",
+  "types": "index.d.js",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://github.com/nrwl/nx#readme",
+  "builders": "./src/builders.json",
+  "schematics": "./src/collection.json",
+  "dependencies": {
+    "@angular-devkit/architect": "~0.12.1",
+    "@angular-devkit/build-webpack": "~0.12.1"
+  }
+}

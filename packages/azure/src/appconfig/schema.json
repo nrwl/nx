@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "SchematicsAzureConfig",
+  "title": "Create Jest Configuration for the workspace",
+  "type": "object",
+  "properties": {
+    "project": {
+      "description": "The name of the project.",
+      "type": "string",
+      "x-prompt": "What name of the project you want to deploy?"
+    },
+    "assetsFolder": {
+      "description": "Folder with assets",
+      "type": "string",
+      "default": "public"
+    },
+    "azureWebAppName": {
+      "description": "Azure web app name",
+      "type": "string",
+      "x-prompt": "What is the name of web app?"
+    },
+    "environment": {
+      "description": "Environment name",
+      "type": "string",
+      "default": "dev"
+    },
+    "deployment": {
+      "description": "Deployment strategy",
+      "type": "string",
+      "enum": ["git", "zip"],
+      "default": "git",
+      "x-prompt": {
+        "message": "What deployment strategy you would like to use?",
+        "type": "list",
+        "items": [
+          { "value": "git", "label": "git" },
+          { "value": "zip", "label": "zip" }
+        ]
+      }
+    }
+  },
+  "required": [
+    "project", "azureWebAppName"
+  ]
+}

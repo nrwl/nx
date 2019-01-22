@@ -7,15 +7,17 @@ import {
 import { getSystemPath, normalize, Path } from '@angular-devkit/core';
 import { WebpackBuilder } from '@angular-devkit/build-webpack';
 
-import { Observable } from 'rxjs';
+import { Observable, of, zip } from 'rxjs';
 import { writeFileSync, statSync } from 'fs';
 import { getWebpackConfig, OUT_FILENAME } from './webpack/config';
 import { resolve, basename, dirname, relative } from 'path';
-import { map } from 'rxjs/operators';
+import { concatMap, first, map, tap } from 'rxjs/operators';
 import {
   AssetPattern,
   AssetPatternObject
 } from '@angular-devkit/build-angular';
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { execSync } from 'child_process';
 
 export interface BuildNodeBuilderOptions {
   main: string;
@@ -35,6 +37,7 @@ export interface BuildNodeBuilderOptions {
   statsJson?: boolean;
   extractLicenses?: boolean;
 
+  buildProjects?: {target: string, directory: string}[];
   root?: string;
 }
 
@@ -82,7 +85,14 @@ export default class BuildNodeBuilder
         map(buildEvent => ({
           ...buildEvent,
           outfile: resolve(this.root, options.outputPath, OUT_FILENAME)
-        }))
+        })),
+        concatMap(buildEvent => {
+          if (buildEvent.success && options.buildProjects) {
+            return this.buildProjects(options);
+          } else {
+            return of();
+          }
+        })
       );
   }
 
@@ -149,5 +159,44 @@ export default class BuildNodeBuilder
       replace: resolve(this.root, fileReplacement.replace),
       with: resolve(this.root, fileReplacement.with)
     }));
+  }
+
+  private buildProjects(
+    options: BuildNodeBuilderOptions
+  ): Observable<NodeBuildEvent> {
+    if (! options.buildProjects) return of();
+
+    console.log("building dependent projects");
+    return zip(...options.buildProjects.map(b => {
+      const [project, target, configuration] = b.target.split(':');
+
+      const builderConfig = this.context.architect.getBuilderConfiguration<BuildNodeBuilderOptions>({
+        project,
+        target,
+        configuration,
+        overrides: {
+          watch: true
+        }
+      });
+
+      return this.context.architect.getBuilderDescription(builderConfig).pipe(
+        concatMap(buildDescription =>
+          this.context.architect.validateBuilderOptions(
+            builderConfig,
+            buildDescription
+          )
+        ),
+        concatMap(
+          builderConfig =>
+            this.context.architect.run(builderConfig, this.context) as Observable<
+              NodeBuildEvent
+              >
+        ),
+        first(),
+        tap(() => {
+          execSync(`cp -r dist/apps/${project} ${options.outputPath}/${b.directory}`);
+        })
+      );
+    })).pipe(map(() => ({success: true}) as any));
   }
 }

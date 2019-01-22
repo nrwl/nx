@@ -1,0 +1,10 @@
+{
+  "$schema": "@angular-devkit/architect/src/builders-schema.json",
+  "builders": {
+    "deploy": {
+      "class": "./deploy/deploy.builder",
+      "schema": "./deploy/schema.json",
+      "description": "Deploy Azure Application"
+    }
+  }
+}

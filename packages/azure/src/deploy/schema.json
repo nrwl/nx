@@ -1,0 +1,34 @@
+{
+  "title": "Deploy Azure App",
+  "description": "Deploy an application on Azure",
+  "type": "object",
+  "properties": {
+    "buildTarget": {
+      "description": "The app to build",
+      "type": "string"
+    },
+    "azureWebAppName": {
+      "description": "Azure web app name",
+      "type": "string"
+    },
+    "deployment": {
+      "description": "Deployment strategy",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "remote": {
+          "type": "string"
+        }
+      }
+    },
+    "create": {
+      "description": "Create an app on Azure",
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "additionalProperties": false,
+  "required": []
+}
