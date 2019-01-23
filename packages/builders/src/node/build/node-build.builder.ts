@@ -167,36 +167,38 @@ export default class BuildNodeBuilder
     if (! options.buildProjects) return of();
 
     console.log("building dependent projects");
-    return zip(...options.buildProjects.map(b => {
-      const [project, target, configuration] = b.target.split(':');
+    if (options.buildProjects.length > 0) {
+      return zip(...options.buildProjects.map(b => {
+        const [project, target, configuration] = b.target.split(':');
 
-      const builderConfig = this.context.architect.getBuilderConfiguration<BuildNodeBuilderOptions>({
-        project,
-        target,
-        configuration,
-        overrides: {
-          watch: true
-        }
-      });
+        const builderConfig = this.context.architect.getBuilderConfiguration<BuildNodeBuilderOptions>({
+          project,
+          target,
+          configuration,
+          overrides: {
+            watch: true
+          }
+        });
 
-      return this.context.architect.getBuilderDescription(builderConfig).pipe(
-        concatMap(buildDescription =>
-          this.context.architect.validateBuilderOptions(
-            builderConfig,
-            buildDescription
-          )
-        ),
-        concatMap(
-          builderConfig =>
-            this.context.architect.run(builderConfig, this.context) as Observable<
-              NodeBuildEvent
-              >
-        ),
-        first(),
-        tap(() => {
-          execSync(`cp -r dist/apps/${project} ${options.outputPath}/${b.directory}`);
-        })
-      );
-    })).pipe(map(() => ({success: true}) as any));
+        return this.context.architect.getBuilderDescription(builderConfig).pipe(
+          concatMap(buildDescription =>
+            this.context.architect.validateBuilderOptions(
+              builderConfig,
+              buildDescription
+            )
+          ),
+          concatMap(
+            builderConfig =>
+              this.context.architect.run(builderConfig, this.context) as Observable<NodeBuildEvent>
+          ),
+          first(),
+          tap(() => {
+            execSync(`cp -r dist/apps/${project} ${options.outputPath}/${b.directory}`);
+          })
+        );
+      })).pipe(map(() => ({ success: true }) as any));
+    } else {
+      return of({success: true} as any);
+    }
   }
 }
