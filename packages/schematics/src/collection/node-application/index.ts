@@ -134,6 +134,12 @@ function getBuildConfig(project: any, options: NormalizedSchema) {
             replace: join(project.sourceRoot, 'environments/environment.ts'),
             with: join(project.sourceRoot, 'environments/environment.prod.ts')
           }
+        ],
+        buildProjects: [
+          {
+            'target': `${options.frontendProject}:build:production`,
+            'directory': 'public'
+          }
         ]
       }
     }
@@ -175,6 +181,10 @@ function updateAngularJson(options: NormalizedSchema): Rule {
     project.architect.lint = getLintConfig(project);
     angularJson.projects[options.name] = project;
 
+    if (options.frontendProject) {
+      const frontend = angularJson.projects[options.frontendProject];
+      frontend.architect.serve.options.proxyConfig = join(options.appProjectRoot, 'proxy.config.json');
+    }
     return angularJson;
   });
 }
@@ -203,9 +213,9 @@ export default function(schema: Schema): Rule {
       options.framework !== 'none' ? createSourceCode(options) : noop(),
       options.unitTestRunner === 'jest'
         ? schematic('jest-project', {
-            project: options.name,
-            skipSetupFile: true
-          })
+          project: options.name,
+          skipSetupFile: true
+        })
         : noop(),
       addTypes(options)
     ])(host, context);

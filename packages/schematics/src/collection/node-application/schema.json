@@ -52,6 +52,10 @@
       "description": "Test runner to use for unit tests",
       "default": "jest"
     },
+    "frontendProject": {
+      "type": "string",
+      "description": "Frontend for this node app"
+    },
     "tags": {
       "type": "string",
       "description": "Add tags to the application (used for linting)",
