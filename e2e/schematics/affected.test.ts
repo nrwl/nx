@@ -82,6 +82,32 @@ describe('Affected', () => {
     expect(noAffectedLibs).not.toContain('mylib');
     expect(noAffectedLibs).not.toContain('mylib2');
 
+    const affectedProjects = runCommand(
+      'npm run affected:projects -- --files="libs/mylib/src/index.ts"'
+    );
+    expect(affectedProjects).toContain('myapp');
+    expect(affectedProjects).toContain('mylib');
+    expect(affectedApps).not.toContain('myapp2');
+    expect(affectedApps).not.toContain('myapp-e2e');
+
+    const implicitlyAffectedProjects = runCommand(
+      'npm run affected:projects -- --files="package.json"'
+    );
+    expect(implicitlyAffectedProjects).toContain('myapp');
+    expect(implicitlyAffectedProjects).toContain('myapp2');
+    expect(implicitlyAffectedProjects).toContain('mylib');
+    expect(implicitlyAffectedProjects).toContain('mylib2');
+    expect(implicitlyAffectedProjects).toContain('mypublishablelib');
+
+    const noAffectedProjects = runCommand(
+      'npm run affected:projects -- --files="README.md"'
+    );
+    expect(noAffectedProjects).not.toContain('myapp');
+    expect(noAffectedProjects).not.toContain('myapp2');
+    expect(noAffectedProjects).not.toContain('mylib');
+    expect(noAffectedProjects).not.toContain('mylib2');
+    expect(noAffectedProjects).not.toContain('mypublishablelib');
+
     const build = runCommand(
       'npm run affected:build -- --files="libs/mylib/src/index.ts"'
     );

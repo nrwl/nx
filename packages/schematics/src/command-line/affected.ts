@@ -14,7 +14,8 @@ import {
   getProjectNames,
   parseFiles,
   getAllProjectNamesWithTarget,
-  getAffectedProjectsWithTarget
+  getAffectedProjectsWithTarget,
+  getAllProjectNames
 } from './shared';
 import { generateGraph } from './dep-graph';
 import { GlobalNxArgs } from './nx';
@@ -78,8 +79,20 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
           );
         console.log(libs.join(' '));
         break;
+      case 'projects':
+        const projects = (parsedArgs.all
+          ? getAllProjectNames()
+          : getAffectedProjects(parseFiles(parsedArgs).files)
+        )
+          .filter(_project => !parsedArgs.exclude.includes(_project))
+          .filter(
+            _project =>
+              !parsedArgs.onlyFailed || !workspaceResults.getResult(_project)
+          );
+        console.log(projects.join(' '));
+        break;
       case 'dep-graph':
-        const projects = parsedArgs.all
+        const depProjects = parsedArgs.all
           ? getProjectNames()
           : getAffectedProjects(parseFiles(parsedArgs).files)
               .filter(app => !parsedArgs.exclude.includes(app))
@@ -87,7 +100,7 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
                 project =>
                   !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
               );
-        generateGraph(parsedArgs, projects);
+        generateGraph(parsedArgs, depProjects);
         break;
       default:
         const targetProjects = getProjects(

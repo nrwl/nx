@@ -75,6 +75,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
       e2e: 'ng e2e',
       'affected:apps': './node_modules/.bin/nx affected:apps',
       'affected:libs': './node_modules/.bin/nx affected:libs',
+      'affected:projects': './node_modules/.bin/nx affected:projects',
       'affected:build': './node_modules/.bin/nx affected:build',
       'affected:e2e': './node_modules/.bin/nx affected:e2e',
       'affected:test': './node_modules/.bin/nx affected:test',

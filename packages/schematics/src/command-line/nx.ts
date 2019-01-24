@@ -45,6 +45,16 @@ yargs
       })
   )
   .command(
+    'affected:projects',
+    'Print applications and libraries affected by changes',
+    withAffectedOptions,
+    args =>
+      affected({
+        ...args,
+        target: 'projects'
+      })
+  )
+  .command(
     'affected:build',
     'Build applications and publishable libraries affected by changes',
     yargs => withAffectedOptions(withParallel(yargs)),

@@ -345,6 +345,12 @@ export function getAllLibNames() {
   return getProjectNames(p => p.type === ProjectType.lib);
 }
 
+export function getAllProjectNames() {
+  return getProjectNames(
+    p => p.type === ProjectType.app || p.type === ProjectType.lib
+  );
+}
+
 export function getAllProjectNamesWithTarget(target: string) {
   return getProjectNames(p => p.architect[target]);
 }
