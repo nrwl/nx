@@ -6,7 +6,7 @@ import * as path from 'path';
 import { serializeJson } from '../../src/utils/fileutils';
 import { readJsonInTree } from '../../src/utils/ast-utils';
 
-describe('Update 7.2.0', () => {
+describe('Update 7.5.0', () => {
   let initialTree: Tree;
   let schematicRunner: SchematicTestRunner;
 
@@ -17,7 +17,6 @@ describe('Update 7.2.0', () => {
       'package.json',
       serializeJson({
         devDependencies: {
-          '@angular/cli': '7.1.0',
           typescript: '~3.1.0'
         }
       })
@@ -29,16 +28,13 @@ describe('Update 7.2.0', () => {
     );
   });
 
-  it('should update typescript and cli', async () => {
+  it('should update typescript', async () => {
     const result = await schematicRunner
-      .runSchematicAsync('update-7.4.0', {}, initialTree)
+      .runSchematicAsync('update-7.5.0', {}, initialTree)
       .toPromise();
 
-    expect(readJsonInTree(result, 'package.json')).toEqual({
-      devDependencies: {
-        '@angular/cli': '7.2.2',
-        typescript: '~3.2.2'
-      }
-    });
+    expect(
+      readJsonInTree(result, 'package.json').devDependencies.typescript
+    ).toEqual('~3.2.2');
   });
 });
