@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "SchematicsAzureConfig",
+  "title": "Create Jest Configuration for the workspace",
+  "type": "object",
+  "properties": {
+    "project": {
+      "description": "The name of the project.",
+      "type": "string",
+      "x-prompt": "What name of the project you want to deploy?"
+    },
+    "azureDbName": {
+      "description": "The name of the database.",
+      "type": "string",
+      "x-prompt": "What name of the database?"
+    }
+  },
+  "required": [
+    "project", "azureDbName"
+  ]
+}

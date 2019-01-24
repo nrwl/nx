@@ -3,7 +3,7 @@
 npx ng-packagr -p packages/nx/ng-package.json
 
 rm -rf build
-./node_modules/.bin/ngc
+./node_modules/.bin/tsc
 
 #Nx client side lib
 rm -rf build/packages/nx

@@ -88,9 +88,11 @@ export default class BuildNodeBuilder
         })),
         concatMap(buildEvent => {
           if (buildEvent.success && options.buildProjects) {
-            return this.buildProjects(options);
+            return this.buildProjects(options).pipe(map(br => {
+              return br.success ? buildEvent : br;
+            }));
           } else {
-            return of();
+            return of(buildEvent);
           }
         })
       );

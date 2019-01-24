@@ -16,6 +16,11 @@ import {
 } from '../build/node-build.builder';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
+try {
+  require('dotenv').config();
+} catch (e) {
+}
+
 export const enum InspectType {
   Inspect = 'inspect',
   InspectBrk = 'inspect-brk'

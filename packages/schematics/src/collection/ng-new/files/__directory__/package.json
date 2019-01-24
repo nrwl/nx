@@ -68,6 +68,7 @@
     "ts-node": "~7.0.0",
     "tslint": "~5.11.0",
     "typescript": "<%= typescriptVersion %>",
-    "prettier": "<%= prettierVersion %>"
+    "prettier": "<%= prettierVersion %>",
+    "dotenv": "^6.2.0"
   }
 }

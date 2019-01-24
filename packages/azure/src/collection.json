@@ -8,6 +8,12 @@
       "schema": "./appconfig/schema.json",
       "description": "Create an Azure ap config",
       "hidden": false
+    },
+    "cosmosdb": {
+      "factory": "./cosmosdb",
+      "schema": "./cosmosdb/schema.json",
+      "description": "Creates cosmosdb config",
+      "hidden": false
     }
   }
 }
