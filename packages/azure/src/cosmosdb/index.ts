@@ -1,5 +1,5 @@
 import { branchAndMerge, chain, Rule, SchematicContext, Tree } from '@angular-devkit/schematics';
-import { getProjectConfig } from '@nrwl/schematics/src/utils/ast-utils';
+import { getProjectConfig, updateProjectConfig } from '@nrwl/schematics/src/utils/ast-utils';
 import { fragment } from '@angular-devkit/core';
 import { execSync } from 'child_process';
 import { join } from 'path';
@@ -37,7 +37,7 @@ function updateEnvFiles(schema: any): Rule {
 export const environment = {
   production: false,
   database: {
-    connectionString: 'mongodb://localhost:27017/test?ssl=true'
+    connectionString: 'mongodb://localhost:27017/devdb'
   }
 };
 `);
@@ -78,13 +78,33 @@ export class AppModule {}
   };
 }
 
+function registerDockerMongo(schema: any): Rule {
+  return (host: Tree, context: SchematicContext) => {
+    const project = getProjectConfig(host, schema.project);
+    project.architect.mongodb = {
+      'builder': '@nrwl/builders:run-commands',
+      'options': {
+        commands: [
+          { command: 'powershell.exe docker run -d -p 27017:27017 mongo' }
+        ]
+      }
+    };
+    project.architect.serve.options.runTargets = [
+      {
+        target: `${schema.project}:mongodb`
+      }
+    ];
+    updateProjectConfig(schema.project, project)(host, context);
+  };
+}
 
 export default function(schema: any): Rule {
   return chain([
     branchAndMerge(chain([
       updateDotEnvFile(schema),
       updateEnvFiles(schema),
-      updateAppModule(schema)
+      updateAppModule(schema),
+      registerDockerMongo(schema)
     ]))
   ]);
 }

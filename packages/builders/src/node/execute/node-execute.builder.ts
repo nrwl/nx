@@ -4,11 +4,11 @@ import {
   BuilderConfiguration,
   BuilderContext
 } from '@angular-devkit/architect';
-import { ChildProcess, fork } from 'child_process';
+import { ChildProcess, execSync, fork } from 'child_process';
 import * as treeKill from 'tree-kill';
 
-import { Observable, bindCallback, of } from 'rxjs';
-import { concatMap, tap, mapTo } from 'rxjs/operators';
+import { Observable, bindCallback, of, zip } from 'rxjs';
+import { concatMap, tap, mapTo, first, map } from 'rxjs/operators';
 
 import {
   BuildNodeBuilderOptions,
@@ -31,6 +31,7 @@ export interface NodeExecuteBuilderOptions {
   args: string[];
   buildTarget: string;
   port: number;
+  runTargets?: {target: string}[];
 }
 
 export class NodeExecuteBuilder implements Builder<NodeExecuteBuilderOptions> {
@@ -44,6 +45,9 @@ export class NodeExecuteBuilder implements Builder<NodeExecuteBuilderOptions> {
     const options = target.options;
 
     return this.startBuild(options).pipe(
+      tap(() => {
+        this.runTargets(options).subscribe();
+      }),
       concatMap((event: NodeBuildEvent) => {
         if (event.success) {
           return this.restartProcess(event.outfile, options).pipe(mapTo(event));
@@ -155,6 +159,44 @@ export class NodeExecuteBuilder implements Builder<NodeExecuteBuilderOptions> {
       }
     });
   }
+
+  private runTargets(
+    options: NodeExecuteBuilderOptions
+  ): Observable<NodeBuildEvent> {
+    if (! options.runTargets) return of();
+
+    if (options.runTargets.length > 0) {
+      return zip(...options.runTargets.map(b => {
+        const [project, target, configuration] = b.target.split(':');
+
+        const builderConfig = this.context.architect.getBuilderConfiguration<BuildNodeBuilderOptions>({
+          project,
+          target,
+          configuration,
+          overrides: {
+            watch: true
+          }
+        });
+
+        return this.context.architect.getBuilderDescription(builderConfig).pipe(
+          concatMap(buildDescription =>
+            this.context.architect.validateBuilderOptions(
+              builderConfig,
+              buildDescription
+            )
+          ),
+          concatMap(
+            builderConfig =>
+              this.context.architect.run(builderConfig, this.context) as Observable<NodeBuildEvent>
+          ),
+          first()
+        );
+      })).pipe(map(() => ({ success: true }) as any));
+    } else {
+      return of({success: true} as any);
+    }
+  }
+
 }
 
 export default NodeExecuteBuilder;
