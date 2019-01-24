@@ -54,10 +54,17 @@ describe('Nrwl Convert to Nx Workspace', () => {
 
     // check that prettier config exits and that files have been moved!
     checkFilesExist(
+      '.vscode/extensions.json',
       '.prettierrc',
       'apps/proj/src/main.ts',
       'apps/proj/src/app/app.module.ts'
     );
+
+    expect(readJson('.vscode/extensions.json').recommendations).toEqual([
+      'nrwl.angular-console',
+      'angular.ng-template',
+      'esbenp.prettier-vscode'
+    ]);
 
     const appModuleContents = readFile('apps/proj/src/app/app.module.ts');
     expect(appModuleContents).toContain(`import { NxModule } from '@nrwl/nx';`);
@@ -247,7 +254,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     checkFilesExist('dist/apps/proj/main.js');
   });
 
-  it('should generate a workspace and not change dependencies or devDependencies if they already exist', () => {
+  it('should generate a workspace and not change dependencies, devDependencies, or vscode extensions if they already exist', () => {
     // create a new AngularCLI app
     runNgNew();
     const nxVersion = '0.0.0';
@@ -262,6 +269,13 @@ describe('Nrwl Convert to Nx Workspace', () => {
     existingPackageJson.dependencies['@ngrx/router-store'] = ngrxVersion;
     existingPackageJson.devDependencies['@ngrx/store-devtools'] = ngrxVersion;
     updateFile('package.json', JSON.stringify(existingPackageJson, null, 2));
+
+    updateFile(
+      '.vscode/extensions.json',
+      JSON.stringify({
+        recommendations: ['eamodio.gitlens', 'angular.ng-template']
+      })
+    );
     // run the command
     runCLI('add @nrwl/schematics --npmScope projscope --skip-install');
     // check that dependencies and devDependencies remained the same
@@ -276,6 +290,13 @@ describe('Nrwl Convert to Nx Workspace', () => {
     expect(packageJson.devDependencies['@ngrx/store-devtools']).toEqual(
       ngrxVersion
     );
+
+    expect(readJson('.vscode/extensions.json').recommendations).toEqual([
+      'eamodio.gitlens',
+      'angular.ng-template',
+      'nrwl.angular-console',
+      'esbenp.prettier-vscode'
+    ]);
   });
 
   it('should generate a workspace from a universal cli project', () => {

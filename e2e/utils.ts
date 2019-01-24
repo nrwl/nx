@@ -1,5 +1,6 @@
 import { execSync, exec } from 'child_process';
 import { readFileSync, statSync, writeFileSync } from 'fs';
+import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
 
 const projectName: string = 'proj';
@@ -150,6 +151,7 @@ export function runCommand(command: string): string {
 }
 
 export function updateFile(f: string, content: string): void {
+  ensureDirSync(path.dirname(path.join(getCwd(), 'tmp', 'proj', f)));
   writeFileSync(path.join(getCwd(), 'tmp', 'proj', f), content);
 }
 
