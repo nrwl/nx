@@ -5,7 +5,12 @@ import { BuildNodeBuilderOptions, NodeBuildEvent } from '../../../builders/src/n
 import { dirSync } from 'tmp';
 import { execSync } from 'child_process';
 import { basename, join } from 'path';
-import { readdirSync } from 'fs';
+import { readdirSync, readFileSync, writeFileSync } from 'fs';
+
+try {
+  require('dotenv').config();
+} catch (e) {
+}
 
 export interface DeployArgs {
   buildTarget: string;
@@ -59,11 +64,23 @@ export default class DeployBuilder implements Builder<DeployArgs> {
           const tmp = dirSync().name;
 
           const projectFolder = basename(buildBuilderConfig.options.outputPath);
-          execSync(`cp -r ${buildBuilderConfig.options.outputPath} ${tmp}`);
-          const dir = readdirSync(join(buildBuilderConfig.sourceRoot, 'azure'))[0];
-          execSync(`cp -r ${join(buildBuilderConfig.sourceRoot, 'azure', dir)}/*.* ${join(tmp, projectFolder)}`);
-
           const tmpWithProject = join(tmp, projectFolder);
+
+
+          execSync(`cp -r ${buildBuilderConfig.options.outputPath} ${tmp}`);
+
+          let mainJs = readFileSync(join(tmpWithProject, 'main.js')).toString();
+          Object.keys(process.env).forEach(k => {
+            if (k.startsWith('AZURE_COSMOS')) {
+              mainJs = mainJs.replace(`process.env.${k}`, `'${process.env[k]}'`)
+            }
+          });
+          writeFileSync(join(tmpWithProject, 'main.js'), mainJs);
+
+          const dir = readdirSync(join(buildBuilderConfig.sourceRoot, 'azure'))[0];
+          execSync(`cp -r ${join(buildBuilderConfig.sourceRoot, 'azure', dir)}/*.* ${tmpWithProject}`);
+
+          console.log(`Tmp: ${tmpWithProject}`);
           execSync(`git init`, { cwd: tmpWithProject });
           execSync(`git add .`, { cwd: tmpWithProject });
           execSync(`git commit -am 'init'`, { cwd: tmpWithProject });
@@ -81,7 +98,7 @@ export default class DeployBuilder implements Builder<DeployArgs> {
   }
 
   private createApp(builderConfig: BuilderConfiguration<DeployArgs>) {
-    const resource = JSON.parse(execSync(`az resource list`).toString())[0];
+    const resource = JSON.parse(execSync(`az appservice plan list`).toString())[0];
     const plan = resource.name;
     const resourceGroup = resource.resourceGroup;
     const runtime = `node|10.6`;

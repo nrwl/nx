@@ -69,6 +69,7 @@
     "tslint": "~5.11.0",
     "typescript": "<%= typescriptVersion %>",
     "prettier": "<%= prettierVersion %>",
-    "dotenv": "^6.2.0"
+    "dotenv": "^6.2.0",
+    "mongodb": "^3.1.12"
   }
 }

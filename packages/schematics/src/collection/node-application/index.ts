@@ -129,6 +129,7 @@ function getBuildConfig(project: any, options: NormalizedSchema) {
         optimization: true,
         extractLicenses: true,
         inspect: false,
+        externalDependencies: "none",
         fileReplacements: [
           {
             replace: join(project.sourceRoot, 'environments/environment.ts'),
@@ -161,6 +162,12 @@ function getServeConfig(options: NormalizedSchema) {
     builder: '@nrwl/builders:node-execute',
     options: {
       buildTarget: `${options.name}:build`
+    },
+    configurations: {
+      "production": {
+        "buildTarget": `${options.name}:build:production`,
+        "runTargets": []
+      }
     }
   };
 }
@@ -183,7 +190,7 @@ function updateAngularJson(options: NormalizedSchema): Rule {
 
     if (options.frontendProject) {
       const frontend = angularJson.projects[options.frontendProject];
-      frontend.architect.serve.options.proxyConfig = join(options.appProjectRoot, 'proxy.config.json');
+      frontend.architect.serve.options.proxyConfig = join(options.appProjectRoot, 'proxy.conf.json');
     }
     return angularJson;
   });
