@@ -23,6 +23,14 @@
         }
       }
     },
+    "username": {
+      "description": "Git Username",
+      "type": "string"
+    },
+    "password": {
+      "description": "Git Password",
+      "type": "string"
+    },
     "create": {
       "description": "Create an app on Azure",
       "type": "boolean",
