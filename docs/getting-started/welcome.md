@@ -15,6 +15,7 @@ With Nx, you can:
 
 ## Learn Nx
 
+- [How to build full-stack applications using Angular and NestJS?](nx-and-cli.md)
 - [How does Nx help you build like Google?](nx-and-cli.md)
 - [How does Nx help you modernize your dev workflow?](nx-and-cli.md)
 - [API docs](apidocs.md)
