@@ -7,7 +7,7 @@
     "project": {
       "description": "The name of the project.",
       "type": "string",
-      "x-prompt": "What name of the project you want to deploy?"
+      "x-prompt": "What name of the project you want to use the database in?"
     },
     "azureDbName": {
       "description": "The name of the database.",
