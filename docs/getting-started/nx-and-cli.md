@@ -2,25 +2,22 @@
 
 Nx **is not** a replacement for Angular CLI. It's a collection of Angular CLI power-ups (schematics and builders) that transform the CLI into a powerful tool for full-stack development.
 
-* **An Nx workspace is an Angular CLI workspace.**
-* You run same `ng build`, `ng serve` commands.
-* You configure your projects in `angular.json`.
-* Anything you can do in a standard Angular CLI project, you can also do in an Nx workspace.
-
+- **An Nx workspace is an Angular CLI workspace.**
+- You run same `ng build`, `ng serve` commands.
+- You configure your projects in `angular.json`.
+- Anything you can do in a standard Angular CLI project, you can also do in an Nx workspace.
 
 ## How?
 
-Angular CLI is extensible. Nx extends what the CLI generates (schematics) and how the CLI runs commands (builders). 
+Angular CLI is extensible. Nx extends what the CLI generates (schematics) and how the CLI runs commands (builders).
 
-What does Nx add? 
-
-
+What does Nx add?
 
 ## Full-Stack Development
 
 With Nx, you can build a backend application next to your Angular application in the same repository. The backend and the frontend can share code. You can connect them to enable a fantastic development experience.
 
-*How do you do it?*
+_How do you do it?_
 
 First, generate a node application.
 
@@ -40,24 +37,20 @@ Now, add the right proxy configuration:
 
 ```json
 {
-    "/graphql": {
-      "target": "http://localhost:3333",
-      "secure": false
-    }
+  "/graphql": {
+    "target": "http://localhost:3333",
+    "secure": false
+  }
 }
 ```
 
 Finally, you can run `ng serve backend` and `ng serve frontend`. There is a lot more to full-stack development in Nx, which we will cover the the guides.
 
-
-
-
-
 ## Use effective development practices pioneered at Google
 
 Using Nx, you can implement monorepo-style development--an approach popularized by Google and used by many tech companies today (Facebook, Uber, Twitter, etc..).
 
-*Doesn't Angular CLI support having multiple projects in the same workspace?*
+_Doesn't Angular CLI support having multiple projects in the same workspace?_
 
 Yes, starting with Angular CLI 6 you can add different types of projects to a single workspace (by default you can add applications and libraries). This is great, but is not sufficient to enable the monorepo-style development. Nx adds an extra layer of tooling to make this possible.
 
@@ -66,7 +59,6 @@ Yes, starting with Angular CLI 6 you can add different types of projects to a si
 To be able to support the monorepo-style development, the tools must know how different projects in your workspace depend on each other. Nx uses advanced code analysis to build this dependency graph. Run `yarn dep-graph` to see the dependency diagram of your workspace.
 
 ![Dependency Diagram](./dep-graph.png)
-
 
 ### Imposing Constraints on the Dependency Graph
 
@@ -82,21 +74,21 @@ For instance, with this configuration, when we import private client code from t
   {
     "allow": [],
     "depConstraints": [
-       {  
-          "sourceTag": "shared", 
+       {
+          "sourceTag": "shared",
           "onlyDependOnLibsWithTags": ["shared"]
        },
-       { 
-          "sourceTag": "admin", 
-          "onlyDependOnLibsWithTags": ["shared", "admin" ] 
+       {
+          "sourceTag": "admin",
+          "onlyDependOnLibsWithTags": ["shared", "admin" ]
        },
-       { 
-          "sourceTag": "client", 
-          "onlyDependOnLibsWithTags": ["shared", "client" ] 
+       {
+          "sourceTag": "client",
+          "onlyDependOnLibsWithTags": ["shared", "client" ]
        },
-       { 
-          "sourceTag": "*", 
-          "onlyDependOnLibsWithTags": ["*"] 
+       {
+          "sourceTag": "*",
+          "onlyDependOnLibsWithTags": ["*"]
        }
      ]
   }
@@ -104,7 +96,6 @@ For instance, with this configuration, when we import private client code from t
 ```
 
 ![Lint Error](./lint-error.png)
-
 
 ### Rebuilding and Retesting What is Affected
 
@@ -120,26 +111,23 @@ yarn affected:e2e --base=master # reruns e2e tests for all the projects affected
 
 Nx will topologically sort the projects, and will run what it can in parallel.
 
-
 ### Angular CLI = Code Collocation, Nx = Monorepo
 
 Imagine you have a regular Angular CLI workspace containing tens projects, where each project has its own suite of e2e tests. The CLI doesnt't know how the projects depend on each other, so the only way for you to make sure your PR works is to rebuild and retest all ten projects. This isn't great.
 
-First, this makes the CI expensive--10 times more expensive in the worse case scenario. Second, e2e tests can be flaky. If you always rerun all the tests in the repo, some tests will be bound to fail for the reasons unrelated to your change. 
+First, this makes the CI expensive--10 times more expensive in the worse case scenario. Second, e2e tests can be flaky. If you always rerun all the tests in the repo, some tests will be bound to fail for the reasons unrelated to your change.
 
 > Only the projects affected by your PR should be rebuilt and retested.
 
 This is a hard requirement for monorepo-style development. Nx implements it.
- 
 
 ### Automation
 
-In addition to using the monorepo, Google is also know for its use of automation. Nx adds powerful capabilities helping your team promote best practices and ensure consistency. 
-
+In addition to using the monorepo, Google is also know for its use of automation. Nx adds powerful capabilities helping your team promote best practices and ensure consistency.
 
 ## Use Innovative Tools
 
-Tools like Apollo, Cypress, Jest, Prettier, and NestJS have gained a lot of popularity. 
+Tools like Apollo, Cypress, Jest, Prettier, and NestJS have gained a lot of popularity.
 
 It's not the case that Apollo is always better than REST or Cypress is always better than Protractor. There are tradeoffs. But in many situations, for many projects, these innovative tools offer a lot of advantages.
 
@@ -164,13 +152,11 @@ Nx is not a replacement for the CLI. It's a set of Angular CLI power-ups.
 
 With Nx, you can:
 
-* Do everything you can do using the CLI
-* Build full-stack applications using Angular and NestJS
-* Use scalable development practices such as monorepos
-* Use innovative tools like Cypress and Jest
-
+- Do everything you can do using the CLI
+- Build full-stack applications using Angular and NestJS
+- Use scalable development practices such as monorepos
+- Use innovative tools like Cypress and Jest
 
 ### A la carte
 
 Most importantly, you can use these power-ups a la carte. Just want to build a single Angular application using Cypress? Nx is still an excellent choice for that.
-
