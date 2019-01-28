@@ -114,7 +114,7 @@ function updateTsConfig(options: CypressProjectSchema): Rule {
         ...json,
         compilerOptions: {
           ...json.compilerOptions,
-          types: [...json.compilerOptions.types, 'cypress']
+          types: [...(json.compilerOptions.types || []), 'cypress']
         }
       };
     }
