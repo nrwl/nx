@@ -28,68 +28,171 @@
 
 # What is Nx?
 
-🔎 **Nx is an open source toolkit for enterprise Angular applications**, which is based on our experience working at Google and helping the Fortune 500 build ambitious Angular applications. It provides an opinionated approach to application project structure and patterns.
+🔎 **Nx is a set of Angular CLI power-ups that transform the CLI into a powerful tool for full-stack development.**
 
-Nx is an extension for the the Angular CLI implementing the monorepo-style development. It is also a collection of runtime libraries, linters, and code generators helping large teams build better with Angular.
+With Nx, you can:
+
+* Build full-stack applications using Angular and NestJS
+* Use effective development practices pioneered at Google
+* Use innovative tools like Cypress and Jest
+
+
+## Does it replace Angular CLI?
+
+Nx **is not** a replacement for Angular CLI.  **An Nx workspace is an Angular CLI workspace.**
+
+* You run same `ng build`, `ng serve` commands.
+* You configure your projects in `angular.json`.
+* Anything you can do in a standard Angular CLI project, you can also do in an Nx workspace.
+
 
 ## Features
 
-Because Nx is built on top of the Angular CLI, you get all the conventional and loved features plus:
+### Full-Stack Development
 
-- Nx Workspace
-- Workspace-Specific Schematics
-- Intelligent Builds and Unit Testing
-- State Management
-- NgRx
-- Data Persistence
-- Linters
-- Code Formatter
-- UpgradeModule and downgradeModule helpers
-- Jest unit tests integration
-- Node build tooling
+With Nx, you can build a backend application next to your Angular application in the same repository. The backend and the frontend can share code. You can connect them to enable a fantastic development experience.
 
-# Why Nx?
+### Use effective development practices pioneered at Google
 
-On the surface, large and small organizations care about the same things: consistency, writing robust, maintainable code, making changes with confidence, being able to understand how the system works.
+Using Nx, you can implement monorepo-style development--an approach popularized by Google and used by many tech companies today (Facebook, Uber, Twitter, etc..).
 
-What’s different about large organizations is that they have hundreds of Angular engineers building dozens of apps. So they have a lot of code, which changes everything.
+*Doesn't Angular CLI support having multiple projects in the same workspace?*
 
-- While ten (10) developers can reach a consensus on best practices by chatting over lunch, five hundred (500) developers cannot. You have to establish best practices, team standards, **and use tools to promote them**.
-- With three (3) projects developers will know what needs to be retested after making a change, with thirty (30) projects, however, this is no longer a simple process. Informal team rules to manage change will no longer work with large teams and multi-team, multi-project efforts. **You have to rely on the automated CI process instead.** …
+Yes, starting with Angular CLI 6 you can add different types of projects to a single workspace (by default you can add applications and libraries). This is great, but is not sufficient to enable the monorepo-style development. Nx adds an extra layer of tooling to make this possible.
 
-In other words, small organizations can often get by with informal ad-hoc processes, whereas large organizations cannot. **Large organizations must rely on tooling to enable that. Nx is this tooling.**
+
+In addition to using the monorepo, Google is also know for its use of automation. Nx adds powerful capabilities helping your team promote best practices and ensure consistency. 
+
+### Use Innovative Tools
+
+Tools like Apollo, Cypress, Jest, Prettier, and NestJS have gained a lot of popularity. 
+
+It's not the case that Apollo is always better than REST or Cypress is always better than Protractor. There are tradeoffs. But in many situations, for many projects, these innovative tools offer a lot of advantages.
+
+Adding these tools to the dev workflow is challenging in a regular CLI project. The choice you have is not between Protractor or Cypress, but between a hacked-up setup for Cypress and a great CLI setup for Protractor. Nx changes that!
+
+
+## A la carte
+
+Most importantly, you can use these power-ups a la carte. Just want to build a single Angular application using Cypress? Nx is still an excellent choice for that.
+
+
 
 # Getting Started
 
-An Nx workspace is an Angular CLI project that has been enhanced to be enterprise ready. Being an Angular CLI project means it will be handy to have the Angular CLI installed globally, which can be done via npm or yarn as well.
+Nx is just a set of power-ups for Angular CLI, **so an Nx workspace is an Angular CLI workspace**. This means that it will be handy to have the Angular CLI installed globally, which can be done via npm or yarn as well.
 
-```
+```bash
 npm install -g @angular/cli
 ```
 
-> Note: If you do not have the Angular CLI installed globally you may not be able to use ng from the terminal to run CLI commands within the project. But the package.json file comes with npm scripts to run ng commands, so you can run npm start to ng serve and you can run npm run ng <command> to run any of the ng commands.
+or
+
+```bash
+yarn global add @angular/cli
+```
+
+> Note: If you do not have the Angular CLI installed globally you may not be able to use ng from the terminal to run CLI commands within the project. But the `package.json` file comes with npm scripts to run ng commands, so you can run npm start to ng serve and you can run `npm run ng <command>` to run any of the ng commands.
 
 After you have installed the Angular CLI, install `@nrwl/schematics`.
 
-```
+```bash
 npm install -g @nrwl/schematics
 ```
 
-After installing it you can create a new Nx workspace by running:
+or
 
+```bash
+yarn global add @nrwl/schematics
 ```
+
+> If you want to work with the version still in development you can use `@nrwl/schematics@next` as the package to install.
+
+
+## Nx Workspace 
+
+### Creating an Nx Workspace
+
+To create an Nx workspace, run: 
+
+```bash
+ng new myworkspace --collection=@nrw/schematics
+```
+
+The `ng new` command uses globally-installed packages. Anything installed globally can be in a messy state. If you have any problems running the command above, you can also run:
+
+```bash
 create-nx-workspace myworkspacename
 ```
 
-You can also add Nx capabilities to an existing CLI project by running:
+This command still runs `ng new` under the hood, but it does it in a sandboxed environment, and, as a result, never fails.
 
-```
+
+### Adding to an Existing Angular CLI workspace
+
+If you already have a regular Angular CLI project, you can add Nx power-ups by running:
+
+```bash
 ng add @nrwl/schematics
 ```
+
+
+
+## Creating First Application
+
+Unlike the CLI, an Nx workspace starts blank. There are no applications to build, serve, and test. To create one run:
+
+```bash
+ng g application myapp
+```
+
+The result will look like this:
+
+```
+apps/
+    myapp/
+        src/
+            app/
+            assets/
+            environment/
+            favicon.ico
+            index.html
+            main.ts
+            polyfills.ts
+            styles.css
+        tsconfig.json
+        tsconfig.app.json
+        tsconfig.spec.json
+        tslint.json
+    myapp-e2e/
+        src/
+        tsconfig.json
+        tsconfig.e2e.json
+        tslint.json
+libs/
+tools/
+package.json
+tsconfig.json
+tslint.json
+angular.json
+nx.json
+```
+
+All the files that the CLI would have in a new project are still here, just in a different folder structure which makes it easier to create more apps and libs in the future.
+
+
+## Serving Application
+
+Run `ng serve myapp` to serve the newly generated application!
+
 
 You are good to go!
 
 ## Quick Start & Documentation
+
+### Books
+
+- [Angular Enteprise Monorepo Patters](https://go.nrwl.io/angular-enterprise-monorepo-patterns-new-book?utm_campaign=Book%3A%20Monorepo%20Patterns%2C%20Jan%202019&utm_source=Github&utm_medium=Banner%20Ad)
 
 ### Documentation
 
