@@ -4,9 +4,9 @@ Nx is a set of Angular CLI power-ups that transform the CLI into a powerful tool
 
 With Nx, you can:
 
-* Build full-stack applications using Angular and NestJS
-* Use effective development practices pioneered at Google
-* Use innovative tools like Cypress and Jest
+- Build full-stack applications using Angular and NestJS
+- Use effective development practices pioneered at Google
+- Use innovative tools like Cypress and Jest
 
 ## Getting Started
 
@@ -20,8 +20,8 @@ With Nx, you can:
 - [API docs](apidocs.md)
 
 ## Community
-- [Books, talks, and blog posts about Nx](resources.md)
 
+- [Books, talks, and blog posts about Nx](resources.md)
 
 ## Contributing
 

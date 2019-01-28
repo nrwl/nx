@@ -1,24 +1,47 @@
+import {
+  JsonObject,
+  logging,
+  normalize,
+  schema,
+  virtualFs
+} from '@angular-devkit/core';
+import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
+import {
+  SchematicEngine,
+  UnsuccessfulWorkflowExecution
+} from '@angular-devkit/schematics';
+import {
+  NodeModulesEngineHost,
+  NodeWorkflow
+} from '@angular-devkit/schematics/tools';
+import * as appRoot from 'app-root-path';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
-import { readFileSync, writeFileSync, statSync } from 'fs';
-import * as path from 'path';
+import { readFileSync, statSync, writeFileSync } from 'fs';
 import { copySync, removeSync } from 'fs-extra';
-import { NodeWorkflow } from '@angular-devkit/schematics/tools';
-import { UnsuccessfulWorkflowExecution } from '@angular-devkit/schematics';
-
+import * as inquirer from 'inquirer';
+import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
-import * as appRoot from 'app-root-path';
-import { virtualFs, normalize, JsonObject } from '@angular-devkit/core';
-import { NodeJsSyncHost, createConsoleLogger } from '@angular-devkit/core/node';
 
 const rootDirectory = appRoot.path;
 
 export function workspaceSchematic(args: string[]) {
   const parsedArgs = parseOptions(args);
+  const logger = createConsoleLogger(
+    parsedArgs['verbose'],
+    process.stdout,
+    process.stderr
+  );
   const outDir = compileTools();
+  if (parsedArgs['list-schematics']) {
+    return listSchematics(
+      path.join(outDir, 'workspace-schematics.json'),
+      logger
+    );
+  }
   const schematicName = args[0];
   const workflow = createWorkflow(parsedArgs.dryRun);
-  executeSchematic(schematicName, parsedArgs, workflow, outDir);
+  executeSchematic(schematicName, parsedArgs, workflow, outDir, logger);
 }
 
 // compile tools
@@ -98,12 +121,70 @@ function createWorkflow(dryRun: boolean) {
   });
 }
 
+function listSchematics(collectionName: string, logger: logging.Logger) {
+  try {
+    const engineHost = new NodeModulesEngineHost();
+    const engine = new SchematicEngine(engineHost);
+    const collection = engine.createCollection(collectionName);
+    logger.info(engine.listSchematicNames(collection).join('\n'));
+  } catch (error) {
+    logger.fatal(error.message);
+    return 1;
+  }
+
+  return 0;
+}
+
+function createPromptProvider(): schema.PromptProvider {
+  return (definitions: Array<schema.PromptDefinition>) => {
+    const questions: inquirer.Questions = definitions.map(definition => {
+      const question: inquirer.Question = {
+        name: definition.id,
+        message: definition.message,
+        default: definition.default
+      };
+
+      const validator = definition.validator;
+      if (validator) {
+        question.validate = input => validator(input);
+      }
+
+      switch (definition.type) {
+        case 'confirmation':
+          return { ...question, type: 'confirm' };
+        case 'list':
+          return {
+            ...question,
+            type: 'list',
+            choices:
+              definition.items &&
+              definition.items.map(item => {
+                if (typeof item == 'string') {
+                  return item;
+                } else {
+                  return {
+                    name: item.label,
+                    value: item.value
+                  };
+                }
+              })
+          };
+        default:
+          return { ...question, type: definition.type };
+      }
+    });
+
+    return inquirer.prompt(questions);
+  };
+}
+
 // execute schematic
 async function executeSchematic(
   schematicName: string,
   options: { [p: string]: any },
   workflow: NodeWorkflow,
-  outDir: string
+  outDir: string,
+  logger: logging.Logger
 ) {
   let nothingDone = true;
   workflow.reporter.subscribe((event: any) => {
@@ -146,7 +227,11 @@ async function executeSchematic(
     }
   });
   delete options._;
-  const logger = createConsoleLogger(true, process.stdout, process.stderr);
+
+  // Add support for interactive prompts
+  if (!options.noInteractive && options.interactive !== false) {
+    workflow.registry.usePromptProvider(createPromptProvider());
+  }
 
   try {
     await workflow

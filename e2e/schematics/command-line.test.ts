@@ -142,7 +142,7 @@ describe('Command line', () => {
 
   it('should support workspace-specific schematics', () => {
     newProject();
-    runCLI('g workspace-schematic custom');
+    runCLI('g workspace-schematic custom -- --noInteractive');
     checkFilesExist(
       'tools/schematics/custom/index.ts',
       'tools/schematics/custom/schema.json'
@@ -165,7 +165,7 @@ describe('Command line', () => {
     );
 
     const dryRunOutput = runCommand(
-      'npm run workspace-schematic custom mylib -- --directory=dir -d'
+      'npm run workspace-schematic custom mylib -- --noInteractive --directory=dir -d'
     );
     expect(exists('libs/dir/mylib/src/index.ts')).toEqual(false);
     expect(dryRunOutput).toContain(
@@ -175,7 +175,7 @@ describe('Command line', () => {
     expect(dryRunOutput).toContain('update nx.json');
 
     const output = runCommand(
-      'npm run workspace-schematic custom mylib -- --directory=dir'
+      'npm run workspace-schematic custom mylib -- --no-interactive --directory=dir'
     );
     checkFilesExist('libs/dir/mylib/src/index.ts');
     expect(output).toContain(
@@ -183,7 +183,26 @@ describe('Command line', () => {
     );
     expect(output).toContain('update angular.json');
     expect(output).toContain('update nx.json');
+
+    runCLI('g workspace-schematic another -- --noInteractive');
+
+    const listSchematicsOutput = runCommand(
+      'npm run workspace-schematic -- --list-schematics'
+    );
+    expect(listSchematicsOutput).toContain(
+      'nx workspace-schematic "--list-schematics"'
+    );
+    expect(listSchematicsOutput).toContain('custom');
+    expect(listSchematicsOutput).toContain('another');
+
+    const promptOutput = runCommand(
+      'npm run workspace-schematic custom mylib2 --'
+    );
+    expect(promptOutput).toContain(
+      'In which directory should the library be generated?'
+    );
   }, 1000000);
+
   describe('dep-graph', () => {
     beforeEach(() => {
       newProject();

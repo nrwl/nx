@@ -123,13 +123,25 @@ yargs
   .command('update', 'Update workspace', noop, _ => update([]))
   .alias('update', 'migrates') // TODO: Remove after 1.0
   .command(
-    'workspace-schematic <name>',
+    'workspace-schematic [name]',
     'Runs a workspace schematic from the tools/schematics directory',
-    yargs =>
-      yargs.positional('name', {
-        type: 'string',
-        describe: 'The name of your schematic`'
-      }),
+    yargs => {
+      yargs.option('list-schematics', {
+        describe: 'List the available workspace-schematics',
+        type: 'boolean'
+      });
+      /**
+       * Don't require `name` if only listing available
+       * schematics
+       */
+      if (yargs.argv.listSchematics !== true) {
+        yargs.demandOption(['name']).positional('name', {
+          type: 'string',
+          describe: 'The name of your schematic`'
+        });
+      }
+      return yargs;
+    },
     () => workspaceSchematic(process.argv.slice(3))
   )
   .help('help')

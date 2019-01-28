@@ -32,12 +32,11 @@ yarn global add @nrwl/schematics
 
 > If you want to work with the version still in development you can use `@nrwl/schematics@next` as the package to install.
 
-
-## Nx Workspace 
+## Nx Workspace
 
 ### Creating an Nx Workspace
 
-To create an Nx workspace, run: 
+To create an Nx workspace, run:
 
 ```bash
 ng new myworkspace --collection=@nrw/schematics
@@ -51,7 +50,6 @@ create-nx-workspace myworkspacename
 
 This command still runs `ng new` under the hood, but it does it in a sandboxed environment, and, as a result, never fails.
 
-
 ### Adding to an Existing Angular CLI workspace
 
 If you already have a regular Angular CLI project, you can add Nx power-ups by running:
@@ -59,8 +57,6 @@ If you already have a regular Angular CLI project, you can add Nx power-ups by r
 ```bash
 ng add @nrwl/schematics
 ```
-
-
 
 ## Creating First Application
 
@@ -104,11 +100,9 @@ nx.json
 
 All the files that the CLI would have in a new project are still here, just in a different folder structure which makes it easier to create more apps and libs in the future.
 
-
 ## Serving Application
 
 Run `ng serve myapp` to serve the newly generated application!
-
 
 ## Use Angular Console
 

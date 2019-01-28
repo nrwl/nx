@@ -225,9 +225,9 @@ The files generated are shown below and include placeholders for the _comments_ 
 - [../app.module.ts](#appmodulets) or [../comments-state.module.ts](#commentsstatemodulets)
 
   <br/>
-  
+
 ###### comments.actions.ts
-  
+
 ```ts
 import {Action} from "@ngrx/store";
 
@@ -258,7 +258,8 @@ CommentsLoaded,
 CommentsLoadError
 }
 
-````
+```
+
 ###### comments.selectors.ts
 
 ```ts
@@ -282,7 +283,7 @@ export const commentsQuery = {
   getAllComments,
   getSelectedComments
 }
-````
+```
 
 ###### comments.reducer.ts
 
