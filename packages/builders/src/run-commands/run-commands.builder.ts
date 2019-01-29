@@ -123,6 +123,10 @@ export default class RunCommandsBuilder
   private createProcess(command: string, readyWhen: string): Promise<boolean> {
     return new Promise(res => {
       const childProcess = exec(command, {});
+      /**
+       * Ensure the child process is killed when the parent exits
+       */
+      process.on('exit', () => childProcess.kill());
       childProcess.stdout.on('data', data => {
         process.stdout.write(data);
         if (readyWhen && data.toString().indexOf(readyWhen) > -1) {
