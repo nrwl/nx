@@ -28,12 +28,12 @@ const rootDirectory = appRoot.path;
 export function workspaceSchematic(args: string[]) {
   const parsedArgs = parseOptions(args);
   const logger = createConsoleLogger(
-    parsedArgs['verbose'],
+    parsedArgs.verbose,
     process.stdout,
     process.stderr
   );
   const outDir = compileTools();
-  if (parsedArgs['list-schematics']) {
+  if (parsedArgs.listSchematics) {
     return listSchematics(
       path.join(outDir, 'workspace-schematics.json'),
       logger
@@ -229,7 +229,7 @@ async function executeSchematic(
   delete options._;
 
   // Add support for interactive prompts
-  if (!options.noInteractive && options.interactive !== false) {
+  if (options.interactive) {
     workflow.registry.usePromptProvider(createPromptProvider());
   }
 
@@ -258,9 +258,13 @@ async function executeSchematic(
 
 function parseOptions(args: string[]): { [k: string]: any } {
   return yargsParser(args, {
-    boolean: ['dryRun'],
+    boolean: ['dryRun', 'listSchematics', 'interactive'],
     alias: {
-      dryRun: ['d']
+      dryRun: ['d'],
+      listSchematics: ['l']
+    },
+    default: {
+      interactive: true
     }
   });
 }
