@@ -16,7 +16,8 @@
     "test:schematics": "yarn linknpm fast && ./scripts/test_schematics.sh",
     "test:nx": "yarn linknpm fast && ./scripts/test_nx.sh",
     "test": "yarn linknpm fast && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
-    "checkformat": "./scripts/check_format.sh"
+    "checkformat": "./scripts/check_format.sh",
+    "documentation": "./scripts/documentation/documentation.sh && yarn format"
   },
   "devDependencies": {
     "@angular-devkit/architect": "~0.12.2",
@@ -104,5 +105,8 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "dependencies": {
+    "ts-node": "^8.0.2"
   }
 }
