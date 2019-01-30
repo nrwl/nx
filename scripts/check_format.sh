@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 echo "Checking prettier"
-prettier "**/*.{ts,js,json,css,scss}" "!**/{__name__,__directory__}/**" --list-different
+prettier "**/*.{ts,js,json,css,scss,md}" "!**/{__name__,__directory__}/**" --list-different
 PRETTIER_STATUS=$?
 
 echo "Checking CRLF"

@@ -32,19 +32,17 @@
 
 With Nx, you can:
 
-* Build full-stack applications using Angular and NestJS
-* Use effective development practices pioneered at Google
-* Use innovative tools like Cypress and Jest
-
+- Build full-stack applications using Angular and NestJS
+- Use effective development practices pioneered at Google
+- Use innovative tools like Cypress and Jest
 
 ## Does it replace Angular CLI?
 
-Nx **is not** a replacement for Angular CLI.  **An Nx workspace is an Angular CLI workspace.**
+Nx **is not** a replacement for Angular CLI. **An Nx workspace is an Angular CLI workspace.**
 
-* You run same `ng build`, `ng serve` commands.
-* You configure your projects in `angular.json`.
-* Anything you can do in a standard Angular CLI project, you can also do in an Nx workspace.
-
+- You run same `ng build`, `ng serve` commands.
+- You configure your projects in `angular.json`.
+- Anything you can do in a standard Angular CLI project, you can also do in an Nx workspace.
 
 ## Features
 
@@ -56,27 +54,23 @@ With Nx, you can build a backend application next to your Angular application in
 
 Using Nx, you can implement monorepo-style development--an approach popularized by Google and used by many tech companies today (Facebook, Uber, Twitter, etc..).
 
-*Doesn't Angular CLI support having multiple projects in the same workspace?*
+_Doesn't Angular CLI support having multiple projects in the same workspace?_
 
 Yes, starting with Angular CLI 6 you can add different types of projects to a single workspace (by default you can add applications and libraries). This is great, but is not sufficient to enable the monorepo-style development. Nx adds an extra layer of tooling to make this possible.
 
-
-In addition to using the monorepo, Google is also know for its use of automation. Nx adds powerful capabilities helping your team promote best practices and ensure consistency. 
+In addition to using the monorepo, Google is also know for its use of automation. Nx adds powerful capabilities helping your team promote best practices and ensure consistency.
 
 ### Use Innovative Tools
 
-Tools like Apollo, Cypress, Jest, Prettier, and NestJS have gained a lot of popularity. 
+Tools like Apollo, Cypress, Jest, Prettier, and NestJS have gained a lot of popularity.
 
 It's not the case that Apollo is always better than REST or Cypress is always better than Protractor. There are tradeoffs. But in many situations, for many projects, these innovative tools offer a lot of advantages.
 
 Adding these tools to the dev workflow is challenging in a regular CLI project. The choice you have is not between Protractor or Cypress, but between a hacked-up setup for Cypress and a great CLI setup for Protractor. Nx changes that!
 
-
 ## A la carte
 
 Most importantly, you can use these power-ups a la carte. Just want to build a single Angular application using Cypress? Nx is still an excellent choice for that.
-
-
 
 # Getting Started
 
@@ -108,12 +102,11 @@ yarn global add @nrwl/schematics
 
 > If you want to work with the version still in development you can use `@nrwl/schematics@next` as the package to install.
 
-
-## Nx Workspace 
+## Nx Workspace
 
 ### Creating an Nx Workspace
 
-To create an Nx workspace, run: 
+To create an Nx workspace, run:
 
 ```bash
 ng new myworkspace --collection=@nrw/schematics
@@ -127,7 +120,6 @@ create-nx-workspace myworkspacename
 
 This command still runs `ng new` under the hood, but it does it in a sandboxed environment, and, as a result, never fails.
 
-
 ### Adding to an Existing Angular CLI workspace
 
 If you already have a regular Angular CLI project, you can add Nx power-ups by running:
@@ -135,8 +127,6 @@ If you already have a regular Angular CLI project, you can add Nx power-ups by r
 ```bash
 ng add @nrwl/schematics
 ```
-
-
 
 ## Creating First Application
 
@@ -180,11 +170,9 @@ nx.json
 
 All the files that the CLI would have in a new project are still here, just in a different folder structure which makes it easier to create more apps and libs in the future.
 
-
 ## Serving Application
 
 Run `ng serve myapp` to serve the newly generated application!
-
 
 You are good to go!
 
