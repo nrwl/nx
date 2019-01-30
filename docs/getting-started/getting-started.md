@@ -98,7 +98,7 @@ angular.json
 nx.json
 ```
 
-All the files that the CLI would have in a new project are still here, just in a different folder structure which makes it easier to create more apps and libs in the future.
+All the files that the CLI would have in a new project are still here, just in a different folder structure which makes it easier to create more applications and libraries in the future.
 
 ## Serving Application
 

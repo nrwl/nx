@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Getting Started",
+    "id": "getting-started",
+    "itemList": [
+      {
+        "name": "What is Nx?",
+        "id": "what-is-nx"
+      },
+      {
+        "name": "Getting Started",
+        "id": "getting-started"
+      },
+      {
+        "name": "Nx and Angular CLI",
+        "id": "nx-and-cli"
+      }
+    ]
+  },
+  {
+    "name": "Fundamentals",
+    "id": "fundamentals",
+    "itemList": [
+      {
+        "name": "Full Stack Development",
+        "id": "full-stack-development"
+      },
+      {
+        "name": "Building Like Google",
+        "id": "building-like-google"
+      },
+      {
+        "name": "Modernizing Dev Workflow",
+        "id": "modernizing-dev-workflow"
+      }
+    ]
+  }
+]

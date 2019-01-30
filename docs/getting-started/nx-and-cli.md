@@ -25,7 +25,7 @@ First, generate a node application.
 ng g node-application backend
 ```
 
-The command will use NestJS by default. If you prefer Express or you want to build your backend from scratch, pass `--framework=express` or `--framework=none`.
+The command will use Nest by default. If you prefer Express or you want to build your backend from scratch, pass `--framework=express` or `--framework=none`.
 
 Second, generate an Angular application.
 
@@ -44,7 +44,7 @@ Now, add the right proxy configuration:
 }
 ```
 
-Finally, you can run `ng serve backend` and `ng serve frontend`. There is a lot more to full-stack development in Nx, which we will cover the the guides.
+Finally, you can run `ng serve backend` and `ng serve frontend`. There is a lot more to full-stack development in Nx, which you can read about [here](../fundamentals/full-stack).
 
 ## Use effective development practices pioneered at Google
 
@@ -66,7 +66,7 @@ If you partition your code into well-defined cohesive units, even a small organi
 
 To help with that Nx uses code analyses to make sure projects can only depend on each other’s well-defined public API. It also allows you to declaratively impose constraints on how projects can depend on each other.
 
-For instance, with this configuration, when we import private client code from the admin part of our repo, we will get an error.
+For instance, with this configuration, when you import private client code from the admin part of our repo, you will get an error.
 
 ```
 "nx-enforce-module-boundaries": [
@@ -105,15 +105,13 @@ To be productive in a monorepo, you need to be able to check that your change is
 yarn affected:build --base=master # reruns build for all the projects affected by a PR
 
 yarn affected:test --base=master # reruns unit tests for all the projects affected by a PR
-
-yarn affected:e2e --base=master # reruns e2e tests for all the projects affected by a PR
 ```
 
 Nx will topologically sort the projects, and will run what it can in parallel.
 
 ### Angular CLI = Code Collocation, Nx = Monorepo
 
-Imagine you have a regular Angular CLI workspace containing tens projects, where each project has its own suite of e2e tests. The CLI doesnt't know how the projects depend on each other, so the only way for you to make sure your PR works is to rebuild and retest all ten projects. This isn't great.
+Imagine you have a regular Angular CLI workspace containing ten projects, where each project has its own suite of e2e tests. The CLI doesnt't know how the projects depend on each other, so the only way for you to make sure your PR works is to rebuild and retest all ten projects. This isn't great.
 
 First, this makes the CI expensive--10 times more expensive in the worse case scenario. Second, e2e tests can be flaky. If you always rerun all the tests in the repo, some tests will be bound to fail for the reasons unrelated to your change.
 
@@ -121,15 +119,15 @@ First, this makes the CI expensive--10 times more expensive in the worse case sc
 
 This is a hard requirement for monorepo-style development. Nx implements it.
 
-### Automation
+### Tooling & Automation
 
-In addition to using the monorepo, Google is also know for its use of automation. Nx adds powerful capabilities helping your team promote best practices and ensure consistency.
+In addition to using the monorepo, Google is also know for its use of automation and tooling. Nx adds powerful capabilities helping your team promote best practices and ensure consistency.
 
 ## Use Innovative Tools
 
-Tools like Apollo, Cypress, Jest, Prettier, and NestJS have gained a lot of popularity.
+Tools like Cypress, Jest, Prettier, and Nest have gained a lot of popularity.
 
-It's not the case that Apollo is always better than REST or Cypress is always better than Protractor. There are tradeoffs. But in many situations, for many projects, these innovative tools offer a lot of advantages.
+It's not the case that Cypress is always better than Protractor or Nest is always better than say Express. There are tradeoffs. But in many situations, for many projects, these innovative tools offer a lot of advantages.
 
 Adding these tools to the dev workflow is challenging in a regular CLI project. The choice you have is not between Protractor or Cypress, but between a hacked-up setup for Cypress and a great CLI setup for Protractor. Nx changes that!
 
@@ -146,14 +144,14 @@ ng test myapp
 ng e2e myapp
 ```
 
-## Summarize
+## Summary
 
 Nx is not a replacement for the CLI. It's a set of Angular CLI power-ups.
 
 With Nx, you can:
 
 - Do everything you can do using the CLI
-- Build full-stack applications using Angular and NestJS
+- Build full-stack applications using Angular and Nest
 - Use scalable development practices such as monorepos
 - Use innovative tools like Cypress and Jest
 

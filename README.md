@@ -32,7 +32,7 @@
 
 With Nx, you can:
 
-- Build full-stack applications using Angular and NestJS
+- Build full-stack applications using Angular and Nest
 - Use effective development practices pioneered at Google
 - Use innovative tools like Cypress and Jest
 
@@ -62,7 +62,7 @@ In addition to using the monorepo, Google is also know for its use of automation
 
 ### Use Innovative Tools
 
-Tools like Apollo, Cypress, Jest, Prettier, and NestJS have gained a lot of popularity.
+Tools like Apollo, Cypress, Jest, Prettier, and Nest have gained a lot of popularity.
 
 It's not the case that Apollo is always better than REST or Cypress is always better than Protractor. There are tradeoffs. But in many situations, for many projects, these innovative tools offer a lot of advantages.
 
