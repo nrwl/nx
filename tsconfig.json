@@ -20,7 +20,8 @@
     "tmp",
     "build",
     "packages/bazel",
-    "packages/schematics/src/*/files/**/*"
+    "packages/schematics/src/*/files/**/*",
+    "scripts"
   ],
   "angularCompilerOptions": {
     "strictMetadataEmit": true,
