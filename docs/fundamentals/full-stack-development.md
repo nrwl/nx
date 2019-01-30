@@ -1,10 +1,10 @@
-# Building Full-Stack Applications using Angular and NestJS
+# Building Full-Stack Applications using Angular and Nest
 
-In this guide we will build a full-stack application using Angular and NestJS.
+In this guide you will build a full-stack application using Angular and Nest.
 
 ## Creating Angular Application
 
-Let's start with implementing the frontend.
+Start with implementing the frontend.
 
 The easier way to add a frontend app to an Nx workspace is to run `ng g application frontend`, which will create:
 
@@ -42,7 +42,7 @@ tslint.json
 
 If you have used the Angular CLI, this should all look familiar: same configuration files, same folders.
 
-We can run:
+You can run:
 
 - `ng serve frontend` to serve the application
 - `ng build frontend` to build the application
@@ -76,7 +76,7 @@ export class AppComponent {
 }
 ```
 
-Next, let's create the api. We can do it by running `ng g node-application api --frontend-project=frontend` (`--frontend-project=frontend` set ups the proxy configuration such that the frontend application can access the api).
+Next, create the api. You can do it by running `ng g node-application api --frontend-project=frontend` (`--frontend-project=frontend` set ups the proxy configuration such that the frontend application can access the api).
 
 ```
 apps/
@@ -117,7 +117,13 @@ tslint.json
 
 The `apps` directory is where Nx places anything you can run: frontend applications, backend applications, e2e test suites. That's why the `api` application appeared there.
 
-By default, Nx will use NestJS when generating node applications. NestJS ia fantastic framework that shares many of its core concepts with Angular. It uses modules, providers, dependency injection, etc.. As a result, most Angular developers find NestJS easy to use.
+You can run:
+
+- `ng serve api` to serve the application
+- `ng build api` to build the application
+- `ng test api` to test the application
+
+By default, Nx will use Nest when generating node applications. Nest ia fantastic framework that shares many of its core concepts with Angular. It uses modules, providers, dependency injection, etc.. As a result, most Angular developers find Nest easy to use.
 
 The generated `apps/api/src/app/app.module.ts` will look like this:
 
@@ -139,7 +145,7 @@ export class AppModule {}
 
 ### Implementing Endpoint
 
-To implement our endpoint, let's update `app.service.ts`
+To implement your endpoint, update `app.service.ts`
 
 ```typescript
 import { Injectable } from '@nestjs/common';
@@ -177,17 +183,17 @@ export class AppController {
 }
 ```
 
-Now, let's run `ng serve frontend & ng serve api`, and open `http://localhost:4200`.
+Now, run `ng serve frontend & ng serve api`, and open `http://localhost:4200`.
 
 ![Full Stack Application Screenshot](./full-stack-app.png)
 
-The application works, but we have a small problem. We defined `Ticket` twice: once on the frontend, once on the backend. This duplication will inevitably result in the two interfaces going out of sync, which means that runtime errors will creep in. We need to share this interface.
+The application works, but you have a small problem. `Ticket` is defined twice: once on the frontend, once on the backend. This duplication will inevitably result in the two interfaces going out of sync, which means that runtime errors will creep in. It's better to share this interface.
 
 Normally sharing code between the backend and the frontend would have required days of work, but with Nx, it’s done in just minutes.
 
 ## Sharing Libs Between Frontend and Backend
 
-Let's create a new lib by running `ng g library data --framework=none`.
+Create a new lib by running `ng g library data --framework=none`.
 
 ```
 apps/
@@ -216,7 +222,7 @@ tsconfig.json
 tslint.json
 ```
 
-Next, let's move `Ticket` into `libs/data/src/index.ts`:
+Next, move `Ticket` into `libs/data/src/index.ts`:
 
 ```typescript
 export interface Ticket {
@@ -225,7 +231,7 @@ export interface Ticket {
 }
 ```
 
-Finally, let's update the frontend and the backend to import the interface from the library.
+Finally, update the frontend and the backend to import the interface from the library.
 
 ```typescript
 import { Observable } from 'rxjs';
@@ -266,14 +272,22 @@ export class AppService {
 }
 ```
 
-After this refactoring, the backend and the frontend will not get out of sync. Being able to factor code into a lot of small libraries with well-defined public API, which you can then use across both the backend and the frontend, is one of key features of Nx. You can read more about it in [Sharing code and Monorepos](./monorepo.md).
+After this refactoring, the backend and the frontend will not get out of sync. Being able to factor code into a lot of small libraries with well-defined public API, which you can then use across both the backend and the frontend, is one of key features of Nx. You can read more about it [here](./build-like-google).
 
 ## Nx is Smart
 
-We have already showed something amazing. We have a repository where we can build multiple Angular and Node applications and share code between them. And it took us just a few minutes.
+You have already showed something amazing. You have a repository where you can build multiple Angular and Node applications and share code between them. And it took you just a few minutes.
 
 But Nx can do a lot more than that. In Nx, your libraries, node applications, Angular applications are all part of the same dependency graph, which you can see by running `npm run dep-graph`.
 
 ![Full Stack Dependencies](./full-stack-deps.png)
 
-If you change the data library, Nx will know that both the backend and the frontend can be affected by the change. This is what makes Nx a powerful full-stack development environment that scales. You can read more about this Nx capability in [Sharing code and Monorepos](./monorepo.md).
+If you change the data library, Nx will know that both the backend and the frontend can be affected by the change. This is what makes Nx a powerful full-stack development environment that scales. You can read more about this Nx capability in [Building Like Google](./build-like-google).
+
+## Summary
+
+With Nx, you can:
+
+- Build full stack applications
+- Share code between backend and frontend
+- Inspect how backend and frontend depend on each other and use this information to only retest or rebuilt what is affected.
