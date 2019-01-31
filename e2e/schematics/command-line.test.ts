@@ -142,7 +142,7 @@ describe('Command line', () => {
 
   it('should support workspace-specific schematics', () => {
     newProject();
-    runCLI('g workspace-schematic custom -- --no-interactive');
+    runCLI('g workspace-schematic custom --no-interactive');
     checkFilesExist(
       'tools/schematics/custom/index.ts',
       'tools/schematics/custom/schema.json'
@@ -184,7 +184,7 @@ describe('Command line', () => {
     expect(output).toContain('update angular.json');
     expect(output).toContain('update nx.json');
 
-    runCLI('g workspace-schematic another -- --no-interactive');
+    runCLI('g workspace-schematic another --no-interactive');
 
     const listSchematicsOutput = runCommand(
       'npm run workspace-schematic -- --list-schematics'
