@@ -67,7 +67,11 @@ describe('lib', () => {
       .toBe(`module.exports = {
   name: 'lib1',
   preset: '../../jest.config.js',
-  coverageDirectory: '../../coverage/libs/lib1'
+  coverageDirectory: '../../coverage/libs/lib1',
+  snapshotSerializers: [
+    'jest-preset-angular/AngularSnapshotSerializer.js',
+    'jest-preset-angular/HTMLCommentSerializer.js'
+  ]
 };
 `);
   });
@@ -148,6 +152,26 @@ describe('lib', () => {
         'libs/lib1/tsconfig.spec.json'
       );
       expect(tsConfig.files).toBeUndefined();
+    });
+  });
+
+  describe('--skip-serializers', () => {
+    it('should not list the serializers in jest.config.js', async () => {
+      const resultTree = await runSchematic(
+        'jest-project',
+        {
+          project: 'lib1',
+          skipSerializers: true
+        },
+        appTree
+      );
+      const jestConfig = resultTree.readContent('libs/lib1/jest.config.js');
+      expect(jestConfig).not.toContain(`
+  snapshotSerializers: [
+    'jest-preset-angular/AngularSnapshotSerializer.js',
+    'jest-preset-angular/HTMLCommentSerializer.js'
+  ]
+`);
     });
   });
 });
