@@ -7,14 +7,14 @@ describe('ngrx', () => {
 
     // Generate root ngrx state management
     runCLI(
-      'generate ngrx users --module=apps/myapp/src/app/app.module.ts --root --collection=@nrwl/schematics'
+      'generate ngrx users --module=apps/myapp/src/app/app.module.ts --root'
     );
     copyMissingPackages();
 
     // Generate feature library and ngrx state within that library
     runCLI('g @nrwl/schematics:lib feature-flights --prefix=fl');
     runCLI(
-      'generate ngrx flights --module=libs/feature-flights/src/lib/feature-flights.module.ts --facade --collection=@nrwl/schematics'
+      'generate ngrx flights --module=libs/feature-flights/src/lib/feature-flights.module.ts --facade'
     );
 
     expect(runCLI('lint', { silenceError: true })).not.toContain('ERROR');
