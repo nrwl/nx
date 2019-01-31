@@ -57,6 +57,24 @@ describe('app', () => {
     });
   });
 
+  it('should recommend vscode extensions', () => {
+    const tree = schematicRunner.runSchematic(
+      'ng-new',
+      { name: 'proj' },
+      projectTree
+    );
+    const recommendations = readJsonInTree<{ recommendations: string[] }>(
+      tree,
+      '/proj/.vscode/extensions.json'
+    ).recommendations;
+
+    expect(recommendations).toEqual([
+      'nrwl.angular-console',
+      'angular.ng-template',
+      'esbenp.prettier-vscode'
+    ]);
+  });
+
   it('should create a root karma configuration', () => {
     const tree = schematicRunner.runSchematic(
       'ng-new',

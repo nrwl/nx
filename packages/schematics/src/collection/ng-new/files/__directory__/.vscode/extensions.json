@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "nrwl.angular-console",
+    "angular.ng-template",
+    "esbenp.prettier-vscode"
+  ]
+}

@@ -589,6 +589,10 @@ export function updateJsonInTree<T = any, O = T>(
   callback: (json: T) => O
 ): Rule {
   return (host: Tree): Tree => {
+    if (!host.exists(path)) {
+      host.create(path, serializeJson(callback({} as T)));
+      return host;
+    }
     host.overwrite(path, serializeJson(callback(readJsonInTree(host, path))));
     return host;
   };

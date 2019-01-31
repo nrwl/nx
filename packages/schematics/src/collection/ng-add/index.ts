@@ -40,7 +40,7 @@ import {
 } from '../../utils/ast-utils';
 import { editTarget } from '../../utils/cli-config-utils';
 import { from } from 'rxjs';
-import { tap, mapTo } from 'rxjs/operators';
+import { tap, mapTo, concatMap } from 'rxjs/operators';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { getAppModulePath } from '@schematics/angular/utility/ng-ast-utils';
 import { insertImport } from '@schematics/angular/utility/ast-utils';
@@ -584,6 +584,24 @@ function createAdditionalFiles(options: Schema): Rule {
       })
     );
     host.create('libs/.gitkeep', '');
+
+    host = updateJsonInTree(
+      '.vscode/extensions.json',
+      (json: { recommendations?: string[] }) => {
+        json.recommendations = json.recommendations || [];
+        [
+          'nrwl.angular-console',
+          'angular.ng-template',
+          'esbenp.prettier-vscode'
+        ].forEach(extension => {
+          if (!json.recommendations.includes(extension)) {
+            json.recommendations.push(extension);
+          }
+        });
+
+        return json;
+      }
+    )(host, _context) as Tree;
 
     // if the user does not already have a prettier configuration
     // of any kind, create one

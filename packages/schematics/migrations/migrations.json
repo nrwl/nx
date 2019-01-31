@@ -54,6 +54,11 @@
       "version": "7.5.0",
       "description": "Updated Angular CLI and Typescript",
       "factory": "./update-7-5-0/update-7-5-0"
+    },
+    "update-7.6.0": {
+      "version": "7.6.0",
+      "description": "Add VSCode Extensions",
+      "factory": "./update-7-6-0/update-7-6-0"
     }
   }
 }
