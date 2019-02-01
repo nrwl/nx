@@ -1,4 +1,5 @@
 import { UnitTestRunner } from '../../utils/test-runners';
+import { Framework } from '../../utils/framework';
 
 export interface Schema {
   name: string;
@@ -19,6 +20,8 @@ export interface Schema {
   lazy?: boolean;
   parentModule?: string;
   tags?: string;
+
+  framework: Framework;
 
   unitTestRunner: UnitTestRunner;
 }
