@@ -241,7 +241,7 @@ function updateProject(options: NormalizedSchema): Rule {
                   ...json,
                   compilerOptions: {
                     ...json.compilerOptions,
-                    types: [...json.compilerOptions.types, 'jasmine']
+                    types: [...(json.compilerOptions.types || []), 'jasmine']
                   }
                 };
               }
@@ -344,7 +344,11 @@ function updateE2eProject(options: NormalizedSchema): Rule {
           ...json,
           compilerOptions: {
             ...json.compilerOptions,
-            types: [...json.compilerOptions.types, 'jasmine', 'jasminewd2']
+            types: [
+              ...(json.compilerOptions.types || []),
+              'jasmine',
+              'jasminewd2'
+            ]
           }
         };
       }),

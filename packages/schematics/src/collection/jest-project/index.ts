@@ -55,7 +55,7 @@ function updateTsConfig(options: JestProjectSchema): Rule {
         compilerOptions: {
           ...json.compilerOptions,
           types: Array.from(
-            new Set([...json.compilerOptions.types, 'node', 'jest'])
+            new Set([...(json.compilerOptions.types || []), 'node', 'jest'])
           )
         }
       };

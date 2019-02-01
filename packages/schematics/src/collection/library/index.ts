@@ -408,7 +408,7 @@ function updateKarmaConfig(options: NormalizedSchema) {
         ...json,
         compilerOptions: {
           ...json.compilerOptions,
-          types: [...json.compilerOptions.types, 'jasmine']
+          types: [...(json.compilerOptions.types || []), 'jasmine']
         }
       };
     }),
