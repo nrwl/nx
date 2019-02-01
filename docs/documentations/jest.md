@@ -13,12 +13,12 @@
 
 ## How to use Jest
 
-### Setting up your workspace to use Jest
+### Generating an Application which uses Jest
 
-First, add the appropriate configuration and dependencies via:
+The following command will generate a new application which is configured to use jest as its test runner.
 
 ```sh
-ng generate jest
+ng generate application my-app --unit-test-runner jest
 ```
 
 ### Generating a Library which uses Jest
