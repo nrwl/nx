@@ -8,7 +8,7 @@ Adding these tools to the dev workflow is challenging in a regular CLI project. 
 
 ## Nest
 
-<img src="./nest-logo.png">
+![NestJS logo](./nest-logo.png)
 
 Nest is a Node.js framework designed for building scalable server-side applications. In many ways, Nest is familiar to Angular developers:
 
@@ -88,7 +88,7 @@ To create an empty node application, run `ng g node-application api --framework=
 
 ## Cypress
 
-<img src="./cypress-logo.png">
+![Cypress logo](./cypress-logo.png)
 
 Cypress is an e2e test runner built for modern web. It has a lot of great features:
 
@@ -148,7 +148,7 @@ To use Protractor instead of Cypress, run `ng g application frontend --e2e-test-
 
 ## Jest
 
-<img src="./jest-logo.png">
+![Jest logo](./jest-logo.png)
 
 Jest is a fast 0-setup testing framework from Facebook.
 
@@ -194,7 +194,7 @@ To use Karma instead of Jest, run `ng g application frontend --unit-test-runner=
 
 ## Prettier
 
-<img src="./prettier-logo.png">
+![Prettier logo](./prettier-logo.png)
 
 Prettier is an opinionated code formatter. An Nx workspace comes with Prettier preconfigured.
 
