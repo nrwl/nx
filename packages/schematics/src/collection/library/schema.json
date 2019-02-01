@@ -18,6 +18,26 @@
       "description": "A directory where the app is placed",
       "x-prompt": "In which directory should the library be generated?"
     },
+    "framework": {
+      "type": "string",
+      "enum": ["angular", "none"],
+      "description": "The framework this library uses",
+      "default": "angular",
+      "x-prompt": {
+        "message": "What framework should this library use?",
+        "type": "list",
+        "items": [
+          {
+            "value": "angular",
+            "label": "Angular    [ https://angular.io/             ]"
+          },
+          {
+            "value": "none",
+            "label": "Typescript [ https://www.typescriptlang.org/ ]"
+          }
+        ]
+      }
+    },
     "publishable": {
       "type": "boolean",
       "default": false,
@@ -85,8 +105,7 @@
     "module": {
       "type": "boolean",
       "default": true,
-      "description": "Include an NgModule in the library.",
-      "x-prompt": "Would you like to generate an NgModule within the library?"
+      "description": "[Deprecated]: Include an NgModule in the library."
     },
     "tags": {
       "type": "string",

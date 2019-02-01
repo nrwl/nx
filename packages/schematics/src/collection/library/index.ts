@@ -41,6 +41,7 @@ import {
 } from '../../utils/cli-config-utils';
 import { formatFiles } from '../../utils/rules/format-files';
 import { updateKarmaConf } from '../../utils/rules/update-karma-conf';
+import { Framework } from '../../utils/frameworks';
 
 interface NormalizedSchema extends Schema {
   name: string;
@@ -260,7 +261,7 @@ function updateProject(options: NormalizedSchema): Rule {
       host.delete(path.join(options.projectRoot, 'tsconfig.spec.json'));
     }
 
-    if (options.module) {
+    if (options.framework === Framework.Angular) {
       host.delete(path.join(libRoot, `${options.name}.module.ts`));
       host.create(
         path.join(libRoot, `${options.fileName}.module.ts`),
@@ -472,7 +473,7 @@ function addModule(options: NormalizedSchema): Rule {
 
 export default function(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
-    const options = normalizeOptions(host, schema);
+    const options = normalizeOptions(host, context, schema);
     if (!options.routing && options.lazy) {
       throw new Error(`routing must be set`);
     }
@@ -493,19 +494,23 @@ export default function(schema: Schema): Rule {
       options.unitTestRunner === 'jest'
         ? schematic('jest-project', {
             project: options.name,
-            skipSetupFile: !options.module,
-            skipSerializers: !options.module
+            skipSetupFile: options.framework !== Framework.Angular,
+            skipSerializers: options.framework !== Framework.Angular
           })
         : noop(),
 
       options.publishable ? updateLibPackageNpmScope(options) : noop(),
-      options.module ? addModule(options) : noop(),
+      options.framework === Framework.Angular ? addModule(options) : noop(),
       formatFiles(options)
     ])(host, context);
   };
 }
 
-function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
+function normalizeOptions(
+  host: Tree,
+  context: SchematicContext,
+  options: Schema
+): NormalizedSchema {
   const name = toFileName(options.name);
   const projectDirectory = options.directory
     ? `${toFileName(options.directory)}/${name}`
@@ -521,6 +526,13 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     : [];
   const modulePath = `${projectRoot}/src/lib/${fileName}.module.ts`;
   const defaultPrefix = getNpmScope(host);
+
+  if (!options.module) {
+    context.logger.warn(
+      'Deprecated: --module is deprecated in favor of --framework'
+    );
+    options.framework = Framework.None;
+  }
 
   return {
     ...options,

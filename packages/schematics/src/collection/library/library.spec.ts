@@ -1,5 +1,3 @@
-import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import * as path from 'path';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
 import {
   createApp,
@@ -10,6 +8,7 @@ import { getFileContent } from '@schematics/angular/utility/test';
 import * as stripJsonComments from 'strip-json-comments';
 import { readJsonInTree } from '../../utils/ast-utils';
 import { NxJson } from '../../command-line/shared';
+import { UnitTestTree } from '@angular-devkit/schematics/testing';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -223,6 +222,33 @@ describe('lib', () => {
           'my-lib'
         ].prefix
       ).toEqual('custom');
+    });
+
+    describe('--framework', () => {
+      describe('none', () => {
+        let tree: UnitTestTree;
+        beforeEach(async () => {
+          tree = await runSchematic(
+            'lib',
+            {
+              name: 'myLib',
+              framework: 'none'
+            },
+            appTree
+          );
+        });
+
+        it('should generate a basic typescript lib', () => {
+          expect(
+            tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
+          ).toEqual(false);
+          expect(
+            tree.exists(
+              'libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.spec.ts'
+            )
+          ).toEqual(false);
+        });
+      });
     });
   });
 
