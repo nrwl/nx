@@ -4,11 +4,10 @@ import {
   UnitTestTree
 } from '@angular-devkit/schematics/testing';
 
-import * as path from 'path';
+import { join } from 'path';
 
 import { serializeJson } from '../../src/utils/fileutils';
 import { readJsonInTree, updateJsonInTree } from '../../src/utils/ast-utils';
-
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 const effectContents = `
@@ -97,7 +96,7 @@ describe('Update 7.6.0', () => {
 
     schematicRunner = new SchematicTestRunner(
       '@nrwl/schematics',
-      path.join(__dirname, '../migrations.json')
+      join(__dirname, '../migrations.json')
     );
   });
 
@@ -256,6 +255,19 @@ describe('Update 7.6.0', () => {
         slice3$ = Observable.from([]).pipe(
           withLatestFrom(this.store.pipe(select(selector5)))
         );`);
+    });
+  });
+
+  describe('Update Angular CLI', () => {
+    it('should update @angular-devkit/build-angular', async () => {
+      const result = await schematicRunner
+        .runSchematicAsync('update-7.6.0', {}, initialTree)
+        .toPromise();
+      expect(
+        readJsonInTree(result, 'package.json').devDependencies[
+          '@angular-devkit/build-angular'
+        ]
+      ).toEqual('~0.13.1');
     });
   });
 });

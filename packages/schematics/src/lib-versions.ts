@@ -1,6 +1,6 @@
-export const angularCliVersion = '~7.2.2';
+export const angularCliVersion = '~7.3.1';
 export const angularVersion = '^7.0.0';
-export const angularDevkitVersion = '~0.11.2';
+export const angularDevkitVersion = '~0.13.1';
 export const angularJsVersion = '1.6.6';
 export const ngrxVersion = '7.2.0';
 export const ngrxStoreFreezeVersion = '0.2.4';
