@@ -68,31 +68,33 @@ To help with that Nx uses code analyses to make sure projects can only depend on
 
 For instance, with this configuration, when you import private client code from the admin part of our repo, you will get an error.
 
-```
-"nx-enforce-module-boundaries": [
-  true,
-  {
-    "allow": [],
-    "depConstraints": [
-       {
+```json
+{
+  "nx-enforce-module-boundaries": [
+    true,
+    {
+      "allow": [],
+      "depConstraints": [
+        {
           "sourceTag": "shared",
           "onlyDependOnLibsWithTags": ["shared"]
-       },
-       {
+        },
+        {
           "sourceTag": "admin",
-          "onlyDependOnLibsWithTags": ["shared", "admin" ]
-       },
-       {
+          "onlyDependOnLibsWithTags": ["shared", "admin"]
+        },
+        {
           "sourceTag": "client",
-          "onlyDependOnLibsWithTags": ["shared", "client" ]
-       },
-       {
+          "onlyDependOnLibsWithTags": ["shared", "client"]
+        },
+        {
           "sourceTag": "*",
           "onlyDependOnLibsWithTags": ["*"]
-       }
-     ]
-  }
-]
+        }
+      ]
+    }
+  ]
+}
 ```
 
 ![Lint Error](./lint-error.png)
@@ -101,7 +103,7 @@ For instance, with this configuration, when you import private client code from 
 
 To be productive in a monorepo, you need to be able to check that your change is safe, and rebuilding and retesting everything on every change won’t scale. Nx uses code analysis to determine what needs to be rebuilt and retested.
 
-```
+```bash
 yarn affected:build --base=master # reruns build for all the projects affected by a PR
 
 yarn affected:test --base=master # reruns unit tests for all the projects affected by a PR
@@ -133,13 +135,13 @@ Adding these tools to the dev workflow is challenging in a regular CLI project. 
 
 When using Nx, adding Cypress or Jest is easy:
 
-```
+```bash
 ng g application myapp --e2eTestRunner=cypress --unitTestRunner=jest
 ```
 
 Tests can then be run just like you would run them normally:
 
-```
+```bash
 ng test myapp
 ng e2e myapp
 ```

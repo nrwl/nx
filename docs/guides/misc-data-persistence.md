@@ -1,4 +1,4 @@
-# Managing state
+# Using DataPersistence
 
 Managing state is a hard problem. We need to coordinate multiple backends, web workers, and UI components, all of which update the state concurrently.
 

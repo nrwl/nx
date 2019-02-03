@@ -19,7 +19,7 @@ To see how Nx delivers all of these, start with an empty Nx workspace:
 
 ## Monorepos with Nx
 
-```
+```console
 apps/
 libs/
 tools/
@@ -48,7 +48,7 @@ Out of the box, Nx comes with two schematics for creating applications.
 
 Creating a new Angular application will result in something like this:
 
-```
+```console
 apps/
   myapp/
     src/
@@ -98,7 +98,7 @@ Nx comes with a schematic for creating libraries.
 
 Creating a new TypeScript library will result in something like this:
 
-```
+```console
 apps/
   ...
 libs/
@@ -159,7 +159,7 @@ It can also help you answer questions like "what apps will have to be redeployed
 
 Because Nx understands how our applications and libraries depend on each other, it can verify that a code change to a reusable library does not break any applications and libraries depending on it.
 
-```
+```bash
 yarn affected:apps --base=master # prints the apps affected by a PR
 
 yarn affected:build --base=master # reruns build for all the projects affected by a PR
@@ -181,7 +181,7 @@ To help with that Nx uses code analyses to make sure projects can only depend on
 
 For instance, with this configuration, when you import private client code from the admin part of our repo, you will get an error.
 
-```
+```json
 "nx-enforce-module-boundaries": [
   true,
   {
@@ -232,7 +232,7 @@ yarn format:check # checks that the formatting is correct (used in CI)
 
 You rarely have to look at `nx.json`, but it is still important to understand what it contains.
 
-```
+```json
 {
   "npmScope": "myorg",
   "implicitDependencies": {
@@ -245,25 +245,25 @@ You rarely have to look at `nx.json`, but it is still important to understand wh
   "projects": {
     "mylib": {
       "tags": [],
-      "implictDependencies": []
+      "implicitDependencies": []
     },
     "myapp": {
       "tags": ["shared"],
-      "implictDependencies": ["myapp-e2e"]
+      "implicitDependencies": ["myapp-e2e"]
     },
     "myapp-e2e": {
       "tags": [],
-      "implictDependencies": []
-    },
+      "implicitDependencies": []
+    }
   }
 }
 ```
 
 The `npmScope` property is used when importing libraries. In this example, when Nx sees `@myorg/mylib`, it will know that you are trying to import the `mylib` library from the same workspace.
 
-The `implicitDependencies` map is used to define what projects global files affect. In this example, any change to `package.json` will affect all the projects in the workspace, so all of them will have to be rebuilt and retested.
+The `implicitDependencies` map is used to define what projects are affected by global files. In this example, any change to `package.json` will affect all the projects in the workspace, so all of them will have to be rebuilt and retested.
 
-```
+```json
 {
   "implicitDependencies": {
     "angular.json": "*",
@@ -271,22 +271,24 @@ The `implicitDependencies` map is used to define what projects global files affe
     "tsconfig.json": "*",
     "tslint.json": "*",
     "nx.json": "*"
-  },
+  }
 }
 ```
 
-In this example, any change to `package.json` will only affected `mylib`.
+In this example, any change to `package.json` will only affect `mylib`.
 
-```
-"myapp": {
-  "tags": ['shared'],
-  "implictDependencies": ["myapp-e2e"]
-},
+```json
+{
+  "myapp": {
+    "tags": ["shared"],
+    "implicitDependencies": ["myapp-e2e"]
+  }
+}
 ```
 
 The `tags` array is used to impose constraints on the dependency graph. Read more about it [here](TODO).
 
-Nx uses its advanced code analysis to construct a dependency graph of all applications and libraries. Some dependencies, however, cannot be determined statically. You can use the `implictDependencies` array to list the dependencies that cannot be determined statically.
+Nx uses its advanced code analysis to construct a dependency graph of all applications and libraries. Some dependencies, however, cannot be determined statically. You can use the `implicitDependencies` array to list the dependencies that cannot be determined statically.
 
 ## Summary
 
