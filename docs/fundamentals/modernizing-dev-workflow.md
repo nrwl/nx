@@ -21,13 +21,13 @@ Many conventions and best practices used in Angular applications can be also be 
 
 To create a new Nest application, run:
 
-```
+```bash
 ng g node-application api # you can also be explicit and pass `--framework=nestjs`
 ```
 
 This will create the following:
 
-```
+```console
 apps/
   api/
     src/
@@ -68,7 +68,7 @@ You can run:
 
 Adding a Nest app will also add Nest schematics to the workspace, which you can run as follows:
 
-```
+```bash
 ng generate @nestjs/schematics:controller mycontroller --sourceRoot=apps/nestapp/src --path=app
 ```
 
@@ -103,7 +103,7 @@ By default, when creating a new Angular application, Nx will use Cypress to crea
 
 So running `ng g application frontend` will create:
 
-```
+```console
 apps/
   frontend/
     ...
@@ -154,7 +154,7 @@ Jest is a fast 0-setup testing framework from Facebook.
 
 By default, Nx uses Jest for both Angular and Node.js applications. So if you run `ng g application frontend`, you will get:
 
-```
+```console
 apps/
   frontend/
     src/
@@ -198,7 +198,7 @@ To use Karma instead of Jest, run `ng g application frontend --unit-test-runner=
 
 Prettier is an opinionated code formatter. An Nx workspace comes with Prettier preconfigured.
 
-```
+```cosnole
 apps/
 libs/
 tools/

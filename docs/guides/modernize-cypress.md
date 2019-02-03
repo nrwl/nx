@@ -11,18 +11,17 @@ Cypress is an e2e test runner built for modern web. It has a lot of great featur
 - Network traffic control
 - Screenshots and videos
 
-
 ## How to Use Cypress
 
 ### Generating Applications
 
 By default, when creating a new Angular application, Nx will use Cypress to create the e2e tests project.
 
-```
+```bash
 ng g application frontend
 ```
 
-```
+```console
 apps/
   frontend/
     ...
@@ -57,7 +56,6 @@ Older versions of Nx used Protractor as a default e2e test runner. For those wor
 
 > Unfortunately, the cypress api and its ecosystem are different from Protractor. So Nx cannot provide a reliable migration from Protractor to Cypress tests in an existing application.
 
-
 ### Testing Applications
 
 Simply run `ng e2e frontend-e2e` to execute e2e tests with Cypress.
@@ -68,7 +66,7 @@ Screenshots and Videos will be accessible respectively in `/dist/apps/frontend/s
 
 ### Watching for Changes
 
-With, `ng e2e frontend-e2e --watch` Cypress will start in the application mode. Change your tests or your application code, and Cypress will rerun the tests. 
+With, `ng e2e frontend-e2e --watch` Cypress will start in the application mode. Change your tests or your application code, and Cypress will rerun the tests.
 
 Running Cypress with `--watch` is a great way to enhance dev workflow. Write your e2e tests, and then start working on your app while Cypress is rerunning the tests.
 
@@ -80,14 +78,13 @@ If you want to run the Cypress tests in headless mode (e.g., on CI), you can do 
 
 You can run your e2e test against a production build like this: `ng e2e my-app-e2e --prod`.
 
-
 ## Configuration
 
 ### Specifying a Custom Url to Test
 
 The `baseUrl` property provides you the ability to test an application hosted on a specific domain.
 
-```
+```bash
 ng e2e my-app-e2e --baseUrl=https://my-app.com
 ```
 

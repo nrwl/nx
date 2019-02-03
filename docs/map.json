@@ -41,13 +41,36 @@
     "itemList": [
       {
         "name": "Using Cypress",
-        "id": "cypress"
+        "id": "modernize-cypress"
       },
       {
         "name": "Using Jest",
-        "id": "jest"
+        "id": "modernize-jest"
+      },
+      {
+        "name": "Rebuilding and Retesting What is Affected",
+        "id": "affected"
+      },
+      {
+        "name": "Analysing & Visualizing Workspaces",
+        "id": "dependency-diagrams"
+      },
+      {
+        "name": "Imposing Constraints on the Dependency Graph",
+        "id": "tags"
+      },
+      {
+        "name": "Setting Up NgRx",
+        "id": "misc-ngrx"
+      },
+      {
+        "name": "Using DataPersistence",
+        "id": "misc-data-persistence"
+      },
+      {
+        "name": "Upgrading AngularJS Applications",
+        "id": "misc-upgrade"
       }
     ]
   }
-
 ]

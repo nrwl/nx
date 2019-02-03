@@ -1,0 +1,201 @@
+# Rebuilding and Retesting What is Affected
+
+As with a regular CLI project, when using Nx you can build and test apps and libs.
+
+```console
+ng g app client
+ng g app admin
+ng g lib client-feature-main
+ng g lib admin-feature-permissions
+ng g lib components-shared
+
+ng build client
+ng build client-feature-main # works if the lib is marked as publishable
+
+ng test client
+ng test admin
+ng test client-feature-main
+ng e2e client-e2e
+```
+
+Now imagine, `admin` depends on `admin-feature-permissions`. If we make a change to `admin-feature-permissions`, we need to make sure nothing in the workspace is affected.
+
+Typically, you would do it like this:
+
+```console
+ng test admin-feature-permissions
+ng build admin
+ng test admin
+ng e2e admin-e2e
+```
+
+In many organizations, you would have dozens or hundreds of apps and libs. To be productive in a monorepo, you need to be able to check that your change is safe, and rebuilding and retesting everything on every change won't scale, tracing the dependencies manually (as shown above) won't scale either.
+
+Nx uses code analysis to construct a dependency graph of all projects in the workspace. It then uses the dependency graph to determine what needs to be rebuilt and retested.
+
+## Viewing Dep Graph
+
+Run `npm run dep-graph` or `yarn dep-graph` to see the dependency graph.
+
+![dependency-graph](./dependency-graph.png)
+
+## Affected
+
+To calculate the project affected by your change, Nx needs to know what file you changed. The most direct way to do it is by passing `--files`:
+
+```
+npm run affected:dep-graph -- --files=libs/admin-feature-permissions/src/index.ts
+```
+
+![dependency-graph-affected](./affected.png)
+
+If you use git, you can use it to determine what files have changed.
+
+```
+npm run affected:dep-graph -- --base=master --head=HEAD
+```
+
+The `--head` defaults to `HEAD`, so when running it locally you can usually omit it:
+
+```
+npm run affected:dep-graph -- --base=master
+```
+
+Nx will find the most common ancestor of the base and head SHAs and will use it to determine what has changed between it and head.
+
+## Building/Testing/Printing Affected Projects
+
+```
+npm run affected:apps -- --base=master # prints affected apps
+npm run affected:libs -- --base=master # prints affected libs
+npm run affected:build -- --base=master # builds affected apps and libs
+npm run affected:lint -- --base=master # lints affected apps and libs
+npm run affected:test -- --base=master # tests affected apps and libs
+npm run affected:e2e -- --base=master # e2e tests affected apps
+```
+
+All of these are just shortcuts for the following:
+
+```
+npm run affected -- --target=ANYTARGET --base=master # run ANYTARGET for all affected apps and libs
+```
+
+Other options will forwarded to the underlying target (e.g., `yarn affected:test --base=origin/master --base=HEAD --sm=false`).
+
+## CI
+
+The SHAs you pass must be defined in the git repository. The `master` and `HEAD` SHAs are what you normally use while developing. Most likely you will want to provision other SHAs in your CI environment.
+
+```
+npm run affected:build -- --base=origin/master --head=$PR_BRANCH_NAME # where PR_BRANCH_NAME is defined by your CI system
+npm run affected:build -- --base=origin/master~1 --head=origin/master # rerun what is affected by the last commit in master
+```
+
+## Running Targets in Parallel
+
+Running targets in parallel can significantly speed up your CI time.
+
+```
+npm run affected:build -- --base=master --parallel
+npm run affected:build -- --base=master --parallel --maxParallel=5
+```
+
+## Rerunning All Targets
+
+You should never do it in CI, but it is sometimes useful to rerun all targets locally.
+
+```
+npm run affected:build -- --all
+```
+
+## Running Failed
+
+After you run any affected command, Nx remembers which targets fail. So if you want to rerun only the failed once, pass: `--only-failed`;
+
+```
+npm run affected:build -- --only-failed
+```
+
+## Excluding Projects
+
+Finally, you can exclude projects like this:
+
+```
+npm run affected:test -- --all --exlude=admin # retests everthing except admin
+```
+
+## When Nx Can't Understand Your Repository
+
+Nx uses its advanced code analysis to construct a dependency graph of all applications and libraries. Some dependencies, however, cannot be determined statically. You can define them yourself in `nx.json`.
+
+```json
+{
+  "npmScope": "myorg",
+  "implicitDependencies": {
+    "angular.json": "*",
+    "package.json": "*",
+    "tsconfig.json": "*",
+    "tslint.json": "*",
+    "nx.json": "*"
+  },
+  "projects": {
+    "client": {
+      "tags": [],
+      "implicitDependencies": ["client-e2e"]
+    },
+    "client-e2e": {
+      "tags": [],
+      "implicitDependencies": []
+    },
+    "admin": {
+      "tags": [],
+      "implicitDependencies": ["admin-e2e"]
+    },
+    "admin-e2e": {
+      "tags": [],
+      "implicitDependencies": []
+    },
+    "client-feature-main": {
+      "tags": [],
+      "implicitDependencies": []
+    },
+    "admin-feature-permissions": {
+      "tags": [],
+      "implicitDependencies": []
+    },
+    "components-shared": {
+      "tags": [],
+      "implicitDependencies": []
+    }
+  }
+}
+```
+
+The `implicitDependencies` map is used to define what projects are affected by global files. In this example, any change to `package.json` will affect all the projects in the workspace, so all of them will have to be rebuilt and retested. You can replace `*` with a list of projects.
+
+```json
+{
+  "implicitDependencies": {
+    "angular.json": "*",
+    "package.json": ["admin", "client"],
+    "tsconfig.json": "*",
+    "tslint.json": "*",
+    "nx.json": "*"
+  }
+}
+```
+
+You can also specify dependencies between projects. For instance, if `admin-e2e` tests both the `admin` and `client` applications, you can express this as follows:
+
+```json
+{
+  "client": {
+    "tags": [],
+    "implicitDependencies": ["client-e2e", "admin-e2e"]
+  },
+  "admin": {
+    "tags": [],
+    "implicitDependencies": ["admin-e2e"]
+  }
+}
+```

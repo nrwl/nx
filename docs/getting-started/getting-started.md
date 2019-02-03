@@ -68,7 +68,7 @@ ng g application myapp
 
 The result will look like this:
 
-```
+```console
 apps/
     myapp/
         src/

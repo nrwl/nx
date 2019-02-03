@@ -8,7 +8,7 @@ Start with implementing the frontend.
 
 The easier way to add a frontend app to an Nx workspace is to run `ng g application frontend`, which will create:
 
-```
+```console
 apps/
   frontend/
     src/
@@ -78,7 +78,7 @@ export class AppComponent {
 
 Next, create the api. You can do it by running `ng g node-application api --frontend-project=frontend` (`--frontend-project=frontend` set ups the proxy configuration such that the frontend application can access the api).
 
-```
+```console
 apps/
   frontend/
     ...
@@ -195,7 +195,7 @@ Normally sharing code between the backend and the frontend would have required d
 
 Create a new lib by running `ng g library data --framework=none`.
 
-```
+```console
 apps/
   frontend/
     ...

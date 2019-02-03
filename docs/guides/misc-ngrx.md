@@ -1,4 +1,4 @@
-# Setting Up NgRx in Nx
+# Setting Up NgRx
 
 Leveraging [NgRx](https://github.com/ngrx/platform) for state management in an Angular application involves
 
@@ -33,7 +33,7 @@ You can generate new **feature** state (NgRx files) which are registered with th
 
 > Feature state libraries can be lazy loaded and support feature state slices that are independent of other feature states.
 
-```sh
+```bash
 ng generate ngrx <FeatureName> --module="" [options]
 ng g ngrx <FeatureName> --module="" [options]
 ```
@@ -67,7 +67,7 @@ Specifies the name of the NgRx feature (e.g., Products, Users, etc.).
 * Do not use `State` a suffix.
 * We recommend developers use the plural forms for feature 'name'; e.g. Products, Users, Cars, etc.
 
-```sh
+```bash
 ng g ngrx <FeatureName> [options]
 ```
 
@@ -79,7 +79,7 @@ Specifies the path to Angular `ngModule`. This option is **always** required and
   - Type: `string`
   - Required: true
 
-```sh
+```bash
 ng g ngrx <FeatureName> --module=<xxx> [options]
 ```
 
@@ -97,7 +97,7 @@ Specify this flag to generate NgRx Facade class(es) along with the standard NgRx
   - Type: `boolean`
   - Required: false; defaults to `false`
 
-```sh
+```bash
 ng g ngrx <FeatureName> -module=<xxx> --facade [options]
 ```
 
@@ -134,7 +134,7 @@ We can run the generate command for ngrx with the module and root options to cre
   - Type: `boolean`
   - Required: false; defaults to `false`
 
-```sh
+```bash
 ng generate ngrx app --module=apps/<appname>/src/app/app.module.ts  --root
 ```
 
@@ -154,7 +154,7 @@ Also, app.module.ts will have StoreModule.forRoot and EffectsModule.forRoot conf
 
 We can run the generate command for ngrx with the module and onlyEmptyRoot option to only add the StoreModule.forRoot and EffectsModule.forRoot calls without generating any new files.
 
-```console
+```bash
 ng generate ngrx app --module=apps/<appname>/src/app/app.module.ts  --onlyEmptyRoot
 ```
 
@@ -164,7 +164,7 @@ This can be useful in the cases where we don't have a need for any state at the 
 
 We can run the generate command for ngrx with the module option to create a new feature level store and corresponding pieces needed:
 
-```console
+```bash
 ng generate ngrx products --module=libs/<libname>/src/mymodule.module.ts
 ```
 
@@ -198,7 +198,7 @@ This can be useful when we want to start building out our state without wiring i
 
 Consider a command to generate a `Comments` NgRx feature set and register it within an application root ngModule.
 
-```sh
+```bash
 ng generate NgRx Comments --root --module=apps/myapp/src/app/app.module.ts
 ```
 
@@ -208,7 +208,7 @@ ng generate NgRx Comments --root --module=apps/myapp/src/app/app.module.ts
 
 Better yet, let's generate a `Comments` feature set within a `state` library and register it with the `comments-state.module.ts` file in the same `comments/state` folder.
 
-```sh
+```bash
 ng g ngrx Comments --module=libs/comments/state/src/lib/comments-state.module.ts
 ```
 
@@ -228,41 +228,41 @@ The files generated are shown below and include placeholders for the _comments_ 
 
 ###### comments.actions.ts
 
-```ts
+```typescript
 import {Action} from "@ngrx/store";
 
 export enum CommentsActionTypes {
-LoadComments = "[Comments] Load Comments",
-CommentsLoaded = "[Comments] Comments Loaded"
-CommentsLoadError = "[Comments] Comments Load Error"
+  LoadComments = "[Comments] Load Comments",
+  CommentsLoaded = "[Comments] Comments Loaded"
+  CommentsLoadError = "[Comments] Comments Load Error"
 }
 
 export class LoadComments implements Action {
-readonly type = CommentsActionTypes.LoadComments;
+  readonly type = CommentsActionTypes.LoadComments;
 }
 
 export class CommentsLoadError implements Action {
-readonly type = CommentsActionTypes.LoadComments;
+  readonly type = CommentsActionTypes.LoadComments;
 }
 
 export class CommentsLoaded implements Action {
-readonly type = CommentsActionTypes.CommentsLoaded;
-constructor(public payload: any[]) { }
+  readonly type = CommentsActionTypes.CommentsLoaded;
+  constructor(public payload: any[]) { }
 }
 
 export type CommentsAction = LoadComments | CommentsLoaded | CommentsLoadError;
 
 export const fromCommentsActions = {
-LoadComments,
-CommentsLoaded,
-CommentsLoadError
+  LoadComments,
+  CommentsLoaded,
+   CommentsLoadError
 }
 
 ```
 
 ###### comments.selectors.ts
 
-```ts
+```typescript
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { CommentsState } from './comments.reducer';
 
@@ -287,7 +287,7 @@ export const commentsQuery = {
 
 ###### comments.reducer.ts
 
-```ts
+```typescript
 import { CommentsAction, CommentsActionTypes } from './comments.actions';
 import { Comments, CommentsState } from './comments.reducer';
 
@@ -331,7 +331,7 @@ export function commentsReducer(
 
 ###### comments.effects.ts
 
-```ts
+```typescript
 import { Injectable } from '@angular/core';
 import { Effect, Actions } from '@ngrx/effects';
 import { DataPersistence } from '@nrwl/nx';
@@ -374,7 +374,7 @@ export class CommentsEffects {
 If you are register the Comments NgRx as part of the `.forRoot()` state, then:
 e.g.
 
-```console
+```bash
 ng generate ngrx Comments --root --module=apps/myapp/src/app/app.module.ts
 ```
 
@@ -384,7 +384,7 @@ will update the root ngModule with NgRx configurations:
  
 ###### apps/myapp/src/app/app.module.ts
 
-```ts
+```typescript
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
@@ -432,7 +432,7 @@ Otherwise you are registering your Comments state management as a feature librar
 
 The command:
 
-```console
+```bash
 ng g ngrx Comments --module=libs/comments/state/src/lib/comments-state.module.ts
 ```
 
@@ -442,7 +442,7 @@ which will update the feature library ngModule with NgRx Comments configurations
 
 ###### libs/comments/state/src/lib/comments-state.module.ts
 
-```ts
+```typescript
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -476,7 +476,7 @@ Finally, we update the <Feature> library's barrel `index.ts` to export the updat
 
 ###### libs/comments/comments-state/src/lib/index.ts
 
-```ts
+```typescript
 export * from './lib/+state/comments.selectors';
 export * from './lib/+state/comments.reducer';
 
@@ -484,7 +484,3 @@ export { CommentsStateModule } from './lib/comments-state.module';
 ```
 
 <br/>
-
----
-
-For developers interested in generating NgRx Facades, see [Building NgRx Facades](guide-ngrx-with-facades.md).
