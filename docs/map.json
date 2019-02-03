@@ -34,5 +34,20 @@
         "id": "modernizing-dev-workflow"
       }
     ]
+  },
+  {
+    "name": "Guides",
+    "id": "guides",
+    "itemList": [
+      {
+        "name": "Using Cypress",
+        "id": "cypress"
+      },
+      {
+        "name": "Using Jest",
+        "id": "jest"
+      }
+    ]
   }
+
 ]

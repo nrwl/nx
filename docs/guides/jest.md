@@ -1,5 +1,7 @@
 # What is Jest?
 
+![Jest logo](./jest-logo.png)
+
 [Jest](https://jestjs.io/) is an open source test runner created by Facebook. It is used within Facebook internally as well as many other enterprise and open source projects including Nx itself!
 
 ## Reasons for Using Jest
@@ -13,39 +15,58 @@
 
 ## How to use Jest
 
-### Generating an Application which uses Jest
+By default, Nx will use Jest when creating applications and libraries.
 
-The following command will generate a new application which is configured to use jest as its test runner.
-
-```sh
-ng generate application my-app --unit-test-runner jest
+```
+apps/
+  frontend/
+    src/
+      app/
+      assets/
+      environments/
+      favicon.ico
+      index.html
+      main.ts
+      polyfills.ts
+      styles.css
+      test.ts
+    browserslist
+    jest.conf.js # <= jest config
+    tsconfig.json
+    tsconfig.app.json
+    tsconfig.spec.json
+    tslint.json
+  frontend-e2e/
+    ...
+libs/
+  ...
+tools/
+  ...
+angular.json
+nx.json
+package.json
+tsconfig.json
+tslint.json
 ```
 
-### Generating a Library which uses Jest
+Older versions of Nx used Karam as a default test runner. For those workspace, you have provide the `--unit-test-runner=jest` option when creating applications or libraries.
 
-The following command will generate a new library which is configured to use jest as its test runner.
 
-```sh
-ng generate library libname --unit-test-runner jest
-```
+### Running Tests
 
-### Testing a project which uses Jest
-
-Testing a project using Jest within the Nx Workspace is almost identical to testing any other project. Use the following command to execute the unit tests in the `libname` lib:
-
-```sh
-ng test libname
+```bash
+ng test frontend
 ```
 
 ### Snapshot Testing
 
 Jest has support for **Snapshot Testing**, a tool which simplifies validating data did not change. Check out the [official Jest Documentation on Snapshot Testing](https://jestjs.io/docs/en/snapshot-testing).
 
-#### Writing tests using Snapshot Testing
+#### Writing Tests Using Snapshot Testing
 
 To write a test which uses **Snapshot Testing**, use the `toMatchSnapshot()` matcher.
 
-```ts
+```typescript
 describe('Home Page', () => {
   it('should have a header', () => {
     const header = fixture.nativeElement.querySelector('header');
@@ -56,7 +77,7 @@ describe('Home Page', () => {
 
 The snapshot will be generated the first time the test is run. If the contents of that snapshot change, the test will fail indicating unexpected changes to the snapshot. Below is an example of the test results if the hamburger icon disappears unintentionally.
 
-```sh
+```bash
 Home Page > should have a header
  expect(value).toMatchSnapshot()
  Received value does not match stored snapshot "Home Page should have a header 1".
@@ -78,34 +99,26 @@ Home Page > should have a header
 
 When intentionally changing the contents of a snapshot, you can run tests with the `--updateSnapshot` flag to update failing snapshots instead of failing the test.
 
-```sh
+```bash
 ng test libname --updateSnapshot
 ```
 
 > Make sure no **unintentional** snapshots are failing **BEFORE** updating failing snapshots.
 
-### Using Jest locally
+### Watching for Changes
 
 If you are a developer making changes locally to a library, start jest's interactive watch mode to run the library's tests related to uncommitted changes and then rerun tests whenever files are changed.
 
-```sh
+```bash
 ng test libname --watch
 ```
 
-#### Debugging failing tests using Jest
+#### Debugging Failing Tests
 
 To debug failing tests using Chrome Devtools or an IDE you can run the test command through node's `--inspect-brk` flag:
 
-```sh
+```bash
 node --inspect-brk ./node_modules/.bin/ng test libname
 ```
 
 Now, you can visit [chrome://inspect](chrome://inspect) in Chrome and inspect the target to attach to the node process. You can now use Chrome Devtools to step through your code line by line and debug the cause of the failing tests. Visit the official [Jest documentation](https://jestjs.io/docs/en/troubleshooting#tests-are-failing-and-you-don-t-know-why) to find out more.
-
-### Using Jest in CI/CD
-
-When using Jest in a CI environment, you can continue to use affected to isolate tests affected by the changes in the PR.
-
-```sh
-yarn affected:test --base=master
-```
