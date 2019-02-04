@@ -1,4 +1,4 @@
-# What is Cypress?
+# Using Cypress
 
 ![Cypress logo](../fundamentals/cypress-logo.png)
 
@@ -62,7 +62,7 @@ Simply run `ng e2e frontend-e2e` to execute e2e tests with Cypress.
 
 By default, Cypress will run in “headed” mode (you will see the tests executing in a new browser window). You will have the result of all the tests and errors (if any) in your terminal.
 
-Screenshots and Videos will be accessible respectively in `/dist/apps/frontend/screenshots` and `/dist/apps/frontend/videos` by default.
+Screenshots and videos will be accessible in `/dist/apps/frontend/screenshots` and `/dist/apps/frontend/videos`.
 
 ### Watching for Changes
 

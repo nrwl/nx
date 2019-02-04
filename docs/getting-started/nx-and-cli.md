@@ -44,7 +44,7 @@ Now, add the right proxy configuration:
 }
 ```
 
-Finally, you can run `ng serve backend` and `ng serve frontend`. There is a lot more to full-stack development in Nx, which you can read about [here](../fundamentals/full-stack).
+Finally, you can run `ng serve backend` and `ng serve frontend`. There is a lot more to full-stack development in Nx, which you can read about [here](../fundamentals/full-stack-development).
 
 ## Use effective development practices pioneered at Google
 
@@ -125,6 +125,8 @@ This is a hard requirement for monorepo-style development. Nx implements it.
 
 In addition to using the monorepo, Google is also know for its use of automation and tooling. Nx adds powerful capabilities helping your team promote best practices and ensure consistency.
 
+Read more about how Nx helps you develop like Google [here](../fundamentals/building-like-google).
+
 ## Use Innovative Tools
 
 Tools like Cypress, Jest, Prettier, and Nest have gained a lot of popularity.
@@ -136,7 +138,8 @@ Adding these tools to the dev workflow is challenging in a regular CLI project. 
 When using Nx, adding Cypress or Jest is easy:
 
 ```bash
-ng g application myapp --e2eTestRunner=cypress --unitTestRunner=jest
+ng g application myapp --e2e-test-runner=cypress --unit-test-runner=jest # cyrpess and jest are actually defaults
+ng g application myapp --e2e-test-runner=protractor --unit-test-runner=karma
 ```
 
 Tests can then be run just like you would run them normally:
@@ -145,6 +148,8 @@ Tests can then be run just like you would run them normally:
 ng test myapp
 ng e2e myapp
 ```
+
+Read more about using innovative tools [here](../fundamentals/modernizing-dev-workflow).
 
 ## Summary
 

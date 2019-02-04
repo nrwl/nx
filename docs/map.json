@@ -49,15 +49,15 @@
       },
       {
         "name": "Rebuilding and Retesting What is Affected",
-        "id": "affected"
+        "id": "monorepo-affected"
       },
       {
         "name": "Analysing & Visualizing Workspaces",
-        "id": "dependency-diagrams"
+        "id": "monorepo-dependency-diagrams"
       },
       {
         "name": "Imposing Constraints on the Dependency Graph",
-        "id": "tags"
+        "id": "monorepo-tags"
       },
       {
         "name": "Setting Up NgRx",

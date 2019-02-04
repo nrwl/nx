@@ -1,7 +1,6 @@
 # Imposing Constraints on the Dependency Graph
 
-If you partition your code into well-defined cohesive units, even a small organization will end up with a dozen apps and dozens or hundreds of libs. If all of them can depend on each other freely,
-the chaos will ensue and the workspace will become unmanageable.
+If you partition your code into well-defined cohesive units, even a small organization will end up with a dozen apps and dozens or hundreds of libs. If all of them can depend on each other freely, the chaos will ensue and the workspace will become unmanageable.
 
 To help with that Nx uses code analyses to make sure projects can only depend on each other's well-defined public API. It also allows you to declaratively impose constraints on how projects can depend on each other.
 
@@ -81,9 +80,9 @@ Next open the top level `tslint.json` to add the constraints.
 }
 ```
 
-With these constrains in place, `scope:client` projects can only depend on other `scope:client` projects or on `scope:shared` projects. And `scope:admin` projects can only depend on other `scope:admin` projects or on `scope:shared` projects. Projects without any tags cannot depend on any other projects.
+With these constrains in place, `scope:client` projects can only depend on other `scope:client` projects or on `scope:shared` projects. And `scope:admin` projects can only depend on other `scope:admin` projects or on `scope:shared` projects. So `scope:client` and `scope:admin` cannot depend on each other.
 
-If you add the following, projects without any tags will be able to depend on any other project.
+Projects without any tags cannot depend on any other projects. If you add the following, projects without any tags will be able to depend on any other project.
 
 ```json
 {
@@ -93,9 +92,9 @@ If you add the following, projects without any tags will be able to depend on an
 ```
 
 If you try to violate the constrains, you will get an err:
-  
+
 ![dependency-graph-constraints-lint-error](../fundamentals/lint-error.png)
 
 ## Multiple Dimensions
 
-The example above shows using a single dimension: `scope`. It's the most commonly used done. But there are other dimensions that you can find useful. You can define which projects contain components, NgRx code, and features, so you, for instance, can disallow projects containing dumb UI components depend on NgRx. You can define which projects are experimental and which are stable, so stable applications cannot depend on experimental projects etc. You can define which projects have server-side code and which have client-side code to make sure your node app doesn't bundle in Angular.
+The example above shows using a single dimension: `scope`. It's the most commonly used done. But you can find other dimensions useful. You can define which projects contain components, NgRx code, and features, so you, for instance, can disallow projects containing dumb UI components depend on NgRx. You can define which projects are experimental and which are stable, so stable applications cannot depend on experimental projects etc. You can define which projects have server-side code and which have client-side code to make sure your node app doesn't bundle in Angular.

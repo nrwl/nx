@@ -130,10 +130,8 @@ To be able to build a library independently, you can pass `--publishable` when c
 You can import library like this:
 
 ```typescript
-import { SomeToken } from '@myorg/mylib';
+import { SomeToken } from '@myorg/mylib'; // the `@myorg` scope is configured in `nx.json`.
 ```
-
-The `@myorg` scope is configured in `nx.json`.
 
 ### Sharing Code
 
@@ -173,6 +171,8 @@ yarn affected --target=lint --base=master # reruns any target (for instance lint
 
 Nx will topologically sort the projects, and will run what it can in parallel. The fact that Nx can use its dependency graph to rebuild and retest the minimal number of projects necessary is crucial. Without this the repo won't scale beyond a handful of projects.
 
+Read more about how to use `affected:*` commands [here](../guides/monorepo-affected).
+
 ### Imposing Constraints on the Dependency Graph
 
 If you partition your code into well-defined cohesive units, even a small organization will end up with a dozen applications and dozens or hundreds of libraries. If all of them can depend on each other freely, chaos will ensue and the workspace will become unmanageable.
@@ -210,23 +210,27 @@ For instance, with this configuration, when you import private client code from 
 
 ![Lint Error](./lint-error.png)
 
+Read more about this feature [here](../guides/monorepo-tags).
+
 ## Tools & Automation
 
 In addition to implementing monorepo-style of development, Nx brings in another key element of Google dev culture--emphasis on tooling.
 
 ### Workspace Schematics
 
-Schematics is what what powers all Angular CLI (and Nx) code generation. With Nx, you can easily define workspace-specific schematics that you can then use to enforce best practices. Read more about it [here](TODO).
+Schematics is what what powers all Angular CLI (and Nx) code generation. With Nx, you can easily define workspace-specific schematics that you can then use to enforce best practices. Read more about it [here](../guides/tools-workspace-schematics).
 
 ### Code Formatting
 
 Pointing out code formatting issue isn't the best way to spend the time allocated for code reviews. We know that, and that's why Nx comes with Prettier support. Run:
 
-```
+```bash
 yarn format:write # formats the files
 
 yarn format:check # checks that the formatting is correct (used in CI)
 ```
+
+Read more about it [here](../guides/modernize-prettier).
 
 ## Understanding Nx.json
 
@@ -286,7 +290,7 @@ In this example, any change to `package.json` will only affect `mylib`.
 }
 ```
 
-The `tags` array is used to impose constraints on the dependency graph. Read more about it [here](TODO).
+The `tags` array is used to impose constraints on the dependency graph. Read more about it [here](../guides/monorepo-tags).
 
 Nx uses its advanced code analysis to construct a dependency graph of all applications and libraries. Some dependencies, however, cannot be determined statically. You can use the `implicitDependencies` array to list the dependencies that cannot be determined statically.
 

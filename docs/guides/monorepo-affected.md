@@ -1,8 +1,8 @@
 # Rebuilding and Retesting What is Affected
 
-As with a regular CLI project, when using Nx you can build and test apps and libs.
+As with a regular CLI project, when using Nx you can build and test individual apps and libs.
 
-```console
+```bash
 ng g app client
 ng g app admin
 ng g lib client-feature-main
@@ -22,7 +22,7 @@ Now imagine, `admin` depends on `admin-feature-permissions`. If we make a change
 
 Typically, you would do it like this:
 
-```console
+```bash
 ng test admin-feature-permissions
 ng build admin
 ng test admin
@@ -43,21 +43,21 @@ Run `npm run dep-graph` or `yarn dep-graph` to see the dependency graph.
 
 To calculate the project affected by your change, Nx needs to know what file you changed. The most direct way to do it is by passing `--files`:
 
-```
+```bash
 npm run affected:dep-graph -- --files=libs/admin-feature-permissions/src/index.ts
 ```
 
 ![dependency-graph-affected](./affected.png)
 
-If you use git, you can use it to determine what files have changed.
+In practice it's easier to use git to determine what files have changed.
 
-```
+```bash
 npm run affected:dep-graph -- --base=master --head=HEAD
 ```
 
 The `--head` defaults to `HEAD`, so when running it locally you can usually omit it:
 
-```
+```bash
 npm run affected:dep-graph -- --base=master
 ```
 
@@ -65,7 +65,7 @@ Nx will find the most common ancestor of the base and head SHAs and will use it 
 
 ## Building/Testing/Printing Affected Projects
 
-```
+```bash
 npm run affected:apps -- --base=master # prints affected apps
 npm run affected:libs -- --base=master # prints affected libs
 npm run affected:build -- --base=master # builds affected apps and libs
@@ -76,7 +76,7 @@ npm run affected:e2e -- --base=master # e2e tests affected apps
 
 All of these are just shortcuts for the following:
 
-```
+```bash
 npm run affected -- --target=ANYTARGET --base=master # run ANYTARGET for all affected apps and libs
 ```
 
@@ -86,16 +86,16 @@ Other options will forwarded to the underlying target (e.g., `yarn affected:test
 
 The SHAs you pass must be defined in the git repository. The `master` and `HEAD` SHAs are what you normally use while developing. Most likely you will want to provision other SHAs in your CI environment.
 
-```
+```bash
 npm run affected:build -- --base=origin/master --head=$PR_BRANCH_NAME # where PR_BRANCH_NAME is defined by your CI system
 npm run affected:build -- --base=origin/master~1 --head=origin/master # rerun what is affected by the last commit in master
 ```
 
 ## Running Targets in Parallel
 
-Running targets in parallel can significantly speed up your CI time.
+Running targets in parallel can significantly speed up your CI time. This is particularly useful in CI.
 
-```
+```bash
 npm run affected:build -- --base=master --parallel
 npm run affected:build -- --base=master --parallel --maxParallel=5
 ```
@@ -104,7 +104,7 @@ npm run affected:build -- --base=master --parallel --maxParallel=5
 
 You should never do it in CI, but it is sometimes useful to rerun all targets locally.
 
-```
+```bash
 npm run affected:build -- --all
 ```
 
@@ -112,7 +112,7 @@ npm run affected:build -- --all
 
 After you run any affected command, Nx remembers which targets fail. So if you want to rerun only the failed once, pass: `--only-failed`;
 
-```
+```bash
 npm run affected:build -- --only-failed
 ```
 
@@ -120,13 +120,13 @@ npm run affected:build -- --only-failed
 
 Finally, you can exclude projects like this:
 
-```
-npm run affected:test -- --all --exlude=admin # retests everthing except admin
+```bash
+npm run affected:test -- --all --exlude=admin # retests everything except admin
 ```
 
 ## When Nx Can't Understand Your Repository
 
-Nx uses its advanced code analysis to construct a dependency graph of all applications and libraries. Some dependencies, however, cannot be determined statically. You can define them yourself in `nx.json`.
+Nx uses its advanced code analysis to construct a dependency graph of all applications and libraries. Some dependencies, however, cannot be determined statically. But you can define them yourself in `nx.json`.
 
 ```json
 {
@@ -171,7 +171,7 @@ Nx uses its advanced code analysis to construct a dependency graph of all applic
 }
 ```
 
-The `implicitDependencies` map is used to define what projects are affected by global files. In this example, any change to `package.json` will affect all the projects in the workspace, so all of them will have to be rebuilt and retested. You can replace `*` with a list of projects.
+The `implicitDependencies` map is used to define what projects are affected by global files. In this example, any change to `package.json` will affect all the projects in the workspace, so all of them will have to be rebuilt and retested. You can replace `*` with an explicit list of projects.
 
 ```json
 {

@@ -17,7 +17,7 @@ Nest is a Node.js framework designed for building scalable server-side applicati
 - It emphasises testability.
 - Its configuration APIs are similar to Angular as well.
 
-Many conventions and best practices used in Angular applications can be also be used when using Nest.
+Many conventions and best practices used in Angular applications can be also be used in Nest.
 
 To create a new Nest application, run:
 

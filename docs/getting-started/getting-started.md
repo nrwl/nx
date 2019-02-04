@@ -16,8 +16,6 @@ or
 yarn global add @angular/cli
 ```
 
-> Note: If you do not have the Angular CLI installed globally you may not be able to use ng from the terminal to run CLI commands within the project. But the `package.json` file comes with npm scripts to run ng commands, so you can run npm start to ng serve and you can run `npm run ng <command>` to run any of the ng commands.
-
 After you have installed the Angular CLI, install `@nrwl/schematics`.
 
 ```bash
@@ -29,8 +27,6 @@ or
 ```bash
 yarn global add @nrwl/schematics
 ```
-
-> If you want to work with the version still in development you can use `@nrwl/schematics@next` as the package to install.
 
 ## Nx Workspace
 
