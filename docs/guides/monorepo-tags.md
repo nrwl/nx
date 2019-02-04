@@ -93,7 +93,7 @@ If you add the following, projects without any tags will be able to depend on an
 ```
 
 If you try to violate the constrains, you will get an err:
-  
+
 ![dependency-graph-constraints-lint-error](../fundamentals/lint-error.png)
 
 ## Multiple Dimensions
