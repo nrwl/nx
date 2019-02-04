@@ -46,7 +46,7 @@ describe('Cypress E2E Test runner', () => {
       const originalContents = JSON.parse(
         readFile('apps/my-app-e2e/cypress.json')
       );
-      delete originalContents.fixtures;
+      delete originalContents.fixturesFolder;
       updateFile(
         'apps/my-app-e2e/cypress.json',
         JSON.stringify(originalContents)

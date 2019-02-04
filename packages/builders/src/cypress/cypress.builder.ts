@@ -155,13 +155,13 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
   private copyCypressFixtures(tsConfigPath: string, cypressConfigPath: string) {
     const cypressConfig = JSON.parse(readFile(cypressConfigPath));
     // DOn't copy fixtures if cypress config does not have it set
-    if (!cypressConfig.fixtures) {
+    if (!cypressConfig.fixturesFolder) {
       return;
     }
 
     copySync(
       `${path.dirname(tsConfigPath)}/src/fixtures`,
-      path.join(path.dirname(cypressConfigPath), cypressConfig.fixtures),
+      path.join(path.dirname(cypressConfigPath), cypressConfig.fixturesFolder),
       { overwrite: true }
     );
   }

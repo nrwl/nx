@@ -211,7 +211,7 @@ describe('Cypress builder', () => {
       fakeEventEmitter.emit('exit'); // Passing tsc command
     });
 
-    it('should copy fixtures files to out-dir', () => {
+    it('should copy fixtures folder to out-dir', () => {
       spyOn(fsUtility, 'readFile').and.callFake((path: string) => {
         return path.endsWith('tsconfig.e2e.json')
           ? JSON.stringify({
@@ -220,7 +220,7 @@ describe('Cypress builder', () => {
               }
             })
           : JSON.stringify({
-              fixtures: '../../dist/out-tsc/apps/my-app-e2e/src/fixtures'
+              fixturesFolder: '../../dist/out-tsc/apps/my-app-e2e/src/fixtures'
             });
       });
       const fakeEventEmitter = new EventEmitter();
@@ -253,7 +253,7 @@ describe('Cypress builder', () => {
       fakeEventEmitter.emit('exit'); // Passing tsc command
     });
 
-    it('should copy not fixtures files if they are not defined in the cypress config', () => {
+    it('should not copy fixtures folder if they are not defined in the cypress config', () => {
       spyOn(fsUtility, 'readFile').and.callFake((path: string) => {
         return path.endsWith('tsconfig.e2e.json')
           ? JSON.stringify({
