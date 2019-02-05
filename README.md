@@ -58,7 +58,7 @@ _Doesn't Angular CLI support having multiple projects in the same workspace?_
 
 Yes, starting with Angular CLI 6 you can add different types of projects to a single workspace (by default you can add applications and libraries). This is great, but is not sufficient to enable the monorepo-style development. Nx adds an extra layer of tooling to make this possible.
 
-In addition to using the monorepo, Google is also know for its use of automation. Nx adds powerful capabilities helping your team promote best practices and ensure consistency.
+In addition to using the monorepo, Google is also known for its use of automation. Nx adds powerful capabilities helping your team promote best practices and ensure consistency.
 
 ### Use Innovative Tools
 
