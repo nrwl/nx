@@ -28,6 +28,10 @@ export interface CypressBuilderOptions {
   browser?: string;
 }
 
+try {
+  require('dotenv').config();
+} catch (e) {}
+
 /**
  * @whatItDoes Implementation of the Cypress Builder, compile Typescript files,
  * build the devServer to serve the app then run Cypress e2e test runner.

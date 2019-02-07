@@ -17,6 +17,10 @@ import {
   AssetPatternObject
 } from '@angular-devkit/build-angular';
 
+try {
+  require('dotenv').config();
+} catch (e) {}
+
 export interface BuildNodeBuilderOptions {
   main: string;
   outputPath: string;

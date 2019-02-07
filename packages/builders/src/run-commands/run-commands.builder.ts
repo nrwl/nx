@@ -7,6 +7,10 @@ import {
 import { Observable } from 'rxjs';
 import { exec } from 'child_process';
 
+try {
+  require('dotenv').config();
+} catch (e) {}
+
 export interface RunCommandsBuilderOptions {
   commands: { command: string }[];
   parallel?: boolean;

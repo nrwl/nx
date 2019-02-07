@@ -363,9 +363,19 @@ const updateNgrx = updateJsonInTree('package.json', json => {
   return json;
 });
 
+const addDotEnv = updateJsonInTree('package.json', json => {
+  json.devDependencies = json.devDependencies || {};
+  json.devDependencies = {
+    ...json.devDependencies,
+    dotenv: '6.2.0'
+  };
+  return json;
+});
+
 export default function(): Rule {
   return chain([
     addExtensionRecommendations,
+    addDotEnv,
     migrateNgrx,
     updateNgrx,
     formatFiles()
