@@ -142,12 +142,16 @@ export function createApp(
       newProjectRoot: '',
       projects: {
         [appName]: {
-          root: `apps/${appName}/src`,
+          root: `apps/${appName}`,
+          sourceRoot: `apps/${appName}/src`,
           architect: {
             build: {
               options: {
                 main: `apps/${appName}/src/main.ts`
               }
+            },
+            serve: {
+              options: {}
             }
           }
         }

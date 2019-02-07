@@ -331,7 +331,6 @@ describe('NodeExecuteBuilder', () => {
   describe('waitUntilTasks', () => {
     beforeEach(() => {
       spyOn(architect, 'getBuilderConfiguration').and.callFake(opts => {
-        console.log(opts);
         if (opts.project === 'project1' && opts.target === 'target1')
           return { config: 'builderConfig1' };
         if (opts.project === 'project2' && opts.target === 'target2')
@@ -382,7 +381,6 @@ describe('NodeExecuteBuilder', () => {
 
     it('should not run the build if any of the tasks fail', done => {
       spyOn(architect, 'run').and.callFake(opts => {
-        console.log('config', opts);
         if (opts.config == 'builderConfig1') return of({ success: true });
         if (opts.config == 'builderConfig2')
           return of({ other: true }, { success: false });

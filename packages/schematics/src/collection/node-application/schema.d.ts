@@ -7,4 +7,5 @@ export interface Schema {
   directory?: string;
   unitTestRunner: UnitTestRunner;
   tags?: string;
+  frontendProject?: string;
 }
