@@ -15,7 +15,7 @@ import { join, normalize, Path } from '@angular-devkit/core';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { Schema } from './schema';
 import { offsetFromRoot } from '../../utils/common';
-import { updateJsonInTree } from '../../utils/ast-utils';
+import { getProjectConfig, updateJsonInTree } from '../../utils/ast-utils';
 import { toFileName } from '../../utils/name-utils';
 import {
   expressVersion,
@@ -193,6 +193,34 @@ function addAppFiles(options: NormalizedSchema): Rule {
   );
 }
 
+function addProxy(options: NormalizedSchema): Rule {
+  return (host: Tree, context: SchematicContext) => {
+    const projectConfig = getProjectConfig(host, options.frontendProject);
+    if (projectConfig.architect && projectConfig.architect.serve) {
+      const pathToProxyFile = `${projectConfig.root}/proxy.conf.json`;
+      host.create(
+        pathToProxyFile,
+        JSON.stringify(
+          {
+            '/api': {
+              target: 'http://localhost:3333',
+              secure: false
+            }
+          },
+          null,
+          2
+        )
+      );
+
+      updateJsonInTree('angular.json', json => {
+        projectConfig.architect.serve.options.proxyConfig = pathToProxyFile;
+        json.projects[options.frontendProject] = projectConfig;
+        return json;
+      })(host, context);
+    }
+  };
+}
+
 export default function(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(schema);
@@ -208,7 +236,8 @@ export default function(schema: Schema): Rule {
             skipSerializers: true
           })
         : noop(),
-      addTypes(options)
+      addTypes(options),
+      options.frontendProject ? addProxy(options) : noop()
     ])(host, context);
   };
 }

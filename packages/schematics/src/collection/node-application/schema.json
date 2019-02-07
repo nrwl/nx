@@ -56,6 +56,10 @@
       "type": "string",
       "description": "Add tags to the application (used for linting)",
       "x-prompt": "Which tags would you like to add to the node application? (used for linting)"
+    },
+    "frontendProject": {
+      "type": "string",
+      "description": "Frontend project that needs to access this application. This sets up proxy configuration."
     }
   },
   "required": []

@@ -1,7 +1,6 @@
-import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import * as path from 'path';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
 import {
+  createApp,
   createEmptyWorkspace,
   schematicRunner
 } from '../../utils/testing-utils';
@@ -286,6 +285,26 @@ describe('node-app', () => {
       );
       expect(tree.exists('apps/my-node-app/src/main.ts')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/src/app/.gitkeep')).toBeTruthy();
+    });
+  });
+
+  describe('frontendProject', () => {
+    it('should configure proxy', () => {
+      appTree = createApp(appTree, 'my-frontend');
+
+      const tree = schematicRunner.runSchematic(
+        'node-app',
+        { name: 'myNodeApp', frontendProject: 'my-frontend' },
+        appTree
+      );
+
+      expect(tree.exists('apps/my-frontend/proxy.conf.json')).toBeTruthy();
+      const serve = JSON.parse(tree.readContent('angular.json')).projects[
+        'my-frontend'
+      ].architect.serve;
+      expect(serve.options.proxyConfig).toEqual(
+        'apps/my-frontend/proxy.conf.json'
+      );
     });
   });
 });
