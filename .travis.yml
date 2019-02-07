@@ -5,6 +5,8 @@ matrix:
       node_js: 8.9.3
       dist: trusty
       sudo: required
+      addons:
+        chrome: stable
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "linux"  ]; then
@@ -20,9 +22,7 @@ script:
   - yarn test
   - yarn e2e
   - yarn checkcommit
-
-addons:
-  chrome: stable
+  - yarn documentation
 
 cache:
   directories:
