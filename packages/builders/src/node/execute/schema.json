@@ -7,6 +7,14 @@
       "type": "string",
       "description": "The target to run to build you the app"
     },
+    "waitUntilTargets": {
+      "type": "array",
+      "description": "The targets to run to before starting the node app",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    },
     "port": {
       "type": "number",
       "default": 7777,
