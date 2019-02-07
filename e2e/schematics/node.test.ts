@@ -4,7 +4,8 @@ import {
   copyMissingPackages,
   exists,
   runCLIAsync,
-  updateFile
+  updateFile,
+  readJson
 } from '../utils';
 import { fork, spawn, execSync } from 'child_process';
 import * as http from 'http';
@@ -13,7 +14,7 @@ import * as treeKill from 'tree-kill';
 
 function getData() {
   return new Promise(resolve => {
-    http.get('http://localhost:3333', res => {
+    http.get('http://localhost:3333/api', res => {
       expect(res.statusCode).toEqual(200);
       let data = '';
       res.on('data', chunk => {
@@ -52,21 +53,6 @@ describe('Node Applications', () => {
     const jestResult = await runCLIAsync('test node-app1');
     expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
 
-    function getData() {
-      return new Promise(resolve => {
-        http.get('http://localhost:3333', res => {
-          expect(res.statusCode).toEqual(200);
-          let data = '';
-          res.on('data', chunk => {
-            data += chunk;
-          });
-          res.once('end', () => {
-            resolve(data);
-          });
-        });
-      });
-    }
-
     await runCLIAsync('build node-app1');
 
     expect(exists('./tmp/proj/dist/apps/node-app1/main.js')).toBeTruthy();
@@ -102,6 +88,23 @@ describe('Node Applications', () => {
       });
     });
 
+    const config = readJson('angular.json');
+    config.projects['node-app1'].architect.waitAndPrint = {
+      builder: '@nrwl/builders:run-commands',
+      options: {
+        commands: [
+          {
+            command: 'sleep 1 && echo DONE'
+          }
+        ],
+        readyWhen: 'DONE'
+      }
+    };
+    config.projects['node-app1'].architect.serve.options.waitUntilTargets = [
+      'node-app1:waitAndPrint'
+    ];
+    updateFile('angular.json', JSON.stringify(config));
+
     const process = spawn(
       'node',
       ['./node_modules/.bin/ng', 'serve', 'node-app1'],
@@ -110,13 +113,17 @@ describe('Node Applications', () => {
       }
     );
 
+    let collectedOutput = '';
     process.stdout.on('data', async (data: Buffer) => {
+      collectedOutput += data.toString();
       if (!data.toString().includes('Listening at http://localhost:3333')) {
         return;
       }
+
       const result = await getData();
       expect(result).toEqual('Welcome to node-app1!');
       treeKill(process.pid, 'SIGTERM', err => {
+        expect(collectedOutput.startsWith('DONE')).toBeTruthy();
         expect(err).toBeFalsy();
         done();
       });

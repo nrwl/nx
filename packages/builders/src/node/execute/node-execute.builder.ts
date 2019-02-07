@@ -7,8 +7,8 @@ import {
 import { ChildProcess, fork } from 'child_process';
 import * as treeKill from 'tree-kill';
 
-import { Observable, bindCallback, of } from 'rxjs';
-import { concatMap, tap, mapTo } from 'rxjs/operators';
+import { Observable, bindCallback, of, zip } from 'rxjs';
+import { concatMap, tap, mapTo, first, map, filter } from 'rxjs/operators';
 
 import {
   BuildNodeBuilderOptions,
@@ -28,6 +28,7 @@ export const enum InspectType {
 export interface NodeExecuteBuilderOptions {
   inspect: boolean | InspectType;
   args: string[];
+  waitUntilTargets: string[];
   buildTarget: string;
   port: number;
 }
@@ -41,18 +42,29 @@ export class NodeExecuteBuilder implements Builder<NodeExecuteBuilderOptions> {
     target: BuilderConfiguration<NodeExecuteBuilderOptions>
   ): Observable<BuildEvent> {
     const options = target.options;
-
-    return this.startBuild(options).pipe(
-      concatMap((event: NodeBuildEvent) => {
-        if (event.success) {
-          return this.restartProcess(event.outfile, options).pipe(mapTo(event));
-        } else {
+    return this.runWaitUntilTargets(options).pipe(
+      concatMap(v => {
+        if (!v.success) {
           this.context.logger.error(
-            'There was an error with the build. See above.'
+            `One of the tasks specified in waitUntilTargets failed`
           );
-          this.context.logger.info(`${event.outfile} was not restarted.`);
-          return of(event);
+          return of({ success: false });
         }
+        return this.startBuild(options).pipe(
+          concatMap((event: NodeBuildEvent) => {
+            if (event.success) {
+              return this.restartProcess(event.outfile, options).pipe(
+                mapTo(event)
+              );
+            } else {
+              this.context.logger.error(
+                'There was an error with the build. See above.'
+              );
+              this.context.logger.info(`${event.outfile} was not restarted.`);
+              return of(event);
+            }
+          })
+        );
       })
     );
   }
@@ -110,7 +122,7 @@ export class NodeExecuteBuilder implements Builder<NodeExecuteBuilderOptions> {
   private startBuild(
     options: NodeExecuteBuilderOptions
   ): Observable<NodeBuildEvent> {
-    const builderConfig = this._getBuildBuilderConfig(options);
+    const builderConfig = this.getBuildBuilderConfig(options);
 
     return this.context.architect.getBuilderDescription(builderConfig).pipe(
       concatMap(buildDescription =>
@@ -140,7 +152,7 @@ export class NodeExecuteBuilder implements Builder<NodeExecuteBuilderOptions> {
     );
   }
 
-  private _getBuildBuilderConfig(options: NodeExecuteBuilderOptions) {
+  private getBuildBuilderConfig(options: NodeExecuteBuilderOptions) {
     const [project, target, configuration] = options.buildTarget.split(':');
 
     return this.context.architect.getBuilderConfiguration<
@@ -153,6 +165,48 @@ export class NodeExecuteBuilder implements Builder<NodeExecuteBuilderOptions> {
         watch: true
       }
     });
+  }
+
+  private runWaitUntilTargets(
+    options: NodeExecuteBuilderOptions
+  ): Observable<BuildEvent> {
+    if (!options.waitUntilTargets || options.waitUntilTargets.length === 0)
+      return of({ success: true });
+
+    return zip(
+      ...options.waitUntilTargets.map(b => {
+        const [project, target, configuration] = b.split(':');
+
+        const builderConfig = this.context.architect.getBuilderConfiguration<
+          BuildNodeBuilderOptions
+        >({
+          project,
+          target,
+          configuration
+        });
+
+        return this.context.architect.getBuilderDescription(builderConfig).pipe(
+          concatMap(buildDescription => {
+            return this.context.architect.validateBuilderOptions(
+              builderConfig,
+              buildDescription
+            );
+          }),
+          concatMap(builderConfig => {
+            return this.context.architect.run(
+              builderConfig,
+              this.context
+            ) as Observable<NodeBuildEvent>;
+          }),
+          filter(e => e.success !== undefined),
+          first()
+        );
+      })
+    ).pipe(
+      map(results => {
+        return { success: !results.some(r => !r.success) };
+      })
+    );
   }
 }
 

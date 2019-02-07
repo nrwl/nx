@@ -1,12 +1,13 @@
 import {
+  InspectType,
   NodeExecuteBuilder,
-  NodeExecuteBuilderOptions,
-  InspectType
+  NodeExecuteBuilderOptions
 } from './node-execute.builder';
 import { TestLogger } from '@angular-devkit/architect/testing';
 import { normalize } from '@angular-devkit/core';
 import { of } from 'rxjs';
 import { cold } from 'jasmine-marbles';
+
 jest.mock('child_process');
 let { fork } = require('child_process');
 jest.mock('tree-kill');
@@ -18,6 +19,7 @@ class MockArchitect {
       config: 'testConfig'
     };
   }
+
   run() {
     return cold('--a--b--a', {
       a: {
@@ -30,11 +32,13 @@ class MockArchitect {
       }
     });
   }
+
   getBuilderDescription() {
     return of({
       description: 'testDescription'
     });
   }
+
   validateBuilderOptions() {
     return of({
       options: {}
@@ -69,7 +73,8 @@ describe('NodeExecuteBuilder', () => {
       inspect: true,
       args: [],
       buildTarget: 'nodeapp:build',
-      port: 9229
+      port: 9229,
+      waitUntilTargets: []
     };
   });
 
@@ -321,5 +326,86 @@ describe('NodeExecuteBuilder', () => {
       })
     );
     expect(logger.warn).toHaveBeenCalled();
+  });
+
+  describe('waitUntilTasks', () => {
+    beforeEach(() => {
+      spyOn(architect, 'getBuilderConfiguration').and.callFake(opts => {
+        console.log(opts);
+        if (opts.project === 'project1' && opts.target === 'target1')
+          return { config: 'builderConfig1' };
+        if (opts.project === 'project2' && opts.target === 'target2')
+          return { config: 'builderConfig2' };
+        return new MockArchitect().getBuilderConfiguration();
+      });
+
+      spyOn(architect, 'validateBuilderOptions').and.callFake(opts => {
+        if (
+          opts.config === 'builderConfig1' ||
+          opts.config === 'builderConfig2'
+        )
+          return of(opts);
+        return new MockArchitect().validateBuilderOptions();
+      });
+    });
+
+    it('should run the tasks before starting the build', () => {
+      spyOn(architect, 'run').and.callFake(opts => {
+        if (opts.config == 'builderConfig1') return of({ success: true });
+        if (opts.config == 'builderConfig2') return of({ success: true });
+        return new MockArchitect().run();
+      });
+
+      expect(
+        builder.run({
+          root: normalize('/root'),
+          projectType: 'application',
+          builder: '@nrwl/builders:node-execute',
+          options: {
+            ...testOptions,
+            waitUntilTargets: ['project1:target1', 'project2:target2']
+          }
+        })
+      ).toBeObservable(
+        cold('--a--b--a', {
+          a: {
+            success: true,
+            outfile: 'outfile.js'
+          },
+          b: {
+            success: false,
+            outfile: 'outfile.js'
+          }
+        })
+      );
+    });
+
+    it('should not run the build if any of the tasks fail', done => {
+      spyOn(architect, 'run').and.callFake(opts => {
+        console.log('config', opts);
+        if (opts.config == 'builderConfig1') return of({ success: true });
+        if (opts.config == 'builderConfig2')
+          return of({ other: true }, { success: false });
+        return new MockArchitect().run();
+      });
+
+      const loggerError = spyOn(logger, 'error');
+
+      builder
+        .run({
+          root: normalize('/root'),
+          projectType: 'application',
+          builder: '@nrwl/builders:node-execute',
+          options: {
+            ...testOptions,
+            waitUntilTargets: ['project1:target1', 'project2:target2']
+          }
+        })
+        .subscribe(e => {
+          expect(e.success).toEqual(false);
+          expect(loggerError).toHaveBeenCalled();
+          done();
+        });
+    });
   });
 });
