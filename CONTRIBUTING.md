@@ -111,9 +111,10 @@ The type must be one of the following:
 
 The scope must be one of the following:
 
-- bazel
-- nx
-- schematics
+- node - anything backend specific
+- testing - anything related to jest or cypress
+- frontend - anything angular specific
+- nx - dependency management, basic workspace structure, etc
 
 ##### Subject
 
