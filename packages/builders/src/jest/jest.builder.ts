@@ -9,6 +9,10 @@ import { map } from 'rxjs/operators';
 
 import * as path from 'path';
 
+try {
+  require('dotenv').config();
+} catch (e) {}
+
 const { runCLI } = require('jest');
 
 export interface JestBuilderOptions {

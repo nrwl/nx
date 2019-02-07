@@ -141,23 +141,30 @@ describe('Update 7.6.0', () => {
     });
   });
 
+  describe('adding dotenv', () => {
+    it('should add dotenv as a dev dependency', async () => {
+      const result = await schematicRunner
+        .runSchematicAsync('update-7.6.0', {}, initialTree)
+        .toPromise();
+
+      expect(
+        readJsonInTree(result, 'package.json').devDependencies['dotenv']
+      ).toEqual('6.2.0');
+    });
+  });
+
   describe('NgRx Migration', () => {
     it('should update ngrx to 7.1.0', async () => {
       const result = await schematicRunner
         .runSchematicAsync('update-7.6.0', {}, initialTree)
         .toPromise();
 
-      expect(readJsonInTree(result, 'package.json')).toEqual({
-        dependencies: {
-          '@ngrx/effects': '7.2.0',
-          '@ngrx/router-store': '7.2.0',
-          '@ngrx/store': '7.2.0'
-        },
-        devDependencies: {
-          '@ngrx/schematics': '7.2.0',
-          '@ngrx/store-devtools': '7.2.0'
-        }
-      });
+      const json = readJsonInTree(result, 'package.json');
+      expect(json.dependencies['@ngrx/effects']).toEqual('7.2.0');
+      expect(json.dependencies['@ngrx/router-store']).toEqual('7.2.0');
+      expect(json.dependencies['@ngrx/store']).toEqual('7.2.0');
+      expect(json.devDependencies['@ngrx/schematics']).toEqual('7.2.0');
+      expect(json.devDependencies['@ngrx/store-devtools']).toEqual('7.2.0');
     });
 
     it('should convert ofType code', async () => {
