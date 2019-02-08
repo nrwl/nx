@@ -42,7 +42,7 @@ To make sure you changes do not break any unit tests, run the following:
 yarn e2e
 ```
 
-Running e2e tests can take some time, so if it often useful to run a single test. You can do it as follows:
+Running e2e tests can take some time, so it is often useful to run a single test. You can do it as follows:
 
 ```bash
 yarn e2e affected
@@ -53,7 +53,7 @@ yarn e2e affected
 To build Nx on Windows, you need to use WSL.
 
 - Run `yarn install` in WSL. Yarn will compile several dependencies. If you don't run `install` in WSL, they will be compiled for Windows.
-- Run `yarn test:scheamtics` and other commands in WSL.
+- Run `yarn test:schematics` and other commands in WSL.
 
 ## Submission Guidelines
 
