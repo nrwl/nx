@@ -122,7 +122,8 @@ export default class RunCommandsBuilder
 
   private createProcess(command: string, readyWhen: string): Promise<boolean> {
     return new Promise(res => {
-      const childProcess = exec(command, {});
+      const TEN_MEGABYTES = 1024 * 10000;
+      const childProcess = exec(command, { maxBuffer: TEN_MEGABYTES });
       /**
        * Ensure the child process is killed when the parent exits
        */
