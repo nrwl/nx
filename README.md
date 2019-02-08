@@ -109,7 +109,7 @@ yarn global add @nrwl/schematics
 To create an Nx workspace, run:
 
 ```bash
-ng new myworkspace --collection=@nrw/schematics
+ng new myworkspace --collection=@nrwl/schematics
 ```
 
 The `ng new` command uses globally-installed packages. Anything installed globally can be in a messy state. If you have any problems running the command above, you can also run:
