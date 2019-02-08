@@ -372,12 +372,42 @@ const addDotEnv = updateJsonInTree('package.json', json => {
   return json;
 });
 
+const setDefaults = updateJsonInTree('angular.json', json => {
+  if (!json.schematics) {
+    json.schematics = {};
+  }
+  if (!json.schematics['@nrwl/schematics:library']) {
+    json.schematics['@nrwl/schematics:library'] = {};
+  }
+  if (!json.schematics['@nrwl/schematics:library'].unitTestRunner) {
+    json.schematics['@nrwl/schematics:library'].unitTestRunner = 'karma';
+  }
+  if (!json.schematics['@nrwl/schematics:application']) {
+    json.schematics['@nrwl/schematics:application'] = {};
+  }
+  if (!json.schematics['@nrwl/schematics:application'].unitTestRunner) {
+    json.schematics['@nrwl/schematics:application'].unitTestRunner = 'karma';
+  }
+  if (!json.schematics['@nrwl/schematics:application'].e2eTestRunner) {
+    json.schematics['@nrwl/schematics:application'].e2eTestRunner =
+      'protractor';
+  }
+  if (!json.schematics['@nrwl/schematics:node-application']) {
+    json.schematics['@nrwl/schematics:node-application'] = {};
+  }
+  if (!json.schematics['@nrwl/schematics:node-application'].framework) {
+    json.schematics['@nrwl/schematics:node-application'].framework = 'express';
+  }
+  return json;
+});
+
 export default function(): Rule {
   return chain([
     addExtensionRecommendations,
     addDotEnv,
     migrateNgrx,
     updateNgrx,
+    setDefaults,
     formatFiles()
   ]);
 }

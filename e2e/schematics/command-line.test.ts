@@ -8,18 +8,28 @@ import {
   runCLI,
   runCommand,
   updateFile,
-  exists
+  exists,
+  ensureProject,
+  uniq
 } from '../utils';
 
 describe('Command line', () => {
   it('lint should ensure module boundaries', () => {
-    newProject();
-    newApp('myapp --tags=validtag');
-    newApp('myapp2');
-    newLib('mylib');
-    newLib('lazylib');
-    newLib('invalidtaglib --tags=invalidtag');
-    newLib('validtaglib --tags=validtag');
+    ensureProject();
+
+    const myapp = uniq('myapp');
+    const myapp2 = uniq('myapp2');
+    const mylib = uniq('mylib');
+    const lazylib = uniq('lazylib');
+    const invalidtaglib = uniq('invalidtaglib');
+    const validtaglib = uniq('validtaglib');
+
+    newApp(`${myapp} --tags=validtag`);
+    newApp(`${myapp2}`);
+    newLib(`${mylib}`);
+    newLib(`${lazylib}`);
+    newLib(`${invalidtaglib} --tags=invalidtag`);
+    newLib(`${validtaglib} --tags=validtag`);
 
     const tslint = readJson('tslint.json');
     tslint.rules['nx-enforce-module-boundaries'][1].depConstraints = [
@@ -29,20 +39,20 @@ describe('Command line', () => {
     updateFile('tslint.json', JSON.stringify(tslint, null, 2));
 
     updateFile(
-      'apps/myapp/src/main.ts',
+      `apps/${myapp}/src/main.ts`,
       `
-      import '../../../libs/mylib';
-      import '@proj/lazylib';
-      import '@proj/mylib/deep';
-      import '@proj/myapp2';
-      import '@proj/invalidtaglib';
-      import '@proj/validtaglib';
+      import '../../../libs/${mylib}';
+      import '@proj/${lazylib}';
+      import '@proj/${mylib}/deep';
+      import '@proj/${myapp2}';
+      import '@proj/${invalidtaglib}';
+      import '@proj/${validtaglib}';
 
-      const s = {loadChildren: '@proj/lazylib'};
+      const s = {loadChildren: '@proj/${lazylib}'};
     `
     );
 
-    const out = runCLI('lint', { silenceError: true });
+    const out = runCLI(`lint ${myapp}`, { silenceError: true });
     expect(out).toContain('library imports must start with @proj/');
     expect(out).toContain('imports of lazy-loaded libraries are forbidden');
     expect(out).toContain('deep imports into libraries are forbidden');
@@ -52,139 +62,143 @@ describe('Command line', () => {
     );
   }, 1000000);
 
-  it('should run nx lint', () => {
-    newProject();
-    newApp('myapp');
-    newApp('app_before');
-    runCommand('mv apps/app-before apps/app-after');
+  describe('nx lint', () => {
+    afterAll(() => {
+      newProject();
+    });
 
-    const stdout = runCommand('npm run lint');
+    it('should run nx lint', () => {
+      ensureProject();
+      const appBefore = uniq('before');
+      const appAfter = uniq('after');
 
-    expect(stdout).toContain(
-      `Cannot find project 'app-before' in 'apps/app-before/'`
-    );
-    expect(stdout).toContain(
-      `The 'apps/app-after/browserslist' file doesn't belong to any project.`
-    );
-  });
+      newApp(appBefore);
+      runCommand(`mv apps/${appBefore} apps/${appAfter}`);
 
-  it('update should print deprecation information', () => {
-    newProject();
-    const update = runCommand('./node_modules/.bin/nx update');
-    expect(update).toContain('Nx update is now deprecated.');
-    expect(update).toContain(
-      'Please use "ng update @nrwl/schematics" instead.'
-    );
+      const stdout = runCommand('./node_modules/.bin/nx lint');
+      expect(stdout).toContain(
+        `Cannot find project '${appBefore}' in 'apps/${appBefore}/'`
+      );
+      expect(stdout).toContain(
+        `The 'apps/${appAfter}/browserslist' file doesn't belong to any project.`
+      );
+    });
   });
 
   it('format should check and reformat the code', () => {
-    newProject();
-    newApp('myapp');
-    newLib('mylib');
+    ensureProject();
+    const myapp = uniq('myapp');
+    const mylib = uniq('mylib');
+
+    newApp(myapp);
+    newLib(mylib);
     updateFile(
-      'apps/myapp/src/main.ts',
+      `apps/${myapp}/src/main.ts`,
       `
          const x = 1111;
     `
     );
 
     updateFile(
-      'apps/myapp/src/app/app.module.ts',
+      `apps/${myapp}/src/app/app.module.ts`,
       `
          const y = 1111;
     `
     );
 
     updateFile(
-      'apps/myapp/src/app/app.component.ts',
+      `apps/${myapp}/src/app/app.component.ts`,
       `
          const z = 1111;
     `
     );
 
     updateFile(
-      'libs/mylib/index.ts',
+      `libs/${mylib}/index.ts`,
       `
          const x = 1111;
     `
     );
     updateFile(
-      'libs/mylib/src/mylib.module.ts',
+      `libs/${mylib}/src/${mylib}.module.ts`,
       `
          const y = 1111;
     `
     );
 
     let stdout = runCommand(
-      'npm run -s format:check -- --files="libs/mylib/index.ts" --libs-and-apps'
+      `npm run -s format:check -- --files="libs/${mylib}/index.ts" --libs-and-apps`
     );
-    expect(stdout).toContain('libs/mylib/index.ts');
-    expect(stdout).toContain('libs/mylib/src/mylib.module.ts');
+    expect(stdout).toContain(`libs/${mylib}/index.ts`);
+    expect(stdout).toContain(`libs/${mylib}/src/${mylib}.module.ts`);
 
-    stdout = runCommand('npm run -s format:check');
-    expect(stdout).toContain('apps/myapp/src/main.ts');
-    expect(stdout).toContain('apps/myapp/src/app/app.module.ts');
-    expect(stdout).toContain('apps/myapp/src/app/app.component.ts');
+    stdout = runCommand(`npm run -s format:check`);
+    expect(stdout).toContain(`apps/${myapp}/src/main.ts`);
+    expect(stdout).toContain(`apps/${myapp}/src/app/app.module.ts`);
+    expect(stdout).toContain(`apps/${myapp}/src/app/app.component.ts`);
 
     runCommand(
-      'npm run format:write -- --files="apps/myapp/src/app/app.module.ts,apps/myapp/src/app/app.component.ts"'
+      `npm run format:write -- --files="apps/${myapp}/src/app/app.module.ts,apps/${myapp}/src/app/app.component.ts"`
     );
 
     stdout = runCommand('npm run -s format:check');
 
-    expect(stdout).toContain('apps/myapp/src/main.ts');
-    expect(stdout).not.toContain('apps/myapp/src/app/app.module.ts');
-    expect(stdout).not.toContain('apps/myapp/src/app/app.component.ts');
+    expect(stdout).toContain(`apps/${myapp}/src/main.ts`);
+    expect(stdout).not.toContain(`apps/${myapp}/src/app/app.module.ts`);
+    expect(stdout).not.toContain(`apps/${myapp}/src/app/app.component.ts`);
 
     runCommand('npm run format:write');
     expect(runCommand('npm run -s format:check')).toEqual('');
-  }, 1000000);
+  });
 
   it('should support workspace-specific schematics', () => {
-    newProject();
-    runCLI('g workspace-schematic custom --no-interactive');
+    ensureProject();
+    const custom = uniq('custom');
+    runCLI(`g workspace-schematic ${custom} --no-interactive`);
     checkFilesExist(
-      'tools/schematics/custom/index.ts',
-      'tools/schematics/custom/schema.json'
+      `tools/schematics/${custom}/index.ts`,
+      `tools/schematics/${custom}/schema.json`
     );
 
-    const json = readJson('tools/schematics/custom/schema.json');
+    const json = readJson(`tools/schematics/${custom}/schema.json`);
     json.properties['directory'] = {
       type: 'string',
       description: 'lib directory'
     };
-    updateFile('tools/schematics/custom/schema.json', JSON.stringify(json));
+    updateFile(`tools/schematics/${custom}/schema.json`, JSON.stringify(json));
 
-    const indexFile = readFile('tools/schematics/custom/index.ts');
+    const indexFile = readFile(`tools/schematics/${custom}/index.ts`);
     updateFile(
-      'tools/schematics/custom/index.ts',
+      `tools/schematics/${custom}/index.ts`,
       indexFile.replace(
         'name: schema.name',
         'name: schema.name, directory: schema.directory'
       )
     );
 
+    const workspace = uniq('workspace');
     const dryRunOutput = runCommand(
-      'npm run workspace-schematic custom mylib -- --no-interactive --directory=dir -d'
+      `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --directory=dir -d`
     );
-    expect(exists('libs/dir/mylib/src/index.ts')).toEqual(false);
+    expect(exists(`libs/dir/${workspace}/src/index.ts`)).toEqual(false);
     expect(dryRunOutput).toContain(
-      'create libs/dir/mylib/src/lib/dir-mylib.module.ts'
+      `create libs/dir/${workspace}/src/lib/dir-${workspace}.module.ts`
     );
     expect(dryRunOutput).toContain('update angular.json');
     expect(dryRunOutput).toContain('update nx.json');
 
     const output = runCommand(
-      'npm run workspace-schematic custom mylib -- --no-interactive --directory=dir'
+      `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --directory=dir`
     );
-    checkFilesExist('libs/dir/mylib/src/index.ts');
+    checkFilesExist(`libs/dir/${workspace}/src/index.ts`);
     expect(output).toContain(
-      'create libs/dir/mylib/src/lib/dir-mylib.module.ts'
+      `create libs/dir/${workspace}/src/lib/dir-${workspace}.module.ts`
     );
     expect(output).toContain('update angular.json');
     expect(output).toContain('update nx.json');
 
-    runCLI('g workspace-schematic another --no-interactive');
+    const another = uniq('another');
+    runCLI(`g workspace-schematic ${another} --no-interactive`);
 
     const listSchematicsOutput = runCommand(
       'npm run workspace-schematic -- --list-schematics'
@@ -192,11 +206,11 @@ describe('Command line', () => {
     expect(listSchematicsOutput).toContain(
       'nx workspace-schematic "--list-schematics"'
     );
-    expect(listSchematicsOutput).toContain('custom');
-    expect(listSchematicsOutput).toContain('another');
+    expect(listSchematicsOutput).toContain(custom);
+    expect(listSchematicsOutput).toContain(another);
 
     const promptOutput = runCommand(
-      'npm run workspace-schematic custom mylib2 --'
+      `npm run workspace-schematic ${custom} mylib2 --`
     );
     expect(promptOutput).toContain(
       'In which directory should the library be generated?'
@@ -204,7 +218,7 @@ describe('Command line', () => {
   }, 1000000);
 
   describe('dep-graph', () => {
-    beforeEach(() => {
+    beforeAll(() => {
       newProject();
       newApp('myapp');
       newApp('myapp2');

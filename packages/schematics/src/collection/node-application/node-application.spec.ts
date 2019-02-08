@@ -83,7 +83,7 @@ describe('node-app', () => {
     it('should generate files', () => {
       const tree = schematicRunner.runSchematic(
         'node-app',
-        { name: 'myNodeApp' },
+        { name: 'myNodeApp', framework: 'express' },
         appTree
       );
       expect(tree.exists(`apps/my-node-app/jest.config.js`)).toBeTruthy();
@@ -121,7 +121,7 @@ describe('node-app', () => {
     it('should add dependencies', () => {
       const tree = schematicRunner.runSchematic(
         'node-app',
-        { name: 'myNodeApp' },
+        { name: 'myNodeApp', framework: 'express' },
         appTree
       );
       const packageJson = readJsonInTree(tree, 'package.json');

@@ -24,6 +24,6 @@ ng generate application ...
 | `skipTests`         | S     | Skip creating spec files.                         | boolean | `false`       |
 | `skipFormat`        |       | Skip formatting files                             | boolean | `false`       |
 | `skipPackageJson`   |       | Do not add dependencies to package.json.          | boolean | `false`       |
-| `unitTestRunner`    |       | Test runner to use for unit tests                 | string  | `karma`       |
-| `e2eTestRunner`     |       | Test runner to use for end to end (e2e) tests     | string  | `protractor`  |
+| `unitTestRunner`    |       | Test runner to use for unit tests                 | string  | `jest`        |
+| `e2eTestRunner`     |       | Test runner to use for end to end (e2e) tests     | string  | `cypress`     |
 | `tags`              |       | Add tags to the application (used for linting)    | string  | `undefined`   |

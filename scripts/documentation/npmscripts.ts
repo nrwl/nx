@@ -7,7 +7,7 @@ import { commandsObject } from '../../packages/schematics/src/command-line/nx-co
 
 const commandsOutputDirectory = path.join(
   __dirname,
-  '../../docs/command-lines'
+  '../../docs/api-npmscripts'
 );
 
 function getCommands(command) {
@@ -69,10 +69,10 @@ function generateFile(
 
 // TODO: Try to add option's type, examples, and group?
 // TODO: split one command per page / Create an index
-const commands = getCommands(commandsObject);
+const npmscripts = getCommands(commandsObject);
 
-Object.keys(commands)
-  .map(name => parseCommandInstance(name, commands[name]))
+Object.keys(npmscripts)
+  .map(name => parseCommandInstance(name, npmscripts[name]))
   .map(command => generateMarkdown(command))
   .forEach(templateObject =>
     generateFile(commandsOutputDirectory, templateObject)

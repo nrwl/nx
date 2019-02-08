@@ -15,7 +15,7 @@ ng generate node-application ...
 | ----------------- | ----- | ----------------------------------------------------------------------------------------- | ------- | ------------- |
 | `name`            |       | The name of the application.                                                              | string  | `undefined`   |
 | `directory`       |       | The directory of the new application.                                                     | string  | `undefined`   |
-| `framework`       |       | Node Framework to use for application.                                                    | string  | `express`     |
+| `framework`       |       | Node Framework to use for application.                                                    | string  | `nestjs`      |
 | `skipFormat`      |       | Skip formatting files                                                                     | boolean | `false`       |
 | `skipPackageJson` |       | Do not add dependencies to package.json.                                                  | boolean | `false`       |
 | `unitTestRunner`  |       | Test runner to use for unit tests                                                         | string  | `jest`        |

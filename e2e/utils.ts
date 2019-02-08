@@ -1,52 +1,61 @@
-import { execSync, exec } from 'child_process';
+import { exec, execSync } from 'child_process';
 import { readFileSync, statSync, writeFileSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
 
 const projectName: string = 'proj';
 
+export function uniq(prefix: string) {
+  return `${prefix}${Math.floor(Math.random() * 10000000)}`;
+}
+
 export function runNgNew(command?: string, silent?: boolean): string {
-  return execSync(
+  const buffer = execSync(
     `../node_modules/.bin/ng new proj --no-interactive ${command}`,
     {
       cwd: `./tmp`,
       ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
     }
-  ).toString();
+  );
+  return buffer ? buffer.toString() : null;
 }
 
 export function newProject(): void {
   cleanup();
   if (!directoryExists('./tmp/proj_backup')) {
-    // TODO delete the try catch after 0.8.0 is released
-    try {
-      runNgNew('--collection=@nrwl/schematics --npmScope=proj', true);
-    } catch (e) {}
+    runNgNew('--collection=@nrwl/schematics --npmScope=proj', true);
     copyMissingPackages();
     execSync('mv ./tmp/proj ./tmp/proj_backup');
   }
   execSync('cp -a ./tmp/proj_backup ./tmp/proj');
 }
 
-export function newBazelProject(): void {
-  cleanup();
-  if (!directoryExists('./tmp/proj_bazel_backup')) {
-    // TODO delete the try catch after 0.8.0 is released
-    try {
-      runNgNew('--collection=@nrwl/bazel --npmScope=proj', true);
-    } catch (e) {}
-    copyMissingPackages();
-    execSync('mv ./tmp/proj ./tmp/proj_backup');
+export function ensureProject(): void {
+  if (!directoryExists('./tmp/proj')) {
+    newProject();
   }
-  execSync('cp -a ./tmp/proj_bazel_backup ./tmp/proj');
 }
 
-export function createNxWorkspace(command: string): string {
-  cleanup();
-  return execSync(
-    `node ../node_modules/@nrwl/schematics/bin/create-nx-workspace.js ${command}`,
-    { cwd: `./tmp` }
-  ).toString();
+export function runsInWSL() {
+  return !!process.env['WINDOWSTMP'];
+}
+
+export function patchKarmaToWorkOnWSL(): void {
+  try {
+    const karma = readFile('karma.conf.js');
+    if (process.env['WINDOWSTMP']) {
+      updateFile(
+        'karma.conf.js',
+        karma.replace(
+          `const { constants } = require('karma');`,
+          `
+      const { constants } = require('karma');
+      process.env['TMPDIR']="${process.env['WINDOWSTMP']}";
+    `
+        )
+      );
+    }
+  } catch (e) {}
 }
 
 export function copyMissingPackages(): void {
@@ -55,15 +64,53 @@ export function copyMissingPackages(): void {
     '@nrwl',
     'angular',
     '@angular/upgrade',
+    '@angular-devkit/build-ng-packagr',
     'npm-run-all',
     'yargs',
-    'yargs-parser'
+    'yargs-parser',
+
+    'cypress',
+    '@types/jquery',
+    'jest',
+    '@types/jest',
+    'jest-preset-angular',
+    'karma',
+    'karma-chrome-launcher',
+    'karma-coverage-istanbul-reporter',
+    'karma-jasmine',
+    'karma-jasmine-html-reporter',
+    'jasmine-core',
+    'jasmine-spec-reporter',
+    'jasmine-marbles',
+    '@types/jasmine',
+    '@types/jasminewd2',
+    '@nestjs',
+    'express',
+    '@types/express'
   ];
   modulesToCopy.forEach(m => copyNodeModule(projectName, m));
+  updateFile(
+    'node_modules/@angular-devkit/schematics/tasks/node-package/executor.js',
+    `
+    function default_1() {
+      return () => {
+        const rxjs = require("rxjs");
+        return new rxjs.Observable(obs => {
+          obs.next();
+          obs.complete();
+        });
+      };
+    }
+    exports.default = default_1;
+  `
+  );
+
   execSync('rm -rf tmp/proj/node_modules/.bin/webpack');
   execSync(
     `cp -a node_modules/.bin/webpack tmp/proj/node_modules/.bin/webpack`
   );
+  execSync(`rm -rf ./tmp/proj/node_modules/cypress/node_modules/@types`);
+  execSync(`rm -rf ./tmp/proj/@types/sinon-chai/node_modules/@types`);
 }
 
 function copyNodeModule(path: string, name: string) {
@@ -127,16 +174,21 @@ export function runCLI(
   }
 }
 
+export function expectTestsPass(v: { stdout: string; stderr: string }) {
+  expect(v.stderr).toContain('Ran all test suites');
+  expect(v.stderr).not.toContain('fail');
+}
+
 export function newApp(name: string): string {
-  return runCLI(`generate app --no-interactive ${name}`);
+  const r = runCLI(`generate app --no-interactive ${name}`);
+  patchKarmaToWorkOnWSL();
+  return r;
 }
 
 export function newLib(name: string): string {
-  return runCLI(`generate lib --no-interactive ${name}`);
-}
-
-export function newModule(name: string): string {
-  return runCLI(`generate module ${name}`);
+  const r = runCLI(`generate lib --no-interactive ${name}`);
+  patchKarmaToWorkOnWSL();
+  return r;
 }
 
 export function runCommand(command: string): string {
@@ -177,10 +229,6 @@ export function readFile(f: string) {
 
 export function cleanup() {
   execSync('rm -rf ./tmp/proj');
-}
-
-export function purge() {
-  execSync('rm -rf ./tmp');
 }
 
 export function getCwd(): string {

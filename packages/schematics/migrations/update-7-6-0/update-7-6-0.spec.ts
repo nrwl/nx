@@ -153,6 +153,35 @@ describe('Update 7.6.0', () => {
     });
   });
 
+  describe('setting defaults to karma, protractor, express', () => {
+    it('should default to karma, protractor and express', async () => {
+      const result = await schematicRunner
+        .runSchematicAsync('update-7.6.0', {}, initialTree)
+        .toPromise();
+
+      expect(
+        readJsonInTree(result, 'angular.json').schematics[
+          '@nrwl/schematics:library'
+        ].unitTestRunner
+      ).toEqual('karma');
+      expect(
+        readJsonInTree(result, 'angular.json').schematics[
+          '@nrwl/schematics:application'
+        ].unitTestRunner
+      ).toEqual('karma');
+      expect(
+        readJsonInTree(result, 'angular.json').schematics[
+          '@nrwl/schematics:application'
+        ].e2eTestRunner
+      ).toEqual('protractor');
+      expect(
+        readJsonInTree(result, 'angular.json').schematics[
+          '@nrwl/schematics:node-application'
+        ].framework
+      ).toEqual('express');
+    });
+  });
+
   describe('NgRx Migration', () => {
     it('should update ngrx to 7.1.0', async () => {
       const result = await schematicRunner

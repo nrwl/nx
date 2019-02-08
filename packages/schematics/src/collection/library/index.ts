@@ -40,7 +40,6 @@ import {
   replaceAppNameWithPath
 } from '../../utils/cli-config-utils';
 import { formatFiles } from '../../utils/rules/format-files';
-import { updateKarmaConf } from '../../utils/rules/update-karma-conf';
 import { Framework } from '../../utils/frameworks';
 
 interface NormalizedSchema extends Schema {
@@ -255,11 +254,9 @@ function updateProject(options: NormalizedSchema): Rule {
       host.delete(path.join(options.projectRoot, 'package.json'));
     }
 
-    if (options.unitTestRunner !== 'karma') {
-      host.delete(path.join(options.projectRoot, 'karma.conf.js'));
-      host.delete(path.join(options.projectRoot, 'src/test.ts'));
-      host.delete(path.join(options.projectRoot, 'tsconfig.spec.json'));
-    }
+    host.delete(path.join(options.projectRoot, 'karma.conf.js'));
+    host.delete(path.join(options.projectRoot, 'src/test.ts'));
+    host.delete(path.join(options.projectRoot, 'tsconfig.spec.json'));
 
     if (options.framework === Framework.Angular) {
       host.delete(path.join(libRoot, `${options.name}.module.ts`));
@@ -343,15 +340,12 @@ function updateProject(options: NormalizedSchema): Rule {
           delete fixedProject.architect.build;
         }
 
-        if (options.unitTestRunner !== 'karma') {
-          delete fixedProject.architect.test;
+        delete fixedProject.architect.test;
 
-          fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
-            path =>
-              path !==
-              join(normalize(options.projectRoot), 'tsconfig.spec.json')
-          );
-        }
+        fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
+          path =>
+            path !== join(normalize(options.projectRoot), 'tsconfig.spec.json')
+        );
 
         json.projects[options.name] = fixedProject;
         return json;
@@ -384,51 +378,9 @@ function updateProject(options: NormalizedSchema): Rule {
           }
         };
       }),
-      updateNgPackage(options),
-      options.unitTestRunner === 'karma' ? updateKarmaConfig(options) : noop()
+      updateNgPackage(options)
     ])(host, context);
   };
-}
-
-function updateKarmaConfig(options: NormalizedSchema) {
-  return chain([
-    host => {
-      const karma = host
-        .read(`${options.projectRoot}/karma.conf.js`)
-        .toString();
-      host.overwrite(
-        `${options.projectRoot}/karma.conf.js`,
-        karma.replace(
-          `'../../coverage${options.projectRoot}'`,
-          `'${offsetFromRoot(options.projectRoot)}coverage'`
-        )
-      );
-    },
-    updateJsonInTree(`${options.projectRoot}/tsconfig.json`, json => {
-      return {
-        ...json,
-        compilerOptions: {
-          ...json.compilerOptions,
-          types: [...(json.compilerOptions.types || []), 'jasmine']
-        }
-      };
-    }),
-    updateJsonInTree(`${options.projectRoot}/tsconfig.spec.json`, json => {
-      return {
-        ...json,
-        extends: `./tsconfig.json`,
-        compilerOptions: {
-          ...json.compilerOptions,
-          outDir: `${offsetFromRoot(options.projectRoot)}dist/out-tsc/${
-            options.projectRoot
-          }`
-        }
-      };
-    }),
-    updateKarmaConf({
-      projectName: options.name
-    })
-  ]);
 }
 
 function updateTsConfig(options: NormalizedSchema): Rule {
@@ -498,7 +450,11 @@ export default function(schema: Schema): Rule {
             skipSerializers: options.framework !== Framework.Angular
           })
         : noop(),
-
+      options.unitTestRunner === 'karma'
+        ? schematic('karma-project', {
+            project: options.name
+          })
+        : noop(),
       options.publishable ? updateLibPackageNpmScope(options) : noop(),
       options.framework === Framework.Angular ? addModule(options) : noop(),
       formatFiles(options)

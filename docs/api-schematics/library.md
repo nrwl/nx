@@ -28,4 +28,4 @@ ng generate library ...
 | `lazy`             |       | Add RouterModule.forChild when set to true, and a simple array of routes when set to false.                              | boolean | `false`       |
 | `module`           |       | [Deprecated]: Include an NgModule in the library.                                                                        | boolean | `true`        |
 | `tags`             |       | Add tags to the library (used for linting)                                                                               | string  | `undefined`   |
-| `unitTestRunner`   |       | Test runner to use for unit tests                                                                                        | string  | `karma`       |
+| `unitTestRunner`   |       | Test runner to use for unit tests                                                                                        | string  | `jest`        |

@@ -2,12 +2,9 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "sourceMap": false,
-    "outDir": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>/src",
-    "lib": ["es2015", "dom"],
-    "types": ["cypress", "node"]
+    "outDir": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>/src"
   },
   "include": [
-    "src/**/*.ts",
-    "../../node_modules/cypress"
+    "src/**/*.ts"
   ]
 }
