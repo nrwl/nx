@@ -21,7 +21,10 @@ const schematicsSourceDirectory = path.join(
   __dirname,
   '../../build/packages/schematics/src'
 );
-const schematicsOutputDirectory = path.join(__dirname, '../../docs/schematics');
+const schematicsOutputDirectory = path.join(
+  __dirname,
+  '../../docs/api-schematics'
+);
 const schematicCollectionFile = path.join(
   schematicsSourceDirectory,
   'collection.json'

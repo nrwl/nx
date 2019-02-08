@@ -1,12 +1,22 @@
-import { newApp, newProject, runCLI, updateFile } from '../utils';
+import {
+  ensureProject,
+  expectTestsPass,
+  newApp,
+  newProject,
+  runCLI,
+  runCLIAsync,
+  uniq,
+  updateFile
+} from '../utils';
 
 describe('Upgrade', () => {
-  it('should generate an UpgradeModule setup', () => {
-    newProject();
-    newApp('myapp');
+  it('should generate an UpgradeModule setup', async () => {
+    ensureProject();
+    const myapp = uniq('myapp');
+    newApp(`${myapp} --unit-test-runner=karma`);
 
     updateFile(
-      'apps/myapp/src/legacy.js',
+      `apps/${myapp}/src/legacy.js`,
       `
       const angular = window.angular.module('legacy', []);
       angular.component('proj-root-legacy', {
@@ -16,22 +26,20 @@ describe('Upgrade', () => {
     );
 
     updateFile(
-      'apps/myapp/src/app/app.component.html',
+      `apps/${myapp}/src/app/app.component.html`,
       `
       EXPECTED [<proj-root-legacy></proj-root-legacy>]
     `
     );
 
-    updateFile('apps/myapp/src/app/app.component.spec.ts', ``);
+    updateFile(`apps/${myapp}/src/app/app.component.spec.ts`, ``);
 
     runCLI(
       'generate upgrade-module legacy --angularJsImport=./legacy ' +
-        '--angularJsCmpSelector=proj-root-legacy --project=myapp'
+        `--angularJsCmpSelector=proj-root-legacy --project=${myapp}`
     );
 
-    expect(runCLI('lint', { silenceError: true })).not.toContain('ERROR');
-
-    runCLI('build');
-    runCLI('test --no-watch');
+    runCLI(`build ${myapp}`);
+    expect(runCLI(`test ${myapp} --no-watch`)).toContain('1 SUCCESS');
   }, 1000000);
 });

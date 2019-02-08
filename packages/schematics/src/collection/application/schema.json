@@ -83,7 +83,7 @@
       "type": "string",
       "enum": ["karma", "jest", "none"],
       "description": "Test runner to use for unit tests",
-      "default": "karma",
+      "default": "jest",
       "x-prompt": {
         "message": "Which Unit Test Runner would you like to use for the application?",
         "type": "list",
@@ -100,7 +100,7 @@
       "type": "string",
       "enum": ["protractor", "cypress", "none"],
       "description": "Test runner to use for end to end (e2e) tests",
-      "default": "protractor",
+      "default": "cypress",
       "x-prompt": {
         "message": "Which E2E Test Runner would you like to use for the application?",
         "type": "list",

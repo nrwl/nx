@@ -124,7 +124,7 @@ describe('lib', () => {
       expect(tsconfigJson).toEqual({
         extends: '../../tsconfig.json',
         compilerOptions: {
-          types: ['jasmine']
+          types: ['node', 'jest']
         },
         include: ['**/*.ts']
       });
@@ -150,7 +150,7 @@ describe('lib', () => {
 
     it('should generate files', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
-      expect(tree.exists(`libs/my-lib/karma.conf.js`)).toBeTruthy();
+      expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
 
@@ -170,7 +170,7 @@ describe('lib', () => {
         { name: 'myLib2', simpleModuleName: true },
         tree
       );
-      expect(tree2.exists(`libs/my-lib2/karma.conf.js`)).toBeTruthy();
+      expect(tree2.exists(`libs/my-lib2/jest.config.js`)).toBeTruthy();
       expect(tree2.exists('libs/my-lib2/src/index.ts')).toBeTruthy();
       expect(
         tree2.exists('libs/my-lib2/src/lib/my-lib2.module.ts')
@@ -299,7 +299,7 @@ describe('lib', () => {
         { name: 'myLib', directory: 'myDir' },
         appTree
       );
-      expect(tree.exists(`libs/my-dir/my-lib/karma.conf.js`)).toBeTruthy();
+      expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
@@ -323,7 +323,7 @@ describe('lib', () => {
         { name: 'myLib2', directory: 'myDir', simpleModuleName: true },
         tree
       );
-      expect(tree2.exists(`libs/my-dir/my-lib2/karma.conf.js`)).toBeTruthy();
+      expect(tree2.exists(`libs/my-dir/my-lib2/jest.config.js`)).toBeTruthy();
       expect(tree2.exists('libs/my-dir/my-lib2/src/index.ts')).toBeTruthy();
       expect(
         tree2.exists('libs/my-dir/my-lib2/src/lib/my-lib2.module.ts')
@@ -399,7 +399,7 @@ describe('lib', () => {
       expect(tsconfigJson).toEqual({
         extends: '../../../tsconfig.json',
         compilerOptions: {
-          types: ['jasmine']
+          types: ['node', 'jest']
         },
         include: ['**/*.ts']
       });
@@ -716,20 +716,20 @@ describe('lib', () => {
     });
   });
 
-  describe('--unit-test-runner jest', () => {
-    it('should generate jest configuration', async () => {
+  describe('--unit-test-runner karma', () => {
+    it('should generate karma configuration', async () => {
       const resultTree = await runSchematic(
         'lib',
-        { name: 'myLib', unitTestRunner: 'jest' },
+        { name: 'myLib', unitTestRunner: 'karma' },
         appTree
       );
-      expect(resultTree.exists('libs/my-lib/src/test.ts')).toBeFalsy();
-      expect(resultTree.exists('libs/my-lib/src/test-setup.ts')).toBeTruthy();
+      expect(resultTree.exists('libs/my-lib/src/test.ts')).toBeTruthy();
+      expect(resultTree.exists('libs/my-lib/src/test-setup.ts')).toBeFalsy();
       expect(resultTree.exists('libs/my-lib/tsconfig.spec.json')).toBeTruthy();
-      expect(resultTree.exists('libs/my-lib/jest.config.js')).toBeTruthy();
+      expect(resultTree.exists('libs/my-lib/karma.conf.js')).toBeTruthy();
       const angularJson = readJsonInTree(resultTree, 'angular.json');
       expect(angularJson.projects['my-lib'].architect.test.builder).toEqual(
-        '@nrwl/builders:jest'
+        '@angular-devkit/build-angular:karma'
       );
       expect(
         angularJson.projects['my-lib'].architect.lint.options.tsConfig
@@ -770,7 +770,7 @@ describe('lib', () => {
       expect(resultTree.exists('libs/my-lib/src/test.ts')).toBeFalsy();
       expect(resultTree.exists('libs/my-lib/tsconfig.spec.json')).toBeFalsy();
       expect(resultTree.exists('libs/my-lib/jest.config.js')).toBeFalsy();
-      expect(resultTree.exists('libs/my-lib/karma.config.js')).toBeFalsy();
+      expect(resultTree.exists('libs/my-lib/karma.conf.js')).toBeFalsy();
       const angularJson = readJsonInTree(resultTree, 'angular.json');
       expect(angularJson.projects['my-lib'].architect.test).toBeUndefined();
       expect(

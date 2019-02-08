@@ -116,7 +116,7 @@
       "type": "string",
       "enum": ["karma", "jest", "none"],
       "description": "Test runner to use for unit tests",
-      "default": "karma",
+      "default": "jest",
       "x-prompt": {
         "message": "Which Unit Test Runner would you like to use for the library?",
         "type": "list",

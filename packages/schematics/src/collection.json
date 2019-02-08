@@ -57,6 +57,20 @@
       "hidden": true
     },
 
+    "karma": {
+      "factory": "./collection/karma",
+      "schema": "./collection/karma/schema.json",
+      "description": "Add Karma configuration to the workspace",
+      "hidden": true
+    },
+
+    "karma-project": {
+      "factory": "./collection/karma-project",
+      "schema": "./collection/karma-project/schema.json",
+      "description": "Add Karma configuration to a project",
+      "hidden": true
+    },
+
     "cypress-project": {
       "factory": "./collection/cypress-project",
       "schema": "./collection/cypress-project/schema.json",

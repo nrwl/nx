@@ -20,7 +20,7 @@ const buildersSourceDirectory = path.join(
   __dirname,
   '../../build/packages/builders/src'
 );
-const buildersOutputDirectory = path.join(__dirname, '../../docs/builders');
+const buildersOutputDirectory = path.join(__dirname, '../../docs/api-builders');
 const builderCollectionFile = path.join(
   buildersSourceDirectory,
   'builders.json'

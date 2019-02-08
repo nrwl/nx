@@ -1,30 +1,33 @@
-import { newApp, newProject, runCLI, copyMissingPackages } from '../utils';
+import {
+  newApp,
+  runCLI,
+  expectTestsPass,
+  runCLIAsync,
+  uniq,
+  ensureProject
+} from '../utils';
 
 describe('ngrx', () => {
-  it('should work', () => {
-    newProject();
-    newApp('myapp');
+  it('should work', async () => {
+    ensureProject();
+
+    const myapp = uniq('myapp');
+    newApp(myapp);
 
     // Generate root ngrx state management
     runCLI(
-      'generate ngrx users --module=apps/myapp/src/app/app.module.ts --root'
+      `generate ngrx users --module=apps/${myapp}/src/app/app.module.ts --root`
     );
-    copyMissingPackages();
 
+    const mylib = uniq('mylib');
     // Generate feature library and ngrx state within that library
-    runCLI('g @nrwl/schematics:lib feature-flights --prefix=fl');
+    runCLI(`g lib ${mylib} --prefix=fl`);
     runCLI(
-      'generate ngrx flights --module=libs/feature-flights/src/lib/feature-flights.module.ts --facade'
+      `generate ngrx flights --module=libs/${mylib}/src/lib/${mylib}.module.ts --facade`
     );
 
-    expect(runCLI('lint', { silenceError: true })).not.toContain('ERROR');
-
-    expect(runCLI('build')).toContain('chunk {main} main.js,');
-    expect(runCLI('test myapp --no-watch')).toContain(
-      'Executed 10 of 10 SUCCESS'
-    );
-    expect(runCLI('test feature-flights --no-watch')).toContain(
-      'Executed 10 of 10 SUCCESS'
-    );
+    expect(runCLI(`build ${myapp}`)).toContain('chunk {main} main.js,');
+    expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
+    expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
   }, 1000000);
 });

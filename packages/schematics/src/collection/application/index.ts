@@ -33,8 +33,9 @@ import {
   angularSchematicNames
 } from '../../utils/cli-config-utils';
 import { formatFiles } from '../../utils/rules/format-files';
-import { updateKarmaConf } from '../../utils/rules/update-karma-conf';
 import { join, normalize } from '@angular-devkit/core';
+import { readJson } from '../../../../../e2e/utils';
+import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -200,15 +201,13 @@ function updateProject(options: NormalizedSchema): Rule {
           });
         }
 
-        if (options.unitTestRunner !== 'karma') {
-          delete fixedProject.architect.test;
+        delete fixedProject.architect.test;
 
-          fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
-            path =>
-              path !==
-              join(normalize(options.appProjectRoot), 'tsconfig.spec.json')
-          );
-        }
+        fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
+          path =>
+            path !==
+            join(normalize(options.appProjectRoot), 'tsconfig.spec.json')
+        );
         if (options.e2eTestRunner === 'none') {
           delete json.projects[options.e2eProjectName];
         }
@@ -228,44 +227,14 @@ function updateProject(options: NormalizedSchema): Rule {
           exclude:
             options.unitTestRunner === 'jest'
               ? ['src/test-setup.ts', '**/*.spec.ts']
-              : json.exclude || [],
+              : ['src/test.ts', '**/*.spec.ts'],
           include: ['**/*.ts']
         };
       }),
-      options.unitTestRunner === 'karma'
-        ? chain([
-            updateJsonInTree(
-              `${options.appProjectRoot}/tsconfig.json`,
-              json => {
-                return {
-                  ...json,
-                  compilerOptions: {
-                    ...json.compilerOptions,
-                    types: [...(json.compilerOptions.types || []), 'jasmine']
-                  }
-                };
-              }
-            ),
-            updateJsonInTree(
-              `${options.appProjectRoot}/tsconfig.spec.json`,
-              json => {
-                return {
-                  ...json,
-                  extends: `./tsconfig.json`,
-                  compilerOptions: {
-                    ...json.compilerOptions,
-                    outDir: `${offsetFromRoot(
-                      options.appProjectRoot
-                    )}dist/out-tsc/${options.appProjectRoot}`
-                  }
-                };
-              }
-            )
-          ])
-        : host => {
-            host.delete(`${options.appProjectRoot}/tsconfig.spec.json`);
-            return host;
-          },
+      host => {
+        host.delete(`${options.appProjectRoot}/tsconfig.spec.json`);
+        return host;
+      },
       updateJsonInTree(`${options.appProjectRoot}/tslint.json`, json => {
         return {
           ...json,
@@ -286,26 +255,22 @@ function updateProject(options: NormalizedSchema): Rule {
         return resultJson;
       }),
       host => {
-        if (options.unitTestRunner !== 'karma') {
-          host.delete(`${options.appProjectRoot}/karma.conf.js`);
-          host.delete(`${options.appProjectRoot}/src/test.ts`);
-        } else {
-          const karma = host
-            .read(`${options.appProjectRoot}/karma.conf.js`)
-            .toString();
-          host.overwrite(
-            `${options.appProjectRoot}/karma.conf.js`,
-            karma.replace(
-              `'../../coverage${options.appProjectRoot}'`,
-              `'${offsetFromRoot(options.appProjectRoot)}coverage'`
-            )
-          );
-        }
-
+        host.delete(`${options.appProjectRoot}/karma.conf.js`);
+        host.delete(`${options.appProjectRoot}/src/test.ts`);
         if (options.e2eTestRunner !== 'protractor') {
           host.delete(`${options.e2eProjectRoot}/src/app.e2e-spec.ts`);
           host.delete(`${options.e2eProjectRoot}/src/app.po.ts`);
           host.delete(`${options.e2eProjectRoot}/protractor.conf.js`);
+        }
+      },
+      (host, context) => {
+        if (options.e2eTestRunner === 'protractor') {
+          updateJsonInTree('/package.json', json => {
+            if (!json.devDependencies.protractor) {
+              json.devDependencies.protractor = '~5.4.0';
+              context.addTask(new NodePackageInstallTask());
+            }
+          });
         }
       }
     ]);
@@ -375,6 +340,7 @@ export default function(schema: Schema): Rule {
     // Determine the roots where @schematics/angular will place the projects
     // This is not where the projects actually end up
     const angularJson = readJsonInTree(host, getWorkspacePath(host));
+
     const appProjectRoot = angularJson.newProjectRoot
       ? `${angularJson.newProjectRoot}/${options.name}`
       : options.name;
@@ -414,13 +380,13 @@ export default function(schema: Schema): Rule {
       updateComponentTemplate(options),
       addNxModule(options),
       options.routing ? addRouterRootConfiguration(options) : noop(),
-      options.unitTestRunner === 'karma'
-        ? updateKarmaConf({
-            projectName: options.name
-          })
-        : noop(),
       options.unitTestRunner === 'jest'
         ? schematic('jest-project', {
+            project: options.name
+          })
+        : noop(),
+      options.unitTestRunner === 'karma'
+        ? schematic('karma-project', {
             project: options.name
           })
         : noop(),

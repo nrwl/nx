@@ -5,7 +5,9 @@ import {
   exists,
   runCLIAsync,
   updateFile,
-  readJson
+  readJson,
+  ensureProject,
+  uniq
 } from '../utils';
 import { fork, spawn, execSync } from 'child_process';
 import * as http from 'http';
@@ -28,18 +30,13 @@ function getData() {
 }
 
 describe('Node Applications', () => {
-  beforeAll(() => {
-    newProject();
-    runCLI('generate jest');
-    copyMissingPackages();
-  });
-
   it('should be able to generate a node application', async done => {
-    runCLI('generate node-app node-app1');
-    copyMissingPackages();
+    ensureProject();
+    const nodeapp = uniq('nodeapp');
+    runCLI(`generate node-app ${nodeapp} --framework express`);
 
     updateFile(
-      'apps/node-app1/src/app/test.spec.ts',
+      `apps/${nodeapp}/src/app/test.spec.ts`,
       `
           describe('test', () => {
             it('should work', () => {
@@ -49,23 +46,23 @@ describe('Node Applications', () => {
         `
     );
 
-    updateFile('apps/node-app1/src/assets/file.txt', ``);
-    const jestResult = await runCLIAsync('test node-app1');
+    updateFile(`apps/${nodeapp}/src/assets/file.txt`, ``);
+    const jestResult = await runCLIAsync(`test ${nodeapp}`);
     expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
 
-    await runCLIAsync('build node-app1');
+    await runCLIAsync(`build ${nodeapp}`);
 
-    expect(exists('./tmp/proj/dist/apps/node-app1/main.js')).toBeTruthy();
+    expect(exists(`./tmp/proj/dist/apps/${nodeapp}/main.js`)).toBeTruthy();
     expect(
-      exists('./tmp/proj/dist/apps/node-app1/assets/file.txt')
+      exists(`./tmp/proj/dist/apps/${nodeapp}/assets/file.txt`)
     ).toBeTruthy();
-    expect(exists('./tmp/proj/dist/apps/node-app1/main.js.map')).toBeTruthy();
+    expect(exists(`./tmp/proj/dist/apps/${nodeapp}/main.js.map`)).toBeTruthy();
 
     const server = fork(
       path.join(
         __dirname,
         '../../../tmp/proj',
-        `./dist/apps/node-app1/main.js`
+        `./dist/apps/${nodeapp}/main.js`
       ),
       [],
       {
@@ -80,7 +77,7 @@ describe('Node Applications', () => {
         expect(data.toString()).toContain('Listening at http://localhost:3333');
         const result = await getData();
 
-        expect(result).toEqual('Welcome to node-app1!');
+        expect(result).toEqual(`Welcome to ${nodeapp}!`);
         treeKill(server.pid, 'SIGTERM', err => {
           expect(err).toBeFalsy();
           resolve();
@@ -89,7 +86,7 @@ describe('Node Applications', () => {
     });
 
     const config = readJson('angular.json');
-    config.projects['node-app1'].architect.waitAndPrint = {
+    config.projects[nodeapp].architect.waitAndPrint = {
       builder: '@nrwl/builders:run-commands',
       options: {
         commands: [
@@ -100,14 +97,14 @@ describe('Node Applications', () => {
         readyWhen: 'DONE'
       }
     };
-    config.projects['node-app1'].architect.serve.options.waitUntilTargets = [
-      'node-app1:waitAndPrint'
+    config.projects[nodeapp].architect.serve.options.waitUntilTargets = [
+      `${nodeapp}:waitAndPrint`
     ];
     updateFile('angular.json', JSON.stringify(config));
 
     const process = spawn(
       'node',
-      ['./node_modules/.bin/ng', 'serve', 'node-app1'],
+      ['./node_modules/.bin/ng', 'serve', nodeapp],
       {
         cwd: './tmp/proj'
       }
@@ -121,7 +118,7 @@ describe('Node Applications', () => {
       }
 
       const result = await getData();
-      expect(result).toEqual('Welcome to node-app1!');
+      expect(result).toEqual(`Welcome to ${nodeapp}!`);
       treeKill(process.pid, 'SIGTERM', err => {
         expect(collectedOutput.startsWith('DONE')).toBeTruthy();
         expect(err).toBeFalsy();
@@ -131,23 +128,28 @@ describe('Node Applications', () => {
   }, 30000);
 
   it('should be able to generate a nest application', async done => {
-    runCLI('generate node-app nest-app --framework nestjs');
-    copyMissingPackages();
+    ensureProject();
+    const nestapp = uniq('nestapp');
+    runCLI(`generate node-app ${nestapp} --framework nestjs`);
 
-    updateFile('apps/nest-app/src/assets/file.txt', ``);
-    const jestResult = await runCLIAsync('test nest-app');
+    updateFile(`apps/${nestapp}/src/assets/file.txt`, ``);
+    const jestResult = await runCLIAsync(`test ${nestapp}`);
     expect(jestResult.stderr).toContain('Test Suites: 2 passed, 2 total');
 
-    await runCLIAsync('build nest-app');
+    await runCLIAsync(`build ${nestapp}`);
 
-    expect(exists('./tmp/proj/dist/apps/nest-app/main.js')).toBeTruthy();
+    expect(exists(`./tmp/proj/dist/apps/${nestapp}/main.js`)).toBeTruthy();
     expect(
-      exists('./tmp/proj/dist/apps/nest-app/assets/file.txt')
+      exists(`./tmp/proj/dist/apps/${nestapp}/assets/file.txt`)
     ).toBeTruthy();
-    expect(exists('./tmp/proj/dist/apps/nest-app/main.js.map')).toBeTruthy();
+    expect(exists(`./tmp/proj/dist/apps/${nestapp}/main.js.map`)).toBeTruthy();
 
     const server = fork(
-      path.join(__dirname, '../../../tmp/proj', `./dist/apps/nest-app/main.js`),
+      path.join(
+        __dirname,
+        '../../../tmp/proj',
+        `./dist/apps/${nestapp}/main.js`
+      ),
       [],
       {
         cwd: './tmp/proj',
@@ -162,7 +164,7 @@ describe('Node Applications', () => {
         if (message.includes('Listening at http://localhost:3333')) {
           const result = await getData();
 
-          expect(result).toEqual('Welcome to nest-app!');
+          expect(result).toEqual(`Welcome to ${nestapp}!`);
           treeKill(server.pid, 'SIGTERM', err => {
             expect(err).toBeFalsy();
             resolve();
@@ -173,7 +175,7 @@ describe('Node Applications', () => {
 
     const process = spawn(
       'node',
-      ['./node_modules/.bin/ng', 'serve', 'nest-app'],
+      ['./node_modules/.bin/ng', 'serve', nestapp],
       {
         cwd: './tmp/proj'
       }
@@ -184,7 +186,7 @@ describe('Node Applications', () => {
         return;
       }
       const result = await getData();
-      expect(result).toEqual('Welcome to nest-app!');
+      expect(result).toEqual(`Welcome to ${nestapp}!`);
       treeKill(process.pid, 'SIGTERM', err => {
         expect(err).toBeFalsy();
         done();
@@ -193,11 +195,14 @@ describe('Node Applications', () => {
   }, 30000);
 
   it('should be able to generate an empty application', async () => {
-    runCLI('generate node-app node-app2 --framework none');
-    updateFile('apps/node-app2/src/main.ts', `console.log('Hello World!');`);
-    await runCLIAsync('build node-app2');
-    expect(exists('./tmp/proj/dist/apps/node-app2/main.js')).toBeTruthy();
-    const result = execSync('node dist/apps/node-app2/main.js', {
+    ensureProject();
+    const nodeapp = uniq('nodeapp');
+
+    runCLI(`generate node-app ${nodeapp} --framework none`);
+    updateFile(`apps/${nodeapp}/src/main.ts`, `console.log('Hello World!');`);
+    await runCLIAsync(`build ${nodeapp}`);
+    expect(exists(`./tmp/proj/dist/apps/${nodeapp}/main.js`)).toBeTruthy();
+    const result = execSync(`node dist/apps/${nodeapp}/main.js`, {
       cwd: './tmp/proj'
     }).toString();
     expect(result).toContain('Hello World!');

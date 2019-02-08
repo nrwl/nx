@@ -63,7 +63,7 @@ export class WorkspaceIntegrityChecks {
       ? []
       : [
           {
-            header: `All files in 'apps' and 'libs' must be part of a project.`,
+            header: `All files in 'apps' and 'libs' must be part of a project`,
             errors
           }
         ];
