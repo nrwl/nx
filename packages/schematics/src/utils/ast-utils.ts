@@ -577,8 +577,12 @@ export function readJsonInTree<T = any>(host: Tree, path: string): T {
   if (!host.exists(path)) {
     throw new Error(`Cannot find ${path}`);
   }
-
-  return JSON.parse(stripJsonComments(host.read(path)!.toString('utf-8')));
+  const contents = host.read(path)!.toString('utf-8');
+  try {
+    return JSON.parse(contents);
+  } catch (e) {
+    throw new Error(`Cannot parse ${path}: ${e.message}`);
+  }
 }
 
 /**
