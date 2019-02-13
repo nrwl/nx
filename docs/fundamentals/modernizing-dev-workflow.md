@@ -27,37 +27,34 @@ ng g node-application api # you can also be explicit and pass `--framework=nestj
 
 This will create the following:
 
-```console
-apps/
-  api/
-    src/
-      app/
-        app.module.ts
-        app.controller.ts
-        app.controller.spec.ts
-        app.service.ts
-        app.service.spec.ts
-      assets/
-        ...
-      environments/
-        environment.ts
-        environment.prod.ts
-      main.ts
-    jest.config.js
-    tsconfig.json
-    tsconfig.app.json
-    tsconfig.spec.json
-    tslint.json
-    proxy.conf.json
-libs/
-  ...
-tools/
-  ...
-angular.json
-nx.json
-package.json
-tsconfig.json
-tslint.json
+```treeview
+<workspace name>/
+├── apps/
+│   └── api/
+│       ├── jest.conf.js
+│       ├── proxy.conf.json
+│       ├── src/
+│       │   ├── app/
+│       │   │   ├── app.controller.ts
+│       │   │   ├── app.controller.spec.ts
+│       │   │   ├── app.module.ts
+│       │   │   ├── app.service.ts
+│       │   │   └── app.service.spec.ts
+│       │   ├── assets/
+│       │   ├── environments/
+│       │   │   ├── environment.ts
+│       │   │   └── environment.prod.ts
+│       │   └── main.ts
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       ├── tsconfig.spec.json
+│       └── tslint.json
+├── libs/
+├── nx.json
+├── package.json
+├── tools/
+├── tsconfig.json
+└── tslint.json
 ```
 
 You can run:
@@ -103,35 +100,34 @@ By default, when creating a new Angular application, Nx will use Cypress to crea
 
 So running `ng g application frontend` will create:
 
-```console
-apps/
-  frontend/
-    ...
-  frontend-e2e/
-    src/
-      fixtures/
-        example.json
-      integration/
-        app.spec.ts
-      plugins/
-        index.ts
-      support/
-        app.po.ts
-        commands.ts
-        index.ts
-    cypress.json
-    tsconfig.e2e.json
-    tsconfig.json
-
-libs/
-  ...
-tools/
-  ...
-angular.json
-nx.json
-package.json
-tsconfig.json
-tslint.json
+```treeview
+<workspace name>/
+├── README.md
+├── angular.json
+├── apps/
+│   ├── frontend/
+│   └── frontend-e2e/
+│       ├── cypress.json
+│       ├── src/
+│       │   ├── fixtures/
+│       │   │   └── example.json
+│       │   ├── integration/
+│       │   │   └── app.spec.ts
+│       │   ├── plugins/
+│       │   │   └── index.ts
+│       │   └── support/
+│       │       ├── app.po.ts
+│       │       ├── commands.ts
+│       │       └── index.ts
+│       ├── tsconfig.e2e.json
+│       ├── tsconfig.json
+│       └── tslint.json
+├── libs/
+├── nx.json
+├── package.json
+├── tools/
+├── tsconfig.json
+└── tslint.json
 ```
 
 You can run:
@@ -154,36 +150,36 @@ Jest is a fast 0-setup testing framework from Facebook.
 
 By default, Nx uses Jest for both Angular and Node.js applications. So if you run `ng g application frontend`, you will get:
 
-```console
-apps/
-  frontend/
-    src/
-      app/
-      assets/
-      environments/
-      favicon.ico
-      index.html
-      main.ts
-      polyfills.ts
-      styles.css
-      test.ts
-    browserslist
-    jest.conf.js
-    tsconfig.json
-    tsconfig.app.json
-    tsconfig.spec.json
-    tslint.json
-  frontend-e2e/
-    ...
-libs/
-  ...
-tools/
-  ...
-angular.json
-nx.json
-package.json
-tsconfig.json
-tslint.json
+```treeview
+<workspace name>/
+├── README.md
+├── angular.json
+├── apps/
+│   ├── frontend/
+│   │   ├── browserslist
+│   │   ├── jest.conf.js
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   ├── assets/
+│   │   │   ├── environments/
+│   │   │   ├── favicon.ico
+│   │   │   ├── index.html
+│   │   │   ├── main.ts
+│   │   │   ├── polyfills.ts
+│   │   │   ├── styles.scss
+│   │   │   └── test.ts
+│   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.json
+│   │   ├── tsconfig.spec.json
+│   │   └── tslint.json
+│   └── frontend-e2e/
+├── libs/
+├── nx.json
+├── package-lock.json
+├── package.json
+├── tools/
+├── tsconfig.json
+└── tslint.json
 ```
 
 Read more about Jest at [jestjs.io](https://jestjs.io).
@@ -198,16 +194,19 @@ To use Karma instead of Jest, run `ng g application frontend --unit-test-runner=
 
 Prettier is an opinionated code formatter. An Nx workspace comes with Prettier preconfigured.
 
-```cosnole
-apps/
-libs/
-tools/
-.prettierrc # prettier config
-angular.json
-nx.json
-package.json
-tsconfig.json
-tslint.json
+```treeview
+<workspace name>/
+├── README.md
+├── angular.json
+├── apps/
+├── libs/
+├── nx.json
+├── package-lock.json
+├── package.json
+├── tools/
+├── .prettierrc # prettier config
+├── tsconfig.json
+└── tslint.json
 ```
 
 You can run:
