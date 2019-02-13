@@ -17,36 +17,35 @@
 
 By default, Nx will use Jest when creating applications and libraries.
 
-```console
-apps/
-  frontend/
-    src/
-      app/
-      assets/
-      environments/
-      favicon.ico
-      index.html
-      main.ts
-      polyfills.ts
-      styles.css
-      test.ts
-    browserslist
-    jest.conf.js # <= jest config
-    tsconfig.json
-    tsconfig.app.json
-    tsconfig.spec.json
-    tslint.json
-  frontend-e2e/
-    ...
-libs/
-  ...
-tools/
-  ...
-angular.json
-nx.json
-package.json
-tsconfig.json
-tslint.json
+```treeview
+<workspace name>/
+├── README.md
+├── angular.json
+├── apps/
+│   ├── frontend/
+│   │   ├── browserslist
+│   │   ├── jest.conf.js # <= jest config
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   ├── assets/
+│   │   │   ├── environments/
+│   │   │   ├── favicon.ico
+│   │   │   ├── index.html
+│   │   │   ├── main.ts
+│   │   │   ├── polyfills.ts
+│   │   │   ├── styles.scss
+│   │   │   └── test.ts
+│   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.json
+│   │   ├── tsconfig.spec.json
+│   │   └── tslint.json
+│   └── frontend-e2e/
+├── libs/
+├── nx.json
+├── package.json
+├── tools/
+├── tsconfig.json
+└── tslint.json
 ```
 
 Older versions of Nx used Karam as a default test runner. For those workspace, you have provide the `--unit-test-runner=jest` option when creating applications or libraries.
