@@ -64,34 +64,50 @@ ng g application myapp
 
 The result will look like this:
 
-```console
-apps/
-    myapp/
-        src/
-            app/
-            assets/
-            environment/
-            favicon.ico
-            index.html
-            main.ts
-            polyfills.ts
-            styles.css
-        tsconfig.json
-        tsconfig.app.json
-        tsconfig.spec.json
-        tslint.json
-    myapp-e2e/
-        src/
-        tsconfig.json
-        tsconfig.e2e.json
-        tslint.json
-libs/
-tools/
-package.json
-tsconfig.json
-tslint.json
-angular.json
-nx.json
+```treeview
+<workspace name>/
+├── README.md
+├── angular.json
+├── apps/
+│   ├── myapp/
+│   │   ├── browserslist
+│   │   ├── jest.conf.js
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   ├── assets/
+│   │   │   ├── environments/
+│   │   │   ├── favicon.ico
+│   │   │   ├── index.html
+│   │   │   ├── main.ts
+│   │   │   ├── polyfills.ts
+│   │   │   ├── styles.scss
+│   │   │   └── test.ts
+│   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.json
+│   │   ├── tsconfig.spec.json
+│   │   └── tslint.json
+│   └── myapp-e2e/
+│       ├── cypress.json
+│       ├── src/
+│       │   ├── fixtures/
+│       │   │   └── example.json
+│       │   ├── integration/
+│       │   │   └── app.spec.ts
+│       │   ├── plugins/
+│       │   │   └── index.ts
+│       │   └── support/
+│       │       ├── app.po.ts
+│       │       ├── commands.ts
+│       │       └── index.ts
+│       ├── tsconfig.e2e.json
+│       ├── tsconfig.json
+│       └── tslint.json
+├── libs/
+├── nx.json
+├── package.json
+├── tools/
+├── tsconfig.json
+└── tslint.json
 ```
 
 All the files that the CLI would have in a new project are still here, just in a different folder structure which makes it easier to create more applications and libraries in the future.
