@@ -224,7 +224,7 @@ The files generated are shown below and include placeholders for the _comments_ 
 - [comments.effects.ts](#commentseffectsts)
 - [../app.module.ts](#appmodulets) or [../comments-state.module.ts](#commentsstatemodulets)
 
-  <br/>
+<br/>
 
 ###### comments.actions.ts
 
