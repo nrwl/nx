@@ -178,7 +178,8 @@ export class DepsCalculator {
    * Process a file and update it's dependencies
    */
   processFile(filePath: string): void {
-    if (path.extname(filePath) !== '.ts') {
+    const extension = path.extname(filePath);
+    if (extension !== '.ts' && extension !== '.tsx') {
       return;
     }
     const tsFile = ts.createSourceFile(

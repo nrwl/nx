@@ -2,39 +2,40 @@ import * as webpack from 'webpack';
 import { Configuration, ProgressPlugin } from 'webpack';
 
 import * as ts from 'typescript';
-import { dirname, resolve } from 'path';
+import { resolve } from 'path';
 
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 
-import { BuildNodeBuilderOptions } from '../node-build.builder';
-import * as nodeExternals from 'webpack-node-externals';
 import { AssetPatternObject } from '@angular-devkit/build-angular';
+import { BuildBuilderOptions } from '../types';
+import { readTsConfig } from '../typescript';
 
 export const OUT_FILENAME = 'main.js';
 
-export function getWebpackConfig(
-  options: BuildNodeBuilderOptions
+export function getBaseWebpackPartial(
+  options: BuildBuilderOptions
 ): Configuration {
-  const compilerOptions = getCompilerOptions(options.tsConfig);
+  const { options: compilerOptions } = readTsConfig(options.tsConfig);
   const supportsEs2015 =
     compilerOptions.target !== ts.ScriptTarget.ES3 &&
     compilerOptions.target !== ts.ScriptTarget.ES5;
   const webpackConfig: Configuration = {
-    entry: [options.main],
+    entry: {
+      main: [options.main]
+    },
     devtool: options.sourceMap ? 'source-map' : 'eval',
     mode: options.optimization ? 'production' : 'development',
     output: {
       path: options.outputPath,
-      filename: OUT_FILENAME,
-      libraryTarget: 'commonjs'
+      filename: OUT_FILENAME
     },
     module: {
       rules: [
         {
-          test: /\.ts$/,
+          test: /\.tsx?$/,
           loader: `ts-loader`,
           options: {
             configFile: options.tsConfig,
@@ -46,12 +47,10 @@ export function getWebpackConfig(
       ]
     },
     resolve: {
-      extensions: ['.ts', '.mjs', '.js'],
+      extensions: ['.ts', '.tsx', '.mjs', '.js', '.jsx'],
       alias: getAliases(options, compilerOptions),
       mainFields: [...(supportsEs2015 ? ['es2015'] : []), 'module', 'main']
     },
-    target: 'node',
-    node: false,
     performance: {
       hints: false
     },
@@ -61,7 +60,10 @@ export function getWebpackConfig(
         workers: options.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE
       })
     ],
-    watch: options.watch
+    watch: options.watch,
+    watchOptions: {
+      poll: options.poll
+    }
   };
 
   const extraPlugins: webpack.Plugin[] = [];
@@ -86,21 +88,6 @@ export function getWebpackConfig(
         outputFilename: `3rdpartylicenses.txt`
       })
     );
-  }
-
-  if (options.externalDependencies === 'all') {
-    webpackConfig.externals = [nodeExternals()];
-  } else if (Array.isArray(options.externalDependencies)) {
-    webpackConfig.externals = [
-      function(context, request, callback: Function) {
-        if (options.externalDependencies.includes(request)) {
-          // not bundled
-          return callback(null, 'commonjs ' + request);
-        }
-        // bundled
-        callback();
-      }
-    ];
   }
 
   // process asset entries
@@ -145,7 +132,7 @@ export function getWebpackConfig(
 }
 
 function getAliases(
-  options: BuildNodeBuilderOptions,
+  options: BuildBuilderOptions,
   compilerOptions: ts.CompilerOptions
 ): { [key: string]: string } {
   const replacements = [
@@ -164,14 +151,4 @@ function getAliases(
     }),
     {}
   );
-}
-
-function getCompilerOptions(tsConfigPath: string) {
-  const readResult = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
-  const tsConfig = ts.parseJsonConfigFileContent(
-    readResult.config,
-    ts.sys,
-    dirname(tsConfigPath)
-  );
-  return tsConfig.options;
 }

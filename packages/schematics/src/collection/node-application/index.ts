@@ -233,7 +233,7 @@ export default function(schema: Schema): Rule {
       options.unitTestRunner === 'jest'
         ? schematic('jest-project', {
             project: options.name,
-            skipSetupFile: true,
+            setupFile: 'none',
             skipSerializers: true
           })
         : noop(),

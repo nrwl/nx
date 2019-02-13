@@ -3,6 +3,7 @@ node_modules
 /.vscode
 dist
 /build
+/coverage
 test
 .DS_Store
 tmp

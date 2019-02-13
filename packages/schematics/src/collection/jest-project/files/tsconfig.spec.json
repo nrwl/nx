@@ -4,7 +4,7 @@
     "outDir": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>",
     "module": "commonjs",
     "types": ["jest", "node"]
-  },
-  <% if(!skipSetupFile) { %>"files": ["src/test-setup.ts"],<% } %>
-  "include": ["**/*.spec.ts", "**/*.d.ts"]
+  },<% if(setupFile !== 'none') { %>
+  "files": ["src/test-setup.ts"],<% } %>
+  "include": ["**/*.spec.ts", "**/*.d.ts"<% if (supportTsx) { %>, "**/*.spec.tsx", "**/*.d.tsx"<% } %>]
 }

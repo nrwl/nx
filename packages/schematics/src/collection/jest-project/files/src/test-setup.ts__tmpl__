@@ -1,1 +1,2 @@
-import 'jest-preset-angular';
+<% if (setupFile === 'angular') { %>import 'jest-preset-angular';
+<% } else if (setupFile === 'custom-elements') { %>import 'document-register-element';<% } %>

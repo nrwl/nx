@@ -34,8 +34,12 @@ import {
 } from '../../utils/cli-config-utils';
 import { formatFiles } from '../../utils/rules/format-files';
 import { join, normalize } from '@angular-devkit/core';
-import { readJson } from '../../../../../e2e/utils';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
+import { Framework } from '../../utils/frameworks';
+import {
+  reactVersions,
+  documentRegisterElementVersion
+} from '../../lib-versions';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -141,19 +145,125 @@ function updateComponentTemplate(options: NormalizedSchema): Rule {
   };
 }
 
+function updateBuilders(options: NormalizedSchema): Rule {
+  return (host: Tree) => {
+    return updateJsonInTree(getWorkspacePath(host), json => {
+      const project = json.projects[options.name];
+      const buildOptions = project.architect.build;
+      const serveOptions = project.architect.serve;
+
+      buildOptions.builder = '@nrwl/builders:web-build';
+      delete buildOptions.configurations.production.aot;
+      delete buildOptions.configurations.production.buildOptimizer;
+
+      serveOptions.builder = '@nrwl/builders:web-dev-server';
+      serveOptions.options.buildTarget = serveOptions.options.browserTarget;
+      delete serveOptions.options.browserTarget;
+      serveOptions.configurations.production.buildTarget =
+        serveOptions.configurations.production.browserTarget;
+      delete serveOptions.configurations.production.browserTarget;
+
+      if (options.framework === Framework.React) {
+        buildOptions.options.main = buildOptions.options.main.replace(
+          '.ts',
+          '.tsx'
+        );
+      }
+      return json;
+    });
+  };
+}
+
+function updateApplicationFiles(options: NormalizedSchema): Rule {
+  return chain([
+    deleteAngularApplicationFiles(options),
+    addApplicationFiles(options),
+    updateDependencies(options)
+  ]);
+}
+
+function addApplicationFiles(options: NormalizedSchema): Rule {
+  return mergeWith(
+    apply(url(`./files/${options.framework}`), [
+      template({
+        ...options,
+        tmpl: ''
+      }),
+      move(options.appProjectRoot)
+    ])
+  );
+}
+
+function deleteAngularApplicationFiles(options: NormalizedSchema): Rule {
+  return (host: Tree) => {
+    const projectRoot = normalize(options.appProjectRoot);
+    [
+      'src/main.ts',
+      'src/polyfills.ts',
+      'src/app/app.module.ts',
+      'src/app/app.component.ts',
+      'src/app/app.component.spec.ts',
+      `src/app/app.component.${options.style}`,
+      'src/app/app.component.html'
+    ].forEach(path => {
+      path = join(projectRoot, path);
+      if (host.exists(path)) {
+        host.delete(path);
+      }
+    });
+  };
+}
+
+function updateDependencies(options: NormalizedSchema): Rule {
+  return updateJsonInTree('package.json', (json, context) => {
+    json.dependencies = json.dependencies || {};
+    json.devDependencies = json.devDependencies || {};
+
+    switch (options.framework) {
+      case Framework.React:
+        json.dependencies = {
+          ...json.dependencies,
+          react: reactVersions.framework,
+          'react-dom': reactVersions.framework
+        };
+        json.devDependencies = {
+          ...json.devDependencies,
+          '@types/react': reactVersions.reactTypes,
+          '@types/react-dom': reactVersions.reactDomTypes,
+          'react-testing-library': reactVersions.testingLibrary
+        };
+        context.addTask(new NodePackageInstallTask());
+        return json;
+
+      case Framework.CustomElements:
+        json.dependencies = {
+          ...json.dependencies,
+          'document-register-element': documentRegisterElementVersion
+        };
+        context.addTask(new NodePackageInstallTask());
+        return json;
+
+      default:
+        return json;
+    }
+  });
+}
+
 function addTsconfigs(options: NormalizedSchema): Rule {
   return chain([
     mergeWith(
-      apply(url('./files'), [
+      apply(url('./files/app'), [
         template({
+          ...options,
           offsetFromRoot: offsetFromRoot(options.appProjectRoot)
         }),
         move(options.appProjectRoot)
       ])
     ),
     mergeWith(
-      apply(url('./files'), [
+      apply(url('./files/app'), [
         template({
+          ...options,
           offsetFromRoot: offsetFromRoot(options.e2eProjectRoot)
         }),
         move(options.e2eProjectRoot)
@@ -246,17 +356,15 @@ function updateProject(options: NormalizedSchema): Rule {
           host.delete(`${options.e2eProjectRoot}/protractor.conf.js`);
         }
       },
-      (host, context) => {
-        if (options.e2eTestRunner === 'protractor') {
-          updateJsonInTree('/package.json', json => {
+      options.e2eTestRunner === 'protractor'
+        ? updateJsonInTree('/package.json', (json, context) => {
             if (!json.devDependencies.protractor) {
               json.devDependencies.protractor = '~5.4.0';
               context.addTask(new NodePackageInstallTask());
             }
             return json;
-          })(host, context);
-        }
-      }
+          })
+        : noop()
     ]);
   };
 }
@@ -361,11 +469,25 @@ export default function(schema: Schema): Rule {
       move(appProjectRoot, options.appProjectRoot),
       updateProject(options),
 
-      updateComponentTemplate(options),
-      options.routing ? addRouterRootConfiguration(options) : noop(),
+      options.framework !== Framework.Angular
+        ? updateBuilders(options)
+        : noop(),
+      options.framework === Framework.Angular
+        ? updateComponentTemplate(options)
+        : updateApplicationFiles(options),
+      options.framework === Framework.Angular && options.routing
+        ? addRouterRootConfiguration(options)
+        : noop(),
       options.unitTestRunner === 'jest'
         ? schematic('jest-project', {
-            project: options.name
+            project: options.name,
+            supportTsx: options.framework === Framework.React,
+            setupFile:
+              options.framework === Framework.Angular
+                ? 'angular'
+                : options.framework === Framework.CustomElements
+                ? 'custom-elements'
+                : 'none'
           })
         : noop(),
       options.unitTestRunner === 'karma'
@@ -379,6 +501,12 @@ export default function(schema: Schema): Rule {
 }
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
+  if (options.framework !== Framework.Angular && options.routing) {
+    throw new Error(
+      `Routing is not supported yet with frameworks other than Angular`
+    );
+  }
+
   const appDirectory = options.directory
     ? `${toFileName(options.directory)}/${toFileName(options.name)}`
     : toFileName(options.name);

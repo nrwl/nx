@@ -4,6 +4,30 @@
   "title": "Nx Application Options Schema",
   "type": "object",
   "properties": {
+    "framework": {
+      "description": "The Framework for the application.",
+      "type": "string",
+      "enum": ["angular", "react", "custom-elements"],
+      "default": "angular",
+      "x-prompt": {
+        "message": "What framework would you like to use for the application?",
+        "type": "list",
+        "items": [
+          {
+            "value": "angular",
+            "label": "Angular         [ https://angular.io   ]"
+          },
+          {
+            "value": "react",
+            "label": "React           [ https://reactjs.org/ ]"
+          },
+          {
+            "value": "custom-elements",
+            "label": "Custom Elements"
+          }
+        ]
+      }
+    },
     "name": {
       "description": "The name of the application.",
       "type": "string",

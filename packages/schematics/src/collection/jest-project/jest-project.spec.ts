@@ -108,6 +108,51 @@ describe('jestProject', () => {
     });
   });
 
+  describe('--setup-file', () => {
+    it('should generate src/test-setup.ts', async () => {
+      const resultTree = await runSchematic(
+        'jest-project',
+        {
+          project: 'lib1',
+          setupFile: 'none'
+        },
+        appTree
+      );
+      expect(resultTree.exists('src/test-setup.ts')).toBeFalsy();
+    });
+
+    it('should not list the setup file in angular.json', async () => {
+      const resultTree = await runSchematic(
+        'jest-project',
+        {
+          project: 'lib1',
+          setupFile: 'none'
+        },
+        appTree
+      );
+      const angularJson = readJsonInTree(resultTree, 'angular.json');
+      expect(
+        angularJson.projects.lib1.architect.test.options.setupFile
+      ).toBeUndefined();
+    });
+
+    it('should not list the setup file in tsconfig.spec.json', async () => {
+      const resultTree = await runSchematic(
+        'jest-project',
+        {
+          project: 'lib1',
+          setupFile: 'none'
+        },
+        appTree
+      );
+      const tsConfig = readJsonInTree(
+        resultTree,
+        'libs/lib1/tsconfig.spec.json'
+      );
+      expect(tsConfig.files).toBeUndefined();
+    });
+  });
+
   describe('--skip-setup-file', () => {
     it('should generate src/test-setup.ts', async () => {
       const resultTree = await runSchematic(
@@ -170,6 +215,23 @@ describe('jestProject', () => {
     'jest-preset-angular/HTMLCommentSerializer.js'
   ]
 `);
+    });
+  });
+
+  describe('--support-tsx', () => {
+    it('should add tsx to moduleExtensions', async () => {
+      const resultTree = await runSchematic(
+        'jest-project',
+        {
+          project: 'lib1',
+          supportTsx: true
+        },
+        appTree
+      );
+      const jestConfig = resultTree.readContent('libs/lib1/jest.config.js');
+      expect(jestConfig).toContain(
+        `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],`
+      );
     });
   });
 });

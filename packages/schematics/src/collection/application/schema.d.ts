@@ -1,6 +1,8 @@
+import { Framework } from './.../utils/frameworks';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 
 export interface Schema {
+  framework: Framework;
   name: string;
   skipFormat: boolean;
   inlineStyle?: boolean;
