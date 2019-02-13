@@ -19,15 +19,15 @@ To see how Nx delivers all of these, start with an empty Nx workspace:
 
 ## Monorepos with Nx
 
-```console
-apps/
-libs/
-tools/
-angular.json
-nx.json
-package.json
-tsconfig.json
-tslint.json
+```treeview
+<workspace name>/
+├── apps/
+├── libs/
+├── nx.json
+├── package.json
+├── tools/
+├── tsconfig.json
+└── tslint.json
 ```
 
 An empty workspace has several root-level configuration files and the folders for applications, libraries, and tools. Since an Nx workspace is an Angular CLI workspace, most configuration files are created by Angular CLI. The only exception is `nx.json`, which contains Nx-specific configuration.
@@ -48,36 +48,35 @@ Out of the box, Nx comes with two schematics for creating applications.
 
 Creating a new Angular application will result in something like this:
 
-```console
-apps/
-  myapp/
-    src/
-      app/
-      assets/
-      environments/
-      favicon.ico
-      index.html
-      main.ts
-      polyfills.ts
-      styles.css
-      test.ts
-    browserslist
-    jest.conf.js
-    tsconfig.json
-    tsconfig.app.json
-    tsconfig.spec.json
-    tslint.json
-  myapp-e2e/
-    ...
-libs/
-  ...
-tools/
-  ...
-angular.json
-nx.json
-package.json
-tsconfig.json
-tslint.json
+```treeview
+<workspace name>/
+├── README.md
+├── angular.json
+├── apps/
+│   ├── myapp/
+│   │   ├── browserslist
+│   │   ├── jest.conf.js
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   ├── assets/
+│   │   │   ├── environments/
+│   │   │   ├── favicon.ico
+│   │   │   ├── index.html
+│   │   │   ├── main.ts
+│   │   │   ├── polyfills.ts
+│   │   │   ├── styles.scss
+│   │   │   └── test.ts
+│   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.json
+│   │   ├── tsconfig.spec.json
+│   │   └── tslint.json
+│   └── myapp-e2e/
+├── libs/
+├── nx.json
+├── package.json
+├── tools/
+├── tsconfig.json
+└── tslint.json
 ```
 
 You can run:
@@ -98,26 +97,25 @@ Nx comes with a schematic for creating libraries.
 
 Creating a new TypeScript library will result in something like this:
 
-```console
-apps/
-  ...
-libs/
-  mylib/
-    src/
-      lib/
-      index.ts
-    jest.config.js
-    tsconfig.json
-    tsconfig.lib.json
-    tsconfig.spec.json
-    tslint.json
-tools/
-  ...
-angular.json
-nx.json
-package.json
-tsconfig.json
-tslint.json
+```treeview
+<workspace name>/
+├── apps/
+├── libs/
+│   └── mylibrary/
+│       ├── jest.conf.js
+│       ├── src/
+│       │   ├── lib/
+│       │   └── index.ts
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       ├── tsconfig.spec.json
+│       └── tslint.json
+├── nx.json
+├── package-lock.json
+├── package.json
+├── tools/
+├── tsconfig.json
+└── tslint.json
 ```
 
 By default, libraries are only buildable in the context of a particular application. As a result, the only two available targets are:

@@ -8,36 +8,35 @@ Start with implementing the frontend.
 
 The easier way to add a frontend app to an Nx workspace is to run `ng g application frontend`, which will create:
 
-```console
-apps/
-  frontend/
-    src/
-      app/
-      assets/
-      environments/
-      favicon.ico
-      index.html
-      main.ts
-      polyfills.ts
-      styles.css
-      test.ts
-    browserslist
-    jest.conf.js
-    tsconfig.json
-    tsconfig.app.json
-    tsconfig.spec.json
-    tslint.json
-  frontend-e2e/
-    ...
-libs/
-  ...
-tools/
-  ...
-angular.json
-nx.json
-package.json
-tsconfig.json
-tslint.json
+```treeview
+<workspace name>/
+├── README.md
+├── angular.json
+├── apps/
+│   ├── frontend/
+│   │   ├── browserslist
+│   │   ├── jest.conf.js
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   ├── assets/
+│   │   │   ├── environments/
+│   │   │   ├── favicon.ico
+│   │   │   ├── index.html
+│   │   │   ├── main.ts
+│   │   │   ├── polyfills.ts
+│   │   │   ├── styles.scss
+│   │   │   └── test.ts
+│   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.json
+│   │   ├── tsconfig.spec.json
+│   │   └── tslint.json
+│   └── frontend-e2e/
+├── libs/
+├── nx.json
+├── package.json
+├── tools/
+├── tsconfig.json
+└── tslint.json
 ```
 
 If you have used the Angular CLI, this should all look familiar: same configuration files, same folders.
@@ -78,41 +77,36 @@ export class AppComponent {
 
 Next, create the api. You can do it by running `ng g node-application api --frontend-project=frontend` (`--frontend-project=frontend` set ups the proxy configuration such that the frontend application can access the api).
 
-```console
-apps/
-  frontend/
-    ...
-  frontend-e2e/
-    ...
-  api/
-    src/
-      app/
-        app.module.ts
-        app.controller.ts
-        app.controller.spec.ts
-        app.service.ts
-        app.service.spec.ts
-      assets/
-        ...
-      environments/
-        environment.ts
-        environment.prod.ts
-      main.ts
-    jest.config.js
-    tsconfig.json
-    tsconfig.app.json
-    tsconfig.spec.json
-    tslint.json
-    proxy.conf.json
-libs/
-  ...
-tools/
-  ...
-angular.json
-nx.json
-package.json
-tsconfig.json
-tslint.json
+```treeview
+<workspace name>/
+├── apps/
+│   ├── frontend/
+│   ├── frontend-e2e/
+│   └── api/
+│       ├── jest.conf.js
+│       ├── proxy.conf.json
+│       ├── src/
+│       │   ├── app/
+│       │   │   ├── app.controller.ts
+│       │   │   ├── app.controller.spec.ts
+│       │   │   ├── app.module.ts
+│       │   │   ├── app.service.ts
+│       │   │   └── app.service.spec.ts
+│       │   ├── assets/
+│       │   ├── environments/
+│       │   │   ├── environment.ts
+│       │   │   └── environment.prod.ts
+│       │   └── main.ts
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       ├── tsconfig.spec.json
+│       └── tslint.json
+├── libs/
+├── nx.json
+├── package.json
+├── tools/
+├── tsconfig.json
+└── tslint.json
 ```
 
 The `apps` directory is where Nx places anything you can run: frontend applications, backend applications, e2e test suites. That's why the `api` application appeared there.
@@ -195,31 +189,27 @@ Normally sharing code between the backend and the frontend would have required d
 
 Create a new lib by running `ng g library data --framework=none`.
 
-```console
-apps/
-  frontend/
-    ...
-  frontend-e2e/
-    ...
-  api/
-    ...
-libs/
-  data/
-    src/
-      lib/
-      index.ts
-    jest.config.js
-    tsconfig.json
-    tsconfig.lib.json
-    tsconfig.spec.json
-    tslint.json
-tools/
-  ...
-angular.json
-nx.json
-package.json
-tsconfig.json
-tslint.json
+```treeview
+<workspace name>/
+├── apps/
+│   ├── frontend/
+│   ├── frontend-e2e/
+│   └── api/
+├── libs/
+│   └── data/
+│       ├── jest.conf.js
+│       ├── src/
+│       │   ├── lib/
+│       │   └── index.ts
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       ├── tsconfig.spec.json
+│       └── tslint.json
+├── nx.json
+├── package.json
+├── tools/
+├── tsconfig.json
+└── tslint.json
 ```
 
 Next, move `Ticket` into `libs/data/src/index.ts`:
