@@ -21,35 +21,34 @@ By default, when creating a new Angular application, Nx will use Cypress to crea
 ng g application frontend
 ```
 
-```console
-apps/
-  frontend/
-    ...
-  frontend-e2e/
-    src/
-      fixtures/
-        example.json
-      integration/
-        app.spec.ts
-      plugins/
-        index.ts
-      support/
-        app.po.ts
-        commands.ts
-        index.ts
-    cypress.json
-    tsconfig.e2e.json
-    tsconfig.json
-
-libs/
-  ...
-tools/
-  ...
-angular.json
-nx.json
-package.json
-tsconfig.json
-tslint.json
+```treeview
+<workspace name>/
+├── README.md
+├── angular.json
+├── apps/
+│   ├── frontend/
+│   └── frontend-e2e/
+│       ├── cypress.json
+│       ├── src/
+│       │   ├── fixtures/
+│       │   │   └── example.json
+│       │   ├── integration/
+│       │   │   └── app.spec.ts
+│       │   ├── plugins/
+│       │   │   └── index.ts
+│       │   └── support/
+│       │       ├── app.po.ts
+│       │       ├── commands.ts
+│       │       └── index.ts
+│       ├── tsconfig.e2e.json
+│       ├── tsconfig.json
+│       └── tslint.json
+├── libs/
+├── nx.json
+├── package.json
+├── tools/
+├── tsconfig.json
+└── tslint.json
 ```
 
 Older versions of Nx used Protractor as a default e2e test runner. For those workspace, you have provide the `--e2e-test-runner=cypress` option when creating a new application.
