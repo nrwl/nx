@@ -22,7 +22,9 @@ import { join, normalize } from '@angular-devkit/core';
 
 export interface JestProjectSchema {
   project: string;
+  supportTsx: boolean;
   skipSetupFile: boolean;
+  setupFile: 'angular' | 'custom-elements' | 'none';
   skipSerializers: boolean;
 }
 
@@ -37,7 +39,7 @@ function generateFiles(options: JestProjectSchema): Rule {
           projectRoot: projectConfig.root,
           offsetFromRoot: offsetFromRoot(projectConfig.root)
         }),
-        options.skipSetupFile
+        options.setupFile === 'none'
           ? filter(file => file !== '/src/test-setup.ts')
           : noop(),
         move(projectConfig.root)
@@ -73,7 +75,7 @@ function updateAngularJson(options: JestProjectSchema): Rule {
         tsConfig: join(normalize(projectConfig.root), 'tsconfig.spec.json')
       }
     };
-    if (!options.skipSetupFile) {
+    if (options.setupFile !== 'none') {
       projectConfig.architect.test.options.setupFile = join(
         normalize(projectConfig.root),
         'src/test-setup.ts'
@@ -104,7 +106,18 @@ function check(options: JestProjectSchema): Rule {
   };
 }
 
+function normalizeOptions(options: JestProjectSchema): JestProjectSchema {
+  if (!options.skipSetupFile) {
+    return options;
+  }
+  return {
+    ...options,
+    setupFile: 'none'
+  };
+}
+
 export default function(options: JestProjectSchema): Rule {
+  options = normalizeOptions(options);
   return chain([
     check(options),
     generateFiles(options),

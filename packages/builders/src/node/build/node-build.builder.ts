@@ -4,47 +4,26 @@ import {
   BuilderConfiguration,
   BuilderContext
 } from '@angular-devkit/architect';
-import { getSystemPath, normalize, Path } from '@angular-devkit/core';
+import { getSystemPath } from '@angular-devkit/core';
 import { WebpackBuilder } from '@angular-devkit/build-webpack';
 
 import { Observable } from 'rxjs';
-import { writeFileSync, statSync } from 'fs';
-import { getWebpackConfig, OUT_FILENAME } from './webpack/config';
-import { resolve, basename, dirname, relative } from 'path';
+import { writeFileSync } from 'fs';
+import { OUT_FILENAME } from '../../utils/webpack/config';
+import { resolve } from 'path';
 import { map } from 'rxjs/operators';
-import {
-  AssetPattern,
-  AssetPatternObject
-} from '@angular-devkit/build-angular';
+import { getNodeWebpackConfig } from '../../utils/webpack/node.config';
+import { normalizeBuildOptions } from '../../utils/normalize';
+import { BuildBuilderOptions } from '../../utils/types';
 
 try {
   require('dotenv').config();
 } catch (e) {}
 
-export interface BuildNodeBuilderOptions {
-  main: string;
-  outputPath: string;
-  tsConfig: string;
-  watch?: boolean;
-  sourceMap?: boolean;
+export interface BuildNodeBuilderOptions extends BuildBuilderOptions {
   optimization?: boolean;
+  sourceMap?: boolean;
   externalDependencies: 'all' | 'none' | string[];
-  showCircularDependencies?: boolean;
-  maxWorkers?: number;
-
-  fileReplacements: FileReplacement[];
-  assets?: AssetPattern[];
-
-  progress?: boolean;
-  statsJson?: boolean;
-  extractLicenses?: boolean;
-
-  root?: string;
-}
-
-export interface FileReplacement {
-  replace: string;
-  with: string;
 }
 
 export interface NodeBuildEvent extends BuildEvent {
@@ -65,12 +44,19 @@ export default class BuildNodeBuilder
   run(
     builderConfig: BuilderConfiguration<BuildNodeBuilderOptions>
   ): Observable<NodeBuildEvent> {
-    const options = this.normalizeOptions(
+    const options = normalizeBuildOptions(
       builderConfig.options,
+      this.root,
       builderConfig.sourceRoot
     );
 
-    let config = getWebpackConfig(options);
+    let config = getNodeWebpackConfig(options);
+    if (options.webpackConfig) {
+      config = require(options.webpackConfig)(config, {
+        options,
+        configuration: this.context.targetSpecifier.configuration
+      });
+    }
     return this.webpackBuilder
       .runWebpack(config, stats => {
         if (options.statsJson) {
@@ -88,70 +74,5 @@ export default class BuildNodeBuilder
           outfile: resolve(this.root, options.outputPath, OUT_FILENAME)
         }))
       );
-  }
-
-  private normalizeOptions(options: BuildNodeBuilderOptions, sourceRoot: Path) {
-    return {
-      ...options,
-      root: this.root,
-      main: resolve(this.root, options.main),
-      outputPath: resolve(this.root, options.outputPath),
-      tsConfig: resolve(this.root, options.tsConfig),
-      fileReplacements: this.normalizeFileReplacements(
-        options.fileReplacements
-      ),
-      assets: this.normalizeAssets(options.assets, sourceRoot)
-    };
-  }
-
-  private normalizeAssets(
-    assets: AssetPattern[],
-    sourceRoot: Path
-  ): AssetPatternObject[] {
-    return assets.map(asset => {
-      if (typeof asset === 'string') {
-        const assetPath = normalize(asset);
-        const resolvedAssetPath = resolve(this.root, assetPath);
-        const resolvedSourceRoot = resolve(this.root, sourceRoot);
-
-        if (!resolvedAssetPath.startsWith(resolvedSourceRoot)) {
-          throw new Error(
-            `The ${resolvedAssetPath} asset path must start with the project source root: ${sourceRoot}`
-          );
-        }
-
-        const isDirectory = statSync(resolvedAssetPath).isDirectory();
-        const input = isDirectory
-          ? resolvedAssetPath
-          : dirname(resolvedAssetPath);
-        const output = relative(resolvedSourceRoot, resolve(this.root, input));
-        const glob = isDirectory ? '**/*' : basename(resolvedAssetPath);
-        return {
-          input,
-          output,
-          glob
-        };
-      } else {
-        if (asset.output.startsWith('..')) {
-          throw new Error(
-            'An asset cannot be written to a location outside of the output path.'
-          );
-        }
-        return {
-          ...asset,
-          // Now we remove starting slash to make Webpack place it from the output root.
-          output: asset.output.replace(/^\//, '')
-        };
-      }
-    });
-  }
-
-  private normalizeFileReplacements(
-    fileReplacements: FileReplacement[]
-  ): FileReplacement[] {
-    return fileReplacements.map(fileReplacement => ({
-      replace: resolve(this.root, fileReplacement.replace),
-      with: resolve(this.root, fileReplacement.with)
-    }));
   }
 }

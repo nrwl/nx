@@ -13,12 +13,24 @@
     },
     "skipSetupFile": {
       "type": "boolean",
-      "description": "Skips the setup file required for angular",
-      "default": false
+      "description": "[Deprecated]: Skips the setup file required for angular. (Use --setup-file)",
+      "default": false,
+      "x-deprecated": true
+    },
+    "setupFile": {
+      "type": "string",
+      "enum": ["none", "angular", "custom-elements"],
+      "description": "The setup file to be generated",
+      "default": "angular"
     },
     "skipSerializers": {
       "type": "boolean",
       "description": "Skips the serializers required to snapshot angular templates",
+      "default": false
+    },
+    "supportTsx": {
+      "type": "boolean",
+      "description": "Setup tsx support",
       "default": false
     }
   },

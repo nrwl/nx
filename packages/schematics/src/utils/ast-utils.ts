@@ -5,7 +5,7 @@
  * Use of this source code is governed by an MIT- style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import { Rule, Tree } from '@angular-devkit/schematics';
+import { Rule, Tree, SchematicContext } from '@angular-devkit/schematics';
 import {
   findNodes,
   getDecoratorMetadata,
@@ -593,14 +593,17 @@ export function readJsonInTree<T = any>(host: Tree, path: string): T {
  */
 export function updateJsonInTree<T = any, O = T>(
   path: string,
-  callback: (json: T) => O
+  callback: (json: T, context: SchematicContext) => O
 ): Rule {
-  return (host: Tree): Tree => {
+  return (host: Tree, context: SchematicContext): Tree => {
     if (!host.exists(path)) {
-      host.create(path, serializeJson(callback({} as T)));
+      host.create(path, serializeJson(callback({} as T, context)));
       return host;
     }
-    host.overwrite(path, serializeJson(callback(readJsonInTree(host, path))));
+    host.overwrite(
+      path,
+      serializeJson(callback(readJsonInTree(host, path), context))
+    );
     return host;
   };
 }

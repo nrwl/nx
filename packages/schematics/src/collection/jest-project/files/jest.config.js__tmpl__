@@ -1,6 +1,10 @@
 module.exports = {
   name: '<%= project %>',
-  preset: '<%= offsetFromRoot %>jest.config.js',
+  preset: '<%= offsetFromRoot %>jest.config.js',<% if (supportTsx) { %>
+  transform: {
+    '^.+\\.[tj]sx?$': 'ts-jest'
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],<% } %>
   coverageDirectory: '<%= offsetFromRoot %>coverage/<%= projectRoot %>'<% if(!skipSerializers) { %>,
   snapshotSerializers: [
     'jest-preset-angular/AngularSnapshotSerializer.js',

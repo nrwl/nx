@@ -24,6 +24,8 @@ export interface KarmaProjectSchema {
   project: string;
 }
 
+// TODO: @jjean implement skipSetupFile
+
 function generateFiles(options: KarmaProjectSchema): Rule {
   return (host, context) => {
     const projectConfig = getProjectConfig(host, options.project);

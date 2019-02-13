@@ -19,7 +19,7 @@ const path = require('path');
  */
 const schematicsSourceDirectory = path.join(
   __dirname,
-  '../../build/packages/schematics/src'
+  '../../packages/schematics/src'
 );
 const schematicsOutputDirectory = path.join(
   __dirname,
@@ -29,6 +29,7 @@ const schematicCollectionFile = path.join(
   schematicsSourceDirectory,
   'collection.json'
 );
+fs.removeSync(schematicsOutputDirectory);
 const schematicCollection = fs.readJsonSync(schematicCollectionFile).schematics;
 const registry = new CoreSchemaRegistry();
 registry.addFormat(pathFormat);

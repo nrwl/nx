@@ -1,37 +1,41 @@
-import { getWebpackConfig } from './config';
-import { BuildNodeBuilderOptions } from '../node-build.builder';
+import { getBaseWebpackPartial } from './config';
 import { normalize, getSystemPath } from '@angular-devkit/core';
 
 import * as ts from 'typescript';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import { ProgressPlugin } from 'webpack';
+import { BuildBuilderOptions } from '../types';
 
-describe('getWebpackConfig', () => {
-  let input: BuildNodeBuilderOptions;
+describe('getBaseWebpackPartial', () => {
+  let input: BuildBuilderOptions;
   beforeEach(() => {
     input = {
       main: 'main.ts',
       outputPath: 'dist',
       tsConfig: 'tsconfig.json',
-      externalDependencies: 'all',
       fileReplacements: [],
-      root: getSystemPath(normalize('/root'))
+      root: getSystemPath(normalize('/root')),
+      statsJson: false
     };
   });
 
   describe('unconditional options', () => {
-    it('should have output options', () => {
-      const result = getWebpackConfig(input);
+    it('should have output filename', () => {
+      const result = getBaseWebpackPartial(input);
 
       expect(result.output.filename).toEqual('main.js');
-      expect(result.output.libraryTarget).toEqual('commonjs');
+    });
+
+    it('should have output path', () => {
+      const result = getBaseWebpackPartial(input);
+
+      expect(result.output.path).toEqual('dist');
     });
 
     it('should have a rule for typescript', () => {
-      const result = getWebpackConfig(input);
+      const result = getBaseWebpackPartial(input);
 
       const typescriptRule = result.module.rules.find(rule =>
         (rule.test as RegExp).test('app/main.ts')
@@ -42,7 +46,7 @@ describe('getWebpackConfig', () => {
     });
 
     it('should split typescript type checking into a separate workers', () => {
-      const result = getWebpackConfig(input);
+      const result = getBaseWebpackPartial(input);
 
       const typeCheckerPlugin = result.plugins.find(
         plugin => plugin instanceof ForkTsCheckerWebpackPlugin
@@ -50,24 +54,24 @@ describe('getWebpackConfig', () => {
       expect(typeCheckerPlugin).toBeTruthy();
     });
 
-    it('should target node', () => {
-      const result = getWebpackConfig(input);
-
-      expect(result.target).toEqual('node');
-    });
-
     it('should disable performance hints', () => {
-      const result = getWebpackConfig(input);
+      const result = getBaseWebpackPartial(input);
 
       expect(result.performance).toEqual({
         hints: false
       });
     });
 
-    it('should resolve typescript and javascript', () => {
-      const result = getWebpackConfig(input);
+    it('should resolve ts, tsx, mjs, js, and jsx', () => {
+      const result = getBaseWebpackPartial(input);
 
-      expect(result.resolve.extensions).toEqual(['.ts', '.mjs', '.js']);
+      expect(result.resolve.extensions).toEqual([
+        '.ts',
+        '.tsx',
+        '.mjs',
+        '.js',
+        '.jsx'
+      ]);
     });
 
     it('should include module and main in mainFields', () => {
@@ -77,29 +81,25 @@ describe('getWebpackConfig', () => {
         }
       });
 
-      const result = getWebpackConfig(input);
+      const result = getBaseWebpackPartial(input);
       expect(result.resolve.mainFields).toContain('module');
       expect(result.resolve.mainFields).toContain('main');
-    });
-
-    it('should not polyfill node apis', () => {
-      const result = getWebpackConfig(input);
-
-      expect(result.node).toEqual(false);
     });
   });
 
   describe('the main option', () => {
     it('should set the correct entry options', () => {
-      const result = getWebpackConfig(input);
+      const result = getBaseWebpackPartial(input);
 
-      expect(result.entry).toEqual(['main.ts']);
+      expect(result.entry).toEqual({
+        main: ['main.ts']
+      });
     });
   });
 
   describe('the output option', () => {
     it('should set the correct output options', () => {
-      const result = getWebpackConfig(input);
+      const result = getBaseWebpackPartial(input);
 
       expect(result.output.path).toEqual('dist');
     });
@@ -107,7 +107,7 @@ describe('getWebpackConfig', () => {
 
   describe('the tsConfig option', () => {
     it('should set the correct typescript rule', () => {
-      const result = getWebpackConfig(input);
+      const result = getBaseWebpackPartial(input);
 
       expect(
         result.module.rules.find(rule => rule.loader === 'ts-loader').options
@@ -119,7 +119,7 @@ describe('getWebpackConfig', () => {
     });
 
     it('should set the correct options for the type checker plugin', () => {
-      const result = getWebpackConfig(input);
+      const result = getBaseWebpackPartial(input);
 
       const typeCheckerPlugin = result.plugins.find(
         plugin => plugin instanceof ForkTsCheckerWebpackPlugin
@@ -136,7 +136,7 @@ describe('getWebpackConfig', () => {
         }
       });
 
-      const result = getWebpackConfig(input);
+      const result = getBaseWebpackPartial(input);
       expect(result.resolve.alias).toEqual({
         '@npmScope/libraryName': '/root/libs/libraryName/src/index.ts'
       });
@@ -149,7 +149,7 @@ describe('getWebpackConfig', () => {
         }
       });
 
-      const result = getWebpackConfig(input);
+      const result = getBaseWebpackPartial(input);
       expect(result.resolve.mainFields).toContain('es2015');
     });
   });
@@ -160,7 +160,7 @@ describe('getWebpackConfig', () => {
         options: {}
       });
 
-      const result = getWebpackConfig({
+      const result = getBaseWebpackPartial({
         ...input,
         fileReplacements: [
           {
@@ -176,39 +176,9 @@ describe('getWebpackConfig', () => {
     });
   });
 
-  describe('the externalDependencies option', () => {
-    it('should change all node_modules to commonjs imports', () => {
-      const result = getWebpackConfig(input);
-      const callback = jest.fn();
-      result.externals[0](null, '@angular/core', callback);
-      expect(callback).toHaveBeenCalledWith(null, 'commonjs @angular/core');
-    });
-
-    it('should change given module names to commonjs imports but not others', () => {
-      const result = getWebpackConfig({
-        ...input,
-        externalDependencies: ['module1']
-      });
-      const callback = jest.fn();
-      result.externals[0](null, 'module1', callback);
-      expect(callback).toHaveBeenCalledWith(null, 'commonjs module1');
-      result.externals[0](null, '@angular/core', callback);
-      expect(callback).toHaveBeenCalledWith();
-    });
-
-    it('should not change any modules to commonjs imports', () => {
-      const result = getWebpackConfig({
-        ...input,
-        externalDependencies: 'none'
-      });
-
-      expect(result.externals).not.toBeDefined();
-    });
-  });
-
   describe('the watch option', () => {
     it('should enable file watching', () => {
-      const result = getWebpackConfig({
+      const result = getBaseWebpackPartial({
         ...input,
         watch: true
       });
@@ -217,9 +187,20 @@ describe('getWebpackConfig', () => {
     });
   });
 
+  describe('the poll option', () => {
+    it('should determine the polling rate', () => {
+      const result = getBaseWebpackPartial({
+        ...input,
+        poll: 1000
+      });
+
+      expect(result.watchOptions.poll).toEqual(1000);
+    });
+  });
+
   describe('the source map option', () => {
     it('should enable source-map devtool', () => {
-      const result = getWebpackConfig({
+      const result = getBaseWebpackPartial({
         ...input,
         sourceMap: true
       });
@@ -228,7 +209,7 @@ describe('getWebpackConfig', () => {
     });
 
     it('should enable source-map devtool', () => {
-      const result = getWebpackConfig({
+      const result = getBaseWebpackPartial({
         ...input,
         sourceMap: false
       });
@@ -240,7 +221,7 @@ describe('getWebpackConfig', () => {
   describe('the optimization option', () => {
     describe('by default', () => {
       it('should set the mode to development', () => {
-        const result = getWebpackConfig(input);
+        const result = getBaseWebpackPartial(input);
 
         expect(result.mode).toEqual('development');
       });
@@ -248,7 +229,7 @@ describe('getWebpackConfig', () => {
 
     describe('when true', () => {
       it('should set the mode to production', () => {
-        const result = getWebpackConfig({
+        const result = getBaseWebpackPartial({
           ...input,
           optimization: true
         });
@@ -257,7 +238,7 @@ describe('getWebpackConfig', () => {
       });
 
       it('should not minify', () => {
-        const result = getWebpackConfig({
+        const result = getBaseWebpackPartial({
           ...input,
           optimization: true
         });
@@ -266,7 +247,7 @@ describe('getWebpackConfig', () => {
       });
 
       it('should not concatenate modules', () => {
-        const result = getWebpackConfig({
+        const result = getBaseWebpackPartial({
           ...input,
           optimization: true
         });
@@ -278,7 +259,7 @@ describe('getWebpackConfig', () => {
 
   describe('the max workers option', () => {
     it('should set the maximum workers for the type checker', () => {
-      const result = getWebpackConfig({
+      const result = getBaseWebpackPartial({
         ...input,
         maxWorkers: 1
       });
@@ -292,7 +273,7 @@ describe('getWebpackConfig', () => {
 
   describe('the assets option', () => {
     it('should add a copy-webpack-plugin', () => {
-      const result = getWebpackConfig({
+      const result = getBaseWebpackPartial({
         ...input,
         assets: [
           {
@@ -319,7 +300,7 @@ describe('getWebpackConfig', () => {
 
   describe('the circular dependencies option', () => {
     it('should show warnings for circular dependencies', () => {
-      const result = getWebpackConfig({
+      const result = getBaseWebpackPartial({
         ...input,
         showCircularDependencies: true
       });
@@ -332,7 +313,7 @@ describe('getWebpackConfig', () => {
     });
 
     it('should exclude node modules', () => {
-      const result = getWebpackConfig({
+      const result = getBaseWebpackPartial({
         ...input,
         showCircularDependencies: true
       });
@@ -348,7 +329,7 @@ describe('getWebpackConfig', () => {
 
   describe('the extract licenses option', () => {
     it('should extract licenses to a separate file', () => {
-      const result = getWebpackConfig({
+      const result = getBaseWebpackPartial({
         ...input,
         extractLicenses: true
       });
@@ -368,7 +349,7 @@ describe('getWebpackConfig', () => {
 
   describe('the progress option', () => {
     it('should show build progress', () => {
-      const result = getWebpackConfig({
+      const result = getBaseWebpackPartial({
         ...input,
         progress: true
       });

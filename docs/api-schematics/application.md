@@ -13,14 +13,15 @@ ng generate application ...
 
 | Name                | Alias | Description                                       | Type    | Default value |
 | ------------------- | ----- | ------------------------------------------------- | ------- | ------------- |
-| `style`             |       | The file extension to be used for style files.    | string  | `css`         |
-| `name`              |       | The name of the application.                      | string  | `undefined`   |
+| `prefix`            | p     | The prefix to apply to generated selectors.       | string  | `undefined`   |
+| `framework`         |       | The Framework for the application.                | string  | `angular`     |
+| `directory`         |       | The directory of the new application.             | string  | `undefined`   |
 | `inlineStyle`       | s     | Specifies if the style will be in the ts file.    | boolean | `false`       |
 | `inlineTemplate`    | t     | Specifies if the template will be in the ts file. | boolean | `false`       |
 | `viewEncapsulation` |       | Specifies the view encapsulation strategy.        | string  | `undefined`   |
 | `routing`           |       | Generates a routing module.                       | boolean | `false`       |
-| `prefix`            | p     | The prefix to apply to generated selectors.       | string  | `undefined`   |
-| `directory`         |       | The directory of the new application.             | string  | `undefined`   |
+| `name`              |       | The name of the application.                      | string  | `undefined`   |
+| `style`             |       | The file extension to be used for style files.    | string  | `css`         |
 | `skipTests`         | S     | Skip creating spec files.                         | boolean | `false`       |
 | `skipFormat`        |       | Skip formatting files                             | boolean | `false`       |
 | `skipPackageJson`   |       | Do not add dependencies to package.json.          | boolean | `false`       |

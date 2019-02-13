@@ -16,6 +16,10 @@
       "description": "Run build when files change.",
       "default": false
     },
+    "poll": {
+      "type": "number",
+      "description": "Frequency of file watcher in ms."
+    },
     "sourceMap": {
       "type": "boolean",
       "description": "Produce source maps.",
@@ -91,6 +95,10 @@
         "required": ["replace", "with"]
       },
       "default": []
+    },
+    "webpackConfig": {
+      "type": "string",
+      "description": "Path to a function which takes a webpack config, context and returns the resulting webpack config"
     }
   },
   "required": ["tsConfig", "main"],

@@ -21,6 +21,15 @@ export const expressTypingsVersion = '4.16.0';
 export const nestJsVersion = '5.5.0';
 export const nestJsSchematicsVersion = '5.11.2';
 
+export const reactVersions = {
+  framework: '16.8.3',
+  reactTypes: '16.8.4',
+  reactDomTypes: '16.8.2',
+  testingLibrary: '6.0.0'
+};
+
+export const documentRegisterElementVersion = '1.13.1';
+
 export const libVersions = {
   angularVersion,
   angularDevkitVersion,

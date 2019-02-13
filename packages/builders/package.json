@@ -26,6 +26,7 @@
   "builders": "./src/builders.json",
   "dependencies": {
     "@angular-devkit/architect": "~0.13.1",
+    "@angular-devkit/build-angular": "~0.13.1",
     "@angular-devkit/build-webpack": "~0.13.1",
     "copy-webpack-plugin": "4.6.0",
     "fork-ts-checker-webpack-plugin": "0.4.9",

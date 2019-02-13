@@ -1,0 +1,53 @@
+{
+  "title": "Web Dev Server",
+  "description": "Web Dev Server",
+  "type": "object",
+  "properties": {
+    "buildTarget": {
+      "type": "string",
+      "description": "Target which builds the application"
+    },
+    "port": {
+      "type": "number",
+      "description": "Port to listen on.",
+      "default": 4200
+    },
+    "host": {
+      "type": "string",
+      "description": "Host to listen on.",
+      "default": "localhost"
+    },
+    "ssl": {
+      "type": "boolean",
+      "description": "Serve using HTTPS.",
+      "default": false
+    },
+    "sslKey": {
+      "type": "string",
+      "description": "SSL key to use for serving HTTPS."
+    },
+    "sslCert": {
+      "type": "string",
+      "description": "SSL certificate to use for serving HTTPS."
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Watches for changes and rebuilds application",
+      "default": true
+    },
+    "liveReload": {
+      "type": "boolean",
+      "description": "Whether to reload the page on change, using live-reload.",
+      "default": true
+    },
+    "publicHost": {
+      "type": "string",
+      "description": "Public URL where the application will be served"
+    },
+    "open": {
+      "type": "boolean",
+      "description": "Open the application in the browser.",
+      "default": false
+    }
+  }
+}
