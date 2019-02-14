@@ -48,7 +48,8 @@ describe('node-app', () => {
                     with:
                       'apps/my-node-app/src/environments/environment.prod.ts'
                   }
-                ]
+                ],
+                externalDependencies: 'none'
               }
             }
           },
