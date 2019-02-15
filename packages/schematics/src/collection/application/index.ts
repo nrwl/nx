@@ -270,7 +270,8 @@ function updateProject(options: NormalizedSchema): Rule {
               json.devDependencies.protractor = '~5.4.0';
               context.addTask(new NodePackageInstallTask());
             }
-          });
+            return json;
+          })(host, context);
         }
       }
     ]);
