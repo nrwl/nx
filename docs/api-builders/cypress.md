@@ -44,6 +44,20 @@ Type: `boolean`
 
 Whether or not to open the Cypress application to run the tests. If set to 'true', will run in headless mode
 
+### key
+
+Type: `string`
+
+The key cypress should use to run tests in parallel/record the run (CI only)
+
+### parallel
+
+Default: `false`
+
+Type: `boolean`
+
+Whether or not Cypress should run its tests in parallel (CI only)
+
 ### record
 
 Default: `false`
