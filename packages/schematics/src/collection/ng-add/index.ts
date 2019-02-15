@@ -592,6 +592,7 @@ function createAdditionalFiles(options: Schema): Rule {
         [
           'nrwl.angular-console',
           'angular.ng-template',
+          'ms-vscode.vscode-typescript-tslint-plugin',
           'esbenp.prettier-vscode'
         ].forEach(extension => {
           if (!json.recommendations.includes(extension)) {
