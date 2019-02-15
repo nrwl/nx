@@ -10,15 +10,15 @@ With Nx, you can:
 
 ## Getting Started
 
-- New to Nx? Have a look at the [Getting Started](./getting-started) guide.
-- [How does Nx compare to the off-the-shelf Angular CLI?](./nx-and-cli)
+- New to Nx? Have a look at the [Getting Started](./getting-started.md) guide.
+- [How does Nx compare to the off-the-shelf Angular CLI?](./nx-and-cli.md)
 
 ## Learn Nx
 
-- [How to build full-stack applications using Angular and Nest?](../fundamentals/full-stack-development)
-- [How does Nx help you build like Google?](../fundamentals/building-like-google)
-- [How does Nx help you modernize your dev workflow?](../fundamentals/modernizing-dev-workflow)
-- [API docs](../api)
+- [How to build full-stack applications using Angular and Nest?](../fundamentals/full-stack-development.md)
+- [How does Nx help you build like Google?](../fundamentals/building-like-google.md)
+- [How does Nx help you modernize your dev workflow?](../fundamentals/modernizing-dev-workflow.md)
+- [API docs](../api-schematics/application.md)
 
 ## Community
 

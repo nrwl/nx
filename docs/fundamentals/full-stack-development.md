@@ -262,7 +262,7 @@ export class AppService {
 }
 ```
 
-After this refactoring, the backend and the frontend will not get out of sync. Being able to factor code into a lot of small libraries with well-defined public API, which you can then use across both the backend and the frontend, is one of key features of Nx. You can read more about it [here](./build-like-google).
+After this refactoring, the backend and the frontend will not get out of sync. Being able to factor code into a lot of small libraries with well-defined public API, which you can then use across both the backend and the frontend, is one of key features of Nx. You can read more about it [here](./building-like-google.md).
 
 ## Nx is Smart
 
@@ -272,7 +272,7 @@ But Nx can do a lot more than that. In Nx, your libraries, node applications, An
 
 ![Full Stack Dependencies](./full-stack-deps.png)
 
-If you change the data library, Nx will know that both the backend and the frontend can be affected by the change. This is what makes Nx a powerful full-stack development environment that scales. You can read more about this Nx capability in [Building Like Google](./build-like-google).
+If you change the data library, Nx will know that both the backend and the frontend can be affected by the change. This is what makes Nx a powerful full-stack development environment that scales. You can read more about this Nx capability in [Building Like Google](./building-like-google.md).
 
 ## Summary
 
