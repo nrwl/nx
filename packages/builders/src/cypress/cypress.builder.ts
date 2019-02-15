@@ -23,7 +23,9 @@ export interface CypressBuilderOptions {
   devServerTarget: string;
   headless: boolean;
   exit: boolean;
+  parallel: boolean;
   record: boolean;
+  key?: string;
   tsConfig: string;
   watch: boolean;
   browser?: string;
@@ -100,6 +102,8 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
           options.headless,
           options.exit,
           options.record,
+          options.key,
+          options.parallel,
           options.watch,
           options.baseUrl,
           options.browser
@@ -188,6 +192,8 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
     headless: boolean,
     exit: boolean,
     record: boolean,
+    key: string,
+    parallel: boolean,
     isWatching: boolean,
     baseUrl: string,
     browser?: string
@@ -210,6 +216,8 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
     options.exit = exit;
     options.headed = !headless;
     options.record = record;
+    options.key = key;
+    options.parallel = parallel;
 
     return fromPromise<any>(
       !isWatching || headless ? Cypress.run(options) : Cypress.open(options)

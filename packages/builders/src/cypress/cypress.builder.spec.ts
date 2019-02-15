@@ -12,6 +12,7 @@ describe('Cypress builder', () => {
   let builder: CypressBuilder;
   const cypressBuilderOptions: CypressBuilderOptions = {
     cypressConfig: 'apps/my-app-e2e/cypress.json',
+    parallel: false,
     tsConfig: 'apps/my-app-e2e/tsconfig.json',
     devServerTarget: 'my-app:serve',
     headless: true,
@@ -199,6 +200,7 @@ describe('Cypress builder', () => {
             devServerTarget: undefined,
             headless: true,
             exit: true,
+            parallel: false,
             record: false,
             baseUrl: undefined,
             watch: false
@@ -241,6 +243,7 @@ describe('Cypress builder', () => {
             devServerTarget: undefined,
             headless: true,
             exit: true,
+            parallel: false,
             record: false,
             baseUrl: undefined,
             watch: false
@@ -282,6 +285,7 @@ describe('Cypress builder', () => {
             devServerTarget: undefined,
             headless: true,
             exit: true,
+            parallel: false,
             record: false,
             baseUrl: undefined,
             watch: false
