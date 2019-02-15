@@ -65,6 +65,7 @@ if (!runsInWSL()) {
       expect(readJson('.vscode/extensions.json').recommendations).toEqual([
         'nrwl.angular-console',
         'angular.ng-template',
+        'ms-vscode.vscode-typescript-tslint-plugin',
         'esbenp.prettier-vscode'
       ]);
 
@@ -307,6 +308,7 @@ if (!runsInWSL()) {
         'eamodio.gitlens',
         'angular.ng-template',
         'nrwl.angular-console',
+        'ms-vscode.vscode-typescript-tslint-plugin',
         'esbenp.prettier-vscode'
       ]);
     });
