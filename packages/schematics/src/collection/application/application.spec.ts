@@ -236,17 +236,6 @@ describe('app', () => {
     });
   });
 
-  it('should import NgModule', async () => {
-    const tree = await runSchematic(
-      'app',
-      { name: 'myApp', directory: 'myDir' },
-      appTree
-    );
-    expect(
-      getFileContent(tree, 'apps/my-dir/my-app/src/app/app.module.ts')
-    ).toContain('NxModule.forRoot()');
-  });
-
   describe('routing', () => {
     it('should include RouterTestingModule', async () => {
       const tree = await runSchematic(

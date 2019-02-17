@@ -44,24 +44,6 @@ interface NormalizedSchema extends Schema {
   parsedTags: string[];
 }
 
-function addNxModule(options: NormalizedSchema): Rule {
-  return (host: Tree) => {
-    const modulePath = `${options.appProjectRoot}/src/app/app.module.ts`;
-    const moduleSource = host.read(modulePath)!.toString('utf-8');
-    const sourceFile = ts.createSourceFile(
-      modulePath,
-      moduleSource,
-      ts.ScriptTarget.Latest,
-      true
-    );
-    insert(host, modulePath, [
-      insertImport(sourceFile, modulePath, 'NxModule', '@nrwl/nx'),
-      ...addImportToModule(sourceFile, modulePath, 'NxModule.forRoot()')
-    ]);
-    return host;
-  };
-}
-
 function addRouterRootConfiguration(options: NormalizedSchema): Rule {
   return (host: Tree) => {
     const modulePath = `${options.appProjectRoot}/src/app/app.module.ts`;
@@ -379,7 +361,6 @@ export default function(schema: Schema): Rule {
       updateProject(options),
 
       updateComponentTemplate(options),
-      addNxModule(options),
       options.routing ? addRouterRootConfiguration(options) : noop(),
       options.unitTestRunner === 'jest'
         ? schematic('jest-project', {
