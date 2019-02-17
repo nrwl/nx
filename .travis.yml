@@ -24,10 +24,6 @@ script:
   - yarn checkcommit
   - yarn documentation
 
-cache:
-  directories:
-    - node_modules
-
 notifications:
   email: false
   webhooks:
