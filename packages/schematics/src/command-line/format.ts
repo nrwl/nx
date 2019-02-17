@@ -4,6 +4,7 @@ import * as resolve from 'resolve';
 import { getProjectRoots, parseFiles } from './shared';
 import { YargsAffectedOptions } from './affected';
 import { getTouchedProjects } from './touched';
+import { fileExists } from '../utils/fileutils';
 
 export interface YargsFormatOptions extends YargsAffectedOptions {
   libsAndApps?: boolean;
@@ -41,9 +42,11 @@ function getPatterns(args: YargsAffectedOptions) {
     }
 
     const p = parseFiles(args);
-    let patterns = p.files.filter(f =>
-      PRETTIER_EXTENSIONS.map(ext => '.' + ext).includes(path.extname(f))
-    );
+    let patterns = p.files
+      .filter(f => fileExists(f))
+      .filter(f =>
+        PRETTIER_EXTENSIONS.map(ext => '.' + ext).includes(path.extname(f))
+      );
 
     const libsAndApp = args.libsAndApps;
     return libsAndApp ? getPatternsFromApps(patterns) : patterns;
