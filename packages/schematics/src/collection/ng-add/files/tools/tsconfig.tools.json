@@ -5,7 +5,7 @@
     "rootDir": ".",
     "module": "commonjs",
     "target": "es5",
-    "types": ["jasmine", "node"]
+    "types": ["node"]
   },
   "include": ["**/*.ts"]
 }

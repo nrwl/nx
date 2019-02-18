@@ -75,33 +75,10 @@ describe('app', () => {
     ]);
   });
 
-  it('should not set package manager by default', () => {
-    const treeNoPackages = schematicRunner.runSchematic(
-      'ng-new',
-      { name: 'proj' },
-      projectTree
-    );
-    expect(
-      JSON.parse(treeNoPackages.readContent('/proj/angular.json')).cli
-        .packageManager
-    ).toBeUndefined();
-  });
-
-  it('should set package manager when provided', () => {
-    const tree = schematicRunner.runSchematic(
-      'ng-new',
-      { name: 'proj', packageManager: 'yarn' },
-      projectTree
-    );
-    expect(
-      JSON.parse(tree.readContent('/proj/angular.json')).cli.packageManager
-    ).toEqual('yarn');
-  });
-
   it('should configure the project to use style argument', () => {
     const tree = schematicRunner.runSchematic(
       'ng-new',
-      { name: 'proj', packageManager: 'yarn', style: 'scss' },
+      { name: 'proj', style: 'scss' },
       projectTree
     );
     expect(

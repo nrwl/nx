@@ -52,18 +52,6 @@
       "default": false,
       "alias": "g"
     },
-    "packageManager": {
-      "type": "string",
-      "description": "Package manager used in the project.",
-      "x-prompt": {
-        "message": "Which Package Manager would you like to use for your workspace?",
-        "type": "list",
-        "items": [
-          { "value": "npm", "label": "" },
-          { "value": "yarn", "label": "Yarn (https://yarnpkg.com/)" }
-        ]
-      }
-    },
     "commit": {
       "description": "Initial repository commit information.",
       "oneOf": [
