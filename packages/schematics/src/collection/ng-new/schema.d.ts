@@ -6,7 +6,6 @@ export interface Schema {
   npmScope?: string;
   skipInstall?: boolean;
   skipGit?: boolean;
-  packageManager?: string;
   style?: string;
   commit?: { name: string; email: string; message?: string };
 }

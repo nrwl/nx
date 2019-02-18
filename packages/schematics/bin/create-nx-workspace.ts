@@ -12,7 +12,7 @@ import { angularCliVersion } from '../src/lib-versions';
 
 const parsedArgs = yargsParser(process.argv, {
   string: ['directory'],
-  boolean: ['yarn', 'bazel', 'help']
+  boolean: ['help']
 });
 
 if (parsedArgs.help) {
@@ -32,8 +32,6 @@ if (parsedArgs.help) {
   `);
   process.exit(0);
 }
-const useYarn = parsedArgs.yarn;
-
 const schematicsTool = {
   name: 'Schematics',
   packageName: '@nrwl/schematics'
@@ -44,6 +42,13 @@ const bazelTool = {
 };
 
 const nxTool = parsedArgs.bazel ? bazelTool : schematicsTool;
+let useYarn = true;
+
+try {
+  execSync('yarn --version', { stdio: ['ignore', 'ignore', 'ignore'] });
+} catch (e) {
+  useYarn = false;
+}
 
 if (!useYarn) {
   try {
@@ -110,24 +115,20 @@ if (useYarn) {
   execSync('npm install --silent', { cwd: tmpDir, stdio: [0, 1, 2] });
 }
 
-const packageManagerOption = useYarn ? '--packageManager=yarn' : '';
-
 // creating the app itself
 const args = process.argv
   .slice(2)
   .filter(a => a !== '--yarn' && a !== '--bazel')
   .map(a => `"${a}"`)
   .join(' ');
-console.log(
-  `ng new ${args} --collection=${nxTool.packageName} ${packageManagerOption}`
-);
+console.log(`ng new ${args} --collection=${nxTool.packageName}`);
 execSync(
   `${path.join(
     tmpDir,
     'node_modules',
     '.bin',
     'ng'
-  )} new ${args} --collection=${nxTool.packageName} ${packageManagerOption}`,
+  )} new ${args} --collection=${nxTool.packageName}`,
   {
     stdio: [0, 1, 2]
   }
