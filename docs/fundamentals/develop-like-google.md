@@ -1,4 +1,4 @@
-# Building like Google: Monorepos and Automation
+# Developing Like Google: Monorepos and Automation
 
 In this guide you will look at one of the most interesting parts of Nx. The part that make so many things so much easier, that it has a transformative effect on a team and even on an organization.
 
@@ -251,11 +251,11 @@ You rarely have to look at `nx.json`, but it is still important to understand wh
     },
     "myapp": {
       "tags": ["shared"],
-      "implicitDependencies": ["myapp-e2e"]
+      "implicitDependencies": []
     },
     "myapp-e2e": {
       "tags": [],
-      "implicitDependencies": []
+      "implicitDependencies": ["myapp"]
     }
   }
 }
@@ -283,7 +283,11 @@ In this example, any change to `package.json` will only affect `mylib`.
 {
   "myapp": {
     "tags": ["shared"],
-    "implicitDependencies": ["myapp-e2e"]
+    "implicitDependencies": []
+  },
+  "myapp-e2e": {
+    "tags": [],
+    "implicitDependencies": ["myapp"]
   }
 }
 ```

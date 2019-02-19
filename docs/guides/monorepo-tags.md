@@ -23,19 +23,19 @@ First, use `nx.json` to annotate your projects with tags. In this example, we wi
   "projects": {
     "client": {
       "tags": ["scope:client"],
-      "implicitDependencies": ["client-e2e"]
+      "implicitDependencies": []
     },
     "client-e2e": {
       "tags": ["scope:client"],
-      "implicitDependencies": []
+      "implicitDependencies": ["client"]
     },
     "admin": {
       "tags": ["scope:admin"],
-      "implicitDependencies": ["admin-e2e"]
+      "implicitDependencies": []
     },
     "admin-e2e": {
       "tags": ["scope:admin"],
-      "implicitDependencies": []
+      "implicitDependencies": ["admin"]
     },
     "client-feature-main": {
       "tags": ["scope:client"],

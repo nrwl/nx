@@ -1,38 +1,34 @@
 # Getting Started
 
-<iframe src="https://player.vimeo.com/video/237418773" width="100%" height="360" frameborder="0" allowfullscreen></iframe>
+## Installing Angular CLI
 
-## Installing Nx
-
-Nx is just a set of power-ups for Angular CLI, **so an Nx workspace is an Angular CLI workspace**. This means that it will be handy to have the Angular CLI installed globally, which can be done via npm or yarn as well.
+Nx is just a set Angular CLI power-ups, **so an Nx workspace is an Angular CLI workspace**. This means that it will be handy to have the Angular CLI installed globally, which can be done via npm or yarn.
 
 ```bash
 npm install -g @angular/cli
 ```
 
-or
+## Creating an Nx Workspace
+
+### Creating an Nx Workspace Using Npx
+
+Using [Npx](https://medium.com/@maybekatz/introducing-npx-an-npm-package-runner-55f7d4bd282b) you can create a new workspace without installing any packages.
+
+Simply run:
 
 ```bash
-yarn global add @angular/cli
+npx -p @nrwl/schematics create-nx-workspace myworkspace
 ```
 
-After you have installed the Angular CLI, install `@nrwl/schematics`.
+### Creating an Nx Workspace Without Npx
+
+Install `@nrwl/schematics`.
 
 ```bash
 npm install -g @nrwl/schematics
 ```
 
-or
-
-```bash
-yarn global add @nrwl/schematics
-```
-
-## Nx Workspace
-
-### Creating an Nx Workspace
-
-To create an Nx workspace, run:
+Then run:
 
 ```bash
 ng new myworkspace --collection=@nrw/schematics
@@ -116,7 +112,7 @@ All the files that the CLI would have in a new project are still here, just in a
 
 Run `ng serve myapp` to serve the newly generated application!
 
-## Use Angular Console
+## Using Angular Console
 
 You can also create a new Nx project using Angular Console--UI for the CLI:
 

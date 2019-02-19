@@ -22,16 +22,16 @@
     "id": "fundamentals",
     "itemList": [
       {
-        "name": "Full Stack Development",
-        "id": "full-stack-development"
+        "name": "Building Full-Stack Applications",
+        "id": "build-full-stack-applications"
       },
       {
-        "name": "Building Like Google",
-        "id": "building-like-google"
+        "name": "Developing Like Google",
+        "id": "develop-like-google"
       },
       {
-        "name": "Modernizing Dev Workflow",
-        "id": "modernizing-dev-workflow"
+        "name": "Using Modern Tools",
+        "id": "use-modern-tools"
       }
     ]
   },

@@ -141,19 +141,19 @@ Nx uses its advanced code analysis to construct a dependency graph of all applic
   "projects": {
     "client": {
       "tags": [],
-      "implicitDependencies": ["client-e2e"]
+      "implicitDependencies": []
     },
     "client-e2e": {
       "tags": [],
-      "implicitDependencies": []
+      "implicitDependencies": ["client"]
     },
     "admin": {
       "tags": [],
-      "implicitDependencies": ["admin-e2e"]
+      "implicitDependencies": []
     },
     "admin-e2e": {
       "tags": [],
-      "implicitDependencies": []
+      "implicitDependencies": ["admin"]
     },
     "client-feature-main": {
       "tags": [],
@@ -189,13 +189,9 @@ You can also specify dependencies between projects. For instance, if `admin-e2e`
 
 ```json
 {
-  "client": {
+  "admin-e2e": {
     "tags": [],
-    "implicitDependencies": ["client-e2e", "admin-e2e"]
-  },
-  "admin": {
-    "tags": [],
-    "implicitDependencies": ["admin-e2e"]
+    "implicitDependencies": ["client", "admin"]
   }
 }
 ```
