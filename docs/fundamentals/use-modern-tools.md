@@ -1,4 +1,4 @@
-# Modernizing Your Dev Workflow
+# Using Modern Tools
 
 Using Nx, you can add Cypress, Jest, Prettier, and Nest into your dev workflow.
 
@@ -68,10 +68,6 @@ Adding a Nest app will also add Nest schematics to the workspace, which you can 
 ```bash
 ng generate @nestjs/schematics:controller mycontroller --sourceRoot=apps/nestapp/src --path=app
 ```
-
-The best way to discover what schematics Nest provides is by using Angular Console:
-
-SCREENSHOT
 
 Read more about Nest at [nestjs.com](https://nestjs.com).
 

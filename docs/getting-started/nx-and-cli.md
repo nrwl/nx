@@ -44,7 +44,7 @@ Now, add the right proxy configuration:
 }
 ```
 
-Finally, you can run `ng serve backend` and `ng serve frontend`. There is a lot more to full-stack development in Nx, which you can read about [here](../fundamentals/full-stack-development.md).
+Finally, you can run `ng serve backend` and `ng serve frontend`. There is a lot more to full-stack development in Nx, which you can read about [here](../fundamentals/build-full-stack-applications.md).
 
 ## Use effective development practices pioneered at Google
 
@@ -125,7 +125,7 @@ This is a hard requirement for monorepo-style development. Nx implements it.
 
 In addition to using the monorepo, Google is also know for its use of automation and tooling. Nx adds powerful capabilities helping your team promote best practices and ensure consistency.
 
-Read more about how Nx helps you develop like Google [here](../fundamentals/building-like-google.md).
+Read more about how Nx helps you develop like Google [here](../fundamentals/develop-like-google.md).
 
 ## Use Innovative Tools
 
@@ -149,7 +149,7 @@ ng test myapp
 ng e2e myapp
 ```
 
-Read more about using innovative tools [here](../fundamentals/modernizing-dev-workflow.md).
+Read more about using innovative tools [here](../fundamentals/use-modern-tools.md).
 
 ## Summary
 

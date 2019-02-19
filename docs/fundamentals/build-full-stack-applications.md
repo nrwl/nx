@@ -1,4 +1,4 @@
-# Building Full-Stack Applications using Angular and Nest
+# Building Full-Stack Applications
 
 In this guide you will build a full-stack application using Angular and Nest.
 
@@ -151,7 +151,7 @@ export interface Ticket {
 
 @Injectable()
 export class AppService {
-  getTodos(): Ticket[] {
+  getTickets(): Ticket[] {
     return [
       { id: 1, title: 'Fix my computer!' },
       { id: 2, title: 'Fix my desk' }
@@ -171,8 +171,8 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get('tickets')
-  getTodos(): Ticket[] {
-    return this.appService.getTodos();
+  getTickets(): Ticket[] {
+    return this.appService.getTickets();
   }
 }
 ```
@@ -253,7 +253,7 @@ import { Ticket } from '@tuskorg/data';
 
 @Injectable()
 export class AppService {
-  getTodos(): Ticket[] {
+  getTickets(): Ticket[] {
     return [
       { id: 1, title: 'Fix my computer!' },
       { id: 2, title: 'Fix my desk' }
@@ -262,7 +262,7 @@ export class AppService {
 }
 ```
 
-After this refactoring, the backend and the frontend will not get out of sync. Being able to factor code into a lot of small libraries with well-defined public API, which you can then use across both the backend and the frontend, is one of key features of Nx. You can read more about it [here](./building-like-google.md).
+After this refactoring, the backend and the frontend will not get out of sync. Being able to factor code into a lot of small libraries with well-defined public API, which you can then use across both the backend and the frontend, is one of key features of Nx. You can read more about it [here](develop-like-google.md).
 
 ## Nx is Smart
 
@@ -272,7 +272,7 @@ But Nx can do a lot more than that. In Nx, your libraries, node applications, An
 
 ![Full Stack Dependencies](./full-stack-deps.png)
 
-If you change the data library, Nx will know that both the backend and the frontend can be affected by the change. This is what makes Nx a powerful full-stack development environment that scales. You can read more about this Nx capability in [Building Like Google](./building-like-google.md).
+If you change the data library, Nx will know that both the backend and the frontend can be affected by the change. This is what makes Nx a powerful full-stack development environment that scales. You can read more about this Nx capability in [Building Like Google](develop-like-google.md).
 
 ## Summary
 
