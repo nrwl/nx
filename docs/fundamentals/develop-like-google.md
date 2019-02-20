@@ -210,7 +210,7 @@ For instance, with this configuration, when you import private client code from 
 
 Read more about this feature [here](../guides/monorepo-tags).
 
-## Tools & Automation
+## Tools and Automation
 
 In addition to implementing monorepo-style of development, Nx brings in another key element of Google dev culture--emphasis on tooling.
 

@@ -40,7 +40,7 @@ ng g ngrx <FeatureName> --module="" [options]
 
 Before you start generating your files, let's first review the schematic command options:
 
-## `ngrx` Command Options
+## ngrx Command Options
 
 - `name` : Specifies the name of the NgRx feature (required)
 - `module` : Specifies the parent directory for the NgRx folder (required)
