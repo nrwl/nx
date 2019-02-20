@@ -14,6 +14,10 @@
       {
         "name": "Nx and Angular CLI",
         "id": "nx-and-cli"
+      },
+      {
+        "name": "Resources",
+        "id": "resources"
       }
     ]
   },
