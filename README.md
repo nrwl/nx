@@ -28,13 +28,25 @@
 
 # What is Nx?
 
-🔎 **Nx is a set of Angular CLI power-ups that transform the CLI into a powerful tool for full-stack development.**
+🔎 **Nx is a set of Angular CLI power-ups for modern development.**
 
-With Nx, you can:
+## Nx Helps You
 
-- Build full-stack applications using Angular and Nest
-- Use effective development practices pioneered at Google
-- Use innovative tools like Cypress and Jest
+### Use Modern Tools
+
+Using Nx, you can add Cypress, Jest, Prettier, and Nest into your dev workflow. Nx sets up these tools and allows you to use them seamlessly. Nx fully integrates with the other modern tools you already use and love.
+
+### Build Full-Stack Applications
+
+With Nx, you can build full-stack applications using Angular and Node.js frameworks such as Nest and Express. You can share code between the frontend and the backend. And you can use the familiar `ng build/test/serve` commands to power whole dev experience.
+
+### Develop Like Google
+
+With Nx, you can develop multiple full-stack applications holistically and share code between them all in the same workspace. Nx provides advanced tools which help you scale your enterprise development. Nx helps enforce your organization’s standards and community best practices.
+
+## A la carte
+
+Most importantly, you can use these power-ups a la carte. Just want to build a single Angular application using Cypress? Nx is still an excellent choice for that.
 
 ## Does it replace Angular CLI?
 
@@ -44,72 +56,30 @@ Nx **is not** a replacement for Angular CLI. **An Nx workspace is an Angular CLI
 - You configure your projects in `angular.json`.
 - Anything you can do in a standard Angular CLI project, you can also do in an Nx workspace.
 
-## Features
-
-### Full-Stack Development
-
-With Nx, you can build a backend application next to your Angular application in the same repository. The backend and the frontend can share code. You can connect them to enable a fantastic development experience.
-
-### Use effective development practices pioneered at Google
-
-Using Nx, you can implement monorepo-style development--an approach popularized by Google and used by many tech companies today (Facebook, Uber, Twitter, etc..).
-
-_Doesn't Angular CLI support having multiple projects in the same workspace?_
-
-Yes, starting with Angular CLI 6 you can add different types of projects to a single workspace (by default you can add applications and libraries). This is great, but is not sufficient to enable the monorepo-style development. Nx adds an extra layer of tooling to make this possible.
-
-In addition to using the monorepo, Google is also known for its use of automation. Nx adds powerful capabilities helping your team promote best practices and ensure consistency.
-
-### Use Innovative Tools
-
-Tools like Apollo, Cypress, Jest, Prettier, and Nest have gained a lot of popularity.
-
-It's not the case that Apollo is always better than REST or Cypress is always better than Protractor. There are tradeoffs. But in many situations, for many projects, these innovative tools offer a lot of advantages.
-
-Adding these tools to the dev workflow is challenging in a regular CLI project. The choice you have is not between Protractor or Cypress, but between a hacked-up setup for Cypress and a great CLI setup for Protractor. Nx changes that!
-
-## A la carte
-
-Most importantly, you can use these power-ups a la carte. Just want to build a single Angular application using Cypress? Nx is still an excellent choice for that.
-
 # Getting Started
 
-Nx is just a set of power-ups for Angular CLI, **so an Nx workspace is an Angular CLI workspace**. This means that it will be handy to have the Angular CLI installed globally, which can be done via npm or yarn as well.
+## Creating an Nx Workspace Using Npx
+
+Using [Npx](https://medium.com/@maybekatz/introducing-npx-an-npm-package-runner-55f7d4bd282b) you can create a new Nx workspace without installing any packages.
+
+Simply run:
 
 ```bash
-npm install -g @angular/cli
+npx -p @nrwl/schematics create-nx-workspace myworkspace
 ```
 
-or
+## Creating an Nx Workspace Without Npx
 
-```bash
-yarn global add @angular/cli
-```
-
-> Note: If you do not have the Angular CLI installed globally you may not be able to use ng from the terminal to run CLI commands within the project. But the `package.json` file comes with npm scripts to run ng commands, so you can run npm start to ng serve and you can run `npm run ng <command>` to run any of the ng commands.
-
-After you have installed the Angular CLI, install `@nrwl/schematics`.
+Install `@nrwl/schematics`.
 
 ```bash
 npm install -g @nrwl/schematics
 ```
 
-or
+Then run:
 
 ```bash
-yarn global add @nrwl/schematics
-```
-
-> If you want to work with the version still in development you can use `@nrwl/schematics@next` as the package to install.
-
-## Nx Workspace
-
-### Creating an Nx Workspace
-
-To create an Nx workspace, run:
-
-```bash
-ng new myworkspace --collection=@nrwl/schematics
+ng new myworkspace --collection=@nrw/schematics
 ```
 
 The `ng new` command uses globally-installed packages. Anything installed globally can be in a messy state. If you have any problems running the command above, you can also run:
@@ -120,7 +90,7 @@ create-nx-workspace myworkspacename
 
 This command still runs `ng new` under the hood, but it does it in a sandboxed environment, and, as a result, never fails.
 
-### Adding to an Existing Angular CLI workspace
+## Adding Nx to an Existing Angular CLI workspace
 
 If you already have a regular Angular CLI project, you can add Nx power-ups by running:
 
@@ -138,37 +108,53 @@ ng g application myapp
 
 The result will look like this:
 
-```
-apps/
-    myapp/
-        src/
-            app/
-            assets/
-            environment/
-            favicon.ico
-            index.html
-            main.ts
-            polyfills.ts
-            styles.css
-        tsconfig.json
-        tsconfig.app.json
-        tsconfig.spec.json
-        tslint.json
-    myapp-e2e/
-        src/
-        tsconfig.json
-        tsconfig.e2e.json
-        tslint.json
-libs/
-tools/
-package.json
-tsconfig.json
-tslint.json
-angular.json
-nx.json
+```treeview
+<workspace name>/
+├── README.md
+├── angular.json
+├── apps/
+│   ├── myapp/
+│   │   ├── browserslist
+│   │   ├── jest.conf.js
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   ├── assets/
+│   │   │   ├── environments/
+│   │   │   ├── favicon.ico
+│   │   │   ├── index.html
+│   │   │   ├── main.ts
+│   │   │   ├── polyfills.ts
+│   │   │   ├── styles.scss
+│   │   │   └── test.ts
+│   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.json
+│   │   ├── tsconfig.spec.json
+│   │   └── tslint.json
+│   └── myapp-e2e/
+│       ├── cypress.json
+│       ├── src/
+│       │   ├── fixtures/
+│       │   │   └── example.json
+│       │   ├── integration/
+│       │   │   └── app.spec.ts
+│       │   ├── plugins/
+│       │   │   └── index.ts
+│       │   └── support/
+│       │       ├── app.po.ts
+│       │       ├── commands.ts
+│       │       └── index.ts
+│       ├── tsconfig.e2e.json
+│       ├── tsconfig.json
+│       └── tslint.json
+├── libs/
+├── nx.json
+├── package.json
+├── tools/
+├── tsconfig.json
+└── tslint.json
 ```
 
-All the files that the CLI would have in a new project are still here, just in a different folder structure which makes it easier to create more apps and libs in the future.
+All the files that the CLI would have in a new project are still here, just in a different folder structure which makes it easier to create more applications and libraries in the future.
 
 ## Serving Application
 
@@ -178,14 +164,14 @@ You are good to go!
 
 ## Quick Start & Documentation
 
+### Documentation
+
+- [Nx Documentation and Guides](https://nx.dev)
+- [Nx blog posts](https://blog.nrwl.io/nx/home)
+
 ### Books
 
 - [Angular Enteprise Monorepo Patters](https://go.nrwl.io/angular-enterprise-monorepo-patterns-new-book?utm_campaign=Book%3A%20Monorepo%20Patterns%2C%20Jan%202019&utm_source=Github&utm_medium=Banner%20Ad)
-
-### Documentation
-
-- [Nx Documentation and Guides](https://nrwl.io/nx)
-- [Nx blog posts](https://blog.nrwl.io/nx/home)
 
 ### Videos
 
