@@ -413,6 +413,7 @@ const updateAngularCLI = chain([
     json.devDependencies = json.devDependencies || {};
     json.devDependencies = {
       ...json.devDependencies,
+      '@angular/cli': '7.3.1',
       '@angular-devkit/build-angular': '~0.13.1'
     };
     return json;
