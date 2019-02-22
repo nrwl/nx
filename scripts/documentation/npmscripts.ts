@@ -55,7 +55,13 @@ function generateMarkdown(command) {
     );
   }
 
-  return { name: command.command.replace(':', '-'), template };
+  return {
+    name: command.command
+      .replace(':', '-')
+      .replace(' ', '-')
+      .replace(/[\]\[.]+/gm, ''),
+    template
+  };
 }
 function generateFile(
   outputDirectory: string,
