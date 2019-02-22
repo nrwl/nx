@@ -30,16 +30,16 @@
     "id": "fundamentals",
     "itemList": [
       {
+        "name": "Using Modern Tools",
+        "id": "use-modern-tools"
+      },
+      {
         "name": "Building Full-Stack Applications",
         "id": "build-full-stack-applications"
       },
       {
         "name": "Developing Like Google",
         "id": "develop-like-google"
-      },
-      {
-        "name": "Using Modern Tools",
-        "id": "use-modern-tools"
       }
     ]
   },
