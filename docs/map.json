@@ -18,6 +18,10 @@
       {
         "name": "Resources",
         "id": "resources"
+      },
+      {
+        "name": "About",
+        "id": "about"
       }
     ]
   },
