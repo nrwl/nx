@@ -12,14 +12,14 @@ With Nx, you can:
 
 ## Getting Started
 
-- New to Nx? Have a look at the [Getting Started](./getting-started.md) guide.
-- [How does Nx compare to the off-the-shelf Angular CLI?](./nx-and-cli.md)
+- New to Nx? Have a look at the [Getting Started](./getting-started) guide.
+- [How does Nx compare to the off-the-shelf Angular CLI?](./nx-and-cli)
 
 ## Learn Nx
 
-- [How Nx helps you use modern tools like Cypress, Jest, and Nest](../fundamentals/use-modern-tools.md)
-- [How Nx helps you build full-stack applications using Angular and Node.js](../fundamentals/build-full-stack-applications.md)
-- [How Nx helps you develop like Google](../fundamentals/develop-like-google.md)
+- [How Nx helps you use modern tools like Cypress, Jest, and Nest](../fundamentals/use-modern-tools)
+- [How Nx helps you build full-stack applications using Angular and Node.js](../fundamentals/build-full-stack-applications)
+- [How Nx helps you develop like Google](../fundamentals/develop-like-google)
 - [Books, talks, and blog posts about Nx](./resources)
 
 ## Contribute

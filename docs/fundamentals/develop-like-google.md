@@ -228,7 +228,7 @@ yarn format:write # formats the files
 yarn format:check # checks that the formatting is correct (used in CI)
 ```
 
-Read more about it [here](../guides/modernize-prettier.md).
+Read more about it [here](../guides/modernize-prettier).
 
 ## Understanding Nx.json
 
