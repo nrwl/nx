@@ -143,6 +143,7 @@ const options = {
     'build/npm/schematics/package.json'
   ],
   increment: parsedVersion.version,
+  requireUpstream: false,
   github: {
     preRelease: parsedVersion.isPrerelease,
     release: true,
