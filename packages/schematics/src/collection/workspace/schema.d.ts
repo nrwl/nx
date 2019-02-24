@@ -1,3 +1,5 @@
+import { UnitTestRunner } from '../../utils/test-runners';
+
 export interface Schema {
   directory: string;
   name: string;
@@ -5,6 +7,5 @@ export interface Schema {
   skipInstall?: boolean;
   skipGit?: boolean;
   style?: string;
-  preset: 'empty' | 'angular' | 'fullstack';
   commit?: { name: string; email: string; message?: string };
 }

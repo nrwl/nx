@@ -19,7 +19,7 @@ import {
 import { toClassName } from '@nrwl/schematics/src/utils/name-utils';
 
 describe('Nrwl Workspace', () => {
-  fit('should work', async () => {
+  it('should work', async () => {
     ensureProject();
     const myapp = uniq('myapp');
     const mylib = uniq('mylib');

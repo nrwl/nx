@@ -6,3 +6,4 @@ node_modules
 packages/schematics/src/collection/**/files/*.json
 /.vscode
 /.idea
+/.github
