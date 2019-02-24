@@ -15,7 +15,7 @@ describe('AppService', () => {
 
   describe('getData', () => {
     it('should return "Welcome to <%= name %>!"', () => {
-      expect(service.getData()).toBe('Welcome to <%= name %>!');
+      expect(service.getData()).toEqual({message: 'Welcome to <%= name %>!'});
     });
   });
 });

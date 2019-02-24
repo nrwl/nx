@@ -14,7 +14,7 @@ import * as http from 'http';
 import * as path from 'path';
 import * as treeKill from 'tree-kill';
 
-function getData() {
+function getData(): Promise<any> {
   return new Promise(resolve => {
     http.get('http://localhost:3333/api', res => {
       expect(res.statusCode).toEqual(200);
@@ -23,7 +23,7 @@ function getData() {
         data += chunk;
       });
       res.once('end', () => {
-        resolve(data);
+        resolve(JSON.parse(data));
       });
     });
   });
@@ -77,7 +77,7 @@ describe('Node Applications', () => {
         expect(data.toString()).toContain('Listening at http://localhost:3333');
         const result = await getData();
 
-        expect(result).toEqual(`Welcome to ${nodeapp}!`);
+        expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
         treeKill(server.pid, 'SIGTERM', err => {
           expect(err).toBeFalsy();
           resolve();
@@ -118,7 +118,7 @@ describe('Node Applications', () => {
       }
 
       const result = await getData();
-      expect(result).toEqual(`Welcome to ${nodeapp}!`);
+      expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
       treeKill(process.pid, 'SIGTERM', err => {
         expect(collectedOutput.startsWith('DONE')).toBeTruthy();
         expect(err).toBeFalsy();
@@ -164,7 +164,7 @@ describe('Node Applications', () => {
         if (message.includes('Listening at http://localhost:3333')) {
           const result = await getData();
 
-          expect(result).toEqual(`Welcome to ${nestapp}!`);
+          expect(result.message).toEqual(`Welcome to ${nestapp}!`);
           treeKill(server.pid, 'SIGTERM', err => {
             expect(err).toBeFalsy();
             resolve();
@@ -186,7 +186,7 @@ describe('Node Applications', () => {
         return;
       }
       const result = await getData();
-      expect(result).toEqual(`Welcome to ${nestapp}!`);
+      expect(result.message).toEqual(`Welcome to ${nestapp}!`);
       treeKill(process.pid, 'SIGTERM', err => {
         expect(err).toBeFalsy();
         done();

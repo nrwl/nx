@@ -13,7 +13,14 @@
     "ng-new": {
       "factory": "./collection/ng-new",
       "schema": "./collection/ng-new/schema.json",
-      "description": "Create an empty workspace"
+      "description": "Create a workspace"
+    },
+
+    "workspace": {
+      "factory": "./collection/workspace",
+      "schema": "./collection/workspace/schema.json",
+      "description": "Create an empty workspace",
+      "hidden": true
     },
 
     "application": {

@@ -94,7 +94,7 @@ describe('node-app', () => {
         'const app = express();'
       );
       expect(tree.readContent('apps/my-node-app/src/main.ts')).toContain(
-        'res.send(`Welcome to my-node-app!`);'
+        'res.send({message: `Welcome to my-node-app!`});'
       );
 
       const tsconfig = readJsonInTree(tree, 'apps/my-node-app/tsconfig.json');
