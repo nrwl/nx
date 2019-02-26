@@ -1,11 +1,11 @@
-# ng-new
+# workspace [hidden]
 
-Create a workspace
+Create an empty workspace
 
 ## Usage
 
 ```bash
-ng generate ng-new ...
+ng generate workspace ...
 
 ```
 
@@ -20,4 +20,3 @@ ng generate ng-new ...
 | `skipInstall` |       | Skip installing dependency packages.           | boolean | `false`       |
 | `skipGit`     | g     | Skip initializing a git repository.            | boolean | `false`       |
 | `commit`      |       | Initial repository commit information.         | boolean | `true`        |
-| `preset`      |       | What to create in the new workspace            | string  | `empty`       |
