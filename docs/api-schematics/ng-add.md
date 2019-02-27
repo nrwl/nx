@@ -9,10 +9,24 @@ ng generate ng-add ...
 
 ```
 
-### Options
+## Options
 
-| Name          | Alias | Description                                   | Type    | Default value |
-| ------------- | ----- | --------------------------------------------- | ------- | ------------- |
-| `npmScope`    |       | Npm scope for importing libs.                 | string  | `undefined`   |
-| `skipInstall` |       | Skip installing after adding @nrwl/schematics | boolean | `false`       |
-| `name`        |       | Project name.                                 | string  | `undefined`   |
+### npmScope
+
+Type: `string`
+
+Npm scope for importing libs.
+
+### skipInstall
+
+Default: `false`
+
+Type: `boolean`
+
+Skip installing after adding @nrwl/schematics
+
+### name
+
+Type: `string`
+
+Project name.

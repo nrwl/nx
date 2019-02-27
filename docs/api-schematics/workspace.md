@@ -9,14 +9,56 @@ ng generate workspace ...
 
 ```
 
-### Options
+## Options
 
-| Name          | Alias | Description                                    | Type    | Default value |
-| ------------- | ----- | ---------------------------------------------- | ------- | ------------- |
-| `name`        |       | The name of the workspace.                     | string  | `undefined`   |
-| `style`       |       | The file extension to be used for style files. | string  | `css`         |
-| `directory`   |       | The directory name to create the workspace in. | string  | ``            |
-| `npmScope`    |       | Npm scope for importing libs.                  | string  | `undefined`   |
-| `skipInstall` |       | Skip installing dependency packages.           | boolean | `false`       |
-| `skipGit`     | g     | Skip initializing a git repository.            | boolean | `false`       |
-| `commit`      |       | Initial repository commit information.         | boolean | `true`        |
+### name
+
+Type: `string`
+
+The name of the workspace.
+
+### style
+
+Default: `css`
+
+Type: `string`
+
+The file extension to be used for style files.
+
+### directory
+
+Type: `string`
+
+The directory name to create the workspace in.
+
+### npmScope
+
+Type: `string`
+
+Npm scope for importing libs.
+
+### skipInstall
+
+Default: `false`
+
+Type: `boolean`
+
+Skip installing dependency packages.
+
+### skipGit
+
+Alias(es): g
+
+Default: `false`
+
+Type: `boolean`
+
+Skip initializing a git repository.
+
+### commit
+
+Default: `true`
+
+Type: `boolean`
+
+Initial repository commit information.

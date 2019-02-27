@@ -9,9 +9,18 @@ ng generate workspace-schematic ...
 
 ```
 
-### Options
+## Options
 
-| Name         | Alias | Description           | Type    | Default value |
-| ------------ | ----- | --------------------- | ------- | ------------- |
-| `name`       |       | Schematic name        | string  | `undefined`   |
-| `skipFormat` |       | Skip formatting files | boolean | `false`       |
+### name
+
+Type: `string`
+
+Schematic name
+
+### skipFormat
+
+Default: `false`
+
+Type: `boolean`
+
+Skip formatting files
