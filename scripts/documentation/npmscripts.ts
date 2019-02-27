@@ -42,16 +42,19 @@ function generateMarkdown(command) {
    `;
 
   if (Array.isArray(command.options) && !!command.options.length) {
-    template += dedent`
-      ### Options
-      | Option | Description | Default value |
-      |--------|-------------|---------------|\n`;
+    template += '## Options';
 
     command.options.forEach(
       option =>
-        (template += dedent`| \`${option.command}\` | ${option.description} | ${
-          option.default === undefined ? '' : `\`${option.default}\``
-        } | \n`)
+        (template += dedent`
+          ### ${option.command.replace('--', '')}
+          ${
+            option.default === undefined || option.default === ''
+              ? ''
+              : `Default: \`${option.default}\`\n`
+          }
+          ${option.description}
+        `)
     );
   }
 
@@ -63,6 +66,7 @@ function generateMarkdown(command) {
     template
   };
 }
+
 function generateFile(
   outputDirectory: string,
   templateObject: { name: string; template: string }

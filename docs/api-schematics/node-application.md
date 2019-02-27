@@ -9,15 +9,60 @@ ng generate node-application ...
 
 ```
 
-### Options
+## Options
 
-| Name              | Alias | Description                                                                               | Type    | Default value |
-| ----------------- | ----- | ----------------------------------------------------------------------------------------- | ------- | ------------- |
-| `name`            |       | The name of the application.                                                              | string  | `undefined`   |
-| `directory`       |       | The directory of the new application.                                                     | string  | `undefined`   |
-| `framework`       |       | Node Framework to use for application.                                                    | string  | `nestjs`      |
-| `skipFormat`      |       | Skip formatting files                                                                     | boolean | `false`       |
-| `skipPackageJson` |       | Do not add dependencies to package.json.                                                  | boolean | `false`       |
-| `unitTestRunner`  |       | Test runner to use for unit tests                                                         | string  | `jest`        |
-| `tags`            |       | Add tags to the application (used for linting)                                            | string  | `undefined`   |
-| `frontendProject` |       | Frontend project that needs to access this application. This sets up proxy configuration. | string  | `undefined`   |
+### name
+
+Type: `string`
+
+The name of the application.
+
+### directory
+
+Type: `string`
+
+The directory of the new application.
+
+### framework
+
+Default: `nestjs`
+
+Type: `string`
+
+Node Framework to use for application.
+
+### skipFormat
+
+Default: `false`
+
+Type: `boolean`
+
+Skip formatting files
+
+### skipPackageJson
+
+Default: `false`
+
+Type: `boolean`
+
+Do not add dependencies to package.json.
+
+### unitTestRunner
+
+Default: `jest`
+
+Type: `string`
+
+Test runner to use for unit tests
+
+### tags
+
+Type: `string`
+
+Add tags to the application (used for linting)
+
+### frontendProject
+
+Type: `string`
+
+Frontend project that needs to access this application. This sets up proxy configuration.

@@ -9,8 +9,10 @@ ng generate cypress-project ...
 
 ```
 
-### Options
+## Options
 
-| Name      | Alias | Description              | Type   | Default value |
-| --------- | ----- | ------------------------ | ------ | ------------- |
-| `project` |       | The name of the project. | string | `undefined`   |
+### project
+
+Type: `string`
+
+The name of the project.
