@@ -100,6 +100,6 @@ ng serve todos
 
 ## Open http://localhost:4200 in the browser. What do you see?
 
-Page saying "This project was generated with Angular CLI using Nrwl Nx"
+Page saying "This project was generated using Nx"
 Page saying "This project was created using Angular CLI"
 404
