@@ -3,65 +3,91 @@
   "description": "Jest target options for Build Facade",
   "type": "object",
   "properties": {
+    "codeCoverage": {
+      "description": "Indicates that test coverage information should be collected and reported in the output. (https://jestjs.io/docs/en/cli#coverage)",
+      "type": "boolean"
+    },
     "jestConfig": {
-      "type": "string",
-      "description": "The path of the Jest configuration. (https://jestjs.io/docs/en/configuration.html)"
+      "description": "The path of the Jest configuration. (https://jestjs.io/docs/en/configuration)",
+      "type": "string"
+    },
+    "testFile": {
+      "description": "The name of the file to test.",
+      "type": "string"
     },
     "tsConfig": {
-      "type": "string",
-      "description": "The name of the Typescript configuration file."
+      "description": "The name of the Typescript configuration file.",
+      "type": "string"
     },
     "setupFile": {
-      "type": "string",
-      "description": "The name of a setup file used by Jest. (https://jestjs.io/docs/en/configuration.html#setuptestframeworkscriptfile-string)"
-    },
-    "watch": {
-      "type": "boolean",
-      "description": "Run tests when files change. (https://jestjs.io/docs/en/cli#watch)",
-      "default": false
-    },
-    "onlyChanged": {
-      "type": "boolean",
-      "alias": "o",
-      "description": "Isolate tests affected by uncommitted changes. (https://jestjs.io/docs/en/cli#onlychanged)"
-    },
-    "passWithNoTests": {
-      "type": "boolean",
-      "description": "Allow test suite to pass when no test files are found. (https://jestjs.io/docs/en/cli#passwithnotests)"
-    },
-    "codeCoverage": {
-      "type": "boolean",
-      "description": "Export a code coverage report. (https://jestjs.io/docs/en/cli#coverage)"
-    },
-    "updateSnapshot": {
-      "type": "boolean",
-      "alias": "u",
-      "description": "Re-record all failing snapshots. (https://jestjs.io/docs/en/cli#updatesnapshot)"
-    },
-    "ci": {
-      "type": "boolean",
-      "description": "Fail on missing snapshots. (https://jestjs.io/docs/en/cli#ci)"
+      "description": "The name of a setup file used by Jest. (https://jestjs.io/docs/en/configuration#setupfilesafterenv-array)",
+      "type": "string"
     },
     "bail": {
-      "type": "boolean",
-      "description": "Exit the test suite immediately upon the first failing test suite. (https://jestjs.io/docs/en/cli#bail)"
+      "alias": "b",
+      "description": "Exit the test suite immediately after `n` number of failing tests. (https://jestjs.io/docs/en/cli#bail)",
+      "type": ["number", "boolean"]
     },
-    "silent": {
-      "type": "boolean",
-      "description": "Prevent tests from printing messages through the console. (https://jestjs.io/docs/en/cli#silent)"
+    "ci": {
+      "description": "Whether to run Jest in continuous integration (CI) mode. This option is on by default in most popular CI environments. It will prevent snapshots from being written unless explicitly requested. (https://jestjs.io/docs/en/cli#ci)",
+      "type": "boolean"
     },
-    "runInBand": {
-      "type": "boolean",
-      "description": "Run tests in a single process as opposed to multiple workers. Useful for CI. (https://jestjs.io/docs/en/cli.html#runinband)"
+    "color": {
+      "description": "Forces test results output color highlighting (even if stdout is not a TTY). Set to false if you would like to have no colors. (https://jestjs.io/docs/en/cli#colors)",
+      "type": "boolean"
+    },
+    "json": {
+      "description": "Prints the test results in JSON. This mode will send all other test output and user messages to stderr. (https://jestjs.io/docs/en/cli#json)",
+      "type": "boolean"
     },
     "maxWorkers": {
-      "type": "number",
-      "description": "Max number of workers to run tests across. Useful for CI. (https://jestjs.io/docs/en/cli.html#maxworkers-num)"
+      "alias": "w",
+      "description": "Specifies the maximum number of workers the worker-pool will spawn for running tests. This defaults to the number of the cores available on your machine. Useful for CI. (its usually best not to override this default) (https://jestjs.io/docs/en/cli#maxworkers-num)",
+      "type": "number"
+    },
+    "onlyChanged": {
+      "alias": "o",
+      "description": "Attempts to identify which tests to run based on which files have changed in the current repository. Only works if you're running tests in a git or hg repository at the moment. (https://jestjs.io/docs/en/cli#onlychanged)",
+      "type": "boolean"
+    },
+    "outputFile": {
+      "description": "Write test results to a file when the --json option is also specified. (https://jestjs.io/docs/en/cli#outputfile-filename)",
+      "type": "string"
+    },
+    "passWithNoTests": {
+      "description": "Will not fail if no tests are found (for example while using `--testPathPattern`.) (https://jestjs.io/docs/en/cli#passwithnotests)",
+      "type": "boolean"
+    },
+    "runInBand": {
+      "alias": "i",
+      "description": "Run all tests serially in the current process (rather than creating a worker pool of child processes that run tests). This is sometimes useful for debugging, but such use cases are pretty rare. Useful for CI. (https://jestjs.io/docs/en/cli#runinband)",
+      "type": "boolean"
+    },
+    "silent": {
+      "description": "Prevent tests from printing messages through the console. (https://jestjs.io/docs/en/cli#silent)",
+      "type": "boolean"
     },
     "testNamePattern": {
-      "type": "string",
       "alias": "t",
-      "description": "Run only tests with a name that matches the regex. (https://jestjs.io/docs/en/cli.html#testnamepattern-regex)"
+      "description": "Run only tests with a name that matches the regex pattern. (https://jestjs.io/docs/en/cli#testnamepattern-regex)",
+      "type": "string"
+    },
+    "updateSnapshot": {
+      "alias": "u",
+      "description": "Use this flag to re-record snapshots. Can be used together with a test suite pattern or with `--testNamePattern` to re-record snapshot for test matching the pattern. (https://jestjs.io/docs/en/cli#updatesnapshot)",
+      "type": "boolean"
+    },
+    "useStderr": {
+      "description": "Divert all output to stderr.",
+      "type": "boolean"
+    },
+    "watch": {
+      "description": "Watch files for changes and rerun tests related to changed files. If you want to re-run all tests when a file has changed, use the `--watchAll` option. (https://jestjs.io/docs/en/cli#watch)",
+      "type": "boolean"
+    },
+    "watchAll": {
+      "description": "Watch files for changes and rerun all tests when something changes. If you want to re-run only the tests that depend on the changed files, use the `--watch` option. (https://jestjs.io/docs/en/cli#watchall)",
+      "type": "boolean"
     }
   },
   "required": ["jestConfig", "tsConfig"]

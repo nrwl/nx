@@ -1,11 +1,11 @@
 import {
   Builder,
-  BuildEvent,
   BuilderConfiguration,
+  BuildEvent,
   BuilderContext
 } from '@angular-devkit/architect';
 
-import { Observable, from } from 'rxjs';
+import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import * as path from 'path';
@@ -17,32 +17,42 @@ try {
 const { runCLI } = require('jest');
 
 export interface JestBuilderOptions {
-  jestConfig: string;
-  tsConfig: string;
-  watch: boolean;
-  bail?: boolean;
-  ci?: boolean;
   codeCoverage?: boolean;
-  onlyChanged?: boolean;
+  jestConfig: string;
+  testFile?: string;
+  setupFile?: string;
+  tsConfig: string;
+  bail?: number | boolean;
+  ci?: boolean;
+  color?: boolean;
+  json?: boolean;
   maxWorkers?: number;
+  onlyChanged?: boolean;
+  outputFile?: string;
   passWithNoTests?: boolean;
   runInBand?: boolean;
-  setupFile?: string;
   silent?: boolean;
-  updateSnapshot?: boolean;
   testNamePattern?: string;
+  updateSnapshot?: boolean;
+  useStderr?: boolean;
+  watch?: boolean;
+  watchAll?: boolean;
 }
 
 export default class JestBuilder implements Builder<JestBuilderOptions> {
+  constructor(private context: BuilderContext) {}
   run(
     builderConfig: BuilderConfiguration<JestBuilderOptions>
   ): Observable<BuildEvent> {
     const options = builderConfig.options;
+
+    options.jestConfig = path.resolve(
+      this.context.workspace.root,
+      options.jestConfig
+    );
+
     const tsJestConfig = {
-      tsConfig: path.join(
-        '<rootDir>',
-        path.relative(builderConfig.root, options.tsConfig)
-      )
+      tsConfig: path.resolve(this.context.workspace.root, options.tsConfig)
     };
 
     // TODO: This is hacky, We should probably just configure it in the user's workspace
@@ -56,34 +66,38 @@ export default class JestBuilder implements Builder<JestBuilderOptions> {
         ]
       });
     } catch (e) {}
+
     const config: any = {
-      watch: options.watch,
       coverage: options.codeCoverage,
       bail: options.bail,
       ci: options.ci,
-      updateSnapshot: options.updateSnapshot,
+      color: options.color,
+      json: options.json,
+      maxWorkers: options.maxWorkers,
       onlyChanged: options.onlyChanged,
+      outputFile: options.outputFile,
       passWithNoTests: options.passWithNoTests,
-      silent: options.silent,
       runInBand: options.runInBand,
+      silent: options.silent,
+      testNamePattern: options.testNamePattern,
+      updateSnapshot: options.updateSnapshot,
+      useStderr: options.useStderr,
+      watch: options.watch,
+      watchAll: options.watchAll,
       globals: JSON.stringify({
         'ts-jest': tsJestConfig
       })
     };
-
-    if (options.maxWorkers) {
-      config.maxWorkers = options.maxWorkers;
-    }
-
-    if (options.testNamePattern) {
-      config.testNamePattern = options.testNamePattern;
-    }
 
     if (options.setupFile) {
       config.setupTestFrameworkScriptFile = path.join(
         '<rootDir>',
         path.relative(builderConfig.root, options.setupFile)
       );
+    }
+
+    if (options.testFile) {
+      config._ = [options.testFile];
     }
 
     return from(runCLI(config, [options.jestConfig])).pipe(
