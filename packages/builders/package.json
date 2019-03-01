@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/builders",
   "version": "0.0.1",
-  "description": "Nrwl Extensions for Angular: Builders",
+  "description": "Angular CLI power-ups for modern Web development: Builders",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nrwl/nx.git"
@@ -22,7 +22,7 @@
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"
   },
-  "homepage": "https://github.com/nrwl/nx#readme",
+  "homepage": "https://nx.dev",
   "builders": "./src/builders.json",
   "dependencies": {
     "@angular-devkit/architect": "~0.13.1",

@@ -9,9 +9,6 @@ PACKAGE_SOURCE=build/packages
 NPM_DEST=build/npm
 ORIG_DIRECTORY=`pwd`
 
-# Get rid of tarballs at top of copied directory (made with npm pack)
-find $NPM_DEST -maxdepth 1 -name *.tgz -delete
-
 # We are running inside of a child_process, so we need to reauth
 npm adduser
 
@@ -24,7 +21,6 @@ do
   PACKAGE_NAME=`node -e "console.log(require('./package.json').name)"`
 
   echo "Publishing ${PACKAGE_NAME}@${VERSION} --tag ${TAG}"
-  npm publish --tag $TAG --access public
 
   cd $ORIG_DIRECTORY
 done

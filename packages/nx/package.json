@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/nx",
   "version": "0.0.1",
-  "description": "Nrwl Extensions for Angular",
+  "description": "Angular CLI power-ups for modern Web development",
   "main": "bundles/nrwl-nx.umd.js",
   "types": "nrwl-nx.d.ts",
   "module": "esm5/nrwl-nx.js",

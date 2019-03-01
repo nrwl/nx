@@ -26,6 +26,7 @@ rm -rf build/packages/nx/bundles/nrwl-nx-testing.umd.min.js.bak
 rsync -a --exclude=*.ts packages/ build/packages
 
 chmod +x build/packages/schematics/bin/create-nx-workspace.js
+chmod +x build/packages/create-nx-workspace/bin/create-nx-workspace.js
 chmod +x build/packages/schematics/src/command-line/nx.js
 rm -rf build/packages/install
 rm -rf build/packages/nx/dist
@@ -33,10 +34,11 @@ rm -rf build/packages/nx/spec
 cp README.md build/packages/builders
 cp README.md build/packages/schematics
 cp README.md build/packages/nx
-cp LICENSE build/packages/bazel
+cp README.md build/packages/create-nx-workspace
 cp LICENSE build/packages/builders
 cp LICENSE build/packages/schematics
 cp LICENSE build/packages/nx
+cp LICENSE build/packages/create-nx-workspace
 
 echo "Nx libraries available at build/packages:"
 ls build/packages

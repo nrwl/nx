@@ -2,6 +2,8 @@
 const yargsParser = require('yargs-parser');
 const releaseIt = require('release-it');
 const childProcess = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
 const parsedArgs = yargsParser(process.argv, {
   boolean: ['dry-run', 'nobazel'],
@@ -88,10 +90,14 @@ if (!parsedVersion.isValid) {
   console.log('parsed version: ', JSON.stringify(parsedVersion));
 }
 
+const cliVersion = JSON.parse(
+  fs.readFileSync(path.join(__dirname, '../package.json'))
+).devDependencies['@angular/cli'];
+
 console.log('Executing build script:');
-const buildCommand = `./scripts/package.sh ${parsedVersion.version} ${
+const buildCommand = `./scripts/package.sh ${
   parsedVersion.version
-}`;
+} ${cliVersion}`;
 console.log(`> ${buildCommand}`);
 childProcess.execSync(buildCommand, {
   stdio: [0, 1, 2]
@@ -140,7 +146,8 @@ const options = {
     'build/npm/bazel/package.json',
     'build/npm/builders/package.json',
     'build/npm/nx/package.json',
-    'build/npm/schematics/package.json'
+    'build/npm/schematics/package.json',
+    'build/npm/create-nx-workspace/package.json'
   ],
   increment: parsedVersion.version,
   requireUpstream: false,

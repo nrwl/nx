@@ -18,7 +18,7 @@ const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
  * be executed correctly.
  */
 export const commandsObject = yargs
-  .usage('Nrwl Extensions for Angular')
+  .usage('Angular CLI power-ups for modern Web development')
   .command(
     'affected',
     'Run task for affected projects',

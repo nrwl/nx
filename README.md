@@ -58,37 +58,25 @@ Nx **is not** a replacement for Angular CLI. **An Nx workspace is an Angular CLI
 
 # Getting Started
 
-## Creating an Nx Workspace Using Npx
+## Creating an Nx Workspace
 
-Using [Npx](https://medium.com/@maybekatz/introducing-npx-an-npm-package-runner-55f7d4bd282b) you can create a new Nx workspace without installing any packages.
-
-Simply run:
+**Using `npx`**
 
 ```bash
-npx -p @nrwl/schematics create-nx-workspace myworkspace
+npx create-nx-workspace myworkspace
 ```
 
-## Creating an Nx Workspace Without Npx
-
-Install `@nrwl/schematics`.
+**Using `npm init`**
 
 ```bash
-npm install -g @nrwl/schematics
+npm init nx-workspace myworkspace
 ```
 
-Then run:
+**Using `yarn create`**
 
 ```bash
-ng new myworkspace --collection=@nrwl/schematics
+yarn create nx-workspace myworkspace
 ```
-
-The `ng new` command uses globally-installed packages. Anything installed globally can be in a messy state. If you have any problems running the command above, you can also run:
-
-```bash
-create-nx-workspace myworkspacename
-```
-
-This command still runs `ng new` under the hood, but it does it in a sandboxed environment, and, as a result, never fails.
 
 ## Adding Nx to an Existing Angular CLI workspace
 
