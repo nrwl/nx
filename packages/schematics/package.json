@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/schematics",
   "version": "0.0.2",
-  "description": "Nrwl Extensions for Angular: Schematics",
+  "description": "Angular CLI power-ups for modern Web development: Schematics",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nrwl/nx.git"
@@ -25,7 +25,7 @@
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"
   },
-  "homepage": "https://github.com/nrwl/nx#readme",
+  "homepage": "https://nx.dev",
   "schematics": "./src/collection.json",
   "ng-update": {
     "requirements": {},

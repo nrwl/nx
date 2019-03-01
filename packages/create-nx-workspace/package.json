@@ -1,0 +1,31 @@
+{
+  "name": "create-nx-workspace",
+  "version": "0.0.2",
+  "description": "Angular CLI power-ups for modern Web development",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nrwl/nx.git"
+  },
+  "keywords": [
+    "RxJS",
+    "Angular",
+    "Workspace",
+    "NgRx",
+    "Schematics",
+    "Angular CLI"
+  ],
+  "bin": {
+    "create-nx-workspace": "./bin/create-nx-workspace.js"
+  },
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "dependencies": {
+    "tmp": "0.0.33",
+    "yargs-parser": "10.0.0",
+    "yargs": "^11.0.0"
+  }
+}

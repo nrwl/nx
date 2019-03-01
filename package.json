@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/nx-source",
-  "version": "7.6.0",
-  "description": "Nrwl Extensions for Angular",
+  "version": "7.6.2",
+  "description": "Angular CLI power-ups for modern Web development",
   "main": "index.js",
   "private": true,
   "scripts": {
