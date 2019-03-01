@@ -103,15 +103,16 @@ function updateComponentTemplate(options: NormalizedSchema): Rule {
   <img width="300" src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png">
 </div>
 
-<h2>This is an Angular CLI app built with Nrwl Nx!</h2>
-
-An open source toolkit for enterprise Angular applications.
-
-Nx is designed to help you create and build enterprise grade Angular applications. It provides an opinionated approach to application project structure and patterns.
+<p>This is an Angular app built with <a href="https://nx.dev">Nx</a>.</p>
+<p>🔎 **Nx is a set of Angular CLI power-ups for modern development.**</p>
 
 <h2>Quick Start & Documentation</h2>
 
-<a href="https://nrwl.io/nx">Watch a 5-minute video on how to get started with Nx.</a>`;
+<ul>
+<li><a href="https://nx.dev/getting-started/what-is-nx">30-minute video showing all Nx features</a></li>
+<li><a href="https://nx.dev/tutorial/01-create-application">Interactive tutorial</a></li>
+</ul>
+`;
     const content = options.routing
       ? `${baseContent}\n<router-outlet></router-outlet>`
       : baseContent;
