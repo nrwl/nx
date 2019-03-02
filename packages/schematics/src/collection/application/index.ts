@@ -235,7 +235,7 @@ function updateDependencies(options: NormalizedSchema): Rule {
         context.addTask(new NodePackageInstallTask());
         return json;
 
-      case Framework.CustomElements:
+      case Framework.WebComponents:
         json.dependencies = {
           ...json.dependencies,
           'document-register-element': documentRegisterElementVersion
@@ -485,8 +485,8 @@ export default function(schema: Schema): Rule {
             setupFile:
               options.framework === Framework.Angular
                 ? 'angular'
-                : options.framework === Framework.CustomElements
-                ? 'custom-elements'
+                : options.framework === Framework.WebComponents
+                ? 'web-components'
                 : 'none'
           })
         : noop(),

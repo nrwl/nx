@@ -22,7 +22,7 @@ describe('lib', () => {
     it('should update ng-package.json', async () => {
       const publishableTree = await runSchematic(
         'lib',
-        { name: 'myLib', publishable: true },
+        { name: 'myLib', framework: 'angular', publishable: true },
         appTree
       );
       let ngPackage = readJsonInTree(
@@ -42,7 +42,7 @@ describe('lib', () => {
     it('should update package.json when publishable', async () => {
       const tree = await runSchematic(
         'lib',
-        { name: 'myLib', publishable: true },
+        { name: 'myLib', framework: 'angular', publishable: true },
         appTree
       );
       const packageJson = readJsonInTree(tree, '/package.json');
@@ -52,7 +52,7 @@ describe('lib', () => {
     it("should update npmScope of lib's package.json when publishable", async () => {
       const tree = await runSchematic(
         'lib',
-        { name: 'myLib', publishable: true },
+        { name: 'myLib', framework: 'angular', publishable: true },
         appTree
       );
       const packageJson = readJsonInTree(tree, '/libs/my-lib/package.json');
@@ -72,7 +72,7 @@ describe('lib', () => {
     it('should update angular.json', async () => {
       const tree = await runSchematic(
         'lib',
-        { name: 'myLib', publishable: true },
+        { name: 'myLib', framework: 'angular', publishable: true },
         appTree
       );
       const angularJson = readJsonInTree(tree, '/angular.json');
@@ -149,7 +149,11 @@ describe('lib', () => {
     });
 
     it('should generate files', async () => {
-      const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', framework: 'angular' },
+        appTree
+      );
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
@@ -167,7 +171,7 @@ describe('lib', () => {
 
       const tree2 = await runSchematic(
         'lib',
-        { name: 'myLib2', simpleModuleName: true },
+        { name: 'myLib2', framework: 'angular', simpleModuleName: true },
         tree
       );
       expect(tree2.exists(`libs/my-lib2/jest.config.js`)).toBeTruthy();
@@ -256,7 +260,12 @@ describe('lib', () => {
     it('should update nx.json', async () => {
       const tree = await runSchematic(
         'lib',
-        { name: 'myLib', directory: 'myDir', tags: 'one' },
+        {
+          name: 'myLib',
+          directory: 'myDir',
+          framework: 'angular',
+          tags: 'one'
+        },
         appTree
       );
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
@@ -274,6 +283,7 @@ describe('lib', () => {
         {
           name: 'myLib2',
           directory: 'myDir',
+          framework: 'angular',
           tags: 'one,two',
           simpleModuleName: true
         },
@@ -296,7 +306,7 @@ describe('lib', () => {
     it('should generate files', async () => {
       const tree = await runSchematic(
         'lib',
-        { name: 'myLib', directory: 'myDir' },
+        { name: 'myLib', directory: 'myDir', framework: 'angular' },
         appTree
       );
       expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
@@ -320,7 +330,12 @@ describe('lib', () => {
 
       const tree2 = await runSchematic(
         'lib',
-        { name: 'myLib2', directory: 'myDir', simpleModuleName: true },
+        {
+          name: 'myLib2',
+          directory: 'myDir',
+          framework: 'angular',
+          simpleModuleName: true
+        },
         tree
       );
       expect(tree2.exists(`libs/my-dir/my-lib2/jest.config.js`)).toBeTruthy();
@@ -346,7 +361,12 @@ describe('lib', () => {
     it('should update ng-package.json', async () => {
       const publishableTree = await runSchematic(
         'lib',
-        { name: 'myLib', directory: 'myDir', publishable: true },
+        {
+          name: 'myLib',
+          directory: 'myDir',
+          framework: 'angular',
+          publishable: true
+        },
         appTree
       );
 
@@ -435,7 +455,13 @@ describe('lib', () => {
       it('should add RouterModule.forChild', async () => {
         const tree = await runSchematic(
           'lib',
-          { name: 'myLib', directory: 'myDir', routing: true, lazy: true },
+          {
+            name: 'myLib',
+            directory: 'myDir',
+            framework: 'angular',
+            routing: true,
+            lazy: true
+          },
           appTree
         );
 
@@ -455,6 +481,7 @@ describe('lib', () => {
             name: 'myLib2',
             directory: 'myDir',
             routing: true,
+            framework: 'angular',
             lazy: true,
             simpleModuleName: true
           },
@@ -478,6 +505,7 @@ describe('lib', () => {
             directory: 'myDir',
             routing: true,
             lazy: true,
+            framework: 'angular',
             parentModule: 'apps/myapp/src/app/app.module.ts'
           },
           appTree
@@ -507,6 +535,7 @@ describe('lib', () => {
             name: 'myLib2',
             directory: 'myDir',
             routing: true,
+            framework: 'angular',
             lazy: true,
             parentModule: 'apps/myapp/src/app/app.module.ts'
           },
@@ -544,6 +573,7 @@ describe('lib', () => {
             name: 'myLib3',
             directory: 'myDir',
             routing: true,
+            framework: 'angular',
             lazy: true,
             parentModule: 'apps/myapp/src/app/app.module.ts',
             simpleModuleName: true
@@ -583,7 +613,12 @@ describe('lib', () => {
       it('should add RouterModule and define an array of routes', async () => {
         const tree = await runSchematic(
           'lib',
-          { name: 'myLib', directory: 'myDir', routing: true },
+          {
+            name: 'myLib',
+            directory: 'myDir',
+            framework: 'angular',
+            routing: true
+          },
           appTree
         );
         expect(
@@ -608,6 +643,7 @@ describe('lib', () => {
             name: 'myLib2',
             directory: 'myDir',
             routing: true,
+            framework: 'angular',
             simpleModuleName: true
           },
           tree
@@ -631,6 +667,7 @@ describe('lib', () => {
             name: 'myLib',
             directory: 'myDir',
             routing: true,
+            framework: 'angular',
             parentModule: 'apps/myapp/src/app/app.module.ts'
           },
           appTree
@@ -651,6 +688,7 @@ describe('lib', () => {
             name: 'myLib2',
             directory: 'myDir',
             routing: true,
+            framework: 'angular',
             parentModule: 'apps/myapp/src/app/app.module.ts'
           },
           tree
@@ -674,6 +712,7 @@ describe('lib', () => {
             name: 'myLib3',
             directory: 'myDir',
             routing: true,
+            framework: 'angular',
             parentModule: 'apps/myapp/src/app/app.module.ts',
             simpleModuleName: true
           },

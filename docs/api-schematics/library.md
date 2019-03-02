@@ -15,7 +15,7 @@ ng generate library ...
 | ------------------ | ----- | ------------------------------------------------------------------------------------------------------------------------ | ------- | ------------- |
 | `skipTsConfig`     |       | Do not update tsconfig.json for development experience.                                                                  | boolean | `false`       |
 | `name`             |       | Library name                                                                                                             | string  | `undefined`   |
-| `framework`        |       | The framework this library uses                                                                                          | string  | `angular`     |
+| `framework`        |       | The framework this library uses                                                                                          | string  | `none`        |
 | `publishable`      |       | Generate a simple TS library when set to true.                                                                           | boolean | `false`       |
 | `prefix`           | p     | The prefix to apply to generated selectors.                                                                              | string  | `undefined`   |
 | `skipFormat`       |       | Skip formatting files                                                                                                    | boolean | `false`       |

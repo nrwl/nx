@@ -49,12 +49,12 @@ describe('Web Applications', () => {
     expect(e2eResults).toContain('All specs passed!');
   }, 30000);
 
-  it('should be able to generate a custom-elements application', async () => {
+  it('should be able to generate a web-components application', async () => {
     ensureProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
-    newApp(`${appName} --framework custom-elements`);
+    newApp(`${appName} --framework web-components`);
     newLib(`${libName} --framework none`);
 
     const mainPath = `apps/${appName}/src/main.ts`;

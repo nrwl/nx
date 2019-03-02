@@ -13,7 +13,7 @@ export class AppElement extends HTMLElement {
           src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png"
         />
       </div>
-      <p>This is a Custom Elements app built with <a href="https://nx.dev">Nx</a>.</p>
+      <p>This is a Web Components app built with <a href="https://nx.dev">Nx</a>.</p>
       <p>🔎 **Nx is a set of Angular CLI power-ups for modern development.**</p>
       <h2>Quick Start & Documentation</h2>
       <ul>

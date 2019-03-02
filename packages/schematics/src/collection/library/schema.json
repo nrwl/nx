@@ -22,18 +22,18 @@
       "type": "string",
       "enum": ["angular", "none"],
       "description": "The framework this library uses",
-      "default": "angular",
+      "default": "none",
       "x-prompt": {
         "message": "What framework should this library use?",
         "type": "list",
         "items": [
           {
-            "value": "angular",
-            "label": "Angular    [ https://angular.io/             ]"
-          },
-          {
             "value": "none",
             "label": "Typescript [ https://www.typescriptlang.org/ ]"
+          },
+          {
+            "value": "angular",
+            "label": "Angular    [ https://angular.io/             ]"
           }
         ]
       }

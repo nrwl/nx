@@ -24,7 +24,7 @@ export interface JestProjectSchema {
   project: string;
   supportTsx: boolean;
   skipSetupFile: boolean;
-  setupFile: 'angular' | 'custom-elements' | 'none';
+  setupFile: 'angular' | 'web-components' | 'none';
   skipSerializers: boolean;
 }
 

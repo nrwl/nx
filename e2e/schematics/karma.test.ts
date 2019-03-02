@@ -14,7 +14,7 @@ describe('Karma', () => {
   it('should be able to generate a testable library using karma', async done => {
     ensureProject();
     const mylib = uniq('mylib');
-    newLib(`${mylib} --unit-test-runner karma`);
+    newLib(`${mylib} --unit-test-runner karma --framework=angular`);
 
     await Promise.all([
       runCLIAsync(`generate service test --project ${mylib}`),
@@ -28,7 +28,7 @@ describe('Karma', () => {
   it('should be able to generate a testable application using karma', async done => {
     ensureProject();
     const myapp = uniq('myapp');
-    newApp(`${myapp} --unit-test-runner karma`);
+    newApp(`${myapp} --unit-test-runner karma --framework=angular`);
 
     await Promise.all([
       runCLIAsync(`generate service test --project ${myapp}`),

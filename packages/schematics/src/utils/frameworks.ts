@@ -1,6 +1,6 @@
 export const enum Framework {
   Angular = 'angular',
   React = 'react',
-  CustomElements = 'custom-elements',
+  WebComponents = 'web-components',
   None = 'none'
 }

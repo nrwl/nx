@@ -9,7 +9,7 @@ const commandsOutputDirectory = path.join(
   __dirname,
   '../../docs/api-npmscripts'
 );
-
+fs.removeSync(commandsOutputDirectory);
 function getCommands(command) {
   return command.getCommandInstance().getCommandHandlers();
 }
