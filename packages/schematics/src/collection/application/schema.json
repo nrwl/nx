@@ -7,7 +7,7 @@
     "framework": {
       "description": "The Framework for the application.",
       "type": "string",
-      "enum": ["angular", "react", "custom-elements"],
+      "enum": ["angular", "react", "web-components"],
       "default": "angular",
       "x-prompt": {
         "message": "What framework would you like to use for the application?",
@@ -22,8 +22,8 @@
             "label": "React           [ https://reactjs.org/ ]"
           },
           {
-            "value": "custom-elements",
-            "label": "Custom Elements"
+            "value": "web-components",
+            "label": "Web Components"
           }
         ]
       }

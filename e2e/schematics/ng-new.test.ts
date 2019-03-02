@@ -24,7 +24,7 @@ describe('Nrwl Workspace', () => {
     const myapp = uniq('myapp');
     const mylib = uniq('mylib');
     newApp(`${myapp} --directory=myDir`);
-    newLib(`${mylib} --directory=myDir`);
+    newLib(`${mylib} --directory=myDir --framework=angular`);
 
     updateFile(
       `apps/my-dir/${myapp}/src/app/app.module.ts`,
@@ -78,7 +78,7 @@ describe('Nrwl Workspace', () => {
     const mylib = uniq('mylib');
     newApp(`${myapp} --directory=myDir --routing`);
     newLib(
-      `${mylib} --directory=myDir --routing --lazy --parentModule=apps/my-dir/${myapp}/src/app/app.module.ts`
+      `${mylib} --directory=myDir --framework=angular --routing --lazy --parentModule=apps/my-dir/${myapp}/src/app/app.module.ts`
     );
 
     runCLI(`build --aot --project=my-dir-${myapp}`);
@@ -93,7 +93,7 @@ describe('Nrwl Workspace', () => {
     newApp(`${myapp} --directory=myDir --routing`);
     const mylib = uniq('mylib');
     newLib(
-      `${mylib} --directory=myDir --routing --parentModule=apps/my-dir/${myapp}/src/app/app.module.ts`
+      `${mylib} --directory=myDir --framework=angular --routing --parentModule=apps/my-dir/${myapp}/src/app/app.module.ts`
     );
 
     runCLI(`build --aot --project=my-dir-${myapp}`);

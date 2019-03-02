@@ -13,7 +13,7 @@ describe('Jest', () => {
   it('should be able to generate a testable library using jest', async done => {
     ensureProject();
     const mylib = uniq('mylib');
-    newLib(`${mylib} --unit-test-runner jest`);
+    newLib(`${mylib} --unit-test-runner jest --framework=angular`);
 
     await Promise.all([
       runCLIAsync(`generate service test --project ${mylib}`),
@@ -27,7 +27,7 @@ describe('Jest', () => {
   it('should be able to generate a testable application using jest', async () => {
     ensureProject();
     const myapp = uniq('myapp');
-    newApp(`${myapp} --unit-test-runner jest`);
+    newApp(`${myapp} --unit-test-runner jest --framework=angular`);
 
     await Promise.all([
       runCLIAsync(`generate service test --project ${myapp}`),

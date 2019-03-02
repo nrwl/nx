@@ -351,11 +351,11 @@ describe('app', () => {
   });
 
   describe('--framework', () => {
-    describe('custom-elements', () => {
+    describe('web-components', () => {
       it('should replace app files', async () => {
         const tree = await runSchematic(
           'app',
-          { name: 'myApp', framework: Framework.CustomElements },
+          { name: 'myApp', framework: Framework.WebComponents },
           appTree
         );
 

@@ -77,7 +77,7 @@
     },
     "preset": {
       "description": "What to create in the new workspace",
-      "enum": ["empty", "angular", "fullstack"],
+      "enum": ["empty", "angular", "react", "web-components", "full-stack"],
       "default": "empty",
       "x-prompt": {
         "message": "What to create in the new workspace (You can create other applications and libraries at any point using 'ng g')",
@@ -85,15 +85,23 @@
         "items": [
           {
             "value": "empty",
-            "label": "empty      [an empty workspace]"
+            "label": "empty             [an empty workspace]"
           },
           {
             "value": "angular",
-            "label": "angular    [a workspace with a single Angular application]"
+            "label": "angular           [a workspace with a single Angular application]"
           },
           {
-            "value": "fullstack",
-            "label": "full-stack [a workspace with a full stack application (NestJS + Angular)]"
+            "value": "react",
+            "label": "react             [a workspace with a single React application]"
+          },
+          {
+            "value": "web-components",
+            "label": "web components    [a workspace with a single built using web components]"
+          },
+          {
+            "value": "full-stack",
+            "label": "full-stack        [a workspace with a full stack application (NestJS + Angular)]"
           }
         ]
       }

@@ -8,13 +8,18 @@ import {
   Tree
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
-import { addImportToModule, insert } from '../../utils/ast-utils';
+import {
+  addImportToModule,
+  insert,
+  updateJsonInTree
+} from '../../utils/ast-utils';
 import * as ts from 'typescript';
 import { insertImport } from '@schematics/angular/utility/ast-utils';
 import {
   NodePackageInstallTask,
   RepositoryInitializerTask
 } from '@angular-devkit/schematics/tasks';
+import { Framework } from '../../utils/frameworks';
 
 export default function(options: Schema): Rule {
   if (!options.directory) {
@@ -39,9 +44,40 @@ function createPreset(options: Schema): Rule {
     return chain([
       schematic(
         'application',
-        { name: options.name, style: options.style },
+        {
+          name: options.name,
+          style: options.style,
+          framework: Framework.Angular
+        },
         { interactive: false }
-      )
+      ),
+      setDefaultAppFramework(Framework.Angular)
+    ]);
+  } else if (options.preset === 'react') {
+    return chain([
+      schematic(
+        'application',
+        {
+          name: options.name,
+          style: options.style,
+          framework: Framework.React
+        },
+        { interactive: false }
+      ),
+      setDefaultAppFramework(Framework.React)
+    ]);
+  } else if (options.preset === 'web-components') {
+    return chain([
+      schematic(
+        'application',
+        {
+          name: options.name,
+          style: options.style,
+          framework: Framework.WebComponents
+        },
+        { interactive: false }
+      ),
+      setDefaultAppFramework(Framework.WebComponents)
     ]);
   } else {
     return chain([
@@ -63,6 +99,7 @@ function createPreset(options: Schema): Rule {
         { name: 'api-interface', framework: 'none' },
         { interactive: false }
       ),
+      setDefaultAppFramework(Framework.Angular),
       connectFrontendAndApi(options)
     ]);
   }
@@ -214,4 +251,19 @@ function addTasks(options: Schema) {
       );
     }
   };
+}
+
+function setDefaultAppFramework(framework: Framework) {
+  return updateJsonInTree('angular.json', json => {
+    if (!json.schematics) {
+      json.schematics = {};
+    }
+    if (!json.schematics['@nrwl/schematics:application']) {
+      json.schematics['@nrwl/schematics:application'] = {};
+    }
+    if (!json.schematics['@nrwl/schematics:application'].framework) {
+      json.schematics['@nrwl/schematics:application'].framework = framework;
+    }
+    return json;
+  });
 }

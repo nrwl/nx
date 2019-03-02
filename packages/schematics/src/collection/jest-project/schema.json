@@ -19,7 +19,7 @@
     },
     "setupFile": {
       "type": "string",
-      "enum": ["none", "angular", "custom-elements"],
+      "enum": ["none", "angular", "web-components"],
       "description": "The setup file to be generated",
       "default": "angular"
     },
