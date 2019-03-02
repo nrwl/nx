@@ -15,7 +15,11 @@ import { join, normalize, Path } from '@angular-devkit/core';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { Schema } from './schema';
 import { offsetFromRoot } from '../../utils/common';
-import { getProjectConfig, updateJsonInTree } from '../../utils/ast-utils';
+import {
+  addDepsToPackageJson,
+  getProjectConfig,
+  updateJsonInTree
+} from '../../utils/ast-utils';
 import { toFileName } from '../../utils/name-utils';
 import {
   expressVersion,
@@ -45,40 +49,33 @@ function addTypes(options: NormalizedSchema): Rule {
 }
 
 function addDependencies(options: NormalizedSchema): Rule {
-  return chain([
-    updateJsonInTree('package.json', json => {
-      json.dependencies = json.dependencies || {};
-      json.devDependencies = json.devDependencies || {};
+  let deps = {};
+  let devDeps = {};
 
-      switch (options.framework) {
-        case 'express':
-          json.dependencies = {
-            ...json.dependencies,
-            express: expressVersion
-          };
+  switch (options.framework) {
+    case 'express':
+      deps = {
+        express: expressVersion
+      };
+      devDeps = {
+        '@types/express': expressTypingsVersion
+      };
+      break;
 
-          json.devDependencies = {
-            ...json.devDependencies,
-            '@types/express': expressTypingsVersion
-          };
+    case 'nestjs':
+      deps = {
+        '@nestjs/common': nestJsVersion,
+        '@nestjs/core': nestJsVersion
+      };
 
-        case 'nestjs':
-          json.dependencies = {
-            ...json.dependencies,
-            '@nestjs/common': nestJsVersion,
-            '@nestjs/core': nestJsVersion
-          };
+      devDeps = {
+        '@nestjs/schematics': nestJsSchematicsVersion,
+        '@nestjs/testing': nestJsVersion
+      };
+      break;
+  }
 
-          json.devDependencies = {
-            ...json.devDependencies,
-            '@nestjs/schematics': nestJsSchematicsVersion,
-            '@nestjs/testing': nestJsVersion
-          };
-      }
-      return json;
-    }),
-    addInstall
-  ]);
+  return addDepsToPackageJson(deps, devDeps);
 }
 
 function createSourceCode(options: NormalizedSchema): Rule {
@@ -96,11 +93,6 @@ function createSourceCode(options: NormalizedSchema): Rule {
       options.framework !== 'none' ? addDependencies(options) : noop()
     ])(host, context);
   };
-}
-
-function addInstall(host: Tree, context: SchematicContext) {
-  context.addTask(new NodePackageInstallTask());
-  return host;
 }
 
 function updateNxJson(options: NormalizedSchema): Rule {

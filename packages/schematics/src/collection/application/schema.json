@@ -62,8 +62,7 @@
     "routing": {
       "type": "boolean",
       "description": "Generates a routing module.",
-      "default": false,
-      "x-prompt": "Would you like to add Angular routing?"
+      "default": false
     },
     "prefix": {
       "type": "string",
@@ -112,11 +111,11 @@
         "message": "Which Unit Test Runner would you like to use for the application?",
         "type": "list",
         "items": [
+          { "value": "jest", "label": "Jest   [ https://jestjs.io ]" },
           {
             "value": "karma",
             "label": "Karma [ https://karma-runner.github.io ]"
-          },
-          { "value": "jest", "label": "Jest   [ https://jestjs.io ]" }
+          }
         ]
       }
     },

@@ -14,6 +14,7 @@ import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { join, normalize } from '@angular-devkit/core';
 // app
 import {
+  addDepsToPackageJson,
   getProjectConfig,
   readJsonInTree,
   updateJsonInTree
@@ -49,21 +50,8 @@ function installDependencies(
     dictionary[value.name] = value.version;
     return dictionary;
   }, {});
-  const updatePackageJson: Rule = updateJsonInTree('package.json', json => {
-    return {
-      ...json,
-      devDependencies: {
-        ...json.devDependencies,
-        ...addedDependencies
-      }
-    };
-  });
 
-  function doInstall(host: Tree, context: SchematicContext): void {
-    context.addTask(new NodePackageInstallTask());
-  }
-
-  return chain([updatePackageJson, doInstall]);
+  return addDepsToPackageJson({}, addedDependencies);
 }
 
 function checkDependenciesInstalled(): Rule {

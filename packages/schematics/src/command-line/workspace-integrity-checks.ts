@@ -23,7 +23,7 @@ export class WorkspaceIntegrityChecks {
   private packageJsonConsistencyCheck(): ErrorGroup[] {
     const nx = this.packageJson.dependencies['@nrwl/nx'];
     const schematics = this.packageJson.devDependencies['@nrwl/schematics'];
-    if (nx !== schematics) {
+    if (schematics && nx && nx !== schematics) {
       return [
         {
           header: 'The package.json is inconsistent',

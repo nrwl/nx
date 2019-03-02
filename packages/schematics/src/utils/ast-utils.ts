@@ -25,6 +25,7 @@ import * as path from 'path';
 import { toFileName } from './name-utils';
 import { serializeJson } from './fileutils';
 import * as stripJsonComments from 'strip-json-comments';
+import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
 export function addReexport(
   source: ts.SourceFile,
@@ -606,6 +607,21 @@ export function updateJsonInTree<T = any, O = T>(
     );
     return host;
   };
+}
+
+export function addDepsToPackageJson(deps: any, devDeps: any): Rule {
+  return updateJsonInTree('package.json', (json, context: SchematicContext) => {
+    json.dependencies = {
+      ...deps,
+      ...(json.dependencies || {})
+    };
+    json.devDependencies = {
+      ...devDeps,
+      ...(json.devDependencies || {})
+    };
+    context.addTask(new NodePackageInstallTask());
+    return json;
+  });
 }
 
 export function getProjectConfig(host: Tree, name: string): any {
