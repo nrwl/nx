@@ -1,6 +1,5 @@
 {
   "rulesDirectory": [
-    "node_modules/codelyzer",
     "node_modules/@nrwl/schematics/src/tslint"
   ],
   "rules": {
@@ -67,28 +66,6 @@
     ],
     "unified-signatures": true,
     "variable-name": false,
-    "directive-selector": [
-      true,
-      "attribute",
-      "app",
-      "camelCase"
-    ],
-    "component-selector": [
-      true,
-      "element",
-      "app",
-      "kebab-case"
-    ],
-    "no-output-on-prefix": true,
-    "use-input-property-decorator": true,
-    "use-output-property-decorator": true,
-    "use-host-property-decorator": true,
-    "no-input-rename": true,
-    "no-output-rename": true,
-    "use-life-cycle-interface": true,
-    "use-pipe-transform-interface": true,
-    "component-class-suffix": true,
-    "directive-class-suffix": true,
 
     "nx-enforce-module-boundaries": [
       true,

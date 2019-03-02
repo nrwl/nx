@@ -71,8 +71,7 @@
     },
     "parentModule": {
       "type": "string",
-      "description": "Update the router configuration of the parent module using loadChildren or children, depending on what `lazy` is set to.",
-      "x-prompt": "Which module should import the library?"
+      "description": "Update the router configuration of the parent module using loadChildren or children, depending on what `lazy` is set to."
     },
     "style": {
       "description": "The file extension to be used for style files.",
@@ -93,8 +92,7 @@
     "routing": {
       "type": "boolean",
       "default": false,
-      "description": "Add router configuration. See lazy for more information.",
-      "x-prompt": "Would you like to add a routing configuration to the library?"
+      "description": "Add router configuration. See lazy for more information."
     },
     "lazy": {
       "type": "boolean",
@@ -121,8 +119,8 @@
         "message": "Which Unit Test Runner would you like to use for the library?",
         "type": "list",
         "items": [
-          { "value": "karma", "label": "Karma" },
-          { "value": "jest", "label": "Jest (https://jestjs.io/)" }
+          { "value": "jest", "label": "Jest [https://jestjs.io/]" },
+          { "value": "karma", "label": "Karma" }
         ]
       }
     }

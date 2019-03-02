@@ -8,7 +8,7 @@ import {
 } from '../../utils/testing-utils';
 import { readJsonInTree } from '@nrwl/schematics/src/utils/ast-utils';
 
-describe('lib', () => {
+describe('jest', () => {
   let appTree: Tree;
 
   beforeEach(() => {
@@ -24,6 +24,7 @@ describe('lib', () => {
   it('should add dependencies', async () => {
     const resultTree = await runSchematic('jest', {}, appTree);
     const packageJson = readJsonInTree(resultTree, 'package.json');
+    console.log(packageJson);
     expect(packageJson.devDependencies.jest).toBeDefined();
     expect(packageJson.devDependencies['@nrwl/builders']).toBeDefined();
     expect(packageJson.devDependencies['@types/jest']).toBeDefined();

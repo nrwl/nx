@@ -97,7 +97,7 @@
           },
           {
             "value": "web-components",
-            "label": "web components    [a workspace with a single built using web components]"
+            "label": "web components    [a workspace with a single app built using web components]"
           },
           {
             "value": "full-stack",

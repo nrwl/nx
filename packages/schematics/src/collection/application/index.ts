@@ -22,7 +22,8 @@ import {
   insert,
   replaceNodeValue,
   updateJsonInTree,
-  readJsonInTree
+  readJsonInTree,
+  addDepsToPackageJson
 } from '../../utils/ast-utils';
 import { toFileName } from '../../utils/name-utils';
 import { offsetFromRoot } from '../../utils/common';
@@ -38,7 +39,10 @@ import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { Framework } from '../../utils/frameworks';
 import {
   reactVersions,
-  documentRegisterElementVersion
+  documentRegisterElementVersion,
+  angularVersion,
+  rxjsVersion,
+  angularDevkitVersion
 } from '../../lib-versions';
 
 interface NormalizedSchema extends Schema {
@@ -177,8 +181,7 @@ function updateBuilders(options: NormalizedSchema): Rule {
 function updateApplicationFiles(options: NormalizedSchema): Rule {
   return chain([
     deleteAngularApplicationFiles(options),
-    addApplicationFiles(options),
-    updateDependencies(options)
+    addApplicationFiles(options)
   ]);
 }
 
@@ -215,38 +218,102 @@ function deleteAngularApplicationFiles(options: NormalizedSchema): Rule {
 }
 
 function updateDependencies(options: NormalizedSchema): Rule {
-  return updateJsonInTree('package.json', (json, context) => {
-    json.dependencies = json.dependencies || {};
-    json.devDependencies = json.devDependencies || {};
+  let deps = {};
+  let devDeps = {};
+  switch (options.framework) {
+    case Framework.React:
+      deps = {
+        react: reactVersions.framework,
+        'react-dom': reactVersions.framework
+      };
+      devDeps = {
+        '@types/react': reactVersions.reactTypes,
+        '@types/react-dom': reactVersions.reactDomTypes,
+        'react-testing-library': reactVersions.testingLibrary
+      };
+      break;
 
-    switch (options.framework) {
-      case Framework.React:
-        json.dependencies = {
-          ...json.dependencies,
-          react: reactVersions.framework,
-          'react-dom': reactVersions.framework
-        };
-        json.devDependencies = {
-          ...json.devDependencies,
-          '@types/react': reactVersions.reactTypes,
-          '@types/react-dom': reactVersions.reactDomTypes,
-          'react-testing-library': reactVersions.testingLibrary
-        };
-        context.addTask(new NodePackageInstallTask());
-        return json;
+    case Framework.Angular:
+      deps = {
+        '@angular/animations': angularVersion,
+        '@angular/common': angularVersion,
+        '@angular/compiler': angularVersion,
+        '@angular/core': angularVersion,
+        '@angular/forms': angularVersion,
+        '@angular/platform-browser': angularVersion,
+        '@angular/platform-browser-dynamic': angularVersion,
+        '@angular/router': angularVersion,
+        'core-js': '^2.5.4',
+        rxjs: rxjsVersion,
+        'zone.js': '^0.8.26'
+      };
+      devDeps = {
+        '@angular/compiler-cli': angularVersion,
+        '@angular/language-service': angularVersion,
+        '@angular-devkit/build-angular': angularDevkitVersion,
+        codelyzer: '~4.5.0'
+      };
+      break;
 
-      case Framework.WebComponents:
-        json.dependencies = {
-          ...json.dependencies,
-          'document-register-element': documentRegisterElementVersion
-        };
-        context.addTask(new NodePackageInstallTask());
-        return json;
+    case Framework.WebComponents:
+      deps = {
+        'document-register-element': documentRegisterElementVersion
+      };
+      break;
+  }
 
-      default:
+  return addDepsToPackageJson(deps, devDeps);
+}
+
+function lint(options: NormalizedSchema): Rule {
+  switch (options.framework) {
+    case Framework.React:
+      return updateJsonInTree(`${options.appProjectRoot}/tslint.json`, json => {
+        json.extends = `${offsetFromRoot(options.appProjectRoot)}tslint.json`;
+        json.rules = [];
         return json;
-    }
-  });
+      });
+
+    case Framework.Angular:
+      return chain([
+        updateJsonInTree('tslint.json', json => {
+          if (
+            json.rulesDirectory &&
+            json.rulesDirectory.indexOf('node_modules/codelyzer') === -1
+          ) {
+            json.rulesDirectory.push('node_modules/codelyzer');
+            json.rules = {
+              ...json.rules,
+
+              'directive-selector': [true, 'attribute', 'app', 'camelCase'],
+              'component-selector': [true, 'element', 'app', 'kebab-case'],
+              'no-output-on-prefix': true,
+              'use-input-property-decorator': true,
+              'use-output-property-decorator': true,
+              'use-host-property-decorator': true,
+              'no-input-rename': true,
+              'no-output-rename': true,
+              'use-life-cycle-interface': true,
+              'use-pipe-transform-interface': true,
+              'component-class-suffix': true,
+              'directive-class-suffix': true
+            };
+          }
+          return json;
+        }),
+        updateJsonInTree(`${options.appProjectRoot}/tslint.json`, json => {
+          json.extends = `${offsetFromRoot(options.appProjectRoot)}tslint.json`;
+          return json;
+        })
+      ]);
+
+    case Framework.WebComponents:
+      return updateJsonInTree(`${options.appProjectRoot}/tslint.json`, json => {
+        json.extends = `${offsetFromRoot(options.appProjectRoot)}tslint.json`;
+        json.rules = [];
+        return json;
+      });
+  }
 }
 
 function addTsconfigs(options: NormalizedSchema): Rule {
@@ -328,12 +395,6 @@ function updateProject(options: NormalizedSchema): Rule {
         host.delete(`${options.appProjectRoot}/tsconfig.spec.json`);
         return host;
       },
-      updateJsonInTree(`${options.appProjectRoot}/tslint.json`, json => {
-        return {
-          ...json,
-          extends: `${offsetFromRoot(options.appProjectRoot)}tslint.json`
-        };
-      }),
       updateJsonInTree(`/nx.json`, json => {
         const resultJson = {
           ...json,
@@ -357,13 +418,7 @@ function updateProject(options: NormalizedSchema): Rule {
         }
       },
       options.e2eTestRunner === 'protractor'
-        ? updateJsonInTree('/package.json', (json, context) => {
-            if (!json.devDependencies.protractor) {
-              json.devDependencies.protractor = '~5.4.0';
-              context.addTask(new NodePackageInstallTask());
-            }
-            return json;
-          })
+        ? addDepsToPackageJson({}, { protractor: '~5.4.0' })
         : noop()
     ]);
   };
@@ -478,6 +533,8 @@ export default function(schema: Schema): Rule {
       options.framework === Framework.Angular && options.routing
         ? addRouterRootConfiguration(options)
         : noop(),
+      updateDependencies(options),
+      lint(options),
       options.unitTestRunner === 'jest'
         ? schematic('jest-project', {
             project: options.name,
