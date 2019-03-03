@@ -234,7 +234,7 @@ describe('Update 7.2.0', () => {
       }
     });
     createJson('apps/node-app/tsconfig.app.json', {
-       extends: '../../tsconfig.json',
+      extends: '../../tsconfig.json',
       compilerOptions: {
         types: ['node']
       }

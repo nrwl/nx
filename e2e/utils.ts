@@ -65,6 +65,8 @@ export function copyMissingPackages(): void {
     'angular',
     '@angular/upgrade',
     '@angular-devkit/build-ng-packagr',
+    'codelyzer',
+    'ngrx-store-freeze',
     'npm-run-all',
     'yargs',
     'yargs-parser',

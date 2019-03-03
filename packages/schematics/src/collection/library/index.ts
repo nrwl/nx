@@ -366,6 +366,7 @@ function updateProject(options: NormalizedSchema): Rule {
       updateJsonInTree(`${options.projectRoot}/tslint.json`, json => {
         return {
           ...json,
+          rules: options.framework === Framework.Angular ? json.rules : [],
           extends: `${offsetFromRoot(options.projectRoot)}tslint.json`
         };
       }),

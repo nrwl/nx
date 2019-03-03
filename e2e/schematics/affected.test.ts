@@ -20,9 +20,9 @@ describe('Affected', () => {
     const mypublishablelib = uniq('mypublishablelib');
     newApp(myapp);
     newApp(myapp2);
-    newLib(mylib);
-    newLib(mylib2);
-    newLib(`${mypublishablelib} --publishable`);
+    newLib(`${mylib} --framework angular`);
+    newLib(`${mylib2} --framework angular`);
+    newLib(`${mypublishablelib} --framework angular --publishable`);
 
     updateFile(
       `apps/${myapp}/src/app/app.component.spec.ts`,

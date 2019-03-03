@@ -21,7 +21,7 @@ describe('ngrx', () => {
 
     const mylib = uniq('mylib');
     // Generate feature library and ngrx state within that library
-    runCLI(`g lib ${mylib} --prefix=fl`);
+    runCLI(`g lib ${mylib} --framework angular --prefix=fl`);
     runCLI(
       `generate ngrx flights --module=libs/${mylib}/src/lib/${mylib}.module.ts --facade`
     );

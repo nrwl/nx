@@ -181,9 +181,6 @@ describe('Command line', () => {
       `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --directory=dir -d`
     );
     expect(exists(`libs/dir/${workspace}/src/index.ts`)).toEqual(false);
-    expect(dryRunOutput).toContain(
-      `create libs/dir/${workspace}/src/lib/dir-${workspace}.module.ts`
-    );
     expect(dryRunOutput).toContain('update angular.json');
     expect(dryRunOutput).toContain('update nx.json');
 
@@ -191,9 +188,6 @@ describe('Command line', () => {
       `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --directory=dir`
     );
     checkFilesExist(`libs/dir/${workspace}/src/index.ts`);
-    expect(output).toContain(
-      `create libs/dir/${workspace}/src/lib/dir-${workspace}.module.ts`
-    );
     expect(output).toContain('update angular.json');
     expect(output).toContain('update nx.json');
 
