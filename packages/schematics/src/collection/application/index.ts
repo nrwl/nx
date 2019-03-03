@@ -265,15 +265,8 @@ function updateDependencies(options: NormalizedSchema): Rule {
   return addDepsToPackageJson(deps, devDeps);
 }
 
-function lint(options: NormalizedSchema): Rule {
+function updateLinting(options: NormalizedSchema): Rule {
   switch (options.framework) {
-    case Framework.React:
-      return updateJsonInTree(`${options.appProjectRoot}/tslint.json`, json => {
-        json.extends = `${offsetFromRoot(options.appProjectRoot)}tslint.json`;
-        json.rules = [];
-        return json;
-      });
-
     case Framework.Angular:
       return chain([
         updateJsonInTree('tslint.json', json => {
@@ -306,7 +299,7 @@ function lint(options: NormalizedSchema): Rule {
           return json;
         })
       ]);
-
+    case Framework.React:
     case Framework.WebComponents:
       return updateJsonInTree(`${options.appProjectRoot}/tslint.json`, json => {
         json.extends = `${offsetFromRoot(options.appProjectRoot)}tslint.json`;
@@ -534,7 +527,7 @@ export default function(schema: Schema): Rule {
         ? addRouterRootConfiguration(options)
         : noop(),
       updateDependencies(options),
-      lint(options),
+      updateLinting(options),
       options.unitTestRunner === 'jest'
         ? schematic('jest-project', {
             project: options.name,
