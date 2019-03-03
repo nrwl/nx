@@ -498,7 +498,8 @@ export default function(schema: Schema): Rule {
         style: options.style,
         viewEncapsulation: options.viewEncapsulation,
         routing: false,
-        skipInstall: true
+        skipInstall: true,
+        skipPackageJson: options.framework !== Framework.Angular
       }),
       addTsconfigs(options),
 

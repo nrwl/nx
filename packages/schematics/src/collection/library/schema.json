@@ -97,8 +97,7 @@
     "lazy": {
       "type": "boolean",
       "default": false,
-      "description": "Add RouterModule.forChild when set to true, and a simple array of routes when set to false.",
-      "x-prompt": "Will this library be lazy loaded?"
+      "description": "Add RouterModule.forChild when set to true, and a simple array of routes when set to false."
     },
     "module": {
       "type": "boolean",

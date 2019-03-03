@@ -35,6 +35,10 @@
     "ts-loader": "5.3.1",
     "webpack": "4.29.0",
     "webpack-dev-server": "3.1.14",
-    "webpack-node-externals": "1.7.2"
+    "webpack-node-externals": "1.7.2",
+    "@angular/core": "^7.2.7",
+    "@angular/compiler": "^7.2.7",
+    "@angular/cli": "7.3.1",
+    "@angular/compiler-cli": "~7.2.0"
   }
 }
