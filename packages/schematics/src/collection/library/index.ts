@@ -360,7 +360,11 @@ function updateProject(options: NormalizedSchema): Rule {
             outDir: `${offsetFromRoot(options.projectRoot)}dist/out-tsc/${
               options.projectRoot
             }`
-          }
+          },
+          angularCompilerOptions:
+            options.framework === Framework.Angular
+              ? json.angularCompilerOptions
+              : undefined
         };
       }),
       updateJsonInTree(`${options.projectRoot}/tslint.json`, json => {
