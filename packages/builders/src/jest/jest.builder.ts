@@ -49,9 +49,15 @@ export default class JestBuilder implements Builder<JestBuilderOptions> {
       runInBand: options.runInBand,
       globals: JSON.stringify({
         'ts-jest': {
-          tsConfigFile: path.relative(builderConfig.root, options.tsConfig)
-        },
-        __TRANSFORM_HTML__: true
+          tsConfig: path.join(
+            '<rootDir>',
+            path.relative(builderConfig.root, options.tsConfig)
+          ),
+          stringifyContentPathRegex: '\\.html$',
+          astTransformers: [
+            'jest-preset-angular/InlineHtmlStripStylesTransformer'
+          ]
+        }
       })
     };
 
