@@ -179,7 +179,12 @@ export class DepsCalculator {
    */
   processFile(filePath: string): void {
     const extension = path.extname(filePath);
-    if (extension !== '.ts' && extension !== '.tsx') {
+    if (
+      extension !== '.ts' &&
+      extension !== '.tsx' &&
+      extension !== '.js' &&
+      extension !== '.jsx'
+    ) {
       return;
     }
     const tsFile = ts.createSourceFile(

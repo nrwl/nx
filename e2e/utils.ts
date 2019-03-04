@@ -1,5 +1,5 @@
 import { exec, execSync } from 'child_process';
-import { readFileSync, statSync, writeFileSync } from 'fs';
+import { readFileSync, statSync, writeFileSync, renameSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
 
@@ -215,6 +215,14 @@ export function runCommand(command: string): string {
 export function updateFile(f: string, content: string): void {
   ensureDirSync(path.dirname(path.join(getCwd(), 'tmp', 'proj', f)));
   writeFileSync(path.join(getCwd(), 'tmp', 'proj', f), content);
+}
+
+export function renameFile(f: string, newPath: string): void {
+  ensureDirSync(path.dirname(path.join(getCwd(), 'tmp', 'proj', newPath)));
+  renameSync(
+    path.join(getCwd(), 'tmp', 'proj', f),
+    path.join(getCwd(), 'tmp', 'proj', newPath)
+  );
 }
 
 export function checkFilesExist(...expectedFiles: string[]) {
