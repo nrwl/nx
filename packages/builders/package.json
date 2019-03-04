@@ -39,6 +39,7 @@
     "@angular/core": "^7.2.7",
     "@angular/compiler": "^7.2.7",
     "@angular/cli": "7.3.1",
-    "@angular/compiler-cli": "~7.2.0"
+    "@angular/compiler-cli": "~7.2.0",
+    "zone.js": "0.8.29"
   }
 }
