@@ -153,6 +153,9 @@ function updateBuilders(options: NormalizedSchema): Rule {
   return (host: Tree) => {
     return updateJsonInTree(getWorkspacePath(host), json => {
       const project = json.projects[options.name];
+
+      delete project.architect['extract-i18n'];
+
       const buildOptions = project.architect.build;
       const serveOptions = project.architect.serve;
 

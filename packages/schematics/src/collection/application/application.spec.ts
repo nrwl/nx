@@ -416,6 +416,20 @@ describe('app', () => {
         );
       });
 
+      it('should remove the extract-i18n target', async () => {
+        const tree = await runSchematic(
+          'app',
+          {
+            name: 'my-App',
+            framework: Framework.React
+          },
+          appTree
+        );
+        const angularJson = readJsonInTree(tree, 'angular.json');
+        const architectConfig = angularJson.projects['my-app'].architect;
+        expect(architectConfig['extract-i18n']).not.toBeDefined();
+      });
+
       it('should setup the nrwl web build builder', async () => {
         const tree = await runSchematic(
           'app',
