@@ -35,7 +35,7 @@ export function getBaseWebpackPartial(
     module: {
       rules: [
         {
-          test: /\.tsx?$/,
+          test: /\.(j|t)sx?$/,
           loader: `ts-loader`,
           options: {
             configFile: options.tsConfig,

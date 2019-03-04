@@ -6,5 +6,11 @@
     "types": ["jest", "node"]
   },<% if(setupFile !== 'none') { %>
   "files": ["src/test-setup.ts"],<% } %>
-  "include": ["**/*.spec.ts", "**/*.d.ts"<% if (supportTsx) { %>, "**/*.spec.tsx", "**/*.d.tsx"<% } %>]
+  "include": [
+    "**/*.spec.ts",<% if (supportTsx) { %>
+    "**/*.spec.tsx",
+    "**/*.spec.js",
+    "**/*.spec.jsx",<% } %>
+    "**/*.d.ts"
+  ]
 }
