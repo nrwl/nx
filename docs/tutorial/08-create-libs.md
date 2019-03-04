@@ -150,9 +150,8 @@ export class AppModule {}
 
 **Restart both `ng serve api` and `ng serve todos` and you should see the application running.**
 
----
-
-## Libraries' public API is defined in...
-
+!!!!!
+Libraries' public API is defined in...
+!!!!!
 index.ts files
 angular.json and tsconfig.json files

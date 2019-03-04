@@ -24,9 +24,8 @@ You can run any target against the affected projects in the graph like this:
 npm run affected -- --target=build --base=master
 ```
 
----
-
-## Run `npm run affected -- --target=invalid --base=master`. What do you see?
-
+!!!!!
+Run "npm run affected -- --target=invalid --base=master". What do you see?
+!!!!!
 No projects to run invalid
 An error message saying that the "invalid" target is invalid

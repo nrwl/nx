@@ -45,10 +45,9 @@ Some changes affect every single project in the repository. To speed up the test
 
 **Run `npm run affected:test -- --base=master --parallel` to test all projects in parallel**
 
----
-
-## Check in the changes into master and run `npm run affected:test -- --base=master`. What do you see?
-
+!!!!!
+Check in the changes into master and run "npm run affected:test -- --base=master". What do you see?
+!!!!!
 No tests ran
 The `todos` project failed as before
 `Cannot run tests against master` error

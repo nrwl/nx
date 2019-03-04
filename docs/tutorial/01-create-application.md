@@ -96,10 +96,9 @@ The generate command added two projects to our workspace:
 ng serve todos
 ```
 
----
-
-## Open http://localhost:4200 in the browser. What do you see?
-
+!!!!!
+Open http://localhost:4200 in the browser. What do you see?
+!!!!!
 Page saying "This project was generated using Nx"
 Page saying "This project was created using Angular CLI"
 404

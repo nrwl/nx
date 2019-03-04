@@ -100,10 +100,9 @@ export class AppComponent {
 
 Every time you add a new library, you have to restart `ng serve`. **So restart both `ng serve api` and `ng serve todos` and you should see the application running.**
 
----
-
-## Nx allows you to share code...
-
+!!!!!
+Nx allows you to share code...
+!!!!!
 Between frontend and backend apps
 Between different frontend apps
 Between different node apps
