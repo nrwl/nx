@@ -6,7 +6,7 @@
 
 ```html
 <ul>
-  <li *ngFor="let t of todos">{{ t.title }}!!!!!</li>
+  <li *ngFor="let t of todos">{{ t.title }}!!!</li>
 </ul>
 ```
 
