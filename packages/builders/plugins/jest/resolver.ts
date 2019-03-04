@@ -1,6 +1,6 @@
 import { dirname } from 'path';
 import * as ts from 'typescript';
-import defaultResolver from 'jest-resolve/build/default_resolver';
+import defaultResolver from 'jest-resolve/build/defaultResolver';
 
 interface ResolveOptions {
   rootDir: string;
