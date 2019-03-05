@@ -1,4 +1,4 @@
-import { dirname } from 'path';
+import { dirname, extname } from 'path';
 import * as ts from 'typescript';
 import defaultResolver from 'jest-resolve/build/defaultResolver';
 
@@ -37,6 +37,16 @@ function getCompilerSetup(rootDir: string) {
 let compilerSetup;
 
 module.exports = function(path: string, options: ResolveOptions) {
+  const ext = extname(path);
+  if (
+    ext === '.css' ||
+    ext === '.scss' ||
+    ext === '.sass' ||
+    ext === '.less' ||
+    ext === '.styl'
+  ) {
+    return require.resolve('identity-obj-proxy');
+  }
   // Try to use the defaultResolver
   try {
     return defaultResolver(path, options);

@@ -22,7 +22,7 @@ describe('Jest', () => {
     const jestResult = await runCLIAsync(`test ${mylib}`);
     expect(jestResult.stderr).toContain('Test Suites: 3 passed, 3 total');
     done();
-  }, 10000);
+  }, 45000);
 
   it('should be able to generate a testable application using jest', async () => {
     ensureProject();
@@ -35,5 +35,5 @@ describe('Jest', () => {
     ]);
     const jestResult = await runCLIAsync(`test ${myapp}`);
     expect(jestResult.stderr).toContain('Test Suites: 3 passed, 3 total');
-  }, 10000);
+  }, 450000);
 });
