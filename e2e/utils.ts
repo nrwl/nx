@@ -76,6 +76,7 @@ export function copyMissingPackages(): void {
     'jest',
     '@types/jest',
     'jest-preset-angular',
+    'identity-obj-proxy',
     'karma',
     'karma-chrome-launcher',
     'karma-coverage-istanbul-reporter',

@@ -23,6 +23,12 @@ describe('Web Applications', () => {
     newLib(`${libName} --framework react`);
 
     const mainPath = `apps/${appName}/src/main.tsx`;
+    updateFile(
+      `apps/${appName}/src/app/app.css`,
+      `body {
+        display: block;
+      }`
+    );
     updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
 
     const lintResults = runCLI(`lint ${appName}`);

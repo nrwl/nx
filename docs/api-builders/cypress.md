@@ -28,14 +28,6 @@ Type: `string`
 
 Dev server target to run tests against.
 
-### headless
-
-Default: `false`
-
-Type: `boolean`
-
-Whether or not to open the Cypress application to run the tests. If set to 'true', will run in headless mode
-
 ### exit
 
 Default: `true`
@@ -43,6 +35,14 @@ Default: `true`
 Type: `boolean`
 
 Whether or not the Cypress Test Runner will stay open after running tests in a spec file
+
+### headless
+
+Default: `false`
+
+Type: `boolean`
+
+Whether or not to open the Cypress application to run the tests. If set to 'true', will run in headless mode
 
 ### record
 
