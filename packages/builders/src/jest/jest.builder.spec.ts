@@ -36,9 +36,15 @@ describe('Jest Builder', () => {
       {
         globals: JSON.stringify({
           'ts-jest': {
-            tsConfigFile: path.relative(root, './tsconfig.test.json')
-          },
-          __TRANSFORM_HTML__: true
+            tsConfig: path.join(
+              '<rootDir>',
+              path.relative(root, './tsconfig.test.json')
+            ),
+            stringifyContentPathRegex: '\\.html$',
+            astTransformers: [
+              'jest-preset-angular/InlineHtmlStripStylesTransformer'
+            ]
+          }
         }),
         watch: false
       },
@@ -74,9 +80,15 @@ describe('Jest Builder', () => {
       {
         globals: JSON.stringify({
           'ts-jest': {
-            tsConfigFile: path.relative(root, './tsconfig.test.json')
-          },
-          __TRANSFORM_HTML__: true
+            tsConfig: path.join(
+              '<rootDir>',
+              path.relative(root, './tsconfig.test.json')
+            ),
+            stringifyContentPathRegex: '\\.html$',
+            astTransformers: [
+              'jest-preset-angular/InlineHtmlStripStylesTransformer'
+            ]
+          }
         }),
         watch: false,
         coverage: true,
@@ -113,9 +125,15 @@ describe('Jest Builder', () => {
       {
         globals: JSON.stringify({
           'ts-jest': {
-            tsConfigFile: path.relative(root, './tsconfig.test.json')
-          },
-          __TRANSFORM_HTML__: true
+            tsConfig: path.join(
+              '<rootDir>',
+              path.relative(root, './tsconfig.test.json')
+            ),
+            stringifyContentPathRegex: '\\.html$',
+            astTransformers: [
+              'jest-preset-angular/InlineHtmlStripStylesTransformer'
+            ]
+          }
         }),
         setupTestFrameworkScriptFile: path.join(
           '<rootDir>',

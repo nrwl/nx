@@ -28,6 +28,5 @@ describe('jest', () => {
     expect(packageJson.devDependencies.jest).toBeDefined();
     expect(packageJson.devDependencies['@nrwl/builders']).toBeDefined();
     expect(packageJson.devDependencies['@types/jest']).toBeDefined();
-    expect(packageJson.devDependencies['jest-preset-angular']).toBeDefined();
   });
 });

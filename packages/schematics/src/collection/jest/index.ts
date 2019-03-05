@@ -1,16 +1,6 @@
-import {
-  mergeWith,
-  SchematicContext,
-  chain,
-  url
-} from '@angular-devkit/schematics';
-import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
-import { addDepsToPackageJson, updateJsonInTree } from '../../utils/ast-utils';
-import {
-  jestVersion,
-  nxVersion,
-  jestPresetAngularVersion
-} from '../../lib-versions';
+import { mergeWith, chain, url } from '@angular-devkit/schematics';
+import { addDepsToPackageJson } from '../../utils/ast-utils';
+import { jestVersion, nxVersion } from '../../lib-versions';
 import { Rule } from '@angular-devkit/schematics';
 
 const updatePackageJson = addDepsToPackageJson(
@@ -18,8 +8,7 @@ const updatePackageJson = addDepsToPackageJson(
   {
     '@nrwl/builders': nxVersion,
     jest: jestVersion,
-    '@types/jest': jestVersion,
-    'jest-preset-angular': jestPresetAngularVersion
+    '@types/jest': jestVersion
   }
 );
 

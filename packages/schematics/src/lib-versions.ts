@@ -13,6 +13,7 @@ export const rxjsVersion = '6.3.3';
 export const jestVersion = '24.1.0';
 export const jestTypesVersion = '24.0.9';
 export const jestPresetAngularVersion = '7.0.0';
+export const tsJestversion = '24.0.0';
 export const jasmineMarblesVersion = '0.4.0';
 export const cypressVersion = '3.1.0';
 

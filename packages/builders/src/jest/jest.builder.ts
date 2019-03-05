@@ -1,7 +1,8 @@
 import {
   Builder,
   BuildEvent,
-  BuilderConfiguration
+  BuilderConfiguration,
+  BuilderContext
 } from '@angular-devkit/architect';
 
 import { Observable, from } from 'rxjs';
@@ -37,6 +38,24 @@ export default class JestBuilder implements Builder<JestBuilderOptions> {
     builderConfig: BuilderConfiguration<JestBuilderOptions>
   ): Observable<BuildEvent> {
     const options = builderConfig.options;
+    const tsJestConfig = {
+      tsConfig: path.join(
+        '<rootDir>',
+        path.relative(builderConfig.root, options.tsConfig)
+      )
+    };
+
+    // TODO: This is hacky, We should probably just configure it in the user's workspace
+    // If jest-preset-angular is installed, apply settings
+    try {
+      require.resolve('jest-preset-angular');
+      Object.assign(tsJestConfig, {
+        stringifyContentPathRegex: '\\.html$',
+        astTransformers: [
+          'jest-preset-angular/InlineHtmlStripStylesTransformer'
+        ]
+      });
+    } catch (e) {}
     const config: any = {
       watch: options.watch,
       coverage: options.codeCoverage,
@@ -48,16 +67,7 @@ export default class JestBuilder implements Builder<JestBuilderOptions> {
       silent: options.silent,
       runInBand: options.runInBand,
       globals: JSON.stringify({
-        'ts-jest': {
-          tsConfig: path.join(
-            '<rootDir>',
-            path.relative(builderConfig.root, options.tsConfig)
-          ),
-          stringifyContentPathRegex: '\\.html$',
-          astTransformers: [
-            'jest-preset-angular/InlineHtmlStripStylesTransformer'
-          ]
-        }
+        'ts-jest': tsJestConfig
       })
     };
 
