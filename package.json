@@ -45,7 +45,7 @@
     "@ngrx/schematics": "7.1.0",
     "@ngrx/store": "7.1.0",
     "@ngrx/store-devtools": "7.1.0",
-    "@schematics/angular": "7.2.2",
+    "@schematics/angular": "~7.3.1",
     "@types/express": "4.16.0",
     "@types/jasmine": "~2.8.6",
     "@types/jasminewd2": "~2.0.3",

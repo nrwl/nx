@@ -313,7 +313,7 @@ describe('app', () => {
 
       expect(angularJson.projects['my-app'].schematics).toEqual({
         '@nrwl/schematics:component': {
-          styleext: 'scss'
+          style: 'scss'
         }
       });
     });

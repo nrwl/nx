@@ -153,7 +153,8 @@ if (!runsInWSL()) {
           tsConfig: 'apps/proj/tsconfig.app.json',
           assets: ['apps/proj/src/favicon.ico', 'apps/proj/src/assets'],
           styles: ['apps/proj/src/styles.css'],
-          scripts: ['apps/proj/src/scripts.ts']
+          scripts: ['apps/proj/src/scripts.ts'],
+          es5BrowserSupport: true
         },
         configurations: {
           production: {
