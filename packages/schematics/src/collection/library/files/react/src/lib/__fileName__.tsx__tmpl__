@@ -1,0 +1,12 @@
+import * as React from 'react';
+import { Component } from 'react';
+
+import './<%= fileName %>.<%= style %>';
+
+export class <%= className %> extends Component {
+  render() {
+    const title = '<%= name %>';
+    return (<div><%= name %> works!</div>
+    );
+  }
+}

@@ -229,6 +229,48 @@ describe('lib', () => {
     });
 
     describe('--framework', () => {
+      describe('react', () => {
+        let tree: UnitTestTree;
+
+        beforeEach(async () => {
+          tree = await runSchematic(
+            'lib',
+            {
+              name: 'home',
+              framework: 'react'
+            },
+            appTree
+          );
+        });
+
+        it('should generate a basic react lib', () => {
+          expect(tree.exists('libs/home/src/lib/home.module.ts')).toEqual(
+            false
+          );
+          expect(tree.exists('libs/home/src/lib/home.module.spec.ts')).toEqual(
+            false
+          );
+          expect(tree.exists('libs/home/src/lib/home.css')).toEqual(true);
+          expect(tree.exists('libs/home/src/lib/home.tsx')).toEqual(true);
+          expect(tree.exists('libs/home/src/lib/home.spec.tsx')).toEqual(true);
+
+          expect(
+            readJsonInTree(tree, 'libs/home/tsconfig.json').compilerOptions.jsx
+          ).toEqual('react');
+
+          expect(tree.readContent('libs/home/src/lib/home.tsx')).toContain(
+            '<div>home works!</div>'
+          );
+          expect(tree.readContent('libs/home/src/lib/home.tsx')).toContain(
+            'export class Home extends Component {'
+          );
+
+          expect(tree.readContent('libs/home/src/lib/home.spec.tsx')).toContain(
+            `describe('Home', () => {`
+          );
+        });
+      });
+
       describe('none', () => {
         let tree: UnitTestTree;
         beforeEach(async () => {

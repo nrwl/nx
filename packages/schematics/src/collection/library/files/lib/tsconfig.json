@@ -1,0 +1,8 @@
+{
+  "extends": "<%= offsetFromRoot %>tsconfig.json",
+  "compilerOptions": {<% if (framework === 'react') { %>
+    "jsx": "react",<% } %>
+    "types": []
+  },
+  "include": ["**/*.ts"<% if (framework === 'react') { %>, "**/*.tsx"<% } %>]
+}
