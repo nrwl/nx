@@ -157,6 +157,7 @@ function updateBuilders(options: NormalizedSchema): Rule {
       const serveOptions = project.architect.serve;
 
       buildOptions.builder = '@nrwl/builders:web-build';
+      delete buildOptions.options.es5BrowserSupport;
       delete buildOptions.configurations.production.aot;
       delete buildOptions.configurations.production.buildOptimizer;
 
