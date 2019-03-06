@@ -1,0 +1,13 @@
+import * as React from 'react';
+import { render, cleanup } from 'react-testing-library';
+
+import { <%= className %> } from './<%= fileName %>';
+
+describe('<%= className %>', () => {
+  afterEach(cleanup);
+
+  it('should render successfully', () => {
+    const { getByText } = render(<<%= className %> />);
+    expect(getByText('<%= name %> works!')).toBeTruthy();
+  });
+});

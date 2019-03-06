@@ -20,7 +20,7 @@
     },
     "framework": {
       "type": "string",
-      "enum": ["angular", "none"],
+      "enum": ["angular", "react", "none"],
       "description": "The framework this library uses",
       "default": "none",
       "x-prompt": {
@@ -28,12 +28,16 @@
         "type": "list",
         "items": [
           {
-            "value": "none",
-            "label": "Typescript [ https://www.typescriptlang.org/ ]"
-          },
-          {
             "value": "angular",
             "label": "Angular    [ https://angular.io/             ]"
+          },
+          {
+            "value": "react",
+            "label": "React      [ https://reactjs.org/            ]"
+          },
+          {
+            "value": "none",
+            "label": "Typescript [ https://www.typescriptlang.org/ ]"
           }
         ]
       }
