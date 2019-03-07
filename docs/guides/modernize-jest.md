@@ -1,6 +1,6 @@
 # Using Jest
 
-![Jest logo](/fundamentals/jest-logo.png)
+![Jest logo](../fundamentals/jest-logo.png)
 
 [Jest](https://jestjs.io/) is an open source test runner created by Facebook. It is used within Facebook internally as well as many other enterprise and open source projects including Nx itself!
 
