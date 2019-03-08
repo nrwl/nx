@@ -11,11 +11,11 @@ ng generate downgrade-module ...
 
 ## Options
 
-### project
+### angularJsImport
 
 Type: `string`
 
-The name of the project
+Import expression of the AngularJS application (e.g., --angularJsImport=some_node_module/my_app).
 
 ### name
 
@@ -23,11 +23,11 @@ Type: `string`
 
 The name of the main AngularJS module.
 
-### angularJsImport
+### project
 
 Type: `string`
 
-Import expression of the AngularJS application (e.g., --angularJsImport=some_node_module/my_app).
+The name of the project
 
 ### skipFormat
 

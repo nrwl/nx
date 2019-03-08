@@ -6,6 +6,7 @@ import {
   htmlSelectorFormat,
   pathFormat
 } from '@angular-devkit/schematics/src/formats';
+import { sortAlphabeticallyFunction } from './utils';
 
 const fs = require('fs-extra');
 const path = require('path');
@@ -79,12 +80,14 @@ function generateTemplate(schematic): { name: string; template: string } {
   if (Array.isArray(schematic.options) && !!schematic.options.length) {
     template += '## Options';
 
-    schematic.options.forEach(
-      option =>
-        (template += dedent`
+    schematic.options
+      .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
+      .forEach(
+        option =>
+          (template += dedent`
           ### ${option.name} ${option.required ? '(*__required__*)' : ''} ${
-          option.hidden ? '(__hidden__)' : ''
-        }
+            option.hidden ? '(__hidden__)' : ''
+          }
           
           ${
             !!option.aliases.length
@@ -101,7 +104,7 @@ function generateTemplate(schematic): { name: string; template: string } {
           
           ${option.description}
         `)
-    );
+      );
   }
 
   return { name: schematic.name, template };

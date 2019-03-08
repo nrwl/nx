@@ -8,6 +8,7 @@ import {
   htmlSelectorFormat,
   pathFormat
 } from '@angular-devkit/schematics/src/formats';
+import { sortAlphabeticallyFunction } from './utils';
 
 /**
  * @WhatItDoes: Generates default documentation from the builders' schema.
@@ -64,12 +65,14 @@ function generateTemplate(builder): { name: string; template: string } {
   if (Array.isArray(builder.options) && !!builder.options.length) {
     template += '## Properties';
 
-    builder.options.forEach(
-      option =>
-        (template += dedent`
+    builder.options
+      .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
+      .forEach(
+        option =>
+          (template += dedent`
           ### ${option.name} ${option.required ? '(*__required__*)' : ''} ${
-          option.hidden ? '(__hidden__)' : ''
-        }
+            option.hidden ? '(__hidden__)' : ''
+          }
           
           ${
             !!option.aliases.length
@@ -86,7 +89,7 @@ function generateTemplate(builder): { name: string; template: string } {
           
           ${option.description}
         `)
-    );
+      );
   }
 
   return { name: builder.name, template };

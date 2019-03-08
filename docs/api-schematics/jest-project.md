@@ -17,14 +17,6 @@ Type: `string`
 
 The name of the project.
 
-### skipSetupFile
-
-Default: `false`
-
-Type: `boolean`
-
-[Deprecated]: Skips the setup file required for angular. (Use --setup-file)
-
 ### setupFile
 
 Default: `angular`
@@ -40,6 +32,14 @@ Default: `false`
 Type: `boolean`
 
 Skips the serializers required to snapshot angular templates
+
+### skipSetupFile
+
+Default: `false`
+
+Type: `boolean`
+
+[Deprecated]: Skips the setup file required for angular. (Use --setup-file)
 
 ### supportTsx
 

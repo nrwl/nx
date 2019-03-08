@@ -4,25 +4,23 @@ Run Cypress e2e tests
 
 ## Properties
 
+### baseUrl
+
+Type: `string`
+
+Use this to pass directly the address of your distant server address with the port running your application
+
+### browser
+
+Type: `string`
+
+The browser to run tests in.
+
 ### cypressConfig
 
 Type: `string`
 
 The path of the Cypress configuration json file.
-
-### watch
-
-Default: `false`
-
-Type: `boolean`
-
-Recompile and run tests when files change.
-
-### tsConfig
-
-Type: `string`
-
-The path of the Cypress tsconfig configuration json file.
 
 ### devServerTarget
 
@@ -54,14 +52,16 @@ Type: `boolean`
 
 Whether or not Cypress should record the results of the tests
 
-### baseUrl
+### tsConfig
 
 Type: `string`
 
-Use this to pass directly the address of your distant server address with the port running your application
+The path of the Cypress tsconfig configuration json file.
 
-### browser
+### watch
 
-Type: `string`
+Default: `false`
 
-The browser to run tests in.
+Type: `boolean`
+
+Recompile and run tests when files change.

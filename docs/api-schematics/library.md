@@ -11,19 +11,11 @@ ng generate library ...
 
 ## Options
 
-### skipTsConfig
-
-Default: `false`
-
-Type: `boolean`
-
-Do not update tsconfig.json for development experience.
-
-### name
+### directory
 
 Type: `string`
 
-Library name
+A directory where the app is placed
 
 ### framework
 
@@ -32,74 +24,6 @@ Default: `none`
 Type: `string`
 
 The framework this library uses
-
-### publishable
-
-Default: `false`
-
-Type: `boolean`
-
-Generate a simple TS library when set to true.
-
-### prefix
-
-Alias(es): p
-
-Type: `string`
-
-The prefix to apply to generated selectors.
-
-### skipFormat
-
-Default: `false`
-
-Type: `boolean`
-
-Skip formatting files
-
-### simpleModuleName
-
-Default: `false`
-
-Type: `boolean`
-
-Keep the module name simple (when using --directory)
-
-### skipPackageJson
-
-Default: `false`
-
-Type: `boolean`
-
-Do not add dependencies to package.json.
-
-### directory
-
-Type: `string`
-
-A directory where the app is placed
-
-### parentModule
-
-Type: `string`
-
-Update the router configuration of the parent module using loadChildren or children, depending on what `lazy` is set to.
-
-### style
-
-Default: `css`
-
-Type: `string`
-
-The file extension to be used for style files.
-
-### routing
-
-Default: `false`
-
-Type: `boolean`
-
-Add router configuration. See lazy for more information.
 
 ### lazy
 
@@ -116,6 +40,82 @@ Default: `true`
 Type: `boolean`
 
 [Deprecated]: Include an NgModule in the library.
+
+### name
+
+Type: `string`
+
+Library name
+
+### parentModule
+
+Type: `string`
+
+Update the router configuration of the parent module using loadChildren or children, depending on what `lazy` is set to.
+
+### prefix
+
+Alias(es): p
+
+Type: `string`
+
+The prefix to apply to generated selectors.
+
+### publishable
+
+Default: `false`
+
+Type: `boolean`
+
+Generate a simple TS library when set to true.
+
+### routing
+
+Default: `false`
+
+Type: `boolean`
+
+Add router configuration. See lazy for more information.
+
+### simpleModuleName
+
+Default: `false`
+
+Type: `boolean`
+
+Keep the module name simple (when using --directory)
+
+### skipFormat
+
+Default: `false`
+
+Type: `boolean`
+
+Skip formatting files
+
+### skipPackageJson
+
+Default: `false`
+
+Type: `boolean`
+
+Do not add dependencies to package.json.
+
+### skipTsConfig
+
+Default: `false`
+
+Type: `boolean`
+
+Do not update tsconfig.json for development experience.
+
+### style
+
+Default: `css`
+
+Type: `string`
+
+The file extension to be used for style files.
 
 ### tags
 

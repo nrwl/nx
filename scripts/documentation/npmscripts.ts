@@ -4,6 +4,7 @@ import * as path from 'path';
 import { dedent } from 'tslint/lib/utils';
 
 import { commandsObject } from '../../packages/schematics/src/command-line/nx-commands';
+import { sortAlphabeticallyFunction } from './utils';
 
 const commandsOutputDirectory = path.join(
   __dirname,
@@ -44,9 +45,16 @@ function generateMarkdown(command) {
   if (Array.isArray(command.options) && !!command.options.length) {
     template += '## Options';
 
-    command.options.forEach(
-      option =>
-        (template += dedent`
+    command.options
+      .sort((a, b) =>
+        sortAlphabeticallyFunction(
+          a.command.replace('--', ''),
+          b.command.replace('--', '')
+        )
+      )
+      .forEach(
+        option =>
+          (template += dedent`
           ### ${option.command.replace('--', '')}
           ${
             option.default === undefined || option.default === ''
@@ -55,7 +63,7 @@ function generateMarkdown(command) {
           }
           ${option.description}
         `)
-    );
+      );
   }
 
   return {
