@@ -13,19 +13,6 @@
 
 <hr>
 
-<p align="center">
-  <a href="https://hubs.ly/H0glYvV0" target="_blank">  
-    <img 
-         width="728" 
-         height="auto" 
-         src="https://images.ctfassets.net/8eyogtwep6d2/57vhB8tLvCaEk1DT920ZQR/aa4ad56598293930ac0314c97329c07b/connect-cypress.jpg?w=728" 
-         srcset="https://images.ctfassets.net/8eyogtwep6d2/57vhB8tLvCaEk1DT920ZQR/aa4ad56598293930ac0314c97329c07b/connect-cypress.jpg 2x" 
-         alt="Our Newest Nrwl Connect event">
-  </a>
-</p>
-
-<hr>
-
 # What is Nx?
 
 🔎 **Nx is a set of Angular CLI power-ups for modern development.**
