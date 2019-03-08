@@ -168,7 +168,7 @@ const staticComponentContent = `
   <h1>
     Welcome to an Angular CLI app built with Nrwl Nx!
   </h1>
-  <img width="300" src="assets/nx-logo.png">
+  <img width="450" src="assets/nx-logo.png">
 </div>
 
 <h2>Nx</h2>
