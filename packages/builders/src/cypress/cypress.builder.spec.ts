@@ -15,6 +15,7 @@ describe('Cypress builder', () => {
     tsConfig: 'apps/my-app-e2e/tsconfig.json',
     devServerTarget: 'my-app:serve',
     headless: true,
+    exit: true,
     record: false,
     baseUrl: undefined,
     watch: false
@@ -197,6 +198,7 @@ describe('Cypress builder', () => {
             tsConfig: 'apps/my-app-e2e/tsconfig.json',
             devServerTarget: undefined,
             headless: true,
+            exit: true,
             record: false,
             baseUrl: undefined,
             watch: false
@@ -238,6 +240,7 @@ describe('Cypress builder', () => {
             tsConfig: 'apps/my-app-e2e/tsconfig.e2e.json',
             devServerTarget: undefined,
             headless: true,
+            exit: true,
             record: false,
             baseUrl: undefined,
             watch: false
@@ -278,6 +281,7 @@ describe('Cypress builder', () => {
             tsConfig: 'apps/my-app-e2e/tsconfig.e2e.json',
             devServerTarget: undefined,
             headless: true,
+            exit: true,
             record: false,
             baseUrl: undefined,
             watch: false
