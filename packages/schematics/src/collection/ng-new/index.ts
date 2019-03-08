@@ -20,6 +20,7 @@ import {
   RepositoryInitializerTask
 } from '@angular-devkit/schematics/tasks';
 import { Framework } from '../../utils/frameworks';
+import { formatFiles } from '../../utils/rules/format-files';
 
 export default function(options: Schema): Rule {
   if (!options.directory) {
@@ -32,7 +33,8 @@ export default function(options: Schema): Rule {
       schematic('workspace', workspaceOpts),
       createPreset(options),
       move('/', options.directory),
-      addTasks(options)
+      addTasks(options),
+      formatFiles()
     ])(Tree.empty(), context);
   };
 }
