@@ -10,21 +10,31 @@ affected:libs
 
 ## Options
 
+### all
+
+All projects
+
+### base
+
+Base of the current branch (usually master)
+
+### exclude
+
+Default: ``
+
+Exclude certain projects from being processed
+
+### files
+
+A list of files delimited by commas
+
+### head
+
+Latest commit of the current branch (usually HEAD)
+
 ### help
 
 Show help
-
-### version
-
-Show version number
-
-### quiet
-
-### parallel
-
-Default: `false`
-
-Parallelize the command
 
 ### maxParallel
 
@@ -32,9 +42,19 @@ Default: `3`
 
 Max number of parallel processes
 
-### files
+### only-failed
 
-A list of files delimited by commas
+Default: `false`
+
+Isolate projects which previously failed
+
+### parallel
+
+Default: `false`
+
+Parallelize the command
+
+### quiet
 
 ### uncommitted
 
@@ -44,26 +64,6 @@ Uncommitted changes
 
 Untracked changes
 
-### all
+### version
 
-All projects
-
-### base
-
-Base of the current branch (usually master)
-
-### head
-
-Latest commit of the current branch (usually HEAD)
-
-### exclude
-
-Default: ``
-
-Exclude certain projects from being processed
-
-### only-failed
-
-Default: `false`
-
-Isolate projects which previously failed
+Show version number

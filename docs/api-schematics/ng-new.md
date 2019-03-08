@@ -11,19 +11,13 @@ ng generate ng-new ...
 
 ## Options
 
-### name
+### commit
 
-Type: `string`
+Default: `true`
 
-The name of the workspace.
+Type: `boolean`
 
-### style
-
-Default: `css`
-
-Type: `string`
-
-The file extension to be used for style files.
+Initial repository commit information.
 
 ### directory
 
@@ -31,19 +25,25 @@ Type: `string`
 
 The directory name to create the workspace in.
 
+### name
+
+Type: `string`
+
+The name of the workspace.
+
 ### npmScope
 
 Type: `string`
 
 Npm scope for importing libs.
 
-### skipInstall
+### preset
 
-Default: `false`
+Default: `empty`
 
-Type: `boolean`
+Type: `string`
 
-Skip installing dependency packages.
+What to create in the new workspace
 
 ### skipGit
 
@@ -55,18 +55,18 @@ Type: `boolean`
 
 Skip initializing a git repository.
 
-### commit
+### skipInstall
 
-Default: `true`
+Default: `false`
 
 Type: `boolean`
 
-Initial repository commit information.
+Skip installing dependency packages.
 
-### preset
+### style
 
-Default: `empty`
+Default: `css`
 
 Type: `string`
 
-What to create in the new workspace
+The file extension to be used for style files.

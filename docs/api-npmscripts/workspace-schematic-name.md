@@ -10,21 +10,41 @@ workspace-schematic [name]
 
 ## Options
 
+### all
+
+All projects
+
+### apps-and-libs
+
+### base
+
+Base of the current branch (usually master)
+
+### exclude
+
+Default: ``
+
+Exclude certain projects from being processed
+
+### file
+
+output file (e.g. --file=.vis/output.json)
+
+### files
+
+A list of files delimited by commas
+
+### head
+
+Latest commit of the current branch (usually HEAD)
+
 ### help
 
 Show help
 
-### version
+### list-schematics
 
-Show version number
-
-### quiet
-
-### parallel
-
-Default: `false`
-
-Parallelize the command
+List the available workspace-schematics
 
 ### maxParallel
 
@@ -32,9 +52,23 @@ Default: `3`
 
 Max number of parallel processes
 
-### files
+### name
 
-A list of files delimited by commas
+The name of your schematic`
+
+### only-failed
+
+Default: `false`
+
+Isolate projects which previously failed
+
+### parallel
+
+Default: `false`
+
+Parallelize the command
+
+### quiet
 
 ### uncommitted
 
@@ -44,40 +78,6 @@ Uncommitted changes
 
 Untracked changes
 
-### all
+### version
 
-All projects
-
-### base
-
-Base of the current branch (usually master)
-
-### head
-
-Latest commit of the current branch (usually HEAD)
-
-### exclude
-
-Default: ``
-
-Exclude certain projects from being processed
-
-### only-failed
-
-Default: `false`
-
-Isolate projects which previously failed
-
-### file
-
-output file (e.g. --file=.vis/output.json)
-
-### apps-and-libs
-
-### list-schematics
-
-List the available workspace-schematics
-
-### name
-
-The name of your schematic`
+Show version number

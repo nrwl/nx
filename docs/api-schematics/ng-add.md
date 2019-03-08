@@ -11,6 +11,12 @@ ng generate ng-add ...
 
 ## Options
 
+### name
+
+Type: `string`
+
+Project name.
+
 ### npmScope
 
 Type: `string`
@@ -24,9 +30,3 @@ Default: `false`
 Type: `boolean`
 
 Skip installing after adding @nrwl/schematics
-
-### name
-
-Type: `string`
-
-Project name.
