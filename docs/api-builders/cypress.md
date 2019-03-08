@@ -36,7 +36,15 @@ Default: `false`
 
 Type: `boolean`
 
-Whether or not the open the Cypress application to run the tests. If set to 'true', will run in headless mode
+Whether or not to open the Cypress application to run the tests. If set to 'true', will run in headless mode
+
+### exit
+
+Default: `true`
+
+Type: `boolean`
+
+Whether or not the Cypress Test Runner will stay open after running tests in a spec file
 
 ### record
 

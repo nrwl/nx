@@ -22,6 +22,7 @@ export interface CypressBuilderOptions {
   cypressConfig: string;
   devServerTarget: string;
   headless: boolean;
+  exit: boolean;
   record: boolean;
   tsConfig: string;
   watch: boolean;
@@ -97,6 +98,7 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
         this.initCypress(
           options.cypressConfig,
           options.headless,
+          options.exit,
           options.record,
           options.watch,
           options.baseUrl,
@@ -184,6 +186,7 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
   private initCypress(
     cypressConfig: string,
     headless: boolean,
+    exit: boolean,
     record: boolean,
     isWatching: boolean,
     baseUrl: string,
@@ -204,6 +207,7 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
       options.browser = browser;
     }
 
+    options.exit = exit;
     options.headed = !headless;
     options.record = record;
 
