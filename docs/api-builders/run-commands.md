@@ -16,4 +16,4 @@ Run commands in parallel
 
 Type: `string`
 
-String to appear in stdout or stderr that indicates that the task is done. This option can only be used when parallel is set to true. If not specified, the task is one when all the child processes complete.
+String to appear in stdout or stderr that indicates that the task is done. This option can only be used when parallel is set to true. If not specified, the task is done when all the child processes complete.
