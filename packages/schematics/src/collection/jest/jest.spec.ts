@@ -24,7 +24,6 @@ describe('jest', () => {
   it('should add dependencies', async () => {
     const resultTree = await runSchematic('jest', {}, appTree);
     const packageJson = readJsonInTree(resultTree, 'package.json');
-    console.log(packageJson);
     expect(packageJson.devDependencies.jest).toBeDefined();
     expect(packageJson.devDependencies['@nrwl/builders']).toBeDefined();
     expect(packageJson.devDependencies['@types/jest']).toBeDefined();
