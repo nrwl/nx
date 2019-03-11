@@ -10,7 +10,8 @@ import {
   apply,
   template,
   move,
-  url
+  url,
+  MergeStrategy
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as ts from 'typescript';
@@ -197,7 +198,8 @@ function addApplicationFiles(options: NormalizedSchema): Rule {
         tmpl: ''
       }),
       move(options.appProjectRoot)
-    ])
+    ]),
+    MergeStrategy.Overwrite
   );
 }
 
