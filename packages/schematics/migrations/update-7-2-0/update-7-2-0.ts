@@ -123,7 +123,6 @@ function getTsConfigs(
         .filter(tsconfig => {
           if (!host.exists(tsconfig)) {
             if (context) {
-              console.log(tsconfig);
               context.logger.warn(
                 `${tsconfig} does not exist but is set as a "tsConfig" in /angular.json`
               );
