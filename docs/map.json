@@ -122,6 +122,14 @@
         "id": "monorepo-tags"
       },
       {
+        "name": "Using React",
+        "id": "react"
+      },
+      {
+        "name": "Building Angular and React Applications Together With Nx",
+        "id": "react-and-angular"
+      },
+      {
         "name": "Setting Up NgRx",
         "id": "misc-ngrx"
       },
