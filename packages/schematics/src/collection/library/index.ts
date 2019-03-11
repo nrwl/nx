@@ -423,7 +423,7 @@ function createAdditionalFiles(options: NormalizedSchema): Rule {
         (host: Tree) => {
           host.overwrite(
             `${options.projectRoot}/src/index.ts`,
-            ` export * from './lib/${options.fileName}.tsx';\n`
+            ` export * from './lib/${options.fileName}';\n`
           );
         }
       ]);
