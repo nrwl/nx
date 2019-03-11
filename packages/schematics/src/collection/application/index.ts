@@ -109,7 +109,7 @@ function updateComponentTemplate(options: NormalizedSchema): Rule {
     const baseContent = `
 <div style="text-align:center">
   <h1>Welcome to {{title}}!</h1>
-  <img width="300" src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png">
+  <img width="450" src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png">
 </div>
 
 <p>This is an Angular app built with <a href="https://nx.dev">Nx</a>.</p>
