@@ -188,7 +188,7 @@ describe('AppComponent', () => {
       `<div style="text-align:center">
   <h1>Welcome to ${options.name}!</h1>
   <img
-    width="300"
+    width="450"
     src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png"
   />
 </div>
