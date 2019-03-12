@@ -416,6 +416,21 @@ describe('app', () => {
         );
       });
 
+      it('should setup jest without serializers', async () => {
+        const tree = await runSchematic(
+          'app',
+          {
+            name: 'my-App',
+            framework: Framework.React
+          },
+          appTree
+        );
+
+        expect(tree.readContent('apps/my-app/jest.config.js')).not.toContain(
+          `'jest-preset-angular/AngularSnapshotSerializer.js',`
+        );
+      });
+
       it('should remove the extract-i18n target', async () => {
         const tree = await runSchematic(
           'app',

@@ -539,6 +539,7 @@ export default function(schema: Schema): Rule {
         ? schematic('jest-project', {
             project: options.name,
             supportTsx: options.framework === Framework.React,
+            skipSerializers: options.framework !== Framework.Angular,
             setupFile:
               options.framework === Framework.Angular
                 ? 'angular'
