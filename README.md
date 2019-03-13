@@ -13,6 +13,17 @@
 
 <hr>
 
+<p align="center">
+  <a href="https://hubs.ly/H0g97pW0" target="_blank">  
+    <img 
+         width="728"
+         src="https://images.ctfassets.net/8eyogtwep6d2/40ASb6l6MR7V0w5ntqZ2yi/b4d439fcf56e50085d1f76df1bee41af/monorepo-banner-angularconsole.png"  
+         alt="Our Newest Enterprise Angular Book">
+  </a>
+</p>
+
+<hr>
+
 # What is Nx?
 
 🔎 **Nx is a set of Angular CLI power-ups for modern development.**
