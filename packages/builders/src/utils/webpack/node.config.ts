@@ -13,6 +13,14 @@ function getNodePartial(options: BuildNodeBuilderOptions) {
     target: 'node',
     node: false
   };
+
+  if (options.optimization) {
+    webpackConfig.optimization = {
+      minimize: false,
+      concatenateModules: false
+    };
+  }
+
   if (options.externalDependencies === 'all') {
     webpackConfig.externals = [nodeExternals()];
   } else if (Array.isArray(options.externalDependencies)) {

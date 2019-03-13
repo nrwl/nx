@@ -236,24 +236,6 @@ describe('getBaseWebpackPartial', () => {
 
         expect(result.mode).toEqual('production');
       });
-
-      it('should not minify', () => {
-        const result = getBaseWebpackPartial({
-          ...input,
-          optimization: true
-        });
-
-        expect(result.optimization.minimize).toEqual(false);
-      });
-
-      it('should not concatenate modules', () => {
-        const result = getBaseWebpackPartial({
-          ...input,
-          optimization: true
-        });
-
-        expect(result.optimization.concatenateModules).toEqual(false);
-      });
     });
   });
 
