@@ -33,7 +33,7 @@ Run
 ng g app frontend --framework=react
 ```
 
-and you will the following:
+and you will see the following:
 
 ```treeview
 myworkspace/
@@ -96,7 +96,7 @@ Run
 ng g lib home --framework=react
 ```
 
-and you will the following:
+and you will see the following:
 
 ```treeview
 myworkspace/
