@@ -34,7 +34,7 @@ An empty workspace has several root-level configuration files and the folders fo
 
 ## Applications and Libraries
 
-Nx supports two types of **projects**: applications from libraries.
+Nx supports two types of **projects**: applications and libraries.
 
 - An **application** is anything that can run in the browser or on the server. It's similar to a binary.
 - A **library** is a piece of code with a well-defined public API. A library can be imported into another library or application. You cannot run a library.
