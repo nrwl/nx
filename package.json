@@ -1,6 +1,6 @@
 {
   "name": "@nrwl/nx-source",
-  "version": "7.6.2",
+  "version": "7.7.0",
   "description": "Angular CLI power-ups for modern Web development",
   "homepage": "https://nx.dev",
   "main": "index.js",
