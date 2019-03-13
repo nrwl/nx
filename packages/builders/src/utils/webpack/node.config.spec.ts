@@ -35,6 +35,26 @@ describe('getNodePartial', () => {
     });
   });
 
+  describe('the optimization option when true', () => {
+    it('should not minify', () => {
+      const result = getNodeWebpackConfig({
+        ...input,
+        optimization: true
+      });
+
+      expect(result.optimization.minimize).toEqual(false);
+    });
+
+    it('should not concatenate modules', () => {
+      const result = getNodeWebpackConfig({
+        ...input,
+        optimization: true
+      });
+
+      expect(result.optimization.concatenateModules).toEqual(false);
+    });
+  });
+
   describe('the externalDependencies option', () => {
     it('should change all node_modules to commonjs imports', () => {
       const result = getNodeWebpackConfig(input);

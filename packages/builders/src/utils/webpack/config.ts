@@ -72,13 +72,6 @@ export function getBaseWebpackPartial(
     extraPlugins.push(new ProgressPlugin());
   }
 
-  if (options.optimization) {
-    webpackConfig.optimization = {
-      minimize: false,
-      concatenateModules: false
-    };
-  }
-
   if (options.extractLicenses) {
     extraPlugins.push(
       new LicenseWebpackPlugin({
