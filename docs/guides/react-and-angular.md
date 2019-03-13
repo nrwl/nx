@@ -8,7 +8,7 @@ To show how Nx does it, let's build two applications (one in Angular, and one in
 
 ## Creating a New Nx Workspace
 
-Let's start by creating a new Nx workspace. The easiest way to do it is to use npx.
+Let's start by creating a new Nx workspace. The easiest way to do this is to use npx.
 
 ```bash
 npx create-nx-workspace happynrwl --preset=empty
@@ -154,8 +154,6 @@ happynrwl/
 Where `main.ts` looks like this:
 
 ```typescript
-import '@happynrwl/ui';
-
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
@@ -447,22 +445,22 @@ git add .
 git commit -am 'great commit'
 ```
 
-Next, let's create a new branch `git checkout -b angularchange`. In this branch, let's introduce any change to app.component.html and run `yarn dep-graph --base=master`.
+Next, let's create a new branch `git checkout -b angularchange`. In this branch, let's introduce any change to app.component.html and run `yarn affected:dep-graph --base=master`.
 
 ![serve screenshot](./react-affected.png)
 
-As you can see, Nx knows that this change only affects the `angularapp` and nothing else.
+As you can see, Nx knows that this change only affects the `angularapp` and nothing else. Nx can use this information to rebuild and retest only the angularapp:
 
 ```bash
 yarn affected:test --base=master # only tests angularapp
 yarn affected:build --base=master # only builds angularapp
 ```
 
-Now, let's introduce a change to `greeting.element.ts` and run `yarn dep-graph --base=master`.
+Now, let's introduce a change to `greeting.element.ts` and run `yarn affected:dep-graph --base=master`.
 
 ![serve screenshot](./react-affected2.png)
 
-Both `angularapp` and `reactapp` are affected by this change.
+Both `angularapp` and `reactapp` are affected by this change because they both depend on the greeting component.
 
 ```bash
 yarn affected:test --base=master # tests ui, angularapp, reactapp
