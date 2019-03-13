@@ -6,16 +6,6 @@ Setting this up traditionally is challenging. Companies put a lot of effort in m
 
 To show how Nx does it, let's build two applications (one in Angular, and one in React) that will use a library of shared web components.
 
-## What is Nx
-
-Nx is a set of Angular CLI power-ups for modern development. With Nx, you can:
-
-- Use modern tools like Cypress and Jest
-- Build full-stack applications and share code between the backend and the frontend
-- Use effective development practices pioneered at Google
-
-Let's see how we can use Nx to organize this development workflow.
-
 ## Creating a New Nx Workspace
 
 Let's start by creating a new Nx workspace. The easiest way to do it is to use npx.
