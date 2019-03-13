@@ -130,7 +130,7 @@ Run:
 - `ng test home` to test the library
 - `ng lint home` to lint the library
 
-## Using Library in Application
+## Using the Library in Application
 
 You can import the home library into the frontend application like this.
 
@@ -154,7 +154,7 @@ export class App extends Component {
 
 ## Sharing Code
 
-Without Nx creating a new shared library can take from several hours to even weeks: a new repo needs to be provisioned, CI needs to be set up, etc.. In an Nx Workspace it takes minutes.
+Without Nx, creating a new shared library can take from several hours or even weeks: a new repo needs to be provisioned, CI needs to be set up, etc.. In an Nx Workspace, it only takes minutes.
 
 You can share React components between multiple React applications. You can also share web components between React and Angular applications. You can even share code between the backend and the frontend. All can be done without any unnecessary ceremony.
 
@@ -162,7 +162,7 @@ You can share React components between multiple React applications. You can also
 
 An Nx workspace can contain dozens (or hundreds) of applications and libraries. They all may depend on one another and without Nx, it is difficult to understand the implications of a particular change.
 
-Previously, some senior architect would create an ad-hoc dependency diagram and upload it to a corporate wiki. The diagram isn’t correct even on Day 1, and gets more and more out of sync with every passing day.
+Previously, some senior architect would create an ad-hoc dependency diagram and upload it to a corporate wiki. The diagram is not correct even on Day 1, and gets more and more out of sync with every passing day.
 
 With Nx, you can do better than that. You can run `yarn dep-graph` to see a current dependency diagram of the workspace: what apps and libs are there, how they depend on each other, what is loaded lazily and what is not. Nx uses code analysis to collect this information.
 
@@ -186,6 +186,6 @@ yarn affected:e2e --base=master # reruns e2e tests for all the projects affected
 yarn affected --target=lint --base=master # reruns any target (for instance lint) for projects affected by a PR
 ```
 
-Nx will topologically sort the projects, and will run what it can in parallel. The fact that Nx can use its dependency graph to rebuild and retest the minimal number of projects necessary is crucial. Without this the repo won't scale beyond a handful of projects.
+Nx will topologically sort the projects, and will run what it can in parallel. The fact that Nx can use its dependency graph to rebuild and retest the minimal number of projects necessary is crucial. Without this the repo will not scale beyond a handful of projects.
 
 You can read more about how Nx help you build like google [here](../fundamentals/develop-like-google).
