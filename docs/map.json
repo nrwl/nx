@@ -140,6 +140,10 @@
       {
         "name": "Upgrading AngularJS Applications",
         "id": "misc-upgrade"
+      },
+      {
+        "name": "Using Nx at Enterprises",
+        "id": "monorepo-nx-enterprise"
       }
     ]
   }
