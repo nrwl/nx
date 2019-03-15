@@ -30,6 +30,7 @@ export interface NodeExecuteBuilderOptions {
   args: string[];
   waitUntilTargets: string[];
   buildTarget: string;
+  host: string;
   port: number;
 }
 
@@ -87,7 +88,7 @@ export class NodeExecuteBuilder implements Builder<NodeExecuteBuilderOptions> {
       options.inspect = InspectType.Inspect;
     }
 
-    return [`--${options.inspect}=localhost:${options.port}`];
+    return [`--${options.inspect}=${options.host}:${options.port}`];
   }
 
   private restartProcess(file: string, options: NodeExecuteBuilderOptions) {

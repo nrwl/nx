@@ -74,7 +74,8 @@ describe('NodeExecuteBuilder', () => {
       args: [],
       buildTarget: 'nodeapp:build',
       port: 9229,
-      waitUntilTargets: []
+      waitUntilTargets: [],
+      host: 'localhost'
     };
   });
 
@@ -173,6 +174,38 @@ describe('NodeExecuteBuilder', () => {
         );
         expect(fork).toHaveBeenCalledWith('outfile.js', [], {
           execArgv: ['--inspect-brk=localhost:9229']
+        });
+      });
+    });
+  });
+
+  describe('--host', () => {
+    describe('0.0.0.0', () => {
+      it('should inspect the process on host 0.0.0.0', () => {
+        expect(
+          builder.run({
+            root: normalize('/root'),
+            projectType: 'application',
+            builder: '@nrwl/builders:node-execute',
+            options: {
+              ...testOptions,
+              host: '0.0.0.0'
+            }
+          })
+        ).toBeObservable(
+          cold('--a--b--a', {
+            a: {
+              success: true,
+              outfile: 'outfile.js'
+            },
+            b: {
+              success: false,
+              outfile: 'outfile.js'
+            }
+          })
+        );
+        expect(fork).toHaveBeenCalledWith('outfile.js', [], {
+          execArgv: ['--inspect=0.0.0.0:9229']
         });
       });
     });

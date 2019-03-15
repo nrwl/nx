@@ -16,6 +16,14 @@ Type: `string`
 
 The target to run to build you the app
 
+### host
+
+Default: `localhost`
+
+Type: `string`
+
+The host to inspect the process on
+
 ### inspect
 
 Default: `inspect`

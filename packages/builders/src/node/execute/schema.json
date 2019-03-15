@@ -15,6 +15,11 @@
         "type": "string"
       }
     },
+    "host": {
+      "type": "string",
+      "default": "localhost",
+      "description": "The host to inspect the process on"
+    },
     "port": {
       "type": "number",
       "default": 7777,
