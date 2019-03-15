@@ -16,6 +16,7 @@ import {
   directoryExists,
   writeToFile
 } from '../utils/fileutils';
+import { stripSourceCode } from '../utils/strip-source-code';
 
 export type DepGraph = {
   projects: ProjectNode[];
@@ -112,6 +113,11 @@ export class DepsCalculator {
   private _incremental: boolean;
   private deps: NxDepsJson;
 
+  private readonly scanner: ts.Scanner = ts.createScanner(
+    ts.ScriptTarget.Latest,
+    false
+  );
+
   constructor(
     private npmScope: string,
     private projects: ProjectNode[],
@@ -187,14 +193,18 @@ export class DepsCalculator {
     ) {
       return;
     }
-    const tsFile = ts.createSourceFile(
-      filePath,
-      this.fileRead(filePath),
-      ts.ScriptTarget.Latest,
-      true
-    );
     this.deps.files[filePath] = [];
-    this.processNode(filePath, tsFile);
+    const content = this.fileRead(filePath);
+    const strippedContent = stripSourceCode(this.scanner, content);
+    if (strippedContent !== '') {
+      const tsFile = ts.createSourceFile(
+        filePath,
+        strippedContent,
+        ts.ScriptTarget.Latest,
+        true
+      );
+      this.processNode(filePath, tsFile);
+    }
   }
 
   private isLegacyFormat(existingDeps: any): boolean {
@@ -256,10 +266,8 @@ export class DepsCalculator {
   }
 
   private processNode(filePath: string, node: ts.Node): void {
-    if (node.kind === ts.SyntaxKind.ImportDeclaration) {
-      const imp = this.getStringLiteralValue(
-        (node as ts.ImportDeclaration).moduleSpecifier
-      );
+    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
+      const imp = this.getStringLiteralValue(node.moduleSpecifier);
       this.addDepIfNeeded(imp, filePath, DependencyType.es6Import);
       return; // stop traversing downwards
     }

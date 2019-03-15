@@ -647,6 +647,73 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
       });
     });
 
+    it('should infer deps between projects based on exports', () => {
+      const deps = dependencies(
+        'nrwl',
+        [
+          {
+            name: 'app1Name',
+            root: 'apps/app1',
+            files: ['app1.ts'],
+            fileMTimes: {
+              'app1.ts': 1
+            },
+            tags: [],
+            implicitDependencies: [],
+            architect: {},
+            type: ProjectType.app
+          },
+          {
+            name: 'lib1Name',
+            root: 'libs/lib1',
+            files: ['lib1.ts'],
+            fileMTimes: {
+              'lib1.ts': 1
+            },
+            tags: [],
+            implicitDependencies: [],
+            architect: {},
+            type: ProjectType.lib
+          },
+          {
+            name: 'lib2Name',
+            root: 'libs/lib2',
+            files: ['lib2.ts'],
+            fileMTimes: {
+              'lib2.ts': 1
+            },
+            tags: [],
+            implicitDependencies: [],
+            architect: {},
+            type: ProjectType.lib
+          }
+        ],
+        null,
+        file => {
+          switch (file) {
+            case 'app1.ts':
+              return `
+            export * from '@nrwl/lib1';
+            export { } from '@nrwl/lib2/deep';
+          `;
+            case 'lib1.ts':
+              return `import '@nrwl/lib2'`;
+            case 'lib2.ts':
+              return '';
+          }
+        }
+      );
+
+      expect(deps).toEqual({
+        app1Name: [
+          { projectName: 'lib1Name', type: DependencyType.es6Import },
+          { projectName: 'lib2Name', type: DependencyType.es6Import }
+        ],
+        lib1Name: [{ projectName: 'lib2Name', type: DependencyType.es6Import }],
+        lib2Name: []
+      });
+    });
+
     it('should calculate dependencies in .tsx files', () => {
       const deps = dependencies(
         'nrwl',
