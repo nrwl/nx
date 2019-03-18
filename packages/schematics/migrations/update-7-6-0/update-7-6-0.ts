@@ -265,6 +265,7 @@ function migrateNgrx(host: Tree) {
     '@ngrx/store'
   ];
   if (
+    ngrxVersion &&
     !(
       ngrxVersion.startsWith('6.') ||
       ngrxVersion.startsWith('~6.') ||
