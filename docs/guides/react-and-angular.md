@@ -11,7 +11,7 @@ To show how Nx does it, let's build two applications (one in Angular, and one in
 Let's start by creating a new Nx workspace. The easiest way to do this is to use npx.
 
 ```bash
-npx create-nx-workspace happynrwl --preset=empty
+npx --ignore-existing create-nx-workspace happynrwl --preset=empty
 ```
 
 ## Creating an Angular Application

@@ -7,7 +7,7 @@ In this tutorial you will use Nx to build a full-stack application out of common
 **Start by creating a new workspace.**
 
 ```bash
-npx create-nx-workspace myorg
+npx --ignore-existing create-nx-workspace myorg
 ```
 
 When asked about 'preset', select `empty`.
