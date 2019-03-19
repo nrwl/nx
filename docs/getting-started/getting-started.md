@@ -13,7 +13,7 @@ npm install -g @angular/cli
 **Using `npx`**
 
 ```bash
-npx create-nx-workspace myworkspace
+npx --ignore-existing create-nx-workspace myworkspace
 ```
 
 **Using `npm init`**

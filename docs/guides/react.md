@@ -16,13 +16,13 @@ Nx has first class support for React: you can create React applications and libr
 Create a new Nx workspace. The easiest way to do it is to use npx.
 
 ```bash
-npx create-nx-workspace happynrwl --preset=empty
+npx --ignore-existing create-nx-workspace happynrwl --preset=empty
 ```
 
 You can also create a workspace with a React application in place by running:
 
 ```bash
-npx create-nx-workspace happynrwl --preset=react
+npx --ignore-existing create-nx-workspace happynrwl --preset=react
 ```
 
 ## Generating a React Application
