@@ -52,7 +52,12 @@ export default class JestBuilder implements Builder<JestBuilderOptions> {
     );
 
     const tsJestConfig = {
-      tsConfig: path.resolve(this.context.workspace.root, options.tsConfig)
+      tsConfig: path.resolve(this.context.workspace.root, options.tsConfig),
+      // Typechecking wasn't done in Jest 23 but is done in 24. This makes errors a warning to amend the breaking change for now
+      // Remove for v8 to fail on type checking failure
+      diagnostics: {
+        warnOnly: true
+      }
     };
 
     // TODO: This is hacky, We should probably just configure it in the user's workspace
