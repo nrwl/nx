@@ -21,11 +21,10 @@ import {
 } from '@angular-devkit/schematics/tasks';
 import { Framework } from '../../utils/frameworks';
 import { formatFiles } from '../../utils/rules/format-files';
+import { toFileName } from '../../utils/name-utils';
 
 export default function(options: Schema): Rule {
-  if (!options.directory) {
-    options.directory = options.name;
-  }
+  options = normalizeOptions(options);
 
   const workspaceOpts = { ...options, preset: undefined };
   return (host: Tree, context: SchematicContext) => {
@@ -268,4 +267,13 @@ function setDefaultAppFramework(framework: Framework) {
     }
     return json;
   });
+}
+
+function normalizeOptions(options: Schema): Schema {
+  options.name = toFileName(options.name);
+  if (!options.directory) {
+    options.directory = options.name;
+  }
+
+  return options;
 }
