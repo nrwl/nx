@@ -45,6 +45,9 @@ describe('Jest Builder', () => {
         globals: JSON.stringify({
           'ts-jest': {
             tsConfig: '/root/tsconfig.test.json',
+            diagnostics: {
+              warnOnly: true
+            },
             stringifyContentPathRegex: '\\.html$',
             astTransformers: [
               'jest-preset-angular/InlineHtmlStripStylesTransformer'
@@ -82,6 +85,9 @@ describe('Jest Builder', () => {
         globals: JSON.stringify({
           'ts-jest': {
             tsConfig: '/root/tsconfig.test.json',
+            diagnostics: {
+              warnOnly: true
+            },
             stringifyContentPathRegex: '\\.html$',
             astTransformers: [
               'jest-preset-angular/InlineHtmlStripStylesTransformer'
@@ -130,6 +136,9 @@ describe('Jest Builder', () => {
         globals: JSON.stringify({
           'ts-jest': {
             tsConfig: '/root/tsconfig.test.json',
+            diagnostics: {
+              warnOnly: true
+            },
             stringifyContentPathRegex: '\\.html$',
             astTransformers: [
               'jest-preset-angular/InlineHtmlStripStylesTransformer'
@@ -176,6 +185,9 @@ describe('Jest Builder', () => {
         globals: JSON.stringify({
           'ts-jest': {
             tsConfig: '/root/tsconfig.test.json',
+            diagnostics: {
+              warnOnly: true
+            },
             stringifyContentPathRegex: '\\.html$',
             astTransformers: [
               'jest-preset-angular/InlineHtmlStripStylesTransformer'
