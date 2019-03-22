@@ -307,5 +307,23 @@ describe('node-app', () => {
         'apps/my-frontend/proxy.conf.json'
       );
     });
+
+    it('should work with unnormalized project names', () => {
+      appTree = createApp(appTree, 'myFrontend');
+
+      const tree = schematicRunner.runSchematic(
+        'node-app',
+        { name: 'myNodeApp', frontendProject: 'myFrontend' },
+        appTree
+      );
+
+      expect(tree.exists('apps/my-frontend/proxy.conf.json')).toBeTruthy();
+      const serve = JSON.parse(tree.readContent('angular.json')).projects[
+        'my-frontend'
+      ].architect.serve;
+      expect(serve.options.proxyConfig).toEqual(
+        'apps/my-frontend/proxy.conf.json'
+      );
+    });
   });
 });

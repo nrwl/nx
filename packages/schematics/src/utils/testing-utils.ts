@@ -1,5 +1,5 @@
 import { Tree } from '@angular-devkit/schematics';
-import { names } from './name-utils';
+import { names, toFileName } from './name-utils';
 import { NxJson } from '../command-line/shared';
 import {
   SchematicTestRunner,
@@ -85,6 +85,7 @@ export function createApp(
   appName: string,
   routing: boolean = true
 ): Tree {
+  appName = toFileName(appName);
   // save for getAppDir() lookup by external *.spec.ts tests
   appConfig = {
     appName,

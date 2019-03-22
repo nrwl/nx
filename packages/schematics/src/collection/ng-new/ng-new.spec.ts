@@ -64,18 +64,44 @@ describe('ng-new', () => {
     ).toBe(Framework.WebComponents);
   });
 
-  it('should create files (preset = full-stack)', async () => {
-    const tree = await schematicRunner
-      .runSchematicAsync(
-        'ng-new',
-        { name: 'proj', preset: 'full-stack' },
-        projectTree
-      )
-      .toPromise();
-    expect(tree.exists('/proj/apps/proj/src/app/app.component.ts')).toBe(true);
-    expect(tree.exists('/proj/apps/api/src/app/app.controller.ts')).toBe(true);
-    expect(tree.exists('/proj/libs/api-interface/src/lib/interfaces.ts')).toBe(
-      true
-    );
+  describe('--preset full-stack', () => {
+    it('should create files', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'ng-new',
+          { name: 'proj', preset: 'full-stack' },
+          projectTree
+        )
+        .toPromise();
+      expect(tree.exists('/proj/apps/proj/src/app/app.component.ts')).toBe(
+        true
+      );
+      expect(tree.exists('/proj/apps/api/src/app/app.controller.ts')).toBe(
+        true
+      );
+      expect(
+        tree.exists('/proj/libs/api-interface/src/lib/interfaces.ts')
+      ).toBe(true);
+    });
+
+    it('should work with unnormalized names', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync(
+          'ng-new',
+          { name: 'myProj', preset: 'full-stack' },
+          projectTree
+        )
+        .toPromise();
+
+      expect(
+        tree.exists('/my-proj/apps/my-proj/src/app/app.component.ts')
+      ).toBe(true);
+      expect(tree.exists('/my-proj/apps/api/src/app/app.controller.ts')).toBe(
+        true
+      );
+      expect(
+        tree.exists('/my-proj/libs/api-interface/src/lib/interfaces.ts')
+      ).toBe(true);
+    });
   });
 });

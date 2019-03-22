@@ -250,7 +250,10 @@ function normalizeOptions(options: Schema): NormalizedSchema {
 
   return {
     ...options,
-    name: appProjectName,
+    name: toFileName(appProjectName),
+    frontendProject: options.frontendProject
+      ? toFileName(options.frontendProject)
+      : undefined,
     appProjectRoot,
     parsedTags
   };
