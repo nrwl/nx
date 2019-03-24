@@ -72,7 +72,8 @@ describe('Jest Builder', () => {
           silent: true,
           runInBand: true,
           maxWorkers: 2,
-          testNamePattern: 'test'
+          testNamePattern: 'test',
+          reporters: 'reporter'
         }
       })
       .toPromise();
@@ -100,7 +101,8 @@ describe('Jest Builder', () => {
         silent: true,
         runInBand: true,
         maxWorkers: 2,
-        testNamePattern: 'test'
+        testNamePattern: 'test',
+        reporters: ['reporter']
       },
       ['./jest.config.js']
     );

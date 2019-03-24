@@ -31,6 +31,7 @@ export interface JestBuilderOptions {
   silent?: boolean;
   updateSnapshot?: boolean;
   testNamePattern?: string;
+  reporters?: string;
 }
 
 export default class JestBuilder implements Builder<JestBuilderOptions> {
@@ -84,6 +85,15 @@ export default class JestBuilder implements Builder<JestBuilderOptions> {
         '<rootDir>',
         path.relative(builderConfig.root, options.setupFile)
       );
+    }
+
+    if (options.reporters) {
+      try {
+        const reporters = JSON.parse(options.reporters);
+        config.reporters = reporters;
+      } catch (e) {
+        config.reporters = [options.reporters];
+      }
     }
 
     return from(runCLI(config, [options.jestConfig])).pipe(
