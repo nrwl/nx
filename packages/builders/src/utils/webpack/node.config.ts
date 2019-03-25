@@ -1,4 +1,4 @@
-import { Configuration } from 'webpack';
+import { Configuration, BannerPlugin } from 'webpack';
 import * as mergeWebpack from 'webpack-merge';
 import * as nodeExternals from 'webpack-node-externals';
 
@@ -33,6 +33,16 @@ function getNodePartial(options: BuildNodeBuilderOptions) {
         // bundled
         callback();
       }
+    ];
+  }
+
+  if (options.sourceMap) {
+    webpackConfig.plugins = [
+      new BannerPlugin({
+        banner: 'require("source-map-support").install();',
+        raw: true,
+        entryOnly: false
+      })
     ];
   }
   return webpackConfig;
