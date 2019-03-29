@@ -126,8 +126,7 @@ function getBuildConfig(project: any, options: NormalizedSchema) {
             replace: join(project.sourceRoot, 'environments/environment.ts'),
             with: join(project.sourceRoot, 'environments/environment.prod.ts')
           }
-        ],
-        externalDependencies: 'none'
+        ]
       }
     }
   };
