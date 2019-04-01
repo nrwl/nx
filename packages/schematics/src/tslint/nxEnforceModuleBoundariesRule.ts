@@ -256,12 +256,12 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
   private isRelativeImportIntoAnotherProject(imp: string): boolean {
     if (!this.isRelative(imp)) return false;
 
-    const targetFile = normalizePath(path
-      .resolve(
+    const targetFile = normalizePath(
+      path.resolve(
         path.join(this.projectPath, path.dirname(this.getSourceFilePath())),
         imp
-      ))
-      .substring(this.projectPath.length + 1);
+      )
+    ).substring(this.projectPath.length + 1);
 
     const sourceProject = this.findSourceProject();
     const targetProject = this.findTargetProject(targetFile);
@@ -345,7 +345,5 @@ function removeExt(file: string): string {
 }
 
 function normalizePath(osSpecificPath: string): string {
-  return osSpecificPath
-    .split(path.sep)
-    .join('/');
+  return osSpecificPath.split(path.sep).join('/');
 }
