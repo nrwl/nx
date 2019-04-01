@@ -340,10 +340,10 @@ describe('Enforce Module Boundaries', () => {
             tags: [],
             implicitDependencies: [],
             architect: {},
-            files: [`libs/mylib/src/main.ts`, `libs/mylib/other/index.ts`],
+            files: [`libs/mylib/src/main.ts`, `libs/mylib/src/other/index.ts`],
             fileMTimes: {
               'libs/mylib/src/main.ts': 1,
-              'libs/mylib/other/index.ts': 1
+              'libs/mylib/src/other/index.ts': 1
             }
           }
         ]
