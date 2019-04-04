@@ -340,7 +340,7 @@ describe('Enforce Module Boundaries', () => {
             tags: [],
             implicitDependencies: [],
             architect: {},
-            files: [`libs/mylib/src/main.ts`, `libs/mylib/src/other/index.ts`],
+            files: [`libs/mylib/src/main.ts`, `libs/mylib/other/index.ts`],
             fileMTimes: {
               'libs/mylib/src/main.ts': 1,
               'libs/mylib/src/other/index.ts': 1
@@ -356,6 +356,43 @@ describe('Enforce Module Boundaries', () => {
         {},
         `${process.cwd()}/proj/libs/mylib/src/main.ts`,
         'import "../../other"',
+        [
+          {
+            name: 'mylibName',
+            root: 'libs/mylib',
+            type: ProjectType.lib,
+            tags: [],
+            implicitDependencies: [],
+            architect: {},
+            files: [`libs/mylib/src/main.ts`],
+            fileMTimes: {
+              'libs/mylib/src/main.ts': 1
+            }
+          },
+          {
+            name: 'otherName',
+            root: 'libs/other',
+            type: ProjectType.lib,
+            tags: [],
+            implicitDependencies: [],
+            architect: {},
+            files: ['libs/other/src/index.ts'],
+            fileMTimes: {
+              'libs/other/src/main.ts': 1
+            }
+          }
+        ]
+      );
+      expect(failures[0].getFailure()).toEqual(
+        'library imports must start with @mycompany/'
+      );
+    });
+
+    it('should error when relatively importing the src directory of another library', () => {
+      const failures = runRule(
+        {},
+        `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+        'import "../../other/src"',
         [
           {
             name: 'mylibName',
