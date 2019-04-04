@@ -343,7 +343,7 @@ describe('Enforce Module Boundaries', () => {
             files: [`libs/mylib/src/main.ts`, `libs/mylib/other/index.ts`],
             fileMTimes: {
               'libs/mylib/src/main.ts': 1,
-              'libs/mylib/src/other/index.ts': 1
+              'libs/mylib/other/index.ts': 1
             }
           }
         ]
