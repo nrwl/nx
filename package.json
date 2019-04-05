@@ -104,6 +104,8 @@
     "strip-json-comments": "2.0.1",
     "tmp": "0.0.33",
     "ts-loader": "^5.3.1",
+    "ts-node": "^8.0.2",
+    "tsconfig-paths-webpack-plugin": "^3.2.0",
     "tsickle": "^0.33.0",
     "tslib": "^1.9.3",
     "tslint": "5.11.0",
@@ -133,8 +135,5 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
-  },
-  "dependencies": {
-    "ts-node": "^8.0.2"
   }
 }

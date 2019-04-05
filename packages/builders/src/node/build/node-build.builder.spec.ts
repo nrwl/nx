@@ -2,6 +2,8 @@ import { join, normalize } from '@angular-devkit/core';
 import { TestLogger } from '@angular-devkit/architect/testing';
 import BuildNodeBuilder from './node-build.builder';
 import { BuildNodeBuilderOptions } from './node-build.builder';
+jest.mock('tsconfig-paths-webpack-plugin');
+import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import { of } from 'rxjs';
 import * as fs from 'fs';
 
@@ -42,6 +44,7 @@ describe('NodeBuildBuilder', () => {
       assets: [],
       statsJson: false
     };
+    (<any>TsConfigPathsPlugin).mockImplementation(class MockPathsPlugin {});
   });
 
   describe('run', () => {
