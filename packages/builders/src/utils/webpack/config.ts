@@ -7,6 +7,7 @@ import { resolve } from 'path';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 
 import { AssetPatternObject } from '@angular-devkit/build-angular';
@@ -22,6 +23,8 @@ export function getBaseWebpackPartial(
   const supportsEs2015 =
     compilerOptions.target !== ts.ScriptTarget.ES3 &&
     compilerOptions.target !== ts.ScriptTarget.ES5;
+  const mainFields = [...(supportsEs2015 ? ['es2015'] : []), 'module', 'main'];
+  const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
   const webpackConfig: Configuration = {
     entry: {
       main: [options.main]
@@ -47,9 +50,16 @@ export function getBaseWebpackPartial(
       ]
     },
     resolve: {
-      extensions: ['.ts', '.tsx', '.mjs', '.js', '.jsx'],
-      alias: getAliases(options, compilerOptions),
-      mainFields: [...(supportsEs2015 ? ['es2015'] : []), 'module', 'main']
+      extensions,
+      alias: getAliases(options),
+      plugins: [
+        new TsConfigPathsPlugin({
+          configFile: options.tsConfig,
+          extensions,
+          mainFields
+        })
+      ],
+      mainFields
     },
     performance: {
       hints: false
@@ -124,20 +134,8 @@ export function getBaseWebpackPartial(
   return webpackConfig;
 }
 
-function getAliases(
-  options: BuildBuilderOptions,
-  compilerOptions: ts.CompilerOptions
-): { [key: string]: string } {
-  const replacements = [
-    ...options.fileReplacements,
-    ...(compilerOptions.paths
-      ? Object.entries(compilerOptions.paths).map(([importPath, values]) => ({
-          replace: importPath,
-          with: resolve(options.root, values[0])
-        }))
-      : [])
-  ];
-  return replacements.reduce(
+function getAliases(options: BuildBuilderOptions): { [key: string]: string } {
+  return options.fileReplacements.reduce(
     (aliases, replacement) => ({
       ...aliases,
       [replacement.replace]: replacement.with

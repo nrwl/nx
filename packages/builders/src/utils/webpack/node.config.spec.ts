@@ -1,7 +1,9 @@
-import { getNodeWebpackConfig } from './node.config';
 import { getSystemPath, normalize } from '@angular-devkit/core';
-import { BuildNodeBuilderOptions } from '../../node/build/node-build.builder';
 import { BannerPlugin } from 'webpack';
+jest.mock('tsconfig-paths-webpack-plugin');
+import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
+import { getNodeWebpackConfig } from './node.config';
+import { BuildNodeBuilderOptions } from '../../node/build/node-build.builder';
 
 describe('getNodePartial', () => {
   let input: BuildNodeBuilderOptions;
@@ -15,6 +17,7 @@ describe('getNodePartial', () => {
       root: getSystemPath(normalize('/root')),
       statsJson: false
     };
+    (<any>TsConfigPathsPlugin).mockImplementation(class MockPathsPlugin {});
   });
 
   describe('unconditionally', () => {

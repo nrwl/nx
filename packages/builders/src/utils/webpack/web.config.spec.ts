@@ -1,4 +1,6 @@
 import { getSystemPath, normalize, Path } from '@angular-devkit/core';
+jest.mock('tsconfig-paths-webpack-plugin');
+import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import { getWebConfig as getWebPartial } from './web.config';
 import { WebBuildBuilderOptions } from '../../web/build/web-build.builder';
 import { createConsoleLogger } from '@angular-devkit/core/node';
@@ -42,6 +44,7 @@ describe('getWebConfig', () => {
       target: 'es2015',
       paths: { path: ['mapped/path'] }
     };
+    (<any>TsConfigPathsPlugin).mockImplementation(class MockPathsPlugin {});
 
     spyOn(ts, 'readConfigFile').and.callFake(() => ({
       config: {
