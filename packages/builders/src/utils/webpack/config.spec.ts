@@ -208,13 +208,13 @@ describe('getBaseWebpackPartial', () => {
       expect(result.devtool).toEqual('source-map');
     });
 
-    it('should enable source-map devtool', () => {
+    it('should disable source-map devtool', () => {
       const result = getBaseWebpackPartial({
         ...input,
         sourceMap: false
       });
 
-      expect(result.devtool).toEqual('eval');
+      expect(result.devtool).toEqual(false);
     });
   });
 
