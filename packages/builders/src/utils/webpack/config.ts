@@ -26,7 +26,7 @@ export function getBaseWebpackPartial(
     entry: {
       main: [options.main]
     },
-    devtool: options.sourceMap ? 'source-map' : 'eval',
+    devtool: options.sourceMap ? 'source-map' : false,
     mode: options.optimization ? 'production' : 'development',
     output: {
       path: options.outputPath,
