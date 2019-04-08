@@ -64,6 +64,11 @@
       "version": "7.7.0",
       "description": "Default library framework to Angular",
       "factory": "./update-7-7-0/update-7-7-0"
+    },
+    "update-7.8.1": {
+      "version": "7.8.1",
+      "description": "Update prettier",
+      "factory": "./update-7-8-1/update-7-8-1"
     }
   }
 }
