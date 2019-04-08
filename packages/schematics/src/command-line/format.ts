@@ -10,7 +10,16 @@ export interface YargsFormatOptions extends YargsAffectedOptions {
   libsAndApps?: boolean;
 }
 
-const PRETTIER_EXTENSIONS = ['ts', 'js', 'scss', 'css', 'html', 'json', 'md'];
+const PRETTIER_EXTENSIONS = [
+  'ts',
+  'js',
+  'scss',
+  'less',
+  'css',
+  'html',
+  'json',
+  'md'
+];
 
 export function format(command: 'check' | 'write', args: YargsFormatOptions) {
   let patterns: string[];
