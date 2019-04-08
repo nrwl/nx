@@ -36,7 +36,7 @@ myorg/
 **Copy the interface into the library's index file.**
 
 ```typescript
-interface Todo {
+export interface Todo {
   title: string;
 }
 ```
