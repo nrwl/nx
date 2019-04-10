@@ -45,7 +45,6 @@
 - [Affected support for uncommitted changes](https://github.com/nrwl/nx/commit/113b51bd330c2af058675386e482d38f170a6688)
 - [Extend circular dependency check](https://github.com/nrwl/nx/commit/fff9659c3a108b613c6db89bcca4072494fbe85f)
 - [Add lint checks ensuring the integrity of the workspace](https://github.com/nrwl/nx/commit/ce553b732e8ca004e1ecf53cf54bcadb6ba1f7f3)
-- [Add ability to create bazel workspace](https://github.com/nrwl/nx/commit/5a26f241b1e8b8b87e2ab4da941d3d3c4c480046)
 
 ## Fixes
 
