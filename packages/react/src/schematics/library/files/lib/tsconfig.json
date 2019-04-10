@@ -1,7 +1,9 @@
 {
   "extends": "<%= offsetFromRoot %>tsconfig.json",
   "compilerOptions": {
+    "jsx": "react",
+    "allowJs": true,
     "types": []
   },
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "**/*.tsx"]
 }

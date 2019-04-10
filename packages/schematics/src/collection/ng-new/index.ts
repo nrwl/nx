@@ -5,7 +5,8 @@ import {
   Rule,
   schematic,
   SchematicContext,
-  Tree
+  Tree,
+  externalSchematic
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import {
@@ -56,12 +57,12 @@ function createPreset(options: Schema): Rule {
     ]);
   } else if (options.preset === 'react') {
     return chain([
-      schematic(
+      externalSchematic(
+        '@nrwl/react',
         'application',
         {
           name: options.name,
-          style: options.style,
-          framework: Framework.React
+          style: options.style
         },
         { interactive: false }
       ),

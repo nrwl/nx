@@ -13,7 +13,9 @@ cd build/packages
 if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i "" "s|exports.nxVersion = '\*';|exports.nxVersion = '$NX_VERSION';|g" schematics/src/lib-versions.js
     sed -i "" "s|exports.schematicsVersion = '\*';|exports.schematicsVersion = '$NX_VERSION';|g" schematics/src/lib-versions.js
-    sed -i "" "s|\*|$NX_VERSION|g" create-nx-workspace/package.json
+    sed -i "" "s|exports.nxVersion = '\*';|exports.nxVersion = '$NX_VERSION';|g" react/src/utils/versions.js
+    sed -i "" "s|\*|$NX_VERSION|g" react/package.json
+    sed -i "" "s|\*|$NX_VERSION|g" schematics/package.json
     sed -i "" "s|NX_VERSION|$NX_VERSION|g" create-nx-workspace/bin/create-nx-workspace.js
     sed -i "" "s|ANGULAR_CLI_VERSION|$ANGULAR_CLI_VERSION|g" create-nx-workspace/bin/create-nx-workspace.js
     sed -i "" "s|NX_VERSION|$NX_VERSION|g" schematics/bin/create-nx-workspace.js
@@ -21,7 +23,9 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
     sed -i "s|exports.nxVersion = '\*';|exports.nxVersion = '$NX_VERSION';|g" schematics/src/lib-versions.js
     sed -i "s|exports.schematicsVersion = '\*';|exports.schematicsVersion = '$NX_VERSION';|g" schematics/src/lib-versions.js
-    sed -i "s|\*|$NX_VERSION|g" create-nx-workspace/package.json
+    sed -i "s|exports.nxVersion = '\*';|exports.nxVersion = '$NX_VERSION';|g" react/src/utils/versions.js
+    sed -i "s|\*|$NX_VERSION|g" react/package.json
+    sed -i "s|\*|$NX_VERSION|g" schematics/package.json
     sed -i "s|NX_VERSION|$NX_VERSION|g" create-nx-workspace/bin/create-nx-workspace.js
     sed -i "s|ANGULAR_CLI_VERSION|$ANGULAR_CLI_VERSION|g" create-nx-workspace/bin/create-nx-workspace.js
     sed -i "s|NX_VERSION|$NX_VERSION|g" schematics/bin/create-nx-workspace.js

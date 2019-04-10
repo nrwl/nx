@@ -31,12 +31,14 @@
     "requirements": {},
     "packageGroup": [
       "@nrwl/nx",
+      "@nrwl/react",
       "@nrwl/schematics",
       "@nrwl/builders"
     ],
     "migrations": "./migrations/migrations.json"
   },
   "dependencies": {
+    "@nrwl/react": "*",
     "app-root-path": "^2.0.1",
     "cosmiconfig": "4.0.0",
     "fs-extra": "6.0.0",

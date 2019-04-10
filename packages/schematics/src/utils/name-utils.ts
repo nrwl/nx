@@ -3,7 +3,14 @@ import * as path from 'path';
 /**
  * Build dictionary of names:
  */
-export function names(name: string): any {
+export function names(
+  name: string
+): {
+  name: string;
+  className: string;
+  propertyName: string;
+  fileName: string;
+} {
   return {
     name,
     className: toClassName(name),

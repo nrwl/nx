@@ -1,10 +1,8 @@
 {
   "extends": "<%= offsetFromRoot %>tsconfig.json",
-  "compilerOptions": {<% if (framework === 'react') { %>
-    "jsx": "react",
-    "allowJs": true,<% } %><% if (framework === 'web-components') { %>
+  "compilerOptions": {<% if (framework === 'web-components') { %>
     "target": "es2015",<% } %>
     "types": []
   },
-  "include": ["**/*.ts"<% if (framework === 'react') { %>, "**/*.tsx"<% } %>]
+  "include": ["**/*.ts"]
 }

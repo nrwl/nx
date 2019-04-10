@@ -36,10 +36,8 @@ import {
 } from '../../utils/cli-config-utils';
 import { formatFiles } from '../../utils/rules/format-files';
 import { join, normalize } from '@angular-devkit/core';
-import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { Framework } from '../../utils/frameworks';
 import {
-  reactVersions,
   documentRegisterElementVersion,
   angularVersion,
   rxjsVersion,
@@ -172,12 +170,6 @@ function updateBuilders(options: NormalizedSchema): Rule {
         serveOptions.configurations.production.browserTarget;
       delete serveOptions.configurations.production.browserTarget;
 
-      if (options.framework === Framework.React) {
-        buildOptions.options.main = buildOptions.options.main.replace(
-          '.ts',
-          '.tsx'
-        );
-      }
       return json;
     });
   };
@@ -227,18 +219,6 @@ function updateDependencies(options: NormalizedSchema): Rule {
   let deps = {};
   let devDeps = {};
   switch (options.framework) {
-    case Framework.React:
-      deps = {
-        react: reactVersions.framework,
-        'react-dom': reactVersions.framework
-      };
-      devDeps = {
-        '@types/react': reactVersions.reactTypes,
-        '@types/react-dom': reactVersions.reactDomTypes,
-        'react-testing-library': reactVersions.testingLibrary
-      };
-      break;
-
     case Framework.Angular:
       deps = {
         '@angular/animations': angularVersion,
@@ -305,7 +285,6 @@ function updateLinting(options: NormalizedSchema): Rule {
           return json;
         })
       ]);
-    case Framework.React:
     case Framework.WebComponents:
       return updateJsonInTree(`${options.appProjectRoot}/tslint.json`, json => {
         json.extends = `${offsetFromRoot(options.appProjectRoot)}tslint.json`;
@@ -538,14 +517,12 @@ export default function(schema: Schema): Rule {
       options.unitTestRunner === 'jest'
         ? schematic('jest-project', {
             project: options.name,
-            supportTsx: options.framework === Framework.React,
+            supportTsx: false,
             skipSerializers: options.framework !== Framework.Angular,
             setupFile:
               options.framework === Framework.Angular
                 ? 'angular'
-                : options.framework === Framework.WebComponents
-                ? 'web-components'
-                : 'none'
+                : 'web-components'
           })
         : noop(),
       options.unitTestRunner === 'karma'

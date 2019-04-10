@@ -1,0 +1,10 @@
+{
+  "extends": "<%= offsetFromRoot %>tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react",
+    "allowJs": true,
+    "target": "es2015",
+    "types": []
+  },
+  "include": ["**/*.ts", "**/*.tsx"]
+}
