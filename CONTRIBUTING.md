@@ -14,7 +14,7 @@ If you find a bug in the source code or a mistake in the documentation, you can 
 
 After cloning the project run: `yarn`.
 
-After that run `yarn build` to build the `bazel`, `nx`, and `schematics` packages.
+After that run `yarn build` to build the `nx`, and `schematics` packages.
 
 After that run `yarn linknpm`.
 
