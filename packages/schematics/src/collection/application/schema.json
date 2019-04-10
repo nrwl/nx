@@ -7,7 +7,7 @@
     "framework": {
       "description": "The Framework for the application.",
       "type": "string",
-      "enum": ["angular", "react", "web-components"],
+      "enum": ["angular", "web-components"],
       "default": "angular",
       "x-prompt": {
         "message": "What framework would you like to use for the application?",
@@ -16,10 +16,6 @@
           {
             "value": "angular",
             "label": "Angular         [ https://angular.io   ]"
-          },
-          {
-            "value": "react",
-            "label": "React           [ https://reactjs.org/ ]"
           },
           {
             "value": "web-components",

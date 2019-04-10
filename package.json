@@ -121,6 +121,8 @@
   "jest": {
     "modulePathIgnorePatterns": [
       "tmp",
+      "<rootDir>/test",
+      "<rootDir>/packages",
       "collection/.*/files"
     ],
     "collectCoverage": true,

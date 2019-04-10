@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "sourceMap": false,
+    "outDir": "<%= offsetFromRoot %>/dist/out-tsc/<%= e2eProjectRoot %>/src"
+  },
+  "include": ["src/**/*.ts"]
+}

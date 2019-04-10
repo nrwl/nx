@@ -32,8 +32,7 @@ import { offsetFromRoot } from '../../utils/common';
 import {
   toClassName,
   toFileName,
-  toPropertyName,
-  names
+  toPropertyName
 } from '../../utils/name-utils';
 import {
   getNpmScope,
@@ -406,33 +405,6 @@ function updateTsConfig(options: NormalizedSchema): Rule {
   ]);
 }
 
-function createAdditionalFiles(options: NormalizedSchema): Rule {
-  switch (options.framework) {
-    case Framework.React:
-      return chain([
-        mergeWith(
-          apply(url(`./files/${options.framework}`), [
-            template({
-              ...options,
-              tmpl: '',
-              ...names(options.name)
-            }),
-            move(options.projectRoot)
-          ])
-        ),
-        (host: Tree) => {
-          host.overwrite(
-            `${options.projectRoot}/src/index.ts`,
-            ` export * from './lib/${options.fileName}';\n`
-          );
-        }
-      ]);
-
-    default:
-      return noop();
-  }
-}
-
 function updateLibPackageNpmScope(options: NormalizedSchema): Rule {
   return (host: Tree) => {
     return updateJsonInTree(`${options.projectRoot}/package.json`, json => {
@@ -477,13 +449,12 @@ export default function(schema: Schema): Rule {
       move(options.name, options.projectRoot),
       updateProject(options),
       updateTsConfig(options),
-      createAdditionalFiles(options),
       options.unitTestRunner === 'jest'
         ? schematic('jest-project', {
             project: options.name,
             setupFile:
               options.framework === Framework.Angular ? 'angular' : 'none',
-            supportTsx: options.framework === Framework.React,
+            supportTsx: false,
             skipSerializers: options.framework !== Framework.Angular
           })
         : noop(),

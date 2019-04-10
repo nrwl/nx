@@ -5,12 +5,10 @@ import {
   move,
   noop,
   Rule,
-  SchematicContext,
   template,
   Tree,
   url
 } from '@angular-devkit/schematics';
-import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { join, normalize } from '@angular-devkit/core';
 // app
 import {

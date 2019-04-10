@@ -18,28 +18,31 @@ const path = require('path');
  *    parsable in order to be used in a rendering process using template. This
  *    in order to generate a markdown file for each available schematic.
  */
-const schematicsSourceDirectory = path.join(
-  __dirname,
-  '../../packages/schematics/src'
-);
-const schematicsOutputDirectory = path.join(
-  __dirname,
-  '../../docs/api-schematics'
-);
-const schematicCollectionFile = path.join(
-  schematicsSourceDirectory,
-  'collection.json'
-);
-fs.removeSync(schematicsOutputDirectory);
-const schematicCollection = fs.readJsonSync(schematicCollectionFile).schematics;
+const schematicsConfig = {
+  source: path.join(__dirname, '../../packages/schematics/src'),
+  output: path.join(__dirname, '../../docs/api-schematics')
+};
+const reactConfig = {
+  source: path.join(__dirname, '../../packages/react'),
+  output: path.join(__dirname, '../../docs/api-react')
+};
+interface DocConfig {
+  source: string;
+  output: string;
+}
+const docSections: DocConfig[] = [schematicsConfig, reactConfig];
 const registry = new CoreSchemaRegistry();
 registry.addFormat(pathFormat);
 registry.addFormat(htmlSelectorFormat);
 
 function generateSchematicList(
-  schematicCollection: Schematic,
+  config: DocConfig,
   registry: CoreSchemaRegistry
 ): Promise<Schematic>[] {
+  const schematicCollectionFile = path.join(config.source, 'collection.json');
+  fs.removeSync(config.output);
+  const schematicCollection = fs.readJsonSync(schematicCollectionFile)
+    .schematics;
   return Object.keys(schematicCollection).map(schematicName => {
     const schematic = {
       name: schematicName,
@@ -48,10 +51,7 @@ function generateSchematicList(
         ? schematicCollection[schematicName]['alias']
         : null,
       rawSchema: fs.readJsonSync(
-        path.join(
-          schematicsSourceDirectory,
-          schematicCollection[schematicName]['schema']
-        )
+        path.join(config.source, schematicCollection[schematicName]['schema'])
       )
     };
 
@@ -120,10 +120,19 @@ function generateFile(
   );
 }
 
-Promise.all(generateSchematicList(schematicCollection, registry))
-  .then(schematicList => schematicList.map(generateTemplate))
-  .then(markdownList =>
-    markdownList.forEach(template =>
-      generateFile(schematicsOutputDirectory, template)
-    )
-  );
+Promise.all(
+  docSections.map(config => {
+    return Promise.all(generateSchematicList(config, registry))
+      .then(schematicList => schematicList.map(generateTemplate))
+      .then(markdownList =>
+        markdownList.forEach(template => generateFile(config.output, template))
+      )
+      .then(() => {
+        console.log(
+          `Documentation from ${config.source} generated to ${config.output}`
+        );
+      });
+  })
+).then(() => {
+  console.log('Finished Generating all Documentation');
+});
