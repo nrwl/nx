@@ -9,6 +9,7 @@ import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import * as path from 'path';
+import { getSystemPath } from '@angular-devkit/core';
 
 try {
   require('dotenv').config();
@@ -47,12 +48,15 @@ export default class JestBuilder implements Builder<JestBuilderOptions> {
     const options = builderConfig.options;
 
     options.jestConfig = path.resolve(
-      this.context.workspace.root,
+      getSystemPath(this.context.workspace.root),
       options.jestConfig
     );
 
     const tsJestConfig = {
-      tsConfig: path.resolve(this.context.workspace.root, options.tsConfig),
+      tsConfig: path.resolve(
+        getSystemPath(this.context.workspace.root),
+        options.tsConfig
+      ),
       // Typechecking wasn't done in Jest 23 but is done in 24. This makes errors a warning to amend the breaking change for now
       // Remove for v8 to fail on type checking failure
       diagnostics: {
