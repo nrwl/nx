@@ -25,6 +25,7 @@ export interface JestBuilderOptions {
   bail?: number | boolean;
   ci?: boolean;
   color?: boolean;
+  clearCache?: boolean;
   json?: boolean;
   maxWorkers?: number;
   onlyChanged?: boolean;
@@ -103,6 +104,10 @@ export default class JestBuilder implements Builder<JestBuilderOptions> {
 
     if (options.testFile) {
       config._ = [options.testFile];
+    }
+
+    if (options.clearCache) {
+      config.clearCache = true;
     }
 
     return from(runCLI(config, [options.jestConfig])).pipe(

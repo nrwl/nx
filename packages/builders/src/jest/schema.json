@@ -7,6 +7,10 @@
       "description": "Indicates that test coverage information should be collected and reported in the output. (https://jestjs.io/docs/en/cli#coverage)",
       "type": "boolean"
     },
+    "clearCache": {
+      "description": "Deletes the Jest cache directory and then exits without running tests. Will delete Jest's default cache directory. _Note: clearing the cache will reduce performance_.",
+      "type": "boolean"
+    },
     "jestConfig": {
       "description": "The path of the Jest configuration. (https://jestjs.io/docs/en/configuration)",
       "type": "string"

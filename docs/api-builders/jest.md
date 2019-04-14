@@ -18,6 +18,12 @@ Type: `boolean`
 
 Whether to run Jest in continuous integration (CI) mode. This option is on by default in most popular CI environments. It will prevent snapshots from being written unless explicitly requested. (https://jestjs.io/docs/en/cli#ci)
 
+### clearCache
+
+Type: `boolean`
+
+Deletes the Jest cache directory and then exits without running tests. Will delete Jest's default cache directory. _Note: clearing the cache will reduce performance_.
+
 ### codeCoverage
 
 Type: `boolean`
