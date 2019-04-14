@@ -31,12 +31,23 @@ const nxTool = {
   name: 'Nx Workspace',
   packageName: '@nrwl/workspace'
 };
-let useYarn = true;
 
+let packageManager: string;
 try {
-  execSync('yarn --version', { stdio: ['ignore', 'ignore', 'ignore'] });
+  packageManager = execSync('ng config -g cli.packageManager', {
+    stdio: ['ignore', 'pipe', 'ignore']
+  })
+    .toString()
+    .trim();
 } catch (e) {
-  useYarn = false;
+  packageManager = 'yarn';
+}
+try {
+  execSync(`${packageManager} --version`, {
+    stdio: ['ignore', 'ignore', 'ignore']
+  });
+} catch (e) {
+  packageManager = 'npm';
 }
 
 const projectName = parsedArgs._[2];
@@ -69,11 +80,10 @@ writeFileSync(
   })
 );
 
-if (useYarn) {
-  execSync('yarn install --silent', { cwd: tmpDir, stdio: [0, 1, 2] });
-} else {
-  execSync('npm install --silent', { cwd: tmpDir, stdio: [0, 1, 2] });
-}
+execSync(`${packageManager} install --silent`, {
+  cwd: tmpDir,
+  stdio: [0, 1, 2]
+});
 
 // creating the app itself
 const args = process.argv
