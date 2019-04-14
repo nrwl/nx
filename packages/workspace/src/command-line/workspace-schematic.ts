@@ -17,11 +17,12 @@ import {
 import * as appRoot from 'app-root-path';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
-import { readFileSync, statSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { copySync, removeSync } from 'fs-extra';
 import * as inquirer from 'inquirer';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
+import { fileExists } from '../utils/fileutils';
 
 const rootDirectory = appRoot.path;
 
@@ -115,10 +116,27 @@ function createWorkflow(dryRun: boolean) {
   const root = normalize(rootDirectory);
   const host = new virtualFs.ScopedHost(new NodeJsSyncHost(), root);
   return new NodeWorkflow(host, {
-    packageManager: fileExists('yarn.lock') ? 'yarn' : 'npm',
+    packageManager: detectPackageManager(),
     root,
     dryRun
   });
+}
+
+function detectPackageManager(): string {
+  try {
+    const packageManager = execSync(`ng config cli.packageManager`, {
+      stdio: ['ignore', 'pipe', 'ignore']
+    })
+      .toString()
+      .trim();
+    return packageManager;
+  } catch (e) {
+    return fileExists('yarn.lock')
+      ? 'yarn'
+      : fileExists('pnpm-lock.yaml')
+      ? 'pnpm'
+      : 'npm';
+  }
 }
 
 function listSchematics(collectionName: string, logger: logging.Logger) {
@@ -273,14 +291,6 @@ function exists(file: string): boolean {
   try {
     return !!fs.statSync(file);
   } catch (e) {
-    return false;
-  }
-}
-
-function fileExists(filePath: string): boolean {
-  try {
-    return statSync(filePath).isFile();
-  } catch (err) {
     return false;
   }
 }
