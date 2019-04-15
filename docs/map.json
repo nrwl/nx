@@ -149,6 +149,10 @@
             "id": "monorepo-nx-enterprise"
           },
           {
+            "name": "Lazy Loading Code",
+            "id": "misc-lazy-loading"
+          },
+          {
             "name": "Changes between Nx 7 and Nx 8",
             "id": "nx7-to-nx8"
           }
