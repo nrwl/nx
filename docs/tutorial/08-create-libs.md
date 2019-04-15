@@ -272,6 +272,7 @@ myorg/
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { MainComponent } from './main/main.component';
 
 @NgModule({
   imports: [
@@ -348,7 +349,7 @@ _**Explanation**: LoadChildren property receives a string of the form path/to/fi
 
 **Restart `ng serve todos`  and go to `localhost:port/main` you should see the application running**
 
-**You can check that the libs was loading lazy checking the browser network panel**
+**Open the network panel on the browser, and check that the lib was lazy loaded.**
 
 !!!!!
 Libraries' public API is defined in...
