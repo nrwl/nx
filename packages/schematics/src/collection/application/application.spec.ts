@@ -1,5 +1,3 @@
-import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import * as path from 'path';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
 import {
   createEmptyWorkspace,
@@ -370,6 +368,14 @@ describe('app', () => {
         expect(
           tree.exists('apps/my-app/src/app/app.component.spec.ts')
         ).toBeFalsy();
+        expect(tree.exists('apps/my-app/src/app/app.element.ts')).toBeTruthy();
+        expect(
+          getFileContent(tree, 'apps/my-app/src/app/app.element.ts')
+        ).toContain("import './app.element.css';");
+        expect(
+          tree.exists('apps/my-app/src/app/app.element.spec.ts')
+        ).toBeTruthy();
+        expect(tree.exists('apps/my-app/src/app/app.element.css')).toBeTruthy();
       });
     });
 

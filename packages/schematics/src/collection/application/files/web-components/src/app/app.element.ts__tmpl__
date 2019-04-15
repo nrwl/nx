@@ -1,3 +1,5 @@
+import './app.element.<%= style %>';
+
 export class AppElement extends HTMLElement {
   public static observedAttributes = [
 
