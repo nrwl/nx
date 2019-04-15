@@ -1,14 +1,9 @@
 import {
   newApp,
   newLib,
-  newProject,
-  readJson,
   runCLI,
   updateFile,
   exists,
-  runNgNew,
-  cleanup,
-  copyMissingPackages,
   getSize,
   expectTestsPass,
   runCLIAsync,
@@ -19,8 +14,11 @@ import {
 import { toClassName } from '@nrwl/schematics/src/utils/name-utils';
 
 describe('Nrwl Workspace', () => {
-  it('should work', async () => {
+  beforeEach(() => {
     ensureProject();
+  });
+
+  it('should work', async () => {
     const myapp = uniq('myapp');
     const mylib = uniq('mylib');
     newApp(`${myapp} --directory=myDir`);
@@ -73,7 +71,6 @@ describe('Nrwl Workspace', () => {
   }, 1000000);
 
   it('should support router config generation (lazy)', async () => {
-    ensureProject();
     const myapp = uniq('myapp');
     const mylib = uniq('mylib');
     newApp(`${myapp} --directory=myDir --routing`);
@@ -88,7 +85,6 @@ describe('Nrwl Workspace', () => {
   }, 1000000);
 
   it('should support router config generation (eager)', async () => {
-    ensureProject();
     const myapp = uniq('myapp');
     newApp(`${myapp} --directory=myDir --routing`);
     const mylib = uniq('mylib');

@@ -3,7 +3,7 @@
   "fixturesFolder": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>/src/fixtures",
   "integrationFolder": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>/src/integration",
   "pluginsFile": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>/src/plugins/index.js",
-  "supportFile":  false,
+  "supportFile": false,
   "video": true,
   "videosFolder": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>/videos",
   "screenshotsFolder": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>/screenshots",

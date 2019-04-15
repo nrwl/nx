@@ -21,11 +21,6 @@
       "schema": "./web/dev-server/schema.json",
       "description": "Serve a web application"
     },
-    "jest": {
-      "class": "./jest/jest.builder",
-      "schema": "./jest/schema.json",
-      "description": "Run Jest unit tests"
-    },
     "cypress": {
       "class": "./cypress/cypress.builder",
       "schema": "./cypress/schema.json",

@@ -515,7 +515,7 @@ export default function(schema: Schema): Rule {
       updateDependencies(options),
       updateLinting(options),
       options.unitTestRunner === 'jest'
-        ? schematic('jest-project', {
+        ? externalSchematic('@nrwl/jest', 'jest-project', {
             project: options.name,
             supportTsx: false,
             skipSerializers: options.framework !== Framework.Angular,

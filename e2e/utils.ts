@@ -25,6 +25,8 @@ export function newProject(): void {
   if (!directoryExists('./tmp/proj_backup')) {
     runNgNew('--collection=@nrwl/schematics --npmScope=proj', true);
     copyMissingPackages();
+    runCLI('add @nrwl/jest');
+    runCLI('add @nrwl/react');
     execSync('mv ./tmp/proj ./tmp/proj_backup');
   }
   execSync('cp -a ./tmp/proj_backup ./tmp/proj');

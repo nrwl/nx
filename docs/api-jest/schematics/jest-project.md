@@ -1,4 +1,4 @@
-# jest-project [hidden]
+# jest-project
 
 Add Jest configuration to a project
 
@@ -19,7 +19,7 @@ The name of the project.
 
 ### setupFile
 
-Default: `angular`
+Default: `none`
 
 Type: `string`
 

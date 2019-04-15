@@ -26,11 +26,15 @@ const reactConfig = {
   source: path.join(__dirname, '../../packages/react'),
   output: path.join(__dirname, '../../docs/api-react')
 };
+const jestConfig = {
+  source: path.join(__dirname, '../../packages/jest'),
+  output: path.join(__dirname, '../../docs/api-jest/schematics')
+};
 interface DocConfig {
   source: string;
   output: string;
 }
-const docSections: DocConfig[] = [schematicsConfig, reactConfig];
+const docSections: DocConfig[] = [schematicsConfig, reactConfig, jestConfig];
 const registry = new CoreSchemaRegistry();
 registry.addFormat(pathFormat);
 registry.addFormat(htmlSelectorFormat);

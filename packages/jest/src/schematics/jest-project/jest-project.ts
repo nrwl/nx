@@ -9,18 +9,16 @@ import {
   move,
   template,
   noop,
-  filter,
-  schematic
+  filter
 } from '@angular-devkit/schematics';
+import { readJsonInTree, updateJsonInTree } from '@nrwl/schematics';
 import {
   getProjectConfig,
-  readJsonInTree,
-  updateJsonInTree,
   addDepsToPackageJson
-} from '../../utils/ast-utils';
-import { offsetFromRoot } from '../../utils/common';
+} from '@nrwl/schematics/src/utils/ast-utils';
+import { offsetFromRoot } from '@nrwl/schematics/src/utils/common';
 import { join, normalize } from '@angular-devkit/core';
-import { jestPresetAngularVersion, tsJestversion } from '../../lib-versions';
+import { jestPresetAngularVersion } from '../../utils/versions';
 
 export interface JestProjectSchema {
   project: string;
@@ -51,8 +49,16 @@ function generateFiles(options: JestProjectSchema): Rule {
 }
 
 function updateTsConfig(options: JestProjectSchema): Rule {
-  return (host: Tree, context: SchematicContext) => {
+  return (host: Tree) => {
     const projectConfig = getProjectConfig(host, options.project);
+    if (!host.exists(join(projectConfig.root, 'tsconfig.json'))) {
+      throw new Error(
+        `Expected ${join(
+          projectConfig.root,
+          'tsconfig.json'
+        )} to exist. Please create one.`
+      );
+    }
     return updateJsonInTree(join(projectConfig.root, 'tsconfig.json'), json => {
       return {
         ...json,
@@ -71,7 +77,7 @@ function updateAngularJson(options: JestProjectSchema): Rule {
   return updateJsonInTree('angular.json', json => {
     const projectConfig = json.projects[options.project];
     projectConfig.architect.test = {
-      builder: '@nrwl/builders:jest',
+      builder: '@nrwl/jest:jest',
       options: {
         jestConfig: join(normalize(projectConfig.root), 'jest.config.js'),
         tsConfig: join(normalize(projectConfig.root), 'tsconfig.spec.json')
@@ -97,8 +103,6 @@ function addDependencies(options: JestProjectSchema): Rule {
   const devDeps = {};
   if (options.setupFile === 'angular') {
     devDeps['jest-preset-angular'] = jestPresetAngularVersion;
-  } else {
-    devDeps['ts-jest'] = tsJestversion;
   }
   return addDepsToPackageJson({}, devDeps);
 }
@@ -113,8 +117,10 @@ function check(options: JestProjectSchema): Rule {
     }
     const packageJson = readJsonInTree(host, 'package.json');
     if (!packageJson.devDependencies.jest) {
-      return schematic('jest', {});
+      context.logger.warn(`"jest" is not installed as a dependency.`);
+      context.logger.info(`Add "jest" via "ng add @nrwl/jest"`);
     }
+    return host;
   };
 }
 

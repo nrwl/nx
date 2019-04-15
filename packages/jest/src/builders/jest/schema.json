@@ -1,5 +1,5 @@
 {
-  "title": "Jest Target",
+  "title": "Jest Builder",
   "description": "Jest target options for Build Facade",
   "type": "object",
   "properties": {

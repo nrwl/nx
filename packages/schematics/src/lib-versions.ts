@@ -10,10 +10,6 @@ export const latestMigration = '20180507-create-nx-json';
 export const prettierVersion = '1.16.4';
 export const typescriptVersion = '3.2.2';
 export const rxjsVersion = '6.3.3';
-export const jestVersion = '24.1.0';
-export const jestTypesVersion = '24.0.9';
-export const jestPresetAngularVersion = '7.0.0';
-export const tsJestversion = '24.0.0';
 export const jasmineMarblesVersion = '^0.4.0';
 export const cypressVersion = '3.1.0';
 

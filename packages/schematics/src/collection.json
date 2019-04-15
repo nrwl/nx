@@ -50,20 +50,6 @@
       "description": "Add NgRx support to a module"
     },
 
-    "jest": {
-      "factory": "./collection/jest",
-      "schema": "./collection/jest/schema.json",
-      "description": "Add Jest configuration to the workspace",
-      "hidden": true
-    },
-
-    "jest-project": {
-      "factory": "./collection/jest-project",
-      "schema": "./collection/jest-project/schema.json",
-      "description": "Add Jest configuration to a project",
-      "hidden": true
-    },
-
     "karma": {
       "factory": "./collection/karma",
       "schema": "./collection/karma/schema.json",

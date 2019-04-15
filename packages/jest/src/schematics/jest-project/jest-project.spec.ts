@@ -1,6 +1,7 @@
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace, runSchematic } from '../../utils/testing-utils';
-import { readJsonInTree } from '@nrwl/schematics/src/utils/ast-utils';
+import { createEmptyWorkspace } from '@nrwl/schematics/testing';
+import { readJsonInTree, updateJsonInTree } from '@nrwl/schematics';
+import { runSchematic, callRule } from '../../utils/testing';
 
 describe('jestProject', () => {
   let appTree: Tree;
@@ -8,12 +9,31 @@ describe('jestProject', () => {
   beforeEach(async () => {
     appTree = new VirtualTree();
     appTree = createEmptyWorkspace(appTree);
-    appTree = await runSchematic(
-      'lib',
-      {
-        name: 'lib1',
-        unitTestRunner: 'none'
-      },
+    appTree = await callRule(
+      updateJsonInTree('angular.json', json => {
+        json.projects.lib1 = {
+          root: 'libs/lib1',
+          architect: {
+            lint: {
+              builder: '@angular-devkit/build-angular:tslint',
+              options: {
+                tsConfig: []
+              }
+            }
+          }
+        };
+        return json;
+      }),
+      appTree
+    );
+    appTree = await callRule(
+      updateJsonInTree('libs/lib1/tsconfig.json', json => {
+        return {
+          compilerOptions: {
+            types: []
+          }
+        };
+      }),
       appTree
     );
   });
@@ -22,7 +42,8 @@ describe('jestProject', () => {
     const resultTree = await runSchematic(
       'jest-project',
       {
-        project: 'lib1'
+        project: 'lib1',
+        setupFile: 'angular'
       },
       appTree
     );
@@ -35,13 +56,14 @@ describe('jestProject', () => {
     const resultTree = await runSchematic(
       'jest-project',
       {
-        project: 'lib1'
+        project: 'lib1',
+        setupFile: 'angular'
       },
       appTree
     );
     const angularJson = readJsonInTree(resultTree, 'angular.json');
     expect(angularJson.projects.lib1.architect.test).toEqual({
-      builder: '@nrwl/builders:jest',
+      builder: '@nrwl/jest:jest',
       options: {
         jestConfig: 'libs/lib1/jest.config.js',
         setupFile: 'libs/lib1/src/test-setup.ts',
@@ -91,7 +113,8 @@ describe('jestProject', () => {
     const resultTree = await runSchematic(
       'jest-project',
       {
-        project: 'lib1'
+        project: 'lib1',
+        setupFile: 'angular'
       },
       appTree
     );
@@ -166,21 +189,6 @@ describe('jestProject', () => {
         expect(
           packageJson.devDependencies['jest-preset-angular']
         ).toBeDefined();
-      });
-    });
-
-    describe('not angular', () => {
-      it('should add ts-jest dependency', async () => {
-        const resultTree = await runSchematic(
-          'jest-project',
-          {
-            project: 'lib1',
-            setupFile: 'web-components'
-          },
-          appTree
-        );
-        const packageJson = readJsonInTree(resultTree, 'package.json');
-        expect(packageJson.devDependencies['ts-jest']).toBeDefined();
       });
     });
   });

@@ -17,34 +17,36 @@ import { sortAlphabeticallyFunction } from './utils';
  *    parsable in order to be used in a rendering process using template. This
  *    in order to generate a markdown file for each available schematic.
  */
-const buildersSourceDirectory = path.join(
-  __dirname,
-  '../../packages/builders/src'
-);
-const buildersOutputDirectory = path.join(__dirname, '../../docs/api-builders');
-const builderCollectionFile = path.join(
-  buildersSourceDirectory,
-  'builders.json'
-);
-fs.removeSync(buildersOutputDirectory);
-const builderCollection = fs.readJsonSync(builderCollectionFile).builders;
+interface DocConfig {
+  source: string;
+  output: string;
+}
+const buildersConfig = {
+  source: path.join(__dirname, '../../packages/builders/src'),
+  output: path.join(__dirname, '../../docs/api-builders')
+};
+const jestConfig = {
+  source: path.join(__dirname, '../../packages/jest'),
+  output: path.join(__dirname, '../../docs/api-jest/builders')
+};
+const docConfigs: DocConfig[] = [buildersConfig, jestConfig];
 const registry = new CoreSchemaRegistry();
 registry.addFormat(pathFormat);
 registry.addFormat(htmlSelectorFormat);
 
 function generateSchematicList(
-  builderCollection: Schematic,
+  config: DocConfig,
   registry: CoreSchemaRegistry
 ): Promise<Schematic>[] {
+  const builderCollectionFile = path.join(config.source, 'builders.json');
+  fs.removeSync(config.output);
+  const builderCollection = fs.readJsonSync(builderCollectionFile).builders;
   return Object.keys(builderCollection).map(builderName => {
     const builder = {
       name: builderName,
       ...builderCollection[builderName],
       rawSchema: fs.readJsonSync(
-        path.join(
-          buildersSourceDirectory,
-          builderCollection[builderName]['schema']
-        )
+        path.join(config.source, builderCollection[builderName]['schema'])
       )
     };
 
@@ -105,10 +107,19 @@ function generateFile(
   );
 }
 
-Promise.all(generateSchematicList(builderCollection, registry))
-  .then(builderList => builderList.map(generateTemplate))
-  .then(markdownList =>
-    markdownList.forEach(template =>
-      generateFile(buildersOutputDirectory, template)
-    )
-  );
+Promise.all(
+  docConfigs.map(config => {
+    Promise.all(generateSchematicList(config, registry))
+      .then(builderList => builderList.map(generateTemplate))
+      .then(markdownList =>
+        markdownList.forEach(template => generateFile(config.output, template))
+      )
+      .then(() =>
+        console.log(
+          `Generated documentation for ${config.source} to ${config.output}`
+        )
+      );
+  })
+).then(() => {
+  console.log('Done generating Builders Documentation');
+});
