@@ -1,10 +1,10 @@
-# jest [hidden]
+# ng-add [hidden]
 
 Add Jest configuration to the workspace
 
 ## Usage
 
 ```bash
-ng generate jest ...
+ng generate ng-add ...
 
 ```

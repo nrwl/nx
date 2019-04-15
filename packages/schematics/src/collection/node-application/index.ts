@@ -9,7 +9,8 @@ import {
   mergeWith,
   apply,
   url,
-  template
+  template,
+  externalSchematic
 } from '@angular-devkit/schematics';
 import { join, normalize, Path } from '@angular-devkit/core';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
@@ -222,7 +223,7 @@ export default function(schema: Schema): Rule {
       updateNxJson(options),
       options.framework !== 'none' ? createSourceCode(options) : noop(),
       options.unitTestRunner === 'jest'
-        ? schematic('jest-project', {
+        ? externalSchematic('@nrwl/jest', 'jest-project', {
             project: options.name,
             setupFile: 'none',
             skipSerializers: true

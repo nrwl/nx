@@ -450,7 +450,7 @@ export default function(schema: Schema): Rule {
       updateProject(options),
       updateTsConfig(options),
       options.unitTestRunner === 'jest'
-        ? schematic('jest-project', {
+        ? externalSchematic('@nrwl/jest', 'jest-project', {
             project: options.name,
             setupFile:
               options.framework === Framework.Angular ? 'angular' : 'none',

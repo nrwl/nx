@@ -4,6 +4,8 @@ tmp
 node_modules
 /package.json
 packages/schematics/src/collection/**/files/**/*.json
+packages/react/src/schematics/**/files/**/*.json
+packages/jest/src/schematics/**/files/**/*.json
 /.vscode
 /.idea
 /.github

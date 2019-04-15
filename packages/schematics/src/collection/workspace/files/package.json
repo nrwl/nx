@@ -27,8 +27,7 @@
     "help": "./node_modules/.bin/nx help"
   },
   "private": true,
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "@angular/cli": "<%= angularCliVersion %>",
     "@nrwl/schematics": "<%= schematicsVersion %>",

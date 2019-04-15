@@ -1,7 +1,14 @@
-import { Rule, chain } from '@angular-devkit/schematics';
+import {
+  Rule,
+  chain,
+  externalSchematic,
+  noop,
+  Tree
+} from '@angular-devkit/schematics';
 import {
   addDepsToPackageJson,
-  updateJsonInTree
+  updateJsonInTree,
+  readJsonInTree
 } from '@nrwl/schematics/src/utils/ast-utils';
 import {
   frameworkVersion,
@@ -35,6 +42,22 @@ function moveDependency(): Rule {
   });
 }
 
+function addJest(): Rule {
+  return (host: Tree) => {
+    const packageJson = readJsonInTree(host, 'package.json');
+    return !packageJson.devDependencies['@nrwl/jest']
+      ? externalSchematic(
+          '@nrwl/jest',
+          'ng-add',
+          {},
+          {
+            interactive: false
+          }
+        )
+      : noop();
+  };
+}
+
 export default function() {
-  return chain([addDependencies(), moveDependency()]);
+  return chain([addJest(), addDependencies(), moveDependency()]);
 }

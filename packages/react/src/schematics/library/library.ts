@@ -101,7 +101,7 @@ export default function(schema: Schema): Rule {
       addProject(options),
       updateNxJson(options),
       options.unitTestRunner !== 'none'
-        ? externalSchematic('@nrwl/schematics', 'jest-project', {
+        ? externalSchematic('@nrwl/jest', 'jest-project', {
             project: options.name,
             setupFile: 'none',
             supportTsx: true,

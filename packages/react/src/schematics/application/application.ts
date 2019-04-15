@@ -189,7 +189,7 @@ export default function(schema: Schema): Rule {
           })
         : noop(),
       options.unitTestRunner === 'jest'
-        ? externalSchematic('@nrwl/schematics', 'jest-project', {
+        ? externalSchematic('@nrwl/jest', 'jest-project', {
             project: options.name,
             supportTsx: true,
             skipSerializers: true,

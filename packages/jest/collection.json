@@ -1,0 +1,17 @@
+{
+  "name": "Nx Jest",
+  "version": "0.1",
+  "schematics": {
+    "ng-add": {
+      "factory": "./src/schematics/ng-add/ng-add",
+      "schema": "./src/schematics/ng-add/schema.json",
+      "description": "Add Jest configuration to the workspace",
+      "hidden": true
+    },
+    "jest-project": {
+      "factory": "./src/schematics/jest-project/jest-project",
+      "schema": "./src/schematics/jest-project/schema.json",
+      "description": "Add Jest configuration to a project"
+    }
+  }
+}

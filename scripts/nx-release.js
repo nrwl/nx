@@ -147,7 +147,9 @@ const options = {
     'build/npm/builders/package.json',
     'build/npm/nx/package.json',
     'build/npm/schematics/package.json',
-    'build/npm/create-nx-workspace/package.json'
+    'build/npm/create-nx-workspace/package.json',
+    'build/npm/jest/package.json',
+    'build/npm/react/package.json'
   ],
   increment: parsedVersion.version,
   requireUpstream: false,

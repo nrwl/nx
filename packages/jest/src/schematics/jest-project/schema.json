@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "SchematicsNxJestProject",
-  "title": "Create Jest Configuration for a project",
+  "id": "NxJestProject",
+  "title": "Add Jest Configuration to a project",
   "type": "object",
   "properties": {
     "project": {
@@ -21,7 +21,7 @@
       "type": "string",
       "enum": ["none", "angular", "web-components"],
       "description": "The setup file to be generated",
-      "default": "angular"
+      "default": "none"
     },
     "skipSerializers": {
       "type": "boolean",
