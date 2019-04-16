@@ -1,0 +1,15 @@
+{
+  "$schema": "@angular-devkit/architect/src/builders-schema.json",
+  "builders": {
+    "build": {
+      "class": "./src/builders/build/build.builder",
+      "schema": "./src/builders/build/schema.json",
+      "description": "Build a Node application"
+    },
+    "execute": {
+      "class": "./src/builders/execute/execute.builder",
+      "schema": "./src/builders/execute/schema.json",
+      "description": "Execute a Node application"
+    }
+  }
+}

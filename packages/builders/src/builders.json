@@ -1,16 +1,6 @@
 {
   "$schema": "@angular-devkit/architect/src/builders-schema.json",
   "builders": {
-    "node-build": {
-      "class": "./node/build/node-build.builder",
-      "schema": "./node/build/schema.json",
-      "description": "Build a Node application"
-    },
-    "node-execute": {
-      "class": "./node/execute/node-execute.builder",
-      "schema": "./node/execute/schema.json",
-      "description": "Execute a Node application"
-    },
     "cypress": {
       "class": "./cypress/cypress.builder",
       "schema": "./cypress/schema.json",

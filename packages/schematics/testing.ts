@@ -1,1 +1,1 @@
-export { createEmptyWorkspace } from './src/utils/testing-utils';
+export { createEmptyWorkspace, createApp } from './src/utils/testing-utils';
