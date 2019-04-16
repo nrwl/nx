@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "NxNestNgAdd",
+  "title": "Add Nx Nest Schematics",
+  "type": "object",
+  "properties": {},
+  "required": []
+}

@@ -88,8 +88,9 @@ function createPreset(options: Schema): Rule {
         { name: options.name, style: options.style },
         { interactive: false }
       ),
-      schematic(
-        'node-application',
+      externalSchematic(
+        '@nrwl/nest',
+        'application',
         {
           name: 'api',
           frontendProject: options.name

@@ -30,10 +30,10 @@ function getData(): Promise<any> {
 }
 
 describe('Node Applications', () => {
-  it('should be able to generate a node application', async done => {
+  it('should be able to generate an express application', async done => {
     ensureProject();
     const nodeapp = uniq('nodeapp');
-    runCLI(`generate node-app ${nodeapp} --framework express`);
+    runCLI(`generate @nrwl/express:app ${nodeapp}`);
 
     updateFile(
       `apps/${nodeapp}/src/app/test.spec.ts`,
@@ -130,7 +130,7 @@ describe('Node Applications', () => {
   it('should be able to generate a nest application', async done => {
     ensureProject();
     const nestapp = uniq('nestapp');
-    runCLI(`generate node-app ${nestapp} --framework nestjs`);
+    runCLI(`generate @nrwl/nest:app ${nestapp}`);
 
     updateFile(`apps/${nestapp}/src/assets/file.txt`, ``);
     const jestResult = await runCLIAsync(`test ${nestapp}`);
@@ -198,7 +198,7 @@ describe('Node Applications', () => {
     ensureProject();
     const nodeapp = uniq('nodeapp');
 
-    runCLI(`generate node-app ${nodeapp} --framework none`);
+    runCLI(`generate @nrwl/node:app ${nodeapp}`);
     updateFile(`apps/${nodeapp}/src/main.ts`, `console.log('Hello World!');`);
     await runCLIAsync(`build ${nodeapp}`);
     expect(exists(`./tmp/proj/dist/apps/${nodeapp}/main.js`)).toBeTruthy();

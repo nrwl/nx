@@ -13,12 +13,6 @@ export const rxjsVersion = '6.3.3';
 export const jasmineMarblesVersion = '^0.4.0';
 export const cypressVersion = '3.1.0';
 
-export const expressVersion = '4.16.3';
-export const expressTypingsVersion = '4.16.0';
-
-export const nestJsVersion = '5.5.0';
-export const nestJsSchematicsVersion = '5.11.2';
-
 export const reactVersions = {
   framework: '16.8.3',
   reactTypes: '16.8.4',
