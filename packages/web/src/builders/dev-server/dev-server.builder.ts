@@ -9,16 +9,16 @@ import { WebpackDevServerBuilder } from '@angular-devkit/build-webpack';
 
 import { Observable } from 'rxjs';
 import { normalizeWebBuildOptions } from '../../utils/normalize';
-import { getDevServerConfig } from '../../utils/webpack/devserver.config';
 import { concatMap, map, switchMap, tap } from 'rxjs/operators';
-import { WebBuildBuilderOptions } from '../build/web-build.builder';
+import { WebBuildBuilderOptions } from '../build/build.builder';
 import { Configuration } from 'webpack';
 import { writeFileSync } from 'fs';
 import * as opn from 'opn';
 import * as url from 'url';
 import { resolve } from 'path';
-import { buildServePath } from '../../utils/serve-path';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { getDevServerConfig } from '../../utils/devserver.config';
+import { buildServePath } from '../../utils/serve-path';
 
 export interface WebDevServerOptions {
   host: string;

@@ -1,0 +1,19 @@
+{
+  "name": "nx/web",
+  "version": "0.1",
+  "schematics": {
+    "ng-add": {
+      "factory": "./src/schematics/ng-add/ng-add",
+      "schema": "./src/schematics/ng-add/schema.json",
+      "description": "Add @nrwl/web to a project",
+      "hidden": true
+    },
+
+    "application": {
+      "factory": "./src/schematics/application/application",
+      "schema": "./src/schematics/application/schema.json",
+      "aliases": ["app"],
+      "description": "Create an application"
+    }
+  }
+}

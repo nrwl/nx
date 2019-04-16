@@ -8,7 +8,6 @@ import { getFileContent } from '@schematics/angular/utility/test';
 import * as stripJsonComments from 'strip-json-comments';
 import { readJsonInTree, updateJsonInTree } from '../../utils/ast-utils';
 import { NxJson } from '../../command-line/shared';
-import { Framework } from '../../utils/frameworks';
 
 describe('app', () => {
   let appTree: Tree;
@@ -345,38 +344,6 @@ describe('app', () => {
       expect(tsconfigAppJson.compilerOptions.outDir).toEqual(
         '../../dist/out-tsc/apps/my-app'
       );
-    });
-  });
-
-  describe('--framework', () => {
-    describe('web-components', () => {
-      it('should replace app files', async () => {
-        const tree = await runSchematic(
-          'app',
-          { name: 'myApp', framework: Framework.WebComponents },
-          appTree
-        );
-
-        expect(tree.exists('apps/my-app/src/main.ts')).toBeTruthy();
-        expect(tree.exists('apps/my-app/src/app/app.component.ts')).toBeFalsy();
-        expect(
-          tree.exists('apps/my-app/src/app/app.component.css')
-        ).toBeFalsy();
-        expect(
-          tree.exists('apps/my-app/src/app/app.component.html')
-        ).toBeFalsy();
-        expect(
-          tree.exists('apps/my-app/src/app/app.component.spec.ts')
-        ).toBeFalsy();
-        expect(tree.exists('apps/my-app/src/app/app.element.ts')).toBeTruthy();
-        expect(
-          getFileContent(tree, 'apps/my-app/src/app/app.element.ts')
-        ).toContain("import './app.element.css';");
-        expect(
-          tree.exists('apps/my-app/src/app/app.element.spec.ts')
-        ).toBeTruthy();
-        expect(tree.exists('apps/my-app/src/app/app.element.css')).toBeTruthy();
-      });
     });
   });
 

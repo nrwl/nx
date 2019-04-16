@@ -1,13 +1,13 @@
 {
-  "name": "@nrwl/react",
+  "name": "@nrwl/web",
   "version": "0.0.1",
-  "description": "React Plugin for Nx",
+  "description": "Web Plugin for Nx",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nrwl/nx.git"
   },
   "keywords": [
-    "React",
+    "Web",
     "Workspace",
     "Monorepo",
     "Schematics",
@@ -23,17 +23,18 @@
   },
   "homepage": "https://nx.dev",
   "schematics": "./collection.json",
+  "builders": "./builders.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "@nrwl/schematics": "*"
+    "@nrwl/schematics": "*",
+    "@nrwl/builders": "*"
   },
   "dependencies": {
     "@angular-devkit/core": "~7.3.1",
     "@angular-devkit/schematics": "~7.3.1",
-    "@nrwl/jest": "*",
-    "@nrwl/web": "*"
+    "@nrwl/jest": "*"
   }
 }

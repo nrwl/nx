@@ -10,14 +10,14 @@ import { WebpackBuilder } from '@angular-devkit/build-webpack';
 import { Observable } from 'rxjs';
 import { writeFileSync } from 'fs';
 import { resolve } from 'path';
-import { normalizeWebBuildOptions } from '../../utils/normalize';
-import { BuildBuilderOptions } from '../../utils/types';
-import { getWebConfig } from '../../utils/webpack/web.config';
 import {
   OutputHashing,
   StylePreprocessorOptions,
   Budget
 } from '@angular-devkit/build-angular';
+import { BuildBuilderOptions } from '@nrwl/builders';
+import { normalizeWebBuildOptions } from '../../utils/normalize';
+import { getWebConfig } from '../../utils/web.config';
 
 export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   index: string;

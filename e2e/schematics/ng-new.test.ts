@@ -1,15 +1,15 @@
 import {
+  ensureProject,
+  exists,
+  expectTestsPass,
+  getSize,
   newApp,
   newLib,
   runCLI,
-  updateFile,
-  exists,
-  getSize,
-  expectTestsPass,
   runCLIAsync,
-  ensureProject,
+  runsInWSL,
   uniq,
-  runsInWSL
+  updateFile
 } from '../utils';
 import { toClassName } from '@nrwl/schematics/src/utils/name-utils';
 

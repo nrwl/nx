@@ -1,6 +1,7 @@
 {
   "extends": "<%= offsetFromRoot %>tsconfig.json",
   "compilerOptions": {
+    "target": "es2015",
     "types": []
   },
   "include": ["**/*.ts"]

@@ -11,16 +11,6 @@
       "schema": "./node/execute/schema.json",
       "description": "Execute a Node application"
     },
-    "web-build": {
-      "class": "./web/build/web-build.builder",
-      "schema": "./web/build/schema.json",
-      "description": "Build a web application"
-    },
-    "web-dev-server": {
-      "class": "./web/dev-server/web-dev-server.builder",
-      "schema": "./web/dev-server/schema.json",
-      "description": "Serve a web application"
-    },
     "cypress": {
       "class": "./cypress/cypress.builder",
       "schema": "./cypress/schema.json",

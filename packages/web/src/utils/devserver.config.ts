@@ -5,13 +5,13 @@ import {
 import { readFileSync } from 'fs';
 import * as path from 'path';
 import * as url from 'url';
-import { WebBuildBuilderOptions } from '../../web/build/web-build.builder';
-import { WebDevServerOptions } from '../../web/dev-server/web-dev-server.builder';
 import { getWebConfig } from './web.config';
 import { Configuration } from 'webpack';
 import { Logger } from '@angular-devkit/core/src/logger';
-import { OptimizationOptions } from '../types';
-import { buildServePath } from '../serve-path';
+import { WebBuildBuilderOptions } from '../builders/build/build.builder';
+import { WebDevServerOptions } from '../builders/dev-server/dev-server.builder';
+import { buildServePath } from './serve-path';
+import { OptimizationOptions } from '@nrwl/builders';
 
 export function getDevServerConfig(
   buildOptions: WebBuildBuilderOptions,
