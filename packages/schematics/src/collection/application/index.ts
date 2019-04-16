@@ -216,15 +216,17 @@ function addTsconfigs(options: NormalizedSchema): Rule {
         move(options.appProjectRoot)
       ])
     ),
-    mergeWith(
-      apply(url('./files/app'), [
-        template({
-          ...options,
-          offsetFromRoot: offsetFromRoot(options.e2eProjectRoot)
-        }),
-        move(options.e2eProjectRoot)
-      ])
-    )
+    options.e2eTestRunner === 'protractor'
+      ? mergeWith(
+          apply(url('./files/app'), [
+            template({
+              ...options,
+              offsetFromRoot: offsetFromRoot(options.e2eProjectRoot)
+            }),
+            move(options.e2eProjectRoot)
+          ])
+        )
+      : noop()
   ]);
 }
 
@@ -292,7 +294,7 @@ function updateProject(options: NormalizedSchema): Rule {
             [options.name]: { tags: options.parsedTags }
           }
         };
-        if (options.e2eTestRunner !== 'none') {
+        if (options.e2eTestRunner === 'protractor') {
           resultJson.projects[options.e2eProjectName] = { tags: [] };
         }
         return resultJson;
@@ -300,11 +302,6 @@ function updateProject(options: NormalizedSchema): Rule {
       host => {
         host.delete(`${options.appProjectRoot}/karma.conf.js`);
         host.delete(`${options.appProjectRoot}/src/test.ts`);
-        if (options.e2eTestRunner !== 'protractor') {
-          host.delete(`${options.e2eProjectRoot}/src/app.e2e-spec.ts`);
-          host.delete(`${options.e2eProjectRoot}/src/app.po.ts`);
-          host.delete(`${options.e2eProjectRoot}/protractor.conf.js`);
-        }
       },
       options.e2eTestRunner === 'protractor'
         ? addDepsToPackageJson({}, { protractor: '~5.4.0' })
@@ -399,14 +396,22 @@ export default function(schema: Schema): Rule {
       }),
       addTsconfigs(options),
 
-      move(e2eProjectRoot, options.e2eProjectRoot),
+      options.e2eTestRunner === 'protractor'
+        ? move(e2eProjectRoot, options.e2eProjectRoot)
+        : host => {
+            host.delete(`${e2eProjectRoot}/src/app.e2e-spec.ts`);
+            host.delete(`${e2eProjectRoot}/src/app.po.ts`);
+            host.delete(`${e2eProjectRoot}/protractor.conf.js`);
+            host.delete(`${e2eProjectRoot}/tsconfig.e2e.json`);
+          },
 
       options.e2eTestRunner === 'protractor'
         ? updateE2eProject(options)
         : noop(),
       options.e2eTestRunner === 'cypress'
-        ? schematic('cypress-project', {
-            ...options,
+        ? externalSchematic('@nrwl/cypress', 'cypress-project', {
+            name: options.e2eProjectName,
+            directory: options.directory,
             project: options.name
           })
         : noop(),
@@ -441,8 +446,11 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     ? `${toFileName(options.directory)}/${toFileName(options.name)}`
     : toFileName(options.name);
 
+  let e2eProjectName = `${toFileName(options.name)}-e2e`;
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
-  const e2eProjectName = `${appProjectName}-e2e`;
+  if (options.e2eTestRunner !== 'cypress') {
+    e2eProjectName = `${appProjectName}-e2e`;
+  }
 
   const appProjectRoot = `apps/${appDirectory}`;
   const e2eProjectRoot = `apps/${appDirectory}-e2e`;

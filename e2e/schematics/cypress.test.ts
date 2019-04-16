@@ -1,8 +1,6 @@
 import {
   checkFilesExist,
-  copyMissingPackages,
   newApp,
-  newProject,
   readJson,
   runCLI,
   updateFile,

@@ -30,13 +30,6 @@
       "description": "Create an application"
     },
 
-    "node-application": {
-      "factory": "./collection/node-application",
-      "schema": "./collection/node-application/schema.json",
-      "aliases": ["node-app"],
-      "description": "Create a NodeJS Application"
-    },
-
     "library": {
       "factory": "./collection/library",
       "schema": "./collection/library/schema.json",
@@ -61,13 +54,6 @@
       "factory": "./collection/karma-project",
       "schema": "./collection/karma-project/schema.json",
       "description": "Add Karma configuration to a project",
-      "hidden": true
-    },
-
-    "cypress-project": {
-      "factory": "./collection/cypress-project",
-      "schema": "./collection/cypress-project/schema.json",
-      "description": "Add Cypress configuration to a project",
       "hidden": true
     },
 

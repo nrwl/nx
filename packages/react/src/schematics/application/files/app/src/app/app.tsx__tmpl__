@@ -5,7 +5,7 @@ import './app.<%= style %>';
 
 export class App extends Component {
   render() {
-    const title = '<%= name %>';
+    const title = '<%= projectName %>';
     return (
       <div>
         <div style={{ textAlign: 'center' }}>

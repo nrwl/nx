@@ -1,8 +1,7 @@
 {
   "extends": "<%= offsetFromRoot %>tsconfig.json",
   "compilerOptions": {
-    "target": "es2015",
-    "types": []
+    "types": ["cypress", "node"]
   },
   "include": ["**/*.ts"]
 }

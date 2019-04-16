@@ -1,13 +1,14 @@
 {
-  "name": "@nrwl/react",
+  "name": "@nrwl/cypress",
   "version": "0.0.1",
-  "description": "React Plugin for Nx",
+  "description": "Cypress plugin for Nx",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nrwl/nx.git"
   },
   "keywords": [
-    "React",
+    "Cypress",
+    "E2E Testing",
     "Workspace",
     "Monorepo",
     "Schematics",
@@ -23,6 +24,7 @@
   },
   "homepage": "https://nx.dev",
   "schematics": "./collection.json",
+  "builders": "./builders.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"
@@ -31,10 +33,10 @@
     "@nrwl/schematics": "*"
   },
   "dependencies": {
+    "@angular-devkit/architect": "~0.13.1",
     "@angular-devkit/core": "~7.3.1",
     "@angular-devkit/schematics": "~7.3.1",
-    "@nrwl/cypress": "*",
-    "@nrwl/jest": "*",
-    "@nrwl/web": "*"
+    "tree-kill": "1.2.1",
+    "rxjs": "6.3.3"
   }
 }
