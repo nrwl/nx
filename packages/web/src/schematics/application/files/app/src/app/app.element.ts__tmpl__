@@ -6,7 +6,7 @@ export class AppElement extends HTMLElement {
   ];
 
   connectedCallback() {
-    const title = '<%= name %>';
+    const title = '<%= projectName %>';
     this.innerHTML = `
       <div style="text-align: center">
         <h1>Welcome to ${title}!</h1>

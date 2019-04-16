@@ -1,0 +1,10 @@
+{
+  "$schema": "@angular-devkit/architect/src/builders-schema.json",
+  "builders": {
+    "cypress": {
+      "class": "./src/builders/cypress/cypress.builder",
+      "schema": "./src/builders/cypress/schema.json",
+      "description": "Run Cypress e2e tests"
+    }
+  }
+}

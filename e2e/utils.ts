@@ -26,6 +26,8 @@ export function newProject(): void {
     runNgNew('--collection=@nrwl/schematics --npmScope=proj', true);
     copyMissingPackages();
     runCLI('add @nrwl/jest');
+    runCLI('add @nrwl/cypress');
+    runCLI('add @nrwl/web');
     runCLI('add @nrwl/react');
     execSync('mv ./tmp/proj ./tmp/proj_backup');
   }

@@ -15,7 +15,7 @@ describe('AppElement', () => {
     app.connectedCallback();
 
     expect(app.querySelector('h1').innerHTML).toEqual(
-      'Welcome to <%= name %>!'
+      'Welcome to <%= projectName %>!'
     );
   });
 });

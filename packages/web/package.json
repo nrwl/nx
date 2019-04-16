@@ -33,8 +33,11 @@
     "@nrwl/builders": "*"
   },
   "dependencies": {
+    "@angular-devkit/architect": "~0.13.1",
     "@angular-devkit/core": "~7.3.1",
     "@angular-devkit/schematics": "~7.3.1",
+    "@angular-devkit/build-angular": "~0.13.1",
+    "@nrwl/cypress": "*",
     "@nrwl/jest": "*"
   }
 }

@@ -1,1 +1,0 @@
-import 'document-register-element';

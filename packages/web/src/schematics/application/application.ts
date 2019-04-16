@@ -21,6 +21,7 @@ import { getNpmScope } from '@nrwl/schematics/src/utils/cli-config-utils';
 import { formatFiles } from '@nrwl/schematics/src/utils/rules/format-files';
 
 interface NormalizedSchema extends Schema {
+  projectName: string;
   appProjectRoot: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
@@ -44,23 +45,9 @@ function createApplicationFiles(options: NormalizedSchema): Rule {
   );
 }
 
-function createE2EFiles(options: NormalizedSchema): Rule {
-  return mergeWith(
-    apply(url(`./files/e2e`), [
-      template({
-        ...options,
-        ...names(options.name),
-        offsetFromRoot: offsetFromRoot(options.appProjectRoot)
-      }),
-      move(options.e2eProjectRoot)
-    ])
-  );
-}
-
 function updateNxJson(options: NormalizedSchema): Rule {
   return updateJsonInTree<NxJson>('nx.json', json => {
-    json.projects[options.name] = { tags: options.parsedTags };
-    json.projects[options.e2eProjectName] = { tags: [] };
+    json.projects[options.projectName] = { tags: options.parsedTags };
     return json;
   });
 }
@@ -121,11 +108,11 @@ function addProject(options: NormalizedSchema): Rule {
     architect.serve = {
       builder: '@nrwl/web:dev-server',
       options: {
-        buildTarget: `${options.name}:build`
+        buildTarget: `${options.projectName}:build`
       },
       configurations: {
         production: {
-          buildTarget: `${options.name}:build:production`
+          buildTarget: `${options.projectName}:build:production`
         }
       }
     };
@@ -140,32 +127,12 @@ function addProject(options: NormalizedSchema): Rule {
       }
     };
 
-    json.projects[options.name] = {
+    json.projects[options.projectName] = {
       root: options.appProjectRoot,
       sourceRoot: join(normalize(options.appProjectRoot), 'src'),
       projectType: 'application',
       schematics: {},
       architect
-    };
-    return json;
-  });
-}
-
-function addE2EProject(options: NormalizedSchema) {
-  return updateJsonInTree('angular.json', json => {
-    json.projects[options.e2eProjectName] = {
-      root: options.e2eProjectRoot,
-      sourceRoot: join(normalize(options.e2eProjectRoot), 'src'),
-      projectType: 'application',
-      architect: {
-        e2e: {},
-        lint: {
-          builder: '@angular-devkit/build-angular:tslint',
-          options: {
-            exclude: ['**/node_modules/**']
-          }
-        }
-      }
     };
     return json;
   });
@@ -179,18 +146,17 @@ export default function(schema: Schema): Rule {
       createApplicationFiles(options),
       updateNxJson(options),
       addProject(options),
-      options.e2eTestRunner !== 'none'
-        ? chain([createE2EFiles(options), addE2EProject(options)])
-        : noop(),
       options.e2eTestRunner === 'cypress'
-        ? externalSchematic('@nrwl/schematics', 'cypress-project', {
+        ? externalSchematic('@nrwl/cypress', 'cypress-project', {
             ...options,
-            project: options.name
+            name: options.name + '-e2e',
+            directory: options.directory,
+            project: options.projectName
           })
         : noop(),
       options.unitTestRunner === 'jest'
         ? externalSchematic('@nrwl/jest', 'jest-project', {
-            project: options.name,
+            project: options.projectName,
             skipSerializers: true,
             setupFile: 'web-components'
           })
@@ -219,7 +185,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   return {
     ...options,
     prefix: options.prefix ? options.prefix : defaultPrefix,
-    name: appProjectName,
+    name: toFileName(options.name),
+    projectName: appProjectName,
     appProjectRoot,
     e2eProjectRoot,
     e2eProjectName,

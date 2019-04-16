@@ -58,6 +58,44 @@ function addJest(): Rule {
   };
 }
 
+function addWeb(): Rule {
+  return (host: Tree) => {
+    const packageJson = readJsonInTree(host, 'package.json');
+    return !packageJson.devDependencies['@nrwl/web']
+      ? externalSchematic(
+          '@nrwl/web',
+          'ng-add',
+          {},
+          {
+            interactive: false
+          }
+        )
+      : noop();
+  };
+}
+
+function addCypress(): Rule {
+  return (host: Tree) => {
+    const packageJson = readJsonInTree(host, 'package.json');
+    return !packageJson.devDependencies['@nrwl/cypress']
+      ? externalSchematic(
+          '@nrwl/cypress',
+          'ng-add',
+          {},
+          {
+            interactive: false
+          }
+        )
+      : noop();
+  };
+}
+
 export default function() {
-  return chain([addJest(), addDependencies(), moveDependency()]);
+  return chain([
+    addJest(),
+    addCypress(),
+    addWeb(),
+    addDependencies(),
+    moveDependency()
+  ]);
 }
