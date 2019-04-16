@@ -37,7 +37,7 @@ function createApplicationFiles(options: NormalizedSchema): Rule {
         offsetFromRoot: offsetFromRoot(options.appProjectRoot)
       }),
       options.unitTestRunner === 'none'
-        ? filter(file => file !== '/src/app/app.spec.tsx')
+        ? filter(file => file !== '/src/app/app.spec.ts')
         : noop(),
       move(options.appProjectRoot)
     ])
@@ -74,7 +74,7 @@ function addProject(options: NormalizedSchema): Rule {
       options: {
         outputPath: join(normalize('dist'), options.appProjectRoot),
         index: join(normalize(options.appProjectRoot), 'src/index.html'),
-        main: join(normalize(options.appProjectRoot), 'src/main.tsx'),
+        main: join(normalize(options.appProjectRoot), 'src/main.ts'),
         polyfills: join(normalize(options.appProjectRoot), 'src/polyfills.ts'),
         tsConfig: join(normalize(options.appProjectRoot), 'tsconfig.app.json'),
         assets: [
@@ -191,9 +191,8 @@ export default function(schema: Schema): Rule {
       options.unitTestRunner === 'jest'
         ? externalSchematic('@nrwl/jest', 'jest-project', {
             project: options.name,
-            supportTsx: true,
             skipSerializers: true,
-            setupFile: 'none'
+            setupFile: 'web-components'
           })
         : noop(),
       formatFiles(options)

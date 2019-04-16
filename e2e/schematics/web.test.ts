@@ -1,29 +1,22 @@
 import {
+  checkFilesExist,
   ensureProject,
   runCLI,
-  uniq,
-  newApp,
-  newLib,
-  updateFile,
-  readFile,
   runCLIAsync,
-  checkFilesExist
+  uniq
 } from '../utils';
 
-describe('Web Applications', () => {
-  it('should be able to generate a web-components application', async () => {
+describe('Web Components Applications', () => {
+  it('should be able to generate a web app', async () => {
     ensureProject();
     const appName = uniq('app');
-    const libName = uniq('lib');
 
-    newApp(`${appName} --framework web-components`);
-    newLib(`${libName} --framework none`);
-
-    const mainPath = `apps/${appName}/src/main.ts`;
-    updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
+    runCLI(`add @nrwl/web`);
+    runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
 
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
+
     runCLI(`build ${appName}`);
     checkFilesExist(
       `dist/apps/${appName}/index.html`,

@@ -1,10 +1,10 @@
 import { getSystemPath, normalize, join } from '@angular-devkit/core';
-import { WebBuildBuilderOptions } from '../../web/build/web-build.builder';
-import { WebDevServerOptions } from '../../web/dev-server/web-dev-server.builder';
 import { getDevServerConfig } from './devserver.config';
 import { Logger } from '@angular-devkit/core/src/logger';
 import * as ts from 'typescript';
 import * as fs from 'fs';
+import { WebBuildBuilderOptions } from '../builders/build/build.builder';
+import { WebDevServerOptions } from '../builders/dev-server/dev-server.builder';
 
 describe('getDevServerConfig', () => {
   let buildInput: WebBuildBuilderOptions;

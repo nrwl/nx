@@ -45,10 +45,12 @@ describe('app', () => {
 
     it('should generate files', async () => {
       const tree = await runSchematic('app', { name: 'myApp' }, appTree);
-      expect(tree.exists('apps/my-app/src/main.tsx')).toBeTruthy();
-      expect(tree.exists('apps/my-app/src/app/app.tsx')).toBeTruthy();
-      expect(tree.exists('apps/my-app/src/app/app.spec.tsx')).toBeTruthy();
-      expect(tree.exists('apps/my-app/src/app/app.css')).toBeTruthy();
+      expect(tree.exists('apps/my-app/src/main.ts')).toBeTruthy();
+      expect(tree.exists('apps/my-app/src/app/app.element.ts')).toBeTruthy();
+      expect(
+        tree.exists('apps/my-app/src/app/app.element.spec.ts')
+      ).toBeTruthy();
+      expect(tree.exists('apps/my-app/src/app/app.element.css')).toBeTruthy();
 
       const tsconfig = readJsonInTree(tree, 'apps/my-app/tsconfig.json');
       expect(tsconfig.extends).toEqual('../../tsconfig.json');
@@ -130,10 +132,10 @@ describe('app', () => {
 
       // Make sure these exist
       [
-        'apps/my-dir/my-app/src/main.tsx',
-        'apps/my-dir/my-app/src/app/app.tsx',
-        'apps/my-dir/my-app/src/app/app.spec.tsx',
-        'apps/my-dir/my-app/src/app/app.css'
+        'apps/my-dir/my-app/src/main.ts',
+        'apps/my-dir/my-app/src/app/app.element.ts',
+        'apps/my-dir/my-app/src/app/app.element.spec.ts',
+        'apps/my-dir/my-app/src/app/app.element.css'
       ].forEach(path => {
         expect(tree.exists(path)).toBeTruthy();
       });
@@ -175,10 +177,12 @@ describe('app', () => {
       { name: 'myApp', directory: 'myDir' },
       appTree
     );
-    expect(tree.readContent('apps/my-dir/my-app/src/app/app.tsx')).toBeTruthy();
-    expect(tree.readContent('apps/my-dir/my-app/src/app/app.tsx')).toContain(
-      'This is a React app built with'
-    );
+    expect(
+      tree.readContent('apps/my-dir/my-app/src/app/app.element.ts')
+    ).toBeTruthy();
+    expect(
+      tree.readContent('apps/my-dir/my-app/src/app/app.element.ts')
+    ).toContain('This is a Web Components app built with');
   });
 
   describe('--style scss', () => {
@@ -188,22 +192,10 @@ describe('app', () => {
         { name: 'myApp', style: 'scss' },
         appTree
       );
-      expect(result.exists('apps/my-app/src/app/app.scss')).toEqual(true);
+      expect(result.exists('apps/my-app/src/app/app.element.scss')).toEqual(
+        true
+      );
     });
-  });
-
-  it('should setup jest with tsx support', async () => {
-    const tree = await runSchematic(
-      'app',
-      {
-        name: 'my-App'
-      },
-      appTree
-    );
-
-    expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
-      `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],`
-    );
   });
 
   it('should setup jest without serializers', async () => {
@@ -234,7 +226,7 @@ describe('app', () => {
     expect(architectConfig.build.options).toEqual({
       assets: ['apps/my-app/src/favicon.ico', 'apps/my-app/src/assets'],
       index: 'apps/my-app/src/index.html',
-      main: 'apps/my-app/src/main.tsx',
+      main: 'apps/my-app/src/main.ts',
       outputPath: 'dist/apps/my-app',
       polyfills: 'apps/my-app/src/polyfills.ts',
       scripts: [],
@@ -326,7 +318,7 @@ describe('app', () => {
         { name: 'myApp', unitTestRunner: 'none' },
         appTree
       );
-      expect(tree.exists('apps/my-app/src/app/app.spec.tsx')).toBeFalsy();
+      expect(tree.exists('apps/my-app/src/app/app.spec.ts')).toBeFalsy();
       expect(tree.exists('apps/my-app/tsconfig.spec.json')).toBeFalsy();
       expect(tree.exists('apps/my-app/jest.config.js')).toBeFalsy();
       const angularJson = readJsonInTree(tree, 'angular.json');

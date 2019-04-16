@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "NxWebNgAdd",
+  "title": "Add Nx Web Schematics",
+  "type": "object",
+  "properties": {},
+  "required": []
+}

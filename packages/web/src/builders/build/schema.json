@@ -1,6 +1,6 @@
 {
-  "title": "Node Application Build Target",
-  "description": "Node application build target options for Build Facade",
+  "title": "Web Application Build Target",
+  "description": "Web application build target options for Build Facade",
   "type": "object",
   "properties": {
     "main": {

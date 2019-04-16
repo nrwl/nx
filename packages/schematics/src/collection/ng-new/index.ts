@@ -70,12 +70,12 @@ function createPreset(options: Schema): Rule {
     ]);
   } else if (options.preset === 'web-components') {
     return chain([
-      schematic(
+      externalSchematic(
+        '@nrwl/web',
         'application',
         {
           name: options.name,
-          style: options.style,
-          framework: Framework.WebComponents
+          style: options.style
         },
         { interactive: false }
       ),

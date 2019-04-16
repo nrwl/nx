@@ -1,7 +1,7 @@
 import { normalize, join } from '@angular-devkit/core';
 import { TestLogger } from '@angular-devkit/architect/testing';
-import WebBuildBuilder from './web-build.builder';
-import { WebBuildBuilderOptions } from './web-build.builder';
+import WebBuildBuilder from './build.builder';
+import { WebBuildBuilderOptions } from './build.builder';
 import { of } from 'rxjs';
 import * as fs from 'fs';
 
@@ -112,7 +112,7 @@ describe('WebBuildBuilder', () => {
             root: normalize(__dirname),
             sourceRoot: join(normalize(__dirname), 'apps/webapp'),
             projectType: 'application',
-            builder: '@nrwl/builders:web-build',
+            builder: '@nrwl/web:build',
             options: {
               ...testOptions,
               statsJson: true
@@ -158,7 +158,7 @@ describe('WebBuildBuilder', () => {
             root: normalize(__dirname),
             sourceRoot: join(normalize(__dirname), 'apps/webapp'),
             projectType: 'application',
-            builder: '@nrwl/builders:web-build',
+            builder: '@nrwl/web:build',
             options: {
               ...testOptions,
               webpackConfig: 'apps/webapp/webpack.config.js'

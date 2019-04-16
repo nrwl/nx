@@ -4,26 +4,6 @@
   "title": "Nx Application Options Schema",
   "type": "object",
   "properties": {
-    "framework": {
-      "description": "The Framework for the application.",
-      "type": "string",
-      "enum": ["angular", "web-components"],
-      "default": "angular",
-      "x-prompt": {
-        "message": "What framework would you like to use for the application?",
-        "type": "list",
-        "items": [
-          {
-            "value": "angular",
-            "label": "Angular         [ https://angular.io   ]"
-          },
-          {
-            "value": "web-components",
-            "label": "Web Components"
-          }
-        ]
-      }
-    },
     "name": {
       "description": "The name of the application.",
       "type": "string",

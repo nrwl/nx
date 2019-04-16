@@ -17,8 +17,8 @@ cd build/packages
 if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i "" "s|exports.nxVersion = '\*';|exports.nxVersion = '$NX_VERSION';|g" schematics/src/lib-versions.js
     sed -i "" "s|exports.schematicsVersion = '\*';|exports.schematicsVersion = '$NX_VERSION';|g" schematics/src/lib-versions.js
-    sed -i "" "s|exports.nxVersion = '\*';|exports.nxVersion = '$NX_VERSION';|g" {react,jest}/src/utils/versions.js
-    sed -i "" "s|\*|$NX_VERSION|g" {schematics,react,jest}/package.json
+    sed -i "" "s|exports.nxVersion = '\*';|exports.nxVersion = '$NX_VERSION';|g" {react,web,jest}/src/utils/versions.js
+    sed -i "" "s|\*|$NX_VERSION|g" {schematics,react,web,jest}/package.json
     sed -i "" "s|NX_VERSION|$NX_VERSION|g" create-nx-workspace/bin/create-nx-workspace.js
     sed -i "" "s|ANGULAR_CLI_VERSION|$ANGULAR_CLI_VERSION|g" create-nx-workspace/bin/create-nx-workspace.js
     sed -i "" "s|NX_VERSION|$NX_VERSION|g" schematics/bin/create-nx-workspace.js
@@ -26,8 +26,8 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
     sed -i "s|exports.nxVersion = '\*';|exports.nxVersion = '$NX_VERSION';|g" schematics/src/lib-versions.js
     sed -i "s|exports.schematicsVersion = '\*';|exports.schematicsVersion = '$NX_VERSION';|g" schematics/src/lib-versions.js
-    sed -i "s|exports.nxVersion = '\*';|exports.nxVersion = '$NX_VERSION';|g" {react,jest}/src/utils/versions.js
-    sed -i "s|\*|$NX_VERSION|g" {schematics,react,jest}/package.json
+    sed -i "s|exports.nxVersion = '\*';|exports.nxVersion = '$NX_VERSION';|g" {react,web,jest}/src/utils/versions.js
+    sed -i "s|\*|$NX_VERSION|g" {schematics,react,web,jest}/package.json
     sed -i "s|NX_VERSION|$NX_VERSION|g" create-nx-workspace/bin/create-nx-workspace.js
     sed -i "s|ANGULAR_CLI_VERSION|$ANGULAR_CLI_VERSION|g" create-nx-workspace/bin/create-nx-workspace.js
     sed -i "s|NX_VERSION|$NX_VERSION|g" schematics/bin/create-nx-workspace.js
@@ -36,9 +36,9 @@ fi
 
 if [[ $NX_VERSION == "*" ]]; then
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -E -i "" "s/\"@nrwl\/([^\"]+)\": \"\\*\"/\"@nrwl\/\1\": \"file:..\/\1\"/" {schematics,jest,react}/package.json
+        sed -E -i "" "s/\"@nrwl\/([^\"]+)\": \"\\*\"/\"@nrwl\/\1\": \"file:..\/\1\"/" {schematics,jest,web,react}/package.json
     else
-        sed -E -i "s/\"@nrwl\/([^\"]+)\": \"\\*\"/\"@nrwl\/\1\": \"file:..\/\1\"/" {schematics,jest,react}/package.json
+        sed -E -i "s/\"@nrwl\/([^\"]+)\": \"\\*\"/\"@nrwl\/\1\": \"file:..\/\1\"/" {schematics,jest,web,react}/package.json
     fi
 fi
 

@@ -1,22 +1,21 @@
 import * as mergeWebpack from 'webpack-merge';
 
-import { WebBuildBuilderOptions } from '../../web/build/web-build.builder';
-import { getBaseWebpackPartial } from './config';
 import {
   getBrowserConfig,
   getStylesConfig,
   getCommonConfig
 } from '@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs';
-import { convertBuildOptions } from '../normalize';
 import { Configuration } from 'webpack';
 import { Logger } from '@angular-devkit/core/src/logger';
-import { readTsConfig } from '../typescript';
 import { resolve } from 'path';
 import {
   WebpackConfigOptions,
   BuildOptions
 } from '@angular-devkit/build-angular/src/angular-cli-files/models/build-options';
 import typescript = require('typescript');
+import { WebBuildBuilderOptions } from '../builders/build/build.builder';
+import { convertBuildOptions } from './normalize';
+import { getBaseWebpackPartial, readTsConfig } from '@nrwl/builders';
 
 export function getWebConfig(options: WebBuildBuilderOptions, logger: Logger) {
   const tsConfig = readTsConfig(options.tsConfig);

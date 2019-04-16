@@ -1,10 +1,9 @@
-import { getSystemPath, normalize, Path } from '@angular-devkit/core';
+import { getSystemPath, normalize } from '@angular-devkit/core';
 import { getWebConfig as getWebPartial } from './web.config';
-import { WebBuildBuilderOptions } from '../../web/build/web-build.builder';
 import { createConsoleLogger } from '@angular-devkit/core/node';
 import { Logger } from '@angular-devkit/core/src/logger';
 import * as ts from 'typescript';
-import { SourceMapDevToolPlugin } from 'webpack';
+import { WebBuildBuilderOptions } from '../builders/build/build.builder';
 
 describe('getWebConfig', () => {
   let input: WebBuildBuilderOptions;

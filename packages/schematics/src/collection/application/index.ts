@@ -36,7 +36,6 @@ import {
 } from '../../utils/cli-config-utils';
 import { formatFiles } from '../../utils/rules/format-files';
 import { join, normalize } from '@angular-devkit/core';
-import { Framework } from '../../utils/frameworks';
 import {
   documentRegisterElementVersion,
   angularVersion,
@@ -148,150 +147,62 @@ function updateComponentTemplate(options: NormalizedSchema): Rule {
   };
 }
 
-function updateBuilders(options: NormalizedSchema): Rule {
-  return (host: Tree) => {
-    return updateJsonInTree(getWorkspacePath(host), json => {
-      const project = json.projects[options.name];
-
-      delete project.architect['extract-i18n'];
-
-      const buildOptions = project.architect.build;
-      const serveOptions = project.architect.serve;
-
-      buildOptions.builder = '@nrwl/builders:web-build';
-      delete buildOptions.options.es5BrowserSupport;
-      delete buildOptions.configurations.production.aot;
-      delete buildOptions.configurations.production.buildOptimizer;
-
-      serveOptions.builder = '@nrwl/builders:web-dev-server';
-      serveOptions.options.buildTarget = serveOptions.options.browserTarget;
-      delete serveOptions.options.browserTarget;
-      serveOptions.configurations.production.buildTarget =
-        serveOptions.configurations.production.browserTarget;
-      delete serveOptions.configurations.production.browserTarget;
-
-      return json;
-    });
-  };
-}
-
-function updateApplicationFiles(options: NormalizedSchema): Rule {
-  return chain([
-    deleteAngularApplicationFiles(options),
-    addApplicationFiles(options)
-  ]);
-}
-
-function addApplicationFiles(options: NormalizedSchema): Rule {
-  return mergeWith(
-    apply(url(`./files/${options.framework}`), [
-      template({
-        ...options,
-        tmpl: ''
-      }),
-      move(options.appProjectRoot)
-    ]),
-    MergeStrategy.Overwrite
-  );
-}
-
-function deleteAngularApplicationFiles(options: NormalizedSchema): Rule {
-  return (host: Tree) => {
-    const projectRoot = normalize(options.appProjectRoot);
-    [
-      'src/main.ts',
-      'src/polyfills.ts',
-      'src/app/app.module.ts',
-      'src/app/app.component.ts',
-      'src/app/app.component.spec.ts',
-      `src/app/app.component.${options.style}`,
-      'src/app/app.component.html'
-    ].forEach(path => {
-      path = join(projectRoot, path);
-      if (host.exists(path)) {
-        host.delete(path);
-      }
-    });
-  };
-}
-
 function updateDependencies(options: NormalizedSchema): Rule {
-  let deps = {};
-  let devDeps = {};
-  switch (options.framework) {
-    case Framework.Angular:
-      deps = {
-        '@angular/animations': angularVersion,
-        '@angular/common': angularVersion,
-        '@angular/compiler': angularVersion,
-        '@angular/core': angularVersion,
-        '@angular/forms': angularVersion,
-        '@angular/platform-browser': angularVersion,
-        '@angular/platform-browser-dynamic': angularVersion,
-        '@angular/router': angularVersion,
-        'core-js': '^2.5.4',
-        rxjs: rxjsVersion,
-        'zone.js': '^0.8.26'
-      };
-      devDeps = {
-        '@angular/compiler-cli': angularVersion,
-        '@angular/language-service': angularVersion,
-        '@angular-devkit/build-angular': angularDevkitVersion,
-        codelyzer: '~4.5.0'
-      };
-      break;
-
-    case Framework.WebComponents:
-      deps = {
-        'document-register-element': documentRegisterElementVersion
-      };
-      break;
-  }
+  const deps = {
+    '@angular/animations': angularVersion,
+    '@angular/common': angularVersion,
+    '@angular/compiler': angularVersion,
+    '@angular/core': angularVersion,
+    '@angular/forms': angularVersion,
+    '@angular/platform-browser': angularVersion,
+    '@angular/platform-browser-dynamic': angularVersion,
+    '@angular/router': angularVersion,
+    'core-js': '^2.5.4',
+    rxjs: rxjsVersion,
+    'zone.js': '^0.8.26'
+  };
+  const devDeps = {
+    '@angular/compiler-cli': angularVersion,
+    '@angular/language-service': angularVersion,
+    '@angular-devkit/build-angular': angularDevkitVersion,
+    codelyzer: '~4.5.0'
+  };
 
   return addDepsToPackageJson(deps, devDeps);
 }
 
 function updateLinting(options: NormalizedSchema): Rule {
-  switch (options.framework) {
-    case Framework.Angular:
-      return chain([
-        updateJsonInTree('tslint.json', json => {
-          if (
-            json.rulesDirectory &&
-            json.rulesDirectory.indexOf('node_modules/codelyzer') === -1
-          ) {
-            json.rulesDirectory.push('node_modules/codelyzer');
-            json.rules = {
-              ...json.rules,
+  return chain([
+    updateJsonInTree('tslint.json', json => {
+      if (
+        json.rulesDirectory &&
+        json.rulesDirectory.indexOf('node_modules/codelyzer') === -1
+      ) {
+        json.rulesDirectory.push('node_modules/codelyzer');
+        json.rules = {
+          ...json.rules,
 
-              'directive-selector': [true, 'attribute', 'app', 'camelCase'],
-              'component-selector': [true, 'element', 'app', 'kebab-case'],
-              'no-output-on-prefix': true,
-              'use-input-property-decorator': true,
-              'use-output-property-decorator': true,
-              'use-host-property-decorator': true,
-              'no-input-rename': true,
-              'no-output-rename': true,
-              'use-life-cycle-interface': true,
-              'use-pipe-transform-interface': true,
-              'component-class-suffix': true,
-              'directive-class-suffix': true
-            };
-          }
-          return json;
-        }),
-        updateJsonInTree(`${options.appProjectRoot}/tslint.json`, json => {
-          json.extends = `${offsetFromRoot(options.appProjectRoot)}tslint.json`;
-          return json;
-        })
-      ]);
-    case Framework.WebComponents:
-      return updateJsonInTree(`${options.appProjectRoot}/tslint.json`, json => {
-        json.extends = `${offsetFromRoot(options.appProjectRoot)}tslint.json`;
-        json.rules = [];
-        return json;
-      });
-  }
+          'directive-selector': [true, 'attribute', 'app', 'camelCase'],
+          'component-selector': [true, 'element', 'app', 'kebab-case'],
+          'no-output-on-prefix': true,
+          'use-input-property-decorator': true,
+          'use-output-property-decorator': true,
+          'use-host-property-decorator': true,
+          'no-input-rename': true,
+          'no-output-rename': true,
+          'use-life-cycle-interface': true,
+          'use-pipe-transform-interface': true,
+          'component-class-suffix': true,
+          'directive-class-suffix': true
+        };
+      }
+      return json;
+    }),
+    updateJsonInTree(`${options.appProjectRoot}/tslint.json`, json => {
+      json.extends = `${offsetFromRoot(options.appProjectRoot)}tslint.json`;
+      return json;
+    })
+  ]);
 }
 
 function addTsconfigs(options: NormalizedSchema): Rule {
@@ -484,7 +395,7 @@ export default function(schema: Schema): Rule {
         viewEncapsulation: options.viewEncapsulation,
         routing: false,
         skipInstall: true,
-        skipPackageJson: options.framework !== Framework.Angular
+        skipPackageJson: false
       }),
       addTsconfigs(options),
 
@@ -503,26 +414,16 @@ export default function(schema: Schema): Rule {
       move(appProjectRoot, options.appProjectRoot),
       updateProject(options),
 
-      options.framework !== Framework.Angular
-        ? updateBuilders(options)
-        : noop(),
-      options.framework === Framework.Angular
-        ? updateComponentTemplate(options)
-        : updateApplicationFiles(options),
-      options.framework === Framework.Angular && options.routing
-        ? addRouterRootConfiguration(options)
-        : noop(),
+      updateComponentTemplate(options),
+      options.routing ? addRouterRootConfiguration(options) : noop(),
       updateDependencies(options),
       updateLinting(options),
       options.unitTestRunner === 'jest'
         ? externalSchematic('@nrwl/jest', 'jest-project', {
             project: options.name,
             supportTsx: false,
-            skipSerializers: options.framework !== Framework.Angular,
-            setupFile:
-              options.framework === Framework.Angular
-                ? 'angular'
-                : 'web-components'
+            skipSerializers: false,
+            setupFile: 'angular'
           })
         : noop(),
       options.unitTestRunner === 'karma'
@@ -536,12 +437,6 @@ export default function(schema: Schema): Rule {
 }
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
-  if (options.framework !== Framework.Angular && options.routing) {
-    throw new Error(
-      `Routing is not supported yet with frameworks other than Angular`
-    );
-  }
-
   const appDirectory = options.directory
     ? `${toFileName(options.directory)}/${toFileName(options.name)}`
     : toFileName(options.name);
