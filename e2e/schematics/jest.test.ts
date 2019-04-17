@@ -1,12 +1,12 @@
-import { newLib, runCLIAsync, newApp, ensureProject, uniq } from '../utils';
+import { runCLIAsync, ensureProject, uniq, runCLI } from '../utils';
 
 describe('Jest', () => {
   it('should be able test projects using jest', async done => {
     ensureProject();
     const mylib = uniq('mylib');
     const myapp = uniq('myapp');
-    newApp(`${myapp} --unit-test-runner jest --framework=angular`);
-    newLib(`${mylib} --unit-test-runner jest --framework=angular`);
+    runCLI(`generate @nrwl/angular:app ${myapp} --unit-test-runner jest`);
+    runCLI(`generate @nrwl/angular:lib ${mylib} --unit-test-runner jest`);
 
     await Promise.all([
       runCLIAsync(`generate service test --project ${myapp}`),

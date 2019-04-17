@@ -13,7 +13,7 @@ describe('Upgrade', () => {
   it('should generate an UpgradeModule setup', async () => {
     ensureProject();
     const myapp = uniq('myapp');
-    newApp(`${myapp} --unit-test-runner=karma`);
+    runCLI(`generate @nrwl/angular:app ${myapp} --unit-test-runner=karma`);
 
     updateFile(
       `apps/${myapp}/src/legacy.js`,
@@ -35,7 +35,7 @@ describe('Upgrade', () => {
     updateFile(`apps/${myapp}/src/app/app.component.spec.ts`, ``);
 
     runCLI(
-      'generate upgrade-module legacy --angularJsImport=./legacy ' +
+      'generate @nrwl/angular:upgrade-module legacy --angularJsImport=./legacy ' +
         `--angularJsCmpSelector=proj-root-legacy --project=${myapp}`
     );
 

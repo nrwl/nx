@@ -1,6 +1,5 @@
 import {
   checkFilesExist,
-  newApp,
   readJson,
   runCLI,
   updateFile,
@@ -15,7 +14,7 @@ describe('Cypress E2E Test runner', () => {
     it('should generate an app with the Cypress as e2e test runner', () => {
       ensureProject();
       const myapp = uniq('myapp');
-      newApp(`${myapp} --e2eTestRunner=cypress`);
+      runCLI(`generate @nrwl/angular:app ${myapp} --e2eTestRunner=cypress`);
 
       // Making sure the package.json file contains the Cypress dependency
       const packageJson = readJson('package.json');
@@ -39,7 +38,7 @@ describe('Cypress E2E Test runner', () => {
       it('should execute e2e tests using Cypress', () => {
         ensureProject();
         const myapp = uniq('myapp');
-        newApp(`${myapp} --e2eTestRunner=cypress`);
+        runCLI(`generate @nrwl/angular:app ${myapp} --e2eTestRunner=cypress`);
 
         expect(
           runCLI(`e2e --project=${myapp}-e2e --headless --watch=false`)

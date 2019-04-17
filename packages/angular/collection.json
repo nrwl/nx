@@ -1,0 +1,57 @@
+{
+  "name": "nx/angular",
+  "version": "0.1",
+  "extends": ["@schematics/angular"],
+  "schematics": {
+    "ng-add": {
+      "factory": "./src/schematics/ng-add/ng-add",
+      "schema": "./src/schematics/ng-add/schema.json",
+      "description": "Add @nrwl/react to a project",
+      "hidden": true
+    },
+
+    "application": {
+      "factory": "./src/schematics/application/application",
+      "schema": "./src/schematics/application/schema.json",
+      "aliases": ["app"],
+      "description": "Create an Angular application"
+    },
+
+    "library": {
+      "factory": "./src/schematics/library/library",
+      "schema": "./src/schematics/library/schema.json",
+      "aliases": ["lib"],
+      "description": "Create an Angular library"
+    },
+
+    "karma": {
+      "factory": "./src/schematics/karma/karma",
+      "schema": "./src/schematics/karma/schema.json",
+      "description": "Add karma configuration to a workspace"
+    },
+
+    "karma-project": {
+      "factory": "./src/schematics/karma-project/karma-project",
+      "schema": "./src/schematics/karma-project/schema.json",
+      "description": "Add karma testing to a project"
+    },
+
+    "ngrx": {
+      "factory": "./src/schematics/ngrx/ngrx",
+      "schema": "./src/schematics/ngrx/schema.json",
+      "description": "Add an ngrx config to a project"
+    },
+
+    "downgrade-module": {
+      "factory": "./src/schematics/downgrade-module/downgrade-module",
+      "schema": "./src/schematics/downgrade-module/schema.json",
+      "description": "Setup Downgrade Module"
+    },
+
+    "upgrade-module": {
+      "factory": "./src/schematics/upgrade-module/upgrade-module",
+      "schema": "./src/schematics/upgrade-module/schema.json",
+      "description": "Add an upgrade module"
+    }
+  }
+}

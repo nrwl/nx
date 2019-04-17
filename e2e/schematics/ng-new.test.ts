@@ -3,8 +3,6 @@ import {
   exists,
   expectTestsPass,
   getSize,
-  newApp,
-  newLib,
   runCLI,
   runCLIAsync,
   runsInWSL,
@@ -21,8 +19,12 @@ describe('Nrwl Workspace', () => {
   it('should work', async () => {
     const myapp = uniq('myapp');
     const mylib = uniq('mylib');
-    newApp(`${myapp} --directory=myDir`);
-    newLib(`${mylib} --directory=myDir --framework=angular`);
+    runCLI(
+      `generate @nrwl/angular:app ${myapp} --directory=myDir --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/angular:lib ${mylib} --directory=myDir --no-interactive`
+    );
 
     updateFile(
       `apps/my-dir/${myapp}/src/app/app.module.ts`,
@@ -73,9 +75,9 @@ describe('Nrwl Workspace', () => {
   it('should support router config generation (lazy)', async () => {
     const myapp = uniq('myapp');
     const mylib = uniq('mylib');
-    newApp(`${myapp} --directory=myDir --routing`);
-    newLib(
-      `${mylib} --directory=myDir --framework=angular --routing --lazy --parentModule=apps/my-dir/${myapp}/src/app/app.module.ts`
+    runCLI(`generate @nrwl/angular:app ${myapp} --directory=myDir --routing`);
+    runCLI(
+      `generate @nrwl/angular:lib ${mylib} --directory=myDir --routing --lazy --parentModule=apps/my-dir/${myapp}/src/app/app.module.ts`
     );
 
     runCLI(`build --aot --project=my-dir-${myapp}`);
@@ -86,10 +88,10 @@ describe('Nrwl Workspace', () => {
 
   it('should support router config generation (eager)', async () => {
     const myapp = uniq('myapp');
-    newApp(`${myapp} --directory=myDir --routing`);
+    runCLI(`generate @nrwl/angular:app ${myapp} --directory=myDir --routing`);
     const mylib = uniq('mylib');
-    newLib(
-      `${mylib} --directory=myDir --framework=angular --routing --parentModule=apps/my-dir/${myapp}/src/app/app.module.ts`
+    runCLI(
+      `generate @nrwl/angular:lib ${mylib} --directory=myDir --routing --parentModule=apps/my-dir/${myapp}/src/app/app.module.ts`
     );
 
     runCLI(`build --aot --project=my-dir-${myapp}`);
