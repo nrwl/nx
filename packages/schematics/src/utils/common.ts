@@ -2,27 +2,7 @@ import { Rule } from '@angular-devkit/schematics';
 import { Options } from 'prettier';
 import * as cosmiconfig from 'cosmiconfig';
 
-import { angularJsVersion } from '../lib-versions';
-import { updateJsonInTree } from './ast-utils';
 import { normalize } from '@angular-devkit/core';
-
-export function addUpgradeToPackageJson(): Rule {
-  return updateJsonInTree('package.json', packageJson => {
-    if (!packageJson['dependencies']) {
-      packageJson['dependencies'] = {};
-    }
-
-    if (!packageJson['dependencies']['@angular/upgrade']) {
-      packageJson['dependencies']['@angular/upgrade'] =
-        packageJson['dependencies']['@angular/core'];
-    }
-    if (!packageJson['dependencies']['angular']) {
-      packageJson['dependencies']['angular'] = angularJsVersion;
-    }
-
-    return packageJson;
-  });
-}
 
 export function offsetFromRoot(fullPathToSourceDir: string): string {
   const parts = normalize(fullPathToSourceDir).split('/');

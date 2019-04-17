@@ -1,20 +1,10 @@
-import {
-  newProject,
-  runCLI,
-  newLib,
-  runCLIAsync,
-  newApp,
-  copyMissingPackages,
-  ensureProject,
-  uniq,
-  patchKarmaToWorkOnWSL
-} from '../utils';
+import { runCLI, runCLIAsync, ensureProject, uniq } from '../utils';
 
 describe('Karma', () => {
   it('should be able to generate a testable library using karma', async done => {
     ensureProject();
     const mylib = uniq('mylib');
-    newLib(`${mylib} --unit-test-runner karma --framework=angular`);
+    runCLI(`generate @nrwl/angular:lib ${mylib} --unit-test-runner karma`);
 
     await Promise.all([
       runCLIAsync(`generate service test --project ${mylib}`),
@@ -28,7 +18,7 @@ describe('Karma', () => {
   it('should be able to generate a testable application using karma', async done => {
     ensureProject();
     const myapp = uniq('myapp');
-    newApp(`${myapp} --unit-test-runner karma --framework=angular`);
+    runCLI(`generate @nrwl/angular:app ${myapp} --unit-test-runner karma`);
 
     await Promise.all([
       runCLIAsync(`generate service test --project ${myapp}`),

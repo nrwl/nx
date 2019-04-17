@@ -1,7 +1,5 @@
 import {
   checkFilesExist,
-  newApp,
-  newLib,
   newProject,
   readFile,
   readJson,
@@ -24,12 +22,12 @@ describe('Command line', () => {
     const invalidtaglib = uniq('invalidtaglib');
     const validtaglib = uniq('validtaglib');
 
-    newApp(`${myapp} --tags=validtag`);
-    newApp(`${myapp2} --framework=angular`);
-    newLib(`${mylib} --framework=angular`);
-    newLib(`${lazylib} --framework=angular`);
-    newLib(`${invalidtaglib} --tags=invalidtag --framework=angular`);
-    newLib(`${validtaglib} --tags=validtag --framework=angular`);
+    runCLI(`generate @nrwl/angular:app ${myapp} --tags=validtag`);
+    runCLI(`generate @nrwl/angular:app ${myapp2}`);
+    runCLI(`generate @nrwl/angular:lib ${mylib}`);
+    runCLI(`generate @nrwl/angular:lib ${lazylib}`);
+    runCLI(`generate @nrwl/angular:lib ${invalidtaglib} --tags=invalidtag`);
+    runCLI(`generate @nrwl/angular:lib ${validtaglib} --tags=validtag`);
 
     const tslint = readJson('tslint.json');
     tslint.rules['nx-enforce-module-boundaries'][1].depConstraints = [
@@ -72,7 +70,7 @@ describe('Command line', () => {
       const appBefore = uniq('before');
       const appAfter = uniq('after');
 
-      newApp(appBefore);
+      runCLI(`generate @nrwl/angular:app ${appBefore}`);
       runCommand(`mv apps/${appBefore} apps/${appAfter}`);
 
       const stdout = runCommand('./node_modules/.bin/nx lint');
@@ -90,8 +88,8 @@ describe('Command line', () => {
     const myapp = uniq('myapp');
     const mylib = uniq('mylib');
 
-    newApp(myapp);
-    newLib(`${mylib} --framework=angular`);
+    runCLI(`generate @nrwl/angular:app ${myapp}`);
+    runCLI(`generate @nrwl/angular:lib ${mylib}`);
     updateFile(
       `apps/${myapp}/src/main.ts`,
       `
@@ -214,11 +212,11 @@ describe('Command line', () => {
   describe('dep-graph', () => {
     beforeAll(() => {
       newProject();
-      newApp('myapp');
-      newApp('myapp2');
-      newApp('myapp3');
-      newLib('mylib --framework=angular');
-      newLib('mylib2 --framework=angular');
+      runCLI('generate @nrwl/angular:app myapp');
+      runCLI('generate @nrwl/angular:app myapp2');
+      runCLI('generate @nrwl/angular:app myapp3');
+      runCLI('generate @nrwl/angular:lib mylib');
+      runCLI('generate @nrwl/angular:lib mylib2');
 
       updateFile(
         'apps/myapp/src/main.ts',

@@ -69,12 +69,6 @@ if (!runsInWSL()) {
         'esbenp.prettier-vscode'
       ]);
 
-      const appModuleContents = readFile('apps/proj/src/app/app.module.ts');
-      expect(appModuleContents).toContain(
-        `import { NxModule } from '@nrwl/nx';`
-      );
-      expect(appModuleContents).toContain(`NxModule.forRoot()`);
-
       // check that package.json got merged
       const updatedPackageJson = readJson('package.json');
       expect(updatedPackageJson.description).toEqual('some description');
@@ -104,15 +98,6 @@ if (!runsInWSL()) {
       });
       expect(
         updatedPackageJson.devDependencies['@nrwl/schematics']
-      ).toBeDefined();
-      expect(updatedPackageJson.dependencies['@nrwl/nx']).toBeDefined();
-      expect(updatedPackageJson.dependencies['@ngrx/store']).toBeDefined();
-      expect(updatedPackageJson.dependencies['@ngrx/effects']).toBeDefined();
-      expect(
-        updatedPackageJson.dependencies['@ngrx/router-store']
-      ).toBeDefined();
-      expect(
-        updatedPackageJson.devDependencies['@ngrx/store-devtools']
       ).toBeDefined();
       expect(updatedPackageJson.devDependencies['@angular/cli']).toBeDefined();
 

@@ -4,3 +4,4 @@ export {
   updateJsonInTree,
   addDepsToPackageJson
 } from './src/utils/ast-utils';
+export { offsetFromRoot } from './src/utils/common';

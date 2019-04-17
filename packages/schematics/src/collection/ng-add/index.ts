@@ -13,15 +13,9 @@ import * as path from 'path';
 import { join } from 'path';
 import {
   angularCliVersion,
-  ngrxStoreFreezeVersion,
-  ngrxVersion,
-  nxVersion,
   prettierVersion,
-  schematicsVersion,
-  jasmineMarblesVersion
+  schematicsVersion
 } from '../../lib-versions';
-import * as fs from 'fs';
-import * as ts from 'typescript';
 import {
   offsetFromRoot,
   resolveUserExistingPrettierConfig,
@@ -33,18 +27,11 @@ import {
   renameSync
 } from '../../utils/fileutils';
 import { toFileName } from '../../utils/name-utils';
-import {
-  updateJsonInTree,
-  readJsonInTree,
-  addImportToModule
-} from '../../utils/ast-utils';
+import { updateJsonInTree, readJsonInTree } from '../../utils/ast-utils';
 import { editTarget } from '../../utils/cli-config-utils';
 import { from } from 'rxjs';
-import { tap, mapTo, concatMap } from 'rxjs/operators';
+import { tap, mapTo } from 'rxjs/operators';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
-import { getAppModulePath } from '@schematics/angular/utility/ng-ast-utils';
-import { insertImport } from '@schematics/angular/utility/ast-utils';
-import { InsertChange } from '@schematics/angular/utility/change';
 
 function updatePackageJson() {
   return updateJsonInTree('package.json', packageJson => {
@@ -73,24 +60,6 @@ function updatePackageJson() {
     if (!packageJson.dependencies) {
       packageJson.dependencies = {};
     }
-    if (!packageJson.dependencies['@nrwl/nx']) {
-      packageJson.dependencies['@nrwl/nx'] = nxVersion;
-    }
-    if (!packageJson.dependencies['@ngrx/store']) {
-      packageJson.dependencies['@ngrx/store'] = ngrxVersion;
-    }
-    if (!packageJson.dependencies['@ngrx/router-store']) {
-      packageJson.dependencies['@ngrx/router-store'] = ngrxVersion;
-    }
-    if (!packageJson.dependencies['@ngrx/effects']) {
-      packageJson.dependencies['@ngrx/effects'] = ngrxVersion;
-    }
-    if (!packageJson.devDependencies['@ngrx/store-devtools']) {
-      packageJson.devDependencies['@ngrx/store-devtools'] = ngrxVersion;
-    }
-    if (!packageJson.devDependencies['ngrx-store-freeze']) {
-      packageJson.devDependencies['ngrx-store-freeze'] = ngrxStoreFreezeVersion;
-    }
     if (packageJson.dependencies['@nrwl/schematics']) {
       delete packageJson.dependencies['@nrwl/schematics'];
     }
@@ -101,9 +70,6 @@ function updatePackageJson() {
       packageJson.devDependencies['@angular/cli'] = angularCliVersion;
     }
     packageJson.devDependencies['karma'] = '~2.0.0';
-    if (!packageJson.devDependencies['jasmine-marbles']) {
-      packageJson.devDependencies['jasmine-marbles'] = jasmineMarblesVersion;
-    }
     if (!packageJson.devDependencies['prettier']) {
       packageJson.devDependencies['prettier'] = prettierVersion;
     }
@@ -620,73 +586,7 @@ function createAdditionalFiles(options: Schema): Rule {
   };
 }
 
-function dedup(array: any[]): any[] {
-  const res = [];
-
-  array.forEach(a => {
-    if (res.indexOf(a) === -1) {
-      res.push(a);
-    }
-  });
-  return res;
-}
-
-function insertInToString(originalString: string, pos: number, toAdd: string) {
-  return originalString.slice(0, pos) + toAdd + originalString.slice(pos);
-}
-
-function addNxModule(options: Schema) {
-  return (host: Tree, context: SchematicContext) => {
-    const angularJson = readJsonInTree(host, 'angular.json');
-    const app = angularJson.projects[options.name];
-    const modulePath = path.resolve(
-      '.',
-      getAppModulePath(host, app.architect.build.options.main).slice(1)
-    );
-    let content = fs.readFileSync(modulePath).toString();
-
-    // Bail if the module already cotains the import
-    if (content.includes('NxModule.forRoot()')) {
-      return host;
-    }
-
-    let moduleSource = ts.createSourceFile(
-      modulePath,
-      content,
-      ts.ScriptTarget.Latest,
-      true
-    );
-    const importChange: InsertChange = insertImport(
-      moduleSource,
-      modulePath,
-      'NxModule',
-      '@nrwl/nx'
-    ) as InsertChange;
-    content = insertInToString(content, importChange.pos, importChange.toAdd);
-
-    moduleSource = ts.createSourceFile(
-      modulePath,
-      content,
-      ts.ScriptTarget.Latest,
-      true
-    );
-
-    const ngModuleChange: InsertChange = addImportToModule(
-      moduleSource,
-      modulePath,
-      'NxModule.forRoot()'
-    )[0] as InsertChange;
-    content = insertInToString(
-      content,
-      ngModuleChange.pos,
-      ngModuleChange.toAdd
-    );
-    fs.writeFileSync(modulePath, content);
-    return host;
-  };
-}
-
-function checkCanConvertToWorkspace(options: Schema) {
+function checkCanConvertToWorkspace() {
   return (host: Tree, context: SchematicContext) => {
     try {
       if (!host.exists('package.json')) {
@@ -751,7 +651,7 @@ export default function(schema: Schema): Rule {
     })
   ]);
   return chain([
-    checkCanConvertToWorkspace(options),
+    checkCanConvertToWorkspace(),
     mergeWith(templateSource),
     moveExistingFiles(options),
     createAdditionalFiles(options),
@@ -761,7 +661,6 @@ export default function(schema: Schema): Rule {
     updateProjectTsLint(options),
     updateTsConfig(options),
     updateTsConfigsJson(options),
-    addNxModule(options),
     addInstallTask(options)
   ]);
 }

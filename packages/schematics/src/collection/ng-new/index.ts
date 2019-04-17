@@ -44,12 +44,12 @@ function createPreset(options: Schema): Rule {
     return noop();
   } else if (options.preset === 'angular') {
     return chain([
-      schematic(
+      externalSchematic(
+        '@nrwl/angular',
         'application',
         {
           name: options.name,
-          style: options.style,
-          framework: Framework.Angular
+          style: options.style
         },
         { interactive: false }
       ),
@@ -83,7 +83,8 @@ function createPreset(options: Schema): Rule {
     ]);
   } else {
     return chain([
-      schematic(
+      externalSchematic(
+        '@nrwl/angular',
         'application',
         { name: options.name, style: options.style },
         { interactive: false }
@@ -97,11 +98,7 @@ function createPreset(options: Schema): Rule {
         },
         { interactive: false }
       ),
-      schematic(
-        'library',
-        { name: 'api-interface', framework: 'none' },
-        { interactive: false }
-      ),
+      schematic('library', { name: 'api-interface' }, { interactive: false }),
       setDefaultAppFramework(Framework.Angular),
       connectFrontendAndApi(options)
     ]);

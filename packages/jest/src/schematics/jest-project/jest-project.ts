@@ -18,7 +18,6 @@ import {
 } from '@nrwl/schematics/src/utils/ast-utils';
 import { offsetFromRoot } from '@nrwl/schematics/src/utils/common';
 import { join, normalize } from '@angular-devkit/core';
-import { jestPresetAngularVersion } from '../../utils/versions';
 
 export interface JestProjectSchema {
   project: string;
@@ -99,14 +98,6 @@ function updateAngularJson(options: JestProjectSchema): Rule {
   });
 }
 
-function addDependencies(options: JestProjectSchema): Rule {
-  const devDeps = {};
-  if (options.setupFile === 'angular') {
-    devDeps['jest-preset-angular'] = jestPresetAngularVersion;
-  }
-  return addDepsToPackageJson({}, devDeps);
-}
-
 function check(options: JestProjectSchema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const projectConfig = getProjectConfig(host, options.project);
@@ -138,7 +129,6 @@ export default function(options: JestProjectSchema): Rule {
   options = normalizeOptions(options);
   return chain([
     check(options),
-    addDependencies(options),
     generateFiles(options),
     updateTsConfig(options),
     updateAngularJson(options)

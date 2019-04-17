@@ -1,13 +1,12 @@
 import {
   ensureProject,
-  newApp,
-  newLib,
   readFile,
   readJson,
   runCommand,
   runsInWSL,
   uniq,
-  updateFile
+  updateFile,
+  runCLI
 } from '../utils';
 
 describe('Affected', () => {
@@ -18,11 +17,11 @@ describe('Affected', () => {
     const mylib = uniq('mylib');
     const mylib2 = uniq('mylib2');
     const mypublishablelib = uniq('mypublishablelib');
-    newApp(myapp);
-    newApp(myapp2);
-    newLib(`${mylib} --framework angular`);
-    newLib(`${mylib2} --framework angular`);
-    newLib(`${mypublishablelib} --framework angular --publishable`);
+    runCLI(`generate @nrwl/angular:app ${myapp}`);
+    runCLI(`generate @nrwl/angular:app ${myapp2}`);
+    runCLI(`generate @nrwl/angular:lib ${mylib}`);
+    runCLI(`generate @nrwl/angular:lib ${mylib2}`);
+    runCLI(`generate @nrwl/angular:lib ${mypublishablelib} --publishable`);
 
     updateFile(
       `apps/${myapp}/src/app/app.component.spec.ts`,

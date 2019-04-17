@@ -23,50 +23,11 @@
       "hidden": true
     },
 
-    "application": {
-      "factory": "./collection/application",
-      "schema": "./collection/application/schema.json",
-      "aliases": ["app"],
-      "description": "Create an application"
-    },
-
     "library": {
-      "factory": "./collection/library",
+      "factory": "./collection/library/library",
       "schema": "./collection/library/schema.json",
       "aliases": ["lib"],
-      "description": "Create a library"
-    },
-
-    "ngrx": {
-      "factory": "./collection/ngrx",
-      "schema": "./collection/ngrx/schema.json",
-      "description": "Add NgRx support to a module"
-    },
-
-    "karma": {
-      "factory": "./collection/karma",
-      "schema": "./collection/karma/schema.json",
-      "description": "Add Karma configuration to the workspace",
-      "hidden": true
-    },
-
-    "karma-project": {
-      "factory": "./collection/karma-project",
-      "schema": "./collection/karma-project/schema.json",
-      "description": "Add Karma configuration to a project",
-      "hidden": true
-    },
-
-    "upgrade-module": {
-      "factory": "./collection/upgrade-module",
-      "schema": "./collection/upgrade-module/schema.json",
-      "description": "Generates UpgradeModule setup"
-    },
-
-    "downgrade-module": {
-      "factory": "./collection/downgrade-module",
-      "schema": "./collection/downgrade-module/schema.json",
-      "description": "Generates downgradeModule setup"
+      "description": "Create a Typescript library"
     },
 
     "workspace-schematic": {

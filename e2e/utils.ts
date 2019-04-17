@@ -29,6 +29,7 @@ export function newProject(): void {
     runCLI('add @nrwl/cypress');
     runCLI('add @nrwl/web');
     runCLI('add @nrwl/react');
+    runCLI('add @nrwl/angular');
     execSync('mv ./tmp/proj ./tmp/proj_backup');
   }
   execSync('cp -a ./tmp/proj_backup ./tmp/proj');

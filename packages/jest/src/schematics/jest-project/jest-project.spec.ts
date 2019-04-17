@@ -174,23 +174,6 @@ describe('jestProject', () => {
       );
       expect(tsConfig.files).toBeUndefined();
     });
-
-    describe('angular', () => {
-      it('should add jest-angular-preset dependency', async () => {
-        const resultTree = await runSchematic(
-          'jest-project',
-          {
-            project: 'lib1',
-            setupFile: 'angular'
-          },
-          appTree
-        );
-        const packageJson = readJsonInTree(resultTree, 'package.json');
-        expect(
-          packageJson.devDependencies['jest-preset-angular']
-        ).toBeDefined();
-      });
-    });
   });
 
   describe('--skip-setup-file', () => {

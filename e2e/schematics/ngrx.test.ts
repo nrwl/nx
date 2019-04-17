@@ -4,7 +4,8 @@ import {
   expectTestsPass,
   runCLIAsync,
   uniq,
-  ensureProject
+  ensureProject,
+  readJson
 } from '../utils';
 
 describe('ngrx', () => {
@@ -12,18 +13,24 @@ describe('ngrx', () => {
     ensureProject();
 
     const myapp = uniq('myapp');
-    newApp(myapp);
+    runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
 
     // Generate root ngrx state management
     runCLI(
-      `generate ngrx users --module=apps/${myapp}/src/app/app.module.ts --root`
+      `generate @nrwl/angular:ngrx users --module=apps/${myapp}/src/app/app.module.ts --root`
     );
+    const packageJson = readJson('package.json');
+    expect(packageJson.dependencies['@nrwl/nx']).toBeDefined();
+    expect(packageJson.dependencies['@ngrx/store']).toBeDefined();
+    expect(packageJson.dependencies['@ngrx/effects']).toBeDefined();
+    expect(packageJson.dependencies['@ngrx/router-store']).toBeDefined();
+    expect(packageJson.devDependencies['@ngrx/store-devtools']).toBeDefined();
 
     const mylib = uniq('mylib');
     // Generate feature library and ngrx state within that library
-    runCLI(`g lib ${mylib} --framework angular --prefix=fl`);
+    runCLI(`g @nrwl/angular:lib ${mylib} --prefix=fl`);
     runCLI(
-      `generate ngrx flights --module=libs/${mylib}/src/lib/${mylib}.module.ts --facade`
+      `generate @nrwl/angular:ngrx flights --module=libs/${mylib}/src/lib/${mylib}.module.ts --facade`
     );
 
     expect(runCLI(`build ${myapp}`)).toContain('chunk {main} main.js,');
