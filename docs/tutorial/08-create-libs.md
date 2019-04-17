@@ -159,7 +159,6 @@ You can use libraries across the app using two strategies:
 1. **Eager Load**: Loads the lib when the app is bootstrapped.
 2. **Lazy Loading**: Loads only when the app required it.
 
-
 #### Eager Loading
 
 A good example was the usage of the `ui` library created previously. The lib was called directly on the `app.module.ts`
@@ -279,7 +278,7 @@ import { MainComponent } from './main/main.component';
     CommonModule,
 
     RouterModule.forChild([
-       {path: '', pathMatch: 'full', component: MainComponent} 
+      { path: '', pathMatch: 'full', component: MainComponent }
     ])
   ]
 })
@@ -289,7 +288,7 @@ export class FeatureShellModule {}
 ## Use Feature Shell Library
 
 **Update the `AppModule` to have a Router Module definition into it using the `loadChildren` property**
- 
+
 ```typescript
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
@@ -299,9 +298,9 @@ import { HttpClientModule } from '@angular/common/http';
 import { UiModule } from '@myorg/ui';
 
 // You can add multiple routes as your needs
-  const routes: Routes = [
-      { path: 'main', loadChildren: '@myorg/feature-shell#FeatureShellModule' }
-  ];
+const routes: Routes = [
+  { path: 'main', loadChildren: '@myorg/feature-shell#FeatureShellModule' }
+];
 
 @NgModule({
   declarations: [AppComponent],
@@ -310,7 +309,7 @@ import { UiModule } from '@myorg/ui';
     HttpClientModule,
     UiModule,
     RouterModule.forRoot(routes)
-    ],
+  ],
   providers: [],
   bootstrap: [AppComponent]
 })
@@ -324,7 +323,6 @@ _**Explanation**: LoadChildren property receives a string of the form path/to/fi
 ```html
 <router-outlet></router-outlet>
 ```
-
 
 **Register the `feature-shell` lib public api on the `tsconfig.app.json` located under `apps/todos` folder to be include when the compilation process starts:**
 
@@ -346,8 +344,7 @@ _**Explanation**: LoadChildren property receives a string of the form path/to/fi
 }
 ```
 
-
-**Restart `ng serve todos`  and go to `localhost:port/main` you should see the application running**
+**Restart `ng serve todos` and go to `localhost:port/main` you should see the application running**
 
 **Open the network panel on the browser, and check that the lib was lazy loaded.**
 
