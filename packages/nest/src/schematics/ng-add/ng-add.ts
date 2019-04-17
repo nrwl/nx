@@ -33,5 +33,9 @@ function moveDependency(): Rule {
 }
 
 export default function() {
-  return chain([externalSchematic('@nrwl/node', 'ng-add', {}), addDependencies(), moveDependency()]);
+  return chain([
+    externalSchematic('@nrwl/node', 'ng-add', {}),
+    addDependencies(),
+    moveDependency()
+  ]);
 }
