@@ -14,14 +14,10 @@ describe('ng-add', () => {
   });
 
   it('should add dependencies into `package.json` file', async () => {
-    const tree = await runSchematic(
-      'cypress-project',
-      { name: 'my-app-e2e', project: 'my-app' },
-      appTree
-    );
+    const tree = await runSchematic('ng-add', {}, appTree);
     const packageJson = readJsonInTree(tree, 'package.json');
 
     expect(packageJson.devDependencies.cypress).toBeDefined();
-    expect(packageJson.devDependencies['@nrwl/builders']).toBeDefined();
+    expect(packageJson.devDependencies['@nrwl/cypress']).toBeDefined();
   });
 });
