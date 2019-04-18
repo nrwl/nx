@@ -34,6 +34,7 @@
     "migrations": "./migrations/migrations.json"
   },
   "dependencies": {
+    "@nrwl/workspace": "*",
     "app-root-path": "^2.0.1",
     "cosmiconfig": "4.0.0",
     "fs-extra": "6.0.0",
