@@ -57,7 +57,7 @@ export function addImportsToModule(context: RequestContext): Rule {
     const storeRouterModule = 'StoreRouterConnectingModule';
 
     // InsertImport [symbol,source] value pairs
-    const nxModuleImport = ['NxModule', '@nrwl/nx'];
+    const nxModuleImport = ['NxModule', '@nrwl/angular'];
     const storeModule = ['StoreModule', '@ngrx/store'];
     const effectsModule = ['EffectsModule', '@ngrx/effects'];
     const storeDevTools = ['StoreDevtoolsModule', '@ngrx/store-devtools'];

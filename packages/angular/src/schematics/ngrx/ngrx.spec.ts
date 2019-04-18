@@ -75,7 +75,7 @@ describe('ngrx', () => {
 
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
 
-    expect(appModule).toContain(`import { NxModule } from '@nrwl/nx';`);
+    expect(appModule).toContain(`import { NxModule } from '@nrwl/angular';`);
     expect(appModule).toContain('NxModule.forRoot');
     expect(appModule).toContain('StoreModule.forRoot');
     expect(appModule).toContain('EffectsModule.forRoot');
@@ -99,7 +99,7 @@ describe('ngrx', () => {
 
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
 
-    expect(appModule).toContain(`import { NxModule } from '@nrwl/nx';`);
+    expect(appModule).toContain(`import { NxModule } from '@nrwl/angular';`);
     expect(appModule).toContain('NxModule.forRoot');
     expect(appModule).toContain('StoreModule.forRoot');
     expect(appModule).toContain('EffectsModule.forRoot');
@@ -391,7 +391,7 @@ describe('ngrx', () => {
       const content = getFileContent(tree, `${statePath}/users.effects.ts`);
 
       [
-        `import { DataPersistence } from \'@nrwl/nx\'`,
+        `import { DataPersistence } from '@nrwl/angular'`,
         `
 import {
   LoadUsers,

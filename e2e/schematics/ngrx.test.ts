@@ -19,7 +19,6 @@ describe('ngrx', () => {
       `generate @nrwl/angular:ngrx users --module=apps/${myapp}/src/app/app.module.ts --root`
     );
     const packageJson = readJson('package.json');
-    expect(packageJson.dependencies['@nrwl/nx']).toBeDefined();
     expect(packageJson.dependencies['@ngrx/store']).toBeDefined();
     expect(packageJson.dependencies['@ngrx/effects']).toBeDefined();
     expect(packageJson.dependencies['@ngrx/router-store']).toBeDefined();

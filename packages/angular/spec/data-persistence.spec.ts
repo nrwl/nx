@@ -1,6 +1,6 @@
 import { Component, Injectable } from '@angular/core';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { Router, RouterStateSnapshot } from '@angular/router';
+import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Actions, Effect, EffectsModule, ofType } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
@@ -9,15 +9,14 @@ import { Store, StoreModule } from '@ngrx/store';
 import { Observable, of, Subject, throwError } from 'rxjs';
 import { delay, withLatestFrom } from 'rxjs/operators';
 
-import { DataPersistence } from '../index';
-import { NxModule } from '../src/nx.module';
-import { readAll } from '../testing';
 import {
-  FetchOpts,
+  DataPersistence,
   pessimisticUpdate,
   optimisticUpdate,
-  fetch
-} from '../src/data-persistence';
+  fetch,
+  NxModule
+} from '../index';
+import { readAll } from '../testing';
 
 // interfaces
 type Todo = {
@@ -52,7 +51,7 @@ function todosReducer(state: Todos, action: Action): Todos {
   }
 }
 
-function userReducer(state: string, action: Action): string {
+function userReducer(): string {
   return 'bob';
 }
 
@@ -237,10 +236,6 @@ describe('DataPersistence', () => {
         type: 'GET_TODOS';
       };
 
-      type GetTodo = {
-        type: 'GET_TODO';
-      };
-
       @Injectable()
       class TodoEffects {
         @Effect()
@@ -253,7 +248,7 @@ describe('DataPersistence', () => {
             }).pipe(delay(1));
           },
 
-          onError: (a, e: any) => null
+          onError: () => null
         });
 
         @Effect()
@@ -328,10 +323,9 @@ describe('DataPersistence', () => {
       class TodoEffects {
         @Effect()
         loadTodo = this.s.fetch<GetTodo>('GET_TODO', {
-          id: (a, state) => a.payload.id,
-          run: (a, state) =>
-            of({ type: 'TODO', payload: a.payload }).pipe(delay(1)),
-          onError: (a, e: any) => null
+          id: a => a.payload.id,
+          run: a => of({ type: 'TODO', payload: a.payload }).pipe(delay(1)),
+          onError: () => null
         });
 
         constructor(private s: DataPersistence<TodosState>) {}
@@ -382,7 +376,7 @@ describe('DataPersistence', () => {
             type: 'TODO_UPDATED',
             payload: { user: state.user, newTitle: a.payload.newTitle }
           }),
-          onError: (a, e: any) => null
+          onError: () => null
         });
 
         @Effect()
@@ -394,7 +388,7 @@ describe('DataPersistence', () => {
               type: 'TODO_UPDATED',
               payload: { user: state.user, newTitle: a.payload.newTitle }
             }),
-            onError: (a, e: any) => null
+            onError: () => null
           })
         );
 
@@ -455,7 +449,7 @@ describe('DataPersistence', () => {
       class TodoEffects {
         @Effect()
         loadTodo = this.s.pessimisticUpdate<UpdateTodo>('UPDATE_TODO', {
-          run: (a, state) => {
+          run: () => {
             throw new Error('boom');
           },
 
@@ -502,7 +496,7 @@ describe('DataPersistence', () => {
       class TodoEffects {
         @Effect()
         loadTodo = this.s.pessimisticUpdate<UpdateTodo>('UPDATE_TODO', {
-          run: (a, state) => {
+          run: () => {
             return throwError('boom');
           },
 
@@ -555,11 +549,11 @@ describe('DataPersistence', () => {
       class TodoEffects {
         @Effect()
         loadTodo = this.s.optimisticUpdate<UpdateTodo>('UPDATE_TODO', {
-          run: (a, state) => {
+          run: () => {
             throw new Error('boom');
           },
 
-          undoAction: (a, e: any) => ({
+          undoAction: a => ({
             type: 'UNDO_UPDATE_TODO',
             payload: a.payload
           })
@@ -570,11 +564,11 @@ describe('DataPersistence', () => {
           ofType<UpdateTodo>('UPDATE_TODO'),
           withLatestFrom(this.s.store),
           optimisticUpdate({
-            run: (a, state) => {
+            run: () => {
               throw new Error('boom');
             },
 
-            undoAction: (a, e: any) => ({
+            undoAction: a => ({
               type: 'UNDO_UPDATE_TODO',
               payload: a.payload
             })

@@ -26,7 +26,6 @@ if (!runsInWSL()) {
       updateFile('package.json', JSON.stringify(packageJson, null, 2));
       // confirm that @nrwl and @ngrx dependencies do not exist yet
       expect(packageJson.devDependencies['@nrwl/workspace']).not.toBeDefined();
-      expect(packageJson.dependencies['@nrwl/nx']).not.toBeDefined();
       expect(packageJson.dependencies['@ngrx/store']).not.toBeDefined();
       expect(packageJson.dependencies['@ngrx/effects']).not.toBeDefined();
       expect(packageJson.dependencies['@ngrx/router-store']).not.toBeDefined();
@@ -260,7 +259,6 @@ if (!runsInWSL()) {
       existingPackageJson.devDependencies[
         '@nrwl/workspace'
       ] = schematicsVersion;
-      existingPackageJson.dependencies['@nrwl/nx'] = nxVersion;
       existingPackageJson.dependencies['@ngrx/store'] = ngrxVersion;
       existingPackageJson.dependencies['@ngrx/effects'] = ngrxVersion;
       existingPackageJson.dependencies['@ngrx/router-store'] = ngrxVersion;
@@ -280,7 +278,6 @@ if (!runsInWSL()) {
       expect(packageJson.devDependencies['@nrwl/workspace']).toEqual(
         schematicsVersion
       );
-      expect(packageJson.dependencies['@nrwl/nx']).toEqual(nxVersion);
       expect(packageJson.dependencies['@ngrx/store']).toEqual(ngrxVersion);
       expect(packageJson.dependencies['@ngrx/effects']).toEqual(ngrxVersion);
       expect(packageJson.dependencies['@ngrx/router-store']).toEqual(

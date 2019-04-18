@@ -6,35 +6,10 @@ export interface ErrorGroup {
 }
 
 export class WorkspaceIntegrityChecks {
-  constructor(
-    private projectNodes: ProjectNode[],
-    private files: string[],
-    private packageJson: any
-  ) {}
+  constructor(private projectNodes: ProjectNode[], private files: string[]) {}
 
   run(): ErrorGroup[] {
-    return [
-      ...this.packageJsonConsistencyCheck(),
-      ...this.projectWithoutFilesCheck(),
-      ...this.filesWithoutProjects()
-    ];
-  }
-
-  private packageJsonConsistencyCheck(): ErrorGroup[] {
-    const nx = this.packageJson.dependencies['@nrwl/nx'];
-    const schematics = this.packageJson.devDependencies['@nrwl/workspace'];
-    if (schematics && nx && nx !== schematics) {
-      return [
-        {
-          header: 'The package.json is inconsistent',
-          errors: [
-            'The versions of the @nrwl/nx and @nrwl/workspace packages must be the same.'
-          ]
-        }
-      ];
-    } else {
-      return [];
-    }
+    return [...this.projectWithoutFilesCheck(), ...this.filesWithoutProjects()];
   }
 
   private projectWithoutFilesCheck(): ErrorGroup[] {

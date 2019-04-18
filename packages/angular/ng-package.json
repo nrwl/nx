@@ -7,5 +7,6 @@
       "@ngrx/router-store": "ngrx.routerStore",
       "@ngrx/store": "ngrx.store"
     }
-  }
+  },
+  "whitelistedNonPeerDependencies": ["@nrwl/", "@angular-devkit", "@schematics"]
 }

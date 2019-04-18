@@ -2,15 +2,6 @@ import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
 import { ProjectType } from './affected-apps';
 
 describe('WorkspaceIntegrityChecks', () => {
-  const packageJson = {
-    dependencies: {
-      '@nrwl/nx': '1.2.3'
-    },
-    devDependencies: {
-      '@nrwl/workspace': '1.2.3'
-    }
-  };
-
   describe('.angular-cli.json is in sync with the filesystem', () => {
     it('should not error when they are in sync', () => {
       const c = new WorkspaceIntegrityChecks(
@@ -28,8 +19,7 @@ describe('WorkspaceIntegrityChecks', () => {
             }
           }
         ],
-        ['libs/project1/src/index.ts'],
-        packageJson
+        ['libs/project1/src/index.ts']
       );
       expect(c.run().length).toEqual(0);
     });
@@ -60,8 +50,7 @@ describe('WorkspaceIntegrityChecks', () => {
             }
           }
         ],
-        ['libs/project2/src/index.ts'],
-        packageJson
+        ['libs/project2/src/index.ts']
       );
 
       const errors = c.run();
@@ -87,37 +76,13 @@ describe('WorkspaceIntegrityChecks', () => {
             files: ['libs/project1/src/index.ts']
           }
         ],
-        ['libs/project1/src/index.ts', 'libs/project2/src/index.ts'],
-        packageJson
+        ['libs/project1/src/index.ts', 'libs/project2/src/index.ts']
       );
 
       const errors = c.run();
       expect(errors.length).toEqual(1);
       expect(errors[0].errors[0]).toEqual(
         `The 'libs/project2/src/index.ts' file doesn't belong to any project.`
-      );
-    });
-  });
-
-  describe('package.json is consistent', () => {
-    it('should not error when @nrwl/nx and @nrwl/workspace are in sync', () => {
-      const c = new WorkspaceIntegrityChecks([], [], packageJson);
-      expect(c.run().length).toEqual(0);
-    });
-
-    it('should error when @nrwl/nx and @nrwl/workspace are not in sync', () => {
-      const c = new WorkspaceIntegrityChecks([], [], {
-        dependencies: {
-          '@nrwl/nx': '1.2.3'
-        },
-        devDependencies: {
-          '@nrwl/workspace': '4.5.6'
-        }
-      });
-      const errors = c.run();
-      expect(errors.length).toEqual(1);
-      expect(errors[0].errors[0]).toEqual(
-        `The versions of the @nrwl/nx and @nrwl/workspace packages must be the same.`
       );
     });
   });
