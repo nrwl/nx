@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/nx/testing",
+  "name": "@nrwl/angular/testing",
   "typings": "./index.d.ts",
   "main": "../bundles/nrwl-nx-testing.umd.js",
   "module": "../esm5/nrwl-nx-testing.js",

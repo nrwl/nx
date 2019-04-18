@@ -6,9 +6,8 @@ import { EffectsModule } from '@ngrx/effects';
 import {StoreModule} from '@ngrx/store';
 import {provideMockActions} from '@ngrx/effects/testing';
 
-import { NxModule } from '@nrwl/nx';
-import {DataPersistence} from '@nrwl/nx';
-import {hot} from '@nrwl/nx/testing';
+import { NxModule, DataPersistence } from '@nrwl/angular';
+import { hot } from '@nrwl/angular/testing';
 
 import { <%= className %>Effects } from './<%= fileName %>.effects';
 import { Load<%= className %>, <%= className %>Loaded } from './<%= fileName %>.actions';

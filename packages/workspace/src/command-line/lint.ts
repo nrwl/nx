@@ -7,18 +7,13 @@ import {
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
 import * as appRoot from 'app-root-path';
 import * as path from 'path';
-import * as fs from 'fs';
 
 export function lint() {
   const nodes = getProjectNodes(readAngularJson(), readNxJson());
-  const packageJson = JSON.parse(
-    fs.readFileSync(`${appRoot.path}/package.json`, 'utf-8')
-  );
 
   const errorGroups = new WorkspaceIntegrityChecks(
     nodes,
-    readAllFilesFromAppsAndLibs(),
-    packageJson
+    readAllFilesFromAppsAndLibs()
   ).run();
   if (errorGroups.length > 0) {
     errorGroups.forEach(g => {

@@ -14,8 +14,10 @@
     "Nx",
     "Angular CLI"
   ],
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "bundles/nrwl-angular.umd.js",
+  "types": "nrwl-angular.d.ts",
+  "module": "esm5/nrwl-angular.js",
+  "es2015": "esm2015/nrwl-angular.js",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -28,7 +30,8 @@
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "@nrwl/workspace": "*"
+    "@nrwl/workspace": "*",
+    "jasmine-marbles": "~0.4.0"
   },
   "dependencies": {
     "@schematics/angular": "~7.3.1",

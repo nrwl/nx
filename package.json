@@ -125,6 +125,9 @@
       "<rootDir>/packages",
       "collection/.*/files"
     ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/build/packages/angular/spec"
+    ],
     "collectCoverage": true,
     "coverageReporters": [
       "html"

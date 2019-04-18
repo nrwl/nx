@@ -22,7 +22,11 @@ getTestBed().initTestEnvironment(
   platformBrowserDynamicTesting()
 );
 
-const context = (<any>require).context('./packages/nx', true, /\.spec\.js$/);
+const context = (<any>require).context(
+  './packages/angular/spec',
+  true,
+  /\.spec\.js$/
+);
 // And load the modules.
 context.keys().map(context);
 // Finally, start Karma to run the tests.

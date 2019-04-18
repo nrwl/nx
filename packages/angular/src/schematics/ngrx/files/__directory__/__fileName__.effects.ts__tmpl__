@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Effect, Actions } from '@ngrx/effects';
-import { DataPersistence } from '@nrwl/nx';
+import { DataPersistence } from '@nrwl/angular';
 
 import { <%= className %>PartialState  } from './<%= fileName %>.reducer';
 import { Load<%= className %>, <%= className %>Loaded, <%= className %>LoadError, <%= className %>ActionTypes } from './<%= fileName %>.actions';
