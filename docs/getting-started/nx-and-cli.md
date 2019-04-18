@@ -138,7 +138,7 @@ Adding these tools to the dev workflow is challenging in a regular CLI project. 
 When using Nx, adding Cypress or Jest is easy:
 
 ```bash
-ng g application myapp --e2e-test-runner=cypress --unit-test-runner=jest # cyrpess and jest are actually defaults
+ng g application myapp --e2e-test-runner=cypress --unit-test-runner=jest # cypress and jest are actually defaults
 ng g application myapp --e2e-test-runner=protractor --unit-test-runner=karma
 ```
 

@@ -229,12 +229,12 @@ The files generated are shown below and include placeholders for the _comments_ 
 ###### comments.actions.ts
 
 ```typescript
-import {Action} from "@ngrx/store";
+import { Action } from '@ngrx/store';
 
 export enum CommentsActionTypes {
-  LoadComments = "[Comments] Load Comments",
-  CommentsLoaded = "[Comments] Comments Loaded"
-  CommentsLoadError = "[Comments] Comments Load Error"
+  LoadComments = '[Comments] Load Comments',
+  CommentsLoaded = '[Comments] Comments Loaded',
+  CommentsLoadError = '[Comments] Comments Load Error'
 }
 
 export class LoadComments implements Action {
@@ -247,7 +247,7 @@ export class CommentsLoadError implements Action {
 
 export class CommentsLoaded implements Action {
   readonly type = CommentsActionTypes.CommentsLoaded;
-  constructor(public payload: any[]) { }
+  constructor(public payload: any[]) {}
 }
 
 export type CommentsAction = LoadComments | CommentsLoaded | CommentsLoadError;
@@ -255,9 +255,8 @@ export type CommentsAction = LoadComments | CommentsLoaded | CommentsLoadError;
 export const fromCommentsActions = {
   LoadComments,
   CommentsLoaded,
-   CommentsLoadError
-}
-
+  CommentsLoadError
+};
 ```
 
 ###### comments.selectors.ts

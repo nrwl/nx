@@ -15,8 +15,8 @@ To illustrate how useful libraries can be, create a library of Angular component
 ```treeview
 myorg/
 ├── apps/
-│   ├── frontend/
-│   ├── frontend-e2e/
+│   ├── todos/
+│   ├── todos-e2e/
 │   └── api/
 ├── libs/
 │   ├── data/
@@ -24,8 +24,8 @@ myorg/
 │       ├── jest.conf.js
 │       ├── src/
 │       │   ├── lib/
-│       │   │  ├── ui.module.spec.ts
-│       │   │  └── ui.module.ts
+│       │   │   ├── ui.module.spec.ts
+│       │   │   └── ui.module.ts
 │       │   └── index.ts
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
@@ -61,8 +61,8 @@ ng g component todos --project=ui --export
 ```treeview
 myorg/
 ├── apps/
-│   ├── frontend/
-│   ├── frontend-e2e/
+│   ├── todos/
+│   ├── todos-e2e/
 │   └── api/
 ├── libs/
 │   ├── data/
@@ -70,13 +70,13 @@ myorg/
 │       ├── jest.conf.js
 │       ├── src/
 │       │   ├── lib/
-│       │   │  ├── todos/
-│       │   │  │   ├── todos.component.css
-│       │   │  │   ├── todos.component.html
-│       │   │  │   ├── todos.component.spec.ts
-│       │   │  │   └── todos.component.ts
-│       │   │  ├── ui.module.spec.ts
-│       │   │  └── ui.module.ts
+│       │   │   ├── todos/
+│       │   │   │   ├── todos.component.css
+│       │   │   │   ├── todos.component.html
+│       │   │   │   ├── todos.component.spec.ts
+│       │   │   │   └── todos.component.ts
+│       │   │   ├── ui.module.spec.ts
+│       │   │   └── ui.module.ts
 │       │   └── index.ts
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json

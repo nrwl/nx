@@ -48,7 +48,7 @@ happynrwl/
 │   └── angularapp-e2e/
 │       ├── src/
 │       │   ├── integrations/
-│       │   │   ├── app.spec.ts
+│       │   │   └── app.spec.ts
 │       │   ├── fixutres/
 │       │   ├── plugins/
 │       │   └── support/
@@ -134,8 +134,8 @@ happynrwl/
 │   └── reactapp-e2e/
 │       ├── src/
 │       │   ├── integrations/
-│       │   │   ├── app.spec.ts
-│       │   ├── fixtures//
+│       │   │   └── app.spec.ts
+│       │   ├── fixtures/
 │       │   ├── plugins/
 │       │   └── support/
 │       ├── cypress.json
