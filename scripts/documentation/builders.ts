@@ -1,6 +1,6 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { parseJsonSchemaToOptions } from '@angular/cli/utilities/json-schema';
+import { parseJsonSchemaToOptions } from './json-parser';
 import { dedent } from 'tslint/lib/utils';
 import { Schematic } from '@angular-devkit/schematics/collection-schema';
 import { CoreSchemaRegistry } from '@angular-devkit/core/src/json/schema';
@@ -49,7 +49,6 @@ function generateSchematicList(
         path.join(config.source, builderCollection[builderName]['schema'])
       )
     };
-
     return parseJsonSchemaToOptions(registry, builder.rawSchema)
       .then(options => ({ ...builder, options }))
       .catch(error =>
@@ -69,29 +68,42 @@ function generateTemplate(builder): { name: string; template: string } {
 
     builder.options
       .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
-      .forEach(
-        option =>
-          (template += dedent`
-          ### ${option.name} ${option.required ? '(*__required__*)' : ''} ${
-            option.hidden ? '(__hidden__)' : ''
-          }
-          
-          ${
-            !!option.aliases.length
-              ? `Alias(es): ${option.aliases.join(',')}\n`
-              : ''
-          }
-          ${
-            option.default === undefined || option.default === ''
-              ? ''
-              : `Default: \`${option.default}\`\n`
-          }
-          Type: \`${option.type}\` \n 
-          
-          
-          ${option.description}
-        `)
-      );
+      .forEach(option => {
+        template += dedent`
+            ### ${option.name} ${option.required ? '(*__required__*)' : ''} ${
+          option.hidden ? '(__hidden__)' : ''
+        }
+            
+            ${
+              !!option.aliases.length
+                ? `Alias(es): ${option.aliases.join(',')}\n`
+                : ''
+            }
+            ${
+              option.default === undefined || option.default === ''
+                ? ''
+                : `Default: \`${option.default}\`\n`
+            }
+            Type: \`${option.type}\` ${
+          option.arrayOfType ? `of \`${option.arrayOfType}\`` : ''
+        } \n 
+            
+            
+            ${option.description}
+          `;
+
+        if (option.arrayOfType && option.arrayOfValues) {
+          option.arrayOfValues.forEach(optionValue => {
+            template += dedent`
+              #### ${optionValue.name} ${
+              optionValue.required ? '(*__required__*)' : ''
+            }
+              Type: \`${optionValue.type}\` \n 
+              ${optionValue.description}
+            `;
+          });
+        }
+      });
   }
 
   return { name: builder.name, template };

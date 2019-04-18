@@ -4,6 +4,16 @@ Run commands
 
 ## Properties
 
+### commands
+
+Type: `array` of `object`
+
+#### command
+
+Type: `string`
+
+Command to run in child process
+
 ### parallel
 
 Default: `true`
