@@ -13,8 +13,8 @@ ng g lib data
 ```treeview
 myorg/
 ├── apps/
-│   ├── frontend/
-│   ├── frontend-e2e/
+│   ├── todos/
+│   ├── todos-e2e/
 │   └── api/
 ├── libs/
 │   └── data/

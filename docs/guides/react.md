@@ -63,7 +63,7 @@ myworkspace/
 │   └── frontend-e2e/
 │   │   ├── src/
 │   │   │   ├── integrations/
-│   │   │   │   ├── app.spec.ts
+│   │   │   │   └── app.spec.ts
 │   │   │   ├── fixutres/
 │   │   │   ├── plugins/
 │   │   │   └── support/

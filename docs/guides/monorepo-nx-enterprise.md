@@ -70,7 +70,7 @@ happynrwl/
 │   │    │   └── utils-testing/
 │   │    └── shared/
 │   │        └── ui/
-|   ├── adminapp/
+│   ├── adminapp/
 |   └── shared/
 │       ├── ui/
 │       └── utils-testing/

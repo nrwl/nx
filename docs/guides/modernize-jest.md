@@ -48,7 +48,7 @@ By default, Nx will use Jest when creating applications and libraries.
 └── tslint.json
 ```
 
-Older versions of Nx used Karam as a default test runner. For those workspace, you have provide the `--unit-test-runner=jest` option when creating applications or libraries.
+Older versions of Nx used Karma as a default test runner. For those workspace, you have provide the `--unit-test-runner=jest` option when creating applications or libraries.
 
 ### Running Tests
 
