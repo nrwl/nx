@@ -13,15 +13,12 @@ import {
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 
-import { NxJson } from '@nrwl/schematics';
-import {
-  updateJsonInTree,
-  readJsonInTree
-} from '@nrwl/schematics/src/utils/ast-utils';
-import { toFileName, names } from '@nrwl/schematics/src/utils/name-utils';
-import { formatFiles } from '@nrwl/schematics/src/utils/rules/format-files';
+import { NxJson } from '@nrwl/workspace';
+import { updateJsonInTree, readJsonInTree } from '@nrwl/workspace';
+import { toFileName, names } from '@nrwl/workspace';
+import { formatFiles } from '@nrwl/workspace';
 import { join, normalize } from 'path';
-import { offsetFromRoot } from '@nrwl/schematics/src/utils/common';
+import { offsetFromRoot } from '@nrwl/workspace';
 
 export interface NormalizedSchema extends Schema {
   name: string;

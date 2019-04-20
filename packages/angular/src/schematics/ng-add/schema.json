@@ -47,7 +47,7 @@
     },
     "skipInstall": {
       "type": "boolean",
-      "description": "Skip installing after adding @nrwl/schematics",
+      "description": "Skip installing after adding @nrwl/workspace",
       "default": false
     }
   }

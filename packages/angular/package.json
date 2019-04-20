@@ -28,7 +28,7 @@
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "@nrwl/schematics": "*"
+    "@nrwl/workspace": "*"
   },
   "dependencies": {
     "@angular-devkit/core": "~7.3.1",

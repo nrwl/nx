@@ -58,7 +58,7 @@ describe('NodeBuildBuilder', () => {
       builder.run({
         root: normalize('/root'),
         projectType: 'application',
-        builder: '@nrwl/builders:node-build',
+        builder: '@nrwl/node:build',
         options: testOptions
       });
 
@@ -79,7 +79,7 @@ describe('NodeBuildBuilder', () => {
         .run({
           root: normalize('/root'),
           projectType: 'application',
-          builder: '@nrwl/builders:node-build',
+          builder: '@nrwl/node:build',
           options: testOptions
         })
         .toPromise();
@@ -110,7 +110,7 @@ describe('NodeBuildBuilder', () => {
           .run({
             root: normalize('/root'),
             projectType: 'application',
-            builder: '@nrwl/builders:node-build',
+            builder: '@nrwl/node:build',
             options: {
               ...testOptions,
               statsJson: true
@@ -156,7 +156,7 @@ describe('NodeBuildBuilder', () => {
             root: normalize('/root'),
             sourceRoot: join(normalize('/root'), 'apps/nodeapp'),
             projectType: 'application',
-            builder: '@nrwl/builders:node-build',
+            builder: '@nrwl/node:build',
             options: {
               ...testOptions,
               webpackConfig: 'apps/nodeapp/webpack.config.js'

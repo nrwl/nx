@@ -6,8 +6,8 @@ import {
 
 import { join } from 'path';
 
-import { serializeJson } from '../../src/utils/fileutils';
-import { readJsonInTree, updateJsonInTree } from '../../src/utils/ast-utils';
+import { serializeJson } from '@nrwl/workspace';
+import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 const effectContents = `

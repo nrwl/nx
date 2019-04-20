@@ -10,7 +10,7 @@ import {
 } from '../utils';
 
 describe('Affected', () => {
-  it('should print, build, and test affected apps', () => {
+  fit('should print, build, and test affected apps', () => {
     ensureProject();
     const myapp = uniq('myapp');
     const myapp2 = uniq('myapp2');

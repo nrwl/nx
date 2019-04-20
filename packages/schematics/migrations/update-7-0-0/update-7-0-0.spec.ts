@@ -1,9 +1,9 @@
 import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { serializeJson } from '../../src/utils/fileutils';
+import { serializeJson } from '@nrwl/workspace';
 
 import * as path from 'path';
-import { updateJsonInTree } from '@nrwl/schematics/src/utils/ast-utils';
+import { updateJsonInTree } from '@nrwl/workspace';
 
 describe('Update 7.0.0', () => {
   let initialTree: Tree;

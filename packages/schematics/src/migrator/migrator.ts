@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { updateJsonFile, readCliConfigFile } from '../utils/fileutils';
+import { updateJsonFile, readCliConfigFile } from '@nrwl/workspace';
 
 type Migration = { description: string; run(): void };
 type MigrationName = { name: string; migration: Migration };

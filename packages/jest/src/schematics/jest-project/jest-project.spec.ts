@@ -1,6 +1,6 @@
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/schematics/testing';
-import { readJsonInTree, updateJsonInTree } from '@nrwl/schematics';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
+import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { runSchematic, callRule } from '../../utils/testing';
 
 describe('jestProject', () => {

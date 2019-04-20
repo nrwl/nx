@@ -12,10 +12,8 @@
     "declaration": true,
     "baseUrl": ".",
     "paths": {
-      "@nrwl/schematics": ["./packages/schematics"],
-      "@nrwl/schematics/*": ["./packages/schematics/*"],
-      "@nrwl/builders": ["./packages/builders"],
-      "@nrwl/builders/*": ["./packages/builders/*"]
+      "@nrwl/workspace": ["./packages/workspace"],
+      "@nrwl/workspace/testing": ["./packages/workspace/testing"]
     }
   },
   "exclude": [
@@ -23,6 +21,15 @@
     "build",
     "packages/bazel",
     "packages/schematics/src/*/files/**/*",
+    "packages/workspace/src/*/files/**/*",
+    "packages/jest/src/*/files/**/*",
+    "packages/cypress/src/*/files/**/*",
+    "packages/node/src/*/files/**/*",
+    "packages/express/src/*/files/**/*",
+    "packages/nest/src/*/files/**/*",
+    "packages/angular/src/*/files/**/*",
+    "packages/react/src/*/files/**/*",
+    "packages/web/src/*/files/**/*",
     "scripts"
   ],
   "angularCompilerOptions": {

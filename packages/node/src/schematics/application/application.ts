@@ -13,10 +13,10 @@ import {
 } from '@angular-devkit/schematics';
 import { join, normalize, Path } from '@angular-devkit/core';
 import { Schema } from './schema';
-import { updateJsonInTree } from '@nrwl/schematics';
-import { toFileName } from '@nrwl/schematics/src/utils/name-utils';
-import { getProjectConfig } from '@nrwl/schematics/src/utils/ast-utils';
-import { offsetFromRoot } from '@nrwl/schematics/src/utils/common';
+import { updateJsonInTree } from '@nrwl/workspace';
+import { toFileName } from '@nrwl/workspace';
+import { getProjectConfig } from '@nrwl/workspace';
+import { offsetFromRoot } from '@nrwl/workspace';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;

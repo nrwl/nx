@@ -11,12 +11,8 @@ import { getSourceNodes } from '@schematics/angular/utility/ast-utils';
 
 import * as ts from 'typescript';
 
-import {
-  updateJsonInTree,
-  readJsonInTree,
-  insert
-} from '../../src/utils/ast-utils';
-import { formatFiles } from '../../src/utils/rules/format-files';
+import { updateJsonInTree, readJsonInTree, insert } from '@nrwl/workspace';
+import { formatFiles } from '@nrwl/workspace';
 
 const addExtensionRecommendations = updateJsonInTree(
   '.vscode/extensions.json',

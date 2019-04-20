@@ -15,7 +15,7 @@ import {
 import typescript = require('typescript');
 import { WebBuildBuilderOptions } from '../builders/build/build.builder';
 import { convertBuildOptions } from './normalize';
-import { getBaseWebpackPartial, readTsConfig } from '@nrwl/builders';
+import { getBaseWebpackPartial, readTsConfig } from '@nrwl/workspace';
 
 export function getWebConfig(options: WebBuildBuilderOptions, logger: Logger) {
   const tsConfig = readTsConfig(options.tsConfig);

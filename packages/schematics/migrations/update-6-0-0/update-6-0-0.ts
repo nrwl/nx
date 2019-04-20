@@ -11,12 +11,12 @@ import {
   createOrUpdate,
   readJsonInTree,
   updateJsonInTree
-} from '../../src/utils/ast-utils';
-import { serializeJson, renameSync } from '../../src/utils/fileutils';
-import { parseTarget, serializeTarget } from '../../src/utils/cli-config-utils';
-import { offsetFromRoot } from '../../src/utils/common';
-import { formatFiles } from '../../src/utils/rules/format-files';
-import { NxJson } from '../../src/command-line/shared';
+} from '@nrwl/workspace';
+import { serializeJson, renameSync } from '@nrwl/workspace';
+import { parseTarget, serializeTarget } from '@nrwl/workspace';
+import { offsetFromRoot } from '@nrwl/workspace';
+import { formatFiles } from '@nrwl/workspace';
+import { NxJson } from '@nrwl/workspace';
 
 function createKarma(host: Tree, project: any) {
   const offset = offsetFromRoot(project.root);

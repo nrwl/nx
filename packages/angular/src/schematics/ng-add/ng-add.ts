@@ -10,7 +10,7 @@ import {
   readJsonInTree,
   addDepsToPackageJson,
   updateJsonInTree
-} from '@nrwl/schematics';
+} from '@nrwl/workspace';
 import {
   angularVersion,
   angularDevkitVersion,

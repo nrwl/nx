@@ -5,9 +5,9 @@ import {
   insert,
   readBootstrapInfo,
   removeFromNgModule
-} from '@nrwl/schematics/src/utils/ast-utils';
+} from '@nrwl/workspace';
 import { Schema } from './schema';
-import { formatFiles } from '@nrwl/schematics/src/utils/rules/format-files';
+import { formatFiles } from '@nrwl/workspace';
 import { addUpgradeToPackageJson } from '../../utils/upgrade';
 
 function updateMain(angularJsImport: string, options: Schema): Rule {

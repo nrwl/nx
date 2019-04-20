@@ -2,7 +2,7 @@ import * as path from 'path';
 
 import { Tree } from '@angular-devkit/schematics';
 import { Schema } from '../schema';
-import * as stringUtils from '@nrwl/schematics/src/utils/strings';
+import { stringUtils } from '@nrwl/workspace';
 
 /**
  * Schematic request context

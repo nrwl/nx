@@ -13,7 +13,7 @@ import {
 } from '../utils';
 
 if (!runsInWSL()) {
-  describe('Nrwl Convert to Nx Workspace', () => {
+  xdescribe('Nrwl Convert to Nx Workspace', () => {
     beforeEach(cleanup);
     afterAll(cleanup);
 
@@ -25,7 +25,7 @@ if (!runsInWSL()) {
       packageJson.description = 'some description';
       updateFile('package.json', JSON.stringify(packageJson, null, 2));
       // confirm that @nrwl and @ngrx dependencies do not exist yet
-      expect(packageJson.devDependencies['@nrwl/schematics']).not.toBeDefined();
+      expect(packageJson.devDependencies['@nrwl/workspace']).not.toBeDefined();
       expect(packageJson.dependencies['@nrwl/nx']).not.toBeDefined();
       expect(packageJson.dependencies['@ngrx/store']).not.toBeDefined();
       expect(packageJson.dependencies['@ngrx/effects']).not.toBeDefined();
@@ -52,7 +52,7 @@ if (!runsInWSL()) {
       updateFile('angular.json', JSON.stringify(angularCLIJson, null, 2));
 
       // run the command
-      runCLI('add @nrwl/schematics --npmScope projscope');
+      runCLI('add @nrwl/workspace --npmScope projscope');
 
       // check that prettier config exits and that files have been moved!
       checkFilesExist(
@@ -90,14 +90,14 @@ if (!runsInWSL()) {
         format: './node_modules/.bin/nx format:write',
         'format:write': './node_modules/.bin/nx format:write',
         'format:check': './node_modules/.bin/nx format:check',
-        update: 'ng update @nrwl/schematics',
+        update: 'ng update @nrwl/workspace',
         'update:check': 'ng update',
         'dep-graph': './node_modules/.bin/nx dep-graph',
         'workspace-schematic': './node_modules/.bin/nx workspace-schematic',
         help: './node_modules/.bin/nx help'
       });
       expect(
-        updatedPackageJson.devDependencies['@nrwl/schematics']
+        updatedPackageJson.devDependencies['@nrwl/workspace']
       ).toBeDefined();
       expect(updatedPackageJson.devDependencies['@angular/cli']).toBeDefined();
 
@@ -258,7 +258,7 @@ if (!runsInWSL()) {
       // update package.json
       const existingPackageJson = readJson('package.json');
       existingPackageJson.devDependencies[
-        '@nrwl/schematics'
+        '@nrwl/workspace'
       ] = schematicsVersion;
       existingPackageJson.dependencies['@nrwl/nx'] = nxVersion;
       existingPackageJson.dependencies['@ngrx/store'] = ngrxVersion;
@@ -274,10 +274,10 @@ if (!runsInWSL()) {
         })
       );
       // run the command
-      runCLI('add @nrwl/schematics --npmScope projscope --skip-install');
+      runCLI('add @nrwl/workspace --npmScope projscope --skip-install');
       // check that dependencies and devDependencies remained the same
       const packageJson = readJson('package.json');
-      expect(packageJson.devDependencies['@nrwl/schematics']).toEqual(
+      expect(packageJson.devDependencies['@nrwl/workspace']).toEqual(
         schematicsVersion
       );
       expect(packageJson.dependencies['@nrwl/nx']).toEqual(nxVersion);
@@ -306,8 +306,8 @@ if (!runsInWSL()) {
       // Add Universal
       runCLI('generate universal --client-project proj');
 
-      // Add @nrwl/schematics
-      runCLI('add @nrwl/schematics --npmScope projscope');
+      // Add @nrwl/workspace
+      runCLI('add @nrwl/workspace --npmScope projscope');
 
       checkFilesExist('apps/proj/tsconfig.server.json');
 
@@ -366,7 +366,7 @@ if (!runsInWSL()) {
       runCLI('add @ngrx/effects');
 
       // Add Nx
-      runCLI('add @nrwl/schematics');
+      runCLI('add @nrwl/workspace');
     });
 
     it('should handle workspaces with no e2e project', async () => {
@@ -379,9 +379,9 @@ if (!runsInWSL()) {
       delete existingAngularJson.projects['proj-e2e'];
       updateFile('angular.json', JSON.stringify(existingAngularJson, null, 2));
 
-      // Add @nrwl/schematics
+      // Add @nrwl/workspace
       const result = await runCLIAsync(
-        'add @nrwl/schematics --npmScope projscope --skip-install'
+        'add @nrwl/workspace --npmScope projscope --skip-install'
       );
 
       checkFilesExist(
@@ -406,8 +406,8 @@ if (!runsInWSL()) {
       ].architect.lint.options.tsConfig = ['e2e/tsconfig.e2e.json'];
       updateFile('angular.json', JSON.stringify(existingAngularJson, null, 2));
 
-      // Add @nrwl/schematics
-      runCLI('add @nrwl/schematics --npmScope projscope --skip-install');
+      // Add @nrwl/workspace
+      runCLI('add @nrwl/workspace --npmScope projscope --skip-install');
 
       const updatedAngularCLIJson = readJson('angular.json');
 
@@ -429,7 +429,7 @@ if (!runsInWSL()) {
       // Only remove e2e directory
       runCommand('mv e2e e2e-bak');
       try {
-        runCLI('add @nrwl/schematics --npmScope projscope --skip-install');
+        runCLI('add @nrwl/workspace --npmScope projscope --skip-install');
         fail('Did not handle not having a e2e directory');
       } catch (e) {
         expect(e.stderr.toString()).toContain(
@@ -443,7 +443,7 @@ if (!runsInWSL()) {
       // Remove package.json
       runCommand('mv package.json package.json.bak');
       try {
-        runCLI('add @nrwl/schematics --npmScope projscope --skip-install');
+        runCLI('add @nrwl/workspace --npmScope projscope --skip-install');
         fail('Did not handle not having a package.json');
       } catch (e) {
         expect(e.stderr.toString()).toContain(
@@ -457,7 +457,7 @@ if (!runsInWSL()) {
       // Remove src
       runCommand('mv src src-bak');
       try {
-        runCLI('add @nrwl/schematics --npmScope projscope --skip-install');
+        runCLI('add @nrwl/workspace --npmScope projscope --skip-install');
         fail('Did not handle not having a src directory');
       } catch (e) {
         expect(e.stderr.toString()).toContain('Path: src does not exist');

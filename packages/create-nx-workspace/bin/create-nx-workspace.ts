@@ -29,7 +29,7 @@ if (parsedArgs.help) {
 
 const nxTool = {
   name: 'Schematics',
-  packageName: '@nrwl/schematics'
+  packageName: '@nrwl/workspace'
 };
 let useYarn = true;
 

@@ -1,7 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/schematics/testing';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import * as stripJsonComments from 'strip-json-comments';
-import { readJsonInTree, NxJson } from '@nrwl/schematics';
+import { readJsonInTree, NxJson } from '@nrwl/workspace';
 import { runSchematic } from '../../utils/testing';
 
 describe('app', () => {

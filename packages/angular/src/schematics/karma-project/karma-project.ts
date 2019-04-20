@@ -14,9 +14,9 @@ import {
   readJsonInTree,
   updateJsonInTree,
   offsetFromRoot
-} from '@nrwl/schematics';
+} from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
-import { getProjectConfig } from '@nrwl/schematics/src/utils/ast-utils';
+import { getProjectConfig } from '@nrwl/workspace';
 
 export interface KarmaProjectSchema {
   project: string;

@@ -8,7 +8,7 @@ import {
   url
 } from '@angular-devkit/schematics';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { updateJsonInTree } from '../../src/utils/ast-utils';
+import { updateJsonInTree } from '@nrwl/workspace';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
 function displayInformation(_, context: SchematicContext) {

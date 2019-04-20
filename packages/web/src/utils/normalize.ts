@@ -2,7 +2,7 @@ import { Path } from '@angular-devkit/core';
 import { resolve } from 'path';
 import { BuildOptions } from '@angular-devkit/build-angular/src/angular-cli-files/models/build-options';
 import { NormalizedBrowserBuilderSchema } from '@angular-devkit/build-angular';
-import { normalizeBuildOptions } from '@nrwl/builders';
+import { normalizeBuildOptions } from '@nrwl/workspace';
 import { WebBuildBuilderOptions } from '../builders/build/build.builder';
 
 export function normalizeWebBuildOptions(

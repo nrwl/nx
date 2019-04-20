@@ -1,4 +1,4 @@
-import { updateJsonFile } from '../../src/utils/fileutils';
+import { updateJsonFile } from '@nrwl/workspace';
 
 export default {
   description: 'Add update, update:skip, update:check scripts',

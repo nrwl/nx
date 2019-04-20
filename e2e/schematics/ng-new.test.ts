@@ -9,7 +9,7 @@ import {
   uniq,
   updateFile
 } from '../utils';
-import { toClassName } from '@nrwl/schematics/src/utils/name-utils';
+import { toClassName } from '@nrwl/workspace';
 
 describe('Nrwl Workspace', () => {
   beforeEach(() => {

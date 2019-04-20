@@ -1,8 +1,8 @@
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/schematics/testing';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { getFileContent } from '@schematics/angular/utility/test';
 import * as stripJsonComments from 'strip-json-comments';
-import { readJsonInTree, updateJsonInTree, NxJson } from '@nrwl/schematics';
+import { readJsonInTree, updateJsonInTree, NxJson } from '@nrwl/workspace';
 import { runSchematic, callRule } from '../../utils/testing';
 
 describe('app', () => {
@@ -303,7 +303,7 @@ describe('app', () => {
       const angularJson = readJsonInTree(result, 'angular.json');
 
       expect(angularJson.projects['my-app'].schematics).toEqual({
-        '@nrwl/schematics:component': {
+        '@nrwl/workspace:component': {
           style: 'scss'
         }
       });

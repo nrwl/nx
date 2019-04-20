@@ -4,9 +4,9 @@ import {
   SchematicContext,
   chain
 } from '@angular-devkit/schematics';
-import { updateJsonInTree } from '../../src/utils/ast-utils';
+import { updateJsonInTree } from '@nrwl/workspace';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { NxJson } from '../../src/command-line/shared';
+import { NxJson } from '@nrwl/workspace';
 
 function displayInformation(host: Tree, context: SchematicContext) {
   context.logger.info(stripIndents`

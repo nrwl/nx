@@ -12,7 +12,7 @@ import {
 } from '@angular-devkit/schematics';
 import { join, normalize, Path } from '@angular-devkit/core';
 import { Schema } from './schema';
-import { toFileName } from '@nrwl/schematics/src/utils/name-utils';
+import { toFileName } from '@nrwl/workspace';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;

@@ -3,8 +3,8 @@ import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 
 import * as path from 'path';
 
-import { serializeJson } from '../../src/utils/fileutils';
-import { readJsonInTree } from '../../src/utils/ast-utils';
+import { serializeJson } from '@nrwl/workspace';
+import { readJsonInTree } from '@nrwl/workspace';
 
 describe('Update 7.5.0', () => {
   let initialTree: Tree;

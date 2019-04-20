@@ -1,5 +1,5 @@
 import { Rule, externalSchematic, chain } from '@angular-devkit/schematics';
-import { updateJsonInTree } from '@nrwl/schematics/src/utils/ast-utils';
+import { updateJsonInTree } from '@nrwl/workspace';
 
 export default function(): Rule {
   return chain([

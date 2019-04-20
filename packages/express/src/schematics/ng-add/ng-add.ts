@@ -1,8 +1,5 @@
 import { Rule, chain, externalSchematic } from '@angular-devkit/schematics';
-import {
-  addDepsToPackageJson,
-  updateJsonInTree
-} from '@nrwl/schematics/src/utils/ast-utils';
+import { addDepsToPackageJson, updateJsonInTree } from '@nrwl/workspace';
 import {
   expressTypingsVersion,
   expressVersion,

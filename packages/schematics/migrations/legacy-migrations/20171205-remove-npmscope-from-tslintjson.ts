@@ -1,4 +1,4 @@
-import { updateJsonFile } from '../../src/utils/fileutils';
+import { updateJsonFile } from '@nrwl/workspace';
 
 export default {
   description: 'Remove npmScope from tslint.json',

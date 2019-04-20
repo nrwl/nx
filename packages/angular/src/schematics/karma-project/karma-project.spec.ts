@@ -1,7 +1,7 @@
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/schematics/testing';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
-import { readJsonInTree } from '@nrwl/schematics/src/utils/ast-utils';
+import { readJsonInTree } from '@nrwl/workspace';
 
 describe('karmaProject', () => {
   let appTree: Tree;

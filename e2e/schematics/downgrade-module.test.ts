@@ -1,4 +1,10 @@
-import { ensureProject, runCLI, uniq, updateFile } from '../utils';
+import {
+  ensureProject,
+  patchKarmaToWorkOnWSL,
+  runCLI,
+  uniq,
+  updateFile
+} from '../utils';
 
 describe('DowngradeModule', () => {
   it('should generate a downgradeModule setup', async () => {
@@ -6,6 +12,7 @@ describe('DowngradeModule', () => {
 
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/angular:app ${myapp} --unit-test-runner=karma`);
+    patchKarmaToWorkOnWSL();
 
     updateFile(
       `apps/${myapp}/src/legacy.js`,

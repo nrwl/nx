@@ -12,8 +12,8 @@ import {
 } from '@angular-devkit/schematics';
 import { join, normalize, Path } from '@angular-devkit/core';
 import { Schema } from './schema';
-import { updateJsonInTree } from '@nrwl/schematics';
-import { toFileName } from '@nrwl/schematics/src/utils/name-utils';
+import { updateJsonInTree } from '@nrwl/workspace';
+import { toFileName } from '@nrwl/workspace';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;

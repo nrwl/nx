@@ -1,7 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
 
-import { readJsonInTree } from '@nrwl/schematics';
-import { createEmptyWorkspace } from '@nrwl/schematics/testing';
+import { readJsonInTree } from '@nrwl/workspace';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 
 import { runSchematic } from '../../utils/testing';
 

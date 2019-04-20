@@ -46,7 +46,7 @@ try {
     "projectType": "application",
     "architect": {
       "e2e": {
-        "builder": "@nrwl/builders:cypress",
+        "builder": "@nrwl/cypress:cypress",
         "options": {
           "cypressConfig": "apps/my-app-e2e/cypress.json",
           "tsConfig": "apps/my-app-e2e/tsconfig.json",

@@ -1,8 +1,8 @@
 import { chain, Rule, Tree } from '@angular-devkit/schematics';
 
-import { updateJsonInTree, insert } from '../../src/utils/ast-utils';
-import { formatFiles } from '../../src/utils/rules/format-files';
-import { Framework } from '../../src/utils/frameworks';
+import { updateJsonInTree, insert } from '@nrwl/workspace';
+import { formatFiles } from '@nrwl/workspace';
+import { Framework } from '@nrwl/workspace';
 
 import * as ts from 'typescript';
 import { getSourceNodes } from '@schematics/angular/utility/ast-utils';

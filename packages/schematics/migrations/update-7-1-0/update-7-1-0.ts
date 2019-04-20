@@ -4,7 +4,7 @@ import {
   SchematicContext,
   Tree
 } from '@angular-devkit/schematics';
-import { updateJsonInTree } from '../../src/utils/ast-utils';
+import { updateJsonInTree } from '@nrwl/workspace';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 function displayInformation(host: Tree, context: SchematicContext) {

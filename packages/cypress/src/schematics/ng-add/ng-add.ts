@@ -2,11 +2,8 @@ import { Rule, Tree, noop, chain } from '@angular-devkit/schematics';
 
 import { Schema } from './schema';
 import { cypressVersion, nxVersion } from '../../utils/versions';
-import { readJsonInTree } from '@nrwl/schematics';
-import {
-  addDepsToPackageJson,
-  updateJsonInTree
-} from '@nrwl/schematics/src/utils/ast-utils';
+import { readJsonInTree } from '@nrwl/workspace';
+import { addDepsToPackageJson, updateJsonInTree } from '@nrwl/workspace';
 
 function checkDependenciesInstalled(): Rule {
   return (host: Tree): Rule => {

@@ -5,8 +5,8 @@ import {
   noop,
   Tree
 } from '@angular-devkit/schematics';
-import { updateJsonInTree, readJsonInTree } from '@nrwl/schematics';
-import { addDepsToPackageJson } from '@nrwl/schematics/src/utils/ast-utils';
+import { updateJsonInTree, readJsonInTree } from '@nrwl/workspace';
+import { addDepsToPackageJson } from '@nrwl/workspace';
 import {
   nxVersion,
   documentRegisterElementVersion
