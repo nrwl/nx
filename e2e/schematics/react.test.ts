@@ -9,7 +9,7 @@ import {
   renameFile,
   readJson
 } from '../utils';
-import { serializeJson } from '@nrwl/schematics/src/utils/fileutils';
+import { serializeJson } from '@nrwl/workspace';
 
 describe('React Applications', () => {
   it('should be able to generate a react app + lib', async () => {

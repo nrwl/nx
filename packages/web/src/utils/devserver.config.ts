@@ -11,7 +11,7 @@ import { Logger } from '@angular-devkit/core/src/logger';
 import { WebBuildBuilderOptions } from '../builders/build/build.builder';
 import { WebDevServerOptions } from '../builders/dev-server/dev-server.builder';
 import { buildServePath } from './serve-path';
-import { OptimizationOptions } from '@nrwl/builders';
+import { OptimizationOptions } from '@nrwl/workspace';
 
 export function getDevServerConfig(
   buildOptions: WebBuildBuilderOptions,

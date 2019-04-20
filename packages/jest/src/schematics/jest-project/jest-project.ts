@@ -11,12 +11,9 @@ import {
   noop,
   filter
 } from '@angular-devkit/schematics';
-import { readJsonInTree, updateJsonInTree } from '@nrwl/schematics';
-import {
-  getProjectConfig,
-  addDepsToPackageJson
-} from '@nrwl/schematics/src/utils/ast-utils';
-import { offsetFromRoot } from '@nrwl/schematics/src/utils/common';
+import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
+import { getProjectConfig, addDepsToPackageJson } from '@nrwl/workspace';
+import { offsetFromRoot } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 
 export interface JestProjectSchema {

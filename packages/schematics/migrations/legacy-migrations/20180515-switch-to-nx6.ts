@@ -1,5 +1,5 @@
 import { existsSync } from 'fs';
-import { readJsonFile, updateJsonFile } from '../../src/utils/fileutils';
+import { readJsonFile, updateJsonFile } from '@nrwl/workspace';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { execSync } from 'child_process';
 import { join } from 'path';

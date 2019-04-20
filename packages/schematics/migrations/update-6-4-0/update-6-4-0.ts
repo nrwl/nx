@@ -1,5 +1,5 @@
 import { Rule, SchematicContext, chain } from '@angular-devkit/schematics';
-import { updateJsonInTree } from '../../src/utils/ast-utils';
+import { updateJsonInTree } from '@nrwl/workspace';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
 function updateDependencies() {

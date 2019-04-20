@@ -3,7 +3,7 @@ import * as yargs from 'yargs';
 import * as path from 'path';
 import { dedent } from 'tslint/lib/utils';
 
-import { commandsObject } from '../../packages/schematics/src/command-line/nx-commands';
+import { commandsObject } from '@nrwl/workspace';
 import { sortAlphabeticallyFunction } from './utils';
 
 const commandsOutputDirectory = path.join(

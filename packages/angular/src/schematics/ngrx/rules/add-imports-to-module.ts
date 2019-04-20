@@ -2,16 +2,12 @@ import { Rule, Tree } from '@angular-devkit/schematics';
 import { Change } from '@schematics/angular/utility/change';
 import { insertImport } from '@schematics/angular/utility/ast-utils';
 import * as ts from 'typescript';
-import {
-  toClassName,
-  toFileName,
-  toPropertyName
-} from '@nrwl/schematics/src/utils/name-utils';
+import { toClassName, toFileName, toPropertyName } from '@nrwl/workspace';
 import {
   insert,
   addImportToModule,
   addProviderToModule
-} from '@nrwl/schematics/src/utils/ast-utils';
+} from '@nrwl/workspace';
 import { RequestContext } from './request-context';
 
 export function addImportsToModule(context: RequestContext): Rule {

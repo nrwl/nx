@@ -1,20 +1,16 @@
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
 import { getFileContent } from '@schematics/angular/utility/test';
-import { readJsonInTree } from '@nrwl/schematics/src/utils/ast-utils';
+import { readJsonInTree } from '@nrwl/workspace';
 
-import { findModuleParent } from '@nrwl/schematics/src/utils/name-utils';
-import {
-  AppConfig,
-  getLibConfig,
-  getAppConfig
-} from '@nrwl/schematics/src/utils/testing-utils';
+import { findModuleParent } from '@nrwl/workspace';
+import { AppConfig, getLibConfig, getAppConfig } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 import {
   createApp,
   createLib,
   createEmptyWorkspace
-} from '@nrwl/schematics/testing';
+} from '@nrwl/workspace/testing';
 
 describe('ngrx', () => {
   let appTree: Tree;

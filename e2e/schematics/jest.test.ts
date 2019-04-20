@@ -9,10 +9,10 @@ describe('Jest', () => {
     runCLI(`generate @nrwl/angular:lib ${mylib} --unit-test-runner jest`);
 
     await Promise.all([
-      runCLIAsync(`generate service test --project ${myapp}`),
-      runCLIAsync(`generate component test --project ${myapp}`),
-      runCLIAsync(`generate service test --project ${mylib}`),
-      runCLIAsync(`generate component test --project ${mylib}`)
+      runCLIAsync(`generate @nrwl/angular:service test --project ${myapp}`),
+      runCLIAsync(`generate @nrwl/angular:component test --project ${myapp}`),
+      runCLIAsync(`generate @nrwl/angular:service test --project ${mylib}`),
+      runCLIAsync(`generate @nrwl/angular:component test --project ${mylib}`)
     ]);
     const appResult = await runCLIAsync(`test ${myapp}`);
     expect(appResult.stderr).toContain('Test Suites: 3 passed, 3 total');

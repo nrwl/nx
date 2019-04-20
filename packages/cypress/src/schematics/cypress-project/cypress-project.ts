@@ -9,9 +9,9 @@ import {
 } from '@angular-devkit/schematics';
 import { join, normalize } from '@angular-devkit/core';
 // app
-import { updateJsonInTree, NxJson } from '@nrwl/schematics';
-import { offsetFromRoot } from '@nrwl/schematics/src/utils/common';
-import { toFileName } from '@nrwl/schematics/src/utils/name-utils';
+import { updateJsonInTree, NxJson } from '@nrwl/workspace';
+import { offsetFromRoot } from '@nrwl/workspace';
+import { toFileName } from '@nrwl/workspace';
 import { Schema } from './schema';
 
 export interface CypressProjectSchema extends Schema {

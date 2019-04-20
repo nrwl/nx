@@ -15,7 +15,7 @@ import {
 import { Schema } from './schema';
 import * as path from 'path';
 
-import { names, toFileName } from '@nrwl/schematics/src/utils/name-utils';
+import { names, toFileName } from '@nrwl/workspace';
 
 import {
   addImportsToModule,
@@ -23,7 +23,7 @@ import {
   addExportsToBarrel,
   RequestContext
 } from './rules';
-import { formatFiles } from '@nrwl/schematics/src/utils/rules/format-files';
+import { formatFiles } from '@nrwl/workspace';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
 /**

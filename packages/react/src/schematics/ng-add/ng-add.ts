@@ -9,7 +9,7 @@ import {
   addDepsToPackageJson,
   updateJsonInTree,
   readJsonInTree
-} from '@nrwl/schematics/src/utils/ast-utils';
+} from '@nrwl/workspace';
 import {
   frameworkVersion,
   typesVersion,

@@ -49,7 +49,7 @@ describe('Cypress builder', () => {
         .run({
           root: normalize('/root'),
           projectType: 'application',
-          builder: '@nrwl/builders:cypress',
+          builder: 'CYPRESSBUILDER',
           options: cypressBuilderOptions
         })
         .subscribe(() => {
@@ -78,7 +78,7 @@ describe('Cypress builder', () => {
         .run({
           root: normalize('/root'),
           projectType: 'application',
-          builder: '@nrwl/builders:cypress',
+          builder: 'CYPRESSBUILDER',
           options: cypressBuilderOptions
         })
         .subscribe(() => {
@@ -107,7 +107,7 @@ describe('Cypress builder', () => {
         .run({
           root: normalize('/root'),
           projectType: 'application',
-          builder: '@nrwl/builders:cypress',
+          builder: 'CYPRESSBUILDER',
           options: Object.assign(cypressBuilderOptions, { headless: false })
         })
         .subscribe(() => {
@@ -135,7 +135,7 @@ describe('Cypress builder', () => {
         .run({
           root: normalize('/root'),
           projectType: 'application',
-          builder: '@nrwl/builders:cypress',
+          builder: 'CYPRESSBUILDER',
           options: Object.assign(cypressBuilderOptions, {
             baseUrl: 'http://my-distant-host.com'
           })
@@ -164,7 +164,7 @@ describe('Cypress builder', () => {
         .run({
           root: normalize('/root'),
           projectType: 'application',
-          builder: '@nrwl/builders:cypress',
+          builder: 'CYPRESSBUILDER',
           options: Object.assign(cypressBuilderOptions, {
             browser: 'chrome'
           })
@@ -193,7 +193,7 @@ describe('Cypress builder', () => {
         .run({
           root: normalize('/root'),
           projectType: 'application',
-          builder: '@nrwl/builders:cypress',
+          builder: 'CYPRESSBUILDER',
           options: {
             cypressConfig: 'apps/my-app-e2e/cypress.json',
             tsConfig: 'apps/my-app-e2e/tsconfig.json',
@@ -236,7 +236,7 @@ describe('Cypress builder', () => {
         .run({
           root: normalize('/root'),
           projectType: 'application',
-          builder: '@nrwl/builders:cypress',
+          builder: 'CYPRESSBUILDER',
           options: {
             cypressConfig: 'apps/my-app-e2e/cypress.json',
             tsConfig: 'apps/my-app-e2e/tsconfig.e2e.json',
@@ -278,7 +278,7 @@ describe('Cypress builder', () => {
         .run({
           root: normalize('/root'),
           projectType: 'application',
-          builder: '@nrwl/builders:cypress',
+          builder: 'CYPRESSBUILDER',
           options: {
             cypressConfig: 'apps/my-app-e2e/cypress.json',
             tsConfig: 'apps/my-app-e2e/tsconfig.e2e.json',

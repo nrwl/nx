@@ -1,6 +1,6 @@
-import { createEmptyWorkspace } from '@nrwl/schematics/testing';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { Tree } from '@angular-devkit/schematics';
-import { readJsonInTree } from '@nrwl/schematics';
+import { readJsonInTree } from '@nrwl/workspace';
 import { runSchematic } from '../../utils/testing';
 
 describe('karma', () => {

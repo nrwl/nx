@@ -5,8 +5,8 @@ import {
 } from '@angular-devkit/schematics/testing';
 
 import { join } from 'path';
-import { readJsonInTree } from '../../src/utils/ast-utils';
-import { serializeJson } from '../../src/utils/fileutils';
+import { readJsonInTree } from '@nrwl/workspace';
+import { serializeJson } from '@nrwl/workspace';
 
 describe('Update 7.7.0', () => {
   let initialTree: Tree;

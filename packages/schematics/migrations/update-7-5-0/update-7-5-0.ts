@@ -1,6 +1,6 @@
 import { Rule, chain, externalSchematic } from '@angular-devkit/schematics';
 
-import { updateJsonInTree } from '../../src/utils/ast-utils';
+import { updateJsonInTree } from '@nrwl/workspace';
 
 const updateAngularCLI = externalSchematic('@schematics/update', 'update', {
   packages: ['@angular/cli'],

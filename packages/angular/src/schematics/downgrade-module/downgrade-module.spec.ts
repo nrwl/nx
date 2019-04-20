@@ -1,10 +1,10 @@
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
-import { createApp, createEmptyWorkspace } from '@nrwl/schematics/testing';
+import { createApp, createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 import { getFileContent } from '@schematics/angular/utility/test';
-import { readJsonInTree } from '@nrwl/schematics';
+import { readJsonInTree } from '@nrwl/workspace';
 
 describe('downgrade-module', () => {
   let appTree: Tree;

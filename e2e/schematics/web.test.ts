@@ -11,7 +11,6 @@ describe('Web Components Applications', () => {
     ensureProject();
     const appName = uniq('app');
 
-    runCLI(`add @nrwl/web`);
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
 
     const lintResults = runCLI(`lint ${appName}`);

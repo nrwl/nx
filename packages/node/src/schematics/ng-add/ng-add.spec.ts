@@ -1,8 +1,8 @@
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/schematics/testing';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { join } from 'path';
-import { readJsonInTree } from '@nrwl/schematics';
+import { readJsonInTree } from '@nrwl/workspace';
 
 describe('ng-add', () => {
   let tree: Tree;

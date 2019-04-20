@@ -10,20 +10,39 @@ export function uniq(prefix: string) {
 }
 
 export function runNgNew(command?: string, silent?: boolean): string {
-  const buffer = execSync(
-    `../node_modules/.bin/ng new proj --no-interactive ${command}`,
+  const gen = execSync(
+    `../node_modules/.bin/ng new proj --no-interactive --skip-install ${command}`,
     {
       cwd: `./tmp`,
       ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
     }
   );
-  return buffer ? buffer.toString() : null;
+
+  const p = readFileSync('./tmp/proj/package.json').toString();
+  const workspacePath = path.join(getCwd(), 'build', 'packages', 'workspace');
+  const angularPath = path.join(getCwd(), 'build', 'packages', 'angular');
+  writeFileSync(
+    './tmp/proj/package.json',
+    p
+      .replace(
+        '"@nrwl/workspace": "*"',
+        `"@nrwl/workspace": "file:${workspacePath}"`
+      )
+      .replace('"@nrwl/angular": "*"', `"@nrwl/angular": "file:${angularPath}"`)
+  );
+  const install = execSync('yarn install', {
+    cwd: './tmp/proj',
+    ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
+  });
+  return silent
+    ? null
+    : `${gen ? gen.toString() : ''}${install ? install.toString() : ''}`;
 }
 
 export function newProject(): void {
   cleanup();
   if (!directoryExists('./tmp/proj_backup')) {
-    runNgNew('--collection=@nrwl/schematics --npmScope=proj', true);
+    runNgNew('--collection=@nrwl/workspace --npmScope=proj', true);
     copyMissingPackages();
     runCLI('add @nrwl/jest');
     runCLI('add @nrwl/cypress');
@@ -193,18 +212,6 @@ export function runCLI(
 export function expectTestsPass(v: { stdout: string; stderr: string }) {
   expect(v.stderr).toContain('Ran all test suites');
   expect(v.stderr).not.toContain('fail');
-}
-
-export function newApp(name: string): string {
-  const r = runCLI(`generate app --no-interactive ${name}`);
-  patchKarmaToWorkOnWSL();
-  return r;
-}
-
-export function newLib(name: string): string {
-  const r = runCLI(`generate lib --no-interactive ${name}`);
-  patchKarmaToWorkOnWSL();
-  return r;
 }
 
 export function runCommand(command: string): string {

@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/builders",
   "version": "0.0.1",
-  "description": "Angular CLI power-ups for modern Web development: Builders",
+  "description": "Deprecated package. Use @nrwl/workspace, @nrwl/web, @nrwl/node, @nrwl/jest, @nrwl/cypress instead.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nrwl/nx.git"

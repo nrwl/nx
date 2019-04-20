@@ -12,11 +12,7 @@ import {
   url
 } from '@angular-devkit/schematics';
 
-import {
-  names,
-  toClassName,
-  toFileName
-} from '@nrwl/schematics/src/utils/name-utils';
+import { names, toClassName, toFileName } from '@nrwl/workspace';
 import * as path from 'path';
 import {
   addDeclarationToModule,
@@ -28,11 +24,11 @@ import {
   insert,
   readBootstrapInfo,
   removeFromNgModule
-} from '@nrwl/schematics/src/utils/ast-utils';
+} from '@nrwl/workspace';
 import { insertImport } from '@schematics/angular/utility/ast-utils';
 import { Schema } from './schema';
 import { addUpgradeToPackageJson } from '../../utils/upgrade';
-import { formatFiles } from '@nrwl/schematics/src/utils/rules/format-files';
+import { formatFiles } from '@nrwl/workspace';
 
 function addImportsToModule(options: Schema): Rule {
   return (host: Tree) => {

@@ -1,0 +1,41 @@
+{
+  "name": "<%= utils.dasherize(name) %>",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "test": "ng test",
+    "lint": "./node_modules/.bin/nx lint && ng lint",
+    "e2e": "ng e2e",
+    "affected:apps": "./node_modules/.bin/nx affected:apps",
+    "affected:libs": "./node_modules/.bin/nx affected:libs",
+    "affected:build": "./node_modules/.bin/nx affected:build",
+    "affected:e2e": "./node_modules/.bin/nx affected:e2e",
+    "affected:test": "./node_modules/.bin/nx affected:test",
+    "affected:lint": "./node_modules/.bin/nx affected:lint",
+    "affected:dep-graph": "./node_modules/.bin/nx affected:dep-graph",
+    "affected": "./node_modules/.bin/nx affected",
+    "format": "./node_modules/.bin/nx format:write",
+    "format:write": "./node_modules/.bin/nx format:write",
+    "format:check": "./node_modules/.bin/nx format:check",
+    "update": "ng update @nrwl/workspace",
+    "update:check": "ng update",
+    "workspace-schematic": "./node_modules/.bin/nx workspace-schematic",
+    "dep-graph": "./node_modules/.bin/nx dep-graph",
+    "help": "./node_modules/.bin/nx help"
+  },
+  "private": true,
+  "dependencies": {},
+  "devDependencies": {
+    "@nrwl/workspace": "<%= nxVersion %>",
+    "@angular/cli": "<%= angularCliVersion %>",
+    "@types/node": "~8.9.4",
+    "dotenv": "6.2.0",
+    "ts-node": "~7.0.0",
+    "tslint": "~5.11.0",
+    "typescript": "<%= typescriptVersion %>",
+    "prettier": "<%= prettierVersion %>"
+  }
+}

@@ -11,12 +11,12 @@ import { Observable } from 'rxjs';
 import { writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { map } from 'rxjs/operators';
-import { getNodeWebpackConfig } from '../../../../node/src/utils/node.config';
+import { getNodeWebpackConfig } from '../../utils/node.config';
 import {
   BuildBuilderOptions,
   normalizeBuildOptions,
   OUT_FILENAME
-} from '@nrwl/builders';
+} from '@nrwl/workspace';
 
 try {
   require('dotenv').config();

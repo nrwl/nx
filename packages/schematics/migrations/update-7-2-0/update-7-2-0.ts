@@ -10,9 +10,9 @@ import { normalize, join, Path, dirname } from '@angular-devkit/core';
 
 import { relative } from 'path';
 
-import { updateJsonInTree, readJsonInTree } from '../../src/utils/ast-utils';
-import { getWorkspacePath } from '../../src/utils/cli-config-utils';
-import { offsetFromRoot } from '../../src/utils/common';
+import { updateJsonInTree, readJsonInTree } from '@nrwl/workspace';
+import { getWorkspacePath } from '@nrwl/workspace';
+import { offsetFromRoot } from '@nrwl/workspace';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 function getBuilders(project: any): string[] {

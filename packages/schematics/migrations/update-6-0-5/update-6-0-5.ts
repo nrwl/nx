@@ -4,7 +4,7 @@ import {
   SchematicContext,
   chain
 } from '@angular-devkit/schematics';
-import { updateJsonInTree } from '../../src/utils/ast-utils';
+import { updateJsonInTree } from '@nrwl/workspace';
 
 export default function(): Rule {
   return updateJsonInTree('package.json', packageJson => {

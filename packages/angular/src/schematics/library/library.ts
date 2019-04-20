@@ -24,25 +24,21 @@ import {
   updateJsonInTree,
   readJsonInTree,
   offsetFromRoot
-} from '@nrwl/schematics';
+} from '@nrwl/workspace';
 import {
   addGlobal,
   addImportToModule,
   addIncludeToTsConfig,
   addRoute,
   insert
-} from '@nrwl/schematics/src/utils/ast-utils';
-import {
-  toClassName,
-  toFileName,
-  toPropertyName
-} from '@nrwl/schematics/src/utils/name-utils';
+} from '@nrwl/workspace';
+import { toClassName, toFileName, toPropertyName } from '@nrwl/workspace';
 import {
   getNpmScope,
   getWorkspacePath,
   replaceAppNameWithPath
-} from '@nrwl/schematics/src/utils/cli-config-utils';
-import { formatFiles } from '@nrwl/schematics/src/utils/rules/format-files';
+} from '@nrwl/workspace';
+import { formatFiles } from '@nrwl/workspace';
 import { addUnitTestRunner } from '../ng-add/ng-add';
 
 interface NormalizedSchema extends Schema {
@@ -329,7 +325,7 @@ function updateProject(options: NormalizedSchema): Rule {
         if (options.style !== 'css') {
           fixedProject.schematics = {
             ...fixedProject.schematics,
-            '@nrwl/schematics:component': {
+            '@nrwl/workspace:component': {
               styleext: options.style
             }
           };

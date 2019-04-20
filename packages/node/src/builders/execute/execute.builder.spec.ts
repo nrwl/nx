@@ -88,7 +88,7 @@ describe('NodeExecuteBuilder', () => {
       builder.run({
         root: normalize('/root'),
         projectType: 'application',
-        builder: '@nrwl/builders:node-execute',
+        builder: '@nrwl/node:execute',
         options: testOptions
       })
     ).toBeObservable(
@@ -124,7 +124,7 @@ describe('NodeExecuteBuilder', () => {
           builder.run({
             root: normalize('/root'),
             projectType: 'application',
-            builder: '@nrwl/builders:node-execute',
+            builder: '@nrwl/node:execute',
             options: {
               ...testOptions,
               inspect: InspectType.Inspect
@@ -154,7 +154,7 @@ describe('NodeExecuteBuilder', () => {
           builder.run({
             root: normalize('/root'),
             projectType: 'application',
-            builder: '@nrwl/builders:node-execute',
+            builder: '@nrwl/node:execute',
             options: {
               ...testOptions,
               inspect: InspectType.InspectBrk
@@ -186,7 +186,7 @@ describe('NodeExecuteBuilder', () => {
           builder.run({
             root: normalize('/root'),
             projectType: 'application',
-            builder: '@nrwl/builders:node-execute',
+            builder: '@nrwl/node:execute',
             options: {
               ...testOptions,
               host: '0.0.0.0'
@@ -218,7 +218,7 @@ describe('NodeExecuteBuilder', () => {
           builder.run({
             root: normalize('/root'),
             projectType: 'application',
-            builder: '@nrwl/builders:node-execute',
+            builder: '@nrwl/node:execute',
             options: {
               ...testOptions,
               port: 1234
@@ -252,7 +252,7 @@ describe('NodeExecuteBuilder', () => {
       builder.run({
         root: normalize('/root'),
         projectType: 'application',
-        builder: '@nrwl/builders:node-execute',
+        builder: '@nrwl/node:execute',
         options: testOptions
       })
     ).toBeObservable(
@@ -279,7 +279,7 @@ describe('NodeExecuteBuilder', () => {
       builder.run({
         root: normalize('/root'),
         projectType: 'application',
-        builder: '@nrwl/builders:node-execute',
+        builder: '@nrwl/node:execute',
         options: testOptions
       })
     ).toBeObservable(
@@ -302,7 +302,7 @@ describe('NodeExecuteBuilder', () => {
       builder.run({
         root: normalize('/root'),
         projectType: 'application',
-        builder: '@nrwl/builders:node-execute',
+        builder: '@nrwl/node:execute',
         options: {
           ...testOptions,
           inspect: false,
@@ -339,7 +339,7 @@ describe('NodeExecuteBuilder', () => {
       builder.run({
         root: normalize('/root'),
         projectType: 'application',
-        builder: '@nrwl/builders:node-execute',
+        builder: '@nrwl/node:execute',
         options: {
           ...testOptions,
           inspect: false,
@@ -392,7 +392,7 @@ describe('NodeExecuteBuilder', () => {
         builder.run({
           root: normalize('/root'),
           projectType: 'application',
-          builder: '@nrwl/builders:node-execute',
+          builder: '@nrwl/node:execute',
           options: {
             ...testOptions,
             waitUntilTargets: ['project1:target1', 'project2:target2']
@@ -426,7 +426,7 @@ describe('NodeExecuteBuilder', () => {
         .run({
           root: normalize('/root'),
           projectType: 'application',
-          builder: '@nrwl/builders:node-execute',
+          builder: '@nrwl/node:execute',
           options: {
             ...testOptions,
             waitUntilTargets: ['project1:target1', 'project2:target2']

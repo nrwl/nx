@@ -1,10 +1,7 @@
 import {
   ensureProject,
-  expectTestsPass,
-  newApp,
-  newProject,
+  patchKarmaToWorkOnWSL,
   runCLI,
-  runCLIAsync,
   uniq,
   updateFile
 } from '../utils';
@@ -14,6 +11,7 @@ describe('Upgrade', () => {
     ensureProject();
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/angular:app ${myapp} --unit-test-runner=karma`);
+    patchKarmaToWorkOnWSL();
 
     updateFile(
       `apps/${myapp}/src/legacy.js`,

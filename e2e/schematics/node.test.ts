@@ -87,7 +87,7 @@ describe('Node Applications', () => {
 
     const config = readJson('angular.json');
     config.projects[nodeapp].architect.waitAndPrint = {
-      builder: '@nrwl/builders:run-commands',
+      builder: '@nrwl/workspace:run-commands',
       options: {
         commands: [
           {

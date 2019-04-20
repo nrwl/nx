@@ -170,7 +170,7 @@ describe('Jest Builder', () => {
     builder
       .run({
         root,
-        builder: '@nrwl/builders:jest',
+        builder: 'JEST_BUILDER',
         projectType: 'application',
         options: {
           jestConfig: './jest.config.js',

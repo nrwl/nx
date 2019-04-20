@@ -1,5 +1,5 @@
 import { Rule } from '@angular-devkit/schematics';
-import { addDepsToPackageJson } from '@nrwl/schematics';
+import { addDepsToPackageJson } from '@nrwl/workspace';
 import {
   ngrxVersion,
   ngrxStoreFreezeVersion,

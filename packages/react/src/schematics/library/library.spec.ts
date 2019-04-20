@@ -1,7 +1,7 @@
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/schematics/testing';
-import { readJsonInTree } from '@nrwl/schematics/src/utils/ast-utils';
-import { NxJson } from '@nrwl/schematics/src/command-line/shared';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
+import { readJsonInTree } from '@nrwl/workspace';
+import { NxJson } from '@nrwl/workspace';
 import { runSchematic } from '../../utils/testing';
 
 describe('lib', () => {

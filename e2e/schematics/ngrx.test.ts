@@ -1,5 +1,4 @@
 import {
-  newApp,
   runCLI,
   expectTestsPass,
   runCLIAsync,

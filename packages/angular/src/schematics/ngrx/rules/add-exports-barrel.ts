@@ -2,8 +2,8 @@ import * as ts from 'typescript';
 import * as path from 'path';
 import { Rule, Tree } from '@angular-devkit/schematics';
 
-import { names } from '@nrwl/schematics/src/utils/name-utils';
-import { insert, addGlobal } from '@nrwl/schematics/src/utils/ast-utils';
+import { names } from '@nrwl/workspace';
+import { insert, addGlobal } from '@nrwl/workspace';
 import { Schema } from '../schema';
 
 /**

@@ -15,23 +15,23 @@ import {
 import { Schema } from './schema';
 import * as ts from 'typescript';
 import { insertImport } from '@schematics/angular/utility/ast-utils';
-import { updateJsonInTree, readJsonInTree } from '@nrwl/schematics';
+import { updateJsonInTree, readJsonInTree } from '@nrwl/workspace';
 import {
   addImportToModule,
   addImportToTestBed,
   getDecoratorPropertyValueNode,
   insert,
   replaceNodeValue
-} from '@nrwl/schematics/src/utils/ast-utils';
-import { toFileName } from '@nrwl/schematics/src/utils/name-utils';
-import { offsetFromRoot } from '@nrwl/schematics/src/utils/common';
+} from '@nrwl/workspace';
+import { toFileName } from '@nrwl/workspace';
+import { offsetFromRoot } from '@nrwl/workspace';
 import {
   getNpmScope,
   getWorkspacePath,
   replaceAppNameWithPath,
   angularSchematicNames
-} from '@nrwl/schematics/src/utils/cli-config-utils';
-import { formatFiles } from '@nrwl/schematics/src/utils/rules/format-files';
+} from '@nrwl/workspace';
+import { formatFiles } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import { addE2eTestRunner, addUnitTestRunner } from '../ng-add/ng-add';
 
@@ -213,7 +213,7 @@ function updateProject(options: NormalizedSchema): Rule {
           angularSchematicNames.forEach(type => {
             const schematic = `@schematics/angular:${type}`;
             if (schematic in fixedProject.schematics) {
-              fixedProject.schematics[`@nrwl/schematics:${type}`] =
+              fixedProject.schematics[`@nrwl/workspace:${type}`] =
                 fixedProject.schematics[schematic];
               delete fixedProject.schematics[schematic];
             }

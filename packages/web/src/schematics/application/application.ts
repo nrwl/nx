@@ -14,11 +14,11 @@ import {
   filter
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
-import { updateJsonInTree, NxJson } from '@nrwl/schematics';
-import { toFileName, names } from '@nrwl/schematics/src/utils/name-utils';
-import { offsetFromRoot } from '@nrwl/schematics/src/utils/common';
-import { getNpmScope } from '@nrwl/schematics/src/utils/cli-config-utils';
-import { formatFiles } from '@nrwl/schematics/src/utils/rules/format-files';
+import { updateJsonInTree, NxJson } from '@nrwl/workspace';
+import { toFileName, names } from '@nrwl/workspace';
+import { offsetFromRoot } from '@nrwl/workspace';
+import { getNpmScope } from '@nrwl/workspace';
+import { formatFiles } from '@nrwl/workspace';
 
 interface NormalizedSchema extends Schema {
   projectName: string;

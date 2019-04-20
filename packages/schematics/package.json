@@ -14,10 +14,6 @@
     "Schematics",
     "Angular CLI"
   ],
-  "bin": {
-    "create-nx-workspace": "./bin/create-nx-workspace.js",
-    "nx": "./src/command-line/nx.js"
-  },
   "main": "index.js",
   "types": "index.d.js",
   "author": "Victor Savkin",
@@ -38,7 +34,6 @@
     "migrations": "./migrations/migrations.json"
   },
   "dependencies": {
-    "@nrwl/react": "*",
     "app-root-path": "^2.0.1",
     "cosmiconfig": "4.0.0",
     "fs-extra": "6.0.0",

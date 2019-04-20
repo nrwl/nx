@@ -62,7 +62,7 @@ describe('WebBuildBuilder', () => {
         root: normalize(__dirname),
         sourceRoot: join(normalize(__dirname), 'apps/webapp'),
         projectType: 'application',
-        builder: '@nrwl/builders:node-build',
+        builder: '@nrwl/node:build',
         options: testOptions
       });
 
@@ -81,7 +81,7 @@ describe('WebBuildBuilder', () => {
           root: normalize(__dirname),
           sourceRoot: join(normalize(__dirname), 'apps/webapp'),
           projectType: 'application',
-          builder: '@nrwl/builders:node-build',
+          builder: '@nrwl/node:build',
           options: testOptions
         })
         .toPromise();
