@@ -1,5 +1,3 @@
-import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import * as path from 'path';
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
 import { createApp, createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';

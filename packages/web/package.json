@@ -33,6 +33,16 @@
   },
   "dependencies": {
     "@nrwl/cypress": "*",
-    "@nrwl/jest": "*"
+    "@nrwl/jest": "*",
+    "@angular-devkit/build-webpack": "~0.13.1",
+    "copy-webpack-plugin": "4.6.0",
+    "fork-ts-checker-webpack-plugin": "0.4.9",
+    "identity-obj-proxy": "3.0.0",
+    "license-webpack-plugin": "^1.4.0",
+    "source-map-support": "0.5.11",
+    "ts-loader": "5.3.1",
+    "webpack": "4.29.0",
+    "webpack-dev-server": "3.1.14",
+    "webpack-node-externals": "1.7.2"
   }
 }
