@@ -2,7 +2,6 @@ import { chain, Rule, Tree } from '@angular-devkit/schematics';
 
 import { updateJsonInTree, insert } from '@nrwl/workspace';
 import { formatFiles } from '@nrwl/workspace';
-import { Framework } from '@nrwl/workspace';
 
 import * as ts from 'typescript';
 import { getSourceNodes } from '@schematics/angular/utility/ast-utils';
@@ -16,7 +15,7 @@ const setDefaults = updateJsonInTree('angular.json', json => {
     json.schematics['@nrwl/schematics:library'] = {};
   }
   if (!json.schematics['@nrwl/schematics:library'].framework) {
-    json.schematics['@nrwl/schematics:library'].framework = Framework.Angular;
+    json.schematics['@nrwl/schematics:library'].framework = 'angular';
   }
   return json;
 });

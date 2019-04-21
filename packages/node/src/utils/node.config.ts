@@ -2,8 +2,8 @@ import { Configuration, BannerPlugin } from 'webpack';
 import * as mergeWebpack from 'webpack-merge';
 import * as nodeExternals from 'webpack-node-externals';
 
-import { getBaseWebpackPartial } from '@nrwl/workspace';
 import { BuildNodeBuilderOptions } from '../builders/build/build.builder';
+import { getBaseWebpackPartial } from './config';
 
 function getNodePartial(options: BuildNodeBuilderOptions) {
   const webpackConfig: Configuration = {

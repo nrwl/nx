@@ -12,11 +12,9 @@ import { writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { map } from 'rxjs/operators';
 import { getNodeWebpackConfig } from '../../utils/node.config';
-import {
-  BuildBuilderOptions,
-  normalizeBuildOptions,
-  OUT_FILENAME
-} from '@nrwl/workspace';
+import { OUT_FILENAME } from '../../utils/config';
+import { BuildBuilderOptions } from '../../utils/types';
+import { normalizeBuildOptions } from '../../../../web/src/utils/normalize';
 
 try {
   require('dotenv').config();

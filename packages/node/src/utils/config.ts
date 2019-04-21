@@ -10,8 +10,8 @@ import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 
 import { AssetPatternObject } from '@angular-devkit/build-angular';
-import { BuildBuilderOptions } from '../types';
-import { readTsConfig } from '../typescript';
+import { readTsConfig } from '@nrwl/workspace';
+import { BuildBuilderOptions } from './types';
 
 export const OUT_FILENAME = 'main.js';
 
