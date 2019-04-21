@@ -15,9 +15,9 @@ import {
   StylePreprocessorOptions,
   Budget
 } from '@angular-devkit/build-angular';
-import { BuildBuilderOptions } from '@nrwl/workspace';
 import { normalizeWebBuildOptions } from '../../utils/normalize';
 import { getWebConfig } from '../../utils/web.config';
+import { BuildBuilderOptions } from '../../utils/types';
 
 export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   index: string;

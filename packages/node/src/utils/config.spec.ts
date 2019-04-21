@@ -6,7 +6,7 @@ import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 import { ProgressPlugin } from 'webpack';
-import { BuildBuilderOptions } from '../types';
+import { BuildBuilderOptions } from './types';
 
 describe('getBaseWebpackPartial', () => {
   let input: BuildBuilderOptions;

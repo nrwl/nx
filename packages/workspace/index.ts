@@ -1,10 +1,4 @@
-export { BuildBuilderOptions, OptimizationOptions } from './src/utils/types';
 export { readTsConfig } from './src/utils/typescript';
-export {
-  getBaseWebpackPartial,
-  OUT_FILENAME
-} from './src/utils/webpack/config';
-export { normalizeBuildOptions } from './src/utils/normalize';
 export {
   toPropertyName,
   toClassName,
@@ -64,7 +58,6 @@ export {
 export { formatFiles } from './src/utils/rules/format-files';
 export { deleteFile } from './src/utils/rules/deleteFile';
 export { updateKarmaConf } from './src/utils/rules/update-karma-conf';
-export { Framework } from './src/utils/frameworks';
 import * as strings from './src/utils/strings';
 
 export const stringUtils = strings;
