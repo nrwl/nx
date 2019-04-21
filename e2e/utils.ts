@@ -44,6 +44,22 @@ export function newProject(): void {
   if (!directoryExists('./tmp/proj_backup')) {
     runNgNew('--collection=@nrwl/workspace --npmScope=proj', true);
     copyMissingPackages();
+
+    writeFileSync(
+      './tmp/proj/node_modules/@angular/cli/node_modules/@angular-devkit/schematics/tasks/node-package/executor.js',
+      `
+      "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const rxjs_1 = require("rxjs");
+function default_1(factoryOptions = {}) {
+    return (options) => {
+        return new rxjs_1.Observable(obs => {
+          obs.complete();
+        });
+    };
+}
+exports.default = default_1;`
+    );
     runCLI('add @nrwl/jest');
     runCLI('add @nrwl/cypress');
     runCLI('add @nrwl/web');
@@ -87,14 +103,15 @@ export function copyMissingPackages(): void {
     '@ngrx',
     '@nrwl',
     'angular',
-    '@angular/upgrade',
-    '@angular-devkit/build-ng-packagr',
+    '@angular',
+    '@angular-devkit',
     'codelyzer',
     'ngrx-store-freeze',
     'npm-run-all',
     'yargs',
     'yargs-parser',
 
+    'ng-packagr',
     'cypress',
     '@types/jquery',
     'jest',
