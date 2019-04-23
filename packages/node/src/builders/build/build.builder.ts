@@ -14,7 +14,7 @@ import { map } from 'rxjs/operators';
 import { getNodeWebpackConfig } from '../../utils/node.config';
 import { OUT_FILENAME } from '../../utils/config';
 import { BuildBuilderOptions } from '../../utils/types';
-import { normalizeBuildOptions } from '../../../../web/src/utils/normalize';
+import { normalizeBuildOptions } from '../../utils/normalize';
 
 try {
   require('dotenv').config();

@@ -1,5 +1,16 @@
-import { Rule, chain, externalSchematic } from '@angular-devkit/schematics';
-import { addDepsToPackageJson, updateJsonInTree } from '@nrwl/workspace';
+import {
+  Rule,
+  chain,
+  externalSchematic,
+  Tree,
+  noop
+} from '@angular-devkit/schematics';
+import {
+  addDepsToPackageJson,
+  updateJsonInTree,
+  readJsonInTree,
+  addPackageWithNgAdd
+} from '@nrwl/workspace';
 import {
   expressTypingsVersion,
   expressVersion,
@@ -29,7 +40,8 @@ function moveDependency(): Rule {
 
 export default function() {
   return chain([
-    externalSchematic('@nrwl/node', 'ng-add', {}),
+    addPackageWithNgAdd('@nrwl/node'),
+    addPackageWithNgAdd('@nrwl/jest'),
     addDependencies(),
     moveDependency()
   ]);

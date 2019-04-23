@@ -57,6 +57,7 @@ export {
 
 export { formatFiles } from './src/utils/rules/format-files';
 export { deleteFile } from './src/utils/rules/deleteFile';
+export * from './src/utils/rules/ng-add';
 export { updateKarmaConf } from './src/utils/rules/update-karma-conf';
 import * as strings from './src/utils/strings';
 

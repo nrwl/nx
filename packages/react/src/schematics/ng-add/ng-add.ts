@@ -8,7 +8,8 @@ import {
 import {
   addDepsToPackageJson,
   updateJsonInTree,
-  readJsonInTree
+  readJsonInTree,
+  addPackageWithNgAdd
 } from '@nrwl/workspace';
 import {
   frameworkVersion,
@@ -18,7 +19,7 @@ import {
   nxVersion
 } from '../../utils/versions';
 
-function addDependencies(): Rule {
+export function addDependencies(): Rule {
   return addDepsToPackageJson(
     {
       react: frameworkVersion,
@@ -42,59 +43,11 @@ function moveDependency(): Rule {
   });
 }
 
-function addJest(): Rule {
-  return (host: Tree) => {
-    const packageJson = readJsonInTree(host, 'package.json');
-    return !packageJson.devDependencies['@nrwl/jest']
-      ? externalSchematic(
-          '@nrwl/jest',
-          'ng-add',
-          {},
-          {
-            interactive: false
-          }
-        )
-      : noop();
-  };
-}
-
-function addWeb(): Rule {
-  return (host: Tree) => {
-    const packageJson = readJsonInTree(host, 'package.json');
-    return !packageJson.devDependencies['@nrwl/web']
-      ? externalSchematic(
-          '@nrwl/web',
-          'ng-add',
-          {},
-          {
-            interactive: false
-          }
-        )
-      : noop();
-  };
-}
-
-function addCypress(): Rule {
-  return (host: Tree) => {
-    const packageJson = readJsonInTree(host, 'package.json');
-    return !packageJson.devDependencies['@nrwl/cypress']
-      ? externalSchematic(
-          '@nrwl/cypress',
-          'ng-add',
-          {},
-          {
-            interactive: false
-          }
-        )
-      : noop();
-  };
-}
-
 export default function() {
   return chain([
-    addJest(),
-    addCypress(),
-    addWeb(),
+    addPackageWithNgAdd('@nrwl/jest'),
+    addPackageWithNgAdd('@nrwl/cypress'),
+    addPackageWithNgAdd('@nrwl/web'),
     addDependencies(),
     moveDependency()
   ]);
