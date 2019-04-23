@@ -1,10 +1,8 @@
 import * as mergeWebpack from 'webpack-merge';
 
-import {
-  getBrowserConfig,
-  getStylesConfig,
-  getCommonConfig
-} from '@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs';
+import { getBrowserConfig } from '@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/browser';
+import { getCommonConfig } from '@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/common';
+import { getStylesConfig } from '@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/styles';
 import { Configuration } from 'webpack';
 import { Logger } from '@angular-devkit/core/src/logger';
 import { resolve } from 'path';
