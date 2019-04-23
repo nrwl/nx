@@ -35,11 +35,8 @@
     "ts-node": "~7.0.0",
     "tslint": "~5.11.0",
     "typescript": "<%= typescriptVersion %>",
-    "prettier": "<%= prettierVersion %>" <% if(!nxCli) { %>
-    , "@angular/cli": "<%= angularCliVersion %>",
-     "@angular/core": "<%= angularVersion %>",
-    "@angular/compiler": "<%= angularVersion %>",
-    "@angular/compiler-cli": "<%= angularVersion %>"
-    <% } %>
+    "prettier": "<%= prettierVersion %>"<% if(!nxCli) { %>,
+    "@angular/cli": "<%= angularCliVersion %>",
+    "@angular/core": "<%= angularVersion %>"<% } %>
   }
 }
