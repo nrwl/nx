@@ -14,7 +14,8 @@ import {
   getProjectNames,
   parseFiles,
   getAllProjectNamesWithTarget,
-  getAffectedProjectsWithTarget
+  getAffectedProjectsWithTarget,
+  readAngularJson
 } from './shared';
 import { generateGraph } from './dep-graph';
 import { GlobalNxArgs } from './nx';
@@ -155,6 +156,11 @@ async function runCommand(
   if (args.length > 0) {
     console.log(`With flags: ${args.join(' ')}`);
   }
+  const angularJson = readAngularJson();
+  const projectMetadata = new Map<string, any>();
+  projects.forEach(project => {
+    projectMetadata.set(project, angularJson.projects[project]);
+  });
   if (parsedArgs.parallel) {
     // Make sure the `package.json` has the `ng: "ng"` command needed by `npm-run-all`
     const packageJson = JSON.parse(
@@ -170,8 +176,16 @@ async function runCommand(
       await runAll(
         projects.map(app => {
           return ngCommands.includes(command)
-            ? `ng -- ${command} --project=${app} ${args.join(' ')} `
-            : `ng -- run ${app}:${command} ${args.join(' ')} `;
+            ? `ng -- ${command} --project=${app} ${transformArgs(
+                args,
+                app,
+                projectMetadata.get(app)
+              ).join(' ')} `
+            : `ng -- run ${app}:${command} ${transformArgs(
+                args,
+                app,
+                projectMetadata.get(app)
+              ).join(' ')} `;
         }),
         {
           parallel: parsedArgs.parallel,
@@ -209,8 +223,16 @@ async function runCommand(
     projects.forEach(project => {
       console.log(`${iterationMessage} ${project}`);
       const task = ngCommands.includes(command)
-        ? `node ${ngPath()} ${command} --project=${project} ${args.join(' ')} `
-        : `node ${ngPath()} run ${project}:${command} ${args.join(' ')} `;
+        ? `node ${ngPath()} ${command} --project=${project} ${transformArgs(
+            args,
+            project,
+            projectMetadata.get(project)
+          ).join(' ')} `
+        : `node ${ngPath()} run ${project}:${command} ${transformArgs(
+            args,
+            project,
+            projectMetadata.get(project)
+          ).join(' ')} `;
       try {
         execSync(task, {
           stdio: [0, 1, 2]
@@ -233,6 +255,26 @@ async function runCommand(
       process.exit(1);
     }
   }
+}
+
+function transformArgs(
+  args: string[],
+  projectName: string,
+  projectMetadata: any
+) {
+  return args.map(arg => {
+    const regex = /{project\.([^}]+)}/g;
+    arg.replace(regex, (_, group: string) => {
+      if (group.includes('.')) {
+        throw new Error('Only top-level properties can be interpolated');
+      }
+
+      if (group === 'name') {
+        return projectName;
+      }
+      return projectMetadata[group];
+    });
+  });
 }
 
 function filterNxSpecificArgs(parsedArgs: YargsAffectedOptions): string[] {
