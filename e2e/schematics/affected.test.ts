@@ -197,5 +197,10 @@ describe('Affected', () => {
       `npm run affected -- --target extract-i18n --files="libs/${mylib}/src/index.ts"`
     );
     expect(i18n).toContain(`Running extract-i18n for ${myapp}`);
+
+    const interpolatedTests = runCommand(
+      `npm run affected -- --target test --files="libs/${mylib}/src/index.ts" -- --jest-config {project.root}jest.config.js`
+    );
+    expect(interpolatedTests).toContain(`Running test for ${mylib}`);
   }, 1000000);
 });
