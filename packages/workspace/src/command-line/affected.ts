@@ -264,7 +264,7 @@ function transformArgs(
 ) {
   return args.map(arg => {
     const regex = /{project\.([^}]+)}/g;
-    arg.replace(regex, (_, group: string) => {
+    return arg.replace(regex, (_, group: string) => {
       if (group.includes('.')) {
         throw new Error('Only top-level properties can be interpolated');
       }
