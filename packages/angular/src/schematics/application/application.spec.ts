@@ -1,4 +1,4 @@
-import { Tree, VirtualTree } from '@angular-devkit/schematics';
+import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { getFileContent } from '@schematics/angular/utility/test';
 import * as stripJsonComments from 'strip-json-comments';
@@ -9,7 +9,7 @@ describe('app', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = new VirtualTree();
+    appTree = Tree.empty();
     appTree = createEmptyWorkspace(appTree);
   });
 
@@ -18,7 +18,7 @@ describe('app', () => {
       const tree = await runSchematic('app', { name: 'myApp' }, appTree);
       const angularJson = readJsonInTree(tree, '/angular.json');
 
-      expect(angularJson.projects['my-app'].root).toEqual('apps/my-app/');
+      expect(angularJson.projects['my-app'].root).toEqual('apps/my-app');
       expect(angularJson.projects['my-app-e2e'].root).toEqual(
         'apps/my-app-e2e'
       );
@@ -143,7 +143,7 @@ describe('app', () => {
       const angularJson = readJsonInTree(tree, '/angular.json');
 
       expect(angularJson.projects['my-dir-my-app'].root).toEqual(
-        'apps/my-dir/my-app/'
+        'apps/my-dir/my-app'
       );
       expect(angularJson.projects['my-dir-my-app-e2e'].root).toEqual(
         'apps/my-dir/my-app-e2e'
@@ -361,16 +361,56 @@ describe('app', () => {
     });
   });
 
-  describe('--e2e-test-runner none', () => {
-    it('should not generate test configuration', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myApp', e2eTestRunner: 'none' },
-        appTree
-      );
-      expect(tree.exists('apps/my-app-e2e')).toBeFalsy();
-      const angularJson = readJsonInTree(tree, 'angular.json');
-      expect(angularJson.projects['my-app-e2e']).toBeUndefined();
+  describe('--e2e-test-runner', () => {
+    describe('protractor', () => {
+      it('should update angular.json', async () => {
+        const tree = await runSchematic(
+          'app',
+          { name: 'myApp', e2eTestRunner: 'protractor' },
+          appTree
+        );
+        expect(tree.exists('apps/my-app-e2e')).toBeFalsy();
+        const angularJson = readJsonInTree(tree, 'angular.json');
+        expect(angularJson.projects['my-app'].architect.e2e).not.toBeDefined();
+        expect(angularJson.projects['my-app-e2e']).toEqual({
+          root: 'apps/my-app-e2e',
+          projectType: 'application',
+          architect: {
+            e2e: {
+              builder: '@angular-devkit/build-angular:protractor',
+              options: {
+                devServerTarget: 'my-app:serve',
+                protractorConfig: 'apps/my-app-e2e/protractor.conf.js'
+              },
+              configurations: {
+                production: {
+                  devServerTarget: 'my-app:serve:production'
+                }
+              }
+            },
+            lint: {
+              builder: '@angular-devkit/build-angular:tslint',
+              options: {
+                tsConfig: 'apps/my-app-e2e/tsconfig.e2e.json',
+                exclude: ['**/node_modules/**']
+              }
+            }
+          }
+        });
+      });
+    });
+
+    describe('none', () => {
+      it('should not generate test configuration', async () => {
+        const tree = await runSchematic(
+          'app',
+          { name: 'myApp', e2eTestRunner: 'none' },
+          appTree
+        );
+        expect(tree.exists('apps/my-app-e2e')).toBeFalsy();
+        const angularJson = readJsonInTree(tree, 'angular.json');
+        expect(angularJson.projects['my-app-e2e']).toBeUndefined();
+      });
     });
   });
 

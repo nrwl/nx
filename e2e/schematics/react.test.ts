@@ -11,7 +11,7 @@ import {
 } from '../utils';
 import { serializeJson } from '@nrwl/workspace';
 
-describe('React Applications', () => {
+xdescribe('React Applications', () => {
   it('should be able to generate a react app + lib', async () => {
     ensureProject();
     const appName = uniq('app');

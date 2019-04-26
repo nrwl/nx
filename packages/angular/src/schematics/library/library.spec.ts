@@ -1,4 +1,4 @@
-import { Tree, VirtualTree } from '@angular-devkit/schematics';
+import { Tree } from '@angular-devkit/schematics';
 import { createApp, createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 import { getFileContent } from '@schematics/angular/utility/test';
@@ -10,7 +10,7 @@ describe('lib', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = new VirtualTree();
+    appTree = Tree.empty();
     appTree = createEmptyWorkspace(appTree);
   });
 
@@ -462,7 +462,7 @@ describe('lib', () => {
         ).toContain('RouterModule.forChild');
       });
 
-      it('should update the parent module', async () => {
+      fit('should update the parent module', async () => {
         appTree = createApp(appTree, 'myapp');
         const tree = await runSchematic(
           'lib',

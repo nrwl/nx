@@ -9,8 +9,8 @@ import {
   runCLI
 } from '../utils';
 
-describe('Affected', () => {
-  fit('should print, build, and test affected apps', () => {
+xdescribe('Affected', () => {
+  it('should print, build, and test affected apps', () => {
     ensureProject();
     const myapp = uniq('myapp');
     const myapp2 = uniq('myapp2');

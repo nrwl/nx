@@ -25,7 +25,7 @@ export function getLibConfig(): LibConfig {
 export function createEmptyWorkspace(tree: Tree): Tree {
   tree.create(
     '/angular.json',
-    JSON.stringify({ projects: {}, newProjectRoot: '' })
+    JSON.stringify({ version: 1, projects: {}, newProjectRoot: '' })
   );
   tree.create(
     '/package.json',
@@ -121,6 +121,7 @@ export function createApp(
     '/angular.json',
     JSON.stringify({
       newProjectRoot: '',
+      version: 1,
       projects: {
         [appName]: {
           root: `apps/${appName}`,
