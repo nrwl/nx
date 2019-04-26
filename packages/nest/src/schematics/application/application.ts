@@ -13,6 +13,7 @@ import {
 import { join, normalize, Path } from '@angular-devkit/core';
 import { Schema } from './schema';
 import { toFileName } from '@nrwl/workspace';
+import ngAdd from '../ng-add/ng-add';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -64,6 +65,7 @@ export default function(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(schema);
     return chain([
+      ngAdd(),
       externalSchematic('@nrwl/node', 'application', schema),
       addMainFile(options),
       addAppFiles(options)

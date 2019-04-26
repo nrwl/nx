@@ -1,5 +1,9 @@
 import { Rule, chain } from '@angular-devkit/schematics';
-import { addDepsToPackageJson, updateJsonInTree } from '@nrwl/workspace';
+import {
+  addDepsToPackageJson,
+  updateJsonInTree,
+  addPackageWithNgAdd
+} from '@nrwl/workspace';
 import { nxVersion } from '../../utils/versions';
 
 function addDependencies(): Rule {
@@ -21,5 +25,9 @@ function moveDependency(): Rule {
 }
 
 export default function() {
-  return chain([addDependencies(), moveDependency()]);
+  return chain([
+    addPackageWithNgAdd('@nrwl/jest'),
+    addDependencies(),
+    moveDependency()
+  ]);
 }

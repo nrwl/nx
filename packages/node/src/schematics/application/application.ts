@@ -17,6 +17,7 @@ import { updateJsonInTree } from '@nrwl/workspace';
 import { toFileName } from '@nrwl/workspace';
 import { getProjectConfig } from '@nrwl/workspace';
 import { offsetFromRoot } from '@nrwl/workspace';
+import ngAdd from '../ng-add/ng-add';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -145,6 +146,7 @@ export default function(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(schema);
     return chain([
+      ngAdd(),
       addAppFiles(options),
       updateAngularJson(options),
       updateNxJson(options),

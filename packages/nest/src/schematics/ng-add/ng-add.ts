@@ -1,12 +1,16 @@
-import { Rule, chain, externalSchematic } from '@angular-devkit/schematics';
-import { addDepsToPackageJson, updateJsonInTree } from '@nrwl/workspace';
+import { Rule, chain } from '@angular-devkit/schematics';
+import {
+  addPackageWithNgAdd,
+  addDepsToPackageJson,
+  updateJsonInTree
+} from '@nrwl/workspace';
 import {
   nestJsSchematicsVersion,
   nestJsVersion,
   nxVersion
 } from '../../utils/versions';
 
-function addDependencies(): Rule {
+export function addDependencies(): Rule {
   return addDepsToPackageJson(
     {
       '@nestjs/common': nestJsVersion,
@@ -31,7 +35,8 @@ function moveDependency(): Rule {
 
 export default function() {
   return chain([
-    externalSchematic('@nrwl/node', 'ng-add', {}),
+    addPackageWithNgAdd('@nrwl/node'),
+    addPackageWithNgAdd('@nrwl/jest'),
     addDependencies(),
     moveDependency()
   ]);

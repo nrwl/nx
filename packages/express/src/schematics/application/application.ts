@@ -1,19 +1,15 @@
 import {
-  apply,
   chain,
   externalSchematic,
-  mergeWith,
-  move,
   Rule,
   SchematicContext,
-  template,
-  Tree,
-  url
+  Tree
 } from '@angular-devkit/schematics';
 import { join, normalize, Path } from '@angular-devkit/core';
 import { Schema } from './schema';
 import { updateJsonInTree } from '@nrwl/workspace';
 import { toFileName } from '@nrwl/workspace';
+import ngAdd from '../ng-add/ng-add';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -60,6 +56,7 @@ export default function(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(schema);
     return chain([
+      ngAdd(),
       externalSchematic('@nrwl/node', 'application', schema),
       addMainFile(options),
       addTypes(options)

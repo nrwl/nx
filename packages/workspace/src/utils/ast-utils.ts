@@ -609,6 +609,8 @@ export function updateJsonInTree<T = any, O = T>(
   };
 }
 
+let installAdded = false;
+
 export function addDepsToPackageJson(deps: any, devDeps: any): Rule {
   return updateJsonInTree('package.json', (json, context: SchematicContext) => {
     json.dependencies = {
@@ -619,7 +621,10 @@ export function addDepsToPackageJson(deps: any, devDeps: any): Rule {
       ...devDeps,
       ...(json.devDependencies || {})
     };
-    context.addTask(new NodePackageInstallTask());
+    if (!installAdded) {
+      context.addTask(new NodePackageInstallTask());
+      installAdded = true;
+    }
     return json;
   });
 }

@@ -14,11 +14,16 @@ import {
   filter
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
-import { updateJsonInTree, NxJson } from '@nrwl/workspace';
-import { toFileName, names } from '@nrwl/workspace';
-import { offsetFromRoot } from '@nrwl/workspace';
-import { getNpmScope } from '@nrwl/workspace';
-import { formatFiles } from '@nrwl/workspace';
+import {
+  updateJsonInTree,
+  NxJson,
+  toFileName,
+  names,
+  offsetFromRoot,
+  getNpmScope,
+  formatFiles
+} from '@nrwl/workspace';
+import ngAdd from '../ng-add/ng-add';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -139,10 +144,11 @@ function addProject(options: NormalizedSchema): Rule {
 }
 
 export default function(schema: Schema): Rule {
-  return (host: Tree, context: SchematicContext) => {
+  return (host: Tree) => {
     const options = normalizeOptions(host, schema);
 
     return chain([
+      ngAdd(),
       createApplicationFiles(options),
       updateNxJson(options),
       addProject(options),
@@ -163,7 +169,7 @@ export default function(schema: Schema): Rule {
           })
         : noop(),
       formatFiles(options)
-    ])(host, context);
+    ]);
   };
 }
 
