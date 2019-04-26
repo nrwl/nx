@@ -2,6 +2,7 @@ import { statSync } from 'fs';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ensureDirSync } from 'fs-extra';
+import * as stripJsonComments from 'strip-json-comments';
 
 export function writeToFile(filePath: string, str: string) {
   ensureDirSync(path.dirname(filePath));
@@ -51,7 +52,7 @@ export function serializeJson(json: any): string {
  * @param path Path of the JSON file on the filesystem
  */
 export function readJsonFile<T = any>(path: string): T {
-  return JSON.parse(fs.readFileSync(path, 'utf-8'));
+  return JSON.parse(stripJsonComments(fs.readFileSync(path, 'utf-8')));
 }
 
 export function writeJsonFile(path: string, json: any) {
