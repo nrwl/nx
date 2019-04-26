@@ -11,7 +11,7 @@ export interface FileReplacement {
 export function normalizeBuildOptions<T extends BuildBuilderOptions>(
   options: T,
   root: string,
-  sourceRoot: Path
+  sourceRoot: string
 ): T {
   return {
     ...options,
@@ -28,7 +28,11 @@ export function normalizeBuildOptions<T extends BuildBuilderOptions>(
   };
 }
 
-function normalizeAssets(assets: any[], root: string, sourceRoot: Path): any[] {
+function normalizeAssets(
+  assets: any[],
+  root: string,
+  sourceRoot: string
+): any[] {
   return assets.map(asset => {
     if (typeof asset === 'string') {
       const assetPath = normalize(asset);
