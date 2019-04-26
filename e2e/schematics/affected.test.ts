@@ -9,7 +9,7 @@ import {
   runCLI
 } from '../utils';
 
-xdescribe('Affected', () => {
+describe('Affected', () => {
   it('should print, build, and test affected apps', () => {
     ensureProject();
     const myapp = uniq('myapp');
@@ -119,10 +119,10 @@ xdescribe('Affected', () => {
     expect(buildWithFlags).toContain('With flags: --stats-json=true');
 
     if (!runsInWSL()) {
-      const e2e = runCommand(
-        `npm run affected:e2e -- --files="libs/${mylib}/src/index.ts" --headless --no-watch`
-      );
-      expect(e2e).toContain('should display welcome message');
+      // const e2e = runCommand(
+      //   `npm run affected:e2e -- --files="libs/${mylib}/src/index.ts" --headless --no-watch`
+      // );
+      // expect(e2e).toContain('should display welcome message');
     }
 
     const unitTests = runCommand(

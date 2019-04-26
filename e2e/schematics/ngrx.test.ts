@@ -7,7 +7,7 @@ import {
   readJson
 } from '../utils';
 
-xdescribe('ngrx', () => {
+describe('ngrx', () => {
   it('should work', async () => {
     ensureProject();
 

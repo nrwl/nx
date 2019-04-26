@@ -1,6 +1,6 @@
 import { runCLIAsync, ensureProject, uniq, runCLI } from '../utils';
 
-xdescribe('Jest', () => {
+describe('Jest', () => {
   it('should be able test projects using jest', async done => {
     ensureProject();
     const mylib = uniq('mylib');

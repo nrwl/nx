@@ -66,9 +66,9 @@ xdescribe('Nrwl Workspace', () => {
     );
 
     if (!runsInWSL()) {
-      expect(
-        runCLI(`e2e --project=my-dir-${myapp}-e2e --headless --watch=false`)
-      ).toContain('All specs passed!');
+      // expect(
+      //   runCLI(`e2e --project=my-dir-${myapp}-e2e --headless --watch=false`)
+      // ).toContain('All specs passed!');
     }
   }, 1000000);
 
