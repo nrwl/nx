@@ -1,9 +1,8 @@
-import { getSystemPath, normalize } from '@angular-devkit/core';
+import { getNodeWebpackConfig } from './node.config';
+import { BannerPlugin } from 'webpack';
 jest.mock('tsconfig-paths-webpack-plugin');
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-import { BannerPlugin } from 'webpack';
-import { BuildNodeBuilderOptions } from '../builders/build/build.builder';
-import { getNodeWebpackConfig } from './node.config';
+import { BuildNodeBuilderOptions } from '../builders/build/build.impl';
 
 describe('getNodePartial', () => {
   let input: BuildNodeBuilderOptions;
@@ -14,7 +13,6 @@ describe('getNodePartial', () => {
       tsConfig: 'tsconfig.json',
       externalDependencies: 'all',
       fileReplacements: [],
-      root: getSystemPath(normalize('/root')),
       statsJson: false
     };
     (<any>TsConfigPathsPlugin).mockImplementation(class MockPathsPlugin {});
@@ -63,9 +61,8 @@ describe('getNodePartial', () => {
     it('should change all node_modules to commonjs imports', () => {
       const result = getNodeWebpackConfig(input);
       const callback = jest.fn();
-      console.log(result.externals[0]);
-      result.externals[0](null, 'typescript', callback);
-      expect(callback).toHaveBeenCalledWith(null, 'commonjs typescript');
+      result.externals[0](null, '@nestjs/core', callback);
+      expect(callback).toHaveBeenCalledWith(null, 'commonjs @nestjs/core');
     });
 
     it('should change given module names to commonjs imports but not others', () => {
@@ -76,7 +73,7 @@ describe('getNodePartial', () => {
       const callback = jest.fn();
       result.externals[0](null, 'module1', callback);
       expect(callback).toHaveBeenCalledWith(null, 'commonjs module1');
-      result.externals[0](null, 'externalLib', callback);
+      result.externals[0](null, '@nestjs/core', callback);
       expect(callback).toHaveBeenCalledWith();
     });
 

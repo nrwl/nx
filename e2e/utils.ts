@@ -52,7 +52,7 @@ export function newProject(): void {
     copyMissingPackages();
 
     writeFileSync(
-      './tmp/proj/node_modules/@angular/cli/node_modules/@angular-devkit/schematics/tasks/node-package/executor.js',
+      './tmp/proj/node_modules/@angular-devkit/schematics/tasks/node-package/executor.js',
       `
       "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });

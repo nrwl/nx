@@ -1,5 +1,5 @@
-import { WebBuildBuilderOptions } from '../builders/build/build.builder';
-import { Path, normalize } from '@angular-devkit/core';
+import { WebBuildBuilderOptions } from '../builders/build/build.impl';
+import { normalize } from '@angular-devkit/core';
 import { resolve, dirname, relative, basename } from 'path';
 import { BuildBuilderOptions } from './types';
 import { statSync } from 'fs';
@@ -12,7 +12,7 @@ export interface FileReplacement {
 export function normalizeBuildOptions<T extends BuildBuilderOptions>(
   options: T,
   root: string,
-  sourceRoot: Path
+  sourceRoot: string
 ): T {
   return {
     ...options,
@@ -29,7 +29,11 @@ export function normalizeBuildOptions<T extends BuildBuilderOptions>(
   };
 }
 
-function normalizeAssets(assets: any[], root: string, sourceRoot: Path): any[] {
+function normalizeAssets(
+  assets: any[],
+  root: string,
+  sourceRoot: string
+): any[] {
   return assets.map(asset => {
     if (typeof asset === 'string') {
       const assetPath = normalize(asset);
@@ -81,7 +85,7 @@ function normalizeFileReplacements(
 export function normalizeWebBuildOptions(
   options: WebBuildBuilderOptions,
   root: string,
-  sourceRoot: Path
+  sourceRoot: string
 ): WebBuildBuilderOptions {
   return {
     ...normalizeBuildOptions(options, root, sourceRoot),

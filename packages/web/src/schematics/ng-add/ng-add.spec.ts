@@ -1,4 +1,4 @@
-import { Tree, VirtualTree } from '@angular-devkit/schematics';
+import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { join } from 'path';
@@ -9,7 +9,7 @@ describe('ng-add', () => {
   let testRunner: SchematicTestRunner;
 
   beforeEach(() => {
-    tree = new VirtualTree();
+    tree = Tree.empty();
     tree = createEmptyWorkspace(tree);
     testRunner = new SchematicTestRunner(
       '@nrwl/web',

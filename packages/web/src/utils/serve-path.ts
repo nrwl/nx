@@ -1,4 +1,4 @@
-import { WebBuildBuilderOptions } from '../builders/build/build.builder';
+import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 
 export function buildServePath(browserOptions: WebBuildBuilderOptions) {
   let servePath =
