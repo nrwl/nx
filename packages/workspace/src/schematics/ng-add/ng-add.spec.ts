@@ -1,11 +1,11 @@
-import { Tree, VirtualTree } from '@angular-devkit/schematics';
+import { Tree } from '@angular-devkit/schematics';
 import { runSchematic } from '../../utils/testing';
 
 describe('workspace', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = new VirtualTree();
+    appTree = Tree.empty();
   });
 
   it('should error if no package.json is present', async () => {

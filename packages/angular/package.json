@@ -34,7 +34,7 @@
     "jasmine-marbles": "~0.4.0"
   },
   "dependencies": {
-    "@schematics/angular": "~7.3.1",
+    "@schematics/angular": "8.0.0-rc.0",
     "@nrwl/cypress": "*",
     "@nrwl/jest": "*"
   }

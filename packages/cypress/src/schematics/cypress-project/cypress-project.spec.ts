@@ -1,4 +1,4 @@
-import { Tree, VirtualTree } from '@angular-devkit/schematics';
+import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 import { readJsonInTree } from '@nrwl/workspace';
@@ -7,7 +7,7 @@ describe('schematic:cypress-project', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = new VirtualTree();
+    appTree = Tree.empty();
     appTree = createEmptyWorkspace(appTree);
   });
 

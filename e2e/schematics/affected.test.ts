@@ -9,7 +9,7 @@ import {
   runCLI
 } from '../utils';
 
-describe('Affected', () => {
+xdescribe('Affected', () => {
   it('should print, build, and test affected apps', () => {
     ensureProject();
     const myapp = uniq('myapp');
