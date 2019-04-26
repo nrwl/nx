@@ -9,7 +9,7 @@ import {
   runsInWSL
 } from '../utils';
 
-xdescribe('Cypress E2E Test runner', () => {
+describe('Cypress E2E Test runner', () => {
   describe('project scaffolding', () => {
     it('should generate an app with the Cypress as e2e test runner', () => {
       ensureProject();
