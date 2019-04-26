@@ -1,4 +1,4 @@
-import { Tree, VirtualTree } from '@angular-devkit/schematics';
+import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 import { readJsonInTree } from '@nrwl/workspace';
@@ -7,7 +7,7 @@ describe('karmaProject', () => {
   let appTree: Tree;
 
   beforeEach(async () => {
-    appTree = new VirtualTree();
+    appTree = Tree.empty();
     appTree = createEmptyWorkspace(appTree);
     appTree = await runSchematic(
       'lib',
@@ -182,7 +182,7 @@ module.exports = function(config) {
       expect(tsConfig).toEqual({
         extends: './tsconfig.json',
         compilerOptions: {
-          outDir: '../../dist/out-tsc/apps/app1/',
+          outDir: '../../dist/out-tsc/apps/app1',
           types: ['jasmine', 'node']
         },
         files: ['src/test.ts', 'src/polyfills.ts'],

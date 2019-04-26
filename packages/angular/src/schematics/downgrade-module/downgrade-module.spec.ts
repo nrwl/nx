@@ -1,4 +1,4 @@
-import { Tree, VirtualTree } from '@angular-devkit/schematics';
+import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import { runSchematic, createApp } from '../../utils/testing';
 import { readJsonInTree } from '@nrwl/workspace';
@@ -7,7 +7,7 @@ describe('downgrade-module', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = new VirtualTree();
+    appTree = Tree.empty();
     appTree = createEmptyWorkspace(appTree);
     appTree = createApp(appTree, 'myapp');
   });

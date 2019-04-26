@@ -29,7 +29,7 @@ function getData(): Promise<any> {
   });
 }
 
-describe('Node Applications', () => {
+xdescribe('Node Applications', () => {
   it('should be able to generate an express application', async done => {
     ensureProject();
     const nodeapp = uniq('nodeapp');

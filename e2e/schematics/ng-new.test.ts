@@ -11,7 +11,7 @@ import {
 } from '../utils';
 import { toClassName } from '@nrwl/workspace';
 
-describe('Nrwl Workspace', () => {
+xdescribe('Nrwl Workspace', () => {
   beforeEach(() => {
     ensureProject();
   });

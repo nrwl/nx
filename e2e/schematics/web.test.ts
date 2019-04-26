@@ -6,7 +6,7 @@ import {
   uniq
 } from '../utils';
 
-describe('Web Components Applications', () => {
+xdescribe('Web Components Applications', () => {
   it('should be able to generate a web app', async () => {
     ensureProject();
     const appName = uniq('app');

@@ -9,6 +9,7 @@ interface ResolveOptions {
   moduleDirectory: string[];
   browser: boolean;
   extensions: string[];
+  defaultResolver: typeof defaultResolver;
 }
 
 function getCompilerSetup(rootDir: string) {

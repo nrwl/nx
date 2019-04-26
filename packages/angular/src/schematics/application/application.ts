@@ -182,18 +182,18 @@ function addTsconfigs(options: NormalizedSchema): Rule {
         }),
         move(options.appProjectRoot)
       ])
-    ),
-    options.e2eTestRunner === 'protractor'
-      ? mergeWith(
-          apply(url('./files'), [
-            template({
-              ...options,
-              offsetFromRoot: offsetFromRoot(options.e2eProjectRoot)
-            }),
-            move(options.e2eProjectRoot)
-          ])
-        )
-      : noop()
+    )
+    // options.e2eTestRunner === 'protractor'
+    //   ? mergeWith(
+    //       apply(url('./files'), [
+    //         template({
+    //           ...options,
+    //           offsetFromRoot: offsetFromRoot(options.e2eProjectRoot)
+    //         }),
+    //         move(options.e2eProjectRoot)
+    //       ])
+    //     )
+    //   : noop()
   ]);
 }
 
@@ -224,7 +224,9 @@ function updateProject(options: NormalizedSchema): Rule {
         fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
           path =>
             path !==
-            join(normalize(options.appProjectRoot), 'tsconfig.spec.json')
+              join(normalize(options.appProjectRoot), 'tsconfig.spec.json') &&
+            path !==
+              join(normalize(options.appProjectRoot), 'e2e/tsconfig.json')
         );
         if (options.e2eTestRunner === 'none') {
           delete json.projects[options.e2eProjectName];
@@ -287,18 +289,27 @@ function updateE2eProject(options: NormalizedSchema): Rule {
 
     return chain([
       updateJsonInTree(getWorkspacePath(host), json => {
-        const project = json.projects[options.e2eProjectName];
-
-        project.root = options.e2eProjectRoot;
+        const project = {
+          root: options.e2eProjectRoot,
+          projectType: 'application',
+          architect: {
+            e2e: json.projects[options.name].architect.e2e,
+            lint: {
+              builder: '@angular-devkit/build-angular:tslint',
+              options: {
+                tsConfig: `${options.e2eProjectRoot}/tsconfig.e2e.json`,
+                exclude: ['**/node_modules/**']
+              }
+            }
+          }
+        };
 
         project.architect.e2e.options.protractorConfig = `${
           options.e2eProjectRoot
         }/protractor.conf.js`;
-        project.architect.lint.options.tsConfig = `${
-          options.e2eProjectRoot
-        }/tsconfig.e2e.json`;
 
         json.projects[options.e2eProjectName] = project;
+        delete json.projects[options.name].architect.e2e;
         return json;
       }),
       updateJsonInTree(`${options.e2eProjectRoot}/tsconfig.json`, json => {
@@ -347,7 +358,7 @@ export default function(schema: Schema): Rule {
       : options.name;
     const e2eProjectRoot = angularJson.newProjectRoot
       ? `${angularJson.newProjectRoot}/${options.e2eProjectName}`
-      : 'e2e';
+      : `${options.name}/e2e`;
 
     return chain([
       setupTestRunners(options),
@@ -371,7 +382,7 @@ export default function(schema: Schema): Rule {
             host.delete(`${e2eProjectRoot}/src/app.e2e-spec.ts`);
             host.delete(`${e2eProjectRoot}/src/app.po.ts`);
             host.delete(`${e2eProjectRoot}/protractor.conf.js`);
-            host.delete(`${e2eProjectRoot}/tsconfig.e2e.json`);
+            host.delete(`${e2eProjectRoot}/tsconfig.json`);
           },
 
       options.e2eTestRunner === 'protractor'

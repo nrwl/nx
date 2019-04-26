@@ -1,4 +1,4 @@
-import { Tree, VirtualTree } from '@angular-devkit/schematics';
+import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import { createApp, runSchematic } from '../../utils/testing';
 import * as stripJsonComments from 'strip-json-comments';
@@ -9,7 +9,7 @@ describe('lib', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = new VirtualTree();
+    appTree = Tree.empty();
     appTree = createEmptyWorkspace(appTree);
   });
 
