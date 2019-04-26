@@ -2,7 +2,7 @@
   "$schema": "@angular-devkit/architect/src/builders-schema.json",
   "builders": {
     "jest": {
-      "class": "./src/builders/jest/jest.builder",
+      "implementation": "./src/builders/jest/jest.impl",
       "schema": "./src/builders/jest/schema.json",
       "description": "Run Jest unit tests"
     }

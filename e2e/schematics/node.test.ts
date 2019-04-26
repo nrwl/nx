@@ -30,7 +30,7 @@ function getData(): Promise<any> {
 }
 
 describe('Node Applications', () => {
-  it('should be able to generate an express application', async done => {
+  xit('should be able to generate an express application', async done => {
     ensureProject();
     const nodeapp = uniq('nodeapp');
     runCLI(`generate @nrwl/express:app ${nodeapp}`);
@@ -84,7 +84,6 @@ describe('Node Applications', () => {
         });
       });
     });
-
     const config = readJson('angular.json');
     config.projects[nodeapp].architect.waitAndPrint = {
       builder: '@nrwl/workspace:run-commands',

@@ -1,26 +1,32 @@
 import * as mergeWebpack from 'webpack-merge';
 
-//TODO @FrozenPandaz we should remove the following imports
+// TODO @FrozenPandaz we should remove the following imports
 import { getBrowserConfig } from '@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/browser';
 import { getCommonConfig } from '@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/common';
 import { getStylesConfig } from '@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/styles';
 import { Configuration } from 'webpack';
-import { Logger } from '@angular-devkit/core/src/logger';
+import { LoggerApi } from '@angular-devkit/core/src/logger';
 import { resolve } from 'path';
 import typescript = require('typescript');
-import { WebBuildBuilderOptions } from '../builders/build/build.builder';
+import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { convertBuildOptions } from './normalize';
 import { readTsConfig } from '@nrwl/workspace';
 import { getBaseWebpackPartial } from './config';
 
-export function getWebConfig(options: WebBuildBuilderOptions, logger: Logger) {
+export function getWebConfig(
+  root,
+  sourceRoot,
+  options: WebBuildBuilderOptions,
+  logger: LoggerApi
+) {
   const tsConfig = readTsConfig(options.tsConfig);
   const supportES2015 =
     tsConfig.options.target !== typescript.ScriptTarget.ES5 &&
     tsConfig.options.target !== typescript.ScriptTarget.ES3;
+  console.log(sourceRoot);
   const wco: any = {
-    root: options.root,
-    projectRoot: resolve(options.root, options.sourceRoot),
+    root,
+    projectRoot: resolve(root, sourceRoot),
     buildOptions: convertBuildOptions(options),
     supportES2015,
     logger,

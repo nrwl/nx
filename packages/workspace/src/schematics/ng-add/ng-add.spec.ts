@@ -1,11 +1,11 @@
-import { Tree, VirtualTree } from '@angular-devkit/schematics';
+import { Tree } from '@angular-devkit/schematics';
 import { runSchematic } from '../../utils/testing';
 
 describe('workspace', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = new VirtualTree();
+    appTree = Tree.empty();
   });
 
   it('should error if no package.json is present', async () => {
@@ -24,9 +24,6 @@ describe('workspace', () => {
       JSON.stringify({
         projects: {
           proj1: {
-            architect: {}
-          },
-          'proj1-e2e': {
             architect: {
               e2e: {
                 options: {

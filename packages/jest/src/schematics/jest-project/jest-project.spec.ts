@@ -1,4 +1,4 @@
-import { Tree, VirtualTree } from '@angular-devkit/schematics';
+import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { runSchematic, callRule } from '../../utils/testing';
@@ -7,7 +7,7 @@ describe('jestProject', () => {
   let appTree: Tree;
 
   beforeEach(async () => {
-    appTree = new VirtualTree();
+    appTree = Tree.empty();
     appTree = createEmptyWorkspace(appTree);
     appTree = await callRule(
       updateJsonInTree('angular.json', json => {

@@ -97,6 +97,7 @@ export function createApp(
     '/angular.json',
     JSON.stringify({
       newProjectRoot: '',
+      version: 1,
       projects: {
         [appName]: {
           root: `apps/${appName}`,

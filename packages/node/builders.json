@@ -2,12 +2,12 @@
   "$schema": "@angular-devkit/architect/src/builders-schema.json",
   "builders": {
     "build": {
-      "class": "./src/builders/build/build.builder",
+      "implementation": "./src/builders/build/build.impl",
       "schema": "./src/builders/build/schema.json",
       "description": "Build a Node application"
     },
     "execute": {
-      "class": "./src/builders/execute/execute.builder",
+      "implementation": "./src/builders/execute/execute.impl",
       "schema": "./src/builders/execute/schema.json",
       "description": "Execute a Node application"
     }

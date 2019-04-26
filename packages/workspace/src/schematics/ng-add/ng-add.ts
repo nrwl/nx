@@ -21,7 +21,6 @@ import { from } from 'rxjs';
 import { mapTo, tap } from 'rxjs/operators';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import {
-  editTarget,
   offsetFromRoot,
   readJsonInTree,
   renameSync,
@@ -32,6 +31,8 @@ import {
   updateJsonInTree
 } from '@nrwl/workspace';
 import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../workspace/workspace';
+import { JsonArray } from '@angular-devkit/core';
+import { updateWorkspace } from '../../utils/workspace';
 
 function updatePackageJson() {
   return updateJsonInTree('package.json', packageJson => {
@@ -85,199 +86,133 @@ function convertPath(name: string, originalPath: string) {
 }
 
 function updateAngularCLIJson(options: Schema): Rule {
-  return updateJsonInTree('angular.json', angularJson => {
-    angularJson = {
-      ...angularJson,
-      newProjectRoot: '',
-      cli: {
-        defaultCollection: '@nrwl/angular'
-      }
-    };
+  return updateWorkspace(workspace => {
+    const appName: string = workspace.extensions.defaultProject as string;
+    const e2eName = appName + '-e2e';
+    const e2eRoot = join('apps', e2eName);
+    workspace.extensions.newProjectRoot = '';
+    const defaultProject = workspace.projects.get(appName);
 
-    let app = angularJson.projects[options.name];
-    let e2eProject = getE2eProject(angularJson);
+    const oldSourceRoot = defaultProject.sourceRoot;
+    const newRoot = join('apps', appName);
+    defaultProject.root = newRoot;
+    defaultProject.sourceRoot = join(newRoot, 'src');
+    function convertBuildOptions(buildOptions) {
+      buildOptions.outputPath =
+        buildOptions.outputPath && join('dist', 'apps', appName);
+      buildOptions.index =
+        buildOptions.index && convertAsset(buildOptions.index as string);
+      buildOptions.main =
+        buildOptions.main && convertAsset(buildOptions.main as string);
+      buildOptions.polyfills =
+        buildOptions.polyfills &&
+        convertAsset(buildOptions.polyfills as string);
+      buildOptions.tsConfig =
+        buildOptions.tsConfig && join(newRoot, 'tsconfig.app.json');
+      buildOptions.assets =
+        buildOptions.assets &&
+        (buildOptions.assets as JsonArray).map(convertAsset);
+      buildOptions.styles =
+        buildOptions.styles &&
+        (buildOptions.styles as JsonArray).map(convertAsset);
+      buildOptions.scripts =
+        buildOptions.scripts &&
+        (buildOptions.scripts as JsonArray).map(convertAsset);
+      buildOptions.fileReplacements =
+        buildOptions.fileReplacements &&
+        buildOptions.fileReplacements.map(replacement => ({
+          replace: convertAsset(replacement.replace),
+          with: convertAsset(replacement.with)
+        }));
+    }
+    convertBuildOptions(defaultProject.targets.get('build').options);
+    Object.values(defaultProject.targets.get('build').configurations).forEach(
+      config => convertBuildOptions(config)
+    );
 
-    const oldSourceRoot = app.sourceRoot;
+    const testOptions = defaultProject.targets.get('test').options;
+    testOptions.main = testOptions.main && convertAsset(testOptions.main);
+    testOptions.polyfills =
+      testOptions.polyfills && convertAsset(testOptions.polyfills);
+    testOptions.tsConfig = join(newRoot, 'tsconfig.spec.json');
+    testOptions.karmaConfig = join(newRoot, 'karma.conf.js');
+    testOptions.assets =
+      testOptions.assets && (testOptions.assets as JsonArray).map(convertAsset);
+    testOptions.styles =
+      testOptions.styles && (testOptions.styles as JsonArray).map(convertAsset);
+    testOptions.scripts =
+      testOptions.scripts &&
+      (testOptions.scripts as JsonArray).map(convertAsset);
+
+    const lintTarget = defaultProject.targets.get('lint');
+    lintTarget.options.tsConfig = [
+      join(newRoot, 'tsconfig.app.json'),
+      join(newRoot, 'tsconfig.spec.json')
+    ];
+
+    function convertServerOptions(serverOptions) {
+      serverOptions.outputPath =
+        serverOptions.outputPath &&
+        path.join('dist', 'apps', options.name + '-server');
+      serverOptions.main =
+        serverOptions.main && convertAsset(serverOptions.main);
+      serverOptions.tsConfig =
+        serverOptions.tsConfig && join('apps', appName, 'tsconfig.server.json');
+      serverOptions.fileReplacements =
+        serverOptions.fileReplacements &&
+        serverOptions.fileReplacements.map(replacement => ({
+          replace: convertAsset(replacement.replace),
+          with: convertAsset(replacement.with)
+        }));
+    }
+
+    if (defaultProject.targets.has('server')) {
+      const serverOptions = defaultProject.targets.get('server').options;
+      convertServerOptions(serverOptions);
+      Object.values(
+        defaultProject.targets.get('server').configurations
+      ).forEach(config => convertServerOptions(config));
+    }
 
     function convertAsset(asset: string | any) {
       if (typeof asset === 'string') {
         return asset.startsWith(oldSourceRoot)
-          ? convertPath(options.name, asset)
+          ? convertPath(appName, asset)
           : asset;
       } else {
         return {
           ...asset,
           input:
             asset.input && asset.input.startsWith(oldSourceRoot)
-              ? convertPath(options.name, asset.input)
+              ? convertPath(appName, asset.input)
               : asset.input
         };
       }
     }
 
-    app = {
-      ...app,
-      root: path.join('apps', options.name),
-      sourceRoot: convertPath(options.name, app.sourceRoot)
-    };
-
-    const buildConfig = app.architect.build;
-
-    buildConfig.options = {
-      ...buildConfig.options,
-      outputPath: path.join('dist/apps', options.name),
-      index: convertPath(options.name, buildConfig.options.index),
-      main: convertPath(options.name, buildConfig.options.main),
-      tsConfig: path.join(app.root, getFilename(buildConfig.options.tsConfig)),
-      polyfills:
-        buildConfig.options.polyfills &&
-        convertPath(options.name, buildConfig.options.polyfills),
-      assets:
-        buildConfig.options.assets &&
-        buildConfig.options.assets.map(convertAsset),
-      styles:
-        buildConfig.options.styles &&
-        buildConfig.options.styles.map(convertAsset),
-      scripts:
-        buildConfig.options.scripts &&
-        buildConfig.options.scripts.map(convertAsset)
-    };
-
-    Object.keys(buildConfig.configurations)
-      .filter(
-        configurationName =>
-          buildConfig.configurations[configurationName].fileReplacements
-      )
-      .forEach(configurationName => {
-        buildConfig.configurations[
-          configurationName
-        ].fileReplacements = buildConfig.configurations[
-          configurationName
-        ].fileReplacements.map(replacement => {
-          return {
-            replace: convertPath(options.name, replacement.replace),
-            with: convertPath(options.name, replacement.with)
-          };
-        });
-      });
-
-    const serveConfig = app.architect.serve;
-
-    serveConfig.options.browserTarget = editTarget(
-      serveConfig.options.browserTarget,
-      parsedTarget => {
-        return {
-          ...parsedTarget,
-          project: options.name
-        };
-      }
-    );
-
-    serveConfig.configurations.production.browserTarget = editTarget(
-      serveConfig.configurations.production.browserTarget,
-      parsedTarget => {
-        return {
-          ...parsedTarget,
-          project: options.name
-        };
-      }
-    );
-
-    const i18nConfig = app.architect['extract-i18n'];
-
-    i18nConfig.options.browserTarget = editTarget(
-      i18nConfig.options.browserTarget,
-      parsedTarget => {
-        return {
-          ...parsedTarget,
-          project: options.name
-        };
-      }
-    );
-
-    const testConfig = app.architect.test;
-
-    testConfig.options = {
-      ...testConfig.options,
-      main: convertPath(options.name, testConfig.options.main),
-      tsConfig: path.join(app.root, getFilename(testConfig.options.tsConfig)),
-      karmaConfig: path.join(
-        app.root,
-        getFilename(testConfig.options.karmaConfig)
-      ),
-      polyfills:
-        testConfig.options.polyfills &&
-        convertPath(options.name, testConfig.options.polyfills),
-      assets:
-        testConfig.options.assets &&
-        testConfig.options.assets.map(convertAsset),
-      styles:
-        testConfig.options.styles &&
-        testConfig.options.styles.map(convertAsset),
-      scripts:
-        testConfig.options.scripts &&
-        testConfig.options.scripts.map(convertAsset)
-    };
-
-    const lintConfig = app.architect.lint;
-    lintConfig.options = {
-      ...lintConfig.options,
-      tsConfig: [buildConfig.options.tsConfig, testConfig.options.tsConfig]
-    };
-
-    if (app.architect.server) {
-      const serverConfig = app.architect.server;
-      serverConfig.options = {
-        ...serverConfig.options,
-        outputPath: path.join('dist/apps', options.name + '-server'),
-        main: convertPath(options.name, serverConfig.options.main),
-        tsConfig: path.join(
-          app.root,
-          getFilename(serverConfig.options.tsConfig)
-        )
-      };
-    }
-
-    angularJson.projects[options.name] = app;
-
-    if (e2eProject) {
-      e2eProject.root = path.join('apps', getE2eKey(angularJson));
-
-      const e2eConfig = e2eProject.architect.e2e;
-      e2eConfig.options = {
-        ...e2eConfig.options,
-        protractorConfig: path.join(
-          e2eProject.root,
-          getFilename(e2eConfig.options.protractorConfig)
-        )
-      };
-
-      e2eConfig.options.devServerTarget = editTarget(
-        e2eConfig.options.devServerTarget,
-        parsedTarget => {
-          return {
-            ...parsedTarget,
-            project: options.name
-          };
+    if (defaultProject.targets.get('e2e')) {
+      const e2eProject = workspace.projects.add({
+        name: e2eName,
+        root: e2eRoot,
+        projectType: 'application',
+        targets: {
+          e2e: defaultProject.targets.get('e2e')
         }
+      });
+      e2eProject.targets.add({
+        name: 'lint',
+        builder: '@angular-devkit/build-angular:tslint',
+        options: {
+          ...lintTarget.options,
+          tsConfig: join(e2eRoot, 'tsconfig.json')
+        }
+      });
+      e2eProject.targets.get('e2e').options.protractorConfig = join(
+        e2eRoot,
+        'protractor.conf.js'
       );
-
-      const e2eLintConfig = e2eProject.architect.lint;
-      e2eLintConfig.options.tsConfig = Array.isArray(
-        e2eLintConfig.options.tsConfig
-      )
-        ? e2eLintConfig.options.tsConfig.map(tsConfigPath =>
-            path.join(e2eProject.root, getFilename(tsConfigPath))
-          )
-        : path.join(
-            e2eProject.root,
-            getFilename(e2eLintConfig.options.tsConfig)
-          );
-
-      angularJson.projects[getE2eKey(angularJson)] = e2eProject;
+      defaultProject.targets.delete('e2e');
     }
-
-    return angularJson;
   });
 }
 
@@ -311,47 +246,31 @@ function updateTsConfigsJson(options: Schema) {
     const app = angularJson.projects[options.name];
     const e2eProject = getE2eProject(angularJson);
 
-    // This has to stay using fs since it is created with fs
     const offset = '../../';
-    updateJsonFile(`${app.root}/tsconfig.app.json`, json => {
+    updateJsonFile(app.architect.build.options.tsConfig, json => {
       json.extends = `${offset}tsconfig.json`;
       json.compilerOptions.outDir = `${offset}dist/out-tsc/apps/${
         options.name
       }`;
     });
 
-    // This has to stay using fs since it is created with fs
-    updateJsonFile(`${app.root}/tsconfig.spec.json`, json => {
+    updateJsonFile(app.architect.test.options.tsConfig, json => {
       json.extends = `${offset}tsconfig.json`;
       json.compilerOptions.outDir = `${offset}dist/out-tsc/apps/${
         options.name
       }`;
-      if (json.files) {
-        json.files = json.files.map(file =>
-          path.join(path.relative(app.root, app.sourceRoot), file)
-        );
-      }
     });
 
     if (app.architect.server) {
-      updateJsonFile(`${app.root}/tsconfig.server.json`, json => {
+      updateJsonFile(app.architect.server.options.tsConfig, json => {
         json.compilerOptions.outDir = `${offset}dist/out-tsc/apps/${
           options.name
         }-server`;
-        const loadChildrenConfig = parseLoadChildren(
-          json.angularCompilerOptions.entryModule
-        );
-        loadChildrenConfig.path = path.join('src', loadChildrenConfig.path);
-        json.angularCompilerOptions = {
-          ...json.angularCompilerOptions,
-          entryModule: serializeLoadChildren(loadChildrenConfig)
-        };
       });
     }
 
     if (e2eProject) {
-      // This has to stay using fs since it is created with fs
-      updateJsonFile(`${e2eProject.root}/tsconfig.e2e.json`, json => {
+      updateJsonFile(e2eProject.architect.lint.options.tsConfig, json => {
         json.extends = `${offsetFromRoot(e2eProject.root)}tsconfig.json`;
         json.compilerOptions = {
           ...json.compilerOptions,
@@ -415,18 +334,16 @@ function setUpCompilerOptions(
     tsconfig.compilerOptions.paths = {};
   }
   tsconfig.compilerOptions.baseUrl = '.';
-  tsconfig.compilerOptions.paths[`@${npmScope}/*`] = [`${offset}libs/*`];
 
   return tsconfig;
 }
 
 function moveOutOfSrc(
-  sourceRoot: string,
   appName: string,
   filename: string,
   context?: SchematicContext
 ) {
-  const from = path.join(sourceRoot, filename);
+  const from = filename;
   const to = path.join('apps', appName, filename);
   renameSync(from, to, err => {
     if (!context) {
@@ -465,34 +382,29 @@ function moveExistingFiles(options: Schema) {
     const e2eApp = getE2eProject(angularJson);
 
     // No context is passed because it should not be required to have a browserslist
-    moveOutOfSrc(app.sourceRoot, options.name, 'browserslist');
+    moveOutOfSrc(options.name, 'browserslist');
     moveOutOfSrc(
-      app.sourceRoot,
       options.name,
       getFilename(app.architect.test.options.karmaConfig),
       context
     );
     moveOutOfSrc(
-      app.sourceRoot,
       options.name,
       getFilename(app.architect.build.options.tsConfig),
       context
     );
     moveOutOfSrc(
-      app.sourceRoot,
       options.name,
       getFilename(app.architect.test.options.tsConfig),
       context
     );
     if (app.architect.server) {
       moveOutOfSrc(
-        app.sourceRoot,
         options.name,
         getFilename(app.architect.server.options.tsConfig),
         context
       );
     }
-    moveOutOfSrc(app.sourceRoot, options.name, 'tslint.json', context);
     const oldAppSourceRoot = app.sourceRoot;
     const newAppSourceRoot = join('apps', options.name, app.sourceRoot);
     renameSync(oldAppSourceRoot, newAppSourceRoot, err => {
@@ -507,8 +419,8 @@ function moveExistingFiles(options: Schema) {
     });
 
     if (e2eApp) {
-      const oldE2eRoot = e2eApp.root;
-      const newE2eRoot = join('apps', getE2eKey(angularJson));
+      const oldE2eRoot = 'e2e';
+      const newE2eRoot = join('apps', getE2eKey(angularJson) + '-e2e');
       renameSync(oldE2eRoot, newE2eRoot, err => {
         if (!err) {
           context.logger.info(`Renamed ${oldE2eRoot} -> ${newE2eRoot}`);
@@ -545,7 +457,7 @@ function createAdditionalFiles(options: Schema): Rule {
           [options.name]: {
             tags: []
           },
-          [getE2eKey(angularJson)]: {
+          [getE2eKey(angularJson) + '-e2e']: {
             tags: []
           }
         }
