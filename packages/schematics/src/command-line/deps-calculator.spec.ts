@@ -714,6 +714,79 @@ describe('Calculates Dependencies Between Apps and Libs', () => {
       });
     });
 
+    it(`should handle an ExportDeclaration w/ moduleSpecifier and w/o moduleSpecifier`, () => {
+      const deps = dependencies(
+        'nrwl',
+        [
+          {
+            name: 'lib1Name',
+            root: 'libs/lib1',
+            files: ['lib1.ts'],
+            fileMTimes: {
+              'lib1.ts': 1
+            },
+            tags: [],
+            implicitDependencies: [],
+            architect: {},
+            type: ProjectType.lib
+          },
+          {
+            name: 'lib2Name',
+            root: 'libs/lib2',
+            files: ['lib2.ts'],
+            fileMTimes: {
+              'lib2.ts': 1
+            },
+            tags: [],
+            implicitDependencies: [],
+            architect: {},
+            type: ProjectType.lib
+          },
+          {
+            name: 'lib3Name',
+            root: 'libs/lib3',
+            files: ['lib3.ts'],
+            fileMTimes: {
+              'lib3.ts': 1
+            },
+            tags: [],
+            implicitDependencies: [],
+            architect: {},
+            type: ProjectType.lib
+          }
+        ],
+        null,
+        file => {
+          switch (file) {
+            case 'lib1.ts':
+              return `
+            const FOO = 23;
+            export { FOO };
+          `;
+            case 'lib2.ts':
+              return `
+            export const BAR = 24;
+          `;
+            case 'lib3.ts':
+              return `
+              import { FOO } from '@nrwl/lib1';
+              export { FOO };
+              export { BAR } from '@nrwl/lib2';
+            `;
+          }
+        }
+      );
+
+      expect(deps).toEqual({
+        lib1Name: [],
+        lib2Name: [],
+        lib3Name: [
+          { projectName: 'lib1Name', type: DependencyType.es6Import },
+          { projectName: 'lib2Name', type: DependencyType.es6Import }
+        ]
+      });
+    });
+
     it('should calculate dependencies in .tsx files', () => {
       const deps = dependencies(
         'nrwl',
