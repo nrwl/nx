@@ -72,6 +72,8 @@ if (useYarn) {
 } else {
   execSync('npm install --silent', { cwd: tmpDir, stdio: [0, 1, 2] });
 }
+// Github issue 1300 - defensivenes for node modules paths that contain spaces
+tmpDir = '"'+ tmpDir +'"';
 
 // creating the app itself
 const args = process.argv
