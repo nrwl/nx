@@ -81,7 +81,7 @@ const args = process.argv
 console.log(`ng new ${args} --collection=${nxTool.packageName}`);
 execSync(
   `${path.join(
-    tmpDir,
+    `"${tmpDir}"`,
     'node_modules',
     '.bin',
     'ng'
