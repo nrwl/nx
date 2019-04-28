@@ -266,7 +266,10 @@ export class DepsCalculator {
   }
 
   private processNode(filePath: string, node: ts.Node): void {
-    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
+    if (
+      ts.isImportDeclaration(node) ||
+      (ts.isExportDeclaration(node) && node.moduleSpecifier)
+    ) {
       const imp = this.getStringLiteralValue(node.moduleSpecifier);
       this.addDepIfNeeded(imp, filePath, DependencyType.es6Import);
       return; // stop traversing downwards
