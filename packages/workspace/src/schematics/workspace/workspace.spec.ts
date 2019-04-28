@@ -47,20 +47,4 @@ describe('workspace', () => {
       'esbenp.prettier-vscode'
     ]);
   });
-
-  it('should configure the project to use style argument', async () => {
-    const tree = await runSchematic(
-      'workspace',
-      { name: 'proj', style: 'scss' },
-      projectTree
-    );
-    expect(JSON.parse(tree.readContent('/angular.json')).schematics).toEqual({
-      '@nrwl/workspace:application': {
-        style: 'scss'
-      },
-      '@nrwl/workspace:library': {
-        style: 'scss'
-      }
-    });
-  });
 });

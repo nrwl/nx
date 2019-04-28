@@ -10,12 +10,5 @@
     },
     "defaultCollection": "@nrwl/workspace"
   },
-  "schematics": {<% if (style !== 'css') { %>
-    "@nrwl/workspace:application": {
-      "style": "<%= style %>"
-    },
-    "@nrwl/workspace:library": {
-      "style": "<%= style %>"
-    }
-  <% } %>}
+  "schematics": {}
 }

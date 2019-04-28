@@ -16,6 +16,13 @@
       "hidden": true
     },
 
+    "preset": {
+      "factory": "./src/schematics/preset/preset",
+      "schema": "./src/schematics/preset/schema.json",
+      "description": "Create application in an empty workspace",
+      "hidden": true
+    },
+
     "ng-new": {
       "factory": "./src/schematics/ng-new/ng-new",
       "schema": "./src/schematics/ng-new/schema.json",

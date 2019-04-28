@@ -38,8 +38,7 @@
     },
     "npmScope": {
       "type": "string",
-      "description": "Npm scope for importing libs.",
-      "x-prompt": "What is the npm scope you would like to use for your Nx Workspace?"
+      "description": "Npm scope for importing libs."
     },
     "skipInstall": {
       "description": "Skip installing dependency packages.",
