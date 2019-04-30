@@ -14,15 +14,8 @@ import {
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as ts from 'typescript';
-import { insertImport } from '@schematics/angular/utility/ast-utils';
 import { updateJsonInTree, readJsonInTree } from '@nrwl/workspace';
-import {
-  addImportToModule,
-  addImportToTestBed,
-  getDecoratorPropertyValueNode,
-  insert,
-  replaceNodeValue
-} from '@nrwl/workspace';
+import { insert, replaceNodeValue } from '@nrwl/workspace';
 import { toFileName } from '@nrwl/workspace';
 import { offsetFromRoot } from '@nrwl/workspace';
 import {
@@ -34,6 +27,12 @@ import {
 import { formatFiles } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import { addE2eTestRunner, addUnitTestRunner } from '../ng-add/ng-add';
+import {
+  addImportToModule,
+  addImportToTestBed,
+  getDecoratorPropertyValueNode
+} from '../../utils/ast-utils';
+import { insertImport } from '@nrwl/workspace/src/utils/ast-utils';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: string;

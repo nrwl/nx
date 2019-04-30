@@ -9,12 +9,7 @@ import {
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 
-import {
-  addImportToModule,
-  insert,
-  insertImport,
-  updateJsonInTree
-} from '../../utils/ast-utils';
+import { insert, insertImport, updateJsonInTree } from '../../utils/ast-utils';
 
 import { formatFiles } from '../../utils/rules/format-files';
 
@@ -99,6 +94,8 @@ function createPreset(options: Schema): Rule {
 }
 
 function connectFrontendAndApi(options: Schema) {
+  const addImportToModule = require('@nrwl/angular/src/utils/ast-utils')
+    .addImportToModule;
   return (host: Tree) => {
     host.create(
       'libs/api-interface/src/lib/interfaces.ts',

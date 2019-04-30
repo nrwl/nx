@@ -1,5 +1,4 @@
 import { FileReplacement } from './normalize';
-import { AssetPattern } from '@angular-devkit/build-angular';
 import { Path } from '@angular-devkit/core';
 
 export interface OptimizationOptions {
@@ -26,7 +25,7 @@ export interface BuildBuilderOptions {
   poll?: number;
 
   fileReplacements: FileReplacement[];
-  assets?: AssetPattern[];
+  assets?: any[];
 
   progress?: boolean;
   statsJson?: boolean;

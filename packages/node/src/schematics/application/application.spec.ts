@@ -1,9 +1,9 @@
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
-import { getFileContent } from '@schematics/angular/utility/test';
 import * as stripJsonComments from 'strip-json-comments';
-import { createApp, createEmptyWorkspace } from '@nrwl/workspace/testing';
+import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 import { NxJson, readJsonInTree } from '@nrwl/workspace';
+import { createApp } from '../../../../angular/src/utils/testing';
 
 describe('app', () => {
   let appTree: Tree;

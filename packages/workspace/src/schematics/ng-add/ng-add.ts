@@ -22,9 +22,6 @@ import * as ts from 'typescript';
 import { from } from 'rxjs';
 import { tap, mapTo, concatMap } from 'rxjs/operators';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
-import { getAppModulePath } from '@schematics/angular/utility/ng-ast-utils';
-import { insertImport } from '@schematics/angular/utility/ast-utils';
-import { InsertChange } from '@schematics/angular/utility/change';
 import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { editTarget } from '@nrwl/workspace';
 import { renameSync, serializeJson, updateJsonFile } from '@nrwl/workspace';
@@ -32,9 +29,9 @@ import {
   offsetFromRoot,
   resolveUserExistingPrettierConfig
 } from '@nrwl/workspace';
-import { addImportToModule } from '@nrwl/workspace';
 import { toFileName } from '@nrwl/workspace';
 import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../workspace/workspace';
+import { InsertChange, insertImport } from '../../utils/ast-utils';
 
 function updatePackageJson() {
   return updateJsonInTree('package.json', packageJson => {
@@ -611,8 +608,8 @@ function addNxModule(options: Schema) {
     const angularJson = readJsonInTree(host, 'angular.json');
     const app = angularJson.projects[options.name];
     const modulePath = path.resolve(
-      '.',
-      getAppModulePath(host, app.architect.build.options.main).slice(1)
+      '.'
+      // getAppModulePath(host, app.architect.build.options.main).slice(1)
     );
     let content = fs.readFileSync(modulePath).toString();
 
@@ -642,16 +639,16 @@ function addNxModule(options: Schema) {
       true
     );
 
-    const ngModuleChange: InsertChange = addImportToModule(
-      moduleSource,
-      modulePath,
-      'NxModule.forRoot()'
-    )[0] as InsertChange;
-    content = insertInToString(
-      content,
-      ngModuleChange.pos,
-      ngModuleChange.toAdd
-    );
+    // const ngModuleChange: InsertChange = addImportToModule(
+    //   moduleSource,
+    //   modulePath,
+    //   'NxModule.forRoot()'
+    // )[0] as InsertChange;
+    // content = insertInToString(
+    //   content,
+    //   ngModuleChange.pos,
+    //   ngModuleChange.toAdd
+    // );
     fs.writeFileSync(modulePath, content);
     return host;
   };

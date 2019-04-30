@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as ts from 'typescript';
-import { getSourceNodes } from '@schematics/angular/utility/ast-utils';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { getSourceNodes } from '@nrwl/workspace/src/utils/ast-utils';
 
 export default {
   description: 'Add makeSureNoAppIsSelected(); to karma conf',

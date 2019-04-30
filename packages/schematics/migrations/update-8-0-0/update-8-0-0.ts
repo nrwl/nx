@@ -18,8 +18,10 @@ import {
   isImportDeclaration,
   isStringLiteral
 } from 'typescript';
-import { ReplaceChange } from '@schematics/angular/utility/change';
-import { getSourceNodes } from '@schematics/angular/utility/ast-utils';
+import {
+  getSourceNodes,
+  ReplaceChange
+} from '@nrwl/workspace/src/utils/ast-utils';
 
 function addDependencies() {
   return (host: Tree) => {

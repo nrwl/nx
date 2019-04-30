@@ -1,7 +1,6 @@
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
-import { createApp, createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runSchematic } from '../../utils/testing';
-import { getFileContent } from '@schematics/angular/utility/test';
+import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
+import { createApp, runSchematic } from '../../utils/testing';
 import { readJsonInTree } from '@nrwl/workspace';
 
 describe('upgrade-module', () => {

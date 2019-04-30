@@ -22,6 +22,7 @@ script:
   - yarn test
   - yarn e2e
   - yarn checkcommit
+  - yarn checkimports
 
 notifications:
   email: false

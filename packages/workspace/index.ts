@@ -24,25 +24,16 @@ export { readAngularJson, readNxJson, NxJson } from './src/command-line/shared';
 export {
   readJsonInTree,
   updateJsonInTree,
-  addImportToModule,
-  addImportToTestBed,
-  getDecoratorPropertyValueNode,
   insert,
   replaceNodeValue,
   addDepsToPackageJson,
-  addEntryComponents,
   addMethod,
-  readBootstrapInfo,
-  removeFromNgModule,
-  addRoute,
   addIncludeToTsConfig,
   addGlobal,
   getProjectConfig,
-  addProviderToModule,
-  addDeclarationToModule,
   addParameterToConstructor,
-  getBootstrapComponent,
-  createOrUpdate
+  createOrUpdate,
+  findNodes
 } from './src/utils/ast-utils';
 
 export {

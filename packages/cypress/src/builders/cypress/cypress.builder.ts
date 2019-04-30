@@ -9,7 +9,6 @@ import { catchError, concatMap, tap, map, take } from 'rxjs/operators';
 import { ChildProcess, fork } from 'child_process';
 import { copySync, removeSync } from 'fs-extra';
 import { fromPromise } from 'rxjs/internal-compatibility';
-import { DevServerBuilderOptions } from '@angular-devkit/build-angular';
 import { readFile } from '@angular-devkit/schematics/tools/file-system-utility';
 import { getSystemPath, join } from '@angular-devkit/core';
 import * as path from 'path';
@@ -249,16 +248,14 @@ export default class CypressBuilder implements Builder<CypressBuilderOptions> {
     const architect = this.context.architect;
     const [project, targetName, configuration] = devServerTarget.split(':');
     // Overrides dev server watch setting.
-    const overrides: Partial<DevServerBuilderOptions> = { watch: isWatching };
+    const overrides: Partial<any> = { watch: isWatching };
     const targetSpec = {
       project,
       target: targetName,
       configuration,
       overrides: overrides
     };
-    const builderConfig = architect.getBuilderConfiguration<
-      DevServerBuilderOptions
-    >(targetSpec);
+    const builderConfig = architect.getBuilderConfiguration<any>(targetSpec);
 
     return architect.getBuilderDescription(builderConfig).pipe(
       concatMap(devServerDescription =>

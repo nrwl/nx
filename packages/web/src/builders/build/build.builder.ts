@@ -10,18 +10,13 @@ import { WebpackBuilder } from '@angular-devkit/build-webpack';
 import { Observable } from 'rxjs';
 import { writeFileSync } from 'fs';
 import { resolve } from 'path';
-import {
-  OutputHashing,
-  StylePreprocessorOptions,
-  Budget
-} from '@angular-devkit/build-angular';
 import { normalizeWebBuildOptions } from '../../utils/normalize';
 import { getWebConfig } from '../../utils/web.config';
 import { BuildBuilderOptions } from '../../utils/types';
 
 export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   index: string;
-  budgets: Budget[];
+  budgets: any[];
   baseHref: string;
   deployUrl: string;
 
@@ -34,8 +29,8 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   vendorChunk?: boolean;
   commonChunk?: boolean;
 
-  outputHashing?: OutputHashing;
-  stylePreprocessingOptions?: StylePreprocessorOptions;
+  outputHashing?: any;
+  stylePreprocessingOptions?: any;
 }
 
 export default class BuildWebBuilder

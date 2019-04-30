@@ -1,14 +1,13 @@
 import { chain, noop, Rule, Tree } from '@angular-devkit/schematics';
-import {
-  addEntryComponents,
-  addMethod,
-  insert,
-  readBootstrapInfo,
-  removeFromNgModule
-} from '@nrwl/workspace';
+import { addMethod, insert } from '@nrwl/workspace';
 import { Schema } from './schema';
 import { formatFiles } from '@nrwl/workspace';
 import { addUpgradeToPackageJson } from '../../utils/upgrade';
+import {
+  addEntryComponents,
+  readBootstrapInfo,
+  removeFromNgModule
+} from '../../utils/ast-utils';
 
 function updateMain(angularJsImport: string, options: Schema): Rule {
   return (host: Tree) => {

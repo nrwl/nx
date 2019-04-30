@@ -19,6 +19,7 @@
     "test:nx": "yarn linknpm fast && ./scripts/test_nx.sh",
     "test": "yarn linknpm fast && ./scripts/test_nx.sh && ./scripts/test_schematics.sh",
     "checkformat": "./scripts/check_format.sh",
+    "checkimports": "node ./scripts/check-imports.js",
     "documentation": "./scripts/documentation/documentation.sh && yarn format && ./scripts/documentation/check-documentation.sh"
   },
   "devDependencies": {
