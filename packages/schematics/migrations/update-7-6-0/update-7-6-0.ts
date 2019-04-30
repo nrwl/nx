@@ -6,13 +6,14 @@ import {
   Tree
 } from '@angular-devkit/schematics';
 
-import { ReplaceChange } from '@schematics/angular/utility/change';
-import { getSourceNodes } from '@schematics/angular/utility/ast-utils';
-
 import * as ts from 'typescript';
 
 import { updateJsonInTree, readJsonInTree, insert } from '@nrwl/workspace';
 import { formatFiles } from '@nrwl/workspace';
+import {
+  getSourceNodes,
+  ReplaceChange
+} from '@nrwl/workspace/src/utils/ast-utils';
 
 const addExtensionRecommendations = updateJsonInTree(
   '.vscode/extensions.json',

@@ -4,8 +4,10 @@ import { updateJsonInTree, insert } from '@nrwl/workspace';
 import { formatFiles } from '@nrwl/workspace';
 
 import * as ts from 'typescript';
-import { getSourceNodes } from '@schematics/angular/utility/ast-utils';
-import { ReplaceChange } from '@schematics/angular/utility/change';
+import {
+  getSourceNodes,
+  ReplaceChange
+} from '@nrwl/workspace/src/utils/ast-utils';
 
 const setDefaults = updateJsonInTree('angular.json', json => {
   if (!json.schematics) {

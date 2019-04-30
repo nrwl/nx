@@ -1,14 +1,13 @@
 import { Rule, Tree } from '@angular-devkit/schematics';
-import { Change } from '@schematics/angular/utility/change';
-import { insertImport } from '@schematics/angular/utility/ast-utils';
 import * as ts from 'typescript';
 import { toClassName, toFileName, toPropertyName } from '@nrwl/workspace';
+import { insert } from '@nrwl/workspace';
+import { RequestContext } from './request-context';
 import {
-  insert,
   addImportToModule,
   addProviderToModule
-} from '@nrwl/workspace';
-import { RequestContext } from './request-context';
+} from '../../../utils/ast-utils';
+import { Change, insertImport } from '@nrwl/workspace/src/utils/ast-utils';
 
 export function addImportsToModule(context: RequestContext): Rule {
   return (host: Tree) => {

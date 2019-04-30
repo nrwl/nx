@@ -1,15 +1,12 @@
 import * as mergeWebpack from 'webpack-merge';
 
+//TODO @FrozenPandaz we should remove the following imports
 import { getBrowserConfig } from '@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/browser';
 import { getCommonConfig } from '@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/common';
 import { getStylesConfig } from '@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/styles';
 import { Configuration } from 'webpack';
 import { Logger } from '@angular-devkit/core/src/logger';
 import { resolve } from 'path';
-import {
-  WebpackConfigOptions,
-  BuildOptions
-} from '@angular-devkit/build-angular/src/angular-cli-files/models/build-options';
 import typescript = require('typescript');
 import { WebBuildBuilderOptions } from '../builders/build/build.builder';
 import { convertBuildOptions } from './normalize';
@@ -21,7 +18,7 @@ export function getWebConfig(options: WebBuildBuilderOptions, logger: Logger) {
   const supportES2015 =
     tsConfig.options.target !== typescript.ScriptTarget.ES5 &&
     tsConfig.options.target !== typescript.ScriptTarget.ES3;
-  const wco: WebpackConfigOptions<BuildOptions> = {
+  const wco: any = {
     root: options.root,
     projectRoot: resolve(options.root, options.sourceRoot),
     buildOptions: convertBuildOptions(options),
@@ -45,9 +42,7 @@ function _getBaseWebpackPartial(options: WebBuildBuilderOptions) {
   return partial;
 }
 
-function getCommonPartial(
-  wco: WebpackConfigOptions<BuildOptions>
-): Configuration {
+function getCommonPartial(wco: any): Configuration {
   const commonConfig: Configuration = <Configuration>getCommonConfig(wco);
   delete commonConfig.entry;
   // delete commonConfig.devtool;
@@ -58,9 +53,7 @@ function getCommonPartial(
   return commonConfig;
 }
 
-function getStylesPartial(
-  wco: WebpackConfigOptions<BuildOptions>
-): Configuration {
+function getStylesPartial(wco: any): Configuration {
   const partial = getStylesConfig(wco);
   partial.module.rules = partial.module.rules.map(rule => {
     if (!Array.isArray(rule.use)) {

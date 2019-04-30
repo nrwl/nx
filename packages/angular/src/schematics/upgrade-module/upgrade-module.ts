@@ -14,21 +14,19 @@ import {
 
 import { names, toClassName, toFileName } from '@nrwl/workspace';
 import * as path from 'path';
+import { addMethod, addParameterToConstructor, insert } from '@nrwl/workspace';
+import { Schema } from './schema';
+import { addUpgradeToPackageJson } from '../../utils/upgrade';
+import { formatFiles } from '@nrwl/workspace';
 import {
   addDeclarationToModule,
   addEntryComponents,
   addImportToModule,
-  addMethod,
-  addParameterToConstructor,
   getBootstrapComponent,
-  insert,
   readBootstrapInfo,
   removeFromNgModule
-} from '@nrwl/workspace';
-import { insertImport } from '@schematics/angular/utility/ast-utils';
-import { Schema } from './schema';
-import { addUpgradeToPackageJson } from '../../utils/upgrade';
-import { formatFiles } from '@nrwl/workspace';
+} from '../../utils/ast-utils';
+import { insertImport } from '@nrwl/workspace/src/utils/ast-utils';
 
 function addImportsToModule(options: Schema): Rule {
   return (host: Tree) => {

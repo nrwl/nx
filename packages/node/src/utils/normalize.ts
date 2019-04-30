@@ -1,9 +1,5 @@
 import { Path, normalize } from '@angular-devkit/core';
 import { resolve, dirname, relative, basename } from 'path';
-import {
-  AssetPattern,
-  AssetPatternObject
-} from '@angular-devkit/build-angular';
 import { BuildBuilderOptions } from './types';
 import { statSync } from 'fs';
 
@@ -32,11 +28,7 @@ export function normalizeBuildOptions<T extends BuildBuilderOptions>(
   };
 }
 
-function normalizeAssets(
-  assets: AssetPattern[],
-  root: string,
-  sourceRoot: Path
-): AssetPatternObject[] {
+function normalizeAssets(assets: any[], root: string, sourceRoot: Path): any[] {
   return assets.map(asset => {
     if (typeof asset === 'string') {
       const assetPath = normalize(asset);

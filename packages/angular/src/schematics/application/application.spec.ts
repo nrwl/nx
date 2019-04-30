@@ -1,6 +1,5 @@
 import { Tree, VirtualTree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { getFileContent } from '@schematics/angular/utility/test';
+import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import * as stripJsonComments from 'strip-json-comments';
 import { readJsonInTree, updateJsonInTree, NxJson } from '@nrwl/workspace';
 import { runSchematic, callRule } from '../../utils/testing';

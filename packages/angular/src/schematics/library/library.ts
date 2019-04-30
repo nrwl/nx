@@ -16,7 +16,6 @@ import {
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';
-import { insertImport } from '@schematics/angular/utility/ast-utils';
 import * as ts from 'typescript';
 
 import {
@@ -25,13 +24,7 @@ import {
   readJsonInTree,
   offsetFromRoot
 } from '@nrwl/workspace';
-import {
-  addGlobal,
-  addImportToModule,
-  addIncludeToTsConfig,
-  addRoute,
-  insert
-} from '@nrwl/workspace';
+import { addGlobal, addIncludeToTsConfig, insert } from '@nrwl/workspace';
 import { toClassName, toFileName, toPropertyName } from '@nrwl/workspace';
 import {
   getNpmScope,
@@ -40,6 +33,8 @@ import {
 } from '@nrwl/workspace';
 import { formatFiles } from '@nrwl/workspace';
 import { addUnitTestRunner } from '../ng-add/ng-add';
+import { addImportToModule, addRoute } from '../../utils/ast-utils';
+import { insertImport } from '@nrwl/workspace/src/utils/ast-utils';
 
 interface NormalizedSchema extends Schema {
   name: string;

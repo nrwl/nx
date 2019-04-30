@@ -1,4 +1,3 @@
-import { AssetPattern } from '@angular-devkit/build-angular';
 import { Path } from '@angular-devkit/core';
 
 export interface FileReplacement {
@@ -30,7 +29,7 @@ export interface BuildBuilderOptions {
   poll?: number;
 
   fileReplacements: FileReplacement[];
-  assets?: AssetPattern[];
+  assets?: any[];
 
   progress?: boolean;
   statsJson?: boolean;

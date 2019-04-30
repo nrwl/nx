@@ -1,8 +1,4 @@
 export {
   createEmptyWorkspace,
-  createApp,
-  createLib,
-  AppConfig,
-  getLibConfig,
-  getAppConfig
+  getFileContent
 } from './src/utils/testing-utils';

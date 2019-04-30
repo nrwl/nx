@@ -60,8 +60,9 @@ describe('getNodePartial', () => {
     it('should change all node_modules to commonjs imports', () => {
       const result = getNodeWebpackConfig(input);
       const callback = jest.fn();
-      result.externals[0](null, '@angular/core', callback);
-      expect(callback).toHaveBeenCalledWith(null, 'commonjs @angular/core');
+      console.log(result.externals[0]);
+      result.externals[0](null, 'typescript', callback);
+      expect(callback).toHaveBeenCalledWith(null, 'commonjs typescript');
     });
 
     it('should change given module names to commonjs imports but not others', () => {
@@ -72,7 +73,7 @@ describe('getNodePartial', () => {
       const callback = jest.fn();
       result.externals[0](null, 'module1', callback);
       expect(callback).toHaveBeenCalledWith(null, 'commonjs module1');
-      result.externals[0](null, '@angular/core', callback);
+      result.externals[0](null, 'externalLib', callback);
       expect(callback).toHaveBeenCalledWith();
     });
 

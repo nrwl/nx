@@ -8,8 +8,6 @@ import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
-
-import { AssetPatternObject } from '@angular-devkit/build-angular';
 import { readTsConfig } from '@nrwl/workspace';
 import { BuildBuilderOptions } from './types';
 
@@ -85,20 +83,18 @@ export function getBaseWebpackPartial(
 
   // process asset entries
   if (options.assets) {
-    const copyWebpackPluginPatterns = options.assets.map(
-      (asset: AssetPatternObject) => {
-        return {
-          context: asset.input,
-          // Now we remove starting slash to make Webpack place it from the output root.
-          to: asset.output,
-          ignore: asset.ignore,
-          from: {
-            glob: asset.glob,
-            dot: true
-          }
-        };
-      }
-    );
+    const copyWebpackPluginPatterns = options.assets.map((asset: any) => {
+      return {
+        context: asset.input,
+        // Now we remove starting slash to make Webpack place it from the output root.
+        to: asset.output,
+        ignore: asset.ignore,
+        from: {
+          glob: asset.glob,
+          dot: true
+        }
+      };
+    });
 
     const copyWebpackPluginOptions = {
       ignore: ['.gitkeep', '**/.DS_Store', '**/Thumbs.db']
