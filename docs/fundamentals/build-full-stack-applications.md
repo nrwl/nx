@@ -117,7 +117,7 @@ You can run:
 - `ng build api` to build the application
 - `ng test api` to test the application
 
-By default, Nx will use Nest when generating node applications. Nest ia fantastic framework that shares many of its core concepts with Angular. It uses modules, providers, dependency injection, etc.. As a result, most Angular developers find Nest easy to use.
+By default, Nx will use Nest when generating node applications. Nest is a fantastic framework that shares many of its core concepts with Angular. It uses modules, providers, dependency injection, etc.. As a result, most Angular developers find Nest easy to use.
 
 The generated `apps/api/src/app/app.module.ts` will look like this:
 
