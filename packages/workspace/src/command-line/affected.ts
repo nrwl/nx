@@ -13,7 +13,7 @@ import {
   getAllLibNames,
   getProjectNames,
   parseFiles,
-  getAllProjectNamesWithTarget,
+  getAllProjectsWithTarget,
   getAffectedProjectsWithTarget,
   readAngularJson
 } from './shared';
@@ -123,7 +123,7 @@ function getProjects(
   all: boolean
 ) {
   const projects = all
-    ? getAllProjectNamesWithTarget(target)
+    ? getAllProjectsWithTarget(target)
     : getAffectedProjectsWithTarget(target)(parseFiles(parsedArgs).files);
 
   return projects

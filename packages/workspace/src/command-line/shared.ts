@@ -349,6 +349,16 @@ export function getAllProjectNamesWithTarget(target: string) {
   return getProjectNames(p => p.architect[target]);
 }
 
+export function getAllProjectsWithTarget(target: string) {
+  const angularJson = readAngularJson();
+  const nxJson = readNxJson();
+  const projects = getProjectNodes(angularJson, nxJson);
+  const dependencies = readDependencies(nxJson.npmScope, projects);
+  const sortedProjects = topologicallySortProjects(projects, dependencies);
+
+  return sortedProjects.filter(p => p.architect[target]).map(p => p.name);
+}
+
 export function getProjectNames(
   predicate?: (projectNode: ProjectNode) => boolean
 ): string[] {
