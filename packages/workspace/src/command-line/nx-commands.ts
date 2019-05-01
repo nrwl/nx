@@ -201,6 +201,9 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'boolean',
       default: false
     })
+    .option('verbose', {
+      describe: 'Print additional error stack trace on failure'
+    })
     .conflicts({
       files: ['uncommitted', 'untracked', 'base', 'head', 'all'],
       untracked: ['uncommitted', 'files', 'base', 'head', 'all'],

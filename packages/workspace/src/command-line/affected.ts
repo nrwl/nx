@@ -39,6 +39,7 @@ export interface AffectedOptions extends GlobalNxArgs {
   onlyFailed?: boolean;
   'only-failed'?: boolean;
   'max-parallel'?: boolean;
+  verbose?: boolean;
 }
 
 // Commands that can do `ng [command]`
@@ -110,7 +111,7 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
         break;
     }
   } catch (e) {
-    printError(e);
+    printError(e, parsedArgs.verbose);
     process.exit(1);
   }
 }
@@ -132,8 +133,12 @@ function getProjects(
     );
 }
 
-function printError(e: any) {
-  console.error(e.message);
+function printError(e: any, verbose?: boolean) {
+  if (verbose && e.stack) {
+    console.error(e.stack);
+  } else {
+    console.error(e.message);
+  }
 }
 
 async function runCommand(
@@ -333,7 +338,8 @@ const dummyOptions: AffectedOptions = {
   base: 'base',
   head: 'head',
   exclude: ['exclude'],
-  files: ['']
+  files: [''],
+  verbose: false
 };
 
 const nxSpecificFlags = Object.keys(dummyOptions);
