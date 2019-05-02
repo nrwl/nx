@@ -1,70 +1,70 @@
 import {
+  apply,
   chain,
+  mergeWith,
   Rule,
   SchematicContext,
+  template,
   Tree,
-  url,
-  mergeWith,
-  apply,
-  template
+  url
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';
 import { join } from 'path';
 import {
-  nxVersion,
   angularCliVersion,
-  prettierVersion,
-  jasmineMarblesVersion
+  jasmineMarblesVersion,
+  nxVersion,
+  prettierVersion
 } from '../../utils/versions';
-import * as fs from 'fs';
-import * as ts from 'typescript';
 import { from } from 'rxjs';
-import { tap, mapTo, concatMap } from 'rxjs/operators';
+import { mapTo, tap } from 'rxjs/operators';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
-import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
-import { editTarget } from '@nrwl/workspace';
-import { renameSync, serializeJson, updateJsonFile } from '@nrwl/workspace';
 import {
+  editTarget,
   offsetFromRoot,
-  resolveUserExistingPrettierConfig
+  readJsonInTree,
+  renameSync,
+  resolveUserExistingPrettierConfig,
+  serializeJson,
+  toFileName,
+  updateJsonFile,
+  updateJsonInTree
 } from '@nrwl/workspace';
-import { toFileName } from '@nrwl/workspace';
 import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../workspace/workspace';
-import { InsertChange, insertImport } from '../../utils/ast-utils';
 
 function updatePackageJson() {
   return updateJsonInTree('package.json', packageJson => {
     packageJson.scripts = packageJson.scripts || {};
     packageJson.scripts = {
       ...packageJson.scripts,
-      'affected:apps': './node_modules/.bin/nx affected:apps',
-      'affected:libs': './node_modules/.bin/nx affected:libs',
-      'affected:build': './node_modules/.bin/nx affected:build',
-      'affected:e2e': './node_modules/.bin/nx affected:e2e',
-      'affected:test': './node_modules/.bin/nx affected:test',
-      'affected:lint': './node_modules/.bin/nx affected:lint',
-      'affected:dep-graph': './node_modules/.bin/nx affected:dep-graph',
-      affected: './node_modules/.bin/nx affected',
-      format: './node_modules/.bin/nx format:write',
-      'format:write': './node_modules/.bin/nx format:write',
-      'format:check': './node_modules/.bin/nx format:check',
+      'affected:apps': 'nx affected:apps',
+      'affected:libs': 'nx affected:libs',
+      'affected:build': 'nx affected:build',
+      'affected:e2e': 'nx affected:e2e',
+      'affected:test': 'nx affected:test',
+      'affected:lint': 'nx affected:lint',
+      'affected:dep-graph': 'nx affected:dep-graph',
+      affected: 'nx affected',
+      format: 'nx format:write',
+      'format:write': 'nx format:write',
+      'format:check': 'nx format:check',
       update: 'ng update @nrwl/workspace',
       'update:check': 'ng update',
-      lint: './node_modules/.bin/nx lint && ng lint',
-      'dep-graph': './node_modules/.bin/nx dep-graph',
-      'workspace-schematic': './node_modules/.bin/nx workspace-schematic',
-      help: './node_modules/.bin/nx help'
+      lint: 'nx lint && ng lint',
+      'dep-graph': 'nx dep-graph',
+      'workspace-schematic': 'nx workspace-schematic',
+      help: 'nx help'
     };
     packageJson.devDependencies = packageJson.devDependencies || {};
     if (!packageJson.dependencies) {
       packageJson.dependencies = {};
     }
-    if (packageJson.dependencies['@nrwl/angular']) {
-      delete packageJson.dependencies['@nrwl/angular'];
+    if (!packageJson.dependencies['@nrwl/angular']) {
+      packageJson.dependencies['@nrwl/angular'] = nxVersion;
     }
-    if (!packageJson.devDependencies['@nrwl/angular']) {
-      packageJson.devDependencies['@nrwl/angular'] = nxVersion;
+    if (!packageJson.devDependencies['@nrwl/workspace']) {
+      packageJson.devDependencies['@nrwl/workspace'] = nxVersion;
     }
     if (!packageJson.devDependencies['@angular/cli']) {
       packageJson.devDependencies['@angular/cli'] = angularCliVersion;
@@ -90,7 +90,7 @@ function updateAngularCLIJson(options: Schema): Rule {
       ...angularJson,
       newProjectRoot: '',
       cli: {
-        defaultCollection: '@nrwl/workspace'
+        defaultCollection: '@nrwl/angular'
       }
     };
 
@@ -588,72 +588,6 @@ function createAdditionalFiles(options: Schema): Rule {
   };
 }
 
-function dedup(array: any[]): any[] {
-  const res = [];
-
-  array.forEach(a => {
-    if (res.indexOf(a) === -1) {
-      res.push(a);
-    }
-  });
-  return res;
-}
-
-function insertInToString(originalString: string, pos: number, toAdd: string) {
-  return originalString.slice(0, pos) + toAdd + originalString.slice(pos);
-}
-
-function addNxModule(options: Schema) {
-  return (host: Tree, context: SchematicContext) => {
-    const angularJson = readJsonInTree(host, 'angular.json');
-    const app = angularJson.projects[options.name];
-    const modulePath = path.resolve(
-      '.'
-      // getAppModulePath(host, app.architect.build.options.main).slice(1)
-    );
-    let content = fs.readFileSync(modulePath).toString();
-
-    // Bail if the module already cotains the import
-    if (content.includes('NxModule.forRoot()')) {
-      return host;
-    }
-
-    let moduleSource = ts.createSourceFile(
-      modulePath,
-      content,
-      ts.ScriptTarget.Latest,
-      true
-    );
-    const importChange: InsertChange = insertImport(
-      moduleSource,
-      modulePath,
-      'NxModule',
-      '@nrwl/nx'
-    ) as InsertChange;
-    content = insertInToString(content, importChange.pos, importChange.toAdd);
-
-    moduleSource = ts.createSourceFile(
-      modulePath,
-      content,
-      ts.ScriptTarget.Latest,
-      true
-    );
-
-    // const ngModuleChange: InsertChange = addImportToModule(
-    //   moduleSource,
-    //   modulePath,
-    //   'NxModule.forRoot()'
-    // )[0] as InsertChange;
-    // content = insertInToString(
-    //   content,
-    //   ngModuleChange.pos,
-    //   ngModuleChange.toAdd
-    // );
-    fs.writeFileSync(modulePath, content);
-    return host;
-  };
-}
-
 function checkCanConvertToWorkspace(options: Schema) {
   return (host: Tree, context: SchematicContext) => {
     try {
@@ -729,7 +663,6 @@ export default function(schema: Schema): Rule {
     updateProjectTsLint(options),
     updateTsConfig(options),
     updateTsConfigsJson(options),
-    addNxModule(options),
     addInstallTask(options)
   ]);
 }

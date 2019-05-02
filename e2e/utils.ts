@@ -9,15 +9,7 @@ export function uniq(prefix: string) {
   return `${prefix}${Math.floor(Math.random() * 10000000)}`;
 }
 
-export function runNgNew(command?: string, silent?: boolean): string {
-  const gen = execSync(
-    `../node_modules/.bin/ng new proj --no-interactive --skip-install ${command}`,
-    {
-      cwd: `./tmp`,
-      ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
-    }
-  );
-
+function patchPackageJsonDeps() {
   const p = readFileSync('./tmp/proj/package.json').toString();
   const workspacePath = path.join(getCwd(), 'build', 'packages', 'workspace');
   const angularPath = path.join(getCwd(), 'build', 'packages', 'angular');
@@ -30,13 +22,27 @@ export function runNgNew(command?: string, silent?: boolean): string {
       )
       .replace('"@nrwl/angular": "*"', `"@nrwl/angular": "file:${angularPath}"`)
   );
+}
+
+function runYarnInstall(silent: boolean = true) {
   const install = execSync('yarn install', {
     cwd: './tmp/proj',
     ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
   });
-  return silent
-    ? null
-    : `${gen ? gen.toString() : ''}${install ? install.toString() : ''}`;
+  return install ? install.toString() : '';
+}
+
+export function runNgNew(command?: string, silent?: boolean): string {
+  const gen = execSync(
+    `../node_modules/.bin/ng new proj --no-interactive --skip-install ${command}`,
+    {
+      cwd: `./tmp`,
+      ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
+    }
+  );
+  patchPackageJsonDeps();
+  const install = runYarnInstall(silent);
+  return silent ? null : `${gen ? gen.toString() : ''}${install}`;
 }
 
 export function newProject(): void {
