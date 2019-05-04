@@ -1,25 +1,30 @@
-import { Rule, chain } from '@angular-devkit/schematics';
+import { chain, Rule } from '@angular-devkit/schematics';
 import {
-  addPackageWithNgAdd,
   addDepsToPackageJson,
+  addPackageWithNgAdd,
   updateJsonInTree
 } from '@nrwl/workspace';
 import {
+  expressTypingsVersion,
   nestJsSchematicsVersion,
   nestJsVersion,
-  nxVersion
+  nxVersion,
+  reflectMetadataVersion
 } from '../../utils/versions';
 
 export function addDependencies(): Rule {
   return addDepsToPackageJson(
     {
       '@nestjs/common': nestJsVersion,
-      '@nestjs/core': nestJsVersion
+      '@nestjs/core': nestJsVersion,
+      '@nestjs/platform-express': nestJsVersion,
+      'reflect-metadata': reflectMetadataVersion
     },
     {
       '@nestjs/schematics': nestJsSchematicsVersion,
       '@nestjs/testing': nestJsVersion,
-      '@nrwl/nest': nxVersion
+      '@nrwl/nest': nxVersion,
+      '@types/express': expressTypingsVersion
     }
   );
 }
