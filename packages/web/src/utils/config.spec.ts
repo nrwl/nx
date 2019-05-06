@@ -1,344 +1,344 @@
-// import { getBaseWebpackPartial } from './config';
-// import { normalize, getSystemPath } from '@angular-devkit/core';
+import { getBaseWebpackPartial } from './config';
+import { normalize, getSystemPath } from '@angular-devkit/core';
 
-// import * as ts from 'typescript';
-// import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-// import CircularDependencyPlugin = require('circular-dependency-plugin');
-// import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-// import { ProgressPlugin } from 'webpack';
-// import { BuildBuilderOptions } from './types';
+import * as ts from 'typescript';
+import { LicenseWebpackPlugin } from 'license-webpack-plugin';
+import CircularDependencyPlugin = require('circular-dependency-plugin');
+import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+import { ProgressPlugin } from 'webpack';
+import { BuildBuilderOptions } from './types';
 
-// describe('getBaseWebpackPartial', () => {
-//   let input: BuildBuilderOptions;
-//   beforeEach(() => {
-//     input = {
-//       main: 'main.ts',
-//       outputPath: 'dist',
-//       tsConfig: 'tsconfig.json',
-//       fileReplacements: [],
-//       root: getSystemPath(normalize('/root')),
-//       statsJson: false
-//     };
-//   });
+describe('getBaseWebpackPartial', () => {
+  let input: BuildBuilderOptions;
+  beforeEach(() => {
+    input = {
+      main: 'main.ts',
+      outputPath: 'dist',
+      tsConfig: 'tsconfig.json',
+      fileReplacements: [],
+      root: '/root',
+      statsJson: false
+    };
+  });
 
-//   describe('unconditional options', () => {
-//     it('should have output filename', () => {
-//       const result = getBaseWebpackPartial(input);
+  describe('unconditional options', () => {
+    it('should have output filename', () => {
+      const result = getBaseWebpackPartial(input);
 
-//       expect(result.output.filename).toEqual('main.js');
-//     });
+      expect(result.output.filename).toEqual('main.js');
+    });
 
-//     it('should have output path', () => {
-//       const result = getBaseWebpackPartial(input);
+    it('should have output path', () => {
+      const result = getBaseWebpackPartial(input);
 
-//       expect(result.output.path).toEqual('dist');
-//     });
+      expect(result.output.path).toEqual('dist');
+    });
 
-//     it('should have a rule for typescript', () => {
-//       const result = getBaseWebpackPartial(input);
+    it('should have a rule for typescript', () => {
+      const result = getBaseWebpackPartial(input);
 
-//       const typescriptRule = result.module.rules.find(rule =>
-//         (rule.test as RegExp).test('app/main.ts')
-//       );
-//       expect(typescriptRule).toBeTruthy();
+      const typescriptRule = result.module.rules.find(rule =>
+        (rule.test as RegExp).test('app/main.ts')
+      );
+      expect(typescriptRule).toBeTruthy();
 
-//       expect(typescriptRule.loader).toEqual('ts-loader');
-//     });
+      expect(typescriptRule.loader).toEqual('ts-loader');
+    });
 
-//     it('should split typescript type checking into a separate workers', () => {
-//       const result = getBaseWebpackPartial(input);
+    it('should split typescript type checking into a separate workers', () => {
+      const result = getBaseWebpackPartial(input);
 
-//       const typeCheckerPlugin = result.plugins.find(
-//         plugin => plugin instanceof ForkTsCheckerWebpackPlugin
-//       ) as ForkTsCheckerWebpackPlugin;
-//       expect(typeCheckerPlugin).toBeTruthy();
-//     });
+      const typeCheckerPlugin = result.plugins.find(
+        plugin => plugin instanceof ForkTsCheckerWebpackPlugin
+      ) as ForkTsCheckerWebpackPlugin;
+      expect(typeCheckerPlugin).toBeTruthy();
+    });
 
-//     it('should disable performance hints', () => {
-//       const result = getBaseWebpackPartial(input);
+    it('should disable performance hints', () => {
+      const result = getBaseWebpackPartial(input);
 
-//       expect(result.performance).toEqual({
-//         hints: false
-//       });
-//     });
+      expect(result.performance).toEqual({
+        hints: false
+      });
+    });
 
-//     it('should resolve ts, tsx, mjs, js, and jsx', () => {
-//       const result = getBaseWebpackPartial(input);
+    it('should resolve ts, tsx, mjs, js, and jsx', () => {
+      const result = getBaseWebpackPartial(input);
 
-//       expect(result.resolve.extensions).toEqual([
-//         '.ts',
-//         '.tsx',
-//         '.mjs',
-//         '.js',
-//         '.jsx'
-//       ]);
-//     });
+      expect(result.resolve.extensions).toEqual([
+        '.ts',
+        '.tsx',
+        '.mjs',
+        '.js',
+        '.jsx'
+      ]);
+    });
 
-//     it('should include module and main in mainFields', () => {
-//       spyOn(ts, 'parseJsonConfigFileContent').and.returnValue({
-//         options: {
-//           target: 'es5'
-//         }
-//       });
+    it('should include module and main in mainFields', () => {
+      spyOn(ts, 'parseJsonConfigFileContent').and.returnValue({
+        options: {
+          target: 'es5'
+        }
+      });
 
-//       const result = getBaseWebpackPartial(input);
-//       expect(result.resolve.mainFields).toContain('module');
-//       expect(result.resolve.mainFields).toContain('main');
-//     });
-//   });
+      const result = getBaseWebpackPartial(input);
+      expect(result.resolve.mainFields).toContain('module');
+      expect(result.resolve.mainFields).toContain('main');
+    });
+  });
 
-//   describe('the main option', () => {
-//     it('should set the correct entry options', () => {
-//       const result = getBaseWebpackPartial(input);
+  describe('the main option', () => {
+    it('should set the correct entry options', () => {
+      const result = getBaseWebpackPartial(input);
 
-//       expect(result.entry).toEqual({
-//         main: ['main.ts']
-//       });
-//     });
-//   });
+      expect(result.entry).toEqual({
+        main: ['main.ts']
+      });
+    });
+  });
 
-//   describe('the output option', () => {
-//     it('should set the correct output options', () => {
-//       const result = getBaseWebpackPartial(input);
+  describe('the output option', () => {
+    it('should set the correct output options', () => {
+      const result = getBaseWebpackPartial(input);
 
-//       expect(result.output.path).toEqual('dist');
-//     });
-//   });
+      expect(result.output.path).toEqual('dist');
+    });
+  });
 
-//   describe('the tsConfig option', () => {
-//     it('should set the correct typescript rule', () => {
-//       const result = getBaseWebpackPartial(input);
+  describe('the tsConfig option', () => {
+    it('should set the correct typescript rule', () => {
+      const result = getBaseWebpackPartial(input);
 
-//       expect(
-//         result.module.rules.find(rule => rule.loader === 'ts-loader').options
-//       ).toEqual({
-//         configFile: 'tsconfig.json',
-//         transpileOnly: true,
-//         experimentalWatchApi: true
-//       });
-//     });
+      expect(
+        result.module.rules.find(rule => rule.loader === 'ts-loader').options
+      ).toEqual({
+        configFile: 'tsconfig.json',
+        transpileOnly: true,
+        experimentalWatchApi: true
+      });
+    });
 
-//     it('should set the correct options for the type checker plugin', () => {
-//       const result = getBaseWebpackPartial(input);
+    it('should set the correct options for the type checker plugin', () => {
+      const result = getBaseWebpackPartial(input);
 
-//       const typeCheckerPlugin = result.plugins.find(
-//         plugin => plugin instanceof ForkTsCheckerWebpackPlugin
-//       ) as ForkTsCheckerWebpackPlugin;
-//       expect(typeCheckerPlugin.options.tsconfig).toBe('tsconfig.json');
-//     });
+      const typeCheckerPlugin = result.plugins.find(
+        plugin => plugin instanceof ForkTsCheckerWebpackPlugin
+      ) as ForkTsCheckerWebpackPlugin;
+      expect(typeCheckerPlugin.options.tsconfig).toBe('tsconfig.json');
+    });
 
-//     it('should set aliases for compilerOptionPaths', () => {
-//       spyOn(ts, 'parseJsonConfigFileContent').and.returnValue({
-//         options: {
-//           paths: {
-//             '@npmScope/libraryName': ['libs/libraryName/src/index.ts']
-//           }
-//         }
-//       });
+    it('should set aliases for compilerOptionPaths', () => {
+      spyOn(ts, 'parseJsonConfigFileContent').and.returnValue({
+        options: {
+          paths: {
+            '@npmScope/libraryName': ['libs/libraryName/src/index.ts']
+          }
+        }
+      });
 
-//       const result = getBaseWebpackPartial(input);
-//       expect(result.resolve.alias).toEqual({
-//         '@npmScope/libraryName': '/root/libs/libraryName/src/index.ts'
-//       });
-//     });
+      const result = getBaseWebpackPartial(input);
+      expect(result.resolve.alias).toEqual({
+        '@npmScope/libraryName': '/root/libs/libraryName/src/index.ts'
+      });
+    });
 
-//     it('should include es2015 in mainFields if typescript is set es2015', () => {
-//       spyOn(ts, 'parseJsonConfigFileContent').and.returnValue({
-//         options: {
-//           target: 'es2015'
-//         }
-//       });
+    it('should include es2015 in mainFields if typescript is set es2015', () => {
+      spyOn(ts, 'parseJsonConfigFileContent').and.returnValue({
+        options: {
+          target: 'es2015'
+        }
+      });
 
-//       const result = getBaseWebpackPartial(input);
-//       expect(result.resolve.mainFields).toContain('es2015');
-//     });
-//   });
+      const result = getBaseWebpackPartial(input);
+      expect(result.resolve.mainFields).toContain('es2015');
+    });
+  });
 
-//   describe('the file replacements option', () => {
-//     it('should set aliases', () => {
-//       spyOn(ts, 'parseJsonConfigFileContent').and.returnValue({
-//         options: {}
-//       });
+  describe('the file replacements option', () => {
+    it('should set aliases', () => {
+      spyOn(ts, 'parseJsonConfigFileContent').and.returnValue({
+        options: {}
+      });
 
-//       const result = getBaseWebpackPartial({
-//         ...input,
-//         fileReplacements: [
-//           {
-//             replace: 'environments/environment.ts',
-//             with: 'environments/environment.prod.ts'
-//           }
-//         ]
-//       });
+      const result = getBaseWebpackPartial({
+        ...input,
+        fileReplacements: [
+          {
+            replace: 'environments/environment.ts',
+            with: 'environments/environment.prod.ts'
+          }
+        ]
+      });
 
-//       expect(result.resolve.alias).toEqual({
-//         'environments/environment.ts': 'environments/environment.prod.ts'
-//       });
-//     });
-//   });
+      expect(result.resolve.alias).toEqual({
+        'environments/environment.ts': 'environments/environment.prod.ts'
+      });
+    });
+  });
 
-//   describe('the watch option', () => {
-//     it('should enable file watching', () => {
-//       const result = getBaseWebpackPartial({
-//         ...input,
-//         watch: true
-//       });
+  describe('the watch option', () => {
+    it('should enable file watching', () => {
+      const result = getBaseWebpackPartial({
+        ...input,
+        watch: true
+      });
 
-//       expect(result.watch).toEqual(true);
-//     });
-//   });
+      expect(result.watch).toEqual(true);
+    });
+  });
 
-//   describe('the poll option', () => {
-//     it('should determine the polling rate', () => {
-//       const result = getBaseWebpackPartial({
-//         ...input,
-//         poll: 1000
-//       });
+  describe('the poll option', () => {
+    it('should determine the polling rate', () => {
+      const result = getBaseWebpackPartial({
+        ...input,
+        poll: 1000
+      });
 
-//       expect(result.watchOptions.poll).toEqual(1000);
-//     });
-//   });
+      expect(result.watchOptions.poll).toEqual(1000);
+    });
+  });
 
-//   describe('the source map option', () => {
-//     it('should enable source-map devtool', () => {
-//       const result = getBaseWebpackPartial({
-//         ...input,
-//         sourceMap: true
-//       });
+  describe('the source map option', () => {
+    it('should enable source-map devtool', () => {
+      const result = getBaseWebpackPartial({
+        ...input,
+        sourceMap: true
+      });
 
-//       expect(result.devtool).toEqual('source-map');
-//     });
+      expect(result.devtool).toEqual('source-map');
+    });
 
-//     it('should disable source-map devtool', () => {
-//       const result = getBaseWebpackPartial({
-//         ...input,
-//         sourceMap: false
-//       });
+    it('should disable source-map devtool', () => {
+      const result = getBaseWebpackPartial({
+        ...input,
+        sourceMap: false
+      });
 
-//       expect(result.devtool).toEqual(false);
-//     });
-//   });
+      expect(result.devtool).toEqual(false);
+    });
+  });
 
-//   describe('the optimization option', () => {
-//     describe('by default', () => {
-//       it('should set the mode to development', () => {
-//         const result = getBaseWebpackPartial(input);
+  describe('the optimization option', () => {
+    describe('by default', () => {
+      it('should set the mode to development', () => {
+        const result = getBaseWebpackPartial(input);
 
-//         expect(result.mode).toEqual('development');
-//       });
-//     });
+        expect(result.mode).toEqual('development');
+      });
+    });
 
-//     describe('when true', () => {
-//       it('should set the mode to production', () => {
-//         const result = getBaseWebpackPartial({
-//           ...input,
-//           optimization: true
-//         });
+    describe('when true', () => {
+      it('should set the mode to production', () => {
+        const result = getBaseWebpackPartial({
+          ...input,
+          optimization: true
+        });
 
-//         expect(result.mode).toEqual('production');
-//       });
-//     });
-//   });
+        expect(result.mode).toEqual('production');
+      });
+    });
+  });
 
-//   describe('the max workers option', () => {
-//     it('should set the maximum workers for the type checker', () => {
-//       const result = getBaseWebpackPartial({
-//         ...input,
-//         maxWorkers: 1
-//       });
+  describe('the max workers option', () => {
+    it('should set the maximum workers for the type checker', () => {
+      const result = getBaseWebpackPartial({
+        ...input,
+        maxWorkers: 1
+      });
 
-//       const typeCheckerPlugin = result.plugins.find(
-//         plugin => plugin instanceof ForkTsCheckerWebpackPlugin
-//       ) as ForkTsCheckerWebpackPlugin;
-//       expect(typeCheckerPlugin.options.workers).toEqual(1);
-//     });
-//   });
+      const typeCheckerPlugin = result.plugins.find(
+        plugin => plugin instanceof ForkTsCheckerWebpackPlugin
+      ) as ForkTsCheckerWebpackPlugin;
+      expect(typeCheckerPlugin.options.workers).toEqual(1);
+    });
+  });
 
-//   describe('the assets option', () => {
-//     it('should add a copy-webpack-plugin', () => {
-//       const result = getBaseWebpackPartial({
-//         ...input,
-//         assets: [
-//           {
-//             input: 'assets',
-//             glob: '**/*',
-//             output: 'assets'
-//           },
-//           {
-//             input: '',
-//             glob: 'file.txt',
-//             output: ''
-//           }
-//         ]
-//       });
+  describe('the assets option', () => {
+    it('should add a copy-webpack-plugin', () => {
+      const result = getBaseWebpackPartial({
+        ...input,
+        assets: [
+          {
+            input: 'assets',
+            glob: '**/*',
+            output: 'assets'
+          },
+          {
+            input: '',
+            glob: 'file.txt',
+            output: ''
+          }
+        ]
+      });
 
-//       // This test isn't great because it's hard to find CopyWebpackPlugin
-//       expect(
-//         result.plugins.some(
-//           plugin => !(plugin instanceof ForkTsCheckerWebpackPlugin)
-//         )
-//       ).toBeTruthy();
-//     });
-//   });
+      // This test isn't great because it's hard to find CopyWebpackPlugin
+      expect(
+        result.plugins.some(
+          plugin => !(plugin instanceof ForkTsCheckerWebpackPlugin)
+        )
+      ).toBeTruthy();
+    });
+  });
 
-//   describe('the circular dependencies option', () => {
-//     it('should show warnings for circular dependencies', () => {
-//       const result = getBaseWebpackPartial({
-//         ...input,
-//         showCircularDependencies: true
-//       });
+  describe('the circular dependencies option', () => {
+    it('should show warnings for circular dependencies', () => {
+      const result = getBaseWebpackPartial({
+        ...input,
+        showCircularDependencies: true
+      });
 
-//       expect(
-//         result.plugins.find(
-//           plugin => plugin instanceof CircularDependencyPlugin
-//         )
-//       ).toBeTruthy();
-//     });
+      expect(
+        result.plugins.find(
+          plugin => plugin instanceof CircularDependencyPlugin
+        )
+      ).toBeTruthy();
+    });
 
-//     it('should exclude node modules', () => {
-//       const result = getBaseWebpackPartial({
-//         ...input,
-//         showCircularDependencies: true
-//       });
+    it('should exclude node modules', () => {
+      const result = getBaseWebpackPartial({
+        ...input,
+        showCircularDependencies: true
+      });
 
-//       const circularDependencyPlugin: CircularDependencyPlugin = result.plugins.find(
-//         plugin => plugin instanceof CircularDependencyPlugin
-//       );
-//       expect(circularDependencyPlugin.options.exclude).toEqual(
-//         /[\\\/]node_modules[\\\/]/
-//       );
-//     });
-//   });
+      const circularDependencyPlugin: CircularDependencyPlugin = result.plugins.find(
+        plugin => plugin instanceof CircularDependencyPlugin
+      );
+      expect(circularDependencyPlugin.options.exclude).toEqual(
+        /[\\\/]node_modules[\\\/]/
+      );
+    });
+  });
 
-//   describe('the extract licenses option', () => {
-//     it('should extract licenses to a separate file', () => {
-//       const result = getBaseWebpackPartial({
-//         ...input,
-//         extractLicenses: true
-//       });
+  describe('the extract licenses option', () => {
+    it('should extract licenses to a separate file', () => {
+      const result = getBaseWebpackPartial({
+        ...input,
+        extractLicenses: true
+      });
 
-//       const licensePlugin = result.plugins.find(
-//         plugin => plugin instanceof LicenseWebpackPlugin
-//       ) as LicenseWebpackPlugin;
-//       const options = (<any>licensePlugin).options;
+      const licensePlugin = result.plugins.find(
+        plugin => plugin instanceof LicenseWebpackPlugin
+      ) as LicenseWebpackPlugin;
+      const options = (<any>licensePlugin).options;
 
-//       expect(licensePlugin).toBeTruthy();
-//       expect(options.pattern).toEqual(/.*/);
-//       expect(options.suppressErrors).toEqual(true);
-//       expect(options.perChunkOutput).toEqual(false);
-//       expect(options.outputFilename).toEqual('3rdpartylicenses.txt');
-//     });
-//   });
+      expect(licensePlugin).toBeTruthy();
+      expect(options.pattern).toEqual(/.*/);
+      expect(options.suppressErrors).toEqual(true);
+      expect(options.perChunkOutput).toEqual(false);
+      expect(options.outputFilename).toEqual('3rdpartylicenses.txt');
+    });
+  });
 
-//   describe('the progress option', () => {
-//     it('should show build progress', () => {
-//       const result = getBaseWebpackPartial({
-//         ...input,
-//         progress: true
-//       });
+  describe('the progress option', () => {
+    it('should show build progress', () => {
+      const result = getBaseWebpackPartial({
+        ...input,
+        progress: true
+      });
 
-//       expect(
-//         result.plugins.find(plugin => plugin instanceof ProgressPlugin)
-//       ).toBeTruthy();
-//     });
-//   });
-// });
+      expect(
+        result.plugins.find(plugin => plugin instanceof ProgressPlugin)
+      ).toBeTruthy();
+    });
+  });
+});

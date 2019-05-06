@@ -1,108 +1,115 @@
-// import {
-//   Configuration as WebpackDevServerConfiguration,
-//   HistoryApiFallbackConfig
-// } from 'webpack-dev-server';
-// import { readFileSync } from 'fs';
-// import * as path from 'path';
-// import * as url from 'url';
-// import { getWebConfig } from './web.config';
-// import { Configuration } from 'webpack';
-// import { Logger } from '@angular-devkit/core/src/logger';
-// import { WebBuildBuilderOptions } from '../builders/build/build.builder';
-// import { WebDevServerOptions } from '../builders/dev-server/dev-server.builder';
-// import { buildServePath } from './serve-path';
-// import { OptimizationOptions } from './types';
+import {
+  Configuration as WebpackDevServerConfiguration,
+  HistoryApiFallbackConfig
+} from 'webpack-dev-server';
+import { readFileSync } from 'fs';
+import * as path from 'path';
+import * as url from 'url';
+import { getWebConfig } from './web.config';
+import { Configuration } from 'webpack';
+import { LoggerApi } from '@angular-devkit/core/src/logger';
+import { WebBuildBuilderOptions } from '../builders/build/build.impl';
+import { WebDevServerOptions } from '../builders/dev-server/dev-server.impl';
+import { buildServePath } from './serve-path';
+import { OptimizationOptions } from './types';
 
-// export function getDevServerConfig(
-//   buildOptions: WebBuildBuilderOptions,
-//   serveOptions: WebDevServerOptions,
-//   logger: Logger
-// ) {
-//   const webpackConfig: Configuration = getWebConfig(buildOptions, logger);
-//   (webpackConfig as any).devServer = getDevServerPartial(
-//     serveOptions,
-//     buildOptions
-//   );
-//   if (serveOptions.liveReload) {
-//     webpackConfig.entry['main'].unshift(getLiveReloadEntry(serveOptions));
-//   }
-//   return webpackConfig;
-// }
+export function getDevServerConfig(
+  root: string,
+  sourceRoot: string,
+  buildOptions: WebBuildBuilderOptions,
+  serveOptions: WebDevServerOptions,
+  logger: LoggerApi
+) {
+  const webpackConfig: Configuration = getWebConfig(
+    root,
+    sourceRoot,
+    buildOptions,
+    logger
+  );
+  (webpackConfig as any).devServer = getDevServerPartial(
+    serveOptions,
+    buildOptions
+  );
+  if (serveOptions.liveReload) {
+    webpackConfig.entry['main'].unshift(getLiveReloadEntry(serveOptions));
+  }
+  return webpackConfig;
+}
 
-// function getLiveReloadEntry(serveOptions: WebDevServerOptions) {
-//   let clientAddress = `${serveOptions.ssl ? 'https' : 'http'}://0.0.0.0:0`;
-//   if (serveOptions.publicHost) {
-//     let publicHost = serveOptions.publicHost;
-//     if (!/^\w+:\/\//.test(publicHost)) {
-//       publicHost = `${serveOptions.ssl ? 'https' : 'http'}://${publicHost}`;
-//     }
-//     const clientUrl = url.parse(publicHost);
-//     serveOptions.publicHost = clientUrl.host;
-//     clientAddress = url.format(clientUrl);
-//   }
-//   let webpackDevServerPath;
-//   try {
-//     webpackDevServerPath = require.resolve('webpack-dev-server/client');
-//   } catch {
-//     throw new Error('The "webpack-dev-server" package could not be found.');
-//   }
-//   return `${webpackDevServerPath}?${clientAddress}`;
-// }
+function getLiveReloadEntry(serveOptions: WebDevServerOptions) {
+  let clientAddress = `${serveOptions.ssl ? 'https' : 'http'}://0.0.0.0:0`;
+  if (serveOptions.publicHost) {
+    let publicHost = serveOptions.publicHost;
+    if (!/^\w+:\/\//.test(publicHost)) {
+      publicHost = `${serveOptions.ssl ? 'https' : 'http'}://${publicHost}`;
+    }
+    const clientUrl = url.parse(publicHost);
+    serveOptions.publicHost = clientUrl.host;
+    clientAddress = url.format(clientUrl);
+  }
+  let webpackDevServerPath;
+  try {
+    webpackDevServerPath = require.resolve('webpack-dev-server/client');
+  } catch {
+    throw new Error('The "webpack-dev-server" package could not be found.');
+  }
+  return `${webpackDevServerPath}?${clientAddress}`;
+}
 
-// function getDevServerPartial(
-//   options: WebDevServerOptions,
-//   buildOptions: WebBuildBuilderOptions
-// ): WebpackDevServerConfiguration {
-//   const servePath = buildServePath(buildOptions);
+function getDevServerPartial(
+  options: WebDevServerOptions,
+  buildOptions: WebBuildBuilderOptions
+): WebpackDevServerConfiguration {
+  const servePath = buildServePath(buildOptions);
 
-//   const {
-//     scripts: scriptsOptimization,
-//     styles: stylesOptimization
-//   } = buildOptions.optimization as OptimizationOptions;
+  const {
+    scripts: scriptsOptimization,
+    styles: stylesOptimization
+  } = buildOptions.optimization as OptimizationOptions;
 
-//   const config: WebpackDevServerConfiguration = {
-//     host: options.host,
-//     port: options.port,
-//     headers: { 'Access-Control-Allow-Origin': '*' },
-//     historyApiFallback: {
-//       index: `${servePath}/${path.basename(buildOptions.index)}`,
-//       disableDotRule: true,
-//       htmlAcceptHeaders: ['text/html', 'application/xhtml+xml']
-//     } as HistoryApiFallbackConfig,
-//     stats: false,
-//     compress: scriptsOptimization || stylesOptimization,
-//     https: options.ssl,
-//     overlay: {
-//       errors: !(scriptsOptimization || stylesOptimization),
-//       warnings: false
-//     },
-//     watchOptions: {
-//       poll: buildOptions.poll
-//     },
-//     public: options.publicHost,
-//     publicPath: servePath,
-//     contentBase: false
-//   };
+  const config: WebpackDevServerConfiguration = {
+    host: options.host,
+    port: options.port,
+    headers: { 'Access-Control-Allow-Origin': '*' },
+    historyApiFallback: {
+      index: `${servePath}/${path.basename(buildOptions.index)}`,
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml']
+    } as HistoryApiFallbackConfig,
+    stats: false,
+    compress: scriptsOptimization || stylesOptimization,
+    https: options.ssl,
+    overlay: {
+      errors: !(scriptsOptimization || stylesOptimization),
+      warnings: false
+    },
+    watchOptions: {
+      poll: buildOptions.poll
+    },
+    public: options.publicHost,
+    publicPath: servePath,
+    contentBase: false
+  };
 
-//   if (options.ssl && options.sslKey && options.sslCert) {
-//     config.https = getSslConfig(buildOptions.root, options);
-//   }
+  if (options.ssl && options.sslKey && options.sslCert) {
+    config.https = getSslConfig(buildOptions.root, options);
+  }
 
-//   if (options.proxyConfig) {
-//     config.proxy = getProxyConfig(buildOptions.root, options);
-//   }
+  if (options.proxyConfig) {
+    config.proxy = getProxyConfig(buildOptions.root, options);
+  }
 
-//   return config;
-// }
+  return config;
+}
 
-// function getSslConfig(root: string, options: WebDevServerOptions) {
-//   return {
-//     key: readFileSync(path.resolve(root, options.sslKey), 'utf-8'),
-//     cert: readFileSync(path.resolve(root, options.sslCert), 'utf-8')
-//   };
-// }
+function getSslConfig(root: string, options: WebDevServerOptions) {
+  return {
+    key: readFileSync(path.resolve(root, options.sslKey), 'utf-8'),
+    cert: readFileSync(path.resolve(root, options.sslCert), 'utf-8')
+  };
+}
 
-// function getProxyConfig(root: string, options: WebDevServerOptions) {
-//   const proxyPath = path.resolve(root, options.proxyConfig as string);
-//   return require(proxyPath);
-// }
+function getProxyConfig(root: string, options: WebDevServerOptions) {
+  const proxyPath = path.resolve(root, options.proxyConfig as string);
+  return require(proxyPath);
+}

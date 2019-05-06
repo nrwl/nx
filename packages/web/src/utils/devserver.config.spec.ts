@@ -1,352 +1,396 @@
-// import { getSystemPath, normalize, join } from '@angular-devkit/core';
-// import { getDevServerConfig } from './devserver.config';
-// import { Logger } from '@angular-devkit/core/src/logger';
-// import * as ts from 'typescript';
-// import * as fs from 'fs';
-// import { WebBuildBuilderOptions } from '../builders/build/build.builder';
-// import { WebDevServerOptions } from '../builders/dev-server/dev-server.builder';
+import { getSystemPath, normalize, join } from '@angular-devkit/core';
+import { getDevServerConfig } from './devserver.config';
+import { Logger } from '@angular-devkit/core/src/logger';
+import * as ts from 'typescript';
+import * as fs from 'fs';
+import { WebBuildBuilderOptions } from '../builders/build/build.impl';
+import { WebDevServerOptions } from '../builders/dev-server/dev-server.impl';
 
-// describe('getDevServerConfig', () => {
-//   let buildInput: WebBuildBuilderOptions;
-//   let serveInput: WebDevServerOptions;
-//   let mockCompilerOptions: any;
-//   let logger: Logger;
+describe('getDevServerConfig', () => {
+  let buildInput: WebBuildBuilderOptions;
+  let serveInput: WebDevServerOptions;
+  let mockCompilerOptions: any;
+  let logger: Logger;
+  let root: string;
+  let sourceRoot: string;
 
-//   beforeEach(() => {
-//     buildInput = {
-//       main: 'main.ts',
-//       index: 'index.html',
-//       budgets: [],
-//       baseHref: '/',
-//       deployUrl: '/',
-//       sourceMap: {
-//         scripts: true,
-//         styles: true,
-//         hidden: false,
-//         vendors: false
-//       },
-//       optimization: {
-//         scripts: false,
-//         styles: false
-//       },
-//       styles: [],
-//       scripts: [],
-//       outputPath: 'dist',
-//       tsConfig: 'tsconfig.json',
-//       fileReplacements: [],
-//       root: getSystemPath(normalize(__dirname)),
-//       sourceRoot: normalize('packages/builders')
-//     };
+  beforeEach(() => {
+    buildInput = {
+      main: 'main.ts',
+      index: 'index.html',
+      budgets: [],
+      baseHref: '/',
+      deployUrl: '/',
+      sourceMap: {
+        scripts: true,
+        styles: true,
+        hidden: false,
+        vendors: false
+      },
+      optimization: {
+        scripts: false,
+        styles: false
+      },
+      styles: [],
+      scripts: [],
+      outputPath: 'dist',
+      tsConfig: 'tsconfig.json',
+      fileReplacements: []
+    };
+    root = '/root';
+    sourceRoot = '/root/apps/app';
 
-//     serveInput = {
-//       host: 'localhost',
-//       port: 4200,
-//       buildTarget: 'webapp:build',
-//       ssl: false,
-//       liveReload: true,
-//       open: false,
-//       watch: true
-//     };
+    serveInput = {
+      host: 'localhost',
+      port: 4200,
+      buildTarget: 'webapp:build',
+      ssl: false,
+      liveReload: true,
+      open: false,
+      watch: true
+    };
 
-//     mockCompilerOptions = {
-//       target: 'es2015',
-//       paths: { path: ['mapped/path'] }
-//     };
+    mockCompilerOptions = {
+      target: 'es2015',
+      paths: { path: ['mapped/path'] }
+    };
 
-//     spyOn(ts, 'readConfigFile').and.callFake(() => ({
-//       config: {
-//         compilerOptions: mockCompilerOptions
-//       }
-//     }));
-//   });
+    spyOn(ts, 'readConfigFile').and.callFake(() => ({
+      config: {
+        compilerOptions: mockCompilerOptions
+      }
+    }));
+  });
 
-//   describe('unconditional settings', () => {
-//     it('should allow requests from any domain', () => {
-//       const { devServer: result } = getDevServerConfig(
-//         buildInput,
-//         serveInput,
-//         logger
-//       ) as any;
+  describe('unconditional settings', () => {
+    it('should allow requests from any domain', () => {
+      const { devServer: result } = getDevServerConfig(
+        root,
+        sourceRoot,
+        buildInput,
+        serveInput,
+        logger
+      ) as any;
 
-//       expect(result.headers['Access-Control-Allow-Origin']).toEqual('*');
-//     });
+      expect(result.headers['Access-Control-Allow-Origin']).toEqual('*');
+    });
 
-//     it('should not display warnings in the overlay', () => {
-//       const { devServer: result } = getDevServerConfig(
-//         buildInput,
-//         serveInput,
-//         logger
-//       ) as any;
+    it('should not display warnings in the overlay', () => {
+      const { devServer: result } = getDevServerConfig(
+        root,
+        sourceRoot,
+        buildInput,
+        serveInput,
+        logger
+      ) as any;
 
-//       expect(result.overlay.warnings).toEqual(false);
-//     });
+      expect(result.overlay.warnings).toEqual(false);
+    });
 
-//     it('should not emit stats', () => {
-//       const { devServer: result } = getDevServerConfig(
-//         buildInput,
-//         serveInput,
-//         logger
-//       ) as any;
+    it('should not emit stats', () => {
+      const { devServer: result } = getDevServerConfig(
+        root,
+        sourceRoot,
+        buildInput,
+        serveInput,
+        logger
+      ) as any;
 
-//       expect(result.stats).toEqual(false);
-//     });
+      expect(result.stats).toEqual(false);
+    });
 
-//     it('should not have a contentBase', () => {
-//       const { devServer: result } = getDevServerConfig(
-//         buildInput,
-//         serveInput,
-//         logger
-//       ) as any;
+    it('should not have a contentBase', () => {
+      const { devServer: result } = getDevServerConfig(
+        root,
+        sourceRoot,
+        buildInput,
+        serveInput,
+        logger
+      ) as any;
 
-//       expect(result.contentBase).toEqual(false);
-//     });
-//   });
+      expect(result.contentBase).toEqual(false);
+    });
+  });
 
-//   describe('host option', () => {
-//     it('should set the host option', () => {
-//       const { devServer: result } = getDevServerConfig(
-//         buildInput,
-//         serveInput,
-//         logger
-//       ) as any;
+  describe('host option', () => {
+    it('should set the host option', () => {
+      const { devServer: result } = getDevServerConfig(
+        root,
+        sourceRoot,
+        buildInput,
+        serveInput,
+        logger
+      ) as any;
 
-//       expect(result.host).toEqual('localhost');
-//     });
-//   });
+      expect(result.host).toEqual('localhost');
+    });
+  });
 
-//   describe('port option', () => {
-//     it('should set the port option', () => {
-//       const { devServer: result } = getDevServerConfig(
-//         buildInput,
-//         serveInput,
-//         logger
-//       ) as any;
+  describe('port option', () => {
+    it('should set the port option', () => {
+      const { devServer: result } = getDevServerConfig(
+        root,
+        sourceRoot,
+        buildInput,
+        serveInput,
+        logger
+      ) as any;
 
-//       expect(result.port).toEqual(4200);
-//     });
-//   });
+      expect(result.port).toEqual(4200);
+    });
+  });
 
-//   describe('build options', () => {
-//     it('should set the history api fallback options', () => {
-//       const { devServer: result } = getDevServerConfig(
-//         buildInput,
-//         serveInput,
-//         logger
-//       ) as any;
+  describe('build options', () => {
+    it('should set the history api fallback options', () => {
+      const { devServer: result } = getDevServerConfig(
+        root,
+        sourceRoot,
+        buildInput,
+        serveInput,
+        logger
+      ) as any;
 
-//       expect(result.historyApiFallback).toEqual({
-//         index: '//index.html',
-//         disableDotRule: true,
-//         htmlAcceptHeaders: ['text/html', 'application/xhtml+xml']
-//       });
-//     });
+      expect(result.historyApiFallback).toEqual({
+        index: '//index.html',
+        disableDotRule: true,
+        htmlAcceptHeaders: ['text/html', 'application/xhtml+xml']
+      });
+    });
 
-//     describe('optimization', () => {
-//       it('should not compress assets by default', () => {
-//         const { devServer: result } = getDevServerConfig(
-//           buildInput,
-//           serveInput,
-//           logger
-//         ) as any;
+    describe('optimization', () => {
+      it('should not compress assets by default', () => {
+        const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
+          buildInput,
+          serveInput,
+          logger
+        ) as any;
 
-//         expect(result.compress).toEqual(false);
-//       });
+        expect(result.compress).toEqual(false);
+      });
 
-//       it('should compress assets if scripts optimization is on', () => {
-//         const { devServer: result } = getDevServerConfig(
-//           {
-//             ...buildInput,
-//             optimization: {
-//               scripts: true,
-//               styles: false
-//             }
-//           },
-//           serveInput,
-//           logger
-//         ) as any;
+      it('should compress assets if scripts optimization is on', () => {
+        const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
+          {
+            ...buildInput,
+            optimization: {
+              scripts: true,
+              styles: false
+            }
+          },
+          serveInput,
+          logger
+        ) as any;
 
-//         expect(result.compress).toEqual(true);
-//       });
+        expect(result.compress).toEqual(true);
+      });
 
-//       it('should compress assets if styles optimization is on', () => {
-//         const { devServer: result } = getDevServerConfig(
-//           {
-//             ...buildInput,
-//             optimization: {
-//               scripts: false,
-//               styles: true
-//             }
-//           },
-//           serveInput,
-//           logger
-//         ) as any;
+      it('should compress assets if styles optimization is on', () => {
+        const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
+          {
+            ...buildInput,
+            optimization: {
+              scripts: false,
+              styles: true
+            }
+          },
+          serveInput,
+          logger
+        ) as any;
 
-//         expect(result.compress).toEqual(true);
-//       });
+        expect(result.compress).toEqual(true);
+      });
 
-//       it('should compress assets if all optimization is on', () => {
-//         const { devServer: result } = getDevServerConfig(
-//           {
-//             ...buildInput,
-//             optimization: {
-//               scripts: true,
-//               styles: true
-//             }
-//           },
-//           serveInput,
-//           logger
-//         ) as any;
+      it('should compress assets if all optimization is on', () => {
+        const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
+          {
+            ...buildInput,
+            optimization: {
+              scripts: true,
+              styles: true
+            }
+          },
+          serveInput,
+          logger
+        ) as any;
 
-//         expect(result.compress).toEqual(true);
-//       });
+        expect(result.compress).toEqual(true);
+      });
 
-//       it('should show an overlay when optimization is off', () => {
-//         const { devServer: result } = getDevServerConfig(
-//           {
-//             ...buildInput,
-//             optimization: {
-//               scripts: false,
-//               styles: false
-//             }
-//           },
-//           serveInput,
-//           logger
-//         ) as any;
+      it('should show an overlay when optimization is off', () => {
+        const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
+          {
+            ...buildInput,
+            optimization: {
+              scripts: false,
+              styles: false
+            }
+          },
+          serveInput,
+          logger
+        ) as any;
 
-//         expect(result.overlay.errors).toEqual(true);
-//       });
+        expect(result.overlay.errors).toEqual(true);
+      });
 
-//       it('should not show an overlay when optimization is on', () => {
-//         const { devServer: result } = getDevServerConfig(
-//           {
-//             ...buildInput,
-//             optimization: {
-//               scripts: true,
-//               styles: true
-//             }
-//           },
-//           serveInput,
-//           logger
-//         ) as any;
+      it('should not show an overlay when optimization is on', () => {
+        const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
+          {
+            ...buildInput,
+            optimization: {
+              scripts: true,
+              styles: true
+            }
+          },
+          serveInput,
+          logger
+        ) as any;
 
-//         expect(result.overlay.errors).toEqual(false);
-//       });
-//     });
+        expect(result.overlay.errors).toEqual(false);
+      });
+    });
 
-//     describe('liveReload option', () => {
-//       it('should push the live reload entry to the main entry', () => {
-//         const result = getDevServerConfig(buildInput, serveInput, logger);
+    describe('liveReload option', () => {
+      it('should push the live reload entry to the main entry', () => {
+        const result = getDevServerConfig(
+          root,
+          sourceRoot,
+          buildInput,
+          serveInput,
+          logger
+        );
 
-//         expect(result.entry['main']).toContain(
-//           `${require.resolve('webpack-dev-server/client')}?http://0.0.0.0:0`
-//         );
-//       });
+        expect(result.entry['main']).toContain(
+          `${require.resolve('webpack-dev-server/client')}?http://0.0.0.0:0`
+        );
+      });
 
-//       it('should push the correct entry when publicHost option is used', () => {
-//         const result = getDevServerConfig(
-//           buildInput,
-//           {
-//             ...serveInput,
-//             publicHost: 'www.example.com'
-//           },
-//           logger
-//         );
+      it('should push the correct entry when publicHost option is used', () => {
+        const result = getDevServerConfig(
+          root,
+          sourceRoot,
+          buildInput,
+          {
+            ...serveInput,
+            publicHost: 'www.example.com'
+          },
+          logger
+        );
 
-//         expect(result.entry['main']).toContain(
-//           `${require.resolve(
-//             'webpack-dev-server/client'
-//           )}?http://www.example.com/`
-//         );
-//       });
+        expect(result.entry['main']).toContain(
+          `${require.resolve(
+            'webpack-dev-server/client'
+          )}?http://www.example.com/`
+        );
+      });
 
-//       it('should push the correct entry when publicHost and ssl options are used', () => {
-//         const result = getDevServerConfig(
-//           buildInput,
-//           {
-//             ...serveInput,
-//             ssl: true,
-//             publicHost: 'www.example.com'
-//           },
-//           logger
-//         );
+      it('should push the correct entry when publicHost and ssl options are used', () => {
+        const result = getDevServerConfig(
+          root,
+          sourceRoot,
+          buildInput,
+          {
+            ...serveInput,
+            ssl: true,
+            publicHost: 'www.example.com'
+          },
+          logger
+        );
 
-//         expect(result.entry['main']).toContain(
-//           `${require.resolve(
-//             'webpack-dev-server/client'
-//           )}?https://www.example.com/`
-//         );
-//       });
-//     });
+        expect(result.entry['main']).toContain(
+          `${require.resolve(
+            'webpack-dev-server/client'
+          )}?https://www.example.com/`
+        );
+      });
+    });
 
-//     describe('ssl option', () => {
-//       it('should set https to false if not on', () => {
-//         const { devServer: result } = getDevServerConfig(
-//           {
-//             ...buildInput,
-//             optimization: {
-//               scripts: true,
-//               styles: true
-//             }
-//           },
-//           serveInput,
-//           logger
-//         ) as any;
+    describe('ssl option', () => {
+      it('should set https to false if not on', () => {
+        const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
+          {
+            ...buildInput,
+            optimization: {
+              scripts: true,
+              styles: true
+            }
+          },
+          serveInput,
+          logger
+        ) as any;
 
-//         expect(result.https).toEqual(false);
-//       });
+        expect(result.https).toEqual(false);
+      });
 
-//       it('should configure it with the key and cert provided when on', () => {
-//         spyOn(fs, 'readFileSync').and.callFake(path => {
-//           if (path.endsWith('ssl.key')) {
-//             return 'sslKeyContents';
-//           } else if (path.endsWith('ssl.cert')) {
-//             return 'sslCertContents';
-//           }
-//         });
+      it('should configure it with the key and cert provided when on', () => {
+        spyOn(fs, 'readFileSync').and.callFake(path => {
+          if (path.endsWith('ssl.key')) {
+            return 'sslKeyContents';
+          } else if (path.endsWith('ssl.cert')) {
+            return 'sslCertContents';
+          }
+        });
 
-//         const { devServer: result } = getDevServerConfig(
-//           buildInput,
-//           {
-//             ...serveInput,
-//             ssl: true,
-//             sslKey: 'ssl.key',
-//             sslCert: 'ssl.cert'
-//           },
-//           logger
-//         ) as any;
+        const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
+          buildInput,
+          {
+            ...serveInput,
+            ssl: true,
+            sslKey: 'ssl.key',
+            sslCert: 'ssl.cert'
+          },
+          logger
+        ) as any;
 
-//         expect(result.https).toEqual({
-//           key: 'sslKeyContents',
-//           cert: 'sslCertContents'
-//         });
-//       });
-//     });
+        expect(result.https).toEqual({
+          key: 'sslKeyContents',
+          cert: 'sslCertContents'
+        });
+      });
+    });
 
-//     describe('proxyConfig option', () => {
-//       it('should setProxyConfig', () => {
-//         jest.mock(
-//           join(normalize(__dirname), 'proxy.conf'),
-//           () => ({
-//             proxyConfig: 'proxyConfig'
-//           }),
-//           {
-//             virtual: true
-//           }
-//         );
+    describe('proxyConfig option', () => {
+      it('should setProxyConfig', () => {
+        jest.mock(
+          join(normalize(__dirname), 'proxy.conf'),
+          () => ({
+            proxyConfig: 'proxyConfig'
+          }),
+          {
+            virtual: true
+          }
+        );
 
-//         const { devServer: result } = getDevServerConfig(
-//           buildInput,
-//           {
-//             ...serveInput,
-//             proxyConfig: 'proxy.conf'
-//           },
-//           logger
-//         ) as any;
+        const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
+          buildInput,
+          {
+            ...serveInput,
+            proxyConfig: 'proxy.conf'
+          },
+          logger
+        ) as any;
 
-//         expect(result.proxy).toEqual({
-//           proxyConfig: 'proxyConfig'
-//         });
-//       });
-//     });
-//   });
-// });
+        expect(result.proxy).toEqual({
+          proxyConfig: 'proxyConfig'
+        });
+      });
+    });
+  });
+});
