@@ -133,8 +133,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
         tsConfig: 'apps/proj/tsconfig.app.json',
         assets: ['apps/proj/src/favicon.ico', 'apps/proj/src/assets'],
         styles: ['apps/proj/src/styles.css'],
-        scripts: ['apps/proj/src/scripts.ts'],
-        es5BrowserSupport: true
+        scripts: ['apps/proj/src/scripts.ts']
       },
       configurations: {
         production: {
@@ -217,16 +216,9 @@ describe('Nrwl Convert to Nx Workspace', () => {
     expect(updatedAngularCLIJson.projects['proj-e2e'].architect.lint).toEqual({
       builder: '@angular-devkit/build-angular:tslint',
       options: {
-        tsConfig: 'apps/proj-e2e/tsconfig.e2e.json',
+        tsConfig: 'apps/proj-e2e/tsconfig.json',
         exclude: ['**/node_modules/**']
       }
-    });
-
-    // check if tsconfig.json get merged
-    const updatedTsConfig = readJson('tsconfig.json');
-    expect(updatedTsConfig.compilerOptions.paths).toEqual({
-      a: ['b'],
-      '@projscope/*': ['libs/*']
     });
 
     const updatedTslint = readJson('tslint.json');
@@ -239,7 +231,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     ]);
 
     runCLI('build --prod --outputHashing none');
-    checkFilesExist('dist/apps/proj/main.js');
+    checkFilesExist('dist/apps/proj/main-es2015.js');
   });
 
   it('should generate a workspace and not change dependencies, devDependencies, or vscode extensions if they already exist', () => {
@@ -309,7 +301,7 @@ describe('Nrwl Convert to Nx Workspace', () => {
     // Remove e2e
     runCommand('rm -rf e2e');
     const existingAngularJson = readJson('angular.json');
-    delete existingAngularJson.projects['proj-e2e'];
+    delete existingAngularJson.projects['proj'].architect.e2e;
     updateFile('angular.json', JSON.stringify(existingAngularJson, null, 2));
 
     // Add @nrwl/workspace
@@ -326,31 +318,6 @@ describe('Nrwl Convert to Nx Workspace', () => {
     expect(result.stderr).toContain(
       'No e2e project was migrated because there was none declared in angular.json'
     );
-  });
-
-  it('should handle type array at tslint builder options.tsConfig (e2e project)', () => {
-    // create a new AngularCLI app
-    runNgNew();
-
-    // set array at tslint builder options.tsConfig
-    const existingAngularJson = readJson('angular.json');
-    existingAngularJson.projects['proj-e2e'].architect.lint.options.tsConfig = [
-      'e2e/tsconfig.e2e.json'
-    ];
-    updateFile('angular.json', JSON.stringify(existingAngularJson, null, 2));
-
-    // Add @nrwl/workspace
-    runCLI('add @nrwl/workspace --npmScope projscope --skip-install');
-
-    const updatedAngularCLIJson = readJson('angular.json');
-
-    expect(updatedAngularCLIJson.projects['proj-e2e'].architect.lint).toEqual({
-      builder: '@angular-devkit/build-angular:tslint',
-      options: {
-        tsConfig: ['apps/proj-e2e/tsconfig.e2e.json'],
-        exclude: ['**/node_modules/**']
-      }
-    });
   });
 
   it('should handle different types of errors', () => {

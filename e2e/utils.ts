@@ -34,7 +34,8 @@ function runYarnInstall(silent: boolean = true) {
 
 export function runNgNew(command?: string, silent?: boolean): string {
   const gen = execSync(
-    `../node_modules/.bin/ng new proj --no-interactive --skip-install ${command}`,
+    `../node_modules/.bin/ng new proj --no-interactive --skip-install ${command ||
+      ''}`,
     {
       cwd: `./tmp`,
       ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
