@@ -23,7 +23,6 @@ describe('ng-add', () => {
       .toPromise();
     const packageJson = readJsonInTree(result, 'package.json');
 
-    console.log(packageJson);
     expect(packageJson.dependencies['@nrwl/nest']).toBeUndefined();
     expect(packageJson.devDependencies['@nrwl/nest']).toBeDefined();
     expect(packageJson.dependencies['@nestjs/core']).toBeDefined();

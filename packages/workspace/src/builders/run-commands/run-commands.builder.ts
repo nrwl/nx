@@ -15,6 +15,8 @@ export interface RunCommandsBuilderOptions {
   commands: { command: string }[];
   parallel?: boolean;
   readyWhen?: string;
+  args?: string;
+  parsedArgs?: { [k: string]: string };
 }
 
 export default class RunCommandsBuilder
@@ -22,6 +24,10 @@ export default class RunCommandsBuilder
   run(
     config: BuilderConfiguration<RunCommandsBuilderOptions>
   ): Observable<BuildEvent> {
+    config.options.parsedArgs = {
+      ...(config.options as any),
+      ...this.parseArgs(config.options.args)
+    };
     return Observable.create(async observer => {
       if (!config || !config.options || !config.options.commands) {
         observer.error(
@@ -62,7 +68,10 @@ export default class RunCommandsBuilder
     config: BuilderConfiguration<RunCommandsBuilderOptions>
   ) {
     const procs = config.options.commands.map(c =>
-      this.createProcess(c.command, config.options.readyWhen).then(result => ({
+      this.createProcess(
+        this.transformCommand(c.command, config.options.parsedArgs),
+        config.options.readyWhen
+      ).then(result => ({
         result,
         command: c.command
       }))
@@ -106,7 +115,7 @@ export default class RunCommandsBuilder
     >(async (m, c) => {
       if ((await m) === null) {
         const success = await this.createProcess(
-          c.command,
+          this.transformCommand(c.command, config.options.parsedArgs),
           config.options.readyWhen
         );
         return !success ? c.command : null;
@@ -150,5 +159,30 @@ export default class RunCommandsBuilder
         }
       });
     });
+  }
+
+  private transformCommand(command: string, args: any) {
+    const regex = /{args\.([^}]+)}/g;
+    return command.replace(regex, (_, group: string) => args[group]);
+  }
+
+  private parseArgs(args: string) {
+    if (!args) {
+      return {};
+    }
+    return args
+      .split(' ')
+      .map(t => t.trim())
+      .reduce((m, c) => {
+        if (!c.startsWith('--')) {
+          throw new Error(`Invalid args: ${args}`);
+        }
+        const [key, value] = c.substring(2).split('=');
+        if (!key || !value) {
+          throw new Error(`Invalid args: ${args}`);
+        }
+        m[key] = value;
+        return m;
+      }, {});
   }
 }
