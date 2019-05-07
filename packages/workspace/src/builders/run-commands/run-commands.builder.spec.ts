@@ -194,4 +194,52 @@ describe('Command Runner Builder', () => {
     expect(result).toEqual({ success: false });
     expect(readFile(f)).toEqual('1');
   });
+
+  it('should throw when invalid args', async () => {
+    const root = normalize('/root');
+    const f = fileSync().name;
+
+    try {
+      await builder
+        .run({
+          root,
+          builder: '@nrwl/run-commands',
+          projectType: 'application',
+          options: {
+            commands: [
+              {
+                command: `echo {args.key} >> ${f}`
+              }
+            ],
+            args: 'key=value'
+          }
+        })
+        .toPromise();
+    } catch (e) {
+      expect(e.message).toEqual('Invalid args: key=value');
+    }
+  });
+
+  it('should enable parameter substitution', async () => {
+    const root = normalize('/root');
+    const f = fileSync().name;
+    const result = await builder
+      .run({
+        root,
+        builder: '@nrwl/run-commands',
+        projectType: 'application',
+        options: {
+          commands: [
+            {
+              command: `echo {args.key} >> ${f}`
+            }
+          ],
+          args: '--key=value'
+        }
+      })
+      .toPromise();
+
+    expect(result).toEqual({ success: true });
+    expect(readFile(f)).toEqual('value');
+  });
 });

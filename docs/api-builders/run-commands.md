@@ -4,15 +4,11 @@ Run commands
 
 ## Properties
 
-### commands
-
-Type: `array` of `object`
-
-#### command
+### args
 
 Type: `string`
 
-Command to run in child process
+Extra arguments. You can pass them as follows: ng run project:target --args='--wait=100'. You can them use {args.wait} syntax to interpolate them in angular.json
 
 ### parallel
 
