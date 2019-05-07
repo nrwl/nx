@@ -24,9 +24,6 @@ describe('workspace', () => {
       JSON.stringify({
         projects: {
           proj1: {
-            architect: {}
-          },
-          'proj1-e2e': {
             architect: {
               e2e: {
                 options: {
