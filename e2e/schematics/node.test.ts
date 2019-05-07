@@ -47,8 +47,8 @@ describe('Node Applications', () => {
     );
 
     updateFile(`apps/${nodeapp}/src/assets/file.txt`, ``);
-    // const jestResult = await runCLIAsync(`test ${nodeapp}`);
-    // expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
+    const jestResult = await runCLIAsync(`test ${nodeapp}`);
+    expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
 
     await runCLIAsync(`build ${nodeapp}`);
 
@@ -132,8 +132,8 @@ describe('Node Applications', () => {
     runCLI(`generate @nrwl/nest:app ${nestapp}`);
 
     updateFile(`apps/${nestapp}/src/assets/file.txt`, ``);
-    // const jestResult = await runCLIAsync(`test ${nestapp}`);
-    // expect(jestResult.stderr).toContain('Test Suites: 2 passed, 2 total');
+    const jestResult = await runCLIAsync(`test ${nestapp}`);
+    expect(jestResult.stderr).toContain('Test Suites: 2 passed, 2 total');
 
     await runCLIAsync(`build ${nestapp}`);
 
