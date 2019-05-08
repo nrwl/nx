@@ -20,9 +20,7 @@ export function stripSourceCode(scanner: Scanner, contents: string): string {
         ) {
           token = scanner.scan();
         }
-        if (token !== SyntaxKind.OpenParenToken) {
-          start = potentialStart;
-        }
+        start = potentialStart;
         break;
       }
 
@@ -46,6 +44,9 @@ export function stripSourceCode(scanner: Scanner, contents: string): string {
       case SyntaxKind.StringLiteral: {
         if (start !== null) {
           token = scanner.scan();
+          if (token === SyntaxKind.CloseParenToken) {
+            token = scanner.scan();
+          }
           const end = scanner.getStartPos();
           statements.push(contents.substring(start, end));
           start = null;
