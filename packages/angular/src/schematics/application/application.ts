@@ -183,17 +183,6 @@ function addTsconfigs(options: NormalizedSchema): Rule {
         move(options.appProjectRoot)
       ])
     )
-    // options.e2eTestRunner === 'protractor'
-    //   ? mergeWith(
-    //       apply(url('./files'), [
-    //         template({
-    //           ...options,
-    //           offsetFromRoot: offsetFromRoot(options.e2eProjectRoot)
-    //         }),
-    //         move(options.e2eProjectRoot)
-    //       ])
-    //     )
-    //   : noop()
   ]);
 }
 
@@ -311,19 +300,6 @@ function updateE2eProject(options: NormalizedSchema): Rule {
         json.projects[options.e2eProjectName] = project;
         delete json.projects[options.name].architect.e2e;
         return json;
-      }),
-      updateJsonInTree(`${options.e2eProjectRoot}/tsconfig.json`, json => {
-        return {
-          ...json,
-          compilerOptions: {
-            ...json.compilerOptions,
-            types: [
-              ...(json.compilerOptions.types || []),
-              'jasmine',
-              'jasminewd2'
-            ]
-          }
-        };
       }),
       updateJsonInTree(`${options.e2eProjectRoot}/tsconfig.e2e.json`, json => {
         return {

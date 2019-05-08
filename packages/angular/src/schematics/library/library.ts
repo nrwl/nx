@@ -125,17 +125,15 @@ function addLoadChildren(options: NormalizedSchema): Rule {
       true
     );
 
-    const loadChildren = `@${npmScope}/${options.projectDirectory}#${
-      options.moduleName
-    }`;
-
     insert(host, options.parentModule, [
       ...addRoute(
         options.parentModule,
         sourceFile,
         `{path: '${toFileName(
           options.fileName
-        )}', loadChildren: '${loadChildren}'}`
+        )}', loadChildren: () => import('@${npmScope}/${
+          options.projectDirectory
+        }').then(module => module.${options.moduleName})}`
       )
     ]);
 

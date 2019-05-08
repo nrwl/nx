@@ -34,7 +34,8 @@ import {
 import {
         Component
       } from "react"
-import "./app.scss"`;
+import "./app.scss"
+import('./module.ts')`;
 
     expect(stripSourceCode(scanner, input)).toEqual(expected);
   });
