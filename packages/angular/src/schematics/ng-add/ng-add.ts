@@ -32,7 +32,7 @@ function updateDependencies(): Rule {
     '@angular/router': angularVersion,
     'core-js': '^2.5.4',
     rxjs: rxjsVersion,
-    'zone.js': '^0.8.26'
+    'zone.js': '^0.9.1'
   };
   const devDeps = {
     '@angular/compiler-cli': angularVersion,

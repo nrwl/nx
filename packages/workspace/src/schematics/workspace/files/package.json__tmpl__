@@ -36,7 +36,6 @@
     "tslint": "~5.11.0",
     "typescript": "<%= typescriptVersion %>",
     "prettier": "<%= prettierVersion %>"<% if(!nxCli) { %>,
-    "@angular/cli": "<%= angularCliVersion %>",
-    "@angular/core": "<%= angularVersion %>"<% } %>
+    "@angular/cli": "<%= angularCliVersion %>"<% } %>
   }
 }

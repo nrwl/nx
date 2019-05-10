@@ -15,8 +15,7 @@ import {
   angularCliVersion,
   prettierVersion,
   typescriptVersion,
-  nxVersion,
-  angularVersion
+  nxVersion
 } from '../../utils/versions';
 
 export const DEFAULT_NRWL_PRETTIER_CONFIG = {
@@ -40,7 +39,6 @@ export default function(options: Schema): Rule {
         prettierVersion,
         // angular cli and angular version are used only when workspace schematics is added to angular cli
         angularCliVersion,
-        angularVersion,
         ...(options as object),
         nxVersion,
         npmScope,
