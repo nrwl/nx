@@ -131,9 +131,9 @@ function addLoadChildren(options: NormalizedSchema): Rule {
         sourceFile,
         `{path: '${toFileName(
           options.fileName
-        )}', loadChildren: () => import('@${npmScope}/${
-          options.projectDirectory
-        }').then(module => module.${options.moduleName})}`
+        )}', loadChildren: '@${npmScope}/${options.projectDirectory}#${
+          options.moduleName
+        }'}`
       )
     ]);
 
