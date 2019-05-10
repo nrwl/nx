@@ -1,15 +1,16 @@
-import { getSystemPath, normalize } from '@angular-devkit/core';
+import { getWebConfig as getWebPartial } from './web.config';
 jest.mock('tsconfig-paths-webpack-plugin');
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-import { getWebConfig as getWebPartial } from './web.config';
 import { createConsoleLogger } from '@angular-devkit/core/node';
 import { Logger } from '@angular-devkit/core/src/logger';
 import * as ts from 'typescript';
-import { WebBuildBuilderOptions } from '../builders/build/build.builder';
+import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 
 describe('getWebConfig', () => {
   let input: WebBuildBuilderOptions;
   let logger: Logger;
+  let root: string;
+  let sourceRoot: string;
   let mockCompilerOptions: any;
 
   beforeEach(() => {
@@ -33,10 +34,10 @@ describe('getWebConfig', () => {
       scripts: [],
       outputPath: 'dist',
       tsConfig: 'tsconfig.json',
-      fileReplacements: [],
-      root: getSystemPath(normalize(__dirname)),
-      sourceRoot: normalize('packages/builders')
+      fileReplacements: []
     };
+    root = '/root';
+    sourceRoot = '/root/apps/app';
     logger = createConsoleLogger();
 
     mockCompilerOptions = {
@@ -53,12 +54,12 @@ describe('getWebConfig', () => {
   });
 
   it('should resolve the browser main field', () => {
-    const result = getWebPartial(input, logger);
+    const result = getWebPartial(root, sourceRoot, input, logger);
     expect(result.resolve.mainFields).toContain('browser');
   });
 
   it('should use the style-loader to load styles', () => {
-    const result = getWebPartial(input, logger);
+    const result = getWebPartial(root, sourceRoot, input, logger);
     expect(
       result.module.rules.find(rule => rule.test.test('styles.css')).use[0]
         .loader
@@ -72,6 +73,8 @@ describe('getWebConfig', () => {
   describe('polyfills', () => {
     it('should set the polyfills entry', () => {
       const result = getWebPartial(
+        root,
+        sourceRoot,
         {
           ...input,
           polyfills: 'polyfills.ts'
@@ -85,6 +88,8 @@ describe('getWebConfig', () => {
   describe('es2015 polyfills', () => {
     it('should set the es2015-polyfills entry', () => {
       const result = getWebPartial(
+        root,
+        sourceRoot,
         {
           ...input,
           es2015Polyfills: 'polyfills.es2015.ts'

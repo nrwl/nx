@@ -5,14 +5,16 @@ jest.mock('tsconfig-paths-webpack-plugin');
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import * as ts from 'typescript';
 import * as fs from 'fs';
-import { WebBuildBuilderOptions } from '../builders/build/build.builder';
-import { WebDevServerOptions } from '../builders/dev-server/dev-server.builder';
+import { WebBuildBuilderOptions } from '../builders/build/build.impl';
+import { WebDevServerOptions } from '../builders/dev-server/dev-server.impl';
 
 describe('getDevServerConfig', () => {
   let buildInput: WebBuildBuilderOptions;
   let serveInput: WebDevServerOptions;
   let mockCompilerOptions: any;
   let logger: Logger;
+  let root: string;
+  let sourceRoot: string;
 
   beforeEach(() => {
     buildInput = {
@@ -35,10 +37,10 @@ describe('getDevServerConfig', () => {
       scripts: [],
       outputPath: 'dist',
       tsConfig: 'tsconfig.json',
-      fileReplacements: [],
-      root: getSystemPath(normalize(__dirname)),
-      sourceRoot: normalize('packages/builders')
+      fileReplacements: []
     };
+    root = '/root';
+    sourceRoot = '/root/apps/app';
 
     serveInput = {
       host: 'localhost',
@@ -66,6 +68,8 @@ describe('getDevServerConfig', () => {
   describe('unconditional settings', () => {
     it('should allow requests from any domain', () => {
       const { devServer: result } = getDevServerConfig(
+        root,
+        sourceRoot,
         buildInput,
         serveInput,
         logger
@@ -76,6 +80,8 @@ describe('getDevServerConfig', () => {
 
     it('should not display warnings in the overlay', () => {
       const { devServer: result } = getDevServerConfig(
+        root,
+        sourceRoot,
         buildInput,
         serveInput,
         logger
@@ -86,6 +92,8 @@ describe('getDevServerConfig', () => {
 
     it('should not emit stats', () => {
       const { devServer: result } = getDevServerConfig(
+        root,
+        sourceRoot,
         buildInput,
         serveInput,
         logger
@@ -96,6 +104,8 @@ describe('getDevServerConfig', () => {
 
     it('should not have a contentBase', () => {
       const { devServer: result } = getDevServerConfig(
+        root,
+        sourceRoot,
         buildInput,
         serveInput,
         logger
@@ -108,6 +118,8 @@ describe('getDevServerConfig', () => {
   describe('host option', () => {
     it('should set the host option', () => {
       const { devServer: result } = getDevServerConfig(
+        root,
+        sourceRoot,
         buildInput,
         serveInput,
         logger
@@ -120,6 +132,8 @@ describe('getDevServerConfig', () => {
   describe('port option', () => {
     it('should set the port option', () => {
       const { devServer: result } = getDevServerConfig(
+        root,
+        sourceRoot,
         buildInput,
         serveInput,
         logger
@@ -132,6 +146,8 @@ describe('getDevServerConfig', () => {
   describe('build options', () => {
     it('should set the history api fallback options', () => {
       const { devServer: result } = getDevServerConfig(
+        root,
+        sourceRoot,
         buildInput,
         serveInput,
         logger
@@ -147,6 +163,8 @@ describe('getDevServerConfig', () => {
     describe('optimization', () => {
       it('should not compress assets by default', () => {
         const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
           buildInput,
           serveInput,
           logger
@@ -157,6 +175,8 @@ describe('getDevServerConfig', () => {
 
       it('should compress assets if scripts optimization is on', () => {
         const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
           {
             ...buildInput,
             optimization: {
@@ -173,6 +193,8 @@ describe('getDevServerConfig', () => {
 
       it('should compress assets if styles optimization is on', () => {
         const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
           {
             ...buildInput,
             optimization: {
@@ -189,6 +211,8 @@ describe('getDevServerConfig', () => {
 
       it('should compress assets if all optimization is on', () => {
         const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
           {
             ...buildInput,
             optimization: {
@@ -205,6 +229,8 @@ describe('getDevServerConfig', () => {
 
       it('should show an overlay when optimization is off', () => {
         const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
           {
             ...buildInput,
             optimization: {
@@ -221,6 +247,8 @@ describe('getDevServerConfig', () => {
 
       it('should not show an overlay when optimization is on', () => {
         const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
           {
             ...buildInput,
             optimization: {
@@ -238,7 +266,13 @@ describe('getDevServerConfig', () => {
 
     describe('liveReload option', () => {
       it('should push the live reload entry to the main entry', () => {
-        const result = getDevServerConfig(buildInput, serveInput, logger);
+        const result = getDevServerConfig(
+          root,
+          sourceRoot,
+          buildInput,
+          serveInput,
+          logger
+        );
 
         expect(result.entry['main']).toContain(
           `${require.resolve('webpack-dev-server/client')}?http://0.0.0.0:0`
@@ -247,6 +281,8 @@ describe('getDevServerConfig', () => {
 
       it('should push the correct entry when publicHost option is used', () => {
         const result = getDevServerConfig(
+          root,
+          sourceRoot,
           buildInput,
           {
             ...serveInput,
@@ -264,6 +300,8 @@ describe('getDevServerConfig', () => {
 
       it('should push the correct entry when publicHost and ssl options are used', () => {
         const result = getDevServerConfig(
+          root,
+          sourceRoot,
           buildInput,
           {
             ...serveInput,
@@ -284,6 +322,8 @@ describe('getDevServerConfig', () => {
     describe('ssl option', () => {
       it('should set https to false if not on', () => {
         const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
           {
             ...buildInput,
             optimization: {
@@ -308,6 +348,8 @@ describe('getDevServerConfig', () => {
         });
 
         const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
           buildInput,
           {
             ...serveInput,
@@ -338,6 +380,8 @@ describe('getDevServerConfig', () => {
         );
 
         const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
           buildInput,
           {
             ...serveInput,

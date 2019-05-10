@@ -33,6 +33,8 @@
     "@nrwl/workspace": "*"
   },
   "dependencies": {
+    "@angular-devkit/architect": "0.800.0-rc.0",
+    "@angular-devkit/core": "8.0.0-rc.0",
     "tree-kill": "1.2.1"
   }
 }

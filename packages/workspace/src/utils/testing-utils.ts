@@ -15,7 +15,7 @@ export function getFileContent(tree: Tree, path: string): string {
 export function createEmptyWorkspace(tree: Tree): Tree {
   tree.create(
     '/angular.json',
-    JSON.stringify({ projects: {}, newProjectRoot: '' })
+    JSON.stringify({ version: 1, projects: {}, newProjectRoot: '' })
   );
   tree.create(
     '/package.json',

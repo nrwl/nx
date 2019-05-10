@@ -16,7 +16,7 @@ describe('getBaseWebpackPartial', () => {
       outputPath: 'dist',
       tsConfig: 'tsconfig.json',
       fileReplacements: [],
-      root: getSystemPath(normalize('/root')),
+      root: '/root',
       statsJson: false
     };
   });

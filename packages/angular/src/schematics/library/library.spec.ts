@@ -1,4 +1,4 @@
-import { Tree, VirtualTree } from '@angular-devkit/schematics';
+import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import { createApp, runSchematic } from '../../utils/testing';
 import * as stripJsonComments from 'strip-json-comments';
@@ -9,7 +9,7 @@ describe('lib', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = new VirtualTree();
+    appTree = Tree.empty();
     appTree = createEmptyWorkspace(appTree);
   });
 
@@ -563,9 +563,8 @@ describe('lib', () => {
         path: 'my-dir-my-lib2',
         loadChildren: '@proj/my-dir/my-lib2#MyDirMyLib2Module'
       }`);
-        expect(moduleContents3).toContain(
-          `{ path: 'my-lib3', loadChildren: '@proj/my-dir/my-lib3#MyLib3Module' }`
-        );
+        expect(moduleContents3).toContain(`
+      { path: 'my-lib3', loadChildren: '@proj/my-dir/my-lib3#MyLib3Module' }`);
 
         const tsConfigAppJson3 = JSON.parse(
           stripJsonComments(

@@ -7,18 +7,25 @@ import * as path from 'path';
 import * as url from 'url';
 import { getWebConfig } from './web.config';
 import { Configuration } from 'webpack';
-import { Logger } from '@angular-devkit/core/src/logger';
-import { WebBuildBuilderOptions } from '../builders/build/build.builder';
-import { WebDevServerOptions } from '../builders/dev-server/dev-server.builder';
+import { LoggerApi } from '@angular-devkit/core/src/logger';
+import { WebBuildBuilderOptions } from '../builders/build/build.impl';
+import { WebDevServerOptions } from '../builders/dev-server/dev-server.impl';
 import { buildServePath } from './serve-path';
 import { OptimizationOptions } from './types';
 
 export function getDevServerConfig(
+  root: string,
+  sourceRoot: string,
   buildOptions: WebBuildBuilderOptions,
   serveOptions: WebDevServerOptions,
-  logger: Logger
+  logger: LoggerApi
 ) {
-  const webpackConfig: Configuration = getWebConfig(buildOptions, logger);
+  const webpackConfig: Configuration = getWebConfig(
+    root,
+    sourceRoot,
+    buildOptions,
+    logger
+  );
   (webpackConfig as any).devServer = getDevServerPartial(
     serveOptions,
     buildOptions

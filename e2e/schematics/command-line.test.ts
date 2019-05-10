@@ -75,7 +75,7 @@ describe('Command line', () => {
 
       const stdout = runCommand('./node_modules/.bin/nx lint');
       expect(stdout).toContain(
-        `Cannot find project '${appBefore}' in 'apps/${appBefore}/'`
+        `Cannot find project '${appBefore}' in 'apps/${appBefore}'`
       );
       expect(stdout).toContain(
         `The 'apps/${appAfter}/browserslist' file doesn't belong to any project.`

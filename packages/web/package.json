@@ -34,7 +34,9 @@
   "dependencies": {
     "@nrwl/cypress": "*",
     "@nrwl/jest": "*",
-    "@angular-devkit/build-webpack": "~0.13.1",
+    "@angular-devkit/architect": "~0.800.0-rc.0",
+    "@angular-devkit/build-webpack": "~0.800.0-rc.0",
+    "@angular-devkit/core": "8.0.0-rc.0",
     "copy-webpack-plugin": "4.6.0",
     "fork-ts-checker-webpack-plugin": "0.4.9",
     "identity-obj-proxy": "3.0.0",

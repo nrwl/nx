@@ -46,7 +46,7 @@ export function replaceAppNameWithPath(
 ): any {
   if (typeof node === 'string') {
     const matchPattern = new RegExp(
-      `([^a-z0-9]+(${appName}))|((${appName})[^a-z0-9:]+)`,
+      `([^a-z0-9]*(${appName}))|((${appName})[^a-z0-9:]*)`,
       'gi'
     );
     if (!!node.match(matchPattern)) {
@@ -60,7 +60,11 @@ export function replaceAppNameWithPath(
   } else if (Array.isArray(node)) {
     return node.map(j => replaceAppNameWithPath(j, appName, root));
   } else if (typeof node === 'object' && node) {
-    const forbiddenPropertyList: string[] = ['prefix', 'builder']; // Some of the properties should not be renamed
+    const forbiddenPropertyList: string[] = [
+      'prefix',
+      'builder',
+      'browserTarget'
+    ]; // Some of the properties should not be renamed
     return Object.keys(node).reduce(
       (m, c) => (
         (m[c] = !forbiddenPropertyList.includes(c)

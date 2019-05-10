@@ -2,7 +2,7 @@ import { Configuration, BannerPlugin } from 'webpack';
 import * as mergeWebpack from 'webpack-merge';
 import * as nodeExternals from 'webpack-node-externals';
 
-import { BuildNodeBuilderOptions } from '../builders/build/build.builder';
+import { BuildNodeBuilderOptions } from '../builders/build/build.impl';
 import { getBaseWebpackPartial } from './config';
 
 function getNodePartial(options: BuildNodeBuilderOptions) {

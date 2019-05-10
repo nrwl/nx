@@ -275,6 +275,17 @@ export class DepsCalculator {
       return; // stop traversing downwards
     }
 
+    if (
+      ts.isCallExpression(node) &&
+      node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+      node.arguments.length === 1 &&
+      ts.isStringLiteral(node.arguments[0])
+    ) {
+      const imp = this.getStringLiteralValue(node.arguments[0]);
+      this.addDepIfNeeded(imp, filePath, DependencyType.loadChildren);
+      return;
+    }
+
     if (node.kind === ts.SyntaxKind.PropertyAssignment) {
       const name = this.getPropertyAssignmentName(
         (node as ts.PropertyAssignment).name
