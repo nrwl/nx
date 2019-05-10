@@ -64,6 +64,10 @@ Uncommitted changes
 
 Untracked changes
 
+### verbose
+
+Print additional error stack trace on failure
+
 ### version
 
 Show version number

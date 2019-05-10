@@ -1,0 +1,36 @@
+# ng-add [hidden]
+
+Add @nrwl/react to a project
+
+## Usage
+
+```bash
+ng generate ng-add ...
+
+```
+
+## Options
+
+### e2eTestRunner
+
+Default: `cypress`
+
+Type: `string`
+
+Test runner to use for end to end (e2e) tests
+
+### skipInstall
+
+Default: `false`
+
+Type: `boolean`
+
+Skip installing after adding @nrwl/workspace
+
+### unitTestRunner
+
+Default: `jest`
+
+Type: `string`
+
+Test runner to use for unit tests

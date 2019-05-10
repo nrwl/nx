@@ -5,23 +5,28 @@
     "itemList": [
       {
         "name": "What is Nx?",
-        "id": "what-is-nx"
+        "id": "what-is-nx",
+        "path": "getting-started/what-is-nx"
       },
       {
         "name": "Getting Started",
-        "id": "getting-started"
+        "id": "getting-started",
+        "path": "getting-started/getting-started"
       },
       {
         "name": "Nx and Angular CLI",
-        "id": "nx-and-cli"
+        "id": "nx-and-cli",
+        "path": "getting-started/nx-and-cli"
       },
       {
         "name": "Resources",
-        "id": "resources"
+        "id": "resources",
+        "path": "getting-started/resources"
       },
       {
         "name": "About",
-        "id": "about"
+        "id": "about",
+        "path": "getting-started/about"
       }
     ]
   },
@@ -31,51 +36,63 @@
     "itemList": [
       {
         "name": "1 - Create Application",
-        "id": "01-create-application"
+        "id": "01-create-application",
+        "path": "tutorial/01-create-application"
       },
       {
         "name": "2 - Add E2E Test",
-        "id": "02-add-e2e-test"
+        "id": "02-add-e2e-test",
+        "path": "tutorial/02-add-e2e-test"
       },
       {
         "name": "3 - Display Todos",
-        "id": "03-display-todos"
+        "id": "03-display-todos",
+        "path": "tutorial/03-display-todos"
       },
       {
         "name": "4 - Connect to API",
-        "id": "04-connect-to-api"
+        "id": "04-connect-to-api",
+        "path": "tutorial/04-connect-to-api"
       },
       {
         "name": "5 - Add Node Application",
-        "id": "05-add-node-app"
+        "id": "05-add-node-app",
+        "path": "tutorial/05-add-node-app"
       },
       {
         "name": "6 - Configure Proxy",
-        "id": "06-proxy"
+        "id": "06-proxy",
+        "path": "tutorial/06-proxy"
       },
       {
         "name": "7 - Share Code",
-        "id": "07-share-code"
+        "id": "07-share-code",
+        "path": "tutorial/07-share-code"
       },
       {
         "name": "8 - Create Libraries",
-        "id": "08-create-libs"
+        "id": "08-create-libs",
+        "path": "tutorial/08-create-libs"
       },
       {
         "name": "9 - Dep Graph",
-        "id": "09-dep-graph"
+        "id": "09-dep-graph",
+        "path": "tutorial/09-dep-graph"
       },
       {
         "name": "10 - Test Affected Projects",
-        "id": "10-test-affected-projects"
+        "id": "10-test-affected-projects",
+        "path": "tutorial/10-test-affected-projects"
       },
       {
         "name": "11 - Build Affected Projects",
-        "id": "11-build-affected-projects"
+        "id": "11-build-affected-projects",
+        "path": "tutorial/11-build-affected-projects"
       },
       {
         "name": "12 - Summary",
-        "id": "12-summary"
+        "id": "12-summary",
+        "path": "tutorial/12-summary"
       }
     ]
   },
@@ -85,15 +102,18 @@
     "itemList": [
       {
         "name": "Using Modern Tools",
-        "id": "use-modern-tools"
+        "id": "use-modern-tools",
+        "path": "fundamentals/use-modern-tools"
       },
       {
         "name": "Building Full-Stack Applications",
-        "id": "build-full-stack-applications"
+        "id": "build-full-stack-applications",
+        "path": "fundamentals/build-full-stack-applications"
       },
       {
         "name": "Developing Like Google",
-        "id": "develop-like-google"
+        "id": "develop-like-google",
+        "path": "fundamentals/develop-like-google"
       }
     ]
   },
@@ -103,47 +123,58 @@
     "itemList": [
       {
         "name": "Using Cypress",
-        "id": "modernize-cypress"
+        "id": "modernize-cypress",
+        "path": "guides/modernize-cypress"
       },
       {
         "name": "Using Jest",
-        "id": "modernize-jest"
+        "id": "modernize-jest",
+        "path": "guides/modernize-jest"
       },
       {
         "name": "Rebuilding and Retesting What is Affected",
-        "id": "monorepo-affected"
+        "id": "monorepo-affected",
+        "path": "guides/monorepo-affected"
       },
       {
         "name": "Analysing & Visualizing Workspaces",
-        "id": "monorepo-dependency-diagrams"
+        "id": "monorepo-dependency-diagrams",
+        "path": "guides/monorepo-dependency-diagrams"
       },
       {
         "name": "Imposing Constraints on the Dependency Graph",
-        "id": "monorepo-tags"
+        "id": "monorepo-tags",
+        "path": "guides/monorepo-tags"
       },
       {
         "name": "Using React",
-        "id": "react"
+        "id": "react",
+        "path": "guides/react"
       },
       {
         "name": "Building Angular and React Applications Together With Nx",
-        "id": "react-and-angular"
+        "id": "react-and-angular",
+        "path": "guides/react-and-angular"
       },
       {
         "name": "Setting Up NgRx",
-        "id": "misc-ngrx"
+        "id": "misc-ngrx",
+        "path": "guides/misc-ngrx"
       },
       {
         "name": "Using DataPersistence",
-        "id": "misc-data-persistence"
+        "id": "misc-data-persistence",
+        "path": "guides/misc-data-persistence"
       },
       {
         "name": "Upgrading AngularJS Applications",
-        "id": "misc-upgrade"
+        "id": "misc-upgrade",
+        "path": "guides/misc-upgrade"
       },
       {
         "name": "Using Nx at Enterprises",
-        "id": "monorepo-nx-enterprise"
+        "id": "monorepo-nx-enterprise",
+        "path": "guides/monorepo-nx-enterprise"
       }
     ]
   }
