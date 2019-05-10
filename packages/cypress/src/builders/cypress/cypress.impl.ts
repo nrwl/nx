@@ -28,6 +28,7 @@ export interface CypressBuilderOptions extends JsonObject {
   tsConfig: string;
   watch: boolean;
   browser?: string;
+  env?: Record<string, string>;
 }
 
 try {
@@ -78,7 +79,8 @@ function run(
         options.parallel,
         options.watch,
         baseUrl,
-        options.browser
+        options.browser,
+        options.env
       )
     ),
     options.watch ? tap(noop) : take(1),
@@ -184,7 +186,8 @@ function initCypress(
   parallel: boolean,
   isWatching: boolean,
   baseUrl: string,
-  browser?: string
+  browser?: string,
+  env?: Record<string, string>
 ): Observable<BuilderOutput> {
   // Cypress expects the folder where a `cypress.json` is present
   const projectFolderPath = path.dirname(cypressConfig);
@@ -199,6 +202,10 @@ function initCypress(
 
   if (browser) {
     options.browser = browser;
+  }
+
+  if (env) {
+    options.env = env;
   }
 
   options.exit = exit;

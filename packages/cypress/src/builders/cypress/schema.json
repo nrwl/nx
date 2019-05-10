@@ -52,6 +52,10 @@
       "type": "string",
       "description": "The browser to run tests in.",
       "enum": ["electron", "chrome", "chromium", "canary"]
+    },
+    "env": {
+      "type": "object",
+      "description": "A key-value Pair of environment variables to pass to Cypress runner"
     }
   },
   "additionalProperties": false,
