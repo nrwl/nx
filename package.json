@@ -135,9 +135,7 @@
     ],
     "testPathIgnorePatterns": [
       "node_modules",
-      "<rootDir>/build/packages/angular/spec",
-      "web.*normalize\\.spec\\.js",
-      "web.*config\\.spec\\.js"
+      "<rootDir>/build/packages/angular/spec"
     ],
     "collectCoverage": true,
     "coverageReporters": [

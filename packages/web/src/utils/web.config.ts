@@ -1,5 +1,4 @@
 import * as mergeWebpack from 'webpack-merge';
-
 // TODO @FrozenPandaz we should remove the following imports
 import { getBrowserConfig } from '@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/browser';
 import { getCommonConfig } from '@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/common';
@@ -7,26 +6,42 @@ import { getStylesConfig } from '@angular-devkit/build-angular/src/angular-cli-f
 import { Configuration } from 'webpack';
 import { LoggerApi } from '@angular-devkit/core/src/logger';
 import { resolve } from 'path';
-import typescript = require('typescript');
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { convertBuildOptions } from './normalize';
 import { readTsConfig } from '@nrwl/workspace';
 import { getBaseWebpackPartial } from './config';
+import { IndexHtmlWebpackPlugin } from '@angular-devkit/build-angular/src/angular-cli-files/plugins/index-html-webpack-plugin';
+import { ScriptTarget } from 'typescript';
 
 export function getWebConfig(
   root,
   sourceRoot,
   options: WebBuildBuilderOptions,
-  logger: LoggerApi
+  logger: LoggerApi,
+  overrideScriptTarget?: ScriptTarget
 ) {
   const tsConfig = readTsConfig(options.tsConfig);
-  const supportES2015 =
-    tsConfig.options.target !== typescript.ScriptTarget.ES5 &&
-    tsConfig.options.target !== typescript.ScriptTarget.ES3;
+
+  if (
+    options.differentialLoading &&
+    !(
+      tsConfig.options.target !== ScriptTarget.ES5 &&
+      tsConfig.options.target !== ScriptTarget.ES3
+    )
+  ) {
+    const message = `Differential Loading is only necessary for targeting ES2015 and above. To target ES2015, set the target field in your tsconfig.json to 'es2015'`;
+    logger.fatal(message);
+    throw new Error(message);
+  }
+
+  const supportES2015 = options.differentialLoading
+    ? overrideScriptTarget === ScriptTarget.ES2015
+    : tsConfig.options.target !== ScriptTarget.ES5 &&
+      tsConfig.options.target !== ScriptTarget.ES3;
   const wco: any = {
     root,
     projectRoot: resolve(root, sourceRoot),
-    buildOptions: convertBuildOptions(options),
+    buildOptions: convertBuildOptions(options, overrideScriptTarget),
     supportES2015,
     logger,
     tsConfig,
@@ -34,13 +49,23 @@ export function getWebConfig(
   };
   return mergeWebpack([
     _getBaseWebpackPartial(options),
-    options.polyfills ? getPolyfillsPartial(options) : {},
-    options.es2015Polyfills ? getEs2015PolyfillsPartial(options) : {},
+    getPolyfillsPartial(options, overrideScriptTarget),
     getStylesPartial(wco),
     getCommonPartial(wco),
-    getBrowserConfig(wco)
+    getBrowserPartial(wco)
   ]);
 }
+
+function getBrowserPartial(wco: any) {
+  const config = getBrowserConfig(wco);
+  if (wco.buildOptions.differentialLoading) {
+    config.plugins = config.plugins.filter(
+      plugin => !(plugin instanceof IndexHtmlWebpackPlugin)
+    );
+  }
+  return config;
+}
+
 function _getBaseWebpackPartial(options: WebBuildBuilderOptions) {
   let partial = getBaseWebpackPartial(options);
   delete partial.resolve.mainFields;
@@ -80,20 +105,41 @@ function getStylesPartial(wco: any): Configuration {
   return partial;
 }
 
-function getPolyfillsPartial(options: WebBuildBuilderOptions): Configuration {
-  return {
-    entry: {
-      polyfills: [options.polyfills]
-    }
-  };
-}
-
-function getEs2015PolyfillsPartial(
-  options: WebBuildBuilderOptions
+function getPolyfillsPartial(
+  options: WebBuildBuilderOptions,
+  overrideScriptTarget: ScriptTarget
 ): Configuration {
-  return {
-    entry: {
-      ['es2015-polyfills']: [options.es2015Polyfills]
-    }
+  const config = {
+    entry: {} as { [key: string]: string[] }
   };
+
+  if (
+    options.polyfills &&
+    options.differentialLoading &&
+    overrideScriptTarget === ScriptTarget.ES2015
+  ) {
+    config.entry.polyfills = [
+      require.resolve(
+        '@angular-devkit/build-angular/src/angular-cli-files/models/safari-nomodule.js'
+      ),
+      ...(options.polyfills ? [options.polyfills] : [])
+    ];
+  } else if (
+    options.es2015Polyfills &&
+    options.differentialLoading &&
+    overrideScriptTarget !== ScriptTarget.ES2015
+  ) {
+    config.entry.polyfills = [
+      options.es2015Polyfills,
+      ...(options.polyfills ? [options.polyfills] : [])
+    ];
+  } else {
+    if (options.polyfills) {
+      config.entry.polyfills = [options.polyfills];
+    }
+    if (options.es2015Polyfills) {
+      config.entry['polyfills-es5'] = [options.es2015Polyfills];
+    }
+  }
+  return config;
 }

@@ -2,7 +2,7 @@ import * as webpack from 'webpack';
 import { Configuration, ProgressPlugin } from 'webpack';
 
 import * as ts from 'typescript';
-import { resolve } from 'path';
+import { ScriptTarget } from 'typescript';
 
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
@@ -11,6 +11,8 @@ import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 
 import { readTsConfig } from '@nrwl/workspace';
 import { BuildBuilderOptions } from './types';
+import * as TerserWebpackPlugin from 'terser-webpack-plugin';
+import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 
 export const OUT_FILENAME = 'main.js';
 
@@ -21,6 +23,8 @@ export function getBaseWebpackPartial(
   const supportsEs2015 =
     compilerOptions.target !== ts.ScriptTarget.ES3 &&
     compilerOptions.target !== ts.ScriptTarget.ES5;
+  const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
+  const mainFields = [...(supportsEs2015 ? ['es2015'] : []), 'module', 'main'];
   const webpackConfig: Configuration = {
     entry: {
       main: [options.main]
@@ -46,9 +50,16 @@ export function getBaseWebpackPartial(
       ]
     },
     resolve: {
-      extensions: ['.ts', '.tsx', '.mjs', '.js', '.jsx'],
+      extensions,
       alias: getAliases(options, compilerOptions),
-      mainFields: [...(supportsEs2015 ? ['es2015'] : []), 'module', 'main']
+      plugins: [
+        new TsConfigPathsPlugin({
+          configFile: options.tsConfig,
+          extensions,
+          mainFields
+        })
+      ],
+      mainFields
     },
     performance: {
       hints: false
@@ -64,6 +75,12 @@ export function getBaseWebpackPartial(
       poll: options.poll
     }
   };
+
+  if (options.optimization) {
+    webpackConfig.optimization = {
+      minimizer: [createTerserPlugin(compilerOptions.target)]
+    };
+  }
 
   const extraPlugins: webpack.Plugin[] = [];
 
@@ -125,20 +142,30 @@ function getAliases(
   options: BuildBuilderOptions,
   compilerOptions: ts.CompilerOptions
 ): { [key: string]: string } {
-  const replacements = [
-    ...options.fileReplacements,
-    ...(compilerOptions.paths
-      ? Object.entries(compilerOptions.paths).map(([importPath, values]) => ({
-          replace: importPath,
-          with: resolve(options.root, values[0])
-        }))
-      : [])
-  ];
-  return replacements.reduce(
+  return options.fileReplacements.reduce(
     (aliases, replacement) => ({
       ...aliases,
       [replacement.replace]: replacement.with
     }),
     {}
   );
+}
+
+export function createTerserPlugin(scriptTarget: ScriptTarget) {
+  return new TerserWebpackPlugin({
+    parallel: true,
+    cache: true,
+    terserOptions: {
+      ecma:
+        scriptTarget === ScriptTarget.ES3 || scriptTarget === ScriptTarget.ES5
+          ? 5
+          : 6,
+      safari10: true,
+      output: {
+        ascii_only: true,
+        comments: false,
+        webkit: true
+      }
+    }
+  });
 }

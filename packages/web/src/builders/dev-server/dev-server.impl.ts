@@ -22,6 +22,7 @@ import {
   runWebpackDevServer,
   DevServerBuildOutput
 } from '@angular-devkit/build-webpack';
+import { NodeJsSyncHost } from '@angular-devkit/core/node';
 
 export interface WebDevServerOptions extends JsonObject {
   host: string;
@@ -43,9 +44,12 @@ function run(
   serveOptions: WebDevServerOptions,
   context: BuilderContext
 ): Observable<DevServerBuildOutput> {
+  const host = new NodeJsSyncHost();
   return forkJoin(
-    getBuildOptions(serveOptions, context),
-    from(getSourceRoot(context))
+    getBuildOptions(serveOptions, context, {
+      differentialLoading: false
+    }),
+    from(getSourceRoot(context, host))
   ).pipe(
     map(([buildOptions, sourceRoot]) => {
       buildOptions = normalizeWebBuildOptions(
@@ -121,18 +125,24 @@ function run(
 
 function getBuildOptions(
   options: WebDevServerOptions,
-  context: BuilderContext
+  context: BuilderContext,
+  overrides?: Partial<WebBuildBuilderOptions>
 ): Observable<WebBuildBuilderOptions> {
   const target = targetFromTargetString(options.buildTarget);
   return from(
     Promise.all([
       context.getTargetOptions(target),
       context.getBuilderNameForTarget(target)
-    ]).then(([options, builderName]) =>
-      context.validateOptions<WebBuildBuilderOptions & JsonObject>(
-        options,
-        builderName
+    ])
+      .then(([options, builderName]) =>
+        context.validateOptions<WebBuildBuilderOptions & JsonObject>(
+          options,
+          builderName
+        )
       )
-    )
+      .then(options => ({
+        ...options,
+        ...overrides
+      }))
   );
 }

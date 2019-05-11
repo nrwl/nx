@@ -1,9 +1,9 @@
 import { BuilderContext } from '@angular-devkit/architect';
-import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { workspaces } from '@angular-devkit/core';
+import { Host } from '@angular-devkit/core/src/virtual-fs/host';
 
-export async function getSourceRoot(context: BuilderContext) {
-  const workspaceHost = workspaces.createWorkspaceHost(new NodeJsSyncHost());
+export async function getSourceRoot(context: BuilderContext, host: Host<{}>) {
+  const workspaceHost = workspaces.createWorkspaceHost(host);
   const { workspace } = await workspaces.readWorkspace(
     context.workspaceRoot,
     workspaceHost
