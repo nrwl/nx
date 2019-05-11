@@ -1,10 +1,13 @@
 import { getWebConfig as getWebPartial } from './web.config';
 jest.mock('tsconfig-paths-webpack-plugin');
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
+import * as StatsPlugin from 'stats-webpack-plugin';
 import { createConsoleLogger } from '@angular-devkit/core/node';
 import { Logger } from '@angular-devkit/core/src/logger';
 import * as ts from 'typescript';
+import { ScriptTarget } from 'typescript';
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
+import { join } from 'path';
 
 describe('getWebConfig', () => {
   let input: WebBuildBuilderOptions;
@@ -30,14 +33,15 @@ describe('getWebConfig', () => {
         scripts: false,
         styles: false
       },
+      differentialLoading: true,
       styles: [],
       scripts: [],
       outputPath: 'dist',
       tsConfig: 'tsconfig.json',
       fileReplacements: []
     };
-    root = '/root';
-    sourceRoot = '/root/apps/app';
+    root = join(__dirname, '../../../..');
+    sourceRoot = join(root, 'apps/app');
     logger = createConsoleLogger();
 
     mockCompilerOptions = {
@@ -70,33 +74,121 @@ describe('getWebConfig', () => {
     ).toEqual('style-loader');
   });
 
-  describe('polyfills', () => {
-    it('should set the polyfills entry', () => {
+  describe('statsJson', () => {
+    it('should generate a stats json', () => {
       const result = getWebPartial(
         root,
         sourceRoot,
         {
           ...input,
-          polyfills: 'polyfills.ts'
+          statsJson: true
         },
         logger
       );
-      expect(result.entry.polyfills).toEqual(['polyfills.ts']);
+
+      expect(
+        result.plugins.find(plugin => plugin instanceof StatsPlugin)
+      ).toBeTruthy();
     });
   });
 
-  describe('es2015 polyfills', () => {
-    it('should set the es2015-polyfills entry', () => {
-      const result = getWebPartial(
-        root,
-        sourceRoot,
-        {
-          ...input,
-          es2015Polyfills: 'polyfills.es2015.ts'
-        },
-        logger
-      );
-      expect(result.entry['es2015-polyfills']).toEqual(['polyfills.es2015.ts']);
+  describe('without differential loading', () => {
+    describe('polyfills', () => {
+      it('should set the polyfills entry', () => {
+        const result = getWebPartial(
+          root,
+          sourceRoot,
+          {
+            ...input,
+            polyfills: 'polyfills.ts'
+          },
+          logger
+        );
+        expect(result.entry.polyfills).toEqual(['polyfills.ts']);
+      });
+    });
+
+    describe('es2015 polyfills', () => {
+      it('should set the es2015-polyfills', () => {
+        const result = getWebPartial(
+          root,
+          sourceRoot,
+          {
+            ...input,
+            differentialLoading: false,
+            es2015Polyfills: 'polyfills.es2015.ts'
+          },
+          logger
+        );
+        expect(result.entry['polyfills-es5']).toEqual(['polyfills.es2015.ts']);
+      });
+    });
+  });
+
+  describe('with differential loading', () => {
+    describe('polyfills', () => {
+      it('should be in both polyfills', () => {
+        const es2015Config = getWebPartial(
+          root,
+          sourceRoot,
+          {
+            ...input,
+            differentialLoading: false,
+            polyfills: 'polyfills.ts'
+          },
+          logger,
+          ScriptTarget.ES2015
+        );
+        expect(es2015Config.entry.polyfills).toContain('polyfills.ts');
+        const es5Config = getWebPartial(
+          root,
+          sourceRoot,
+          {
+            ...input,
+            polyfills: 'polyfills.ts'
+          },
+          logger,
+          ScriptTarget.ES5
+        );
+        expect(es5Config.entry.polyfills).toContain('polyfills.ts');
+      });
+    });
+
+    describe('es2015Polyfills', () => {
+      it('should be in es5 polyfills', () => {
+        const es5Config = getWebPartial(
+          root,
+          sourceRoot,
+          {
+            ...input,
+            polyfills: 'polyfills.ts',
+            es2015Polyfills: 'polyfills.es2015.ts'
+          },
+          logger,
+          ScriptTarget.ES5
+        );
+        expect(es5Config.entry.polyfills).toContain('polyfills.es2015.ts');
+      });
+    });
+
+    describe('safari polyfills', () => {
+      it('should be in es2015 polyfills', () => {
+        const es2015Config = getWebPartial(
+          root,
+          sourceRoot,
+          {
+            ...input,
+            polyfills: 'polyfills.ts'
+          },
+          logger,
+          ScriptTarget.ES2015
+        );
+        expect(es2015Config.entry.polyfills).toContain(
+          require.resolve(
+            '@angular-devkit/build-angular/src/angular-cli-files/models/safari-nomodule.js'
+          )
+        );
+      });
     });
   });
 });

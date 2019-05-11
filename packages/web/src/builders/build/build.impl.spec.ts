@@ -4,19 +4,22 @@ import { of } from 'rxjs';
 import * as buildWebpack from '@angular-devkit/build-webpack';
 jest.mock('tsconfig-paths-webpack-plugin');
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
+import * as webConfigUtils from '../../utils/web.config';
 import { getMockContext, MockBuilderContext } from '../../utils/testing';
 import { join } from 'path';
-import * as fs from 'fs';
+import * as indexHtmlUtils from '@angular-devkit/build-angular/src/angular-cli-files/utilities/index-file/write-index-html';
 
 describe('WebBuildBuilder', () => {
   let context: MockBuilderContext;
   let testOptions: WebBuildBuilderOptions;
   let runWebpack: jasmine.Spy;
+  let writeIndexHtml: jasmine.Spy;
 
   beforeEach(async () => {
     context = await getMockContext();
     testOptions = {
       index: 'apps/webapp/src/index.html',
+      differentialLoading: true,
       budgets: [],
       baseHref: '/',
       deployUrl: '/',
@@ -48,7 +51,17 @@ describe('WebBuildBuilder', () => {
           toString: () => JSON.stringify(stats)
         });
         return of({
-          success: true
+          success: true,
+          emittedFiles: [
+            {
+              file: 'scripts.js',
+              extension: '.js'
+            },
+            {
+              file: 'styles.css',
+              extension: '.css'
+            }
+          ]
         });
       }
     );
@@ -61,6 +74,12 @@ describe('WebBuildBuilder', () => {
         }
       }
     });
+    spyOn(webConfigUtils, 'getWebConfig').and.returnValue({
+      config: 'config'
+    });
+    writeIndexHtml = spyOn(indexHtmlUtils, 'writeIndexHtml').and.returnValue(
+      of(null)
+    );
     (<any>TsConfigPathsPlugin).mockImplementation(class MockPathsPlugin {});
   });
 
@@ -77,30 +96,17 @@ describe('WebBuildBuilder', () => {
       expect(buildEvent.success).toEqual(true);
     });
 
-    describe('statsJson option', () => {
-      beforeEach(() => {
-        spyOn(fs, 'writeFileSync');
-      });
+    it('should write the HTML', async () => {
+      await run(testOptions, context).toPromise();
 
-      it('should generate a stats json', async () => {
-        await run(
-          {
-            ...testOptions,
-            statsJson: true
-          },
-          context
-        ).toPromise();
+      expect(writeIndexHtml).toHaveBeenCalled();
+    });
 
-        expect(fs.writeFileSync).toHaveBeenCalledWith(
-          join('/root/dist/apps/webapp/stats.json'),
-          JSON.stringify(
-            {
-              stats: 'stats'
-            },
-            null,
-            2
-          )
-        );
+    describe('differentialLoading', () => {
+      it('should call runWebpack twice', async () => {
+        await run(testOptions, context).toPromise();
+
+        expect(runWebpack).toHaveBeenCalledTimes(2);
       });
     });
 
@@ -115,6 +121,7 @@ describe('WebBuildBuilder', () => {
         await run(
           {
             ...testOptions,
+            differentialLoading: false,
             webpackConfig: 'apps/webapp/webpack.config.js'
           },
           context

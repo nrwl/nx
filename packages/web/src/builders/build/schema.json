@@ -159,6 +159,11 @@
         }
       ]
     },
+    "differentialLoading": {
+      "type": "boolean",
+      "description": "Enable differential loading for es5 browsers",
+      "default": true
+    },
     "extractCss": {
       "type": "boolean",
       "description": "Extract css into a .css file",

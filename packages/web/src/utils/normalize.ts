@@ -3,6 +3,7 @@ import { normalize } from '@angular-devkit/core';
 import { resolve, dirname, relative, basename } from 'path';
 import { BuildBuilderOptions } from './types';
 import { statSync } from 'fs';
+import { ScriptTarget } from 'typescript';
 
 export interface FileReplacement {
   replace: string;
@@ -16,8 +17,6 @@ export function normalizeBuildOptions<T extends BuildBuilderOptions>(
 ): T {
   return {
     ...options,
-    root: root,
-    sourceRoot: sourceRoot,
     main: resolve(root, options.main),
     outputPath: resolve(root, options.outputPath),
     tsConfig: resolve(root, options.tsConfig),
@@ -112,12 +111,17 @@ export function normalizeWebBuildOptions(
   };
 }
 
-export function convertBuildOptions(buildOptions: WebBuildBuilderOptions): any {
+export function convertBuildOptions(
+  buildOptions: WebBuildBuilderOptions,
+  scriptTargetOverride: ScriptTarget
+): any {
   const options = buildOptions as any;
   return <any>{
     ...options,
     buildOptimizer: options.optimization,
     aot: false,
+    scriptTargetOverride: scriptTargetOverride,
+    esVersionInFileName: !!scriptTargetOverride,
     forkTypeChecker: false,
     lazyModules: [] as string[],
     assets: [] as string[]

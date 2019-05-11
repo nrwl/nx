@@ -2,7 +2,6 @@ import * as webpack from 'webpack';
 import { Configuration, ProgressPlugin } from 'webpack';
 
 import * as ts from 'typescript';
-import { resolve } from 'path';
 
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
