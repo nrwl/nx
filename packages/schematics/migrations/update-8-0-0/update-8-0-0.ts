@@ -2,7 +2,9 @@ import {
   Rule,
   chain,
   SchematicContext,
-  Tree
+  Tree,
+  externalSchematic,
+  noop
 } from '@angular-devkit/schematics';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
@@ -260,9 +262,50 @@ const updateDefaultCollection = (host: Tree) => {
   });
 };
 
+export const runAngularMigrations: Rule = (
+  host: Tree,
+  context: SchematicContext
+) => {
+  const packageJson = readJsonInTree(host, 'package.json');
+
+  return !!packageJson.dependencies['@angular/core']
+    ? chain([
+        externalSchematic(
+          '@schematics/update',
+          'update',
+          {
+            packages: ['@angular/cli'],
+            from: '7.2.2',
+            to: '8.0.0-rc.3',
+            force: true,
+            next: true
+          },
+          {
+            interactive: true
+          }
+        ),
+        externalSchematic(
+          '@schematics/update',
+          'update',
+          {
+            packages: ['@angular/core'],
+            from: '7.0.0',
+            to: '8.0.0-rc.3',
+            force: true,
+            next: true
+          },
+          {
+            interactive: true
+          }
+        )
+      ])
+    : noop();
+};
+
 export default function(): Rule {
   return chain([
     displayInformation,
+    runAngularMigrations,
     removeOldDependencies,
     updateUpdateScript,
     updateBuilders,
