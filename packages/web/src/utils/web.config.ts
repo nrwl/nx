@@ -23,7 +23,6 @@ export function getWebConfig(
   const supportES2015 =
     tsConfig.options.target !== typescript.ScriptTarget.ES5 &&
     tsConfig.options.target !== typescript.ScriptTarget.ES3;
-  console.log(sourceRoot);
   const wco: any = {
     root,
     projectRoot: resolve(root, sourceRoot),

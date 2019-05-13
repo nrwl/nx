@@ -1,5 +1,5 @@
 import { BuilderContext, createBuilder } from '@angular-devkit/architect';
-import { JsonObject, workspaces } from '@angular-devkit/core';
+import { JsonObject } from '@angular-devkit/core';
 import { runWebpack, BuildResult } from '@angular-devkit/build-webpack';
 
 import { Observable, from } from 'rxjs';
@@ -8,7 +8,6 @@ import { resolve } from 'path';
 import { normalizeWebBuildOptions } from '../../utils/normalize';
 import { getWebConfig } from '../../utils/web.config';
 import { BuildBuilderOptions } from '../../utils/types';
-import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { concatMap, map } from 'rxjs/operators';
 import { getSourceRoot } from '../../utils/source-root';
 
