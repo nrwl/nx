@@ -55,13 +55,15 @@ const tmpDir = dirSync().name;
 
 const nxVersion = 'NX_VERSION';
 const cliVersion = 'ANGULAR_CLI_VERSION';
+const typescriptVersion = 'TYPESCRIPT_VERSION';
 
 writeFileSync(
   path.join(tmpDir, 'package.json'),
   JSON.stringify({
     dependencies: {
       [nxTool.packageName]: nxVersion,
-      '@angular/cli': cliVersion
+      '@angular/cli': cliVersion,
+      typescript: typescriptVersion
     },
     license: 'MIT'
   })
