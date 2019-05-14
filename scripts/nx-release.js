@@ -90,14 +90,16 @@ if (!parsedVersion.isValid) {
   console.log('parsed version: ', JSON.stringify(parsedVersion));
 }
 
-const cliVersion = JSON.parse(
+const { devDependencies } = JSON.parse(
   fs.readFileSync(path.join(__dirname, '../package.json'))
-).devDependencies['@angular/cli'];
+);
+const cliVersion = devDependencies['@angular/cli'];
+const typescriptVersion = devDependencies['typescript'];
 
 console.log('Executing build script:');
 const buildCommand = `./scripts/package.sh ${
   parsedVersion.version
-} ${cliVersion}`;
+} ${cliVersion} ${typescriptVersion}`;
 console.log(`> ${buildCommand}`);
 childProcess.execSync(buildCommand, {
   stdio: [0, 1, 2]
