@@ -29,8 +29,10 @@ else
     sed -i "s|\*|$NX_VERSION|g" {schematics,react,web,jest,node,express,nest,cypress,angular,workspace}/package.json
     sed -i "s|NX_VERSION|$NX_VERSION|g" create-nx-workspace/bin/create-nx-workspace.js
     sed -i "s|ANGULAR_CLI_VERSION|$ANGULAR_CLI_VERSION|g" create-nx-workspace/bin/create-nx-workspace.js
+    sed -i "s|TYPESCRIPT_VERSION|$TYPESCRIPT_VERSION|g" create-nx-workspace/bin/create-nx-workspace.js
     sed -i "s|NX_VERSION|$NX_VERSION|g" workspace/bin/create-nx-workspace.js
     sed -i "s|ANGULAR_CLI_VERSION|$ANGULAR_CLI_VERSION|g" workspace/bin/create-nx-workspace.js
+    sed -i "s|TYPESCRIPT_VERSION|$TYPESCRIPT_VERSION|g" workspace/bin/create-nx-workspace.js
 fi
 
 if [[ $NX_VERSION == "*" ]]; then
