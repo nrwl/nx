@@ -10,14 +10,6 @@
     "@angular-devkit/core" "8.0.0-rc.3"
     rxjs "6.4.0"
 
-"@angular-devkit/architect@0.800.0-rc.3", "@angular-devkit/architect@~0.800.0-rc.2":
-  version "0.800.0-rc.3"
-  resolved "https://registry.yarnpkg.com/@angular-devkit/architect/-/architect-0.800.0-rc.3.tgz#71043979d63bbf45d5b1cfd3d0d6feaee6399388"
-  integrity sha512-nX3sIDj7J3y5R6Hzsf052tfs5Fx+QE3KBv7u1prfaqVX9i5EnBJZeHAbwmBFPLUlhgrqp0azwwD4L2RHpPuicA==
-  dependencies:
-    "@angular-devkit/core" "8.0.0-rc.3"
-    rxjs "6.4.0"
-
 "@angular-devkit/build-angular@~0.800.0-rc.3":
   version "0.800.0-rc.3"
   resolved "https://registry.yarnpkg.com/@angular-devkit/build-angular/-/build-angular-0.800.0-rc.3.tgz#e71b2362d66d5dbd6f13766481abbb1b160939f0"
@@ -110,17 +102,6 @@
     chokidar "2.0.4"
     fast-json-stable-stringify "2.0.0"
     rxjs "6.3.3"
-    source-map "0.7.3"
-
-"@angular-devkit/core@8.0.0-rc.3":
-  version "8.0.0-rc.3"
-  resolved "https://registry.yarnpkg.com/@angular-devkit/core/-/core-8.0.0-rc.3.tgz#a5e10e941d8a046abda9046e816d45694703c695"
-  integrity sha512-5PmX42/XOzPSqhIZBtXyozBN01Qpagj3YO0+ToKPDY+veGEUonPhz1jBiJ639NBldlGW1BBdQczpGZNg3uJj9A==
-  dependencies:
-    ajv "6.10.0"
-    fast-json-stable-stringify "2.0.0"
-    magic-string "0.25.2"
-    rxjs "6.4.0"
     source-map "0.7.3"
 
 "@angular-devkit/core@8.0.0-rc.3":
@@ -11205,7 +11186,7 @@ source-map-resolve@^0.5.0:
     source-map-url "^0.4.0"
     urix "^0.1.0"
 
-source-map-support@0.5.12, source-map-support@^0.5.5, source-map-support@^0.5.6, source-map-support@~0.5.10:
+source-map-support@0.5.12, source-map-support@^0.5.12, source-map-support@^0.5.5, source-map-support@^0.5.6, source-map-support@~0.5.10:
   version "0.5.12"
   resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.5.12.tgz#b4f3b10d51857a5af0138d3ce8003b201613d599"
   integrity sha512-4h2Pbvyy15EE02G+JOZpUCmqWJuqrs+sEkzewTm++BPi7Hvn/HwcqLAcNxYAyI0x13CpPPn+kMjl+hplXMHITQ==

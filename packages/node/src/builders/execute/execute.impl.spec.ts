@@ -60,7 +60,11 @@ describe('NodeExecuteBuilder', () => {
       }
     );
     expect(fork).toHaveBeenCalledWith('outfile.js', [], {
-      execArgv: ['--inspect=localhost:9229']
+      execArgv: [
+        '-r',
+        'source-map-support/register',
+        '--inspect=localhost:9229'
+      ]
     });
     expect(treeKill).toHaveBeenCalledTimes(0);
     expect(fork).toHaveBeenCalledTimes(1);
@@ -77,7 +81,11 @@ describe('NodeExecuteBuilder', () => {
           context
         ).toPromise();
         expect(fork).toHaveBeenCalledWith('outfile.js', [], {
-          execArgv: ['--inspect=localhost:9229']
+          execArgv: [
+            '-r',
+            'source-map-support/register',
+            '--inspect=localhost:9229'
+          ]
         });
       });
     });
@@ -92,7 +100,11 @@ describe('NodeExecuteBuilder', () => {
           context
         ).toPromise();
         expect(fork).toHaveBeenCalledWith('outfile.js', [], {
-          execArgv: ['--inspect-brk=localhost:9229']
+          execArgv: [
+            '-r',
+            'source-map-support/register',
+            '--inspect=localhost:9229'
+          ]
         });
       });
     });
@@ -109,7 +121,11 @@ describe('NodeExecuteBuilder', () => {
           context
         ).toPromise();
         expect(fork).toHaveBeenCalledWith('outfile.js', [], {
-          execArgv: ['--inspect=0.0.0.0:9229']
+          execArgv: [
+            '-r',
+            'source-map-support/register',
+            '--inspect=localhost:9229'
+          ]
         });
       });
     });
@@ -126,7 +142,11 @@ describe('NodeExecuteBuilder', () => {
           context
         ).toPromise();
         expect(fork).toHaveBeenCalledWith('outfile.js', [], {
-          execArgv: ['--inspect=localhost:1234']
+          execArgv: [
+            '-r',
+            'source-map-support/register',
+            '--inspect=localhost:1234'
+          ]
         });
       });
     });
@@ -176,7 +196,7 @@ describe('NodeExecuteBuilder', () => {
       context
     ).toPromise();
     expect(fork).toHaveBeenCalledWith('outfile.js', ['arg1', 'arg2'], {
-      execArgv: []
+      execArgv: ['-r', 'source-map-support/register']
     });
   });
 

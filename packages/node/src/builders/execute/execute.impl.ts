@@ -80,15 +80,17 @@ function runProcess(file: string, options: NodeExecuteBuilderOptions) {
 }
 
 function getExecArgv(options: NodeExecuteBuilderOptions) {
-  if (!options.inspect) {
-    return [];
-  }
+  const args = ['-r', 'source-map-support/register'];
 
   if (options.inspect === true) {
     options.inspect = InspectType.Inspect;
   }
 
-  return [`--${options.inspect}=${options.host}:${options.port}`];
+  if (options.inspect) {
+    args.push(`--${options.inspect}=${options.host}:${options.port}`);
+  }
+
+  return args;
 }
 
 function restartProcess(
