@@ -11,6 +11,14 @@ ng generate application ...
 
 ## Options
 
+### classComponent
+
+Default: `false`
+
+Type: `boolean`
+
+Use class components instead of functional component
+
 ### directory
 
 Type: `string`
@@ -30,6 +38,14 @@ Test runner to use for end to end (e2e) tests
 Type: `string`
 
 The name of the application.
+
+### pascalCaseFiles
+
+Default: `false`
+
+Type: `boolean`
+
+Use pascal case component file name (e.g. App.tsx)®
 
 ### skipFormat
 

@@ -1,28 +1,29 @@
 import { join, normalize } from '@angular-devkit/core';
 import {
-  chain,
-  Rule,
-  Tree,
-  mergeWith,
   apply,
-  template,
-  move,
-  url,
+  chain,
   externalSchematic,
+  filter,
+  mergeWith,
+  move,
   noop,
-  filter
+  Rule,
+  template,
+  Tree,
+  url
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import {
-  updateJsonInTree,
-  NxJson,
-  toFileName,
+  formatFiles,
   names,
+  NxJson,
   offsetFromRoot,
-  getNpmScope,
-  formatFiles
+  toFileName,
+  updateJsonInTree
 } from '@nrwl/workspace';
 import ngAdd from '../ng-add/ng-add';
+import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
+import { addDepsToPackageJson } from '@nrwl/workspace/src/utils/ast-utils';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -30,19 +31,57 @@ interface NormalizedSchema extends Schema {
   e2eProjectName: string;
   e2eProjectRoot: string;
   parsedTags: string[];
+  fileName: string;
+  styledModule: null | string;
+}
+
+export default function(schema: Schema): Rule {
+  return (host: Tree) => {
+    const options = normalizeOptions(host, schema);
+
+    return chain([
+      ngAdd({
+        skipFormat: true
+      }),
+      createApplicationFiles(options),
+      updateNxJson(options),
+      addProject(options),
+      options.e2eTestRunner === 'cypress'
+        ? externalSchematic('@nrwl/cypress', 'cypress-project', {
+            ...options,
+            name: options.name + '-e2e',
+            directory: options.directory,
+            project: options.projectName
+          })
+        : noop(),
+      options.unitTestRunner === 'jest'
+        ? externalSchematic('@nrwl/jest', 'jest-project', {
+            project: options.projectName,
+            supportTsx: true,
+            skipSerializers: true,
+            setupFile: 'none'
+          })
+        : noop(),
+      addStyledModuleDependencies(options),
+      formatFiles(options)
+    ]);
+  };
 }
 
 function createApplicationFiles(options: NormalizedSchema): Rule {
   return mergeWith(
     apply(url(`./files/app`), [
       template({
-        ...options,
         ...names(options.name),
+        ...options,
         tmpl: '',
         offsetFromRoot: offsetFromRoot(options.appProjectRoot)
       }),
+      options.styledModule
+        ? filter(file => !file.endsWith(`.${options.style}`))
+        : noop(),
       options.unitTestRunner === 'none'
-        ? filter(file => file !== '/src/app/app.spec.tsx')
+        ? filter(file => file !== `/src/app/${options.fileName}.spec.tsx`)
         : noop(),
       move(options.appProjectRoot)
     ])
@@ -65,16 +104,21 @@ function addProject(options: NormalizedSchema): Rule {
       options: {
         outputPath: join(normalize('dist'), options.appProjectRoot),
         index: join(normalize(options.appProjectRoot), 'src/index.html'),
-        main: join(normalize(options.appProjectRoot), 'src/main.tsx'),
+        main: join(normalize(options.appProjectRoot), `src/main.tsx`),
         polyfills: join(normalize(options.appProjectRoot), 'src/polyfills.ts'),
         tsConfig: join(normalize(options.appProjectRoot), 'tsconfig.app.json'),
         assets: [
           join(normalize(options.appProjectRoot), 'src/favicon.ico'),
           join(normalize(options.appProjectRoot), 'src/assets')
         ],
-        styles: [
-          join(normalize(options.appProjectRoot), `src/styles.${options.style}`)
-        ],
+        styles: options.styledModule
+          ? []
+          : [
+              join(
+                normalize(options.appProjectRoot),
+                `src/styles.${options.style}`
+              )
+            ],
         scripts: []
       },
       configurations: {
@@ -142,36 +186,15 @@ function addProject(options: NormalizedSchema): Rule {
   });
 }
 
-export default function(schema: Schema): Rule {
-  return (host: Tree) => {
-    const options = normalizeOptions(host, schema);
+function addStyledModuleDependencies(options: NormalizedSchema): Rule {
+  const extraDependencies = CSS_IN_JS_DEPENDENCIES[options.styledModule];
 
-    return chain([
-      ngAdd({
-        skipFormat: true
-      }),
-      createApplicationFiles(options),
-      updateNxJson(options),
-      addProject(options),
-      options.e2eTestRunner === 'cypress'
-        ? externalSchematic('@nrwl/cypress', 'cypress-project', {
-            ...options,
-            name: options.name + '-e2e',
-            directory: options.directory,
-            project: options.projectName
-          })
-        : noop(),
-      options.unitTestRunner === 'jest'
-        ? externalSchematic('@nrwl/jest', 'jest-project', {
-            project: options.projectName,
-            supportTsx: true,
-            skipSerializers: true,
-            setupFile: 'none'
-          })
-        : noop(),
-      formatFiles(options)
-    ]);
-  };
+  return extraDependencies
+    ? addDepsToPackageJson(
+        extraDependencies.dependencies,
+        extraDependencies.devDependencies
+      )
+    : noop();
 }
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
@@ -189,15 +212,21 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     ? options.tags.split(',').map(s => s.trim())
     : [];
 
-  const defaultPrefix = getNpmScope(host);
+  const fileName = options.pascalCaseFiles ? 'App' : 'app';
+
+  const styledModule = /^(css|scss|less|styl)$/.test(options.style)
+    ? null
+    : options.style;
+
   return {
     ...options,
-    prefix: options.prefix ? options.prefix : defaultPrefix,
     name: toFileName(options.name),
     projectName: appProjectName,
     appProjectRoot,
     e2eProjectRoot,
     e2eProjectName,
-    parsedTags
+    parsedTags,
+    fileName,
+    styledModule
   };
 }

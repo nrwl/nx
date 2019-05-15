@@ -196,7 +196,7 @@ describe('app', () => {
     const tree = await runSchematic(
       'app',
       {
-        name: 'my-App'
+        name: 'my-app'
       },
       appTree
     );
@@ -210,7 +210,7 @@ describe('app', () => {
     const tree = await runSchematic(
       'app',
       {
-        name: 'my-App'
+        name: 'my-app'
       },
       appTree
     );
@@ -224,7 +224,7 @@ describe('app', () => {
     const tree = await runSchematic(
       'app',
       {
-        name: 'my-App'
+        name: 'my-app'
       },
       appTree
     );
@@ -269,7 +269,7 @@ describe('app', () => {
     const tree = await runSchematic(
       'app',
       {
-        name: 'my-App'
+        name: 'my-app'
       },
       appTree
     );
@@ -288,7 +288,7 @@ describe('app', () => {
     const tree = await runSchematic(
       'app',
       {
-        name: 'my-App'
+        name: 'my-app'
       },
       appTree
     );
@@ -302,20 +302,6 @@ describe('app', () => {
           'apps/my-app/tsconfig.spec.json'
         ]
       }
-    });
-  });
-
-  describe('--prefix', () => {
-    it('should use the prefix in the index.html', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myApp', prefix: 'prefix' },
-        appTree
-      );
-
-      expect(tree.readContent('apps/my-app/src/index.html')).toContain(
-        '<prefix-root></prefix-root>'
-      );
     });
   });
 
@@ -347,6 +333,117 @@ describe('app', () => {
       expect(tree.exists('apps/my-app-e2e')).toBeFalsy();
       const angularJson = readJsonInTree(tree, 'angular.json');
       expect(angularJson.projects['my-app-e2e']).toBeUndefined();
+    });
+  });
+
+  describe('--pascalCaseFiles', () => {
+    it('should use upper case app file', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', pascalCaseFiles: true },
+        appTree
+      );
+
+      expect(tree.exists('apps/my-app/src/app/App.tsx')).toBeTruthy();
+      expect(tree.exists('apps/my-app/src/app/App.spec.tsx')).toBeTruthy();
+      expect(tree.exists('apps/my-app/src/app/App.css')).toBeTruthy();
+    });
+  });
+
+  it('should generate functional components by default', async () => {
+    const tree = await runSchematic('app', { name: 'myApp' }, appTree);
+
+    const appContent = tree.read('apps/my-app/src/app/app.tsx').toString();
+
+    expect(appContent).not.toMatch(/extends Component/);
+  });
+
+  describe('--class-component', () => {
+    it('should generate class components', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', classComponent: true },
+        appTree
+      );
+
+      const appContent = tree.read('apps/my-app/src/app/app.tsx').toString();
+
+      expect(appContent).toMatch(/extends Component/);
+    });
+  });
+
+  describe('--style styled-components', () => {
+    it('should use styled-components as the styled API library', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', style: 'styled-components' },
+        appTree
+      );
+
+      expect(
+        tree.exists('apps/my-app/src/app/app.styled-components')
+      ).toBeFalsy();
+      expect(tree.exists('apps/my-app/src/app/app.tsx')).toBeTruthy();
+
+      const content = tree.read('apps/my-app/src/app/app.tsx').toString();
+      expect(content).toContain('styled-component');
+      expect(content).toContain('<StyledApp>');
+    });
+
+    it('should add dependencies to package.json', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', style: 'styled-components' },
+        appTree
+      );
+
+      const packageJSON = readJsonInTree(tree, 'package.json');
+      expect(packageJSON.dependencies['styled-components']).toBeDefined();
+    });
+  });
+
+  describe('--style @emotion/styled', () => {
+    it('should use @emotion/styled as the styled API library', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', style: '@emotion/styled' },
+        appTree
+      );
+
+      expect(
+        tree.exists('apps/my-app/src/app/app.@emotion/styled')
+      ).toBeFalsy();
+      expect(tree.exists('apps/my-app/src/app/app.tsx')).toBeTruthy();
+
+      const content = tree.read('apps/my-app/src/app/app.tsx').toString();
+      expect(content).toContain('@emotion/styled');
+      expect(content).toContain('<StyledApp>');
+    });
+
+    it('should exclude styles from angular.json', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', style: '@emotion/styled' },
+        appTree
+      );
+
+      const angularJSON = readJsonInTree(tree, 'angular.json');
+
+      expect(
+        angularJSON.projects['my-app'].architect.build.options.styles
+      ).toEqual([]);
+    });
+
+    it('should add dependencies to package.json', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', style: '@emotion/styled' },
+        appTree
+      );
+
+      const packageJSON = readJsonInTree(tree, 'package.json');
+      expect(packageJSON.dependencies['@emotion/core']).toBeDefined();
+      expect(packageJSON.dependencies['@emotion/styled']).toBeDefined();
     });
   });
 });
