@@ -28,6 +28,35 @@ export interface NormalizedSchema extends Schema {
   parsedTags: string[];
 }
 
+export default function(schema: Schema): Rule {
+  return (host: Tree, context: SchematicContext) => {
+    const options = normalizeOptions(schema);
+
+    return chain([
+      createFiles(options),
+      !options.skipTsConfig ? updateTsConfig(options) : noop(),
+      addProject(options),
+      updateNxJson(options),
+      options.unitTestRunner !== 'none'
+        ? externalSchematic('@nrwl/jest', 'jest-project', {
+            project: options.name,
+            setupFile: 'none',
+            supportTsx: true,
+            skipSerializers: true
+          })
+        : noop(),
+      externalSchematic('@nrwl/react', 'component', {
+        name: options.name,
+        project: options.name,
+        style: options.style,
+        skipTests: options.unitTestRunner === 'none',
+        export: true
+      }),
+      formatFiles(options)
+    ])(host, context);
+  };
+}
+
 function addProject(options: NormalizedSchema): Rule {
   return updateJsonInTree('angular.json', json => {
     const architect: { [key: string]: any } = {};
@@ -86,28 +115,6 @@ function updateNxJson(options: NormalizedSchema): Rule {
     json.projects[options.name] = { tags: options.parsedTags };
     return json;
   });
-}
-
-export default function(schema: Schema): Rule {
-  return (host: Tree, context: SchematicContext) => {
-    const options = normalizeOptions(schema);
-
-    return chain([
-      createFiles(options),
-      !options.skipTsConfig ? updateTsConfig(options) : noop(),
-      addProject(options),
-      updateNxJson(options),
-      options.unitTestRunner !== 'none'
-        ? externalSchematic('@nrwl/jest', 'jest-project', {
-            project: options.name,
-            setupFile: 'none',
-            supportTsx: true,
-            skipSerializers: true
-          })
-        : noop(),
-      formatFiles(options)
-    ])(host, context);
-  };
 }
 
 function normalizeOptions(options: Schema): NormalizedSchema {

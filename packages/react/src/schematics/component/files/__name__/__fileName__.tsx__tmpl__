@@ -1,0 +1,45 @@
+<% if (classComponent) { %>
+import React, { Component } from 'react';
+<% } else { %>
+import React from 'react';
+<% } %>
+<% if (styledModule) {
+  var wrapper = 'Styled' + className;
+%>
+import styled from '<%= styledModule %>';
+<% } else {
+  var wrapper = 'div';
+%>
+import './<%= fileName %>.<%= style %>';
+<% } %>
+
+/* tslint:disable:no-empty-interface */
+export interface <%= className %>Props {
+}
+
+<% if (styledModule) { %>
+const Styled<%= className %> = styled.div`
+  color: pink;
+`;
+<% }%>
+<% if (classComponent) { %>
+export class <%= className %> extends Component<<%= className %>Props> {
+  render() {
+    return (
+      <<%= wrapper %>>
+      Welcome to <%= name %> component!
+      </<%= wrapper %>>
+    );
+  }
+}
+<% } else { %>
+export const <%= className %> = (props: <%= className %>Props) => {
+  return (
+    <<%= wrapper %>>
+      Welcome to <%= name %> component!
+    </<%= wrapper %>>
+  );
+};
+<% } %>
+
+export default <%= className %>;

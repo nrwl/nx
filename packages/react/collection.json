@@ -22,6 +22,12 @@
       "schema": "./src/schematics/library/schema.json",
       "aliases": ["lib"],
       "description": "Create a library"
+    },
+
+    "component": {
+      "factory": "./src/schematics/component/component",
+      "schema": "./src/schematics/component/schema.json",
+      "description": "Create a component"
     }
   }
 }

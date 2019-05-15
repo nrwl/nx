@@ -1,5 +1,4 @@
 import { UnitTestRunner } from '../../utils/test-runners';
-import { Framework } from '../../utils/framework';
 
 export interface Schema {
   name: string;
@@ -9,6 +8,6 @@ export interface Schema {
   skipFormat: boolean;
   tags?: string;
   simpleModuleName: boolean;
-
+  pascalCaseFiles?: boolean;
   unitTestRunner: UnitTestRunner;
 }

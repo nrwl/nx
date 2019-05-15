@@ -23,6 +23,14 @@ Type: `string`
 
 Library name
 
+### pascalCaseFiles
+
+Default: `false`
+
+Type: `boolean`
+
+Use pascal case component file name (e.g. App.tsx)®
+
 ### skipFormat
 
 Default: `false`
