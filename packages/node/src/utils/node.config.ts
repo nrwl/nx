@@ -35,16 +35,6 @@ function getNodePartial(options: BuildNodeBuilderOptions) {
       }
     ];
   }
-
-  if (options.sourceMap) {
-    webpackConfig.plugins = [
-      new BannerPlugin({
-        banner: 'require("source-map-support").install();',
-        raw: true,
-        entryOnly: false
-      })
-    ];
-  }
   return webpackConfig;
 }
 

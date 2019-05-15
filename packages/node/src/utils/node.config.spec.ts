@@ -86,25 +86,4 @@ describe('getNodePartial', () => {
       expect(result.externals).not.toBeDefined();
     });
   });
-
-  describe('the sourceMap option when true', () => {
-    it('should add a BannerPlugin', () => {
-      const result = getNodeWebpackConfig({
-        ...input,
-        sourceMap: true
-      });
-
-      const bannerPlugin = result.plugins.find(
-        plugin => plugin instanceof BannerPlugin
-      ) as BannerPlugin;
-      const options = (<any>bannerPlugin).options;
-
-      expect(bannerPlugin).toBeTruthy();
-      expect(options.banner).toEqual(
-        'require("source-map-support").install();'
-      );
-      expect(options.raw).toEqual(true);
-      expect(options.entryOnly).toEqual(false);
-    });
-  });
 });
