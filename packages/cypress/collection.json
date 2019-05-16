@@ -11,7 +11,8 @@
     "cypress-project": {
       "factory": "./src/schematics/cypress-project/cypress-project",
       "schema": "./src/schematics/cypress-project/schema.json",
-      "description": "Add a Cypress E2E Project"
+      "description": "Add a Cypress E2E Project",
+      "hidden": true
     }
   }
 }
