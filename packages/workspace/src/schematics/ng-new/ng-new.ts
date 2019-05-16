@@ -23,6 +23,7 @@ import { nxVersion } from '../../utils/versions';
 import * as path from 'path';
 import { Observable } from 'rxjs';
 import { spawn } from 'child_process';
+import { platform } from 'os';
 
 class RunPresetTask {
   toConfiguration() {
@@ -42,16 +43,20 @@ function createPresetTaskExecutor(opts: Schema) {
           shell: true,
           cwd: path.join(process.cwd(), opts.directory)
         };
+        const ng =
+          platform() === 'win32'
+            ? '.\\node_modules\\.bin\\ng'
+            : './node_modules/.bin/ng';
         const args = [
           `g`,
           `@nrwl/workspace:preset`,
-          `--name='${opts.name}'`,
-          `--style='${opts.style}'`,
-          `--npmScope='${opts.npmScope}'`,
-          `--preset='${opts.preset}'`
-        ];
+          `--name=${opts.name}`,
+          opts.style ? `--style=${opts.style}` : null,
+          opts.npmScope ? `--npmScope=${opts.npmScope}` : null,
+          opts.preset ? `--preset=${opts.preset}` : null
+        ].filter(e => !!e);
         return new Observable(obs => {
-          spawn('ng', args, spawnOptions).on('close', (code: number) => {
+          spawn(ng, args, spawnOptions).on('close', (code: number) => {
             if (code === 0) {
               obs.next();
               obs.complete();
