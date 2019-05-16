@@ -11,7 +11,8 @@
     "jest-project": {
       "factory": "./src/schematics/jest-project/jest-project",
       "schema": "./src/schematics/jest-project/schema.json",
-      "description": "Add Jest configuration to a project"
+      "description": "Add Jest configuration to a project",
+      "hidden": true
     }
   }
 }
