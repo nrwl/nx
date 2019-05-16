@@ -107,7 +107,7 @@ describe('Jest Builder', () => {
       jestConfig: './jest.config.js',
       tsConfig: './tsconfig.test.json',
       codeCoverage: true,
-      bail: true,
+      bail: 1,
       color: false,
       ci: true,
       json: true,
@@ -142,7 +142,7 @@ describe('Jest Builder', () => {
           }
         }),
         coverage: true,
-        bail: true,
+        bail: 1,
         color: false,
         ci: true,
         json: true,
