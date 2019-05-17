@@ -55,10 +55,18 @@
         "type": "list",
         "items": [
           { "value": "css", "label": "CSS" },
-          { "value": "scss", "label": "SCSS   [ http://sass-lang.com   ]" },
-          { "value": "sass", "label": "SASS   [ http://sass-lang.com   ]" },
-          { "value": "less", "label": "LESS   [ http://lesscss.org     ]" },
-          { "value": "styl", "label": "Stylus [ http://stylus-lang.com ]" }
+          {
+            "value": "scss",
+            "label": "SASS(.scss)  [ http://sass-lang.com   ]"
+          },
+          {
+            "value": "styl",
+            "label": "Stylus(.styl)[ http://stylus-lang.com ]"
+          },
+          {
+            "value": "less",
+            "label": "LESS         [ http://lesscss.org     ]"
+          }
         ]
       }
     },

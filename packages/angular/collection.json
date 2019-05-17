@@ -1,7 +1,7 @@
 {
   "name": "nx/angular",
   "version": "0.1",
-  "extends": ["@schematics/angular"],
+  "extends": ["@schematics/angular", "@nrwl/workspace"],
   "schematics": {
     "ng-add": {
       "factory": "./src/schematics/ng-add/ng-add",

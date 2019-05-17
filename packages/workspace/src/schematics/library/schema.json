@@ -18,22 +18,6 @@
       "description": "A directory where the app is placed",
       "x-prompt": "In which directory should the library be generated?"
     },
-    "style": {
-      "description": "The file extension to be used for style files.",
-      "type": "string",
-      "default": "css",
-      "x-prompt": {
-        "message": "Which stylesheet format would you like to use?",
-        "type": "list",
-        "items": [
-          { "value": "css", "label": "CSS" },
-          { "value": "scss", "label": "SCSS   [ http://sass-lang.com   ]" },
-          { "value": "sass", "label": "SASS   [ http://sass-lang.com   ]" },
-          { "value": "less", "label": "LESS   [ http://lesscss.org     ]" },
-          { "value": "styl", "label": "Stylus [ http://stylus-lang.com ]" }
-        ]
-      }
-    },
     "unitTestRunner": {
       "type": "string",
       "enum": ["jest", "none"],

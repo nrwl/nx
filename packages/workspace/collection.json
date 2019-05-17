@@ -26,7 +26,8 @@
     "ng-new": {
       "factory": "./src/schematics/ng-new/ng-new",
       "schema": "./src/schematics/ng-new/schema.json",
-      "description": "Create a workspace"
+      "description": "Create a workspace",
+      "hidden": true
     },
 
     "library": {
