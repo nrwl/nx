@@ -211,18 +211,6 @@ describe('lib', () => {
     });
   });
 
-  describe('--style scss', () => {
-    it('should use scss for styles', async () => {
-      const result = await runSchematic(
-        'lib',
-        { name: 'myLib', style: 'scss' },
-        appTree
-      );
-
-      expect(result.exists('libs/my-lib/src/lib/my-lib.scss'));
-    });
-  });
-
   describe('--unit-test-runner none', () => {
     it('should not generate test configuration', async () => {
       const resultTree = await runSchematic(
