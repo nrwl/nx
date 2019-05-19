@@ -15,11 +15,11 @@
 <hr>
 
 <p align="center">
-  <a href="https://hubs.ly/H0g97pW0" target="_blank">
-    <img
+  <a href="https://hubs.ly/H0hWwWd0" target="_blank">  
+    <img 
          width="728"
-         src="https://images.ctfassets.net/8eyogtwep6d2/40ASb6l6MR7V0w5ntqZ2yi/b4d439fcf56e50085d1f76df1bee41af/monorepo-banner-angularconsole.png"
-         alt="Our Newest Enterprise Angular Book">
+         src="https://images.ctfassets.net/8eyogtwep6d2/3sfF3myh6RazVT3ZGqdy7u/a9849e076d02a272a5331bbdcd3dada4/join-connect-banner.png?w=1920"  
+         alt="Nrwl Connect platform">
   </a>
 </p>
 
