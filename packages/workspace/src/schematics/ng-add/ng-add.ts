@@ -249,23 +249,17 @@ function updateTsConfigsJson(options: Schema) {
     const offset = '../../';
     updateJsonFile(app.architect.build.options.tsConfig, json => {
       json.extends = `${offset}tsconfig.json`;
-      json.compilerOptions.outDir = `${offset}dist/out-tsc/apps/${
-        options.name
-      }`;
+      json.compilerOptions.outDir = `${offset}dist/out-tsc`;
     });
 
     updateJsonFile(app.architect.test.options.tsConfig, json => {
       json.extends = `${offset}tsconfig.json`;
-      json.compilerOptions.outDir = `${offset}dist/out-tsc/apps/${
-        options.name
-      }`;
+      json.compilerOptions.outDir = `${offset}dist/out-tsc`;
     });
 
     if (app.architect.server) {
       updateJsonFile(app.architect.server.options.tsConfig, json => {
-        json.compilerOptions.outDir = `${offset}dist/out-tsc/apps/${
-          options.name
-        }-server`;
+        json.compilerOptions.outDir = `${offset}dist/out-tsc`;
       });
     }
 
@@ -274,9 +268,7 @@ function updateTsConfigsJson(options: Schema) {
         json.extends = `${offsetFromRoot(e2eProject.root)}tsconfig.json`;
         json.compilerOptions = {
           ...json.compilerOptions,
-          outDir: `${offsetFromRoot(e2eProject.root)}dist/out-tsc/${
-            e2eProject.root
-          }`
+          outDir: `${offsetFromRoot(e2eProject.root)}dist/out-tsc`
         };
       });
     }

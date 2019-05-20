@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>",
+    "outDir": "<%= offsetFromRoot %>dist/out-tsc",
     "types": []
   },
   "exclude": ["**/*.spec.ts"],

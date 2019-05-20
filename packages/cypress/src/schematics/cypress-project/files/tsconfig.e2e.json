@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "sourceMap": false,
-    "outDir": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>/src"
+    "outDir": "<%= offsetFromRoot %>dist/out-tsc"
   },
   "include": ["src/**/*.ts"]
 }

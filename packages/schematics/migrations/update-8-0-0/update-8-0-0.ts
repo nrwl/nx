@@ -262,6 +262,33 @@ const updateDefaultCollection = (host: Tree) => {
   });
 };
 
+const setRootDirAndUpdateOurDir = (host: Tree) => {
+  host.visit(path => {
+    if (!path.endsWith('.json')) {
+      return;
+    }
+
+    const json = host.read(path).toString();
+    const match = json.match(/"outDir"\s*:\s*"([^"]+)"/);
+    if (match) {
+      const outParts = match[1].split('out-tsc');
+      if (outParts.length > 1) {
+        const updatedJson = json.replace(
+          /"outDir"\s*:\s*"([^"]+)"/,
+          `"outDir": "${outParts[0]}out-tsc"`
+        );
+        host.overwrite(path, updatedJson);
+      }
+    }
+  });
+
+  updateJsonInTree('tsconfig.json', json => {
+    json.compilerOptions = json.compilerOptions || {};
+    json.compilerOptions.rootDir = '.';
+    return json;
+  })(host, null);
+};
+
 export const runAngularMigrations: Rule = (
   host: Tree,
   context: SchematicContext
@@ -314,6 +341,7 @@ export default function(): Rule {
     updateTslintRules,
     addDependencies(),
     updateDefaultCollection,
+    setRootDirAndUpdateOurDir,
     formatFiles()
   ]);
 }

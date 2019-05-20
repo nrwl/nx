@@ -229,9 +229,7 @@ function updateProject(options: NormalizedSchema): Rule {
           extends: `./tsconfig.json`,
           compilerOptions: {
             ...json.compilerOptions,
-            outDir: `${offsetFromRoot(options.appProjectRoot)}dist/out-tsc/${
-              options.appProjectRoot
-            }`
+            outDir: `${offsetFromRoot(options.appProjectRoot)}dist/out-tsc`
           },
           exclude:
             options.unitTestRunner === 'jest'
@@ -307,9 +305,7 @@ function updateE2eProject(options: NormalizedSchema): Rule {
           extends: `./tsconfig.json`,
           compilerOptions: {
             ...json.compilerOptions,
-            outDir: `${offsetFromRoot(options.e2eProjectRoot)}dist/out-tsc/${
-              options.e2eProjectRoot
-            }`
+            outDir: `${offsetFromRoot(options.e2eProjectRoot)}dist/out-tsc`
           }
         };
       })
@@ -345,6 +341,7 @@ export default function(schema: Schema): Rule {
         skipTests: options.skipTests,
         style: options.style,
         viewEncapsulation: options.viewEncapsulation,
+        enableIvy: options.enableIvy,
         routing: false,
         skipInstall: true,
         skipPackageJson: false

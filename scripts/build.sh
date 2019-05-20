@@ -14,6 +14,11 @@ echo "Compiling Typescript..."
 ./node_modules/.bin/ngc
 echo "Compiled Typescript"
 
+rm build/packages/angular/testing/nrwl-angular-testing.metadata.json
+rm build/packages/angular/testing/index.metadata.json
+rm build/packages/workspace/index.metadata.json
+rm build/packages/workspace/testing.metadata.json
+
 #TODO This is a temporary hack until we can publish named umds
 sed -i.bak "s/define(\[/define('@nrwl\/angular',\[/" build/packages/angular/bundles/nrwl-angular.umd.js
 sed -i.bak "s/define(\[/define('@nrwl\/angular',\[/" build/packages/angular/bundles/nrwl-angular.umd.min.js

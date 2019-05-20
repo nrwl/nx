@@ -87,9 +87,7 @@ describe('app', () => {
           getFileContent(tree, 'apps/my-node-app/tsconfig.app.json')
         )
       );
-      expect(tsconfigApp.compilerOptions.outDir).toEqual(
-        '../../dist/out-tsc/apps/my-node-app'
-      );
+      expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
       const tslintJson = JSON.parse(
@@ -162,7 +160,7 @@ describe('app', () => {
         {
           path: 'apps/my-dir/my-node-app/tsconfig.app.json',
           lookupFn: json => json.compilerOptions.outDir,
-          expectedValue: '../../../dist/out-tsc/apps/my-dir/my-node-app'
+          expectedValue: '../../../dist/out-tsc'
         },
         {
           path: 'apps/my-dir/my-node-app/tsconfig.app.json',

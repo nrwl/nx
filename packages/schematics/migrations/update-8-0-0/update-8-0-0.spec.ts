@@ -38,6 +38,24 @@ describe('Update 8-0-0', () => {
       .toPromise();
     initialTree = await schematicRunner
       .callRule(
+        updateJsonInTree('tsconfig.json', json => ({
+          compilerOptions: {}
+        })),
+        initialTree
+      )
+      .toPromise();
+    initialTree = await schematicRunner
+      .callRule(
+        updateJsonInTree('tsconfig.app.json', json => ({
+          compilerOptions: {
+            outDir: '../../dist/out-tsc/apps/blah'
+          }
+        })),
+        initialTree
+      )
+      .toPromise();
+    initialTree = await schematicRunner
+      .callRule(
         updateJsonInTree('angular.json', json => ({
           projects: {
             'my-app': {
@@ -161,6 +179,20 @@ describe('Update 8-0-0', () => {
         .toPromise();
       const packageJson = readJsonInTree(tree, 'package.json');
       expect(packageJson.scripts.update).toEqual('ng update @nrwl/workspace');
+    });
+  });
+
+  describe('set root dir', () => {
+    it('should set root dir and update out dirs', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync('update-8.0.0', {}, initialTree)
+        .toPromise();
+      const rootTsConfig = readJsonInTree(tree, 'tsconfig.json');
+      expect(rootTsConfig.compilerOptions.rootDir).toEqual('.');
+
+      const appTsConfig = readJsonInTree(tree, 'tsconfig.app.json');
+      console.log(appTsConfig);
+      expect(appTsConfig.compilerOptions.outDir).toEqual('../../dist/out-tsc');
     });
   });
 

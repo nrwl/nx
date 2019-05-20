@@ -345,9 +345,7 @@ function updateProject(options: NormalizedSchema): Rule {
           extends: `./tsconfig.json`,
           compilerOptions: {
             ...json.compilerOptions,
-            outDir: `${offsetFromRoot(options.projectRoot)}dist/out-tsc/${
-              options.projectRoot
-            }`
+            outDir: `${offsetFromRoot(options.projectRoot)}dist/out-tsc`
           }
         };
       }),

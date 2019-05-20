@@ -60,9 +60,7 @@ describe('app', () => {
       const tsconfigApp = JSON.parse(
         stripJsonComments(getFileContent(tree, 'apps/my-app/tsconfig.app.json'))
       );
-      expect(tsconfigApp.compilerOptions.outDir).toEqual(
-        '../../dist/out-tsc/apps/my-app'
-      );
+      expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
       const tslintJson = JSON.parse(
@@ -76,9 +74,6 @@ describe('app', () => {
           getFileContent(tree, 'apps/my-app-e2e/tsconfig.e2e.json')
         )
       );
-      // expect(tsconfigE2E.compilerOptions.outDir).toEqual(
-      //   '../../dist/out-tsc/apps/my-app-e2e'
-      // );
       expect(tsconfigE2E.extends).toEqual('./tsconfig.json');
     });
 
@@ -206,7 +201,7 @@ describe('app', () => {
         {
           path: 'apps/my-dir/my-app/tsconfig.app.json',
           lookupFn: json => json.compilerOptions.outDir,
-          expectedValue: '../../../dist/out-tsc/apps/my-dir/my-app'
+          expectedValue: '../../../dist/out-tsc'
         },
         {
           path: 'apps/my-dir/my-app-e2e/tsconfig.json',
@@ -335,7 +330,7 @@ describe('app', () => {
       );
       expect(tsconfigAppJson.exclude).toEqual(['src/test.ts', '**/*.spec.ts']);
       expect(tsconfigAppJson.compilerOptions.outDir).toEqual(
-        '../../dist/out-tsc/apps/my-app'
+        '../../dist/out-tsc'
       );
     });
   });
