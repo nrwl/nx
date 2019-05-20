@@ -71,7 +71,7 @@
       "factory": "./update-7-8-1/update-7-8-1"
     },
     "update-8.0.0": {
-      "version": "8.0.0",
+      "version": "8.0.0-beta.3",
       "description": "V8 migrations",
       "factory": "./update-8-0-0/update-8-0-0"
     }
