@@ -101,9 +101,7 @@ describe('schematic:cypress-project', () => {
       );
 
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
-      expect(tsconfigJson.compilerOptions.outDir).toEqual(
-        '../../dist/out-tsc/apps/my-app-e2e/src'
-      );
+      expect(tsconfigJson.compilerOptions.outDir).toEqual('../../dist/out-tsc');
     });
 
     describe('nested', () => {
@@ -180,7 +178,7 @@ describe('schematic:cypress-project', () => {
         );
 
         expect(tsconfigJson.compilerOptions.outDir).toEqual(
-          '../../../dist/out-tsc/apps/my-dir/my-app-e2e/src'
+          '../../../dist/out-tsc'
         );
       });
     });

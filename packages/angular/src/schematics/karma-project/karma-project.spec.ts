@@ -118,7 +118,7 @@ module.exports = function(config) {
       expect(tsConfig).toEqual({
         extends: './tsconfig.json',
         compilerOptions: {
-          outDir: '../../dist/out-tsc/libs/lib1',
+          outDir: '../../dist/out-tsc',
           types: ['jasmine', 'node']
         },
         files: ['src/test.ts'],
@@ -182,7 +182,7 @@ module.exports = function(config) {
       expect(tsConfig).toEqual({
         extends: './tsconfig.json',
         compilerOptions: {
-          outDir: '../../dist/out-tsc/apps/app1',
+          outDir: '../../dist/out-tsc',
           types: ['jasmine', 'node']
         },
         files: ['src/test.ts', 'src/polyfills.ts'],

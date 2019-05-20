@@ -40,6 +40,11 @@
       "description": "Generates a routing module.",
       "default": false
     },
+    "enablyIvy": {
+      "description": "**EXPERIMENTAL** True to create a new app that uses the Ivy rendering engine.",
+      "type": "boolean",
+      "default": false
+    },
     "prefix": {
       "type": "string",
       "format": "html-selector",

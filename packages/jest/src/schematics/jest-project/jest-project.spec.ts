@@ -123,7 +123,7 @@ describe('jestProject', () => {
       extends: './tsconfig.json',
       compilerOptions: {
         module: 'commonjs',
-        outDir: '../../dist/out-tsc/libs/lib1',
+        outDir: '../../dist/out-tsc',
         types: ['jest', 'node']
       },
       files: ['src/test-setup.ts'],
