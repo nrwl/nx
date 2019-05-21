@@ -146,7 +146,9 @@ export default function(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(schema);
     return chain([
-      ngAdd(),
+      ngAdd({
+        skipFormat: true
+      }),
       addAppFiles(options),
       updateAngularJson(options),
       updateNxJson(options),

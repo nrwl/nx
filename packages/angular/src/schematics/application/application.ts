@@ -26,7 +26,7 @@ import {
 } from '@nrwl/workspace';
 import { formatFiles } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
-import { addE2eTestRunner, addUnitTestRunner } from '../ng-add/ng-add';
+import ngAdd from '../ng-add/ng-add';
 import {
   addImportToModule,
   addImportToTestBed,
@@ -317,10 +317,6 @@ function updateE2eProject(options: NormalizedSchema): Rule {
   };
 }
 
-function setupTestRunners(options: NormalizedSchema): Rule {
-  return chain([addUnitTestRunner(options), addE2eTestRunner(options)]);
-}
-
 export default function(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
@@ -337,7 +333,10 @@ export default function(schema: Schema): Rule {
       : `${options.name}/e2e`;
 
     return chain([
-      setupTestRunners(options),
+      ngAdd({
+        ...options,
+        skipFormat: true
+      }),
       externalSchematic('@schematics/angular', 'application', {
         name: options.name,
         inlineStyle: options.inlineStyle,

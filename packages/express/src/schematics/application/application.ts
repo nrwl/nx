@@ -56,7 +56,7 @@ export default function(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(schema);
     return chain([
-      ngAdd(),
+      ngAdd({ skipFormat: true }),
       externalSchematic('@nrwl/node', 'application', schema),
       addMainFile(options),
       addTypes(options)

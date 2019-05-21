@@ -19,6 +19,14 @@ Type: `string`
 
 Test runner to use for end to end (e2e) tests
 
+### skipFormat
+
+Default: `false`
+
+Type: `boolean`
+
+Skip formatting files
+
 ### skipInstall
 
 Default: `false`

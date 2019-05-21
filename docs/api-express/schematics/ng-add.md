@@ -8,3 +8,13 @@ Add @nrwl/express to a project
 ng generate ng-add ...
 
 ```
+
+## Options
+
+### skipFormat
+
+Default: `false`
+
+Type: `boolean`
+
+Skip formatting files

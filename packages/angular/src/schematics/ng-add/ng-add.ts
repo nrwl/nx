@@ -9,7 +9,8 @@ import {
 import {
   readJsonInTree,
   addDepsToPackageJson,
-  updateJsonInTree
+  updateWorkspace,
+  formatFiles
 } from '@nrwl/workspace';
 import {
   angularVersion,
@@ -19,6 +20,7 @@ import {
 import { Schema } from './schema';
 import { UnitTestRunner, E2eTestRunner } from '../../utils/test-runners';
 import { jestPresetAngularVersion } from '../../utils/versions';
+import { JsonObject } from '@angular-devkit/core';
 
 function updateDependencies(): Rule {
   const deps = {
@@ -117,31 +119,41 @@ export function addE2eTestRunner(options: Pick<Schema, 'e2eTestRunner'>): Rule {
   }
 }
 
-function setDefaults(options: Schema): Rule {
-  return updateJsonInTree('angular.json', json => {
-    json.schematics = json.schematics || {};
-    json.schematics['@nrwl/angular:application'] =
-      json.schematics['@nrwl/angular:application'] || {};
-    json.schematics['@nrwl/angular:application'] = {
-      ...json.schematics['@nrwl/angular:application'],
+export function setDefaults(options: Schema): Rule {
+  return updateWorkspace(workspace => {
+    workspace.extensions.schematics = workspace.extensions.schematics || {};
+    workspace.extensions.schematics['@nrwl/angular:application'] =
+      workspace.extensions.schematics['@nrwl/angular:application'] || {};
+    workspace.extensions.schematics['@nrwl/angular:application'] = {
+      ...workspace.extensions.schematics['@nrwl/angular:application'],
       unitTestRunner: options.unitTestRunner,
       e2eTestRunner: options.e2eTestRunner
     };
-    json.schematics['@nrwl/angular:library'] =
-      json.schematics['@nrwl/angular:library'] || {};
-    json.schematics['@nrwl/angular:library'] = {
-      ...json.schematics['@nrwl/angular:library'],
+    workspace.extensions.schematics['@nrwl/angular:library'] =
+      workspace.extensions.schematics['@nrwl/angular:library'] || {};
+    workspace.extensions.schematics['@nrwl/angular:library'] = {
+      ...workspace.extensions.schematics['@nrwl/angular:library'],
       unitTestRunner: options.unitTestRunner
     };
-    return json;
+
+    workspace.extensions.cli = workspace.extensions.cli || {};
+    const defaultCollection: string =
+      workspace.extensions.cli &&
+      ((workspace.extensions.cli as JsonObject).defaultCollection as string);
+
+    if (!defaultCollection || defaultCollection === '@nrwl/workspace') {
+      (workspace.extensions.cli as JsonObject).defaultCollection =
+        '@nrwl/react';
+    }
   });
 }
 
 export default function(options: Schema): Rule {
   return chain([
+    setDefaults(options),
     updateDependencies(),
     addUnitTestRunner(options),
     addE2eTestRunner(options),
-    setDefaults(options)
+    formatFiles()
   ]);
 }
