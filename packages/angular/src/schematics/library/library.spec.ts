@@ -483,7 +483,8 @@ describe('lib', () => {
         expect(moduleContents).toContain(`
       {
         path: 'my-dir-my-lib',
-        loadChildren: '@proj/my-dir/my-lib#MyDirMyLibModule'
+        loadChildren: () =>
+          import('@proj/my-dir/my-lib').then(module => module.MyDirMyLibModule)
       }`);
 
         const tsConfigAppJson = JSON.parse(
@@ -516,12 +517,16 @@ describe('lib', () => {
         expect(moduleContents2).toContain(`
       {
         path: 'my-dir-my-lib',
-        loadChildren: '@proj/my-dir/my-lib#MyDirMyLibModule'
+        loadChildren: () =>
+          import('@proj/my-dir/my-lib').then(module => module.MyDirMyLibModule)
       }`);
         expect(moduleContents2).toContain(`
       {
         path: 'my-dir-my-lib2',
-        loadChildren: '@proj/my-dir/my-lib2#MyDirMyLib2Module'
+        loadChildren: () =>
+          import('@proj/my-dir/my-lib2').then(
+            module => module.MyDirMyLib2Module
+          )
       }`);
 
         const tsConfigAppJson2 = JSON.parse(
@@ -556,15 +561,23 @@ describe('lib', () => {
         expect(moduleContents3).toContain(`
       {
         path: 'my-dir-my-lib',
-        loadChildren: '@proj/my-dir/my-lib#MyDirMyLibModule'
+        loadChildren: () =>
+          import('@proj/my-dir/my-lib').then(module => module.MyDirMyLibModule)
       }`);
         expect(moduleContents3).toContain(`
       {
         path: 'my-dir-my-lib2',
-        loadChildren: '@proj/my-dir/my-lib2#MyDirMyLib2Module'
+        loadChildren: () =>
+          import('@proj/my-dir/my-lib2').then(
+            module => module.MyDirMyLib2Module
+          )
       }`);
         expect(moduleContents3).toContain(`
-      { path: 'my-lib3', loadChildren: '@proj/my-dir/my-lib3#MyLib3Module' }`);
+      {
+        path: 'my-lib3',
+        loadChildren: () =>
+          import('@proj/my-dir/my-lib3').then(module => module.MyLib3Module)
+      }`);
 
         const tsConfigAppJson3 = JSON.parse(
           stripJsonComments(
