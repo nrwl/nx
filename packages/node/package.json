@@ -33,7 +33,10 @@
   },
   "dependencies": {
     "@nrwl/jest": "*",
-    "@angular-devkit/build-webpack": "0.800.0-rc.3",
+    "@angular-devkit/architect": "0.800.0-rc.4",
+    "@angular-devkit/core": "8.0.0-rc.4",
+    "@angular-devkit/schematics": "8.0.0-rc.4",
+    "@angular-devkit/build-webpack": "0.800.0-rc.4",
     "circular-dependency-plugin": "^5.0.2",
     "copy-webpack-plugin": "4.6.0",
     "fork-ts-checker-webpack-plugin": "0.4.9",

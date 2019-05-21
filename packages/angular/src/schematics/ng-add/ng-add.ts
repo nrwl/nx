@@ -40,7 +40,7 @@ function updateDependencies(): Rule {
     '@angular/compiler-cli': angularVersion,
     '@angular/language-service': angularVersion,
     '@angular-devkit/build-angular': angularDevkitVersion,
-    codelyzer: '~4.5.0'
+    codelyzer: '~5.0.1'
   };
 
   return addDepsToPackageJson(deps, devDeps);
