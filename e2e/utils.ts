@@ -72,6 +72,9 @@ exports.default = default_1;`
     runCLI('add @nrwl/web');
     runCLI('add @nrwl/react');
     runCLI('add @nrwl/angular');
+    runCLI('add @nrwl/node');
+    runCLI('add @nrwl/express');
+    runCLI('add @nrwl/nest');
     execSync('mv ./tmp/proj ./tmp/proj_backup');
   }
   execSync('cp -a ./tmp/proj_backup ./tmp/proj');

@@ -33,6 +33,7 @@
   "dependencies": {
     "@nrwl/cypress": "*",
     "@nrwl/jest": "*",
-    "@nrwl/web": "*"
+    "@nrwl/web": "*",
+    "@angular-devkit/schematics": "8.0.0-rc.4"
   }
 }
