@@ -39,14 +39,6 @@ Type: `boolean`
 
 Do not update tsconfig.json for development experience.
 
-### style
-
-Default: `css`
-
-Type: `string`
-
-The file extension to be used for style files.
-
 ### tags
 
 Type: `string`

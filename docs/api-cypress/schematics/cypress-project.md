@@ -1,4 +1,4 @@
-# cypress-project
+# cypress-project [hidden]
 
 Add a Cypress E2E Project
 

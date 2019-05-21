@@ -1,4 +1,4 @@
-# ng-new
+# ng-new [hidden]
 
 Create a workspace
 

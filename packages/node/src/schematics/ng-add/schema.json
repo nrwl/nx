@@ -3,6 +3,12 @@
   "id": "NxNodeNgAdd",
   "title": "Add Nx Node Schematics",
   "type": "object",
-  "properties": {},
+  "properties": {
+    "skipFormat": {
+      "description": "Skip formatting files",
+      "type": "boolean",
+      "default": false
+    }
+  },
   "required": []
 }

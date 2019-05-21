@@ -2,8 +2,11 @@ import { chain, Rule } from '@angular-devkit/schematics';
 import {
   addDepsToPackageJson,
   addPackageWithNgAdd,
-  updateJsonInTree
+  formatFiles,
+  updateJsonInTree,
+  updateWorkspace
 } from '@nrwl/workspace';
+import { Schema } from './schema';
 import {
   expressTypingsVersion,
   nestJsSchematicsVersion,
@@ -11,6 +14,7 @@ import {
   nxVersion,
   reflectMetadataVersion
 } from '../../utils/versions';
+import { JsonObject } from '@angular-devkit/core';
 
 export function addDependencies(): Rule {
   return addDepsToPackageJson(
@@ -38,11 +42,27 @@ function moveDependency(): Rule {
   });
 }
 
-export default function() {
+function setDefault(): Rule {
+  return updateWorkspace(workspace => {
+    workspace.extensions.cli = workspace.extensions.cli || {};
+
+    const defaultCollection: string =
+      workspace.extensions.cli &&
+      ((workspace.extensions.cli as JsonObject).defaultCollection as string);
+
+    if (!defaultCollection || defaultCollection === '@nrwl/workspace') {
+      (workspace.extensions.cli as JsonObject).defaultCollection = '@nrwl/nest';
+    }
+  });
+}
+
+export default function(schema: Schema) {
   return chain([
+    setDefault(),
     addPackageWithNgAdd('@nrwl/node'),
     addPackageWithNgAdd('@nrwl/jest'),
     addDependencies(),
-    moveDependency()
+    moveDependency(),
+    formatFiles(schema)
   ]);
 }

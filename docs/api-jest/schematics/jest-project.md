@@ -1,4 +1,4 @@
-# jest-project
+# jest-project [hidden]
 
 Add Jest configuration to a project
 

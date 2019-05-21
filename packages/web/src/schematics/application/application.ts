@@ -148,7 +148,9 @@ export default function(schema: Schema): Rule {
     const options = normalizeOptions(host, schema);
 
     return chain([
-      ngAdd(),
+      ngAdd({
+        skipFormat: true
+      }),
       createApplicationFiles(options),
       updateNxJson(options),
       addProject(options),

@@ -46,6 +46,8 @@ export {
   serializeTarget
 } from './src/utils/cli-config-utils';
 
+export { getWorkspace, updateWorkspace } from './src/utils/workspace';
+
 export { formatFiles } from './src/utils/rules/format-files';
 export { deleteFile } from './src/utils/rules/deleteFile';
 export * from './src/utils/rules/ng-add';
