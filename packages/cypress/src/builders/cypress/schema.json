@@ -56,6 +56,10 @@
     "env": {
       "type": "object",
       "description": "A key-value Pair of environment variables to pass to Cypress runner"
+    },
+    "spec": {
+      "type": "string",
+      "description": "A comma delimited glob string that is provided to the Cypress runner to specify which spec files to run. i.e. '**examples/**,**actions.spec**"
     }
   },
   "additionalProperties": false,
