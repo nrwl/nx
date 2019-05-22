@@ -198,7 +198,7 @@ describe('ng-add', () => {
     it('should be set if none was set before', async () => {
       const result = await runSchematic('ng-add', {}, appTree);
       const angularJson = readJsonInTree(result, 'angular.json');
-      expect(angularJson.cli.defaultCollection).toEqual('@nrwl/react');
+      expect(angularJson.cli.defaultCollection).toEqual('@nrwl/angular');
     });
 
     it('should be set if @nrwl/workspace was set before', async () => {
@@ -214,14 +214,14 @@ describe('ng-add', () => {
       );
       const result = await runSchematic('ng-add', {}, appTree);
       const angularJson = readJsonInTree(result, 'angular.json');
-      expect(angularJson.cli.defaultCollection).toEqual('@nrwl/react');
+      expect(angularJson.cli.defaultCollection).toEqual('@nrwl/angular');
     });
 
     it('should not be set if something else was set before', async () => {
       appTree = await callRule(
         updateJsonInTree('angular.json', json => {
           json.cli = {
-            defaultCollection: '@nrwl/angular'
+            defaultCollection: '@nrwl/react'
           };
 
           return json;
@@ -230,7 +230,7 @@ describe('ng-add', () => {
       );
       const result = await runSchematic('ng-add', {}, appTree);
       const angularJson = readJsonInTree(result, 'angular.json');
-      expect(angularJson.cli.defaultCollection).toEqual('@nrwl/angular');
+      expect(angularJson.cli.defaultCollection).toEqual('@nrwl/react');
     });
   });
 });

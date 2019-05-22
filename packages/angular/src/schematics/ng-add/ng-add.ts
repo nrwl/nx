@@ -122,19 +122,23 @@ export function addE2eTestRunner(options: Pick<Schema, 'e2eTestRunner'>): Rule {
 export function setDefaults(options: Schema): Rule {
   return updateWorkspace(workspace => {
     workspace.extensions.schematics = workspace.extensions.schematics || {};
+
     workspace.extensions.schematics['@nrwl/angular:application'] =
       workspace.extensions.schematics['@nrwl/angular:application'] || {};
-    workspace.extensions.schematics['@nrwl/angular:application'] = {
-      ...workspace.extensions.schematics['@nrwl/angular:application'],
-      unitTestRunner: options.unitTestRunner,
-      e2eTestRunner: options.e2eTestRunner
-    };
+    workspace.extensions.schematics[
+      '@nrwl/angular:application'
+    ].unitTestRunner =
+      workspace.extensions.schematics['@nrwl/angular:application']
+        .unitTestRunner || options.unitTestRunner;
+    workspace.extensions.schematics['@nrwl/angular:application'].e2eTestRunner =
+      workspace.extensions.schematics['@nrwl/angular:application']
+        .e2eTestRunner || options.e2eTestRunner;
+
     workspace.extensions.schematics['@nrwl/angular:library'] =
       workspace.extensions.schematics['@nrwl/angular:library'] || {};
-    workspace.extensions.schematics['@nrwl/angular:library'] = {
-      ...workspace.extensions.schematics['@nrwl/angular:library'],
-      unitTestRunner: options.unitTestRunner
-    };
+    workspace.extensions.schematics['@nrwl/angular:library'].unitTestRunner =
+      workspace.extensions.schematics['@nrwl/angular:library'].unitTestRunner ||
+      options.unitTestRunner;
 
     workspace.extensions.cli = workspace.extensions.cli || {};
     const defaultCollection: string =
@@ -143,7 +147,7 @@ export function setDefaults(options: Schema): Rule {
 
     if (!defaultCollection || defaultCollection === '@nrwl/workspace') {
       (workspace.extensions.cli as JsonObject).defaultCollection =
-        '@nrwl/react';
+        '@nrwl/angular';
     }
   });
 }
