@@ -15,7 +15,8 @@ import {
   parseFiles,
   getAllProjectsWithTarget,
   getAffectedProjectsWithTarget,
-  readAngularJson
+  readAngularJson,
+  printArgsWarning
 } from './shared';
 import { generateGraph } from './dep-graph';
 import { GlobalNxArgs } from './nx';
@@ -66,6 +67,7 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
             project =>
               !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
           );
+        printArgsWarning(parsedArgs);
         console.log(apps.join(' '));
         break;
       case 'libs':
@@ -78,6 +80,7 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
             project =>
               !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
           );
+        printArgsWarning(parsedArgs);
         console.log(libs.join(' '));
         break;
       case 'dep-graph':
@@ -89,6 +92,7 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
                 project =>
                   !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
               );
+        printArgsWarning(parsedArgs);
         generateGraph(parsedArgs, projects);
         break;
       default:
@@ -98,6 +102,7 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
           workspaceResults,
           parsedArgs.all
         );
+        printArgsWarning(parsedArgs);
         runCommand(
           target,
           targetProjects,
