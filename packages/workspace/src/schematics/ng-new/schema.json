@@ -99,6 +99,10 @@
             "label": "angular           [a workspace with a single Angular application]"
           },
           {
+            "value": "angular-ivy",
+            "label": "angular-ivy       [a workspace with a single Angular application built using Ivy]"
+          },
+          {
             "value": "react",
             "label": "react             [a workspace with a single React application]"
           },
@@ -108,7 +112,7 @@
           },
           {
             "value": "full-stack",
-            "label": "full-stack        [a workspace with a full stack application (NestJS + Angular)]"
+            "label": "full-stack        [a workspace with a full stack application (NestJS + Angular Ivy)]"
           }
         ]
       }

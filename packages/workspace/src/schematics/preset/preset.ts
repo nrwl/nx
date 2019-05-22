@@ -39,6 +39,20 @@ function createPreset(options: Schema): Rule {
       ),
       setDefaultCollection('@nrwl/angular')
     ]);
+  } else if (options.preset === 'angular-ivy') {
+    return chain([
+      externalSchematic(
+        '@nrwl/angular',
+        'application',
+        {
+          name: options.name,
+          style: options.style,
+          enableIvy: true
+        },
+        { interactive: false }
+      ),
+      setDefaultCollection('@nrwl/angular')
+    ]);
   } else if (options.preset === 'react') {
     return chain([
       externalSchematic(
@@ -70,7 +84,7 @@ function createPreset(options: Schema): Rule {
       externalSchematic(
         '@nrwl/angular',
         'application',
-        { name: options.name, style: options.style },
+        { name: options.name, style: options.style, enableIvy: true },
         { interactive: false }
       ),
       externalSchematic(
