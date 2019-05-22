@@ -22,7 +22,8 @@ Many conventions and best practices used in Angular applications can be also be 
 To create a new Nest application, run:
 
 ```bash
-ng g node-application api # you can also be explicit and pass `--framework=nestjs`
+ng add @nrwl/nest # Add Nest Capabilities to a workspace
+ng g @nrwl/nest:application api # Create a Nest App
 ```
 
 This will create the following:
@@ -42,8 +43,6 @@ This will create the following:
 │       │   │   └── app.service.spec.ts
 │       │   ├── assets/
 │       │   ├── environments/
-│       │   │   ├── environment.ts
-│       │   │   └── environment.prod.ts
 │       │   └── main.ts
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
@@ -73,11 +72,21 @@ Read more about Nest at [nestjs.com](https://nestjs.com).
 
 ### Using Express
 
-To create an express application, run `ng g node-application api --framework=express`.
+To create an express application, run:
 
-### Using Other Framework
+```sh
+ng add @nrwl/express # Add Express Capabilities to a workspace
+ng g @nrwl/express:application api # Create an Express Application
+```
 
-To create an empty node application, run `ng g node-application api --framework=none`.
+### Using Other Frameworks
+
+To create an empty node application, run:
+
+```sh
+ng add @nrwl/node # Add Node Capabilities to a workspace
+ng g @nrwl/node:application api # Create a Node Application
+```
 
 ## Cypress
 
@@ -94,7 +103,7 @@ Cypress is an e2e test runner built for modern web. It has a lot of great featur
 
 By default, when creating a new Angular application, Nx will use Cypress to create the e2e tests project.
 
-So running `ng g application frontend` will create:
+So running `ng g @nrwl/angular:application frontend` will create:
 
 ```treeview
 <workspace name>/
@@ -136,7 +145,7 @@ Read more about Cypress at [cypress.io](https://cypress.io).
 
 ### Using Protractor
 
-To use Protractor instead of Cypress, run `ng g application frontend --e2e-test-runner=protractor`.
+To use Protractor instead of Cypress, run `ng g @nrwl/angular:application frontend --e2e-test-runner=protractor`.
 
 ## Jest
 
@@ -152,8 +161,6 @@ By default, Nx uses Jest for both Angular and Node.js applications. So if you ru
 ├── angular.json
 ├── apps/
 │   ├── frontend/
-│   │   ├── browserslist
-│   │   ├── jest.conf.js
 │   │   ├── src/
 │   │   │   ├── app/
 │   │   │   ├── assets/
@@ -163,7 +170,9 @@ By default, Nx uses Jest for both Angular and Node.js applications. So if you ru
 │   │   │   ├── main.ts
 │   │   │   ├── polyfills.ts
 │   │   │   ├── styles.scss
-│   │   │   └── test.ts
+│   │   │   └── test-setup.ts
+│   │   ├── browserslist
+│   │   ├── jest.config.js
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.json
 │   │   ├── tsconfig.spec.json
@@ -182,7 +191,7 @@ Read more about Jest at [jestjs.io](https://jestjs.io).
 
 ### Using Karma
 
-To use Karma instead of Jest, run `ng g application frontend --unit-test-runner=karma`.
+To use Karma instead of Jest, run `ng g @nrwl/angular:application frontend --unit-test-runner=karma`.
 
 ## Prettier
 
@@ -201,6 +210,7 @@ Prettier is an opinionated code formatter. An Nx workspace comes with Prettier p
 ├── package.json
 ├── tools/
 ├── .prettierrc # prettier config
+├── .prettierignore # config to ignore files from prettier
 ├── tsconfig.json
 └── tslint.json
 ```
@@ -209,3 +219,5 @@ You can run:
 
 - `yarn format:write` to format the files
 - `yarn format:check` to check the formatted files
+
+Read more about [Prettier](https://prettier.io).

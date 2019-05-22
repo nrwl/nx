@@ -1,6 +1,6 @@
 # Developing Like Google: Monorepos and Automation
 
-In this guide you will look at one of the most interesting parts of Nx. The part that make so many things so much easier, that it has a transformative effect on a team and even on an organization.
+In this guide you will look at one of the most interesting parts of Nx. The part that make many things so much easier, that it has a transformative effect on a team and even on an organization.
 
 What is it?
 
@@ -30,7 +30,7 @@ To see how Nx delivers all of these, start with an empty Nx workspace:
 └── tslint.json
 ```
 
-An empty workspace has several root-level configuration files and the folders for applications, libraries, and tools. Since an Nx workspace is an Angular CLI workspace, most configuration files are created by Angular CLI. The only exception is `nx.json`, which contains Nx-specific configuration.
+An empty workspace has several root-level configuration files and the folders for applications, libraries, and tools.
 
 ## Applications and Libraries
 
@@ -41,12 +41,39 @@ Nx supports two types of **projects**: applications and libraries.
 
 ### Applications
 
-Out of the box, Nx comes with two schematics for creating applications.
+Nx can generate many different types of applications:
 
-- `ng g application myapp` will create an Angular application.
-- `ng g node-application myapp` will create a Node.js application using Nest.
+Angular Applications:
 
-Creating a new Angular application will result in something like this:
+```sh
+ng add @nrwl/angular # Add Angular Capabilities to a workspace
+ng g @nrwl/angular:application myapp # Generate an Angular Application
+```
+
+React Applications:
+
+```sh
+ng add @nrwl/react # Add React Capabilities to a workspace
+ng g @nrwl/react:application myapp # Generate a React Application
+```
+
+NestJS Applications:
+
+```sh
+ng add @nrwl/nest # Add Nest Capabilities to a workspace
+ng g @nrwl/nest:application myapp # Generate a Nest Application
+```
+
+Express Applications:
+
+```sh
+ng add @nrwl/express # Add Express Capabilities to a workspace
+ng g @nrwl/express:application myapp # Generate an Express Application
+```
+
+And even more!
+
+Creating a new application will result in something like this:
 
 ```treeview
 <workspace name>/
@@ -54,8 +81,6 @@ Creating a new Angular application will result in something like this:
 ├── angular.json
 ├── apps/
 │   ├── myapp/
-│   │   ├── browserslist
-│   │   ├── jest.conf.js
 │   │   ├── src/
 │   │   │   ├── app/
 │   │   │   ├── assets/
@@ -66,6 +91,8 @@ Creating a new Angular application will result in something like this:
 │   │   │   ├── polyfills.ts
 │   │   │   ├── styles.scss
 │   │   │   └── test.ts
+│   │   ├── browserslist
+│   │   ├── jest.config.js
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.json
 │   │   ├── tsconfig.spec.json
@@ -79,33 +106,46 @@ Creating a new Angular application will result in something like this:
 └── tslint.json
 ```
 
-You can run:
+No matter what what kind of application it is, you can run:
 
 - `ng serve myapp` to serve the application
 - `ng build myapp` to build the application
 - `ng test myapp` to test the application
 - `ng lint myapp` to lint the application
 
-Using an Nx workspace with a single Angular application is almost identical to using a standard CLI project.
-
 ### Libraries
 
-Nx comes with a schematic for creating libraries.
+Nx can also generate many different types of libraries:
 
-- `ng g library mylibrary` will create an Angular library.
-- `ng g library mylibrary --framework=none` will create a TypeScript library.
+Angular Libraries:
 
-Creating a new TypeScript library will result in something like this:
+```sh
+ng g @nrwl/angular:library mylib # Generate an Angular Library
+```
+
+React Libraries:
+
+```sh
+ng g @nrwl/react:library mylib # Generate a React Library
+```
+
+Typescript Libraries:
+
+```sh
+ng g @nrwl/workspace:library mylib # Generate a Typescript Library
+```
+
+Creating a new library will result in something like this:
 
 ```treeview
 <workspace name>/
 ├── apps/
 ├── libs/
-│   └── mylibrary/
-│       ├── jest.conf.js
+│   └── mylib/
 │       ├── src/
 │       │   ├── lib/
 │       │   └── index.ts
+│       ├── jest.conf.js
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
 │       ├── tsconfig.spec.json
@@ -118,14 +158,16 @@ Creating a new TypeScript library will result in something like this:
 └── tslint.json
 ```
 
-By default, libraries are only buildable in the context of a particular application. As a result, the only two available targets are:
+No matter what kind of library it is, you can run:
 
 - `ng test mylib` to test the library
 - `ng lint mylib` to lint the library
 
-To be able to build a library independently, you can pass `--publishable` when creating it. You can then run `ng build mylib` to build it, and then publish the results to an NPM registry.
+> By default, libraries are only buildable in the context of an application.
 
-You can import library like this:
+> To be able to build a library independently, you can pass `--publishable` when creating it. You can then run `ng build mylib` to build it, and then publish the results to an NPM registry.
+
+You can import the library like this:
 
 ```typescript
 import { SomeToken } from '@myorg/mylib'; // the `@myorg` scope is configured in `nx.json`.
@@ -133,7 +175,13 @@ import { SomeToken } from '@myorg/mylib'; // the `@myorg` scope is configured in
 
 ### Sharing Code
 
-Without Nx creating a new shared library can take weeks: a new repo needs to be provisioned, CI needs to be set up, etc.. In an Nx Workspace it takes minutes:
+Without Nx creating a new shared library is a complicated and involved process which can take weeks:
+
+- a new repo needs to be provisioned
+- CI needs to be set up
+- etc.
+
+In an Nx Workspace it takes minutes:
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/jMql4zzDxZM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
@@ -141,11 +189,11 @@ It's hard to overstress how powerful this is. If it takes days or weeks to creat
 
 ### Understanding Your Nx Workspace
 
-An Nx workspace can contain dozens (or hundreds) of applications and libraries. It can be difficult to understand how they depend upon each other, and what are the implications of making a particular change.
+An Nx workspace can contain dozens (or hundreds) of applications and libraries. It can be difficult to understand how they depend upon each other, and the implications of making a particular change.
 
-Previously, some senior architect would create an ad-hoc dependency diagram and upload it to a corporate wiki. The diagram isn’t correct even on Day 1, and gets more and more out of sync with every passing day.
+Previously, a senior architect would create an ad-hoc dependency diagram and upload it to a corporate wiki. The diagram is not even correct on Day 1, and gets more and more out of sync with every passing day.
 
-With Nx, you can do better than that. You can run `yarn dep-graph` to see a current dependency diagram of the workspace: what apps and libs are there, how they depend on each other, what is loaded lazily and what is not. Nx uses code analysis to collect this information.
+With Nx, you can do better than that. You can run `yarn dep-graph` to see a current dependency diagram of the workspace: what apps and libs are there, how they depend on each other, what is loaded lazily and what is not. Nx uses code analysis to collect this information. Read more about [Analyzing and Visualizing Workspaces](/guides/monorepo-dependency-diagrams).
 
 ![Monorepo Diagram](./monorepo-diagram.png)
 
@@ -167,7 +215,7 @@ yarn affected:e2e --base=master # reruns e2e tests for all the projects affected
 yarn affected --target=lint --base=master # reruns any target (for instance lint) for projects affected by a PR
 ```
 
-Nx will topologically sort the projects, and will run what it can in parallel. The fact that Nx can use its dependency graph to rebuild and retest the minimal number of projects necessary is crucial. Without this the repo won't scale beyond a handful of projects.
+Nx will topologically sort the projects, and will run what it can in parallel. The fact that Nx can use its dependency graph to rebuild and retest the minimal number of projects necessary is crucial. Without this the repo will not scale beyond a handful of projects.
 
 Read more about how to use `affected:*` commands [here](/guides/monorepo-affected).
 
@@ -216,11 +264,11 @@ In addition to implementing monorepo-style of development, Nx brings in another 
 
 ### Workspace Schematics
 
-Schematics is what what powers all Angular CLI (and Nx) code generation. With Nx, you can easily define workspace-specific schematics that you can then use to enforce best practices. Read more about it [here](/guides/tools-workspace-schematics).
+Schematics is what what powers all Angular CLI (and Nx) code generation. With Nx, you can easily create workspace-specific schematics that you can then use to enforce your own best practices. Read more about [Workspace Schematics](/guides/tools-workspace-schematics).
 
 ### Code Formatting
 
-Pointing out code formatting issue isn't the best way to spend the time allocated for code reviews. We know that, and that's why Nx comes with Prettier support. Run:
+Pointing out code formatting issues during code reviews is not the best way to review code. That's why Nx comes with Prettier support. Run:
 
 ```bash
 yarn format:write # formats the files
@@ -263,7 +311,7 @@ You rarely have to look at `nx.json`, but it is still important to understand wh
 
 The `npmScope` property is used when importing libraries. In this example, when Nx sees `@myorg/mylib`, it will know that you are trying to import the `mylib` library from the same workspace.
 
-The `implicitDependencies` map is used to define what projects are affected by global files. In this example, any change to `package.json` will affect all the projects in the workspace, so all of them will have to be rebuilt and retested.
+The `implicitDependencies` map is used to define what projects are affected by global files. In the above example, any change to `package.json` will affect all the projects in the workspace, so all of them will have to be rebuilt and retested.
 
 ```json
 {
@@ -277,7 +325,7 @@ The `implicitDependencies` map is used to define what projects are affected by g
 }
 ```
 
-In this example, any change to `package.json` will only affect `mylib`.
+In the above example, any change to `package.json` will only affect `mylib`.
 
 ```json
 {
