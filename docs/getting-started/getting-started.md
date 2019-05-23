@@ -33,15 +33,28 @@ yarn create nx-workspace myworkspace
 If you already have a regular Angular CLI project, you can add Nx power-ups by running:
 
 ```bash
-ng add @nrwl/schematics
+ng add @nrwl/workspace
 ```
 
-## Creating First Application
+## Adding Capabilities
 
-Unlike the CLI, an Nx workspace starts blank. There are no applications to build, serve, and test. To create one run:
+Unlike the Angular CLI, an Nx workspace starts blank. There are no applications to create, build, serve, and test. Capabilities other code generation and build tooling that you may add to your workspace. To add capabilities to the workspace:
+
+```sh
+ng add @nrwl/angular # Adds Angular capabilities
+ng add @nrwl/react # Adds React capabilities
+ng add @nrwl/nest # Adds Nest capabilities
+ng add @nrwl/express # Adds Express capabilities
+ng add @nrwl/web # Adds Web capabilities
+ng add @nrwl/node # Adds Node capabilities
+```
+
+## Creating your First Application
+
+After the capability is added, you can now create your first application via:
 
 ```bash
-ng g application myapp
+ng g @nrwl/angular:application myapp
 ```
 
 The result will look like this:
@@ -52,8 +65,6 @@ The result will look like this:
 ├── angular.json
 ├── apps/
 │   ├── myapp/
-│   │   ├── browserslist
-│   │   ├── jest.conf.js
 │   │   ├── src/
 │   │   │   ├── app/
 │   │   │   ├── assets/
@@ -64,6 +75,8 @@ The result will look like this:
 │   │   │   ├── polyfills.ts
 │   │   │   ├── styles.scss
 │   │   │   └── test.ts
+│   │   ├── browserslist
+│   │   ├── jest.config.js
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.json
 │   │   ├── tsconfig.spec.json
@@ -92,7 +105,7 @@ The result will look like this:
 └── tslint.json
 ```
 
-All the files that the CLI would have in a new project are still here, just in a different folder structure which makes it easier to create more applications and libraries in the future.
+All the files that the Angular CLI would have in a new project are still here, just in a different folder structure which makes it easier to create more applications and libraries in the future.
 
 ## Serving Application
 
@@ -100,6 +113,6 @@ Run `ng serve myapp` to serve the newly generated application!
 
 ## Using Angular Console
 
-You can also create a new Nx project using Angular Console--UI for the CLI:
+You can also create a new Nx project using [Angular Console](https://angularconsole.com)--UI for the CLI:
 
 ![Create Workspace](./create-workspace.gif)

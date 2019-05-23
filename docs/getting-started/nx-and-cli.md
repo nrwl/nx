@@ -15,33 +15,29 @@ What does Nx add?
 
 ## Full-Stack Development
 
-With Nx, you can build a backend application next to your Angular application in the same repository. The backend and the frontend can share code. You can connect them to enable a fantastic development experience.
+With Nx, you can build a backend application next to your frontend application in the same repository. The backend and the frontend can share code. You can connect them to enable a fantastic development experience.
 
 _How do you do it?_
 
-First, generate a node application.
+First, generate an Angular application.
 
 ```bash
-ng g node-application backend
+ng addd @nrwl/angular # Add Angular capabilities to a workspace
+ng g @nrwl/angular:app frontend
 ```
 
-The command will use Nest by default. If you prefer Express or you want to build your backend from scratch, pass `--framework=express` or `--framework=none`.
-
-Second, generate an Angular application.
+Second, generate a Nest application.
 
 ```bash
-ng g application frontend
+ng add @nrwl/nest # Add Nest capabilities to a workspace
+ng g @nrwl/nest:app backend --frontend-project frontend # Generate a Nest Application and sets up a proxy for the frontend application.
 ```
 
-Now, add the right proxy configuration:
+We recommend using [Nest](https://nestjs.com). If you prefer Express or you want to build your backend from scratch, add and use different capabilities to your workspacevia:
 
-```json
-{
-  "/graphql": {
-    "target": "http://localhost:3333",
-    "secure": false
-  }
-}
+```sh
+ng add @nrwl/express # Add Express capabilities to a workspace
+ng add @nrwl/node # Add Node capabilities to a workspace
 ```
 
 Finally, you can run `ng serve backend` and `ng serve frontend`. There is a lot more to full-stack development in Nx, which you can read about [here](/fundamentals/build-full-stack-applications).
@@ -133,13 +129,13 @@ Tools like Cypress, Jest, Prettier, and Nest have gained a lot of popularity.
 
 It's not the case that Cypress is always better than Protractor or Nest is always better than say Express. There are tradeoffs. But in many situations, for many projects, these innovative tools offer a lot of advantages.
 
-Adding these tools to the dev workflow is challenging in a regular CLI project. The choice you have is not between Protractor or Cypress, but between a hacked-up setup for Cypress and a great CLI setup for Protractor. Nx changes that!
+Adding these tools to the dev workflow is challenging in a regular Angular CLI project. The choice you have is not between Protractor or Cypress, but between a hacked-up setup for Cypress and a great CLI setup for Protractor. Nx changes that!
 
 When using Nx, adding Cypress or Jest is easy:
 
 ```bash
-ng g application myapp --e2e-test-runner=cypress --unit-test-runner=jest # cypress and jest are actually defaults
-ng g application myapp --e2e-test-runner=protractor --unit-test-runner=karma
+ng g @nrwl/angular:app myapp --e2e-test-runner=cypress --unit-test-runner=jest # cypress and jest are actually defaults
+ng g @nrwl/angular:app myapp --e2e-test-runner=protractor --unit-test-runner=karma
 ```
 
 Tests can then be run just like you would run them normally:
