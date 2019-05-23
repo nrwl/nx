@@ -1,30 +1,33 @@
 import {
+  apply,
   chain,
   externalSchematic,
+  mergeWith,
+  move,
   noop,
   Rule,
-  Tree,
-  SchematicContext,
   schematic,
-  mergeWith,
-  apply,
+  SchematicContext,
   template,
-  move,
+  Tree,
   url
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as ts from 'typescript';
-import { updateJsonInTree, readJsonInTree } from '@nrwl/workspace';
-import { insert, replaceNodeValue } from '@nrwl/workspace';
-import { toFileName } from '@nrwl/workspace';
-import { offsetFromRoot } from '@nrwl/workspace';
 import {
+  angularSchematicNames,
+  formatFiles,
   getNpmScope,
   getWorkspacePath,
+  insert,
+  offsetFromRoot,
+  readJsonInTree,
   replaceAppNameWithPath,
-  angularSchematicNames
+  replaceNodeValue,
+  toFileName,
+  updateJsonInTree,
+  updateWorkspace
 } from '@nrwl/workspace';
-import { formatFiles } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import ngAdd from '../ng-add/ng-add';
 import {
@@ -263,6 +266,20 @@ function updateProject(options: NormalizedSchema): Rule {
   };
 }
 
+function removeE2e(options: NormalizedSchema, e2eProjectRoot: string): Rule {
+  return chain([
+    host => {
+      host.delete(`${e2eProjectRoot}/src/app.e2e-spec.ts`);
+      host.delete(`${e2eProjectRoot}/src/app.po.ts`);
+      host.delete(`${e2eProjectRoot}/protractor.conf.js`);
+      host.delete(`${e2eProjectRoot}/tsconfig.json`);
+    },
+    updateWorkspace(workspace => {
+      workspace.projects.get(options.name).targets.delete('e2e');
+    })
+  ]);
+}
+
 function updateE2eProject(options: NormalizedSchema): Rule {
   return (host: Tree) => {
     // patching the spec file because of a bug in the CLI application schematic
@@ -350,12 +367,7 @@ export default function(schema: Schema): Rule {
 
       options.e2eTestRunner === 'protractor'
         ? move(e2eProjectRoot, options.e2eProjectRoot)
-        : host => {
-            host.delete(`${e2eProjectRoot}/src/app.e2e-spec.ts`);
-            host.delete(`${e2eProjectRoot}/src/app.po.ts`);
-            host.delete(`${e2eProjectRoot}/protractor.conf.js`);
-            host.delete(`${e2eProjectRoot}/tsconfig.json`);
-          },
+        : removeE2e(options, e2eProjectRoot),
 
       options.e2eTestRunner === 'protractor'
         ? updateE2eProject(options)
