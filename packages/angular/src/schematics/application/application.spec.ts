@@ -23,6 +23,12 @@ describe('app', () => {
       );
     });
 
+    it('should remove the e2e target on the application', async () => {
+      const tree = await runSchematic('app', { name: 'myApp' }, appTree);
+      const angularJson = readJsonInTree(tree, '/angular.json');
+      expect(angularJson.projects['my-app'].architect.e2e).not.toBeDefined();
+    });
+
     it('should update nx.json', async () => {
       const tree = await runSchematic(
         'app',
