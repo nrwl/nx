@@ -97,7 +97,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       .substring(1, node.moduleSpecifier.getText().length - 1);
 
     // whitelisted import
-    if (this.allow.indexOf(imp) > -1) {
+    if (this.allow.some(a => matchImportWithWildcard(a, imp))) {
       super.visitImportDeclaration(node);
       return;
     }
@@ -346,4 +346,13 @@ function removeExt(file: string): string {
 
 function normalizePath(osSpecificPath: string): string {
   return osSpecificPath.split(path.sep).join('/');
+}
+
+function matchImportWithWildcard(
+  // This may or may not contain wildcards ("*")
+  allowableImport: string,
+  extractedImport: string
+): boolean {
+  const regex = new RegExp('^' + allowableImport.split('*').join('.*') + '$');
+  return regex.test(extractedImport);
 }
