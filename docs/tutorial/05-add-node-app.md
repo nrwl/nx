@@ -1,16 +1,26 @@
 # Step 5: Add Node Application Implementing API
 
-Using Nx you can develop node applications next to your Angular applications. You can use same commands to run and test them. You can share code between the backend and the frontend. Let's use this capability to implement the API service.
+The requests fail because the API has not been created yet. Using Nx you can develop node applications next to your Angular applications. You can use same commands to run and test them. You can share code between the backend and the frontend. Use this capability to implement the API service.
 
-**Run the following to generate a new Node application:**
+## Add Nest Capabilities to your workspace
+
+Run the following to add the capability to develop Nest applications in your workspace:
+
+```sh
+ng add @nrwl/nest
+```
+
+## Create a Nest Application
+
+**Run the following to generate a new Nest application:**
 
 ```bash
-ng g node-app api --frontendProject=todos
+ng g @nrwl/nest:app api --frontendProject=todos
 ```
 
 Nx will ask you a few questions, and, as with the Angular application, the defaults will work well here.
 
-After Nx is done installing the required dependencies, you should see something like this:
+After this is done, you should see something like this:
 
 ```treeview
 myorg/
@@ -68,11 +78,11 @@ import { AppService } from './app.service';
 export class AppModule {}
 ```
 
-By default, Nx uses the Nest framework when creating node applications. Nest is heavily inspired by Angular, so the configuration for your backend and your frontend will look similar. Also, a lot of best practices used in Angular can be used in Nest as well.
+We recommend using the [Nest](https://nestjs.com) framework when creating node applications. Nest is a powerful framework which helps develop robust node applications. You can also use Express or any node libraries with Nx.
 
 In this case you have an application that registers a service and a controller. Services in Nest are responsible for the business logic, and controllers are responsible for implementing Http endpoints.
 
-**Update `AppService`:**
+**Update `apps/api/src/app/app.service.ts`:**
 
 ```typescript
 import { Injectable } from '@nestjs/common';

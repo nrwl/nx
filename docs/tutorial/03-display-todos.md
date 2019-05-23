@@ -1,6 +1,6 @@
 # Step 3: Display Todos
 
-Great! You have a failing E2E test. Let's make it pass!
+Great! You have a failing E2E test. Now you can make it pass!
 
 The best way to work with Cypress is to keep the failing E2E test running while working on the app. This helps you see the progress you are making.
 
@@ -8,7 +8,7 @@ The best way to work with Cypress is to keep the failing E2E test running while 
 
 **Open `apps/todos`.** If you have used Angular CLI, this should look very familiar: same layout, same module and component files. The only difference is that Nx uses Jest instead of Karma.
 
-**To make the first assertion of the e2e test pass, update `apps/todos/src/app/app.component.ts`:**
+To make the first assertion of the e2e test pass, update `apps/todos/src/app/app.component.ts`:
 
 ```typescript
 import { Component } from '@angular/core';
@@ -37,7 +37,7 @@ and `apps/todos/src/app/app.component.html`:
 </ul>
 ```
 
-**Refresh the e2e test.** Now the test will fail while trying to find the add todo button.
+**Rerun the specs by clicking the button in the top right corner of the left pane.** Now the test will fail while trying to find the add todo button.
 
 ## Add Todos
 

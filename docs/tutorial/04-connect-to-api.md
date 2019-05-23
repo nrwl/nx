@@ -1,6 +1,6 @@
-# Step 4: Connect to API
+# Step 4: Connect to an API
 
-Real-world applications don’t live in isolation — they need APIs to talk to. Let's sketch something out!
+Real-world applications do not live in isolation — they need APIs to talk to. Setup your app to talk to an API.
 
 **Open `apps/todos/src/app/app.module.ts` to import `HttpClientModule`.**
 
@@ -55,7 +55,7 @@ export class AppComponent {
 ```
 
 !!!!!
-Run "ng serve todos" and open localhost:4200. What do you see?
+Run "ng serve todos" and open http://localhost:4200. What do you see?
 !!!!!
 "the server responded with a status of 404 (Not Found)" in Console.
 Blank screen.
