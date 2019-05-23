@@ -136,9 +136,6 @@
     "testPathIgnorePatterns": [
       "node_modules",
       "<rootDir>/build/packages/angular/spec",
-      ".*\\.builder\\.spec\\.js",
-      "node.*normalize\\.spec\\.js",
-      "node.*config\\.spec\\.js",
       "web.*normalize\\.spec\\.js",
       "web.*config\\.spec\\.js"
     ],
