@@ -1,14 +1,14 @@
 # Step 7: Share Code
 
-There is a problem. Both the backend and the frontend define the `Todo` interface. The interface is in sync now, but in a real application, over time, it will diverge, and, as a result, runtime errors will creep in. You need to share this interface between the backend and the frontend. In Nx, you can do it by creating a library.
+Awesome! The application is working end to end! However, there is a problem. Both the backend and the frontend define the `Todo` interface. The interface is in sync now, but in a real application, over time, it will diverge, and, as a result, runtime errors will creep in. You should share this interface between the backend and the frontend. In Nx, you can do this by creating a library.
 
 **Run the following generator to create a library:**
 
 ```bash
-ng g lib data
+ng g #nrwl/workspace:lib data
 ```
 
-**When asked "What framework should this library use?", select `TypeScript`.** The result should look like this:
+The result should look like this:
 
 ```treeview
 myorg/
@@ -21,6 +21,7 @@ myorg/
 │       ├── jest.conf.js
 │       ├── src/
 │       │   ├── lib/
+│       │   │   └── data.ts
 │       │   └── index.ts
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
@@ -33,7 +34,7 @@ myorg/
 └── tslint.json
 ```
 
-**Copy the interface into the library's index file.**
+**Copy the interface into `libs/data/src/lib/data.ts`.**
 
 ```typescript
 export interface Todo {
@@ -41,9 +42,9 @@ export interface Todo {
 }
 ```
 
-## Update Backend
+## Refactor the API
 
-**Now update `app.service.ts` to import the interface:**
+**Now update `apps/api/src/app/app.service.ts` to import the interface:**
 
 ```typescript
 import { Injectable } from '@nestjs/common';
@@ -65,9 +66,9 @@ export class AppService {
 }
 ```
 
-## Update Frontend
+## Update the Angular Application
 
-**Next import the interface on the frontend:**
+**Next import the interface in `apps/todos/src/app/app.component.ts`:**
 
 ```typescript
 import { Component } from '@angular/core';
