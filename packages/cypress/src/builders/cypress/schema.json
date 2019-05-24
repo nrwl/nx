@@ -60,6 +60,10 @@
     "spec": {
       "type": "string",
       "description": "A comma delimited glob string that is provided to the Cypress runner to specify which spec files to run. i.e. '**examples/**,**actions.spec**"
+    },
+    "copyFiles": {
+      "type": "string",
+      "description": "A regex string that is used to choose what additional integration files to copy to the dist folder"
     }
   },
   "additionalProperties": false,
