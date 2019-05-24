@@ -2,7 +2,7 @@
 
 Nx is a great tool for companies of all sizes. These days even small products have several microservies and several frontends (say desktop and mobile) which are often built by distributed teams. Being able to do this type of development holistically, using modern tools, is as important for a startup as it is for a well-established organization.
 
-Some things, however, are much important for large companies:
+Some things, however, are much more important for large companies:
 
 - Code organization & naming conventions
 - Code ownership
@@ -53,7 +53,7 @@ happynrwl/
 └── tslint.json
 ```
 
-For larger projects, it is a good idea ot group libraries into application sections.
+For larger projects, it is a good idea to group libraries into application sections.
 
 ```treeview
 happynrwl/
@@ -134,7 +134,7 @@ This categorization is a good starting point, but other library types are quite 
 
 ### Managing Dependencies
 
-For a large organization it's crucial to establish how libraries can depend on each other. For instance:
+For a large organization it's crucial to establish how projects can depend on each other. For instance:
 
 - Libraries with a broader scope (e.g., `shared/ui`) should not depend on the libraries with narrower scope (e.g., `happynrwlapp/search/utils-testing`).
 - Component libraries should only depend on other component libraries and utility libraries, but should not depend feature libraries.
@@ -145,7 +145,7 @@ Nx provides a feature called tags that can be used to codify and statically-enfo
 
 It's crucial for a large company with multiple teams contributing to the same repository to establish clear code ownership.
 
-Since Nx allows us to group apps and libs in directories, those directories can become code-ownership boundaries. That's why the structure of an Nx workspace often reflects the structure of an organization. GitHub Enterprise users can use the CODEOWNERS file for that.
+Since Nx allows us to group apps and libs in directories, those directories can become code-ownership boundaries. That's why the structure of an Nx workspace often reflects the structure of an organization. GitHub users can use the `CODEOWNERS` file for that.
 
 ```
 /libs/happynrwlapp  julie-happynrwlapp-lead
@@ -162,7 +162,7 @@ With Nx, we can help teams adopt best practices by using workspace schematics an
 
 ### Workspace Schematics
 
-Schematics is a library used by the Angular CLI and Nx to do code generation. `ng g lib mylib` invokes the lib schematic from the default collection, which happens to be `@nrwl/schematics`. Schematics is a great way to codify conventions and best practices. Unfortunately, creating a custom schematics collection isn't very straightforward, so few do it.
+Schematics is a library used by the Angular CLI and Nx to do code generation. `ng g lib mylib` invokes the lib schematic from the default collection. Schematics are a great way to codify conventions and best practices. Unfortunately, creating a custom schematics collection is not very straightforward, so few do it.
 
 Nx simplifies it. With Nx, we can create custom schematics in the `tools/schematics` and invoke them without having to do compile, build, deploy anything.
 
@@ -186,7 +186,7 @@ Embracing the monorepo-style development often requires some changes to the deve
 
 Note `all the projects affected by a PR/commit`. This is very important. Monorepo-style development only works if we rebuild, retest, and relint only the projects that can be affected by our changes. If we instead retest everything, we will get the the following problems:
 
-- The performance of we CI will degrade over time. The time it takes to run the CI should be proportional to the impact of the change, not the size of the repo.
+- The performance of CI checks will degrade over time. The time it takes to run the CI checks should be proportional to the impact of the change, not the size of the repo.
 - We will be affected by the code your change didn’t touch
 
 We should utilize `affected:*` commands to build and test projects. Read more about them [here](./monorepo-affected).
@@ -195,10 +195,10 @@ We should utilize `affected:*` commands to build and test projects. Read more ab
 
 Monorepo-style development works best when used with trunk-based development.
 
-When using trunk-based development, we have a single main branch (say master) where every team submits their code. And
+When using trunk-based development, we have a single main branch (say `master`) where every team submits their code. And
 they do it as soon as possible. So if someone works on a large feature, they split it into a few small changes that can be integrated into master in a week. In other words, when using trunk-based development, teams can create branches, but they are short-lived and focus on a specific user story.
 
-One issue folks often raise in regards to trunk-based development is "things change under you while you are trying to create a release". This can definitely happen, especially when manual testing is involved. To mitigate we can create a release branch where we would cherry-pick commits from master to. With this, we can still frequently merge code into master and have our release isolated from changes made by other teams.
+One issue folks often raise in regards to trunk-based development is "things change under you while you are trying to create a release". This can definitely happen, especially when manual testing is involved. To mitigate we can create a release branch where we would cherry-pick commits from `master` to. With this, we can still frequently merge code into `master` and have our release isolated from changes made by other teams.
 
 ## Enterprise Angular: Monorepo Patterns Book
 

@@ -18,7 +18,7 @@ ng test client-feature-main
 ng e2e client-e2e
 ```
 
-Now imagine, `admin` depends on `admin-feature-permissions`. If we make a change to `admin-feature-permissions`, we need to make sure nothing in the workspace is affected.
+Now imagine, `admin` depends on `admin-feature-permissions`. If we make a change to `admin-feature-permissions`, we need to make sure nothing in the workspace is broken unintentionally.
 
 Typically, you would do it like this:
 
@@ -55,10 +55,10 @@ In practice it's easier to use git to determine what files have changed.
 npm run affected:dep-graph -- --base=master --head=HEAD
 ```
 
-The `--head` defaults to `HEAD`, so when running it locally you can usually omit it:
+The `--base` defaults to `master` and `--head` defaults to `HEAD`, so when running it locally you can usually omit it:
 
 ```bash
-npm run affected:dep-graph -- --base=master
+npm run affected:dep-graph
 ```
 
 Nx will find the most common ancestor of the base and head SHAs and will use it to determine what has changed between it and head.
@@ -66,21 +66,21 @@ Nx will find the most common ancestor of the base and head SHAs and will use it 
 ## Building/Testing/Printing Affected Projects
 
 ```bash
-npm run affected:apps -- --base=master # prints affected apps
-npm run affected:libs -- --base=master # prints affected libs
-npm run affected:build -- --base=master # builds affected apps and libs
-npm run affected:lint -- --base=master # lints affected apps and libs
-npm run affected:test -- --base=master # tests affected apps and libs
-npm run affected:e2e -- --base=master # e2e tests affected apps
+npm run affected:apps # prints affected apps
+npm run affected:libs # prints affected libs
+npm run affected:build # builds affected apps and libs
+npm run affected:lint # lints affected apps and libs
+npm run affected:test # tests affected apps and libs
+npm run affected:e2e # e2e tests affected apps
 ```
 
 All of these are just shortcuts for the following:
 
 ```bash
-npm run affected -- --target=ANYTARGET --base=master # run ANYTARGET for all affected apps and libs
+npm run affected -- --target=ANYTARGET # run ANYTARGET for all affected apps and libs
 ```
 
-Other options will forwarded to the underlying target (e.g., `yarn affected:test --base=origin/master --base=HEAD --sm=false`).
+Options which should be forwarded to the underlying target should be delimited by a `--` (e.g., `yarn affected:test -- -- --sm=false`).
 
 ## CI
 
@@ -96,8 +96,8 @@ npm run affected:build -- --base=origin/master~1 --head=origin/master # rerun wh
 Running targets in parallel can significantly speed up your CI time. This is particularly useful in CI.
 
 ```bash
-npm run affected:build -- --base=master --parallel
-npm run affected:build -- --base=master --parallel --maxParallel=5
+npm run affected:build -- --parallel
+npm run affected:build -- --parallel --maxParallel=5
 ```
 
 ## Rerunning All Targets
@@ -124,7 +124,7 @@ Finally, you can exclude projects like this:
 npm run affected:test -- --all --exlude=admin # retests everything except admin
 ```
 
-## When Nx Can't Understand Your Repository
+## When Nx can't Understand Your Repository
 
 Nx uses its advanced code analysis to construct a dependency graph of all applications and libraries. Some dependencies, however, cannot be determined statically. But you can define them yourself in `nx.json`.
 
