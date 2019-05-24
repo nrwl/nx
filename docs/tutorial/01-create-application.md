@@ -38,7 +38,7 @@ ng add @nrwl/angular --defaults
 Now, create your first Angular application.
 
 ```bash
-ng g app todos
+ng g @nrwl/angular:application todos
 ```
 
 Nx will ask you a few questions about the application you are trying to create: the directory it will be placed it, the tags used for linting, etc.. As your workspace grows, those things become really important. For now the default answers are good enough.
