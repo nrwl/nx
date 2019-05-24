@@ -318,7 +318,7 @@ function updateProject(options: NormalizedSchema): Rule {
         if (options.style !== 'css') {
           fixedProject.schematics = {
             ...fixedProject.schematics,
-            '@nrwl/workspace:component': {
+            '@nrwl/angular:component': {
               styleext: options.style
             }
           };
