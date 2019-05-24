@@ -77,7 +77,7 @@ describe('Cypress builder', () => {
     await run.result;
     await run.stop();
     expect(fork).toHaveBeenCalledWith(
-      '/root/node_modules/.bin/tsc',
+      '/root/node_modules/typescript/bin/tsc',
       ['-p', '/root/apps/my-app-e2e/tsconfig.json'],
       { stdio: [0, 1, 2, 'ipc'] }
     );
