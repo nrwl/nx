@@ -9,8 +9,7 @@ What should we store in memory and what in the URL? What about the local UI stat
 For a better user experience, `optimisticUpdate` method updates the state on the client application first, before updating the data on the server-side. While it addresses fetching data in order, removing the race conditions and handling error, it is optimistic about not failing to update the server. In case of a failure, when using `optimisticUpdate`, the local state on the client is already updated. The developer must provide an undo action to restore the previous state to keep it consistent with the server state. The error handling must be done in the callback, or by means of the undo action.
 
 ```typescript
-import { DataPersistence } from '@nrwl/nx';
-...
+import { DataPersistence } from '@nrwl/angular';
 
 class TodoEffects {
   @Effect() updateTodo = this.s.optimisticUpdate('UPDATE_TODO', {
@@ -21,14 +20,17 @@ class TodoEffects {
 
     undoAction: (a: UpdateTodo, e: any) => {
       // dispatch an undo action to undo the changes in the client state
-      return ({
+      return {
         type: 'UNDO_UPDATE_TODO',
         payload: a
-      });
+      };
     }
   });
 
-  constructor(private s: DataPersistence<TodosState>, private backend: Backend) {}
+  constructor(
+    private s: DataPersistence<TodosState>,
+    private backend: Backend
+  ) {}
 }
 ```
 
@@ -37,8 +39,7 @@ class TodoEffects {
 To achieve a more reliable data synchronization, `pessimisticUpdate` method updates the server data first. When the change is reflected in the server state, changes the client state by dispatching an action. `pessimisticUpdate` method enforces the order of the fetches and error handling.
 
 ```typescript
-import { DataPersistence } from '@nrwl/nx';
-...
+import { DataPersistence } from '@nrwl/angular';
 
 @Injectable()
 class TodoEffects {
@@ -60,7 +61,10 @@ class TodoEffects {
     }
   });
 
-  constructor(private s: DataPersistence<TodosState>, private backend: Backend) {}
+  constructor(
+    private s: DataPersistence<TodosState>,
+    private backend: Backend
+  ) {}
 }
 ```
 
@@ -69,27 +73,29 @@ class TodoEffects {
 DataPersistence's fetch method provides consistency when fetching data. If there are multiple requests scheduled for the same action, it will only run the last one.
 
 ```typescript
-import { DataPersistence } from '@nrwl/nx';
-...
+import { DataPersistence } from '@nrwl/angular';
 
 @Injectable()
 class TodoEffects {
   @Effect() loadTodos = this.s.fetch('GET_TODOS', {
-   // provides an action and the current state of the store
-   run: (a: GetTodos, state: TodosState) => {
-     return this.backend(state.user, a.payload).map(r => ({
-       type: 'TODOS',
-       payload: r
-     }));
-   },
+    // provides an action and the current state of the store
+    run: (a: GetTodos, state: TodosState) => {
+      return this.backend(state.user, a.payload).map(r => ({
+        type: 'TODOS',
+        payload: r
+      }));
+    },
 
-   onError: (a: GetTodos, e: any) => {
-     // dispatch an undo action to undo the changes in the client state
-     return null;
-   }
- });
+    onError: (a: GetTodos, e: any) => {
+      // dispatch an undo action to undo the changes in the client state
+      return null;
+    }
+  });
 
- constructor(private s: DataPersistence<TodosState>, private backend: Backend) {}
+  constructor(
+    private s: DataPersistence<TodosState>,
+    private backend: Backend
+  ) {}
 }
 ```
 
@@ -134,8 +140,7 @@ Since the user can always interact with the URL directly, we should treat the ro
 When our state depends on navigation, we can not assume the route change happened when a new url is triggered but when we actually know the user was able to navigate to the url. DataPersistence `navigation` method checks if an activated router state contains the passed in component type, and, if it does, runs the `run` callback. It provides the activated snapshot associated with the component and the current state. And it only runs the last request.
 
 ```typescript
-import { DataPersistence } from '@nrwl/nx';
-...
+import { DataPersistence } from '@nrwl/angular';
 
 @Injectable()
 class TodoEffects {
@@ -154,6 +159,9 @@ class TodoEffects {
     }
   });
 
-  constructor(private s: DataPersistence<TodosState>, private backend: Backend) {}
+  constructor(
+    private s: DataPersistence<TodosState>,
+    private backend: Backend
+  ) {}
 }
 ```
