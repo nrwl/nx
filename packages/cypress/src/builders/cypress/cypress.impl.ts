@@ -30,6 +30,7 @@ export interface CypressBuilderOptions extends JsonObject {
   browser?: string;
   env?: Record<string, string>;
   spec?: string;
+  copyFiles?: string;
 }
 
 try {
@@ -62,7 +63,14 @@ function run(
   );
 
   return compileTypescriptFiles(options.tsConfig, options.watch, context).pipe(
-    tap(() => copyCypressFixtures(options.cypressConfig, context)),
+    tap(() => {
+      copyCypressFixtures(options.cypressConfig, context);
+      copyIntegrationFilesByRegex(
+        options.cypressConfig,
+        context,
+        options.copyFiles
+      );
+    }),
     concatMap(() =>
       options.devServerTarget
         ? startDevServer(options.devServerTarget, options.watch, context).pipe(
@@ -165,6 +173,38 @@ function copyCypressFixtures(
       cypressConfig.fixturesFolder
     ),
     { overwrite: true }
+  );
+}
+
+/**
+ * @whatItDoes Copy all the integration files that match the given regex into the dist folder.
+ * This is done because `tsc` doesn't handle all file types, e.g. Cucumbers `feature` files.
+ * @param fileExtension File extension to copy
+ */
+function copyIntegrationFilesByRegex(
+  cypressConfigPath: string,
+  context: BuilderContext,
+  regex: string
+) {
+  const cypressConfig = readJsonFile(
+    path.join(context.workspaceRoot, cypressConfigPath)
+  );
+
+  if (!regex || !cypressConfig.integrationFolder) {
+    return;
+  }
+
+  const regExp: RegExp = new RegExp(regex);
+
+  copySync(
+    `${path.dirname(
+      path.join(context.workspaceRoot, cypressConfigPath)
+    )}/src/integration`,
+    path.join(
+      path.dirname(path.join(context.workspaceRoot, cypressConfigPath)),
+      cypressConfig.integrationFolder
+    ),
+    { filter: file => regExp.test(file) }
   );
 }
 
