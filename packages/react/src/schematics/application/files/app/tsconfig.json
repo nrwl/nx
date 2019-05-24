@@ -5,7 +5,6 @@
     "allowJs": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "target": "es2015",
     "types": []
   },
   "include": ["**/*.ts", "**/*.tsx"]

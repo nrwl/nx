@@ -45,15 +45,28 @@ describe('Nrwl Workspace', () => {
       `
     );
     runCLI(`build --prod --project=my-dir-${myapp} --output-hashing none`);
-    expect(exists(`./tmp/proj/dist/apps/my-dir/${myapp}/main.js`)).toEqual(
+    expect(
+      exists(`./tmp/proj/dist/apps/my-dir/${myapp}/main-es2015.js`)
+    ).toEqual(true);
+    expect(exists(`./tmp/proj/dist/apps/my-dir/${myapp}/main-es5.js`)).toEqual(
       true
     );
 
     // This is a loose requirement because there are a lot of
     // influences external from this project that affect this.
-    const bundleSize = getSize(`./tmp/proj/dist/apps/my-dir/${myapp}/main.js`);
-    console.log(`The current bundle size is ${bundleSize} KB`);
-    expect(bundleSize).toBeLessThanOrEqual(200000);
+    const es2015BundleSize = getSize(
+      `./tmp/proj/dist/apps/my-dir/${myapp}/main-es2015.js`
+    );
+    console.log(
+      `The current es2015 bundle size is ${es2015BundleSize / 1000} KB`
+    );
+    expect(es2015BundleSize).toBeLessThanOrEqual(150000);
+
+    const es5BundleSize = getSize(
+      `./tmp/proj/dist/apps/my-dir/${myapp}/main-es5.js`
+    );
+    console.log(`The current es5 bundle size is ${es5BundleSize / 1000} KB`);
+    expect(es5BundleSize).toBeLessThanOrEqual(175000);
 
     // running tests for the app
     expectTestsPass(
