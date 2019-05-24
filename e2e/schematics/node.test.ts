@@ -30,7 +30,7 @@ function getData(): Promise<any> {
 }
 
 describe('Node Applications', () => {
-  xit('should be able to generate an express application', async done => {
+  it('should be able to generate an express application', async done => {
     ensureProject();
     const nodeapp = uniq('nodeapp');
     runCLI(`generate @nrwl/express:app ${nodeapp}`);
