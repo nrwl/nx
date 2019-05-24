@@ -115,7 +115,7 @@ function compileTypescriptFiles(
       let args = ['-p', path.join(context.workspaceRoot, tsConfigPath)];
       const tscPath = path.join(
         context.workspaceRoot,
-        '/node_modules/.bin/tsc'
+        '/node_modules/typescript/bin/tsc'
       );
       if (isWatching) {
         args.push('--watch');
