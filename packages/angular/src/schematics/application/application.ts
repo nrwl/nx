@@ -154,16 +154,18 @@ function updateLinting(options: NormalizedSchema): Rule {
 
           'directive-selector': [true, 'attribute', 'app', 'camelCase'],
           'component-selector': [true, 'element', 'app', 'kebab-case'],
-          'no-output-on-prefix': true,
-          'use-input-property-decorator': true,
-          'use-output-property-decorator': true,
-          'use-host-property-decorator': true,
+          'no-conflicting-lifecycle': true,
+          'no-host-metadata-property': true,
           'no-input-rename': true,
+          'no-inputs-metadata-property': true,
+          'no-output-native': true,
+          'no-output-on-prefix': true,
           'no-output-rename': true,
-          'use-life-cycle-interface': true,
-          'use-pipe-transform-interface': true,
-          'component-class-suffix': true,
-          'directive-class-suffix': true
+          'no-outputs-metadata-property': true,
+          'template-banana-in-box': true,
+          'template-no-negated-async': true,
+          'use-lifecycle-interface': true,
+          'use-pipe-transform-interface': true
         };
       }
       return json;
