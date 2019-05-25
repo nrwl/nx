@@ -329,6 +329,33 @@ export const runAngularMigrations: Rule = (
     : noop();
 };
 
+const updateNestDependencies = updateJsonInTree('package.json', json => {
+  json.dependencies = json.dependencies || {};
+  json.devDependencies = json.devDependencies || {};
+
+  if (!json.devDependencies['@nrwl/nest']) {
+    return json;
+  }
+
+  const nestFrameworkVersion = '^6.2.4';
+
+  json.dependencies = {
+    ...json.dependencies,
+    '@nestjs/common': nestFrameworkVersion,
+    '@nestjs/core': nestFrameworkVersion,
+    '@nestjs/platform-express': nestFrameworkVersion,
+    'reflect-metadata': '^0.1.12'
+  };
+
+  json.devDependencies = {
+    ...json.devDependencies,
+    '@nestjs/schematics': '^6.3.0',
+    '@nestjs/testing': nestFrameworkVersion
+  };
+
+  return json;
+});
+
 export default function(): Rule {
   return chain([
     displayInformation,
@@ -340,6 +367,7 @@ export default function(): Rule {
     updateNxModuleImports,
     updateTslintRules,
     addDependencies(),
+    updateNestDependencies,
     updateDefaultCollection,
     setRootDirAndUpdateOurDir,
     formatFiles()
