@@ -8,7 +8,6 @@ import {
 } from '@nrwl/workspace';
 import { Schema } from './schema';
 import {
-  expressTypingsVersion,
   nestJsSchematicsVersion,
   nestJsVersion,
   nxVersion,
@@ -27,8 +26,7 @@ export function addDependencies(): Rule {
     {
       '@nestjs/schematics': nestJsSchematicsVersion,
       '@nestjs/testing': nestJsVersion,
-      '@nrwl/nest': nxVersion,
-      '@types/express': expressTypingsVersion
+      '@nrwl/nest': nxVersion
     }
   );
 }

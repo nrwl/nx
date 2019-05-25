@@ -191,7 +191,6 @@ describe('Update 8-0-0', () => {
       expect(rootTsConfig.compilerOptions.rootDir).toEqual('.');
 
       const appTsConfig = readJsonInTree(tree, 'tsconfig.app.json');
-      console.log(appTsConfig);
       expect(appTsConfig.compilerOptions.outDir).toEqual('../../dist/out-tsc');
     });
   });
@@ -253,6 +252,26 @@ describe('Update 8-0-0', () => {
       expect(rulesDirectory).toContain(
         'node_modules/@nrwl/workspace/src/tslint'
       );
+    });
+  });
+
+  describe('Nest dependencies', () => {
+    it('should be updated to 6.x', async () => {
+      const tree = await schematicRunner
+        .runSchematicAsync('update-8.0.0', {}, initialTree)
+        .toPromise();
+
+      const { dependencies, devDependencies } = readJsonInTree(
+        tree,
+        'package.json'
+      );
+
+      expect(dependencies['@nestjs/common']).toEqual('^6.2.4');
+      expect(dependencies['@nestjs/core']).toEqual('^6.2.4');
+      expect(dependencies['@nestjs/platform-express']).toEqual('^6.2.4');
+      expect(dependencies['reflect-metadata']).toEqual('^0.1.12');
+      expect(devDependencies['@nestjs/schematics']).toEqual('^6.3.0');
+      expect(devDependencies['@nestjs/testing']).toEqual('^6.2.4');
     });
   });
 
