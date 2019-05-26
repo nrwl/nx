@@ -27,7 +27,8 @@
     "component": {
       "factory": "./src/schematics/component/component",
       "schema": "./src/schematics/component/schema.json",
-      "description": "Create a component"
+      "description": "Create a component",
+      "aliases": "c"
     }
   }
 }

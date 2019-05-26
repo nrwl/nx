@@ -1,18 +1,18 @@
 import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runSchematic } from '../../utils/testing';
-import { names } from '@nrwl/workspace/src/utils/name-utils';
+import { runSchematic, createApp, createLib } from '../../utils/testing';
 import { readJsonInTree } from '@nrwl/workspace/src/utils/ast-utils';
 
 describe('component', () => {
   let appTree: Tree;
   let projectName: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     projectName = 'my-lib';
     appTree = Tree.empty();
     appTree = createEmptyWorkspace(appTree);
-    appTree = createLib(appTree, projectName);
+    appTree = await createApp(appTree, 'my-app');
+    appTree = await createLib(appTree, projectName);
   });
 
   it('should generate files', async () => {
@@ -29,6 +29,20 @@ describe('component', () => {
     expect(tree.exists('libs/my-lib/src/lib/hello/hello.css')).toBeTruthy();
   });
 
+  it('should generate files for an app', async () => {
+    const tree = await runSchematic(
+      'component',
+      { name: 'hello', project: 'my-app' },
+      appTree
+    );
+
+    expect(tree.exists('apps/my-app/src/app/hello/hello.tsx')).toBeTruthy();
+    expect(
+      tree.exists('apps/my-app/src/app/hello/hello.spec.tsx')
+    ).toBeTruthy();
+    expect(tree.exists('apps/my-app/src/app/hello/hello.css')).toBeTruthy();
+  });
+
   describe('--export', () => {
     it('should add to index.ts barrel', async () => {
       const tree = await runSchematic(
@@ -40,6 +54,18 @@ describe('component', () => {
       const indexContent = tree.read('libs/my-lib/src/index.ts').toString();
 
       expect(indexContent).toMatch(/lib\/hello\/hello/);
+    });
+
+    it('should not export from an app', async () => {
+      const tree = await runSchematic(
+        'component',
+        { name: 'hello', project: 'my-app', export: true },
+        appTree
+      );
+
+      const indexContent = tree.read('libs/my-lib/src/index.ts').toString();
+
+      expect(indexContent).not.toMatch(/lib\/hello\/hello/);
     });
   });
 
@@ -123,27 +149,3 @@ describe('component', () => {
     });
   });
 });
-
-export function createLib(tree: Tree, libName: string): Tree {
-  const { fileName } = names(libName);
-
-  tree.create(`/libs/${fileName}/src/index.ts`, `\n`);
-
-  tree.overwrite(
-    '/angular.json',
-    `
-{
-  "projects": {
-    "${libName}": {
-      "root": "libs/${fileName}",
-      "sourceRoot": "libs/${fileName}/src",
-      "projectType": "library",
-      "schematics": {}
-    }
-  }
-}
-`
-  );
-
-  return tree;
-}
