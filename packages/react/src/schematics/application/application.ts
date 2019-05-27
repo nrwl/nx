@@ -1,4 +1,4 @@
-import { join, normalize } from '@angular-devkit/core';
+import { join, normalize, Path } from '@angular-devkit/core';
 import {
   apply,
   chain,
@@ -12,24 +12,29 @@ import {
   Tree,
   url
 } from '@angular-devkit/schematics';
-import { Schema } from './schema';
 import {
   formatFiles,
+  insert,
   names,
   NxJson,
   offsetFromRoot,
   toFileName,
   updateJsonInTree
 } from '@nrwl/workspace';
-import ngAdd from '../ng-add/ng-add';
-import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
 import { addDepsToPackageJson } from '@nrwl/workspace/src/utils/ast-utils';
+import ngAdd from '../ng-add/ng-add';
+import * as ts from 'typescript';
+
+import { Schema } from './schema';
+import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
+import { addRouter } from '../../utils/ast-utils';
+import { reactRouterVersion } from '../../utils/versions';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
-  appProjectRoot: string;
+  appProjectRoot: Path;
   e2eProjectName: string;
-  e2eProjectRoot: string;
+  e2eProjectRoot: Path;
   parsedTags: string[];
   fileName: string;
   styledModule: null | string;
@@ -63,6 +68,7 @@ export default function(schema: Schema): Rule {
           })
         : noop(),
       addStyledModuleDependencies(options),
+      addRouting(options),
       formatFiles(options)
     ]);
   };
@@ -103,22 +109,17 @@ function addProject(options: NormalizedSchema): Rule {
       builder: '@nrwl/web:build',
       options: {
         outputPath: join(normalize('dist'), options.appProjectRoot),
-        index: join(normalize(options.appProjectRoot), 'src/index.html'),
-        main: join(normalize(options.appProjectRoot), `src/main.tsx`),
-        polyfills: join(normalize(options.appProjectRoot), 'src/polyfills.ts'),
-        tsConfig: join(normalize(options.appProjectRoot), 'tsconfig.app.json'),
+        index: join(options.appProjectRoot, 'src/index.html'),
+        main: join(options.appProjectRoot, `src/main.tsx`),
+        polyfills: join(options.appProjectRoot, 'src/polyfills.ts'),
+        tsConfig: join(options.appProjectRoot, 'tsconfig.app.json'),
         assets: [
-          join(normalize(options.appProjectRoot), 'src/favicon.ico'),
-          join(normalize(options.appProjectRoot), 'src/assets')
+          join(options.appProjectRoot, 'src/favicon.ico'),
+          join(options.appProjectRoot, 'src/assets')
         ],
         styles: options.styledModule
           ? []
-          : [
-              join(
-                normalize(options.appProjectRoot),
-                `src/styles.${options.style}`
-              )
-            ],
+          : [join(options.appProjectRoot, `src/styles.${options.style}`)],
         scripts: []
       },
       configurations: {
@@ -126,11 +127,11 @@ function addProject(options: NormalizedSchema): Rule {
           fileReplacements: [
             {
               replace: join(
-                normalize(options.appProjectRoot),
+                options.appProjectRoot,
                 `src/environments/environment.ts`
               ),
               with: join(
-                normalize(options.appProjectRoot),
+                options.appProjectRoot,
                 `src/environments/environment.prod.ts`
               )
             }
@@ -168,16 +169,14 @@ function addProject(options: NormalizedSchema): Rule {
     architect.lint = {
       builder: '@angular-devkit/build-angular:tslint',
       options: {
-        tsConfig: [
-          join(normalize(options.appProjectRoot), 'tsconfig.app.json')
-        ],
+        tsConfig: [join(options.appProjectRoot, 'tsconfig.app.json')],
         exclude: ['**/node_modules/**']
       }
     };
 
     json.projects[options.projectName] = {
       root: options.appProjectRoot,
-      sourceRoot: join(normalize(options.appProjectRoot), 'src'),
+      sourceRoot: join(options.appProjectRoot, 'src'),
       projectType: 'application',
       schematics: {},
       architect
@@ -200,6 +199,29 @@ function addStyledModuleDependencies(options: NormalizedSchema): Rule {
     : noop();
 }
 
+function addRouting(options: NormalizedSchema): Rule {
+  return options.routing
+    ? chain([
+        function addRouterToComponent(host: Tree) {
+          const appPath = join(
+            options.appProjectRoot,
+            `src/app/${options.fileName}.tsx`
+          );
+          const appFileContent = host.read(appPath).toString('utf-8');
+          const appSource = ts.createSourceFile(
+            appPath,
+            appFileContent,
+            ts.ScriptTarget.Latest,
+            true
+          );
+
+          insert(host, appPath, addRouter(appPath, appSource));
+        },
+        addDepsToPackageJson({ 'react-router-dom': reactRouterVersion }, {})
+      ])
+    : noop();
+}
+
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appDirectory = options.directory
     ? `${toFileName(options.directory)}/${toFileName(options.name)}`
@@ -208,8 +230,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
   const e2eProjectName = `${appProjectName}-e2e`;
 
-  const appProjectRoot = `apps/${appDirectory}`;
-  const e2eProjectRoot = `apps/${appDirectory}-e2e`;
+  const appProjectRoot = normalize(`apps/${appDirectory}`);
+  const e2eProjectRoot = normalize(`apps/${appDirectory}-e2e`);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map(s => s.trim())

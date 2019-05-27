@@ -22,6 +22,7 @@ import {
   insert
 } from '@nrwl/workspace/src/utils/ast-utils';
 import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
+import { reactRouterVersion } from '../../utils/versions';
 
 interface NormalizedSchema extends Schema {
   projectSourceRoot: Path;
@@ -37,6 +38,9 @@ export default function(schema: Schema): Rule {
       createComponentFiles(options),
       addStyledModuleDependencies(options),
       addExportsToBarrel(options),
+      options.routing
+        ? addDepsToPackageJson({ 'react-router-dom': reactRouterVersion }, {})
+        : noop(),
       formatFiles({ skipFormat: false })
     ]);
   };
@@ -103,9 +107,7 @@ function addExportsToBarrel(options: NormalizedSchema): Rule {
               addGlobal(
                 indexSourceFile,
                 indexFilePath,
-                `export { default as ${options.className}, ${
-                  options.className
-                }Props } from './lib/${options.name}/${options.fileName}';`
+                `export * from './lib/${options.name}/${options.fileName}';`
               )
             );
           }

@@ -75,6 +75,14 @@
       "type": "boolean",
       "description": "Use pascal case component file name (e.g. App.tsx)®",
       "default": false
+    },
+    "routing": {
+      "type": "boolean",
+      "description": "Generate library with routes"
+    },
+    "parentRoute": {
+      "type": "string",
+      "description": "Add new route to the parent component as specified by this path"
     }
   },
   "required": ["name"]

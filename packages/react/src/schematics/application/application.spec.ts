@@ -443,4 +443,24 @@ describe('app', () => {
       expect(packageJSON.dependencies['@emotion/styled']).toBeDefined();
     });
   });
+
+  describe('--routing', () => {
+    it('should add routes to the App component', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', routing: true },
+        appTree
+      );
+
+      const componentSource = tree
+        .read('apps/my-app/src/app/app.tsx')
+        .toString();
+
+      expect(componentSource).toContain('react-router-dom');
+      expect(componentSource).toContain('<Router>');
+      expect(componentSource).toContain('</Router>');
+      expect(componentSource).toMatch(/<Route\s*path="\/"/);
+      expect(componentSource).toMatch(/<Link\s*to="\/"/);
+    });
+  });
 });

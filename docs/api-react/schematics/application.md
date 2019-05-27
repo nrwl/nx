@@ -47,6 +47,12 @@ Type: `boolean`
 
 Use pascal case component file name (e.g. App.tsx)®
 
+### routing
+
+Type: `boolean`
+
+Generate application with routes
+
 ### skipFormat
 
 Default: `false`

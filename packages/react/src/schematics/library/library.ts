@@ -1,29 +1,40 @@
 import {
+  apply,
   chain,
   externalSchematic,
-  Rule,
-  Tree,
-  SchematicContext,
   mergeWith,
-  apply,
-  url,
-  template,
   move,
-  noop
+  noop,
+  Rule,
+  SchematicContext,
+  template,
+  Tree,
+  url
 } from '@angular-devkit/schematics';
-import { Schema } from './schema';
+import {
+  addDepsToPackageJson,
+  formatFiles,
+  getNpmScope,
+  insert,
+  names,
+  NxJson,
+  offsetFromRoot,
+  readJsonInTree,
+  toClassName,
+  toFileName,
+  updateJsonInTree
+} from '@nrwl/workspace';
+import { join, normalize, Path } from '@angular-devkit/core';
+import * as ts from 'typescript';
 
-import { NxJson } from '@nrwl/workspace';
-import { updateJsonInTree, readJsonInTree } from '@nrwl/workspace';
-import { toFileName, names } from '@nrwl/workspace';
-import { formatFiles } from '@nrwl/workspace';
-import { join, normalize } from 'path';
-import { offsetFromRoot } from '@nrwl/workspace';
+import { Schema } from './schema';
+import { addRoute, addRouter } from '../../utils/ast-utils';
+import { reactRouterVersion } from '../../utils/versions';
 
 export interface NormalizedSchema extends Schema {
   name: string;
   fileName: string;
-  projectRoot: string;
+  projectRoot: Path;
   projectDirectory: string;
   parsedTags: string[];
 }
@@ -50,8 +61,10 @@ export default function(schema: Schema): Rule {
         project: options.name,
         style: options.style,
         skipTests: options.unitTestRunner === 'none',
-        export: true
+        export: true,
+        routing: options.routing
       }),
+      updateParentRoute(options),
       formatFiles(options)
     ])(host, context);
   };
@@ -117,6 +130,67 @@ function updateNxJson(options: NormalizedSchema): Rule {
   });
 }
 
+function updateParentRoute(options: NormalizedSchema): Rule {
+  return options.parentRoute
+    ? chain([
+        function ensureRouterAdded(host: Tree) {
+          const { source, content } = readComponent(host, options.parentRoute);
+          const isRouterPresent = content.match(/react-router-dom/);
+
+          if (!isRouterPresent) {
+            insert(
+              host,
+              options.parentRoute,
+              addRouter(options.parentRoute, source)
+            );
+            return addDepsToPackageJson(
+              { 'react-router-dom': reactRouterVersion },
+              {}
+            );
+          }
+        },
+        function addRouteToComponent(host: Tree) {
+          const npmScope = getNpmScope(host);
+          const { source: componentSource } = readComponent(
+            host,
+            options.parentRoute
+          );
+
+          insert(
+            host,
+            options.parentRoute,
+            addRoute(options.parentRoute, componentSource, {
+              libName: options.name,
+              componentName: toClassName(options.name),
+              moduleName: `@${npmScope}/${options.projectDirectory}`
+            })
+          );
+        },
+        addDepsToPackageJson({ 'react-router-dom': reactRouterVersion }, {})
+      ])
+    : noop();
+}
+
+function readComponent(
+  host: Tree,
+  path: string
+): { content: string; source: ts.SourceFile } {
+  if (!host.exists(path)) {
+    throw new Error(`Cannot find ${path}`);
+  }
+
+  const content = host.read(path).toString('utf-8');
+
+  const source = ts.createSourceFile(
+    path,
+    content,
+    ts.ScriptTarget.Latest,
+    true
+  );
+
+  return { content, source };
+}
+
 function normalizeOptions(options: Schema): NormalizedSchema {
   const name = toFileName(options.name);
   const projectDirectory = options.directory
@@ -125,7 +199,7 @@ function normalizeOptions(options: Schema): NormalizedSchema {
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = options.simpleModuleName ? name : projectName;
-  const projectRoot = `libs/${projectDirectory}`;
+  const projectRoot = normalize(`libs/${projectDirectory}`);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map(s => s.trim())

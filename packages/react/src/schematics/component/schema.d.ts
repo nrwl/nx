@@ -6,4 +6,5 @@ export interface Schema {
   export?: boolean;
   pascalCaseFiles?: boolean;
   classComponent?: boolean;
+  routing?: boolean;
 }

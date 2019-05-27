@@ -9,5 +9,7 @@ export interface Schema {
   tags?: string;
   simpleModuleName: boolean;
   pascalCaseFiles?: boolean;
+  routing?: boolean;
+  parentRoute?: string;
   unitTestRunner: UnitTestRunner;
 }
