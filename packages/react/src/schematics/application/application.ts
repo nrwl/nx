@@ -182,6 +182,9 @@ function addProject(options: NormalizedSchema): Rule {
       schematics: {},
       architect
     };
+
+    json.defaultProject = json.defaultProject || options.projectName;
+
     return json;
   });
 }

@@ -53,6 +53,7 @@ describe('app', () => {
         })
       );
       expect(angularJson.projects['my-node-app-e2e']).toBeUndefined();
+      expect(angularJson.defaultProject).toEqual('my-node-app');
     });
 
     it('should update nx.json', async () => {
@@ -110,6 +111,7 @@ describe('app', () => {
         'apps/my-dir/my-node-app'
       );
       expect(angularJson.projects['my-dir-my-node-app-e2e']).toBeUndefined();
+      expect(angularJson.defaultProject).toEqual('my-dir-my-node-app');
     });
 
     it('should update nx.json', async () => {

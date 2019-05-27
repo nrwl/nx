@@ -21,6 +21,7 @@ describe('app', () => {
       expect(angularJson.projects['my-app-e2e'].root).toEqual(
         'apps/my-app-e2e'
       );
+      expect(angularJson.defaultProject).toEqual('my-app');
     });
 
     it('should update nx.json', async () => {
