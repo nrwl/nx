@@ -10,7 +10,7 @@ import React from 'react';
 %>import styled from '<%= styledModule %>';<% } else {
   var wrapper = 'div';
   var header = 'header';
-  var headerAttributes = " styles={{ textAlign: 'center'}}";
+  var headerAttributes = " style={{ textAlign: 'center'}}";
 %>import './app.<%= style %>';<% } %>
 
 <% if (styledModule) { %>

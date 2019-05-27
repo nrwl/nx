@@ -25,12 +25,20 @@ You can also create a workspace with a React application in place by running:
 npx --ignore-existing create-nx-workspace happynrwl --preset=react
 ```
 
+## Adding React capabilities to a workspace
+
+If you used the react preset, you are all set and can skip this. If you created an empty workspace or have an existing workspace, you can add React capabilities to the workspace:
+
+```sh
+ng add @nrwl/react
+```
+
 ## Generating a React Application
 
 Run
 
 ```bash
-ng g app frontend --framework=react
+ng g @nrwl/react:app frontend
 ```
 
 and you will see the following:
@@ -93,7 +101,7 @@ As with Angular and Node, when using React in Nx, you get the out-of-the-box sup
 Run
 
 ```bash
-ng g lib home --framework=react
+ng g @nrwl/react:lib home
 ```
 
 and you will see the following:
@@ -130,11 +138,11 @@ Run:
 - `ng test home` to test the library
 - `ng lint home` to lint the library
 
-## Using the Library in Application
+## Using the Library in an Application
 
 You can import the home library into the frontend application like this.
 
-```typescript
+```typescript jsx
 import { Component } from 'react';
 import { Home } from '@myworkspace/home';
 
@@ -175,15 +183,15 @@ It can also help you answer questions like "what apps will have to be redeployed
 Because Nx understands how our applications and libraries depend on each other, it can verify that a code change to a reusable library does not break any applications and libraries depending on it.
 
 ```bash
-yarn affected:apps --base=master # prints the apps affected by a PR
+yarn affected:apps # prints the apps affected by a PR
 
-yarn affected:build --base=master # reruns build for all the projects affected by a PR
+yarn affected:build # reruns build for all the projects affected by a PR
 
-yarn affected:test --base=master # reruns unit tests for all the projects affected by a PR
+yarn affected:test # reruns unit tests for all the projects affected by a PR
 
-yarn affected:e2e --base=master # reruns e2e tests for all the projects affected by a PR
+yarn affected:e2e # reruns e2e tests for all the projects affected by a PR
 
-yarn affected --target=lint --base=master # reruns any target (for instance lint) for projects affected by a PR
+yarn affected --target=lint # reruns any target (for instance lint) for projects affected by a PR
 ```
 
 Nx will topologically sort the projects, and will run what it can in parallel. The fact that Nx can use its dependency graph to rebuild and retest the minimal number of projects necessary is crucial. Without this the repo will not scale beyond a handful of projects.

@@ -30,10 +30,6 @@ describe('normalizeBuildOptions', () => {
     root = '/root';
     sourceRoot = normalize('apps/nodeapp/src');
   });
-  it('should add the root', () => {
-    const result = normalizeBuildOptions(testOptions, root, sourceRoot);
-    expect(result.root).toEqual('/root');
-  });
 
   it('should resolve main from root', () => {
     const result = normalizeBuildOptions(testOptions, root, sourceRoot);

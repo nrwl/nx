@@ -1,4 +1,4 @@
-import { getSystemPath, normalize, join } from '@angular-devkit/core';
+import { normalize } from '@angular-devkit/core';
 import { getDevServerConfig } from './devserver.config';
 import { Logger } from '@angular-devkit/core/src/logger';
 jest.mock('tsconfig-paths-webpack-plugin');
@@ -7,6 +7,7 @@ import * as ts from 'typescript';
 import * as fs from 'fs';
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { WebDevServerOptions } from '../builders/dev-server/dev-server.impl';
+import { join } from 'path';
 
 describe('getDevServerConfig', () => {
   let buildInput: WebBuildBuilderOptions;
@@ -19,6 +20,7 @@ describe('getDevServerConfig', () => {
   beforeEach(() => {
     buildInput = {
       main: 'main.ts',
+      differentialLoading: true,
       index: 'index.html',
       budgets: [],
       baseHref: '/',
@@ -39,8 +41,8 @@ describe('getDevServerConfig', () => {
       tsConfig: 'tsconfig.json',
       fileReplacements: []
     };
-    root = '/root';
-    sourceRoot = '/root/apps/app';
+    root = join(__dirname, '../../../..');
+    sourceRoot = join(root, 'apps/app');
 
     serveInput = {
       host: 'localhost',
@@ -370,7 +372,7 @@ describe('getDevServerConfig', () => {
     describe('proxyConfig option', () => {
       it('should setProxyConfig', () => {
         jest.mock(
-          join(normalize(__dirname), 'proxy.conf'),
+          join(root, 'proxy.conf'),
           () => ({
             proxyConfig: 'proxyConfig'
           }),

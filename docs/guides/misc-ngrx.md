@@ -13,7 +13,7 @@ Leveraging [NgRx](https://github.com/ngrx/platform) for state management in an A
 
 You use this Nx schematic to build out a new NgRx feature area that provides a new slice of managed state.
 
-**@nrwl/schematics** has an `ngrx` schematic to generate files that implement best patterns for NgRx scaffolding. This schematic generates source files and then enhances the generated NgRx boilerplate with Nx improvements.
+**@nrwl/angular** has an `ngrx` schematic to generate files that implement best patterns for NgRx scaffolding. This schematic generates source files and then enhances the generated NgRx boilerplate with Nx improvements.
 
 The `ngrx` schematic generates a NgRx feature set containing the following files:
 
@@ -29,18 +29,17 @@ The `ngrx` schematic generates a NgRx feature set containing the following files
 
 > Note: the `name` and the `--module=` arguments are required!
 
-You can generate new **feature** state (NgRx files) which are registered with the `StoreModule.forFeature()` in the feature library ngModule OR the `StoreModule.forRoot()` in the application ngModule.
+You can generate new **feature** state (NgRx files) which are registered with the `StoreModule.forFeature()` in the feature library NgModule OR the `StoreModule.forRoot()` in the application ngModule.
 
 > Feature state libraries can be lazy loaded and support feature state slices that are independent of other feature states.
 
 ```bash
-ng generate ngrx <FeatureName> --module="" [options]
-ng g ngrx <FeatureName> --module="" [options]
+ng g @nrwl/angular:ngrx <FeatureName> --module=<module> [options]
 ```
 
-Before you start generating your files, let's first review the schematic command options:
+Before you start generating your files, let's first review the schematic options:
 
-## ngrx Command Options
+## ngrx Schematic Options
 
 - `name` : Specifies the name of the NgRx feature (required)
 - `module` : Specifies the parent directory for the NgRx folder (required)
@@ -68,23 +67,23 @@ Specifies the name of the NgRx feature (e.g., Products, Users, etc.).
 * We recommend developers use the plural forms for feature 'name'; e.g. Products, Users, Cars, etc.
 
 ```bash
-ng g ngrx <FeatureName> [options]
+ng g @nrwl/angular:ngrx <FeatureName> [options]
 ```
 
 #### 2) `module`
 
-Specifies the path to Angular `ngModule`. This option is **always** required and is used to determine the **parent directory** for the new **+state** folder.
+Specifies the path to Angular `NgModule`. This option is **always** required and is used to determine the **parent directory** for the new **+state** folder.
 
 - `--module`
   - Type: `string`
   - Required: true
 
 ```bash
-ng g ngrx <FeatureName> --module=<xxx> [options]
+ng g @nrwl/angular:ngrx <FeatureName> --module=<xxx> [options]
 ```
 
 - Another option can specify an application root module when the `--root` is specified. The NgRx state files are registered with the `StoreModule.forRoot()` in the application module.
-  > e.g. --module=apps/myapp/src/app/app.module.ts
+  > e.g. --module=apps/myapp/src/app/app.module.ts --root
 - Otherwise, this option can specify a library module. The parent folder to this module will also be used as the _container_ library for the new NgRx state files. Consider the following example of a feature library `state` used for _comments_... organized within a _comments_ grouping folder.
 
   > e.g. --module=libs/comments/state/src/lib/comments-state.module.ts
@@ -98,7 +97,7 @@ Specify this flag to generate NgRx Facade class(es) along with the standard NgRx
   - Required: false; defaults to `false`
 
 ```bash
-ng g ngrx <FeatureName> -module=<xxx> --facade [options]
+ng g @nrwl/angular:ngrx <FeatureName> --module=<xxx> --facade [options]
 ```
 
 > See the blog [Better State Management with Facades](https://blog.nrwl.io/nrwl-nx-6-2-angular-6-1-and-better-state-management-e139da2cd074#cb93) for details.
@@ -135,7 +134,7 @@ We can run the generate command for ngrx with the module and root options to cre
   - Required: false; defaults to `false`
 
 ```bash
-ng generate ngrx app --module=apps/<appname>/src/app/app.module.ts  --root
+ng g @nrwl/angular:ngrx app --module=apps/<appname>/src/app/app.module.ts  --root
 ```
 
 We will see the following files created:
@@ -155,7 +154,7 @@ Also, app.module.ts will have StoreModule.forRoot and EffectsModule.forRoot conf
 We can run the generate command for ngrx with the module and onlyEmptyRoot option to only add the StoreModule.forRoot and EffectsModule.forRoot calls without generating any new files.
 
 ```bash
-ng generate ngrx app --module=apps/<appname>/src/app/app.module.ts  --onlyEmptyRoot
+ng g @nrwl/angular:ngrx app --module=apps/<appname>/src/app/app.module.ts  --onlyEmptyRoot
 ```
 
 This can be useful in the cases where we don't have a need for any state at the root (or app) level.
@@ -165,7 +164,7 @@ This can be useful in the cases where we don't have a need for any state at the 
 We can run the generate command for ngrx with the module option to create a new feature level store and corresponding pieces needed:
 
 ```bash
-ng generate ngrx products --module=libs/<libname>/src/mymodule.module.ts
+ng g @nrwl/angular:ngrx products --module=libs/<libname>/src/mymodule.module.ts
 ```
 
 We will see the following files created:
@@ -185,7 +184,7 @@ Also, mymodule.module.ts will have StoreModule.forFeature and EffectsModule.forF
 We can run the generate command for ngrx with the module and `--onlyAddFiles` option to generate files without adding imports to the module.
 
 ```console
-ng generate ngrx products --module=apps/<appname>/src/app/mymodule/mymodule.module.ts --onlyAddFiles
+ng g @nrwl/angular:ngrx products --module=apps/<appname>/src/app/mymodule/mymodule.module.ts --onlyAddFiles
 ```
 
 This can be useful when we want to start building out our state without wiring it up to our Angular application yet.
@@ -199,7 +198,7 @@ This can be useful when we want to start building out our state without wiring i
 Consider a command to generate a `Comments` NgRx feature set and register it within an application root ngModule.
 
 ```bash
-ng generate NgRx Comments --root --module=apps/myapp/src/app/app.module.ts
+ng g @nrwl/angular:ngrx Comments --root --module=apps/myapp/src/app/app.module.ts
 ```
 
 > This would use `StoreModule.forRoot()` to register the Comments NgRx state functionality.
@@ -209,7 +208,7 @@ ng generate NgRx Comments --root --module=apps/myapp/src/app/app.module.ts
 Better yet, let's generate a `Comments` feature set within a `state` library and register it with the `comments-state.module.ts` file in the same `comments/state` folder.
 
 ```bash
-ng g ngrx Comments --module=libs/comments/state/src/lib/comments-state.module.ts
+ng g @nrwl/angular:ngrx Comments --module=libs/comments/state/src/lib/comments-state.module.ts
 ```
 
 #### Generated Files
@@ -333,7 +332,7 @@ export function commentsReducer(
 ```typescript
 import { Injectable } from '@angular/core';
 import { Effect, Actions } from '@ngrx/effects';
-import { DataPersistence } from '@nrwl/nx';
+import { DataPersistence } from '@nrwl/angular';
 
 import { CommentsState } from './comments.reducer';
 import {
@@ -359,7 +358,7 @@ export class CommentsEffects {
 
   constructor(
     private actions: Actions,
-    private dataPersistence: DataPersistenceComments
+    private dataPersistence: DataPersistence<Comments>
   ) {}
 }
 ```
@@ -374,7 +373,7 @@ If you are register the Comments NgRx as part of the `.forRoot()` state, then:
 e.g.
 
 ```bash
-ng generate ngrx Comments --root --module=apps/myapp/src/app/app.module.ts
+ng g @nrwl/angular:ngrx Comments --root --module=apps/myapp/src/app/app.module.ts
 ```
 
 will update the root ngModule with NgRx configurations:
@@ -432,7 +431,7 @@ Otherwise you are registering your Comments state management as a feature librar
 The command:
 
 ```bash
-ng g ngrx Comments --module=libs/comments/state/src/lib/comments-state.module.ts
+ng g @nrwl/angular:ngrx Comments --module=libs/comments/state/src/lib/comments-state.module.ts
 ```
 
 which will update the feature library ngModule with NgRx Comments configurations as follows:

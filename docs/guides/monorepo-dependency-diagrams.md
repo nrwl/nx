@@ -6,7 +6,7 @@ You can visualize it by running `npm run dep-graph` or `yarn dep-graph`.
 
 ![dependency-graph](./dependency-graph.png)
 
-You can also visualize what is affected by your change, by using the `npm run affected:dep-graph -- --base=master` command.
+You can also visualize what is affected by your change, by using the `npm run affected:dep-graph` command.
 
 ![dependency-graph-affected](./affected.png)
 

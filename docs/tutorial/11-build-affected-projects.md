@@ -2,7 +2,7 @@
 
 ## Build Affected Apps
 
-**Once again make a change to `todos.component.html`:**
+**Once again, make a change to `libs/ui/src/lib/todos/todos.component.html`:**
 
 ```html
 <ul>
@@ -10,18 +10,20 @@
 </ul>
 ```
 
-**Run `npm run affected:build -- --base=master`**
+**Run `npm run affected:build`**
 
 Nx will rebuild `todos` app. Why didn't it rebuild `ui`?
 
-By default, Nx build libraries in the context of some application. You can change it if you mark a library as `publishable`.
+By default, Nx only builds libraries in the context of an application.
 
 ## Affected:\*
 
 You can run any target against the affected projects in the graph like this:
 
 ```bash
-npm run affected -- --target=build --base=master
+# The following are equivalent
+npm run affected -- --target=build
+npm run affected:build
 ```
 
 !!!!!

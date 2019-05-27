@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import * as path from 'path';
 import * as resolve from 'resolve';
-import { getProjectRoots, parseFiles } from './shared';
+import { getProjectRoots, parseFiles, printArgsWarning } from './shared';
 import { YargsAffectedOptions } from './affected';
 import { getTouchedProjects } from './touched';
 import { fileExists } from '../utils/fileutils';
@@ -50,6 +50,7 @@ function getPatterns(args: YargsAffectedOptions) {
       return getPatternsWithPathPrefix(['{apps,libs,tools}']);
     }
 
+    printArgsWarning(args);
     const p = parseFiles(args);
     let patterns = p.files
       .filter(f => fileExists(f))

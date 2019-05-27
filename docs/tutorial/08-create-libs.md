@@ -1,16 +1,18 @@
 # Step 8: Create Libs
 
-Libraries aren't just a way to share code in Nx. They are also useful for factoring out code into small units with well-defined public API.
+Libraries are not just a way to share code in Nx. They are also useful for factoring out code into small units with a well-defined public API.
 
 ## Public API
 
-Every library has an `index.ts` file, which defines its public API. Other applications and libraries can only access what the `index.ts` exports. Everything else defined in the library is private.
+Every library has an `index.ts` file, which defines its public API. Other applications and libraries should only access what the `index.ts` exports. Everything else in the library is private.
 
 ## UI Libraries
 
 To illustrate how useful libraries can be, create a library of Angular components.
 
-**Run `ng g lib ui`, and select Angular as the library framework.**
+**Run `ng g @nrwl/angular:lib ui`.**
+
+You should see the following:
 
 ```treeview
 myorg/
@@ -38,7 +40,7 @@ myorg/
 └── tslint.json
 ```
 
-The `ui.module.ts` file looks like this:
+The `libs/ui/src/lib/ui.module.ts` file looks like this:
 
 ```typescript
 import { NgModule } from '@angular/core';
@@ -50,7 +52,7 @@ import { CommonModule } from '@angular/common';
 export class UiModule {}
 ```
 
-## Add Component
+## Add a Component
 
 **Add a component to the newly created ui library by running:**
 
@@ -89,7 +91,7 @@ myorg/
 └── tslint.json
 ```
 
-**Add the `todos` input to the `TodosComponent`.**
+**Add a `todos` input to `libs/src/lib/todos/todos.component.ts`.**
 
 ```typescript
 import { Component, OnInit, Input } from '@angular/core';
@@ -117,9 +119,9 @@ export class TodosComponent implements OnInit {
 </ul>
 ```
 
-## Use Ui Library
+## Use the UI Library
 
-**Now import `UiModule` into `AppModule`.**
+**Now import `UiModule` into `apps/todos/src/app/app.module.ts`.**
 
 ```typescript
 import { BrowserModule } from '@angular/platform-browser';
@@ -153,5 +155,5 @@ export class AppModule {}
 !!!!!
 Libraries' public API is defined in...
 !!!!!
-index.ts files
+index.ts
 angular.json and tsconfig.json files

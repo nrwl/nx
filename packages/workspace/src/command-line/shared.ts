@@ -45,6 +45,21 @@ function readFileIfExisting(path: string) {
 const ig = ignore();
 ig.add(readFileIfExisting(`${appRoot.path}/.gitignore`));
 
+export function printArgsWarning(options: YargsAffectedOptions) {
+  const { files, uncommitted, untracked, base, head } = options;
+
+  if (
+    !files &&
+    !uncommitted &&
+    !untracked &&
+    !base &&
+    !head &&
+    options._.length < 2
+  ) {
+    console.log('Note: Nx defaulted to --base=master --head=HEAD');
+  }
+}
+
 export function parseFiles(options: YargsAffectedOptions): { files: string[] } {
   const { files, uncommitted, untracked, base, head } = options;
 
@@ -79,7 +94,15 @@ export function parseFiles(options: YargsAffectedOptions): { files: string[] } {
       files: getFilesFromShash(options._[1], options._[2])
     };
   } else {
-    throw new Error('Invalid options provided');
+    return {
+      files: Array.from(
+        new Set([
+          ...getFilesUsingBaseAndHead('master', 'HEAD'),
+          ...getUncommittedFiles(),
+          ...getUntrackedFiles()
+        ])
+      )
+    };
   }
 }
 

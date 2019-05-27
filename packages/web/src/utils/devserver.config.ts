@@ -27,6 +27,7 @@ export function getDevServerConfig(
     logger
   );
   (webpackConfig as any).devServer = getDevServerPartial(
+    root,
     serveOptions,
     buildOptions
   );
@@ -57,6 +58,7 @@ function getLiveReloadEntry(serveOptions: WebDevServerOptions) {
 }
 
 function getDevServerPartial(
+  root: string,
   options: WebDevServerOptions,
   buildOptions: WebBuildBuilderOptions
 ): WebpackDevServerConfiguration {
@@ -92,11 +94,11 @@ function getDevServerPartial(
   };
 
   if (options.ssl && options.sslKey && options.sslCert) {
-    config.https = getSslConfig(buildOptions.root, options);
+    config.https = getSslConfig(root, options);
   }
 
   if (options.proxyConfig) {
-    config.proxy = getProxyConfig(buildOptions.root, options);
+    config.proxy = getProxyConfig(root, options);
   }
 
   return config;

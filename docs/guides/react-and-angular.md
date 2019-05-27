@@ -14,9 +14,21 @@ Let's start by creating a new Nx workspace. The easiest way to do this is to use
 npx --ignore-existing create-nx-workspace happynrwl --preset=empty
 ```
 
+## Add Angular Capabilities
+
+An empty workspace does not have any capabilities to create applications. Add capabilities for Angular development via:
+
+```sh
+ng add @nrwl/angular
+```
+
 ## Creating an Angular Application
 
-An empty workspace has no application or libraries: nothing to run and nothing to test. Let's add an Angular application into it by running `ng g app angularapp --framework=angular`.
+An empty workspace has no application or libraries: nothing to run and nothing to test. Let's add an Angular application into it via:
+
+```sh
+ng g @nrwl/angular:app angularapp
+```
 
 The result should look like this:
 
@@ -65,8 +77,6 @@ happynrwl/
 └── tslint.json
 ```
 
-Everything should look familiar to anyone who have used the Angular CLI. The only difference is that Nx uses Jest and Cypress by default, but we can use Karma and Protractor if we want to.
-
 The generated `main.ts`, will look as follows:
 
 ```typescript
@@ -100,11 +110,19 @@ And the template of the generated component will look as follows:
 <p>This is an Angular app built with <a href="https://nx.dev">Nx</a>.</p>
 ```
 
+## Adding React Capabilities
+
+Generating a React application is just as easy. First, add capabilities for React development via:
+
+```sh
+ng add @nrwl/react
+```
+
 ## Creating a React Application
 
-Generating a React application is just as easy.
+Create a React application via:
 
-`ng g app reactapp --framework=react` and this is what we will see:
+`ng g @nrwl/react:app reactapp` and this is what we will see:
 
 ```treeview
 happynrwl/
@@ -191,7 +209,7 @@ export class App extends Component {
 }
 ```
 
-Nx has first-class React support, so all the commands we use to develop Angular applications work for React as well:
+Nx provides a uniform tool for development the commands used for React development are the same as the commands used to develop Angular applications.
 
 - `ng serve reactapp` serves the React app
 - `ng build reactapp` builds the React app
@@ -206,7 +224,7 @@ TypeScript support, Jest, Cypress, source maps, watch mode--all work with React 
 
 Nx makes sharing code between applications easy. What used to take days or even weeks, with Nx takes minutes. Say we want to create a ui library of shared components that we will use in both the React and Angular applications.
 
-`ng g lib ui --framework=none` and this is what we will see:
+`ng g @nrwl/workspace:lib ui` and this is what we will see:
 
 ```treeview
 happynrwl/
@@ -234,7 +252,7 @@ happynrwl/
 └── tslint.json
 ```
 
-Let's create `greeting.element.ts` in the lib folder:
+Let's create a `greeting.element.ts` in the lib folder:
 
 ```typescript
 export class GreetingElement extends HTMLElement {
@@ -274,23 +292,6 @@ happynrwl/
 ```
 
 ## Using the Greeting Element in our Angular App
-
-### Setting Target to ES2015
-
-To use the Greeting component in the Angular app, let's start with changing the output target to es2015 in `tsconfig.json`.
-
-```json
-{
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "target": "es2015",
-    "types": ["node", "jest"]
-  },
-  "include": ["**/*.ts"]
-}
-```
-
-If we need to support older browsers, we can include the required polyfill instead.
 
 ### Importing the Library
 
@@ -349,21 +350,6 @@ Finally, we can update `app.component.html` to use our shared web component.
 ## Using the Greeting Element in our React App
 
 Using Greeting in the react app requires similar steps.
-
-### Setting Target to ES2015
-
-Let's change the target to es2015.
-
-```json
-{
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "target": "es2015",
-    "types": ["node", "jest"]
-  },
-  "include": ["**/*.ts"]
-}
-```
 
 ### Importing Library
 
@@ -445,32 +431,32 @@ git add .
 git commit -am 'great commit'
 ```
 
-Next, let's create a new branch `git checkout -b angularchange`. In this branch, let's introduce any change to app.component.html and run `yarn affected:dep-graph --base=master`.
+Next, let's create a new branch `git checkout -b angularchange`. In this branch, let's introduce any change to app.component.html and run `yarn affected:dep-graph`.
 
 ![serve screenshot](./react-affected.png)
 
 As you can see, Nx knows that this change only affects the `angularapp` and nothing else. Nx can use this information to rebuild and retest only the angularapp:
 
 ```bash
-yarn affected:test --base=master # only tests angularapp
-yarn affected:build --base=master # only builds angularapp
+yarn affected:test # only tests angularapp
+yarn affected:build # only builds angularapp
 ```
 
-Now, let's introduce a change to `greeting.element.ts` and run `yarn affected:dep-graph --base=master`.
+Now, let's introduce a change to `greeting.element.ts` and run `yarn affected:dep-graph`.
 
 ![serve screenshot](./react-affected2.png)
 
 Both `angularapp` and `reactapp` are affected by this change because they both depend on the greeting component.
 
 ```bash
-yarn affected:test --base=master # tests ui, angularapp, reactapp
-yarn affected:build --base=master # only builds angularapp, reactapp
+yarn affected:test # tests ui, angularapp, reactapp
+yarn affected:build # only builds angularapp, reactapp
 ```
 
-This is what we got:
+This is what we just saw:
 
 - If we only touch our code, we only have to retest and rebuild our code.
-- If we touch something that affects other folks, we'll have to rebuild and retest their applications as well.
+- If we touch something that affects other teams, we'll have to rebuild and retest their applications as well.
 
 Because this is a simple example, the impact is easily deductible. But a real workspace can have a dozen applications and hundred of libraries. Ad-hoc solutions do not work at such scale--we need tools like Nx, that can help us manage those workspaces.
 

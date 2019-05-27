@@ -1,10 +1,11 @@
 import { getBaseWebpackPartial } from './config';
-import { normalize, getSystemPath } from '@angular-devkit/core';
 
 import * as ts from 'typescript';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+jest.mock('tsconfig-paths-webpack-plugin');
+import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import { ProgressPlugin } from 'webpack';
 import { BuildBuilderOptions } from './types';
 
@@ -19,6 +20,7 @@ describe('getBaseWebpackPartial', () => {
       root: '/root',
       statsJson: false
     };
+    (<any>TsConfigPathsPlugin).mockImplementation(class MockPathsPlugin {});
   });
 
   describe('unconditional options', () => {
@@ -127,7 +129,7 @@ describe('getBaseWebpackPartial', () => {
       expect(typeCheckerPlugin.options.tsconfig).toBe('tsconfig.json');
     });
 
-    it('should set aliases for compilerOptionPaths', () => {
+    it('should add the TsConfigPathsPlugin for resolving', () => {
       spyOn(ts, 'parseJsonConfigFileContent').and.returnValue({
         options: {
           paths: {
@@ -135,11 +137,12 @@ describe('getBaseWebpackPartial', () => {
           }
         }
       });
-
       const result = getBaseWebpackPartial(input);
-      expect(result.resolve.alias).toEqual({
-        '@npmScope/libraryName': '/root/libs/libraryName/src/index.ts'
-      });
+      expect(
+        result.resolve.plugins.some(
+          plugin => plugin instanceof TsConfigPathsPlugin
+        )
+      ).toEqual(true);
     });
 
     it('should include es2015 in mainFields if typescript is set es2015', () => {

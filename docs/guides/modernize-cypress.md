@@ -15,7 +15,7 @@ Cypress is an e2e test runner built for modern web. It has a lot of great featur
 
 ### Generating Applications
 
-By default, when creating a new Angular application, Nx will use Cypress to create the e2e tests project.
+By default, when creating a new frontend application, Nx will use Cypress to create the e2e tests project.
 
 ```bash
 ng g application frontend
@@ -51,7 +51,7 @@ ng g application frontend
 └── tslint.json
 ```
 
-Older versions of Nx used Protractor as a default e2e test runner. For those workspace, you have provide the `--e2e-test-runner=cypress` option when creating a new application.
+Older versions of Nx used Protractor as a default e2e test runner. For those workspaces, you have provide the `--e2e-test-runner=cypress` option when creating a new application.
 
 > Unfortunately, the cypress api and its ecosystem are different from Protractor. So Nx cannot provide a reliable migration from Protractor to Cypress tests in an existing application.
 

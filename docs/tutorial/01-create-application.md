@@ -29,22 +29,26 @@ This is an empty Nx workspace without any applications or libraries: nothing to 
 
 ## Create an Angular Application
 
-**Create you first Angular application.**
+First, we must add the capability to create [Angular](https://angular.io) applications via:
+
+```nashorn js
+ng add @nrwl/angular --defaults
+```
+
+Now, create your first Angular application.
 
 ```bash
-ng g app todos
+ng g @nrwl/angular:application todos
 ```
 
 Nx will ask you a few questions about the application you are trying to create: the directory it will be placed it, the tags used for linting, etc.. As your workspace grows, those things become really important. For now the default answers are good enough.
 
-After Nx generated the code and ran `npm install`, you should see something like this:
+After this is done, you should see something like this:
 
 ```treeview
 myorg/
 ├── apps/
 │   ├── todos/
-│   │   ├── browserslist
-│   │   ├── jest.conf.js
 │   │   ├── src/
 │   │   │   ├── app/
 │   │   │   ├── assets/
@@ -55,12 +59,13 @@ myorg/
 │   │   │   ├── polyfills.ts
 │   │   │   ├── styles.scss
 │   │   │   └── test.ts
+│   │   ├── browserslist
+│   │   ├── jest.conf.js
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.json
 │   │   ├── tsconfig.spec.json
 │   │   └── tslint.json
 │   └── todos-e2e/
-│       ├── cypress.json
 │       ├── src/
 │       │   ├── fixtures/
 │       │   │   └── example.json
@@ -72,6 +77,7 @@ myorg/
 │       │       ├── app.po.ts
 │       │       ├── commands.ts
 │       │       └── index.ts
+│       ├── cypress.json
 │       ├── tsconfig.e2e.json
 │       ├── tsconfig.json
 │       └── tslint.json
@@ -90,7 +96,9 @@ The generate command added two projects to our workspace:
 - An Angular application
 - E2E tests for the Angular application
 
-**Serve the newly created application.**
+## Serve the newly created application
+
+Now that the application is setup, run it locally via:
 
 ```bash
 ng serve todos
@@ -99,6 +107,6 @@ ng serve todos
 !!!!!
 Open http://localhost:4200 in the browser. What do you see?
 !!!!!
-Page saying "This project was generated using Nx"
-Page saying "This project was created using Angular CLI"
+Page saying "This is an Angular app built with Nx"
+Page saying "This is an Angular app built with the Angular CLI"
 404
