@@ -15,6 +15,11 @@ const parsedArgs = yargsParser(process.argv, {
 
 console.log('parsedArgs', parsedArgs);
 
+if (! process.env.GITHUB_TOKEN_RELEASE_IT_NX) {
+  console.error('process.env.GITHUB_TOKEN_RELEASE_IT_NX is not set');
+  process.exit(1);
+}
+
 if (parsedArgs.help) {
   console.log(`
       Usage: yarn nx-release <version> [options]
