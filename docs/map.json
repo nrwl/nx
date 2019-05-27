@@ -175,6 +175,11 @@
         "name": "Using Nx at Enterprises",
         "id": "monorepo-nx-enterprise",
         "path": "guides/monorepo-nx-enterprise"
+      },
+      {
+        "name": "Changes between Nx 7 and Nx 8",
+        "id": "nx7-to-nx8",
+        "path": "guides/nx7-to-nx8"
       }
     ]
   }
