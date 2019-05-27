@@ -4,7 +4,8 @@ import {
   SchematicContext,
   Tree,
   externalSchematic,
-  noop
+  noop,
+  filter
 } from '@angular-devkit/schematics';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
@@ -24,9 +25,12 @@ import {
   getSourceNodes,
   ReplaceChange
 } from '@nrwl/workspace/src/utils/ast-utils';
+import { relative } from 'path';
+
+const ignore = require('ignore');
 
 function addDependencies() {
-  return (host: Tree) => {
+  return (host: Tree, context: SchematicContext) => {
     const dependencies = readJsonInTree(host, 'package.json').dependencies;
     const builders = new Set<string>();
     const projects = readJsonInTree(host, 'angular.json').projects;
@@ -40,47 +44,62 @@ function addDependencies() {
     const newDevDependencies = {
       '@nrwl/workspace': '8.0.0'
     };
+    context.logger.info(`Adding @nrwl/workspace as a dependency`);
     if (dependencies['@angular/core']) {
       newDependencies['@nrwl/angular'] = '8.0.0';
+      context.logger.info(`Adding @nrwl/angular as a dependency`);
     }
     if (dependencies['react']) {
       newDevDependencies['@nrwl/react'] = '8.0.0';
+      context.logger.info(`Adding @nrwl/react as a dependency`);
     }
     if (dependencies['@nestjs/core']) {
       newDevDependencies['@nrwl/nest'] = '8.0.0';
+      context.logger.info(`Adding @nrwl/nest as a dependency`);
     }
     if (dependencies.express) {
       newDevDependencies['@nrwl/express'] = '8.0.0';
       newDevDependencies['@nrwl/node'] = '8.0.0';
+      context.logger.info(`Adding @nrwl/express as a dependency`);
     }
     if (builders.has('@nrwl/web')) {
       newDevDependencies['@nrwl/web'] = '8.0.0';
+      context.logger.info(`Adding @nrwl/web as a dependency`);
     }
     if (builders.has('@nrwl/node')) {
       newDevDependencies['@nrwl/node'] = '8.0.0';
+      context.logger.info(`Adding @nrwl/node as a dependency`);
     }
     if (builders.has('@nrwl/jest')) {
       newDevDependencies['@nrwl/jest'] = '8.0.0';
+      context.logger.info(`Adding @nrwl/jest as a dependency`);
     }
     if (builders.has('@nrwl/cypress')) {
       newDevDependencies['@nrwl/cypress'] = '8.0.0';
+      context.logger.info(`Adding @nrwl/cypress as a dependency`);
     }
     return chain([addDepsToPackageJson(newDependencies, newDevDependencies)]);
   };
 }
 
-const removeOldDependencies = updateJsonInTree('package.json', json => {
-  json.dependencies = json.dependencies || {};
-  json.devDependencies = json.devDependencies || {};
-  delete json.dependencies['@nrwl/nx'];
-  delete json.devDependencies['@nrwl/nx'];
-  delete json.dependencies['@nrwl/schematics'];
-  delete json.devDependencies['@nrwl/schematics'];
-  delete json.dependencies['@nrwl/builders'];
-  delete json.devDependencies['@nrwl/builders'];
+const removeOldDependencies = updateJsonInTree(
+  'package.json',
+  (json, context: SchematicContext) => {
+    json.dependencies = json.dependencies || {};
+    json.devDependencies = json.devDependencies || {};
+    delete json.dependencies['@nrwl/nx'];
+    delete json.devDependencies['@nrwl/nx'];
+    delete json.dependencies['@nrwl/schematics'];
+    delete json.devDependencies['@nrwl/schematics'];
+    delete json.dependencies['@nrwl/builders'];
+    delete json.devDependencies['@nrwl/builders'];
+    context.logger.info(`Removing @nrwl/schematics as a dependency`);
+    context.logger.info(`Removing @nrwl/builders as a dependency`);
+    context.logger.info(`Removing @nrwl/nx as a dependency`);
 
-  return json;
-});
+    return json;
+  }
+);
 
 const updateUpdateScript = updateJsonInTree('package.json', json => {
   json.scripts = json.scripts || {};
@@ -129,6 +148,10 @@ const displayInformation = (host: Tree, context: SchematicContext) => {
     Nx has been repackaged. We are installing and migrating your dependencies to the ones necessary.
 
     If you have workspace schematics, we tried to migrate your imports from "@nrwl/schematics" to "@nrwl/workspace" but your externalSchematics may be broken.
+    
+    Read this guide to see where to find familiar features: https://nx.dev/guides/nx7-to-nx8
+    
+    This migration may take a few minutes.
   `);
 };
 
@@ -235,7 +258,7 @@ const updateTslintRules = updateJsonInTree('tslint.json', json => {
   return json;
 });
 
-const updateDefaultCollection = (host: Tree) => {
+const updateDefaultCollection = (host: Tree, context: SchematicContext) => {
   const { dependencies, devDependencies } = readJsonInTree(
     host,
     'package.json'
@@ -258,6 +281,9 @@ const updateDefaultCollection = (host: Tree) => {
     } else {
       json.cli.defaultCollection = '@nrwl/workspace';
     }
+    context.logger.info(
+      `Default collection is now set to ${json.cli.defaultCollection}`
+    );
     return json;
   });
 };
@@ -294,6 +320,10 @@ export const runAngularMigrations: Rule = (
   context: SchematicContext
 ) => {
   const packageJson = readJsonInTree(host, 'package.json');
+
+  if (!!packageJson.dependencies['@angular/core']) {
+    context.logger.info('Migrating Angular to v8.0.0');
+  }
 
   return !!packageJson.dependencies['@angular/core']
     ? chain([
@@ -356,9 +386,21 @@ const updateNestDependencies = updateJsonInTree('package.json', json => {
   return json;
 });
 
+function filterFiles(host: Tree, context: SchematicContext) {
+  const ig = ignore();
+  if (!host.exists('.gitignore')) {
+    return noop();
+  }
+  ig.add(host.read('.gitignore').toString());
+  return filter(file => {
+    return ig.ignores(relative('/', file));
+  });
+}
+
 export default function(): Rule {
   return chain([
     displayInformation,
+    filterFiles,
     runAngularMigrations,
     removeOldDependencies,
     updateUpdateScript,
