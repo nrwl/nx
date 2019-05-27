@@ -73,6 +73,10 @@
       "type": "boolean",
       "description": "Use class components instead of functional component",
       "default": false
+    },
+    "routing": {
+      "type": "boolean",
+      "description": "Generate library with routes"
     }
   },
   "required": ["name", "project"]

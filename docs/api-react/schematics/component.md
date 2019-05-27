@@ -47,6 +47,12 @@ Type: `string`
 
 The name of the project (as specified in angular.json).
 
+### routing
+
+Type: `boolean`
+
+Generate library with routes
+
 ### skipTests
 
 Default: `false`

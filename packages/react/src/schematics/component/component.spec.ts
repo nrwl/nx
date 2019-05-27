@@ -148,4 +148,24 @@ describe('component', () => {
       expect(packageJSON.dependencies['@emotion/core']).toBeDefined();
     });
   });
+
+  describe('--routing', () => {
+    it('should add routes to the component', async () => {
+      const tree = await runSchematic(
+        'component',
+        { name: 'hello', project: projectName, routing: true },
+        appTree
+      );
+
+      const content = tree
+        .read('libs/my-lib/src/lib/hello/hello.tsx')
+        .toString();
+      expect(content).toContain('react-router-dom');
+      expect(content).toMatch(/<Route\s*path="\/"/);
+      expect(content).toMatch(/<Link\s*to="\/"/);
+
+      const packageJSON = readJsonInTree(tree, 'package.json');
+      expect(packageJSON.dependencies['react-router-dom']).toBeDefined();
+    });
+  });
 });

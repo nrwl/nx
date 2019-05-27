@@ -23,6 +23,12 @@ Type: `string`
 
 Library name
 
+### parentRoute
+
+Type: `string`
+
+Add new route to the parent component as specified by this path
+
 ### pascalCaseFiles
 
 Default: `false`
@@ -30,6 +36,12 @@ Default: `false`
 Type: `boolean`
 
 Use pascal case component file name (e.g. App.tsx)®
+
+### routing
+
+Type: `boolean`
+
+Generate library with routes
 
 ### skipFormat
 

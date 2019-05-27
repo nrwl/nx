@@ -25,6 +25,14 @@ Type: `string`
 
 Test runner to use for end to end (e2e) tests
 
+### enableIvy
+
+Default: `false`
+
+Type: `boolean`
+
+**EXPERIMENTAL** True to create a new app that uses the Ivy rendering engine.
+
 ### inlineStyle
 
 Alias(es): s

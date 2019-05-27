@@ -10,4 +10,5 @@ export interface Schema {
   e2eTestRunner: E2eTestRunner;
   pascalCaseFiles?: boolean;
   classComponent?: boolean;
+  routing?: boolean;
 }

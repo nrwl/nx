@@ -263,4 +263,63 @@ describe('lib', () => {
       ).toEqual(['libs/my-lib/tsconfig.lib.json']);
     });
   });
+
+  describe('--parentRoute', () => {
+    it('should add route to parent component', async () => {
+      appTree = await runSchematic(
+        'app',
+        { name: 'myApp', routing: true },
+        appTree
+      );
+
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          parentRoute: 'apps/my-app/src/app/app.tsx'
+        },
+        appTree
+      );
+
+      const appSource = tree.read('apps/my-app/src/app/app.tsx').toString();
+
+      expect(appSource).toMatch(/<Route\s*path="\/my-lib"/);
+      expect(appSource).toContain('@proj/my-lib');
+    });
+
+    it('throws error when parent component file is missing', async () => {
+      await expect(
+        runSchematic(
+          'lib',
+          {
+            name: 'myLib',
+            parentRoute: 'does/not/exist.tsx'
+          },
+          appTree
+        )
+      ).rejects.toThrow('Cannot find');
+    });
+
+    it('should add routing to app if it does not exist yet', async () => {
+      appTree = await runSchematic(
+        'app',
+        { name: 'myApp', routing: false },
+        appTree
+      );
+
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          parentRoute: 'apps/my-app/src/app/app.tsx'
+        },
+        appTree
+      );
+
+      const appSource = tree.read('apps/my-app/src/app/app.tsx').toString();
+
+      expect(appSource).toContain('react-router-dom');
+      expect(appSource).toMatch(/<Route\s*path="\/my-lib"/);
+    });
+  });
 });
