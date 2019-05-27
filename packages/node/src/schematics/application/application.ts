@@ -96,6 +96,8 @@ function updateAngularJson(options: NormalizedSchema): Rule {
     project.architect.lint = getLintConfig(project);
     angularJson.projects[options.name] = project;
 
+    angularJson.defaultProject = angularJson.defaultProject || options.name;
+
     return angularJson;
   });
 }
