@@ -3,11 +3,6 @@ import { getPackageConfigurations } from './get-package-configurations';
 import { generateFile, getNxPackageDependencies } from './utils';
 import { dedent } from 'tslint/lib/utils';
 
-/**
- * @TODO: Generate home for each packages
- *   and link them to the api home.
- */
-
 let template = dedent`
 # API
 
@@ -16,6 +11,32 @@ can see, for each package its dependencies.
 
 | PackageName | Dependencies | PeerDependencies |
 | ----------- | ------------ | ---------------- |
+`;
+
+const imagesTemplate = dedent`
+## Angular
+![Angular](./angular.jpg)
+
+## React
+![React](./react.jpg)
+
+## Nest
+![Nest](./nest.jpg)
+
+## Express
+![Express](./express.jpg)
+
+## Node
+![Node](./node.jpg)
+
+## Cypress
+![Cypress](./cypress.jpg)
+
+## Jest
+![Jest](./jest.jpg)
+
+## Web
+![Web](./web.jpg)
 `;
 
 getPackageConfigurations()
@@ -38,6 +59,9 @@ getPackageConfigurations()
       ', '
     )} | ${data.peerDependencies.join(', ')} |\n`;
   });
+
+// Adding images of dependency graphs
+template += imagesTemplate;
 
 generateFile(path.join(__dirname, '../../docs', 'api'), {
   name: 'home',
