@@ -66,6 +66,12 @@ Type: `boolean`
 
 Whether or not Cypress should record the results of the tests
 
+### spec
+
+Type: `string`
+
+A comma delimited glob string that is provided to the Cypress runner to specify which spec files to run. i.e. '**examples/**,**actions.spec**
+
 ### tsConfig
 
 Type: `string`

@@ -14,3 +14,35 @@ can see, for each package its dependencies.
 | @nrwl/react     | @nrwl/cypress, @nrwl/jest, @nrwl/web | @nrwl/workspace  |
 | @nrwl/web       | @nrwl/cypress, @nrwl/jest            | @nrwl/workspace  |
 | @nrwl/workspace |                                      |                  |
+
+## Angular
+
+![Angular](./angular.jpg)
+
+## React
+
+![React](./react.jpg)
+
+## Nest
+
+![Nest](./nest.jpg)
+
+## Express
+
+![Express](./express.jpg)
+
+## Node
+
+![Node](./node.jpg)
+
+## Cypress
+
+![Cypress](./cypress.jpg)
+
+## Jest
+
+![Jest](./jest.jpg)
+
+## Web
+
+![Web](./web.jpg)
