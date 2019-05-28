@@ -22,7 +22,10 @@
         "message": "Which stylesheet format would you like to use?",
         "type": "list",
         "items": [
-          { "value": "css", "label": "CSS" },
+          {
+            "value": "css",
+            "label": "CSS"
+          },
           {
             "value": "scss",
             "label": "SASS(.scss)  [ http://sass-lang.com   ]"
@@ -62,7 +65,9 @@
     "commit": {
       "description": "Initial repository commit information.",
       "oneOf": [
-        { "type": "boolean" },
+        {
+          "type": "boolean"
+        },
         {
           "type": "object",
           "properties": {
@@ -98,6 +103,10 @@
         "type": "list",
         "items": [
           {
+            "value": "empty",
+            "label": "empty             [an empty workspace]"
+          },
+          {
             "value": "angular",
             "label": "angular           [a workspace with a single Angular application]"
           },
@@ -116,10 +125,6 @@
           {
             "value": "full-stack",
             "label": "full-stack        [a workspace with a full stack application (NestJS + Angular Ivy)]"
-          },
-          {
-            "value": "empty",
-            "label": "empty             [an empty workspace]"
           }
         ]
       }
