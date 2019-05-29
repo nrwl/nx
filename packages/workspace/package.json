@@ -42,8 +42,8 @@
     ]
   },
   "dependencies": {
-    "@angular-devkit/core": "8.0.0-rc.4",
-    "@angular-devkit/schematics": "8.0.0-rc.4",
+    "@angular-devkit/core": "8.0.0",
+    "@angular-devkit/schematics": "8.0.0",
     "app-root-path": "^2.0.1",
     "cosmiconfig": "4.0.0",
     "fs-extra": "6.0.0",

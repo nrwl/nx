@@ -325,38 +325,36 @@ export const runAngularMigrations: Rule = (
     context.logger.info('Migrating Angular to v8.0.0');
   }
 
-  return !!packageJson.dependencies['@angular/core']
-    ? chain([
-        externalSchematic(
-          '@schematics/update',
-          'update',
-          {
-            packages: ['@angular/cli'],
-            from: '7.2.2',
-            to: '8.0.0-rc.3',
-            force: true,
-            next: true
-          },
-          {
-            interactive: true
-          }
-        ),
-        externalSchematic(
+  return chain([
+    externalSchematic(
+      '@schematics/update',
+      'update',
+      {
+        packages: ['@angular/cli'],
+        from: '7.2.2',
+        to: '8.0.0',
+        force: true
+      },
+      {
+        interactive: true
+      }
+    ),
+    !!packageJson.dependencies['@angular/core']
+      ? externalSchematic(
           '@schematics/update',
           'update',
           {
             packages: ['@angular/core'],
             from: '7.0.0',
-            to: '8.0.0-rc.3',
-            force: true,
-            next: true
+            to: '8.0.0',
+            force: true
           },
           {
             interactive: true
           }
         )
-      ])
-    : noop();
+      : noop()
+  ]);
 };
 
 const updateNestDependencies = updateJsonInTree('package.json', json => {
@@ -393,7 +391,7 @@ function filterFiles(host: Tree, context: SchematicContext) {
   }
   ig.add(host.read('.gitignore').toString());
   return filter(file => {
-    return ig.ignores(relative('/', file));
+    return !ig.ignores(relative('/', file));
   });
 }
 
