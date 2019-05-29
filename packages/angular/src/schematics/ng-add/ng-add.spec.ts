@@ -143,7 +143,6 @@ describe('ng-add', () => {
         const { devDependencies } = readJsonInTree(tree, 'package.json');
         expect(devDependencies['@nrwl/cypress']).toBeDefined();
         expect(devDependencies['cypress']).toBeDefined();
-        expect(devDependencies['@types/jquery']).toBeDefined();
       });
 
       it('should set defaults', async () => {

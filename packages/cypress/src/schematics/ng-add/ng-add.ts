@@ -11,8 +11,6 @@ function checkDependenciesInstalled(): Rule {
     const dependencyList: { name: string; version: string }[] = [];
     if (!packageJson.devDependencies.cypress) {
       dependencyList.push({ name: 'cypress', version: cypressVersion });
-      // NOTE: Need to be removed on the next Cypress release (=>3.1.1)
-      dependencyList.push({ name: '@types/jquery', version: '3.3.6' });
     }
     if (!packageJson.devDependencies['@nrwl/cypress']) {
       dependencyList.push({ name: '@nrwl/cypress', version: nxVersion });
