@@ -4,8 +4,7 @@ import {
   SchematicContext,
   Tree,
   externalSchematic,
-  noop,
-  filter
+  noop
 } from '@angular-devkit/schematics';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
@@ -159,6 +158,14 @@ const updateNxModuleImports = (host: Tree) => {
   host.visit(path => {
     if (!path.endsWith('.ts')) {
       return;
+    }
+
+    if (host.exists('.gitignore')) {
+      const ig = ignore();
+      ig.add(host.read('.gitignore').toString());
+      if (ig.ignores(relative('/', path))) {
+        return;
+      }
     }
 
     const sourceFile = createSourceFile(
@@ -384,21 +391,9 @@ const updateNestDependencies = updateJsonInTree('package.json', json => {
   return json;
 });
 
-function filterFiles(host: Tree, context: SchematicContext) {
-  const ig = ignore();
-  if (!host.exists('.gitignore')) {
-    return noop();
-  }
-  ig.add(host.read('.gitignore').toString());
-  return filter(file => {
-    return !ig.ignores(relative('/', file));
-  });
-}
-
 export default function(): Rule {
   return chain([
     displayInformation,
-    filterFiles,
     runAngularMigrations,
     removeOldDependencies,
     updateUpdateScript,
