@@ -155,17 +155,20 @@ const displayInformation = (host: Tree, context: SchematicContext) => {
 };
 
 const updateNxModuleImports = (host: Tree) => {
+  let ig;
+
+  if (host.exists('.gitignore')) {
+    ig = ignore();
+    ig.add(host.read('.gitignore').toString());
+  }
+
   host.visit(path => {
     if (!path.endsWith('.ts')) {
       return;
     }
 
-    if (host.exists('.gitignore')) {
-      const ig = ignore();
-      ig.add(host.read('.gitignore').toString());
-      if (ig.ignores(relative('/', path))) {
-        return;
-      }
+    if (ig && ig.ignores(relative('/', path))) {
+      return;
     }
 
     const sourceFile = createSourceFile(
@@ -296,8 +299,19 @@ const updateDefaultCollection = (host: Tree, context: SchematicContext) => {
 };
 
 const setRootDirAndUpdateOurDir = (host: Tree) => {
+  let ig;
+
+  if (host.exists('.gitignore')) {
+    ig = ignore();
+    ig.add(host.read('.gitignore').toString());
+  }
+
   host.visit(path => {
     if (!path.endsWith('.json')) {
+      return;
+    }
+
+    if (ig && ig.ignores(relative('/', path))) {
       return;
     }
 
@@ -329,7 +343,19 @@ export const runAngularMigrations: Rule = (
   const packageJson = readJsonInTree(host, 'package.json');
 
   if (!!packageJson.dependencies['@angular/core']) {
-    context.logger.info('Migrating Angular to v8.0.0');
+    if (
+      context.engine.workflow &&
+      context.engine.workflow.context.parentContext &&
+      !(context.engine.workflow.context.parentContext
+        .options as any).packages.includes('@angular/core')
+    ) {
+      const message = `This migration should be run with the @angular/core migration`;
+      context.logger.error(message);
+      context.logger.info(
+        '\n!!! Please rerun this command as "npm run update -- @angular/core" or "yarn update @angular/core"!\n'
+      );
+      throw new Error(message);
+    }
   }
 
   return chain([
@@ -345,22 +371,7 @@ export const runAngularMigrations: Rule = (
       {
         interactive: true
       }
-    ),
-    !!packageJson.dependencies['@angular/core']
-      ? externalSchematic(
-          '@schematics/update',
-          'update',
-          {
-            packages: ['@angular/core'],
-            from: '7.0.0',
-            to: '8.0.0',
-            force: true
-          },
-          {
-            interactive: true
-          }
-        )
-      : noop()
+    )
   ]);
 };
 
