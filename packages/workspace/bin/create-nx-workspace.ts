@@ -82,12 +82,12 @@ const args = process.argv
   .join(' ');
 console.log(`ng new ${args} --collection=${nxTool.packageName}`);
 execSync(
-  `${path.join(
-    `"${tmpDir}"`,
+  `"${path.join(
+    tmpDir,
     'node_modules',
     '.bin',
     'ng'
-  )} new ${args} --collection=${nxTool.packageName}`,
+  )}" new ${args} --collection=${nxTool.packageName}`,
   {
     stdio: [0, 1, 2]
   }
