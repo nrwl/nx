@@ -3,8 +3,10 @@ import {
   chain,
   SchematicContext,
   Tree,
-  externalSchematic,
-  noop
+  TaskConfigurationGenerator,
+  TaskConfiguration,
+  TaskExecutorFactory,
+  externalSchematic
 } from '@angular-devkit/schematics';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
@@ -25,8 +27,66 @@ import {
   ReplaceChange
 } from '@nrwl/workspace/src/utils/ast-utils';
 import { relative } from 'path';
+import { RunSchematicTaskOptions } from '@angular-devkit/schematics/tasks/run-schematic/options';
+import * as path from 'path';
+import { platform } from 'os';
+import { Observable } from 'rxjs';
+import { spawn } from 'child_process';
 
 const ignore = require('ignore');
+
+export class RunUpdateTask implements TaskConfigurationGenerator<any> {
+  protected _package: string;
+
+  constructor(pkg: string) {
+    this._package = pkg;
+  }
+
+  toConfiguration(): TaskConfiguration<any> {
+    return {
+      name: 'RunUpdate',
+      options: {
+        package: this._package
+      }
+    };
+  }
+}
+
+function createRunUpdateTask(): TaskExecutorFactory<any> {
+  return {
+    name: 'RunUpdate',
+    create: () => {
+      return Promise.resolve((options: any, context: SchematicContext) => {
+        context.logger.info(`Updating ${options.package}`);
+        const spawnOptions = {
+          stdio: [process.stdin, process.stdout, process.stderr],
+          shell: true
+        };
+        const ng =
+          platform() === 'win32'
+            ? '.\\node_modules\\.bin\\ng'
+            : './node_modules/.bin/ng';
+        const args = [
+          'update',
+          options.package,
+          '--force',
+          '--allow-dirty'
+        ].filter(e => !!e);
+        return new Observable(obs => {
+          spawn(ng, args, spawnOptions).on('close', (code: number) => {
+            if (code === 0) {
+              obs.next();
+              obs.complete();
+            } else {
+              const message = `${options.package} migration failed, see above.`;
+              obs.error(new Error(message));
+            }
+          });
+        });
+      });
+    }
+  };
+}
 
 function addDependencies() {
   return (host: Tree, context: SchematicContext) => {
@@ -340,39 +400,20 @@ export const runAngularMigrations: Rule = (
   host: Tree,
   context: SchematicContext
 ) => {
-  const packageJson = readJsonInTree(host, 'package.json');
-
-  if (!!packageJson.dependencies['@angular/core']) {
-    if (
-      context.engine.workflow &&
-      context.engine.workflow.context.parentContext &&
-      !(context.engine.workflow.context.parentContext
-        .options as any).packages.includes('@angular/core')
-    ) {
-      const message = `This migration should be run with the @angular/core migration`;
-      context.logger.error(message);
-      context.logger.info(
-        '\n!!! Please rerun this command as "npm run update -- @angular/core" or "yarn update @angular/core"!\n'
-      );
-      throw new Error(message);
-    }
+  // Should always be there during ng update but not during tests.
+  if (!context.engine.workflow) {
+    return;
   }
 
-  return chain([
-    externalSchematic(
-      '@schematics/update',
-      'update',
-      {
-        packages: ['@angular/cli'],
-        from: '7.2.2',
-        to: '8.0.0',
-        force: true
-      },
-      {
-        interactive: true
-      }
-    )
-  ]);
+  const packageJson = readJsonInTree(host, 'package.json');
+
+  const engineHost = (context.engine.workflow as any)._engineHost;
+  engineHost.registerTaskExecutor(createRunUpdateTask());
+  const cliUpgrade = context.addTask(new RunUpdateTask('@angular/cli'));
+
+  if (packageJson.dependencies['@angular/core']) {
+    context.addTask(new RunUpdateTask('@angular/core'), [cliUpgrade]);
+  }
 };
 
 const updateNestDependencies = updateJsonInTree('package.json', json => {
