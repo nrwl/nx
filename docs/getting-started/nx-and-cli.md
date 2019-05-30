@@ -22,7 +22,7 @@ _How do you do it?_
 First, generate an Angular application.
 
 ```bash
-ng addd @nrwl/angular # Add Angular capabilities to a workspace
+ng add @nrwl/angular # Add Angular capabilities to a workspace
 ng g @nrwl/angular:app frontend
 ```
 
