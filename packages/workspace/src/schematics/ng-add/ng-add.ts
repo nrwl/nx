@@ -70,9 +70,6 @@ function updatePackageJson() {
     if (!packageJson.devDependencies['@angular/cli']) {
       packageJson.devDependencies['@angular/cli'] = angularCliVersion;
     }
-    if (!packageJson.devDependencies['jasmine-marbles']) {
-      packageJson.devDependencies['jasmine-marbles'] = jasmineMarblesVersion;
-    }
     if (!packageJson.devDependencies['prettier']) {
       packageJson.devDependencies['prettier'] = prettierVersion;
     }
