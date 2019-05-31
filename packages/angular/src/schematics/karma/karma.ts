@@ -1,6 +1,5 @@
 import { Tree, noop, chain, mergeWith, url } from '@angular-devkit/schematics';
 import { readJsonInTree, addDepsToPackageJson } from '@nrwl/workspace';
-import { jasmineMarblesVersion } from '../../utils/versions';
 
 export default function() {
   return (host: Tree) => {
@@ -20,7 +19,6 @@ export default function() {
           'karma-jasmine-html-reporter': '^0.2.2',
           'jasmine-core': '~2.99.1',
           'jasmine-spec-reporter': '~4.2.1',
-          'jasmine-marbles': jasmineMarblesVersion,
           '@types/jasmine': '~2.8.8'
         }
       )
