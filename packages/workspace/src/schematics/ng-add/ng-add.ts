@@ -13,7 +13,6 @@ import * as path from 'path';
 import { join } from 'path';
 import {
   angularCliVersion,
-  jasmineMarblesVersion,
   nxVersion,
   prettierVersion
 } from '../../utils/versions';
