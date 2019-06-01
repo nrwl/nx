@@ -1,10 +1,4 @@
-import {
-  Rule,
-  chain,
-  externalSchematic,
-  SchematicContext,
-  Tree
-} from '@angular-devkit/schematics';
+import { chain, Rule, Tree } from '@angular-devkit/schematics';
 
 import { ReplaceChange } from '@schematics/angular/utility/change';
 import { getSourceNodes } from '@schematics/angular/utility/ast-utils';
@@ -14,8 +8,10 @@ import * as ts from 'typescript';
 import {
   updateJsonInTree,
   readJsonInTree,
-  insert
+  insert,
+  addDepsToPackageJson
 } from '../../src/utils/ast-utils';
+import { addUpdateTask } from '../../src/utils/update-task';
 import { formatFiles } from '../../src/utils/rules/format-files';
 
 const addExtensionRecommendations = updateJsonInTree(
@@ -404,21 +400,13 @@ const setDefaults = updateJsonInTree('angular.json', json => {
 });
 
 const updateAngularCLI = chain([
-  externalSchematic('@schematics/update', 'update', {
-    packages: ['@angular/cli'],
-    from: '7.2.2',
-    to: '7.3.1',
-    force: true
-  }),
-  updateJsonInTree('package.json', json => {
-    json.devDependencies = json.devDependencies || {};
-    json.devDependencies = {
-      ...json.devDependencies,
-      '@angular/cli': '7.3.1',
+  addUpdateTask('@angular/cli', '7.3.1'),
+  addDepsToPackageJson(
+    {},
+    {
       '@angular-devkit/build-angular': '~0.13.1'
-    };
-    return json;
-  })
+    }
+  )
 ]);
 
 export default function(): Rule {
