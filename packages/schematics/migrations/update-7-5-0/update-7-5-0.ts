@@ -1,13 +1,9 @@
 import { Rule, chain, externalSchematic } from '@angular-devkit/schematics';
 
 import { updateJsonInTree } from '@nrwl/workspace';
+import { addUpdateTask } from '../../src/utils/update-task';
 
-const updateAngularCLI = externalSchematic('@schematics/update', 'update', {
-  packages: ['@angular/cli'],
-  from: '7.1.0',
-  to: '7.2.2',
-  force: true
-});
+const updateAngularCLI = addUpdateTask('@angular/cli', '7.2.2');
 
 const updateTypescript = updateJsonInTree('package.json', json => {
   json.devDependencies = json.devDependencies || {};

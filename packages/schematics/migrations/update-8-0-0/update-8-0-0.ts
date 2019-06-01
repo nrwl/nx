@@ -1,92 +1,31 @@
 import {
-  Rule,
   chain,
+  Rule,
   SchematicContext,
-  Tree,
-  TaskConfigurationGenerator,
-  TaskConfiguration,
-  TaskExecutorFactory,
-  externalSchematic
+  Tree
 } from '@angular-devkit/schematics';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
-  readJsonInTree,
   addDepsToPackageJson,
-  updateJsonInTree,
+  formatFiles,
   insert,
-  formatFiles
+  readJsonInTree,
+  updateJsonInTree
 } from '@nrwl/workspace';
 import {
   createSourceFile,
-  ScriptTarget,
   isImportDeclaration,
-  isStringLiteral
+  isStringLiteral,
+  ScriptTarget
 } from 'typescript';
 import {
   getSourceNodes,
   ReplaceChange
 } from '@nrwl/workspace/src/utils/ast-utils';
 import { relative } from 'path';
-import { RunSchematicTaskOptions } from '@angular-devkit/schematics/tasks/run-schematic/options';
-import * as path from 'path';
-import { platform } from 'os';
-import { Observable } from 'rxjs';
-import { spawn } from 'child_process';
+import { addUpdateTask } from '../../src/utils/update-task';
 
 const ignore = require('ignore');
-
-export class RunUpdateTask implements TaskConfigurationGenerator<any> {
-  protected _package: string;
-
-  constructor(pkg: string) {
-    this._package = pkg;
-  }
-
-  toConfiguration(): TaskConfiguration<any> {
-    return {
-      name: 'RunUpdate',
-      options: {
-        package: this._package
-      }
-    };
-  }
-}
-
-function createRunUpdateTask(): TaskExecutorFactory<any> {
-  return {
-    name: 'RunUpdate',
-    create: () => {
-      return Promise.resolve((options: any, context: SchematicContext) => {
-        context.logger.info(`Updating ${options.package}`);
-        const spawnOptions = {
-          stdio: [process.stdin, process.stdout, process.stderr],
-          shell: true
-        };
-        const ng =
-          platform() === 'win32'
-            ? '.\\node_modules\\.bin\\ng'
-            : './node_modules/.bin/ng';
-        const args = [
-          'update',
-          options.package,
-          '--force',
-          '--allow-dirty'
-        ].filter(e => !!e);
-        return new Observable(obs => {
-          spawn(ng, args, spawnOptions).on('close', (code: number) => {
-            if (code === 0) {
-              obs.next();
-              obs.complete();
-            } else {
-              const message = `${options.package} migration failed, see above.`;
-              obs.error(new Error(message));
-            }
-          });
-        });
-      });
-    }
-  };
-}
 
 function addDependencies() {
   return (host: Tree, context: SchematicContext) => {
@@ -400,20 +339,14 @@ export const runAngularMigrations: Rule = (
   host: Tree,
   context: SchematicContext
 ) => {
-  // Should always be there during ng update but not during tests.
-  if (!context.engine.workflow) {
-    return;
-  }
+  const { dependencies } = readJsonInTree(host, 'package.json');
 
-  const packageJson = readJsonInTree(host, 'package.json');
-
-  const engineHost = (context.engine.workflow as any)._engineHost;
-  engineHost.registerTaskExecutor(createRunUpdateTask());
-  const cliUpgrade = context.addTask(new RunUpdateTask('@angular/cli'));
-
-  if (packageJson.dependencies['@angular/core']) {
-    context.addTask(new RunUpdateTask('@angular/core'), [cliUpgrade]);
-  }
+  return chain([
+    addUpdateTask('@angular/cli', '8.0.1'),
+    ...(dependencies['@angular/core']
+      ? [addUpdateTask('@angular/core', '8.0.0')]
+      : [])
+  ]);
 };
 
 const updateNestDependencies = updateJsonInTree('package.json', json => {

@@ -6,6 +6,7 @@ import {
 } from '@angular-devkit/schematics';
 import { updateJsonInTree } from '@nrwl/workspace';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { addDepsToPackageJson } from '@nrwl/workspace/src/utils/ast-utils';
 
 function displayInformation(host: Tree, context: SchematicContext) {
   context.logger.info(
@@ -21,18 +22,12 @@ function displayInformation(host: Tree, context: SchematicContext) {
 
 export default function(): Rule {
   return chain([
-    updateJsonInTree('package.json', json => {
-      json.scripts = json.scripts || {};
-      json.devDependencies = json.devDependencies || {};
-      json.scripts = json.scripts || {};
-
-      json.devDependencies = {
-        ...json.devDependencies,
+    addDepsToPackageJson(
+      {},
+      {
         prettier: '1.16.4'
-      };
-
-      return json;
-    }),
+      }
+    ),
     displayInformation
   ]);
 }
