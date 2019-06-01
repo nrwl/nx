@@ -14,6 +14,7 @@ import { updateJsonInTree, readJsonInTree } from '@nrwl/workspace';
 import { getWorkspacePath } from '@nrwl/workspace';
 import { offsetFromRoot } from '@nrwl/workspace';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { addUpdateTask } from '../../src/utils/update-task';
 
 function getBuilders(project: any): string[] {
   return Array.from(
@@ -213,12 +214,7 @@ function switchToEs2015(host: Tree, context: SchematicContext) {
   });
 }
 
-const updateAngularCLI = externalSchematic('@schematics/update', 'update', {
-  packages: ['@angular/cli'],
-  from: '7.0.1',
-  to: '7.1.0',
-  force: true
-});
+const updateAngularCLI = addUpdateTask('@angular/cli', '7.1.0');
 
 export default function(): Rule {
   return chain([
