@@ -5,7 +5,7 @@ Awesome! The application is working end to end! However, there is a problem. Bot
 **Run the following generator to create a library:**
 
 ```bash
-ng g #nrwl/workspace:lib data
+ng g @nrwl/workspace:lib data
 ```
 
 The result should look like this:
