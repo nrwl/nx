@@ -1,4 +1,4 @@
 {
-  "extends": "<%= offsetFromRoot %>/tslint.json",
+  "extends": "<%= offsetFromRoot %>tslint.json",
   "rules": []
 }
