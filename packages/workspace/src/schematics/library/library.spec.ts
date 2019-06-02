@@ -150,6 +150,8 @@ describe('lib', () => {
       expect(
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.ts')
       ).toBeTruthy();
+      expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
+      expect(tree.exists(`libs/my-dir/my-lib/tslint.json`)).toBeTruthy();
     });
 
     it('should update angular.json', async () => {
@@ -207,6 +209,20 @@ describe('lib', () => {
           types: ['node', 'jest']
         },
         include: ['**/*.ts']
+      });
+    });
+
+    it('should create a local tslint.json', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', directory: 'myDir' },
+        appTree
+      );
+
+      const tslintJson = readJsonInTree(tree, 'libs/my-dir/my-lib/tslint.json');
+      expect(tslintJson).toEqual({
+        extends: '../../../tslint.json',
+        rules: []
       });
     });
   });
