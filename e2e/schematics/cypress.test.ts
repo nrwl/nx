@@ -35,8 +35,7 @@ describe('Cypress E2E Test runner', () => {
   });
 
   if (!runsInWSL()) {
-    // TODO: This passes locally but not on CI
-    xdescribe('running Cypress', () => {
+    describe('running Cypress', () => {
       it('should execute e2e tests using Cypress', () => {
         newProject();
         const myapp = uniq('myapp');

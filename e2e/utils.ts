@@ -123,7 +123,6 @@ export function copyMissingPackages(): void {
 
     'ng-packagr',
     'cypress',
-    '@types/jquery',
     'jest',
     '@types/jest',
     'jest-preset-angular',
