@@ -50,6 +50,11 @@
         ]
       }
     },
+    "routing": {
+      "type": "boolean",
+      "description": "Generate application with routes",
+      "x-prompt": "Would you like to configure routing for this application?"
+    },
     "skipFormat": {
       "description": "Skip formatting files",
       "type": "boolean",
@@ -81,10 +86,6 @@
       "type": "boolean",
       "description": "Use class components instead of functional component",
       "default": false
-    },
-    "routing": {
-      "type": "boolean",
-      "description": "Generate application with routes"
     }
   },
   "required": []
