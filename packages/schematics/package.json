@@ -25,12 +25,6 @@
   "schematics": "./src/collection.json",
   "ng-update": {
     "requirements": {},
-    "packageGroup": [
-      "@nrwl/nx",
-      "@nrwl/react",
-      "@nrwl/schematics",
-      "@nrwl/builders"
-    ],
     "migrations": "./migrations/migrations.json"
   },
   "dependencies": {
