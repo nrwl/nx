@@ -150,7 +150,6 @@ const options = {
    */
   pkgFiles: [
     'package.json',
-    'build/npm/builders/package.json',
     'build/npm/schematics/package.json',
     'build/npm/create-nx-workspace/package.json',
     'build/npm/jest/package.json',
