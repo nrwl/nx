@@ -18,39 +18,6 @@
       "type": "string",
       "x-prompt": "In which directory should the application be generated?"
     },
-    "inlineStyle": {
-      "description": "Specifies if the style will be in the ts file.",
-      "type": "boolean",
-      "default": false,
-      "alias": "s"
-    },
-    "inlineTemplate": {
-      "description": "Specifies if the template will be in the ts file.",
-      "type": "boolean",
-      "default": false,
-      "alias": "t"
-    },
-    "viewEncapsulation": {
-      "description": "Specifies the view encapsulation strategy.",
-      "enum": ["Emulated", "Native", "None"],
-      "type": "string"
-    },
-    "routing": {
-      "type": "boolean",
-      "description": "Generates a routing module.",
-      "default": false
-    },
-    "enableIvy": {
-      "description": "**EXPERIMENTAL** True to create a new app that uses the Ivy rendering engine.",
-      "type": "boolean",
-      "default": false
-    },
-    "prefix": {
-      "type": "string",
-      "format": "html-selector",
-      "description": "The prefix to apply to generated selectors.",
-      "alias": "p"
-    },
     "style": {
       "description": "The file extension to be used for style files.",
       "type": "string",
@@ -74,6 +41,40 @@
           }
         ]
       }
+    },
+    "routing": {
+      "type": "boolean",
+      "description": "Generates a routing module.",
+      "default": false,
+      "x-prompt": "Would you like to configure routing for this application?"
+    },
+    "inlineStyle": {
+      "description": "Specifies if the style will be in the ts file.",
+      "type": "boolean",
+      "default": false,
+      "alias": "s"
+    },
+    "inlineTemplate": {
+      "description": "Specifies if the template will be in the ts file.",
+      "type": "boolean",
+      "default": false,
+      "alias": "t"
+    },
+    "viewEncapsulation": {
+      "description": "Specifies the view encapsulation strategy.",
+      "enum": ["Emulated", "Native", "None"],
+      "type": "string"
+    },
+    "enableIvy": {
+      "description": "**EXPERIMENTAL** True to create a new app that uses the Ivy rendering engine.",
+      "type": "boolean",
+      "default": false
+    },
+    "prefix": {
+      "type": "string",
+      "format": "html-selector",
+      "description": "The prefix to apply to generated selectors.",
+      "alias": "p"
     },
     "skipTests": {
       "description": "Skip creating spec files.",
