@@ -16,6 +16,12 @@ Type: `string`
 
 The browser to run tests in.
 
+### copyFiles
+
+Type: `string`
+
+A regex string that is used to choose what additional integration files to copy to the dist folder
+
 ### cypressConfig
 
 Type: `string`
