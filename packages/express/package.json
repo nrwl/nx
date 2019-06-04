@@ -35,6 +35,6 @@
   "dependencies": {
     "@nrwl/node": "*",
     "@nrwl/jest": "*",
-    "@angular-devkit/schematics": "8.0.0"
+    "@angular-devkit/schematics": "8.0.1"
   }
 }
