@@ -100,21 +100,24 @@ function addDependencies(options: Schema) {
       {
         '@nrwl/angular': nxVersion
       },
-      {}
+      {},
+      false
     );
   } else if (options.preset === 'react') {
     return addDepsToPackageJson(
       {},
       {
         '@nrwl/react': nxVersion
-      }
+      },
+      false
     );
   } else if (options.preset === 'web-components') {
     return addDepsToPackageJson(
       {},
       {
         '@nrwl/web': nxVersion
-      }
+      },
+      false
     );
   } else {
     return addDepsToPackageJson(
@@ -123,7 +126,8 @@ function addDependencies(options: Schema) {
       },
       {
         '@nrwl/nest': nxVersion
-      }
+      },
+      false
     );
   }
 }
