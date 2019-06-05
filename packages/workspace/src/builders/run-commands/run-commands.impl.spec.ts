@@ -143,7 +143,7 @@ describe('Command Runner Builder', () => {
         expect(readFile(f)).toEqual('');
       });
       setTimeout(() => {
-        expect(successEmitted).toEqual(true, 'Success must be emitted');
+        expect(successEmitted).toEqual(true);
         expect(readFile(f)).toEqual('1');
         done();
       }, 150);
