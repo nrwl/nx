@@ -116,7 +116,7 @@ ng test libname --watch
 To debug failing tests using Chrome Devtools or an IDE you can run the test command through node's `--inspect-brk` flag:
 
 ```bash
-node --inspect-brk ./node_modules/.bin/ng test libname
+node --inspect-brk ./node_modules/@angular/cli/bin/ng test libname
 ```
 
 Now, you can visit [chrome://inspect](chrome://inspect) in Chrome and inspect the target to attach to the node process. You can now use Chrome Devtools to step through your code line by line and debug the cause of the failing tests. Visit the official [Jest documentation](https://jestjs.io/docs/en/troubleshooting#tests-are-failing-and-you-don-t-know-why) to find out more.
