@@ -93,6 +93,7 @@ export function getSourceNodes(sourceFile: ts.SourceFile): ts.Node[] {
 
 export interface Change {
   apply(host: any): Promise<void>;
+
   readonly type: string;
   readonly path: string | null;
   readonly order: number;
@@ -104,6 +105,7 @@ export class NoopChange implements Change {
   description = 'No operation.';
   order = Infinity;
   path = null;
+
   apply() {
     return Promise.resolve();
   }
@@ -392,7 +394,11 @@ export function updateJsonInTree<T = any, O = T>(
 
 let installAdded = false;
 
-export function addDepsToPackageJson(deps: any, devDeps: any): Rule {
+export function addDepsToPackageJson(
+  deps: any,
+  devDeps: any,
+  addInstall = true
+): Rule {
   return updateJsonInTree('package.json', (json, context: SchematicContext) => {
     json.dependencies = {
       ...deps,
@@ -402,7 +408,7 @@ export function addDepsToPackageJson(deps: any, devDeps: any): Rule {
       ...devDeps,
       ...(json.devDependencies || {})
     };
-    if (!installAdded) {
+    if (addInstall && !installAdded) {
       context.addTask(new NodePackageInstallTask());
       installAdded = true;
     }
