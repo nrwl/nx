@@ -106,7 +106,14 @@ const updateUpdateScript = updateJsonInTree('package.json', json => {
 });
 
 const updateBuilders = updateJsonInTree('angular.json', json => {
+  if (!json.projects) {
+    return json;
+  }
   Object.entries<any>(json.projects).forEach(([projectKey, project]) => {
+    if (!project.architect) {
+      return;
+    }
+
     Object.entries<any>(project.architect).forEach(([targetKey, target]) => {
       if (target.builder === '@nrwl/builders:jest') {
         json.projects[projectKey].architect[targetKey].builder =
