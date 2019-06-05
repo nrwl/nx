@@ -3869,7 +3869,7 @@ cyclist@~0.2.2:
   resolved "https://registry.yarnpkg.com/cyclist/-/cyclist-0.2.2.tgz#1b33792e11e914a2fd6d6ed6447464444e5fa640"
   integrity sha1-GzN5LhHpFKL9bW7WRHRkRE5fpkA=
 
-cypress@3.3.1:
+cypress@~3.3.1:
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/cypress/-/cypress-3.3.1.tgz#8a127b1d9fa74bff21f111705abfef58d595fdef"
   integrity sha512-JIo47ZD9P3jAw7oaK7YKUoODzszJbNw41JmBrlMMiupHOlhmXvZz75htuo7mfRFPC9/1MDQktO4lX/V2+a6lGQ==
@@ -7011,10 +7011,10 @@ jasmine-core@~2.99.1:
   resolved "https://registry.yarnpkg.com/jasmine-core/-/jasmine-core-2.99.1.tgz#e6400df1e6b56e130b61c4bcd093daa7f6e8ca15"
   integrity sha1-5kAN8ea1bhMLYcS80JPap/boyhU=
 
-jasmine-marbles@0.4.0:
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/jasmine-marbles/-/jasmine-marbles-0.4.0.tgz#de72331d189d4968e4b1e78b638e51654040c755"
-  integrity sha512-fV8fXz5K3p6LUYyElkmXDMZmtxe9c1/8nmD5H9r2TDix/sJAhd/PFoPXym1c7gZCXByx7tfoiVVyc2t/AxtS6Q==
+jasmine-marbles@~0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/jasmine-marbles/-/jasmine-marbles-0.5.0.tgz#5d4c51082fcf619bb8dbc85583cb11718a32b200"
+  integrity sha512-hkSYy7VJpcxaKE48s/CasVpGyheElp5ZegguFi5kpYAaUWsyOko6RnMZS1kv14ThMtlJVNqCW5z16f1q6HqbEg==
   dependencies:
     lodash "^4.5.0"
 
