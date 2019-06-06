@@ -22,6 +22,16 @@ describe('readJsonInTree', () => {
     });
   });
 
+  it('should handle json files with comments', () => {
+    tree.create(
+      'data.json',
+      `{
+      // data: 'data'
+      }`
+    );
+    expect(readJsonInTree(tree, 'data.json')).toEqual({});
+  });
+
   it('should throw an error if the file does not exist', () => {
     expect(() => readJsonInTree(tree, 'data.json')).toThrow(
       'Cannot find data.json'
