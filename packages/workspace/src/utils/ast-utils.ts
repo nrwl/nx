@@ -7,6 +7,7 @@
  */
 import { Rule, Tree, SchematicContext } from '@angular-devkit/schematics';
 import * as ts from 'typescript';
+import * as stripJsonComments from 'strip-json-comments';
 import { serializeJson } from './fileutils';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
@@ -361,7 +362,7 @@ export function readJsonInTree<T = any>(host: Tree, path: string): T {
   if (!host.exists(path)) {
     throw new Error(`Cannot find ${path}`);
   }
-  const contents = host.read(path)!.toString('utf-8');
+  const contents = stripJsonComments(host.read(path)!.toString('utf-8'));
   try {
     return JSON.parse(contents);
   } catch (e) {
