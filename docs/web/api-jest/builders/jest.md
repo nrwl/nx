@@ -45,7 +45,7 @@ Forces test results output color highlighting (even if stdout is not a TTY). Set
 
 Type: `boolean`
 
-Forces test results output highlighting even if stdout is not a TTY. (https://jestjs.io/docs/en/cli#colors)
+Alias for `--color`.
 
 ### config
 
@@ -121,7 +121,7 @@ Will not fail if no tests are found (for example while using `--testPathPattern`
 
 Type: `array`
 
-Run tests with specified reporters. Reporter options are not available via CLI. Example with multiple reporters: jest --reporters="default" --reporters="jest-junit" (https://jestjs.io/docs/en/cli#reporters)
+Use this configuration option to add custom reporters to Jest. A custom reporter is a class that implements onRunStart, onTestStart, onTestResult, onRunComplete methods that will be called when any of those events occurs
 
 ### runInBand
 
@@ -185,9 +185,9 @@ Divert all output to stderr.
 
 ### verbose
 
-Type: `string`
+Type: `boolean`
 
-Display individual test results with the test suite hierarchy. (https://jestjs.io/docs/en/cli#verbose)
+Indicates whether each individual test should be reported during the run. All errors will also still be shown on the bottom after execution.
 
 ### watch
 
