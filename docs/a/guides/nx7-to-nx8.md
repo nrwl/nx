@@ -4,7 +4,7 @@ If you have used Nx since before version 8, things might seem different now. Pri
 
 ## Upgrading from Nx 7 to Nx 8
 
-To upgrade from a Nx 7 workspace to a Nx 8 workspace, use `yarn upgrade` or `npm run update`. This will add the new packages as well as migrate features from their usages in Nx 7 to their usages in Nx 8.
+To upgrade from a Nx 7 workspace to a Nx 8 workspace, use `yarn update` or `npm run update`. This will add the new packages as well as migrate features from their usages in Nx 7 to their usages in Nx 8.
 
 ## Where you can find familiar features
 

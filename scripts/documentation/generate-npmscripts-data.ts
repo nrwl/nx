@@ -8,7 +8,7 @@ import { commandsObject } from '../../packages/workspace';
 
 const commandsOutputDirectory = path.join(
   __dirname,
-  '../../docs/api-npmscripts'
+  '../../docs/api-workspace/npmscripts'
 );
 fs.removeSync(commandsOutputDirectory);
 function getCommands(command) {

@@ -17,32 +17,32 @@ can see, for each package its dependencies.
 
 ## Angular
 
-![Angular](./angular.jpg)
+![Angular](/assets/content/api/angular.jpg)
 
 ## React
 
-![React](./react.jpg)
+![React](/assets/content/api/react.jpg)
 
 ## Nest
 
-![Nest](./nest.jpg)
+![Nest](/assets/content/api/nest.jpg)
 
 ## Express
 
-![Express](./express.jpg)
+![Express](/assets/content/api/express.jpg)
 
 ## Node
 
-![Node](./node.jpg)
+![Node](/assets/content/api/node.jpg)
 
 ## Cypress
 
-![Cypress](./cypress.jpg)
+![Cypress](/assets/content/api/cypress.jpg)
 
 ## Jest
 
-![Jest](./jest.jpg)
+![Jest](/assets/content/api/jest.jpg)
 
 ## Web
 
-![Web](./web.jpg)
+![Web](/assets/content/api/web.jpg)
