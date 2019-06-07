@@ -162,7 +162,7 @@ You are good to go!
 
 ### Videos
 
-- [5-minute video on how to get started with Nx.](http://nrwl.io/nx)
+- [Nx Quickstart - How to Scale a JavaScript Project](https://www.youtube.com/watch?v=VUyBY72mwrQ)
 - [Video course on using Nx Workspaces](https://angularplaybook.com/p/nx-workspaces)
 
 ### Talks
