@@ -90,7 +90,7 @@ ng g @nrwl/node:application api # Create a Node Application
 
 ## Cypress
 
-![Cypress logo](./cypress-logo.png)
+![Cypress logo](../../shared/cypress-logo.png)
 
 Cypress is an e2e test runner built for modern web. It has a lot of great features:
 
@@ -149,7 +149,7 @@ To use Protractor instead of Cypress, run `ng g @nrwl/angular:application fronte
 
 ## Jest
 
-![Jest logo](./jest-logo.png)
+![Jest logo](../../shared/jest-logo.png)
 
 Jest is a fast 0-setup testing framework from Facebook.
 

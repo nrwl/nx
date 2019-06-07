@@ -40,7 +40,7 @@ ng add @nrwl/express # Add Express capabilities to a workspace
 ng add @nrwl/node # Add Node capabilities to a workspace
 ```
 
-Finally, you can run `ng serve backend` and `ng serve frontend`. There is a lot more to full-stack development in Nx, which you can read about [here](/fundamentals/build-full-stack-applications).
+Finally, you can run `ng serve backend` and `ng serve frontend`. There is a lot more to full-stack development in Nx, which you can read about [here](/a/fundamentals/build-full-stack-applications).
 
 ## Use effective development practices pioneered at Google
 
@@ -121,7 +121,7 @@ This is a hard requirement for monorepo-style development. Nx implements it.
 
 In addition to using the monorepo, Google is also known for its use of automation and tooling. Nx adds powerful capabilities helping your team promote best practices and ensure consistency.
 
-Read more about how Nx helps you develop like Google [here](/fundamentals/develop-like-google).
+Read more about how Nx helps you develop like Google [here](/a/fundamentals/develop-like-google).
 
 ## Use Innovative Tools
 
@@ -145,7 +145,7 @@ ng test myapp
 ng e2e myapp
 ```
 
-Read more about using innovative tools [here](/fundamentals/use-modern-tools).
+Read more about using innovative tools [here](/a/fundamentals/use-modern-tools).
 
 ## Summary
 

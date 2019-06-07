@@ -91,9 +91,9 @@ Projects without any tags cannot depend on any other projects. If you add the fo
 }
 ```
 
-If you try to violate the constrains, you will get an err:
+If you try to violate the constrains, you will get an error:
 
-![dependency-graph-constraints-lint-error](../fundamentals/lint-error.png)
+![dependency-graph-constraints-lint-error](../getting-started/lint-error.png)
 
 ## Multiple Dimensions
 
