@@ -16,8 +16,8 @@ import {
   nxVersion,
   prettierVersion
 } from '../../utils/versions';
-import { from } from 'rxjs';
-import { mapTo, tap } from 'rxjs/operators';
+import { from, of } from 'rxjs';
+import { mapTo, tap, catchError } from 'rxjs/operators';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import {
   offsetFromRoot,
@@ -33,6 +33,7 @@ import {
 import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../workspace/workspace';
 import { JsonArray } from '@angular-devkit/core';
 import { updateWorkspace } from '../../utils/workspace';
+import { writeToFile } from '../../utils/fileutils';
 
 function updatePackageJson() {
   return updateJsonInTree('package.json', packageJson => {
@@ -210,6 +211,21 @@ function updateAngularCLIJson(options: Schema): Rule {
         'protractor.conf.js'
       );
       defaultProject.targets.delete('e2e');
+    } else if (workspace.projects.has(e2eName)) {
+      // updates the e2e project
+      const e2eProject = workspace.projects.get(e2eName);
+      e2eProject.root = e2eRoot;
+      e2eProject.sourceRoot = undefined;
+
+      if (e2eProject.targets.has('lint')) {
+        const lintOptions = e2eProject.targets.get('lint').options;
+        lintOptions.tsConfig = join(e2eRoot, 'tsconfig.json');
+      }
+
+      if (e2eProject.targets.has('e2e')) {
+        const e2eOptions = e2eProject.targets.get('e2e').options;
+        e2eOptions.protractorConfig = join(e2eRoot, 'protractor.conf.js');
+      }
     }
   });
 }
@@ -335,14 +351,14 @@ function moveOutOfSrc(
   context?: SchematicContext
 ) {
   const from = filename;
-  const to = path.join('apps', appName, filename);
+  const to = path.join('apps', appName, getFilename(filename));
   renameSync(from, to, err => {
     if (!context) {
       return;
     } else if (!err) {
       context.logger.info(`Renamed ${from} -> ${to}`);
     } else {
-      context.logger.warn(err.message);
+      context.logger.warn(`Tried to rename ${from} -> ${to} but ${err.message}`);
     }
   });
 }
@@ -374,28 +390,33 @@ function moveExistingFiles(options: Schema) {
 
     // No context is passed because it should not be required to have a browserslist
     moveOutOfSrc(options.name, 'browserslist');
+
     moveOutOfSrc(
       options.name,
-      getFilename(app.architect.test.options.karmaConfig),
+      app.architect.test.options.karmaConfig,
       context
     );
+
     moveOutOfSrc(
       options.name,
-      getFilename(app.architect.build.options.tsConfig),
+      app.architect.build.options.tsConfig,
       context
     );
+
     moveOutOfSrc(
       options.name,
-      getFilename(app.architect.test.options.tsConfig),
+      app.architect.test.options.tsConfig,
       context
     );
+
     if (app.architect.server) {
       moveOutOfSrc(
         options.name,
-        getFilename(app.architect.server.options.tsConfig),
+        app.architect.server.options.tsConfig,
         context
       );
     }
+
     const oldAppSourceRoot = app.sourceRoot;
     const newAppSourceRoot = join('apps', options.name, app.sourceRoot);
     renameSync(oldAppSourceRoot, newAppSourceRoot, err => {
@@ -404,7 +425,7 @@ function moveExistingFiles(options: Schema) {
           `Renamed ${oldAppSourceRoot} -> ${newAppSourceRoot}`
         );
       } else {
-        context.logger.error(err.message);
+        context.logger.error(`Tried to rename ${oldAppSourceRoot} -> ${newAppSourceRoot} but ${err.message}`);
         throw err;
       }
     });
@@ -416,7 +437,7 @@ function moveExistingFiles(options: Schema) {
         if (!err) {
           context.logger.info(`Renamed ${oldE2eRoot} -> ${newE2eRoot}`);
         } else {
-          context.logger.error(err.message);
+          context.logger.error(`Tried to rename ${oldE2eRoot} -> ${newE2eRoot} but ${err.message}`);
           throw err;
         }
       });
@@ -478,8 +499,9 @@ function createAdditionalFiles(options: Schema): Rule {
     // if the user does not already have a prettier configuration
     // of any kind, create one
     return from(resolveUserExistingPrettierConfig()).pipe(
+      catchError(() => of(false)),
       tap(existingPrettierConfig => {
-        if (!existingPrettierConfig) {
+        if (!existingPrettierConfig && !host.exists('.prettierrc')) {
           host.create(
             '.prettierrc',
             serializeJson(DEFAULT_NRWL_PRETTIER_CONFIG)
