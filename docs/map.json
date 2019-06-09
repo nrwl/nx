@@ -180,6 +180,11 @@
         "name": "Changes between Nx 7 and Nx 8",
         "id": "nx7-to-nx8",
         "path": "guides/nx7-to-nx8"
+      },
+      {
+        "name": "Lazy Loading Code",
+        "id": "misc-lazy-loading",
+        "path": "guides/misc-lazy-loading"
       }
     ]
   }
