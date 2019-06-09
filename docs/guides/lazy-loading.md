@@ -1,4 +1,4 @@
-# Libraries usage
+# Lazy Loading Libraries
 
 You can use libraries across the app using two strategies:
 
@@ -7,9 +7,11 @@ You can use libraries across the app using two strategies:
 
 ### Eager Loading
 
-A good example was the usage of the `ui` library created previously. The lib was called directly on the `app.module.ts`
+By default all your app loads eagerly, that means all the `NgModules` are loaded whether or not they are immediately necessary.
 
 ### Lazy Loading
+
+When the app grows and have multiple `NgModules` that doesn't need to load before some user interaction you can use Lazy Loading as a design pattern. It helps on your final bundle size and decrease the load time.
 
 You can check the feature-shell usage:
 
@@ -17,7 +19,7 @@ You can check the feature-shell usage:
 
 To illustrate how to use lazy load strategy for libraries, create a library of Angular components.
 
-**Run `ng g lib feature-shell --router --lazy`, and select Angular as the library framework.**
+**Run `ng g lib todo-list-shell --router --lazy`, and select Angular as the library framework.**
 
 _**Explanation**_
 
@@ -32,14 +34,12 @@ myorg/
 │   ├── todos-e2e/
 │   └── api/
 ├── libs/
-│   ├── data/
-│   ├── ui/
-│   └── feature-shell/
+│   └── todo-list-shell/
 │       ├── jest.conf.js
 │       ├── src/
 │       │   ├── lib/
-│       │   │  ├── feature-shell.module.spec.ts
-│       │   │  └── feature-shell.module.ts
+│       │   │  ├── todo-list-shell.module.spec.ts
+│       │   │  └── todo-list-shell.module.ts
 │       │   └── index.ts
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
@@ -52,7 +52,7 @@ myorg/
 └── tslint.json
 ```
 
-The `feature-shell.module.ts` file looks like this:
+The `todo-list-shell.module.ts` file looks like this:
 
 ```typescript
 import { NgModule } from '@angular/core';
@@ -73,10 +73,10 @@ export class FeatureShellModule {}
 
 ### Add Component
 
-**Add a component to the newly created feature-shell library by running:**
+**Add a component to the newly created todo-list-shell library by running:**
 
 ```bash
-ng g component main --project=feature-shell
+ng g component main --project=todo-list-shell
 ```
 
 ```treeview
@@ -86,19 +86,17 @@ myorg/
 │   ├── todos-e2e/
 │   └── api/
 ├── libs/
-│   ├── data/
-│   └── ui/
-│   └── feature-shell/
+│   └── todo-list-shell/
 │       ├── jest.conf.js
 │       ├── src/
 │       │   ├── lib/
-│       │   │  ├── main/
-│       │   │  │   ├── main.component.css
-│       │   │  │   ├── main.component.html
-│       │   │  │   ├── main.component.spec.ts
-│       │   │  │   └── main.component.ts
-│       │   │  ├── feature-shell.module.spec.ts
-│       │   │  └── feature-shell.module.ts
+│       │   │  ├── todo-list/
+│       │   │  │   ├── todo-list.component.css
+│       │   │  │   ├── todo-list.component.html
+│       │   │  │   ├── todo-list.component.spec.ts
+│       │   │  │   └── todo-list.component.ts
+│       │   │  ├── todo-list-shell.module.spec.ts
+│       │   │  └── todo-list-shell.module.ts
 │       │   └── index.ts
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
@@ -111,58 +109,79 @@ myorg/
 └── tslint.json
 ```
 
-**Update the `FeatureShellModule` to use the `main` component**
+**Update the `TodoListShellModule` to use the `main` component**
 
 ```typescript
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { MainComponent } from './main/main.component';
+import { TodoListComponent } from './todo-list/todo-list.component';
 
 @NgModule({
   imports: [
     CommonModule,
-
     RouterModule.forChild([
-      { path: '', pathMatch: 'full', component: MainComponent }
+      { path: '', pathMatch: 'full', component: TodoListComponent }
     ])
   ]
 })
-export class FeatureShellModule {}
+export class TodoListShellModule {}
 ```
 
 ### Use Feature Shell Library
 
 **Update the `AppModule` to have a Router Module definition into it using the `loadChildren` property**
 
+#### For previous Nx Workspaces versions (7.8.9 or older)
+
 ```typescript
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
-import { HttpClientModule } from '@angular/common/http';
-import { UiModule } from '@myorg/ui';
 
 // You can add multiple routes as your needs
 const routes: Routes = [
-  { path: 'main', loadChildren: '@myorg/feature-shell#FeatureShellModule' }
+  {
+    path: 'list',
+    loadChildren: '@myorg/todo-list-shell#TodoListShellModule'
+  }
 ];
 
 @NgModule({
   declarations: [AppComponent],
-  imports: [
-    BrowserModule,
-    HttpClientModule,
-    UiModule,
-    RouterModule.forRoot(routes)
-  ],
+  imports: [BrowserModule, HttpClientModule, RouterModule.forRoot(routes)],
   providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule {}
 ```
 
-_**Explanation**: LoadChildren property receives a string of the form path/to/file#exportName that acts as a URL for a set of routes to load, or a function that returns such a set._
+#### For Nx 8 Workspaces versions (8.0.0 or latest)
+
+```typescript
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+
+import { AppComponent } from './app.component';
+
+// You can add multiple routes as your needs
+const routes: Routes = [
+  {
+    path: 'list',
+    loadChildren: () =>
+      import('@myorg/todo-list-shell').then(m => m.TodoListShellModule)
+  }
+];
+
+@NgModule({
+  declarations: [AppComponent],
+  imports: [BrowserModule, RouterModule.forRoot(routes)],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule {}
+```
 
 **And update `app.component.html`:**
 
@@ -170,7 +189,7 @@ _**Explanation**: LoadChildren property receives a string of the form path/to/fi
 <router-outlet></router-outlet>
 ```
 
-**Register the `feature-shell` lib public api on the `tsconfig.app.json` located under `apps/todos` folder to be include when the compilation process starts:**
+**Register the `todo-list-shell` lib public api on the `tsconfig.app.json` located under `apps/todos` folder to be include when the compilation process starts:**
 
 ```typescript
 {
@@ -185,7 +204,7 @@ _**Explanation**: LoadChildren property receives a string of the form path/to/fi
   ],
   "include": [
     "**/*.ts",
-    "../../libs/feature-shell/src/index.ts"
+    "../../libs/todo-list-shell/src/index.ts"
   ]
 }
 ```
