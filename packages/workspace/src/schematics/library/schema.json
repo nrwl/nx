@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "NxReactLibrary",
-  "title": "Create a React Library for Nx",
+  "id": "Typescript library",
+  "title": "Create a TypeScript Library",
   "type": "object",
   "properties": {
     "name": {

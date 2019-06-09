@@ -1,5 +1,4 @@
 import { UnitTestRunner } from '../../utils/test-runners';
-import { Framework } from '../../utils/framework';
 
 export interface Schema {
   name: string;
