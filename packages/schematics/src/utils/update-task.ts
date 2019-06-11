@@ -1,5 +1,4 @@
 import {
-  chain,
   Rule,
   SchematicContext,
   TaskConfiguration,
@@ -7,9 +6,9 @@ import {
   TaskExecutorFactory,
   Tree
 } from '@angular-devkit/schematics';
-import { platform } from 'os';
 import { Observable } from 'rxjs';
-import { spawn } from 'child_process';
+import { fork } from 'child_process';
+import { join } from 'path';
 
 let taskRegistered = false;
 
@@ -65,14 +64,11 @@ function createRunUpdateTask(): TaskExecutorFactory<UpdateTaskOptions> {
       return Promise.resolve(
         (options: UpdateTaskOptions, context: SchematicContext) => {
           context.logger.info(`Updating ${options.package} to ${options.to}`);
-          const spawnOptions = {
-            stdio: [process.stdin, process.stdout, process.stderr],
+          const forkOptions = {
+            stdio: [process.stdin, process.stdout, process.stderr, 'ipc'],
             shell: true
           };
-          const ng =
-            platform() === 'win32'
-              ? '.\\node_modules\\.bin\\ng'
-              : './node_modules/.bin/ng';
+          const ng = join('./node_modules', '@angular/cli', 'bin/ng');
           const args = [
             'update',
             `${options.package}@${options.to}`,
@@ -80,7 +76,7 @@ function createRunUpdateTask(): TaskExecutorFactory<UpdateTaskOptions> {
             '--allow-dirty'
           ].filter(e => !!e);
           return new Observable(obs => {
-            spawn(ng, args, spawnOptions).on('close', (code: number) => {
+            fork(ng, args, forkOptions).on('close', (code: number) => {
               if (code === 0) {
                 obs.next();
                 obs.complete();
