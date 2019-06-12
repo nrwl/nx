@@ -59,7 +59,9 @@ function getPatterns(args: YargsAffectedOptions) {
       );
 
     const libsAndApp = args.libsAndApps;
-    return libsAndApp ? getPatternsFromApps(patterns) : patterns;
+    return libsAndApp
+      ? getPatternsFromApps(patterns)
+      : patterns.map(f => `"${f}"`);
   } catch (e) {
     return getPatternsWithPathPrefix(['{apps,libs,tools}']);
   }
