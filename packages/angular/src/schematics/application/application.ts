@@ -222,6 +222,10 @@ function updateProject(options: NormalizedSchema): Rule {
             path !==
               join(normalize(options.appProjectRoot), 'e2e/tsconfig.json')
         );
+        fixedProject.architect.lint.options.exclude.push(
+          '!' + join(normalize(options.appProjectRoot), '**')
+        );
+
         if (options.e2eTestRunner === 'none') {
           delete json.projects[options.e2eProjectName];
         }
@@ -304,7 +308,10 @@ function updateE2eProject(options: NormalizedSchema): Rule {
               builder: '@angular-devkit/build-angular:tslint',
               options: {
                 tsConfig: `${options.e2eProjectRoot}/tsconfig.e2e.json`,
-                exclude: ['**/node_modules/**']
+                exclude: [
+                  '**/node_modules/**',
+                  '!' + join(normalize(options.e2eProjectRoot), '**')
+                ]
               }
             }
           }

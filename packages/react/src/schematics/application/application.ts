@@ -170,7 +170,10 @@ function addProject(options: NormalizedSchema): Rule {
       builder: '@angular-devkit/build-angular:tslint',
       options: {
         tsConfig: [join(options.appProjectRoot, 'tsconfig.app.json')],
-        exclude: ['**/node_modules/**']
+        exclude: [
+          '**/node_modules/**',
+          '!' + join(options.appProjectRoot, '**')
+        ]
       }
     };
 

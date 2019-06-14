@@ -64,7 +64,11 @@ function updateAngularJson(options: CypressProjectSchema): Rule {
     architect.lint = {
       builder: '@angular-devkit/build-angular:tslint',
       options: {
-        tsConfig: join(normalize(options.projectRoot), 'tsconfig.e2e.json')
+        tsConfig: join(normalize(options.projectRoot), 'tsconfig.e2e.json'),
+        exclude: [
+          '**/node_modules/**',
+          '!' + join(normalize(options.projectRoot), '**')
+        ]
       }
     };
     json.projects[options.projectName] = {

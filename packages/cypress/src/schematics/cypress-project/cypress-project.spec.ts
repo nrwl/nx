@@ -2,6 +2,7 @@ import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 import { readJsonInTree } from '@nrwl/workspace';
+import { join, normalize } from '@angular-devkit/core';
 
 describe('schematic:cypress-project', () => {
   let appTree: Tree;
@@ -50,7 +51,8 @@ describe('schematic:cypress-project', () => {
       expect(project.architect.lint).toEqual({
         builder: '@angular-devkit/build-angular:tslint',
         options: {
-          tsConfig: 'apps/my-app-e2e/tsconfig.e2e.json'
+          tsConfig: 'apps/my-app-e2e/tsconfig.e2e.json',
+          exclude: ['**/node_modules/**', '!apps/my-app-e2e/**']
         }
       });
       expect(project.architect.e2e).toEqual({
@@ -119,7 +121,8 @@ describe('schematic:cypress-project', () => {
         expect(projectConfig.architect.lint).toEqual({
           builder: '@angular-devkit/build-angular:tslint',
           options: {
-            tsConfig: 'apps/my-dir/my-app-e2e/tsconfig.e2e.json'
+            tsConfig: 'apps/my-dir/my-app-e2e/tsconfig.e2e.json',
+            exclude: ['**/node_modules/**', '!apps/my-dir/my-app-e2e/**']
           }
         });
 

@@ -21,6 +21,13 @@ describe('app', () => {
       expect(angularJson.projects['my-app-e2e'].root).toEqual(
         'apps/my-app-e2e'
       );
+
+      expect(
+        angularJson.projects['my-app'].architect.lint.options.exclude
+      ).toEqual(['**/node_modules/**', '!apps/my-app/**']);
+      expect(
+        angularJson.projects['my-app-e2e'].architect.lint.options.exclude
+      ).toEqual(['**/node_modules/**', '!apps/my-app-e2e/**']);
     });
 
     it('should remove the e2e target on the application', async () => {
@@ -148,6 +155,13 @@ describe('app', () => {
       expect(angularJson.projects['my-dir-my-app-e2e'].root).toEqual(
         'apps/my-dir/my-app-e2e'
       );
+
+      expect(
+        angularJson.projects['my-dir-my-app'].architect.lint.options.exclude
+      ).toEqual(['**/node_modules/**', '!apps/my-dir/my-app/**']);
+      expect(
+        angularJson.projects['my-dir-my-app-e2e'].architect.lint.options.exclude
+      ).toEqual(['**/node_modules/**', '!apps/my-dir/my-app-e2e/**']);
     });
 
     it('should update nx.json', async () => {
@@ -392,7 +406,7 @@ describe('app', () => {
               builder: '@angular-devkit/build-angular:tslint',
               options: {
                 tsConfig: 'apps/my-app-e2e/tsconfig.e2e.json',
-                exclude: ['**/node_modules/**']
+                exclude: ['**/node_modules/**', '!apps/my-app-e2e/**']
               }
             }
           }

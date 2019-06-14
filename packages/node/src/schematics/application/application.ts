@@ -66,7 +66,7 @@ function getLintConfig(project: any) {
     builder: '@angular-devkit/build-angular:tslint',
     options: {
       tsConfig: [join(project.root, 'tsconfig.app.json')],
-      exclude: ['**/node_modules/**']
+      exclude: ['**/node_modules/**', '!' + join(project.root, '**')]
     }
   };
 }
