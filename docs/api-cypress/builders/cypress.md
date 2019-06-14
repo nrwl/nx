@@ -20,7 +20,7 @@ The browser to run tests in.
 
 Type: `string`
 
-A regex string that is used to choose what additional integration files to copy to the dist folder
+DEPRECATED: A regex string that is used to choose what additional integration files to copy to the dist folder
 
 ### cypressConfig
 

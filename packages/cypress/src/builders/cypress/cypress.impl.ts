@@ -5,15 +5,15 @@ import {
   scheduleTargetAndForget,
   targetFromTargetString
 } from '@angular-devkit/architect';
-import { Observable, of, Subscriber, noop } from 'rxjs';
+import { Observable, of, noop } from 'rxjs';
 import { catchError, concatMap, tap, map, take } from 'rxjs/operators';
-import { fork, ChildProcess } from 'child_process';
-import { copySync, removeSync } from 'fs-extra';
 import { fromPromise } from 'rxjs/internal-compatibility';
 import { JsonObject } from '@angular-devkit/core';
-import * as path from 'path';
-import * as treeKill from 'tree-kill';
+import { dirname, join, relative } from 'path';
 import { readJsonFile } from '@nrwl/workspace';
+import { legacyCompile } from './legacy';
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+
 const Cypress = require('cypress'); // @NOTE: Importing via ES6 messes the whole test dependencies.
 
 export interface CypressBuilderOptions extends JsonObject {
@@ -39,8 +39,6 @@ try {
 
 export default createBuilder<CypressBuilderOptions>(run);
 
-let tscProcess: ChildProcess;
-
 /**
  * @whatItDoes This is the starting point of the builder.
  * @param builderConfig
@@ -49,35 +47,23 @@ function run(
   options: CypressBuilderOptions,
   context: BuilderContext
 ): Observable<BuilderOutput> {
-  // TODO: consider comments
-  const tsconfigJson = readJsonFile(
-    path.join(context.workspaceRoot, options.tsConfig)
-  );
+  const legacy = isLegacy(options, context);
+  if (legacy) {
+    showLegacyWarning(context);
+  }
+  options.env = options.env || {};
+  if (options.tsConfig) {
+    options.env.tsConfig = join(context.workspaceRoot, options.tsConfig);
+  }
 
-  // Cleaning the /dist folder
-  removeSync(
-    path.join(
-      path.dirname(options.tsConfig),
-      tsconfigJson.compilerOptions.outDir
-    )
-  );
-
-  return compileTypescriptFiles(options.tsConfig, options.watch, context).pipe(
-    tap(() => {
-      copyCypressFixtures(options.cypressConfig, context);
-      copyIntegrationFilesByRegex(
-        options.cypressConfig,
-        context,
-        options.copyFiles
-      );
-    }),
-    concatMap(() =>
-      options.devServerTarget
-        ? startDevServer(options.devServerTarget, options.watch, context).pipe(
-            map(output => output.baseUrl)
-          )
-        : of(options.baseUrl)
-    ),
+  return (!legacy
+    ? options.devServerTarget
+      ? startDevServer(options.devServerTarget, options.watch, context).pipe(
+          map(output => output.baseUrl)
+        )
+      : of(options.baseUrl)
+    : legacyCompile(options, context)
+  ).pipe(
     concatMap((baseUrl: string) =>
       initCypress(
         options.cypressConfig,
@@ -101,110 +87,6 @@ function run(
         success: false
       });
     })
-  );
-}
-
-/**
- * @whatItDoes Compile typescript spec files to be able to run Cypress.
- * The compilation is done via executing the `tsc` command line/
- * @param tsConfigPath
- * @param isWatching
- */
-function compileTypescriptFiles(
-  tsConfigPath: string,
-  isWatching: boolean,
-  context: BuilderContext
-): Observable<BuilderOutput> {
-  if (tscProcess) {
-    killProcess(context);
-  }
-  return Observable.create((subscriber: Subscriber<BuilderOutput>) => {
-    try {
-      let args = ['-p', path.join(context.workspaceRoot, tsConfigPath)];
-      const tscPath = path.join(
-        context.workspaceRoot,
-        '/node_modules/typescript/bin/tsc'
-      );
-      if (isWatching) {
-        args.push('--watch');
-        tscProcess = fork(tscPath, args, { stdio: [0, 1, 2, 'ipc'] });
-        subscriber.next({ success: true });
-      } else {
-        tscProcess = fork(tscPath, args, { stdio: [0, 1, 2, 'ipc'] });
-        tscProcess.on('exit', code => {
-          subscriber.next({ success: code === 0 });
-          subscriber.complete();
-        });
-      }
-    } catch (error) {
-      if (tscProcess) {
-        killProcess(context);
-      }
-      subscriber.error(
-        new Error(`Could not compile Typescript files: \n ${error}`)
-      );
-    }
-  });
-}
-
-/**
- * @whatItDoes Copy all the fixtures into the dist folder.
- * This is done because `tsc` doesn't handle `json` files.
- * @param tsConfigPath
- */
-function copyCypressFixtures(
-  cypressConfigPath: string,
-  context: BuilderContext
-) {
-  const cypressConfig = readJsonFile(
-    path.join(context.workspaceRoot, cypressConfigPath)
-  );
-  // DOn't copy fixtures if cypress config does not have it set
-  if (!cypressConfig.fixturesFolder) {
-    return;
-  }
-
-  copySync(
-    `${path.dirname(
-      path.join(context.workspaceRoot, cypressConfigPath)
-    )}/src/fixtures`,
-    path.join(
-      path.dirname(path.join(context.workspaceRoot, cypressConfigPath)),
-      cypressConfig.fixturesFolder
-    ),
-    { overwrite: true }
-  );
-}
-
-/**
- * @whatItDoes Copy all the integration files that match the given regex into the dist folder.
- * This is done because `tsc` doesn't handle all file types, e.g. Cucumbers `feature` files.
- * @param fileExtension File extension to copy
- */
-function copyIntegrationFilesByRegex(
-  cypressConfigPath: string,
-  context: BuilderContext,
-  regex: string
-) {
-  const cypressConfig = readJsonFile(
-    path.join(context.workspaceRoot, cypressConfigPath)
-  );
-
-  if (!regex || !cypressConfig.integrationFolder) {
-    return;
-  }
-
-  const regExp: RegExp = new RegExp(regex);
-
-  copySync(
-    `${path.dirname(
-      path.join(context.workspaceRoot, cypressConfigPath)
-    )}/src/integration`,
-    path.join(
-      path.dirname(path.join(context.workspaceRoot, cypressConfigPath)),
-      cypressConfig.integrationFolder
-    ),
-    { filter: file => regExp.test(file) }
   );
 }
 
@@ -233,7 +115,7 @@ function initCypress(
   spec?: string
 ): Observable<BuilderOutput> {
   // Cypress expects the folder where a `cypress.json` is present
-  const projectFolderPath = path.dirname(cypressConfig);
+  const projectFolderPath = dirname(cypressConfig);
   const options: any = {
     project: projectFolderPath
   };
@@ -283,7 +165,7 @@ function initCypress(
  * @param isWatching
  * @private
  */
-function startDevServer(
+export function startDevServer(
   devServerTarget: string,
   isWatching: boolean,
   context: BuilderContext
@@ -299,16 +181,38 @@ function startDevServer(
   );
 }
 
-function killProcess(context: BuilderContext): void {
-  return treeKill(tscProcess.pid, 'SIGTERM', error => {
-    tscProcess = null;
-    if (error) {
-      if (Array.isArray(error) && error[0] && error[2]) {
-        const errorMessage = error[2];
-        context.logger.error(errorMessage);
-      } else if (error.message) {
-        context.logger.error(error.message);
-      }
-    }
-  });
+function isLegacy(
+  options: CypressBuilderOptions,
+  context: BuilderContext
+): boolean {
+  const tsconfigJson = readJsonFile(
+    join(context.workspaceRoot, options.tsConfig)
+  );
+  const cypressConfigPath = join(context.workspaceRoot, options.cypressConfig);
+  const cypressJson = readJsonFile(cypressConfigPath);
+
+  if (!cypressJson.integrationFolder) {
+    throw new Error(
+      `"integrationFolder" is not defined in ${options.cypressConfig}`
+    );
+  }
+
+  const integrationFolder = join(
+    dirname(cypressConfigPath),
+    cypressJson.integrationFolder
+  );
+  const tsOutDirPath = join(
+    context.workspaceRoot,
+    dirname(options.tsConfig),
+    tsconfigJson.compilerOptions.outDir
+  );
+
+  return !relative(tsOutDirPath, integrationFolder).startsWith('../');
+}
+
+function showLegacyWarning(context: BuilderContext) {
+  context.logger.warn(stripIndents`
+  Warning:
+  You are using the legacy configuration for cypress.
+  Please run "ng update @nrwl/cypress --from 8.1.0 --to 8.2.0 --migrate-only".`);
 }
