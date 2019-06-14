@@ -53,8 +53,8 @@ describe('Cypress builder', () => {
     cypressRun = spyOn(Cypress, 'run').and.returnValue(Promise.resolve({}));
     cypressOpen = spyOn(Cypress, 'open').and.returnValue(Promise.resolve({}));
     cypressConfig = {
-      fixturesFolder: '../../dist/out-tsc/apps/my-app-e2e/src/fixtures',
-      integrationFolder: '../../dist/out-tsc/apps/my-app-e2e/src/integration'
+      fixturesFolder: './src/fixtures',
+      integrationFolder: './src/integration'
     };
     spyOn(fsUtility, 'readJsonFile').and.callFake(path => {
       return path.endsWith('tsconfig.json')
@@ -67,21 +67,6 @@ describe('Cypress builder', () => {
     });
     spyOn(fsExtras, 'copySync');
     spyOn(process, 'exit');
-  });
-
-  it('should call `fork.child_process` with the tsc command', async () => {
-    const run = await architect.scheduleBuilder(
-      '@nrwl/cypress:cypress',
-      cypressBuilderOptions
-    );
-    fakeEventEmitter.emit('exit');
-    await run.result;
-    await run.stop();
-    expect(fork).toHaveBeenCalledWith(
-      '/root/node_modules/typescript/bin/tsc',
-      ['-p', '/root/apps/my-app-e2e/tsconfig.json'],
-      { stdio: [0, 1, 2, 'ipc'] }
-    );
   });
 
   it('should call `Cypress.run` if headless mode is `true`', async done => {
@@ -192,94 +177,122 @@ describe('Cypress builder', () => {
     fakeEventEmitter.emit('exit'); // Passing tsc command
   });
 
-  it('should copy fixtures folder to out-dir', async done => {
-    const run = await architect.scheduleBuilder(
-      '@nrwl/cypress:cypress',
-      cypressBuilderOptions
-    );
-    run.result.then(async () => {
-      await run.stop();
-      expect(fsExtras.copySync).toHaveBeenCalledWith(
-        '/root/apps/my-app-e2e/src/fixtures',
-        '/root/dist/out-tsc/apps/my-app-e2e/src/fixtures',
-        { overwrite: true }
+  describe('legacy', () => {
+    beforeEach(() => {
+      cypressConfig = {
+        fixturesFolder: '../../dist/out-tsc/apps/my-app-e2e/src/fixtures',
+        integrationFolder: '../../dist/out-tsc/apps/my-app-e2e/src/integration'
+      };
+    });
+
+    it('should call `fork.child_process` with the tsc command', async () => {
+      const run = await architect.scheduleBuilder(
+        '@nrwl/cypress:cypress',
+        cypressBuilderOptions
       );
-      done();
-    });
-
-    fakeEventEmitter.emit('exit'); // Passing tsc command
-  });
-
-  it('should not copy fixtures folder if they are not defined in the cypress config', async done => {
-    cypressConfig = {};
-
-    const run = await architect.scheduleBuilder(
-      '@nrwl/cypress:cypress',
-      cypressBuilderOptions
-    );
-    run.result.then(async () => {
+      fakeEventEmitter.emit('exit');
+      await run.result;
       await run.stop();
-      expect(fsExtras.copySync).not.toHaveBeenCalled();
-      done();
-    });
-
-    fakeEventEmitter.emit('exit'); // Passing tsc command
-  });
-
-  it('should copy regex files to out-dir', async done => {
-    const regex: string = '^.+\\.feature$';
-
-    const run = await architect.scheduleBuilder('@nrwl/cypress:cypress', {
-      ...cypressBuilderOptions,
-      copyFiles: regex
-    });
-    run.result.then(async () => {
-      await run.stop();
-      expect(fsExtras.copySync).toHaveBeenCalledWith(
-        '/root/apps/my-app-e2e/src/integration',
-        '/root/dist/out-tsc/apps/my-app-e2e/src/integration',
-        { filter: jasmine.any(Function) }
+      expect(fork).toHaveBeenCalledWith(
+        '/root/node_modules/typescript/bin/tsc',
+        ['-p', '/root/apps/my-app-e2e/tsconfig.json'],
+        { stdio: [0, 1, 2, 'ipc'] }
       );
-      done();
     });
 
-    fakeEventEmitter.emit('exit'); // Passing tsc command
-  });
-
-  it('should not copy regex files if the regex is not defined', async done => {
-    const regex: string = undefined;
-
-    const run = await architect.scheduleBuilder('@nrwl/cypress:cypress', {
-      ...cypressBuilderOptions,
-      copyFiles: regex
-    });
-    run.result.then(async () => {
-      await run.stop();
-      expect(fsExtras.copySync).not.toHaveBeenCalledWith(
-        '/root/apps/my-app-e2e/src/integration',
-        '/root/dist/out-tsc/apps/my-app-e2e/src/integration',
-        { filter: jasmine.any(Function) }
+    it('should copy fixtures folder to out-dir', async done => {
+      const run = await architect.scheduleBuilder(
+        '@nrwl/cypress:cypress',
+        cypressBuilderOptions
       );
-      done();
+      run.result.then(async () => {
+        await run.stop();
+        expect(fsExtras.copySync).toHaveBeenCalledWith(
+          '/root/apps/my-app-e2e/src/fixtures',
+          '/root/dist/out-tsc/apps/my-app-e2e/src/fixtures',
+          { overwrite: true }
+        );
+        done();
+      });
+
+      fakeEventEmitter.emit('exit'); // Passing tsc command
     });
 
-    fakeEventEmitter.emit('exit'); // Passing tsc command
-  });
+    it('should not copy fixtures folder if they are not defined in the cypress config', async done => {
+      delete cypressConfig.fixturesFolder;
+      const run = await architect.scheduleBuilder(
+        '@nrwl/cypress:cypress',
+        cypressBuilderOptions
+      );
+      run.result.then(async () => {
+        await run.stop();
+        expect(fsExtras.copySync).not.toHaveBeenCalled();
+        done();
+      });
 
-  it('should not copy regex files if the integration files are not defined in the cypress config', async done => {
-    cypressConfig = {};
-    const regex: string = '^.+\\.feature$';
-
-    const run = await architect.scheduleBuilder('@nrwl/cypress:cypress', {
-      ...cypressBuilderOptions,
-      copyFiles: regex
-    });
-    run.result.then(async () => {
-      await run.stop();
-      expect(fsExtras.copySync).not.toHaveBeenCalled();
-      done();
+      fakeEventEmitter.emit('exit'); // Passing tsc command
     });
 
-    fakeEventEmitter.emit('exit'); // Passing tsc command
+    it('should copy regex files to out-dir', async done => {
+      const regex: string = '^.+\\.feature$';
+
+      const run = await architect.scheduleBuilder('@nrwl/cypress:cypress', {
+        ...cypressBuilderOptions,
+        copyFiles: regex
+      });
+      run.result.then(async () => {
+        await run.stop();
+        expect(fsExtras.copySync).toHaveBeenCalledWith(
+          '/root/apps/my-app-e2e/src/integration',
+          '/root/dist/out-tsc/apps/my-app-e2e/src/integration',
+          { filter: jasmine.any(Function) }
+        );
+        done();
+      });
+
+      fakeEventEmitter.emit('exit'); // Passing tsc command
+    });
+
+    it('should not copy regex files if the regex is not defined', async done => {
+      const regex: string = undefined;
+
+      const run = await architect.scheduleBuilder('@nrwl/cypress:cypress', {
+        ...cypressBuilderOptions,
+        copyFiles: regex
+      });
+      run.result.then(async () => {
+        await run.stop();
+        expect(fsExtras.copySync).not.toHaveBeenCalledWith(
+          '/root/apps/my-app-e2e/src/integration',
+          '/root/dist/out-tsc/apps/my-app-e2e/src/integration',
+          { filter: jasmine.any(Function) }
+        );
+        done();
+      });
+
+      fakeEventEmitter.emit('exit'); // Passing tsc command
+    });
+
+    it('should not copy regex files if the integration files are not defined in the cypress config', async done => {
+      delete cypressConfig.integrationFolder;
+
+      const regex: string = '^.+\\.feature$';
+
+      const run = await architect.scheduleBuilder('@nrwl/cypress:cypress', {
+        ...cypressBuilderOptions,
+        copyFiles: regex
+      });
+      run.result
+        .then(async () => {
+          await run.stop();
+          fail();
+        })
+        .catch(async () => {
+          await run.stop();
+          done();
+        });
+
+      fakeEventEmitter.emit('exit'); // Passing tsc command
+    });
   });
 });

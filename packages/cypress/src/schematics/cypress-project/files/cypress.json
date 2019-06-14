@@ -1,11 +1,11 @@
 {
-  "fileServerFolder": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>",
-  "fixturesFolder": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>/src/fixtures",
-  "integrationFolder": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>/src/integration",
-  "pluginsFile": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>/src/plugins/index.js",
+  "fileServerFolder": ".",
+  "fixturesFolder": "./src/fixtures",
+  "integrationFolder": "./src/integration",
+  "pluginsFile": "./src/plugins/index",
   "supportFile": false,
   "video": true,
-  "videosFolder": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>/videos",
-  "screenshotsFolder": "<%= offsetFromRoot %>dist/out-tsc/<%= projectRoot %>/screenshots",
+  "videosFolder": "<%= offsetFromRoot %>dist/cypress/<%= projectRoot %>/videos",
+  "screenshotsFolder": "<%= offsetFromRoot %>dist/cypress/<%= projectRoot %>/screenshots",
   "chromeWebSecurity": false
 }

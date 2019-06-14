@@ -27,7 +27,7 @@ describe('Cypress E2E Test runner', () => {
 
       checkFilesExist(`apps/${myapp}-e2e/src/fixtures/example.json`);
       checkFilesExist(`apps/${myapp}-e2e/src/integration/app.spec.ts`);
-      checkFilesExist(`apps/${myapp}-e2e/src/plugins/index.ts`);
+      checkFilesExist(`apps/${myapp}-e2e/src/plugins/index.js`);
       checkFilesExist(`apps/${myapp}-e2e/src/support/app.po.ts`);
       checkFilesExist(`apps/${myapp}-e2e/src/support/index.ts`);
       checkFilesExist(`apps/${myapp}-e2e/src/support/commands.ts`);

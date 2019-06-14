@@ -28,7 +28,7 @@ describe('schematic:cypress-project', () => {
       expect(
         tree.exists('apps/my-app-e2e/src/integration/app.spec.ts')
       ).toBeTruthy();
-      expect(tree.exists('apps/my-app-e2e/src/plugins/index.ts')).toBeTruthy();
+      expect(tree.exists('apps/my-app-e2e/src/plugins/index.js')).toBeTruthy();
       expect(tree.exists('apps/my-app-e2e/src/support/app.po.ts')).toBeTruthy();
       expect(
         tree.exists('apps/my-app-e2e/src/support/commands.ts')
@@ -77,14 +77,14 @@ describe('schematic:cypress-project', () => {
       const cypressJson = readJsonInTree(tree, 'apps/my-app-e2e/cypress.json');
 
       expect(cypressJson).toEqual({
-        fileServerFolder: '../../dist/out-tsc/apps/my-app-e2e',
-        fixturesFolder: '../../dist/out-tsc/apps/my-app-e2e/src/fixtures',
-        integrationFolder: '../../dist/out-tsc/apps/my-app-e2e/src/integration',
-        pluginsFile: '../../dist/out-tsc/apps/my-app-e2e/src/plugins/index.js',
+        fileServerFolder: '.',
+        fixturesFolder: './src/fixtures',
+        integrationFolder: './src/integration',
+        pluginsFile: './src/plugins/index',
         supportFile: false,
         video: true,
-        videosFolder: '../../dist/out-tsc/apps/my-app-e2e/videos',
-        screenshotsFolder: '../../dist/out-tsc/apps/my-app-e2e/screenshots',
+        videosFolder: '../../dist/cypress/apps/my-app-e2e/videos',
+        screenshotsFolder: '../../dist/cypress/apps/my-app-e2e/screenshots',
         chromeWebSecurity: false
       });
     });
@@ -150,18 +150,15 @@ describe('schematic:cypress-project', () => {
         );
 
         expect(cypressJson).toEqual({
-          fileServerFolder: '../../../dist/out-tsc/apps/my-dir/my-app-e2e',
-          fixturesFolder:
-            '../../../dist/out-tsc/apps/my-dir/my-app-e2e/src/fixtures',
-          integrationFolder:
-            '../../../dist/out-tsc/apps/my-dir/my-app-e2e/src/integration',
-          pluginsFile:
-            '../../../dist/out-tsc/apps/my-dir/my-app-e2e/src/plugins/index.js',
+          fileServerFolder: '.',
+          fixturesFolder: './src/fixtures',
+          integrationFolder: './src/integration',
+          pluginsFile: './src/plugins/index',
           supportFile: false,
           video: true,
-          videosFolder: '../../../dist/out-tsc/apps/my-dir/my-app-e2e/videos',
+          videosFolder: '../../../dist/cypress/apps/my-dir/my-app-e2e/videos',
           screenshotsFolder:
-            '../../../dist/out-tsc/apps/my-dir/my-app-e2e/screenshots',
+            '../../../dist/cypress/apps/my-dir/my-app-e2e/screenshots',
           chromeWebSecurity: false
         });
       });
