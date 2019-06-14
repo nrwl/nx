@@ -74,6 +74,15 @@ describe('lib', () => {
 
       expect(angularJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(angularJson.projects['my-lib'].architect.build).toBeDefined();
+      expect(
+        angularJson.projects['my-lib'].architect.lint.options.tsConfig
+      ).toEqual([
+        'libs/my-lib/tsconfig.lib.json',
+        'libs/my-lib/tsconfig.spec.json'
+      ]);
+      expect(
+        angularJson.projects['my-lib'].architect.lint.options.exclude
+      ).toEqual(['**/node_modules/**', '!libs/my-lib/**']);
     });
 
     it('should remove "build" target from angular.json when a library is not publishable', async () => {
@@ -368,6 +377,16 @@ describe('lib', () => {
       expect(angularJson.projects['my-dir-my-lib'].root).toEqual(
         'libs/my-dir/my-lib'
       );
+
+      expect(
+        angularJson.projects['my-dir-my-lib'].architect.lint.options.tsConfig
+      ).toEqual([
+        'libs/my-dir/my-lib/tsconfig.lib.json',
+        'libs/my-dir/my-lib/tsconfig.spec.json'
+      ]);
+      expect(
+        angularJson.projects['my-dir-my-lib'].architect.lint.options.exclude
+      ).toEqual(['**/node_modules/**', '!libs/my-dir/my-lib/**']);
     });
 
     it('should update tsconfig.json', async () => {
@@ -761,6 +780,9 @@ describe('lib', () => {
         'libs/my-lib/tsconfig.lib.json',
         'libs/my-lib/tsconfig.spec.json'
       ]);
+      expect(
+        angularJson.projects['my-lib'].architect.lint.options.exclude
+      ).toEqual(['**/node_modules/**', '!libs/my-lib/**']);
     });
   });
 

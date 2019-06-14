@@ -293,7 +293,7 @@ describe('app', () => {
     expect(angularJson.projects['my-app'].architect.lint).toEqual({
       builder: '@angular-devkit/build-angular:tslint',
       options: {
-        exclude: ['**/node_modules/**'],
+        exclude: ['**/node_modules/**', '!apps/my-app/**'],
         tsConfig: [
           'apps/my-app/tsconfig.app.json',
           'apps/my-app/tsconfig.spec.json'

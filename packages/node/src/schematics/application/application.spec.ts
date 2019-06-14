@@ -52,6 +52,16 @@ describe('app', () => {
           }
         })
       );
+      expect(angularJson.projects['my-node-app'].architect.lint).toEqual({
+        builder: '@angular-devkit/build-angular:tslint',
+        options: {
+          tsConfig: [
+            'apps/my-node-app/tsconfig.app.json',
+            'apps/my-node-app/tsconfig.spec.json'
+          ],
+          exclude: ['**/node_modules/**', '!apps/my-node-app/**']
+        }
+      });
       expect(angularJson.projects['my-node-app-e2e']).toBeUndefined();
       expect(angularJson.defaultProject).toEqual('my-node-app');
     });
@@ -110,6 +120,20 @@ describe('app', () => {
       expect(angularJson.projects['my-dir-my-node-app'].root).toEqual(
         'apps/my-dir/my-node-app'
       );
+
+      expect(angularJson.projects['my-dir-my-node-app'].architect.lint).toEqual(
+        {
+          builder: '@angular-devkit/build-angular:tslint',
+          options: {
+            tsConfig: [
+              'apps/my-dir/my-node-app/tsconfig.app.json',
+              'apps/my-dir/my-node-app/tsconfig.spec.json'
+            ],
+            exclude: ['**/node_modules/**', '!apps/my-dir/my-node-app/**']
+          }
+        }
+      );
+
       expect(angularJson.projects['my-dir-my-node-app-e2e']).toBeUndefined();
       expect(angularJson.defaultProject).toEqual('my-dir-my-node-app');
     });

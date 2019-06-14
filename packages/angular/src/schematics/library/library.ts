@@ -334,6 +334,9 @@ function updateProject(options: NormalizedSchema): Rule {
           path =>
             path !== join(normalize(options.projectRoot), 'tsconfig.spec.json')
         );
+        fixedProject.architect.lint.options.exclude.push(
+          '!' + join(normalize(options.projectRoot), '**')
+        );
 
         json.projects[options.name] = fixedProject;
         return json;
