@@ -46,7 +46,7 @@ const ig = ignore();
 ig.add(readFileIfExisting(`${appRoot.path}/.gitignore`));
 
 export function printArgsWarning(options: YargsAffectedOptions) {
-  const { files, uncommitted, untracked, base, head } = options;
+  const { files, uncommitted, untracked, base, head, all } = options;
 
   if (
     !files &&
@@ -54,9 +54,30 @@ export function printArgsWarning(options: YargsAffectedOptions) {
     !untracked &&
     !base &&
     !head &&
+    !all &&
     options._.length < 2
   ) {
     console.log('Note: Nx defaulted to --base=master --head=HEAD');
+  }
+
+  if (all) {
+    console.warn(
+      '****************************************************************************************'
+    );
+    console.warn('WARNING:');
+    console.warn(
+      'Running affected:* commands with --all can result in very slow builds.'
+    );
+    console.warn(
+      'It is not meant to be used for any sizable project or to be used in CI.'
+    );
+    console.warn(
+      'Read about rebuilding and retesting only what is affected here:'
+    );
+    console.warn('https://nx.dev/guides/monorepo-affected.');
+    console.warn(
+      '****************************************************************************************'
+    );
   }
 }
 
