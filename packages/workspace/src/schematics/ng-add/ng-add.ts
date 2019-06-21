@@ -322,6 +322,7 @@ function setUpCompilerOptions(
     tsconfig.compilerOptions.paths = {};
   }
   tsconfig.compilerOptions.baseUrl = '.';
+  tsconfig.compilerOptions.rootDir = '.';
 
   return tsconfig;
 }
