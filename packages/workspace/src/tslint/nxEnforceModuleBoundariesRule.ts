@@ -2,7 +2,6 @@ import * as path from 'path';
 import * as Lint from 'tslint';
 import { IOptions } from 'tslint';
 import * as ts from 'typescript';
-import * as appRoot from 'app-root-path';
 import {
   getProjectNodes,
   normalizedProjectRoot,
@@ -15,6 +14,7 @@ import {
   DependencyType,
   readDependencies
 } from '../command-line/deps-calculator';
+import { appRootPath } from '../utils/app-root';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(
@@ -26,7 +26,7 @@ export class Rule extends Lint.Rules.AbstractRule {
   ) {
     super(options);
     if (!projectPath) {
-      this.projectPath = appRoot.path;
+      this.projectPath = appRootPath;
       if (!(global as any).projectNodes) {
         const angularJson = readAngularJson();
         const nxJson = readNxJson();

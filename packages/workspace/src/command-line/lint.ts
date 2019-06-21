@@ -5,8 +5,8 @@ import {
   readNxJson
 } from './shared';
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
-import * as appRoot from 'app-root-path';
 import * as path from 'path';
+import { appRootPath } from '../utils/app-root';
 
 export function lint() {
   const nodes = getProjectNodes(readAngularJson(), readNxJson());
@@ -27,7 +27,7 @@ export function lint() {
 
 function readAllFilesFromAppsAndLibs() {
   return [
-    ...allFilesInDir(`${appRoot.path}/apps`).map(f => f.file),
-    ...allFilesInDir(`${appRoot.path}/libs`).map(f => f.file)
+    ...allFilesInDir(`${appRootPath}/apps`).map(f => f.file),
+    ...allFilesInDir(`${appRootPath}/libs`).map(f => f.file)
   ].filter(f => !path.basename(f).startsWith('.'));
 }

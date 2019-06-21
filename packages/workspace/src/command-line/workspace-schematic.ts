@@ -14,7 +14,6 @@ import {
   NodeModulesEngineHost,
   NodeWorkflow
 } from '@angular-devkit/schematics/tools';
-import * as appRoot from 'app-root-path';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import { readFileSync, writeFileSync } from 'fs';
@@ -23,8 +22,9 @@ import * as inquirer from 'inquirer';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 import { fileExists } from '../utils/fileutils';
+import { appRootPath } from '../utils/app-root';
 
-const rootDirectory = appRoot.path;
+const rootDirectory = appRootPath;
 
 export function workspaceSchematic(args: string[]) {
   const parsedArgs = parseOptions(args);

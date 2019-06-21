@@ -1,15 +1,16 @@
 import {
-  Tree,
-  SchematicContext,
-  Rule,
+  CreateFileAction,
   noop,
   OverwriteFileAction,
-  CreateFileAction
+  Rule,
+  SchematicContext,
+  Tree
 } from '@angular-devkit/schematics';
-import { format, resolveConfig, getFileInfo } from 'prettier';
-import * as appRoot from 'app-root-path';
-import { from, Observable } from 'rxjs';
-import { concatMap, delay, filter, map, mergeMap } from 'rxjs/operators';
+import { format, getFileInfo, resolveConfig } from 'prettier';
+import { from } from 'rxjs';
+import { filter, map, mergeMap } from 'rxjs/operators';
+import * as path from 'path';
+import { appRootPath } from '../app-root';
 
 export function formatFiles(
   options: { skipFormat: boolean } = { skipFormat: false }
@@ -32,7 +33,7 @@ export function formatFiles(
     return from(files).pipe(
       filter(file => host.exists(file.path)),
       mergeMap(async file => {
-        const systemPath = appRoot.resolve(file.path);
+        const systemPath = path.join(appRootPath, file.path);
         let options: any = {
           filepath: systemPath
         };

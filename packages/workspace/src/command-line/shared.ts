@@ -10,11 +10,11 @@ import {
   affectedProjectNamesWithTarget
 } from './affected-apps';
 import * as fs from 'fs';
-import * as appRoot from 'app-root-path';
 import { readJsonFile } from '../utils/fileutils';
 import { YargsAffectedOptions } from './affected';
 import { readDependencies, DepGraph, Deps } from './deps-calculator';
 import { touchedProjects } from './touched';
+import { appRootPath } from '../utils/app-root';
 
 const ignore = require('ignore');
 
@@ -43,7 +43,7 @@ function readFileIfExisting(path: string) {
 }
 
 const ig = ignore();
-ig.add(readFileIfExisting(`${appRoot.path}/.gitignore`));
+ig.add(readFileIfExisting(`${appRootPath}/.gitignore`));
 
 export function printArgsWarning(options: YargsAffectedOptions) {
   const { files, uncommitted, untracked, base, head, all } = options;
@@ -320,7 +320,7 @@ export function getProjectNodes(
       implicitDependencies = [key.replace(/-e2e$/, '')];
     }
 
-    const filesWithMTimes = allFilesInDir(`${appRoot.path}/${p.root}`);
+    const filesWithMTimes = allFilesInDir(`${appRootPath}/${p.root}`);
     const fileMTimes = {};
     filesWithMTimes.forEach(f => {
       fileMTimes[f.file] = f.mtime;
@@ -350,11 +350,11 @@ function minus(a: string[], b: string[]): string[] {
 }
 
 export function readAngularJson(): any {
-  return readJsonFile(`${appRoot.path}/angular.json`);
+  return readJsonFile(`${appRootPath}/angular.json`);
 }
 
 export function readNxJson(): NxJson {
-  const config = readJsonFile<NxJson>(`${appRoot.path}/nx.json`);
+  const config = readJsonFile<NxJson>(`${appRootPath}/nx.json`);
   if (!config.npmScope) {
     throw new Error(`nx.json must define the npmScope property.`);
   }
@@ -423,7 +423,7 @@ export function allFilesInDir(
   dirName: string
 ): { file: string; mtime: number }[] {
   // Ignore .gitignored files
-  if (ig.ignores(path.relative(appRoot.path, dirName))) {
+  if (ig.ignores(path.relative(appRootPath, dirName))) {
     return [];
   }
 
@@ -431,7 +431,7 @@ export function allFilesInDir(
   try {
     fs.readdirSync(dirName).forEach(c => {
       const child = path.join(dirName, c);
-      if (ig.ignores(path.relative(appRoot.path, child))) {
+      if (ig.ignores(path.relative(appRootPath, child))) {
         return;
       }
       try {
@@ -439,7 +439,7 @@ export function allFilesInDir(
         if (!s.isDirectory()) {
           // add starting with "apps/myapp/..." or "libs/mylib/..."
           res.push({
-            file: normalizePath(path.relative(appRoot.path, child)),
+            file: normalizePath(path.relative(appRootPath, child)),
             mtime: s.mtimeMs
           });
         } else if (s.isDirectory()) {
@@ -455,10 +455,10 @@ export function lastModifiedAmongProjectFiles(projects: ProjectNode[]) {
   return Math.max(
     ...[
       ...projects.map(project => getProjectMTime(project)),
-      mtime(`${appRoot.path}/angular.json`),
-      mtime(`${appRoot.path}/nx.json`),
-      mtime(`${appRoot.path}/tslint.json`),
-      mtime(`${appRoot.path}/package.json`)
+      mtime(`${appRootPath}/angular.json`),
+      mtime(`${appRootPath}/nx.json`),
+      mtime(`${appRootPath}/tslint.json`),
+      mtime(`${appRootPath}/package.json`)
     ]
   );
 }
