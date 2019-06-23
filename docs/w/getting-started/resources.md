@@ -1,3 +1,0 @@
-# Web Components Resources
-
-TODO

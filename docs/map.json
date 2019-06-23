@@ -1,6 +1,6 @@
 [
   {
-    "id": "a",
+    "id": "angular",
     "itemList": [
       {
         "name": "Getting Started",
@@ -160,9 +160,8 @@
       }
     ]
   },
-
   {
-    "id": "w",
+    "id": "web",
     "itemList": [
       {
         "name": "Getting Started",
@@ -193,6 +192,50 @@
           {
             "name": "1 - Create Application",
             "id": "01-create-application"
+          },
+          {
+            "name": "2 - Add E2E Test",
+            "id": "02-add-e2e-test"
+          },
+          {
+            "name": "3 - Display Todos",
+            "id": "03-display-todos"
+          },
+          {
+            "name": "4 - Connect to API",
+            "id": "04-connect-to-api"
+          },
+          {
+            "name": "5 - Add Node Application",
+            "id": "05-add-node-app"
+          },
+          {
+            "name": "6 - Configure Proxy",
+            "id": "06-proxy"
+          },
+          {
+            "name": "7 - Share Code",
+            "id": "07-share-code"
+          },
+          {
+            "name": "8 - Create Libraries",
+            "id": "08-create-libs"
+          },
+          {
+            "name": "9 - Dep Graph",
+            "id": "09-dep-graph"
+          },
+          {
+            "name": "10 - Test Affected Projects",
+            "id": "10-test-affected-projects"
+          },
+          {
+            "name": "11 - Build Affected Projects",
+            "id": "11-build-affected-projects"
+          },
+          {
+            "name": "12 - Summary",
+            "id": "12-summary"
           }
         ]
       },
@@ -216,9 +259,8 @@
       }
     ]
   },
-
   {
-    "id": "r",
+    "id": "react",
     "itemList": [
       {
         "name": "Getting Started",
@@ -249,6 +291,50 @@
           {
             "name": "1 - Create Application",
             "id": "01-create-application"
+          },
+          {
+            "name": "2 - Add E2E Test",
+            "id": "02-add-e2e-test"
+          },
+          {
+            "name": "3 - Display Todos",
+            "id": "03-display-todos"
+          },
+          {
+            "name": "4 - Connect to API",
+            "id": "04-connect-to-api"
+          },
+          {
+            "name": "5 - Add Node Application",
+            "id": "05-add-node-app"
+          },
+          {
+            "name": "6 - Configure Proxy",
+            "id": "06-proxy"
+          },
+          {
+            "name": "7 - Share Code",
+            "id": "07-share-code"
+          },
+          {
+            "name": "8 - Create Libraries",
+            "id": "08-create-libs"
+          },
+          {
+            "name": "9 - Dep Graph",
+            "id": "09-dep-graph"
+          },
+          {
+            "name": "10 - Test Affected Projects",
+            "id": "10-test-affected-projects"
+          },
+          {
+            "name": "11 - Build Affected Projects",
+            "id": "11-build-affected-projects"
+          },
+          {
+            "name": "12 - Summary",
+            "id": "12-summary"
           }
         ]
       },

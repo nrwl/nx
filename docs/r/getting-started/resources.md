@@ -1,3 +1,0 @@
-# React Resources
-
-TODO

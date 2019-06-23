@@ -1,3 +1,0 @@
-# Web Components Tutorial
-
-TODO

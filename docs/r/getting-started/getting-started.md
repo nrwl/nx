@@ -1,3 +1,0 @@
-# React Getting Started
-
-TODO
