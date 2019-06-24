@@ -186,12 +186,12 @@ async function runCommand(
       await runAll(
         projects.map(app => {
           return ngCommands.includes(command)
-            ? `ng -- ${command} --project=${app} ${transformArgs(
+            ? `ng ${command} --project=${app} ${transformArgs(
                 args,
                 app,
                 projectMetadata.get(app)
               ).join(' ')} `
-            : `ng -- run ${app}:${command} ${transformArgs(
+            : `ng run ${app}:${command} ${transformArgs(
                 args,
                 app,
                 projectMetadata.get(app)
