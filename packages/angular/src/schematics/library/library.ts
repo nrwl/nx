@@ -224,9 +224,19 @@ function updateNgPackage(options: NormalizedSchema): Rule {
   }`;
   return chain([
     updateJsonInTree(`${options.projectRoot}/ng-package.json`, json => {
+      let $schema = json.$schema;
+      if (json.$schema && json.$schema.indexOf('node_modules') >= 0) {
+        $schema = `${offsetFromRoot(
+          options.projectRoot
+        )}${json.$schema.substring(
+          json.$schema.indexOf('node_modules'),
+          json.$schema.length
+        )}`;
+      }
       return {
         ...json,
-        dest
+        dest,
+        $schema
       };
     })
   ]);
