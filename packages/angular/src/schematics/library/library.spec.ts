@@ -27,6 +27,21 @@ describe('lib', () => {
 
       expect(ngPackage.dest).toEqual('../../dist/libs/my-lib');
     });
+    it('should update ng-package.json $schema to the correct folder', async () => {
+      const publishableTree = await runSchematic(
+        'lib',
+        { name: 'myLib', framework: 'angular', publishable: true },
+        appTree
+      );
+      let ngPackage = readJsonInTree(
+        publishableTree,
+        'libs/my-lib/ng-package.json'
+      );
+
+      expect(ngPackage.$schema).toEqual(
+        '../../node_modules/ng-packagr/ng-package.schema.json'
+      );
+    });
 
     it('should not update package.json by default', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
