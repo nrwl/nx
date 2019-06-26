@@ -207,7 +207,7 @@ function isLegacy(
     tsconfigJson.compilerOptions.outDir
   );
 
-  return !relative(tsOutDirPath, integrationFolder).startsWith('../');
+  return !relative(tsOutDirPath, integrationFolder).startsWith('..');
 }
 
 function showLegacyWarning(context: BuilderContext) {

@@ -28,6 +28,7 @@ import {
   ScriptTarget
 } from 'typescript';
 import { dirname, join, relative } from 'path';
+import { normalize } from '@angular-devkit/core';
 
 async function updateCypressJson(host: Tree, context: SchematicContext) {
   const rules: Rule[] = [];
@@ -57,11 +58,13 @@ async function updateCypressJson(host: Tree, context: SchematicContext) {
             }
             return (
               './' +
-              relative(
-                dirname(target.options.cypressConfig as string),
+              normalize(
                 relative(
-                  './' + tsConfig.options.outDir,
-                  join(dirname(target.options.cypressConfig as string), path)
+                  dirname(target.options.cypressConfig as string),
+                  relative(
+                    './' + tsConfig.options.outDir,
+                    join(dirname(target.options.cypressConfig as string), path)
+                  )
                 )
               )
             );
