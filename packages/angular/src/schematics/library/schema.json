@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "SchematicsNxLibrary",
+  "id": "SchematicsAngularLibrary",
   "title": "Create a library",
   "type": "object",
   "properties": {
@@ -57,7 +57,10 @@
         "message": "Which stylesheet format would you like to use?",
         "type": "list",
         "items": [
-          { "value": "css", "label": "CSS" },
+          {
+            "value": "css",
+            "label": "CSS"
+          },
           {
             "value": "scss",
             "label": "SASS(.scss)  [ http://sass-lang.com   ]"
@@ -89,22 +92,13 @@
     },
     "tags": {
       "type": "string",
-      "description": "Add tags to the library (used for linting)",
-      "x-prompt": "Which tags would you like to add to the library? (used for linting)"
+      "description": "Add tags to the library (used for linting)"
     },
     "unitTestRunner": {
       "type": "string",
       "enum": ["karma", "jest", "none"],
       "description": "Test runner to use for unit tests",
-      "default": "jest",
-      "x-prompt": {
-        "message": "Which Unit Test Runner would you like to use for the library?",
-        "type": "list",
-        "items": [
-          { "value": "jest", "label": "Jest [https://jestjs.io/]" },
-          { "value": "karma", "label": "Karma" }
-        ]
-      }
+      "default": "jest"
     }
   },
   "required": []
