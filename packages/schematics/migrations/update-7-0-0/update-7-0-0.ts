@@ -1,6 +1,5 @@
 import { Rule, chain } from '@angular-devkit/schematics';
-import { updateJsonInTree } from '@nrwl/workspace';
-import { addUpdateTask } from '../../src/utils/update-task';
+import { updateJsonInTree, addUpdateTask } from '@nrwl/workspace';
 
 export default function(): Rule {
   return chain([

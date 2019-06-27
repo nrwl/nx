@@ -1150,30 +1150,35 @@
   dependencies:
     optional "0.1.4"
 
-"@ngrx/effects@7.1.0":
-  version "7.1.0"
-  resolved "https://registry.yarnpkg.com/@ngrx/effects/-/effects-7.1.0.tgz#c42966a92096d605b72a1959599ad6c90a1e15a2"
-  integrity sha512-0oF9VaixL8TNzIyBfFieLXunoz66uuceGfh5EaepQu+qPcVhnFq5KvYHDQOdCq0uuQYB7rVwNFYjOD7pO5LE5A==
+"@ngrx/effects@8.1.0":
+  version "8.1.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/effects/-/effects-8.1.0.tgz#76245d6d8658fbe84d610ade4016cc7d6091d09a"
+  integrity sha512-JQKD39Itsq70Mlq8kJ/yQuVbM08luAUexMqyi5HECe8izyRNkcIGJFh/2VkQSMLUGSNkU7qnT7y7xug8GA+AGA==
 
-"@ngrx/router-store@7.1.0":
-  version "7.1.0"
-  resolved "https://registry.yarnpkg.com/@ngrx/router-store/-/router-store-7.1.0.tgz#931bdc902d806b3d026e99604748ebfefcd82dc3"
-  integrity sha512-xLTtdLvbgwFyhXU9A/kYsuVruvp8w7WcNorGq0LyWCwI+rk4twaNFJLUx/rVnLbzfXLichU8kHAiRmR8VD438A==
+"@ngrx/entity@8.1.0":
+  version "8.1.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/entity/-/entity-8.1.0.tgz#2856121a288ef850e39c851edd39a6619d2d8910"
+  integrity sha512-/pPHCkT0QfNZSGIaJ1i864wMZCaVYXLkqWpdnujf+BQHvjYFBCR81rZf3aGcnKaB5s3N36xGlt2aGZshGxHxFQ==
 
-"@ngrx/schematics@7.1.0":
-  version "7.1.0"
-  resolved "https://registry.yarnpkg.com/@ngrx/schematics/-/schematics-7.1.0.tgz#ddc4faebd506f28ac181df04091b630c70ced713"
-  integrity sha512-4+drIY4jCMgsOZWo6LTpUL8uLxv8RrbzS5CNEcm8EvwmUrzd/GKoCZ9rKqzoAlF5EyA+1OraMppeOHV0j8DZ3w==
+"@ngrx/router-store@8.1.0":
+  version "8.1.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/router-store/-/router-store-8.1.0.tgz#04d58c783a7a9a70676c37ab78e27f86675b19f6"
+  integrity sha512-mS1yfB5fsE9Vh4SFhWZS51KOSxrTBdaU3PZfLS+v+NOpiDUPM8Ja3lIGQvo9yUd3sky/IGhzbZ4Qn8MZmwHFrg==
 
-"@ngrx/store-devtools@7.1.0":
-  version "7.1.0"
-  resolved "https://registry.yarnpkg.com/@ngrx/store-devtools/-/store-devtools-7.1.0.tgz#ea5248d616b2bdf7607e9f4a1c80aa4365e0f830"
-  integrity sha512-r0LUFQKxKOhFIO2TBK7k6eoOCT6WGQFXzOFTWwctU7teQgSSpzyUVQfsULfAyFpGN9f1hog9leY/J/EVjdwBQQ==
+"@ngrx/schematics@8.1.0":
+  version "8.1.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/schematics/-/schematics-8.1.0.tgz#d7f84c65ad343cde520bc13509fbb05b58d9a1f4"
+  integrity sha512-e/v8/LvcVaHyrSyEAlLDCsYNglKREnl22nSMq5E5I1CVMJXftfKIFeB2uv/cssBcT/0iTWYkWt9BbxPfEcz7JQ==
 
-"@ngrx/store@7.1.0":
-  version "7.1.0"
-  resolved "https://registry.yarnpkg.com/@ngrx/store/-/store-7.1.0.tgz#072f22e062e264c62859f37d9807dfac860f161d"
-  integrity sha512-tM8ZGxbLTyQ5JUHow3/PSFU3FWfYJs/wAVyRlxzTxfY7Krs/TJ64GgI4lOa6gVizi2UiYfLtI31pJrxzXyxEoA==
+"@ngrx/store-devtools@8.1.0":
+  version "8.1.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/store-devtools/-/store-devtools-8.1.0.tgz#b720be01c5d3a7250f33429767c6ae792a2b8de7"
+  integrity sha512-1xqZR728Jev2bjV/KDxFCT+B1aGhbIWbn3yeAm/gPyDGaJAmaQlBdE6M8Yxjsr3kCffwyPv8jtD3ekdY47l2VA==
+
+"@ngrx/store@8.1.0":
+  version "8.1.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/store/-/store-8.1.0.tgz#2ef648c591b2a56529a40ab3081327c49fb8ca93"
+  integrity sha512-1Pfe8uLoEjfLyXpX2UoqeSzYz4yPhsTlMVHIP7EybLD9YC/IrhecnCMmBCkNpJDRBQYqmJPbfUBrp8/q9wcB6g==
 
 "@ngtools/json-schema@^1.1.0":
   version "1.1.0"
@@ -7634,10 +7639,10 @@ jasmine-core@~2.99.1:
   resolved "https://registry.yarnpkg.com/jasmine-core/-/jasmine-core-2.99.1.tgz#e6400df1e6b56e130b61c4bcd093daa7f6e8ca15"
   integrity sha1-5kAN8ea1bhMLYcS80JPap/boyhU=
 
-jasmine-marbles@~0.5.0:
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/jasmine-marbles/-/jasmine-marbles-0.5.0.tgz#5d4c51082fcf619bb8dbc85583cb11718a32b200"
-  integrity sha512-hkSYy7VJpcxaKE48s/CasVpGyheElp5ZegguFi5kpYAaUWsyOko6RnMZS1kv14ThMtlJVNqCW5z16f1q6HqbEg==
+jasmine-marbles@~0.6.0:
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/jasmine-marbles/-/jasmine-marbles-0.6.0.tgz#f78dc1a3bc452976de10ee8b47c73d616532a954"
+  integrity sha512-1uzgjEesEeCb+r+v46qn5x326TiGqk5SUZa+A3O+XnMCjG/pGcUOhL9Xsg5L7gLC6RFHyWGTkB5fei4rcvIOiQ==
   dependencies:
     lodash "^4.5.0"
 

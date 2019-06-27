@@ -17,7 +17,7 @@ Default: `+state`
 
 Type: `string`
 
-Override the name of the folder used to contain/group the NgRx files: contains actions, effects, reducers. selectors. (e.g., +state)
+The name of the folder used to contain/group the generated NgRx files.
 
 ### facade
 
@@ -25,19 +25,27 @@ Default: `false`
 
 Type: `boolean`
 
-Create a Facade class for the the Feature (e.g., --facade).
+Create a Facade class for the the Feature.
+
+### minimal
+
+Default: `false`
+
+Type: `boolean`
+
+Only register the root state management setup or feature state.
 
 ### module
 
 Type: `string`
 
-Path to ngModule; host directory will contain the new '+state' directory (e.g., libs/comments/src/lib/comments-state.module.ts).
+The path to NgModule where the feature state will be registered. The host directory will create/use the new state directory.
 
 ### name
 
 Type: `string`
 
-Name of the NgRx feature (e.g., Products, Users, etc.). Recommended to use plural form for name.
+Name of the NgRx feature state, such as "products" or "users"). Recommended to use the plural form of the name.
 
 ### onlyAddFiles
 
@@ -45,7 +53,7 @@ Default: `false`
 
 Type: `boolean`
 
-Only add new NgRx files, without changing the module file (e.g., --onlyAddFiles).
+**Deprecated**, use `skipImport`. Only add new NgRx files, without changing the module file (e.g., --onlyAddFiles).
 
 ### onlyEmptyRoot
 
@@ -53,7 +61,7 @@ Default: `false`
 
 Type: `boolean`
 
-Do not generate any files. Only generate StoreModule.forRoot and EffectsModule.forRoot (e.g., --onlyEmptyRoot).
+**Deprecated**, use `minimal`. Do not generate any files. Only generate StoreModule.forRoot and EffectsModule.forRoot (e.g., --onlyEmptyRoot).
 
 ### root
 
@@ -61,7 +69,7 @@ Default: `false`
 
 Type: `boolean`
 
-Add StoreModule.forRoot and EffectsModule.forRoot() instead of forFeature (e.g., --root).
+Setup root or feature state management with NgRx.
 
 ### skipFormat
 
@@ -69,7 +77,15 @@ Default: `false`
 
 Type: `boolean`
 
-Skip formatting files
+Skip formatting of generated files.
+
+### skipImport
+
+Default: `false`
+
+Type: `boolean`
+
+Generate NgRx feature files without registering the feature in the NgModule.
 
 ### skipPackageJson
 
@@ -77,4 +93,12 @@ Default: `false`
 
 Type: `boolean`
 
-Do not add NgRx dependencies to package.json (e.g., --skipPackageJson)
+Do not update the package.json with NgRx dependencies.
+
+### syntax
+
+Default: `classes`
+
+Type: `string`
+
+Specifies whether to use class-based or creator functions for actions, reducers, and effects.

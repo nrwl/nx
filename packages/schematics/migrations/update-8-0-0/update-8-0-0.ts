@@ -10,7 +10,8 @@ import {
   formatFiles,
   insert,
   readJsonInTree,
-  updateJsonInTree
+  updateJsonInTree,
+  addUpdateTask
 } from '@nrwl/workspace';
 import {
   createSourceFile,
@@ -23,7 +24,6 @@ import {
   ReplaceChange
 } from '@nrwl/workspace/src/utils/ast-utils';
 import { relative } from 'path';
-import { addUpdateTask } from '../../src/utils/update-task';
 
 const ignore = require('ignore');
 

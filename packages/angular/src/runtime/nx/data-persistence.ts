@@ -2,7 +2,7 @@ import { Injectable, Type } from '@angular/core';
 import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { Actions, ofType } from '@ngrx/effects';
 import { ROUTER_NAVIGATION, RouterNavigationAction } from '@ngrx/router-store';
-import { Action, Store } from '@ngrx/store';
+import { Action, Store, ActionCreator } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
 import {
   catchError,
@@ -230,7 +230,7 @@ export class DataPersistence<T> {
    * ```
    */
   pessimisticUpdate<A extends Action = Action>(
-    actionType: string,
+    actionType: string | ActionCreator,
     opts: PessimisticUpdateOpts<T, A>
   ): Observable<any> {
     return this.actions.pipe(
@@ -287,7 +287,7 @@ export class DataPersistence<T> {
    * ```
    */
   optimisticUpdate<A extends Action = Action>(
-    actionType: string,
+    actionType: string | ActionCreator,
     opts: OptimisticUpdateOpts<T, A>
   ): Observable<any> {
     return this.actions.pipe(
@@ -365,7 +365,7 @@ export class DataPersistence<T> {
    * it will only run the last one.
    */
   fetch<A extends Action = Action>(
-    actionType: string,
+    actionType: string | ActionCreator,
     opts: FetchOpts<T, A>
   ): Observable<any> {
     return this.actions.pipe(

@@ -1,10 +1,6 @@
 import { Rule } from '@angular-devkit/schematics';
 import { addDepsToPackageJson } from '@nrwl/workspace';
-import {
-  ngrxVersion,
-  ngrxStoreFreezeVersion,
-  nxVersion
-} from '../../../utils/versions';
+import { ngrxVersion } from '../../../utils/versions';
 
 export function addNgRxToPackageJson(): Rule {
   return addDepsToPackageJson(
@@ -15,8 +11,8 @@ export function addNgRxToPackageJson(): Rule {
       '@ngrx/router-store': ngrxVersion
     },
     {
-      '@ngrx/store-devtools': ngrxVersion,
-      'ngrx-store-freeze': ngrxStoreFreezeVersion
+      '@ngrx/schematics': ngrxVersion,
+      '@ngrx/store-devtools': ngrxVersion
     }
   );
 }

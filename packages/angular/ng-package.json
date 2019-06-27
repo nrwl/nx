@@ -4,6 +4,7 @@
     "entryFile": "index.ts",
     "umdModuleIds": {
       "@ngrx/effects": "ngrx.effects",
+      "@ngrx/entity": "ngrx.entity",
       "@ngrx/router-store": "ngrx.routerStore",
       "@ngrx/store": "ngrx.store",
       "jasmine-marbles": "jasmine-marbles"

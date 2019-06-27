@@ -24,11 +24,10 @@ import {
   RequestContext
 } from './rules';
 import { formatFiles } from '@nrwl/workspace';
-import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
 /**
  * Rule to generate the Nx 'ngrx' Collection
- * Note: see https://nrwl.io/nx/guide-setting-up-ngrx for guide to generated files
+ * Note: see https://nx.dev/angular/guides/misc-ngrx for guide to generated files
  */
 export default function generateNgrxCollection(_options: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
@@ -47,6 +46,14 @@ export default function generateNgrxCollection(_options: Schema): Rule {
       host
     };
 
+    if (options.minimal) {
+      options.onlyEmptyRoot = true;
+    }
+
+    if (options.skipImport) {
+      options.onlyAddFiles = true;
+    }
+
     const fileGeneration = !options.onlyEmptyRoot
       ? [generateNgrxFilesFromTemplates(options)]
       : [];
@@ -57,6 +64,7 @@ export default function generateNgrxCollection(_options: Schema): Rule {
           addExportsToBarrel(requestContext.options)
         ]
       : [];
+
     const packageJsonModification = !options.skipPackageJson
       ? [addNgRxToPackageJson()]
       : [];
@@ -82,11 +90,14 @@ function generateNgrxFilesFromTemplates(options: Schema) {
   const moduleDir = path.dirname(options.module);
   const excludeFacade = path => path.match(/^((?!facade).)*$/);
 
-  const templateSource = apply(url('./files'), [
-    !options.facade ? filter(excludeFacade) : noop(),
-    template({ ...options, tmpl: '', ...names(name) }),
-    move(moduleDir)
-  ]);
+  const templateSource = apply(
+    url(options.syntax === 'creators' ? './creator-files' : './files'),
+    [
+      !options.facade ? filter(excludeFacade) : noop(),
+      template({ ...options, tmpl: '', ...names(name) }),
+      move(moduleDir)
+    ]
+  );
 
   return mergeWith(templateSource);
 }

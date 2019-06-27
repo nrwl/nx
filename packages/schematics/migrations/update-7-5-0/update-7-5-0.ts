@@ -1,7 +1,6 @@
 import { Rule, chain, externalSchematic } from '@angular-devkit/schematics';
 
-import { updateJsonInTree } from '@nrwl/workspace';
-import { addUpdateTask } from '../../src/utils/update-task';
+import { updateJsonInTree, addUpdateTask } from '@nrwl/workspace';
 
 const updateAngularCLI = addUpdateTask('@angular/cli', '7.2.2');
 

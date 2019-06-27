@@ -36,6 +36,6 @@
     "@nrwl/jest": "*",
     "@angular-devkit/schematics": "8.0.1",
     "@schematics/angular": "8.0.1",
-    "jasmine-marbles": "~0.5.0"
+    "jasmine-marbles": "~0.6.0"
   }
 }

@@ -7,14 +7,15 @@ import { StoreModule, Store } from '@ngrx/store';
 
 import { NxModule } from '@nrwl/angular';
 
+import { <%= className %>Entity } from './<%= fileName %>.models';
 import { <%= className %>Effects } from './<%= fileName %>.effects';
 import { <%= className %>Facade } from './<%= fileName %>.facade';
 
-import { <%= propertyName %>Query } from './<%= fileName %>.selectors';
-import { Load<%= className %>, <%= className %>Loaded } from './<%= fileName %>.actions';
+import * as <%= className %>Selectors from './<%= fileName %>.selectors';
+import * as <%= className %>Actions from './<%= fileName %>.actions';
 import {
+  <%= className.toUpperCase() %>_FEATURE_KEY,
   <%= className %>State,
-  Entity,
   initialState,
   reducer
 } from './<%= fileName %>.reducer';
@@ -26,13 +27,13 @@ interface TestSchema {
 describe('<%= className %>Facade', () => {
   let facade: <%= className %>Facade;
   let store: Store<TestSchema>;
-  let create<%= className %>;
+  const create<%= className %>Entity = (id: string, name = '' ) => ({
+    id,
+    name: name || `name-${id}`
+  } as <%= className %>Entity);
 
   beforeEach(() => {
-    create<%= className %> = ( id:string, name = '' ): Entity => ({
-       id,
-       name: name || `name-${id}`
-    });
+    
   });
 
   describe('used in NgModule', () => {
@@ -40,7 +41,7 @@ describe('<%= className %>Facade', () => {
     beforeEach(() => {
       @NgModule({
         imports: [
-          StoreModule.forFeature('<%= propertyName %>', reducer, { initialState }),
+          StoreModule.forFeature(<%= className.toUpperCase() %>_FEATURE_KEY, reducer),
           EffectsModule.forFeature([<%= className %>Effects])
         ],
         providers: [<%= className %>Facade]
@@ -88,7 +89,7 @@ describe('<%= className %>Facade', () => {
     });
 
     /**
-     * Use `<%= className %>Loaded` to manually submit list for state management
+     * Use `load<%= className %>Success` to manually update list
      */
     it('all<%= className %>$ should return the loaded list; and loaded flag == true', async (done) => {
       try {
@@ -98,10 +99,12 @@ describe('<%= className %>Facade', () => {
         expect(list.length).toBe(0);
         expect(isLoaded).toBe(false);
 
-        store.dispatch(new <%= className %>Loaded([
-          create<%= className %>('AAA'),
-          create<%= className %>('BBB')
-        ]));
+        store.dispatch(<%= className %>Actions.load<%= className %>Success({
+          <%= propertyName %>: [
+            create<%= className %>Entity('AAA'),
+            create<%= className %>Entity('BBB')
+          ]})
+        );
 
         list = await readFirst(facade.all<%= className %>$);
         isLoaded = await readFirst(facade.loaded$);
