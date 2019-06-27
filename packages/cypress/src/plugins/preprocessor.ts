@@ -1,5 +1,6 @@
 import * as wp from '@cypress/webpack-preprocessor';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
+import * as nodeExternals from 'webpack-node-externals';
 
 export function preprocessTypescript(config: any) {
   if (!config.env.tsConfig) {
@@ -30,6 +31,7 @@ export function getWebpackConfig(config: any) {
         {
           test: /\.(j|t)sx?$/,
           loader: 'ts-loader',
+          exclude: [/node_modules/],
           options: {
             configFile: config.env.tsConfig,
             // https://github.com/TypeStrong/ts-loader/pull/685
@@ -37,6 +39,7 @@ export function getWebpackConfig(config: any) {
           }
         }
       ]
-    }
+    },
+    externals: [nodeExternals()]
   };
 }
