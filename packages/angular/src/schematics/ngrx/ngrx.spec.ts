@@ -40,10 +40,35 @@ describe('ngrx', () => {
     ).toBeFalsy();
 
     expect(appModule).toContain('StoreModule.forRoot(');
-    expect(appModule).toContain(
-      '{ metaReducers: !environment.production ? [storeFreeze] : [] }'
-    );
+    expect(appModule).toContain('runtimeChecks: {');
+    expect(appModule).toContain('strictActionImmutability: true');
+    expect(appModule).toContain('strictStateImmutability: true');
     expect(appModule).toContain('EffectsModule.forRoot');
+  });
+
+  it('should add empty root with minimal option', async () => {
+    const tree = await runSchematic(
+      'ngrx',
+      {
+        name: 'state',
+        module: 'apps/myapp/src/app/app.module.ts',
+        root: true,
+        onlyEmptyRoot: false,
+        minimal: true
+      },
+      appTree
+    );
+    const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
+
+    expect(
+      tree.exists('apps/myapp/src/app/+state/state.actions.ts')
+    ).toBeFalsy();
+
+    expect(appModule).toContain('StoreModule.forRoot(');
+    expect(appModule).toContain('runtimeChecks: {');
+    expect(appModule).toContain('strictActionImmutability: true');
+    expect(appModule).toContain('strictStateImmutability: true');
+    expect(appModule).toContain('EffectsModule.forRoot([])');
   });
 
   it('should add root', async () => {
@@ -78,13 +103,18 @@ describe('ngrx', () => {
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
 
     expect(appModule).toContain(`import { NxModule } from '@nrwl/angular';`);
+    expect(appModule).toContain(
+      `import * as fromApp from './+state/app.reducer';`
+    );
     expect(appModule).toContain('NxModule.forRoot');
     expect(appModule).toContain('StoreModule.forRoot');
+    expect(appModule).toContain(
+      `StoreModule.forFeature(fromApp.APP_FEATURE_KEY, fromApp.reducer)`
+    );
     expect(appModule).toContain('EffectsModule.forRoot');
-    expect(appModule).toContain('!environment.production ? [storeFreeze] : []');
-
-    expect(appModule).toContain('app: appReducer');
-    expect(appModule).toContain('initialState: { app: appInitialState }');
+    expect(appModule).toContain(
+      'metaReducers: !environment.production ? [] : []'
+    );
   });
 
   it('should add facade to root', async () => {
@@ -105,13 +135,12 @@ describe('ngrx', () => {
     expect(appModule).toContain('NxModule.forRoot');
     expect(appModule).toContain('StoreModule.forRoot');
     expect(appModule).toContain('EffectsModule.forRoot');
-    expect(appModule).toContain('!environment.production ? [storeFreeze] : []');
+    expect(appModule).toContain(
+      'metaReducers: !environment.production ? [] : []'
+    );
 
     // Do not add Effects file to providers; already registered in EffectsModule
     expect(appModule).toContain('providers: [AppFacade]');
-
-    expect(appModule).toContain('app: appReducer');
-    expect(appModule).toContain('initialState: { app: appInitialState }');
 
     [
       '/apps/myapp/src/app/+state/app.actions.ts',
@@ -143,7 +172,7 @@ describe('ngrx', () => {
       tree,
       '/apps/myapp-norouter/src/app/app.module.ts'
     );
-    expect(appModule).not.toContain('StoreRouterConnectingModule');
+    expect(appModule).not.toContain('StoreRouterConnectingModule.forRoot()');
   });
 
   it('should add feature', async () => {
@@ -159,11 +188,7 @@ describe('ngrx', () => {
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
     expect(appModule).toContain('StoreModule.forFeature');
     expect(appModule).toContain('EffectsModule.forFeature');
-    expect(appModule).toContain('STATE_FEATURE_KEY, stateReducer');
-    expect(appModule).toContain('initialState: stateInitialState');
-    expect(appModule).not.toContain(
-      '!environment.production ? [storeFreeze] : []'
-    );
+    expect(appModule).not.toContain('!environment.production ? [] : []');
 
     expect(
       tree.exists(`/apps/myapp/src/app/+state/state.actions.ts`)
@@ -184,9 +209,7 @@ describe('ngrx', () => {
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
     expect(appModule).toContain('StoreModule.forFeature');
     expect(appModule).toContain('EffectsModule.forFeature');
-    expect(appModule).not.toContain(
-      '!environment.production ? [storeFreeze] : []'
-    );
+    expect(appModule).not.toContain('!environment.production ? [] : []');
 
     expect(
       tree.exists(`/apps/myapp/src/app/my-custom-state/state.actions.ts`)
@@ -207,9 +230,37 @@ describe('ngrx', () => {
 
     const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
     expect(appModule).not.toContain('StoreModule');
-    expect(appModule).not.toContain(
-      '!environment.production ? [storeFreeze] : []'
+    expect(appModule).not.toContain('!environment.production ? [] : []');
+
+    [
+      '/apps/myapp/src/app/+state/state.effects.ts',
+      '/apps/myapp/src/app/+state/state.facade.ts',
+      '/apps/myapp/src/app/+state/state.reducer.ts',
+      '/apps/myapp/src/app/+state/state.selectors.ts',
+      '/apps/myapp/src/app/+state/state.effects.spec.ts',
+      '/apps/myapp/src/app/+state/state.facade.spec.ts',
+      '/apps/myapp/src/app/+state/state.selectors.spec.ts'
+    ].forEach(fileName => {
+      expect(tree.exists(fileName)).toBeTruthy();
+    });
+  });
+
+  it('should only add files with skipImport option', async () => {
+    const tree = await runSchematic(
+      'ngrx',
+      {
+        name: 'state',
+        module: 'apps/myapp/src/app/app.module.ts',
+        onlyAddFiles: false,
+        skipImport: true,
+        facade: true
+      },
+      appTree
     );
+
+    const appModule = getFileContent(tree, '/apps/myapp/src/app/app.module.ts');
+    expect(appModule).not.toContain('StoreModule');
+    expect(appModule).not.toContain('!environment.production ? [] : []');
 
     [
       '/apps/myapp/src/app/+state/state.effects.ts',
@@ -239,7 +290,6 @@ describe('ngrx', () => {
     expect(packageJson.dependencies['@ngrx/router-store']).toBeDefined();
     expect(packageJson.dependencies['@ngrx/effects']).toBeDefined();
     expect(packageJson.devDependencies['@ngrx/store-devtools']).toBeDefined();
-    expect(packageJson.devDependencies['ngrx-store-freeze']).toBeDefined();
   });
 
   it('should error when no module is provided', async () => {
@@ -370,13 +420,11 @@ describe('ngrx', () => {
       const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
       const content = getFileContent(tree, `${statePath}/user.reducer.ts`);
 
-      expect(content).not.toContain('function reducer');
-
       [
         `import { UserAction, UserActionTypes } from \'./user.actions\'`,
         `export interface User`,
         `export interface UserState`,
-        'export function userReducer',
+        'export function reducer',
         'state: UserState = initialState',
         'action: UserAction',
         '): UserState',
@@ -423,7 +471,7 @@ import {
 
       expect(contents).toContain(`describe('User Reducer', () => {`);
       expect(contents).toContain(
-        'const result = userReducer(initialState, action);'
+        'const result = reducer(initialState, action);'
       );
     });
 
@@ -483,8 +531,107 @@ import {
 
       expect(contents).toContain(`describe('SuperUsers Reducer', () => {`);
       expect(contents).toContain(
-        `const result = superUsersReducer(initialState, action);`
+        `const result = reducer(initialState, action);`
       );
+    });
+  });
+
+  describe('creators syntax', () => {
+    let appConfig = getAppConfig();
+    let tree: UnitTestTree;
+    let statePath: string;
+
+    beforeEach(async () => {
+      appConfig = getAppConfig();
+      tree = await runSchematic(
+        'ngrx',
+        {
+          name: 'users',
+          module: appConfig.appModule,
+          syntax: 'creators',
+          facade: true
+        },
+        appTree
+      );
+
+      statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+    });
+
+    it('should generate a set of actions for the feature', async () => {
+      const content = tree.readContent(`${statePath}/users.actions.ts`);
+
+      [
+        '[Users] Load Users',
+        '[Users] Load Users Success',
+        'props<{ users: UsersEntity[] }>()',
+        '[Users] Load Users Failure',
+        'props<{ error: any }>()'
+      ].forEach(text => {
+        expect(content).toContain(text);
+      });
+    });
+
+    it('should generate a reducer for the feature', async () => {
+      const content = tree.readContent(`${statePath}/users.reducer.ts`);
+
+      [
+        `export const USERS_FEATURE_KEY = 'users';`,
+        `const usersReducer = createReducer`,
+        'export function reducer(state: UsersState | undefined, action: Action) {'
+      ].forEach(text => {
+        expect(content).toContain(text);
+      });
+    });
+
+    it('should generate effects for the feature', async () => {
+      const content = tree.readContent(`${statePath}/users.effects.ts`);
+
+      [
+        `import { createEffect, Actions } from '@ngrx/effects';`,
+        'this.dataPersistence.fetch(UsersActions.loadUsers, {'
+      ].forEach(text => {
+        expect(content).toContain(text);
+      });
+    });
+
+    it('should generate selectors for the feature', async () => {
+      const content = tree.readContent(`${statePath}/users.selectors.ts`);
+
+      [
+        `
+import {
+  USERS_FEATURE_KEY,
+  UsersState,
+  UsersPartialState,
+  usersAdapter
+} from './users.reducer';`,
+        `const { selectAll, selectEntities } = usersAdapter.getSelectors();`
+      ].forEach(text => {
+        expect(content).toContain(text);
+      });
+    });
+
+    it('should generate a facade for the feature if enabled', async () => {
+      const content = tree.readContent(`${statePath}/users.facade.ts`);
+
+      [
+        `loaded$ = this.store.pipe(select(UsersSelectors.getUsersLoaded));`,
+        `allUsers$ = this.store.pipe(select(UsersSelectors.getAllUsers));`,
+        `selectedUsers$ = this.store.pipe(select(UsersSelectors.getSelected));`
+      ].forEach(text => {
+        expect(content).toContain(text);
+      });
+    });
+
+    it('should generate a models file for the feature', async () => {
+      const content = tree.readContent(`${statePath}/users.models.ts`);
+
+      [
+        'export interface UsersEntity',
+        'id: string | number; // Primary ID'
+      ].forEach(text => {
+        expect(content).toContain(text);
+      });
     });
   });
 

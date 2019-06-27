@@ -19,8 +19,12 @@ export function addImportsToModule(context: RequestContext): Rule {
       ts.ScriptTarget.Latest,
       true
     );
-    const addImport = (symbolName: string, fileName: string): Change => {
-      return insertImport(source, modulePath, symbolName, fileName);
+    const addImport = (
+      symbolName: string,
+      fileName: string,
+      isDefault = false
+    ): Change => {
+      return insertImport(source, modulePath, symbolName, fileName, isDefault);
     };
 
     const dir = `./${toFileName(context.options.directory)}`;
@@ -30,30 +34,29 @@ export function addImportsToModule(context: RequestContext): Rule {
     const facadePath = `${pathPrefix}.facade`;
 
     const featureName = `${toPropertyName(context.featureName)}`;
-    const reducerName = `${toPropertyName(context.featureName)}Reducer`;
     const effectsName = `${toClassName(context.featureName)}Effects`;
     const facadeName = `${toClassName(context.featureName)}Facade`;
-    const reducerImports = `${featureName.toUpperCase()}_FEATURE_KEY, initialState as ${featureName}InitialState, ${reducerName}`;
+    const className = `${toClassName(context.featureName)}`;
+    const reducerImports = `* as from${className}`;
 
-    const storeReducers = `{ ${featureName}: ${reducerName} }`;
-    const storeInitState = `initialState : { ${featureName} : ${featureName}InitialState }`;
-    const storeMetaReducers = `metaReducers : !environment.production ? [storeFreeze] : []`;
+    const storeMetaReducers = `metaReducers: !environment.production ? [] : []`;
 
-    const storeForRoot = `StoreModule.forRoot(
-  ${storeReducers},
+    const storeForRoot = `StoreModule.forRoot({},
   {
-    ${storeInitState},
-    ${storeMetaReducers}
+    ${storeMetaReducers},
+    runtimeChecks: {
+      strictActionImmutability: true,
+      strictStateImmutability: true
+    }
   }
 )`;
     const nxModule = 'NxModule.forRoot()';
-    const storeForEmptyRoot = `StoreModule.forRoot({},{ ${storeMetaReducers} })`;
     const effectsForRoot = `EffectsModule.forRoot([${effectsName}])`;
     const effectsForEmptyRoot = `EffectsModule.forRoot([])`;
-    const storeForFeature = `StoreModule.forFeature(${featureName.toUpperCase()}_FEATURE_KEY, ${reducerName}, { initialState: ${featureName}InitialState })`;
+    const storeForFeature = `StoreModule.forFeature(from${className}.${featureName.toUpperCase()}_FEATURE_KEY, from${className}.reducer)`;
     const effectsForFeature = `EffectsModule.forFeature([${effectsName}])`;
     const devTools = `!environment.production ? StoreDevtoolsModule.instrument() : []`;
-    const storeRouterModule = 'StoreRouterConnectingModule';
+    const storeRouterModule = 'StoreRouterConnectingModule.forRoot()';
 
     // InsertImport [symbol,source] value pairs
     const nxModuleImport = ['NxModule', '@nrwl/angular'];
@@ -62,21 +65,19 @@ export function addImportsToModule(context: RequestContext): Rule {
     const storeDevTools = ['StoreDevtoolsModule', '@ngrx/store-devtools'];
     const environment = ['environment', '../environments/environment'];
     const storeRouter = ['StoreRouterConnectingModule', '@ngrx/router-store'];
-    const storeFreeze = ['storeFreeze', 'ngrx-store-freeze'];
 
     // this is just a heuristic
     const hasRouter = sourceText.indexOf('RouterModule') > -1;
     const hasNxModule = sourceText.includes('NxModule.forRoot()');
 
-    if (context.options.onlyEmptyRoot) {
+    if (context.options.onlyEmptyRoot || context.options.minimal) {
       insert(host, modulePath, [
         addImport.apply(this, storeModule),
         addImport.apply(this, effectsModule),
         addImport.apply(this, storeDevTools),
         addImport.apply(this, environment),
         ...(hasRouter ? [addImport.apply(this, storeRouter)] : []),
-        addImport.apply(this, storeFreeze),
-        ...addImportToModule(source, modulePath, storeForEmptyRoot),
+        ...addImportToModule(source, modulePath, storeForRoot),
         ...addImportToModule(source, modulePath, effectsForEmptyRoot),
         ...addImportToModule(source, modulePath, devTools),
         ...(hasRouter
@@ -87,7 +88,7 @@ export function addImportsToModule(context: RequestContext): Rule {
       let common = [
         addImport.apply(this, storeModule),
         addImport.apply(this, effectsModule),
-        addImport(reducerImports, reducerPath),
+        addImport(reducerImports, reducerPath, true),
         addImport(effectsName, effectsPath)
       ];
       if (context.options.facade) {
@@ -105,7 +106,6 @@ export function addImportsToModule(context: RequestContext): Rule {
           addImport.apply(this, storeDevTools),
           addImport.apply(this, environment),
           ...(hasRouter ? [addImport.apply(this, storeRouter)] : []),
-          addImport.apply(this, storeFreeze),
           ...(!hasNxModule
             ? addImportToModule(source, modulePath, nxModule)
             : []),
@@ -114,7 +114,8 @@ export function addImportsToModule(context: RequestContext): Rule {
           ...addImportToModule(source, modulePath, devTools),
           ...(hasRouter
             ? addImportToModule(source, modulePath, storeRouterModule)
-            : [])
+            : []),
+          ...addImportToModule(source, modulePath, storeForFeature)
         ]);
       } else {
         insert(host, modulePath, [

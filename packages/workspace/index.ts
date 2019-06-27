@@ -51,6 +51,7 @@ export {
 } from './src/utils/cli-config-utils';
 
 export { getWorkspace, updateWorkspace } from './src/utils/workspace';
+export { addUpdateTask } from './src/utils/update-task';
 
 export { closestCli } from './src/utils/app-root';
 export { formatFiles } from './src/utils/rules/format-files';

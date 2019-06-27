@@ -12,9 +12,8 @@ import { relative } from 'path';
 
 import { updateJsonInTree, readJsonInTree } from '@nrwl/workspace';
 import { getWorkspacePath } from '@nrwl/workspace';
-import { offsetFromRoot } from '@nrwl/workspace';
+import { offsetFromRoot, addUpdateTask } from '@nrwl/workspace';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { addUpdateTask } from '../../src/utils/update-task';
 
 function getBuilders(project: any): string[] {
   return Array.from(

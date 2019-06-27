@@ -4,8 +4,7 @@ export const <%= className.toUpperCase() %>_FEATURE_KEY = '<%= propertyName %>';
 
 /**
  * Interface for the '<%= className %>' data used in
- *  - <%= className %>State, and
- *  - <%= propertyName %>Reducer
+ *  - <%= className %>State, and the reducer function
  *
  *  Note: replace if already defined in another module
  */
@@ -30,7 +29,7 @@ export const initialState: <%= className %>State = {
   loaded : false
 };
 
-export function <%= propertyName %>Reducer(
+export function reducer(
   state: <%= className %>State = initialState, 
   action: <%= className %>Action): <%= className %>State
 {

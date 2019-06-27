@@ -80,8 +80,16 @@ describe('DataPersistence', () => {
       TestBed.configureTestingModule({
         declarations: [RootCmp, TodoComponent],
         imports: [
-          StoreModule.forRoot({ todos: todosReducer, user: userReducer }),
-          StoreRouterConnectingModule,
+          StoreModule.forRoot(
+            { todos: todosReducer, user: userReducer },
+            {
+              runtimeChecks: {
+                strictStateImmutability: false,
+                strictStateSerializability: false
+              }
+            }
+          ),
+          StoreRouterConnectingModule.forRoot(),
           RouterTestingModule.withRoutes([
             { path: 'todo/:id', component: TodoComponent }
           ]),
@@ -278,7 +286,17 @@ describe('DataPersistence', () => {
         actions = new Subject<any>();
         TestBed.configureTestingModule({
           providers: [TodoEffects, provideMockActions(() => actions)],
-          imports: [StoreModule.forRoot({ user: userReducer })]
+          imports: [
+            StoreModule.forRoot(
+              { user: userReducer },
+              {
+                runtimeChecks: {
+                  strictStateImmutability: false,
+                  strictStateSerializability: false
+                }
+              }
+            )
+          ]
         });
       });
 
@@ -341,7 +359,17 @@ describe('DataPersistence', () => {
         actions = new Subject<any>();
         TestBed.configureTestingModule({
           providers: [TodoEffects, provideMockActions(() => actions)],
-          imports: [StoreModule.forRoot({ user: userReducer })]
+          imports: [
+            StoreModule.forRoot(
+              { user: userReducer },
+              {
+                runtimeChecks: {
+                  strictStateImmutability: false,
+                  strictStateSerializability: false
+                }
+              }
+            )
+          ]
         });
       });
 
@@ -405,7 +433,17 @@ describe('DataPersistence', () => {
         actions = new Subject<any>();
         TestBed.configureTestingModule({
           providers: [TodoEffects, provideMockActions(() => actions)],
-          imports: [StoreModule.forRoot({ user: userReducer })]
+          imports: [
+            StoreModule.forRoot(
+              { user: userReducer },
+              {
+                runtimeChecks: {
+                  strictStateImmutability: false,
+                  strictStateSerializability: false
+                }
+              }
+            )
+          ]
         });
       });
 
@@ -472,7 +510,17 @@ describe('DataPersistence', () => {
         actions = new Subject<any>();
         TestBed.configureTestingModule({
           providers: [TodoEffects, provideMockActions(() => actions)],
-          imports: [StoreModule.forRoot({ user: userReducer })]
+          imports: [
+            StoreModule.forRoot(
+              { user: userReducer },
+              {
+                runtimeChecks: {
+                  strictStateImmutability: false,
+                  strictStateSerializability: false
+                }
+              }
+            )
+          ]
         });
       });
 
@@ -519,7 +567,17 @@ describe('DataPersistence', () => {
         actions = new Subject<any>();
         TestBed.configureTestingModule({
           providers: [TodoEffects, provideMockActions(() => actions)],
-          imports: [StoreModule.forRoot({ user: userReducer })]
+          imports: [
+            StoreModule.forRoot(
+              { user: userReducer },
+              {
+                runtimeChecks: {
+                  strictStateImmutability: false,
+                  strictStateSerializability: false
+                }
+              }
+            )
+          ]
         });
       });
 
@@ -588,7 +646,17 @@ describe('DataPersistence', () => {
         actions = new Subject<any>();
         TestBed.configureTestingModule({
           providers: [TodoEffects, provideMockActions(() => actions)],
-          imports: [StoreModule.forRoot({ user: userReducer })]
+          imports: [
+            StoreModule.forRoot(
+              { user: userReducer },
+              {
+                runtimeChecks: {
+                  strictStateImmutability: false,
+                  strictStateSerializability: false
+                }
+              }
+            )
+          ]
         });
       });
 

@@ -22,6 +22,7 @@ export function addExportsToBarrel(options: Schema): Rule {
       const moduleDir = path.dirname(options.module);
       const indexFilePath = path.join(moduleDir, '../index.ts');
       const hasFacade = options.facade == true;
+      const addModels = options.syntax === 'creators';
 
       const buffer = host.read(indexFilePath);
       if (!!buffer) {
@@ -51,6 +52,13 @@ export function addExportsToBarrel(options: Schema): Rule {
             indexFilePath,
             `export * from '${statePath}.reducer';`
           ),
+          ...(addModels
+            ? addGlobal(
+                indexSourceFile,
+                indexFilePath,
+                `export * from '${statePath}.models';`
+              )
+            : []),
           ...addGlobal(
             indexSourceFile,
             indexFilePath,

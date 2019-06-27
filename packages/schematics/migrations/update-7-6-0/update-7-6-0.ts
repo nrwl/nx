@@ -4,6 +4,7 @@ import * as ts from 'typescript';
 
 import {
   addDepsToPackageJson,
+  addUpdateTask,
   formatFiles,
   insert,
   readJsonInTree,
@@ -13,7 +14,6 @@ import {
   getSourceNodes,
   ReplaceChange
 } from '@nrwl/workspace/src/utils/ast-utils';
-import { addUpdateTask } from '../../src/utils/update-task';
 
 const addExtensionRecommendations = updateJsonInTree(
   '.vscode/extensions.json',
