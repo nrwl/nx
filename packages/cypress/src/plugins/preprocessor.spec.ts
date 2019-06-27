@@ -15,6 +15,7 @@ describe('getWebpackConfig', () => {
     expect(config.module.rules).toContainEqual({
       test: /\.(j|t)sx?$/,
       loader: 'ts-loader',
+      exclude: [/node_modules/],
       options: {
         configFile: './tsconfig.json',
         // https://github.com/TypeStrong/ts-loader/pull/685
@@ -49,5 +50,16 @@ describe('getWebpackConfig', () => {
       '.js',
       '.jsx'
     ]);
+  });
+
+  it('should keep node_modules external', () => {
+    const config = getWebpackConfig({
+      env: {
+        tsConfig: './tsconfig.json'
+      }
+    });
+    const callback = jest.fn();
+    config.externals[0](null, '@nestjs/core', callback);
+    expect(callback).toHaveBeenCalledWith(null, 'commonjs @nestjs/core');
   });
 });
