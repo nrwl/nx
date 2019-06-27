@@ -32,12 +32,14 @@ function addDependencies() {
     const dependencies = readJsonInTree(host, 'package.json').dependencies;
     const builders = new Set<string>();
     const projects = readJsonInTree(host, 'angular.json').projects;
-    Object.values<any>(projects).forEach(project => {
-      Object.values<any>(project.architect).forEach(target => {
-        const [builderDependency] = target.builder.split(':');
-        builders.add(builderDependency);
+    Object.values<any>(projects)
+      .filter(project => typeof project === 'object')
+      .forEach(project => {
+        Object.values<any>(project.architect).forEach(target => {
+          const [builderDependency] = target.builder.split(':');
+          builders.add(builderDependency);
+        });
       });
-    });
     const newDependencies = {};
     const newDevDependencies = {
       '@nrwl/workspace': '8.0.0'
