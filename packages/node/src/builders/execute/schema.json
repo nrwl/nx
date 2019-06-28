@@ -25,9 +25,9 @@
       "default": 7777,
       "description": "The port to inspect the process on"
     },
-    "restart": {
+    "watch": {
       "type": "boolean",
-      "description": "Restart the process after successful build",
+      "description": "Run build when files change",
       "default": true
     },
     "inspect": {

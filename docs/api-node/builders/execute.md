@@ -40,13 +40,13 @@ Type: `number`
 
 The port to inspect the process on
 
-### restart
+### watch
 
 Default: `true`
 
 Type: `boolean`
 
-Restart the process after successful build
+Run build when files change
 
 ### waitUntilTargets
 
