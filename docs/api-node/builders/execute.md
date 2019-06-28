@@ -40,6 +40,12 @@ Type: `number`
 
 The port to inspect the process on
 
+### waitUntilTargets
+
+Type: `array`
+
+The targets to run to before starting the node app
+
 ### watch
 
 Default: `true`
@@ -47,9 +53,3 @@ Default: `true`
 Type: `boolean`
 
 Run build when files change
-
-### waitUntilTargets
-
-Type: `array`
-
-The targets to run to before starting the node app
