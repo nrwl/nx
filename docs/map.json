@@ -125,6 +125,10 @@
             "id": "monorepo-tags"
           },
           {
+            "name": "Updating Nx",
+            "id": "update-nx"
+          },
+          {
             "name": "Using React",
             "id": "react"
           },
@@ -256,6 +260,16 @@
             "id": "develop-like-google"
           }
         ]
+      },
+      {
+        "name": "Guides",
+        "id": "guides",
+        "itemList": [
+          {
+            "name": "Updating Nx",
+            "id": "update-nx"
+          }
+        ]
       }
     ]
   },
@@ -353,6 +367,16 @@
           {
             "name": "Developing Like Google",
             "id": "develop-like-google"
+          }
+        ]
+      },
+      {
+        "name": "Guides",
+        "id": "guides",
+        "itemList": [
+          {
+            "name": "Updating Nx",
+            "id": "update-nx"
           }
         ]
       }
