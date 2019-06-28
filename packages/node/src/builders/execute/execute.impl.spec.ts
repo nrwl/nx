@@ -39,7 +39,7 @@ describe('NodeExecuteBuilder', () => {
       port: 9229,
       waitUntilTargets: [],
       host: 'localhost',
-      watch: true,
+      watch: true
     };
     scheduleTargetAndForget = spyOn(
       devkitArchitect,
