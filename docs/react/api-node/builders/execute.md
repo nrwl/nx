@@ -48,3 +48,11 @@ The port to inspect the process on. Setting port to 0 will assign random free po
 Type: `array`
 
 The targets to run to before starting the node app
+
+### watch
+
+Default: `true`
+
+Type: `boolean`
+
+Run build when files change

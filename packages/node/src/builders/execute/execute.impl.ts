@@ -8,7 +8,7 @@ import {
 import { ChildProcess, fork } from 'child_process';
 import * as treeKill from 'tree-kill';
 
-import { Observable, bindCallback, of, zip, from } from 'rxjs';
+import { Observable, bindCallback, of, zip, from, iif } from 'rxjs';
 import { concatMap, tap, mapTo, first, map, filter } from 'rxjs/operators';
 
 import { NodeBuildEvent } from '../build/build.impl';
@@ -31,13 +31,14 @@ export interface NodeExecuteBuilderOptions extends JsonObject {
   buildTarget: string;
   host: string;
   port: number;
+  watch: boolean;
 }
 
 export default createBuilder<NodeExecuteBuilderOptions>(
   nodeExecuteBuilderHandler
 );
 
-let subProcess: ChildProcess;
+let subProcess: ChildProcess = null;
 
 export function nodeExecuteBuilderHandler(
   options: NodeExecuteBuilderOptions,
@@ -53,28 +54,24 @@ export function nodeExecuteBuilderHandler(
       }
       return startBuild(options, context).pipe(
         concatMap((event: NodeBuildEvent) => {
-          if (event.success) {
-            return restartProcess(event.outfile, options, context).pipe(
-              mapTo(event)
-            );
-          } else {
+          if (!event.success) {
             context.logger.error(
               'There was an error with the build. See above.'
             );
             context.logger.info(`${event.outfile} was not restarted.`);
-            return of(event);
           }
+
+          return handleBuildEvent(event, options, context).pipe(mapTo(event));
         })
       );
     })
   );
 }
 
-function runProcess(file: string, options: NodeExecuteBuilderOptions) {
-  if (subProcess) {
-    throw new Error('Already running');
-  }
-  subProcess = fork(file, options.args, {
+function runProcess(event: NodeBuildEvent, options: NodeExecuteBuilderOptions) {
+  if (subProcess || !event.success) return;
+
+  subProcess = fork(event.outfile, options.args, {
     execArgv: getExecArgv(options)
   });
 }
@@ -93,16 +90,16 @@ function getExecArgv(options: NodeExecuteBuilderOptions) {
   return args;
 }
 
-function restartProcess(
-  file: string,
+function handleBuildEvent(
+  event: NodeBuildEvent,
   options: NodeExecuteBuilderOptions,
   context: BuilderContext
 ) {
-  return killProcess(context).pipe(
-    tap(() => {
-      runProcess(file, options);
-    })
-  );
+  return iif(
+    () => !event.success || options.watch,
+    killProcess(context),
+    of(undefined)
+  ).pipe(tap(() => runProcess(event, options)));
 }
 
 function killProcess(context: BuilderContext): Observable<void | Error> {

@@ -25,6 +25,11 @@
       "default": 7777,
       "description": "The port to inspect the process on. Setting port to 0 will assign random free ports to all forked processes."
     },
+    "watch": {
+      "type": "boolean",
+      "description": "Run build when files change",
+      "default": true
+    },
     "inspect": {
       "oneOf": [
         {
