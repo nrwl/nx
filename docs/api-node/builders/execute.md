@@ -40,6 +40,14 @@ Type: `number`
 
 The port to inspect the process on
 
+### restart
+
+Default: `true`
+
+Type: `boolean`
+
+Restart the process after successful build
+
 ### waitUntilTargets
 
 Type: `array`

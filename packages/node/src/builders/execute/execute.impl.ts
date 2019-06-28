@@ -31,6 +31,7 @@ export interface NodeExecuteBuilderOptions extends JsonObject {
   buildTarget: string;
   host: string;
   port: number;
+  restart: boolean;
 }
 
 export default createBuilder<NodeExecuteBuilderOptions>(
@@ -54,16 +55,27 @@ export function nodeExecuteBuilderHandler(
       return startBuild(options, context).pipe(
         concatMap((event: NodeBuildEvent) => {
           if (event.success) {
-            return restartProcess(event.outfile, options, context).pipe(
-              mapTo(event)
-            );
+            if (options.restart) {
+              return restartProcess(event.outfile, options, context).pipe(
+                mapTo(event)
+              );
+            } else if (!subProcess) {
+              runProcess(event.outfile, options);
+            }
           } else {
             context.logger.error(
               'There was an error with the build. See above.'
             );
-            context.logger.info(`${event.outfile} was not restarted.`);
-            return of(event);
+            context.logger.info(`${event.outfile} was not restarted.`); 
+
+            if (!options.restart) {
+              return killProcess(context).pipe(
+                mapTo(event)
+              );
+            }
           }
+
+          return of(event);
         })
       );
     })

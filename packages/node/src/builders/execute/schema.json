@@ -25,6 +25,11 @@
       "default": 7777,
       "description": "The port to inspect the process on"
     },
+    "restart": {
+      "type": "boolean",
+      "description": "Restart the process after successful build",
+      "default": true
+    },
     "inspect": {
       "oneOf": [
         {

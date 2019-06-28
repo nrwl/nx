@@ -38,7 +38,8 @@ describe('NodeExecuteBuilder', () => {
       buildTarget: 'nodeapp:build',
       port: 9229,
       waitUntilTargets: [],
-      host: 'localhost'
+      host: 'localhost',
+      restart: true,
     };
     scheduleTargetAndForget = spyOn(
       devkitArchitect,
