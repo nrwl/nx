@@ -171,99 +171,65 @@ async function runCommand(
   projects.forEach(project => {
     projectMetadata.set(project, angularJson.projects[project]);
   });
-  if (parsedArgs.parallel) {
-    // Make sure the `package.json` has the `ng: "ng"` command needed by `npm-run-all`
-    const packageJson = JSON.parse(
-      fs.readFileSync('./package.json').toString('utf-8')
+
+  // Make sure the `package.json` has the `ng: "ng"` command needed by `npm-run-all`
+  const packageJson = JSON.parse(
+    fs.readFileSync('./package.json').toString('utf-8')
+  );
+  if (!packageJson.scripts || !packageJson.scripts.ng) {
+    console.error(
+      '\nError: Your `package.json` file should contain the `ng: "ng"` command in the `scripts` section.\n'
     );
-    if (!packageJson.scripts || !packageJson.scripts.ng) {
-      console.error(
-        '\nError: Your `package.json` file should contain the `ng: "ng"` command in the `scripts` section.\n'
-      );
-      return process.exit(1);
-    }
-    try {
-      await runAll(
-        projects.map(app => {
-          return ngCommands.includes(command)
-            ? `ng ${command} --project=${app} ${transformArgs(
-                args,
-                app,
-                projectMetadata.get(app)
-              ).join(' ')} `
-            : `ng run ${app}:${command} ${transformArgs(
-                args,
-                app,
-                projectMetadata.get(app)
-              ).join(' ')} `;
-        }),
-        {
-          parallel: parsedArgs.parallel,
-          maxParallel: parsedArgs.maxParallel,
-          continueOnError: true,
-          stdin: process.stdin,
-          stdout: process.stdout,
-          stderr: process.stderr
-        }
-      );
-      projects.forEach(project => {
-        workspaceResults.success(project);
-      });
-    } catch (e) {
-      e.results.forEach((result, i) => {
-        if (result.code === 0) {
-          workspaceResults.success(projects[i]);
-        } else {
-          workspaceResults.fail(projects[i]);
-        }
-      });
-    }
-    workspaceResults.saveResults();
-    workspaceResults.printResults(
-      parsedArgs.onlyFailed,
-      successMessage,
-      errorMessage
+    return process.exit(1);
+  }
+
+  try {
+    await runAll(
+      projects.map(app => {
+        return ngCommands.includes(command)
+          ? `ng -- ${command} --project=${app} ${transformArgs(
+              args,
+              app,
+              projectMetadata.get(app)
+            ).join(' ')} `
+          : `ng -- run ${app}:${command} ${transformArgs(
+              args,
+              app,
+              projectMetadata.get(app)
+            ).join(' ')} `;
+      }),
+      {
+        parallel: parsedArgs.parallel || false,
+        maxParallel: parsedArgs.maxParallel || 1,
+        continueOnError: true,
+        stdin: process.stdin,
+        stdout: process.stdout,
+        stderr: process.stderr
+      }
     );
 
-    if (workspaceResults.hasFailure) {
-      process.exit(1);
-    }
-  } else {
-    let failedProjects = [];
     projects.forEach(project => {
-      console.log(`${iterationMessage} ${project}`);
-      const task = ngCommands.includes(command)
-        ? `node ${ngPath()} ${command} --project=${project} ${transformArgs(
-            args,
-            project,
-            projectMetadata.get(project)
-          ).join(' ')} `
-        : `node ${ngPath()} run ${project}:${command} ${transformArgs(
-            args,
-            project,
-            projectMetadata.get(project)
-          ).join(' ')} `;
-      try {
-        execSync(task, {
-          stdio: [0, 1, 2]
-        });
-        workspaceResults.success(project);
-      } catch (e) {
-        failedProjects.push(project);
-        workspaceResults.fail(project);
+      workspaceResults.success(project);
+    });
+  } catch (e) {
+    e.results.forEach((result, i) => {
+      if (result.code === 0) {
+        workspaceResults.success(projects[i]);
+      } else {
+        workspaceResults.fail(projects[i]);
       }
     });
+  }
 
-    workspaceResults.saveResults();
-    workspaceResults.printResults(
-      parsedArgs.onlyFailed,
-      successMessage,
-      errorMessage
-    );
+  workspaceResults.saveResults();
+  workspaceResults.printResults(
+    parsedArgs.onlyFailed,
+    successMessage,
+    errorMessage
+  );
 
-    if (workspaceResults.hasFailure) {
-      process.exit(1);
-    }
+  if (workspaceResults.hasFailure) {
+    process.exit(1);
   }
 }
 

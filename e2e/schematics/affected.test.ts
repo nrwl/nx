@@ -89,8 +89,9 @@ describe('Affected', () => {
     const build = runCommand(
       `npm run affected:build -- --files="libs/${mylib}/src/index.ts"`
     );
-    expect(build).toContain(`Running build for ${mypublishablelib}`);
-    expect(build).toContain(`Running build for ${myapp}`);
+    expect(build).toContain(
+      `Running build for projects:\n  ${myapp},\n  ${mypublishablelib}`
+    );
     expect(build).not.toContain('is not registered with the build command');
     expect(build).not.toContain('with flags:');
 
@@ -108,14 +109,18 @@ describe('Affected', () => {
     const buildExcluded = runCommand(
       `npm run affected:build -- --files="libs/${mylib}/src/index.ts" --exclude ${myapp}`
     );
-    expect(buildExcluded).toContain(`Running build for ${mypublishablelib}`);
+    expect(buildExcluded).toContain(
+      `Running build for projects:\n  ${mypublishablelib}`
+    );
 
     // affected:build should pass non-nx flags to the CLI
     const buildWithFlags = runCommand(
       `npm run affected:build -- --files="libs/${mylib}/src/index.ts" --stats-json`
     );
-    expect(buildWithFlags).toContain(`Running build for ${mypublishablelib}`);
-    expect(buildWithFlags).toContain(`Running build for ${myapp}`);
+
+    expect(buildWithFlags).toContain(
+      `Running build for projects:\n  ${myapp},\n  ${mypublishablelib}`
+    );
     expect(buildWithFlags).toContain('With flags: --stats-json=true');
 
     if (!runsInWSL()) {
@@ -128,9 +133,9 @@ describe('Affected', () => {
     const unitTests = runCommand(
       `npm run affected:test -- --files="libs/${mylib}/src/index.ts"`
     );
-    expect(unitTests).toContain(`Running test for ${mylib}`);
-    expect(unitTests).toContain(`Running test for ${mypublishablelib}`);
-    expect(unitTests).toContain(`Running test for ${myapp}`);
+    expect(unitTests).toContain(
+      `Running test for projects:\n  ${mylib},\n  ${myapp},\n  ${mypublishablelib}`
+    );
 
     // Fail a Unit Test
     updateFile(
@@ -144,10 +149,9 @@ describe('Affected', () => {
     const failedTests = runCommand(
       `npm run affected:test -- --files="libs/${mylib}/src/index.ts"`
     );
-
-    expect(failedTests).toContain(`Running test for ${mylib}`);
-    expect(failedTests).toContain(`Running test for ${mypublishablelib}`);
-    expect(failedTests).toContain(`Running test for ${myapp}`);
+    expect(failedTests).toContain(
+      `Running test for projects:\n  ${mylib},\n  ${mypublishablelib},\n  ${myapp}`
+    );
     expect(failedTests).toContain(`Failed projects: ${myapp}`);
     expect(failedTests).toContain(
       'You can isolate the above projects by passing --only-failed'
@@ -173,15 +177,14 @@ describe('Affected', () => {
     const isolatedTests = runCommand(
       `npm run affected:test -- --files="libs/${mylib}/src/index.ts" --only-failed`
     );
-    expect(isolatedTests).toContain(`Running test for ${myapp}`);
+    expect(isolatedTests).toContain(`Running test for projects:\n  ${myapp}`);
 
     const linting = runCommand(
       `npm run affected:lint -- --files="libs/${mylib}/src/index.ts"`
     );
-    expect(linting).toContain(`Running lint for ${mylib}`);
-    expect(linting).toContain(`Running lint for ${myapp}`);
-    expect(linting).toContain(`Running lint for ${myapp}-e2e`);
-    expect(linting).toContain(`Running lint for ${mypublishablelib}`);
+    expect(linting).toContain(
+      `Running lint for projects:\n  ${mylib},\n  ${myapp},\n  ${myapp}-e2e,\n  ${mypublishablelib}`
+    );
 
     const lintWithJsonFormating = runCommand(
       `npm run affected:lint -- --files="libs/${mylib}/src/index.ts" -- --format json`
@@ -191,12 +194,14 @@ describe('Affected', () => {
     const unitTestsExcluded = runCommand(
       `npm run affected:test -- --files="libs/${mylib}/src/index.ts" --exclude=${myapp},${mypublishablelib}`
     );
-    expect(unitTestsExcluded).toContain(`Running test for ${mylib}`);
+    expect(unitTestsExcluded).toContain(
+      `Running test for projects:\n  ${mylib}`
+    );
 
     const i18n = runCommand(
       `npm run affected -- --target extract-i18n --files="libs/${mylib}/src/index.ts"`
     );
-    expect(i18n).toContain(`Running extract-i18n for ${myapp}`);
+    expect(i18n).toContain(`Running extract-i18n for projects:\n  ${myapp}`);
 
     const interpolatedTests = runCommand(
       `npm run affected -- --target test --files="libs/${mylib}/src/index.ts" -- --jest-config {project.root}/jest.config.js`
