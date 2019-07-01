@@ -62,6 +62,12 @@ Type: `string`
 
 A list of reporter names that Jest uses when writing coverage reports. Any istanbul reporter
 
+### findRelatedTests
+
+Type: `string`
+
+Find and run the tests that cover a comma separated list of source files that were passed in as arguments. (https://jestjs.io/docs/en/cli#findrelatedtests-spaceseparatedlistofsourcefiles)
+
 ### jestConfig
 
 Type: `string`
