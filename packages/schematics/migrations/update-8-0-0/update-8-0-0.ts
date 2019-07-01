@@ -33,7 +33,10 @@ function addDependencies() {
     const builders = new Set<string>();
     const projects = readJsonInTree(host, 'angular.json').projects;
     Object.values<any>(projects)
-      .filter(project => typeof project === 'object')
+      .filter(
+        project =>
+          typeof project === 'object' && project.hasOwnProperty('architect')
+      )
       .forEach(project => {
         Object.values<any>(project.architect).forEach(target => {
           const [builderDependency] = target.builder.split(':');
