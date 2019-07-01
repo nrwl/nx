@@ -26,6 +26,7 @@ export interface JestBuilderOptions extends JsonObject {
   ci?: boolean;
   color?: boolean;
   clearCache?: boolean;
+  findRelatedTests?: string;
   json?: boolean;
   maxWorkers?: number;
   onlyChanged?: boolean;
@@ -75,6 +76,7 @@ function run(
   } catch (e) {}
 
   const config: any = {
+    _: [],
     coverage: options.codeCoverage,
     bail: options.bail,
     ci: options.ci,
@@ -110,7 +112,13 @@ function run(
   }
 
   if (options.testFile) {
-    config._ = [options.testFile];
+    config._.push(options.testFile);
+  }
+
+  if (options.findRelatedTests) {
+    const parsedTests = options.findRelatedTests.split(',').map(s => s.trim());
+    config._.push(...parsedTests);
+    config.findRelatedTests = true;
   }
 
   if (options.clearCache) {

@@ -41,6 +41,10 @@
       "description": "Forces test results output color highlighting (even if stdout is not a TTY). Set to false if you would like to have no colors. (https://jestjs.io/docs/en/cli#colors)",
       "type": "boolean"
     },
+    "findRelatedTests": {
+      "description": "Find and run the tests that cover a comma separated list of source files that were passed in as arguments. (https://jestjs.io/docs/en/cli#findrelatedtests-spaceseparatedlistofsourcefiles)",
+      "type": "string"
+    },
     "json": {
       "description": "Prints the test results in JSON. This mode will send all other test output and user messages to stderr. (https://jestjs.io/docs/en/cli#json)",
       "type": "boolean"

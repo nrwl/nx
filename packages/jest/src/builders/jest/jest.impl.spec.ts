@@ -44,6 +44,7 @@ describe('Jest Builder', () => {
     );
     expect(runCLI).toHaveBeenCalledWith(
       {
+        _: [],
         globals: JSON.stringify({
           'ts-jest': {
             tsConfig: '/root/tsconfig.test.json',
@@ -115,6 +116,47 @@ describe('Jest Builder', () => {
     );
   });
 
+  it('should send appropriate options to jestCLI when findRelatedTests is specified', async () => {
+    const run = await architect.scheduleBuilder('@nrwl/jest:jest', {
+      findRelatedTests: 'file1.ts,file2.ts',
+      jestConfig: './jest.config.js',
+      tsConfig: './tsconfig.test.json',
+      codeCoverage: false,
+      runInBand: true,
+      testNamePattern: 'should load',
+      watch: false
+    });
+    expect(await run.result).toEqual(
+      jasmine.objectContaining({
+        success: true
+      })
+    );
+
+    expect(runCLI).toHaveBeenCalledWith(
+      {
+        _: ['file1.ts', 'file2.ts'],
+        globals: JSON.stringify({
+          'ts-jest': {
+            tsConfig: '/root/tsconfig.test.json',
+            diagnostics: {
+              warnOnly: true
+            },
+            stringifyContentPathRegex: '\\.html$',
+            astTransformers: [
+              'jest-preset-angular/InlineHtmlStripStylesTransformer'
+            ]
+          }
+        }),
+        coverage: false,
+        findRelatedTests: true,
+        runInBand: true,
+        testNamePattern: 'should load',
+        watch: false
+      },
+      ['/root/jest.config.js']
+    );
+  });
+
   it('should send other options to jestCLI', async () => {
     const run = await architect.scheduleBuilder('@nrwl/jest:jest', {
       jestConfig: './jest.config.js',
@@ -149,6 +191,7 @@ describe('Jest Builder', () => {
     );
     expect(runCLI).toHaveBeenCalledWith(
       {
+        _: [],
         globals: JSON.stringify({
           'ts-jest': {
             tsConfig: '/root/tsconfig.test.json',
@@ -201,6 +244,7 @@ describe('Jest Builder', () => {
     );
     expect(runCLI).toHaveBeenCalledWith(
       {
+        _: [],
         globals: JSON.stringify({
           'ts-jest': {
             tsConfig: '/root/tsconfig.test.json',
