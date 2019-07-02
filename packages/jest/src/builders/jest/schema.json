@@ -37,6 +37,7 @@
       "type": "boolean"
     },
     "color": {
+      "alias": "colors",
       "description": "Forces test results output color highlighting (even if stdout is not a TTY). Set to false if you would like to have no colors. (https://jestjs.io/docs/en/cli#colors)",
       "type": "boolean"
     },
@@ -74,6 +75,29 @@
     "testNamePattern": {
       "alias": "t",
       "description": "Run only tests with a name that matches the regex pattern. (https://jestjs.io/docs/en/cli#testnamepattern-regex)",
+      "type": "string"
+    },
+    "colors": {
+      "description": "Forces test results output highlighting even if stdout is not a TTY. (https://jestjs.io/docs/en/cli#colors)",
+      "type": "boolean"
+    },
+    "reporters": {
+      "description": "Run tests with specified reporters. Reporter options are not available via CLI. Example with multiple reporters: jest --reporters=\"default\" --reporters=\"jest-junit\" (https://jestjs.io/docs/en/cli#reporters)",
+      "type": "string"
+    },
+    "verbose": {
+      "description": "Display individual test results with the test suite hierarchy. (https://jestjs.io/docs/en/cli#verbose)"
+    },
+    "coverage": {
+      "description": "Indicates that test coverage information should be collected and reported in the output. This option is also aliased by --collectCoverage. (https://jestjs.io/docs/en/cli#coverage)",
+      "type": "boolean"
+    },
+    "coverageReporters": {
+      "description": "A list of reporter names that Jest uses when writing coverage reports. Any istanbul reporter",
+      "type": "string"
+    },
+    "coverageDirectory": {
+      "description": "An array of regexp pattern strings that are matched against all file paths before executing the test. If the file path matches any of the patterns, coverage information will be skipped.",
       "type": "string"
     },
     "updateSnapshot": {

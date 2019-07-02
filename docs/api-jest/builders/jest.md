@@ -32,9 +32,35 @@ Indicates that test coverage information should be collected and reported in the
 
 ### color
 
+Alias(es): colors
+
 Type: `boolean`
 
 Forces test results output color highlighting (even if stdout is not a TTY). Set to false if you would like to have no colors. (https://jestjs.io/docs/en/cli#colors)
+
+### colors
+
+Type: `boolean`
+
+Forces test results output highlighting even if stdout is not a TTY. (https://jestjs.io/docs/en/cli#colors)
+
+### coverage
+
+Type: `boolean`
+
+Indicates that test coverage information should be collected and reported in the output. This option is also aliased by --collectCoverage. (https://jestjs.io/docs/en/cli#coverage)
+
+### coverageDirectory
+
+Type: `string`
+
+An array of regexp pattern strings that are matched against all file paths before executing the test. If the file path matches any of the patterns, coverage information will be skipped.
+
+### coverageReporters
+
+Type: `string`
+
+A list of reporter names that Jest uses when writing coverage reports. Any istanbul reporter
 
 ### jestConfig
 
@@ -75,6 +101,12 @@ Write test results to a file when the --json option is also specified. (https://
 Type: `boolean`
 
 Will not fail if no tests are found (for example while using `--testPathPattern`.) (https://jestjs.io/docs/en/cli#passwithnotests)
+
+### reporters
+
+Type: `string`
+
+Run tests with specified reporters. Reporter options are not available via CLI. Example with multiple reporters: jest --reporters="default" --reporters="jest-junit" (https://jestjs.io/docs/en/cli#reporters)
 
 ### runInBand
 
@@ -129,6 +161,12 @@ Use this flag to re-record snapshots. Can be used together with a test suite pat
 Type: `boolean`
 
 Divert all output to stderr.
+
+### verbose
+
+Type: `string`
+
+Display individual test results with the test suite hierarchy. (https://jestjs.io/docs/en/cli#verbose)
 
 ### watch
 
