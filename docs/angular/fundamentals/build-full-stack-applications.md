@@ -191,7 +191,7 @@ export class AppModule {}
 
 ```
 ng add @nrwl/express # Add Express Capabilities to the workspace
-ng g @nrwl/exprss:application api --frontend-project frontend
+ng g @nrwl/express:application api --frontend-project frontend
 ```
 
 ### Adding an Endpoint
