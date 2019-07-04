@@ -152,9 +152,7 @@ function initCypress(
        * `cypress.open` is the graphical UI, so it will be obvious to know what wasn't
        * working. Forcing the build to success when `cypress.open` is used.
        */
-      success: result.hasOwnProperty(`totalFailed`)
-        ? result.totalFailed === 0
-        : true
+      success: !result.totalFailed && !result.failures
     }))
   );
 }
