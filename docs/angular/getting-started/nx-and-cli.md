@@ -33,7 +33,7 @@ ng add @nrwl/nest # Add Nest capabilities to a workspace
 ng g @nrwl/nest:app backend --frontend-project frontend # Generate a Nest Application and sets up a proxy for the frontend application.
 ```
 
-We recommend using [Nest](https://nestjs.com). If you prefer Express or you want to build your backend from scratch, add and use different capabilities to your workspacevia:
+We recommend using [Nest](https://nestjs.com). If you prefer Express or you want to build your backend from scratch, add and use different capabilities to your workspace via:
 
 ```bash
 ng add @nrwl/express # Add Express capabilities to a workspace
