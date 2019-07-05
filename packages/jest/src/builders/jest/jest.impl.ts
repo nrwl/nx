@@ -34,6 +34,7 @@ export interface JestBuilderOptions extends JsonObject {
   runInBand?: boolean;
   silent?: boolean;
   testNamePattern?: string;
+  testPathPattern?: string;
   colors?: boolean;
   reporters?: string;
   verbose?: false;
@@ -86,6 +87,7 @@ function run(
     runInBand: options.runInBand,
     silent: options.silent,
     testNamePattern: options.testNamePattern,
+    testPathPattern: options.testPathPattern,
     colors: options.colors,
     reporters: options.reporters,
     verbose: options.verbose,
