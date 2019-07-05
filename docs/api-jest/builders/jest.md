@@ -142,6 +142,12 @@ Type: `string`
 
 Run only tests with a name that matches the regex pattern. (https://jestjs.io/docs/en/cli#testnamepattern-regex)
 
+### testPathPattern
+
+Type: `string`
+
+A regexp pattern string that is matched against all tests paths before executing the test. (https://jestjs.io/docs/en/cli#testpathpattern-regex)
+
 ### tsConfig
 
 Type: `string`
