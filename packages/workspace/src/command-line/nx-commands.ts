@@ -22,7 +22,7 @@ export const commandsObject = yargs
   .command(
     'affected',
     'Run task for affected projects',
-    yargs => withAffectedOptions(withParallel(yargs)),
+    yargs => withAffectedOptions(withParallel(withTarget(yargs))),
     args => affected(args)
   )
   .command(
@@ -246,4 +246,14 @@ function withParallel(yargs: yargs.Argv): yargs.Argv {
       type: 'number',
       default: 3
     });
+}
+
+function withTarget(yargs: yargs.Argv): yargs.Argv {
+  return yargs.option('target', {
+    describe: 'Task to run for affected projects',
+    type: 'string',
+    requiresArg: true,
+    demandOption: true,
+    global: false
+  });
 }
