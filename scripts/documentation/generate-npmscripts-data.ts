@@ -1,10 +1,11 @@
 import * as fs from 'fs-extra';
-import * as yargs from 'yargs';
 import * as path from 'path';
 import { dedent } from 'tslint/lib/utils';
 
 import { generateFile, sortAlphabeticallyFunction } from './utils';
 import { commandsObject } from '../../packages/workspace';
+
+const importFresh = require('import-fresh');
 
 const commandsOutputDirectory = path.join(
   __dirname,
@@ -15,7 +16,7 @@ function getCommands(command) {
   return command.getCommandInstance().getCommandHandlers();
 }
 function parseCommandInstance(name, command) {
-  const builder = command.builder((<any>yargs).resetOptions());
+  const builder = command.builder(importFresh('yargs')().resetOptions());
   const builderDescriptions = builder.getUsageInstance().getDescriptions();
   const builderDefaultOptions = builder.getOptions().default;
   return {

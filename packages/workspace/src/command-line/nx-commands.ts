@@ -104,7 +104,7 @@ export const commandsObject = yargs
   .command(
     'affected:e2e',
     'Run e2e tests for the applications affected by changes',
-    withAffectedOptions,
+    yargs => withAffectedOptions(withParallel(yargs)),
     args =>
       affected({
         ...args,

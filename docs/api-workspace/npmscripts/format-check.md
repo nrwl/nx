@@ -26,10 +26,6 @@ Default: ``
 
 Exclude certain projects from being processed
 
-### file
-
-output file (e.g. --file=.vis/output.json)
-
 ### files
 
 A list of files delimited by commas
@@ -42,25 +38,11 @@ Latest commit of the current branch (usually HEAD)
 
 Show help
 
-### maxParallel
-
-Default: `3`
-
-Max number of parallel processes
-
 ### only-failed
 
 Default: `false`
 
 Isolate projects which previously failed
-
-### parallel
-
-Default: `false`
-
-Parallelize the command
-
-### quiet
 
 ### uncommitted
 
