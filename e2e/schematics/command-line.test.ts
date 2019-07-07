@@ -73,7 +73,7 @@ describe('Command line', () => {
       runCLI(`generate @nrwl/angular:app ${appBefore}`);
       runCommand(`mv apps/${appBefore} apps/${appAfter}`);
 
-      const stdout = runCommand('./node_modules/.bin/nx lint');
+      const stdout = runCommand('./node_modules/.bin/nx workspace-lint');
       expect(stdout).toContain(
         `Cannot find project '${appBefore}' in 'apps/${appBefore}'`
       );

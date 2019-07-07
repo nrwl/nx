@@ -3,12 +3,30 @@ import * as yargs from 'yargs';
 
 import { affected } from './affected';
 import { format } from './format';
-import { update } from './update';
 import { lint } from './lint';
 import { workspaceSchematic } from './workspace-schematic';
 import { generateGraph, OutputType } from './dep-graph';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
+
+export const supportedNxCommands = [
+  'affected',
+  'affected:apps',
+  'affected:libs',
+  'affected:build',
+  'affected:test',
+  'affected:e2e',
+  'affected:dep-graph',
+  'affected:lint',
+  'dep-graph',
+  'format',
+  'format:check',
+  'format:write',
+  'workspace-schematic',
+  'workspace-lint',
+  '--help',
+  '--version'
+];
 
 /**
  * Exposing the Yargs commands object so the documentation generator can
@@ -114,15 +132,12 @@ export const commandsObject = yargs
     args => format('write', args)
   )
   .alias('format:write', 'format')
-  .command('lint [files..]', 'Lint workspace or list of files', noop, _ =>
-    lint()
+  .command(
+    'workspace-lint [files..]',
+    'Lint workspace or list of files',
+    noop,
+    _ => lint()
   )
-  .command('update:check', 'Check for workspace updates', noop, _ =>
-    update(['check'])
-  )
-  .command('update:skip', 'Skip workspace updates', noop, _ => update(['skip']))
-  .command('update', 'Update workspace', noop, _ => update([]))
-  .alias('update', 'migrates') // TODO: Remove after 1.0
   .command(
     'workspace-schematic [name]',
     'Runs a workspace schematic from the tools/schematics directory',
@@ -147,8 +162,7 @@ export const commandsObject = yargs
   )
   .help('help')
   .version()
-  .option('quiet', { type: 'boolean', hidden: true })
-  .demandCommand();
+  .option('quiet', { type: 'boolean', hidden: true });
 
 function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
   return withAffectedOptions(yargs).option('apps-and-libs', {
