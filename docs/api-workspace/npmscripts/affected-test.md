@@ -54,8 +54,6 @@ Default: `false`
 
 Parallelize the command
 
-### quiet
-
 ### uncommitted
 
 Uncommitted changes

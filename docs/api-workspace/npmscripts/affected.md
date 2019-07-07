@@ -54,8 +54,6 @@ Default: `false`
 
 Parallelize the command
 
-### quiet
-
 ### target
 
 Task to run for affected projects
