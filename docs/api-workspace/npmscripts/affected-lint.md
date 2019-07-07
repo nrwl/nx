@@ -24,10 +24,6 @@ Default: ``
 
 Exclude certain projects from being processed
 
-### file
-
-output file (e.g. --file=.vis/output.json)
-
 ### files
 
 A list of files delimited by commas
@@ -57,8 +53,6 @@ Isolate projects which previously failed
 Default: `false`
 
 Parallelize the command
-
-### quiet
 
 ### uncommitted
 
