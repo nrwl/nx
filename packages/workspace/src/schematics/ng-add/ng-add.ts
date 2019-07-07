@@ -38,6 +38,7 @@ function updatePackageJson() {
     packageJson.scripts = packageJson.scripts || {};
     packageJson.scripts = {
       ...packageJson.scripts,
+      nx: 'nx',
       'affected:apps': 'nx affected:apps',
       'affected:libs': 'nx affected:libs',
       'affected:build': 'nx affected:build',
@@ -51,7 +52,7 @@ function updatePackageJson() {
       'format:check': 'nx format:check',
       update: 'ng update @nrwl/workspace',
       'update:check': 'ng update',
-      lint: 'nx lint && ng lint',
+      lint: 'nx workspace-lint && ng lint',
       'dep-graph': 'nx dep-graph',
       'workspace-schematic': 'nx workspace-schematic',
       help: 'nx help'

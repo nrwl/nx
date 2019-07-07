@@ -1,11 +1,11 @@
-# update
+# workspace-lint [files..]
 
-Update workspace
+Lint workspace or list of files
 
 ## Usage
 
 ```bash
-update
+workspace-lint [files..]
 ```
 
 ## Options

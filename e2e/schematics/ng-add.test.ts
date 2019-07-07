@@ -71,10 +71,11 @@ describe('Nrwl Convert to Nx Workspace', () => {
     expect(updatedPackageJson.description).toEqual('some description');
     expect(updatedPackageJson.scripts).toEqual({
       ng: 'ng',
+      nx: 'nx',
       start: 'ng serve',
       build: 'ng build',
       test: 'ng test',
-      lint: 'nx lint && ng lint',
+      lint: 'nx workspace-lint && ng lint',
       e2e: 'ng e2e',
       'affected:apps': 'nx affected:apps',
       'affected:libs': 'nx affected:libs',

@@ -4,6 +4,11 @@
       "version": "8.2.0-beta.1",
       "description": "Add exclusions to lint config",
       "factory": "./src/migrations/update-8-2-0/update-8-2-0"
+    },
+    "rename-lint-into-workspace-lint": {
+      "version": "8.3.0-beta.1",
+      "description": "Rename 'nx lint' into 'nx workspace-lint' to avoid confusion",
+      "factory": "./src/migrations/update-8-3-0/rename-lint"
     }
   }
 }
