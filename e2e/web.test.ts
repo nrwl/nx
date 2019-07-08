@@ -4,7 +4,7 @@ import {
   runCLI,
   runCLIAsync,
   uniq
-} from '../utils';
+} from './utils';
 
 describe('Web Components Applications', () => {
   it('should be able to generate a web app', async () => {

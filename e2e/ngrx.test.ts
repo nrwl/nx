@@ -5,7 +5,7 @@ import {
   uniq,
   ensureProject,
   readJson
-} from '../utils';
+} from './utils';
 
 describe('ngrx', () => {
   it('should work', async () => {

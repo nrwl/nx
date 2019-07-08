@@ -1,4 +1,4 @@
-import { ensureProject, uniq, runCommand, checkFilesExist } from '../utils';
+import { ensureProject, uniq, runCommand, checkFilesExist } from './utils';
 
 describe('Delegate to CLI', () => {
   it('should delegate to the Angular CLI all non-standard commands', async () => {

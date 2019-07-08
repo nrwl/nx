@@ -41,22 +41,10 @@ To make sure your changes do not break any unit tests, run the following:
 yarn test
 ```
 
-To test the schematics only, run:
-
-```bash
-yarn test:schematics
-```
-
-To test the Nx packages only, run:
-
-```bash
-yarn test:nx
-```
-
 For example, if you need to only run the **ngrx/ngrx.spec.ts** test suite, provide a path to the specific spec file, run:
 
 ```bash
-yarn test:schematics angular/src/schematics/ngrx/ngrx
+yarn test angular/src/schematics/ngrx/ngrx
 ```
 
 ### Running E2E Tests
@@ -78,7 +66,7 @@ yarn e2e affected
 To build Nx on Windows, you need to use WSL.
 
 - Run `yarn install` in WSL. Yarn will compile several dependencies. If you don't run `install` in WSL, they will be compiled for Windows.
-- Run `yarn test:schematics` and other commands in WSL.
+- Run `yarn test` and other commands in WSL.
 
 ## Submission Guidelines
 

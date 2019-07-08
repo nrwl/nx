@@ -1,18 +1,16 @@
-import {
-  newProject,
-  runCLI,
-  copyMissingPackages,
-  exists,
-  runCLIAsync,
-  updateFile,
-  readJson,
-  ensureProject,
-  uniq
-} from '../utils';
-import { fork, spawn, execSync } from 'child_process';
+import { execSync, fork, spawn } from 'child_process';
 import * as http from 'http';
 import * as path from 'path';
 import * as treeKill from 'tree-kill';
+import {
+  ensureProject,
+  exists,
+  readJson,
+  runCLI,
+  runCLIAsync,
+  uniq,
+  updateFile
+} from './utils';
 
 function getData(): Promise<any> {
   return new Promise(resolve => {
@@ -30,7 +28,7 @@ function getData(): Promise<any> {
 }
 
 describe('Node Applications', () => {
-  it('should be able to generate an express application', async done => {
+  fit('should be able to generate an express application', async done => {
     ensureProject();
     const nodeapp = uniq('nodeapp');
     runCLI(`generate @nrwl/express:app ${nodeapp}`);
@@ -49,7 +47,6 @@ describe('Node Applications', () => {
     updateFile(`apps/${nodeapp}/src/assets/file.txt`, ``);
     const jestResult = await runCLIAsync(`test ${nodeapp}`);
     expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
-
     await runCLIAsync(`build ${nodeapp}`);
 
     expect(exists(`./tmp/proj/dist/apps/${nodeapp}/main.js`)).toBeTruthy();
@@ -57,13 +54,8 @@ describe('Node Applications', () => {
       exists(`./tmp/proj/dist/apps/${nodeapp}/assets/file.txt`)
     ).toBeTruthy();
     expect(exists(`./tmp/proj/dist/apps/${nodeapp}/main.js.map`)).toBeTruthy();
-
     const server = fork(
-      path.join(
-        __dirname,
-        '../../../tmp/proj',
-        `./dist/apps/${nodeapp}/main.js`
-      ),
+      path.join(__dirname, '../../tmp/proj', `./dist/apps/${nodeapp}/main.js`),
       [],
       {
         cwd: './tmp/proj',
@@ -71,7 +63,6 @@ describe('Node Applications', () => {
       }
     );
     expect(server).toBeTruthy();
-
     await new Promise(resolve => {
       server.stdout.once('data', async data => {
         expect(data.toString()).toContain('Listening at http://localhost:3333');
@@ -100,7 +91,6 @@ describe('Node Applications', () => {
       `${nodeapp}:waitAndPrint`
     ];
     updateFile('angular.json', JSON.stringify(config));
-
     const process = spawn(
       'node',
       ['./node_modules/.bin/ng', 'serve', nodeapp],
@@ -108,7 +98,6 @@ describe('Node Applications', () => {
         cwd: './tmp/proj'
       }
     );
-
     let collectedOutput = '';
     process.stdout.on('data', async (data: Buffer) => {
       collectedOutput += data.toString();
@@ -144,11 +133,7 @@ describe('Node Applications', () => {
     expect(exists(`./tmp/proj/dist/apps/${nestapp}/main.js.map`)).toBeTruthy();
 
     const server = fork(
-      path.join(
-        __dirname,
-        '../../../tmp/proj',
-        `./dist/apps/${nestapp}/main.js`
-      ),
+      path.join(__dirname, '../../tmp/proj', `./dist/apps/${nestapp}/main.js`),
       [],
       {
         cwd: './tmp/proj',

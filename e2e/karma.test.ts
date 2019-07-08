@@ -4,7 +4,7 @@ import {
   ensureProject,
   uniq,
   patchKarmaToWorkOnWSL
-} from '../utils';
+} from './utils';
 
 describe('Karma', () => {
   it('should be able to generate a testable library using karma', async done => {

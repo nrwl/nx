@@ -19,7 +19,7 @@ install:
 
 script:
   - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then yarn checkformat --head=$TRAVIS_PULL_REQUEST_SHA --base=$(git merge-base HEAD $TRAVIS_BRANCH); fi'
-  - yarn test
+  - yarn test:all
   - yarn e2e
   - yarn checkcommit
   - yarn checkimports

@@ -8,7 +8,7 @@ import {
   uniq,
   runsInWSL,
   newProject
-} from '../utils';
+} from './utils';
 
 describe('Cypress E2E Test runner', () => {
   describe('project scaffolding', () => {

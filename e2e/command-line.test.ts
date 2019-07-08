@@ -9,7 +9,7 @@ import {
   exists,
   ensureProject,
   uniq
-} from '../utils';
+} from './utils';
 
 describe('Command line', () => {
   it('lint should ensure module boundaries', () => {
