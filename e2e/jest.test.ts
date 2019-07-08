@@ -1,4 +1,4 @@
-import { runCLIAsync, ensureProject, uniq, runCLI } from '../utils';
+import { runCLIAsync, ensureProject, uniq, runCLI } from './utils';
 
 describe('Jest', () => {
   it('should be able test projects using jest', async done => {

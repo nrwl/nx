@@ -4,7 +4,7 @@ import {
   runCLI,
   uniq,
   updateFile
-} from '../utils';
+} from './utils';
 
 describe('Upgrade', () => {
   it('should generate an UpgradeModule setup', async () => {

@@ -4,7 +4,7 @@ import {
   runCLI,
   uniq,
   updateFile
-} from '../utils';
+} from './utils';
 
 describe('DowngradeModule', () => {
   it('should generate a downgradeModule setup', async () => {

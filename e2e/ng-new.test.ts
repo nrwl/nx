@@ -8,7 +8,7 @@ import {
   runsInWSL,
   uniq,
   updateFile
-} from '../utils';
+} from './utils';
 import { toClassName } from '@nrwl/workspace';
 
 describe('Nrwl Workspace', () => {

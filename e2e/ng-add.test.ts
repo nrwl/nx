@@ -8,7 +8,7 @@ import {
   runCommand,
   runNgNew,
   updateFile
-} from '../utils';
+} from './utils';
 
 describe('Nrwl Convert to Nx Workspace', () => {
   beforeEach(cleanup);

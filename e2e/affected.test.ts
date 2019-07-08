@@ -7,7 +7,7 @@ import {
   uniq,
   updateFile,
   runCLI
-} from '../utils';
+} from './utils';
 
 describe('Affected', () => {
   it('should print, build, and test affected apps', () => {

@@ -8,7 +8,7 @@ import {
   checkFilesExist,
   renameFile,
   readJson
-} from '../utils';
+} from './utils';
 import { serializeJson } from '@nrwl/workspace';
 
 describe('React Applications', () => {
