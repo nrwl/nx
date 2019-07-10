@@ -11,13 +11,13 @@ import {
   move,
   noop
 } from '@angular-devkit/schematics';
+import { join, normalize } from '@angular-devkit/core';
 import { Schema } from './schema';
 
 import { NxJson } from '@nrwl/workspace';
 import { updateJsonInTree, readJsonInTree } from '@nrwl/workspace';
 import { toFileName, names } from '@nrwl/workspace';
 import { formatFiles } from '@nrwl/workspace';
-import { join, normalize } from 'path';
 import { offsetFromRoot } from '@nrwl/workspace';
 
 export interface NormalizedSchema extends Schema {
