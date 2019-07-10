@@ -27,7 +27,7 @@ After cloning the project to your machine, to install the dependencies, run:
 yarn
 ```
 
-To build the `nx`, and `schematics` packages, run:
+To build the all packages, run:
 
 ```bash
 yarn build
@@ -41,10 +41,10 @@ To make sure your changes do not break any unit tests, run the following:
 yarn test
 ```
 
-For example, if you need to only run the **ngrx/ngrx.spec.ts** test suite, provide a path to the specific spec file, run:
+For example, if you need to only run the **jest-project/jest-project.spec.ts** test suite, provide a path to the specific spec file, run:
 
 ```bash
-yarn test angular/src/schematics/ngrx/ngrx
+yarn test jest/src/schematics/jest-project/jest-project
 ```
 
 ### Running E2E Tests
@@ -77,10 +77,8 @@ Before you submit an issue, please search the issue tracker. An issue for your p
 We want to fix all the issues as soon as possible, but before fixing a bug we need to reproduce and confirm it. Having a reproducible scenario gives us wealth of important information without going back and forth with you requiring additional information, such as:
 
 - version of Nx used
-- version of Angular CLI used
-- `angular.json` configuration
-- version of Angular DevKit used
-- 3rd-party libraries and their versions
+- `workspace.json` or `angular.json` configuration
+- `yarn.lock` or `package-lock.json`
 - and most importantly - a use-case that fails
 
 A minimal reproduction allows us to quickly confirm a bug (or point out coding problem) as well as confirm that we are fixing the right problem.
@@ -125,10 +123,10 @@ The type must be one of the following:
 
 The scope must be one of the following:
 
-- node - anything backend specific
+- backend - anything backend specific
 - testing - anything related to jest or cypress
-- frontend - anything angular specific
-- nx - dependency management, basic workspace structure, etc
+- frontend - anything frontend specific
+- nx - dependency management, basic workspace structure, anything touching both backend and frontend, and other related areas
 
 ##### Subject and Body
 
@@ -141,7 +139,7 @@ Including the issue number that the PR relates to also helps with tracking.
 ```
 feat(schematics): add an option to generate lazy-loadable modules
 
-`ng generate lib mylib --lazy` provisions the mylib project in tslint.json
+`nx generate lib mylib --lazy` provisions the mylib project in tslint.json
 
 Closes #157
 ```
