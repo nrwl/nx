@@ -14,11 +14,6 @@ echo "Compiling Typescript..."
 ./node_modules/.bin/tsc
 echo "Compiled Typescript"
 
-# rm build/packages/angular/testing/nrwl-angular-testing.metadata.json
-# rm build/packages/angular/testing/index.metadata.json
-# rm build/packages/workspace/index.metadata.json
-# rm build/packages/workspace/testing.metadata.json
-
 #TODO This is a temporary hack until we can publish named umds
 sed -i.bak "s/define(\[/define('@nrwl\/angular',\[/" build/packages/angular/bundles/nrwl-angular.umd.js
 sed -i.bak "s/define(\[/define('@nrwl\/angular',\[/" build/packages/angular/bundles/nrwl-angular.umd.min.js
@@ -34,9 +29,10 @@ rm -rf build/packages/angular/bundles/nrwl-angular-testing.umd.min.js.bak
 
 rsync -a --exclude=*.ts packages/ build/packages
 
-chmod +x build/packages/workspace/bin/create-nx-workspace.js
 chmod +x build/packages/create-nx-workspace/bin/create-nx-workspace.js
 chmod +x build/packages/workspace/src/command-line/nx.js
+chmod +x build/packages/cli/bin/nx.js
+
 rm -rf build/packages/install
 rm -rf build/packages/nx/dist
 rm -rf build/packages/nx/spec
@@ -53,6 +49,7 @@ cp README.md build/packages/react
 cp README.md build/packages/angular
 cp README.md build/packages/jest
 cp README.md build/packages/cypress
+cp README.md build/packages/cli
 cp LICENSE build/packages/builders
 cp LICENSE build/packages/schematics
 cp LICENSE build/packages/nx
@@ -66,6 +63,7 @@ cp LICENSE build/packages/react
 cp LICENSE build/packages/angular
 cp LICENSE build/packages/jest
 cp LICENSE build/packages/cypress
+cp LICENSE build/packages/cli
 
 echo "Nx libraries available at build/packages:"
 ls build/packages

@@ -19,14 +19,13 @@ import {
   printArgsWarning
 } from './shared';
 import { generateGraph } from './dep-graph';
-import { GlobalNxArgs } from './nx';
 import { WorkspaceResults } from './workspace-results';
 
 export interface YargsAffectedOptions
   extends yargs.Arguments,
     AffectedOptions {}
 
-export interface AffectedOptions extends GlobalNxArgs {
+export interface AffectedOptions {
   target?: string;
   parallel?: boolean;
   maxParallel?: number;
@@ -41,6 +40,9 @@ export interface AffectedOptions extends GlobalNxArgs {
   'only-failed'?: boolean;
   'max-parallel'?: boolean;
   verbose?: boolean;
+  help?: boolean;
+  version?: boolean;
+  quiet?: boolean;
 }
 
 // Commands that can do `ng [command]`
