@@ -13,7 +13,7 @@ can see, for each package its dependencies.
 | @nrwl/node      | @nrwl/jest                           | @nrwl/workspace  |
 | @nrwl/react     | @nrwl/cypress, @nrwl/jest, @nrwl/web | @nrwl/workspace  |
 | @nrwl/web       | @nrwl/cypress, @nrwl/jest            | @nrwl/workspace  |
-| @nrwl/workspace |                                      |                  |
+| @nrwl/workspace | @nrwl/cli                            |                  |
 
 ## Angular
 

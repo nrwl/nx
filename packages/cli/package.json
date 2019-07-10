@@ -1,7 +1,7 @@
 {
-  "name": "create-nx-workspace",
+  "name": "@nrwl/cli",
   "version": "0.0.2",
-  "description": "Angular CLI power-ups for modern Web development",
+  "description": "",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nrwl/nx.git"
@@ -18,7 +18,7 @@
     "CLI"
   ],
   "bin": {
-    "create-nx-workspace": "./bin/create-nx-workspace.js"
+    "nx": "./bin/nx.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",

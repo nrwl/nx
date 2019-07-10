@@ -7,11 +7,15 @@
     "url": "git+https://github.com/nrwl/nx.git"
   },
   "keywords": [
-    "Workspace",
     "Monorepo",
-    "Schematics",
-    "Nx",
-    "Angular CLI"
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
   ],
   "main": "index.js",
   "types": "index.d.ts",
@@ -19,10 +23,6 @@
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"
-  },
-  "bin": {
-    "create-nx-workspace": "./bin/create-nx-workspace.js",
-    "nx": "./src/command-line/nx.js"
   },
   "homepage": "https://nx.dev",
   "schematics": "./collection.json",
@@ -57,6 +57,7 @@
     "viz.js": "^1.8.1",
     "yargs-parser": "10.0.0",
     "yargs": "^11.0.0",
-    "prettier": "1.16.4"
+    "prettier": "1.16.4",
+    "@nrwl/cli": "*"
   }
 }

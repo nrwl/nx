@@ -7,13 +7,15 @@
     "url": "git+https://github.com/nrwl/nx.git"
   },
   "keywords": [
-    "Cypress",
-    "E2E Testing",
-    "Workspace",
     "Monorepo",
-    "Schematics",
-    "Nx",
-    "Angular CLI"
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
   ],
   "main": "index.js",
   "types": "index.d.ts",

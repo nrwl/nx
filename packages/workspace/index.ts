@@ -19,7 +19,10 @@ export {
   ExistingPrettierConfig,
   resolveUserExistingPrettierConfig
 } from './src/utils/common';
-export { commandsObject } from './src/command-line/nx-commands';
+export {
+  commandsObject,
+  supportedNxCommands
+} from './src/command-line/nx-commands';
 export { readAngularJson, readNxJson, NxJson } from './src/command-line/shared';
 export {
   readJsonInTree,
@@ -48,6 +51,7 @@ export {
 
 export { getWorkspace, updateWorkspace } from './src/utils/workspace';
 
+export { closestCli } from './src/utils/app-root';
 export { formatFiles } from './src/utils/rules/format-files';
 export { deleteFile } from './src/utils/rules/deleteFile';
 export * from './src/utils/rules/ng-add';

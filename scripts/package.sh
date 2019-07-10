@@ -42,7 +42,3 @@ if [[ $NX_VERSION == "*" ]]; then
         sed -E -i "s/\"@nrwl\/([^\"]+)\": \"\\*\"/\"@nrwl\/\1\": \"file:..\/\1\"/" {schematics,jest,web,react,node,express,nest,cypress,angular,workspace}/package.json
     fi
 fi
-
-tar -czf nx.tgz nx
-tar -czf schematics.tgz schematics
-tar -czf create-nx-workspace.tgz create-nx-workspace
