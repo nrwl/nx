@@ -57,7 +57,7 @@ describe('normalizeBuildOptions', () => {
         assets: [
           'apps/nodeapp/src/assets',
           {
-            input: '/outsideroot',
+            input: 'outsideproj',
             output: 'output',
             glob: '**/*',
             ignore: ['**/*.json']
@@ -74,7 +74,7 @@ describe('normalizeBuildOptions', () => {
         glob: '**/*'
       },
       {
-        input: '/outsideroot',
+        input: '/root/outsideproj',
         output: 'output',
         glob: '**/*',
         ignore: ['**/*.json']

@@ -62,8 +62,12 @@ function normalizeAssets(
           'An asset cannot be written to a location outside of the output path.'
         );
       }
+
+      const assetPath = normalize(asset.input);
+      const resolvedAssetPath = resolve(root, assetPath);
       return {
         ...asset,
+        input: resolvedAssetPath,
         // Now we remove starting slash to make Webpack place it from the output root.
         output: asset.output.replace(/^\//, '')
       };
