@@ -27,7 +27,7 @@ forEachCli(() => {
           runYarnInstall();
 
           expect(
-            runCLI(`run ${mylib}-e2e:e2e --configuration=headless`)
+            runCLI(`run ${mylib}-e2e:e2e --configuration=headless --no-watch`)
           ).toContain('All specs passed!');
         }, 1000000);
       });

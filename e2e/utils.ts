@@ -64,12 +64,14 @@ function patchPackageJsonDeps(addWorkspace = true) {
   const workspacePath = path.join(getCwd(), 'build', 'packages', 'workspace');
   const angularPath = path.join(getCwd(), 'build', 'packages', 'angular');
   const reactPath = path.join(getCwd(), 'build', 'packages', 'react');
+  const storybookPath = path.join(getCwd(), 'build', 'packages', 'storybook');
 
   if (addWorkspace) {
     p.devDependencies['@nrwl/workspace'] = `file:${workspacePath}`;
   }
   p.devDependencies['@nrwl/angular'] = `file:${angularPath}`;
   p.devDependencies['@nrwl/react'] = `file:${reactPath}`;
+  p.devDependencies['@nrwl/storybook'] = `file:${storybookPath}`;
   writeFileSync(tmpProjPath('package.json'), JSON.stringify(p, null, 2));
 }
 

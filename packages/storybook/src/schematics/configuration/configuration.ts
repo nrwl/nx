@@ -15,7 +15,8 @@ import {
   getProjectConfig,
   updateWorkspace,
   addPackageWithNgAdd,
-  offsetFromRoot
+  offsetFromRoot,
+  readJsonFile
 } from '@nrwl/workspace';
 import { StorybookStoriesSchema } from '../../../../angular/src/schematics/stories/stories';
 import { parseJsonAtPath } from '../../utils/utils';
@@ -97,28 +98,29 @@ function configureTsConfig(projectName: string): Rule {
 
 function addStorybookTask(projectName: string): Rule {
   return updateWorkspace(workspace => {
-    workspace.projects.get(projectName).targets.add({
+    const projectConfig = workspace.projects.get(projectName);
+    let uiFramework = '@storybook/react';
+    try {
+      if (
+        readJsonFile(projectConfig.root + '/tsconfig.lib.json')
+          .angularCompilerOptions
+      ) {
+        uiFramework = '@storybook/angular';
+      }
+    } catch (e) {}
+    projectConfig.targets.add({
       name: 'storybook',
-      builder: '@nrwl/workspace:run-commands',
+      builder: '@nrwl/storybook:storybook',
       options: {
-        readyWhen: 'http://localhost:4400',
-        commands: [
-          {
-            command: `npx start-storybook -c ${
-              workspace.projects.get(projectName).root
-            }/.storybook -p 4400`
-          }
-        ]
+        uiFramework,
+        port: 4400,
+        config: {
+          configFolder: `${projectConfig.root}/.storybook`
+        }
       },
       configurations: {
         ci: {
-          commands: [
-            {
-              command: `npx start-storybook -c ${
-                workspace.projects.get(projectName).root
-              }/.storybook -p 4400 --ci --quiet`
-            }
-          ]
+          quiet: true
         }
       }
     });

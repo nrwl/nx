@@ -1,12 +1,10 @@
 [
-  "angular",
   "cypress",
   "express",
   "jest",
+  "linter",
   "nest",
-  "next",
   "node",
-  "react",
   "storybook",
   "web",
   "workspace"

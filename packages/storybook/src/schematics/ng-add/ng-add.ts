@@ -27,6 +27,7 @@ function checkDependenciesInstalled(): Rule {
     if (!packageJson.devDependencies['@storybook/angular']) {
       context.addTask(new NodePackageInstallTask());
       dependencyList.push(
+        { name: '@nrwl/storybook', version: '*' },
         { name: '@storybook/angular', version: storybookAngularVersion },
         { name: '@storybook/addon-knobs', version: storybookAddonKnobsVersion },
         {

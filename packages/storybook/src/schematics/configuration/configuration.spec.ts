@@ -34,24 +34,11 @@ describe('schematic:configuration', () => {
     const project = angularJson.projects['test-ui-lib'];
 
     expect(project.architect.storybook).toEqual({
-      builder: '@nrwl/workspace:run-commands',
+      builder: '@nrwl/storybook:storybook',
       options: {
-        readyWhen: 'http://localhost:4400',
-        commands: [
-          {
-            command:
-              'npx start-storybook -c libs/test-ui-lib/.storybook -p 4400'
-          }
-        ]
-      },
-      configurations: {
-        ci: {
-          commands: [
-            {
-              command:
-                'npx start-storybook -c libs/test-ui-lib/.storybook -p 4400 --ci --quiet'
-            }
-          ]
+        port: 4400,
+        config: {
+          configFolder: 'libs/test-ui-lib/.storybook'
         }
       }
     });
