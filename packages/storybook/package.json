@@ -1,0 +1,52 @@
+{
+  "name": "@nrwl/storybook",
+  "version": "0.0.1",
+  "description": "Storybook plugin for Nx",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nrwl/nx.git"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Storybook",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "index.js",
+  "types": "index.d.ts",
+  "author": "Isaac Mann",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./collection.json",
+  "builders": "./builders.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "peerDependencies": {
+    "@nrwl/workspace": "*",
+    "@storybook/angular": "^5.1.9",
+    "@storybook/addon-knobs": "^5.1.9",
+    "@types/storybook__addon-knobs": "^5.1.9",
+    "babel-loader": "^7.5.4",
+    "@babel/core": "^8.0.6"
+  },
+  "dependencies": {
+    "@angular-devkit/architect": "0.800.1",
+    "@angular-devkit/core": "8.0.1",
+    "@nrwl/cypress": "8.2.0",
+    "tree-kill": "1.2.1",
+    "ts-loader": "5.3.1",
+    "tsconfig-paths-webpack-plugin": "3.2.0",
+    "webpack-node-externals": "1.7.2"
+  }
+}

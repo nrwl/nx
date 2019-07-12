@@ -1,0 +1,42 @@
+{
+  "name": "Nx Cypress",
+  "version": "0.1",
+  "schematics": {
+    "ng-add": {
+      "factory": "./src/schematics/ng-add/ng-add",
+      "schema": "./src/schematics/ng-add/schema.json",
+      "description": "Add storybook configuration to the workspace",
+      "hidden": true
+    },
+    "storybook-configure": {
+      "factory": "./src/schematics/storybook-configure/storybook-configure",
+      "schema": "./src/schematics/storybook-configure/schema.json",
+      "description": "Add storybook configuration to a ui library",
+      "hidden": false
+    },
+    "storybook-stories": {
+      "factory": "./src/schematics/storybook-stories/storybook-stories",
+      "schema": "./src/schematics/storybook-stories/schema.json",
+      "description": "Create stories/specs for all components declared in a library",
+      "hidden": false
+    },
+    "cypress-configure": {
+      "factory": "./src/schematics/cypress-configure/cypress-configure",
+      "schema": "./src/schematics/cypress-configure/schema.json",
+      "description": "Add cypress e2e app to test a ui library that is set up for storybook",
+      "hidden": false
+    },
+    "component-cypress-spec": {
+      "factory": "./src/schematics/component-cypress-spec/component-cypress-spec",
+      "schema": "./src/schematics/component-cypress-spec/schema.json",
+      "description": "Create a cypress spec for a ui component that has a story",
+      "hidden": true
+    },
+    "component-story": {
+      "factory": "./src/schematics/component-story/component-story",
+      "schema": "./src/schematics/component-story/schema.json",
+      "description": "Create a stories.ts file for a component",
+      "hidden": true
+    }
+  }
+}

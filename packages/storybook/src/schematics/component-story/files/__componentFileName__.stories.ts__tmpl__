@@ -1,0 +1,14 @@
+import { storiesOf } from '@storybook/angular';
+import { text, number, boolean } from '@storybook/addon-knobs';
+import { <%=moduleName%> } from '<%=relativeModulePath%>';
+import { <%=componentName%> } from './<%=componentFileName%>';
+
+storiesOf('<%=componentName%>', module).add('default', () => ({
+  moduleMetadata: {
+    imports: [<%=moduleName%>]
+  },
+  component: <%=componentName%>,
+  props: {<% for (let prop of props) { %>
+    <%=prop.name%>: <%=prop.type%>('<%=prop.name%>', <%=prop.defaultValue%>),<% } %>
+  }
+}));

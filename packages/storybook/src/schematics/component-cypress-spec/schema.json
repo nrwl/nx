@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "component-cypress-spec",
+  "type": "object",
+  "properties": {
+    "projectName": {
+      "type": "string",
+      "description": "Name of the library from angular.json",
+      "examples": ["ui-samples"]
+    },
+    "libPath": {
+      "type": "string",
+      "description": "Path to the library",
+      "examples": ["libs/ui-samples"]
+    },
+    "componentName": {
+      "type": "string",
+      "description": "Class name of the component",
+      "examples": ["AwesomeComponent"]
+    },
+    "componentPath": {
+      "type": "string",
+      "description": "Relative path to the component file from the library root",
+      "examples": ["awesome"]
+    },
+    "componentFileName": {
+      "type": "string",
+      "description": "Component file name without the .ts extension",
+      "examples": ["awesome.component"]
+    }
+  },
+  "required": [
+    "projectName",
+    "libPath",
+    "componentName",
+    "componentPath",
+    "componentFileName"
+  ]
+}
