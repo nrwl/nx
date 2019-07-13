@@ -27,7 +27,6 @@ function allFilesInDir(dirName) {
 function check() {
   const exceptions = [
     'packages/create-nx-workspace/bin/create-nx-workspace.ts',
-    'packages/workspace/bin/create-nx-workspace.ts',
     'packages/web/src/builders/build/build.impl.ts',
     'packages/web/src/builders/build/build.impl.spec.ts',
     'packages/web/src/utils/web.config.ts',

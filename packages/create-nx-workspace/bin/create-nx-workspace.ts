@@ -103,17 +103,18 @@ execSync(
   }
 );
 
-try {
-  execSync('nx --version');
-} catch (e) {
-  // no nx found
-  console.log('-----------------------------------------------------------');
-  console.log(`It looks like you don't have the Nx CLI installed globally.`);
-  console.log(
-    `This means that you might have to use "yarn nx" or "npm nx" to execute commands in your workspace.`
-  );
-  console.log(
-    `If you want to execute the nx command directly, run "yarn global add @nrwl/cli" or "npm install -g @nrwl/cli"`
-  );
-  console.log('-----------------------------------------------------------');
-}
+// TODO: vsavkin: reenable for 8.4
+// try {
+//   execSync('nx --version');
+// } catch (e) {
+//   // no nx found
+//   console.log('-----------------------------------------------------------');
+//   console.log(`It looks like you don't have the Nx CLI installed globally.`);
+//   console.log(
+//     `This means that you might have to use "yarn nx" or "npm nx" to execute commands in your workspace.`
+//   );
+//   console.log(
+//     `If you want to execute the nx command directly, run "yarn global add @nrwl/cli" or "npm install -g @nrwl/cli"`
+//   );
+//   console.log('-----------------------------------------------------------');
+// }
