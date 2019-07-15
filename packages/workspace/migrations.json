@@ -14,6 +14,11 @@
       "version": "8.3.0-beta.1",
       "description": "Update Angular CLI to 8.1.1",
       "factory": "./src/migrations/update-8-3-0/update-ng-cli-8-1"
+    },
+    "update-cypress-to-34": {
+      "version": "8.3.0-beta.1",
+      "description": "Update Cypress to 3.4",
+      "factory": "./src/migrations/update-8-3-0/update-cypress-to-34"
     }
   }
 }
