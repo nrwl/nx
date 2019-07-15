@@ -7,23 +7,30 @@ matrix:
       sudo: required
       addons:
         chrome: stable
-
-before_install:
-  - if [ "$TRAVIS_OS_NAME" == "linux"  ]; then
-    export DISPLAY=:99.0;
-    sh -e /etc/init.d/xvfb start;
-    fi
-
-install:
-  - yarn install --network-timeout 1000000 # Timeout needed for Windows (really slow)
-
-script:
-  - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then yarn checkformat --head=$TRAVIS_PULL_REQUEST_SHA --base=$(git merge-base HEAD $TRAVIS_BRANCH); fi'
-  - yarn test:all
-  - yarn e2e
-  - yarn checkcommit
-  - yarn checkimports
-  - yarn documentation
+      before_install:
+        - export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start;
+      install:
+        - yarn install --network-timeout 1000000
+      script:
+        - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then yarn checkformat --head=$TRAVIS_PULL_REQUEST_SHA --base=$(git merge-base HEAD $TRAVIS_BRANCH); fi'
+        - yarn checkcommit
+        - yarn checkimports
+        - yarn documentation
+        - yarn test:all
+    - os: linux
+      language: node_js
+      node_js: 10
+      dist: trusty
+      sudo: required
+      addons:
+        chrome: stable
+      before_install:
+        - export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start;
+      install:
+        - yarn install --network-timeout 1000000
+      script:
+        - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then yarn checkformat --head=$TRAVIS_PULL_REQUEST_SHA --base=$(git merge-base HEAD $TRAVIS_BRANCH); fi'
+        - yarn e2e
 
 notifications:
   email: false
