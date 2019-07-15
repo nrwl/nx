@@ -341,6 +341,8 @@ The `tags` array is used to impose constraints on the dependency graph. Read mor
 
 Nx uses its advanced code analysis to construct a dependency graph of all applications and libraries. Some dependencies, however, cannot be determined statically. You can use the `implicitDependencies` array to list the dependencies that cannot be determined statically.
 
+> Note: Glob patterns in the `.gitignore` and `.nxignore` files are ignored during affected commands by default.
+
 ## Summary
 
 With Nx, you can use effective development practices pioneered at Google:

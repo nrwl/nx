@@ -43,8 +43,14 @@ function readFileIfExisting(path: string) {
   return fs.existsSync(path) ? fs.readFileSync(path, 'UTF-8').toString() : '';
 }
 
-const ig = ignore();
-ig.add(readFileIfExisting(`${appRootPath}/.gitignore`));
+function getIgnoredGlobs() {
+  const ig = ignore();
+
+  ig.add(readFileIfExisting(`${appRootPath}/.gitignore`));
+  ig.add(readFileIfExisting(`${appRootPath}/.nxignore`));
+
+  return ig;
+}
 
 export function printArgsWarning(options: YargsAffectedOptions) {
   const { files, uncommitted, untracked, base, head, all } = options;
@@ -441,8 +447,8 @@ export function getProjectRoots(projectNames: string[]): string[] {
 export function allFilesInDir(
   dirName: string
 ): { file: string; mtime: number }[] {
-  // Ignore .gitignored files
-  if (ig.ignores(path.relative(appRootPath, dirName))) {
+  const ignoredGlobs = getIgnoredGlobs();
+  if (ignoredGlobs.ignores(path.relative(appRootPath, dirName))) {
     return [];
   }
 
@@ -450,7 +456,7 @@ export function allFilesInDir(
   try {
     fs.readdirSync(dirName).forEach(c => {
       const child = path.join(dirName, c);
-      if (ig.ignores(path.relative(appRootPath, child))) {
+      if (ignoredGlobs.ignores(path.relative(appRootPath, child))) {
         return;
       }
       try {
