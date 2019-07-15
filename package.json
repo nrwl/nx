@@ -138,12 +138,7 @@
     "testPathIgnorePatterns": [
       "node_modules",
       "<rootDir>/build/packages/angular/spec"
-    ],
-    "collectCoverage": true,
-    "coverageReporters": [
-      "html"
-    ],
-    "coverageDirectory": "coverage"
+    ]
   },
   "config": {
     "commitizen": {
