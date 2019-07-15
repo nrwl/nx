@@ -189,3 +189,10 @@ You can also specify dependencies between projects. For instance, if `admin-e2e`
   }
 }
 ```
+
+### Ignoring Additional Files from Affected Commands
+
+Nx provides two methods to exclude additional glob patterns (files and folders) from `affected:*` commands.
+
+- Glob patterns defined in your `.gitignore` file are ignored.
+- Glob patterns defined in an optional `.nxignore` file are ignored.
