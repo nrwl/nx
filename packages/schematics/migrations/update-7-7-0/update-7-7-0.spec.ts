@@ -54,7 +54,8 @@ describe('Update 7.7.0', () => {
             '^.+\\.(ts|js|html)$': 'jest-preset-angular/preprocessor.js'
           },
           resolver: '@nrwl/builders/plugins/jest/resolver',
-          moduleFileExtensions: ['ts', 'js', 'html']
+          moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageReporters: ['html']
         };`
       );
     });
