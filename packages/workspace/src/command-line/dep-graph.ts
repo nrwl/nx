@@ -254,8 +254,9 @@ function handleOutput({ data, shouldOpen, filename }: OutputOptions) {
     opn(tmpFilename, {
       wait: false
     });
+  } else {
+    writeToFile(filename, data);
   }
-  writeToFile(filename, data);
 }
 
 function applyHTMLTemplate(svg: string) {

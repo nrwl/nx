@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-import { output } from '@nrwl/workspace';
+// we can import from '@nrwl/workspace' because it will require typescript
+import { output } from '@nrwl/workspace/src/command-line/output';
 import { execSync } from 'child_process';
 import { writeFileSync } from 'fs';
 import * as path from 'path';
