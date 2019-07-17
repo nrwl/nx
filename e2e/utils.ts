@@ -145,7 +145,7 @@ export function copyMissingPackages(): void {
     'react-dom',
     '@types/react',
     '@types/react-dom',
-    'react-testing-library',
+    '@testing-library',
 
     'document-register-element'
   ];

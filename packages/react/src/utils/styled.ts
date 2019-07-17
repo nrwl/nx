@@ -1,7 +1,7 @@
 import {
   emotionVersion,
-  styledComponentVersion,
-  styledComponentTypesVersion
+  styledComponentsVersion,
+  styledComponentsTypesVersion
 } from './versions';
 import { PackageDependencies } from './dependencies';
 
@@ -10,10 +10,10 @@ export const CSS_IN_JS_DEPENDENCIES: {
 } = {
   'styled-components': {
     dependencies: {
-      'styled-components': styledComponentVersion
+      'styled-components': styledComponentsVersion
     },
     devDependencies: {
-      '@types/styled-components': styledComponentTypesVersion
+      '@types/styled-components': styledComponentsTypesVersion
     }
   },
   '@emotion/styled': {

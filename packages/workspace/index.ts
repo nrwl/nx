@@ -33,7 +33,8 @@ export {
   getProjectConfig,
   addParameterToConstructor,
   createOrUpdate,
-  findNodes
+  findNodes,
+  updatePackageJsonDependencies
 } from './src/utils/ast-utils';
 
 export {

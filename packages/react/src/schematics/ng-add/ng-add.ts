@@ -25,7 +25,7 @@ export function addDependencies(): Rule {
       '@nrwl/react': nxVersion,
       '@types/react': typesVersion,
       '@types/react-dom': domTypesVersion,
-      'react-testing-library': testingLibraryVersion
+      '@testing-library/react': testingLibraryVersion
     }
   );
 }

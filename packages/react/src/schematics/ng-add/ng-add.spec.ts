@@ -21,7 +21,7 @@ describe('ng-add', () => {
     expect(packageJson.devDependencies['@nrwl/react']).toBeDefined();
     expect(packageJson.devDependencies['@types/react']).toBeDefined();
     expect(packageJson.devDependencies['@types/react-dom']).toBeDefined();
-    expect(packageJson.devDependencies['react-testing-library']).toBeDefined();
+    expect(packageJson.devDependencies['@testing-library/react']).toBeDefined();
   });
 
   describe('defaultCollection', () => {
