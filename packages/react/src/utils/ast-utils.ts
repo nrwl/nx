@@ -13,18 +13,6 @@ export function addRouter(sourcePath: string, source: ts.SourceFile): Change[] {
   const outerMostJsxOpening = jsxOpening[0];
   const outerMostJsxClosing = jsxClosing[jsxClosing.length - 1];
 
-  const insertOpening = new InsertChange(
-    sourcePath,
-    outerMostJsxOpening.getStart(),
-    '<Router>'
-  );
-
-  const insertClosing = new InsertChange(
-    sourcePath,
-    outerMostJsxClosing.getEnd(),
-    '</Router>'
-  );
-
   const insertRoute = new InsertChange(
     sourcePath,
     outerMostJsxClosing.getStart(),
@@ -51,8 +39,6 @@ export function addRouter(sourcePath: string, source: ts.SourceFile): Change[] {
       sourcePath,
       `import { BrowserRouter as Router, Route, Link} from 'react-router-dom';`
     ),
-    insertOpening,
-    insertClosing,
     insertRoute,
     insertLink
   ];

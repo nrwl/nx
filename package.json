@@ -101,6 +101,7 @@
     "react": "16.8.6",
     "react-dom": "16.8.6",
     "@testing-library/react": "8.0.5",
+    "react-router-dom": "5.0.1",
     "release-it": "^7.4.0",
     "rxjs": "~6.4.0",
     "semver": "5.4.1",

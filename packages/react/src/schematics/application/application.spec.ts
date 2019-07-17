@@ -452,13 +452,15 @@ describe('app', () => {
         appTree
       );
 
+      const mainSource = tree.read('apps/my-app/src/main.tsx').toString();
+
       const componentSource = tree
         .read('apps/my-app/src/app/app.tsx')
         .toString();
 
-      expect(componentSource).toContain('react-router-dom');
-      expect(componentSource).toContain('<Router>');
-      expect(componentSource).toContain('</Router>');
+      expect(mainSource).toContain('react-router-dom');
+      expect(mainSource).toContain('<BrowserRouter>');
+      expect(mainSource).toContain('</BrowserRouter>');
       expect(componentSource).toMatch(/<Route\s*path="\/"/);
       expect(componentSource).toMatch(/<Link\s*to="\/"/);
     });

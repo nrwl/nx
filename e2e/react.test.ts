@@ -29,42 +29,19 @@ describe('React Applications', () => {
     );
     updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
 
-    const lintResults = runCLI(`lint ${appName}`);
-    expect(lintResults).toContain('All files pass linting.');
-    runCLI(`build ${appName}`);
-    checkFilesExist(
-      `dist/apps/${appName}/index.html`,
-      `dist/apps/${appName}/polyfills-es2015.js`,
-      `dist/apps/${appName}/runtime-es2015.js`,
-      `dist/apps/${appName}/vendor-es2015.js`,
-      `dist/apps/${appName}/main-es2015.js`,
-      `dist/apps/${appName}/styles-es2015.js`,
-      `dist/apps/${appName}/polyfills-es5.js`,
-      `dist/apps/${appName}/runtime-es5.js`,
-      `dist/apps/${appName}/vendor-es5.js`,
-      `dist/apps/${appName}/main-es5.js`,
-      `dist/apps/${appName}/styles-es5.js`
-    );
-    runCLI(`build ${appName} --prod --output-hashing none`);
-    checkFilesExist(
-      `dist/apps/${appName}/index.html`,
-      `dist/apps/${appName}/polyfills-es2015.js`,
-      `dist/apps/${appName}/runtime-es2015.js`,
-      `dist/apps/${appName}/main-es2015.js`,
-      `dist/apps/${appName}/polyfills-es5.js`,
-      `dist/apps/${appName}/runtime-es5.js`,
-      `dist/apps/${appName}/main-es5.js`,
-      `dist/apps/${appName}/styles.css`
-    );
-    const testResults = await runCLIAsync(`test ${appName}`);
-    expect(testResults.stderr).toContain('Test Suites: 1 passed, 1 total');
-    const lintE2eResults = runCLI(`lint ${appName}-e2e`);
-    expect(lintE2eResults).toContain('All files pass linting.');
-    const e2eResults = runCLI(`e2e ${appName}-e2e`);
-    expect(e2eResults).toContain('All specs passed!');
-
     const libTestResults = await runCLIAsync(`test ${libName}`);
     expect(libTestResults.stderr).toContain('Test Suites: 1 passed, 1 total');
+
+    await testGeneratedApp(appName);
+  }, 120000);
+
+  it('should generate app with routing', async () => {
+    ensureProject();
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/react:app ${appName} --routing --no-interactive`);
+
+    await testGeneratedApp(appName);
   }, 120000);
 
   it('should be able to use JSX', async () => {
@@ -101,8 +78,13 @@ describe('React Applications', () => {
     const mainPath = `apps/${appName}/src/main.jsx`;
     updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
 
+    await testGeneratedApp(appName);
+  }, 30000);
+
+  async function testGeneratedApp(appName) {
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
+
     runCLI(`build ${appName}`);
     checkFilesExist(
       `dist/apps/${appName}/index.html`,
@@ -134,5 +116,5 @@ describe('React Applications', () => {
     expect(lintE2eResults).toContain('All files pass linting.');
     const e2eResults = runCLI(`e2e ${appName}-e2e`);
     expect(e2eResults).toContain('All specs passed!');
-  }, 30000);
+  }
 });
