@@ -9,6 +9,11 @@
       "version": "8.3.0-beta.1",
       "description": "Rename 'nx lint' into 'nx workspace-lint' to avoid confusion",
       "factory": "./src/migrations/update-8-3-0/rename-lint"
+    },
+    "update-angular-cli-8-1": {
+      "version": "8.3.0-beta.1",
+      "description": "Update Angular CLI to 8.1.1",
+      "factory": "./src/migrations/update-8-3-0/update-ng-cli-8-1"
     }
   }
 }

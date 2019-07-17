@@ -34,6 +34,6 @@
     "@nrwl/cypress": "*",
     "@nrwl/jest": "*",
     "@nrwl/web": "*",
-    "@angular-devkit/schematics": "8.0.1"
+    "@angular-devkit/schematics": "8.1.1"
   }
 }

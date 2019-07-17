@@ -1,7 +1,6 @@
 import { getWebConfig as getWebPartial } from './web.config';
 jest.mock('tsconfig-paths-webpack-plugin');
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-import * as StatsPlugin from 'stats-webpack-plugin';
 import { createConsoleLogger } from '@angular-devkit/core/node';
 import { Logger } from '@angular-devkit/core/src/logger';
 import * as ts from 'typescript';
@@ -72,24 +71,6 @@ describe('getWebConfig', () => {
       result.module.rules.find(rule => rule.test.test('styles.scss')).use[0]
         .loader
     ).toEqual('style-loader');
-  });
-
-  describe('statsJson', () => {
-    it('should generate a stats json', () => {
-      const result = getWebPartial(
-        root,
-        sourceRoot,
-        {
-          ...input,
-          statsJson: true
-        },
-        logger
-      );
-
-      expect(
-        result.plugins.find(plugin => plugin instanceof StatsPlugin)
-      ).toBeTruthy();
-    });
   });
 
   describe('without differential loading', () => {
