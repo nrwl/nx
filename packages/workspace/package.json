@@ -42,8 +42,8 @@
     ]
   },
   "dependencies": {
-    "@angular-devkit/core": "8.0.1",
-    "@angular-devkit/schematics": "8.0.1",
+    "@angular-devkit/core": "8.1.1",
+    "@angular-devkit/schematics": "8.1.1",
     "cosmiconfig": "4.0.0",
     "fs-extra": "6.0.0",
     "graphviz": "0.0.8",

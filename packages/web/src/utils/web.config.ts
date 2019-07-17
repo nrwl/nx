@@ -5,12 +5,13 @@ import { getCommonConfig } from '@angular-devkit/build-angular/src/angular-cli-f
 import { getStylesConfig } from '@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/styles';
 import { Configuration } from 'webpack';
 import { LoggerApi } from '@angular-devkit/core/src/logger';
-import { resolve } from 'path';
+import { resolve, basename } from 'path';
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { convertBuildOptions } from './normalize';
 import { readTsConfig } from '@nrwl/workspace';
 import { getBaseWebpackPartial } from './config';
 import { IndexHtmlWebpackPlugin } from '@angular-devkit/build-angular/src/angular-cli-files/plugins/index-html-webpack-plugin';
+import { generateEntryPoints } from '@angular-devkit/build-angular/src/angular-cli-files/utilities/package-chunk-sort';
 import { ScriptTarget } from 'typescript';
 
 export function getWebConfig(
@@ -52,17 +53,36 @@ export function getWebConfig(
     getPolyfillsPartial(options, overrideScriptTarget),
     getStylesPartial(wco),
     getCommonPartial(wco),
-    getBrowserPartial(wco)
+    getBrowserPartial(wco, options)
   ]);
 }
 
-function getBrowserPartial(wco: any) {
+function getBrowserPartial(wco: any, options: WebBuildBuilderOptions) {
   const config = getBrowserConfig(wco);
-  if (wco.buildOptions.differentialLoading) {
-    config.plugins = config.plugins.filter(
-      plugin => !(plugin instanceof IndexHtmlWebpackPlugin)
+
+  if (!wco.buildOptions.differentialLoading) {
+    const {
+      deployUrl,
+      subresourceIntegrity,
+      scripts = [],
+      styles = [],
+      index,
+      baseHref
+    } = options;
+
+    config.plugins.push(
+      new IndexHtmlWebpackPlugin({
+        input: resolve(wco.root, index),
+        output: basename(index),
+        baseHref,
+        entrypoints: generateEntryPoints({ scripts, styles }),
+        deployUrl: deployUrl,
+        sri: subresourceIntegrity,
+        noModuleEntrypoints: ['polyfills-es5']
+      })
     );
   }
+
   return config;
 }
 

@@ -40,6 +40,7 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
 
   outputHashing?: any;
   stylePreprocessingOptions?: any;
+  subresourceIntegrity?: boolean;
 }
 
 export default createBuilder<WebBuildBuilderOptions & JsonObject>(run);
@@ -107,8 +108,8 @@ export function run(
                     normalize(context.workspaceRoot),
                     options.index
                   ),
-                  ES5BuildFiles: result2.emittedFiles,
-                  ES2015BuildFiles: result1.emittedFiles,
+                  noModuleFiles: result2.emittedFiles,
+                  moduleFiles: result1.emittedFiles,
                   baseHref: options.baseHref,
                   deployUrl: options.deployUrl,
                   scripts: options.scripts,
