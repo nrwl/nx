@@ -417,6 +417,28 @@ export function addDepsToPackageJson(
   });
 }
 
+export function updatePackageJsonDependencies(
+  deps: any,
+  devDeps: any,
+  addInstall = true
+): Rule {
+  return updateJsonInTree('package.json', (json, context: SchematicContext) => {
+    json.dependencies = {
+      ...(json.dependencies || {}),
+      ...deps
+    };
+    json.devDependencies = {
+      ...(json.devDependencies || {}),
+      ...devDeps
+    };
+    if (addInstall && !installAdded) {
+      context.addTask(new NodePackageInstallTask());
+      installAdded = true;
+    }
+    return json;
+  });
+}
+
 export function getProjectConfig(host: Tree, name: string): any {
   const angularJson = readJsonInTree(host, '/angular.json');
   const projectConfig = angularJson.projects[name];
