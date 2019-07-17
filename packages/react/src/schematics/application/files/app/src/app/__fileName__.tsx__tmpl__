@@ -34,15 +34,15 @@ export class App extends Component {
             src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png"
           />
         </<%= header %>>
-        <p>This is a React app built with <a href="https://nx.dev">Nx</a>.</p>
-        <p>🔎 **Nx is a set of Angular CLI power-ups for modern development.**</p>
+        <p>This is a React app built with <a href="https://nx.dev/react">Nx</a>.</p>
+        <p>🔎 **Nx is a set of Extensible Dev Tools for Monorepos.**</p>
         <h2>Quick Start & Documentation</h2>
         <ul>
           <li>
-            <a href="https://nx.dev/getting-started/what-is-nx">30-minute video showing all Nx features</a>
+            <a href="https://nx.dev/react/getting-started/what-is-nx">10-minute video showing all Nx features</a>
           </li>
           <li>
-            <a href="https://nx.dev/tutorial/01-create-application">Interactive tutorial</a>
+            <a href="https://nx.dev/react/tutorial/01-create-application">Interactive tutorial</a>
           </li>
         </ul>
       </<%= wrapper %>>
@@ -60,15 +60,15 @@ export const App = () => {
           src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png"
         />
       </<%= header %>>
-      <p>This is a React app built with <a href="https://nx.dev">Nx</a>.</p>
-      <p>🔎 **Nx is a set of Angular CLI power-ups for modern development.**</p>
+      <p>This is a React app built with <a href="https://nx.dev/react">Nx</a>.</p>
+      <p>🔎 **Nx is a set of Extensible Dev Tools for Monorepos.**</p>
       <h2>Quick Start & Documentation</h2>
       <ul>
         <li>
-          <a href="https://nx.dev/getting-started/what-is-nx">30-minute video showing all Nx features</a>
+          <a href="https://nx.dev/react/getting-started/what-is-nx">10-minute video showing all Nx features</a>
         </li>
         <li>
-          <a href="https://nx.dev/tutorial/01-create-application">Interactive tutorial</a>
+          <a href="https://nx.dev/react/tutorial/01-create-application">Interactive tutorial</a>
         </li>
       </ul>
     </<%= wrapper %>>

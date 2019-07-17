@@ -4,13 +4,13 @@ This project was generated using [Nx](https://nx.dev).
 
 <p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png" width="450"></p>
 
-🔎 **Nx is a set of Angular CLI power-ups for modern development.**
+🔎 **Nx is a set of Extensible Dev Tools for Monorepos.**
 
 ## Quick Start & Documentation
 
 [Nx Documentation](https://nx.dev)
 
-[30-minute video showing all Nx features](https://nx.dev/getting-started/what-is-nx)
+[10-minute video showing all Nx features](https://nx.dev/getting-started/what-is-nx)
 
 [Interactive Tutorial](https://nx.dev/tutorial/01-create-application)
 
