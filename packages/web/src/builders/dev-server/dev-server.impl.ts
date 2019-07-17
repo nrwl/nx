@@ -7,7 +7,7 @@ import { JsonObject } from '@angular-devkit/core';
 
 import { Observable, from, forkJoin } from 'rxjs';
 import { normalizeWebBuildOptions } from '../../utils/normalize';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 import { WebBuildBuilderOptions } from '../build/build.impl';
 import { Configuration } from 'webpack';
 import { writeFileSync } from 'fs';
@@ -111,7 +111,7 @@ function run(
             );
           }
 
-          context.logger.info(stats.toString());
+          context.logger.info(stats.toString(config.stats));
         }
       }).pipe(
         map(output => {
