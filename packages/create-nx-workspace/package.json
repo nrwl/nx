@@ -1,7 +1,7 @@
 {
   "name": "create-nx-workspace",
   "version": "0.0.2",
-  "description": "Angular CLI power-ups for modern Web development",
+  "description": "Extensible Dev Tools for Monorepos",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nrwl/nx.git"

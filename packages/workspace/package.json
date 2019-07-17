@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/workspace",
   "version": "0.0.1",
-  "description": "Power-ups for Angular CLI",
+  "description": "Extensible Dev Tools for Monorepos",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nrwl/nx.git"

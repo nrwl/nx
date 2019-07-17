@@ -36,7 +36,7 @@ export const supportedNxCommands = [
  * be executed correctly.
  */
 export const commandsObject = yargs
-  .usage('Angular CLI power-ups for modern Web development')
+  .usage('Extensible Dev Tools for Monorepos')
   .command(
     'affected',
     'Run task for affected projects',
