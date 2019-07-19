@@ -1,3 +1,9 @@
 {
-  "schematics": {}
+  "schematics": {
+    "update-8.3.0": {
+      "version": "8.3.0",
+      "description": "Update jest.config.js",
+      "factory": "./src/migrations/update-8-3-0/update-8-3-0"
+    }
+  }
 }
