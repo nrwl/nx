@@ -1,20 +1,9 @@
 import { Tree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runSchematic, createTestUILib } from '../../utils/testing';
 import { readJsonInTree } from '@nrwl/workspace';
-import { join, normalize, schema } from '@angular-devkit/core';
-import {
-  babelCoreVersion,
-  storybookAddonKnobsVersion,
-  storybookAngularVersion,
-  babelLoaderVersion
-} from '../../utils/versions';
-import { Architect, targetFromTargetString } from '@angular-devkit/architect';
-import { TestingArchitectHost } from '@angular-devkit/architect/testing';
-import * as path from 'path';
+import { createTestUILib, runSchematic } from '../../utils/testing';
 import { StorybookConfigureSchema } from './schema';
 
-describe('schematic:storybook-configure', () => {
+describe('schematic:configuration', () => {
   let appTree: Tree;
 
   beforeEach(async () => {
@@ -23,7 +12,7 @@ describe('schematic:storybook-configure', () => {
 
   it('should generate files', async () => {
     const tree = await runSchematic(
-      'storybook-configure',
+      'configuration',
       { name: 'test-ui-lib' },
       appTree
     );
@@ -37,7 +26,7 @@ describe('schematic:storybook-configure', () => {
 
   it('should update `angular.json` file', async () => {
     const tree = await runSchematic(
-      'storybook-configure',
+      'configuration',
       { name: 'test-ui-lib' },
       appTree
     );
@@ -70,7 +59,7 @@ describe('schematic:storybook-configure', () => {
 
   it('should update `tsconfig.lib.json` file', async () => {
     const tree = await runSchematic(
-      'storybook-configure',
+      'configuration',
       { name: 'test-ui-lib' },
       appTree
     );
@@ -83,7 +72,7 @@ describe('schematic:storybook-configure', () => {
 
   it('should configure everything at once', async () => {
     const tree = await runSchematic(
-      'storybook-configure',
+      'configuration',
       <StorybookConfigureSchema>{
         name: 'test-ui-lib',
         configureCypress: true,
@@ -122,7 +111,7 @@ describe('schematic:storybook-configure', () => {
 
   // it('should launch cypress and storybook successfully', async done => {
   //   const tree = await runSchematic(
-  //     'storybook-configure',
+  //     'configuration',
   //     <StorybookConfigureSchema>{
   //       name: 'test-ui-lib',
   //       configureCypress: true,

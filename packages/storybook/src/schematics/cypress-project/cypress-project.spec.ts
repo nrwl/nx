@@ -1,9 +1,8 @@
 import { Tree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runSchematic, createTestUILib } from '../../utils/testing';
 import { readJsonInTree } from '@nrwl/workspace';
+import { createTestUILib, runSchematic } from '../../utils/testing';
 
-describe('schematic:cypress-configure', () => {
+describe('schematic:cypress-project', () => {
   let appTree: Tree;
 
   beforeEach(async () => {
@@ -12,7 +11,7 @@ describe('schematic:cypress-configure', () => {
 
   it('should generate files', async () => {
     const tree = await runSchematic(
-      'cypress-configure',
+      'cypress-project',
       { name: 'test-ui-lib' },
       appTree
     );
@@ -27,7 +26,7 @@ describe('schematic:cypress-configure', () => {
 
   it('should update `angular.json` file', async () => {
     const tree = await runSchematic(
-      'cypress-configure',
+      'cypress-project',
       { name: 'test-ui-lib' },
       appTree
     );

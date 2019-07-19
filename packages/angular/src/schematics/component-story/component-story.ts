@@ -1,21 +1,20 @@
 import {
-  chain,
-  externalSchematic,
-  Rule,
-  Tree,
-  SchematicContext,
-  mergeWith,
   apply,
-  url,
+  chain,
+  mergeWith,
+  move,
+  Rule,
+  SchematicContext,
   template,
-  move
+  Tree,
+  url
 } from '@angular-devkit/schematics';
-import { PropertyDeclaration, SyntaxKind } from 'typescript';
 import {
-  getSourceNodes,
-  findNodes
+  findNodes,
+  getSourceNodes
 } from '@schematics/angular/utility/ast-utils';
-import { getTsSourceFile } from '../../utils/utils';
+import { PropertyDeclaration, SyntaxKind } from 'typescript';
+import { getTsSourceFile } from '../../utils/ast-utils';
 
 export interface CreateComponentStoriesFileSchema {
   libPath: string;

@@ -8,7 +8,7 @@ import {
   InsertChange,
   RemoveChange
 } from '@nrwl/workspace/src/utils/ast-utils';
-import { Tree } from '@angular-devkit/schematics';
+import { Tree, SchematicsException } from '@angular-devkit/schematics';
 import * as path from 'path';
 import { toFileName } from '@nrwl/workspace/src/utils/name-utils';
 
@@ -598,4 +598,20 @@ function getMatchingObjectLiteralElement(
         return false;
       })[0]
   );
+}
+
+export function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
+  const buffer = host.read(path);
+  if (!buffer) {
+    throw new SchematicsException(`Could not read TS file (${path}).`);
+  }
+  const content = buffer.toString();
+  const source = ts.createSourceFile(
+    path,
+    content,
+    ts.ScriptTarget.Latest,
+    true
+  );
+
+  return source;
 }

@@ -1,18 +1,13 @@
 import { Tree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runSchematic, createTestUILib } from '../../utils/testing';
-import { readJsonInTree } from '@nrwl/workspace';
-import { join, normalize } from '@angular-devkit/core';
+import { CypressConfigureSchema } from '../../../../storybook/src/schematics/cypress-project/cypress-project';
+import { StorybookStoriesSchema } from './stories';
 import {
-  babelCoreVersion,
-  storybookAddonKnobsVersion,
-  storybookAngularVersion,
-  babelLoaderVersion
-} from '../../utils/versions';
-import { StorybookStoriesSchema } from './storybook-stories';
-import { CypressConfigureSchema } from '../cypress-configure/cypress-configure';
+  createTestUILib,
+  runSchematic,
+  runExternalSchematic
+} from '../../utils/testing';
 
-describe('schematic:storybook-stories', () => {
+describe('schematic:stories', () => {
   let appTree: Tree;
 
   beforeEach(async () => {
@@ -22,7 +17,7 @@ describe('schematic:storybook-stories', () => {
   describe('Storybook stories', () => {
     it('should generate stories.ts files', async () => {
       const tree = await runSchematic<StorybookStoriesSchema>(
-        'storybook-stories',
+        'stories',
         { name: 'test-ui-lib', generateCypressSpecs: false },
         appTree
       );
@@ -52,13 +47,14 @@ describe('schematic:storybook-stories', () => {
     });
 
     it('should generate cypress spec files', async () => {
-      let tree = await runSchematic<CypressConfigureSchema>(
-        'cypress-configure',
+      let tree = await runExternalSchematic(
+        '@nrwl/storybook',
+        'cypress-project',
         { name: 'test-ui-lib' },
         appTree
       );
       tree = await runSchematic<StorybookStoriesSchema>(
-        'storybook-stories',
+        'stories',
         { name: 'test-ui-lib', generateCypressSpecs: true },
         tree
       );
@@ -99,18 +95,19 @@ describe('schematic:storybook-stories', () => {
     });
 
     it('should run twice without errors', async () => {
-      let tree = await runSchematic<CypressConfigureSchema>(
-        'cypress-configure',
+      let tree = await runExternalSchematic(
+        '@nrwl/storybook',
+        'cypress-project',
         { name: 'test-ui-lib' },
         appTree
       );
       tree = await runSchematic<StorybookStoriesSchema>(
-        'storybook-stories',
+        'stories',
         { name: 'test-ui-lib', generateCypressSpecs: false },
         tree
       );
       tree = await runSchematic<StorybookStoriesSchema>(
-        'storybook-stories',
+        'stories',
         { name: 'test-ui-lib', generateCypressSpecs: true },
         tree
       );

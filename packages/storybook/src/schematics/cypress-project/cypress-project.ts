@@ -2,17 +2,11 @@ import {
   chain,
   externalSchematic,
   Rule,
-  Tree,
-  SchematicContext
+  SchematicContext,
+  Tree
 } from '@angular-devkit/schematics';
-import { safeFileDelete, parseJsonAtPath } from '../../utils/utils';
-import { Observable, of } from 'rxjs';
-import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
-import { getProject } from '@schematics/angular/utility/project';
-import {
-  updateWorkspace,
-  getWorkspace
-} from '@schematics/angular/utility/config';
+import { getProjectConfig, updateWorkspaceInTree } from '@nrwl/workspace';
+import { parseJsonAtPath, safeFileDelete } from '../../utils/utils';
 
 export interface CypressConfigureSchema {
   name: string;
@@ -35,11 +29,12 @@ function removeUnneededFiles(projectName: string): Rule {
   return (tree: Tree, context: SchematicContext): Tree => {
     safeFileDelete(
       tree,
-      getProject(tree, projectName).sourceRoot + '/integration/app.spec.ts'
+      getProjectConfig(tree, projectName).sourceRoot +
+        '/integration/app.spec.ts'
     );
     safeFileDelete(
       tree,
-      getProject(tree, projectName).sourceRoot + '/support/app.po.ts'
+      getProjectConfig(tree, projectName).sourceRoot + '/support/app.po.ts'
     );
 
     return tree;
@@ -49,7 +44,7 @@ function removeUnneededFiles(projectName: string): Rule {
 function addBaseUrlToCypressConfig(projectName: string): Rule {
   return (tree: Tree, context: SchematicContext): void | Tree => {
     const cypressConfigPath =
-      getProject(tree, projectName).root + '/cypress.json';
+      getProjectConfig(tree, projectName).root + '/cypress.json';
     const cypressConfig = parseJsonAtPath(tree, cypressConfigPath);
 
     let cypressConfigContent: any;
@@ -73,10 +68,10 @@ function updateAngularJsonBuilder(
   e2eProjectName: string,
   targetProjectName
 ): Rule {
-  return (tree: Tree): void | Tree => {
-    const workspace = getWorkspace(tree);
-    const e2eTarget = workspace.projects[e2eProjectName].architect.e2e;
-    workspace.projects[e2eProjectName].architect.e2e = {
+  return updateWorkspaceInTree(workspace => {
+    const project = workspace.projects[e2eProjectName];
+    const e2eTarget = project.architect['e2e'];
+    project.architect['e2e'] = {
       ...e2eTarget,
       options: <any>{
         ...e2eTarget.options,
@@ -91,6 +86,6 @@ function updateAngularJsonBuilder(
         }
       }
     };
-    return <any>updateWorkspace(workspace);
-  };
+    return workspace;
+  });
 }
