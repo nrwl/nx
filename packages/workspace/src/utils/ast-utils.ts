@@ -402,10 +402,12 @@ export function addDepsToPackageJson(
 ): Rule {
   return updateJsonInTree('package.json', (json, context: SchematicContext) => {
     json.dependencies = {
+      ...(json.dependencies || {}),
       ...deps,
       ...(json.dependencies || {})
     };
     json.devDependencies = {
+      ...(json.devDependencies || {}),
       ...devDeps,
       ...(json.devDependencies || {})
     };
