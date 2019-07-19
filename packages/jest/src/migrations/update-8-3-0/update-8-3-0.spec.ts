@@ -28,8 +28,8 @@ describe('Update 8.3.0', () => {
       .runSchematicAsync('update-8.3.0', {}, initialTree)
       .toPromise();
 
-    expect(result.readContent('jest.config.js')).toContain(
-      'collectCoverage: false'
-    );
+    const updatedJestConfigFile = result.readContent('jest.config.js');
+
+    expect(updatedJestConfigFile).not.toContain('collectCoverage: true');
   });
 });

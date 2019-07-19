@@ -1,29 +1,38 @@
-import { Rule, SchematicContext, Tree } from '@angular-devkit/schematics';
+import { Rule, Tree } from '@angular-devkit/schematics';
+import { insert } from '@nrwl/workspace';
+import * as ts from 'typescript';
+import {
+  getSourceNodes,
+  RemoveChange
+} from '@nrwl/workspace/src/utils/ast-utils';
 
-function updateJestConfig(host: Tree, context: SchematicContext) {
-  if (!host.exists('jest.config.js')) {
-    context.logger.warn(`Could not find ./jest.config.js`);
-    context.logger.warn(
-      'It is recommended that your jest.config.js configuration sets collectCoverage: false'
+function updateJestConfig(host: Tree) {
+  if (host.exists('jest.config.js')) {
+    const contents = host.read('jest.config.js').toString();
+    const sourceFile = ts.createSourceFile(
+      'jest.config.js',
+      contents,
+      ts.ScriptTarget.Latest
     );
-    return host;
-  }
+    const changes: RemoveChange[] = [];
 
-  const originalContent = host.read('jest.config.js').toString();
-  const content = originalContent.replace(
-    'collectCoverage: true',
-    'collectCoverage: false'
-  );
-  if (content.includes('collectCoverage: false')) {
-    host.overwrite('jest.config.js', content);
-  } else {
-    context.logger.warn('Could not alter ./jest.config.js');
-    context.logger.warn(
-      'It is recommended that your jest.config.js configuration sets collectCoverage: false'
-    );
+    getSourceNodes(sourceFile).forEach(node => {
+      if (
+        ts.isPropertyAssignment(node) &&
+        ts.isIdentifier(node.name) &&
+        node.name.text === 'collectCoverage'
+      ) {
+        changes.push(
+          new RemoveChange(
+            'jest.config.js',
+            node.getStart(sourceFile),
+            node.getFullText(sourceFile)
+          )
+        );
+      }
+    });
+    insert(host, 'jest.config.js', changes);
   }
-
-  return host;
 }
 
 export default function(): Rule {
