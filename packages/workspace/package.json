@@ -31,6 +31,7 @@
     "requirements": {},
     "migrations": "./migrations.json",
     "packageGroup": [
+      "@nrwl/workspace",
       "@nrwl/angular",
       "@nrwl/cypress",
       "@nrwl/express",

@@ -4,6 +4,7 @@ import {
   TaskConfiguration,
   TaskConfigurationGenerator,
   TaskExecutorFactory,
+  TaskId,
   Tree
 } from '@angular-devkit/schematics';
 import { Observable } from 'rxjs';
@@ -12,7 +13,11 @@ import { join } from 'path';
 
 let taskRegistered = false;
 
-export function addUpdateTask(pkg: string, to: string): Rule {
+export function addUpdateTask(
+  pkg: string,
+  to: string,
+  dependencies: TaskId[] = []
+): Rule {
   return (host: Tree, context: SchematicContext) => {
     // Workflow should always be there during ng update but not during tests.
     if (!context.engine.workflow) {
@@ -34,7 +39,9 @@ export function addUpdateTask(pkg: string, to: string): Rule {
       }
     });
 
-    context.addTask(new RunUpdateTask(pkg, to));
+    console.log(dependencies);
+
+    context.addTask(new RunUpdateTask(pkg, to), dependencies);
   };
 }
 
