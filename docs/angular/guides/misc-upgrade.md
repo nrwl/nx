@@ -9,7 +9,7 @@ NgUpgrade is a library put together by the Angular team, which we can use in our
 Setting up an Upgrade Module manually involves several steps and is easy to misconfigure. **Nx** provides a command that does it for you.
 
 ```console
-ng g @nrwl/angular:upgrade-module legacyApp --app=myapp
+ng g @nrwl/angular:upgrade-module legacyApp --project=myapp
 ```
 
 This will add and set up `UpgradeModule`, configure `legacyApp`, and will add all the needed dependencies to `package.json`.
@@ -51,7 +51,7 @@ For finer grain control over application performance during conversion to Angula
 Setting up a Downgrade Module manually involves several steps and is easy to misconfigure. **Nx** provides a command that does it for you.
 
 ```console
-ng @nrwl/angular:downgrade-module legacyApp --app=myapp
+ng @nrwl/angular:downgrade-module legacyApp --project=myapp
 ```
 
 This will configure the `AppModule` to not bootstrap the `AppComponent` and instead set it up as an entry component. It will also configure `main.ts` to bootstrap AngularJS and use the `downgradeModule` to downgrade the Angular `AppModule` to run in AngularJS.
