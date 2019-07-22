@@ -55,7 +55,6 @@ describe('Update 7.7.0', () => {
           },
           resolver: '@nrwl/builders/plugins/jest/resolver',
           moduleFileExtensions: ['ts', 'js', 'html'],
-          collectCoverage: true,
           coverageReporters: ['html']
         };`
       );
