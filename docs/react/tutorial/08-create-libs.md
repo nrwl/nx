@@ -10,7 +10,7 @@ Every library has an `index.ts` file, which defines its public API. Other applic
 
 To illustrate how useful libraries can be, create a library of React components.
 
-**Run `ng g @nrwl/react:lib ui`.**
+**Run `nx g @nrwl/react:lib ui`.**
 
 You should see the following:
 
@@ -70,7 +70,7 @@ Here, you can either change the UI component or generate a new one.
 **Add a component to the newly created ui library by running:**
 
 ```bash
-ng g @nrwl/react:component todos --project=ui
+nx g @nrwl/react:component todos --project=ui
 ```
 
 ```treeview
@@ -160,7 +160,7 @@ export const App = () => {
 export default App;
 ```
 
-**Restart both `ng serve api` and `ng serve todos` and you should see the application running.**
+**Restart both `nx serve api` and `nx serve todos` and you should see the application running.**
 
 !!!!!
 Libraries' public API is defined in...

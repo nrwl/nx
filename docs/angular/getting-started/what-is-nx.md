@@ -1,26 +1,21 @@
 # Nx
 
-Tools for Modern Web Development.
+Nx is a set of Extensible Dev Tools for Monorepos.
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/mVKMse-gFBI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 With Nx, you can:
 
-- Use modern tools like Cypress, Jest, Prettier, TypeScript, ...
-- Build full-stack applications using Angular and Node.js
-- Use effective development practices pioneered at Google, Facebook and Microsoft
+- Use [modern tools](/angular/fundamentals/use-modern-tools) like Cypress, Jest, Prettier, TypeScript, and others.
+- Build [full-stack applications](/angular/fundamentals/build-full-stack-applications) using Angular, and Node.js.
+- Use [effective development practices](/angular/fundamentals/develop-like-google) pioneered at Google, Facebook, and Microsoft.
 
 ## Getting Started
 
 - New to Nx? Have a look at the [Getting Started](/angular/getting-started/getting-started) guide.
-- [How does Nx compare to the off-the-shelf Angular CLI?](/angular/getting-started/nx-and-cli)
-
-## Learn Nx
-
-- [How Nx helps you use modern tools like Cypress, Jest, and Nest](/angular/fundamentals/use-modern-tools)
-- [How Nx helps you build full-stack applications using Angular and Node.js](/angular/fundamentals/build-full-stack-applications)
-- [How Nx helps you develop like Google](/angular/fundamentals/develop-like-google)
-- [Books, talks, and blog posts about Nx](/angular/getting-started/resources)
+- Complete the [tutorial](/angular/tutorial/01-create-application) on using Nx build a full stack application.
+- Use the [Nx CLI](/angular/guides/cli) to perform various development tasks.
+- Learn more about Nx from books, blog posts, talks on our [resources page](/angular/getting-started/resources).
 
 ## Contribute
 

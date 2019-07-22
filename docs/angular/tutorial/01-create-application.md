@@ -10,7 +10,7 @@ In this tutorial you will use Nx to build a full-stack application out of common
 npx create-nx-workspace@latest myorg
 ```
 
-When asked about 'preset', select `empty`.
+When asked about 'preset', select `empty`, and `Angular CLI` for the CLI.
 
 ```treeview
 myorg/

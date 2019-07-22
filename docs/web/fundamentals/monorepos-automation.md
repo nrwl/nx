@@ -1,4 +1,4 @@
-# Developing Like Google: Monorepos and Automation
+# Monorepos and Automation
 
 In this guide you will look at one of the most interesting parts of Nx. The part that make many things so much easier, that it has a transformative effect on a team and even on an organization.
 
@@ -44,6 +44,13 @@ Nx supports two types of **projects**: applications and libraries.
 
 Nx can generate many different types of applications:
 
+React Applications:
+
+```bash
+yarn add --dev @nrwl/react # Add React Capabilities to a workspace
+nx g @nrwl/react:application myapp # Generate a React Application
+```
+
 Applications built out of Web Components:
 
 ```bash
@@ -56,13 +63,6 @@ Angular Applications:
 ```bash
 yarn add --dev @nrwl/angular # Add Angular Capabilities to a workspace
 nx g @nrwl/angular:application myapp # Generate an Angular Application
-```
-
-React Applications:
-
-```bash
-yarn add --dev @nrwl/react # Add React Capabilities to a workspace
-nx g @nrwl/react:application myapp # Generate a React Application
 ```
 
 NestJS Applications:
@@ -124,10 +124,10 @@ No matter what what kind of application it is, you can run:
 
 Nx can also generate many different types of libraries:
 
-Typescript Libraries / Web Components Libraries:
+React Libraries:
 
 ```bash
-nx g @nrwl/workspace:library mylib # Generate a Typescript Library
+nx g @nrwl/react:library mylib # Generate a React Library
 ```
 
 Angular Libraries:
@@ -136,10 +136,10 @@ Angular Libraries:
 nx g @nrwl/angular:library mylib # Generate an Angular Library
 ```
 
-React Libraries:
+Typescript Libraries:
 
 ```bash
-nx g @nrwl/react:library mylib # Generate a React Library
+nx g @nrwl/workspace:library mylib # Generate a Typescript Library
 ```
 
 Creating a new library will result in something like this:
@@ -353,5 +353,5 @@ Nx uses its advanced code analysis to construct a dependency graph of all applic
 
 With Nx, you can use effective development practices pioneered at Google:
 
-- Monorepo-style development. You can build multiple web and Node.js applications out of reusable libraries.
+- Monorepo-style development. You can build multiple React and Node.js applications out of reusable libraries.
 - Automation. You can enforce best practices uses workspace-specific schematics and code formatters.
