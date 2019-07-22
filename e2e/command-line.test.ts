@@ -75,10 +75,16 @@ describe('Command line', () => {
 
       const stdout = runCommand('./node_modules/.bin/nx workspace-lint');
       expect(stdout).toContain(
-        `Cannot find project '${appBefore}' in 'apps/${appBefore}'`
+        `- Cannot find project '${appBefore}' in 'apps/${appBefore}'`
       );
       expect(stdout).toContain(
-        `The 'apps/${appAfter}/browserslist' file doesn't belong to any project.`
+        'The following file(s) do not belong to any projects:'
+      );
+      expect(stdout).toContain(`- apps/${appAfter}/browserslist`);
+      expect(stdout).toContain(`- apps/${appAfter}/src/app/app.component.css`);
+      expect(stdout).toContain(`- apps/${appAfter}/src/app/app.component.html`);
+      expect(stdout).toContain(
+        `- apps/${appAfter}/src/app/app.component.spec.ts`
       );
     });
   });

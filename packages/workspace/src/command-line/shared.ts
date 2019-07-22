@@ -15,6 +15,7 @@ import { YargsAffectedOptions } from './affected';
 import { readDependencies, DepGraph, Deps } from './deps-calculator';
 import { touchedProjects } from './touched';
 import { appRootPath } from '../utils/app-root';
+import { output } from './output';
 
 const ignore = require('ignore');
 
@@ -57,27 +58,25 @@ export function printArgsWarning(options: YargsAffectedOptions) {
     !all &&
     options._.length < 2
   ) {
-    console.log('Note: Nx defaulted to --base=master --head=HEAD');
+    output.note({
+      title: `Affected criteria defaulted to --base=${output.bold(
+        'master'
+      )} --head=${output.bold('HEAD')}`
+    });
   }
 
   if (all) {
-    console.warn(
-      '****************************************************************************************'
-    );
-    console.warn('WARNING:');
-    console.warn(
-      'Running affected:* commands with --all can result in very slow builds.'
-    );
-    console.warn(
-      'It is not meant to be used for any sizable project or to be used in CI.'
-    );
-    console.warn(
-      'Read about rebuilding and retesting only what is affected here:'
-    );
-    console.warn('https://nx.dev/guides/monorepo-affected.');
-    console.warn(
-      '****************************************************************************************'
-    );
+    output.warn({
+      title: `Running affected:* commands with --all can result in very slow builds.`,
+      bodyLines: [
+        output.bold('--all') +
+          ' is not meant to be used for any sizable project or to be used in CI.',
+        '',
+        output.colors.gray(
+          'Learn more about checking only what is affected: '
+        ) + 'https://nx.dev/guides/monorepo-affected.'
+      ]
+    });
   }
 }
 

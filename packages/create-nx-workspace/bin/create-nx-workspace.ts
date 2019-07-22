@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
+import { output } from '@nrwl/workspace';
 import { execSync } from 'child_process';
-import { dirSync } from 'tmp';
 import { writeFileSync } from 'fs';
 import * as path from 'path';
+import { dirSync } from 'tmp';
 import * as yargsParser from 'yargs-parser';
 
 const parsedArgs = yargsParser(process.argv, {
@@ -54,14 +55,19 @@ const projectName = parsedArgs._[2];
 
 // check that the workspace name is passed in
 if (!projectName) {
-  console.error(
-    'Please provide a project name (e.g., create-nx-workspace nrwl-proj)'
-  );
+  output.error({
+    title: 'A project name is required when creating a new workspace',
+    bodyLines: [
+      output.colors.gray('For example:'),
+      '',
+      `${output.colors.gray('>')} create-nx-workspace my-new-workspace`
+    ]
+  });
   process.exit(1);
 }
 
 // creating the sandbox
-console.log(`Creating a sandbox with Nx...`);
+output.logSingleLine(`Creating a sandbox...`);
 const tmpDir = dirSync().name;
 
 const nxVersion = 'NX_VERSION';
@@ -90,7 +96,13 @@ const args = process.argv
   .slice(2)
   .map(a => `"${a}"`)
   .join(' ');
-console.log(`ng new ${args} --collection=${nxTool.packageName}`);
+
+output.logSingleLine(
+  `${output.colors.gray('Running:')} ng new ${args} --collection=${
+    nxTool.packageName
+  }`
+);
+
 execSync(
   `"${path.join(
     tmpDir,

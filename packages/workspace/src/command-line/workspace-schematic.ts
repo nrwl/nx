@@ -23,6 +23,7 @@ import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 import { fileExists } from '../utils/fileutils';
 import { appRootPath } from '../utils/app-root';
+import { output } from './output';
 
 const rootDirectory = appRootPath;
 
@@ -204,6 +205,10 @@ async function executeSchematic(
   outDir: string,
   logger: logging.Logger
 ) {
+  output.logSingleLine(
+    `${output.colors.gray(`Executing your local schematic`)}: ${schematicName}`
+  );
+
   let nothingDone = true;
   workflow.reporter.subscribe((event: any) => {
     nothingDone = false;

@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import { WorkspaceResults } from './workspace-results';
 import { serializeJson } from '../utils/fileutils';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { output } from './output';
 
 describe('WorkspacesResults', () => {
   let results: WorkspaceResults;
@@ -39,25 +40,46 @@ describe('WorkspacesResults', () => {
     });
 
     it('should print results', () => {
-      results.success('proj');
-      spyOn(console, 'log');
+      const projectName = 'proj';
+      results.success(projectName);
+      spyOn(output, 'success');
 
-      results.printResults(false, 'Success', 'Fail');
+      const successTitle = 'Success';
 
-      expect(console.log).toHaveBeenCalledWith('Success');
+      results.printResults(false, successTitle, 'Fail');
+
+      expect(output.success).toHaveBeenCalledWith({
+        title: successTitle
+      });
     });
 
-    it('should tell warn the user that not all tests were run', () => {
+    it('should warn the user that not all tests were run', () => {
       (<any>results).startedWithFailedProjects = true;
-      results.success('proj');
-      spyOn(console, 'warn');
 
-      results.printResults(true, 'Success', 'Fail');
+      const projectName = 'proj';
+      spyOn(output, 'success');
+      spyOn(output, 'warn');
 
-      expect(console.warn).toHaveBeenCalledWith(stripIndents`
-          Warning: Only failed affected projects were run.
-          You should run above command WITHOUT --only-failed
-        `);
+      results.success(projectName);
+
+      const successTitle = 'Success';
+
+      results.printResults(true, successTitle, 'Fail');
+
+      expect(output.success).toHaveBeenCalledWith({
+        title: successTitle
+      });
+
+      expect(output.warn).toHaveBeenCalledWith({
+        title: `Only affected projects ${output.underline(
+          'which had previously failed'
+        )} were run`,
+        bodyLines: [
+          `You should verify by running ${output.underline(
+            'without'
+          )} ${output.bold('--only-failed')}`
+        ]
+      });
     });
   });
 
@@ -86,23 +108,45 @@ describe('WorkspacesResults', () => {
     });
 
     it('should print results', () => {
-      results.fail('proj');
-      spyOn(console, 'error');
+      const projectName = 'proj';
+      results.fail(projectName);
+      spyOn(output, 'error');
 
-      results.printResults(true, 'Success', 'Fail');
+      const errorTitle = 'Fail';
 
-      expect(console.error).toHaveBeenCalledWith('Fail');
+      results.printResults(true, 'Success', errorTitle);
+
+      expect(output.error).toHaveBeenCalledWith({
+        title: errorTitle,
+        bodyLines: [
+          output.colors.gray('Failed projects:'),
+          '',
+          `${output.colors.gray('-')} ${projectName}`
+        ]
+      });
     });
 
-    it('should tell warn the user that not all tests were run', () => {
-      results.fail('proj');
-      spyOn(console, 'log');
+    it('should tell the user that they can isolate only the failed tests', () => {
+      const projectName = 'proj';
+      results.fail(projectName);
+      spyOn(output, 'error');
 
-      results.printResults(false, 'Success', 'Fail');
+      const errorTitle = 'Fail';
 
-      expect(console.log).toHaveBeenCalledWith(
-        `You can isolate the above projects by passing --only-failed`
-      );
+      results.printResults(false, 'Success', errorTitle);
+
+      expect(output.error).toHaveBeenCalledWith({
+        title: errorTitle,
+        bodyLines: [
+          output.colors.gray('Failed projects:'),
+          '',
+          `${output.colors.gray('-')} ${projectName}`,
+          '',
+          `${output.colors.gray(
+            'You can isolate the above projects by passing:'
+          )} ${output.bold('--only-failed')}`
+        ]
+      });
     });
   });
 

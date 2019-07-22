@@ -20,6 +20,7 @@ import {
 } from './shared';
 import { generateGraph } from './dep-graph';
 import { WorkspaceResults } from './workspace-results';
+import { output } from './output';
 
 export interface YargsAffectedOptions
   extends yargs.Arguments,
@@ -70,7 +71,12 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
               !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
           );
         printArgsWarning(parsedArgs);
-        console.log(apps.join(' '));
+        if (apps.length) {
+          output.log({
+            title: 'Affected apps:',
+            bodyLines: apps.map(app => `${output.colors.gray('-')} ${app}`)
+          });
+        }
         break;
       case 'libs':
         const libs = (parsedArgs.all
@@ -83,7 +89,12 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
               !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
           );
         printArgsWarning(parsedArgs);
-        console.log(libs.join(' '));
+        if (libs.length) {
+          output.log({
+            title: 'Affected libs:',
+            bodyLines: libs.map(lib => `${output.colors.gray('-')} ${lib}`)
+          });
+        }
         break;
       case 'dep-graph':
         const projects = parsedArgs.all
@@ -105,16 +116,7 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
           parsedArgs.all
         );
         printArgsWarning(parsedArgs);
-        runCommand(
-          target,
-          targetProjects,
-          parsedArgs,
-          rest,
-          workspaceResults,
-          `Running ${target} for`,
-          `Running ${target} for affected projects succeeded.`,
-          `Running ${target} for affected projects failed.`
-        );
+        runCommand(target, targetProjects, parsedArgs, rest, workspaceResults);
         break;
     }
   } catch (e) {
@@ -141,33 +143,50 @@ function getProjects(
 }
 
 function printError(e: any, verbose?: boolean) {
+  const bodyLines = [e.message];
   if (verbose && e.stack) {
-    console.error(e.stack);
-  } else {
-    console.error(e.message);
+    bodyLines.push('');
+    bodyLines.push(e.stack);
   }
+  output.error({
+    title: 'There was a critical error when running your command',
+    bodyLines
+  });
 }
 
 async function runCommand(
-  command: string,
+  targetName: string,
   projects: string[],
   parsedArgs: YargsAffectedOptions,
   args: string[],
-  workspaceResults: WorkspaceResults,
-  iterationMessage: string,
-  successMessage: string,
-  errorMessage: string
+  workspaceResults: WorkspaceResults
 ) {
   if (projects.length <= 0) {
-    console.log(`No projects to run ${command}`);
+    output.logSingleLine(
+      `No affected projects to run target "${targetName}" on`
+    );
     return;
   }
 
-  let message = `${iterationMessage} projects:\n  ${projects.join(',\n  ')}`;
-  console.log(message);
+  const bodyLines = projects.map(
+    project => `${output.colors.gray('-')} ${project}`
+  );
   if (args.length > 0) {
-    console.log(`With flags: ${args.join(' ')}`);
+    bodyLines.push('');
+    bodyLines.push(
+      `${output.colors.gray('With flags:')} ${output.bold(args.join(' '))}`
+    );
   }
+
+  output.log({
+    title: `${output.colors.gray(
+      'Running target'
+    )} ${targetName} ${output.colors.gray('for projects:')}`,
+    bodyLines
+  });
+
+  output.addVerticalSeparator();
+
   const angularJson = readAngularJson();
   const projectMetadata = new Map<string, any>();
   projects.forEach(project => {
@@ -179,22 +198,32 @@ async function runCommand(
     fs.readFileSync('./package.json').toString('utf-8')
   );
   if (!packageJson.scripts || !packageJson.scripts.ng) {
-    console.error(
-      '\nError: Your `package.json` file should contain the `ng: "ng"` command in the `scripts` section.\n'
-    );
+    output.error({
+      title:
+        'The "scripts" section of your `package.json` must contain `"ng": "ng"`',
+      bodyLines: [
+        output.colors.gray('...'),
+        ' "scripts": {',
+        output.colors.gray('  ...'),
+        '   "ng": "ng"',
+        output.colors.gray('  ...'),
+        ' }',
+        output.colors.gray('...')
+      ]
+    });
     return process.exit(1);
   }
 
   try {
     await runAll(
       projects.map(app => {
-        return ngCommands.includes(command)
-          ? `ng -- ${command} --project=${app} ${transformArgs(
+        return ngCommands.includes(targetName)
+          ? `ng -- ${targetName} --project=${app} ${transformArgs(
               args,
               app,
               projectMetadata.get(app)
             ).join(' ')} `
-          : `ng -- run ${app}:${command} ${transformArgs(
+          : `ng -- run ${app}:${targetName} ${transformArgs(
               args,
               app,
               projectMetadata.get(app)
@@ -226,8 +255,8 @@ async function runCommand(
   workspaceResults.saveResults();
   workspaceResults.printResults(
     parsedArgs.onlyFailed,
-    successMessage,
-    errorMessage
+    `Running target "${targetName}" for affected projects succeeded`,
+    `Running target "${targetName}" for affected projects failed`
   );
 
   if (workspaceResults.hasFailure) {
