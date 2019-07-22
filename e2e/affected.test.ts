@@ -9,7 +9,21 @@ import {
   runCLI
 } from './utils';
 
+let originalCIValue;
+
 describe('Affected', () => {
+  /**
+   * Setting CI=true makes it simpler to configure assertions around output, as there
+   * won't be any colors.
+   */
+  beforeAll(() => {
+    originalCIValue = process.env.CI;
+    process.env.CI = 'true';
+  });
+  afterAll(() => {
+    process.env.CI = originalCIValue;
+  });
+
   it('should print, build, and test affected apps', () => {
     ensureProject();
     const myapp = uniq('myapp');
@@ -89,9 +103,10 @@ describe('Affected', () => {
     const build = runCommand(
       `npm run affected:build -- --files="libs/${mylib}/src/index.ts"`
     );
-    expect(build).toContain(
-      `Running build for projects:\n  ${myapp},\n  ${mypublishablelib}`
-    );
+    expect(build).toContain(`Running target build for projects:`);
+    expect(build).toContain(myapp);
+    expect(build).toContain(mypublishablelib);
+
     expect(build).not.toContain('is not registered with the build command');
     expect(build).not.toContain('with flags:');
 
@@ -99,28 +114,26 @@ describe('Affected', () => {
     const buildParallel = runCommand(
       `npm run affected:build -- --files="libs/${mylib}/src/index.ts" --parallel`
     );
+    expect(buildParallel).toContain(`Running target build for projects:`);
+    expect(buildParallel).toContain(myapp);
+    expect(buildParallel).toContain(mypublishablelib);
     expect(buildParallel).toContain(
-      `Running build for projects:\n  ${myapp},\n  ${mypublishablelib}`
-    );
-    expect(buildParallel).toContain(
-      'Running build for affected projects succeeded.'
+      'Running target "build" for affected projects succeeded'
     );
 
     const buildExcluded = runCommand(
       `npm run affected:build -- --files="libs/${mylib}/src/index.ts" --exclude ${myapp}`
     );
-    expect(buildExcluded).toContain(
-      `Running build for projects:\n  ${mypublishablelib}`
-    );
+    expect(buildExcluded).toContain(`Running target build for projects:`);
+    expect(buildExcluded).toContain(mypublishablelib);
 
     // affected:build should pass non-nx flags to the CLI
     const buildWithFlags = runCommand(
       `npm run affected:build -- --files="libs/${mylib}/src/index.ts" --stats-json`
     );
-
-    expect(buildWithFlags).toContain(
-      `Running build for projects:\n  ${myapp},\n  ${mypublishablelib}`
-    );
+    expect(buildWithFlags).toContain(`Running target build for projects:`);
+    expect(buildWithFlags).toContain(myapp);
+    expect(buildWithFlags).toContain(mypublishablelib);
     expect(buildWithFlags).toContain('With flags: --stats-json=true');
 
     if (!runsInWSL()) {
@@ -133,9 +146,10 @@ describe('Affected', () => {
     const unitTests = runCommand(
       `npm run affected:test -- --files="libs/${mylib}/src/index.ts"`
     );
-    expect(unitTests).toContain(
-      `Running test for projects:\n  ${mylib},\n  ${myapp},\n  ${mypublishablelib}`
-    );
+    expect(unitTests).toContain(`Running target test for projects:`);
+    expect(unitTests).toContain(mylib);
+    expect(unitTests).toContain(myapp);
+    expect(unitTests).toContain(mypublishablelib);
 
     // Fail a Unit Test
     updateFile(
@@ -149,12 +163,15 @@ describe('Affected', () => {
     const failedTests = runCommand(
       `npm run affected:test -- --files="libs/${mylib}/src/index.ts"`
     );
+    expect(failedTests).toContain(`Running target test for projects:`);
+    expect(failedTests).toContain(mylib);
+    expect(failedTests).toContain(myapp);
+    expect(failedTests).toContain(mypublishablelib);
+
+    expect(failedTests).toContain(`Failed projects:`);
+    expect(failedTests).toContain(myapp);
     expect(failedTests).toContain(
-      `Running test for projects:\n  ${mylib},\n  ${mypublishablelib},\n  ${myapp}`
-    );
-    expect(failedTests).toContain(`Failed projects: ${myapp}`);
-    expect(failedTests).toContain(
-      'You can isolate the above projects by passing --only-failed'
+      'You can isolate the above projects by passing: --only-failed'
     );
     expect(readJson('dist/.nx-results')).toEqual({
       command: 'test',
@@ -177,14 +194,17 @@ describe('Affected', () => {
     const isolatedTests = runCommand(
       `npm run affected:test -- --files="libs/${mylib}/src/index.ts" --only-failed`
     );
-    expect(isolatedTests).toContain(`Running test for projects:\n  ${myapp}`);
+    expect(isolatedTests).toContain(`Running target test for projects:`);
+    expect(isolatedTests).toContain(myapp);
 
     const linting = runCommand(
       `npm run affected:lint -- --files="libs/${mylib}/src/index.ts"`
     );
-    expect(linting).toContain(
-      `Running lint for projects:\n  ${mylib},\n  ${myapp},\n  ${myapp}-e2e,\n  ${mypublishablelib}`
-    );
+    expect(linting).toContain(`Running target lint for projects:`);
+    expect(linting).toContain(mylib);
+    expect(linting).toContain(myapp);
+    expect(linting).toContain(`${myapp}-e2e`);
+    expect(linting).toContain(mypublishablelib);
 
     const lintWithJsonFormating = runCommand(
       `npm run affected:lint -- --files="libs/${mylib}/src/index.ts" -- --format json`
@@ -194,20 +214,20 @@ describe('Affected', () => {
     const unitTestsExcluded = runCommand(
       `npm run affected:test -- --files="libs/${mylib}/src/index.ts" --exclude=${myapp},${mypublishablelib}`
     );
-    expect(unitTestsExcluded).toContain(
-      `Running test for projects:\n  ${mylib}`
-    );
+    expect(unitTestsExcluded).toContain(`Running target test for projects:`);
+    expect(unitTestsExcluded).toContain(mylib);
 
     const i18n = runCommand(
       `npm run affected -- --target extract-i18n --files="libs/${mylib}/src/index.ts"`
     );
-    expect(i18n).toContain(`Running extract-i18n for projects:\n  ${myapp}`);
+    expect(i18n).toContain(`Running target extract-i18n for projects:`);
+    expect(i18n).toContain(myapp);
 
     const interpolatedTests = runCommand(
       `npm run affected -- --target test --files="libs/${mylib}/src/index.ts" -- --jest-config {project.root}/jest.config.js`
     );
     expect(interpolatedTests).toContain(
-      `Running test for affected projects succeeded.`
+      `Running target "test" for affected projects succeeded`
     );
   }, 1000000);
 });

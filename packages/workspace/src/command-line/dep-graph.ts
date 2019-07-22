@@ -77,7 +77,6 @@ type ParsedUserOptions = {
 type OutputOptions = {
   data: string;
   shouldOpen: boolean;
-  shouldWriteToFile: boolean;
   filename?: string;
 };
 
@@ -248,23 +247,15 @@ export function createGraphviz(
   return g.to_dot();
 }
 
-function handleOutput({
-  data,
-  shouldOpen,
-  shouldWriteToFile,
-  filename
-}: OutputOptions) {
+function handleOutput({ data, shouldOpen, filename }: OutputOptions) {
   if (shouldOpen) {
     const tmpFilename = `${tmpNameSync()}.html`;
     writeToFile(tmpFilename, data);
     opn(tmpFilename, {
       wait: false
     });
-  } else if (!shouldWriteToFile) {
-    return console.log(data);
-  } else {
-    writeToFile(filename, data);
   }
+  writeToFile(filename, data);
 }
 
 function applyHTMLTemplate(svg: string) {
@@ -361,7 +352,6 @@ export function generateGraph(
   handleOutput({
     data: extractDataFromJson(projects, json, config.type),
     filename: config.filename,
-    shouldWriteToFile: config.isFilePresent,
     shouldOpen: config.shouldOpen
   });
 }

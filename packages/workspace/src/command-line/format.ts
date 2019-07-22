@@ -5,6 +5,7 @@ import { getProjectRoots, parseFiles, printArgsWarning } from './shared';
 import { YargsAffectedOptions } from './affected';
 import { getTouchedProjects } from './touched';
 import { fileExists } from '../utils/fileutils';
+import { output } from './output';
 
 export interface YargsFormatOptions extends YargsAffectedOptions {
   libsAndApps?: boolean;
@@ -27,7 +28,18 @@ export function format(command: 'check' | 'write', args: YargsFormatOptions) {
   try {
     patterns = getPatterns(args);
   } catch (e) {
-    printError(command, e);
+    output.error({
+      title: e.message,
+      bodyLines: [
+        `Pass the SHA range: ${output.bold(
+          `npm run format:${command} -- SHA1 SHA2`
+        )}`,
+        '',
+        `Or pass the list of files: ${output.bold(
+          `npm run format:${command} -- --files="libs/mylib/index.ts,libs/mylib2/index.ts"`
+        )}`
+      ]
+    });
     process.exit(1);
   }
 
@@ -84,16 +96,6 @@ function getPatternsWithPathPrefix(prefixes: string[]): string[] {
   return prefixes.map(
     prefix => `"${prefix}/**/*.{${PRETTIER_EXTENSIONS.join(',')}}"`
   );
-}
-
-function printError(command: string, e: any) {
-  console.error(
-    `Pass the SHA range, as follows: npm run format:${command} -- SHA1 SHA2.`
-  );
-  console.error(
-    `Or pass the list of files, as follows: npm run format:${command} -- --files="libs/mylib/index.ts,libs/mylib2/index.ts".`
-  );
-  console.error(e.message);
 }
 
 function write(patterns: string[]) {

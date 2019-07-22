@@ -3,7 +3,7 @@ import * as yargs from 'yargs';
 
 import { affected } from './affected';
 import { format } from './format';
-import { lint } from './lint';
+import { workspaceLint } from './lint';
 import { workspaceSchematic } from './workspace-schematic';
 import { generateGraph, OutputType } from './dep-graph';
 
@@ -136,7 +136,7 @@ export const commandsObject = yargs
     'workspace-lint [files..]',
     'Lint workspace or list of files',
     noop,
-    _ => lint()
+    _ => workspaceLint()
   )
   .command(
     'workspace-schematic [name]',

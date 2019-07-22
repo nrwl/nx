@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import { readJsonFile, writeJsonFile } from '../utils/fileutils';
 import { unlinkSync } from 'fs';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { output } from './output';
 
 const RESULTS_FILE = 'dist/.nx-results';
 
@@ -37,10 +37,12 @@ export class WorkspaceResults {
         if (this.startedWithFailedProjects) {
           this.commandResults = commandResults;
         }
-      } catch (e) {
-        // RESULTS_FILE is likely not valid JSON
-        console.error('Error: .nx-results file is corrupted.');
-        console.error(e);
+      } catch {
+        /**
+         * If we got here it is likely that RESULTS_FILE is not valid JSON.
+         * It is safe to continue, and it does not make much sense to give the
+         * user feedback as the file will be updated automatically.
+         */
       }
     }
   }
@@ -70,24 +72,52 @@ export class WorkspaceResults {
     successMessage: string,
     failureMessage: string
   ) {
-    const failedProjects = this.failedProjects;
+    /**
+     * Leave a bit of breathing room between the process output
+     * and our formatted results.
+     */
+    output.addNewline();
+    output.addVerticalSeparator();
+
     if (this.failedProjects.length === 0) {
-      console.log(successMessage);
+      output.success({
+        title: successMessage
+      });
+
       if (onlyFailed && this.startedWithFailedProjects) {
-        console.warn(stripIndents`
-          Warning: Only failed affected projects were run.
-          You should run above command WITHOUT --only-failed
-        `);
+        output.warn({
+          title: `Only affected projects ${output.underline(
+            'which had previously failed'
+          )} were run`,
+          bodyLines: [
+            `You should verify by running ${output.underline(
+              'without'
+            )} ${output.bold('--only-failed')}`
+          ]
+        });
       }
-    } else {
-      console.error(failureMessage);
-      console.log(`Failed projects: ${failedProjects.join(',')}`);
-      if (!onlyFailed && !this.startedWithFailedProjects) {
-        console.log(
-          `You can isolate the above projects by passing --only-failed`
-        );
-      }
+      return;
     }
+
+    const bodyLines = [
+      output.colors.gray('Failed projects:'),
+      '',
+      ...this.failedProjects.map(
+        project => `${output.colors.gray('-')} ${project}`
+      )
+    ];
+    if (!onlyFailed && !this.startedWithFailedProjects) {
+      bodyLines.push('');
+      bodyLines.push(
+        `${output.colors.gray(
+          'You can isolate the above projects by passing:'
+        )} ${output.bold('--only-failed')}`
+      );
+    }
+    output.error({
+      title: failureMessage,
+      bodyLines
+    });
   }
 
   private setResult(projectName: string, result: boolean) {

@@ -1,28 +1,37 @@
 import { ProjectNode } from './affected-apps';
-
-export interface ErrorGroup {
-  header: string;
-  errors: string[];
-}
+import { output, CLIErrorMessageConfig } from './output';
 
 export class WorkspaceIntegrityChecks {
   constructor(private projectNodes: ProjectNode[], private files: string[]) {}
 
-  run(): ErrorGroup[] {
+  run(): CLIErrorMessageConfig[] {
     return [...this.projectWithoutFilesCheck(), ...this.filesWithoutProjects()];
   }
 
-  private projectWithoutFilesCheck(): ErrorGroup[] {
+  private projectWithoutFilesCheck(): CLIErrorMessageConfig[] {
     const errors = this.projectNodes
       .filter(n => n.files.length === 0)
       .map(p => `Cannot find project '${p.name}' in '${p.root}'`);
 
+    const errorGroupBodyLines = errors.map(
+      f => `${output.colors.gray('-')} ${f}`
+    );
+
     return errors.length === 0
       ? []
-      : [{ header: 'The angular.json file is out of sync', errors }];
+      : [
+          {
+            title: 'The angular.json file is out of sync',
+            bodyLines: errorGroupBodyLines
+            /**
+             * TODO(JamesHenry): Add support for error documentation
+             */
+            // slug: 'project-has-no-files'
+          }
+        ];
   }
 
-  private filesWithoutProjects(): ErrorGroup[] {
+  private filesWithoutProjects(): CLIErrorMessageConfig[] {
     const allFilesFromProjects = this.allProjectFiles();
     const allFilesWithoutProjects = minus(this.files, allFilesFromProjects);
     const first5FilesWithoutProjects =
@@ -30,16 +39,20 @@ export class WorkspaceIntegrityChecks {
         ? allFilesWithoutProjects.slice(0, 5)
         : allFilesWithoutProjects;
 
-    const errors = first5FilesWithoutProjects.map(
-      p => `The '${p}' file doesn't belong to any project.`
+    const errorGroupBodyLines = first5FilesWithoutProjects.map(
+      f => `${output.colors.gray('-')} ${f}`
     );
 
-    return errors.length === 0
+    return first5FilesWithoutProjects.length === 0
       ? []
       : [
           {
-            header: `All files in 'apps' and 'libs' must be part of a project`,
-            errors
+            title: `The following file(s) do not belong to any projects:`,
+            bodyLines: errorGroupBodyLines
+            /**
+             * TODO(JamesHenry): Add support for error documentation
+             */
+            // slug: 'file-does-not-belong-to-project'
           }
         ];
   }

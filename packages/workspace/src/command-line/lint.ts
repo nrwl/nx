@@ -7,19 +7,19 @@ import {
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
 import * as path from 'path';
 import { appRootPath } from '../utils/app-root';
+import { output } from './output';
 
-export function lint() {
+export function workspaceLint() {
   const nodes = getProjectNodes(readAngularJson(), readNxJson());
 
-  const errorGroups = new WorkspaceIntegrityChecks(
+  const cliErrorOutputConfigs = new WorkspaceIntegrityChecks(
     nodes,
     readAllFilesFromAppsAndLibs()
   ).run();
-  if (errorGroups.length > 0) {
-    errorGroups.forEach(g => {
-      console.error(`${g.header}:`);
-      g.errors.forEach(e => console.error(e));
-      console.log('');
+
+  if (cliErrorOutputConfigs.length > 0) {
+    cliErrorOutputConfigs.forEach(errorConfig => {
+      output.error(errorConfig);
     });
     process.exit(1);
   }

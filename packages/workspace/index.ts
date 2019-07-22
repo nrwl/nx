@@ -19,6 +19,7 @@ export {
   ExistingPrettierConfig,
   resolveUserExistingPrettierConfig
 } from './src/utils/common';
+export { output } from './src/command-line/output';
 export {
   commandsObject,
   supportedNxCommands

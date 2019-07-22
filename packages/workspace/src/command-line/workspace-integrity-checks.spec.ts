@@ -1,8 +1,9 @@
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
 import { ProjectType } from './affected-apps';
+import chalk from 'chalk';
 
 describe('WorkspaceIntegrityChecks', () => {
-  describe('.angular-cli.json is in sync with the filesystem', () => {
+  describe('angular.json is in sync with the filesystem', () => {
     it('should not error when they are in sync', () => {
       const c = new WorkspaceIntegrityChecks(
         [
@@ -54,10 +55,16 @@ describe('WorkspaceIntegrityChecks', () => {
       );
 
       const errors = c.run();
-      expect(errors.length).toEqual(1);
-      expect(errors[0].errors[0]).toEqual(
-        `Cannot find project 'project1' in 'libs/project1'`
-      );
+      expect(errors).toEqual([
+        {
+          bodyLines: [
+            `${chalk.grey(
+              '-'
+            )} Cannot find project 'project1' in 'libs/project1'`
+          ],
+          title: 'The angular.json file is out of sync'
+        }
+      ]);
     });
 
     it('should error when there are files in apps or libs without projects', () => {
@@ -80,10 +87,12 @@ describe('WorkspaceIntegrityChecks', () => {
       );
 
       const errors = c.run();
-      expect(errors.length).toEqual(1);
-      expect(errors[0].errors[0]).toEqual(
-        `The 'libs/project2/src/index.ts' file doesn't belong to any project.`
-      );
+      expect(errors).toEqual([
+        {
+          bodyLines: [`${chalk.grey('-')} libs/project2/src/index.ts`],
+          title: 'The following file(s) do not belong to any projects:'
+        }
+      ]);
     });
   });
 });
