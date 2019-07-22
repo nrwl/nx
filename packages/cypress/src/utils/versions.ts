@@ -1,2 +1,2 @@
 export const nxVersion = '*';
-export const cypressVersion = '~3.3.1';
+export const cypressVersion = '3.4.0';
