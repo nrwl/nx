@@ -1,13 +1,15 @@
 import { getBaseWebpackPartial } from './config';
 
 import * as ts from 'typescript';
+import { ScriptTarget } from 'typescript';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import CircularDependencyPlugin = require('circular-dependency-plugin');
-import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-jest.mock('tsconfig-paths-webpack-plugin');
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import { ProgressPlugin } from 'webpack';
 import { BuildBuilderOptions } from './types';
+import CircularDependencyPlugin = require('circular-dependency-plugin');
+import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+
+jest.mock('tsconfig-paths-webpack-plugin');
 
 describe('getBaseWebpackPartial', () => {
   let input: BuildBuilderOptions;
@@ -116,7 +118,8 @@ describe('getBaseWebpackPartial', () => {
       ).toEqual({
         configFile: 'tsconfig.json',
         transpileOnly: true,
-        experimentalWatchApi: true
+        experimentalWatchApi: true,
+        compilerOptions: null
       });
     });
 
@@ -154,6 +157,30 @@ describe('getBaseWebpackPartial', () => {
 
       const result = getBaseWebpackPartial(input);
       expect(result.resolve.mainFields).toContain('es2015');
+    });
+  });
+
+  describe('script overrides', () => {
+    it('should override the compiler options target for es2015', () => {
+      const result = getBaseWebpackPartial(input, ScriptTarget.ES2015);
+
+      expect(
+        (result.module.rules.find(rule => rule.loader === 'ts-loader')
+          .options as any).compilerOptions
+      ).toEqual({
+        target: 'es2015'
+      });
+    });
+
+    it('should override the compiler options target for es5', () => {
+      const result = getBaseWebpackPartial(input, ScriptTarget.ES5);
+
+      expect(
+        (result.module.rules.find(rule => rule.loader === 'ts-loader')
+          .options as any).compilerOptions
+      ).toEqual({
+        target: 'es5'
+      });
     });
   });
 
