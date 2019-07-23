@@ -7,13 +7,11 @@ import { JsonObject } from '@angular-devkit/core';
 
 import { Observable, from, forkJoin } from 'rxjs';
 import { normalizeWebBuildOptions } from '../../utils/normalize';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 import { WebBuildBuilderOptions } from '../build/build.impl';
 import { Configuration } from 'webpack';
-import { writeFileSync } from 'fs';
 import * as opn from 'opn';
 import * as url from 'url';
-import { resolve } from 'path';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { getDevServerConfig } from '../../utils/devserver.config';
 import { buildServePath } from '../../utils/serve-path';
@@ -104,14 +102,7 @@ function run(
     switchMap(([config, options, serverUrl]) => {
       return runWebpackDevServer(config, context, {
         logging: stats => {
-          if (options.statsJson) {
-            writeFileSync(
-              resolve(context.workspaceRoot, options.outputPath, 'stats.json'),
-              JSON.stringify(stats.toJson(), null, 2)
-            );
-          }
-
-          context.logger.info(stats.toString());
+          context.logger.info(stats.toString(config.stats));
         }
       }).pipe(
         map(output => {

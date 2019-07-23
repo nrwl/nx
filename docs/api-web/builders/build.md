@@ -198,6 +198,14 @@ Type: `boolean`
 
 Use a separate bundle containing only vendor libraries.
 
+### verbose
+
+Default: `false`
+
+Type: `boolean`
+
+Emits verbose output
+
 ### watch
 
 Default: `false`

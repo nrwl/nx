@@ -30,6 +30,7 @@ export interface BuildBuilderOptions {
   progress?: boolean;
   statsJson?: boolean;
   extractLicenses?: boolean;
+  verbose?: boolean;
 
   webpackConfig?: string;
 

@@ -1,5 +1,5 @@
 import * as webpack from 'webpack';
-import { Configuration, ProgressPlugin } from 'webpack';
+import { Configuration, ProgressPlugin, Stats } from 'webpack';
 
 import * as ts from 'typescript';
 
@@ -70,7 +70,8 @@ export function getBaseWebpackPartial(
     watch: options.watch,
     watchOptions: {
       poll: options.poll
-    }
+    },
+    stats: getStatsConfig(options)
   };
 
   const extraPlugins: webpack.Plugin[] = [];
@@ -137,4 +138,27 @@ function getAliases(options: BuildBuilderOptions): { [key: string]: string } {
     }),
     {}
   );
+}
+
+function getStatsConfig(options: BuildBuilderOptions): Stats.ToStringOptions {
+  return {
+    hash: true,
+    timings: false,
+    cached: false,
+    cachedAssets: false,
+    modules: false,
+    warnings: true,
+    errors: true,
+    colors: !options.verbose && !options.statsJson,
+    chunks: !options.verbose,
+    assets: !!options.verbose,
+    chunkOrigins: !!options.verbose,
+    chunkModules: !!options.verbose,
+    children: !!options.verbose,
+    reasons: !!options.verbose,
+    version: !!options.verbose,
+    errorDetails: !!options.verbose,
+    moduleTrace: !!options.verbose,
+    usedExports: !!options.verbose
+  };
 }

@@ -108,6 +108,14 @@ Type: `string`
 
 The name of the Typescript configuration file.
 
+### verbose
+
+Default: `false`
+
+Type: `boolean`
+
+Emits verbose output
+
 ### watch
 
 Default: `false`
