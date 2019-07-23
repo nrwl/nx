@@ -6,9 +6,7 @@ matrix:
       dist: trusty
       sudo: required
       cache:
-        directories:
-          - ~/.yarn
-          - ~/.cache
+        npm: false
       addons:
         chrome: stable
       before_install:
@@ -26,6 +24,8 @@ matrix:
       node_js: 10
       dist: trusty
       sudo: required
+      cache:
+        npm: false
       addons:
         chrome: stable
       before_install:
