@@ -34,10 +34,12 @@ export default function(options: Schema): Rule {
         utils: strings,
         dot: '.',
         tmpl: '',
+        workspaceFile: options.cli === 'angular' ? 'angular' : 'workspace',
+        cliCommand: options.cli === 'angular' ? 'ng' : 'nx',
         nxCli: false,
         typescriptVersion,
         prettierVersion,
-        // angular cli and angular version are used only when workspace schematics is added to angular cli
+        // angular cli is used only when workspace schematics is added to angular cli
         angularCliVersion,
         ...(options as object),
         nxVersion,

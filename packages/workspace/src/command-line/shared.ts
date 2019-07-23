@@ -1,20 +1,20 @@
 import { execSync } from 'child_process';
+import * as fs from 'fs';
 import * as path from 'path';
+import { appRootPath } from '../utils/app-root';
+import { readJsonFile } from '../utils/fileutils';
+import { YargsAffectedOptions } from './affected';
 import {
   affectedAppNames,
   AffectedFetcher,
   affectedLibNames,
   affectedProjectNames,
+  affectedProjectNamesWithTarget,
   ProjectNode,
-  ProjectType,
-  affectedProjectNamesWithTarget
+  ProjectType
 } from './affected-apps';
-import * as fs from 'fs';
-import { readJsonFile } from '../utils/fileutils';
-import { YargsAffectedOptions } from './affected';
-import { readDependencies, DepGraph, Deps } from './deps-calculator';
+import { Deps, readDependencies } from './deps-calculator';
 import { touchedProjects } from './touched';
-import { appRootPath } from '../utils/app-root';
 import { output } from './output';
 
 const ignore = require('ignore');
@@ -214,10 +214,10 @@ function detectAndSetInvalidProjectValues(
 
 export function getImplicitDependencies(
   projects: ProjectNode[],
-  angularJson: any,
+  workspaceJson: any,
   nxJson: NxJson
 ): ImplicitDependencies {
-  assertWorkspaceValidity(angularJson, nxJson);
+  assertWorkspaceValidity(workspaceJson, nxJson);
 
   const implicitFileDeps = getFileLevelImplicitDependencies(projects, nxJson);
   const implicitProjectDeps = getProjectLevelImplicitDependencies(projects);
@@ -228,30 +228,30 @@ export function getImplicitDependencies(
   };
 }
 
-export function assertWorkspaceValidity(angularJson, nxJson) {
-  const angularJsonProjects = Object.keys(angularJson.projects);
+export function assertWorkspaceValidity(workspaceJson, nxJson) {
+  const workspaceJsonProjects = Object.keys(workspaceJson.projects);
   const nxJsonProjects = Object.keys(nxJson.projects);
 
-  if (minus(angularJsonProjects, nxJsonProjects).length > 0) {
+  if (minus(workspaceJsonProjects, nxJsonProjects).length > 0) {
     throw new Error(
-      `angular.json and nx.json are out of sync. The following projects are missing in nx.json: ${minus(
-        angularJsonProjects,
+      `${workspaceFileName()} and nx.json are out of sync. The following projects are missing in nx.json: ${minus(
+        workspaceJsonProjects,
         nxJsonProjects
       ).join(', ')}`
     );
   }
 
-  if (minus(nxJsonProjects, angularJsonProjects).length > 0) {
+  if (minus(nxJsonProjects, workspaceJsonProjects).length > 0) {
     throw new Error(
-      `angular.json and nx.json are out of sync. The following projects are missing in angular.json: ${minus(
+      `${workspaceFileName()} and nx.json are out of sync. The following projects are missing in ${workspaceFileName()}: ${minus(
         nxJsonProjects,
-        angularJsonProjects
+        workspaceJsonProjects
       ).join(', ')}`
     );
   }
 
   const projects = {
-    ...angularJson.projects,
+    ...workspaceJson.projects,
     ...nxJson.projects
   };
 
@@ -296,15 +296,15 @@ export function assertWorkspaceValidity(angularJson, nxJson) {
 }
 
 export function getProjectNodes(
-  angularJson: any,
+  workspaceJson: any,
   nxJson: NxJson
 ): ProjectNode[] {
-  assertWorkspaceValidity(angularJson, nxJson);
+  assertWorkspaceValidity(workspaceJson, nxJson);
 
-  const angularJsonProjects = Object.keys(angularJson.projects);
+  const workspaceJsonProjects = Object.keys(workspaceJson.projects);
 
-  return angularJsonProjects.map(key => {
-    const p = angularJson.projects[key];
+  return workspaceJsonProjects.map(key => {
+    const p = workspaceJson.projects[key];
     const tags = nxJson.projects[key].tags;
 
     const projectType =
@@ -348,8 +348,24 @@ function minus(a: string[], b: string[]): string[] {
   return res;
 }
 
-export function readAngularJson(): any {
-  return readJsonFile(`${appRootPath}/angular.json`);
+export function readWorkspaceJson(): any {
+  return readJsonFile(`${appRootPath}/${workspaceFileName()}`);
+}
+
+export function workspaceFileName() {
+  const packageJson = readPackageJson();
+  if (
+    packageJson.devDependencies['@angular/cli'] ||
+    packageJson.dependencies['@angular/cli']
+  ) {
+    return 'angular.json';
+  } else {
+    return 'workspace.json';
+  }
+}
+
+export function readPackageJson(): any {
+  return readJsonFile(`${appRootPath}/package.json`);
 }
 
 export function readNxJson(): NxJson {
@@ -363,10 +379,10 @@ export function readNxJson(): NxJson {
 export const getAffected = (affectedNamesFetcher: AffectedFetcher) => (
   touchedFiles: string[]
 ): string[] => {
-  const angularJson = readAngularJson();
+  const workspaceJson = readWorkspaceJson();
   const nxJson = readNxJson();
-  const projects = getProjectNodes(angularJson, nxJson);
-  const implicitDeps = getImplicitDependencies(projects, angularJson, nxJson);
+  const projects = getProjectNodes(workspaceJson, nxJson);
+  const implicitDeps = getImplicitDependencies(projects, workspaceJson, nxJson);
   const dependencies = readDependencies(nxJson.npmScope, projects);
   const sortedProjects = topologicallySortProjects(projects, dependencies);
   const tp = touchedProjects(implicitDeps, projects, touchedFiles);
@@ -393,9 +409,9 @@ export function getAllProjectNamesWithTarget(target: string) {
 }
 
 export function getAllProjectsWithTarget(target: string) {
-  const angularJson = readAngularJson();
+  const workspaceJson = readWorkspaceJson();
   const nxJson = readNxJson();
-  const projects = getProjectNodes(angularJson, nxJson);
+  const projects = getProjectNodes(workspaceJson, nxJson);
   const dependencies = readDependencies(nxJson.npmScope, projects);
   const sortedProjects = topologicallySortProjects(projects, dependencies);
 
@@ -405,7 +421,7 @@ export function getAllProjectsWithTarget(target: string) {
 export function getProjectNames(
   predicate?: (projectNode: ProjectNode) => boolean
 ): string[] {
-  let projects = getProjectNodes(readAngularJson(), readNxJson());
+  let projects = getProjectNodes(readWorkspaceJson(), readNxJson());
   if (predicate) {
     projects = projects.filter(predicate);
   }
@@ -414,7 +430,7 @@ export function getProjectNames(
 }
 
 export function getProjectRoots(projectNames: string[]): string[] {
-  const { projects } = readAngularJson();
+  const { projects } = readWorkspaceJson();
   return projectNames.map(name => projects[name].root);
 }
 
@@ -454,7 +470,7 @@ export function lastModifiedAmongProjectFiles(projects: ProjectNode[]) {
   return Math.max(
     ...[
       ...projects.map(project => getProjectMTime(project)),
-      mtime(`${appRootPath}/angular.json`),
+      mtime(`${appRootPath}/${workspaceFileName()}`),
       mtime(`${appRootPath}/nx.json`),
       mtime(`${appRootPath}/tslint.json`),
       mtime(`${appRootPath}/package.json`)

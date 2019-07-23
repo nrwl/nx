@@ -7,7 +7,7 @@ import { join } from 'path';
 export default {
   description: `Switch to Nx 6.0`,
   run: () => {
-    if (!existsSync('.angular-cli.json') && existsSync('angular.json')) {
+    if (!existsSync('.angular-cli.json') && existsSync('workspace.json')) {
       console.warn(stripIndents`
         You have already upgraded to Angular CLI 6.
         We will not be able to recover information about your project's tags for you.

@@ -1,6 +1,6 @@
 import {
   ImplicitDependencies,
-  readAngularJson,
+  readWorkspaceJson,
   getProjectNodes,
   readNxJson,
   getImplicitDependencies
@@ -26,10 +26,10 @@ export function touchedProjects(
 }
 
 export function getTouchedProjects(touchedFiles: string[]): string[] {
-  const angularJson = readAngularJson();
+  const workspaceJson = readWorkspaceJson();
   const nxJson = readNxJson();
-  const projects = getProjectNodes(angularJson, nxJson);
-  const implicitDeps = getImplicitDependencies(projects, angularJson, nxJson);
+  const projects = getProjectNodes(workspaceJson, nxJson);
+  const implicitDeps = getImplicitDependencies(projects, workspaceJson, nxJson);
   return touchedProjects(implicitDeps, projects, touchedFiles).filter(p => !!p);
 }
 

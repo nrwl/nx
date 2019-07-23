@@ -3,14 +3,15 @@ import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { serializeJson } from '@nrwl/workspace';
 
 import * as path from 'path';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 
 describe('Update 7.8.1', () => {
   let initialTree: Tree;
   let schematicRunner: SchematicTestRunner;
 
   beforeEach(() => {
-    initialTree = Tree.empty();
-    initialTree.create(
+    initialTree = createEmptyWorkspace(Tree.empty());
+    initialTree.overwrite(
       'package.json',
       serializeJson({
         scripts: {}

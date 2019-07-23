@@ -18,6 +18,12 @@
       "description": "A directory where the app is placed",
       "x-prompt": "In which directory should the library be generated?"
     },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["eslint", "tslint"],
+      "default": "tslint"
+    },
     "unitTestRunner": {
       "type": "string",
       "enum": ["jest", "none"],

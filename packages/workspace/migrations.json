@@ -19,6 +19,11 @@
       "version": "8.3.0-beta.1",
       "description": "Update Cypress to 3.4",
       "factory": "./src/migrations/update-8-3-0/update-cypress-to-34"
+    },
+    "add-nx-script": {
+      "version": "8.4.0-beta.1",
+      "description": "Add 'nx' script to package.json",
+      "factory": "./src/migrations/update-8-4-0/add-nx-script"
     }
   }
 }

@@ -19,9 +19,14 @@ import {
   NxJson,
   offsetFromRoot,
   toFileName,
-  updateJsonInTree
+  updateJsonInTree,
+  generateProjectLint,
+  addGlobalLint
 } from '@nrwl/workspace';
-import { addDepsToPackageJson } from '@nrwl/workspace/src/utils/ast-utils';
+import {
+  addDepsToPackageJson,
+  updateWorkspaceInTree
+} from '@nrwl/workspace/src/utils/ast-utils';
 import ngAdd from '../ng-add/ng-add';
 import * as ts from 'typescript';
 
@@ -48,6 +53,7 @@ export default function(schema: Schema): Rule {
       ngAdd({
         skipFormat: true
       }),
+      addGlobalLint(options.linter),
       createApplicationFiles(options),
       updateNxJson(options),
       addProject(options),
@@ -102,7 +108,7 @@ function updateNxJson(options: NormalizedSchema): Rule {
 }
 
 function addProject(options: NormalizedSchema): Rule {
-  return updateJsonInTree('angular.json', json => {
+  return updateWorkspaceInTree(json => {
     const architect: { [key: string]: any } = {};
 
     architect.build = {
@@ -166,16 +172,11 @@ function addProject(options: NormalizedSchema): Rule {
       }
     };
 
-    architect.lint = {
-      builder: '@angular-devkit/build-angular:tslint',
-      options: {
-        tsConfig: [join(options.appProjectRoot, 'tsconfig.app.json')],
-        exclude: [
-          '**/node_modules/**',
-          '!' + join(options.appProjectRoot, '**')
-        ]
-      }
-    };
+    architect.lint = generateProjectLint(
+      normalize(options.appProjectRoot),
+      join(normalize(options.appProjectRoot), 'tsconfig.app.json'),
+      options.linter
+    );
 
     json.projects[options.projectName] = {
       root: options.appProjectRoot,

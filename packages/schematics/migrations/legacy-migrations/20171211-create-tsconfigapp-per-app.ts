@@ -1,4 +1,4 @@
-import { readCliConfigFile, updateJsonFile } from '@nrwl/workspace';
+import { readWorkspaceConfigPath, updateJsonFile } from '@nrwl/workspace';
 import { writeFileSync, unlinkSync } from 'fs';
 import { offsetFromRoot } from '@nrwl/workspace';
 import * as path from 'path';
@@ -6,7 +6,7 @@ import * as path from 'path';
 export default {
   description: 'Create tsconfig.app.json for every app',
   run: () => {
-    const config = readCliConfigFile();
+    const config = readWorkspaceConfigPath();
     config.apps.forEach(app => {
       if (!app.root.startsWith('apps/')) return;
       const offset = offsetFromRoot(app.root);

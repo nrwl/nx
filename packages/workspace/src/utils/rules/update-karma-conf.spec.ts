@@ -18,8 +18,8 @@ describe('updateKarmaConf', () => {
     tree = createEmptyWorkspace(Tree.empty());
     tree.create('apps/projectName/karma.conf.js', '');
     const process$ = schematicRunner.callRule(
-      updateJsonInTree('/angular.json', angularJson => {
-        angularJson.projects.projectName = {
+      updateJsonInTree('/workspace.json', workspaceJson => {
+        workspaceJson.projects.projectName = {
           root: 'apps/projectName',
           architect: {
             test: {
@@ -29,7 +29,7 @@ describe('updateKarmaConf', () => {
             }
           }
         };
-        return angularJson;
+        return workspaceJson;
       }),
       tree
     );

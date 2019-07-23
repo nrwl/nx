@@ -80,6 +80,7 @@ function generateMarkdown(command) {
 const npmscripts = getCommands(commandsObject);
 
 Object.keys(npmscripts)
+  .filter(name => !name.startsWith('run') && !name.startsWith('generate'))
   .map(name => parseCommandInstance(name, npmscripts[name]))
   .map(command => generateMarkdown(command))
   .forEach(templateObject =>

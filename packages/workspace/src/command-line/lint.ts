@@ -1,7 +1,7 @@
 import {
   getProjectNodes,
   allFilesInDir,
-  readAngularJson,
+  readWorkspaceJson,
   readNxJson
 } from './shared';
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
@@ -10,7 +10,7 @@ import { appRootPath } from '../utils/app-root';
 import { output } from './output';
 
 export function workspaceLint() {
-  const nodes = getProjectNodes(readAngularJson(), readNxJson());
+  const nodes = getProjectNodes(readWorkspaceJson(), readNxJson());
 
   const cliErrorOutputConfigs = new WorkspaceIntegrityChecks(
     nodes,

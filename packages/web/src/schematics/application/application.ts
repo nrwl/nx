@@ -21,7 +21,10 @@ import {
   names,
   offsetFromRoot,
   getNpmScope,
-  formatFiles
+  formatFiles,
+  updateWorkspaceInTree,
+  generateProjectLint,
+  addGlobalLint
 } from '@nrwl/workspace';
 import ngAdd from '../ng-add/ng-add';
 
@@ -58,7 +61,7 @@ function updateNxJson(options: NormalizedSchema): Rule {
 }
 
 function addProject(options: NormalizedSchema): Rule {
-  return updateJsonInTree('angular.json', json => {
+  return updateWorkspaceInTree(json => {
     const architect: { [key: string]: any } = {};
 
     architect.build = {
@@ -122,15 +125,11 @@ function addProject(options: NormalizedSchema): Rule {
       }
     };
 
-    architect.lint = {
-      builder: '@angular-devkit/build-angular:tslint',
-      options: {
-        tsConfig: [
-          join(normalize(options.appProjectRoot), 'tsconfig.app.json')
-        ],
-        exclude: ['**/node_modules/**']
-      }
-    };
+    architect.lint = generateProjectLint(
+      normalize(options.appProjectRoot),
+      join(normalize(options.appProjectRoot), 'tsconfig.app.json'),
+      options.linter
+    );
 
     json.projects[options.projectName] = {
       root: options.appProjectRoot,
@@ -154,6 +153,7 @@ export default function(schema: Schema): Rule {
       ngAdd({
         skipFormat: true
       }),
+      addGlobalLint(options.linter),
       createApplicationFiles(options),
       updateNxJson(options),
       addProject(options),

@@ -9,6 +9,7 @@ import { join } from 'path';
 import { serializeJson } from '@nrwl/workspace';
 import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 
 const effectContents = `
 import { Injectable } from '@angular/core';
@@ -77,9 +78,9 @@ describe('Update 7.6.0', () => {
   let schematicRunner: SchematicTestRunner;
 
   beforeEach(() => {
-    initialTree = new UnitTestTree(Tree.empty());
+    initialTree = createEmptyWorkspace(Tree.empty());
 
-    initialTree.create(
+    initialTree.overwrite(
       'package.json',
       serializeJson({
         dependencies: {
@@ -159,22 +160,22 @@ describe('Update 7.6.0', () => {
         .toPromise();
 
       expect(
-        readJsonInTree(result, 'angular.json').schematics[
+        readJsonInTree(result, 'workspace.json').schematics[
           '@nrwl/schematics:library'
         ].unitTestRunner
       ).toEqual('karma');
       expect(
-        readJsonInTree(result, 'angular.json').schematics[
+        readJsonInTree(result, 'workspace.json').schematics[
           '@nrwl/schematics:application'
         ].unitTestRunner
       ).toEqual('karma');
       expect(
-        readJsonInTree(result, 'angular.json').schematics[
+        readJsonInTree(result, 'workspace.json').schematics[
           '@nrwl/schematics:application'
         ].e2eTestRunner
       ).toEqual('protractor');
       expect(
-        readJsonInTree(result, 'angular.json').schematics[
+        readJsonInTree(result, 'workspace.json').schematics[
           '@nrwl/schematics:node-application'
         ].framework
       ).toEqual('express');

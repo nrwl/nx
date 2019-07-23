@@ -8,7 +8,7 @@ Run commands
 
 Type: `string`
 
-Extra arguments. You can pass them as follows: ng run project:target --args='--wait=100'. You can them use {args.wait} syntax to interpolate them in angular.json
+Extra arguments. You can pass them as follows: ng run project:target --args='--wait=100'. You can them use {args.wait} syntax to interpolate them in the workspace config file.
 
 ### commands
 

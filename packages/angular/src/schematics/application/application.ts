@@ -15,7 +15,6 @@ import {
 import { Schema } from './schema';
 import * as ts from 'typescript';
 import {
-  angularSchematicNames,
   formatFiles,
   getNpmScope,
   getWorkspacePath,
@@ -26,7 +25,8 @@ import {
   replaceNodeValue,
   toFileName,
   updateJsonInTree,
-  updateWorkspace
+  updateWorkspace,
+  addGlobalLint
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import ngAdd from '../ng-add/ng-add';
@@ -202,6 +202,16 @@ function updateProject(options: NormalizedSchema): Rule {
           options.appProjectRoot
         );
 
+        const angularSchematicNames = [
+          'class',
+          'component',
+          'directive',
+          'guard',
+          'module',
+          'pipe',
+          'service'
+        ];
+
         if (fixedProject.schematics) {
           angularSchematicNames.forEach(type => {
             const schematic = `@schematics/angular:${type}`;
@@ -345,13 +355,13 @@ export default function(schema: Schema): Rule {
 
     // Determine the roots where @schematics/angular will place the projects
     // This is not where the projects actually end up
-    const angularJson = readJsonInTree(host, getWorkspacePath(host));
+    const workspaceJson = readJsonInTree(host, getWorkspacePath(host));
 
-    const appProjectRoot = angularJson.newProjectRoot
-      ? `${angularJson.newProjectRoot}/${options.name}`
+    const appProjectRoot = workspaceJson.newProjectRoot
+      ? `${workspaceJson.newProjectRoot}/${options.name}`
       : options.name;
-    const e2eProjectRoot = angularJson.newProjectRoot
-      ? `${angularJson.newProjectRoot}/${options.e2eProjectName}`
+    const e2eProjectRoot = workspaceJson.newProjectRoot
+      ? `${workspaceJson.newProjectRoot}/${options.e2eProjectName}`
       : `${options.name}/e2e`;
 
     return chain([
@@ -359,6 +369,7 @@ export default function(schema: Schema): Rule {
         ...options,
         skipFormat: true
       }),
+      addGlobalLint('tslint'),
       externalSchematic('@schematics/angular', 'application', {
         name: options.name,
         inlineStyle: options.inlineStyle,
@@ -373,11 +384,9 @@ export default function(schema: Schema): Rule {
         skipPackageJson: false
       }),
       addTsconfigs(options),
-
       options.e2eTestRunner === 'protractor'
         ? move(e2eProjectRoot, options.e2eProjectRoot)
         : removeE2e(options, e2eProjectRoot),
-
       options.e2eTestRunner === 'protractor'
         ? updateE2eProject(options)
         : noop(),
@@ -388,10 +397,8 @@ export default function(schema: Schema): Rule {
             project: options.name
           })
         : noop(),
-
       move(appProjectRoot, options.appProjectRoot),
       updateProject(options),
-
       updateComponentTemplate(options),
       options.routing ? addRouterRootConfiguration(options) : noop(),
       updateLinting(options),

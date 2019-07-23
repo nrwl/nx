@@ -13,27 +13,27 @@ describe('app', () => {
   });
 
   describe('not nested', () => {
-    it('should update angular.json', async () => {
+    it('should update workspace.json', async () => {
       const tree = await runSchematic('app', { name: 'myApp' }, appTree);
-      const angularJson = readJsonInTree(tree, '/angular.json');
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
 
-      expect(angularJson.projects['my-app'].root).toEqual('apps/my-app');
-      expect(angularJson.projects['my-app-e2e'].root).toEqual(
+      expect(workspaceJson.projects['my-app'].root).toEqual('apps/my-app');
+      expect(workspaceJson.projects['my-app-e2e'].root).toEqual(
         'apps/my-app-e2e'
       );
 
       expect(
-        angularJson.projects['my-app'].architect.lint.options.exclude
+        workspaceJson.projects['my-app'].architect.lint.options.exclude
       ).toEqual(['**/node_modules/**', '!apps/my-app/**']);
       expect(
-        angularJson.projects['my-app-e2e'].architect.lint.options.exclude
+        workspaceJson.projects['my-app-e2e'].architect.lint.options.exclude
       ).toEqual(['**/node_modules/**', '!apps/my-app-e2e/**']);
     });
 
     it('should remove the e2e target on the application', async () => {
       const tree = await runSchematic('app', { name: 'myApp' }, appTree);
-      const angularJson = readJsonInTree(tree, '/angular.json');
-      expect(angularJson.projects['my-app'].architect.e2e).not.toBeDefined();
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      expect(workspaceJson.projects['my-app'].architect.e2e).not.toBeDefined();
     });
 
     it('should update nx.json', async () => {
@@ -107,8 +107,10 @@ describe('app', () => {
       let appE2eSpec = noPrefix
         .read('apps/my-app-e2e/src/app.e2e-spec.ts')
         .toString();
-      let angularJson = JSON.parse(noPrefix.read('angular.json').toString());
-      let myAppPrefix = angularJson.projects['my-app'].prefix;
+      let workspaceJson = JSON.parse(
+        noPrefix.read('workspace.json').toString()
+      );
+      let myAppPrefix = workspaceJson.projects['my-app'].prefix;
 
       expect(myAppPrefix).toEqual('proj');
       expect(appE2eSpec).toContain('Welcome to my-app!');
@@ -118,8 +120,8 @@ describe('app', () => {
       appE2eSpec = withPrefix
         .read('apps/my-app-e2e/src/app.e2e-spec.ts')
         .toString();
-      angularJson = JSON.parse(withPrefix.read('angular.json').toString());
-      myAppPrefix = angularJson.projects['my-app'].prefix;
+      workspaceJson = JSON.parse(withPrefix.read('workspace.json').toString());
+      myAppPrefix = workspaceJson.projects['my-app'].prefix;
 
       expect(myAppPrefix).toEqual('custom');
       expect(appE2eSpec).toContain('Welcome to my-app!');
@@ -127,7 +129,7 @@ describe('app', () => {
 
     xit('should work if the new project root is changed', async () => {
       appTree = await callRule(
-        updateJsonInTree('/angular.json', json => ({
+        updateJsonInTree('/workspace.json', json => ({
           ...json,
           newProjectRoot: 'newProjectRoot'
         })),
@@ -141,26 +143,27 @@ describe('app', () => {
   });
 
   describe('nested', () => {
-    it('should update angular.json', async () => {
+    it('should update workspace.json', async () => {
       const tree = await runSchematic(
         'app',
         { name: 'myApp', directory: 'myDir' },
         appTree
       );
-      const angularJson = readJsonInTree(tree, '/angular.json');
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
 
-      expect(angularJson.projects['my-dir-my-app'].root).toEqual(
+      expect(workspaceJson.projects['my-dir-my-app'].root).toEqual(
         'apps/my-dir/my-app'
       );
-      expect(angularJson.projects['my-dir-my-app-e2e'].root).toEqual(
+      expect(workspaceJson.projects['my-dir-my-app-e2e'].root).toEqual(
         'apps/my-dir/my-app-e2e'
       );
 
       expect(
-        angularJson.projects['my-dir-my-app'].architect.lint.options.exclude
+        workspaceJson.projects['my-dir-my-app'].architect.lint.options.exclude
       ).toEqual(['**/node_modules/**', '!apps/my-dir/my-app/**']);
       expect(
-        angularJson.projects['my-dir-my-app-e2e'].architect.lint.options.exclude
+        workspaceJson.projects['my-dir-my-app-e2e'].architect.lint.options
+          .exclude
       ).toEqual(['**/node_modules/**', '!apps/my-dir/my-app-e2e/**']);
     });
 
@@ -314,9 +317,9 @@ describe('app', () => {
         { name: 'myApp', style: 'scss' },
         appTree
       );
-      const angularJson = readJsonInTree(result, 'angular.json');
+      const workspaceJson = readJsonInTree(result, 'workspace.json');
 
-      expect(angularJson.projects['my-app'].schematics).toEqual({
+      expect(workspaceJson.projects['my-app'].schematics).toEqual({
         '@nrwl/workspace:component': {
           style: 'scss'
         }
@@ -334,12 +337,12 @@ describe('app', () => {
 
       expect(tree.exists('apps/my-app/tsconfig.spec.json')).toBeTruthy();
       expect(tree.exists('apps/my-app/karma.conf.js')).toBeTruthy();
-      const angularJson = readJsonInTree(tree, 'angular.json');
-      expect(angularJson.projects['my-app'].architect.test.builder).toEqual(
+      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+      expect(workspaceJson.projects['my-app'].architect.test.builder).toEqual(
         '@angular-devkit/build-angular:karma'
       );
       expect(
-        angularJson.projects['my-app'].architect.lint.options.tsConfig
+        workspaceJson.projects['my-app'].architect.lint.options.tsConfig
       ).toEqual([
         'apps/my-app/tsconfig.app.json',
         'apps/my-app/tsconfig.spec.json'
@@ -367,26 +370,28 @@ describe('app', () => {
       expect(tree.exists('apps/my-app/tsconfig.spec.json')).toBeFalsy();
       expect(tree.exists('apps/my-app/jest.config.js')).toBeFalsy();
       expect(tree.exists('apps/my-app/karma.config.js')).toBeFalsy();
-      const angularJson = readJsonInTree(tree, 'angular.json');
-      expect(angularJson.projects['my-app'].architect.test).toBeUndefined();
+      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+      expect(workspaceJson.projects['my-app'].architect.test).toBeUndefined();
       expect(
-        angularJson.projects['my-app'].architect.lint.options.tsConfig
+        workspaceJson.projects['my-app'].architect.lint.options.tsConfig
       ).toEqual(['apps/my-app/tsconfig.app.json']);
     });
   });
 
   describe('--e2e-test-runner', () => {
     describe('protractor', () => {
-      it('should update angular.json', async () => {
+      it('should update workspace.json', async () => {
         const tree = await runSchematic(
           'app',
           { name: 'myApp', e2eTestRunner: 'protractor' },
           appTree
         );
         expect(tree.exists('apps/my-app-e2e')).toBeFalsy();
-        const angularJson = readJsonInTree(tree, 'angular.json');
-        expect(angularJson.projects['my-app'].architect.e2e).not.toBeDefined();
-        expect(angularJson.projects['my-app-e2e']).toEqual({
+        const workspaceJson = readJsonInTree(tree, 'workspace.json');
+        expect(
+          workspaceJson.projects['my-app'].architect.e2e
+        ).not.toBeDefined();
+        expect(workspaceJson.projects['my-app-e2e']).toEqual({
           root: 'apps/my-app-e2e',
           projectType: 'application',
           architect: {
@@ -422,30 +427,30 @@ describe('app', () => {
           appTree
         );
         expect(tree.exists('apps/my-app-e2e')).toBeFalsy();
-        const angularJson = readJsonInTree(tree, 'angular.json');
-        expect(angularJson.projects['my-app-e2e']).toBeUndefined();
+        const workspaceJson = readJsonInTree(tree, 'workspace.json');
+        expect(workspaceJson.projects['my-app-e2e']).toBeUndefined();
       });
     });
   });
 
   describe('replaceAppNameWithPath', () => {
-    it('should protect `angular.json` commands and properties', async () => {
+    it('should protect `workspace.json` commands and properties', async () => {
       const tree = await runSchematic('app', { name: 'ui' }, appTree);
-      const angularJson = readJsonInTree(tree, 'angular.json');
-      expect(angularJson.projects['ui']).toBeDefined();
+      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+      expect(workspaceJson.projects['ui']).toBeDefined();
       expect(
-        angularJson.projects['ui']['architect']['build']['builder']
+        workspaceJson.projects['ui']['architect']['build']['builder']
       ).toEqual('@angular-devkit/build-angular:browser');
     });
 
-    it('should protect `angular.json` sensible properties value to be renamed', async () => {
+    it('should protect `workspace.json` sensible properties value to be renamed', async () => {
       const tree = await runSchematic(
         'app',
         { name: 'ui', prefix: 'ui' },
         appTree
       );
-      const angularJson = readJsonInTree(tree, 'angular.json');
-      expect(angularJson.projects['ui'].prefix).toEqual('ui');
+      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+      expect(workspaceJson.projects['ui'].prefix).toEqual('ui');
     });
   });
 });

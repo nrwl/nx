@@ -3,13 +3,14 @@ import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { updateJsonInTree, readJsonInTree } from '@nrwl/workspace';
 
 import * as path from 'path';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 
 describe('Update 8-0-0', () => {
   let initialTree: Tree;
   let schematicRunner: SchematicTestRunner;
 
   beforeEach(async () => {
-    initialTree = Tree.empty();
+    initialTree = createEmptyWorkspace(Tree.empty());
     schematicRunner = new SchematicTestRunner(
       '@nrwl/schematics',
       path.join(__dirname, '../migrations.json')
@@ -56,7 +57,7 @@ describe('Update 8-0-0', () => {
       .toPromise();
     initialTree = await schematicRunner
       .callRule(
-        updateJsonInTree('angular.json', json => ({
+        updateJsonInTree('workspace.json', json => ({
           projects: {
             'my-app': {
               architect: {
@@ -158,7 +159,7 @@ describe('Update 8-0-0', () => {
       const tree = await schematicRunner
         .runSchematicAsync('update-8.0.0', {}, initialTree)
         .toPromise();
-      const { projects } = readJsonInTree(tree, 'angular.json');
+      const { projects } = readJsonInTree(tree, 'workspace.json');
       const { architect } = projects['my-app'];
       expect(architect.cypress.builder).toEqual('@nrwl/cypress:cypress');
       expect(architect.jest.builder).toEqual('@nrwl/jest:jest');
@@ -281,7 +282,7 @@ describe('Update 8-0-0', () => {
         .runSchematicAsync('update-8.0.0', {}, initialTree)
         .toPromise();
 
-      const defaultCollection = readJsonInTree(tree, 'angular.json').cli
+      const defaultCollection = readJsonInTree(tree, 'workspace.json').cli
         .defaultCollection;
       expect(defaultCollection).toEqual('@nrwl/angular');
     });
@@ -304,7 +305,7 @@ describe('Update 8-0-0', () => {
         .runSchematicAsync('update-8.0.0', {}, initialTree)
         .toPromise();
 
-      const defaultCollection = readJsonInTree(tree, 'angular.json').cli
+      const defaultCollection = readJsonInTree(tree, 'workspace.json').cli
         .defaultCollection;
       expect(defaultCollection).toEqual('@nrwl/react');
     });
@@ -326,7 +327,7 @@ describe('Update 8-0-0', () => {
         .runSchematicAsync('update-8.0.0', {}, initialTree)
         .toPromise();
 
-      const defaultCollection = readJsonInTree(tree, 'angular.json').cli
+      const defaultCollection = readJsonInTree(tree, 'workspace.json').cli
         .defaultCollection;
       expect(defaultCollection).toEqual('@nrwl/nest');
     });
@@ -347,7 +348,7 @@ describe('Update 8-0-0', () => {
         .runSchematicAsync('update-8.0.0', {}, initialTree)
         .toPromise();
 
-      const defaultCollection = readJsonInTree(tree, 'angular.json').cli
+      const defaultCollection = readJsonInTree(tree, 'workspace.json').cli
         .defaultCollection;
       expect(defaultCollection).toEqual('@nrwl/express');
     });
@@ -368,7 +369,7 @@ describe('Update 8-0-0', () => {
         .runSchematicAsync('update-8.0.0', {}, initialTree)
         .toPromise();
 
-      const defaultCollection = readJsonInTree(tree, 'angular.json').cli
+      const defaultCollection = readJsonInTree(tree, 'workspace.json').cli
         .defaultCollection;
       expect(defaultCollection).toEqual('@nrwl/express');
     });
@@ -385,7 +386,7 @@ describe('Update 8-0-0', () => {
         .toPromise();
       initialTree = await schematicRunner
         .callRule(
-          updateJsonInTree('angular.json', json => ({
+          updateJsonInTree('workspace.json', json => ({
             ...json,
             projects: {}
           })),
@@ -396,7 +397,7 @@ describe('Update 8-0-0', () => {
         .runSchematicAsync('update-8.0.0', {}, initialTree)
         .toPromise();
 
-      const defaultCollection = readJsonInTree(tree, 'angular.json').cli
+      const defaultCollection = readJsonInTree(tree, 'workspace.json').cli
         .defaultCollection;
       expect(defaultCollection).toEqual('@nrwl/workspace');
     });

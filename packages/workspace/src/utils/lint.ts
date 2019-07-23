@@ -1,3 +1,42 @@
+import { Tree } from '@angular-devkit/schematics';
+import { join } from '@angular-devkit/core';
+
+export function generateProjectLint(
+  projectRoot: string,
+  tsConfigPath: string,
+  linter: 'tslint' | 'eslint' | 'none'
+) {
+  if (linter === 'tslint') {
+    return {
+      builder: '@angular-devkit/build-angular:tslint',
+      options: {
+        tsConfig: [tsConfigPath],
+        exclude: ['**/node_modules/**', '!' + projectRoot + '/**']
+      }
+    };
+  } else if (linter === 'eslint') {
+    return {};
+  } else {
+    return undefined;
+  }
+}
+
+export function addGlobalLint(linter: 'tslint' | 'eslint' | 'none') {
+  return (host: Tree) => {
+    if (linter === 'tslint') {
+      if (!host.exists('/tslint.json')) {
+        host.create('/tslint.json', globalTsLint);
+      }
+    } else if (linter === 'eslint') {
+      if (!host.exists('/.eslintrc')) {
+        host.create('/.eslintrc', globalTsLint);
+      }
+    } else {
+    }
+  };
+}
+
+const globalTsLint = `
 {
   "rulesDirectory": ["node_modules/@nrwl/workspace/src/tslint"],
   "rules": {
@@ -59,3 +98,9 @@
     ]
   }
 }
+`;
+
+const globalEsLit = `
+{
+}
+`;

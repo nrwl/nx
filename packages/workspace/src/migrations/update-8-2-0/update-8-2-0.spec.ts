@@ -12,7 +12,7 @@ describe('Update 8.2.0', () => {
   beforeEach(async () => {
     tree = createEmptyWorkspace(Tree.empty());
     tree = await callRule(
-      updateJsonInTree('angular.json', json => {
+      updateJsonInTree('workspace.json', json => {
         json.projects['my-app'] = {
           root: 'my-app',
           architect: {
@@ -34,8 +34,8 @@ describe('Update 8.2.0', () => {
 
   it('should add exclusions for files other than the project root', async () => {
     const result = await runMigration('update-8.2.0', {}, tree);
-    const angularJson = readJsonInTree(tree, 'angular.json');
-    const project = angularJson.projects['my-app'];
+    const workspaceJson = readJsonInTree(tree, 'workspace.json');
+    const project = workspaceJson.projects['my-app'];
     expect(project.architect.lint).toEqual({
       builder: '@angular-devkit/build-angular:tslint',
       options: {

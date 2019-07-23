@@ -13,15 +13,15 @@ describe('app', () => {
   });
 
   describe('not nested', () => {
-    it('should update angular.json', async () => {
+    it('should update workspace.json', async () => {
       const tree = await runSchematic('app', { name: 'myApp' }, appTree);
-      const angularJson = readJsonInTree(tree, '/angular.json');
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
 
-      expect(angularJson.projects['my-app'].root).toEqual('apps/my-app');
-      expect(angularJson.projects['my-app-e2e'].root).toEqual(
+      expect(workspaceJson.projects['my-app'].root).toEqual('apps/my-app');
+      expect(workspaceJson.projects['my-app-e2e'].root).toEqual(
         'apps/my-app-e2e'
       );
-      expect(angularJson.defaultProject).toEqual('my-app');
+      expect(workspaceJson.defaultProject).toEqual('my-app');
     });
 
     it('should update nx.json', async () => {
@@ -78,18 +78,18 @@ describe('app', () => {
   });
 
   describe('nested', () => {
-    it('should update angular.json', async () => {
+    it('should update workspace.json', async () => {
       const tree = await runSchematic(
         'app',
         { name: 'myApp', directory: 'myDir' },
         appTree
       );
-      const angularJson = readJsonInTree(tree, '/angular.json');
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
 
-      expect(angularJson.projects['my-dir-my-app'].root).toEqual(
+      expect(workspaceJson.projects['my-dir-my-app'].root).toEqual(
         'apps/my-dir/my-app'
       );
-      expect(angularJson.projects['my-dir-my-app-e2e'].root).toEqual(
+      expect(workspaceJson.projects['my-dir-my-app-e2e'].root).toEqual(
         'apps/my-dir/my-app-e2e'
       );
     });
@@ -217,8 +217,8 @@ describe('app', () => {
       },
       appTree
     );
-    const angularJson = readJsonInTree(tree, 'angular.json');
-    const architectConfig = angularJson.projects['my-app'].architect;
+    const workspaceJson = readJsonInTree(tree, 'workspace.json');
+    const architectConfig = workspaceJson.projects['my-app'].architect;
     expect(architectConfig.build.builder).toEqual('@nrwl/web:build');
     expect(architectConfig.build.options).toEqual({
       assets: ['apps/my-app/src/favicon.ico', 'apps/my-app/src/assets'],
@@ -262,8 +262,8 @@ describe('app', () => {
       },
       appTree
     );
-    const angularJson = readJsonInTree(tree, 'angular.json');
-    const architectConfig = angularJson.projects['my-app'].architect;
+    const workspaceJson = readJsonInTree(tree, 'workspace.json');
+    const architectConfig = workspaceJson.projects['my-app'].architect;
     expect(architectConfig.serve.builder).toEqual('@nrwl/web:dev-server');
     expect(architectConfig.serve.options).toEqual({
       buildTarget: 'my-app:build'
@@ -281,11 +281,12 @@ describe('app', () => {
       },
       appTree
     );
-    const angularJson = readJsonInTree(tree, 'angular.json');
-    expect(angularJson.projects['my-app'].architect.lint).toEqual({
+    const workspaceJson = readJsonInTree(tree, 'workspace.json');
+
+    expect(workspaceJson.projects['my-app'].architect.lint).toEqual({
       builder: '@angular-devkit/build-angular:tslint',
       options: {
-        exclude: ['**/node_modules/**'],
+        exclude: ['**/node_modules/**', '!apps/my-app/**'],
         tsConfig: [
           'apps/my-app/tsconfig.app.json',
           'apps/my-app/tsconfig.spec.json'
@@ -318,10 +319,10 @@ describe('app', () => {
       expect(tree.exists('apps/my-app/src/app/app.spec.ts')).toBeFalsy();
       expect(tree.exists('apps/my-app/tsconfig.spec.json')).toBeFalsy();
       expect(tree.exists('apps/my-app/jest.config.js')).toBeFalsy();
-      const angularJson = readJsonInTree(tree, 'angular.json');
-      expect(angularJson.projects['my-app'].architect.test).toBeUndefined();
+      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+      expect(workspaceJson.projects['my-app'].architect.test).toBeUndefined();
       expect(
-        angularJson.projects['my-app'].architect.lint.options.tsConfig
+        workspaceJson.projects['my-app'].architect.lint.options.tsConfig
       ).toEqual(['apps/my-app/tsconfig.app.json']);
     });
   });
@@ -334,8 +335,8 @@ describe('app', () => {
         appTree
       );
       expect(tree.exists('apps/my-app-e2e')).toBeFalsy();
-      const angularJson = readJsonInTree(tree, 'angular.json');
-      expect(angularJson.projects['my-app-e2e']).toBeUndefined();
+      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+      expect(workspaceJson.projects['my-app-e2e']).toBeUndefined();
     });
   });
 });

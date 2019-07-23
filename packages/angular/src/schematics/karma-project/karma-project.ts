@@ -13,7 +13,8 @@ import {
 import {
   readJsonInTree,
   updateJsonInTree,
-  offsetFromRoot
+  offsetFromRoot,
+  updateWorkspaceInTree
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import { getProjectConfig } from '@nrwl/workspace';
@@ -76,8 +77,8 @@ function updateTsSpecConfig(options: KarmaProjectSchema): Rule {
   };
 }
 
-function updateAngularJson(options: KarmaProjectSchema): Rule {
-  return updateJsonInTree('angular.json', json => {
+function updateworkspaceJson(options: KarmaProjectSchema): Rule {
+  return updateWorkspaceInTree(json => {
     const projectConfig = json.projects[options.project];
     projectConfig.architect.test = {
       builder: '@angular-devkit/build-angular:karma',
@@ -124,6 +125,6 @@ export default function(options: KarmaProjectSchema): Rule {
     generateFiles(options),
     updateTsConfig(options),
     updateTsSpecConfig(options),
-    updateAngularJson(options)
+    updateworkspaceJson(options)
   ]);
 }

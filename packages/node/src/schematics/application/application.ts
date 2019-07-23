@@ -13,7 +13,12 @@ import {
 } from '@angular-devkit/schematics';
 import { join, normalize, Path } from '@angular-devkit/core';
 import { Schema } from './schema';
-import { updateJsonInTree } from '@nrwl/workspace';
+import {
+  updateJsonInTree,
+  updateWorkspaceInTree,
+  generateProjectLint,
+  addGlobalLint
+} from '@nrwl/workspace';
 import { toFileName } from '@nrwl/workspace';
 import { getProjectConfig } from '@nrwl/workspace';
 import { offsetFromRoot } from '@nrwl/workspace';
@@ -61,16 +66,6 @@ function getBuildConfig(project: any, options: NormalizedSchema) {
   };
 }
 
-function getLintConfig(project: any) {
-  return {
-    builder: '@angular-devkit/build-angular:tslint',
-    options: {
-      tsConfig: [join(project.root, 'tsconfig.app.json')],
-      exclude: ['**/node_modules/**', '!' + join(project.root, '**')]
-    }
-  };
-}
-
 function getServeConfig(options: NormalizedSchema) {
   return {
     builder: '@nrwl/node:execute',
@@ -80,8 +75,8 @@ function getServeConfig(options: NormalizedSchema) {
   };
 }
 
-function updateAngularJson(options: NormalizedSchema): Rule {
-  return updateJsonInTree('angular.json', angularJson => {
+function updateWorkspaceJson(options: NormalizedSchema): Rule {
+  return updateWorkspaceInTree(workspaceJson => {
     const project = {
       root: options.appProjectRoot,
       sourceRoot: join(options.appProjectRoot, 'src'),
@@ -93,12 +88,17 @@ function updateAngularJson(options: NormalizedSchema): Rule {
 
     project.architect.build = getBuildConfig(project, options);
     project.architect.serve = getServeConfig(options);
-    project.architect.lint = getLintConfig(project);
-    angularJson.projects[options.name] = project;
+    project.architect.lint = generateProjectLint(
+      normalize(project.root),
+      join(normalize(project.root), 'tsconfig.app.json'),
+      options.linter
+    );
 
-    angularJson.defaultProject = angularJson.defaultProject || options.name;
+    workspaceJson.projects[options.name] = project;
 
-    return angularJson;
+    workspaceJson.defaultProject = workspaceJson.defaultProject || options.name;
+
+    return workspaceJson;
   });
 }
 
@@ -135,7 +135,7 @@ function addProxy(options: NormalizedSchema): Rule {
         )
       );
 
-      updateJsonInTree('angular.json', json => {
+      updateWorkspaceInTree(json => {
         projectConfig.architect.serve.options.proxyConfig = pathToProxyFile;
         json.projects[options.frontendProject] = projectConfig;
         return json;
@@ -151,8 +151,9 @@ export default function(schema: Schema): Rule {
       ngAdd({
         skipFormat: true
       }),
+      addGlobalLint(options.linter),
       addAppFiles(options),
-      updateAngularJson(options),
+      updateWorkspaceJson(options),
       updateNxJson(options),
       options.unitTestRunner === 'jest'
         ? externalSchematic('@nrwl/jest', 'jest-project', {

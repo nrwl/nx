@@ -30,6 +30,13 @@
       "hidden": true
     },
 
+    "tao-new": {
+      "factory": "./src/schematics/tao-new/tao-new",
+      "schema": "./src/schematics/tao-new/schema.json",
+      "description": "Create a workspace",
+      "hidden": true
+    },
+
     "library": {
       "factory": "./src/schematics/library/library",
       "schema": "./src/schematics/library/schema.json",

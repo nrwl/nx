@@ -17,6 +17,14 @@ Type: `string`
 
 A directory where the app is placed
 
+### linter
+
+Default: `tslint`
+
+Type: `string`
+
+The tool to use for running lint checks.
+
 ### name
 
 Type: `string`

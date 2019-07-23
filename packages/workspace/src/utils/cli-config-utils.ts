@@ -2,18 +2,8 @@ import { Tree } from '@angular-devkit/schematics';
 import { readJsonInTree } from './ast-utils';
 import { NxJson } from '../command-line/shared';
 
-export const angularSchematicNames = [
-  'class',
-  'component',
-  'directive',
-  'guard',
-  'module',
-  'pipe',
-  'service'
-];
-
 export function getWorkspacePath(host: Tree) {
-  const possibleFiles = ['/angular.json', '/.angular.json'];
+  const possibleFiles = ['/workspace.json', '/angular.json', '/.angular.json'];
   return possibleFiles.filter(path => host.exists(path))[0];
 }
 

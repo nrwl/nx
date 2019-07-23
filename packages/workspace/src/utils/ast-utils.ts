@@ -10,6 +10,7 @@ import * as ts from 'typescript';
 import * as stripJsonComments from 'strip-json-comments';
 import { serializeJson } from './fileutils';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
+import { getWorkspacePath } from './cli-config-utils';
 
 function nodesByPosition(first: ts.Node, second: ts.Node): number {
   return first.getStart() - second.getStart();
@@ -393,6 +394,19 @@ export function updateJsonInTree<T = any, O = T>(
   };
 }
 
+export function updateWorkspaceInTree<T = any, O = T>(
+  callback: (json: T, context: SchematicContext) => O
+): Rule {
+  return (host: Tree, context: SchematicContext): Tree => {
+    const path = getWorkspacePath(host);
+    host.overwrite(
+      path,
+      serializeJson(callback(readJsonInTree(host, path), context))
+    );
+    return host;
+  };
+}
+
 let installAdded = false;
 
 export function addDepsToPackageJson(
@@ -440,8 +454,8 @@ export function updatePackageJsonDependencies(
 }
 
 export function getProjectConfig(host: Tree, name: string): any {
-  const angularJson = readJsonInTree(host, '/angular.json');
-  const projectConfig = angularJson.projects[name];
+  const workspaceJson = readJsonInTree(host, getWorkspacePath(host));
+  const projectConfig = workspaceJson.projects[name];
   if (!projectConfig) {
     throw new Error(`Cannot find project '${name}'`);
   } else {

@@ -15,7 +15,7 @@ describe('Update 7.2.0', () => {
       scripts: {}
     });
     createJson('tsconfig.json', {});
-    createJson('angular.json', {
+    createJson('workspace.json', {
       projects: {
         app1: {
           root: 'apps/app1',
@@ -321,7 +321,7 @@ describe('Update 7.2.0', () => {
   it('should fix cypress lint configs', async () => {
     initialTree = await schematicRunner
       .callRule(
-        updateJsonInTree('angular.json', json => {
+        updateJsonInTree('workspace.json', json => {
           json.projects['app2-e2e'].architect.lint.options.tsConfig =
             'e2e/tsconfig.e2e.json';
           return json;
@@ -333,8 +333,8 @@ describe('Update 7.2.0', () => {
       .runSchematicAsync('update-7.2.0', {}, initialTree)
       .toPromise();
     expect(
-      readJsonInTree(result, 'angular.json').projects['app2-e2e'].architect.lint
-        .options.tsConfig
+      readJsonInTree(result, 'workspace.json').projects['app2-e2e'].architect
+        .lint.options.tsConfig
     ).toEqual('apps/app2-e2e/tsconfig.e2e.json');
     [
       '/apps/app1/tsconfig.app.json',
@@ -358,7 +358,7 @@ describe('Update 7.2.0', () => {
   it('should not fail for non-existing tsconfigs', async () => {
     initialTree = await schematicRunner
       .callRule(
-        updateJsonInTree('angular.json', json => {
+        updateJsonInTree('workspace.json', json => {
           json.projects['app2'].architect.lint.options.tsConfig =
             'apps/nonexistent/tsconfig.app.json';
           return json;

@@ -11,7 +11,8 @@ import {
   insert,
   readJsonInTree,
   updateJsonInTree,
-  addUpdateTask
+  addUpdateTask,
+  updateWorkspaceInTree
 } from '@nrwl/workspace';
 import {
   createSourceFile,
@@ -31,7 +32,7 @@ function addDependencies() {
   return (host: Tree, context: SchematicContext) => {
     const dependencies = readJsonInTree(host, 'package.json').dependencies;
     const builders = new Set<string>();
-    const projects = readJsonInTree(host, 'angular.json').projects;
+    const projects = readJsonInTree(host, 'workspace.json').projects;
     Object.values<any>(projects)
       .filter(
         project =>
@@ -110,7 +111,7 @@ const updateUpdateScript = updateJsonInTree('package.json', json => {
   return json;
 });
 
-const updateBuilders = updateJsonInTree('angular.json', json => {
+const updateBuilders = updateWorkspaceInTree(json => {
   if (!json.projects) {
     return json;
   }
@@ -285,7 +286,7 @@ const updateDefaultCollection = (host: Tree, context: SchematicContext) => {
     'package.json'
   );
 
-  return updateJsonInTree('angular.json', json => {
+  return updateWorkspaceInTree(json => {
     json.cli = json.cli || {};
     if (dependencies['@nrwl/angular']) {
       json.cli.defaultCollection = '@nrwl/angular';

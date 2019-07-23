@@ -8,4 +8,5 @@ export interface Schema {
   skipGit?: boolean;
   style?: string;
   commit?: { name: string; email: string; message?: string };
+  cli: 'nx' | 'angular';
 }

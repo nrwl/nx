@@ -22,7 +22,10 @@ import {
   readJsonInTree,
   toClassName,
   toFileName,
-  updateJsonInTree
+  updateJsonInTree,
+  updateWorkspaceInTree,
+  addGlobalLint,
+  generateProjectLint
 } from '@nrwl/workspace';
 import { join, normalize, Path } from '@angular-devkit/core';
 import * as ts from 'typescript';
@@ -44,6 +47,7 @@ export default function(schema: Schema): Rule {
     const options = normalizeOptions(schema);
 
     return chain([
+      addGlobalLint(options.linter),
       createFiles(options),
       !options.skipTsConfig ? updateTsConfig(options) : noop(),
       addProject(options),
@@ -71,19 +75,14 @@ export default function(schema: Schema): Rule {
 }
 
 function addProject(options: NormalizedSchema): Rule {
-  return updateJsonInTree('angular.json', json => {
+  return updateWorkspaceInTree(json => {
     const architect: { [key: string]: any } = {};
 
-    architect.lint = {
-      builder: '@angular-devkit/build-angular:tslint',
-      options: {
-        tsConfig: [join(normalize(options.projectRoot), 'tsconfig.lib.json')],
-        exclude: [
-          '**/node_modules/**',
-          '!' + join(normalize(options.projectRoot), '**')
-        ]
-      }
-    };
+    architect.lint = generateProjectLint(
+      normalize(options.projectRoot),
+      join(normalize(options.projectRoot), 'tsconfig.lib.json'),
+      options.linter
+    );
 
     json.projects[options.name] = {
       root: options.projectRoot,

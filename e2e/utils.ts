@@ -3,57 +3,107 @@ import { readFileSync, statSync, writeFileSync, renameSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
 
-const projectName: string = 'proj';
+export let cli;
 
 export function uniq(prefix: string) {
   return `${prefix}${Math.floor(Math.random() * 10000000)}`;
 }
 
-function patchPackageJsonDeps() {
-  const p = readFileSync('./tmp/proj/package.json').toString();
+export function forEachCli(
+  selectedCliOrFunction: string | Function,
+  callback?: Function
+) {
+  let clis;
+  if (process.env.SELECTED_CLI && selectedCliOrFunction && callback) {
+    if (selectedCliOrFunction == process.env.SELECTED_CLI) {
+      clis = [process.env.SELECTED_CLI];
+    } else {
+      clis = [];
+    }
+  } else if (process.env.SELECTED_CLI) {
+    clis = [process.env.SELECTED_CLI];
+  } else {
+    clis = callback ? [selectedCliOrFunction] : ['nx', 'angular'];
+  }
+
+  const cb: any = callback ? callback : selectedCliOrFunction;
+  clis.forEach(c => {
+    describe(`[${c}]`, () => {
+      beforeEach(() => {
+        cli = c;
+      });
+      cb();
+    });
+  });
+}
+
+export function workspaceConfigName() {
+  return cli === 'angular' ? 'angular.json' : 'workspace.json';
+}
+
+function patchPackageJsonDeps(addWorkspace = true) {
+  const p = JSON.parse(readFileSync(tmpProjPath('package.json')).toString());
   const workspacePath = path.join(getCwd(), 'build', 'packages', 'workspace');
   const angularPath = path.join(getCwd(), 'build', 'packages', 'angular');
-  writeFileSync(
-    './tmp/proj/package.json',
-    p
-      .replace(
-        '"@nrwl/workspace": "*"',
-        `"@nrwl/workspace": "file:${workspacePath}"`
-      )
-      .replace('"@nrwl/angular": "*"', `"@nrwl/angular": "file:${angularPath}"`)
-  );
+  const reactPath = path.join(getCwd(), 'build', 'packages', 'react');
+
+  if (addWorkspace) {
+    p.devDependencies['@nrwl/workspace'] = `file:${workspacePath}`;
+  }
+  p.devDependencies['@nrwl/angular'] = `file:${angularPath}`;
+  p.devDependencies['@nrwl/react'] = `file:${reactPath}`;
+  writeFileSync(tmpProjPath('package.json'), JSON.stringify(p, null, 2));
 }
 
 function runYarnInstall(silent: boolean = true) {
   const install = execSync('yarn install', {
-    cwd: './tmp/proj',
+    cwd: tmpProjPath(),
     ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
   });
   return install ? install.toString() : '';
 }
 
-export function runNgNew(command?: string, silent?: boolean): string {
-  const gen = execSync(
-    `../node_modules/.bin/ng new proj --no-interactive --skip-install ${command ||
-      ''}`,
-    {
-      cwd: `./tmp`,
-      ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
-    }
-  );
-  patchPackageJsonDeps();
-  const install = runYarnInstall(silent);
+export function runNew(
+  command?: string,
+  silent?: boolean,
+  addWorkspace = true
+): string {
+  let gen;
+  if (cli === 'angular') {
+    gen = execSync(
+      `../../node_modules/.bin/ng new proj --no-interactive --skip-install ${command ||
+        ''}`,
+      {
+        cwd: `./tmp/${cli}`,
+        ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
+      }
+    );
+  } else {
+    gen = execSync(
+      `node ../../node_modules/@nrwl/tao/index.js new proj --no-interactive --skip-install ${command ||
+        ''}`,
+      {
+        cwd: `./tmp/${cli}`,
+        ...(silent && false ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
+      }
+    );
+  }
+
+  patchPackageJsonDeps(addWorkspace);
+  const install = runYarnInstall(silent && false);
   return silent ? null : `${gen ? gen.toString() : ''}${install}`;
 }
 
 export function newProject(): void {
   cleanup();
-  if (!directoryExists('./tmp/proj_backup')) {
-    runNgNew('--collection=@nrwl/workspace --npmScope=proj', true);
+  if (!directoryExists(tmpBackupProjPath())) {
+    runNew('--collection=@nrwl/workspace --npmScope=proj', true);
     copyMissingPackages();
 
     writeFileSync(
-      './tmp/proj/node_modules/@angular-devkit/schematics/tasks/node-package/executor.js',
+      tmpProjPath(
+        'node_modules/@angular-devkit/schematics/tasks/node-package/executor.js'
+      ),
       `
       "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -67,45 +117,28 @@ function default_1(factoryOptions = {}) {
 }
 exports.default = default_1;`
     );
-    runCLI('add @nrwl/jest');
-    runCLI('add @nrwl/cypress');
-    runCLI('add @nrwl/web');
-    runCLI('add @nrwl/react');
-    runCLI('add @nrwl/angular');
-    runCLI('add @nrwl/node');
-    runCLI('add @nrwl/express');
-    runCLI('add @nrwl/nest');
-    execSync('mv ./tmp/proj ./tmp/proj_backup');
+
+    execSync(`mv ${tmpProjPath()} ${tmpBackupProjPath()}`);
   }
-  execSync('cp -a ./tmp/proj_backup ./tmp/proj');
+  execSync(`cp -a ${tmpBackupProjPath()} ${tmpProjPath()}`);
 }
 
 export function ensureProject(): void {
-  if (!directoryExists('./tmp/proj')) {
+  if (!directoryExists(tmpProjPath())) {
     newProject();
   }
 }
 
-export function runsInWSL() {
-  return !!process.env['WINDOWSTMP'];
-}
-
-export function patchKarmaToWorkOnWSL(): void {
+export function supportUi() {
+  // powershell => wsl => no ui for now
   try {
-    const karma = readFile('karma.conf.js');
-    if (process.env['WINDOWSTMP']) {
-      updateFile(
-        'karma.conf.js',
-        karma.replace(
-          `const { constants } = require('karma');`,
-          `
-      const { constants } = require('karma');
-      process.env['TMPDIR']="${process.env['WINDOWSTMP']}";
-    `
-        )
-      );
-    }
-  } catch (e) {}
+    execSync(`powershell.exe echo 1`, {
+      stdio: ['ignore', 'ignore', 'ignore']
+    });
+    return false;
+  } catch (e) {
+    return true;
+  }
 }
 
 export function copyMissingPackages(): void {
@@ -150,7 +183,7 @@ export function copyMissingPackages(): void {
 
     'document-register-element'
   ];
-  modulesToCopy.forEach(m => copyNodeModule(projectName, m));
+  modulesToCopy.forEach(m => copyNodeModule(m));
   updateFile(
     'node_modules/@angular-devkit/schematics/tasks/node-package/executor.js',
     `
@@ -167,17 +200,18 @@ export function copyMissingPackages(): void {
   `
   );
 
-  execSync('rm -rf tmp/proj/node_modules/.bin/webpack');
+  execSync(`rm -rf ${tmpProjPath('node_modules/.bin/webpack')}`);
   execSync(
-    `cp -a node_modules/.bin/webpack tmp/proj/node_modules/.bin/webpack`
+    `cp -a node_modules/.bin/webpack ${tmpProjPath(
+      'node_modules/.bin/webpack'
+    )}`
   );
-  execSync(`rm -rf ./tmp/proj/node_modules/cypress/node_modules/@types`);
-  execSync(`rm -rf ./tmp/proj/@types/sinon-chai/node_modules/@types`);
+  execSync(`rm -rf ${tmpProjPath('node_modules/cypress/node_modules/@types')}`);
 }
 
-function copyNodeModule(path: string, name: string) {
-  execSync(`rm -rf tmp/${path}/node_modules/${name}`);
-  execSync(`cp -a node_modules/${name} tmp/${path}/node_modules/${name}`);
+function copyNodeModule(name: string) {
+  execSync(`rm -rf ${tmpProjPath('node_modules/' + name)}`);
+  execSync(`cp -a node_modules/${name} ${tmpProjPath('node_modules/' + name)}`);
 }
 
 export function runCommandAsync(
@@ -190,7 +224,7 @@ export function runCommandAsync(
     exec(
       command,
       {
-        cwd: `./tmp/proj`
+        cwd: tmpProjPath()
       },
       (err, stdout, stderr) => {
         if (!opts.silenceError && err) {
@@ -208,7 +242,35 @@ export function runCLIAsync(
     silenceError: false
   }
 ): Promise<{ stdout: string; stderr: string }> {
-  return runCommandAsync(`./node_modules/.bin/ng ${command}`, opts);
+  return runCommandAsync(
+    `node ./node_modules/@nrwl/cli/bin/nx.js ${command}`,
+    opts
+  );
+}
+
+export function runNgAdd(
+  command?: string,
+  opts = {
+    silenceError: false
+  }
+): string {
+  try {
+    return execSync(`./node_modules/.bin/ng ${command}`, {
+      cwd: tmpProjPath()
+    })
+      .toString()
+      .replace(
+        /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
+        ''
+      );
+  } catch (e) {
+    if (opts.silenceError) {
+      return e.stdout.toString();
+    } else {
+      console.log(e.stdout.toString(), e.stderr.toString());
+      throw e;
+    }
+  }
 }
 
 export function runCLI(
@@ -218,8 +280,8 @@ export function runCLI(
   }
 ): string {
   try {
-    return execSync(`./node_modules/.bin/ng ${command}`, {
-      cwd: `./tmp/${projectName}`
+    return execSync(`node ./node_modules/@nrwl/cli/bin/nx.js ${command}`, {
+      cwd: tmpProjPath()
     })
       .toString()
       .replace(
@@ -244,7 +306,7 @@ export function expectTestsPass(v: { stdout: string; stderr: string }) {
 export function runCommand(command: string): string {
   try {
     return execSync(command, {
-      cwd: `./tmp/${projectName}`,
+      cwd: tmpProjPath(),
       stdio: ['pipe', 'pipe', 'pipe']
     }).toString();
   } catch (e) {
@@ -253,23 +315,18 @@ export function runCommand(command: string): string {
 }
 
 export function updateFile(f: string, content: string): void {
-  ensureDirSync(path.dirname(path.join(getCwd(), 'tmp', 'proj', f)));
-  writeFileSync(path.join(getCwd(), 'tmp', 'proj', f), content);
+  ensureDirSync(path.dirname(tmpProjPath(f)));
+  writeFileSync(tmpProjPath(f), content);
 }
 
 export function renameFile(f: string, newPath: string): void {
-  ensureDirSync(path.dirname(path.join(getCwd(), 'tmp', 'proj', newPath)));
-  renameSync(
-    path.join(getCwd(), 'tmp', 'proj', f),
-    path.join(getCwd(), 'tmp', 'proj', newPath)
-  );
+  ensureDirSync(path.dirname(tmpProjPath(newPath)));
+  renameSync(tmpProjPath(f), tmpProjPath(newPath));
 }
 
 export function checkFilesExist(...expectedFiles: string[]) {
   expectedFiles.forEach(f => {
-    const ff = f.startsWith('/')
-      ? f
-      : path.join(getCwd(), 'tmp', projectName, f);
+    const ff = f.startsWith('/') ? f : tmpProjPath(f);
     if (!exists(ff)) {
       throw new Error(`File '${ff}' does not exist`);
     }
@@ -281,12 +338,12 @@ export function readJson(f: string): any {
 }
 
 export function readFile(f: string) {
-  const ff = f.startsWith('/') ? f : path.join(getCwd(), 'tmp', projectName, f);
+  const ff = f.startsWith('/') ? f : tmpProjPath(f);
   return readFileSync(ff).toString();
 }
 
 export function cleanup() {
-  execSync('rm -rf ./tmp/proj');
+  execSync(`rm -rf ${tmpProjPath()}`);
 }
 
 export function getCwd(): string {
@@ -315,4 +372,12 @@ export function exists(filePath: string): boolean {
 
 export function getSize(filePath: string): number {
   return statSync(filePath).size;
+}
+
+export function tmpProjPath(path?: string) {
+  return path ? `./tmp/${cli}/proj/${path}` : `./tmp/${cli}/proj`;
+}
+
+function tmpBackupProjPath(path?: string) {
+  return path ? `./tmp/${cli}/proj-backup/${path}` : `./tmp/${cli}/proj-backup`;
 }

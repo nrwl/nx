@@ -45,7 +45,7 @@ Use pascal case component file name (e.g. App.tsx)
 
 Type: `string`
 
-The name of the project (as specified in angular.json).
+The name of the project.
 
 ### routing
 
