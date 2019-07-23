@@ -5,6 +5,10 @@ matrix:
       node_js: 10
       dist: trusty
       sudo: required
+      cache:
+        directories:
+          - ~/.yarn
+          - ~/.cache
       addons:
         chrome: stable
       before_install:
