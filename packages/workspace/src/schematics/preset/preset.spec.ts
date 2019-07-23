@@ -18,7 +18,7 @@ describe('preset', () => {
     expect(tree.exists('/apps/proj/src/app/app.component.ts')).toBe(true);
 
     expect(
-      JSON.parse(tree.readContent('/angular.json')).cli.defaultCollection
+      JSON.parse(tree.readContent('/workspace.json')).cli.defaultCollection
     ).toBe('@nrwl/angular');
   });
 
@@ -30,7 +30,7 @@ describe('preset', () => {
     );
     expect(tree.exists('/apps/proj/src/main.tsx')).toBe(true);
     expect(
-      JSON.parse(tree.readContent('/angular.json')).cli.defaultCollection
+      JSON.parse(tree.readContent('/workspace.json')).cli.defaultCollection
     ).toBe('@nrwl/react');
   });
 
@@ -42,7 +42,7 @@ describe('preset', () => {
     );
     expect(tree.exists('/apps/proj/src/main.ts')).toBe(true);
     expect(
-      JSON.parse(tree.readContent('/angular.json')).cli.defaultCollection
+      JSON.parse(tree.readContent('/workspace.json')).cli.defaultCollection
     ).toBe('@nrwl/web');
   });
 

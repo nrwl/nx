@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { updateJsonFile, readCliConfigFile } from '@nrwl/workspace';
+import { updateJsonFile, readWorkspaceConfigPath } from '@nrwl/workspace';
 
 type Migration = { description: string; run(): void };
 type MigrationName = { name: string; migration: Migration };
@@ -32,7 +32,7 @@ updateLatestMigration();
 console.log('All migrations run successfully');
 
 function readLatestMigration(): string {
-  const angularCli = readCliConfigFile();
+  const angularCli = readWorkspaceConfigPath();
   return angularCli.project.latestMigration;
 }
 

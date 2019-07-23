@@ -5,15 +5,16 @@ import * as path from 'path';
 
 import { serializeJson } from '@nrwl/workspace';
 import { readJsonInTree } from '@nrwl/workspace';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 
 describe('Update 7.5.0', () => {
   let initialTree: Tree;
   let schematicRunner: SchematicTestRunner;
 
   beforeEach(() => {
-    initialTree = Tree.empty();
+    initialTree = createEmptyWorkspace(Tree.empty());
 
-    initialTree.create(
+    initialTree.overwrite(
       'package.json',
       serializeJson({
         devDependencies: {

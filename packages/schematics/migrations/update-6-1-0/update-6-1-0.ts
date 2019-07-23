@@ -25,7 +25,7 @@ const addImplicitDependencies = updateJsonInTree<NxJson>('nx.json', nxJson => {
   return {
     ...nxJson,
     implicitDependencies: {
-      'angular.json': '*',
+      'workspace.json': '*',
       'package.json': '*',
       'tsconfig.json': '*',
       'tslint.json': '*',

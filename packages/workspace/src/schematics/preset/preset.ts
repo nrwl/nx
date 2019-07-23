@@ -9,7 +9,11 @@ import {
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 
-import { insert, insertImport, updateJsonInTree } from '../../utils/ast-utils';
+import {
+  insert,
+  insertImport,
+  updateWorkspaceInTree
+} from '../../utils/ast-utils';
 
 import { formatFiles } from '../../utils/rules/format-files';
 
@@ -34,20 +38,6 @@ function createPreset(options: Schema): Rule {
         {
           name: options.name,
           style: options.style
-        },
-        { interactive: false }
-      ),
-      setDefaultCollection('@nrwl/angular')
-    ]);
-  } else if (options.preset === 'angular-ivy') {
-    return chain([
-      externalSchematic(
-        '@nrwl/angular',
-        'application',
-        {
-          name: options.name,
-          style: options.style,
-          enableIvy: true
         },
         { interactive: false }
       ),
@@ -235,7 +225,7 @@ export class AppService {
 }
 
 function setDefaultCollection(defaultCollection: string) {
-  return updateJsonInTree('angular.json', json => {
+  return updateWorkspaceInTree(json => {
     if (!json.cli) {
       json.cli = {};
     }

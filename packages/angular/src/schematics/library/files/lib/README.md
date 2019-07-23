@@ -5,5 +5,5 @@ This library was generated with [Nx](https://nx.dev).
 
 ## Running unit tests
 
-Run `ng test <%= name %>` to execute the unit tests.
+Run `nx test <%= name %>` to execute the unit tests.
 <% } %>

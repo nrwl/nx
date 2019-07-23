@@ -8,7 +8,8 @@ import {
   formatFiles,
   insert,
   readJsonInTree,
-  updateJsonInTree
+  updateJsonInTree,
+  updateWorkspaceInTree
 } from '@nrwl/workspace';
 import {
   getSourceNodes,
@@ -371,7 +372,7 @@ const addDotEnv = updateJsonInTree('package.json', json => {
   return json;
 });
 
-const setDefaults = updateJsonInTree('angular.json', json => {
+const setDefaults = updateWorkspaceInTree(json => {
   if (!json.schematics) {
     json.schematics = {};
   }

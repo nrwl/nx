@@ -26,12 +26,12 @@ export function _findDefaultServePath(
     /^(\w+:)?\/\//.test(baseHref || '') ||
     /^(\w+:)?\/\//.test(deployUrl || '')
   ) {
-    // If baseHref or deployUrl is absolute, unsupported by ng serve
+    // If baseHref or deployUrl is absolute, unsupported by nx serve
     return null;
   }
 
   // normalize baseHref
-  // for ng serve the starting base is always `/` so a relative
+  // for nx serve the starting base is always `/` so a relative
   // and root relative value are identical
   const baseHrefParts = (baseHref || '').split('/').filter(part => part !== '');
   if (baseHref && !baseHref.endsWith('/')) {
@@ -42,7 +42,7 @@ export function _findDefaultServePath(
 
   if (deployUrl && deployUrl[0] === '/') {
     if (baseHref && baseHref[0] === '/' && normalizedBaseHref !== deployUrl) {
-      // If baseHref and deployUrl are root relative and not equivalent, unsupported by ng serve
+      // If baseHref and deployUrl are root relative and not equivalent, unsupported by nx serve
       return null;
     }
 

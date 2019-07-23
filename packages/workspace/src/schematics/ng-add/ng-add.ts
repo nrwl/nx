@@ -27,7 +27,8 @@ import {
   serializeJson,
   toFileName,
   updateJsonFile,
-  updateJsonInTree
+  updateJsonInTree,
+  getWorkspacePath
 } from '@nrwl/workspace';
 import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../workspace/workspace';
 import { JsonArray } from '@angular-devkit/core';
@@ -239,9 +240,9 @@ function serializeLoadChildren({
 
 function updateTsConfigsJson(options: Schema) {
   return (host: Tree) => {
-    const angularJson = readJsonInTree(host, 'angular.json');
-    const app = angularJson.projects[options.name];
-    const e2eProject = getE2eProject(angularJson);
+    const workspaceJson = readJsonInTree(host, 'angular.json');
+    const app = workspaceJson.projects[options.name];
+    const e2eProject = getE2eProject(workspaceJson);
 
     const offset = '../../';
     updateJsonFile(app.architect.build.options.tsConfig, json => {
@@ -300,8 +301,8 @@ function updateTsLint() {
 
 function updateProjectTsLint(options: Schema) {
   return (host: Tree) => {
-    const angularJson = readJsonInTree(host, '/angular.json');
-    const app = angularJson.projects[options.name];
+    const workspaceJson = readJsonInTree(host, getWorkspacePath(host));
+    const app = workspaceJson.projects[options.name];
     const offset = '../../';
 
     if (host.exists(`${app.root}/tslint.json`)) {
@@ -350,16 +351,16 @@ function getFilename(path: string) {
   return path.split('/').pop();
 }
 
-function getE2eKey(angularJson: any) {
-  return Object.keys(angularJson.projects).find(key => {
-    return !!angularJson.projects[key].architect.e2e;
+function getE2eKey(workspaceJson: any) {
+  return Object.keys(workspaceJson.projects).find(key => {
+    return !!workspaceJson.projects[key].architect.e2e;
   });
 }
 
-function getE2eProject(angularJson: any) {
-  const key = getE2eKey(angularJson);
+function getE2eProject(workspaceJson: any) {
+  const key = getE2eKey(workspaceJson);
   if (key) {
-    return angularJson.projects[key];
+    return workspaceJson.projects[key];
   } else {
     return null;
   }
@@ -367,9 +368,9 @@ function getE2eProject(angularJson: any) {
 
 function moveExistingFiles(options: Schema) {
   return (host: Tree, context: SchematicContext) => {
-    const angularJson = readJsonInTree(host, 'angular.json');
-    const app = angularJson.projects[options.name];
-    const e2eApp = getE2eProject(angularJson);
+    const workspaceJson = readJsonInTree(host, getWorkspacePath(host));
+    const app = workspaceJson.projects[options.name];
+    const e2eApp = getE2eProject(workspaceJson);
 
     // No context is passed because it should not be required to have a browserslist
     moveOutOfSrc(options.name, 'browserslist');
@@ -410,7 +411,7 @@ function moveExistingFiles(options: Schema) {
 
     if (e2eApp) {
       const oldE2eRoot = 'e2e';
-      const newE2eRoot = join('apps', getE2eKey(angularJson) + '-e2e');
+      const newE2eRoot = join('apps', getE2eKey(workspaceJson) + '-e2e');
       renameSync(oldE2eRoot, newE2eRoot, err => {
         if (!err) {
           context.logger.info(`Renamed ${oldE2eRoot} -> ${newE2eRoot}`);
@@ -431,7 +432,7 @@ function moveExistingFiles(options: Schema) {
 
 function createAdditionalFiles(options: Schema): Rule {
   return (host: Tree, _context: SchematicContext) => {
-    const angularJson = readJsonInTree(host, 'angular.json');
+    const workspaceJson = readJsonInTree(host, 'angular.json');
     host.create(
       'nx.json',
       serializeJson({
@@ -447,7 +448,7 @@ function createAdditionalFiles(options: Schema): Rule {
           [options.name]: {
             tags: []
           },
-          [getE2eKey(angularJson) + '-e2e']: {
+          [getE2eKey(workspaceJson) + '-e2e']: {
             tags: []
           }
         }
@@ -502,12 +503,12 @@ function checkCanConvertToWorkspace(options: Schema) {
       }
 
       // TODO: This restriction should be lited
-      const angularJson = readJsonInTree(host, 'angular.json');
-      if (Object.keys(angularJson.projects).length > 2) {
+      const workspaceJson = readJsonInTree(host, 'angular.json');
+      if (Object.keys(workspaceJson.projects).length > 2) {
         throw new Error('Can only convert projects with one app');
       }
-      const e2eKey = getE2eKey(angularJson);
-      const e2eApp = getE2eProject(angularJson);
+      const e2eKey = getE2eKey(workspaceJson);
+      const e2eApp = getE2eProject(workspaceJson);
 
       if (
         e2eApp &&

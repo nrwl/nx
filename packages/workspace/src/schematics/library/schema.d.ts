@@ -7,6 +7,6 @@ export interface Schema {
   skipFormat: boolean;
   tags?: string;
   simpleModuleName: boolean;
-
-  unitTestRunner: UnitTestRunner;
+  unitTestRunner: 'jest' | 'none';
+  linter: 'eslint' | 'tslint';
 }

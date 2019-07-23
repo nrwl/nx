@@ -10,7 +10,8 @@ import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import {
   createOrUpdate,
   readJsonInTree,
-  updateJsonInTree
+  updateJsonInTree,
+  updateWorkspaceInTree
 } from '@nrwl/workspace';
 import { serializeJson, renameSync } from '@nrwl/workspace';
 import { parseTarget, serializeTarget } from '@nrwl/workspace';
@@ -256,8 +257,8 @@ function createTsconfigLibJson(host: Tree, project: any) {
 }
 
 function createAdditionalFiles(host: Tree) {
-  const angularJson = readJsonInTree(host, 'angular.json');
-  Object.entries<any>(angularJson.projects).forEach(([key, project]) => {
+  const workspaceJson = readJsonInTree(host, 'workspace.json');
+  Object.entries<any>(workspaceJson.projects).forEach(([key, project]) => {
     if (project.architect.test) {
       createTsconfigSpecJson(host, project);
       createKarma(host, project);
@@ -282,9 +283,9 @@ function createAdditionalFiles(host: Tree) {
 }
 
 function moveE2eTests(host: Tree, context: SchematicContext) {
-  const angularJson = readJsonInTree(host, 'angular.json');
+  const workspaceJson = readJsonInTree(host, 'workspace.json');
 
-  Object.entries<any>(angularJson.projects).forEach(([key, p]) => {
+  Object.entries<any>(workspaceJson.projects).forEach(([key, p]) => {
     if (p.projectType === 'application' && !p.architect.e2e) {
       renameSync(`${p.root}/e2e`, `${p.root}-e2e/src`, err => {
         if (!err) {
@@ -320,9 +321,9 @@ function deleteUnneededFiles(host: Tree) {
 }
 
 function patchLibIndexFiles(host: Tree, context: SchematicContext) {
-  const angularJson = readJsonInTree(host, 'angular.json');
+  const workspaceJson = readJsonInTree(host, 'workspace.json');
 
-  Object.entries<any>(angularJson.projects).forEach(([key, p]) => {
+  Object.entries<any>(workspaceJson.projects).forEach(([key, p]) => {
     if (p.projectType === 'library') {
       try {
         // TODO: incorporate this into fileutils.renameSync
@@ -489,8 +490,8 @@ function createDefaultE2eTsConfig(host: Tree, project: any) {
 }
 
 function updateTsConfigs(host: Tree) {
-  const angularJson = readJsonInTree(host, 'angular.json');
-  Object.entries<any>(angularJson.projects).forEach(([key, project]) => {
+  const workspaceJson = readJsonInTree(host, 'workspace.json');
+  Object.entries<any>(workspaceJson.projects).forEach(([key, project]) => {
     if (
       project.architect.build &&
       project.architect.build.options.main.startsWith('apps')
@@ -562,7 +563,7 @@ function updateTsConfigs(host: Tree) {
   return host;
 }
 
-const updateAngularJson = updateJsonInTree('angular.json', json => {
+const updateworkspaceJson = updateWorkspaceInTree(json => {
   json.newProjectRoot = '';
   json.cli = {
     ...json.cli,
@@ -681,7 +682,7 @@ function addInstallTask(host: Tree, context: SchematicContext) {
 }
 
 function checkCli6Upgraded(host: Tree) {
-  if (!host.exists('angular.json') && host.exists('.angular-cli.json')) {
+  if (!host.exists('workspace.json') && host.exists('.angular-cli.json')) {
     throw new Error(
       'Please install the latest version and run ng update @angular/cli first'
     );
@@ -701,7 +702,7 @@ export default function(): Rule {
   return chain([
     checkCli6Upgraded,
     updatePackageJson,
-    updateAngularJson,
+    updateworkspaceJson,
     moveE2eTests,
     updateTsConfigs,
     createAdditionalFiles,

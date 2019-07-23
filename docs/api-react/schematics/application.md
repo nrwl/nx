@@ -33,6 +33,14 @@ Type: `string`
 
 Test runner to use for end to end (e2e) tests
 
+### linter
+
+Default: `tslint`
+
+Type: `string`
+
+The tool to use for running lint checks.
+
 ### name
 
 Type: `string`

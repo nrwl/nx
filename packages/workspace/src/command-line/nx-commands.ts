@@ -6,6 +6,7 @@ import { format } from './format';
 import { workspaceLint } from './lint';
 import { workspaceSchematic } from './workspace-schematic';
 import { generateGraph, OutputType } from './dep-graph';
+import { nxVersion } from '../utils/versions';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
@@ -37,6 +38,23 @@ export const supportedNxCommands = [
  */
 export const commandsObject = yargs
   .usage('Extensible Dev Tools for Monorepos')
+  .command(
+    'run [project][:target][:configuration] [options, ...]',
+    `
+    Run a target for a project 
+    (e.g., nx run myapp:serve:production). 
+    
+    You can also use the infix notation to run a target:
+    (e.g., nx serve myapp --configuration=production)
+    `
+  )
+  .command(
+    'generate [schematic-collection:][schematic] [options, ...]',
+    `
+    Generate code
+    (e.g., nx generate @nrwl/web:app myapp). 
+    `
+  )
   .command(
     'affected',
     'Run task for affected projects',
@@ -161,7 +179,7 @@ export const commandsObject = yargs
     () => workspaceSchematic(process.argv.slice(3))
   )
   .help('help')
-  .version()
+  .version(nxVersion)
   .option('quiet', { type: 'boolean', hidden: true });
 
 function withFormatOptions(yargs: yargs.Argv): yargs.Argv {

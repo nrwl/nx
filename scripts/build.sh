@@ -28,7 +28,9 @@ rm -rf build/packages/angular/bundles/nrwl-angular-testing.umd.js.bak
 rm -rf build/packages/angular/bundles/nrwl-angular-testing.umd.min.js.bak
 
 rsync -a --exclude=*.ts packages/ build/packages
+chmod +x build/packages/create-nx-workspace/bin/create-nx-workspace.js
 chmod +x build/packages/cli/bin/nx.js
+chmod +x build/packages/tao/index.js
 
 rm -rf build/packages/install
 rm -rf build/packages/nx/dist
@@ -47,6 +49,8 @@ cp README.md build/packages/angular
 cp README.md build/packages/jest
 cp README.md build/packages/cypress
 cp README.md build/packages/cli
+cp README.md build/packages/tao
+
 cp LICENSE build/packages/builders
 cp LICENSE build/packages/schematics
 cp LICENSE build/packages/nx
@@ -61,6 +65,7 @@ cp LICENSE build/packages/angular
 cp LICENSE build/packages/jest
 cp LICENSE build/packages/cypress
 cp LICENSE build/packages/cli
+cp LICENSE build/packages/tao
 
 echo "Nx libraries available at build/packages:"
 ls build/packages

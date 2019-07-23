@@ -11,6 +11,14 @@ ng generate workspace ...
 
 ## Options
 
+### cli
+
+Default: `nx`
+
+Type: `string`
+
+CLI used for generating code and running tasks
+
 ### commit
 
 Default: `true`

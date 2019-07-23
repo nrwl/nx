@@ -3,13 +3,15 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
+    <% if(cli === 'angular') { %>
     "ng": "ng",
+    <% } %>
     "nx": "nx",
-    "start": "ng serve",
-    "build": "ng build",
-    "test": "ng test",
-    "lint": "nx workspace-lint && ng lint",
-    "e2e": "ng e2e",
+    "start": "<%= cliCommand %> serve",
+    "build": "<%= cliCommand %> build",
+    "test": "<%= cliCommand %> test",
+    "lint": "nx lint && <%= cliCommand %> lint",
+    "e2e": "<%= cliCommand %> e2e",
     "affected:apps": "nx affected:apps",
     "affected:libs": "nx affected:libs",
     "affected:build": "nx affected:build",
@@ -21,8 +23,12 @@
     "format": "nx format:write",
     "format:write": "nx format:write",
     "format:check": "nx format:check",
+
+    <% if(cli === 'angular') { %>
     "update": "ng update @nrwl/workspace",
     "update:check": "ng update",
+    <% } %>
+
     "workspace-schematic": "nx workspace-schematic",
     "dep-graph": "nx dep-graph",
     "help": "nx help"
@@ -30,13 +36,13 @@
   "private": true,
   "dependencies": {},
   "devDependencies": {
+     <% if(cli === 'angular') { %>"@angular/cli": "<%= angularCliVersion %>",<% } %>
     "@nrwl/workspace": "<%= nxVersion %>",
     "@types/node": "~8.9.4",
     "dotenv": "6.2.0",
     "ts-node": "~7.0.0",
     "tslint": "~5.11.0",
     "typescript": "<%= typescriptVersion %>",
-    "prettier": "<%= prettierVersion %>"<% if(!nxCli) { %>,
-    "@angular/cli": "<%= angularCliVersion %>"<% } %>
+    "prettier": "<%= prettierVersion %>"
   }
 }

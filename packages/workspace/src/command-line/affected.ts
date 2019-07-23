@@ -15,7 +15,7 @@ import {
   parseFiles,
   getAllProjectsWithTarget,
   getAffectedProjectsWithTarget,
-  readAngularJson,
+  readWorkspaceJson,
   printArgsWarning
 } from './shared';
 import { generateGraph } from './dep-graph';
@@ -46,8 +46,7 @@ export interface AffectedOptions {
   quiet?: boolean;
 }
 
-// Commands that can do `ng [command]`
-const ngCommands = ['build', 'test', 'lint', 'e2e'];
+const commonCommands = ['build', 'test', 'lint', 'e2e'];
 
 export function affected(parsedArgs: YargsAffectedOptions): void {
   const target = parsedArgs.target;
@@ -187,25 +186,25 @@ async function runCommand(
 
   output.addVerticalSeparator();
 
-  const angularJson = readAngularJson();
+  const workspaceJson = readWorkspaceJson();
   const projectMetadata = new Map<string, any>();
   projects.forEach(project => {
-    projectMetadata.set(project, angularJson.projects[project]);
+    projectMetadata.set(project, workspaceJson.projects[project]);
   });
 
-  // Make sure the `package.json` has the `ng: "ng"` command needed by `npm-run-all`
+  // Make sure the `package.json` has the `nx: "nx"` command needed by `npm-run-all`
   const packageJson = JSON.parse(
     fs.readFileSync('./package.json').toString('utf-8')
   );
-  if (!packageJson.scripts || !packageJson.scripts.ng) {
+  if (!packageJson.scripts || !packageJson.scripts.nx) {
     output.error({
       title:
-        'The "scripts" section of your `package.json` must contain `"ng": "ng"`',
+        'The "scripts" section of your `package.json` must contain `"nx": "nx"`',
       bodyLines: [
         output.colors.gray('...'),
         ' "scripts": {',
         output.colors.gray('  ...'),
-        '   "ng": "ng"',
+        '   "nx": "nx"',
         output.colors.gray('  ...'),
         ' }',
         output.colors.gray('...')
@@ -216,17 +215,17 @@ async function runCommand(
 
   try {
     await runAll(
-      projects.map(app => {
-        return ngCommands.includes(targetName)
-          ? `ng -- ${targetName} --project=${app} ${transformArgs(
+      projects.map(proj => {
+        return commonCommands.includes(targetName)
+          ? `nx -- ${targetName} ${proj} ${transformArgs(
               args,
-              app,
-              projectMetadata.get(app)
+              proj,
+              projectMetadata.get(proj)
             ).join(' ')} `
-          : `ng -- run ${app}:${targetName} ${transformArgs(
+          : `nx -- run ${proj}:${targetName} ${transformArgs(
               args,
-              app,
-              projectMetadata.get(app)
+              proj,
+              projectMetadata.get(proj)
             ).join(' ')} `;
       }),
       {
@@ -308,15 +307,6 @@ function filterNxSpecificArgs(parsedArgs: YargsAffectedOptions): string[] {
       })
       .join(' ');
   });
-}
-
-function ngPath() {
-  const basePath = path.dirname(
-    path.dirname(
-      path.dirname(resolve.sync('@angular/cli', { basedir: __dirname }))
-    )
-  );
-  return `"${path.join(basePath, 'bin', 'ng')}"`;
 }
 
 /**

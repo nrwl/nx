@@ -11,7 +11,7 @@ export {
   renameSync,
   updateJsonFile,
   readJsonFile,
-  readCliConfigFile,
+  readWorkspaceConfigPath,
   copyFile
 } from './src/utils/fileutils';
 export {
@@ -24,10 +24,15 @@ export {
   commandsObject,
   supportedNxCommands
 } from './src/command-line/nx-commands';
-export { readAngularJson, readNxJson, NxJson } from './src/command-line/shared';
+export {
+  readWorkspaceJson,
+  readNxJson,
+  NxJson
+} from './src/command-line/shared';
 export {
   readJsonInTree,
   updateJsonInTree,
+  updateWorkspaceInTree,
   insert,
   replaceNodeValue,
   addDepsToPackageJson,
@@ -45,7 +50,6 @@ export {
   getNpmScope,
   getWorkspacePath,
   replaceAppNameWithPath,
-  angularSchematicNames,
   editTarget,
   parseTarget,
   serializeTarget
@@ -53,8 +57,8 @@ export {
 
 export { getWorkspace, updateWorkspace } from './src/utils/workspace';
 export { addUpdateTask } from './src/utils/update-task';
+export { addGlobalLint, generateProjectLint } from './src/utils/lint';
 
-export { closestCli } from './src/utils/app-root';
 export { formatFiles } from './src/utils/rules/format-files';
 export { deleteFile } from './src/utils/rules/deleteFile';
 export * from './src/utils/rules/ng-add';

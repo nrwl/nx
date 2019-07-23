@@ -1,5 +1,3 @@
-import { UnitTestRunner } from '../../utils/test-runners';
-
 export interface Schema {
   name: string;
   directory?: string;
@@ -11,5 +9,6 @@ export interface Schema {
   pascalCaseFiles?: boolean;
   routing?: boolean;
   parentRoute?: string;
-  unitTestRunner: UnitTestRunner;
+  unitTestRunner: 'jest' | 'none';
+  linter: 'eslint' | 'tslint';
 }

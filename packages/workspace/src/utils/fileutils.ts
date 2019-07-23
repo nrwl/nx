@@ -59,8 +59,12 @@ export function writeJsonFile(path: string, json: any) {
   writeToFile(path, serializeJson(json));
 }
 
-export function readCliConfigFile(): any {
-  return readJsonFile('.angular-cli.json');
+export function readWorkspaceConfigPath(): any {
+  if (fileExists('workspace.json')) {
+    return readJsonFile('workspace.json');
+  } else {
+    return readJsonFile('workspace.json');
+  }
 }
 
 export function copyFile(file: string, target: string) {

@@ -3,7 +3,7 @@ import { ProjectType } from './affected-apps';
 import chalk from 'chalk';
 
 describe('WorkspaceIntegrityChecks', () => {
-  describe('angular.json is in sync with the filesystem', () => {
+  describe('workspace.json is in sync with the filesystem', () => {
     it('should not error when they are in sync', () => {
       const c = new WorkspaceIntegrityChecks(
         [

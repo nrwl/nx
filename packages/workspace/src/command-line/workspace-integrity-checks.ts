@@ -1,5 +1,6 @@
 import { ProjectNode } from './affected-apps';
 import { output, CLIErrorMessageConfig } from './output';
+import { workspaceFileName } from './shared';
 
 export class WorkspaceIntegrityChecks {
   constructor(private projectNodes: ProjectNode[], private files: string[]) {}
@@ -21,7 +22,7 @@ export class WorkspaceIntegrityChecks {
       ? []
       : [
           {
-            title: 'The angular.json file is out of sync',
+            title: `The ${workspaceFileName()} file is out of sync`,
             bodyLines: errorGroupBodyLines
             /**
              * TODO(JamesHenry): Add support for error documentation

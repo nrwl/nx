@@ -14,10 +14,10 @@ describe('app', () => {
   });
 
   describe('not nested', () => {
-    it('should update angular.json', async () => {
+    it('should update workspace.json', async () => {
       const tree = await runSchematic('app', { name: 'myNodeApp' }, appTree);
-      const angularJson = readJsonInTree(tree, '/angular.json');
-      const project = angularJson.projects['my-node-app'];
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      const project = workspaceJson.projects['my-node-app'];
       expect(project.root).toEqual('apps/my-node-app');
       expect(project.architect).toEqual(
         jasmine.objectContaining({
@@ -52,7 +52,7 @@ describe('app', () => {
           }
         })
       );
-      expect(angularJson.projects['my-node-app'].architect.lint).toEqual({
+      expect(workspaceJson.projects['my-node-app'].architect.lint).toEqual({
         builder: '@angular-devkit/build-angular:tslint',
         options: {
           tsConfig: [
@@ -62,8 +62,8 @@ describe('app', () => {
           exclude: ['**/node_modules/**', '!apps/my-node-app/**']
         }
       });
-      expect(angularJson.projects['my-node-app-e2e']).toBeUndefined();
-      expect(angularJson.defaultProject).toEqual('my-node-app');
+      expect(workspaceJson.projects['my-node-app-e2e']).toBeUndefined();
+      expect(workspaceJson.defaultProject).toEqual('my-node-app');
     });
 
     it('should update nx.json', async () => {
@@ -109,33 +109,33 @@ describe('app', () => {
   });
 
   describe('nested', () => {
-    it('should update angular.json', async () => {
+    it('should update workspace.json', async () => {
       const tree = await runSchematic(
         'app',
         { name: 'myNodeApp', directory: 'myDir' },
         appTree
       );
-      const angularJson = readJsonInTree(tree, '/angular.json');
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
 
-      expect(angularJson.projects['my-dir-my-node-app'].root).toEqual(
+      expect(workspaceJson.projects['my-dir-my-node-app'].root).toEqual(
         'apps/my-dir/my-node-app'
       );
 
-      expect(angularJson.projects['my-dir-my-node-app'].architect.lint).toEqual(
-        {
-          builder: '@angular-devkit/build-angular:tslint',
-          options: {
-            tsConfig: [
-              'apps/my-dir/my-node-app/tsconfig.app.json',
-              'apps/my-dir/my-node-app/tsconfig.spec.json'
-            ],
-            exclude: ['**/node_modules/**', '!apps/my-dir/my-node-app/**']
-          }
+      expect(
+        workspaceJson.projects['my-dir-my-node-app'].architect.lint
+      ).toEqual({
+        builder: '@angular-devkit/build-angular:tslint',
+        options: {
+          tsConfig: [
+            'apps/my-dir/my-node-app/tsconfig.app.json',
+            'apps/my-dir/my-node-app/tsconfig.spec.json'
+          ],
+          exclude: ['**/node_modules/**', '!apps/my-dir/my-node-app/**']
         }
-      );
+      });
 
-      expect(angularJson.projects['my-dir-my-node-app-e2e']).toBeUndefined();
-      expect(angularJson.defaultProject).toEqual('my-dir-my-node-app');
+      expect(workspaceJson.projects['my-dir-my-node-app-e2e']).toBeUndefined();
+      expect(workspaceJson.defaultProject).toEqual('my-dir-my-node-app');
     });
 
     it('should update nx.json', async () => {
@@ -213,12 +213,12 @@ describe('app', () => {
       expect(tree.exists('apps/my-node-app/src/test.ts')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/tsconfig.spec.json')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/jest.config.js')).toBeFalsy();
-      const angularJson = readJsonInTree(tree, 'angular.json');
+      const workspaceJson = readJsonInTree(tree, 'workspace.json');
       expect(
-        angularJson.projects['my-node-app'].architect.test
+        workspaceJson.projects['my-node-app'].architect.test
       ).toBeUndefined();
       expect(
-        angularJson.projects['my-node-app'].architect.lint.options.tsConfig
+        workspaceJson.projects['my-node-app'].architect.lint.options.tsConfig
       ).toEqual(['apps/my-node-app/tsconfig.app.json']);
     });
   });
@@ -234,7 +234,7 @@ describe('app', () => {
       );
 
       expect(tree.exists('apps/my-frontend/proxy.conf.json')).toBeTruthy();
-      const serve = JSON.parse(tree.readContent('angular.json')).projects[
+      const serve = JSON.parse(tree.readContent('workspace.json')).projects[
         'my-frontend'
       ].architect.serve;
       expect(serve.options.proxyConfig).toEqual(
@@ -252,7 +252,7 @@ describe('app', () => {
       );
 
       expect(tree.exists('apps/my-frontend/proxy.conf.json')).toBeTruthy();
-      const serve = JSON.parse(tree.readContent('angular.json')).projects[
+      const serve = JSON.parse(tree.readContent('workspace.json')).projects[
         'my-frontend'
       ].architect.serve;
       expect(serve.options.proxyConfig).toEqual(

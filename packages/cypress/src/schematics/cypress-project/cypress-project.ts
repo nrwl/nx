@@ -9,7 +9,13 @@ import {
 } from '@angular-devkit/schematics';
 import { join, normalize } from '@angular-devkit/core';
 // app
-import { updateJsonInTree, NxJson } from '@nrwl/workspace';
+import {
+  updateJsonInTree,
+  NxJson,
+  updateWorkspaceInTree,
+  generateProjectLint,
+  addGlobalLint
+} from '@nrwl/workspace';
 import { offsetFromRoot } from '@nrwl/workspace';
 import { toFileName } from '@nrwl/workspace';
 import { Schema } from './schema';
@@ -44,8 +50,8 @@ function updateNxJson(options: CypressProjectSchema): Rule {
   });
 }
 
-function updateAngularJson(options: CypressProjectSchema): Rule {
-  return updateJsonInTree('angular.json', json => {
+function updateWorkspaceJson(options: CypressProjectSchema): Rule {
+  return updateWorkspaceInTree(json => {
     const architect: any = {};
 
     architect.e2e = {
@@ -61,16 +67,13 @@ function updateAngularJson(options: CypressProjectSchema): Rule {
         }
       }
     };
-    architect.lint = {
-      builder: '@angular-devkit/build-angular:tslint',
-      options: {
-        tsConfig: join(normalize(options.projectRoot), 'tsconfig.e2e.json'),
-        exclude: [
-          '**/node_modules/**',
-          '!' + join(normalize(options.projectRoot), '**')
-        ]
-      }
-    };
+
+    architect.lint = generateProjectLint(
+      normalize(options.projectRoot),
+      join(normalize(options.projectRoot), 'tsconfig.e2e.json'),
+      options.linter
+    );
+
     json.projects[options.projectName] = {
       root: options.projectRoot,
       sourceRoot: join(normalize(options.projectRoot), 'src'),
@@ -84,8 +87,9 @@ function updateAngularJson(options: CypressProjectSchema): Rule {
 export default function(options: CypressProjectSchema): Rule {
   options = normalizeOptions(options);
   return chain([
+    addGlobalLint(options.linter),
     generateFiles(options),
-    updateAngularJson(options),
+    updateWorkspaceJson(options),
     updateNxJson(options)
   ]);
 }

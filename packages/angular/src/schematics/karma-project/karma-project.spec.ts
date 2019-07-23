@@ -81,7 +81,7 @@ module.exports = function(config) {
   });
 
   describe('library', () => {
-    it('should alter angular.json', async () => {
+    it('should alter workspace.json', async () => {
       const resultTree = await runSchematic(
         'karma-project',
         {
@@ -89,8 +89,8 @@ module.exports = function(config) {
         },
         appTree
       );
-      const angularJson = readJsonInTree(resultTree, 'angular.json');
-      expect(angularJson.projects.lib1.architect.test).toEqual({
+      const workspaceJson = readJsonInTree(resultTree, 'workspace.json');
+      expect(workspaceJson.projects.lib1.architect.test).toEqual({
         builder: '@angular-devkit/build-angular:karma',
         options: {
           main: 'libs/lib1/src/test.ts',
@@ -99,7 +99,7 @@ module.exports = function(config) {
         }
       });
       expect(
-        angularJson.projects.lib1.architect.lint.options.tsConfig
+        workspaceJson.projects.lib1.architect.lint.options.tsConfig
       ).toContain('libs/lib1/tsconfig.spec.json');
     });
 
@@ -141,7 +141,7 @@ module.exports = function(config) {
   });
 
   describe('applications', () => {
-    it('should alter angular.json', async () => {
+    it('should alter workspace.json', async () => {
       const resultTree = await runSchematic(
         'karma-project',
         {
@@ -149,8 +149,8 @@ module.exports = function(config) {
         },
         appTree
       );
-      const angularJson = readJsonInTree(resultTree, 'angular.json');
-      expect(angularJson.projects.app1.architect.test).toEqual({
+      const workspaceJson = readJsonInTree(resultTree, 'workspace.json');
+      expect(workspaceJson.projects.app1.architect.test).toEqual({
         builder: '@angular-devkit/build-angular:karma',
         options: {
           main: 'apps/app1/src/test.ts',
@@ -163,7 +163,7 @@ module.exports = function(config) {
         }
       });
       expect(
-        angularJson.projects.app1.architect.lint.options.tsConfig
+        workspaceJson.projects.app1.architect.lint.options.tsConfig
       ).toContain('apps/app1/tsconfig.spec.json');
     });
 

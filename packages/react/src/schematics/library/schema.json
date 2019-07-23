@@ -50,6 +50,12 @@
         ]
       }
     },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["eslint", "tslint"],
+      "default": "tslint"
+    },
     "unitTestRunner": {
       "type": "string",
       "enum": ["jest", "none"],

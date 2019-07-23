@@ -7,13 +7,14 @@ import {
 import { join } from 'path';
 import { readJsonInTree } from '@nrwl/workspace';
 import { serializeJson } from '@nrwl/workspace';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 
 describe('Update 7.7.0', () => {
   let initialTree: Tree;
   let schematicRunner: SchematicTestRunner;
 
   beforeEach(() => {
-    initialTree = new UnitTestTree(Tree.empty());
+    initialTree = createEmptyWorkspace(Tree.empty());
 
     schematicRunner = new SchematicTestRunner(
       '@nrwl/schematics',
@@ -28,7 +29,7 @@ describe('Update 7.7.0', () => {
         .toPromise();
 
       expect(
-        readJsonInTree(result, 'angular.json').schematics[
+        readJsonInTree(result, 'workspace.json').schematics[
           '@nrwl/schematics:library'
         ].framework
       ).toEqual('angular');
@@ -37,7 +38,7 @@ describe('Update 7.7.0', () => {
 
   describe('jest update', () => {
     beforeEach(() => {
-      initialTree.create(
+      initialTree.overwrite(
         'package.json',
         serializeJson({
           devDependencies: {

@@ -4,7 +4,7 @@ import * as opn from 'opn';
 import { ProjectNode, ProjectType } from './affected-apps';
 import * as yargs from 'yargs';
 
-import { getProjectNodes, readAngularJson, readNxJson } from './shared';
+import { getProjectNodes, readWorkspaceJson, readNxJson } from './shared';
 import * as path from 'path';
 import { tmpNameSync } from 'tmp';
 import {
@@ -340,9 +340,9 @@ export function generateGraph(
   args: UserOptions,
   criticalPath?: string[]
 ): void {
-  const angularJson = readAngularJson();
+  const workspaceJson = readWorkspaceJson();
   const nxJson = readNxJson();
-  const projects: ProjectNode[] = getProjectNodes(angularJson, nxJson);
+  const projects: ProjectNode[] = getProjectNodes(workspaceJson, nxJson);
   const json = generateGraphJson(projects, criticalPath || []);
 
   const config = {

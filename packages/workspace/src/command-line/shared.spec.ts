@@ -8,7 +8,7 @@ import { ProjectType, ProjectNode } from './affected-apps';
 
 describe('assertWorkspaceValidity', () => {
   let mockNxJson;
-  let mockAngularJson;
+  let mockWorkspaceJson;
 
   beforeEach(() => {
     mockNxJson = {
@@ -33,7 +33,7 @@ describe('assertWorkspaceValidity', () => {
         }
       }
     };
-    mockAngularJson = {
+    mockWorkspaceJson = {
       projects: {
         app1: {},
         'app1-e2e': {},
@@ -46,23 +46,23 @@ describe('assertWorkspaceValidity', () => {
   });
 
   it('should not throw for a valid workspace', () => {
-    assertWorkspaceValidity(mockAngularJson, mockNxJson);
+    assertWorkspaceValidity(mockWorkspaceJson, mockNxJson);
   });
 
-  it('should throw for a missing project in angular.json', () => {
-    delete mockAngularJson.projects.app1;
+  it('should throw for a missing project in workspace.json', () => {
+    delete mockWorkspaceJson.projects.app1;
     try {
-      assertWorkspaceValidity(mockAngularJson, mockNxJson);
+      assertWorkspaceValidity(mockWorkspaceJson, mockNxJson);
       fail('Did not throw');
     } catch (e) {
-      expect(e.message).toContain('projects are missing in angular.json');
+      expect(e.message).toContain('projects are missing in');
     }
   });
 
   it('should throw for a missing project in nx.json', () => {
     delete mockNxJson.projects.app1;
     try {
-      assertWorkspaceValidity(mockAngularJson, mockNxJson);
+      assertWorkspaceValidity(mockWorkspaceJson, mockNxJson);
       fail('Did not throw');
     } catch (e) {
       expect(e.message).toContain('projects are missing in nx.json');
@@ -74,7 +74,7 @@ describe('assertWorkspaceValidity', () => {
       'README.md': ['invalidproj']
     };
     try {
-      assertWorkspaceValidity(mockAngularJson, mockNxJson);
+      assertWorkspaceValidity(mockWorkspaceJson, mockNxJson);
       fail('Did not throw');
     } catch (e) {
       expect(e.message).toContain(
@@ -89,7 +89,7 @@ describe('assertWorkspaceValidity', () => {
     mockNxJson.projects.app2.implicitDependencies = ['invalidproj'];
 
     try {
-      assertWorkspaceValidity(mockAngularJson, mockNxJson);
+      assertWorkspaceValidity(mockWorkspaceJson, mockNxJson);
       fail('Did not throw');
     } catch (e) {
       expect(e.message).toContain(
@@ -103,7 +103,7 @@ describe('assertWorkspaceValidity', () => {
 
 describe('getImplicitDependencies', () => {
   let mockNxJson: NxJson;
-  let mockAngularJson: any;
+  let mockworkspaceJson: any;
 
   beforeEach(() => {
     mockNxJson = {
@@ -129,7 +129,7 @@ describe('getImplicitDependencies', () => {
         }
       }
     };
-    mockAngularJson = {
+    mockworkspaceJson = {
       projects: {
         app1: {
           projectType: 'application'
@@ -160,8 +160,8 @@ describe('getImplicitDependencies', () => {
       };
 
       const result = getImplicitDependencies(
-        getProjectNodes(mockAngularJson, mockNxJson),
-        mockAngularJson,
+        getProjectNodes(mockworkspaceJson, mockNxJson),
+        mockworkspaceJson,
         mockNxJson
       );
 
@@ -182,8 +182,8 @@ describe('getImplicitDependencies', () => {
       };
 
       const result = getImplicitDependencies(
-        getProjectNodes(mockAngularJson, mockNxJson),
-        mockAngularJson,
+        getProjectNodes(mockworkspaceJson, mockNxJson),
+        mockworkspaceJson,
         mockNxJson
       );
 
@@ -209,8 +209,8 @@ describe('getImplicitDependencies', () => {
       delete mockNxJson.projects.app1;
       try {
         getImplicitDependencies(
-          getProjectNodes(mockAngularJson, mockNxJson),
-          mockAngularJson,
+          getProjectNodes(mockworkspaceJson, mockNxJson),
+          mockworkspaceJson,
           mockNxJson
         );
         fail('did not throw');
@@ -221,8 +221,8 @@ describe('getImplicitDependencies', () => {
   describe('project-based implicit dependencies', () => {
     it('should default appropriately', () => {
       const result = getImplicitDependencies(
-        getProjectNodes(mockAngularJson, mockNxJson),
-        mockAngularJson,
+        getProjectNodes(mockworkspaceJson, mockNxJson),
+        mockworkspaceJson,
         mockNxJson
       );
 
@@ -240,8 +240,8 @@ describe('getImplicitDependencies', () => {
       mockNxJson.projects.lib2.implicitDependencies = ['lib1'];
 
       const result = getImplicitDependencies(
-        getProjectNodes(mockAngularJson, mockNxJson),
-        mockAngularJson,
+        getProjectNodes(mockworkspaceJson, mockNxJson),
+        mockworkspaceJson,
         mockNxJson
       );
 
@@ -261,8 +261,8 @@ describe('getImplicitDependencies', () => {
       mockNxJson.projects['app1-e2e'].implicitDependencies = ['app2'];
 
       const result = getImplicitDependencies(
-        getProjectNodes(mockAngularJson, mockNxJson),
-        mockAngularJson,
+        getProjectNodes(mockworkspaceJson, mockNxJson),
+        mockworkspaceJson,
         mockNxJson
       );
 
@@ -278,8 +278,8 @@ describe('getImplicitDependencies', () => {
       mockNxJson.projects['app1-e2e'].implicitDependencies = [];
 
       const result = getImplicitDependencies(
-        getProjectNodes(mockAngularJson, mockNxJson),
-        mockAngularJson,
+        getProjectNodes(mockworkspaceJson, mockNxJson),
+        mockworkspaceJson,
         mockNxJson
       );
 
@@ -301,8 +301,8 @@ describe('getImplicitDependencies', () => {
       mockNxJson.projects.app2.implicitDependencies = ['app1'];
 
       const result = getImplicitDependencies(
-        getProjectNodes(mockAngularJson, mockNxJson),
-        mockAngularJson,
+        getProjectNodes(mockworkspaceJson, mockNxJson),
+        mockworkspaceJson,
         mockNxJson
       );
 
@@ -321,7 +321,7 @@ describe('getImplicitDependencies', () => {
 
 describe('getProjectNodes', () => {
   let mockNxJson;
-  let mockAngularJson;
+  let mockworkspaceJson;
 
   beforeEach(() => {
     mockNxJson = {
@@ -343,7 +343,7 @@ describe('getProjectNodes', () => {
         }
       }
     };
-    mockAngularJson = {
+    mockworkspaceJson = {
       projects: {
         app1: {
           projectType: 'application'
@@ -366,7 +366,7 @@ describe('getProjectNodes', () => {
 
   it('should parse nodes as correct type', () => {
     const result: Pick<ProjectNode, 'name' | 'type'>[] = getProjectNodes(
-      mockAngularJson,
+      mockworkspaceJson,
       mockNxJson
     ).map(node => {
       return { name: node.name, type: node.type };
@@ -396,7 +396,7 @@ describe('getProjectNodes', () => {
   });
 
   it('should normalize missing architect configurations to an empty object', () => {
-    const result = getProjectNodes(mockAngularJson, mockNxJson).map(node => {
+    const result = getProjectNodes(mockworkspaceJson, mockNxJson).map(node => {
       return { name: node.name, architect: node.architect };
     });
     expect(result).toEqual([

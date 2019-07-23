@@ -74,7 +74,7 @@ describe('ng-add', () => {
           },
           appTree
         );
-        const { schematics } = readJsonInTree(tree, 'angular.json');
+        const { schematics } = readJsonInTree(tree, 'workspace.json');
         expect(schematics['@nrwl/angular:application'].unitTestRunner).toEqual(
           'karma'
         );
@@ -118,7 +118,7 @@ describe('ng-add', () => {
           },
           appTree
         );
-        const { schematics } = readJsonInTree(tree, 'angular.json');
+        const { schematics } = readJsonInTree(tree, 'workspace.json');
         expect(schematics['@nrwl/angular:application'].unitTestRunner).toEqual(
           'jest'
         );
@@ -153,7 +153,7 @@ describe('ng-add', () => {
           },
           appTree
         );
-        const { schematics } = readJsonInTree(tree, 'angular.json');
+        const { schematics } = readJsonInTree(tree, 'workspace.json');
         expect(schematics['@nrwl/angular:application'].e2eTestRunner).toEqual(
           'cypress'
         );
@@ -185,7 +185,7 @@ describe('ng-add', () => {
           },
           appTree
         );
-        const { schematics } = readJsonInTree(tree, 'angular.json');
+        const { schematics } = readJsonInTree(tree, 'workspace.json');
         expect(schematics['@nrwl/angular:application'].e2eTestRunner).toEqual(
           'protractor'
         );
@@ -196,13 +196,13 @@ describe('ng-add', () => {
   describe('defaultCollection', () => {
     it('should be set if none was set before', async () => {
       const result = await runSchematic('ng-add', {}, appTree);
-      const angularJson = readJsonInTree(result, 'angular.json');
-      expect(angularJson.cli.defaultCollection).toEqual('@nrwl/angular');
+      const workspaceJson = readJsonInTree(result, 'workspace.json');
+      expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/angular');
     });
 
     it('should be set if @nrwl/workspace was set before', async () => {
       appTree = await callRule(
-        updateJsonInTree('angular.json', json => {
+        updateJsonInTree('workspace.json', json => {
           json.cli = {
             defaultCollection: '@nrwl/workspace'
           };
@@ -212,13 +212,13 @@ describe('ng-add', () => {
         appTree
       );
       const result = await runSchematic('ng-add', {}, appTree);
-      const angularJson = readJsonInTree(result, 'angular.json');
-      expect(angularJson.cli.defaultCollection).toEqual('@nrwl/angular');
+      const workspaceJson = readJsonInTree(result, 'workspace.json');
+      expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/angular');
     });
 
     it('should not be set if something else was set before', async () => {
       appTree = await callRule(
-        updateJsonInTree('angular.json', json => {
+        updateJsonInTree('workspace.json', json => {
           json.cli = {
             defaultCollection: '@nrwl/react'
           };
@@ -228,8 +228,8 @@ describe('ng-add', () => {
         appTree
       );
       const result = await runSchematic('ng-add', {}, appTree);
-      const angularJson = readJsonInTree(result, 'angular.json');
-      expect(angularJson.cli.defaultCollection).toEqual('@nrwl/react');
+      const workspaceJson = readJsonInTree(result, 'workspace.json');
+      expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/react');
     });
   });
 });

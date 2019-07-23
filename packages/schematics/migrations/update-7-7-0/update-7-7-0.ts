@@ -1,7 +1,7 @@
 import { chain, Rule, Tree } from '@angular-devkit/schematics';
 
 import { updateJsonInTree, insert } from '@nrwl/workspace';
-import { formatFiles } from '@nrwl/workspace';
+import { formatFiles, updateWorkspaceInTree } from '@nrwl/workspace';
 
 import * as ts from 'typescript';
 import {
@@ -9,7 +9,7 @@ import {
   ReplaceChange
 } from '@nrwl/workspace/src/utils/ast-utils';
 
-const setDefaults = updateJsonInTree('angular.json', json => {
+const setDefaults = updateWorkspaceInTree(json => {
   if (!json.schematics) {
     json.schematics = {};
   }

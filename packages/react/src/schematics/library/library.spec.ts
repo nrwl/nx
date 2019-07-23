@@ -13,13 +13,12 @@ describe('lib', () => {
   });
 
   describe('not nested', () => {
-    it('should update angular.json', async () => {
+    it('should update workspace.json', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
-      const angularJson = readJsonInTree(tree, '/angular.json');
-
-      expect(angularJson.projects['my-lib'].root).toEqual('libs/my-lib');
-      expect(angularJson.projects['my-lib'].architect.build).toBeUndefined();
-      expect(angularJson.projects['my-lib'].architect.lint).toEqual({
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
+      expect(workspaceJson.projects['my-lib'].architect.build).toBeUndefined();
+      expect(workspaceJson.projects['my-lib'].architect.lint).toEqual({
         builder: '@angular-devkit/build-angular:tslint',
         options: {
           exclude: ['**/node_modules/**', '!libs/my-lib/**'],
@@ -172,18 +171,18 @@ describe('lib', () => {
       ).toBeTruthy();
     });
 
-    it('should update angular.json', async () => {
+    it('should update workspace.json', async () => {
       const tree = await runSchematic(
         'lib',
         { name: 'myLib', directory: 'myDir' },
         appTree
       );
-      const angularJson = readJsonInTree(tree, '/angular.json');
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
 
-      expect(angularJson.projects['my-dir-my-lib'].root).toEqual(
+      expect(workspaceJson.projects['my-dir-my-lib'].root).toEqual(
         'libs/my-dir/my-lib'
       );
-      expect(angularJson.projects['my-dir-my-lib'].architect.lint).toEqual({
+      expect(workspaceJson.projects['my-dir-my-lib'].architect.lint).toEqual({
         builder: '@angular-devkit/build-angular:tslint',
         options: {
           exclude: ['**/node_modules/**', '!libs/my-dir/my-lib/**'],
@@ -256,10 +255,10 @@ describe('lib', () => {
       );
       expect(resultTree.exists('libs/my-lib/tsconfig.spec.json')).toBeFalsy();
       expect(resultTree.exists('libs/my-lib/jest.config.js')).toBeFalsy();
-      const angularJson = readJsonInTree(resultTree, 'angular.json');
-      expect(angularJson.projects['my-lib'].architect.test).toBeUndefined();
+      const workspaceJson = readJsonInTree(resultTree, 'workspace.json');
+      expect(workspaceJson.projects['my-lib'].architect.test).toBeUndefined();
       expect(
-        angularJson.projects['my-lib'].architect.lint.options.tsConfig
+        workspaceJson.projects['my-lib'].architect.lint.options.tsConfig
       ).toEqual(['libs/my-lib/tsconfig.lib.json']);
     });
   });

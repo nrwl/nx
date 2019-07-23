@@ -81,6 +81,12 @@
         }
       ],
       "default": true
+    },
+    "cli": {
+      "description": "CLI used for generating code and running tasks",
+      "type": "string",
+      "enum": ["nx", "angular"],
+      "default": "nx"
     }
   }
 }

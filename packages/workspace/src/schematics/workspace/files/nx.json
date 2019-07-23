@@ -1,7 +1,7 @@
 {
   "npmScope": "<%= npmScope %>",
   "implicitDependencies": {
-    "angular.json": "*",
+    "<%= workspaceFile %>.json": "*",
     "package.json": "*",
     "tsconfig.json": "*",
     "tslint.json": "*",

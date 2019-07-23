@@ -125,7 +125,7 @@ function createWorkflow(dryRun: boolean) {
 
 function detectPackageManager(): string {
   try {
-    const packageManager = execSync(`ng config cli.packageManager`, {
+    const packageManager = execSync(`nx config cli.packageManager`, {
       stdio: ['ignore', 'pipe', 'ignore']
     })
       .toString()

@@ -37,21 +37,21 @@ describe('schematic:cypress-project', () => {
       expect(tree.exists('apps/my-app-e2e/src/support/index.ts')).toBeTruthy();
     });
 
-    it('should add update `angular.json` file', async () => {
+    it('should add update `workspace.json` file', async () => {
       const tree = await runSchematic(
         'cypress-project',
         { name: 'my-app-e2e', project: 'my-app' },
         appTree
       );
-      const angularJson = readJsonInTree(tree, 'angular.json');
-      const project = angularJson.projects['my-app-e2e'];
+      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+      const project = workspaceJson.projects['my-app-e2e'];
 
       expect(project.root).toEqual('apps/my-app-e2e');
 
       expect(project.architect.lint).toEqual({
         builder: '@angular-devkit/build-angular:tslint',
         options: {
-          tsConfig: 'apps/my-app-e2e/tsconfig.e2e.json',
+          tsConfig: ['apps/my-app-e2e/tsconfig.e2e.json'],
           exclude: ['**/node_modules/**', '!apps/my-app-e2e/**']
         }
       });
@@ -107,13 +107,13 @@ describe('schematic:cypress-project', () => {
     });
 
     describe('nested', () => {
-      it('should update angular.json', async () => {
+      it('should update workspace.json', async () => {
         const tree = await runSchematic(
           'cypress-project',
           { name: 'my-app-e2e', project: 'my-dir-my-app', directory: 'my-dir' },
           appTree
         );
-        const projectConfig = readJsonInTree(tree, 'angular.json').projects[
+        const projectConfig = readJsonInTree(tree, 'workspace.json').projects[
           'my-dir-my-app-e2e'
         ];
 
@@ -121,7 +121,7 @@ describe('schematic:cypress-project', () => {
         expect(projectConfig.architect.lint).toEqual({
           builder: '@angular-devkit/build-angular:tslint',
           options: {
-            tsConfig: 'apps/my-dir/my-app-e2e/tsconfig.e2e.json',
+            tsConfig: ['apps/my-dir/my-app-e2e/tsconfig.e2e.json'],
             exclude: ['**/node_modules/**', '!apps/my-dir/my-app-e2e/**']
           }
         });

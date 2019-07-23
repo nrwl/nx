@@ -5,7 +5,7 @@ import * as ts from 'typescript';
 import {
   getProjectNodes,
   normalizedProjectRoot,
-  readAngularJson,
+  readWorkspaceJson,
   readNxJson
 } from '../command-line/shared';
 import { ProjectNode, ProjectType } from '../command-line/affected-apps';
@@ -28,10 +28,10 @@ export class Rule extends Lint.Rules.AbstractRule {
     if (!projectPath) {
       this.projectPath = appRootPath;
       if (!(global as any).projectNodes) {
-        const angularJson = readAngularJson();
+        const workspaceJson = readWorkspaceJson();
         const nxJson = readNxJson();
         (global as any).npmScope = nxJson.npmScope;
-        (global as any).projectNodes = getProjectNodes(angularJson, nxJson);
+        (global as any).projectNodes = getProjectNodes(workspaceJson, nxJson);
         (global as any).deps = readDependencies(
           (global as any).npmScope,
           (global as any).projectNodes

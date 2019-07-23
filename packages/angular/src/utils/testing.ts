@@ -94,7 +94,7 @@ export function createApp(
     })
   );
   tree.overwrite(
-    '/angular.json',
+    '/workspace.json',
     JSON.stringify({
       newProjectRoot: '',
       version: 1,

@@ -10,7 +10,7 @@ describe('jestProject', () => {
     appTree = Tree.empty();
     appTree = createEmptyWorkspace(appTree);
     appTree = await callRule(
-      updateJsonInTree('angular.json', json => {
+      updateJsonInTree('workspace.json', json => {
         json.projects.lib1 = {
           root: 'libs/lib1',
           architect: {
@@ -52,7 +52,7 @@ describe('jestProject', () => {
     expect(resultTree.exists('/libs/lib1/tsconfig.spec.json')).toBeTruthy();
   });
 
-  it('should alter angular.json', async () => {
+  it('should alter workspace.json', async () => {
     const resultTree = await runSchematic(
       'jest-project',
       {
@@ -61,8 +61,8 @@ describe('jestProject', () => {
       },
       appTree
     );
-    const angularJson = readJsonInTree(resultTree, 'angular.json');
-    expect(angularJson.projects.lib1.architect.test).toEqual({
+    const workspaceJson = readJsonInTree(resultTree, 'workspace.json');
+    expect(workspaceJson.projects.lib1.architect.test).toEqual({
       builder: '@nrwl/jest:jest',
       options: {
         jestConfig: 'libs/lib1/jest.config.js',
@@ -70,9 +70,9 @@ describe('jestProject', () => {
         tsConfig: 'libs/lib1/tsconfig.spec.json'
       }
     });
-    expect(angularJson.projects.lib1.architect.lint.options.tsConfig).toContain(
-      'libs/lib1/tsconfig.spec.json'
-    );
+    expect(
+      workspaceJson.projects.lib1.architect.lint.options.tsConfig
+    ).toContain('libs/lib1/tsconfig.spec.json');
   });
 
   it('should create a jest.config.js', async () => {
@@ -144,7 +144,7 @@ describe('jestProject', () => {
       expect(resultTree.exists('src/test-setup.ts')).toBeFalsy();
     });
 
-    it('should not list the setup file in angular.json', async () => {
+    it('should not list the setup file in workspace.json', async () => {
       const resultTree = await runSchematic(
         'jest-project',
         {
@@ -153,9 +153,9 @@ describe('jestProject', () => {
         },
         appTree
       );
-      const angularJson = readJsonInTree(resultTree, 'angular.json');
+      const workspaceJson = readJsonInTree(resultTree, 'workspace.json');
       expect(
-        angularJson.projects.lib1.architect.test.options.setupFile
+        workspaceJson.projects.lib1.architect.test.options.setupFile
       ).toBeUndefined();
     });
 
@@ -189,7 +189,7 @@ describe('jestProject', () => {
       expect(resultTree.exists('src/test-setup.ts')).toBeFalsy();
     });
 
-    it('should not list the setup file in angular.json', async () => {
+    it('should not list the setup file in workspace.json', async () => {
       const resultTree = await runSchematic(
         'jest-project',
         {
@@ -198,9 +198,9 @@ describe('jestProject', () => {
         },
         appTree
       );
-      const angularJson = readJsonInTree(resultTree, 'angular.json');
+      const workspaceJson = readJsonInTree(resultTree, 'workspace.json');
       expect(
-        angularJson.projects.lib1.architect.test.options.setupFile
+        workspaceJson.projects.lib1.architect.test.options.setupFile
       ).toBeUndefined();
     });
 
