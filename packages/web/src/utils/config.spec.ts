@@ -87,6 +87,22 @@ describe('getBaseWebpackPartial', () => {
       expect(result.resolve.mainFields).toContain('module');
       expect(result.resolve.mainFields).toContain('main');
     });
+
+    it('should configure stats', () => {
+      const result = getBaseWebpackPartial(input);
+
+      expect(result.stats).toEqual(
+        jasmine.objectContaining({
+          hash: true,
+          timings: false,
+          cached: false,
+          cachedAssets: false,
+          modules: false,
+          warnings: true,
+          errors: true
+        })
+      );
+    });
   });
 
   describe('the main option', () => {
@@ -342,6 +358,53 @@ describe('getBaseWebpackPartial', () => {
       expect(
         result.plugins.find(plugin => plugin instanceof ProgressPlugin)
       ).toBeTruthy();
+    });
+  });
+
+  describe('the verbose option', () => {
+    describe('when false', () => {
+      it('should configure stats to be not verbose', () => {
+        const result = getBaseWebpackPartial(input);
+
+        expect(result.stats).toEqual(
+          jasmine.objectContaining({
+            colors: true,
+            chunks: true,
+            assets: false,
+            chunkOrigins: false,
+            chunkModules: false,
+            children: false,
+            reasons: false,
+            version: false,
+            errorDetails: false,
+            moduleTrace: false,
+            usedExports: false
+          })
+        );
+      });
+    });
+
+    describe('when true', () => {
+      it('should configure stats to be verbose', () => {
+        input.verbose = true;
+        const result = getBaseWebpackPartial(input);
+
+        expect(result.stats).toEqual(
+          jasmine.objectContaining({
+            colors: false,
+            chunks: false,
+            assets: true,
+            chunkOrigins: true,
+            chunkModules: true,
+            children: true,
+            reasons: true,
+            version: true,
+            errorDetails: true,
+            moduleTrace: true,
+            usedExports: true
+          })
+        );
+      });
     });
   });
 });

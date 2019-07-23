@@ -13,6 +13,7 @@ import { readTsConfig } from '@nrwl/workspace';
 import { BuildBuilderOptions } from './types';
 import * as TerserWebpackPlugin from 'terser-webpack-plugin';
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
+import { Stats } from 'webpack';
 
 export const OUT_FILENAME = 'main.js';
 
@@ -73,7 +74,8 @@ export function getBaseWebpackPartial(
     watch: options.watch,
     watchOptions: {
       poll: options.poll
-    }
+    },
+    stats: getStatsConfig(options)
   };
 
   if (options.optimization) {
@@ -168,4 +170,27 @@ export function createTerserPlugin(scriptTarget: ScriptTarget) {
       }
     }
   });
+}
+
+function getStatsConfig(options: BuildBuilderOptions): Stats.ToStringOptions {
+  return {
+    hash: true,
+    timings: false,
+    cached: false,
+    cachedAssets: false,
+    modules: false,
+    warnings: true,
+    errors: true,
+    colors: !options.verbose && !options.statsJson,
+    chunks: !options.verbose,
+    assets: !!options.verbose,
+    chunkOrigins: !!options.verbose,
+    chunkModules: !!options.verbose,
+    children: !!options.verbose,
+    reasons: !!options.verbose,
+    version: !!options.verbose,
+    errorDetails: !!options.verbose,
+    moduleTrace: !!options.verbose,
+    usedExports: !!options.verbose
+  };
 }

@@ -59,6 +59,11 @@
       "description": "Generates a 'stats.json' file which can be analyzed using tools such as: #webpack-bundle-analyzer' or https: //webpack.github.io/analyse.",
       "default": false
     },
+    "verbose": {
+      "type": "boolean",
+      "description": "Emits verbose output",
+      "default": false
+    },
     "extractLicenses": {
       "type": "boolean",
       "description": "Extract all licenses in a separate file, in the case of production builds only.",

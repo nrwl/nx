@@ -10,13 +10,7 @@ import { Observable, from, of, forkJoin } from 'rxjs';
 import { normalizeWebBuildOptions } from '../../utils/normalize';
 import { getWebConfig } from '../../utils/web.config';
 import { BuildBuilderOptions } from '../../utils/types';
-import {
-  bufferCount,
-  concatMap,
-  map,
-  mergeScan,
-  switchMap
-} from 'rxjs/operators';
+import { concatMap, map, switchMap } from 'rxjs/operators';
 import { getSourceRoot } from '../../utils/source-root';
 import { ScriptTarget } from 'typescript';
 import { writeIndexHtml } from '@angular-devkit/build-angular/src/angular-cli-files/utilities/index-file/write-index-html';
@@ -41,6 +35,8 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   outputHashing?: any;
   stylePreprocessingOptions?: any;
   subresourceIntegrity?: boolean;
+
+  verbose?: boolean;
 }
 
 export default createBuilder<WebBuildBuilderOptions & JsonObject>(run);
@@ -88,13 +84,14 @@ export function run(
       return configs;
     }),
     concatMap(configs => {
-      const runWebpackOptions = {
-        logging: stats => {
-          context.logger.info(stats.toString());
-        }
-      };
       return forkJoin(
-        configs.map(config => runWebpack(config, context, runWebpackOptions))
+        configs.map(config =>
+          runWebpack(config, context, {
+            logging: stats => {
+              context.logger.info(stats.toString(config.stats));
+            }
+          })
+        )
       ).pipe(
         switchMap(
           ([result1, result2 = { success: true, emittedFiles: [] }]) => {
