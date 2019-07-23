@@ -49,7 +49,7 @@ export function getWebConfig(
     tsConfigPath: options.tsConfig
   };
   return mergeWebpack([
-    _getBaseWebpackPartial(options),
+    _getBaseWebpackPartial(options, overrideScriptTarget),
     getPolyfillsPartial(options, overrideScriptTarget),
     getStylesPartial(wco),
     getCommonPartial(wco),
@@ -86,8 +86,11 @@ function getBrowserPartial(wco: any, options: WebBuildBuilderOptions) {
   return config;
 }
 
-function _getBaseWebpackPartial(options: WebBuildBuilderOptions) {
-  let partial = getBaseWebpackPartial(options);
+function _getBaseWebpackPartial(
+  options: WebBuildBuilderOptions,
+  overrideScriptTarget: ScriptTarget
+) {
+  let partial = getBaseWebpackPartial(options, overrideScriptTarget);
   delete partial.resolve.mainFields;
   return partial;
 }

@@ -18,7 +18,8 @@ import { Stats } from 'webpack';
 export const OUT_FILENAME = 'main.js';
 
 export function getBaseWebpackPartial(
-  options: BuildBuilderOptions
+  options: BuildBuilderOptions,
+  overrideScriptTarget?: ScriptTarget
 ): Configuration {
   const { options: compilerOptions } = readTsConfig(options.tsConfig);
   const supportsEs2015 =
@@ -26,6 +27,11 @@ export function getBaseWebpackPartial(
     compilerOptions.target !== ts.ScriptTarget.ES5;
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
   const mainFields = [...(supportsEs2015 ? ['es2015'] : []), 'module', 'main'];
+  const compilerOptionOverrides = overrideScriptTarget
+    ? {
+        target: overrideScriptTarget === ScriptTarget.ES5 ? 'es5' : 'es2015'
+      }
+    : null;
   const webpackConfig: Configuration = {
     entry: {
       main: [options.main]
@@ -45,7 +51,8 @@ export function getBaseWebpackPartial(
             configFile: options.tsConfig,
             transpileOnly: true,
             // https://github.com/TypeStrong/ts-loader/pull/685
-            experimentalWatchApi: true
+            experimentalWatchApi: true,
+            compilerOptions: compilerOptionOverrides
           }
         }
       ]

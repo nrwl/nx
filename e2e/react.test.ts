@@ -99,6 +99,12 @@ describe('React Applications', () => {
       `dist/apps/${appName}/main-es5.js`,
       `dist/apps/${appName}/styles-es5.js`
     );
+    expect(readFile(`dist/apps/${appName}/main-es5.js`)).toContain(
+      'var App = function () {'
+    );
+    expect(readFile(`dist/apps/${appName}/main-es2015.js`)).toContain(
+      'const App = () => {'
+    );
     runCLI(`build ${appName} --prod --output-hashing none`);
     checkFilesExist(
       `dist/apps/${appName}/index.html`,

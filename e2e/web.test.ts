@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   ensureProject,
+  readFile,
   runCLI,
   runCLIAsync,
   uniq
@@ -27,6 +28,12 @@ describe('Web Components Applications', () => {
       `dist/apps/${appName}/runtime-es5.js`,
       `dist/apps/${appName}/main-es5.js`,
       `dist/apps/${appName}/styles-es5.js`
+    );
+    expect(readFile(`dist/apps/${appName}/main-es5.js`)).toContain(
+      'var AppElement = /** @class */ (function (_super) {'
+    );
+    expect(readFile(`dist/apps/${appName}/main-es2015.js`)).toContain(
+      'class AppElement'
     );
     runCLI(`build ${appName} --prod --output-hashing none`);
     checkFilesExist(
