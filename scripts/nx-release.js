@@ -162,7 +162,8 @@ const options = {
     'build/npm/nest/package.json',
     'build/npm/workspace/package.json',
     'build/npm/cli/package.json',
-    'build/npm/tao/package.json'
+    'build/npm/tao/package.json',
+    'build/npm/linter/package.json'
   ],
   increment: parsedVersion.version,
   requireUpstream: false,

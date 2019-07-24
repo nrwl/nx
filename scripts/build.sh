@@ -50,6 +50,7 @@ cp README.md build/packages/jest
 cp README.md build/packages/cypress
 cp README.md build/packages/cli
 cp README.md build/packages/tao
+cp README.md build/packages/linter
 
 cp LICENSE build/packages/builders
 cp LICENSE build/packages/schematics
@@ -66,6 +67,7 @@ cp LICENSE build/packages/jest
 cp LICENSE build/packages/cypress
 cp LICENSE build/packages/cli
 cp LICENSE build/packages/tao
+cp LICENSE build/packages/linter
 
 echo "Nx libraries available at build/packages:"
 ls build/packages
