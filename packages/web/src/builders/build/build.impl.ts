@@ -105,6 +105,9 @@ export function run(
                     normalize(context.workspaceRoot),
                     options.index
                   ),
+                  files: result1.emittedFiles.filter(
+                    x => x.extension === '.css'
+                  ),
                   noModuleFiles: result2.emittedFiles,
                   moduleFiles: result1.emittedFiles,
                   baseHref: options.baseHref,

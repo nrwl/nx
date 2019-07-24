@@ -125,6 +125,12 @@ forEachCli(() => {
         filesToCheck.push(`dist/apps/${appName}/styles.css`);
       }
       checkFilesExist(...filesToCheck);
+      if (opts.checkStyles) {
+        expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
+          `<link rel="stylesheet" href="styles.css">`
+        );
+      }
+
       const testResults = await runCLIAsync(`test ${appName}`);
       expect(testResults.stderr).toContain('Test Suites: 1 passed, 1 total');
       const lintE2eResults = runCLI(`lint ${appName}-e2e`);
