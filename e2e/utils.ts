@@ -177,6 +177,7 @@ export function copyMissingPackages(): void {
     'react',
     'react-dom',
     'react-router-dom',
+    'styled-components',
     '@types/react',
     '@types/react-dom',
     '@testing-library',

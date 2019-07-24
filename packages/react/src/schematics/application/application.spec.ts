@@ -174,7 +174,7 @@ describe('app', () => {
     );
     expect(tree.readContent('apps/my-dir/my-app/src/app/app.tsx')).toBeTruthy();
     expect(tree.readContent('apps/my-dir/my-app/src/app/app.tsx')).toContain(
-      'This is a React app built with'
+      'Welcome to my-app'
     );
   });
 
