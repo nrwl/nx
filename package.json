@@ -109,6 +109,7 @@
     "shelljs": "^0.8.3",
     "source-map-support": "^0.5.12",
     "strip-json-comments": "2.0.1",
+    "styled-components": "4.3.2",
     "tmp": "0.0.33",
     "tree-kill": "1.2.1",
     "ts-loader": "^5.3.1",

@@ -7,28 +7,30 @@ import {
 import * as ts from 'typescript';
 
 export function addRouter(sourcePath: string, source: ts.SourceFile): Change[] {
-  const jsxOpening = findNodes(source, ts.SyntaxKind.JsxOpeningElement);
   const jsxClosing = findNodes(source, ts.SyntaxKind.JsxClosingElement);
 
-  const outerMostJsxOpening = jsxOpening[0];
   const outerMostJsxClosing = jsxClosing[jsxClosing.length - 1];
 
   const insertRoute = new InsertChange(
     sourcePath,
     outerMostJsxClosing.getStart(),
-    `<Route
-       path="/"
-       exact
-       render={() => (
-         <div>This is the root route.</div>
-       )}
-     />`
-  );
-
-  const insertLink = new InsertChange(
-    sourcePath,
-    outerMostJsxOpening.getEnd(),
-    '<ul><li><Link to="/">Root</Link></li></ul>'
+    `
+    <hr style={{ margin: '36px 0' }}/>
+    <Route
+      path="/"
+      exact
+      render={() => (
+        <div>This is the generated root route. <Link to="/page-2">Click here for page 2.</Link></div>
+      )}
+    />
+    <Route
+      path="/page-2"
+      exact
+      render={() => (
+        <div><Link to="/">Click here to go back to root page.</Link></div>
+      )}
+    />
+    `
   );
 
   findDefaultExport(source);
@@ -37,10 +39,9 @@ export function addRouter(sourcePath: string, source: ts.SourceFile): Change[] {
     ...addGlobal(
       source,
       sourcePath,
-      `import { BrowserRouter as Router, Route, Link} from 'react-router-dom';`
+      `import { Route, Link} from 'react-router-dom';`
     ),
-    insertRoute,
-    insertLink
+    insertRoute
   ];
 }
 
