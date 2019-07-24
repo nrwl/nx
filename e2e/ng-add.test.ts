@@ -195,8 +195,9 @@ forEachCli('angular', () => {
       });
 
       expect(updatedAngularCLIJson.projects.proj.architect.lint).toEqual({
-        builder: '@angular-devkit/build-angular:tslint',
+        builder: '@nrwl/linter:lint',
         options: {
+          linter: 'tslint',
           tsConfig: [
             'apps/proj/tsconfig.app.json',
             'apps/proj/tsconfig.spec.json'
@@ -222,8 +223,9 @@ forEachCli('angular', () => {
       });
       expect(updatedAngularCLIJson.projects['proj-e2e'].architect.lint).toEqual(
         {
-          builder: '@angular-devkit/build-angular:tslint',
+          builder: '@nrwl/linter:lint',
           options: {
+            linter: 'tslint',
             tsConfig: 'apps/proj-e2e/tsconfig.json',
             exclude: ['**/node_modules/**']
           }

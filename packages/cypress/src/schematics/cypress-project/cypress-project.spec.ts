@@ -49,8 +49,9 @@ describe('schematic:cypress-project', () => {
       expect(project.root).toEqual('apps/my-app-e2e');
 
       expect(project.architect.lint).toEqual({
-        builder: '@angular-devkit/build-angular:tslint',
+        builder: '@nrwl/linter:lint',
         options: {
+          linter: 'tslint',
           tsConfig: ['apps/my-app-e2e/tsconfig.e2e.json'],
           exclude: ['**/node_modules/**', '!apps/my-app-e2e/**']
         }
@@ -119,8 +120,9 @@ describe('schematic:cypress-project', () => {
 
         expect(projectConfig).toBeDefined();
         expect(projectConfig.architect.lint).toEqual({
-          builder: '@angular-devkit/build-angular:tslint',
+          builder: '@nrwl/linter:lint',
           options: {
+            linter: 'tslint',
             tsConfig: ['apps/my-dir/my-app-e2e/tsconfig.e2e.json'],
             exclude: ['**/node_modules/**', '!apps/my-dir/my-app-e2e/**']
           }

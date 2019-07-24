@@ -8,8 +8,9 @@ export function generateProjectLint(
 ) {
   if (linter === 'tslint') {
     return {
-      builder: '@angular-devkit/build-angular:tslint',
+      builder: '@nrwl/linter:lint',
       options: {
+        linter: 'tslint',
         tsConfig: [tsConfigPath],
         exclude: ['**/node_modules/**', '!' + projectRoot + '/**']
       }
@@ -29,7 +30,7 @@ export function addGlobalLint(linter: 'tslint' | 'eslint' | 'none') {
       }
     } else if (linter === 'eslint') {
       if (!host.exists('/.eslintrc')) {
-        host.create('/.eslintrc', globalTsLint);
+        host.create('/.eslintrc', '');
       }
     } else {
     }

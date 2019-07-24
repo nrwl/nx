@@ -1,0 +1,35 @@
+{
+  "name": "@nrwl/lint",
+  "version": "0.0.1",
+  "description": "Lint Plugin for Nx",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nrwl/nx.git"
+  },
+  "keywords": [
+    "Monorepo",
+    "Web",
+    "Lint",
+    "TSLint",
+    "ESLint",
+    "CLI"
+  ],
+  "main": "index.js",
+  "types": "index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "builders": "./builders.json",
+  "peerDependencies": {
+    "@nrwl/workspace": "*"
+  },
+  "dependencies": {
+    "@angular/compiler": "8.1.2",
+    "@angular/compiler-cli": "8.1.2",
+    "@angular-devkit/build-angular": "0.801.1",
+    "@angular-devkit/architect": "0.801.1"
+  }
+}

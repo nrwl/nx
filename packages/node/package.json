@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@nrwl/jest": "*",
+    "@nrwl/lint": "*",
     "@angular-devkit/architect": "0.801.1",
     "@angular-devkit/core": "8.1.1",
     "@angular-devkit/schematics": "8.1.1",

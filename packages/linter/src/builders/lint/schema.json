@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Lint Target",
+  "description": "Linter",
+  "type": "object",
+  "properties": {
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["eslint", "tslint"],
+      "default": "tslint"
+    },
+    "config": {
+      "type": "string",
+      "description": "The name of the configuration file."
+    },
+    "tsConfig": {
+      "description": "The name of the TypeScript configuration file.",
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "format": {
+      "type": "string",
+      "description": "Output format (prose, json, stylish, verbose, pmd, msbuild, checkstyle, vso, fileslist).",
+      "default": "prose",
+      "anyOf": [
+        {
+          "enum": [
+            "checkstyle",
+            "codeFrame",
+            "filesList",
+            "json",
+            "junit",
+            "msbuild",
+            "pmd",
+            "prose",
+            "stylish",
+            "tap",
+            "verbose",
+            "vso"
+          ]
+        },
+        { "minLength": 1 }
+      ]
+    },
+    "exclude": {
+      "type": "array",
+      "description": "Files to exclude from linting.",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    },
+    "files": {
+      "type": "array",
+      "description": "Files to include in linting.",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": ["linter"]
+}
