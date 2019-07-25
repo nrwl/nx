@@ -182,6 +182,15 @@ export function copyMissingPackages(): void {
     '@types/react-dom',
     '@testing-library',
 
+    // For testing webpack config with babel-loader
+    '@babel/core',
+    '@babel/preset-env',
+    '@babel/preset-react',
+    '@babel/preset-typescript',
+    '@babel/plugin-proposal-decorators',
+    'babel-loader',
+    'babel-plugin-macros',
+
     'document-register-element'
   ];
   modulesToCopy.forEach(m => copyNodeModule(m));

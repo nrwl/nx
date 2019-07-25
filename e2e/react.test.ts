@@ -21,7 +21,7 @@ forEachCli(() => {
       const appName = uniq('app');
       const libName = uniq('lib');
 
-      runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
+      runCLI(`generate @nrwl/react:app ${appName} --no-interactive --babel`);
       runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
 
       const mainPath = `apps/${appName}/src/main.tsx`;
@@ -30,16 +30,18 @@ forEachCli(() => {
       const libTestResults = await runCLIAsync(`test ${libName}`);
       expect(libTestResults.stderr).toContain('Test Suites: 1 passed, 1 total');
 
-      await testGeneratedApp(appName);
+      await testGeneratedApp(appName, { checkStyles: true });
     }, 120000);
 
     it('should generate app with routing', async () => {
       ensureProject();
       const appName = uniq('app');
 
-      runCLI(`generate @nrwl/react:app ${appName} --routing --no-interactive`);
+      runCLI(
+        `generate @nrwl/react:app ${appName} --routing --no-interactive --babel`
+      );
 
-      await testGeneratedApp(appName);
+      await testGeneratedApp(appName, { checkStyles: true });
     }, 120000);
 
     it('should generate app with styled-components', async () => {
@@ -47,10 +49,10 @@ forEachCli(() => {
       const appName = uniq('app');
 
       runCLI(
-        `generate @nrwl/react:app ${appName} --style styled-components --no-interactive`
+        `generate @nrwl/react:app ${appName} --style styled-components --no-interactive --babel`
       );
 
-      await testGeneratedApp(appName, false);
+      await testGeneratedApp(appName, { checkStyles: false });
     }, 120000);
 
     it('should be able to use JSX', async () => {
@@ -58,7 +60,7 @@ forEachCli(() => {
       const appName = uniq('app');
       const libName = uniq('lib');
 
-      runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
+      runCLI(`generate @nrwl/react:app ${appName} --no-interactive --babel`);
       runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
 
       renameFile(
@@ -90,49 +92,36 @@ forEachCli(() => {
       const mainPath = `apps/${appName}/src/main.jsx`;
       updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
 
-      await testGeneratedApp(appName);
+      await testGeneratedApp(appName, { checkStyles: true });
     }, 30000);
 
-    async function testGeneratedApp(appName, styles = true) {
+    async function testGeneratedApp(appName, opts: { checkStyles: boolean }) {
       const lintResults = runCLI(`lint ${appName}`);
       expect(lintResults).toContain('All files pass linting.');
 
       runCLI(`build ${appName}`);
       let filesToCheck = [
         `dist/apps/${appName}/index.html`,
-        `dist/apps/${appName}/polyfills-es2015.js`,
-        `dist/apps/${appName}/runtime-es2015.js`,
-        `dist/apps/${appName}/vendor-es2015.js`,
-        `dist/apps/${appName}/main-es2015.js`,
-        `dist/apps/${appName}/polyfills-es5.js`,
-        `dist/apps/${appName}/runtime-es5.js`,
-        `dist/apps/${appName}/vendor-es5.js`,
-        `dist/apps/${appName}/main-es5.js`
+        `dist/apps/${appName}/polyfills.js`,
+        `dist/apps/${appName}/runtime.js`,
+        `dist/apps/${appName}/vendor.js`,
+        `dist/apps/${appName}/main.js`
       ];
-      if (styles) {
-        filesToCheck.push(
-          `dist/apps/${appName}/styles-es2015.js`,
-          `dist/apps/${appName}/styles-es5.js`
-        );
+      if (opts.checkStyles) {
+        filesToCheck.push(`dist/apps/${appName}/styles.js`);
       }
       checkFilesExist(...filesToCheck);
-      expect(readFile(`dist/apps/${appName}/main-es5.js`)).toContain(
-        'var App = function () {'
-      );
-      expect(readFile(`dist/apps/${appName}/main-es2015.js`)).toContain(
-        'const App = () => {'
+      expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
+        'var App = function App() {'
       );
       runCLI(`build ${appName} --prod --output-hashing none`);
       filesToCheck = [
         `dist/apps/${appName}/index.html`,
-        `dist/apps/${appName}/polyfills-es2015.js`,
-        `dist/apps/${appName}/runtime-es2015.js`,
-        `dist/apps/${appName}/main-es2015.js`,
-        `dist/apps/${appName}/polyfills-es5.js`,
-        `dist/apps/${appName}/runtime-es5.js`,
-        `dist/apps/${appName}/main-es5.js`
+        `dist/apps/${appName}/polyfills.js`,
+        `dist/apps/${appName}/runtime.js`,
+        `dist/apps/${appName}/main.js`
       ];
-      if (styles) {
+      if (opts.checkStyles) {
         filesToCheck.push(`dist/apps/${appName}/styles.css`);
       }
       checkFilesExist(...filesToCheck);

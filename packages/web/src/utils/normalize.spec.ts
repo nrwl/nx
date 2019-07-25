@@ -25,7 +25,8 @@ describe('normalizeBuildOptions', () => {
         }
       ],
       assets: [],
-      statsJson: false
+      statsJson: false,
+      webpackConfig: './apps/nodeapp/webpack.config'
     };
     root = '/root';
     sourceRoot = normalize('apps/nodeapp/src');
@@ -94,5 +95,20 @@ describe('normalizeBuildOptions', () => {
         with: '/root/module2.ts'
       }
     ]);
+  });
+
+  it('should only resolve relative webpack config path', () => {
+    let result = normalizeBuildOptions(testOptions, root, sourceRoot);
+    expect(result.webpackConfig).toEqual('/root/apps/nodeapp/webpack.config');
+
+    result = normalizeBuildOptions(
+      {
+        ...testOptions,
+        webpackConfig: '@nrwl/react/plugins/babel'
+      },
+      root,
+      sourceRoot
+    );
+    expect(result.webpackConfig).toEqual('@nrwl/react/plugins/babel');
   });
 });

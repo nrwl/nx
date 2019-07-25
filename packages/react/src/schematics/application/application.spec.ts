@@ -229,6 +229,7 @@ describe('app', () => {
     const architectConfig = workspaceJson.projects['my-app'].architect;
     expect(architectConfig.build.builder).toEqual('@nrwl/web:build');
     expect(architectConfig.build.options).toEqual({
+      differentialLoading: true,
       assets: ['apps/my-app/src/favicon.ico', 'apps/my-app/src/assets'],
       index: 'apps/my-app/src/index.html',
       main: 'apps/my-app/src/main.tsx',
@@ -464,6 +465,22 @@ describe('app', () => {
       expect(mainSource).toContain('</BrowserRouter>');
       expect(componentSource).toMatch(/<Route\s*path="\/"/);
       expect(componentSource).toMatch(/<Link\s*to="\/"/);
+    });
+  });
+
+  describe('--babel true', () => {
+    it('should adds custom webpack config', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', babel: true },
+        appTree
+      );
+
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+
+      expect(
+        workspaceJson.projects['my-app'].architect.build.options.webpackConfig
+      ).toEqual('@nrwl/react/plugins/babel');
     });
   });
 });

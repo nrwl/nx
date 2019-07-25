@@ -50,6 +50,16 @@ function setDefault(): Rule {
     if (!defaultCollection || defaultCollection === '@nrwl/workspace') {
       (workspace.extensions.cli as JsonObject).defaultCollection =
         '@nrwl/react';
+
+      // Also generate apps with babel option by default.
+      workspace.extensions.schematics = {
+        ...(workspace.extensions.schematics
+          ? (workspace.extensions.schematics as JsonObject)
+          : {}),
+        '@nrwl/react:application': {
+          babel: true
+        }
+      };
     }
   });
 }

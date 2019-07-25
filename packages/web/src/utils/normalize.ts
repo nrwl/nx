@@ -23,7 +23,10 @@ export function normalizeBuildOptions<T extends BuildBuilderOptions>(
     fileReplacements: normalizeFileReplacements(root, options.fileReplacements),
     assets: normalizeAssets(options.assets, root, sourceRoot),
     webpackConfig: options.webpackConfig
-      ? resolve(root, options.webpackConfig)
+      ? // Don't resolve node_modules or absolute paths.
+        options.webpackConfig.startsWith('.')
+        ? resolve(root, options.webpackConfig)
+        : options.webpackConfig
       : options.webpackConfig
   };
 }

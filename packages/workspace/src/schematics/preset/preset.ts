@@ -50,7 +50,8 @@ function createPreset(options: Schema): Rule {
         'application',
         {
           name: options.name,
-          style: options.style
+          style: options.style,
+          babel: true
         },
         { interactive: false }
       ),

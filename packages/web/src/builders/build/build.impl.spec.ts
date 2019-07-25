@@ -122,7 +122,7 @@ describe('WebBuildBuilder', () => {
           {
             ...testOptions,
             differentialLoading: false,
-            webpackConfig: 'apps/webapp/webpack.config.js'
+            webpackConfig: './apps/webapp/webpack.config.js'
           },
           context
         ).toPromise();

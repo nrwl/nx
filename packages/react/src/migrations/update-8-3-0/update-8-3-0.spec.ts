@@ -90,7 +90,7 @@ describe('Update 8-0-0', () => {
           devDependencies: {
             '@testing-library/react': '8.0.5',
             '@types/react': '16.8.23',
-            '@types/react-dom': '16.8.23',
+            '@types/react-dom': '16.8.5',
             '@types/styled-components': '4.1.18'
           }
         })
