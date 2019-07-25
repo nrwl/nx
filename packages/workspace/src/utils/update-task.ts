@@ -39,8 +39,6 @@ export function addUpdateTask(
       }
     });
 
-    console.log(dependencies);
-
     context.addTask(new RunUpdateTask(pkg, to), dependencies);
   };
 }
