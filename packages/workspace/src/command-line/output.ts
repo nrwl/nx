@@ -19,6 +19,7 @@ export interface CLILogMessageConfig {
 
 export interface CLINoteMessageConfig {
   title: string;
+  bodyLines?: string[];
 }
 
 export interface CLISuccessMessageConfig {
@@ -142,13 +143,15 @@ class CLIOutput {
     this.addNewline();
   }
 
-  note({ title }: CLINoteMessageConfig) {
+  note({ title, bodyLines }: CLINoteMessageConfig) {
     this.addNewline();
 
     this.writeOutputTitle({
       label: chalk.reset.inverse.bold.keyword('orange')(' NOTE '),
       title: chalk.bold.keyword('orange')(title)
     });
+
+    this.writeOptionalOutputBody(bodyLines);
 
     this.addNewline();
   }

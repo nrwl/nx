@@ -15,6 +15,11 @@ const presetOptions = [
     name: 'empty             [an empty workspace]'
   },
   {
+    value: 'web-components',
+    name:
+      'web components    [a workspace with a single app built using web components]'
+  },
+  {
     value: 'angular',
     name: 'angular           [a workspace with a single Angular application]'
   },
@@ -23,14 +28,9 @@ const presetOptions = [
     name: 'react             [a workspace with a single React application]'
   },
   {
-    value: 'web-components',
-    name:
-      'web components    [a workspace with a single app built using web components]'
-  },
-  {
     value: 'full-stack',
     name:
-      'full-stack        [a workspace with a full stack application (NestJS + Angular Ivy)]'
+      'full-stack        [a workspace with a full stack application (NestJS + Angular)]'
   }
 ];
 
@@ -180,7 +180,7 @@ function determineCli(preset: string, parsedArgs: any) {
       .prompt([
         {
           name: 'CLI',
-          message: `CLI to power the Nx workspace`,
+          message: `CLI to power the Nx workspace      `,
           default: 'nx',
           type: 'list',
           choices: [
@@ -261,32 +261,35 @@ function showNxWarning() {
     execSync('nx --version', { stdio: ['ignore', 'ignore', 'ignore'] });
   } catch (e) {
     // no nx found
-    console.log('-----------------------------------------------------------');
-    console.log(`It looks like you don't have the Nx CLI installed globally.`);
-    console.log(
-      `This means that you might have to use "yarn nx" or "npm nx" to execute commands in your workspace.`
-    );
-    console.log(
-      `If you want to execute the nx command directly, run "yarn global add @nrwl/cli" or "npm install -g @nrwl/cli"`
-    );
-    console.log('-----------------------------------------------------------');
+    output.addVerticalSeparator();
+    output.note({
+      title: `Nx CLI is not installed globally.`,
+      bodyLines: [
+        `This means that you might have to use "yarn nx" or "npm nx" to execute commands in the workspace.`,
+        `Run "yarn global add @nrwl/cli" or "npm install -g @nrwl/cli" to be able to execute command directly.`
+      ]
+    });
   }
 }
 
 function showCliWarning(preset: string, parsedArgs: any) {
   if (!parsedArgs.cli) {
     if (preset == 'angular' || preset == 'full-stack') {
-      console.log(
-        'Because you selected an Angular-specific preset, we generated an Nx workspace powered by the Angular CLi.'
-      );
-      console.log(
-        `If you want want to power the workspace using a different CLI, you can pass it using '--cli'. Find out more by running 'create-nx-workspace --help'.`
-      );
+      output.addVerticalSeparator();
+      output.note({
+        title: `Because you selected an Angular-specific preset, we generated an Nx workspace powered by the Angular CLI.`,
+        bodyLines: [
+          `Run 'create-nx-workspace --help' to see how to select a different CLI.`
+        ]
+      });
     } else if (preset === 'web-components' || preset === 'react') {
-      console.log('We generated an Nx workspace powered by the Nx CLi.');
-      console.log(
-        `If you want want to power the workspace using a different CLI, you can pass it using '--cli'. Find out more by running 'create-nx-workspace --help'.`
-      );
+      output.addVerticalSeparator();
+      output.note({
+        title: `We generated an Nx workspace powered by the Nx CLi.`,
+        bodyLines: [
+          `Run 'create-nx-workspace --help' to see how to select a different CLI.`
+        ]
+      });
     }
   }
 }
