@@ -75,7 +75,7 @@ function createPreset(options: Schema): Rule {
       externalSchematic(
         '@nrwl/angular',
         'application',
-        { name: options.name, style: options.style, enableIvy: true },
+        { name: options.name, style: options.style },
         { interactive: false }
       ),
       externalSchematic(

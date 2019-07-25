@@ -41,6 +41,9 @@ if (workspace) {
       'index.js'
     ));
   } else if (workspace.type === 'angular') {
+    w.output.note({
+      title: `Nx didn't recognize the command, forwarding on to the Angular CLI.`
+    });
     require(path.join(
       workspace.dir,
       'node_modules',
