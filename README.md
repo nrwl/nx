@@ -78,6 +78,18 @@ ng add @nrwl/workspace
 
 By default, an Nx workspace starts blank. There are no applications to build, serve, and test. To create one, you need to add capabilities to the workspace.
 
+**To add a web components app, run:**
+
+```bash
+yarn add @nrwl/web
+nx g @nrwl/web:app myapp # or just "nx g myapp"
+```
+
+```bash
+npm install --save-dev @nrwl/web
+nx g @nrwl/web:app myapp # or just "nx g myapp"
+```
+
 **To add an Angular app, run:**
 
 ```bash
@@ -100,18 +112,6 @@ nx g @nrwl/react:app myapp # or just "nx g myapp"
 ```bash
 npm install --save-dev @nrwl/react
 nx g @nrwl/react:app myapp # or just "nx g myapp"
-```
-
-**To add a web components app, run:**
-
-```bash
-yarn add @nrwl/web
-nx g @nrwl/web:app myapp # or just "nx g myapp"
-```
-
-```bash
-npm install --save-dev @nrwl/web
-nx g @nrwl/web:app myapp # or just "nx g myapp"
 ```
 
 If `nx g` fails, use: `yarn nx g @nrwl/web:app myapp` or `npm run nx -- g @nrwl/web:app myapp`.

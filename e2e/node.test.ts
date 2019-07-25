@@ -113,7 +113,7 @@ forEachCli(() => {
         const result = await getData();
         expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
         treeKill(process.pid, 'SIGTERM', err => {
-          expect(collectedOutput.startsWith('DONE')).toBeTruthy();
+          expect(collectedOutput.indexOf('DONE') > -1).toBeTruthy();
           expect(err).toBeFalsy();
           done();
         });
