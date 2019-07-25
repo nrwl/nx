@@ -216,7 +216,13 @@ function getCollection(workflow: NodeWorkflow, name: string) {
 function printGenHelp(opts: GenerateOptions, schema: Schema) {
   printHelp(
     `${commandName} generate ${opts.collectionName}:${opts.schematicName}`,
-    schema
+    {
+      ...schema,
+      properties: {
+        ...schema.properties,
+        dryRun: `Runs through and reports activity without writing to disk.`
+      }
+    }
   );
 }
 
@@ -350,5 +356,5 @@ export async function taoNew(root: string, args: string[]) {
 }
 
 function isTTY(): boolean {
-  return !!process.stdout.isTTY && !!process.env['CI'];
+  return !!process.stdout.isTTY && process.env['CI'] !== 'true';
 }

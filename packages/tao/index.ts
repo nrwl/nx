@@ -28,9 +28,10 @@ export async function invokeCommand(
     case '--help':
       return (await import('./src/commands/help')).printHelp();
     default:
+      const projectName = commandArgs[0] ? commandArgs[0] : '';
       // this is to make `tao test mylib` same as `tao run mylib:test`
       return (await import('./src/commands/run')).run(root, [
-        `${commandArgs[0]}:${command}`,
+        `${projectName}:${command}`,
         ...commandArgs.slice(1)
       ]);
   }

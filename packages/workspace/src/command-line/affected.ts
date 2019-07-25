@@ -16,7 +16,8 @@ import {
   getAllProjectsWithTarget,
   getAffectedProjectsWithTarget,
   readWorkspaceJson,
-  printArgsWarning
+  printArgsWarning,
+  cliCommand
 } from './shared';
 import { generateGraph } from './dep-graph';
 import { WorkspaceResults } from './workspace-results';
@@ -167,6 +168,8 @@ async function runCommand(
     return;
   }
 
+  const cli = cliCommand();
+
   const bodyLines = projects.map(
     project => `${output.colors.gray('-')} ${project}`
   );
@@ -196,15 +199,14 @@ async function runCommand(
   const packageJson = JSON.parse(
     fs.readFileSync('./package.json').toString('utf-8')
   );
-  if (!packageJson.scripts || !packageJson.scripts.nx) {
+  if (!packageJson.scripts || !packageJson.scripts[cli]) {
     output.error({
-      title:
-        'The "scripts" section of your `package.json` must contain `"nx": "nx"`',
+      title: `The "scripts" section of your 'package.json' must contain "${cli}": "${cli}"`,
       bodyLines: [
         output.colors.gray('...'),
         ' "scripts": {',
         output.colors.gray('  ...'),
-        '   "nx": "nx"',
+        `   "${cli}": "${cli}"`,
         output.colors.gray('  ...'),
         ' }',
         output.colors.gray('...')
@@ -217,12 +219,12 @@ async function runCommand(
     await runAll(
       projects.map(proj => {
         return commonCommands.includes(targetName)
-          ? `nx -- ${targetName} ${proj} ${transformArgs(
+          ? `${cli} -- ${targetName} ${proj} ${transformArgs(
               args,
               proj,
               projectMetadata.get(proj)
             ).join(' ')} `
-          : `nx -- run ${proj}:${targetName} ${transformArgs(
+          : `${cli} -- run ${proj}:${targetName} ${transformArgs(
               args,
               proj,
               projectMetadata.get(proj)

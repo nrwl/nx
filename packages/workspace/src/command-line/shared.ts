@@ -348,6 +348,10 @@ function minus(a: string[], b: string[]): string[] {
   return res;
 }
 
+export function cliCommand() {
+  return workspaceFileName() === 'angular.json' ? 'ng' : 'nx';
+}
+
 export function readWorkspaceJson(): any {
   return readJsonFile(`${appRootPath}/${workspaceFileName()}`);
 }
