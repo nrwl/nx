@@ -10,7 +10,7 @@
     "start": "<%= cliCommand %> serve",
     "build": "<%= cliCommand %> build",
     "test": "<%= cliCommand %> test",
-    "lint": "nx lint && <%= cliCommand %> lint",
+    "lint": "nx workspace-lint && <%= cliCommand %> lint",
     "e2e": "<%= cliCommand %> e2e",
     "affected:apps": "nx affected:apps",
     "affected:libs": "nx affected:libs",
