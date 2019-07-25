@@ -49,14 +49,7 @@ function run(
     concatMap(config =>
       runWebpack(config, context, {
         logging: stats => {
-          if (options.statsJson) {
-            writeFileSync(
-              resolve(context.workspaceRoot, options.outputPath, 'stats.json'),
-              JSON.stringify(stats.toJson(), null, 2)
-            );
-          }
-
-          context.logger.info(stats.toString());
+          context.logger.info(stats.toString(config.stats));
         }
       })
     ),

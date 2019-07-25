@@ -82,37 +82,6 @@ describe('NodeBuildBuilder', () => {
       expect(output.outfile).toEqual('/root/dist/apps/nodeapp/main.js');
     });
 
-    describe('when stats json option is passed', () => {
-      beforeEach(() => {
-        const stats = {
-          stats: 'stats'
-        };
-        spyOn(fs, 'writeFileSync');
-      });
-
-      it('should generate a stats json', async () => {
-        testOptions.statsJson = true;
-        const run = await architect.scheduleBuilder(
-          '@nrwl/node:build',
-          testOptions
-        );
-        await run.output.toPromise();
-
-        await run.stop();
-
-        expect(fs.writeFileSync).toHaveBeenCalledWith(
-          '/root/dist/apps/nodeapp/stats.json',
-          JSON.stringify(
-            {
-              stats: 'stats'
-            },
-            null,
-            2
-          )
-        );
-      });
-    });
-
     describe('webpackConfig option', () => {
       it('should require the specified function and use the return value', async () => {
         const mockFunction = jest.fn(config => ({
