@@ -10,4 +10,5 @@ export interface Schema {
   pascalCaseFiles?: boolean;
   classComponent?: boolean;
   routing?: boolean;
+  babel?: boolean;
 }

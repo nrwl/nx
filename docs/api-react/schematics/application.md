@@ -11,6 +11,14 @@ ng generate application ...
 
 ## Options
 
+### babel
+
+Default: `false`
+
+Type: `boolean`
+
+Use Babel and TypeScript preset instead of ts-loader (Useful if you need Babel plugins)
+
 ### classComponent
 
 Default: `false`
@@ -53,7 +61,7 @@ Default: `false`
 
 Type: `boolean`
 
-Use pascal case component file name (e.g. App.tsx)®
+Use pascal case component file name (e.g. App.tsx)
 
 ### routing
 

@@ -64,7 +64,7 @@ function updateDependencies(tree: Tree) {
     'react-dom': '16.8.6',
     'react-router-dom': '5.0.1',
     '@types/react': '16.8.23',
-    '@types/react-dom': '16.8.23',
+    '@types/react-dom': '16.8.5',
     'styled-components': '4.3.2',
     '@types/styled-components': '4.1.18',
     '@emotion/styled': '10.0.14'

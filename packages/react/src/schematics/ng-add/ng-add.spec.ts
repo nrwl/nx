@@ -29,6 +29,9 @@ describe('ng-add', () => {
       const result = await runSchematic('ng-add', {}, tree);
       const workspaceJson = readJsonInTree(result, 'workspace.json');
       expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/react');
+      expect(workspaceJson.schematics['@nrwl/react:application'].babel).toBe(
+        true
+      );
     });
 
     it('should be set if @nrwl/workspace was set before', async () => {
@@ -45,6 +48,9 @@ describe('ng-add', () => {
       const result = await runSchematic('ng-add', {}, tree);
       const workspaceJson = readJsonInTree(result, 'workspace.json');
       expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/react');
+      expect(workspaceJson.schematics['@nrwl/react:application'].babel).toBe(
+        true
+      );
     });
 
     it('should not be set if something else was set before', async () => {
@@ -54,6 +60,8 @@ describe('ng-add', () => {
             defaultCollection: '@nrwl/angular'
           };
 
+          json.schematics = {};
+
           return json;
         }),
         tree
@@ -61,6 +69,9 @@ describe('ng-add', () => {
       const result = await runSchematic('ng-add', {}, tree);
       const workspaceJson = readJsonInTree(result, 'workspace.json');
       expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/angular');
+      expect(
+        workspaceJson.schematics['@nrwl/react:application']
+      ).not.toBeDefined();
     });
   });
 });

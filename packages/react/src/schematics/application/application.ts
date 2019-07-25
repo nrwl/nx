@@ -33,7 +33,16 @@ import * as ts from 'typescript';
 import { Schema } from './schema';
 import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
 import { addRouter } from '../../utils/ast-utils';
-import { reactRouterVersion } from '../../utils/versions';
+import {
+  babelCoreVersion,
+  babelLoaderVersion,
+  babelPluginDecoratorsVersion,
+  babelPluginMacrosVersion,
+  babelPresetEnvVersion,
+  babelPresetReactVersion,
+  babelPresetTypeScriptVersion,
+  reactRouterVersion
+} from '../../utils/versions';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -75,6 +84,7 @@ export default function(schema: Schema): Rule {
         : noop(),
       addStyledModuleDependencies(options),
       addRouting(options),
+      addBabel(options),
       formatFiles(options)
     ]);
   };
@@ -114,6 +124,7 @@ function addProject(options: NormalizedSchema): Rule {
     architect.build = {
       builder: '@nrwl/web:build',
       options: {
+        differentialLoading: !options.babel, // Using babel-loader will not work with differential loading for now
         outputPath: join(normalize('dist'), options.appProjectRoot),
         index: join(options.appProjectRoot, 'src/index.html'),
         main: join(options.appProjectRoot, `src/main.tsx`),
@@ -126,7 +137,8 @@ function addProject(options: NormalizedSchema): Rule {
         styles: options.styledModule
           ? []
           : [join(options.appProjectRoot, `src/styles.${options.style}`)],
-        scripts: []
+        scripts: [],
+        webpackConfig: options.babel ? '@nrwl/react/plugins/babel' : undefined
       },
       configurations: {
         production: {
@@ -223,6 +235,23 @@ function addRouting(options: NormalizedSchema): Rule {
         },
         addDepsToPackageJson({ 'react-router-dom': reactRouterVersion }, {})
       ])
+    : noop();
+}
+
+function addBabel(options: NormalizedSchema): Rule {
+  return options.babel
+    ? addDepsToPackageJson(
+        {},
+        {
+          '@babel/core': babelCoreVersion,
+          '@babel/preset-env': babelPresetEnvVersion,
+          '@babel/preset-react': babelPresetReactVersion,
+          '@babel/preset-typescript': babelPresetTypeScriptVersion,
+          '@babel/plugin-proposal-decorators': babelPluginDecoratorsVersion,
+          'babel-loader': babelLoaderVersion,
+          'babel-plugin-macros': babelPluginMacrosVersion
+        }
+      )
     : noop();
 }
 
