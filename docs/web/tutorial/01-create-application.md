@@ -10,7 +10,7 @@ In this tutorial you will use Nx to build a full-stack application out of common
 npx create-nx-workspace@latest myorg
 ```
 
-When asked about 'preset', select `empty`.
+When asked about 'preset', select `empty`, and `Nx` for the CLI.
 
 ```treeview
 myorg/
@@ -29,7 +29,7 @@ This is an empty Nx workspace without any applications or libraries: nothing to 
 
 ## Create a Web Application
 
-First, we must add the capability to create weg applications via:
+First, we must add the capability to create web applications via:
 
 ```bash
 npm install --save-dev @nrwl/web
@@ -44,7 +44,7 @@ yarn add --dev @nrwl/web
 Now, create your first web application.
 
 ```bash
-ng g @nrwl/web:application todos
+nx g @nrwl/web:application todos
 ```
 
 Nx will ask you a few questions about the application you are trying to create: the directory it will be placed it, the tags used for linting, etc.. As your workspace grows, those things become really important. For now the default answers are good enough.
@@ -106,7 +106,7 @@ The generate command added two projects to our workspace:
 Now that the application is setup, run it locally via:
 
 ```bash
-ng serve todos
+nx serve todos
 ```
 
 !!!!!

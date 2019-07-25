@@ -126,7 +126,7 @@
           },
           {
             "name": "Updating Nx",
-            "id": "update-nx"
+            "id": "update"
           },
           {
             "name": "Using React",
@@ -266,8 +266,12 @@
         "id": "guides",
         "itemList": [
           {
+            "name": "Nx CLI",
+            "id": "cli"
+          },
+          {
             "name": "Updating Nx",
-            "id": "update-nx"
+            "id": "update"
           }
         ]
       }
@@ -365,8 +369,8 @@
             "id": "build-full-stack-applications"
           },
           {
-            "name": "Developing Like Google",
-            "id": "develop-like-google"
+            "name": "Monorepos and Automation",
+            "id": "monorepos-automation"
           }
         ]
       },
@@ -375,8 +379,12 @@
         "id": "guides",
         "itemList": [
           {
+            "name": "Nx CLI",
+            "id": "cli"
+          },
+          {
             "name": "Updating Nx",
-            "id": "update-nx"
+            "id": "update"
           }
         ]
       }

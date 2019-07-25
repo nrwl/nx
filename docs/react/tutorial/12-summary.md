@@ -17,4 +17,4 @@ Watch the video showing how to use Nx build full-stack applications.
 
 - [Using Modern Tools](/react/fundamentals/use-modern-tools)
 - [Building Full-Stack Applications](/react/fundamentals/build-full-stack-applications)
-- [Developing Like Google: Monorepos and Automation](/react/fundamentals/develop-like-google)
+- [Developing Like Google: Monorepos and Automation](/react/fundamentals/monorepos-automation)

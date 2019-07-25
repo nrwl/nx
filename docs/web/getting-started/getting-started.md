@@ -1,14 +1,12 @@
 # Getting Started
 
-## TLDR
+## Overview
 
-```bash
-npx create-nx-workspace myapp --preset=web
-cd myapp
-ng serve myapp
-```
+This page shows you how to get up and running quickly with an Nx workspace.
 
-## Creating an Nx Workspace
+## Creating the workspace
+
+You get started with Nx by running a command that uses your package manager to setup your initial workspace.
 
 **Using `npx`**
 
@@ -28,41 +26,57 @@ npm init nx-workspace myworkspace
 yarn create nx-workspace myworkspace
 ```
 
-## Adding Capabilities
-
-If you haven't specified any presets, you will get an empty Nx workspace. There are no applications to build, serve, and test. You can run the following to add capabilities to the workspace:
-
-**Using `npm`**
+After creating the workspace, change into the newly created workspace directory.
 
 ```bash
-npm install --save-dev @nrwl/web # Adds Web capabilities
-npm install --save-dev @nrwl/react # Adds React capabilities
-npm install --save-dev @nrwl/angular # Adds Angular capabilities
-npm install --save-dev @nrwl/node # Adds Node capabilities
-npm install --save-dev @nrwl/express # Adds Express capabilities
-npm install --save-dev @nrwl/nest # Adds Nest capabilities
+cd myworkspace
+```
+
+## Adding Capabilities
+
+If you haven't specified any presets, you get an empty Nx workspace. There are no applications to build, serve, and test. To add capabilities for React to the workspace:
+
+Using `npm`:
+
+```bash
+npm install --save-dev @nrwl/web
+```
+
+Using `yarn`:
+
+```bash
+yarn add --dev @nrwl/web
+```
+
+### Additional Capabilities
+
+Nx also provides capabilities for other platforms, and libraries such as Node, Express, and Nest.
+
+To add the additional capabilities:
+
+```bash
+npm install --save-dev @nrwl/node
+npm install --save-dev @nrwl/express
+npm install --save-dev @nrwl/nest
 ```
 
 **Using `yarn`**
 
 ```bash
-yarn add --dev @nrwl/web # Adds Web capabilities
-yarn add --dev @nrwl/react # Adds React capabilities
-yarn add --dev @nrwl/angular # Adds Angular capabilities
-yarn add --dev @nrwl/node # Adds Node capabilities
-yarn add --dev @nrwl/express # Adds Express capabilities
-yarn add --dev @nrwl/nest # Adds Nest capabilities
+yarn add --dev @nrwl/node
+yarn add --dev @nrwl/express
+yarn add --dev @nrwl/nest
 ```
 
-## Creating Your First Application
+## Creating an application
 
-After the capability is added, you can now create your first application via:
+After the capabilities are added, you create your first application using the following command:
 
 ```bash
-ng g @nrwl/web:application myapp
+nx generate @nrwl/web:application myapp
 ```
 
-The result will look like this:
+The following files and folders are generated in the new application:
 
 ```treeview
 <workspace name>/
@@ -109,6 +123,16 @@ The result will look like this:
 └── tslint.json
 ```
 
-## Serving Application
+## Serving an application
 
-Run `ng serve myapp` to serve the newly generated application!
+To serve the newly generated application, run:
+
+```bash
+nx serve myapp
+```
+
+When the app is ready, visit `http://localhost:4200` in your browser.
+
+That's it! You've created your first application in an Nx workspace. To become more familiar with Nx:
+
+- Go through a [complete tutorial](/web/tutorial/01-create-application) on using Nx to build a full-stack application.

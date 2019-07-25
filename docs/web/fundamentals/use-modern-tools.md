@@ -6,18 +6,23 @@ Of course, it's not the case that Cypress is always better than Protractor or Ne
 
 ## Nest
 
-![NestJS logo](./nest-logo.png)
+![NestJS logo](../../shared/nest-logo.png)
 
 Nest is a Node.js framework designed for building scalable server-side applications.
 
-To create a new Nest application, run:
+Add the Nest capability to your workspace:
 
 ```bash
-yarn add --dev @nrwl/nest # Add Nest Capabilities to a workspace
-yarn g @nrwl/nest:application api # Create a Nest App
+yarn add --dev @nrwl/nest
 ```
 
-This will create the following:
+To create the new Nest application:
+
+```bash
+yarn g @nrwl/nest:application api
+```
+
+The following folders and files are created:
 
 ```treeview
 <workspace name>/
@@ -50,34 +55,44 @@ This will create the following:
 
 You can run:
 
-- `ng serve api` to serve the application
-- `ng build api` to build the application
-- `ng test api` to test the application
+- `nx serve api` to serve the application
+- `nx build api` to build the application
+- `nx test api` to test the application
 
 Adding a Nest app will also add Nest schematics to the workspace, which you can run as follows:
 
 ```bash
-ng generate @nestjs/schematics:controller mycontroller --sourceRoot=apps/nestapp/src --path=app
+nx generate @nestjs/schematics:controller mycontroller --sourceRoot=apps/nestapp/src --path=app
 ```
 
 Read more about Nest at [nestjs.com](https://nestjs.com).
 
 ### Using Express
 
+To use [Express](https://express.org), add the Express capability to your workspace:
+
+```bash
+yarn add --dev @nrwl/nest
+```
+
 To create an express application, run:
 
 ```bash
-yarn add --dev @nrwl/express # Add Express Capabilities to a workspace
-ng g @nrwl/express:application api # Create an Express Application
+nx g @nrwl/express:application api
 ```
 
 ### Using Other Frameworks
 
-To create an empty node application, run:
+For an empty node application, add the Node capability to your workspace:
 
 ```bash
-yarn add --dev @nrwl/node # Add Node Capabilities to a workspace
-ng g @nrwl/node:application api # Create a Node Application
+yarn add --dev @nrwl/node
+```
+
+To create a Node Application:
+
+```bash
+nx g @nrwl/node:application api
 ```
 
 ## Cypress
@@ -95,7 +110,7 @@ Cypress is an e2e test runner built for modern web. It has a lot of great featur
 
 By default, when creating a new web application, Nx will use Cypress to create the e2e tests project.
 
-So running `ng g @nrwl/web:application frontend` will create:
+Running `nx g @nrwl/web:application frontend` will create:
 
 ```treeview
 <workspace name>/
@@ -144,9 +159,9 @@ So running `ng g @nrwl/web:application frontend` will create:
 
 You can run:
 
-- `ng e2e frontend-e2e` to run e2e tests
-- `ng e2e frontend-e2e --watch` to run e2e tests in the watch mode
-- `ng e2e frontend-e2e --headless` to run e2e tests in the headless mode (used in CI)
+- `nx e2e frontend-e2e` to run e2e tests
+- `nx e2e frontend-e2e --watch` to run e2e tests in the watch mode
+- `nx e2e frontend-e2e --headless` to run e2e tests in the headless mode (used in CI)
 
 Read more about Cypress at [cypress.io](https://cypress.io).
 
@@ -156,7 +171,7 @@ Read more about Cypress at [cypress.io](https://cypress.io).
 
 Jest is a fast 0-setup testing framework from Facebook.
 
-By default, Nx uses Jest for both Web and Node.js applications. So if you run `ng g application frontend`, you will get:
+By default, Nx uses Jest for both Web and Node.js applications. So if you run `nx g application frontend`, you will get:
 
 ```treeview
 <workspace name>/

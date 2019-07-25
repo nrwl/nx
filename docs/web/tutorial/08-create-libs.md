@@ -10,7 +10,7 @@ Every library has an `index.ts` file, which defines its public API. Other applic
 
 To illustrate how useful libraries can be, create a library of Web components.
 
-**Run `ng g @nrwl/workspace:lib ui`.**
+**Run `nx g @nrwl/workspace:lib ui`.**
 
 You should see the following:
 
@@ -105,7 +105,7 @@ export class AppElement extends HTMLElement {
 customElements.define('myorg-root', AppElement);
 ```
 
-**Restart both `ng serve api` and `ng serve todos` and you should see the application running.**
+**Restart both `nx serve api` and `nx serve todos` and you should see the application running.**
 
 !!!!!
 Libraries' public API is defined in...

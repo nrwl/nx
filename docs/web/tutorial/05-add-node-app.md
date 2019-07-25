@@ -21,7 +21,7 @@ yarn add --dev @nrwl/express
 **Run the following to generate a new Express application:**
 
 ```bash
-ng g @nrwl/express:app api --frontendProject=todos
+nx g @nrwl/express:app api --frontendProject=todos
 ```
 
 Nx will ask you a few questions, and, as with the web application, the defaults will work well here.
@@ -60,9 +60,9 @@ The `apps` directory is where Nx places anything you can run: frontend applicati
 
 You can run:
 
-- `ng serve api` to serve the application
-- `ng build api` to build the application
-- `ng test api` to test the application
+- `nx serve api` to serve the application
+- `nx build api` to build the application
+- `nx test api` to test the application
 
 **Add a file `apps/api/src/app/todos.ts`.**
 
@@ -110,7 +110,7 @@ server.on('error', console.error);
 ```
 
 !!!!!
-Run "ng serve api" and open https://localhost:3333/api/todos. What do you see?
+Run "nx serve api" and open https://localhost:3333/api/todos. What do you see?
 !!!!!
 `[{"title":"Todo 1"},{"title":"Todo 2"}]`
 Blank screen

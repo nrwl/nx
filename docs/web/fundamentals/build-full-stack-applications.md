@@ -19,8 +19,8 @@ cd myorg
 Now, create a frontend application using web components with:
 
 ```bash
-yarn add --dev @nrwl/web # Add web components to the workspace
-ng g @nrwl/web:application frontend # Create a Web Components Application
+yarn add --dev @nrwl/web # Add Web Capabilities to the workspace
+nx g @nrwl/web:application frontend # Create a Web Application
 ```
 
 This will create the following:
@@ -72,9 +72,9 @@ myorg/
 
 You can run:
 
-- `ng serve frontend` to serve the application
-- `ng build frontend` to build the application
-- `ng test frontend` to test the application
+- `nx serve frontend` to serve the application
+- `nx build frontend` to build the application
+- `nx test frontend` to test the application
 
 ## Creating a Node Application
 
@@ -116,7 +116,7 @@ Create an Express application similar to how you created the web components appl
 
 ```bash
 yarn add --dev @nrwl/express # Add Express Capabilities to the workspace
-ng g @nrwl/express:application api --frontend-project frontend # sets up the proxy configuration so you can access the API in development
+nx g @nrwl/express:application api --frontend-project frontend # sets up the proxy configuration so you can access the API in development
 ```
 
 This will create the following:
@@ -153,9 +153,9 @@ The `apps` directory is where Nx places anything you can run: frontend applicati
 
 You can run:
 
-- `ng serve api` to serve the application
-- `ng build api` to build the application
-- `ng test api` to test the application
+- `nx serve api` to serve the application
+- `nx build api` to build the application
+- `nx test api` to test the application
 
 ### Adding an Endpoint
 
@@ -184,7 +184,7 @@ const server = app.listen(port, () => {
 server.on('error', console.error);
 ```
 
-Now, run `ng serve frontend & ng serve api`, and open [http://localhost:4200](http://localhost:4200) to see both the frontend and backend working:
+Now, run `nx serve frontend & nx serve api`, and open [http://localhost:4200](http://localhost:4200) to see both the frontend and backend working:
 
 ![Full Stack Application Screenshot](./full-stack-app.png)
 
@@ -197,7 +197,7 @@ Normally sharing code between the backend and the frontend would have required d
 Create a new library via:
 
 ```bash
-ng g @nrwl/workspace:library data # This generates a barebone library with only Typescript setup
+nx g @nrwl/workspace:library data # This generates a barebone library with only Typescript setup
 ```
 
 ```treeview
@@ -257,7 +257,7 @@ const todos: Todo[] = [{ title: 'Todo 1' }, { title: 'Todo 2' }];
 //...
 ```
 
-After this refactor, the backend and the frontend will share the same definition of `Todo` and never get out of sync. Being able to factor code into a lot of small libraries with a well-defined public API, which you can then use across both the backend and the frontend, is a key feature of Nx. You can read more about it in our [Develop like Google Guide](/web/fundamentals/develop-like-google).
+After this refactor, the backend and the frontend will share the same definition of `Todo` and never get out of sync. Being able to factor code into a lot of small libraries with a well-defined public API, which you can then use across both the backend and the frontend, is a key feature of Nx. You can read more about it in our [Develop like Google Guide](/web/fundamentals/monorepos-automation).
 
 ## Nx is Smart
 
@@ -271,7 +271,7 @@ npm run dep-graph
 
 ![Full Stack Dependencies](./full-stack-deps.png)
 
-If you change the data library, Nx will know that both the backend and the frontend can be affected by the change. This information can be used to test and build all areas affected by a change making Nx a powerful full-stack development environment that scales. You can read more about this Nx capability in [Building Like Google](/web/fundamentals/develop-like-google).
+If you change the data library, Nx will know that both the backend and the frontend can be affected by the change. This information can be used to test and build all areas affected by a change making Nx a powerful full-stack development environment that scales. You can read more about this Nx capability in [Building Like Google](/web/fundamentals/monorepos-automation).
 
 ## Summary
 

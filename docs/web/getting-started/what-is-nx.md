@@ -1,23 +1,19 @@
 # Nx
 
-Tools for Modern Web Development.
+Nx is a set of Extensible Dev Tools for Monorepos.
 
 With Nx, you can:
 
-- Use modern tools like Cypress, Jest, Prettier, TypeScript, ...
-- Build full-stack applications using Web Components and Node.js
-- Use effective development practices pioneered at Google, Facebook and Microsoft
+- Use [modern tools](/web/fundamentals/use-modern-tools) like Cypress, Jest, Prettier, TypeScript, and others.
+- Build [full-stack applications](/web/fundamentals/build-full-stack-applications) using React, and Node.js.
+- Use [effective development practices](/web/fundamentals/monorepos-automation) pioneered at Google, Facebook, and Microsoft.
 
 ## Getting Started
 
 - New to Nx? Have a look at the [Getting Started](/web/getting-started/getting-started) guide.
-
-## Learn Nx
-
-- [How Nx helps you use modern tools like Cypress, Jest, and Nest](/web/fundamentals/use-modern-tools)
-- [How Nx helps you build full-stack applications using Web Components and Node.js](/web/fundamentals/build-full-stack-applications)
-- [How Nx helps you develop like Google](/web/fundamentals/develop-like-google)
-- [Books, talks, and blog posts about Nx](/web/getting-started/resources)
+- Complete the [tutorial](/web/tutorial/01-create-application) on using Nx build a full stack application.
+- Use the [Nx CLI](/web/guides/cli) to perform various development tasks.
+- Learn more about Nx from books, blog posts, talks on our [resources page](/web/getting-started/resources).
 
 ## Contribute
 

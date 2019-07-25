@@ -48,35 +48,35 @@ React Applications:
 
 ```bash
 yarn add --dev @nrwl/react # Add React Capabilities to a workspace
-ng g @nrwl/react:application myapp # Generate a React Application
+nx g @nrwl/react:application myapp # Generate a React Application
 ```
 
 Applications built out of Web Components:
 
 ```bash
 yarn add --dev @nrwl/react # Add React Capabilities to a workspace
-ng g @nrwl/react:application myapp # Generate a React Application
+nx g @nrwl/react:application myapp # Generate a React Application
 ```
 
 Angular Applications:
 
 ```bash
 yarn add --dev @nrwl/angular # Add Angular Capabilities to a workspace
-ng g @nrwl/angular:application myapp # Generate an Angular Application
+nx g @nrwl/angular:application myapp # Generate an Angular Application
 ```
 
 NestJS Applications:
 
 ```bash
 yarn add --dev @nrwl/nest # Add Nest Capabilities to a workspace
-ng g @nrwl/nest:application myapp # Generate a Nest Application
+nx g @nrwl/nest:application myapp # Generate a Nest Application
 ```
 
 Express Applications:
 
 ```bash
 yarn add --dev @nrwl/express # Add Express Capabilities to a workspace
-ng g @nrwl/express:application myapp # Generate an Express Application
+nx g @nrwl/express:application myapp # Generate an Express Application
 ```
 
 And even more!
@@ -115,10 +115,10 @@ Creating a new application will result in something like this:
 
 No matter what what kind of application it is, you can run:
 
-- `ng serve myapp` to serve the application
-- `ng build myapp` to build the application
-- `ng test myapp` to test the application
-- `ng lint myapp` to lint the application
+- `nx serve myapp` to serve the application
+- `nx build myapp` to build the application
+- `nx test myapp` to test the application
+- `nx lint myapp` to lint the application
 
 ### Libraries
 
@@ -127,19 +127,19 @@ Nx can also generate many different types of libraries:
 React Libraries:
 
 ```bash
-ng g @nrwl/react:library mylib # Generate a React Library
+nx g @nrwl/react:library mylib # Generate a React Library
 ```
 
 Angular Libraries:
 
 ```bash
-ng g @nrwl/angular:library mylib # Generate an Angular Library
+nx g @nrwl/angular:library mylib # Generate an Angular Library
 ```
 
 Typescript Libraries:
 
 ```bash
-ng g @nrwl/workspace:library mylib # Generate a Typescript Library
+nx g @nrwl/workspace:library mylib # Generate a Typescript Library
 ```
 
 Creating a new library will result in something like this:
@@ -167,12 +167,12 @@ Creating a new library will result in something like this:
 
 No matter what kind of library it is, you can run:
 
-- `ng test mylib` to test the library
-- `ng lint mylib` to lint the library
+- `nx test mylib` to test the library
+- `nx lint mylib` to lint the library
 
 > By default, libraries are only buildable in the context of an application.
 
-> To be able to build a library independently, you can pass `--publishable` when creating it. You can then run `ng build mylib` to build it, and then publish the results to an NPM registry.
+> To be able to build a library independently, you can pass `--publishable` when creating it. You can then run `nx build mylib` to build it, and then publish the results to an NPM registry.
 
 You can import the library like this:
 

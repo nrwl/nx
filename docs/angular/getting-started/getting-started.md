@@ -1,14 +1,12 @@
 # Getting Started
 
-## TLDR
+## Overview
 
-```bash
-npx create-nx-workspace myapp --preset=angular
-cd myapp
-ng serve myapp
-```
+This page shows you how to get up and running quickly with an Nx workspace.
 
-## Creating an Nx Workspace
+## Creating the workspace
+
+You get started with Nx by running a command that uses your package manager to setup your initial workspace.
 
 **Using `npx`**
 
@@ -26,6 +24,12 @@ npm init nx-workspace myworkspace
 
 ```bash
 yarn create nx-workspace myworkspace
+```
+
+After creating the workspace, change into the newly created workspace directory.
+
+```bash
+cd myworkspace
 ```
 
 ### Adding to an Existing Angular CLI workspace
@@ -73,7 +77,7 @@ ng add @nrwl/express # Adds Express capabilities
 ng add @nrwl/nest # Adds Nest capabilities
 ```
 
-## Creating Your First Application
+## Creating an application
 
 After the capability is added, you can now create your first application via:
 
@@ -81,7 +85,7 @@ After the capability is added, you can now create your first application via:
 ng g @nrwl/angular:application myapp
 ```
 
-The result will look like this:
+The following files and folders are generated in the new application:
 
 ```treeview
 <workspace name>/
@@ -131,9 +135,19 @@ The result will look like this:
 
 All the files that the Angular CLI would have in a new project are still here, just in a different folder structure which makes it easier to create more applications and libraries in the future.
 
-## Serving Application
+## Serving an Application
 
-Run `ng serve myapp` to serve the newly generated application!
+To serve the newly generated application, run:
+
+```bash
+nx serve myapp
+```
+
+When the app is ready, visit `http://localhost:4200` in your browser.
+
+That's it! You've created your first application in an Nx workspace. To become more familiar with Nx:
+
+- Go through a [complete tutorial](/angular/tutorial/01-create-application) on using Nx to build a full-stack application.
 
 ## Using Angular Console
 

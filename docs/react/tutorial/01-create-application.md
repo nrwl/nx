@@ -10,7 +10,7 @@ In this tutorial you will use Nx to build a full-stack application out of common
 npx create-nx-workspace@latest myorg
 ```
 
-When asked about 'preset', select `empty`.
+When asked about 'preset', select `empty`, and `Nx` for the CLI.
 
 ```treeview
 myorg/
@@ -25,17 +25,19 @@ myorg/
 └── README.md
 ```
 
-This is an empty Nx workspace without any applications or libraries: nothing to run and nothing to test.
+This is an empty Nx workspace without any applications or libraries: nothing to run, and nothing to test.
 
 ## Create an React Application
 
 First, we must add the capability to create [React](https://reactjs.org/) applications via:
 
+Using `npm`:
+
 ```bash
 npm install --save-dev @nrwl/react
 ```
 
-or
+Using `yarn`:
 
 ```bash
 yarn add --dev @nrwl/react
@@ -44,7 +46,7 @@ yarn add --dev @nrwl/react
 Now, create your first React application.
 
 ```bash
-ng g @nrwl/react:application todos
+nx generate @nrwl/react:application todos
 ```
 
 Nx will ask you a few questions about the application you are trying to create: the directory it will be placed it, the tags used for linting, etc.. As your workspace grows, those things become really important. For now the default answers are good enough.
@@ -106,7 +108,7 @@ The generate command added two projects to our workspace:
 Now that the application is setup, run it locally via:
 
 ```bash
-ng serve todos
+nx serve todos
 ```
 
 !!!!!
