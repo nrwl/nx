@@ -171,8 +171,6 @@ server.on('error', console.error);
 
 Now, run `nx serve frontend & nx serve api`, and open [http://localhost:4200](http://localhost:4200) to see both the frontend and backend working:
 
-![Full Stack Application Screenshot](./full-stack-app.png)
-
 The application works, but you have a small problem. The `Todo` interface is defined twice: once on the frontend, once on the backend. This duplication will inevitably result in the two interfaces going out of sync, which means that runtime errors will creep in. It's better to share this interface.
 
 ## Sharing Code Between Frontend and Backend
@@ -245,7 +243,7 @@ const todos: Todo[] = [{ title: 'Todo 1' }, { title: 'Todo 2' }];
 //...
 ```
 
-After this refactor, the backend and the frontend will share the same definition of `Todo` and never get out of sync. Being able to factor code into a lot of small libraries with a well-defined public API, which you can then use across both the backend and the frontend, is a key feature of Nx. You can read more about it in our [Develop like Google Guide](/react/fundamentals/monorepos-automation).
+After this refactor, the backend and the frontend will share the same definition of `Todo` and never get out of sync. Being able to factor code into a lot of small libraries with a well-defined public API, which you can then use across both the backend and the frontend, is a key feature of Nx. You can read more about it in our [Monorepos and Automation](/react/fundamentals/monorepos-automation) guide.
 
 ## Nx is Smart
 
@@ -259,7 +257,7 @@ npm run dep-graph
 
 ![Full Stack Dependencies](./full-stack-deps.png)
 
-If you change the data library, Nx will know that both the backend and the frontend can be affected by the change. This information can be used to test and build all areas affected by a change making Nx a powerful full-stack development environment that scales. You can read more about this Nx capability in [Building Like Google](/react/fundamentals/monorepos-automation).
+If you change the data library, Nx will know that both the backend and the frontend can be affected by the change. This information can be used to test and build all areas affected by a change making Nx a powerful full-stack development environment that scales. You can read more about this Nx capability in the[Monorepos and Automation](/react/fundamentals/monorepos-automation) guide.
 
 ## Summary
 
