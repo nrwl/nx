@@ -132,7 +132,7 @@ function connectFrontendAndApi(options: Schema) {
       )
     ]);
 
-    const scope = options.npmScope ? options.npmScope : options.name;
+    const scope = options.npmScope;
     const style = options.style ? options.style : 'css';
     host.overwrite(
       `apps/${options.name}/src/app/app.component.ts`,
