@@ -261,7 +261,7 @@ In addition to implementing monorepo-style of development, Nx brings in another 
 
 ### Workspace Schematics
 
-Schematics is what what powers all Angular CLI (and Nx) code generation. With Nx, you can easily create workspace-specific schematics that you can then use to enforce your own best practices. Read more about [Workspace Schematics](/angular/guides/tools-workspace-schematics).
+Schematics is what what powers all Angular CLI (and Nx) code generation. With Nx, you can easily create workspace-specific schematics that you can then use to enforce your own best practices. Read more about workspace schematics [here](https://auth0.com/blog/create-custom-schematics-with-nx/).
 
 ### Code Formatting
 
