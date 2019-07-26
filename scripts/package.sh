@@ -31,7 +31,7 @@ fi
 
 if [[ $NX_VERSION == "*" ]]; then
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -E -i "" "s/\"@nrwl\/([^\"]+)\": \"\\*\"/\"@nrwl\/\1\": \"file:$PWD\/\1\"/" {schematics,jest,web,react,node,express,nest,cypress,angular,workspace,cli,tao,create-nx-workspace}/package.json
+        sed -E -i "" "s|\"@nrwl\/([^\"]+)\": \"\\*\"|\"@nrwl\/\1\": \"file:$PWD\/\1\"|" {schematics,jest,web,react,node,express,nest,cypress,angular,workspace,cli,tao,create-nx-workspace}/package.json
     else
     echo $PWD
         sed -E -i "s|\"@nrwl\/([^\"]+)\": \"\\*\"|\"@nrwl\/\1\": \"file:$PWD\/\1\"|" {schematics,jest,web,react,node,express,nest,cypress,angular,workspace,cli,tao,create-nx-workspace}/package.json
