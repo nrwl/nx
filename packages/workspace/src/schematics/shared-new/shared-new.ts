@@ -27,6 +27,7 @@ import { platform } from 'os';
 export interface Schema {
   directory: string;
   name: string;
+  appName: string;
   npmScope?: string;
   skipInstall?: boolean;
   skipGit?: boolean;
@@ -62,11 +63,15 @@ function createPresetTaskExecutor(cli: string, opts: Schema) {
         const args = [
           `g`,
           `@nrwl/workspace:preset`,
-          `--name=${opts.name}`,
+          `--name=${opts.appName}`,
           opts.style ? `--style=${opts.style}` : null,
-          opts.npmScope ? `--npmScope=${opts.npmScope}` : null,
+          opts.npmScope
+            ? `--npmScope=${opts.npmScope}`
+            : `--npmScope=${opts.name}`,
           opts.preset ? `--preset=${opts.preset}` : null
         ].filter(e => !!e);
+
+        console.log('here', path.join(process.cwd(), opts.directory));
         return new Observable(obs => {
           spawn(executable, args, spawnOptions).on('close', (code: number) => {
             if (code === 0) {

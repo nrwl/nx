@@ -40,7 +40,10 @@ const nxVersion = 'NX_VERSION';
 const angularCliVersion = 'ANGULAR_CLI_VERSION';
 
 const parsedArgs = yargsParser(process.argv, {
-  string: ['cli', 'preset'],
+  string: ['cli', 'preset', 'appName'],
+  alias: {
+    appName: 'app-name'
+  },
   boolean: ['help']
 });
 
@@ -48,14 +51,17 @@ if (parsedArgs.help) {
   showHelp();
   process.exit(0);
 }
-validateInput(parsedArgs);
 const packageManager = determinePackageManager();
-determinePreset(parsedArgs).then(preset => {
-  return determineCli(preset, parsedArgs).then(cli => {
-    const tmpDir = createSandbox(packageManager, cli);
-    createApp(tmpDir, cli, parsedArgs, preset);
-    showNxWarning();
-    showCliWarning(preset, parsedArgs);
+determineWorkspaceName(parsedArgs).then(name => {
+  determinePreset(parsedArgs).then(preset => {
+    return determineAppName(preset, parsedArgs).then(appName => {
+      return determineCli(preset, parsedArgs).then(cli => {
+        const tmpDir = createSandbox(packageManager, cli);
+        createApp(tmpDir, cli, parsedArgs, name, preset, appName);
+        showNxWarning();
+        showCliWarning(preset, parsedArgs);
+      });
+    });
   });
 });
 
@@ -72,6 +78,8 @@ function showHelp() {
     preset                    What to create in a new workspace (options: ${presetOptions
       .map(o => '"' + o.value + '"')
       .join(', ')})
+
+    appName                   the name of the application created by some presets  
 
     cli                       CLI to power the Nx workspace (options: "nx", "angular")
 
@@ -103,32 +111,46 @@ function determinePackageManager() {
   return packageManager;
 }
 
-function validateInput(parsedArgs: any) {
-  const projectName = parsedArgs._[2];
+function determineWorkspaceName(parsedArgs: any) {
+  const workspaceName = parsedArgs._[2];
 
-  if (!projectName) {
-    output.error({
-      title: 'A project name is required when creating a new workspace',
-      bodyLines: [
-        output.colors.gray('For example:'),
-        '',
-        `${output.colors.gray('>')} create-nx-workspace my-new-workspace`
-      ]
-    });
-    process.exit(1);
+  if (workspaceName) {
+    return Promise.resolve(workspaceName);
+  } else {
+    return inquirer
+      .prompt([
+        {
+          name: 'WorkspaceName',
+          message: `Workspace name (e.g., org name)    `,
+          type: 'string'
+        }
+      ])
+      .then(a => {
+        if (!a.WorkspaceName) {
+          output.error({
+            title: 'Invalid workspace name',
+            bodyLines: [`Workspace name cannot be empty`]
+          });
+          process.exit(1);
+        }
+        return a.WorkspaceName;
+      });
   }
 
-  return projectName;
+  return workspaceName;
 }
 
 function determinePreset(parsedArgs: any): Promise<string> {
   if (parsedArgs.preset) {
     if (presetOptions.map(o => o.value).indexOf(parsedArgs.preset) === -1) {
-      console.error(
-        `Invalid preset. It must be one of the following: ${presetOptions
-          .map(o => '"' + o.value + '"')
-          .join(', ')}.`
-      );
+      output.error({
+        title: 'Invalid preset',
+        bodyLines: [
+          `It must be one of the following:`,
+          '',
+          ...presetOptions.map(o => o.value)
+        ]
+      });
       process.exit(1);
     } else {
       return Promise.resolve(parsedArgs.preset);
@@ -148,6 +170,35 @@ function determinePreset(parsedArgs: any): Promise<string> {
   }
 }
 
+function determineAppName(preset: string, parsedArgs: any): Promise<string> {
+  if (preset === 'empty') {
+    return Promise.resolve('');
+  }
+
+  if (parsedArgs.appName) {
+    return Promise.resolve(parsedArgs.appName);
+  } else {
+    return inquirer
+      .prompt([
+        {
+          name: 'AppName',
+          message: `Application name                   `,
+          type: 'string'
+        }
+      ])
+      .then(a => {
+        if (!a.AppName) {
+          output.error({
+            title: 'Invalid name',
+            bodyLines: [`Name cannot be empty`]
+          });
+          process.exit(1);
+        }
+        return a.AppName;
+      });
+  }
+}
+
 function determineCli(preset: string, parsedArgs: any) {
   const angular = {
     package: '@angular/cli',
@@ -163,9 +214,10 @@ function determineCli(preset: string, parsedArgs: any) {
 
   if (parsedArgs.cli) {
     if (['nx', 'angular'].indexOf(parsedArgs.cli) === -1) {
-      console.error(
-        `Invalid cli. It must be one of the following: "nx", "angular".`
-      );
+      output.error({
+        title: 'Invalid cli',
+        bodyLines: [`It must be one of the following:`, '', 'nx', 'angular']
+      });
       process.exit(1);
     }
     return Promise.resolve(parsedArgs.cli === 'angular' ? angular : nx);
@@ -231,16 +283,22 @@ function createApp(
   tmpDir: string,
   cli: { command: string },
   parsedArgs: any,
-  preset: string
+  name: string,
+  preset: string,
+  appName: string
 ) {
   // creating the app itself
-  const args = process.argv
-    .slice(2)
-    .filter(a => !a.startsWith('--cli')) // not used by the new command
-    .map(a => `"${a}"`)
-    .join(' ');
+  const args = [
+    name,
+    ...process.argv
+      .slice(parsedArgs._[2] ? 3 : 2)
+      .filter(a => !a.startsWith('--cli')) // not used by the new command
+      .map(a => `"${a}"`)
+  ].join(' ');
 
-  const presetArg = parsedArgs.preset ? '' : ` --preset=${preset}`;
+  const presetArg = parsedArgs.preset
+    ? ''
+    : ` --preset=${preset} --appName=${appName}`;
 
   console.log(`new ${args}${presetArg} --collection=@nrwl/workspace`);
   execSync(

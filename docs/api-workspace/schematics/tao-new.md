@@ -11,6 +11,12 @@ ng generate tao-new ...
 
 ## Options
 
+### appName
+
+Type: `string`
+
+Application name.
+
 ### commit
 
 Default: `true`
