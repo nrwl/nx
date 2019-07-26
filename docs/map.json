@@ -268,10 +268,6 @@
           {
             "name": "Nx CLI",
             "id": "cli"
-          },
-          {
-            "name": "Updating Nx",
-            "id": "update"
           }
         ]
       }
@@ -381,10 +377,6 @@
           {
             "name": "Nx CLI",
             "id": "cli"
-          },
-          {
-            "name": "Updating Nx",
-            "id": "update"
           }
         ]
       }
