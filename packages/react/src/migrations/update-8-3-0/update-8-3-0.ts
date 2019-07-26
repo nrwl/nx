@@ -96,14 +96,14 @@ function updateDependencies(tree: Tree) {
 }
 
 function updateImports(host: Tree) {
-  let ig = ignore().add(['*', '!*.ts', '!*.tsx']); // include only .tsx? files
+  let ig = ignore();
 
   if (host.exists('.gitignore')) {
     ig = ig.add(host.read('.gitignore').toString());
   }
 
   host.visit(path => {
-    if (ig.ignores(relative('/', path))) {
+    if (ig.ignores(relative('/', path)) || !/\.tsx?$/.test(path)) {
       return;
     }
 
