@@ -74,6 +74,14 @@ If you are an Angular user, you can also add Nx to your existing Angular CLI pro
 ng add @nrwl/workspace
 ```
 
+### Command Line Arguments
+
+```
+--cli: (npm | yarn)
+--preset: (empty | angular | react | web | full-stack)
+--directory: Custom Directory where nx should create workspace
+```
+
 ## Creating First Application
 
 By default, an Nx workspace starts blank. There are no applications to build, serve, and test. To create one, you need to add capabilities to the workspace.
