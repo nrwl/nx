@@ -40,7 +40,7 @@ const nxVersion = 'NX_VERSION';
 const angularCliVersion = 'ANGULAR_CLI_VERSION';
 
 const parsedArgs = yargsParser(process.argv, {
-  string: ['cli', 'preset'],
+  string: ['cli', 'preset', 'directory'],
   boolean: ['help']
 });
 
@@ -52,8 +52,8 @@ validateInput(parsedArgs);
 const packageManager = determinePackageManager();
 determinePreset(parsedArgs).then(preset => {
   return determineCli(preset, parsedArgs).then(cli => {
-    const tmpDir = createSandbox(packageManager, cli);
-    createApp(tmpDir, cli, parsedArgs, preset);
+    const dir = createSandbox(packageManager, cli, parsedArgs);
+    createApp(dir, cli, parsedArgs, preset);
     showNxWarning();
     showCliWarning(preset, parsedArgs);
   });
@@ -201,14 +201,21 @@ function determineCli(preset: string, parsedArgs: any) {
   }
 }
 
+function determineDirectory(parsedArgs: any): string {
+  return parsedArgs.directory ? parsedArgs.directory : dirSync().name;
+}
+
 function createSandbox(
   packageManager: string,
-  cli: { package: string; version: string }
+  cli: { package: string; version: string },
+  parsedArgs: any
 ) {
   console.log(`Creating a sandbox with Nx...`);
-  const tmpDir = dirSync().name;
+
+  const dir = determineDirectory(parsedArgs);
+
   writeFileSync(
-    path.join(tmpDir, 'package.json'),
+    path.join(dir, 'package.json'),
     JSON.stringify({
       dependencies: {
         '@nrwl/workspace': nxVersion,
@@ -220,11 +227,11 @@ function createSandbox(
   );
 
   execSync(`${packageManager} install --silent`, {
-    cwd: tmpDir,
+    cwd: dir,
     stdio: [0, 1, 2]
   });
 
-  return tmpDir;
+  return dir;
 }
 
 function createApp(
