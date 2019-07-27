@@ -216,7 +216,7 @@ function updateProject(options: NormalizedSchema): Rule {
           angularSchematicNames.forEach(type => {
             const schematic = `@schematics/angular:${type}`;
             if (schematic in fixedProject.schematics) {
-              fixedProject.schematics[`@nrwl/workspace:${type}`] =
+              fixedProject.schematics[`@nrwl/angular:${type}`] =
                 fixedProject.schematics[schematic];
               delete fixedProject.schematics[schematic];
             }
