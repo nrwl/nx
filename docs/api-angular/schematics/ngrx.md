@@ -101,4 +101,4 @@ Default: `classes`
 
 Type: `string`
 
-Specifies whether to use class-based or creator functions for actions, reducers, and effects.
+Specifies whether to use class-based or creator functions for actions, reducers, and effects. Use `creators` for creator functions.
