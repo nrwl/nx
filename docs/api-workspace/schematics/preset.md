@@ -11,6 +11,12 @@ ng generate preset ...
 
 ## Options
 
+### cli
+
+Type: `string`
+
+CLI powering the workspace.
+
 ### name
 
 Type: `string`

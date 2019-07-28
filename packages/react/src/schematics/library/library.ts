@@ -24,7 +24,7 @@ import {
   toFileName,
   updateJsonInTree,
   updateWorkspaceInTree,
-  addGlobalLint,
+  addLintFiles,
   generateProjectLint
 } from '@nrwl/workspace';
 import { join, normalize, Path } from '@angular-devkit/core';
@@ -47,7 +47,7 @@ export default function(schema: Schema): Rule {
     const options = normalizeOptions(schema);
 
     return chain([
-      addGlobalLint(options.linter),
+      addLintFiles(options.projectRoot, options.linter),
       createFiles(options),
       !options.skipTsConfig ? updateTsConfig(options) : noop(),
       addProject(options),

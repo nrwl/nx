@@ -17,7 +17,7 @@ import {
   updateJsonInTree,
   updateWorkspaceInTree,
   generateProjectLint,
-  addGlobalLint
+  addLintFiles
 } from '@nrwl/workspace';
 import { toFileName } from '@nrwl/workspace';
 import { getProjectConfig } from '@nrwl/workspace';
@@ -151,7 +151,7 @@ export default function(schema: Schema): Rule {
       ngAdd({
         skipFormat: true
       }),
-      addGlobalLint(options.linter),
+      addLintFiles(options.appProjectRoot, options.linter),
       addAppFiles(options),
       updateWorkspaceJson(options),
       updateNxJson(options),

@@ -28,8 +28,11 @@ export default function(options: Schema): Rule {
 }
 
 function createPreset(options: Schema): Rule {
+  // const linter = options.cli === 'angular' ? 'tslint' : 'eslint';
+  const linter = 'tslint';
+
   if (options.preset === 'empty') {
-    return noop();
+    return setDefaultLinter(linter);
   } else if (options.preset === 'angular') {
     return chain([
       externalSchematic(
@@ -51,11 +54,13 @@ function createPreset(options: Schema): Rule {
         {
           name: options.name,
           style: options.style,
-          babel: true
+          babel: true,
+          linter
         },
         { interactive: false }
       ),
-      setDefaultCollection('@nrwl/react')
+      setDefaultCollection('@nrwl/react'),
+      setDefaultLinter(linter)
     ]);
   } else if (options.preset === 'web-components') {
     return chain([
@@ -64,13 +69,15 @@ function createPreset(options: Schema): Rule {
         'application',
         {
           name: options.name,
-          style: options.style
+          style: options.style,
+          linter
         },
         { interactive: false }
       ),
-      setDefaultCollection('@nrwl/web')
+      setDefaultCollection('@nrwl/web'),
+      setDefaultLinter(linter)
     ]);
-  } else {
+  } else if (options.preset === 'angular-nest') {
     return chain([
       externalSchematic(
         '@nrwl/angular',
@@ -95,6 +102,10 @@ function createPreset(options: Schema): Rule {
       setDefaultCollection('@nrwl/angular'),
       connectFrontendAndApi(options)
     ]);
+  } else if (options.preset === 'react-express') {
+    throw new Error(`Not implemented yet`);
+  } else {
+    throw new Error(`Invalid preset ${options.preset}`);
   }
 }
 
@@ -231,6 +242,20 @@ function setDefaultCollection(defaultCollection: string) {
       json.cli = {};
     }
     json.cli.defaultCollection = defaultCollection;
+    return json;
+  });
+}
+
+function setDefaultLinter(linter: string) {
+  return updateWorkspaceInTree(json => {
+    if (!json.schematics) {
+      json.schematics = {};
+    }
+    json.schematics['@nrwl/workspace'] = { linter };
+    json.schematics['@nrwl/cypress'] = { linter };
+    json.schematics['@nrwl/react'] = { linter };
+    json.schematics['@nrwl/web'] = { linter };
+    json.schematics['@nrwl/node'] = { linter };
     return json;
   });
 }

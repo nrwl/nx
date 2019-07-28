@@ -16,6 +16,10 @@
       "description": "Npm scope for importing libs.",
       "type": "string"
     },
+    "cli": {
+      "description": "CLI powering the workspace.",
+      "type": "string"
+    },
     "style": {
       "description": "The file extension to be used for style files.",
       "type": "string",

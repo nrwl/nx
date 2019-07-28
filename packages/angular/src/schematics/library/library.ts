@@ -23,7 +23,7 @@ import {
   updateJsonInTree,
   readJsonInTree,
   offsetFromRoot,
-  addGlobalLint
+  addLintFiles
 } from '@nrwl/workspace';
 import { addGlobal, addIncludeToTsConfig, insert } from '@nrwl/workspace';
 import { toClassName, toFileName, toPropertyName } from '@nrwl/workspace';
@@ -431,7 +431,7 @@ export default function(schema: Schema): Rule {
     }
 
     return chain([
-      addGlobalLint('tslint'),
+      addLintFiles(options.projectRoot, 'tslint', true),
       addUnitTestRunner(options),
       externalSchematic('@schematics/angular', 'library', {
         name: options.name,
