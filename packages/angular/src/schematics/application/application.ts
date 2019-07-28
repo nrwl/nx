@@ -26,7 +26,7 @@ import {
   toFileName,
   updateJsonInTree,
   updateWorkspace,
-  addGlobalLint
+  addLintFiles
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import ngAdd from '../ng-add/ng-add';
@@ -369,7 +369,7 @@ export default function(schema: Schema): Rule {
         ...options,
         skipFormat: true
       }),
-      addGlobalLint('tslint'),
+      addLintFiles(options.appProjectRoot, 'tslint', true),
       externalSchematic('@schematics/angular', 'application', {
         name: options.name,
         inlineStyle: options.inlineStyle,

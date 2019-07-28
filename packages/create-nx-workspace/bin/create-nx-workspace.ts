@@ -28,10 +28,15 @@ const presetOptions = [
     name: 'react             [a workspace with a single React application]'
   },
   {
-    value: 'full-stack',
+    value: 'nest-angular',
     name:
-      'full-stack        [a workspace with a full stack application (NestJS + Angular)]'
+      'angular-nest      [a workspace with a full stack application (Angular + Nest)]'
   }
+  // {
+  //   value: 'react-express',
+  //   name:
+  //     'react-express     [a workspace with a full stack application (React + Express)]'
+  // }
 ];
 
 const tsVersion = 'TYPESCRIPT_VERSION';
@@ -223,9 +228,13 @@ function determineCli(preset: string, parsedArgs: any) {
     return Promise.resolve(parsedArgs.cli === 'angular' ? angular : nx);
   }
 
-  if (preset == 'angular' || preset == 'full-stack') {
+  if (preset == 'angular' || preset == 'angular-nest') {
     return Promise.resolve(angular);
-  } else if (preset === 'web-components' || preset === 'react') {
+  } else if (
+    preset === 'web-components' ||
+    preset === 'react' ||
+    preset === 'react-express'
+  ) {
     return Promise.resolve(nx);
   } else {
     return inquirer
@@ -332,7 +341,7 @@ function showNxWarning() {
 
 function showCliWarning(preset: string, parsedArgs: any) {
   if (!parsedArgs.cli) {
-    if (preset == 'angular' || preset == 'full-stack') {
+    if (preset === 'angular' || preset === 'angular-nest') {
       output.addVerticalSeparator();
       output.note({
         title: `Because you selected an Angular-specific preset, we generated an Nx workspace powered by the Angular CLI.`,
@@ -340,7 +349,11 @@ function showCliWarning(preset: string, parsedArgs: any) {
           `Run 'create-nx-workspace --help' to see how to select a different CLI.`
         ]
       });
-    } else if (preset === 'web-components' || preset === 'react') {
+    } else if (
+      preset === 'web-components' ||
+      preset === 'react' ||
+      preset === 'react-express'
+    ) {
       output.addVerticalSeparator();
       output.note({
         title: `We generated an Nx workspace powered by the Nx CLi.`,

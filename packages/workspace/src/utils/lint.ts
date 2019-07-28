@@ -1,5 +1,6 @@
-import { Tree } from '@angular-devkit/schematics';
 import { join } from '@angular-devkit/core';
+import { Tree } from '@angular-devkit/schematics';
+import { offsetFromRoot } from './common';
 
 export function generateProjectLint(
   projectRoot: string,
@@ -16,21 +17,41 @@ export function generateProjectLint(
       }
     };
   } else if (linter === 'eslint') {
-    return {};
+    return {
+      builder: '@nrwl/linter:lint',
+      options: {
+        linter: 'eslint',
+        tsConfig: [tsConfigPath],
+        exclude: ['**/node_modules/**', '!' + projectRoot + '/**']
+      }
+    };
   } else {
     return undefined;
   }
 }
 
-export function addGlobalLint(linter: 'tslint' | 'eslint' | 'none') {
+export function addLintFiles(
+  projectRoot: string,
+  linter: 'tslint' | 'eslint' | 'none',
+  onlyGlobal = false
+) {
   return (host: Tree) => {
     if (linter === 'tslint') {
       if (!host.exists('/tslint.json')) {
         host.create('/tslint.json', globalTsLint);
       }
+      if (!onlyGlobal) {
+        host.create(
+          join(projectRoot as any, `tslint.json`),
+          JSON.stringify({
+            extends: `${offsetFromRoot(projectRoot)}tslint.json`,
+            rules: []
+          })
+        );
+      }
     } else if (linter === 'eslint') {
       if (!host.exists('/.eslintrc')) {
-        host.create('/.eslintrc', '');
+        host.create('/.eslintrc', '{}');
       }
     } else {
     }

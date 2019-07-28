@@ -24,7 +24,7 @@ import {
   formatFiles,
   updateWorkspaceInTree,
   generateProjectLint,
-  addGlobalLint
+  addLintFiles
 } from '@nrwl/workspace';
 import ngAdd from '../ng-add/ng-add';
 
@@ -153,7 +153,7 @@ export default function(schema: Schema): Rule {
       ngAdd({
         skipFormat: true
       }),
-      addGlobalLint(options.linter),
+      addLintFiles(options.appProjectRoot, options.linter),
       createApplicationFiles(options),
       updateNxJson(options),
       addProject(options),

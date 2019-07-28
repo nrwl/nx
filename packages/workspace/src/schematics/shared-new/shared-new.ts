@@ -32,7 +32,13 @@ export interface Schema {
   skipInstall?: boolean;
   skipGit?: boolean;
   style?: string;
-  preset: 'empty' | 'angular' | 'react' | 'web-components' | 'full-stack';
+  preset:
+    | 'empty'
+    | 'angular'
+    | 'react'
+    | 'web-components'
+    | 'angular-nest'
+    | 'react-express';
   commit?: { name: string; email: string; message?: string };
 }
 
@@ -68,10 +74,9 @@ function createPresetTaskExecutor(cli: string, opts: Schema) {
           opts.npmScope
             ? `--npmScope=${opts.npmScope}`
             : `--npmScope=${opts.name}`,
-          opts.preset ? `--preset=${opts.preset}` : null
+          opts.preset ? `--preset=${opts.preset}` : null,
+          `--cli=${cliCommand}`
         ].filter(e => !!e);
-
-        console.log('here', path.join(process.cwd(), opts.directory));
         return new Observable(obs => {
           spawn(executable, args, spawnOptions).on('close', (code: number) => {
             if (code === 0) {

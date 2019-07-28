@@ -21,7 +21,7 @@ import {
   toFileName,
   updateJsonInTree,
   generateProjectLint,
-  addGlobalLint
+  addLintFiles
 } from '@nrwl/workspace';
 import {
   addDepsToPackageJson,
@@ -62,7 +62,7 @@ export default function(schema: Schema): Rule {
       ngAdd({
         skipFormat: true
       }),
-      addGlobalLint(options.linter),
+      addLintFiles(options.appProjectRoot, options.linter),
       createApplicationFiles(options),
       updateNxJson(options),
       addProject(options),

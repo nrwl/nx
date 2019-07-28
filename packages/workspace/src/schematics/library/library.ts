@@ -19,7 +19,7 @@ import { updateJsonInTree, readJsonInTree } from '@nrwl/workspace';
 import { toFileName, names } from '@nrwl/workspace';
 import { formatFiles } from '@nrwl/workspace';
 import { offsetFromRoot } from '@nrwl/workspace';
-import { generateProjectLint, addGlobalLint } from '../../utils/lint';
+import { generateProjectLint, addLintFiles } from '../../utils/lint';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -91,7 +91,7 @@ export default function(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(schema);
     return chain([
-      addGlobalLint(options.linter),
+      addLintFiles(options.projectRoot, options.linter),
       createFiles(options),
       !options.skipTsConfig ? updateTsConfig(options) : noop(),
       addProject(options),

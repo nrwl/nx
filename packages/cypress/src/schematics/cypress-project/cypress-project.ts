@@ -14,7 +14,7 @@ import {
   NxJson,
   updateWorkspaceInTree,
   generateProjectLint,
-  addGlobalLint
+  addLintFiles
 } from '@nrwl/workspace';
 import { offsetFromRoot } from '@nrwl/workspace';
 import { toFileName } from '@nrwl/workspace';
@@ -87,7 +87,7 @@ function updateWorkspaceJson(options: CypressProjectSchema): Rule {
 export default function(options: CypressProjectSchema): Rule {
   options = normalizeOptions(options);
   return chain([
-    addGlobalLint(options.linter),
+    addLintFiles(options.projectRoot, options.linter),
     generateFiles(options),
     updateWorkspaceJson(options),
     updateNxJson(options)

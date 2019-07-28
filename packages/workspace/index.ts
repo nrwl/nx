@@ -57,7 +57,7 @@ export {
 
 export { getWorkspace, updateWorkspace } from './src/utils/workspace';
 export { addUpdateTask } from './src/utils/update-task';
-export { addGlobalLint, generateProjectLint } from './src/utils/lint';
+export { addLintFiles, generateProjectLint } from './src/utils/lint';
 
 export { formatFiles } from './src/utils/rules/format-files';
 export { deleteFile } from './src/utils/rules/deleteFile';

@@ -46,11 +46,11 @@ describe('preset', () => {
     ).toBe('@nrwl/web');
   });
 
-  describe('--preset full-stack', () => {
+  describe('--preset angular-nest', () => {
     it('should create files', async () => {
       const tree = await runSchematic(
         'preset',
-        { name: 'proj', preset: 'full-stack' },
+        { name: 'proj', preset: 'angular-nest' },
         projectTree
       );
       expect(tree.exists('/apps/proj/src/app/app.component.ts')).toBe(true);
@@ -63,7 +63,7 @@ describe('preset', () => {
     it('should work with unnormalized names', async () => {
       const tree = await runSchematic(
         'preset',
-        { name: 'myProj', preset: 'full-stack' },
+        { name: 'myProj', preset: 'angular-nest' },
         projectTree
       );
 
