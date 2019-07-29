@@ -44,6 +44,12 @@ Type: `boolean`
 
 Forces test results output highlighting even if stdout is not a TTY. (https://jestjs.io/docs/en/cli#colors)
 
+### config
+
+Type: `string`
+
+The path to a Jest config file specifying how to find and execute tests. If no rootDir is set in the config, the directory containing the config file is assumed to be the rootDir for the project. This can also be a JSON-encoded value which Jest will use as configuration
+
 ### coverage
 
 Type: `boolean`
@@ -110,7 +116,7 @@ Will not fail if no tests are found (for example while using `--testPathPattern`
 
 ### reporters
 
-Type: `string`
+Type: `array`
 
 Run tests with specified reporters. Reporter options are not available via CLI. Example with multiple reporters: jest --reporters="default" --reporters="jest-junit" (https://jestjs.io/docs/en/cli#reporters)
 

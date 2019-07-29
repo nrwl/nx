@@ -57,7 +57,8 @@ describe('Jest Builder', () => {
             ]
           }
         }),
-        watch: false
+        watch: false,
+        reporters: ['default']
       },
       ['/root/jest.config.js']
     );
@@ -73,7 +74,7 @@ describe('Jest Builder', () => {
       testNamePattern: 'should load',
       testPathPattern: '/test/path',
       colors: false,
-      reporters: '/test/path',
+      reporters: ['/test/path'],
       verbose: false,
       coverage: false,
       coverageReporters: 'test',
@@ -106,7 +107,7 @@ describe('Jest Builder', () => {
         testNamePattern: 'should load',
         testPathPattern: '/test/path',
         colors: false,
-        reporters: '/test/path',
+        reporters: ['/test/path'],
         verbose: false,
         coverageReporters: 'test',
         coverageDirectory: '/test/path',
@@ -149,6 +150,7 @@ describe('Jest Builder', () => {
         }),
         coverage: false,
         findRelatedTests: true,
+        reporters: ['default'],
         runInBand: true,
         testNamePattern: 'should load',
         watch: false
@@ -174,7 +176,7 @@ describe('Jest Builder', () => {
       testNamePattern: 'test',
       testPathPattern: '/test/path',
       colors: false,
-      reporters: '/test/path',
+      reporters: ['/test/path'],
       verbose: false,
       coverage: false,
       coverageReporters: 'test',
@@ -218,7 +220,7 @@ describe('Jest Builder', () => {
         testPathPattern: '/test/path',
         colors: false,
         verbose: false,
-        reporters: '/test/path',
+        reporters: ['/test/path'],
         coverageReporters: 'test',
         coverageDirectory: '/test/path',
         updateSnapshot: true,
@@ -257,6 +259,7 @@ describe('Jest Builder', () => {
             ]
           }
         }),
+        reporters: ['default'],
         setupTestFrameworkScriptFile: '/root/test.ts',
         watch: false
       },

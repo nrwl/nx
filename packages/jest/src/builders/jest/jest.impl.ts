@@ -18,6 +18,7 @@ const { runCLI } = require('jest');
 
 export interface JestBuilderOptions extends JsonObject {
   codeCoverage?: boolean;
+  config?: string;
   jestConfig: string;
   testFile?: string;
   setupFile?: string;
@@ -37,7 +38,7 @@ export interface JestBuilderOptions extends JsonObject {
   testNamePattern?: string;
   testPathPattern?: string;
   colors?: boolean;
-  reporters?: string;
+  reporters?: string[];
   verbose?: false;
   coverage?: false;
   coverageReporters?: string;
@@ -77,6 +78,7 @@ function run(
 
   const config: any = {
     _: [],
+    config: options.config,
     coverage: options.codeCoverage,
     bail: options.bail,
     ci: options.ci,
@@ -123,6 +125,10 @@ function run(
 
   if (options.clearCache) {
     config.clearCache = true;
+  }
+
+  if (!options.reporters || !options.reporters.length) {
+    config.reporters = ['default'];
   }
 
   return from(runCLI(config, [options.jestConfig])).pipe(

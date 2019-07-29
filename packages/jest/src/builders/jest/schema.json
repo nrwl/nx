@@ -7,6 +7,10 @@
       "description": "Indicates that test coverage information should be collected and reported in the output. (https://jestjs.io/docs/en/cli#coverage)",
       "type": "boolean"
     },
+    "config": {
+      "description": "The path to a Jest config file specifying how to find and execute tests. If no rootDir is set in the config, the directory containing the config file is assumed to be the rootDir for the project. This can also be a JSON-encoded value which Jest will use as configuration",
+      "type": "string"
+    },
     "clearCache": {
       "description": "Deletes the Jest cache directory and then exits without running tests. Will delete Jest's default cache directory. _Note: clearing the cache will reduce performance_.",
       "type": "boolean"
@@ -91,7 +95,10 @@
     },
     "reporters": {
       "description": "Run tests with specified reporters. Reporter options are not available via CLI. Example with multiple reporters: jest --reporters=\"default\" --reporters=\"jest-junit\" (https://jestjs.io/docs/en/cli#reporters)",
-      "type": "string"
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "verbose": {
       "description": "Display individual test results with the test suite hierarchy. (https://jestjs.io/docs/en/cli#verbose)"
