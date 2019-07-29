@@ -64,7 +64,7 @@ determineWorkspaceName(parsedArgs).then(name => {
         return determineCli(preset, parsedArgs).then(cli => {
           const tmpDir = createSandbox(packageManager, cli);
           createApp(tmpDir, cli, parsedArgs, name, preset, appName, style);
-          showNxWarning();
+          showNxWarning(name);
           showCliWarning(preset, parsedArgs);
         });
       });
@@ -368,9 +368,13 @@ function createApp(
   );
 }
 
-function showNxWarning() {
+function showNxWarning(workspaceName: string) {
   try {
-    execSync('nx --version', { stdio: ['ignore', 'ignore', 'ignore'] });
+    const pathToRunNxCommand = path.resolve(process.cwd(), workspaceName);
+    execSync('nx --version', {
+      cwd: pathToRunNxCommand,
+      stdio: ['ignore', 'ignore', 'ignore']
+    });
   } catch (e) {
     // no nx found
     output.addVerticalSeparator();
