@@ -10,7 +10,7 @@
       "$default": {
         "$source": "projectName"
       },
-      "x-prompt": "What is the name of the project for ths component?"
+      "x-prompt": "What is the name of the project for this component?"
     },
     "name": {
       "type": "string",
