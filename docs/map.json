@@ -24,7 +24,8 @@
           },
           {
             "name": "About",
-            "id": "about"
+            "id": "about",
+            "file": "shared/about"
           }
         ]
       },
@@ -106,23 +107,28 @@
         "itemList": [
           {
             "name": "Using Cypress",
-            "id": "modernize-cypress"
+            "id": "modernize-cypress",
+            "file": "shared/modernize-cypress"
           },
           {
             "name": "Using Jest",
-            "id": "modernize-jest"
+            "id": "modernize-jest",
+            "file": "shared/modernize-jest"
           },
           {
             "name": "Rebuilding and Retesting What is Affected",
-            "id": "monorepo-affected"
+            "id": "monorepo-affected",
+            "file": "shared/monorepo-affected"
           },
           {
-            "name": "Analysing & Visualizing Workspaces",
-            "id": "monorepo-dependency-diagrams"
+            "name": "Analyzing & Visualizing Workspaces",
+            "id": "monorepo-dependency-diagrams",
+            "file": "shared/monorepo-dependency-diagrams"
           },
           {
             "name": "Imposing Constraints on the Dependency Graph",
-            "id": "monorepo-tags"
+            "id": "monorepo-tags",
+            "file": "shared/monorepo-tags"
           },
           {
             "name": "Updating Nx",
@@ -150,7 +156,8 @@
           },
           {
             "name": "Using Nx at Enterprises",
-            "id": "monorepo-nx-enterprise"
+            "id": "monorepo-nx-enterprise",
+            "file": "shared/monorepo-nx-enterprise"
           },
           {
             "name": "Lazy Loading Code",
@@ -185,7 +192,8 @@
           },
           {
             "name": "About",
-            "id": "about"
+            "id": "about",
+            "file": "shared/about"
           }
         ]
       },
@@ -268,6 +276,36 @@
           {
             "name": "Nx CLI",
             "id": "cli"
+          },
+          {
+            "name": "Using Cypress",
+            "id": "modernize-cypress",
+            "file": "shared/modernize-cypress"
+          },
+          {
+            "name": "Using Jest",
+            "id": "modernize-jest",
+            "file": "shared/modernize-jest"
+          },
+          {
+            "name": "Rebuilding and Retesting What is Affected",
+            "id": "monorepo-affected",
+            "file": "shared/monorepo-affected"
+          },
+          {
+            "name": "Analyzing & Visualizing Workspaces",
+            "id": "monorepo-dependency-diagrams",
+            "file": "shared/monorepo-dependency-diagrams"
+          },
+          {
+            "name": "Using Nx at Enterprises",
+            "id": "monorepo-nx-enterprise",
+            "file": "shared/monorepo-nx-enterprise"
+          },
+          {
+            "name": "Imposing Constraints on the Dependency Graph",
+            "id": "monorepo-tags",
+            "file": "shared/monorepo-tags"
           }
         ]
       }
@@ -294,7 +332,8 @@
           },
           {
             "name": "About",
-            "id": "about"
+            "id": "about",
+            "file": "shared/about"
           }
         ]
       },
@@ -377,6 +416,36 @@
           {
             "name": "Nx CLI",
             "id": "cli"
+          },
+          {
+            "name": "Using Cypress",
+            "id": "modernize-cypress",
+            "file": "shared/modernize-cypress"
+          },
+          {
+            "name": "Using Jest",
+            "id": "modernize-jest",
+            "file": "shared/modernize-jest"
+          },
+          {
+            "name": "Rebuilding and Retesting What is Affected",
+            "id": "monorepo-affected",
+            "file": "shared/monorepo-affected"
+          },
+          {
+            "name": "Analyzing & Visualizing Workspaces",
+            "id": "monorepo-dependency-diagrams",
+            "file": "shared/monorepo-dependency-diagrams"
+          },
+          {
+            "name": "Using Nx at Enterprises",
+            "id": "monorepo-nx-enterprise",
+            "file": "shared/monorepo-nx-enterprise"
+          },
+          {
+            "name": "Imposing Constraints on the Dependency Graph",
+            "id": "monorepo-tags",
+            "file": "shared/monorepo-tags"
           }
         ]
       }

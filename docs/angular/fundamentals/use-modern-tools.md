@@ -90,7 +90,7 @@ ng g @nrwl/node:application api # Create a Node Application
 
 ## Cypress
 
-![Cypress logo](../../shared/cypress-logo.png)
+![Cypress logo](/shared/cypress-logo.png)
 
 Cypress is an e2e test runner built for modern web. It has a lot of great features:
 
@@ -149,7 +149,7 @@ To use Protractor instead of Cypress, run `ng g @nrwl/angular:application fronte
 
 ## Jest
 
-![Jest logo](../../shared/jest-logo.png)
+![Jest logo](/shared/jest-logo.png)
 
 Jest is a fast 0-setup testing framework from Facebook.
 
@@ -194,7 +194,7 @@ To use Karma instead of Jest, run `ng g @nrwl/angular:application frontend --uni
 
 ## Prettier
 
-![Prettier logo](./prettier-logo.png)
+![Prettier logo](/shared/prettier-logo.png)
 
 Prettier is an opinionated code formatter. An Nx workspace comes with Prettier preconfigured.
 
@@ -215,7 +215,7 @@ Prettier is an opinionated code formatter. An Nx workspace comes with Prettier p
 
 You can run:
 
-- `yarn format:write` to format the files
-- `yarn format:check` to check the formatted files
+- `nx format:write` to format the files
+- `nx format:check` to check the formatted files
 
 Read more about [Prettier](https://prettier.io).

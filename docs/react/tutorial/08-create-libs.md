@@ -47,7 +47,6 @@ import React from 'react';
 
 import './ui.css';
 
-/* tslint:disable:no-empty-interface */
 export interface UiProps {}
 
 export const Ui = (props: UiProps) => {

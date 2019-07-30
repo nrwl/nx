@@ -350,7 +350,7 @@ Having both frontend and backend code is already something amazing. In just minu
 But Nx can do a lot more than that. In Nx, your libraries, backend applications, frontend applications are all part of the same dependency graph, which you can see via:
 
 ```bash
-npm run dep-graph
+nx dep-graph
 ```
 
 ![Full Stack Dependencies](./full-stack-deps.png)

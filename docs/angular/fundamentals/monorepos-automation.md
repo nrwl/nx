@@ -190,7 +190,7 @@ An Nx workspace can contain dozens (or hundreds) of applications and libraries. 
 
 Previously, a senior architect would create an ad-hoc dependency diagram and upload it to a corporate wiki. The diagram is not even correct on Day 1, and gets more and more out of sync with every passing day.
 
-With Nx, you can do better than that. You can run `yarn dep-graph` to see a current dependency diagram of the workspace: what apps and libs are there, how they depend on each other, what is loaded lazily and what is not. Nx uses code analysis to collect this information. Read more about [Analyzing and Visualizing Workspaces](/angular/guides/monorepo-dependency-diagrams).
+With Nx, you can do better than that. You can run `nx dep-graph` to see a current dependency diagram of the workspace: what apps and libs are there, how they depend on each other, what is loaded lazily and what is not. Nx uses code analysis to collect this information. Read more about [Analyzing and Visualizing Workspaces](/angular/guides/monorepo-dependency-diagrams).
 
 ![Monorepo Diagram](./monorepo-diagram.png)
 
@@ -201,15 +201,15 @@ It can also help you answer questions like "what apps will have to be redeployed
 Because Nx understands how our applications and libraries depend on each other, it can verify that a code change to a reusable library does not break any applications and libraries depending on it.
 
 ```bash
-yarn affected:apps --base=master # prints the apps affected by a PR
+nx affected:apps  # prints the apps affected by a PR
 
-yarn affected:build --base=master # reruns build for all the projects affected by a PR
+nx affected:build  # reruns build for all the projects affected by a PR
 
-yarn affected:test --base=master # reruns unit tests for all the projects affected by a PR
+nx affected:test  # reruns unit tests for all the projects affected by a PR
 
-yarn affected:e2e --base=master # reruns e2e tests for all the projects affected by a PR
+nx affected:e2e  # reruns e2e tests for all the projects affected by a PR
 
-yarn affected --target=lint --base=master # reruns any target (for instance lint) for projects affected by a PR
+nx affected --target=lint  # reruns any target (for instance lint) for projects affected by a PR
 ```
 
 Nx will topologically sort the projects, and will run what it can in parallel. The fact that Nx can use its dependency graph to rebuild and retest the minimal number of projects necessary is crucial. Without this the repo will not scale beyond a handful of projects.
@@ -268,9 +268,9 @@ Schematics is what what powers all Angular CLI (and Nx) code generation. With Nx
 Pointing out code formatting issues during code reviews is not the best way to review code. That's why Nx comes with Prettier support. Run:
 
 ```bash
-yarn format:write # formats the files
+nx format:write # formats the files
 
-yarn format:check # checks that the formatting is correct (used in CI)
+nx format:check # checks that the formatting is correct (used in CI)
 ```
 
 Read more about it [here](/angular/guides/modernize-prettier).

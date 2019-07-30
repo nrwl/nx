@@ -14,10 +14,8 @@ First, use `nx.json` to annotate your projects with tags. In this example, we wi
 {
   "npmScope": "myorg",
   "implicitDependencies": {
-    "angular.json": "*",
     "package.json": "*",
     "tsconfig.json": "*",
-    "tslint.json": "*",
     "nx.json": "*"
   },
   "projects": {
@@ -53,7 +51,7 @@ First, use `nx.json` to annotate your projects with tags. In this example, we wi
 }
 ```
 
-Next open the top level `tslint.json` to add the constraints.
+Next open the top level `.eslintrc` or `tslint.json` to add the constraints.
 
 ```json
 {
@@ -93,8 +91,10 @@ Projects without any tags cannot depend on any other projects. If you add the fo
 
 If you try to violate the constrains, you will get an error:
 
-![dependency-graph-constraints-lint-error](../getting-started/lint-error.png)
+```
+A project tagged with "scope:admin" can only depend on projects tagged with "scoped:shared" or "scope:admin".
+```
 
 ## Multiple Dimensions
 
-The example above shows using a single dimension: `scope`. It's the most commonly used one. But you can find other dimensions useful. You can define which projects contain components, NgRx code, and features, so you, for instance, can disallow projects containing dumb UI components depend on NgRx. You can define which projects are experimental and which are stable, so stable applications cannot depend on experimental projects etc. You can define which projects have server-side code and which have client-side code to make sure your node app doesn't bundle in Angular.
+The example above shows using a single dimension: `scope`. It's the most commonly used one. But you can find other dimensions useful. You can define which projects contain components, state managemetn code, and features, so you, for instance, can disallow projects containing dumb UI components depend on state management code. You can define which projects are experimental and which are stable, so stable applications cannot depend on experimental projects etc. You can define which projects have server-side code and which have client-side code to make sure your node app doesn't bundle in your frontend framework.

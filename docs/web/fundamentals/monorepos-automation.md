@@ -193,7 +193,7 @@ An Nx workspace can contain dozens (or hundreds) of applications and libraries. 
 
 Previously, a senior architect would create an ad-hoc dependency diagram and upload it to a corporate wiki. The diagram is not even correct on Day 1, and gets more and more out of sync with every passing day.
 
-With Nx, you can do better than that. You can run `nx dep-graph` to see a current dependency diagram of the workspace: what apps and libs are there, how they depend on each other, what is loaded lazily and what is not. Nx uses code analysis to collect this information. Read more about [Analyzing and Visualizing Workspaces](/angular/guides/monorepo-dependency-diagrams).
+With Nx, you can do better than that. You can run `nx dep-graph` to see a current dependency diagram of the workspace: what apps and libs are there, how they depend on each other, what is loaded lazily and what is not. Nx uses code analysis to collect this information. Read more about [Analyzing and Visualizing Workspaces](/web/guides/monorepo-dependency-diagrams).
 
 ![Monorepo Diagram](./monorepo-diagram.png)
 
@@ -217,7 +217,7 @@ nx affected --target=lint  # reruns any target (for instance lint) for projects 
 
 Nx will topologically sort the projects, and will run what it can in parallel. The fact that Nx can use its dependency graph to rebuild and retest the minimal number of projects necessary is crucial. Without this the repo will not scale beyond a handful of projects.
 
-Read more about how to use `affected:*` commands [here](/angular/guides/monorepo-affected).
+Read more about how to use `affected:*` commands [here](/web/guides/monorepo-affected).
 
 ### Imposing Constraints on the Dependency Graph
 
@@ -254,7 +254,9 @@ For instance, with this configuration, when you import private client code from 
 ]
 ```
 
-Read more about this feature [here](/angular/guides/monorepo-tags).
+![Lint Error](./lint-error.png)
+
+Read more about this feature [here](/web/guides/monorepo-tags).
 
 ## Tools and Automation
 
@@ -274,7 +276,7 @@ nx format:write # formats the files
 nx format:check # checks that the formatting is correct (used in CI)
 ```
 
-Read more about it [here](/angular/guides/modernize-prettier).
+Read more about it [here](/web/guides/modernize-prettier).
 
 ## Understanding Nx.json
 
@@ -287,7 +289,6 @@ You rarely have to look at `nx.json`, but it is still important to understand wh
     "workspace.json": "*",
     "package.json": "*",
     "tsconfig.json": "*",
-    "tslint.json": "*",
     "nx.json": "*"
   },
   "projects": {
@@ -317,7 +318,6 @@ The `implicitDependencies` map is used to define what projects are affected by g
     "workspace.json": "*",
     "package.json": ["mylib"],
     "tsconfig.json": "*",
-    "tslint.json": "*",
     "nx.json": "*"
   }
 }
@@ -338,7 +338,7 @@ In the above example, any change to `package.json` will only affect `mylib`.
 }
 ```
 
-The `tags` array is used to impose constraints on the dependency graph. Read more about it [here](/angular/guides/monorepo-tags).
+The `tags` array is used to impose constraints on the dependency graph. Read more about it [here](/web/guides/monorepo-tags).
 
 Nx uses its advanced code analysis to construct a dependency graph of all applications and libraries. Some dependencies, however, cannot be determined statically. You can use the `implicitDependencies` array to list the dependencies that cannot be determined statically.
 

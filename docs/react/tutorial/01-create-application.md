@@ -21,7 +21,6 @@ myorg/
 ├── workspace.json
 ├── package.json
 ├── tsconfig.json
-├── tslint.json
 └── README.md
 ```
 

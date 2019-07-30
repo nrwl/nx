@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/nx-source",
   "version": "8.4.1",
-  "description": "Angular CLI power-ups for modern Web development",
+  "description": "Extensible Dev Tools for Monorepos",
   "homepage": "https://nx.dev",
   "main": "index.js",
   "private": true,

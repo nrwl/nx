@@ -46,11 +46,10 @@ happynrwl/
 │       ├── ui/
 │       └── utils-testing/
 ├── tools/
-├── angular.json
+├── workspace.json
 ├── nx.json
 ├── package.json
-├── tsconfig.json
-└── tslint.json
+└── tsconfig.json
 ```
 
 For larger projects, it is a good idea to group libraries into application sections.
@@ -75,11 +74,10 @@ happynrwl/
 │       ├── ui/
 │       └── utils-testing/
 ├── tools/
-├── angular.json
+├── workspace.json
 ├── nx.json
 ├── package.json
-├── tsconfig.json
-└── tslint.json
+└── tsconfig.json
 ```
 
 Here we have:
@@ -112,11 +110,10 @@ happynrwl/
 │       ├── ui/
 │       └── utils-testing/
 ├── tools/
-├── angular.json
+├── workspace.json
 ├── nx.json
 ├── package.json
-├── tsconfig.json
-└── tslint.json
+└── tsconfig.json
 ```
 
 ### Type (What is in the library)
@@ -139,7 +136,7 @@ For a large organization it's crucial to establish how projects can depend on ea
 - Libraries with a broader scope (e.g., `shared/ui`) should not depend on the libraries with narrower scope (e.g., `happynrwlapp/search/utils-testing`).
 - Component libraries should only depend on other component libraries and utility libraries, but should not depend feature libraries.
 
-Nx provides a feature called tags that can be used to codify and statically-enforce these rules. Read more about tags [here](./monorepo-tags).
+Nx provides a feature called tags that can be used to codify and statically-enforce these rules. Read more about tags [here](/shared/monorepo-tags).
 
 ## Code Ownership
 
@@ -162,7 +159,7 @@ With Nx, we can help teams adopt best practices by using workspace schematics an
 
 ### Workspace Schematics
 
-Schematics is a library used by the Angular CLI and Nx to do code generation. `ng g lib mylib` invokes the lib schematic from the default collection. Schematics are a great way to codify conventions and best practices. Unfortunately, creating a custom schematics collection is not very straightforward, so few do it.
+Schematics is a library used by Nx to do code generation. `nx g lib mylib` invokes the lib schematic from the default collection. Schematics are a great way to codify conventions and best practices. Unfortunately, creating a custom schematics collection is not very straightforward, so few do it.
 
 Nx simplifies it. With Nx, we can create custom schematics in the `tools/schematics` and invoke them without having to do compile, build, deploy anything.
 
@@ -170,7 +167,7 @@ Read more about workspace schematics [here](https://auth0.com/blog/create-custom
 
 ### Workspace Lint Checks
 
-Custom lint checks is another great way to enforce best practices. We can create custom lint checks in the `tools/lint` directory and then register them in `tslint.json`.
+Custom lint checks is another great way to enforce best practices. We can create custom lint checks in the `tools/lint` directory and then register them in `tslint.json`or `.eslintrc`.
 
 ## Developer Workflow
 
@@ -178,7 +175,7 @@ Embracing the monorepo-style development often requires some changes to the deve
 
 **Our CI should run the following checks:**
 
-- It checks that the changed code is formatted properly. (`yarn format:check`)
+- It checks that the changed code is formatted properly. (`nx format:check`)
 - It runs lint checks for all the projects affected by a PR/commit.
 - It runs unit tests for all the projects affected by a PR/commit.
 - It runs e2e tests for all the apps affected by a PR/commit.
@@ -189,7 +186,7 @@ Note `all the projects affected by a PR/commit`. This is very important. Monorep
 - The performance of CI checks will degrade over time. The time it takes to run the CI checks should be proportional to the impact of the change, not the size of the repo.
 - We will be affected by the code your change didn’t touch
 
-We should utilize `affected:*` commands to build and test projects. Read more about them [here](./monorepo-affected).
+We should utilize `affected:*` commands to build and test projects. Read more about them [here](/shared/monorepo-affected).
 
 ### Trunk-based development
 
@@ -199,9 +196,3 @@ When using trunk-based development, we have a single main branch (say `master`) 
 they do it as soon as possible. So if someone works on a large feature, they split it into a few small changes that can be integrated into master in a week. In other words, when using trunk-based development, teams can create branches, but they are short-lived and focus on a specific user story.
 
 One issue folks often raise in regards to trunk-based development is "things change under you while you are trying to create a release". This can definitely happen, especially when manual testing is involved. To mitigate we can create a release branch where we would cherry-pick commits from `master` to. With this, we can still frequently merge code into `master` and have our release isolated from changes made by other teams.
-
-## Enterprise Angular: Monorepo Patterns Book
-
-<img src="https://go.nrwl.io/hs-fs/hubfs/LP_Cover.jpg?width=5668&name=LP_Cover.jpg">
-
-[This is a free book](https://go.nrwl.io/angular-enterprise-monorepo-patterns-new-book?utm_campaign=Book%3A%20Monorepo%20Patterns%2C%20Jan%202019&utm_source=Github&utm_medium=Banner%20Ad) on using Nx in large organizations. It covers everything we talked about in this guide in much more detail. It is very practical. Even though it covers the general benefits of Google-style development, it focuses on concrete problems and how to effectively use Nx to solve them.

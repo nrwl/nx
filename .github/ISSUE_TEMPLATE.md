@@ -35,9 +35,6 @@ Please provide detailed steps for reproducing the issue.
 Please provide any relevant information about your setup:
 
 - version of Nx used
-- version of Angular CLI used
-- `angular.json` configuration
-- version of Angular DevKit used
 - 3rd-party libraries and their versions
 - and most importantly - a use-case that fails
 
