@@ -77,7 +77,6 @@ Before you submit an issue, please search the issue tracker. An issue for your p
 We want to fix all the issues as soon as possible, but before fixing a bug we need to reproduce and confirm it. Having a reproducible scenario gives us wealth of important information without going back and forth with you requiring additional information, such as:
 
 - version of Nx used
-- `workspace.json` or `angular.json` configuration
 - `yarn.lock` or `package-lock.json`
 - and most importantly - a use-case that fails
 

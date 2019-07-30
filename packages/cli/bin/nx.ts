@@ -59,9 +59,7 @@ if (workspace) {
   if (w) {
     require(path.join(w.dir, 'node_modules', '@nrwl', 'cli', 'bin', 'nx.js'));
   } else {
-    console.error(
-      `Error: The current directory isn't part of an Nx workspace.`
-    );
-    process.exit(1);
+    console.log(`The current directory isn't part of an Nx workspace.`);
+    process.exit(0);
   }
 }
