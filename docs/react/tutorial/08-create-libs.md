@@ -33,13 +33,11 @@ myorg/
 │       ├── jest.conf.js
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
+│       └── tsconfig.spec.json
+├── tools/
 ├── nx.json
 ├── package.json
-├── tools/
-├── tsconfig.json
-└── tslint.json
+└── tsconfig.json
 ```
 
 The `libs/ui/src/lib/ui.tsx` file looks like this:
@@ -96,14 +94,12 @@ myorg/
 │       ├── jest.conf.js
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
+│       └── tsconfig.spec.json
+├── tools/
 ├── workspace.json
 ├── nx.json
 ├── package.json
-├── tools/
-├── tsconfig.json
-└── tslint.json
+└── tsconfig.json
 ```
 
 **Implement the Todos component.**

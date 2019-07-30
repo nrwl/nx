@@ -10,7 +10,7 @@ this.innerHTML = `<ul>${this._todos
   .join('')}</ul>`;
 ```
 
-**Run `npm run affected:build`**
+**Run `nx affected:build`**
 
 Nx will rebuild `todos` app. Why didn't it rebuild `ui`?
 
@@ -22,12 +22,12 @@ You can run any target against the affected projects in the graph like this:
 
 ```bash
 # The following are equivalent
-npm run affected -- --target=build
-npm run affected:build
+nx affected --target=build
+nx affected:build
 ```
 
 !!!!!
-Run "npm run affected -- --target=invalid --base=master". What do you see?
+Run "nx affected --target=invalid --base=master". What do you see?
 !!!!!
-No projects to run invalid
+No affected projects to run target "invalid" on
 An error message saying that the "invalid" target is invalid

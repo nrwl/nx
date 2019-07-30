@@ -70,8 +70,7 @@ myorg/
 │   │   ├── jest.config.js
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.json
-│   │   ├── tsconfig.spec.json
-│   │   └── tslint.json
+│   │   └── tsconfig.spec.json
 │   └── todos-e2e/
 │       ├── src/
 │       │   ├── fixtures/
@@ -86,16 +85,14 @@ myorg/
 │       │       └── index.ts
 │       ├── cypress.json
 │       ├── tsconfig.e2e.json
-│       ├── tsconfig.json
-│       └── tslint.json
+│       └── tsconfig.json
 ├── libs/
 ├── tools/
 ├── README.md
 ├── workspace.json
 ├── nx.json
 ├── package.json
-├── tsconfig.json
-└── tslint.json
+└── tsconfig.json
 ```
 
 The generate command added two projects to our workspace:
@@ -114,6 +111,6 @@ nx serve todos
 !!!!!
 Open http://localhost:4200 in the browser. What do you see?
 !!!!!
-Page saying "This is an React app built with Nx"
+Page saying "Welcome to Todos!"
 Page saying "This is an React app built with Create React App"
 404

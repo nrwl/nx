@@ -45,15 +45,13 @@ myorg/
 │       ├── proxy.conf.json
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
+│       └── tsconfig.spec.json
 ├── libs/
+├── tools/
 ├── workspace.json
 ├── nx.json
 ├── package.json
-├── tools/
-├── tsconfig.json
-└── tslint.json
+└── tsconfig.json
 ```
 
 The `apps` directory is where Nx places anything you can run: frontend applications, backend applications, e2e test suites. That's why the `api` application appeared there.
@@ -110,7 +108,7 @@ server.on('error', console.error);
 ```
 
 !!!!!
-Run "nx serve api" and open https://localhost:3333/api/todos. What do you see?
+Run "nx serve api" and open http://localhost:3333/api/todos. What do you see?
 !!!!!
 `[{"title":"Todo 1"},{"title":"Todo 2"}]`
 Blank screen

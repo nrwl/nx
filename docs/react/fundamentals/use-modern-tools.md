@@ -42,15 +42,13 @@ The following folders and files are created:
 │       │   └── main.ts
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
+│       └── tsconfig.spec.json
 ├── libs/
+├── tools/
 ├── workspace.json
 ├── nx.json
 ├── package.json
-├── tools/
-├── tsconfig.json
-└── tslint.json
+└── tsconfig.json
 ```
 
 You can run:
@@ -72,7 +70,7 @@ Read more about Nest at [nestjs.com](https://nestjs.com).
 To use [Express](https://express.org), add the Express capability to your workspace:
 
 ```bash
-yarn add --dev @nrwl/nest
+yarn add --dev @nrwl/express
 ```
 
 To create an express application, run:
@@ -130,16 +128,14 @@ Running `nx g @nrwl/react:application frontend` will create:
 │       │       ├── commands.ts
 │       │       └── index.ts
 │       ├── tsconfig.e2e.json
-│       ├── tsconfig.json
-│       └── tslint.json
+│       └── tsconfig.json
 ├── libs/
+├── tools/
 ├── README.md
 ├── workspace.json
 ├── nx.json
 ├── package.json
-├── tools/
-├── tsconfig.json
-└── tslint.json
+└── tsconfig.json
 ```
 
 You can run:
@@ -175,8 +171,7 @@ By default, Nx uses Jest for both React and Node.js applications. So if you run 
 │   │   ├── jest.config.js
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.json
-│   │   ├── tsconfig.spec.json
-│   │   └── tslint.json
+│   │   └── tsconfig.spec.json
 │   └── frontend-e2e/
 ├── libs/
 ├── tools/
@@ -184,8 +179,7 @@ By default, Nx uses Jest for both React and Node.js applications. So if you run 
 ├── workspace.json
 ├── nx.json
 ├── package.json
-├── tsconfig.json
-└── tslint.json
+└── tsconfig.json
 ```
 
 Read more about Jest at [jestjs.io](https://jestjs.io).
@@ -207,13 +201,12 @@ Prettier is an opinionated code formatter. An Nx workspace comes with Prettier p
 ├── package.json
 ├── .prettierrc # prettier config
 ├── .prettierignore # config to ignore files from prettier
-├── tsconfig.json
-└── tslint.json
+└── tsconfig.json
 ```
 
 You can run:
 
-- `yarn format:write` to format the files
-- `yarn format:check` to check the formatted files
+- `nx format:write` to format the files
+- `nx format:check` to check the formatted files
 
 Read more about [Prettier](https://prettier.io).

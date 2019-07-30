@@ -11,19 +11,19 @@ You get started with Nx by running a command that uses your package manager to s
 **Using `npx`**
 
 ```bash
-npx create-nx-workspace@latest myworkspace
+npx create-nx-workspace@latest
 ```
 
 **Using `npm init`**
 
 ```bash
-npm init nx-workspace myworkspace
+npm init nx-workspace
 ```
 
 **Using `yarn create`**
 
 ```bash
-yarn create nx-workspace myworkspace
+yarn create nx-workspace
 ```
 
 After creating the workspace, change into the newly created workspace directory.
@@ -95,8 +95,7 @@ The following files and folders are generated in the new application:
 │   │   ├── jest.config.js
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.json
-│   │   ├── tsconfig.spec.json
-│   │   └── tslint.json
+│   │   └── tsconfig.spec.json
 │   └── myapp-e2e/
 │       ├── src/
 │       │   ├── fixtures/
@@ -111,16 +110,14 @@ The following files and folders are generated in the new application:
 │       │       └── index.ts
 │       ├── cypress.json
 │       ├── tsconfig.e2e.json
-│       ├── tsconfig.json
-│       └── tslint.json
+│       └── tsconfig.json
 ├── libs/
 ├── tools/
 ├── README.md
 ├── workspace.json
 ├── nx.json
 ├── package.json
-├── tsconfig.json
-└── tslint.json
+└── tsconfig.json
 ```
 
 ## Serving an application
