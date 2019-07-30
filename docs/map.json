@@ -95,8 +95,8 @@
             "id": "build-full-stack-applications"
           },
           {
-            "name": "Developing Like Google",
-            "id": "develop-like-google"
+            "name": "Monorepos and Automation",
+            "id": "monorepos-automation"
           }
         ]
       },
@@ -256,8 +256,8 @@
             "id": "build-full-stack-applications"
           },
           {
-            "name": "Developing Like Google",
-            "id": "develop-like-google"
+            "name": "Monorepos and Automation",
+            "id": "monorepos-automation"
           }
         ]
       },

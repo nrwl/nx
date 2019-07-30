@@ -121,7 +121,7 @@ This is a hard requirement for monorepo-style development. Nx implements it.
 
 In addition to using the monorepo, Google is also known for its use of automation and tooling. Nx adds powerful capabilities helping your team promote best practices and ensure consistency.
 
-Read more about how Nx helps you develop like Google [here](/angular/fundamentals/develop-like-google).
+Read more about how Nx helps you develop like Google [here](/angular/fundamentals/monorepos-automation).
 
 ## Use Innovative Tools
 

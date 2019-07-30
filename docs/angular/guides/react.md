@@ -196,4 +196,4 @@ yarn affected --target=lint # reruns any target (for instance lint) for projects
 
 Nx will topologically sort the projects, and will run what it can in parallel. The fact that Nx can use its dependency graph to rebuild and retest the minimal number of projects necessary is crucial. Without this the repo will not scale beyond a handful of projects.
 
-You can read more about how Nx help you build like google [here](../fundamentals/develop-like-google).
+You can read more about how Nx help you build like google [here](../fundamentals/monorepos-automation).

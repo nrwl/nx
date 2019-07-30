@@ -1,4 +1,4 @@
-# Developing Like Google: Monorepos and Automation
+# Developing Like Google, Facebook, and Microsoft: Monorepos and Automation
 
 In this guide you will look at one of the most interesting parts of Nx. The part that make many things so much easier, that it has a transformative effect on a team and even on an organization.
 

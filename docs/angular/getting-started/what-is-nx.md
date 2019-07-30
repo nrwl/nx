@@ -8,7 +8,7 @@ With Nx, you can:
 
 - Use [modern tools](/angular/fundamentals/use-modern-tools) like Cypress, Jest, Prettier, TypeScript, and others.
 - Build [full-stack applications](/angular/fundamentals/build-full-stack-applications) using Angular, and Node.js.
-- Use [effective development practices](/angular/fundamentals/develop-like-google) pioneered at Google, Facebook, and Microsoft.
+- Use [effective development practices](/angular/fundamentals/monorepos-automation) pioneered at Google, Facebook, and Microsoft.
 
 ## Getting Started
 
