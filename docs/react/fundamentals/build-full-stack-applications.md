@@ -10,7 +10,7 @@ In this guide you will:
 Start with creating a new workspace with the following:
 
 ```bash
-npx create-nx-workspace@latest myorg
+npx create-nx-workspace@latest
 cd myorg
 ```
 
@@ -42,8 +42,7 @@ myorg/
 │   │   ├── jest.config.js
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.json
-│   │   ├── tsconfig.spec.json
-│   │   └── tslint.json
+│   │   └── tsconfig.spec.json
 │   └── frontend-e2e/
 ├── libs/
 ├── tools/
@@ -51,8 +50,7 @@ myorg/
 ├── workspace.json
 ├── nx.json
 ├── package.json
-├── tsconfig.json
-└── tslint.json
+└── tsconfig.json
 ```
 
 You can run:
@@ -123,15 +121,13 @@ myorg/
 │       ├── proxy.conf.json
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
+│       └── tsconfig.spec.json
 ├── libs/
+├── tools/
 ├── workspace.json
 ├── nx.json
 ├── package.json
-├── tools/
-├── tsconfig.json
-└── tslint.json
+└── tsconfig.json
 ```
 
 The `apps` directory is where Nx places anything you can run: frontend applications, backend applications, e2e test suites. That is why the `api` application was generated there.
@@ -198,13 +194,11 @@ myorg/
 │       ├── jest.conf.js
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
+│       └── tsconfig.spec.json
+├── tools/
 ├── nx.json
 ├── package.json
-├── tools/
-├── tsconfig.json
-└── tslint.json
+└── tsconfig.json
 ```
 
 Next, move `Todo` into `libs/data/src/lib/data.ts`:
@@ -252,7 +246,7 @@ Having both frontend and backend code is already something amazing. In just minu
 But Nx can do a lot more than that. In Nx, your libraries, backend applications, frontend applications are all part of the same dependency graph, which you can see via:
 
 ```bash
-npm run dep-graph
+nx dep-graph
 ```
 
 ![Full Stack Dependencies](./full-stack-deps.png)

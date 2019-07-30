@@ -2,7 +2,7 @@
 
 ## Learn Nx in 10 Minutes
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/mVKMse-gFBI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/Jxh_--FeJeY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## Books and Blogs
 

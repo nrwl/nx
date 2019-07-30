@@ -25,13 +25,11 @@ myorg/
 │       ├── jest.conf.js
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
+│       └── tsconfig.spec.json
+├── tools/
 ├── nx.json
 ├── package.json
-├── tools/
-├── tsconfig.json
-└── tslint.json
+└── tsconfig.json
 ```
 
 **Copy the interface into `libs/data/src/lib/data.ts`.**
