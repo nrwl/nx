@@ -250,11 +250,16 @@ function setDefaultLinter(linter: string) {
     if (!json.schematics) {
       json.schematics = {};
     }
-    json.schematics['@nrwl/workspace'] = { linter };
-    json.schematics['@nrwl/cypress'] = { linter };
-    json.schematics['@nrwl/react'] = { linter };
-    json.schematics['@nrwl/web'] = { linter };
-    json.schematics['@nrwl/node'] = { linter };
+    json.schematics['@nrwl/workspace'] = { library: { linter } };
+    json.schematics['@nrwl/cypress'] = { 'cypress-project': { linter } };
+    json.schematics['@nrwl/react'] = {
+      application: { linter },
+      library: { linter }
+    };
+    json.schematics['@nrwl/web'] = { application: { linter } };
+    json.schematics['@nrwl/node'] = { application: { linter } };
+    json.schematics['@nrwl/nest'] = { application: { linter } };
+    json.schematics['@nrwl/workspace'] = { application: { linter } };
     return json;
   });
 }
