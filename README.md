@@ -66,14 +66,6 @@ yarn create nx-workspace myworkspace
 
 If it's your first Nx project, the command will recommend you to install `@nrwl/cli` globally, so you can invoke `nx` directly without going through yarn or npm.
 
-### Adding Nx to an Existing Angular CLI workspace
-
-If you are an Angular user, you can also add Nx to your existing Angular CLI project by running:
-
-```bash
-ng add @nrwl/workspace
-```
-
 ## Creating First Application
 
 By default, an Nx workspace starts blank. There are no applications to build, serve, and test. To create one, you need to add capabilities to the workspace.
@@ -140,10 +132,6 @@ Regardless of what framework you chose, the resulting file tree will look like t
 Angular users can also run `ng g/serve/test/e2e`.
 
 You are good to go!
-
-## Quick Start & Documentation
-
-<p align="center"><a href="https://www.youtube.com/watch?v=mVKMse-gFBI" target="_blank"><img src="https://raw.githubusercontent.com/nrwl/nx/master/nx-video-img.png" width="450"></p></a>
 
 ### Documentation
 

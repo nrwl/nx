@@ -1,6 +1,6 @@
 # Using Cypress
 
-![Cypress logo](../../shared/cypress-logo.png)
+![Cypress logo](/shared/cypress-logo.png)
 
 Cypress is an e2e test runner built for modern web. It has a lot of great features:
 
@@ -18,17 +18,14 @@ Cypress is an e2e test runner built for modern web. It has a lot of great featur
 By default, when creating a new frontend application, Nx will use Cypress to create the e2e tests project.
 
 ```bash
-ng g application frontend
+nx g @nrwl/web:app frontend
 ```
 
 ```treeview
 <workspace name>/
-├── README.md
-├── angular.json
 ├── apps/
 │   ├── frontend/
 │   └── frontend-e2e/
-│       ├── cypress.json
 │       ├── src/
 │       │   ├── fixtures/
 │       │   │   └── example.json
@@ -40,28 +37,25 @@ ng g application frontend
 │       │       ├── app.po.ts
 │       │       ├── commands.ts
 │       │       └── index.ts
+│       ├── cypress.json
 │       ├── tsconfig.e2e.json
-│       ├── tsconfig.json
-│       └── tslint.json
+│       └── tsconfig.json
 ├── libs/
+├── tools/
 ├── nx.json
 ├── package.json
-├── tools/
-├── tsconfig.json
-└── tslint.json
+├── README.md
+├── workspace.json
+└── tsconfig.json
 ```
-
-Older versions of Nx used Protractor as a default e2e test runner. For those workspaces, you have provide the `--e2e-test-runner=cypress` option when creating a new application.
-
-> Unfortunately, the cypress api and its ecosystem are different from Protractor. So Nx cannot provide a reliable migration from Protractor to Cypress tests in an existing application.
 
 ### Testing Applications
 
-Simply run `ng e2e frontend-e2e` to execute e2e tests with Cypress.
+Simply run `nx e2e frontend-e2e` to execute e2e tests with Cypress.
 
 By default, Cypress will run in “headed” mode (you will see the tests executing in a new browser window). You will have the result of all the tests and errors (if any) in your terminal.
 
-Screenshots and videos will be accessible in `/dist/apps/frontend/screenshots` and `/dist/apps/frontend/videos`.
+Screenshots and videos will be accessible in `dist/apps/frontend/screenshots` and `dist/apps/frontend/videos`.
 
 ### Watching for Changes
 
@@ -75,7 +69,7 @@ If you want to run the Cypress tests in headless mode (e.g., on CI), you can do 
 
 ### Testing Against Prod Build
 
-You can run your e2e test against a production build like this: `ng e2e my-app-e2e --prod`.
+You can run your e2e test against a production build like this: `nx e2e frontend-e2e --prod`.
 
 ## Configuration
 
@@ -84,7 +78,7 @@ You can run your e2e test against a production build like this: `ng e2e my-app-e
 The `baseUrl` property provides you the ability to test an application hosted on a specific domain.
 
 ```bash
-ng e2e my-app-e2e --baseUrl=https://my-app.com
+nx e2e frontend-e2e --baseUrl=https://frontend.com
 ```
 
 > If no `baseUrl` and no `devServerTarget` are provided, Cypress will expect to have the `baseUrl` property in the `cypress.json` file, or will error.

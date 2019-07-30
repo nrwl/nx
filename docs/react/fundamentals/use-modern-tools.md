@@ -19,7 +19,7 @@ yarn add --dev @nrwl/nest
 To create the new Nest application:
 
 ```bash
-yarn g @nrwl/nest:application api
+nx g @nrwl/nest:application api
 ```
 
 The following folders and files are created:
@@ -95,7 +95,7 @@ nx g @nrwl/node:application api
 
 ## Cypress
 
-![Cypress logo](../../shared/cypress-logo.png)
+![Cypress logo](/shared/cypress-logo.png)
 
 Cypress is an e2e test runner built for modern web. It has a lot of great features:
 
@@ -148,7 +148,7 @@ Read more about Cypress at [cypress.io](https://cypress.io).
 
 ## Jest
 
-![Jest logo](../../shared/jest-logo.png)
+![Jest logo](/shared/jest-logo.png)
 
 Jest is a fast 0-setup testing framework from Facebook.
 
@@ -186,7 +186,7 @@ Read more about Jest at [jestjs.io](https://jestjs.io).
 
 ## Prettier
 
-![Prettier logo](./prettier-logo.png)
+![Prettier logo](/shared/prettier-logo.png)
 
 Prettier is an opinionated code formatter. An Nx workspace comes with Prettier preconfigured.
 
