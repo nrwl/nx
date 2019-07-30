@@ -17,4 +17,4 @@ Watch the video showing how to use Nx and Angular Console to build full-stack ap
 
 - [Using Modern Tools](/angular/fundamentals/use-modern-tools)
 - [Building Full-Stack Applications](/angular/fundamentals/build-full-stack-applications)
-- [Developing Like Google: Monorepos and Automation](/angular/fundamentals/develop-like-google)
+- [Developing Like Google: Monorepos and Automation](/angular/fundamentals/monorepos-automation)

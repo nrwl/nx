@@ -341,7 +341,7 @@ export class AppController {
 }
 ```
 
-After this refactor, the backend and the frontend will share the same definition of `Todo` and never get out of sync. Being able to factor code into a lot of small libraries with a well-defined public API, which you can then use across both the backend and the frontend, is a key feature of Nx. You can read more about it in our [Develop like Google Guide](/angular/fundamentals/develop-like-google).
+After this refactor, the backend and the frontend will share the same definition of `Todo` and never get out of sync. Being able to factor code into a lot of small libraries with a well-defined public API, which you can then use across both the backend and the frontend, is a key feature of Nx. You can read more about it in our [Develop like Google Guide](/angular/fundamentals/monorepos-automation).
 
 ## Nx is Smart
 
@@ -355,7 +355,7 @@ npm run dep-graph
 
 ![Full Stack Dependencies](./full-stack-deps.png)
 
-If you change the data library, Nx will know that both the backend and the frontend can be affected by the change. This information can be used to test and build all areas affected by a change making Nx a powerful full-stack development environment that scales. You can read more about this Nx capability in [Building Like Google](/angular/fundamentals/develop-like-google).
+If you change the data library, Nx will know that both the backend and the frontend can be affected by the change. This information can be used to test and build all areas affected by a change making Nx a powerful full-stack development environment that scales. You can read more about this Nx capability in [Building Like Google](/angular/fundamentals/monorepos-automation).
 
 ## Summary
 
