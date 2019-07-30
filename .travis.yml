@@ -33,7 +33,6 @@ matrix:
       install:
         - yarn install --network-timeout 1000000
       script:
-        - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then yarn checkformat --head=$TRAVIS_PULL_REQUEST_SHA --base=$(git merge-base HEAD $TRAVIS_BRANCH); fi'
         - yarn e2e --cli nx
     - os: linux
       language: node_js
@@ -41,7 +40,7 @@ matrix:
       dist: trusty
       sudo: required
       cache:
-        npm: false      
+        npm: false
       addons:
         chrome: stable
       before_install:
@@ -49,7 +48,6 @@ matrix:
       install:
         - yarn install --network-timeout 1000000
       script:
-        - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then yarn checkformat --head=$TRAVIS_PULL_REQUEST_SHA --base=$(git merge-base HEAD $TRAVIS_BRANCH); fi'
         - yarn e2e --cli angular
 
 notifications:
