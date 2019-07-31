@@ -21,10 +21,13 @@ import {
   toFileName,
   updateJsonInTree,
   generateProjectLint,
-  addLintFiles
+  addLintFiles,
+  toPropertyName,
+  addGlobal
 } from '@nrwl/workspace';
 import {
   addDepsToPackageJson,
+  insertImport,
   updateWorkspaceInTree
 } from '@nrwl/workspace/src/utils/ast-utils';
 import ngAdd from '../ng-add/ng-add';
@@ -41,8 +44,11 @@ import {
   babelPresetEnvVersion,
   babelPresetReactVersion,
   babelPresetTypeScriptVersion,
-  reactRouterVersion
+  coreJsVersion,
+  reactRouterVersion,
+  regeneratorVersion
 } from '../../utils/versions';
+import { addImportToModule } from '../../../../angular/src/utils/ast-utils';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -240,19 +246,54 @@ function addRouting(options: NormalizedSchema): Rule {
 
 function addBabel(options: NormalizedSchema): Rule {
   return options.babel
-    ? addDepsToPackageJson(
-        {},
-        {
-          '@babel/core': babelCoreVersion,
-          '@babel/preset-env': babelPresetEnvVersion,
-          '@babel/preset-react': babelPresetReactVersion,
-          '@babel/preset-typescript': babelPresetTypeScriptVersion,
-          '@babel/plugin-proposal-decorators': babelPluginDecoratorsVersion,
-          'babel-loader': babelLoaderVersion,
-          'babel-plugin-macros': babelPluginMacrosVersion
-        }
-      )
+    ? chain([
+        addDepsToPackageJson(
+          {},
+          {
+            '@babel/core': babelCoreVersion,
+            '@babel/preset-env': babelPresetEnvVersion,
+            '@babel/preset-react': babelPresetReactVersion,
+            '@babel/preset-typescript': babelPresetTypeScriptVersion,
+            '@babel/plugin-proposal-decorators': babelPluginDecoratorsVersion,
+            'babel-loader': babelLoaderVersion,
+            'babel-plugin-macros': babelPluginMacrosVersion,
+            'core-js': coreJsVersion,
+            'regenerator-runtime': regeneratorVersion
+          }
+        ),
+        addPolyfillForBabel(options)
+      ])
     : noop();
+}
+
+function addPolyfillForBabel(options: NormalizedSchema): Rule {
+  return (host: Tree) => {
+    const polyfillsPath = join(options.appProjectRoot, `src/polyfills.ts`);
+    const polyfillsSource = host.read(polyfillsPath)!.toString('utf-8');
+    const polyfillsSourceFile = ts.createSourceFile(
+      polyfillsPath,
+      polyfillsSource,
+      ts.ScriptTarget.Latest,
+      true
+    );
+
+    insert(host, polyfillsPath, [
+      ...addGlobal(
+        polyfillsSourceFile,
+        polyfillsPath,
+        `
+/*
+ * Polyfill stable language features.
+ * It's recommended to use @babel/preset-env and browserslist
+ * to only include the polyfills necessary for the target browsers.
+ */
+import 'core-js/stable';
+
+import 'regenerator-runtime/runtime';
+`
+      )
+    ]);
+  };
 }
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {

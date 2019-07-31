@@ -482,5 +482,22 @@ describe('app', () => {
         workspaceJson.projects['my-app'].architect.build.options.webpackConfig
       ).toEqual('@nrwl/react/plugins/babel');
     });
+
+    it('should add required polyfills for core-js and regenerator', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', babel: true },
+        appTree
+      );
+      const packageJSON = readJsonInTree(tree, 'package.json');
+      const polyfillsSource = tree
+        .read('apps/my-app/src/polyfills.ts')
+        .toString();
+
+      expect(packageJSON.devDependencies['core-js']).toBeDefined();
+      expect(packageJSON.devDependencies['regenerator-runtime']).toBeDefined();
+      expect(polyfillsSource).toContain('regenerator');
+      expect(polyfillsSource).toContain('core-js');
+    });
   });
 });
