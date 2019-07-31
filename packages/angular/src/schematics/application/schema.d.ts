@@ -14,6 +14,7 @@ export interface Schema {
   skipTests?: boolean;
   directory?: string;
   tags?: string;
+  linter: string;
   unitTestRunner: UnitTestRunner;
   e2eTestRunner: E2eTestRunner;
 }

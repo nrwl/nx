@@ -53,6 +53,14 @@ Type: `boolean`
 
 Specifies if the template will be in the ts file.
 
+### linter
+
+Default: `tslint`
+
+Type: `string`
+
+The tool to use for running lint checks.
+
 ### name
 
 Type: `string`

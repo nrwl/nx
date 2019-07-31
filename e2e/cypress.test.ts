@@ -11,13 +11,18 @@ import {
   supportUi
 } from './utils';
 
-forEachCli(() => {
+forEachCli(currentCLIName => {
+  const linter = currentCLIName === 'angular' ? 'tslint' : 'eslint';
+  const nrwlPackageName = currentCLIName === 'angular' ? 'angular' : 'react';
+
   describe('Cypress E2E Test runner', () => {
     describe('project scaffolding', () => {
       it('should generate an app with the Cypress as e2e test runner', () => {
         ensureProject();
         const myapp = uniq('myapp');
-        runCLI(`generate @nrwl/angular:app ${myapp} --e2eTestRunner=cypress`);
+        runCLI(
+          `generate @nrwl/${nrwlPackageName}:app ${myapp} --e2eTestRunner=cypress --linter=${linter}`
+        );
 
         // Making sure the package.json file contains the Cypress dependency
         const packageJson = readJson('package.json');
@@ -38,10 +43,12 @@ forEachCli(() => {
 
     if (supportUi()) {
       describe('running Cypress', () => {
-        fit('should execute e2e tests using Cypress', () => {
+        it('should execute e2e tests using Cypress', () => {
           newProject();
           const myapp = uniq('myapp');
-          runCLI(`generate @nrwl/angular:app ${myapp} --e2eTestRunner=cypress`);
+          runCLI(
+            `generate @nrwl/${nrwlPackageName}:app ${myapp} --e2eTestRunner=cypress --linter=${linter}`
+          );
 
           expect(runCLI(`e2e ${myapp}-e2e --headless --no-watch`)).toContain(
             'All specs passed!'
