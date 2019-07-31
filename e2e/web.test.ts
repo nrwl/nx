@@ -9,13 +9,16 @@ import {
   supportUi
 } from './utils';
 
-forEachCli(() => {
+forEachCli(currentCLIName => {
   describe('Web Components Applications', () => {
     it('should be able to generate a web app', async () => {
       ensureProject();
       const appName = uniq('app');
 
-      runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+      const linter = currentCLIName === 'angular' ? 'tslint' : 'eslint';
+      runCLI(
+        `generate @nrwl/web:app ${appName} --no-interactive --linter=${linter}`
+      );
 
       const lintResults = runCLI(`lint ${appName}`);
       expect(lintResults).toContain('All files pass linting.');

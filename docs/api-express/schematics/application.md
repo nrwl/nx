@@ -23,6 +23,14 @@ Type: `string`
 
 Frontend project that needs to access this application. This sets up proxy configuration.
 
+### linter
+
+Default: `tslint`
+
+Type: `string`
+
+The tool to use for running lint checks.
+
 ### name
 
 Type: `string`

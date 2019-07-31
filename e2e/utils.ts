@@ -11,7 +11,7 @@ export function uniq(prefix: string) {
 
 export function forEachCli(
   selectedCliOrFunction: string | Function,
-  callback?: Function
+  callback?: (currentCLIName) => void
 ) {
   let clis;
   if (process.env.SELECTED_CLI && selectedCliOrFunction && callback) {
@@ -32,7 +32,7 @@ export function forEachCli(
       beforeEach(() => {
         cli = c;
       });
-      cb();
+      cb(c);
     });
   });
 }

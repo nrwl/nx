@@ -1,25 +1,41 @@
 import {
   BuilderContext,
-  createBuilder,
-  BuilderOutput
+  BuilderOutput,
+  createBuilder
 } from '@angular-devkit/architect';
-import { Observable, from } from 'rxjs';
-import { concatMap, tap } from 'rxjs/operators';
+import { from, Observable } from 'rxjs';
+import { concatMap } from 'rxjs/operators';
 
 function run(options: any, context: BuilderContext): Observable<BuilderOutput> {
   if (options.linter === 'tslint') {
     delete options.linter;
     options.tslintConfig = options.config;
     delete options.config;
-    context.logger;
     return from(
       context.scheduleBuilder('@angular-devkit/build-angular:tslint', options, {
         logger: patchedLogger(context)
       })
     ).pipe(concatMap(r => r.output));
-  } else {
-    throw new Error(`ESLint support hasn't been implemented yet.`);
   }
+
+  if (options.linter === 'eslint') {
+    delete options.linter;
+    options.eslintConfig = options.config;
+    delete options.config;
+    // Use whatever the default formatter is
+    delete options.format;
+    return from(
+      context.scheduleBuilder('@angular-eslint/builder:lint', options, {
+        logger: patchedLogger(context)
+      })
+    ).pipe(concatMap(r => r.output));
+  }
+
+  throw new Error(
+    `"${
+      options.linter
+    }" is not a supported linter option: use either eslint or tslint`
+  );
 }
 
 // remove once https://github.com/angular/angular-cli/issues/15053 is fixed
