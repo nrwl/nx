@@ -28,8 +28,7 @@ export default function(options: Schema): Rule {
 }
 
 function createPreset(options: Schema): Rule {
-  // const linter = options.cli === 'angular' ? 'tslint' : 'eslint';
-  const linter = 'tslint';
+  const linter = options.cli === 'angular' ? 'tslint' : 'eslint';
 
   if (options.preset === 'empty') {
     return setDefaultLinter(linter);

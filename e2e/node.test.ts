@@ -31,12 +31,15 @@ function getData(): Promise<any> {
   });
 }
 
-forEachCli(() => {
+forEachCli(currentCLIName => {
+  const linter = currentCLIName === 'angular' ? 'tslint' : 'eslint';
+
   describe('Node Applications', () => {
     it('should be able to generate an express application', async done => {
       ensureProject();
       const nodeapp = uniq('nodeapp');
-      runCLI(`generate @nrwl/express:app ${nodeapp}`);
+
+      runCLI(`generate @nrwl/express:app ${nodeapp} --linter=${linter}`);
 
       updateFile(
         `apps/${nodeapp}/src/app/test.spec.ts`,
@@ -123,7 +126,7 @@ forEachCli(() => {
     it('should be able to generate a nest application', async done => {
       ensureProject();
       const nestapp = uniq('nestapp');
-      runCLI(`generate @nrwl/nest:app ${nestapp}`);
+      runCLI(`generate @nrwl/nest:app ${nestapp} --linter=${linter}`);
 
       updateFile(`apps/${nestapp}/src/assets/file.txt`, ``);
       const jestResult = await runCLIAsync(`test ${nestapp}`);
@@ -183,7 +186,7 @@ forEachCli(() => {
       ensureProject();
       const nodeapp = uniq('nodeapp');
 
-      runCLI(`generate @nrwl/node:app ${nodeapp}`);
+      runCLI(`generate @nrwl/node:app ${nodeapp} --linter=${linter}`);
       updateFile(`apps/${nodeapp}/src/main.ts`, `console.log('Hello World!');`);
       await runCLIAsync(`build ${nodeapp}`);
 

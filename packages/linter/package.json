@@ -30,6 +30,7 @@
     "@angular/compiler": "8.1.2",
     "@angular/compiler-cli": "8.1.2",
     "@angular-devkit/build-angular": "0.801.1",
-    "@angular-devkit/architect": "0.801.1"
+    "@angular-devkit/architect": "0.801.1",
+    "@angular-eslint/builder": "0.0.1-alpha.16"
   }
 }

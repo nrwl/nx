@@ -14,14 +14,18 @@ import {
 } from './utils';
 import { serializeJson } from '@nrwl/workspace';
 
-forEachCli(() => {
+forEachCli(currentCLIName => {
+  const linter = currentCLIName === 'angular' ? 'tslint' : 'eslint';
+
   describe('React Applications', () => {
     it('should be able to generate a react app + lib', async () => {
       ensureProject();
       const appName = uniq('app');
       const libName = uniq('lib');
 
-      runCLI(`generate @nrwl/react:app ${appName} --no-interactive --babel`);
+      runCLI(
+        `generate @nrwl/react:app ${appName} --no-interactive --babel --linter=${linter}`
+      );
       runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
 
       const mainPath = `apps/${appName}/src/main.tsx`;
@@ -38,7 +42,7 @@ forEachCli(() => {
       const appName = uniq('app');
 
       runCLI(
-        `generate @nrwl/react:app ${appName} --routing --no-interactive --babel`
+        `generate @nrwl/react:app ${appName} --routing --no-interactive --babel --linter=${linter}`
       );
 
       await testGeneratedApp(appName, { checkStyles: true });
@@ -49,7 +53,7 @@ forEachCli(() => {
       const appName = uniq('app');
 
       runCLI(
-        `generate @nrwl/react:app ${appName} --style styled-components --no-interactive --babel`
+        `generate @nrwl/react:app ${appName} --style styled-components --no-interactive --babel --linter=${linter}`
       );
 
       await testGeneratedApp(appName, { checkStyles: false });
@@ -60,7 +64,9 @@ forEachCli(() => {
       const appName = uniq('app');
       const libName = uniq('lib');
 
-      runCLI(`generate @nrwl/react:app ${appName} --no-interactive --babel`);
+      runCLI(
+        `generate @nrwl/react:app ${appName} --no-interactive --babel --linter=${linter}`
+      );
       runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
 
       renameFile(
