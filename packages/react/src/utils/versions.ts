@@ -14,3 +14,5 @@ export const babelPresetTypeScriptVersion = '7.3.3';
 export const babelPluginDecoratorsVersion = '7.4.4';
 export const babelLoaderVersion = '8.0.6';
 export const babelPluginMacrosVersion = '2.6.1';
+export const coreJsVersion = '3.1.4';
+export const regeneratorVersion = '0.13.3';
