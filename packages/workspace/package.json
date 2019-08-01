@@ -59,6 +59,7 @@
     "yargs-parser": "10.0.0",
     "yargs": "^11.0.0",
     "prettier": "1.16.4",
+    "chalk": "2.4.2",
     "@nrwl/cli": "*"
   }
 }
