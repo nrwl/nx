@@ -4,24 +4,26 @@ import {
   ensureProject,
   uniq,
   forEachCli,
-  supportUi
+  supportUi,
+  patchKarmaToWorkOnWSL
 } from './utils';
 
 forEachCli(() => {
-  xdescribe('Karma', () => {
+  describe('Karma', () => {
     it('should be able to generate a testable library using karma', async done => {
       ensureProject();
+
       const mylib = uniq('mylib');
       runCLI(`generate @nrwl/angular:lib ${mylib} --unit-test-runner karma`);
+      patchKarmaToWorkOnWSL();
 
       await Promise.all([
         runCLIAsync(`generate @nrwl/angular:service test --project ${mylib}`),
         runCLIAsync(`generate @nrwl/angular:component test --project ${mylib}`)
       ]);
-      if (supportUi()) {
-        const karmaResult = await runCLIAsync(`test ${mylib}`);
-        expect(karmaResult.stdout).toContain('3 SUCCESS');
-      }
+
+      const karmaResult = await runCLIAsync(`test ${mylib}`);
+      expect(karmaResult.stdout).toContain('3 SUCCESS');
       done();
     }, 30000);
 
@@ -29,15 +31,14 @@ forEachCli(() => {
       ensureProject();
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp} --unit-test-runner karma`);
+      patchKarmaToWorkOnWSL();
 
       await Promise.all([
         runCLIAsync(`generate @nrwl/angular:service test --project ${myapp}`),
         runCLIAsync(`generate @nrwl/angular:component test --project ${myapp}`)
       ]);
-      if (supportUi()) {
-        const karmaResult = await runCLIAsync(`test ${myapp}`);
-        expect(karmaResult.stdout).toContain('5 SUCCESS');
-      }
+      const karmaResult = await runCLIAsync(`test ${myapp}`);
+      expect(karmaResult.stdout).toContain('5 SUCCESS');
       done();
     }, 30000);
   });

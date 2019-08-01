@@ -37,6 +37,24 @@ export function forEachCli(
   });
 }
 
+export function patchKarmaToWorkOnWSL(): void {
+  try {
+    const karma = readFile('karma.conf.js');
+    if (process.env['WINDOWSTMP']) {
+      updateFile(
+        'karma.conf.js',
+        karma.replace(
+          `const { constants } = require('karma');`,
+          `
+      const { constants } = require('karma');
+      process.env['TMPDIR']="${process.env['WINDOWSTMP']}";
+    `
+        )
+      );
+    }
+  } catch (e) {}
+}
+
 export function workspaceConfigName() {
   return cli === 'angular' ? 'angular.json' : 'workspace.json';
 }
@@ -217,6 +235,11 @@ export function copyMissingPackages(): void {
     )}`
   );
   execSync(`rm -rf ${tmpProjPath('node_modules/cypress/node_modules/@types')}`);
+  execSync(
+    `cp -a node_modules/mime ${tmpProjPath(
+      'node_modules/karma/node_modules/mime'
+    )}`
+  );
 }
 
 function copyNodeModule(name: string) {

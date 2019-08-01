@@ -137,7 +137,8 @@
     "webpack-node-externals": "^1.7.2",
     "yargs": "^11.0.0",
     "yargs-parser": "10.0.0",
-    "zone.js": "^0.9.0"
+    "zone.js": "^0.9.0",
+    "mime": "2.4.4"
   },
   "author": "Victor Savkin",
   "license": "MIT",
