@@ -163,7 +163,7 @@ function updateTsConfigs(project: any): Rule {
 }
 
 function fixCypressConfigs(host: Tree, context: SchematicContext): Rule {
-  const workspaceJson = readJsonInTree(host, 'workspace.json');
+  const workspaceJson = readJsonInTree(host, 'angular.json');
   return chain(
     Object.entries<any>(workspaceJson.projects)
       .filter(

@@ -5,7 +5,7 @@ import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 export default {
   description: `Create nx.json before migrating to Angular CLI 6.`,
   run: () => {
-    if (!existsSync('.angular-cli.json') && existsSync('workspace.json')) {
+    if (!existsSync('.angular-cli.json') && existsSync('angular.json')) {
       console.warn(stripIndents`
         You have already upgraded to Angular CLI 6.
         We will not be able to recover information about your project's tags for you.

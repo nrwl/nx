@@ -407,6 +407,11 @@ export function updateWorkspaceInTree<T = any, O = T>(
   };
 }
 
+export function readWorkspace(host: Tree): any {
+  const path = getWorkspacePath(host);
+  return readJsonInTree(host, path);
+}
+
 let installAdded = false;
 
 export function addDepsToPackageJson(

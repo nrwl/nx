@@ -257,7 +257,7 @@ function createTsconfigLibJson(host: Tree, project: any) {
 }
 
 function createAdditionalFiles(host: Tree) {
-  const workspaceJson = readJsonInTree(host, 'workspace.json');
+  const workspaceJson = readJsonInTree(host, 'angular.json');
   Object.entries<any>(workspaceJson.projects).forEach(([key, project]) => {
     if (project.architect.test) {
       createTsconfigSpecJson(host, project);
@@ -283,7 +283,7 @@ function createAdditionalFiles(host: Tree) {
 }
 
 function moveE2eTests(host: Tree, context: SchematicContext) {
-  const workspaceJson = readJsonInTree(host, 'workspace.json');
+  const workspaceJson = readJsonInTree(host, 'angular.json');
 
   Object.entries<any>(workspaceJson.projects).forEach(([key, p]) => {
     if (p.projectType === 'application' && !p.architect.e2e) {
@@ -321,7 +321,7 @@ function deleteUnneededFiles(host: Tree) {
 }
 
 function patchLibIndexFiles(host: Tree, context: SchematicContext) {
-  const workspaceJson = readJsonInTree(host, 'workspace.json');
+  const workspaceJson = readJsonInTree(host, 'angular.json');
 
   Object.entries<any>(workspaceJson.projects).forEach(([key, p]) => {
     if (p.projectType === 'library') {
@@ -490,7 +490,7 @@ function createDefaultE2eTsConfig(host: Tree, project: any) {
 }
 
 function updateTsConfigs(host: Tree) {
-  const workspaceJson = readJsonInTree(host, 'workspace.json');
+  const workspaceJson = readJsonInTree(host, 'angular.json');
   Object.entries<any>(workspaceJson.projects).forEach(([key, project]) => {
     if (
       project.architect.build &&
@@ -682,7 +682,7 @@ function addInstallTask(host: Tree, context: SchematicContext) {
 }
 
 function checkCli6Upgraded(host: Tree) {
-  if (!host.exists('workspace.json') && host.exists('.angular-cli.json')) {
+  if (!host.exists('angular.json') && host.exists('.angular-cli.json')) {
     throw new Error(
       'Please install the latest version and run ng update @angular/cli first'
     );
