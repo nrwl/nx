@@ -117,12 +117,30 @@ export function sharedNew(cli: string, options: Schema): Rule {
 function addDependencies(options: Schema) {
   if (options.preset === 'empty') {
     return noop();
+  } else if (options.preset === 'web-components') {
+    return addDepsToPackageJson(
+      {},
+      {
+        '@nrwl/web': nxVersion
+      },
+      false
+    );
   } else if (options.preset === 'angular') {
     return addDepsToPackageJson(
       {
         '@nrwl/angular': nxVersion
       },
       {},
+      false
+    );
+  } else if (options.preset === 'angular-nest') {
+    return addDepsToPackageJson(
+      {
+        '@nrwl/angular': nxVersion
+      },
+      {
+        '@nrwl/nest': nxVersion
+      },
       false
     );
   } else if (options.preset === 'react') {
@@ -133,24 +151,17 @@ function addDependencies(options: Schema) {
       },
       false
     );
-  } else if (options.preset === 'web-components') {
+  } else if (options.preset === 'react-express') {
     return addDepsToPackageJson(
       {},
       {
-        '@nrwl/web': nxVersion
+        '@nrwl/react': nxVersion,
+        '@nrwl/express': nxVersion
       },
       false
     );
   } else {
-    return addDepsToPackageJson(
-      {
-        '@nrwl/angular': nxVersion
-      },
-      {
-        '@nrwl/nest': nxVersion
-      },
-      false
-    );
+    return noop();
   }
 }
 
