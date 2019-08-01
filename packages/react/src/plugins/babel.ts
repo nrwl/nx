@@ -13,6 +13,7 @@ export function getBabelWebpackConfig(config: Configuration) {
             {
               // Allow importing core-js in entrypoint and use browserlist to select polyfills
               useBuiltIns: 'entry',
+              corejs: 3,
               modules: false,
               // Exclude transforms that make all code slower
               exclude: ['transform-typeof-symbol']

@@ -55,9 +55,9 @@ describe('preset', () => {
       );
       expect(tree.exists('/apps/proj/src/app/app.component.ts')).toBe(true);
       expect(tree.exists('/apps/api/src/app/app.controller.ts')).toBe(true);
-      expect(tree.exists('/libs/api-interface/src/lib/interfaces.ts')).toBe(
-        true
-      );
+      expect(
+        tree.exists('/libs/api-interfaces/src/lib/api-interfaces.ts')
+      ).toBe(true);
     });
 
     it('should work with unnormalized names', async () => {
@@ -69,9 +69,36 @@ describe('preset', () => {
 
       expect(tree.exists('/apps/my-proj/src/app/app.component.ts')).toBe(true);
       expect(tree.exists('/apps/api/src/app/app.controller.ts')).toBe(true);
-      expect(tree.exists('/libs/api-interface/src/lib/interfaces.ts')).toBe(
-        true
+      expect(
+        tree.exists('/libs/api-interfaces/src/lib/api-interfaces.ts')
+      ).toBe(true);
+    });
+  });
+
+  describe('--preset react-express', () => {
+    it('should create files', async () => {
+      const tree = await runSchematic(
+        'preset',
+        { name: 'proj', preset: 'react-express' },
+        projectTree
       );
+      expect(tree.exists('/apps/proj/src/app/app.tsx')).toBe(true);
+      expect(
+        tree.exists('/libs/api-interfaces/src/lib/api-interfaces.ts')
+      ).toBe(true);
+    });
+
+    it('should work with unnormalized names', async () => {
+      const tree = await runSchematic(
+        'preset',
+        { name: 'myProj', preset: 'react-express' },
+        projectTree
+      );
+
+      expect(tree.exists('/apps/my-proj/src/app/app.tsx')).toBe(true);
+      expect(
+        tree.exists('/libs/api-interfaces/src/lib/api-interfaces.ts')
+      ).toBe(true);
     });
   });
 });

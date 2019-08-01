@@ -93,32 +93,49 @@ function createPreset(options: Schema): Rule {
         },
         { interactive: false }
       ),
-      schematic(
-        'library',
-        { name: 'api-interface', framework: 'none' },
-        { interactive: false }
-      ),
+      schematic('library', { name: 'api-interfaces' }, { interactive: false }),
       setDefaultCollection('@nrwl/angular'),
-      connectFrontendAndApi(options)
+      connectAngularAndNest(options)
     ]);
   } else if (options.preset === 'react-express') {
-    throw new Error(`Not implemented yet`);
+    return chain([
+      externalSchematic(
+        '@nrwl/react',
+        'application',
+        {
+          name: options.name,
+          style: options.style,
+          babel: true,
+          linter
+        },
+        { interactive: false }
+      ),
+      externalSchematic(
+        '@nrwl/express',
+        'application',
+        {
+          name: 'api',
+          frontendProject: options.name
+        },
+        { interactive: false }
+      ),
+      schematic('library', { name: 'api-interfaces' }, { interactive: false }),
+      setDefaultCollection('@nrwl/react'),
+      setDefaultLinter(linter),
+      connectReactAndExpress(options)
+    ]);
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
   }
 }
 
-function connectFrontendAndApi(options: Schema) {
+function connectAngularAndNest(options: Schema) {
   const addImportToModule = require('@nrwl/angular/src/utils/ast-utils')
     .addImportToModule;
   return (host: Tree) => {
-    host.create(
-      'libs/api-interface/src/lib/interfaces.ts',
-      `export interface Message { message: string }`
-    );
     host.overwrite(
-      'libs/api-interface/src/index.ts',
-      `export * from './lib/interfaces';`
+      'libs/api-interfaces/src/lib/api-interfaces.ts',
+      `export interface Message { message: string }`
     );
 
     const modulePath = `apps/${options.name}/src/app/app.module.ts`;
@@ -148,7 +165,7 @@ function connectFrontendAndApi(options: Schema) {
       `apps/${options.name}/src/app/app.component.ts`,
       `import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Message } from '@${scope}/api-interface';
+import { Message } from '@${scope}/api-interfaces';
 
 @Component({
   selector: '${scope}-root',
@@ -203,7 +220,7 @@ describe('AppComponent', () => {
       `apps/api/src/app/app.controller.ts`,
       `import { Controller, Get } from '@nestjs/common';
 
-import { Message } from '@${scope}/api-interface';
+import { Message } from '@${scope}/api-interfaces';
 
 import { AppService } from './app.service';
 
@@ -222,7 +239,7 @@ export class AppController {
     host.overwrite(
       `apps/api/src/app/app.service.ts`,
       `import { Injectable } from '@nestjs/common';
-import { Message } from '@${scope}/api-interface';
+import { Message } from '@${scope}/api-interfaces';
 
 @Injectable()
 export class AppService {
@@ -230,6 +247,98 @@ export class AppService {
     return { message: 'Welcome to api!' };
   }
 }
+    `
+    );
+  };
+}
+
+function connectReactAndExpress(options: Schema) {
+  return (host: Tree) => {
+    const scope = options.npmScope;
+    const style = options.style ? options.style : 'css';
+    host.overwrite(
+      'libs/api-interfaces/src/lib/api-interfaces.ts',
+      `export interface Message { message: string }`
+    );
+
+    host.overwrite(
+      `apps/${options.name}/src/app/app.tsx`,
+      `import React, { useEffect, useState } from 'react';
+import { Message } from '@${scope}/api-interfaces';
+
+import './app.${style}';
+
+export const App = () => {
+  const [m, setMessage] = useState<Message>({ message: '' });
+
+  useEffect(() => {
+    fetch('/api')
+      .then(r => r.json())
+      .then(setMessage);
+  }, []);
+
+  return (
+    <>
+      <div style={{ textAlign: 'center' }}>
+        <h1>Welcome to ${options.name}!</h1>
+        <img
+          width="450"
+          src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png"
+        />
+      </div>
+      <div>{m.message}</div>
+    </>
+  );
+};
+
+export default App;
+    `
+    );
+
+    host.overwrite(
+      `apps/${options.name}/src/app/app.spec.tsx`,
+      `import { cleanup, getByText, render, wait } from '@testing-library/react';
+import React from 'react';
+import App from './app';
+
+describe('App', () => {
+  afterEach(() => {
+    delete global['fetch'];
+    cleanup();
+  });
+
+  it('should render successfully', async () => {
+    global['fetch'] = jest.fn().mockResolvedValueOnce({
+      json: () => ({
+        message: 'my message'
+      })
+    });
+
+    const { baseElement } = render(<App />);
+    await wait(() => getByText(baseElement, 'my message'));
+  });
+});
+    `
+    );
+
+    host.overwrite(
+      `apps/api/src/main.ts`,
+      `import * as express from 'express';
+import { Message } from '@${scope}/api-interfaces';
+
+const app = express();
+
+const greeting: Message = { message: 'Welcome to api!' };
+
+app.get('/api', (req, res) => {
+  res.send(greeting);
+});
+
+const port = process.env.port || 3333;
+const server = app.listen(port, () => {
+  console.log('Listening at http://localhost:' + port + '/api');
+});
+server.on('error', console.error);
     `
     );
   };

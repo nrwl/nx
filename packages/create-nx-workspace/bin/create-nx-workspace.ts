@@ -24,19 +24,19 @@ const presetOptions = [
     name: 'angular           [a workspace with a single Angular application]'
   },
   {
+    value: 'angular-nest',
+    name:
+      'angular-nest      [a workspace with a full stack application (Angular + Nest)]'
+  },
+  {
     value: 'react',
     name: 'react             [a workspace with a single React application]'
   },
   {
-    value: 'nest-angular',
+    value: 'react-express',
     name:
-      'angular-nest      [a workspace with a full stack application (Angular + Nest)]'
+      'react-express     [a workspace with a full stack application (React + Express)]'
   }
-  // {
-  //   value: 'react-express',
-  //   name:
-  //     'react-express     [a workspace with a full stack application (React + Express)]'
-  // }
 ];
 
 const tsVersion = 'TYPESCRIPT_VERSION';
