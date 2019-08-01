@@ -73,7 +73,7 @@ By default, an Nx workspace starts blank. There are no applications to build, se
 **To add a web components app, run:**
 
 ```bash
-yarn add @nrwl/web
+yarn add -D @nrwl/web
 nx g @nrwl/web:app myapp # or just "nx g myapp"
 ```
 
@@ -85,7 +85,7 @@ nx g @nrwl/web:app myapp # or just "nx g myapp"
 **To add an Angular app, run:**
 
 ```bash
-yarn add @nrwl/angular
+yarn add -D @nrwl/angular
 nx g @nrwl/angular:app myapp # or just "nx g myapp"
 ```
 
@@ -97,7 +97,7 @@ nx g @nrwl/angular:app myapp # or just "nx g myapp"
 **To add a React app, run:**
 
 ```bash
-yarn add @nrwl/react
+yarn add -D @nrwl/react
 nx g @nrwl/react:app myapp # or just "nx g myapp"
 ```
 
