@@ -17,37 +17,7 @@
     "style": {
       "description": "The file extension to be used for style files.",
       "type": "string",
-      "default": "css",
-      "x-prompt": {
-        "message": "Which stylesheet format would you like to use?",
-        "type": "list",
-        "items": [
-          {
-            "value": "css",
-            "label": "CSS"
-          },
-          {
-            "value": "scss",
-            "label": "SASS(.scss)  [ http://sass-lang.com   ]"
-          },
-          {
-            "value": "styl",
-            "label": "Stylus(.styl)[ http://stylus-lang.com ]"
-          },
-          {
-            "value": "less",
-            "label": "LESS         [ http://lesscss.org     ]"
-          },
-          {
-            "value": "styled-components",
-            "label": "styled-components [ https://styled-components.com ]"
-          },
-          {
-            "value": "@emotion/styled",
-            "label": "emotion           [ https://emotion.sh            ]"
-          }
-        ]
-      }
+      "default": "css"
     },
     "directory": {
       "type": "string",

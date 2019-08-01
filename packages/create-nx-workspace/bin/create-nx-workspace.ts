@@ -60,11 +60,13 @@ const packageManager = determinePackageManager();
 determineWorkspaceName(parsedArgs).then(name => {
   determinePreset(parsedArgs).then(preset => {
     return determineAppName(preset, parsedArgs).then(appName => {
-      return determineCli(preset, parsedArgs).then(cli => {
-        const tmpDir = createSandbox(packageManager, cli);
-        createApp(tmpDir, cli, parsedArgs, name, preset, appName);
-        showNxWarning();
-        showCliWarning(preset, parsedArgs);
+      return determineStyle(preset).then(style => {
+        return determineCli(preset, parsedArgs).then(cli => {
+          const tmpDir = createSandbox(packageManager, cli);
+          createApp(tmpDir, cli, parsedArgs, name, preset, appName, style);
+          showNxWarning();
+          showCliWarning(preset, parsedArgs);
+        });
       });
     });
   });
@@ -126,7 +128,7 @@ function determineWorkspaceName(parsedArgs: any) {
       .prompt([
         {
           name: 'WorkspaceName',
-          message: `Workspace name (e.g., org name)    `,
+          message: `Workspace name (e.g., org name)               `,
           type: 'string'
         }
       ])
@@ -141,8 +143,6 @@ function determineWorkspaceName(parsedArgs: any) {
         return a.WorkspaceName;
       });
   }
-
-  return workspaceName;
 }
 
 function determinePreset(parsedArgs: any): Promise<string> {
@@ -165,7 +165,7 @@ function determinePreset(parsedArgs: any): Promise<string> {
       .prompt([
         {
           name: 'Preset',
-          message: `What to create in the new workspace`,
+          message: `What to create in the new workspace           `,
           default: 'empty',
           type: 'list',
           choices: presetOptions
@@ -187,7 +187,7 @@ function determineAppName(preset: string, parsedArgs: any): Promise<string> {
       .prompt([
         {
           name: 'AppName',
-          message: `Application name                   `,
+          message: `Application name                              `,
           type: 'string'
         }
       ])
@@ -241,7 +241,7 @@ function determineCli(preset: string, parsedArgs: any) {
       .prompt([
         {
           name: 'CLI',
-          message: `CLI to power the Nx workspace      `,
+          message: `CLI to power the Nx workspace                 `,
           default: 'nx',
           type: 'list',
           choices: [
@@ -260,6 +260,46 @@ function determineCli(preset: string, parsedArgs: any) {
       ])
       .then(a => (a.CLI === 'angular' ? angular : nx));
   }
+}
+
+function determineStyle(preset: string) {
+  if (preset === 'empty') return Promise.resolve(null);
+  return inquirer
+    .prompt([
+      {
+        name: 'style',
+        message: `Which stylesheet format would you like to use?`,
+        default: 'css',
+        type: 'list',
+        choices: [
+          {
+            value: 'css',
+            name: 'CSS'
+          },
+          {
+            value: 'scss',
+            name: 'SASS(.scss)  [ http://sass-lang.com   ]'
+          },
+          {
+            value: 'styl',
+            name: 'Stylus(.styl)[ http://stylus-lang.com ]'
+          },
+          {
+            value: 'less',
+            name: 'LESS         [ http://lesscss.org     ]'
+          },
+          {
+            value: 'styled-components',
+            name: 'styled-components [ https://styled-components.com ]'
+          },
+          {
+            value: '@emotion/styled',
+            name: 'emotion           [ https://emotion.sh]'
+          }
+        ]
+      }
+    ])
+    .then(a => a.style);
 }
 
 function createSandbox(
@@ -294,7 +334,8 @@ function createApp(
   parsedArgs: any,
   name: string,
   preset: string,
-  appName: string
+  appName: string,
+  style: string | null
 ) {
   // creating the app itself
   const args = [
@@ -309,7 +350,11 @@ function createApp(
     ? ''
     : ` --preset=${preset} --appName=${appName}`;
 
-  console.log(`new ${args}${presetArg} --collection=@nrwl/workspace`);
+  const styleArg = style ? ` --style=${style}` : ``;
+
+  console.log(
+    `new ${args}${presetArg}${styleArg} --collection=@nrwl/workspace`
+  );
   execSync(
     `"${path.join(
       tmpDir,
