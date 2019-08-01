@@ -28,9 +28,6 @@
     "tao": "./index.js"
   },
   "homepage": "https://nx.dev",
-  "peerDependencies": {
-    "@nrwl/workspace": "*"
-  },
   "dependencies": {
     "@angular-devkit/schematics": "8.1.1",
     "@angular-devkit/core": "8.1.1",
