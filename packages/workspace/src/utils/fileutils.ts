@@ -63,7 +63,7 @@ export function readWorkspaceConfigPath(): any {
   if (fileExists('workspace.json')) {
     return readJsonFile('workspace.json');
   } else {
-    return readJsonFile('workspace.json');
+    return readJsonFile('angular.json');
   }
 }
 
