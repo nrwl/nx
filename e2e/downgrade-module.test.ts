@@ -4,16 +4,18 @@ import {
   uniq,
   updateFile,
   forEachCli,
-  supportUi
+  supportUi,
+  patchKarmaToWorkOnWSL
 } from './utils';
 
-forEachCli(() => {
-  xdescribe('DowngradeModule', () => {
+forEachCli('angular', () => {
+  describe('DowngradeModule', () => {
     it('should generate a downgradeModule setup', async () => {
       ensureProject();
 
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp} --unit-test-runner=karma`);
+      patchKarmaToWorkOnWSL();
 
       updateFile(
         `apps/${myapp}/src/legacy.js`,
@@ -25,9 +27,13 @@ forEachCli(() => {
       );
 
       runCLI(`build ${myapp}`);
-      if (supportUi()) {
-        expect(runCLI(`test ${myapp} --no-watch`)).toContain('3 SUCCESS');
-      }
+      expect(runCLI(`test ${myapp} --no-watch`)).toContain('3 SUCCESS');
     }, 1000000);
+  });
+});
+
+forEachCli('nx', () => {
+  describe('DowngradeModule', () => {
+    it('not supported', async () => {}, 1000000);
   });
 });
