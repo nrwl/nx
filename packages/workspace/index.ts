@@ -43,7 +43,8 @@ export {
   addParameterToConstructor,
   createOrUpdate,
   findNodes,
-  updatePackageJsonDependencies
+  updatePackageJsonDependencies,
+  readWorkspace
 } from './src/utils/ast-utils';
 
 export {

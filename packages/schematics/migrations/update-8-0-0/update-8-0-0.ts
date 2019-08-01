@@ -12,7 +12,8 @@ import {
   readJsonInTree,
   updateJsonInTree,
   addUpdateTask,
-  updateWorkspaceInTree
+  updateWorkspaceInTree,
+  readWorkspace
 } from '@nrwl/workspace';
 import {
   createSourceFile,
@@ -32,7 +33,7 @@ function addDependencies() {
   return (host: Tree, context: SchematicContext) => {
     const dependencies = readJsonInTree(host, 'package.json').dependencies;
     const builders = new Set<string>();
-    const projects = readJsonInTree(host, 'workspace.json').projects;
+    const projects = readWorkspace(host).projects;
     Object.values<any>(projects)
       .filter(
         project =>
