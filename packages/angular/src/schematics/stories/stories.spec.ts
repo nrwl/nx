@@ -11,7 +11,7 @@ describe('schematic:stories', () => {
   let appTree: Tree;
 
   beforeEach(async () => {
-    appTree = await createTestUILib();
+    appTree = await createTestUILib('test-ui-lib');
   });
 
   describe('Storybook stories', () => {

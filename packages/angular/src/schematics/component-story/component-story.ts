@@ -141,5 +141,14 @@ export function getKnobType(property: PropertyDeclaration): KnobType {
 }
 
 export function getKnobDefaultValue(property: PropertyDeclaration): string {
-  return property.initializer ? property.initializer.getText() : "''";
+  const typeNameToDefault = {
+    string: "''",
+    number: '0',
+    boolean: 'false'
+  };
+  return property.initializer
+    ? property.initializer.getText()
+    : property.type
+    ? typeNameToDefault[property.type.getText()]
+    : "''";
 }

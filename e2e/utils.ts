@@ -73,7 +73,7 @@ function patchPackageJsonDeps(addWorkspace = true) {
   writeFileSync(tmpProjPath('package.json'), JSON.stringify(p, null, 2));
 }
 
-function runYarnInstall(silent: boolean = true) {
+export function runYarnInstall(silent: boolean = true) {
   const install = execSync('yarn install', {
     cwd: tmpProjPath(),
     ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
@@ -138,6 +138,52 @@ exports.default = default_1;`
 
     execSync(`mv ${tmpProjPath()} ${tmpBackupProjPath()}`);
   }
+  execSync(`cp -a ${tmpBackupProjPath()} ${tmpProjPath()}`);
+}
+
+export function createTestUILib(libName: string): void {
+  runCLI(`g @nrwl/angular:library ${libName} --no-interactive`);
+  runCLI(
+    `g @schematics/angular:component test-button --project=${libName} --no-interactive`
+  );
+
+  writeFileSync(
+    tmpProjPath(`libs/${libName}/src/lib/test-button/test-button.component.ts`),
+    `
+import { Component, OnInit, Input } from '@angular/core';
+
+export type ButtonStyle = 'default' | 'primary' | 'accent';
+
+@Component({
+  selector: 'proj-test-button',
+  templateUrl: './test-button.component.html',
+  styleUrls: ['./test-button.component.css']
+})
+export class TestButtonComponent implements OnInit {
+  @Input('buttonType') type = 'button';
+  @Input() style: ButtonStyle = 'default';
+  @Input() age: number;
+  @Input() isOn = false;
+
+  constructor() { }
+
+  ngOnInit() {
+  }
+
+}
+      `
+  );
+
+  writeFileSync(
+    tmpProjPath(
+      `libs/${libName}/src/lib/test-button/test-button.component.html`
+    ),
+    `<button [attr.type]="type" [ngClass]="style"></button>`
+  );
+  runCLI(
+    `g @schematics/angular:component test-other --project=${libName} --no-interactive`
+  );
+
   execSync(`cp -a ${tmpBackupProjPath()} ${tmpProjPath()}`);
 }
 

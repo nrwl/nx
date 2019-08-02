@@ -6,7 +6,7 @@ describe('schematic:cypress-project', () => {
   let appTree: Tree;
 
   beforeEach(async () => {
-    appTree = await createTestUILib();
+    appTree = await createTestUILib('test-ui-lib');
   });
 
   it('should generate files', async () => {

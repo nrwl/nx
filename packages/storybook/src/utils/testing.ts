@@ -37,24 +37,24 @@ export function runMigration(migrationName: string, options: any, tree: Tree) {
     .toPromise();
 }
 
-export async function createTestUILib(): Promise<Tree> {
+export async function createTestUILib(libName: string): Promise<Tree> {
   let appTree = Tree.empty();
   appTree = createEmptyWorkspace(appTree);
   appTree = await callRule(
     externalSchematic('@nrwl/angular', 'library', {
-      name: 'test-ui-lib'
+      name: libName
     }),
     appTree
   );
   appTree = await callRule(
     externalSchematic('@schematics/angular', 'component', {
       name: 'test-button',
-      project: 'test-ui-lib'
+      project: libName
     }),
     appTree
   );
   appTree.overwrite(
-    'libs/test-ui-lib/src/lib/test-button/test-button.component.ts',
+    `libs/${libName}/src/lib/test-button/test-button.component.ts`,
     `
 import { Component, OnInit, Input } from '@angular/core';
 
@@ -80,13 +80,13 @@ export class TestButtonComponent implements OnInit {
 `
   );
   appTree.overwrite(
-    'libs/test-ui-lib/src/lib/test-button/test-button.component.html',
+    `libs/${libName}/src/lib/test-button/test-button.component.html`,
     `<button [attr.type]="type" [ngClass]="style"></button>`
   );
   appTree = await callRule(
     externalSchematic('@schematics/angular', 'component', {
       name: 'test-other',
-      project: 'test-ui-lib'
+      project: libName
     }),
     appTree
   );

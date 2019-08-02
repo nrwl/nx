@@ -8,24 +8,25 @@ import {
   schematic,
   SchematicContext,
   Tree,
-  url
+  url,
+  template
 } from '@angular-devkit/schematics';
 import {
   getProjectConfig,
-  getWorkspace,
-  updateWorkspace
+  updateWorkspace,
+  addPackageWithNgAdd,
+  offsetFromRoot
 } from '@nrwl/workspace';
 import { StorybookStoriesSchema } from '../../../../angular/src/schematics/stories/stories';
 import { parseJsonAtPath } from '../../utils/utils';
 import { CypressConfigureSchema } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
-import { from } from 'rxjs';
-import { map } from 'rxjs/operators';
-import workspace from '@nrwl/workspace/src/schematics/workspace/workspace';
 
 export default function(schema: StorybookConfigureSchema): Rule {
   return chain([
-    createStorybookDir(schema.name),
+    schematic('ng-add', {}),
+    createRootStorybookDir(),
+    createLibStorybookDir(schema.name),
     configureTsConfig(schema.name),
     addStorybookTask(schema.name),
     schema.configureCypress
@@ -43,13 +44,28 @@ export default function(schema: StorybookConfigureSchema): Rule {
   ]);
 }
 
-function createStorybookDir(projectName: string): Rule {
+function createRootStorybookDir(): Rule {
   return (tree: Tree, context: SchematicContext) => {
     context.logger.debug('adding .storybook folder to lib');
 
+    return chain([mergeWith(apply(url('./root-files'), []))])(tree, context);
+  };
+}
+
+function createLibStorybookDir(projectName: string): Rule {
+  return (tree: Tree, context: SchematicContext) => {
+    context.logger.debug('adding .storybook folder to lib');
+    const projectConfig = getProjectConfig(tree, projectName);
+
     return chain([
       mergeWith(
-        apply(url('./files'), [move(getProjectConfig(tree, projectName).root)])
+        apply(url('./lib-files'), [
+          template({
+            tmpl: '',
+            offsetFromRoot: offsetFromRoot(projectConfig.root)
+          }),
+          move(projectConfig.root)
+        ])
       )
     ])(tree, context);
   };
@@ -57,32 +73,25 @@ function createStorybookDir(projectName: string): Rule {
 
 function configureTsConfig(projectName: string): Rule {
   return (tree: Tree) => {
-    return from(getWorkspace(tree)).pipe(
-      map(workspace => {
-        const projectPath = workspace.projects[projectName].root;
-        const tsConfigPath = projectPath + '/tsconfig.lib.json';
-        const projectTsConfig = parseJsonAtPath(tree, tsConfigPath);
+    const projectPath = getProjectConfig(tree, projectName).root;
+    const tsConfigPath = projectPath + '/tsconfig.lib.json';
+    const projectTsConfig = parseJsonAtPath(tree, tsConfigPath);
 
-        let tsConfigContent: any;
+    let tsConfigContent: any;
 
-        if (projectTsConfig && projectTsConfig.value) {
-          tsConfigContent = projectTsConfig.value;
-        } else {
-          return tree;
-        }
+    if (projectTsConfig && projectTsConfig.value) {
+      tsConfigContent = projectTsConfig.value;
+    } else {
+      return tree;
+    }
 
-        tsConfigContent.exclude = [
-          ...tsConfigContent.exclude,
-          '**/*.stories.ts'
-        ];
+    tsConfigContent.exclude = [...tsConfigContent.exclude, '**/*.stories.ts'];
 
-        tree.overwrite(
-          tsConfigPath,
-          JSON.stringify(tsConfigContent, null, 2) + '\n'
-        );
-        return tree;
-      })
+    tree.overwrite(
+      tsConfigPath,
+      JSON.stringify(tsConfigContent, null, 2) + '\n'
     );
+    return tree;
   };
 }
 
