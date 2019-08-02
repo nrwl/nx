@@ -57,8 +57,7 @@ describe('Jest Builder', () => {
             ]
           }
         }),
-        watch: false,
-        reporters: ['default']
+        watch: false
       },
       ['/root/jest.config.js']
     );
@@ -150,7 +149,6 @@ describe('Jest Builder', () => {
         }),
         coverage: false,
         findRelatedTests: true,
-        reporters: ['default'],
         runInBand: true,
         testNamePattern: 'should load',
         watch: false
@@ -259,7 +257,6 @@ describe('Jest Builder', () => {
             ]
           }
         }),
-        reporters: ['default'],
         setupTestFrameworkScriptFile: '/root/test.ts',
         watch: false
       },
