@@ -38,7 +38,7 @@ Default: `7777`
 
 Type: `number`
 
-The port to inspect the process on
+The port to inspect the process on. Setting port to 0 will assign random free ports to all forked processes.
 
 ### waitUntilTargets
 

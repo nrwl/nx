@@ -128,7 +128,7 @@ function determineWorkspaceName(parsedArgs: any) {
       .prompt([
         {
           name: 'WorkspaceName',
-          message: `Workspace name (e.g., org name)               `,
+          message: `Workspace name (e.g., org name)    `,
           type: 'string'
         }
       ])
@@ -165,7 +165,7 @@ function determinePreset(parsedArgs: any): Promise<string> {
       .prompt([
         {
           name: 'Preset',
-          message: `What to create in the new workspace           `,
+          message: `What to create in the new workspace`,
           default: 'empty',
           type: 'list',
           choices: presetOptions
@@ -187,7 +187,7 @@ function determineAppName(preset: string, parsedArgs: any): Promise<string> {
       .prompt([
         {
           name: 'AppName',
-          message: `Application name                              `,
+          message: `Application name                   `,
           type: 'string'
         }
       ])
@@ -241,7 +241,7 @@ function determineCli(preset: string, parsedArgs: any) {
       .prompt([
         {
           name: 'CLI',
-          message: `CLI to power the Nx workspace                 `,
+          message: `CLI to power the Nx workspace      `,
           default: 'nx',
           type: 'list',
           choices: [
@@ -268,7 +268,7 @@ function determineStyle(preset: string) {
     .prompt([
       {
         name: 'style',
-        message: `Which stylesheet format would you like to use?`,
+        message: `Default stylesheet format          `,
         default: 'css',
         type: 'list',
         choices: [
@@ -342,18 +342,15 @@ function createApp(
     name,
     ...process.argv
       .slice(parsedArgs._[2] ? 3 : 2)
-      .filter(a => !a.startsWith('--cli')) // not used by the new command
+      .filter(a => !a.startsWith('--cli') && !a.startsWith('--preset')) // not used by the new command
       .map(a => `"${a}"`)
   ].join(' ');
 
-  const presetArg = parsedArgs.preset
-    ? ''
-    : ` --preset=${preset} --appName=${appName}`;
-
+  const appNameArg = appName ? ` --appName=${appName}` : ``;
   const styleArg = style ? ` --style=${style}` : ``;
 
   console.log(
-    `new ${args}${presetArg}${styleArg} --collection=@nrwl/workspace`
+    `new ${args} --preset=${preset}${appNameArg}${styleArg} --collection=@nrwl/workspace`
   );
   execSync(
     `"${path.join(
@@ -361,7 +358,7 @@ function createApp(
       'node_modules',
       '.bin',
       cli.command
-    )}" new ${args}${presetArg} --collection=@nrwl/workspace`,
+    )}" new ${args} --preset=${preset}${appNameArg}${styleArg} --collection=@nrwl/workspace`,
     {
       stdio: [0, 1, 2]
     }
