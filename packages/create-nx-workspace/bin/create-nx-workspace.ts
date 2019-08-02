@@ -342,15 +342,21 @@ function createApp(
     name,
     ...process.argv
       .slice(parsedArgs._[2] ? 3 : 2)
-      .filter(a => !a.startsWith('--cli') && !a.startsWith('--preset')) // not used by the new command
+      .filter(
+        a =>
+          !a.startsWith('--cli') &&
+          !a.startsWith('--preset') &&
+          !a.startsWith('--appName') &&
+          !a.startsWith('--app-name')
+      ) // not used by the new command
       .map(a => `"${a}"`)
   ].join(' ');
 
-  const appNameArg = appName ? ` --appName=${appName}` : ``;
-  const styleArg = style ? ` --style=${style}` : ``;
+  const appNameArg = appName ? ` --appName="${appName}"` : ``;
+  const styleArg = style ? ` --style="${style}"` : ``;
 
   console.log(
-    `new ${args} --preset=${preset}${appNameArg}${styleArg} --collection=@nrwl/workspace`
+    `new ${args} --preset="${preset}"${appNameArg}${styleArg} --collection=@nrwl/workspace`
   );
   execSync(
     `"${path.join(
@@ -358,7 +364,7 @@ function createApp(
       'node_modules',
       '.bin',
       cli.command
-    )}" new ${args} --preset=${preset}${appNameArg}${styleArg} --collection=@nrwl/workspace`,
+    )}" new ${args} --preset="${preset}"${appNameArg}${styleArg} --collection=@nrwl/workspace`,
     {
       stdio: [0, 1, 2]
     }
