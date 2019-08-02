@@ -251,6 +251,9 @@ async function runCommand(
         workspaceResults.fail(projects[i]);
       }
     });
+  } finally {
+    // fix for https://github.com/nrwl/nx/issues/1666
+    if (process.stdin['unref']) (process.stdin as any).unref();
   }
 
   workspaceResults.saveResults();
