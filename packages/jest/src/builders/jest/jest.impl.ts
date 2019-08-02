@@ -93,7 +93,6 @@ function run(
     testNamePattern: options.testNamePattern,
     testPathPattern: options.testPathPattern,
     colors: options.colors,
-    reporters: options.reporters,
     verbose: options.verbose,
     coverageReporters: options.coverageReporters,
     coverageDirectory: options.coverageDirectory,
@@ -127,8 +126,8 @@ function run(
     config.clearCache = true;
   }
 
-  if (!options.reporters || !options.reporters.length) {
-    config.reporters = ['default'];
+  if (options.reporters && options.reporters.length > 0) {
+    config.reporters = options.reporters;
   }
 
   return from(runCLI(config, [options.jestConfig])).pipe(
