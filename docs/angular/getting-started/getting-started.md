@@ -47,12 +47,12 @@ If you haven't specified any presets, you will get an empty Nx workspace. There 
 **Using `npm`**
 
 ```bash
-npm install --dev @nrwl/angular # Adds Angular capabilities
-npm install --dev @nrwl/web # Adds Web capabilities
-npm install --dev @nrwl/react # Adds React capabilities
-npm install --dev @nrwl/node # Adds Node capabilities
-npm install --dev @nrwl/express # Adds Express capabilities
-npm install --dev @nrwl/nest # Adds Nest capabilities
+npm install --save-dev @nrwl/angular # Adds Angular capabilities
+npm install --save-dev @nrwl/web # Adds Web capabilities
+npm install --save-dev @nrwl/react # Adds React capabilities
+npm install --save-dev @nrwl/node # Adds Node capabilities
+npm install --save-dev @nrwl/express # Adds Express capabilities
+npm install --save-dev @nrwl/nest # Adds Nest capabilities
 ```
 
 **Using `yarn`**
