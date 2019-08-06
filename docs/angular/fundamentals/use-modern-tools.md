@@ -8,7 +8,7 @@ Adding these tools to the dev workflow is challenging in a regular CLI project. 
 
 ## Nest
 
-![NestJS logo](./nest-logo.png)
+![NestJS logo](/shared/nest-logo.png)
 
 Nest is a Node.js framework designed for building scalable server-side applications. In many ways, Nest is familiar to Angular developers:
 

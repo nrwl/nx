@@ -200,7 +200,7 @@ Read more about Jest at [jestjs.io](https://jestjs.io).
 
 ## Prettier
 
-![Prettier logo](shared/prettier-logo.png)
+![Prettier logo](/shared/prettier-logo.png)
 
 Prettier is an opinionated code formatter. An Nx workspace comes with Prettier preconfigured.
 
