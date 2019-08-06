@@ -6,7 +6,7 @@ Of course, it's not the case that Cypress is always better than Protractor or Ne
 
 ## Nest
 
-![NestJS logo](../../shared/nest-logo.png)
+![NestJS logo](/shared/nest-logo.png)
 
 Nest is a Node.js framework designed for building scalable server-side applications.
 
