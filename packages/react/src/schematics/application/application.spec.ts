@@ -292,9 +292,8 @@ describe('app', () => {
     );
     const workspaceJson = readJsonInTree(tree, 'workspace.json');
     expect(workspaceJson.projects['my-app'].architect.lint).toEqual({
-      builder: '@nrwl/linter:lint',
+      builder: '@angular-devkit/build-angular:tslint',
       options: {
-        linter: 'tslint',
         exclude: ['**/node_modules/**', '!apps/my-app/**'],
         tsConfig: [
           'apps/my-app/tsconfig.app.json',

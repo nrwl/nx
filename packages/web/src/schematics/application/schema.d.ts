@@ -7,5 +7,5 @@ export interface Schema {
   tags?: string;
   unitTestRunner: 'jest' | 'none';
   e2eTestRunner: 'cypress' | 'none';
-  linter: 'eslint' | 'tslint';
+  linter: Linter;
 }

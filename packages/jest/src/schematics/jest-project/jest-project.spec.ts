@@ -15,9 +15,8 @@ describe('jestProject', () => {
           root: 'libs/lib1',
           architect: {
             lint: {
-              builder: '@nrwl/linter:lint',
+              builder: '@angular-devkit/build-angular:tslint',
               options: {
-                linter: 'tslint',
                 tsConfig: []
               }
             }

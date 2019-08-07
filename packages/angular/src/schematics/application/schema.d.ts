@@ -1,5 +1,6 @@
 import { E2eTestRunner } from '../../utils/test-runners';
 import { UnitTestRunner } from '../../utils/UnitTestRunner';
+import { Linter } from '@nrwl/workspace';
 
 export interface Schema {
   name: string;
@@ -14,7 +15,7 @@ export interface Schema {
   skipTests?: boolean;
   directory?: string;
   tags?: string;
-  linter: string;
+  linter: Linter;
   unitTestRunner: UnitTestRunner;
   e2eTestRunner: E2eTestRunner;
 }

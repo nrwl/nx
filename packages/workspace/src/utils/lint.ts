@@ -13,21 +13,26 @@ import {
   eslintConfigPrettierVersion
 } from './versions';
 
+export const enum Linter {
+  TsLint = 'tslint',
+  EsLint = 'eslint',
+  None = 'none'
+}
+
 export function generateProjectLint(
   projectRoot: string,
   tsConfigPath: string,
-  linter: 'tslint' | 'eslint' | 'none'
+  linter: Linter
 ) {
-  if (linter === 'tslint') {
+  if (linter === Linter.TsLint) {
     return {
-      builder: '@nrwl/linter:lint',
+      builder: '@angular-devkit/build-angular:tslint',
       options: {
-        linter: 'tslint',
         tsConfig: [tsConfigPath],
         exclude: ['**/node_modules/**', '!' + projectRoot + '/**']
       }
     };
-  } else if (linter === 'eslint') {
+  } else if (linter === Linter.EsLint) {
     return {
       builder: '@nrwl/linter:lint',
       options: {
@@ -44,7 +49,7 @@ export function generateProjectLint(
 
 export function addLintFiles(
   projectRoot: string,
-  linter: 'tslint' | 'eslint' | 'none',
+  linter: Linter,
   onlyGlobal = false
 ): Rule {
   return (host: Tree, context: SchematicContext) => {

@@ -1,38 +1,41 @@
 import { join, normalize } from '@angular-devkit/core';
 import {
+  apply,
   chain,
   externalSchematic,
-  noop,
-  Rule,
-  Tree,
-  SchematicContext,
-  schematic,
-  url,
-  apply,
+  MergeStrategy,
   mergeWith,
   move,
+  noop,
+  Rule,
+  schematic,
+  SchematicContext,
   template,
-  MergeStrategy
+  Tree,
+  url
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';
 import * as ts from 'typescript';
 
 import {
-  NxJson,
-  updateJsonInTree,
-  readJsonInTree,
-  offsetFromRoot,
-  addLintFiles
-} from '@nrwl/workspace';
-import { addGlobal, addIncludeToTsConfig, insert } from '@nrwl/workspace';
-import { toClassName, toFileName, toPropertyName } from '@nrwl/workspace';
-import {
+  addGlobal,
+  addIncludeToTsConfig,
+  addLintFiles,
+  formatFiles,
   getNpmScope,
   getWorkspacePath,
-  replaceAppNameWithPath
+  insert,
+  Linter,
+  NxJson,
+  offsetFromRoot,
+  readJsonInTree,
+  replaceAppNameWithPath,
+  toClassName,
+  toFileName,
+  toPropertyName,
+  updateJsonInTree
 } from '@nrwl/workspace';
-import { formatFiles } from '@nrwl/workspace';
 import { addUnitTestRunner } from '../ng-add/ng-add';
 import { addImportToModule, addRoute } from '../../utils/ast-utils';
 import { insertImport } from '@nrwl/workspace/src/utils/ast-utils';
@@ -431,7 +434,7 @@ export default function(schema: Schema): Rule {
     }
 
     return chain([
-      addLintFiles(options.projectRoot, 'tslint', true),
+      addLintFiles(options.projectRoot, Linter.TsLint, true),
       addUnitTestRunner(options),
       externalSchematic('@schematics/angular', 'library', {
         name: options.name,

@@ -369,7 +369,7 @@ export default function(schema: Schema): Rule {
         ...options,
         skipFormat: true
       }),
-      addLintFiles(options.appProjectRoot, 'tslint', true),
+      addLintFiles(options.appProjectRoot, options.linter, true),
       externalSchematic('@schematics/angular', 'application', {
         name: options.name,
         inlineStyle: options.inlineStyle,
@@ -394,7 +394,8 @@ export default function(schema: Schema): Rule {
         ? externalSchematic('@nrwl/cypress', 'cypress-project', {
             name: options.e2eProjectName,
             directory: options.directory,
-            project: options.name
+            project: options.name,
+            linter: options.linter
           })
         : noop(),
       move(appProjectRoot, options.appProjectRoot),

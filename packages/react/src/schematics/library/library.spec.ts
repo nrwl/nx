@@ -19,9 +19,8 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(workspaceJson.projects['my-lib'].architect.build).toBeUndefined();
       expect(workspaceJson.projects['my-lib'].architect.lint).toEqual({
-        builder: '@nrwl/linter:lint',
+        builder: '@angular-devkit/build-angular:tslint',
         options: {
-          linter: 'tslint',
           exclude: ['**/node_modules/**', '!libs/my-lib/**'],
           tsConfig: [
             'libs/my-lib/tsconfig.lib.json',
@@ -184,9 +183,8 @@ describe('lib', () => {
         'libs/my-dir/my-lib'
       );
       expect(workspaceJson.projects['my-dir-my-lib'].architect.lint).toEqual({
-        builder: '@nrwl/linter:lint',
+        builder: '@angular-devkit/build-angular:tslint',
         options: {
-          linter: 'tslint',
           exclude: ['**/node_modules/**', '!libs/my-dir/my-lib/**'],
           tsConfig: [
             'libs/my-dir/my-lib/tsconfig.lib.json',
