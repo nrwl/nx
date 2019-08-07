@@ -1,8 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
-import { readJsonInTree } from '@nrwl/workspace';
-import { join, normalize } from '@angular-devkit/core';
+import { readJsonInTree, Linter } from '@nrwl/workspace';
 
 describe('schematic:cypress-project', () => {
   let appTree: Tree;
@@ -40,7 +39,7 @@ describe('schematic:cypress-project', () => {
     it('should add update `workspace.json` file', async () => {
       const tree = await runSchematic(
         'cypress-project',
-        { name: 'my-app-e2e', project: 'my-app' },
+        { name: 'my-app-e2e', project: 'my-app', linter: Linter.TsLint },
         appTree
       );
       const workspaceJson = readJsonInTree(tree, 'workspace.json');
@@ -49,9 +48,8 @@ describe('schematic:cypress-project', () => {
       expect(project.root).toEqual('apps/my-app-e2e');
 
       expect(project.architect.lint).toEqual({
-        builder: '@nrwl/linter:lint',
+        builder: '@angular-devkit/build-angular:tslint',
         options: {
-          linter: 'tslint',
           tsConfig: ['apps/my-app-e2e/tsconfig.e2e.json'],
           exclude: ['**/node_modules/**', '!apps/my-app-e2e/**']
         }
@@ -67,6 +65,26 @@ describe('schematic:cypress-project', () => {
           production: {
             devServerTarget: 'my-app:serve:production'
           }
+        }
+      });
+    });
+
+    it('should add update `workspace.json` file properly when eslint is passed', async () => {
+      const tree = await runSchematic(
+        'cypress-project',
+        { name: 'my-app-e2e', project: 'my-app', linter: Linter.EsLint },
+        appTree
+      );
+      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+      const project = workspaceJson.projects['my-app-e2e'];
+
+      expect(project.architect.lint).toEqual({
+        builder: '@nrwl/linter:lint',
+        options: {
+          linter: 'eslint',
+          config: 'apps/my-app-e2e/.eslintrc',
+          tsConfig: ['apps/my-app-e2e/tsconfig.e2e.json'],
+          exclude: ['**/node_modules/**', '!apps/my-app-e2e/**']
         }
       });
     });
@@ -111,7 +129,12 @@ describe('schematic:cypress-project', () => {
       it('should update workspace.json', async () => {
         const tree = await runSchematic(
           'cypress-project',
-          { name: 'my-app-e2e', project: 'my-dir-my-app', directory: 'my-dir' },
+          {
+            name: 'my-app-e2e',
+            project: 'my-dir-my-app',
+            directory: 'my-dir',
+            linter: Linter.TsLint
+          },
           appTree
         );
         const projectConfig = readJsonInTree(tree, 'workspace.json').projects[
@@ -120,9 +143,8 @@ describe('schematic:cypress-project', () => {
 
         expect(projectConfig).toBeDefined();
         expect(projectConfig.architect.lint).toEqual({
-          builder: '@nrwl/linter:lint',
+          builder: '@angular-devkit/build-angular:tslint',
           options: {
-            linter: 'tslint',
             tsConfig: ['apps/my-dir/my-app-e2e/tsconfig.e2e.json'],
             exclude: ['**/node_modules/**', '!apps/my-dir/my-app-e2e/**']
           }

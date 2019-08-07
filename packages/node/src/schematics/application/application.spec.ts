@@ -53,9 +53,8 @@ describe('app', () => {
         })
       );
       expect(workspaceJson.projects['my-node-app'].architect.lint).toEqual({
-        builder: '@nrwl/linter:lint',
+        builder: '@angular-devkit/build-angular:tslint',
         options: {
-          linter: 'tslint',
           tsConfig: [
             'apps/my-node-app/tsconfig.app.json',
             'apps/my-node-app/tsconfig.spec.json'
@@ -125,9 +124,8 @@ describe('app', () => {
       expect(
         workspaceJson.projects['my-dir-my-node-app'].architect.lint
       ).toEqual({
-        builder: '@nrwl/linter:lint',
+        builder: '@angular-devkit/build-angular:tslint',
         options: {
-          linter: 'tslint',
           tsConfig: [
             'apps/my-dir/my-node-app/tsconfig.app.json',
             'apps/my-dir/my-node-app/tsconfig.spec.json'

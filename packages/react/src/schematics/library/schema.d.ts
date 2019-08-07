@@ -1,3 +1,5 @@
+import { Linter } from '@nrwl/workspace';
+
 export interface Schema {
   name: string;
   directory?: string;
@@ -10,5 +12,5 @@ export interface Schema {
   routing?: boolean;
   parentRoute?: string;
   unitTestRunner: 'jest' | 'none';
-  linter: 'eslint' | 'tslint';
+  linter: Linter;
 }

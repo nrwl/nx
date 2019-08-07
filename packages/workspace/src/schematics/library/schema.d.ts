@@ -1,4 +1,4 @@
-import { UnitTestRunner } from '../../utils/test-runners';
+import { Linter } from '@nrwl/workspace/src/utils/lint';
 
 export interface Schema {
   name: string;
@@ -8,5 +8,5 @@ export interface Schema {
   tags?: string;
   simpleModuleName: boolean;
   unitTestRunner: 'jest' | 'none';
-  linter: 'eslint' | 'tslint';
+  linter: Linter;
 }

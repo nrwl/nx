@@ -1,3 +1,5 @@
+import { Linter } from '@nrwl/workspace';
+
 export interface Schema {
   name: string;
   style?: string;
@@ -6,7 +8,7 @@ export interface Schema {
   tags?: string;
   unitTestRunner: 'jest' | 'none';
   e2eTestRunner: 'cypress' | 'none';
-  linter: 'eslint' | 'tslint';
+  linter: Linter;
   pascalCaseFiles?: boolean;
   classComponent?: boolean;
   routing?: boolean;
