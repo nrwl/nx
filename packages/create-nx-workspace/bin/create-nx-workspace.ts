@@ -408,7 +408,7 @@ function showCliWarning(preset: string, parsedArgs: any) {
     ) {
       output.addVerticalSeparator();
       output.note({
-        title: `We generated an Nx workspace powered by the Nx CLi.`,
+        title: `We generated an Nx workspace powered by the Nx CLI.`,
         bodyLines: [
           `Run 'create-nx-workspace --help' to see how to select a different CLI.`
         ]
