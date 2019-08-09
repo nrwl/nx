@@ -368,7 +368,7 @@ function setDefaultLinter(linter: string) {
     json.schematics['@nrwl/web'] = { application: { linter } };
     json.schematics['@nrwl/node'] = { application: { linter } };
     json.schematics['@nrwl/nest'] = { application: { linter } };
-    json.schematics['@nrwl/workspace'] = { application: { linter } };
+    json.schematics['@nrwl/express'] = { application: { linter } };
     return json;
   });
 }
