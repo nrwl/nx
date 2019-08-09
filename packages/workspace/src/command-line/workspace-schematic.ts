@@ -24,6 +24,7 @@ import * as yargsParser from 'yargs-parser';
 import { fileExists } from '../utils/fileutils';
 import { appRootPath } from '../utils/app-root';
 import { output } from './output';
+import { platform } from 'os';
 
 const rootDirectory = appRootPath;
 
@@ -73,8 +74,12 @@ function getToolsOutDir() {
 
 function compileToolsDir(outDir: string) {
   copySync(path.join(rootDirectory, 'tools'), outDir);
+  const tsc =
+    platform() === 'win32'
+      ? `.\\node_modules\\.bin\\tsc`
+      : `./node_modules/.bin/tsc`;
   try {
-    execSync('tsc -p tools/tsconfig.tools.json', {
+    execSync(`${tsc} -p tools/tsconfig.tools.json`, {
       stdio: 'inherit',
       cwd: rootDirectory
     });
@@ -125,12 +130,13 @@ function createWorkflow(dryRun: boolean) {
 
 function detectPackageManager(): string {
   try {
-    const packageManager = execSync(`nx config cli.packageManager`, {
+    const output = execSync(`nx config cli.packageManager`, {
       stdio: ['ignore', 'pipe', 'ignore']
     })
       .toString()
-      .trim();
-    return packageManager;
+      .trim()
+      .split('\n');
+    return output[output.length - 1].trim();
   } catch (e) {
     return fileExists('yarn.lock')
       ? 'yarn'
