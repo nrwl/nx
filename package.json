@@ -68,6 +68,7 @@
     "@types/webpack": "^4.4.24",
     "@types/yargs": "^11.0.0",
     "@typescript-eslint/eslint-plugin": "2.0.0-alpha.4",
+    "@typescript-eslint/experimental-utils": "2.0.0-alpha.4",
     "@typescript-eslint/parser": "2.0.0-alpha.4",
     "angular": "1.6.6",
     "app-root-path": "^2.0.1",

@@ -15,6 +15,7 @@ import {
   angularCliVersion,
   prettierVersion,
   typescriptVersion,
+  eslintVersion,
   nxVersion
 } from '../../utils/versions';
 
@@ -39,6 +40,7 @@ export default function(options: Schema): Rule {
         nxCli: false,
         typescriptVersion,
         prettierVersion,
+        eslintVersion,
         // angular cli is used only when workspace schematics is added to angular cli
         angularCliVersion,
         ...(options as object),

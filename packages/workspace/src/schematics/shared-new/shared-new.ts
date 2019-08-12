@@ -174,16 +174,14 @@ function addTasks(options: Schema) {
         new NodePackageInstallTask(options.directory)
       );
     }
-    if (options.preset !== 'empty') {
-      const createPresetTask = context.addTask(new RunPresetTask(), [
-        packageTask
-      ]);
+    const createPresetTask = context.addTask(new RunPresetTask(), [
+      packageTask
+    ]);
 
-      presetInstallTask = context.addTask(
-        new NodePackageInstallTask(options.directory),
-        [createPresetTask]
-      );
-    }
+    presetInstallTask = context.addTask(
+      new NodePackageInstallTask(options.directory),
+      [createPresetTask]
+    );
     if (!options.skipGit) {
       const commit =
         typeof options.commit == 'object'
