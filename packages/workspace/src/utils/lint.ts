@@ -10,7 +10,8 @@ import { offsetFromRoot } from './common';
 import {
   eslintVersion,
   typescriptESLintVersion,
-  eslintConfigPrettierVersion
+  eslintConfigPrettierVersion,
+  nxVersion
 } from './versions';
 
 export const enum Linter {
@@ -75,6 +76,7 @@ export function addLintFiles(
         addDepsToPackageJson(
           {},
           {
+            '@nrwl/eslint-plugin-nx': nxVersion,
             '@typescript-eslint/parser': typescriptESLintVersion,
             '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
             eslint: eslintVersion,
@@ -179,7 +181,7 @@ const globalESLint = `
     "sourceType": "module",
     "project": "./tsconfig.json"
   },
-  "plugins": ["@typescript-eslint"],
+  "plugins": ["@typescript-eslint", "@nrwl/nx"],
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
@@ -190,7 +192,16 @@ const globalESLint = `
   "rules": {
     "@typescript-eslint/explicit-member-accessibility": "off",
     "@typescript-eslint/explicit-function-return-type": "off",
-    "@typescript-eslint/no-parameter-properties": "off"
+    "@typescript-eslint/no-parameter-properties": "off",
+    "@nrwl/nx/enforce-module-boundaries": [
+      "error",
+      {
+        "allow": [],
+        "depConstraints": [
+          { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }
+        ]
+      }
+    ]
   },
   "overrides": [
     {
@@ -227,7 +238,7 @@ const globalESLint = `
 //       "version": "detect"
 //     }
 //   },
-//   "plugins": ["@typescript-eslint", "import", "jsx-a11y", "react", "react-hooks"],
+//   "plugins": ["@typescript-eslint", "@nrwl/nx", "import", "jsx-a11y", "react", "react-hooks"],
 //   "extends": [
 //     "eslint:recommended",
 //     "plugin:@typescript-eslint/eslint-recommended",
@@ -241,6 +252,15 @@ const globalESLint = `
 //   * https://github.com/facebook/create-react-app
 //   */
 //   "rules": {
+//     "@nrwl/nx/enforce-module-boundaries": [
+//       "error",
+//       {
+//         "allow": [],
+//         "depConstraints": [
+//           { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }
+//         ]
+//       }
+//     ],
 //     /**
 //      * Standard ESLint rule configurations
 //      * https://eslint.org/docs/rules
