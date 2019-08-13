@@ -24,6 +24,7 @@ import {
   matchImportWithWildcard,
   onlyLoadChildren
 } from '../utils/runtime-lint-utils';
+import { normalize } from '@angular-devkit/core';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(
@@ -35,7 +36,7 @@ export class Rule extends Lint.Rules.AbstractRule {
   ) {
     super(options);
     if (!projectPath) {
-      this.projectPath = appRootPath;
+      this.projectPath = normalize(appRootPath);
       if (!(global as any).projectNodes) {
         const workspaceJson = readWorkspaceJson();
         const nxJson = readNxJson();
@@ -112,7 +113,10 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
         imp,
         this.projectPath,
         this.projectNodes,
-        getSourceFilePath(this.getSourceFile().fileName, this.projectPath)
+        getSourceFilePath(
+          normalize(this.getSourceFile().fileName),
+          this.projectPath
+        )
       ) ||
       isAbsoluteImportIntoAnotherProject(imp)
     ) {
