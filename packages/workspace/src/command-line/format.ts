@@ -14,6 +14,8 @@ export interface YargsFormatOptions extends YargsAffectedOptions {
 const PRETTIER_EXTENSIONS = [
   'ts',
   'js',
+  'tsx',
+  'jsx',
   'scss',
   'less',
   'css',
