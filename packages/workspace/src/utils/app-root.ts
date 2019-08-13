@@ -1,6 +1,7 @@
 import { fileExists } from './fileutils';
 import * as path from 'path';
 
+// TODO: vsavkin normalize the path
 export const appRootPath = pathInner(__dirname);
 
 function pathInner(dir: string): string {

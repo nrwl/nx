@@ -2,6 +2,7 @@ import * as path from 'path';
 import { ProjectNode } from '../command-line/affected-apps';
 import { Dependency, DependencyType } from '../command-line/deps-calculator';
 import { normalizedProjectRoot } from '../command-line/shared';
+import { normalize } from '@angular-devkit/core';
 
 export type Deps = { [projectName: string]: Dependency[] };
 export type DepConstraint = {
@@ -177,5 +178,5 @@ export function onlyLoadChildren(
 }
 
 export function getSourceFilePath(sourceFileName: string, projectPath: string) {
-  return sourceFileName.substring(projectPath.length + 1);
+  return normalize(sourceFileName).substring(projectPath.length + 1);
 }
