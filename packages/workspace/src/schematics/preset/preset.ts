@@ -31,7 +31,7 @@ function createPreset(options: Schema): Rule {
   const linter = options.cli === 'angular' ? 'tslint' : 'eslint';
 
   if (options.preset === 'empty') {
-    return setDefaultLinter(linter);
+    return noop();
   } else if (options.preset === 'angular') {
     return chain([
       externalSchematic(
@@ -58,8 +58,7 @@ function createPreset(options: Schema): Rule {
         },
         { interactive: false }
       ),
-      setDefaultCollection('@nrwl/react'),
-      setDefaultLinter(linter)
+      setDefaultCollection('@nrwl/react')
     ]);
   } else if (options.preset === 'web-components') {
     return chain([
@@ -73,8 +72,7 @@ function createPreset(options: Schema): Rule {
         },
         { interactive: false }
       ),
-      setDefaultCollection('@nrwl/web'),
-      setDefaultLinter(linter)
+      setDefaultCollection('@nrwl/web')
     ]);
   } else if (options.preset === 'angular-nest') {
     return chain([
@@ -121,7 +119,6 @@ function createPreset(options: Schema): Rule {
       ),
       schematic('library', { name: 'api-interfaces' }, { interactive: false }),
       setDefaultCollection('@nrwl/react'),
-      setDefaultLinter(linter),
       connectReactAndExpress(options)
     ]);
   } else {
@@ -350,25 +347,6 @@ function setDefaultCollection(defaultCollection: string) {
       json.cli = {};
     }
     json.cli.defaultCollection = defaultCollection;
-    return json;
-  });
-}
-
-function setDefaultLinter(linter: string) {
-  return updateWorkspaceInTree(json => {
-    if (!json.schematics) {
-      json.schematics = {};
-    }
-    json.schematics['@nrwl/workspace'] = { library: { linter } };
-    json.schematics['@nrwl/cypress'] = { 'cypress-project': { linter } };
-    json.schematics['@nrwl/react'] = {
-      application: { linter },
-      library: { linter }
-    };
-    json.schematics['@nrwl/web'] = { application: { linter } };
-    json.schematics['@nrwl/node'] = { application: { linter } };
-    json.schematics['@nrwl/nest'] = { application: { linter } };
-    json.schematics['@nrwl/express'] = { application: { linter } };
     return json;
   });
 }

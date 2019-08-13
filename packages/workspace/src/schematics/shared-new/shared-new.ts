@@ -12,7 +12,10 @@ import {
   RepositoryInitializerTask
 } from '@angular-devkit/schematics/tasks';
 
-import { addDepsToPackageJson } from '../../utils/ast-utils';
+import {
+  addDepsToPackageJson,
+  updateWorkspaceInTree
+} from '../../utils/ast-utils';
 
 import { toFileName } from '../../utils/name-utils';
 
@@ -106,6 +109,7 @@ export function sharedNew(cli: string, options: Schema): Rule {
 
     return chain([
       schematic('workspace', { ...workspaceOpts, cli }),
+      cli === 'angular' ? noop() : setDefaultLinter('eslint'),
       addDependencies(options),
       move('/', options.directory),
       addTasks(options),
@@ -174,14 +178,16 @@ function addTasks(options: Schema) {
         new NodePackageInstallTask(options.directory)
       );
     }
-    const createPresetTask = context.addTask(new RunPresetTask(), [
-      packageTask
-    ]);
+    if (options.preset !== 'empty') {
+      const createPresetTask = context.addTask(new RunPresetTask(), [
+        packageTask
+      ]);
 
-    presetInstallTask = context.addTask(
-      new NodePackageInstallTask(options.directory),
-      [createPresetTask]
-    );
+      presetInstallTask = context.addTask(
+        new NodePackageInstallTask(options.directory),
+        [createPresetTask]
+      );
+    }
     if (!options.skipGit) {
       const commit =
         typeof options.commit == 'object'
@@ -208,4 +214,23 @@ function normalizeOptions(options: Schema): Schema {
   }
 
   return options;
+}
+
+function setDefaultLinter(linter: string) {
+  return updateWorkspaceInTree(json => {
+    if (!json.schematics) {
+      json.schematics = {};
+    }
+    json.schematics['@nrwl/workspace'] = { library: { linter } };
+    json.schematics['@nrwl/cypress'] = { 'cypress-project': { linter } };
+    json.schematics['@nrwl/react'] = {
+      application: { linter },
+      library: { linter }
+    };
+    json.schematics['@nrwl/web'] = { application: { linter } };
+    json.schematics['@nrwl/node'] = { application: { linter } };
+    json.schematics['@nrwl/nest'] = { application: { linter } };
+    json.schematics['@nrwl/express'] = { application: { linter } };
+    return json;
+  });
 }

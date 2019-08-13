@@ -218,11 +218,9 @@ forEachCli(() => {
       expect(listSchematicsOutput).toContain(another);
 
       const promptOutput = runCommand(
-        `npm run workspace-schematic ${custom} mylib2 --`
+        `npm run workspace-schematic ${custom} mylib2 --dry-run`
       );
-      expect(promptOutput).toContain(
-        'In which directory should the library be generated?'
-      );
+      expect(promptOutput).toContain('update nx.json');
     }, 1000000);
 
     describe('dep-graph', () => {
