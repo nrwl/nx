@@ -22,6 +22,14 @@ Type: `array`
 
 Files to include in linting.
 
+### fix
+
+Default: `false`
+
+Type: `boolean`
+
+Fixes linting errors (may overwrite linted files).
+
 ### format
 
 Default: `prose`
