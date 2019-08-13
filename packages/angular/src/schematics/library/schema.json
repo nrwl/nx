@@ -15,8 +15,7 @@
     },
     "directory": {
       "type": "string",
-      "description": "A directory where the app is placed",
-      "x-prompt": "In which directory should the library be generated?"
+      "description": "A directory where the app is placed"
     },
     "publishable": {
       "type": "boolean",

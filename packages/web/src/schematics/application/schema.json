@@ -15,8 +15,7 @@
     },
     "directory": {
       "description": "The directory of the new application.",
-      "type": "string",
-      "x-prompt": "In which directory should the application be generated?"
+      "type": "string"
     },
     "style": {
       "description": "The file extension to be used for style files.",
