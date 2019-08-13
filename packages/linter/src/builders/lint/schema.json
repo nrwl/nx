@@ -65,6 +65,11 @@
       "items": {
         "type": "string"
       }
+    },
+    "fix": {
+      "type": "boolean",
+      "description": "Fixes linting errors (may overwrite linted files).",
+      "default": false
     }
   },
   "additionalProperties": false,
