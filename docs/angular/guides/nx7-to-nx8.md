@@ -4,7 +4,15 @@ If you have used Nx since before version 8, things might seem different now. Pri
 
 ## Upgrading from Nx 7 to Nx 8
 
-To upgrade from a Nx 7 workspace to a Nx 8 workspace, use `yarn update` or `npm run update`. This will add the new packages as well as migrate features from their usages in Nx 7 to their usages in Nx 8.
+To upgrade from a Nx 7 workspace to a Nx 8 workspace, run:
+
+- `ng update @nrwl/schematics@8.4.8` to update the workspace to the Nx 8 format.
+- Commit the results
+- `ng update @nrwl/workspace@8.4.8` to update the workspace to 8.4.8.
+
+### Potential Issues
+
+If you use publishable libraries, running `ng update @nrwl/schematics@8.4.8` will incorrectly update the version of `@angular/compiler-cli` and `@angular/language-service`. Update the versions manually before committing the changes. The issue is due to an incorrect peer dependency in `ng-packagr`, which we cannot fix in Nx.
 
 ## Where you can find familiar features
 
