@@ -88,7 +88,7 @@
     "eslint-config-prettier": "6.0.0",
     "fork-ts-checker-webpack-plugin": "^0.4.9",
     "fs-extra": "7.0.1",
-    "graphviz": "^0.0.8",
+    "graphviz": "^0.0.9",
     "html-webpack-plugin": "^3.2.0",
     "husky": "^3.0.3",
     "identity-obj-proxy": "3.0.0",
