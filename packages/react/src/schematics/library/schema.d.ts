@@ -7,10 +7,9 @@ export interface Schema {
   skipTsConfig: boolean;
   skipFormat: boolean;
   tags?: string;
-  simpleModuleName: boolean;
   pascalCaseFiles?: boolean;
   routing?: boolean;
-  parentRoute?: string;
+  appProject?: string;
   unitTestRunner: 'jest' | 'none';
   linter: Linter;
 }
