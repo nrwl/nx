@@ -124,7 +124,9 @@ The scope must be one of the following:
 
 - backend - anything backend specific
 - testing - anything related to jest or cypress
-- frontend - anything frontend specific
+- web - anything web specific
+- react - anything react specific
+- angular - anything angular specific
 - nx - dependency management, basic workspace structure, anything touching both backend and frontend, and other related areas
 
 ##### Subject and Body
