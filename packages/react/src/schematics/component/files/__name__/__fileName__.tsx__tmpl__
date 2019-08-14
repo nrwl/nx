@@ -17,7 +17,7 @@ import styled from '<%= styledModule %>';
 import './<%= fileName %>.<%= style %>';
 <% } %>
 
-/* tslint:disable:no-empty-interface */
+/* eslint-disable-next-line */
 export interface <%= className %>Props {
 }
 
