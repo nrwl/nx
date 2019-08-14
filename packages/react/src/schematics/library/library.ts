@@ -13,8 +13,11 @@ import {
 } from '@angular-devkit/schematics';
 import {
   addDepsToPackageJson,
+  addLintFiles,
   formatFiles,
+  generateProjectLint,
   getNpmScope,
+  getProjectConfig,
   insert,
   names,
   NxJson,
@@ -23,28 +26,34 @@ import {
   toClassName,
   toFileName,
   updateJsonInTree,
-  updateWorkspaceInTree,
-  addLintFiles,
-  generateProjectLint
+  updateWorkspaceInTree
 } from '@nrwl/workspace';
 import { join, normalize, Path } from '@angular-devkit/core';
 import * as ts from 'typescript';
 
 import { Schema } from './schema';
-import { addRoute, addRouter } from '../../utils/ast-utils';
+import {
+  addBrowserRouter,
+  addInitialRoutes,
+  addRoute,
+  findComponentImportPath
+} from '../../utils/ast-utils';
 import { reactRouterVersion } from '../../utils/versions';
 
 export interface NormalizedSchema extends Schema {
   name: string;
   fileName: string;
   projectRoot: Path;
+  routePath: string;
   projectDirectory: string;
   parsedTags: string[];
+  appMain?: string;
+  appSourceRoot?: Path;
 }
 
 export default function(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(host, schema, context);
 
     return chain([
       addLintFiles(options.projectRoot, options.linter),
@@ -68,7 +77,7 @@ export default function(schema: Schema): Rule {
         export: true,
         routing: options.routing
       }),
-      updateParentRoute(options),
+      updateAppRoutes(options, context),
       formatFiles(options)
     ])(host, context);
   };
@@ -132,45 +141,77 @@ function updateNxJson(options: NormalizedSchema): Rule {
   });
 }
 
-function updateParentRoute(options: NormalizedSchema): Rule {
-  return options.parentRoute
-    ? chain([
-        function ensureRouterAdded(host: Tree) {
-          const { source, content } = readComponent(host, options.parentRoute);
-          const isRouterPresent = content.match(/react-router-dom/);
+function updateAppRoutes(
+  options: NormalizedSchema,
+  context: SchematicContext
+): Rule {
+  if (!options.appMain || !options.appSourceRoot) {
+    return noop();
+  }
+  return (host: Tree) => {
+    const { source } = readComponent(host, options.appMain);
+    const componentImportPath = findComponentImportPath('App', source);
 
-          if (!isRouterPresent) {
-            insert(
-              host,
-              options.parentRoute,
-              addRouter(options.parentRoute, source)
-            );
-            return addDepsToPackageJson(
-              { 'react-router-dom': reactRouterVersion },
-              {}
-            );
-          }
-        },
-        function addRouteToComponent(host: Tree) {
-          const npmScope = getNpmScope(host);
-          const { source: componentSource } = readComponent(
-            host,
-            options.parentRoute
-          );
+    if (!componentImportPath) {
+      throw new Error(
+        `Could not find App component in ${
+          options.appMain
+        } (Hint: you can omit --appProject, or make sure App exists)`
+      );
+    }
 
+    const appComponentPath = join(
+      options.appSourceRoot,
+      `${componentImportPath}.tsx`
+    );
+    return chain([
+      addDepsToPackageJson({ 'react-router-dom': reactRouterVersion }, {}),
+      function addBrowserRouterToMain(host: Tree) {
+        const { content, source } = readComponent(host, options.appMain);
+        const isRouterPresent = content.match(/react-router-dom/);
+        if (!isRouterPresent) {
           insert(
             host,
-            options.parentRoute,
-            addRoute(options.parentRoute, componentSource, {
-              libName: options.name,
+            options.appMain,
+            addBrowserRouter(options.appMain, source, context)
+          );
+        }
+      },
+      function addInitialAppRoutes(host: Tree) {
+        const { content, source } = readComponent(host, appComponentPath);
+        const isRouterPresent = content.match(/react-router-dom/);
+        if (!isRouterPresent) {
+          insert(
+            host,
+            appComponentPath,
+            addInitialRoutes(appComponentPath, source, context)
+          );
+        }
+      },
+      function addNewAppRoute(host: Tree) {
+        const npmScope = getNpmScope(host);
+        const { source: componentSource } = readComponent(
+          host,
+          appComponentPath
+        );
+        insert(
+          host,
+          appComponentPath,
+          addRoute(
+            appComponentPath,
+            componentSource,
+            {
+              routePath: options.routePath,
               componentName: toClassName(options.name),
               moduleName: `@${npmScope}/${options.projectDirectory}`
-            })
-          );
-        },
-        addDepsToPackageJson({ 'react-router-dom': reactRouterVersion }, {})
-      ])
-    : noop();
+            },
+            context
+          )
+        );
+      },
+      addDepsToPackageJson({ 'react-router-dom': reactRouterVersion }, {})
+    ]);
+  };
 }
 
 function readComponent(
@@ -193,26 +234,54 @@ function readComponent(
   return { content, source };
 }
 
-function normalizeOptions(options: Schema): NormalizedSchema {
+function normalizeOptions(
+  host: Tree,
+  options: Schema,
+  context: SchematicContext
+): NormalizedSchema {
   const name = toFileName(options.name);
   const projectDirectory = options.directory
     ? `${toFileName(options.directory)}/${name}`
     : name;
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
-  const fileName = options.simpleModuleName ? name : projectName;
+  const fileName = projectName;
   const projectRoot = normalize(`libs/${projectDirectory}`);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map(s => s.trim())
     : [];
 
-  return {
+  const normalized: NormalizedSchema = {
     ...options,
     fileName,
+    routePath: `/${name}`,
     name: projectName,
     projectRoot,
     projectDirectory,
     parsedTags
   };
+
+  if (options.appProject) {
+    const appProjectConfig = getProjectConfig(host, options.appProject);
+
+    if (appProjectConfig.projectType !== 'application') {
+      throw new Error(
+        `appProject expected type of "application" but got "${
+          appProjectConfig.projectType
+        }"`
+      );
+    }
+
+    try {
+      normalized.appMain = appProjectConfig.architect.build.options.main;
+      normalized.appSourceRoot = normalize(appProjectConfig.sourceRoot);
+    } catch (e) {
+      throw new Error(
+        `Could not locate project main for ${options.appProject}`
+      );
+    }
+  }
+
+  return normalized;
 }

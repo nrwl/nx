@@ -11,6 +11,12 @@ ng generate library ...
 
 ## Options
 
+### appProject
+
+Type: `string`
+
+The application project to add the library route to
+
 ### directory
 
 Type: `string`
@@ -30,12 +36,6 @@ The tool to use for running lint checks.
 Type: `string`
 
 Library name
-
-### parentRoute
-
-Type: `string`
-
-Add new route to the parent component as specified by this path
 
 ### pascalCaseFiles
 

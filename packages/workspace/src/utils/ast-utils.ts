@@ -45,7 +45,7 @@ function insertAfterLastOccurrence(
 
 export function findNodes(
   node: ts.Node,
-  kind: ts.SyntaxKind,
+  kind: ts.SyntaxKind | ts.SyntaxKind[],
   max = Infinity
 ): ts.Node[] {
   if (!node || max == 0) {
@@ -53,7 +53,10 @@ export function findNodes(
   }
 
   const arr: ts.Node[] = [];
-  if (node.kind === kind) {
+  const hasMatch = Array.isArray(kind)
+    ? kind.includes(node.kind)
+    : node.kind === kind;
+  if (hasMatch) {
     arr.push(node);
     max--;
   }

@@ -263,8 +263,8 @@ describe('lib', () => {
     });
   });
 
-  describe('--parentRoute', () => {
-    it('should add route to parent component', async () => {
+  describe('--appProject', () => {
+    it('should add new route to existing routing code', async () => {
       appTree = await runSchematic(
         'app',
         { name: 'myApp', routing: true },
@@ -275,48 +275,39 @@ describe('lib', () => {
         'lib',
         {
           name: 'myLib',
-          parentRoute: 'apps/my-app/src/app/app.tsx'
+          appProject: 'my-app'
         },
         appTree
       );
 
       const appSource = tree.read('apps/my-app/src/app/app.tsx').toString();
+      const mainSource = tree.read('apps/my-app/src/main.tsx').toString();
 
-      expect(appSource).toMatch(/<Route\s*path="\/my-lib"/);
+      expect(mainSource).toContain('react-router-dom');
+      expect(mainSource).toContain('<BrowserRouter>');
       expect(appSource).toContain('@proj/my-lib');
+      expect(appSource).toContain('react-router-dom');
+      expect(appSource).toMatch(/<Route\s*path="\/my-lib"/);
     });
 
-    it('throws error when parent component file is missing', async () => {
-      await expect(
-        runSchematic(
-          'lib',
-          {
-            name: 'myLib',
-            parentRoute: 'does/not/exist.tsx'
-          },
-          appTree
-        )
-      ).rejects.toThrow('Cannot find');
-    });
-
-    it('should add routing to app if it does not exist yet', async () => {
-      appTree = await runSchematic(
-        'app',
-        { name: 'myApp', routing: false },
-        appTree
-      );
+    it('should initialize routes if none were set up then add new route', async () => {
+      appTree = await runSchematic('app', { name: 'myApp' }, appTree);
 
       const tree = await runSchematic(
         'lib',
         {
           name: 'myLib',
-          parentRoute: 'apps/my-app/src/app/app.tsx'
+          appProject: 'my-app'
         },
         appTree
       );
 
       const appSource = tree.read('apps/my-app/src/app/app.tsx').toString();
+      const mainSource = tree.read('apps/my-app/src/main.tsx').toString();
 
+      expect(mainSource).toContain('react-router-dom');
+      expect(mainSource).toContain('<BrowserRouter>');
+      expect(appSource).toContain('@proj/my-lib');
       expect(appSource).toContain('react-router-dom');
       expect(appSource).toMatch(/<Route\s*path="\/my-lib"/);
     });

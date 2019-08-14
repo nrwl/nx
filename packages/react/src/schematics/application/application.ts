@@ -8,6 +8,7 @@ import {
   move,
   noop,
   Rule,
+  SchematicContext,
   template,
   Tree,
   url
@@ -35,7 +36,7 @@ import * as ts from 'typescript';
 
 import { Schema } from './schema';
 import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
-import { addRouter } from '../../utils/ast-utils';
+import { addRoute, addInitialRoutes } from '../../utils/ast-utils';
 import {
   babelCoreVersion,
   babelLoaderVersion,
@@ -61,7 +62,7 @@ interface NormalizedSchema extends Schema {
 }
 
 export default function(schema: Schema): Rule {
-  return (host: Tree) => {
+  return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
 
     return chain([
@@ -89,7 +90,7 @@ export default function(schema: Schema): Rule {
           })
         : noop(),
       addStyledModuleDependencies(options),
-      addRouting(options),
+      addRouting(options, context),
       addBabel(options),
       formatFiles(options)
     ]);
@@ -221,7 +222,10 @@ function addStyledModuleDependencies(options: NormalizedSchema): Rule {
     : noop();
 }
 
-function addRouting(options: NormalizedSchema): Rule {
+function addRouting(
+  options: NormalizedSchema,
+  context: SchematicContext
+): Rule {
   return options.routing
     ? chain([
         function addRouterToComponent(host: Tree) {
@@ -237,7 +241,7 @@ function addRouting(options: NormalizedSchema): Rule {
             true
           );
 
-          insert(host, appPath, addRouter(appPath, appSource));
+          insert(host, appPath, addInitialRoutes(appPath, appSource, context));
         },
         addDepsToPackageJson({ 'react-router-dom': reactRouterVersion }, {})
       ])

@@ -84,9 +84,9 @@
       "type": "boolean",
       "description": "Generate library with routes"
     },
-    "parentRoute": {
+    "appProject": {
       "type": "string",
-      "description": "Add new route to the parent component as specified by this path"
+      "description": "The application project to add the library route to"
     }
   },
   "required": ["name"]
