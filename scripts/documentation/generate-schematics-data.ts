@@ -55,15 +55,19 @@ function generateSchematicList(
   });
 }
 
-function generateTemplate(schematic): { name: string; template: string } {
+function generateTemplate(
+  framework: string,
+  schematic
+): { name: string; template: string } {
+  const command = framework === 'angular' ? 'ng' : 'nx';
   let template = dedent`
     # ${schematic.name} ${schematic.hidden ? '[hidden]' : ''}
     ${schematic.description}
   
     ## Usage
     \`\`\`bash
-    ng generate ${schematic.name} ...
-    ${schematic.alias ? `ng g ${schematic.name} ... # Same` : ''}
+    ${command} generate ${schematic.name} ...
+    ${schematic.alias ? `${command} g ${schematic.name} ... # Same` : ''}
     \`\`\`
     \n`;
 
@@ -101,32 +105,40 @@ function generateTemplate(schematic): { name: string; template: string } {
 }
 
 Promise.all(
-  getPackageConfigurations()
-    .filter(item => item.hasSchematics)
-    .map(config => {
-      return Promise.all(generateSchematicList(config, registry))
-        .then(schematicList => schematicList.map(generateTemplate))
-        .then(markdownList =>
-          markdownList.forEach(template =>
-            generateFile(config.schematicOutput, template)
-          )
-        )
-        .then(() => {
-          console.log(
-            `Documentation from ${config.root} generated to ${
-              config.schematicOutput
-            }`
-          );
-        });
-    })
+  getPackageConfigurations().map(({ framework, configs }) => {
+    return Promise.all(
+      configs
+        .filter(item => item.hasSchematics)
+        .map(config => {
+          return Promise.all(generateSchematicList(config, registry))
+            .then(schematicList =>
+              schematicList.map(s => generateTemplate(framework, s))
+            )
+            .then(markdownList =>
+              markdownList.forEach(template =>
+                generateFile(config.schematicOutput, template)
+              )
+            )
+            .then(() => {
+              console.log(
+                `Documentation from ${config.root} generated to ${
+                  config.schematicOutput
+                }`
+              );
+            });
+        })
+    );
+  })
 ).then(() => {
   console.log('Finished Generating all Documentation');
 });
 
-const schematics = getPackageConfigurations()
-  .filter(item => item.hasSchematics)
-  .map(item => item.name);
-fs.outputJsonSync(
-  path.join(__dirname, '../../docs', 'schematics.json'),
-  schematics
-);
+getPackageConfigurations().forEach(({ framework, configs }) => {
+  const schematics = configs
+    .filter(item => item.hasSchematics)
+    .map(item => item.name);
+  fs.outputJsonSync(
+    path.join(__dirname, '../../docs', framework, 'schematics.json'),
+    schematics
+  );
+});

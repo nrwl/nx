@@ -101,30 +101,36 @@ function generateTemplate(builder): { name: string; template: string } {
 }
 
 Promise.all(
-  getPackageConfigurations()
-    .filter(item => item.hasBuilders)
-    .map(config => {
-      Promise.all(generateSchematicList(config, registry))
-        .then(builderList => builderList.map(generateTemplate))
-        .then(markdownList =>
-          markdownList.forEach(template =>
-            generateFile(config.builderOutput, template)
-          )
-        )
-        .then(() =>
-          console.log(
-            `Generated documentation for ${config.root} to ${config.output}`
-          )
-        );
-    })
+  getPackageConfigurations().map(({ configs }) => {
+    return Promise.all(
+      configs
+        .filter(item => item.hasBuilders)
+        .map(config => {
+          Promise.all(generateSchematicList(config, registry))
+            .then(builderList => builderList.map(generateTemplate))
+            .then(markdownList =>
+              markdownList.forEach(template =>
+                generateFile(config.builderOutput, template)
+              )
+            )
+            .then(() =>
+              console.log(
+                `Generated documentation for ${config.root} to ${config.output}`
+              )
+            );
+        })
+    );
+  })
 ).then(() => {
   console.log('Done generating Builders Documentation');
 });
 
-const builders = getPackageConfigurations()
-  .filter(item => item.hasBuilders)
-  .map(item => item.name);
-fs.outputJsonSync(
-  path.join(__dirname, '../../docs', 'builders.json'),
-  builders
-);
+getPackageConfigurations().forEach(({ framework, configs }) => {
+  const builders = configs
+    .filter(item => item.hasBuilders)
+    .map(item => item.name);
+  fs.outputJsonSync(
+    path.join(__dirname, '../../docs', framework, 'builders.json'),
+    builders
+  );
+});

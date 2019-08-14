@@ -21,25 +21,33 @@ export interface Configuration {
 export function getPackageConfigurations(
   packagesDirectory: string = 'packages',
   documentationsDirectory: string = 'docs'
-): Configuration[] {
-  const packagesDir = path.resolve(
-    path.join(__dirname, '../../', packagesDirectory)
-  );
-  const documentationDir = path.resolve(
-    path.join(__dirname, '../../', documentationsDirectory)
-  );
-  return shelljs.ls(packagesDir).map(folderName => {
-    const itemList = shelljs.ls(path.join(packagesDir, folderName));
-    const output = path.join(documentationDir, `api-${folderName}`);
-    return {
-      name: folderName,
-      root: path.join(packagesDir, folderName),
-      source: path.join(packagesDir, `${folderName}/src`),
-      output,
-      builderOutput: path.join(output, 'builders'),
-      schematicOutput: path.join(output, 'schematics'),
-      hasBuilders: itemList.includes('builders.json'),
-      hasSchematics: itemList.includes('collection.json')
-    };
+): { framework: 'web' | 'angular' | 'react'; configs: Configuration[] }[] {
+  return ['web', 'angular', 'react'].map(framework => {
+    const packagesDir = path.resolve(
+      path.join(__dirname, '../../', packagesDirectory)
+    );
+    const documentationDir = path.resolve(
+      path.join(__dirname, '../../', documentationsDirectory)
+    );
+    const configs = shelljs.ls(packagesDir).map(folderName => {
+      const itemList = shelljs.ls(path.join(packagesDir, folderName));
+      const output = path.join(
+        documentationDir,
+        framework,
+        `api-${folderName}`
+      );
+      return {
+        name: folderName,
+        root: path.join(packagesDir, folderName),
+        source: path.join(packagesDir, `${folderName}/src`),
+        output,
+        framework,
+        builderOutput: path.join(output, 'builders'),
+        schematicOutput: path.join(output, 'schematics'),
+        hasBuilders: itemList.includes('builders.json'),
+        hasSchematics: itemList.includes('collection.json')
+      };
+    });
+    return { framework: framework as any, configs };
   });
 }
