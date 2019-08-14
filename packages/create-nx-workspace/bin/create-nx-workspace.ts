@@ -253,7 +253,8 @@ function determineCli(preset: string, parsedArgs: any) {
 
             {
               value: 'angular',
-              name: 'Angular CLI  [Extensible CLI for Angular applications]'
+              name:
+                'Angular CLI  [Extensible CLI for Angular applications. Recommended for Angular projects.]'
             }
           ]
         }
