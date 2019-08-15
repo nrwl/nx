@@ -127,8 +127,7 @@ describe('lib', () => {
         {
           name: 'myLib2',
           directory: 'myDir',
-          tags: 'one,two',
-          simpleModuleName: true
+          tags: 'one,two'
         },
         tree
       );

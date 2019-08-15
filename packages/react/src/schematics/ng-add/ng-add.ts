@@ -41,8 +41,8 @@ function moveDependency(): Rule {
 
 function setDefault(): Rule {
   return updateWorkspace(workspace => {
+    // Set workspace default collection to 'react' if not already set.
     workspace.extensions.cli = workspace.extensions.cli || {};
-
     const defaultCollection: string =
       workspace.extensions.cli &&
       ((workspace.extensions.cli as JsonObject).defaultCollection as string);
@@ -50,18 +50,27 @@ function setDefault(): Rule {
     if (!defaultCollection || defaultCollection === '@nrwl/workspace') {
       (workspace.extensions.cli as JsonObject).defaultCollection =
         '@nrwl/react';
+    }
 
-      // Also generate apps with babel option by default.
-      workspace.extensions.schematics = {
-        ...(workspace.extensions.schematics
-          ? (workspace.extensions.schematics as JsonObject)
-          : {}),
-        '@nrwl/react:application': {
+    // Also generate all new react apps with babel.
+    workspace.extensions.schematics =
+      jsonIdentity(workspace.extensions.schematics) || {};
+    const reactSchematics =
+      jsonIdentity(workspace.extensions.schematics['@nrwl/react']) || {};
+    workspace.extensions.schematics = {
+      ...workspace.extensions.schematics,
+      '@nrwl/react': {
+        application: {
+          ...jsonIdentity(reactSchematics.application),
           babel: true
         }
-      };
-    }
+      }
+    };
   });
+}
+
+function jsonIdentity(x: any): JsonObject {
+  return x as JsonObject;
 }
 
 export default function(schema: Schema) {

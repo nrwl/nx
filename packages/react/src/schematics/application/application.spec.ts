@@ -499,4 +499,33 @@ describe('app', () => {
       expect(polyfillsSource).toContain('core-js');
     });
   });
+
+  describe('--skipWorkspaceJson', () => {
+    it('should update workspace with defaults when --skipWorkspaceJson=false', async () => {
+      const tree = await runSchematic(
+        'app',
+        {
+          name: 'myApp',
+          babel: true,
+          style: 'styled-components',
+          skipWorkspaceJson: false
+        },
+        appTree
+      );
+
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      expect(workspaceJson.schematics['@nrwl/react']).toMatchObject({
+        application: {
+          babel: true,
+          style: 'styled-components'
+        },
+        component: {
+          style: 'styled-components'
+        },
+        library: {
+          style: 'styled-components'
+        }
+      });
+    });
+  });
 });

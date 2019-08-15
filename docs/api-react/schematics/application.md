@@ -77,6 +77,14 @@ Type: `boolean`
 
 Skip formatting files
 
+### skipWorkspaceJson
+
+Default: `false`
+
+Type: `boolean`
+
+Skip updating workspace.json with default schematic options based on values provided to this app (e.g. babel, style)
+
 ### style
 
 Default: `css`
