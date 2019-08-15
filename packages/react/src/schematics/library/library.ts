@@ -39,6 +39,7 @@ import {
   findComponentImportPath
 } from '../../utils/ast-utils';
 import { reactRouterVersion } from '../../utils/versions';
+import { assertValidStyle } from '../../utils/assertion';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -282,6 +283,8 @@ function normalizeOptions(
       );
     }
   }
+
+  assertValidStyle(normalized.style);
 
   return normalized;
 }

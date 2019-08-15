@@ -23,6 +23,7 @@ import {
 } from '@nrwl/workspace/src/utils/ast-utils';
 import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
 import { reactRouterVersion } from '../../utils/versions';
+import { assertValidStyle } from '../../utils/assertion';
 
 interface NormalizedSchema extends Schema {
   projectSourceRoot: Path;
@@ -124,23 +125,23 @@ function normalizeOptions(
   context: SchematicContext
 ): NormalizedSchema {
   const { className, fileName } = names(options.name);
-
   const componentFileName = options.pascalCaseFiles ? className : fileName;
-
   const { sourceRoot: projectSourceRoot, projectType } = getProjectConfig(
     host,
     options.project
   );
+
+  const styledModule = /^(css|scss|less|styl)$/.test(options.style)
+    ? null
+    : options.style;
+
+  assertValidStyle(options.style);
 
   if (options.export && projectType === 'application') {
     context.logger.warn(
       `The "--export" option should not be used with applications and will do nothing.`
     );
   }
-
-  const styledModule = /^(css|scss|less|styl)$/.test(options.style)
-    ? null
-    : options.style;
 
   return {
     ...options,
