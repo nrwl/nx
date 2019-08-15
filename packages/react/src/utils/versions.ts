@@ -16,3 +16,11 @@ export const babelLoaderVersion = '8.0.6';
 export const babelPluginMacrosVersion = '2.6.1';
 export const coreJsVersion = '3.1.4';
 export const regeneratorVersion = '0.13.3';
+export const eslintConfigReactAppVersion = '5.0.1';
+
+export const EsLintPlugins = {
+  importVersion: '2.18.2',
+  jsxA11yVersion: '6.2.3',
+  reactVersion: '7.14.3',
+  reactHooksVersion: '1.6.1'
+};

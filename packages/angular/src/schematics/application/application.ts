@@ -369,7 +369,9 @@ export default function(schema: Schema): Rule {
         ...options,
         skipFormat: true
       }),
-      addLintFiles(options.appProjectRoot, options.linter, true),
+      addLintFiles(options.appProjectRoot, options.linter, {
+        onlyGlobal: true
+      }),
       externalSchematic('@schematics/angular', 'application', {
         name: options.name,
         inlineStyle: options.inlineStyle,

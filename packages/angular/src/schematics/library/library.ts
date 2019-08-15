@@ -434,7 +434,7 @@ export default function(schema: Schema): Rule {
     }
 
     return chain([
-      addLintFiles(options.projectRoot, Linter.TsLint, true),
+      addLintFiles(options.projectRoot, Linter.TsLint, { onlyGlobal: true }),
       addUnitTestRunner(options),
       externalSchematic('@schematics/angular', 'library', {
         name: options.name,
