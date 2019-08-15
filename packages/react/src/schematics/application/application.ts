@@ -1,4 +1,4 @@
-import { join, normalize, Path } from '@angular-devkit/core';
+import { join, JsonObject, normalize, Path } from '@angular-devkit/core';
 import {
   apply,
   chain,
@@ -14,21 +14,20 @@ import {
   url
 } from '@angular-devkit/schematics';
 import {
+  addGlobal,
+  addLintFiles,
   formatFiles,
+  generateProjectLint,
   insert,
   names,
   NxJson,
   offsetFromRoot,
   toFileName,
   updateJsonInTree,
-  generateProjectLint,
-  addLintFiles,
-  toPropertyName,
-  addGlobal
+  updateWorkspace
 } from '@nrwl/workspace';
 import {
   addDepsToPackageJson,
-  insertImport,
   updateWorkspaceInTree
 } from '@nrwl/workspace/src/utils/ast-utils';
 import ngAdd from '../ng-add/ng-add';
@@ -36,7 +35,7 @@ import * as ts from 'typescript';
 
 import { Schema } from './schema';
 import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
-import { addRoute, addInitialRoutes } from '../../utils/ast-utils';
+import { addInitialRoutes } from '../../utils/ast-utils';
 import {
   babelCoreVersion,
   babelLoaderVersion,
@@ -49,7 +48,6 @@ import {
   reactRouterVersion,
   regeneratorVersion
 } from '../../utils/versions';
-import { addImportToModule } from '../../../../angular/src/utils/ast-utils';
 import { assertValidStyle } from '../../utils/assertion';
 
 interface NormalizedSchema extends Schema {
@@ -93,6 +91,7 @@ export default function(schema: Schema): Rule {
       addStyledModuleDependencies(options),
       addRouting(options, context),
       addBabel(options),
+      setDefaults(options),
       formatFiles(options)
     ]);
   };
@@ -299,6 +298,45 @@ import 'regenerator-runtime/runtime';
       )
     ]);
   };
+}
+
+function setDefaults(options: NormalizedSchema): Rule {
+  return options.skipWorkspaceJson
+    ? noop()
+    : updateWorkspace(workspace => {
+        workspace.extensions.schematics = jsonIdentity(
+          workspace.extensions.schematics || {}
+        );
+        workspace.extensions.schematics['@nrwl/react'] =
+          workspace.extensions.schematics['@nrwl/react'] || {};
+        const prev = jsonIdentity(
+          workspace.extensions.schematics['@nrwl/react']
+        );
+
+        workspace.extensions.schematics = {
+          ...workspace.extensions.schematics,
+          '@nrwl/react': {
+            ...prev,
+            application: {
+              babel: options.babel,
+              style: options.style,
+              ...jsonIdentity(prev.application)
+            },
+            component: {
+              style: options.style,
+              ...jsonIdentity(prev.component)
+            },
+            library: {
+              style: options.style,
+              ...jsonIdentity(prev.library)
+            }
+          }
+        };
+      });
+}
+
+function jsonIdentity(x: any): JsonObject {
+  return x as JsonObject;
 }
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {

@@ -15,7 +15,7 @@ ng generate cypress-project ...
 
 Type: `string`
 
-A directory where the app is placed
+A directory where the project is placed
 
 ### linter
 

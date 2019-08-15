@@ -65,6 +65,11 @@
       "type": "boolean",
       "default": false
     },
+    "skipWorkspaceJson": {
+      "description": "Skip updating workspace.json with default schematic options based on values provided to this app (e.g. babel, style)",
+      "type": "boolean",
+      "default": false
+    },
     "unitTestRunner": {
       "type": "string",
       "enum": ["jest", "none"],
