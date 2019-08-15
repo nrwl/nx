@@ -50,6 +50,7 @@ import {
   regeneratorVersion
 } from '../../utils/versions';
 import { addImportToModule } from '../../../../angular/src/utils/ast-utils';
+import { assertValidStyle } from '../../utils/assertion';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -320,6 +321,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const styledModule = /^(css|scss|less|styl)$/.test(options.style)
     ? null
     : options.style;
+
+  assertValidStyle(options.style);
 
   return {
     ...options,
