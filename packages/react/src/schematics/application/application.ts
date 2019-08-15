@@ -49,6 +49,7 @@ import {
   regeneratorVersion
 } from '../../utils/versions';
 import { assertValidStyle } from '../../utils/assertion';
+import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -68,7 +69,10 @@ export default function(schema: Schema): Rule {
       ngAdd({
         skipFormat: true
       }),
-      addLintFiles(options.appProjectRoot, options.linter),
+      addLintFiles(options.appProjectRoot, options.linter, {
+        localConfig: reactEslintJson,
+        extraPackageDeps: extraEslintDependencies
+      }),
       createApplicationFiles(options),
       updateNxJson(options),
       addProject(options),
@@ -320,6 +324,7 @@ function setDefaults(options: NormalizedSchema): Rule {
             application: {
               babel: options.babel,
               style: options.style,
+              linter: options.linter,
               ...jsonIdentity(prev.application)
             },
             component: {
@@ -328,6 +333,7 @@ function setDefaults(options: NormalizedSchema): Rule {
             },
             library: {
               style: options.style,
+              linter: options.linter,
               ...jsonIdentity(prev.library)
             }
           }

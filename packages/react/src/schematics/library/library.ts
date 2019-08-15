@@ -40,6 +40,7 @@ import {
 } from '../../utils/ast-utils';
 import { reactRouterVersion } from '../../utils/versions';
 import { assertValidStyle } from '../../utils/assertion';
+import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -57,7 +58,10 @@ export default function(schema: Schema): Rule {
     const options = normalizeOptions(host, schema, context);
 
     return chain([
-      addLintFiles(options.projectRoot, options.linter),
+      addLintFiles(options.projectRoot, options.linter, {
+        localConfig: reactEslintJson,
+        extraPackageDeps: extraEslintDependencies
+      }),
       createFiles(options),
       !options.skipTsConfig ? updateTsConfig(options) : noop(),
       addProject(options),

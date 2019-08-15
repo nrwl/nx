@@ -209,6 +209,11 @@ export function copyMissingPackages(): void {
     'babel-loader',
     'babel-plugin-macros',
 
+    'eslint-plugin-import',
+    'eslint-plugin-jsx-a11y',
+    'eslint-plugin-react',
+    'eslint-plugin-react-hooks',
+
     'document-register-element'
   ];
   modulesToCopy.forEach(m => copyNodeModule(m));
