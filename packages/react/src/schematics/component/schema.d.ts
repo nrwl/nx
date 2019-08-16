@@ -3,6 +3,7 @@ export interface Schema {
   project: string;
   style?: string;
   skipTests?: boolean;
+  directory?: string;
   export?: boolean;
   pascalCaseFiles?: boolean;
   classComponent?: boolean;

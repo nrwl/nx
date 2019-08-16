@@ -93,11 +93,9 @@ describe('lib', () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
-      expect(tree.exists('libs/my-lib/src/lib/my-lib/my-lib.tsx')).toBeTruthy();
-      expect(tree.exists('libs/my-lib/src/lib/my-lib/my-lib.css')).toBeTruthy();
-      expect(
-        tree.exists('libs/my-lib/src/lib/my-lib/my-lib.spec.tsx')
-      ).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.tsx')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.css')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.tsx')).toBeTruthy();
     });
   });
 
@@ -154,19 +152,13 @@ describe('lib', () => {
       expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
-        tree.exists(
-          'libs/my-dir/my-lib/src/lib/my-dir-my-lib/my-dir-my-lib.tsx'
-        )
+        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.tsx')
       ).toBeTruthy();
       expect(
-        tree.exists(
-          'libs/my-dir/my-lib/src/lib/my-dir-my-lib/my-dir-my-lib.css'
-        )
+        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.css')
       ).toBeTruthy();
       expect(
-        tree.exists(
-          'libs/my-dir/my-lib/src/lib/my-dir-my-lib/my-dir-my-lib.spec.tsx'
-        )
+        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.spec.tsx')
       ).toBeTruthy();
     });
 
@@ -241,7 +233,7 @@ describe('lib', () => {
         appTree
       );
 
-      expect(result.exists('libs/my-lib/src/lib/my-lib/my-lib.scss'));
+      expect(result.exists('libs/my-lib/src/lib/my-lib.scss')).toBeTruthy();
     });
   });
 

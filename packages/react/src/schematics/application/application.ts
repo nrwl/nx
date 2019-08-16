@@ -76,22 +76,8 @@ export default function(schema: Schema): Rule {
       createApplicationFiles(options),
       updateNxJson(options),
       addProject(options),
-      options.e2eTestRunner === 'cypress'
-        ? externalSchematic('@nrwl/cypress', 'cypress-project', {
-            ...options,
-            name: options.name + '-e2e',
-            directory: options.directory,
-            project: options.projectName
-          })
-        : noop(),
-      options.unitTestRunner === 'jest'
-        ? externalSchematic('@nrwl/jest', 'jest-project', {
-            project: options.projectName,
-            supportTsx: true,
-            skipSerializers: true,
-            setupFile: 'none'
-          })
-        : noop(),
+      addCypress(options),
+      addJest(options),
       addStyledModuleDependencies(options),
       addRouting(options, context),
       addBabel(options),
@@ -213,6 +199,28 @@ function addProject(options: NormalizedSchema): Rule {
 
     return json;
   });
+}
+
+function addCypress(options: NormalizedSchema): Rule {
+  return options.e2eTestRunner === 'cypress'
+    ? externalSchematic('@nrwl/cypress', 'cypress-project', {
+        ...options,
+        name: options.name + '-e2e',
+        directory: options.directory,
+        project: options.projectName
+      })
+    : noop();
+}
+
+function addJest(options: NormalizedSchema): Rule {
+  return options.unitTestRunner === 'jest'
+    ? externalSchematic('@nrwl/jest', 'jest-project', {
+        project: options.projectName,
+        supportTsx: true,
+        skipSerializers: true,
+        setupFile: 'none'
+      })
+    : noop();
 }
 
 function addStyledModuleDependencies(options: NormalizedSchema): Rule {

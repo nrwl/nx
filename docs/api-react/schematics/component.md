@@ -13,13 +13,25 @@ ng generate component ...
 
 ### classComponent
 
+Alias(es): C
+
 Default: `false`
 
 Type: `boolean`
 
-Use class components instead of functional component
+Use class components instead of functional component.
+
+### directory
+
+Alias(es): d
+
+Type: `string`
+
+Create the component under this directory (can be nested).
 
 ### export
+
+Alias(es): e
 
 Default: `false`
 
@@ -35,13 +47,17 @@ The name of the component.
 
 ### pascalCaseFiles
 
+Alias(es): P
+
 Default: `false`
 
 Type: `boolean`
 
-Use pascal case component file name (e.g. App.tsx)
+Use pascal case component file name (e.g. App.tsx).
 
 ### project
+
+Alias(es): p
 
 Type: `string`
 
@@ -51,7 +67,7 @@ The name of the project.
 
 Type: `boolean`
 
-Generate library with routes
+Generate a library with routes.
 
 ### skipTests
 
@@ -62,6 +78,8 @@ Type: `boolean`
 When true, does not create "spec.ts" test files for the new component.
 
 ### style
+
+Alias(es): s
 
 Default: `css`
 

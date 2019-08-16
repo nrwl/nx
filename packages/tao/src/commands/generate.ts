@@ -1,25 +1,26 @@
 import {
+  coerceTypes,
+  convertAliases,
   convertToCamelCase,
   handleErrors,
-  Schema,
-  coerceTypes
+  Schema
 } from '../shared/params';
 import {
+  experimental,
   JsonObject,
   logging,
   normalize,
   schema,
   tags,
   terminal,
-  virtualFs,
-  experimental
+  virtualFs
 } from '@angular-devkit/core';
 import { DryRunEvent, HostTree, Schematic } from '@angular-devkit/schematics';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { NodeWorkflow } from '@angular-devkit/schematics/tools';
 import * as inquirer from 'inquirer';
 import { logger } from '../shared/logger';
-import { printHelp, commandName } from '../shared/print-help';
+import { commandName, printHelp } from '../shared/print-help';
 import * as fs from 'fs';
 import minimist = require('minimist');
 
@@ -281,8 +282,8 @@ async function runSchematic(
           );
     const record = { loggingQueue: [] as string[], error: false };
     workflow.reporter.subscribe(createRecorder(record, logger));
-    const schematicOptions = coerceTypes(
-      opts.schematicOptions,
+    const schematicOptions = convertAliases(
+      coerceTypes(opts.schematicOptions, flattenedSchema as any),
       flattenedSchema as any
     );
     await workflow

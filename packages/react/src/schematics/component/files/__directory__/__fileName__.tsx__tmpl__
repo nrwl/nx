@@ -31,7 +31,7 @@ export class <%= className %> extends Component<<%= className %>Props> {
   render() {
     return (
       <<%= wrapper %>>
-        <h1>Welcome to <%= name %> component!</h1>
+        <p>Welcome to <%= name %> component!</p>
         <% if (routing) { %>
           <ul>
             <li><Link to="/"><%= name %> root</Link></li>

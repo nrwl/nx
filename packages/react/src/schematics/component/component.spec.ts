@@ -22,11 +22,9 @@ describe('component', () => {
       appTree
     );
 
-    expect(tree.exists('libs/my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
-    expect(
-      tree.exists('libs/my-lib/src/lib/hello/hello.spec.tsx')
-    ).toBeTruthy();
-    expect(tree.exists('libs/my-lib/src/lib/hello/hello.css')).toBeTruthy();
+    expect(tree.exists('libs/my-lib/src/lib/hello.tsx')).toBeTruthy();
+    expect(tree.exists('libs/my-lib/src/lib/hello.spec.tsx')).toBeTruthy();
+    expect(tree.exists('libs/my-lib/src/lib/hello.css')).toBeTruthy();
   });
 
   it('should generate files for an app', async () => {
@@ -36,11 +34,9 @@ describe('component', () => {
       appTree
     );
 
-    expect(tree.exists('apps/my-app/src/app/hello/hello.tsx')).toBeTruthy();
-    expect(
-      tree.exists('apps/my-app/src/app/hello/hello.spec.tsx')
-    ).toBeTruthy();
-    expect(tree.exists('apps/my-app/src/app/hello/hello.css')).toBeTruthy();
+    expect(tree.exists('apps/my-app/src/app/hello.tsx')).toBeTruthy();
+    expect(tree.exists('apps/my-app/src/app/hello.spec.tsx')).toBeTruthy();
+    expect(tree.exists('apps/my-app/src/app/hello.css')).toBeTruthy();
   });
 
   describe('--export', () => {
@@ -53,7 +49,7 @@ describe('component', () => {
 
       const indexContent = tree.read('libs/my-lib/src/index.ts').toString();
 
-      expect(indexContent).toMatch(/lib\/hello\/hello/);
+      expect(indexContent).toMatch(/lib\/hello/);
     });
 
     it('should not export from an app', async () => {
@@ -65,7 +61,7 @@ describe('component', () => {
 
       const indexContent = tree.read('libs/my-lib/src/index.ts').toString();
 
-      expect(indexContent).not.toMatch(/lib\/hello\/hello/);
+      expect(indexContent).not.toMatch(/lib\/hello/);
     });
   });
 
@@ -76,11 +72,9 @@ describe('component', () => {
         { name: 'hello', project: projectName, pascalCaseFiles: true },
         appTree
       );
-      expect(tree.exists('libs/my-lib/src/lib/hello/Hello.tsx')).toBeTruthy();
-      expect(
-        tree.exists('libs/my-lib/src/lib/hello/Hello.spec.tsx')
-      ).toBeTruthy();
-      expect(tree.exists('libs/my-lib/src/lib/hello/Hello.css')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/Hello.tsx')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/Hello.spec.tsx')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/Hello.css')).toBeTruthy();
     });
   });
 
@@ -93,13 +87,11 @@ describe('component', () => {
       );
 
       expect(
-        tree.exists('libs/my-lib/src/lib/hello/hello.styled-components')
+        tree.exists('libs/my-lib/src/lib/hello.styled-components')
       ).toBeFalsy();
-      expect(tree.exists('libs/my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/hello.tsx')).toBeTruthy();
 
-      const content = tree
-        .read('libs/my-lib/src/lib/hello/hello.tsx')
-        .toString();
+      const content = tree.read('libs/my-lib/src/lib/hello.tsx').toString();
       expect(content).toContain('styled-components');
       expect(content).toContain('<StyledHello>');
     });
@@ -125,13 +117,11 @@ describe('component', () => {
       );
 
       expect(
-        tree.exists('libs/my-lib/src/lib/hello/hello.@emotion/styled')
+        tree.exists('libs/my-lib/src/lib/hello.@emotion/styled')
       ).toBeFalsy();
-      expect(tree.exists('libs/my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/hello.tsx')).toBeTruthy();
 
-      const content = tree
-        .read('libs/my-lib/src/lib/hello/hello.tsx')
-        .toString();
+      const content = tree.read('libs/my-lib/src/lib/hello.tsx').toString();
       expect(content).toContain('@emotion/styled');
       expect(content).toContain('<StyledHello>');
     });
@@ -157,15 +147,35 @@ describe('component', () => {
         appTree
       );
 
-      const content = tree
-        .read('libs/my-lib/src/lib/hello/hello.tsx')
-        .toString();
+      const content = tree.read('libs/my-lib/src/lib/hello.tsx').toString();
       expect(content).toContain('react-router-dom');
       expect(content).toMatch(/<Route\s*path="\/"/);
       expect(content).toMatch(/<Link\s*to="\/"/);
 
       const packageJSON = readJsonInTree(tree, 'package.json');
       expect(packageJSON.dependencies['react-router-dom']).toBeDefined();
+    });
+  });
+
+  describe('--directory', () => {
+    it('should create component under the directory', async () => {
+      const tree = await runSchematic(
+        'component',
+        { name: 'hello', project: projectName, directory: 'components' },
+        appTree
+      );
+
+      expect(tree.exists('/libs/my-lib/src/lib/components/hello.tsx'));
+    });
+
+    it('should create with nested directories', async () => {
+      const tree = await runSchematic(
+        'component',
+        { name: 'helloWorld', project: projectName, directory: 'foo' },
+        appTree
+      );
+
+      expect(tree.exists('/libs/my-lib/src/lib/foo/bar/faz/hello-world.tsx'));
     });
   });
 });

@@ -48,3 +48,19 @@ export function coerceTypes(opts: { [k: string]: any }, schema: Schema) {
   });
   return opts;
 }
+
+export function convertAliases(opts: { [k: string]: any }, schema: Schema) {
+  return Object.keys(opts).reduce((acc, k) => {
+    if (schema.properties[k]) {
+      acc[k] = opts[k];
+    } else {
+      const found = Object.entries(schema.properties).find(
+        ([_, d]) => d.alias === k
+      );
+      if (found) {
+        acc[found[0]] = opts[k];
+      }
+    }
+    return acc;
+  }, {});
+}
