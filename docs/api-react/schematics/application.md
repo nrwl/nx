@@ -21,6 +21,8 @@ Use Babel and TypeScript preset instead of ts-loader (Useful if you need Babel p
 
 ### classComponent
 
+Alias(es): C
+
 Default: `false`
 
 Type: `boolean`
@@ -28,6 +30,8 @@ Type: `boolean`
 Use class components instead of functional component
 
 ### directory
+
+Alias(es): d
 
 Type: `string`
 
@@ -56,6 +60,8 @@ Type: `string`
 The name of the application.
 
 ### pascalCaseFiles
+
+Alias(es): P
 
 Default: `false`
 
@@ -87,6 +93,8 @@ Skip updating workspace.json with default schematic options based on values prov
 
 ### style
 
+Alias(es): s
+
 Default: `css`
 
 Type: `string`
@@ -94,6 +102,8 @@ Type: `string`
 The file extension to be used for style files.
 
 ### tags
+
+Alias(es): t
 
 Type: `string`
 

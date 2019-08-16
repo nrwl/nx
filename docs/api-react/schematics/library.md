@@ -13,11 +13,15 @@ ng generate library ...
 
 ### appProject
 
+Alias(es): a
+
 Type: `string`
 
 The application project to add the library route to
 
 ### directory
+
+Alias(es): d
 
 Type: `string`
 
@@ -39,11 +43,13 @@ Library name
 
 ### pascalCaseFiles
 
+Alias(es): P
+
 Default: `false`
 
 Type: `boolean`
 
-Use pascal case component file name (e.g. App.tsx)®
+Use pascal case component file name (e.g. App.tsx)
 
 ### routing
 
@@ -69,6 +75,8 @@ Do not update tsconfig.json for development experience.
 
 ### style
 
+Alias(es): s
+
 Default: `css`
 
 Type: `string`
@@ -76,6 +84,8 @@ Type: `string`
 The file extension to be used for style files.
 
 ### tags
+
+Alias(es): t
 
 Type: `string`
 
