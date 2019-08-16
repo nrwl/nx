@@ -15,12 +15,14 @@
     },
     "directory": {
       "description": "The directory of the new application.",
-      "type": "string"
+      "type": "string",
+      "alias": "d"
     },
     "style": {
       "description": "The file extension to be used for style files.",
       "type": "string",
       "default": "css",
+      "alias": "s",
       "x-prompt": {
         "message": "Which stylesheet format would you like to use?",
         "type": "list",
@@ -84,16 +86,19 @@
     },
     "tags": {
       "type": "string",
-      "description": "Add tags to the application (used for linting)"
+      "description": "Add tags to the application (used for linting)",
+      "alias": "t"
     },
     "pascalCaseFiles": {
       "type": "boolean",
       "description": "Use pascal case component file name (e.g. App.tsx)",
+      "alias": "P",
       "default": false
     },
     "classComponent": {
       "type": "boolean",
       "description": "Use class components instead of functional component",
+      "alias": "C",
       "default": false
     },
     "babel": {
