@@ -34,13 +34,6 @@ export const reactEslintJson = {
    * https://github.com/facebook/create-react-app
    */
   rules: {
-    '@nrwl/nx/enforce-module-boundaries': [
-      'error',
-      {
-        allow: [],
-        depConstraints: [{ sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }]
-      }
-    ],
     /**
      * Standard ESLint rule configurations
      * https://eslint.org/docs/rules
