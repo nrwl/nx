@@ -6,7 +6,7 @@
     "ng-add": {
       "factory": "./src/schematics/ng-add/ng-add",
       "schema": "./src/schematics/ng-add/schema.json",
-      "description": "Add @nrwl/react to a project",
+      "description": "Add @nrwl/angular to a project",
       "hidden": true
     },
 
