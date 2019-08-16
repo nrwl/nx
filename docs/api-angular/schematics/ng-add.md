@@ -1,6 +1,6 @@
 # ng-add [hidden]
 
-Add @nrwl/react to a project
+Add @nrwl/angular to a project
 
 ## Usage
 
