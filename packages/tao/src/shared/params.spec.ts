@@ -1,4 +1,4 @@
-import { convertToCamelCase } from './params';
+import { convertToCamelCase, convertAliases } from './params';
 
 describe('params', () => {
   describe('convertToCamelCase', () => {
@@ -30,6 +30,34 @@ describe('params', () => {
       ).toEqual({
         oneTwo: 1
       });
+    });
+  });
+
+  describe('convertAliases', () => {
+    it('should replace aliases with actual keys', () => {
+      expect(
+        convertAliases(
+          { d: 'test' },
+          {
+            properties: { directory: { type: 'string', alias: 'd' } },
+            required: [],
+            description: ''
+          }
+        )
+      ).toEqual({ directory: 'test' });
+    });
+
+    it('should filter out unknown keys without alias', () => {
+      expect(
+        convertAliases(
+          { d: 'test' },
+          {
+            properties: { directory: { type: 'string' } },
+            required: [],
+            description: ''
+          }
+        )
+      ).toEqual({});
     });
   });
 });

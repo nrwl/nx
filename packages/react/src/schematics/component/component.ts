@@ -14,7 +14,7 @@ import {
   url
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
-import { getWorkspace, names, formatFiles } from '@nrwl/workspace';
+import { formatFiles, getWorkspace, names } from '@nrwl/workspace';
 import {
   addDepsToPackageJson,
   addGlobal,
@@ -108,7 +108,11 @@ function addExportsToBarrel(options: NormalizedSchema): Rule {
               addGlobal(
                 indexSourceFile,
                 indexFilePath,
-                `export * from './lib/${options.name}/${options.fileName}';`
+                options.directory
+                  ? `export * from './lib/${options.directory}/${
+                      options.fileName
+                    }';`
+                  : `export * from './lib/${options.fileName}';`
               )
             );
           }
@@ -143,11 +147,25 @@ function normalizeOptions(
     );
   }
 
+  const slashes = ['/', '\\'];
+  slashes.forEach(s => {
+    if (componentFileName.indexOf(s) !== -1) {
+      const [name, ...rest] = componentFileName.split(s).reverse();
+      let suggestion = rest.map(x => x.toLowerCase()).join(s);
+      if (options.directory) {
+        suggestion = `${options.directory}${s}${suggestion}`;
+      }
+      throw new Error(
+        `Found "${s}" in the component name. Did you mean to use the --directory option (e.g. \`nx g c ${name} --directory ${suggestion}\`)?`
+      );
+    }
+  });
+
   return {
     ...options,
+    directory: options.directory || '',
     styledModule,
     className,
-    name: fileName,
     fileName: componentFileName,
     projectSourceRoot
   };
