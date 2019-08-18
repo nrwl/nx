@@ -5,10 +5,54 @@ Run task for affected projects
 ## Usage
 
 ```bash
-affected
+nx affected
 ```
 
-     ## Options
+Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.  
+ ### Examples
+Run custom target for all affected projects:
+
+```bash
+nx affected --target=custom-target
+```
+
+Run tests in parallel:
+
+```bash
+nx affected --target=test --parallel --maxParallel=5
+```
+
+Rerun the test target only for the projects that failed last time:
+
+```bash
+nx affected --target=test --only-failed
+```
+
+Run the test target for all projects:
+
+```bash
+nx affected --target=test --all
+```
+
+Run tests for all the projects affected by changing the index.ts file:
+
+```bash
+nx affected --target=test --files=libs/mylib/src/index.ts
+```
+
+Run tests for all the projects affected by the changes between master and HEAD (e.g., PR):
+
+```bash
+nx affected --target=test --base=master --head=HEAD
+```
+
+Run tests for all the projects affected by the last commit on master:
+
+```bash
+nx affected --target=test --base=master~1 --head=master
+```
+
+## Options
 
 ### all
 

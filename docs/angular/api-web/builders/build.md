@@ -2,6 +2,8 @@
 
 Build a application
 
+Builder properties can be configured in angular.json when defining the builder, or when invoking it.
+
 ## Properties
 
 ### assets
@@ -123,6 +125,8 @@ Enables optimization of the build output.
 Default: `none`
 
 Type: `string`
+
+Possible values: `none`, `all`, `media`, `bundles`
 
 Define the output filename cache-busting hashing mode.
 

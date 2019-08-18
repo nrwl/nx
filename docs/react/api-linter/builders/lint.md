@@ -2,6 +2,9 @@
 
 Lint a project
 
+Builder properties can be configured in workspace.json when defining the builder, or when invoking it.
+Read more about how to use builders and the CLI here: https://nx.dev/react/guides/cli.
+
 ## Properties
 
 ### config
@@ -43,6 +46,8 @@ Output format (prose, json, stylish, verbose, pmd, msbuild, checkstyle, vso, fil
 Default: `tslint`
 
 Type: `string`
+
+Possible values: `eslint`, `tslint`
 
 The tool to use for running lint checks.
 

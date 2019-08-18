@@ -5,10 +5,48 @@ Run e2e tests for the applications affected by changes
 ## Usage
 
 ```bash
-affected:e2e
+nx affected:e2e
 ```
 
-     ## Options
+Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.  
+ ### Examples
+Run tests in parallel:
+
+```bash
+nx affected:e2e --parallel --maxParallel=5
+```
+
+Rerun the test target only for the projects that failed last time:
+
+```bash
+nx affected:e2e --only-failed
+```
+
+Run the test target for all projects:
+
+```bash
+nx affected:e2e --all
+```
+
+Run tests for all the projects affected by changing the index.ts file:
+
+```bash
+nx affected:e2e --files=libs/mylib/src/index.ts
+```
+
+Run tests for all the projects affected by the changes between master and HEAD (e.g., PR):
+
+```bash
+nx affected:e2e --base=master --head=HEAD
+```
+
+Run tests for all the projects affected by the last commit on master:
+
+```bash
+nx affected:e2e --base=master~1 --head=master
+```
+
+## Options
 
 ### all
 

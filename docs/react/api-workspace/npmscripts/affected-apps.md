@@ -5,10 +5,30 @@ Print applications affected by changes
 ## Usage
 
 ```bash
-affected:apps
+nx affected:apps
 ```
 
-     ## Options
+Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.  
+ ### Examples
+Print the names of all the apps affected by changing the index.ts file:
+
+```bash
+nx affected:apps --files=libs/mylib/src/index.ts
+```
+
+Print the names of all the apps affected by the changes between master and HEAD (e.g., PR):
+
+```bash
+nx affected:apps --base=master --head=HEAD
+```
+
+Print the names of all the apps affected by the last commit on master:
+
+```bash
+nx affected:apps --base=master~1 --head=master
+```
+
+## Options
 
 ### all
 

@@ -6,7 +6,20 @@ Add an upgrade module
 
 ```bash
 nx generate upgrade-module ...
+```
 
+By default, Nx will search for `upgrade-module` in the default collection provisioned in `workspace.json`.
+
+You can specify the collection explicitly as follows:
+
+```bash
+nx g @nrwl/angular:upgrade-module ...
+```
+
+Show what will be generated without writing to disk:
+
+```bash
+nx g upgrade-module ... --dry-run
 ```
 
 ## Options

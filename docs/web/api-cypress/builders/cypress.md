@@ -2,6 +2,9 @@
 
 Run Cypress e2e tests
 
+Builder properties can be configured in workspace.json when defining the builder, or when invoking it.
+Read more about how to use builders and the CLI here: https://nx.dev/web/guides/cli.
+
 ## Properties
 
 ### baseUrl
@@ -13,6 +16,8 @@ Use this to pass directly the address of your distant server address with the po
 ### browser
 
 Type: `string`
+
+Possible values: `electron`, `chrome`, `chromium`, `canary`
 
 The browser to run tests in.
 

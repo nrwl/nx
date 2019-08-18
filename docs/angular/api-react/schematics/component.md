@@ -6,7 +6,38 @@ Create a component
 
 ```bash
 ng generate component ...
+```
 
+```bash
+ng g c ... # same
+```
+
+By default, Nx will search for `component` in the default collection provisioned in `angular.json`.
+
+You can specify the collection explicitly as follows:
+
+```bash
+ng g @nrwl/react:component ...
+```
+
+Show what will be generated without writing to disk:
+
+```bash
+ng g component ... --dry-run
+```
+
+### Examples
+
+Generate a component in the mylib library:
+
+```bash
+ng g component my-component --project=mylib
+```
+
+Generate a class component in the mylib library:
+
+```bash
+ng g component my-component --project=mylib --classComponent
 ```
 
 ## Options
@@ -84,5 +115,7 @@ Alias(es): s
 Default: `css`
 
 Type: `string`
+
+Possible values: `css`, `scss`, `styl`, `less`, `styled-components`, `@emotion/styled`
 
 The file extension to be used for style files.

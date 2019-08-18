@@ -3,6 +3,12 @@
   "id": "Typescript library",
   "title": "Create a TypeScript Library",
   "type": "object",
+  "examples": [
+    {
+      "command": "g lib mylib --directory=myapp",
+      "description": "Generate libs/myapp/mylib"
+    }
+  ],
   "properties": {
     "name": {
       "type": "string",

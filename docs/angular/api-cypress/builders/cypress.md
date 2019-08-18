@@ -2,6 +2,8 @@
 
 Run Cypress e2e tests
 
+Builder properties can be configured in angular.json when defining the builder, or when invoking it.
+
 ## Properties
 
 ### baseUrl
@@ -13,6 +15,8 @@ Use this to pass directly the address of your distant server address with the po
 ### browser
 
 Type: `string`
+
+Possible values: `electron`, `chrome`, `chromium`, `canary`
 
 The browser to run tests in.
 

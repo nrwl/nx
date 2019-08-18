@@ -2,6 +2,9 @@
 
 Build a application
 
+Builder properties can be configured in workspace.json when defining the builder, or when invoking it.
+Read more about how to use builders and the CLI here: https://nx.dev/web/guides/cli.
+
 ## Properties
 
 ### assets
@@ -123,6 +126,8 @@ Enables optimization of the build output.
 Default: `none`
 
 Type: `string`
+
+Possible values: `none`, `all`, `media`, `bundles`
 
 Define the output filename cache-busting hashing mode.
 

@@ -2,6 +2,8 @@
 
 Serve a web application
 
+Builder properties can be configured in angular.json when defining the builder, or when invoking it.
+
 ## Properties
 
 ### buildTarget

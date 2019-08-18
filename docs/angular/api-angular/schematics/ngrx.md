@@ -6,7 +6,20 @@ Add an ngrx config to a project
 
 ```bash
 ng generate ngrx ...
+```
 
+By default, Nx will search for `ngrx` in the default collection provisioned in `angular.json`.
+
+You can specify the collection explicitly as follows:
+
+```bash
+ng g @nrwl/angular:ngrx ...
+```
+
+Show what will be generated without writing to disk:
+
+```bash
+ng g ngrx ... --dry-run
 ```
 
 ## Options
@@ -100,5 +113,7 @@ Do not update the package.json with NgRx dependencies.
 Default: `classes`
 
 Type: `string`
+
+Possible values: `classes`, `creators`
 
 Specifies whether to use class-based or creator functions for actions, reducers, and effects.
