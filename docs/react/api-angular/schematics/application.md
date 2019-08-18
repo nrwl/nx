@@ -6,7 +6,24 @@ Create an Angular application
 
 ```bash
 nx generate application ...
+```
 
+```bash
+nx g app ... # same
+```
+
+By default, Nx will search for `application` in the default collection provisioned in `workspace.json`.
+
+You can specify the collection explicitly as follows:
+
+```bash
+nx g @nrwl/angular:application ...
+```
+
+Show what will be generated without writing to disk:
+
+```bash
+nx g application ... --dry-run
 ```
 
 ## Options
@@ -22,6 +39,8 @@ The directory of the new application.
 Default: `cypress`
 
 Type: `string`
+
+Possible values: `protractor`, `cypress`, `none`
 
 Test runner to use for end to end (e2e) tests
 
@@ -58,6 +77,8 @@ Specifies if the template will be in the ts file.
 Default: `tslint`
 
 Type: `string`
+
+Possible values: `tslint`
 
 The tool to use for running lint checks.
 
@@ -115,6 +136,8 @@ Default: `css`
 
 Type: `string`
 
+Possible values: `css`, `scss`, `styl`, `less`
+
 The file extension to be used for style files.
 
 ### tags
@@ -129,10 +152,14 @@ Default: `jest`
 
 Type: `string`
 
+Possible values: `karma`, `jest`, `none`
+
 Test runner to use for unit tests
 
 ### viewEncapsulation
 
 Type: `string`
+
+Possible values: `Emulated`, `Native`, `None`
 
 Specifies the view encapsulation strategy.

@@ -6,7 +6,20 @@ Generates a workspace schematic
 
 ```bash
 ng generate workspace-schematic ...
+```
 
+By default, Nx will search for `workspace-schematic` in the default collection provisioned in `angular.json`.
+
+You can specify the collection explicitly as follows:
+
+```bash
+ng g @nrwl/workspace:workspace-schematic ...
+```
+
+Show what will be generated without writing to disk:
+
+```bash
+ng g workspace-schematic ... --dry-run
 ```
 
 ## Options

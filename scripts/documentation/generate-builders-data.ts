@@ -48,10 +48,22 @@ function generateSchematicList(
   });
 }
 
-function generateTemplate(builder): { name: string; template: string } {
+function generateTemplate(
+  framework,
+  builder
+): { name: string; template: string } {
+  const filename = framework === 'angular' ? 'angular.json' : 'workspace.json';
+
   let template = dedent`
     # ${builder.name}
     ${builder.description}
+
+    Builder properties can be configured in ${filename} when defining the builder, or when invoking it.
+    ${
+      framework != 'angular'
+        ? `Read more about how to use builders and the CLI here: https://nx.dev/${framework}/guides/cli.`
+        : ``
+    }
     \n`;
 
   if (Array.isArray(builder.options) && !!builder.options.length) {
@@ -60,6 +72,9 @@ function generateTemplate(builder): { name: string; template: string } {
     builder.options
       .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
       .forEach(option => {
+        const enumStr = option.enum
+          ? `Possible values: ${option.enum.map(e => `\`${e}\``).join(', ')}\n`
+          : ``;
         template += dedent`
             ### ${option.name} ${option.required ? '(*__required__*)' : ''} ${
           option.hidden ? '(__hidden__)' : ''
@@ -79,7 +94,7 @@ function generateTemplate(builder): { name: string; template: string } {
           option.arrayOfType ? `of \`${option.arrayOfType}\`` : ''
         } \n 
             
-            
+            ${enumStr} 
             ${option.description}
           `;
 
@@ -101,13 +116,15 @@ function generateTemplate(builder): { name: string; template: string } {
 }
 
 Promise.all(
-  getPackageConfigurations().map(({ configs }) => {
+  getPackageConfigurations().map(({ framework, configs }) => {
     return Promise.all(
       configs
         .filter(item => item.hasBuilders)
         .map(config => {
           Promise.all(generateSchematicList(config, registry))
-            .then(builderList => builderList.map(generateTemplate))
+            .then(builderList =>
+              builderList.map(b => generateTemplate(framework, b))
+            )
             .then(markdownList =>
               markdownList.forEach(template =>
                 generateFile(config.builderOutput, template)

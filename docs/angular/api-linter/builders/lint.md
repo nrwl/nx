@@ -2,6 +2,8 @@
 
 Lint a project
 
+Builder properties can be configured in angular.json when defining the builder, or when invoking it.
+
 ## Properties
 
 ### config
@@ -43,6 +45,8 @@ Output format (prose, json, stylish, verbose, pmd, msbuild, checkstyle, vso, fil
 Default: `tslint`
 
 Type: `string`
+
+Possible values: `eslint`, `tslint`
 
 The tool to use for running lint checks.
 

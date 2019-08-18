@@ -6,7 +6,20 @@ Setup Downgrade Module
 
 ```bash
 ng generate downgrade-module ...
+```
 
+By default, Nx will search for `downgrade-module` in the default collection provisioned in `angular.json`.
+
+You can specify the collection explicitly as follows:
+
+```bash
+ng g @nrwl/angular:downgrade-module ...
+```
+
+Show what will be generated without writing to disk:
+
+```bash
+ng g downgrade-module ... --dry-run
 ```
 
 ## Options

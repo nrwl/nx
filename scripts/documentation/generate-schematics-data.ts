@@ -13,6 +13,7 @@ import {
   Configuration,
   getPackageConfigurations
 } from './get-package-configurations';
+import { optionalCallExpression } from '@babel/types';
 
 /**
  * @WhatItDoes: Generates default documentation from the schematics' schema.
@@ -36,9 +37,10 @@ function generateSchematicList(
   return Object.keys(schematicCollection).map(schematicName => {
     const schematic = {
       name: schematicName,
+      collectionName: `@nrwl/${config.name}`,
       ...schematicCollection[schematicName],
-      alias: schematicCollection[schematicName].hasOwnProperty('alias')
-        ? schematicCollection[schematicName]['alias']
+      alias: schematicCollection[schematicName].hasOwnProperty('aliases')
+        ? schematicCollection[schematicName]['aliases'][0]
         : null,
       rawSchema: fs.readJsonSync(
         path.join(config.root, schematicCollection[schematicName]['schema'])
@@ -59,29 +61,84 @@ function generateTemplate(
   framework: string,
   schematic
 ): { name: string; template: string } {
-  const command = framework === 'angular' ? 'ng' : 'nx';
+  const cliCommand = framework === 'angular' ? 'ng' : 'nx';
+  const filename = framework === 'angular' ? 'angular.json' : 'workspace.json';
   let template = dedent`
     # ${schematic.name} ${schematic.hidden ? '[hidden]' : ''}
     ${schematic.description}
   
     ## Usage
     \`\`\`bash
-    ${command} generate ${schematic.name} ...
-    ${schematic.alias ? `${command} g ${schematic.name} ... # Same` : ''}
+    ${cliCommand} generate ${schematic.name} ...
     \`\`\`
-    \n`;
+    `;
+
+  if (schematic.alias) {
+    template += dedent`
+    \`\`\`bash
+    ${cliCommand} g ${schematic.alias} ... # same
+    \`\`\`
+    `;
+  }
+
+  template += dedent`
+  By default, Nx will search for \`${
+    schematic.name
+  }\` in the default collection provisioned in \`${filename}\`.\n
+  You can specify the collection explicitly as follows:  
+  \`\`\`bash
+  ${cliCommand} g ${schematic.collectionName}:${schematic.name} ...
+  \`\`\`
+  `;
+
+  template += dedent`
+    Show what will be generated without writing to disk:
+    \`\`\`bash
+    ${cliCommand} g ${schematic.name} ... --dry-run
+    \`\`\`\n
+    `;
+
+  if (schematic.rawSchema.examples) {
+    template += `### Examples`;
+    schematic.rawSchema.examples.forEach(example => {
+      template += dedent`
+      ${example.description}:
+      \`\`\`bash
+      ${cliCommand} ${example.command}
+      \`\`\`
+      `;
+    });
+  }
 
   if (Array.isArray(schematic.options) && !!schematic.options.length) {
     template += '## Options';
 
     schematic.options
       .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
-      .forEach(
-        option =>
-          (template += dedent`
+      .forEach(option => {
+        let enumValues = [];
+        const rawSchemaProp = schematic.rawSchema.properties[option.name];
+        if (
+          rawSchemaProp &&
+          rawSchemaProp['x-prompt'] &&
+          rawSchemaProp['x-prompt'].items
+        ) {
+          rawSchemaProp['x-prompt'].items.forEach(p => {
+            enumValues.push(`\`${p.value}\``);
+          });
+        } else if (option.enum) {
+          enumValues = option.enum.map(e => `\`${e}\``);
+        }
+
+        const enumStr =
+          enumValues.length > 0
+            ? `Possible values: ${enumValues.join(', ')}`
+            : ``;
+
+        template += dedent`
           ### ${option.name} ${option.required ? '(*__required__*)' : ''} ${
-            option.hidden ? '(__hidden__)' : ''
-          }
+          option.hidden ? '(__hidden__)' : ''
+        }
           
           ${
             !!option.aliases.length
@@ -93,12 +150,13 @@ function generateTemplate(
               ? ''
               : `Default: \`${option.default}\`\n`
           }
-          Type: \`${option.type}\` \n 
-          
+          Type: \`${option.type}\`
+
+          ${enumStr}
           
           ${option.description}
-        `)
-      );
+        `;
+      });
   }
 
   return { name: schematic.name, template };
@@ -112,7 +170,9 @@ Promise.all(
         .map(config => {
           return Promise.all(generateSchematicList(config, registry))
             .then(schematicList =>
-              schematicList.map(s => generateTemplate(framework, s))
+              schematicList
+                .filter(s => !s.hidden)
+                .map(s => generateTemplate(framework, s))
             )
             .then(markdownList =>
               markdownList.forEach(template =>

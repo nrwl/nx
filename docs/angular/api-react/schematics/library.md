@@ -6,7 +6,38 @@ Create a library
 
 ```bash
 ng generate library ...
+```
 
+```bash
+ng g lib ... # same
+```
+
+By default, Nx will search for `library` in the default collection provisioned in `angular.json`.
+
+You can specify the collection explicitly as follows:
+
+```bash
+ng g @nrwl/react:library ...
+```
+
+Show what will be generated without writing to disk:
+
+```bash
+ng g library ... --dry-run
+```
+
+### Examples
+
+Generate libs/myapp/mylib:
+
+```bash
+ng g lib mylib --directory=myapp
+```
+
+Generate a library with routes and add them to myapp:
+
+```bash
+ng g lib mylib --appProject=myapp
 ```
 
 ## Options
@@ -32,6 +63,8 @@ A directory where the app is placed
 Default: `tslint`
 
 Type: `string`
+
+Possible values: `eslint`, `tslint`
 
 The tool to use for running lint checks.
 
@@ -81,6 +114,8 @@ Default: `css`
 
 Type: `string`
 
+Possible values: `css`, `scss`, `styl`, `less`, `styled-components`, `@emotion/styled`
+
 The file extension to be used for style files.
 
 ### tags
@@ -96,5 +131,7 @@ Add tags to the library (used for linting)
 Default: `jest`
 
 Type: `string`
+
+Possible values: `jest`, `none`
 
 Test runner to use for unit tests

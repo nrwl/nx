@@ -6,7 +6,24 @@ Create an Angular library
 
 ```bash
 nx generate library ...
+```
 
+```bash
+nx g lib ... # same
+```
+
+By default, Nx will search for `library` in the default collection provisioned in `workspace.json`.
+
+You can specify the collection explicitly as follows:
+
+```bash
+nx g @nrwl/angular:library ...
+```
+
+Show what will be generated without writing to disk:
+
+```bash
+nx g library ... --dry-run
 ```
 
 ## Options
@@ -99,6 +116,8 @@ Default: `css`
 
 Type: `string`
 
+Possible values: `css`, `scss`, `styl`, `less`
+
 The file extension to be used for style files.
 
 ### tags
@@ -112,5 +131,7 @@ Add tags to the library (used for linting)
 Default: `jest`
 
 Type: `string`
+
+Possible values: `karma`, `jest`, `none`
 
 Test runner to use for unit tests

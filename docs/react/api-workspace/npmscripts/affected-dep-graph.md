@@ -5,10 +5,42 @@ Graph dependencies affected by changes
 ## Usage
 
 ```bash
-affected:dep-graph
+nx affected:dep-graph
 ```
 
-     ## Options
+Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.  
+ ### Examples
+Open the dep graph of the workspace in the browser, and highlight the projects affected by changing the index.ts file:
+
+```bash
+nx affected:dep-graph --files=libs/mylib/src/index.ts
+```
+
+Open the dep graph of the workspace in the browser, and highlight the projects affected by the changes between master and HEAD (e.g., PR):
+
+```bash
+nx affected:dep-graph --base=master --head=HEAD
+```
+
+Save the dep graph of the workspace in a json file, and highlight the projects affected by the changes between master and HEAD (e.g., PR):
+
+```bash
+nx affected:dep-graph --base=master --head=HEAD --file=output.json
+```
+
+Save the dep graph of the workspace in a html file, and highlight the projects affected by the changes between master and HEAD (e.g., PR):
+
+```bash
+nx affected:dep-graph --base=master --head=HEAD --file=output.html
+```
+
+Open the dep graph of the workspace in the browser, and highlight the projects affected by the last commit on master:
+
+```bash
+nx affected:dep-graph --base=master~1 --head=master
+```
+
+## Options
 
 ### all
 

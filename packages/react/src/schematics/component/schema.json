@@ -1,8 +1,18 @@
 {
   "$schema": "http://json-schema.org/schema",
   "id": "NxReactApp",
-  "title": "Create a React Application for Nx",
+  "title": "Create a React Component for Nx",
   "type": "object",
+  "examples": [
+    {
+      "command": "g component my-component --project=mylib",
+      "description": "Generate a component in the mylib library"
+    },
+    {
+      "command": "g component my-component --project=mylib --classComponent",
+      "description": "Generate a class component in the mylib library"
+    }
+  ],
   "properties": {
     "project": {
       "type": "string",

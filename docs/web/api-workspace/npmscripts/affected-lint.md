@@ -5,10 +5,48 @@ Lint projects affected by changes
 ## Usage
 
 ```bash
-affected:lint
+nx affected:lint
 ```
 
-     ## Options
+Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.  
+ ### Examples
+Run lint in parallel:
+
+```bash
+nx affected:lint --parallel --maxParallel=5
+```
+
+Rerun the lint target only for the projects that failed last time:
+
+```bash
+nx affected:lint --only-failed
+```
+
+Run the lint target for all projects:
+
+```bash
+nx affected:lint --all
+```
+
+Run lint for all the projects affected by changing the index.ts file:
+
+```bash
+nx affected:lint --files=libs/mylib/src/index.ts
+```
+
+Run lint for all the projects affected by the changes between master and HEAD (e.g., PR):
+
+```bash
+nx affected:lint --base=master --head=HEAD
+```
+
+Run lint for all the projects affected by the last commit on master:
+
+```bash
+nx affected:lint --base=master~1 --head=master
+```
+
+## Options
 
 ### all
 

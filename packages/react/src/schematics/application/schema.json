@@ -2,6 +2,20 @@
   "$schema": "http://json-schema.org/schema",
   "id": "NxReactApp",
   "title": "Create a React Application for Nx",
+  "examples": [
+    {
+      "command": "g app myapp --directory=myorg",
+      "description": "Generate apps/myorg/myapp and apps/myorg/myapp-e2e"
+    },
+    {
+      "command": "g app myapp --classComponent",
+      "description": "Use class components instead of functional components"
+    },
+    {
+      "command": "g app myapp --routing",
+      "description": "Set up routing"
+    }
+  ],
   "type": "object",
   "properties": {
     "name": {

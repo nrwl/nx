@@ -6,7 +6,20 @@ Setup Downgrade Module
 
 ```bash
 nx generate downgrade-module ...
+```
 
+By default, Nx will search for `downgrade-module` in the default collection provisioned in `workspace.json`.
+
+You can specify the collection explicitly as follows:
+
+```bash
+nx g @nrwl/angular:downgrade-module ...
+```
+
+Show what will be generated without writing to disk:
+
+```bash
+nx g downgrade-module ... --dry-run
 ```
 
 ## Options

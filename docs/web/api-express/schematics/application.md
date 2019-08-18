@@ -6,7 +6,24 @@ Create an express application
 
 ```bash
 nx generate application ...
+```
 
+```bash
+nx g app ... # same
+```
+
+By default, Nx will search for `application` in the default collection provisioned in `workspace.json`.
+
+You can specify the collection explicitly as follows:
+
+```bash
+nx g @nrwl/express:application ...
+```
+
+Show what will be generated without writing to disk:
+
+```bash
+nx g application ... --dry-run
 ```
 
 ## Options
@@ -28,6 +45,8 @@ Frontend project that needs to access this application. This sets up proxy confi
 Default: `tslint`
 
 Type: `string`
+
+Possible values: `eslint`, `tslint`
 
 The tool to use for running lint checks.
 
@@ -64,5 +83,7 @@ Add tags to the application (used for linting)
 Default: `jest`
 
 Type: `string`
+
+Possible values: `jest`, `none`
 
 Test runner to use for unit tests
