@@ -8,8 +8,10 @@ Print libraries affected by changes
 nx affected:libs
 ```
 
-Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.  
- ### Examples
+Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
+
+### Examples
+
 Print the names of all the libs affected by changing the index.ts file:
 
 ```bash
