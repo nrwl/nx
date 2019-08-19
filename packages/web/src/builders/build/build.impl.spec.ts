@@ -80,7 +80,9 @@ describe('WebBuildBuilder', () => {
     writeIndexHtml = spyOn(indexHtmlUtils, 'writeIndexHtml').and.returnValue(
       of(null)
     );
-    (<any>TsConfigPathsPlugin).mockImplementation(class MockPathsPlugin {});
+    (<any>TsConfigPathsPlugin).mockImplementation(
+      function MockPathsPlugin() {}
+    );
   });
 
   describe('run', () => {

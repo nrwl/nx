@@ -22,7 +22,9 @@ describe('getBaseWebpackPartial', () => {
       root: '/root',
       statsJson: false
     };
-    (<any>TsConfigPathsPlugin).mockImplementation(class MockPathsPlugin {});
+    (<any>TsConfigPathsPlugin).mockImplementation(
+      function MockPathsPlugin() {}
+    );
   });
 
   describe('unconditional options', () => {

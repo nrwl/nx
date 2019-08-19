@@ -1,4 +1,3 @@
-import { normalize } from '@angular-devkit/core';
 import { getDevServerConfig } from './devserver.config';
 import { Logger } from '@angular-devkit/core/src/logger';
 jest.mock('tsconfig-paths-webpack-plugin');
@@ -54,7 +53,9 @@ describe('getDevServerConfig', () => {
       watch: true
     };
 
-    (<any>TsConfigPathsPlugin).mockImplementation(class MockPathsPlugin {});
+    (<any>TsConfigPathsPlugin).mockImplementation(
+      function MockPathsPlugin() {}
+    );
 
     mockCompilerOptions = {
       target: 'es2015'

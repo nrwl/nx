@@ -53,7 +53,9 @@ describe('NodeBuildBuilder', () => {
         }
       }
     });
-    (<any>TsConfigPathsPlugin).mockImplementation(class MockPathsPlugin {});
+    (<any>TsConfigPathsPlugin).mockImplementation(
+      function MockPathsPlugin() {}
+    );
   });
 
   describe('run', () => {

@@ -278,6 +278,11 @@
             "id": "cli"
           },
           {
+            "name": "Updating Nx",
+            "id": "update",
+            "file": "shared/update"
+          },
+          {
             "name": "Using Cypress",
             "id": "modernize-cypress",
             "file": "shared/modernize-cypress"
@@ -416,6 +421,11 @@
           {
             "name": "Nx CLI",
             "id": "cli"
+          },
+          {
+            "name": "Updating Nx",
+            "id": "update",
+            "file": "shared/update"
           },
           {
             "name": "Using Cypress",

@@ -47,7 +47,9 @@ describe('getWebConfig', () => {
       target: 'es2015',
       paths: { path: ['mapped/path'] }
     };
-    (<any>TsConfigPathsPlugin).mockImplementation(class MockPathsPlugin {});
+    (<any>TsConfigPathsPlugin).mockImplementation(
+      function MockPathsPlugin() {}
+    );
 
     spyOn(ts, 'readConfigFile').and.callFake(() => ({
       config: {

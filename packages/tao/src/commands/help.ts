@@ -30,6 +30,14 @@ export function printHelp() {
     
     You can also use the infix notation to run a target:
     ${commandName} [target] [project] [options, ...]
+
+    ${terminal.bold('Migrate packages and create migrations.json.')}
+    ${commandName} migrate ${terminal.grey('[package-name]')}
+    
+    ${terminal.bold('Run migrations.')}
+    ${commandName} migrate --run-migrations=[filename]')}
+  )}
+
   `);
   return 0;
 }
