@@ -138,13 +138,32 @@ You are good to go!
 - [Nx Documentation and Guides](https://nx.dev)
 - [Nx blog posts](https://blog.nrwl.io/nx/home)
 
+### Quick Start Videos
+
+<table>
+  <tr>
+    <td>    
+      <a href="https://www.youtube.com/watch?v=mVKMse-gFBI" target="_blank">
+      <p align="center">Angular<br><img src="https://raw.githubusercontent.com/nrwl/nx/master/nx-angular-video.png" width="350"></p>
+      </a>
+    </td>
+    <td>    
+      <a href="https://www.youtube.com/watch?v=E188J7E_MDU" target="_blank">
+      <p align="center">React<br><img src="https://raw.githubusercontent.com/nrwl/nx/master/nx-react-video.png" width="350"></p>
+      </a>
+    </td>
+  </tr>
+</table>
+
 ### Books
 
-- [Enterprise Monorepo Patterns](https://go.nrwl.io/angular-enterprise-monorepo-patterns-new-book?utm_campaign=Book%3A%20Monorepo%20Patterns%2C%20Jan%202019&utm_source=Github&utm_medium=Banner%20Ad)
+- [Effective React Development with Nx](https://go.nrwl.io/effective-react-development-with-nx-new-book)
+- [Angular Enterprise Monorepo Patterns](https://go.nrwl.io/angular-enterprise-monorepo-patterns-new-book?utm_campaign=Book%3A%20Monorepo%20Patterns%2C%20Jan%202019&utm_source=Github&utm_medium=Banner%20Ad)
 
 ### Videos
 
-- [Nx Quickstart - How to Scale a JavaScript Project](https://www.youtube.com/watch?v=VUyBY72mwrQ)
+- [Building Angular full-stack applications in a monorepo.](https://www.youtube.com/watch?v=XZpp52IqD2A&t=1292s)
+- [Building React full-stack applications in a monorepo.](https://www.youtube.com/watch?v=Jxh_--FeJeY&t=2s)
 - [Video course on using Nx Workspaces](https://angularplaybook.com/p/nx-workspaces)
 
 ### Talks

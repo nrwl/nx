@@ -2,12 +2,16 @@
 
 ## Learn Nx in 10 Minutes
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/E188J7E_MDU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+## Building Full Stack Applications
+
 <iframe width="560" height="315" src="https://www.youtube.com/embed/Jxh_--FeJeY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## Books and Blogs
 
 - [Nx blog posts](https://blog.nrwl.io/nx/home)
-- [Enteprise Monorepo Patterns Book](https://go.nrwl.io/angular-enterprise-monorepo-patterns-new-book?utm_campaign=Book%3A%20Monorepo%20Patterns%2C%20Jan%202019&utm_source=Github&utm_medium=Banner%20Ad)
+- [Enterprise Monorepo Patterns Book](https://go.nrwl.io/angular-enterprise-monorepo-patterns-new-book?utm_campaign=Book%3A%20Monorepo%20Patterns%2C%20Jan%202019&utm_source=Github&utm_medium=Banner%20Ad)
 
 ## Misc
 

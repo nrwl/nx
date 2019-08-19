@@ -12,7 +12,7 @@
 
 ### Books and Blogs
 
-- [Angular Enteprise Monorepo Patters Book](https://go.nrwl.io/angular-enterprise-monorepo-patterns-new-book?utm_campaign=Book%3A%20Monorepo%20Patterns%2C%20Jan%202019&utm_source=Github&utm_medium=Banner%20Ad)
+- [Angular Enterprise Monorepo Patters Book](https://go.nrwl.io/angular-enterprise-monorepo-patterns-new-book?utm_campaign=Book%3A%20Monorepo%20Patterns%2C%20Jan%202019&utm_source=Github&utm_medium=Banner%20Ad)
 - [Nx blog posts](https://blog.nrwl.io/nx/home)
 
 ### Videos
