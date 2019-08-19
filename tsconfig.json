@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2015",
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "build",
@@ -35,10 +35,5 @@
     "packages/react/src/*/files/**/*",
     "packages/web/src/*/files/**/*",
     "scripts"
-  ],
-  "angularCompilerOptions": {
-    "strictMetadataEmit": true,
-    "skipTemplateCodegen": true,
-    "annotationsAs": "decorators"
-  }
+  ]
 }

@@ -24,6 +24,11 @@ export async function invokeCommand(
     case 'run':
     case 'r':
       return (await import('./src/commands/run')).run(root, commandArgs);
+    case 'migrate':
+      return (await import('./src/commands/migrate')).migrate(
+        root,
+        commandArgs
+      );
     case 'help':
     case '--help':
       return (await import('./src/commands/help')).printHelp();

@@ -75,9 +75,3 @@ git clean -fd # Delete newly added files and directories
 ## Updating Other Dependencies
 
 Nx does not handle updating the dependencies that Nx did not add. Please refer to those projects for the best updating strategy.
-
-## Using Angular CLI Update
-
-The `nx migrate` command uses the same migrations as `ng update`. You can use either command to update your workspace.
-
-The difference is that `nx migrate` gives you a lot more control over what gets installed, what migrations run, etc.. This is often needed for mid-size or large projects, where `ng-update` falls short.

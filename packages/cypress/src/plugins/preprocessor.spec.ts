@@ -4,7 +4,9 @@ import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 
 describe('getWebpackConfig', () => {
   beforeEach(() => {
-    (<any>TsConfigPathsPlugin).mockImplementation(class MockPathsPlugin {});
+    (<any>TsConfigPathsPlugin).mockImplementation(
+      function MockPathsPlugin() {}
+    );
   });
   it('should load typescript', () => {
     const config = getWebpackConfig({

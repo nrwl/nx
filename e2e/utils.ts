@@ -353,9 +353,16 @@ export function runCommand(command: string): string {
   }
 }
 
-export function updateFile(f: string, content: string): void {
+export function updateFile(f: string, content: string | Function): void {
   ensureDirSync(path.dirname(tmpProjPath(f)));
-  writeFileSync(tmpProjPath(f), content);
+  if (typeof content === 'string') {
+    writeFileSync(tmpProjPath(f), content);
+  } else {
+    writeFileSync(
+      tmpProjPath(f),
+      content(readFileSync(tmpProjPath(f)).toString())
+    );
+  }
 }
 
 export function renameFile(f: string, newPath: string): void {

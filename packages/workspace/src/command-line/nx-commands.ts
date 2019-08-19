@@ -7,6 +7,7 @@ import { workspaceLint } from './lint';
 import { workspaceSchematic } from './workspace-schematic';
 import { generateGraph, OutputType } from './dep-graph';
 import { nxVersion } from '../utils/versions';
+import { execSync } from 'child_process';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
@@ -25,6 +26,7 @@ export const supportedNxCommands = [
   'format:write',
   'workspace-schematic',
   'workspace-lint',
+  'migrate',
   '--help',
   '--version'
 ];
@@ -177,6 +179,19 @@ export const commandsObject = yargs
       return yargs;
     },
     () => workspaceSchematic(process.argv.slice(3))
+  )
+  .command(
+    'migrate',
+    'Creates a migrations file or runs migrations from the migrations file.',
+    yargs => yargs,
+    () => {
+      execSync(
+        `./node_modules/.bin/tao migrate ${process.argv.slice(3).join(' ')}`,
+        {
+          stdio: ['inherit', 'inherit', 'inherit']
+        }
+      );
+    }
   )
   .help('help')
   .version(nxVersion)
