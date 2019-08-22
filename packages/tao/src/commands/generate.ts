@@ -139,6 +139,23 @@ function createRecorder(record: any, logger: logging.Logger) {
   };
 }
 
+function detectPackageManager(host: virtualFs.Host<any>): string {
+  const hostTree = new HostTree(host);
+  if (hostTree.get('workspace.json')) {
+    const workspaceJson = JSON.parse(
+      hostTree.read('workspace.json')!.toString()
+    );
+    if (workspaceJson.cli && workspaceJson.cli.packageManager) {
+      return workspaceJson.cli.packageManager;
+    }
+  }
+  return host.exists('yarn.lock' as any)
+    ? 'yarn'
+    : host.exists('pnpm-lock.yaml' as any)
+    ? 'pnpm'
+    : 'npm';
+}
+
 function createWorkflow(
   fsHost: virtualFs.Host<fs.Stats>,
   root: string,
@@ -147,7 +164,7 @@ function createWorkflow(
   const workflow = new NodeWorkflow(fsHost, {
     force: opts.force,
     dryRun: opts.dryRun,
-    packageManager: 'yarn',
+    packageManager: detectPackageManager(fsHost),
     root: normalize(root)
   });
   const _params = opts.schematicOptions._;
