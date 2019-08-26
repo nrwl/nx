@@ -286,34 +286,6 @@ function addRouterRootConfiguration(options: NormalizedSchema): Rule {
       )
     ]);
 
-    if (options.skipTests !== true) {
-      const componentSpecPath = `${
-        options.appProjectRoot
-      }/src/app/app.component.spec.ts`;
-      const componentSpecSource = host
-        .read(componentSpecPath)!
-        .toString('utf-8');
-      const componentSpecSourceFile = ts.createSourceFile(
-        componentSpecPath,
-        componentSpecSource,
-        ts.ScriptTarget.Latest,
-        true
-      );
-      insert(host, componentSpecPath, [
-        insertImport(
-          componentSpecSourceFile,
-          componentSpecPath,
-          'RouterTestingModule',
-          '@angular/router/testing'
-        ),
-        ...addImportToTestBed(
-          componentSpecSourceFile,
-          componentSpecPath,
-          `RouterTestingModule`
-        )
-      ]);
-    }
-
     return host;
   };
 }
@@ -382,6 +354,53 @@ function updateComponentTemplate(options: NormalizedSchema): Rule {
       templateNodeValue,
       `\`\n${nrwlHomeTemplate.html}\n\`,\n`
     );
+  };
+}
+
+function updateComponentSpec(options: NormalizedSchema) {
+  return (host: Tree) => {
+    if (options.skipTests !== true) {
+      const componentSpecPath = `${
+        options.appProjectRoot
+      }/src/app/app.component.spec.ts`;
+      const componentSpecSource = host
+        .read(componentSpecPath)!
+        .toString('utf-8');
+      const componentSpecSourceFile = ts.createSourceFile(
+        componentSpecPath,
+        componentSpecSource,
+        ts.ScriptTarget.Latest,
+        true
+      );
+
+      host.overwrite(
+        componentSpecPath,
+        componentSpecSource
+          .replace('.content span', 'h1')
+          .replace(
+            `${options.name} app is running!`,
+            `Welcome to ${options.name}!`
+          )
+      );
+
+      if (options.routing) {
+        insert(host, componentSpecPath, [
+          insertImport(
+            componentSpecSourceFile,
+            componentSpecPath,
+            'RouterTestingModule',
+            '@angular/router/testing'
+          ),
+          ...addImportToTestBed(
+            componentSpecSourceFile,
+            componentSpecPath,
+            `RouterTestingModule`
+          )
+        ]);
+      }
+    }
+
+    return host;
   };
 }
 
@@ -552,7 +571,7 @@ function updateE2eProject(options: NormalizedSchema): Rule {
     const content = host.read(spec).toString();
     host.overwrite(
       spec,
-      content.replace('Welcome to app!', `Welcome to ${options.prefix}!`)
+      content.replace('my-app app is running!', `Welcome to ${options.name}!`)
     );
 
     return chain([
@@ -677,6 +696,7 @@ export default function(schema: Schema): Rule {
       updateProject(options),
       updateComponentTemplate(options),
       updateComponentStyles(options),
+      updateComponentSpec(options),
       options.routing ? addRouterRootConfiguration(options) : noop(),
       updateLinting(options),
       options.unitTestRunner === 'jest'

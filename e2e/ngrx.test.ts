@@ -36,7 +36,9 @@ forEachCli(() => {
       expect(runCLI(`build ${myapp}`)).toContain(
         'chunk {main} main-es2015.js,'
       );
-      expect(runCLI(`build ${myapp}`)).toContain('chunk {main} main-es5.js,');
+      expect(runCLI(`build ${myapp}`)).toContain(
+        'ES5 bundle generation complete'
+      );
       expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
       expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
     }, 1000000);
@@ -69,7 +71,9 @@ forEachCli(() => {
       expect(runCLI(`build ${myapp}`)).toContain(
         'chunk {main} main-es2015.js,'
       );
-      expect(runCLI(`build ${myapp}`)).toContain('chunk {main} main-es5.js,');
+      expect(runCLI(`build ${myapp}`)).toContain(
+        'ES5 bundle generation complete'
+      );
       expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
       expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
     }, 1000000);

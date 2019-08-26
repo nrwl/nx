@@ -15,9 +15,18 @@ import {
   terminal,
   virtualFs
 } from '@angular-devkit/core';
-import { DryRunEvent, HostTree, Schematic } from '@angular-devkit/schematics';
+import {
+  DryRunEvent,
+  HostTree,
+  Schematic,
+  formats
+} from '@angular-devkit/schematics';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
-import { NodeWorkflow } from '@angular-devkit/schematics/tools';
+import {
+  NodeWorkflow,
+  validateOptionsWithSchema,
+  FileSystemSchematicDescription
+} from '@angular-devkit/schematics/tools';
 import * as inquirer from 'inquirer';
 import { logger } from '../shared/logger';
 import { commandName, printHelp } from '../shared/print-help';
@@ -175,7 +184,8 @@ async function createWorkflow(
     force: opts.force,
     dryRun: opts.dryRun,
     packageManager: await detectPackageManager(fsHost),
-    root: normalize(root)
+    root: normalize(root),
+    registry: new schema.CoreSchemaRegistry(formats.standardFormats)
   });
   const _params = opts.schematicOptions._;
   delete opts.schematicOptions._;
@@ -186,6 +196,16 @@ async function createWorkflow(
       return _params;
     }
   });
+
+  if (opts.defaults) {
+    workflow.registry.addPreTransform(schema.transforms.addUndefinedDefaults);
+  } else {
+    workflow.registry.addPostTransform(schema.transforms.addUndefinedDefaults);
+  }
+
+  workflow.engineHost.registerOptionsTransform(
+    validateOptionsWithSchema(workflow.registry)
+  );
 
   if (opts.interactive !== false && isTTY()) {
     workflow.registry.usePromptProvider(

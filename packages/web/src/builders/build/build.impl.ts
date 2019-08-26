@@ -15,6 +15,7 @@ import { writeIndexHtml } from '@angular-devkit/build-angular/src/angular-cli-fi
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { execSync } from 'child_process';
 import { Range, satisfies } from 'semver';
+import { basename } from 'path';
 
 export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   index: string;
@@ -39,10 +40,7 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
 
 export default createBuilder<WebBuildBuilderOptions & JsonObject>(run);
 
-export function run(
-  options: WebBuildBuilderOptions,
-  context: BuilderContext
-): Observable<BuildResult> {
+export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
   const host = new NodeJsSyncHost();
   const isScriptOptimizeOn =
     typeof options.optimization === 'boolean'
@@ -133,7 +131,10 @@ export function run(
         return (options.optimization
           ? writeIndexHtml({
               host,
-              outputPath: normalize(options.outputPath),
+              outputPath: devkitJoin(
+                normalize(options.outputPath),
+                basename(options.index)
+              ),
               indexPath: devkitJoin(
                 normalize(context.workspaceRoot),
                 options.index
