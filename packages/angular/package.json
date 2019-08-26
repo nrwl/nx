@@ -37,8 +37,8 @@
   "dependencies": {
     "@nrwl/cypress": "*",
     "@nrwl/jest": "*",
-    "@angular-devkit/schematics": "8.1.1",
-    "@schematics/angular": "8.1.1",
+    "@angular-devkit/schematics": "8.3.2",
+    "@schematics/angular": "8.3.2",
     "jasmine-marbles": "~0.6.0"
   }
 }

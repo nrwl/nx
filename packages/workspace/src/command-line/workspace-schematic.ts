@@ -8,11 +8,13 @@ import {
 import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
 import {
   SchematicEngine,
-  UnsuccessfulWorkflowExecution
+  UnsuccessfulWorkflowExecution,
+  formats
 } from '@angular-devkit/schematics';
 import {
   NodeModulesEngineHost,
-  NodeWorkflow
+  NodeWorkflow,
+  validateOptionsWithSchema
 } from '@angular-devkit/schematics/tools';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
@@ -124,7 +126,8 @@ function createWorkflow(dryRun: boolean) {
   return new NodeWorkflow(host, {
     packageManager: detectPackageManager(),
     root,
-    dryRun
+    dryRun,
+    registry: new schema.CoreSchemaRegistry(formats.standardFormats)
   });
 }
 
@@ -256,6 +259,16 @@ async function executeSchematic(
     }
   });
   delete options._;
+
+  if (options.defaults) {
+    workflow.registry.addPreTransform(schema.transforms.addUndefinedDefaults);
+  } else {
+    workflow.registry.addPostTransform(schema.transforms.addUndefinedDefaults);
+  }
+
+  workflow.engineHost.registerOptionsTransform(
+    validateOptionsWithSchema(workflow.registry)
+  );
 
   // Add support for interactive prompts
   if (options.interactive) {

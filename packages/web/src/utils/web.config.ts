@@ -12,6 +12,7 @@ import { readTsConfig } from '@nrwl/workspace';
 import { getBaseWebpackPartial } from './config';
 import { IndexHtmlWebpackPlugin } from '@angular-devkit/build-angular/src/angular-cli-files/plugins/index-html-webpack-plugin';
 import { generateEntryPoints } from '@angular-devkit/build-angular/src/angular-cli-files/utilities/package-chunk-sort';
+import { ScriptTarget } from 'typescript';
 
 export function getWebConfig(
   root,
@@ -22,6 +23,15 @@ export function getWebConfig(
   isScriptOptimizeOn?: boolean
 ) {
   const tsConfig = readTsConfig(options.tsConfig);
+
+  if (isScriptOptimizeOn) {
+    // Angular CLI uses an environment variable (NG_BUILD_DIFFERENTIAL_FULL)
+    // to determine whether to use the scriptTargetOverride
+    // or the tsConfig target
+    // We want to force the target if overriden
+    tsConfig.options.target = ScriptTarget.ES5;
+  }
+
   const wco: any = {
     root,
     projectRoot: resolve(root, sourceRoot),

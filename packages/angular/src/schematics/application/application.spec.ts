@@ -297,6 +297,21 @@ describe('app', () => {
         getFileContent(tree, 'apps/my-dir/my-app/src/app/app.component.ts')
       ).toContain('Thank you for using and showing some ♥ for Nx.');
     });
+
+    it('should update the AppComponent spec to target Nx content', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', directory: 'myDir', inlineTemplate: true },
+        appTree
+      );
+      const testFileContent = getFileContent(
+        tree,
+        'apps/my-dir/my-app/src/app/app.component.spec.ts'
+      );
+
+      expect(testFileContent).toContain(`querySelector('h1')`);
+      expect(testFileContent).toContain('Welcome to my-dir-my-app!');
+    });
   });
 
   describe('--style scss', () => {

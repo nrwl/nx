@@ -155,6 +155,11 @@ forEachCli('angular', () => {
                 maximumError: '5mb',
                 maximumWarning: '2mb',
                 type: 'initial'
+              },
+              {
+                maximumError: '10kb',
+                maximumWarning: '6kb',
+                type: 'anyComponentStyle'
               }
             ],
             optimization: true,
