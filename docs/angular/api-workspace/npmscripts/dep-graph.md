@@ -8,10 +8,8 @@ Graph dependencies within workspace
 nx dep-graph
 ```
 
-Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
-
-### Examples
-
+Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.  
+ ### Examples
 Open the dep graph of the workspace in the browser:
 
 ```bash

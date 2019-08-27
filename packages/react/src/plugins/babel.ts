@@ -11,6 +11,8 @@ export function getBabelWebpackConfig(config: Configuration) {
           [
             require('@babel/preset-env').default,
             {
+              // Include any project files, e.g. browserlist, by setting the context as config path
+              configPath: config.context,
               // Allow importing core-js in entrypoint and use browserlist to select polyfills
               useBuiltIns: 'entry',
               corejs: 3,

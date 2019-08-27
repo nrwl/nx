@@ -1,4 +1,7 @@
-# This file is currently used by autoprefixer to adjust CSS to support the below specified browsers
+# This file is used by:
+# 1. autoprefixer to adjust CSS to support the below specified browsers
+# 2. babel preset-env to adjust included polyfills
+#
 # For additional information regarding the format and rule options, please see:
 # https://github.com/browserslist/browserslist#queries
 #

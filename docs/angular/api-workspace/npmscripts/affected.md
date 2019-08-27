@@ -8,10 +8,8 @@ Run task for affected projects
 nx affected
 ```
 
-Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
-
-### Examples
-
+Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.  
+ ### Examples
 Run custom target for all affected projects:
 
 ```bash
