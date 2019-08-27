@@ -29,6 +29,13 @@
       "schema": "./src/schematics/component/schema.json",
       "description": "Create a component",
       "aliases": "c"
+    },
+
+    "redux": {
+      "factory": "./src/schematics/redux/redux",
+      "schema": "./src/schematics/redux/schema.json",
+      "description": "Create a redux slice for a project",
+      "aliases": ["slice"]
     }
   }
 }

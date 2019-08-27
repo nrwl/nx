@@ -8,8 +8,10 @@ Lint projects affected by changes
 nx affected:lint
 ```
 
-Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.  
- ### Examples
+Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
+
+### Examples
+
 Run lint in parallel:
 
 ```bash
