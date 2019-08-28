@@ -22,7 +22,10 @@ import {
   insert
 } from '@nrwl/workspace/src/utils/ast-utils';
 import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
-import { reactRouterVersion } from '../../utils/versions';
+import {
+  reactRouterDomVersion,
+  reactRouterVersion
+} from '../../utils/versions';
 import { assertValidStyle } from '../../utils/assertion';
 
 interface NormalizedSchema extends Schema {
@@ -40,7 +43,10 @@ export default function(schema: Schema): Rule {
       addStyledModuleDependencies(options),
       addExportsToBarrel(options),
       options.routing
-        ? addDepsToPackageJson({ 'react-router-dom': reactRouterVersion }, {})
+        ? addDepsToPackageJson(
+            { 'react-router-dom': reactRouterVersion },
+            { '@types/react-router-dom': reactRouterDomVersion }
+          )
         : noop(),
       formatFiles({ skipFormat: false })
     ]);

@@ -38,7 +38,10 @@ import {
   addRoute,
   findComponentImportPath
 } from '../../utils/ast-utils';
-import { reactRouterVersion } from '../../utils/versions';
+import {
+  reactRouterDomVersion,
+  reactRouterVersion
+} from '../../utils/versions';
 import { assertValidStyle } from '../../utils/assertion';
 import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
 
@@ -170,7 +173,10 @@ function updateAppRoutes(
       `${componentImportPath}.tsx`
     );
     return chain([
-      addDepsToPackageJson({ 'react-router-dom': reactRouterVersion }, {}),
+      addDepsToPackageJson(
+        { 'react-router-dom': reactRouterVersion },
+        { '@types/react-router-dom': reactRouterDomVersion }
+      ),
       function addBrowserRouterToMain(host: Tree) {
         const { content, source } = readComponent(host, options.appMain);
         const isRouterPresent = content.match(/react-router-dom/);
