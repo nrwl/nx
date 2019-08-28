@@ -44,6 +44,179 @@ interface NormalizedSchema extends Schema {
   parsedTags: string[];
 }
 
+const nrwlHomeTemplate = {
+  html: `
+<header class="flex">
+    <img alt="Nx logo" width="75" src="https://nx.dev/assets/images/nx-logo-white.svg" />
+    <h1>Welcome to {{title}}!</h1>
+</header>
+<main>
+    <h2>Resources &amp; Tools</h2>
+    <p>
+        Thank you for using and showing some ♥ for Nx. <br />
+        Here are some links to help you get started.
+    </p>
+    <ul class="resources">
+        <li class="col-span-2">
+            <a
+                    class="resource flex"
+                    href="https://nx.dev/angular/getting-started/what-is-nx"
+            >
+                Nx video tutorial
+            </a>
+        </li>
+        <li class="col-span-2">
+            <a
+                    class="resource flex"
+                    href="https://nx.dev/angular/tutorial/01-create-application"
+            >
+                Interactive tutorial
+            </a>
+        </li>
+        <li class="col-span-2">
+            <a class="resource flex" href="https://connect.nrwl.io/">
+                <img
+                        height="36"
+                        alt="Nrwl Connect"
+                        src="https://connect.nrwl.io/assets/img/CONNECT_ColorIcon.png"
+                />
+                <span class="gutter-left">Nrwl Connect</span>
+            </a>
+        </li>
+    </ul>
+    <h2>Next Steps</h2>
+    <p>Here are some things you can do with Nx.</p>
+    <details open>
+        <summary>Add UI library</summary>
+        <pre>
+\`# Generate UI lib
+ng g @nrwl/angular:lib ui
+
+# Add a component
+ng g @nrwl/angular:component xyz --project ui\`</pre
+        >
+    </details>
+    <details>
+        <summary>View dependency graph</summary>
+        <pre>\`nx dep-graph\`</pre>
+    </details>
+    <details>
+        <summary>Run affected commands</summary>
+        <pre>
+\`# see what's been affected by changes
+ng affected:dep-graph
+
+# run tests for current changes
+ng affected:test
+
+# run e2e tests for current changes
+ng affected:e2e
+\`</pre
+        >
+    </details>
+</main>
+  `,
+  css: `
+/*
+ * Remove template code below
+ */
+:host {
+  display: block;
+  font-family: sans-serif;
+  min-width: 300px;
+  max-width: 600px;
+  margin: 50px auto;
+}
+
+.gutter-left {
+  margin-left: 9px;
+}
+
+.col-span-2 {
+  grid-column: span 2;
+}
+
+.flex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+header {
+  background-color: #143055;
+  color: white;
+  padding: 5px;
+  border-radius: 3px;
+}
+
+main {
+  padding: 0 36px;
+}
+
+p {
+  text-align: center;
+}
+
+h1 {
+  text-align: center;
+  margin-left: 18px;
+  font-size: 24px;
+}
+
+h2 {
+  text-align: center;
+  font-size: 20px;
+  margin: 40px 0 10px 0;
+}
+
+.resources {
+  text-align: center;
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-gap: 9px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.resource {
+  color: #0094ba;
+  height: 36px;
+  background-color: rgba(0, 0, 0, 0);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  padding: 3px 9px;
+  text-decoration: none;
+}
+
+.resource:hover {
+  background-color: rgba(68, 138, 255, 0.04);
+}
+
+pre {
+  padding: 9px;
+  border-radius: 4px;
+  background-color: black;
+  color: #eee;
+}
+
+details {
+  border-radius: 4px;
+  color: #333;
+  background-color: rgba(0, 0, 0, 0);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 3px 9px;
+  margin-bottom: 9px;
+}
+
+summary {
+  cursor: pointer;
+  outline: none;
+  height: 36px;
+  line-height: 36px;
+}
+  `
+};
+
 function addRouterRootConfiguration(options: NormalizedSchema): Rule {
   return (host: Tree) => {
     const modulePath = `${options.appProjectRoot}/src/app/app.module.ts`;
@@ -95,27 +268,47 @@ function addRouterRootConfiguration(options: NormalizedSchema): Rule {
   };
 }
 
+function updateComponentStyles(options: NormalizedSchema): Rule {
+  return (host: Tree) => {
+    const content = nrwlHomeTemplate.css;
+
+    if (!options.inlineStyle) {
+      const filesMap = {
+        css: `${options.appProjectRoot}/src/app/app.component.css`,
+        scss: `${options.appProjectRoot}/src/app/app.component.scss`,
+        less: `${options.appProjectRoot}/src/app/app.component.less`,
+        styl: `${options.appProjectRoot}/src/app/app.component.styl`
+      };
+      return host.overwrite(filesMap[options.style], content);
+    }
+
+    // Inline component update
+    const modulePath = `${options.appProjectRoot}/src/app/app.component.ts`;
+    const templateNodeValue = getDecoratorPropertyValueNode(
+      host,
+      modulePath,
+      'Component',
+      'styles',
+      '@angular/core'
+    );
+    replaceNodeValue(
+      host,
+      modulePath,
+      templateNodeValue,
+      `[\`\n${content}\n\`],\n`
+    );
+  };
+}
+
+/**
+ *
+ * @param options
+ */
 function updateComponentTemplate(options: NormalizedSchema): Rule {
   return (host: Tree) => {
-    const baseContent = `
-<div style="text-align:center">
-  <h1>Welcome to {{title}}!</h1>
-  <img width="450" src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png">
-</div>
-
-<p>This is an Angular app built with <a href="https://nx.dev/angular">Nx</a>.</p>
-<p>🔎 **Nx is a set of Extensible Dev Tools for Monorepos.**</p>
-
-<h2>Quick Start & Documentation</h2>
-
-<ul>
-<li><a href="https://nx.dev/angular/getting-started/what-is-nx">10-minute video showing all Nx features</a></li>
-<li><a href="https://nx.dev/angular/tutorial/01-create-application">Interactive tutorial</a></li>
-</ul>
-`;
     const content = options.routing
-      ? `${baseContent}\n<router-outlet></router-outlet>`
-      : baseContent;
+      ? `${nrwlHomeTemplate.html}\n<router-outlet></router-outlet>`
+      : nrwlHomeTemplate.html;
 
     if (!options.inlineTemplate) {
       return host.overwrite(
@@ -124,6 +317,7 @@ function updateComponentTemplate(options: NormalizedSchema): Rule {
       );
     }
 
+    // Inline component update
     const modulePath = `${options.appProjectRoot}/src/app/app.component.ts`;
     const templateNodeValue = getDecoratorPropertyValueNode(
       host,
@@ -136,7 +330,7 @@ function updateComponentTemplate(options: NormalizedSchema): Rule {
       host,
       modulePath,
       templateNodeValue,
-      `\`\n${baseContent}\n\`,\n`
+      `\`\n${nrwlHomeTemplate.html}\n\`,\n`
     );
   };
 }
@@ -403,6 +597,7 @@ export default function(schema: Schema): Rule {
       move(appProjectRoot, options.appProjectRoot),
       updateProject(options),
       updateComponentTemplate(options),
+      updateComponentStyles(options),
       options.routing ? addRouterRootConfiguration(options) : noop(),
       updateLinting(options),
       options.unitTestRunner === 'jest'
