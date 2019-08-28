@@ -284,7 +284,7 @@ describe('app', () => {
       ).toBeTruthy();
       expect(
         getFileContent(tree, 'apps/my-dir/my-app/src/app/app.component.html')
-      ).toContain('This is an Angular app built with');
+      ).toContain('Thank you for using and showing some ♥ for Nx.');
     });
 
     it("should update `template`'s property of AppComponent with Nx content", async () => {
@@ -295,7 +295,7 @@ describe('app', () => {
       );
       expect(
         getFileContent(tree, 'apps/my-dir/my-app/src/app/app.component.ts')
-      ).toContain('This is an Angular app built with');
+      ).toContain('Thank you for using and showing some ♥ for Nx.');
     });
   });
 

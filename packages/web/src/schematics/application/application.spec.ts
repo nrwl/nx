@@ -179,7 +179,7 @@ describe('app', () => {
     ).toBeTruthy();
     expect(
       tree.readContent('apps/my-dir/my-app/src/app/app.element.ts')
-    ).toContain('This is a Web Components app built with');
+    ).toContain('Thank you for using and showing some ♥ for Nx.');
   });
 
   describe('--style scss', () => {
