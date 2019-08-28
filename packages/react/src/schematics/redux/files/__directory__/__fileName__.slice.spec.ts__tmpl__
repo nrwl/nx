@@ -1,0 +1,40 @@
+import {
+  <%= propertyName %>Reducer,
+  get<%= className %>Start,
+  get<%= className %>Failure,
+  get<%= className %>Success
+} from './<%= fileName %>.slice';
+
+describe('<%= propertyName %> reducer', () => {
+  it('should handle initial state', () => {
+    expect(<%= propertyName %>Reducer(undefined, { type: '' })).toMatchObject({
+      entities: []
+    });
+  });
+
+  it('should handle get <%= propertyName %> actions', () => {
+    let state = <%= propertyName %>Reducer(undefined, get<%= className %>Start());
+
+    expect(state).toEqual({
+      loaded: false,
+      error: null,
+      entities: []
+    });
+
+    state = <%= propertyName %>Reducer(state, get<%= className %>Success([{ id: 1 }]));
+
+    expect(state).toEqual({
+      loaded: true,
+      error: null,
+      entities: [{ id: 1 }]
+    });
+
+    state = <%= propertyName %>Reducer(state, get<%= className %>Failure('Uh oh'));
+
+    expect(state).toEqual({
+      loaded: true,
+      error: 'Uh oh',
+      entities: [{ id: 1 }]
+    });
+  });
+});

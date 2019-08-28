@@ -1,0 +1,118 @@
+import { createSlice, Action, PayloadAction } from 'redux-starter-kit';
+import { ThunkAction } from 'redux-thunk';
+import { createSelector } from 'reselect';
+
+export const <%= constantName %>_FEATURE_KEY = '<%= propertyName %>';
+
+/*
+ * Change this from `any` if there is a more specific error type.
+ */
+export type <%= className %>Error = any;
+
+/*
+ * Update these interfaces according to your requirements.
+ */
+export interface <%= className %>Entity {
+  id: number;
+}
+
+export interface <%= className %>State {
+  entities: <%= className %>Entity[];
+  loaded: boolean;
+  error: <%= className %>Error;
+}
+
+export const initial<%= className %>State: <%= className %>State = {
+  entities: [],
+  loaded: false,
+  error: null
+};
+
+export const <%= propertyName %>Slice = createSlice({
+  slice: <%= constantName %>_FEATURE_KEY,
+  initialState: initial<%= className %>State as <%= className %>State,
+  reducers: {
+    get<%= className %>Start: (state, action: PayloadAction<undefined>) => {
+      state.loaded = false;
+    },
+    get<%= className %>Success: (state, action: PayloadAction<<%= className %>Entity[]>) => {
+      state.loaded = true;
+      state.entities = action.payload;
+    },
+    get<%= className %>Failure: (state, action: PayloadAction<<%= className %>Error>) => {
+      state.error = action.payload;
+    }
+  }
+});
+
+/*
+ * Export reducer for store configuration.
+ */
+export const <%= propertyName %>Reducer = <%= propertyName %>Slice.reducer;
+
+/*
+ * Export action creators to be dispatched. For use with the `useDispatch` hook.
+ *
+ * e.g.
+ * ```
+ * const dispatch = useDispatch();
+ * dispatch(get<%= className %>Success([{ id: 1 }]));
+ * ```
+ *
+ * See: https://react-redux.js.org/next/api/hooks#usedispatch
+ */
+export const {
+  get<%= className %>Start,
+  get<%= className %>Success,
+  get<%= className %>Failure
+} = <%= propertyName %>Slice.actions;
+
+/*
+ * Export selectors to query state. For use with the `useSelector` hook.
+ *
+ * e.g.
+ * ```
+ * const entities = useSelector(select<%= className %>Entities);
+ * ```
+ *
+ * See: https://react-redux.js.org/next/api/hooks#useselector
+ */
+export const get<%= className %>State = (rootState: any): <%= className %>State =>
+  rootState[<%= constantName %>_FEATURE_KEY];
+
+export const select<%= className %>Entities = createSelector(
+  get<%= className %>State,
+  s => s.entities
+);
+
+export const select<%= className %>Loaded = createSelector(
+  get<%= className %>State,
+  s => s.loaded
+);
+
+export const select<%= className %>Error = createSelector(
+  get<%= className %>State,
+  s => s.error
+);
+
+/*
+ * Export default effect, handled by redux-thunk.
+ * You can replace this with your own effects solution.
+ */
+export const fetch<%= className %> = (): ThunkAction<
+  void,
+  any,
+  null,
+  Action<string>
+> => async dispatch => {
+  try {
+    dispatch(get<%= className %>Start());
+    // Replace this with your custom fetch call.
+    // For example, `const data = await myApi.get<%= className %>`;
+    // Right now we just load an empty array.
+    const data = [];
+    dispatch(get<%= className %>Success(data));
+  } catch (err) {
+    dispatch(get<%= className %>Failure(err));
+  }
+};
