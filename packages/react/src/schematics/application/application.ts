@@ -45,6 +45,7 @@ import {
   babelPresetReactVersion,
   babelPresetTypeScriptVersion,
   coreJsVersion,
+  reactRouterDomVersion,
   reactRouterVersion,
   regeneratorVersion
 } from '../../utils/versions';
@@ -255,7 +256,10 @@ function addRouting(
 
           insert(host, appPath, addInitialRoutes(appPath, appSource, context));
         },
-        addDepsToPackageJson({ 'react-router-dom': reactRouterVersion }, {})
+        addDepsToPackageJson(
+          { 'react-router-dom': reactRouterVersion },
+          { '@types/react-router-dom': reactRouterDomVersion }
+        )
       ])
     : noop();
 }

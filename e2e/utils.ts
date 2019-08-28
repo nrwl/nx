@@ -198,6 +198,7 @@ export function copyMissingPackages(): void {
     'styled-components',
     '@types/react',
     '@types/react-dom',
+    '@types/react-router-dom',
     '@testing-library',
 
     // For testing webpack config with babel-loader

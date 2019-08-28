@@ -6,6 +6,7 @@ export const styledComponentsTypesVersion = '4.1.18';
 export const emotionVersion = '10.0.14';
 export const domTypesVersion = '16.8.5';
 export const reactRouterVersion = '5.0.1';
+export const reactRouterDomVersion = '4.3.5';
 export const testingLibraryVersion = '8.0.5';
 export const babelCoreVersion = '7.5.5';
 export const babelPresetEnvVersion = '7.5.5';
