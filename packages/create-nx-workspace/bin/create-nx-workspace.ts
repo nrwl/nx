@@ -64,8 +64,9 @@ determineWorkspaceName(parsedArgs).then(name => {
         return determineCli(preset, parsedArgs).then(cli => {
           const tmpDir = createSandbox(packageManager, cli);
           createApp(tmpDir, cli, parsedArgs, name, preset, appName, style);
-          showNxWarning(name);
           showCliWarning(preset, parsedArgs);
+          showNxWarning(name);
+          pointToTutorial(preset);
         });
       });
     });
@@ -415,5 +416,27 @@ function showCliWarning(preset: string, parsedArgs: any) {
         ]
       });
     }
+  }
+}
+
+function pointToTutorial(preset: string) {
+  if (preset === 'react' || preset === 'react-express') {
+    output.addVerticalSeparator();
+    output.note({
+      title: `First time using Nx? Check out this interactive Nx tutorial.`,
+      bodyLines: [`https://nx.dev/react/tutorial/01-create-application`]
+    });
+  } else if (preset === 'angular' || preset === 'angular-nest') {
+    output.addVerticalSeparator();
+    output.note({
+      title: `First time using Nx? Check out this interactive Nx tutorial.`,
+      bodyLines: [`https://nx.dev/angular/tutorial/01-create-application`]
+    });
+  } else if (preset === 'web-components') {
+    output.addVerticalSeparator();
+    output.note({
+      title: `First time using Nx? Check out this interactive Nx tutorial.`,
+      bodyLines: [`https://nx.dev/web/tutorial/01-create-application`]
+    });
   }
 }
