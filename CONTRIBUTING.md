@@ -116,7 +116,6 @@ The type must be one of the following:
 - refactor
 - style
 - docs
-- test
 
 ##### Scope
 
