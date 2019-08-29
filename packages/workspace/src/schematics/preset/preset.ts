@@ -257,7 +257,6 @@ export class AppService {
 function connectReactAndExpress(options: Schema) {
   return (host: Tree) => {
     const scope = options.npmScope;
-    const style = options.style ? options.style : 'css';
     host.overwrite(
       'libs/api-interfaces/src/lib/api-interfaces.ts',
       `export interface Message { message: string }`
@@ -267,8 +266,6 @@ function connectReactAndExpress(options: Schema) {
       `apps/${options.name}/src/app/app.tsx`,
       `import React, { useEffect, useState } from 'react';
 import { Message } from '@${scope}/api-interfaces';
-
-import './app.${style}';
 
 export const App = () => {
   const [m, setMessage] = useState<Message>({ message: '' });
