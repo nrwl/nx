@@ -53,8 +53,18 @@ const nrwlHomeTemplate = {
 <main>
     <h2>Resources &amp; Tools</h2>
     <p>
-        Thank you for using and showing some ♥ for Nx. <br />
-        Here are some links to help you get started.
+      Thank you for using and showing some ♥ for Nx.
+    </p>
+    <div class="flex github-star-container">
+      <a href="https://github.com/nrwl/nx" target="_blank" rel="noopener"> Give our repo a star.
+        <div class="github-star-badge">
+          <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+            Star
+        </div>
+      </a>
+    </div>
+    <p>
+      Here are some links to help you get started.
     </p>
     <ul class="resources">
         <li class="col-span-2">
@@ -213,6 +223,42 @@ summary {
   outline: none;
   height: 36px;
   line-height: 36px;
+}
+
+.github-star-container {
+  margin-top: 12px;
+  line-height: 20px;
+}
+
+.github-star-container a {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #333;
+}
+
+.github-star-badge {
+  color: #24292e;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  padding: 3px 10px;
+  border: 1px solid rgba(27,31,35,.2);
+  border-radius: 3px;
+  background-image: linear-gradient(-180deg,#fafbfc,#eff3f6 90%);
+  margin-left: 4px;
+  font-weight: 600;
+}
+
+.github-star-badge:hover {
+  background-image: linear-gradient(-180deg,#f0f3f6,#e6ebf1 90%);
+  border-color: rgba(27,31,35,.35);
+  background-position: -.5em;
+}
+.github-star-badge .material-icons {
+  height: 16px;
+  width: 16px;
+  margin-right: 4px;
 }
   `
 };
