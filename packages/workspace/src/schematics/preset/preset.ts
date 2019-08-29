@@ -113,11 +113,16 @@ function createPreset(options: Schema): Rule {
         'application',
         {
           name: 'api',
-          frontendProject: options.name
+          frontendProject: options.name,
+          linter
         },
         { interactive: false }
       ),
-      schematic('library', { name: 'api-interfaces' }, { interactive: false }),
+      schematic(
+        'library',
+        { name: 'api-interfaces', linter },
+        { interactive: false }
+      ),
       setDefaultCollection('@nrwl/react'),
       connectReactAndExpress(options)
     ]);
