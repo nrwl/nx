@@ -56,7 +56,7 @@ const nrwlHomeTemplate = {
       Thank you for using and showing some ♥ for Nx.
     </p>
     <div class="flex github-star-container">
-      <a href="https://github.com/nrwl/nx" target="_blank" rel="noopener"> Give our repo a star.
+      <a href="https://github.com/nrwl/nx" target="_blank" rel="noopener noreferrer"> Please give our repo a star:
         <div class="github-star-badge">
           <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
             Star
@@ -417,8 +417,12 @@ function updateLinting(options: NormalizedSchema): Rule {
   ]);
 }
 
-function addTsconfigs(options: NormalizedSchema): Rule {
+function addSchematicFiles(
+  appProjectRoot: string,
+  options: NormalizedSchema
+): Rule {
   return chain([
+    host => host.delete(`${appProjectRoot}/src/favicon.ico`),
     mergeWith(
       apply(url('./files'), [
         template({
@@ -625,7 +629,7 @@ export default function(schema: Schema): Rule {
         skipInstall: true,
         skipPackageJson: false
       }),
-      addTsconfigs(options),
+      addSchematicFiles(appProjectRoot, options),
       options.e2eTestRunner === 'protractor'
         ? move(e2eProjectRoot, options.e2eProjectRoot)
         : removeE2e(options, e2eProjectRoot),
