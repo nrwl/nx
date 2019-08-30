@@ -446,7 +446,7 @@ export function updateReduxStore(
       sourcePath,
       reducerDescriptor.getStart() + 1,
       `[${feature.keyName}]: ${feature.reducerName}${
-        reducerDescriptor.properties.length === 1 ? ',' : ''
+        reducerDescriptor.properties.length > 0 ? ',' : ''
       }`
     )
   ];

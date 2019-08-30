@@ -39,15 +39,29 @@ describe('lib', () => {
   describe('--appProject', () => {
     it('should configure app main', async () => {
       appTree = await runSchematic('app', { name: 'my-app' }, appTree);
-      const tree = await runSchematic(
+      let tree = await runSchematic(
         'redux',
         { name: 'my-slice', project: 'my-lib', appProject: 'my-app' },
         appTree
+      );
+      tree = await runSchematic(
+        'redux',
+        { name: 'another-slice', project: 'my-lib', appProject: 'my-app' },
+        tree
+      );
+      tree = await runSchematic(
+        'redux',
+        { name: 'third-slice', project: 'my-lib', appProject: 'my-app' },
+        tree
       );
 
       const main = tree.read('/apps/my-app/src/main.tsx').toString();
       expect(main).toContain('redux-starter-kit');
       expect(main).toContain('configureStore');
+      expect(main).toContain('[THIRD_SLICE_FEATURE_KEY]: thirdSliceReducer,');
+      expect(main).toContain(
+        '[ANOTHER_SLICE_FEATURE_KEY]: anotherSliceReducer,'
+      );
       expect(main).toContain('[MY_SLICE_FEATURE_KEY]: mySliceReducer');
       expect(main).toMatch(/<Provider store={store}>/);
     });
