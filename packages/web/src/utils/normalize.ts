@@ -118,17 +118,12 @@ export function normalizeWebBuildOptions(
   };
 }
 
-export function convertBuildOptions(
-  buildOptions: WebBuildBuilderOptions,
-  scriptTargetOverride: ScriptTarget
-): any {
+export function convertBuildOptions(buildOptions: WebBuildBuilderOptions): any {
   const options = buildOptions as any;
   return <any>{
     ...options,
     buildOptimizer: options.optimization,
     aot: false,
-    scriptTargetOverride: scriptTargetOverride,
-    esVersionInFileName: !!scriptTargetOverride,
     forkTypeChecker: false,
     lazyModules: [] as string[],
     assets: [] as string[]

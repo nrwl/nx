@@ -19,9 +19,9 @@ describe('WebBuildBuilder', () => {
     context = await getMockContext();
     testOptions = {
       index: 'apps/webapp/src/index.html',
-      differentialLoading: true,
       budgets: [],
       baseHref: '/',
+      optimization: true,
       deployUrl: '/',
       scripts: ['apps/webapp/src/scripts.js'],
       styles: ['apps/webapp/src/styles.css'],
@@ -104,7 +104,7 @@ describe('WebBuildBuilder', () => {
       expect(writeIndexHtml).toHaveBeenCalled();
     });
 
-    describe('differentialLoading', () => {
+    describe('differential loading', () => {
       it('should call runWebpack twice', async () => {
         await run(testOptions, context).toPromise();
 
@@ -123,7 +123,6 @@ describe('WebBuildBuilder', () => {
         await run(
           {
             ...testOptions,
-            differentialLoading: false,
             webpackConfig: './apps/webapp/webpack.config.js'
           },
           context

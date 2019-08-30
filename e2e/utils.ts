@@ -206,6 +206,7 @@ export function copyMissingPackages(): void {
     '@babel/preset-env',
     '@babel/preset-react',
     '@babel/preset-typescript',
+    '@babel/plugin-proposal-class-properties',
     '@babel/plugin-proposal-decorators',
     'babel-loader',
     'babel-plugin-macros',

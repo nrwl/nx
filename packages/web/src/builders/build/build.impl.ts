@@ -1,23 +1,22 @@
 import { BuilderContext, createBuilder } from '@angular-devkit/architect';
 import {
+  join as devkitJoin,
   JsonObject,
-  normalize,
-  join as devkitJoin
+  normalize
 } from '@angular-devkit/core';
-import { runWebpack, BuildResult } from '@angular-devkit/build-webpack';
-
-import { Observable, from, of, forkJoin } from 'rxjs';
+import { BuildResult, runWebpack } from '@angular-devkit/build-webpack';
+import { from, Observable, of } from 'rxjs';
 import { normalizeWebBuildOptions } from '../../utils/normalize';
 import { getWebConfig } from '../../utils/web.config';
 import { BuildBuilderOptions } from '../../utils/types';
-import { concatMap, map, switchMap } from 'rxjs/operators';
+import { bufferCount, map, mergeScan, switchMap } from 'rxjs/operators';
 import { getSourceRoot } from '../../utils/source-root';
-import { ScriptTarget } from 'typescript';
 import { writeIndexHtml } from '@angular-devkit/build-angular/src/angular-cli-files/utilities/index-file/write-index-html';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
+import { execSync } from 'child_process';
+import { Range, satisfies } from 'semver';
 
 export interface WebBuildBuilderOptions extends BuildBuilderOptions {
-  differentialLoading: boolean;
   index: string;
   budgets: any[];
   baseHref: string;
@@ -32,7 +31,6 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   vendorChunk?: boolean;
   commonChunk?: boolean;
 
-  outputHashing?: any;
   stylePreprocessingOptions?: any;
   subresourceIntegrity?: boolean;
 
@@ -46,91 +44,118 @@ export function run(
   context: BuilderContext
 ): Observable<BuildResult> {
   const host = new NodeJsSyncHost();
-  return from(getSourceRoot(context, host)).pipe(
-    map(sourceRoot => {
-      options = normalizeWebBuildOptions(
-        options,
-        context.workspaceRoot,
-        sourceRoot
-      );
-      let configs = [
-        getWebConfig(
-          context.workspaceRoot,
-          sourceRoot,
+  const isScriptOptimizeOn =
+    typeof options.optimization === 'boolean'
+      ? options.optimization
+      : options.optimization && options.optimization.scripts
+      ? options.optimization.scripts
+      : false;
+
+  // Node versions 12.2-12.8 has a bug where prod builds will hang for 2-3 minutes
+  // after the program exits.
+  const nodeVersion = execSync(`node --version`)
+    .toString('utf-8')
+    .trim();
+  const supportedRange = new Range('10 || >=12.9');
+  if (!satisfies(nodeVersion, supportedRange)) {
+    throw new Error(
+      `Node version ${nodeVersion} is not supported. Supported range is "${
+        supportedRange.raw
+      }".`
+    );
+  }
+  return from(getSourceRoot(context, host))
+    .pipe(
+      map(sourceRoot => {
+        options = normalizeWebBuildOptions(
           options,
-          context.logger,
-          options.differentialLoading ? ScriptTarget.ES2015 : null
-        )
-      ];
-      if (options.differentialLoading) {
-        configs.push(
+          context.workspaceRoot,
+          sourceRoot
+        );
+        return [
+          // ESM build for modern browsers.
           getWebConfig(
             context.workspaceRoot,
             sourceRoot,
             options,
             context.logger,
-            ScriptTarget.ES5
+            true,
+            isScriptOptimizeOn
+          ),
+          // ES5 build for legacy browsers.
+          isScriptOptimizeOn
+            ? getWebConfig(
+                context.workspaceRoot,
+                sourceRoot,
+                options,
+                context.logger,
+                false,
+                isScriptOptimizeOn
+              )
+            : undefined
+        ]
+          .filter(Boolean)
+          .map(config =>
+            options.webpackConfig
+              ? require(options.webpackConfig)(config, {
+                  options,
+                  configuration: context.target.configuration
+                })
+              : config
+          );
+      })
+    )
+    .pipe(
+      switchMap(configs =>
+        from(configs).pipe(
+          // Run build sequentially and bail when first one fails.
+          mergeScan(
+            (acc, config) => {
+              if (acc.success) {
+                return runWebpack(config, context, {
+                  logging: stats => {
+                    context.logger.info(stats.toString(config.stats));
+                  }
+                });
+              } else {
+                return of();
+              }
+            },
+            { success: true } as BuildResult,
+            1
+          ),
+          // Collect build results as an array.
+          bufferCount(configs.length)
+        )
+      ),
+      switchMap(([result1, result2 = { success: true, emittedFiles: [] }]) => {
+        const success = [result1, result2].every(result => result.success);
+        return (options.optimization
+          ? writeIndexHtml({
+              host,
+              outputPath: normalize(options.outputPath),
+              indexPath: devkitJoin(
+                normalize(context.workspaceRoot),
+                options.index
+              ),
+              files: result1.emittedFiles.filter(x => x.extension === '.css'),
+              noModuleFiles: result2.emittedFiles,
+              moduleFiles: result1.emittedFiles,
+              baseHref: options.baseHref,
+              deployUrl: options.deployUrl,
+              scripts: options.scripts,
+              styles: options.styles
+            })
+          : of(null)
+        ).pipe(
+          map(
+            () =>
+              ({
+                success,
+                emittedFiles: [...result1.emittedFiles, ...result2.emittedFiles]
+              } as BuildResult)
           )
         );
-      }
-      if (options.webpackConfig) {
-        configs = configs.map(config =>
-          require(options.webpackConfig)(config, {
-            options,
-            configuration: context.target.configuration
-          })
-        );
-      }
-      return configs;
-    }),
-    concatMap(configs => {
-      return forkJoin(
-        configs.map(config =>
-          runWebpack(config, context, {
-            logging: stats => {
-              context.logger.info(stats.toString(config.stats));
-            }
-          })
-        )
-      ).pipe(
-        switchMap(
-          ([result1, result2 = { success: true, emittedFiles: [] }]) => {
-            const success = [result1, result2].every(result => result.success);
-
-            return (options.differentialLoading
-              ? writeIndexHtml({
-                  host,
-                  outputPath: normalize(options.outputPath),
-                  indexPath: devkitJoin(
-                    normalize(context.workspaceRoot),
-                    options.index
-                  ),
-                  files: result1.emittedFiles.filter(
-                    x => x.extension === '.css'
-                  ),
-                  noModuleFiles: result2.emittedFiles,
-                  moduleFiles: result1.emittedFiles,
-                  baseHref: options.baseHref,
-                  deployUrl: options.deployUrl,
-                  scripts: options.scripts,
-                  styles: options.styles
-                })
-              : of(null)
-            ).pipe(
-              map(
-                () =>
-                  ({
-                    success,
-                    emittedFiles: [
-                      ...result1.emittedFiles,
-                      ...result2.emittedFiles
-                    ]
-                  } as BuildResult)
-              )
-            );
-          }
-        )
-      );
-    })
-  );
+      })
+    );
 }

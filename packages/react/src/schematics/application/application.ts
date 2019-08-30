@@ -37,17 +37,9 @@ import { Schema } from './schema';
 import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
 import { addInitialRoutes } from '../../utils/ast-utils';
 import {
-  babelCoreVersion,
-  babelLoaderVersion,
-  babelPluginDecoratorsVersion,
-  babelPluginMacrosVersion,
-  babelPresetEnvVersion,
   babelPresetReactVersion,
-  babelPresetTypeScriptVersion,
-  coreJsVersion,
   reactRouterDomVersion,
-  reactRouterVersion,
-  regeneratorVersion
+  reactRouterVersion
 } from '../../utils/versions';
 import { assertValidStyle } from '../../utils/assertion';
 import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
@@ -122,7 +114,6 @@ function addProject(options: NormalizedSchema): Rule {
     architect.build = {
       builder: '@nrwl/web:build',
       options: {
-        differentialLoading: !options.babel, // Using babel-loader will not work with differential loading for now
         outputPath: join(normalize('dist'), options.appProjectRoot),
         index: join(options.appProjectRoot, 'src/index.html'),
         main: join(options.appProjectRoot, `src/main.tsx`),
@@ -136,7 +127,7 @@ function addProject(options: NormalizedSchema): Rule {
           ? []
           : [join(options.appProjectRoot, `src/styles.${options.style}`)],
         scripts: [],
-        webpackConfig: options.babel ? '@nrwl/react/plugins/babel' : undefined
+        webpackConfig: '@nrwl/react/plugins/babel'
       },
       configurations: {
         production: {
@@ -265,25 +256,15 @@ function addRouting(
 }
 
 function addBabel(options: NormalizedSchema): Rule {
-  return options.babel
-    ? chain([
-        addDepsToPackageJson(
-          {},
-          {
-            '@babel/core': babelCoreVersion,
-            '@babel/preset-env': babelPresetEnvVersion,
-            '@babel/preset-react': babelPresetReactVersion,
-            '@babel/preset-typescript': babelPresetTypeScriptVersion,
-            '@babel/plugin-proposal-decorators': babelPluginDecoratorsVersion,
-            'babel-loader': babelLoaderVersion,
-            'babel-plugin-macros': babelPluginMacrosVersion,
-            'core-js': coreJsVersion,
-            'regenerator-runtime': regeneratorVersion
-          }
-        ),
-        addPolyfillForBabel(options)
-      ])
-    : noop();
+  return chain([
+    addDepsToPackageJson(
+      {},
+      {
+        '@babel/preset-react': babelPresetReactVersion
+      }
+    ),
+    addPolyfillForBabel(options)
+  ]);
 }
 
 function addPolyfillForBabel(options: NormalizedSchema): Rule {
@@ -334,7 +315,6 @@ function setDefaults(options: NormalizedSchema): Rule {
           '@nrwl/react': {
             ...prev,
             application: {
-              babel: options.babel,
               style: options.style,
               linter: options.linter,
               ...jsonIdentity(prev.application)

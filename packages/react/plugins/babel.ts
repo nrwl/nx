@@ -1,1 +1,23 @@
-module.exports = require('../src/plugins/babel').getBabelWebpackConfig;
+import { Configuration } from 'webpack';
+
+// Adds react preset for JSX support
+function getBabelWebpackConfig(config: Configuration) {
+  const babelRuleOptions = config.module.rules.find(
+    r => r.loader === 'babel-loader'
+  ).options as any;
+
+  const idx = babelRuleOptions.presets.findIndex(
+    p => Array.isArray(p) && p[0] === '@babel/preset-env'
+  );
+
+  babelRuleOptions.presets.splice(idx, 0, [
+    '@babel/preset-react',
+    {
+      useBuiltIns: true
+    }
+  ]);
+
+  return config;
+}
+
+module.exports = getBabelWebpackConfig;

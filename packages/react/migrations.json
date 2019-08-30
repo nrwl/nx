@@ -4,6 +4,11 @@
       "version": "8.3.0-beta.1",
       "description": "Update React libraries",
       "factory": "./src/migrations/update-8-3-0/update-8-3-0"
+    },
+    "update-workspace-8.5.0": {
+      "version": "8.5.0-beta.1",
+      "description": "Update React workspace",
+      "factory": "./src/migrations/update-8-5-0/update-workspace-8-5-0"
     }
   }
 }
