@@ -12,7 +12,7 @@ import {
 } from '@angular-devkit/schematics';
 import { join, normalize, Path } from '@angular-devkit/core';
 import { Schema } from './schema';
-import { toFileName } from '@nrwl/workspace';
+import { toFileName, updateJsonInTree } from '@nrwl/workspace';
 import init from '../init/init';
 
 interface NormalizedSchema extends Schema {
@@ -61,6 +61,22 @@ function addAppFiles(options: NormalizedSchema): Rule {
   );
 }
 
+function updateTsConfigTarget(options: NormalizedSchema): Rule {
+  return (host: Tree, context: SchematicContext) => {
+    const pathToTsConfigOfApp = `${options.appProjectRoot}/tsconfig.app.json`;
+    return updateJsonInTree(pathToTsConfigOfApp, json => {
+      return {
+        ...json,
+        compilerOptions: {
+          ...json.compilerOptions,
+          target: 'es2017',
+          incremental: true
+        }
+      };
+    });
+  };
+}
+
 export default function(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(schema);
@@ -70,7 +86,8 @@ export default function(schema: Schema): Rule {
       }),
       externalSchematic('@nrwl/node', 'application', schema),
       addMainFile(options),
-      addAppFiles(options)
+      addAppFiles(options),
+      updateTsConfigTarget(options)
     ])(host, context);
   };
 }

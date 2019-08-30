@@ -1,3 +1,9 @@
 {
-  "schematics": {}
+  "schematics": {
+    "update-8-6-0": {
+      "version": "8.6.0-beta.1",
+      "description": "Update nestjs to 6.7.1",
+      "factory": "./src/migrations/update-8-6-0/update-8-6-0"
+    }
+  }
 }
