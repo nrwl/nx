@@ -114,11 +114,6 @@
       "description": "Use class components instead of functional component",
       "alias": "C",
       "default": false
-    },
-    "babel": {
-      "type": "boolean",
-      "description": "Use Babel and TypeScript preset instead of ts-loader (Useful if you need Babel plugins)",
-      "default": false
     }
   },
   "required": []

@@ -1,65 +1,86 @@
 import * as webpack from 'webpack';
-import { Configuration, ProgressPlugin } from 'webpack';
-
-import * as ts from 'typescript';
-import { ScriptTarget } from 'typescript';
-
+import { Configuration, ProgressPlugin, Stats } from 'webpack';
+import { dirname } from 'path';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import CircularDependencyPlugin = require('circular-dependency-plugin');
-import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
-
-import { readTsConfig } from '@nrwl/workspace';
-import { BuildBuilderOptions } from './types';
 import * as TerserWebpackPlugin from 'terser-webpack-plugin';
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-import { Stats } from 'webpack';
 
-export const OUT_FILENAME = 'main.js';
+import { BuildBuilderOptions } from './types';
+import CircularDependencyPlugin = require('circular-dependency-plugin');
+import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+import { getOutputHashFormat } from './hash-format';
 
 export function getBaseWebpackPartial(
   options: BuildBuilderOptions,
-  overrideScriptTarget?: ScriptTarget
+  esm?: boolean,
+  isScriptOptimizeOn?: boolean
 ): Configuration {
-  const { options: compilerOptions } = readTsConfig(options.tsConfig);
-  const supportsEs2015 =
-    compilerOptions.target !== ts.ScriptTarget.ES3 &&
-    compilerOptions.target !== ts.ScriptTarget.ES5;
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
-  const mainFields = [...(supportsEs2015 ? ['es2015'] : []), 'module', 'main'];
-  const compilerOptionOverrides = overrideScriptTarget
-    ? {
-        target: overrideScriptTarget === ScriptTarget.ES5 ? 'es5' : 'es2015'
-      }
-    : null;
+  const mainFields = [...(esm ? ['es2015'] : []), 'module', 'main'];
+  const hashFormat = getOutputHashFormat(options.outputHashing);
+  const suffixFormat = esm ? '.esm' : '.es5';
+  const filename = isScriptOptimizeOn
+    ? `[name]${hashFormat.script}${suffixFormat}.js`
+    : '[name].js';
+  const chunkFilename = isScriptOptimizeOn
+    ? `[name]${hashFormat.chunk}${suffixFormat}.js`
+    : '[name].js';
+
   const webpackConfig: Configuration = {
     entry: {
       main: [options.main]
     },
     devtool: options.sourceMap ? 'source-map' : false,
-    mode: options.optimization ? 'production' : 'development',
+    mode: isScriptOptimizeOn ? 'production' : 'development',
     output: {
       path: options.outputPath,
-      filename: OUT_FILENAME
+      filename,
+      chunkFilename
     },
     module: {
       rules: [
         {
-          test: /\.(j|t)sx?$/,
-          loader: `ts-loader`,
+          test: /\.([jt])sx?$/,
+          loader: `babel-loader`,
+          exclude: /node_modules/,
           options: {
-            configFile: options.tsConfig,
-            transpileOnly: true,
-            // https://github.com/TypeStrong/ts-loader/pull/685
-            experimentalWatchApi: true,
-            compilerOptions: compilerOptionOverrides
+            cacheDirectory: true,
+            cacheCompression: false,
+            compact: isScriptOptimizeOn,
+            presets: [
+              [
+                '@babel/preset-env',
+                {
+                  // Allows browserlist file from project to be used.
+                  configPath: dirname(options.main),
+                  // Allow importing core-js in entrypoint and use browserlist to select polyfills.
+                  // This is needed for differential loading as well.
+                  useBuiltIns: 'entry',
+                  debug: options.verbose,
+                  corejs: 3,
+                  modules: false,
+                  // Exclude transforms that make all code slower
+                  exclude: ['transform-typeof-symbol'],
+                  // Let babel-env figure which modern browsers to support.
+                  // See: https://github.com/babel/babel/blob/master/packages/babel-preset-env/data/built-in-modules.json
+                  targets: esm ? { esmodules: true } : undefined
+                }
+              ],
+              ['@babel/preset-typescript']
+            ],
+            plugins: [
+              'babel-plugin-macros',
+              ['@babel/plugin-proposal-class-properties'],
+              ['@babel/plugin-proposal-decorators', false]
+            ]
           }
         }
       ]
     },
     resolve: {
       extensions,
-      alias: getAliases(options, compilerOptions),
+      alias: getAliases(options),
       plugins: [
         new TsConfigPathsPlugin({
           configFile: options.tsConfig,
@@ -85,9 +106,10 @@ export function getBaseWebpackPartial(
     stats: getStatsConfig(options)
   };
 
-  if (options.optimization) {
+  if (isScriptOptimizeOn) {
     webpackConfig.optimization = {
-      minimizer: [createTerserPlugin(compilerOptions.target)]
+      minimizer: [createTerserPlugin(esm)],
+      runtimeChunk: true
     };
   }
 
@@ -147,10 +169,7 @@ export function getBaseWebpackPartial(
   return webpackConfig;
 }
 
-function getAliases(
-  options: BuildBuilderOptions,
-  compilerOptions: ts.CompilerOptions
-): { [key: string]: string } {
+function getAliases(options: BuildBuilderOptions): { [key: string]: string } {
   return options.fileReplacements.reduce(
     (aliases, replacement) => ({
       ...aliases,
@@ -160,15 +179,12 @@ function getAliases(
   );
 }
 
-export function createTerserPlugin(scriptTarget: ScriptTarget) {
+export function createTerserPlugin(esm: boolean) {
   return new TerserWebpackPlugin({
     parallel: true,
     cache: true,
     terserOptions: {
-      ecma:
-        scriptTarget === ScriptTarget.ES3 || scriptTarget === ScriptTarget.ES5
-          ? 5
-          : 6,
+      ecma: esm ? 6 : 5,
       safari10: true,
       output: {
         ascii_only: true,
@@ -200,4 +216,16 @@ function getStatsConfig(options: BuildBuilderOptions): Stats.ToStringOptions {
     moduleTrace: !!options.verbose,
     usedExports: !!options.verbose
   };
+}
+
+function createFileName(esm, isScriptOptimizeOn, outputHashing) {
+  return isScriptOptimizeOn
+    ? esm
+      ? outputHashing
+        ? '[name].[chunkhash].esm.js'
+        : '[name].esm.js'
+      : outputHashing
+      ? '[name].[chunkhash].es5.js'
+      : '[name].es5.js'
+    : '[name].js';
 }

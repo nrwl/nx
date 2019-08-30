@@ -5,62 +5,49 @@ import { getCommonConfig } from '@angular-devkit/build-angular/src/angular-cli-f
 import { getStylesConfig } from '@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/styles';
 import { Configuration } from 'webpack';
 import { LoggerApi } from '@angular-devkit/core/src/logger';
-import { resolve, basename } from 'path';
+import { basename, resolve } from 'path';
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { convertBuildOptions } from './normalize';
 import { readTsConfig } from '@nrwl/workspace';
 import { getBaseWebpackPartial } from './config';
 import { IndexHtmlWebpackPlugin } from '@angular-devkit/build-angular/src/angular-cli-files/plugins/index-html-webpack-plugin';
 import { generateEntryPoints } from '@angular-devkit/build-angular/src/angular-cli-files/utilities/package-chunk-sort';
-import { ScriptTarget } from 'typescript';
 
 export function getWebConfig(
   root,
   sourceRoot,
   options: WebBuildBuilderOptions,
   logger: LoggerApi,
-  overrideScriptTarget?: ScriptTarget
+  esm?: boolean,
+  isScriptOptimizeOn?: boolean
 ) {
   const tsConfig = readTsConfig(options.tsConfig);
-
-  if (
-    options.differentialLoading &&
-    !(
-      tsConfig.options.target !== ScriptTarget.ES5 &&
-      tsConfig.options.target !== ScriptTarget.ES3
-    )
-  ) {
-    const message = `Differential Loading is only necessary for targeting ES2015 and above. To target ES2015, set the target field in your tsconfig.json to 'es2015'`;
-    logger.fatal(message);
-    throw new Error(message);
-  }
-
-  const supportES2015 = options.differentialLoading
-    ? overrideScriptTarget === ScriptTarget.ES2015
-    : tsConfig.options.target !== ScriptTarget.ES5 &&
-      tsConfig.options.target !== ScriptTarget.ES3;
   const wco: any = {
     root,
     projectRoot: resolve(root, sourceRoot),
-    buildOptions: convertBuildOptions(options, overrideScriptTarget),
-    supportES2015,
+    buildOptions: convertBuildOptions(options),
+    esm,
     logger,
     tsConfig,
     tsConfigPath: options.tsConfig
   };
   return mergeWebpack([
-    _getBaseWebpackPartial(options, overrideScriptTarget),
-    getPolyfillsPartial(options, overrideScriptTarget),
+    _getBaseWebpackPartial(options, esm, isScriptOptimizeOn),
+    getPolyfillsPartial(options, esm, isScriptOptimizeOn),
     getStylesPartial(wco),
     getCommonPartial(wco),
-    getBrowserPartial(wco, options)
+    getBrowserPartial(wco, options, isScriptOptimizeOn)
   ]);
 }
 
-function getBrowserPartial(wco: any, options: WebBuildBuilderOptions) {
+function getBrowserPartial(
+  wco: any,
+  options: WebBuildBuilderOptions,
+  isScriptOptimizeOn: boolean
+) {
   const config = getBrowserConfig(wco);
 
-  if (!wco.buildOptions.differentialLoading) {
+  if (!isScriptOptimizeOn) {
     const {
       deployUrl,
       subresourceIntegrity,
@@ -88,9 +75,10 @@ function getBrowserPartial(wco: any, options: WebBuildBuilderOptions) {
 
 function _getBaseWebpackPartial(
   options: WebBuildBuilderOptions,
-  overrideScriptTarget: ScriptTarget
+  esm: boolean,
+  isScriptOptimizeOn: boolean
 ) {
-  let partial = getBaseWebpackPartial(options, overrideScriptTarget);
+  let partial = getBaseWebpackPartial(options, esm, isScriptOptimizeOn);
   delete partial.resolve.mainFields;
   return partial;
 }
@@ -130,28 +118,23 @@ function getStylesPartial(wco: any): Configuration {
 
 function getPolyfillsPartial(
   options: WebBuildBuilderOptions,
-  overrideScriptTarget: ScriptTarget
+  esm: boolean,
+  isScriptOptimizeOn: boolean
 ): Configuration {
   const config = {
     entry: {} as { [key: string]: string[] }
   };
 
-  if (
-    options.polyfills &&
-    options.differentialLoading &&
-    overrideScriptTarget === ScriptTarget.ES2015
-  ) {
+  if (options.polyfills && esm && isScriptOptimizeOn) {
+    // Safari 10.1 supports <script type="module"> but not <script nomodule>.
+    // Need to patch it up so the browser doesn't load both sets.
     config.entry.polyfills = [
       require.resolve(
         '@angular-devkit/build-angular/src/angular-cli-files/models/safari-nomodule.js'
       ),
       ...(options.polyfills ? [options.polyfills] : [])
     ];
-  } else if (
-    options.es2015Polyfills &&
-    options.differentialLoading &&
-    overrideScriptTarget !== ScriptTarget.ES2015
-  ) {
+  } else if (options.es2015Polyfills && !esm && isScriptOptimizeOn) {
     config.entry.polyfills = [
       options.es2015Polyfills,
       ...(options.polyfills ? [options.polyfills] : [])
@@ -164,5 +147,6 @@ function getPolyfillsPartial(
       config.entry['polyfills-es5'] = [options.es2015Polyfills];
     }
   }
+
   return config;
 }

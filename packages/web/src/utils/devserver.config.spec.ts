@@ -19,7 +19,6 @@ describe('getDevServerConfig', () => {
   beforeEach(() => {
     buildInput = {
       main: 'main.ts',
-      differentialLoading: true,
       index: 'index.html',
       budgets: [],
       baseHref: '/',

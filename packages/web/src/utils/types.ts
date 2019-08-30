@@ -32,6 +32,7 @@ export interface BuildBuilderOptions {
   extractLicenses?: boolean;
   verbose?: boolean;
 
+  outputHashing?: any;
   webpackConfig?: string;
 
   root?: string;

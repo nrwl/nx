@@ -13,18 +13,16 @@ forEachCli(() => {
 
       const appName = uniq('app');
       runCommand(`npm run nx -- g @nrwl/web:app ${appName}`);
-      runCommand(`npm run nx -- build ${appName}`);
+      runCommand(`npm run nx -- build ${appName} --prod --outputHashing none`);
 
       checkFilesExist(
         `dist/apps/${appName}/index.html`,
-        `dist/apps/${appName}/polyfills-es2015.js`,
-        `dist/apps/${appName}/runtime-es2015.js`,
-        `dist/apps/${appName}/main-es2015.js`,
-        `dist/apps/${appName}/styles-es2015.js`,
-        `dist/apps/${appName}/polyfills-es5.js`,
-        `dist/apps/${appName}/runtime-es5.js`,
-        `dist/apps/${appName}/main-es5.js`,
-        `dist/apps/${appName}/styles-es5.js`
+        `dist/apps/${appName}/runtime.js`,
+        `dist/apps/${appName}/polyfills.esm.js`,
+        `dist/apps/${appName}/main.esm.js`,
+        `dist/apps/${appName}/polyfills.es5.js`,
+        `dist/apps/${appName}/main.es5.js`,
+        `dist/apps/${appName}/styles.css`
       );
     }, 120000);
   });

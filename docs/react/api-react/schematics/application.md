@@ -48,14 +48,6 @@ nx g app myapp --routing
 
 ## Options
 
-### babel
-
-Default: `false`
-
-Type: `boolean`
-
-Use Babel and TypeScript preset instead of ts-loader (Useful if you need Babel plugins)
-
 ### classComponent
 
 Alias(es): C

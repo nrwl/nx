@@ -4,7 +4,6 @@ import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import { createConsoleLogger } from '@angular-devkit/core/node';
 import { Logger } from '@angular-devkit/core/src/logger';
 import * as ts from 'typescript';
-import { ScriptTarget } from 'typescript';
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { join } from 'path';
 
@@ -32,7 +31,6 @@ describe('getWebConfig', () => {
         scripts: false,
         styles: false
       },
-      differentialLoading: true,
       styles: [],
       scripts: [],
       outputPath: 'dist',
@@ -59,12 +57,12 @@ describe('getWebConfig', () => {
   });
 
   it('should resolve the browser main field', () => {
-    const result = getWebPartial(root, sourceRoot, input, logger);
+    const result = getWebPartial(root, sourceRoot, input, logger, false, false);
     expect(result.resolve.mainFields).toContain('browser');
   });
 
   it('should use the style-loader to load styles', () => {
-    const result = getWebPartial(root, sourceRoot, input, logger);
+    const result = getWebPartial(root, sourceRoot, input, logger, false, false);
     expect(
       result.module.rules.find(rule => rule.test.test('styles.css')).use[0]
         .loader
@@ -85,7 +83,9 @@ describe('getWebConfig', () => {
             ...input,
             polyfills: 'polyfills.ts'
           },
-          logger
+          logger,
+          false,
+          false
         );
         expect(result.entry.polyfills).toEqual(['polyfills.ts']);
       });
@@ -98,10 +98,11 @@ describe('getWebConfig', () => {
           sourceRoot,
           {
             ...input,
-            differentialLoading: false,
             es2015Polyfills: 'polyfills.es2015.ts'
           },
-          logger
+          logger,
+          false,
+          false
         );
         expect(result.entry['polyfills-es5']).toEqual(['polyfills.es2015.ts']);
       });
@@ -116,11 +117,11 @@ describe('getWebConfig', () => {
           sourceRoot,
           {
             ...input,
-            differentialLoading: false,
             polyfills: 'polyfills.ts'
           },
           logger,
-          ScriptTarget.ES2015
+          true,
+          true
         );
         expect(es2015Config.entry.polyfills).toContain('polyfills.ts');
         const es5Config = getWebPartial(
@@ -131,7 +132,8 @@ describe('getWebConfig', () => {
             polyfills: 'polyfills.ts'
           },
           logger,
-          ScriptTarget.ES5
+          false,
+          true
         );
         expect(es5Config.entry.polyfills).toContain('polyfills.ts');
       });
@@ -148,7 +150,8 @@ describe('getWebConfig', () => {
             es2015Polyfills: 'polyfills.es2015.ts'
           },
           logger,
-          ScriptTarget.ES5
+          false,
+          true
         );
         expect(es5Config.entry.polyfills).toContain('polyfills.es2015.ts');
       });
@@ -164,7 +167,8 @@ describe('getWebConfig', () => {
             polyfills: 'polyfills.ts'
           },
           logger,
-          ScriptTarget.ES2015
+          true,
+          true
         );
         expect(es2015Config.entry.polyfills).toContain(
           require.resolve(

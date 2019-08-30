@@ -24,7 +24,7 @@ forEachCli(currentCLIName => {
       const libName = uniq('lib');
 
       runCLI(
-        `generate @nrwl/react:app ${appName} --no-interactive --babel --linter=${linter}`
+        `generate @nrwl/react:app ${appName} --no-interactive --linter=${linter}`
       );
       runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
 
@@ -42,7 +42,7 @@ forEachCli(currentCLIName => {
       const appName = uniq('app');
 
       runCLI(
-        `generate @nrwl/react:app ${appName} --routing --no-interactive --babel --linter=${linter}`
+        `generate @nrwl/react:app ${appName} --routing --no-interactive --linter=${linter}`
       );
 
       await testGeneratedApp(appName, { checkStyles: true, checkLinter: true });
@@ -53,7 +53,7 @@ forEachCli(currentCLIName => {
       const appName = uniq('app');
 
       runCLI(
-        `generate @nrwl/react:app ${appName} --style styled-components --no-interactive --babel --linter=${linter}`
+        `generate @nrwl/react:app ${appName} --style styled-components --no-interactive --linter=${linter}`
       );
 
       await testGeneratedApp(appName, {
@@ -68,7 +68,7 @@ forEachCli(currentCLIName => {
       const libName = uniq('lib');
 
       runCLI(
-        `generate @nrwl/react:app ${appName} --no-interactive --babel --linter=${linter}`
+        `generate @nrwl/react:app ${appName} --no-interactive --linter=${linter}`
       );
       runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
 
@@ -129,14 +129,16 @@ forEachCli(currentCLIName => {
       }
       checkFilesExist(...filesToCheck);
       expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
-        'var App = function App() {'
+        'var App = () => {'
       );
       runCLI(`build ${appName} --prod --output-hashing none`);
       filesToCheck = [
         `dist/apps/${appName}/index.html`,
-        `dist/apps/${appName}/polyfills.js`,
         `dist/apps/${appName}/runtime.js`,
-        `dist/apps/${appName}/main.js`
+        `dist/apps/${appName}/polyfills.esm.js`,
+        `dist/apps/${appName}/main.esm.js`,
+        `dist/apps/${appName}/polyfills.es5.js`,
+        `dist/apps/${appName}/main.es5.js`
       ];
       if (opts.checkStyles) {
         filesToCheck.push(`dist/apps/${appName}/styles.css`);

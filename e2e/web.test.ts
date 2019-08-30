@@ -26,30 +26,22 @@ forEachCli(currentCLIName => {
       runCLI(`build ${appName}`);
       checkFilesExist(
         `dist/apps/${appName}/index.html`,
-        `dist/apps/${appName}/polyfills-es2015.js`,
-        `dist/apps/${appName}/runtime-es2015.js`,
-        `dist/apps/${appName}/main-es2015.js`,
-        `dist/apps/${appName}/styles-es2015.js`,
-        `dist/apps/${appName}/polyfills-es5.js`,
-        `dist/apps/${appName}/runtime-es5.js`,
-        `dist/apps/${appName}/main-es5.js`,
-        `dist/apps/${appName}/styles-es5.js`
+        `dist/apps/${appName}/runtime.js`,
+        `dist/apps/${appName}/polyfills.js`,
+        `dist/apps/${appName}/main.js`,
+        `dist/apps/${appName}/styles.js`
       );
-      expect(readFile(`dist/apps/${appName}/main-es5.js`)).toContain(
-        'var AppElement = /** @class */ (function (_super) {'
-      );
-      expect(readFile(`dist/apps/${appName}/main-es2015.js`)).toContain(
+      expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
         'class AppElement'
       );
       runCLI(`build ${appName} --prod --output-hashing none`);
       checkFilesExist(
         `dist/apps/${appName}/index.html`,
-        `dist/apps/${appName}/polyfills-es2015.js`,
-        `dist/apps/${appName}/runtime-es2015.js`,
-        `dist/apps/${appName}/main-es2015.js`,
-        `dist/apps/${appName}/polyfills-es5.js`,
-        `dist/apps/${appName}/runtime-es5.js`,
-        `dist/apps/${appName}/main-es5.js`,
+        `dist/apps/${appName}/runtime.js`,
+        `dist/apps/${appName}/polyfills.esm.js`,
+        `dist/apps/${appName}/main.esm.js`,
+        `dist/apps/${appName}/polyfills.es5.js`,
+        `dist/apps/${appName}/main.es5.js`,
         `dist/apps/${appName}/styles.css`
       );
       expect(readFile(`dist/apps/${appName}/index.html`)).toContain(

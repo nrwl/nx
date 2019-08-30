@@ -44,9 +44,7 @@ function run(
 ): Observable<DevServerBuildOutput> {
   const host = new NodeJsSyncHost();
   return forkJoin(
-    getBuildOptions(serveOptions, context, {
-      differentialLoading: false
-    }),
+    getBuildOptions(serveOptions, context),
     from(getSourceRoot(context, host))
   ).pipe(
     map(([buildOptions, sourceRoot]) => {

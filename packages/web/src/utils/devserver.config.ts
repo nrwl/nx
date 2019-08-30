@@ -24,7 +24,9 @@ export function getDevServerConfig(
     root,
     sourceRoot,
     buildOptions,
-    logger
+    logger,
+    true, // Don't need to support legacy browsers for dev.
+    false
   );
   (webpackConfig as any).devServer = getDevServerPartial(
     root,

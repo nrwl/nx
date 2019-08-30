@@ -41,14 +41,6 @@ Type: `string`
 
 URL where the application will be deployed.
 
-### differentialLoading
-
-Default: `true`
-
-Type: `boolean`
-
-Enable differential loading for es5 browsers
-
 ### es2015Polyfills
 
 Type: `string`
