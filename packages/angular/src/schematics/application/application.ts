@@ -35,7 +35,11 @@ import {
   addImportToTestBed,
   getDecoratorPropertyValueNode
 } from '../../utils/ast-utils';
-import { insertImport } from '@nrwl/workspace/src/utils/ast-utils';
+import {
+  insertImport,
+  getProjectConfig,
+  updateWorkspaceInTree
+} from '@nrwl/workspace/src/utils/ast-utils';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -593,6 +597,31 @@ function updateE2eProject(options: NormalizedSchema): Rule {
   };
 }
 
+function addProxyConfig(options: NormalizedSchema): Rule {
+  return (host: Tree, context: SchematicContext) => {
+    const projectConfig = getProjectConfig(host, options.name);
+    if (projectConfig.architect && projectConfig.architect.serve) {
+      const pathToProxyFile = `${projectConfig.root}/proxy.conf.json`;
+
+      return chain([
+        updateJsonInTree(pathToProxyFile, json => {
+          return {
+            [`/${options.backendProject}`]: {
+              target: 'http://localhost:3333',
+              secure: false
+            }
+          };
+        }),
+        updateWorkspaceInTree(json => {
+          projectConfig.architect.serve.options.proxyConfig = pathToProxyFile;
+          json.projects[options.name] = projectConfig;
+          return json;
+        })
+      ])(host, context);
+    }
+  };
+}
+
 export default function(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
@@ -663,6 +692,7 @@ export default function(schema: Schema): Rule {
             project: options.name
           })
         : noop(),
+      options.backendProject ? addProxyConfig(options) : noop(),
       formatFiles(options)
     ])(host, context);
   };
