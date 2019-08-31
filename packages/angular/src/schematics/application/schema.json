@@ -115,6 +115,10 @@
       "type": "string",
       "enum": ["tslint"],
       "default": "tslint"
+    },
+    "backendProject": {
+      "type": "string",
+      "description": "Backend project that provides data to this application. This sets up proxy.config.json."
     }
   },
   "required": []

@@ -28,6 +28,12 @@ nx g application ... --dry-run
 
 ## Options
 
+### backendProject
+
+Type: `string`
+
+Backend project that provides data to this application. This sets up proxy.config.json.
+
 ### directory
 
 Type: `string`

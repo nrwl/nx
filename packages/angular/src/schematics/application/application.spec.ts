@@ -453,4 +453,44 @@ describe('app', () => {
       expect(workspaceJson.projects['ui'].prefix).toEqual('ui');
     });
   });
+
+  describe('--backend-project', () => {
+    describe('with a backend project', () => {
+      it('should add a proxy.conf.json to app', async () => {
+        const tree = await runSchematic(
+          'app',
+          { name: 'customer-ui', backendProject: 'customer-api' },
+          appTree
+        );
+
+        const proxyConfContent = JSON.stringify(
+          {
+            '/customer-api': {
+              target: 'http://localhost:3333',
+              secure: false
+            }
+          },
+          null,
+          2
+        );
+
+        expect(tree.exists('apps/customer-ui/proxy.conf.json')).toBeTruthy();
+        expect(tree.readContent('apps/customer-ui/proxy.conf.json')).toContain(
+          proxyConfContent
+        );
+      });
+    });
+
+    describe('with no backend project', () => {
+      it('should not generate a proxy.conf.json', async () => {
+        const tree = await runSchematic(
+          'app',
+          { name: 'customer-ui' },
+          appTree
+        );
+
+        expect(tree.exists('apps/customer-ui/proxy.conf.json')).toBeFalsy();
+      });
+    });
+  });
 });

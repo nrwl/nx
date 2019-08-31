@@ -18,4 +18,5 @@ export interface Schema {
   linter: Linter;
   unitTestRunner: UnitTestRunner;
   e2eTestRunner: E2eTestRunner;
+  backendProject?: string;
 }
