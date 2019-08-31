@@ -57,7 +57,7 @@ function run(
   }
 
   return (!legacy
-    ? options.devServerTarget
+    ? options.devServerTarget && !options.baseUrl
       ? startDevServer(options.devServerTarget, options.watch, context)
       : of(options.baseUrl)
     : legacyCompile(options, context)
