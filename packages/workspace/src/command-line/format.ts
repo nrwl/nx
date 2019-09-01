@@ -59,9 +59,11 @@ export function format(command: 'check' | 'write', args: YargsFormatOptions) {
 }
 
 function getPatterns(args: YargsAffectedOptions) {
+  const allFilesPattern = [`"**/*.{${PRETTIER_EXTENSIONS.join(',')}}"`];
+
   try {
     if (args.all) {
-      return getPatternsWithPathPrefix(['{apps,libs,tools}']);
+      return allFilesPattern;
     }
 
     printArgsWarning(args);
@@ -77,13 +79,13 @@ function getPatterns(args: YargsAffectedOptions) {
       ? getPatternsFromApps(patterns)
       : patterns.map(f => `"${f}"`);
   } catch (e) {
-    return getPatternsWithPathPrefix(['{apps,libs,tools}']);
+    return allFilesPattern;
   }
 }
 
 function getPatternsFromApps(affectedFiles: string[]): string[] {
   const roots = getProjectRoots(getTouchedProjects(affectedFiles));
-  return getPatternsWithPathPrefix(roots);
+  return roots.map(root => `"${root}/**/*.{${PRETTIER_EXTENSIONS.join(',')}}"`);
 }
 
 function chunkify(target: string[], size: number): string[][] {
@@ -92,12 +94,6 @@ function chunkify(target: string[], size: number): string[][] {
     current[current.length - 1].push(value);
     return current;
   }, []);
-}
-
-function getPatternsWithPathPrefix(prefixes: string[]): string[] {
-  return prefixes.map(
-    prefix => `"${prefix}/**/*.{${PRETTIER_EXTENSIONS.join(',')}}"`
-  );
 }
 
 function write(patterns: string[]) {
