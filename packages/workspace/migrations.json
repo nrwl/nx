@@ -24,6 +24,11 @@
       "version": "8.4.0-beta.1",
       "description": "Add 'nx' script to package.json",
       "factory": "./src/migrations/update-8-4-0/add-nx-script"
+    },
+    "fix-tsconfig-lib-json": {
+      "version": "8.5.0-beta.1",
+      "description": "Fix the exclude paths in tsconfig.lib.json files for Jest projects",
+      "factory": "./src/migrations/update-8-5-0/fix-tsconfig-lib-json"
     }
   }
 }

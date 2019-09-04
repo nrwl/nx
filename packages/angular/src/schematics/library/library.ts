@@ -363,7 +363,11 @@ function updateProject(options: NormalizedSchema): Rule {
           compilerOptions: {
             ...json.compilerOptions,
             outDir: `${offsetFromRoot(options.projectRoot)}dist/out-tsc`
-          }
+          },
+          exclude:
+            options.unitTestRunner === 'jest'
+              ? ['src/test-setup.ts', '**/*.spec.ts']
+              : json.exclude || []
         };
       }),
       updateJsonInTree(`${options.projectRoot}/tslint.json`, json => {
