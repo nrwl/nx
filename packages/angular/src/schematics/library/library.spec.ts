@@ -160,13 +160,44 @@ describe('lib', () => {
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
     });
 
-    it('should extend the local tsconfig.json with tsconfig.lib.json', async () => {
-      const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
-      const tsconfigJson = readJsonInTree(
-        tree,
-        'libs/my-lib/tsconfig.lib.json'
-      );
-      expect(tsconfigJson.extends).toEqual('./tsconfig.json');
+    describe('when creating the tsconfig.lib.json', () => {
+      it('should extend the local tsconfig.json', async () => {
+        const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
+        const tsconfigJson = readJsonInTree(
+          tree,
+          'libs/my-lib/tsconfig.lib.json'
+        );
+        expect(tsconfigJson.extends).toEqual('./tsconfig.json');
+      });
+
+      it('should exclude the test setup file when unitTestRunner is jest', async () => {
+        const tree = await runSchematic(
+          'lib',
+          { name: 'myLib', unitTestRunner: 'jest' },
+          appTree
+        );
+        const tsconfigJson = readJsonInTree(
+          tree,
+          'libs/my-lib/tsconfig.lib.json'
+        );
+        expect(tsconfigJson.exclude).toEqual([
+          'src/test-setup.ts',
+          '**/*.spec.ts'
+        ]);
+      });
+
+      it('should leave the excludes alone when unitTestRunner is not jest', async () => {
+        const tree = await runSchematic(
+          'lib',
+          { name: 'myLib', unitTestRunner: 'karma' },
+          appTree
+        );
+        const tsconfigJson = readJsonInTree(
+          tree,
+          'libs/my-lib/tsconfig.lib.json'
+        );
+        expect(tsconfigJson.exclude).toEqual(['src/test.ts', '**/*.spec.ts']);
+      });
     });
 
     it('should generate files', async () => {
