@@ -493,4 +493,17 @@ describe('app', () => {
       });
     });
   });
+
+  describe('--skipPackageJson', () => {
+    it('should not make changes to package.json', async () => {
+      const packageJsonBefore = appTree.read('package.json').toString();
+      const tree = await runSchematic(
+        'app',
+        { name: 'my-app', skipPackageJson: true, skipFormat: true },
+        appTree
+      );
+      const packageJsonAfter = tree.readContent('package.json');
+      expect(packageJsonBefore).toBe(packageJsonAfter);
+    });
+  });
 });

@@ -638,10 +638,12 @@ export default function(schema: Schema): Rule {
       : `${options.name}/e2e`;
 
     return chain([
-      ngAdd({
-        ...options,
-        skipFormat: true
-      }),
+      options.skipPackageJson
+        ? noop()
+        : ngAdd({
+            ...options,
+            skipFormat: true
+          }),
       addLintFiles(options.appProjectRoot, options.linter, {
         onlyGlobal: true
       }),
@@ -656,7 +658,7 @@ export default function(schema: Schema): Rule {
         enableIvy: options.enableIvy,
         routing: false,
         skipInstall: true,
-        skipPackageJson: false
+        skipPackageJson: options.skipPackageJson
       }),
       addSchematicFiles(appProjectRoot, options),
       options.e2eTestRunner === 'protractor'
