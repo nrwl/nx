@@ -43,6 +43,10 @@ export interface Todo {
 }
 ```
 
+### A note about VS Code :
+
+If you're using [VS Code](https://code.visualstudio.com/) it may be necessary at this point to restart the TS server so that the new `@myorg/data` package is recognised. This may need to be done **every time a new workspace library is added**.
+
 ## Refactor the API
 
 **Now update `apps/api/src/app/app.service.ts` to import the interface:**
