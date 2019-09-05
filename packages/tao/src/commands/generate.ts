@@ -139,24 +139,34 @@ function createRecorder(record: any, logger: logging.Logger) {
   };
 }
 
-function detectPackageManager(host: virtualFs.Host<any>): string {
+async function detectPackageManager(
+  host: virtualFs.Host<any>
+): Promise<string> {
   const hostTree = new HostTree(host);
   if (hostTree.get('workspace.json')) {
-    const workspaceJson = JSON.parse(
+    const workspaceJson: { cli: { packageManager: string } } = JSON.parse(
       hostTree.read('workspace.json')!.toString()
     );
     if (workspaceJson.cli && workspaceJson.cli.packageManager) {
       return workspaceJson.cli.packageManager;
     }
   }
-  return host.exists('yarn.lock' as any)
-    ? 'yarn'
-    : host.exists('pnpm-lock.yaml' as any)
-    ? 'pnpm'
-    : 'npm';
+
+  const yarnLockFileExists = await host.exists('yarn.lock' as any).toPromise();
+  if (yarnLockFileExists) {
+    return 'yarn';
+  }
+  const pnpmLockFileExists = await host
+    .exists('pnpm-lock.yaml' as any)
+    .toPromise();
+  if (pnpmLockFileExists) {
+    return 'pnpm';
+  }
+
+  return 'npm';
 }
 
-function createWorkflow(
+async function createWorkflow(
   fsHost: virtualFs.Host<fs.Stats>,
   root: string,
   opts: GenerateOptions
@@ -164,7 +174,7 @@ function createWorkflow(
   const workflow = new NodeWorkflow(fsHost, {
     force: opts.force,
     dryRun: opts.dryRun,
-    packageManager: detectPackageManager(fsHost),
+    packageManager: await detectPackageManager(fsHost),
     root: normalize(root)
   });
   const _params = opts.schematicOptions._;
@@ -333,7 +343,7 @@ export async function generate(root: string, args: string[]) {
       'generate',
       await readDefaultCollection(fsHost)
     );
-    const workflow = createWorkflow(fsHost, root, opts);
+    const workflow = await createWorkflow(fsHost, root, opts);
     const collection = getCollection(workflow, opts.collectionName);
     const schematic = collection.createSchematic(opts.schematicName, true);
     return runSchematic(
@@ -360,7 +370,7 @@ export async function taoNew(root: string, args: string[]) {
       normalize(root)
     );
     const opts = parseGenerateOpts(args, 'new', null);
-    const workflow = createWorkflow(fsHost, root, opts);
+    const workflow = await createWorkflow(fsHost, root, opts);
     const collection = getCollection(workflow, opts.collectionName);
     const schematic = collection.createSchematic('tao-new', true);
     return runSchematic(
