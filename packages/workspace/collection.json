@@ -10,8 +10,8 @@
     },
 
     "ng-add": {
-      "factory": "./src/schematics/ng-add/ng-add",
-      "schema": "./src/schematics/ng-add/schema.json",
+      "factory": "./src/schematics/init/init",
+      "schema": "./src/schematics/init/schema.json",
       "description": "Convert an existing CLI project into an Nx Workspace",
       "hidden": true
     },

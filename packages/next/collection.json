@@ -1,0 +1,20 @@
+{
+  "name": "nx/nest",
+  "version": "0.1",
+  "extends": ["@nrwl/react"],
+  "schematics": {
+    "init": {
+      "factory": "./src/schematics/init/init",
+      "schema": "./src/schematics/init/schema.json",
+      "description": "Initialize the @nrwl/next plugin",
+      "hidden": true
+    },
+
+    "application": {
+      "factory": "./src/schematics/application/application",
+      "schema": "./src/schematics/application/schema.json",
+      "aliases": ["app"],
+      "description": "Create a Next.js application"
+    }
+  }
+}

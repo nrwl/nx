@@ -1,0 +1,7 @@
+{
+  "title": "Next Build",
+  "description": "Build a Next.js app",
+  "type": "object",
+  "properties": {},
+  "required": []
+}

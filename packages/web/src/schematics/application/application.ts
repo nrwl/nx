@@ -26,7 +26,7 @@ import {
   generateProjectLint,
   addLintFiles
 } from '@nrwl/workspace';
-import ngAdd from '../ng-add/ng-add';
+import init from '../init/init';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -150,7 +150,7 @@ export default function(schema: Schema): Rule {
     const options = normalizeOptions(host, schema);
 
     return chain([
-      ngAdd({
+      init({
         skipFormat: true
       }),
       addLintFiles(options.appProjectRoot, options.linter),

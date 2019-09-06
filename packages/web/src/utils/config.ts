@@ -221,15 +221,3 @@ function getStatsConfig(options: BuildBuilderOptions): Stats.ToStringOptions {
     usedExports: !!options.verbose
   };
 }
-
-function createFileName(esm, isScriptOptimizeOn, outputHashing) {
-  return isScriptOptimizeOn
-    ? esm
-      ? outputHashing
-        ? '[name].[chunkhash].esm.js'
-        : '[name].esm.js'
-      : outputHashing
-      ? '[name].[chunkhash].es5.js'
-      : '[name].es5.js'
-    : '[name].js';
-}

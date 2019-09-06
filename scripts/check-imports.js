@@ -34,7 +34,7 @@ function check() {
     'packages/workspace/src/command-line/affected.ts',
     'packages/workspace/src/command-line/shared.ts',
     'packages/workspace/src/schematics/preset/preset.ts',
-    'packages/workspace/src/schematics/ng-add/ng-add.ts',
+    'packages/workspace/src/schematics/init/init.ts',
     'packages/workspace/src/utils/update-task.ts',
     'packages/workspace/src/migrations/update-8-3-0/update-8-3-0.spec.ts',
     'packages/workspace/src/migrations/update-8-3-0/update-ng-cli-8-1.ts'

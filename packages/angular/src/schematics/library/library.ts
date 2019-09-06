@@ -36,7 +36,7 @@ import {
   toPropertyName,
   updateJsonInTree
 } from '@nrwl/workspace';
-import { addUnitTestRunner } from '../ng-add/ng-add';
+import { addUnitTestRunner } from '../init/init';
 import { addImportToModule, addRoute } from '../../utils/ast-utils';
 import { insertImport } from '@nrwl/workspace/src/utils/ast-utils';
 

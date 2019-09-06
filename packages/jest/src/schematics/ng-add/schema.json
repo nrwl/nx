@@ -1,8 +1,0 @@
-{
-  "$schema": "http://json-schema.org/schema",
-  "id": "NxJestNgAdd",
-  "title": "Add Jest Configuration to a workspace",
-  "type": "object",
-  "properties": {},
-  "required": []
-}

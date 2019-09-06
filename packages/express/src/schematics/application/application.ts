@@ -9,7 +9,7 @@ import { join, normalize, Path } from '@angular-devkit/core';
 import { Schema } from './schema';
 import { updateJsonInTree } from '@nrwl/workspace';
 import { toFileName, formatFiles } from '@nrwl/workspace';
-import ngAdd from '../ng-add/ng-add';
+import init from '../init/init';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -54,7 +54,7 @@ export default function(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(schema);
     return chain([
-      ngAdd({ skipFormat: true }),
+      init({ skipFormat: true }),
       externalSchematic('@nrwl/node', 'application', schema),
       addMainFile(options),
       addTypes(options),

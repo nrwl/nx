@@ -29,7 +29,7 @@ import {
   addLintFiles
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
-import ngAdd from '../ng-add/ng-add';
+import init from '../init/init';
 import {
   addImportToModule,
   addImportToTestBed,
@@ -657,7 +657,7 @@ export default function(schema: Schema): Rule {
       : `${options.name}/e2e`;
 
     return chain([
-      ngAdd({
+      init({
         ...options,
         skipFormat: true
       }),

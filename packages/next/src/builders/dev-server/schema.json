@@ -1,0 +1,32 @@
+{
+  "title": "Next Serve",
+  "description": "Serve a Next.js app",
+  "type": "object",
+  "properties": {
+    "dev": {
+      "type": "boolean",
+      "description": "Serve the application in the dev mode",
+      "default": true
+    },
+    "buildTarget": {
+      "type": "string",
+      "description": "Target which builds the application"
+    },
+    "port": {
+      "type": "number",
+      "description": "Port to listen on.",
+      "default": 4200
+    },
+    "staticMarkup": {
+      "type": "boolean",
+      "description": "Static markup.",
+      "default": false
+    },
+    "quiet": {
+      "type": "boolean",
+      "description": "Hide error messages containing server information.",
+      "default": false
+    }
+  },
+  "required": []
+}

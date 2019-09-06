@@ -30,7 +30,7 @@ import {
   addDepsToPackageJson,
   updateWorkspaceInTree
 } from '@nrwl/workspace/src/utils/ast-utils';
-import ngAdd from '../ng-add/ng-add';
+import init from '../init/init';
 import * as ts from 'typescript';
 
 import { Schema } from './schema';
@@ -59,7 +59,7 @@ export default function(schema: Schema): Rule {
     const options = normalizeOptions(host, schema);
 
     return chain([
-      ngAdd({
+      init({
         skipFormat: true
       }),
       addLintFiles(options.appProjectRoot, options.linter, {
