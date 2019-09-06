@@ -12,4 +12,5 @@ export interface Schema {
   appProject?: string;
   unitTestRunner: 'jest' | 'none';
   linter: Linter;
+  publishable?: boolean;
 }

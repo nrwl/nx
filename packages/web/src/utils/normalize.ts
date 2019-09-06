@@ -1,13 +1,36 @@
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { normalize } from '@angular-devkit/core';
 import { resolve, dirname, relative, basename } from 'path';
-import { BuildBuilderOptions } from './types';
+import { BuildBuilderOptions, BundleBuilderOptions } from './types';
 import { statSync } from 'fs';
-import { ScriptTarget } from 'typescript';
 
 export interface FileReplacement {
   replace: string;
   with: string;
+}
+
+export function normalizeBundleOptions<T extends BundleBuilderOptions>(
+  options: T,
+  root
+): T & {
+  entryRoot: string;
+  projectRoot: string;
+} {
+  const entryFile = `${root}/${options.entryFile}`;
+  const entryRoot = dirname(entryFile);
+  const project = `${root}/${options.project}`;
+  const projectRoot = dirname(project);
+  const outputPath = `${root}/${options.outputPath}`;
+  return {
+    ...options,
+    babelConfig: normalizePluginPath(options.babelConfig, root),
+    rollupConfig: normalizePluginPath(options.rollupConfig, root),
+    entryFile,
+    entryRoot,
+    project,
+    projectRoot,
+    outputPath
+  };
 }
 
 export function normalizeBuildOptions<T extends BuildBuilderOptions>(
@@ -22,13 +45,19 @@ export function normalizeBuildOptions<T extends BuildBuilderOptions>(
     tsConfig: resolve(root, options.tsConfig),
     fileReplacements: normalizeFileReplacements(root, options.fileReplacements),
     assets: normalizeAssets(options.assets, root, sourceRoot),
-    webpackConfig: options.webpackConfig
-      ? // Don't resolve node_modules or absolute paths.
-        options.webpackConfig.startsWith('.')
-        ? resolve(root, options.webpackConfig)
-        : options.webpackConfig
-      : options.webpackConfig
+    webpackConfig: normalizePluginPath(options.webpackConfig, root)
   };
+}
+
+function normalizePluginPath(pluginPath: void | string, root: string) {
+  if (!pluginPath) {
+    return pluginPath;
+  }
+  try {
+    return require.resolve(pluginPath);
+  } catch {
+    return resolve(root, pluginPath);
+  }
 }
 
 function normalizeAssets(

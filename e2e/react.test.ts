@@ -37,6 +37,25 @@ forEachCli(currentCLIName => {
       await testGeneratedApp(appName, { checkStyles: true, checkLinter: true });
     }, 120000);
 
+    it('should be able to generate a publishable react lib', async () => {
+      ensureProject();
+      const libName = uniq('lib');
+
+      runCLI(
+        `generate @nrwl/react:lib ${libName} --publishable --no-interactive`
+      );
+
+      const libTestResults = await runCLIAsync(`build ${libName}`);
+      expect(libTestResults.stdout).toContain('Bundle complete.');
+
+      checkFilesExist(
+        `dist/libs/${libName}/index.d.ts`,
+        `dist/libs/${libName}/${libName}.esm5.js`,
+        `dist/libs/${libName}/${libName}.esm2015.js`,
+        `dist/libs/${libName}/${libName}.umd.js`
+      );
+    }, 120000);
+
     it('should generate app with routing', async () => {
       ensureProject();
       const appName = uniq('app');

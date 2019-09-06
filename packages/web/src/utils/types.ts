@@ -38,3 +38,13 @@ export interface BuildBuilderOptions {
   root?: string;
   sourceRoot?: Path;
 }
+
+export interface BundleBuilderOptions {
+  outputPath: string;
+  tsConfig: string;
+  project: string;
+  entryFile: string;
+  rollupConfig?: string;
+  babelConfig?: string;
+  watch?: boolean;
+}
