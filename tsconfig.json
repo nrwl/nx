@@ -17,7 +17,8 @@
       "@nrwl/tao/*": ["./packages/tao/*"],
       "@nrwl/workspace": ["./packages/workspace"],
       "@nrwl/workspace/*": ["./packages/workspace/*"],
-      "@nrwl/workspace/testing": ["./packages/workspace/testing"]
+      "@nrwl/workspace/testing": ["./packages/workspace/testing"],
+      "@nrwl/react": ["./packages/react"]
     }
   },
   "exclude": [

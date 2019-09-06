@@ -1,0 +1,7 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "NxCypressInit",
+  "title": "Add Cypress Configuration to the workspace",
+  "type": "object",
+  "properties": {}
+}

@@ -148,15 +148,7 @@ export function ensureProject(): void {
 }
 
 export function supportUi() {
-  // powershell => wsl => no ui for now
-  try {
-    execSync(`powershell.exe echo 1`, {
-      stdio: ['ignore', 'ignore', 'ignore']
-    });
-    return false;
-  } catch (e) {
-    return true;
-  }
+  return !process.env.NO_CHROME;
 }
 
 export function copyMissingPackages(): void {
@@ -216,6 +208,8 @@ export function copyMissingPackages(): void {
     'eslint-plugin-react',
     'eslint-plugin-react-hooks',
 
+    'next',
+    'next-server',
     'document-register-element'
   ];
   modulesToCopy.forEach(m => copyNodeModule(m));

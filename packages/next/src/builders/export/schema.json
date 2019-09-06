@@ -1,0 +1,7 @@
+{
+  "title": "Next Export",
+  "description": "Export a Next.js app",
+  "type": "object",
+  "properties": {},
+  "required": []
+}

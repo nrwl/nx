@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import './src/compat/angular-cli-compat';
+import './src/compat/compat';
 
 export async function invokeCommand(
   command: string,

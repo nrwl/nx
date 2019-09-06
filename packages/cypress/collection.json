@@ -2,10 +2,11 @@
   "name": "Nx Cypress",
   "version": "0.1",
   "schematics": {
-    "ng-add": {
-      "factory": "./src/schematics/ng-add/ng-add",
-      "schema": "./src/schematics/ng-add/schema.json",
-      "description": "Add Cypress configuration to the workspace",
+    "init": {
+      "factory": "./src/schematics/init/init",
+      "schema": "./src/schematics/init/schema.json",
+      "description": "Initialize the @nrwl/cypress plugin",
+      "aliases": ["ng-add"],
       "hidden": true
     },
     "cypress-project": {

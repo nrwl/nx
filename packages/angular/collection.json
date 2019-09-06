@@ -1,12 +1,13 @@
 {
-  "name": "nx/angular",
+  "name": "Nx Angular",
   "version": "0.1",
   "extends": ["@schematics/angular", "@nrwl/workspace"],
   "schematics": {
-    "ng-add": {
-      "factory": "./src/schematics/ng-add/ng-add",
-      "schema": "./src/schematics/ng-add/schema.json",
-      "description": "Add @nrwl/angular to a project",
+    "init": {
+      "factory": "./src/schematics/init/init",
+      "schema": "./src/schematics/init/schema.json",
+      "description": "Initialize the @nrwl/angular plugin",
+      "aliaes": ["ng-add"],
       "hidden": true
     },
 

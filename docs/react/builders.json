@@ -1,1 +1,11 @@
-["cypress", "express", "jest", "linter", "nest", "node", "web", "workspace"]
+[
+  "cypress",
+  "express",
+  "jest",
+  "linter",
+  "nest",
+  "next",
+  "node",
+  "web",
+  "workspace"
+]

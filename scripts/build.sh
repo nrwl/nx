@@ -45,6 +45,7 @@ cp README.md build/packages/express
 cp README.md build/packages/nest
 cp README.md build/packages/web
 cp README.md build/packages/react
+cp README.md build/packages/next
 cp README.md build/packages/angular
 cp README.md build/packages/jest
 cp README.md build/packages/cypress
@@ -63,6 +64,7 @@ cp LICENSE build/packages/express
 cp LICENSE build/packages/nest
 cp LICENSE build/packages/web
 cp LICENSE build/packages/react
+cp LICENSE build/packages/next
 cp LICENSE build/packages/angular
 cp LICENSE build/packages/jest
 cp LICENSE build/packages/cypress

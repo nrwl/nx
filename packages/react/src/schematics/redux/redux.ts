@@ -1,6 +1,6 @@
 import * as ts from 'typescript';
 import { join, Path, strings } from '@angular-devkit/core';
-import '@nrwl/tao/src/compat/angular-cli-compat';
+import '@nrwl/tao/src/compat/compat';
 import {
   addDepsToPackageJson,
   addGlobal,

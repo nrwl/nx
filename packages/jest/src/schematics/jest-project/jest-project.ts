@@ -19,7 +19,7 @@ import {
 import { getProjectConfig, addDepsToPackageJson } from '@nrwl/workspace';
 import { offsetFromRoot } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
-import ngAdd from '../ng-add/ng-add';
+import init from '../init/init';
 
 export interface JestProjectSchema {
   project: string;
@@ -125,7 +125,7 @@ function normalizeOptions(options: JestProjectSchema): JestProjectSchema {
 export default function(options: JestProjectSchema): Rule {
   options = normalizeOptions(options);
   return chain([
-    ngAdd(),
+    init(),
     check(options),
     generateFiles(options),
     updateTsConfig(options),
