@@ -71,8 +71,12 @@ export function getBaseWebpackPartial(
             ],
             plugins: [
               'babel-plugin-macros',
-              ['@babel/plugin-proposal-class-properties'],
-              ['@babel/plugin-proposal-decorators', false]
+              [
+                // Allows decorators to be before export since it is consistent with TypeScript syntax.
+                '@babel/plugin-proposal-decorators',
+                { decoratorsBeforeExport: true }
+              ],
+              ['@babel/plugin-proposal-class-properties']
             ]
           }
         }
