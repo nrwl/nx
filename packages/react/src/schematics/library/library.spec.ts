@@ -303,4 +303,46 @@ describe('lib', () => {
       expect(appSource).toMatch(/<Route\s*path="\/my-lib"/);
     });
   });
+
+  describe('--publishable', () => {
+    it('should add build architect', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          publishable: true
+        },
+        appTree
+      );
+
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+
+      expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
+        builder: '@nrwl/web:bundle',
+        options: {
+          entryFile: 'libs/my-lib/src/index.ts',
+          outputPath: 'dist/libs/my-lib',
+          project: 'libs/my-lib/package.json',
+          tsConfig: 'libs/my-lib/tsconfig.lib.json',
+          babelConfig: '@nrwl/react/plugins/bundle-babel',
+          rollupConfig: '@nrwl/react/plugins/bundle-rollup'
+        }
+      });
+    });
+
+    it('should add package.json', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          publishable: true
+        },
+        appTree
+      );
+
+      const packageJson = readJsonInTree(tree, '/libs/my-lib/package.json');
+
+      expect(packageJson.name).toEqual('my-lib');
+    });
+  });
 });

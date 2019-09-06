@@ -1,5 +1,5 @@
-import { normalizeBuildOptions } from './normalize';
-import { BuildBuilderOptions } from './types';
+import { normalizeBuildOptions, normalizeBundleOptions } from './normalize';
+import { BuildBuilderOptions, BundleBuilderOptions } from './types';
 import { Path, normalize } from '@angular-devkit/core';
 
 import * as fs from 'fs';
@@ -26,7 +26,7 @@ describe('normalizeBuildOptions', () => {
       ],
       assets: [],
       statsJson: false,
-      webpackConfig: './apps/nodeapp/webpack.config'
+      webpackConfig: 'apps/nodeapp/webpack.config'
     };
     root = '/root';
     sourceRoot = normalize('apps/nodeapp/src');
@@ -97,18 +97,68 @@ describe('normalizeBuildOptions', () => {
     ]);
   });
 
-  it('should only resolve relative webpack config path', () => {
+  it('should resolve both node modules and relative path for webpackConfig', () => {
     let result = normalizeBuildOptions(testOptions, root, sourceRoot);
     expect(result.webpackConfig).toEqual('/root/apps/nodeapp/webpack.config');
 
     result = normalizeBuildOptions(
       {
         ...testOptions,
-        webpackConfig: '@nrwl/react/plugins/babel'
+        webpackConfig: 'react' // something that exists in node_modules
       },
       root,
       sourceRoot
     );
-    expect(result.webpackConfig).toEqual('@nrwl/react/plugins/babel');
+    expect(result.webpackConfig).toMatch('react');
+    expect(result.webpackConfig).not.toMatch(root);
   });
+});
+
+describe('normalizeBundleOptions', () => {
+  let testOptions: BundleBuilderOptions;
+  let root: string;
+  let sourceRoot: Path;
+
+  beforeEach(() => {
+    testOptions = {
+      outputPath: '/tmp',
+      project: 'apps/nodeapp/package.json',
+      entryFile: 'apps/nodeapp/src/main.ts',
+      tsConfig: 'apps/nodeapp/tsconfig.app.json',
+      babelConfig: 'apps/nodeapp/babel.config',
+      rollupConfig: 'apps/nodeapp/rollup.config'
+    };
+    root = '/root';
+    sourceRoot = normalize('apps/nodeapp/src');
+  });
+
+  it('should resolve both node modules and relative path for babelConfig/rollupConfig', () => {
+    let result = normalizeBundleOptions(testOptions, root);
+    expect(result.babelConfig).toEqual('/root/apps/nodeapp/babel.config');
+    expect(result.rollupConfig).toEqual('/root/apps/nodeapp/rollup.config');
+
+    result = normalizeBundleOptions(
+      {
+        ...testOptions,
+        // something that exists in node_modules
+        rollupConfig: 'react',
+        babelConfig: 'react'
+      },
+      root
+    );
+    expect(result.babelConfig).toMatch('react');
+    expect(result.babelConfig).not.toMatch(root);
+    expect(result.rollupConfig).toMatch('react');
+    expect(result.rollupConfig).not.toMatch(root);
+  });
+
+  it('should handle babelConfig/rollupCofig being undefined', () => {
+    delete testOptions.babelConfig;
+    delete testOptions.rollupConfig;
+
+    const result = normalizeBundleOptions(testOptions, root);
+
+    expect(result.babelConfig).toBeUndefined();
+    expect(result.rollupConfig).toBeUndefined();
+  })
 });

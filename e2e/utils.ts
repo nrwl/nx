@@ -207,6 +207,17 @@ export function copyMissingPackages(): void {
     'eslint-plugin-react',
     'eslint-plugin-react-hooks',
 
+    // For testing web bundle
+    'rollup',
+    'rollup-plugin-babel',
+    'rollup-plugin-commonjs',
+    'rollup-plugin-filesize',
+    'rollup-plugin-local-resolve',
+    'rollup-plugin-node-resolve',
+    'rollup-plugin-peer-deps-external',
+    'rollup-plugin-postcss',
+    'rollup-plugin-typescript2',
+
     'next',
     'next-server',
     'document-register-element'

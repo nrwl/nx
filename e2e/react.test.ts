@@ -37,6 +37,18 @@ forEachCli(currentCLIName => {
       await testGeneratedApp(appName, { checkStyles: true, checkLinter: true });
     }, 120000);
 
+    it('should be able to generate a publishable react lib', async () => {
+      ensureProject();
+      const libName = uniq('lib');
+
+      runCLI(
+      );
+      runCLI(`generate @nrwl/react:lib ${libName} --publishable --no-interactive`);
+
+      const libTestResults = await runCLIAsync(`build ${libName}`);
+      expect(libTestResults.stderr).toContain('Bundle complete.');
+    }, 120000);
+
     it('should generate app with routing', async () => {
       ensureProject();
       const appName = uniq('app');

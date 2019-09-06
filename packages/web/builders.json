@@ -6,6 +6,11 @@
       "schema": "./src/builders/build/schema.json",
       "description": "Build a application"
     },
+    "bundle": {
+      "implementation": "./src/builders/bundle/bundle.impl",
+      "schema": "./src/builders/bundle/schema.json",
+      "description": "Bundle a library"
+    },
     "dev-server": {
       "implementation": "./src/builders/dev-server/dev-server.impl",
       "schema": "./src/builders/dev-server/schema.json",

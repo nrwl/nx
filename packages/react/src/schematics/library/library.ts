@@ -2,6 +2,7 @@ import {
   apply,
   chain,
   externalSchematic,
+  filter,
   mergeWith,
   move,
   noop,
@@ -101,6 +102,20 @@ function addProject(options: NormalizedSchema): Rule {
       options.linter
     );
 
+    if (options.publishable) {
+      architect.build = {
+        builder: '@nrwl/web:bundle',
+        options: {
+          outputPath: `dist/libs/${options.projectDirectory}`,
+          tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
+          project: `${options.projectRoot}/package.json`,
+          entryFile: `${options.projectRoot}/src/index.ts`,
+          babelConfig: `@nrwl/react/plugins/bundle-babel`,
+          rollupConfig: `@nrwl/react/plugins/bundle-rollup`
+        }
+      };
+    }
+
     json.projects[options.name] = {
       root: options.projectRoot,
       sourceRoot: join(normalize(options.projectRoot), 'src'),
@@ -137,7 +152,10 @@ function createFiles(options: NormalizedSchema): Rule {
         tmpl: '',
         offsetFromRoot: offsetFromRoot(options.projectRoot)
       }),
-      move(options.projectRoot)
+      move(options.projectRoot),
+      options.publishable
+        ? noop()
+        : filter(file => !file.endsWith('package.json'))
     ])
   );
 }
