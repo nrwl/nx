@@ -10,6 +10,7 @@ import { BuildBuilderOptions } from './types';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 import { getOutputHashFormat } from './hash-format';
+import { createBabelConfig } from './babel-config';
 
 export function getBaseWebpackPartial(
   options: BuildBuilderOptions,
@@ -45,39 +46,9 @@ export function getBaseWebpackPartial(
           loader: `babel-loader`,
           exclude: /node_modules/,
           options: {
+            ...createBabelConfig(dirname(options.main), esm, options.verbose),
             cacheDirectory: true,
-            cacheCompression: false,
-            compact: isScriptOptimizeOn,
-            presets: [
-              [
-                require.resolve('@babel/preset-env'),
-                {
-                  // Allows browserlist file from project to be used.
-                  configPath: dirname(options.main),
-                  // Allow importing core-js in entrypoint and use browserlist to select polyfills.
-                  // This is needed for differential loading as well.
-                  useBuiltIns: 'entry',
-                  debug: options.verbose,
-                  corejs: 3,
-                  modules: false,
-                  // Exclude transforms that make all code slower
-                  exclude: ['transform-typeof-symbol'],
-                  // Let babel-env figure which modern browsers to support.
-                  // See: https://github.com/babel/babel/blob/master/packages/babel-preset-env/data/built-in-modules.json
-                  targets: esm ? { esmodules: true } : undefined
-                }
-              ],
-              [require.resolve('@babel/preset-typescript')]
-            ],
-            plugins: [
-              require.resolve('babel-plugin-macros'),
-              [
-                // Allows decorators to be before export since it is consistent with TypeScript syntax.
-                require.resolve('@babel/plugin-proposal-decorators'),
-                { decoratorsBeforeExport: true }
-              ],
-              [require.resolve('@babel/plugin-proposal-class-properties')]
-            ]
+            cacheCompression: false
           }
         }
       ]
