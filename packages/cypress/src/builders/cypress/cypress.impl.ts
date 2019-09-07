@@ -58,9 +58,7 @@ function run(
 
   return (!legacy
     ? options.devServerTarget
-      ? startDevServer(options.devServerTarget, options.watch, context).pipe(
-          map(output => output.baseUrl)
-        )
+      ? startDevServer(options.devServerTarget, options.watch, context)
       : of(options.baseUrl)
     : legacyCompile(options, context)
   ).pipe(
@@ -167,7 +165,7 @@ export function startDevServer(
   devServerTarget: string,
   isWatching: boolean,
   context: BuilderContext
-): Observable<BuilderOutput> {
+): Observable<string> {
   // Overrides dev server watch setting.
   const overrides = {
     watch: isWatching
@@ -176,6 +174,13 @@ export function startDevServer(
     context,
     targetFromTargetString(devServerTarget),
     overrides
+  ).pipe(
+    map(output => {
+      if (!output.success && !isWatching) {
+        throw new Error('Could not compile application files');
+      }
+      return output.baseUrl as string;
+    })
   );
 }
 

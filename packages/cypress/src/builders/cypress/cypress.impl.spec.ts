@@ -85,7 +85,7 @@ describe('Cypress builder', () => {
       expect(cypressOpen).not.toHaveBeenCalled();
       done();
     });
-    fakeEventEmitter.emit('exit'); // Passing tsc command
+    fakeEventEmitter.emit('exit', 0); // Passing tsc command
   });
 
   it('should call `Cypress.open` if headless mode is `false`', async done => {
@@ -105,7 +105,7 @@ describe('Cypress builder', () => {
       expect(cypressRun).not.toHaveBeenCalled();
       done();
     });
-    fakeEventEmitter.emit('exit'); // Passing tsc command
+    fakeEventEmitter.emit('exit', 0); // Passing tsc command
   });
 
   it('should call `Cypress.run` with provided baseUrl', async done => {
@@ -128,7 +128,7 @@ describe('Cypress builder', () => {
       expect(cypressOpen).not.toHaveBeenCalled();
     });
 
-    fakeEventEmitter.emit('exit'); // Passing tsc command
+    fakeEventEmitter.emit('exit', 0); // Passing tsc command
   });
 
   it('should call `Cypress.run` with provided browser', async done => {
@@ -148,7 +148,7 @@ describe('Cypress builder', () => {
       done();
     });
 
-    fakeEventEmitter.emit('exit'); // Passing tsc command
+    fakeEventEmitter.emit('exit', 0); // Passing tsc command
   });
 
   it('should call `Cypress.run` without baseUrl nor dev server target value', async done => {
@@ -174,7 +174,26 @@ describe('Cypress builder', () => {
       done();
     });
 
-    fakeEventEmitter.emit('exit'); // Passing tsc command
+    fakeEventEmitter.emit('exit', 0); // Passing tsc command
+  });
+
+  it('should fail early if application build fails', async done => {
+    (devkitArchitect as any).scheduleTargetAndForget = jest
+      .fn()
+      .mockReturnValue(
+        of({
+          success: false
+        })
+      );
+    const run = await architect.scheduleBuilder(
+      '@nrwl/cypress:cypress',
+      cypressBuilderOptions
+    );
+    run.result.then(async res => {
+      await run.stop();
+      expect(res.success).toBe(false);
+      done();
+    });
   });
 
   describe('legacy', () => {
@@ -190,7 +209,7 @@ describe('Cypress builder', () => {
         '@nrwl/cypress:cypress',
         cypressBuilderOptions
       );
-      fakeEventEmitter.emit('exit');
+      fakeEventEmitter.emit('exit', 0);
       await run.result;
       await run.stop();
       expect(fork).toHaveBeenCalledWith(
@@ -215,7 +234,7 @@ describe('Cypress builder', () => {
         done();
       });
 
-      fakeEventEmitter.emit('exit'); // Passing tsc command
+      fakeEventEmitter.emit('exit', 0); // Passing tsc command
     });
 
     it('should not copy fixtures folder if they are not defined in the cypress config', async done => {
@@ -230,7 +249,7 @@ describe('Cypress builder', () => {
         done();
       });
 
-      fakeEventEmitter.emit('exit'); // Passing tsc command
+      fakeEventEmitter.emit('exit', 0); // Passing tsc command
     });
 
     it('should copy regex files to out-dir', async done => {
@@ -250,7 +269,7 @@ describe('Cypress builder', () => {
         done();
       });
 
-      fakeEventEmitter.emit('exit'); // Passing tsc command
+      fakeEventEmitter.emit('exit', 0); // Passing tsc command
     });
 
     it('should not copy regex files if the regex is not defined', async done => {
@@ -270,7 +289,7 @@ describe('Cypress builder', () => {
         done();
       });
 
-      fakeEventEmitter.emit('exit'); // Passing tsc command
+      fakeEventEmitter.emit('exit', 0); // Passing tsc command
     });
 
     it('should not copy regex files if the integration files are not defined in the cypress config', async done => {
@@ -292,7 +311,21 @@ describe('Cypress builder', () => {
           done();
         });
 
-      fakeEventEmitter.emit('exit'); // Passing tsc command
+      fakeEventEmitter.emit('exit', 0); // Passing tsc command
+    });
+
+    it('should fail early if integration files fail to compile', async done => {
+      const run = await architect.scheduleBuilder(
+        '@nrwl/cypress:cypress',
+        cypressBuilderOptions
+      );
+      run.result.then(async res => {
+        await run.stop();
+        expect(res.success).toBe(false);
+        done();
+      });
+
+      fakeEventEmitter.emit('exit', 1); // Passing tsc command
     });
   });
 });
