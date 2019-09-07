@@ -19,6 +19,7 @@ import {
 import { getProjectConfig, addDepsToPackageJson } from '@nrwl/workspace';
 import { offsetFromRoot } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
+import ngAdd from '../ng-add/ng-add';
 
 export interface JestProjectSchema {
   project: string;
@@ -107,13 +108,6 @@ function check(options: JestProjectSchema): Rule {
         `${options.project} already has a test architect option.`
       );
     }
-    const packageJson = readJsonInTree(host, 'package.json');
-    if (!packageJson.devDependencies.jest) {
-      context.logger.warn(`"jest" is not installed as a dependency.`);
-      context.logger.info(
-        `Add "jest" via "yarn add --dev @nrwl/jest" or "npm install -D @nrwl/jest"`
-      );
-    }
     return host;
   };
 }
@@ -131,6 +125,7 @@ function normalizeOptions(options: JestProjectSchema): JestProjectSchema {
 export default function(options: JestProjectSchema): Rule {
   options = normalizeOptions(options);
   return chain([
+    ngAdd(),
     check(options),
     generateFiles(options),
     updateTsConfig(options),
