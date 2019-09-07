@@ -16,6 +16,12 @@ describe('jest', () => {
     expect(resultTree.exists('jest.config.js')).toBeTruthy();
   });
 
+  it('should not override existing files', async () => {
+    appTree.create('jest.config.js', `test`);
+    const resultTree = await runSchematic('ng-add', {}, appTree);
+    expect(resultTree.read('jest.config.js').toString()).toEqual('test');
+  });
+
   it('should add dependencies', async () => {
     const resultTree = await runSchematic('ng-add', {}, appTree);
     const packageJson = readJsonInTree(resultTree, 'package.json');
