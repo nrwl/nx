@@ -34,9 +34,7 @@ export function legacyCompile(
     }),
     concatMap(() =>
       options.devServerTarget
-        ? startDevServer(options.devServerTarget, options.watch, context).pipe(
-            map(output => output.baseUrl)
-          )
+        ? startDevServer(options.devServerTarget, options.watch, context)
         : of(options.baseUrl)
     )
   );
@@ -70,7 +68,9 @@ function compileTypescriptFiles(
       } else {
         tscProcess = fork(tscPath, args, { stdio: [0, 1, 2, 'ipc'] });
         tscProcess.on('exit', code => {
-          subscriber.next({ success: code === 0 });
+          code === 0
+            ? subscriber.next({ success: true })
+            : subscriber.error('Could not compile Typescript files');
           subscriber.complete();
         });
       }
