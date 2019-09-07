@@ -5,7 +5,7 @@ const gitMessage = require('child_process')
   .execSync('git log -1 --no-merges')
   .toString()
   .trim();
-const matchCommit = /(build|feat|fix|refactor|style|docs)\((backend|testing|web|react|angular|nx)\):\s(([a-z0-9:\-\s])+)/g.test(
+const matchCommit = /(build|feat|fix|refactor|style|docs|chore)\((backend|testing|web|react|angular|nx)\):\s(([a-z0-9:\-\s])+)/g.test(
   gitMessage
 );
 const matchRelease = /release/gi.test(gitMessage);
