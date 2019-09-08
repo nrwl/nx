@@ -1,6 +1,6 @@
 {
   "title": "Next Export",
-  "description": "Export a Next.js app",
+  "description": "Export a Next.js app. The exported application is located at dist/$outputPath/exported.",
   "type": "object",
   "properties": {},
   "required": []

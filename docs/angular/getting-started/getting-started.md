@@ -53,6 +53,7 @@ npm install --save-dev @nrwl/react # Adds React capabilities
 npm install --save-dev @nrwl/node # Adds Node capabilities
 npm install --save-dev @nrwl/express # Adds Express capabilities
 npm install --save-dev @nrwl/nest # Adds Nest capabilities
+npm install --save-dev @nrwl/next # Adds Next.js capabilities
 ```
 
 **Using `yarn`**
@@ -64,6 +65,7 @@ yarn add --dev @nrwl/angular # Adds Angular capabilities
 yarn add --dev @nrwl/node # Adds Node capabilities
 yarn add --dev @nrwl/express # Adds Express capabilities
 yarn add --dev @nrwl/nest # Adds Nest capabilities
+yarn add --dev @nrwl/next # Adds Next.js capabilities
 ```
 
 **Using `ng add`**
@@ -75,6 +77,7 @@ ng add @nrwl/react # Adds React capabilities
 ng add @nrwl/node # Adds Node capabilities
 ng add @nrwl/express # Adds Express capabilities
 ng add @nrwl/nest # Adds Nest capabilities
+ng add @nrwl/next # Adds Next.js capabilities
 ```
 
 ## Creating an application

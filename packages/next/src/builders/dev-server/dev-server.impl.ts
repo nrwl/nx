@@ -64,7 +64,17 @@ function run(
               } as any,
               options.port
             ).then(app => app.prepare())
-          ).pipe(switchMap(e => new Observable<BuilderOutput>(obs => {})));
+          ).pipe(
+            switchMap(
+              e =>
+                new Observable<BuilderOutput>(obs => {
+                  obs.next({
+                    baseUrl: `http://localhost:${options.port}`,
+                    success: true
+                  });
+                })
+            )
+          );
         })
       );
     })

@@ -25,6 +25,19 @@ const workspace = findWorkspaceRoot(__dirname);
 
 // we are running a local nx
 if (workspace) {
+  // required to make sure nrwl/workspace import works
+  if (workspace.type === 'nx') {
+    require(path.join(
+      workspace.dir,
+      'node_modules',
+      '@nrwl',
+      'tao',
+      'src',
+      'compat',
+      'compat.js'
+    ));
+  }
+
   // The commandsObject is a Yargs object declared in `nx-commands.ts`,
   // It is exposed and bootstrapped here to provide CLI features.
   const w = require('@nrwl/workspace');

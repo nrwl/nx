@@ -78,6 +78,13 @@ yarn add --dev @nrwl/express # Add Express Capabilities to a workspace
 nx g @nrwl/express:application myapp # Generate an Express Application
 ```
 
+Next.js Applications:
+
+```bash
+yarn add --dev @nrwl/next # Add Next.js capabilities to a workspace
+nx g @nrwl/next:application myapp # Generate an Next.js application
+```
+
 And even more!
 
 Creating a new application will result in something like this:

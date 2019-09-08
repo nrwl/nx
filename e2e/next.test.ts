@@ -8,7 +8,8 @@ import {
   runCLI,
   runCLIAsync,
   uniq,
-  updateFile
+  updateFile,
+  supportUi
 } from './utils';
 import treeKill = require('tree-kill');
 

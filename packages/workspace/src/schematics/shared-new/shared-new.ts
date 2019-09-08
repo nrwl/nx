@@ -41,7 +41,8 @@ export interface Schema {
     | 'react'
     | 'web-components'
     | 'angular-nest'
-    | 'react-express';
+    | 'react-express'
+    | 'next';
   commit?: { name: string; email: string; message?: string };
 }
 
@@ -164,6 +165,14 @@ function addDependencies(options: Schema) {
       },
       false
     );
+  } else if (options.preset === 'next') {
+    return addDepsToPackageJson(
+      {},
+      {
+        '@nrwl/next': nxVersion
+      },
+      false
+    );
   } else {
     return noop();
   }
@@ -226,6 +235,9 @@ function setDefaultLinter(linter: string) {
     json.schematics['@nrwl/react'] = {
       application: { linter },
       library: { linter }
+    };
+    json.schematics['@nrwl/next'] = {
+      application: { linter }
     };
     json.schematics['@nrwl/web'] = { application: { linter } };
     json.schematics['@nrwl/node'] = { application: { linter } };

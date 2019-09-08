@@ -46,6 +46,18 @@ describe('preset', () => {
     ).toBe('@nrwl/web');
   });
 
+  it('should create files (preset = next)', async () => {
+    const tree = await runSchematic(
+      'preset',
+      { name: 'proj', preset: 'next' },
+      projectTree
+    );
+    expect(tree.exists('/apps/proj/pages/index.tsx')).toBe(true);
+    expect(
+      JSON.parse(tree.readContent('/workspace.json')).cli.defaultCollection
+    ).toBe('@nrwl/next');
+  });
+
   describe('--preset angular-nest', () => {
     it('should create files', async () => {
       const tree = await runSchematic(

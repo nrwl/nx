@@ -14,7 +14,7 @@
     "export": {
       "implementation": "./src/builders/export/export.impl",
       "schema": "./src/builders/export/schema.json",
-      "description": "Export a Next.js app"
+      "description": "Export a Next.js app. The exported application is located at dist/$outputPath/exported."
     }
   }
 }

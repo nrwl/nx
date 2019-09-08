@@ -27,10 +27,6 @@ To see how Nx delivers all of these, start with an empty Nx workspace:
 ├── workspace.json
 ├── nx.json
 ├── package.json
-<<<<<<< HEAD
-=======
-├── tools/
->>>>>>> wip
 └── tsconfig.json
 ```
 
@@ -50,36 +46,43 @@ Nx can generate many different types of applications:
 React Applications:
 
 ```bash
-yarn add --dev @nrwl/react # Add React Capabilities to a workspace
-nx g @nrwl/react:application myapp # Generate a React Application
+yarn add --dev @nrwl/react # Add React capabilities to a workspace
+nx g @nrwl/react:application myapp # Generate a React application
 ```
 
 Applications built out of Web Components:
 
 ```bash
-yarn add --dev @nrwl/web # Add Web Capabilities to a workspace
-nx g @nrwl/web:application myapp # Generate a Web Application
+yarn add --dev @nrwl/web # Add Web capabilities to a workspace
+nx g @nrwl/web:application myapp # Generate a Web application
 ```
 
 Angular Applications:
 
 ```bash
-yarn add --dev @nrwl/angular # Add Angular Capabilities to a workspace
-nx g @nrwl/angular:application myapp # Generate an Angular Application
+yarn add --dev @nrwl/angular # Add Angular capabilities to a workspace
+nx g @nrwl/angular:application myapp # Generate an Angular application
 ```
 
 NestJS Applications:
 
 ```bash
-yarn add --dev @nrwl/nest # Add Nest Capabilities to a workspace
-nx g @nrwl/nest:application myapp # Generate a Nest Application
+yarn add --dev @nrwl/nest # Add Nest capabilities to a workspace
+nx g @nrwl/nest:application myapp # Generate a Nest application
 ```
 
 Express Applications:
 
 ```bash
-yarn add --dev @nrwl/express # Add Express Capabilities to a workspace
-nx g @nrwl/express:application myapp # Generate an Express Application
+yarn add --dev @nrwl/express # Add Express capabilities to a workspace
+nx g @nrwl/express:application myapp # Generate an Express application
+```
+
+Next.js Applications:
+
+```bash
+yarn add --dev @nrwl/next # Add Next.js capabilities to a workspace
+nx g @nrwl/next:application myapp # Generate an Next.js application
 ```
 
 And even more!
