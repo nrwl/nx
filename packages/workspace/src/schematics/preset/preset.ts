@@ -53,12 +53,25 @@ function createPreset(options: Schema): Rule {
         {
           name: options.name,
           style: options.style,
-          babel: true,
           linter
         },
         { interactive: false }
       ),
       setDefaultCollection('@nrwl/react')
+    ]);
+  } else if (options.preset === 'next') {
+    return chain([
+      externalSchematic(
+        '@nrwl/next',
+        'application',
+        {
+          name: options.name,
+          style: options.style,
+          linter
+        },
+        { interactive: false }
+      ),
+      setDefaultCollection('@nrwl/next')
     ]);
   } else if (options.preset === 'web-components') {
     return chain([
@@ -103,7 +116,6 @@ function createPreset(options: Schema): Rule {
         {
           name: options.name,
           style: options.style,
-          babel: true,
           linter
         },
         { interactive: false }

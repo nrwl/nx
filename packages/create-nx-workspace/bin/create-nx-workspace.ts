@@ -36,6 +36,10 @@ const presetOptions = [
     value: 'react-express',
     name:
       'react-express     [a workspace with a full stack application (React + Express)]'
+  },
+  {
+    value: 'next',
+    name: 'next.js           [a workspace with a single Next.js application]'
   }
 ];
 
@@ -234,7 +238,8 @@ function determineCli(preset: string, parsedArgs: any) {
   } else if (
     preset === 'web-components' ||
     preset === 'react' ||
-    preset === 'react-express'
+    preset === 'react-express' ||
+    preset === 'next'
   ) {
     return Promise.resolve(nx);
   } else {
@@ -406,7 +411,8 @@ function showCliWarning(preset: string, parsedArgs: any) {
     } else if (
       preset === 'web-components' ||
       preset === 'react' ||
-      preset === 'react-express'
+      preset === 'react-express' ||
+      preset === 'next'
     ) {
       output.addVerticalSeparator();
       output.note({
@@ -420,7 +426,7 @@ function showCliWarning(preset: string, parsedArgs: any) {
 }
 
 function pointToTutorial(preset: string) {
-  if (preset === 'react' || preset === 'react-express') {
+  if (preset === 'react' || preset === 'react-express' || preset === 'next') {
     output.addVerticalSeparator();
     output.note({
       title: `First time using Nx? Check out this interactive Nx tutorial.`,

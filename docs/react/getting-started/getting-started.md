@@ -50,11 +50,12 @@ yarn add --dev @nrwl/react
 
 ### Additional Capabilities
 
-Nx also provides capabilities for other platforms, and libraries such as Node, Express, and Nest.
+Nx also provides capabilities for other platforms, and libraries such as Node, Next.js, Express, and Nest.
 
 To add the additional capabilities:
 
 ```bash
+npm install --save-dev @nrwl/next
 npm install --save-dev @nrwl/node
 npm install --save-dev @nrwl/express
 npm install --save-dev @nrwl/nest
@@ -63,6 +64,7 @@ npm install --save-dev @nrwl/nest
 **Using `yarn`**
 
 ```bash
+yarn add --dev @nrwl/next
 yarn add --dev @nrwl/node
 yarn add --dev @nrwl/express
 yarn add --dev @nrwl/nest
@@ -75,6 +77,8 @@ After the capabilities are added, you create your first application using the fo
 ```bash
 nx generate @nrwl/react:application myapp
 ```
+
+> Nx has first-class Next.js support. Read more about it [here](https://nx.dev/react/guides/nextjs).
 
 The following files and folders are generated in the new application:
 

@@ -7,6 +7,7 @@ export interface Schema {
     | 'empty'
     | 'angular'
     | 'react'
+    | 'next'
     | 'web-components'
     | 'angular-nest'
     | 'react-express';

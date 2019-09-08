@@ -4,6 +4,31 @@ Using Nx, you can add Cypress, Jest, Prettier, and Nest into your dev workflow.
 
 Of course, it's not the case that Cypress is always better than Protractor or Nest is always better than say Express. There are tradeoffs. But in many situations, for many projects, these innovative tools offer a lot of advantages.
 
+## Next.js
+
+Next.js is a React framework designed for building server-prerendered applications.
+
+Add the Nex.js capability to your workspace:
+
+```bash
+yarn add --dev @nrwl/next
+```
+
+To create the new Next.js application:
+
+```bash
+nx g @nrwl/next:application tasks
+```
+
+You can run:
+
+- `nx serve tasks` to serve the application
+- `nx build tasks` to build the application
+- `nx test tasks` to test the application
+- `nx e2e tasks-e2e` to run e2e tests for the application
+
+Read more about Next.js at [nextjs.org](https://nextjs.org).
+
 ## Nest
 
 ![NestJS logo](/shared/nest-logo.png)
