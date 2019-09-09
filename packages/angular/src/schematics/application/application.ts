@@ -103,21 +103,21 @@ const nrwlHomeTemplate = {
     <details open>
         <summary>Add UI library</summary>
         <pre>
-\`# Generate UI lib
+# Generate UI lib
 ng g @nrwl/angular:lib ui
 
 # Add a component
-ng g @nrwl/angular:component xyz --project ui\`</pre
+ng g @nrwl/angular:component xyz --project ui</pre
         >
     </details>
     <details>
         <summary>View dependency graph</summary>
-        <pre>\`nx dep-graph\`</pre>
+        <pre>nx dep-graph</pre>
     </details>
     <details>
         <summary>Run affected commands</summary>
         <pre>
-\`# see what's been affected by changes
+# see what's been affected by changes
 ng affected:dep-graph
 
 # run tests for current changes
@@ -125,7 +125,7 @@ ng affected:test
 
 # run e2e tests for current changes
 ng affected:e2e
-\`</pre
+</pre
         >
     </details>
 </main>
