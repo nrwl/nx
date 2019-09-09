@@ -14,7 +14,7 @@ try {
   require('dotenv').config();
 } catch (e) {}
 
-const { runCLI } = require('jest');
+import { runCLI } from 'jest';
 
 export interface JestBuilderOptions extends JsonObject {
   codeCoverage?: boolean;
@@ -106,10 +106,9 @@ function run(
   };
 
   if (options.setupFile) {
-    config.setupTestFrameworkScriptFile = path.resolve(
-      context.workspaceRoot,
-      options.setupFile
-    );
+    config.setupFilesAfterEnv = [
+      path.resolve(context.workspaceRoot, options.setupFile)
+    ];
   }
 
   if (options.testFile) {
@@ -131,7 +130,7 @@ function run(
   }
 
   return from(runCLI(config, [options.jestConfig])).pipe(
-    map((results: any) => {
+    map(results => {
       return {
         success: results.results.success
       };
