@@ -32,7 +32,7 @@
 
 ### Use Modern Tools
 
-Using Nx, you can add TypeScript, Cypress, Jest, Prettier, and Nest into your dev workflow. Nx sets up these tools and allows you to use them seamlessly. Nx fully integrates with the other modern tools you already use and love.
+Using Nx, you can add TypeScript, Cypress, Jest, Prettier, Angular, React, Next.js and Nest into your dev workflow. Nx sets up these tools and allows you to use them seamlessly. Nx fully integrates with the other modern tools you already use and love.
 
 ### Build Full-Stack Applications
 
