@@ -216,15 +216,20 @@ async function runCommand(
   }
 
   try {
+    const isYarn = path
+      .basename(process.env.npm_execpath || 'npm')
+      .startsWith('yarn');
     await runAll(
       projects.map(proj => {
         return commonCommands.includes(targetName)
-          ? `${cli} -- ${targetName} ${proj} ${transformArgs(
+          ? `${cli} ${isYarn ? '' : '--'} ${targetName} ${proj} ${transformArgs(
               args,
               proj,
               projectMetadata.get(proj)
             ).join(' ')} `
-          : `${cli} -- run ${proj}:${targetName} ${transformArgs(
+          : `${cli} ${
+              isYarn ? '' : '--'
+            } run ${proj}:${targetName} ${transformArgs(
               args,
               proj,
               projectMetadata.get(proj)
