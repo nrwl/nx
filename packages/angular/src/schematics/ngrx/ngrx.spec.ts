@@ -577,7 +577,7 @@ import {
       [
         `export const USERS_FEATURE_KEY = 'users';`,
         `const usersReducer = createReducer`,
-        'export function reducer(state: UsersState | undefined, action: Action) {'
+        'export function reducer(state: State | undefined, action: Action) {'
       ].forEach(text => {
         expect(content).toContain(text);
       });
@@ -587,7 +587,7 @@ import {
       const content = tree.readContent(`${statePath}/users.effects.ts`);
 
       [
-        `import { createEffect, Actions } from '@ngrx/effects';`,
+        `import { createEffect, Actions, ofType } from '@ngrx/effects';`,
         'this.dataPersistence.fetch(UsersActions.loadUsers, {'
       ].forEach(text => {
         expect(content).toContain(text);
@@ -601,7 +601,7 @@ import {
         `
 import {
   USERS_FEATURE_KEY,
-  UsersState,
+  State,
   UsersPartialState,
   usersAdapter
 } from './users.reducer';`,
@@ -629,6 +629,62 @@ import {
       [
         'export interface UsersEntity',
         'id: string | number; // Primary ID'
+      ].forEach(text => {
+        expect(content).toContain(text);
+      });
+    });
+
+    it('should use DataPersistence operators when useDataPersistence is set to false', async () => {
+      appTree = Tree.empty();
+      appTree = createEmptyWorkspace(appTree);
+      appTree = createApp(appTree, 'myapp');
+      const tree = await runSchematic(
+        'ngrx',
+        {
+          name: 'users',
+          module: appConfig.appModule,
+          syntax: 'creators',
+          facade: true,
+          useDataPersistence: false
+        },
+        appTree
+      );
+      const content = tree.readContent(`${statePath}/users.effects.ts`);
+
+      [`{ fetch }`, `, ofType`, `ofType(UsersActions.loadUsers),`].forEach(
+        text => {
+          expect(content).toContain(text);
+        }
+      );
+
+      expect(content).not.toContain('dataPersistence.fetch');
+    });
+
+    it('should re-export actions, state, and selectors using barrels if enabled', async () => {
+      appTree = Tree.empty();
+      appTree = createEmptyWorkspace(appTree);
+      appTree = createApp(appTree, 'myapp');
+      appTree.create('/apps/myapp/src/index.ts', '');
+
+      const tree = await runSchematic(
+        'ngrx',
+        {
+          name: 'users',
+          module: appConfig.appModule,
+          syntax: 'creators',
+          barrels: true
+        },
+        appTree
+      );
+
+      const content = tree.readContent('/apps/myapp/src/index.ts');
+
+      [
+        `import * as UsersActions from './lib/+state/users.actions';`,
+        `import * as UsersFeature from './lib/+state/users.reducer';`,
+        `import * as UsersSelectors from './lib/+state/users.selectors';`,
+        `export { UsersActions, UsersFeature, UsersSelectors };`,
+        `export * from './lib/+state/users.models';`
       ].forEach(text => {
         expect(content).toContain(text);
       });

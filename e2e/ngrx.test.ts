@@ -64,8 +64,10 @@ forEachCli(() => {
       const mylib = uniq('mylib');
       // Generate feature library and ngrx state within that library
       runCLI(`g @nrwl/angular:lib ${mylib} --prefix=fl`);
+
+      const flags = `--facade --syntax=creators --useDataPersistence=false --barrels`;
       runCLI(
-        `generate @nrwl/angular:ngrx flights --module=libs/${mylib}/src/lib/${mylib}.module.ts --facade --syntax=creators`
+        `generate @nrwl/angular:ngrx flights --module=libs/${mylib}/src/lib/${mylib}.module.ts ${flags}`
       );
 
       expect(runCLI(`build ${myapp}`)).toContain(

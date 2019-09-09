@@ -18,4 +18,6 @@ export interface Schema {
   skipFormat: boolean;
   skipPackageJson: boolean;
   syntax?: string;
+  useDataPersistence: boolean;
+  barrels: boolean;
 }

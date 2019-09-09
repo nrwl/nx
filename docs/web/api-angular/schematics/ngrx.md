@@ -24,6 +24,14 @@ nx g ngrx ... --dry-run
 
 ## Options
 
+### barrels
+
+Default: `false`
+
+Type: `boolean`
+
+Use barrels to re-export actions, state, and selectors.
+
 ### directory
 
 Default: `+state`
@@ -117,3 +125,11 @@ Type: `string`
 Possible values: `classes`, `creators`
 
 Specifies whether to use class-based or creator functions for actions, reducers, and effects.
+
+### useDataPersistence
+
+Default: `true`
+
+Type: `boolean`
+
+Generate NgRx Effects with the DataPersistence helper service. Set to false to use plain effects data persistence operators.

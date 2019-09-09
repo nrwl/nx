@@ -15,13 +15,13 @@ import * as <%= className %>Selectors from './<%= fileName %>.selectors';
 import * as <%= className %>Actions from './<%= fileName %>.actions';
 import {
   <%= className.toUpperCase() %>_FEATURE_KEY,
-  <%= className %>State,
+  State,
   initialState,
   reducer
 } from './<%= fileName %>.reducer';
 
 interface TestSchema {
-  '<%= propertyName %>' : <%= className %>State
+  '<%= propertyName %>' : State
 }
 
 describe('<%= className %>Facade', () => {
@@ -74,7 +74,7 @@ describe('<%= className %>Facade', () => {
         expect(list.length).toBe(0);
         expect(isLoaded).toBe(false);
 
-        facade.loadAll();
+        facade.dispatch(<%= className %>Actions.load<%= className %>());
 
         list = await readFirst(facade.all<%= className %>$);
         isLoaded = await readFirst(facade.loaded$);
@@ -99,7 +99,7 @@ describe('<%= className %>Facade', () => {
         expect(list.length).toBe(0);
         expect(isLoaded).toBe(false);
 
-        store.dispatch(<%= className %>Actions.load<%= className %>Success({
+        facade.dispatch(<%= className %>Actions.load<%= className %>Success({
           <%= propertyName %>: [
             create<%= className %>Entity('AAA'),
             create<%= className %>Entity('BBB')

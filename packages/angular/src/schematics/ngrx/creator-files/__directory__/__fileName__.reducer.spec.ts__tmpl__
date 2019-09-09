@@ -1,6 +1,6 @@
 import { <%= className %>Entity } from './<%= fileName %>.models';
 import * as <%= className %>Actions from './<%= fileName %>.actions';
-import { <%= className %>State, initialState, reducer } from './<%= fileName %>.reducer';
+import { State, initialState, reducer } from './<%= fileName %>.reducer';
 
 describe('<%= className %> Reducer', () => {
   const create<%= className %>Entity = ( id: string, name = '' ) => ({
@@ -20,7 +20,7 @@ describe('<%= className %> Reducer', () => {
       ];
       const action = <%= className %>Actions.load<%= className %>Success({ <%= propertyName %> });
 
-      const result: <%= className %>State = reducer(initialState, action);
+      const result: State = reducer(initialState, action);
 
       expect(result.loaded).toBe(true);
       expect(result.ids.length).toBe(2);

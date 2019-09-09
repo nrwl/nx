@@ -2,7 +2,7 @@
 
 Managing state is a hard problem. We need to coordinate multiple backends, web workers, and UI components, all of which update the state concurrently.
 
-What should we store in memory and what in the URL? What about the local UI state? How do we synchronize the persistent state, the URL, and the state on the server? All these questions have to be answered when designing the state management of our applications. **Nx** Data Persistence is a set of helper functions that enables the developer to manage state with an intentional synchronization strategy and handle error state. Check out the [Using NgRx 4 to Manage State in Angular Applications](https://blog.nrwl.io/using-ngrx-4-to-manage-state-in-angular-applications-64e7a1f84b7b) for more detailed example of the state problem Data Persistence is solving.
+What should we store in memory and what in the URL? What about the local UI state? How do we synchronize the persistent state, the URL, and the state on the server? All these questions have to be answered when designing the state management of our applications. **Nx** Data Persistence is a set of helper functions that enables the developer to manage state with an intentional synchronization strategy and handle error state. Check out the [Managing State in Angular Applications using NgRx](https://blog.nrwl.io/using-ngrx-4-to-manage-state-in-angular-applications-64e7a1f84b7b) for more detailed example of the state problem Data Persistence is solving.
 
 ## Optimistic Updates
 

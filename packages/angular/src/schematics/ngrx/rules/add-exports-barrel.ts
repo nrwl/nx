@@ -2,7 +2,7 @@ import * as ts from 'typescript';
 import * as path from 'path';
 import { Rule, Tree } from '@angular-devkit/schematics';
 
-import { names } from '@nrwl/workspace';
+import { names, toClassName } from '@nrwl/workspace';
 import { insert, addGlobal } from '@nrwl/workspace';
 import { Schema } from '../schema';
 
@@ -23,6 +23,8 @@ export function addExportsToBarrel(options: Schema): Rule {
       const indexFilePath = path.join(moduleDir, '../index.ts');
       const hasFacade = options.facade == true;
       const addModels = options.syntax === 'creators';
+      const className = `${toClassName(options.name)}`;
+      const exportBarrels = options.barrels === true;
 
       const buffer = host.read(indexFilePath);
       if (!!buffer) {
@@ -40,18 +42,34 @@ export function addExportsToBarrel(options: Schema): Rule {
         const statePath = `./lib/${options.directory}/${fileName}`;
 
         insert(host, indexFilePath, [
-          ...(hasFacade
-            ? addGlobal(
-                indexSourceFile,
-                indexFilePath,
-                `export * from '${statePath}.facade';`
-              )
-            : []),
           ...addGlobal(
             indexSourceFile,
             indexFilePath,
-            `export * from '${statePath}.reducer';`
+            exportBarrels
+              ? `import * as ${className}Actions from '${statePath}.actions';`
+              : `export * from '${statePath}.actions';`
           ),
+          ...addGlobal(
+            indexSourceFile,
+            indexFilePath,
+            exportBarrels
+              ? `import * as ${className}Feature from '${statePath}.reducer';`
+              : `export * from '${statePath}.reducer';`
+          ),
+          ...addGlobal(
+            indexSourceFile,
+            indexFilePath,
+            exportBarrels
+              ? `import * as ${className}Selectors from '${statePath}.selectors';`
+              : `export * from '${statePath}.selectors';`
+          ),
+          ...(exportBarrels
+            ? addGlobal(
+                indexSourceFile,
+                indexFilePath,
+                `export { ${className}Actions, ${className}Feature, ${className}Selectors };`
+              )
+            : []),
           ...(addModels
             ? addGlobal(
                 indexSourceFile,
@@ -59,11 +77,13 @@ export function addExportsToBarrel(options: Schema): Rule {
                 `export * from '${statePath}.models';`
               )
             : []),
-          ...addGlobal(
-            indexSourceFile,
-            indexFilePath,
-            `export * from '${statePath}.selectors';`
-          )
+          ...(hasFacade
+            ? addGlobal(
+                indexSourceFile,
+                indexFilePath,
+                `export * from '${statePath}.facade';`
+              )
+            : [])
         ]);
       }
     }
