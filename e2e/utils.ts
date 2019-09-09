@@ -185,8 +185,6 @@ export class TestButtonComponent implements OnInit {
   runCLI(
     `g @schematics/angular:component test-other --project=${libName} --no-interactive`
   );
-
-  execSync(`cp -a ${tmpBackupProjPath()} ${tmpProjPath()}`);
 }
 
 export function ensureProject(): void {

@@ -6,7 +6,8 @@
     "uiFramework": {
       "type": "string",
       "description": "Storybook framework npm package",
-      "require": true
+      "default": "@storybook/angular",
+      "hidden": true
     },
     "port": {
       "type": "number",

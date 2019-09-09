@@ -1,25 +1,22 @@
 import {
-  apply,
   chain,
   externalSchematic,
-  mergeWith,
   move,
   Rule,
   schematic,
   SchematicContext,
+  template,
   Tree,
-  url,
-  template
+  url
 } from '@angular-devkit/schematics';
 import {
   getProjectConfig,
-  updateWorkspace,
-  addPackageWithNgAdd,
   offsetFromRoot,
-  readJsonFile
+  readJsonFile,
+  updateWorkspace
 } from '@nrwl/workspace';
 import { StorybookStoriesSchema } from '../../../../angular/src/schematics/stories/stories';
-import { parseJsonAtPath } from '../../utils/utils';
+import { applyWithSkipExisting, parseJsonAtPath } from '../../utils/utils';
 import { CypressConfigureSchema } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
 
@@ -49,7 +46,10 @@ function createRootStorybookDir(): Rule {
   return (tree: Tree, context: SchematicContext) => {
     context.logger.debug('adding .storybook folder to lib');
 
-    return chain([mergeWith(apply(url('./root-files'), []))])(tree, context);
+    return chain([applyWithSkipExisting(url('./root-files'), [])])(
+      tree,
+      context
+    );
   };
 }
 
@@ -59,15 +59,13 @@ function createLibStorybookDir(projectName: string): Rule {
     const projectConfig = getProjectConfig(tree, projectName);
 
     return chain([
-      mergeWith(
-        apply(url('./lib-files'), [
-          template({
-            tmpl: '',
-            offsetFromRoot: offsetFromRoot(projectConfig.root)
-          }),
-          move(projectConfig.root)
-        ])
-      )
+      applyWithSkipExisting(url('./lib-files'), [
+        template({
+          tmpl: '',
+          offsetFromRoot: offsetFromRoot(projectConfig.root)
+        }),
+        move(projectConfig.root)
+      ])
     ])(tree, context);
   };
 }
@@ -108,8 +106,7 @@ function addStorybookTask(projectName: string): Rule {
         uiFramework = '@storybook/angular';
       }
     } catch (e) {}
-    projectConfig.targets.add({
-      name: 'storybook',
+    projectConfig.targets.set('storybook', {
       builder: '@nrwl/storybook:storybook',
       options: {
         uiFramework,

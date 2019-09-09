@@ -21,8 +21,17 @@ forEachCli(() => {
           const mylib = uniq('test-ui-lib');
           createTestUILib(mylib);
 
+          const mylib2 = uniq('test-ui-lib2');
+          createTestUILib(mylib2);
+
           runCLI(
             `generate @nrwl/storybook:configuration ${mylib} --configureCypress --generateStories --generateCypressSpecs --noInteractive`
+          );
+          runCLI(
+            `generate @nrwl/storybook:configuration ${mylib} --noInteractive`
+          );
+          runCLI(
+            `generate @nrwl/storybook:configuration ${mylib2} --configureCypress --generateStories --generateCypressSpecs --noInteractive`
           );
           runYarnInstall();
 

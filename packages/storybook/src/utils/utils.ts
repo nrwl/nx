@@ -10,7 +10,12 @@ import {
 import {
   SchematicsException,
   Tree,
-  SchematicContext
+  SchematicContext,
+  Source,
+  Rule,
+  mergeWith,
+  apply,
+  forEach
 } from '@angular-devkit/schematics';
 
 import {
@@ -194,4 +199,41 @@ export function getTsSourceFile(host: Tree, path: string): SourceFile {
   const source = createSourceFile(path, content, ScriptTarget.Latest, true);
 
   return source;
+}
+
+export function applyWithOverwrite(source: Source, rules: Rule[]): Rule {
+  return (tree: Tree, _context: SchematicContext) => {
+    const rule = mergeWith(
+      apply(source, [
+        ...rules,
+        forEach(fileEntry => {
+          if (tree.exists(fileEntry.path)) {
+            tree.overwrite(fileEntry.path, fileEntry.content);
+            return null;
+          }
+          return fileEntry;
+        })
+      ])
+    );
+
+    return rule(tree, _context);
+  };
+}
+
+export function applyWithSkipExisting(source: Source, rules: Rule[]): Rule {
+  return (tree: Tree, _context: SchematicContext) => {
+    const rule = mergeWith(
+      apply(source, [
+        ...rules,
+        forEach(fileEntry => {
+          if (tree.exists(fileEntry.path)) {
+            return null;
+          }
+          return fileEntry;
+        })
+      ])
+    );
+
+    return rule(tree, _context);
+  };
 }
