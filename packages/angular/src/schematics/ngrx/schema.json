@@ -70,6 +70,16 @@
       "enum": ["classes", "creators"],
       "default": "classes",
       "description": "Specifies whether to use class-based or creator functions for actions, reducers, and effects."
+    },
+    "useDataPersistence": {
+      "type": "boolean",
+      "default": true,
+      "description": "Generate NgRx Effects with the DataPersistence helper service. Set to false to use plain effects data persistence operators."
+    },
+    "barrels": {
+      "type": "boolean",
+      "default": false,
+      "description": "Use barrels to re-export actions, state, and selectors."
     }
   },
   "required": ["module"]

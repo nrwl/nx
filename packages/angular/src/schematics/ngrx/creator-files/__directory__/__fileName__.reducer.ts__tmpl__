@@ -6,19 +6,19 @@ import { <%= className %>Entity } from './<%= fileName %>.models';
 
 export const <%= className.toUpperCase() %>_FEATURE_KEY = '<%= propertyName %>';
 
-export interface <%= className %>State extends EntityState<<%= className %>Entity> {
+export interface State extends EntityState<<%= className %>Entity> {
   selectedId ?: string | number;          // which <%= className %> record has been selected
   loaded      : boolean;                  // has the <%= className %> list been loaded
   error      ?: string | null;            // last none error (if any)
 }
 
 export interface <%= className %>PartialState {
-  readonly [<%= className.toUpperCase() %>_FEATURE_KEY]: <%= className %>State;
+  readonly [<%= className.toUpperCase() %>_FEATURE_KEY]: State;
 }
 
 export const <%= propertyName %>Adapter: EntityAdapter<<%= className %>Entity> = createEntityAdapter<<%= className %>Entity>();
 
-export const initialState: <%= className %>State = <%= propertyName %>Adapter.getInitialState({
+export const initialState: State = <%= propertyName %>Adapter.getInitialState({
   // set initial required properties
   loaded : false
 });
@@ -36,6 +36,6 @@ const <%= propertyName %>Reducer = createReducer(
   ),
 );
 
-export function reducer(state: <%= className %>State | undefined, action: Action) {
+export function reducer(state: State | undefined, action: Action) {
   return <%= propertyName %>Reducer(state, action);
 }
