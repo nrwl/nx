@@ -26,16 +26,16 @@ function updateCLI() {
       }
 
       if (json['devDependencies']['@angular/cli']) {
-        json['devDependencies']['@angular/cli'] = '8.3.2';
+        json['devDependencies']['@angular/cli'] = '8.3.3';
       }
 
       if (json['devDependencies']['@angular-devkit/build-angular']) {
-        json['devDependencies']['@angular-devkit/build-angular'] = '^0.803.2';
+        json['devDependencies']['@angular-devkit/build-angular'] = '^0.803.3';
       }
 
       if (json['devDependencies']['@angular-devkit/build-ng-packagr']) {
         json['devDependencies']['@angular-devkit/build-ng-packagr'] =
-          '~0.803.2';
+          '~0.803.3';
       }
 
       return json;
