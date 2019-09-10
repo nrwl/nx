@@ -28,8 +28,7 @@ import { addReduxStoreToMain, updateReduxStore } from '../../utils/ast-utils';
 import {
   reactReduxTypesVersion,
   reactReduxVersion,
-  reduxStarterKitversion,
-  reselectVersion
+  reduxStarterKitVersion
 } from '../../utils/versions';
 
 export default function(schema: any): Rule {
@@ -59,10 +58,9 @@ function generateReduxFiles(options: NormalizedSchema) {
 function addReduxPackageDependencies(): Rule {
   return addDepsToPackageJson(
     {
-      'redux-starter-kit': reduxStarterKitversion,
+      'redux-starter-kit': reduxStarterKitVersion,
       'react-redux': reactReduxVersion,
-      '@types/react-redux': reactReduxTypesVersion,
-      reselect: reselectVersion
+      '@types/react-redux': reactReduxTypesVersion
     },
     {}
   );
