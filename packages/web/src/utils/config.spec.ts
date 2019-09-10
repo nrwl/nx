@@ -164,7 +164,9 @@ describe('getBaseWebpackPartial', () => {
 
       expect(
         (result.module.rules.find(rule => rule.loader === 'babel-loader')
-          .options as any).presets.find(p => p[0] === '@babel/preset-env')[1]
+          .options as any).presets.find(p =>
+          (p[0] as string).includes('@babel/preset-env')
+        )[1]
       ).toMatchObject({
         targets: { esmodules: true }
       });
@@ -175,7 +177,9 @@ describe('getBaseWebpackPartial', () => {
 
       expect(
         (result.module.rules.find(rule => rule.loader === 'babel-loader')
-          .options as any).presets.find(p => p[0] === '@babel/preset-env')[1]
+          .options as any).presets.find(p =>
+          (p[0] as string).includes('@babel/preset-env')
+        )[1]
       ).toMatchObject({
         targets: undefined
       });
