@@ -50,7 +50,7 @@ export function getBaseWebpackPartial(
             compact: isScriptOptimizeOn,
             presets: [
               [
-                '@babel/preset-env',
+                require.resolve('@babel/preset-env'),
                 {
                   // Allows browserlist file from project to be used.
                   configPath: dirname(options.main),
@@ -67,16 +67,16 @@ export function getBaseWebpackPartial(
                   targets: esm ? { esmodules: true } : undefined
                 }
               ],
-              ['@babel/preset-typescript']
+              [require.resolve('@babel/preset-typescript')]
             ],
             plugins: [
-              'babel-plugin-macros',
+              require.resolve('babel-plugin-macros'),
               [
                 // Allows decorators to be before export since it is consistent with TypeScript syntax.
-                '@babel/plugin-proposal-decorators',
+                require.resolve('@babel/plugin-proposal-decorators'),
                 { decoratorsBeforeExport: true }
               ],
-              ['@babel/plugin-proposal-class-properties']
+              [require.resolve('@babel/plugin-proposal-class-properties')]
             ]
           }
         }
