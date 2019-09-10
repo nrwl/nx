@@ -1,6 +1,5 @@
-import { createSlice, Action, PayloadAction } from 'redux-starter-kit';
+import { createSlice, createSelector, Action, PayloadAction } from 'redux-starter-kit';
 import { ThunkAction } from 'redux-thunk';
-import { createSelector } from 'reselect';
 
 export const <%= constantName %>_FEATURE_KEY = '<%= propertyName %>';
 

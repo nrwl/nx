@@ -9,10 +9,9 @@ export const reactRouterVersion = '5.0.1';
 export const reactRouterDomVersion = '4.3.5';
 export const testingLibraryVersion = '8.0.5';
 export const babelPresetReactVersion = '7.0.0';
-export const reduxStarterKitversion = '0.6.3';
+export const reduxStarterKitVersion = '0.7.0';
 export const reactReduxVersion = '7.1.1';
 export const reactReduxTypesVersion = '7.1.2';
-export const reselectVersion = '4.0.0';
 
 export const EsLintPlugins = {
   importVersion: '2.18.2',
