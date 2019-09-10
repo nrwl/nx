@@ -14,16 +14,6 @@ function updateCLI() {
   const rule = chain([
     updateJsonInTree('package.json', json => {
       json.devDependencies = json.devDependencies || {};
-      const cliVersion = json.devDependencies['@angular/cli'];
-
-      if (
-        cliVersion &&
-        (cliVersion.startsWith('8.3') ||
-          cliVersion.startsWith('~8.3') ||
-          cliVersion.startsWith('^8.3'))
-      ) {
-        return json;
-      }
 
       if (json['devDependencies']['@angular/cli']) {
         json['devDependencies']['@angular/cli'] = '8.3.3';
