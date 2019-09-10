@@ -7,10 +7,10 @@ function getBabelWebpackConfig(config: Configuration) {
   ).options as any;
 
   const idx = babelRuleOptions.presets.findIndex(
-    p => Array.isArray(p) && p[0] === '@babel/preset-env'
+    p => Array.isArray(p) && p[0].indexOf('@babel/preset-env') !== -1
   );
 
-  babelRuleOptions.presets.splice(idx, 0, [
+  babelRuleOptions.presets.splice(idx + 1, 0, [
     '@babel/preset-react',
     {
       useBuiltIns: true
