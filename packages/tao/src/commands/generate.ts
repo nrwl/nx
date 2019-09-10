@@ -32,6 +32,7 @@ import { logger } from '../shared/logger';
 import { commandName, printHelp } from '../shared/print-help';
 import * as fs from 'fs';
 import minimist = require('minimist');
+import { execSync } from 'child_process';
 
 interface GenerateOptions {
   collectionName: string;
@@ -161,18 +162,46 @@ async function detectPackageManager(
     }
   }
 
-  const yarnLockFileExists = await host.exists('yarn.lock' as any).toPromise();
-  if (yarnLockFileExists) {
+  if (await fileExists(host, 'yarn.lock')) {
     return 'yarn';
   }
-  const pnpmLockFileExists = await host
-    .exists('pnpm-lock.yaml' as any)
-    .toPromise();
-  if (pnpmLockFileExists) {
+
+  if (await fileExists(host, 'pnpm-lock.yaml')) {
+    return 'pnpm';
+  }
+
+  if (await fileExists(host, 'package-lock.json')) {
+    return 'npm';
+  }
+
+  // If we get here, there are no lock files, so lets check for package managers in our preferred order
+  if (isPackageManagerInstalled('yarn')) {
+    return 'yarn';
+  }
+
+  if (isPackageManagerInstalled('pnpm')) {
     return 'pnpm';
   }
 
   return 'npm';
+}
+
+function fileExists(
+  host: virtualFs.Host<any>,
+  fileName: string
+): Promise<boolean> {
+  return host.exists(fileName as any).toPromise();
+}
+
+function isPackageManagerInstalled(packageManager: string) {
+  try {
+    execSync(`${packageManager} --version`, {
+      stdio: ['ignore', 'ignore', 'ignore']
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 async function createWorkflow(

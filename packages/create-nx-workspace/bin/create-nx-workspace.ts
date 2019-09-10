@@ -100,27 +100,48 @@ function showHelp() {
 }
 
 function determinePackageManager() {
+  let packageManager = getPackageManagerFromAngularCLI();
+  if (packageManager === 'npm' || isPackageManagerInstalled(packageManager)) {
+    return packageManager;
+  }
+
+  if (isPackageManagerInstalled('yarn')) {
+    return 'yarn';
+  }
+
+  if (isPackageManagerInstalled('pnpm')) {
+    return 'pnpm';
+  }
+
+  return 'npm';
+}
+
+function getPackageManagerFromAngularCLI(): string {
   // If you have Angular CLI installed, read Angular CLI config.
-  // If it isn't not installed, default to 'yarn'.
-  let packageManager: string;
+  // If it isn't installed, default to 'yarn'.
   try {
-    packageManager = execSync('ng config -g cli.packageManager', {
+    return execSync('ng config -g cli.packageManager', {
       stdio: ['ignore', 'pipe', 'ignore'],
       timeout: 500
     })
       .toString()
       .trim();
   } catch (e) {
-    packageManager = 'yarn';
+    return 'yarn';
   }
+}
+
+function isPackageManagerInstalled(packageManager: string) {
+  let isInstalled = false;
   try {
     execSync(`${packageManager} --version`, {
       stdio: ['ignore', 'ignore', 'ignore']
     });
+    isInstalled = true;
   } catch (e) {
-    packageManager = 'npm';
+    /* do nothing */
   }
-  return packageManager;
+  return isInstalled;
 }
 
 function determineWorkspaceName(parsedArgs: any) {
