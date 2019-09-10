@@ -51,7 +51,7 @@ describe('Jest Builder', () => {
             diagnostics: {
               warnOnly: true
             },
-            stringifyContentPathRegex: '\\.html$',
+            stringifyContentPathRegex: '\\.(html|svg)$',
             astTransformers: [
               'jest-preset-angular/InlineHtmlStripStylesTransformer'
             ]
@@ -95,7 +95,7 @@ describe('Jest Builder', () => {
             diagnostics: {
               warnOnly: true
             },
-            stringifyContentPathRegex: '\\.html$',
+            stringifyContentPathRegex: '\\.(html|svg)$',
             astTransformers: [
               'jest-preset-angular/InlineHtmlStripStylesTransformer'
             ]
@@ -141,7 +141,7 @@ describe('Jest Builder', () => {
             diagnostics: {
               warnOnly: true
             },
-            stringifyContentPathRegex: '\\.html$',
+            stringifyContentPathRegex: '\\.(html|svg)$',
             astTransformers: [
               'jest-preset-angular/InlineHtmlStripStylesTransformer'
             ]
@@ -198,7 +198,7 @@ describe('Jest Builder', () => {
             diagnostics: {
               warnOnly: true
             },
-            stringifyContentPathRegex: '\\.html$',
+            stringifyContentPathRegex: '\\.(html|svg)$',
             astTransformers: [
               'jest-preset-angular/InlineHtmlStripStylesTransformer'
             ]
@@ -251,7 +251,7 @@ describe('Jest Builder', () => {
             diagnostics: {
               warnOnly: true
             },
-            stringifyContentPathRegex: '\\.html$',
+            stringifyContentPathRegex: '\\.(html|svg)$',
             astTransformers: [
               'jest-preset-angular/InlineHtmlStripStylesTransformer'
             ]
