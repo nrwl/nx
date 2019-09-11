@@ -8,7 +8,8 @@ const updateCLI = updateJsonInTree('package.json', json => {
 
   if (
     cliVersion &&
-    (cliVersion.startsWith('8.1') ||
+    (cliVersion > 8.1 ||
+      cliVersion.startsWith('8.1') ||
       cliVersion.startsWith('~8.1') ||
       cliVersion.startsWith('^8.1'))
   ) {
