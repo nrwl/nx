@@ -1,18 +1,13 @@
 import { updateJsonInTree } from '@nrwl/workspace';
 import { chain, SchematicContext } from '@angular-devkit/schematics';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
+import { gt } from 'semver';
 
 const updateCLI = updateJsonInTree('package.json', json => {
   json.devDependencies = json.devDependencies || {};
   const cliVersion = json.devDependencies['@angular/cli'];
 
-  if (
-    cliVersion &&
-    (cliVersion > 8.1 ||
-      cliVersion.startsWith('8.1') ||
-      cliVersion.startsWith('~8.1') ||
-      cliVersion.startsWith('^8.1'))
-  ) {
+  if (cliVersion && gt(cliVersion, '8.1.1')) {
     return json;
   }
 

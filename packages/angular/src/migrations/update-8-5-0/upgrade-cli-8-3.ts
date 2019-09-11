@@ -6,6 +6,7 @@ import {
   updateJsonInTree
 } from '@nrwl/workspace';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
+import { gt } from 'semver';
 
 const updateAngular = addUpdateTask('@angular/core', '8.2.4');
 
@@ -16,13 +17,7 @@ function updateCLI() {
       json.devDependencies = json.devDependencies || {};
       const cliVersion = json.devDependencies['@angular/cli'];
 
-      if (
-        cliVersion &&
-        (cliVersion > 8.3 ||
-          cliVersion.startsWith('8.3') ||
-          cliVersion.startsWith('~8.3') ||
-          cliVersion.startsWith('^8.3'))
-      ) {
+      if (cliVersion && gt(cliVersion, '8.3.3')) {
         return json;
       }
 
