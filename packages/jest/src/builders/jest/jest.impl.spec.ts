@@ -1,11 +1,11 @@
-// import JestBuilder from './jest.impl';
-import { normalize, schema } from '@angular-devkit/core';
-import {
-  TestLogger,
-  TestingArchitectHost
-} from '@angular-devkit/architect/testing';
+import { schema } from '@angular-devkit/core';
+import { TestingArchitectHost } from '@angular-devkit/architect/testing';
+
 jest.mock('jest');
 const { runCLI } = require('jest');
+const mockJestConfig: any = {};
+jest.mock('/root/jest.config.js', () => mockJestConfig, { virtual: true });
+
 import * as path from 'path';
 import { Architect } from '@angular-devkit/architect';
 
@@ -16,6 +16,8 @@ describe('Jest Builder', () => {
     const registry = new schema.CoreSchemaRegistry();
     registry.addPostTransform(schema.transforms.addUndefinedDefaults);
     const testArchitectHost = new TestingArchitectHost('/root', '/root');
+
+    mockJestConfig.globals = {};
 
     architect = new Architect(testArchitectHost, registry);
     await testArchitectHost.addBuilderFromPackage(
@@ -48,9 +50,6 @@ describe('Jest Builder', () => {
         globals: JSON.stringify({
           'ts-jest': {
             tsConfig: '/root/tsconfig.test.json',
-            diagnostics: {
-              warnOnly: true
-            },
             stringifyContentPathRegex: '\\.(html|svg)$',
             astTransformers: [
               'jest-preset-angular/InlineHtmlStripStylesTransformer'
@@ -92,9 +91,6 @@ describe('Jest Builder', () => {
         globals: JSON.stringify({
           'ts-jest': {
             tsConfig: '/root/tsconfig.test.json',
-            diagnostics: {
-              warnOnly: true
-            },
             stringifyContentPathRegex: '\\.(html|svg)$',
             astTransformers: [
               'jest-preset-angular/InlineHtmlStripStylesTransformer'
@@ -138,9 +134,6 @@ describe('Jest Builder', () => {
         globals: JSON.stringify({
           'ts-jest': {
             tsConfig: '/root/tsconfig.test.json',
-            diagnostics: {
-              warnOnly: true
-            },
             stringifyContentPathRegex: '\\.(html|svg)$',
             astTransformers: [
               'jest-preset-angular/InlineHtmlStripStylesTransformer'
@@ -195,9 +188,6 @@ describe('Jest Builder', () => {
         globals: JSON.stringify({
           'ts-jest': {
             tsConfig: '/root/tsconfig.test.json',
-            diagnostics: {
-              warnOnly: true
-            },
             stringifyContentPathRegex: '\\.(html|svg)$',
             astTransformers: [
               'jest-preset-angular/InlineHtmlStripStylesTransformer'
@@ -248,9 +238,36 @@ describe('Jest Builder', () => {
         globals: JSON.stringify({
           'ts-jest': {
             tsConfig: '/root/tsconfig.test.json',
-            diagnostics: {
-              warnOnly: true
-            },
+            stringifyContentPathRegex: '\\.(html|svg)$',
+            astTransformers: [
+              'jest-preset-angular/InlineHtmlStripStylesTransformer'
+            ]
+          }
+        }),
+        setupTestFrameworkScriptFile: '/root/test.ts',
+        watch: false
+      },
+      ['/root/jest.config.js']
+    );
+  });
+
+  it('should merge the globals property from jest config', async () => {
+    mockJestConfig.globals = { hereToStay: true };
+
+    await architect.scheduleBuilder('@nrwl/jest:jest', {
+      jestConfig: './jest.config.js',
+      tsConfig: './tsconfig.test.json',
+      setupFile: './test.ts',
+      watch: false
+    });
+
+    expect(runCLI).toHaveBeenCalledWith(
+      {
+        _: [],
+        globals: JSON.stringify({
+          hereToStay: true,
+          'ts-jest': {
+            tsConfig: '/root/tsconfig.test.json',
             stringifyContentPathRegex: '\\.(html|svg)$',
             astTransformers: [
               'jest-preset-angular/InlineHtmlStripStylesTransformer'

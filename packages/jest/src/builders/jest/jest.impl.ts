@@ -58,12 +58,7 @@ function run(
   options.jestConfig = path.resolve(context.workspaceRoot, options.jestConfig);
 
   const tsJestConfig = {
-    tsConfig: path.resolve(context.workspaceRoot, options.tsConfig),
-    // Typechecking wasn't done in Jest 23 but is done in 24. This makes errors a warning to amend the breaking change for now
-    // Remove for v8 to fail on type checking failure
-    diagnostics: {
-      warnOnly: true
-    }
+    tsConfig: path.resolve(context.workspaceRoot, options.tsConfig)
   };
 
   // TODO: This is hacky, We should probably just configure it in the user's workspace
@@ -75,6 +70,13 @@ function run(
       astTransformers: ['jest-preset-angular/InlineHtmlStripStylesTransformer']
     });
   } catch (e) {}
+
+  // merge the jestConfig globals with our 'ts-jest' override
+  const jestConfig: { globals: any } = require(options.jestConfig);
+  const globals = jestConfig.globals || {};
+  Object.assign(globals, {
+    'ts-jest': tsJestConfig
+  });
 
   const config: any = {
     _: [],
@@ -100,9 +102,7 @@ function run(
     useStderr: options.useStderr,
     watch: options.watch,
     watchAll: options.watchAll,
-    globals: JSON.stringify({
-      'ts-jest': tsJestConfig
-    })
+    globals: JSON.stringify(globals)
   };
 
   if (options.setupFile) {
