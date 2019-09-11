@@ -110,6 +110,7 @@ body
 
 The type must be one of the following:
 
+- chore
 - build
 - feat
 - fix

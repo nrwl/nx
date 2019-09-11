@@ -2,7 +2,7 @@ matrix:
   include:
     - os: linux
       language: node_js
-      node_js: 10
+      node_js: 12
       dist: trusty
       sudo: required
       cache:
@@ -21,7 +21,7 @@ matrix:
         - yarn test:all
     - os: linux
       language: node_js
-      node_js: 10
+      node_js: 12
       dist: trusty
       sudo: required
       cache:
@@ -36,7 +36,7 @@ matrix:
         - yarn e2e --cli nx
     - os: linux
       language: node_js
-      node_js: 10
+      node_js: 12
       dist: trusty
       sudo: required
       cache:
