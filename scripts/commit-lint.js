@@ -5,7 +5,7 @@ const gitMessage = require('child_process')
   .execSync('git log -1 --no-merges')
   .toString()
   .trim();
-const matchCommit = /(build|feat|fix|refactor|style|docs)\((backend|testing|web|react|angular|nx)\):\s(([a-z0-9:\-\s])+)/g.test(
+const matchCommit = /(chore|build|feat|fix|refactor|style|docs)\((backend|testing|web|react|angular|nx)\):\s(([a-z0-9:\-\s])+)/g.test(
   gitMessage
 );
 const matchRelease = /release/gi.test(gitMessage);
@@ -23,7 +23,7 @@ if (exitCode === 0) {
   );
   console.log('\ntype(scope): subject \n BLANK LINE \n body');
   console.log('\n');
-  console.log('possible types: build|feat|fix|refactor|style|docs');
+  console.log('possible types: chore|build|feat|fix|refactor|style|docs');
   console.log(
     'possible scopes: backend|testing|web|react|angular|nx (if unsure use "nx")'
   );

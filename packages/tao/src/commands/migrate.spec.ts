@@ -5,7 +5,9 @@ describe('Migration', () => {
     it('should throw an error when the target package is not available', async () => {
       const migrator = new Migrator({
         versions: () => null,
-        fetch: (p, v) => null,
+        fetch: (p, v) => {
+          throw new Error('cannot fetch');
+        },
         from: {},
         to: {}
       });
@@ -14,7 +16,7 @@ describe('Migration', () => {
         await migrator.updatePackageJson('mypackage', 'myversion');
         throw new Error('fail');
       } catch (e) {
-        expect(e.message).toEqual(`Cannot find package "mypackage" installed.`);
+        expect(e.message).toEqual(`cannot fetch`);
       }
     });
 
@@ -29,7 +31,7 @@ describe('Migration', () => {
       expect(await migrator.updatePackageJson('mypackage', '2.0.0')).toEqual({
         migrations: [],
         packageJson: {
-          mypackage: '2.0.0'
+          mypackage: { version: '2.0.0', alwaysAddToPackageJson: false }
         }
       });
     });
@@ -45,13 +47,16 @@ describe('Migration', () => {
                 version2: {
                   version: '2.0.0',
                   packages: {
-                    child: { version: '2.0.0' }
+                    child: { version: '2.0.0' },
+                    newChild: { version: '3.0.0', alwaysAddToPackageJson: true }
                   }
                 }
               },
               schematics: {}
             });
           } else if (p === 'child') {
+            return Promise.resolve({ version: '2.0.0' });
+          } else if (p === 'newChild') {
             return Promise.resolve({ version: '2.0.0' });
           } else {
             return Promise.resolve(null);
@@ -64,8 +69,9 @@ describe('Migration', () => {
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
         migrations: [],
         packageJson: {
-          parent: '2.0.0',
-          child: '2.0.0'
+          parent: { version: '2.0.0', alwaysAddToPackageJson: false },
+          child: { version: '2.0.0', alwaysAddToPackageJson: false },
+          newChild: { version: '2.0.0', alwaysAddToPackageJson: true }
         }
       });
     });
@@ -111,8 +117,8 @@ describe('Migration', () => {
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
         migrations: [],
         packageJson: {
-          parent: '2.0.0',
-          child: '2.0.0'
+          parent: { version: '2.0.0', alwaysAddToPackageJson: false },
+          child: { version: '2.0.0', alwaysAddToPackageJson: false }
         }
       });
     });
@@ -172,10 +178,10 @@ describe('Migration', () => {
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
         migrations: [],
         packageJson: {
-          parent: '2.0.0',
-          child1: '2.0.0',
-          child2: '2.0.0',
-          grandchild: '4.0.0'
+          parent: { version: '2.0.0', alwaysAddToPackageJson: false },
+          child1: { version: '2.0.0', alwaysAddToPackageJson: false },
+          child2: { version: '2.0.0', alwaysAddToPackageJson: false },
+          grandchild: { version: '4.0.0', alwaysAddToPackageJson: false }
         }
       });
     });
@@ -221,8 +227,8 @@ describe('Migration', () => {
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
         migrations: [],
         packageJson: {
-          parent: '2.0.0',
-          child: '2.0.0'
+          parent: { version: '2.0.0', alwaysAddToPackageJson: false },
+          child: { version: '2.0.0', alwaysAddToPackageJson: false }
         }
       });
     });
@@ -263,8 +269,8 @@ describe('Migration', () => {
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
         migrations: [],
         packageJson: {
-          parent: '2.0.0',
-          child1: '2.0.0'
+          parent: { version: '2.0.0', alwaysAddToPackageJson: false },
+          child1: { version: '2.0.0', alwaysAddToPackageJson: false }
         }
       });
     });
@@ -273,7 +279,11 @@ describe('Migration', () => {
   describe('migrations', () => {
     it('should create a list of migrations to run', async () => {
       const migrator = new Migrator({
-        versions: p => (p !== 'not-installed' ? '1.0.0' : null),
+        versions: p => {
+          if (p === 'parent') return '1.0.0';
+          if (p === 'child') return '1.0.0';
+          return null;
+        },
         fetch: (p, v) => {
           if (p === 'parent') {
             return Promise.resolve({
@@ -282,7 +292,10 @@ describe('Migration', () => {
                 version2: {
                   version: '2.0.0',
                   packages: {
-                    child: { version: '2.0.0' }
+                    child: { version: '2.0.0' },
+                    newChild: {
+                      version: '3.0.0'
+                    }
                   }
                 }
               },
@@ -300,6 +313,16 @@ describe('Migration', () => {
                 version2: {
                   version: '2.0.0',
                   factory: 'child-factory'
+                }
+              }
+            });
+          } else if (p === 'newChild') {
+            return Promise.resolve({
+              version: '3.0.0',
+              schematics: {
+                version2: {
+                  version: '2.0.0',
+                  factory: 'new-child-factory'
                 }
               }
             });
@@ -326,8 +349,9 @@ describe('Migration', () => {
           }
         ],
         packageJson: {
-          parent: '2.0.0',
-          child: '2.0.0'
+          parent: { version: '2.0.0', alwaysAddToPackageJson: false },
+          child: { version: '2.0.0', alwaysAddToPackageJson: false },
+          newChild: { version: '3.0.0', alwaysAddToPackageJson: false }
         }
       });
     });

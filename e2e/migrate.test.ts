@@ -89,7 +89,7 @@ forEachCli(() => {
                       }
                     },
                     packageJsonUpdates: {
-                      'run-11': {version: '1.1.0', packages: {'migrate-child-package': {version: '9.0.0'}}},
+                      'run-11': {version: '1.1.0', packages: {'migrate-child-package': {version: '9.0.0', alwaysAddToPackageJson: true}}},
                     }
                   });
                 } else {
@@ -102,13 +102,12 @@ forEachCli(() => {
         }
       );
 
-      runCLI('migrate migrate-parent-package@2.0.0');
+      runCLI(
+        'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"'
+      );
 
       // updates package.json
       const packageJson = readJson(`package.json`);
-      expect(packageJson.dependencies['migrate-parent-package']).toEqual(
-        '2.0.0'
-      );
       expect(packageJson.dependencies['migrate-child-package']).toEqual(
         '9.0.0'
       );

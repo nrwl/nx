@@ -45,7 +45,7 @@ module.exports = {
       expect(readFile(`dist/apps/${appName}/BUILD_ID`)).toEqual('fixed');
     }, 120000);
 
-    it('should generate a Next.js app dynamically loading a lib', async () => {
+    xit('should generate a Next.js app dynamically loading a lib', async () => {
       ensureProject();
       const appName = uniq('app');
       const libName = uniq('lib');

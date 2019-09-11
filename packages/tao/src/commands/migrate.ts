@@ -23,7 +23,11 @@ export type MigrationsJson = {
     [name: string]: {
       version: string;
       packages: {
-        [p: string]: { version: string; ifPackageInstalled?: string };
+        [p: string]: {
+          version: string;
+          ifPackageInstalled?: string;
+          alwaysAddToPackageJson?: boolean;
+        };
       };
     };
   };
@@ -50,35 +54,35 @@ export class Migrator {
   async updatePackageJson(targetPackage: string, targetVersion: string) {
     const packageJson = await this._updatePackageJson(
       targetPackage,
-      targetVersion,
+      { version: targetVersion, alwaysAddToPackageJson: false },
       {}
     );
     const migrations = await this._createMigrateJson(packageJson);
     return { packageJson, migrations };
   }
 
-  private async _createMigrateJson(versions: { [k: string]: string }) {
+  private async _createMigrateJson(versions: {
+    [k: string]: { version: string; alwaysAddToPackageJson: boolean };
+  }) {
     const migrations = await Promise.all(
       Object.keys(versions).map(async c => {
         const currentVersion = this.versions(c);
-        const targetVersion = versions[c];
-        if (currentVersion) {
-          const migrationsJson = await this.fetch(c, targetVersion);
-          if (!migrationsJson.schematics) return [];
-          return Object.keys(migrationsJson.schematics)
-            .filter(
-              r =>
-                gt(migrationsJson.schematics[r].version, currentVersion) &
-                lte(migrationsJson.schematics[r].version, targetVersion)
-            )
-            .map(r => ({
-              ...migrationsJson.schematics[r],
-              package: c,
-              name: r
-            }));
-        } else {
-          return Promise.resolve(null);
-        }
+        if (currentVersion === null) return [];
+
+        const target = versions[c];
+        const migrationsJson = await this.fetch(c, target.version);
+        if (!migrationsJson.schematics) return [];
+        return Object.keys(migrationsJson.schematics)
+          .filter(
+            r =>
+              gt(migrationsJson.schematics[r].version, currentVersion) &
+              lte(migrationsJson.schematics[r].version, target.version)
+          )
+          .map(r => ({
+            ...migrationsJson.schematics[r],
+            package: c,
+            name: r
+          }));
       })
     );
 
@@ -87,24 +91,20 @@ export class Migrator {
 
   private async _updatePackageJson(
     targetPackage: string,
-    targetVersion: string,
-    versions: { [k: string]: string }
+    target: { version: string; alwaysAddToPackageJson: boolean },
+    collectedVersions: {
+      [k: string]: { version: string; alwaysAddToPackageJson: boolean };
+    }
   ) {
+    let targetVersion = target.version;
     if (this.to[targetPackage]) {
       targetVersion = this.to[targetPackage];
     }
-    let currentVersion;
-    if (this.from[targetPackage]) {
-      currentVersion = this.from[targetPackage];
-    } else {
-      currentVersion = this.versions(targetPackage);
-      if (!currentVersion) {
-        throw new Error(`Cannot find package "${targetPackage}" installed.`);
-      }
-    }
+
     let migrationsJson;
     try {
       migrationsJson = await this.fetch(targetPackage, targetVersion);
+      targetVersion = migrationsJson.version;
     } catch (e) {
       if (e.message.indexOf('No matching version') > -1) {
         throw new Error(
@@ -124,23 +124,34 @@ export class Migrator {
 
     const childCalls = await Promise.all(
       Object.keys(packages)
-        .filter(r => !versions[r] || gt(packages[r], versions[r]))
+        .filter(r => {
+          return (
+            !collectedVersions[r] ||
+            gt(packages[r].version, collectedVersions[r].version)
+          );
+        })
         .map(u =>
           this._updatePackageJson(u, packages[u], {
-            [targetPackage]: targetVersion
+            ...collectedVersions,
+            [targetPackage]: target
           })
         )
     );
     return childCalls.reduce(
       (m, c) => {
         Object.keys(c).forEach(r => {
-          if (!m[r] || gt(c[r], m[r])) {
+          if (!m[r] || gt(c[r].version, m[r].version)) {
             m[r] = c[r];
           }
         });
         return m;
       },
-      { [targetPackage]: migrationsJson.version }
+      {
+        [targetPackage]: {
+          version: migrationsJson.version,
+          alwaysAddToPackageJson: target.alwaysAddToPackageJson || false
+        }
+      }
     );
   }
 
@@ -149,13 +160,17 @@ export class Migrator {
     targetVersion: string,
     m: MigrationsJson | null
   ) {
+    // this should be used to know what version to include
+    // we should use from everywhere we use versions
+
     if (!m.packageJsonUpdates) return {};
     return Object.keys(m.packageJsonUpdates)
-      .filter(
-        r =>
-          gt(m.packageJsonUpdates[r].version, this.versions(packageName)) &
+      .filter(r => {
+        return (
+          gt(m.packageJsonUpdates[r].version, this.versions(packageName)) &&
           lte(m.packageJsonUpdates[r].version, targetVersion)
-      )
+        );
+      })
       .map(r => m.packageJsonUpdates[r].packages)
       .map(packages => {
         if (!packages) return {};
@@ -166,7 +181,16 @@ export class Migrator {
               !packages[p].ifPackageInstalled ||
               this.versions(packages[p].ifPackageInstalled)
           )
-          .reduce((m, c) => ({ ...m, [c]: packages[c].version }), {});
+          .reduce(
+            (m, c) => ({
+              ...m,
+              [c]: {
+                version: packages[c].version,
+                alwaysAddToPackageJson: packages[c].alwaysAddToPackageJson
+              }
+            }),
+            {}
+          );
       })
       .reduce((m, c) => ({ ...m, ...c }), {});
   }
@@ -239,12 +263,12 @@ function parseMigrationsOptions(
 
 function versions(root: string) {
   return (packageName: string) => {
-    const content = readFileSync(
-      path.join(root, `./node_modules/${packageName}/package.json`)
-    );
-    if (content) {
+    try {
+      const content = readFileSync(
+        path.join(root, `./node_modules/${packageName}/package.json`)
+      );
       return JSON.parse(stripJsonComments(content.toString()))['version'];
-    } else {
+    } catch (e) {
       return null;
     }
   };
@@ -266,7 +290,16 @@ async function fetch(
       ).toString()
     )
   );
-  const migrationsFile = json['nx-migrations'] || json['ng-update'];
+  let migrationsFile = json['nx-migrations'] || json['ng-update'];
+
+  // migrationsFile is an object
+  if (migrationsFile.migration) {
+    migrationsFile = migrationsFile.migration;
+  }
+
+  // packageVersion can be a tag, resolvedVersion works with semver
+  const resolvedVersion = json.version;
+
   if (migrationsFile) {
     const json = JSON.parse(
       stripJsonComments(
@@ -276,12 +309,12 @@ async function fetch(
       )
     );
     return {
-      version: packageVersion,
+      version: resolvedVersion,
       schematics: json.schematics,
       packageJsonUpdates: json.packageJsonUpdates
     };
   } else {
-    return { version: packageVersion };
+    return { version: resolvedVersion };
   }
 }
 // testing-fetch-end
@@ -293,17 +326,24 @@ function createMigrationsFile(root: string, migrations: any[]) {
   );
 }
 
-function updatePackageJson(root: string, packageJson: { [p: string]: string }) {
+function updatePackageJson(
+  root: string,
+  packageJson: {
+    [p: string]: { version: string; alwaysAddToPackageJson: boolean };
+  }
+) {
   const packageJsonPath = path.join(root, 'package.json');
   const json = JSON.parse(
     stripJsonComments(readFileSync(packageJsonPath).toString())
   );
   Object.keys(packageJson).forEach(p => {
     if (json.devDependencies && json.devDependencies[p]) {
-      json.devDependencies[p] = packageJson[p];
-    } else {
+      json.devDependencies[p] = packageJson[p].version;
+    } else if (json.dependencies && json.dependencies[p]) {
+      json.dependencies[p] = packageJson[p].version;
+    } else if (packageJson[p].alwaysAddToPackageJson) {
       if (!json.dependencies) json.dependencies = {};
-      json.dependencies[p] = packageJson[p];
+      json.dependencies[p] = packageJson[p].version;
     }
   });
   writeFileSync(packageJsonPath, JSON.stringify(json, null, 2));
@@ -329,18 +369,27 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     opts.targetPackage,
     opts.targetVersion
   );
-  createMigrationsFile(root, migrations);
   updatePackageJson(root, packageJson);
 
-  logger.info(`The migrate command has run successfully.`);
-  logger.info(`- package.json has been updated`);
-  logger.info(`- migrations.json has been generated`);
+  if (migrations.length > 0) {
+    createMigrationsFile(root, migrations);
 
-  logger.info(`Next steps:`);
-  logger.info(
-    `- Make sure package.json changes make sense and then run 'npm install' or 'yarn'`
-  );
-  logger.info(`- Run 'nx migrate --run-migrations=migrations.json'`);
+    logger.info(`The migrate command has run successfully.`);
+    logger.info(`- package.json has been updated`);
+    logger.info(`- migrations.json has been generated`);
+
+    logger.info(`Next steps:`);
+    logger.info(
+      `- Make sure package.json changes make sense and then run 'npm install' or 'yarn'`
+    );
+    logger.info(`- Run 'nx migrate --run-migrations=migrations.json'`);
+  } else {
+    logger.info(`The migrate command has run successfully.`);
+    logger.info(`- package.json has been updated`);
+    logger.info(
+      `- there are no migrations to run, so migrations.json has not been created.`
+    );
+  }
 }
 
 class MigrationEngineHost extends NodeModulesEngineHost {

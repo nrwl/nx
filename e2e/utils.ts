@@ -202,7 +202,6 @@ export function copyMissingPackages(): void {
     '@babel/plugin-proposal-decorators',
     'babel-loader',
     'babel-plugin-macros',
-
     'eslint-plugin-import',
     'eslint-plugin-jsx-a11y',
     'eslint-plugin-react',
