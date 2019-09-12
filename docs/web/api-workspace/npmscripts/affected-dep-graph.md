@@ -64,7 +64,7 @@ output file (e.g. --file=.vis/output.json)
 
 ### files
 
-A list of files delimited by commas
+Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas
 
 ### head
 
