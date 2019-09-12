@@ -206,7 +206,8 @@ function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
 function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .option('files', {
-      describe: 'A list of files delimited by commas',
+      describe:
+        'Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas',
       type: 'array',
       requiresArg: true,
       coerce: parseCSV

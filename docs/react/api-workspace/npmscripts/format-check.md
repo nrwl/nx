@@ -30,7 +30,7 @@ Exclude certain projects from being processed
 
 ### files
 
-A list of files delimited by commas
+Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas
 
 ### head
 
