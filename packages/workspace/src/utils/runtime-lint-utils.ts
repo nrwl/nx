@@ -29,8 +29,14 @@ function removeExt(file: string): string {
   return file.replace(/\.[^/.]+$/, '');
 }
 
+function removeWindowsDriveLetter(osSpecificPath: string): string {
+  return osSpecificPath.replace(/^[A-Z]:/, '');
+}
+
 function normalizePath(osSpecificPath: string): string {
-  return osSpecificPath.split(path.sep).join('/');
+  return removeWindowsDriveLetter(osSpecificPath)
+    .split(path.sep)
+    .join('/');
 }
 
 export function matchImportWithWildcard(
