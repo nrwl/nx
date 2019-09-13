@@ -22,6 +22,10 @@ All projects
 
 Base of the current branch (usually master)
 
+### configuration
+
+This is the configuration to use when performing tasks on projects
+
 ### exclude
 
 Default: ``
@@ -49,6 +53,10 @@ Isolate projects which previously failed
 ### plain
 
 Produces a plain output for affected:apps and affected:libs
+
+### runner
+
+This is the name of the tasks runner configured in nx.json
 
 ### uncommitted
 

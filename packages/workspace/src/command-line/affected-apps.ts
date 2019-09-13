@@ -26,16 +26,17 @@ export function getAffectedProjects(
   ).map(project => project.name);
 }
 
-export function getAffectedProjectsWithTarget(
+export function getAffectedProjectsWithTargetAndConfiguration(
   affectedMetadata: AffectedMetadata,
-  target: string
-): string[] {
+  target: string,
+  configuration?: string
+): ProjectNode[] {
   return filterAffectedMetadata(
     affectedMetadata,
     project =>
       affectedMetadata.projectStates[project.name].affected &&
-      project.architect[target]
-  ).map(project => project.name);
+      projectHasTargetAndConfiguration(project, target, configuration)
+  );
 }
 
 export function getAllApps(affectedMetadata: AffectedMetadata): string[] {
@@ -58,14 +59,33 @@ export function getAllProjects(affectedMetadata: AffectedMetadata): string[] {
   );
 }
 
-export function getAllProjectsWithTarget(
+export function getAllProjectsWithTargetAndConfiguration(
   affectedMetadata: AffectedMetadata,
-  target: string
-): string[] {
-  return filterAffectedMetadata(
-    affectedMetadata,
-    project => project.architect[target]
-  ).map(project => project.name);
+  target: string,
+  configuration?: string
+): ProjectNode[] {
+  return filterAffectedMetadata(affectedMetadata, project =>
+    projectHasTargetAndConfiguration(project, target, configuration)
+  );
+}
+
+export function projectHasTargetAndConfiguration(
+  project: ProjectNode,
+  target: string,
+  configuration?: string
+) {
+  if (!project.architect[target]) {
+    return false;
+  }
+
+  if (!configuration) {
+    return !!project.architect[target];
+  } else {
+    return (
+      project.architect[target].configurations &&
+      project.architect[target].configurations[configuration]
+    );
+  }
 }
 
 function filterAffectedMetadata(

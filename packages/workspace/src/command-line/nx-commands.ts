@@ -249,6 +249,15 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       coerce: parseCSV,
       default: []
     })
+    .options('runner', {
+      describe: 'This is the name of the tasks runner configured in nx.json',
+      type: 'string'
+    })
+    .options('configuration', {
+      describe:
+        'This is the configuration to use when performing tasks on projects',
+      type: 'string'
+    })
     .options('only-failed', {
       describe: 'Isolate projects which previously failed',
       type: 'boolean',

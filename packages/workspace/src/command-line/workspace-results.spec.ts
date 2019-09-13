@@ -22,7 +22,7 @@ describe('WorkspacesResults', () => {
 
   describe('success', () => {
     it('should return true when getting results', () => {
-      results.success('proj');
+      results.setResult('proj', true);
 
       expect(results.getResult('proj')).toBe(true);
     });
@@ -32,7 +32,7 @@ describe('WorkspacesResults', () => {
       spyOn(fs, 'unlinkSync');
       spyOn(fs, 'existsSync').and.returnValue(true);
 
-      results.success('proj');
+      results.setResult('proj', true);
       results.saveResults();
 
       expect(fs.writeSync).not.toHaveBeenCalled();
@@ -41,7 +41,7 @@ describe('WorkspacesResults', () => {
 
     it('should print results', () => {
       const projectName = 'proj';
-      results.success(projectName);
+      results.setResult(projectName, true);
       spyOn(output, 'success');
 
       const successTitle = 'Success';
@@ -60,7 +60,7 @@ describe('WorkspacesResults', () => {
       spyOn(output, 'success');
       spyOn(output, 'warn');
 
-      results.success(projectName);
+      results.setResult(projectName, true);
 
       const successTitle = 'Success';
 
@@ -85,7 +85,7 @@ describe('WorkspacesResults', () => {
 
   describe('fail', () => {
     it('should return false when getting results', () => {
-      results.fail('proj');
+      results.setResult('proj', false);
 
       expect(results.getResult('proj')).toBe(false);
     });
@@ -93,7 +93,7 @@ describe('WorkspacesResults', () => {
     it('should save results to file system', () => {
       spyOn(fs, 'writeFileSync');
 
-      results.fail('proj');
+      results.setResult('proj', false);
       results.saveResults();
 
       expect(fs.writeFileSync).toHaveBeenCalledWith(
@@ -109,7 +109,7 @@ describe('WorkspacesResults', () => {
 
     it('should print results', () => {
       const projectName = 'proj';
-      results.fail(projectName);
+      results.setResult(projectName, false);
       spyOn(output, 'error');
 
       const errorTitle = 'Fail';
@@ -128,7 +128,7 @@ describe('WorkspacesResults', () => {
 
     it('should tell the user that they can isolate only the failed tests', () => {
       const projectName = 'proj';
-      results.fail(projectName);
+      results.setResult(projectName, false);
       spyOn(output, 'error');
 
       const errorTitle = 'Fail';

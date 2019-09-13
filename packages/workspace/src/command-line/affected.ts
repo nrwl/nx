@@ -1,28 +1,39 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import * as runAll from 'npm-run-all';
 import * as yargs from 'yargs';
+import * as yargsParser from 'yargs-parser';
+import { join } from 'path';
 
 import {
   parseFiles,
-  readWorkspaceJson,
   printArgsWarning,
-  cliCommand,
-  getAffectedMetadata
+  getAffectedMetadata,
+  AffectedMetadata,
+  readNxJson,
+  ProjectNode,
+  NxJson
 } from './shared';
 import {
   getAffectedApps,
   getAffectedLibs,
   getAffectedProjects,
-  getAffectedProjectsWithTarget,
+  getAffectedProjectsWithTargetAndConfiguration,
   getAllApps,
   getAllLibs,
   getAllProjects,
-  getAllProjectsWithTarget
+  getAllProjectsWithTargetAndConfiguration,
+  projectHasTargetAndConfiguration
 } from './affected-apps';
 import { generateGraph } from './dep-graph';
 import { WorkspaceResults } from './workspace-results';
 import { output } from './output';
+import {
+  AffectedEventType,
+  Task,
+  TaskCompleteEvent,
+  TasksRunner
+} from '../tasks-runner/tasks-runner';
+import { appRootPath } from '../utils/app-root';
+import { defaultTasksRunner } from '../tasks-runner/default-tasks-runner';
+import { isRelativePath } from '../utils/fileutils';
 
 export interface YargsAffectedOptions
   extends yargs.Arguments,
@@ -30,6 +41,8 @@ export interface YargsAffectedOptions
 
 export interface AffectedOptions {
   target?: string;
+  configuration?: string;
+  runner?: string;
   parallel?: boolean;
   maxParallel?: number;
   untracked?: boolean;
@@ -49,14 +62,15 @@ export interface AffectedOptions {
   plain?: boolean;
 }
 
-const commonCommands = ['build', 'test', 'lint', 'e2e'];
+interface ProcessedArgs {
+  affectedArgs: YargsAffectedOptions;
+  taskOverrides: any;
+  tasksRunnerOptions: any;
+  tasksRunner: TasksRunner;
+}
 
 export function affected(parsedArgs: YargsAffectedOptions): void {
   const target = parsedArgs.target;
-  const rest: string[] = [
-    ...parsedArgs._.slice(1),
-    ...filterNxSpecificArgs(parsedArgs)
-  ];
 
   const workspaceResults = new WorkspaceResults(target);
 
@@ -70,10 +84,10 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
           ? getAllApps(affectedMetadata)
           : getAffectedApps(affectedMetadata)
         )
-          .filter(app => !parsedArgs.exclude.includes(app))
+          .filter(affectedApp => !parsedArgs.exclude.includes(affectedApp))
           .filter(
-            project =>
-              !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+            affectedApp =>
+              !parsedArgs.onlyFailed || !workspaceResults.getResult(affectedApp)
           );
         if (parsedArgs.plain) {
           console.log(apps.join(' '));
@@ -92,10 +106,10 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
           ? getAllLibs(affectedMetadata)
           : getAffectedLibs(affectedMetadata)
         )
-          .filter(app => !parsedArgs.exclude.includes(app))
+          .filter(affectedLib => !parsedArgs.exclude.includes(affectedLib))
           .filter(
-            project =>
-              !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+            affectedLib =>
+              !parsedArgs.onlyFailed || !workspaceResults.getResult(affectedLib)
           );
 
         if (parsedArgs.plain) {
@@ -125,17 +139,28 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
         break;
       }
       default: {
+        const nxJson = readNxJson();
+        const processedArgs = processArgs(parsedArgs, nxJson);
         const projects = (parsedArgs.all
-          ? getAllProjectsWithTarget(affectedMetadata, target)
-          : getAffectedProjectsWithTarget(affectedMetadata, target)
+          ? getAllProjectsWithTargetAndConfiguration(
+              affectedMetadata,
+              target,
+              processedArgs.affectedArgs.configuration
+            )
+          : getAffectedProjectsWithTargetAndConfiguration(
+              affectedMetadata,
+              target,
+              processedArgs.affectedArgs.configuration
+            )
         )
-          .filter(project => !parsedArgs.exclude.includes(project))
+          .filter(project => !parsedArgs.exclude.includes(project.name))
           .filter(
             project =>
-              !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+              !parsedArgs.onlyFailed ||
+              !workspaceResults.getResult(project.name)
           );
         printArgsWarning(parsedArgs);
-        runCommand(target, projects, parsedArgs, rest, workspaceResults);
+        runCommand(projects, affectedMetadata, processedArgs, workspaceResults);
         break;
       }
     }
@@ -158,145 +183,202 @@ function printError(e: any, verbose?: boolean) {
 }
 
 async function runCommand(
-  targetName: string,
-  projects: string[],
-  parsedArgs: YargsAffectedOptions,
-  args: string[],
+  affectedProjects: ProjectNode[],
+  affectedMetadata: AffectedMetadata,
+  processedArgs: ProcessedArgs,
   workspaceResults: WorkspaceResults
 ) {
-  if (projects.length <= 0) {
-    output.logSingleLine(
-      `No affected projects to run target "${targetName}" on`
-    );
+  const {
+    affectedArgs,
+    taskOverrides,
+    tasksRunnerOptions,
+    tasksRunner
+  } = processedArgs;
+
+  if (affectedProjects.length <= 0) {
+    let description = `with "${affectedArgs.target}"`;
+    if (affectedArgs.configuration) {
+      description += ` that are configured for "${affectedArgs.configuration}"`;
+    }
+    output.logSingleLine(`No projects ${description} were affected`);
     return;
   }
 
-  const cli = cliCommand();
-
-  const bodyLines = projects.map(
-    project => `${output.colors.gray('-')} ${project}`
+  const bodyLines = affectedProjects.map(
+    affectedProject => `${output.colors.gray('-')} ${affectedProject.name}`
   );
-  if (args.length > 0) {
+  if (Object.keys(taskOverrides).length > 0) {
     bodyLines.push('');
-    bodyLines.push(
-      `${output.colors.gray('With flags:')} ${output.bold(args.join(' '))}`
-    );
+    bodyLines.push(`${output.colors.gray('With flags:')}`);
+    Object.entries(taskOverrides)
+      .map(([flag, value]) => `  --${flag}=${value}`)
+      .forEach(arg => bodyLines.push(arg));
   }
 
   output.log({
-    title: `${output.colors.gray(
-      'Running target'
-    )} ${targetName} ${output.colors.gray('for projects:')}`,
+    title: `${output.colors.gray('Running target')} ${
+      affectedArgs.target
+    } ${output.colors.gray('for projects:')}`,
     bodyLines
   });
 
   output.addVerticalSeparator();
 
-  const workspaceJson = readWorkspaceJson();
-  const projectMetadata = new Map<string, any>();
-  projects.forEach(project => {
-    projectMetadata.set(project, workspaceJson.projects[project]);
-  });
-
-  // Make sure the `package.json` has the `nx: "nx"` command needed by `npm-run-all`
-  const packageJson = JSON.parse(
-    fs.readFileSync('./package.json').toString('utf-8')
-  );
-  if (!packageJson.scripts || !packageJson.scripts[cli]) {
-    output.error({
-      title: `The "scripts" section of your 'package.json' must contain "${cli}": "${cli}"`,
-      bodyLines: [
-        output.colors.gray('...'),
-        ' "scripts": {',
-        output.colors.gray('  ...'),
-        `   "${cli}": "${cli}"`,
-        output.colors.gray('  ...'),
-        ' }',
-        output.colors.gray('...')
-      ]
-    });
-    return process.exit(1);
-  }
-
-  try {
-    const isYarn = path
-      .basename(process.env.npm_execpath || 'npm')
-      .startsWith('yarn');
-    await runAll(
-      projects.map(proj => {
-        return commonCommands.includes(targetName)
-          ? `${cli} ${isYarn ? '' : '--'} ${targetName} ${proj} ${transformArgs(
-              args,
-              proj,
-              projectMetadata.get(proj)
-            ).join(' ')} `
-          : `${cli} ${
-              isYarn ? '' : '--'
-            } run ${proj}:${targetName} ${transformArgs(
-              args,
-              proj,
-              projectMetadata.get(proj)
-            ).join(' ')} `;
-      }),
-      {
-        parallel: parsedArgs.parallel || false,
-        maxParallel: parsedArgs.maxParallel || 1,
-        continueOnError: true,
-        stdin: process.stdin,
-        stdout: process.stdout,
-        stderr: process.stderr
-      }
-    );
-
-    projects.forEach(project => {
-      workspaceResults.success(project);
-    });
-  } catch (e) {
-    e.results.forEach((result, i) => {
-      if (result.code === 0) {
-        workspaceResults.success(projects[i]);
-      } else {
-        workspaceResults.fail(projects[i]);
-      }
-    });
-  } finally {
-    // fix for https://github.com/nrwl/nx/issues/1666
-    if (process.stdin['unref']) (process.stdin as any).unref();
-  }
-
-  workspaceResults.saveResults();
-  workspaceResults.printResults(
-    parsedArgs.onlyFailed,
-    `Running target "${targetName}" for affected projects succeeded`,
-    `Running target "${targetName}" for affected projects failed`
+  const tasks: Task[] = affectedProjects.map(affectedProject =>
+    createTask({
+      project: affectedProject,
+      target: processedArgs.affectedArgs.target,
+      configuration: processedArgs.affectedArgs.configuration,
+      overrides: processedArgs.taskOverrides
+    })
   );
 
-  if (workspaceResults.hasFailure) {
-    process.exit(1);
-  }
-}
-
-function transformArgs(
-  args: string[],
-  projectName: string,
-  projectMetadata: any
-) {
-  return args.map(arg => {
-    const regex = /{project\.([^}]+)}/g;
-    return arg.replace(regex, (_, group: string) => {
-      if (group.includes('.')) {
-        throw new Error('Only top-level properties can be interpolated');
+  const tasksMap: {
+    [projectName: string]: { [targetName: string]: Task };
+  } = {};
+  Object.entries(affectedMetadata.dependencyGraph.projects).forEach(
+    ([projectName, project]) => {
+      if (
+        projectHasTargetAndConfiguration(
+          project,
+          processedArgs.affectedArgs.target,
+          processedArgs.affectedArgs.configuration
+        )
+      ) {
+        tasksMap[projectName] = {
+          [processedArgs.affectedArgs.target]: createTask({
+            project: project,
+            target: processedArgs.affectedArgs.target,
+            configuration: processedArgs.affectedArgs.configuration,
+            overrides: processedArgs.taskOverrides
+          })
+        };
       }
+    }
+  );
 
-      if (group === 'name') {
-        return projectName;
+  tasksRunner(tasks, tasksRunnerOptions, {
+    dependencyGraph: affectedMetadata.dependencyGraph,
+    tasksMap
+  }).subscribe({
+    next: (event: TaskCompleteEvent) => {
+      switch (event.type) {
+        case AffectedEventType.TaskComplete: {
+          workspaceResults.setResult(event.task.target.project, event.success);
+        }
       }
-      return projectMetadata[group];
-    });
+    },
+    error: console.error,
+    complete: () => {
+      // fix for https://github.com/nrwl/nx/issues/1666
+      if (process.stdin['unref']) (process.stdin as any).unref();
+
+      workspaceResults.saveResults();
+      workspaceResults.printResults(
+        affectedArgs.onlyFailed,
+        `Running target "${affectedArgs.target}" for affected projects succeeded`,
+        `Running target "${affectedArgs.target}" for affected projects failed`
+      );
+
+      if (workspaceResults.hasFailure) {
+        process.exit(1);
+      }
+    }
   });
 }
 
-function filterNxSpecificArgs(parsedArgs: YargsAffectedOptions): string[] {
+function createTask({
+  project,
+  target,
+  configuration,
+  overrides
+}: {
+  project: ProjectNode;
+  target: string;
+  configuration: string;
+  overrides: Object;
+}): Task {
+  return {
+    id: getTaskId({
+      project: project.name,
+      target: target,
+      configuration: configuration
+    }),
+    target: {
+      project: project.name,
+      target,
+      configuration
+    },
+    overrides: interpolateOverrides(overrides, project.name, project)
+  };
+}
+
+function getTaskId({
+  project,
+  target,
+  configuration
+}: {
+  project: string;
+  target: string;
+  configuration?: string;
+}): string {
+  let id = project + ':' + target;
+  if (configuration) {
+    id += ':' + configuration;
+  }
+  return id;
+}
+
+function getTasksRunner(
+  runner: string | undefined,
+  nxJson: NxJson
+): {
+  tasksRunner: TasksRunner;
+  options: unknown;
+} {
+  if (!nxJson.tasksRunnerOptions) {
+    return {
+      tasksRunner: defaultTasksRunner,
+      options: {}
+    };
+  }
+
+  if (!runner && !nxJson.tasksRunnerOptions.default) {
+    return {
+      tasksRunner: defaultTasksRunner,
+      options: {}
+    };
+  }
+
+  runner = runner || 'default';
+
+  if (nxJson.tasksRunnerOptions[runner]) {
+    let modulePath: string = nxJson.tasksRunnerOptions[runner].runner;
+    if (isRelativePath(modulePath)) {
+      modulePath = join(appRootPath, modulePath);
+    }
+    return {
+      tasksRunner: require(modulePath),
+      options: nxJson.tasksRunnerOptions[runner].options
+    };
+  } else {
+    throw new Error(`Could not find runner configuration for ${runner}`);
+  }
+}
+
+function getNxSpecificOptions(
+  parsedArgs: YargsAffectedOptions
+): YargsAffectedOptions {
+  const filteredArgs = {};
+  nxSpecificFlags.forEach(flag => {
+    filteredArgs[flag] = parsedArgs[flag];
+  });
+  return filteredArgs as YargsAffectedOptions;
+}
+
+function getNonNxSpecificOptions(
+  parsedArgs: YargsAffectedOptions
+): YargsAffectedOptions {
   const filteredArgs = { ...parsedArgs };
   // Delete Nx arguments from parsed Args
   nxSpecificFlags.forEach(flag => {
@@ -308,18 +390,54 @@ function filterNxSpecificArgs(parsedArgs: YargsAffectedOptions): string[] {
   // Also remove the node path
   delete filteredArgs.$0;
 
-  // Re-serialize into a list of args
-  return Object.keys(filteredArgs).map(filteredArg => {
-    if (!Array.isArray(filteredArgs[filteredArg])) {
-      filteredArgs[filteredArg] = [filteredArgs[filteredArg]];
-    }
+  return filteredArgs;
+}
 
-    return filteredArgs[filteredArg]
-      .map(value => {
-        return `--${filteredArg}=${value}`;
-      })
-      .join(' ');
+export function processArgs(
+  parsedArgs: YargsAffectedOptions,
+  nxJson: NxJson
+): ProcessedArgs {
+  const affectedArgs = getNxSpecificOptions(parsedArgs);
+  const { tasksRunner, options: configOptions } = getTasksRunner(
+    affectedArgs.runner,
+    nxJson
+  );
+  const tasksRunnerOptions = {
+    ...configOptions,
+    ...getNonNxSpecificOptions(parsedArgs)
+  };
+  const taskOverrides = yargsParser(parsedArgs._.slice(1));
+  delete taskOverrides._;
+  return {
+    affectedArgs,
+    taskOverrides,
+    tasksRunner,
+    tasksRunnerOptions: tasksRunnerOptions
+  };
+}
+
+function interpolateOverrides<T = any>(
+  args: T,
+  projectName: string,
+  projectMetadata: any
+): T {
+  const interpolatedArgs: T = { ...args };
+  Object.entries(interpolatedArgs).forEach(([name, value]) => {
+    if (typeof value === 'string') {
+      const regex = /{project\.([^}]+)}/g;
+      interpolatedArgs[name] = value.replace(regex, (_, group: string) => {
+        if (group.includes('.')) {
+          throw new Error('Only top-level properties can be interpolated');
+        }
+
+        if (group === 'name') {
+          return projectName;
+        }
+        return projectMetadata[group];
+      });
+    }
   });
+  return interpolatedArgs;
 }
 
 /**
@@ -329,13 +447,12 @@ function filterNxSpecificArgs(parsedArgs: YargsAffectedOptions): string[] {
  */
 const dummyOptions: AffectedOptions = {
   target: '',
-  parallel: false,
-  maxParallel: 3,
-  'max-parallel': false,
+  configuration: '',
   onlyFailed: false,
   'only-failed': false,
   untracked: false,
   uncommitted: false,
+  runner: '',
   help: false,
   version: false,
   quiet: false,

@@ -143,13 +143,14 @@ forEachCli(() => {
 
       // affected:build should pass non-nx flags to the CLI
       const buildWithFlags = runCommand(
-        `npm run affected:build -- --files="libs/${mylib}/src/index.ts" --stats-json`
+        `npm run affected:build -- --files="libs/${mylib}/src/index.ts" -- --stats-json`
       );
 
       expect(buildWithFlags).toContain(`Running target build for projects:`);
       expect(buildWithFlags).toContain(`- ${myapp}`);
       expect(buildWithFlags).toContain(`- ${mypublishablelib}`);
-      expect(buildWithFlags).toContain('With flags: --stats-json=true');
+      expect(buildWithFlags).toContain('With flags:');
+      expect(buildWithFlags).toContain('--stats-json=true');
 
       if (supportUi()) {
         const e2e = runCommand(
@@ -221,7 +222,8 @@ forEachCli(() => {
       const lintWithJsonFormating = runCommand(
         `npm run affected:lint -- --files="libs/${mylib}/src/index.ts" -- --format json`
       );
-      expect(lintWithJsonFormating).toContain('With flags: --format json');
+      expect(lintWithJsonFormating).toContain('With flags:');
+      expect(lintWithJsonFormating).toContain('--format=json');
 
       const unitTestsExcluded = runCommand(
         `npm run affected:test -- --files="libs/${mylib}/src/index.ts" --exclude=${myapp},${mypublishablelib}`

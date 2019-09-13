@@ -51,14 +51,6 @@ export class WorkspaceResults {
     return this.commandResults.results[projectName];
   }
 
-  fail(projectName: string) {
-    this.setResult(projectName, false);
-  }
-
-  success(projectName: string) {
-    this.setResult(projectName, true);
-  }
-
   saveResults() {
     if (Object.values<boolean>(this.commandResults.results).includes(false)) {
       writeJsonFile(RESULTS_FILE, this.commandResults);
@@ -120,7 +112,7 @@ export class WorkspaceResults {
     });
   }
 
-  private setResult(projectName: string, result: boolean) {
+  setResult(projectName: string, result: boolean) {
     this.commandResults.results[projectName] = result;
   }
 }
