@@ -24,6 +24,12 @@ export interface NxJson {
   projects: {
     [projectName: string]: NxJsonProjectConfig;
   };
+  tasksRunnerOptions?: {
+    [tasksRunnerName: string]: {
+      runner: string;
+      options?: unknown;
+    };
+  };
 }
 
 export interface NxJsonProjectConfig {
@@ -443,6 +449,7 @@ export function createAffectedMetadata(
 ): AffectedMetadata {
   const projectStates: ProjectStates = {};
   const projects: ProjectMap = {};
+
   projectNodes.forEach(project => {
     projectStates[project.name] = {
       touched: false,

@@ -3,11 +3,11 @@ import {
   getAffectedApps,
   getAffectedLibs,
   getAffectedProjects,
-  getAffectedProjectsWithTarget,
+  getAffectedProjectsWithTargetAndConfiguration,
   getAllApps,
   getAllLibs,
   getAllProjects,
-  getAllProjectsWithTarget
+  getAllProjectsWithTargetAndConfiguration
 } from './affected-apps';
 import { DependencyType } from './deps-calculator';
 
@@ -23,7 +23,11 @@ describe('affected-apps', () => {
         architect: {
           lint: {},
           test: {},
-          build: {}
+          build: {
+            configurations: {
+              production: {}
+            }
+          }
         }
       },
       app2: {
@@ -196,11 +200,46 @@ describe('affected-apps', () => {
     });
   });
 
-  describe('getAffectedProjectsWithTarget', () => {
+  describe('getAffectedProjectsWithTargetAndConfiguration', () => {
     it('should get none if no projects are affected', () => {
-      expect(getAffectedProjectsWithTarget(affectedMetadata, 'test')).toEqual(
-        []
-      );
+      expect(
+        getAffectedProjectsWithTargetAndConfiguration(affectedMetadata, 'test')
+      ).toEqual([]);
+    });
+
+    it('should find affected projects that can be built', () => {
+      projectStates.lib1 = {
+        affected: true,
+        touched: true
+      };
+      projectStates.app1.affected = true;
+      projectStates['app1-e2e'].affected = true;
+      projectStates.app2.affected = true;
+      projectStates['customName-e2e'].affected = true;
+      expect(
+        getAffectedProjectsWithTargetAndConfiguration(affectedMetadata, 'build')
+      ).toEqual([
+        affectedMetadata.dependencyGraph.projects.app1,
+        affectedMetadata.dependencyGraph.projects.app2
+      ]);
+    });
+
+    it('should find affected projects that can be built for production', () => {
+      projectStates.lib1 = {
+        affected: true,
+        touched: true
+      };
+      projectStates.app1.affected = true;
+      projectStates['app1-e2e'].affected = true;
+      projectStates.app2.affected = true;
+      projectStates['customName-e2e'].affected = true;
+      expect(
+        getAffectedProjectsWithTargetAndConfiguration(
+          affectedMetadata,
+          'build',
+          'production'
+        )
+      ).toEqual([affectedMetadata.dependencyGraph.projects.app1]);
     });
 
     it('should find affected projects that can be linted', () => {
@@ -212,12 +251,14 @@ describe('affected-apps', () => {
       projectStates['app1-e2e'].affected = true;
       projectStates.app2.affected = true;
       projectStates['customName-e2e'].affected = true;
-      expect(getAffectedProjectsWithTarget(affectedMetadata, 'lint')).toEqual([
-        'lib1',
-        'app1',
-        'app1-e2e',
-        'app2',
-        'customName-e2e'
+      expect(
+        getAffectedProjectsWithTargetAndConfiguration(affectedMetadata, 'lint')
+      ).toEqual([
+        affectedMetadata.dependencyGraph.projects.lib1,
+        affectedMetadata.dependencyGraph.projects.app1,
+        affectedMetadata.dependencyGraph.projects['app1-e2e'],
+        affectedMetadata.dependencyGraph.projects.app2,
+        affectedMetadata.dependencyGraph.projects['customName-e2e']
       ]);
     });
 
@@ -230,10 +271,12 @@ describe('affected-apps', () => {
       projectStates['app1-e2e'].affected = true;
       projectStates.app2.affected = true;
       projectStates['customName-e2e'].affected = true;
-      expect(getAffectedProjectsWithTarget(affectedMetadata, 'test')).toEqual([
-        'lib1',
-        'app1',
-        'app2'
+      expect(
+        getAffectedProjectsWithTargetAndConfiguration(affectedMetadata, 'test')
+      ).toEqual([
+        affectedMetadata.dependencyGraph.projects.lib1,
+        affectedMetadata.dependencyGraph.projects.app1,
+        affectedMetadata.dependencyGraph.projects.app2
       ]);
     });
 
@@ -246,9 +289,11 @@ describe('affected-apps', () => {
       projectStates['app1-e2e'].affected = true;
       projectStates.app2.affected = true;
       projectStates['customName-e2e'].affected = true;
-      expect(getAffectedProjectsWithTarget(affectedMetadata, 'e2e')).toEqual([
-        'app1-e2e',
-        'customName-e2e'
+      expect(
+        getAffectedProjectsWithTargetAndConfiguration(affectedMetadata, 'e2e')
+      ).toEqual([
+        affectedMetadata.dependencyGraph.projects['app1-e2e'],
+        affectedMetadata.dependencyGraph.projects['customName-e2e']
       ]);
     });
   });
@@ -280,36 +325,54 @@ describe('affected-apps', () => {
 
   describe('getAllProjectsWithTarget', () => {
     it('should get all projects that can be linted', () => {
-      expect(getAllProjectsWithTarget(affectedMetadata, 'lint')).toEqual([
-        'lib1',
-        'app1',
-        'app1-e2e',
-        'lib2',
-        'app2',
-        'customName-e2e'
+      expect(
+        getAllProjectsWithTargetAndConfiguration(affectedMetadata, 'lint')
+      ).toEqual([
+        affectedMetadata.dependencyGraph.projects.lib1,
+        affectedMetadata.dependencyGraph.projects.app1,
+        affectedMetadata.dependencyGraph.projects['app1-e2e'],
+        affectedMetadata.dependencyGraph.projects.lib2,
+        affectedMetadata.dependencyGraph.projects.app2,
+        affectedMetadata.dependencyGraph.projects['customName-e2e']
       ]);
     });
 
     it('should get all projects that can be tested', () => {
-      expect(getAllProjectsWithTarget(affectedMetadata, 'test')).toEqual([
-        'lib1',
-        'app1',
-        'lib2',
-        'app2'
+      expect(
+        getAllProjectsWithTargetAndConfiguration(affectedMetadata, 'test')
+      ).toEqual([
+        affectedMetadata.dependencyGraph.projects.lib1,
+        affectedMetadata.dependencyGraph.projects.app1,
+        affectedMetadata.dependencyGraph.projects.lib2,
+        affectedMetadata.dependencyGraph.projects.app2
       ]);
     });
 
     it('should get all projects that can be built', () => {
-      expect(getAllProjectsWithTarget(affectedMetadata, 'build')).toEqual([
-        'app1',
-        'app2'
+      expect(
+        getAllProjectsWithTargetAndConfiguration(affectedMetadata, 'build')
+      ).toEqual([
+        affectedMetadata.dependencyGraph.projects.app1,
+        affectedMetadata.dependencyGraph.projects.app2
       ]);
     });
 
+    it('should get all projects that can be built for production', () => {
+      expect(
+        getAllProjectsWithTargetAndConfiguration(
+          affectedMetadata,
+          'build',
+          'production'
+        )
+      ).toEqual([affectedMetadata.dependencyGraph.projects.app1]);
+    });
+
     it('should get all projects that can be e2e-tested', () => {
-      expect(getAllProjectsWithTarget(affectedMetadata, 'e2e')).toEqual([
-        'app1-e2e',
-        'customName-e2e'
+      expect(
+        getAllProjectsWithTargetAndConfiguration(affectedMetadata, 'e2e')
+      ).toEqual([
+        affectedMetadata.dependencyGraph.projects['app1-e2e'],
+        affectedMetadata.dependencyGraph.projects['customName-e2e']
       ]);
     });
   });
