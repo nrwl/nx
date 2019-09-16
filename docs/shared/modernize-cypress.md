@@ -59,13 +59,17 @@ Screenshots and videos will be accessible in `dist/apps/frontend/screenshots` an
 
 ### Watching for Changes
 
-With, `ng e2e frontend-e2e --watch` Cypress will start in the application mode. Change your tests or your application code, and Cypress will rerun the tests.
+With, `ng e2e frontend-e2e --watch` Cypress will start in the application mode.
 
-Running Cypress with `--watch` is a great way to enhance dev workflow. Write your e2e tests, and then start working on your app while Cypress is rerunning the tests.
+Running Cypress with `--watch` is a great way to enhance dev workflow - you can build up test files with the application running and Cypress will re-run those tests as you enhance and add to the suite.
+
+Cypress doesn't currently re-run your tests after changes are made to application code when it runs in “headed” mode. There is an [open feature request](https://github.com/nrwl/nx/issues/870) to add this behaviour.
 
 ### Using Cypress in the Headless Mode
 
 If you want to run the Cypress tests in headless mode (e.g., on CI), you can do so by passing `--headless`. You will see all the test results live in the terminal. Videos and screenshots will be available for debugging.
+
+In headless mode your tests **will** be re-run every time you make a change to your application code.
 
 ### Testing Against Prod Build
 
