@@ -224,7 +224,7 @@ describe('Jest Builder', () => {
     const run = await architect.scheduleBuilder('@nrwl/jest:jest', {
       jestConfig: './jest.config.js',
       tsConfig: './tsconfig.test.json',
-      setupFile: './test.ts',
+      setupFile: './test-setup.ts',
       watch: false
     });
     expect(await run.result).toEqual(
@@ -274,7 +274,7 @@ describe('Jest Builder', () => {
             ]
           }
         }),
-        setupTestFrameworkScriptFile: '/root/test.ts',
+        setupFilesAfterEnv: ['/root/test-setup.ts'],
         watch: false
       },
       ['/root/jest.config.js']
