@@ -1,4 +1,4 @@
-import { updateJsonInTree } from '@nrwl/workspace';
+import { updateJsonInTree, checkAndCleanWithSemver } from '@nrwl/workspace';
 import { chain, SchematicContext } from '@angular-devkit/schematics';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { gt } from 'semver';
@@ -6,8 +6,9 @@ import { gt } from 'semver';
 const updateCLI = updateJsonInTree('package.json', json => {
   json.devDependencies = json.devDependencies || {};
   const cliVersion = json.devDependencies['@angular/cli'];
+  const cleanCliVersion = checkAndCleanWithSemver('@angular/cli', cliVersion);
 
-  if (cliVersion && gt(cliVersion, '8.1.1')) {
+  if (cleanCliVersion && gt(cleanCliVersion, '8.1.1')) {
     return json;
   }
 
