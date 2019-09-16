@@ -3,7 +3,8 @@ import {
   addUpdateTask,
   readJsonInTree,
   formatFiles,
-  updateJsonInTree
+  updateJsonInTree,
+  checkAndCleanWithSemver
 } from '@nrwl/workspace';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { gt } from 'semver';
@@ -16,8 +17,12 @@ function updateCLI() {
     updateJsonInTree('package.json', json => {
       json.devDependencies = json.devDependencies || {};
       const cliVersion = json.devDependencies['@angular/cli'];
+      const cleanCliVersion = checkAndCleanWithSemver(
+        '@angular/cli',
+        cliVersion
+      );
 
-      if (cliVersion && gt(cliVersion, '8.3.3')) {
+      if (cleanCliVersion && gt(cleanCliVersion, '8.3.3')) {
         return json;
       }
 
