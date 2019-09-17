@@ -61,7 +61,7 @@
     "@ngrx/store-devtools": "8.3.0",
     "@schematics/angular": "8.3.3",
     "@testing-library/react": "9.3.0",
-    "@storybook/core": "^5.1.11",
+    "@storybook/core": "^5.2.0",
     "@types/express": "4.17.0",
     "@types/fast-levenshtein": "^0.0.1",
     "@types/jasmine": "~2.8.6",

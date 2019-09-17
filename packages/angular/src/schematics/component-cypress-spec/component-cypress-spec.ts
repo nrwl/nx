@@ -10,17 +10,13 @@ import {
   Tree,
   url
 } from '@angular-devkit/schematics';
-import {
-  findNodes,
-  getDecoratorMetadata
-} from '@schematics/angular/utility/ast-utils';
-import { getProjectConfig } from '@nrwl/workspace';
+import { findNodes, getProjectConfig } from '@nrwl/workspace';
 import {
   PropertyAssignment,
   PropertyDeclaration,
   SyntaxKind
 } from 'typescript';
-import { getTsSourceFile } from '../../utils/ast-utils';
+import { getTsSourceFile, getDecoratorMetadata } from '../../utils/ast-utils';
 import {
   getInputPropertyDeclarations,
   getKnobType

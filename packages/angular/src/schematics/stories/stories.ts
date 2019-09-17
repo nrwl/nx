@@ -6,13 +6,13 @@ import {
   SchematicsException,
   Tree
 } from '@angular-devkit/schematics';
-import {
-  getDecoratorMetadata,
-  getFirstNgModuleName
-} from '@schematics/angular/utility/ast-utils';
 import { getProjectConfig } from '@nrwl/workspace';
 import { SyntaxKind } from 'typescript';
-import { getTsSourceFile } from '../../utils/ast-utils';
+import {
+  getTsSourceFile,
+  getDecoratorMetadata,
+  getFirstNgModuleName
+} from '../../utils/ast-utils';
 import { CreateComponentSpecFileSchema } from '../component-cypress-spec/component-cypress-spec';
 import { CreateComponentStoriesFileSchema } from '../component-story/component-story';
 

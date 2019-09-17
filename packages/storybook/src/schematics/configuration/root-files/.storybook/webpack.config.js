@@ -12,10 +12,7 @@ module.exports = async ({ config, mode }) => {
     use: [
       'to-string-loader',
       {
-        loader: 'style-loader',
-        options: {
-          sourceMap: true
-        }
+        loader: 'style-loader'
       },
       {
         loader: 'css-loader',
@@ -27,6 +24,12 @@ module.exports = async ({ config, mode }) => {
   });
 
   config.module.rules = r;
+
+  let scssLoader = config.module.rules.find(i => !!'a.scss'.match(i.test));
+  scssLoader.use = ['to-string-loader', ...scssLoader.use];
+
+  let htmlLoader = config.module.rules.find(i => !!'a.html'.match(i.test));
+  htmlLoader.loader = 'html-loader';
 
   // Return the altered config
   return config;

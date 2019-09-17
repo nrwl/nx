@@ -1,8 +1,3 @@
-import { configure } from '<%= offsetFromRoot %>../.storybook/config';
+import { configure } from '@storybook/angular';
 
-function loadStories() {
-  const req = require.context('../src/lib', true, /\.stories\.ts$/);
-  req.keys().forEach(filename => req(filename));
-}
-
-configure(loadStories, module);
+configure(require.context('../src/lib', true, /\.stories\.ts$/), module);

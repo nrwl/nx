@@ -37,6 +37,7 @@ function checkDependenciesInstalled(): Rule {
         { name: 'babel-loader', version: babelLoaderVersion },
         { name: '@babel/core', version: babelCoreVersion },
         { name: 'to-string-loader', version: '*' },
+        { name: 'html-loader', version: '*' },
         { name: 'css-loader', version: '*' }
       );
     }

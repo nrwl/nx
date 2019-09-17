@@ -1927,7 +1927,7 @@
   dependencies:
     core-js "^3.0.1"
 
-"@storybook/core@^5.1.11":
+"@storybook/core@^5.2.0":
   version "5.2.1"
   resolved "https://registry.yarnpkg.com/@storybook/core/-/core-5.2.1.tgz#3aa17c6fa9b02704723501d32884453869e3c06c"
   integrity sha512-mGGvN3GWeLxZ9lYZ4IuD1IoJD+cn6XXm2Arzw+k6KEtJJDFrC5SjESTDGLVFienX5s2tgH4FjYb9Ps9sKfhHlg==
