@@ -356,18 +356,21 @@ function updateProject(options: NormalizedSchema): Rule {
         return json;
       }),
       updateJsonInTree(`${options.projectRoot}/tsconfig.lib.json`, json => {
-        json.exclude = json.exclude || [];
+        if (options.unitTestRunner === 'jest') {
+          json.exclude = ['src/test-setup.ts', '**/*.spec.ts'];
+        } else if (options.unitTestRunner === 'none') {
+          json.exclude = [];
+        } else {
+          json.exclude = json.exclude || [];
+        }
+
         return {
           ...json,
           extends: `./tsconfig.json`,
           compilerOptions: {
             ...json.compilerOptions,
             outDir: `${offsetFromRoot(options.projectRoot)}dist/out-tsc`
-          },
-          exclude:
-            options.unitTestRunner === 'jest'
-              ? ['src/test-setup.ts', '**/*.spec.ts']
-              : json.exclude || []
+          }
         };
       }),
       updateJsonInTree(`${options.projectRoot}/tslint.json`, json => {

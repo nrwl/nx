@@ -186,7 +186,7 @@ describe('lib', () => {
         ]);
       });
 
-      it('should leave the excludes alone when unitTestRunner is not jest', async () => {
+      it('should leave the excludes alone when unitTestRunner is karma', async () => {
         const tree = await runSchematic(
           'lib',
           { name: 'myLib', unitTestRunner: 'karma' },
@@ -197,6 +197,19 @@ describe('lib', () => {
           'libs/my-lib/tsconfig.lib.json'
         );
         expect(tsconfigJson.exclude).toEqual(['src/test.ts', '**/*.spec.ts']);
+      });
+
+      it('should remove the excludes when unitTestRunner is none', async () => {
+        const tree = await runSchematic(
+          'lib',
+          { name: 'myLib', unitTestRunner: 'none' },
+          appTree
+        );
+        const tsconfigJson = readJsonInTree(
+          tree,
+          'libs/my-lib/tsconfig.lib.json'
+        );
+        expect(tsconfigJson.exclude).toEqual([]);
       });
     });
 
