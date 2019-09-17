@@ -93,6 +93,7 @@
     "confusing-browser-globals": "^1.0.8",
     "conventional-changelog-cli": "^2.0.23",
     "copy-webpack-plugin": "5.0.3",
+    "core-js": "^2.6.9",
     "cosmiconfig": "^4.0.0",
     "cypress": "3.4.1",
     "cz-conventional-changelog": "^3.0.2",
