@@ -43,6 +43,7 @@ export interface JestBuilderOptions extends JsonObject {
   coverage?: false;
   coverageReporters?: string;
   coverageDirectory?: string;
+  testResultsProcessor?: string;
   updateSnapshot?: boolean;
   useStderr?: boolean;
   watch?: boolean;
@@ -98,6 +99,7 @@ function run(
     verbose: options.verbose,
     coverageReporters: options.coverageReporters,
     coverageDirectory: options.coverageDirectory,
+    testResultsProcessor: options.testResultsProcessor,
     updateSnapshot: options.updateSnapshot,
     useStderr: options.useStderr,
     watch: options.watch,

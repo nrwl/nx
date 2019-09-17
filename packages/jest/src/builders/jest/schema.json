@@ -115,6 +115,10 @@
       "description": "An array of regexp pattern strings that are matched against all file paths before executing the test. If the file path matches any of the patterns, coverage information will be skipped.",
       "type": "string"
     },
+    "testResultsProcessor": {
+      "description": "Node module that implements a custom results processor. (https://jestjs.io/docs/en/configuration#testresultsprocessor-string)",
+      "type": "string"
+    },
     "updateSnapshot": {
       "alias": "u",
       "description": "Use this flag to re-record snapshots. Can be used together with a test suite pattern or with `--testNamePattern` to re-record snapshot for test matching the pattern. (https://jestjs.io/docs/en/cli#updatesnapshot)",

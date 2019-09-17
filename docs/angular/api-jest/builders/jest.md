@@ -162,6 +162,12 @@ Type: `string`
 
 A regexp pattern string that is matched against all tests paths before executing the test. (https://jestjs.io/docs/en/cli#testpathpattern-regex)
 
+### testResultsProcessor
+
+Type: `string`
+
+Node module that implements a custom results processor. (https://jestjs.io/docs/en/configuration#testresultsprocessor-string)
+
 ### tsConfig
 
 Type: `string`
