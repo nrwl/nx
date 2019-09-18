@@ -36,7 +36,7 @@ export interface JestBuilderOptions extends JsonObject {
   runInBand?: boolean;
   silent?: boolean;
   testNamePattern?: string;
-  testPathPattern?: string;
+  testPathPattern?: string[];
   colors?: boolean;
   reporters?: string[];
   verbose?: boolean;

@@ -159,9 +159,9 @@ Run only tests with a name that matches the regex pattern. (https://jestjs.io/do
 
 ### testPathPattern
 
-Type: `string`
+Type: `array`
 
-A regexp pattern string that is matched against all tests paths before executing the test. (https://jestjs.io/docs/en/cli#testpathpattern-regex)
+An array of regexp pattern strings that is matched against all tests paths before executing the test. (https://jestjs.io/docs/en/cli#testpathpattern-regex)
 
 ### testResultsProcessor
 
