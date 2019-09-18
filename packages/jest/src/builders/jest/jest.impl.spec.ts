@@ -61,6 +61,7 @@ describe('Jest Builder', () => {
               ]
             }
           }),
+          testPathPattern: [],
           watch: false
         },
         ['/root/jest.config.js']
@@ -75,7 +76,7 @@ describe('Jest Builder', () => {
         codeCoverage: false,
         runInBand: true,
         testNamePattern: 'should load',
-        testPathPattern: '/test/path',
+        testPathPattern: ['/test/path'],
         colors: false,
         reporters: ['/test/path'],
         verbose: false,
@@ -105,7 +106,7 @@ describe('Jest Builder', () => {
           coverage: false,
           runInBand: true,
           testNamePattern: 'should load',
-          testPathPattern: '/test/path',
+          testPathPattern: ['/test/path'],
           colors: false,
           reporters: ['/test/path'],
           verbose: false,
@@ -149,6 +150,7 @@ describe('Jest Builder', () => {
           findRelatedTests: true,
           runInBand: true,
           testNamePattern: 'should load',
+          testPathPattern: [],
           watch: false
         },
         ['/root/jest.config.js']
@@ -170,7 +172,7 @@ describe('Jest Builder', () => {
         passWithNoTests: true,
         silent: true,
         testNamePattern: 'test',
-        testPathPattern: '/test/path',
+        testPathPattern: ['/test/path'],
         colors: false,
         reporters: ['/test/path'],
         verbose: false,
@@ -211,7 +213,7 @@ describe('Jest Builder', () => {
           passWithNoTests: true,
           silent: true,
           testNamePattern: 'test',
-          testPathPattern: '/test/path',
+          testPathPattern: ['/test/path'],
           colors: false,
           verbose: false,
           reporters: ['/test/path'],
@@ -252,6 +254,7 @@ describe('Jest Builder', () => {
             }
           }),
           setupFilesAfterEnv: ['/root/test-setup.ts'],
+          testPathPattern: [],
           watch: false
         },
         ['/root/jest.config.js']
@@ -307,6 +310,7 @@ describe('Jest Builder', () => {
             }
           }),
           setupFilesAfterEnv: ['/root/test-setup.ts'],
+          testPathPattern: [],
           watch: false
         },
         ['/root/jest.config.js']

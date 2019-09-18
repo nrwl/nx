@@ -86,8 +86,11 @@
       "type": "string"
     },
     "testPathPattern": {
-      "description": "A regexp pattern string that is matched against all tests paths before executing the test. (https://jestjs.io/docs/en/cli#testpathpattern-regex)",
-      "type": "string"
+      "description": "An array of regexp pattern strings that is matched against all tests paths before executing the test. (https://jestjs.io/docs/en/cli#testpathpattern-regex)",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "colors": {
       "description": "Forces test results output highlighting even if stdout is not a TTY. (https://jestjs.io/docs/en/cli#colors)",
