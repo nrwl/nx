@@ -56,6 +56,10 @@ function run(
     options.env.tsConfig = join(context.workspaceRoot, options.tsConfig);
   }
 
+  // Cypress expects the folder where a `cypress.json` is present
+  const projectFolderPath = dirname(options.cypressConfig);
+  const cypressConfigValues = getCypressConfigValues(options, context);
+
   return (!legacy
     ? options.devServerTarget
       ? startDevServer(options.devServerTarget, options.watch, context)
@@ -64,7 +68,8 @@ function run(
   ).pipe(
     concatMap((baseUrl: string) =>
       initCypress(
-        options.cypressConfig,
+        projectFolderPath,
+        cypressConfigValues,
         options.headless,
         options.exit,
         options.record,
@@ -100,7 +105,8 @@ function run(
  * @param isWatching
  */
 function initCypress(
-  cypressConfig: string,
+  projectFolderPath: string,
+  cypressConfigValues: any,
   headless: boolean,
   exit: boolean,
   record: boolean,
@@ -112,15 +118,14 @@ function initCypress(
   env?: Record<string, string>,
   spec?: string
 ): Observable<BuilderOutput> {
-  // Cypress expects the folder where a `cypress.json` is present
-  const projectFolderPath = dirname(cypressConfig);
   const options: any = {
-    project: projectFolderPath
+    project: projectFolderPath,
+    config: cypressConfigValues
   };
 
   // If not, will use the `baseUrl` normally from `cypress.json`
   if (baseUrl) {
-    options.config = { baseUrl: baseUrl };
+    options.config.baseUrl = baseUrl;
   }
 
   if (browser) {
@@ -184,6 +189,14 @@ export function startDevServer(
   );
 }
 
+function getCypressConfigValues(
+  options: CypressBuilderOptions,
+  context: BuilderContext
+): any {
+  const cypressConfigPath = join(context.workspaceRoot, options.cypressConfig);
+  return readJsonFile(cypressConfigPath);
+}
+
 function isLegacy(
   options: CypressBuilderOptions,
   context: BuilderContext
@@ -192,9 +205,9 @@ function isLegacy(
     join(context.workspaceRoot, options.tsConfig)
   );
   const cypressConfigPath = join(context.workspaceRoot, options.cypressConfig);
-  const cypressJson = readJsonFile(cypressConfigPath);
+  const cypressConfigValues = getCypressConfigValues(options, context);
 
-  if (!cypressJson.integrationFolder) {
+  if (!cypressConfigValues.integrationFolder) {
     throw new Error(
       `"integrationFolder" is not defined in ${options.cypressConfig}`
     );
@@ -202,7 +215,7 @@ function isLegacy(
 
   const integrationFolder = join(
     dirname(cypressConfigPath),
-    cypressJson.integrationFolder
+    cypressConfigValues.integrationFolder
   );
   const tsOutDirPath = join(
     context.workspaceRoot,

@@ -78,7 +78,9 @@ describe('Cypress builder', () => {
       await run.stop();
       expect(cypressRun).toHaveBeenCalledWith(
         jasmine.objectContaining({
-          config: { baseUrl: 'http://localhost:4200' },
+          config: jasmine.objectContaining({
+            baseUrl: 'http://localhost:4200'
+          }),
           project: path.dirname(cypressBuilderOptions.cypressConfig)
         })
       );
@@ -98,7 +100,9 @@ describe('Cypress builder', () => {
       await run.stop();
       expect(cypressOpen).toHaveBeenCalledWith(
         jasmine.objectContaining({
-          config: { baseUrl: 'http://localhost:4200' },
+          config: jasmine.objectContaining({
+            baseUrl: 'http://localhost:4200'
+          }),
           project: path.dirname(cypressBuilderOptions.cypressConfig)
         })
       );
@@ -118,9 +122,9 @@ describe('Cypress builder', () => {
       await run.stop();
       expect(cypressRun).toHaveBeenCalledWith(
         jasmine.objectContaining({
-          config: {
+          config: jasmine.objectContaining({
             baseUrl: 'http://my-distant-host.com'
-          },
+          }),
           project: path.dirname(cypressBuilderOptions.cypressConfig)
         })
       );
