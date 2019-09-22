@@ -83,9 +83,7 @@ function parseVersion(version) {
 const parsedVersion = parseVersion(parsedArgs._[2]);
 if (!parsedVersion.isValid) {
   console.error(
-    `\nError:\nThe specified version is not valid. You specified: "${
-      parsedVersion.version
-    }"`
+    `\nError:\nThe specified version is not valid. You specified: "${parsedVersion.version}"`
   );
   console.error(
     `Please run "yarn nx-release --help" for details on the acceptable version format.\n`
@@ -102,9 +100,7 @@ const cliVersion = devDependencies['@angular/cli'];
 const typescriptVersion = devDependencies['typescript'];
 
 console.log('Executing build script:');
-const buildCommand = `./scripts/package.sh ${
-  parsedVersion.version
-} ${cliVersion} ${typescriptVersion}`;
+const buildCommand = `./scripts/package.sh ${parsedVersion.version} ${cliVersion} ${typescriptVersion}`;
 console.log(`> ${buildCommand}`);
 childProcess.execSync(buildCommand, {
   stdio: [0, 1, 2]
@@ -205,9 +201,7 @@ releaseIt(options)
      * We always use either "latest" or "next" (i.e. no separate tags for alpha, beta etc)
      */
     const npmTag = parsedVersion.isPrerelease ? 'next' : 'latest';
-    const npmPublishCommand = `./scripts/publish.sh ${
-      output.version
-    } ${npmTag}`;
+    const npmPublishCommand = `./scripts/publish.sh ${output.version} ${npmTag}`;
     console.log('Executing publishing script for all packages:');
     console.log(`> ${npmPublishCommand}`);
     console.log(

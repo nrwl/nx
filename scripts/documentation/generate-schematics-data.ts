@@ -82,9 +82,7 @@ function generateTemplate(
   }
 
   template += dedent`
-  By default, Nx will search for \`${
-    schematic.name
-  }\` in the default collection provisioned in \`${filename}\`.\n
+  By default, Nx will search for \`${schematic.name}\` in the default collection provisioned in \`${filename}\`.\n
   You can specify the collection explicitly as follows:  
   \`\`\`bash
   ${cliCommand} g ${schematic.collectionName}:${schematic.name} ...
@@ -181,9 +179,7 @@ Promise.all(
             )
             .then(() => {
               console.log(
-                `Documentation from ${config.root} generated to ${
-                  config.schematicOutput
-                }`
+                `Documentation from ${config.root} generated to ${config.schematicOutput}`
               );
             });
         })

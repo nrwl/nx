@@ -108,7 +108,7 @@ interface Todo {
   template: `
     <h1>Todos</h1>
     <ul>
-      <li *ngFor="let t of (todos | async)">{{ t.title }}</li>
+      <li *ngFor="let t of todos | async">{{ t.title }}</li>
     </ul>
   `
 })
@@ -294,7 +294,7 @@ import { Todo } from '@myorg/data';
   template: `
     <h1>Todos</h1>
     <ul>
-      <li *ngFor="let t of (todos | async)">{{ t.title }}</li>
+      <li *ngFor="let t of todos | async">{{ t.title }}</li>
     </ul>
   `
 })

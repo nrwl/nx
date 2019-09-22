@@ -283,9 +283,7 @@ export function addRoute(
       new InsertChange(
         sourcePath,
         firstRoute.getEnd(),
-        `<Route path="${options.routePath}" component={${
-          options.componentName
-        }} />`
+        `<Route path="${options.routePath}" component={${options.componentName}} />`
       )
     );
 
@@ -296,9 +294,7 @@ export function addRoute(
           new InsertChange(
             sourcePath,
             parentLi.getEnd(),
-            `<li><Link to="${options.routePath}">${
-              options.componentName
-            }</Link></li>`
+            `<li><Link to="${options.routePath}">${options.componentName}</Link></li>`
           )
         );
       } else {
@@ -438,9 +434,7 @@ export function updateReduxStore(
     ...addGlobal(
       source,
       sourcePath,
-      `import { ${feature.keyName}, ${feature.reducerName} } from '${
-        feature.modulePath
-      }';`
+      `import { ${feature.keyName}, ${feature.reducerName} } from '${feature.modulePath}';`
     ),
     new InsertChange(
       sourcePath,

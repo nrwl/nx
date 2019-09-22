@@ -301,9 +301,7 @@ function moveE2eTests(host: Tree, context: SchematicContext) {
         );
         context.logger.warn(err.message);
         context.logger.warn(
-          `If there are e2e tests for the ${key} project, we recommend manually moving them to ${
-            p.root
-          }-e2e/src.`
+          `If there are e2e tests for the ${key} project, we recommend manually moving them to ${p.root}-e2e/src.`
         );
       });
     }
@@ -591,15 +589,9 @@ const updateworkspaceJson = updateWorkspaceInTree(json => {
       case 'application':
         project.prefix = prefix;
 
-        project.architect.build.options.tsConfig = `${
-          project.root
-        }/tsconfig.app.json`;
-        project.architect.test.options.karmaConfig = `${
-          project.root
-        }/karma.conf.js`;
-        project.architect.test.options.tsConfig = `${
-          project.root
-        }/tsconfig.spec.json`;
+        project.architect.build.options.tsConfig = `${project.root}/tsconfig.app.json`;
+        project.architect.test.options.karmaConfig = `${project.root}/karma.conf.js`;
+        project.architect.test.options.tsConfig = `${project.root}/tsconfig.spec.json`;
 
         project.architect.test.options.main = `${project.sourceRoot}/test.ts`;
 
@@ -630,12 +622,8 @@ const updateworkspaceJson = updateWorkspaceInTree(json => {
         project.prefix = prefix;
 
         project.projectType = 'library';
-        project.architect.test.options.karmaConfig = `${
-          project.root
-        }/karma.conf.js`;
-        project.architect.test.options.tsConfig = `${
-          project.root
-        }/tsconfig.spec.json`;
+        project.architect.test.options.karmaConfig = `${project.root}/karma.conf.js`;
+        project.architect.test.options.tsConfig = `${project.root}/tsconfig.spec.json`;
         project.architect.test.options.main = `${project.sourceRoot}/test.ts`;
 
         project.architect.lint.options.tsConfig = [
@@ -660,9 +648,7 @@ const updateworkspaceJson = updateWorkspaceInTree(json => {
         project.sourceRoot = `${project.root}/src`;
         project.prefix = prefix;
 
-        project.architect.e2e.options.protractorConfig = `${
-          project.root
-        }/protractor.conf.js`;
+        project.architect.e2e.options.protractorConfig = `${project.root}/protractor.conf.js`;
         project.architect.lint.options.tsConfig = [
           `${project.root}/tsconfig.e2e.json`
         ];

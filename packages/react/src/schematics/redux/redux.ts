@@ -183,9 +183,7 @@ async function normalizeOptions(
     const appConfig = getProjectConfig(host, options.appProject);
     if (appConfig.projectType !== 'application') {
       throw new Error(
-        `Expected ${options.appProject} to be an application but got ${
-          appConfig.projectType
-        }`
+        `Expected ${options.appProject} to be an application but got ${appConfig.projectType}`
       );
     }
     appProjectSourcePath = appConfig.sourceRoot;

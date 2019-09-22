@@ -108,9 +108,7 @@ export class Migrator {
     } catch (e) {
       if (e.message.indexOf('No matching version') > -1) {
         throw new Error(
-          `${
-            e.message
-          }\nRun migrate with --to="package1@version1,package2@version2"`
+          `${e.message}\nRun migrate with --to="package1@version1,package2@version2"`
         );
       } else {
         throw e;

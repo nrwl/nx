@@ -115,9 +115,7 @@ function addExportsToBarrel(options: NormalizedSchema): Rule {
                 indexSourceFile,
                 indexFilePath,
                 options.directory
-                  ? `export * from './lib/${options.directory}/${
-                      options.fileName
-                    }';`
+                  ? `export * from './lib/${options.directory}/${options.fileName}';`
                   : `export * from './lib/${options.fileName}';`
               )
             );

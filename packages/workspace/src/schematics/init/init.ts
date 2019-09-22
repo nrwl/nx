@@ -518,9 +518,7 @@ function checkCanConvertToWorkspace(options: Schema) {
           `Make sure the ${e2eKey}.architect.e2e.options.protractorConfig is valid or the ${e2eKey} project is removed from angular.json.`
         );
         throw new Error(
-          `An e2e project was specified but ${
-            e2eApp.architect.e2e.options.protractorConfig
-          } could not be found.`
+          `An e2e project was specified but ${e2eApp.architect.e2e.options.protractorConfig} could not be found.`
         );
       }
 

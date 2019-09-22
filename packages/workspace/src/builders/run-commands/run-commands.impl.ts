@@ -78,9 +78,7 @@ async function runInParallel(options: RunCommandsBuilderOptions) {
     const r = await Promise.race(procs);
     if (!r.result) {
       process.stderr.write(
-        `Warning: @nrwl/run-command command "${
-          r.command
-        }" exited with non-zero status code`
+        `Warning: @nrwl/run-command command "${r.command}" exited with non-zero status code`
       );
       return false;
     } else {
@@ -92,9 +90,7 @@ async function runInParallel(options: RunCommandsBuilderOptions) {
     if (failed.length > 0) {
       failed.forEach(f => {
         process.stderr.write(
-          `Warning: @nrwl/run-command command "${
-            f.command
-          }" exited with non-zero status code`
+          `Warning: @nrwl/run-command command "${f.command}" exited with non-zero status code`
         );
       });
       return false;

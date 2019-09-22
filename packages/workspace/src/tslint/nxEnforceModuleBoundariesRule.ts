@@ -150,9 +150,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
 
       // check for circular dependency
       if (isCircular(this.deps, sourceProject, targetProject)) {
-        const error = `Circular dependency between "${
-          sourceProject.name
-        }" and "${targetProject.name}" detected`;
+        const error = `Circular dependency between "${sourceProject.name}" and "${targetProject.name}" detected`;
         this.addFailureAt(node.getStart(), node.getWidth(), error);
         return;
       }
@@ -221,9 +219,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
             const allowedTags = constraint.onlyDependOnLibsWithTags
               .map(s => `"${s}"`)
               .join(', ');
-            const error = `A project tagged with "${
-              constraint.sourceTag
-            }" can only depend on libs tagged with ${allowedTags}`;
+            const error = `A project tagged with "${constraint.sourceTag}" can only depend on libs tagged with ${allowedTags}`;
             this.addFailureAt(node.getStart(), node.getWidth(), error);
             return;
           }
