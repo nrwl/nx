@@ -2,6 +2,8 @@ import {
   JsonObject,
   logging,
   normalize,
+  terminal,
+  tags,
   schema,
   virtualFs
 } from '@angular-devkit/core';
@@ -219,6 +221,9 @@ async function executeSchematic(
   );
 
   let nothingDone = true;
+  let loggingQueue: string[] = [];
+  let hasError = false;
+
   workflow.reporter.subscribe((event: any) => {
     nothingDone = false;
     const eventPath = event.path.startsWith('/')
@@ -226,27 +231,54 @@ async function executeSchematic(
       : event.path;
     switch (event.kind) {
       case 'error':
+        hasError = true;
+
         const desc =
           event.description == 'alreadyExist'
             ? 'already exists'
             : 'does not exist.';
-        console.error(`error! ${eventPath} ${desc}.`);
+        logger.warn(`ERROR! ${eventPath} ${desc}.`);
         break;
       case 'update':
-        console.log(`update ${eventPath} (${event.content.length} bytes)`);
+        loggingQueue.push(
+          tags.oneLine`${terminal.white('UPDATE')} ${eventPath} (${
+            event.content.length
+          } bytes)`
+        );
         break;
       case 'create':
-        console.log(`create ${eventPath} (${event.content.length} bytes)`);
+        loggingQueue.push(
+          tags.oneLine`${terminal.green('CREATE')} ${eventPath} (${
+            event.content.length
+          } bytes)`
+        );
         break;
       case 'delete':
-        console.log(`delete ${eventPath}`);
+        loggingQueue.push(
+          tags.oneLine`${terminal.yellow('DELETE')} ${eventPath}`
+        );
         break;
       case 'rename':
         const eventToPath = event.to.startsWith('/')
           ? event.to.substr(1)
           : event.to;
-        console.log(`rename ${eventPath} => ${eventToPath}`);
+        loggingQueue.push(
+          tags.oneLine`${terminal.blue(
+            'RENAME'
+          )} ${eventPath} => ${eventToPath}`
+        );
         break;
+    }
+  });
+
+  workflow.lifeCycle.subscribe(event => {
+    if (event.kind === 'workflow-end' || event.kind === 'post-tasks-start') {
+      if (!hasError) {
+        loggingQueue.forEach(log => logger.info(log));
+      }
+
+      loggingQueue = [];
+      hasError = false;
     }
   });
 
@@ -287,6 +319,10 @@ async function executeSchematic(
 
     if (nothingDone) {
       logger.info('Nothing to be done.');
+    }
+
+    if (options.dryRun) {
+      logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
   } catch (err) {
     if (err instanceof UnsuccessfulWorkflowExecution) {
