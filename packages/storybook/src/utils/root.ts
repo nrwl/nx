@@ -12,9 +12,7 @@ export async function getRoot(context: BuilderContext, host: Host<{}>) {
     return workspace.projects.get(context.target.project).root;
   } else {
     context.reportStatus('Error');
-    const message = `${
-      context.target.project
-    } does not have a root. Please define one.`;
+    const message = `${context.target.project} does not have a root. Please define one.`;
     context.logger.error(message);
     throw new Error(message);
   }
