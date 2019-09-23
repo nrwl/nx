@@ -21,7 +21,9 @@ describe('getWebpackConfig', () => {
       options: {
         configFile: './tsconfig.json',
         // https://github.com/TypeStrong/ts-loader/pull/685
-        experimentalWatchApi: true
+        experimentalWatchApi: true,
+        // https://github.com/cypress-io/cypress/issues/2316
+        transpileOnly: true
       }
     });
   });
