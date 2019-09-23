@@ -291,8 +291,8 @@ async function fetch(
   let migrationsFile = json['nx-migrations'] || json['ng-update'];
 
   // migrationsFile is an object
-  if (migrationsFile.migration) {
-    migrationsFile = migrationsFile.migration;
+  if (migrationsFile && migrationsFile.migrations) {
+    migrationsFile = migrationsFile.migrations;
   }
 
   // packageVersion can be a tag, resolvedVersion works with semver
@@ -357,6 +357,8 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     to: { [p: string]: string };
   }
 ) {
+  logger.info(`Fetching meta data about packages.`);
+  logger.info(`It may take a few minutes.`);
   const migrator = new Migrator({
     versions: versions(root),
     fetch,
