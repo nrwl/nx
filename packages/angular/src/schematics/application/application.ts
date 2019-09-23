@@ -360,9 +360,7 @@ function updateComponentTemplate(options: NormalizedSchema): Rule {
 function updateComponentSpec(options: NormalizedSchema) {
   return (host: Tree) => {
     if (options.skipTests !== true) {
-      const componentSpecPath = `${
-        options.appProjectRoot
-      }/src/app/app.component.spec.ts`;
+      const componentSpecPath = `${options.appProjectRoot}/src/app/app.component.spec.ts`;
       const componentSpecSource = host
         .read(componentSpecPath)!
         .toString('utf-8');
@@ -594,9 +592,7 @@ function updateE2eProject(options: NormalizedSchema): Rule {
           }
         };
 
-        project.architect.e2e.options.protractorConfig = `${
-          options.e2eProjectRoot
-        }/protractor.conf.js`;
+        project.architect.e2e.options.protractorConfig = `${options.e2eProjectRoot}/protractor.conf.js`;
 
         json.projects[options.e2eProjectName] = project;
         delete json.projects[options.name].architect.e2e;

@@ -86,9 +86,7 @@ function createRunUpdateTask(): TaskExecutorFactory<UpdateTaskOptions> {
                 obs.next();
                 obs.complete();
               } else {
-                const message = `${
-                  options.package
-                } migration failed, see above.`;
+                const message = `${options.package} migration failed, see above.`;
                 obs.error(new Error(message));
               }
             });

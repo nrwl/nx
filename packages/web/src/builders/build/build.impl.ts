@@ -57,9 +57,7 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
   const supportedRange = new Range('10 || >=12.9');
   if (!satisfies(nodeVersion, supportedRange)) {
     throw new Error(
-      `Node version ${nodeVersion} is not supported. Supported range is "${
-        supportedRange.raw
-      }".`
+      `Node version ${nodeVersion} is not supported. Supported range is "${supportedRange.raw}".`
     );
   }
   return from(getSourceRoot(context, host))

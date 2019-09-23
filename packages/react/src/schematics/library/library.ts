@@ -162,9 +162,7 @@ function updateAppRoutes(
 
     if (!componentImportPath) {
       throw new Error(
-        `Could not find App component in ${
-          options.appMain
-        } (Hint: you can omit --appProject, or make sure App exists)`
+        `Could not find App component in ${options.appMain} (Hint: you can omit --appProject, or make sure App exists)`
       );
     }
 
@@ -278,9 +276,7 @@ function normalizeOptions(
 
     if (appProjectConfig.projectType !== 'application') {
       throw new Error(
-        `appProject expected type of "application" but got "${
-          appProjectConfig.projectType
-        }"`
+        `appProject expected type of "application" but got "${appProjectConfig.projectType}"`
       );
     }
 

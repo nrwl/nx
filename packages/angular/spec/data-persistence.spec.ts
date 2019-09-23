@@ -65,7 +65,7 @@ class RootCmp {}
 @Component({
   template: `
     Todo [
-    <div *ngIf="(todo | async) as t">ID {{ t.id }} User {{ t.user }}</div>
+    <div *ngIf="todo | async as t">ID {{ t.id }} User {{ t.user }}</div>
     ]
   `
 })

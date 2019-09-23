@@ -32,9 +32,7 @@ function run(options: any, context: BuilderContext): Observable<BuilderOutput> {
   }
 
   throw new Error(
-    `"${
-      options.linter
-    }" is not a supported linter option: use either eslint or tslint`
+    `"${options.linter}" is not a supported linter option: use either eslint or tslint`
   );
 }
 
