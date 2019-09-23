@@ -6,7 +6,7 @@
 
 ### Angular Enterprise Monorepo Pattens Book
 
-<img src="https://go.nrwl.io/hs-fs/hubfs/LP_Cover.jpg?width=5668&name=LP_Cover.jpg">
+<img src="https://images.ctfassets.net/8eyogtwep6d2/3OywPCi0Bg6zLWVN54j6tY/3b80e9f8c18f943f2f68008442920328/Angular_Enterprise_Monorepo_Pattens_Book.png?w=1024&fm=jpg&fl=progressive">
 
 [This is a free book](https://go.nrwl.io/angular-enterprise-monorepo-patterns-new-book?utm_campaign=Book%3A%20Monorepo%20Patterns%2C%20Jan%202019&utm_source=Github&utm_medium=Banner%20Ad) on using Nx in large organizations. It is very practical. Even though it covers the general benefits of Google-style development, it focuses on concrete problems and how to effectively use Nx to solve them.
 
