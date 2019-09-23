@@ -195,15 +195,15 @@ forEachCli(() => {
         `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --directory=dir -d`
       );
       expect(exists(`libs/dir/${workspace}/src/index.ts`)).toEqual(false);
-      expect(dryRunOutput).toContain(`update ${workspaceConfigName()}`);
-      expect(dryRunOutput).toContain('update nx.json');
+      expect(dryRunOutput).toContain(`UPDATE ${workspaceConfigName()}`);
+      expect(dryRunOutput).toContain('UPDATE nx.json');
 
       const output = runCommand(
         `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --directory=dir`
       );
       checkFilesExist(`libs/dir/${workspace}/src/index.ts`);
-      expect(output).toContain(`update ${workspaceConfigName()}`);
-      expect(output).toContain('update nx.json');
+      expect(output).toContain(`UPDATE ${workspaceConfigName()}`);
+      expect(output).toContain('UPDATE nx.json');
 
       const another = uniq('another');
       runCLI(`g workspace-schematic ${another} --no-interactive`);
@@ -220,7 +220,7 @@ forEachCli(() => {
       const promptOutput = runCommand(
         `npm run workspace-schematic ${custom} mylib2 --dry-run`
       );
-      expect(promptOutput).toContain('update nx.json');
+      expect(promptOutput).toContain('UPDATE nx.json');
     }, 1000000);
 
     describe('dep-graph', () => {
