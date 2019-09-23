@@ -193,8 +193,22 @@ function getCypressConfigValues(
   options: CypressBuilderOptions,
   context: BuilderContext
 ): any {
+  const cypressBaseConfigPath = join(
+    context.workspaceRoot,
+    dirname(options.cypressConfig),
+    'cypress.json'
+  );
   const cypressConfigPath = join(context.workspaceRoot, options.cypressConfig);
-  return readJsonFile(cypressConfigPath);
+
+  if (cypressBaseConfigPath !== cypressConfigPath) {
+    // merge cypress.json + extending configuration file (for legacy check)
+    return {
+      ...readJsonFile(cypressBaseConfigPath),
+      ...readJsonFile(cypressConfigPath)
+    };
+  } else {
+    return readJsonFile(cypressBaseConfigPath);
+  }
 }
 
 function isLegacy(
