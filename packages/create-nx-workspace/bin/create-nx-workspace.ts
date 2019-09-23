@@ -9,9 +9,19 @@ import * as path from 'path';
 import { dirSync } from 'tmp';
 import * as yargsParser from 'yargs-parser';
 
+enum Preset {
+  Empty = 'empty',
+  WebComponents = 'web-components',
+  Angular = 'angular',
+  AngularWithNest = 'angular-nest',
+  React = 'react',
+  ReactWithExpress = 'react-express',
+  NextJs = 'next'
+}
+
 const presetOptions = [
   {
-    value: 'empty',
+    value: Preset.Empty,
     name: 'empty             [an empty workspace]'
   },
   {
@@ -20,25 +30,25 @@ const presetOptions = [
       'web components    [a workspace with a single app built using web components]'
   },
   {
-    value: 'angular',
+    value: Preset.Angular,
     name: 'angular           [a workspace with a single Angular application]'
   },
   {
-    value: 'angular-nest',
+    value: Preset.AngularWithNest,
     name:
       'angular-nest      [a workspace with a full stack application (Angular + Nest)]'
   },
   {
-    value: 'react',
+    value: Preset.React,
     name: 'react             [a workspace with a single React application]'
   },
   {
-    value: 'react-express',
+    value: Preset.ReactWithExpress,
     name:
       'react-express     [a workspace with a full stack application (React + Express)]'
   },
   {
-    value: 'next',
+    value: Preset.NextJs,
     name: 'next.js           [a workspace with a single Next.js application]'
   }
 ];
@@ -78,6 +88,10 @@ determineWorkspaceName(parsedArgs).then(name => {
 });
 
 function showHelp() {
+  const options = Object.values(Preset)
+    .map(preset => '"' + preset + '"')
+    .join(', ');
+
   console.log(`
   Usage: create-nx-workspace <name> [options] [new workspace options]
 
@@ -87,9 +101,7 @@ function showHelp() {
 
     name                      workspace name
 
-    preset                    What to create in a new workspace (options: ${presetOptions
-      .map(o => '"' + o.value + '"')
-      .join(', ')})
+    preset                    What to create in a new workspace (options: ${options})
 
     appName                   the name of the application created by some presets  
 
@@ -144,93 +156,93 @@ function isPackageManagerInstalled(packageManager: string) {
   return isInstalled;
 }
 
-function determineWorkspaceName(parsedArgs: any) {
-  const workspaceName = parsedArgs._[2];
+function determineWorkspaceName(parsedArgs: any): Promise<string> {
+  const workspaceName: string = parsedArgs._[2];
 
   if (workspaceName) {
     return Promise.resolve(workspaceName);
-  } else {
-    return inquirer
-      .prompt([
-        {
-          name: 'WorkspaceName',
-          message: `Workspace name (e.g., org name)    `,
-          type: 'string'
-        }
-      ])
-      .then(a => {
-        if (!a.WorkspaceName) {
-          output.error({
-            title: 'Invalid workspace name',
-            bodyLines: [`Workspace name cannot be empty`]
-          });
-          process.exit(1);
-        }
-        return a.WorkspaceName;
-      });
   }
+
+  return inquirer
+    .prompt([
+      {
+        name: 'WorkspaceName',
+        message: `Workspace name (e.g., org name)    `,
+        type: 'string'
+      }
+    ])
+    .then(a => {
+      if (!a.WorkspaceName) {
+        output.error({
+          title: 'Invalid workspace name',
+          bodyLines: [`Workspace name cannot be empty`]
+        });
+        process.exit(1);
+      }
+      return a.WorkspaceName;
+    });
 }
 
-function determinePreset(parsedArgs: any): Promise<string> {
+function determinePreset(parsedArgs: any): Promise<Preset> {
   if (parsedArgs.preset) {
-    if (presetOptions.map(o => o.value).indexOf(parsedArgs.preset) === -1) {
+    if (Object.values(Preset).indexOf(parsedArgs.preset) === -1) {
       output.error({
         title: 'Invalid preset',
         bodyLines: [
           `It must be one of the following:`,
           '',
-          ...presetOptions.map(o => o.value)
+          ...Object.values(Preset)
         ]
       });
       process.exit(1);
     } else {
       return Promise.resolve(parsedArgs.preset);
     }
-  } else {
-    return inquirer
-      .prompt([
-        {
-          name: 'Preset',
-          message: `What to create in the new workspace`,
-          default: 'empty',
-          type: 'list',
-          choices: presetOptions
-        }
-      ])
-      .then(a => a.Preset);
   }
+
+  return inquirer
+    .prompt([
+      {
+        name: 'Preset',
+        message: `What to create in the new workspace`,
+        default: 'empty',
+        type: 'list',
+        choices: presetOptions
+      }
+    ])
+    .then((a: { Preset: Preset }) => a.Preset);
 }
 
-function determineAppName(preset: string, parsedArgs: any): Promise<string> {
-  if (preset === 'empty') {
+function determineAppName(preset: Preset, parsedArgs: any): Promise<string> {
+  if (preset === Preset.Empty) {
     return Promise.resolve('');
   }
 
   if (parsedArgs.appName) {
     return Promise.resolve(parsedArgs.appName);
-  } else {
-    return inquirer
-      .prompt([
-        {
-          name: 'AppName',
-          message: `Application name                   `,
-          type: 'string'
-        }
-      ])
-      .then(a => {
-        if (!a.AppName) {
-          output.error({
-            title: 'Invalid name',
-            bodyLines: [`Name cannot be empty`]
-          });
-          process.exit(1);
-        }
-        return a.AppName;
-      });
   }
+
+  return inquirer
+    .prompt([
+      {
+        name: 'AppName',
+        message: `Application name                   `,
+        type: 'string'
+      }
+    ])
+    .then(a => {
+      if (!a.AppName) {
+        output.error({
+          title: 'Invalid name',
+          bodyLines: [`Name cannot be empty`]
+        });
+        process.exit(1);
+      }
+      return a.AppName;
+    });
 }
 
-function determineCli(preset: string, parsedArgs: any) {
+function determineCli(preset: Preset, parsedArgs: any) {
   const angular = {
     package: '@angular/cli',
     version: angularCliVersion,
@@ -254,44 +266,82 @@ function determineCli(preset: string, parsedArgs: any) {
     return Promise.resolve(parsedArgs.cli === 'angular' ? angular : nx);
   }
 
-  if (preset == 'angular' || preset == 'angular-nest') {
-    return Promise.resolve(angular);
-  } else if (
-    preset === 'web-components' ||
-    preset === 'react' ||
-    preset === 'react-express' ||
-    preset === 'next'
-  ) {
-    return Promise.resolve(nx);
-  } else {
-    return inquirer
-      .prompt([
-        {
-          name: 'CLI',
-          message: `CLI to power the Nx workspace      `,
-          default: 'nx',
-          type: 'list',
-          choices: [
-            {
-              value: 'nx',
-              name:
-                'Nx           [Extensible CLI for JavaScript and TypeScript applications]'
-            },
+  switch (preset) {
+    case Preset.Angular:
+    case Preset.AngularWithNest: {
+      return Promise.resolve(angular);
+    }
+    case Preset.WebComponents:
+    case Preset.React:
+    case Preset.ReactWithExpress:
+    case Preset.NextJs: {
+      return Promise.resolve(nx);
+    }
+    default: {
+      return inquirer
+        .prompt([
+          {
+            name: 'CLI',
+            message: `CLI to power the Nx workspace      `,
+            default: 'nx',
+            type: 'list',
+            choices: [
+              {
+                value: 'nx',
+                name:
+                  'Nx           [Extensible CLI for JavaScript and TypeScript applications]'
+              },
 
-            {
-              value: 'angular',
-              name:
-                'Angular CLI  [Extensible CLI for Angular applications. Recommended for Angular projects.]'
-            }
-          ]
-        }
-      ])
-      .then(a => (a.CLI === 'angular' ? angular : nx));
+              {
+                value: 'angular',
+                name:
+                  'Angular CLI  [Extensible CLI for Angular applications. Recommended for Angular projects.]'
+              }
+            ]
+          }
+        ])
+        .then((a: { CLI: string }) => (a.CLI === 'angular' ? angular : nx));
+    }
   }
 }
 
-function determineStyle(preset: string) {
-  if (preset === 'empty') return Promise.resolve(null);
+function determineStyle(preset: Preset) {
+  if (preset === Preset.Empty) {
+    return Promise.resolve(null);
+  }
+
+  const choices = [
+    {
+      value: 'css',
+      name: 'CSS'
+    },
+    {
+      value: 'scss',
+      name: 'SASS(.scss)  [ http://sass-lang.com   ]'
+    },
+    {
+      value: 'styl',
+      name: 'Stylus(.styl)[ http://stylus-lang.com ]'
+    },
+    {
+      value: 'less',
+      name: 'LESS         [ http://lesscss.org     ]'
+    }
+  ];
+
+  if (preset === Preset.ReactWithExpress || preset === Preset.React) {
+    choices.push(
+      {
+        value: 'styled-components',
+        name: 'styled-components [ https://styled-components.com ]'
+      },
+      {
+        value: '@emotion/styled',
+        name: 'emotion           [ https://emotion.sh]'
+      }
+    );
+  }
+
   return inquirer
     .prompt([
       {
@@ -299,32 +349,7 @@ function determineStyle(preset: string) {
         message: `Default stylesheet format          `,
         default: 'css',
         type: 'list',
-        choices: [
-          {
-            value: 'css',
-            name: 'CSS'
-          },
-          {
-            value: 'scss',
-            name: 'SASS(.scss)  [ http://sass-lang.com   ]'
-          },
-          {
-            value: 'styl',
-            name: 'Stylus(.styl)[ http://stylus-lang.com ]'
-          },
-          {
-            value: 'less',
-            name: 'LESS         [ http://lesscss.org     ]'
-          },
-          {
-            value: 'styled-components',
-            name: 'styled-components [ https://styled-components.com ]'
-          },
-          {
-            value: '@emotion/styled',
-            name: 'emotion           [ https://emotion.sh]'
-          }
-        ]
+        choices
       }
     ])
     .then(a => a.style);
@@ -361,7 +386,7 @@ function createApp(
   cli: { command: string },
   parsedArgs: any,
   name: string,
-  preset: string,
+  preset: Preset,
   appName: string,
   style: string | null
 ) {
@@ -419,51 +444,64 @@ function showNxWarning(workspaceName: string) {
   }
 }
 
-function showCliWarning(preset: string, parsedArgs: any) {
+function showCliWarning(preset: Preset, parsedArgs: yargsParser.Arguments) {
   if (!parsedArgs.cli) {
-    if (preset === 'angular' || preset === 'angular-nest') {
-      output.addVerticalSeparator();
-      output.note({
-        title: `Because you selected an Angular-specific preset, we generated an Nx workspace powered by the Angular CLI.`,
-        bodyLines: [
-          `Run 'create-nx-workspace --help' to see how to select a different CLI.`
-        ]
-      });
-    } else if (
-      preset === 'web-components' ||
-      preset === 'react' ||
-      preset === 'react-express' ||
-      preset === 'next'
-    ) {
-      output.addVerticalSeparator();
-      output.note({
-        title: `We generated an Nx workspace powered by the Nx CLI.`,
-        bodyLines: [
-          `Run 'create-nx-workspace --help' to see how to select a different CLI.`
-        ]
-      });
+    switch (preset) {
+      case Preset.Angular:
+      case Preset.AngularWithNest:
+        {
+          output.addVerticalSeparator();
+          output.note({
+            title: `Because you selected an Angular-specific preset, we generated an Nx workspace powered by the Angular CLI.`,
+            bodyLines: [
+              `Run 'create-nx-workspace --help' to see how to select a different CLI.`
+            ]
+          });
+        }
+        break;
+      case Preset.WebComponents:
+      case Preset.React:
+      case Preset.ReactWithExpress:
+      case Preset.NextJs:
+        {
+          output.addVerticalSeparator();
+          output.note({
+            title: `We generated an Nx workspace powered by the Nx CLI.`,
+            bodyLines: [
+              `Run 'create-nx-workspace --help' to see how to select a different CLI.`
+            ]
+          });
+        }
+        break;
     }
   }
 }
 
-function pointToTutorial(preset: string) {
-  if (preset === 'react' || preset === 'react-express' || preset === 'next') {
-    output.addVerticalSeparator();
-    output.note({
-      title: `First time using Nx? Check out this interactive Nx tutorial.`,
-      bodyLines: [`https://nx.dev/react/tutorial/01-create-application`]
-    });
-  } else if (preset === 'angular' || preset === 'angular-nest') {
-    output.addVerticalSeparator();
-    output.note({
-      title: `First time using Nx? Check out this interactive Nx tutorial.`,
-      bodyLines: [`https://nx.dev/angular/tutorial/01-create-application`]
-    });
-  } else if (preset === 'web-components') {
-    output.addVerticalSeparator();
-    output.note({
-      title: `First time using Nx? Check out this interactive Nx tutorial.`,
-      bodyLines: [`https://nx.dev/web/tutorial/01-create-application`]
-    });
+function pointToTutorial(preset: Preset) {
+  switch (preset) {
+    case Preset.React:
+    case Preset.ReactWithExpress:
+    case Preset.NextJs:
+      output.addVerticalSeparator();
+      output.note({
+        title: `First time using Nx? Check out this interactive Nx tutorial.`,
+        bodyLines: [`https://nx.dev/react/tutorial/01-create-application`]
+      });
+      break;
+    case Preset.Angular:
+    case Preset.AngularWithNest:
+      output.addVerticalSeparator();
+      output.note({
+        title: `First time using Nx? Check out this interactive Nx tutorial.`,
+        bodyLines: [`https://nx.dev/angular/tutorial/01-create-application`]
+      });
+      break;
+    case Preset.WebComponents:
+      output.addVerticalSeparator();
+      output.note({
+        title: `First time using Nx? Check out this interactive Nx tutorial.`,
+        bodyLines: [`https://nx.dev/web/tutorial/01-create-application`]
+      });
+      break;
   }
 }
