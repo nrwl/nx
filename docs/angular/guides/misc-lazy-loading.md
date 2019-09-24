@@ -9,7 +9,7 @@ You can use libraries across the app using two strategies:
 
 Even a medium size application has code that doesn't need to load until later. Lazing loading this code help with the bundle size, as a a result, with the startup time of your application.
 
-To learn how to use lazy loading, run `ng g @nrwl/angular:lib todo-list-shell --router --lazy --parentModule=apps/todos/src/app/app.module.ts`.
+To learn how to use lazy loading, run `ng g @nrwl/angular:lib todo-list-shell --routing --lazy --parentModule=apps/todos/src/app/app.module.ts`.
 
 _**Explanation**_
 
