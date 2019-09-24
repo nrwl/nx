@@ -9,7 +9,7 @@ describe('Update 8.5.0', () => {
   let tree: Tree;
   let schematicRunner: SchematicTestRunner;
 
-  const jestBuilder = '@nrwl/jest:test';
+  const jestBuilder = '@nrwl/jest:jest';
   const nonJestBuilder = 'something-else';
 
   beforeEach(async () => {
