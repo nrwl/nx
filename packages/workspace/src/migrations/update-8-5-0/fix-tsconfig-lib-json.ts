@@ -12,7 +12,7 @@ export default function() {
         project.projectType === 'library' &&
         project.architect &&
         project.architect.test &&
-        project.architect.test.builder === '@nrwl/jest:test' &&
+        project.architect.test.builder === '@nrwl/jest:jest' &&
         project.architect.test.options &&
         project.architect.test.options.setupFile ===
           project.sourceRoot + '/test-setup.ts'
