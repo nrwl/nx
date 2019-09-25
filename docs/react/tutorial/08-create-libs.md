@@ -10,7 +10,8 @@ Every library has an `index.ts` file, which defines its public API. Other applic
 
 To illustrate how useful libraries can be, create a library of React components.
 
-Run 
+Run
+
 ```bash
 nx g @nrwl/react:lib ui
 ```
