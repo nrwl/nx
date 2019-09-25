@@ -10,7 +10,10 @@ Every library has an `index.ts` file, which defines its public API. Other applic
 
 To illustrate how useful libraries can be, create a library of React components.
 
-**Run `nx g @nrwl/react:lib ui`.**
+Run 
+```bash
+nx g @nrwl/react:lib ui
+```
 
 You should see the following:
 
@@ -120,7 +123,7 @@ export const Todos = (props: { todos: Todo[] }) => {
 export default Todos;
 ```
 
-**Reexport it from the index file.**
+**Re-export it from the index file.**
 
 ```typescript
 export * from './lib/ui/ui';

@@ -87,7 +87,7 @@ export function addTodoRoutes(app: Express) {
 
 Here, you are building an Express application with Nx. Nx also comes with Nest support, and you can also use any other node library you want.
 
-**Next.update main.ts to register to routes**
+**Next update `apps/api/src/main.ts` to register the routes**
 
 ```typescript
 import * as express from 'express';
