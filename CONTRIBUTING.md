@@ -27,7 +27,7 @@ After cloning the project to your machine, to install the dependencies, run:
 yarn
 ```
 
-To build the all packages, run:
+To build all the packages, run:
 
 ```bash
 yarn build
