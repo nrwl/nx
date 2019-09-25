@@ -17,7 +17,7 @@
 
 ### Videos
 
-- [Video course on using Nx Workspaces](https://angularplaybook.com/p/nx-workspaces)
+- [Video course on using Nx Workspaces](https://connect.nrwl.io/app/courses/nx-workspaces/intro)
 
 ### Talks
 

@@ -32,6 +32,14 @@ export class AppElement extends HTMLElement {
         <li class="col-span-2">
             <a
                     class="resource flex"
+                    href="https://connect.nrwl.io/app/courses/nx-workspaces/intro"
+            >
+                Nx video course
+            </a>
+        </li>
+        <li class="col-span-2">
+            <a
+                    class="resource flex"
                     href="https://nx.dev/angular/getting-started/what-is-nx"
             >
                 Nx video tutorial

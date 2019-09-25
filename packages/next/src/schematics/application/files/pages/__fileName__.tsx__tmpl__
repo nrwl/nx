@@ -176,6 +176,14 @@ var innerJsx = `
       Here are some links to help you get started.
     </p>
     <ul className="resources">
+        <li className="col-span-2">
+          <a
+            className="resource flex"
+            href="https://connect.nrwl.io/app/courses/nx-workspaces/intro"
+          >
+            Nx video course
+          </a>
+        </li>
       <li className="col-span-2">
         <a
           className="resource flex"

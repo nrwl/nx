@@ -13,6 +13,10 @@
 - [Nx blog posts](https://blog.nrwl.io/react/home)
 - [Effective React Development with Nx](https://go.nrwl.io/effective-react-development-with-nx-new-book)
 
+## Videos
+
+- [Video course on using Nx Workspaces](https://connect.nrwl.io/app/courses/nx-workspaces/intro)
+
 ## Misc
 
 - [nx-examples](https://github.com/nrwl/nx-examples) repo has branches for different nx comments to display expected behavior and example app and libraries.
