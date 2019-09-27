@@ -326,7 +326,7 @@ function createMigrationsFile(root: string, migrations: any[]) {
 
 function updatePackageJson(
   root: string,
-  packageJson: {
+  updatedPackages: {
     [p: string]: { version: string; alwaysAddToPackageJson: boolean };
   }
 ) {
@@ -334,14 +334,14 @@ function updatePackageJson(
   const json = JSON.parse(
     stripJsonComments(readFileSync(packageJsonPath).toString())
   );
-  Object.keys(packageJson).forEach(p => {
+  Object.keys(updatedPackages).forEach(p => {
     if (json.devDependencies && json.devDependencies[p]) {
-      json.devDependencies[p] = packageJson[p].version;
+      json.devDependencies[p] = updatedPackages[p].version;
     } else if (json.dependencies && json.dependencies[p]) {
-      json.dependencies[p] = packageJson[p].version;
-    } else if (packageJson[p].alwaysAddToPackageJson) {
+      json.dependencies[p] = updatedPackages[p].version;
+    } else if (updatedPackages[p].alwaysAddToPackageJson) {
       if (!json.dependencies) json.dependencies = {};
-      json.dependencies[p] = packageJson[p].version;
+      json.dependencies[p] = updatedPackages[p].version;
     }
   });
   writeFileSync(packageJsonPath, JSON.stringify(json, null, 2));
