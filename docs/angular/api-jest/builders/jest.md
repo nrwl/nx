@@ -190,7 +190,7 @@ Divert all output to stderr.
 
 ### verbose
 
-Type: `string`
+Type: `boolean`
 
 Display individual test results with the test suite hierarchy. (https://jestjs.io/docs/en/cli#verbose)
 
