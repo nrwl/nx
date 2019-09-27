@@ -63,7 +63,7 @@ forEachCli(() => {
       console.log(
         `The current es2015 bundle size is ${es2015BundleSize / 1000} KB`
       );
-      expect(es2015BundleSize).toBeLessThanOrEqual(150000);
+      expect(es2015BundleSize).toBeLessThanOrEqual(160000);
 
       const es5BundleSize = getSize(
         tmpProjPath(`dist/apps/my-dir/${myapp}/main-es5.js`)
