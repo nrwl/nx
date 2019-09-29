@@ -95,6 +95,15 @@ If you try to violate the constrains, you will get an error:
 A project tagged with "scope:admin" can only depend on projects tagged with "scoped:shared" or "scope:admin".
 ```
 
+### Exceptions
+
+The `"allow": []` are the list of imports that won't fail linting.
+
+- `"allow": ['@myorg/mylib/testing']` allows importing `'@myorg/mylib/testing'`.
+- `"allow": ['@myorg/mylib/*']` allows importing `'@myorg/mylib/a'` but not `'@myorg/mylib/a/b'`.
+- `"allow": ['@myorg/mylib/**']` allows importing `'@myorg/mylib/a'` and `'@myorg/mylib/a/b'`.
+- `"allow": ['@myorg/**/testing']` allows importing `'@myorg/mylib/testing'` and `'@myorg/nested/lib/testing'`.
+
 ## Multiple Dimensions
 
 The example above shows using a single dimension: `scope`. It's the most commonly used one. But you can find other dimensions useful. You can define which projects contain components, state management code, and features, so you, for instance, can disallow projects containing dumb UI components to depend on state management code. You can define which projects are experimental and which are stable, so stable applications cannot depend on experimental projects etc. You can define which projects have server-side code and which have client-side code to make sure your node app doesn't bundle in your frontend framework.

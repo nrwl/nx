@@ -44,8 +44,21 @@ export function matchImportWithWildcard(
   allowableImport: string,
   extractedImport: string
 ): boolean {
-  const regex = new RegExp('^' + allowableImport.split('*').join('.*') + '$');
-  return regex.test(extractedImport);
+  if (allowableImport.endsWith('/**')) {
+    const prefix = allowableImport.substring(0, allowableImport.length - 2);
+    return extractedImport.startsWith(prefix);
+  } else if (allowableImport.endsWith('/*')) {
+    const prefix = allowableImport.substring(0, allowableImport.length - 1);
+    if (!extractedImport.startsWith(prefix)) return false;
+    return extractedImport.substring(prefix.length).indexOf('/') > -1;
+  } else if (allowableImport.indexOf('/**/') > -1) {
+    const [prefix, suffix] = allowableImport.split('/**/');
+    return (
+      extractedImport.startsWith(prefix) && extractedImport.endsWith(suffix)
+    );
+  } else {
+    return extractedImport === allowableImport;
+  }
 }
 
 export function isRelative(s: string) {

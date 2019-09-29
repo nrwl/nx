@@ -550,10 +550,11 @@ describe('Enforce Module Boundaries', () => {
 
   it('should not error about deep imports into library when exception is specified with a wildcard', () => {
     const failures = runRule(
-      { allow: ['@mycompany/other/*'] },
+      { allow: ['@mycompany/other/**', '@mycompany/**/testing'] },
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
       `
       import "@mycompany/other/src/blah"
+      import "@mycompany/another/testing"
       `,
       [
         {
@@ -563,10 +564,9 @@ describe('Enforce Module Boundaries', () => {
           tags: [],
           implicitDependencies: [],
           architect: {},
-          files: [`libs/mylib/src/main.ts`, `libs/mylib/src/another-file.ts`],
+          files: [`libs/mylib/src/main.ts`],
           fileMTimes: {
-            'libs/mylib/src/main.ts': 1,
-            'libs/mylib/src/another-file.ts': 1
+            'libs/mylib/src/main.ts': 1
           }
         },
         {
@@ -580,10 +580,61 @@ describe('Enforce Module Boundaries', () => {
           fileMTimes: {
             'libs/other/src/blah.ts': 1
           }
+        },
+        {
+          name: 'anotherName',
+          root: 'libs/another',
+          type: ProjectType.lib,
+          tags: [],
+          implicitDependencies: [],
+          architect: {},
+          files: [`libs/anotherlib/testing.ts`],
+          fileMTimes: {
+            'libs/anotherlib/testing.ts': 1
+          }
         }
       ]
     );
     expect(failures.length).toEqual(0);
+  });
+
+  it('should not error about one level deep imports into library when exception is specified with a wildcard', () => {
+    const failures = runRule(
+      { allow: ['@mycompany/other/*'] },
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      `
+      import "@mycompany/other/a/b";
+      import "@mycompany/other/a";
+      `,
+      [
+        {
+          name: 'mylibName',
+          root: 'libs/mylib',
+          type: ProjectType.lib,
+          tags: [],
+          implicitDependencies: [],
+          architect: {},
+          files: [`libs/mylib/src/main.ts`],
+          fileMTimes: {
+            'libs/mylib/src/main.ts': 1
+          }
+        },
+        {
+          name: 'otherName',
+          root: 'libs/other',
+          type: ProjectType.lib,
+          tags: [],
+          implicitDependencies: [],
+          architect: {},
+          files: [`libs/other/a/index.ts`, `libs/other/a/b.ts`],
+          fileMTimes: {
+            'libs/other/a/index.ts': 1,
+            'libs/other/a/b.ts': 1
+          }
+        }
+      ]
+    );
+    expect(failures.length).toEqual(1);
   });
 
   it('should error on importing a lazy-loaded library', () => {
