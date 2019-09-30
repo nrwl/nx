@@ -277,7 +277,9 @@ describe('Jest Builder', () => {
     beforeAll(() => {
       jest.doMock(
         '/root/jest.config.js',
-        () => ({ globals: { hereToStay: true } }),
+        () => ({
+          globals: { hereToStay: true, 'ts-jest': { diagnostics: false } }
+        }),
         { virtual: true }
       );
     });
@@ -296,6 +298,7 @@ describe('Jest Builder', () => {
           globals: JSON.stringify({
             hereToStay: true,
             'ts-jest': {
+              diagnostics: false,
               tsConfig: '/root/tsconfig.test.json',
               stringifyContentPathRegex: '\\.(html|svg)$',
               astTransformers: [

@@ -76,7 +76,10 @@ function run(
   const jestConfig: { globals: any } = require(options.jestConfig);
   const globals = jestConfig.globals || {};
   Object.assign(globals, {
-    'ts-jest': tsJestConfig
+    'ts-jest': {
+      ...(globals['ts-jest'] || {}),
+      ...tsJestConfig
+    }
   });
 
   const config: any = {
