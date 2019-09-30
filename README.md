@@ -165,7 +165,7 @@ You are good to go!
 
 - [Building Angular full-stack applications in a monorepo.](https://www.youtube.com/watch?v=XZpp52IqD2A&t=1292s)
 - [Building React full-stack applications in a monorepo.](https://www.youtube.com/watch?v=Jxh_--FeJeY&t=2s)
-- [Video course on using Nx Workspaces](https://angularplaybook.com/p/nx-workspaces)
+- [Video course on using Nx Workspaces](https://connect.nrwl.io/app/courses/nx-workspaces/intro)
 
 ### Talks
 
