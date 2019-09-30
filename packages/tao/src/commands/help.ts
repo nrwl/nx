@@ -1,9 +1,10 @@
-import { tags } from '@angular-devkit/core';
-import { logger } from '../shared/logger';
-import { toolDescription, commandName } from '../shared/print-help';
-import { terminal } from '@angular-devkit/core';
+import { tags, terminal } from '@angular-devkit/core';
+import { getLogger } from '../shared/logger';
+import { commandName, toolDescription } from '../shared/print-help';
 
-export function printHelp() {
+export function help() {
+  const logger = getLogger(true);
+
   logger.info(tags.stripIndent`
     ${terminal.bold(toolDescription)}
   

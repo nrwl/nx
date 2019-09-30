@@ -1,9 +1,11 @@
+import { logging, tags, terminal } from '@angular-devkit/core';
 import { Schema } from './params';
-import { logger } from './logger';
-import { tags } from '@angular-devkit/core';
-import { terminal } from '@angular-devkit/core';
 
-export function printHelp(header: string, schema: Schema) {
+export function printHelp(
+  header: string,
+  schema: Schema,
+  logger: logging.Logger
+) {
   const allPositional = Object.keys(schema.properties).filter(key => {
     const p = schema.properties[key];
     return p['$default'] && p['$default']['$source'] === 'argv';

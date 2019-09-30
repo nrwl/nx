@@ -1,11 +1,4 @@
 import {
-  coerceTypes,
-  convertAliases,
-  convertToCamelCase,
-  handleErrors,
-  Schema
-} from '../shared/params';
-import {
   experimental,
   JsonObject,
   logging,
@@ -15,24 +8,30 @@ import {
   terminal,
   virtualFs
 } from '@angular-devkit/core';
-import {
-  DryRunEvent,
-  HostTree,
-  Schematic,
-  formats
-} from '@angular-devkit/schematics';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import {
+  DryRunEvent,
+  formats,
+  HostTree,
+  Schematic
+} from '@angular-devkit/schematics';
+import {
   NodeWorkflow,
-  validateOptionsWithSchema,
-  FileSystemSchematicDescription
+  validateOptionsWithSchema
 } from '@angular-devkit/schematics/tools';
-import * as inquirer from 'inquirer';
-import { logger } from '../shared/logger';
-import { commandName, printHelp } from '../shared/print-help';
-import * as fs from 'fs';
-import minimist = require('minimist');
 import { execSync } from 'child_process';
+import * as fs from 'fs';
+import * as inquirer from 'inquirer';
+import { getLogger } from '../shared/logger';
+import {
+  coerceTypes,
+  convertAliases,
+  convertToCamelCase,
+  handleErrors,
+  Schema
+} from '../shared/params';
+import { commandName, printHelp } from '../shared/print-help';
+import minimist = require('minimist');
 
 interface GenerateOptions {
   collectionName: string;
@@ -290,7 +289,11 @@ function getCollection(workflow: NodeWorkflow, name: string) {
   return collection;
 }
 
-function printGenHelp(opts: GenerateOptions, schema: Schema) {
+function printGenHelp(
+  opts: GenerateOptions,
+  schema: Schema,
+  logger: logging.Logger
+) {
   printHelp(
     `${commandName} generate ${opts.collectionName}:${opts.schematicName}`,
     {
@@ -299,7 +302,8 @@ function printGenHelp(opts: GenerateOptions, schema: Schema) {
         ...schema.properties,
         dryRun: `Runs through and reports activity without writing to disk.`
       }
-    }
+    },
+    logger
   );
 }
 
@@ -346,7 +350,7 @@ async function runSchematic(
     .toPromise();
 
   if (opts.help) {
-    printGenHelp(opts, flattenedSchema as any);
+    printGenHelp(opts, flattenedSchema as any, logger);
   } else {
     const defaults =
       opts.schematicName === 'tao-new'
@@ -381,8 +385,14 @@ async function runSchematic(
   return 0;
 }
 
-export async function generate(root: string, args: string[]) {
-  return handleErrors(logger, async () => {
+export async function generate(
+  root: string,
+  args: string[],
+  isVerbose: boolean = false
+) {
+  const logger = getLogger(isVerbose);
+
+  return handleErrors(logger, isVerbose, async () => {
     const fsHost = new virtualFs.ScopedHost(
       new NodeJsSyncHost(),
       normalize(root)
@@ -412,8 +422,14 @@ async function readDefaultCollection(host: virtualFs.Host<any>) {
   return workspaceJson.cli ? workspaceJson.cli.defaultCollection : null;
 }
 
-export async function taoNew(root: string, args: string[]) {
-  return handleErrors(logger, async () => {
+export async function taoNew(
+  root: string,
+  args: string[],
+  isVerbose: boolean = false
+) {
+  const logger = getLogger(isVerbose);
+
+  return handleErrors(logger, isVerbose, async () => {
     const fsHost = new virtualFs.ScopedHost(
       new NodeJsSyncHost(),
       normalize(root)

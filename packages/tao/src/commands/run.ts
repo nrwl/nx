@@ -1,22 +1,22 @@
-import {
-  convertToCamelCase,
-  handleErrors,
-  Schema,
-  coerceTypes
-} from '../shared/params';
+import { Architect } from '@angular-devkit/architect';
+import { WorkspaceNodeModulesArchitectHost } from '@angular-devkit/architect/node';
 import {
   experimental,
   json,
+  logging,
   normalize,
-  schema,
-  tags
+  schema
 } from '@angular-devkit/core';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
-import { WorkspaceNodeModulesArchitectHost } from '@angular-devkit/architect/node';
-import { Architect } from '@angular-devkit/architect';
-import { logger } from '../shared/logger';
+import { getLogger } from '../shared/logger';
+import {
+  coerceTypes,
+  convertToCamelCase,
+  handleErrors,
+  Schema
+} from '../shared/params';
+import { commandName, printHelp } from '../shared/print-help';
 import minimist = require('minimist');
-import { printHelp, commandName } from '../shared/print-help';
 
 export interface RunOptions {
   project: string;
@@ -70,12 +70,22 @@ function parseRunOpts(
   return res;
 }
 
-function printRunHelp(opts: RunOptions, schema: Schema) {
-  printHelp(`${commandName} run ${opts.project}:${opts.target}`, schema);
+function printRunHelp(
+  opts: RunOptions,
+  schema: Schema,
+  logger: logging.Logger
+) {
+  printHelp(
+    `${commandName} run ${opts.project}:${opts.target}`,
+    schema,
+    logger
+  );
 }
 
-export async function run(root: string, args: string[]) {
-  return handleErrors(logger, async () => {
+export async function run(root: string, args: string[], isVerbose: boolean) {
+  const logger = getLogger(isVerbose);
+
+  return handleErrors(logger, isVerbose, async () => {
     const fsHost = new NodeJsSyncHost();
     const workspace = await new experimental.workspace.Workspace(
       normalize(root) as any,
@@ -102,7 +112,7 @@ export async function run(root: string, args: string[]) {
       .flatten(builderDesc.optionSchema! as json.JsonObject)
       .toPromise();
     if (opts.help) {
-      printRunHelp(opts, flattenedSchema as any);
+      printRunHelp(opts, flattenedSchema as any, logger);
       return 0;
     } else {
       const runOptions = coerceTypes(opts.runOptions, flattenedSchema as any);

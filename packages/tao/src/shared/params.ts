@@ -7,7 +7,11 @@ export type Schema = {
   description: string;
 };
 
-export async function handleErrors(logger: logging.Logger, fn: Function) {
+export async function handleErrors(
+  logger: logging.Logger,
+  isVerbose: boolean,
+  fn: Function
+) {
   try {
     return await fn();
   } catch (err) {
@@ -15,6 +19,9 @@ export async function handleErrors(logger: logging.Logger, fn: Function) {
       logger.fatal('The Schematic workflow failed. See above.');
     } else {
       logger.fatal(err.message);
+    }
+    if (isVerbose && err.stack) {
+      logger.info(err.stack);
     }
     return 1;
   }
