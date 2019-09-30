@@ -1,20 +1,18 @@
-import { gt, lte } from 'semver';
-import { handleErrors, convertToCamelCase } from '../shared/params';
-import { logger } from '../shared/logger';
-import minimist = require('minimist');
-import { commandName } from '../shared/print-help';
-import { virtualFs, normalize, logging } from '@angular-devkit/core';
-import { NodeJsSyncHost } from '@angular-devkit/core/node';
-import { HostTree } from '@angular-devkit/schematics';
-import { dirSync } from 'tmp';
-import { readFileSync, writeFileSync, statSync } from 'fs';
-import { NodeModulesEngineHost } from '@angular-devkit/schematics/tools';
-import { BaseWorkflow } from '@angular-devkit/schematics/src/workflow';
-import * as stripJsonComments from 'strip-json-comments';
-
-import * as path from 'path';
+import { logging, normalize, virtualFs } from '@angular-devkit/core';
 import * as core from '@angular-devkit/core/node';
+import { NodeJsSyncHost } from '@angular-devkit/core/node';
+import { BaseWorkflow } from '@angular-devkit/schematics/src/workflow';
+import { NodeModulesEngineHost } from '@angular-devkit/schematics/tools';
 import { execSync } from 'child_process';
+import { readFileSync, writeFileSync } from 'fs';
+import * as path from 'path';
+import { gt, lte } from 'semver';
+import * as stripJsonComments from 'strip-json-comments';
+import { dirSync } from 'tmp';
+import { getLogger } from '../shared/logger';
+import { convertToCamelCase, handleErrors } from '../shared/params';
+import { commandName } from '../shared/print-help';
+import minimist = require('minimist');
 
 export type MigrationsJson = {
   version: string;
@@ -484,8 +482,14 @@ async function runMigrations(
   await p;
 }
 
-export async function migrate(root: string, args: string[]) {
-  return handleErrors(logger, async () => {
+export async function migrate(
+  root: string,
+  args: string[],
+  isVerbose: boolean = false
+) {
+  const logger = getLogger(isVerbose);
+
+  return handleErrors(logger, isVerbose, async () => {
     const opts = parseMigrationsOptions(args);
     if (opts.type === 'generateMigrations') {
       await generateMigrationsJsonAndUpdatePackageJson(logger, root, opts);
