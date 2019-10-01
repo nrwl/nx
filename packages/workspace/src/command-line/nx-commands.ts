@@ -5,7 +5,7 @@ import { affected } from './affected';
 import { format } from './format';
 import { workspaceLint } from './lint';
 import { workspaceSchematic } from './workspace-schematic';
-import { generateGraph, OutputType } from './dep-graph';
+import { generateGraph } from './dep-graph';
 import { nxVersion } from '../utils/versions';
 import { execSync } from 'child_process';
 import { platform } from 'os';
@@ -137,8 +137,8 @@ export const commandsObject = yargs
   .command(
     'dep-graph',
     'Graph dependencies within workspace',
-    yargs => withAffectedOptions(withDepGraphOptions(yargs)),
-    args => generateGraph(args)
+    yargs => withDepGraphOptions(yargs),
+    args => generateGraph(args as any, [])
   )
   .command(
     'format:check',
@@ -266,14 +266,10 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
 }
 
 function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
-  return yargs
-    .describe('file', 'output file (e.g. --file=.vis/output.json)')
-    .choices('output', [
-      OutputType.json,
-      OutputType.dot,
-      OutputType.html,
-      OutputType.svg
-    ]);
+  return yargs.option('file', {
+    describe: 'output file (e.g. --file=output.json)',
+    type: 'string'
+  });
 }
 
 function parseCSV(args: string[]) {

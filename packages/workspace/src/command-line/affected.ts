@@ -106,7 +106,7 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
                   !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
               );
         printArgsWarning(parsedArgs);
-        generateGraph(parsedArgs, projects);
+        generateGraph(parsedArgs as any, projects);
         break;
       default:
         const targetProjects = getProjects(
