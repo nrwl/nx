@@ -64,6 +64,10 @@ Default: `false`
 
 Isolate projects which previously failed
 
+### plain
+
+Produces a plain output for affected:apps and affected:libs
+
 ### uncommitted
 
 Uncommitted changes

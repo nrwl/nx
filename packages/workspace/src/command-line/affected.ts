@@ -45,6 +45,7 @@ export interface AffectedOptions {
   help?: boolean;
   version?: boolean;
   quiet?: boolean;
+  plain?: boolean;
 }
 
 const commonCommands = ['build', 'test', 'lint', 'e2e'];
@@ -70,12 +71,16 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
             project =>
               !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
           );
-        printArgsWarning(parsedArgs);
-        if (apps.length) {
-          output.log({
-            title: 'Affected apps:',
-            bodyLines: apps.map(app => `${output.colors.gray('-')} ${app}`)
-          });
+        if (parsedArgs.plain) {
+          console.log(apps.join(' '));
+        } else {
+          printArgsWarning(parsedArgs);
+          if (apps.length) {
+            output.log({
+              title: 'Affected apps:',
+              bodyLines: apps.map(app => `${output.colors.gray('-')} ${app}`)
+            });
+          }
         }
         break;
       case 'libs':
@@ -88,12 +93,17 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
             project =>
               !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
           );
-        printArgsWarning(parsedArgs);
-        if (libs.length) {
-          output.log({
-            title: 'Affected libs:',
-            bodyLines: libs.map(lib => `${output.colors.gray('-')} ${lib}`)
-          });
+
+        if (parsedArgs.plain) {
+          console.log(libs.join(' '));
+        } else {
+          printArgsWarning(parsedArgs);
+          if (libs.length) {
+            output.log({
+              title: 'Affected libs:',
+              bodyLines: libs.map(lib => `${output.colors.gray('-')} ${lib}`)
+            });
+          }
         }
         break;
       case 'dep-graph':
@@ -341,7 +351,8 @@ const dummyOptions: AffectedOptions = {
   head: 'head',
   exclude: ['exclude'],
   files: [''],
-  verbose: false
+  verbose: false,
+  plain: false
 };
 
 const nxSpecificFlags = Object.keys(dummyOptions);
