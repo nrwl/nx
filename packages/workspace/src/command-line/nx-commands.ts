@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-import * as yargs from 'yargs';
-
-import { affected } from './affected';
-import { format } from './format';
-import { workspaceLint } from './lint';
-import { workspaceSchematic } from './workspace-schematic';
-import { generateGraph } from './dep-graph';
-import { nxVersion } from '../utils/versions';
 import { execSync } from 'child_process';
 import { platform } from 'os';
+import * as yargs from 'yargs';
+import { nxVersion } from '../utils/versions';
+import { affected } from './affected';
+import { generateGraph } from './dep-graph';
+import { format } from './format';
+import { workspaceLint } from './lint';
+import { report } from './report';
+import { workspaceSchematic } from './workspace-schematic';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
@@ -28,6 +28,7 @@ export const supportedNxCommands = [
   'workspace-schematic',
   'workspace-lint',
   'migrate',
+  'report',
   '--help',
   '--version'
 ];
@@ -197,6 +198,12 @@ export const commandsObject = yargs
         stdio: ['inherit', 'inherit', 'inherit']
       });
     }
+  )
+  .command(
+    'report',
+    'Reports useful version numbers to copy into the Nx issue template',
+    noop,
+    _ => report()
   )
   .help('help')
   .version(nxVersion)
