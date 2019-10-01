@@ -206,10 +206,6 @@ const examples = {
     {
       command: 'dep-graph --file=output.json',
       description: 'Save the dep graph into a json file'
-    },
-    {
-      command: 'dep-graph --file=output.html',
-      description: 'Save the dep graph into a html file'
     }
   ],
   'affected:dep-graph': [
@@ -228,12 +224,6 @@ const examples = {
         'affected:dep-graph --base=master --head=HEAD --file=output.json',
       description:
         'Save the dep graph of the workspace in a json file, and highlight the projects affected by the changes between master and HEAD (e.g., PR)'
-    },
-    {
-      command:
-        'affected:dep-graph --base=master --head=HEAD --file=output.html',
-      description:
-        'Save the dep graph of the workspace in a html file, and highlight the projects affected by the changes between master and HEAD (e.g., PR)'
     },
     {
       command: 'affected:dep-graph --base=master~1 --head=master',

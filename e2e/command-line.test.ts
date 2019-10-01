@@ -224,7 +224,7 @@ forEachCli(() => {
     }, 1000000);
 
     describe('dep-graph', () => {
-      beforeAll(() => {
+      beforeEach(() => {
         newProject();
         runCLI('generate @nrwl/angular:app myapp');
         runCLI('generate @nrwl/angular:app myapp2');
@@ -252,109 +252,70 @@ forEachCli(() => {
         );
       });
 
-      it('dep-graph should output json (without critical path) to file', () => {
-        const file = 'dep-graph.json';
+      it('dep-graph should output json to file', () => {
+        console.log(runCommand(`npm run dep-graph -- --file=dep-graph.json`));
 
-        runCommand(`npm run dep-graph -- --file="${file}"`);
+        expect(() => checkFilesExist('dep-graph.json')).not.toThrow();
 
-        expect(() => checkFilesExist(file)).not.toThrow();
+        const jsonFileContents = readJson('dep-graph.json');
 
-        const jsonFileContents = readJson(file);
-
-        expect(jsonFileContents).toEqual({
-          deps: {
-            mylib2: [],
-            myapp3: [],
-            'myapp3-e2e': [
-              {
-                projectName: 'myapp3',
-                type: 'implicit'
-              }
-            ],
-            myapp2: [
-              {
-                projectName: 'mylib',
-                type: 'es6Import'
-              }
-            ],
-            'myapp2-e2e': [
-              {
-                projectName: 'myapp2',
-                type: 'implicit'
-              }
-            ],
-            mylib: [
-              {
-                projectName: 'mylib2',
-                type: 'es6Import'
-              }
-            ],
-            myapp: [
-              {
-                projectName: 'mylib',
-                type: 'es6Import'
-              },
-              {
-                projectName: 'mylib2',
-                type: 'loadChildren'
-              }
-            ],
-            'myapp-e2e': [
-              {
-                projectName: 'myapp',
-                type: 'implicit'
-              }
-            ]
-          },
-          criticalPath: []
+        expect(jsonFileContents.deps).toEqual({
+          mylib2: [],
+          myapp3: [],
+          'myapp3-e2e': [
+            {
+              projectName: 'myapp3',
+              type: 'implicit'
+            }
+          ],
+          myapp2: [
+            {
+              projectName: 'mylib',
+              type: 'es6Import'
+            }
+          ],
+          'myapp2-e2e': [
+            {
+              projectName: 'myapp2',
+              type: 'implicit'
+            }
+          ],
+          mylib: [
+            {
+              projectName: 'mylib2',
+              type: 'es6Import'
+            }
+          ],
+          myapp: [
+            {
+              projectName: 'mylib',
+              type: 'es6Import'
+            },
+            {
+              projectName: 'mylib2',
+              type: 'loadChildren'
+            }
+          ],
+          'myapp-e2e': [
+            {
+              projectName: 'myapp',
+              type: 'implicit'
+            }
+          ]
         });
-      }, 1000000);
-
-      it('dep-graph should output json with critical path to file', () => {
-        const file = 'dep-graph.json';
 
         runCommand(
-          `npm run affected:dep-graph -- --files="libs/mylib/src/index.ts" --file="${file}"`
+          `npm run affected:dep-graph -- --files="libs/mylib/src/index.ts" --file="dep-graph.json"`
         );
 
-        expect(() => checkFilesExist(file)).not.toThrow();
+        expect(() => checkFilesExist('dep-graph.json')).not.toThrow();
 
-        const jsonFileContents = readJson(file);
+        const jsonFileContents2 = readJson('dep-graph.json');
 
-        expect(jsonFileContents.criticalPath).toContain('myapp');
-        expect(jsonFileContents.criticalPath).toContain('myapp2');
-        expect(jsonFileContents.criticalPath).toContain('mylib');
-        expect(jsonFileContents.criticalPath).not.toContain('mylib2');
-      }, 1000000);
-
-      it('dep-graph should output dot to file', () => {
-        const file = 'dep-graph.dot';
-
-        runCommand(
-          `npm run dep-graph -- --files="libs/mylib/index.ts" --file="${file}"`
-        );
-
-        expect(() => checkFilesExist(file)).not.toThrow();
-
-        const fileContents = readFile(file);
-        expect(fileContents).toContain('"myapp" -> "mylib"');
-        expect(fileContents).toContain('"myapp2" -> "mylib"');
-        expect(fileContents).toContain('"mylib" -> "mylib2"');
-      }, 1000000);
-
-      it('dep-graph should output html to file', () => {
-        const file = 'dep-graph.html';
-        runCommand(
-          `npm run dep-graph -- --files="libs/mylib/index.ts" --file="${file}"`
-        );
-
-        expect(() => checkFilesExist(file)).not.toThrow();
-
-        const fileContents = readFile(file);
-        expect(fileContents).toContain('<html>');
-        expect(fileContents).toContain('<title>myapp&#45;&gt;mylib</title>');
-        expect(fileContents).toContain('<title>myapp&#45;&gt;mylib2</title>');
-        expect(fileContents).toContain('<title>mylib&#45;&gt;mylib2</title>');
+        expect(jsonFileContents2.criticalPath).toContain('myapp');
+        expect(jsonFileContents2.criticalPath).toContain('myapp2');
+        expect(jsonFileContents2.criticalPath).toContain('mylib');
+        expect(jsonFileContents2.criticalPath).not.toContain('mylib2');
       }, 1000000);
     });
   });
