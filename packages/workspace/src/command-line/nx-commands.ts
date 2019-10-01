@@ -257,6 +257,9 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     .option('verbose', {
       describe: 'Print additional error stack trace on failure'
     })
+    .option('plain', {
+      describe: 'Produces a plain output for affected:apps and affected:libs'
+    })
     .conflicts({
       files: ['uncommitted', 'untracked', 'base', 'head', 'all'],
       untracked: ['uncommitted', 'files', 'base', 'head', 'all'],
