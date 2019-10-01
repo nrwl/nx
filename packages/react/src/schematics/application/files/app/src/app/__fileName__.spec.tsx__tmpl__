@@ -7,8 +7,6 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './app';
 
 describe('App', () => {
-  afterEach(cleanup);
-
   it('should render successfully', () => {
     <% if (routing) { %>
     const { baseElement } = render(<BrowserRouter><App /></BrowserRouter>);
