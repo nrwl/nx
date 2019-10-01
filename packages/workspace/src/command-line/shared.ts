@@ -19,6 +19,8 @@ import { output } from './output';
 
 const ignore = require('ignore');
 
+export const TEN_MEGABYTES = 1024 * 10000;
+
 export type ImplicitDependencyEntry = { [key: string]: '*' | string[] };
 export type NormalizedImplicitDependencyEntry = { [key: string]: string[] };
 export type ImplicitDependencies = {
@@ -141,7 +143,9 @@ function getUntrackedFiles(): string[] {
 }
 
 function getFilesUsingBaseAndHead(base: string, head: string): string[] {
-  const mergeBase = execSync(`git merge-base ${base} ${head}`)
+  const mergeBase = execSync(`git merge-base ${base} ${head}`, {
+    maxBuffer: TEN_MEGABYTES
+  })
     .toString()
     .trim();
   return parseGitOutput(`git diff --name-only ${mergeBase} ${head}`);
@@ -152,7 +156,7 @@ function getFilesFromShash(sha1: string, sha2: string): string[] {
 }
 
 function parseGitOutput(command: string): string[] {
-  return execSync(command)
+  return execSync(command, { maxBuffer: TEN_MEGABYTES })
     .toString('utf-8')
     .split('\n')
     .map(a => a.trim())

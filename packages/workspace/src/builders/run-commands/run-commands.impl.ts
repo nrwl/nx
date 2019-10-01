@@ -1,11 +1,12 @@
 import {
-  createBuilder,
   BuilderContext,
-  BuilderOutput
+  BuilderOutput,
+  createBuilder
 } from '@angular-devkit/architect';
-import { Observable } from 'rxjs';
-import { exec } from 'child_process';
 import { JsonObject } from '@angular-devkit/core';
+import { exec } from 'child_process';
+import { Observable } from 'rxjs';
+import { TEN_MEGABYTES } from '../../command-line/shared';
 
 try {
   require('dotenv').config();
@@ -136,7 +137,6 @@ function createProcess(
 ): Promise<boolean> {
   command = transformCommand(command, parsedArgs);
   return new Promise(res => {
-    const TEN_MEGABYTES = 1024 * 10000;
     const childProcess = exec(command, { maxBuffer: TEN_MEGABYTES });
     /**
      * Ensure the child process is killed when the parent exits
