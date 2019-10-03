@@ -3,7 +3,7 @@ import * as ts from 'typescript';
 import * as fs from 'fs';
 
 import { Rule } from './nxEnforceModuleBoundariesRule';
-import { ProjectNode, ProjectType } from '../command-line/affected-apps';
+import { ProjectNode, ProjectType } from '../command-line/shared';
 import { DependencyType, Dependency } from '../command-line/deps-calculator';
 
 describe('Enforce Module Boundaries', () => {

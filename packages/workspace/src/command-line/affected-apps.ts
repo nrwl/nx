@@ -1,100 +1,101 @@
-import { Dependency, Deps } from './deps-calculator';
+import { AffectedMetadata, ProjectNode, ProjectType } from './shared';
 
-export enum ProjectType {
-  app = 'app',
-  e2e = 'e2e',
-  lib = 'lib'
+export function getAffectedApps(affectedMetadata: AffectedMetadata): string[] {
+  return filterAffectedMetadata(
+    affectedMetadata,
+    project =>
+      affectedMetadata.projectStates[project.name].affected &&
+      project.type === ProjectType.app
+  ).map(project => project.name);
 }
 
-export type ProjectNode = {
-  name: string;
-  root: string;
-  type: ProjectType;
-  tags: string[];
-  files: string[];
-  architect: { [k: string]: any };
-  implicitDependencies: string[];
-  fileMTimes: {
-    [filePath: string]: number;
-  };
-};
-
-export type AffectedFetcher = (
-  projects: ProjectNode[],
-  dependencies: Deps,
-  touchedProjects: string[]
-) => string[];
-
-export function affectedAppNames(
-  projects: ProjectNode[],
-  dependencies: Deps,
-  touchedProjects: string[]
+export function getAffectedLibs(affectedMetadata: AffectedMetadata): string[] {
+  return filterAffectedMetadata(
+    affectedMetadata,
+    project =>
+      affectedMetadata.projectStates[project.name].affected &&
+      project.type === ProjectType.lib
+  ).map(project => project.name);
+}
+export function getAffectedProjects(
+  affectedMetadata: AffectedMetadata
 ): string[] {
-  return affectedProjects(projects, dependencies, touchedProjects)
-    .filter(p => p.type === ProjectType.app)
-    .map(p => p.name);
+  return filterAffectedMetadata(
+    affectedMetadata,
+    project => affectedMetadata.projectStates[project.name].affected
+  ).map(project => project.name);
 }
 
-export function affectedLibNames(
-  projects: ProjectNode[],
-  dependencies: Deps,
-  touchedProjects: string[]
-): string[] {
-  return affectedProjects(projects, dependencies, touchedProjects)
-    .filter(p => p.type === ProjectType.lib)
-    .map(p => p.name);
-}
-
-export function affectedProjectNames(
-  projects: ProjectNode[],
-  dependencies: Deps,
-  touchedProjects: string[]
-): string[] {
-  return affectedProjects(projects, dependencies, touchedProjects).map(
-    p => p.name
-  );
-}
-
-export function affectedProjectNamesWithTarget(
+export function getAffectedProjectsWithTarget(
+  affectedMetadata: AffectedMetadata,
   target: string
-): AffectedFetcher {
-  return (
-    projects: ProjectNode[],
-    dependencies: Deps,
-    touchedProjects: string[]
-  ) => {
-    return affectedProjects(projects, dependencies, touchedProjects)
-      .filter(p => p.architect[target])
-      .map(p => p.name);
-  };
+): string[] {
+  return filterAffectedMetadata(
+    affectedMetadata,
+    project =>
+      affectedMetadata.projectStates[project.name].affected &&
+      project.architect[target]
+  ).map(project => project.name);
 }
 
-function affectedProjects(
-  projects: ProjectNode[],
-  dependencies: Deps,
-  touchedProjects: string[]
-) {
-  return projects.filter(proj =>
-    hasDependencyOnTouchedProjects(proj.name, touchedProjects, dependencies, [])
+export function getAllApps(affectedMetadata: AffectedMetadata): string[] {
+  return filterAffectedMetadata(
+    affectedMetadata,
+    project => project.type === ProjectType.app
+  ).map(project => project.name);
+}
+
+export function getAllLibs(affectedMetadata: AffectedMetadata): string[] {
+  return filterAffectedMetadata(
+    affectedMetadata,
+    project => project.type === ProjectType.lib
+  ).map(project => project.name);
+}
+
+export function getAllProjects(affectedMetadata: AffectedMetadata): string[] {
+  return filterAffectedMetadata(affectedMetadata, () => true).map(
+    project => project.name
   );
 }
 
-function hasDependencyOnTouchedProjects(
-  project: string,
-  touchedProjects: string[],
-  deps: { [projectName: string]: Dependency[] },
-  visisted: string[]
+export function getAllProjectsWithTarget(
+  affectedMetadata: AffectedMetadata,
+  target: string
+): string[] {
+  return filterAffectedMetadata(
+    affectedMetadata,
+    project => project.architect[target]
+  ).map(project => project.name);
+}
+
+function filterAffectedMetadata(
+  affectedMetadata: AffectedMetadata,
+  predicate: (project) => boolean
+): ProjectNode[] {
+  const projects: ProjectNode[] = [];
+  visit(affectedMetadata, project => {
+    if (predicate(project)) {
+      projects.push(project);
+    }
+  });
+  return projects;
+}
+function visit(
+  affectedMetadata: AffectedMetadata,
+  visitor: (project: ProjectNode) => void
 ) {
-  if (touchedProjects.indexOf(project) > -1) return true;
-  if (visisted.indexOf(project) > -1) return false;
-  return (
-    deps[project]
-      .map(d => d.projectName)
-      .filter(k =>
-        hasDependencyOnTouchedProjects(k, touchedProjects, deps, [
-          ...visisted,
-          project
-        ])
-      ).length > 0
-  );
+  const visited = new Set<string>();
+  function _visit(projectName: string) {
+    affectedMetadata.dependencyGraph.dependencies[projectName].forEach(dep => {
+      _visit(dep.projectName);
+    });
+    if (visited.has(projectName)) {
+      return;
+    }
+    visited.add(projectName);
+    visitor(affectedMetadata.dependencyGraph.projects[projectName]);
+  }
+  affectedMetadata.dependencyGraph.roots.forEach(root => {
+    _visit(root);
+  });
 }

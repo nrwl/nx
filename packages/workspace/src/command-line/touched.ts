@@ -3,9 +3,9 @@ import {
   readWorkspaceJson,
   getProjectNodes,
   readNxJson,
-  getImplicitDependencies
+  getImplicitDependencies,
+  ProjectNode
 } from './shared';
-import { ProjectNode } from './affected-apps';
 
 export function touchedProjects(
   implicitDependencies: ImplicitDependencies,

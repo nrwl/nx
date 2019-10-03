@@ -1,106 +1,316 @@
-import { affectedAppNames, ProjectType, ProjectNode } from './affected-apps';
-import { DependencyType, Deps } from './deps-calculator';
-import * as fs from 'fs';
+import { AffectedMetadata, ProjectStates, ProjectType } from './shared';
+import {
+  getAffectedApps,
+  getAffectedLibs,
+  getAffectedProjects,
+  getAffectedProjectsWithTarget,
+  getAllApps,
+  getAllLibs,
+  getAllProjects,
+  getAllProjectsWithTarget
+} from './affected-apps';
+import { DependencyType } from './deps-calculator';
 
 describe('affected-apps', () => {
-  let deps: Deps;
-  let projects: ProjectNode[];
+  let affectedMetadata: AffectedMetadata;
+  let projectStates: ProjectStates;
 
   beforeEach(() => {
-    spyOn(fs, 'writeFileSync');
-    deps = {
-      app1Name: [],
-      app2Name: [],
-      lib1Name: [],
-      lib2Name: []
-    };
-    projects = [
-      {
-        name: 'app1Name',
-        root: 'apps/app1',
-        files: ['apps/app1/app1.ts'],
-        fileMTimes: {
-          'apps/app1/app1.ts': 1
-        },
-        tags: [],
-        implicitDependencies: [],
-        architect: {},
-        type: ProjectType.app
+    const projects: any = {
+      app1: {
+        name: 'app1',
+        type: ProjectType.app,
+        architect: {
+          lint: {},
+          test: {},
+          build: {}
+        }
       },
-      {
-        name: 'app2Name',
-        root: 'apps/app2',
-        files: ['apps/app2/app2.ts'],
-        fileMTimes: {
-          'apps/app2/app2.ts': 1
-        },
-        tags: [],
-        implicitDependencies: [],
-        architect: {},
-        type: ProjectType.app
+      app2: {
+        name: 'app2',
+        type: ProjectType.app,
+        architect: {
+          lint: {},
+          test: {},
+          build: {}
+        }
       },
-      {
-        name: 'lib1Name',
-        root: 'libs/lib1',
-        files: ['libs/lib1/lib1.ts'],
-        fileMTimes: {
-          'libs/lib1/lib1.ts': 1
-        },
-        tags: [],
-        implicitDependencies: [],
-        architect: {},
-        type: ProjectType.lib
+      'app1-e2e': {
+        name: 'app1-e2e',
+        type: ProjectType.e2e,
+        architect: {
+          lint: {},
+          e2e: {}
+        }
       },
-      {
-        name: 'lib2Name',
-        root: 'libs/lib2',
-        files: ['libs/lib2/lib2.ts'],
-        fileMTimes: {
-          'libs/lib2/lib2.ts': 1
-        },
-        tags: [],
-        implicitDependencies: [],
-        architect: {},
-        type: ProjectType.lib
+      'customName-e2e': {
+        name: 'customName-e2e',
+        type: ProjectType.e2e,
+        architect: {
+          lint: {},
+          e2e: {}
+        }
+      },
+      lib1: {
+        name: 'lib1',
+        type: ProjectType.lib,
+        architect: {
+          lint: {},
+          test: {}
+        }
+      },
+      lib2: {
+        name: 'lib2',
+        type: ProjectType.lib,
+        architect: {
+          lint: {},
+          test: {}
+        }
       }
-    ];
+    };
+    projectStates = {
+      app1: {
+        touched: false,
+        affected: false
+      },
+      app2: {
+        touched: false,
+        affected: false
+      },
+      'app1-e2e': {
+        touched: false,
+        affected: false
+      },
+      'customName-e2e': {
+        touched: false,
+        affected: false
+      },
+      lib1: {
+        touched: false,
+        affected: false
+      },
+      lib2: {
+        touched: false,
+        affected: false
+      }
+    };
+    const dependencies = {
+      'app1-e2e': [
+        {
+          projectName: 'app1',
+          type: DependencyType.implicit
+        }
+      ],
+      'customName-e2e': [
+        {
+          projectName: 'app2',
+          type: DependencyType.implicit
+        }
+      ],
+      app1: [
+        {
+          projectName: 'lib1',
+          type: DependencyType.es6Import
+        }
+      ],
+      app2: [
+        {
+          projectName: 'lib1',
+          type: DependencyType.es6Import
+        },
+        {
+          projectName: 'lib2',
+          type: DependencyType.es6Import
+        }
+      ],
+      lib1: [],
+      lib2: []
+    };
+    affectedMetadata = {
+      dependencyGraph: {
+        projects,
+        dependencies,
+        roots: ['app1-e2e', 'customName-e2e']
+      },
+      projectStates
+    };
   });
 
-  describe('affectedAppNames', () => {
-    it('should return the list of affected apps', () => {
-      deps = {
-        ...deps,
-        app1Name: [
-          {
-            projectName: 'lib1Name',
-            type: DependencyType.es6Import
-          }
-        ]
-      };
-      const affected = affectedAppNames(projects, deps, ['lib1Name']);
-
-      expect(affected).toEqual(['app1Name']);
+  describe('getAffectedApps', () => {
+    it('should get none if no apps are affected', () => {
+      expect(getAffectedApps(affectedMetadata)).toEqual([]);
     });
 
-    it('should handle circular dependencies', () => {
-      deps = {
-        ...deps,
-        app1Name: [
-          {
-            projectName: 'app2Name',
-            type: DependencyType.es6Import
-          }
-        ],
-        app2Name: [
-          {
-            projectName: 'app1Name',
-            type: DependencyType.es6Import
-          }
-        ]
+    it('should find affected apps', () => {
+      projectStates.lib1 = {
+        affected: true,
+        touched: true
       };
-      const affected = affectedAppNames(projects, deps, ['app1Name']);
+      projectStates.app1.affected = true;
+      projectStates['app1-e2e'].affected = true;
+      projectStates.app2.affected = true;
+      projectStates['customName-e2e'].affected = true;
+      expect(getAffectedApps(affectedMetadata)).toEqual(['app1', 'app2']);
+    });
+  });
 
-      expect(affected).toEqual(['app1Name', 'app2Name']);
+  describe('getAffectedLibs', () => {
+    it('should get none if no libs are affected', () => {
+      expect(getAffectedLibs(affectedMetadata)).toEqual([]);
+    });
+
+    it('should find affected libs', () => {
+      projectStates.lib1 = {
+        affected: true,
+        touched: true
+      };
+      projectStates.app1.affected = true;
+      projectStates['app1-e2e'].affected = true;
+      projectStates.app2.affected = true;
+      projectStates['customName-e2e'].affected = true;
+      expect(getAffectedLibs(affectedMetadata)).toEqual(['lib1']);
+    });
+  });
+
+  describe('getAffectedProjects', () => {
+    it('should get none if no projects are affected', () => {
+      expect(getAffectedProjects(affectedMetadata)).toEqual([]);
+    });
+
+    it('should find affected projects', () => {
+      projectStates.lib1 = {
+        affected: true,
+        touched: true
+      };
+      projectStates.app1.affected = true;
+      projectStates['app1-e2e'].affected = true;
+      projectStates.app2.affected = true;
+      projectStates['customName-e2e'].affected = true;
+      expect(getAffectedProjects(affectedMetadata)).toEqual([
+        'lib1',
+        'app1',
+        'app1-e2e',
+        'app2',
+        'customName-e2e'
+      ]);
+    });
+  });
+
+  describe('getAffectedProjectsWithTarget', () => {
+    it('should get none if no projects are affected', () => {
+      expect(getAffectedProjectsWithTarget(affectedMetadata, 'test')).toEqual(
+        []
+      );
+    });
+
+    it('should find affected projects that can be linted', () => {
+      projectStates.lib1 = {
+        affected: true,
+        touched: true
+      };
+      projectStates.app1.affected = true;
+      projectStates['app1-e2e'].affected = true;
+      projectStates.app2.affected = true;
+      projectStates['customName-e2e'].affected = true;
+      expect(getAffectedProjectsWithTarget(affectedMetadata, 'lint')).toEqual([
+        'lib1',
+        'app1',
+        'app1-e2e',
+        'app2',
+        'customName-e2e'
+      ]);
+    });
+
+    it('should find affected projects that can be tested', () => {
+      projectStates.lib1 = {
+        affected: true,
+        touched: true
+      };
+      projectStates.app1.affected = true;
+      projectStates['app1-e2e'].affected = true;
+      projectStates.app2.affected = true;
+      projectStates['customName-e2e'].affected = true;
+      expect(getAffectedProjectsWithTarget(affectedMetadata, 'test')).toEqual([
+        'lib1',
+        'app1',
+        'app2'
+      ]);
+    });
+
+    it('should find affected projects that can be e2e-tested', () => {
+      projectStates.lib1 = {
+        affected: true,
+        touched: true
+      };
+      projectStates.app1.affected = true;
+      projectStates['app1-e2e'].affected = true;
+      projectStates.app2.affected = true;
+      projectStates['customName-e2e'].affected = true;
+      expect(getAffectedProjectsWithTarget(affectedMetadata, 'e2e')).toEqual([
+        'app1-e2e',
+        'customName-e2e'
+      ]);
+    });
+  });
+
+  describe('getAllApps', () => {
+    it('should get all apps', () => {
+      expect(getAllApps(affectedMetadata)).toEqual(['app1', 'app2']);
+    });
+  });
+
+  describe('getAllLibs', () => {
+    it('should get all libs', () => {
+      expect(getAllLibs(affectedMetadata)).toEqual(['lib1', 'lib2']);
+    });
+  });
+
+  describe('getAllProjects', () => {
+    it('should get all projects', () => {
+      expect(getAllProjects(affectedMetadata)).toEqual([
+        'lib1',
+        'app1',
+        'app1-e2e',
+        'lib2',
+        'app2',
+        'customName-e2e'
+      ]);
+    });
+  });
+
+  describe('getAllProjectsWithTarget', () => {
+    it('should get all projects that can be linted', () => {
+      expect(getAllProjectsWithTarget(affectedMetadata, 'lint')).toEqual([
+        'lib1',
+        'app1',
+        'app1-e2e',
+        'lib2',
+        'app2',
+        'customName-e2e'
+      ]);
+    });
+
+    it('should get all projects that can be tested', () => {
+      expect(getAllProjectsWithTarget(affectedMetadata, 'test')).toEqual([
+        'lib1',
+        'app1',
+        'lib2',
+        'app2'
+      ]);
+    });
+
+    it('should get all projects that can be built', () => {
+      expect(getAllProjectsWithTarget(affectedMetadata, 'build')).toEqual([
+        'app1',
+        'app2'
+      ]);
+    });
+
+    it('should get all projects that can be e2e-tested', () => {
+      expect(getAllProjectsWithTarget(affectedMetadata, 'e2e')).toEqual([
+        'app1-e2e',
+        'customName-e2e'
+      ]);
     });
   });
 });
