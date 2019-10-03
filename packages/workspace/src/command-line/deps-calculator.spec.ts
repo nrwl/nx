@@ -6,7 +6,7 @@ import {
   NxDepsJson,
   dependencies
 } from './deps-calculator';
-import { ProjectType, ProjectNode } from './affected-apps';
+import { ProjectType, ProjectNode } from './shared';
 import { serializeJson } from '../utils/fileutils';
 
 describe('DepsCalculator', () => {

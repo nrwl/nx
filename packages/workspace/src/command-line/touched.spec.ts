@@ -1,5 +1,5 @@
 import { touchedProjects } from './touched';
-import { ProjectType } from './affected-apps';
+import { ProjectType } from './shared';
 
 describe('touchedProjects', () => {
   it('should return the list of touchedProjects', () => {

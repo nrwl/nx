@@ -1,7 +1,6 @@
 import * as path from 'path';
-import { ProjectNode } from '../command-line/affected-apps';
 import { Dependency, DependencyType } from '../command-line/deps-calculator';
-import { normalizedProjectRoot } from '../command-line/shared';
+import { normalizedProjectRoot, ProjectNode } from '../command-line/shared';
 import { normalize } from '@angular-devkit/core';
 
 export type Deps = { [projectName: string]: Dependency[] };

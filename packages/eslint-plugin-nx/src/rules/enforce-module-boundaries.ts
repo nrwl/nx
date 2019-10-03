@@ -1,10 +1,10 @@
-import { ProjectType } from '@nrwl/workspace/src/command-line/affected-apps';
 import { readDependencies } from '@nrwl/workspace/src/command-line/deps-calculator';
 import {
   getProjectNodes,
   normalizedProjectRoot,
   readNxJson,
-  readWorkspaceJson
+  readWorkspaceJson,
+  ProjectType
 } from '@nrwl/workspace/src/command-line/shared';
 import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
 import {

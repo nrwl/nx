@@ -1,9 +1,13 @@
 import { readFileSync, writeFileSync } from 'fs';
 import * as http from 'http';
 import * as opn from 'opn';
-import { ProjectNode } from './affected-apps';
 import { Deps, readDependencies } from './deps-calculator';
-import { getProjectNodes, readNxJson, readWorkspaceJson } from './shared';
+import {
+  getProjectNodes,
+  readNxJson,
+  readWorkspaceJson,
+  ProjectNode
+} from './shared';
 
 export function startServer(
   projects: ProjectNode[],

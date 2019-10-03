@@ -1,6 +1,5 @@
-import { ProjectNode } from './affected-apps';
 import { output, CLIErrorMessageConfig } from './output';
-import { workspaceFileName } from './shared';
+import { workspaceFileName, ProjectNode } from './shared';
 
 export class WorkspaceIntegrityChecks {
   constructor(private projectNodes: ProjectNode[], private files: string[]) {}
