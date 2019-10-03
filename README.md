@@ -156,6 +156,20 @@ You are good to go!
   </tr>
 </table>
 
+### Free Course
+
+#### Create a free account on the Connect Platform and enjoy a complete Nx course on us!
+
+<table>
+  <tr>
+    <td>    
+      <a href="https://connect.nrwl.io/app/courses/nx-workspaces/intro" target="_blank">
+        <p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/docs/shared/course-nx.jpg" width="100%"></p>
+      </a>
+    </td>
+  </tr>
+</table>
+
 ### Books
 
 - [Effective React Development with Nx](https://go.nrwl.io/effective-react-development-with-nx-new-book)
