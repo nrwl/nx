@@ -42,7 +42,7 @@ To generate a new application:
 nx generate @nrwl/react:app myapp
 ```
 
-> Substitute `myapp` with the name of your application.
+> Substitute `myapp` with the name of your application. Also use the `--help` option to see the other options for generating an app.
 
 To start up a development web server:
 
@@ -173,6 +173,45 @@ Defaults are defined under the `schematics` top-level key in your `workspace.jso
 
 For the workspace, unless overridden, each component will be generated using CSS as the style configuration, and without routing. Defaults can be set using the specific collection and schematic name, or using an object to set defaults for the entire collection.
 
+### Default Collection
+
+You can also set default schematics for your workspace by configuring the `defaultCollection` property in your `workspace.json` file. 
+
+```json
+{
+  "version": 1,
+  "projects": {
+    "myapp": {
+      "root": "apps/myapp",
+      "sourceRoot": "apps/myapp/src",
+      "projectType": "application",
+      "schematics": {
+        "@nrwl/react:component": {
+          "style": "scss"
+        }
+      }
+    }
+  },
+  "cli": {
+    "defaultCollection": "@nrwl/react"
+  }
+}
+```
+
+Setting `@nrwl/react` as the default collection allows you to use shorthand syntax to run the schematics command. Without a default, you have to specify the collection for the schematics.
+
+```sh
+nx g @nrwl/react:app mysecondapp
+```
+
+With the default set, the command becomes much shorter:
+
+```sh
+nx g app mysecondapp
+```
+
+> The alias for the `generate` command is `g` in the above example.
+
 ## Builders
 
 The Nx CLI uses the Builders API for performing tasks to accomplish a specific task, such as building and bundling your application, running unit tests, or running E2E tests against a specific target, whether that be an application or workspace.
@@ -244,6 +283,12 @@ Build the apps and libs affected by the current changes
 nx affected:build
 ```
 
+To use the long form syntax:
+
+```sh
+nx affected --target=build
+```
+
 Affected builds can also be run in parallel
 
 ```sh
@@ -272,6 +317,12 @@ Run the E2E tests for all projects affected by the current
 nx affected:e2e
 ```
 
+To use the long form syntax:
+
+```sh
+nx affected --target=e2e
+```
+
 Link check for affected projects can also be run in parallel
 
 ```sh
@@ -294,6 +345,12 @@ Run the unit tests for the projects affected by the current changes
 nx affected:test
 ```
 
+To use the long form syntax:
+
+```sh
+nx affected --target=test
+```
+
 Link check for affected projects can also be run in parallel
 
 ```sh
@@ -314,6 +371,12 @@ Run the lint check for the projects affected by the current changes
 
 ```sh
 nx affected:lint
+```
+
+To use the long form syntax:
+
+```sh
+nx affected --target=lint
 ```
 
 Link check for affected projects can also be run in parallel
@@ -342,7 +405,7 @@ nx affected:dep-graph
 
 ### affected
 
-Display the list of projects affected by the current changes
+Display the help usage for available options to determine the affected projects.
 
 ```sh
 nx affected
