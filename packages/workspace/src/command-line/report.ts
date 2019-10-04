@@ -23,6 +23,13 @@ export const packagesWeCareAbout = [
   'typescript'
 ];
 
+export const report = {
+  command: 'report',
+  describe: 'Reports useful version numbers to copy into the Nx issue template',
+  builder: yargs => yargs,
+  handler: reportHandler
+};
+
 /**
  * Reports relevant version numbers for adding to an Nx issue report
  *
@@ -31,7 +38,7 @@ export const packagesWeCareAbout = [
  * Must be run within an Nx workspace
  *
  */
-export function report() {
+function reportHandler() {
   const nodeModulesDir = path.join(appRootPath, 'node_modules');
   const bodyLines = [];
 

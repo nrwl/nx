@@ -80,6 +80,24 @@ ng add @nrwl/nest # Adds Nest capabilities
 ng add @nrwl/next # Adds Next.js capabilities
 ```
 
+## Discover Capabilities
+
+Nx comes with a `list` feature which enables you to see the capabilities that have been added to your workspace.
+
+```bash
+nx list
+```
+
+This will output a list of all the collections you have just added, alongside some that Angular comes with out of the box like `@schematics/angular`.
+
+To list the capabilities within a specific collection :
+
+```bash
+nx list @nrwl/web
+```
+
+This will list all the capabilities in the `@nrwl/web` collection.
+
 ## Creating an application
 
 After the capability is added, you can now create your first application via:
