@@ -1,0 +1,41 @@
+{
+    "$schema": "http://json-schema.org/schema",
+    "id": "stryker-config",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "$default": {
+          "$source": "argv",
+          "index": 0
+        }
+      },
+      "mutator": {
+        "type": "string",
+        "description": "The mutator plugin you want to use",
+        "default": "typescript"
+      },
+      "packageManager": {
+        "type": "string",
+        "description": "The mutator plugin you want to use",
+        "default": "yarn"
+      },
+      "testRunner": {
+        "type": "string",
+        "description": "The test runner that Stryker uses to run your tests",
+        "default": "jest"
+      },
+      "coverageAnalysis": {
+        "type": "string",
+        "description": "Specify which coverage analysis strategy you want to use",
+        "default": "off"
+      },
+      "reporters": {
+        "type": "object",
+        "description": "Set the reporters for stryker to use",
+        "default": ["html"]
+      }
+    },
+    "required": []
+  }

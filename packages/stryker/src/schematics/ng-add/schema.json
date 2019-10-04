@@ -1,0 +1,7 @@
+{
+    "$schema": "http://json-schema.org/schema",
+    "id": "Nx Stryker Project Schematics Schema",
+    "title": "Add Stryker Configuration to the workspace",
+    "type": "object",
+    "properties": {}
+  }
