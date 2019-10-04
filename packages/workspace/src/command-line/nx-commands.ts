@@ -7,6 +7,7 @@ import { affected } from './affected';
 import { generateGraph } from './dep-graph';
 import { format } from './format';
 import { workspaceLint } from './lint';
+import { list } from './list';
 import { report } from './report';
 import { workspaceSchematic } from './workspace-schematic';
 
@@ -29,6 +30,7 @@ export const supportedNxCommands = [
   'workspace-lint',
   'migrate',
   'report',
+  'list',
   '--help',
   '--version'
 ];
@@ -199,12 +201,8 @@ export const commandsObject = yargs
       });
     }
   )
-  .command(
-    'report',
-    'Reports useful version numbers to copy into the Nx issue template',
-    noop,
-    _ => report()
-  )
+  .command(report)
+  .command(list)
   .help('help')
   .version(nxVersion)
   .option('quiet', { type: 'boolean', hidden: true });

@@ -66,6 +66,22 @@ nx build myapp --prod
 
 The distributable application files are located in the `dist/apps/` folder of your workspace.
 
+## Discover
+
+If you want to look at the schematic collections you have installed which can add further features to your app :
+
+```bash
+nx list
+```
+
+And to list the schematics within a specific collection :
+
+```bash
+nx list @nrwl/web
+```
+
+This will list all the schematics in the `@nrwl/web` collection.
+
 ## Workspaces and project files
 
 A single workspace configuration file, `workspace.json`, is created at the top level of the workspace. This is where you can set per-project defaults for CLI command options, and specify configurations to use when the CLI builds a project for different targets.
@@ -93,4 +109,6 @@ The workspace configuration file is updated when adding new applications, or lib
 | format:check        | Check the formatted code across all the projects                                        |
 | workspace-schematic | Run a workspace schematic                                                               |
 | test                | Run the unit tests for all projects                                                     |
+| list                | Lists available collections or schematics within a collection                           |
+| report              | Reports useful version numbers to copy into the Nx issue template                       |
 | help                | Display usage help for the Nx CLI                                                       |

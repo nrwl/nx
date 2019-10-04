@@ -1,9 +1,8 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { dedent } from 'tslint/lib/utils';
-
-import { generateFile, sortAlphabeticallyFunction } from './utils';
 import { commandsObject } from '../../packages/workspace';
+import { generateFile, sortAlphabeticallyFunction } from './utils';
 
 const importFresh = require('import-fresh');
 
@@ -231,7 +230,17 @@ const examples = {
         'Open the dep graph of the workspace in the browser, and highlight the projects affected by the last commit on master'
     }
   ],
-  'workspace-schematic': []
+  'workspace-schematic': [],
+  'list [schematic-collection]': [
+    {
+      command: 'list',
+      description: 'List the collections installed in the current workspace'
+    },
+    {
+      command: 'list @nrwl/web',
+      description: 'List the schematics available in the `@nrwl/web` collection'
+    }
+  ]
 };
 
 ['web', 'angular', 'react'].forEach(framework => {

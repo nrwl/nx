@@ -42,8 +42,6 @@ if (workspace) {
   // It is exposed and bootstrapped here to provide CLI features.
   const w = require('@nrwl/workspace');
   if (w.supportedNxCommands.includes(process.argv[2])) {
-    // The commandsObject is a Yargs object declared in `nx-commands.ts`,
-    // It is exposed and bootstrapped here to provide CLI features.
     w.commandsObject.argv;
   } else if (workspace.type === 'nx') {
     require(path.join(
