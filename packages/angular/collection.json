@@ -7,7 +7,7 @@
       "factory": "./src/schematics/init/init",
       "schema": "./src/schematics/init/schema.json",
       "description": "Initialize the @nrwl/angular plugin",
-      "aliaes": ["ng-add"],
+      "aliases": ["ng-add"],
       "hidden": true
     },
 
