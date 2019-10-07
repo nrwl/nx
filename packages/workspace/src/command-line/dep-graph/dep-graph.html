@@ -123,7 +123,10 @@
           filteredProjectNames.indexOf(d.projectName) > -1
         ) {
           const clazz =
-            window.affected.indexOf(p) > -1 ? 'affected' : 'no-affected';
+            window.affected.indexOf(p) > -1 &&
+            window.affected.indexOf(d.projectName) > -1
+              ? 'affected'
+              : 'no-affected';
           const label =
             d.type === 'implicit'
               ? 'implicit'
