@@ -411,4 +411,4 @@ Display the help usage for available options to determine the affected projects.
 nx affected
 ```
 
-You can read more about these commands in the guide about [nly rebuilding and retesting what is affected](react/guides/monorepo-affected).
+You can read more about these commands in the guide about [only rebuilding and retesting what is affected](react/guides/monorepo-affected).
