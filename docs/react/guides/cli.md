@@ -234,15 +234,13 @@ The above command will run the `build` configuration against the `myapp` project
 
 The following commands are general commands to peform specific tasks against projects in your workspace, or against your workspace as a whole.
 
-| Command   | Description                                                                             |
+| Command   | Description                                                               |
 | --------- | --------------------------------------------------------------------------------------- |
 | serve     | Build the application, start up a development web server, and rebuild/reload on changes |
-| build     | Build and bundle the application for distribution                                       |
-| dep-graph | Generate a dependency graph for the project                                             |
-| lint      | Run the lint checker for the workspace                                                  |
-| e2e       | Run all the E2E tests for the workspace                                                 |
-
-|
+| build     | Build and bundle the application for distribution                         |
+| dep-graph | Generate a dependency graph for the project                               |
+| lint      | Run the lint checker for the workspace                                    |
+| e2e       | Run all the E2E tests for the workspace                                   |
 | format:write | Run the code formatter across all the projects |
 | format:check | Check the formatted code across all the projects |
 | workspace-schematic | Run a workspace schematic |
