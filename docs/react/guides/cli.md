@@ -175,7 +175,7 @@ For the workspace, unless overridden, each component will be generated using CSS
 
 ### Default Collection
 
-You can also set default schematics for your workspace by configuring the `defaultCollection` property in your `workspace.json` file. 
+You can also set default schematics for your workspace by configuring the `defaultCollection` property in your `workspace.json` file.
 
 ```json
 {
@@ -234,18 +234,18 @@ The above command will run the `build` configuration against the `myapp` project
 
 The following commands are general commands to peform specific tasks against projects in your workspace, or against your workspace as a whole.
 
-| Command   | Description                                                               |
-| --------- | --------------------------------------------------------------------------------------- |
-| serve     | Build the application, start up a development web server, and rebuild/reload on changes |
-| build     | Build and bundle the application for distribution                         |
-| dep-graph | Generate a dependency graph for the project                               |
-| lint      | Run the lint checker for the workspace                                    |
-| e2e       | Run all the E2E tests for the workspace                                   |
-| format:write | Run the code formatter across all the projects |
-| format:check | Check the formatted code across all the projects |
-| workspace-schematic | Run a workspace schematic |
-| test | Run the unit tests for all projects |
-| help | Display usage help for the Nx CLI |
+| Command             | Description                                                                             |
+| ------------------- | --------------------------------------------------------------------------------------- |
+| serve               | Build the application, start up a development web server, and rebuild/reload on changes |
+| build               | Build and bundle the application for distribution                                       |
+| dep-graph           | Generate a dependency graph for the project                                             |
+| lint                | Run the lint checker for the workspace                                                  |
+| e2e                 | Run all the E2E tests for the workspace                                                 |
+| format:write        | Run the code formatter across all the projects                                          |
+| format:check        | Check the formatted code across all the projects                                        |
+| workspace-schematic | Run a workspace schematic                                                               |
+| test                | Run the unit tests for all projects                                                     |
+| help                | Display usage help for the Nx CLI                                                       |
 
 ## Determining Affected Projects
 
@@ -261,6 +261,12 @@ Display the list of apps affected by the current changes
 nx affected:apps
 ```
 
+Display the help usage for available options to determine the affected apps.
+
+```sh
+nx affected:apps --help
+```
+
 ---
 
 ### affected:libs
@@ -269,6 +275,12 @@ Display the list of libs affected by the current changes
 
 ```sh
 nx affected:libs
+```
+
+Display the help usage for available options to determine the affected libs.
+
+```sh
+nx affected:libs --help
 ```
 
 ---
