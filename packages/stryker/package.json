@@ -1,0 +1,36 @@
+{
+  "name": "@nrwl/stryker",
+  "version": "0.0.1",
+  "description": "Stryker Plugin for Nx",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nrwl/nx.git"
+  },
+  "keywords": [
+    "Angular",
+    "React",
+    "Web",
+    "Jest",
+    "Karma",
+    "Stryker",
+    "Mutation Testing"
+  ],
+  "main": "index.js",
+  "types": "index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./collection.json",
+  "builders": "./builders.json",
+  "peerDependencies": {
+    "@nrwl/workspace": "*"
+  },
+  "dependencies": {
+    "@angular-devkit/architect": "0.803.3",
+    "@angular-devkit/core": "8.3.3",
+    "@angular-devkit/schematics": "8.3.3"
+  }
+}

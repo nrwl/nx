@@ -1,0 +1,72 @@
+{
+    "id": "NxStrykerBuilder",
+    "title": "Mutation builder",
+    "description": "Mutation builder options",
+    "properties": {
+      "configFile": {
+        "type": "string",
+        "description": "path to the stryker config file"
+      },
+      "runnerFile": {
+        "type": "string",
+        "description": "path to the runner config file"
+      },
+      "mutator":{
+        "type": "string",
+        "description": "mutator"
+      },
+      "packageManager":{
+        "type": "string",
+        "description": "packageManager"
+      },
+      "testRunner":{
+        "type": "string",
+        "description": "testRunner"
+      },
+      "testPackage":{
+        "type": "string",
+        "description": "testPackage"
+      },
+      "commandRunner":{
+        "type": "object",
+        "description": "commandRunner"
+      },
+      "plugins":{
+        "type": "array",
+        "description": "plugins"
+      },
+      "coverageAnalysis":{
+        "type": "string",
+        "description": "coverageAnalysis"
+      },
+      "tsconfigFile":{
+        "type": "string",
+        "description": "tsconfigFile"
+      },
+      "files":{
+        "type": "array",
+        "description": "files"
+      },
+      "mutate":{
+        "type": "array",
+        "description": "mutate"
+      },
+      "fileLogLevel":{
+        "type": "string",
+        "description": "fileLogLevel"
+      },
+      "logLevel":{
+        "type": "string",
+        "description": "logLevel"
+      },
+      "timeoutMS":{
+        "type": "number",
+        "description": "timeoutMS"
+      },
+      "reporters":{
+        "type": "array",
+        "description": "reporters"
+      }
+    },
+    "required": []
+  }

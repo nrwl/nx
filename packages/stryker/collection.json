@@ -1,0 +1,14 @@
+{
+    "name": "Nx Stryker",
+    "version": "0.1",
+    "extends": ["@nrwl/workspace"],
+    "schematics": {
+      "init": {
+        "factory": "./src/schematics/init/init",
+        "schema": "./src/schematics/init/schema.json",
+        "description": "Initialize the @nrwl/stryker plugin",
+        "aliaes": ["ng-add"],
+        "hidden": true
+      }
+}
+}

@@ -1,7 +1,7 @@
 import { Config } from '@stryker-mutator/api/config';
 import { LoggerApi } from "@angular-devkit/core/src/logger";
 import { LogLevel } from '@stryker-mutator/api/core';
-import { SchemaObject as StrykerBuilderSchema } from './schema';
+import { Schema as StrykerBuilderSchema } from './schema';
 
 export class StrykerConfiguration{
   private readonly _config = new Config();
@@ -53,4 +53,3 @@ export class StrykerConfiguration{
       return this._config
     }
 }
-© 2019 GitHub, Inc.
