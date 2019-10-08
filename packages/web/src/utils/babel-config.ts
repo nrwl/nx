@@ -28,12 +28,12 @@ export function createBabelConfig(
     ],
     plugins: [
       require.resolve('babel-plugin-macros'),
+      // Must use legacy decorators to remain compatible with TypeScript.
+      [require.resolve('@babel/plugin-proposal-decorators'), { legacy: true }],
       [
-        // Allows decorators to be before export since it is consistent with TypeScript syntax.
-        require.resolve('@babel/plugin-proposal-decorators'),
-        { decoratorsBeforeExport: true }
-      ],
-      [require.resolve('@babel/plugin-proposal-class-properties')]
+        require.resolve('@babel/plugin-proposal-class-properties'),
+        { loose: true }
+      ]
     ]
   };
 }
