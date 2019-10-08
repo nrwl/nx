@@ -6,8 +6,10 @@ import {
   runCLIAsync,
   uniq,
   forEachCli,
-  supportUi
+  supportUi,
+  updateFile
 } from './utils';
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 forEachCli(currentCLIName => {
   describe('Web Components Applications', () => {
@@ -57,5 +59,35 @@ forEachCli(currentCLIName => {
         expect(e2eResults).toContain('All specs passed!');
       }
     }, 120000);
+
+    it('should allow for TypeScript-compatible decorators', () => {
+      ensureProject();
+      const appName = uniq('app');
+
+      runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+
+      const mainPath = `apps/${appName}/src/app/app.element.ts`;
+      const content = readFile(mainPath);
+      updateFile(
+        mainPath,
+        content
+          .replace(
+            `export class AppElement extends HTMLElement`,
+            stripIndents`
+          function a(ctor) {
+            ctor.title = '${appName}';
+          }
+
+          @a
+          export class AppElement extends HTMLElement`
+          )
+          .replace('${title}', '${(AppElement as any).title}')
+      );
+
+      if (supportUi()) {
+        const e2eResults = runCLI(`e2e ${appName}-e2e`);
+        expect(e2eResults).toContain('All specs passed!');
+      }
+    });
   });
 });
