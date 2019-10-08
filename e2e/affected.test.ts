@@ -26,7 +26,7 @@ forEachCli(() => {
   });
 
   describe('Affected', () => {
-    it('should print, build, and test affected apps', () => {
+    fit('should print, build, and test affected apps', () => {
       ensureProject();
       const myapp = uniq('myapp');
       const myapp2 = uniq('myapp2');
@@ -62,6 +62,12 @@ forEachCli(() => {
             `
       );
 
+      expect(
+        runCommand(
+          `npm run affected:apps -- --files="libs/${mylib}/src/index.ts" --plain`
+        ).split('\n')[4]
+      ).toEqual(myapp);
+
       const affectedApps = runCommand(
         `npm run affected:apps -- --files="libs/${mylib}/src/index.ts"`
       );
@@ -80,6 +86,12 @@ forEachCli(() => {
       );
       expect(noAffectedApps).not.toContain(myapp);
       expect(noAffectedApps).not.toContain(myapp2);
+
+      expect(
+        runCommand(
+          `npm run affected:libs -- --files="libs/${mylib}/src/index.ts" --plain`
+        ).split('\n')[4]
+      ).toEqual(`${mylib} ${mypublishablelib}`);
 
       const affectedLibs = runCommand(
         `npm run affected:libs -- --files="libs/${mylib}/src/index.ts"`

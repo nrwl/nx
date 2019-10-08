@@ -100,6 +100,10 @@ Default: `false`
 
 Parallelize the command
 
+### plain
+
+Produces a plain output for affected:apps and affected:libs
+
 ### target
 
 Task to run for affected projects

@@ -30,15 +30,17 @@ Please provide detailed steps for reproducing the issue.
 2. step 2
 3. ...
 
+If you can provide steps to reproduce from scratch, that would be enormously appreciated (i.e. where the first step is `npx create-nx-workspace@latest repro-workspace`)
+
 ### Context
 
 Please provide any relevant information about your setup:
 
-- version of Nx used
+- version of Nx used (_Please run `nx report` at the root of your workspace and copy the results here if you are using Nx 8.6.1 or greater_)
 - 3rd-party libraries and their versions
 - and most importantly - a use-case that fails
 
-**A minimal reproduce scenario using allows us to quickly confirm a bug (or point out coding problem) as well as confirm that we are fixing the right problem.**
+**A minimal reproduction scenario allows us to quickly confirm a bug (or point out coding problem) as well as confirm that we are fixing the right problem.**
 
 ### Failure Logs
 

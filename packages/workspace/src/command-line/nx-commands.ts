@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-import * as yargs from 'yargs';
-
-import { affected } from './affected';
-import { format } from './format';
-import { workspaceLint } from './lint';
-import { workspaceSchematic } from './workspace-schematic';
-import { generateGraph, OutputType } from './dep-graph';
-import { nxVersion } from '../utils/versions';
 import { execSync } from 'child_process';
 import { platform } from 'os';
+import * as yargs from 'yargs';
+import { nxVersion } from '../utils/versions';
+import { affected } from './affected';
+import { generateGraph } from './dep-graph';
+import { format } from './format';
+import { workspaceLint } from './lint';
+import { report } from './report';
+import { workspaceSchematic } from './workspace-schematic';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
@@ -28,6 +28,7 @@ export const supportedNxCommands = [
   'workspace-schematic',
   'workspace-lint',
   'migrate',
+  'report',
   '--help',
   '--version'
 ];
@@ -137,8 +138,8 @@ export const commandsObject = yargs
   .command(
     'dep-graph',
     'Graph dependencies within workspace',
-    yargs => withAffectedOptions(withDepGraphOptions(yargs)),
-    args => generateGraph(args)
+    yargs => withDepGraphOptions(yargs),
+    args => generateGraph(args as any, [])
   )
   .command(
     'format:check',
@@ -197,6 +198,12 @@ export const commandsObject = yargs
         stdio: ['inherit', 'inherit', 'inherit']
       });
     }
+  )
+  .command(
+    'report',
+    'Reports useful version numbers to copy into the Nx issue template',
+    noop,
+    _ => report()
   )
   .help('help')
   .version(nxVersion)
@@ -257,6 +264,9 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     .option('verbose', {
       describe: 'Print additional error stack trace on failure'
     })
+    .option('plain', {
+      describe: 'Produces a plain output for affected:apps and affected:libs'
+    })
     .conflicts({
       files: ['uncommitted', 'untracked', 'base', 'head', 'all'],
       untracked: ['uncommitted', 'files', 'base', 'head', 'all'],
@@ -266,14 +276,10 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
 }
 
 function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
-  return yargs
-    .describe('file', 'output file (e.g. --file=.vis/output.json)')
-    .choices('output', [
-      OutputType.json,
-      OutputType.dot,
-      OutputType.html,
-      OutputType.svg
-    ]);
+  return yargs.option('file', {
+    describe: 'output file (e.g. --file=output.json)',
+    type: 'string'
+  });
 }
 
 function parseCSV(args: string[]) {

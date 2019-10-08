@@ -10,6 +10,20 @@
 
 [This is a free book](https://go.nrwl.io/angular-enterprise-monorepo-patterns-new-book?utm_campaign=Book%3A%20Monorepo%20Patterns%2C%20Jan%202019&utm_source=Github&utm_medium=Banner%20Ad) on using Nx in large organizations. It is very practical. Even though it covers the general benefits of Google-style development, it focuses on concrete problems and how to effectively use Nx to solve them.
 
+### Free Course
+
+#### Create a free account on the Connect Platform and enjoy a complete Nx course on us!
+
+<table>
+  <tr>
+    <td>    
+      <a href="https://connect.nrwl.io/app/courses/nx-workspaces/intro" target="_blank">
+        <p align="center"><img src="/shared/course-nx.jpg" width="100%"></p>
+      </a>
+    </td>
+  </tr>
+</table>
+
 ### Books and Blogs
 
 - [Angular Enterprise Monorepo Patters Book](https://go.nrwl.io/angular-enterprise-monorepo-patterns-new-book?utm_campaign=Book%3A%20Monorepo%20Patterns%2C%20Jan%202019&utm_source=Github&utm_medium=Banner%20Ad)

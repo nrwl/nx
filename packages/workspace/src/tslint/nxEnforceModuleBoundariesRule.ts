@@ -1,13 +1,14 @@
 import * as Lint from 'tslint';
 import { IOptions } from 'tslint';
 import * as ts from 'typescript';
-import { ProjectNode, ProjectType } from '../command-line/affected-apps';
 import { readDependencies } from '../command-line/deps-calculator';
 import {
   getProjectNodes,
   normalizedProjectRoot,
   readNxJson,
-  readWorkspaceJson
+  readWorkspaceJson,
+  ProjectNode,
+  ProjectType
 } from '../command-line/shared';
 import { appRootPath } from '../utils/app-root';
 import {

@@ -4,15 +4,6 @@ import * as path from 'path';
 import { appRootPath } from '../utils/app-root';
 import { readJsonFile } from '../utils/fileutils';
 import { YargsAffectedOptions } from './affected';
-import {
-  affectedAppNames,
-  AffectedFetcher,
-  affectedLibNames,
-  affectedProjectNames,
-  affectedProjectNamesWithTarget,
-  ProjectNode,
-  ProjectType
-} from './affected-apps';
 import { Deps, readDependencies } from './deps-calculator';
 import { touchedProjects } from './touched';
 import { output } from './output';
@@ -20,7 +11,6 @@ import { output } from './output';
 const ignore = require('ignore');
 
 export const TEN_MEGABYTES = 1024 * 10000;
-
 export type ImplicitDependencyEntry = { [key: string]: '*' | string[] };
 export type NormalizedImplicitDependencyEntry = { [key: string]: string[] };
 export type ImplicitDependencies = {
@@ -39,6 +29,48 @@ export interface NxJson {
 export interface NxJsonProjectConfig {
   implicitDependencies?: string[];
   tags?: string[];
+}
+
+export enum ProjectType {
+  app = 'app',
+  e2e = 'e2e',
+  lib = 'lib'
+}
+
+export type ProjectNode = {
+  name: string;
+  root: string;
+  type: ProjectType;
+  tags: string[];
+  files: string[];
+  architect: { [k: string]: any };
+  implicitDependencies: string[];
+  fileMTimes: {
+    [filePath: string]: number;
+  };
+};
+
+export interface ProjectMap {
+  [projectName: string]: ProjectNode;
+}
+
+export interface ProjectStates {
+  [projectName: string]: {
+    affected: boolean;
+    touched: boolean;
+  };
+}
+
+export interface DependencyGraph {
+  projects: ProjectMap;
+  dependencies: Deps;
+  roots: string[];
+}
+
+export interface AffectedMetadata {
+  dependencyGraph: DependencyGraph;
+
+  projectStates: ProjectStates;
 }
 
 function readFileIfExisting(path: string) {
@@ -390,57 +422,91 @@ export function readNxJson(): NxJson {
   return config;
 }
 
-export const getAffected = (affectedNamesFetcher: AffectedFetcher) => (
-  touchedFiles: string[]
-): string[] => {
+export function getAffectedMetadata(touchedFiles: string[]): AffectedMetadata {
   const workspaceJson = readWorkspaceJson();
   const nxJson = readNxJson();
-  const projects = getProjectNodes(workspaceJson, nxJson);
-  const implicitDeps = getImplicitDependencies(projects, workspaceJson, nxJson);
-  const dependencies = readDependencies(nxJson.npmScope, projects);
-  const sortedProjects = topologicallySortProjects(projects, dependencies);
-  const tp = touchedProjects(implicitDeps, projects, touchedFiles);
-  return affectedNamesFetcher(sortedProjects, dependencies, tp);
-};
-
-export function getAffectedProjectsWithTarget(target: string) {
-  return getAffected(affectedProjectNamesWithTarget(target));
-}
-export const getAffectedApps = getAffected(affectedAppNames);
-export const getAffectedProjects = getAffected(affectedProjectNames);
-export const getAffectedLibs = getAffected(affectedLibNames);
-
-export function getAllAppNames() {
-  return getProjectNames(p => p.type === ProjectType.app);
+  const projectNodes = getProjectNodes(workspaceJson, nxJson);
+  const implicitDeps = getImplicitDependencies(
+    projectNodes,
+    workspaceJson,
+    nxJson
+  );
+  const dependencies = readDependencies(nxJson.npmScope, projectNodes);
+  const tp = touchedProjects(implicitDeps, projectNodes, touchedFiles);
+  return createAffectedMetadata(projectNodes, dependencies, tp);
 }
 
-export function getAllLibNames() {
-  return getProjectNames(p => p.type === ProjectType.lib);
+export function createAffectedMetadata(
+  projectNodes: ProjectNode[],
+  dependencies: Deps,
+  touchedProjects: string[]
+): AffectedMetadata {
+  const projectStates: ProjectStates = {};
+  const projects: ProjectMap = {};
+  projectNodes.forEach(project => {
+    projectStates[project.name] = {
+      touched: false,
+      affected: false
+    };
+    projects[project.name] = project;
+  });
+  const reverseDeps = reverseDependencies(dependencies);
+  const roots = projectNodes
+    .filter(project => !reverseDeps[project.name])
+    .map(project => project.name);
+  touchedProjects.forEach(projectName => {
+    projectStates[projectName].touched = true;
+
+    setAffected(projectName, reverseDeps, projectStates);
+  });
+  return {
+    dependencyGraph: {
+      projects,
+      dependencies,
+      roots
+    },
+    projectStates
+  };
 }
 
-export function getAllProjectNamesWithTarget(target: string) {
-  return getProjectNames(p => p.architect[target]);
+function reverseDependencies(
+  dependencies: Deps
+): { [projectName: string]: string[] } {
+  const reverseDepSets: { [projectName: string]: Set<string> } = {};
+  Object.entries(dependencies).forEach(([depName, deps]) => {
+    deps.forEach(dep => {
+      reverseDepSets[dep.projectName] =
+        reverseDepSets[dep.projectName] || new Set<string>();
+      reverseDepSets[dep.projectName].add(depName);
+    });
+  });
+  return Object.entries(reverseDepSets).reduce(
+    (reverseDeps, [name, depSet]) => {
+      reverseDeps[name] = Array.from(depSet);
+      return reverseDeps;
+    },
+    {} as {
+      [projectName: string]: string[];
+    }
+  );
 }
 
-export function getAllProjectsWithTarget(target: string) {
-  const workspaceJson = readWorkspaceJson();
-  const nxJson = readNxJson();
-  const projects = getProjectNodes(workspaceJson, nxJson);
-  const dependencies = readDependencies(nxJson.npmScope, projects);
-  const sortedProjects = topologicallySortProjects(projects, dependencies);
-
-  return sortedProjects.filter(p => p.architect[target]).map(p => p.name);
-}
-
-export function getProjectNames(
-  predicate?: (projectNode: ProjectNode) => boolean
-): string[] {
-  let projects = getProjectNodes(readWorkspaceJson(), readNxJson());
-  if (predicate) {
-    projects = projects.filter(predicate);
+function setAffected(
+  projectName: string,
+  reverseDeps: { [projectName: string]: string[] },
+  projectStates: ProjectStates
+) {
+  projectStates[projectName].affected = true;
+  if (!reverseDeps[projectName]) {
+    return;
   }
-
-  return projects.map(p => p.name);
+  reverseDeps[projectName].forEach(dep => {
+    // If a dependency is already marked as affected, it means it has been visited
+    if (projectStates[dep].affected) {
+      return;
+    }
+    setAffected(dep, reverseDeps, projectStates);
+  });
 }
 
 export function getProjectRoots(projectNames: string[]): string[] {
@@ -517,30 +583,4 @@ export function normalizedProjectRoot(p: ProjectNode): string {
     .filter(v => !!v)
     .slice(1)
     .join('/');
-}
-
-function topologicallySortProjects(
-  projects: ProjectNode[],
-  deps: Deps
-): ProjectNode[] {
-  const temporary = {};
-  const marked = {};
-  const res: ProjectNode[] = [];
-
-  while (Object.keys(marked).length !== projects.length) {
-    visit(projects.find(p => !marked[p.name]));
-  }
-
-  function visit(n: ProjectNode) {
-    if (marked[n.name]) return;
-    if (temporary[n.name]) return;
-    temporary[n.name] = true;
-    deps[n.name].forEach(e => {
-      visit(projects.find(pp => pp.name === e.projectName));
-    });
-    marked[n.name] = true;
-    res.push(n);
-  }
-
-  return res;
 }

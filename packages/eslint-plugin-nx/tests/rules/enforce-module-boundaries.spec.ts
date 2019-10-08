@@ -1,7 +1,7 @@
 import {
   ProjectNode,
   ProjectType
-} from '@nrwl/workspace/src/command-line/affected-apps';
+} from '@nrwl/workspace/src/command-line/shared';
 import {
   Dependency,
   DependencyType

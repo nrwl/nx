@@ -8,6 +8,20 @@
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/Jxh_--FeJeY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
+### Free Course
+
+#### Create a free account on the Connect Platform and enjoy a complete Nx course on us!
+
+<table>
+  <tr>
+    <td>    
+      <a href="https://connect.nrwl.io/app/courses/nx-workspaces/intro" target="_blank">
+        <p align="center"><img src="./docs/shared/course-nx.jpg" width="100%"></p>
+      </a>
+    </td>
+  </tr>
+</table>
+
 ## Books and Blogs
 
 - [Nx blog posts](https://blog.nrwl.io/nx/home)

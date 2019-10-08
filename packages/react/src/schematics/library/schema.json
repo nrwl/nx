@@ -102,6 +102,10 @@
       "type": "string",
       "description": "The application project to add the library route to",
       "alias": "a"
+    },
+    "publishable": {
+      "type": "boolean",
+      "description": "Create a publishable library. A \"build\" architect will be added for this project the workspace configuration."
     }
   },
   "required": ["name"]

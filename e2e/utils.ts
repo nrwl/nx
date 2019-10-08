@@ -1,5 +1,5 @@
 import { exec, execSync } from 'child_process';
-import { readFileSync, statSync, writeFileSync, renameSync } from 'fs';
+import { readFileSync, renameSync, statSync, writeFileSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
 
@@ -207,6 +207,17 @@ export function copyMissingPackages(): void {
     'eslint-plugin-react',
     'eslint-plugin-react-hooks',
 
+    // For testing web bundle
+    'rollup',
+    'rollup-plugin-babel',
+    'rollup-plugin-commonjs',
+    'rollup-plugin-filesize',
+    'rollup-plugin-local-resolve',
+    'rollup-plugin-node-resolve',
+    'rollup-plugin-peer-deps-external',
+    'rollup-plugin-postcss',
+    'rollup-plugin-typescript2',
+
     'next',
     'next-server',
     'document-register-element'
@@ -291,6 +302,42 @@ export function runNgAdd(
     return execSync(`./node_modules/.bin/ng ${command}`, {
       cwd: tmpProjPath()
     })
+      .toString()
+      .replace(
+        /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
+        ''
+      );
+  } catch (e) {
+    if (opts.silenceError) {
+      return e.stdout.toString();
+    } else {
+      console.log(e.stdout.toString(), e.stderr.toString());
+      throw e;
+    }
+  }
+}
+
+export function runCLIFromSubfolder(
+  command?: string,
+  subFolder?: string,
+  opts = {
+    silenceError: false
+  }
+): string {
+  const backToRoot = subFolder
+    ? subFolder
+        .split('/')
+        .map(_ => '..')
+        .join('/')
+    : '.';
+
+  try {
+    return execSync(
+      `node ${backToRoot}/node_modules/@nrwl/cli/bin/nx.js ${command}`,
+      {
+        cwd: tmpProjPath(subFolder)
+      }
+    )
       .toString()
       .replace(
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,

@@ -1,5 +1,5 @@
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
-import { ProjectType } from './affected-apps';
+import { ProjectType } from './shared';
 import chalk from 'chalk';
 
 describe('WorkspaceIntegrityChecks', () => {

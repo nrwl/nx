@@ -5,9 +5,9 @@ import {
   normalizedProjectRoot,
   getProjectMTime,
   mtime,
-  lastModifiedAmongProjectFiles
+  lastModifiedAmongProjectFiles,
+  ProjectNode
 } from './shared';
-import { ProjectNode } from './affected-apps';
 import { mkdirSync, readFileSync } from 'fs';
 import {
   fileExists,

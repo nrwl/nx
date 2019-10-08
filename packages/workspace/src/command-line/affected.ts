@@ -1,24 +1,25 @@
-import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as resolve from 'resolve';
 import * as runAll from 'npm-run-all';
 import * as yargs from 'yargs';
 
 import {
+  parseFiles,
+  readWorkspaceJson,
+  printArgsWarning,
+  cliCommand,
+  getAffectedMetadata
+} from './shared';
+import {
   getAffectedApps,
   getAffectedLibs,
   getAffectedProjects,
-  getAllAppNames,
-  getAllLibNames,
-  getProjectNames,
-  parseFiles,
-  getAllProjectsWithTarget,
   getAffectedProjectsWithTarget,
-  readWorkspaceJson,
-  printArgsWarning,
-  cliCommand
-} from './shared';
+  getAllApps,
+  getAllLibs,
+  getAllProjects,
+  getAllProjectsWithTarget
+} from './affected-apps';
 import { generateGraph } from './dep-graph';
 import { WorkspaceResults } from './workspace-results';
 import { output } from './output';
@@ -45,6 +46,7 @@ export interface AffectedOptions {
   help?: boolean;
   version?: boolean;
   quiet?: boolean;
+  plain?: boolean;
 }
 
 const commonCommands = ['build', 'test', 'lint', 'e2e'];
@@ -58,30 +60,60 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
 
   const workspaceResults = new WorkspaceResults(target);
 
+  const touchedFiles = parseFiles(parsedArgs).files;
+  const affectedMetadata = getAffectedMetadata(touchedFiles);
+
   try {
     switch (target) {
       case 'apps':
         const apps = (parsedArgs.all
-          ? getAllAppNames()
-          : getAffectedApps(parseFiles(parsedArgs).files)
+          ? getAllApps(affectedMetadata)
+          : getAffectedApps(affectedMetadata)
         )
           .filter(app => !parsedArgs.exclude.includes(app))
           .filter(
             project =>
               !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
           );
-        printArgsWarning(parsedArgs);
-        if (apps.length) {
-          output.log({
-            title: 'Affected apps:',
-            bodyLines: apps.map(app => `${output.colors.gray('-')} ${app}`)
-          });
+        if (parsedArgs.plain) {
+          console.log(apps.join(' '));
+        } else {
+          printArgsWarning(parsedArgs);
+          if (apps.length) {
+            output.log({
+              title: 'Affected apps:',
+              bodyLines: apps.map(app => `${output.colors.gray('-')} ${app}`)
+            });
+          }
         }
         break;
       case 'libs':
         const libs = (parsedArgs.all
-          ? getAllLibNames()
-          : getAffectedLibs(parseFiles(parsedArgs).files)
+          ? getAllLibs(affectedMetadata)
+          : getAffectedLibs(affectedMetadata)
+        )
+          .filter(app => !parsedArgs.exclude.includes(app))
+          .filter(
+            project =>
+              !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+          );
+
+        if (parsedArgs.plain) {
+          console.log(libs.join(' '));
+        } else {
+          printArgsWarning(parsedArgs);
+          if (libs.length) {
+            output.log({
+              title: 'Affected libs:',
+              bodyLines: libs.map(lib => `${output.colors.gray('-')} ${lib}`)
+            });
+          }
+        }
+        break;
+      case 'dep-graph': {
+        const projects = (parsedArgs.all
+          ? getAllProjects(affectedMetadata)
+          : getAffectedProjects(affectedMetadata)
         )
           .filter(app => !parsedArgs.exclude.includes(app))
           .filter(
@@ -89,57 +121,28 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
               !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
           );
         printArgsWarning(parsedArgs);
-        if (libs.length) {
-          output.log({
-            title: 'Affected libs:',
-            bodyLines: libs.map(lib => `${output.colors.gray('-')} ${lib}`)
-          });
-        }
+        generateGraph(parsedArgs as any, projects);
         break;
-      case 'dep-graph':
-        const projects = parsedArgs.all
-          ? getProjectNames()
-          : getAffectedProjects(parseFiles(parsedArgs).files)
-              .filter(app => !parsedArgs.exclude.includes(app))
-              .filter(
-                project =>
-                  !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
-              );
+      }
+      default: {
+        const projects = (parsedArgs.all
+          ? getAllProjectsWithTarget(affectedMetadata, target)
+          : getAffectedProjectsWithTarget(affectedMetadata, target)
+        )
+          .filter(project => !parsedArgs.exclude.includes(project))
+          .filter(
+            project =>
+              !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
+          );
         printArgsWarning(parsedArgs);
-        generateGraph(parsedArgs, projects);
+        runCommand(target, projects, parsedArgs, rest, workspaceResults);
         break;
-      default:
-        const targetProjects = getProjects(
-          target,
-          parsedArgs,
-          workspaceResults,
-          parsedArgs.all
-        );
-        printArgsWarning(parsedArgs);
-        runCommand(target, targetProjects, parsedArgs, rest, workspaceResults);
-        break;
+      }
     }
   } catch (e) {
     printError(e, parsedArgs.verbose);
     process.exit(1);
   }
-}
-
-function getProjects(
-  target: string,
-  parsedArgs: YargsAffectedOptions,
-  workspaceResults: WorkspaceResults,
-  all: boolean
-) {
-  const projects = all
-    ? getAllProjectsWithTarget(target)
-    : getAffectedProjectsWithTarget(target)(parseFiles(parsedArgs).files);
-
-  return projects
-    .filter(project => !parsedArgs.exclude.includes(project))
-    .filter(
-      project => !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
-    );
 }
 
 function printError(e: any, verbose?: boolean) {
@@ -341,7 +344,8 @@ const dummyOptions: AffectedOptions = {
   head: 'head',
   exclude: ['exclude'],
   files: [''],
-  verbose: false
+  verbose: false,
+  plain: false
 };
 
 const nxSpecificFlags = Object.keys(dummyOptions);

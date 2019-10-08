@@ -24,61 +24,15 @@ Save the dep graph into a json file:
 nx dep-graph --file=output.json
 ```
 
-Save the dep graph into a html file:
-
-```bash
-nx dep-graph --file=output.html
-```
-
 ## Options
-
-### all
-
-All projects
-
-### base
-
-Base of the current branch (usually master)
-
-### exclude
-
-Default: ``
-
-Exclude certain projects from being processed
 
 ### file
 
-output file (e.g. --file=.vis/output.json)
-
-### files
-
-Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas
-
-### head
-
-Latest commit of the current branch (usually HEAD)
+output file (e.g. --file=output.json)
 
 ### help
 
 Show help
-
-### only-failed
-
-Default: `false`
-
-Isolate projects which previously failed
-
-### uncommitted
-
-Uncommitted changes
-
-### untracked
-
-Untracked changes
-
-### verbose
-
-Print additional error stack trace on failure
 
 ### version
 

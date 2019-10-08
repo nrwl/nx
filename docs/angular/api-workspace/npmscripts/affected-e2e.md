@@ -94,6 +94,10 @@ Default: `false`
 
 Parallelize the command
 
+### plain
+
+Produces a plain output for affected:apps and affected:libs
+
 ### uncommitted
 
 Uncommitted changes
