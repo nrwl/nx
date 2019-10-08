@@ -73,7 +73,7 @@ All Web schematics such as `app` and `lib` have been moved to `@nrwl/web` which 
 The builders for building and serving Web apps has been moved to `@nrwl/web` and can be specified as follows:
 
 - `@nrwl/builders:web-build` is now `@nrwl/web:build`
-- `@nrwl/builders:web-dev-server` is now `@nrwl/web:devserver`
+- `@nrwl/builders:web-dev-server` is now `@nrwl/web:dev-server`
 
 ### Nest
 
