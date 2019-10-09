@@ -12,15 +12,7 @@
 
 #### Create a free account on the Connect Platform and enjoy a complete Nx course on us!
 
-<table>
-  <tr>
-    <td>    
-      <a href="https://connect.nrwl.io/app/courses/nx-workspaces/intro" target="_blank">
-        <p align="center"><img src="/shared/course-nx.jpg" width="100%"></p>
-      </a>
-    </td>
-  </tr>
-</table>
+[![Create Workspace](./course-nx.jpg)](https://connect.nrwl.io/app/courses/nx-workspaces/intro)
 
 ## Books and Blogs
 
