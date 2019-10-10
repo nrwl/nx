@@ -1,4 +1,4 @@
-import { convertToCamelCase, convertAliases } from './params';
+import { convertAliases, convertToCamelCase, lookupUnmatched } from './params';
 
 describe('params', () => {
   describe('convertToCamelCase', () => {
@@ -47,7 +47,7 @@ describe('params', () => {
       ).toEqual({ directory: 'test' });
     });
 
-    it('should filter out unknown keys without alias', () => {
+    it('should filter unknown keys into the leftovers field', () => {
       expect(
         convertAliases(
           { d: 'test' },
@@ -57,7 +57,70 @@ describe('params', () => {
             description: ''
           }
         )
-      ).toEqual({});
+      ).toEqual({
+        '--': [
+          {
+            name: 'd',
+            possible: []
+          }
+        ]
+      });
+    });
+  });
+
+  describe('lookupUnmatched', () => {
+    it('should populate the possible array with near matches', () => {
+      expect(
+        lookupUnmatched(
+          {
+            '--': [
+              {
+                name: 'directoy',
+                possible: []
+              }
+            ]
+          },
+          {
+            properties: { directory: { type: 'string' } },
+            required: [],
+            description: ''
+          }
+        )
+      ).toEqual({
+        '--': [
+          {
+            name: 'directoy',
+            possible: ['directory']
+          }
+        ]
+      });
+    });
+
+    it('should NOT populate the possible array with far matches', () => {
+      expect(
+        lookupUnmatched(
+          {
+            '--': [
+              {
+                name: 'directoy',
+                possible: []
+              }
+            ]
+          },
+          {
+            properties: { faraway: { type: 'string' } },
+            required: [],
+            description: ''
+          }
+        )
+      ).toEqual({
+        '--': [
+          {
+            name: 'directoy',
+            possible: []
+          }
+        ]
+      });
     });
   });
 });
