@@ -19,16 +19,15 @@ import {
   NodeWorkflow,
   validateOptionsWithSchema
 } from '@angular-devkit/schematics/tools';
-import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as inquirer from 'inquirer';
+import { detectPackageManager } from '../shared/detect-package-manager';
 import { getLogger } from '../shared/logger';
 import {
-  coerceTypes,
-  convertAliases,
   convertToCamelCase,
   handleErrors,
-  Schema
+  Schema,
+  validateOptions
 } from '../shared/params';
 import { commandName, printHelp } from '../shared/print-help';
 import minimist = require('minimist');
@@ -146,61 +145,6 @@ function createRecorder(record: any, logger: logging.Logger) {
       );
     }
   };
-}
-
-async function detectPackageManager(
-  host: virtualFs.Host<any>
-): Promise<string> {
-  const hostTree = new HostTree(host);
-  if (hostTree.get('workspace.json')) {
-    const workspaceJson: { cli: { packageManager: string } } = JSON.parse(
-      hostTree.read('workspace.json')!.toString()
-    );
-    if (workspaceJson.cli && workspaceJson.cli.packageManager) {
-      return workspaceJson.cli.packageManager;
-    }
-  }
-
-  if (await fileExists(host, 'yarn.lock')) {
-    return 'yarn';
-  }
-
-  if (await fileExists(host, 'pnpm-lock.yaml')) {
-    return 'pnpm';
-  }
-
-  if (await fileExists(host, 'package-lock.json')) {
-    return 'npm';
-  }
-
-  // If we get here, there are no lock files, so lets check for package managers in our preferred order
-  if (isPackageManagerInstalled('yarn')) {
-    return 'yarn';
-  }
-
-  if (isPackageManagerInstalled('pnpm')) {
-    return 'pnpm';
-  }
-
-  return 'npm';
-}
-
-function fileExists(
-  host: virtualFs.Host<any>,
-  fileName: string
-): Promise<boolean> {
-  return host.exists(fileName as any).toPromise();
-}
-
-function isPackageManagerInstalled(packageManager: string) {
-  try {
-    execSync(`${packageManager} --version`, {
-      stdio: ['ignore', 'ignore', 'ignore']
-    });
-    return true;
-  } catch (e) {
-    return false;
-  }
 }
 
 async function createWorkflow(
@@ -343,44 +287,63 @@ async function runSchematic(
   workflow: NodeWorkflow,
   logger: logging.Logger,
   opts: GenerateOptions,
-  schematic: Schematic<any, any>
+  schematic: Schematic<any, any>,
+  allowAdditionalArgs: boolean = false
 ): Promise<number> {
-  const flattenedSchema = await workflow.registry
+  const flattenedSchema = (await workflow.registry
     .flatten(schematic.description.schemaJson!)
-    .toPromise();
+    .toPromise()) as Schema;
 
   if (opts.help) {
     printGenHelp(opts, flattenedSchema as any, logger);
-  } else {
-    const defaults =
-      opts.schematicName === 'tao-new'
-        ? {}
-        : await getSchematicDefaults(
-            root,
-            opts.collectionName,
-            opts.schematicName
-          );
-    const record = { loggingQueue: [] as string[], error: false };
-    workflow.reporter.subscribe(createRecorder(record, logger));
-    const schematicOptions = convertAliases(
-      coerceTypes(opts.schematicOptions, flattenedSchema as any),
-      flattenedSchema as any
-    );
-    await workflow
-      .execute({
-        collection: opts.collectionName,
-        schematic: opts.schematicName,
-        options: { ...defaults, ...schematicOptions },
-        debug: opts.debug,
-        logger
-      })
-      .toPromise();
-    if (!record.error) {
-      record.loggingQueue.forEach(log => logger.info(log));
-    }
-    if (opts.dryRun) {
-      logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
-    }
+    return 0;
+  }
+
+  const defaults =
+    opts.schematicName === 'tao-new'
+      ? {}
+      : await getSchematicDefaults(
+          root,
+          opts.collectionName,
+          opts.schematicName
+        );
+  const record = { loggingQueue: [] as string[], error: false };
+  workflow.reporter.subscribe(createRecorder(record, logger));
+
+  const schematicOptions = validateOptions(
+    opts.schematicOptions,
+    flattenedSchema
+  );
+
+  if (schematicOptions['--'] && !allowAdditionalArgs) {
+    schematicOptions['--'].forEach(unmatched => {
+      const message =
+        `Could not match option '${unmatched.name}' to the ${opts.collectionName}:${opts.schematicName} schema.` +
+        (unmatched.possible.length > 0
+          ? ` Possible matches : ${unmatched.possible.join()}`
+          : '');
+      logger.fatal(message);
+    });
+
+    return 1;
+  }
+
+  await workflow
+    .execute({
+      collection: opts.collectionName,
+      schematic: opts.schematicName,
+      options: { ...defaults, ...schematicOptions },
+      debug: opts.debug,
+      logger
+    })
+    .toPromise();
+
+  if (!record.error) {
+    record.loggingQueue.forEach(log => logger.info(log));
+  }
+
+  if (opts.dryRun) {
+    logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
   }
   return 0;
 }
@@ -402,6 +365,7 @@ export async function generate(
       'generate',
       await readDefaultCollection(fsHost)
     );
+
     const workflow = await createWorkflow(fsHost, root, opts);
     const collection = getCollection(workflow, opts.collectionName);
     const schematic = collection.createSchematic(opts.schematicName, true);
@@ -438,12 +402,14 @@ export async function taoNew(
     const workflow = await createWorkflow(fsHost, root, opts);
     const collection = getCollection(workflow, opts.collectionName);
     const schematic = collection.createSchematic('tao-new', true);
+    const allowAdditionalArgs = true; // tao-new is a special case, we can't yet know the schema to validate against
     return runSchematic(
       root,
       workflow,
       logger,
       { ...opts, schematicName: schematic.description.name },
-      schematic
+      schematic,
+      allowAdditionalArgs
     );
   });
 }
