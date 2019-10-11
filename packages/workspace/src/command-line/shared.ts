@@ -173,7 +173,7 @@ export function parseFiles(options: YargsAffectedOptions): { files: string[] } {
 }
 
 function getUncommittedFiles(): string[] {
-  return parseGitOutput(`git diff --name-only HEAD .`);
+  return parseGitOutput(`git diff --name-only --relative HEAD .`);
 }
 
 function getUntrackedFiles(): string[] {
@@ -186,11 +186,11 @@ function getFilesUsingBaseAndHead(base: string, head: string): string[] {
   })
     .toString()
     .trim();
-  return parseGitOutput(`git diff --name-only ${mergeBase} ${head}`);
+  return parseGitOutput(`git diff --name-only --relative ${mergeBase} ${head}`);
 }
 
 function getFilesFromShash(sha1: string, sha2: string): string[] {
-  return parseGitOutput(`git diff --name-only ${sha1} ${sha2}`);
+  return parseGitOutput(`git diff --name-only --relative ${sha1} ${sha2}`);
 }
 
 function parseGitOutput(command: string): string[] {

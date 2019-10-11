@@ -1,3 +1,5 @@
+import { join } from 'path';
+
 import {
   ImplicitDependencies,
   readWorkspaceJson,
@@ -6,6 +8,7 @@ import {
   getImplicitDependencies,
   ProjectNode
 } from './shared';
+import { appRootPath } from '../utils/app-root';
 
 export function touchedProjects(
   implicitDependencies: ImplicitDependencies,
@@ -40,7 +43,7 @@ function implicitlyTouchedProjects(
   return Array.from(
     Object.entries(implicitDependencies.files).reduce(
       (projectSet, [file, projectNames]) => {
-        if (touchedFiles.find(tf => tf.endsWith(file))) {
+        if (touchedFiles.find(tf => tf === file)) {
           projectNames.forEach(projectName => {
             projectSet.add(projectName);
           });
@@ -59,9 +62,7 @@ function directlyTouchedProjects(
   return projects
     .filter(project => {
       return touchedFiles.some(file => {
-        return project.files.some(projectFile => {
-          return file.endsWith(projectFile);
-        });
+        return project.files.some(projectFile => projectFile === file);
       });
     })
     .map(project => project.name);

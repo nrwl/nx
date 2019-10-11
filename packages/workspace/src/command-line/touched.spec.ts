@@ -78,9 +78,9 @@ describe('touchedProjects', () => {
         {
           name: 'app1Name',
           root: 'apps/app1',
-          files: ['app1.ts'],
+          files: ['apps/app1/app1.ts'],
           fileMTimes: {
-            'app1.ts': 1
+            'apps/app1/app1.ts': 1
           },
           tags: [],
           implicitDependencies: [],
@@ -90,9 +90,9 @@ describe('touchedProjects', () => {
         {
           name: 'app2Name',
           root: 'apps/app2',
-          files: ['app2.ts'],
+          files: ['apps/app2/app2.ts'],
           fileMTimes: {
-            'app2.ts': 1
+            'apps/app2/app2.ts': 1
           },
           tags: [],
           implicitDependencies: [],
@@ -102,9 +102,9 @@ describe('touchedProjects', () => {
         {
           name: 'lib1Name',
           root: 'libs/lib1',
-          files: ['lib1.ts'],
+          files: ['libs/lib1/lib1.ts'],
           fileMTimes: {
-            'lib1.ts': 1
+            'libs/lib1/lib1.ts': 1
           },
           tags: [],
           implicitDependencies: [],
@@ -114,9 +114,9 @@ describe('touchedProjects', () => {
         {
           name: 'lib2Name',
           root: 'libs/lib2',
-          files: ['lib2.ts'],
+          files: ['libs/lib2/lib2.ts'],
           fileMTimes: {
-            'lib2.ts': 1
+            'libs/lib2/lib2.ts': 1
           },
           tags: [],
           implicitDependencies: [],
@@ -124,7 +124,7 @@ describe('touchedProjects', () => {
           type: ProjectType.lib
         }
       ],
-      ['gitrepo/some/path/inside/nx/libs/lib2/lib2.ts', 'apps/app2/app2.ts']
+      ['libs/lib2/lib2.ts', 'apps/app2/app2.ts']
     );
 
     expect(tp).toEqual(['app2Name', 'lib2Name']);
@@ -254,7 +254,7 @@ describe('touchedProjects', () => {
           type: ProjectType.lib
         }
       ],
-      ['gitrepo/some/path/Jenkinsfile']
+      ['Jenkinsfile']
     );
 
     expect(tp).toEqual(['app1Name', 'app2Name']);
