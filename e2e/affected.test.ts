@@ -7,7 +7,8 @@ import {
   updateFile,
   runCLI,
   forEachCli,
-  supportUi
+  supportUi,
+  newProject
 } from './utils';
 
 let originalCIValue;
@@ -26,7 +27,7 @@ forEachCli(() => {
   });
 
   describe('Affected', () => {
-    fit('should print, build, and test affected apps', () => {
+    it('should print, build, and test affected apps', () => {
       ensureProject();
       const myapp = uniq('myapp');
       const myapp2 = uniq('myapp2');
@@ -61,7 +62,6 @@ forEachCli(() => {
               });
             `
       );
-
       expect(
         runCommand(
           `npm run affected:apps -- --files="libs/${mylib}/src/index.ts" --plain`

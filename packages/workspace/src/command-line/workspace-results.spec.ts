@@ -38,49 +38,6 @@ describe('WorkspacesResults', () => {
       expect(fs.writeSync).not.toHaveBeenCalled();
       expect(fs.unlinkSync).toHaveBeenCalledWith('dist/.nx-results');
     });
-
-    it('should print results', () => {
-      const projectName = 'proj';
-      results.setResult(projectName, true);
-      spyOn(output, 'success');
-
-      const successTitle = 'Success';
-
-      results.printResults(false, successTitle, 'Fail');
-
-      expect(output.success).toHaveBeenCalledWith({
-        title: successTitle
-      });
-    });
-
-    it('should warn the user that not all tests were run', () => {
-      (<any>results).startedWithFailedProjects = true;
-
-      const projectName = 'proj';
-      spyOn(output, 'success');
-      spyOn(output, 'warn');
-
-      results.setResult(projectName, true);
-
-      const successTitle = 'Success';
-
-      results.printResults(true, successTitle, 'Fail');
-
-      expect(output.success).toHaveBeenCalledWith({
-        title: successTitle
-      });
-
-      expect(output.warn).toHaveBeenCalledWith({
-        title: `Only affected projects ${output.underline(
-          'which had previously failed'
-        )} were run`,
-        bodyLines: [
-          `You should verify by running ${output.underline(
-            'without'
-          )} ${output.bold('--only-failed')}`
-        ]
-      });
-    });
   });
 
   describe('fail', () => {
@@ -105,48 +62,6 @@ describe('WorkspacesResults', () => {
           }
         })
       );
-    });
-
-    it('should print results', () => {
-      const projectName = 'proj';
-      results.setResult(projectName, false);
-      spyOn(output, 'error');
-
-      const errorTitle = 'Fail';
-
-      results.printResults(true, 'Success', errorTitle);
-
-      expect(output.error).toHaveBeenCalledWith({
-        title: errorTitle,
-        bodyLines: [
-          output.colors.gray('Failed projects:'),
-          '',
-          `${output.colors.gray('-')} ${projectName}`
-        ]
-      });
-    });
-
-    it('should tell the user that they can isolate only the failed tests', () => {
-      const projectName = 'proj';
-      results.setResult(projectName, false);
-      spyOn(output, 'error');
-
-      const errorTitle = 'Fail';
-
-      results.printResults(false, 'Success', errorTitle);
-
-      expect(output.error).toHaveBeenCalledWith({
-        title: errorTitle,
-        bodyLines: [
-          output.colors.gray('Failed projects:'),
-          '',
-          `${output.colors.gray('-')} ${projectName}`,
-          '',
-          `${output.colors.gray(
-            'You can isolate the above projects by passing:'
-          )} ${output.bold('--only-failed')}`
-        ]
-      });
     });
   });
 

@@ -488,8 +488,12 @@ describe('createAffectedMetadata', () => {
 
   it('should translate project nodes array to map', () => {
     expect(
-      createAffectedMetadata(projectNodes as ProjectNode[], dependencies, [])
-        .dependencyGraph.projects
+      createAffectedMetadata(
+        projectNodes as ProjectNode[],
+        dependencies,
+        [],
+        false
+      ).dependencyGraph.projects
     ).toEqual({
       app1: {
         name: 'app1'
@@ -514,15 +518,23 @@ describe('createAffectedMetadata', () => {
 
   it('should include the dependencies', () => {
     expect(
-      createAffectedMetadata(projectNodes as ProjectNode[], dependencies, [])
-        .dependencyGraph.dependencies
+      createAffectedMetadata(
+        projectNodes as ProjectNode[],
+        dependencies,
+        [],
+        false
+      ).dependencyGraph.dependencies
     ).toEqual(dependencies);
   });
 
   it('should find the roots', () => {
     expect(
-      createAffectedMetadata(projectNodes as ProjectNode[], dependencies, [])
-        .dependencyGraph.roots
+      createAffectedMetadata(
+        projectNodes as ProjectNode[],
+        dependencies,
+        [],
+        false
+      ).dependencyGraph.roots
     ).toEqual(['app1-e2e', 'customName-e2e']);
   });
 
@@ -530,7 +542,8 @@ describe('createAffectedMetadata', () => {
     const { projectStates } = createAffectedMetadata(
       projectNodes as ProjectNode[],
       dependencies,
-      ['app1', 'lib2']
+      ['app1', 'lib2'],
+      false
     );
     expect(projectStates.app1.touched).toEqual(true);
     expect(projectStates.lib2.touched).toEqual(true);
@@ -545,7 +558,8 @@ describe('createAffectedMetadata', () => {
     const { projectStates } = createAffectedMetadata(
       projectNodes as ProjectNode[],
       dependencies,
-      ['app1', 'lib2']
+      ['app1', 'lib2'],
+      false
     );
     expect(projectStates.app1.affected).toEqual(true);
     expect(projectStates.lib2.affected).toEqual(true);
@@ -555,7 +569,8 @@ describe('createAffectedMetadata', () => {
     const { projectStates } = createAffectedMetadata(
       projectNodes as ProjectNode[],
       dependencies,
-      ['app1']
+      ['app1'],
+      false
     );
     expect(projectStates.app1.affected).toEqual(true);
     expect(projectStates['app1-e2e'].affected).toEqual(true);
@@ -570,7 +585,8 @@ describe('createAffectedMetadata', () => {
     const { projectStates } = createAffectedMetadata(
       projectNodes as ProjectNode[],
       dependencies,
-      ['lib1']
+      ['lib1'],
+      false
     );
     expect(projectStates.app1.affected).toEqual(true);
     expect(projectStates['app1-e2e'].affected).toEqual(true);
@@ -585,7 +601,8 @@ describe('createAffectedMetadata', () => {
     const { projectStates } = createAffectedMetadata(
       projectNodes as ProjectNode[],
       dependencies,
-      []
+      [],
+      false
     );
     expect(projectStates.app1.affected).toEqual(false);
     expect(projectStates.app2.affected).toEqual(false);
@@ -603,7 +620,8 @@ describe('createAffectedMetadata', () => {
     const metadata = createAffectedMetadata(
       projectNodes as ProjectNode[],
       dependencies,
-      ['lib2']
+      ['lib2'],
+      false
     );
     const { dependencyGraph, projectStates } = metadata;
     expect(dependencyGraph.roots).toEqual(['app1-e2e', 'customName-e2e']);
@@ -627,7 +645,8 @@ describe('createAffectedMetadata', () => {
     const metadata = createAffectedMetadata(
       projectNodes as ProjectNode[],
       dependencies,
-      ['app1-e2e', 'customName-e2e']
+      ['app1-e2e', 'customName-e2e'],
+      false
     );
     const { dependencyGraph, projectStates } = metadata;
     expect(dependencyGraph.roots).toEqual([]);
