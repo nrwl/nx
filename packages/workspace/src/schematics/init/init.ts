@@ -545,7 +545,6 @@ function addInstallTask(options: Schema) {
 export default function(schema: Schema): Rule {
   const options = {
     ...schema,
-    name: toFileName(schema.name),
     npmScope: toFileName(schema.npmScope || schema.name)
   };
   const templateSource = apply(url('./files'), [
