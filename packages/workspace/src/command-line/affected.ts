@@ -1,30 +1,7 @@
+import { join, basename, posix } from 'path';
 import * as yargs from 'yargs';
 import * as yargsParser from 'yargs-parser';
-import { join } from 'path';
-
-import {
-  parseFiles,
-  printArgsWarning,
-  getAffectedMetadata,
-  AffectedMetadata,
-  readNxJson,
-  ProjectNode,
-  NxJson
-} from './shared';
-import {
-  getAffectedApps,
-  getAffectedLibs,
-  getAffectedProjects,
-  getAffectedProjectsWithTargetAndConfiguration,
-  getAllApps,
-  getAllLibs,
-  getAllProjects,
-  getAllProjectsWithTargetAndConfiguration,
-  projectHasTargetAndConfiguration
-} from './affected-apps';
-import { generateGraph } from './dep-graph';
-import { WorkspaceResults } from './workspace-results';
-import { output } from './output';
+import { defaultTasksRunner } from '../tasks-runner/default-tasks-runner';
 import {
   AffectedEventType,
   Task,
@@ -32,8 +9,22 @@ import {
   TasksRunner
 } from '../tasks-runner/tasks-runner';
 import { appRootPath } from '../utils/app-root';
-import { defaultTasksRunner } from '../tasks-runner/default-tasks-runner';
 import { isRelativePath } from '../utils/fileutils';
+import { generateGraph } from './dep-graph';
+import { output } from './output';
+import {
+  AffectedMetadata,
+  getAffectedMetadata,
+  NxJson,
+  parseFiles,
+  printArgsWarning,
+  ProjectNode,
+  ProjectType,
+  readNxJson,
+  cliCommand
+} from './shared';
+import { WorkspaceResults } from './workspace-results';
+import { getCommand, getOutputs } from '../tasks-runner/utils';
 
 export interface YargsAffectedOptions
   extends yargs.Arguments,
@@ -60,6 +51,7 @@ export interface AffectedOptions {
   version?: boolean;
   quiet?: boolean;
   plain?: boolean;
+  withDeps?: boolean;
 }
 
 interface ProcessedArgs {
@@ -69,26 +61,33 @@ interface ProcessedArgs {
   tasksRunner: TasksRunner;
 }
 
-export function affected(parsedArgs: YargsAffectedOptions): void {
-  const target = parsedArgs.target;
-
-  const workspaceResults = new WorkspaceResults(target);
+export function affected(
+  command: string,
+  parsedArgs: YargsAffectedOptions
+): void {
+  const workspaceResults = new WorkspaceResults(parsedArgs.target);
 
   const touchedFiles = parseFiles(parsedArgs).files;
-  const affectedMetadata = getAffectedMetadata(touchedFiles);
+  const affectedMetadata = getAffectedMetadata(
+    touchedFiles,
+    parsedArgs.withDeps
+  );
 
+  const projects = (parsedArgs.all
+    ? getAllProjects(affectedMetadata)
+    : getAffectedProjects(affectedMetadata)
+  )
+    .filter(app => !parsedArgs.exclude.includes(app.name))
+    .filter(
+      project =>
+        !parsedArgs.onlyFailed || !workspaceResults.getResult(project.name)
+    );
   try {
-    switch (target) {
+    switch (command) {
       case 'apps':
-        const apps = (parsedArgs.all
-          ? getAllApps(affectedMetadata)
-          : getAffectedApps(affectedMetadata)
-        )
-          .filter(affectedApp => !parsedArgs.exclude.includes(affectedApp))
-          .filter(
-            affectedApp =>
-              !parsedArgs.onlyFailed || !workspaceResults.getResult(affectedApp)
-          );
+        const apps = projects
+          .filter(p => p.type === ProjectType.app)
+          .map(p => p.name);
         if (parsedArgs.plain) {
           console.log(apps.join(' '));
         } else {
@@ -102,16 +101,9 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
         }
         break;
       case 'libs':
-        const libs = (parsedArgs.all
-          ? getAllLibs(affectedMetadata)
-          : getAffectedLibs(affectedMetadata)
-        )
-          .filter(affectedLib => !parsedArgs.exclude.includes(affectedLib))
-          .filter(
-            affectedLib =>
-              !parsedArgs.onlyFailed || !workspaceResults.getResult(affectedLib)
-          );
-
+        const libs = projects
+          .filter(p => p.type === ProjectType.lib)
+          .map(p => p.name);
         if (parsedArgs.plain) {
           console.log(libs.join(' '));
         } else {
@@ -124,43 +116,37 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
           }
         }
         break;
+      case 'print-affected':
+        const {
+          processedArgs,
+          projectWithTargetAndConfig
+        } = allProjectsWithTargetAndConfiguration(projects, parsedArgs);
+        printAffected(
+          projectWithTargetAndConfig,
+          affectedMetadata,
+          processedArgs
+        );
+        break;
+
       case 'dep-graph': {
-        const projects = (parsedArgs.all
-          ? getAllProjects(affectedMetadata)
-          : getAffectedProjects(affectedMetadata)
-        )
-          .filter(app => !parsedArgs.exclude.includes(app))
-          .filter(
-            project =>
-              !parsedArgs.onlyFailed || !workspaceResults.getResult(project)
-          );
+        const projectNames = projects.map(p => p.name);
         printArgsWarning(parsedArgs);
-        generateGraph(parsedArgs as any, projects);
+        generateGraph(parsedArgs as any, projectNames);
         break;
       }
-      default: {
-        const nxJson = readNxJson();
-        const processedArgs = processArgs(parsedArgs, nxJson);
-        const projects = (parsedArgs.all
-          ? getAllProjectsWithTargetAndConfiguration(
-              affectedMetadata,
-              target,
-              processedArgs.affectedArgs.configuration
-            )
-          : getAffectedProjectsWithTargetAndConfiguration(
-              affectedMetadata,
-              target,
-              processedArgs.affectedArgs.configuration
-            )
-        )
-          .filter(project => !parsedArgs.exclude.includes(project.name))
-          .filter(
-            project =>
-              !parsedArgs.onlyFailed ||
-              !workspaceResults.getResult(project.name)
-          );
+
+      case 'affected': {
+        const {
+          processedArgs,
+          projectWithTargetAndConfig
+        } = allProjectsWithTargetAndConfiguration(projects, parsedArgs);
         printArgsWarning(parsedArgs);
-        runCommand(projects, affectedMetadata, processedArgs, workspaceResults);
+        runCommand(
+          projectWithTargetAndConfig,
+          affectedMetadata,
+          processedArgs,
+          workspaceResults
+        );
         break;
       }
     }
@@ -168,6 +154,86 @@ export function affected(parsedArgs: YargsAffectedOptions): void {
     printError(e, parsedArgs.verbose);
     process.exit(1);
   }
+}
+
+function allProjectsWithTargetAndConfiguration(
+  projects: ProjectNode[],
+  parsedArgs: YargsAffectedOptions
+) {
+  const nxJson = readNxJson();
+  const processedArgs = processArgs(parsedArgs, nxJson);
+  const projectWithTargetAndConfig = projects.filter(p =>
+    projectHasTargetAndConfiguration(
+      p,
+      parsedArgs.target,
+      processedArgs.affectedArgs.configuration
+    )
+  );
+  return { processedArgs, projectWithTargetAndConfig };
+}
+
+function projectHasTargetAndConfiguration(
+  project: ProjectNode,
+  target: string,
+  configuration?: string
+) {
+  if (!project.architect[target]) {
+    return false;
+  }
+
+  if (!configuration) {
+    return !!project.architect[target];
+  } else {
+    return (
+      project.architect[target].configurations &&
+      project.architect[target].configurations[configuration]
+    );
+  }
+}
+
+function getAffectedProjects(
+  affectedMetadata: AffectedMetadata
+): ProjectNode[] {
+  return filterAffectedMetadata(
+    affectedMetadata,
+    project => affectedMetadata.projectStates[project.name].affected
+  );
+}
+
+function getAllProjects(affectedMetadata: AffectedMetadata): ProjectNode[] {
+  return filterAffectedMetadata(affectedMetadata, () => true);
+}
+
+function filterAffectedMetadata(
+  affectedMetadata: AffectedMetadata,
+  predicate: (project) => boolean
+): ProjectNode[] {
+  const projects: ProjectNode[] = [];
+  visit(affectedMetadata, project => {
+    if (predicate(project)) {
+      projects.push(project);
+    }
+  });
+  return projects;
+}
+function visit(
+  affectedMetadata: AffectedMetadata,
+  visitor: (project: ProjectNode) => void
+) {
+  const visited = new Set<string>();
+  function _visit(projectName: string) {
+    affectedMetadata.dependencyGraph.dependencies[projectName].forEach(dep => {
+      _visit(dep.projectName);
+    });
+    if (visited.has(projectName)) {
+      return;
+    }
+    visited.add(projectName);
+    visitor(affectedMetadata.dependencyGraph.projects[projectName]);
+  }
+  affectedMetadata.dependencyGraph.roots.forEach(root => {
+    _visit(root);
+  });
 }
 
 function printError(e: any, verbose?: boolean) {
@@ -182,7 +248,41 @@ function printError(e: any, verbose?: boolean) {
   });
 }
 
-async function runCommand(
+function printAffected(
+  affectedProjects: ProjectNode[],
+  affectedMetadata: AffectedMetadata,
+  processedArgs: ProcessedArgs
+) {
+  const tasks: Task[] = affectedProjects.map(affectedProject =>
+    createTask({
+      project: affectedProject,
+      target: processedArgs.affectedArgs.target,
+      configuration: processedArgs.affectedArgs.configuration,
+      overrides: processedArgs.taskOverrides
+    })
+  );
+  const cli = cliCommand();
+  const isYarn = basename(process.env.npm_execpath || 'npm').startsWith('yarn');
+  const tasksJson = tasks.map(task => ({
+    id: task.id,
+    overrides: task.overrides,
+    target: task.target,
+    command: `${isYarn ? 'yarn' : 'npm run'} ${getCommand(cli, isYarn, task)}`,
+    outputs: getOutputs(affectedMetadata.dependencyGraph.projects, task)
+  }));
+  console.log(
+    JSON.stringify(
+      {
+        tasks: tasksJson,
+        dependencyGraph: affectedMetadata.dependencyGraph
+      },
+      null,
+      2
+    )
+  );
+}
+
+function runCommand(
   affectedProjects: ProjectNode[],
   affectedMetadata: AffectedMetadata,
   processedArgs: ProcessedArgs,
@@ -195,34 +295,12 @@ async function runCommand(
     tasksRunner
   } = processedArgs;
 
-  if (affectedProjects.length <= 0) {
-    let description = `with "${affectedArgs.target}"`;
-    if (affectedArgs.configuration) {
-      description += ` that are configured for "${affectedArgs.configuration}"`;
-    }
-    output.logSingleLine(`No projects ${description} were affected`);
-    return;
-  }
-
-  const bodyLines = affectedProjects.map(
-    affectedProject => `${output.colors.gray('-')} ${affectedProject.name}`
+  const reporter = new DefaultReporter();
+  reporter.beforeRun(
+    affectedProjects.map(p => p.name),
+    affectedArgs,
+    taskOverrides
   );
-  if (Object.keys(taskOverrides).length > 0) {
-    bodyLines.push('');
-    bodyLines.push(`${output.colors.gray('With flags:')}`);
-    Object.entries(taskOverrides)
-      .map(([flag, value]) => `  --${flag}=${value}`)
-      .forEach(arg => bodyLines.push(arg));
-  }
-
-  output.log({
-    title: `${output.colors.gray('Running target')} ${
-      affectedArgs.target
-    } ${output.colors.gray('for projects:')}`,
-    bodyLines
-  });
-
-  output.addVerticalSeparator();
 
   const tasks: Task[] = affectedProjects.map(affectedProject =>
     createTask({
@@ -274,10 +352,10 @@ async function runCommand(
       if (process.stdin['unref']) (process.stdin as any).unref();
 
       workspaceResults.saveResults();
-      workspaceResults.printResults(
-        affectedArgs.onlyFailed,
-        `Running target "${affectedArgs.target}" for affected projects succeeded`,
-        `Running target "${affectedArgs.target}" for affected projects failed`
+      reporter.printResults(
+        affectedArgs,
+        workspaceResults.failedProjects,
+        workspaceResults.startedWithFailedProjects
       );
 
       if (workspaceResults.hasFailure) {
@@ -287,6 +365,91 @@ async function runCommand(
   });
 }
 
+class DefaultReporter {
+  beforeRun(
+    affectedProjectNames: string[],
+    affectedArgs: YargsAffectedOptions,
+    taskOverrides: any
+  ) {
+    if (affectedProjectNames.length <= 0) {
+      let description = `with "${affectedArgs.target}"`;
+      if (affectedArgs.configuration) {
+        description += ` that are configured for "${affectedArgs.configuration}"`;
+      }
+      output.logSingleLine(`No projects ${description} were affected`);
+      return;
+    }
+
+    const bodyLines = affectedProjectNames.map(
+      affectedProject => `${output.colors.gray('-')} ${affectedProject}`
+    );
+    if (Object.keys(taskOverrides).length > 0) {
+      bodyLines.push('');
+      bodyLines.push(`${output.colors.gray('With flags:')}`);
+      Object.entries(taskOverrides)
+        .map(([flag, value]) => `  --${flag}=${value}`)
+        .forEach(arg => bodyLines.push(arg));
+    }
+
+    output.log({
+      title: `${output.colors.gray('Running target')} ${
+        affectedArgs.target
+      } ${output.colors.gray('for projects:')}`,
+      bodyLines
+    });
+
+    output.addVerticalSeparator();
+  }
+
+  printResults(
+    affectedArgs: YargsAffectedOptions,
+    failedProjectNames: string[],
+    startedWithFailedProjects: boolean
+  ) {
+    output.addNewline();
+    output.addVerticalSeparator();
+
+    if (failedProjectNames.length === 0) {
+      output.success({
+        title: `Running target "${affectedArgs.target}" for affected projects succeeded`
+      });
+
+      if (affectedArgs.onlyFailed && startedWithFailedProjects) {
+        output.warn({
+          title: `Only affected projects ${output.underline(
+            'which had previously failed'
+          )} were run`,
+          bodyLines: [
+            `You should verify by running ${output.underline(
+              'without'
+            )} ${output.bold('--only-failed')}`
+          ]
+        });
+      }
+      return;
+    }
+
+    const bodyLines = [
+      output.colors.gray('Failed projects:'),
+      '',
+      ...failedProjectNames.map(
+        project => `${output.colors.gray('-')} ${project}`
+      )
+    ];
+    if (!affectedArgs.onlyFailed && !startedWithFailedProjects) {
+      bodyLines.push('');
+      bodyLines.push(
+        `${output.colors.gray(
+          'You can isolate the above projects by passing:'
+        )} ${output.bold('--only-failed')}`
+      );
+    }
+    output.error({
+      title: `Running target "${affectedArgs.target}" for affected projects failed`,
+      bodyLines
+    });
+  }
+}
 function createTask({
   project,
   target,

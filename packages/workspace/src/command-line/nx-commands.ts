@@ -22,6 +22,7 @@ export const supportedNxCommands = [
   'affected:e2e',
   'affected:dep-graph',
   'affected:lint',
+  'print-affected',
   'dep-graph',
   'format',
   'format:check',
@@ -65,26 +66,21 @@ export const commandsObject = yargs
     'affected',
     'Run task for affected projects',
     yargs => withAffectedOptions(withParallel(withTarget(yargs))),
-    args => affected(args)
+    args => affected('affected', { ...args })
   )
   .command(
     'affected:apps',
     'Print applications affected by changes',
     withAffectedOptions,
-    args =>
-      affected({
-        ...args,
-        target: 'apps'
-      })
+    args => affected('apps', { ...args })
   )
   .command(
     'affected:libs',
     'Print libraries affected by changes',
     withAffectedOptions,
     args =>
-      affected({
-        ...args,
-        target: 'libs'
+      affected('libs', {
+        ...args
       })
   )
   .command(
@@ -92,7 +88,7 @@ export const commandsObject = yargs
     'Build applications and publishable libraries affected by changes',
     yargs => withAffectedOptions(withParallel(yargs)),
     args =>
-      affected({
+      affected('affected', {
         ...args,
         target: 'build'
       })
@@ -102,7 +98,7 @@ export const commandsObject = yargs
     'Test projects affected by changes',
     yargs => withAffectedOptions(withParallel(yargs)),
     args =>
-      affected({
+      affected('affected', {
         ...args,
         target: 'test'
       })
@@ -112,7 +108,7 @@ export const commandsObject = yargs
     'Run e2e tests for the applications affected by changes',
     yargs => withAffectedOptions(withParallel(yargs)),
     args =>
-      affected({
+      affected('affected', {
         ...args,
         target: 'e2e'
       })
@@ -122,9 +118,17 @@ export const commandsObject = yargs
     'Graph dependencies affected by changes',
     yargs => withAffectedOptions(withDepGraphOptions(yargs)),
     args =>
-      affected({
-        ...args,
-        target: 'dep-graph'
+      affected('dep-graph', {
+        ...args
+      })
+  )
+  .command(
+    'print-affected',
+    'Graph execution plan',
+    yargs => withAffectedOptions(yargs),
+    args =>
+      affected('print-affected', {
+        ...args
       })
   )
   .command(
@@ -132,7 +136,7 @@ export const commandsObject = yargs
     'Lint projects affected by changes',
     yargs => withAffectedOptions(withParallel(yargs)),
     args =>
-      affected({
+      affected('affected', {
         ...args,
         target: 'lint'
       })

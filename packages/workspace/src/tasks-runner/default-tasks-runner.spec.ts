@@ -1,4 +1,4 @@
-import defaultTasksRunner from './default-tasks-runner';
+import defaultTaskRunner from './default-tasks-runner';
 import { AffectedEventType, Task } from './tasks-runner';
 jest.mock('npm-run-all', () => jest.fn());
 import * as runAll from 'npm-run-all';
@@ -14,109 +14,57 @@ jest.mock('../utils/fileutils', () => ({
 }));
 
 describe('defaultTasksRunner', () => {
-  let tasks: Task[];
-  beforeEach(() => {
-    tasks = [
-      {
-        id: 'task-1',
-        target: {
-          project: 'app-1',
-          target: 'target'
-        },
-        overrides: {}
+  const tasks = [
+    {
+      id: 'task-1',
+      target: {
+        project: 'app-1',
+        target: 'target'
       },
-      {
-        id: 'task-2',
-        target: {
-          project: 'app-2',
-          target: 'target'
-        },
-        overrides: {}
-      }
-    ];
-  });
+      overrides: {}
+    },
+    {
+      id: 'task-2',
+      target: {
+        project: 'app-2',
+        target: 'target'
+      },
+      overrides: {}
+    }
+  ];
 
-  it('should run the correct commands through "npm-run-all"', done => {
-    runAll.mockImplementation(() => Promise.resolve());
-    defaultTasksRunner(tasks, {}).subscribe({
-      complete: () => {
-        expect(runAll).toHaveBeenCalledWith(
-          ['nx run app-1:target', 'nx run app-2:target'],
-          jasmine.anything()
-        );
-        done();
+  const context = {
+    dependencyGraph: {
+      projects: {
+        'app-1': { architect: { target: {} } },
+        'app-2': { architect: { target: {} } }
+      },
+      dependencies: {
+        'app-1': [],
+        'app-2': []
+      },
+      roots: ['app-1', 'app-2']
+    },
+    tasksMap: {
+      'app-1': {
+        target: tasks[0]
+      },
+      'app-2': {
+        target: tasks[1]
       }
-    });
-  });
-
-  it('should run the correct commands through "npm-run-all" when tasks have a configuration', done => {
-    runAll.mockImplementation(() => Promise.resolve());
-    tasks = tasks.map(task => {
-      task.target.configuration = 'production';
-      return task;
-    });
-    defaultTasksRunner(tasks, {}).subscribe({
-      complete: () => {
-        expect(runAll).toHaveBeenCalledWith(
-          ['nx run app-1:target:production', 'nx run app-2:target:production'],
-          jasmine.anything()
-        );
-        done();
-      }
-    });
-  });
-
-  it('should run the correct commands through "npm-run-all" when tasks have overrides', done => {
-    runAll.mockImplementation(() => Promise.resolve());
-    tasks = tasks.map(task => {
-      task.overrides = {
-        override: 'override-value'
-      };
-      return task;
-    });
-    defaultTasksRunner(tasks, {}).subscribe({
-      complete: () => {
-        expect(runAll).toHaveBeenCalledWith(
-          [
-            'nx run app-1:target --override=override-value',
-            'nx run app-2:target --override=override-value'
-          ],
-          jasmine.anything()
-        );
-        done();
-      }
-    });
-  });
-
-  it('should run the correct commands through "npm-run-all" when tasks have configurations and overrides', done => {
-    runAll.mockImplementation(() => Promise.resolve());
-    tasks = tasks.map(task => {
-      task.target.configuration = 'production';
-      task.overrides = {
-        override: 'override-value'
-      };
-      return task;
-    });
-    defaultTasksRunner(tasks, {}).subscribe({
-      complete: () => {
-        expect(runAll).toHaveBeenCalledWith(
-          [
-            'nx run app-1:target:production --override=override-value',
-            'nx run app-2:target:production --override=override-value'
-          ],
-          jasmine.anything()
-        );
-        done();
-      }
-    });
-  });
+    }
+  } as any;
 
   it('should pass the right options when options are passed', done => {
     runAll.mockImplementation(() => Promise.resolve());
-    defaultTasksRunner(tasks, {
-      parallel: true,
-      maxParallel: 5
-    }).subscribe({
+    defaultTaskRunner(
+      tasks,
+      {
+        parallel: true,
+        maxParallel: 5
+      },
+      context
+    ).subscribe({
       complete: () => {
         expect(runAll).toHaveBeenCalledWith(
           jasmine.any(Array),
@@ -145,7 +93,7 @@ describe('defaultTasksRunner', () => {
         success: true
       }
     ];
-    defaultTasksRunner(tasks, {}).subscribe({
+    defaultTaskRunner(tasks, {}, context).subscribe({
       next: event => {
         expect(event).toEqual(expected[i++]);
       },
@@ -179,7 +127,7 @@ describe('defaultTasksRunner', () => {
         success: false
       }
     ];
-    defaultTasksRunner(tasks, {}).subscribe({
+    defaultTaskRunner(tasks, {}, context).subscribe({
       next: event => {
         expect(event).toEqual(expected[i++]);
       },

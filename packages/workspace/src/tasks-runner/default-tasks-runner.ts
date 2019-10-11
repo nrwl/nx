@@ -10,8 +10,7 @@ import {
 import { cliCommand } from '../command-line/shared';
 import { output } from '../command-line/output';
 import { readJsonFile } from '../utils/fileutils';
-
-const commonCommands = ['build', 'test', 'lint', 'e2e', 'deploy'];
+import { getCommand } from './utils';
 
 export interface DefaultTasksRunnerOptions {
   parallel?: boolean;
@@ -22,6 +21,9 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
   tasks: Task[],
   options: DefaultTasksRunnerOptions
 ): Observable<TaskCompleteEvent> => {
+  const cli = cliCommand();
+  const isYarn = basename(process.env.npm_execpath || 'npm').startsWith('yarn');
+  assertPackageJsonScriptExists(cli);
   const additionalTaskOverrides = getLegacyTaskOverrides(options);
   tasks.forEach(task => {
     task.overrides = {
@@ -29,7 +31,7 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
       ...additionalTaskOverrides
     };
   });
-  const commands = getCommands(tasks);
+  const commands = tasks.map(t => getCommand(cli, isYarn, t));
   return new Observable(subscriber => {
     runAll(commands, {
       parallel: options.parallel || false,
@@ -65,8 +67,6 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
   });
 };
 
-export default defaultTasksRunner;
-
 function getLegacyTaskOverrides(options: any) {
   const legacyTaskOverrides = { ...options };
   delete legacyTaskOverrides.maxParallel;
@@ -74,30 +74,6 @@ function getLegacyTaskOverrides(options: any) {
   delete legacyTaskOverrides.parallel;
   delete legacyTaskOverrides.verbose;
   return legacyTaskOverrides;
-}
-
-function getCommands(tasks: Task[]) {
-  const cli = cliCommand();
-  assertPackageJsonScriptExists(cli);
-  const isYarn = basename(process.env.npm_execpath || 'npm').startsWith('yarn');
-  return tasks.map(task => {
-    const args = Object.entries(task.overrides)
-      .map(([prop, value]) => `--${prop}=${value}`)
-      .join(' ');
-    return commonCommands.includes(task.target.target)
-      ? `${cli}${isYarn ? '' : ' --'} ${task.target.target} ${
-          task.target.project
-        } ${
-          task.target.configuration
-            ? `--configuration ${task.target.configuration} `
-            : ''
-        }${args}`
-      : `${cli}${isYarn ? '' : ' --'} run ${task.target.project}:${
-          task.target.target
-        }${task.target.configuration ? `:${task.target.configuration}` : ''}${
-          args ? ' ' + args : ''
-        }`;
-  });
 }
 
 function assertPackageJsonScriptExists(cli: string) {
@@ -119,3 +95,5 @@ function assertPackageJsonScriptExists(cli: string) {
     return process.exit(1);
   }
 }
+
+export default defaultTasksRunner;
