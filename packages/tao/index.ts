@@ -49,12 +49,18 @@ export async function invokeCommand(
     case 'help':
     case '--help':
       return (await import('./src/commands/help')).help();
+
     default:
-      const projectName = commandArgs[0] ? commandArgs[0] : '';
+      const projectNameIncluded =
+        commandArgs[0] && !commandArgs[0].startsWith('-');
+      const projectName = projectNameIncluded ? commandArgs[0] : '';
       // this is to make `tao test mylib` same as `tao run mylib:test`
       return (await import('./src/commands/run')).run(
         root,
-        [`${projectName}:${command}`, ...commandArgs.slice(1)],
+        [
+          `${projectName}:${command}`,
+          ...(projectNameIncluded ? commandArgs.slice(1) : commandArgs)
+        ],
         isVerbose
       );
   }

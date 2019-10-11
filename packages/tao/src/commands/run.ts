@@ -5,7 +5,8 @@ import {
   json,
   logging,
   normalize,
-  schema
+  schema,
+  terminal
 } from '@angular-devkit/core';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { getLogger } from '../shared/logger';
@@ -34,7 +35,8 @@ function throwInvalidInvocation() {
 
 function parseRunOpts(
   args: string[],
-  defaultProjectName: string | null
+  defaultProjectName: string | null,
+  logger: logging.Logger
 ): RunOptions {
   const runOptions = convertToCamelCase(
     minimist(args, {
@@ -47,7 +49,14 @@ function parseRunOpts(
     throwInvalidInvocation();
   }
   let [project, target, configuration] = runOptions._[0].split(':');
-  if (!project && defaultProjectName) project = defaultProjectName;
+  if (!project && defaultProjectName) {
+    logger.debug(
+      `No project name specified. Using default project : ${terminal.bold(
+        defaultProjectName
+      )}`
+    );
+    project = defaultProjectName;
+  }
   if (!project || !target) {
     throwInvalidInvocation();
   }
@@ -82,6 +91,45 @@ function printRunHelp(
   );
 }
 
+export function validateTargetAndConfiguration(
+  workspace: experimental.workspace.Workspace,
+  opts: RunOptions
+) {
+  const targets = workspace.getProjectTargets(opts.project);
+
+  const target = targets[opts.target];
+  if (!target) {
+    throw new Error(
+      `Could not find target "${opts.target}" in the ${
+        opts.project
+      } project. Valid targets are: ${terminal.bold(
+        Object.keys(targets).join(', ')
+      )}`
+    );
+  }
+
+  // Not all targets have configurations
+  // and an undefined configuration is valid
+  if (opts.configuration) {
+    if (target.configurations) {
+      const configuration = target.configurations[opts.configuration];
+      if (!configuration) {
+        throw new Error(
+          `Could not find configuration "${opts.configuration}" in ${
+            opts.project
+          }:${opts.target}. Valid configurations are: ${Object.keys(
+            target.configurations
+          ).join(', ')}`
+        );
+      }
+    } else {
+      throw new Error(
+        `No configurations are defined for ${opts.project}:${opts.target}, so "${opts.configuration}" is invalid.`
+      );
+    }
+  }
+}
+
 export async function run(root: string, args: string[], isVerbose: boolean) {
   const logger = getLogger(isVerbose);
 
@@ -93,7 +141,9 @@ export async function run(root: string, args: string[], isVerbose: boolean) {
     )
       .loadWorkspaceFromHost('workspace.json' as any)
       .toPromise();
-    const opts = parseRunOpts(args, workspace.getDefaultProjectName());
+
+    const opts = parseRunOpts(args, workspace.getDefaultProjectName(), logger);
+    validateTargetAndConfiguration(workspace, opts);
 
     const registry = new json.schema.CoreSchemaRegistry();
     registry.addPostTransform(schema.transforms.addUndefinedDefaults);
@@ -111,23 +161,24 @@ export async function run(root: string, args: string[], isVerbose: boolean) {
     const flattenedSchema = await registry
       .flatten(builderDesc.optionSchema! as json.JsonObject)
       .toPromise();
+
     if (opts.help) {
       printRunHelp(opts, flattenedSchema as any, logger);
       return 0;
-    } else {
-      const runOptions = coerceTypes(opts.runOptions, flattenedSchema as any);
-      const run = await architect.scheduleTarget(
-        {
-          project: opts.project,
-          target: opts.target,
-          configuration: opts.configuration
-        },
-        runOptions,
-        { logger }
-      );
-      const result = await run.output.toPromise();
-      await run.stop();
-      return result.success ? 0 : 1;
     }
+
+    const runOptions = coerceTypes(opts.runOptions, flattenedSchema as any);
+    const run = await architect.scheduleTarget(
+      {
+        project: opts.project,
+        target: opts.target,
+        configuration: opts.configuration
+      },
+      runOptions,
+      { logger }
+    );
+    const result = await run.output.toPromise();
+    await run.stop();
+    return result.success ? 0 : 1;
   });
 }
