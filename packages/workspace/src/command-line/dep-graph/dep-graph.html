@@ -146,9 +146,11 @@
 
     render(d3.select('svg g'), g);
 
+    svg.attr('height', g.graph().height + 40);
+    svg.attr('width', g.graph().width + 100);
+
     var xCenterOffset = (svg.attr('width') - g.graph().width) / 2;
     svgGroup.attr('transform', 'translate(' + xCenterOffset + ', 20)');
-    svg.attr('height', g.graph().height + 40);
   }
 </script>
 <form onsubmit="return window.filter()">
