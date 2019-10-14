@@ -508,4 +508,30 @@ describe('app', () => {
       });
     });
   });
+
+  describe('--enable-ivy', () => {
+    it('should not exclude files in the tsconfig.app.json', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'my-app', enableIvy: true },
+        appTree
+      );
+
+      expect(tree.readContent('apps/my-app/tsconfig.app.json')).not.toContain(
+        'exclude'
+      );
+    });
+
+    it('should only include dts files in the tsconfig.app.json', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'my-app', enableIvy: true },
+        appTree
+      );
+
+      expect(tree.readContent('apps/my-app/tsconfig.app.json')).toContain(
+        `\"include\": [\"src/**/*.d.ts\"]`
+      );
+    });
+  });
 });
