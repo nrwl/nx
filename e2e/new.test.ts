@@ -108,5 +108,15 @@ forEachCli(() => {
       runCLI(`build my-dir-${myapp} --aot`);
       expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
     }, 1000000);
+
+    it('should support Ivy', async () => {
+      const myapp = uniq('myapp');
+      runCLI(
+        `generate @nrwl/angular:app ${myapp} --directory=myDir --routing --enable-ivy`
+      );
+
+      runCLI(`build my-dir-${myapp} --aot`);
+      expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
+    }, 1000000);
   });
 });

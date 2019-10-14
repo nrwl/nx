@@ -523,11 +523,12 @@ function updateProject(options: NormalizedSchema): Rule {
             ...json.compilerOptions,
             outDir: `${offsetFromRoot(options.appProjectRoot)}dist/out-tsc`
           },
-          exclude:
-            options.unitTestRunner === 'jest'
-              ? ['src/test-setup.ts', '**/*.spec.ts']
-              : ['src/test.ts', '**/*.spec.ts'],
-          include: ['**/*.ts']
+          exclude: options.enableIvy
+            ? undefined
+            : options.unitTestRunner === 'jest'
+            ? ['src/test-setup.ts', '**/*.spec.ts']
+            : ['src/test.ts', '**/*.spec.ts'],
+          include: [options.enableIvy ? 'src/**/*.d.ts' : '**/*.ts']
         };
       }),
       host => {
