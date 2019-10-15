@@ -88,7 +88,7 @@ describe('Update 8-0-0', () => {
             'styled-components': '4.3.2'
           },
           devDependencies: {
-            '@testing-library/react': '8.0.5',
+            '@testing-library/react': '9.2.0',
             '@types/react': '16.8.23',
             '@types/react-dom': '16.8.5',
             '@types/styled-components': '4.1.18'
