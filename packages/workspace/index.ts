@@ -66,5 +66,8 @@ export * from './src/utils/rules/ng-add';
 export { updateKarmaConf } from './src/utils/rules/update-karma-conf';
 import * as strings from './src/utils/strings';
 export { checkAndCleanWithSemver } from './src/utils/version-utils';
+export {
+  updatePackagesInPackageJson
+} from './src/utils/update-packages-in-package-json';
 
 export const stringUtils = strings;

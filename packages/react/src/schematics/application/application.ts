@@ -38,8 +38,8 @@ import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
 import { addInitialRoutes } from '../../utils/ast-utils';
 import {
   babelPresetReactVersion,
-  reactRouterDomVersion,
-  reactRouterVersion
+  reactRouterTypesVersion,
+  reactRouterDomVersion
 } from '../../utils/versions';
 import { assertValidStyle } from '../../utils/assertion';
 import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
@@ -248,8 +248,8 @@ function addRouting(
           insert(host, appPath, addInitialRoutes(appPath, appSource, context));
         },
         addDepsToPackageJson(
-          { 'react-router-dom': reactRouterVersion },
-          { '@types/react-router-dom': reactRouterDomVersion }
+          { 'react-router-dom': reactRouterDomVersion },
+          { '@types/react-router-dom': reactRouterTypesVersion }
         )
       ])
     : noop();

@@ -28,7 +28,7 @@ export const initial<%= className %>State: <%= className %>State = {
 };
 
 export const <%= propertyName %>Slice = createSlice({
-  slice: <%= constantName %>_FEATURE_KEY,
+  name: <%= constantName %>_FEATURE_KEY,
   initialState: initial<%= className %>State as <%= className %>State,
   reducers: {
     get<%= className %>Start: (state, action: PayloadAction<undefined>) => {

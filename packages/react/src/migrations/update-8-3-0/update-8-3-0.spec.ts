@@ -70,33 +70,4 @@ describe('Update 8-0-0', () => {
       `);
     });
   });
-
-  describe('dependencies', () => {
-    it('should update dependencies', async () => {
-      tree = await schematicRunner
-        .runSchematicAsync('update-8.3.0', {}, tree)
-        .toPromise();
-
-      const result = readJsonInTree(tree, 'package.json');
-
-      expect(result).toEqual(
-        expect.objectContaining({
-          dependencies: {
-            react: '16.8.6',
-            'react-dom': '16.8.6',
-            'react-router-dom': '5.0.1',
-            'styled-components': '4.3.2'
-          },
-          devDependencies: {
-            '@testing-library/react': '9.2.0',
-            '@types/react': '16.8.23',
-            '@types/react-dom': '16.8.5',
-            '@types/styled-components': '4.1.18'
-          }
-        })
-      );
-
-      expect(result.devDependencies['react-testing-library']).not.toBeDefined();
-    });
-  });
 });
