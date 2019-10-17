@@ -402,14 +402,14 @@ describe('getDevServerConfig', () => {
     describe('allowed hosts', () => {
       it('should have two allowed hosts', () => {
         const { devServer: result } = getDevServerConfig(
-            root,
-            sourceRoot,
-            buildInput,
-            {
-              ...serveInput,
-              allowedHosts: 'host.com,subdomain.host.com'
-            },
-            logger
+          root,
+          sourceRoot,
+          buildInput,
+          {
+            ...serveInput,
+            allowedHosts: 'host.com,subdomain.host.com'
+          },
+          logger
         ) as any;
 
         expect(result.allowedHosts).toEqual(['host.com', 'subdomain.host.com']);
@@ -417,14 +417,14 @@ describe('getDevServerConfig', () => {
 
       it('should have one allowed host', () => {
         const { devServer: result } = getDevServerConfig(
-            root,
-            sourceRoot,
-            buildInput,
-            {
-              ...serveInput,
-              allowedHosts: 'host.com'
-            },
-            logger
+          root,
+          sourceRoot,
+          buildInput,
+          {
+            ...serveInput,
+            allowedHosts: 'host.com'
+          },
+          logger
         ) as any;
 
         expect(result.allowedHosts).toEqual(['host.com']);
@@ -432,11 +432,11 @@ describe('getDevServerConfig', () => {
 
       it('should not have allowed hosts', () => {
         const { devServer: result } = getDevServerConfig(
-            root,
-            sourceRoot,
-            buildInput,
-            serveInput,
-            logger
+          root,
+          sourceRoot,
+          buildInput,
+          serveInput,
+          logger
         ) as any;
 
         expect(result.allowedHosts).toEqual([]);
