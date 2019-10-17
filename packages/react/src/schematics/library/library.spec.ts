@@ -67,6 +67,7 @@ describe('lib', () => {
           esModuleInterop: true,
           types: ['node', 'jest']
         },
+        files: ['../../node_modules/@nrwl/react/typings/svg.d.ts'],
         include: ['**/*.ts', '**/*.tsx']
       });
     });
@@ -220,6 +221,7 @@ describe('lib', () => {
           esModuleInterop: true,
           types: ['node', 'jest']
         },
+        files: ['../../../node_modules/@nrwl/react/typings/svg.d.ts'],
         include: ['**/*.ts', '**/*.tsx']
       });
     });

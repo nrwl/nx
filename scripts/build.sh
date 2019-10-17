@@ -32,6 +32,9 @@ chmod +x build/packages/create-nx-workspace/bin/create-nx-workspace.js
 chmod +x build/packages/cli/bin/nx.js
 chmod +x build/packages/tao/index.js
 
+# React-specifc typings
+cp packages/react/typings/* build/packages/react/typings
+
 rm -rf build/packages/install
 rm -rf build/packages/nx/dist
 rm -rf build/packages/nx/spec
