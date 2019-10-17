@@ -34,6 +34,7 @@ export interface WebDevServerOptions extends JsonObject {
   open: boolean;
   liveReload: boolean;
   watch: boolean;
+  allowedHosts: string;
 }
 
 export default createBuilder<WebDevServerOptions>(run);
