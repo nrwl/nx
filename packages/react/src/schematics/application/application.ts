@@ -43,6 +43,7 @@ import {
 } from '../../utils/versions';
 import { assertValidStyle } from '../../utils/assertion';
 import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
+import { updateJestConfigContent } from '../../utils/jest-utils';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -71,6 +72,7 @@ export default function(schema: Schema): Rule {
       addProject(options),
       addCypress(options),
       addJest(options),
+      updateJestConfig(options),
       addStyledModuleDependencies(options),
       addRouting(options, context),
       addBabel(options),
@@ -98,6 +100,17 @@ function createApplicationFiles(options: NormalizedSchema): Rule {
       move(options.appProjectRoot)
     ])
   );
+}
+
+function updateJestConfig(options: NormalizedSchema): Rule {
+  return options.unitTestRunner === 'none'
+    ? noop()
+    : host => {
+        const configPath = `${options.appProjectRoot}/jest.config.js`;
+        const originalContent = host.read(configPath).toString();
+        const content = updateJestConfigContent(originalContent);
+        host.overwrite(configPath, content);
+      };
 }
 
 function updateNxJson(options: NormalizedSchema): Rule {

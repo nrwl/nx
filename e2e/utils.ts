@@ -215,6 +215,7 @@ export function copyMissingPackages(): void {
 
     // For testing webpack config with babel-loader
     '@babel',
+    '@svgr/webpack',
     'babel-loader',
     'babel-plugin-const-enum',
     'babel-plugin-macros',
@@ -222,6 +223,7 @@ export function copyMissingPackages(): void {
     'eslint-plugin-jsx-a11y',
     'eslint-plugin-react',
     'eslint-plugin-react-hooks',
+    'url-loader',
 
     // For testing web bundle
     'rollup',

@@ -51,6 +51,9 @@ describe('app', () => {
       expect(tree.exists('apps/my-app/src/app/app.spec.tsx')).toBeTruthy();
       expect(tree.exists('apps/my-app/src/app/app.css')).toBeTruthy();
 
+      const jestConfig = tree.readContent('apps/my-app/jest.config.js');
+      expect(jestConfig).toContain('@nrwl/react/plugins/jest');
+
       const tsconfig = readJsonInTree(tree, 'apps/my-app/tsconfig.json');
       expect(tsconfig.extends).toEqual('../../tsconfig.json');
       expect(tsconfig.compilerOptions.types).toContain('jest');

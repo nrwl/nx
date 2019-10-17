@@ -7,5 +7,6 @@
     "allowSyntheticDefaultImports": true,
     "types": []
   },
+  "files": ["<%= offsetFromRoot %>node_modules/@nrwl/react/typings/svg.d.ts"],
   "include": ["**/*.ts", "**/*.tsx"]
 }
