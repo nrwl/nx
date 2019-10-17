@@ -122,6 +122,12 @@ Possible values: `none`, `all`, `media`, `bundles`
 
 Define the output filename cache-busting hashing mode.
 
+### outputPath
+
+Type: `string`
+
+The output path of the generated files.
+
 ### polyfills
 
 Type: `string`
