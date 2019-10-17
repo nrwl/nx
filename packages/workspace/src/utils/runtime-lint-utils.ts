@@ -56,7 +56,7 @@ export function matchImportWithWildcard(
       extractedImport.startsWith(prefix) && extractedImport.endsWith(suffix)
     );
   } else {
-    return extractedImport === allowableImport;
+    return new RegExp(allowableImport).test(extractedImport);
   }
 }
 
