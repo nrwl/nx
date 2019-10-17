@@ -11,6 +11,10 @@
       "type": "string",
       "description": "The name of the Typescript configuration file."
     },
+    "outputPath": {
+      "type": "string",
+      "description": "The output path of the generated files."
+    },
     "watch": {
       "type": "boolean",
       "description": "Run build when files change.",

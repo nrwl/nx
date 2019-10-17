@@ -66,6 +66,12 @@ Type: `boolean`
 
 Defines the optimization level of the build.
 
+### outputPath
+
+Type: `string`
+
+The output path of the generated files.
+
 ### poll
 
 Type: `number`
