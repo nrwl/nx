@@ -40,8 +40,8 @@ import {
   findComponentImportPath
 } from '../../utils/ast-utils';
 import {
-  reactRouterDomVersion,
-  reactRouterVersion
+  reactRouterTypesVersion,
+  reactRouterDomVersion
 } from '../../utils/versions';
 import { assertValidStyle } from '../../utils/assertion';
 import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
@@ -190,8 +190,8 @@ function updateAppRoutes(
     );
     return chain([
       addDepsToPackageJson(
-        { 'react-router-dom': reactRouterVersion },
-        { '@types/react-router-dom': reactRouterDomVersion }
+        { 'react-router-dom': reactRouterDomVersion },
+        { '@types/react-router-dom': reactRouterTypesVersion }
       ),
       function addBrowserRouterToMain(host: Tree) {
         const { content, source } = readComponent(host, options.appMain);
@@ -236,7 +236,7 @@ function updateAppRoutes(
           )
         );
       },
-      addDepsToPackageJson({ 'react-router-dom': reactRouterVersion }, {})
+      addDepsToPackageJson({ 'react-router-dom': reactRouterDomVersion }, {})
     ]);
   };
 }

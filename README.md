@@ -164,7 +164,7 @@ You are good to go!
   <tr>
     <td>    
       <a href="https://connect.nrwl.io/app/courses/nx-workspaces/intro" target="_blank">
-        <p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/docs/shared/course-nx.jpg" width="100%"></p>
+        <p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/nx-connect-course.jpg" width="100%"></p>
       </a>
     </td>
   </tr>
