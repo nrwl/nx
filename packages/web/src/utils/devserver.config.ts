@@ -92,7 +92,8 @@ function getDevServerPartial(
     },
     public: options.publicHost,
     publicPath: servePath,
-    contentBase: false
+    contentBase: false,
+    allowedHosts: []
   };
 
   if (options.ssl && options.sslKey && options.sslCert) {
@@ -101,6 +102,10 @@ function getDevServerPartial(
 
   if (options.proxyConfig) {
     config.proxy = getProxyConfig(root, options);
+  }
+
+  if (options.allowedHosts) {
+    config.allowedHosts = options.allowedHosts.split(',');
   }
 
   return config;
