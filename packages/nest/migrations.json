@@ -1,3 +1,38 @@
 {
-  "schematics": {}
+  "schematics": {},
+  "packageJsonUpdates": {
+    "8.7.0": {
+      "version": "8.7.0-beta.1",
+      "packages": {
+        "@nrwl/nest": {
+          "version": "8.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/common": {
+          "version": "^6.8.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/core": {
+          "version": "^6.8.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/platform-express": {
+          "version": "^6.8.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/schematics": {
+          "version": "^6.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/testing": {
+          "version": "^6.8.3",
+          "alwaysAddToPackageJson": false
+        },
+        "reflect-metadata": {
+          "version": "^0.1.13",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
 }

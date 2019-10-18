@@ -9,6 +9,63 @@
       "version": "8.5.0-beta.1",
       "description": "Update React workspace",
       "factory": "./src/migrations/update-8-5-0/update-workspace-8-5-0"
+    },
+    "update-8-7-0.": {
+      "version": "8.7.0-beta.1",
+      "description": "Update React libraries",
+      "factory": "./src/migrations/update-8-7-0/update-8-7-0"
+    }
+  },
+
+  "packageJsonUpdates": {
+    "8.7.0": {
+      "version": "8.7.0-beta.1",
+      "packages": {
+        "@nrwl/react": {
+          "version": "8.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/web": {
+          "version": "8.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/jest": {
+          "version": "8.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/cypress": {
+          "version": "8.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react": {
+          "version": "16.10.2",
+          "alwaysAddToPackageJson": false
+        },
+        "react-dom": {
+          "version": "16.10.2",
+          "alwaysAddToPackageJson": false
+        },
+        "react-router-dom": {
+          "version": "5.1.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react": {
+          "version": "9.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "redux-starter-kit": {
+          "version": "0.8.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-redux": {
+          "version": "7.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-redux": {
+          "version": "7.1.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
