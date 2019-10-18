@@ -8,6 +8,7 @@ import {
   readWorkspaceJson,
   ProjectNode
 } from './shared';
+import { output } from './output';
 
 export function startServer(
   projects: ProjectNode[],
@@ -32,6 +33,9 @@ export function startServer(
   });
 
   app.listen(4211, '127.0.0.1');
+  output.note({
+    title: 'Dep graph started started at http://localhost:4211'
+  });
 
   opn('http://localhost:4211', {
     wait: false
