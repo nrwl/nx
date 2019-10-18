@@ -49,7 +49,8 @@ describe('getDevServerConfig', () => {
       ssl: false,
       liveReload: true,
       open: false,
-      watch: true
+      watch: true,
+      allowedHosts: null
     };
 
     (<any>TsConfigPathsPlugin).mockImplementation(
@@ -395,6 +396,50 @@ describe('getDevServerConfig', () => {
         expect(result.proxy).toEqual({
           proxyConfig: 'proxyConfig'
         });
+      });
+    });
+
+    describe('allowed hosts', () => {
+      it('should have two allowed hosts', () => {
+        const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
+          buildInput,
+          {
+            ...serveInput,
+            allowedHosts: 'host.com,subdomain.host.com'
+          },
+          logger
+        ) as any;
+
+        expect(result.allowedHosts).toEqual(['host.com', 'subdomain.host.com']);
+      });
+
+      it('should have one allowed host', () => {
+        const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
+          buildInput,
+          {
+            ...serveInput,
+            allowedHosts: 'host.com'
+          },
+          logger
+        ) as any;
+
+        expect(result.allowedHosts).toEqual(['host.com']);
+      });
+
+      it('should not have allowed hosts', () => {
+        const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
+          buildInput,
+          serveInput,
+          logger
+        ) as any;
+
+        expect(result.allowedHosts).toEqual([]);
       });
     });
   });
