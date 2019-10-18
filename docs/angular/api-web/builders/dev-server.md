@@ -77,3 +77,11 @@ Default: `true`
 Type: `boolean`
 
 Watches for changes and rebuilds application
+
+### allowedHosts
+
+Type: `String`
+
+Possible values: `host.com,host2.com`, `.host.com`
+
+This option allows you to whitelist services that are allowed to access the dev server.

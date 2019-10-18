@@ -48,6 +48,10 @@
       "type": "boolean",
       "description": "Open the application in the browser.",
       "default": false
+    },
+    "allowedHosts": {
+      "type": "string",
+      "description": "This option allows you to whitelist services that are allowed to access the dev server."
     }
   }
 }
