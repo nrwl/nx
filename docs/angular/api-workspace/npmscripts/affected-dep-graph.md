@@ -64,6 +64,10 @@ output file (e.g. --file=output.json)
 
 Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas
 
+### filter
+
+Use to limit the dependency graph to only show specific projects, list of projects delimited by commas.
+
 ### head
 
 Latest commit of the current branch (usually HEAD)
