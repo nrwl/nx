@@ -51,7 +51,8 @@
     },
     "allowedHosts": {
       "type": "string",
-      "description": "This option allows you to whitelist services that are allowed to access the dev server."
+      "description": "This option allows you to whitelist services that are allowed to access the dev server.",
+      "enum": ["host.com,host2.com", ".host.com"]
     }
   }
 }
