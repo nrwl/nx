@@ -205,6 +205,15 @@ const examples = {
     {
       command: 'dep-graph --file=output.json',
       description: 'Save the dep graph into a json file'
+    },
+    {
+      command: 'dep-graph --filter=todos-feature-main',
+      description:
+        'Show the graph where every node is either an ancestor or a descendant of todos-feature-main.'
+    },
+    {
+      command: 'dep-graph --exclude=project-one,project-two',
+      description: 'Exclude project-one and project-two from the dep graph.'
     }
   ],
   'affected:dep-graph': [
