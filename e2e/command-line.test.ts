@@ -176,6 +176,10 @@ forEachCli(() => {
         type: 'string',
         description: 'lib directory'
       };
+      json.properties['skipTsConfig'] = {
+        type: 'boolean',
+        description: 'skip changes to tsconfig'
+      };
       updateFile(
         `tools/schematics/${custom}/schema.json`,
         JSON.stringify(json)
@@ -186,17 +190,18 @@ forEachCli(() => {
         `tools/schematics/${custom}/index.ts`,
         indexFile.replace(
           'name: schema.name',
-          'name: schema.name, directory: schema.directory'
+          'name: schema.name, directory: schema.directory, skipTsConfig: schema.skipTsConfig'
         )
       );
 
       const workspace = uniq('workspace');
       const dryRunOutput = runCommand(
-        `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --directory=dir -d`
+        `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --directory=dir --skipTsConfig=true -d`
       );
       expect(exists(`libs/dir/${workspace}/src/index.ts`)).toEqual(false);
       expect(dryRunOutput).toContain(`UPDATE ${workspaceConfigName()}`);
       expect(dryRunOutput).toContain('UPDATE nx.json');
+      expect(dryRunOutput).not.toContain('UPDATE tsconfig.json');
 
       const output = runCommand(
         `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --directory=dir`

@@ -25,7 +25,7 @@ import { copySync, removeSync } from 'fs-extra';
 import * as inquirer from 'inquirer';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
-import { fileExists } from '../utils/fileutils';
+import { fileExists, readJsonFile } from '../utils/fileutils';
 import { appRootPath } from '../utils/app-root';
 import { output } from './output';
 import { platform } from 'os';
@@ -33,13 +33,13 @@ import { platform } from 'os';
 const rootDirectory = appRootPath;
 
 export function workspaceSchematic(args: string[]) {
-  const parsedArgs = parseOptions(args);
+  const outDir = compileTools();
+  const parsedArgs = parseOptions(args, outDir);
   const logger = createConsoleLogger(
     parsedArgs.verbose,
     process.stdout,
     process.stderr
   );
-  const outDir = compileTools();
   if (parsedArgs.listSchematics) {
     return listSchematics(
       path.join(outDir, 'workspace-schematics.json'),
@@ -334,9 +334,19 @@ async function executeSchematic(
   }
 }
 
-function parseOptions(args: string[]): { [k: string]: any } {
+function parseOptions(args: string[], outDir: string): { [k: string]: any } {
+  const schemaPath = path.join(outDir, args[0], 'schema.json');
+  let booleanProps = [];
+  if (fileExists(schemaPath)) {
+    const { properties } = readJsonFile(
+      path.join(outDir, args[0], 'schema.json')
+    );
+    booleanProps = Object.keys(properties).filter(
+      key => properties[key].type === 'boolean'
+    );
+  }
   return yargsParser(args, {
-    boolean: ['dryRun', 'listSchematics', 'interactive'],
+    boolean: ['dryRun', 'listSchematics', 'interactive', ...booleanProps],
     alias: {
       dryRun: ['d'],
       listSchematics: ['l']
