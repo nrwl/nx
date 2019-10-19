@@ -7,16 +7,11 @@
     "url": "git+https://github.com/nrwl/nx.git"
   },
   "keywords": [
-    "Monorepo",
     "Angular",
     "React",
     "Web",
-    "Node",
-    "Nest",
-    "Jest",
     "Storybook",
-    "Cypress",
-    "CLI"
+    "Cypress"
   ],
   "main": "index.js",
   "types": "index.d.ts",
@@ -41,10 +36,7 @@
     "@babel/core": "^8.0.6"
   },
   "dependencies": {
-    "@angular-devkit/architect": "0.800.1",
-    "@angular-devkit/core": "8.0.1",
-    "@nrwl/cypress": "8.2.0",
-    "@schematics/angular": "8.1.1",
+    "@nrwl/cypress": "*",
     "core-js": "^3.2.1",
     "tree-kill": "1.2.1",
     "ts-loader": "5.3.1",
