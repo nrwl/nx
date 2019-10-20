@@ -183,7 +183,8 @@ describe('Jest Builder', () => {
         updateSnapshot: true,
         useStderr: true,
         watch: false,
-        watchAll: false
+        watchAll: false,
+        testLocationInResults: true
       });
       expect(await run.result).toEqual(
         jasmine.objectContaining({
@@ -223,7 +224,8 @@ describe('Jest Builder', () => {
           updateSnapshot: true,
           useStderr: true,
           watch: false,
-          watchAll: false
+          watchAll: false,
+          testLocationInResults: true
         },
         ['/root/jest.config.js']
       );
