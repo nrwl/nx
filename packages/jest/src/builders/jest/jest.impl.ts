@@ -48,6 +48,7 @@ export interface JestBuilderOptions extends JsonObject {
   useStderr?: boolean;
   watch?: boolean;
   watchAll?: boolean;
+  testLocationInResults?: boolean;
 }
 
 export default createBuilder<JestBuilderOptions>(run);
@@ -96,6 +97,7 @@ function run(
     passWithNoTests: options.passWithNoTests,
     runInBand: options.runInBand,
     silent: options.silent,
+    testLocationInResults: options.testLocationInResults,
     testNamePattern: options.testNamePattern,
     testPathPattern: options.testPathPattern,
     colors: options.colors,

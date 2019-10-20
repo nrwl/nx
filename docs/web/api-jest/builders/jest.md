@@ -149,6 +149,12 @@ Type: `string`
 
 The name of the file to test.
 
+### testLocationInResults
+
+Type: `boolean`
+
+Adds a location field to test results. Used to report location of a test in a reporter. { "column": 4, "line": 5 } (https://jestjs.io/docs/en/cli#testlocationinresults)
+
 ### testNamePattern
 
 Alias(es): t
