@@ -33,7 +33,6 @@ import {
 import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../workspace/workspace';
 import { JsonArray } from '@angular-devkit/core';
 import { updateWorkspace } from '../../utils/workspace';
-import { writeToFile } from '../../utils/fileutils';
 
 function updatePackageJson() {
   return updateJsonInTree('package.json', packageJson => {
@@ -136,11 +135,13 @@ function updateAngularCLIJson(options: Schema): Rule {
     );
 
     const testOptions = defaultProject.targets.get('test').options;
+    testOptions.tsConfig = join(newRoot, 'tsconfig.spec.json');
     testOptions.main = testOptions.main && convertAsset(testOptions.main);
     testOptions.polyfills =
       testOptions.polyfills && convertAsset(testOptions.polyfills);
-    testOptions.tsConfig = join(newRoot, 'tsconfig.spec.json');
-    testOptions.karmaConfig = join(newRoot, 'karma.conf.js');
+    testOptions.karmaConfig =
+      testOptions.karmaConfig &&
+      join(newRoot, getFilename(testOptions.karmaConfig as string));
     testOptions.assets =
       testOptions.assets && (testOptions.assets as JsonArray).map(convertAsset);
     testOptions.styles =
@@ -212,25 +213,25 @@ function updateAngularCLIJson(options: Schema): Rule {
           tsConfig: join(e2eRoot, 'tsconfig.json')
         }
       });
-      e2eProject.targets.get('e2e').options.protractorConfig = join(
-        e2eRoot,
-        'protractor.conf.js'
-      );
+      const e2eOptions = e2eProject.targets.get('e2e').options;
+      e2eOptions.protractorConfig =
+        e2eOptions.protractorConfig && join(e2eRoot, 'protractor.conf.js');
       defaultProject.targets.delete('e2e');
-    } else if (workspace.projects.has(e2eName)) {
+    } else if (getE2eProject(workspace)) {
       // updates the e2e project
-      const e2eProject = workspace.projects.get(e2eName);
+      const e2eProject = getE2eProject(workspace);
       e2eProject.root = e2eRoot;
       e2eProject.sourceRoot = undefined;
 
       if (e2eProject.targets.has('lint')) {
         const lintOptions = e2eProject.targets.get('lint').options;
-        lintOptions.tsConfig = join(e2eRoot, 'tsconfig.json');
+        lintOptions.tsConfig = join(e2eRoot, getFilename(lintOptions.tsConfig));
       }
 
       if (e2eProject.targets.has('e2e')) {
         const e2eOptions = e2eProject.targets.get('e2e').options;
-        e2eOptions.protractorConfig = join(e2eRoot, 'protractor.conf.js');
+        e2eOptions.protractorConfig =
+          e2eOptions.protractorConfig && join(e2eRoot, 'protractor.conf.js');
       }
     }
   });
@@ -242,24 +243,6 @@ function updateTsConfig(options: Schema): Rule {
   );
 }
 
-function parseLoadChildren(loadChildrenString: string) {
-  const [path, className] = loadChildrenString.split('#');
-  return {
-    path,
-    className
-  };
-}
-
-function serializeLoadChildren({
-  path,
-  className
-}: {
-  path: string;
-  className: string;
-}) {
-  return `${path}#${className}`;
-}
-
 function updateTsConfigsJson(options: Schema) {
   return (host: Tree) => {
     const workspaceJson = readJsonInTree(host, 'angular.json');
@@ -268,12 +251,12 @@ function updateTsConfigsJson(options: Schema) {
 
     const offset = '../../';
     updateJsonFile(app.architect.build.options.tsConfig, json => {
-      json.extends = `${offset}tsconfig.json`;
+      json.extends = offset + getFilename(app.architect.build.options.tsConfig);
       json.compilerOptions.outDir = `${offset}dist/out-tsc`;
     });
 
     updateJsonFile(app.architect.test.options.tsConfig, json => {
-      json.extends = `${offset}tsconfig.json`;
+      json.extends = offset + getFilename(app.architect.test.options.tsConfig);
       json.compilerOptions.outDir = `${offset}dist/out-tsc`;
     });
 
@@ -285,7 +268,9 @@ function updateTsConfigsJson(options: Schema) {
 
     if (e2eProject) {
       updateJsonFile(e2eProject.architect.lint.options.tsConfig, json => {
-        json.extends = `${offsetFromRoot(e2eProject.root)}tsconfig.json`;
+        json.extends =
+          offsetFromRoot(e2eProject.root) +
+          getFilename(e2eProject.architect.lint.options.tsConfig);
         json.compilerOptions = {
           ...json.compilerOptions,
           outDir: `${offsetFromRoot(e2eProject.root)}dist/out-tsc`
@@ -364,7 +349,9 @@ function moveOutOfSrc(
     } else if (!err) {
       context.logger.info(`Renamed ${from} -> ${to}`);
     } else {
-      context.logger.warn(`Tried to rename ${from} -> ${to} but ${err.message}`);
+      context.logger.warn(
+        `Tried to rename ${from} -> ${to} but ${err.message}`
+      );
     }
   });
 }
@@ -377,6 +364,13 @@ function getE2eKey(workspaceJson: any) {
   return Object.keys(workspaceJson.projects).find(key => {
     return !!workspaceJson.projects[key].architect.e2e;
   });
+}
+
+function getE2eName(workspaceJson: any) {
+  const appName = Object.keys(workspaceJson.projects).find(key => {
+    return !!workspaceJson.projects[key].architect.build;
+  });
+  return appName + '-e2e';
 }
 
 function getE2eProject(workspaceJson: any) {
@@ -397,23 +391,17 @@ function moveExistingFiles(options: Schema) {
     // No context is passed because it should not be required to have a browserslist
     moveOutOfSrc(options.name, 'browserslist');
 
-    moveOutOfSrc(
-      options.name,
-      app.architect.test.options.karmaConfig,
-      context
-    );
+    moveOutOfSrc(options.name, app.architect.build.options.tsConfig, context);
 
-    moveOutOfSrc(
-      options.name,
-      app.architect.build.options.tsConfig,
-      context
-    );
+    moveOutOfSrc(options.name, app.architect.test.options.tsConfig, context);
 
-    moveOutOfSrc(
-      options.name,
-      app.architect.test.options.tsConfig,
-      context
-    );
+    if (app.architect.test.options.karmaConfig) {
+      moveOutOfSrc(
+        options.name,
+        app.architect.test.options.karmaConfig,
+        context
+      );
+    }
 
     if (app.architect.server) {
       moveOutOfSrc(
@@ -431,19 +419,23 @@ function moveExistingFiles(options: Schema) {
           `Renamed ${oldAppSourceRoot} -> ${newAppSourceRoot}`
         );
       } else {
-        context.logger.error(`Tried to rename ${oldAppSourceRoot} -> ${newAppSourceRoot} but ${err.message}`);
+        context.logger.error(
+          `Tried to rename ${oldAppSourceRoot} -> ${newAppSourceRoot} but ${err.message}`
+        );
         throw err;
       }
     });
 
     if (e2eApp) {
       const oldE2eRoot = 'e2e';
-      const newE2eRoot = join('apps', getE2eKey(workspaceJson) + '-e2e');
+      const newE2eRoot = join('apps', getE2eName(workspaceJson));
       renameSync(oldE2eRoot, newE2eRoot, err => {
         if (!err) {
           context.logger.info(`Renamed ${oldE2eRoot} -> ${newE2eRoot}`);
         } else {
-          context.logger.error(`Tried to rename ${oldE2eRoot} -> ${newE2eRoot} but ${err.message}`);
+          context.logger.error(
+            `Tried to rename ${oldE2eRoot} -> ${newE2eRoot} but ${err.message}`
+          );
           throw err;
         }
       });
@@ -475,7 +467,7 @@ function createAdditionalFiles(options: Schema): Rule {
           [options.name]: {
             tags: []
           },
-          [getE2eKey(workspaceJson) + '-e2e']: {
+          [getE2eName(workspaceJson)]: {
             tags: []
           }
         }
