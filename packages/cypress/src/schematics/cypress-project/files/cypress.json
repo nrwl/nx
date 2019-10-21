@@ -2,6 +2,7 @@
   "fileServerFolder": ".",
   "fixturesFolder": "./src/fixtures",
   "integrationFolder": "./src/integration",
+  "modifyObstructiveCode": false,
   "pluginsFile": "./src/plugins/index",
   "supportFile": false,
   "video": true,
