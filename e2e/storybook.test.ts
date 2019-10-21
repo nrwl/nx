@@ -25,13 +25,13 @@ forEachCli(() => {
           createTestUILib(mylib2);
 
           runCLI(
-            `generate @nrwl/storybook:configuration ${mylib} --configureCypress --generateStories --generateCypressSpecs --noInteractive`
+            `generate @nrwl/storybook:configuration ${mylib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
           );
           runCLI(
-            `generate @nrwl/storybook:configuration ${mylib} --noInteractive`
+            `generate @nrwl/storybook:configuration ${mylib} --no-interactive`
           );
           runCLI(
-            `generate @nrwl/storybook:configuration ${mylib2} --configureCypress --generateStories --generateCypressSpecs --noInteractive`
+            `generate @nrwl/storybook:configuration ${mylib2} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
           );
           runYarnInstall();
 
