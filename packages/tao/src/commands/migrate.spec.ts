@@ -274,6 +274,44 @@ describe('Migration', () => {
         }
       });
     });
+
+    // this is temporary. if tao gets used by other projects,
+    // we will extract the special casing
+    it('should special case @nrwl/workspace', async () => {
+      const migrator = new Migrator({
+        versions: () => '1.0.0',
+        fetch: (p, v) => Promise.resolve({ version: '2.0.0' }),
+        from: {},
+        to: {}
+      });
+
+      expect(
+        await migrator.updatePackageJson('@nrwl/workspace', '2.0.0')
+      ).toEqual({
+        migrations: [],
+        packageJson: {
+          '@nrwl/workspace': {
+            version: '2.0.0',
+            alwaysAddToPackageJson: false
+          },
+          '@nrwl/angular': { version: '2.0.0', alwaysAddToPackageJson: false },
+          '@nrwl/cypress': { version: '2.0.0', alwaysAddToPackageJson: false },
+          '@nrwl/eslint-plugin-nx': {
+            version: '2.0.0',
+            alwaysAddToPackageJson: false
+          },
+          '@nrwl/express': { version: '2.0.0', alwaysAddToPackageJson: false },
+          '@nrwl/jest': { version: '2.0.0', alwaysAddToPackageJson: false },
+          '@nrwl/linter': { version: '2.0.0', alwaysAddToPackageJson: false },
+          '@nrwl/nest': { version: '2.0.0', alwaysAddToPackageJson: false },
+          '@nrwl/next': { version: '2.0.0', alwaysAddToPackageJson: false },
+          '@nrwl/node': { version: '2.0.0', alwaysAddToPackageJson: false },
+          '@nrwl/react': { version: '2.0.0', alwaysAddToPackageJson: false },
+          '@nrwl/tao': { version: '2.0.0', alwaysAddToPackageJson: false },
+          '@nrwl/web': { version: '2.0.0', alwaysAddToPackageJson: false }
+        }
+      });
+    });
   });
 
   describe('migrations', () => {

@@ -6,9 +6,16 @@ import {
 } from '@angular-devkit/schematics';
 import { readJsonInTree, updatePackagesInPackageJson } from '@nrwl/workspace';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import * as path from 'path';
 
 export default function update(): Rule {
-  return chain([displayInformation, updatePackagesInPackageJson('8.7.0')]);
+  return chain([
+    displayInformation,
+    updatePackagesInPackageJson(
+      path.join(__dirname, '../../../', 'migrations.json'),
+      '8.7.0'
+    )
+  ]);
 }
 
 function displayInformation(host: Tree, context: SchematicContext) {

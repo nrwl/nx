@@ -1,13 +1,15 @@
 {
-  "schematics": {},
+  "schematics": {
+    "update-8-7-0.": {
+      "version": "8.7.0-beta.1",
+      "description": "Update Nest.js libraries",
+      "factory": "./src/migrations/update-8-7-0/update-8-7-0"
+    }
+  },
   "packageJsonUpdates": {
     "8.7.0": {
-      "version": "8.7.0-beta.1",
+      "version": "8.7.0-beta.4",
       "packages": {
-        "@nrwl/nest": {
-          "version": "8.7.0",
-          "alwaysAddToPackageJson": false
-        },
         "@nestjs/common": {
           "version": "^6.8.3",
           "alwaysAddToPackageJson": false
