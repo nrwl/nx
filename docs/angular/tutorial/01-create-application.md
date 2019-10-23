@@ -41,7 +41,7 @@ Now, create your first Angular application.
 ng g @nrwl/angular:application todos
 ```
 
-Nx will ask you a few questions about the application you are trying to create: the directory it will be placed it, the tags used for linting, etc.. As your workspace grows, those things become really important. For now the default answers are good enough.
+Nx will ask you a few questions about the application you are trying to create: the directory it will be placed in, the tags used for linting, etc. As your workspace grows, those things become really important. For now the default answers are good enough.
 
 After this is done, you should see something like this:
 
