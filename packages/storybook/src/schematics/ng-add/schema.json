@@ -1,0 +1,7 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "Nx Storybook Project Schematics Schema",
+  "title": "Add Storybook Configuration to the workspace",
+  "type": "object",
+  "properties": {}
+}
