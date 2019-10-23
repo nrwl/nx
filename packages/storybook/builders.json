@@ -1,0 +1,10 @@
+{
+  "$schema": "@angular-devkit/architect/src/builders-schema.json",
+  "builders": {
+    "storybook": {
+      "implementation": "./src/builders/storybook/storybook.impl",
+      "schema": "./src/builders/storybook/schema.json",
+      "description": "Serve Storybook"
+    }
+  }
+}
