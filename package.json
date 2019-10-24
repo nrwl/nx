@@ -119,7 +119,7 @@
     "jasmine-spec-reporter": "~4.2.1",
     "jest": "^24.1.0",
     "jest-jasmine2": "^24.1.0",
-    "jest-preset-angular": "7.0.0",
+    "jest-preset-angular": "8.0.0",
     "karma": "~4.0.0",
     "karma-chrome-launcher": "~2.2.0",
     "karma-coverage-istanbul-reporter": "~2.0.1",

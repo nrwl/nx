@@ -213,7 +213,7 @@ describe('app', () => {
     );
 
     expect(tree.readContent('apps/my-app/jest.config.js')).not.toContain(
-      `'jest-preset-angular/AngularSnapshotSerializer.js',`
+      `'jest-preset-angular/build/AngularSnapshotSerializer.js',`
     );
   });
 
