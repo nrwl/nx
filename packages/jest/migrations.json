@@ -9,6 +9,11 @@
       "version": "8.7.0",
       "description": "Update Jest testPathPattern option",
       "factory": "./src/migrations/update-8-7-0/update-8-7-0"
+    },
+    "update-8.8.0": {
+      "version": "8.8.0",
+      "description": "Upgrades jest-preset-angular and runs migrations for breaking changes",
+      "factory": "./src/migrations/update-8-8-0/update-8-8-0"
     }
   }
 }

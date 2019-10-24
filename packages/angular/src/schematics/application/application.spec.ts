@@ -91,6 +91,17 @@ describe('app', () => {
       expect(tsconfigE2E.extends).toEqual('./tsconfig.json');
     });
 
+    it('should setup jest with serializers', async () => {
+      const tree = await runSchematic('app', { name: 'myApp' }, appTree);
+
+      expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
+        `'jest-preset-angular/build/AngularSnapshotSerializer.js'`
+      );
+      expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
+        `'jest-preset-angular/build/HTMLCommentSerializer.js'`
+      );
+    });
+
     it('should default the prefix to npmScope', async () => {
       const noPrefix = await runSchematic(
         'app',
