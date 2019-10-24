@@ -29,9 +29,10 @@
   },
   "peerDependencies": {
     "@nrwl/workspace": "*",
-    "@storybook/angular": "^5.1.9",
-    "@storybook/addon-knobs": "^5.1.9",
-    "@types/storybook__addon-knobs": "^5.1.9",
+    "@storybook/angular": "^5.2.5",
+    "@storybook/react": "^5.2.5",
+    "@storybook/web": "^5.2.5",
+    "@storybook/addon-knobs": "^5.2.5",
     "babel-loader": "^7.5.4",
     "@babel/core": "^8.0.6"
   },
@@ -41,6 +42,8 @@
     "tree-kill": "1.2.1",
     "ts-loader": "5.3.1",
     "tsconfig-paths-webpack-plugin": "3.2.0",
-    "webpack-node-externals": "1.7.2"
+    "webpack-node-externals": "1.7.2",
+    "to-string-loader": "^1.1.5",
+    "html-loader": "^0.5.5"
   }
 }
