@@ -88,15 +88,17 @@ Nx comes with a `list` feature which enables you to see the capabilities that ha
 nx list
 ```
 
-This will output a list of all the collections you have just added, alongside some that Angular comes with out of the box like `@schematics/angular`.
+This will output a list of all the plugins you have just added, alongside some that Angular comes with out of the box like `@schematics/angular`.
 
-To list the capabilities within a specific collection :
+To list the capabilities within a specific plugin :
 
 ```bash
 nx list @nrwl/web
 ```
 
 This will list all the capabilities in the `@nrwl/web` collection.
+
+`nx list` will also output a list of Nrwl-approved plugins that you may want to consider adding to your workspace.
 
 ## Creating an application
 
