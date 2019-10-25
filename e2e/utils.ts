@@ -83,15 +83,22 @@ export function runYarnInstall(silent: boolean = true) {
   return install ? install.toString() : '';
 }
 
+/**
+ * Run the `new` command for the currently selected CLI
+ *
+ * @param args Extra arguments to pass to the `new` command
+ * @param silent Run in silent mode (no output)
+ * @param addWorkspace Include `@nrwl/workspace` when patching the `package.json` paths
+ */
 export function runNew(
-  command?: string,
+  args?: string,
   silent?: boolean,
   addWorkspace = true
 ): string {
   let gen;
   if (cli === 'angular') {
     gen = execSync(
-      `../../node_modules/.bin/ng new proj --no-interactive --skip-install ${command ||
+      `../../node_modules/.bin/ng new proj --no-interactive --skip-install ${args ||
         ''}`,
       {
         cwd: `./tmp/${cli}`,
@@ -100,7 +107,7 @@ export function runNew(
     );
   } else {
     gen = execSync(
-      `node ../../node_modules/@nrwl/tao/index.js new proj --no-interactive --skip-install ${command ||
+      `node ../../node_modules/@nrwl/tao/index.js new proj --no-interactive --skip-install ${args ||
         ''}`,
       {
         cwd: `./tmp/${cli}`,
@@ -114,6 +121,10 @@ export function runNew(
   return silent ? null : `${gen ? gen.toString() : ''}${install}`;
 }
 
+/**
+ * Sets up a new project in the temporary project path
+ * for the currently selected CLI.
+ */
 export function newProject(): void {
   cleanup();
   if (!directoryExists(tmpBackupProjPath())) {
@@ -143,6 +154,13 @@ exports.default = default_1;`
   execSync(`cp -a ${tmpBackupProjPath()} ${tmpProjPath()}`);
 }
 
+/**
+ * Ensures that a project has been setup
+ * in the temporary project path for the
+ * currently selected CLI.
+ *
+ * If one is not found, it creates a new project.
+ */
 export function ensureProject(): void {
   if (!directoryExists(tmpProjPath())) {
     newProject();

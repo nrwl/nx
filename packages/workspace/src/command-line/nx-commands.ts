@@ -32,6 +32,7 @@ export const supportedNxCommands = [
   'migrate',
   'report',
   'list',
+  'help',
   '--help',
   '--version'
 ];

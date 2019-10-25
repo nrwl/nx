@@ -250,14 +250,15 @@ const examples = {
     }
   ],
   'workspace-schematic': [],
-  'list [schematic-collection]': [
+  'list [plugin]': [
     {
       command: 'list',
-      description: 'List the collections installed in the current workspace'
+      description: 'List the plugins installed in the current workspace'
     },
     {
       command: 'list @nrwl/web',
-      description: 'List the schematics available in the `@nrwl/web` collection'
+      description:
+        'List the schematics and builders available in the `@nrwl/web` plugin if it is installed (If the plugin is not installed `nx` will show advice on how to add it to your workspace)'
     }
   ]
 };
