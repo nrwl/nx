@@ -240,7 +240,7 @@ const examples = {
     }
   ],
   'workspace-schematic': [],
-  'list [schematic-collection]': [
+  'list [schematic-collection] [--recommended || -r]': [
     {
       command: 'list',
       description: 'List the collections installed in the current workspace'
@@ -248,6 +248,11 @@ const examples = {
     {
       command: 'list @nrwl/web',
       description: 'List the schematics available in the `@nrwl/web` collection'
+    },
+    {
+      command: 'list --recommended',
+      description:
+        'List the recommended schematic collections available to install'
     }
   ]
 };

@@ -82,6 +82,14 @@ nx list @nrwl/web
 
 This will list all the schematics in the `@nrwl/web` collection.
 
+To list recommended capabilities that can be added to your workspace :
+
+```bash
+nx list --recommended
+```
+
+This will list capabilities recommended for use with your workspace alongside other Nrwl-approved collections.
+
 > Visit the [CLI Commands](/web/guides/cli#cli-commands) section to see more available commands.
 
 ## Workspaces and project files

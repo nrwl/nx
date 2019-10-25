@@ -16,11 +16,24 @@ export interface SchematicCollection {
   schematics: { [name: string]: Schematic };
 }
 
+export function getSchematicCollectionVersion(
+  workspaceRoot: string,
+  name: string
+): string {
+  try {
+    const packageJson = readJsonFile(
+      path.join(workspaceRoot, 'node_modules', name, 'package.json')
+    );
+    return packageJson.version;
+  } catch {
+    throw new Error(`Could not read package.json for module ${name}`);
+  }
+}
+
 export function readSchematicCollectionsFromNodeModules(
   workspaceRoot: string
 ): Array<{ name: string; collection: SchematicCollection }> {
-  const nodeModulesDir = path.join(workspaceRoot, 'node_modules');
-  const packages = listOfUnnestedNpmPackages(nodeModulesDir);
+  const packages = listOfUnnestedNpmPackages(workspaceRoot);
   return packages
     .map(name => ({
       name,
@@ -43,16 +56,24 @@ export function getSchematicCollection(
   }
 }
 
-export function listOfUnnestedNpmPackages(nodeModulesDir: string): string[] {
-  const res: string[] = [];
+let packageList: string[] = [];
+export function listOfUnnestedNpmPackages(
+  workspaceRoot: string,
+  requery: boolean = false
+): string[] {
+  if (!requery && packageList.length > 0) {
+    return packageList;
+  }
+
+  const nodeModulesDir = path.join(workspaceRoot, 'node_modules');
   readdirSync(nodeModulesDir).forEach(npmPackageOrScope => {
     if (npmPackageOrScope.startsWith('@')) {
       readdirSync(path.join(nodeModulesDir, npmPackageOrScope)).forEach(p => {
-        res.push(`${npmPackageOrScope}/${p}`);
+        packageList.push(`${npmPackageOrScope}/${p}`);
       });
     } else {
-      res.push(npmPackageOrScope);
+      packageList.push(npmPackageOrScope);
     }
   });
-  return res;
+  return packageList;
 }

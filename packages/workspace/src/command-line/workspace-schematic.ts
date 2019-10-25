@@ -2,16 +2,16 @@ import {
   JsonObject,
   logging,
   normalize,
-  terminal,
-  tags,
   schema,
+  tags,
+  terminal,
   virtualFs
 } from '@angular-devkit/core';
 import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
 import {
+  formats,
   SchematicEngine,
-  UnsuccessfulWorkflowExecution,
-  formats
+  UnsuccessfulWorkflowExecution
 } from '@angular-devkit/schematics';
 import {
   NodeModulesEngineHost,
@@ -23,12 +23,13 @@ import * as fs from 'fs';
 import { readFileSync, writeFileSync } from 'fs';
 import { copySync, removeSync } from 'fs-extra';
 import * as inquirer from 'inquirer';
+import { platform } from 'os';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
-import { fileExists, readJsonFile } from '../utils/fileutils';
 import { appRootPath } from '../utils/app-root';
+import { detectPackageManager } from '../utils/detect-package-manager';
+import { fileExists, readJsonFile } from '../utils/fileutils';
 import { output } from './output';
-import { platform } from 'os';
 
 const rootDirectory = appRootPath;
 
@@ -131,24 +132,6 @@ function createWorkflow(dryRun: boolean) {
     dryRun,
     registry: new schema.CoreSchemaRegistry(formats.standardFormats)
   });
-}
-
-function detectPackageManager(): string {
-  try {
-    const output = execSync(`nx config cli.packageManager`, {
-      stdio: ['ignore', 'pipe', 'ignore']
-    })
-      .toString()
-      .trim()
-      .split('\n');
-    return output[output.length - 1].trim();
-  } catch (e) {
-    return fileExists('yarn.lock')
-      ? 'yarn'
-      : fileExists('pnpm-lock.yaml')
-      ? 'pnpm'
-      : 'npm';
-  }
 }
 
 function listSchematics(collectionName: string, logger: logging.Logger) {

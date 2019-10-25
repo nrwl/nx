@@ -98,6 +98,14 @@ nx list @nrwl/web
 
 This will list all the capabilities in the `@nrwl/web` collection.
 
+To list recommended capabilities that can be added to your workspace :
+
+```bash
+nx list --recommended
+```
+
+This will list capabilities recommended for use with your workspace alongside other Nrwl-approved collections.
+
 ## Creating an application
 
 After the capability is added, you can now create your first application via:
