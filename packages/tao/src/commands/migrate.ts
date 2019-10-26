@@ -99,6 +99,15 @@ export class Migrator {
       targetVersion = this.to[targetPackage];
     }
 
+    if (!this.versions(targetPackage)) {
+      return {
+        [targetPackage]: {
+          version: target.version,
+          alwaysAddToPackageJson: !!target.alwaysAddToPackageJson
+        }
+      };
+    }
+
     let migrationsJson;
     try {
       migrationsJson = await this.fetch(targetPackage, targetVersion);

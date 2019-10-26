@@ -76,7 +76,8 @@ forEachCli(() => {
           const before = content.substring(0, start);
           const after = content.substring(end);
           const newFetch = `
-              function fetch(packageName) {
+             function createFetcher(logger) {
+              return function fetch(packageName) {
                 if (packageName === 'migrate-parent-package') {
                   return Promise.resolve({
                     version: '2.0.0',
@@ -96,6 +97,7 @@ forEachCli(() => {
                   return Promise.resolve({version: '9.0.0'});
                 }
               }
+            }
             `;
 
           return `${before}${newFetch}${after}`;

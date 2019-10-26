@@ -4,7 +4,7 @@ describe('Migration', () => {
   describe('packageJson patch', () => {
     it('should throw an error when the target package is not available', async () => {
       const migrator = new Migrator({
-        versions: () => null,
+        versions: () => '1.0',
         fetch: (p, v) => {
           throw new Error('cannot fetch');
         },
@@ -311,6 +311,38 @@ describe('Migration', () => {
           '@nrwl/web': { version: '2.0.0', alwaysAddToPackageJson: false }
         }
       });
+    });
+
+    it('should not throw when packages are missing', async () => {
+      const migrator = new Migrator({
+        versions: p => (p === '@nrwl/nest' ? null : '1.0.0'),
+        fetch: (p, v) =>
+          Promise.resolve({
+            version: '2.0.0',
+            packageJsonUpdates: { one: { version: '2.0.0', packages: {} } }
+          }),
+        from: {},
+        to: {}
+      });
+      await migrator.updatePackageJson('@nrwl/workspace', '2.0.0');
+    });
+
+    it('should only fetch packages that are installed', async () => {
+      const migrator = new Migrator({
+        versions: p => (p === '@nrwl/nest' ? null : '1.0.0'),
+        fetch: (p, v) => {
+          if (p === '@nrwl/nest') {
+            throw new Error('Boom');
+          }
+          return Promise.resolve({
+            version: '2.0.0',
+            packageJsonUpdates: { one: { version: '2.0.0', packages: {} } }
+          });
+        },
+        from: {},
+        to: {}
+      });
+      await migrator.updatePackageJson('@nrwl/workspace', '2.0.0');
     });
   });
 
