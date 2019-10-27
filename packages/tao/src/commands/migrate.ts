@@ -99,6 +99,15 @@ export class Migrator {
       targetVersion = this.to[targetPackage];
     }
 
+    if (!this.versions(targetPackage)) {
+      return {
+        [targetPackage]: {
+          version: target.version,
+          alwaysAddToPackageJson: !!target.alwaysAddToPackageJson
+        }
+      };
+    }
+
     let migrationsJson;
     try {
       migrationsJson = await this.fetch(targetPackage, targetVersion);
@@ -159,7 +168,34 @@ export class Migrator {
     // this should be used to know what version to include
     // we should use from everywhere we use versions
 
+    if (packageName === '@nrwl/workspace') {
+      if (!m.packageJsonUpdates) m.packageJsonUpdates = {};
+      m.packageJsonUpdates[targetVersion + '-defaultPackages'] = {
+        version: targetVersion,
+        packages: [
+          '@nrwl/angular',
+          '@nrwl/cypress',
+          '@nrwl/eslint-plugin-nx',
+          '@nrwl/express',
+          '@nrwl/jest',
+          '@nrwl/linter',
+          '@nrwl/nest',
+          '@nrwl/next',
+          '@nrwl/node',
+          '@nrwl/react',
+          '@nrwl/tao',
+          '@nrwl/web'
+        ].reduce(
+          (m, c) => ({
+            ...m,
+            [c]: { verson: targetVersion, alwaysAddToPackageJson: false }
+          }),
+          {}
+        )
+      };
+    }
     if (!m.packageJsonUpdates) return {};
+
     return Object.keys(m.packageJsonUpdates)
       .filter(r => {
         return (
@@ -271,47 +307,56 @@ function versions(root: string) {
 }
 
 // testing-fetch-start
-async function fetch(
-  packageName: string,
-  packageVersion: string
-): Promise<MigrationsJson> {
-  const dir = dirSync().name;
-  execSync(`npm install ${packageName}@${packageVersion} --prefix=${dir}`, {
-    stdio: []
-  });
-  const json = JSON.parse(
-    stripJsonComments(
-      readFileSync(
-        path.join(dir, 'node_modules', packageName, 'package.json')
-      ).toString()
-    )
-  );
-  let migrationsFile = json['nx-migrations'] || json['ng-update'];
+function createFetcher(logger: logging.Logger) {
+  let cache = {};
+  return async function f(
+    packageName: string,
+    packageVersion: string
+  ): Promise<MigrationsJson> {
+    if (!cache[`${packageName}-${packageVersion}`]) {
+      const dir = dirSync().name;
+      logger.info(`Fetching ${packageName}@${packageVersion}`);
+      execSync(`npm install ${packageName}@${packageVersion} --prefix=${dir}`, {
+        stdio: []
+      });
+      const json = JSON.parse(
+        stripJsonComments(
+          readFileSync(
+            path.join(dir, 'node_modules', packageName, 'package.json')
+          ).toString()
+        )
+      );
+      let migrationsFile = json['nx-migrations'] || json['ng-update'];
 
-  // migrationsFile is an object
-  if (migrationsFile && migrationsFile.migrations) {
-    migrationsFile = migrationsFile.migrations;
-  }
+      // migrationsFile is an object
+      if (migrationsFile && migrationsFile.migrations) {
+        migrationsFile = migrationsFile.migrations;
+      }
 
-  // packageVersion can be a tag, resolvedVersion works with semver
-  const resolvedVersion = json.version;
+      // packageVersion can be a tag, resolvedVersion works with semver
+      const resolvedVersion = json.version;
 
-  if (migrationsFile) {
-    const json = JSON.parse(
-      stripJsonComments(
-        readFileSync(
-          path.join(dir, 'node_modules', packageName, migrationsFile)
-        ).toString()
-      )
-    );
-    return {
-      version: resolvedVersion,
-      schematics: json.schematics,
-      packageJsonUpdates: json.packageJsonUpdates
-    };
-  } else {
-    return { version: resolvedVersion };
-  }
+      if (migrationsFile) {
+        const json = JSON.parse(
+          stripJsonComments(
+            readFileSync(
+              path.join(dir, 'node_modules', packageName, migrationsFile)
+            ).toString()
+          )
+        );
+        cache[`${packageName}-${packageVersion}`] = {
+          version: resolvedVersion,
+          schematics: json.schematics,
+          packageJsonUpdates: json.packageJsonUpdates
+        };
+      } else {
+        cache[`${packageName}-${packageVersion}`] = {
+          version: resolvedVersion
+        };
+      }
+    }
+    return cache[`${packageName}-${packageVersion}`];
+  };
 }
 // testing-fetch-end
 
@@ -359,7 +404,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
   logger.info(`It may take a few minutes.`);
   const migrator = new Migrator({
     versions: versions(root),
-    fetch,
+    fetch: createFetcher(logger),
     from: opts.from,
     to: opts.to
   });
@@ -409,11 +454,14 @@ class MigrationEngineHost extends NodeModulesEngineHost {
         packageJsonPath = path.join(packageJsonPath, 'package.json');
       }
       let pkgJsonSchematics = require(packageJsonPath)['nx-migrations'];
-      if (!pkgJsonSchematics || typeof pkgJsonSchematics != 'string') {
+      if (!pkgJsonSchematics) {
         pkgJsonSchematics = require(packageJsonPath)['ng-update'];
         if (!pkgJsonSchematics) {
           throw new Error(`Could find migrations in package: "${name}"`);
         }
+      }
+      if (typeof pkgJsonSchematics != 'string') {
+        pkgJsonSchematics = pkgJsonSchematics.migrations;
       }
       collectionPath = this._resolvePath(
         pkgJsonSchematics,
@@ -459,8 +507,8 @@ async function runMigrations(
   const workflow = new MigrationsWorkflow(host);
   let p = Promise.resolve(null);
   migrationsFile.migrations.forEach(m => {
-    logger.info(`Running migration ${m.package}:${m.name}`);
     p = p.then(() => {
+      logger.info(`Running migration ${m.package}:${m.name}`);
       return workflow
         .execute({
           collection: m.package,

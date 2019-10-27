@@ -16,27 +16,10 @@
       "factory": "./src/migrations/update-8-7-0/update-8-7-0"
     }
   },
-
   "packageJsonUpdates": {
     "8.7.0": {
-      "version": "8.7.0-beta.1",
+      "version": "8.7.0-beta.4",
       "packages": {
-        "@nrwl/react": {
-          "version": "8.7.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@nrwl/web": {
-          "version": "8.7.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@nrwl/jest": {
-          "version": "8.7.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@nrwl/cypress": {
-          "version": "8.7.0",
-          "alwaysAddToPackageJson": false
-        },
         "react": {
           "version": "16.10.2",
           "alwaysAddToPackageJson": false

@@ -644,6 +644,43 @@ describe('Enforce Module Boundaries', () => {
     expect(failures.length).toEqual(1);
   });
 
+  it('should respect regexp in allow option', () => {
+    const failures = runRule(
+      { allow: ['^.*/utils/.*$'] },
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      `
+      import "../../utils/a";
+      `,
+      [
+        {
+          name: 'mylibName',
+          root: 'libs/mylib',
+          type: ProjectType.lib,
+          tags: [],
+          implicitDependencies: [],
+          architect: {},
+          files: [`libs/mylib/src/main.ts`],
+          fileMTimes: {
+            'libs/mylib/src/main.ts': 1
+          }
+        },
+        {
+          name: 'utils',
+          root: 'libs/utils',
+          type: ProjectType.lib,
+          tags: [],
+          implicitDependencies: [],
+          architect: {},
+          files: [`libs/utils/a.ts`],
+          fileMTimes: {
+            'libs/utils/a.ts': 1
+          }
+        }
+      ]
+    );
+    expect(failures.length).toEqual(0);
+  });
+
   it('should error on importing a lazy-loaded library', () => {
     const failures = runRule(
       {},

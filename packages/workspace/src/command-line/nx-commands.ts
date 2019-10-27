@@ -287,10 +287,23 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
 }
 
 function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
-  return yargs.option('file', {
-    describe: 'output file (e.g. --file=output.json)',
-    type: 'string'
-  });
+  return yargs
+    .option('file', {
+      describe: 'output file (e.g. --file=output.json)',
+      type: 'string'
+    })
+    .option('filter', {
+      describe:
+        'Use to limit the dependency graph to only show specific projects, list of projects delimited by commas.',
+      type: 'array',
+      coerce: parseCSV
+    })
+    .option('exclude', {
+      describe:
+        'List of projects delimited by commas to exclude from the dependency graph.',
+      type: 'array',
+      coerce: parseCSV
+    });
 }
 
 function parseCSV(args: string[]) {

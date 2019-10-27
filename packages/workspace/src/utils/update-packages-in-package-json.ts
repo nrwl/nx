@@ -1,8 +1,11 @@
 import { updateJsonInTree } from './ast-utils';
 import { readFileSync } from 'fs';
 
-export function updatePackagesInPackageJson(versionName: string) {
-  const migrations = JSON.parse(readFileSync('../migrations.json').toString());
+export function updatePackagesInPackageJson(
+  migrationFilePath: string,
+  versionName: string
+) {
+  const migrations = JSON.parse(readFileSync(migrationFilePath).toString());
   const packageJsonUpdates = migrations.packageJsonUpdates[versionName];
 
   // should never happen
@@ -22,5 +25,6 @@ export function updatePackagesInPackageJson(versionName: string) {
         json.dependencies[p] = updatedPackages[p].version;
       }
     });
+    return json;
   });
 }

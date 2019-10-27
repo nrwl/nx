@@ -1,0 +1,88 @@
+{
+  "title": "Storybook Dev Builder",
+  "description": "Serve up storybook in development mode",
+  "type": "object",
+  "properties": {
+    "uiFramework": {
+      "type": "string",
+      "description": "Storybook framework npm package",
+      "default": "@storybook/angular",
+      "hidden": true
+    },
+    "port": {
+      "type": "number",
+      "description": "Port to listen on.",
+      "default": 9009
+    },
+    "host": {
+      "type": "string",
+      "description": "Host to listen on.",
+      "default": "localhost"
+    },
+    "ssl": {
+      "type": "boolean",
+      "description": "Serve using HTTPS.",
+      "default": false
+    },
+    "sslKey": {
+      "type": "string",
+      "description": "SSL key to use for serving HTTPS."
+    },
+    "sslCert": {
+      "type": "string",
+      "description": "SSL certificate to use for serving HTTPS."
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Watches for changes and rebuilds application",
+      "default": true
+    },
+    "staticDir": {
+      "type": "array",
+      "description": "Directory where to load static files from, array of strings",
+      "items": {
+        "type": "number"
+      }
+    },
+    "config": {
+      "type": "object",
+      "description": ".storybook configuration",
+      "properties": {
+        "configFolder": {
+          "type": "string",
+          "description": "Directory where to load Storybook configurations from"
+        },
+        "pluginPath": {
+          "type": "string",
+          "description": "Path to storybook plugin.js file."
+        },
+        "configPath": {
+          "type": "string",
+          "description": "Path to storybook config.js file."
+        },
+        "srcRoot": {
+          "type": "string",
+          "description": "Project source path."
+        }
+      },
+      "oneOf": [
+        {
+          "anyOf": [
+            {
+              "required": ["configFolder"]
+            },
+            {
+              "required": ["pluginPath", "configPath", "srcRoot"]
+            }
+          ]
+        }
+      ]
+    },
+    "quiet": {
+      "type": "boolean",
+      "description": "Suppress verbose build output.",
+      "default": true
+    }
+  },
+  "required": ["uiFramework", "config"]
+}

@@ -137,6 +137,59 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "870": {
+      "version": "8.7.0",
+      "packages": {
+        "@nrwl/angular": {
+          "version": "8.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/cypress": {
+          "version": "8.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/eslint-plugin-nx": {
+          "version": "8.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/express": {
+          "version": "8.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/jest": {
+          "version": "8.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/linter": {
+          "version": "8.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/nest": {
+          "version": "8.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/next": {
+          "version": "8.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/node": {
+          "version": "8.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/react": {
+          "version": "8.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/tao": {
+          "version": "8.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/web": {
+          "version": "8.7.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

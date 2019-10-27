@@ -139,6 +139,10 @@
     "watchAll": {
       "description": "Watch files for changes and rerun all tests when something changes. If you want to re-run only the tests that depend on the changed files, use the `--watch` option. (https://jestjs.io/docs/en/cli#watchall)",
       "type": "boolean"
+    },
+    "testLocationInResults": {
+      "description": "Adds a location field to test results.  Used to report location of a test in a reporter. { \"column\": 4, \"line\": 5 } (https://jestjs.io/docs/en/cli#testlocationinresults)",
+      "type": "boolean"
     }
   },
   "required": ["jestConfig", "tsConfig"]

@@ -78,7 +78,6 @@ forEachCli(() => {
       expectTestsPass(await runCLIAsync(`test my-dir-${mylib} --no-watch`));
 
       if (supportUi()) {
-        console.log(runCLI(`e2e my-dir-${myapp}-e2e --headless --no-watch`));
         expect(
           runCLI(`e2e my-dir-${myapp}-e2e --headless --no-watch`)
         ).toContain('All specs passed!');

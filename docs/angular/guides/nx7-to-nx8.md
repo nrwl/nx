@@ -12,7 +12,8 @@ To upgrade from a Nx 7 workspace to a Nx 8 workspace, run:
 
 ### Potential Issues
 
-If you use publishable libraries, running `ng update @nrwl/schematics@8.4.8` will incorrectly update the version of `@angular/compiler-cli` and `@angular/language-service`. Update the versions manually before committing the changes. The issue is due to an incorrect peer dependency in `ng-packagr`, which we cannot fix in Nx.
+- If you use publishable libraries, running `ng update @nrwl/schematics@8.4.8` will incorrectly update the version of `@angular/compiler-cli` and `@angular/language-service`. Update the versions manually before committing the changes. The issue is due to an incorrect peer dependency in `ng-packagr`, which we cannot fix in Nx.
+- The schematics section of `angular.json` might still contain references to `@nrwl/schematics`. Update them to point to appropriate package (e.g., `@nrwl/angular`, `@nrwl/react`, `@nrwl/nest`).
 
 ## Where you can find familiar features
 
