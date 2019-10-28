@@ -67,9 +67,8 @@ export function affected(
 ): void {
   const workspaceResults = new WorkspaceResults(parsedArgs.target);
 
-  const touchedFiles = parseFiles(parsedArgs).files;
   const affectedMetadata = getAffectedMetadata(
-    touchedFiles,
+    parsedArgs.all ? [] : parseFiles(parsedArgs).files,
     parsedArgs.withDeps
   );
 
