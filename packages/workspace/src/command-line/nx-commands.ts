@@ -3,7 +3,7 @@ import { execSync } from 'child_process';
 import { platform } from 'os';
 import * as yargs from 'yargs';
 import { nxVersion } from '../utils/versions';
-import { affected } from './affected';
+import { affected, runMany } from './run-tasks';
 import { generateGraph } from './dep-graph';
 import { format } from './format';
 import { workspaceLint } from './lint';
@@ -31,6 +31,7 @@ export const supportedNxCommands = [
   'workspace-lint',
   'migrate',
   'report',
+  'run-many',
   'list',
   'help',
   '--help',
@@ -68,6 +69,12 @@ export const commandsObject = yargs
     'Run task for affected projects',
     yargs => withAffectedOptions(withParallel(withTarget(yargs))),
     args => affected('affected', { ...args })
+  )
+  .command(
+    'run-many',
+    'Run task for multiple projects',
+    yargs => withRunManyOptions(withParallel(withTarget(yargs))),
+    args => runMany({ ...args })
   )
   .command(
     'affected:apps',
@@ -284,6 +291,41 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       untracked: ['uncommitted', 'files', 'base', 'head', 'all'],
       uncommitted: ['files', 'untracked', 'base', 'head', 'all'],
       all: ['files', 'untracked', 'uncommitted', 'base', 'head']
+    });
+}
+
+function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
+  return yargs
+    .option('projects', {
+      describe: 'Projects to run (comma delimited)',
+      type: 'string'
+    })
+    .option('all', { describe: 'All projects' })
+    .nargs('all', 0)
+    .check(({ all, projects }) => {
+      if ((all && projects) || (!all && !projects))
+        throw new Error('You must provide either --all or --projects');
+      return true;
+    })
+    .options('runner', {
+      describe: 'This is the name of the tasks runner configured in nx.json',
+      type: 'string'
+    })
+    .options('configuration', {
+      describe:
+        'This is the configuration to use when performing tasks on projects',
+      type: 'string'
+    })
+    .options('only-failed', {
+      describe: 'Isolate projects which previously failed',
+      type: 'boolean',
+      default: false
+    })
+    .option('verbose', {
+      describe: 'Print additional error stack trace on failure'
+    })
+    .conflicts({
+      all: 'projects'
     });
 }
 

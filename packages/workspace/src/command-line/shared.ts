@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { appRootPath } from '../utils/app-root';
 import { readJsonFile } from '../utils/fileutils';
-import { YargsAffectedOptions } from './affected';
+import { YargsAffectedOptions } from './run-tasks/affected';
 import { Deps, readDependencies } from './deps-calculator';
 import { touchedProjects } from './touched';
 import { output } from './output';
@@ -73,7 +73,7 @@ export interface DependencyGraph {
   roots: string[];
 }
 
-export interface AffectedMetadata {
+export interface ProjectMetadata {
   dependencyGraph: DependencyGraph;
 
   projectStates: ProjectStates;
@@ -428,10 +428,10 @@ export function readNxJson(): NxJson {
   return config;
 }
 
-export function getAffectedMetadata(
+export function getProjectMetadata(
   touchedFiles: string[],
   withDeps: boolean
-): AffectedMetadata {
+): ProjectMetadata {
   const workspaceJson = readWorkspaceJson();
   const nxJson = readNxJson();
   const projectNodes = getProjectNodes(workspaceJson, nxJson);
@@ -442,15 +442,15 @@ export function getAffectedMetadata(
   );
   const dependencies = readDependencies(nxJson.npmScope, projectNodes);
   const tp = touchedProjects(implicitDeps, projectNodes, touchedFiles);
-  return createAffectedMetadata(projectNodes, dependencies, tp, withDeps);
+  return createProjectMetadata(projectNodes, dependencies, tp, withDeps);
 }
 
-export function createAffectedMetadata(
+export function createProjectMetadata(
   projectNodes: ProjectNode[],
   dependencies: Deps,
   touchedProjects: string[],
   withDeps: boolean
-): AffectedMetadata {
+): ProjectMetadata {
   const projectStates: ProjectStates = {};
   const projects: ProjectMap = {};
 

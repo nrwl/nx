@@ -7,11 +7,10 @@ import {
   updateFile,
   runCLI,
   forEachCli,
-  supportUi,
-  newProject
+  supportUi
 } from './utils';
 
-let originalCIValue;
+let originalCIValue: any;
 
 forEachCli(() => {
   /**
@@ -131,9 +130,7 @@ forEachCli(() => {
       expect(buildParallel).toContain(`Running target build for projects:`);
       expect(buildParallel).toContain(`- ${myapp}`);
       expect(buildParallel).toContain(`- ${mypublishablelib}`);
-      expect(buildParallel).toContain(
-        'Running target "build" for affected projects succeeded'
-      );
+      expect(buildParallel).toContain('Running target "build" succeeded');
 
       const buildExcluded = runCommand(
         `npm run affected:build -- --files="libs/${mylib}/src/index.ts" --exclude ${myapp}`
@@ -240,9 +237,7 @@ forEachCli(() => {
       const interpolatedTests = runCommand(
         `npm run affected -- --target test --files="libs/${mylib}/src/index.ts" -- --jest-config {project.root}/jest.config.js`
       );
-      expect(interpolatedTests).toContain(
-        `Running target \"test\" for affected projects succeeded`
-      );
+      expect(interpolatedTests).toContain(`Running target \"test\" succeeded`);
     }, 1000000);
   });
 });

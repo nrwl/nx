@@ -1,6 +1,6 @@
 import {
   assertWorkspaceValidity,
-  createAffectedMetadata,
+  createProjectMetadata,
   getImplicitDependencies,
   getProjectNodes,
   NxJson,
@@ -10,8 +10,8 @@ import {
 import { DependencyType, Deps } from './deps-calculator';
 
 describe('assertWorkspaceValidity', () => {
-  let mockNxJson;
-  let mockWorkspaceJson;
+  let mockNxJson: any;
+  let mockWorkspaceJson: any;
 
   beforeEach(() => {
     mockNxJson = {
@@ -323,8 +323,8 @@ describe('getImplicitDependencies', () => {
 });
 
 describe('getProjectNodes', () => {
-  let mockNxJson;
-  let mockworkspaceJson;
+  let mockNxJson: any;
+  let mockworkspaceJson: any;
 
   beforeEach(() => {
     mockNxJson = {
@@ -488,7 +488,7 @@ describe('createAffectedMetadata', () => {
 
   it('should translate project nodes array to map', () => {
     expect(
-      createAffectedMetadata(
+      createProjectMetadata(
         projectNodes as ProjectNode[],
         dependencies,
         [],
@@ -518,7 +518,7 @@ describe('createAffectedMetadata', () => {
 
   it('should include the dependencies', () => {
     expect(
-      createAffectedMetadata(
+      createProjectMetadata(
         projectNodes as ProjectNode[],
         dependencies,
         [],
@@ -529,7 +529,7 @@ describe('createAffectedMetadata', () => {
 
   it('should find the roots', () => {
     expect(
-      createAffectedMetadata(
+      createProjectMetadata(
         projectNodes as ProjectNode[],
         dependencies,
         [],
@@ -539,7 +539,7 @@ describe('createAffectedMetadata', () => {
   });
 
   it('should set projects as touched', () => {
-    const { projectStates } = createAffectedMetadata(
+    const { projectStates } = createProjectMetadata(
       projectNodes as ProjectNode[],
       dependencies,
       ['app1', 'lib2'],
@@ -555,7 +555,7 @@ describe('createAffectedMetadata', () => {
   });
 
   it('should set touched projects as affected', () => {
-    const { projectStates } = createAffectedMetadata(
+    const { projectStates } = createProjectMetadata(
       projectNodes as ProjectNode[],
       dependencies,
       ['app1', 'lib2'],
@@ -566,7 +566,7 @@ describe('createAffectedMetadata', () => {
   });
 
   it('should set dependents of touched projects as affected', () => {
-    const { projectStates } = createAffectedMetadata(
+    const { projectStates } = createProjectMetadata(
       projectNodes as ProjectNode[],
       dependencies,
       ['app1'],
@@ -582,7 +582,7 @@ describe('createAffectedMetadata', () => {
   });
 
   it('should set dependents of touched projects as affected (2)', () => {
-    const { projectStates } = createAffectedMetadata(
+    const { projectStates } = createProjectMetadata(
       projectNodes as ProjectNode[],
       dependencies,
       ['lib1'],
@@ -598,7 +598,7 @@ describe('createAffectedMetadata', () => {
   });
 
   it('should not set any projects as affected when none are touched', () => {
-    const { projectStates } = createAffectedMetadata(
+    const { projectStates } = createProjectMetadata(
       projectNodes as ProjectNode[],
       dependencies,
       [],
@@ -617,7 +617,7 @@ describe('createAffectedMetadata', () => {
       projectName: 'app2',
       type: DependencyType.es6Import
     });
-    const metadata = createAffectedMetadata(
+    const metadata = createProjectMetadata(
       projectNodes as ProjectNode[],
       dependencies,
       ['lib2'],
@@ -642,7 +642,7 @@ describe('createAffectedMetadata', () => {
       projectName: 'customName-e2e',
       type: DependencyType.es6Import
     });
-    const metadata = createAffectedMetadata(
+    const metadata = createProjectMetadata(
       projectNodes as ProjectNode[],
       dependencies,
       ['app1-e2e', 'customName-e2e'],
