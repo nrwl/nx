@@ -9,7 +9,7 @@
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
     "types": ["node", "jest"],
-    "lib": ["es2017"],
+    "lib": ["es2018"],
     "declaration": true,
     "baseUrl": ".",
     "paths": {

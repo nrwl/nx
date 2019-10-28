@@ -1,8 +1,8 @@
 import * as mergeWebpack from 'webpack-merge';
 // TODO @FrozenPandaz we should remove the following imports
-import { getBrowserConfig } from '@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/browser';
-import { getCommonConfig } from '@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/common';
-import { getStylesConfig } from '@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/styles';
+import { getBrowserConfig } from './build-angular/angular-cli-files/models/webpack-configs/browser';
+import { getCommonConfig } from './build-angular/angular-cli-files/models/webpack-configs/common';
+import { getStylesConfig } from './build-angular/angular-cli-files/models/webpack-configs/styles';
 import { Configuration } from 'webpack';
 import { LoggerApi } from '@angular-devkit/core/src/logger';
 import { basename, resolve } from 'path';
@@ -10,8 +10,8 @@ import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { convertBuildOptions } from './normalize';
 import { readTsConfig } from '@nrwl/workspace';
 import { getBaseWebpackPartial } from './config';
-import { IndexHtmlWebpackPlugin } from '@angular-devkit/build-angular/src/angular-cli-files/plugins/index-html-webpack-plugin';
-import { generateEntryPoints } from '@angular-devkit/build-angular/src/angular-cli-files/utilities/package-chunk-sort';
+import { IndexHtmlWebpackPlugin } from './build-angular/angular-cli-files/plugins/index-html-webpack-plugin';
+import { generateEntryPoints } from './build-angular/angular-cli-files/utilities/package-chunk-sort';
 import { ScriptTarget } from 'typescript';
 
 export function getWebConfig(
@@ -140,7 +140,7 @@ function getPolyfillsPartial(
     // Need to patch it up so the browser doesn't load both sets.
     config.entry.polyfills = [
       require.resolve(
-        '@angular-devkit/build-angular/src/angular-cli-files/models/safari-nomodule.js'
+        '@nrwl/web/src/utils/build-angular/angular-cli-files/models/safari-nomodule.js'
       ),
       ...(options.polyfills ? [options.polyfills] : [])
     ];
