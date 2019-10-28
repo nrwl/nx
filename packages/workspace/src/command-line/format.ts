@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 import * as path from 'path';
 import * as resolve from 'resolve';
 import { getProjectRoots, parseFiles, printArgsWarning } from './shared';
-import { YargsAffectedOptions } from './affected';
+import { YargsAffectedOptions } from './run-tasks/affected';
 import { getTouchedProjects } from './touched';
 import { fileExists } from '../utils/fileutils';
 import { output } from './output';
