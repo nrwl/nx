@@ -15,7 +15,7 @@ import {
 forEachCli('angular', () => {
   describe('Nrwl Convert to Nx Workspace', () => {
     beforeEach(cleanup);
-    afterAll(cleanup);
+    // afterAll(cleanup);
 
     it('should generate a workspace', () => {
       runNew('', false, false);
@@ -243,6 +243,12 @@ forEachCli('angular', () => {
           depConstraints: [{ sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }]
         }
       ]);
+
+      const updatedAppTsconfig = readJson('apps/proj/tsconfig.app.json');
+      expect(updatedAppTsconfig.extends).toEqual('../../tsconfig.json');
+
+      const updatedAppTsSpecConfig = readJson('apps/proj/tsconfig.spec.json');
+      expect(updatedAppTsSpecConfig.extends).toEqual('../../tsconfig.json');      
 
       runCLI('build --prod --outputHashing none');
       checkFilesExist('dist/apps/proj/main-es2015.js');

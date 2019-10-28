@@ -27,10 +27,10 @@
     "@nrwl/workspace": "*"
   },
   "dependencies": {
-    "@angular/compiler": "8.2.0",
-    "@angular/compiler-cli": "8.2.0",
-    "@angular-devkit/build-angular": "0.803.2",
-    "@angular-devkit/architect": "0.803.2",
+    "@angular/compiler": "8.2.12",
+    "@angular/compiler-cli": "8.2.12",
+    "@angular-devkit/build-angular": "0.803.14",
+    "@angular-devkit/architect": "0.803.14",
     "@angular-eslint/builder": "0.0.1-alpha.17"
   }
 }
