@@ -172,7 +172,7 @@ describe('getWebConfig', () => {
         );
         expect(es2015Config.entry.polyfills).toContain(
           require.resolve(
-            '@angular-devkit/build-angular/src/angular-cli-files/models/safari-nomodule.js'
+            '@nrwl/web/src/utils/build-angular/angular-cli-files/models/safari-nomodule.js'
           )
         );
       });

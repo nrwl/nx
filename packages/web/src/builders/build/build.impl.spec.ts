@@ -7,7 +7,7 @@ import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import * as webConfigUtils from '../../utils/web.config';
 import { getMockContext, MockBuilderContext } from '../../utils/testing';
 import { join } from 'path';
-import * as indexHtmlUtils from '@angular-devkit/build-angular/src/angular-cli-files/utilities/index-file/write-index-html';
+import * as indexHtmlUtils from '../../utils/build-angular/angular-cli-files/utilities/index-file/write-index-html';
 
 describe('WebBuildBuilder', () => {
   let context: MockBuilderContext;
