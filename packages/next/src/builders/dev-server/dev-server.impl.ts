@@ -11,6 +11,7 @@ import {
   PHASE_PRODUCTION_SERVER
 } from 'next-server/constants';
 import startServer from 'next/dist/server/lib/start-server';
+import NextServer from 'next/dist/server/next-dev-server';
 import * as path from 'path';
 import { from, Observable, of } from 'rxjs';
 import { switchMap, concatMap } from 'rxjs/operators';
@@ -26,9 +27,30 @@ export interface NextBuildBuilderOptions extends JsonObject {
   staticMarkup: boolean;
   quiet: boolean;
   buildTarget: string;
+  customServerPath: string;
+}
+
+export interface NextServerOptions {
+  dev: string;
+  dir: string;
+  staticMarkup: boolean;
+  quiet: boolean;
+  conf: any;
+  port: number;
+  path: string;
 }
 
 export default createBuilder<NextBuildBuilderOptions>(run);
+
+function defaultServer(settings: NextServerOptions) {
+  return startServer(settings, settings.port).then(app => app.prepare());
+}
+
+function customServer(settings: NextServerOptions) {
+  const nextApp = new NextServer(settings);
+
+  return require(path.resolve(settings.dir, settings.path))(nextApp, settings);
+}
 
 function run(
   options: NextBuildBuilderOptions,
@@ -46,6 +68,7 @@ function run(
       return from(context.getTargetOptions(buildTarget)).pipe(
         concatMap((buildOptions: any) => {
           const root = path.resolve(context.workspaceRoot, buildOptions.root);
+
           const config = prepareConfig(
             context.workspaceRoot,
             buildOptions.root,
@@ -53,18 +76,23 @@ function run(
             options.dev ? PHASE_DEVELOPMENT_SERVER : PHASE_PRODUCTION_SERVER
           );
 
-          return from(
-            startServer(
-              {
-                dev: options.dev,
-                dir: root,
-                staticMarkup: options.staticMarkup,
-                quiet: options.quiet,
-                conf: config
-              } as any,
-              options.port
-            ).then(app => app.prepare())
-          ).pipe(
+          const settings = {
+            dev: options.dev
+              ? PHASE_DEVELOPMENT_SERVER
+              : PHASE_PRODUCTION_SERVER,
+            dir: root,
+            staticMarkup: options.staticMarkup,
+            quiet: options.quiet,
+            conf: config,
+            port: options.port,
+            path: options.customServerPath
+          };
+
+          const server = options.customServerPath
+            ? customServer
+            : defaultServer;
+
+          return from(server(settings)).pipe(
             switchMap(
               e =>
                 new Observable<BuilderOutput>(obs => {

@@ -96,6 +96,12 @@ Type: `boolean`
 
 Use pascal case component file name (e.g. App.tsx)
 
+### server
+
+Type: `string`
+
+The server script path to be used with next.
+
 ### skipFormat
 
 Default: `false`
