@@ -26,6 +26,11 @@
       "type": "boolean",
       "description": "Hide error messages containing server information.",
       "default": false
+    },
+    "customServerPath": {
+      "type": "string",
+      "description": "Use a custom server script",
+      "default": null
     }
   },
   "required": []

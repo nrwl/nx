@@ -13,6 +13,12 @@ Type: `string`
 
 Target which builds the application
 
+### customServerPath
+
+Type: `string`
+
+Use a custom server script
+
 ### dev
 
 Default: `true`

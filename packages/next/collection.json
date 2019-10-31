@@ -1,5 +1,5 @@
 {
-  "name": "nx/nest",
+  "name": "nx/next",
   "version": "0.1",
   "extends": ["@nrwl/react"],
   "schematics": {

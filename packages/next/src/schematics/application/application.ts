@@ -1,4 +1,10 @@
-import { join, JsonObject, normalize, Path } from '@angular-devkit/core';
+import {
+  join,
+  JsonObject,
+  normalize,
+  Path,
+  dirname
+} from '@angular-devkit/core';
 import {
   apply,
   chain,
@@ -60,6 +66,7 @@ export default function(schema: Schema): Rule {
         extraPackageDeps: extraEslintDependencies
       }),
       createApplicationFiles(options),
+      createNextServerFiles(options),
       updateNxJson(options),
       addProject(options),
       addCypress(options),
@@ -68,6 +75,107 @@ export default function(schema: Schema): Rule {
       setDefaults(options),
       formatFiles(options)
     ]);
+  };
+}
+
+function createNextServerFiles(options: NormalizedSchema) {
+  return (host: Tree) => {
+    if (options.server) {
+      const directory = dirname(join(options.appProjectRoot, options.server));
+
+      host.create(
+        join(options.appProjectRoot, options.server),
+        `
+      // @ts-check
+      'use strict';
+
+      /**
+       * @typedef {import('http').Server} Server
+       * @typedef {import('next/dist/server/next-dev-server').default} DevServer
+       */
+
+      const express = require('express');
+
+      /**
+       * @param {DevServer} app
+       * @param {{dev: string; dir: string; staticMarkup: boolean; quiet: boolean; conf: any; port: number;}} options
+       * @returns {Promise<Server>}
+       */
+      module.exports = async function nextServer(app, options) {
+        const handle = app.getRequestHandler();
+        const expressApp = express();
+
+        await app.prepare();
+
+        /**
+         * @returns {Promise<Server>}
+         */
+        return new Promise((resolve, reject) => {
+
+          expressApp.all('*', (req, res) => {
+            return handle(req, res);
+          });
+
+          const server = expressApp.listen(options.port, (err) => {
+            err ? reject(err) : resolve(server);
+          });
+        });
+      }
+      `
+      );
+
+      host.create(
+        join(directory, 'server.js'),
+        `
+      // @ts-check
+      'use strict';
+
+      /**
+       * Production Nextjs custom server
+       * 
+       * Usage: run this script with node
+       * Adjust dir option for your serve/deploy config
+       * 
+       * node server.js
+       */
+
+      /**
+       * @typedef {import('next-server/dist/server/next-server').default} Server
+       */
+
+      const NextServer = require('next-server/dist/server/next-server').default;
+      const express = require('express');
+
+      const nextApp = new NextServer({
+        dir: './dist/apps/<%= name %>',
+        staticMarkup: false,
+        quiet: false,
+        conf: {
+          distDir: '.'
+        }
+      });
+
+      const serve = async () => {
+        const handle = nextApp.getRequestHandler();
+        const expressApp = express();
+
+        await nextApp.prepare();
+
+        return new Promise((resolve, reject) => {
+          expressApp.all('*', (req, res) => {
+            return handle(req, res);
+          });
+
+          const server = expressApp.listen(4200, err => {
+            err ? reject(err) : resolve(server);
+          });
+        });
+      }
+
+      serve().then(server => console.log('Server is running on port 4200'));
+      `
+      );
+    }
   };
 }
 
@@ -101,6 +209,7 @@ function updateNxJson(options: NormalizedSchema): Rule {
 function addProject(options: NormalizedSchema): Rule {
   return updateWorkspaceInTree(json => {
     const architect: { [key: string]: any } = {};
+    const { server } = options;
 
     architect.build = {
       builder: '@nrwl/next:build',
@@ -122,6 +231,13 @@ function addProject(options: NormalizedSchema): Rule {
         }
       }
     };
+
+    if (server) {
+      architect.serve.options = {
+        ...architect.serve.options,
+        customServerPath: options.server
+      };
+    }
 
     architect.export = {
       builder: '@nrwl/next:export',
