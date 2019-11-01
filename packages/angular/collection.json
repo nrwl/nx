@@ -55,6 +55,13 @@
       "description": "Add an upgrade module"
     },
 
+    "storybook-configuration": {
+      "factory": "./src/schematics/storybook-configuration/configuration",
+      "schema": "./src/schematics/storybook-configuration/schema.json",
+      "description": "Create stories/specs for all components declared in a library",
+      "hidden": false
+    },
+
     "stories": {
       "factory": "./src/schematics/stories/stories",
       "schema": "./src/schematics/stories/schema.json",

@@ -64,6 +64,7 @@
     "@testing-library/react": "9.3.0",
     "@storybook/core": "^5.2.5",
     "@storybook/angular": "^5.2.5",
+    "@storybook/react": "^5.2.5",
     "@storybook/addon-knobs": "^5.2.5",
     "@types/express": "4.17.0",
     "@types/fast-levenshtein": "^0.0.1",

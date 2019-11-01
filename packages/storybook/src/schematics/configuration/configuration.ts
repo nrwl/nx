@@ -24,19 +24,12 @@ export default function(schema: StorybookConfigureSchema): Rule {
   return chain([
     schematic('ng-add', {}),
     createRootStorybookDir(),
-    createLibStorybookDir(schema.name),
+    createLibStorybookDir(schema.name, schema.uiFramework),
     configureTsConfig(schema.name),
-    addStorybookTask(schema.name),
+    addStorybookTask(schema.name, schema.uiFramework),
     schema.configureCypress
       ? schematic<CypressConfigureSchema>('cypress-project', {
           name: schema.name
-        })
-      : () => {},
-    schema.generateStories
-      ? externalSchematic<StorybookStoriesSchema>('@nrwl/angular', 'stories', {
-          name: schema.name,
-          generateCypressSpecs:
-            schema.configureCypress && schema.generateCypressSpecs
         })
       : () => {}
   ]);
@@ -53,7 +46,7 @@ function createRootStorybookDir(): Rule {
   };
 }
 
-function createLibStorybookDir(projectName: string): Rule {
+function createLibStorybookDir(projectName: string, uiFramework: string): Rule {
   return (tree: Tree, context: SchematicContext) => {
     context.logger.debug('adding .storybook folder to lib');
     const projectConfig = getProjectConfig(tree, projectName);
@@ -62,6 +55,7 @@ function createLibStorybookDir(projectName: string): Rule {
       applyWithSkipExisting(url('./lib-files'), [
         template({
           tmpl: '',
+          uiFramework,
           offsetFromRoot: offsetFromRoot(projectConfig.root)
         }),
         move(projectConfig.root)
@@ -94,18 +88,9 @@ function configureTsConfig(projectName: string): Rule {
   };
 }
 
-function addStorybookTask(projectName: string): Rule {
+function addStorybookTask(projectName: string, uiFramework: string): Rule {
   return updateWorkspace(workspace => {
     const projectConfig = workspace.projects.get(projectName);
-    let uiFramework = '@storybook/react';
-    try {
-      if (
-        readJsonFile(projectConfig.root + '/tsconfig.lib.json')
-          .angularCompilerOptions
-      ) {
-        uiFramework = '@storybook/angular';
-      }
-    } catch (e) {}
     projectConfig.targets.set('storybook', {
       builder: '@nrwl/storybook:storybook',
       options: {

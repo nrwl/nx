@@ -21,17 +21,20 @@ forEachCli(() => {
           const mylib = uniq('test-ui-lib');
           createTestUILib(mylib);
 
-          const mylib2 = uniq('test-ui-lib2');
-          createTestUILib(mylib2);
+          const mylib2 = uniq('test-ui-lib-react');
+          runCLI(`generate @nrwl/react:lib ${mylib2} --no-interactive`);
+          runCLI(
+            `generate @nrwl/react:component TestComponent --project=${mylib2} --no-interactive`
+          );
 
           runCLI(
-            `generate @nrwl/storybook:configuration ${mylib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
+            `generate @nrwl/angular:storybook-configuration ${mylib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
           );
           runCLI(
             `generate @nrwl/storybook:configuration ${mylib} --no-interactive`
           );
           runCLI(
-            `generate @nrwl/storybook:configuration ${mylib2} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
+            `generate @nrwl/react:storybook-configuration ${mylib2} --configureCypress --no-interactive`
           );
 
           expect(

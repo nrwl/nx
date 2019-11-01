@@ -11,12 +11,6 @@
         "index": 0
       }
     },
-    "uiFramework": {
-      "type": "string",
-      "description": "Storybook UI Framework to use",
-      "enum": ["@storybook/angular", "@storybook/react", "@storybook/web"],
-      "x-prompt": "What UI framework plugin should storybook use?"
-    },
     "configureCypress": {
       "type": "boolean",
       "description": "Run the cypress-configure schematic",

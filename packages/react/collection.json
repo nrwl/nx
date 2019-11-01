@@ -37,6 +37,13 @@
       "schema": "./src/schematics/redux/schema.json",
       "description": "Create a redux slice for a project",
       "aliases": ["slice"]
+    },
+
+    "storybook-configuration": {
+      "factory": "./src/schematics/storybook-configuration/configuration",
+      "schema": "./src/schematics/storybook-configuration/schema.json",
+      "description": "Set up storybook for a react library",
+      "hidden": false
     }
   }
 }
