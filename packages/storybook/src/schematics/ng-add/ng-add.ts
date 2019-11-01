@@ -13,8 +13,7 @@ import {
 import {
   babelCoreVersion,
   babelLoaderVersion,
-  storybookAddonKnobsVersion,
-  storybookAngularVersion
+  storybookVersion
 } from '../../utils/versions';
 import { Schema } from './schema';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
@@ -27,8 +26,9 @@ function checkDependenciesInstalled(): Rule {
       context.addTask(new NodePackageInstallTask());
       dependencyList.push(
         { name: '@nrwl/storybook', version: '*' },
-        { name: '@storybook/angular', version: storybookAngularVersion },
-        { name: '@storybook/addon-knobs', version: storybookAddonKnobsVersion },
+        { name: '@storybook/angular', version: storybookVersion },
+        { name: '@storybook/react', version: storybookVersion },
+        { name: '@storybook/addon-knobs', version: storybookVersion },
         { name: 'babel-loader', version: babelLoaderVersion },
         { name: '@babel/core', version: babelCoreVersion },
         { name: 'to-string-loader', version: '*' },

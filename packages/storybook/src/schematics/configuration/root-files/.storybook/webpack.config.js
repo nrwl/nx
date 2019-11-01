@@ -24,12 +24,17 @@ module.exports = async ({ config, mode }) => {
   });
 
   config.module.rules = r;
+  config.resolve.extensions.push('.tsx');
 
   let scssLoader = config.module.rules.find(i => !!'a.scss'.match(i.test));
-  scssLoader.use = ['to-string-loader', ...scssLoader.use];
+  if (scssLoader && scssLoader.use) {
+    scssLoader.use = ['to-string-loader', ...scssLoader.use];
+  }
 
   let htmlLoader = config.module.rules.find(i => !!'a.html'.match(i.test));
-  htmlLoader.loader = 'html-loader';
+  if (htmlLoader) {
+    htmlLoader.loader = 'html-loader';
+  }
 
   // Return the altered config
   return config;

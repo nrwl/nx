@@ -32,7 +32,6 @@ export function createAllStories(
   return (tree: Tree, context: SchematicContext) => {
     context.logger.debug('adding .storybook folder to lib');
 
-    debugger;
     const libPath = getProjectConfig(tree, projectName).sourceRoot + '/lib';
     return chain(
       tree
