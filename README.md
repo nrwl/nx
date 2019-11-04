@@ -14,17 +14,6 @@
 
 <hr>
 
-<p align="center">
-  <a href="https://hubs.ly/H0hWwWd0" target="_blank">  
-    <img 
-         width="728"
-         src="https://images.ctfassets.net/8eyogtwep6d2/4FZPkA6lK3IEwJFlmfB47/4b5fef4738d4b23c41007329fca37ad0/nrwl-connect-banner-with-shadow.png?w=1024"  
-         alt="Nrwl Connect platform">
-  </a>
-</p>
-
-<hr>
-
 # What is Nx?
 
 🔎 **Extensible Dev Tools for Monorepos.**

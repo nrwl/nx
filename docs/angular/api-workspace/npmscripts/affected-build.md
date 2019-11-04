@@ -30,6 +30,12 @@ Run the build target for all projects:
 nx affected:build --all
 ```
 
+Run the build target for the affected projects and also all the projects the affected projects depend on.:
+
+```bash
+nx affected:build --with-deps
+```
+
 Run build for all the projects affected by changing the index.ts file:
 
 ```bash

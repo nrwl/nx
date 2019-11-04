@@ -26,6 +26,11 @@ const examples = {
       description: 'Run the test target for all projects'
     },
     {
+      command: 'affected --target=test --with-deps',
+      description:
+        'Run the test target for the affected projects and also all the projects the affected projects depend on.'
+    },
+    {
       command: 'affected --target=test --files=libs/mylib/src/index.ts',
       description:
         'Run tests for all the projects affected by changing the index.ts file'
@@ -84,6 +89,11 @@ const examples = {
     {
       command: 'affected:build --all',
       description: 'Run the build target for all projects'
+    },
+    {
+      command: 'affected:build --with-deps',
+      description:
+        'Run the build target for the affected projects and also all the projects the affected projects depend on.'
     },
     {
       command: 'affected:build --files=libs/mylib/src/index.ts',

@@ -36,6 +36,12 @@ Run the test target for all projects:
 nx affected --target=test --all
 ```
 
+Run the test target for the affected projects and also all the projects the affected projects depend on.:
+
+```bash
+nx affected --target=test --with-deps
+```
+
 Run tests for all the projects affected by changing the index.ts file:
 
 ```bash
