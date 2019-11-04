@@ -12,7 +12,7 @@ import {
 } from '@angular-devkit/schematics';
 import { join, normalize, Path } from '@angular-devkit/core';
 import { Schema } from './schema';
-import { toFileName } from '@nrwl/workspace';
+import { toFileName, updateJsonInTree } from '@nrwl/workspace';
 import init from '../init/init';
 
 interface NormalizedSchema extends Schema {
@@ -70,7 +70,11 @@ export default function(schema: Schema): Rule {
       }),
       externalSchematic('@nrwl/node', 'application', schema),
       addMainFile(options),
-      addAppFiles(options)
+      addAppFiles(options),
+      updateJsonInTree(join(options.appProjectRoot, 'tsconfig.json'), json => {
+        json.compilerOptions.emitDecoratorMetadata = true;
+        return json;
+      })
     ])(host, context);
   };
 }
