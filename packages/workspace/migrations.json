@@ -190,6 +190,147 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "880": {
+      "version": "8.8.0",
+      "packages": {
+        "@nrwl/angular": {
+          "version": "8.8.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/cypress": {
+          "version": "8.8.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/eslint-plugin-nx": {
+          "version": "8.8.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/express": {
+          "version": "8.8.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/jest": {
+          "version": "8.8.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/linter": {
+          "version": "8.8.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/nest": {
+          "version": "8.8.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/next": {
+          "version": "8.8.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/node": {
+          "version": "8.8.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/react": {
+          "version": "8.8.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/tao": {
+          "version": "8.8.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nrwl/web": {
+          "version": "8.8.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store": {
+          "version": "8.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/effects": {
+          "version": "8.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/entity": {
+          "version": "8.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/router-store": {
+          "version": "8.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/schematics": {
+          "version": "8.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store-devtools": {
+          "version": "8.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "0.803.14",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "0.803.14",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-ng-packagr": {
+          "version": "0.803.14",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "0.803.14",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "8.3.14",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "8.3.14",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cli": {
+          "version": "8.3.14",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/common": {
+          "version": "8.2.12",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler": {
+          "version": "8.2.12",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler-cli": {
+          "version": "8.2.12",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "8.2.12",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser": {
+          "version": "8.2.12",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser-dynamic": {
+          "version": "8.2.12",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/router": {
+          "version": "8.2.12",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/upgrade": {
+          "version": "8.2.12",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "8.3.14",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
