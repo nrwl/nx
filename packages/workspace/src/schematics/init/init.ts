@@ -117,12 +117,6 @@ function updateAngularCLIJson(options: Schema): Rule {
       buildOptions.scripts =
         buildOptions.scripts &&
         (buildOptions.scripts as JsonArray).map(convertAsset);
-      buildOptions.stylePreprocessorOptions =
-        buildOptions.stylePreprocessorOptions &&
-        buildOptions.stylePreprocessorOptions.includePaths &&
-        buildOptions.stylePreprocessorOptions.includePaths.map(stylePath =>
-          convertAsset(stylePath)
-        );
       buildOptions.fileReplacements =
         buildOptions.fileReplacements &&
         buildOptions.fileReplacements.map(replacement => ({
