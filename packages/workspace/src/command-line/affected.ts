@@ -221,13 +221,13 @@ function visit(
 ) {
   const visited = new Set<string>();
   function _visit(projectName: string) {
-    affectedMetadata.dependencyGraph.dependencies[projectName].forEach(dep => {
-      _visit(dep.projectName);
-    });
     if (visited.has(projectName)) {
       return;
     }
     visited.add(projectName);
+    affectedMetadata.dependencyGraph.dependencies[projectName].forEach(dep => {
+      _visit(dep.projectName);
+    });
     visitor(affectedMetadata.dependencyGraph.projects[projectName]);
   }
   affectedMetadata.dependencyGraph.roots.forEach(root => {
