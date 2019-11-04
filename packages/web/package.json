@@ -34,8 +34,6 @@
     "@nrwl/cypress": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
-    "@angular/compiler": "8.2.12",
-    "@angular/compiler-cli": "8.2.12",
     "@angular/service-worker": "8.2.12",
     "@angular-devkit/architect": "0.803.14",
     "@angular-devkit/build-webpack": "0.803.14",
