@@ -7,4 +7,5 @@
  */
 const mangleVariable = process.env['NG_BUILD_MANGLE'];
 export const manglingDisabled =
-  !!mangleVariable && (mangleVariable === '0' || mangleVariable.toLowerCase() === 'false');
+  !!mangleVariable &&
+  (mangleVariable === '0' || mangleVariable.toLowerCase() === 'false');

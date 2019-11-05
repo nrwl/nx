@@ -67,16 +67,16 @@ describe('bundle-calculator', () => {
     expect(calculateBytes('25.0gB')).toBe(25 * 1024 * 1024 * 1024);
   });
 
-  it ('converts a decimal with mb and baseline', () => {
+  it('converts a decimal with mb and baseline', () => {
     expect(calculateBytes('3mb', '5mb', -1)).toBe(2 * 1024 * 1024);
   });
 
-  it ('converts a percentage with baseline', () => {
+  it('converts a percentage with baseline', () => {
     expect(calculateBytes('20%', '1mb')).toBe(1024 * 1024 * 1.2);
     expect(calculateBytes('20%', '1mb', -1)).toBe(1024 * 1024 * 0.8);
   });
 
-  it ('supports whitespace', () => {
+  it('supports whitespace', () => {
     expect(calculateBytes(' 5kb ')).toBe(5 * 1024);
     expect(calculateBytes('0.25 MB')).toBe(0.25 * 1024 * 1024);
     expect(calculateBytes(' 20 % ', ' 1 mb ')).toBe(1024 * 1024 * 1.2);

@@ -5,12 +5,16 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import { BuilderContext, BuilderOutput, createBuilder } from '@angular-devkit/architect';
+import {
+  BuilderContext,
+  BuilderOutput,
+  createBuilder
+} from '@angular-devkit/architect';
 import {
   BuildResult,
   EmittedFiles,
   WebpackLoggingCallback,
-  runWebpack,
+  runWebpack
 } from '@angular-devkit/build-webpack';
 import {
   experimental,
@@ -21,7 +25,7 @@ import {
   normalize,
   resolve,
   tags,
-  virtualFs,
+  virtualFs
 } from '@angular-devkit/core';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { createHash } from 'crypto';
@@ -30,7 +34,14 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { from, of } from 'rxjs';
-import { bufferCount, catchError, concatMap, map, mergeScan, switchMap } from 'rxjs/operators';
+import {
+  bufferCount,
+  catchError,
+  concatMap,
+  map,
+  mergeScan,
+  switchMap
+} from 'rxjs/operators';
 import { ScriptTarget } from 'typescript';
 import * as webpack from 'webpack';
 // import { NgBuildAnalyticsPlugin } from '../../plugins/webpack/analytics';
@@ -43,11 +54,11 @@ import {
   getStatsConfig,
   getStylesConfig,
   getWorkerConfig,
-  normalizeExtraEntryPoints,
+  normalizeExtraEntryPoints
 } from '../angular-cli-files/models/webpack-configs';
 import {
   IndexHtmlTransform,
-  writeIndexHtml,
+  writeIndexHtml
 } from '../angular-cli-files/utilities/index-file/write-index-html';
 import { readTsconfig } from '../angular-cli-files/utilities/read-tsconfig';
 import { augmentAppWithServiceWorker } from '../angular-cli-files/utilities/service-worker';
@@ -56,7 +67,7 @@ import {
   generateBundleStats,
   statsErrorsToString,
   statsToString,
-  statsWarningsToString,
+  statsWarningsToString
 } from '../angular-cli-files/utilities/stats';
 import { ExecutionTransformer } from '../transforms';
 import {
@@ -64,18 +75,18 @@ import {
   deleteOutputDir,
   fullDifferential,
   normalizeOptimization,
-  normalizeSourceMaps,
+  normalizeSourceMaps
 } from '../utils';
 import {
   ProcessBundleFile,
   ProcessBundleOptions,
-  ProcessBundleResult,
+  ProcessBundleResult
 } from '../utils/process-bundle';
 import { assertCompatibleAngularVersion } from '../utils/version';
 import {
   generateBrowserWebpackConfigFromContext,
   getIndexInputFile,
-  getIndexOutputFile,
+  getIndexOutputFile
 } from '../utils/webpack-browser-config';
 import { BundleActionExecutor } from './action-executor';
 import { Schema as BrowserBuilderSchema } from './schema';
@@ -91,7 +102,7 @@ export type BrowserBuilderOutput = json.JsonObject &
 
 export function createBrowserLoggingCallback(
   verbose: boolean,
-  logger: logging.LoggerApi,
+  logger: logging.LoggerApi
 ): WebpackLoggingCallback {
   return (stats, config) => {
     // config.stats contains our own stats settings, added during buildWebpackConfig().
@@ -114,8 +125,11 @@ export function createBrowserLoggingCallback(
 export async function buildBrowserWebpackConfigFromContext(
   options: BrowserBuilderSchema,
   context: BuilderContext,
-  host: virtualFs.Host<fs.Stats> = new NodeJsSyncHost(),
-): Promise<{ workspace: experimental.workspace.Workspace; config: webpack.Configuration[] }> {
+  host: virtualFs.Host<fs.Stats> = new NodeJsSyncHost()
+): Promise<{
+  workspace: experimental.workspace.Workspace;
+  config: webpack.Configuration[];
+}> {
   return generateBrowserWebpackConfigFromContext(
     options,
     context,
@@ -126,15 +140,15 @@ export async function buildBrowserWebpackConfigFromContext(
       getStatsConfig(wco),
       getAnalyticsConfig(wco, context),
       getCompilerConfig(wco),
-      wco.buildOptions.webWorkerTsConfig ? getWorkerConfig(wco) : {},
+      wco.buildOptions.webWorkerTsConfig ? getWorkerConfig(wco) : {}
     ],
-    host,
+    host
   );
 }
 
 function getAnalyticsConfig(
   wco: WebpackConfigOptions,
-  context: BuilderContext,
+  context: BuilderContext
 ): webpack.Configuration {
   if (context.analytics) {
     // If there's analytics, add our plugin. Otherwise no need to slow down the build.
@@ -142,12 +156,14 @@ function getAnalyticsConfig(
     if (context.builder) {
       // We already vetted that this is a "safe" package, otherwise the analytics would be noop.
       category =
-        context.builder.builderName.split(':')[1] || context.builder.builderName || 'build';
+        context.builder.builderName.split(':')[1] ||
+        context.builder.builderName ||
+        'build';
     }
 
     // The category is the builder name if it's an angular builder.
     return {
-      plugins: [],
+      plugins: []
     };
   }
 
@@ -166,9 +182,16 @@ async function initialize(
   options: BrowserBuilderSchema,
   context: BuilderContext,
   host: virtualFs.Host<fs.Stats>,
-  webpackConfigurationTransform?: ExecutionTransformer<webpack.Configuration>,
-): Promise<{ workspace: experimental.workspace.Workspace; config: webpack.Configuration[] }> {
-  const { config, workspace } = await buildBrowserWebpackConfigFromContext(options, context, host);
+  webpackConfigurationTransform?: ExecutionTransformer<webpack.Configuration>
+): Promise<{
+  workspace: experimental.workspace.Workspace;
+  config: webpack.Configuration[];
+}> {
+  const { config, workspace } = await buildBrowserWebpackConfigFromContext(
+    options,
+    context,
+    host
+  );
 
   let transformedConfig;
   if (webpackConfigurationTransform) {
@@ -182,7 +205,7 @@ async function initialize(
     await deleteOutputDir(
       normalize(context.workspaceRoot),
       normalize(options.outputPath),
-      host,
+      host
     ).toPromise();
   }
 
@@ -197,7 +220,7 @@ export function buildWebpackBrowser(
     webpackConfiguration?: ExecutionTransformer<webpack.Configuration>;
     logging?: WebpackLoggingCallback;
     indexHtml?: IndexHtmlTransform;
-  } = {},
+  } = {}
 ) {
   const host = new NodeJsSyncHost();
   const root = normalize(context.workspaceRoot);
@@ -205,7 +228,9 @@ export function buildWebpackBrowser(
   // Check Angular version.
   assertCompatibleAngularVersion(context.workspaceRoot, context.logger);
 
-  return from(initialize(options, context, host, transforms.webpackConfiguration)).pipe(
+  return from(
+    initialize(options, context, host, transforms.webpackConfiguration)
+  ).pipe(
     // tslint:disable-next-line: no-big-function
     switchMap(({ workspace, config: configs }) => {
       const projectName = context.target
@@ -213,17 +238,22 @@ export function buildWebpackBrowser(
         : workspace.getDefaultProjectName();
 
       if (!projectName) {
-        throw new Error('Must either have a target from the context or a default project.');
+        throw new Error(
+          'Must either have a target from the context or a default project.'
+        );
       }
 
       const projectRoot = resolve(
         workspace.root,
-        normalize(workspace.getProject(projectName).root),
+        normalize(workspace.getProject(projectName).root)
       );
 
       const tsConfig = readTsconfig(options.tsConfig, context.workspaceRoot);
       const target = tsConfig.options.target || ScriptTarget.ES5;
-      const buildBrowserFeatures = new BuildBrowserFeatures(getSystemPath(projectRoot), target);
+      const buildBrowserFeatures = new BuildBrowserFeatures(
+        getSystemPath(projectRoot),
+        target
+      );
 
       const isDifferentialLoadingNeeded = buildBrowserFeatures.isDifferentialLoadingNeeded();
 
@@ -251,14 +281,17 @@ export function buildWebpackBrowser(
                   transforms.logging ||
                   (useBundleDownleveling
                     ? () => {}
-                    : createBrowserLoggingCallback(!!options.verbose, context.logger)),
+                    : createBrowserLoggingCallback(
+                        !!options.verbose,
+                        context.logger
+                      ))
               });
             } else {
               return of();
             }
           },
           { success: true } as BuildResult,
-          1,
+          1
         ),
         bufferCount(configs.length),
         // tslint:disable-next-line: no-big-function
@@ -270,10 +303,14 @@ export function buildWebpackBrowser(
             // If it fails show any diagnostic messages and bail
             const webpackStats = buildEvents[0].webpackStats;
             if (webpackStats && webpackStats.warnings.length > 0) {
-              context.logger.warn(statsWarningsToString(webpackStats, { colors: true }));
+              context.logger.warn(
+                statsWarningsToString(webpackStats, { colors: true })
+              );
             }
             if (webpackStats && webpackStats.errors.length > 0) {
-              context.logger.error(statsErrorsToString(webpackStats, { colors: true }));
+              context.logger.error(
+                statsErrorsToString(webpackStats, { colors: true })
+              );
             }
 
             return { success };
@@ -284,14 +321,19 @@ export function buildWebpackBrowser(
 
             const scriptsEntryPointName = normalizeExtraEntryPoints(
               options.scripts || [],
-              'scripts',
+              'scripts'
             ).map(x => x.bundleName);
 
             const [firstBuild, secondBuild] = buildEvents;
-            if (isDifferentialLoadingNeeded && (fullDifferential || options.watch)) {
+            if (
+              isDifferentialLoadingNeeded &&
+              (fullDifferential || options.watch)
+            ) {
               moduleFiles = firstBuild.emittedFiles || [];
               files = moduleFiles.filter(
-                x => x.extension === '.css' || (x.name && scriptsEntryPointName.includes(x.name)),
+                x =>
+                  x.extension === '.css' ||
+                  (x.name && scriptsEntryPointName.includes(x.name))
               );
 
               if (buildEvents.length === 2) {
@@ -303,13 +345,17 @@ export function buildWebpackBrowser(
               noModuleFiles = [];
 
               // Common options for all bundle process actions
-              const sourceMapOptions = normalizeSourceMaps(options.sourceMap || false);
+              const sourceMapOptions = normalizeSourceMaps(
+                options.sourceMap || false
+              );
               const actionOptions: Partial<ProcessBundleOptions> = {
                 optimize: normalizeOptimization(options.optimization).scripts,
                 sourceMaps: sourceMapOptions.scripts,
                 hiddenSourceMaps: sourceMapOptions.hidden,
                 vendorSourceMaps: sourceMapOptions.vendor,
-                integrityAlgorithm: options.subresourceIntegrity ? 'sha384' : undefined,
+                integrityAlgorithm: options.subresourceIntegrity
+                  ? 'sha384'
+                  : undefined
               };
 
               const actions: ProcessBundleOptions[] = [];
@@ -347,14 +393,20 @@ export function buildWebpackBrowser(
                 }
                 // If not optimizing then ES2015 polyfills do not need processing
                 // Unlike other module scripts, it is never downleveled
-                const es2015Polyfills = file.file.startsWith('polyfills-es2015');
+                const es2015Polyfills = file.file.startsWith(
+                  'polyfills-es2015'
+                );
                 if (!actionOptions.optimize && es2015Polyfills) {
                   continue;
                 }
 
                 // Retrieve the content/map for the file
                 // NOTE: Additional future optimizations will read directly from memory
-                let filename = path.resolve(getSystemPath(root), options.outputPath, file.file);
+                let filename = path.resolve(
+                  getSystemPath(root),
+                  options.outputPath,
+                  file.file
+                );
                 const code = fs.readFileSync(filename, 'utf8');
                 let map;
                 if (actionOptions.sourceMaps) {
@@ -383,7 +435,7 @@ export function buildWebpackBrowser(
                   name: file.id!,
                   runtime: file.file.startsWith('runtime'),
                   ignoreOriginal: es5Polyfills,
-                  optimizeOnly: es2015Polyfills,
+                  optimizeOnly: es2015Polyfills
                 });
 
                 // ES2015 polyfills are only optimized; optimization check was performed above
@@ -399,7 +451,9 @@ export function buildWebpackBrowser(
               }
 
               // Execute the bundle processing actions
-              context.logger.info('Generating ES5 bundles for differential loading...');
+              context.logger.info(
+                'Generating ES5 bundles for differential loading...'
+              );
 
               const processActions: typeof actions = [];
               let processRuntimeAction: ProcessBundleOptions | undefined;
@@ -416,11 +470,13 @@ export function buildWebpackBrowser(
 
               const executor = new BundleActionExecutor(
                 { cachePath: cacheDownlevelPath },
-                options.subresourceIntegrity ? 'sha384' : undefined,
+                options.subresourceIntegrity ? 'sha384' : undefined
               );
 
               try {
-                for await (const result of executor.processAll(processActions)) {
+                for await (const result of executor.processAll(
+                  processActions
+                )) {
                   processResults.push(result);
                 }
               } finally {
@@ -431,32 +487,40 @@ export function buildWebpackBrowser(
               if (processRuntimeAction) {
                 const runtimeOptions = {
                   ...processRuntimeAction,
-                  runtimeData: processResults,
+                  runtimeData: processResults
                 };
                 processResults.push(
-                  await import('../utils/process-bundle').then(m => m.process(runtimeOptions)),
+                  await import('../utils/process-bundle').then(m =>
+                    m.process(runtimeOptions)
+                  )
                 );
               }
 
               context.logger.info('ES5 bundle generation complete.');
 
-              type ArrayElement<A> = A extends ReadonlyArray<infer T> ? T : never;
+              type ArrayElement<A> = A extends ReadonlyArray<infer T>
+                ? T
+                : never;
               function generateBundleInfoStats(
                 id: string | number,
                 bundle: ProcessBundleFile,
-                chunk: ArrayElement<webpack.Stats.ToJsonOutput['chunks']> | undefined,
+                chunk:
+                  | ArrayElement<webpack.Stats.ToJsonOutput['chunks']>
+                  | undefined
               ): string {
                 return generateBundleStats(
                   {
                     id,
                     size: bundle.size,
-                    files: bundle.map ? [bundle.filename, bundle.map.filename] : [bundle.filename],
+                    files: bundle.map
+                      ? [bundle.filename, bundle.map.filename]
+                      : [bundle.filename],
                     names: chunk && chunk.names,
                     entry: !!chunk && chunk.names.includes('runtime'),
                     initial: !!chunk && chunk.initial,
-                    rendered: true,
+                    rendered: true
                   },
-                  true,
+                  true
                 );
               }
 
@@ -468,14 +532,26 @@ export function buildWebpackBrowser(
                 const chunk =
                   webpackStats &&
                   webpackStats.chunks &&
-                  webpackStats.chunks.find(c => result.name === c.id.toString());
+                  webpackStats.chunks.find(
+                    c => result.name === c.id.toString()
+                  );
                 if (result.original) {
                   bundleInfoText +=
-                    '\n' + generateBundleInfoStats(result.name, result.original, chunk);
+                    '\n' +
+                    generateBundleInfoStats(
+                      result.name,
+                      result.original,
+                      chunk
+                    );
                 }
                 if (result.downlevel) {
                   bundleInfoText +=
-                    '\n' + generateBundleInfoStats(result.name, result.downlevel, chunk);
+                    '\n' +
+                    generateBundleInfoStats(
+                      result.name,
+                      result.downlevel,
+                      chunk
+                    );
                 }
               }
 
@@ -486,9 +562,14 @@ export function buildWebpackBrowser(
                   }
 
                   const asset =
-                    webpackStats.assets && webpackStats.assets.find(a => a.name === chunk.files[0]);
+                    webpackStats.assets &&
+                    webpackStats.assets.find(a => a.name === chunk.files[0]);
                   bundleInfoText +=
-                    '\n' + generateBundleStats({ ...chunk, size: asset && asset.size }, true);
+                    '\n' +
+                    generateBundleStats(
+                      { ...chunk, size: asset && asset.size },
+                      true
+                    );
                 }
               }
 
@@ -497,19 +578,25 @@ export function buildWebpackBrowser(
                 generateBuildStats(
                   (webpackStats && webpackStats.hash) || '<unknown>',
                   Date.now() - startTime,
-                  true,
+                  true
                 );
               context.logger.info(bundleInfoText);
               if (webpackStats && webpackStats.warnings.length > 0) {
-                context.logger.warn(statsWarningsToString(webpackStats, { colors: true }));
+                context.logger.warn(
+                  statsWarningsToString(webpackStats, { colors: true })
+                );
               }
               if (webpackStats && webpackStats.errors.length > 0) {
-                context.logger.error(statsErrorsToString(webpackStats, { colors: true }));
+                context.logger.error(
+                  statsErrorsToString(webpackStats, { colors: true })
+                );
               }
             } else {
               const { emittedFiles = [] } = firstBuild;
               files = emittedFiles.filter(x => x.name !== 'polyfills-es5');
-              noModuleFiles = emittedFiles.filter(x => x.name === 'polyfills-es5');
+              noModuleFiles = emittedFiles.filter(
+                x => x.name === 'polyfills-es5'
+              );
             }
 
             if (options.index) {
@@ -517,7 +604,10 @@ export function buildWebpackBrowser(
                 host,
                 outputPath: resolve(
                   root,
-                  join(normalize(options.outputPath), getIndexOutputFile(options)),
+                  join(
+                    normalize(options.outputPath),
+                    getIndexOutputFile(options)
+                  )
                 ),
                 indexPath: join(root, getIndexInputFile(options)),
                 files,
@@ -529,11 +619,13 @@ export function buildWebpackBrowser(
                 scripts: options.scripts,
                 styles: options.styles,
                 postTransform: transforms.indexHtml,
-                crossOrigin: options.crossOrigin,
+                crossOrigin: options.crossOrigin
               })
                 .pipe(
                   map(() => ({ success: true })),
-                  catchError(error => of({ success: false, error: mapErrorToMessage(error) })),
+                  catchError(error =>
+                    of({ success: false, error: mapErrorToMessage(error) })
+                  )
                 )
                 .toPromise();
             } else {
@@ -552,11 +644,11 @@ export function buildWebpackBrowser(
                 projectRoot,
                 resolve(root, normalize(options.outputPath)),
                 options.baseHref || '/',
-                options.ngswConfigPath,
+                options.ngswConfigPath
               ).then(
                 () => ({ success: true }),
-                error => ({ success: false, error: mapErrorToMessage(error) }),
-              ),
+                error => ({ success: false, error: mapErrorToMessage(error) })
+              )
             );
           } else {
             return of(buildEvent);
@@ -567,11 +659,14 @@ export function buildWebpackBrowser(
             ({
               ...event,
               // If we use differential loading, both configs have the same outputs
-              outputPath: path.resolve(context.workspaceRoot, options.outputPath),
-            } as BrowserBuilderOutput),
-        ),
+              outputPath: path.resolve(
+                context.workspaceRoot,
+                options.outputPath
+              )
+            } as BrowserBuilderOutput)
+        )
       );
-    }),
+    })
   );
 }
 
@@ -587,4 +682,6 @@ function mapErrorToMessage(error: unknown): string | undefined {
   return undefined;
 }
 
-export default createBuilder<json.JsonObject & BrowserBuilderSchema>(buildWebpackBrowser);
+export default createBuilder<json.JsonObject & BrowserBuilderSchema>(
+  buildWebpackBrowser
+);

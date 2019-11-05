@@ -12,7 +12,7 @@ import {
   PostcssCliResources,
   RawCssLoader,
   RemoveHashPlugin,
-  SuppressExtractedTextChunksWebpackPlugin,
+  SuppressExtractedTextChunksWebpackPlugin
 } from '../../plugins/webpack';
 import { WebpackConfigOptions } from '../build-options';
 import { getOutputHashFormat, normalizeExtraEntryPoints } from './utils';
@@ -63,7 +63,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
               resolve(content);
             });
           });
-        },
+        }
       }),
       PostcssCliResources({
         baseHref: buildOptions.baseHref,
@@ -71,9 +71,9 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
         resourcesOutputPath: buildOptions.resourcesOutputPath,
         loader,
         rebaseRootRelative: buildOptions.rebaseRootRelativeCssUrls,
-        filename: `[name]${hashFormat.file}.[ext]`,
+        filename: `[name]${hashFormat.file}.[ext]`
       }),
-      autoprefixer(),
+      autoprefixer()
     ];
   };
 
@@ -86,11 +86,12 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
     buildOptions.stylePreprocessorOptions.includePaths &&
     buildOptions.stylePreprocessorOptions.includePaths.length > 0
   ) {
-    buildOptions.stylePreprocessorOptions.includePaths.forEach((includePath: string) =>
-      includePaths.push(path.resolve(root, includePath)),
+    buildOptions.stylePreprocessorOptions.includePaths.forEach(
+      (includePath: string) =>
+        includePaths.push(path.resolve(root, includePath))
     );
     lessPathOptions = {
-      paths: includePaths,
+      paths: includePaths
     };
   }
 
@@ -150,10 +151,10 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
             sourceMap: cssSourceMap,
             // bootstrap-sass requires a minimum precision of 8
             precision: 8,
-            includePaths,
-          },
-        },
-      ],
+            includePaths
+          }
+        }
+      ]
     },
     {
       test: /\.less$/,
@@ -163,10 +164,10 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
           options: {
             sourceMap: cssSourceMap,
             javascriptEnabled: true,
-            ...lessPathOptions,
-          },
-        },
-      ],
+            ...lessPathOptions
+          }
+        }
+      ]
     },
     {
       test: /\.styl$/,
@@ -175,11 +176,11 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
           loader: 'stylus-loader',
           options: {
             sourceMap: cssSourceMap,
-            paths: includePaths,
-          },
-        },
-      ],
-    },
+            paths: includePaths
+          }
+        }
+      ]
+    }
   ];
 
   // load component css as raw strings
@@ -193,17 +194,20 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
         options: {
           ident: 'embedded',
           plugins: postcssPluginCreator,
-          sourceMap: cssSourceMap
+          sourceMap:
+            cssSourceMap &&
             // Never use component css sourcemap when style optimizations are on.
             // It will just increase bundle size without offering good debug experience.
-            && !buildOptions.optimization.styles
+            !buildOptions.optimization.styles &&
             // Inline all sourcemap types except hidden ones, which are the same as no sourcemaps
             // for component css.
-            && !buildOptions.sourceMap.hidden ? 'inline' : false,
-        },
+            !buildOptions.sourceMap.hidden
+              ? 'inline'
+              : false
+        }
       },
-      ...(use as webpack.Loader[]),
-    ],
+      ...(use as webpack.Loader[])
+    ]
   }));
 
   // load global css as css files
@@ -214,7 +218,9 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
           include: globalStylePaths,
           test,
           use: [
-            buildOptions.extractCss ? MiniCssExtractPlugin.loader : 'style-loader',
+            buildOptions.extractCss
+              ? MiniCssExtractPlugin.loader
+              : 'style-loader',
             RawCssLoader,
             {
               loader: 'postcss-loader',
@@ -222,15 +228,17 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
                 ident: buildOptions.extractCss ? 'extracted' : 'embedded',
                 plugins: postcssPluginCreator,
                 sourceMap:
-                  cssSourceMap && !buildOptions.extractCss && !buildOptions.sourceMap.hidden
+                  cssSourceMap &&
+                  !buildOptions.extractCss &&
+                  !buildOptions.sourceMap.hidden
                     ? 'inline'
-                    : cssSourceMap,
-              },
+                    : cssSourceMap
+              }
             },
-            ...(use as webpack.Loader[]),
-          ],
+            ...(use as webpack.Loader[])
+          ]
         };
-      }),
+      })
     );
   }
 
@@ -239,13 +247,13 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
       // extract global css from js files into own css file
       new MiniCssExtractPlugin({ filename: `[name]${hashFormat.extract}.css` }),
       // suppress empty .js files in css only entry points
-      new SuppressExtractedTextChunksWebpackPlugin(),
+      new SuppressExtractedTextChunksWebpackPlugin()
     );
   }
 
   return {
     entry: entryPoints,
     module: { rules },
-    plugins: extraPlugins,
+    plugins: extraPlugins
   };
 }

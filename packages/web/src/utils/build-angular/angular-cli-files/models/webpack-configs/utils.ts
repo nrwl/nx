@@ -28,14 +28,14 @@ export function getOutputHashFormat(option: string, length = 20): HashFormat {
       chunk: `.[chunkhash:${length}]`,
       extract: `.[contenthash:${length}]`,
       file: '',
-      script: `.[hash:${length}]`,
+      script: `.[hash:${length}]`
     },
     all: {
       chunk: `.[chunkhash:${length}]`,
       extract: `.[contenthash:${length}]`,
       file: `.[hash:${length}]`,
-      script: `.[hash:${length}]`,
-    },
+      script: `.[hash:${length}]`
+    }
   };
   return hashFormats[option] || hashFormats['none'];
 }
@@ -46,12 +46,16 @@ export type NormalizedEntryPoint = Required<Omit<ExtraEntryPointClass, 'lazy'>>;
 
 export function normalizeExtraEntryPoints(
   extraEntryPoints: ExtraEntryPoint[],
-  defaultBundleName: string,
+  defaultBundleName: string
 ): NormalizedEntryPoint[] {
   return extraEntryPoints.map(entry => {
     let normalizedEntry;
     if (typeof entry === 'string') {
-      normalizedEntry = { input: entry, inject: true, bundleName: defaultBundleName };
+      normalizedEntry = {
+        input: entry,
+        inject: true,
+        bundleName: defaultBundleName
+      };
     } else {
       const { lazy, inject = true, ...newEntry } = entry;
       const injectNormalized = entry.lazy !== undefined ? !entry.lazy : inject;
@@ -62,7 +66,7 @@ export function normalizeExtraEntryPoints(
       } else if (!injectNormalized) {
         // Lazy entry points use the file name as bundle name.
         bundleName = basename(
-          normalize(entry.input.replace(/\.(js|css|scss|sass|less|styl)$/i, '')),
+          normalize(entry.input.replace(/\.(js|css|scss|sass|less|styl)$/i, ''))
         );
       } else {
         bundleName = defaultBundleName;
@@ -79,7 +83,7 @@ export function getSourceMapDevTool(
   scriptsSourceMap: boolean,
   stylesSourceMap: boolean,
   hiddenSourceMap = false,
-  inlineSourceMap = false,
+  inlineSourceMap = false
 ): SourceMapDevToolPlugin {
   const include = [];
   if (scriptsSourceMap) {
@@ -99,7 +103,7 @@ export function getSourceMapDevTool(
     // there is no way to set the 'webRoot'
     sourceRoot: inlineSourceMap ? '' : 'webpack:///',
     moduleFilenameTemplate: '[resource-path]',
-    append: hiddenSourceMap ? false : undefined,
+    append: hiddenSourceMap ? false : undefined
   });
 }
 
@@ -108,7 +112,7 @@ export function getSourceMapDevTool(
  */
 export function getEsVersionForFileName(
   scriptTargetOverride: ScriptTarget | undefined,
-  esVersionInFileName = false,
+  esVersionInFileName = false
 ): string {
   return scriptTargetOverride && esVersionInFileName
     ? '-' + ScriptTarget[scriptTargetOverride].toLowerCase()

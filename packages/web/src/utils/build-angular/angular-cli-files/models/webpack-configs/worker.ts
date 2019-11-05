@@ -12,7 +12,6 @@ import { getTypescriptWorkerPlugin } from './typescript';
 
 const WorkerPlugin = require('worker-plugin');
 
-
 export function getWorkerConfig(wco: WebpackConfigOptions): Configuration {
   const { buildOptions } = wco;
 
@@ -27,9 +26,11 @@ export function getWorkerConfig(wco: WebpackConfigOptions): Configuration {
   const workerTsConfigPath = resolve(wco.root, buildOptions.webWorkerTsConfig);
 
   return {
-    plugins: [new WorkerPlugin({
-      globalObject: false,
-      plugins: [getTypescriptWorkerPlugin(wco, workerTsConfigPath)],
-    })],
+    plugins: [
+      new WorkerPlugin({
+        globalObject: false,
+        plugins: [getTypescriptWorkerPlugin(wco, workerTsConfigPath)]
+      })
+    ]
   };
 }

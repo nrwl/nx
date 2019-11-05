@@ -8,15 +8,13 @@
 import { Compiler, compilation } from 'webpack';
 import { HashFormat } from '../models/webpack-configs/utils';
 
-
 export interface RemoveHashPluginOptions {
   chunkNames: string[];
   hashFormat: HashFormat;
 }
 
 export class RemoveHashPlugin {
-
-  constructor(private options: RemoveHashPluginOptions) { }
+  constructor(private options: RemoveHashPluginOptions) {}
 
   apply(compiler: Compiler): void {
     compiler.hooks.compilation.tap('remove-hash-plugin', compilation => {
@@ -24,7 +22,8 @@ export class RemoveHashPlugin {
         hooks: compilation.CompilationHooks;
       };
 
-      mainTemplate.hooks.assetPath.tap('remove-hash-plugin',
+      mainTemplate.hooks.assetPath.tap(
+        'remove-hash-plugin',
         (path: string, data: { chunk?: { name: string } }) => {
           const chunkName = data.chunk && data.chunk.name;
           const { chunkNames, hashFormat } = this.options;
@@ -37,7 +36,7 @@ export class RemoveHashPlugin {
           }
 
           return path;
-        },
+        }
       );
     });
   }

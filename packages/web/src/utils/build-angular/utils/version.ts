@@ -8,15 +8,24 @@
 import { logging, tags } from '@angular-devkit/core';
 import { SemVer, gte, satisfies } from 'semver';
 
-export function assertCompatibleAngularVersion(projectRoot: string, logger: logging.LoggerApi) {
+export function assertCompatibleAngularVersion(
+  projectRoot: string,
+  logger: logging.LoggerApi
+) {
   let angularCliPkgJson;
   let angularPkgJson;
   let rxjsPkgJson;
   const resolveOptions = { paths: [projectRoot] };
 
   try {
-    const angularPackagePath = require.resolve('@angular/core/package.json', resolveOptions);
-    const rxjsPackagePath = require.resolve('rxjs/package.json', resolveOptions);
+    const angularPackagePath = require.resolve(
+      '@angular/core/package.json',
+      resolveOptions
+    );
+    const rxjsPackagePath = require.resolve(
+      'rxjs/package.json',
+      resolveOptions
+    );
 
     angularPkgJson = require(angularPackagePath);
     rxjsPkgJson = require(rxjsPackagePath);
@@ -28,7 +37,14 @@ export function assertCompatibleAngularVersion(projectRoot: string, logger: logg
     process.exit(2);
   }
 
-  if (!(angularPkgJson && angularPkgJson['version'] && rxjsPkgJson && rxjsPkgJson['version'])) {
+  if (
+    !(
+      angularPkgJson &&
+      angularPkgJson['version'] &&
+      rxjsPkgJson &&
+      rxjsPkgJson['version']
+    )
+  ) {
     logger.error(tags.stripIndents`
       Cannot determine versions of "@angular/core" and/or "rxjs".
       This likely means your local installation is broken. Please reinstall your packages.
@@ -38,7 +54,10 @@ export function assertCompatibleAngularVersion(projectRoot: string, logger: logg
   }
 
   try {
-    const angularCliPkgPath = require.resolve('@angular/cli/package.json', resolveOptions);
+    const angularCliPkgPath = require.resolve(
+      '@angular/cli/package.json',
+      resolveOptions
+    );
     angularCliPkgJson = require(angularCliPkgPath);
     if (!(angularCliPkgJson && angularCliPkgJson['version'])) {
       throw new Error();
@@ -66,7 +85,11 @@ export function assertCompatibleAngularVersion(projectRoot: string, logger: logg
   const angularVersion = new SemVer(angularPkgJson['version']);
   const rxjsVersion = new SemVer(rxjsPkgJson['version']);
 
-  if (!satisfies(angularVersion, supportedAngularSemver, { includePrerelease: true })) {
+  if (
+    !satisfies(angularVersion, supportedAngularSemver, {
+      includePrerelease: true
+    })
+  ) {
     logger.error(
       tags.stripIndents`
         This version of CLI is only compatible with Angular versions ${supportedAngularSemver},
@@ -74,7 +97,7 @@ export function assertCompatibleAngularVersion(projectRoot: string, logger: logg
 
         Please visit the link below to find instructions on how to update Angular.
         https://angular-update-guide.firebaseapp.com/
-      ` + '\n',
+      ` + '\n'
     );
 
     process.exit(3);
@@ -90,18 +113,21 @@ export function assertCompatibleAngularVersion(projectRoot: string, logger: logg
 
         Please visit the link below to find instructions on how to update RxJs.
         https://docs.google.com/document/d/12nlLt71VLKb-z3YaSGzUfx6mJbc34nsMXtByPUN35cg/edit#
-      ` + '\n',
+      ` + '\n'
     );
 
     process.exit(3);
-  } else if (gte(angularVersion, '6.0.0-rc.0') && !gte(rxjsVersion, '6.0.0-beta.0')) {
+  } else if (
+    gte(angularVersion, '6.0.0-rc.0') &&
+    !gte(rxjsVersion, '6.0.0-beta.0')
+  ) {
     logger.warn(
       tags.stripIndents`
         This project uses a temporary compatibility version of RxJs (${rxjsVersion}).
 
         Please visit the link below to find instructions on how to update RxJs.
         https://docs.google.com/document/d/12nlLt71VLKb-z3YaSGzUfx6mJbc34nsMXtByPUN35cg/edit#
-      ` + '\n',
+      ` + '\n'
     );
   }
 }

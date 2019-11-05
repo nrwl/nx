@@ -8,7 +8,10 @@
 import JestWorker from 'jest-worker';
 import * as os from 'os';
 import * as path from 'path';
-import { ProcessBundleOptions, ProcessBundleResult } from '../utils/process-bundle';
+import {
+  ProcessBundleOptions,
+  ProcessBundleResult
+} from '../utils/process-bundle';
 import { BundleActionCache } from './action-cache';
 
 let workerFile = require.resolve('../utils/process-bundle');
@@ -25,13 +28,19 @@ export class BundleActionExecutor {
   constructor(
     private workerOptions: unknown,
     integrityAlgorithm?: string,
-    private readonly sizeThreshold = 32 * 1024,
+    private readonly sizeThreshold = 32 * 1024
   ) {
     this.cache = new BundleActionCache(integrityAlgorithm);
   }
 
-  private static executeMethod<O>(worker: JestWorker, method: string, input: unknown): Promise<O> {
-    return ((worker as unknown) as Record<string, (i: unknown) => Promise<O>>)[method](input);
+  private static executeMethod<O>(
+    worker: JestWorker,
+    method: string,
+    input: unknown
+  ): Promise<O> {
+    return ((worker as unknown) as Record<string, (i: unknown) => Promise<O>>)[
+      method
+    ](input);
   }
 
   private ensureLarge(): JestWorker {
@@ -42,7 +51,7 @@ export class BundleActionExecutor {
     // larger files are processed in a separate process to limit memory usage in the main process
     return (this.largeWorker = new JestWorker(workerFile, {
       exposedMethods: ['process'],
-      setupArgs: [this.workerOptions],
+      setupArgs: [this.workerOptions]
     }));
   }
 
@@ -58,16 +67,27 @@ export class BundleActionExecutor {
       setupArgs: [this.workerOptions],
       numWorkers: os.cpus().length < 2 ? 1 : 2,
       // Will automatically fallback to processes if not supported
-      enableWorkerThreads: true,
+      enableWorkerThreads: true
     }));
   }
 
-  private executeAction<O>(method: string, action: { code: string }): Promise<O> {
+  private executeAction<O>(
+    method: string,
+    action: { code: string }
+  ): Promise<O> {
     // code.length is not an exact byte count but close enough for this
     if (action.code.length > this.sizeThreshold) {
-      return BundleActionExecutor.executeMethod<O>(this.ensureLarge(), method, action);
+      return BundleActionExecutor.executeMethod<O>(
+        this.ensureLarge(),
+        method,
+        action
+      );
     } else {
-      return BundleActionExecutor.executeMethod<O>(this.ensureSmall(), method, action);
+      return BundleActionExecutor.executeMethod<O>(
+        this.ensureSmall(),
+        method,
+        action
+      );
     }
   }
 
@@ -87,7 +107,10 @@ export class BundleActionExecutor {
   }
 
   async *processAll(actions: Iterable<ProcessBundleOptions>) {
-    const executions = new Map<Promise<ProcessBundleResult>, Promise<ProcessBundleResult>>();
+    const executions = new Map<
+      Promise<ProcessBundleResult>,
+      Promise<ProcessBundleResult>
+    >();
     for (const action of actions) {
       const execution = this.process(action);
       executions.set(
@@ -96,7 +119,7 @@ export class BundleActionExecutor {
           executions.delete(execution);
 
           return result;
-        }),
+        })
       );
     }
 

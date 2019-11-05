@@ -9,7 +9,11 @@ import { existsSync } from 'fs';
 import * as path from 'path';
 import { isDirectory } from './is-directory';
 
-export function findUp(names: string | string[], from: string, stopOnNodeModules = false) {
+export function findUp(
+  names: string | string[],
+  from: string,
+  stopOnNodeModules = false
+) {
   if (!Array.isArray(names)) {
     names = [names];
   }

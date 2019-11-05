@@ -12,10 +12,9 @@ import {
   getSystemPath,
   join,
   normalize,
-  virtualFs,
+  virtualFs
 } from '@angular-devkit/core';
 import { FileReplacement } from '../browser/schema';
-
 
 export class MissingFileReplacementException extends BaseException {
   constructor(path: String) {
@@ -31,14 +30,15 @@ export interface NormalizedFileReplacement {
 export function normalizeFileReplacements(
   fileReplacements: FileReplacement[],
   host: virtualFs.SyncDelegateHost,
-  root: Path,
+  root: Path
 ): NormalizedFileReplacement[] {
   if (fileReplacements.length === 0) {
     return [];
   }
 
-  const normalizedReplacement = fileReplacements
-    .map(replacement => normalizeFileReplacement(replacement, root));
+  const normalizedReplacement = fileReplacements.map(replacement =>
+    normalizeFileReplacement(replacement, root)
+  );
 
   for (const { replace, with: replacementWith } of normalizedReplacement) {
     if (!host.exists(replacementWith)) {
@@ -55,7 +55,7 @@ export function normalizeFileReplacements(
 
 function normalizeFileReplacement(
   fileReplacement: FileReplacement,
-  root?: Path,
+  root?: Path
 ): NormalizedFileReplacement {
   let replacePath: Path;
   let withPath: Path;
@@ -66,7 +66,9 @@ function normalizeFileReplacement(
     replacePath = normalize(fileReplacement.replace);
     withPath = normalize(fileReplacement.with);
   } else {
-    throw new Error(`Invalid file replacement: ${JSON.stringify(fileReplacement)}`);
+    throw new Error(
+      `Invalid file replacement: ${JSON.stringify(fileReplacement)}`
+    );
   }
 
   // TODO: For 7.x should this only happen if not absolute?

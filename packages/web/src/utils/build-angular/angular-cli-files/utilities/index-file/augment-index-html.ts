@@ -56,8 +56,16 @@ export interface FileInfo {
  * after processing several configurations in order to build different sets of
  * bundles for differential serving.
  */
-export async function augmentIndexHtml(params: AugmentIndexHtmlOptions): Promise<string> {
-  const { loadOutputFile, files, noModuleFiles = [], moduleFiles = [], entrypoints } = params;
+export async function augmentIndexHtml(
+  params: AugmentIndexHtmlOptions
+): Promise<string> {
+  const {
+    loadOutputFile,
+    files,
+    noModuleFiles = [],
+    moduleFiles = [],
+    entrypoints
+  } = params;
 
   let { crossOrigin = 'none' } = params;
   if (params.sri && crossOrigin === 'none') {
@@ -88,7 +96,10 @@ export async function augmentIndexHtml(params: AugmentIndexHtmlOptions): Promise
 
   // Find the head and body elements
   const treeAdapter = parse5.treeAdapters.default;
-  const document = parse5.parse(params.inputContent, { treeAdapter, locationInfo: true });
+  const document = parse5.parse(params.inputContent, {
+    treeAdapter,
+    locationInfo: true
+  });
   let headElement;
   let bodyElement;
   for (const docChild of document.childNodes) {
@@ -127,12 +138,15 @@ export async function augmentIndexHtml(params: AugmentIndexHtmlOptions): Promise
   }
 
   // Inject into the html
-  const indexSource = new ReplaceSource(new RawSource(params.inputContent), params.input);
+  const indexSource = new ReplaceSource(
+    new RawSource(params.inputContent),
+    params.input
+  );
 
   let scriptElements = '';
   for (const script of scripts) {
     const attrs: { name: string; value: string | null }[] = [
-      { name: 'src', value: (params.deployUrl || '') + script },
+      { name: 'src', value: (params.deployUrl || '') + script }
     ];
 
     if (crossOrigin !== 'none') {
@@ -169,7 +183,9 @@ export async function augmentIndexHtml(params: AugmentIndexHtmlOptions): Promise
     }
 
     const attributes = attrs
-      .map(attr => (attr.value === null ? attr.name : `${attr.name}="${attr.value}"`))
+      .map(attr =>
+        attr.value === null ? attr.name : `${attr.name}="${attr.value}"`
+      )
       .join(' ');
     scriptElements += `<script ${attributes}></script>`;
   }
@@ -189,13 +205,13 @@ export async function augmentIndexHtml(params: AugmentIndexHtmlOptions): Promise
 
     if (!baseElement) {
       baseElement = treeAdapter.createElement('base', undefined, [
-        { name: 'href', value: params.baseHref },
+        { name: 'href', value: params.baseHref }
       ]);
 
       treeAdapter.appendChild(baseFragment, baseElement);
       indexSource.insert(
         headElement.__location.startTag.endOffset,
-        parse5.serialize(baseFragment, { treeAdapter }),
+        parse5.serialize(baseFragment, { treeAdapter })
       );
     } else {
       let hrefAttribute;
@@ -214,7 +230,7 @@ export async function augmentIndexHtml(params: AugmentIndexHtmlOptions): Promise
       indexSource.replace(
         baseElement.__location.startOffset,
         baseElement.__location.endOffset,
-        parse5.serialize(baseFragment, { treeAdapter }),
+        parse5.serialize(baseFragment, { treeAdapter })
       );
     }
   }
@@ -223,7 +239,7 @@ export async function augmentIndexHtml(params: AugmentIndexHtmlOptions): Promise
   for (const stylesheet of stylesheets) {
     const attrs = [
       { name: 'rel', value: 'stylesheet' },
-      { name: 'href', value: (params.deployUrl || '') + stylesheet },
+      { name: 'href', value: (params.deployUrl || '') + stylesheet }
     ];
 
     if (crossOrigin !== 'none') {
@@ -239,7 +255,10 @@ export async function augmentIndexHtml(params: AugmentIndexHtmlOptions): Promise
     treeAdapter.appendChild(styleElements, element);
   }
 
-  indexSource.insert(styleInsertionPoint, parse5.serialize(styleElements, { treeAdapter }));
+  indexSource.insert(
+    styleInsertionPoint,
+    parse5.serialize(styleElements, { treeAdapter })
+  );
 
   return indexSource.source();
 }

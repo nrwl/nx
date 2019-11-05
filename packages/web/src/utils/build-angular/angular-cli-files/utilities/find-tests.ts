@@ -11,7 +11,11 @@ import { basename, dirname, extname, join } from 'path';
 import { isDirectory } from './is-directory';
 
 // go through all patterns and find unique list of files
-export function findTests(patterns: string[], cwd: string, workspaceRoot: string): string[] {
+export function findTests(
+  patterns: string[],
+  cwd: string,
+  workspaceRoot: string
+): string[] {
   return patterns.reduce(
     (files, pattern) => {
       const relativePathToMain = cwd.replace(workspaceRoot, '').substr(1); // remove leading slash
@@ -24,11 +28,15 @@ export function findTests(patterns: string[], cwd: string, workspaceRoot: string
 
       return files;
     },
-    [] as string[],
+    [] as string[]
   );
 }
 
-function findMatchingTests(pattern: string, cwd: string, relativePathToMain: string): string[] {
+function findMatchingTests(
+  pattern: string,
+  cwd: string,
+  relativePathToMain: string
+): string[] {
   // normalize pattern, glob lib only accepts forward slashes
   pattern = pattern.replace(/\\/g, '/');
   relativePathToMain = relativePathToMain.replace(/\\/g, '/');
@@ -55,7 +63,7 @@ function findMatchingTests(pattern: string, cwd: string, relativePathToMain: str
   }
 
   const files = glob.sync(pattern, {
-    cwd,
+    cwd
   });
 
   return files;

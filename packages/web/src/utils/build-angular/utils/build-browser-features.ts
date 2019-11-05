@@ -22,9 +22,11 @@ export class BuildBrowserFeatures {
 
   constructor(
     private projectRoot: string,
-    private scriptTarget: ts.ScriptTarget,
+    private scriptTarget: ts.ScriptTarget
   ) {
-    this._supportedBrowsers = browserslist(undefined, { path: this.projectRoot });
+    this._supportedBrowsers = browserslist(undefined, {
+      path: this.projectRoot
+    });
     this._es6TargetOrLater = this.scriptTarget > ts.ScriptTarget.ES5;
   }
 
@@ -54,12 +56,11 @@ export class BuildBrowserFeatures {
       return false;
     }
 
-    const safariBrowsers = [
-      'safari 10.1',
-      'ios_saf 10.3',
-    ];
+    const safariBrowsers = ['safari 10.1', 'ios_saf 10.3'];
 
-    return this._supportedBrowsers.some(browser => safariBrowsers.includes(browser));
+    return this._supportedBrowsers.some(browser =>
+      safariBrowsers.includes(browser)
+    );
   }
 
   /**
@@ -70,24 +71,22 @@ export class BuildBrowserFeatures {
     // n: feature is unavailable
     // a: feature is partially supported
     // x: feature is prefixed
-    const criteria = [
-      'y',
-      'a',
-    ];
+    const criteria = ['y', 'a'];
 
     const data = feature(features[featureId]);
 
-    return !this._supportedBrowsers
-      .some(browser => {
-        const [agentId, version] = browser.split(' ');
+    return !this._supportedBrowsers.some(browser => {
+      const [agentId, version] = browser.split(' ');
 
-        const browserData = data.stats[agentId];
-        const featureStatus = (browserData && browserData[version]) as string | undefined;
+      const browserData = data.stats[agentId];
+      const featureStatus = (browserData && browserData[version]) as
+        | string
+        | undefined;
 
-        // We are only interested in the first character
-        // Ex: when 'a #4 #5', we only need to check for 'a'
-        // as for such cases we should polyfill these features as needed
-        return !featureStatus || !criteria.includes(featureStatus.charAt(0));
-      });
+      // We are only interested in the first character
+      // Ex: when 'a #4 #5', we only need to check for 'a'
+      // as for such cases we should polyfill these features as needed
+      return !featureStatus || !criteria.includes(featureStatus.charAt(0));
+    });
   }
 }

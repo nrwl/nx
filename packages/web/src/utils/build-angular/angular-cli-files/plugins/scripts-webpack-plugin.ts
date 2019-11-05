@@ -16,7 +16,13 @@
  * found in the LICENSE file at https://angular.io/license
  */
 import { Compiler, loader } from 'webpack';
-import { CachedSource, ConcatSource, OriginalSource, RawSource, Source } from 'webpack-sources';
+import {
+  CachedSource,
+  ConcatSource,
+  OriginalSource,
+  RawSource,
+  Source
+} from 'webpack-sources';
 import { interpolateName } from 'loader-utils';
 import * as path from 'path';
 
@@ -42,20 +48,26 @@ function addDependencies(compilation: any, scripts: string[]): void {
   }
 }
 
-function hook(compiler: any, action: (compilation: any, callback: (err?: Error) => void) => void) {
-  compiler.hooks.thisCompilation.tap('scripts-webpack-plugin', (compilation: any) => {
-    compilation.hooks.additionalAssets.tapAsync(
-      'scripts-webpack-plugin',
-      (callback: (err?: Error) => void) => action(compilation, callback),
-    );
-  });
+function hook(
+  compiler: any,
+  action: (compilation: any, callback: (err?: Error) => void) => void
+) {
+  compiler.hooks.thisCompilation.tap(
+    'scripts-webpack-plugin',
+    (compilation: any) => {
+      compilation.hooks.additionalAssets.tapAsync(
+        'scripts-webpack-plugin',
+        (callback: (err?: Error) => void) => action(compilation, callback)
+      );
+    }
+  );
 }
 
 export class ScriptsWebpackPlugin {
   private _lastBuildTime?: number;
   private _cachedOutput?: ScriptOutput;
 
-  constructor(private options: Partial<ScriptsWebpackPluginOptions> = {}) { }
+  constructor(private options: Partial<ScriptsWebpackPluginOptions> = {}) {}
 
   shouldSkip(compilation: any, scripts: string[]): boolean {
     if (this._lastBuildTime == undefined) {
@@ -74,7 +86,11 @@ export class ScriptsWebpackPlugin {
     return true;
   }
 
-  private _insertOutput(compilation: any, { filename, source }: ScriptOutput, cached = false) {
+  private _insertOutput(
+    compilation: any,
+    { filename, source }: ScriptOutput,
+    cached = false
+  ) {
     const chunk = new Chunk(this.options.name);
     chunk.rendered = !cached;
     chunk.id = this.options.name;
@@ -112,29 +128,32 @@ export class ScriptsWebpackPlugin {
 
       const sourceGetters = scripts.map(fullPath => {
         return new Promise<Source>((resolve, reject) => {
-          compilation.inputFileSystem.readFile(fullPath, (err: Error, data: Buffer) => {
-            if (err) {
-              reject(err);
-              return;
-            }
-
-            const content = data.toString();
-
-            let source;
-            if (this.options.sourceMap) {
-              // TODO: Look for source map file (for '.min' scripts, etc.)
-
-              let adjustedPath = fullPath;
-              if (this.options.basePath) {
-                adjustedPath = path.relative(this.options.basePath, fullPath);
+          compilation.inputFileSystem.readFile(
+            fullPath,
+            (err: Error, data: Buffer) => {
+              if (err) {
+                reject(err);
+                return;
               }
-              source = new OriginalSource(content, adjustedPath);
-            } else {
-              source = new RawSource(content);
-            }
 
-            resolve(source);
-          });
+              const content = data.toString();
+
+              let source;
+              if (this.options.sourceMap) {
+                // TODO: Look for source map file (for '.min' scripts, etc.)
+
+                let adjustedPath = fullPath;
+                if (this.options.basePath) {
+                  adjustedPath = path.relative(this.options.basePath, fullPath);
+                }
+                source = new OriginalSource(content, adjustedPath);
+              } else {
+                source = new RawSource(content);
+              }
+
+              resolve(source);
+            }
+          );
         });
       });
 
@@ -150,7 +169,7 @@ export class ScriptsWebpackPlugin {
           const filename = interpolateName(
             { resourcePath: 'scripts.js' } as loader.LoaderContext,
             this.options.filename as string,
-            { content: combinedSource.source() },
+            { content: combinedSource.source() }
           );
 
           const output = { filename, source: combinedSource };

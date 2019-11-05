@@ -15,9 +15,12 @@ export function generateEntryPoints(appConfig: {
   // Add all styles/scripts, except lazy-loaded ones.
   const extraEntryPoints = (
     extraEntryPoints: ExtraEntryPoint[],
-    defaultBundleName: string,
+    defaultBundleName: string
   ): string[] => {
-    const entryPoints = normalizeExtraEntryPoints(extraEntryPoints, defaultBundleName)
+    const entryPoints = normalizeExtraEntryPoints(
+      extraEntryPoints,
+      defaultBundleName
+    )
       .filter(entry => entry.inject)
       .map(entry => entry.bundleName);
 
@@ -34,15 +37,21 @@ export function generateEntryPoints(appConfig: {
     ...extraEntryPoints(appConfig.styles, 'styles'),
     ...extraEntryPoints(appConfig.scripts, 'scripts'),
     'vendor',
-    'main',
+    'main'
   ];
 
   const duplicates = [
-    ...new Set(entryPoints.filter(x => entryPoints.indexOf(x) !== entryPoints.lastIndexOf(x))),
+    ...new Set(
+      entryPoints.filter(
+        x => entryPoints.indexOf(x) !== entryPoints.lastIndexOf(x)
+      )
+    )
   ];
 
   if (duplicates.length > 0) {
-    throw new Error(`Multiple bundles have been named the same: '${duplicates.join(`', '`)}'.`);
+    throw new Error(
+      `Multiple bundles have been named the same: '${duplicates.join(`', '`)}'.`
+    );
   }
 
   return entryPoints;

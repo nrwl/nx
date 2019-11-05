@@ -12,7 +12,6 @@ import * as webpack from 'webpack';
 import { WebpackConfigOptions, WebpackTestOptions } from '../build-options';
 import { getSourceMapDevTool, isPolyfillsEntry } from './utils';
 
-
 /**
  * Enumerate loaders and their dependencies from this file to let the dependency validator
  * know they are used.
@@ -22,7 +21,7 @@ import { getSourceMapDevTool, isPolyfillsEntry } from './utils';
  */
 
 export function getTestConfig(
-  wco: WebpackConfigOptions<WebpackTestOptions>,
+  wco: WebpackConfigOptions<WebpackTestOptions>
 ): webpack.Configuration {
   const { root, buildOptions, sourceRoot: include } = wco;
 
@@ -32,10 +31,7 @@ export function getTestConfig(
   // if (buildOptions.codeCoverage && CliConfig.fromProject()) {
   if (buildOptions.codeCoverage) {
     const codeCoverageExclude = buildOptions.codeCoverageExclude;
-    const exclude: (string | RegExp)[] = [
-      /\.(e2e|spec)\.ts$/,
-      /node_modules/,
-    ];
+    const exclude: (string | RegExp)[] = [/\.(e2e|spec)\.ts$/, /node_modules/];
 
     if (codeCoverageExclude) {
       codeCoverageExclude.forEach((excludeGlob: string) => {
@@ -52,19 +48,16 @@ export function getTestConfig(
       options: { esModules: true },
       enforce: 'post',
       exclude,
-      include,
+      include
     });
   }
 
   if (wco.buildOptions.sourceMap) {
     const { styles, scripts } = wco.buildOptions.sourceMap;
 
-    extraPlugins.push(getSourceMapDevTool(
-      scripts || false,
-      styles || false,
-      false,
-      true,
-    ));
+    extraPlugins.push(
+      getSourceMapDevTool(scripts || false, styles || false, false, true)
+    );
   }
 
   return {
@@ -72,34 +65,43 @@ export function getTestConfig(
     resolve: {
       mainFields: [
         ...(wco.supportES2015 ? ['es2015'] : []),
-        'browser', 'module', 'main',
-      ],
+        'browser',
+        'module',
+        'main'
+      ]
     },
     devtool: buildOptions.sourceMap ? false : 'eval',
     entry: {
-      main: path.resolve(root, buildOptions.main),
+      main: path.resolve(root, buildOptions.main)
     },
     module: {
-      rules: extraRules,
+      rules: extraRules
     },
     plugins: extraPlugins,
     optimization: {
       splitChunks: {
-        chunks: ((chunk: { name: string }) => !isPolyfillsEntry(chunk.name)),
+        chunks: (chunk: { name: string }) => !isPolyfillsEntry(chunk.name),
         cacheGroups: {
           vendors: false,
           vendor: {
             name: 'vendor',
             chunks: 'initial',
-            test: (module: { nameForCondition?: () => string }, chunks: { name: string }[]) => {
-              const moduleName = module.nameForCondition ? module.nameForCondition() : '';
+            test: (
+              module: { nameForCondition?: () => string },
+              chunks: { name: string }[]
+            ) => {
+              const moduleName = module.nameForCondition
+                ? module.nameForCondition()
+                : '';
 
-              return /[\\/]node_modules[\\/]/.test(moduleName)
-                && !chunks.some(({ name }) => isPolyfillsEntry(name));
-            },
-          },
-        },
-      },
-    },
+              return (
+                /[\\/]node_modules[\\/]/.test(moduleName) &&
+                !chunks.some(({ name }) => isPolyfillsEntry(name))
+              );
+            }
+          }
+        }
+      }
+    }
   };
 }

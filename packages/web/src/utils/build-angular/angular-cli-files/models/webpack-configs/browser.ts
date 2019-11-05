@@ -8,70 +8,92 @@
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import * as webpack from 'webpack';
 import { WebpackConfigOptions } from '../build-options';
-import { getSourceMapDevTool, isPolyfillsEntry, normalizeExtraEntryPoints } from './utils';
+import {
+  getSourceMapDevTool,
+  isPolyfillsEntry,
+  normalizeExtraEntryPoints
+} from './utils';
 
 const SubresourceIntegrityPlugin = require('webpack-subresource-integrity');
 
-
-export function getBrowserConfig(wco: WebpackConfigOptions): webpack.Configuration {
+export function getBrowserConfig(
+  wco: WebpackConfigOptions
+): webpack.Configuration {
   const { buildOptions } = wco;
   const extraPlugins = [];
 
   let isEval = false;
-  const { styles: stylesOptimization, scripts: scriptsOptimization } = buildOptions.optimization;
+  const {
+    styles: stylesOptimization,
+    scripts: scriptsOptimization
+  } = buildOptions.optimization;
   const {
     styles: stylesSourceMap,
     scripts: scriptsSourceMap,
-    hidden: hiddenSourceMap,
+    hidden: hiddenSourceMap
   } = buildOptions.sourceMap;
 
   // See https://webpack.js.org/configuration/devtool/ for sourcemap types.
-  if ((stylesSourceMap || scriptsSourceMap) &&
+  if (
+    (stylesSourceMap || scriptsSourceMap) &&
     buildOptions.evalSourceMap &&
     !stylesOptimization &&
-    !scriptsOptimization) {
+    !scriptsOptimization
+  ) {
     // Produce eval sourcemaps for development with serve, which are faster.
     isEval = true;
   }
 
   if (buildOptions.subresourceIntegrity) {
-    extraPlugins.push(new SubresourceIntegrityPlugin({
-      hashFuncNames: ['sha384'],
-    }));
+    extraPlugins.push(
+      new SubresourceIntegrityPlugin({
+        hashFuncNames: ['sha384']
+      })
+    );
   }
 
   if (buildOptions.extractLicenses) {
-    extraPlugins.push(new LicenseWebpackPlugin({
-      stats: {
-        warnings: false,
-        errors: false,
-      },
-      perChunkOutput: false,
-      outputFilename: `3rdpartylicenses.txt`,
-    }));
+    extraPlugins.push(
+      new LicenseWebpackPlugin({
+        stats: {
+          warnings: false,
+          errors: false
+        },
+        perChunkOutput: false,
+        outputFilename: `3rdpartylicenses.txt`
+      })
+    );
   }
 
   if (!isEval && (scriptsSourceMap || stylesSourceMap)) {
-    extraPlugins.push(getSourceMapDevTool(
-      !!scriptsSourceMap,
-      !!stylesSourceMap,
-      hiddenSourceMap,
-    ));
+    extraPlugins.push(
+      getSourceMapDevTool(
+        !!scriptsSourceMap,
+        !!stylesSourceMap,
+        hiddenSourceMap
+      )
+    );
   }
 
-  const globalStylesBundleNames = normalizeExtraEntryPoints(buildOptions.styles, 'styles')
-    .map(style => style.bundleName);
+  const globalStylesBundleNames = normalizeExtraEntryPoints(
+    buildOptions.styles,
+    'styles'
+  ).map(style => style.bundleName);
 
   return {
     devtool: isEval ? 'eval' : false,
     resolve: {
       mainFields: [
         ...(wco.supportES2015 ? ['es2015'] : []),
-        'browser', 'module', 'main',
-      ],
+        'browser',
+        'module',
+        'main'
+      ]
     },
     output: {
-      crossOriginLoading: buildOptions.subresourceIntegrity ? 'anonymous' : false,
+      crossOriginLoading: buildOptions.subresourceIntegrity
+        ? 'anonymous'
+        : false
     },
     optimization: {
       runtimeChunk: 'single',
@@ -81,32 +103,42 @@ export function getBrowserConfig(wco: WebpackConfigOptions): webpack.Configurati
           default: !!buildOptions.commonChunk && {
             chunks: 'async',
             minChunks: 2,
-            priority: 10,
+            priority: 10
           },
           common: !!buildOptions.commonChunk && {
             name: 'common',
             chunks: 'async',
             minChunks: 2,
             enforce: true,
-            priority: 5,
+            priority: 5
           },
           vendors: false,
           vendor: !!buildOptions.vendorChunk && {
             name: 'vendor',
             chunks: 'initial',
             enforce: true,
-            test: (module: { nameForCondition?: Function }, chunks: Array<{ name: string }>) => {
-              const moduleName = module.nameForCondition ? module.nameForCondition() : '';
+            test: (
+              module: { nameForCondition?: Function },
+              chunks: Array<{ name: string }>
+            ) => {
+              const moduleName = module.nameForCondition
+                ? module.nameForCondition()
+                : '';
 
-              return /[\\/]node_modules[\\/]/.test(moduleName)
-                && !chunks.some(({ name }) => isPolyfillsEntry(name)
-                  || globalStylesBundleNames.includes(name));
-            },
-          },
-        },
-      },
+              return (
+                /[\\/]node_modules[\\/]/.test(moduleName) &&
+                !chunks.some(
+                  ({ name }) =>
+                    isPolyfillsEntry(name) ||
+                    globalStylesBundleNames.includes(name)
+                )
+              );
+            }
+          }
+        }
+      }
     },
     plugins: extraPlugins,
-    node: false,
+    node: false
   };
 }
