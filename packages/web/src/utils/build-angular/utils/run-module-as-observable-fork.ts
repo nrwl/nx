@@ -11,27 +11,26 @@ import { resolve } from 'path';
 import { Observable } from 'rxjs';
 const treeKill = require('tree-kill');
 
-
 export function runModuleAsObservableFork(
   cwd: string,
   modulePath: string,
   exportName: string | undefined,
   // tslint:disable-next-line:no-any
-  args: any[],
+  args: any[]
 ): Observable<BuilderOutput> {
   return new Observable(obs => {
     const workerPath: string = resolve(__dirname, './run-module-worker.js');
 
     const debugArgRegex = /--inspect(?:-brk|-port)?|--debug(?:-brk|-port)/;
-    const execArgv = process.execArgv.filter((arg) => {
+    const execArgv = process.execArgv.filter(arg => {
       // Remove debug args.
       // Workaround for https://github.com/nodejs/node/issues/9435
       return !debugArgRegex.test(arg);
     });
-    const forkOptions: ForkOptions = {
+    const forkOptions: ForkOptions = ({
       cwd,
-      execArgv,
-    } as {} as ForkOptions;
+      execArgv
+    } as {}) as ForkOptions;
 
     // TODO: support passing in a logger to use as stdio streams
     // if (logger) {
@@ -77,7 +76,7 @@ export function runModuleAsObservableFork(
       hash: '5d4b9a5c0a4e0f9977598437b0e85bcc',
       modulePath,
       exportName,
-      args,
+      args
     });
 
     // Teardown logic. When unsubscribing, kill the forked process.

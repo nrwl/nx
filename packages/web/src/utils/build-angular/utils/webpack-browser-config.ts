@@ -13,7 +13,7 @@ import {
   normalize,
   resolve,
   schema,
-  virtualFs,
+  virtualFs
 } from '@angular-devkit/core';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import * as fs from 'fs';
@@ -27,14 +27,16 @@ import {
   NormalizedBrowserBuilderSchema,
   defaultProgress,
   fullDifferential,
-  normalizeBrowserSchema,
+  normalizeBrowserSchema
 } from '../utils';
 import { BuildBrowserFeatures } from './build-browser-features';
 
 const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 const webpackMerge = require('webpack-merge');
 
-type BrowserWebpackConfigOptions = WebpackConfigOptions<NormalizedBrowserBuilderSchema>;
+type BrowserWebpackConfigOptions = WebpackConfigOptions<
+  NormalizedBrowserBuilderSchema
+>;
 
 export async function generateWebpackConfig(
   context: BuilderContext,
@@ -42,12 +44,16 @@ export async function generateWebpackConfig(
   projectRoot: string,
   sourceRoot: string | undefined,
   options: NormalizedBrowserBuilderSchema,
-  webpackPartialGenerator: (wco: BrowserWebpackConfigOptions) => webpack.Configuration[],
-  logger: logging.LoggerApi,
+  webpackPartialGenerator: (
+    wco: BrowserWebpackConfigOptions
+  ) => webpack.Configuration[],
+  logger: logging.LoggerApi
 ): Promise<webpack.Configuration[]> {
   // Ensure Build Optimizer is only used with AOT.
   if (options.buildOptimizer && !options.aot) {
-    throw new Error(`The 'buildOptimizer' option cannot be used without 'aot'.`);
+    throw new Error(
+      `The 'buildOptimizer' option cannot be used without 'aot'.`
+    );
   }
 
   const tsConfigPath = path.resolve(workspaceRoot, options.tsConfig);
@@ -59,10 +65,14 @@ export async function generateWebpackConfig(
   // At the moment, only the browser builder supports differential loading
   // However this config generation is used by multiple builders such as dev-server
   const scriptTarget = tsConfig.options.target || ts.ScriptTarget.ES5;
-  const buildBrowserFeatures = new BuildBrowserFeatures(projectRoot, scriptTarget);
-  const differentialLoading = context.builder.builderName === 'browser'
-    && !options.watch
-    && buildBrowserFeatures.isDifferentialLoadingNeeded();
+  const buildBrowserFeatures = new BuildBrowserFeatures(
+    projectRoot,
+    scriptTarget
+  );
+  const differentialLoading =
+    context.builder.builderName === 'browser' &&
+    !options.watch &&
+    buildBrowserFeatures.isDifferentialLoadingNeeded();
 
   const scriptTargets = [scriptTarget];
 
@@ -73,29 +83,33 @@ export async function generateWebpackConfig(
   // For differential loading, we can have several targets
   return scriptTargets.map(scriptTarget => {
     let buildOptions: NormalizedBrowserBuilderSchema = { ...options };
-    const supportES2015
-      = scriptTarget !== ts.ScriptTarget.ES3 && scriptTarget !== ts.ScriptTarget.ES5;
+    const supportES2015 =
+      scriptTarget !== ts.ScriptTarget.ES3 &&
+      scriptTarget !== ts.ScriptTarget.ES5;
 
     if (differentialLoading && fullDifferential) {
       buildOptions = {
         ...options,
-        ...(
-          // FIXME: we do create better webpack config composition to achieve the below
-          // When DL is enabled and supportES2015 is true it means that we are on the second build
-          // This also means that we don't need to include styles and assets multiple times
-          supportES2015
-            ? {}
-            : {
+        ...// FIXME: we do create better webpack config composition to achieve the below
+        // When DL is enabled and supportES2015 is true it means that we are on the second build
+        // This also means that we don't need to include styles and assets multiple times
+        (supportES2015
+          ? {}
+          : {
               styles: options.extractCss ? [] : options.styles,
-              assets: [],
-            }
-        ),
+              assets: []
+            }),
         es5BrowserSupport: undefined,
         esVersionInFileName: true,
-        scriptTargetOverride: scriptTarget,
+        scriptTargetOverride: scriptTarget
       };
     } else if (differentialLoading && !fullDifferential) {
-      buildOptions = { ...options, esVersionInFileName: true, scriptTargetOverride: ts.ScriptTarget.ES5, es5BrowserSupport: undefined };
+      buildOptions = {
+        ...options,
+        esVersionInFileName: true,
+        scriptTargetOverride: ts.ScriptTarget.ES5,
+        es5BrowserSupport: undefined
+      };
     }
 
     const wco: BrowserWebpackConfigOptions = {
@@ -106,7 +120,7 @@ export async function generateWebpackConfig(
       buildOptions,
       tsConfig,
       tsConfigPath,
-      supportES2015,
+      supportES2015
     };
 
     wco.buildOptions.progress = defaultProgress(wco.buildOptions.progress);
@@ -121,21 +135,24 @@ export async function generateWebpackConfig(
       if (!webpackConfig.resolve.alias) {
         webpackConfig.resolve.alias = {};
       }
-      webpackConfig.resolve.alias['zone.js/dist/zone'] = 'zone.js/dist/zone-evergreen';
+      webpackConfig.resolve.alias['zone.js/dist/zone'] =
+        'zone.js/dist/zone-evergreen';
     }
 
     if (options.profile || process.env['NG_BUILD_PROFILING']) {
       const esVersionInFileName = getEsVersionForFileName(
-        fullDifferential ? buildOptions.scriptTargetOverride : tsConfig.options.target,
-        wco.buildOptions.esVersionInFileName,
+        fullDifferential
+          ? buildOptions.scriptTargetOverride
+          : tsConfig.options.target,
+        wco.buildOptions.esVersionInFileName
       );
 
       const smp = new SpeedMeasurePlugin({
         outputFormat: 'json',
         outputTarget: path.resolve(
           workspaceRoot,
-          `speed-measure-plugin${esVersionInFileName}.json`,
-        ),
+          `speed-measure-plugin${esVersionInFileName}.json`
+        )
       });
 
       return smp.wrap(webpackConfig);
@@ -145,18 +162,22 @@ export async function generateWebpackConfig(
   });
 }
 
-
 export async function generateBrowserWebpackConfigFromWorkspace(
   options: BrowserBuilderSchema,
   context: BuilderContext,
   projectName: string,
   workspace: experimental.workspace.Workspace,
   host: virtualFs.Host<fs.Stats>,
-  webpackPartialGenerator: (wco: BrowserWebpackConfigOptions) => webpack.Configuration[],
-  logger: logging.LoggerApi,
+  webpackPartialGenerator: (
+    wco: BrowserWebpackConfigOptions
+  ) => webpack.Configuration[],
+  logger: logging.LoggerApi
 ): Promise<webpack.Configuration[]> {
   // TODO: Use a better interface for workspace access.
-  const projectRoot = resolve(workspace.root, normalize(workspace.getProject(projectName).root));
+  const projectRoot = resolve(
+    workspace.root,
+    normalize(workspace.getProject(projectName).root)
+  );
   const projectSourceRoot = workspace.getProject(projectName).sourceRoot;
   const sourceRoot = projectSourceRoot
     ? resolve(workspace.root, normalize(projectSourceRoot))
@@ -167,7 +188,7 @@ export async function generateBrowserWebpackConfigFromWorkspace(
     workspace.root,
     projectRoot,
     sourceRoot,
-    options,
+    options
   );
 
   return generateWebpackConfig(
@@ -177,30 +198,38 @@ export async function generateBrowserWebpackConfigFromWorkspace(
     sourceRoot && getSystemPath(sourceRoot),
     normalizedOptions,
     webpackPartialGenerator,
-    logger,
+    logger
   );
 }
-
 
 export async function generateBrowserWebpackConfigFromContext(
   options: BrowserBuilderSchema,
   context: BuilderContext,
-  webpackPartialGenerator: (wco: BrowserWebpackConfigOptions) => webpack.Configuration[],
-  host: virtualFs.Host<fs.Stats> = new NodeJsSyncHost(),
-): Promise<{ workspace: experimental.workspace.Workspace, config: webpack.Configuration[] }> {
+  webpackPartialGenerator: (
+    wco: BrowserWebpackConfigOptions
+  ) => webpack.Configuration[],
+  host: virtualFs.Host<fs.Stats> = new NodeJsSyncHost()
+): Promise<{
+  workspace: experimental.workspace.Workspace;
+  config: webpack.Configuration[];
+}> {
   const registry = new schema.CoreSchemaRegistry();
   registry.addPostTransform(schema.transforms.addUndefinedDefaults);
 
   const workspace = await experimental.workspace.Workspace.fromPath(
     host,
     normalize(context.workspaceRoot),
-    registry,
+    registry
   );
 
-  const projectName = context.target ? context.target.project : workspace.getDefaultProjectName();
+  const projectName = context.target
+    ? context.target.project
+    : workspace.getDefaultProjectName();
 
   if (!projectName) {
-    throw new Error('Must either have a target from the context or a default project.');
+    throw new Error(
+      'Must either have a target from the context or a default project.'
+    );
   }
 
   const config = await generateBrowserWebpackConfigFromWorkspace(
@@ -210,7 +239,7 @@ export async function generateBrowserWebpackConfigFromContext(
     workspace,
     host,
     webpackPartialGenerator,
-    context.logger,
+    context.logger
   );
 
   return { workspace, config };

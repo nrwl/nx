@@ -19,25 +19,31 @@ export function getServerConfig(wco: WebpackConfigOptions): Configuration {
   if (wco.buildOptions.sourceMap) {
     const { scripts, styles, hidden } = wco.buildOptions.sourceMap;
 
-    extraPlugins.push(getSourceMapDevTool(scripts || false, styles || false, hidden || false));
+    extraPlugins.push(
+      getSourceMapDevTool(scripts || false, styles || false, hidden || false)
+    );
   }
 
   const config: Configuration = {
     resolve: {
-      mainFields: [...(wco.supportES2015 ? ['es2015'] : []), 'main', 'module'],
+      mainFields: [...(wco.supportES2015 ? ['es2015'] : []), 'main', 'module']
     },
     target: 'node',
     output: {
-      libraryTarget: 'commonjs',
+      libraryTarget: 'commonjs'
     },
     plugins: extraPlugins,
-    node: false,
+    node: false
   };
 
   if (wco.buildOptions.bundleDependencies == 'none') {
     config.externals = [
       /^@angular/,
-      (context: string, request: string, callback: (error?: null, result?: string) => void) => {
+      (
+        context: string,
+        request: string,
+        callback: (error?: null, result?: string) => void
+      ) => {
         // Absolute & Relative paths are not externals
         if (/^\.{0,2}\//.test(request) || isAbsolute(request)) {
           return callback();
@@ -50,7 +56,7 @@ export function getServerConfig(wco: WebpackConfigOptions): Configuration {
           // Node couldn't find it, so it must be user-aliased
           callback();
         }
-      },
+      }
     ];
   }
 

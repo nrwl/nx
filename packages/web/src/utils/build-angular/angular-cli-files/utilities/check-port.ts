@@ -7,7 +7,11 @@
  */
 import * as net from 'net';
 
-export function checkPort(port: number, host: string, basePort = 49152): Promise<number> {
+export function checkPort(
+  port: number,
+  host: string,
+  basePort = 49152
+): Promise<number> {
   return new Promise<number>((resolve, reject) => {
     function _getPort(portNumber: number) {
       if (portNumber > 65535) {
@@ -16,23 +20,26 @@ export function checkPort(port: number, host: string, basePort = 49152): Promise
 
       const server = net.createServer();
 
-      server.once('error', (err: Error & {code: string}) => {
-        if (err.code !== 'EADDRINUSE') {
-          reject(err);
-        } else if (port === 0) {
-          _getPort(portNumber + 1);
-        } else {
-          // If the port isn't available and we weren't looking for any port, throw error.
-          reject(
-            new Error(`Port ${port} is already in use. Use '--port' to specify a different port.`),
-          );
-        }
-      })
-      .once('listening', () => {
-        server.close();
-        resolve(portNumber);
-      })
-      .listen(portNumber, host);
+      server
+        .once('error', (err: Error & { code: string }) => {
+          if (err.code !== 'EADDRINUSE') {
+            reject(err);
+          } else if (port === 0) {
+            _getPort(portNumber + 1);
+          } else {
+            // If the port isn't available and we weren't looking for any port, throw error.
+            reject(
+              new Error(
+                `Port ${port} is already in use. Use '--port' to specify a different port.`
+              )
+            );
+          }
+        })
+        .once('listening', () => {
+          server.close();
+          resolve(portNumber);
+        })
+        .listen(portNumber, host);
     }
 
     _getPort(port || basePort);

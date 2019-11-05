@@ -22,7 +22,7 @@ const webpackOutputOptions = {
   assets: true, // required by custom stat output
   version: false,
   errorDetails: false,
-  moduleTrace: false,
+  moduleTrace: false
 };
 
 const verboseWebpackOutputOptions = {
@@ -37,7 +37,7 @@ const verboseWebpackOutputOptions = {
   version: true,
   chunkModules: true,
   errorDetails: true,
-  moduleTrace: true,
+  moduleTrace: true
 };
 
 export function getWebpackStatsConfig(verbose = false) {

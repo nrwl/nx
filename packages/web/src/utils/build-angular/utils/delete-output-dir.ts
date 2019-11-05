@@ -12,14 +12,18 @@ import { concatMap, last } from 'rxjs/operators';
 /**
  * Delete an output directory, but error out if it's the root of the project.
  */
-export function deleteOutputDir(root: Path, outputPath: Path, host: virtualFs.Host) {
+export function deleteOutputDir(
+  root: Path,
+  outputPath: Path,
+  host: virtualFs.Host
+) {
   const resolvedOutputPath = resolve(root, outputPath);
   if (resolvedOutputPath === root) {
     throw new Error('Output path MUST not be project root directory!');
   }
 
   return host.exists(resolvedOutputPath).pipe(
-    concatMap(exists => exists ? host.delete(resolvedOutputPath) : EMPTY),
-    last(null, null),
+    concatMap(exists => (exists ? host.delete(resolvedOutputPath) : EMPTY)),
+    last(null, null)
   );
 }

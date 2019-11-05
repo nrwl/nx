@@ -9,7 +9,11 @@ import { createHash } from 'crypto';
 import * as findCacheDirectory from 'find-cache-dir';
 import * as fs from 'fs';
 import { manglingDisabled } from '../utils/mangle-options';
-import { CacheKey, ProcessBundleOptions, ProcessBundleResult } from '../utils/process-bundle';
+import {
+  CacheKey,
+  ProcessBundleOptions,
+  ProcessBundleResult
+} from '../utils/process-bundle';
 
 const cacache = require('cacache');
 const cacheDownlevelPath = findCacheDirectory({ name: 'angular-build-dl' });
@@ -20,7 +24,11 @@ const packageVersion = require('../../package.json').version;
 let copyFileWorkaround = false;
 if (process.platform === 'darwin') {
   const version = process.versions.node.split('.').map(part => Number(part));
-  if (version[0] < 10 || version[0] === 11 || (version[0] === 10 && version[1] < 16)) {
+  if (
+    version[0] < 10 ||
+    version[0] === 11 ||
+    (version[0] === 10 && version[1] < 16)
+  ) {
     copyFileWorkaround = true;
   }
 }
@@ -44,7 +52,7 @@ export class BundleActionCache {
     fs.copyFileSync(
       typeof entry === 'string' ? entry : entry.path,
       dest,
-      fs.constants.COPYFILE_EXCL,
+      fs.constants.COPYFILE_EXCL
     );
     if (process.platform !== 'win32') {
       // The cache writes entries as readonly and when using copyFile the permissions will also be copied.
@@ -74,7 +82,8 @@ export class BundleActionCache {
 
     // Postfix added to sourcemap cache keys when vendor sourcemaps are present
     // Allows non-destructive caching of both variants
-    const SourceMapVendorPostfix = !!action.sourceMaps && action.vendorSourceMaps ? '|vendor' : '';
+    const SourceMapVendorPostfix =
+      !!action.sourceMaps && action.vendorSourceMaps ? '|vendor' : '';
 
     // Determine cache entries required based on build settings
     const cacheKeys = [];
@@ -85,7 +94,8 @@ export class BundleActionCache {
 
       // If sourcemaps are enabled, add original sourcemap as required
       if (action.sourceMaps) {
-        cacheKeys[CacheKey.OriginalMap] = baseCacheKey + SourceMapVendorPostfix + '|orig-map';
+        cacheKeys[CacheKey.OriginalMap] =
+          baseCacheKey + SourceMapVendorPostfix + '|orig-map';
       }
     }
     // If not only optimizing, add downlevel as required
@@ -94,14 +104,17 @@ export class BundleActionCache {
 
       // If sourcemaps are enabled, add downlevel sourcemap as required
       if (action.sourceMaps) {
-        cacheKeys[CacheKey.DownlevelMap] = baseCacheKey + SourceMapVendorPostfix + '|dl-map';
+        cacheKeys[CacheKey.DownlevelMap] =
+          baseCacheKey + SourceMapVendorPostfix + '|dl-map';
       }
     }
 
     return cacheKeys;
   }
 
-  async getCacheEntries(cacheKeys: (string | null)[]): Promise<(CacheEntry | null)[] | false> {
+  async getCacheEntries(
+    cacheKeys: (string | null)[]
+  ): Promise<(CacheEntry | null)[] | false> {
     // Attempt to get required cache entries
     const cacheEntries = [];
     for (const key of cacheKeys) {
@@ -113,7 +126,7 @@ export class BundleActionCache {
         cacheEntries.push({
           path: entry.path,
           size: entry.size,
-          integrity: entry.metadata && entry.metadata.integrity,
+          integrity: entry.metadata && entry.metadata.integrity
         });
       } else {
         cacheEntries.push(null);
@@ -123,8 +136,11 @@ export class BundleActionCache {
     return cacheEntries;
   }
 
-  async getCachedBundleResult(action: ProcessBundleOptions): Promise<ProcessBundleResult | null> {
-    const entries = action.cacheKeys && await this.getCacheEntries(action.cacheKeys);
+  async getCachedBundleResult(
+    action: ProcessBundleOptions
+  ): Promise<ProcessBundleResult | null> {
+    const entries =
+      action.cacheKeys && (await this.getCacheEntries(action.cacheKeys));
     if (!entries) {
       return null;
     }
@@ -136,7 +152,7 @@ export class BundleActionCache {
       result.original = {
         filename: action.filename,
         size: cacheEntry.size,
-        integrity: cacheEntry.integrity,
+        integrity: cacheEntry.integrity
       };
 
       BundleActionCache.copyEntryContent(cacheEntry, result.original.filename);
@@ -145,10 +161,13 @@ export class BundleActionCache {
       if (cacheEntry) {
         result.original.map = {
           filename: action.filename + '.map',
-          size: cacheEntry.size,
+          size: cacheEntry.size
         };
 
-        BundleActionCache.copyEntryContent(cacheEntry, result.original.filename + '.map');
+        BundleActionCache.copyEntryContent(
+          cacheEntry,
+          result.original.filename + '.map'
+        );
       }
     } else if (!action.ignoreOriginal) {
       // If the original wasn't processed (and therefore not cached), add info
@@ -160,8 +179,8 @@ export class BundleActionCache {
             ? undefined
             : {
                 filename: action.filename + '.map',
-                size: Buffer.byteLength(action.map, 'utf8'),
-              },
+                size: Buffer.byteLength(action.map, 'utf8')
+              }
       };
     }
 
@@ -170,7 +189,7 @@ export class BundleActionCache {
       result.downlevel = {
         filename: action.filename.replace('es2015', 'es5'),
         size: cacheEntry.size,
-        integrity: cacheEntry.integrity,
+        integrity: cacheEntry.integrity
       };
 
       BundleActionCache.copyEntryContent(cacheEntry, result.downlevel.filename);
@@ -179,10 +198,13 @@ export class BundleActionCache {
       if (cacheEntry) {
         result.downlevel.map = {
           filename: action.filename.replace('es2015', 'es5') + '.map',
-          size: cacheEntry.size,
+          size: cacheEntry.size
         };
 
-        BundleActionCache.copyEntryContent(cacheEntry, result.downlevel.filename + '.map');
+        BundleActionCache.copyEntryContent(
+          cacheEntry,
+          result.downlevel.filename + '.map'
+        );
       }
     }
 

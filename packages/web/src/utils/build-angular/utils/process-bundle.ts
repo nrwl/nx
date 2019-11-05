@@ -8,7 +8,11 @@
 import { createHash } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
-import { RawSourceMap, SourceMapConsumer, SourceMapGenerator } from 'source-map';
+import {
+  RawSourceMap,
+  SourceMapConsumer,
+  SourceMapGenerator
+} from 'source-map';
 import { minify } from 'terser';
 import { ScriptTarget, transpileModule } from 'typescript';
 import { SourceMapSource } from 'webpack-sources';
@@ -54,7 +58,7 @@ export const enum CacheKey {
   OriginalCode = 0,
   OriginalMap = 1,
   DownlevelCode = 2,
-  DownlevelMap = 3,
+  DownlevelMap = 3
 }
 
 let cachePath: string | undefined;
@@ -63,15 +67,21 @@ export function setup(options: { cachePath: string }): void {
   cachePath = options.cachePath;
 }
 
-async function cachePut(content: string, key: string | null, integrity?: string): Promise<void> {
+async function cachePut(
+  content: string,
+  key: string | null,
+  integrity?: string
+): Promise<void> {
   if (cachePath && key) {
     await cacache.put(cachePath, key, content, {
-      metadata: { integrity },
+      metadata: { integrity }
     });
   }
 }
 
-export async function process(options: ProcessBundleOptions): Promise<ProcessBundleResult> {
+export async function process(
+  options: ProcessBundleOptions
+): Promise<ProcessBundleResult> {
   if (!options.cacheKeys) {
     options.cacheKeys = [];
   }
@@ -79,7 +89,10 @@ export async function process(options: ProcessBundleOptions): Promise<ProcessBun
   const result: ProcessBundleResult = { name: options.name };
   if (options.integrityAlgorithm) {
     // Store unmodified code integrity value -- used for SRI value replacement
-    result.integrity = generateIntegrityValue(options.integrityAlgorithm, options.code);
+    result.integrity = generateIntegrityValue(
+      options.integrityAlgorithm,
+      options.code
+    );
   }
 
   // Runtime chunk requires specialized handling
@@ -108,15 +121,18 @@ export async function process(options: ProcessBundleOptions): Promise<ProcessBun
       fileName: downlevelFilename,
       compilerOptions: {
         sourceMap: !!sourceMap,
-        target: ScriptTarget.ES5,
-      },
+        target: ScriptTarget.ES5
+      }
     });
 
     downlevelCode = transformResult.outputText;
 
     if (sourceMap && transformResult.sourceMapText) {
       if (manualSourceMaps) {
-        downlevelMap = await mergeSourcemaps(sourceMap, JSON.parse(transformResult.sourceMapText));
+        downlevelMap = await mergeSourcemaps(
+          sourceMap,
+          JSON.parse(transformResult.sourceMapText)
+        );
       } else {
         // More accurate but significantly more costly
         const tempSource = new SourceMapSource(
@@ -124,7 +140,7 @@ export async function process(options: ProcessBundleOptions): Promise<ProcessBun
           downlevelFilename,
           JSON.parse(transformResult.sourceMapText),
           sourceCode,
-          sourceMap,
+          sourceMap
         );
 
         downlevelMap = tempSource.map();
@@ -137,7 +153,7 @@ export async function process(options: ProcessBundleOptions): Promise<ProcessBun
       const minifyResult = terserMangle(downlevelCode, {
         filename: downlevelFilename,
         map: downlevelMap,
-        compress: true,
+        compress: true
       });
       downlevelCode = minifyResult.code;
       downlevelMap = minifyResult.map;
@@ -166,13 +182,13 @@ export async function process(options: ProcessBundleOptions): Promise<ProcessBun
       downlevelFilename,
       downlevelCode,
       mapContent,
-      options.integrityAlgorithm,
+      options.integrityAlgorithm
     );
 
     await cachePut(
       downlevelCode,
       options.cacheKeys[CacheKey.DownlevelCode],
-      result.downlevel.integrity,
+      result.downlevel.integrity
     );
     fs.writeFileSync(downlevelPath, downlevelCode);
   }
@@ -183,7 +199,7 @@ export async function process(options: ProcessBundleOptions): Promise<ProcessBun
       options.filename,
       options.code,
       options.map,
-      options.integrityAlgorithm,
+      options.integrityAlgorithm
     );
   }
 
@@ -205,7 +221,7 @@ async function mergeSourcemaps(first: RawSourceMap, second: RawSourceMap) {
         }
         const originalPosition = originalConsumer.originalPositionFor({
           line: mapping.originalLine,
-          column: mapping.originalColumn,
+          column: mapping.originalColumn
         });
         if (
           originalPosition.line === null ||
@@ -217,14 +233,14 @@ async function mergeSourcemaps(first: RawSourceMap, second: RawSourceMap) {
         generator.addMapping({
           generated: {
             line: mapping.generatedLine,
-            column: mapping.generatedColumn,
+            column: mapping.generatedColumn
           },
           name: originalPosition.name || undefined,
           original: {
             line: originalPosition.line,
-            column: originalPosition.column,
+            column: originalPosition.column
           },
-          source: originalPosition.source,
+          source: originalPosition.source
         });
       });
     });
@@ -242,24 +258,28 @@ async function mergeSourcemaps(first: RawSourceMap, second: RawSourceMap) {
   return map;
 }
 
-async function mangleOriginal(options: ProcessBundleOptions): Promise<ProcessBundleFile> {
+async function mangleOriginal(
+  options: ProcessBundleOptions
+): Promise<ProcessBundleFile> {
   const result = terserMangle(options.code, {
     filename: path.basename(options.filename),
     map: options.map ? JSON.parse(options.map) : undefined,
-    ecma: 6,
+    ecma: 6
   });
 
   let mapContent;
   if (result.map) {
     if (!options.hiddenSourceMaps) {
-      result.code += `\n//# sourceMappingURL=${path.basename(options.filename)}.map`;
+      result.code += `\n//# sourceMappingURL=${path.basename(
+        options.filename
+      )}.map`;
     }
 
     mapContent = JSON.stringify(result.map);
 
     await cachePut(
       mapContent,
-      (options.cacheKeys && options.cacheKeys[CacheKey.OriginalMap]) || null,
+      (options.cacheKeys && options.cacheKeys[CacheKey.OriginalMap]) || null
     );
     fs.writeFileSync(options.filename + '.map', mapContent);
   }
@@ -268,13 +288,13 @@ async function mangleOriginal(options: ProcessBundleOptions): Promise<ProcessBun
     options.filename,
     result.code,
     mapContent,
-    options.integrityAlgorithm,
+    options.integrityAlgorithm
   );
 
   await cachePut(
     result.code,
     (options.cacheKeys && options.cacheKeys[CacheKey.OriginalCode]) || null,
-    fileResult.integrity,
+    fileResult.integrity
   );
   fs.writeFileSync(options.filename, result.code);
 
@@ -283,7 +303,12 @@ async function mangleOriginal(options: ProcessBundleOptions): Promise<ProcessBun
 
 function terserMangle(
   code: string,
-  options: { filename?: string; map?: RawSourceMap; compress?: boolean; ecma?: 5 | 6 } = {},
+  options: {
+    filename?: string;
+    map?: RawSourceMap;
+    compress?: boolean;
+    ecma?: 5 | 6;
+  } = {}
 ) {
   // Note: Investigate converting the AST instead of re-parsing
   // estree -> terser is already supported; need babel -> estree/terser
@@ -296,7 +321,7 @@ function terserMangle(
     safari10: true,
     output: {
       ascii_only: true,
-      webkit: true,
+      webkit: true
     },
     sourceMap:
       !!options.map &&
@@ -305,10 +330,10 @@ function terserMangle(
         // terser uses an old version of the sourcemap typings
         // tslint:disable-next-line: no-any
         content: options.map as any,
-        asObject: true,
+        asObject: true
         // typings don't include asObject option
         // tslint:disable-next-line: no-any
-      } as any),
+      } as any)
   });
 
   if (minifyOutput.error) {
@@ -316,25 +341,29 @@ function terserMangle(
   }
 
   // tslint:disable-next-line: no-non-null-assertion
-  return { code: minifyOutput.code!, map: minifyOutput.map as unknown | RawSourceMap | undefined };
+  return {
+    code: minifyOutput.code!,
+    map: minifyOutput.map as unknown | RawSourceMap | undefined
+  };
 }
 
 function createFileEntry(
   filename: string,
   code: string,
   map: string | undefined,
-  integrityAlgorithm?: string,
+  integrityAlgorithm?: string
 ): ProcessBundleFile {
   return {
     filename: filename,
     size: Buffer.byteLength(code),
-    integrity: integrityAlgorithm && generateIntegrityValue(integrityAlgorithm, code),
+    integrity:
+      integrityAlgorithm && generateIntegrityValue(integrityAlgorithm, code),
     map: !map
       ? undefined
       : {
           filename: filename + '.map',
-          size: Buffer.byteLength(map),
-        },
+          size: Buffer.byteLength(map)
+        }
   };
 }
 
@@ -352,7 +381,7 @@ function generateIntegrityValue(hashAlgorithm: string, code: string) {
 // However, two variants are still needed due to lazy routing and SRI differences
 // NOTE: This should eventually be a babel plugin
 async function processRuntime(
-  options: ProcessBundleOptions,
+  options: ProcessBundleOptions
 ): Promise<Partial<ProcessBundleResult>> {
   let originalCode = options.code;
   let downlevelCode = options.code;
@@ -365,10 +394,16 @@ async function processRuntime(
       }
 
       if (data.original && data.original.integrity) {
-        originalCode = originalCode.replace(data.integrity, data.original.integrity);
+        originalCode = originalCode.replace(
+          data.integrity,
+          data.original.integrity
+        );
       }
       if (data.downlevel && data.downlevel.integrity) {
-        downlevelCode = downlevelCode.replace(data.integrity, data.downlevel.integrity);
+        downlevelCode = downlevelCode.replace(
+          data.integrity,
+          data.downlevel.integrity
+        );
       }
     }
   }
@@ -383,7 +418,7 @@ async function processRuntime(
   if (options.optimize) {
     const minifiyResults = terserMangle(downlevelCode, {
       filename: path.basename(downlevelFilePath),
-      map: options.map === undefined ? undefined : JSON.parse(options.map),
+      map: options.map === undefined ? undefined : JSON.parse(options.map)
     });
     downlevelCode = minifiyResults.code;
     downlevelMap = JSON.stringify(minifiyResults.map);
@@ -394,8 +429,8 @@ async function processRuntime(
         downlevelFilePath,
         downlevelCode,
         downlevelMap,
-        options.integrityAlgorithm,
-      ),
+        options.integrityAlgorithm
+      )
     };
   } else {
     if (options.map) {
@@ -409,28 +444,30 @@ async function processRuntime(
         options.filename,
         originalCode,
         options.map,
-        options.integrityAlgorithm,
+        options.integrityAlgorithm
       ),
       downlevel: createFileEntry(
         downlevelFilePath,
         downlevelCode,
         downlevelMap,
-        options.integrityAlgorithm,
-      ),
+        options.integrityAlgorithm
+      )
     };
   }
 
   if (downlevelMap) {
     await cachePut(
       downlevelMap,
-      (options.cacheKeys && options.cacheKeys[CacheKey.DownlevelMap]) || null,
+      (options.cacheKeys && options.cacheKeys[CacheKey.DownlevelMap]) || null
     );
     fs.writeFileSync(downlevelFilePath + '.map', downlevelMap);
-    downlevelCode += `\n//# sourceMappingURL=${path.basename(downlevelFilePath)}.map`;
+    downlevelCode += `\n//# sourceMappingURL=${path.basename(
+      downlevelFilePath
+    )}.map`;
   }
   await cachePut(
     downlevelCode,
-    (options.cacheKeys && options.cacheKeys[CacheKey.DownlevelCode]) || null,
+    (options.cacheKeys && options.cacheKeys[CacheKey.DownlevelCode]) || null
   );
   fs.writeFileSync(downlevelFilePath, downlevelCode);
 

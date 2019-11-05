@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 
-process.on('message', (message) => {
+process.on('message', message => {
   // Only process messages with the hash in 'run-module-as-observable-fork.ts'.
   if (message.hash === '5d4b9a5c0a4e0f9977598437b0e85bcc') {
     const requiredModule = require(message.modulePath);
@@ -17,4 +17,3 @@ process.on('message', (message) => {
     }
   }
 });
-

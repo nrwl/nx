@@ -16,7 +16,10 @@ import * as path from 'path';
  * @param workspaceRoot - workspaceRoot root location when provided
  * it will resolve 'tsconfigPath' from this path.
  */
-export function readTsconfig(tsconfigPath: string, workspaceRoot?: string): ParsedConfiguration {
+export function readTsconfig(
+  tsconfigPath: string,
+  workspaceRoot?: string
+): ParsedConfiguration {
   const tsConfigFullPath = workspaceRoot
     ? path.resolve(workspaceRoot, tsconfigPath)
     : tsconfigPath;

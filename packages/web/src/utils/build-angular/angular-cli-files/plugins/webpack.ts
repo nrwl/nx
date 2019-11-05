@@ -7,15 +7,28 @@
  */
 
 // Exports the webpack plugins we use internally.
-export { CleanCssWebpackPlugin, CleanCssWebpackPluginOptions } from './cleancss-webpack-plugin';
+export {
+  CleanCssWebpackPlugin,
+  CleanCssWebpackPluginOptions
+} from './cleancss-webpack-plugin';
 export { BundleBudgetPlugin, BundleBudgetPluginOptions } from './bundle-budget';
-export { ScriptsWebpackPlugin, ScriptsWebpackPluginOptions } from './scripts-webpack-plugin';
-export { SuppressExtractedTextChunksWebpackPlugin } from './suppress-entry-chunks-webpack-plugin';
-export { RemoveHashPlugin, RemoveHashPluginOptions } from './remove-hash-plugin';
-export { NamedLazyChunksPlugin as NamedChunksPlugin } from './named-chunks-plugin';
+export {
+  ScriptsWebpackPlugin,
+  ScriptsWebpackPluginOptions
+} from './scripts-webpack-plugin';
+export {
+  SuppressExtractedTextChunksWebpackPlugin
+} from './suppress-entry-chunks-webpack-plugin';
+export {
+  RemoveHashPlugin,
+  RemoveHashPluginOptions
+} from './remove-hash-plugin';
+export {
+  NamedLazyChunksPlugin as NamedChunksPlugin
+} from './named-chunks-plugin';
 export {
   default as PostcssCliResources,
-  PostcssCliResourcesOptions,
+  PostcssCliResourcesOptions
 } from './postcss-cli-resources';
 
 import { join } from 'path';

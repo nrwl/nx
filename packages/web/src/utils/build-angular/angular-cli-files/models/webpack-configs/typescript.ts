@@ -24,7 +24,7 @@ function _pluginOptionsOverrides(
 ): AngularCompilerPluginOptions {
   const compilerOptions = {
     ...(pluginOptions.compilerOptions || {})
-  }
+  };
 
   const hostReplacementPaths: { [replace: string]: string } = {};
   if (buildOptions.fileReplacements) {
@@ -51,7 +51,7 @@ function _pluginOptionsOverrides(
 function _createAotPlugin(
   wco: WebpackConfigOptions,
   options: AngularCompilerPluginOptions,
-  i18nExtract = false,
+  i18nExtract = false
 ) {
   const { root, buildOptions } = wco;
 
@@ -61,20 +61,18 @@ function _createAotPlugin(
 
   const i18nFileAndFormat = i18nExtract
     ? {
-      i18nOutFile: buildOptions.i18nFile,
-      i18nOutFormat: buildOptions.i18nFormat,
-    } : {
-      i18nInFile: i18nInFile,
-      i18nInFormat: buildOptions.i18nFormat,
-    };
+        i18nOutFile: buildOptions.i18nFile,
+        i18nOutFormat: buildOptions.i18nFormat
+      }
+    : {
+        i18nInFile: i18nInFile,
+        i18nInFormat: buildOptions.i18nFormat
+      };
 
   const additionalLazyModules: { [module: string]: string } = {};
   if (buildOptions.lazyModules) {
     for (const lazyModule of buildOptions.lazyModules) {
-      additionalLazyModules[lazyModule] = path.resolve(
-        root,
-        lazyModule,
-      );
+      additionalLazyModules[lazyModule] = path.resolve(root, lazyModule);
     }
   }
 
@@ -82,7 +80,8 @@ function _createAotPlugin(
     mainPath: path.join(root, buildOptions.main),
     ...i18nFileAndFormat,
     locale: buildOptions.i18nLocale,
-    platform: buildOptions.platform === 'server' ? PLATFORM.Server : PLATFORM.Browser,
+    platform:
+      buildOptions.platform === 'server' ? PLATFORM.Server : PLATFORM.Browser,
     missingTranslation: buildOptions.i18nMissingTranslation,
     sourceMap: buildOptions.sourceMap.scripts,
     additionalLazyModules,
@@ -91,7 +90,7 @@ function _createAotPlugin(
     contextElementDependencyConstructor: require('webpack/lib/dependencies/ContextElementDependency'),
     logger: wco.logger,
     directTemplateLoading: true,
-    ...options,
+    ...options
   };
 
   pluginOptions = _pluginOptionsOverrides(buildOptions, pluginOptions);
@@ -127,7 +126,10 @@ export function getAotConfig(wco: WebpackConfigOptions, i18nExtract = false) {
   };
 }
 
-export function getTypescriptWorkerPlugin(wco: WebpackConfigOptions, workerTsConfigPath: string) {
+export function getTypescriptWorkerPlugin(
+  wco: WebpackConfigOptions,
+  workerTsConfigPath: string
+) {
   const { buildOptions } = wco;
 
   let pluginOptions: AngularCompilerPluginOptions = {
@@ -142,7 +144,7 @@ export function getTypescriptWorkerPlugin(wco: WebpackConfigOptions, workerTsCon
     // Run no transformers.
     platformTransformers: [],
     // Don't attempt lazy route discovery.
-    discoverLazyRoutes: false,
+    discoverLazyRoutes: false
   };
 
   pluginOptions = _pluginOptionsOverrides(buildOptions, pluginOptions);

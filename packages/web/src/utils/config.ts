@@ -95,16 +95,14 @@ export function getBaseWebpackPartial(
   }
 
   if (options.extractLicenses) {
-    extraPlugins.push(
-      new LicenseWebpackPlugin({
-        stats: {
-          warnings: false,
-          errors: false,
-        },
-        perChunkOutput: false,
-        outputFilename: `3rdpartylicenses.txt`,
-      }) as any
-    );
+    extraPlugins.push(new LicenseWebpackPlugin({
+      stats: {
+        warnings: false,
+        errors: false
+      },
+      perChunkOutput: false,
+      outputFilename: `3rdpartylicenses.txt`
+    }) as any);
   }
 
   // process asset entries

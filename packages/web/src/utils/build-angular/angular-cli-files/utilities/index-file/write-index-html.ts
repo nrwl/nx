@@ -7,13 +7,23 @@
  */
 
 import { EmittedFiles } from '@angular-devkit/build-webpack';
-import { Path, dirname, getSystemPath, join, virtualFs } from '@angular-devkit/core';
+import {
+  Path,
+  dirname,
+  getSystemPath,
+  join,
+  virtualFs
+} from '@angular-devkit/core';
 import { Observable, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { ExtraEntryPoint } from '../../../browser/schema';
 import { generateEntryPoints } from '../package-chunk-sort';
 import { stripBom } from '../strip-bom';
-import { CrossOriginValue, FileInfo, augmentIndexHtml } from './augment-index-html';
+import {
+  CrossOriginValue,
+  FileInfo,
+  augmentIndexHtml
+} from './augment-index-html';
 
 type ExtensionFilter = '.js' | '.css';
 
@@ -48,7 +58,7 @@ export function writeIndexHtml({
   scripts = [],
   styles = [],
   postTransform,
-  crossOrigin,
+  crossOrigin
 }: WriteIndexHtmlOptions): Observable<void> {
   return host.read(indexPath).pipe(
     map(content => stripBom(virtualFs.fileBufferToString(content))),
@@ -69,18 +79,20 @@ export function writeIndexHtml({
             .read(join(dirname(outputPath), filePath))
             .pipe(map(data => virtualFs.fileBufferToString(data)))
             .toPromise();
-        },
-      }),
+        }
+      })
     ),
-    switchMap(content => (postTransform ? postTransform(content) : of(content))),
+    switchMap(content =>
+      postTransform ? postTransform(content) : of(content)
+    ),
     map(content => virtualFs.stringToFileBuffer(content)),
-    switchMap(content => host.write(outputPath, content)),
+    switchMap(content => host.write(outputPath, content))
   );
 }
 
 function filterAndMapBuildFiles(
   files: EmittedFiles[],
-  extensionFilter: ExtensionFilter | ExtensionFilter[],
+  extensionFilter: ExtensionFilter | ExtensionFilter[]
 ): FileInfo[] {
   const filteredFiles: FileInfo[] = [];
   const validExtensions: string[] = Array.isArray(extensionFilter)

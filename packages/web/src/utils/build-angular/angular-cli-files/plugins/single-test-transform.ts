@@ -15,7 +15,9 @@ export interface SingleTestTransformLoaderOptions {
   logger: logging.Logger;
 }
 
-export const SingleTestTransformLoader = require.resolve(join(__dirname, 'single-test-transform'));
+export const SingleTestTransformLoader = require.resolve(
+  join(__dirname, 'single-test-transform')
+);
 
 /**
  * This loader transforms the default test file to only run tests
@@ -46,12 +48,13 @@ export default function loader(this: loader.LoaderContext, source: string) {
     const message = [
       `The 'include' option requires that the 'main' file for tests include the line below:`,
       `const context = require.context('./', true, /\.spec\.ts$/);`,
-      `Arguments passed to require.context are not strict and can be changed`,
+      `Arguments passed to require.context are not strict and can be changed`
     ];
     options.logger.error(message.join(lineSeparator));
   }
 
-  const mockedRequireContext = '{ keys: () => ({ map: (_a) => { } }) };' + lineSeparator;
+  const mockedRequireContext =
+    '{ keys: () => ({ map: (_a) => { } }) };' + lineSeparator;
   source = source.replace(regex, mockedRequireContext + targettedImports);
 
   return source;

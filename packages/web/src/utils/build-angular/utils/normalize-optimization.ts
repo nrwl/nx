@@ -9,10 +9,12 @@
 import { OptimizationClass, OptimizationUnion } from '../browser/schema';
 
 export function normalizeOptimization(
-  optimization: OptimizationUnion = false,
+  optimization: OptimizationUnion = false
 ): Required<OptimizationClass> {
   return {
-    scripts: typeof optimization === 'object' ? !!optimization.scripts : optimization,
-    styles: typeof optimization === 'object' ? !!optimization.styles : optimization,
+    scripts:
+      typeof optimization === 'object' ? !!optimization.scripts : optimization,
+    styles:
+      typeof optimization === 'object' ? !!optimization.styles : optimization
   };
 }
