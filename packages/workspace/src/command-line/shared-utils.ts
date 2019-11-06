@@ -3,81 +3,20 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { appRootPath } from '../utils/app-root';
 import { readJsonFile } from '../utils/fileutils';
-import { YargsAffectedOptions } from './run-tasks/affected';
-import { Deps, readDependencies } from './deps-calculator';
-import { touchedProjects } from './touched';
 import { output } from './output';
+import {
+  ImplicitDependencies,
+  NormalizedImplicitDependencyEntry,
+  NxJson,
+  PackageJson,
+  ProjectNode,
+  ProjectType,
+  YargsAffectedOptions
+} from './shared-models';
 
 const ignore = require('ignore');
 
 export const TEN_MEGABYTES = 1024 * 10000;
-export type ImplicitDependencyEntry = { [key: string]: '*' | string[] };
-export type NormalizedImplicitDependencyEntry = { [key: string]: string[] };
-export type ImplicitDependencies = {
-  files: NormalizedImplicitDependencyEntry;
-  projects: NormalizedImplicitDependencyEntry;
-};
-
-export interface NxJson {
-  implicitDependencies?: ImplicitDependencyEntry;
-  npmScope: string;
-  projects: {
-    [projectName: string]: NxJsonProjectConfig;
-  };
-  tasksRunnerOptions?: {
-    [tasksRunnerName: string]: {
-      runner: string;
-      options?: unknown;
-    };
-  };
-}
-
-export interface NxJsonProjectConfig {
-  implicitDependencies?: string[];
-  tags?: string[];
-}
-
-export enum ProjectType {
-  app = 'app',
-  e2e = 'e2e',
-  lib = 'lib'
-}
-
-export type ProjectNode = {
-  name: string;
-  root: string;
-  type: ProjectType;
-  tags: string[];
-  files: string[];
-  architect: { [k: string]: any };
-  implicitDependencies: string[];
-  fileMTimes: {
-    [filePath: string]: number;
-  };
-};
-
-export interface ProjectMap {
-  [projectName: string]: ProjectNode;
-}
-
-export interface ProjectStates {
-  [projectName: string]: {
-    affected: boolean;
-    touched: boolean;
-  };
-}
-
-export interface DependencyGraph {
-  projects: ProjectMap;
-  dependencies: Deps;
-  roots: string[];
-}
-
-export interface ProjectMetadata {
-  dependencyGraph: DependencyGraph;
-
-  projectStates: ProjectStates;
-}
 
 function readFileIfExisting(path: string) {
   return fs.existsSync(path) ? fs.readFileSync(path, 'UTF-8').toString() : '';
@@ -209,14 +148,16 @@ function getFileLevelImplicitDependencies(
     return {};
   }
 
-  Object.entries<'*' | string[]>(nxJson.implicitDependencies).forEach(
-    ([key, value]) => {
-      if (value === '*') {
-        nxJson.implicitDependencies[key] = projects.map(p => p.name);
-      }
+  const normalized: NormalizedImplicitDependencyEntry = {};
+
+  Object.entries(nxJson.implicitDependencies).forEach(([key, value]) => {
+    if (value === '*') {
+      normalized[key] = projects.map(p => p.name);
+    } else if (Array.isArray(value)) {
+      normalized[key] = value;
     }
-  );
-  return <NormalizedImplicitDependencyEntry>nxJson.implicitDependencies;
+  });
+  return normalized;
 }
 
 function getProjectLevelImplicitDependencies(
@@ -305,8 +246,8 @@ export function assertWorkspaceValidity(workspaceJson, nxJson) {
 
   const invalidImplicitDependencies = new Map<string, string[]>();
 
-  Object.entries<'*' | string[]>(nxJson.implicitDependencies || {})
-    .filter(([_, val]) => val !== '*') // These are valid since it is calculated
+  Object.entries(nxJson.implicitDependencies || {})
+    .filter(([_, val]) => Array.isArray(val)) // These are valid since it is calculated
     .reduce((map, [filename, projectNames]: [string, string[]]) => {
       detectAndSetInvalidProjectValues(map, filename, projectNames, projects);
       return map;
@@ -416,7 +357,7 @@ export function workspaceFileName() {
   }
 }
 
-export function readPackageJson(): any {
+export function readPackageJson(): PackageJson {
   return readJsonFile(`${appRootPath}/package.json`);
 }
 
@@ -426,133 +367,6 @@ export function readNxJson(): NxJson {
     throw new Error(`nx.json must define the npmScope property.`);
   }
   return config;
-}
-
-export function getProjectMetadata(
-  touchedFiles: string[],
-  withDeps: boolean
-): ProjectMetadata {
-  const workspaceJson = readWorkspaceJson();
-  const nxJson = readNxJson();
-  const projectNodes = getProjectNodes(workspaceJson, nxJson);
-  const implicitDeps = getImplicitDependencies(
-    projectNodes,
-    workspaceJson,
-    nxJson
-  );
-  const dependencies = readDependencies(nxJson.npmScope, projectNodes);
-  const tp = touchedProjects(implicitDeps, projectNodes, touchedFiles);
-  return createProjectMetadata(projectNodes, dependencies, tp, withDeps);
-}
-
-export function createProjectMetadata(
-  projectNodes: ProjectNode[],
-  dependencies: Deps,
-  touchedProjects: string[],
-  withDeps: boolean
-): ProjectMetadata {
-  const projectStates: ProjectStates = {};
-  const projects: ProjectMap = {};
-
-  projectNodes.forEach(project => {
-    projectStates[project.name] = {
-      touched: false,
-      affected: false
-    };
-    projects[project.name] = project;
-  });
-  const reverseDeps = reverseDependencies(dependencies);
-  const roots = projectNodes
-    .filter(project => !reverseDeps[project.name])
-    .map(project => project.name);
-
-  touchedProjects.forEach(projectName => {
-    projectStates[projectName].touched = true;
-    setAffected(
-      projectName,
-      simplifyDeps(dependencies),
-      reverseDeps,
-      projectStates,
-      withDeps
-    );
-  });
-
-  return {
-    dependencyGraph: {
-      projects,
-      dependencies,
-      roots
-    },
-    projectStates
-  };
-}
-
-function simplifyDeps(dependencies: Deps): { [projectName: string]: string[] } {
-  const res = {};
-  Object.keys(dependencies).forEach(d => {
-    res[d] = dependencies[d].map(dd => dd.projectName);
-  });
-  return res;
-}
-
-function reverseDependencies(
-  dependencies: Deps
-): { [projectName: string]: string[] } {
-  const reverseDepSets: { [projectName: string]: Set<string> } = {};
-  Object.entries(dependencies).forEach(([depName, deps]) => {
-    deps.forEach(dep => {
-      reverseDepSets[dep.projectName] =
-        reverseDepSets[dep.projectName] || new Set<string>();
-      reverseDepSets[dep.projectName].add(depName);
-    });
-  });
-  return Object.entries(reverseDepSets).reduce(
-    (reverseDeps, [name, depSet]) => {
-      reverseDeps[name] = Array.from(depSet);
-      return reverseDeps;
-    },
-    {} as {
-      [projectName: string]: string[];
-    }
-  );
-}
-
-function setAffected(
-  projectName: string,
-  deps: { [projectName: string]: string[] },
-  reverseDeps: { [projectName: string]: string[] },
-  projectStates: ProjectStates,
-  withDeps: boolean
-) {
-  projectStates[projectName].affected = true;
-  const rdep = reverseDeps[projectName] || [];
-  rdep.forEach(dep => {
-    // If a dependency is already marked as affected, it means it has been visited
-    if (projectStates[dep].affected) {
-      return;
-    }
-    setAffected(dep, deps, reverseDeps, projectStates, withDeps);
-  });
-
-  if (withDeps) {
-    setDeps(projectName, deps, reverseDeps, projectStates);
-  }
-}
-
-function setDeps(
-  projectName: string,
-  deps: { [projectName: string]: string[] },
-  reverseDeps: { [projectName: string]: string[] },
-  projectStates: ProjectStates
-) {
-  projectStates[projectName].affected = true;
-  deps[projectName].forEach(dep => {
-    // If a dependency is already marked as affected, it means it has been visited
-    if (projectStates[dep].affected) {
-      return;
-    }
-    setDeps(dep, deps, reverseDeps, projectStates);
-  });
 }
 
 export function getProjectRoots(projectNames: string[]): string[] {

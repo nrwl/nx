@@ -1,20 +1,26 @@
+import { execSync } from 'child_process';
 import { basename } from 'path';
 import * as yargs from 'yargs';
 import { Task } from '../../tasks-runner/tasks-runner';
 import { generateGraph } from '../dep-graph';
 import { output } from '../output';
+import { ProjectNode, ProjectType } from '../shared-models';
 import {
-  ProjectMetadata,
-  getProjectMetadata,
+  cliCommand,
+  getProjectNodes,
   parseFiles,
   printArgsWarning,
-  ProjectNode,
-  ProjectType,
-  cliCommand
-} from '../shared';
+  readNxJson,
+  readWorkspaceJson,
+  TEN_MEGABYTES
+} from '../shared-utils';
 import { getCommand, getOutputs } from '../../tasks-runner/utils';
-import { createTask, runCommand } from './run-command';
-import { Arguments, readEnvironment, splitArgs } from './utils';
+import { createTask, runCommand } from '../run-tasks/run-command';
+import { Arguments, readEnvironment, splitArgs } from '../run-tasks/utils';
+import { readDependencies } from '../read-dependencies';
+import { AffectedMetadata } from '../affected/affected-metadata';
+import { AffectedMetadataBuilder } from '../affected/affected-metadata-builder';
+import { readFileSync } from 'fs';
 
 export interface YargsAffectedOptions
   extends yargs.Arguments,
@@ -49,12 +55,13 @@ export function affected(
   parsedArgs: YargsAffectedOptions
 ): void {
   const env = readEnvironment(parsedArgs.target);
-
-  const affectedMetadata = getProjectMetadata(
-    parsedArgs.all ? [] : parseFiles(parsedArgs).files,
+  const touchedFiles = parsedArgs.all ? [] : parseFiles(parsedArgs).files;
+  const revisionRange = getAffectedRevisionRange(parsedArgs);
+  const affectedMetadata = getAffectedMetadata(
+    touchedFiles,
+    revisionRange,
     parsedArgs.withDeps
   );
-
   const projects = (parsedArgs.all
     ? getAllProjects(affectedMetadata)
     : getAffectedProjects(affectedMetadata)
@@ -135,6 +142,53 @@ export function affected(
   }
 }
 
+export function getAffectedMetadata(
+  touchedFiles: string[],
+  revisionRange: { base: null | string; head: null | string },
+  withDeps: boolean
+): AffectedMetadata {
+  const workspaceJson = readWorkspaceJson();
+  const nxJson = readNxJson();
+  const projectNodes = getProjectNodes(workspaceJson, nxJson);
+  const dependencies = readDependencies(nxJson.npmScope, projectNodes);
+  const builder = new AffectedMetadataBuilder();
+  builder.contextReady({
+    readFileAtRevision,
+    workspaceJson,
+    nxJson,
+    dependencies,
+    projectNodes,
+    revisionRange,
+    withDeps
+  });
+  builder.filesTouched(touchedFiles);
+  return builder.build();
+}
+
+function getAffectedRevisionRange(parsedArgs: YargsAffectedOptions) {
+  return parsedArgs.all || parsedArgs.files
+    ? { base: null, head: null }
+    : {
+        base: parsedArgs.base || 'master',
+        // not setting `head` means uncommitted and untracked files are accounted for
+        head: parsedArgs.head
+      };
+}
+
+function readFileAtRevision(file: string, revision: string): string {
+  try {
+    return !revision
+      ? readFileSync(file).toString()
+      : execSync(`git show ${revision}:${file}`, {
+          maxBuffer: TEN_MEGABYTES
+        })
+          .toString()
+          .trim();
+  } catch {
+    return '';
+  }
+}
+
 function allProjectsWithTargetAndConfiguration(
   projects: ProjectNode[],
   parsedArgs: YargsAffectedOptions
@@ -169,19 +223,21 @@ function projectHasTargetAndConfiguration(
   }
 }
 
-function getAffectedProjects(affectedMetadata: ProjectMetadata): ProjectNode[] {
+function getAffectedProjects(
+  affectedMetadata: AffectedMetadata
+): ProjectNode[] {
   return filterAffectedMetadata(
     affectedMetadata,
     project => affectedMetadata.projectStates[project.name].affected
   );
 }
 
-function getAllProjects(affectedMetadata: ProjectMetadata): ProjectNode[] {
+function getAllProjects(affectedMetadata: AffectedMetadata): ProjectNode[] {
   return filterAffectedMetadata(affectedMetadata, () => true);
 }
 
 function filterAffectedMetadata(
-  affectedMetadata: ProjectMetadata,
+  affectedMetadata: AffectedMetadata,
   predicate: (project) => boolean
 ): ProjectNode[] {
   const projects: ProjectNode[] = [];
@@ -192,20 +248,26 @@ function filterAffectedMetadata(
   });
   return projects;
 }
+
 function visit(
-  affectedMetadata: ProjectMetadata,
+  affectedMetadata: AffectedMetadata,
   visitor: (project: ProjectNode) => void
 ) {
   const visited = new Set<string>();
   function _visit(projectName: string) {
-    if (visited.has(projectName)) {
+    if (
+      visited.has(projectName) ||
+      !affectedMetadata.dependencyGraph.dependencies[projectName]
+    ) {
       return;
     }
     visited.add(projectName);
     affectedMetadata.dependencyGraph.dependencies[projectName].forEach(dep => {
       _visit(dep.projectName);
     });
-    visitor(affectedMetadata.dependencyGraph.projects[projectName]);
+    if (affectedMetadata.dependencyGraph.projects[projectName]) {
+      visitor(affectedMetadata.dependencyGraph.projects[projectName]);
+    }
   }
   affectedMetadata.dependencyGraph.roots.forEach(root => {
     _visit(root);
@@ -226,7 +288,7 @@ function printError(e: any, verbose?: boolean) {
 
 function printAffected(
   affectedProjects: ProjectNode[],
-  affectedMetadata: ProjectMetadata,
+  affectedMetadata: AffectedMetadata,
   args: Arguments<YargsAffectedOptions>
 ) {
   const tasks: Task[] = affectedProjects.map(affectedProject =>
@@ -280,7 +342,8 @@ const dummyOptions: AffectedOptions = {
   exclude: ['exclude'],
   files: [''],
   verbose: false,
-  plain: false
+  plain: false,
+  withDeps: false
 };
 
 const nxSpecificFlags = Object.keys(dummyOptions);

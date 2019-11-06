@@ -1,5 +1,5 @@
 import { Task } from './tasks-runner';
-import { ProjectMap } from '../command-line/shared';
+import { ProjectMap } from '../command-line/shared-models';
 
 const commonCommands = ['build', 'test', 'lint', 'e2e', 'deploy'];
 

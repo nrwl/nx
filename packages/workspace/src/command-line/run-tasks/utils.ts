@@ -1,14 +1,8 @@
 import * as yargsParser from 'yargs-parser';
 import * as yargs from 'yargs';
-import {
-  getProjectNodes,
-  NxJson,
-  ProjectNode,
-  readNxJson,
-  readWorkspaceJson
-} from '../shared';
+import { readNxJson, readWorkspaceJson } from '../shared-utils';
+import { NxJson, ProjectNode } from '../shared-models';
 import { WorkspaceResults } from '../workspace-results';
-import { output } from '../output';
 
 export interface Arguments<T extends yargs.Arguments> {
   nxArgs: T;

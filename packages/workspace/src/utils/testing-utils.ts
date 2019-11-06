@@ -7,11 +7,11 @@ import {
   UpdateRecorder,
   Action
 } from '@angular-devkit/schematics';
-import { NxJson } from '../command-line/shared';
 import {
   _test_addWorkspaceFile,
   WorkspaceFormat
 } from '@angular-devkit/core/src/workspace/core';
+import { NxJson } from '../command-line/shared-models';
 
 export function getFileContent(tree: Tree, path: string): string {
   const fileEntry = tree.get(path);

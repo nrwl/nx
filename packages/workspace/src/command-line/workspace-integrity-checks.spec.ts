@@ -1,6 +1,6 @@
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
-import { ProjectType } from './shared';
 import chalk from 'chalk';
+import { ProjectType } from './shared-models';
 
 describe('WorkspaceIntegrityChecks', () => {
   describe('workspace.json is in sync with the filesystem', () => {

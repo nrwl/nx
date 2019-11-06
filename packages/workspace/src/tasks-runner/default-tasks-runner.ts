@@ -2,12 +2,12 @@ import * as runAll from 'npm-run-all';
 import { Observable } from 'rxjs';
 import { basename } from 'path';
 import {
-  AffectedEventType,
+  TaskEventType,
   Task,
   TaskCompleteEvent,
   TasksRunner
 } from './tasks-runner';
-import { cliCommand } from '../command-line/shared';
+import { cliCommand } from '../command-line/shared-utils';
 import { output } from '../command-line/output';
 import { readJsonFile } from '../utils/fileutils';
 import { getCommand } from './utils';
@@ -45,7 +45,7 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
         tasks.forEach(task => {
           subscriber.next({
             task: task,
-            type: AffectedEventType.TaskComplete,
+            type: TaskEventType.TaskComplete,
             success: true
           });
         });
@@ -54,7 +54,7 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
         e.results.forEach((result, i) => {
           subscriber.next({
             task: tasks[i],
-            type: AffectedEventType.TaskComplete,
+            type: TaskEventType.TaskComplete,
             success: result.code === 0
           });
         });

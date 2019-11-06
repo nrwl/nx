@@ -1,11 +1,10 @@
-import { readDependencies } from '@nrwl/workspace/src/command-line/deps-calculator';
+import { readDependencies } from '@nrwl/workspace/src/command-line/read-dependencies';
 import {
   getProjectNodes,
   normalizedProjectRoot,
   readNxJson,
-  readWorkspaceJson,
-  ProjectType
-} from '@nrwl/workspace/src/command-line/shared';
+  readWorkspaceJson
+} from '@nrwl/workspace';
 import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
 import {
   DepConstraint,
@@ -179,7 +178,7 @@ export default createESLintRule<Options, MessageIds>({
           }
 
           // cannot import apps
-          if (targetProject.type !== ProjectType.lib) {
+          if (targetProject.type !== 'lib') {
             context.report({
               node,
               messageId: 'noImportsOfApps'

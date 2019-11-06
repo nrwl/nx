@@ -3,8 +3,12 @@ import * as ts from 'typescript';
 import * as fs from 'fs';
 
 import { Rule } from './nxEnforceModuleBoundariesRule';
-import { ProjectNode, ProjectType } from '../command-line/shared';
-import { DependencyType, Dependency } from '../command-line/deps-calculator';
+import {
+  Dependency,
+  DependencyType,
+  ProjectNode,
+  ProjectType
+} from '../command-line/shared-models';
 
 describe('Enforce Module Boundaries', () => {
   beforeEach(() => {

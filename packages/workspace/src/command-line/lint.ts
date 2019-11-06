@@ -3,7 +3,7 @@ import {
   allFilesInDir,
   readWorkspaceJson,
   readNxJson
-} from './shared';
+} from './shared-utils';
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
 import * as path from 'path';
 import { appRootPath } from '../utils/app-root';

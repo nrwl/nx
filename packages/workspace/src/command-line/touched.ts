@@ -1,14 +1,10 @@
-import { join } from 'path';
-
 import {
-  ImplicitDependencies,
-  readWorkspaceJson,
+  getImplicitDependencies,
   getProjectNodes,
   readNxJson,
-  getImplicitDependencies,
-  ProjectNode
-} from './shared';
-import { appRootPath } from '../utils/app-root';
+  readWorkspaceJson
+} from './shared-utils';
+import { ImplicitDependencies, ProjectNode } from './shared-models';
 
 export function touchedProjects(
   implicitDependencies: ImplicitDependencies,

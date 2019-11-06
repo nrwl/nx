@@ -1,21 +1,21 @@
 import { readFileSync, writeFileSync } from 'fs';
 import * as http from 'http';
 import * as opn from 'opn';
-import { Deps, readDependencies } from './deps-calculator';
+import { readDependencies } from '../read-dependencies';
 import {
   getProjectNodes,
   readNxJson,
-  readWorkspaceJson,
-  ProjectNode
-} from './shared';
-import { output } from './output';
+  readWorkspaceJson
+} from '../shared-utils';
+import { output } from '../output';
+import { Dependencies, ProjectNode } from '../shared-models';
 
 export function startServer(
   projects: ProjectNode[],
-  deps: Deps,
+  deps: Dependencies,
   affected: string[]
 ) {
-  const f = readFileSync(__dirname + '/dep-graph/dep-graph.html').toString();
+  const f = readFileSync(__dirname + '/dep-graph.html').toString();
   const html = f
     .replace(
       `window.projects = null`,

@@ -1,6 +1,6 @@
-import { DependencyGraph, NxJson, ProjectNode } from '../shared';
+import { DependencyGraph, NxJson, ProjectNode } from '../shared-models';
 import {
-  AffectedEventType,
+  TaskEventType,
   Task,
   TaskCompleteEvent,
   TasksRunner
@@ -71,7 +71,7 @@ export function runCommand<T extends RunArgs>(
   }).subscribe({
     next: (event: TaskCompleteEvent) => {
       switch (event.type) {
-        case AffectedEventType.TaskComplete: {
+        case TaskEventType.TaskComplete: {
           workspace.setResult(event.task.target.project, event.success);
         }
       }

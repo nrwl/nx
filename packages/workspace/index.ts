@@ -25,10 +25,11 @@ export {
   supportedNxCommands
 } from './src/command-line/nx-commands';
 export {
+  getProjectNodes,
+  normalizedProjectRoot,
   readWorkspaceJson,
-  readNxJson,
-  NxJson
-} from './src/command-line/shared';
+  readNxJson
+} from './src/command-line/shared-utils';
 export {
   readJsonInTree,
   updateJsonInTree,
@@ -69,5 +70,6 @@ export { checkAndCleanWithSemver } from './src/utils/version-utils';
 export {
   updatePackagesInPackageJson
 } from './src/utils/update-packages-in-package-json';
+export { NxJson } from './src/command-line/shared-models';
 
 export const stringUtils = strings;

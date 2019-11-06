@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import { Target } from '@angular-devkit/architect';
 
-import { DependencyGraph } from '../command-line/shared';
+import { DependencyGraph } from '../command-line/shared-models';
 
 export interface Task {
   id: string;
@@ -9,17 +9,17 @@ export interface Task {
   overrides: Object;
 }
 
-export enum AffectedEventType {
+export enum TaskEventType {
   TaskComplete = '[Task] Complete'
 }
 
-export interface AffectedEvent {
+export interface TaskEvent {
   task: Task;
-  type: AffectedEventType;
+  type: TaskEventType;
 }
 
-export interface TaskCompleteEvent extends AffectedEvent {
-  type: AffectedEventType.TaskComplete;
+export interface TaskCompleteEvent extends TaskEvent {
+  type: TaskEventType.TaskComplete;
   success: boolean;
 }
 
@@ -34,4 +34,4 @@ export type TasksRunner<T = unknown> = (
       };
     };
   }
-) => Observable<AffectedEvent>;
+) => Observable<TaskEvent>;

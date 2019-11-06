@@ -1,17 +1,15 @@
-import {
-  ProjectNode,
-  ProjectType
-} from '@nrwl/workspace/src/command-line/shared';
-import {
-  Dependency,
-  DependencyType
-} from '@nrwl/workspace/src/command-line/deps-calculator';
 import { TSESLint } from '@typescript-eslint/experimental-utils';
 import * as parser from '@typescript-eslint/parser';
 import * as fs from 'fs';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName
 } from '../../src/rules/enforce-module-boundaries';
+import {
+  Dependency,
+  DependencyType,
+  ProjectNode,
+  ProjectType
+} from '@nrwl/workspace/src/command-line/shared-models';
 
 describe('Enforce Module Boundaries', () => {
   beforeEach(() => {

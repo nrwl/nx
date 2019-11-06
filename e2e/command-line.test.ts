@@ -265,8 +265,38 @@ forEachCli(() => {
         const jsonFileContents = readJson('dep-graph.json');
 
         expect(jsonFileContents.deps).toEqual({
-          mylib2: [],
-          myapp3: [],
+          mylib2: [
+            {
+              projectName: '@angular/core',
+              type: 'nodeModule'
+            },
+            {
+              projectName: '@angular/common',
+              type: 'nodeModule'
+            },
+            {
+              projectName: 'jest-preset-angular',
+              type: 'nodeModule'
+            }
+          ],
+          myapp3: [
+            {
+              projectName: '@angular/core',
+              type: 'nodeModule'
+            },
+            {
+              projectName: '@angular/platform-browser',
+              type: 'nodeModule'
+            },
+            {
+              projectName: '@angular/platform-browser-dynamic',
+              type: 'nodeModule'
+            },
+            {
+              projectName: 'jest-preset-angular',
+              type: 'nodeModule'
+            }
+          ],
           'myapp3-e2e': [
             {
               projectName: 'myapp3',
@@ -277,6 +307,22 @@ forEachCli(() => {
             {
               projectName: 'mylib',
               type: 'es6Import'
+            },
+            {
+              projectName: '@angular/core',
+              type: 'nodeModule'
+            },
+            {
+              projectName: '@angular/platform-browser',
+              type: 'nodeModule'
+            },
+            {
+              projectName: '@angular/platform-browser-dynamic',
+              type: 'nodeModule'
+            },
+            {
+              projectName: 'jest-preset-angular',
+              type: 'nodeModule'
             }
           ],
           'myapp2-e2e': [
@@ -287,11 +333,31 @@ forEachCli(() => {
           ],
           mylib: [
             {
+              projectName: '@angular/core',
+              type: 'nodeModule'
+            },
+            {
+              projectName: '@angular/common',
+              type: 'nodeModule'
+            },
+            {
               projectName: 'mylib2',
               type: 'es6Import'
+            },
+            {
+              projectName: 'jest-preset-angular',
+              type: 'nodeModule'
             }
           ],
           myapp: [
+            {
+              projectName: '@angular/core',
+              type: 'nodeModule'
+            },
+            {
+              projectName: '@angular/platform-browser',
+              type: 'nodeModule'
+            },
             {
               projectName: 'mylib',
               type: 'es6Import'
@@ -299,6 +365,10 @@ forEachCli(() => {
             {
               projectName: 'mylib2',
               type: 'loadChildren'
+            },
+            {
+              projectName: 'jest-preset-angular',
+              type: 'nodeModule'
             }
           ],
           'myapp-e2e': [

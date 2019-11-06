@@ -1,8 +1,9 @@
 import defaultTaskRunner from './default-tasks-runner';
-import { AffectedEventType, Task } from './tasks-runner';
-jest.mock('npm-run-all', () => jest.fn());
+import { TaskEventType } from './tasks-runner';
 import * as runAll from 'npm-run-all';
-jest.mock('../command-line/shared', () => ({
+
+jest.mock('npm-run-all', () => jest.fn());
+jest.mock('../command-line/shared-utils', () => ({
   cliCommand: () => 'nx'
 }));
 jest.mock('../utils/fileutils', () => ({
@@ -84,12 +85,12 @@ describe('defaultTasksRunner', () => {
     const expected = [
       {
         task: tasks[0],
-        type: AffectedEventType.TaskComplete,
+        type: TaskEventType.TaskComplete,
         success: true
       },
       {
         task: tasks[1],
-        type: AffectedEventType.TaskComplete,
+        type: TaskEventType.TaskComplete,
         success: true
       }
     ];
@@ -118,12 +119,12 @@ describe('defaultTasksRunner', () => {
     const expected = [
       {
         task: tasks[0],
-        type: AffectedEventType.TaskComplete,
+        type: TaskEventType.TaskComplete,
         success: true
       },
       {
         task: tasks[1],
-        type: AffectedEventType.TaskComplete,
+        type: TaskEventType.TaskComplete,
         success: false
       }
     ];

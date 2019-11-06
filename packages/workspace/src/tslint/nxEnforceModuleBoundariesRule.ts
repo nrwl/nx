@@ -1,15 +1,13 @@
 import * as Lint from 'tslint';
 import { IOptions } from 'tslint';
 import * as ts from 'typescript';
-import { readDependencies } from '../command-line/deps-calculator';
+import { readDependencies } from '../command-line/read-dependencies';
 import {
   getProjectNodes,
   normalizedProjectRoot,
   readNxJson,
-  readWorkspaceJson,
-  ProjectNode,
-  ProjectType
-} from '../command-line/shared';
+  readWorkspaceJson
+} from '../command-line/shared-utils';
 import { appRootPath } from '../utils/app-root';
 import {
   DepConstraint,
@@ -26,6 +24,7 @@ import {
   onlyLoadChildren
 } from '../utils/runtime-lint-utils';
 import { normalize } from '@angular-devkit/core';
+import { ProjectNode, ProjectType } from '../command-line/shared-models';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(

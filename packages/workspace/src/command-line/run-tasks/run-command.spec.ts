@@ -1,4 +1,4 @@
-import { NxJson } from '../shared';
+import { NxJson } from '../shared-models';
 import { TasksRunner } from '../../tasks-runner/tasks-runner';
 import defaultTasksRunner from '../../tasks-runner/default-tasks-runner';
 import { getRunner } from './run-command';
@@ -52,14 +52,14 @@ describe('getRunner', () => {
     expect(tasksOptions).toEqual(targetArgs);
   });
 
-  it.only('gets a custom task runner with options', () => {
-    jest.mock('custom-runner', () => mockRunner, {
+  it('gets a custom task runner with options', () => {
+    jest.mock('custom-runner-with-options', () => mockRunner, {
       virtual: true
     });
 
     nxJson.tasksRunnerOptions = {
       custom: {
-        runner: 'custom-runner',
+        runner: 'custom-runner-with-options',
         options: {
           runnerOption: 'runner-option'
         }

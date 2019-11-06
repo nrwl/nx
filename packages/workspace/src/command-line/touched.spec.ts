@@ -1,5 +1,5 @@
 import { touchedProjects } from './touched';
-import { ProjectType } from './shared';
+import { ProjectType } from './shared-models';
 
 describe('touchedProjects', () => {
   it('should return the list of touchedProjects', () => {
