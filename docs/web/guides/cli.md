@@ -256,6 +256,9 @@ The Nx CLI also has built-in commands to show you how your changes impact applic
 
 > Each command can also be run using `nx affected --target={TARGET}`. They can also be provided `--base` and `--head` options that come from your Git repository.
 
+> Heads up! Circular dependencies in your code might break the `affected` commands. It you encounter a `Maximum call stack size exceeded` error, you might have one or more such circular dependencies.  
+> Run `npm run lint` to find out where those circular dependencies are, fix them, and everything should then work just fine.
+
 ### affected:apps
 
 Display the list of apps affected by the current changes
