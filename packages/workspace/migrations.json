@@ -243,27 +243,27 @@
           "alwaysAddToPackageJson": false
         },
         "@ngrx/store": {
-          "version": "8.4.0",
+          "version": "8.5.0",
           "alwaysAddToPackageJson": false
         },
         "@ngrx/effects": {
-          "version": "8.4.0",
+          "version": "8.5.0",
           "alwaysAddToPackageJson": false
         },
         "@ngrx/entity": {
-          "version": "8.4.0",
+          "version": "8.5.0",
           "alwaysAddToPackageJson": false
         },
         "@ngrx/router-store": {
-          "version": "8.4.0",
+          "version": "8.5.0",
           "alwaysAddToPackageJson": false
         },
         "@ngrx/schematics": {
-          "version": "8.4.0",
+          "version": "8.5.0",
           "alwaysAddToPackageJson": false
         },
         "@ngrx/store-devtools": {
-          "version": "8.4.0",
+          "version": "8.5.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/architect": {
