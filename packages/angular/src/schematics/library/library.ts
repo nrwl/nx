@@ -136,7 +136,7 @@ function addLoadChildren(options: NormalizedSchema): Rule {
         `{path: '${toFileName(
           options.fileName
         )}', loadChildren: () => import('@${npmScope}/${
-          options.projectDirectory
+          options.simpleModuleName ? options.name : options.projectDirectory
         }').then(module => module.${options.moduleName})}`
       )
     ]);
@@ -195,7 +195,7 @@ function addChildren(options: NormalizedSchema): Rule {
       true
     );
     const constName = `${toPropertyName(options.fileName)}Routes`;
-    const importPath = `@${npmScope}/${options.projectDirectory}`;
+    const importPath = `@${npmScope}/${options.simpleModuleName ? options.name : options.projectDirectory}`;
 
     insert(host, options.parentModule, [
       insertImport(
@@ -224,7 +224,7 @@ function updateNgPackage(options: NormalizedSchema): Rule {
     return noop();
   }
   const dest = `${offsetFromRoot(options.projectRoot)}dist/libs/${
-    options.projectDirectory
+    options.simpleModuleName ? options.name : options.projectDirectory
   }`;
   return chain([
     updateJsonInTree(`${options.projectRoot}/ng-package.json`, json => {
@@ -400,7 +400,7 @@ function updateTsConfig(options: NormalizedSchema): Rule {
       return updateJsonInTree('tsconfig.json', json => {
         const c = json.compilerOptions;
         delete c.paths[options.name];
-        c.paths[`@${nxJson.npmScope}/${options.projectDirectory}`] = [
+        c.paths[`@${nxJson.npmScope}/${options.simpleModuleName ? options.name : options.projectDirectory}`] = [
           `libs/${options.projectDirectory}/src/index.ts`
         ];
         return json;
