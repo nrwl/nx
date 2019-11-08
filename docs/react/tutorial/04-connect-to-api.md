@@ -5,7 +5,7 @@ Real-world applications do not live in isolation — they need APIs to talk 
 **Let's change our application to fetch the data from the API.**
 
 ```typescript jsx
-export const App = () => {
+const App = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
 
   useEffect(() => {
@@ -39,6 +39,8 @@ export const App = () => {
     </>
   );
 };
+
+export default App
 ```
 
 !!!!!
