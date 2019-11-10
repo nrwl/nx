@@ -140,6 +140,12 @@ describe('app', () => {
       expect(result.exists('apps/my-app/src/main.ts')).toEqual(true);
       expect(result.exists('apps/my-app-e2e/protractor.conf.js')).toEqual(true);
     });
+
+    it('should set projectType to application', async () => {
+      const tree = await runSchematic('app', { name: 'app' }, appTree);
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      expect(workspaceJson.projects['app'].projectType).toEqual('application');
+    });
   });
 
   describe('nested', () => {

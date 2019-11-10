@@ -39,7 +39,11 @@ export function replaceAppNameWithPath(
       `([^a-z0-9]*(${appName}))|((${appName})[^a-z0-9:]*)`,
       'gi'
     );
-    if (!!node.match(matchPattern)) {
+    if (
+      !!node.match(matchPattern) &&
+      node !== 'application' &&
+      node !== 'library'
+    ) {
       const r = node.replace(appName, root);
       return r.startsWith('/apps') || r.startsWith('/libs')
         ? r.substring(1)
