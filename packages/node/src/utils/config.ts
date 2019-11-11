@@ -83,7 +83,6 @@ export function getBaseWebpackPartial(
   if (options.extractLicenses) {
     extraPlugins.push((new LicenseWebpackPlugin({
       stats: {
-        warnings: false,
         errors: false
       },
       perChunkOutput: false,

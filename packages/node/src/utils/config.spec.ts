@@ -332,7 +332,7 @@ describe('getBaseWebpackPartial', () => {
   });
 
   describe('the extract licenses option', () => {
-    xit('should extract licenses to a separate file', () => {
+    it('should extract licenses to a separate file', () => {
       const result = getBaseWebpackPartial({
         ...input,
         extractLicenses: true
@@ -341,13 +341,8 @@ describe('getBaseWebpackPartial', () => {
       const licensePlugin = result.plugins.find(
         plugin => plugin instanceof LicenseWebpackPlugin
       );
-      const options = (<any>licensePlugin).options;
 
       expect(licensePlugin).toBeTruthy();
-      expect(options.pattern).toEqual(/.*/);
-      expect(options.suppressErrors).toEqual(true);
-      expect(options.perChunkOutput).toEqual(false);
-      expect(options.outputFilename).toEqual('3rdpartylicenses.txt');
     });
   });
 
