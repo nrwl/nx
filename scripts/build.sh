@@ -49,6 +49,7 @@ cp README.md build/packages/next
 cp README.md build/packages/angular
 cp README.md build/packages/jest
 cp README.md build/packages/cypress
+cp README.md build/packages/storybook
 cp README.md build/packages/cli
 cp README.md build/packages/tao
 cp README.md build/packages/eslint-plugin-nx
@@ -68,6 +69,7 @@ cp LICENSE build/packages/next
 cp LICENSE build/packages/angular
 cp LICENSE build/packages/jest
 cp LICENSE build/packages/cypress
+cp LICENSE build/packages/storybook
 cp LICENSE build/packages/cli
 cp LICENSE build/packages/tao
 cp LICENSE build/packages/eslint-plugin-nx

@@ -1,5 +1,5 @@
 import { Tree } from '@angular-devkit/schematics';
-import { readJsonInTree } from '@nrwl/workspace';
+import { readJsonInTree, getProjectConfig } from '@nrwl/workspace';
 import { createTestUILib, runSchematic } from '../../utils/testing';
 
 describe('schematic:cypress-project', () => {
@@ -30,8 +30,7 @@ describe('schematic:cypress-project', () => {
       { name: 'test-ui-lib' },
       appTree
     );
-    const angularJson = readJsonInTree(tree, 'angular.json');
-    const project = angularJson.projects['test-ui-lib-e2e'];
+    const project = getProjectConfig(tree, 'test-ui-lib-e2e');
 
     expect(project.architect.e2e.options.devServerTarget).toEqual(
       'test-ui-lib:storybook'

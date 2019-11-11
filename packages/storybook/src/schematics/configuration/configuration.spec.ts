@@ -1,5 +1,9 @@
 import { Tree } from '@angular-devkit/schematics';
-import { readJsonInTree } from '@nrwl/workspace';
+import {
+  readJsonInTree,
+  readWorkspaceJson,
+  getProjectConfig
+} from '@nrwl/workspace';
 import { createTestUILib, runSchematic } from '../../utils/testing';
 import { StorybookConfigureSchema } from './schema';
 
@@ -24,17 +28,21 @@ describe('schematic:configuration', () => {
     ).toBeTruthy();
   });
 
-  it('should update `angular.json` file', async () => {
+  it('should update workspace file', async () => {
     const tree = await runSchematic(
       'configuration',
       { name: 'test-ui-lib' },
       appTree
     );
-    const angularJson = readJsonInTree(tree, 'angular.json');
-    const project = angularJson.projects['test-ui-lib'];
+    const project = getProjectConfig(tree, 'test-ui-lib');
 
     expect(project.architect.storybook).toEqual({
       builder: '@nrwl/storybook:storybook',
+      configurations: {
+        ci: {
+          quiet: true
+        }
+      },
       options: {
         port: 4400,
         config: {

@@ -18,9 +18,6 @@ describe('ng-add', () => {
     const packageJson = readJsonInTree(tree, 'package.json');
     expect(packageJson.devDependencies['@storybook/angular']).toBeDefined();
     expect(packageJson.devDependencies['@storybook/addon-knobs']).toBeDefined();
-    expect(
-      packageJson.devDependencies['@types/storybook__addon-knobs']
-    ).toBeDefined();
     expect(packageJson.devDependencies['babel-loader']).toBeDefined();
     expect(packageJson.devDependencies['@babel/core']).toBeDefined();
   });

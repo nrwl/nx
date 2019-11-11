@@ -307,6 +307,10 @@ describe('Migration', () => {
           '@nrwl/next': { version: '2.0.0', alwaysAddToPackageJson: false },
           '@nrwl/node': { version: '2.0.0', alwaysAddToPackageJson: false },
           '@nrwl/react': { version: '2.0.0', alwaysAddToPackageJson: false },
+          '@nrwl/storybook': {
+            version: '2.0.0',
+            alwaysAddToPackageJson: false
+          },
           '@nrwl/tao': { version: '2.0.0', alwaysAddToPackageJson: false },
           '@nrwl/web': { version: '2.0.0', alwaysAddToPackageJson: false }
         }
