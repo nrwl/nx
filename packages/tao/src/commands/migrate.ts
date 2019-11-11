@@ -183,6 +183,7 @@ export class Migrator {
           '@nrwl/next',
           '@nrwl/node',
           '@nrwl/react',
+          '@nrwl/storybook',
           '@nrwl/tao',
           '@nrwl/web'
         ].reduce(
