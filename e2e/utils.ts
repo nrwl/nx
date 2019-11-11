@@ -242,7 +242,37 @@ export function copyMissingPackages(): void {
     'next-server',
     'document-register-element',
 
-    '@angular/forms'
+    '@angular/forms',
+
+    // For web builder with inlined build-angular
+    'source-map',
+    'webpack-sources',
+    'terser',
+    'caniuse-lite',
+    'browserslist',
+    'license-webpack-plugin',
+    'webpack-subresource-integrity',
+    'copy-webpack-plugin',
+    'autoprefixer',
+    'mini-css-extract-plugin',
+    'postcss-import',
+    '@ngtools/webpack',
+    'worker-plugin',
+    'regenerator-runtime',
+    'clean-css',
+    'loader-utils',
+    'postcss',
+    'url',
+    'circular-dependency-plugin',
+    'terser-webpack-plugin',
+    'parse5',
+    'cacache',
+    'find-cache-dir',
+    'tree-kill',
+    'speed-measure-webpack-plugin',
+    'webpack-merge',
+    'istanbul-instrumenter-loader',
+    'semver'
   ];
   modulesToCopy.forEach(m => copyNodeModule(m));
   updateFile(
