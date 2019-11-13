@@ -47,7 +47,7 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     appTree
   );
   appTree = await callRule(
-    externalSchematic('@schematics/angular', 'component', {
+    externalSchematic('@nrwl/angular', 'component', {
       name: 'test-button',
       project: libName
     }),
@@ -84,7 +84,7 @@ export class TestButtonComponent implements OnInit {
     `<button [attr.type]="type" [ngClass]="style"></button>`
   );
   appTree = await callRule(
-    externalSchematic('@schematics/angular', 'component', {
+    externalSchematic('@nrwl/angular', 'component', {
       name: 'test-other',
       project: libName
     }),

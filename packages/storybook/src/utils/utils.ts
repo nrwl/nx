@@ -18,13 +18,6 @@ import {
   forEach
 } from '@angular-devkit/schematics';
 
-import {
-  findPropertyInAstObject,
-  appendPropertyInAstObject,
-  insertPropertyInAstObjectInOrder,
-  appendValueInAstArray
-} from '@schematics/angular/utility/json-utils';
-
 import { get } from 'http';
 import { SourceFile, createSourceFile, ScriptTarget } from 'typescript';
 
@@ -50,77 +43,6 @@ export function safeFileDelete(tree: Tree, path: string): boolean {
   } else {
     return false;
   }
-}
-
-export function addPropertyToPackageJson(
-  tree: Tree,
-  context: SchematicContext,
-  propertyName: string,
-  propertyValue: { [key: string]: string }
-) {
-  addPropertyToJsonAst(
-    tree,
-    context,
-    '/package.json',
-    propertyName,
-    propertyValue
-  );
-}
-
-export function addPropertyToJsonAst(
-  tree: Tree,
-  context: SchematicContext,
-  jsonPath: string,
-  propertyName: string,
-  propertyValue: { [key: string]: string } | JsonValue,
-  appendInArray = false
-) {
-  const jsonAst = getJsonFile(tree, jsonPath);
-  const jsonNode = findPropertyInAstObject(jsonAst, propertyName);
-  const recorder = tree.beginUpdate(jsonPath);
-
-  if (!jsonNode) {
-    // outer node missing, add key/value
-    appendPropertyInAstObject(
-      recorder,
-      jsonAst,
-      propertyName,
-      propertyValue,
-      Constants.jsonIndentLevel
-    );
-  } else if (jsonNode.kind === 'object') {
-    // property exists, update values
-    for (const [key, value] of Object.entries(propertyValue as {
-      [key: string]: string;
-    })) {
-      const innerNode = findPropertyInAstObject(jsonNode, key);
-
-      if (!innerNode) {
-        // 'propertyName' not found, add it
-        context.logger.debug(`creating ${key} with ${value}`);
-
-        insertPropertyInAstObjectInOrder(
-          recorder,
-          jsonNode,
-          key,
-          value,
-          Constants.jsonIndentLevel
-        );
-      } else {
-        // 'propertyName' found, overwrite value
-        context.logger.debug(`overwriting ${key} with ${value}`);
-
-        const { end, start } = innerNode;
-
-        recorder.remove(start.offset, end.offset - start.offset);
-        recorder.insertRight(start.offset, JSON.stringify(value));
-      }
-    }
-  } else if (jsonNode.kind === 'array' && appendInArray) {
-    appendValueInAstArray(recorder, jsonNode, propertyValue);
-  }
-
-  tree.commitUpdate(recorder);
 }
 
 /**

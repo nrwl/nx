@@ -2,10 +2,11 @@
   "name": "Nx Cypress",
   "version": "0.1",
   "schematics": {
-    "ng-add": {
-      "factory": "./src/schematics/ng-add/ng-add",
-      "schema": "./src/schematics/ng-add/schema.json",
+    "init": {
+      "factory": "./src/schematics/init/init",
+      "schema": "./src/schematics/init/schema.json",
       "description": "Add storybook configuration to the workspace",
+      "aliases": ["ng-add"],
       "hidden": true
     },
     "configuration": {
