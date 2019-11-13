@@ -82,58 +82,70 @@ export function createAllStories(
             statement => statement.kind === SyntaxKind.ImportDeclaration
           );
           const componentInfo = declaredComponents.map(componentName => {
-            const importStatement = imports.find(statement => {
-              const importedIdentifiers = statement
+            try {
+              const importStatement = imports.find(statement => {
+                const importedIdentifiers = statement
+                  .getChildren()
+                  .find(node => node.kind === SyntaxKind.ImportClause)
+                  .getChildren()
+                  .find(node => node.kind === SyntaxKind.NamedImports)
+                  .getChildren()
+                  .find(node => node.kind === SyntaxKind.SyntaxList)
+                  .getChildren()
+                  .filter(node => node.kind === SyntaxKind.ImportSpecifier)
+                  .map(node => node.getText());
+                return importedIdentifiers.includes(componentName);
+              });
+              const fullPath = importStatement
                 .getChildren()
-                .find(node => node.kind === SyntaxKind.ImportClause)
-                .getChildren()
-                .find(node => node.kind === SyntaxKind.NamedImports)
-                .getChildren()
-                .find(node => node.kind === SyntaxKind.SyntaxList)
-                .getChildren()
-                .filter(node => node.kind === SyntaxKind.ImportSpecifier)
-                .map(node => node.getText());
-              return importedIdentifiers.includes(componentName);
-            });
-            const fullPath = importStatement
-              .getChildren()
-              .find(node => node.kind === SyntaxKind.StringLiteral)
-              .getText()
-              .slice(1, -1);
-            const path = fullPath.slice(0, fullPath.lastIndexOf('/'));
-            const componentFileName = fullPath.slice(
-              fullPath.lastIndexOf('/') + 1
-            );
-            return { name: componentName, path, componentFileName };
+                .find(node => node.kind === SyntaxKind.StringLiteral)
+                .getText()
+                .slice(1, -1);
+              const path = fullPath.slice(0, fullPath.lastIndexOf('/'));
+              const componentFileName = fullPath.slice(
+                fullPath.lastIndexOf('/') + 1
+              );
+              return { name: componentName, path, componentFileName };
+            } catch (ex) {
+              context.logger.warn(
+                `Could not generate a story for ${componentName}.  Error: ${ex}`
+              );
+              return undefined;
+            }
           });
 
           const moduleName = getFirstNgModuleName(file);
 
           return chain(
-            componentInfo.map(info =>
-              chain([
-                schematic<CreateComponentStoriesFileSchema>('component-story', {
-                  libPath,
-                  moduleFileName: fileName,
-                  ngModuleClassName: moduleName,
-                  componentName: info.name,
-                  componentPath: info.path,
-                  componentFileName: info.componentFileName
-                }),
-                generateCypressSpecs
-                  ? schematic<CreateComponentSpecFileSchema>(
-                      'component-cypress-spec',
-                      {
-                        projectName,
-                        libPath,
-                        componentName: info.name,
-                        componentPath: info.path,
-                        componentFileName: info.componentFileName
-                      }
-                    )
-                  : () => {}
-              ])
-            )
+            componentInfo
+              .filter(info => info !== undefined)
+              .map(info =>
+                chain([
+                  schematic<CreateComponentStoriesFileSchema>(
+                    'component-story',
+                    {
+                      libPath,
+                      moduleFileName: fileName,
+                      ngModuleClassName: moduleName,
+                      componentName: info.name,
+                      componentPath: info.path,
+                      componentFileName: info.componentFileName
+                    }
+                  ),
+                  generateCypressSpecs
+                    ? schematic<CreateComponentSpecFileSchema>(
+                        'component-cypress-spec',
+                        {
+                          projectName,
+                          libPath,
+                          componentName: info.name,
+                          componentPath: info.path,
+                          componentFileName: info.componentFileName
+                        }
+                      )
+                    : () => {}
+                ])
+              )
           );
         })
     );

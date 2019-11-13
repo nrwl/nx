@@ -5,7 +5,7 @@ import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 
 import { runSchematic } from '../../utils/testing';
 
-describe('ng-add', () => {
+describe('init', () => {
   let appTree: Tree;
 
   beforeEach(() => {
@@ -14,7 +14,7 @@ describe('ng-add', () => {
   });
 
   it('should add dependencies into `package.json` file', async () => {
-    const tree = await runSchematic('ng-add', {}, appTree);
+    const tree = await runSchematic('init', {}, appTree);
     const packageJson = readJsonInTree(tree, 'package.json');
     expect(packageJson.devDependencies['@storybook/angular']).toBeDefined();
     expect(packageJson.devDependencies['@storybook/addon-knobs']).toBeDefined();

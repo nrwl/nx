@@ -6,7 +6,7 @@ import {
   ensureProject,
   tmpProjPath
 } from './utils';
-import { writeFileSync } from 'fs';
+import { writeFileSync, mkdirSync } from 'fs';
 
 forEachCli(() => {
   describe('Storybook schematics', () => {
@@ -24,7 +24,52 @@ forEachCli(() => {
           const mylib2 = uniq('test-ui-lib-react');
           runCLI(`generate @nrwl/react:lib ${mylib2} --no-interactive`);
           runCLI(
-            `generate @nrwl/react:component TestComponent --project=${mylib2} --no-interactive`
+            `generate @nrwl/react:component Button --project=${mylib2} --no-interactive`
+          );
+          writeFileSync(
+            tmpProjPath(`libs/${mylib2}/src/lib/button.tsx`),
+            `
+            import React from 'react';
+
+            import './button.css';
+            
+            export type ButtonStyle = 'default' | 'primary' | 'warning';
+            
+            /* eslint-disable-next-line */
+            export interface ButtonProps {
+              text?: string;
+              style?: ButtonStyle;
+              padding?: number;
+            }
+            
+            export const Button = (props: ButtonProps) => {
+              return (
+                <button className={props.style} style={{ padding: \`\${props.padding}px\` }}>
+                  {props.text}
+                </button>
+              );
+            };
+            
+            export default Button;            
+            `
+          );
+          writeFileSync(
+            tmpProjPath(`libs/${mylib2}/src/lib/button.stories.tsx`),
+            `
+            import React from 'react';
+            import { text, number } from '@storybook/addon-knobs';
+            import { Button, ButtonStyle } from './button';
+            
+            export default { title: 'Button' };
+            
+            export const primary = () => (
+              <Button
+                padding={number('Padding', 0)}
+                style={text('Style', 'default') as ButtonStyle}
+                text={text('Text', 'Click me')}
+              />
+            );
+            `
           );
 
           runCLI(
@@ -62,6 +107,28 @@ forEachCli(() => {
             `generate @nrwl/react:storybook-configuration ${mylib2} --configureCypress --no-interactive`
           );
 
+          mkdirSync(tmpProjPath(`apps/${mylib2}-e2e/src/integration`));
+          writeFileSync(
+            tmpProjPath(`apps/${mylib2}-e2e/src/integration/button.spec.ts`),
+            `
+            describe('react-ui', () => {
+              it('should render the component', () => {
+                cy.visit(
+                  '/iframe.html?id=button--primary&knob-Style=default&knob-Padding&knob-Text=Click%20me'
+                );
+                cy.get('button').should('exist');
+                cy.get('button').should('have.class', 'default');
+              });
+              it('should adjust the knobs', () => {
+                cy.visit(
+                  '/iframe.html?id=button--primary&knob-Style=primary&knob-Padding=10&knob-Text=Other'
+                );
+                cy.get('button').should('have.class', 'primary');
+              });
+            });
+            `
+          );
+
           expect(
             runCLI(`run ${mylib}-e2e:e2e --configuration=headless --no-watch`)
           ).toContain('All specs passed!');
@@ -74,7 +141,7 @@ forEachCli(() => {
 export function createTestUILib(libName: string): void {
   runCLI(`g @nrwl/angular:library ${libName} --no-interactive`);
   runCLI(
-    `g @schematics/angular:component test-button --project=${libName} --no-interactive`
+    `g @nrwl/angular:component test-button --project=${libName} --no-interactive`
   );
 
   writeFileSync(
@@ -114,6 +181,6 @@ export class TestButtonComponent implements OnInit {
     `
   );
   runCLI(
-    `g @schematics/angular:component test-other --project=${libName} --no-interactive`
+    `g @nrwl/angular:component test-other --project=${libName} --no-interactive`
   );
 }
