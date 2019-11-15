@@ -103,7 +103,7 @@ describe('schematic:cypress-project', () => {
         integrationFolder: './src/integration',
         modifyObstructiveCode: false,
         pluginsFile: './src/plugins/index',
-        supportFile: false,
+        supportFile: './src/support/index.ts',
         video: true,
         videosFolder: '../../dist/cypress/apps/my-app-e2e/videos',
         screenshotsFolder: '../../dist/cypress/apps/my-app-e2e/screenshots',
@@ -183,7 +183,7 @@ describe('schematic:cypress-project', () => {
           integrationFolder: './src/integration',
           modifyObstructiveCode: false,
           pluginsFile: './src/plugins/index',
-          supportFile: false,
+          supportFile: './src/support/index.ts',
           video: true,
           videosFolder: '../../../dist/cypress/apps/my-dir/my-app-e2e/videos',
           screenshotsFolder:

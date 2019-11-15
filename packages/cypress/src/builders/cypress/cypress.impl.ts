@@ -41,7 +41,8 @@ export default createBuilder<CypressBuilderOptions>(run);
 
 /**
  * @whatItDoes This is the starting point of the builder.
- * @param builderConfig
+ * @param options
+ * @param context
  */
 function run(
   options: CypressBuilderOptions,
@@ -96,8 +97,15 @@ function run(
  * provide directly the results in the console output.
  * @param cypressConfig
  * @param headless
+ * @param exit
+ * @param record
+ * @param key
+ * @param parallel
  * @param baseUrl
  * @param isWatching
+ * @param browser
+ * @param env
+ * @param spec
  */
 function initCypress(
   cypressConfig: string,
@@ -159,6 +167,7 @@ function initCypress(
  * @whatItDoes Compile the application using the webpack builder.
  * @param devServerTarget
  * @param isWatching
+ * @param context
  * @private
  */
 export function startDevServer(
