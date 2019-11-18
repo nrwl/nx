@@ -2,6 +2,7 @@ import { execSync, fork, spawn } from 'child_process';
 import * as http from 'http';
 import * as path from 'path';
 import * as treeKill from 'tree-kill';
+import * as ts from 'typescript';
 import {
   ensureProject,
   exists,
@@ -13,7 +14,11 @@ import {
   forEachCli,
   checkFilesExist,
   tmpProjPath,
-  workspaceConfigName
+  workspaceConfigName,
+  cleanup,
+  runNew,
+  runNgAdd,
+  copyMissingPackages
 } from './utils';
 
 function getData(): Promise<any> {
@@ -123,6 +128,31 @@ forEachCli(currentCLIName => {
           done();
         });
       });
+    }, 30000);
+
+    fit('should have correct ts options for nest application', async () => {
+      if (currentCLIName === 'angular') {
+        // Usually the tests use ensureProject() to setup the test workspace. But it will trigger
+        // the nx workspace schematic which creates a tsconfig file containing the parameters
+        // required by nest.
+        // However, when creating an Angular workspace and adding the workspace capability (as
+        // described in the docs) the tsconfig file could miss required options if Angular removes
+        // them from their config files as happened with emitDecoratorMetadata.
+        cleanup();
+        runNew('', false, false);
+        runNgAdd('add @nrwl/workspace --npmScope projscope --skip-install');
+        copyMissingPackages();
+      } else {
+        ensureProject();
+      }
+
+      const nestapp = uniq('nestapp');
+      runCLI(`generate @nrwl/nest:app ${nestapp} --linter=${linter}`);
+      const configPath = tmpProjPath(`apps/${nestapp}/tsconfig.app.json`);
+      const json = ts.readConfigFile(configPath, ts.sys.readFile);
+      const config = ts.parseJsonConfigFileContent(json.config, ts.sys, path.dirname(configPath)); // respects "extends" inside tsconfigs
+
+      expect(config.options.emitDecoratorMetadata).toEqual(true); // required by nest to function properly
     }, 30000);
 
     it('should be able to generate a nest application', async done => {
