@@ -15,6 +15,7 @@ import {
   readJsonFile,
   updateWorkspace
 } from '@nrwl/workspace';
+import { join, normalize } from '@angular-devkit/core';
 import { StorybookStoriesSchema } from '../../../../angular/src/schematics/stories/stories';
 import { applyWithSkipExisting, parseJsonAtPath } from '../../utils/utils';
 import { CypressConfigureSchema } from '../cypress-project/cypress-project';
@@ -96,6 +97,21 @@ function addStorybookTask(projectName: string, uiFramework: string): Rule {
       options: {
         uiFramework,
         port: 4400,
+        config: {
+          configFolder: `${projectConfig.root}/.storybook`
+        }
+      },
+      configurations: {
+        ci: {
+          quiet: true
+        }
+      }
+    });
+    projectConfig.targets.set('storybook-static', {
+      builder: '@nrwl/storybook:storybook-static',
+      options: {
+        uiFramework,
+        outputPath: join(normalize('dist'), normalize('storybook-static'), projectName),
         config: {
           configFolder: `${projectConfig.root}/.storybook`
         }
