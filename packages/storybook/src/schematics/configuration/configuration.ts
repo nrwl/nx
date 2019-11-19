@@ -111,7 +111,11 @@ function addStorybookTask(projectName: string, uiFramework: string): Rule {
       builder: '@nrwl/storybook:storybook-static',
       options: {
         uiFramework,
-        outputPath: join(normalize('dist'), normalize('storybook-static'), projectName),
+        outputPath: join(
+          normalize('dist'),
+          normalize('storybook-static'),
+          projectName
+        ),
         config: {
           configFolder: `${projectConfig.root}/.storybook`
         }
