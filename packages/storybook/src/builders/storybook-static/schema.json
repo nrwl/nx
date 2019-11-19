@@ -1,0 +1,57 @@
+{
+  "title": "Storybook Builder",
+  "description": "Build storybook in production mode",
+  "type": "object",
+  "properties": {
+    "uiFramework": {
+      "type": "string",
+      "description": "Storybook framework npm package",
+      "default": "@storybook/angular",
+      "hidden": true
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "The output path of the generated files."
+    },
+    "config": {
+      "type": "object",
+      "description": ".storybook configuration",
+      "properties": {
+        "configFolder": {
+          "type": "string",
+          "description": "Directory where to load Storybook configurations from"
+        },
+        "pluginPath": {
+          "type": "string",
+          "description": "Path to storybook plugin.js file."
+        },
+        "configPath": {
+          "type": "string",
+          "description": "Path to storybook config.js file."
+        },
+        "srcRoot": {
+          "type": "string",
+          "description": "Project source path."
+        }
+      },
+      "oneOf": [
+        {
+          "anyOf": [
+            {
+              "required": ["configFolder"]
+            },
+            {
+              "required": ["pluginPath", "configPath", "srcRoot"]
+            }
+          ]
+        }
+      ]
+    },
+    "quiet": {
+      "type": "boolean",
+      "description": "Suppress verbose build output.",
+      "default": true
+    }
+  },
+  "required": ["uiFramework", "config"]
+}

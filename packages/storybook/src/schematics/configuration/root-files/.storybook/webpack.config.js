@@ -4,7 +4,7 @@ module.exports = async ({ config, mode }) => {
   // You can change the configuration based on that.
   // 'PRODUCTION' is used when building the static version of storybook.
 
-  r = config.module.rules.filter(rule => rule.test != '/\\.css$/');
+  let r = config.module.rules.filter(rule => rule.test != '/\\.css$/');
 
   // Make whatever fine-grained changes you need
   r.push({
