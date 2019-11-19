@@ -137,9 +137,19 @@ function listCapabilities(pluginName: string) {
 function listPlugins() {
   const installedPlugins = readCapabilitiesFromNodeModules(appRootPath);
 
+  // The following packages are present in any workspace. Hide them to avoid confusion.
+  const hide = [
+    '@angular-devkit/architect',
+    '@angular-devkit/build-ng-packagr',
+    '@angular-devkit/build-webpack',
+    '@angular-eslint/builder'
+  ];
+
+  const filtered = installedPlugins.filter(p => hide.indexOf(p.name) === -1);
+
   output.log({
     title: `Installed plugins :`,
-    bodyLines: installedPlugins.map(p => {
+    bodyLines: filtered.map(p => {
       const capabilities = [];
       if (hasElements(p.builders)) {
         capabilities.push('builders');
