@@ -4,7 +4,8 @@ import {
   supportUi,
   uniq,
   ensureProject,
-  tmpProjPath
+  tmpProjPath,
+  checkFilesExist
 } from './utils';
 import { writeFileSync, mkdirSync } from 'fs';
 
@@ -132,6 +133,32 @@ forEachCli(() => {
           expect(
             runCLI(`run ${mylib}-e2e:e2e --configuration=headless --no-watch`)
           ).toContain('All specs passed!');
+        }, 1000000);
+      });
+    }
+  });
+
+  describe('Storybook builders', () => {
+    if (supportUi()) {
+      describe('building Storybook', () => {
+        it('should generate a static Storybook build', () => {
+          ensureProject();
+
+          const myapp = uniq('myapp');
+          runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
+
+          const mylib = uniq('test-ui-lib');
+          createTestUILib(mylib);
+
+          runCLI(
+            `generate @nrwl/angular:storybook-configuration ${mylib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
+          );
+          runCLI(
+            `generate @nrwl/storybook:configuration ${mylib} --no-interactive`
+          );
+
+          runCLI(`run ${mylib}:storybook-build`);
+          checkFilesExist(`dist/storybook/${mylib}/index.html`);
         }, 1000000);
       });
     }

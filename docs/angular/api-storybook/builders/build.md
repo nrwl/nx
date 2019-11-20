@@ -1,4 +1,4 @@
-# storybook-static
+# build
 
 Build Storybook
 
