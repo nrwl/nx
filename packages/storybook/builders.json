@@ -6,9 +6,9 @@
       "schema": "./src/builders/storybook/schema.json",
       "description": "Serve Storybook"
     },
-    "storybook-static": {
-      "implementation": "./src/builders/storybook-static/storybook-static.impl",
-      "schema": "./src/builders/storybook-static/schema.json",
+    "build": {
+      "implementation": "./src/builders/storybook-build/storybook-build.impl",
+      "schema": "./src/builders/storybook-build/schema.json",
       "description": "Build Storybook"
     }
   }

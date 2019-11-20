@@ -107,13 +107,13 @@ function addStorybookTask(projectName: string, uiFramework: string): Rule {
         }
       }
     });
-    projectConfig.targets.set('storybook-static', {
-      builder: '@nrwl/storybook:storybook-static',
+    projectConfig.targets.set('storybook-build', {
+      builder: '@nrwl/storybook:build',
       options: {
         uiFramework,
         outputPath: join(
           normalize('dist'),
-          normalize('storybook-static'),
+          normalize('storybook'),
           projectName
         ),
         config: {
