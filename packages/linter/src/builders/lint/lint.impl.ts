@@ -7,17 +7,6 @@ import { from, Observable } from 'rxjs';
 import { concatMap } from 'rxjs/operators';
 
 function run(options: any, context: BuilderContext): Observable<BuilderOutput> {
-  if (options.linter === 'tslint') {
-    delete options.linter;
-    options.tslintConfig = options.config;
-    delete options.config;
-    return from(
-      context.scheduleBuilder('@angular-devkit/build-angular:tslint', options, {
-        logger: patchedLogger(context)
-      })
-    ).pipe(concatMap(r => r.output));
-  }
-
   if (options.linter === 'eslint') {
     delete options.linter;
     options.eslintConfig = options.config;
@@ -29,6 +18,12 @@ function run(options: any, context: BuilderContext): Observable<BuilderOutput> {
         logger: patchedLogger(context)
       })
     ).pipe(concatMap(r => r.output));
+  }
+
+  if (options.linter === 'tslint') {
+    throw new Error(
+      `'tslint' option is no longer supported. Update your angular.json to use "@angular-eslint/builder:lint" builder directly.`
+    );
   }
 
   throw new Error(
