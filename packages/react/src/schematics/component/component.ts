@@ -23,7 +23,7 @@ import {
 } from '@nrwl/workspace/src/utils/ast-utils';
 import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
 import {
-  reactRouterTypesVersion,
+  typesReactRouterDomVersion,
   reactRouterDomVersion
 } from '../../utils/versions';
 import { assertValidStyle } from '../../utils/assertion';
@@ -45,7 +45,7 @@ export default function(schema: Schema): Rule {
       options.routing
         ? addDepsToPackageJson(
             { 'react-router-dom': reactRouterDomVersion },
-            { '@types/react-router-dom': reactRouterTypesVersion }
+            { '@types/react-router-dom': typesReactRouterDomVersion }
           )
         : noop(),
       formatFiles({ skipFormat: false })

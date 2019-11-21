@@ -1,13 +1,18 @@
-import { EsLintPlugins } from './versions';
+import {
+  eslintPluginImportVersion,
+  eslintPluginReactVersion,
+  eslintPluginReactHooksVersion,
+  eslintPluginJsxA11yVersion
+} from './versions';
 import * as restrictedGlobals from 'confusing-browser-globals';
 
 export const extraEslintDependencies = {
   dependencies: {},
   devDependencies: {
-    'eslint-plugin-import': EsLintPlugins.importVersion,
-    'eslint-plugin-jsx-a11y': EsLintPlugins.jsxA11yVersion,
-    'eslint-plugin-react': EsLintPlugins.reactVersion,
-    'eslint-plugin-react-hooks': EsLintPlugins.reactHooksVersion
+    'eslint-plugin-import': eslintPluginImportVersion,
+    'eslint-plugin-jsx-a11y': eslintPluginJsxA11yVersion,
+    'eslint-plugin-react': eslintPluginReactVersion,
+    'eslint-plugin-react-hooks': eslintPluginReactHooksVersion
   }
 };
 

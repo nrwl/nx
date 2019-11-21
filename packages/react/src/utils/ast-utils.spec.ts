@@ -282,7 +282,7 @@ ReactDOM.render(<App/>, document.getElementById('root'));
     );
 
     const result = tree.read('/main.tsx').toString();
-    expect(result).toContain('redux-starter-kit');
+    expect(result).toContain('@reduxjs/toolkit');
     expect(result).toContain('const store = configureStore');
     expect(result).toContain('<Provider store={store}>');
   });
@@ -301,7 +301,7 @@ describe('updateReduxStore', () => {
 
   it('should update configureStore call', () => {
     const sourceCode = `
-import { configureStore } from 'redux-starter-kit';
+import { configureStore } from '@reduxjs/toolkit';
 const store = configureStore({
   reducer: {}
 });

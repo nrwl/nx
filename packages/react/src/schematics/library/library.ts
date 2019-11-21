@@ -40,7 +40,7 @@ import {
   findComponentImportPath
 } from '../../utils/ast-utils';
 import {
-  reactRouterTypesVersion,
+  typesReactRouterDomVersion,
   reactRouterDomVersion
 } from '../../utils/versions';
 import { assertValidStyle } from '../../utils/assertion';
@@ -191,7 +191,7 @@ function updateAppRoutes(
     return chain([
       addDepsToPackageJson(
         { 'react-router-dom': reactRouterDomVersion },
-        { '@types/react-router-dom': reactRouterTypesVersion }
+        { '@types/react-router-dom': typesReactRouterDomVersion }
       ),
       function addBrowserRouterToMain(host: Tree) {
         const { content, source } = readComponent(host, options.appMain);
