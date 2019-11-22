@@ -101,6 +101,8 @@ export function getProjectsToRun(
         title: `the following do not have configuration for "${target}"`,
         bodyLines: noConfig.map(p => '- ' + p)
       });
+
+      process.exit(1);
     }
   } else {
     found = allProjects;
