@@ -73,8 +73,8 @@ export class Migrator {
         return Object.keys(migrationsJson.schematics)
           .filter(
             r =>
-              gt(migrationsJson.schematics[r].version, currentVersion) &
-              lte(migrationsJson.schematics[r].version, target.version)
+              this.gt(migrationsJson.schematics[r].version, currentVersion) &
+              this.lte(migrationsJson.schematics[r].version, target.version)
           )
           .map(r => ({
             ...migrationsJson.schematics[r],
@@ -132,7 +132,7 @@ export class Migrator {
         .filter(r => {
           return (
             !collectedVersions[r] ||
-            gt(packages[r].version, collectedVersions[r].version)
+            this.gt(packages[r].version, collectedVersions[r].version)
           );
         })
         .map(u =>
@@ -145,7 +145,7 @@ export class Migrator {
     return childCalls.reduce(
       (m, c) => {
         Object.keys(c).forEach(r => {
-          if (!m[r] || gt(c[r].version, m[r].version)) {
+          if (!m[r] || this.gt(c[r].version, m[r].version)) {
             m[r] = c[r];
           }
         });
@@ -189,19 +189,21 @@ export class Migrator {
         ].reduce(
           (m, c) => ({
             ...m,
-            [c]: { verson: targetVersion, alwaysAddToPackageJson: false }
+            [c]: { version: targetVersion, alwaysAddToPackageJson: false }
           }),
           {}
         )
       };
     }
-    if (!m.packageJsonUpdates) return {};
+    if (!m.packageJsonUpdates || !this.versions(packageName)) return {};
 
     return Object.keys(m.packageJsonUpdates)
       .filter(r => {
         return (
-          gt(m.packageJsonUpdates[r].version, this.versions(packageName)) &&
-          lte(m.packageJsonUpdates[r].version, targetVersion)
+          this.gt(
+            m.packageJsonUpdates[r].version,
+            this.versions(packageName)
+          ) && this.lte(m.packageJsonUpdates[r].version, targetVersion)
         );
       })
       .map(r => m.packageJsonUpdates[r].packages)
@@ -226,6 +228,22 @@ export class Migrator {
           );
       })
       .reduce((m, c) => ({ ...m, ...c }), {});
+  }
+
+  private gt(v1: string, v2: string) {
+    return gt(this.normalizeVersion(v1), this.normalizeVersion(v2));
+  }
+
+  private lte(v1: string, v2: string) {
+    return lte(this.normalizeVersion(v1), this.normalizeVersion(v2));
+  }
+
+  private normalizeVersion(v: string) {
+    if (v.startsWith('8-')) return '8.0.0-beta.1';
+    if (v.startsWith('9-')) return '9.0.0-beta.1';
+    if (v.startsWith('10-')) return '9.0.0-beta.1';
+    if (v.startsWith('11-')) return '9.0.0-beta.1';
+    return v;
   }
 }
 
@@ -294,9 +312,12 @@ function parseMigrationsOptions(
   }
 }
 
-function versions(root: string) {
+function versions(root: string, from: { [p: string]: string }) {
   return (packageName: string) => {
     try {
+      if (from[packageName]) {
+        return from[packageName];
+      }
       const content = readFileSync(
         path.join(root, `./node_modules/${packageName}/package.json`)
       );
@@ -337,20 +358,29 @@ function createFetcher(logger: logging.Logger) {
       // packageVersion can be a tag, resolvedVersion works with semver
       const resolvedVersion = json.version;
 
-      if (migrationsFile) {
-        const json = JSON.parse(
-          stripJsonComments(
-            readFileSync(
-              path.join(dir, 'node_modules', packageName, migrationsFile)
-            ).toString()
-          )
+      try {
+        if (migrationsFile && typeof migrationsFile === 'string') {
+          const json = JSON.parse(
+            stripJsonComments(
+              readFileSync(
+                path.join(dir, 'node_modules', packageName, migrationsFile)
+              ).toString()
+            )
+          );
+          cache[`${packageName}-${packageVersion}`] = {
+            version: resolvedVersion,
+            schematics: json.schematics,
+            packageJsonUpdates: json.packageJsonUpdates
+          };
+        } else {
+          cache[`${packageName}-${packageVersion}`] = {
+            version: resolvedVersion
+          };
+        }
+      } catch (e) {
+        logger.warn(
+          `Could not find '${migrationsFile}' in '${packageName}'. Skipping it`
         );
-        cache[`${packageName}-${packageVersion}`] = {
-          version: resolvedVersion,
-          schematics: json.schematics,
-          packageJsonUpdates: json.packageJsonUpdates
-        };
-      } else {
         cache[`${packageName}-${packageVersion}`] = {
           version: resolvedVersion
         };
@@ -404,7 +434,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
   logger.info(`Fetching meta data about packages.`);
   logger.info(`It may take a few minutes.`);
   const migrator = new Migrator({
-    versions: versions(root),
+    versions: versions(root, opts.from),
     fetch: createFetcher(logger),
     from: opts.from,
     to: opts.to
