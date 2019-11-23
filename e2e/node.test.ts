@@ -35,7 +35,7 @@ forEachCli(currentCLIName => {
   const linter = currentCLIName === 'angular' ? 'tslint' : 'eslint';
 
   describe('Node Applications', () => {
-    fit('should be able to generate an express application', async done => {
+    it('should be able to generate an express application', async done => {
       ensureProject();
       const nodeapp = uniq('nodeapp');
 
