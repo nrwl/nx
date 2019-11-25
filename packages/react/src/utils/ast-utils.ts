@@ -351,7 +351,7 @@ export function addReduxStoreToMain(
     ...addGlobal(
       source,
       sourcePath,
-      `import { configureStore } from 'redux-starter-kit';
+      `import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';`
     ),
     new InsertChange(

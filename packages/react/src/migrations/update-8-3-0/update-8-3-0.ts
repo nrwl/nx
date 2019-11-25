@@ -20,7 +20,7 @@ import {
 } from 'typescript';
 import { ReplaceChange } from '@nrwl/workspace/src/utils/ast-utils';
 import { relative } from 'path';
-import { testingLibraryVersion } from '../../utils/versions';
+import { testingLibraryReactVersion } from '../../utils/versions';
 
 const ignore = require('ignore');
 
@@ -82,7 +82,7 @@ function updateDependencies(tree: Tree) {
     {
       dependencies: {},
       devDependencies: {
-        '@testing-library/react': testingLibraryVersion
+        '@testing-library/react': testingLibraryReactVersion
       }
     }
   );

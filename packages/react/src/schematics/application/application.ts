@@ -38,7 +38,7 @@ import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
 import { addInitialRoutes } from '../../utils/ast-utils';
 import {
   babelPresetReactVersion,
-  reactRouterTypesVersion,
+  typesReactRouterDomVersion,
   reactRouterDomVersion
 } from '../../utils/versions';
 import { assertValidStyle } from '../../utils/assertion';
@@ -249,7 +249,7 @@ function addRouting(
         },
         addDepsToPackageJson(
           { 'react-router-dom': reactRouterDomVersion },
-          { '@types/react-router-dom': reactRouterTypesVersion }
+          { '@types/react-router-dom': typesReactRouterDomVersion }
         )
       ])
     : noop();

@@ -5,17 +5,23 @@ import {
   addPackageWithInit,
   updateWorkspace
 } from '@nrwl/workspace';
-import { frameworkVersion, pluginVersion } from '../../utils/versions';
+import {
+  nextVersion,
+  zeitNextCss,
+  zeitNextLess,
+  zeitNextSass,
+  zeitNextStylus
+} from '../../utils/versions';
 import { Schema } from './schema';
 
 export function addDependencies(): Rule {
   return addDepsToPackageJson(
     {
-      next: frameworkVersion,
-      '@zeit/next-css': pluginVersion,
-      '@zeit/next-sass': pluginVersion,
-      '@zeit/next-less': pluginVersion,
-      '@zeit/next-stylus': pluginVersion
+      next: nextVersion,
+      '@zeit/next-css': zeitNextCss,
+      '@zeit/next-sass': zeitNextLess,
+      '@zeit/next-less': zeitNextSass,
+      '@zeit/next-stylus': zeitNextStylus
     },
     {}
   );
