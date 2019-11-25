@@ -106,6 +106,10 @@
         "id": "guides",
         "itemList": [
           {
+            "name": "Transitioning to Nx",
+            "id": "transition-to-nx"
+          },
+          {
             "name": "Using Cypress",
             "id": "modernize-cypress",
             "file": "shared/modernize-cypress"
