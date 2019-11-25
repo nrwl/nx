@@ -559,10 +559,18 @@ function updateProject(options: NormalizedSchema): Rule {
 function removeE2e(options: NormalizedSchema, e2eProjectRoot: string): Rule {
   return chain([
     host => {
-      host.delete(`${e2eProjectRoot}/src/app.e2e-spec.ts`);
-      host.delete(`${e2eProjectRoot}/src/app.po.ts`);
-      host.delete(`${e2eProjectRoot}/protractor.conf.js`);
-      host.delete(`${e2eProjectRoot}/tsconfig.json`);
+      if (host.read(`${e2eProjectRoot}/src/app.e2e-spec.ts`)) {
+        host.delete(`${e2eProjectRoot}/src/app.e2e-spec.ts`);
+      }
+      if (host.read(`${e2eProjectRoot}/src/app.po.ts`)) {
+        host.delete(`${e2eProjectRoot}/src/app.po.ts`);
+      }
+      if (host.read(`${e2eProjectRoot}/protractor.conf.js`)) {
+        host.delete(`${e2eProjectRoot}/protractor.conf.js`);
+      }
+      if (host.read(`${e2eProjectRoot}/tsconfig.json`)) {
+        host.delete(`${e2eProjectRoot}/tsconfig.json`);
+      }
     },
     updateWorkspace(workspace => {
       workspace.projects.get(options.name).targets.delete('e2e');
