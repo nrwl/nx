@@ -17,7 +17,7 @@ export class DefaultReporter {
       if (affectedArgs.configuration) {
         description += ` that are configured for "${affectedArgs.configuration}"`;
       }
-      output.logSingleLine(`No projects ${description} were affected`);
+      output.logSingleLine(`No projects ${description} were run`);
       return;
     }
 
