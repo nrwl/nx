@@ -8,11 +8,15 @@
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/Jxh_--FeJeY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-### Free Course
+## Courses
 
-#### Create a free account on the Connect Platform and enjoy a complete Nx course on us!
+### Nx Workspace (free)
 
-[![Create Workspace](./course-nx.jpg)](https://connect.nrwl.io/app/courses/nx-workspaces/intro)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/2mYLe9Kp9VM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+### Advanced Nx Workspace (premium)
+
+[![Advanced Nx Workspace](./advanced-nx-workspace-course.png)](https://nxplaybook.com/p/advanced-nx-workspaces)
 
 ## Books and Blogs
 
