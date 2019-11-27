@@ -24,7 +24,6 @@
   "exclude": [
     "tmp",
     "build",
-    "packages/bazel",
     "packages/schematics/src/*/files/**/*",
     "packages/workspace/src/*/files/**/*",
     "packages/jest/src/*/files/**/*",

@@ -44,6 +44,7 @@ export {
   createOrUpdate,
   findNodes,
   updatePackageJsonDependencies,
+  getProjectGraphFromHost,
   readWorkspace
 } from './src/utils/ast-utils';
 

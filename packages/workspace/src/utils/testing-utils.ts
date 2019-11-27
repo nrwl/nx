@@ -33,6 +33,7 @@ export function createEmptyWorkspace(tree: Tree): Tree {
   tree.create(
     '/package.json',
     JSON.stringify({
+      name: 'test-name',
       dependencies: {},
       devDependencies: {}
     })
