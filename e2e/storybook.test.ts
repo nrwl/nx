@@ -5,11 +5,12 @@ import {
   uniq,
   ensureProject,
   tmpProjPath,
-  checkFilesExist
+  checkFilesExist,
+  readFile
 } from './utils';
-import { writeFileSync, mkdirSync } from 'fs';
+import { writeFileSync } from 'fs';
 
-forEachCli(() => {
+forEachCli(() => { 
   describe('Storybook schematics', () => {
     if (supportUi()) {
       describe('running Storybook and Cypress', () => {
@@ -139,29 +140,30 @@ forEachCli(() => {
   });
 
   describe('Storybook builders', () => {
-    if (supportUi()) {
-      describe('building Storybook', () => {
-        it('should generate a static Storybook build', () => {
-          ensureProject();
+    it('should generate a static Storybook build', () => {
+      ensureProject();
 
-          const myapp = uniq('myapp');
-          runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
+      const myapp = uniq('myapp');
+      runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
 
-          const mylib = uniq('test-ui-lib');
-          createTestUILib(mylib);
+      const mylib = uniq('test-storybook-lib');
+      createTestUILib(mylib);
 
-          runCLI(
-            `generate @nrwl/angular:storybook-configuration ${mylib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
-          );
-          runCLI(
-            `generate @nrwl/storybook:configuration ${mylib} --no-interactive`
-          );
+      runCLI(
+        `generate @nrwl/angular:storybook-configuration ${mylib} --generateStories --no-interactive`
+      );
+      runCLI(
+        `generate @nrwl/storybook:configuration ${mylib} --no-interactive`
+      );
 
-          runCLI(`run ${mylib}:storybook-build`);
-          checkFilesExist(`dist/storybook/${mylib}/index.html`);
-        }, 1000000);
-      });
-    }
+      const storybookOutput = runCLI(`run ${mylib}:storybook-build`);
+      expect(storybookOutput).toContain('info => Preview built');
+ 
+      checkFilesExist(`dist/storybook/${mylib}/index.html`);
+      expect(readFile(`dist/storybook/${mylib}/index.html`)).toContain(
+        `<title>Storybook</title>`
+      );
+    }, 1000000);
   });
 });
 
