@@ -11,6 +11,11 @@ import * as stripJsonComments from 'strip-json-comments';
 import { serializeJson } from './fileutils';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { getWorkspacePath } from './cli-config-utils';
+import {
+  DependencyGraph,
+  getDependencyGraph,
+  NxJson
+} from '../command-line/shared';
 
 function nodesByPosition(first: ts.Node, second: ts.Node): number {
   return first.getStart() - second.getStart();
@@ -372,6 +377,18 @@ export function readJsonInTree<T = any>(host: Tree, path: string): T {
   } catch (e) {
     throw new Error(`Cannot parse ${path}: ${e.message}`);
   }
+}
+
+/**
+ * Method for utilizing the dependency graph in schematics
+ */
+export function getDependencyGraphFromTree(host: Tree): DependencyGraph {
+  const workspaceJson = readJsonInTree(host, getWorkspacePath(host));
+  const nxJson = readJsonInTree<NxJson>(host, '/nx.json');
+
+  const fileRead = (f: string) => host.read(f).toString();
+
+  return getDependencyGraph(workspaceJson, nxJson, nxJson.npmScope, fileRead);
 }
 
 /**

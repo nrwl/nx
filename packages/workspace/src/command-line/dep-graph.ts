@@ -1,12 +1,12 @@
 import { readFileSync, writeFileSync } from 'fs';
 import * as http from 'http';
 import * as opn from 'opn';
-import { Deps, readDependencies } from './deps-calculator';
+import { Deps } from './deps-calculator';
 import {
-  getProjectNodes,
   readNxJson,
   readWorkspaceJson,
-  ProjectNode
+  ProjectNode,
+  getDependencyGraph
 } from './shared';
 import { output } from './output';
 
@@ -48,8 +48,13 @@ export function generateGraph(
 ): void {
   const workspaceJson = readWorkspaceJson();
   const nxJson = readNxJson();
-  const projects: ProjectNode[] = getProjectNodes(workspaceJson, nxJson);
-  const deps = readDependencies(nxJson.npmScope, projects);
+  const dependencyGraph = getDependencyGraph(
+    workspaceJson,
+    nxJson,
+    nxJson.npmScope
+  );
+  const projects: ProjectNode[] = Object.values(dependencyGraph.projects);
+  const deps = dependencyGraph.dependencies;
 
   const renderProjects: ProjectNode[] = filterProjects(
     deps,

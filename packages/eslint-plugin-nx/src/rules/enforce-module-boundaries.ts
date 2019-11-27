@@ -4,7 +4,8 @@ import {
   normalizedProjectRoot,
   readNxJson,
   readWorkspaceJson,
-  ProjectType
+  ProjectType,
+  getDependencyGraph
 } from '@nrwl/workspace/src/command-line/shared';
 import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
 import {
@@ -94,11 +95,13 @@ export default createESLintRule<Options, MessageIds>({
       const workspaceJson = readWorkspaceJson();
       const nxJson = readNxJson();
       (global as any).npmScope = nxJson.npmScope;
-      (global as any).projectNodes = getProjectNodes(workspaceJson, nxJson);
-      (global as any).deps = readDependencies(
-        (global as any).npmScope,
-        (global as any).projectNodes
+      const depGraph = getDependencyGraph(
+        workspaceJson,
+        nxJson,
+        nxJson.npmScope
       );
+      (global as any).projectNodes = Object.values(depGraph.projects);
+      (global as any).deps = depGraph.dependencies;
     }
     const npmScope = (global as any).npmScope;
     const projectNodes = (global as any).projectNodes;
