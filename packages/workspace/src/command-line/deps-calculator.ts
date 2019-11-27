@@ -42,7 +42,8 @@ export enum DependencyType {
 
 export function readDependencies(
   npmScope: string,
-  projectNodes: ProjectNode[]
+  projectNodes: ProjectNode[],
+  readFile: (f: string) => string
 ): Deps {
   const nxDepsPath = `${appRootPath}/dist/nxdeps.json`;
   const m = lastModifiedAmongProjectFiles(projectNodes);
@@ -51,9 +52,7 @@ export function readDependencies(
   }
   const existingDeps = fileExists(nxDepsPath) ? readJsonFile(nxDepsPath) : null;
   if (!existingDeps || m > mtime(nxDepsPath)) {
-    return dependencies(npmScope, projectNodes, existingDeps, (f: string) =>
-      readFileSync(`${appRootPath}/${f}`, 'UTF-8')
-    );
+    return dependencies(npmScope, projectNodes, existingDeps, readFile);
   } else {
     return existingDeps.dependencies;
   }

@@ -1,6 +1,8 @@
 import {
   assertWorkspaceValidity,
   createProjectMetadata,
+  DependencyGraph,
+  findRoots,
   getImplicitDependencies,
   getProjectNodes,
   NxJson,
@@ -428,11 +430,205 @@ describe('getProjectNodes', () => {
 });
 
 describe('createAffectedMetadata', () => {
-  let projectNodes: Partial<ProjectNode>[];
-  let dependencies: Deps;
+  let dependencyGraph: DependencyGraph;
 
   beforeEach(() => {
-    projectNodes = [
+    dependencyGraph = <any>{
+      projects: {
+        app1: {
+          name: 'app1'
+        },
+        app2: {
+          name: 'app2'
+        },
+        'app1-e2e': {
+          name: 'app1-e2e'
+        },
+        'customName-e2e': {
+          name: 'customName-e2e'
+        },
+        lib1: {
+          name: 'lib1'
+        },
+        lib2: {
+          name: 'lib2'
+        }
+      },
+      dependencies: {
+        'app1-e2e': [
+          {
+            projectName: 'app1',
+            type: DependencyType.implicit
+          }
+        ],
+        'customName-e2e': [
+          {
+            projectName: 'app2',
+            type: DependencyType.implicit
+          }
+        ],
+        app1: [
+          {
+            projectName: 'lib1',
+            type: DependencyType.es6Import
+          }
+        ],
+        app2: [
+          {
+            projectName: 'lib1',
+            type: DependencyType.es6Import
+          },
+          {
+            projectName: 'lib2',
+            type: DependencyType.es6Import
+          }
+        ],
+        lib1: [],
+        lib2: []
+      }
+    };
+  });
+
+  it('should translate project nodes array to map', () => {
+    expect(
+      createProjectMetadata(dependencyGraph, [], false).dependencyGraph.projects
+    ).toEqual({
+      app1: {
+        name: 'app1'
+      },
+      app2: {
+        name: 'app2'
+      },
+      'app1-e2e': {
+        name: 'app1-e2e'
+      },
+      'customName-e2e': {
+        name: 'customName-e2e'
+      },
+      lib1: {
+        name: 'lib1'
+      },
+      lib2: {
+        name: 'lib2'
+      }
+    });
+  });
+
+  it('should include the dependencyGraph', () => {
+    expect(
+      createProjectMetadata(dependencyGraph, [], false).dependencyGraph
+    ).toEqual(dependencyGraph);
+  });
+
+  it('should set projects as touched', () => {
+    const { projectStates } = createProjectMetadata(
+      dependencyGraph,
+      ['app1', 'lib2'],
+      false
+    );
+    expect(projectStates.app1.touched).toEqual(true);
+    expect(projectStates.lib2.touched).toEqual(true);
+
+    expect(projectStates.lib1.touched).toEqual(false);
+    expect(projectStates.app2.touched).toEqual(false);
+    expect(projectStates['customName-e2e'].touched).toEqual(false);
+    expect(projectStates['app1-e2e'].touched).toEqual(false);
+  });
+
+  it('should set touched projects as affected', () => {
+    const { projectStates } = createProjectMetadata(
+      dependencyGraph,
+      ['app1', 'lib2'],
+      false
+    );
+    expect(projectStates.app1.affected).toEqual(true);
+    expect(projectStates.lib2.affected).toEqual(true);
+  });
+
+  it('should set dependents of touched projects as affected', () => {
+    const { projectStates } = createProjectMetadata(
+      dependencyGraph,
+      ['app1'],
+      false
+    );
+    expect(projectStates.app1.affected).toEqual(true);
+    expect(projectStates['app1-e2e'].affected).toEqual(true);
+
+    expect(projectStates.lib1.affected).toEqual(false);
+    expect(projectStates.lib2.affected).toEqual(false);
+    expect(projectStates.app2.affected).toEqual(false);
+    expect(projectStates['customName-e2e'].affected).toEqual(false);
+  });
+
+  it('should set dependents of touched projects as affected (2)', () => {
+    const { projectStates } = createProjectMetadata(
+      dependencyGraph,
+      ['lib1'],
+      false
+    );
+    expect(projectStates.app1.affected).toEqual(true);
+    expect(projectStates['app1-e2e'].affected).toEqual(true);
+    expect(projectStates.lib1.affected).toEqual(true);
+    expect(projectStates.app2.affected).toEqual(true);
+    expect(projectStates['customName-e2e'].affected).toEqual(true);
+
+    expect(projectStates.lib2.affected).toEqual(false);
+  });
+
+  it('should not set any projects as affected when none are touched', () => {
+    const { projectStates } = createProjectMetadata(dependencyGraph, [], false);
+    expect(projectStates.app1.affected).toEqual(false);
+    expect(projectStates.app2.affected).toEqual(false);
+    expect(projectStates.lib1.affected).toEqual(false);
+    expect(projectStates.lib2.affected).toEqual(false);
+    expect(projectStates['app1-e2e'].affected).toEqual(false);
+    expect(projectStates['customName-e2e'].affected).toEqual(false);
+  });
+
+  it('should handle circular dependencies', () => {
+    dependencyGraph.dependencies['lib2'].push({
+      projectName: 'app2',
+      type: DependencyType.es6Import
+    });
+    const metadata = createProjectMetadata(dependencyGraph, ['lib2'], false);
+    const { projectStates } = metadata;
+    expect(projectStates.app1.affected).toEqual(false);
+    expect(projectStates.app2.affected).toEqual(true);
+    expect(projectStates.lib1.affected).toEqual(false);
+    expect(projectStates.lib2.affected).toEqual(true);
+    expect(projectStates['app1-e2e'].affected).toEqual(false);
+    expect(projectStates['customName-e2e'].affected).toEqual(true);
+  });
+
+  it('should cases where there is no root', () => {
+    dependencyGraph.dependencies['lib1'].push({
+      projectName: 'app1-e2e',
+      type: DependencyType.es6Import
+    });
+    dependencyGraph.dependencies['lib2'].push({
+      projectName: 'customName-e2e',
+      type: DependencyType.es6Import
+    });
+    const metadata = createProjectMetadata(
+      dependencyGraph,
+      ['app1-e2e', 'customName-e2e'],
+      false
+    );
+    const { projectStates } = metadata;
+    expect(projectStates.app1.affected).toEqual(true);
+    expect(projectStates.app2.affected).toEqual(true);
+    expect(projectStates.lib1.affected).toEqual(true);
+    expect(projectStates.lib2.affected).toEqual(true);
+    expect(projectStates['app1-e2e'].affected).toEqual(true);
+    expect(projectStates['customName-e2e'].affected).toEqual(true);
+  });
+});
+
+describe('findRoots', () => {
+  let projectNodes: any[];
+  let dependencies: Deps;
+  beforeEach(() => {
+    projectNodes = <Partial<ProjectNode>[]>[
       {
         name: 'app1'
       },
@@ -486,154 +682,14 @@ describe('createAffectedMetadata', () => {
     };
   });
 
-  it('should translate project nodes array to map', () => {
-    expect(
-      createProjectMetadata(
-        projectNodes as ProjectNode[],
-        dependencies,
-        [],
-        false
-      ).dependencyGraph.projects
-    ).toEqual({
-      app1: {
-        name: 'app1'
-      },
-      app2: {
-        name: 'app2'
-      },
-      'app1-e2e': {
-        name: 'app1-e2e'
-      },
-      'customName-e2e': {
-        name: 'customName-e2e'
-      },
-      lib1: {
-        name: 'lib1'
-      },
-      lib2: {
-        name: 'lib2'
-      }
-    });
-  });
-
-  it('should include the dependencies', () => {
-    expect(
-      createProjectMetadata(
-        projectNodes as ProjectNode[],
-        dependencies,
-        [],
-        false
-      ).dependencyGraph.dependencies
-    ).toEqual(dependencies);
-  });
-
   it('should find the roots', () => {
-    expect(
-      createProjectMetadata(
-        projectNodes as ProjectNode[],
-        dependencies,
-        [],
-        false
-      ).dependencyGraph.roots
-    ).toEqual(['app1-e2e', 'customName-e2e']);
+    expect(findRoots(projectNodes, dependencies)).toEqual([
+      'app1-e2e',
+      'customName-e2e'
+    ]);
   });
 
-  it('should set projects as touched', () => {
-    const { projectStates } = createProjectMetadata(
-      projectNodes as ProjectNode[],
-      dependencies,
-      ['app1', 'lib2'],
-      false
-    );
-    expect(projectStates.app1.touched).toEqual(true);
-    expect(projectStates.lib2.touched).toEqual(true);
-
-    expect(projectStates.lib1.touched).toEqual(false);
-    expect(projectStates.app2.touched).toEqual(false);
-    expect(projectStates['customName-e2e'].touched).toEqual(false);
-    expect(projectStates['app1-e2e'].touched).toEqual(false);
-  });
-
-  it('should set touched projects as affected', () => {
-    const { projectStates } = createProjectMetadata(
-      projectNodes as ProjectNode[],
-      dependencies,
-      ['app1', 'lib2'],
-      false
-    );
-    expect(projectStates.app1.affected).toEqual(true);
-    expect(projectStates.lib2.affected).toEqual(true);
-  });
-
-  it('should set dependents of touched projects as affected', () => {
-    const { projectStates } = createProjectMetadata(
-      projectNodes as ProjectNode[],
-      dependencies,
-      ['app1'],
-      false
-    );
-    expect(projectStates.app1.affected).toEqual(true);
-    expect(projectStates['app1-e2e'].affected).toEqual(true);
-
-    expect(projectStates.lib1.affected).toEqual(false);
-    expect(projectStates.lib2.affected).toEqual(false);
-    expect(projectStates.app2.affected).toEqual(false);
-    expect(projectStates['customName-e2e'].affected).toEqual(false);
-  });
-
-  it('should set dependents of touched projects as affected (2)', () => {
-    const { projectStates } = createProjectMetadata(
-      projectNodes as ProjectNode[],
-      dependencies,
-      ['lib1'],
-      false
-    );
-    expect(projectStates.app1.affected).toEqual(true);
-    expect(projectStates['app1-e2e'].affected).toEqual(true);
-    expect(projectStates.lib1.affected).toEqual(true);
-    expect(projectStates.app2.affected).toEqual(true);
-    expect(projectStates['customName-e2e'].affected).toEqual(true);
-
-    expect(projectStates.lib2.affected).toEqual(false);
-  });
-
-  it('should not set any projects as affected when none are touched', () => {
-    const { projectStates } = createProjectMetadata(
-      projectNodes as ProjectNode[],
-      dependencies,
-      [],
-      false
-    );
-    expect(projectStates.app1.affected).toEqual(false);
-    expect(projectStates.app2.affected).toEqual(false);
-    expect(projectStates.lib1.affected).toEqual(false);
-    expect(projectStates.lib2.affected).toEqual(false);
-    expect(projectStates['app1-e2e'].affected).toEqual(false);
-    expect(projectStates['customName-e2e'].affected).toEqual(false);
-  });
-
-  it('should handle circular dependencies', () => {
-    dependencies['lib2'].push({
-      projectName: 'app2',
-      type: DependencyType.es6Import
-    });
-    const metadata = createProjectMetadata(
-      projectNodes as ProjectNode[],
-      dependencies,
-      ['lib2'],
-      false
-    );
-    const { dependencyGraph, projectStates } = metadata;
-    expect(dependencyGraph.roots).toEqual(['app1-e2e', 'customName-e2e']);
-    expect(projectStates.app1.affected).toEqual(false);
-    expect(projectStates.app2.affected).toEqual(true);
-    expect(projectStates.lib1.affected).toEqual(false);
-    expect(projectStates.lib2.affected).toEqual(true);
-    expect(projectStates['app1-e2e'].affected).toEqual(false);
-    expect(projectStates['customName-e2e'].affected).toEqual(true);
-  });
-
-  it('should cases where there is no root', () => {
+  it('should handle cases where there are no roots', () => {
     dependencies['lib1'].push({
       projectName: 'app1-e2e',
       type: DependencyType.es6Import
@@ -642,19 +698,17 @@ describe('createAffectedMetadata', () => {
       projectName: 'customName-e2e',
       type: DependencyType.es6Import
     });
-    const metadata = createProjectMetadata(
-      projectNodes as ProjectNode[],
-      dependencies,
-      ['app1-e2e', 'customName-e2e'],
-      false
-    );
-    const { dependencyGraph, projectStates } = metadata;
-    expect(dependencyGraph.roots).toEqual([]);
-    expect(projectStates.app1.affected).toEqual(true);
-    expect(projectStates.app2.affected).toEqual(true);
-    expect(projectStates.lib1.affected).toEqual(true);
-    expect(projectStates.lib2.affected).toEqual(true);
-    expect(projectStates['app1-e2e'].affected).toEqual(true);
-    expect(projectStates['customName-e2e'].affected).toEqual(true);
+    expect(findRoots(projectNodes, dependencies)).toEqual([]);
+  });
+
+  it('should handle circular dependencies', () => {
+    dependencies['lib2'].push({
+      projectName: 'app2',
+      type: DependencyType.es6Import
+    });
+    expect(findRoots(projectNodes, dependencies)).toEqual([
+      'app1-e2e',
+      'customName-e2e'
+    ]);
   });
 });

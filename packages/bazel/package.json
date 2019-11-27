@@ -1,0 +1,54 @@
+{
+  "name": "@nrwl/bazel",
+  "version": "0.0.1",
+  "description": "Bazel Plugin for Nx",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nrwl/nx.git"
+  },
+  "keywords": [
+    "Monorepo",
+    "Bazel",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "index.js",
+  "types": "index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./collection.json",
+  "builders": "./builders.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json",
+    "packageGroup": [
+      "@nrwl/workspace",
+      "@nrwl/angular",
+      "@nrwl/cypress",
+      "@nrwl/express",
+      "@nrwl/jest",
+      "@nrwl/nest",
+      "@nrwl/node",
+      "@nrwl/react",
+      "@nrwl/web"
+    ]
+  },
+  "dependencies": {
+    "@angular-devkit/core": "8.3.14",
+    "@angular-devkit/schematics": "8.3.14",
+    "@nrwl/cli": "*"
+  },
+  "peerDependencies": {
+    "@nrwl/workspace": "*"
+  }
+}

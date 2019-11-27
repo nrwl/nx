@@ -7,6 +7,7 @@ import { YargsAffectedOptions } from './run-tasks/affected';
 import { Deps, readDependencies } from './deps-calculator';
 import { touchedProjects } from './touched';
 import { output } from './output';
+import { readFileSync } from 'fs';
 
 const ignore = require('ignore');
 
@@ -428,61 +429,90 @@ export function readNxJson(): NxJson {
   return config;
 }
 
+const defaultReadFile = (f: string) =>
+  readFileSync(`${appRootPath}/${f}`, 'UTF-8');
+
+export function getDependencyGraph(
+  workspaceJson: any,
+  nxJson: NxJson,
+  npmScope: string,
+  readFile: (f: string) => string = defaultReadFile
+) {
+  const projectNodes = getProjectNodes(workspaceJson, nxJson);
+  const projects: ProjectMap = {};
+  projectNodes.forEach(project => {
+    projects[project.name] = project;
+  });
+
+  const dependencies = readDependencies(npmScope, projectNodes, readFile);
+
+  return {
+    projects,
+    dependencies,
+    roots: findRoots(projectNodes, dependencies)
+  };
+}
+
+export function findRoots(projectNodes: ProjectNode[], dependencies: Deps) {
+  const reverseDeps = reverseDependencies(dependencies);
+  return projectNodes
+    .filter(project => !reverseDeps[project.name])
+    .map(project => project.name);
+}
+
 export function getProjectMetadata(
   touchedFiles: string[],
   withDeps: boolean
 ): ProjectMetadata {
   const workspaceJson = readWorkspaceJson();
   const nxJson = readNxJson();
-  const projectNodes = getProjectNodes(workspaceJson, nxJson);
+
+  const dependencyGraph = getDependencyGraph(
+    workspaceJson,
+    nxJson,
+    nxJson.npmScope
+  );
+
+  const projectNodes = Object.values(dependencyGraph.projects);
   const implicitDeps = getImplicitDependencies(
     projectNodes,
     workspaceJson,
     nxJson
   );
-  const dependencies = readDependencies(nxJson.npmScope, projectNodes);
+
   const tp = touchedProjects(implicitDeps, projectNodes, touchedFiles);
-  return createProjectMetadata(projectNodes, dependencies, tp, withDeps);
+  return createProjectMetadata(dependencyGraph, tp, withDeps);
 }
 
 export function createProjectMetadata(
-  projectNodes: ProjectNode[],
-  dependencies: Deps,
+  dependencyGraph: DependencyGraph,
   touchedProjects: string[],
   withDeps: boolean
 ): ProjectMetadata {
   const projectStates: ProjectStates = {};
-  const projects: ProjectMap = {};
+
+  const projectNodes = Object.values(dependencyGraph.projects);
 
   projectNodes.forEach(project => {
     projectStates[project.name] = {
       touched: false,
       affected: false
     };
-    projects[project.name] = project;
   });
-  const reverseDeps = reverseDependencies(dependencies);
-  const roots = projectNodes
-    .filter(project => !reverseDeps[project.name])
-    .map(project => project.name);
 
   touchedProjects.forEach(projectName => {
     projectStates[projectName].touched = true;
     setAffected(
       projectName,
-      simplifyDeps(dependencies),
-      reverseDeps,
+      simplifyDeps(dependencyGraph.dependencies),
+      reverseDependencies(dependencyGraph.dependencies),
       projectStates,
       withDeps
     );
   });
 
   return {
-    dependencyGraph: {
-      projects,
-      dependencies,
-      roots
-    },
+    dependencyGraph,
     projectStates
   };
 }

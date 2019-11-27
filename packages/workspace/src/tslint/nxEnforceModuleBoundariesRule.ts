@@ -1,14 +1,13 @@
 import * as Lint from 'tslint';
 import { IOptions } from 'tslint';
 import * as ts from 'typescript';
-import { readDependencies } from '../command-line/deps-calculator';
 import {
-  getProjectNodes,
   normalizedProjectRoot,
   readNxJson,
   readWorkspaceJson,
   ProjectNode,
-  ProjectType
+  ProjectType,
+  getDependencyGraph
 } from '../command-line/shared';
 import { appRootPath } from '../utils/app-root';
 import {
@@ -42,11 +41,13 @@ export class Rule extends Lint.Rules.AbstractRule {
         const workspaceJson = readWorkspaceJson();
         const nxJson = readNxJson();
         (global as any).npmScope = nxJson.npmScope;
-        (global as any).projectNodes = getProjectNodes(workspaceJson, nxJson);
-        (global as any).deps = readDependencies(
-          (global as any).npmScope,
-          (global as any).projectNodes
+        const depGraph = getDependencyGraph(
+          workspaceJson,
+          nxJson,
+          nxJson.npmScope
         );
+        (global as any).projectNodes = Object.values(depGraph.projects);
+        (global as any).deps = depGraph.dependencies;
       }
       this.npmScope = (global as any).npmScope;
       this.projectNodes = (global as any).projectNodes;

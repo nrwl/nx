@@ -6,6 +6,7 @@ export {
   names,
   findModuleParent
 } from './src/utils/name-utils';
+export {} from './src/utils/rules/get-dependency-graph';
 export {
   serializeJson,
   renameSync,
@@ -27,6 +28,8 @@ export {
 export {
   readWorkspaceJson,
   readNxJson,
+  DependencyGraph,
+  ProjectNode,
   NxJson
 } from './src/command-line/shared';
 export {
@@ -44,6 +47,7 @@ export {
   createOrUpdate,
   findNodes,
   updatePackageJsonDependencies,
+  getDependencyGraphFromTree,
   readWorkspace
 } from './src/utils/ast-utils';
 

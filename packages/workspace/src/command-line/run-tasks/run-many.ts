@@ -1,5 +1,9 @@
 import * as yargs from 'yargs';
-import { ProjectNode, getProjectNodes, createProjectMetadata } from '../shared';
+import {
+  ProjectNode,
+  createProjectMetadata,
+  getDependencyGraph
+} from '../shared';
 import { runCommand } from './run-command';
 import {
   readEnvironment,
@@ -8,7 +12,6 @@ import {
   projectHasTargetAndConfiguration
 } from './utils';
 import { output } from '../output';
-import { readDependencies } from '../deps-calculator';
 
 export type YargsRunManyOptions = yargs.Arguments & RunManyOptions;
 
@@ -36,14 +39,18 @@ export function runMany(parsedArgs: yargs.Arguments): void {
   const args = splitArgs(parsedArgs as YargsRunManyOptions, flags);
   const environment = readEnvironment(args.nxArgs.target);
   const { nxJson, workspaceJson } = environment;
+  const dependencyGraph = getDependencyGraph(
+    workspaceJson,
+    nxJson,
+    nxJson.npmScope
+  );
 
-  const allProjects = getProjectNodes(workspaceJson, nxJson);
+  const allProjects = Object.values(dependencyGraph.projects);
+
   const projects = getProjectsToRun(args.nxArgs, allProjects);
 
-  const dependencies = readDependencies(nxJson.npmScope, allProjects);
   const metadata = createProjectMetadata(
-    allProjects,
-    dependencies,
+    dependencyGraph,
     [],
     args.nxArgs.withDeps
   );
