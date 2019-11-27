@@ -11,6 +11,13 @@ import * as stripJsonComments from 'strip-json-comments';
 import { serializeJson } from './fileutils';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { getWorkspacePath } from './cli-config-utils';
+import {
+  createProjectGraph,
+  ProjectGraph
+} from '../command-line/project-graph';
+import { NxJson } from '../command-line/shared';
+import { FileData } from '../command-line/file-utils';
+import { extname, join, normalize, Path } from '@angular-devkit/core';
 
 function nodesByPosition(first: ts.Node, second: ts.Node): number {
   return first.getStart() - second.getStart();
@@ -372,6 +379,78 @@ export function readJsonInTree<T = any>(host: Tree, path: string): T {
   } catch (e) {
     throw new Error(`Cannot parse ${path}: ${e.message}`);
   }
+}
+
+/**
+ * Method for utilizing the project graph in schematics
+ */
+export function getProjectGraphFromHost(host: Tree): ProjectGraph {
+  const workspaceJson = readJsonInTree(host, getWorkspacePath(host));
+  const nxJson = readJsonInTree<NxJson>(host, '/nx.json');
+
+  const fileRead = (f: string) => host.read(f).toString();
+
+  const workspaceFiles: FileData[] = [];
+
+  const mtime = +Date.now();
+
+  workspaceFiles.push(
+    ...allFilesInDirInHost(host, normalize(''), { recursive: false }).map(f =>
+      getFileDataInHost(host, f, mtime)
+    )
+  );
+  workspaceFiles.push(
+    ...allFilesInDirInHost(host, normalize('tools')).map(f =>
+      getFileDataInHost(host, f, mtime)
+    )
+  );
+
+  // Add files for workspace projects
+  Object.keys(workspaceJson.projects).forEach(projectName => {
+    const project = workspaceJson.projects[projectName];
+    workspaceFiles.push(
+      ...allFilesInDirInHost(host, normalize(project.root)).map(f =>
+        getFileDataInHost(host, f, mtime)
+      )
+    );
+  });
+
+  return createProjectGraph(workspaceJson, nxJson, workspaceFiles, fileRead);
+}
+
+export function getFileDataInHost(
+  host: Tree,
+  path: Path,
+  mtime: number
+): FileData {
+  return {
+    file: path,
+    ext: extname(normalize(path)),
+    mtime
+  };
+}
+
+export function allFilesInDirInHost(
+  host: Tree,
+  path: Path,
+  options: {
+    recursive: boolean;
+  } = { recursive: true }
+): Path[] {
+  const dir = host.getDir(path);
+  const res: Path[] = [];
+  dir.subfiles.forEach(p => {
+    res.push(join(path, p));
+  });
+
+  if (!options.recursive) {
+    return res;
+  }
+
+  dir.subdirs.forEach(p => {
+    res.push(...allFilesInDirInHost(host, join(path, p)));
+  });
+  return res;
 }
 
 /**
