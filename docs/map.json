@@ -116,6 +116,11 @@
             "file": "shared/modernize-jest"
           },
           {
+            "name": "Using Storybook",
+            "id": "modernize-storybook-angular",
+            "file": "modernize-storybook"
+          },
+          {
             "name": "Rebuilding and Retesting What is Affected",
             "id": "monorepo-affected",
             "file": "shared/monorepo-affected"
@@ -440,6 +445,11 @@
             "name": "Using Jest",
             "id": "modernize-jest",
             "file": "shared/modernize-jest"
+          },
+          {
+            "name": "Using Storybook",
+            "id": "modernize-storybook-react",
+            "file": "modernize-storybook"
           },
           {
             "name": "Rebuilding and Retesting What is Affected",
