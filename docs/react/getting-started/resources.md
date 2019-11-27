@@ -8,20 +8,18 @@
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/Jxh_--FeJeY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-### Free Course
+## Nx Workspace (free)
 
-#### Create a free account on the Connect Platform and enjoy a complete Nx course on us!
+<iframe width="560" height="315" src="https://www.youtube.com/embed/2mYLe9Kp9VM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-[![Create Workspace](./course-nx.jpg)](https://connect.nrwl.io/app/courses/nx-workspaces/intro)
+## Advanced Nx Workspace (premium)
+
+[![Advanced Nx Workspace](./advanced-nx-workspace-course.png)](https://nxplaybook.com/p/advanced-nx-workspaces)
 
 ## Books and Blogs
 
 - [Nx blog posts](https://blog.nrwl.io/react/home)
 - [Effective React Development with Nx](https://go.nrwl.io/effective-react-development-with-nx-new-book)
-
-## Videos
-
-- [Video course on using Nx Workspaces](https://connect.nrwl.io/app/courses/nx-workspaces/intro)
 
 ## Misc
 

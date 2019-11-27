@@ -145,15 +145,18 @@ You are good to go!
   </tr>
 </table>
 
-### Free Course
-
-#### Create a free account on the Connect Platform and enjoy a complete Nx course on us!
+### Courses
 
 <table>
   <tr>
     <td>    
-      <a href="https://connect.nrwl.io/app/courses/nx-workspaces/intro" target="_blank">
-        <p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/nx-connect-course.jpg" width="100%"></p>
+      <a href="https://www.youtube.com/watch?v=2mYLe9Kp9VM&list=PLakNactNC1dH38AfqmwabvOszDmKriGco" target="_blank">
+        <p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/nx-workspace-course.png" width="350"></p>
+      </a>
+    </td>
+    <td>    
+      <a href="https://nxplaybook.com/p/advanced-nx-workspaces" target="_blank">
+      <p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/advanced-nx-workspace-course.png" width="350"></p>
       </a>
     </td>
   </tr>
@@ -168,7 +171,6 @@ You are good to go!
 
 - [Building Angular full-stack applications in a monorepo.](https://www.youtube.com/watch?v=XZpp52IqD2A&t=1292s)
 - [Building React full-stack applications in a monorepo.](https://www.youtube.com/watch?v=Jxh_--FeJeY&t=2s)
-- [Video course on using Nx Workspaces](https://connect.nrwl.io/app/courses/nx-workspaces/intro)
 
 ### Talks
 
