@@ -9,12 +9,27 @@ const testRunner = new SchematicTestRunner(
   join(__dirname, '../../collection.json')
 );
 
+const migrationTestRunner = new SchematicTestRunner(
+  '@nrwl/workspace',
+  join(__dirname, '../../migrations.json')
+);
+
 export function runSchematic<SchemaOptions = any>(
   schematicName: string,
   options: SchemaOptions,
   tree: Tree
 ) {
   return testRunner.runSchematicAsync(schematicName, options, tree).toPromise();
+}
+
+export function runMigration<SchemaOptions = any>(
+  schematicName: string,
+  options: SchemaOptions,
+  tree: Tree
+) {
+  return migrationTestRunner
+    .runSchematicAsync(schematicName, options, tree)
+    .toPromise();
 }
 
 export function runExternalSchematic<SchemaOptions = any>(
