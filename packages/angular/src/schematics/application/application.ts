@@ -528,7 +528,7 @@ function updateProject(options: NormalizedSchema): Rule {
             : options.unitTestRunner === 'jest'
             ? ['src/test-setup.ts', '**/*.spec.ts']
             : ['src/test.ts', '**/*.spec.ts'],
-          include: [options.enableIvy ? 'src/**/*.d.ts' : '**/*.ts']
+          include: options.enableIvy ? undefined : ['src/**/*.d.ts']
         };
       }),
       host => {

@@ -10,7 +10,8 @@ import {
   readJsonInTree,
   addDepsToPackageJson,
   updateWorkspace,
-  formatFiles
+  formatFiles,
+  updateJsonInTree
 } from '@nrwl/workspace';
 import {
   angularVersion,
@@ -152,9 +153,24 @@ export function setDefaults(options: Schema): Rule {
   });
 }
 
+function addPostinstall(): Rule {
+  return updateJsonInTree('package.json', json => {
+    json.scripts = json.scripts || {};
+
+    if (!json.scripts.postinstall) {
+      json.scripts.postinstall = 'ngcc';
+    } else {
+      json.scripts.postinstall = 'ngcc && ' + json.scripts.postinstall;
+    }
+    return json;
+  });
+}
+
 export default function(options: Schema): Rule {
   return chain([
     setDefaults(options),
+    // TODO: Remove this when ngcc can be run in parallel
+    addPostinstall(),
     updateDependencies(),
     addUnitTestRunner(options),
     addE2eTestRunner(options),
