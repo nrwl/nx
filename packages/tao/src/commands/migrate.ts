@@ -1,5 +1,4 @@
 import { logging, normalize, virtualFs } from '@angular-devkit/core';
-import * as core from '@angular-devkit/core/node';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { BaseWorkflow } from '@angular-devkit/schematics/src/workflow';
 import { NodeModulesEngineHost } from '@angular-devkit/schematics/tools';
@@ -13,6 +12,7 @@ import { getLogger } from '../shared/logger';
 import { convertToCamelCase, handleErrors } from '../shared/params';
 import { commandName } from '../shared/print-help';
 import minimist = require('minimist');
+import { dirname, extname, join, resolve } from 'path';
 
 export type MigrationsJson = {
   version: string;
@@ -473,20 +473,22 @@ class MigrationEngineHost extends NodeModulesEngineHost {
   protected _resolveCollectionPath(name: string): string {
     let collectionPath: string | undefined = undefined;
 
-    if (name.replace(/\\/g, '/').split('/').length > (name[0] == '@' ? 2 : 1)) {
-      try {
-        collectionPath = this._resolvePath(name, process.cwd());
-      } catch {}
+    try {
+      return super._resolveCollectionPath(name);
+    } catch {}
+
+    if (name.startsWith('.') || name.startsWith('/')) {
+      name = resolve(name);
     }
 
-    if (!collectionPath) {
-      let packageJsonPath = this._resolvePackageJson(name, process.cwd());
-      if (!core.fs.isFile(packageJsonPath)) {
-        packageJsonPath = path.join(packageJsonPath, 'package.json');
-      }
-      let pkgJsonSchematics = require(packageJsonPath)['nx-migrations'];
+    if (extname(name)) {
+      collectionPath = require.resolve(name);
+    } else {
+      const packageJsonPath = require.resolve(join(name, 'package.json'));
+      const packageJson = require(packageJsonPath);
+      let pkgJsonSchematics = packageJson['nx-migrations'];
       if (!pkgJsonSchematics) {
-        pkgJsonSchematics = require(packageJsonPath)['ng-update'];
+        pkgJsonSchematics = packageJson['ng-update'];
         if (!pkgJsonSchematics) {
           throw new Error(`Could find migrations in package: "${name}"`);
         }
@@ -494,10 +496,7 @@ class MigrationEngineHost extends NodeModulesEngineHost {
       if (typeof pkgJsonSchematics != 'string') {
         pkgJsonSchematics = pkgJsonSchematics.migrations;
       }
-      collectionPath = this._resolvePath(
-        pkgJsonSchematics,
-        path.dirname(packageJsonPath)
-      );
+      collectionPath = resolve(dirname(packageJsonPath), pkgJsonSchematics);
     }
 
     try {

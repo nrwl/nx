@@ -32,6 +32,22 @@ describe('init', () => {
     expect(devDependencies['codelyzer']).toBeDefined();
   });
 
+  it('should add a postinstall script for ngcc', async () => {
+    const tree = await runSchematic(
+      'init',
+      {
+        unitTestRunner: 'karma'
+      },
+      appTree
+    );
+
+    const packageJson = readJsonInTree(tree, 'package.json');
+
+    expect(packageJson.scripts.postinstall).toEqual(
+      'ngcc --properties es2015 browser module main --first-only --create-ivy-entry-points'
+    );
+  });
+
   describe('--unit-test-runner', () => {
     describe('karma', () => {
       it('should add karma dependencies', async () => {

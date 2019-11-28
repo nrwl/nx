@@ -1,4 +1,4 @@
-import { capitalize } from '@nrwl/workspace/src/utils/strings';
+import { stringUtils } from '@nrwl/workspace';
 import * as http from 'http';
 import {
   checkFilesExist,
@@ -61,7 +61,9 @@ module.exports = {
         `
         import dynamic from 'next/dynamic';
         const DynamicComponent = dynamic(
-            () => import('@proj/${libName}').then(d => d.${capitalize(libName)})
+            () => import('@proj/${libName}').then(d => d.${stringUtils.capitalize(
+          libName
+        )})
           );
       ` + readFile(mainPath)
       );
