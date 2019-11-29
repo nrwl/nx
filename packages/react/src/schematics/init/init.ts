@@ -7,25 +7,26 @@ import {
 } from '@nrwl/workspace';
 import { Schema } from './schema';
 import {
-  frameworkVersion,
-  typesVersion,
-  domTypesVersion,
-  testingLibraryVersion,
-  nxVersion
+  reactVersion,
+  typesReactVersion,
+  typesReactDomVersion,
+  testingLibraryReactVersion,
+  nxVersion,
+  reactDomVersion
 } from '../../utils/versions';
 import { JsonObject } from '@angular-devkit/core';
 
 export function addDependencies(): Rule {
   return addDepsToPackageJson(
     {
-      react: frameworkVersion,
-      'react-dom': frameworkVersion
+      react: reactVersion,
+      'react-dom': reactDomVersion
     },
     {
       '@nrwl/react': nxVersion,
-      '@types/react': typesVersion,
-      '@types/react-dom': domTypesVersion,
-      '@testing-library/react': testingLibraryVersion
+      '@types/react': typesReactVersion,
+      '@types/react-dom': typesReactDomVersion,
+      '@testing-library/react': testingLibraryReactVersion
     }
   );
 }

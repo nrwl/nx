@@ -19,7 +19,7 @@ describe('lib', () => {
       appTree
     );
     const packageJson = readJsonInTree(tree, '/package.json');
-    expect(packageJson.dependencies['redux-starter-kit']).toBeDefined();
+    expect(packageJson.dependencies['@reduxjs/toolkit']).toBeDefined();
     expect(packageJson.dependencies['react-redux']).toBeDefined();
   });
 
@@ -56,7 +56,7 @@ describe('lib', () => {
       );
 
       const main = tree.read('/apps/my-app/src/main.tsx').toString();
-      expect(main).toContain('redux-starter-kit');
+      expect(main).toContain('@reduxjs/toolkit');
       expect(main).toContain('configureStore');
       expect(main).toContain('[THIRD_SLICE_FEATURE_KEY]: thirdSliceReducer,');
       expect(main).toContain(

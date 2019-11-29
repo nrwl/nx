@@ -26,9 +26,9 @@ import { formatFiles, getWorkspace, names, toFileName } from '@nrwl/workspace';
 import * as path from 'path';
 import { addReduxStoreToMain, updateReduxStore } from '../../utils/ast-utils';
 import {
-  reactReduxTypesVersion,
+  typesReactReduxVersion,
   reactReduxVersion,
-  reduxStarterKitVersion
+  reduxjsToolkitVersion
 } from '../../utils/versions';
 
 export default function(schema: any): Rule {
@@ -58,9 +58,9 @@ function generateReduxFiles(options: NormalizedSchema) {
 function addReduxPackageDependencies(): Rule {
   return addDepsToPackageJson(
     {
-      'redux-starter-kit': reduxStarterKitVersion,
+      '@reduxjs/toolkit': reduxjsToolkitVersion,
       'react-redux': reactReduxVersion,
-      '@types/react-redux': reactReduxTypesVersion
+      '@types/react-redux': typesReactReduxVersion
     },
     {}
   );

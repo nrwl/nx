@@ -1,6 +1,6 @@
 import * as webpack from 'webpack';
 import { Configuration, ProgressPlugin, Stats } from 'webpack';
-import { dirname } from 'path';
+import { dirname, resolve } from 'path';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as TerserWebpackPlugin from 'terser-webpack-plugin';
@@ -63,6 +63,9 @@ export function getBaseWebpackPartial(
           mainFields
         })
       ],
+      // Search closest node_modules first, and then fallback to to default node module resolution scheme.
+      // This ensures we are pulling the correct versions of dependencies, such as `core-js`.
+      modules: [resolve(__dirname, '..', '..', 'node_modules'), 'node_modules'],
       mainFields
     },
     performance: {
