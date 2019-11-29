@@ -12,17 +12,15 @@ import { writeFileSync, mkdirSync } from 'fs';
 
 forEachCli(() => { 
   describe('Storybook schematics', () => {
-    describe('running Storybook and Cypress', () => {
+    xdescribe('running Storybook and Cypress', () => {
       it('should execute e2e tests using Cypress running against Storybook', () => {
         ensureProject();
   
         const myapp = uniq('myapp');
         runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
-        console.log(`App ${myapp} generated`);
   
         const mylib = uniq('test-ui-lib');
         createTestUILib(mylib);
-        console.log(`Lib ${mylib} generated`);
         
         runCLI(
           `generate @nrwl/angular:storybook-configuration ${mylib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
@@ -141,19 +139,17 @@ forEachCli(() => {
     });
   });
   
-  xdescribe('Storybook builders', () => {
+  describe('Storybook builders', () => {
     it('should generate a static Storybook build', () => {  
       ensureProject();
       const myapp = uniq('myapp');
-      runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
-      console.log(`App ${myapp} generated`);
+      runCLI(`generate @nrwl/angular:app ${myapp} --e2eTestRunner=none --no-interactive`);
 
       const mylib = uniq('test-storybook-lib');
       createTestUILib(mylib);
-      console.log(`Lib ${mylib} generated`);
       
       runCLI(
-        `generate @nrwl/angular:storybook-configuration ${mylib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
+        `generate @nrwl/angular:storybook-configuration ${mylib} --generateStories --no-interactive`
       );
       runCLI(
         `generate @nrwl/storybook:configuration ${mylib} --no-interactive`
