@@ -214,7 +214,12 @@ export function copyMissingPackages(): void {
     '@testing-library',
 
     // For testing webpack config with babel-loader
-    '@babel',
+    '@babel/core',
+    '@babel/preset-env',
+    '@babel/preset-react',
+    '@babel/preset-typescript',
+    '@babel/plugin-proposal-class-properties',
+    '@babel/plugin-proposal-decorators',
     'babel-loader',
     'babel-plugin-macros',
     'eslint-plugin-import',
