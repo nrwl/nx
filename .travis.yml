@@ -76,10 +76,9 @@ matrix:
       before_install:
         - export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start;
       install:
-        - travis_wait mvn install
         - yarn install --network-timeout 1000000
       script:
-        - yarn e2e-ci2 angular
+        - travis_wait 20 yarn e2e-ci2 angular
 notifications:
   email: false
   webhooks:
