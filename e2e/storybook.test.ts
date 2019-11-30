@@ -129,9 +129,9 @@ forEachCli(() => {
             `
           );
 
-          expect(
-            runCLI(`run ${mylib}-e2e:e2e --configuration=headless --no-watch`)
-          ).toContain('All specs passed!');
+          expect(runCLI(`run ${mylib}-e2e:e2e --no-watch`)).toContain(
+            'All specs passed!'
+          );
         }, 1000000);
       });
     }
