@@ -10,5 +10,20 @@
       "description": "Update Cypress Config",
       "factory": "./src/migrations/update-8-2-0/update-8-2-0"
     }
+  },
+  "packageJsonUpdates": {
+    "9.0.0": {
+      "version": "9.0.0-beta.1",
+      "packages": {
+        "@nrwl/cypress": {
+          "version": "9.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "cypress": {
+          "version": "9.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
   }
 }
