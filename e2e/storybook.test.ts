@@ -10,9 +10,9 @@ import {
 } from './utils';
 import { writeFileSync, mkdirSync } from 'fs';
 
-forEachCli(() => { 
+forEachCli(() => {
   describe('Storybook schematics', () => {
-    xdescribe('running Storybook and Cypress', () => {
+    describe('running Storybook and Cypress', () => {
       it('should execute e2e tests using Cypress running against Storybook', () => {
         ensureProject();
   

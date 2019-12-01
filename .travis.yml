@@ -11,6 +11,7 @@ matrix:
         chrome: stable
       before_install:
         - export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start;
+        - npm install yarn@1.19.0 -g
       install:
         - yarn install --network-timeout 1000000 --frozen-lockfile
       script:
@@ -30,6 +31,7 @@ matrix:
         chrome: stable
       before_install:
         - export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start;
+        - npm install yarn@1.19.0 -g
       install:
         - yarn install --network-timeout 1000000
       script:
@@ -45,6 +47,7 @@ matrix:
         chrome: stable
       before_install:
         - export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start;
+        - npm install yarn@1.19.0 -g
       install:
         - yarn install --network-timeout 1000000
       script:
@@ -60,6 +63,7 @@ matrix:
         chrome: stable
       before_install:
         - export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start;
+        - npm install yarn@1.19.0 -g
       install:
         - yarn install --network-timeout 1000000
       script:
@@ -75,6 +79,7 @@ matrix:
         chrome: stable
       before_install:
         - export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start;
+        - npm install yarn@1.19.0 -g
       install:
         - yarn install --network-timeout 1000000
       script:

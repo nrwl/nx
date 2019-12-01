@@ -35,13 +35,8 @@ describe('schematic:cypress-project', () => {
     expect(project.architect.e2e.options.devServerTarget).toEqual(
       'test-ui-lib:storybook'
     );
-    expect(project.architect.e2e.options.headless).toEqual(false);
-    expect(project.architect.e2e.options.watch).toEqual(true);
-    expect(
-      project.architect.e2e.configurations.headless.devServerTarget
-    ).toEqual('test-ui-lib:storybook:ci');
-    expect(project.architect.e2e.configurations.headless.headless).toEqual(
-      true
-    );
+    expect(project.architect.e2e.options.headless).toBeUndefined();
+    expect(project.architect.e2e.options.watch).toBeUndefined();
+    expect(project.architect.e2e.configurations.headless).toBeUndefined();
   });
 });
