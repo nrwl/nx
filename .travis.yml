@@ -83,7 +83,7 @@ matrix:
       install:
         - yarn install --network-timeout 1000000
       script:
-        - travis_wait 20 yarn e2e-ci2 angular
+        - travis_wait 40 yarn e2e-ci2 angular
 notifications:
   email: false
   webhooks:
