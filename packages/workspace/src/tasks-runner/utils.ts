@@ -1,7 +1,45 @@
 import { Task } from './tasks-runner';
-import { ProjectMap } from '../command-line/shared';
+import { ProjectMap, DependencyGraph } from '../command-line/shared';
+import { createTask } from '../command-line/run-tasks/run-command';
+import { Target } from '@angular-devkit/architect';
 
 const commonCommands = ['build', 'test', 'lint', 'e2e', 'deploy'];
+
+export function getPreconditions(
+  tasks: Task[],
+  graph: DependencyGraph
+): Task[] {
+  const preconditions = new Set<Task>();
+
+  for (let task of tasks) {
+    buildPreconditions(task.target, graph, preconditions);
+  }
+
+  return Array.from(preconditions);
+}
+
+function buildPreconditions(
+  target: Target,
+  graph: DependencyGraph,
+  preconditions: Set<Task>
+) {
+  const { projects, dependencies } = graph;
+
+  for (let dep of dependencies[target.project]) {
+    let next: Target = { ...target, project: dep.projectName };
+    buildPreconditions(next, graph, preconditions);
+
+    const project = projects[dep.projectName];
+    const task = createTask({
+      project,
+      target: next.target,
+      configuration: next.configuration,
+      overrides: next.overrides
+    });
+
+    preconditions.add(task);
+  }
+}
 
 export function getCommand(cliCommand: string, isYarn: boolean, task: Task) {
   const args = Object.entries(task.overrides || {})

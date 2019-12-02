@@ -27,7 +27,7 @@ export function runCommand<T extends RunArgs>(
   projectsToRun: ProjectNode[],
   dependencyGraph: DependencyGraph,
   { nxArgs, overrides, targetArgs }: Arguments<T>,
-  { nxJson, workspace }: Environment
+  { nxJson, workspaceResults }: Environment
 ) {
   const reporter = new DefaultReporter();
   reporter.beforeRun(projectsToRun.map(p => p.name), nxArgs, overrides);
@@ -72,7 +72,7 @@ export function runCommand<T extends RunArgs>(
     next: (event: TaskCompleteEvent) => {
       switch (event.type) {
         case AffectedEventType.TaskComplete: {
-          workspace.setResult(event.task.target.project, event.success);
+          workspaceResults.setResult(event.task.target.project, event.success);
         }
       }
     },
@@ -81,14 +81,14 @@ export function runCommand<T extends RunArgs>(
       // fix for https://github.com/nrwl/nx/issues/1666
       if (process.stdin['unref']) (process.stdin as any).unref();
 
-      workspace.saveResults();
+      workspaceResults.saveResults();
       reporter.printResults(
         nxArgs,
-        workspace.failedProjects,
-        workspace.startedWithFailedProjects
+        workspaceResults.failedProjects,
+        workspaceResults.startedWithFailedProjects
       );
 
-      if (workspace.hasFailure) {
+      if (workspaceResults.hasFailure) {
         process.exit(1);
       }
     }

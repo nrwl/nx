@@ -428,10 +428,13 @@ export function readNxJson(): NxJson {
   return config;
 }
 
-export function getProjectMetadata(
-  touchedFiles: string[],
-  withDeps: boolean
-): ProjectMetadata {
+export interface GetMetadataParams {
+  touchedFiles?: string[];
+  existingTouchedProjects?: string[];
+}
+
+export function getProjectMetadata(params: GetMetadataParams): ProjectMetadata {
+  const { touchedFiles, existingTouchedProjects } = params;
   const workspaceJson = readWorkspaceJson();
   const nxJson = readNxJson();
   const projectNodes = getProjectNodes(workspaceJson, nxJson);
@@ -441,15 +444,96 @@ export function getProjectMetadata(
     nxJson
   );
   const dependencies = readDependencies(nxJson.npmScope, projectNodes);
-  const tp = touchedProjects(implicitDeps, projectNodes, touchedFiles);
-  return createProjectMetadata(projectNodes, dependencies, tp, withDeps);
+
+  let tp = new Set(existingTouchedProjects || []);
+  if (touchedFiles) {
+    for (let touched of touchedProjects(
+      implicitDeps,
+      projectNodes,
+      touchedFiles
+    )) {
+      tp.add(touched);
+    }
+  }
+
+  return createProjectMetadata(projectNodes, dependencies, Array.from(tp));
+}
+
+export function getAffectedProjects(metadata: ProjectMetadata): ProjectNode[] {
+  return filterMetadata(
+    metadata,
+    project => metadata.projectStates[project.name].affected
+  );
+}
+
+export function getAllProjects(metadata: ProjectMetadata): ProjectNode[] {
+  return filterMetadata(metadata, () => true);
+}
+
+export function getSpecificProjects(
+  metadata: ProjectMetadata,
+  projectNames: string[],
+  strict = false
+): ProjectNode[] {
+  const found = [];
+  const projects = filterMetadata(metadata, p => {
+    const flag = projectNames.includes(p.name);
+    if (flag) found.push(p.name);
+    return flag;
+  });
+
+  if (strict) {
+    const notFound = projectNames.filter(p => !found.includes(p));
+
+    if (notFound.length) {
+      output.error({
+        title: 'the following projects were not found in nx.json',
+        bodyLines: notFound.map(p => '- ' + p)
+      });
+
+      process.exit(1);
+    }
+  }
+
+  return projects;
+}
+
+function filterMetadata(
+  metadata: ProjectMetadata,
+  predicate: (project) => boolean
+): ProjectNode[] {
+  const projects: ProjectNode[] = [];
+  visit(metadata, project => {
+    if (predicate(project)) {
+      projects.push(project);
+    }
+  });
+  return projects;
+}
+function visit(
+  metadata: ProjectMetadata,
+  visitor: (project: ProjectNode) => void
+) {
+  const visited = new Set<string>();
+  function _visit(projectName: string) {
+    if (visited.has(projectName)) {
+      return;
+    }
+    visited.add(projectName);
+    metadata.dependencyGraph.dependencies[projectName].forEach(dep => {
+      _visit(dep.projectName);
+    });
+    visitor(metadata.dependencyGraph.projects[projectName]);
+  }
+  metadata.dependencyGraph.roots.forEach(root => {
+    _visit(root);
+  });
 }
 
 export function createProjectMetadata(
   projectNodes: ProjectNode[],
   dependencies: Deps,
-  touchedProjects: string[],
-  withDeps: boolean
+  touchedProjects: string[]
 ): ProjectMetadata {
   const projectStates: ProjectStates = {};
   const projects: ProjectMap = {};
@@ -472,8 +556,7 @@ export function createProjectMetadata(
       projectName,
       simplifyDeps(dependencies),
       reverseDeps,
-      projectStates,
-      withDeps
+      projectStates
     );
   });
 
@@ -521,8 +604,7 @@ function setAffected(
   projectName: string,
   deps: { [projectName: string]: string[] },
   reverseDeps: { [projectName: string]: string[] },
-  projectStates: ProjectStates,
-  withDeps: boolean
+  projectStates: ProjectStates
 ) {
   projectStates[projectName].affected = true;
   const rdep = reverseDeps[projectName] || [];
@@ -531,27 +613,7 @@ function setAffected(
     if (projectStates[dep].affected) {
       return;
     }
-    setAffected(dep, deps, reverseDeps, projectStates, withDeps);
-  });
-
-  if (withDeps) {
-    setDeps(projectName, deps, reverseDeps, projectStates);
-  }
-}
-
-function setDeps(
-  projectName: string,
-  deps: { [projectName: string]: string[] },
-  reverseDeps: { [projectName: string]: string[] },
-  projectStates: ProjectStates
-) {
-  projectStates[projectName].affected = true;
-  deps[projectName].forEach(dep => {
-    // If a dependency is already marked as affected, it means it has been visited
-    if (projectStates[dep].affected) {
-      return;
-    }
-    setDeps(dep, deps, reverseDeps, projectStates);
+    setAffected(dep, deps, reverseDeps, projectStates);
   });
 }
 

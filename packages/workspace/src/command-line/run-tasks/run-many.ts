@@ -1,14 +1,17 @@
 import * as yargs from 'yargs';
-import { ProjectNode, getProjectNodes, createProjectMetadata } from '../shared';
+import {
+  ProjectNode,
+  getProjectMetadata,
+  getAllProjects,
+  getSpecificProjects
+} from '../shared';
 import { runCommand } from './run-command';
 import {
   readEnvironment,
   splitArgs,
-  TaskArgs,
   projectHasTargetAndConfiguration
 } from './utils';
 import { output } from '../output';
-import { readDependencies } from '../deps-calculator';
 
 export type YargsRunManyOptions = yargs.Arguments & RunManyOptions;
 
@@ -27,7 +30,6 @@ export interface RunManyOptions {
   help?: boolean;
   version?: boolean;
   quiet?: boolean;
-  withDeps?: boolean;
 }
 
 export function runMany(parsedArgs: yargs.Arguments): void {
@@ -36,19 +38,24 @@ export function runMany(parsedArgs: yargs.Arguments): void {
   const args = splitArgs(parsedArgs as YargsRunManyOptions, flags);
   const environment = readEnvironment(args.nxArgs.target);
   const { nxJson, workspaceJson } = environment;
+  const { nxArgs } = args;
 
-  const allProjects = getProjectNodes(workspaceJson, nxJson);
-  const projects = getProjectsToRun(args.nxArgs, allProjects);
+  const metadata = getProjectMetadata({
+    existingTouchedProjects: nxArgs.projects || []
+  });
+  const { dependencyGraph } = metadata;
 
-  const dependencies = readDependencies(nxJson.npmScope, allProjects);
-  const metadata = createProjectMetadata(
-    allProjects,
-    dependencies,
-    [],
-    args.nxArgs.withDeps
-  );
+  let projects: ProjectNode[];
 
-  runCommand(projects, metadata.dependencyGraph, args, environment);
+  if (nxArgs.all) {
+    const all = getAllProjects(metadata);
+    projects = runnableForTarget(all, nxArgs.target);
+  } else {
+    const specific = getSpecificProjects(metadata, nxArgs.projects, true);
+    projects = runnableForTarget(specific, nxArgs.target, true);
+  }
+
+  runCommand(projects, dependencyGraph, args, environment);
 }
 
 function preprocess(args: yargs.Arguments): yargs.Arguments {
@@ -65,50 +72,30 @@ function preprocess(args: yargs.Arguments): yargs.Arguments {
   return args;
 }
 
-export function getProjectsToRun(
-  args: TaskArgs,
-  allProjects: ProjectNode[]
+function runnableForTarget(
+  projects: ProjectNode[],
+  target: string,
+  strict = false
 ): ProjectNode[] {
-  const { projects, target, all } = args;
+  const notRunnable = [];
+  const runnable = [];
 
-  let found = [];
-
-  if (!all) {
-    const notFound = [];
-    const noConfig = [];
-
-    for (let project of projects) {
-      const node = allProjects.find(p => p.name === project);
-
-      if (!node) {
-        notFound.push(project);
-      } else if (!projectHasTargetAndConfiguration(node, target)) {
-        noConfig.push(project);
-      } else {
-        found.push(node);
-      }
+  for (let project of projects) {
+    if (projectHasTargetAndConfiguration(project, target)) {
+      runnable.push(project);
+    } else {
+      notRunnable.push(project);
     }
-
-    if (notFound.length) {
-      output.error({
-        title: 'the following projects were not found in nx.json',
-        bodyLines: notFound.map(p => '- ' + p)
-      });
-    }
-
-    if (noConfig.length) {
-      output.warn({
-        title: `the following do not have configuration for "${target}"`,
-        bodyLines: noConfig.map(p => '- ' + p)
-      });
-
-      process.exit(1);
-    }
-  } else {
-    found = allProjects;
   }
 
-  return found;
+  if (strict && notRunnable.length) {
+    output.warn({
+      title: `the following do not have configuration for "${target}"`,
+      bodyLines: notRunnable.map(p => '- ' + p)
+    });
+  }
+
+  return runnable;
 }
 
 const dummyOptions: RunManyOptions = {

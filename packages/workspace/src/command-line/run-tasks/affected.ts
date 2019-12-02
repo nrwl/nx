@@ -10,11 +10,22 @@ import {
   printArgsWarning,
   ProjectNode,
   ProjectType,
-  cliCommand
+  cliCommand,
+  getAllProjects,
+  getAffectedProjects
 } from '../shared';
-import { getCommand, getOutputs } from '../../tasks-runner/utils';
+import {
+  getCommand,
+  getOutputs,
+  getPreconditions
+} from '../../tasks-runner/utils';
 import { createTask, runCommand } from './run-command';
-import { Arguments, readEnvironment, splitArgs } from './utils';
+import {
+  Arguments,
+  readEnvironment,
+  splitArgs,
+  projectHasTargetAndConfiguration
+} from './utils';
 
 export interface YargsAffectedOptions
   extends yargs.Arguments,
@@ -50,10 +61,9 @@ export function affected(
 ): void {
   const env = readEnvironment(parsedArgs.target);
 
-  const affectedMetadata = getProjectMetadata(
-    parsedArgs.all ? [] : parseFiles(parsedArgs).files,
-    parsedArgs.withDeps
-  );
+  const affectedMetadata = getProjectMetadata({
+    touchedFiles: parsedArgs.all ? [] : parseFiles(parsedArgs).files
+  });
 
   const projects = (parsedArgs.all
     ? getAllProjects(affectedMetadata)
@@ -62,7 +72,7 @@ export function affected(
     .filter(app => !parsedArgs.exclude.includes(app.name))
     .filter(
       project =>
-        !parsedArgs.onlyFailed || !env.workspace.getResult(project.name)
+        !parsedArgs.onlyFailed || !env.workspaceResults.getResult(project.name)
     );
   try {
     switch (command) {
@@ -150,68 +160,6 @@ function allProjectsWithTargetAndConfiguration(
   return { args, projectWithTargetAndConfig };
 }
 
-function projectHasTargetAndConfiguration(
-  project: ProjectNode,
-  target: string,
-  configuration?: string
-) {
-  if (!project.architect[target]) {
-    return false;
-  }
-
-  if (!configuration) {
-    return !!project.architect[target];
-  } else {
-    return (
-      project.architect[target].configurations &&
-      project.architect[target].configurations[configuration]
-    );
-  }
-}
-
-function getAffectedProjects(affectedMetadata: ProjectMetadata): ProjectNode[] {
-  return filterAffectedMetadata(
-    affectedMetadata,
-    project => affectedMetadata.projectStates[project.name].affected
-  );
-}
-
-function getAllProjects(affectedMetadata: ProjectMetadata): ProjectNode[] {
-  return filterAffectedMetadata(affectedMetadata, () => true);
-}
-
-function filterAffectedMetadata(
-  affectedMetadata: ProjectMetadata,
-  predicate: (project) => boolean
-): ProjectNode[] {
-  const projects: ProjectNode[] = [];
-  visit(affectedMetadata, project => {
-    if (predicate(project)) {
-      projects.push(project);
-    }
-  });
-  return projects;
-}
-function visit(
-  affectedMetadata: ProjectMetadata,
-  visitor: (project: ProjectNode) => void
-) {
-  const visited = new Set<string>();
-  function _visit(projectName: string) {
-    if (visited.has(projectName)) {
-      return;
-    }
-    visited.add(projectName);
-    affectedMetadata.dependencyGraph.dependencies[projectName].forEach(dep => {
-      _visit(dep.projectName);
-    });
-    visitor(affectedMetadata.dependencyGraph.projects[projectName]);
-  }
-  affectedMetadata.dependencyGraph.roots.forEach(root => {
-    _visit(root);
-  });
-}
-
 function printError(e: any, verbose?: boolean) {
   const bodyLines = [e.message];
   if (verbose && e.stack) {
@@ -229,7 +177,7 @@ function printAffected(
   affectedMetadata: ProjectMetadata,
   args: Arguments<YargsAffectedOptions>
 ) {
-  const tasks: Task[] = affectedProjects.map(affectedProject =>
+  let tasks: Task[] = affectedProjects.map(affectedProject =>
     createTask({
       project: affectedProject,
       target: args.nxArgs.target,
@@ -237,6 +185,15 @@ function printAffected(
       overrides: args.overrides
     })
   );
+
+  if (args.nxArgs.withDeps) {
+    const preconditions = getPreconditions(
+      tasks,
+      affectedMetadata.dependencyGraph
+    );
+    tasks = [...preconditions, ...tasks];
+  }
+
   const cli = cliCommand();
   const isYarn = basename(process.env.npm_execpath || 'npm').startsWith('yarn');
   const tasksJson = tasks.map(task => ({

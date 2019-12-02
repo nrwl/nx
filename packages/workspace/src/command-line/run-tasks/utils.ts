@@ -1,14 +1,7 @@
 import * as yargsParser from 'yargs-parser';
 import * as yargs from 'yargs';
-import {
-  getProjectNodes,
-  NxJson,
-  ProjectNode,
-  readNxJson,
-  readWorkspaceJson
-} from '../shared';
+import { NxJson, ProjectNode, readNxJson, readWorkspaceJson } from '../shared';
 import { WorkspaceResults } from '../workspace-results';
-import { output } from '../output';
 
 export interface Arguments<T extends yargs.Arguments> {
   nxArgs: T;
@@ -65,13 +58,13 @@ export function projectHasTargetAndConfiguration(
 export interface Environment {
   nxJson: NxJson;
   workspaceJson: any;
-  workspace: any;
+  workspaceResults: any;
 }
 
 export function readEnvironment(target: string): Environment {
   const nxJson = readNxJson();
   const workspaceJson = readWorkspaceJson();
-  const workspace = new WorkspaceResults(target);
+  const workspaceResults = new WorkspaceResults(target);
 
-  return { nxJson, workspaceJson, workspace };
+  return { nxJson, workspaceJson, workspaceResults };
 }

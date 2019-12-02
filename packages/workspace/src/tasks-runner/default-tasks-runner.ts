@@ -5,21 +5,24 @@ import {
   AffectedEventType,
   Task,
   TaskCompleteEvent,
-  TasksRunner
+  TasksRunner,
+  TasksRunnerContext
 } from './tasks-runner';
 import { cliCommand } from '../command-line/shared';
 import { output } from '../command-line/output';
 import { readJsonFile } from '../utils/fileutils';
-import { getCommand } from './utils';
+import { getCommand, getPreconditions } from './utils';
 
 export interface DefaultTasksRunnerOptions {
   parallel?: boolean;
   maxParallel?: number;
+  withDeps?: boolean;
 }
 
 export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
   tasks: Task[],
-  options: DefaultTasksRunnerOptions
+  options: DefaultTasksRunnerOptions,
+  context: TasksRunnerContext
 ): Observable<TaskCompleteEvent> => {
   const cli = cliCommand();
   const isYarn = basename(process.env.npm_execpath || 'npm').startsWith('yarn');
@@ -31,6 +34,12 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
       ...additionalTaskOverrides
     };
   });
+
+  if (options.withDeps) {
+    const preconditions = getPreconditions(tasks, context.dependencyGraph);
+    tasks = [...preconditions, ...tasks];
+  }
+
   const commands = tasks.map(t => getCommand(cli, isYarn, t));
   return new Observable(subscriber => {
     runAll(commands, {
@@ -69,6 +78,8 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
 
 function getLegacyTaskOverrides(options: any) {
   const legacyTaskOverrides = { ...options };
+  delete legacyTaskOverrides.withDeps;
+  delete legacyTaskOverrides['with-deps'];
   delete legacyTaskOverrides.maxParallel;
   delete legacyTaskOverrides['max-parallel'];
   delete legacyTaskOverrides.parallel;

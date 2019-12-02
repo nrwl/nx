@@ -23,15 +23,17 @@ export interface TaskCompleteEvent extends AffectedEvent {
   success: boolean;
 }
 
+export interface TasksRunnerContext {
+  dependencyGraph: DependencyGraph;
+  tasksMap: {
+    [projectName: string]: {
+      [targetName: string]: Task;
+    };
+  };
+}
+
 export type TasksRunner<T = unknown> = (
   tasks: Task[],
   options?: T,
-  context?: {
-    dependencyGraph: DependencyGraph;
-    tasksMap: {
-      [projectName: string]: {
-        [targetName: string]: Task;
-      };
-    };
-  }
+  context?: TasksRunnerContext
 ) => Observable<AffectedEvent>;
