@@ -30,10 +30,7 @@ function checkDependenciesInstalled(): Rule {
         { name: '@storybook/react', version: storybookVersion },
         { name: '@storybook/addon-knobs', version: storybookVersion },
         { name: 'babel-loader', version: babelLoaderVersion },
-        { name: '@babel/core', version: babelCoreVersion },
-        { name: 'to-string-loader', version: '*' },
-        { name: 'html-loader', version: '*' },
-        { name: 'css-loader', version: '*' }
+        { name: '@babel/core', version: babelCoreVersion }
       );
     }
     if (
