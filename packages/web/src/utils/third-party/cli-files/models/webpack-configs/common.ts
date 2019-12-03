@@ -37,6 +37,16 @@ import {
   normalizeExtraEntryPoints
 } from './utils';
 
+export const GLOBAL_DEFS_FOR_TERSER = {
+  ngDevMode: false,
+  ngI18nClosureMode: false
+};
+
+export const GLOBAL_DEFS_FOR_TERSER_WITH_AOT = {
+  ...GLOBAL_DEFS_FOR_TERSER,
+  ngJitMode: false
+};
+
 const ProgressPlugin = require('webpack/lib/ProgressPlugin');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
@@ -361,17 +371,12 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
       ngI18nClosureMode: false
     };
 
-    // Try to load known global definitions from @angular/compiler-cli.
-    const GLOBAL_DEFS_FOR_TERSER = require('@angular/compiler-cli')
-      .GLOBAL_DEFS_FOR_TERSER;
     if (GLOBAL_DEFS_FOR_TERSER) {
       angularGlobalDefinitions = GLOBAL_DEFS_FOR_TERSER;
     }
 
     if (buildOptions.aot) {
       // Also try to load AOT-only global definitions.
-      const GLOBAL_DEFS_FOR_TERSER_WITH_AOT = require('@angular/compiler-cli')
-        .GLOBAL_DEFS_FOR_TERSER_WITH_AOT;
       if (GLOBAL_DEFS_FOR_TERSER_WITH_AOT) {
         angularGlobalDefinitions = {
           ...angularGlobalDefinitions,
@@ -450,17 +455,6 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
     );
   }
 
-  if (
-    wco.tsConfig.options.target !== undefined &&
-    wco.tsConfig.options.target >= ScriptTarget.ES2017
-  ) {
-    wco.logger.warn(tags.stripIndent`
-      WARNING: Zone.js does not support native async/await in ES2017.
-      These blocks are not intercepted by zone.js and will not triggering change detection.
-      See: https://github.com/angular/zone.js/pull/1140 for more information.
-    `);
-  }
-
   return {
     mode:
       scriptsOptimization || stylesOptimization ? 'production' : 'development',
@@ -500,12 +494,6 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
           options: {
             name: `[name]${hashFormat.file}.[ext]`
           }
-        },
-        {
-          // Mark files inside `@angular/core` as using SystemJS style dynamic imports.
-          // Removing this will cause deprecation warnings to appear.
-          test: /[\/\\]@angular[\/\\]core[\/\\].+\.js$/,
-          parser: { system: true }
         },
         {
           test: /[\/\\]hot[\/\\]emitter\.js$/,

@@ -19,9 +19,9 @@ import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as webpack from 'webpack';
-import { WebpackConfigOptions } from '../angular-cli-files/models/build-options';
-import { getEsVersionForFileName } from '../angular-cli-files/models/webpack-configs';
-import { readTsconfig } from '../angular-cli-files/utilities/read-tsconfig';
+import { WebpackConfigOptions } from '../cli-files/models/build-options';
+import { getEsVersionForFileName } from '../cli-files/models/webpack-configs';
+import { readTsconfig } from '../cli-files/utilities/read-tsconfig';
 import { Schema as BrowserBuilderSchema } from '../browser/schema';
 import {
   NormalizedBrowserBuilderSchema,
