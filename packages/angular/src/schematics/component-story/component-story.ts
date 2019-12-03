@@ -11,7 +11,7 @@ import {
 } from '@angular-devkit/schematics';
 import { findNodes } from '@nrwl/workspace';
 import { PropertyDeclaration, SyntaxKind } from 'typescript';
-import { getTsSourceFile } from '../../utils/ast-utils';
+import { getTsSourceFile, applyWithSkipExisting } from '../../utils/ast-utils';
 import { getSourceNodes } from '@nrwl/workspace/src/utils/ast-utils';
 
 export interface CreateComponentStoriesFileSchema {
@@ -48,20 +48,16 @@ export function createComponentStoriesFile({
       tree,
       libPath + '/' + componentPath + '/' + componentFileName + '.ts'
     );
-    return chain([
-      mergeWith(
-        apply(url('./files'), [
-          template({
-            componentFileName: componentFileName,
-            componentName: componentName,
-            relativeModulePath,
-            moduleName: ngModuleClassName,
-            props,
-            tmpl: ''
-          }),
-          move(libPath + '/' + componentPath)
-        ])
-      )
+    return applyWithSkipExisting(url('./files'), [
+      template({
+        componentFileName: componentFileName,
+        componentName: componentName,
+        relativeModulePath,
+        moduleName: ngModuleClassName,
+        props,
+        tmpl: ''
+      }),
+      move(libPath + '/' + componentPath)
     ]);
   };
 }

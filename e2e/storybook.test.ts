@@ -76,7 +76,7 @@ forEachCli(() => {
             `generate @nrwl/angular:storybook-configuration ${mylib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
           );
           runCLI(
-            `generate @nrwl/storybook:configuration ${mylib} --no-interactive`
+            `generate @nrwl/angular:stories ${mylib} --generateCypressSpecs --no-interactive`
           );
 
           writeFileSync(

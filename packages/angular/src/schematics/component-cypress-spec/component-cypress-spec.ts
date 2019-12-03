@@ -16,7 +16,11 @@ import {
   PropertyDeclaration,
   SyntaxKind
 } from 'typescript';
-import { getTsSourceFile, getDecoratorMetadata } from '../../utils/ast-utils';
+import {
+  getTsSourceFile,
+  getDecoratorMetadata,
+  applyWithSkipExisting
+} from '../../utils/ast-utils';
 import {
   getInputPropertyDeclarations,
   getKnobType
@@ -67,20 +71,16 @@ export function createComponentSpecFile({
       }
     );
     const componentSelector = getComponentSelector(tree, fullComponentPath);
-    return chain([
-      mergeWith(
-        apply(url('./files'), [
-          template({
-            projectName,
-            componentFileName: componentFileName,
-            componentName: componentName,
-            componentSelector,
-            props,
-            tmpl: ''
-          }),
-          move(e2eLibIntegrationFolderPath + '/' + componentPath)
-        ])
-      )
+    return applyWithSkipExisting(url('./files'), [
+      template({
+        projectName,
+        componentFileName: componentFileName,
+        componentName: componentName,
+        componentSelector,
+        props,
+        tmpl: ''
+      }),
+      move(e2eLibIntegrationFolderPath + '/' + componentPath)
     ]);
   };
 }
