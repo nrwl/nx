@@ -883,6 +883,46 @@ describe('Enforce Module Boundaries', () => {
       'Circular dependency between "mylibName" and "badcirclelibName" detected'
     );
   });
+
+  it('should error when it cannot match a scoped import to a root folder path', () => {
+    const failures = runRule(
+      {},
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      `
+      import "@mycompany/mylib";
+      import "@mycompany/utils/data";
+      // should error because the import doesnt match a root folder
+      import "@mycompany/utils-data";
+      `,
+      [
+        {
+          name: 'mylibName',
+          root: 'libs/mylib',
+          type: ProjectType.lib,
+          tags: [],
+          implicitDependencies: [],
+          architect: {},
+          files: [`libs/mylib/src/main.ts`],
+          fileMTimes: {
+            'libs/mylib/src/main.ts': 1
+          }
+        },
+        {
+          name: 'utils-data',
+          root: 'libs/utils/data',
+          type: ProjectType.lib,
+          tags: [],
+          implicitDependencies: [],
+          architect: {},
+          files: [`libs/utils/data/a.ts`],
+          fileMTimes: {
+            'libs/utils/data/a.ts': 1
+          }
+        }
+      ]
+    );
+    expect(failures.length).toEqual(1);
+  });
 });
 
 const linter = new TSESLint.Linter();

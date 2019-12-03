@@ -136,6 +136,13 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
         this.projectNodes,
         getSourceFilePath(this.getSourceFile().fileName, this.projectPath)
       );
+
+      // something went wrong => return.
+      if (!sourceProject) {
+        super.visitImportDeclaration(node);
+        return;
+      }
+
       // findProjectUsingImport to take care of same prefix
       const targetProject = findProjectUsingImport(
         this.projectNodes,
@@ -143,9 +150,10 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
         imp
       );
 
-      // something went wrong => return.
-      if (!sourceProject || !targetProject) {
-        super.visitImportDeclaration(node);
+      if (!targetProject) {
+        const deScopedPath = imp.replace(`@${this.npmScope}/`, '');
+        const error = `Cannot match "${deScopedPath}" to a library path`;
+        this.addFailureAt(node.getStart(), node.getWidth(), error);
         return;
       }
 

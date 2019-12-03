@@ -37,7 +37,8 @@ export type MessageIds =
   | 'noDeepImportsIntoLibraries'
   | 'noImportsOfLazyLoadedLibraries'
   | 'projectWithoutTagsCannotHaveDependencies'
-  | 'tagConstraintViolation';
+  | 'tagConstraintViolation'
+  | 'scopePathNotFound';
 export const RULE_NAME = 'enforce-module-boundaries';
 
 export default createESLintRule<Options, MessageIds>({
@@ -76,7 +77,8 @@ export default createESLintRule<Options, MessageIds>({
       noDeepImportsIntoLibraries: 'Deep imports into libraries are forbidden',
       noImportsOfLazyLoadedLibraries: `Imports of lazy-loaded libraries are forbidden`,
       projectWithoutTagsCannotHaveDependencies: `A project without tags cannot depend on any libraries`,
-      tagConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{allowedTags}}`
+      tagConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{allowedTags}}`,
+      scopePathNotFound: `Cannot match "{{deScopedPath}}" to a library path`
     }
   },
   defaultOptions: [
@@ -148,6 +150,11 @@ export default createESLintRule<Options, MessageIds>({
         if (imp.startsWith(`@${npmScope}/`)) {
           // we should find the name
           const sourceProject = findSourceProject(projectNodes, sourceFilePath);
+          // something went wrong => return.
+          if (!sourceProject) {
+            return;
+          }
+
           // findProjectUsingImport to take care of same prefix
           const targetProject = findProjectUsingImport(
             projectNodes,
@@ -155,8 +162,15 @@ export default createESLintRule<Options, MessageIds>({
             imp
           );
 
-          // something went wrong => return.
-          if (!sourceProject || !targetProject) {
+          if (!targetProject) {
+            const deScopedPath = imp.replace(`@${npmScope}/`, '');
+            context.report({
+              node,
+              messageId: 'scopePathNotFound',
+              data: {
+                deScopedPath
+              }
+            });
             return;
           }
 
