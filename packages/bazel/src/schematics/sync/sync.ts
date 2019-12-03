@@ -1,3 +1,4 @@
+import { join, normalize } from '@angular-devkit/core';
 import {
   apply,
   chain,
@@ -5,18 +6,21 @@ import {
   mergeWith,
   move,
   Rule,
+  SchematicContext,
   Source,
   template,
   Tree,
   url
 } from '@angular-devkit/schematics';
+import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import {
-  getDependencyGraphFromTree,
-  readJsonInTree,
   DependencyGraph,
-  ProjectNode
+  getDependencyGraphFromTree,
+  ProjectNode,
+  readJsonInTree,
+  updateJsonInTree
 } from '@nrwl/workspace';
-import { join, normalize } from '@angular-devkit/core';
+const ignore = require('ignore');
 
 function createBuildFile(
   project: ProjectNode,
@@ -31,7 +35,7 @@ function updateBuildFile(
   project: ProjectNode,
   depGraph: DependencyGraph
 ): Rule {
-  return (host, context) => {
+  return (host, _context) => {
     const buildFile = createBuildFile(project, depGraph);
     const buildFilePath = join(normalize(project.root), 'BUILD.bazel');
 
@@ -55,36 +59,27 @@ function updateBuildFile(
   };
 }
 
-function createWorkspaceFile() {
+function createRootFiles(): Rule {
   return host => {
     return mergeWith(
-      apply(url('./files/workspace-file'), [
+      apply(url('./files/root'), [
         template({
           tmpl: '',
+          rootFiles: host
+            .getDir('/')
+            .subfiles.filter(f => f !== 'WORKSPACE' && f !== 'BUILD.bazel'),
           name: readJsonInTree(host, '/package.json').name.replace('-', '_')
         }),
         () => {
           if (host.exists('WORKSPACE')) {
             host.delete('WORKSPACE');
           }
-        }
-      ]),
-      MergeStrategy.Overwrite
-    );
-  };
-}
-
-function createRootBuildFile() {
-  return host => {
-    return mergeWith(
-      apply(url('./files/root-build-file'), [
-        template({
-          tmpl: '',
-          rootFiles: host
-            .getDir('/')
-            .subfiles.filter(f => f !== 'WORKSPACE' && f !== 'BUILD.bazel')
-        }),
-        () => {
+          if (host.exists('.bazelrc')) {
+            host.delete('.bazelrc');
+          }
+          if (host.exists('nx.bzl')) {
+            host.delete('nx.bzl');
+          }
           if (host.exists('BUILD.bazel')) {
             host.delete('BUILD.bazel');
           }
@@ -95,13 +90,95 @@ function createRootBuildFile() {
   };
 }
 
+function addNpmPackagePatches(): Rule {
+  return host => {
+    return mergeWith(
+      apply(url('./files/patches'), [
+        template({
+          tmpl: '',
+          rootFiles: host
+            .getDir('/')
+            .subfiles.filter(f => f !== 'WORKSPACE' && f !== 'BUILD.bazel'),
+          name: readJsonInTree(host, '/package.json').name.replace('-', '_')
+        }),
+        () => {
+          if (host.exists('patches')) {
+            host.delete('patches');
+          }
+        }
+      ]),
+      MergeStrategy.Overwrite
+    );
+  };
+}
+
+function addRequiredPackages() {
+  const devDeps = {
+    'patch-package': '^6.2.0',
+    '@bazel/bazel': '^1.2.0',
+    '@bazel/ibazel': '0.10.3'
+  };
+
+  return updateJsonInTree('package.json', (json, context: SchematicContext) => {
+    if (!json.scripts) {
+      json.scripts = {};
+    }
+    if (json.scripts.postinstall) {
+      if (!(json.scripts.postinstall as string).includes('patch-package')) {
+        json.scripts.postinstall = `patch-package && ${json.script.postinstall}`;
+      }
+    } else {
+      json.scripts.postinstall = 'patch-package';
+    }
+
+    Object.keys(devDeps).forEach(key => {
+      if (json.dependencies) {
+        delete json.dependencies[key];
+      }
+      if (json.devDependencies) {
+        delete json.devDependencies[key];
+      }
+    });
+
+    json.devDependencies = {
+      ...(json.devDependencies || {}),
+      ...devDeps
+    };
+
+    context.addTask(new NodePackageInstallTask());
+
+    return json;
+  });
+}
+
+function updateGitIgnore(): Rule {
+  return host => {
+    if (!host.exists('.gitignore')) {
+      return;
+    }
+
+    const ig = ignore();
+    ig.add(host.read('.gitignore').toString());
+
+    if (!ig.ignores('bazel-out')) {
+      const content = `${host
+        .read('.gitignore')!
+        .toString('utf-8')
+        .trimRight()}\nbazel-*\n`;
+      host.overwrite('.gitignore', content);
+    }
+  };
+}
+
 export default (): Rule => {
   return (host: Tree) => {
     const depGraph = getDependencyGraphFromTree(host);
 
     return chain([
-      createWorkspaceFile(),
-      createRootBuildFile(),
+      createRootFiles(),
+      addNpmPackagePatches(),
+      addRequiredPackages(),
+      updateGitIgnore(),
       ...Object.values(depGraph.projects).map(project =>
         updateBuildFile(project, depGraph)
       )

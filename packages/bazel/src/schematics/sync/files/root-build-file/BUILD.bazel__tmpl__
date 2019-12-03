@@ -1,7 +1,0 @@
-exports_files(
-    [
-        <% for (rootFile of rootFiles) { %>"<%= rootFile %>",
-        <% } %>
-    ],
-    visibility = ["//:__subpackages__"],
-)

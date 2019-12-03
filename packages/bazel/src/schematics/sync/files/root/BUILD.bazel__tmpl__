@@ -1,0 +1,31 @@
+package(default_visibility = ["//:__subpackages__"])
+
+exports_files(
+    [
+        <% for (rootFile of rootFiles) { %>"<%= rootFile %>",
+        <% } %>
+    ],
+)
+
+filegroup(
+    name = "node_modules",
+    srcs = glob(
+        [
+            "node_modules/**/*"
+        ],
+        exclude = [
+            "node_modules/**/test/**",
+            "node_modules/**/coverage/**",
+        ],
+    ),
+)
+
+load("@build_bazel_rules_nodejs//:index.bzl", "nodejs_binary")
+
+# Wire up nx as a bazel executable
+nodejs_binary(
+    name = "nx",
+    data = ["//:node_modules"],
+    entry_point = "//:node_modules/@nrwl/cli/bin/nx.js",
+    install_source_map_support = False,
+)
