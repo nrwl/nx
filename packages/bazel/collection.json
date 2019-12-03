@@ -3,6 +3,13 @@
   "version": "0.1",
   "extends": [],
   "schematics": {
+    "init": {
+      "factory": "./src/schematics/init/init",
+      "schema": "./src/schematics/init/schema.json",
+      "aliases": ["ng-add"],
+      "description": "Add Bazel Files",
+      "hidden": true
+    },
     "sync": {
       "factory": "./src/schematics/sync/sync",
       "schema": "./src/schematics/sync/schema.json",
