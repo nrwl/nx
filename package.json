@@ -228,7 +228,7 @@
     "testPathIgnorePatterns": [
       "node_modules",
       "<rootDir>/build/packages/angular/spec",
-      "packages/web/src/utils/build-angular/angular-cli-files/models/webpack-configs"
+      "packages/web/src/utils/third-party/cli-files/models/webpack-configs"
     ],
     "coverageReporters": [
       "html"

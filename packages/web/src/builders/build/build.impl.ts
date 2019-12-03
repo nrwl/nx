@@ -11,7 +11,7 @@ import { getWebConfig } from '../../utils/web.config';
 import { BuildBuilderOptions } from '../../utils/types';
 import { bufferCount, map, mergeScan, switchMap } from 'rxjs/operators';
 import { getSourceRoot } from '../../utils/source-root';
-import { writeIndexHtml } from '../../utils/build-angular/angular-cli-files/utilities/index-file/write-index-html';
+import { writeIndexHtml } from '../../utils/third-party/cli-files/utilities/index-file/write-index-html';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { execSync } from 'child_process';
 import { Range, satisfies } from 'semver';

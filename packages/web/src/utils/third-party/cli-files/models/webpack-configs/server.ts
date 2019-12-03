@@ -36,29 +36,5 @@ export function getServerConfig(wco: WebpackConfigOptions): Configuration {
     node: false
   };
 
-  if (wco.buildOptions.bundleDependencies == 'none') {
-    config.externals = [
-      /^@angular/,
-      (
-        context: string,
-        request: string,
-        callback: (error?: null, result?: string) => void
-      ) => {
-        // Absolute & Relative paths are not externals
-        if (/^\.{0,2}\//.test(request) || isAbsolute(request)) {
-          return callback();
-        }
-
-        try {
-          require.resolve(request);
-          callback(null, request);
-        } catch {
-          // Node couldn't find it, so it must be user-aliased
-          callback();
-        }
-      }
-    ];
-  }
-
   return config;
 }

@@ -45,7 +45,7 @@ import {
 import { ScriptTarget } from 'typescript';
 import * as webpack from 'webpack';
 // import { NgBuildAnalyticsPlugin } from '../../plugins/webpack/analytics';
-import { WebpackConfigOptions } from '../angular-cli-files/models/build-options';
+import { WebpackConfigOptions } from '../cli-files/models/build-options';
 import {
   getAotConfig,
   getBrowserConfig,
@@ -55,20 +55,20 @@ import {
   getStylesConfig,
   getWorkerConfig,
   normalizeExtraEntryPoints
-} from '../angular-cli-files/models/webpack-configs';
+} from '../cli-files/models/webpack-configs';
 import {
   IndexHtmlTransform,
   writeIndexHtml
-} from '../angular-cli-files/utilities/index-file/write-index-html';
-import { readTsconfig } from '../angular-cli-files/utilities/read-tsconfig';
-import { augmentAppWithServiceWorker } from '../angular-cli-files/utilities/service-worker';
+} from '../cli-files/utilities/index-file/write-index-html';
+import { readTsconfig } from '../cli-files/utilities/read-tsconfig';
+import { augmentAppWithServiceWorker } from '../cli-files/utilities/service-worker';
 import {
   generateBuildStats,
   generateBundleStats,
   statsErrorsToString,
   statsToString,
   statsWarningsToString
-} from '../angular-cli-files/utilities/stats';
+} from '../cli-files/utilities/stats';
 import { ExecutionTransformer } from '../transforms';
 import {
   BuildBrowserFeatures,
@@ -82,7 +82,6 @@ import {
   ProcessBundleOptions,
   ProcessBundleResult
 } from '../utils/process-bundle';
-import { assertCompatibleAngularVersion } from '../utils/version';
 import {
   generateBrowserWebpackConfigFromContext,
   getIndexInputFile,
@@ -226,7 +225,6 @@ export function buildWebpackBrowser(
   const root = normalize(context.workspaceRoot);
 
   // Check Angular version.
-  assertCompatibleAngularVersion(context.workspaceRoot, context.logger);
 
   return from(
     initialize(options, context, host, transforms.webpackConfiguration)
