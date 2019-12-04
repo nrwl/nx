@@ -17,10 +17,10 @@ if (exitCode === 0) {
 } else {
   console.log(
     '[Error]: Ho no! 😦 Your commit message: \n' +
-    '-------------------------------------------------------------------\n' +
-    gitMessage +
-    '\n-------------------------------------------------------------------' +
-    '\n\n 👉️ Does not follow the commit message convention specified in the CONTRIBUTING.MD file.'
+      '-------------------------------------------------------------------\n' +
+      gitMessage +
+      '\n-------------------------------------------------------------------' +
+      '\n\n 👉️ Does not follow the commit message convention specified in the CONTRIBUTING.MD file.'
   );
   console.log('\ntype(scope): subject \n BLANK LINE \n body');
   console.log('\n');
@@ -30,7 +30,7 @@ if (exitCode === 0) {
   );
   console.log(
     '\nEXAMPLE: \n' +
-    'feat(nx): add an option to generate lazy-loadable modules\n'
+      'feat(nx): add an option to generate lazy-loadable modules\n'
   );
 }
 process.exit(exitCode);

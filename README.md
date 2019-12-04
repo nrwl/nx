@@ -39,19 +39,19 @@ With Nx, you can develop multiple full-stack applications holistically and share
 **Using `npx`**
 
 ```bash
-npx create-nx-workspace myworkspace
+npx create-nx-workspace
 ```
 
 **Using `npm init`**
 
 ```bash
-npm init nx-workspace myworkspace
+npm init nx-workspace
 ```
 
 **Using `yarn create`**
 
 ```bash
-yarn create nx-workspace myworkspace
+yarn create nx-workspace
 ```
 
 If it's your first Nx project, the command will recommend you to install `@nrwl/cli` globally, so you can invoke `nx` directly without going through yarn or npm.
