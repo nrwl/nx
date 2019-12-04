@@ -14,8 +14,8 @@ import { join, sep, basename } from 'path';
 import { tmpdir } from 'os';
 import { mkdtempSync, statSync, copyFileSync, constants } from 'fs';
 
-import { buildStaticStandalone } from '@storybook/core/dist/server/build-static';
-//import * as build from '@storybook/core/standalone';
+//import { buildStaticStandalone } from '@storybook/core/dist/server/build-static';
+import * as build from '@storybook/core/standalone';
 
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { getRoot } from '../../utils/root';
