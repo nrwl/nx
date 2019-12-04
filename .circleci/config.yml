@@ -1,0 +1,99 @@
+# Javascript Node CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-javascript/ for more details
+#
+version: 2.1
+
+executors:
+  default:
+    working_directory: ~/repo
+    docker:
+      - image: circleci/node:12-browsers
+
+commands:
+  install_rsync:
+    description: 'Install Rsync'
+    steps:
+      - run: sudo apt install rsync
+  yarn_install:
+    description: 'Install Dependencies'
+    steps:
+      - run: yarn install --frozen-lockfile --non-interactive
+      - run: ./node_modules/.bin/cypress verify
+      - save_cache:
+          key: node-deps-node12-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache
+            - node_modules
+  restore_yarn_cache:
+    description: 'Restore Cached Dependencies'
+    steps:
+      - restore_cache:
+          keys:
+            - node-deps-node12-{{ checksum "yarn.lock" }}
+            # fallback to using the latest cache if no exact match is found
+            - node-deps-node12-
+  setup:
+    description: 'Setup Executor'
+    steps:
+      - checkout
+      - restore_yarn_cache
+      - install_rsync
+
+jobs:
+  install:
+    executor: default
+    steps:
+      - checkout
+      - restore_yarn_cache
+      - yarn_install
+  checks-and-unit-tests:
+    executor: default
+    steps:
+      - setup
+      - run: yarn checkformat
+      - run: yarn checkcommit
+      - run: yarn checkimports
+      - run: yarn documentation
+      - run: yarn test:all
+  e2e-nx-1:
+    executor: default
+    steps:
+      - setup
+      - run: yarn e2e-ci1 nx
+  e2e-nx-2:
+    executor: default
+    steps:
+      - setup
+      - run: yarn e2e-ci2 nx
+  e2e-ng-1:
+    executor: default
+    steps:
+      - setup
+      - run: yarn e2e-ci1 angular
+  e2e-ng-2:
+    executor: default
+    steps:
+      - setup
+      - run: yarn e2e-ci2 angular
+
+workflows:
+  version: 2.1
+  default_workflow:
+    jobs:
+      - install
+      - checks-and-unit-tests:
+          requires:
+            - install
+      - e2e-nx-1:
+          requires:
+            - install
+      - e2e-nx-2:
+          requires:
+            - install
+      - e2e-ng-1:
+          requires:
+            - install
+      - e2e-ng-2:
+          requires:
+            - install
