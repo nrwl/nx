@@ -15,6 +15,7 @@ import { tmpdir } from 'os';
 import { mkdtempSync, statSync, copyFileSync, constants } from 'fs';
 
 import { buildStaticStandalone } from '@storybook/core/dist/server/build-static';
+//import * as build from '@storybook/core/standalone';
 
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { getRoot } from '../../utils/root';
@@ -23,7 +24,7 @@ export interface StorybookConfig extends JsonObject {
   configFolder?: string;
   configPath?: string;
   pluginPath?: string;
-  srcRoot?: string;
+  srcRoot?: string; 
 }
 
 export interface StorybookBuilderOptions extends JsonObject {
@@ -61,12 +62,18 @@ function run(
 }
 
 function runInstance(options: StorybookBuilderOptions) {
-  return new Observable<any>(obs => {
-    buildStaticStandalone({ ...options, ci: true })
+  return from(build({ ...options, ci: true }));
+
+  /*return new Observable<any>(obs => {
+    build({ ...options, ci: true })
       .then(sucess => obs.next(sucess))
       .catch(err => obs.error(err));
-  });
+  });*/
 }
+
+/*async function buildStaticStandaloneWrapper(options: StorybookBuilderOptions){
+  return buildStaticStandalone({ ...options, ci: true });
+}*/
 
 async function storybookOptionMapper(
   builderOptions: StorybookBuilderOptions,
@@ -79,11 +86,15 @@ async function storybookOptionMapper(
   );
   const optionsWithFramework = {
     ...builderOptions,
-    mode: 'prod',
+    mode: 'static',
     outputDir: builderOptions.outputPath,
     configDir: storybookConfig,
     ...frameworkOptions,
-    frameworkPresets: [...(frameworkOptions.frameworkPresets || [])]
+    frameworkPresets: [...(frameworkOptions.frameworkPresets || [])],
+
+    watch: false,
+    debugWebpack: true,
+
   };
   optionsWithFramework.config;
   return optionsWithFramework;

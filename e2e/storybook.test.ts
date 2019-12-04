@@ -11,7 +11,7 @@ import {
 import { writeFileSync, mkdirSync } from 'fs';
 
 forEachCli(() => {
-  xdescribe('Storybook schematics', () => {
+  describe('Storybook schematics', () => {
     describe('running Storybook and Cypress', () => {
       it('should execute e2e tests using Cypress running against Storybook', () => {
         ensureProject();
@@ -135,32 +135,18 @@ forEachCli(() => {
             runCLI(`run ${mylib}-e2e:e2e --no-watch`)
           ).toContain('All specs passed!');
         }
-      }, 1000000);
-    });
-  });
-  
-  describe('Storybook builders', () => {
-    it('should generate a static Storybook build', () => {  
-      ensureProject();
-      const myapp = uniq('myapp');
-      runCLI(`generate @nrwl/angular:app ${myapp} --e2eTestRunner=none --no-interactive`);
 
-      const mylib = uniq('test-storybook-lib');
-      createTestUILib(mylib);
-      
-      runCLI(
-        `generate @nrwl/angular:storybook-configuration ${mylib} --generateStories --no-interactive`
-      );
-      runCLI(
-        `generate @nrwl/storybook:configuration ${mylib} --no-interactive`
-      );
-      const storybookOutput = runCLI(`run ${mylib}:storybook-build`);
+        
+      //const storybookOutput = runCLI(`run ${mylib}:storybook-build`);
       //expect(storybookOutput).toContain('info => Preview built');
- 
+        
+      runCLI(`run ${mylib}:storybook-build`);
+
       checkFilesExist(`dist/storybook/${mylib}/index.html`);
       expect(readFile(`dist/storybook/${mylib}/index.html`)).toContain(
         `<title>Storybook</title>`
       );
+      }, 1000000);
     });
   });
 });
