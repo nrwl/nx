@@ -15,10 +15,10 @@ forEachCli(() => {
     describe('running Storybook and Cypress', () => {
       it('should execute e2e tests using Cypress running against Storybook', () => {
         ensureProject();
-  
+
         const myapp = uniq('myapp');
         runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
-  
+
         const mylib = uniq('test-ui-lib');
         createTestUILib(mylib);
         const mylib2 = uniq('test-ui-lib-react');
@@ -52,10 +52,10 @@ forEachCli(() => {
             
             export default Button;            
             `
-          );
-          writeFileSync(
-            tmpProjPath(`libs/${mylib2}/src/lib/button.stories.tsx`),
-            `
+        );
+        writeFileSync(
+          tmpProjPath(`libs/${mylib2}/src/lib/button.stories.tsx`),
+          `
             import React from 'react';
             import { text, number } from '@storybook/addon-knobs';
             import { Button, ButtonStyle } from './button';
@@ -70,20 +70,20 @@ forEachCli(() => {
               />
             );
             `
-          );
+        );
 
-          runCLI(
-            `generate @nrwl/angular:storybook-configuration ${mylib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
-          );
-          runCLI(
-            `generate @nrwl/angular:stories ${mylib} --generateCypressSpecs --no-interactive`
-          );
+        runCLI(
+          `generate @nrwl/angular:storybook-configuration ${mylib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
+        );
+        runCLI(
+          `generate @nrwl/angular:stories ${mylib} --generateCypressSpecs --no-interactive`
+        );
 
-          writeFileSync(
-            tmpProjPath(
-              `apps/${mylib}-e2e/src/integration/test-button/test-button.component.spec.ts`
-            ),
-            `
+        writeFileSync(
+          tmpProjPath(
+            `apps/${mylib}-e2e/src/integration/test-button/test-button.component.spec.ts`
+          ),
+          `
             describe('test-ui-lib3726865', () => {
 
           it('should render the component', () => {
@@ -101,16 +101,16 @@ forEachCli(() => {
           });
         });
         `
-      );
+        );
 
-      runCLI(
-        `generate @nrwl/react:storybook-configuration ${mylib2} --configureCypress --no-interactive`
-      );
+        runCLI(
+          `generate @nrwl/react:storybook-configuration ${mylib2} --configureCypress --no-interactive`
+        );
 
-      mkdirSync(tmpProjPath(`apps/${mylib2}-e2e/src/integration`));
-      writeFileSync(
-        tmpProjPath(`apps/${mylib2}-e2e/src/integration/button.spec.ts`),
-        `
+        mkdirSync(tmpProjPath(`apps/${mylib2}-e2e/src/integration`));
+        writeFileSync(
+          tmpProjPath(`apps/${mylib2}-e2e/src/integration/button.spec.ts`),
+          `
         describe('react-ui', () => {
           it('should render the component', () => {
             cy.visit(
@@ -127,20 +127,20 @@ forEachCli(() => {
           });
         });
         `
-      );
-      
-        if (supportUi()) {
-          expect(
-            runCLI(`run ${mylib}-e2e:e2e --no-watch`)
-          ).toContain('All specs passed!');
-        }
-        
-      runCLI(`run ${mylib}:storybook-build`);
+        );
 
-      checkFilesExist(`dist/storybook/${mylib}/index.html`);
-      expect(readFile(`dist/storybook/${mylib}/index.html`)).toContain(
-        `<title>Storybook</title>`
-      );
+        if (supportUi()) {
+          expect(runCLI(`run ${mylib}-e2e:e2e --no-watch`)).toContain(
+            'All specs passed!'
+          );
+        }
+
+        runCLI(`run ${mylib}:storybook-build`);
+
+        checkFilesExist(`dist/storybook/${mylib}/index.html`);
+        expect(readFile(`dist/storybook/${mylib}/index.html`)).toContain(
+          `<title>Storybook</title>`
+        );
       }, 1000000);
     });
   });

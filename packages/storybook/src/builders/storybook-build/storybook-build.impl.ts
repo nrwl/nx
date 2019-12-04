@@ -3,11 +3,7 @@ import {
   createBuilder,
   BuilderOutput
 } from '@angular-devkit/architect';
-import {
-  join as devkitJoin,
-  JsonObject,
-  normalize
-} from '@angular-devkit/core';
+import { JsonObject } from '@angular-devkit/core';
 import { Observable, from } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { join, sep, basename } from 'path';
@@ -24,7 +20,7 @@ export interface StorybookConfig extends JsonObject {
   configFolder?: string;
   configPath?: string;
   pluginPath?: string;
-  srcRoot?: string; 
+  srcRoot?: string;
 }
 
 export interface StorybookBuilderOptions extends JsonObject {
@@ -82,9 +78,7 @@ async function storybookOptionMapper(
     ...frameworkOptions,
     frameworkPresets: [...(frameworkOptions.frameworkPresets || [])],
 
-    watch: false,
-    debugWebpack: true,
-
+    watch: false
   };
   optionsWithFramework.config;
   return optionsWithFramework;
