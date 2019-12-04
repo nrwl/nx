@@ -14,7 +14,8 @@ With Nx, you can:
 
 - New to Nx? Have a look at the [Getting Started](/angular/getting-started/getting-started) guide.
 - Complete the [tutorial](/angular/tutorial/01-create-application) on using Nx build a full stack application.
-- Use the [Nx CLI](/angular/guides/cli) to perform various development tasks.
+- Use the [Angular CLI](https://angular.io/cli) to perform various development tasks.
+- Transform an [Angular CLI workspace into an Nx workspace](/angular/guides/transition-to-nx).
 - Learn more about Nx from books, blog posts, talks on our [resources page](/angular/getting-started/resources).
 
 ## Contribute

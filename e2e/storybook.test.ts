@@ -21,14 +21,6 @@ forEachCli(() => {
   
         const mylib = uniq('test-ui-lib');
         createTestUILib(mylib);
-        
-        runCLI(
-          `generate @nrwl/angular:storybook-configuration ${mylib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
-        );
-        runCLI(
-          `generate @nrwl/storybook:configuration ${mylib} --no-interactive`
-        );
-
         const mylib2 = uniq('test-ui-lib-react');
         runCLI(`generate @nrwl/react:lib ${mylib2} --no-interactive`);
         runCLI(
@@ -39,53 +31,60 @@ forEachCli(() => {
           `
           import React from 'react';
 
-          import './button.css';
-          
-          export type ButtonStyle = 'default' | 'primary' | 'warning';
-          
-          /* eslint-disable-next-line */
-          export interface ButtonProps {
-            text?: string;
-            style?: ButtonStyle;
-            padding?: number;
-          }
-          
-          export const Button = (props: ButtonProps) => {
-            return (
-              <button className={props.style} style={{ padding: \`\${props.padding}px\` }}>
-                {props.text}
-              </button>
-            );
-          };
-          
-          export default Button;            
-          `
-        );
-        writeFileSync(
-          tmpProjPath(`libs/${mylib2}/src/lib/button.stories.tsx`),
-          `
-          import React from 'react';
-          import { text, number } from '@storybook/addon-knobs';
-          import { Button, ButtonStyle } from './button';
-          
-          export default { title: 'Button' };
-          
-          export const primary = () => (
-            <Button
-              padding={number('Padding', 0)}
-              style={text('Style', 'default') as ButtonStyle}
-              text={text('Text', 'Click me')}
-            />
+            import './button.css';
+            
+            export type ButtonStyle = 'default' | 'primary' | 'warning';
+            
+            /* eslint-disable-next-line */
+            export interface ButtonProps {
+              text?: string;
+              style?: ButtonStyle;
+              padding?: number;
+            }
+            
+            export const Button = (props: ButtonProps) => {
+              return (
+                <button className={props.style} style={{ padding: \`\${props.padding}px\` }}>
+                  {props.text}
+                </button>
+              );
+            };
+            
+            export default Button;            
+            `
           );
-          `
-        );
-      
-      writeFileSync(
-        tmpProjPath(
-          `apps/${mylib}-e2e/src/integration/test-button/test-button.component.spec.ts`
-        ),
-        `
-        describe('test-ui-lib3726865', () => {
+          writeFileSync(
+            tmpProjPath(`libs/${mylib2}/src/lib/button.stories.tsx`),
+            `
+            import React from 'react';
+            import { text, number } from '@storybook/addon-knobs';
+            import { Button, ButtonStyle } from './button';
+            
+            export default { title: 'Button' };
+            
+            export const primary = () => (
+              <Button
+                padding={number('Padding', 0)}
+                style={text('Style', 'default') as ButtonStyle}
+                text={text('Text', 'Click me')}
+              />
+            );
+            `
+          );
+
+          runCLI(
+            `generate @nrwl/angular:storybook-configuration ${mylib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
+          );
+          runCLI(
+            `generate @nrwl/angular:stories ${mylib} --generateCypressSpecs --no-interactive`
+          );
+
+          writeFileSync(
+            tmpProjPath(
+              `apps/${mylib}-e2e/src/integration/test-button/test-button.component.spec.ts`
+            ),
+            `
+            describe('test-ui-lib3726865', () => {
 
           it('should render the component', () => {
             cy.visit('/iframe.html?id=testbuttoncomponent--primary&knob-buttonType=button&knob-style=default&knob-age&knob-isDisabled=false');

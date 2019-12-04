@@ -600,11 +600,12 @@ describe('Enforce Module Boundaries', () => {
 
   it('should not error about one level deep imports into library when exception is specified with a wildcard', () => {
     const failures = runRule(
-      { allow: ['@mycompany/other/*'] },
+      { allow: ['@mycompany/other/*', '@mycompany/another/*'] },
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
       `
       import "@mycompany/other/a/b";
       import "@mycompany/other/a";
+      import "@mycompany/another/a/b";
       `,
       [
         {
@@ -631,10 +632,23 @@ describe('Enforce Module Boundaries', () => {
             'libs/other/a/index.ts': 1,
             'libs/other/a/b.ts': 1
           }
+        },
+        {
+          name: 'anotherName',
+          root: 'libs/another',
+          type: ProjectType.lib,
+          tags: [],
+          implicitDependencies: [],
+          architect: {},
+          files: [`libs/another/a/index.ts`, `libs/another/a/b.ts`],
+          fileMTimes: {
+            'libs/another/a/index.ts': 1,
+            'libs/another/a/b.ts': 1
+          }
         }
       ]
     );
-    expect(failures.length).toEqual(1);
+    expect(failures.length).toEqual(2);
   });
 
   it('should respect regexp in allow option', () => {

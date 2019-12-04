@@ -76,8 +76,7 @@ function run(
       const path = buildServePath(options);
       const serverUrl = url.format({
         protocol: serveOptions.ssl ? 'https' : 'http',
-        hostname:
-          serveOptions.host === '0.0.0.0' ? 'localhost' : serveOptions.host,
+        hostname: serveOptions.host,
         port: serveOptions.port.toString(),
         path: path
       });

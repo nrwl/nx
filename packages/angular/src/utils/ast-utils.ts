@@ -8,7 +8,16 @@ import {
   InsertChange,
   RemoveChange
 } from '@nrwl/workspace/src/utils/ast-utils';
-import { Tree, SchematicsException } from '@angular-devkit/schematics';
+import {
+  Tree,
+  SchematicsException,
+  Source,
+  Rule,
+  SchematicContext,
+  mergeWith,
+  apply,
+  forEach
+} from '@angular-devkit/schematics';
 import * as path from 'path';
 import { toFileName } from '@nrwl/workspace/src/utils/name-utils';
 
@@ -646,4 +655,22 @@ export function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
   );
 
   return source;
+}
+
+export function applyWithSkipExisting(source: Source, rules: Rule[]): Rule {
+  return (tree: Tree, _context: SchematicContext) => {
+    const rule = mergeWith(
+      apply(source, [
+        ...rules,
+        forEach(fileEntry => {
+          if (tree.exists(fileEntry.path)) {
+            return null;
+          }
+          return fileEntry;
+        })
+      ])
+    );
+
+    return rule(tree, _context);
+  };
 }

@@ -49,7 +49,7 @@ export function matchImportWithWildcard(
   } else if (allowableImport.endsWith('/*')) {
     const prefix = allowableImport.substring(0, allowableImport.length - 1);
     if (!extractedImport.startsWith(prefix)) return false;
-    return extractedImport.substring(prefix.length).indexOf('/') > -1;
+    return extractedImport.substring(prefix.length).indexOf('/') === -1;
   } else if (allowableImport.indexOf('/**/') > -1) {
     const [prefix, suffix] = allowableImport.split('/**/');
     return (
