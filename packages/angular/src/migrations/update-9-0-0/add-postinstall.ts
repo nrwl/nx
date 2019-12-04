@@ -17,7 +17,8 @@ export default function() {
       context.logger.info(
         stripIndents`A "postinstall" script has been added to package.json to run ngcc.`
       );
-      json.scripts.postinstall = 'ngcc';
+      json.scripts.postinstall =
+        'ngcc --properties es2015 browser module main --first-only --create-ivy-entry-points';
     }
     return json;
   });
