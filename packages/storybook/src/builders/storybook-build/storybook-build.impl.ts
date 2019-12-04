@@ -63,17 +63,7 @@ function run(
 
 function runInstance(options: StorybookBuilderOptions) {
   return from(build({ ...options, ci: true }));
-
-  /*return new Observable<any>(obs => {
-    build({ ...options, ci: true })
-      .then(sucess => obs.next(sucess))
-      .catch(err => obs.error(err));
-  });*/
 }
-
-/*async function buildStaticStandaloneWrapper(options: StorybookBuilderOptions){
-  return buildStaticStandalone({ ...options, ci: true });
-}*/
 
 async function storybookOptionMapper(
   builderOptions: StorybookBuilderOptions,

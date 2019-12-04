@@ -135,10 +135,6 @@ forEachCli(() => {
             runCLI(`run ${mylib}-e2e:e2e --no-watch`)
           ).toContain('All specs passed!');
         }
-
-        
-      //const storybookOutput = runCLI(`run ${mylib}:storybook-build`);
-      //expect(storybookOutput).toContain('info => Preview built');
         
       runCLI(`run ${mylib}:storybook-build`);
 
