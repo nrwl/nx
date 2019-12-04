@@ -47,7 +47,7 @@ export function getBaseWebpackPartial(
           exclude: /node_modules/,
           options: {
             ...createBabelConfig(dirname(options.main), esm, options.verbose),
-            cacheDirectory: true,
+            cacheDirectory: false,
             cacheCompression: false
           }
         }
