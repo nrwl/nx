@@ -122,7 +122,7 @@
           {
             "name": "Using Storybook",
             "id": "modernize-storybook-angular",
-            "file": "modernize-storybook"
+            "file": "angular/guides/modernize-storybook"
           },
           {
             "name": "Rebuilding and Retesting What is Affected",
@@ -453,7 +453,7 @@
           {
             "name": "Using Storybook",
             "id": "modernize-storybook-react",
-            "file": "modernize-storybook"
+            "file": "react/guides/modernize-storybook"
           },
           {
             "name": "Rebuilding and Retesting What is Affected",
