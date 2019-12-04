@@ -1,0 +1,50 @@
+diff --git a/node_modules/@ngtools/webpack/src/loader.js b/node_modules/@ngtools/webpack/src/loader.js
+index bf6e8ae..ad943fe 100644
+--- a/node_modules/@ngtools/webpack/src/loader.js
++++ b/node_modules/@ngtools/webpack/src/loader.js
+@@ -30,9 +30,9 @@ function ngcLoader() {
+     // We must verify that the plugin is an instance of the right class.
+     // Throw an error if it isn't, that often means multiple @ngtools/webpack installs.
+     if (!(plugin instanceof angular_compiler_plugin_1.AngularCompilerPlugin) || !plugin.done) {
+-        throw new Error('Angular Compiler was detected but it was an instance of the wrong class.\n'
+-            + 'This likely means you have several @ngtools/webpack packages installed. '
+-            + 'You can check this with `npm ls @ngtools/webpack`, and then remove the extra copies.');
++        // throw new Error('Angular Compiler was detected but it was an instance of the wrong class.\n'
++        //     + 'This likely means you have several @ngtools/webpack packages installed. '
++        //     + 'You can check this with `npm ls @ngtools/webpack`, and then remove the extra copies.');
+     }
+     benchmark_1.time(timeLabel + '.ngcLoader.AngularCompilerPlugin');
+     plugin.done
+diff --git a/node_modules/@ngtools/webpack/src/ngcc_processor.js b/node_modules/@ngtools/webpack/src/ngcc_processor.js
+index 77f218a..d270644 100644
+--- a/node_modules/@ngtools/webpack/src/ngcc_processor.js
++++ b/node_modules/@ngtools/webpack/src/ngcc_processor.js
+@@ -49,6 +49,16 @@ class NgccProcessor {
+             this._processedModules.add(moduleName);
+             return;
+         }
++        // If the package.json is read only we should skip calling NGCC.
++        // With Bazel when running under sandbox the filesystem is read-only.
++        try {
++            fs_1.accessSync(packageJsonPath, fs_1.constants.W_OK);
++        }
++        catch (_a) {
++            // add it to processed so the second time round we skip this.
++            this._processedModules.add(moduleName);
++            return;
++        }
+         const timeLabel = `NgccProcessor.processModule.ngcc.process+${moduleName}`;
+         benchmark_1.time(timeLabel);
+         ngcc_1.process({
+@@ -88,6 +98,11 @@ class NgccProcessor {
+         }
+     }
+     findNodeModulesDirectory(startPoint) {
++        if (process.env.TEST_SRCDIR) {
++            // Check why with bazel build this is not resolved but is with bazel test
++            return path.join(require.resolve('npm/node_modules/@ngtools/webpack/package.json', '../../../'));
++        }
++
+         let current = startPoint;
+         while (path.dirname(current) !== current) {
+             const nodePath = path.join(current, 'node_modules');

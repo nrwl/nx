@@ -5,6 +5,7 @@ import {
   mergeWith,
   move,
   Rule,
+  schematic,
   Source,
   template,
   Tree,
@@ -83,6 +84,8 @@ function createWorkspaceFile() {
   };
 }
 
+const ignoredFromRootBuildFile = ['WORKSPACE', '.bazelrc', 'BUILD.bazel'];
+
 function createRootBuildFile() {
   return host => {
     return mergeWith(
@@ -91,7 +94,7 @@ function createRootBuildFile() {
           tmpl: '',
           rootFiles: host
             .getDir('/')
-            .subfiles.filter(f => f !== 'WORKSPACE' && f !== 'BUILD.bazel')
+            .subfiles.filter(f => !ignoredFromRootBuildFile.includes(f))
         }),
         () => {
           if (host.exists('BUILD.bazel')) {
@@ -104,11 +107,14 @@ function createRootBuildFile() {
   };
 }
 
+const runInit = schematic<{}>('init', {});
+
 export default (): Rule => {
   return (host: Tree) => {
     const projectGraph = getProjectGraphFromHost(host);
 
     return chain([
+      runInit,
       createWorkspaceFile(),
       createRootBuildFile(),
       ...Object.values(projectGraph.nodes).map(project =>
