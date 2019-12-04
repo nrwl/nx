@@ -1,14 +1,13 @@
 import * as yargs from 'yargs';
-import { ProjectNode, getProjectNodes, createProjectMetadata } from '../shared';
 import { runCommand } from './run-command';
 import {
+  projectHasTargetAndConfiguration,
   readEnvironment,
   splitArgs,
-  TaskArgs,
-  projectHasTargetAndConfiguration
+  TaskArgs
 } from './utils';
 import { output } from '../output';
-import { readDependencies } from '../deps-calculator';
+import { createProjectGraph, ProjectGraphNode } from '../project-graph';
 
 export type YargsRunManyOptions = yargs.Arguments & RunManyOptions;
 
@@ -32,23 +31,12 @@ export interface RunManyOptions {
 
 export function runMany(parsedArgs: yargs.Arguments): void {
   parsedArgs = preprocess(parsedArgs);
-
   const args = splitArgs(parsedArgs as YargsRunManyOptions, flags);
   const environment = readEnvironment(args.nxArgs.target);
-  const { nxJson, workspaceJson } = environment;
-
-  const allProjects = getProjectNodes(workspaceJson, nxJson);
+  const projectGraph = createProjectGraph();
+  const allProjects = Object.values(projectGraph.nodes);
   const projects = getProjectsToRun(args.nxArgs, allProjects);
-
-  const dependencies = readDependencies(nxJson.npmScope, allProjects);
-  const metadata = createProjectMetadata(
-    allProjects,
-    dependencies,
-    [],
-    args.nxArgs.withDeps
-  );
-
-  runCommand(projects, metadata.dependencyGraph, args, environment);
+  runCommand(projects, projectGraph, args, environment);
 }
 
 function preprocess(args: yargs.Arguments): yargs.Arguments {
@@ -67,8 +55,8 @@ function preprocess(args: yargs.Arguments): yargs.Arguments {
 
 export function getProjectsToRun(
   args: TaskArgs,
-  allProjects: ProjectNode[]
-): ProjectNode[] {
+  allProjects: ProjectGraphNode[]
+): ProjectGraphNode[] {
   const { projects, target, all } = args;
 
   let found = [];

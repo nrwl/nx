@@ -258,64 +258,65 @@ forEachCli(() => {
       });
 
       it('dep-graph should output json to file', () => {
-        console.log(runCommand(`npm run dep-graph -- --file=dep-graph.json`));
+        runCommand(`npm run dep-graph -- --file=project-graph.json`);
 
-        expect(() => checkFilesExist('dep-graph.json')).not.toThrow();
+        expect(() => checkFilesExist('project-graph.json')).not.toThrow();
 
-        const jsonFileContents = readJson('dep-graph.json');
+        const jsonFileContents = readJson('project-graph.json');
 
-        expect(jsonFileContents.deps).toEqual({
-          mylib2: [],
-          myapp3: [],
+        expect(jsonFileContents.graph.dependencies).toEqual({
           'myapp3-e2e': [
             {
-              projectName: 'myapp3',
+              source: 'myapp3-e2e',
+              target: 'myapp3',
               type: 'implicit'
             }
           ],
           myapp2: [
             {
-              projectName: 'mylib',
-              type: 'es6Import'
+              source: 'myapp2',
+              target: 'mylib',
+              type: 'static'
             }
           ],
           'myapp2-e2e': [
             {
-              projectName: 'myapp2',
+              source: 'myapp2-e2e',
+              target: 'myapp2',
               type: 'implicit'
             }
           ],
           mylib: [
             {
-              projectName: 'mylib2',
-              type: 'es6Import'
+              source: 'mylib',
+              target: 'mylib2',
+              type: 'static'
             }
           ],
           myapp: [
             {
-              projectName: 'mylib',
-              type: 'es6Import'
+              source: 'myapp',
+              target: 'mylib',
+              type: 'static'
             },
-            {
-              projectName: 'mylib2',
-              type: 'loadChildren'
-            }
+            { source: 'myapp', target: 'mylib2', type: 'dynamic' }
           ],
           'myapp-e2e': [
             {
-              projectName: 'myapp',
+              source: 'myapp-e2e',
+              target: 'myapp',
               type: 'implicit'
             }
           ]
         });
 
         runCommand(
-          `npm run affected:dep-graph -- --files="libs/mylib/src/index.ts" --file="dep-graph.json"`
+          `npm run affected:dep-graph -- --files="libs/mylib/src/index.ts" --file="project-graph.json"`
         );
 
-        expect(() => checkFilesExist('dep-graph.json')).not.toThrow();
+        expect(() => checkFilesExist('project-graph.json')).not.toThrow();
 
-        const jsonFileContents2 = readJson('dep-graph.json');
+        const jsonFileContents2 = readJson('project-graph.json');
 
         expect(jsonFileContents2.criticalPath).toContain('myapp');
         expect(jsonFileContents2.criticalPath).toContain('myapp2');

@@ -3,9 +3,11 @@ import * as path from 'path';
 import * as resolve from 'resolve';
 import { getProjectRoots, parseFiles, printArgsWarning } from './shared';
 import { YargsAffectedOptions } from './run-tasks/affected';
-import { getTouchedProjects } from './touched';
 import { fileExists } from '../utils/fileutils';
 import { output } from './output';
+import { createProjectGraph } from './project-graph';
+import { filterAffected } from './affected-project-graph';
+import { calculateFileChanges } from './file-utils';
 
 export interface YargsFormatOptions extends YargsAffectedOptions {
   libsAndApps?: boolean;
@@ -84,7 +86,12 @@ function getPatterns(args: YargsAffectedOptions) {
 }
 
 function getPatternsFromApps(affectedFiles: string[]): string[] {
-  const roots = getProjectRoots(getTouchedProjects(affectedFiles));
+  const graph = createProjectGraph();
+  const affectedGraph = filterAffected(
+    graph,
+    calculateFileChanges(affectedFiles)
+  );
+  const roots = getProjectRoots(Object.keys(affectedGraph.nodes));
   return roots.map(root => `"${root}/**/*.{${PRETTIER_EXTENSIONS.join(',')}}"`);
 }
 

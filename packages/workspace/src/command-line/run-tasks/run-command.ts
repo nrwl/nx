@@ -1,4 +1,4 @@
-import { DependencyGraph, NxJson, ProjectNode } from '../shared';
+import { NxJson } from '../shared';
 import {
   AffectedEventType,
   Task,
@@ -16,6 +16,7 @@ import {
   projectHasTargetAndConfiguration
 } from './utils';
 import * as yargs from 'yargs';
+import { ProjectGraph, ProjectGraphNode } from '../project-graph';
 
 export interface TasksMap {
   [projectName: string]: { [targetName: string]: Task };
@@ -24,14 +25,13 @@ export interface TasksMap {
 type RunArgs = yargs.Arguments & ReporterArgs;
 
 export function runCommand<T extends RunArgs>(
-  projectsToRun: ProjectNode[],
-  dependencyGraph: DependencyGraph,
+  projectsToRun: ProjectGraphNode[],
+  projectGraph: ProjectGraph,
   { nxArgs, overrides, targetArgs }: Arguments<T>,
   { nxJson, workspace }: Environment
 ) {
   const reporter = new DefaultReporter();
   reporter.beforeRun(projectsToRun.map(p => p.name), nxArgs, overrides);
-
   const tasks: Task[] = projectsToRun.map(project =>
     createTask({
       project,
@@ -42,7 +42,7 @@ export function runCommand<T extends RunArgs>(
   );
 
   const tasksMap: TasksMap = {};
-  Object.entries(dependencyGraph.projects).forEach(([projectName, project]) => {
+  Object.entries(projectGraph.nodes).forEach(([projectName, project]) => {
     const runnable = projectHasTargetAndConfiguration(
       project,
       nxArgs.target,
@@ -67,7 +67,7 @@ export function runCommand<T extends RunArgs>(
   );
   tasksRunner(tasks, tasksOptions, {
     target: nxArgs.target,
-    dependencyGraph: dependencyGraph,
+    projectGraph,
     tasksMap
   }).subscribe({
     next: (event: TaskCompleteEvent) => {
@@ -97,7 +97,7 @@ export function runCommand<T extends RunArgs>(
 }
 
 export interface TaskParams {
-  project: ProjectNode;
+  project: ProjectGraphNode;
   target: string;
   configuration: string;
   overrides: Object;
@@ -120,7 +120,7 @@ export function createTask({
       target,
       configuration
     },
-    overrides: interpolateOverrides(overrides, project.name, project)
+    overrides: interpolateOverrides(overrides, project.name, project.data)
   };
 }
 

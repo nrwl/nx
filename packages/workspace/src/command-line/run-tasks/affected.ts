@@ -3,18 +3,20 @@ import * as yargs from 'yargs';
 import { Task } from '../../tasks-runner/tasks-runner';
 import { generateGraph } from '../dep-graph';
 import { output } from '../output';
-import {
-  ProjectMetadata,
-  getProjectMetadata,
-  parseFiles,
-  printArgsWarning,
-  ProjectNode,
-  ProjectType,
-  cliCommand
-} from '../shared';
+import { cliCommand, parseFiles, printArgsWarning } from '../shared';
 import { getCommand, getOutputs } from '../../tasks-runner/utils';
 import { createTask, runCommand } from './run-command';
 import { Arguments, readEnvironment, splitArgs } from './utils';
+import { filterAffected } from '../affected-project-graph';
+import {
+  createProjectGraph,
+  ProjectGraph,
+  ProjectGraphNode,
+  ProjectType,
+  reverse,
+  withDeps
+} from '../project-graph';
+import { calculateFileChanges } from '../file-utils';
 
 export interface YargsAffectedOptions
   extends yargs.Arguments,
@@ -49,21 +51,20 @@ export function affected(
   parsedArgs: YargsAffectedOptions
 ): void {
   const env = readEnvironment(parsedArgs.target);
+  const projectGraph = createProjectGraph();
 
-  const affectedMetadata = getProjectMetadata(
-    parsedArgs.all ? [] : parseFiles(parsedArgs).files,
-    parsedArgs.withDeps
-  );
+  const fileChanges = readFileChanges(parsedArgs);
+  let affectedGraph = filterAffected(projectGraph, fileChanges);
+  if (parsedArgs.withDeps) {
+    affectedGraph = withDeps(projectGraph, affectedGraph);
+  }
 
-  const projects = (parsedArgs.all
-    ? getAllProjects(affectedMetadata)
-    : getAffectedProjects(affectedMetadata)
+  const projects = Object.values(
+    parsedArgs.all ? projectGraph.nodes : affectedGraph.nodes
   )
-    .filter(app => !parsedArgs.exclude.includes(app.name))
-    .filter(
-      project =>
-        !parsedArgs.onlyFailed || !env.workspace.getResult(project.name)
-    );
+    .filter(n => !parsedArgs.exclude.includes(n.name))
+    .filter(n => !parsedArgs.onlyFailed || !env.workspace.getResult(n.name));
+
   try {
     switch (command) {
       case 'apps':
@@ -103,7 +104,7 @@ export function affected(
           args,
           projectWithTargetAndConfig
         } = allProjectsWithTargetAndConfiguration(projects, parsedArgs);
-        printAffected(projectWithTargetAndConfig, affectedMetadata, args);
+        printAffected(projectWithTargetAndConfig, projectGraph, args);
         break;
 
       case 'dep-graph': {
@@ -120,12 +121,7 @@ export function affected(
         } = allProjectsWithTargetAndConfiguration(projects, parsedArgs);
         printArgsWarning(parsedArgs);
 
-        runCommand(
-          projectWithTargetAndConfig,
-          affectedMetadata.dependencyGraph,
-          args,
-          env
-        );
+        runCommand(projectWithTargetAndConfig, projectGraph, args, env);
         break;
       }
     }
@@ -135,8 +131,20 @@ export function affected(
   }
 }
 
+// -----------------------------------------------------------------------------
+
+function readFileChanges(parsedArgs: YargsAffectedOptions) {
+  // Do we still need this `--all` option?
+  if (parsedArgs.all) {
+    return [];
+  }
+
+  const files = parseFiles(parsedArgs).files;
+  return calculateFileChanges(files, parsedArgs.base, parsedArgs.head);
+}
+
 function allProjectsWithTargetAndConfiguration(
-  projects: ProjectNode[],
+  projects: ProjectGraphNode[],
   parsedArgs: YargsAffectedOptions
 ) {
   const args = splitArgs(parsedArgs, nxSpecificFlags);
@@ -151,65 +159,22 @@ function allProjectsWithTargetAndConfiguration(
 }
 
 function projectHasTargetAndConfiguration(
-  project: ProjectNode,
+  project: ProjectGraphNode,
   target: string,
   configuration?: string
 ) {
-  if (!project.architect[target]) {
+  if (!project.data.architect[target]) {
     return false;
   }
 
   if (!configuration) {
-    return !!project.architect[target];
+    return !!project.data.architect[target];
   } else {
     return (
-      project.architect[target].configurations &&
-      project.architect[target].configurations[configuration]
+      project.data.architect[target].configurations &&
+      project.data.architect[target].configurations[configuration]
     );
   }
-}
-
-function getAffectedProjects(affectedMetadata: ProjectMetadata): ProjectNode[] {
-  return filterAffectedMetadata(
-    affectedMetadata,
-    project => affectedMetadata.projectStates[project.name].affected
-  );
-}
-
-function getAllProjects(affectedMetadata: ProjectMetadata): ProjectNode[] {
-  return filterAffectedMetadata(affectedMetadata, () => true);
-}
-
-function filterAffectedMetadata(
-  affectedMetadata: ProjectMetadata,
-  predicate: (project) => boolean
-): ProjectNode[] {
-  const projects: ProjectNode[] = [];
-  visit(affectedMetadata, project => {
-    if (predicate(project)) {
-      projects.push(project);
-    }
-  });
-  return projects;
-}
-function visit(
-  affectedMetadata: ProjectMetadata,
-  visitor: (project: ProjectNode) => void
-) {
-  const visited = new Set<string>();
-  function _visit(projectName: string) {
-    if (visited.has(projectName)) {
-      return;
-    }
-    visited.add(projectName);
-    affectedMetadata.dependencyGraph.dependencies[projectName].forEach(dep => {
-      _visit(dep.projectName);
-    });
-    visitor(affectedMetadata.dependencyGraph.projects[projectName]);
-  }
-  affectedMetadata.dependencyGraph.roots.forEach(root => {
-    _visit(root);
-  });
 }
 
 function printError(e: any, verbose?: boolean) {
@@ -225,8 +190,8 @@ function printError(e: any, verbose?: boolean) {
 }
 
 function printAffected(
-  affectedProjects: ProjectNode[],
-  affectedMetadata: ProjectMetadata,
+  affectedProjects: ProjectGraphNode[],
+  projectGraph: ProjectGraph,
   args: Arguments<YargsAffectedOptions>
 ) {
   const tasks: Task[] = affectedProjects.map(affectedProject =>
@@ -244,13 +209,13 @@ function printAffected(
     overrides: task.overrides,
     target: task.target,
     command: `${isYarn ? 'yarn' : 'npm run'} ${getCommand(cli, isYarn, task)}`,
-    outputs: getOutputs(affectedMetadata.dependencyGraph.projects, task)
+    outputs: getOutputs(projectGraph.nodes, task)
   }));
   console.log(
     JSON.stringify(
       {
         tasks: tasksJson,
-        dependencyGraph: affectedMetadata.dependencyGraph
+        projectGraph
       },
       null,
       2

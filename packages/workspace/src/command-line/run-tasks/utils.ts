@@ -1,14 +1,8 @@
 import * as yargsParser from 'yargs-parser';
 import * as yargs from 'yargs';
-import {
-  getProjectNodes,
-  NxJson,
-  ProjectNode,
-  readNxJson,
-  readWorkspaceJson
-} from '../shared';
+import { NxJson, readNxJson, readWorkspaceJson } from '../shared';
 import { WorkspaceResults } from '../workspace-results';
-import { output } from '../output';
+import { ProjectGraphNode } from '../project-graph';
 
 export interface Arguments<T extends yargs.Arguments> {
   nxArgs: T;
@@ -44,20 +38,24 @@ export interface TaskArgs {
 }
 
 export function projectHasTargetAndConfiguration(
-  project: ProjectNode,
+  project: ProjectGraphNode,
   target: string,
   configuration?: string
 ) {
-  if (!project.architect[target]) {
+  if (
+    !project.data ||
+    !project.data.architect ||
+    !project.data.architect[target]
+  ) {
     return false;
   }
 
   if (!configuration) {
-    return !!project.architect[target];
+    return !!project.data.architect[target];
   } else {
     return (
-      project.architect[target].configurations &&
-      project.architect[target].configurations[configuration]
+      project.data.architect[target].configurations &&
+      project.data.architect[target].configurations[configuration]
     );
   }
 }

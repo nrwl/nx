@@ -69,9 +69,7 @@ forEachCli(cliName => {
           outputs: []
         }
       ]);
-      expect(Object.keys(testOutput.dependencyGraph.projects).length).toEqual(
-        7
-      );
+      expect(Object.keys(testOutput.projectGraph.nodes).length).toEqual(7);
 
       expect(
         JSON.parse(
