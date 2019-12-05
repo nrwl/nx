@@ -6,6 +6,7 @@ import * as withCSS from '@zeit/next-css';
 import * as withLESS from '@zeit/next-less';
 import * as withSASS from '@zeit/next-sass';
 import * as withSTYLUS from '@zeit/next-stylus';
+import { existsSync } from 'fs';
 
 function createWebpackConfig(root: string) {
   return function webpackConfig(config, { defaultLoaders }) {
@@ -39,7 +40,21 @@ export function prepareConfig(
   config.distDir = `${offsetFromRoot(root)}${outputPath}`;
   config.outdir = `${offsetFromRoot(root)}${outputPath}`;
   const userWebpack = config.webpack;
-  config.webpack = (a, b) =>
-    createWebpackConfig(absoluteRoot)(userWebpack(a, b), b);
+  const customConfigPath = path.join(absoluteRoot, 'next.config.js');
+  const hasCustomConfig = existsSync(customConfigPath);
+  if (hasCustomConfig) {
+    const customConfig = require(customConfigPath);
+    Object.assign(config, customConfig);
+    if (customConfig.webpack) {
+      config.webpack = (a, b) =>
+        customConfig.webpack(
+          createWebpackConfig(absoluteRoot)(userWebpack(a, b), b),
+          b
+        );
+    }
+  } else {
+    config.webpack = (a, b) =>
+      createWebpackConfig(absoluteRoot)(userWebpack(a, b), b);
+  }
   return config;
 }
