@@ -27,7 +27,7 @@ function updateCLI() {
       }
 
       if (json['devDependencies']['@angular/cli']) {
-        json['devDependencies']['@angular/cli'] = '8.3.3';
+        json['devDependencies']['@angular/cli'] = '^8.3.3';
       }
 
       if (json['devDependencies']['@angular-devkit/build-angular']) {
