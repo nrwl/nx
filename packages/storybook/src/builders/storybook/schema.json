@@ -41,7 +41,7 @@
       "type": "array",
       "description": "Directory where to load static files from, array of strings",
       "items": {
-        "type": "number"
+        "type": "string"
       }
     },
     "config": {
