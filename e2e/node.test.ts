@@ -128,9 +128,9 @@ forEachCli(currentCLIName => {
           done();
         });
       });
-    }, 30000);
+    }, 60000);
 
-    fit('should have correct ts options for nest application', async () => {
+    it('should have correct ts options for nest application', async () => {
       if (currentCLIName === 'angular') {
         // Usually the tests use ensureProject() to setup the test workspace. But it will trigger
         // the nx workspace schematic which creates a tsconfig file containing the parameters
@@ -157,7 +157,7 @@ forEachCli(currentCLIName => {
       ); // respects "extends" inside tsconfigs
 
       expect(config.options.emitDecoratorMetadata).toEqual(true); // required by nest to function properly
-    }, 30000);
+    }, 60000);
 
     it('should be able to generate a nest application', async done => {
       ensureProject();
@@ -201,13 +201,14 @@ forEachCli(currentCLIName => {
 
       const process = spawn(
         'node',
-        ['./node_modules/.bin/nx', 'serve', nestapp],
+        ['./node_modules/@nrwl/cli/bin/nx', 'serve', nestapp],
         {
           cwd: tmpProjPath()
         }
       );
 
       process.stdout.on('data', async (data: Buffer) => {
+        console.log(data.toString());
         if (!data.toString().includes('Listening at http://localhost:3333')) {
           return;
         }
@@ -218,7 +219,7 @@ forEachCli(currentCLIName => {
           done();
         });
       });
-    }, 30000);
+    }, 60000);
 
     it('should be able to generate an empty application', async () => {
       ensureProject();
@@ -236,6 +237,6 @@ forEachCli(currentCLIName => {
         cwd: tmpProjPath()
       }).toString();
       expect(result).toContain('Hello World!');
-    }, 30000);
+    }, 60000);
   });
 });
