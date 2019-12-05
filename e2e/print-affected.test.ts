@@ -50,15 +50,6 @@ forEachCli(cliName => {
           `
       );
 
-      updateFile(`nx.json`, c => {
-        const content = JSON.parse(c);
-        content['tasksRunnerOptions'] = {
-          json: {
-            runner: '@nrwl/workspace/src/tasks-runner/json-output-tasks-runner'
-          }
-        };
-        return JSON.stringify(content);
-      });
       const testOutput = JSON.parse(
         runCommand(
           `npm run nx print-affected --silent -- --files=apps/${myapp}/src/main.tsx --target=test`

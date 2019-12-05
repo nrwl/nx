@@ -26,6 +26,7 @@
     "documentation": "./scripts/documentation/documentation.sh && yarn format && ./scripts/documentation/check-documentation.sh"
   },
   "devDependencies": {
+    "axios": "^0.19.0",
     "@angular-devkit/architect": "0.803.14",
     "@angular-devkit/build-angular": "0.803.14",
     "@angular-devkit/build-ng-packagr": "0.803.14",

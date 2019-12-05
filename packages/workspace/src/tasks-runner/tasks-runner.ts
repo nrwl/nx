@@ -27,6 +27,7 @@ export type TasksRunner<T = unknown> = (
   tasks: Task[],
   options?: T,
   context?: {
+    target?: string;
     dependencyGraph: DependencyGraph;
     tasksMap: {
       [projectName: string]: {
