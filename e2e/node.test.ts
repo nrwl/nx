@@ -5,7 +5,6 @@ import * as treeKill from 'tree-kill';
 import * as ts from 'typescript';
 import {
   ensureProject,
-  exists,
   readJson,
   runCLI,
   runCLIAsync,
@@ -18,7 +17,8 @@ import {
   cleanup,
   runNew,
   runNgAdd,
-  copyMissingPackages
+  copyMissingPackages,
+  setMaxWorkers
 } from './utils';
 
 function getData(): Promise<any> {
@@ -163,6 +163,9 @@ forEachCli(currentCLIName => {
       ensureProject();
       const nestapp = uniq('nestapp');
       runCLI(`generate @nrwl/nest:app ${nestapp} --linter=${linter}`);
+
+      setMaxWorkers(nestapp);
+
       const lintResults = runCLI(`lint ${nestapp}`);
       expect(lintResults).toContain('All files pass linting.');
 
@@ -208,7 +211,6 @@ forEachCli(currentCLIName => {
       );
 
       process.stdout.on('data', async (data: Buffer) => {
-        console.log(data.toString());
         if (!data.toString().includes('Listening at http://localhost:3333')) {
           return;
         }
