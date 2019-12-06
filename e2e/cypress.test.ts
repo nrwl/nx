@@ -8,7 +8,9 @@ import {
   uniq,
   newProject,
   forEachCli,
-  supportUi
+  supportUi,
+  workspaceConfigName,
+  setMaxWorkers
 } from './utils';
 
 forEachCli(currentCLIName => {
@@ -49,6 +51,10 @@ forEachCli(currentCLIName => {
           runCLI(
             `generate @nrwl/${nrwlPackageName}:app ${myapp} --e2eTestRunner=cypress --linter=${linter}`
           );
+
+          if (currentCLIName === 'nx') {
+            setMaxWorkers(myapp);
+          }
 
           expect(runCLI(`e2e ${myapp}-e2e --headless --no-watch`)).toContain(
             'All specs passed!'
