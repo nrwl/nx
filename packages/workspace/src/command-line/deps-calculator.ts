@@ -17,6 +17,11 @@ import {
 } from '../utils/fileutils';
 import { stripSourceCode } from '../utils/strip-source-code';
 import { appRootPath } from '../utils/app-root';
+import {
+  readTsConfig,
+  getCompilerHost,
+  CompilerHostAndOptions
+} from '../utils/typescript';
 
 export type DepGraph = {
   projects: ProjectNode[];
@@ -112,6 +117,7 @@ export class DepsCalculator {
 
   private _incremental: boolean;
   private deps: NxDepsJson;
+  private tsCompilerHost: CompilerHostAndOptions;
 
   private readonly scanner: ts.Scanner = ts.createScanner(
     ts.ScriptTarget.Latest,
@@ -122,7 +128,8 @@ export class DepsCalculator {
     private npmScope: string,
     private projects: ProjectNode[],
     private existingDeps: NxDepsJson,
-    private fileRead: (s: string) => string
+    private fileRead: (s: string) => string,
+    tsCompilerHost?: CompilerHostAndOptions
   ) {
     this.projects.sort((a, b) => {
       if (!a.root) return -1;
@@ -131,6 +138,7 @@ export class DepsCalculator {
     });
     this._incremental = this.shouldIncrementallyRecalculate();
     this.deps = this.initializeDeps();
+    this.tsCompilerHost = tsCompilerHost || this.createCompiler();
   }
 
   /**
@@ -325,12 +333,37 @@ export class DepsCalculator {
     filePath: string,
     depType: DependencyType
   ) {
+    if (!expr.startsWith(`@${this.npmScope}`)) {
+      return;
+    }
+
+    const { options, host } = this.tsCompilerHost;
+    const { resolvedModule } = ts.resolveModuleName(
+      expr,
+      filePath,
+      options,
+      host
+    );
+
+    if (!resolvedModule) {
+      return;
+    }
+
+    // find the config file dir that matches this lib
+    const foundConfig = ts.findConfigFile(
+      resolvedModule.resolvedFileName,
+      host.fileExists,
+      'tsconfig.lib.json'
+    );
+    const dir = path.dirname(foundConfig);
+
     const matchingProject = this.projects.filter(a => {
       const normalizedRoot = normalizedProjectRoot(a);
       return (
         expr === `@${this.npmScope}/${normalizedRoot}` ||
         expr.startsWith(`@${this.npmScope}/${normalizedRoot}#`) ||
-        expr.startsWith(`@${this.npmScope}/${normalizedRoot}/`)
+        expr.startsWith(`@${this.npmScope}/${normalizedRoot}/`) ||
+        `${appRootPath}/${a.root}` === dir
       );
     })[0];
 
@@ -361,5 +394,9 @@ export class DepsCalculator {
 
   private getStringLiteralValue(node: ts.Node): string {
     return node.getText().substr(1, node.getText().length - 2);
+  }
+
+  private createCompiler() {
+    return getCompilerHost();
   }
 }

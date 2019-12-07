@@ -12,6 +12,8 @@ import * as fs from 'fs';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName
 } from '../../src/rules/enforce-module-boundaries';
+import * as ts from 'typescript';
+import { getTestCompilerHost } from '@nrwl/workspace/src/utils/typescript';
 
 describe('Enforce Module Boundaries', () => {
   beforeEach(() => {
@@ -194,6 +196,30 @@ describe('Enforce Module Boundaries', () => {
       ]
     };
 
+    const compilerOptions = createCompilerOptions({
+      '@mycompany/impl': ['libs/impl/src/index.ts'],
+      '@mycompany/untagged': ['libs/untagged/src/index.ts'],
+      '@mycompany/api': ['libs/api/src/index.ts'],
+      '@mycompany/impl-domain2': ['libs/impl-domain2/src/index.ts'],
+      '@mycompany/impl-both-domains': ['libs/impl-both-domains/src/index.ts'],
+      '@mycompany/impl2': ['libs/impl2/src/index.ts']
+    });
+
+    const fileSys = {
+      'libs/impl/src/index.ts': '',
+      'libs/impl/tsconfig.lib.json': '',
+      'libs/untagged/src/index.ts': '',
+      'libs/untagged/tsconfig.lib.json': '',
+      'libs/api/src/index.ts': '',
+      'libs/api/tsconfig.lib.json': '',
+      'libs/impl-domain2/src/index.ts': '',
+      'libs/impl-domain2/tsconfig.lib.json': '',
+      'libs/impl-both-domains/src/index.ts': '',
+      'libs/impl-both-domains/tsconfig.lib.json': '',
+      'libs/impl2/src/index.ts': '',
+      'libs/impl2/tsconfig.lib.json': ''
+    };
+
     it('should error when the target library does not have the right tag', () => {
       const failures = runRule(
         depConstraints,
@@ -201,7 +227,10 @@ describe('Enforce Module Boundaries', () => {
         `
           import '@mycompany/impl';
         `,
-        projectNodes
+        projectNodes,
+        {},
+        fileSys,
+        compilerOptions
       );
 
       expect(failures[0].message).toEqual(
@@ -216,7 +245,10 @@ describe('Enforce Module Boundaries', () => {
         `
             import '@mycompany/untagged';
           `,
-        projectNodes
+        projectNodes,
+        {},
+        fileSys,
+        compilerOptions
       );
 
       expect(failures[0].message).toEqual(
@@ -231,7 +263,10 @@ describe('Enforce Module Boundaries', () => {
         `
             import '@mycompany/api';
           `,
-        projectNodes
+        projectNodes,
+        {},
+        fileSys,
+        compilerOptions
       );
 
       expect(failures[0].message).toEqual(
@@ -246,7 +281,10 @@ describe('Enforce Module Boundaries', () => {
         `
             import '@mycompany/impl-domain2';
           `,
-        projectNodes
+        projectNodes,
+        {},
+        fileSys,
+        compilerOptions
       );
 
       expect(failures[0].message).toEqual(
@@ -261,7 +299,10 @@ describe('Enforce Module Boundaries', () => {
         `
             import '@mycompany/impl-both-domains';
           `,
-        projectNodes
+        projectNodes,
+        {},
+        fileSys,
+        compilerOptions
       );
 
       expect(failures.length).toEqual(0);
@@ -274,7 +315,10 @@ describe('Enforce Module Boundaries', () => {
         `
             import '@mycompany/impl';
           `,
-        projectNodes
+        projectNodes,
+        {},
+        fileSys,
+        compilerOptions
       );
 
       expect(failures.length).toEqual(0);
@@ -287,7 +331,10 @@ describe('Enforce Module Boundaries', () => {
         `
             import '@mycompany/impl2';
           `,
-        projectNodes
+        projectNodes,
+        {},
+        fileSys,
+        compilerOptions
       );
 
       expect(failures.length).toEqual(0);
@@ -302,7 +349,10 @@ describe('Enforce Module Boundaries', () => {
         `
             import '@mycompany/impl';
           `,
-        projectNodes
+        projectNodes,
+        {},
+        fileSys,
+        compilerOptions
       );
 
       expect(failures.length).toEqual(0);
@@ -507,7 +557,20 @@ describe('Enforce Module Boundaries', () => {
             'libs/other/sublib/src/blah.ts': 1
           }
         }
-      ]
+      ],
+      {},
+      {
+        'libs/mylib/src/main.ts': `
+        import "@mycompany/other/src/blah"
+        import "@mycompany/other/src/sublib/blah"
+        `,
+        'libs/other/tsconfig.lib.json': '',
+        'libs/other/src/blah.ts': '',
+        'libs/other/src/sublib/blah.ts': ''
+      },
+      createCompilerOptions({
+        '@mycompany/other/*': ['libs/other/*']
+      })
     );
     expect(failures[0].message).toEqual(
       'Deep imports into libraries are forbidden'
@@ -639,7 +702,22 @@ describe('Enforce Module Boundaries', () => {
             'libs/other/a/b.ts': 1
           }
         }
-      ]
+      ],
+      {},
+      {
+        'libs/mylib/src/main.ts': '',
+        'libs/mylib/src/tsconfig.lib.json': '',
+        'libs/other/a/index.ts': '',
+        'libs/other/a/b.ts': '',
+        'libs/other/tsconfig.lib.json': '',
+        'libs/another/a/index.ts': '',
+        'libs/another/a/b.ts': '',
+        'libs/another/tsconfig.lib.json': ''
+      },
+      createCompilerOptions({
+        '@mycompany/other/*': ['libs/other/*'],
+        '@mycompany/another/*': ['libs/another/*']
+      })
     );
     expect(failures.length).toEqual(1);
   });
@@ -716,7 +794,16 @@ describe('Enforce Module Boundaries', () => {
         mylibName: [
           { projectName: 'otherName', type: DependencyType.loadChildren }
         ]
-      }
+      },
+      {
+        'libs/mylib/src/main.ts': '',
+        'libs/mylib/tsconfig.lib.json': '',
+        'libs/other/index.ts': '',
+        'libs/other/tsconfig.lib.json': ''
+      },
+      createCompilerOptions({
+        '@mycompany/other': ['libs/other/index.ts']
+      })
     );
     expect(failures[0].message).toEqual(
       'Imports of lazy-loaded libraries are forbidden'
@@ -753,7 +840,17 @@ describe('Enforce Module Boundaries', () => {
             'apps/myapp/src/index.ts': 1
           }
         }
-      ]
+      ],
+      {},
+      {
+        'apps/myapp/src/index.ts': '',
+        'apps/myapp/tsconfig.json': '',
+        'libs/mylib/src/main.ts': '',
+        'libs/mylib/tsconfig.lib.json': ''
+      },
+      createCompilerOptions({
+        '@mycompany/myapp': ['apps/myapp/src/index.ts']
+      })
     );
     expect(failures[0].message).toEqual('Imports of apps are forbidden');
   });
@@ -805,7 +902,14 @@ describe('Enforce Module Boundaries', () => {
         mylibName: [
           { projectName: 'anotherlibName', type: DependencyType.es6Import }
         ]
-      }
+      },
+      {
+        'libs/mylib/src/main.ts': '',
+        'libs/mylib/tsconfig.lib.json': ''
+      },
+      createCompilerOptions({
+        '@mycompany/mylib': ['libs/mylib/src/main.ts']
+      })
     );
     expect(failures[0].message).toEqual(
       'Circular dependency between "anotherlibName" and "mylibName" detected'
@@ -877,7 +981,17 @@ describe('Enforce Module Boundaries', () => {
         anotherlibName: [
           { projectName: 'mylibName', type: DependencyType.es6Import }
         ]
-      }
+      },
+      {
+        'libs/mylib/src/main.ts': '',
+        'libs/mylib/tsconfig.lib.json': '',
+        'libs/anotherlib/src/main.ts': '',
+        'libs/badcirclelib/src/main.ts': '',
+        'libs/badcirclelib/tsconfig.lib.json': ''
+      },
+      createCompilerOptions({
+        '@mycompany/badcirclelib': ['libs/badcirclelib/src/main.ts']
+      })
     );
     expect(failures[0].message).toEqual(
       'Circular dependency between "mylibName" and "badcirclelibName" detected'
@@ -904,12 +1018,24 @@ function runRule(
   contentPath: string,
   content: string,
   projectNodes: ProjectNode[],
-  deps: { [projectName: string]: Dependency[] } = {}
+  deps: { [projectName: string]: Dependency[] } = {},
+  fileSys: {} = {},
+  compilerOptions: ts.CompilerOptions = {}
 ): TSESLint.Linter.LintMessage[] {
   (global as any).projectPath = `${process.cwd()}/proj`;
   (global as any).npmScope = 'mycompany';
   (global as any).projectNodes = projectNodes;
   (global as any).deps = deps;
+
+  if (Object.keys(compilerOptions).length != 0) {
+    fileSys['tsconfig.json'] = `{ "compilerOptions": ${JSON.stringify(
+      compilerOptions
+    )}}`;
+  }
+  (global as any).tsCompilerHostAndOptions = getTestCompilerHost(
+    fileSys,
+    compilerOptions
+  );
 
   const config = {
     ...baseConfig,
@@ -919,4 +1045,18 @@ function runRule(
   };
 
   return linter.verifyAndFix(content, config as any, contentPath).messages;
+}
+
+function createCompilerOptions(
+  paths: ts.MapLike<string[]>
+): ts.CompilerOptions {
+  return {
+    ...ts.getDefaultCompilerOptions(),
+    ...{
+      baseUrl: '.',
+      module: ts.ModuleKind.ESNext,
+      moduleResolution: ts.ModuleResolutionKind.NodeJs,
+      paths
+    }
+  };
 }

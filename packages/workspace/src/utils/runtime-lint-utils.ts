@@ -1,7 +1,10 @@
 import * as path from 'path';
+import * as ts from 'typescript';
 import { Dependency, DependencyType } from '../command-line/deps-calculator';
 import { normalizedProjectRoot, ProjectNode } from '../command-line/shared';
 import { normalize } from '@angular-devkit/core';
+import { appRootPath } from './app-root';
+import { readTsConfig, CompilerHostAndOptions } from './typescript';
 
 export type Deps = { [projectName: string]: Dependency[] };
 export type DepConstraint = {
@@ -128,16 +131,44 @@ export function isAbsoluteImportIntoAnotherProject(imp: string) {
 export function findProjectUsingImport(
   projectNodes: ProjectNode[],
   npmScope: string,
-  imp: string
+  imp: string,
+  filePath: string,
+  tsCompilerHostAndOptions: CompilerHostAndOptions
 ) {
-  const unscopedImport = imp.substring(npmScope.length + 2);
-  return projectNodes.filter(n => {
-    const normalizedRoot = normalizedProjectRoot(n);
-    return (
-      unscopedImport === normalizedRoot ||
-      unscopedImport.startsWith(`${normalizedRoot}/`)
+  const { resolvedModule } = ts.resolveModuleName(
+    imp,
+    filePath,
+    tsCompilerHostAndOptions.options,
+    tsCompilerHostAndOptions.host
+  );
+
+  if (!resolvedModule) {
+    return;
+  }
+
+  const foundConfig =
+    ts.findConfigFile(
+      resolvedModule.resolvedFileName,
+      tsCompilerHostAndOptions.host.fileExists,
+      'tsconfig.lib.json'
+    ) ||
+    ts.findConfigFile(
+      resolvedModule.resolvedFileName,
+      tsCompilerHostAndOptions.host.fileExists,
+      'tsconfig.json'
     );
+  const dir = path.dirname(foundConfig);
+  return projectNodes.filter(n => {
+    return `${appRootPath}/${n.root}` === dir || n.root === dir;
   })[0];
+}
+
+export function isDeepImport(
+  imp: string,
+  tsCompilerHostAndOptions: CompilerHostAndOptions
+) {
+  // if the import expression does not match any paths in the tsconfig, it is a deep import
+  return !tsCompilerHostAndOptions.options.paths[imp];
 }
 
 export function isCircular(

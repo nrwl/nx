@@ -18,11 +18,13 @@ import {
   isCircular,
   isRelativeImportIntoAnotherProject,
   matchImportWithWildcard,
-  onlyLoadChildren
+  onlyLoadChildren,
+  isDeepImport
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import { TSESTree } from '@typescript-eslint/experimental-utils';
 import { createESLintRule } from '../utils/create-eslint-rule';
 import { normalize } from '@angular-devkit/core';
+import { getCompilerHost } from '@nrwl/workspace/src/utils/typescript';
 
 type Options = [
   {
@@ -100,9 +102,14 @@ export default createESLintRule<Options, MessageIds>({
         (global as any).projectNodes
       );
     }
+    if (!(global as any).tsCompilerHostAndOptions) {
+      (global as any).tsCompilerHostAndOptions = getCompilerHost();
+    }
+
     const npmScope = (global as any).npmScope;
     const projectNodes = (global as any).projectNodes;
     const deps = (global as any).deps;
+    const tsCompilerHostAndOptions = (global as any).tsCompilerHostAndOptions;
 
     projectNodes.sort((a, b) => {
       if (!a.root) return -1;
@@ -152,7 +159,9 @@ export default createESLintRule<Options, MessageIds>({
           const targetProject = findProjectUsingImport(
             projectNodes,
             npmScope,
-            imp
+            imp,
+            sourceFilePath,
+            tsCompilerHostAndOptions
           );
 
           // something went wrong => return.
@@ -188,7 +197,7 @@ export default createESLintRule<Options, MessageIds>({
           }
 
           // deep imports aren't allowed
-          if (imp !== `@${npmScope}/${normalizedProjectRoot(targetProject)}`) {
+          if (isDeepImport(imp, tsCompilerHostAndOptions)) {
             context.report({
               node,
               messageId: 'noDeepImportsIntoLibraries'

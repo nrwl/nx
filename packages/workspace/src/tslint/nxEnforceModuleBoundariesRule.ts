@@ -23,9 +23,11 @@ import {
   isCircular,
   isRelativeImportIntoAnotherProject,
   matchImportWithWildcard,
-  onlyLoadChildren
+  onlyLoadChildren,
+  isDeepImport
 } from '../utils/runtime-lint-utils';
 import { normalize } from '@angular-devkit/core';
+import { CompilerHostAndOptions, getCompilerHost } from '../utils/typescript';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(
@@ -33,9 +35,12 @@ export class Rule extends Lint.Rules.AbstractRule {
     private readonly projectPath?: string,
     private readonly npmScope?: string,
     private readonly projectNodes?: ProjectNode[],
-    private readonly deps?: Deps
+    private readonly deps?: Deps,
+    private readonly tsCompilerHost?: CompilerHostAndOptions
   ) {
     super(options);
+    this.tsCompilerHost = tsCompilerHost || getCompilerHost();
+
     if (!projectPath) {
       this.projectPath = normalize(appRootPath);
       if (!(global as any).projectNodes) {
@@ -62,7 +67,8 @@ export class Rule extends Lint.Rules.AbstractRule {
         this.projectPath,
         this.npmScope,
         this.projectNodes,
-        this.deps
+        this.deps,
+        this.tsCompilerHost
       )
     );
   }
@@ -78,7 +84,8 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     private readonly projectPath: string,
     private readonly npmScope: string,
     private readonly projectNodes: ProjectNode[],
-    private readonly deps: Deps
+    private readonly deps: Deps,
+    private readonly tsCompilerHostAndOptions: CompilerHostAndOptions
   ) {
     super(sourceFile, options);
 
@@ -140,7 +147,9 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       const targetProject = findProjectUsingImport(
         this.projectNodes,
         this.npmScope,
-        imp
+        imp,
+        getSourceFilePath(this.getSourceFile().fileName, this.projectPath),
+        this.tsCompilerHostAndOptions
       );
 
       // something went wrong => return.
@@ -173,7 +182,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       }
 
       // deep imports aren't allowed
-      if (imp !== `@${this.npmScope}/${normalizedProjectRoot(targetProject)}`) {
+      if (isDeepImport(imp, this.tsCompilerHostAndOptions)) {
         this.addFailureAt(
           node.getStart(),
           node.getWidth(),
@@ -182,7 +191,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
         return;
       }
 
-      // if we import a library using loadChildre, we should not import it using es6imports
+      // if we import a library using loadChildren, we should not import it using es6imports
       if (
         onlyLoadChildren(this.deps, sourceProject.name, targetProject.name, [])
       ) {

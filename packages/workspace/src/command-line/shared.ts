@@ -599,7 +599,8 @@ export function lastModifiedAmongProjectFiles(projects: ProjectNode[]) {
       mtime(`${appRootPath}/${workspaceFileName()}`),
       mtime(`${appRootPath}/nx.json`),
       mtime(`${appRootPath}/tslint.json`),
-      mtime(`${appRootPath}/package.json`)
+      mtime(`${appRootPath}/package.json`),
+      mtime(`${appRootPath}/tsconfig.json`)
     ]
   );
 }
