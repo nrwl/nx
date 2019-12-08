@@ -228,6 +228,9 @@ forEachCli(currentCLIName => {
       const nodeapp = uniq('nodeapp');
 
       runCLI(`generate @nrwl/node:app ${nodeapp} --linter=${linter}`);
+
+      setMaxWorkers(nodeapp);
+
       const lintResults = runCLI(`lint ${nodeapp}`);
       expect(lintResults).toContain('All files pass linting.');
 
