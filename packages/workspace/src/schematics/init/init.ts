@@ -6,7 +6,8 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
+  noop
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';
@@ -22,13 +23,13 @@ import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import {
   offsetFromRoot,
   readJsonInTree,
-  renameSync,
   resolveUserExistingPrettierConfig,
   serializeJson,
   toFileName,
-  updateJsonFile,
   updateJsonInTree,
-  getWorkspacePath
+  getWorkspacePath,
+  renameSyncInTree,
+  renameDirSyncInTree
 } from '@nrwl/workspace';
 import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../workspace/workspace';
 import { JsonArray } from '@angular-devkit/core';
@@ -220,24 +221,6 @@ function updateTsConfig(options: Schema): Rule {
   );
 }
 
-function parseLoadChildren(loadChildrenString: string) {
-  const [path, className] = loadChildrenString.split('#');
-  return {
-    path,
-    className
-  };
-}
-
-function serializeLoadChildren({
-  path,
-  className
-}: {
-  path: string;
-  className: string;
-}) {
-  return `${path}#${className}`;
-}
-
 function updateTsConfigsJson(options: Schema) {
   return (host: Tree) => {
     const workspaceJson = readJsonInTree(host, 'angular.json');
@@ -245,33 +228,38 @@ function updateTsConfigsJson(options: Schema) {
     const e2eProject = getE2eProject(workspaceJson);
 
     const offset = '../../';
-    updateJsonFile(app.architect.build.options.tsConfig, json => {
-      json.extends = `${offset}tsconfig.json`;
-      json.compilerOptions.outDir = `${offset}dist/out-tsc`;
-    });
 
-    updateJsonFile(app.architect.test.options.tsConfig, json => {
-      json.extends = `${offset}tsconfig.json`;
-      json.compilerOptions.outDir = `${offset}dist/out-tsc`;
-    });
-
-    if (app.architect.server) {
-      updateJsonFile(app.architect.server.options.tsConfig, json => {
+    return chain([
+      updateJsonInTree(app.architect.build.options.tsConfig, json => {
+        json.extends = `${offset}tsconfig.json`;
         json.compilerOptions.outDir = `${offset}dist/out-tsc`;
-      });
-    }
+        return json;
+      }),
 
-    if (e2eProject) {
-      updateJsonFile(e2eProject.architect.lint.options.tsConfig, json => {
-        json.extends = `${offsetFromRoot(e2eProject.root)}tsconfig.json`;
-        json.compilerOptions = {
-          ...json.compilerOptions,
-          outDir: `${offsetFromRoot(e2eProject.root)}dist/out-tsc`
-        };
-      });
-    }
+      updateJsonInTree(app.architect.test.options.tsConfig, json => {
+        json.extends = `${offset}tsconfig.json`;
+        json.compilerOptions.outDir = `${offset}dist/out-tsc`;
+        return json;
+      }),
 
-    return host;
+      app.architect.server
+        ? updateJsonInTree(app.architect.server.options.tsConfig, json => {
+            json.compilerOptions.outDir = `${offset}dist/out-tsc`;
+            return json;
+          })
+        : noop(),
+
+      !!e2eProject
+        ? updateJsonInTree(e2eProject.architect.lint.options.tsConfig, json => {
+            json.extends = `${offsetFromRoot(e2eProject.root)}tsconfig.json`;
+            json.compilerOptions = {
+              ...json.compilerOptions,
+              outDir: `${offsetFromRoot(e2eProject.root)}dist/out-tsc`
+            };
+            return json;
+          })
+        : noop()
+    ]);
   };
 }
 
@@ -306,11 +294,11 @@ function updateProjectTsLint(options: Schema) {
     const offset = '../../';
 
     if (host.exists(`${app.root}/tslint.json`)) {
-      updateJsonFile(`${app.root}/tslint.json`, json => {
+      return updateJsonInTree(`${app.root}/tslint.json`, json => {
         json.extends = `${offset}tslint.json`;
+        return json;
       });
     }
-
     return host;
   };
 }
@@ -330,25 +318,23 @@ function setUpCompilerOptions(
 }
 
 function moveOutOfSrc(
+  tree: Tree,
   appName: string,
-  filename: string,
+  filePath: string,
   context?: SchematicContext
 ) {
-  const from = filename;
+  const filename = !!filePath ? path.basename(filePath) : '';
+  const from = filePath;
   const to = path.join('apps', appName, filename);
-  renameSync(from, to, err => {
+  renameSyncInTree(tree, from, to, err => {
     if (!context) {
       return;
     } else if (!err) {
       context.logger.info(`Renamed ${from} -> ${to}`);
     } else {
-      context.logger.warn(err.message);
+      context.logger.warn(err);
     }
   });
-}
-
-function getFilename(path: string) {
-  return path.split('/').pop();
 }
 
 function getE2eKey(workspaceJson: any) {
@@ -373,38 +359,42 @@ function moveExistingFiles(options: Schema) {
     const e2eApp = getE2eProject(workspaceJson);
 
     // No context is passed because it should not be required to have a browserslist
-    moveOutOfSrc(options.name, 'browserslist');
+    moveOutOfSrc(host, options.name, 'browserslist');
     moveOutOfSrc(
+      host,
       options.name,
-      getFilename(app.architect.test.options.karmaConfig),
+      app.architect.test.options.karmaConfig,
       context
     );
     moveOutOfSrc(
+      host,
       options.name,
-      getFilename(app.architect.build.options.tsConfig),
+      app.architect.build.options.tsConfig,
       context
     );
     moveOutOfSrc(
+      host,
       options.name,
-      getFilename(app.architect.test.options.tsConfig),
+      app.architect.test.options.tsConfig,
       context
     );
     if (app.architect.server) {
       moveOutOfSrc(
+        host,
         options.name,
-        getFilename(app.architect.server.options.tsConfig),
+        app.architect.server.options.tsConfig,
         context
       );
     }
     const oldAppSourceRoot = app.sourceRoot;
     const newAppSourceRoot = join('apps', options.name, app.sourceRoot);
-    renameSync(oldAppSourceRoot, newAppSourceRoot, err => {
+    renameDirSyncInTree(host, oldAppSourceRoot, newAppSourceRoot, err => {
       if (!err) {
         context.logger.info(
           `Renamed ${oldAppSourceRoot} -> ${newAppSourceRoot}`
         );
       } else {
-        context.logger.error(err.message);
+        context.logger.error(err);
         throw err;
       }
     });
@@ -412,11 +402,11 @@ function moveExistingFiles(options: Schema) {
     if (e2eApp) {
       const oldE2eRoot = 'e2e';
       const newE2eRoot = join('apps', getE2eKey(workspaceJson) + '-e2e');
-      renameSync(oldE2eRoot, newE2eRoot, err => {
+      renameDirSyncInTree(host, oldE2eRoot, newE2eRoot, err => {
         if (!err) {
           context.logger.info(`Renamed ${oldE2eRoot} -> ${newE2eRoot}`);
         } else {
-          context.logger.error(err.message);
+          context.logger.error(err);
           throw err;
         }
       });
@@ -509,7 +499,6 @@ function checkCanConvertToWorkspace(options: Schema) {
       }
       const e2eKey = getE2eKey(workspaceJson);
       const e2eApp = getE2eProject(workspaceJson);
-
       if (
         e2eApp &&
         !host.exists(e2eApp.architect.e2e.options.protractorConfig)
