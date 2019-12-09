@@ -6,9 +6,9 @@ Please answer the following questions for yourself before submitting an issue.
 **YOU MAY DELETE THE PREREQUISITES SECTION.**
 
 - [ ] I am running the latest version
-- [ ] I checked the documentation and found no answer
+- [ ] I checked the documentation (nx.dev) and found no answer
 - [ ] I checked to make sure that this issue has not already been filed
-- [ ] I'm reporting the issue to the correct repository (not related to Angular, AngularCLI or any dependency)
+- [ ] I'm reporting the issue to the correct repository (not related to React, Angular or any dependency)
 
 ## Expected Behavior
 

@@ -10,7 +10,8 @@ import {
   readJson,
   forEachCli,
   supportUi,
-  workspaceConfigName
+  workspaceConfigName,
+  setMaxWorkers
 } from './utils';
 import { serializeJson } from '@nrwl/workspace';
 
@@ -27,6 +28,8 @@ forEachCli(currentCLIName => {
         `generate @nrwl/react:app ${appName} --no-interactive --linter=${linter}`
       );
       runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
+
+      setMaxWorkers(appName);
 
       const mainPath = `apps/${appName}/src/main.tsx`;
       updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
@@ -64,6 +67,8 @@ forEachCli(currentCLIName => {
         `generate @nrwl/react:app ${appName} --routing --no-interactive --linter=${linter}`
       );
 
+      setMaxWorkers(appName);
+
       await testGeneratedApp(appName, { checkStyles: true, checkLinter: true });
     }, 120000);
 
@@ -74,6 +79,8 @@ forEachCli(currentCLIName => {
       runCLI(
         `generate @nrwl/react:app ${appName} --style styled-components --no-interactive --linter=${linter}`
       );
+
+      setMaxWorkers(appName);
 
       await testGeneratedApp(appName, {
         checkStyles: false,
@@ -90,6 +97,8 @@ forEachCli(currentCLIName => {
         `generate @nrwl/react:app ${appName} --no-interactive --linter=${linter}`
       );
       runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
+
+      setMaxWorkers(appName);
 
       renameFile(
         `apps/${appName}/src/main.tsx`,

@@ -12,7 +12,7 @@ import {
 } from '@angular-devkit/schematics';
 import { join, normalize, Path } from '@angular-devkit/core';
 import { Schema } from './schema';
-import { toFileName, updateJsonInTree } from '@nrwl/workspace';
+import { formatFiles, toFileName, updateJsonInTree } from '@nrwl/workspace';
 import init from '../init/init';
 
 interface NormalizedSchema extends Schema {
@@ -26,7 +26,7 @@ function addMainFile(options: NormalizedSchema): Rule {
       `/**
  * This is not a production server yet!
  * This is only a minimal backend to get started.
- **/
+ */
 
 import { NestFactory } from '@nestjs/core';
 
@@ -74,7 +74,8 @@ export default function(schema: Schema): Rule {
       updateJsonInTree(join(options.appProjectRoot, 'tsconfig.json'), json => {
         json.compilerOptions.emitDecoratorMetadata = true;
         return json;
-      })
+      }),
+      formatFiles(options)
     ])(host, context);
   };
 }

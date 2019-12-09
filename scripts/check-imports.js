@@ -37,13 +37,7 @@ function check() {
     'packages/workspace/src/schematics/init/init.ts',
     'packages/workspace/src/utils/update-task.ts',
     'packages/workspace/src/migrations/update-8-3-0/update-8-3-0.spec.ts',
-    'packages/workspace/src/migrations/update-8-3-0/update-ng-cli-8-1.ts',
-    'packages/web/src/utils/build-angular/angular-cli-files/models/build-options.ts',
-    'packages/web/src/utils/build-angular/angular-cli-files/models/webpack-configs/common.ts',
-    'packages/web/src/utils/build-angular/angular-cli-files/models/webpack-configs/server.ts',
-    'packages/web/src/utils/build-angular/angular-cli-files/utilities/read-tsconfig.ts',
-    'packages/web/src/utils/build-angular/angular-cli-files/utilities/service-worker/index.ts',
-    'packages/web/src/utils/build-angular/utils/version.ts'
+    'packages/workspace/src/migrations/update-8-3-0/update-ng-cli-8-1.ts'
   ];
 
   const files = [

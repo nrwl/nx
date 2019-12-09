@@ -7,7 +7,7 @@
  */
 
 import { Path, virtualFs } from '@angular-devkit/core';
-import { BuildOptions } from '../angular-cli-files/models/build-options';
+import { BuildOptions } from '../cli-files/models/build-options';
 import {
   AssetPatternClass,
   OptimizationClass,

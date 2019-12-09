@@ -83,6 +83,17 @@ export function runYarnInstall(silent: boolean = true) {
   return install ? install.toString() : '';
 }
 
+export function runNgcc(silent: boolean = true) {
+  const install = execSync(
+    'node ./node_modules/@angular/compiler-cli/ngcc/main-ngcc.js',
+    {
+      cwd: tmpProjPath(),
+      ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
+    }
+  );
+  return install ? install.toString() : '';
+}
+
 /**
  * Run the `new` command for the currently selected CLI
  *
@@ -148,6 +159,8 @@ function default_1(factoryOptions = {}) {
 }
 exports.default = default_1;`
     );
+
+    runNgcc();
 
     execSync(`mv ${tmpProjPath()} ${tmpBackupProjPath()}`);
   }
@@ -238,6 +251,7 @@ export function copyMissingPackages(): void {
     'document-register-element',
 
     '@angular/forms',
+    '@storybook',
 
     // For web builder with inlined build-angular
     'source-map',
@@ -403,6 +417,19 @@ export function runCommand(command: string): string {
     }).toString();
   } catch (e) {
     return e.stdout.toString() + e.stderr.toString();
+  }
+}
+
+/**
+ * Sets maxWorkers in CircleCI so that it doesn't try to run it with 34 workers
+ * @param appName Name of the app to update
+ */
+export function setMaxWorkers(appName: string) {
+  if (process.env['CIRCLECI']) {
+    const workspaceFile = workspaceConfigName();
+    const workspace = readJson(workspaceFile);
+    workspace.projects[appName].architect.build.options.maxWorkers = 4;
+    updateFile(workspaceFile, JSON.stringify(workspace));
   }
 }
 

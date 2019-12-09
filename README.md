@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Build Status](https://travis-ci.org/nrwl/nx.svg?branch=master)](https://travis-ci.org/nrwl/nx)
+[![CircleCI](https://circleci.com/gh/nrwl/nx.svg?style=svg)](https://circleci.com/gh/nrwl/nx)
 [![License](https://img.shields.io/npm/l/@nrwl/workspace.svg?style=flat-square)]()
 [![NPM Version](https://badge.fury.io/js/%40nrwl%2Fworkspace.svg)](https://www.npmjs.com/@nrwl/workspace)
 [![Semantic Release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat-square)]()
@@ -22,7 +22,7 @@
 
 ### Use Modern Tools
 
-Using Nx, you can add TypeScript, Cypress, Jest, Prettier, Angular, React, Next.js and Nest into your dev workflow. Nx sets up these tools and allows you to use them seamlessly. Nx fully integrates with the other modern tools you already use and love.
+Using Nx, you can add TypeScript, Cypress, Jest, Prettier, Angular, React, Storybook, Next.js and Nest into your dev workflow. Nx sets up these tools and allows you to use them seamlessly. Nx fully integrates with the other modern tools you already use and love.
 
 ### Build Full-Stack Applications
 
@@ -39,19 +39,19 @@ With Nx, you can develop multiple full-stack applications holistically and share
 **Using `npx`**
 
 ```bash
-npx create-nx-workspace myworkspace
+npx create-nx-workspace
 ```
 
 **Using `npm init`**
 
 ```bash
-npm init nx-workspace myworkspace
+npm init nx-workspace
 ```
 
 **Using `yarn create`**
 
 ```bash
-yarn create nx-workspace myworkspace
+yarn create nx-workspace
 ```
 
 If it's your first Nx project, the command will recommend you to install `@nrwl/cli` globally, so you can invoke `nx` directly without going through yarn or npm.

@@ -1,0 +1,7 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "NxInsightsInit",
+  "title": "Add Nx Insights Configuration to the workspace",
+  "type": "object",
+  "properties": {}
+}

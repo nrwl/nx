@@ -15,9 +15,10 @@ If you find a bug in the source code or a mistake in the documentation, you can 
 Source code and documentation are included in the top-level folders listed below.
 
 - `docs` - Markdown and configuration files for documentation including tutorials, guides for each supported platform, and API docs.
-- `e2e` - E2E tests for Nx packages and schematics.
-- `packages` - Source code for Nx packages such as Angular, React, Web, and others including schematics and builders.
+- `e2e` - E2E tests.
+- `packages` - Source code for Nx packages such as Angular, React, Web, NestJS, Next and others including schematics and builders.
 - `scripts` - Miscellaneous scripts for project tasks such as building documentation, testing, and code formatting.
+- `tmp` - Folder used by e2e tests. If you are a WebStorm user, make sure to mark this folder as excluded.
 
 ## Building the Project
 
@@ -61,6 +62,27 @@ Running E2E tests can take some time, so it is often useful to run a single test
 yarn e2e affected
 ```
 
+The `yarn e2e` command is going to remove the `tmp` folder and will recreate the sandbox from scratch. This can take a long time. If you are working on the same e2e test, you can use `yarn e2e-rerun affected`, which is significantly faster.
+
+### Playground
+
+While developing you may want to try out the changes you have made. The easier way to do it is to run:
+
+```bash
+yarn create-playground
+```
+
+You can then go to `tmp/nx` (this is set up to use Nx CLI) or `tmp/angular` (this is set up to use Angular CLI), where you will find an empty workspace with your changes in it, something this that:
+
+```bash
+yarn create-playground
+cd tmp/nx
+nx g @nrwl/express:app backend
+nx build backend
+```
+
+You can fix the changed files in `tmp/nx/node_modules/@nrwl/...` and `tmp/angular/node_modules/@nrwl/...`.
+
 ### Developing on Windows
 
 To build Nx on Windows, you need to use WSL.
@@ -76,7 +98,7 @@ Before you submit an issue, please search the issue tracker. An issue for your p
 
 We want to fix all the issues as soon as possible, but before fixing a bug we need to reproduce and confirm it. Having a reproducible scenario gives us wealth of important information without going back and forth with you requiring additional information, such as:
 
-- version of Nx used
+- the output of `nx report`
 - `yarn.lock` or `package-lock.json`
 - and most importantly - a use-case that fails
 
@@ -91,7 +113,7 @@ You can file new issues by filling out our [issue form](https://github.com/nrwl/
 Please follow the following guidelines:
 
 - Make sure unit tests pass
-- Make sure e2e tests pass
+- Make sure e2e tests pass (this can take a while, so you can always let CI check those)
 - Make sure you run `yarn format`
 - For documentation, check for spelling and grammatical errors.
 - Update your commit message to follow the guidelines below
@@ -111,23 +133,26 @@ body
 The type must be one of the following:
 
 - chore
-- build
 - feat
 - fix
-- refactor
-- style
+- cleanup
 - docs
 
 ##### Scope
 
 The scope must be one of the following:
 
-- backend - anything backend specific
-- testing - anything related to jest or cypress
-- web - anything web specific
-- react - anything react specific
-- angular - anything angular specific
-- nx - dependency management, basic workspace structure, anything touching both backend and frontend, and other related areas
+- angular - anything Angular specific
+- bazel - anything Bazel specific
+- core - anything Nx core specific
+- docs - anything related to docs infrastructure
+- nextjs - anything Next specific
+- node - anything Node specific
+- react - anything React specific
+- storybook - anything Storybook specific
+- testing - anything testing specific (e.g., jest or cypress)
+- repo - anything related to managing the repo itself
+- misc - misc stuff
 
 ##### Subject and Body
 
@@ -149,9 +174,3 @@ Closes #157
 
 To simplify and automate the process of committing with this format,
 **Nx is a [Commitizen](https://github.com/commitizen/cz-cli) friendly repository**, just do `git add` and execute `yarn commit`.
-
-## Migrations
-
-Nx allows users to automatically upgrade to the newest version of the package. If you are introducing a change that would require the users to upgrade their workspace, add a migration to `packages/schematics/migrations`.
-
-Migrations are named using version numbers in the following fashion: `update-major-minor-patch/update-major-minor-patch.ts`, for example, `update-8-1-0/update-8-1-0.ts`.

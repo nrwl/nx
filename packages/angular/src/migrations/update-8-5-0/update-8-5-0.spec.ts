@@ -5,7 +5,7 @@ import {
   UnitTestTree
 } from '@angular-devkit/schematics/testing';
 import { serializeJson } from '@nrwl/workspace';
-import { join } from 'path';
+import { runMigration } from '../../utils/testing';
 
 describe('Update 8.5.0', () => {
   let tree: Tree;
@@ -13,11 +13,6 @@ describe('Update 8.5.0', () => {
 
   beforeEach(() => {
     tree = new UnitTestTree(Tree.empty());
-
-    schematicRunner = new SchematicTestRunner(
-      '@nrwl/workspace',
-      join(__dirname, '../../../migrations.json')
-    );
   });
 
   describe('Update Angular CLI', () => {
@@ -31,13 +26,11 @@ describe('Update 8.5.0', () => {
         })
       );
 
-      const result = await schematicRunner
-        .runSchematicAsync('upgrade-cli-8-3', {}, tree)
-        .toPromise();
+      const result = await runMigration('upgrade-cli-8-3', {}, tree);
 
       expect(
         readJsonInTree(result, 'package.json').devDependencies['@angular/cli']
-      ).toEqual('8.3.3');
+      ).toEqual('^8.3.3');
     });
 
     it('should coerce a version with a caret into a valid version', async () => {
@@ -50,13 +43,11 @@ describe('Update 8.5.0', () => {
         })
       );
 
-      const result = await schematicRunner
-        .runSchematicAsync('upgrade-cli-8-3', {}, tree)
-        .toPromise();
+      const result = await runMigration('upgrade-cli-8-3', {}, tree);
 
       expect(
         readJsonInTree(result, 'package.json').devDependencies['@angular/cli']
-      ).toEqual('8.3.3');
+      ).toEqual('^8.3.3');
     });
 
     it('should coerce a version with a tilde into a valid version', async () => {
@@ -69,13 +60,11 @@ describe('Update 8.5.0', () => {
         })
       );
 
-      const result = await schematicRunner
-        .runSchematicAsync('upgrade-cli-8-3', {}, tree)
-        .toPromise();
+      const result = await runMigration('upgrade-cli-8-3', {}, tree);
 
       expect(
         readJsonInTree(result, 'package.json').devDependencies['@angular/cli']
-      ).toEqual('8.3.3');
+      ).toEqual('^8.3.3');
     });
 
     it('should fail if the version cannot be validated', async () => {
@@ -91,9 +80,7 @@ describe('Update 8.5.0', () => {
       );
 
       try {
-        await schematicRunner
-          .runSchematicAsync('upgrade-cli-8-3', {}, tree)
-          .toPromise();
+        await runMigration('upgrade-cli-8-3', {}, tree);
       } catch (e) {
         error = e;
       }
