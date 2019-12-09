@@ -234,7 +234,6 @@ export function copyMissingPackages(): void {
     'rollup-plugin-typescript2',
 
     'next',
-    'next-server',
     'document-register-element',
 
     '@angular/forms',

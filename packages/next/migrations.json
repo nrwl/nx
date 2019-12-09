@@ -1,3 +1,20 @@
 {
-  "schematics": {}
+  "schematics": {
+    "update-8.10.0": {
+      "version": "8.10.0-beta.1",
+      "description": "Update Next.js libraries",
+      "factory": "./src/migrations/update-8-10-0/update-8-10-0"
+    }
+  },
+  "packageJsonUpdates": {
+    "8.10.0": {
+      "version": "8.10.0",
+      "packages": {
+        "next": {
+          "version": "9.1.5",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
 }
