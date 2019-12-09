@@ -9,7 +9,7 @@ import { JsonObject } from '@angular-devkit/core';
 import {
   PHASE_DEVELOPMENT_SERVER,
   PHASE_PRODUCTION_SERVER
-} from 'next-server/constants';
+} from 'next/dist/next-server/lib/constants';
 import startServer from 'next/dist/server/lib/start-server';
 import NextServer from 'next/dist/server/next-dev-server';
 import * as path from 'path';
@@ -31,7 +31,7 @@ export interface NextBuildBuilderOptions extends JsonObject {
 }
 
 export interface NextServerOptions {
-  dev: string;
+  dev: boolean;
   dir: string;
   staticMarkup: boolean;
   quiet: boolean;
@@ -77,9 +77,7 @@ function run(
           );
 
           const settings = {
-            dev: options.dev
-              ? PHASE_DEVELOPMENT_SERVER
-              : PHASE_PRODUCTION_SERVER,
+            dev: options.dev,
             dir: root,
             staticMarkup: options.staticMarkup,
             quiet: options.quiet,

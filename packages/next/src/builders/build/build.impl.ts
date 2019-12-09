@@ -4,7 +4,7 @@ import {
   createBuilder
 } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
-import { PHASE_PRODUCTION_BUILD } from 'next-server/constants';
+import { PHASE_PRODUCTION_BUILD } from 'next/dist/next-server/lib/constants';
 import build from 'next/dist/build';
 import * as path from 'path';
 import { from, Observable } from 'rxjs';
