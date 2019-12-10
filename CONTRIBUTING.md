@@ -112,11 +112,11 @@ You can file new issues by filling out our [issue form](https://github.com/nrwl/
 
 Please follow the following guidelines:
 
-- Make sure unit tests pass
-- Make sure e2e tests pass (this can take a while, so you can always let CI check those)
+- Make sure unit tests pass (`yarn test`)
+- Make sure e2e tests pass (this can take a while, so you can always let CI check those) (`yarn e2e`)
 - Make sure you run `yarn format`
-- For documentation, check for spelling and grammatical errors.
-- Update your commit message to follow the guidelines below
+- Update documentation with `yarn documentation`. For documentation, check for spelling and grammatical errors.
+- Update your commit message to follow the guidelines below (use `yarn commit` to automate compliance)
 
 #### Commit Message Guidelines
 
