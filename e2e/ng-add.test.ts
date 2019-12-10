@@ -132,7 +132,7 @@ forEachCli('angular', () => {
       expect(updatedAngularCLIJson.projects.proj.architect.build).toEqual({
         builder: '@angular-devkit/build-angular:browser',
         options: {
-          aot: true,
+          aot: false,
           outputPath: 'dist/apps/proj',
           index: 'apps/proj/src/index.html',
           main: 'apps/proj/src/main.ts',
@@ -167,6 +167,7 @@ forEachCli('angular', () => {
             sourceMap: false,
             extractCss: true,
             namedChunks: false,
+            aot: true,
             extractLicenses: true,
             vendorChunk: false,
             buildOptimizer: true
