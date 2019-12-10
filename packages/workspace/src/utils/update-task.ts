@@ -3,6 +3,7 @@ import {
   SchematicContext,
   TaskConfiguration,
   TaskConfigurationGenerator,
+  TaskExecutor,
   TaskExecutorFactory,
   TaskId,
   Tree
@@ -66,7 +67,7 @@ function createRunUpdateTask(): TaskExecutorFactory<UpdateTaskOptions> {
   return {
     name: 'RunUpdate',
     create: () => {
-      return Promise.resolve(
+      return Promise.resolve<TaskExecutor<UpdateTaskOptions>>(
         (options: UpdateTaskOptions, context: SchematicContext) => {
           context.logger.info(`Updating ${options.package} to ${options.to}`);
           const forkOptions = {

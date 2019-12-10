@@ -3,7 +3,6 @@ import { JsonObject, workspaces } from '@angular-devkit/core';
 import { runWebpack, BuildResult } from '@angular-devkit/build-webpack';
 
 import { Observable, from } from 'rxjs';
-import { writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { map, concatMap } from 'rxjs/operators';
 import { getNodeWebpackConfig } from '../../utils/node.config';
@@ -50,7 +49,8 @@ function run(
       runWebpack(config, context, {
         logging: stats => {
           context.logger.info(stats.toString(config.stats));
-        }
+        },
+        webpackFactory: require('webpack')
       })
     ),
     map((buildEvent: BuildResult) => {

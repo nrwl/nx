@@ -129,7 +129,7 @@ forEachCli(currentCLIName => {
           done();
         });
       });
-    }, 60000);
+    }, 120000);
 
     it('should have correct ts options for nest application', async () => {
       if (currentCLIName === 'angular') {
@@ -158,7 +158,8 @@ forEachCli(currentCLIName => {
       ); // respects "extends" inside tsconfigs
 
       expect(config.options.emitDecoratorMetadata).toEqual(true); // required by nest to function properly
-    }, 60000);
+      cleanup();
+    }, 120000);
 
     it('should be able to generate a nest application', async done => {
       ensureProject();
@@ -222,7 +223,7 @@ forEachCli(currentCLIName => {
           done();
         });
       });
-    }, 60000);
+    }, 120000);
 
     it('should be able to generate an empty application', async () => {
       ensureProject();

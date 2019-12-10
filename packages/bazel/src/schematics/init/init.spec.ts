@@ -20,17 +20,6 @@ describe('@nrwl/bazel:sync', () => {
     });
   });
 
-  describe('patches', () => {
-    it('should be added', async () => {
-      const result = await runSchematic('init', {}, tree);
-
-      expect(result.exists('patches/BUILD.bazel')).toEqual(true);
-      expect(result.exists('patches/@ngtools+webpack+8.3.20.patch')).toEqual(
-        true
-      );
-    });
-  });
-
   describe('@bazel dependencies', () => {
     it('should be added', async () => {
       const result = await runSchematic('init', {}, tree);
@@ -38,7 +27,6 @@ describe('@nrwl/bazel:sync', () => {
       const packageJson = readJsonInTree(result, 'package.json');
       expect(packageJson.devDependencies['@bazel/bazel']).toBeDefined();
       expect(packageJson.devDependencies['@bazel/ibazel']).toBeDefined();
-      expect(packageJson.devDependencies['patch-package']).toBeDefined();
     });
   });
 

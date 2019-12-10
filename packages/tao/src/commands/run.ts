@@ -6,7 +6,8 @@ import {
   logging,
   normalize,
   schema,
-  terminal
+  terminal,
+  workspaces
 } from '@angular-devkit/core';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { getLogger } from '../shared/logger';
@@ -18,6 +19,7 @@ import {
 } from '../shared/params';
 import { commandName, printHelp } from '../shared/print-help';
 import minimist = require('minimist');
+import { WorkspaceDefinition } from '@angular-devkit/core/src/workspace';
 
 export interface RunOptions {
   project: string;
@@ -92,12 +94,12 @@ function printRunHelp(
 }
 
 export function validateTargetAndConfiguration(
-  workspace: experimental.workspace.Workspace,
+  workspace: WorkspaceDefinition,
   opts: RunOptions
 ) {
-  const targets = workspace.getProjectTargets(opts.project);
+  const targets = workspace.projects.get(opts.project).targets;
 
-  const target = targets[opts.target];
+  const target = targets.get(opts.target);
   if (!target) {
     throw new Error(
       `Could not find target "${opts.target}" in the ${
@@ -135,14 +137,16 @@ export async function run(root: string, args: string[], isVerbose: boolean) {
 
   return handleErrors(logger, isVerbose, async () => {
     const fsHost = new NodeJsSyncHost();
-    const workspace = await new experimental.workspace.Workspace(
-      normalize(root) as any,
-      fsHost
-    )
-      .loadWorkspaceFromHost('workspace.json' as any)
-      .toPromise();
+    const { workspace } = await workspaces.readWorkspace(
+      'workspace.json',
+      workspaces.createWorkspaceHost(fsHost)
+    );
 
-    const opts = parseRunOpts(args, workspace.getDefaultProjectName(), logger);
+    const opts = parseRunOpts(
+      args,
+      workspace.extensions['defaultProject'] as string,
+      logger
+    );
     validateTargetAndConfiguration(workspace, opts);
 
     const registry = new json.schema.CoreSchemaRegistry();
