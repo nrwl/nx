@@ -5,7 +5,7 @@ if [ "$1" = "fast" ]; then
 fi
 
 if [ "$1" != "fast" ]; then
-  ./scripts/package.sh --local
+  ./scripts/build.sh
 fi
 
 rm -rf node_modules/@nrwl

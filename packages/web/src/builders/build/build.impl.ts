@@ -111,8 +111,7 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
                 return runWebpack(config, context, {
                   logging: stats => {
                     context.logger.info(stats.toString(config.stats));
-                  },
-                  webpackFactory: require('webpack')
+                  }
                 });
               } else {
                 return of();

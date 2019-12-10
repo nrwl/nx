@@ -11,7 +11,7 @@ import {
   TestingArchitectHost,
   TestLogger
 } from '@angular-devkit/architect/testing';
-import { schema, JsonObject, json } from '@angular-devkit/core';
+import { schema, JsonObject } from '@angular-devkit/core';
 
 const testRunner = new SchematicTestRunner(
   '@nrwl/web',
@@ -115,13 +115,4 @@ export class MockBuilderContext implements BuilderContext {
   reportProgress(current: number, total?: number, status?: string) {}
 
   addTeardown(teardown: () => Promise<void> | void) {}
-
-  async getProjectMetadata(
-    target: Target | string
-  ): Promise<json.JsonObject | null> {
-    return (
-      this.architectHost &&
-      this.architectHost.getProjectMetadata(target as string)
-    );
-  }
 }

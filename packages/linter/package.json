@@ -27,7 +27,7 @@
     "@nrwl/workspace": "*"
   },
   "dependencies": {
-    "@angular-devkit/architect": "0.900.0-rc.5",
+    "@angular-devkit/architect": "0.803.14",
     "@angular-eslint/builder": "0.0.1-alpha.17"
   }
 }

@@ -35,8 +35,8 @@
     "@nrwl/workspace": "*"
   },
   "dependencies": {
-    "@angular-devkit/architect": "0.900.0-rc.5",
-    "@angular-devkit/core": "9.0.0-rc.5",
+    "@angular-devkit/architect": "0.803.14",
+    "@angular-devkit/core": "8.3.14",
     "@cypress/webpack-preprocessor": "~4.1.0",
     "tree-kill": "1.2.1",
     "ts-loader": "5.3.1",

@@ -5,28 +5,5 @@
       "description": "Update storybook builder and tsconfig",
       "factory": "./src/migrations/update-8-8-2/update-builder-8-8-2"
     }
-  },
-  "packageJsonUpdates": {
-    "9.0.0": {
-      "version": "9.0.0-beta.1",
-      "packages": {
-        "@storybook/angular": {
-          "version": "5.3.0-beta.13",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/react": {
-          "version": "5.3.0-beta.13",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/web": {
-          "version": "5.3.0-beta.13",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/addon-knobs": {
-          "version": "5.3.0-beta.13",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    }
   }
 }
