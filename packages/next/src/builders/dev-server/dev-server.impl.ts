@@ -43,7 +43,11 @@ export interface NextServerOptions {
 export default createBuilder<NextBuildBuilderOptions>(run);
 
 function defaultServer(settings: NextServerOptions) {
-  return startServer(settings, settings.port).then(app => app.prepare());
+  return startServer(settings, settings.port)
+    .then(app => app.prepare())
+    .then(() => {
+      console.info(`> Ready on http://localhost:${settings.port}`);
+    });
 }
 
 function customServer(settings: NextServerOptions) {
