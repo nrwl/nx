@@ -135,7 +135,7 @@ forEachCli(() => {
           );
         }
 
-        runCLI(`run ${mylib}:storybook-build`);
+        runCLI(`run ${mylib}:build-storybook`);
 
         checkFilesExist(`dist/storybook/${mylib}/index.html`);
         expect(readFile(`dist/storybook/${mylib}/index.html`)).toContain(

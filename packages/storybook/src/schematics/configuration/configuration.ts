@@ -107,7 +107,7 @@ function addStorybookTask(projectName: string, uiFramework: string): Rule {
         }
       }
     });
-    projectConfig.targets.set('storybook-build', {
+    projectConfig.targets.set('build-storybook', {
       builder: '@nrwl/storybook:build',
       options: {
         uiFramework,
