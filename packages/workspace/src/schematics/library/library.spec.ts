@@ -222,7 +222,7 @@ describe('lib', () => {
       const tslintJson = readJsonInTree(tree, 'libs/my-dir/my-lib/tslint.json');
       expect(tslintJson).toEqual({
         extends: '../../../tslint.json',
-        rules: []
+        rules: {}
       });
     });
   });

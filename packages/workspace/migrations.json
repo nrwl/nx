@@ -29,6 +29,11 @@
       "version": "8.5.0-beta.1",
       "description": "Fix the exclude paths in tsconfig.lib.json files for Jest projects",
       "factory": "./src/migrations/update-8-5-0/fix-tsconfig-lib-json"
+    },
+    "fix-tslint-json": {
+      "version": "8.10.0-beta.1",
+      "description": "Fix rules in `tslint.json`",
+      "factory": "./src/migrations/update-8-10-0/fix-tslint-json"
     }
   },
   "packageJsonUpdates": {

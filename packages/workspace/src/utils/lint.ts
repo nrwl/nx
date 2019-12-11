@@ -77,7 +77,7 @@ export function addLintFiles(
           join(projectRoot as any, `tslint.json`),
           JSON.stringify({
             extends: `${offsetFromRoot(projectRoot)}tslint.json`,
-            rules: []
+            rules: {}
           })
         );
       }
