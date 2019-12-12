@@ -268,12 +268,6 @@ function parseMigrationsOptions(
     })
   );
   if (!options.runMigrations) {
-    if (!args[0]) {
-      throw new Error(
-        `Specify the package name (e.g., ${commandName} migrate mypackage@1.2.3)`
-      );
-    }
-
     let from = {};
     if (options.from) {
       options.from.split(',').forEach(p => {
@@ -292,14 +286,18 @@ function parseMigrationsOptions(
 
     let targetPackage;
     let targetVersion;
-    if (args[0].lastIndexOf('@') > 0) {
+    if (args[0] && args[0].indexOf('@') > 1) {
       const i = args[0].lastIndexOf('@');
       targetPackage = args[0].substring(0, i);
       targetVersion = args[0].substring(i + 1);
+    } else if (args[0]) {
+      targetPackage = '@nrwl/workspace';
+      targetVersion = args[0];
     } else {
-      targetPackage = args[0];
+      targetPackage = '@nrwl/workspace';
       targetVersion = 'latest';
     }
+
     return {
       type: 'generateMigrations',
       targetPackage,
@@ -389,6 +387,7 @@ function createFetcher(logger: logging.Logger) {
     return cache[`${packageName}-${packageVersion}`];
   };
 }
+
 // testing-fetch-end
 
 function createMigrationsFile(root: string, migrations: any[]) {
@@ -431,38 +430,56 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     to: { [p: string]: string };
   }
 ) {
-  logger.info(`Fetching meta data about packages.`);
-  logger.info(`It may take a few minutes.`);
-  const migrator = new Migrator({
-    versions: versions(root, opts.from),
-    fetch: createFetcher(logger),
-    from: opts.from,
-    to: opts.to
-  });
-  const { migrations, packageJson } = await migrator.updatePackageJson(
-    opts.targetPackage,
-    opts.targetVersion
-  );
-  updatePackageJson(root, packageJson);
-
-  if (migrations.length > 0) {
-    createMigrationsFile(root, migrations);
-
-    logger.info(`The migrate command has run successfully.`);
-    logger.info(`- package.json has been updated`);
-    logger.info(`- migrations.json has been generated`);
-
-    logger.info(`Next steps:`);
-    logger.info(
-      `- Make sure package.json changes make sense and then run 'npm install' or 'yarn'`
+  try {
+    logger.info(`Fetching meta data about packages.`);
+    logger.info(`It may take a few minutes.`);
+    const migrator = new Migrator({
+      versions: versions(root, opts.from),
+      fetch: createFetcher(logger),
+      from: opts.from,
+      to: opts.to
+    });
+    const { migrations, packageJson } = await migrator.updatePackageJson(
+      opts.targetPackage,
+      opts.targetVersion
     );
-    logger.info(`- Run 'nx migrate --run-migrations=migrations.json'`);
-  } else {
-    logger.info(`The migrate command has run successfully.`);
-    logger.info(`- package.json has been updated`);
-    logger.info(
-      `- there are no migrations to run, so migrations.json has not been created.`
+    updatePackageJson(root, packageJson);
+
+    if (migrations.length > 0) {
+      createMigrationsFile(root, migrations);
+
+      logger.info(`The migrate command has run successfully.`);
+      logger.info(`- package.json has been updated`);
+      logger.info(`- migrations.json has been generated`);
+
+      logger.info(`Next steps:`);
+      logger.info(
+        `- Make sure package.json changes make sense and then run 'npm install' or 'yarn'`
+      );
+      logger.info(`- Run 'nx migrate --run-migrations=migrations.json'`);
+    } else {
+      logger.info(`The migrate command has run successfully.`);
+      logger.info(`- package.json has been updated`);
+      logger.info(
+        `- there are no migrations to run, so migrations.json has not been created.`
+      );
+    }
+  } catch (e) {
+    const startVersion = versions(root, {})('@nrwl/workspace');
+    logger.error(
+      `The migrate command failed. Try the following to migrate your workspace:`
     );
+    logger.error(`> npm install --save-dev @nrwl/workspace@latest`);
+    logger.error(
+      `> nx migrate ${opts.targetPackage}@${opts.targetVersion} --from="@nrwl/workspace@${startVersion}"`
+    );
+    logger.error(
+      `This will use the newest version of the migrate functionality, which might have your issue resolved.`
+    );
+    logger.error(
+      `----------------------------------------------------------------------------------------------------`
+    );
+    throw e;
   }
 }
 
@@ -470,6 +487,7 @@ class MigrationEngineHost extends NodeModulesEngineHost {
   constructor() {
     super();
   }
+
   protected _resolveCollectionPath(name: string): string {
     let collectionPath: string | undefined = undefined;
 
