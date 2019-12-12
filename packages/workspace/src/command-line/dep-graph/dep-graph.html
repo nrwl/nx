@@ -55,7 +55,7 @@
 
 <script>
   window.projects = null;
-  window.deps = null;
+  window.graph = null;
   window.affected = null;
 
   window.filteredProjects = window.projects;
@@ -63,10 +63,9 @@
   function hasPath(target, node, visited) {
     if (target === node) return true;
 
-    for (let d of window.deps[node]) {
-      if (visited.indexOf(d.projectName) > -1) continue;
-      if (hasPath(target, d.projectName, [...visited, d.projectName]))
-        return true;
+    for (let d of window.graph.dependencies[node]) {
+      if (visited.indexOf(d.name) > -1) continue;
+      if (hasPath(target, d.name, [...visited, d.name])) return true;
     }
     return false;
   }
@@ -115,26 +114,26 @@
       }
     });
 
-    Object.keys(deps).forEach(p => {
+    Object.keys(graph.dependencies).forEach(p => {
       const filteredProjectNames = window.filteredProjects.map(f => f.name);
-      deps[p].forEach(d => {
+      graph.dependencies[p].forEach(d => {
         if (
           filteredProjectNames.indexOf(p) > -1 &&
-          filteredProjectNames.indexOf(d.projectName) > -1
+          filteredProjectNames.indexOf(d.target) > -1
         ) {
           const clazz =
             window.affected.indexOf(p) > -1 &&
-            window.affected.indexOf(d.projectName) > -1
+            window.affected.indexOf(d.target) > -1
               ? 'affected'
               : 'no-affected';
           const label =
             d.type === 'implicit'
               ? 'implicit'
-              : d.type === 'loadChildren'
+              : d.type === 'dynamic'
               ? 'lazy'
               : undefined;
 
-          g.setEdge(p, d.projectName, { label: label, class: clazz });
+          g.setEdge(p, d.target, { label: label, class: clazz });
         }
       });
     });

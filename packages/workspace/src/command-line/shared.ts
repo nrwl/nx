@@ -1,14 +1,15 @@
 import { execSync } from 'child_process';
 import * as fs from 'fs';
-import * as path from 'path';
 import { appRootPath } from '../utils/app-root';
 import { readJsonFile } from '../utils/fileutils';
 import { YargsAffectedOptions } from './run-tasks/affected';
-import { Deps, readDependencies } from './deps-calculator';
-import { touchedProjects } from './touched';
 import { output } from './output';
-
-const ignore = require('ignore');
+import { allFilesInDir, FileData } from './file-utils';
+import {
+  createProjectGraph,
+  ProjectGraphNode,
+  ProjectType
+} from './project-graph';
 
 export const TEN_MEGABYTES = 1024 * 10000;
 export type ImplicitDependencyEntry = { [key: string]: '*' | string[] };
@@ -35,61 +36,6 @@ export interface NxJson {
 export interface NxJsonProjectConfig {
   implicitDependencies?: string[];
   tags?: string[];
-}
-
-export enum ProjectType {
-  app = 'app',
-  e2e = 'e2e',
-  lib = 'lib'
-}
-
-export type ProjectNode = {
-  name: string;
-  root: string;
-  type: ProjectType;
-  tags: string[];
-  files: string[];
-  architect: { [k: string]: any };
-  implicitDependencies: string[];
-  fileMTimes: {
-    [filePath: string]: number;
-  };
-};
-
-export interface ProjectMap {
-  [projectName: string]: ProjectNode;
-}
-
-export interface ProjectStates {
-  [projectName: string]: {
-    affected: boolean;
-    touched: boolean;
-  };
-}
-
-export interface DependencyGraph {
-  projects: ProjectMap;
-  dependencies: Deps;
-  roots: string[];
-}
-
-export interface ProjectMetadata {
-  dependencyGraph: DependencyGraph;
-
-  projectStates: ProjectStates;
-}
-
-function readFileIfExisting(path: string) {
-  return fs.existsSync(path) ? fs.readFileSync(path, 'UTF-8').toString() : '';
-}
-
-function getIgnoredGlobs() {
-  const ig = ignore();
-
-  ig.add(readFileIfExisting(`${appRootPath}/.gitignore`));
-  ig.add(readFileIfExisting(`${appRootPath}/.nxignore`));
-
-  return ig;
 }
 
 export function printArgsWarning(options: YargsAffectedOptions) {
@@ -201,51 +147,6 @@ function parseGitOutput(command: string): string[] {
     .filter(a => a.length > 0);
 }
 
-function getFileLevelImplicitDependencies(
-  projects: ProjectNode[],
-  nxJson: NxJson
-): NormalizedImplicitDependencyEntry {
-  if (!nxJson.implicitDependencies) {
-    return {};
-  }
-
-  Object.entries<'*' | string[]>(nxJson.implicitDependencies).forEach(
-    ([key, value]) => {
-      if (value === '*') {
-        nxJson.implicitDependencies[key] = projects.map(p => p.name);
-      }
-    }
-  );
-  return <NormalizedImplicitDependencyEntry>nxJson.implicitDependencies;
-}
-
-function getProjectLevelImplicitDependencies(
-  projects: ProjectNode[]
-): NormalizedImplicitDependencyEntry {
-  const implicitDependencies = projects.reduce(
-    (memo, project) => {
-      project.implicitDependencies.forEach(dep => {
-        if (memo[dep]) {
-          memo[dep].add(project.name);
-        } else {
-          memo[dep] = new Set([project.name]);
-        }
-      });
-
-      return memo;
-    },
-    {} as { [key: string]: Set<string> }
-  );
-
-  return Object.entries(implicitDependencies).reduce(
-    (memo, [key, val]) => {
-      memo[key] = Array.from(val);
-      return memo;
-    },
-    {} as NormalizedImplicitDependencyEntry
-  );
-}
-
 function detectAndSetInvalidProjectValues(
   map: Map<string, string[]>,
   sourceName: string,
@@ -258,22 +159,6 @@ function detectAndSetInvalidProjectValues(
   if (invalidProjects.length > 0) {
     map.set(sourceName, invalidProjects);
   }
-}
-
-export function getImplicitDependencies(
-  projects: ProjectNode[],
-  workspaceJson: any,
-  nxJson: NxJson
-): ImplicitDependencies {
-  assertWorkspaceValidity(workspaceJson, nxJson);
-
-  const implicitFileDeps = getFileLevelImplicitDependencies(projects, nxJson);
-  const implicitProjectDeps = getProjectLevelImplicitDependencies(projects);
-
-  return {
-    files: implicitFileDeps,
-    projects: implicitProjectDeps
-  };
 }
 
 export function assertWorkspaceValidity(workspaceJson, nxJson) {
@@ -343,49 +228,6 @@ export function assertWorkspaceValidity(workspaceJson, nxJson) {
   throw new Error(message);
 }
 
-export function getProjectNodes(
-  workspaceJson: any,
-  nxJson: NxJson
-): ProjectNode[] {
-  assertWorkspaceValidity(workspaceJson, nxJson);
-
-  const workspaceJsonProjects = Object.keys(workspaceJson.projects);
-
-  return workspaceJsonProjects.map(key => {
-    const p = workspaceJson.projects[key];
-    const tags = nxJson.projects[key].tags;
-
-    const projectType =
-      p.projectType === 'application'
-        ? key.endsWith('-e2e')
-          ? ProjectType.e2e
-          : ProjectType.app
-        : ProjectType.lib;
-
-    let implicitDependencies = nxJson.projects[key].implicitDependencies || [];
-    if (projectType === ProjectType.e2e && implicitDependencies.length === 0) {
-      implicitDependencies = [key.replace(/-e2e$/, '')];
-    }
-
-    const filesWithMTimes = allFilesInDir(`${appRootPath}/${p.root}`);
-    const fileMTimes = {};
-    filesWithMTimes.forEach(f => {
-      fileMTimes[f.file] = f.mtime;
-    });
-
-    return {
-      name: key,
-      root: p.root,
-      type: projectType,
-      tags,
-      architect: p.architect || {},
-      files: filesWithMTimes.map(f => f.file),
-      implicitDependencies,
-      fileMTimes
-    };
-  });
-}
-
 function minus(a: string[], b: string[]): string[] {
   const res = [];
   a.forEach(aa => {
@@ -428,184 +270,45 @@ export function readNxJson(): NxJson {
   return config;
 }
 
-export function getProjectMetadata(
-  touchedFiles: string[],
-  withDeps: boolean
-): ProjectMetadata {
+export function readWorkspaceFiles(): FileData[] {
   const workspaceJson = readWorkspaceJson();
-  const nxJson = readNxJson();
-  const projectNodes = getProjectNodes(workspaceJson, nxJson);
-  const implicitDeps = getImplicitDependencies(
-    projectNodes,
-    workspaceJson,
-    nxJson
-  );
-  const dependencies = readDependencies(nxJson.npmScope, projectNodes);
-  const tp = touchedProjects(implicitDeps, projectNodes, touchedFiles);
-  return createProjectMetadata(projectNodes, dependencies, tp, withDeps);
+  const files = [];
+
+  // Add known workspace files and directories
+  files.push(...allFilesInDir(appRootPath, false));
+  files.push(...allFilesInDir(`${appRootPath}/tools`));
+
+  // Add files for workspace projects
+  Object.keys(workspaceJson.projects).forEach(projectName => {
+    const project = workspaceJson.projects[projectName];
+    files.push(...allFilesInDir(`${appRootPath}/${project.root}`));
+  });
+
+  return files;
+}
+export function getProjectNodes(
+  workspaceJson: any,
+  nxJson: NxJson
+): ProjectGraphNode[] {
+  const graph = createProjectGraph(workspaceJson, nxJson);
+  return Object.values(graph.nodes);
 }
 
-export function createProjectMetadata(
-  projectNodes: ProjectNode[],
-  dependencies: Deps,
-  touchedProjects: string[],
-  withDeps: boolean
-): ProjectMetadata {
-  const projectStates: ProjectStates = {};
-  const projects: ProjectMap = {};
-
-  projectNodes.forEach(project => {
-    projectStates[project.name] = {
-      touched: false,
-      affected: false
-    };
-    projects[project.name] = project;
-  });
-  const reverseDeps = reverseDependencies(dependencies);
-  const roots = projectNodes
-    .filter(project => !reverseDeps[project.name])
-    .map(project => project.name);
-
-  touchedProjects.forEach(projectName => {
-    projectStates[projectName].touched = true;
-    setAffected(
-      projectName,
-      simplifyDeps(dependencies),
-      reverseDeps,
-      projectStates,
-      withDeps
-    );
-  });
-
-  return {
-    dependencyGraph: {
-      projects,
-      dependencies,
-      roots
-    },
-    projectStates
-  };
-}
-
-function simplifyDeps(dependencies: Deps): { [projectName: string]: string[] } {
-  const res = {};
-  Object.keys(dependencies).forEach(d => {
-    res[d] = dependencies[d].map(dd => dd.projectName);
-  });
-  return res;
-}
-
-function reverseDependencies(
-  dependencies: Deps
-): { [projectName: string]: string[] } {
-  const reverseDepSets: { [projectName: string]: Set<string> } = {};
-  Object.entries(dependencies).forEach(([depName, deps]) => {
-    deps.forEach(dep => {
-      reverseDepSets[dep.projectName] =
-        reverseDepSets[dep.projectName] || new Set<string>();
-      reverseDepSets[dep.projectName].add(depName);
-    });
-  });
-  return Object.entries(reverseDepSets).reduce(
-    (reverseDeps, [name, depSet]) => {
-      reverseDeps[name] = Array.from(depSet);
-      return reverseDeps;
-    },
-    {} as {
-      [projectName: string]: string[];
-    }
-  );
-}
-
-function setAffected(
-  projectName: string,
-  deps: { [projectName: string]: string[] },
-  reverseDeps: { [projectName: string]: string[] },
-  projectStates: ProjectStates,
-  withDeps: boolean
-) {
-  projectStates[projectName].affected = true;
-  const rdep = reverseDeps[projectName] || [];
-  rdep.forEach(dep => {
-    // If a dependency is already marked as affected, it means it has been visited
-    if (projectStates[dep].affected) {
-      return;
-    }
-    setAffected(dep, deps, reverseDeps, projectStates, withDeps);
-  });
-
-  if (withDeps) {
-    setDeps(projectName, deps, reverseDeps, projectStates);
+export function normalizedProjectRoot(p: ProjectGraphNode): string {
+  if (p.data && p.data.root) {
+    return p.data.root
+      .split('/')
+      .filter(v => !!v)
+      .slice(1)
+      .join('/');
+  } else {
+    return '';
   }
-}
-
-function setDeps(
-  projectName: string,
-  deps: { [projectName: string]: string[] },
-  reverseDeps: { [projectName: string]: string[] },
-  projectStates: ProjectStates
-) {
-  projectStates[projectName].affected = true;
-  deps[projectName].forEach(dep => {
-    // If a dependency is already marked as affected, it means it has been visited
-    if (projectStates[dep].affected) {
-      return;
-    }
-    setDeps(dep, deps, reverseDeps, projectStates);
-  });
 }
 
 export function getProjectRoots(projectNames: string[]): string[] {
   const { projects } = readWorkspaceJson();
   return projectNames.map(name => projects[name].root);
-}
-
-export function allFilesInDir(
-  dirName: string
-): { file: string; mtime: number }[] {
-  const ignoredGlobs = getIgnoredGlobs();
-  if (ignoredGlobs.ignores(path.relative(appRootPath, dirName))) {
-    return [];
-  }
-
-  let res = [];
-  try {
-    fs.readdirSync(dirName).forEach(c => {
-      const child = path.join(dirName, c);
-      if (ignoredGlobs.ignores(path.relative(appRootPath, child))) {
-        return;
-      }
-      try {
-        const s = fs.statSync(child);
-        if (!s.isDirectory()) {
-          // add starting with "apps/myapp/..." or "libs/mylib/..."
-          res.push({
-            file: normalizePath(path.relative(appRootPath, child)),
-            mtime: s.mtimeMs
-          });
-        } else if (s.isDirectory()) {
-          res = [...res, ...allFilesInDir(child)];
-        }
-      } catch (e) {}
-    });
-  } catch (e) {}
-  return res;
-}
-
-export function lastModifiedAmongProjectFiles(projects: ProjectNode[]) {
-  return Math.max(
-    ...[
-      ...projects.map(project => getProjectMTime(project)),
-      mtime(`${appRootPath}/${workspaceFileName()}`),
-      mtime(`${appRootPath}/nx.json`),
-      mtime(`${appRootPath}/tslint.json`),
-      mtime(`${appRootPath}/package.json`)
-    ]
-  );
-}
-
-export function getProjectMTime(project: ProjectNode): number {
-  return Math.max(...Object.values(project.fileMTimes));
 }
 
 /**
@@ -617,16 +320,4 @@ export function mtime(filePath: string): number {
     return -Infinity;
   }
   return fs.statSync(filePath).mtimeMs;
-}
-
-function normalizePath(file: string): string {
-  return file.split(path.sep).join('/');
-}
-
-export function normalizedProjectRoot(p: ProjectNode): string {
-  return p.root
-    .split('/')
-    .filter(v => !!v)
-    .slice(1)
-    .join('/');
 }
