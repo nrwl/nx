@@ -83,6 +83,7 @@ export function affected(
           }
         }
         break;
+
       case 'libs':
         const libs = projects
           .filter(p => p.type === ProjectType.lib)
@@ -99,12 +100,22 @@ export function affected(
           }
         }
         break;
+
       case 'print-affected':
-        const {
-          args,
-          projectWithTargetAndConfig
-        } = allProjectsWithTargetAndConfiguration(projects, parsedArgs);
-        printAffected(projectWithTargetAndConfig, projectGraph, args);
+        if (parsedArgs && parsedArgs.target) {
+          const {
+            args,
+            projectWithTargetAndConfig
+          } = allProjectsWithTargetAndConfiguration(projects, parsedArgs);
+          printAffectedWithTasks(
+            projectWithTargetAndConfig,
+            projects,
+            projectGraph,
+            args
+          );
+        } else {
+          printAffectedWithoutTasks(projects, projectGraph);
+        }
         break;
 
       case 'dep-graph': {
@@ -189,21 +200,24 @@ function printError(e: any, verbose?: boolean) {
   });
 }
 
-function printAffected(
+function printAffectedWithTasks(
+  affectedProjectsWithTargetAndConfig: ProjectGraphNode[],
   affectedProjects: ProjectGraphNode[],
   projectGraph: ProjectGraph,
   args: Arguments<YargsAffectedOptions>
 ) {
-  const tasks: Task[] = affectedProjects.map(affectedProject =>
-    createTask({
-      project: affectedProject,
-      target: args.nxArgs.target,
-      configuration: args.nxArgs.configuration,
-      overrides: args.overrides
-    })
+  const tasks: Task[] = affectedProjectsWithTargetAndConfig.map(
+    affectedProject =>
+      createTask({
+        project: affectedProject,
+        target: args.nxArgs.target,
+        configuration: args.nxArgs.configuration,
+        overrides: args.overrides
+      })
   );
   const cli = cliCommand();
   const isYarn = basename(process.env.npm_execpath || 'npm').startsWith('yarn');
+  const projectNames = affectedProjects.map(p => p.name);
   const tasksJson = tasks.map(task => ({
     id: task.id,
     overrides: task.overrides,
@@ -215,12 +229,36 @@ function printAffected(
     JSON.stringify(
       {
         tasks: tasksJson,
-        projectGraph
+        projects: projectNames,
+        projectGraph: serializeProjectGraph(projectGraph)
       },
       null,
       2
     )
   );
+}
+
+function printAffectedWithoutTasks(
+  affectedProjects: ProjectGraphNode[],
+  projectGraph: ProjectGraph
+) {
+  const projectNames = affectedProjects.map(p => p.name);
+  console.log(
+    JSON.stringify(
+      {
+        tasks: [],
+        projects: projectNames,
+        projectGraph: serializeProjectGraph(projectGraph)
+      },
+      null,
+      2
+    )
+  );
+}
+
+function serializeProjectGraph(projectGraph: ProjectGraph) {
+  const nodes = Object.values(projectGraph.nodes).map(n => n.name);
+  return { nodes, dependencies: projectGraph.dependencies };
 }
 
 /**

@@ -60,6 +60,12 @@ Run tests for all the projects affected by the last commit on master:
 nx affected --target=test --base=master~1 --head=master
 ```
 
+Run build for all the projects affected by the last commit on master and their dependencies:
+
+```bash
+nx affected --target=build --base=master~1 --head=master --with-deps
+```
+
 ## Options
 
 ### all

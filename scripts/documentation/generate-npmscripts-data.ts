@@ -7,6 +7,28 @@ import { generateFile, sortAlphabeticallyFunction } from './utils';
 const importFresh = require('import-fresh');
 
 const examples = {
+  'print-affected': [
+    {
+      command: 'print-affected',
+      description:
+        'Print information about affected projects and the dependency graph.'
+    },
+    {
+      command: 'print-affected --base=master --head=HEAD',
+      description:
+        'Print information about the projects affected by the changes between master and HEAD (e.g,. PR).'
+    },
+    {
+      command: 'print-affected --target=test',
+      description:
+        'Prints information about the affected projects and a list of tasks to test them.'
+    },
+    {
+      command: 'print-affected --target=build --with-deps',
+      description:
+        'Prints information about the affected projects and a list of tasks to build them and their dependencies.'
+    }
+  ],
   affected: [
     {
       command: 'affected --target=custom-target',
@@ -44,6 +66,12 @@ const examples = {
       command: 'affected --target=test --base=master~1 --head=master',
       description:
         'Run tests for all the projects affected by the last commit on master'
+    },
+    {
+      command:
+        'affected --target=build --base=master~1 --head=master --with-deps',
+      description:
+        'Run build for all the projects affected by the last commit on master and their dependencies'
     }
   ],
   'affected:test': [
@@ -109,6 +137,11 @@ const examples = {
       command: 'affected:build --base=master~1 --head=master',
       description:
         'Run build for all the projects affected by the last commit on master'
+    },
+    {
+      command: 'affected:build --base=master~1 --head=master --with-deps',
+      description:
+        'Run build for all the projects affected by the last commit on master and their dependencies'
     }
   ],
   'affected:e2e': [

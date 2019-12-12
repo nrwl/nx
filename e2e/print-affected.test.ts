@@ -50,14 +50,22 @@ forEachCli(cliName => {
           `
       );
 
-      const testOutput = JSON.parse(
+      const resWithoutTarget = JSON.parse(
+        runCommand(
+          `npm run nx print-affected --silent -- --files=apps/${myapp}/src/main.tsx`
+        )
+      );
+      expect(resWithoutTarget.tasks).toEqual([]);
+      compareTwoArrays(resWithoutTarget.projects, [`${myapp}-e2e`, myapp]);
+
+      const resWithTarget = JSON.parse(
         runCommand(
           `npm run nx print-affected --silent -- --files=apps/${myapp}/src/main.tsx --target=test`
         ).trim()
       );
 
       const cliCommand = cliName === 'angular' ? 'ng' : 'nx';
-      expect(testOutput.tasks).toEqual([
+      expect(resWithTarget.tasks).toEqual([
         {
           id: `${myapp}:test`,
           overrides: {},
@@ -69,15 +77,14 @@ forEachCli(cliName => {
           outputs: []
         }
       ]);
-      expect(Object.keys(testOutput.projectGraph.nodes).length).toEqual(7);
+      compareTwoArrays(resWithTarget.projects, [`${myapp}-e2e`, myapp]);
 
-      expect(
-        JSON.parse(
-          runCommand(
-            `npm run nx print-affected --silent -- --files=apps/${myapp}/src/main.tsx --target=build --with-deps`
-          )
-        ).tasks
-      ).toEqual([
+      const resWithDeps = JSON.parse(
+        runCommand(
+          `npm run nx print-affected --silent -- --files=apps/${myapp}/src/main.tsx --target=build --with-deps`
+        )
+      );
+      expect(resWithDeps.tasks).toEqual([
         {
           id: `${mypublishablelib}:build`,
           overrides: {},
@@ -99,6 +106,18 @@ forEachCli(cliName => {
           outputs: [`dist/apps/${myapp}`]
         }
       ]);
+      compareTwoArrays(resWithDeps.projects, [
+        mylib,
+        mypublishablelib,
+        myapp,
+        `${myapp}-e2e`
+      ]);
     }, 120000);
   });
+
+  function compareTwoArrays(a: string[], b: string[]) {
+    expect(a.sort((x, y) => x.localeCompare(y))).toEqual(
+      b.sort((x, y) => x.localeCompare(y))
+    );
+  }
 });
