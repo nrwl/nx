@@ -1,13 +1,17 @@
 import * as yargs from 'yargs';
 import { runCommand } from './run-command';
 import {
-  projectHasTargetAndConfiguration,
   readEnvironment,
   splitArgs,
-  TaskArgs
+  projectHasTargetAndConfiguration
 } from './utils';
 import { output } from '../output';
-import { createProjectGraph, ProjectGraphNode } from '../project-graph';
+import {
+  createProjectGraph,
+  ProjectGraph,
+  ProjectGraphNode,
+  withDeps
+} from '../project-graph';
 
 export type YargsRunManyOptions = yargs.Arguments & RunManyOptions;
 
@@ -27,19 +31,44 @@ export interface RunManyOptions {
   version?: boolean;
   quiet?: boolean;
   withDeps?: boolean;
+  'with-deps'?: boolean;
 }
 
 export function runMany(parsedArgs: yargs.Arguments): void {
-  parsedArgs = preprocess(parsedArgs);
-  const args = splitArgs(parsedArgs as YargsRunManyOptions, flags);
-  const environment = readEnvironment(args.nxArgs.target);
+  const args = splitArgs(normalize(parsedArgs) as YargsRunManyOptions, flags);
+  const env = readEnvironment(args.nxArgs.target);
   const projectGraph = createProjectGraph();
-  const allProjects = Object.values(projectGraph.nodes);
-  const projects = getProjectsToRun(args.nxArgs, allProjects);
-  runCommand(projects, projectGraph, args, environment);
+  const projects = projectsToRun(args.nxArgs, projectGraph);
+  runCommand(projects, projectGraph, args, env);
 }
 
-function preprocess(args: yargs.Arguments): yargs.Arguments {
+function projectsToRun(nxArgs: RunManyOptions, projectGraph: ProjectGraph) {
+  const allProjects = Object.values(projectGraph.nodes);
+  if (nxArgs.all) {
+    return runnableForTargetAndConfiguration(
+      allProjects,
+      nxArgs.target,
+      nxArgs.configuration
+    );
+  } else {
+    let selectedProjects = allProjects.filter(
+      p => nxArgs.projects.indexOf(p.name) > -1
+    );
+    if (nxArgs.withDeps) {
+      selectedProjects = Object.values(
+        withDeps(projectGraph, selectedProjects).nodes
+      );
+    }
+    return runnableForTargetAndConfiguration(
+      selectedProjects,
+      nxArgs.target,
+      nxArgs.configuration,
+      true
+    );
+  }
+}
+
+function normalize(args: yargs.Arguments): yargs.Arguments {
   if (!args.all) {
     args.all = false;
   }
@@ -53,50 +82,31 @@ function preprocess(args: yargs.Arguments): yargs.Arguments {
   return args;
 }
 
-export function getProjectsToRun(
-  args: TaskArgs,
-  allProjects: ProjectGraphNode[]
+function runnableForTargetAndConfiguration(
+  projects: ProjectGraphNode[],
+  target: string,
+  configuration?: string,
+  strict = false
 ): ProjectGraphNode[] {
-  const { projects, target, all } = args;
+  const notRunnable = [];
+  const runnable = [];
 
-  let found = [];
-
-  if (!all) {
-    const notFound = [];
-    const noConfig = [];
-
-    for (let project of projects) {
-      const node = allProjects.find(p => p.name === project);
-
-      if (!node) {
-        notFound.push(project);
-      } else if (!projectHasTargetAndConfiguration(node, target)) {
-        noConfig.push(project);
-      } else {
-        found.push(node);
-      }
+  for (let project of projects) {
+    if (projectHasTargetAndConfiguration(project, target, configuration)) {
+      runnable.push(project);
+    } else {
+      notRunnable.push(project);
     }
-
-    if (notFound.length) {
-      output.error({
-        title: 'the following projects were not found in nx.json',
-        bodyLines: notFound.map(p => '- ' + p)
-      });
-    }
-
-    if (noConfig.length) {
-      output.warn({
-        title: `the following do not have configuration for "${target}"`,
-        bodyLines: noConfig.map(p => '- ' + p)
-      });
-
-      process.exit(1);
-    }
-  } else {
-    found = allProjects;
   }
 
-  return found;
+  if (strict && notRunnable.length) {
+    output.warn({
+      title: `the following do not have configuration for "${target}"`,
+      bodyLines: notRunnable.map(p => '- ' + p)
+    });
+  }
+
+  return runnable;
 }
 
 const dummyOptions: RunManyOptions = {
@@ -110,7 +120,9 @@ const dummyOptions: RunManyOptions = {
   help: false,
   version: false,
   quiet: false,
-  verbose: false
+  verbose: false,
+  withDeps: false,
+  'with-deps': false
 };
 
 const flags = Object.keys(dummyOptions);

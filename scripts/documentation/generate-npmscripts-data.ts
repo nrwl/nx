@@ -293,6 +293,25 @@ const examples = {
       description:
         'List the schematics and builders available in the `@nrwl/web` plugin if it is installed (If the plugin is not installed `nx` will show advice on how to add it to your workspace)'
     }
+  ],
+  'run-many': [
+    {
+      command: 'run-many --target=test --all',
+      description: 'Test all projects.'
+    },
+    {
+      command: 'run-many --target=test --projects=proj1,proj2',
+      description: 'Test proj1 and proj2.'
+    },
+    {
+      command:
+        'run-many --target=test --projects=proj1,proj2 --parallel --maxParallel=2',
+      description: 'Test proj1 and proj2 in parallel.'
+    },
+    {
+      command: 'run-many --target=test --projects=proj1,proj2 --with-deps',
+      description: 'Build proj1 and proj2 and all their dependencies.'
+    }
   ]
 };
 

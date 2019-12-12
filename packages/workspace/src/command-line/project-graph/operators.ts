@@ -1,5 +1,5 @@
 import { ProjectGraphBuilder } from './project-graph-builder';
-import { ProjectGraph } from './project-graph-models';
+import { ProjectGraph, ProjectGraphNode } from './project-graph-models';
 
 const reverseMemo = new Map<ProjectGraph, ProjectGraph>();
 export function reverse(graph: ProjectGraph): ProjectGraph {
@@ -23,10 +23,10 @@ export function reverse(graph: ProjectGraph): ProjectGraph {
 
 export function withDeps(
   original: ProjectGraph,
-  subset: ProjectGraph
+  subsetNodes: ProjectGraphNode[]
 ): ProjectGraph {
   const builder = new ProjectGraphBuilder();
-  Object.values(subset.nodes).forEach(recur);
+  Object.values(subsetNodes).forEach(recur);
   return builder.build();
 
   // ---------------------------------------------------------------------------

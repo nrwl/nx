@@ -98,31 +98,13 @@ describe('reverse', () => {
 
 describe('withDeps', () => {
   it('should return a new graph with all dependencies included from original', () => {
-    const affectedGraph: ProjectGraph = {
-      nodes: {
-        'app1-e2e': { name: 'app1-e2e', type: 'app', data: null },
-        app1: { name: 'app1', type: 'app', data: null },
-        lib1: { name: 'lib1', type: 'lib', data: null }
-      },
-      dependencies: {
-        'app1-e2e': [
-          {
-            type: DependencyType.implicit,
-            source: 'app1-e2e',
-            target: 'app1'
-          }
-        ],
-        app1: [
-          {
-            type: DependencyType.static,
-            source: 'app1',
-            target: 'lib1'
-          }
-        ]
-      }
-    };
+    const affectedNodes = [
+      { name: 'app1-e2e', type: 'app', data: null },
+      { name: 'app1', type: 'app', data: null },
+      { name: 'lib1', type: 'lib', data: null }
+    ];
 
-    const result = withDeps(graph, affectedGraph);
+    const result = withDeps(graph, affectedNodes);
     expect(result).toEqual({
       nodes: {
         lib3: {
