@@ -37,7 +37,7 @@ describe('Update 8.5.0', () => {
 
       expect(
         readJsonInTree(result, 'package.json').devDependencies['@angular/cli']
-      ).toEqual('8.3.3');
+      ).toEqual('^8.3.3');
     });
 
     it('should coerce a version with a caret into a valid version', async () => {
@@ -56,7 +56,7 @@ describe('Update 8.5.0', () => {
 
       expect(
         readJsonInTree(result, 'package.json').devDependencies['@angular/cli']
-      ).toEqual('8.3.3');
+      ).toEqual('^8.3.3');
     });
 
     it('should coerce a version with a tilde into a valid version', async () => {
@@ -75,7 +75,7 @@ describe('Update 8.5.0', () => {
 
       expect(
         readJsonInTree(result, 'package.json').devDependencies['@angular/cli']
-      ).toEqual('8.3.3');
+      ).toEqual('^8.3.3');
     });
 
     it('should fail if the version cannot be validated', async () => {

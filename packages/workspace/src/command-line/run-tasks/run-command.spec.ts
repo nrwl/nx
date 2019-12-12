@@ -7,27 +7,33 @@ describe('getRunner', () => {
   let nxJson: NxJson;
   let mockRunner: TasksRunner;
   let targetArgs: any;
-  let runner: string | undefined;
 
   beforeEach(() => {
     nxJson = {
       npmScope: 'proj',
       projects: {}
     };
-    runner = undefined;
     mockRunner = jest.fn();
     targetArgs = { foo: 'bar' };
   });
 
   it('gets a default runner when runner is not defined in the nx json', () => {
-    const { tasksRunner, tasksOptions } = getRunner(runner, nxJson, targetArgs);
+    const { tasksRunner, tasksOptions } = getRunner(
+      undefined,
+      nxJson,
+      targetArgs
+    );
 
     expect(tasksRunner).toEqual(defaultTasksRunner);
     expect(tasksOptions).toEqual(targetArgs);
   });
 
   it('gets a default runner when default options are not configured', () => {
-    const { tasksRunner, tasksOptions } = getRunner(runner, nxJson, targetArgs);
+    const { tasksRunner, tasksOptions } = getRunner(
+      undefined,
+      nxJson,
+      targetArgs
+    );
 
     expect(tasksRunner).toEqual(defaultTasksRunner);
     expect(tasksOptions).toEqual(targetArgs);
@@ -38,39 +44,42 @@ describe('getRunner', () => {
       virtual: true
     });
 
-    runner = 'custom';
-
     nxJson.tasksRunnerOptions = {
       custom: {
         runner: 'custom-runner'
       }
     };
 
-    const { tasksRunner, tasksOptions } = getRunner(runner, nxJson, targetArgs);
+    const { tasksRunner, tasksOptions } = getRunner(
+      'custom',
+      nxJson,
+      targetArgs
+    );
 
     expect(tasksRunner).toEqual(mockRunner);
     expect(tasksOptions).toEqual(targetArgs);
   });
 
-  it.only('gets a custom task runner with options', () => {
-    jest.mock('custom-runner', () => mockRunner, {
+  it('gets a custom task runner with options', () => {
+    jest.mock('custom-runner2', () => mockRunner, {
       virtual: true
     });
 
     nxJson.tasksRunnerOptions = {
       custom: {
-        runner: 'custom-runner',
+        runner: 'custom-runner2',
         options: {
           runnerOption: 'runner-option'
         }
       }
     };
 
-    runner = 'custom';
-
-    const { tasksRunner, tasksOptions } = getRunner(runner, nxJson, targetArgs);
-
-    expect(tasksRunner).toEqual(mockRunner);
+    const { tasksRunner, tasksOptions } = getRunner(
+      'custom',
+      nxJson,
+      targetArgs
+    );
+    expect(tasksRunner).toBe(mockRunner);
     expect(tasksOptions).toEqual({
       runnerOption: 'runner-option',
       foo: 'bar'
@@ -88,7 +97,7 @@ describe('getRunner', () => {
       }
     };
 
-    const { tasksRunner } = getRunner(runner, nxJson, targetArgs);
+    const { tasksRunner } = getRunner(undefined, nxJson, targetArgs);
 
     expect(tasksRunner).toEqual(mockRunner);
   });

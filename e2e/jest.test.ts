@@ -67,5 +67,23 @@ forEachCli(() => {
       expect(appResult.stderr).toContain('Test Suites: 1 passed, 1 total');
       done();
     }, 45000);
+
+    it('should set the NODE_ENV to `test`', async done => {
+      ensureProject();
+      const mylib = uniq('mylib');
+      runCLI(`generate @nrwl/workspace:lib ${mylib} --unit-test-runner jest`);
+
+      updateFile(
+        `libs/${mylib}/src/lib/${mylib}.spec.ts`,
+        `
+        test('can access jest global', () => {
+          expect(process.env.NODE_ENV).toBe('test');
+        });
+        `
+      );
+      const appResult = await runCLIAsync(`test ${mylib} --no-watch`);
+      expect(appResult.stderr).toContain('Test Suites: 1 passed, 1 total');
+      done();
+    }, 45000);
   });
 });

@@ -406,6 +406,19 @@ export function runCommand(command: string): string {
   }
 }
 
+/**
+ * Sets maxWorkers in CircleCI so that it doesn't try to run it with 34 workers
+ * @param appName Name of the app to update
+ */
+export function setMaxWorkers(appName: string) {
+  if (process.env['CIRCLECI']) {
+    const workspaceFile = workspaceConfigName();
+    const workspace = readJson(workspaceFile);
+    workspace.projects[appName].architect.build.options.maxWorkers = 4;
+    updateFile(workspaceFile, JSON.stringify(workspace));
+  }
+}
+
 export function updateFile(f: string, content: string | Function): void {
   ensureDirSync(path.dirname(tmpProjPath(f)));
   if (typeof content === 'string') {

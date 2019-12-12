@@ -5,7 +5,6 @@ import * as treeKill from 'tree-kill';
 import * as ts from 'typescript';
 import {
   ensureProject,
-  exists,
   readJson,
   runCLI,
   runCLIAsync,
@@ -18,7 +17,8 @@ import {
   cleanup,
   runNew,
   runNgAdd,
-  copyMissingPackages
+  copyMissingPackages,
+  setMaxWorkers
 } from './utils';
 
 function getData(): Promise<any> {
@@ -128,9 +128,9 @@ forEachCli(currentCLIName => {
           done();
         });
       });
-    }, 30000);
+    }, 60000);
 
-    fit('should have correct ts options for nest application', async () => {
+    it('should have correct ts options for nest application', async () => {
       if (currentCLIName === 'angular') {
         // Usually the tests use ensureProject() to setup the test workspace. But it will trigger
         // the nx workspace schematic which creates a tsconfig file containing the parameters
@@ -157,12 +157,15 @@ forEachCli(currentCLIName => {
       ); // respects "extends" inside tsconfigs
 
       expect(config.options.emitDecoratorMetadata).toEqual(true); // required by nest to function properly
-    }, 30000);
+    }, 60000);
 
     it('should be able to generate a nest application', async done => {
       ensureProject();
       const nestapp = uniq('nestapp');
       runCLI(`generate @nrwl/nest:app ${nestapp} --linter=${linter}`);
+
+      setMaxWorkers(nestapp);
+
       const lintResults = runCLI(`lint ${nestapp}`);
       expect(lintResults).toContain('All files pass linting.');
 
@@ -201,7 +204,7 @@ forEachCli(currentCLIName => {
 
       const process = spawn(
         'node',
-        ['./node_modules/.bin/nx', 'serve', nestapp],
+        ['./node_modules/@nrwl/cli/bin/nx', 'serve', nestapp],
         {
           cwd: tmpProjPath()
         }
@@ -218,13 +221,16 @@ forEachCli(currentCLIName => {
           done();
         });
       });
-    }, 30000);
+    }, 60000);
 
     it('should be able to generate an empty application', async () => {
       ensureProject();
       const nodeapp = uniq('nodeapp');
 
       runCLI(`generate @nrwl/node:app ${nodeapp} --linter=${linter}`);
+
+      setMaxWorkers(nodeapp);
+
       const lintResults = runCLI(`lint ${nodeapp}`);
       expect(lintResults).toContain('All files pass linting.');
 
@@ -236,6 +242,6 @@ forEachCli(currentCLIName => {
         cwd: tmpProjPath()
       }).toString();
       expect(result).toContain('Hello World!');
-    }, 30000);
+    }, 60000);
   });
 });
