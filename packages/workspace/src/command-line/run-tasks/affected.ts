@@ -6,7 +6,12 @@ import { output } from '../output';
 import { cliCommand, parseFiles, printArgsWarning } from '../shared';
 import { getCommand, getOutputs } from '../../tasks-runner/utils';
 import { createTask, runCommand } from './run-command';
-import { Arguments, readEnvironment, splitArgs } from './utils';
+import {
+  Arguments,
+  projectHasTargetAndConfiguration,
+  readEnvironment,
+  splitArgs
+} from './utils';
 import { filterAffected } from '../affected-project-graph';
 import {
   createProjectGraph,
@@ -56,7 +61,7 @@ export function affected(
   const fileChanges = readFileChanges(parsedArgs);
   let affectedGraph = filterAffected(projectGraph, fileChanges);
   if (parsedArgs.withDeps) {
-    affectedGraph = withDeps(projectGraph, affectedGraph);
+    affectedGraph = withDeps(projectGraph, Object.values(affectedGraph.nodes));
   }
 
   const projects = Object.values(
@@ -156,25 +161,6 @@ function allProjectsWithTargetAndConfiguration(
     )
   );
   return { args, projectWithTargetAndConfig };
-}
-
-function projectHasTargetAndConfiguration(
-  project: ProjectGraphNode,
-  target: string,
-  configuration?: string
-) {
-  if (!project.data.architect[target]) {
-    return false;
-  }
-
-  if (!configuration) {
-    return !!project.data.architect[target];
-  } else {
-    return (
-      project.data.architect[target].configurations &&
-      project.data.architect[target].configurations[configuration]
-    );
-  }
 }
 
 function printError(e: any, verbose?: boolean) {
