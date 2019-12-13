@@ -30,6 +30,9 @@ export class ProjectGraphBuilder {
     sourceProjectName: string,
     targetProjectName: string
   ) {
+    if (sourceProjectName === targetProjectName) {
+      return;
+    }
     if (!this.nodes[sourceProjectName]) {
       throw new Error(`Source project does not exist: ${sourceProjectName}`);
     }
