@@ -1,6 +1,4 @@
-import { ensureProject, updateFile, uniq, runCLI, forEachCli } from './utils';
-
-let originalCIValue: any;
+import { updateFile, uniq, runCLI, forEachCli, newProject } from './utils';
 
 const DEBUG = false;
 const l = (str: string) => {
@@ -12,22 +10,9 @@ const l = (str: string) => {
 };
 
 forEachCli(() => {
-  /**
-   * Setting CI=true makes it simpler to configure assertions around output, as there
-   * won't be any colors.
-   */
-  beforeAll(() => {
-    originalCIValue = process.env.CI;
-    process.env.CI = 'true';
-  });
-
-  afterAll(() => {
-    process.env.CI = originalCIValue;
-  });
-
   describe('Run Many', () => {
     it('should build specific and all projects', () => {
-      ensureProject();
+      newProject();
       const libA = uniq('liba-rand');
       const libB = uniq('libb-rand');
       const libC = uniq('libc-rand');
@@ -54,9 +39,7 @@ forEachCli(() => {
       l('=======> testing run many starting');
 
       const buildParallel = l(
-        runCLI(
-          `run-many --target=build --projects="${libC},${libB}" --parallel`
-        )
+        runCLI(`run-many --target=build --projects="${libC},${libB}"`)
       );
 
       expect(buildParallel).toContain(`Running target build for projects:`);
@@ -82,9 +65,7 @@ forEachCli(() => {
       l('=======> testing run many --with-deps');
 
       const buildWithDeps = l(
-        runCLI(
-          `run-many --target=build --projects="${libA}" --with-deps --parallel`
-        )
+        runCLI(`run-many --target=build --projects="${libA}" --with-deps`)
       );
       expect(buildWithDeps).toContain(`Running target build for projects:`);
       expect(buildWithDeps).toContain(`- ${libA}`);

@@ -239,6 +239,8 @@ export function copyMissingPackages(): void {
 
     '@angular/forms',
 
+    'fork-ts-checker-webpack-plugin',
+
     // For web builder with inlined build-angular
     'source-map',
     'webpack-sources',
