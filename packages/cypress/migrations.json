@@ -10,15 +10,15 @@
       "description": "Update Cypress Config",
       "factory": "./src/migrations/update-8-2-0/update-8-2-0"
     },
-    "update-9.0.0": {
-      "version": "9.0.0-beta.1",
+    "update-8.10.0": {
+      "version": "8.10.0-beta.1",
       "description": "Update Cypress to 3.6.1",
-      "factory": "./src/migrations/update-9-0-0/update-9-0-0"
+      "factory": "./src/migrations/update-8-10-0/update-8-10-0"
     }
   },
   "packageJsonUpdates": {
-    "9.0.0": {
-      "version": "9.0.0-beta.1",
+    "8.10.0": {
+      "version": "8.10.0-beta.1",
       "packages": {
         "cypress": {
           "version": "3.6.1",
