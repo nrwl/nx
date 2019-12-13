@@ -5,7 +5,11 @@ load("@npm//@nrwl/cli:index.bzl", "nx", "nx_test")
 
 filegroup(
     name = "<%= project.name %>",
-    srcs = glob(["**"]),
+    srcs = glob(["**"]) + [
+        # Dependencies
+        <% for (dep of dependencies) { %>"<%= dep %>",
+        <% } %>
+    ],
     visibility = ["//visibility:public"],
 )
 
@@ -18,9 +22,6 @@ nx(
     ],
     data = [
         ":<%= project.name %>",
-        # Dependencies
-        <% for (dep of dependencies) { %>"//<%= dep %>",
-        <% } %>
         # Root Files
         "//:angular.json",
         "//:package.json",
