@@ -1,5 +1,7 @@
-exports_files(
-    [
+filegroup(
+    name = "root-files",
+    srcs = [
+        # Root Files
         <% for (rootFile of rootFiles) { %>"<%= rootFile %>",
         <% } %>
     ],

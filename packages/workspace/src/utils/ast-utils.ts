@@ -415,7 +415,13 @@ export function getProjectGraphFromHost(host: Tree): ProjectGraph {
     );
   });
 
-  return createProjectGraph(workspaceJson, nxJson, workspaceFiles, fileRead);
+  return createProjectGraph(
+    workspaceJson,
+    nxJson,
+    workspaceFiles,
+    fileRead,
+    false
+  );
 }
 
 export function getFileDataInHost(

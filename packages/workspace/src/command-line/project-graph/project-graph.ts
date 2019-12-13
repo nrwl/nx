@@ -28,11 +28,10 @@ export function createProjectGraph(
   workspaceJson = readWorkspaceJson(),
   nxJson = readNxJson(),
   workspaceFiles = readWorkspaceFiles(),
-  fileRead: (s: string) => string = defaultFileRead
+  fileRead: (s: string) => string = defaultFileRead,
+  cache: false | { data: ProjectGraphCache; mtime: number } = readCache()
 ): ProjectGraph {
   assertWorkspaceValidity(workspaceJson, nxJson);
-
-  const cache = readCache();
 
   if (!cache || maxMTime(workspaceFiles) > cache.mtime) {
     const builder = new ProjectGraphBuilder(
