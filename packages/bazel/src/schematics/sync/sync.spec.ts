@@ -1,7 +1,13 @@
-import { Tree } from '@angular-devkit/schematics';
+import { chain, Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runSchematic } from '../utils/testing';
+import { callRule, runSchematic } from '../utils/testing';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import {
+  updateJsonInTree,
+  updateWorkspaceInTree
+} from '@nrwl/workspace/src/utils/ast-utils';
+import { updateWorkspace } from '@nrwl/workspace/src/utils/workspace';
+import { NxJson } from '@nrwl/workspace/src/command-line/shared';
 
 describe('@nrwl/bazel:sync', () => {
   let tree: Tree;
@@ -89,6 +95,36 @@ describe('@nrwl/bazel:sync', () => {
            visibility = ["//:__subpackages__"],
          )
       `);
+    });
+  });
+
+  describe('Project BUILD files', () => {
+    it('should be generated', async () => {
+      tree = await callRule(
+        chain([
+          updateWorkspace(workspace => {
+            workspace.projects.add({
+              name: 'proj',
+              root: 'proj'
+            });
+            workspace.projects.add({
+              name: 'proj2',
+              root: 'proj2'
+            });
+          }),
+          updateJsonInTree<NxJson>('nx.json', json => {
+            json.projects['proj'] = {};
+            json.projects['proj2'] = {};
+            return json;
+          })
+        ]),
+        tree
+      );
+
+      const result = await runSchematic('sync', {}, tree);
+
+      expect(result.exists('proj/BUILD.bazel')).toEqual(true);
+      expect(result.exists('proj2/BUILD.bazel')).toEqual(true);
     });
   });
 });

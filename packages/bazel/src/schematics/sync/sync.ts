@@ -11,13 +11,12 @@ import {
   Tree,
   url
 } from '@angular-devkit/schematics';
+import { getProjectGraphFromHost, readJsonInTree } from '@nrwl/workspace';
+import { join, normalize } from '@angular-devkit/core';
 import {
-  getProjectGraphFromHost,
-  readJsonInTree,
   ProjectGraph,
   ProjectGraphNode
-} from '@nrwl/workspace';
-import { join, normalize } from '@angular-devkit/core';
+} from '@nrwl/workspace/src/command-line/project-graph';
 
 function createBuildFile(
   project: ProjectGraphNode,
@@ -30,7 +29,10 @@ function createBuildFile(
       projectGraph,
       dependencies: projectGraph.dependencies[project.name]
         ? projectGraph.dependencies[project.name].map(
-            dep => `//${projectGraph.nodes[dep.target].data.root}:${dep.target}`
+            dep =>
+              `//${normalize(projectGraph.nodes[dep.target].data.root)}:${
+                dep.target
+              }`
           )
         : []
     })
