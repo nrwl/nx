@@ -1,5 +1,6 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { format, resolveConfig } from 'prettier';
 
 export function sortAlphabeticallyFunction(a: string, b: string): number {
   const nameA = a.toUpperCase(); // ignore upper and lowercase
@@ -14,14 +15,40 @@ export function sortAlphabeticallyFunction(a: string, b: string): number {
   return 0;
 }
 
-export function generateFile(
+export async function generateMarkdownFile(
   outputDirectory: string,
   templateObject: { name: string; template: string }
-): void {
+): Promise<void> {
+  const filePath = path.join(outputDirectory, `${templateObject.name}.md`);
   fs.outputFileSync(
-    path.join(outputDirectory, `${templateObject.name}.md`),
-    templateObject.template
+    filePath,
+    await formatWithPrettier(filePath, templateObject.template)
   );
+}
+
+export async function generateJsonFile(
+  filePath: string,
+  json: unknown
+): Promise<void> {
+  fs.outputFileSync(
+    filePath,
+    await formatWithPrettier(filePath, JSON.stringify(json))
+  );
+}
+
+export async function formatWithPrettier(filePath: string, content: string) {
+  let options: any = {
+    filepath: filePath
+  };
+  const resolvedOptions = await resolveConfig(filePath);
+  if (resolvedOptions) {
+    options = {
+      ...options,
+      ...resolvedOptions
+    };
+  }
+
+  return format(content, options);
 }
 
 export function getNxPackageDependencies(

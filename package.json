@@ -23,8 +23,8 @@
     "checkformat": "./scripts/check_format.sh",
     "checkimports": "node ./scripts/check-imports.js",
     "checkversions": "ts-node ./scripts/check-versions.ts",
-    "documentation": "./scripts/documentation/documentation.sh && yarn format && ./scripts/documentation/check-documentation.sh",
-    "prepush": "yarn checkcommit && yarn checkformat && yarn documentation"
+    "documentation": "./scripts/documentation/documentation.sh && ./scripts/documentation/check-documentation.sh",
+    "prepush": "yarn checkcommit && yarn documentation && yarn checkformat"
   },
   "devDependencies": {
     "@angular-devkit/architect": "0.803.14",

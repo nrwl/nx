@@ -2,7 +2,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { dedent } from 'tslint/lib/utils';
 import { commandsObject } from '../../packages/workspace';
-import { generateFile, sortAlphabeticallyFunction } from './utils';
+import { generateMarkdownFile, sortAlphabeticallyFunction } from './utils';
 
 const importFresh = require('import-fresh');
 
@@ -314,37 +314,38 @@ const examples = {
     }
   ]
 };
-
-['web', 'angular', 'react'].forEach(framework => {
-  const commandsOutputDirectory = path.join(
-    __dirname,
-    '../../docs/',
-    framework,
-    'api-workspace/npmscripts'
-  );
-  fs.removeSync(commandsOutputDirectory);
-  function getCommands(command) {
-    return command.getCommandInstance().getCommandHandlers();
-  }
-  function parseCommandInstance(name, command) {
-    const builder = command.builder(importFresh('yargs')().resetOptions());
-    const builderDescriptions = builder.getUsageInstance().getDescriptions();
-    const builderDefaultOptions = builder.getOptions().default;
-    return {
-      command: command['original'],
-      description: command['description'],
-      options:
-        Object.keys(builderDescriptions).map(name => ({
-          command: '--'.concat(name),
-          description: builderDescriptions[name]
-            ? builderDescriptions[name].replace('__yargsString__:', '')
-            : '',
-          default: builderDefaultOptions[name]
-        })) || null
-    };
-  }
-  function generateMarkdown(command) {
-    let template = dedent`
+console.log('Generating npmscript Documentation');
+Promise.all(
+  ['web', 'angular', 'react'].map(async framework => {
+    const commandsOutputDirectory = path.join(
+      __dirname,
+      '../../docs/',
+      framework,
+      'api-workspace/npmscripts'
+    );
+    fs.removeSync(commandsOutputDirectory);
+    function getCommands(command) {
+      return command.getCommandInstance().getCommandHandlers();
+    }
+    function parseCommandInstance(name, command) {
+      const builder = command.builder(importFresh('yargs')().resetOptions());
+      const builderDescriptions = builder.getUsageInstance().getDescriptions();
+      const builderDefaultOptions = builder.getOptions().default;
+      return {
+        command: command['original'],
+        description: command['description'],
+        options:
+          Object.keys(builderDescriptions).map(name => ({
+            command: '--'.concat(name),
+            description: builderDescriptions[name]
+              ? builderDescriptions[name].replace('__yargsString__:', '')
+              : '',
+            default: builderDefaultOptions[name]
+          })) || null
+      };
+    }
+    function generateMarkdown(command) {
+      let template = dedent`
       # ${command.command}
       ${command.description}
       
@@ -355,31 +356,31 @@ const examples = {
 
       Install \`@nrwl/cli\` globally to invoke the command directly using \`nx\`, or use \`npm run nx\` or \`yarn nx\`.\n`;
 
-    if (examples[command.command] && examples[command.command].length > 0) {
-      template += `### Examples`;
-      examples[command.command].forEach(example => {
-        template += dedent`
+      if (examples[command.command] && examples[command.command].length > 0) {
+        template += `### Examples`;
+        examples[command.command].forEach(example => {
+          template += dedent`
         ${example.description}:
         \`\`\`bash
         nx ${example.command}
         \`\`\`
         `;
-      });
-    }
+        });
+      }
 
-    if (Array.isArray(command.options) && !!command.options.length) {
-      template += '\n## Options';
+      if (Array.isArray(command.options) && !!command.options.length) {
+        template += '\n## Options';
 
-      command.options
-        .sort((a, b) =>
-          sortAlphabeticallyFunction(
-            a.command.replace('--', ''),
-            b.command.replace('--', '')
+        command.options
+          .sort((a, b) =>
+            sortAlphabeticallyFunction(
+              a.command.replace('--', ''),
+              b.command.replace('--', '')
+            )
           )
-        )
-        .forEach(
-          option =>
-            (template += dedent`
+          .forEach(
+            option =>
+              (template += dedent`
             ### ${option.command.replace('--', '')}
             ${
               option.default === undefined || option.default === ''
@@ -388,27 +389,31 @@ const examples = {
             }
             ${option.description}
           `)
-        );
+          );
+      }
+
+      return {
+        name: command.command
+          .replace(':', '-')
+          .replace(' ', '-')
+          .replace(/[\]\[.]+/gm, ''),
+        template
+      };
     }
 
-    return {
-      name: command.command
-        .replace(':', '-')
-        .replace(' ', '-')
-        .replace(/[\]\[.]+/gm, ''),
-      template
-    };
-  }
-
-  // TODO: Try to add option's type, examples, and group?
-  // TODO: split one command per page / Create an index
-  const npmscripts = getCommands(commandsObject);
-
-  Object.keys(npmscripts)
-    .filter(name => !name.startsWith('run') && !name.startsWith('generate'))
-    .map(name => parseCommandInstance(name, npmscripts[name]))
-    .map(command => generateMarkdown(command))
-    .forEach(templateObject =>
-      generateFile(commandsOutputDirectory, templateObject)
+    // TODO: Try to add option's type, examples, and group?
+    // TODO: split one command per page / Create an index
+    const npmscripts = getCommands(commandsObject);
+    await Promise.all(
+      Object.keys(npmscripts)
+        .filter(name => !name.startsWith('run') && !name.startsWith('generate'))
+        .map(name => parseCommandInstance(name, npmscripts[name]))
+        .map(command => generateMarkdown(command))
+        .map(templateObject =>
+          generateMarkdownFile(commandsOutputDirectory, templateObject)
+        )
     );
+  })
+).then(() => {
+  console.log('Finished generating npmscripts Documentation');
 });
