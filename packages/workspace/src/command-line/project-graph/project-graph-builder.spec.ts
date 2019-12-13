@@ -24,6 +24,7 @@ describe('ProjectGraphBuilder', () => {
     builder.addDependency(DependencyType.static, myapp.name, libB.name);
     builder.addDependency(DependencyType.static, libB.name, libC.name);
     builder.addDependency(DependencyType.static, libB.name, libC.name); // Idempotency
+    builder.addDependency(DependencyType.static, libB.name, libB.name);
     builder.addDependency(DependencyType.static, libC.name, happyNrwl.name);
 
     const graph = builder.build();
