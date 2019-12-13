@@ -2,6 +2,14 @@
 
 We would love for you to contribute to Nx! Read this document to see how to do it.
 
+## How to Get Started Video
+
+Watch this 5-minute video:
+
+<a href="https://www.youtube.com/watch?v=o11p0zSm0No&feature=youtu.be" target="_blank">
+<p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/how-to-contribute.png" width="600"></p>
+</a>
+
 ## Got a Question?
 
 We are trying to keep GitHub issues for bug reports and feature requests. Using the `nrwl` tag on [Stack Overflow](https://stackoverflow.com/questions/tagged/nrwl) is a much better place to ask general questions about how to use Nx.
