@@ -13,28 +13,21 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-nx(
-    name = "build",
+<% for (label of labels) { %>
+<%= label.bazelRuleName %>(
+    name = "<%= label.bazelLabel %>",
     args = [
-        "build",
-        "<%= project.name%>",
-        "--outputPath=$@",
+        "run",
+        "<%= label.cliTarget %>",<% if (label.isBuildTarget) { %>
+        "--<%= label.outputArgument %>=$(@D)",<% } %>
     ],
     data = [
         ":<%= project.name %>",
         # Root Files
-        "//:angular.json",
-        "//:package.json",
-        "//:tsconfig.json",
-        # NOTE: Use @npm//node_modules causes bundling to fail due to Babel errors.
-        "@npm//@angular-devkit/build-angular",
-        "@npm//@angular/cli",
-        "@npm//@angular/core",
-        "@npm//@angular/platform-browser-dynamic",
-        "@npm//@angular/router",
-        "@npm//@babel/preset-env",
-        "@npm//@nrwl/workspace",
-        "@npm//inquirer",
-    ],
-    output_dir = True,
+        "//:root-files",
+        # Node Modules
+        "@npm//:node_modules"
+    ],<% if (label.isBuildTarget) { %>
+    output_dir = True,<% } %>
 )
+<% } %>

@@ -11,17 +11,75 @@ import {
   Tree,
   url
 } from '@angular-devkit/schematics';
-import { getProjectGraphFromHost, readJsonInTree } from '@nrwl/workspace';
+import {
+  getProjectGraphFromHost,
+  getWorkspace,
+  readJsonInTree,
+  readWorkspace
+} from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import {
   ProjectGraph,
   ProjectGraphNode
 } from '@nrwl/workspace/src/command-line/project-graph';
+import { rulesNodeJSSha, rulesNodeJSVersion } from '../utils/versions';
+import { TargetDefinition } from '@angular-devkit/core/src/workspace';
+
+const buildBuilders = {
+  '@angular-devkit/build-angular:browser': 'outputPath',
+  '@angular-devkit/build-angular:server': 'outputPath',
+  '@angular-devkit/build-angular:ng-packagr': 'outputPath',
+  '@angular-devkit/build-webpack:webpack': 'outputPath',
+  '@nrwl/web:build': 'outputPath'
+};
+
+const testBuilders = new Set([
+  '@angular-devkit/build-angular:karma',
+  '@angular-devkit/build-angular:protractor',
+  '@angular-devkit/build-angular:tslint',
+  '@nrwl/jest:jest',
+  '@nrwl/cypress:cypress',
+  '@nrwl/linter:lint'
+]);
 
 function createBuildFile(
   project: ProjectGraphNode,
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph,
+  labelsMetadata: Array<{
+    name: string;
+    configurations: string[];
+    target: TargetDefinition;
+  }>
 ): Source {
+  const labels: {
+    cliTarget: string;
+    bazelLabel: string;
+    isBuildTarget: boolean;
+    outputArgument: string;
+  }[] = [];
+  labelsMetadata
+    .map(metadata =>
+      metadata.configurations.map(config => {
+        const isTestTarget = testBuilders.has(metadata.target.builder);
+        const isBuildTarget = !!buildBuilders[metadata.target.builder];
+        const outputArgument = buildBuilders[metadata.target.builder];
+        return {
+          bazelRuleName: isTestTarget ? 'nx_test' : 'nx',
+          cliTarget: `${project.name}:${metadata.name}${
+            config === '__nx_default__' ? '' : `:${config}`
+          }`,
+          bazelLabel: `${metadata.name}${
+            config === '__nx_default__' ? '' : `__${config}`
+          }`,
+          isBuildTarget,
+          outputArgument
+        };
+      })
+    )
+    .forEach(arr => {
+      arr.forEach(label => labels.push(label));
+    });
+
   return apply(url('./files/build-file'), [
     template({
       tmpl: '',
@@ -34,7 +92,8 @@ function createBuildFile(
                 dep.target
               }`
           )
-        : []
+        : [],
+      labels
     })
   ]);
 }
@@ -43,8 +102,19 @@ function updateBuildFile(
   project: ProjectGraphNode,
   projectGraph: ProjectGraph
 ): Rule {
-  return (host, context) => {
-    const buildFile = createBuildFile(project, projectGraph);
+  return async (host, context) => {
+    const workspace = await getWorkspace(host);
+    const labelsMetadata = Array.from(
+      workspace.projects.get(project.name).targets.entries()
+    ).map(([name, target]) => ({
+      name,
+      target,
+      configurations: [
+        '__nx_default__',
+        ...Object.keys(target.configurations || {})
+      ]
+    }));
+    const buildFile = createBuildFile(project, projectGraph, labelsMetadata);
     const buildFilePath = join(normalize(project.data.root), 'BUILD.bazel');
 
     return mergeWith(
@@ -73,7 +143,9 @@ function createWorkspaceFile() {
       apply(url('./files/workspace-file'), [
         template({
           tmpl: '',
-          name: readJsonInTree(host, '/package.json').name.replace('-', '_')
+          name: readJsonInTree(host, '/package.json').name.replace('-', '_'),
+          rulesNodeJSVersion,
+          rulesNodeJSSha
         }),
         () => {
           if (host.exists('WORKSPACE')) {
