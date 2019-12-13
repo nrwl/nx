@@ -8,7 +8,11 @@ import {
   htmlSelectorFormat,
   pathFormat
 } from '@angular-devkit/schematics/src/formats';
-import { generateFile, sortAlphabeticallyFunction } from './utils';
+import {
+  generateJsonFile,
+  generateMarkdownFile,
+  sortAlphabeticallyFunction
+} from './utils';
 import {
   Configuration,
   getPackageConfigurations
@@ -126,8 +130,10 @@ Promise.all(
               builderList.map(b => generateTemplate(framework, b))
             )
             .then(markdownList =>
-              markdownList.forEach(template =>
-                generateFile(config.builderOutput, template)
+              Promise.all(
+                markdownList.map(template =>
+                  generateMarkdownFile(config.builderOutput, template)
+                )
               )
             )
             .then(() =>
@@ -142,11 +148,11 @@ Promise.all(
   console.log('Done generating Builders Documentation');
 });
 
-getPackageConfigurations().forEach(({ framework, configs }) => {
+getPackageConfigurations().forEach(async ({ framework, configs }) => {
   const builders = configs
     .filter(item => item.hasBuilders)
     .map(item => item.name);
-  fs.outputJsonSync(
+  await generateJsonFile(
     path.join(__dirname, '../../docs', framework, 'builders.json'),
     builders
   );
