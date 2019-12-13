@@ -5,6 +5,7 @@ import {
   ProjectGraphNodeRecords
 } from '../project-graph-models';
 import { TypeScriptImportLocator } from './typescript-import-locator';
+import { normalizedProjectRoot } from '@nrwl/workspace/src/command-line/shared';
 
 export function buildExplicitTypeScriptDependencies(
   ctx: ProjectGraphContext,
@@ -29,8 +30,14 @@ export function buildExplicitTypeScriptDependencies(
   });
 
   function findTargetProject(importExpr, nodes) {
-    return Object.keys(nodes).find(projectName =>
-      importExpr.startsWith(`@${ctx.nxJson.npmScope}/${projectName}`)
-    );
+    return Object.keys(nodes).find(projectName => {
+      const p = nodes[projectName];
+      const normalizedRoot = normalizedProjectRoot(p);
+      return (
+        importExpr === `@${ctx.nxJson.npmScope}/${normalizedRoot}` ||
+        importExpr.startsWith(`@${ctx.nxJson.npmScope}/${normalizedRoot}#`) ||
+        importExpr.startsWith(`@${ctx.nxJson.npmScope}/${normalizedRoot}/`)
+      );
+    });
   }
 }

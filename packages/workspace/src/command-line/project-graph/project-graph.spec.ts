@@ -43,9 +43,9 @@ describe('project graph', () => {
           sourceRoot: 'libs/ui/src',
           projectType: 'library'
         },
-        util: {
-          root: 'libs/util/',
-          sourceRoot: 'libs/util/src',
+        'shared-util': {
+          root: 'libs/shared/util/',
+          sourceRoot: 'libs/shared/util/src',
           projectType: 'library'
         },
         api: {
@@ -62,7 +62,7 @@ describe('project graph', () => {
         demo: { tags: [], implicitDependencies: ['api'] },
         'demo-e2e': { tags: [] },
         ui: { tags: [] },
-        util: { tags: [] }
+        'shared-util': { tags: [] }
       }
     };
     filesJson = {
@@ -76,9 +76,9 @@ describe('project graph', () => {
         describe('whatever', () => {});
       `,
       './libs/ui/src/index.ts': stripIndents`
-        import * as util from '@nrwl/util';
+        import * as util from '@nrwl/shared/util';
       `,
-      './libs/util/src/index.ts': stripIndents`
+      './libs/shared/util/src/index.ts': stripIndents`
         import * as happyNrwl from 'happy-nrwl';
       `,
       './package.json': JSON.stringify(packageJson),
@@ -101,7 +101,7 @@ describe('project graph', () => {
       'demo-e2e': { name: 'demo-e2e', type: 'e2e' },
       demo: { name: 'demo', type: 'app' },
       ui: { name: 'ui', type: 'lib' },
-      util: { name: 'util', type: 'lib' }
+      'shared-util': { name: 'shared-util', type: 'lib' }
     });
 
     expect(graph.dependencies).toMatchObject({
@@ -112,23 +112,23 @@ describe('project graph', () => {
         { type: DependencyType.implicit, source: 'demo', target: 'api' },
         { type: DependencyType.static, source: 'demo', target: 'ui' }
       ]),
-      ui: [{ type: DependencyType.static, source: 'ui', target: 'util' }]
+      ui: [{ type: DependencyType.static, source: 'ui', target: 'shared-util' }]
     });
   });
 
   it('should handle circular dependencies', () => {
-    filesJson['./libs/util/src/index.ts'] = stripIndents`
-        import * as util from '@nrwl/ui';
+    filesJson['./libs/shared/util/src/index.ts'] = stripIndents`
+        import * as ui from '@nrwl/ui';
         import * as happyNrwl from 'happy-nrwl';
     `;
     vol.fromJSON(filesJson, '/root');
 
     const graph = createProjectGraph();
 
-    expect(graph.dependencies['util']).toEqual([
+    expect(graph.dependencies['shared-util']).toEqual([
       {
         type: DependencyType.static,
-        source: 'util',
+        source: 'shared-util',
         target: 'ui'
       }
     ]);
@@ -136,7 +136,7 @@ describe('project graph', () => {
       {
         type: DependencyType.static,
         source: 'ui',
-        target: 'util'
+        target: 'shared-util'
       }
     ]);
   });
