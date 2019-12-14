@@ -286,6 +286,7 @@ export function readWorkspaceFiles(): FileData[] {
 
   return files;
 }
+
 export function getProjectNodes(
   workspaceJson: any,
   nxJson: NxJson
