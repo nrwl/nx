@@ -52,22 +52,29 @@ forEachCli(currentCLIName => {
     });
 
     it('should be able to lint projects with bazel', () => {
-      const lintResult = runCommand(`npx bazel test //apps/${ngapp}:lint`);
+      const lintResult = runCommand(
+        `./node_modules/.bin/bazel test //apps/${ngapp}:lint`
+      );
       expect(lintResult).toContain('PASSED');
     });
 
-    xit('should be able to build projects with bazel', () => {
-      const buildResult = runCommand(`npx bazel build //apps/${ngapp}:build`);
-      expect(buildResult).toContain('PASSED');
+    it('should be able to build projects with bazel', () => {
+      const buildResult = runCommand(
+        `./node_modules/.bin/bazel build //apps/${ngapp}:build`
+      );
     });
 
     xit('should be able to test projects with bazel', () => {
-      const testResult = runCommand(`npx bazel test //apps/${ngapp}:test`);
+      const testResult = runCommand(
+        `./node_modules/.bin/bazel test //apps/${ngapp}:test`
+      );
       expect(testResult).toContain('PASSED');
     });
 
     xit('should be able to e2e test projects with bazel', () => {
-      const e2eResult = runCommand(`npx bazel test //apps/${ngapp}-e2e:e2e`);
+      const e2eResult = runCommand(
+        `./node_modules/.bin/bazel test //apps/${ngapp}-e2e:e2e`
+      );
       expect(e2eResult).toContain('PASSED');
     });
   });

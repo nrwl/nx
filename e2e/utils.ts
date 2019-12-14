@@ -271,7 +271,9 @@ export function copyMissingPackages(): void {
 
     'mime',
     'less',
-    'send'
+    'send',
+
+    '@bazel'
   ];
   modulesToCopy.forEach(m => copyNodeModule(m));
   updateFile(
@@ -295,6 +297,11 @@ export function copyMissingPackages(): void {
     `cp -a node_modules/.bin/webpack ${tmpProjPath(
       'node_modules/.bin/webpack'
     )}`
+  );
+
+  execSync(`rm -rf ${tmpProjPath('node_modules/.bin/bazel')}`);
+  execSync(
+    `cp -a node_modules/.bin/bazel ${tmpProjPath('node_modules/.bin/bazel')}`
   );
   execSync(`rm -rf ${tmpProjPath('node_modules/cypress/node_modules/@types')}`);
   execSync(`rm -rf node_modules/karma/node_modules/mime`);
