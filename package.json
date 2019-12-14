@@ -53,6 +53,8 @@
     "@babel/preset-env": "7.5.5",
     "@babel/preset-react": "7.0.0",
     "@babel/preset-typescript": "7.3.3",
+    "@bazel/bazel": "^1.2.0",
+    "@bazel/ibazel": "^0.10.3",
     "@cypress/webpack-preprocessor": "^4.1.0",
     "@nestjs/common": "^6.2.4",
     "@nestjs/core": "^6.2.4",

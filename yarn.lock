@@ -1417,6 +1417,42 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
+"@bazel/bazel-darwin_x64@1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@bazel/bazel-darwin_x64/-/bazel-darwin_x64-1.2.0.tgz#e29840c263e0ebb9286bec9fa285907c9161f890"
+  integrity sha512-3th94yNeqNdmzYhUlUeGWx8XEgE9UEh/1TBsG69QOPnYw4I1MYztfAa1iYXREs7qbvQP2R260tRaNhnwg2x6JQ==
+
+"@bazel/bazel-linux_x64@1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@bazel/bazel-linux_x64/-/bazel-linux_x64-1.2.0.tgz#da4f4036c38638d8d49c77c16e21f6f6bae1be06"
+  integrity sha512-pEFEu1mkqFcpKBkjlFbMwWj0J+f+e54EmJrOheNCneRi5ArZLBdHtGaxcWr27VMMR99qZM656R8NXXelOmhCqA==
+
+"@bazel/bazel-win32_x64@1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@bazel/bazel-win32_x64/-/bazel-win32_x64-1.2.0.tgz#1b0cf50fa4ec77e438d0ccf9550ac71a6c285f09"
+  integrity sha512-fl/eKtWSW1fJIhyGD99p0c0GFv2L4019YFftmv5UBIu2Thb9wYZKQqLVyDBVe8D+Vz2tW6LpefCb+VcmiweJ8A==
+
+"@bazel/bazel@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@bazel/bazel/-/bazel-1.2.0.tgz#3aa126823c7c880fb09afe1fadfdb457f6b99531"
+  integrity sha512-+NDzRxFpYBhdCbTiCMVK9dPXWqIBLMCXH1qq28Edy7xDMoP/J0gWITh8reMBwzDte/qC5ZAq6WjRDX75hWLUog==
+  dependencies:
+    "@bazel/hide-bazel-files" latest
+  optionalDependencies:
+    "@bazel/bazel-darwin_x64" "1.2.0"
+    "@bazel/bazel-linux_x64" "1.2.0"
+    "@bazel/bazel-win32_x64" "1.2.0"
+
+"@bazel/hide-bazel-files@latest":
+  version "0.42.3"
+  resolved "https://registry.yarnpkg.com/@bazel/hide-bazel-files/-/hide-bazel-files-0.42.3.tgz#967e24b8fdc7ce96d1dbc43557ec6457ccf6d0cd"
+  integrity sha512-gov5u61OhcCThgVVQGTZPJasPHQPTSvOsTZyVRU6tp/cria+6k4KXTb/1UO0FkZdB5wL/jEQUlh3HMtvQMsdkQ==
+
+"@bazel/ibazel@^0.10.3":
+  version "0.10.3"
+  resolved "https://registry.yarnpkg.com/@bazel/ibazel/-/ibazel-0.10.3.tgz#2e2b8a1d3e885946eac41db2b1aa6801fb319887"
+  integrity sha512-v1nXbMTHVlMM4z4uWp6XiRoHAyUlYggF1SOboLLWRp0+D22kWixqArWqnozLw2mOtnxr97BdLjluWiho6A8Hjg==
+
 "@cnakazawa/watch@^1.0.3":
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/@cnakazawa/watch/-/watch-1.0.3.tgz#099139eaec7ebf07a27c1786a3ff64f39464d2ef"
