@@ -1,9 +1,5 @@
 import * as yargsParser from 'yargs-parser';
 import * as yargs from 'yargs';
-import { WorkspaceResults } from './workspace-results';
-import { ProjectGraphNode } from '../core/project-graph';
-import { readWorkspaceJson, readNxJson } from '../core/file-utils';
-import { NxJson } from '../core/shared-interfaces';
 
 /**
  * These options are only for getting an array with properties of AffectedOptions.
@@ -33,7 +29,8 @@ const dummyOptions: NxArgs = {
   plain: false,
   withDeps: false,
   'with-deps': false,
-  projects: []
+  projects: [],
+  select: ''
 } as any;
 
 const nxSpecific = Object.keys(dummyOptions);
@@ -62,23 +59,24 @@ export interface NxArgs {
   withDeps?: boolean;
   'with-deps'?: boolean;
   projects?: string[];
+  select?: string;
   _: string[];
 }
 
 const ignoreArgs = ['$0', '_'];
 
-export function splitArgsIntoNxArgsAndTargetArgs(
+export function splitArgsIntoNxArgsAndOverrides(
   args: yargs.Arguments
-): { nxArgs: NxArgs; targetArgs: yargs.Arguments } {
+): { nxArgs: NxArgs; overrides: yargs.Arguments } {
   const nxArgs: any = {};
-  const targetArgs = yargsParser(args._);
-  delete targetArgs._;
+  const overrides = yargsParser(args._);
+  delete overrides._;
 
   Object.entries(args).forEach(([key, value]) => {
     if (nxSpecific.includes(key as any)) {
       nxArgs[key] = value;
     } else if (!ignoreArgs.includes(key)) {
-      targetArgs[key] = value;
+      overrides[key] = value;
     }
   });
 
@@ -88,5 +86,5 @@ export function splitArgsIntoNxArgsAndTargetArgs(
     nxArgs.projects = args.projects.split(',').map((p: string) => p.trim());
   }
 
-  return { nxArgs, targetArgs };
+  return { nxArgs, overrides };
 }

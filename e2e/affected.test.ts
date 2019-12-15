@@ -216,11 +216,11 @@ forEachCli(() => {
       expect(linting).toContain(`- ${myapp}-e2e`);
       expect(linting).toContain(`- ${mypublishablelib}`);
 
-      const lintWithJsonFormating = runCommand(
+      const lintWithJsonFormatting = runCommand(
         `npm run affected:lint -- --files="libs/${mylib}/src/index.ts" -- --format json`
       );
-      expect(lintWithJsonFormating).toContain('With flags:');
-      expect(lintWithJsonFormating).toContain('--format=json');
+      expect(lintWithJsonFormatting).toContain('With flags:');
+      expect(lintWithJsonFormatting).toContain('--format=json');
 
       const unitTestsExcluded = runCommand(
         `npm run affected:test -- --files="libs/${mylib}/src/index.ts" --exclude=${myapp},${mypublishablelib}`

@@ -32,7 +32,7 @@ function check() {
     'packages/web/src/utils/web.config.ts',
     'packages/web/src/utils/web.config.spec.ts',
     'packages/workspace/src/command-line/affected.ts',
-    'packages/workspace/src/command-line/shared.ts',
+    'packages/workspace/src/core/file-utils.ts',
     'packages/workspace/src/schematics/preset/preset.ts',
     'packages/workspace/src/schematics/init/init.ts',
     'packages/workspace/src/utils/update-task.ts',

@@ -13,6 +13,7 @@ import * as yargs from 'yargs';
 import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
 import { Environment, NxJson } from '../core/shared-interfaces';
 import { projectHasTargetAndConfiguration } from '../utils/project-has-target-and-configuration';
+import { NxArgs } from '@nrwl/workspace/src/command-line/utils';
 
 export interface TasksMap {
   [projectName: string]: { [targetName: string]: Task };
@@ -24,17 +25,17 @@ export function runCommand<T extends RunArgs>(
   projectsToRun: ProjectGraphNode[],
   projectGraph: ProjectGraph,
   { nxJson, workspace }: Environment,
-  nxArgs: any,
-  targetArgs: any
+  nxArgs: NxArgs,
+  overrides: any
 ) {
   const reporter = new DefaultReporter();
-  reporter.beforeRun(projectsToRun.map(p => p.name), nxArgs, targetArgs);
+  reporter.beforeRun(projectsToRun.map(p => p.name), nxArgs, overrides);
   const tasks: Task[] = projectsToRun.map(project =>
     createTask({
       project,
       target: nxArgs.target,
       configuration: nxArgs.configuration,
-      overrides: targetArgs
+      overrides: overrides
     })
   );
 
@@ -51,7 +52,7 @@ export function runCommand<T extends RunArgs>(
           project: project,
           target: nxArgs.target,
           configuration: nxArgs.configuration,
-          overrides: targetArgs
+          overrides: overrides
         })
       };
     }
@@ -60,7 +61,7 @@ export function runCommand<T extends RunArgs>(
   const { tasksRunner, tasksOptions } = getRunner(
     nxArgs.runner,
     nxJson,
-    targetArgs
+    overrides
   );
   tasksRunner(tasks, tasksOptions, {
     target: nxArgs.target,
@@ -140,7 +141,7 @@ function getId({
 export function getRunner(
   runner: string | undefined,
   nxJson: NxJson,
-  targetArgs: any
+  overrides: any
 ): {
   tasksRunner: TasksRunner;
   tasksOptions: unknown;
@@ -148,14 +149,14 @@ export function getRunner(
   if (!nxJson.tasksRunnerOptions) {
     return {
       tasksRunner: defaultTasksRunner,
-      tasksOptions: targetArgs
+      tasksOptions: overrides
     };
   }
 
   if (!runner && !nxJson.tasksRunnerOptions.default) {
     return {
       tasksRunner: defaultTasksRunner,
-      tasksOptions: targetArgs
+      tasksOptions: overrides
     };
   }
 
@@ -178,7 +179,7 @@ export function getRunner(
       tasksRunner,
       tasksOptions: {
         ...nxJson.tasksRunnerOptions[runner].options,
-        ...targetArgs
+        ...overrides
       }
     };
   } else {
