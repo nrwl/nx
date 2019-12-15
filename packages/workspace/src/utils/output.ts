@@ -12,11 +12,6 @@ export interface CLIWarnMessageConfig {
   slug?: string;
 }
 
-export interface CLILogMessageConfig {
-  title: string;
-  bodyLines?: string[];
-}
-
 export interface CLINoteMessageConfig {
   title: string;
   bodyLines?: string[];

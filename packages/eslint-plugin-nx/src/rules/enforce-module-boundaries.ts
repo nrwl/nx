@@ -1,8 +1,3 @@
-import {
-  readWorkspaceJson,
-  readNxJson,
-  normalizedProjectRoot
-} from '@nrwl/workspace/src/command-line/shared';
 import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
 import {
   DepConstraint,
@@ -24,7 +19,12 @@ import {
   createProjectGraph,
   ProjectGraph,
   ProjectType
-} from '@nrwl/workspace/src/command-line/project-graph';
+} from '@nrwl/workspace/src/core/project-graph';
+import {
+  normalizedProjectRoot,
+  readNxJson,
+  readWorkspaceJson
+} from '@nrwl/workspace/src/core/file-utils';
 
 type Options = [
   {

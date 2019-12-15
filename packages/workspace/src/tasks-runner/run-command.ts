@@ -1,22 +1,18 @@
-import { NxJson } from '../shared';
 import {
   AffectedEventType,
   Task,
   TaskCompleteEvent,
   TasksRunner
-} from '../../tasks-runner/tasks-runner';
-import { defaultTasksRunner } from '../../tasks-runner/default-tasks-runner';
-import { isRelativePath } from '../../utils/fileutils';
+} from './tasks-runner';
+import { defaultTasksRunner } from './default-tasks-runner';
+import { isRelativePath } from '../utils/fileutils';
 import { join } from 'path';
-import { appRootPath } from '../../utils/app-root';
+import { appRootPath } from '../utils/app-root';
 import { DefaultReporter, ReporterArgs } from './default-reporter';
-import {
-  Arguments,
-  Environment,
-  projectHasTargetAndConfiguration
-} from './utils';
 import * as yargs from 'yargs';
-import { ProjectGraph, ProjectGraphNode } from '../project-graph';
+import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
+import { Environment, NxJson } from '../core/shared-interfaces';
+import { projectHasTargetAndConfiguration } from '../utils/project-has-target-and-configuration';
 
 export interface TasksMap {
   [projectName: string]: { [targetName: string]: Task };
@@ -27,17 +23,18 @@ type RunArgs = yargs.Arguments & ReporterArgs;
 export function runCommand<T extends RunArgs>(
   projectsToRun: ProjectGraphNode[],
   projectGraph: ProjectGraph,
-  { nxArgs, overrides, targetArgs }: Arguments<T>,
-  { nxJson, workspace }: Environment
+  { nxJson, workspace }: Environment,
+  nxArgs: any,
+  targetArgs: any
 ) {
   const reporter = new DefaultReporter();
-  reporter.beforeRun(projectsToRun.map(p => p.name), nxArgs, overrides);
+  reporter.beforeRun(projectsToRun.map(p => p.name), nxArgs, targetArgs);
   const tasks: Task[] = projectsToRun.map(project =>
     createTask({
       project,
       target: nxArgs.target,
       configuration: nxArgs.configuration,
-      overrides: overrides
+      overrides: targetArgs
     })
   );
 
@@ -54,7 +51,7 @@ export function runCommand<T extends RunArgs>(
           project: project,
           target: nxArgs.target,
           configuration: nxArgs.configuration,
-          overrides: overrides
+          overrides: targetArgs
         })
       };
     }

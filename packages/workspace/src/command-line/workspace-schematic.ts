@@ -29,7 +29,7 @@ import * as yargsParser from 'yargs-parser';
 import { appRootPath } from '../utils/app-root';
 import { detectPackageManager } from '../utils/detect-package-manager';
 import { fileExists, readJsonFile } from '../utils/fileutils';
-import { output } from './output';
+import { output } from '../utils/output';
 
 const rootDirectory = appRootPath;
 

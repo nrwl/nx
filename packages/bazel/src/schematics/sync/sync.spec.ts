@@ -4,8 +4,8 @@ import { callRule, runSchematic } from '../utils/testing';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { updateJsonInTree } from '@nrwl/workspace/src/utils/ast-utils';
 import { updateWorkspace } from '@nrwl/workspace/src/utils/workspace';
-import { NxJson } from '@nrwl/workspace/src/command-line/shared';
 import { rulesNodeJSSha, rulesNodeJSVersion } from '../utils/versions';
+import { NxJson } from '@nrwl/workspace/src/core/shared-interfaces';
 
 describe('@nrwl/bazel:sync', () => {
   let tree: Tree;

@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import { Target } from '@angular-devkit/architect';
 
-import { ProjectGraph } from '../command-line/project-graph';
+import { ProjectGraph } from '../core/project-graph';
 
 export interface Task {
   id: string;

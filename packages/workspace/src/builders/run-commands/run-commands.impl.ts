@@ -6,7 +6,7 @@ import {
 import { JsonObject } from '@angular-devkit/core';
 import { exec } from 'child_process';
 import { Observable } from 'rxjs';
-import { TEN_MEGABYTES } from '../../command-line/shared';
+import { TEN_MEGABYTES } from '@nrwl/workspace/src/core/file-utils';
 
 try {
   require('dotenv').config();

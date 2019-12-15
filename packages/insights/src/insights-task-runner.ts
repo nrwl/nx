@@ -10,8 +10,8 @@ import {
   DefaultTasksRunnerOptions
 } from '@nrwl/workspace/src/tasks-runner/default-tasks-runner';
 import * as fs from 'fs';
-import { TasksMap } from '@nrwl/workspace/src/command-line/run-tasks/run-command';
-import { ProjectGraph } from '@nrwl/workspace/src/command-line/project-graph';
+import { TasksMap } from '@nrwl/workspace/src/tasks-runner/run-command';
+import { ProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 const axios = require('axios');
 
 interface InsightsTaskRunnerOptions extends DefaultTasksRunnerOptions {

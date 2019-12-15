@@ -2,7 +2,7 @@ import defaultTaskRunner from './default-tasks-runner';
 import { AffectedEventType, Task } from './tasks-runner';
 jest.mock('npm-run-all', () => jest.fn());
 import * as runAll from 'npm-run-all';
-jest.mock('../command-line/shared', () => ({
+jest.mock('../core/file-utils', () => ({
   cliCommand: () => 'nx'
 }));
 jest.mock('../utils/fileutils', () => ({

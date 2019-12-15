@@ -1,7 +1,7 @@
 import { ProjectGraph } from '../project-graph';
-import { NxJson, readNxJson, readWorkspaceJson } from '../shared';
-import { FileChange } from '../file-utils';
+import { FileChange, readNxJson, readWorkspaceJson } from '../file-utils';
 import { filterAffectedProjects } from './filter-affected-projects';
+import { NxJson } from '../shared-interfaces';
 
 export function filterAffected(
   graph: ProjectGraph,

@@ -21,7 +21,7 @@ import { join, normalize } from '@angular-devkit/core';
 import {
   ProjectGraph,
   ProjectGraphNode
-} from '@nrwl/workspace/src/command-line/project-graph';
+} from '@nrwl/workspace/src/core/project-graph';
 import { rulesNodeJSSha, rulesNodeJSVersion } from '../utils/versions';
 import { TargetDefinition } from '@angular-devkit/core/src/workspace';
 

@@ -11,13 +11,10 @@ import * as stripJsonComments from 'strip-json-comments';
 import { serializeJson } from './fileutils';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { getWorkspacePath } from './cli-config-utils';
-import {
-  createProjectGraph,
-  ProjectGraph
-} from '../command-line/project-graph';
-import { NxJson } from '../command-line/shared';
-import { FileData } from '../command-line/file-utils';
+import { createProjectGraph, ProjectGraph } from '../core/project-graph';
+import { FileData } from '../core/file-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
+import { NxJson } from '@nrwl/workspace/src/core/shared-interfaces';
 
 function nodesByPosition(first: ts.Node, second: ts.Node): number {
   return first.getStart() - second.getStart();
@@ -42,7 +39,7 @@ function insertAfterLastOccurrence(
   }
   if (!lastItem && fallbackPos == undefined) {
     throw new Error(
-      `tried to insert ${toInsert} as first occurence with no fallback position`
+      `tried to insert ${toInsert} as first occurrence with no fallback position`
     );
   }
   const lastItemPosition: number = lastItem ? lastItem.getEnd() : fallbackPos;

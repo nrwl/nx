@@ -1,7 +1,7 @@
-import { NxJson } from '../shared';
-import { TasksRunner } from '../../tasks-runner/tasks-runner';
-import defaultTasksRunner from '../../tasks-runner/default-tasks-runner';
+import { TasksRunner } from './tasks-runner';
+import defaultTasksRunner from './default-tasks-runner';
 import { getRunner } from './run-command';
+import { NxJson } from '../core/shared-interfaces';
 
 describe('getRunner', () => {
   let nxJson: NxJson;

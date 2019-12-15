@@ -5,12 +5,7 @@ import {
   createProjectGraph,
   ProjectGraph,
   ProjectGraphNode
-} from '../command-line/project-graph';
-import {
-  normalizedProjectRoot,
-  readNxJson,
-  readWorkspaceJson
-} from '../command-line/shared';
+} from '../core/project-graph';
 import { appRootPath } from '../utils/app-root';
 import {
   DepConstraint,
@@ -27,7 +22,12 @@ import {
   onlyLoadChildren
 } from '../utils/runtime-lint-utils';
 import { normalize } from '@angular-devkit/core';
-import { ProjectType } from '../command-line/project-graph';
+import { ProjectType } from '../core/project-graph';
+import {
+  normalizedProjectRoot,
+  readNxJson,
+  readWorkspaceJson
+} from '@nrwl/workspace/src/core/file-utils';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(

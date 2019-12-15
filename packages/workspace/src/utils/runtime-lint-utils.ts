@@ -1,13 +1,12 @@
 import * as path from 'path';
-import { normalizedProjectRoot } from '../command-line/shared';
 import {
   DependencyType,
   ProjectGraphNode,
   ProjectGraphDependency,
   ProjectGraph
-} from '../command-line/project-graph';
+} from '../core/project-graph';
 import { normalize } from '@angular-devkit/core';
-import { FileData } from '../command-line/file-utils';
+import { FileData, normalizedProjectRoot } from '../core/file-utils';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 export type DepConstraint = {

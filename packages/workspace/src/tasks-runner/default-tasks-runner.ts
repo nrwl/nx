@@ -7,10 +7,10 @@ import {
   TaskCompleteEvent,
   TasksRunner
 } from './tasks-runner';
-import { cliCommand } from '../command-line/shared';
-import { output } from '../command-line/output';
+import { output } from '../utils/output';
 import { readJsonFile } from '../utils/fileutils';
 import { getCommand } from './utils';
+import { cliCommand } from '../core/file-utils';
 
 export interface DefaultTasksRunnerOptions {
   parallel?: boolean;
