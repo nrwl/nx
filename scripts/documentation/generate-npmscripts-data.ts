@@ -27,6 +27,16 @@ const examples = {
       command: 'print-affected --target=build --with-deps',
       description:
         'Prints information about the affected projects and a list of tasks to build them and their dependencies.'
+    },
+    {
+      command: 'print-affected --target=build --select=projects',
+      description:
+        'Prints the projects property from the print-affected output.'
+    },
+    {
+      command: 'print-affected --target=build --select=tasks.target.project',
+      description:
+        'Prints the tasks.target.project property from the print-affected output.'
     }
   ],
   affected: [

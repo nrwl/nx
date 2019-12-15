@@ -3,7 +3,7 @@ import { generateGraph } from './dep-graph';
 import { output } from '../utils/output';
 import { parseFiles, printArgsWarning } from './shared';
 import { runCommand } from '../tasks-runner/run-command';
-import { NxArgs, splitArgsIntoNxArgsAndTargetArgs } from './utils';
+import { NxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
 import { filterAffected } from '../core/affected-project-graph';
 import {
   createProjectGraph,
@@ -16,7 +16,7 @@ import { printAffected } from './print-affected';
 import { projectHasTargetAndConfiguration } from '../utils/project-has-target-and-configuration';
 
 export function affected(command: string, parsedArgs: yargs.Arguments): void {
-  const { nxArgs, targetArgs } = splitArgsIntoNxArgsAndTargetArgs(parsedArgs);
+  const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(parsedArgs);
 
   const env = readEnvironment(nxArgs.target);
   const projectGraph = createProjectGraph();
@@ -84,10 +84,10 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
             affectedProjects,
             projectGraph,
             nxArgs,
-            targetArgs
+            overrides
           );
         } else {
-          printAffected([], affectedProjects, projectGraph, nxArgs, targetArgs);
+          printAffected([], affectedProjects, projectGraph, nxArgs, overrides);
         }
         break;
 
@@ -102,7 +102,7 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
           projectGraph,
           env,
           nxArgs,
-          targetArgs
+          overrides
         );
         break;
       }

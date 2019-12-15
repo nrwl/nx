@@ -112,8 +112,28 @@ forEachCli(cliName => {
         myapp,
         `${myapp}-e2e`
       ]);
+
+      const resWithTargetWithSelect1 = runCommand(
+        `npm run nx print-affected --silent -- --files=apps/${myapp}/src/main.tsx --target=test --select=projects`
+      ).trim();
+      compareTwoSerializedArrays(
+        resWithTargetWithSelect1,
+        `${myapp}-e2e, ${myapp}`
+      );
+
+      const resWithTargetWithSelect2 = runCommand(
+        `npm run nx print-affected --silent -- --files=apps/${myapp}/src/main.tsx --target=test --select="tasks.target.project"`
+      ).trim();
+      compareTwoSerializedArrays(resWithTargetWithSelect2, `${myapp}`);
     }, 120000);
   });
+
+  function compareTwoSerializedArrays(a: string, b: string) {
+    compareTwoArrays(
+      a.split(',').map(_ => _.trim()),
+      b.split(',').map(_ => _.trim())
+    );
+  }
 
   function compareTwoArrays(a: string[], b: string[]) {
     expect(a.sort((x, y) => x.localeCompare(y))).toEqual(

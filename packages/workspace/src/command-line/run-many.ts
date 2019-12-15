@@ -1,6 +1,6 @@
 import * as yargs from 'yargs';
 import { runCommand } from '../tasks-runner/run-command';
-import { splitArgsIntoNxArgsAndTargetArgs, NxArgs } from './utils';
+import { splitArgsIntoNxArgsAndOverrides, NxArgs } from './utils';
 import { output } from '../utils/output';
 import {
   createProjectGraph,
@@ -12,11 +12,11 @@ import { readEnvironment } from '../core/file-utils';
 import { projectHasTargetAndConfiguration } from '../utils/project-has-target-and-configuration';
 
 export function runMany(parsedArgs: yargs.Arguments): void {
-  const { nxArgs, targetArgs } = splitArgsIntoNxArgsAndTargetArgs(parsedArgs);
+  const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(parsedArgs);
   const env = readEnvironment(nxArgs.target);
   const projectGraph = createProjectGraph();
   const projects = projectsToRun(nxArgs, projectGraph);
-  runCommand(projects, projectGraph, env, nxArgs, targetArgs);
+  runCommand(projects, projectGraph, env, nxArgs, overrides);
 }
 
 function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {

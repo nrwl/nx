@@ -24,13 +24,6 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
   const cli = cliCommand();
   const isYarn = basename(process.env.npm_execpath || 'npm').startsWith('yarn');
   assertPackageJsonScriptExists(cli);
-  const additionalTaskOverrides = getLegacyTaskOverrides(options);
-  tasks.forEach(task => {
-    task.overrides = {
-      ...task.overrides,
-      ...additionalTaskOverrides
-    };
-  });
   const commands = tasks.map(t => getCommand(cli, isYarn, t));
   return new Observable(subscriber => {
     runAll(commands, {
@@ -66,15 +59,6 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
       });
   });
 };
-
-function getLegacyTaskOverrides(options: any) {
-  const legacyTaskOverrides = { ...options };
-  delete legacyTaskOverrides.maxParallel;
-  delete legacyTaskOverrides['max-parallel'];
-  delete legacyTaskOverrides.parallel;
-  delete legacyTaskOverrides.verbose;
-  return legacyTaskOverrides;
-}
 
 function assertPackageJsonScriptExists(cli: string) {
   // Make sure the `package.json` has the `nx: "nx"` command needed by `npm-run-all`

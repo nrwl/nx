@@ -36,6 +36,18 @@ Prints information about the affected projects and a list of tasks to build them
 nx print-affected --target=build --with-deps
 ```
 
+Prints the projects property from the print-affected output.:
+
+```bash
+nx print-affected --target=build --select=projects
+```
+
+Prints the tasks.target.project property from the print-affected output.:
+
+```bash
+nx print-affected --target=build --select=tasks.target.project
+```
+
 ## Options
 
 ### all
@@ -81,6 +93,8 @@ Produces a plain output for affected:apps and affected:libs
 ### runner
 
 This is the name of the tasks runner configured in nx.json
+
+### select
 
 ### uncommitted
 

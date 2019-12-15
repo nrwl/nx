@@ -1,9 +1,9 @@
-import { splitArgsIntoNxArgsAndTargetArgs } from './utils';
+import { splitArgsIntoNxArgsAndOverrides } from './utils';
 
 describe('splitArgs', () => {
   it('should split nx specific arguments into nxArgs', () => {
     expect(
-      splitArgsIntoNxArgsAndTargetArgs({
+      splitArgsIntoNxArgsAndOverrides({
         files: [''],
         notNxArg: true,
         _: ['--override'],
@@ -17,12 +17,12 @@ describe('splitArgs', () => {
 
   it('should split non nx specific arguments into target args', () => {
     expect(
-      splitArgsIntoNxArgsAndTargetArgs({
+      splitArgsIntoNxArgsAndOverrides({
         files: [''],
         notNxArg: true,
         _: ['--override'],
         $0: ''
-      }).targetArgs
+      }).overrides
     ).toEqual({
       notNxArg: true,
       override: true

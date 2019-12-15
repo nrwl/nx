@@ -6,7 +6,7 @@ import { NxJson } from '../core/shared-interfaces';
 describe('getRunner', () => {
   let nxJson: NxJson;
   let mockRunner: TasksRunner;
-  let targetArgs: any;
+  let overrides: any;
 
   beforeEach(() => {
     nxJson = {
@@ -14,29 +14,29 @@ describe('getRunner', () => {
       projects: {}
     };
     mockRunner = jest.fn();
-    targetArgs = { foo: 'bar' };
+    overrides = { foo: 'bar' };
   });
 
   it('gets a default runner when runner is not defined in the nx json', () => {
     const { tasksRunner, tasksOptions } = getRunner(
       undefined,
       nxJson,
-      targetArgs
+      overrides
     );
 
     expect(tasksRunner).toEqual(defaultTasksRunner);
-    expect(tasksOptions).toEqual(targetArgs);
+    expect(tasksOptions).toEqual(overrides);
   });
 
   it('gets a default runner when default options are not configured', () => {
     const { tasksRunner, tasksOptions } = getRunner(
       undefined,
       nxJson,
-      targetArgs
+      overrides
     );
 
     expect(tasksRunner).toEqual(defaultTasksRunner);
-    expect(tasksOptions).toEqual(targetArgs);
+    expect(tasksOptions).toEqual(overrides);
   });
 
   it('gets a custom task runner', () => {
@@ -53,11 +53,11 @@ describe('getRunner', () => {
     const { tasksRunner, tasksOptions } = getRunner(
       'custom',
       nxJson,
-      targetArgs
+      overrides
     );
 
     expect(tasksRunner).toEqual(mockRunner);
-    expect(tasksOptions).toEqual(targetArgs);
+    expect(tasksOptions).toEqual(overrides);
   });
 
   it('gets a custom task runner with options', () => {
@@ -77,7 +77,7 @@ describe('getRunner', () => {
     const { tasksRunner, tasksOptions } = getRunner(
       'custom',
       nxJson,
-      targetArgs
+      overrides
     );
     expect(tasksRunner).toBe(mockRunner);
     expect(tasksOptions).toEqual({
@@ -97,7 +97,7 @@ describe('getRunner', () => {
       }
     };
 
-    const { tasksRunner } = getRunner(undefined, nxJson, targetArgs);
+    const { tasksRunner } = getRunner(undefined, nxJson, overrides);
 
     expect(tasksRunner).toEqual(mockRunner);
   });
