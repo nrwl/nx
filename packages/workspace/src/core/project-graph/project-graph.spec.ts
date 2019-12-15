@@ -4,7 +4,7 @@ import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { createProjectGraph } from './project-graph';
 import { DependencyType } from './project-graph-models';
 import { FileData } from '../file-utils';
-import { NxJson } from '../shared';
+import { NxJson } from '../shared-interfaces';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('../../utils/app-root', () => ({ appRootPath: '/root' }));

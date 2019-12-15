@@ -1,9 +1,9 @@
-import { createProjectGraph } from './project-graph';
+import { createProjectGraph } from '../core/project-graph';
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
 import * as path from 'path';
 import { appRootPath } from '../utils/app-root';
-import { allFilesInDir } from '../command-line/file-utils';
-import { output } from './output';
+import { allFilesInDir } from '../core/file-utils';
+import { output } from '../utils/output';
 
 export function workspaceLint() {
   const graph = createProjectGraph();

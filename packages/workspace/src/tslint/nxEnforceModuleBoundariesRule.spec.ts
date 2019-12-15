@@ -3,8 +3,8 @@ import * as ts from 'typescript';
 import * as fs from 'fs';
 
 import { Rule } from './nxEnforceModuleBoundariesRule';
-import { DependencyType, ProjectGraph } from '../command-line/project-graph';
-import { ProjectType } from '../command-line/project-graph';
+import { DependencyType, ProjectGraph } from '../core/project-graph';
+import { ProjectType } from '../core/project-graph';
 import { extname } from 'path';
 
 describe('Enforce Module Boundaries', () => {

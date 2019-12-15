@@ -1,13 +1,6 @@
 import { mkdirSync, readFileSync } from 'fs';
 import { ProjectGraph, ProjectGraphContext } from './project-graph-models';
 import { ProjectGraphBuilder } from './project-graph-builder';
-import {
-  assertWorkspaceValidity,
-  mtime,
-  readNxJson,
-  readWorkspaceFiles,
-  readWorkspaceJson
-} from '../shared';
 import { appRootPath } from '../../utils/app-root';
 import {
   directoryExists,
@@ -15,7 +8,13 @@ import {
   readJsonFile,
   writeJsonFile
 } from '../../utils/fileutils';
-import { FileData } from '../file-utils';
+import {
+  FileData,
+  mtime,
+  readNxJson,
+  readWorkspaceFiles,
+  readWorkspaceJson
+} from '../file-utils';
 import { createFileMap, FileMap } from '../file-graph';
 import { BuildNodes, buildWorkspaceProjectNodes } from './build-nodes';
 import {
@@ -23,6 +22,7 @@ import {
   buildExplicitTypeScriptDependencies,
   buildImplicitProjectDependencies
 } from './build-dependencies';
+import { assertWorkspaceValidity } from '../assert-workspace-validity';
 
 export function createProjectGraph(
   workspaceJson = readWorkspaceJson(),

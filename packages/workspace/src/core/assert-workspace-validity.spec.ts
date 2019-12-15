@@ -1,4 +1,4 @@
-import { assertWorkspaceValidity } from './shared';
+import { assertWorkspaceValidity } from './assert-workspace-validity';
 
 describe('assertWorkspaceValidity', () => {
   let mockNxJson: any;

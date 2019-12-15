@@ -1,6 +1,6 @@
-import { NxJson } from '../shared';
 import { FileMap } from '../file-graph';
 import { FileData } from '../file-utils';
+import { NxJson } from '../shared-interfaces';
 
 export interface ProjectGraph {
   nodes: Record<string, ProjectGraphNode>;

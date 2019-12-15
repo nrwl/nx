@@ -5,8 +5,8 @@ import {
   createProjectGraph,
   ProjectGraph,
   ProjectGraphNode
-} from './project-graph';
-import { output } from './output';
+} from '../core/project-graph';
+import { output } from '../utils/output';
 
 export function generateGraph(
   args: { file?: string; filter?: string[]; exclude?: string[] },

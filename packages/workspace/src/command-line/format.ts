@@ -2,16 +2,13 @@ import { execSync } from 'child_process';
 import * as path from 'path';
 import * as resolve from 'resolve';
 import { getProjectRoots, parseFiles, printArgsWarning } from './shared';
-import { YargsAffectedOptions } from './run-tasks/affected';
 import { fileExists } from '../utils/fileutils';
-import { output } from './output';
-import { createProjectGraph } from './project-graph';
-import { filterAffected } from './affected-project-graph';
-import { calculateFileChanges } from './file-utils';
-
-export interface YargsFormatOptions extends YargsAffectedOptions {
-  libsAndApps?: boolean;
-}
+import { output } from '../utils/output';
+import { createProjectGraph } from '../core/project-graph';
+import { filterAffected } from '../core/affected-project-graph';
+import { calculateFileChanges } from '../core/file-utils';
+import * as yargs from 'yargs';
+import { NxArgs } from './utils';
 
 const PRETTIER_EXTENSIONS = [
   'ts',
@@ -26,11 +23,11 @@ const PRETTIER_EXTENSIONS = [
   'md'
 ];
 
-export function format(command: 'check' | 'write', args: YargsFormatOptions) {
+export function format(command: 'check' | 'write', args: yargs.Arguments) {
   let patterns: string[];
 
   try {
-    patterns = getPatterns(args);
+    patterns = getPatterns(args as any);
   } catch (e) {
     output.error({
       title: e.message,
@@ -60,7 +57,7 @@ export function format(command: 'check' | 'write', args: YargsFormatOptions) {
   }
 }
 
-function getPatterns(args: YargsAffectedOptions) {
+function getPatterns(args: NxArgs & { libsAndApps: boolean; _: string[] }) {
   const allFilesPattern = [`"**/*.{${PRETTIER_EXTENSIONS.join(',')}}"`];
 
   try {

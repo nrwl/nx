@@ -8,7 +8,7 @@ import {
   readCapabilitiesFromNodeModules
 } from '../utils/plugin-utils';
 import { approvedPlugins } from '../utils/plugins';
-import { output } from './output';
+import { output } from '../utils/output';
 
 export interface YargsListArgs extends yargs.Arguments, ListArgs {}
 

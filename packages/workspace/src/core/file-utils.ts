@@ -2,10 +2,14 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { appRootPath } from '../utils/app-root';
 import { extname } from 'path';
-import { mtime } from './shared';
 import { jsonDiff } from '../utils/json-diff';
 import { readFileSync } from 'fs';
 import { execSync } from 'child_process';
+import { readJsonFile } from '../utils/fileutils';
+import { Environment, NxJson } from './shared-interfaces';
+import { ProjectGraphNode } from './project-graph';
+import { WorkspaceResults } from '../command-line/workspace-results';
+
 const ignore = require('ignore');
 
 export interface FileData {
@@ -59,7 +63,7 @@ export function calculateFileChanges(
   });
 }
 
-const TEN_MEGABYTES = 1024 * 10000;
+export const TEN_MEGABYTES = 1024 * 10000;
 
 function defaultReadFileAtRevision(
   file: string,
@@ -125,4 +129,84 @@ function getIgnoredGlobs() {
 
 function readFileIfExisting(path: string) {
   return fs.existsSync(path) ? fs.readFileSync(path, 'UTF-8').toString() : '';
+}
+
+export function readWorkspaceJson(): any {
+  return readJsonFile(`${appRootPath}/${workspaceFileName()}`);
+}
+
+export function cliCommand() {
+  return workspaceFileName() === 'angular.json' ? 'ng' : 'nx';
+}
+
+export function workspaceFileName() {
+  const packageJson = readPackageJson();
+  if (
+    packageJson.devDependencies['@angular/cli'] ||
+    packageJson.dependencies['@angular/cli']
+  ) {
+    return 'angular.json';
+  } else {
+    return 'workspace.json';
+  }
+}
+
+export function readPackageJson(): any {
+  return readJsonFile(`${appRootPath}/package.json`);
+}
+
+export function readNxJson(): NxJson {
+  const config = readJsonFile<NxJson>(`${appRootPath}/nx.json`);
+  if (!config.npmScope) {
+    throw new Error(`nx.json must define the npmScope property.`);
+  }
+  return config;
+}
+
+export function readWorkspaceFiles(): FileData[] {
+  const workspaceJson = readWorkspaceJson();
+  const files = [];
+
+  // Add known workspace files and directories
+  files.push(...allFilesInDir(appRootPath, false));
+  files.push(...allFilesInDir(`${appRootPath}/tools`));
+
+  // Add files for workspace projects
+  Object.keys(workspaceJson.projects).forEach(projectName => {
+    const project = workspaceJson.projects[projectName];
+    files.push(...allFilesInDir(`${appRootPath}/${project.root}`));
+  });
+
+  return files;
+}
+
+export function readEnvironment(target: string): Environment {
+  const nxJson = readNxJson();
+  const workspaceJson = readWorkspaceJson();
+  const workspace = new WorkspaceResults(target);
+
+  return { nxJson, workspaceJson, workspace };
+}
+
+/**
+ * Returns the time when file was last modified
+ * Returns -Infinity for a non-existent file
+ */
+export function mtime(filePath: string): number {
+  if (!fs.existsSync(filePath)) {
+    return -Infinity;
+  }
+  return fs.statSync(filePath).mtimeMs;
+}
+
+export function normalizedProjectRoot(p: ProjectGraphNode): string {
+  if (p.data && p.data.root) {
+    return p.data.root
+      .split('/')
+      .filter(v => !!v)
+      .slice(1)
+      .join('/');
+  } else {
+    return '';
+  }
 }

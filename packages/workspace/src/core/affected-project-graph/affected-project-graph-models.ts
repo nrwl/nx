@@ -1,4 +1,4 @@
-import { NxJson } from '../shared';
+import { NxJson } from '../shared-interfaces';
 
 export interface AffectedProjectGraphContext {
   workspaceJson: any;

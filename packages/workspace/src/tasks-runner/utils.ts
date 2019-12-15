@@ -1,5 +1,5 @@
 import { Task } from './tasks-runner';
-import { ProjectGraphNode } from '../command-line/project-graph';
+import { ProjectGraphNode } from '../core/project-graph';
 
 const commonCommands = ['build', 'test', 'lint', 'e2e', 'deploy'];
 
