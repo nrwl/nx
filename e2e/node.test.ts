@@ -243,5 +243,18 @@ forEachCli(currentCLIName => {
       }).toString();
       expect(result).toContain('Hello World!');
     }, 60000);
+
+    it('should be able to generate a node library', async () => {
+      ensureProject();
+      const nodelib = uniq('nodelib');
+
+      runCLI(`generate @nrwl/node:lib ${nodelib}`);
+
+      const lintResults = runCLI(`lint ${nodelib}`);
+      expect(lintResults).toContain('All files pass linting.');
+
+      const jestResult = await runCLIAsync(`test ${nodelib}`);
+      expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
+    }, 60000);
   });
 });
