@@ -33,12 +33,15 @@
     "packageGroup": [
       "@nrwl/workspace",
       "@nrwl/angular",
+      "@nrwl/bazel",
       "@nrwl/cypress",
       "@nrwl/express",
       "@nrwl/jest",
       "@nrwl/nest",
+      "@nrwl/next",
       "@nrwl/node",
       "@nrwl/react",
+      "@nrwl/storybook",
       "@nrwl/web"
     ]
   },
