@@ -16,7 +16,11 @@ import * as stripJsonComments from 'strip-json-comments';
 import { serializeJson } from './fileutils';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { getWorkspacePath } from './cli-config-utils';
-import { createProjectGraph, ProjectGraph } from '../core/project-graph';
+import {
+  createProjectGraph,
+  onlyWorkspaceProjects,
+  ProjectGraph
+} from '../core/project-graph';
 import { FileData } from '../core/file-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
 import { NxJson } from '@nrwl/workspace/src/core/shared-interfaces';
@@ -417,12 +421,8 @@ export function getProjectGraphFromHost(host: Tree): ProjectGraph {
     );
   });
 
-  return createProjectGraph(
-    workspaceJson,
-    nxJson,
-    workspaceFiles,
-    fileRead,
-    false
+  return onlyWorkspaceProjects(
+    createProjectGraph(workspaceJson, nxJson, workspaceFiles, fileRead, false)
   );
 }
 

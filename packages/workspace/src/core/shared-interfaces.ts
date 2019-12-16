@@ -1,7 +1,13 @@
-export type ImplicitDependencyEntry = { [key: string]: '*' | string[] };
+export type ImplicitDependencyEntry<T = '*' | string[]> = {
+  [key: string]: T | ImplicitJsonSubsetDependency<T>;
+};
 
-export interface NxJson {
-  implicitDependencies?: ImplicitDependencyEntry;
+export interface ImplicitJsonSubsetDependency<T = '*' | string[]> {
+  [key: string]: T | ImplicitJsonSubsetDependency<T>;
+}
+
+export interface NxJson<T = '*' | string[]> {
+  implicitDependencies?: ImplicitDependencyEntry<T>;
   npmScope: string;
   projects: {
     [projectName: string]: NxJsonProjectConfig;

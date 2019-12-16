@@ -26,7 +26,7 @@ export class ProjectGraphBuilder {
   }
 
   addDependency(
-    type: DependencyType,
+    type: DependencyType | string,
     sourceProjectName: string,
     targetProjectName: string
   ) {

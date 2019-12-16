@@ -24,13 +24,13 @@ export type ProjectGraphNodeRecords = Record<string, ProjectGraphNode>;
 export type AddProjectNode = (node: ProjectGraphNode) => void;
 
 export interface ProjectGraphDependency {
-  type: DependencyType;
+  type: DependencyType | string;
   target: string;
   source: string;
 }
 
 export type AddProjectDependency = (
-  type: DependencyType,
+  type: DependencyType | string,
   source: string,
   target: string
 ) => void;

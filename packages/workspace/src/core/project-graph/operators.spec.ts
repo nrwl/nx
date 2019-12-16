@@ -1,5 +1,5 @@
 import { DependencyType, ProjectGraph } from './project-graph-models';
-import { reverse, withDeps } from './operators';
+import { reverse, withDeps, filterNodes } from './operators';
 
 const graph: ProjectGraph = {
   nodes: {
@@ -163,6 +163,27 @@ describe('withDeps', () => {
         'app1-e2e': [
           {
             type: 'implicit',
+            source: 'app1-e2e',
+            target: 'app1'
+          }
+        ]
+      }
+    });
+  });
+});
+
+describe('filterNodes', () => {
+  it('filters out nodes based on predicate', () => {
+    const result = filterNodes(n => n.type === 'app')(graph);
+    expect(result).toEqual({
+      nodes: {
+        'app1-e2e': { name: 'app1-e2e', type: 'app', data: null },
+        app1: { name: 'app1', type: 'app', data: null }
+      },
+      dependencies: {
+        'app1-e2e': [
+          {
+            type: DependencyType.implicit,
             source: 'app1-e2e',
             target: 'app1'
           }

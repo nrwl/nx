@@ -75,7 +75,7 @@ forEachCli(() => {
       expect(affectedApps).not.toContain(`${myapp}-e2e`);
 
       const implicitlyAffectedApps = runCommand(
-        'npm run affected:apps -- --files="package.json"'
+        'npm run affected:apps -- --files="tsconfig.json"'
       );
       expect(implicitlyAffectedApps).toContain(myapp);
       expect(implicitlyAffectedApps).toContain(myapp2);
@@ -100,7 +100,7 @@ forEachCli(() => {
       expect(affectedLibs).not.toContain(mylib2);
 
       const implicitlyAffectedLibs = runCommand(
-        'npm run affected:libs -- --files="package.json"'
+        'npm run affected:libs -- --files="tsconfig.json"'
       );
       expect(implicitlyAffectedLibs).toContain(mypublishablelib);
       expect(implicitlyAffectedLibs).toContain(mylib);

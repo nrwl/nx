@@ -7,6 +7,7 @@ import { NxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
 import { filterAffected } from '../core/affected-project-graph';
 import {
   createProjectGraph,
+  onlyWorkspaceProjects,
   ProjectGraphNode,
   ProjectType,
   withDeps
@@ -23,7 +24,9 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
   const fileChanges = readFileChanges(nxArgs);
   let affectedGraph = filterAffected(projectGraph, fileChanges);
   if (parsedArgs.withDeps) {
-    affectedGraph = withDeps(projectGraph, Object.values(affectedGraph.nodes));
+    affectedGraph = onlyWorkspaceProjects(
+      withDeps(projectGraph, Object.values(affectedGraph.nodes))
+    );
   }
   const affectedProjects = Object.values(
     parsedArgs.all ? projectGraph.nodes : affectedGraph.nodes

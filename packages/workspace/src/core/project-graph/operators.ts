@@ -21,6 +21,33 @@ export function reverse(graph: ProjectGraph): ProjectGraph {
   return result;
 }
 
+export function filterNodes(
+  predicate: (n: ProjectGraphNode) => boolean
+): (p: ProjectGraph) => ProjectGraph {
+  return original => {
+    const builder = new ProjectGraphBuilder();
+    const added = new Set<string>();
+    Object.values(original.nodes).forEach(n => {
+      if (predicate(n)) {
+        builder.addNode(n);
+        added.add(n.name);
+      }
+    });
+    Object.values(original.dependencies).forEach(ds => {
+      ds.forEach(d => {
+        if (added.has(d.source) && added.has(d.target)) {
+          builder.addDependency(d.type, d.source, d.target);
+        }
+      });
+    });
+    return builder.build();
+  };
+}
+
+export const onlyWorkspaceProjects = filterNodes(
+  n => n.type === 'app' || n.type === 'lib' || n.type === 'e2e'
+);
+
 export function withDeps(
   original: ProjectGraph,
   subsetNodes: ProjectGraphNode[]

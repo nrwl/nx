@@ -1,5 +1,5 @@
 import { extname } from 'path';
-import { vol } from 'memfs';
+import { vol, fs } from 'memfs';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { createProjectGraph } from './project-graph';
 import { DependencyType } from './project-graph-models';
@@ -68,6 +68,13 @@ describe('project graph', () => {
     };
     nxJson = {
       npmScope: 'nrwl',
+      implicitDependencies: {
+        'package.json': {
+          scripts: {
+            deploy: '*'
+          }
+        }
+      },
       projects: {
         api: { tags: [] },
         demo: { tags: [], implicitDependencies: ['api'] },
@@ -106,7 +113,7 @@ describe('project graph', () => {
         import * as util from '@nrwl/shared/util';
       `,
       './libs/shared/util/src/index.ts': stripIndents`
-        import * as happyNrwl from 'happy-nrwl';
+        import * as happyNrwl from 'happy-nrwl/a/b/c';
       `,
       './libs/shared/util/data/src/index.ts': stripIndents`
         export const SHARED_DATA = 'shared data';
@@ -137,7 +144,8 @@ describe('project graph', () => {
       ui: { name: 'ui', type: 'lib' },
       'shared-util': { name: 'shared-util', type: 'lib' },
       'shared-util-data': { name: 'shared-util-data', type: 'lib' },
-      'lazy-lib': { name: 'lazy-lib', type: 'lib' }
+      'lazy-lib': { name: 'lazy-lib', type: 'lib' },
+      'happy-nrwl': { name: 'happy-nrwl', type: 'npm' }
     });
     expect(graph.dependencies).toMatchObject({
       'demo-e2e': [
@@ -157,16 +165,24 @@ describe('project graph', () => {
         },
         { type: DependencyType.implicit, source: 'demo', target: 'api' }
       ],
-      ui: [{ type: DependencyType.static, source: 'ui', target: 'shared-util' }]
+      ui: [
+        { type: DependencyType.static, source: 'ui', target: 'shared-util' }
+      ],
+      'shared-util': [
+        {
+          type: DependencyType.static,
+          source: 'shared-util',
+          target: 'happy-nrwl'
+        }
+      ]
     });
   });
 
   it('should handle circular dependencies', () => {
-    filesJson['./libs/shared/util/src/index.ts'] = stripIndents`
-        import * as ui from '@nrwl/ui';
-        import * as happyNrwl from 'happy-nrwl';
-    `;
-    vol.fromJSON(filesJson, '/root');
+    fs.writeFileSync(
+      '/root/libs/shared/util/src/index.ts',
+      `import * as ui from '@nrwl/ui';`
+    );
 
     const graph = createProjectGraph();
 

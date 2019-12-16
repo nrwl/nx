@@ -1,5 +1,4 @@
 import { execSync } from 'child_process';
-import * as fs from 'fs';
 import { output } from '../utils/output';
 import { createProjectGraph, ProjectGraphNode } from '../core/project-graph';
 import { NxArgs } from './utils';
