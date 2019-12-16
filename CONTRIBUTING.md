@@ -121,10 +121,15 @@ You can file new issues by filling out our [issue form](https://github.com/nrwl/
 Please follow the following guidelines:
 
 - Make sure unit tests pass (`yarn test`)
+  - Target a specific unit test (i.e. `/build/packages/angular/src/utils/ast-utils.spec.js`) with `yarn test angular/src/utils/ast-utils`
+  - Debug with `node --inspect-brk ./node_modules/jest/bin/jest.js build/packages/angular/src/utils/ast-utils.spec.js`
 - Make sure e2e tests pass (this can take a while, so you can always let CI check those) (`yarn e2e`)
+  - Target a specific e2e test (i.e. `/build/e2e/cypress.test.js`) with `yarn e2e cypress`
+  - Debug with `node --inspect-brk ./node_modules/jest/bin/jest.js build/e2e/cypress.test.js`
 - Make sure you run `yarn format`
 - Update documentation with `yarn documentation`. For documentation, check for spelling and grammatical errors.
 - Update your commit message to follow the guidelines below (use `yarn commit` to automate compliance)
+  - `yarn checkcommit` will check to make sure your commit messages are formatted correctly
 
 #### Commit Message Guidelines
 

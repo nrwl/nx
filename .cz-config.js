@@ -56,7 +56,8 @@ module.exports = {
     scope: '\nDenote the SCOPE of this change (optional):',
     // used if allowCustomScopes is true
     customScope: 'Denote the SCOPE of this change:',
-    subject: 'Write a SHORT, IMPERATIVE tense description of the change:\n',
+    subject:
+      'Write a SHORT, IMPERATIVE (lowercase) description of the change:\n',
     body:
       'Provide a LONGER description of the change (optional). Use "|" to break new line:\n',
     breaking: 'List any BREAKING CHANGES (optional):\n',
@@ -68,7 +69,7 @@ module.exports = {
   allowCustomScopes: false,
   allowBreakingChanges: ['feat', 'fix'],
   // skip any questions you want
-  skipQuestions: [],
+  skipQuestions: ['ticketNumber'],
 
   // limit subject length
   subjectLimit: 100
