@@ -54,11 +54,11 @@ export function run(
     ),
     switchMap(option => {
       context.logger.info(`Storybook builder starting ...`);
-      return runInstance(option)
+      return runInstance(option);
     }),
     map(loaded => {
       context.logger.info(`Storybook builder finished ...`);
-      context.logger.info(`Storybook files availble in ${options.outputPath}`)
+      context.logger.info(`Storybook files availble in ${options.outputPath}`);
       const builder: BuilderOutput = { success: true } as BuilderOutput;
       return builder;
     })
@@ -96,7 +96,6 @@ async function findOrCreateConfig(
   config: StorybookConfig,
   context: BuilderContext
 ): Promise<string> {
-
   if (config.configFolder && statSync(config.configFolder).isDirectory()) {
     return config.configFolder;
   } else if (

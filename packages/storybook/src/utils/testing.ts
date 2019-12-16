@@ -8,8 +8,16 @@ import {
   source
 } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { BuilderContext, Target, Architect, ScheduleOptions } from '@angular-devkit/architect';
-import { TestLogger, TestingArchitectHost } from '@angular-devkit/architect/testing';
+import {
+  BuilderContext,
+  Target,
+  Architect,
+  ScheduleOptions
+} from '@angular-devkit/architect';
+import {
+  TestLogger,
+  TestingArchitectHost
+} from '@angular-devkit/architect/testing';
 import { JsonObject, json, schema } from '@angular-devkit/core';
 import { tmpdir } from 'os';
 import { mkdtempSync } from 'fs';
@@ -100,12 +108,11 @@ export class TestButtonComponent implements OnInit {
   return appTree;
 }
 
-function getTempDir(){
+function getTempDir() {
   const tmpDir = tmpdir();
   const tmpFolder = `${tmpDir}${sep}`;
   return mkdtempSync(tmpFolder);
 }
-
 
 export async function getTestArchitect() {
   const tmpDir = getTempDir();
@@ -119,7 +126,6 @@ export async function getTestArchitect() {
 
   return [architect, architectHost] as [Architect, TestingArchitectHost];
 }
-
 
 export async function getMockContext() {
   const [architect, architectHost] = await getTestArchitect();
