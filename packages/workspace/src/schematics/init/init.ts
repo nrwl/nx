@@ -129,25 +129,32 @@ function updateAngularCLIJson(options: Schema): Rule {
       config => convertBuildOptions(config)
     );
 
-    const testOptions = defaultProject.targets.get('test').options;
-    testOptions.main = testOptions.main && convertAsset(testOptions.main);
-    testOptions.polyfills =
-      testOptions.polyfills && convertAsset(testOptions.polyfills);
-    testOptions.tsConfig = join(newRoot, 'tsconfig.spec.json');
-    testOptions.karmaConfig = join(newRoot, 'karma.conf.js');
-    testOptions.assets =
-      testOptions.assets && (testOptions.assets as JsonArray).map(convertAsset);
-    testOptions.styles =
-      testOptions.styles && (testOptions.styles as JsonArray).map(convertAsset);
-    testOptions.scripts =
-      testOptions.scripts &&
-      (testOptions.scripts as JsonArray).map(convertAsset);
+    if (defaultProject.targets.has('test')) {
+      const testOptions = defaultProject.targets.get('test').options;
+      testOptions.main = testOptions.main && convertAsset(testOptions.main);
+      testOptions.polyfills =
+        testOptions.polyfills && convertAsset(testOptions.polyfills);
+      testOptions.tsConfig = join(newRoot, 'tsconfig.spec.json');
+      testOptions.karmaConfig = join(newRoot, 'karma.conf.js');
+      testOptions.assets =
+        testOptions.assets &&
+        (testOptions.assets as JsonArray).map(convertAsset);
+      testOptions.styles =
+        testOptions.styles &&
+        (testOptions.styles as JsonArray).map(convertAsset);
+      testOptions.scripts =
+        testOptions.scripts &&
+        (testOptions.scripts as JsonArray).map(convertAsset);
+    }
 
     const lintTarget = defaultProject.targets.get('lint');
-    lintTarget.options.tsConfig = [
-      join(newRoot, 'tsconfig.app.json'),
-      join(newRoot, 'tsconfig.spec.json')
-    ];
+
+    if (lintTarget) {
+      lintTarget.options.tsConfig = [
+        join(newRoot, 'tsconfig.app.json'),
+        join(newRoot, 'tsconfig.spec.json')
+      ];
+    }
 
     function convertServerOptions(serverOptions) {
       serverOptions.outputPath =
@@ -190,6 +197,7 @@ function updateAngularCLIJson(options: Schema): Rule {
     }
 
     if (defaultProject.targets.get('e2e')) {
+      const lintTargetOptions = lintTarget ? lintTarget.options : {};
       const e2eProject = workspace.projects.add({
         name: e2eName,
         root: e2eRoot,
@@ -202,7 +210,7 @@ function updateAngularCLIJson(options: Schema): Rule {
         name: 'lint',
         builder: '@angular-devkit/build-angular:tslint',
         options: {
-          ...lintTarget.options,
+          ...lintTargetOptions,
           tsConfig: join(e2eRoot, 'tsconfig.json')
         }
       });
@@ -236,11 +244,13 @@ function updateTsConfigsJson(options: Schema) {
         return json;
       }),
 
-      updateJsonInTree(app.architect.test.options.tsConfig, json => {
-        json.extends = `${offset}tsconfig.json`;
-        json.compilerOptions.outDir = `${offset}dist/out-tsc`;
-        return json;
-      }),
+      app.architect.test
+        ? updateJsonInTree(app.architect.test.options.tsConfig, json => {
+            json.extends = `${offset}tsconfig.json`;
+            json.compilerOptions.outDir = `${offset}dist/out-tsc`;
+            return json;
+          })
+        : noop(),
 
       app.architect.server
         ? updateJsonInTree(app.architect.server.options.tsConfig, json => {
@@ -363,21 +373,35 @@ function moveExistingFiles(options: Schema) {
     moveOutOfSrc(
       host,
       options.name,
-      app.architect.test.options.karmaConfig,
-      context
-    );
-    moveOutOfSrc(
-      host,
-      options.name,
       app.architect.build.options.tsConfig,
       context
     );
-    moveOutOfSrc(
-      host,
-      options.name,
-      app.architect.test.options.tsConfig,
-      context
-    );
+
+    if (app.architect.test) {
+      moveOutOfSrc(
+        host,
+        options.name,
+        app.architect.test.options.karmaConfig,
+        context
+      );
+      moveOutOfSrc(
+        host,
+        options.name,
+        app.architect.test.options.tsConfig,
+        context
+      );
+    } else {
+      // there could still be a karma.conf.js file in the root
+      // so move to new location
+      if (host.exists('karma.conf.js')) {
+        context.logger.info(
+          'No test configuration, but root Karma config file found'
+        );
+
+        moveOutOfSrc(host, options.name, 'karma.conf.js', context);
+      }
+    }
+
     if (app.architect.server) {
       moveOutOfSrc(
         host,
@@ -543,8 +567,8 @@ export default function(schema: Schema): Rule {
   ]);
   return chain([
     checkCanConvertToWorkspace(options),
-    mergeWith(templateSource),
     moveExistingFiles(options),
+    mergeWith(templateSource),
     createAdditionalFiles(options),
     updatePackageJson(),
     updateAngularCLIJson(options),

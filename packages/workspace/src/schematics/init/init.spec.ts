@@ -183,4 +183,48 @@ describe('workspace', () => {
     const tree = await runSchematic('ng-add', { name: 'myApp' }, appTree);
     expect(tree.exists('/apps/myApp/tsconfig.app.json')).toBe(true);
   });
+
+  it('should work with missing e2e, lint, or test targets', async () => {
+    appTree.create('/package.json', JSON.stringify({}));
+    appTree.create(
+      '/angular.json',
+      JSON.stringify({
+        version: 1,
+        defaultProject: 'myApp',
+        projects: {
+          myApp: {
+            root: '',
+            sourceRoot: 'src',
+            architect: {
+              build: {
+                options: {
+                  tsConfig: 'tsconfig.app.json'
+                },
+                configurations: {}
+              }
+            }
+          }
+        }
+      })
+    );
+    appTree.create(
+      '/tsconfig.app.json',
+      '{"extends": "../tsconfig.json", "compilerOptions": {}}'
+    );
+    appTree.create(
+      '/tsconfig.spec.json',
+      '{"extends": "../tsconfig.json", "compilerOptions": {}}'
+    );
+    appTree.create('/tsconfig.json', '{"compilerOptions": {}}');
+    appTree.create('/tslint.json', '{"rules": {}}');
+    appTree.create('/e2e/protractor.conf.js', '// content');
+    appTree.create('/src/app/app.module.ts', '// content');
+    appTree.create('/karma.conf.js', '// content');
+
+    const tree = await runSchematic('ng-add', { name: 'myApp' }, appTree);
+
+    expect(tree.exists('/apps/myApp/tsconfig.app.json')).toBe(true);
+    expect(tree.exists('/apps/myApp/karma.conf.js')).toBe(true);
+    expect(tree.exists('/karma.conf.js')).toBe(true);
+  });
 });
