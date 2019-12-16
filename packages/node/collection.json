@@ -10,12 +10,17 @@
       "aliases": ["ng-add"],
       "hidden": true
     },
-
     "application": {
       "factory": "./src/schematics/application/application",
       "schema": "./src/schematics/application/schema.json",
       "aliases": ["app"],
       "description": "Create a node application"
+    },
+    "library": {
+      "factory": "./src/schematics/library/library",
+      "schema": "./src/schematics/library/schema.json",
+      "aliases": ["lib"],
+      "description": "Create a library"
     }
   }
 }
