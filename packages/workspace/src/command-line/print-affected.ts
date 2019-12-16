@@ -5,7 +5,7 @@ import { basename } from 'path';
 import { getCommand, getOutputs } from '../tasks-runner/utils';
 import * as yargs from 'yargs';
 import { NxArgs } from './utils';
-import { cliCommand } from '@nrwl/workspace/src/core/file-utils';
+import { cliCommand } from '../core/file-utils';
 
 export function printAffected(
   affectedProjectsWithTargetAndConfig: ProjectGraphNode[],

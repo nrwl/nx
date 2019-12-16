@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 echo "Generating API documentation"
 ts-node ./scripts/documentation/generate-builders-data.ts
 ts-node ./scripts/documentation/generate-schematics-data.ts

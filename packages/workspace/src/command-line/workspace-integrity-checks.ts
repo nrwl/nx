@@ -1,6 +1,6 @@
 import { output, CLIErrorMessageConfig } from '../utils/output';
 import { ProjectGraph } from '../core/project-graph';
-import { workspaceFileName } from '@nrwl/workspace/src/core/file-utils';
+import { workspaceFileName } from '../core/file-utils';
 
 export class WorkspaceIntegrityChecks {
   constructor(private projectGraph: ProjectGraph, private files: string[]) {}

@@ -10,7 +10,7 @@ import { list } from './list';
 import { report } from './report';
 import { workspaceSchematic } from './workspace-schematic';
 import { affected } from './affected';
-import { runMany } from '@nrwl/workspace/src/command-line/run-many';
+import { runMany } from './run-many';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
