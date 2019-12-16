@@ -30,7 +30,8 @@ const dummyOptions: NxArgs = {
   withDeps: false,
   'with-deps': false,
   projects: [],
-  select: ''
+  select: '',
+  _: []
 } as any;
 
 const nxSpecific = Object.keys(dummyOptions);

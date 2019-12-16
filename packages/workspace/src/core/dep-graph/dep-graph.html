@@ -63,9 +63,9 @@
   function hasPath(target, node, visited) {
     if (target === node) return true;
 
-    for (let d of window.graph.dependencies[node]) {
-      if (visited.indexOf(d.name) > -1) continue;
-      if (hasPath(target, d.name, [...visited, d.name])) return true;
+    for (let d of window.graph.dependencies[node] || []) {
+      if (visited.indexOf(d.target) > -1) continue;
+      if (hasPath(target, d.target, [...visited, d.target])) return true;
     }
     return false;
   }

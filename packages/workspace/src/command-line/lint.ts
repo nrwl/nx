@@ -1,4 +1,7 @@
-import { createProjectGraph } from '../core/project-graph';
+import {
+  createProjectGraph,
+  onlyWorkspaceProjects
+} from '../core/project-graph';
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
 import * as path from 'path';
 import { appRootPath } from '../utils/app-root';
@@ -6,7 +9,7 @@ import { allFilesInDir } from '../core/file-utils';
 import { output } from '../utils/output';
 
 export function workspaceLint() {
-  const graph = createProjectGraph();
+  const graph = onlyWorkspaceProjects(createProjectGraph());
 
   const cliErrorOutputConfigs = new WorkspaceIntegrityChecks(
     graph,

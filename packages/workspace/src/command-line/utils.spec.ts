@@ -10,6 +10,7 @@ describe('splitArgs', () => {
         $0: ''
       }).nxArgs
     ).toEqual({
+      _: ['--override'],
       projects: [],
       files: ['']
     });

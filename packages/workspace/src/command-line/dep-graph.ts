@@ -3,16 +3,18 @@ import * as http from 'http';
 import * as opn from 'opn';
 import {
   createProjectGraph,
+  onlyWorkspaceProjects,
   ProjectGraph,
   ProjectGraphNode
 } from '../core/project-graph';
 import { output } from '../utils/output';
+import { join } from 'path';
 
 export function generateGraph(
   args: { file?: string; filter?: string[]; exclude?: string[] },
   affectedProjects: string[]
 ): void {
-  const graph = createProjectGraph();
+  const graph = onlyWorkspaceProjects(createProjectGraph());
 
   const renderProjects: ProjectGraphNode[] = filterProjects(
     graph,
@@ -43,7 +45,9 @@ function startServer(
   graph: ProjectGraph,
   affected: string[]
 ) {
-  const f = readFileSync(__dirname + '/dep-graph/dep-graph.html').toString();
+  const f = readFileSync(
+    join(__dirname, '../core/dep-graph/dep-graph.html')
+  ).toString();
   const html = f
     .replace(
       `window.projects = null`,
@@ -90,13 +94,17 @@ function filterProjects(
   return filteredProjects;
 }
 
-function hasPath(graph, target, node, visited) {
+function hasPath(
+  graph: ProjectGraph,
+  target: string,
+  node: string,
+  visited: string[]
+) {
   if (target === node) return true;
 
-  for (let d of graph.nodes[node]) {
-    if (visited.indexOf(d.projectName) > -1) continue;
-    if (hasPath(graph, target, d.projectName, [...visited, d.projectName]))
-      return true;
+  for (let d of graph.dependencies[node] || []) {
+    if (visited.indexOf(d.target) > -1) continue;
+    if (hasPath(graph, target, d.target, [...visited, d.target])) return true;
   }
   return false;
 }

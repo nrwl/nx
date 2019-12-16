@@ -1,5 +1,5 @@
 import { mkdirSync, readFileSync } from 'fs';
-import { ProjectGraph, ProjectGraphContext } from './project-graph-models';
+import { ProjectGraph } from './project-graph-models';
 import { ProjectGraphBuilder } from './project-graph-builder';
 import { appRootPath } from '../../utils/app-root';
 import {
@@ -16,13 +16,19 @@ import {
   readWorkspaceJson
 } from '../file-utils';
 import { createFileMap, FileMap } from '../file-graph';
-import { BuildNodes, buildWorkspaceProjectNodes } from './build-nodes';
+import {
+  BuildNodes,
+  buildNpmPackageNodes,
+  buildWorkspaceProjectNodes
+} from './build-nodes';
 import {
   BuildDependencies,
+  buildExplicitNpmDependencies,
   buildExplicitTypeScriptDependencies,
   buildImplicitProjectDependencies
 } from './build-dependencies';
 import { assertWorkspaceValidity } from '../assert-workspace-validity';
+import { normalizeNxJson } from '../normalize-nx-json';
 
 export function createProjectGraph(
   workspaceJson = readWorkspaceJson(),
@@ -33,23 +39,26 @@ export function createProjectGraph(
 ): ProjectGraph {
   assertWorkspaceValidity(workspaceJson, nxJson);
 
+  const normalizedNxJson = normalizeNxJson(nxJson);
+
   if (!cache || maxMTime(workspaceFiles) > cache.mtime) {
-    const builder = new ProjectGraphBuilder(
-      cache ? cache.data.projectGraph : undefined
-    );
-    const buildNodesFns: BuildNodes[] = [buildWorkspaceProjectNodes];
-    const buildDependenciesFns: BuildDependencies[] = [
-      buildExplicitTypeScriptDependencies,
-      buildImplicitProjectDependencies
-    ];
-    // TODO: File graph needs to be handled separately from project graph, or
-    // we need a way to support project extensions (e.g. npm project).
     const fileMap = createFileMap(workspaceJson, workspaceFiles);
+    const incremental = modifiedSinceCache(fileMap, cache);
     const ctx = {
       workspaceJson,
-      nxJson,
-      fileMap: modifiedSinceCache(fileMap, cache)
+      nxJson: normalizedNxJson,
+      fileMap: incremental.fileMap
     };
+    const builder = new ProjectGraphBuilder(incremental.projectGraph);
+    const buildNodesFns: BuildNodes[] = [
+      buildWorkspaceProjectNodes,
+      buildNpmPackageNodes
+    ];
+    const buildDependenciesFns: BuildDependencies[] = [
+      buildExplicitTypeScriptDependencies,
+      buildImplicitProjectDependencies,
+      buildExplicitNpmDependencies
+    ];
 
     buildNodesFns.forEach(f => f(ctx, builder.addNode.bind(builder), fileRead));
 
@@ -113,38 +122,44 @@ function maxMTime(files: FileData[]) {
 function modifiedSinceCache(
   fileMap: FileMap,
   c: false | { data: ProjectGraphCache; mtime: number }
-): FileMap {
+): { fileMap: FileMap; projectGraph?: ProjectGraph } {
   // No cache -> compute entire graph
   if (!c) {
-    return fileMap;
+    return { fileMap };
   }
 
+  const cachedFileMap = c.data.fileMap;
   const currentProjects = Object.keys(fileMap).sort();
-  const previousProjects = Object.keys(c.data.fileMap).sort();
+  const previousProjects = Object.keys(cachedFileMap).sort();
 
   // Projects changed -> compute entire graph
   if (
     currentProjects.length !== previousProjects.length ||
     currentProjects.some((val, idx) => val !== previousProjects[idx])
   ) {
-    return fileMap;
+    return { fileMap };
   }
 
-  // Projects are same, only compute changed projects
-  const modifiedSince: FileMap = currentProjects.reduce((acc, k) => {
-    acc[k] = [];
-    return acc;
-  }, {});
+  // Projects are same -> compute projects with file changes
+  const modifiedSince: FileMap = {};
   currentProjects.forEach(p => {
+    let projectFilesChanged = false;
     for (const f of fileMap[p]) {
-      const fromCache = c.data.fileMap[p].find(x => x.file === f.file);
-
-      if (!fromCache) {
-        modifiedSince[p].push(f);
-      } else if (f.mtime > fromCache.mtime) {
-        modifiedSince[p].push(f);
+      const fromCache = cachedFileMap[p].find(x => x.file === f.file);
+      if (!fromCache || f.mtime > fromCache.mtime) {
+        projectFilesChanged = true;
+        break;
       }
     }
+    if (projectFilesChanged) {
+      modifiedSince[p] = fileMap[p];
+    }
   });
-  return modifiedSince;
+
+  // Re-compute nodes and dependencies for each project in file map.
+  Object.keys(modifiedSince).forEach(key => {
+    delete c.data.projectGraph.dependencies[key];
+  });
+
+  return { fileMap: modifiedSince, projectGraph: c.data.projectGraph };
 }

@@ -5,7 +5,7 @@ export interface FileMap {
 }
 
 export function createFileMap(workspaceJson: any, files: FileData[]): FileMap {
-  const graph: FileMap = {};
+  const fileMap: FileMap = {};
   const seen = new Set();
   // Sorting here so `apps/client-e2e` comes before `apps/client` and has
   // a chance to match prefix first.
@@ -20,16 +20,16 @@ export function createFileMap(workspaceJson: any, files: FileData[]): FileMap {
     })
     .forEach(projectName => {
       const p = workspaceJson.projects[projectName];
+      fileMap[projectName] = fileMap[projectName] || [];
       files.forEach(f => {
         if (seen.has(f.file)) {
           return;
         }
         if (f.file.startsWith(p.root)) {
-          graph[projectName] = graph[projectName] || [];
-          graph[projectName].push(f);
+          fileMap[projectName].push(f);
           seen.add(f.file);
         }
       });
     });
-  return graph;
+  return fileMap;
 }

@@ -24,7 +24,10 @@ describe('workspace', () => {
       npmScope: 'proj',
       implicitDependencies: {
         'workspace.json': '*',
-        'package.json': '*',
+        'package.json': {
+          dependencies: '*',
+          devDependencies: '*'
+        },
         'tsconfig.json': '*',
         'tslint.json': '*',
         'nx.json': '*'

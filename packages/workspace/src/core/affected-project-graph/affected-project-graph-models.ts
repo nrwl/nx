@@ -2,6 +2,6 @@ import { NxJson } from '../shared-interfaces';
 
 export interface AffectedProjectGraphContext {
   workspaceJson: any;
-  nxJson: NxJson;
+  nxJson: NxJson<string[]>;
   touchedProjects: string[];
 }

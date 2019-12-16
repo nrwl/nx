@@ -1,4 +1,5 @@
 import { workspaceFileName } from './file-utils';
+import { ImplicitJsonSubsetDependency } from '@nrwl/workspace/src/core/shared-interfaces';
 
 export function assertWorkspaceValidity(workspaceJson, nxJson) {
   const workspaceJsonProjects = Object.keys(workspaceJson.projects);
@@ -29,8 +30,24 @@ export function assertWorkspaceValidity(workspaceJson, nxJson) {
 
   const invalidImplicitDependencies = new Map<string, string[]>();
 
-  Object.entries<'*' | string[]>(nxJson.implicitDependencies || {})
-    .filter(([_, val]) => val !== '*') // These are valid since it is calculated
+  Object.entries<'*' | string[] | ImplicitJsonSubsetDependency>(
+    nxJson.implicitDependencies || {}
+  )
+    .reduce((acc, entry) => {
+      function recur(value, acc = []) {
+        if (value === '*') {
+          // do nothing since '*' is calculated and always valid.
+        } else if (Array.isArray(value)) {
+          acc.push([entry[0], value]);
+        } else {
+          Object.values(value).forEach(v => {
+            recur(v, acc);
+          });
+        }
+      }
+      recur(entry[1], acc);
+      return acc;
+    }, [])
     .reduce((map, [filename, projectNames]: [string, string[]]) => {
       detectAndSetInvalidProjectValues(map, filename, projectNames, projects);
       return map;

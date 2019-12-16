@@ -1,15 +1,13 @@
-import { ProjectGraphContext, AddProjectNode } from '../project-graph-models';
+import { AddProjectNode, ProjectGraphContext } from '../project-graph-models';
 
 export function buildWorkspaceProjectNodes(
   ctx: ProjectGraphContext,
   addNode: AddProjectNode,
   fileRead: (s: string) => string
 ) {
-  const workspaceJsonProjects = Object.keys(ctx.workspaceJson.projects);
-
   const toAdd = [];
 
-  workspaceJsonProjects.forEach(key => {
+  Object.keys(ctx.fileMap).forEach(key => {
     const p = ctx.workspaceJson.projects[key];
 
     const projectType =
@@ -29,7 +27,7 @@ export function buildWorkspaceProjectNodes(
       data: {
         ...p,
         tags,
-        files: ctx.fileMap[key] || []
+        files: ctx.fileMap[key]
       }
     });
   });

@@ -1,4 +1,5 @@
 import { extname } from 'path';
+import { jsonDiff } from '../../utils/json-diff';
 import { vol } from 'memfs';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { createProjectGraph } from '../project-graph';
@@ -22,11 +23,14 @@ describe('project graph', () => {
   beforeEach(() => {
     packageJson = {
       name: '@nrwl/workspace-src',
+      scripts: {
+        deploy: 'echo deploy'
+      },
       dependencies: {
         'happy-nrwl': '1.0.0'
       },
       devDependencies: {
-        '@nrwl/workspace': '*'
+        '@nrwl/workspace': '8.0.0'
       }
     };
     workspaceJson = {
@@ -61,6 +65,14 @@ describe('project graph', () => {
     nxJson = {
       npmScope: 'nrwl',
       implicitDependencies: {
+        'package.json': {
+          scripts: {
+            deploy: ['demo', 'api']
+          },
+          devDependencies: {
+            '@nrwl/workspace': '*'
+          }
+        },
         'something-for-api.txt': ['api']
       },
       projects: {
@@ -182,5 +194,121 @@ describe('project graph', () => {
         ]
       }
     });
+  });
+
+  it('should create nodes and dependencies with npm packages', () => {
+    const graph = createProjectGraph();
+    const updatedPackageJson = {
+      ...packageJson,
+      dependencies: {
+        'happy-nrwl': '2.0.0'
+      }
+    };
+
+    const affected = filterAffected(graph, [
+      {
+        file: 'package.json',
+        ext: '.json',
+        mtime: 1,
+        getChanges: () => jsonDiff(packageJson, updatedPackageJson)
+      }
+    ]);
+
+    expect(affected).toEqual({
+      nodes: {
+        'happy-nrwl': {
+          type: 'npm',
+          name: 'happy-nrwl',
+          data: expect.anything()
+        },
+        util: {
+          name: 'util',
+          type: 'lib',
+          data: expect.anything()
+        },
+        ui: {
+          name: 'ui',
+          type: 'lib',
+          data: expect.anything()
+        },
+        demo: {
+          name: 'demo',
+          type: 'app',
+          data: expect.anything()
+        },
+        'demo-e2e': {
+          name: 'demo-e2e',
+          type: 'e2e',
+          data: expect.anything()
+        }
+      },
+      dependencies: {
+        'demo-e2e': [
+          {
+            type: 'implicit',
+            source: 'demo-e2e',
+            target: 'demo'
+          }
+        ],
+        demo: [
+          {
+            type: 'static',
+            source: 'demo',
+            target: 'ui'
+          }
+        ],
+        ui: [{ type: 'static', source: 'ui', target: 'util' }],
+        util: [{ type: 'static', source: 'util', target: 'happy-nrwl' }]
+      }
+    });
+  });
+
+  it('should support implicit JSON file dependencies (some projects)', () => {
+    const graph = createProjectGraph();
+    const updatedPackageJson = {
+      ...packageJson,
+      scripts: {
+        deploy: 'echo deploy!!!'
+      }
+    };
+
+    const affected = filterAffected(graph, [
+      {
+        file: 'package.json',
+        ext: '.json',
+        mtime: 1,
+        getChanges: () => jsonDiff(packageJson, updatedPackageJson)
+      }
+    ]);
+
+    expect(Object.keys(affected.nodes)).toEqual(['demo', 'demo-e2e', 'api']);
+  });
+
+  it('should support implicit JSON file dependencies (all projects)', () => {
+    const graph = createProjectGraph();
+    const updatedPackageJson = {
+      ...packageJson,
+      devDependencies: {
+        '@nrwl/workspace': '9.0.0'
+      }
+    };
+
+    const affected = filterAffected(graph, [
+      {
+        file: 'package.json',
+        ext: '.json',
+        mtime: 1,
+        getChanges: () => jsonDiff(packageJson, updatedPackageJson)
+      }
+    ]);
+
+    expect(Object.keys(affected.nodes)).toEqual([
+      '@nrwl/workspace',
+      'api',
+      'demo',
+      'demo-e2e',
+      'ui',
+      'util'
+    ]);
   });
 });
