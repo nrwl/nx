@@ -6,10 +6,8 @@ import {
   readFile,
   ensureProject,
   uniq,
-  newProject,
   forEachCli,
   supportUi,
-  workspaceConfigName,
   setMaxWorkers
 } from './utils';
 
@@ -46,7 +44,7 @@ forEachCli(currentCLIName => {
     if (supportUi()) {
       describe('running Cypress', () => {
         it('should execute e2e tests using Cypress', () => {
-          newProject();
+          ensureProject();
           const myapp = uniq('myapp');
           runCLI(
             `generate @nrwl/${nrwlPackageName}:app ${myapp} --e2eTestRunner=cypress --linter=${linter}`
