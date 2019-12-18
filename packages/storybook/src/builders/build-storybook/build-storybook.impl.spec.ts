@@ -10,7 +10,7 @@ describe('Build storybook', () => {
     context = await getMockContext();
   });
 
-  xit('should call the storybook static standalone build', async () => {
+  it('should call the storybook static standalone build', async () => {
     const storybookSpy = spyOn(
       storybook,
       'buildStaticStandalone'
@@ -40,7 +40,7 @@ describe('Build storybook', () => {
     expect(storybookSpy).toHaveBeenCalled();
   });
 
-  xit('should log the output path', async () => {
+  it('should log the output path', async () => {
     const outputPath = `${context.workspaceRoot}/dist/storybook`;
     spyOn(storybook, 'buildStaticStandalone').and.returnValue(
       Promise.resolve(true)
@@ -72,7 +72,7 @@ describe('Build storybook', () => {
     ).toBeTruthy();
   });
 
-  xit('should log the choosen ui framework', async () => {
+  it('should log the choosen ui framework', async () => {
     const uiFramework = '@storybook/angular';
     spyOn(storybook, 'buildStaticStandalone').and.returnValue(
       Promise.resolve(true)
