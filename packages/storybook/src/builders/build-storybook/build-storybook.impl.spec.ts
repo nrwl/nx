@@ -11,7 +11,10 @@ describe('Build storybook', () => {
   });
 
   it('should call the storybook static standalone build', async () => {
-    const storybookSpy = spyOn(storybook, 'buildStaticStandalone').and.returnValue(Promise.resolve(true));
+    const storybookSpy = spyOn(
+      storybook,
+      'buildStaticStandalone'
+    ).and.returnValue(Promise.resolve(true));
     const result = await storybookBuilder(
       {
         uiFramework: '@storybook/angular',
@@ -36,9 +39,12 @@ describe('Build storybook', () => {
 
     expect(storybookSpy).toHaveBeenCalled();
   }, 60000);
-  
+
   it('should log the output path', async () => {
-    const storybookSpy = spyOn(storybook, 'buildStaticStandalone').and.returnValue(Promise.resolve(true));
+    const storybookSpy = spyOn(
+      storybook,
+      'buildStaticStandalone'
+    ).and.returnValue(Promise.resolve(true));
     const outputPath = `${context.workspaceRoot}/dist/storybook`;
     const result = await storybookBuilder(
       {
@@ -62,12 +68,17 @@ describe('Build storybook', () => {
       context
     ).toPromise();
 
-    expect(context.logger.includes(`Storybook files availble in ${outputPath}`)).toBeTruthy();
-  }, 60000)
+    expect(
+      context.logger.includes(`Storybook files availble in ${outputPath}`)
+    ).toBeTruthy();
+  }, 60000);
 
   it('should log the choosen ui framework', async () => {
-    const storybookSpy = spyOn(storybook, 'buildStaticStandalone').and.returnValue(Promise.resolve(true));
-    const uiFramework = '@storybook/angular'
+    const storybookSpy = spyOn(
+      storybook,
+      'buildStaticStandalone'
+    ).and.returnValue(Promise.resolve(true));
+    const uiFramework = '@storybook/angular';
     const result = await storybookBuilder(
       {
         uiFramework,
@@ -90,7 +101,9 @@ describe('Build storybook', () => {
       context
     ).toPromise();
 
-    expect(context.logger.includes(`ui framework: ${uiFramework}`)).toBeTruthy();
+    expect(
+      context.logger.includes(`ui framework: ${uiFramework}`)
+    ).toBeTruthy();
   }, 60000);
 
   it('should run successfull', async () => {
