@@ -15,7 +15,7 @@ describe('Build storybook', () => {
       storybook,
       'buildStaticStandalone'
     ).and.returnValue(Promise.resolve(true));
-    const result = await storybookBuilder(
+    await storybookBuilder(
       {
         uiFramework: '@storybook/angular',
         outputPath: `${context.workspaceRoot}/dist/storybook`,
@@ -38,15 +38,14 @@ describe('Build storybook', () => {
     ).toPromise();
 
     expect(storybookSpy).toHaveBeenCalled();
-  }, 60000);
+  });
 
   it('should log the output path', async () => {
-    const storybookSpy = spyOn(
-      storybook,
-      'buildStaticStandalone'
-    ).and.returnValue(Promise.resolve(true));
     const outputPath = `${context.workspaceRoot}/dist/storybook`;
-    const result = await storybookBuilder(
+    spyOn(storybook, 'buildStaticStandalone').and.returnValue(
+      Promise.resolve(true)
+    );
+    await storybookBuilder(
       {
         uiFramework: '@storybook/angular',
         outputPath,
@@ -71,15 +70,14 @@ describe('Build storybook', () => {
     expect(
       context.logger.includes(`Storybook files availble in ${outputPath}`)
     ).toBeTruthy();
-  }, 60000);
+  });
 
-  it('should log the choosen ui-framework', async () => {
-    const storybookSpy = spyOn(
-      storybook,
-      'buildStaticStandalone'
-    ).and.returnValue(Promise.resolve(true));
+  it('should log the choosen ui framework', async () => {
     const uiFramework = '@storybook/angular';
-    const result = await storybookBuilder(
+    spyOn(storybook, 'buildStaticStandalone').and.returnValue(
+      Promise.resolve(true)
+    );
+    await storybookBuilder(
       {
         uiFramework,
         outputPath: `${context.workspaceRoot}/dist/storybook`,
@@ -104,7 +102,7 @@ describe('Build storybook', () => {
     expect(
       context.logger.includes(`ui framework: ${uiFramework}`)
     ).toBeTruthy();
-  }, 60000);
+  });
 
   it('should run successfull', async () => {
     const result = await storybookBuilder(
@@ -130,5 +128,5 @@ describe('Build storybook', () => {
     ).toPromise();
 
     expect(result.success).toBe(true);
-  }, 60000);
+  }, 120000);
 });
