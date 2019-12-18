@@ -7,7 +7,7 @@ import {
   apply,
   source
 } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
+import { createEmptyWorkspace } from '@nrwl/workspace/src/utils/testing-utils';
 import {
   BuilderContext,
   Target,
