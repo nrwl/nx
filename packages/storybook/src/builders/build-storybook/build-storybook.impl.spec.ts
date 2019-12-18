@@ -73,7 +73,7 @@ describe('Build storybook', () => {
     ).toBeTruthy();
   }, 60000);
 
-  it('should log the choosen ui framework', async () => {
+  it('should log the choosen ui-framework', async () => {
     const storybookSpy = spyOn(
       storybook,
       'buildStaticStandalone'
