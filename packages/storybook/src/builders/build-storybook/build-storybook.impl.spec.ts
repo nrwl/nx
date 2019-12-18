@@ -11,14 +11,16 @@ describe('Build storybook', () => {
   });
 
   it('should call the storybook static standalone build', async () => {
+    const uiFramework = '@storybook/angular';
+    const outputPath = `${context.workspaceRoot}/dist/storybook`;
     const storybookSpy = spyOn(
       storybook,
       'buildStaticStandalone'
     ).and.returnValue(Promise.resolve(true));
-    await storybookBuilder(
+    const result = await storybookBuilder(
       {
-        uiFramework: '@storybook/angular',
-        outputPath: `${context.workspaceRoot}/dist/storybook`,
+        uiFramework: uiFramework,
+        outputPath: outputPath,
         config: {
           pluginPath: join(
             __dirname,
@@ -38,95 +40,12 @@ describe('Build storybook', () => {
     ).toPromise();
 
     expect(storybookSpy).toHaveBeenCalled();
-  });
-
-  it('should log the output path', async () => {
-    const outputPath = `${context.workspaceRoot}/dist/storybook`;
-    spyOn(storybook, 'buildStaticStandalone').and.returnValue(
-      Promise.resolve(true)
-    );
-    await storybookBuilder(
-      {
-        uiFramework: '@storybook/angular',
-        outputPath,
-        config: {
-          pluginPath: join(
-            __dirname,
-            `/../../schematics/configuration/root-files/.storybook/addons.js`
-          ),
-          configPath: join(
-            __dirname,
-            `/../../schematics/configuration/root-files/.storybook/webpack.config.js`
-          ),
-          srcRoot: join(
-            __dirname,
-            `/../../schematics/configuration/root-files/.storybook/tsconfig.json`
-          )
-        }
-      },
-      context
-    ).toPromise();
-
     expect(
       context.logger.includes(`Storybook files availble in ${outputPath}`)
     ).toBeTruthy();
-  });
-
-  it('should log the choosen ui framework', async () => {
-    const uiFramework = '@storybook/angular';
-    spyOn(storybook, 'buildStaticStandalone').and.returnValue(
-      Promise.resolve(true)
-    );
-    await storybookBuilder(
-      {
-        uiFramework,
-        outputPath: `${context.workspaceRoot}/dist/storybook`,
-        config: {
-          pluginPath: join(
-            __dirname,
-            `/../../schematics/configuration/root-files/.storybook/addons.js`
-          ),
-          configPath: join(
-            __dirname,
-            `/../../schematics/configuration/root-files/.storybook/webpack.config.js`
-          ),
-          srcRoot: join(
-            __dirname,
-            `/../../schematics/configuration/root-files/.storybook/tsconfig.json`
-          )
-        }
-      },
-      context
-    ).toPromise();
-
     expect(
       context.logger.includes(`ui framework: ${uiFramework}`)
     ).toBeTruthy();
+    expect(result.success).toBeTruthy();
   });
-
-  it('should run successfull', async () => {
-    const result = await storybookBuilder(
-      {
-        uiFramework: '@storybook/angular',
-        outputPath: `${context.workspaceRoot}/dist/storybook`,
-        config: {
-          pluginPath: join(
-            __dirname,
-            `/../../schematics/configuration/root-files/.storybook/addons.js`
-          ),
-          configPath: join(
-            __dirname,
-            `/../../schematics/configuration/root-files/.storybook/webpack.config.js`
-          ),
-          srcRoot: join(
-            __dirname,
-            `/../../schematics/configuration/root-files/.storybook/tsconfig.json`
-          )
-        }
-      },
-      context
-    ).toPromise();
-
-    expect(result.success).toBe(true);
-  }, 120000);
 });
