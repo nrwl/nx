@@ -20,6 +20,12 @@ Possible values: `electron`, `chrome`, `chromium`, `canary`
 
 The browser to run tests in.
 
+### ciBuildId
+
+Type: `string`
+
+A unique identifier for a run to enable grouping or parallelization.
+
 ### copyFiles
 
 Type: `string`
