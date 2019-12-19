@@ -1,19 +1,15 @@
-import {
-  getProjectNodes,
-  allFilesInDir,
-  readWorkspaceJson,
-  readNxJson
-} from './shared';
+import { createProjectGraph } from '../core/project-graph';
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
 import * as path from 'path';
 import { appRootPath } from '../utils/app-root';
-import { output } from './output';
+import { allFilesInDir } from '../core/file-utils';
+import { output } from '../utils/output';
 
 export function workspaceLint() {
-  const nodes = getProjectNodes(readWorkspaceJson(), readNxJson());
+  const graph = createProjectGraph();
 
   const cliErrorOutputConfigs = new WorkspaceIntegrityChecks(
-    nodes,
+    graph,
     readAllFilesFromAppsAndLibs()
   ).run();
 

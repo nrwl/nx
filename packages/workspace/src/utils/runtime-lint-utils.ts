@@ -1,27 +1,34 @@
 import * as path from 'path';
-import { Dependency, DependencyType } from '../command-line/deps-calculator';
-import { normalizedProjectRoot, ProjectNode } from '../command-line/shared';
+import {
+  DependencyType,
+  ProjectGraphNode,
+  ProjectGraphDependency,
+  ProjectGraph
+} from '../core/project-graph';
 import { normalize } from '@angular-devkit/core';
+import { FileData, normalizedProjectRoot } from '../core/file-utils';
 
-export type Deps = { [projectName: string]: Dependency[] };
+export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 export type DepConstraint = {
   sourceTag: string;
   onlyDependOnLibsWithTags: string[];
 };
 
-export function hasNoneOfTheseTags(proj: ProjectNode, tags: string[]) {
+export function hasNoneOfTheseTags(proj: ProjectGraphNode, tags: string[]) {
   return tags.filter(allowedTag => hasTag(proj, allowedTag)).length === 0;
 }
 
-function hasTag(proj: ProjectNode, tag: string) {
-  return (proj.tags || []).indexOf(tag) > -1 || tag === '*';
+function hasTag(proj: ProjectGraphNode, tag: string) {
+  return (proj.data.tags || []).indexOf(tag) > -1 || tag === '*';
 }
 
 function containsFile(
-  files: string[],
+  files: FileData[],
   targetFileWithoutExtension: string
 ): boolean {
-  return !!files.filter(f => removeExt(f) === targetFileWithoutExtension)[0];
+  return !!files.filter(
+    f => removeExt(f.file) === targetFileWithoutExtension
+  )[0];
 }
 
 function removeExt(file: string): string {
@@ -67,7 +74,7 @@ export function isRelative(s: string) {
 export function isRelativeImportIntoAnotherProject(
   imp: string,
   projectPath: string,
-  projectNodes: ProjectNode[],
+  projectGraph: ProjectGraph,
   sourceFilePath: string
 ): boolean {
   if (!isRelative(imp)) return false;
@@ -76,40 +83,39 @@ export function isRelativeImportIntoAnotherProject(
     path.resolve(path.join(projectPath, path.dirname(sourceFilePath)), imp)
   ).substring(projectPath.length + 1);
 
-  const sourceProject = findSourceProject(projectNodes, sourceFilePath);
-  const targetProject = findTargetProject(projectNodes, targetFile);
+  const sourceProject = findSourceProject(projectGraph, sourceFilePath);
+  const targetProject = findTargetProject(projectGraph, targetFile);
   return sourceProject && targetProject && sourceProject !== targetProject;
 }
 
-export function findProjectUsingFile(
-  projectNodes: ProjectNode[],
-  file: string
-) {
-  return projectNodes.filter(n => containsFile(n.files, file))[0];
+export function findProjectUsingFile(projectGraph: ProjectGraph, file: string) {
+  return Object.values(projectGraph.nodes).filter(n =>
+    containsFile(n.data.files, file)
+  )[0];
 }
 
 export function findSourceProject(
-  projectNodes: ProjectNode[],
+  projectGraph: ProjectGraph,
   sourceFilePath: string
 ) {
   const targetFile = removeExt(sourceFilePath);
-  return findProjectUsingFile(projectNodes, targetFile);
+  return findProjectUsingFile(projectGraph, targetFile);
 }
 
 export function findTargetProject(
-  projectNodes: ProjectNode[],
+  projectGraph: ProjectGraph,
   targetFile: string
 ) {
-  let targetProject = findProjectUsingFile(projectNodes, targetFile);
+  let targetProject = findProjectUsingFile(projectGraph, targetFile);
   if (!targetProject) {
     targetProject = findProjectUsingFile(
-      projectNodes,
+      projectGraph,
       normalizePath(path.join(targetFile, 'index'))
     );
   }
   if (!targetProject) {
     targetProject = findProjectUsingFile(
-      projectNodes,
+      projectGraph,
       normalizePath(path.join(targetFile, 'src', 'index'))
     );
   }
@@ -126,42 +132,50 @@ export function isAbsoluteImportIntoAnotherProject(imp: string) {
 }
 
 export function findProjectUsingImport(
-  projectNodes: ProjectNode[],
+  projectGraph: ProjectGraph,
   npmScope: string,
   imp: string
 ) {
   const unscopedImport = imp.substring(npmScope.length + 2);
-  return projectNodes.filter(n => {
+  let bestMatchedRoot: string = '';
+  let bestMatch: ProjectGraphNode = undefined;
+  Object.values(projectGraph.nodes).forEach(n => {
     const normalizedRoot = normalizedProjectRoot(n);
-    return (
+    if (
       unscopedImport === normalizedRoot ||
       unscopedImport.startsWith(`${normalizedRoot}/`)
-    );
-  })[0];
+    ) {
+      if (normalizedRoot.length > bestMatchedRoot.length) {
+        bestMatchedRoot = normalizedRoot;
+        bestMatch = n;
+      }
+    }
+  });
+  return bestMatch;
 }
 
 export function isCircular(
-  deps: Deps,
-  sourceProject: ProjectNode,
-  targetProject: ProjectNode
+  graph: ProjectGraph,
+  sourceProject: ProjectGraphNode,
+  targetProject: ProjectGraphNode
 ): boolean {
-  if (!deps[targetProject.name]) return false;
-  return isDependingOn(deps, targetProject.name, sourceProject.name);
+  if (!graph.nodes[targetProject.name]) return false;
+  return isDependingOn(graph, targetProject.name, sourceProject.name);
 }
 
 function isDependingOn(
-  deps: Deps,
+  graph: ProjectGraph,
   sourceProjectName: string,
   targetProjectName: string,
   done: { [projectName: string]: boolean } = {}
 ): boolean {
   if (done[sourceProjectName]) return false;
-  if (!deps[sourceProjectName]) return false;
-  return deps[sourceProjectName]
+  if (!graph.dependencies[sourceProjectName]) return false;
+  return graph.dependencies[sourceProjectName]
     .map(dep =>
-      dep.projectName === targetProjectName
+      dep.target === targetProjectName
         ? true
-        : isDependingOn(deps, dep.projectName, targetProjectName, {
+        : isDependingOn(graph, dep.target, targetProjectName, {
             ...done,
             [`${sourceProjectName}`]: true
           })
@@ -171,23 +185,23 @@ function isDependingOn(
 
 export function findConstraintsFor(
   depConstraints: DepConstraint[],
-  sourceProject: ProjectNode
+  sourceProject: ProjectGraphNode
 ) {
   return depConstraints.filter(f => hasTag(sourceProject, f.sourceTag));
 }
 
 export function onlyLoadChildren(
-  deps: Deps,
+  graph: ProjectGraph,
   sourceProjectName: string,
   targetProjectName: string,
   visited: string[]
 ) {
   if (visited.indexOf(sourceProjectName) > -1) return false;
   return (
-    (deps[sourceProjectName] || []).filter(d => {
-      if (d.type !== DependencyType.loadChildren) return false;
-      if (d.projectName === targetProjectName) return true;
-      return onlyLoadChildren(deps, d.projectName, targetProjectName, [
+    (graph.dependencies[sourceProjectName] || []).filter(d => {
+      if (d.type !== DependencyType.dynamic) return false;
+      if (d.target === targetProjectName) return true;
+      return onlyLoadChildren(graph, d.target, targetProjectName, [
         ...visited,
         sourceProjectName
       ]);

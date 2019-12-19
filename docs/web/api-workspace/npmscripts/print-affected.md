@@ -10,6 +10,44 @@ nx print-affected
 
 Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
 
+### Examples
+
+Print information about affected projects and the dependency graph.:
+
+```bash
+nx print-affected
+```
+
+Print information about the projects affected by the changes between master and HEAD (e.g,. PR).:
+
+```bash
+nx print-affected --base=master --head=HEAD
+```
+
+Prints information about the affected projects and a list of tasks to test them.:
+
+```bash
+nx print-affected --target=test
+```
+
+Prints information about the affected projects and a list of tasks to build them and their dependencies.:
+
+```bash
+nx print-affected --target=build --with-deps
+```
+
+Prints the projects property from the print-affected output.:
+
+```bash
+nx print-affected --target=build --select=projects
+```
+
+Prints the tasks.target.project property from the print-affected output.:
+
+```bash
+nx print-affected --target=build --select=tasks.target.project
+```
+
 ## Options
 
 ### all
@@ -55,6 +93,8 @@ Produces a plain output for affected:apps and affected:libs
 ### runner
 
 This is the name of the tasks runner configured in nx.json
+
+### select
 
 ### uncommitted
 

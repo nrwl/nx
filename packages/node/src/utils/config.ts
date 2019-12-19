@@ -64,7 +64,8 @@ export function getBaseWebpackPartial(
     plugins: [
       new ForkTsCheckerWebpackPlugin({
         tsconfig: options.tsConfig,
-        workers: options.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE
+        workers: options.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE,
+        useTypescriptIncrementalApi: false
       })
     ],
     watch: options.watch,

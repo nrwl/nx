@@ -1,17 +1,18 @@
-import { output, CLIErrorMessageConfig } from './output';
-import { workspaceFileName, ProjectNode } from './shared';
+import { output, CLIErrorMessageConfig } from '../utils/output';
+import { ProjectGraph } from '../core/project-graph';
+import { workspaceFileName } from '../core/file-utils';
 
 export class WorkspaceIntegrityChecks {
-  constructor(private projectNodes: ProjectNode[], private files: string[]) {}
+  constructor(private projectGraph: ProjectGraph, private files: string[]) {}
 
   run(): CLIErrorMessageConfig[] {
     return [...this.projectWithoutFilesCheck(), ...this.filesWithoutProjects()];
   }
 
   private projectWithoutFilesCheck(): CLIErrorMessageConfig[] {
-    const errors = this.projectNodes
-      .filter(n => n.files.length === 0)
-      .map(p => `Cannot find project '${p.name}' in '${p.root}'`);
+    const errors = Object.values(this.projectGraph.nodes)
+      .filter(n => n.data.files.length === 0)
+      .map(p => `Cannot find project '${p.name}' in '${p.data.root}'`);
 
     const errorGroupBodyLines = errors.map(
       f => `${output.colors.gray('-')} ${f}`
@@ -58,7 +59,10 @@ export class WorkspaceIntegrityChecks {
   }
 
   private allProjectFiles() {
-    return this.projectNodes.reduce((m, c) => [...m, ...c.files], []);
+    return Object.values(this.projectGraph.nodes).reduce(
+      (m, c) => [...m, ...c.data.files.map(f => f.file)],
+      []
+    );
   }
 }
 

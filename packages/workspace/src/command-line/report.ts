@@ -2,7 +2,7 @@ import { terminal } from '@angular-devkit/core';
 import { readFileSync } from 'fs';
 import * as path from 'path';
 import { appRootPath } from '../utils/app-root';
-import { output } from './output';
+import { output } from '../utils/output';
 
 export const packagesWeCareAbout = [
   '@nrwl/angular',

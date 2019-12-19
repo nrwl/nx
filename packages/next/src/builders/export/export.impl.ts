@@ -6,7 +6,7 @@ import {
   scheduleTargetAndForget
 } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
-import { PHASE_EXPORT } from 'next-server/constants';
+import { PHASE_EXPORT } from 'next/dist/next-server/lib/constants';
 import exportApp from 'next/dist/export';
 import * as path from 'path';
 import { from, Observable, of } from 'rxjs';

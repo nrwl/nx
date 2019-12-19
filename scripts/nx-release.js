@@ -194,10 +194,10 @@ releaseIt(options)
       return;
     }
 
-    if (parsedArgs.nobazel) {
-      childProcess.execSync('rm -rf ./build/packages/bazel');
-      childProcess.execSync('rm -rf ./build/npm/bazel');
-    }
+    // if (parsedArgs.nobazel) {
+    childProcess.execSync('rm -rf ./build/packages/bazel');
+    childProcess.execSync('rm -rf ./build/npm/bazel');
+    // }
 
     /**
      * We always use either "latest" or "next" (i.e. no separate tags for alpha, beta etc)

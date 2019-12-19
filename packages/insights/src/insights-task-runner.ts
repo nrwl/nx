@@ -10,8 +10,8 @@ import {
   DefaultTasksRunnerOptions
 } from '@nrwl/workspace/src/tasks-runner/default-tasks-runner';
 import * as fs from 'fs';
-import { DependencyGraph } from '@nrwl/workspace/src/command-line/shared';
-import { TasksMap } from '@nrwl/workspace/src/command-line/run-tasks/run-command';
+import { TasksMap } from '@nrwl/workspace/src/tasks-runner/run-command';
+import { ProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 const axios = require('axios');
 
 interface InsightsTaskRunnerOptions extends DefaultTasksRunnerOptions {
@@ -19,7 +19,7 @@ interface InsightsTaskRunnerOptions extends DefaultTasksRunnerOptions {
 }
 
 type Context = {
-  dependencyGraph: DependencyGraph;
+  projectGraph: ProjectGraph;
   tasksMap: TasksMap;
   target: string;
 };
@@ -156,7 +156,7 @@ class InsightsNotifier implements Notifier {
       packageJson: files.packageJson,
       workspaceJson: files.workspaceJson,
       nxJson: files.nxJson,
-      dependencyGraph: JSON.stringify(this.context.dependencyGraph),
+      projectGraph: JSON.stringify(this.context.projectGraph),
       startTime: new Date().toISOString()
     });
     return p.then(() => tasks.map(t => this.startTask(t)));

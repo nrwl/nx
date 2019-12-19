@@ -1,11 +1,3 @@
-import { readDependencies } from '@nrwl/workspace/src/command-line/deps-calculator';
-import {
-  getProjectNodes,
-  normalizedProjectRoot,
-  readNxJson,
-  readWorkspaceJson,
-  ProjectType
-} from '@nrwl/workspace/src/command-line/shared';
 import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
 import {
   DepConstraint,
@@ -23,6 +15,16 @@ import {
 import { TSESTree } from '@typescript-eslint/experimental-utils';
 import { createESLintRule } from '../utils/create-eslint-rule';
 import { normalize } from '@angular-devkit/core';
+import {
+  createProjectGraph,
+  ProjectGraph,
+  ProjectType
+} from '@nrwl/workspace/src/core/project-graph';
+import {
+  normalizedProjectRoot,
+  readNxJson,
+  readWorkspaceJson
+} from '@nrwl/workspace/src/core/file-utils';
 
 type Options = [
   {
@@ -90,26 +92,14 @@ export default createESLintRule<Options, MessageIds>({
      * Globally cached info about workspace
      */
     const projectPath = normalize((global as any).projectPath || appRootPath);
-    if (!(global as any).projectNodes) {
+    if (!(global as any).projectGraph) {
       const workspaceJson = readWorkspaceJson();
       const nxJson = readNxJson();
       (global as any).npmScope = nxJson.npmScope;
-      (global as any).projectNodes = getProjectNodes(workspaceJson, nxJson);
-      (global as any).deps = readDependencies(
-        (global as any).npmScope,
-        (global as any).projectNodes
-      );
+      (global as any).projectGraph = createProjectGraph(workspaceJson, nxJson);
     }
     const npmScope = (global as any).npmScope;
-    const projectNodes = (global as any).projectNodes;
-    const deps = (global as any).deps;
-
-    projectNodes.sort((a, b) => {
-      if (!a.root) return -1;
-      if (!b.root) return -1;
-      return a.root.length > b.root.length ? -1 : 1;
-    });
-
+    const projectGraph = (global as any).projectGraph as ProjectGraph;
     return {
       ImportDeclaration(node: TSESTree.ImportDeclaration) {
         const imp = (node.source as TSESTree.Literal).value as string;
@@ -129,7 +119,7 @@ export default createESLintRule<Options, MessageIds>({
           isRelativeImportIntoAnotherProject(
             imp,
             projectPath,
-            projectNodes,
+            projectGraph,
             sourceFilePath
           ) ||
           isAbsoluteImportIntoAnotherProject(imp)
@@ -147,10 +137,10 @@ export default createESLintRule<Options, MessageIds>({
         // check constraints between libs and apps
         if (imp.startsWith(`@${npmScope}/`)) {
           // we should find the name
-          const sourceProject = findSourceProject(projectNodes, sourceFilePath);
+          const sourceProject = findSourceProject(projectGraph, sourceFilePath);
           // findProjectUsingImport to take care of same prefix
           const targetProject = findProjectUsingImport(
-            projectNodes,
+            projectGraph,
             npmScope,
             imp
           );
@@ -161,7 +151,7 @@ export default createESLintRule<Options, MessageIds>({
           }
 
           // check for circular dependency
-          if (isCircular(deps, sourceProject, targetProject)) {
+          if (isCircular(projectGraph, sourceProject, targetProject)) {
             context.report({
               node,
               messageId: 'noCircularDependencies',
@@ -198,7 +188,12 @@ export default createESLintRule<Options, MessageIds>({
 
           // if we import a library using loadChildren, we should not import it using es6imports
           if (
-            onlyLoadChildren(deps, sourceProject.name, targetProject.name, [])
+            onlyLoadChildren(
+              projectGraph,
+              sourceProject.name,
+              targetProject.name,
+              []
+            )
           ) {
             context.report({
               node,

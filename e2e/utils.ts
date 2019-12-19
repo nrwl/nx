@@ -83,17 +83,6 @@ export function runYarnInstall(silent: boolean = true) {
   return install ? install.toString() : '';
 }
 
-export function runNgcc(silent: boolean = true) {
-  const install = execSync(
-    'node ./node_modules/@angular/compiler-cli/ngcc/main-ngcc.js',
-    {
-      cwd: tmpProjPath(),
-      ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
-    }
-  );
-  return install ? install.toString() : '';
-}
-
 /**
  * Run the `new` command for the currently selected CLI
  *
@@ -159,8 +148,6 @@ function default_1(factoryOptions = {}) {
 }
 exports.default = default_1;`
     );
-
-    runNgcc();
 
     execSync(`mv ${tmpProjPath()} ${tmpBackupProjPath()}`);
   }
@@ -247,11 +234,11 @@ export function copyMissingPackages(): void {
     'rollup-plugin-typescript2',
 
     'next',
-    'next-server',
     'document-register-element',
 
     '@angular/forms',
-    '@storybook',
+
+    'fork-ts-checker-webpack-plugin',
 
     // For web builder with inlined build-angular
     'source-map',
@@ -285,7 +272,9 @@ export function copyMissingPackages(): void {
 
     'mime',
     'less',
-    'send'
+    'send',
+
+    '@bazel'
   ];
   modulesToCopy.forEach(m => copyNodeModule(m));
   updateFile(
@@ -309,6 +298,11 @@ export function copyMissingPackages(): void {
     `cp -a node_modules/.bin/webpack ${tmpProjPath(
       'node_modules/.bin/webpack'
     )}`
+  );
+
+  execSync(`rm -rf ${tmpProjPath('node_modules/.bin/bazel')}`);
+  execSync(
+    `cp -a node_modules/.bin/bazel ${tmpProjPath('node_modules/.bin/bazel')}`
   );
   execSync(`rm -rf ${tmpProjPath('node_modules/cypress/node_modules/@types')}`);
   execSync(`rm -rf node_modules/karma/node_modules/mime`);

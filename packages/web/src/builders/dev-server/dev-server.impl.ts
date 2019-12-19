@@ -101,9 +101,7 @@ function run(
       return runWebpackDevServer(config, context, {
         logging: stats => {
           context.logger.info(stats.toString(config.stats));
-        },
-        webpackFactory: require('webpack'),
-        webpackDevServerFactory: require('webpack-dev-server')
+        }
       }).pipe(
         map(output => {
           output.baseUrl = serverUrl;

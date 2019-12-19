@@ -2,6 +2,14 @@
 
 We would love for you to contribute to Nx! Read this document to see how to do it.
 
+## How to Get Started Video
+
+Watch this 5-minute video:
+
+<a href="https://www.youtube.com/watch?v=o11p0zSm0No&feature=youtu.be" target="_blank">
+<p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/how-to-contribute.png" width="600"></p>
+</a>
+
 ## Got a Question?
 
 We are trying to keep GitHub issues for bug reports and feature requests. Using the `nrwl` tag on [Stack Overflow](https://stackoverflow.com/questions/tagged/nrwl) is a much better place to ask general questions about how to use Nx.
@@ -112,11 +120,16 @@ You can file new issues by filling out our [issue form](https://github.com/nrwl/
 
 Please follow the following guidelines:
 
-- Make sure unit tests pass
-- Make sure e2e tests pass (this can take a while, so you can always let CI check those)
+- Make sure unit tests pass (`yarn test`)
+  - Target a specific unit test (i.e. `/build/packages/angular/src/utils/ast-utils.spec.js`) with `yarn test angular/src/utils/ast-utils`
+  - Debug with `node --inspect-brk ./node_modules/jest/bin/jest.js build/packages/angular/src/utils/ast-utils.spec.js`
+- Make sure e2e tests pass (this can take a while, so you can always let CI check those) (`yarn e2e`)
+  - Target a specific e2e test (i.e. `/build/e2e/cypress.test.js`) with `yarn e2e cypress`
+  - Debug with `node --inspect-brk ./node_modules/jest/bin/jest.js build/e2e/cypress.test.js`
 - Make sure you run `yarn format`
-- For documentation, check for spelling and grammatical errors.
-- Update your commit message to follow the guidelines below
+- Update documentation with `yarn documentation`. For documentation, check for spelling and grammatical errors.
+- Update your commit message to follow the guidelines below (use `yarn commit` to automate compliance)
+  - `yarn checkcommit` will check to make sure your commit messages are formatted correctly
 
 #### Commit Message Guidelines
 

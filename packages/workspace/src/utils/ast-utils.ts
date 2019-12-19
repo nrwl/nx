@@ -5,12 +5,21 @@
  * Use of this source code is governed by an MIT- style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import { Rule, Tree, SchematicContext } from '@angular-devkit/schematics';
+import {
+  Rule,
+  Tree,
+  SchematicContext,
+  DirEntry
+} from '@angular-devkit/schematics';
 import * as ts from 'typescript';
 import * as stripJsonComments from 'strip-json-comments';
 import { serializeJson } from './fileutils';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { getWorkspacePath } from './cli-config-utils';
+import { createProjectGraph, ProjectGraph } from '../core/project-graph';
+import { FileData } from '../core/file-utils';
+import { extname, join, normalize, Path } from '@angular-devkit/core';
+import { NxJson } from '@nrwl/workspace/src/core/shared-interfaces';
 
 function nodesByPosition(first: ts.Node, second: ts.Node): number {
   return first.getStart() - second.getStart();
@@ -35,7 +44,7 @@ function insertAfterLastOccurrence(
   }
   if (!lastItem && fallbackPos == undefined) {
     throw new Error(
-      `tried to insert ${toInsert} as first occurence with no fallback position`
+      `tried to insert ${toInsert} as first occurrence with no fallback position`
     );
   }
   const lastItemPosition: number = lastItem ? lastItem.getEnd() : fallbackPos;
@@ -375,6 +384,84 @@ export function readJsonInTree<T = any>(host: Tree, path: string): T {
 }
 
 /**
+ * Method for utilizing the project graph in schematics
+ */
+export function getProjectGraphFromHost(host: Tree): ProjectGraph {
+  const workspaceJson = readJsonInTree(host, getWorkspacePath(host));
+  const nxJson = readJsonInTree<NxJson>(host, '/nx.json');
+
+  const fileRead = (f: string) => host.read(f).toString();
+
+  const workspaceFiles: FileData[] = [];
+
+  const mtime = +Date.now();
+
+  workspaceFiles.push(
+    ...allFilesInDirInHost(host, normalize(''), { recursive: false }).map(f =>
+      getFileDataInHost(host, f, mtime)
+    )
+  );
+  workspaceFiles.push(
+    ...allFilesInDirInHost(host, normalize('tools')).map(f =>
+      getFileDataInHost(host, f, mtime)
+    )
+  );
+
+  // Add files for workspace projects
+  Object.keys(workspaceJson.projects).forEach(projectName => {
+    const project = workspaceJson.projects[projectName];
+    workspaceFiles.push(
+      ...allFilesInDirInHost(host, normalize(project.root)).map(f =>
+        getFileDataInHost(host, f, mtime)
+      )
+    );
+  });
+
+  return createProjectGraph(
+    workspaceJson,
+    nxJson,
+    workspaceFiles,
+    fileRead,
+    false
+  );
+}
+
+export function getFileDataInHost(
+  host: Tree,
+  path: Path,
+  mtime: number
+): FileData {
+  return {
+    file: path,
+    ext: extname(normalize(path)),
+    mtime
+  };
+}
+
+export function allFilesInDirInHost(
+  host: Tree,
+  path: Path,
+  options: {
+    recursive: boolean;
+  } = { recursive: true }
+): Path[] {
+  const dir = host.getDir(path);
+  const res: Path[] = [];
+  dir.subfiles.forEach(p => {
+    res.push(join(path, p));
+  });
+
+  if (!options.recursive) {
+    return res;
+  }
+
+  dir.subdirs.forEach(p => {
+    res.push(...allFilesInDirInHost(host, join(path, p)));
+  });
+  return res;
+}
+
+/**
  * This method is specifically for updating JSON in a Tree
  * @param path Path of JSON file in the Tree
  * @param callback Manipulation of the JSON data
@@ -585,4 +672,51 @@ export function replaceNodeValue(
       content
     )
   ]);
+}
+
+export function renameSyncInTree(
+  tree: Tree,
+  from: string,
+  to: string,
+  cb: (err: string) => void
+) {
+  if (!tree.exists(from)) {
+    cb(`Path: ${from} does not exist`);
+  } else if (tree.exists(to)) {
+    cb(`Path: ${to} already exists`);
+  } else {
+    renameFile(tree, from, to);
+    cb(null);
+  }
+}
+
+export function renameDirSyncInTree(
+  tree: Tree,
+  from: string,
+  to: string,
+  cb: (err: string) => void
+) {
+  const dir = tree.getDir(from);
+  if (!dirExists(dir)) {
+    cb(`Path: ${from} does not exist`);
+    return;
+  }
+  dir.visit(path => {
+    const destination = path.replace(from, to);
+    renameFile(tree, path, destination);
+  });
+  cb(null);
+}
+
+function dirExists(dir: DirEntry): boolean {
+  return dir.subdirs.length + dir.subfiles.length !== 0;
+}
+
+function renameFile(tree: Tree, from: string, to: string) {
+  const buffer = tree.read(from);
+  if (!buffer) {
+    return;
+  }
+  tree.create(to, buffer.toString());
+  tree.delete(from);
 }

@@ -5,7 +5,7 @@ import {
   UnitTestTree
 } from '@angular-devkit/schematics/testing';
 import { serializeJson } from '@nrwl/workspace';
-import { runMigration } from '../../utils/testing';
+import { join } from 'path';
 
 describe('Update 8.5.0', () => {
   let tree: Tree;
@@ -13,6 +13,11 @@ describe('Update 8.5.0', () => {
 
   beforeEach(() => {
     tree = new UnitTestTree(Tree.empty());
+
+    schematicRunner = new SchematicTestRunner(
+      '@nrwl/workspace',
+      join(__dirname, '../../../migrations.json')
+    );
   });
 
   describe('Update Angular CLI', () => {
@@ -26,7 +31,9 @@ describe('Update 8.5.0', () => {
         })
       );
 
-      const result = await runMigration('upgrade-cli-8-3', {}, tree);
+      const result = await schematicRunner
+        .runSchematicAsync('upgrade-cli-8-3', {}, tree)
+        .toPromise();
 
       expect(
         readJsonInTree(result, 'package.json').devDependencies['@angular/cli']
@@ -43,7 +50,9 @@ describe('Update 8.5.0', () => {
         })
       );
 
-      const result = await runMigration('upgrade-cli-8-3', {}, tree);
+      const result = await schematicRunner
+        .runSchematicAsync('upgrade-cli-8-3', {}, tree)
+        .toPromise();
 
       expect(
         readJsonInTree(result, 'package.json').devDependencies['@angular/cli']
@@ -60,7 +69,9 @@ describe('Update 8.5.0', () => {
         })
       );
 
-      const result = await runMigration('upgrade-cli-8-3', {}, tree);
+      const result = await schematicRunner
+        .runSchematicAsync('upgrade-cli-8-3', {}, tree)
+        .toPromise();
 
       expect(
         readJsonInTree(result, 'package.json').devDependencies['@angular/cli']
@@ -80,7 +91,9 @@ describe('Update 8.5.0', () => {
       );
 
       try {
-        await runMigration('upgrade-cli-8-3', {}, tree);
+        await schematicRunner
+          .runSchematicAsync('upgrade-cli-8-3', {}, tree)
+          .toPromise();
       } catch (e) {
         error = e;
       }

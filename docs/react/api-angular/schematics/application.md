@@ -52,11 +52,11 @@ Test runner to use for end to end (e2e) tests
 
 ### enableIvy
 
-Default: `true`
+Default: `false`
 
 Type: `boolean`
 
-Create a new app that uses the Ivy rendering engine.
+**EXPERIMENTAL** True to create a new app that uses the Ivy rendering engine.
 
 ### inlineStyle
 

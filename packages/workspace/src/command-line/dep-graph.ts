@@ -1,18 +1,46 @@
 import { readFileSync, writeFileSync } from 'fs';
 import * as http from 'http';
 import * as opn from 'opn';
-import { Deps, readDependencies } from './deps-calculator';
 import {
-  getProjectNodes,
-  readNxJson,
-  readWorkspaceJson,
-  ProjectNode
-} from './shared';
-import { output } from './output';
+  createProjectGraph,
+  ProjectGraph,
+  ProjectGraphNode
+} from '../core/project-graph';
+import { output } from '../utils/output';
 
-export function startServer(
-  projects: ProjectNode[],
-  deps: Deps,
+export function generateGraph(
+  args: { file?: string; filter?: string[]; exclude?: string[] },
+  affectedProjects: string[]
+): void {
+  const graph = createProjectGraph();
+
+  const renderProjects: ProjectGraphNode[] = filterProjects(
+    graph,
+    args.filter,
+    args.exclude
+  );
+
+  if (args.file) {
+    writeFileSync(
+      args.file,
+      JSON.stringify(
+        {
+          graph,
+          affectedProjects,
+          criticalPath: affectedProjects
+        },
+        null,
+        2
+      )
+    );
+  } else {
+    startServer(renderProjects, graph, affectedProjects);
+  }
+}
+
+function startServer(
+  projects: ProjectGraphNode[],
+  graph: ProjectGraph,
   affected: string[]
 ) {
   const f = readFileSync(__dirname + '/dep-graph/dep-graph.html').toString();
@@ -21,7 +49,7 @@ export function startServer(
       `window.projects = null`,
       `window.projects = ${JSON.stringify(projects)}`
     )
-    .replace(`window.deps = null`, `window.deps = ${JSON.stringify(deps)}`)
+    .replace(`window.graph = null`, `window.graph = ${JSON.stringify(graph)}`)
     .replace(
       `window.affected = null`,
       `window.affected = ${JSON.stringify(affected)}`
@@ -42,46 +70,16 @@ export function startServer(
   });
 }
 
-export function generateGraph(
-  args: { file?: string; filter?: string[]; exclude?: string[] },
-  affectedProjects: string[]
-): void {
-  const workspaceJson = readWorkspaceJson();
-  const nxJson = readNxJson();
-  const projects: ProjectNode[] = getProjectNodes(workspaceJson, nxJson);
-  const deps = readDependencies(nxJson.npmScope, projects);
-
-  const renderProjects: ProjectNode[] = filterProjects(
-    deps,
-    projects,
-    args.filter,
-    args.exclude
-  );
-
-  if (args.file) {
-    writeFileSync(
-      args.file,
-      JSON.stringify(
-        {
-          deps,
-          affectedProjects,
-          criticalPath: affectedProjects
-        },
-        null,
-        2
-      )
-    );
-  } else {
-    startServer(renderProjects, deps, affectedProjects);
-  }
-}
-
-export function filterProjects(deps, projects, filter, exclude) {
-  const filteredProjects = projects.filter(p => {
+function filterProjects(
+  graph: ProjectGraph,
+  filter: string[],
+  exclude: string[]
+) {
+  const filteredProjects = Object.values(graph.nodes).filter(p => {
     const filtered =
       filter && filter.length > 0
         ? filter.find(
-            f => hasPath(deps, f, p.name, []) || hasPath(deps, p.name, f, [])
+            f => hasPath(graph, f, p.name, []) || hasPath(graph, p.name, f, [])
           )
         : true;
     return !exclude
@@ -92,12 +90,12 @@ export function filterProjects(deps, projects, filter, exclude) {
   return filteredProjects;
 }
 
-export function hasPath(deps, target, node, visited) {
+function hasPath(graph, target, node, visited) {
   if (target === node) return true;
 
-  for (let d of deps[node]) {
+  for (let d of graph.nodes[node]) {
     if (visited.indexOf(d.projectName) > -1) continue;
-    if (hasPath(deps, target, d.projectName, [...visited, d.projectName]))
+    if (hasPath(graph, target, d.projectName, [...visited, d.projectName]))
       return true;
   }
   return false;

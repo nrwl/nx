@@ -30,10 +30,10 @@
       "description": "Fix the exclude paths in tsconfig.lib.json files for Jest projects",
       "factory": "./src/migrations/update-8-5-0/fix-tsconfig-lib-json"
     },
-    "update-9-0-0": {
-      "version": "9.0.0-beta.1",
-      "description": "Update typescript to 3.6 and angular/cli to version 9",
-      "factory": "./src/migrations/update-9-0-0/update-9-0-0"
+    "fix-tslint-json": {
+      "version": "8.10.0-beta.1",
+      "description": "Fix rules in `tslint.json`",
+      "factory": "./src/migrations/update-8-10-0/fix-tslint-json"
     }
   },
   "packageJsonUpdates": {
@@ -285,19 +285,6 @@
         },
         "@schematics/angular": {
           "version": "8.3.14",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "9.0.0": {
-      "version": "9.0.0-beta.1",
-      "packages": {
-        "@angular/cli": {
-          "version": "9.0.0-rc.4",
-          "alwaysAddToPackageJson": false
-        },
-        "typescript": {
-          "version": "~3.6.4",
           "alwaysAddToPackageJson": false
         }
       }

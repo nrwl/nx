@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import { Target } from '@angular-devkit/architect';
 
-import { DependencyGraph } from '../command-line/shared';
+import { ProjectGraph } from '../core/project-graph';
 
 export interface Task {
   id: string;
@@ -28,7 +28,7 @@ export type TasksRunner<T = unknown> = (
   options?: T,
   context?: {
     target?: string;
-    dependencyGraph: DependencyGraph;
+    projectGraph: ProjectGraph;
     tasksMap: {
       [projectName: string]: {
         [targetName: string]: Task;

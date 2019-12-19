@@ -55,6 +55,7 @@ cp README.md build/packages/tao
 cp README.md build/packages/eslint-plugin-nx
 cp README.md build/packages/linter
 cp README.md build/packages/insights
+cp README.md build/packages/bazel
 
 cp LICENSE build/packages/builders
 cp LICENSE build/packages/schematics
@@ -76,6 +77,7 @@ cp LICENSE build/packages/tao
 cp LICENSE build/packages/eslint-plugin-nx
 cp LICENSE build/packages/linter
 cp LICENSE build/packages/insights
+cp LICENSE build/packages/bazel
 
 echo "Nx libraries available at build/packages:"
 ls build/packages

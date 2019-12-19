@@ -1,5 +1,5 @@
 import { Task } from './tasks-runner';
-import { ProjectMap } from '../command-line/shared';
+import { ProjectGraphNode } from '../core/project-graph';
 
 const commonCommands = ['build', 'test', 'lint', 'e2e', 'deploy'];
 
@@ -25,8 +25,8 @@ export function getCommand(cliCommand: string, isYarn: boolean, task: Task) {
   }
 }
 
-export function getOutputs(p: ProjectMap, task: Task) {
-  const architect = p[task.target.project].architect[task.target.target];
+export function getOutputs(p: Record<string, ProjectGraphNode>, task: Task) {
+  const architect = p[task.target.project].data.architect[task.target.target];
   let opts = architect.options || {};
   if (
     architect.configurations &&

@@ -21,7 +21,7 @@ commands:
       - run: yarn install --frozen-lockfile --non-interactive
       - run: ./node_modules/.bin/cypress verify
       - save_cache:
-          key: node-deps-node12-{{ checksum "yarn.lock" }}
+          key: nrwl-nx-node12-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache
             - node_modules
@@ -30,9 +30,9 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - node-deps-node12-{{ checksum "yarn.lock" }}
+            - nrwl-nx-node12-{{ checksum "yarn.lock" }}
             # fallback to using the latest cache if no exact match is found
-            - node-deps-node12-
+            - nrwl-nx-node12-
   setup:
     description: 'Setup Executor'
     steps:
@@ -51,31 +51,49 @@ jobs:
     executor: default
     steps:
       - setup
-      - run: yarn checkformat
-      - run: yarn checkcommit
-      - run: yarn checkimports
-      - run: yarn documentation
-      - run: yarn test:all
+      - run:
+          name: Check Formatting
+          command: yarn checkformat
+      - run:
+          name: Check Commit Message Format
+          command: yarn checkcommit
+      - run:
+          name: Check Imports
+          command: yarn checkimports
+      - run:
+          name: Check Documentation
+          command: yarn documentation
+      - run:
+          name: Run Unit Tests
+          command: yarn test:all
   e2e-nx-1:
     executor: default
     steps:
       - setup
-      - run: yarn e2e-ci1 nx
+      - run:
+          name: Nx CLI E2E Tests Part 1
+          command: yarn e2e-ci1 nx
   e2e-nx-2:
     executor: default
     steps:
       - setup
-      - run: yarn e2e-ci2 nx
+      - run:
+          name: Nx CLI E2E Tests Part 2
+          command: yarn e2e-ci2 nx
   e2e-ng-1:
     executor: default
     steps:
       - setup
-      - run: yarn e2e-ci1 angular
+      - run:
+          name: Angular CLI E2E Tests Part 1
+          command: yarn e2e-ci1 angular
   e2e-ng-2:
     executor: default
     steps:
       - setup
-      - run: yarn e2e-ci2 angular
+      - run:
+          name: Angular CLI E2E Tests Part 2
+          command: yarn e2e-ci2 angular
 
 workflows:
   version: 2.1

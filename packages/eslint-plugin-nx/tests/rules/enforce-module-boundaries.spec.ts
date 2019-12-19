@@ -1,17 +1,15 @@
-import {
-  ProjectNode,
-  ProjectType
-} from '@nrwl/workspace/src/command-line/shared';
-import {
-  Dependency,
-  DependencyType
-} from '@nrwl/workspace/src/command-line/deps-calculator';
 import { TSESLint } from '@typescript-eslint/experimental-utils';
 import * as parser from '@typescript-eslint/parser';
 import * as fs from 'fs';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName
 } from '../../src/rules/enforce-module-boundaries';
+import {
+  DependencyType,
+  ProjectGraph,
+  ProjectType
+} from '@nrwl/workspace/src/core/project-graph';
+import { extname } from 'path';
 
 describe('Enforce Module Boundaries', () => {
   beforeEach(() => {
@@ -27,34 +25,40 @@ describe('Enforce Module Boundaries', () => {
         import '@mycompany/mylib/deep';
         import '../blah';
       `,
-      [
-        {
-          name: 'myappName',
-          root: 'libs/myapp',
-          type: ProjectType.app,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`apps/myapp/src/main.ts`, `apps/myapp/blah.ts`],
-          fileMTimes: {
-            'apps/myapp/src/main.ts': 0,
-            'apps/myapp/blah.ts': 1
+
+      {
+        nodes: {
+          myappName: {
+            name: 'myappName',
+            type: ProjectType.app,
+            data: {
+              root: 'libs/myapp',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [
+                createFile(`apps/myapp/src/main.ts`),
+                createFile(`apps/myapp/blah.ts`)
+              ]
+            }
+          },
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [
+                createFile(`libs/mylib/src/index.ts`),
+                createFile(`libs/mylib/src/deep.ts`)
+              ]
+            }
           }
         },
-        {
-          name: 'mylibName',
-          root: 'libs/mylib',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/mylib/src/index.ts`, `libs/mylib/src/deep.ts`],
-          fileMTimes: {
-            'apps/mylib/src/index.ts': 0,
-            'apps/mylib/src/deep.ts': 1
-          }
-        }
-      ]
+        dependencies: {}
+      }
     );
 
     expect(failures.length).toEqual(0);
@@ -67,123 +71,124 @@ describe('Enforce Module Boundaries', () => {
       `
           import '@mycompany/myapp2/mylib';
         `,
-      [
-        {
-          name: 'myappName',
-          root: 'libs/myapp',
-          type: ProjectType.app,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`apps/myapp/src/main.ts`, `apps/myapp/src/blah.ts`],
-          fileMTimes: {
-            'apps/myapp/src/main.ts': 0,
-            'apps/myapp/src/blah.ts': 1
+      {
+        nodes: {
+          myappName: {
+            name: 'myappName',
+            type: ProjectType.app,
+            data: {
+              root: 'libs/myapp',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [
+                createFile(`apps/myapp/src/main.ts`),
+                createFile(`apps/myapp/src/blah.ts`)
+              ]
+            }
+          },
+          myapp2Name: {
+            name: 'myapp2Name',
+            type: ProjectType.app,
+            data: {
+              root: 'libs/myapp2',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: []
+            }
+          },
+          'myapp2-mylib': {
+            name: 'myapp2-mylib',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/myapp2/mylib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile('libs/myapp2/mylib/src/index.ts')]
+            }
           }
         },
-        {
-          name: 'myapp2Name',
-          root: 'libs/myapp2',
-          type: ProjectType.app,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [],
-          fileMTimes: {}
-        },
-        {
-          name: 'myapp2-mylib',
-          root: 'libs/myapp2/mylib',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: ['libs/myapp2/mylib/src/index.ts'],
-          fileMTimes: {
-            'libs/myapp2/mylib/src/index.ts': 1
-          }
-        }
-      ]
+        dependencies: {}
+      }
     );
 
     expect(failures.length).toEqual(0);
   });
 
   describe('depConstraints', () => {
-    const projectNodes: ProjectNode[] = [
-      {
-        name: 'apiName',
-        root: 'libs/api',
-        type: ProjectType.lib,
-        tags: ['api', 'domain1'],
-        implicitDependencies: [],
-        architect: {},
-        files: [`libs/api/src/index.ts`],
-        fileMTimes: {
-          'libs/api/src/index.ts': 1
+    const graph = {
+      nodes: {
+        apiName: {
+          name: 'apiName',
+          type: ProjectType.lib,
+          data: {
+            root: 'libs/api',
+            tags: ['api', 'domain1'],
+            implicitDependencies: [],
+            architect: {},
+            files: [createFile(`libs/api/src/index.ts`)]
+          }
+        },
+        implName: {
+          name: 'implName',
+          type: ProjectType.lib,
+          data: {
+            root: 'libs/impl',
+            tags: ['impl', 'domain1'],
+            implicitDependencies: [],
+            architect: {},
+            files: [createFile(`libs/impl/src/index.ts`)]
+          }
+        },
+        impl2Name: {
+          name: 'impl2Name',
+          type: ProjectType.lib,
+          data: {
+            root: 'libs/impl2',
+            tags: ['impl', 'domain1'],
+            implicitDependencies: [],
+            architect: {},
+            files: [createFile(`libs/impl2/src/index.ts`)]
+          }
+        },
+        'impl-domain2Name': {
+          name: 'impl-domain2Name',
+          type: ProjectType.lib,
+          data: {
+            root: 'libs/impl-domain2',
+            tags: ['impl', 'domain2'],
+            implicitDependencies: [],
+            architect: {},
+            files: [createFile(`libs/impl-domain2/src/index.ts`)]
+          }
+        },
+        'impl-both-domainsName': {
+          name: 'impl-both-domainsName',
+          type: ProjectType.lib,
+          data: {
+            root: 'libs/impl-both-domains',
+            tags: ['impl', 'domain1', 'domain2'],
+            implicitDependencies: [],
+            architect: {},
+            files: [createFile(`libs/impl-both-domains/src/index.ts`)]
+          }
+        },
+        untaggedName: {
+          name: 'untaggedName',
+          type: ProjectType.lib,
+          data: {
+            root: 'libs/untagged',
+            tags: [],
+            implicitDependencies: [],
+            architect: {},
+            files: [createFile(`libs/untagged/src/index.ts`)]
+          }
         }
       },
-      {
-        name: 'implName',
-        root: 'libs/impl',
-        type: ProjectType.lib,
-        tags: ['impl', 'domain1'],
-        implicitDependencies: [],
-        architect: {},
-        files: [`libs/impl/src/index.ts`],
-        fileMTimes: {
-          'libs/impl/src/index.ts': 1
-        }
-      },
-      {
-        name: 'impl2Name',
-        root: 'libs/impl2',
-        type: ProjectType.lib,
-        tags: ['impl', 'domain1'],
-        implicitDependencies: [],
-        architect: {},
-        files: [`libs/impl2/src/index.ts`],
-        fileMTimes: {
-          'libs/impl2/src/index.ts': 1
-        }
-      },
-      {
-        name: 'impl-domain2Name',
-        root: 'libs/impl-domain2',
-        type: ProjectType.lib,
-        tags: ['impl', 'domain2'],
-        implicitDependencies: [],
-        architect: {},
-        files: [`libs/impl-domain2/src/index.ts`],
-        fileMTimes: {
-          'libs/impl-domain2/src/index.ts': 1
-        }
-      },
-      {
-        name: 'impl-both-domainsName',
-        root: 'libs/impl-both-domains',
-        type: ProjectType.lib,
-        tags: ['impl', 'domain1', 'domain2'],
-        implicitDependencies: [],
-        architect: {},
-        files: [`libs/impl-both-domains/src/index.ts`],
-        fileMTimes: {
-          'libs/impl-both-domains/src/index.ts': 1
-        }
-      },
-      {
-        name: 'untaggedName',
-        root: 'libs/untagged',
-        type: ProjectType.lib,
-        tags: [],
-        implicitDependencies: [],
-        architect: {},
-        files: [`libs/untagged/src/index.ts`],
-        fileMTimes: {
-          'libs/untagged/src/index.ts': 1
-        }
-      }
-    ];
+      dependencies: {}
+    };
 
     const depConstraints = {
       depConstraints: [
@@ -201,7 +206,7 @@ describe('Enforce Module Boundaries', () => {
         `
           import '@mycompany/impl';
         `,
-        projectNodes
+        graph
       );
 
       expect(failures[0].message).toEqual(
@@ -216,7 +221,7 @@ describe('Enforce Module Boundaries', () => {
         `
             import '@mycompany/untagged';
           `,
-        projectNodes
+        graph
       );
 
       expect(failures[0].message).toEqual(
@@ -231,7 +236,7 @@ describe('Enforce Module Boundaries', () => {
         `
             import '@mycompany/api';
           `,
-        projectNodes
+        graph
       );
 
       expect(failures[0].message).toEqual(
@@ -246,7 +251,7 @@ describe('Enforce Module Boundaries', () => {
         `
             import '@mycompany/impl-domain2';
           `,
-        projectNodes
+        graph
       );
 
       expect(failures[0].message).toEqual(
@@ -261,7 +266,7 @@ describe('Enforce Module Boundaries', () => {
         `
             import '@mycompany/impl-both-domains';
           `,
-        projectNodes
+        graph
       );
 
       expect(failures.length).toEqual(0);
@@ -274,7 +279,7 @@ describe('Enforce Module Boundaries', () => {
         `
             import '@mycompany/impl';
           `,
-        projectNodes
+        graph
       );
 
       expect(failures.length).toEqual(0);
@@ -287,7 +292,7 @@ describe('Enforce Module Boundaries', () => {
         `
             import '@mycompany/impl2';
           `,
-        projectNodes
+        graph
       );
 
       expect(failures.length).toEqual(0);
@@ -302,7 +307,7 @@ describe('Enforce Module Boundaries', () => {
         `
             import '@mycompany/impl';
           `,
-        projectNodes
+        graph
       );
 
       expect(failures.length).toEqual(0);
@@ -315,21 +320,25 @@ describe('Enforce Module Boundaries', () => {
         {},
         `${process.cwd()}/proj/libs/mylib/src/main.ts`,
         'import "../other"',
-        [
-          {
-            name: 'mylibName',
-            root: 'libs/mylib',
-            type: ProjectType.lib,
-            tags: [],
-            implicitDependencies: [],
-            architect: {},
-            files: [`libs/mylib/src/main.ts`, `libs/mylib/other.ts`],
-            fileMTimes: {
-              'libs/mylib/src/main.ts': 1,
-              'libs/mylib/other.ts': 1
+        {
+          nodes: {
+            mylibName: {
+              name: 'mylibName',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/mylib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {},
+                files: [
+                  createFile(`libs/mylib/src/main.ts`),
+                  createFile(`libs/mylib/other.ts`)
+                ]
+              }
             }
-          }
-        ]
+          },
+          dependencies: {}
+        }
       );
       expect(failures.length).toEqual(0);
     });
@@ -339,21 +348,25 @@ describe('Enforce Module Boundaries', () => {
         {},
         `${process.cwd()}/proj/libs/mylib/src/main.ts`,
         'import "../other"',
-        [
-          {
-            name: 'mylibName',
-            root: 'libs/mylib',
-            type: ProjectType.lib,
-            tags: [],
-            implicitDependencies: [],
-            architect: {},
-            files: [`libs/mylib/src/main.ts`, `libs/mylib/other/index.ts`],
-            fileMTimes: {
-              'libs/mylib/src/main.ts': 1,
-              'libs/mylib/other/index.ts': 1
+        {
+          nodes: {
+            mylibName: {
+              name: 'mylibName',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/mylib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {},
+                files: [
+                  createFile(`libs/mylib/src/main.ts`),
+                  createFile(`libs/mylib/other/index.ts`)
+                ]
+              }
             }
-          }
-        ]
+          },
+          dependencies: {}
+        }
       );
       expect(failures.length).toEqual(0);
     });
@@ -363,32 +376,33 @@ describe('Enforce Module Boundaries', () => {
         {},
         `${process.cwd()}/proj/libs/mylib/src/main.ts`,
         'import "../../other"',
-        [
-          {
-            name: 'mylibName',
-            root: 'libs/mylib',
-            type: ProjectType.lib,
-            tags: [],
-            implicitDependencies: [],
-            architect: {},
-            files: [`libs/mylib/src/main.ts`],
-            fileMTimes: {
-              'libs/mylib/src/main.ts': 1
+        {
+          nodes: {
+            mylibName: {
+              name: 'mylibName',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/mylib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {},
+                files: [createFile(`libs/mylib/src/main.ts`)]
+              }
+            },
+            otherName: {
+              name: 'otherName',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/other',
+                tags: [],
+                implicitDependencies: [],
+                architect: {},
+                files: [createFile('libs/other/src/index.ts')]
+              }
             }
           },
-          {
-            name: 'otherName',
-            root: 'libs/other',
-            type: ProjectType.lib,
-            tags: [],
-            implicitDependencies: [],
-            architect: {},
-            files: ['libs/other/src/index.ts'],
-            fileMTimes: {
-              'libs/other/src/main.ts': 1
-            }
-          }
-        ]
+          dependencies: {}
+        }
       );
       expect(failures[0].message).toEqual(
         'Library imports must start with @mycompany/'
@@ -400,32 +414,33 @@ describe('Enforce Module Boundaries', () => {
         {},
         `${process.cwd()}/proj/libs/mylib/src/main.ts`,
         'import "../../other/src"',
-        [
-          {
-            name: 'mylibName',
-            root: 'libs/mylib',
-            type: ProjectType.lib,
-            tags: [],
-            implicitDependencies: [],
-            architect: {},
-            files: [`libs/mylib/src/main.ts`],
-            fileMTimes: {
-              'libs/mylib/src/main.ts': 1
+        {
+          nodes: {
+            mylibName: {
+              name: 'mylibName',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/mylib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {},
+                files: [createFile(`libs/mylib/src/main.ts`)]
+              }
+            },
+            otherName: {
+              name: 'otherName',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/other',
+                tags: [],
+                implicitDependencies: [],
+                architect: {},
+                files: [createFile('libs/other/src/index.ts')]
+              }
             }
           },
-          {
-            name: 'otherName',
-            root: 'libs/other',
-            type: ProjectType.lib,
-            tags: [],
-            implicitDependencies: [],
-            architect: {},
-            files: ['libs/other/src/index.ts'],
-            fileMTimes: {
-              'libs/other/src/main.ts': 1
-            }
-          }
-        ]
+          dependencies: {}
+        }
       );
       expect(failures[0].message).toEqual(
         'Library imports must start with @mycompany/'
@@ -438,21 +453,25 @@ describe('Enforce Module Boundaries', () => {
       {},
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
       'import "libs/src/other.ts"',
-      [
-        {
-          name: 'mylibName',
-          root: 'libs/mylib',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/mylib/src/main.ts`, `libs/mylib/src/other.ts`],
-          fileMTimes: {
-            'libs/mylib/src/main.ts': 1,
-            'libs/mylib/src/other/index.ts': 1
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [
+                createFile(`libs/mylib/src/main.ts`),
+                createFile(`libs/mylib/src/other.ts`)
+              ]
+            }
           }
-        }
-      ]
+        },
+        dependencies: {}
+      }
     );
 
     expect(failures.length).toEqual(1);
@@ -469,45 +488,47 @@ describe('Enforce Module Boundaries', () => {
         import "@mycompany/other/src/blah"
         import "@mycompany/other/src/sublib/blah"
         `,
-      [
-        {
-          name: 'mylibName',
-          root: 'libs/mylib',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/mylib/src/main.ts`, `libs/mylib/src/another-file.ts`],
-          fileMTimes: {
-            'libs/mylib/src/main.ts': 1,
-            'libs/mylib/src/another-file.ts': 1
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [
+                createFile(`libs/mylib/src/main.ts`),
+                createFile(`libs/mylib/src/another-file.ts`)
+              ]
+            }
+          },
+          otherName: {
+            name: 'otherName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/other',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/other/src/blah.ts`)]
+            }
+          },
+          otherSublibName: {
+            name: 'otherSublibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/other/sublib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/other/sublib/src/blah.ts`)]
+            }
           }
         },
-        {
-          name: 'otherName',
-          root: 'libs/other',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/other/src/blah.ts`],
-          fileMTimes: {
-            'libs/other/src/blah.ts': 1
-          }
-        },
-        {
-          name: 'otherSublibName',
-          root: 'libs/other/sublib',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/other/sublib/src/blah.ts`],
-          fileMTimes: {
-            'libs/other/sublib/src/blah.ts': 1
-          }
-        }
-      ]
+        dependencies: {}
+      }
     );
     expect(failures[0].message).toEqual(
       'Deep imports into libraries are forbidden'
@@ -524,33 +545,36 @@ describe('Enforce Module Boundaries', () => {
       `
         import "@mycompany/other/src/blah"
         `,
-      [
-        {
-          name: 'mylibName',
-          root: 'libs/mylib',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/mylib/src/main.ts`, `libs/mylib/src/another-file.ts`],
-          fileMTimes: {
-            'libs/mylib/src/main.ts': 1,
-            'libs/mylib/src/another-file.ts': 1
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [
+                createFile(`libs/mylib/src/main.ts`),
+                createFile(`libs/mylib/src/another-file.ts`)
+              ]
+            }
+          },
+          otherName: {
+            name: 'otherName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/other',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/other/src/blah.ts`)]
+            }
           }
         },
-        {
-          name: 'otherName',
-          root: 'libs/other',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/other/src/blah.ts`],
-          fileMTimes: {
-            'libs/other/src/blah.ts': 1
-          }
-        }
-      ]
+        dependencies: {}
+      }
     );
     expect(failures.length).toEqual(0);
   });
@@ -563,44 +587,44 @@ describe('Enforce Module Boundaries', () => {
         import "@mycompany/other/src/blah"
         import "@mycompany/another/testing"
         `,
-      [
-        {
-          name: 'mylibName',
-          root: 'libs/mylib',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/mylib/src/main.ts`],
-          fileMTimes: {
-            'libs/mylib/src/main.ts': 1
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/mylib/src/main.ts`)]
+            }
+          },
+          otherName: {
+            name: 'otherName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/other',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/other/src/blah.ts`)]
+            }
+          },
+          anotherName: {
+            name: 'anotherName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/another',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/anotherlib/testing.ts`)]
+            }
           }
         },
-        {
-          name: 'otherName',
-          root: 'libs/other',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/other/src/blah.ts`],
-          fileMTimes: {
-            'libs/other/src/blah.ts': 1
-          }
-        },
-        {
-          name: 'anotherName',
-          root: 'libs/another',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/anotherlib/testing.ts`],
-          fileMTimes: {
-            'libs/anotherlib/testing.ts': 1
-          }
-        }
-      ]
+        dependencies: {}
+      }
     );
     expect(failures.length).toEqual(0);
   });
@@ -613,33 +637,50 @@ describe('Enforce Module Boundaries', () => {
       import "@mycompany/other/a/b";
       import "@mycompany/other/a";
         `,
-      [
-        {
-          name: 'mylibName',
-          root: 'libs/mylib',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/mylib/src/main.ts`],
-          fileMTimes: {
-            'libs/mylib/src/main.ts': 1
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/mylib/src/main.ts`)]
+            }
+          },
+          otherName: {
+            name: 'otherName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/other',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [
+                createFile(`libs/other/a/index.ts`),
+                createFile(`libs/other/a/b.ts`)
+              ]
+            }
+          },
+          anotherName: {
+            name: 'anotherName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/another',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [
+                createFile(`libs/another/a/index.ts`),
+                createFile(`libs/another/a/b.ts`)
+              ]
+            }
           }
         },
-        {
-          name: 'otherName',
-          root: 'libs/other',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/other/a/index.ts`, `libs/other/a/b.ts`],
-          fileMTimes: {
-            'libs/other/a/index.ts': 1,
-            'libs/other/a/b.ts': 1
-          }
-        }
-      ]
+        dependencies: {}
+      }
     );
     expect(failures.length).toEqual(1);
   });
@@ -651,32 +692,33 @@ describe('Enforce Module Boundaries', () => {
       `
       import "../../utils/a";
       `,
-      [
-        {
-          name: 'mylibName',
-          root: 'libs/mylib',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/mylib/src/main.ts`],
-          fileMTimes: {
-            'libs/mylib/src/main.ts': 1
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/mylib/src/main.ts`)]
+            }
+          },
+          utils: {
+            name: 'utils',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/utils',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/utils/a.ts`)]
+            }
           }
         },
-        {
-          name: 'utils',
-          root: 'libs/utils',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/utils/a.ts`],
-          fileMTimes: {
-            'libs/utils/a.ts': 1
-          }
-        }
-      ]
+        dependencies: {}
+      }
     );
     expect(failures.length).toEqual(0);
   });
@@ -686,36 +728,40 @@ describe('Enforce Module Boundaries', () => {
       {},
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
       'import "@mycompany/other";',
-      [
-        {
-          name: 'mylibName',
-          root: 'libs/mylib',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/mylib/src/main.ts`],
-          fileMTimes: {
-            'libs/mylib/src/main.ts': 1
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/mylib/src/main.ts`)]
+            }
+          },
+          otherName: {
+            name: 'otherName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/other',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/other/index.ts`)]
+            }
           }
         },
-        {
-          name: 'otherName',
-          root: 'libs/other',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/other/index.ts`],
-          fileMTimes: {
-            'libs/other/index.ts': 1
-          }
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'otherName',
+              type: DependencyType.dynamic
+            }
+          ]
         }
-      ],
-      {
-        mylibName: [
-          { projectName: 'otherName', type: DependencyType.loadChildren }
-        ]
       }
     );
     expect(failures[0].message).toEqual(
@@ -728,32 +774,33 @@ describe('Enforce Module Boundaries', () => {
       {},
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
       'import "@mycompany/myapp"',
-      [
-        {
-          name: 'mylibName',
-          root: 'libs/mylib',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/mylib/src/main.ts`],
-          fileMTimes: {
-            'libs/mylib/src/main.ts': 1
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/mylib/src/main.ts`)]
+            }
+          },
+          myappName: {
+            name: 'myappName',
+            type: ProjectType.app,
+            data: {
+              root: 'apps/myapp',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`apps/myapp/src/index.ts`)]
+            }
           }
         },
-        {
-          name: 'myappName',
-          root: 'apps/myapp',
-          type: ProjectType.app,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`apps/myapp/src/index.ts`],
-          fileMTimes: {
-            'apps/myapp/src/index.ts': 1
-          }
-        }
-      ]
+        dependencies: {}
+      }
     );
     expect(failures[0].message).toEqual('Imports of apps are forbidden');
   });
@@ -763,48 +810,51 @@ describe('Enforce Module Boundaries', () => {
       {},
       `${process.cwd()}/proj/libs/anotherlib/src/main.ts`,
       'import "@mycompany/mylib"',
-      [
-        {
-          name: 'mylibName',
-          root: 'libs/mylib',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/mylib/src/main.ts`],
-          fileMTimes: {
-            'libs/mylib/src/main.ts': 1
-          }
-        },
-        {
-          name: 'anotherlibName',
-          root: 'libs/anotherlib',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/anotherlib/src/main.ts`],
-          fileMTimes: {
-            'libs/anotherlib/src/main.ts': 1
-          }
-        },
-        {
-          name: 'myappName',
-          root: 'apps/myapp',
-          type: ProjectType.app,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`apps/myapp/src/index.ts`],
-          fileMTimes: {
-            'apps/myapp/src/index.ts': 1
-          }
-        }
-      ],
       {
-        mylibName: [
-          { projectName: 'anotherlibName', type: DependencyType.es6Import }
-        ]
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/mylib/src/main.ts`)]
+            }
+          },
+          anotherlibName: {
+            name: 'anotherlibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/anotherlib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/anotherlib/src/main.ts`)]
+            }
+          },
+          myappName: {
+            name: 'myappName',
+            type: ProjectType.app,
+            data: {
+              root: 'apps/myapp',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`apps/myapp/src/index.ts`)]
+            }
+          }
+        },
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'anotherlibName',
+              type: DependencyType.static
+            }
+          ]
+        }
       }
     );
     expect(failures[0].message).toEqual(
@@ -817,66 +867,76 @@ describe('Enforce Module Boundaries', () => {
       {},
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
       'import "@mycompany/badcirclelib"',
-      [
-        {
-          name: 'mylibName',
-          root: 'libs/mylib',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/mylib/src/main.ts`],
-          fileMTimes: {
-            'libs/mylib/src/main.ts': 1
-          }
-        },
-        {
-          name: 'anotherlibName',
-          root: 'libs/anotherlib',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/anotherlib/src/main.ts`],
-          fileMTimes: {
-            'libs/mylib/src/main.ts': 1
-          }
-        },
-        {
-          name: 'badcirclelibName',
-          root: 'libs/badcirclelib',
-          type: ProjectType.lib,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`libs/badcirclelib/src/main.ts`],
-          fileMTimes: {
-            'libs/badcirclelib/src/main.ts': 1
-          }
-        },
-        {
-          name: 'myappName',
-          root: 'apps/myapp',
-          type: ProjectType.app,
-          tags: [],
-          implicitDependencies: [],
-          architect: {},
-          files: [`apps/myapp/index.ts`],
-          fileMTimes: {
-            'apps/myapp/index.ts': 1
-          }
-        }
-      ],
       {
-        mylibName: [
-          { projectName: 'badcirclelibName', type: DependencyType.es6Import }
-        ],
-        badcirclelibName: [
-          { projectName: 'anotherlibName', type: DependencyType.es6Import }
-        ],
-        anotherlibName: [
-          { projectName: 'mylibName', type: DependencyType.es6Import }
-        ]
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/mylib/src/main.ts`)]
+            }
+          },
+          anotherlibName: {
+            name: 'anotherlibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/anotherlib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/anotherlib/src/main.ts`)]
+            }
+          },
+          badcirclelibName: {
+            name: 'badcirclelibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/badcirclelib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/badcirclelib/src/main.ts`)]
+            }
+          },
+          myappName: {
+            name: 'myappName',
+            type: ProjectType.app,
+            data: {
+              root: 'apps/myapp',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`apps/myapp/index.ts`)]
+            }
+          }
+        },
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'badcirclelibName',
+              type: DependencyType.static
+            }
+          ],
+          badcirclelibName: [
+            {
+              source: 'badcirclelibName',
+              target: 'anotherlibName',
+              type: DependencyType.static
+            }
+          ],
+          anotherlibName: [
+            {
+              source: 'anotherlibName',
+              target: 'mylibName',
+              type: DependencyType.static
+            }
+          ]
+        }
       }
     );
     expect(failures[0].message).toEqual(
@@ -899,17 +959,19 @@ const baseConfig = {
 linter.defineParser('@typescript-eslint/parser', parser);
 linter.defineRule(enforceModuleBoundariesRuleName, enforceModuleBoundaries);
 
+function createFile(f) {
+  return { file: f, ext: extname(f), mtime: 1 };
+}
+
 function runRule(
   ruleArguments: any,
   contentPath: string,
   content: string,
-  projectNodes: ProjectNode[],
-  deps: { [projectName: string]: Dependency[] } = {}
+  projectGraph: ProjectGraph
 ): TSESLint.Linter.LintMessage[] {
   (global as any).projectPath = `${process.cwd()}/proj`;
   (global as any).npmScope = 'mycompany';
-  (global as any).projectNodes = projectNodes;
-  (global as any).deps = deps;
+  (global as any).projectGraph = projectGraph;
 
   const config = {
     ...baseConfig,

@@ -8,7 +8,7 @@ import { DataPersistence } from './data-persistence';
  */
 @NgModule({})
 export class NxModule {
-  static forRoot(): ModuleWithProviders<NxModule> {
+  static forRoot(): ModuleWithProviders {
     return { ngModule: NxModule, providers: [DataPersistence] };
   }
 }

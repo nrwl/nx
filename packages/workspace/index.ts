@@ -19,16 +19,13 @@ export {
   ExistingPrettierConfig,
   resolveUserExistingPrettierConfig
 } from './src/utils/common';
-export { output } from './src/command-line/output';
+export { output } from './src/utils/output';
 export {
   commandsObject,
   supportedNxCommands
 } from './src/command-line/nx-commands';
-export {
-  readWorkspaceJson,
-  readNxJson,
-  NxJson
-} from './src/command-line/shared';
+export { readWorkspaceJson, readNxJson } from './src/core/file-utils';
+export { NxJson } from './src/core/shared-interfaces';
 export {
   readJsonInTree,
   updateJsonInTree,
@@ -44,7 +41,10 @@ export {
   createOrUpdate,
   findNodes,
   updatePackageJsonDependencies,
-  readWorkspace
+  getProjectGraphFromHost,
+  readWorkspace,
+  renameSyncInTree,
+  renameDirSyncInTree
 } from './src/utils/ast-utils';
 
 export {

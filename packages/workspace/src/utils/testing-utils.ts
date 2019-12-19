@@ -1,17 +1,9 @@
-import {
-  Tree,
-  MergeStrategy,
-  DirEntry,
-  FileEntry,
-  FilePredicate,
-  UpdateRecorder,
-  Action
-} from '@angular-devkit/schematics';
-import { NxJson } from '../command-line/shared';
+import { Tree } from '@angular-devkit/schematics';
 import {
   _test_addWorkspaceFile,
   WorkspaceFormat
 } from '@angular-devkit/core/src/workspace/core';
+import { NxJson } from '@nrwl/workspace/src/core/shared-interfaces';
 
 export function getFileContent(tree: Tree, path: string): string {
   const fileEntry = tree.get(path);
@@ -33,6 +25,7 @@ export function createEmptyWorkspace(tree: Tree): Tree {
   tree.create(
     '/package.json',
     JSON.stringify({
+      name: 'test-name',
       dependencies: {},
       devDependencies: {}
     })

@@ -3,13 +3,14 @@ import { execSync } from 'child_process';
 import { platform } from 'os';
 import * as yargs from 'yargs';
 import { nxVersion } from '../utils/versions';
-import { affected, runMany } from './run-tasks';
 import { generateGraph } from './dep-graph';
 import { format } from './format';
 import { workspaceLint } from './lint';
 import { list } from './list';
 import { report } from './report';
 import { workspaceSchematic } from './workspace-schematic';
+import { affected } from './affected';
+import { runMany } from './run-many';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
@@ -133,7 +134,7 @@ export const commandsObject = yargs
   .command(
     'print-affected',
     'Graph execution plan',
-    yargs => withAffectedOptions(yargs),
+    yargs => withAffectedOptions(withPrintAffectedOptions(yargs)),
     args =>
       affected('print-affected', {
         ...args
@@ -223,6 +224,10 @@ function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
   return withAffectedOptions(yargs).option('apps-and-libs', {
     type: 'boolean'
   });
+}
+
+function withPrintAffectedOptions(yargs: yargs.Argv): yargs.Argv {
+  return yargs.option('select', { type: 'string' });
 }
 
 function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
@@ -315,6 +320,12 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       describe:
         'This is the configuration to use when performing tasks on projects',
       type: 'string'
+    })
+    .options('with-deps', {
+      describe:
+        'Include dependencies of specified projects when computing what to run',
+      type: 'boolean',
+      default: false
     })
     .options('only-failed', {
       describe: 'Isolate projects which previously failed',

@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { WorkspaceResults } from './workspace-results';
 import { serializeJson } from '../utils/fileutils';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { output } from './output';
+import { output } from '../utils/output';
 
 describe('WorkspacesResults', () => {
   let results: WorkspaceResults;

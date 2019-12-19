@@ -29,10 +29,11 @@
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "@nrwl/workspace": "*"
+    "@nrwl/workspace": "*",
+    "next": "^9.1.0"
   },
   "dependencies": {
     "@nrwl/react": "*",
-    "@angular-devkit/schematics": "9.0.0-rc.5"
+    "@angular-devkit/schematics": "8.3.14"
   }
 }

@@ -1,8 +1,9 @@
-import { statSync } from 'fs';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ensureDirSync } from 'fs-extra';
 import * as stripJsonComments from 'strip-json-comments';
+import { appRootPath } from './app-root';
+const ignore = require('ignore');
 
 export function writeToFile(filePath: string, str: string) {
   ensureDirSync(path.dirname(filePath));
@@ -21,23 +22,6 @@ export function updateJsonFile(path: string, callback: (a: any) => any) {
   const json = readJsonFile(path);
   callback(json);
   writeJsonFile(path, json);
-}
-
-export function addApp(apps: any[] | undefined, newApp: any): any[] {
-  if (!apps) {
-    apps = [];
-  }
-  apps.push(newApp);
-
-  apps.sort((a: any, b: any) => {
-    if (a.name === '$workspaceRoot') return 1;
-    if (b.name === '$workspaceRoot') return -1;
-    if (a.main && !b.main) return -1;
-    if (!a.main && b.main) return 1;
-    if (a.name > b.name) return 1;
-    return -1;
-  });
-  return apps;
 }
 
 export function serializeJson(json: any): string {
@@ -85,7 +69,7 @@ export function directoryExists(name) {
 
 export function fileExists(filePath: string): boolean {
   try {
-    return statSync(filePath).isFile();
+    return fs.statSync(filePath).isFile();
   } catch (err) {
     return false;
   }

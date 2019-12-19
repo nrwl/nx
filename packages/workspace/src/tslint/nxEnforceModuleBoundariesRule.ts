@@ -1,15 +1,11 @@
 import * as Lint from 'tslint';
 import { IOptions } from 'tslint';
 import * as ts from 'typescript';
-import { readDependencies } from '../command-line/deps-calculator';
 import {
-  getProjectNodes,
-  normalizedProjectRoot,
-  readNxJson,
-  readWorkspaceJson,
-  ProjectNode,
-  ProjectType
-} from '../command-line/shared';
+  createProjectGraph,
+  ProjectGraph,
+  ProjectGraphNode
+} from '../core/project-graph';
 import { appRootPath } from '../utils/app-root';
 import {
   DepConstraint,
@@ -26,31 +22,35 @@ import {
   onlyLoadChildren
 } from '../utils/runtime-lint-utils';
 import { normalize } from '@angular-devkit/core';
+import { ProjectType } from '../core/project-graph';
+import {
+  normalizedProjectRoot,
+  readNxJson,
+  readWorkspaceJson
+} from '@nrwl/workspace/src/core/file-utils';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(
     options: IOptions,
     private readonly projectPath?: string,
     private readonly npmScope?: string,
-    private readonly projectNodes?: ProjectNode[],
-    private readonly deps?: Deps
+    private readonly projectGraph?: ProjectGraph
   ) {
     super(options);
+
     if (!projectPath) {
       this.projectPath = normalize(appRootPath);
-      if (!(global as any).projectNodes) {
+      if (!(global as any).projectGraph) {
         const workspaceJson = readWorkspaceJson();
         const nxJson = readNxJson();
         (global as any).npmScope = nxJson.npmScope;
-        (global as any).projectNodes = getProjectNodes(workspaceJson, nxJson);
-        (global as any).deps = readDependencies(
-          (global as any).npmScope,
-          (global as any).projectNodes
+        (global as any).projectGraph = createProjectGraph(
+          workspaceJson,
+          nxJson
         );
       }
       this.npmScope = (global as any).npmScope;
-      this.projectNodes = (global as any).projectNodes;
-      this.deps = (global as any).deps;
+      this.projectGraph = (global as any).projectGraph;
     }
   }
 
@@ -61,8 +61,7 @@ export class Rule extends Lint.Rules.AbstractRule {
         this.getOptions(),
         this.projectPath,
         this.npmScope,
-        this.projectNodes,
-        this.deps
+        this.projectGraph
       )
     );
   }
@@ -77,16 +76,9 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     options: IOptions,
     private readonly projectPath: string,
     private readonly npmScope: string,
-    private readonly projectNodes: ProjectNode[],
-    private readonly deps: Deps
+    private readonly projectGraph: ProjectGraph
   ) {
     super(sourceFile, options);
-
-    this.projectNodes.sort((a, b) => {
-      if (!a.root) return -1;
-      if (!b.root) return -1;
-      return a.root.length > b.root.length ? -1 : 1;
-    });
 
     this.allow = Array.isArray(this.getOptions()[0].allow)
       ? this.getOptions()[0].allow.map(a => `${a}`)
@@ -113,7 +105,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       isRelativeImportIntoAnotherProject(
         imp,
         this.projectPath,
-        this.projectNodes,
+        this.projectGraph,
         getSourceFilePath(
           normalize(this.getSourceFile().fileName),
           this.projectPath
@@ -133,12 +125,12 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     if (imp.startsWith(`@${this.npmScope}/`)) {
       // we should find the name
       const sourceProject = findSourceProject(
-        this.projectNodes,
+        this.projectGraph,
         getSourceFilePath(this.getSourceFile().fileName, this.projectPath)
       );
       // findProjectUsingImport to take care of same prefix
       const targetProject = findProjectUsingImport(
-        this.projectNodes,
+        this.projectGraph,
         this.npmScope,
         imp
       );
@@ -150,7 +142,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       }
 
       // check for circular dependency
-      if (isCircular(this.deps, sourceProject, targetProject)) {
+      if (isCircular(this.projectGraph, sourceProject, targetProject)) {
         const error = `Circular dependency between "${sourceProject.name}" and "${targetProject.name}" detected`;
         this.addFailureAt(node.getStart(), node.getWidth(), error);
         return;
@@ -184,7 +176,12 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
 
       // if we import a library using loadChildre, we should not import it using es6imports
       if (
-        onlyLoadChildren(this.deps, sourceProject.name, targetProject.name, [])
+        onlyLoadChildren(
+          this.projectGraph,
+          sourceProject.name,
+          targetProject.name,
+          []
+        )
       ) {
         this.addFailureAt(
           node.getStart(),

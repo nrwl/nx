@@ -8,7 +8,11 @@ import {
   htmlSelectorFormat,
   pathFormat
 } from '@angular-devkit/schematics/src/formats';
-import { generateFile, sortAlphabeticallyFunction } from './utils';
+import {
+  generateJsonFile,
+  generateMarkdownFile,
+  sortAlphabeticallyFunction
+} from './utils';
 import {
   Configuration,
   getPackageConfigurations
@@ -173,8 +177,10 @@ Promise.all(
                 .map(s => generateTemplate(framework, s))
             )
             .then(markdownList =>
-              markdownList.forEach(template =>
-                generateFile(config.schematicOutput, template)
+              Promise.all(
+                markdownList.map(template =>
+                  generateMarkdownFile(config.schematicOutput, template)
+                )
               )
             )
             .then(() => {
@@ -186,14 +192,14 @@ Promise.all(
     );
   })
 ).then(() => {
-  console.log('Finished Generating all Documentation');
+  console.log('Finished Generating Schematics Documentation');
 });
 
-getPackageConfigurations().forEach(({ framework, configs }) => {
+getPackageConfigurations().forEach(async ({ framework, configs }) => {
   const schematics = configs
     .filter(item => item.hasSchematics)
     .map(item => item.name);
-  fs.outputJsonSync(
+  await generateJsonFile(
     path.join(__dirname, '../../docs', framework, 'schematics.json'),
     schematics
   );

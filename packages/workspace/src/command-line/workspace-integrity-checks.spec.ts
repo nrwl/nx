@@ -1,25 +1,28 @@
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
-import { ProjectType } from './shared';
 import chalk from 'chalk';
+import { ProjectType, ProjectGraph } from '../core/project-graph';
+import { extname } from 'path';
 
 describe('WorkspaceIntegrityChecks', () => {
   describe('workspace.json is in sync with the filesystem', () => {
     it('should not error when they are in sync', () => {
       const c = new WorkspaceIntegrityChecks(
-        [
-          {
-            name: 'project1',
-            type: ProjectType.lib,
-            root: 'libs/project1',
-            tags: [],
-            implicitDependencies: [],
-            architect: {},
-            files: ['libs/project1/src/index.ts'],
-            fileMTimes: {
-              'libs/project1/src/index.ts': 1
+        {
+          nodes: {
+            project1: {
+              name: 'project1',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/project1',
+                tags: [],
+                implicitDependencies: [],
+                architect: {},
+                files: [createFile('libs/project1/src/index.ts')]
+              }
             }
-          }
-        ],
+          },
+          dependencies: {}
+        },
         ['libs/project1/src/index.ts']
       );
       expect(c.run().length).toEqual(0);
@@ -27,30 +30,33 @@ describe('WorkspaceIntegrityChecks', () => {
 
     it('should error when there are projects without files', () => {
       const c = new WorkspaceIntegrityChecks(
-        [
-          {
-            name: 'project1',
-            type: ProjectType.lib,
-            root: 'libs/project1',
-            tags: [],
-            implicitDependencies: [],
-            architect: {},
-            files: [],
-            fileMTimes: {}
-          },
-          {
-            name: 'project2',
-            type: ProjectType.lib,
-            root: 'libs/project2',
-            tags: [],
-            implicitDependencies: [],
-            architect: {},
-            files: ['libs/project2/src/index.ts'],
-            fileMTimes: {
-              'libs/project2/src/index.ts': 1
+        {
+          nodes: {
+            project1: {
+              name: 'project1',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/project1',
+                tags: [],
+                implicitDependencies: [],
+                architect: {},
+                files: []
+              }
+            },
+            project2: {
+              name: 'project2',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/project2',
+                tags: [],
+                implicitDependencies: [],
+                architect: {},
+                files: [createFile('libs/project2/src/index.ts')]
+              }
             }
-          }
-        ],
+          },
+          dependencies: {}
+        },
         ['libs/project2/src/index.ts']
       );
 
@@ -69,20 +75,22 @@ describe('WorkspaceIntegrityChecks', () => {
 
     it('should error when there are files in apps or libs without projects', () => {
       const c = new WorkspaceIntegrityChecks(
-        [
-          {
-            name: 'project1',
-            type: ProjectType.lib,
-            root: 'libs/project1',
-            fileMTimes: {
-              'libs/project1/src/index.ts': 1
-            },
-            tags: [],
-            implicitDependencies: [],
-            architect: {},
-            files: ['libs/project1/src/index.ts']
-          }
-        ],
+        {
+          nodes: {
+            project1: {
+              name: 'project1',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/project1',
+                tags: [],
+                implicitDependencies: [],
+                architect: {},
+                files: [createFile('libs/project1/src/index.ts')]
+              }
+            }
+          },
+          dependencies: {}
+        },
         ['libs/project1/src/index.ts', 'libs/project2/src/index.ts']
       );
 
@@ -96,3 +104,7 @@ describe('WorkspaceIntegrityChecks', () => {
     });
   });
 });
+
+function createFile(f) {
+  return { file: f, ext: extname(f), mtime: 1 };
+}
