@@ -1,12 +1,16 @@
+import { join } from 'path';
+
 import { workspaces } from '@angular-devkit/core';
-import { run, WebBuildBuilderOptions } from './build.impl';
 import { of } from 'rxjs';
 import * as buildWebpack from '@angular-devkit/build-webpack';
 jest.mock('tsconfig-paths-webpack-plugin');
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
+
+import { MockBuilderContext } from '@nrwl/workspace/testing';
+
+import { run, WebBuildBuilderOptions } from './build.impl';
 import * as webConfigUtils from '../../utils/web.config';
-import { getMockContext, MockBuilderContext } from '../../utils/testing';
-import { join } from 'path';
+import { getMockContext } from '../../utils/testing';
 import * as indexHtmlUtils from '../../utils/third-party/cli-files/utilities/index-file/write-index-html';
 
 describe('WebBuildBuilder', () => {

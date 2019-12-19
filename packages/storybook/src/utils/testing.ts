@@ -1,26 +1,17 @@
 import { join, sep } from 'path';
-import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import {
-  Tree,
-  Rule,
-  externalSchematic,
-  apply,
-  source
-} from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/src/utils/testing-utils';
-import {
-  BuilderContext,
-  Target,
-  Architect,
-  ScheduleOptions
-} from '@angular-devkit/architect';
-import {
-  TestLogger,
-  TestingArchitectHost
-} from '@angular-devkit/architect/testing';
-import { JsonObject, json, schema } from '@angular-devkit/core';
 import { tmpdir } from 'os';
 import { mkdtempSync } from 'fs';
+
+import { schema } from '@angular-devkit/core';
+import { externalSchematic, Rule, Tree } from '@angular-devkit/schematics';
+import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
+import { Architect } from '@angular-devkit/architect';
+import { TestingArchitectHost } from '@angular-devkit/architect/testing';
+
+import {
+  createEmptyWorkspace,
+  MockBuilderContext
+} from '@nrwl/workspace/testing';
 
 const testRunner = new SchematicTestRunner(
   '@nrwl/storybook',
@@ -133,84 +124,4 @@ export async function getMockContext() {
   const context = new MockBuilderContext(architect, architectHost);
   await context.addBuilderFromPackage(join(__dirname, '../..'));
   return context;
-}
-
-export class MockBuilderContext implements BuilderContext {
-  id: 0;
-
-  builder: any = {};
-  analytics = null;
-
-  target: Target = {
-    project: null,
-    target: null
-  };
-
-  get currentDirectory() {
-    return this.architectHost.currentDirectory;
-  }
-  get workspaceRoot() {
-    return this.architectHost.workspaceRoot;
-  }
-  logger = new TestLogger('test');
-  constructor(
-    private architect: Architect,
-    private architectHost: TestingArchitectHost
-  ) {}
-
-  async addBuilderFromPackage(path: string) {
-    return await this.architectHost.addBuilderFromPackage(path);
-  }
-
-  async addTarget(target: Target, builderName: string) {
-    return await this.architectHost.addTarget(target, builderName);
-  }
-
-  getBuilderNameForTarget(target: Target) {
-    return this.architectHost.getBuilderNameForTarget(target);
-  }
-
-  scheduleTarget(
-    target: Target,
-    overrides?: JsonObject,
-    scheduleOptions?: ScheduleOptions
-  ) {
-    return this.architect.scheduleTarget(target, overrides, scheduleOptions);
-  }
-
-  scheduleBuilder(
-    name: string,
-    overrides?: JsonObject,
-    scheduleOptions?: ScheduleOptions
-  ) {
-    return this.architect.scheduleBuilder(name, overrides, scheduleOptions);
-  }
-
-  getTargetOptions(target: Target) {
-    return this.architectHost.getOptionsForTarget(target);
-  }
-
-  validateOptions<T extends JsonObject = JsonObject>(
-    options: JsonObject,
-    builderName: string
-  ): Promise<T> {
-    return Promise.resolve<T>(options as T);
-  }
-
-  reportRunning() {}
-
-  reportStatus(status: string) {}
-
-  reportProgress(current: number, total?: number, status?: string) {}
-
-  addTeardown(teardown: () => Promise<void> | void) {}
-
-  async getProjectMetadata(
-    target: Target | string
-  ): Promise<json.JsonObject | null> {
-    return (
-      this.architectHost &&
-      this.architectHost.getProjectMetadata(target as string)
-    );
-  }
 }

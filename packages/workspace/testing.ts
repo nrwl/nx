@@ -1,4 +1,5 @@
 export {
   createEmptyWorkspace,
-  getFileContent
+  getFileContent,
+  MockBuilderContext
 } from './src/utils/testing-utils';
