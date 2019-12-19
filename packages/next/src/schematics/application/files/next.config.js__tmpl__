@@ -1,0 +1,2 @@
+const { withNx } = require('@nrwl/next');
+module.exports = withNx('<%= projectName %>')({});

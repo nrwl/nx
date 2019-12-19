@@ -28,21 +28,8 @@ forEachCli('nx', () => {
 
       const mainPath = `apps/${appName}/pages/index.tsx`;
       updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
-      updateFile(
-        `apps/${appName}/next.config.js`,
-        `
-module.exports = {
-  generateBuildId: function () {
-    return 'fixed';
-  }
-};
-      `
-      );
 
       await checkApp(appName, { checkLint: true });
-
-      // check that the configuration was consumed
-      expect(readFile(`dist/apps/${appName}/BUILD_ID`)).toEqual('fixed');
     }, 120000);
 
     xit('should generate a Next.js app dynamically loading a lib', async () => {
