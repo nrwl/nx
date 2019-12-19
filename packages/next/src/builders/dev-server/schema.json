@@ -17,11 +17,6 @@
       "description": "Port to listen on.",
       "default": 4200
     },
-    "staticMarkup": {
-      "type": "boolean",
-      "description": "Static markup.",
-      "default": false
-    },
     "quiet": {
       "type": "boolean",
       "description": "Hide error messages containing server information.",

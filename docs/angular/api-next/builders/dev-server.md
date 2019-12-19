@@ -41,11 +41,3 @@ Default: `false`
 Type: `boolean`
 
 Hide error messages containing server information.
-
-### staticMarkup
-
-Default: `false`
-
-Type: `boolean`
-
-Static markup.

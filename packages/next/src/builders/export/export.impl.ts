@@ -6,12 +6,10 @@ import {
   scheduleTargetAndForget
 } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
-import { PHASE_EXPORT } from 'next/dist/next-server/lib/constants';
 import exportApp from 'next/dist/export';
 import * as path from 'path';
 import { from, Observable, of } from 'rxjs';
 import { map, concatMap } from 'rxjs/operators';
-import { prepareConfig } from '../../utils/config';
 
 try {
   require('dotenv').config();
@@ -39,23 +37,13 @@ function run(
       return from(context.getTargetOptions(buildTarget)).pipe(
         concatMap((buildOptions: any) => {
           const root = path.resolve(context.workspaceRoot, buildOptions.root);
-          const config = prepareConfig(
-            context.workspaceRoot,
-            buildOptions.root,
-            buildOptions.outputPath,
-            PHASE_EXPORT
-          );
           return from(
-            exportApp(
-              root,
-              {
-                silent: options.silent,
-                threads: options.threads,
-                concurrency: options.concurrency,
-                outdir: `${buildOptions.outputPath}/exported`
-              } as any,
-              config
-            )
+            exportApp(root, {
+              silent: options.silent,
+              threads: options.threads,
+              concurrency: options.concurrency,
+              outdir: `${buildOptions.outputPath}/exported`
+            } as any)
           ).pipe(map(() => ({ success: true })));
         })
       );
