@@ -1,10 +1,14 @@
+import { of } from 'rxjs';
+import { join } from 'path';
+
+import { workspaces } from '@angular-devkit/core';
+
+import * as f from '@nrwl/workspace/src/utils/fileutils';
+import { MockBuilderContext } from '@nrwl/workspace/testing';
+
 import * as impl from './bundle.impl';
 import * as rr from './run-rollup';
-import { of } from 'rxjs';
-import { getMockContext, MockBuilderContext } from '../../utils/testing';
-import { workspaces } from '@angular-devkit/core';
-import { join } from 'path';
-import * as f from '@nrwl/workspace/src/utils/fileutils';
+import { getMockContext } from '../../utils/testing';
 import { BundleBuilderOptions } from '../../utils/types';
 
 jest.mock('tsconfig-paths-webpack-plugin');

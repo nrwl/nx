@@ -1,7 +1,11 @@
-import { run as storybookBuilder } from './build-storybook.impl';
-import { MockBuilderContext, getMockContext } from '../../utils/testing';
 import { join } from 'path';
+
 import * as storybook from '@storybook/core/dist/server/build-static';
+
+import { MockBuilderContext } from '@nrwl/workspace/testing';
+
+import { getMockContext } from '../../utils/testing';
+import { run as storybookBuilder } from './build-storybook.impl';
 
 describe('Build storybook', () => {
   let context: MockBuilderContext;
