@@ -1,11 +1,12 @@
 import { Tree } from '@angular-devkit/schematics';
 import { runSchematic } from '../../utils/testing';
+import { UnitTestTree } from '@angular-devkit/schematics/testing';
 
 describe('workspace', () => {
-  let appTree: Tree;
+  let appTree: UnitTestTree;
 
   beforeEach(() => {
-    appTree = Tree.empty();
+    appTree = new UnitTestTree(Tree.empty());
   });
 
   it('should error if no package.json is present', async () => {
@@ -74,5 +75,112 @@ describe('workspace', () => {
     } catch (e) {
       expect(e.message).toContain('Can only convert projects with one app');
     }
+  });
+
+  it('should work without nested tsconfig files', async () => {
+    appTree.create('/package.json', JSON.stringify({}));
+    appTree.create(
+      '/angular.json',
+      JSON.stringify({
+        version: 1,
+        defaultProject: 'myApp',
+        projects: {
+          myApp: {
+            root: '',
+            sourceRoot: 'src',
+            architect: {
+              build: {
+                options: {
+                  tsConfig: 'tsconfig.app.json'
+                },
+                configurations: {}
+              },
+              test: {
+                options: {
+                  tsConfig: 'tsconfig.spec.json'
+                }
+              },
+              lint: {
+                options: {
+                  tsConfig: 'tsconfig.app.json'
+                }
+              },
+              e2e: {
+                options: {
+                  protractorConfig: 'e2e/protractor.conf.js'
+                }
+              }
+            }
+          }
+        }
+      })
+    );
+    appTree.create(
+      '/tsconfig.app.json',
+      '{"extends": "../tsconfig.json", "compilerOptions": {}}'
+    );
+    appTree.create(
+      '/tsconfig.spec.json',
+      '{"extends": "../tsconfig.json", "compilerOptions": {}}'
+    );
+    appTree.create('/tsconfig.json', '{"compilerOptions": {}}');
+    appTree.create('/tslint.json', '{"rules": {}}');
+    appTree.create('/e2e/protractor.conf.js', '// content');
+    appTree.create('/src/app/app.module.ts', '// content');
+    const tree = await runSchematic('ng-add', { name: 'myApp' }, appTree);
+    expect(tree.exists('/apps/myApp/tsconfig.app.json')).toBe(true);
+  });
+
+  it('should work with nested (sub-dir) tsconfig files', async () => {
+    appTree.create('/package.json', JSON.stringify({}));
+    appTree.create(
+      '/angular.json',
+      JSON.stringify({
+        version: 1,
+        defaultProject: 'myApp',
+        projects: {
+          myApp: {
+            sourceRoot: 'src',
+            architect: {
+              build: {
+                options: {
+                  tsConfig: 'src/tsconfig.app.json'
+                },
+                configurations: {}
+              },
+              test: {
+                options: {
+                  tsConfig: 'src/tsconfig.spec.json'
+                }
+              },
+              lint: {
+                options: {
+                  tsConfig: 'src/tsconfig.app.json'
+                }
+              },
+              e2e: {
+                options: {
+                  protractorConfig: 'e2e/protractor.conf.js'
+                }
+              }
+            }
+          }
+        }
+      })
+    );
+    appTree.create(
+      '/src/tsconfig.app.json',
+      '{"extends": "../tsconfig.json", "compilerOptions": {}}'
+    );
+    appTree.create(
+      '/src/tsconfig.spec.json',
+      '{"extends": "../tsconfig.json", "compilerOptions": {}}'
+    );
+    appTree.create('/tsconfig.json', '{"compilerOptions": {}}');
+    appTree.create('/tslint.json', '{"rules": {}}');
+    appTree.create('/e2e/protractor.conf.js', '// content');
+    appTree.create('/src/app/app.module.ts', '// content');
+    const tree = await runSchematic('ng-add', { name: 'myApp' }, appTree);
+    expect(tree.exists('/apps/myApp/tsconfig.app.json')).toBe(true);
   });
 });

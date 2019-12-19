@@ -5,7 +5,12 @@
  * Use of this source code is governed by an MIT- style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import { Rule, Tree, SchematicContext } from '@angular-devkit/schematics';
+import {
+  Rule,
+  Tree,
+  SchematicContext,
+  DirEntry
+} from '@angular-devkit/schematics';
 import * as ts from 'typescript';
 import * as stripJsonComments from 'strip-json-comments';
 import { serializeJson } from './fileutils';
@@ -667,4 +672,51 @@ export function replaceNodeValue(
       content
     )
   ]);
+}
+
+export function renameSyncInTree(
+  tree: Tree,
+  from: string,
+  to: string,
+  cb: (err: string) => void
+) {
+  if (!tree.exists(from)) {
+    cb(`Path: ${from} does not exist`);
+  } else if (tree.exists(to)) {
+    cb(`Path: ${to} already exists`);
+  } else {
+    renameFile(tree, from, to);
+    cb(null);
+  }
+}
+
+export function renameDirSyncInTree(
+  tree: Tree,
+  from: string,
+  to: string,
+  cb: (err: string) => void
+) {
+  const dir = tree.getDir(from);
+  if (!dirExists(dir)) {
+    cb(`Path: ${from} does not exist`);
+    return;
+  }
+  dir.visit(path => {
+    const destination = path.replace(from, to);
+    renameFile(tree, path, destination);
+  });
+  cb(null);
+}
+
+function dirExists(dir: DirEntry): boolean {
+  return dir.subdirs.length + dir.subfiles.length !== 0;
+}
+
+function renameFile(tree: Tree, from: string, to: string) {
+  const buffer = tree.read(from);
+  if (!buffer) {
+    return;
+  }
+  tree.create(to, buffer.toString());
+  tree.delete(from);
 }

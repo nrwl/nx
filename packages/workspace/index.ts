@@ -42,7 +42,9 @@ export {
   findNodes,
   updatePackageJsonDependencies,
   getProjectGraphFromHost,
-  readWorkspace
+  readWorkspace,
+  renameSyncInTree,
+  renameDirSyncInTree
 } from './src/utils/ast-utils';
 
 export {
