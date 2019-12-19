@@ -36,30 +36,32 @@ export function buildExplicitTypeScriptDependencies(
     });
   });
 
-  function findTargetProject(importExpr, nodes, filePath) {
-    compilerHost = compilerHost || getCompilerHost();
-    const { options, host, moduleResolutionCache } = compilerHost;
+  function findTargetProject(
+    importExpr: string,
+    nodes: ProjectGraphNodeRecords,
+    filePath: string
+  ) {
+    let resolvedLocation: string;
+    try {
+      resolvedLocation = require.resolve(importExpr, {
+        paths: [`${appRootPath}/node_modules`]
+      });
+    } catch {
+      resolvedLocation = resolveTypescriptModule(importExpr, filePath);
+    }
 
-    importExpr = importExpr.split('#')[0];
-
-    const { resolvedModule } = ts.resolveModuleName(
-      importExpr,
-      filePath,
-      options,
-      host,
-      moduleResolutionCache
-    );
-
-    // module was not found in the workspace - return
-    if (!resolvedModule) {
+    // could not find resolution anywhere
+    if (!resolvedLocation) {
       return;
     }
 
-    return Object.keys(nodes).find(projectName =>
-      resolvedModule.resolvedFileName
-        .replace(appRootPath, '')
-        .includes(nodes[projectName].data.root)
-    );
+    resolvedLocation = resolvedLocation.replace(appRootPath, '');
+
+    return Object.keys(nodes).find(projectName => {
+      if (nodes[projectName].data.root) {
+        return resolvedLocation.includes(nodes[projectName].data.root);
+      }
+    });
   }
 }
 
@@ -71,4 +73,26 @@ function getCompilerHost() {
     host.getCanonicalFileName
   );
   return { options, host, moduleResolutionCache };
+}
+
+function resolveTypescriptModule(importExpr: string, filePath: string) {
+  compilerHost = compilerHost || getCompilerHost();
+  const { options, host, moduleResolutionCache } = compilerHost;
+
+  importExpr = importExpr.split('#')[0];
+
+  const { resolvedModule } = ts.resolveModuleName(
+    importExpr,
+    filePath,
+    options,
+    host,
+    moduleResolutionCache
+  );
+
+  // module was not found in the workspace - return
+  if (!resolvedModule) {
+    return;
+  }
+
+  return resolvedModule.resolvedFileName;
 }
