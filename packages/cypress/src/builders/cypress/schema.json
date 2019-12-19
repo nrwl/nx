@@ -65,6 +65,10 @@
       "type": "string",
       "description": "DEPRECATED: A regex string that is used to choose what additional integration files to copy to the dist folder",
       "x-deprecated": true
+    },
+    "ciBuildId": {
+      "type": "string",
+      "description": "A unique identifier for a run to enable grouping or parallelization."
     }
   },
   "additionalProperties": false,
