@@ -204,13 +204,4 @@ export class MockBuilderContext implements BuilderContext {
   reportProgress(current: number, total?: number, status?: string) {}
 
   addTeardown(teardown: () => Promise<void> | void) {}
-
-  async getProjectMetadata(
-    target: Target | string
-  ): Promise<json.JsonObject | null> {
-    return (
-      this.architectHost &&
-      this.architectHost.getProjectMetadata(target as string)
-    );
-  }
 }
