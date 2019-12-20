@@ -22,9 +22,9 @@
       "description": "Hide error messages containing server information.",
       "default": false
     },
-    "customServerPath": {
+    "customServerTarget": {
       "type": "string",
-      "description": "Use a custom server script",
+      "description": "Target which builds a custom server",
       "default": null
     }
   },

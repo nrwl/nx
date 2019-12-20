@@ -9,7 +9,7 @@ import { JsonObject } from '@angular-devkit/core';
 import * as http from 'http';
 import next from 'next';
 import * as path from 'path';
-import { from, Observable, of } from 'rxjs';
+import { from, Observable, of, forkJoin } from 'rxjs';
 import { switchMap, concatMap, tap } from 'rxjs/operators';
 import { StartServerFn } from '../../..';
 
@@ -22,13 +22,13 @@ export interface NextBuildBuilderOptions extends JsonObject {
   port: number;
   quiet: boolean;
   buildTarget: string;
-  customServerPath: string;
+  customServerTarget: string;
 }
 
 export default createBuilder<NextBuildBuilderOptions>(run);
 
 /**
- * A simple default server implementation to be used if no `customServerPath` is provided.
+ * A simple default server implementation to be used if no `customServerTarget` is provided.
  */
 const defaultStartServer: StartServerFn = async (nextApp, options) => {
   const handle = nextApp.getRequestHandler();
@@ -37,11 +37,12 @@ const defaultStartServer: StartServerFn = async (nextApp, options) => {
     handle(req, res);
   });
   return new Promise((resolve, reject) => {
-    server.listen(options.port, error => {
+    server.on('error', (error: Error) => {
       if (error) {
         reject(error);
-        return;
       }
+    });
+    server.listen(options.port, () => {
       resolve();
     });
   });
@@ -52,14 +53,25 @@ function run(
   context: BuilderContext
 ): Observable<BuilderOutput> {
   const buildTarget = targetFromTargetString(options.buildTarget);
+  const customServerTarget =
+    options.customServerTarget &&
+    targetFromTargetString(options.customServerTarget);
 
+  const success: BuilderOutput = { success: true };
   const build$ = !options.dev
     ? scheduleTargetAndForget(context, buildTarget)
-    : of({ success: true });
+    : of(success);
+  const customServer$ = customServerTarget
+    ? scheduleTargetAndForget(context, customServerTarget)
+    : of(success);
 
-  return build$.pipe(
-    concatMap(r => {
-      if (!r.success) return of(r);
+  return forkJoin(build$, customServer$).pipe(
+    concatMap(([buildResult, customServerResult]) => {
+      if (!buildResult.success) return of(buildResult);
+      if (!customServerResult.success) return of(customServerResult);
+
+      const customServerEntry = customServerResult.outfile;
+
       return from(context.getTargetOptions(buildTarget)).pipe(
         concatMap((buildOptions: JsonObject) => {
           const root = path.resolve(
@@ -73,16 +85,19 @@ function run(
             quiet: options.quiet
           });
 
-          const startServer: StartServerFn = options.customServerPath
-            ? require(path.resolve(root, options.customServerPath))
-            : defaultStartServer;
+          let startServer: StartServerFn;
+          if (customServerEntry) {
+            startServer = require(customServerEntry as string).startServer;
+          } else {
+            startServer = defaultStartServer;
+          }
 
           return from(startServer(nextApp, options)).pipe(
             tap(() => {
               context.logger.info(`Ready on http://localhost:${options.port}`);
             }),
             switchMap(
-              e =>
+              _e =>
                 new Observable<BuilderOutput>(obs => {
                   obs.next({
                     baseUrl: `http://localhost:${options.port}`,

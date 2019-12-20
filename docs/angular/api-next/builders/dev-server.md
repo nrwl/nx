@@ -12,11 +12,11 @@ Type: `string`
 
 Target which builds the application
 
-### customServerPath
+### customServerTarget
 
 Type: `string`
 
-Use a custom server script
+Target which builds a custom server
 
 ### dev
 
