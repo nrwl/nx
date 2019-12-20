@@ -34,6 +34,19 @@ export function createBabelConfig(
         require.resolve('@babel/plugin-proposal-class-properties'),
         { loose: true }
       ]
+    ],
+    overrides: [
+      {
+        test: /\.tsx?$/,
+        plugins: [
+          [
+            require.resolve('babel-plugin-const-enum'),
+            {
+              transform: 'removeConst'
+            }
+          ]
+        ]
+      }
     ]
   };
 }
