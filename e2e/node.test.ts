@@ -18,7 +18,8 @@ import {
   runNew,
   runNgAdd,
   copyMissingPackages,
-  setMaxWorkers
+  setMaxWorkers,
+  fileExists
 } from './utils';
 
 function getData(): Promise<any> {
@@ -255,6 +256,40 @@ forEachCli(currentCLIName => {
 
       const jestResult = await runCLIAsync(`test ${nodelib}`);
       expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
+    }, 60000);
+
+    it('should be able to generate a publishable node library', async () => {
+      ensureProject();
+      const nodeLib = uniq('nodelib');
+      runCLI(`generate @nrwl/node:lib ${nodeLib} --publishable`);
+      fileExists(`libs/${nodeLib}/package.json`);
+      const tslibConfig = readJson(`libs/${nodeLib}/tsconfig.lib.json`);
+      expect(tslibConfig).toEqual({
+        extends: './tsconfig.json',
+        compilerOptions: {
+          module: 'commonjs',
+          outDir: '../../dist/out-tsc',
+          declaration: true,
+          rootDir: './src',
+          types: ['node']
+        },
+        exclude: ['**/*.spec.ts'],
+        include: ['**/*.ts']
+      });
+      await runCLIAsync(`build ${nodeLib}`);
+      checkFilesExist(
+        `dist/libs/${nodeLib}/index.js`,
+        `dist/libs/${nodeLib}/index.d.ts`,
+        `dist/libs/${nodeLib}/package.json`
+      );
+
+      const packageJson = readJson(`dist/libs/${nodeLib}/package.json`);
+      expect(packageJson).toEqual({
+        name: nodeLib,
+        version: '0.0.1',
+        main: 'index.js',
+        typings: 'index.d.ts'
+      });
     }, 60000);
   });
 });

@@ -20,7 +20,8 @@ import {
   names,
   offsetFromRoot,
   toFileName,
-  updateJsonInTree
+  updateJsonInTree,
+  updateWorkspaceInTree
 } from '@nrwl/workspace';
 import { Schema } from './schema';
 
@@ -40,6 +41,7 @@ export default function(schema: NormalizedSchema): Rule {
       externalSchematic('@nrwl/workspace', 'lib', schema),
       createFiles(options),
       updateTsConfig(options),
+      addProject(options),
       formatFiles(options)
     ]);
   };
@@ -83,7 +85,10 @@ function createFiles(options: NormalizedSchema): Rule {
       move(options.projectRoot),
       options.unitTestRunner === 'none'
         ? filter(file => !file.endsWith('spec.ts'))
-        : noop()
+        : noop(),
+      options.publishable
+        ? noop()
+        : filter(file => !file.endsWith('package.json'))
     ]),
     MergeStrategy.Overwrite
   );
@@ -101,4 +106,27 @@ function updateTsConfig(options: NormalizedSchema): Rule {
       return json;
     });
   };
+}
+
+function addProject(options: NormalizedSchema): Rule {
+  if (!options.publishable) {
+    return noop();
+  }
+
+  return updateWorkspaceInTree(json => {
+    const architect = json.projects[options.name].architect;
+    if (architect) {
+      architect.build = {
+        builder: '@nrwl/node:package',
+        options: {
+          outputPath: `dist/libs/${options.projectDirectory}`,
+          tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
+          packageJson: `${options.projectRoot}/package.json`,
+          main: `${options.projectRoot}/src/index.ts`,
+          assets: [`${options.projectRoot}/**/*.md`]
+        }
+      };
+    }
+    return json;
+  });
 }

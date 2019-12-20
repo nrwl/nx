@@ -50,6 +50,10 @@
       "type": "boolean",
       "default": false,
       "description": "Do not update tsconfig.json for development experience."
+    },
+    "publishable": {
+      "type": "boolean",
+      "description": "Create a publishable library. A \"build\" architect will be added for this project the workspace configuration."
     }
   },
   "required": ["name"]

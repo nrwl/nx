@@ -60,6 +60,12 @@ Type: `string`
 
 Library name
 
+### publishable
+
+Type: `boolean`
+
+Create a publishable library. A "build" architect will be added for this project the workspace configuration.
+
 ### skipFormat
 
 Default: `false`
