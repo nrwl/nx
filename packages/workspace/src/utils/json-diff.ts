@@ -1,10 +1,12 @@
+import { Change } from '../core/file-utils';
+
 export enum DiffType {
-  Deleted,
-  Added,
-  Modified
+  Deleted = 'JsonPropertyDeleted',
+  Added = 'JsonPropertyAdded',
+  Modified = 'JsonPropertyModified'
 }
 
-export interface JsonValueDiff {
+export interface JsonChange extends Change {
   type: DiffType;
   path: string[];
   value: {
@@ -13,8 +15,16 @@ export interface JsonValueDiff {
   };
 }
 
-export function jsonDiff(lhs: any, rhs: any): JsonValueDiff[] {
-  const result: JsonValueDiff[] = [];
+export function isJsonChange(change: Change): change is JsonChange {
+  return (
+    change.type === DiffType.Added ||
+    change.type === DiffType.Deleted ||
+    change.type === DiffType.Modified
+  );
+}
+
+export function jsonDiff(lhs: any, rhs: any): JsonChange[] {
+  const result: JsonChange[] = [];
   const seenInLhs = new Set<string>();
 
   walkJsonTree(lhs, [], (path, lhsValue) => {
@@ -67,7 +77,7 @@ export function jsonDiff(lhs: any, rhs: any): JsonValueDiff[] {
 }
 
 // Depth-first walk down JSON tree.
-function walkJsonTree(
+export function walkJsonTree(
   json: any,
   currPath: string[],
   visitor: (path: string[], value: any) => boolean

@@ -32,4 +32,39 @@ describe('jsonDiff', () => {
       ])
     );
   });
+
+  it('should work well for package.json', () => {
+    const result = jsonDiff(
+      {
+        dependencies: {
+          'happy-nrwl': '0.0.1',
+          'not-awesome-nrwl': '0.0.1'
+        }
+      },
+      {
+        dependencies: {
+          'happy-nrwl': '0.0.2',
+          'awesome-nrwl': '0.0.1'
+        }
+      }
+    );
+
+    expect(result).toContainEqual({
+      type: DiffType.Modified,
+      path: ['dependencies', 'happy-nrwl'],
+      value: { lhs: '0.0.1', rhs: '0.0.2' }
+    });
+
+    expect(result).toContainEqual({
+      type: DiffType.Deleted,
+      path: ['dependencies', 'not-awesome-nrwl'],
+      value: { lhs: '0.0.1', rhs: undefined }
+    });
+
+    expect(result).toContainEqual({
+      type: DiffType.Added,
+      path: ['dependencies', 'awesome-nrwl'],
+      value: { lhs: undefined, rhs: '0.0.1' }
+    });
+  });
 });

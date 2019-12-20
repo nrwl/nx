@@ -21,8 +21,12 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
 
   const env = readEnvironment(nxArgs.target);
   const projectGraph = createProjectGraph();
-  const fileChanges = readFileChanges(nxArgs);
-  let affectedGraph = filterAffected(projectGraph, fileChanges);
+  let affectedGraph = nxArgs.all
+    ? projectGraph
+    : filterAffected(
+        projectGraph,
+        calculateFileChanges(parseFiles(nxArgs).files, nxArgs)
+      );
   if (parsedArgs.withDeps) {
     affectedGraph = onlyWorkspaceProjects(
       withDeps(projectGraph, Object.values(affectedGraph.nodes))
@@ -43,7 +47,7 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
         if (parsedArgs.plain) {
           console.log(apps.join(' '));
         } else {
-          printArgsWarning(parsedArgs);
+          printArgsWarning(nxArgs);
           if (apps.length) {
             output.log({
               title: 'Affected apps:',
@@ -60,7 +64,7 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
         if (parsedArgs.plain) {
           console.log(libs.join(' '));
         } else {
-          printArgsWarning(parsedArgs);
+          printArgsWarning(nxArgs);
           if (libs.length) {
             output.log({
               title: 'Affected libs:',
@@ -72,7 +76,7 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
 
       case 'dep-graph':
         const projectNames = affectedProjects.map(p => p.name);
-        printArgsWarning(parsedArgs);
+        printArgsWarning(nxArgs);
         generateGraph(parsedArgs as any, projectNames);
         break;
 
@@ -99,7 +103,7 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
           affectedProjects,
           nxArgs
         );
-        printArgsWarning(parsedArgs);
+        printArgsWarning(nxArgs);
         runCommand(
           projectWithTargetAndConfig,
           projectGraph,
@@ -114,16 +118,6 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
     printError(e, parsedArgs.verbose);
     process.exit(1);
   }
-}
-
-function readFileChanges(nxArgs: NxArgs) {
-  // Do we still need this `--all` option?
-  if (nxArgs.all) {
-    return [];
-  }
-
-  const files = parseFiles(nxArgs).files;
-  return calculateFileChanges(files, nxArgs.base, nxArgs.head);
 }
 
 function allProjectsWithTargetAndConfiguration(

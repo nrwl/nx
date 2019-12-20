@@ -9,6 +9,7 @@ import { readJsonFile } from '../utils/fileutils';
 import { Environment, NxJson } from './shared-interfaces';
 import { ProjectGraphNode } from './project-graph';
 import { WorkspaceResults } from '../command-line/workspace-results';
+import { NxArgs } from '../command-line/utils';
 
 const ignore = require('ignore');
 
@@ -18,14 +19,25 @@ export interface FileData {
   ext: string;
 }
 
-export interface FileChange extends FileData {
-  getChanges: () => any[];
+export interface Change {
+  type: string;
+}
+
+export interface FileChange<T extends Change = Change> extends FileData {
+  getChanges: () => T[];
+}
+
+export class WholeFileChange implements Change {
+  type = 'WholeFileChange';
+}
+
+export function isWholeFileChange(change: Change): change is WholeFileChange {
+  return change.type === 'WholeFileChange';
 }
 
 export function calculateFileChanges(
   files: string[],
-  base: void | string,
-  head: void | string,
+  nxArgs?: NxArgs,
   readFileAtRevision: (
     f: string,
     r: void | string
@@ -35,29 +47,32 @@ export function calculateFileChanges(
     const ext = extname(f);
     const _mtime = mtime(`${appRootPath}/${f}`);
     // Memoize results so we don't recalculate on successive invocation.
-    let value: any[] = null;
 
     return {
       file: f,
       ext,
       mtime: _mtime,
-      getChanges: () => {
-        if (!value) {
-          switch (ext) {
-            case '.json':
-              if (base) {
-                const atBase = readFileAtRevision(f, base);
-                const atHead = readFileAtRevision(f, head);
-                value = jsonDiff(atBase, atHead);
-              } else {
-                value = [];
-              }
-              break;
-            default:
-              throw new Error(`Cannot call getChanges() on ${f}`);
-          }
+      getChanges: (): Change[] => {
+        if (!nxArgs) {
+          return [new WholeFileChange()];
         }
-        return value;
+
+        if (nxArgs.files && nxArgs.files.includes(f)) {
+          return [new WholeFileChange()];
+        }
+        switch (ext) {
+          case '.json':
+            const atBase = readFileAtRevision(f, nxArgs.base);
+            const atHead = readFileAtRevision(f, nxArgs.head);
+
+            try {
+              return jsonDiff(JSON.parse(atBase), JSON.parse(atHead));
+            } catch (e) {
+              return [new WholeFileChange()];
+            }
+          default:
+            return [new WholeFileChange()];
+        }
       }
     };
   });
@@ -149,6 +164,10 @@ export function workspaceFileName() {
   } else {
     return 'workspace.json';
   }
+}
+
+export function defaultFileRead(filePath: string) {
+  return readFileSync(`${appRootPath}/${filePath}`, 'UTF-8');
 }
 
 export function readPackageJson(): any {

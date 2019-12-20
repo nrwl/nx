@@ -9,6 +9,7 @@ import {
   writeJsonFile
 } from '../../utils/fileutils';
 import {
+  defaultFileRead,
   FileData,
   mtime,
   readNxJson,
@@ -85,10 +86,6 @@ export function createProjectGraph(
 interface ProjectGraphCache {
   projectGraph: ProjectGraph;
   fileMap: FileMap;
-}
-
-function defaultFileRead(filePath: string) {
-  return readFileSync(`${appRootPath}/${filePath}`, 'UTF-8');
 }
 
 const nxDepsPath = `${appRootPath}/dist/nxdeps.json`;

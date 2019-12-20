@@ -1,20 +1,29 @@
-import { NxJson } from '../../shared-interfaces';
-import { FileChange } from '../../file-utils';
+import { isWholeFileChange, WholeFileChange } from '../../file-utils';
+import { isJsonChange, JsonChange } from '../../../utils/json-diff';
+import { TouchedProjectLocator } from '../affected-project-graph-models';
 
-export function getTouchedNpmPackages(
-  workspaceJson: any,
-  nxJson: NxJson,
-  touchedFiles: FileChange[]
-): string[] {
-  const packageJson = touchedFiles.find(f => f.file === 'package.json');
+export const getTouchedNpmPackages: TouchedProjectLocator<
+  WholeFileChange | JsonChange
+> = (touchedFiles, workspaceJson, nxJson, packageJson): string[] => {
+  const packageJsonChange = touchedFiles.find(f => f.file === 'package.json');
   const touched = [];
-  if (packageJson) {
-    const changes = packageJson.getChanges();
+  if (packageJsonChange) {
+    const changes = packageJsonChange.getChanges();
     changes.forEach(c => {
-      if (c.path[0] === 'dependencies' || c.path[0] === 'devDependencies') {
+      if (
+        isJsonChange(c) &&
+        (c.path[0] === 'dependencies' || c.path[0] === 'devDependencies')
+      ) {
         touched.push(c.path[1]);
+      } else if (isWholeFileChange(c)) {
+        Object.keys({
+          ...(packageJson.dependencies || {}),
+          ...(packageJson.devDependencies || {})
+        }).forEach(p => {
+          touched.push(p);
+        });
       }
     });
   }
   return touched;
-}
+};

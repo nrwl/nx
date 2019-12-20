@@ -1,22 +1,14 @@
 import { execSync } from 'child_process';
 import { output } from '../utils/output';
 import { createProjectGraph, ProjectGraphNode } from '../core/project-graph';
-import { NxArgs } from './utils';
 import { NxJson } from '../core/shared-interfaces';
 import { readWorkspaceJson, TEN_MEGABYTES } from '../core/file-utils';
+import { NxArgs } from './utils';
 
 export function printArgsWarning(options: NxArgs) {
   const { files, uncommitted, untracked, base, head, all } = options;
 
-  if (
-    !files &&
-    !uncommitted &&
-    !untracked &&
-    !base &&
-    !head &&
-    !all &&
-    options._.length < 2
-  ) {
+  if (!files && !uncommitted && !untracked && !base && !head && !all) {
     output.note({
       title: `Affected criteria defaulted to --base=${output.bold(
         'master'
@@ -68,20 +60,6 @@ export function parseFiles(options: NxArgs): { files: string[] } {
         ])
       )
     };
-  } else if (options._.length >= 2) {
-    return {
-      files: getFilesFromShash(options._[1], options._[2])
-    };
-  } else {
-    return {
-      files: Array.from(
-        new Set([
-          ...getFilesUsingBaseAndHead('master', 'HEAD'),
-          ...getUncommittedFiles(),
-          ...getUntrackedFiles()
-        ])
-      )
-    };
   }
 }
 
@@ -100,10 +78,6 @@ function getFilesUsingBaseAndHead(base: string, head: string): string[] {
     .toString()
     .trim();
   return parseGitOutput(`git diff --name-only --relative ${mergeBase} ${head}`);
-}
-
-function getFilesFromShash(sha1: string, sha2: string): string[] {
-  return parseGitOutput(`git diff --name-only --relative ${sha1} ${sha2}`);
 }
 
 function parseGitOutput(command: string): string[] {
