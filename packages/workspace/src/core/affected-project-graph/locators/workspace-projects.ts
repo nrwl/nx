@@ -1,11 +1,9 @@
-import { NxJson } from '../../shared-interfaces';
-import { FileChange } from '../../file-utils';
+import { TouchedProjectLocator } from '../affected-project-graph-models';
 
-export function getTouchedProjects(
-  workspaceJson: any,
-  nxJson: NxJson,
-  touchedFiles: FileChange[]
-): string[] {
+export const getTouchedProjects: TouchedProjectLocator = (
+  touchedFiles,
+  workspaceJson
+): string[] => {
   return touchedFiles
     .map(f => {
       return Object.keys(workspaceJson.projects).find(projectName => {
@@ -14,13 +12,13 @@ export function getTouchedProjects(
       });
     })
     .filter(Boolean);
-}
+};
 
-export function getImplicitlyTouchedProjects(
-  workspaceJson: any,
-  nxJson: NxJson,
-  fileChanges: FileChange[]
-): string[] {
+export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
+  fileChanges,
+  workspaceJson,
+  nxJson
+): string[] => {
   if (!nxJson.implicitDependencies) {
     return [];
   }
@@ -38,12 +36,10 @@ export function getImplicitlyTouchedProjects(
     }
 
     // File change affects all projects, just return all projects.
-    if (projects === '*') {
-      return Object.keys(workspaceJson.projects);
-    } else if (Array.isArray(projects)) {
+    if (Array.isArray(projects)) {
       touched.push(...projects);
     }
   }
 
   return touched;
-}
+};

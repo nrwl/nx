@@ -30,8 +30,7 @@ const dummyOptions: NxArgs = {
   withDeps: false,
   'with-deps': false,
   projects: [],
-  select: '',
-  _: []
+  select: ''
 } as any;
 
 const nxSpecific = Object.keys(dummyOptions);
@@ -61,7 +60,6 @@ export interface NxArgs {
   'with-deps'?: boolean;
   projects?: string[];
   select?: string;
-  _: string[];
 }
 
 const ignoreArgs = ['$0', '_'];
@@ -85,6 +83,21 @@ export function splitArgsIntoNxArgsAndOverrides(
     nxArgs.projects = [];
   } else {
     nxArgs.projects = args.projects.split(',').map((p: string) => p.trim());
+  }
+
+  if (
+    !nxArgs.files &&
+    !nxArgs.uncommitted &&
+    !nxArgs.untracked &&
+    !nxArgs.base &&
+    !nxArgs.head &&
+    !nxArgs.all &&
+    args._.length >= 2
+  ) {
+    nxArgs.base = args._[0];
+    nxArgs.head = args._[1];
+  } else if (!nxArgs.base) {
+    nxArgs.base = 'master';
   }
 
   return { nxArgs, overrides };

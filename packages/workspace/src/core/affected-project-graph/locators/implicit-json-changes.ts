@@ -1,12 +1,15 @@
-import { NxJson } from '../../shared-interfaces';
-import { FileChange } from '../../file-utils';
-import { JsonValueDiff } from '../../../utils/json-diff';
+import { WholeFileChange } from '../../file-utils';
+import {
+  isJsonChange,
+  JsonChange,
+  walkJsonTree
+} from '../../../utils/json-diff';
+import { TouchedProjectLocator } from '../affected-project-graph-models';
+import { ImplicitDependencyEntry } from '../../shared-interfaces';
 
-export function getImplicitlyTouchedProjectsByJsonChanges(
-  workspaceJson: any,
-  nxJson: NxJson,
-  touchedFiles: FileChange[]
-): string[] {
+export const getImplicitlyTouchedProjectsByJsonChanges: TouchedProjectLocator<
+  WholeFileChange | JsonChange
+> = (touchedFiles, workspaceJson, nxJson): string[] => {
   const { implicitDependencies } = nxJson;
 
   if (!implicitDependencies) {
@@ -17,16 +20,38 @@ export function getImplicitlyTouchedProjectsByJsonChanges(
 
   for (const f of touchedFiles) {
     if (f.file.endsWith('.json') && implicitDependencies[f.file]) {
-      const changes: JsonValueDiff[] = f.getChanges();
+      const changes = f.getChanges();
       for (const c of changes) {
-        const projects =
-          getTouchedProjects(c.path, implicitDependencies[f.file]) || [];
-        projects.forEach(p => touched.push(p));
+        if (isJsonChange(c)) {
+          const projects =
+            getTouchedProjects(c.path, implicitDependencies[f.file]) || [];
+          projects.forEach(p => touched.push(p));
+        } else {
+          const projects = getTouchedProjectsByJsonFile(
+            implicitDependencies,
+            f.file
+          );
+          projects.forEach(p => touched.push(p));
+        }
       }
     }
   }
 
   return touched;
+};
+
+function getTouchedProjectsByJsonFile(
+  implicitDependencies: ImplicitDependencyEntry<string[]>,
+  file: string
+): any[] {
+  let projects = [];
+  walkJsonTree(implicitDependencies[file], [], (p, value) => {
+    if (Array.isArray(value)) {
+      projects.push(...value);
+    }
+    return !Array.isArray(value);
+  });
+  return projects;
 }
 
 function getTouchedProjects(path: string[], implicitDependencyConfig: any) {

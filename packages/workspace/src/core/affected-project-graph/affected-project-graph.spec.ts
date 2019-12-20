@@ -4,7 +4,7 @@ import { vol } from 'memfs';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { createProjectGraph } from '../project-graph';
 import { filterAffected } from './affected-project-graph';
-import { FileData } from '../file-utils';
+import { FileData, WholeFileChange } from '../file-utils';
 import { NxJson } from '../shared-interfaces';
 
 jest.mock('fs', () => require('memfs').fs);
@@ -140,13 +140,13 @@ describe('project graph', () => {
         file: 'something-for-api.txt',
         ext: '.txt',
         mtime: 1,
-        getChanges: () => ['SOMETHING CHANGED']
+        getChanges: () => [new WholeFileChange()]
       },
       {
         file: 'libs/ui/src/index.ts',
         ext: '.ts',
         mtime: 1,
-        getChanges: () => ['SOMETHING CHANGED']
+        getChanges: () => [new WholeFileChange()]
       }
     ]);
     expect(affected).toEqual({
