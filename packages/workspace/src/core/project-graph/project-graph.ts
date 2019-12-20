@@ -20,7 +20,8 @@ import { BuildNodes, buildWorkspaceProjectNodes } from './build-nodes';
 import {
   BuildDependencies,
   buildExplicitTypeScriptDependencies,
-  buildImplicitProjectDependencies
+  buildImplicitProjectDependencies,
+  buildImportsToProjectRoots
 } from './build-dependencies';
 import { assertWorkspaceValidity } from '../assert-workspace-validity';
 
