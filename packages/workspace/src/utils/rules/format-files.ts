@@ -6,7 +6,10 @@ import {
   SchematicContext,
   Tree
 } from '@angular-devkit/schematics';
-import { format, getFileInfo, resolveConfig } from 'prettier';
+let prettier;
+try {
+  prettier = require('prettier');
+} catch (e) {}
 import { from } from 'rxjs';
 import { filter, map, mergeMap } from 'rxjs/operators';
 import * as path from 'path';
@@ -15,7 +18,7 @@ import { appRootPath } from '../app-root';
 export function formatFiles(
   options: { skipFormat: boolean } = { skipFormat: false }
 ): Rule {
-  if (options.skipFormat) {
+  if (options.skipFormat || !prettier) {
     return noop();
   }
   return (host: Tree, context: SchematicContext) => {
@@ -37,20 +40,20 @@ export function formatFiles(
         let options: any = {
           filepath: systemPath
         };
-        const resolvedOptions = await resolveConfig(systemPath);
+        const resolvedOptions = await prettier.resolveConfig(systemPath);
         if (resolvedOptions) {
           options = {
             ...options,
             ...resolvedOptions
           };
         }
-        const support = await getFileInfo(systemPath, options);
+        const support = await prettier.getFileInfo(systemPath, options);
         if (support.ignored || !support.inferredParser) {
           return;
         }
 
         try {
-          host.overwrite(file.path, format(file.content, options));
+          host.overwrite(file.path, prettier.format(file.content, options));
         } catch (e) {
           context.logger.warn(
             `Could not format ${file.path} because ${e.message}`

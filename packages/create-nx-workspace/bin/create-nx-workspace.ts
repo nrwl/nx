@@ -57,6 +57,7 @@ const tsVersion = 'TYPESCRIPT_VERSION';
 const cliVersion = 'NX_VERSION';
 const nxVersion = 'NX_VERSION';
 const angularCliVersion = 'ANGULAR_CLI_VERSION';
+const prettierVersion = 'PRETTIER_VERSION';
 
 const parsedArgs = yargsParser(process.argv, {
   string: ['cli', 'preset', 'appName'],
@@ -367,7 +368,8 @@ function createSandbox(
       dependencies: {
         '@nrwl/workspace': nxVersion,
         [cli.package]: cli.version,
-        typescript: tsVersion
+        typescript: tsVersion,
+        prettier: prettierVersion
       },
       license: 'MIT'
     })
