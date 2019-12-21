@@ -98,9 +98,10 @@ const { devDependencies } = JSON.parse(
 );
 const cliVersion = devDependencies['@angular/cli'];
 const typescriptVersion = devDependencies['typescript'];
+const prettierVersion = devDependencies['prettier'];
 
 console.log('Executing build script:');
-const buildCommand = `./scripts/package.sh ${parsedVersion.version} ${cliVersion} ${typescriptVersion}`;
+const buildCommand = `./scripts/package.sh ${parsedVersion.version} ${cliVersion} ${typescriptVersion} ${prettierVersion}`;
 console.log(`> ${buildCommand}`);
 childProcess.execSync(buildCommand, {
   stdio: [0, 1, 2]
