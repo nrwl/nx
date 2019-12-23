@@ -19,6 +19,11 @@
       "version": "8.9.0-beta.1",
       "description": "Update React libraries",
       "factory": "./src/migrations/update-8-9-0/update-8-9-0"
+    },
+    "update-8.10.0": {
+      "version": "8.10.0-beta.1",
+      "description": "Update React libraries",
+      "factory": "./src/migrations/update-8-10-0/update-8-10-0"
     }
   },
   "packageJsonUpdates": {
@@ -104,6 +109,47 @@
         },
         "eslint-plugin-react-hooks": {
           "version": "2.3.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "8.10.0": {
+      "version": "8.10.0-beta.1",
+      "packages": {
+        "@types/react": {
+          "version": "16.9.17",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-router-dom": {
+          "version": "5.1.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react": {
+          "version": "9.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/styled-components": {
+          "version": "4.4.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/core": {
+          "version": "10.0.27",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/styled": {
+          "version": "10.0.27",
+          "alwaysAddToPackageJson": false
+        },
+        "@reduxjs/toolkit": {
+          "version": "1.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-import": {
+          "version": "2.19.1",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-react": {
+          "version": "7.17.0",
           "alwaysAddToPackageJson": false
         }
       }
