@@ -5,6 +5,6 @@ import { join } from 'path';
 export default () => {
   return updatePackagesInPackageJson(
     join(__dirname, '../../../migrations.json'),
-    '9.0.0'
+    '8.10.0'
   );
 };
