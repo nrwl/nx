@@ -216,6 +216,7 @@ export function copyMissingPackages(): void {
     // For testing webpack config with babel-loader
     '@babel',
     'babel-loader',
+    'babel-plugin-const-enum',
     'babel-plugin-macros',
     'eslint-plugin-import',
     'eslint-plugin-jsx-a11y',

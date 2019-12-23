@@ -99,6 +99,7 @@
     "autoprefixer": "9.6.1",
     "axios": "^0.19.0",
     "babel-loader": "8.0.6",
+    "babel-plugin-const-enum": "^0.0.5",
     "babel-plugin-macros": "2.6.1",
     "babel-plugin-transform-async-to-promises": "0.8.14",
     "browserslist": "4.6.6",

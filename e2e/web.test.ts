@@ -60,7 +60,7 @@ forEachCli(currentCLIName => {
       }
     }, 120000);
 
-    it('should allow for TypeScript-compatible decorators', () => {
+    it('should support same syntax as TypeScript', () => {
       ensureProject();
       const appName = uniq('app');
 
@@ -71,17 +71,26 @@ forEachCli(currentCLIName => {
       updateFile(
         mainPath,
         content
+          // Testing decorators
           .replace(
             `export class AppElement extends HTMLElement`,
             stripIndents`
-          function a(ctor) {
+          function myDecorator(ctor) {
             ctor.title = '${appName}';
           }
 
-          @a
+          @myDecorator
           export class AppElement extends HTMLElement`
           )
-          .replace('${title}', '${(AppElement as any).title}')
+          .replace('${title}', '${(AppElement as any).title}') +
+          // Testing const enums
+          stripIndents`
+            export const enum MyEnum {
+              a,
+              b,
+              b
+            };
+          `
       );
 
       if (supportUi()) {
