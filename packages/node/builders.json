@@ -10,6 +10,11 @@
       "implementation": "./src/builders/execute/execute.impl",
       "schema": "./src/builders/execute/schema.json",
       "description": "Execute a Node application"
+    },
+    "package": {
+      "implementation": "./src/builders/package/package.impl",
+      "schema": "./src/builders/package/schema.json",
+      "description": "Package a Node library"
     }
   }
 }
