@@ -4,7 +4,7 @@ describe('jsonDiff', () => {
   it('should return deep diffs of two JSON objects', () => {
     const result = jsonDiff(
       { x: 1, a: { b: { c: 1 } } },
-      { y: 2, a: { b: { c: 2 } } }
+      { y: 2, a: { b: { c: 2, d: 2 } } }
     );
 
     expect(result).toEqual(
@@ -22,6 +22,11 @@ describe('jsonDiff', () => {
         {
           type: DiffType.Added,
           path: ['y'],
+          value: { lhs: undefined, rhs: 2 }
+        },
+        {
+          type: DiffType.Added,
+          path: ['a', 'b', 'd'],
           value: { lhs: undefined, rhs: 2 }
         }
       ])

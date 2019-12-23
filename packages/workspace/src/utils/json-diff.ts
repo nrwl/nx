@@ -15,10 +15,10 @@ export interface JsonValueDiff {
 
 export function jsonDiff(lhs: any, rhs: any): JsonValueDiff[] {
   const result: JsonValueDiff[] = [];
-  const seen = new Set<string>();
+  const seenInLhs = new Set<string>();
 
   walkJsonTree(lhs, [], (path, lhsValue) => {
-    seen.add(hashArray(path));
+    seenInLhs.add(hashArray(path));
     if (typeof lhsValue === 'object') {
       return true;
     }
@@ -46,11 +46,11 @@ export function jsonDiff(lhs: any, rhs: any): JsonValueDiff[] {
   });
 
   walkJsonTree(rhs, [], (path, rhsValue) => {
-    if (seen.has(hashArray(path))) {
-      return false;
-    } else if (typeof rhsValue === 'object') {
+    if (typeof rhsValue === 'object') {
       return true;
-    } else {
+    }
+    const addedInRhs = !seenInLhs.has(hashArray(path));
+    if (addedInRhs) {
       result.push({
         type: DiffType.Added,
         path,
