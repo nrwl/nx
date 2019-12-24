@@ -20,5 +20,7 @@ jest --maxWorkers=1 ./build/e2e/jest.test.js &&
 jest --maxWorkers=1 ./build/e2e/karma.test.js &&
 jest --maxWorkers=1 ./build/e2e/list.test.js &&
 jest --maxWorkers=1 ./build/e2e/migrate.test.js &&
+jest --maxWorkers=1 ./build/e2e/move.angular.test.js &&
+jest --maxWorkers=1 ./build/e2e/move.workspace.test.js &&
 jest --maxWorkers=1 ./build/e2e/new.test.js &&
 jest --maxWorkers=1 ./build/e2e/next.test.js

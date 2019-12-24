@@ -81,6 +81,13 @@
       "schema": "./src/schematics/component-story/schema.json",
       "description": "Create a stories.ts file for a component",
       "hidden": true
+    },
+
+    "move": {
+      "factory": "./src/schematics/move/move",
+      "schema": "./src/schematics/move/schema.json",
+      "aliases": ["mv"],
+      "description": "Move an Angular application or library to another folder"
     }
   }
 }
