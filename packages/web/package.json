@@ -104,7 +104,7 @@
     "stylus-loader": "3.0.2",
     "tree-kill": "1.2.1",
     "terser": "4.3.8",
-    "terser-webpack-plugin": "1.4.1",
+    "terser-webpack-plugin": "2.3.1",
     "ts-loader": "5.4.5",
     "tsconfig-paths-webpack-plugin": "3.2.0",
     "webpack": "4.41.2",
