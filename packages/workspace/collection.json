@@ -23,6 +23,13 @@
       "hidden": true
     },
 
+    "move": {
+      "factory": "./src/schematics/move/move",
+      "schema": "./src/schematics/move/schema.json",
+      "aliases": ["mv"],
+      "description": "Move an application or library to another folder"
+    },
+
     "ng-new": {
       "factory": "./src/schematics/ng-new/ng-new",
       "schema": "./src/schematics/ng-new/schema.json",

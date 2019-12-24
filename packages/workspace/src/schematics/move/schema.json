@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "NxWorkspaceMove",
+  "title": "Nx Move",
+  "description": "Move a project to another folder in the workspace",
+  "type": "object",
+  "properties": {
+    "projectName": {
+      "type": "string",
+      "description": "The name of the project to move"
+    },
+    "destination": {
+      "type": "string",
+      "description": "The folder to move the project into"
+    }
+  },
+  "required": ["projectName", "destination"]
+}

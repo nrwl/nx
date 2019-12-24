@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "NxAngularMove",
+  "title": "Nx Angular Move",
+  "description": "Move an Angular project to another folder in the workspace",
+  "type": "object",
+  "properties": {
+    "projectName": {
+      "type": "string",
+      "description": "The name of the Angular project to move"
+    },
+    "destination": {
+      "type": "string",
+      "description": "The folder to move the Angular project into"
+    }
+  },
+  "required": ["projectName", "destination"]
+}
