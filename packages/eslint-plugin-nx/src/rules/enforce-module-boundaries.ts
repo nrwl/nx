@@ -141,8 +141,9 @@ export default createESLintRule<Options, MessageIds>({
           // findProjectUsingImport to take care of same prefix
           const targetProject = findProjectUsingImport(
             projectGraph,
-            npmScope,
-            imp
+            sourceFilePath,
+            imp,
+            npmScope
           );
 
           // something went wrong => return.
