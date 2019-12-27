@@ -21,6 +21,7 @@ module.exports = {
     { name: 'docs', description: 'anything related to docs infrastructure' },
     { name: 'nextjs', description: 'anything Next specific' },
     { name: 'node', description: 'anything Node specific' },
+    { name: 'nx-plugin', description: 'anything Nx Plugin specific' },
     { name: 'react', description: 'anything React specific' },
     { name: 'storybook', description: 'anything Storybook specific' },
     {

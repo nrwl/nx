@@ -1,0 +1,8 @@
+import { Rule, SchematicContext, Tree } from '@angular-devkit/schematics';
+import { <%= className %>SchematicSchema } from './schema';
+
+export default function(options: <%= className %>SchematicSchema): Rule {
+ return (tree: Tree, context: SchematicContext) => {
+   return tree;
+ };
+}

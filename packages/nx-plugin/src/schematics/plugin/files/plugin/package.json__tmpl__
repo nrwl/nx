@@ -1,0 +1,7 @@
+{
+    "name": "@<%= npmScope %>/<%= name %>",
+    "version": "0.0.1",
+    "main": "src/index.js",
+    "schematics": "src/collection.json",
+    "builders": "src/builders.json",
+}

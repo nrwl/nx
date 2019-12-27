@@ -1,0 +1,12 @@
+{
+  "name": "Nx Plugin",
+  "version": "0.1",
+  "extends": ["@nrwl/workspace"],
+  "schematics": {
+    "plugin": {
+      "factory": "./src/schematics/plugin/plugin",
+      "schema": "./src/schematics/plugin/schema.json",
+      "description": "Create a Nx Plugin"
+    }
+  }
+}
