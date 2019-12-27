@@ -240,4 +240,54 @@ forEachCli(() => {
       expect(interpolatedTests).toContain(`Running target \"test\" succeeded`);
     }, 1000000);
   });
+
+  describe('build in the right order', () => {
+    let myapp, mypublishablelib;
+    beforeEach(() => {
+      ensureProject();
+
+      // create my app depending on mypublishablelib
+      myapp = uniq('myapp');
+      mypublishablelib = uniq('mypublishablelib');
+      runCLI(`generate @nrwl/angular:app ${myapp}`);
+      runCLI(`generate @nrwl/angular:lib ${mypublishablelib} --publishable`);
+      updateFile(
+        `apps/${myapp}/src/app/app.component.spec.ts`,
+        `
+              import '@proj/${mypublishablelib}';
+              describe('sample test', () => {
+                it('should test', () => {
+                  expect(1).toEqual(1);
+                });
+              });
+            `
+      );
+    });
+
+    it('should wait for deps to be built before continuing', () => {
+      const build = runCommand(
+        `npm run affected:build -- --files="apps/${myapp}/src/main.ts,libs/${mypublishablelib}/src/index.ts" --parallel`
+      );
+      console.log(build);
+      // make sure that the package is done building before we start building the app
+      expect(
+        build.indexOf('Built Angular Package!') <
+          build.indexOf(`"build" "${myapp}"`)
+      ).toBeTruthy();
+    });
+
+    it('should not invoke build for projects who deps fail', () => {
+      updateFile(
+        `libs/${mypublishablelib}/src/index.ts`,
+        `
+          const x: number = 'string';
+            `
+      );
+
+      const build = runCommand(
+        `npm run affected:build -- --files="apps/${myapp}/src/main.ts,libs/${mypublishablelib}/src/index.ts" --parallel`
+      );
+      expect(build.indexOf(`"build" "${myapp}"`)).toEqual(-1);
+    });
+  });
 });

@@ -1,7 +1,11 @@
-import defaultTaskRunner from './default-tasks-runner';
-import { AffectedEventType, Task } from './tasks-runner';
-jest.mock('npm-run-all', () => jest.fn());
+import defaultTaskRunner, {
+  splitTasksIntoStages
+} from './default-tasks-runner';
+import { AffectedEventType } from './tasks-runner';
 import * as runAll from 'npm-run-all';
+import { DependencyType } from '@nrwl/workspace/src/core/project-graph';
+
+jest.mock('npm-run-all', () => jest.fn());
 jest.mock('../core/file-utils', () => ({
   cliCommand: () => 'nx'
 }));
@@ -132,6 +136,79 @@ describe('defaultTasksRunner', () => {
         expect(event).toEqual(expected[i++]);
       },
       complete: done
+    });
+  });
+
+  describe('splitTasksIntoStages', () => {
+    it('should return empty for an empty array', () => {
+      const stages = splitTasksIntoStages([], { nodes: {}, dependencies: {} });
+      expect(stages).toEqual([]);
+    });
+
+    it('should split tasks into stages based on their dependencies', () => {
+      const stages = splitTasksIntoStages(
+        [
+          {
+            target: { project: 'parent' }
+          },
+          {
+            target: { project: 'child1' }
+          },
+          {
+            target: { project: 'child2' }
+          },
+          {
+            target: { project: 'grandparent' }
+          }
+        ] as any,
+        {
+          nodes: {},
+          dependencies: {
+            child1: [],
+            child2: [],
+            parent: [
+              {
+                source: 'parent',
+                target: 'child1',
+                type: DependencyType.static
+              },
+              {
+                source: 'parent',
+                target: 'child2',
+                type: DependencyType.static
+              }
+            ],
+            grandparent: [
+              {
+                source: 'grandparent',
+                target: 'parent',
+                type: DependencyType.static
+              }
+            ]
+          }
+        }
+      );
+
+      expect(stages).toEqual([
+        [
+          {
+            target: { project: 'child1' }
+          },
+          {
+            target: { project: 'child2' }
+          }
+        ],
+        [
+          {
+            target: { project: 'parent' }
+          }
+        ],
+        [
+          {
+            target: { project: 'grandparent' }
+          }
+        ]
+      ]);
     });
   });
 });
