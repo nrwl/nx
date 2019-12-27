@@ -12,12 +12,7 @@ import { DefaultReporter, ReporterArgs } from './default-reporter';
 import * as yargs from 'yargs';
 import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
 import { Environment, NxJson } from '../core/shared-interfaces';
-import { projectHasTargetAndConfiguration } from '../utils/project-has-target-and-configuration';
 import { NxArgs } from '@nrwl/workspace/src/command-line/utils';
-
-export interface TasksMap {
-  [projectName: string]: { [targetName: string]: Task };
-}
 
 type RunArgs = yargs.Arguments & ReporterArgs;
 
@@ -39,25 +34,6 @@ export function runCommand<T extends RunArgs>(
     })
   );
 
-  const tasksMap: TasksMap = {};
-  Object.entries(projectGraph.nodes).forEach(([projectName, project]) => {
-    const runnable = projectHasTargetAndConfiguration(
-      project,
-      nxArgs.target,
-      nxArgs.configuration
-    );
-    if (runnable) {
-      tasksMap[projectName] = {
-        [nxArgs.target]: createTask({
-          project: project,
-          target: nxArgs.target,
-          configuration: nxArgs.configuration,
-          overrides: overrides
-        })
-      };
-    }
-  });
-
   const { tasksRunner, tasksOptions } = getRunner(
     nxArgs.runner,
     nxJson,
@@ -65,8 +41,7 @@ export function runCommand<T extends RunArgs>(
   );
   tasksRunner(tasks, tasksOptions, {
     target: nxArgs.target,
-    projectGraph,
-    tasksMap
+    projectGraph
   }).subscribe({
     next: (event: TaskCompleteEvent) => {
       switch (event.type) {
@@ -107,17 +82,14 @@ export function createTask({
   configuration,
   overrides
 }: TaskParams): Task {
+  const qualifiedTarget = {
+    project: project.name,
+    target,
+    configuration
+  };
   return {
-    id: getId({
-      project: project.name,
-      target: target,
-      configuration: configuration
-    }),
-    target: {
-      project: project.name,
-      target,
-      configuration
-    },
+    id: getId(qualifiedTarget),
+    target: qualifiedTarget,
     overrides: interpolateOverrides(overrides, project.name, project.data)
   };
 }
