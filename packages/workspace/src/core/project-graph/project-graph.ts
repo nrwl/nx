@@ -26,8 +26,7 @@ import {
   BuildDependencies,
   buildExplicitNpmDependencies,
   buildExplicitTypeScriptDependencies,
-  buildImplicitProjectDependencies,
-  buildImportsToProjectRoots
+  buildImplicitProjectDependencies
 } from './build-dependencies';
 import { assertWorkspaceValidity } from '../assert-workspace-validity';
 import { normalizeNxJson } from '../normalize-nx-json';
