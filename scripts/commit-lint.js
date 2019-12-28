@@ -9,8 +9,9 @@ const gitMessage = require('child_process')
 const matchCommit = /(chore|feat|fix|cleanup|docs)\((angular|bazel|core|docs|nextjs|node|react|storybook|testing|repo|misc)\):\s(([a-z0-9:\-\s])+)/g.test(
   gitMessage
 );
+const matchRevert = /Revert/gi.test(gitMessage);
 const matchRelease = /Release/gi.test(gitMessage);
-const exitCode = +!(matchRelease || matchCommit);
+const exitCode = +!(matchRelease || matchRevert || matchCommit);
 
 if (exitCode === 0) {
   console.log('Commit ACCEPTED 👌');
