@@ -78,7 +78,7 @@ function run(
         protocol: serveOptions.ssl ? 'https' : 'http',
         hostname: serveOptions.host,
         port: serveOptions.port.toString(),
-        path: path
+        pathname: path
       });
 
       context.logger.info(stripIndents`

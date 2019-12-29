@@ -9,9 +9,10 @@ import {
 } from './tasks-runner';
 import { output } from '../utils/output';
 import { readJsonFile } from '../utils/fileutils';
-import { getCommand } from './utils';
+import { getCommand, getCommandAsString } from './utils';
 import { cliCommand } from '../core/file-utils';
 import { ProjectGraph } from '../core/project-graph';
+import { NxJson } from '@nrwl/workspace/src/core/shared-interfaces';
 
 export interface DefaultTasksRunnerOptions {
   parallel?: boolean;
@@ -75,7 +76,7 @@ export function splitTasksIntoStages(
 export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
   tasks: Task[],
   options: DefaultTasksRunnerOptions,
-  context: { target: string; projectGraph: ProjectGraph }
+  context: { target: string; projectGraph: ProjectGraph; nxJson: NxJson }
 ): Observable<TaskCompleteEvent> => {
   return new Observable(subscriber => {
     runTasks(tasks, options, context)
@@ -110,7 +111,9 @@ async function runTasks(
   for (let i = 0; i < stages.length; ++i) {
     const tasksInStage = stages[i];
     try {
-      const commands = tasksInStage.map(t => getCommand(cli, isYarn, t));
+      const commands = tasksInStage.map(t =>
+        getCommandAsString(cli, isYarn, t)
+      );
       await runAll(commands, {
         parallel: options.parallel || false,
         maxParallel: options.maxParallel || 3,

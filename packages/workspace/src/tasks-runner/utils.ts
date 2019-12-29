@@ -3,25 +3,46 @@ import { ProjectGraphNode } from '../core/project-graph';
 
 const commonCommands = ['build', 'test', 'lint', 'e2e', 'deploy'];
 
+export function getCommandAsString(
+  cliCommand: string,
+  isYarn: boolean,
+  task: Task
+) {
+  return getCommand(cliCommand, isYarn, task)
+    .join(' ')
+    .trim();
+}
+
 export function getCommand(cliCommand: string, isYarn: boolean, task: Task) {
-  const args = Object.entries(task.overrides || {})
-    .map(([prop, value]) => `--${prop}=${value}`)
-    .join(' ');
+  const args = Object.entries(task.overrides || {}).map(
+    ([prop, value]) => `--${prop}=${value}`
+  );
 
   if (commonCommands.includes(task.target.target)) {
     const config = task.target.configuration
-      ? `--configuration ${task.target.configuration} `
-      : '';
-    return `${cliCommand}${isYarn ? '' : ' --'} ${task.target.target} ${
-      task.target.project
-    } ${config} ${args}`.trim();
+      ? [`--configuration`, task.target.configuration]
+      : [];
+
+    return [
+      cliCommand,
+      ...(isYarn ? [] : ['--']),
+      task.target.target,
+      task.target.project,
+      ...config,
+      ...args
+    ];
   } else {
     const config = task.target.configuration
       ? `:${task.target.configuration} `
       : '';
-    return `${cliCommand}${isYarn ? '' : ' --'}  run ${task.target.project}:${
-      task.target.target
-    }${config} ${args}`.trim();
+
+    return [
+      cliCommand,
+      ...(isYarn ? [] : ['--']),
+      'run',
+      `${task.target.project}:${task.target.target}${config}`,
+      ...args
+    ];
   }
 }
 

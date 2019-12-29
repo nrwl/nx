@@ -24,6 +24,7 @@
     "@nrwl/workspace": "*"
   },
   "dependencies": {
-    "axios": "^0.19.0"
+    "axios": "^0.19.0",
+    "tar": "5.0.5"
   }
 }

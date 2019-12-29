@@ -80,7 +80,7 @@
     "@types/jasmine": "~2.8.6",
     "@types/jasminewd2": "~2.0.3",
     "@types/jest": "24.0.9",
-    "@types/node": "~8.9.4",
+    "@types/node": "10.17.13",
     "@types/prettier": "^1.10.0",
     "@types/react": "16.9.17",
     "@types/react-dom": "16.9.4",
@@ -164,7 +164,6 @@
     "next": "9.1.5",
     "ng-packagr": "5.7.0",
     "ngrx-store-freeze": "0.2.4",
-    "npm-run-all": "^4.1.5",
     "open": "6.4.0",
     "opn": "^5.3.0",
     "parse5": "4.0.0",
@@ -224,7 +223,10 @@
     "worker-plugin": "3.2.0",
     "yargs": "^11.0.0",
     "yargs-parser": "10.0.0",
-    "zone.js": "^0.9.0"
+    "zone.js": "^0.9.0",
+    "tar": "5.0.5",
+    "npm-run-all": "^4.1.5",
+    "hasha": "5.1.0"
   },
   "author": "Victor Savkin",
   "license": "MIT",
