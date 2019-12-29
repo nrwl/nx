@@ -2,7 +2,7 @@ import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
 import { Task } from '../tasks-runner/tasks-runner';
 import { createTask } from '../tasks-runner/run-command';
 import { basename } from 'path';
-import { getCommand, getOutputs } from '../tasks-runner/utils';
+import { getCommandAsString, getOutputs } from '../tasks-runner/utils';
 import * as yargs from 'yargs';
 import { NxArgs } from './utils';
 import { cliCommand } from '../core/file-utils';
@@ -54,7 +54,11 @@ function createTasks(
     id: task.id,
     overrides: overrides,
     target: task.target,
-    command: `${isYarn ? 'yarn' : 'npm run'} ${getCommand(cli, isYarn, task)}`,
+    command: `${isYarn ? 'yarn' : 'npm run'} ${getCommandAsString(
+      cli,
+      isYarn,
+      task
+    )}`,
     outputs: getOutputs(projectGraph.nodes, task)
   }));
 }

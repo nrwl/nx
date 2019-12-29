@@ -18,4 +18,5 @@ jest --maxWorkers=1 ./build/e2e/report.test.js &&
 jest --maxWorkers=1 ./build/e2e/run-many.test.js &&
 jest --maxWorkers=1 ./build/e2e/storybook.test.js &&
 jest --maxWorkers=1 ./build/e2e/upgrade-module.test.js &&
-jest --maxWorkers=1 ./build/e2e/web.test.js
+jest --maxWorkers=1 ./build/e2e/web.test.js &&
+jest --maxWorkers=1 ./build/e2e/cache.test.js

@@ -81,7 +81,7 @@ function createRunUpdateTask(): TaskExecutorFactory<UpdateTaskOptions> {
             '--allow-dirty'
           ].filter(e => !!e);
           return new Observable(obs => {
-            fork(ng, args, forkOptions).on('close', (code: number) => {
+            fork(ng, args, forkOptions as any).on('close', (code: number) => {
               if (code === 0) {
                 obs.next();
                 obs.complete();

@@ -45,7 +45,8 @@ export class DefaultReporter {
   printResults(
     affectedArgs: ReporterArgs,
     failedProjectNames: string[],
-    startedWithFailedProjects: boolean
+    startedWithFailedProjects: boolean,
+    cachedProjectNames: string[]
   ) {
     output.addNewline();
     output.addVerticalSeparator();
@@ -67,27 +68,36 @@ export class DefaultReporter {
           ]
         });
       }
-      return;
+    } else {
+      const bodyLines = [
+        output.colors.gray('Failed projects:'),
+        '',
+        ...failedProjectNames.map(
+          project => `${output.colors.gray('-')} ${project}`
+        )
+      ];
+      if (!affectedArgs.onlyFailed && !startedWithFailedProjects) {
+        bodyLines.push('');
+        bodyLines.push(
+          `${output.colors.gray(
+            'You can isolate the above projects by passing:'
+          )} ${output.bold('--only-failed')}`
+        );
+      }
+      output.error({
+        title: `Running target "${affectedArgs.target}" failed`,
+        bodyLines
+      });
     }
 
-    const bodyLines = [
-      output.colors.gray('Failed projects:'),
-      '',
-      ...failedProjectNames.map(
+    if (cachedProjectNames.length > 0) {
+      const bodyLines = cachedProjectNames.map(
         project => `${output.colors.gray('-')} ${project}`
-      )
-    ];
-    if (!affectedArgs.onlyFailed && !startedWithFailedProjects) {
-      bodyLines.push('');
-      bodyLines.push(
-        `${output.colors.gray(
-          'You can isolate the above projects by passing:'
-        )} ${output.bold('--only-failed')}`
       );
+      output.note({
+        title: `Nx read the output from cache instead of running the command for the following projects:`,
+        bodyLines
+      });
     }
-    output.error({
-      title: `Running target "${affectedArgs.target}" failed`,
-      bodyLines
-    });
   }
 }

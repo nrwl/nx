@@ -1,9 +1,9 @@
-import { ensureProject, forEachCli } from './utils';
+import { ensureProject, forEachCli, newProject, runCLI } from './utils';
 
-forEachCli(() => {
+forEachCli('angular', () => {
   describe('create playground', () => {
     it('create playground', () => {
-      ensureProject();
+      newProject();
     }, 120000);
   });
 });

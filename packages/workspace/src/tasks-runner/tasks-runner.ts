@@ -2,6 +2,7 @@ import { Observable } from 'rxjs';
 import { Target } from '@angular-devkit/architect';
 
 import { ProjectGraph } from '../core/project-graph';
+import { NxJson } from '../core/shared-interfaces';
 
 export interface Task {
   id: string;
@@ -10,7 +11,8 @@ export interface Task {
 }
 
 export enum AffectedEventType {
-  TaskComplete = '[Task] Complete'
+  TaskComplete = '[Task] Complete',
+  TaskCacheRead = '[Task] CacheRead'
 }
 
 export interface AffectedEvent {
@@ -29,5 +31,6 @@ export type TasksRunner<T = unknown> = (
   context?: {
     target?: string;
     projectGraph: ProjectGraph;
+    nxJson: NxJson;
   }
 ) => Observable<AffectedEvent>;

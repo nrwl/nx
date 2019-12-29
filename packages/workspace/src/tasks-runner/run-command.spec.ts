@@ -1,5 +1,5 @@
 import { TasksRunner } from './tasks-runner';
-import defaultTasksRunner from './default-tasks-runner';
+import defaultTaskRunner from './default-tasks-runner';
 import { getRunner } from './run-command';
 import { NxJson } from '../core/shared-interfaces';
 
@@ -24,7 +24,7 @@ describe('getRunner', () => {
       overrides
     );
 
-    expect(tasksRunner).toEqual(defaultTasksRunner);
+    expect(tasksRunner).toEqual(defaultTaskRunner);
     expect(tasksOptions).toEqual(overrides);
   });
 
@@ -35,7 +35,7 @@ describe('getRunner', () => {
       overrides
     );
 
-    expect(tasksRunner).toEqual(defaultTasksRunner);
+    expect(tasksRunner).toEqual(defaultTaskRunner);
     expect(tasksOptions).toEqual(overrides);
   });
 

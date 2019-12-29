@@ -1,9 +1,4 @@
-import {
-  AffectedEventType,
-  Task,
-  TaskCompleteEvent,
-  TasksRunner
-} from './tasks-runner';
+import { AffectedEventType, Task, TasksRunner } from './tasks-runner';
 import { defaultTasksRunner } from './default-tasks-runner';
 import { isRelativePath } from '../utils/fileutils';
 import { join } from 'path';
@@ -39,14 +34,22 @@ export function runCommand<T extends RunArgs>(
     nxJson,
     overrides
   );
+  const cached = [];
   tasksRunner(tasks, tasksOptions, {
     target: nxArgs.target,
-    projectGraph
+    projectGraph,
+    nxJson
   }).subscribe({
-    next: (event: TaskCompleteEvent) => {
+    next: (event: any) => {
       switch (event.type) {
         case AffectedEventType.TaskComplete: {
           workspace.setResult(event.task.target.project, event.success);
+          break;
+        }
+        case AffectedEventType.TaskCacheRead: {
+          workspace.setResult(event.task.target.project, event.success);
+          cached.push(event.task.target.project);
+          break;
         }
       }
     },
@@ -59,7 +62,8 @@ export function runCommand<T extends RunArgs>(
       reporter.printResults(
         nxArgs,
         workspace.failedProjects,
-        workspace.startedWithFailedProjects
+        workspace.startedWithFailedProjects,
+        cached
       );
 
       if (workspace.hasFailure) {
@@ -143,7 +147,6 @@ export function getRunner(
     let tasksRunner = require(modulePath);
     // to support both babel and ts formats
     if (tasksRunner.default) {
-      throw new Error('boom');
       tasksRunner = tasksRunner.default;
     }
 
