@@ -70,6 +70,14 @@ Type: `boolean`
 
 When true, the component is exported from the project index.ts (if it exists).
 
+### js
+
+Default: `false`
+
+Type: `boolean`
+
+Generate JavaScript files rather than TypeScript files
+
 ### name
 
 Type: `string`

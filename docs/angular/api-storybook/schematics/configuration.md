@@ -30,6 +30,14 @@ Type: `boolean`
 
 Run the cypress-configure schematic
 
+### js
+
+Default: `false`
+
+Type: `boolean`
+
+Generate JavaScript files rather than TypeScript files
+
 ### name
 
 Type: `string`

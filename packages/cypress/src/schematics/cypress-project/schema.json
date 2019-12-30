@@ -29,6 +29,11 @@
       "type": "string",
       "enum": ["eslint", "tslint"],
       "default": "tslint"
+    },
+    "js": {
+      "description": "Generate JavaScript files rather than TypeScript files",
+      "type": "boolean",
+      "default": false
     }
   },
   "required": ["name"]

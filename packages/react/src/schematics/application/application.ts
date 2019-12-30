@@ -44,6 +44,7 @@ import {
 import { assertValidStyle } from '../../utils/assertion';
 import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
 import { updateJestConfigContent } from '../../utils/jest-utils';
+import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -97,7 +98,8 @@ function createApplicationFiles(options: NormalizedSchema): Rule {
       options.unitTestRunner === 'none'
         ? filter(file => file !== `/src/app/${options.fileName}.spec.tsx`)
         : noop(),
-      move(options.appProjectRoot)
+      move(options.appProjectRoot),
+      options.js ? toJS() : noop()
     ])
   );
 }
@@ -129,8 +131,11 @@ function addProject(options: NormalizedSchema): Rule {
       options: {
         outputPath: join(normalize('dist'), options.appProjectRoot),
         index: join(options.appProjectRoot, 'src/index.html'),
-        main: join(options.appProjectRoot, `src/main.tsx`),
-        polyfills: join(options.appProjectRoot, 'src/polyfills.ts'),
+        main: join(options.appProjectRoot, maybeJs(options, `src/main.tsx`)),
+        polyfills: join(
+          options.appProjectRoot,
+          maybeJs(options, 'src/polyfills.ts')
+        ),
         tsConfig: join(options.appProjectRoot, 'tsconfig.app.json'),
         assets: [
           join(options.appProjectRoot, 'src/favicon.ico'),
@@ -148,11 +153,11 @@ function addProject(options: NormalizedSchema): Rule {
             {
               replace: join(
                 options.appProjectRoot,
-                `src/environments/environment.ts`
+                maybeJs(options, `src/environments/environment.ts`)
               ),
               with: join(
                 options.appProjectRoot,
-                `src/environments/environment.prod.ts`
+                maybeJs(options, `src/environments/environment.prod.ts`)
               )
             }
           ],
@@ -248,7 +253,7 @@ function addRouting(
         function addRouterToComponent(host: Tree) {
           const appPath = join(
             options.appProjectRoot,
-            `src/app/${options.fileName}.tsx`
+            maybeJs(options, `src/app/${options.fileName}.tsx`)
           );
           const appFileContent = host.read(appPath).toString('utf-8');
           const appSource = ts.createSourceFile(
@@ -282,7 +287,10 @@ function addBabel(options: NormalizedSchema): Rule {
 
 function addPolyfillForBabel(options: NormalizedSchema): Rule {
   return (host: Tree) => {
-    const polyfillsPath = join(options.appProjectRoot, `src/polyfills.ts`);
+    const polyfillsPath = join(
+      options.appProjectRoot,
+      maybeJs(options, `src/polyfills.ts`)
+    );
     const polyfillsSource = host.read(polyfillsPath)!.toString('utf-8');
     const polyfillsSourceFile = ts.createSourceFile(
       polyfillsPath,
@@ -384,4 +392,10 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     fileName,
     styledModule
   };
+}
+
+function maybeJs(options: NormalizedSchema, path: string): string {
+  return options.js && (path.endsWith('.ts') || path.endsWith('.tsx'))
+    ? path.replace(/\.tsx?$/, '.js')
+    : path;
 }

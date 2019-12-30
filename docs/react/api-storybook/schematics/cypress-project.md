@@ -24,6 +24,14 @@ nx g cypress-project ... --dry-run
 
 ## Options
 
+### js
+
+Default: `false`
+
+Type: `boolean`
+
+Generate JavaScript files rather than TypeScript files
+
 ### name
 
 Type: `string`

@@ -10,6 +10,11 @@
         "$source": "argv",
         "index": 0
       }
+    },
+    "js": {
+      "type": "boolean",
+      "description": "Generate JavaScript files rather than TypeScript files",
+      "default": false
     }
   },
   "required": ["name"]

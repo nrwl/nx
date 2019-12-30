@@ -97,6 +97,11 @@
     "routing": {
       "type": "boolean",
       "description": "Generate a library with routes."
+    },
+    "js": {
+      "type": "boolean",
+      "description": "Generate JavaScript files rather than TypeScript files",
+      "default": false
     }
   },
   "required": ["name", "project"]

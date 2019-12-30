@@ -45,6 +45,7 @@ import {
 } from '../../utils/versions';
 import { assertValidStyle } from '../../utils/assertion';
 import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
+import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -84,7 +85,8 @@ export default function(schema: Schema): Rule {
         style: options.style,
         skipTests: options.unitTestRunner === 'none',
         export: true,
-        routing: options.routing
+        routing: options.routing,
+        js: options.js
       }),
       updateAppRoutes(options, context),
       formatFiles(options)
@@ -109,7 +111,7 @@ function addProject(options: NormalizedSchema): Rule {
           outputPath: `dist/libs/${options.projectDirectory}`,
           tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
           project: `${options.projectRoot}/package.json`,
-          entryFile: `${options.projectRoot}/src/index.ts`,
+          entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
           babelConfig: `@nrwl/react/plugins/bundle-babel`,
           rollupConfig: `@nrwl/react/plugins/bundle-rollup`
         }
@@ -135,7 +137,7 @@ function updateTsConfig(options: NormalizedSchema): Rule {
         const c = json.compilerOptions;
         delete c.paths[options.name];
         c.paths[`@${nxJson.npmScope}/${options.projectDirectory}`] = [
-          `libs/${options.projectDirectory}/src/index.ts`
+          maybeJs(options, `libs/${options.projectDirectory}/src/index.ts`)
         ];
         return json;
       })(host, context);
@@ -155,7 +157,8 @@ function createFiles(options: NormalizedSchema): Rule {
       move(options.projectRoot),
       options.publishable
         ? noop()
-        : filter(file => !file.endsWith('package.json'))
+        : filter(file => !file.endsWith('package.json')),
+      options.js ? toJS() : noop()
     ])
   );
 }
@@ -186,7 +189,7 @@ function updateAppRoutes(
 
     const appComponentPath = join(
       options.appSourceRoot,
-      `${componentImportPath}.tsx`
+      maybeJs(options, `${componentImportPath}.tsx`)
     );
     return chain([
       addDepsToPackageJson(
@@ -311,4 +314,10 @@ function normalizeOptions(
   assertValidStyle(normalized.style);
 
   return normalized;
+}
+
+function maybeJs(options: NormalizedSchema, path: string): string {
+  return options.js && (path.endsWith('.ts') || path.endsWith('.tsx'))
+    ? path.replace(/\.tsx?$/, '.js')
+    : path;
 }

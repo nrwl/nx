@@ -5,4 +5,5 @@ export interface Schema {
   name: string;
   directory: string;
   linter: Linter;
+  js?: boolean;
 }

@@ -30,6 +30,11 @@
       "type": "string",
       "description": "The application project to add the slice to.",
       "alias": "a"
+    },
+    "js": {
+      "type": "boolean",
+      "description": "Generate JavaScript files rather than TypeScript files",
+      "default": false
     }
   },
   "required": ["name"]

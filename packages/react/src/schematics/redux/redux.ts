@@ -30,6 +30,7 @@ import {
   reactReduxVersion,
   reduxjsToolkitVersion
 } from '../../utils/versions';
+import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 
 export default function(schema: any): Rule {
   return async (host: Tree, context: SchematicContext) => {
@@ -49,7 +50,8 @@ export default function(schema: any): Rule {
 function generateReduxFiles(options: NormalizedSchema) {
   const templateSource = apply(url('./files'), [
     template({ ...options, tmpl: '' }),
-    move(options.filesPath)
+    move(options.filesPath),
+    options.js ? toJS() : noop()
   ]);
 
   return mergeWith(templateSource);
@@ -68,7 +70,10 @@ function addReduxPackageDependencies(): Rule {
 
 function addExportsToBarrel(options: NormalizedSchema): Rule {
   return (host: Tree) => {
-    const indexFilePath = path.join(options.projectSourcePath, 'index.ts');
+    const indexFilePath = path.join(
+      options.projectSourcePath,
+      options.js ? 'index.js' : 'index.ts'
+    );
 
     const buffer = host.read(indexFilePath);
     if (!!buffer) {
@@ -187,7 +192,10 @@ async function normalizeOptions(
       );
     }
     appProjectSourcePath = appConfig.sourceRoot;
-    appMainFilePath = path.join(appProjectSourcePath, 'main.tsx');
+    appMainFilePath = path.join(
+      appProjectSourcePath,
+      options.js ? 'main.js' : 'main.tsx'
+    );
     if (!host.exists(appMainFilePath)) {
       throw new Error(
         `Could not find ${appMainFilePath} during store configuration`
