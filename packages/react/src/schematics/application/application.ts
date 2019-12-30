@@ -140,7 +140,7 @@ function addProject(options: NormalizedSchema): Rule {
           ? []
           : [join(options.appProjectRoot, `src/styles.${options.style}`)],
         scripts: [],
-        webpackConfig: '@nrwl/react/plugins/babel'
+        webpackConfig: '@nrwl/react/plugins/webpack'
       },
       configurations: {
         production: {

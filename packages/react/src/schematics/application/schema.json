@@ -13,7 +13,7 @@
     },
     {
       "command": "g app myapp --routing",
-      "description": "Set up routing"
+      "description": "Set up React Router"
     }
   ],
   "type": "object",
@@ -74,7 +74,8 @@
     "routing": {
       "type": "boolean",
       "description": "Generate application with routes",
-      "x-prompt": "Would you like to configure routing for this application?"
+      "x-prompt": "Would you like to add React Router to this application?",
+      "default": false
     },
     "skipFormat": {
       "description": "Skip formatting files",

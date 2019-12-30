@@ -240,7 +240,7 @@ describe('app', () => {
       scripts: [],
       styles: ['apps/my-app/src/styles.css'],
       tsConfig: 'apps/my-app/tsconfig.app.json',
-      webpackConfig: '@nrwl/react/plugins/babel'
+      webpackConfig: '@nrwl/react/plugins/webpack'
     });
     expect(architectConfig.build.configurations.production).toEqual({
       optimization: true,
@@ -481,7 +481,7 @@ describe('app', () => {
 
     expect(
       workspaceJson.projects['my-app'].architect.build.options.webpackConfig
-    ).toEqual('@nrwl/react/plugins/babel');
+    ).toEqual('@nrwl/react/plugins/webpack');
   });
 
   it('should add required polyfills for core-js and regenerator', async () => {
