@@ -40,7 +40,7 @@ Use class components instead of functional components:
 ng g app myapp --classComponent
 ```
 
-Set up routing:
+Set up React Router:
 
 ```bash
 ng g app myapp --routing
@@ -103,6 +103,8 @@ Type: `boolean`
 Use pascal case component file name (e.g. App.tsx)
 
 ### routing
+
+Default: `false`
 
 Type: `boolean`
 

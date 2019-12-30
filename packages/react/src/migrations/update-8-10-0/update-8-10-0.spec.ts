@@ -69,14 +69,53 @@ describe('Update 8-10-0', () => {
 
     let tsConfig = JSON.parse(tree.read(`apps/demo/tsconfig.json`).toString());
     expect(tsConfig.files).toContain(
-      '../../node_modules/@nrwl/react/typings/svg.d.ts'
+      '../../node_modules/@nrwl/react/typings/image.d.ts'
     );
 
     tsConfig = JSON.parse(
       tree.read(`apps/nested/nested-app/tsconfig.json`).toString()
     );
     expect(tsConfig.files).toContain(
-      '../../../node_modules/@nrwl/react/typings/svg.d.ts'
+      '../../../node_modules/@nrwl/react/typings/image.d.ts'
     );
+  });
+
+  it('should change `@nrwl/react/plugins/babel` with `@nrwl/react/plugins/webpack`', async () => {
+    let workspaceJson = readJsonInTree(tree, '/workspace.json');
+    workspaceJson.projects = {
+      demo: {
+        root: 'apps/demo',
+        projectType: 'application',
+        architect: {
+          build: {
+            builder: '@nrwl/web:build',
+            options: {
+              webpackConfig: '@nrwl/react/plugins/babel'
+            }
+          }
+        }
+      }
+    };
+    tree.overwrite('/workspace.json', JSON.stringify(workspaceJson));
+
+    tree = await schematicRunner
+      .runSchematicAsync('update-8.10.0', {}, tree)
+      .toPromise();
+
+    workspaceJson = readJsonInTree(tree, '/workspace.json');
+    expect(workspaceJson.projects).toEqual({
+      demo: {
+        root: 'apps/demo',
+        projectType: 'application',
+        architect: {
+          build: {
+            builder: '@nrwl/web:build',
+            options: {
+              webpackConfig: '@nrwl/react/plugins/webpack'
+            }
+          }
+        }
+      }
+    });
   });
 });
