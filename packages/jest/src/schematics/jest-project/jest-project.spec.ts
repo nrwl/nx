@@ -89,6 +89,7 @@ describe('jestProject', () => {
   preset: '../../jest.config.js',
   coverageDirectory: '../../coverage/libs/lib1',
   snapshotSerializers: [
+    'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
     'jest-preset-angular/build/AngularSnapshotSerializer.js',
     'jest-preset-angular/build/HTMLCommentSerializer.js'
   ]
@@ -234,6 +235,7 @@ describe('jestProject', () => {
       const jestConfig = resultTree.readContent('libs/lib1/jest.config.js');
       expect(jestConfig).not.toContain(`
   snapshotSerializers: [
+    'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js,
     'jest-preset-angular/build/AngularSnapshotSerializer.js',
     'jest-preset-angular/build/HTMLCommentSerializer.js'
   ]

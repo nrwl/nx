@@ -5,7 +5,7 @@ import * as path from 'path';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { serializeJson } from '@nrwl/workspace';
 
-describe.only('Update 8.8.0', () => {
+describe('Update 8.10.0', () => {
   let initialTree: Tree;
   let schematicRunner: SchematicTestRunner;
 
@@ -105,7 +105,7 @@ describe.only('Update 8.8.0', () => {
 
   it('should update jest-preset-angular to 8.0.0', async () => {
     const result = await schematicRunner
-      .runSchematicAsync('update-8.8.0', {}, initialTree)
+      .runSchematicAsync('update-8.10.0', {}, initialTree)
       .toPromise();
 
     const { devDependencies } = readJsonInTree(result, 'package.json');
@@ -114,7 +114,7 @@ describe.only('Update 8.8.0', () => {
 
   it(`it should add '/build' into jest-preset-angular snapshotSerializers in any jest.config.js where it exists`, async () => {
     const result = await schematicRunner
-      .runSchematicAsync('update-8.8.0', {}, initialTree)
+      .runSchematicAsync('update-8.10.0', {}, initialTree)
       .toPromise();
 
     const updateJestAngularOne = result.readContent(
@@ -139,16 +139,34 @@ describe.only('Update 8.8.0', () => {
     expect(updateJestAngularTwo).not.toContain(
       'jest-preset-angular/HTMLCommentSerializer.js'
     );
+
+    expect(updateJestAngularOne).toContain(
+      'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js'
+    );
     expect(updateJestAngularOne).toContain(
       'jest-preset-angular/build/AngularSnapshotSerializer.js'
     );
     expect(updateJestAngularOne).toContain(
       'jest-preset-angular/build/HTMLCommentSerializer.js'
     );
+
+    expect(updateJestAngularTwo).toContain(
+      'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js'
+    );
     expect(updateJestAngularTwo).toContain(
       'jest-preset-angular/build/AngularSnapshotSerializer.js'
     );
     expect(updateJestAngularTwo).toContain(
+      'jest-preset-angular/build/HTMLCommentSerializer.js'
+    );
+
+    expect(updateJestNonAngularOne).not.toContain(
+      'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js'
+    );
+    expect(updateJestNonAngularOne).not.toContain(
+      'jest-preset-angular/build/AngularSnapshotSerializer.js'
+    );
+    expect(updateJestNonAngularOne).not.toContain(
       'jest-preset-angular/build/HTMLCommentSerializer.js'
     );
   });

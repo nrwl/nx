@@ -1,23 +1,33 @@
 import {
-  Tree,
-  Rule,
   chain,
-  SchematicContext
+  Rule,
+  SchematicContext,
+  Tree
 } from '@angular-devkit/schematics';
-import { readWorkspace, insert, formatFiles } from '@nrwl/workspace';
-import * as ts from 'typescript';
 import {
-  ReplaceChange,
-  updateJsonInTree,
+  formatFiles,
+  insert,
+  readWorkspace,
+  updatePackagesInPackageJson
+} from '@nrwl/workspace';
+import * as ts from 'typescript';
+import * as path from 'path';
+import {
+  Change,
+  getSourceNodes,
+  InsertChange,
   readJsonInTree,
-  getSourceNodes
+  ReplaceChange
 } from '@nrwl/workspace/src/utils/ast-utils';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 export default function update(): Rule {
   return chain([
     displayInformation,
-    updateDependencies,
+    updatePackagesInPackageJson(
+      path.join(__dirname, '../../../', 'migrations.json'),
+      '8.10.0'
+    ),
     updateJestConfigs,
     formatFiles()
   ]);
@@ -36,16 +46,6 @@ function displayInformation(host: Tree, context: SchematicContext) {
   `);
   }
 }
-
-const updateDependencies = updateJsonInTree('package.json', json => {
-  json.devDependencies = json.devDependencies || {};
-
-  if (json.devDependencies['jest-preset-angular']) {
-    json.devDependencies['jest-preset-angular'] = '8.0.0';
-  }
-
-  return json;
-});
 
 function updateJestConfigs(host: Tree) {
   const config = readJsonInTree(host, 'package.json');
@@ -77,14 +77,24 @@ function updateJestConfigs(host: Tree) {
           ts.ScriptTarget.Latest
         );
 
-        const changes: ReplaceChange[] = [];
+        const changes: Change[] = [];
 
         getSourceNodes(sourceFile).forEach(node => {
           if (node && ts.isStringLiteral(node)) {
             const nodeText = node.text;
+
             if (
               nodeText === 'jest-preset-angular/AngularSnapshotSerializer.js'
             ) {
+              // add new serializer from v8 of jest-preset-angular
+              changes.push(
+                new InsertChange(
+                  configPath,
+                  node.getStart(sourceFile),
+                  `'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js'\n`
+                )
+              );
+
               changes.push(
                 new ReplaceChange(
                   configPath,
