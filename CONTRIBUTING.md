@@ -80,7 +80,7 @@ While developing you may want to try out the changes you have made. The easier w
 yarn create-playground
 ```
 
-You can then go to `tmp/nx` (this is set up to use Nx CLI) or `tmp/angular` (this is set up to use Angular CLI), where you will find an empty workspace with your changes in it, something this that:
+You can then go to `tmp/nx` (this is set up to use Nx CLI) or `tmp/angular` (this is set up to use Angular CLI), where you will find an empty workspace with your changes in it.:
 
 ```bash
 yarn create-playground
