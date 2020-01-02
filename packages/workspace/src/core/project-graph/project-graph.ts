@@ -61,10 +61,23 @@ export function createProjectGraph(
       buildExplicitNpmDependencies
     ];
 
-    buildNodesFns.forEach(f => f(ctx, builder.addNode.bind(builder), fileRead));
+    buildNodesFns.forEach(f =>
+      f(
+        ctx,
+        builder.addNode.bind(builder),
+        builder.addNodeNames.bind(builder),
+        fileRead
+      )
+    );
 
     buildDependenciesFns.forEach(f =>
-      f(ctx, builder.nodes, builder.addDependency.bind(builder), fileRead)
+      f(
+        ctx,
+        builder.nodes,
+        builder.nodeNames,
+        builder.addDependency.bind(builder),
+        fileRead
+      )
     );
 
     const projectGraph = builder.build();

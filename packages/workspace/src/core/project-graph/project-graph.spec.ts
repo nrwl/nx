@@ -178,6 +178,21 @@ describe('project graph', () => {
     });
   });
 
+  it('should have a ordered (based on root length) array of project names', () => {
+    const graph = createProjectGraph();
+    expect(graph.nodeNames).toEqual([
+      'shared-util-data',
+      'shared-util',
+      'demo-e2e',
+      'lazy-lib',
+      'demo',
+      'api',
+      'ui',
+      'happy-nrwl',
+      '@nrwl/workspace'
+    ]);
+  });
+
   it('should handle circular dependencies', () => {
     fs.writeFileSync(
       '/root/libs/shared/util/src/index.ts',

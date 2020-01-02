@@ -11,6 +11,7 @@ jest.mock('fs', () => require('memfs').fs);
 describe('findTargetProjectWithImport', () => {
   let ctx: ProjectGraphContext;
   let projects: Record<string, ProjectGraphNode>;
+  let projectNames: string[];
   let fsJson;
   beforeEach(() => {
     const workspaceJson = {
@@ -116,19 +117,22 @@ describe('findTargetProjectWithImport', () => {
         }
       }
     };
+    projectNames = ['proj1', 'proj2', 'proj3', 'proj4'];
   });
   it('should be able to resolve a module by using tsConfig paths', () => {
     const proj2 = findTargetProjectWithImport(
       '@proj/my-second-proj',
       'libs/proj1/index.ts',
       ctx.nxJson.npmScope,
-      projects
+      projects,
+      projectNames
     );
     const proj3 = findTargetProjectWithImport(
       '@proj/project-3',
       'libs/proj1/index.ts',
       ctx.nxJson.npmScope,
-      projects
+      projects,
+      projectNames
     );
 
     expect(proj2).toEqual('proj2');
@@ -139,7 +143,8 @@ describe('findTargetProjectWithImport', () => {
       '@proj/proj4',
       'libs/proj1/index.ts',
       ctx.nxJson.npmScope,
-      projects
+      projects,
+      projectNames
     );
 
     expect(proj4).toEqual('proj4');

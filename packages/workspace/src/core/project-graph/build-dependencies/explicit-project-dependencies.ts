@@ -10,6 +10,7 @@ import { findTargetProjectWithImport } from './find-target-project';
 export function buildExplicitTypeScriptDependencies(
   ctx: ProjectGraphContext,
   nodes: ProjectGraphNodeRecords,
+  nodeNames: string[],
   addDependency: AddProjectDependency,
   fileRead: (s: string) => string
 ) {
@@ -24,7 +25,8 @@ export function buildExplicitTypeScriptDependencies(
             importExpr,
             f.file,
             ctx.nxJson.npmScope,
-            nodes
+            nodes,
+            nodeNames
           );
           if (source && target) {
             addDependency(type, source, target);

@@ -5,6 +5,7 @@ describe('TaskStages', () => {
   it('should return empty for an empty array', () => {
     const stages = new TaskOrderer('build', {
       nodes: {},
+      nodeNames: [],
       dependencies: {}
     }).splitTasksIntoStages([]);
     expect(stages).toEqual([]);
@@ -13,6 +14,7 @@ describe('TaskStages', () => {
   it('should split tasks into stages based on their dependencies', () => {
     const stages = new TaskOrderer('build', {
       nodes: {},
+      nodeNames: [],
       dependencies: {
         child1: [],
         child2: [],

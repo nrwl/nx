@@ -1,9 +1,14 @@
 import * as stripJsonComments from 'strip-json-comments';
-import { ProjectGraphContext, AddProjectNode } from '../project-graph-models';
+import {
+  ProjectGraphContext,
+  AddProjectNode,
+  AddProjectNodeNames
+} from '../project-graph-models';
 
 export function buildNpmPackageNodes(
   ctx: ProjectGraphContext,
   addNode: AddProjectNode,
+  addNodeNames: AddProjectNodeNames,
   fileRead: (s: string) => string
 ) {
   const packageJson = JSON.parse(stripJsonComments(fileRead('package.json')));
@@ -12,6 +17,7 @@ export function buildNpmPackageNodes(
     ...packageJson.devDependencies
   };
   Object.keys(deps).forEach(d => {
+    addNodeNames(d);
     addNode({
       type: 'npm',
       name: d,

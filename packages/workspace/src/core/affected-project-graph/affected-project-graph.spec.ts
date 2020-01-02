@@ -172,6 +172,7 @@ describe('project graph', () => {
           data: expect.anything()
         }
       },
+      nodeNames: [],
       dependencies: {
         'demo-e2e': [
           {
@@ -242,6 +243,7 @@ describe('project graph', () => {
           data: expect.anything()
         }
       },
+      nodeNames: [],
       dependencies: {
         'demo-e2e': [
           {

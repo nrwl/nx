@@ -142,7 +142,8 @@ export function findProjectUsingImport(
     imp,
     filePath,
     npmScope,
-    projectGraph.nodes
+    projectGraph.nodes,
+    projectGraph.nodeNames
   );
   return projectGraph.nodes[target];
 }

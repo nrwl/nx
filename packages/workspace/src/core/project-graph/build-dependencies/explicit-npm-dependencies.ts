@@ -9,6 +9,7 @@ import { TypeScriptImportLocator } from './typescript-import-locator';
 export function buildExplicitNpmDependencies(
   ctx: ProjectGraphContext,
   nodes: ProjectGraphNodeRecords,
+  nodeNames: string[],
   addDependency: AddProjectDependency,
   fileRead: (s: string) => string
 ) {
@@ -19,9 +20,7 @@ export function buildExplicitNpmDependencies(
       importLocator.fromFile(
         f.file,
         (importExpr: string, filePath: string, type: DependencyType) => {
-          const key = Object.keys(nodes).find(k =>
-            isNpmPackageImport(k, importExpr)
-          );
+          const key = nodeNames.find(k => isNpmPackageImport(k, importExpr));
           const target = nodes[key];
           if (source && target && target.type === 'npm') {
             addDependency(type, source, target.name);

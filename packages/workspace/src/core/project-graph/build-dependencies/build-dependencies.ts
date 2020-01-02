@@ -8,6 +8,7 @@ export interface BuildDependencies {
   (
     ctx: ProjectGraphContext,
     nodes: ProjectGraphNodeRecords,
+    nodeNames: string[],
     addDependency: AddProjectDependency,
     fileRead: (s: string) => string
   ): void;

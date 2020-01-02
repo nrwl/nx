@@ -7,6 +7,7 @@ import {
 
 export class ProjectGraphBuilder {
   readonly nodes: Record<string, ProjectGraphNode> = {};
+  readonly nodeNames: string[] = [];
   readonly dependencies: Record<
     string,
     Record<string, ProjectGraphDependency>
@@ -23,6 +24,14 @@ export class ProjectGraphBuilder {
 
   addNode(node: ProjectGraphNode) {
     this.nodes[node.name] = node;
+  }
+
+  addNodeNames(nodeNames: string | string[]) {
+    if (typeof nodeNames === 'string') {
+      this.nodeNames.push(nodeNames);
+    } else {
+      this.nodeNames.push(...nodeNames);
+    }
   }
 
   addDependency(
@@ -53,6 +62,7 @@ export class ProjectGraphBuilder {
   build(): ProjectGraph {
     return {
       nodes: this.nodes as ProjectGraph['nodes'],
+      nodeNames: this.nodeNames,
       dependencies: Object.keys(this.dependencies).reduce(
         (acc, k) => {
           acc[k] = Object.values(this.dependencies[k]);

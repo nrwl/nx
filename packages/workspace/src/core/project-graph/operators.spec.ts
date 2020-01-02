@@ -9,6 +9,7 @@ const graph: ProjectGraph = {
     lib2: { name: 'lib2', type: 'lib', data: null },
     lib3: { name: 'lib3', type: 'lib', data: null }
   },
+  nodeNames: [],
   dependencies: {
     'app1-e2e': [
       {
@@ -57,6 +58,7 @@ describe('reverse', () => {
         lib2: { name: 'lib2', type: 'lib', data: null },
         lib3: { name: 'lib3', type: 'lib', data: null }
       },
+      nodeNames: [],
       dependencies: {
         app1: [
           {
@@ -133,6 +135,7 @@ describe('withDeps', () => {
           data: null
         }
       },
+      nodeNames: [],
       dependencies: {
         lib2: [
           {
@@ -180,6 +183,7 @@ describe('filterNodes', () => {
         'app1-e2e': { name: 'app1-e2e', type: 'app', data: null },
         app1: { name: 'app1', type: 'app', data: null }
       },
+      nodeNames: [],
       dependencies: {
         'app1-e2e': [
           {

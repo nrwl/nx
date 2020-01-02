@@ -1,8 +1,13 @@
-import { AddProjectNode, ProjectGraphContext } from '../project-graph-models';
+import {
+  AddProjectNode,
+  ProjectGraphContext,
+  AddProjectNodeNames
+} from '../project-graph-models';
 
 export function buildWorkspaceProjectNodes(
   ctx: ProjectGraphContext,
   addNode: AddProjectNode,
+  addNodeNames: AddProjectNodeNames,
   fileRead: (s: string) => string
 ) {
   const toAdd = [];
@@ -33,11 +38,16 @@ export function buildWorkspaceProjectNodes(
   });
 
   // Sort by root directory length (do we need this?)
-  toAdd.sort((a, b) => {
-    if (!a.data.root) return -1;
-    if (!b.data.root) return -1;
-    return a.data.root.length > b.data.root.length ? -1 : 1;
-  });
+  const nodeNames = toAdd
+    .sort((a, b) => {
+      if (!a.data.root) return -1;
+      if (!b.data.root) return -1;
+      return a.data.root.length > b.data.root.length ? -1 : 1;
+    })
+    .map(node => {
+      return node.name;
+    });
+  addNodeNames(nodeNames);
 
   toAdd.forEach(n => {
     addNode({

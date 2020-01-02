@@ -21,6 +21,7 @@ describe('WorkspaceIntegrityChecks', () => {
               }
             }
           },
+          nodeNames: ['project1'],
           dependencies: {}
         },
         ['libs/project1/src/index.ts']
@@ -55,6 +56,7 @@ describe('WorkspaceIntegrityChecks', () => {
               }
             }
           },
+          nodeNames: ['project1', 'projec2'],
           dependencies: {}
         },
         ['libs/project2/src/index.ts']
@@ -89,6 +91,7 @@ describe('WorkspaceIntegrityChecks', () => {
               }
             }
           },
+          nodeNames: ['project1'],
           dependencies: {}
         },
         ['libs/project1/src/index.ts', 'libs/project2/src/index.ts']

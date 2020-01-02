@@ -106,6 +106,7 @@ describe('Enforce Module Boundaries', () => {
             }
           }
         },
+        nodeNames: ['myappName', 'mylibName'],
         dependencies: {}
       }
     );
@@ -159,6 +160,7 @@ describe('Enforce Module Boundaries', () => {
             }
           }
         },
+        nodeNames: ['myapp2-mylib', 'myapp2Name', 'myappName'],
         dependencies: {}
       }
     );
@@ -236,6 +238,14 @@ describe('Enforce Module Boundaries', () => {
           }
         }
       },
+      nodeNames: [
+        'impl-both-domainsName',
+        'impl-domain2Name',
+        'impl2Name',
+        'untaggedName',
+        'apiName',
+        'implName'
+      ],
       dependencies: {}
     };
 
@@ -390,6 +400,7 @@ describe('Enforce Module Boundaries', () => {
               }
             }
           },
+          nodeNames: ['mylibName'],
           dependencies: {}
         }
       );
@@ -418,6 +429,7 @@ describe('Enforce Module Boundaries', () => {
               }
             }
           },
+          nodeNames: ['mylibName'],
           dependencies: {}
         }
       );
@@ -454,6 +466,7 @@ describe('Enforce Module Boundaries', () => {
               }
             }
           },
+          nodeNames: ['mylibName', 'otherName'],
           dependencies: {}
         }
       );
@@ -493,6 +506,7 @@ describe('Enforce Module Boundaries', () => {
               }
             }
           },
+          nodeNames: ['mylibName', 'otherName'],
           dependencies: {}
         }
       );
@@ -524,6 +538,7 @@ describe('Enforce Module Boundaries', () => {
             }
           }
         },
+        nodeNames: ['mylibName'],
         dependencies: {}
       }
     );
@@ -566,6 +581,7 @@ describe('Enforce Module Boundaries', () => {
             }
           }
         },
+        nodeNames: ['mylibName', 'utils'],
         dependencies: {}
       }
     );
@@ -602,6 +618,7 @@ describe('Enforce Module Boundaries', () => {
             }
           }
         },
+        nodeNames: ['mylibName', 'otherName'],
         dependencies: {
           mylibName: [
             {
@@ -648,6 +665,7 @@ describe('Enforce Module Boundaries', () => {
             }
           }
         },
+        nodeNames: ['mylibName', 'myappName'],
         dependencies: {}
       }
     );
@@ -695,6 +713,7 @@ describe('Enforce Module Boundaries', () => {
             }
           }
         },
+        nodeNames: ['anotherlibName', 'mylibName', 'myappName'],
         dependencies: {
           mylibName: [
             {
@@ -763,6 +782,12 @@ describe('Enforce Module Boundaries', () => {
             }
           }
         },
+        nodeNames: [
+          'badcirclelibName',
+          'anotherlibName',
+          'mylibName',
+          'myappName'
+        ],
         dependencies: {
           mylibName: [
             {

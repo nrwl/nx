@@ -4,6 +4,7 @@ import { NxJson } from '../shared-interfaces';
 
 export interface ProjectGraph {
   nodes: Record<string, ProjectGraphNode>;
+  nodeNames: string[];
   dependencies: Record<string, ProjectGraphDependency[]>;
 }
 
@@ -22,6 +23,8 @@ export interface ProjectGraphNode<T extends {} = {}> {
 export type ProjectGraphNodeRecords = Record<string, ProjectGraphNode>;
 
 export type AddProjectNode = (node: ProjectGraphNode) => void;
+
+export type AddProjectNodeNames = (nodeNames: string | string[]) => void;
 
 export interface ProjectGraphDependency {
   type: DependencyType | string;
