@@ -1,0 +1,10 @@
+{
+  "$schema": "@angular-devkit/architect/src/builders-schema.json",
+  "builders": {
+    "playground": {
+      "implementation": "./src/builders/playground/playground.impl",
+      "schema": "./src/builders/playground/schema.json",
+      "description": "Creates a playground for a Nx Plugin"
+    }
+  }
+}

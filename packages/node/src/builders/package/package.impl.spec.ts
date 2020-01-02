@@ -104,6 +104,18 @@ describe('NodeCompileBuilder', () => {
     fakeEventEmitter.emit('exit', 0);
   });
 
+  it('should have the output path in the BuilderOutput', done => {
+    runNodePackageBuilder(testOptions, context).subscribe({
+      next: value => {
+        expect(value.outputPath).toEqual(testOptions.outputPath);
+      },
+      complete: () => {
+        done();
+      }
+    });
+    fakeEventEmitter.emit('exit', 0);
+  });
+
   describe('Asset copying', () => {
     beforeEach(() => {
       jest.clearAllMocks();
