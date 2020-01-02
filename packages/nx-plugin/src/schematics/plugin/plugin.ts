@@ -1,4 +1,4 @@
-import { normalize, Path } from '@angular-devkit/core';
+import { normalize, Path, JsonArray } from '@angular-devkit/core';
 import {
   apply,
   chain,
@@ -10,14 +10,16 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
+  schematic
 } from '@angular-devkit/schematics';
 import {
   formatFiles,
   names,
   NxJson,
   offsetFromRoot,
-  toFileName
+  toFileName,
+  updateWorkspace
 } from '@nrwl/workspace';
 import {
   allFilesInDirInHost,
@@ -46,8 +48,11 @@ export default function(schema: NormalizedSchema): Rule {
         publishable: true
       }),
       addFiles(options),
-      updateWorkspace(options),
+      updateWorkspaceJson(options),
       updateTsConfig(options),
+      schematic('e2e-project', {
+        pluginName: options.name
+      }),
       formatFiles(options)
     ]);
   };
@@ -109,11 +114,11 @@ function addFiles(options: NormalizedSchema): Rule {
   ]);
 }
 
-function updateWorkspace(options: NormalizedSchema): Rule {
-  return updateWorkspaceInTree(json => {
-    const build = json.projects[options.name].architect.build;
+function updateWorkspaceJson(options: NormalizedSchema): Rule {
+  return updateWorkspace(workspace => {
+    const build = workspace.projects.get(options.name).targets.get('build');
     if (build) {
-      build.options.assets.push(
+      (build.options.assets as JsonArray).push(
         ...[
           {
             input: `./${options.projectRoot}/src`,
@@ -128,7 +133,6 @@ function updateWorkspace(options: NormalizedSchema): Rule {
         ]
       );
     }
-    return json;
   });
 }
 

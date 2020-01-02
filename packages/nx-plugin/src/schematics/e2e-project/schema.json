@@ -1,0 +1,12 @@
+{
+  "id": "NxPluginE2E",
+  "title": "Create an e2e app for a Nx Plugin",
+  "type": "object",
+  "properties": {
+    "pluginName": {
+      "type": "string",
+      "description": "the name of the pluging to be tested"
+    }
+  },
+  "required": ["pluginName"]
+}
