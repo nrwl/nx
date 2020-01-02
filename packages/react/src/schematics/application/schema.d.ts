@@ -13,4 +13,5 @@ export interface Schema {
   classComponent?: boolean;
   routing?: boolean;
   skipWorkspaceJson?: boolean;
+  js?: boolean;
 }

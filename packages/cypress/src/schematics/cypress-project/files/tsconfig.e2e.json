@@ -4,5 +4,5 @@
     "sourceMap": false,
     "outDir": "<%= offsetFromRoot %>dist/out-tsc"
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "src/**/*.js"]
 }

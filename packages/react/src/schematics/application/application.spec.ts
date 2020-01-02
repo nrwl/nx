@@ -549,4 +549,17 @@ describe('app', () => {
       });
     });
   });
+
+  describe('--js', () => {
+    it('generates JS files', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', js: true },
+        appTree
+      );
+
+      expect(tree.exists('/apps/my-app/src/app/app.js')).toBe(true);
+      expect(tree.exists('/apps/my-app/src/main.js')).toBe(true);
+    });
+  });
 });

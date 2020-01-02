@@ -2,6 +2,7 @@ import {
   chain,
   externalSchematic,
   move,
+  noop,
   Rule,
   schematic,
   SchematicContext,
@@ -20,38 +21,42 @@ import { StorybookStoriesSchema } from '../../../../angular/src/schematics/stori
 import { applyWithSkipExisting, parseJsonAtPath } from '../../utils/utils';
 import { CypressConfigureSchema } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
+import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 
 export default function(schema: StorybookConfigureSchema): Rule {
   return chain([
     schematic('ng-add', {}),
-    createRootStorybookDir(),
-    createLibStorybookDir(schema.name, schema.uiFramework),
+    createRootStorybookDir(schema.name, schema.js),
+    createLibStorybookDir(schema.name, schema.uiFramework, schema.js),
     configureTsConfig(schema.name),
     addStorybookTask(schema.name, schema.uiFramework),
     schema.configureCypress
       ? schematic<CypressConfigureSchema>('cypress-project', {
-          name: schema.name
+          name: schema.name,
+          js: schema.js
         })
       : () => {}
   ]);
 }
 
-function createRootStorybookDir(): Rule {
+function createRootStorybookDir(projectName: string, js: boolean): Rule {
   return (tree: Tree, context: SchematicContext) => {
     context.logger.debug('adding .storybook folder to lib');
 
-    return chain([applyWithSkipExisting(url('./root-files'), [])])(
-      tree,
-      context
-    );
+    return chain([
+      applyWithSkipExisting(url('./root-files'), [js ? toJS() : noop()])
+    ])(tree, context);
   };
 }
 
-function createLibStorybookDir(projectName: string, uiFramework: string): Rule {
+function createLibStorybookDir(
+  projectName: string,
+  uiFramework: string,
+  js: boolean
+): Rule {
   return (tree: Tree, context: SchematicContext) => {
     context.logger.debug('adding .storybook folder to lib');
     const projectConfig = getProjectConfig(tree, projectName);
-
     return chain([
       applyWithSkipExisting(url('./lib-files'), [
         template({
@@ -59,7 +64,8 @@ function createLibStorybookDir(projectName: string, uiFramework: string): Rule {
           uiFramework,
           offsetFromRoot: offsetFromRoot(projectConfig.root)
         }),
-        move(projectConfig.root)
+        move(projectConfig.root),
+        js ? toJS() : noop()
       ])
     ])(tree, context);
   };
@@ -79,7 +85,11 @@ function configureTsConfig(projectName: string): Rule {
       return tree;
     }
 
-    tsConfigContent.exclude = [...tsConfigContent.exclude, '**/*.stories.ts'];
+    tsConfigContent.exclude = [
+      ...tsConfigContent.exclude,
+      '**/*.stories.ts',
+      '**/*.stories.js'
+    ];
 
     tree.overwrite(
       tsConfigPath,

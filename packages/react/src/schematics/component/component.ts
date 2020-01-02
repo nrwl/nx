@@ -27,6 +27,7 @@ import {
   reactRouterDomVersion
 } from '../../utils/versions';
 import { assertValidStyle } from '../../utils/assertion';
+import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 
 interface NormalizedSchema extends Schema {
   projectSourceRoot: Path;
@@ -73,7 +74,8 @@ function createComponentFiles(options: NormalizedSchema): Rule {
         options.styledModule
           ? filter(file => !file.endsWith(`.${options.style}`))
           : noop(),
-        move(directory)
+        move(directory),
+        options.js ? toJS() : noop()
       ])
     );
   };
@@ -97,7 +99,10 @@ function addExportsToBarrel(options: NormalizedSchema): Rule {
       workspace.projects.get(options.project).extensions.type === 'application';
     return options.export && !isApp
       ? (host: Tree) => {
-          const indexFilePath = join(options.projectSourceRoot, 'index.ts');
+          const indexFilePath = join(
+            options.projectSourceRoot,
+            options.js ? 'index.js' : 'index.ts'
+          );
           const buffer = host.read(indexFilePath);
           if (!!buffer) {
             const indexSource = buffer!.toString('utf-8');

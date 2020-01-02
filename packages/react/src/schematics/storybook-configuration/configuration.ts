@@ -6,7 +6,8 @@ export default function(schema: StorybookConfigureSchema): Rule {
     externalSchematic('@nrwl/storybook', 'configuration', {
       name: schema.name,
       uiFramework: '@storybook/react',
-      configureCypress: schema.configureCypress
+      configureCypress: schema.configureCypress,
+      js: schema.js
     })
   ]);
 }

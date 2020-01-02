@@ -71,7 +71,7 @@ describe('lib', () => {
           '../../node_modules/@nrwl/react/typings/cssmodule.d.ts',
           '../../node_modules/@nrwl/react/typings/image.d.ts'
         ],
-        include: ['**/*.ts', '**/*.tsx']
+        include: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx']
       });
     });
 
@@ -228,7 +228,7 @@ describe('lib', () => {
           '../../../node_modules/@nrwl/react/typings/cssmodule.d.ts',
           '../../../node_modules/@nrwl/react/typings/image.d.ts'
         ],
-        include: ['**/*.ts', '**/*.tsx']
+        include: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx']
       });
     });
   });
@@ -351,6 +351,21 @@ describe('lib', () => {
       const packageJson = readJsonInTree(tree, '/libs/my-lib/package.json');
 
       expect(packageJson.name).toEqual('my-lib');
+    });
+  });
+
+  describe('--js', () => {
+    it('should generate JS files', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          js: true
+        },
+        appTree
+      );
+
+      expect(tree.exists('/libs/my-lib/src/index.js')).toBe(true);
     });
   });
 });

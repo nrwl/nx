@@ -10,6 +10,7 @@ import { parseJsonAtPath, safeFileDelete } from '../../utils/utils';
 
 export interface CypressConfigureSchema {
   name: string;
+  js?: boolean;
 }
 
 export default function(schema: CypressConfigureSchema): Rule {
@@ -17,24 +18,26 @@ export default function(schema: CypressConfigureSchema): Rule {
   return chain([
     externalSchematic('@nrwl/cypress', 'cypress-project', {
       name: e2eProjectName,
-      project: schema.name
+      project: schema.name,
+      js: schema.js
     }),
-    removeUnneededFiles(e2eProjectName),
+    removeUnneededFiles(e2eProjectName, schema.js),
     addBaseUrlToCypressConfig(e2eProjectName),
     updateAngularJsonBuilder(e2eProjectName, schema.name)
   ]);
 }
 
-function removeUnneededFiles(projectName: string): Rule {
+function removeUnneededFiles(projectName: string, js: boolean): Rule {
   return (tree: Tree, context: SchematicContext): Tree => {
     safeFileDelete(
       tree,
       getProjectConfig(tree, projectName).sourceRoot +
-        '/integration/app.spec.ts'
+        (js ? '/integration/app.spec.js' : '/integration/app.spec.ts')
     );
     safeFileDelete(
       tree,
-      getProjectConfig(tree, projectName).sourceRoot + '/support/app.po.ts'
+      getProjectConfig(tree, projectName).sourceRoot +
+        (js ? '/support/app.po.js' : '/support/app.po.ts')
     );
 
     return tree;

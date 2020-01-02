@@ -4,7 +4,7 @@
   "integrationFolder": "./src/integration",
   "modifyObstructiveCode": false,
   "pluginsFile": "./src/plugins/index",
-  "supportFile": "./src/support/index.ts",
+  "supportFile": "./src/support/index.<%= ext %>",
   "video": true,
   "videosFolder": "<%= offsetFromRoot %>dist/cypress/<%= projectRoot %>/videos",
   "screenshotsFolder": "<%= offsetFromRoot %>dist/cypress/<%= projectRoot %>/screenshots",

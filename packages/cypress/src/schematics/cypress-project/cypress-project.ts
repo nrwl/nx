@@ -3,6 +3,7 @@ import {
   chain,
   mergeWith,
   move,
+  noop,
   Rule,
   template,
   url
@@ -19,6 +20,7 @@ import {
 import { offsetFromRoot } from '@nrwl/workspace';
 import { toFileName } from '@nrwl/workspace';
 import { Schema } from './schema';
+import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 
 export interface CypressProjectSchema extends Schema {
   projectName: string;
@@ -33,9 +35,11 @@ function generateFiles(options: CypressProjectSchema): Rule {
         template({
           tmpl: '',
           ...options,
+          ext: options.js ? 'js' : 'ts',
           offsetFromRoot: offsetFromRoot(options.projectRoot)
         }),
-        move(options.projectRoot)
+        move(options.projectRoot),
+        options.js ? toJS() : noop()
       ])
     );
   };

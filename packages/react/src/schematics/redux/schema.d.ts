@@ -5,6 +5,7 @@ export interface Schema {
   project: string;
   directory: string;
   appProject: string;
+  js?: string;
 }
 
 interface NormalizedSchema extends Schema {

@@ -44,6 +44,14 @@ Type: `string`
 
 The name of the folder used to contain/group the generated Redux files.
 
+### js
+
+Default: `false`
+
+Type: `boolean`
+
+Generate JavaScript files rather than TypeScript files
+
 ### name
 
 Type: `string`

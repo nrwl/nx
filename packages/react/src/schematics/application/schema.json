@@ -115,6 +115,11 @@
       "description": "Use class components instead of functional component",
       "alias": "C",
       "default": false
+    },
+    "js": {
+      "type": "boolean",
+      "description": "Generate JavaScript files rather than TypeScript files",
+      "default": false
     }
   },
   "required": []
