@@ -29,11 +29,10 @@ export function runCommand<T extends RunArgs>(
     })
   );
 
-  const { tasksRunner, tasksOptions } = getRunner(
-    nxArgs.runner,
-    nxJson,
-    overrides
-  );
+  const { tasksRunner, tasksOptions } = getRunner(nxArgs.runner, nxJson, {
+    ...nxArgs,
+    ...overrides
+  });
   const cached = [];
   tasksRunner(tasks, tasksOptions, {
     target: nxArgs.target,
