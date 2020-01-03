@@ -28,13 +28,15 @@ import {
   readNxJson,
   readWorkspaceJson
 } from '@nrwl/workspace/src/core/file-utils';
+import { TargetProjectLocator } from '../core/project-graph/build-dependencies/target-project-locator';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(
     options: IOptions,
     private readonly projectPath?: string,
     private readonly npmScope?: string,
-    private readonly projectGraph?: ProjectGraph
+    private readonly projectGraph?: ProjectGraph,
+    private readonly targetProjectLocator?: TargetProjectLocator
   ) {
     super(options);
 
@@ -51,6 +53,13 @@ export class Rule extends Lint.Rules.AbstractRule {
       }
       this.npmScope = (global as any).npmScope;
       this.projectGraph = (global as any).projectGraph;
+
+      if (!(global as any).targetProjectLocator) {
+        (global as any).targetProjectLocator = new TargetProjectLocator(
+          this.projectGraph.nodes
+        );
+      }
+      this.targetProjectLocator = (global as any).targetProjectLocator;
     }
   }
 
@@ -61,7 +70,8 @@ export class Rule extends Lint.Rules.AbstractRule {
         this.getOptions(),
         this.projectPath,
         this.npmScope,
-        this.projectGraph
+        this.projectGraph,
+        this.targetProjectLocator
       )
     );
   }
@@ -76,7 +86,8 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     options: IOptions,
     private readonly projectPath: string,
     private readonly npmScope: string,
-    private readonly projectGraph: ProjectGraph
+    private readonly projectGraph: ProjectGraph,
+    private readonly targetProjectLocator: TargetProjectLocator
   ) {
     super(sourceFile, options);
 
@@ -132,6 +143,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       // findProjectUsingImport to take care of same prefix
       const targetProject = findProjectUsingImport(
         this.projectGraph,
+        this.targetProjectLocator,
         filePath,
         imp,
         this.npmScope

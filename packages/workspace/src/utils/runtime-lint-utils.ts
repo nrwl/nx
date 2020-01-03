@@ -7,7 +7,7 @@ import {
   ProjectGraphDependency,
   ProjectGraphNode
 } from '../core/project-graph';
-import { findTargetProjectWithImport } from '../core/project-graph/build-dependencies/find-target-project';
+import { TargetProjectLocator } from '../core/project-graph/build-dependencies/target-project-locator';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 export type DepConstraint = {
@@ -134,15 +134,15 @@ export function isAbsoluteImportIntoAnotherProject(imp: string) {
 
 export function findProjectUsingImport(
   projectGraph: ProjectGraph,
+  targetProjectLocator: TargetProjectLocator,
   filePath: string,
   imp: string,
   npmScope: string
 ) {
-  const target = findTargetProjectWithImport(
+  const target = targetProjectLocator.findProjectWithImport(
     imp,
     filePath,
-    npmScope,
-    projectGraph.nodes
+    npmScope
   );
   return projectGraph.nodes[target];
 }

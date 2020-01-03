@@ -38,7 +38,7 @@ export function resolveModuleByImport(importExpr: string, filePath: string) {
   if (!resolvedModule) {
     return;
   } else {
-    return resolvedModule.resolvedFileName.replace(appRootPath, '');
+    return resolvedModule.resolvedFileName.replace(`${appRootPath}/`, '');
   }
 }
 
