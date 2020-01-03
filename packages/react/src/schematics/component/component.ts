@@ -137,18 +137,18 @@ function normalizeOptions(
   options: Schema,
   context: SchematicContext
 ): NormalizedSchema {
+  assertValidOptions(options);
+
   const { className, fileName } = names(options.name);
   const componentFileName = options.pascalCaseFiles ? className : fileName;
   const { sourceRoot: projectSourceRoot, projectType } = getProjectConfig(
     host,
     options.project
   );
-
+  const directory = options.flat ? '' : options.directory || fileName;
   const styledModule = /^(css|scss|less|styl)$/.test(options.style)
     ? null
     : options.style;
-
-  assertValidStyle(options.style);
 
   if (options.export && projectType === 'application') {
     context.logger.warn(
@@ -156,10 +156,23 @@ function normalizeOptions(
     );
   }
 
+  return {
+    ...options,
+    directory,
+    styledModule,
+    className,
+    fileName: componentFileName,
+    projectSourceRoot
+  };
+}
+
+function assertValidOptions(options: Schema) {
+  assertValidStyle(options.style);
+
   const slashes = ['/', '\\'];
   slashes.forEach(s => {
-    if (componentFileName.indexOf(s) !== -1) {
-      const [name, ...rest] = componentFileName.split(s).reverse();
+    if (options.name.indexOf(s) !== -1) {
+      const [name, ...rest] = options.name.split(s).reverse();
       let suggestion = rest.map(x => x.toLowerCase()).join(s);
       if (options.directory) {
         suggestion = `${options.directory}${s}${suggestion}`;
@@ -169,13 +182,4 @@ function normalizeOptions(
       );
     }
   });
-
-  return {
-    ...options,
-    directory: options.directory || '',
-    styledModule,
-    className,
-    fileName: componentFileName,
-    projectSourceRoot
-  };
 }
