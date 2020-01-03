@@ -22,9 +22,11 @@ describe('component', () => {
       appTree
     );
 
-    expect(tree.exists('libs/my-lib/src/lib/hello.tsx')).toBeTruthy();
-    expect(tree.exists('libs/my-lib/src/lib/hello.spec.tsx')).toBeTruthy();
-    expect(tree.exists('libs/my-lib/src/lib/hello.css')).toBeTruthy();
+    expect(tree.exists('libs/my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
+    expect(
+      tree.exists('libs/my-lib/src/lib/hello/hello.spec.tsx')
+    ).toBeTruthy();
+    expect(tree.exists('libs/my-lib/src/lib/hello/hello.css')).toBeTruthy();
   });
 
   it('should generate files for an app', async () => {
@@ -34,9 +36,11 @@ describe('component', () => {
       appTree
     );
 
-    expect(tree.exists('apps/my-app/src/app/hello.tsx')).toBeTruthy();
-    expect(tree.exists('apps/my-app/src/app/hello.spec.tsx')).toBeTruthy();
-    expect(tree.exists('apps/my-app/src/app/hello.css')).toBeTruthy();
+    expect(tree.exists('apps/my-app/src/app/hello/hello.tsx')).toBeTruthy();
+    expect(
+      tree.exists('apps/my-app/src/app/hello/hello.spec.tsx')
+    ).toBeTruthy();
+    expect(tree.exists('apps/my-app/src/app/hello/hello.css')).toBeTruthy();
   });
 
   describe('--export', () => {
@@ -72,9 +76,11 @@ describe('component', () => {
         { name: 'hello', project: projectName, pascalCaseFiles: true },
         appTree
       );
-      expect(tree.exists('libs/my-lib/src/lib/Hello.tsx')).toBeTruthy();
-      expect(tree.exists('libs/my-lib/src/lib/Hello.spec.tsx')).toBeTruthy();
-      expect(tree.exists('libs/my-lib/src/lib/Hello.css')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/hello/Hello.tsx')).toBeTruthy();
+      expect(
+        tree.exists('libs/my-lib/src/lib/hello/Hello.spec.tsx')
+      ).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/hello/Hello.css')).toBeTruthy();
     });
   });
 
@@ -87,11 +93,13 @@ describe('component', () => {
       );
 
       expect(
-        tree.exists('libs/my-lib/src/lib/hello.styled-components')
+        tree.exists('libs/my-lib/src/lib/hello/hello.styled-components')
       ).toBeFalsy();
-      expect(tree.exists('libs/my-lib/src/lib/hello.tsx')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
 
-      const content = tree.read('libs/my-lib/src/lib/hello.tsx').toString();
+      const content = tree
+        .read('libs/my-lib/src/lib/hello/hello.tsx')
+        .toString();
       expect(content).toContain('styled-components');
       expect(content).toContain('<StyledHello>');
     });
@@ -117,11 +125,13 @@ describe('component', () => {
       );
 
       expect(
-        tree.exists('libs/my-lib/src/lib/hello.@emotion/styled')
+        tree.exists('libs/my-lib/src/lib/hello/hello.@emotion/styled')
       ).toBeFalsy();
-      expect(tree.exists('libs/my-lib/src/lib/hello.tsx')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
 
-      const content = tree.read('libs/my-lib/src/lib/hello.tsx').toString();
+      const content = tree
+        .read('libs/my-lib/src/lib/hello/hello.tsx')
+        .toString();
       expect(content).toContain('@emotion/styled');
       expect(content).toContain('<StyledHello>');
     });
@@ -147,7 +157,9 @@ describe('component', () => {
         appTree
       );
 
-      const content = tree.read('libs/my-lib/src/lib/hello.tsx').toString();
+      const content = tree
+        .read('libs/my-lib/src/lib/hello/hello.tsx')
+        .toString();
       expect(content).toContain('react-router-dom');
       expect(content).toMatch(/<Route\s*path="\/"/);
       expect(content).toMatch(/<Link\s*to="\/"/);

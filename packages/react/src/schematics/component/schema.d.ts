@@ -9,4 +9,5 @@ export interface Schema {
   classComponent?: boolean;
   routing?: boolean;
   js?: boolean;
+  flat?: boolean;
 }

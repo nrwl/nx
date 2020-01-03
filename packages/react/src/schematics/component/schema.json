@@ -100,7 +100,12 @@
     },
     "js": {
       "type": "boolean",
-      "description": "Generate JavaScript files rather than TypeScript files",
+      "description": "Generate JavaScript files rather than TypeScript files.",
+      "default": false
+    },
+    "flat": {
+      "type": "boolean",
+      "description": "Create component at the source root rather than its own directory.",
       "default": false
     }
   },

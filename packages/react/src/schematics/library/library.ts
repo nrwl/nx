@@ -82,6 +82,7 @@ export default function(schema: Schema): Rule {
       externalSchematic('@nrwl/react', 'component', {
         name: options.name,
         project: options.name,
+        flat: true,
         style: options.style,
         skipTests: options.unitTestRunner === 'none',
         export: true,
