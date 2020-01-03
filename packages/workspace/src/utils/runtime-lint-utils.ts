@@ -1,12 +1,13 @@
+import { normalize } from '@angular-devkit/core';
 import * as path from 'path';
+import { FileData } from '../core/file-utils';
 import {
   DependencyType,
-  ProjectGraphNode,
+  ProjectGraph,
   ProjectGraphDependency,
-  ProjectGraph
+  ProjectGraphNode
 } from '../core/project-graph';
-import { normalize } from '@angular-devkit/core';
-import { FileData, normalizedProjectRoot } from '../core/file-utils';
+import { findTargetProjectWithImport } from '../core/project-graph/build-dependencies/find-target-project';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 export type DepConstraint = {
@@ -133,25 +134,17 @@ export function isAbsoluteImportIntoAnotherProject(imp: string) {
 
 export function findProjectUsingImport(
   projectGraph: ProjectGraph,
-  npmScope: string,
-  imp: string
+  filePath: string,
+  imp: string,
+  npmScope: string
 ) {
-  const unscopedImport = imp.substring(npmScope.length + 2);
-  let bestMatchedRoot: string = '';
-  let bestMatch: ProjectGraphNode = undefined;
-  Object.values(projectGraph.nodes).forEach(n => {
-    const normalizedRoot = normalizedProjectRoot(n);
-    if (
-      unscopedImport === normalizedRoot ||
-      unscopedImport.startsWith(`${normalizedRoot}/`)
-    ) {
-      if (normalizedRoot.length > bestMatchedRoot.length) {
-        bestMatchedRoot = normalizedRoot;
-        bestMatch = n;
-      }
-    }
-  });
-  return bestMatch;
+  const target = findTargetProjectWithImport(
+    imp,
+    filePath,
+    npmScope,
+    projectGraph.nodes
+  );
+  return projectGraph.nodes[target];
 }
 
 export function isCircular(

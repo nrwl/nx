@@ -44,7 +44,6 @@ forEachCli(() => {
         `
       import '../../../libs/${mylib}';
       import '@proj/${lazylib}';
-      import '@proj/${mylib}/deep';
       import '@proj/${myapp2}';
       import '@proj/${invalidtaglib}';
       import '@proj/${validtaglib}';
@@ -56,7 +55,6 @@ forEachCli(() => {
       const out = runCLI(`lint ${myapp}`, { silenceError: true });
       expect(out).toContain('library imports must start with @proj/');
       expect(out).toContain('imports of lazy-loaded libraries are forbidden');
-      expect(out).toContain('deep imports into libraries are forbidden');
       expect(out).toContain('imports of apps are forbidden');
       expect(out).toContain(
         'A project tagged with "validtag" can only depend on libs tagged with "validtag"'
