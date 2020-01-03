@@ -60,7 +60,7 @@ const angularCliVersion = 'ANGULAR_CLI_VERSION';
 const prettierVersion = 'PRETTIER_VERSION';
 
 const parsedArgs = yargsParser(process.argv, {
-  string: ['cli', 'preset', 'appName'],
+  string: ['cli', 'preset', 'appName', 'interactive'],
   alias: {
     appName: 'app-name'
   },
@@ -78,7 +78,7 @@ determineWorkspaceName(parsedArgs).then(name => {
       return determineStyle(preset).then(style => {
         return determineCli(preset, parsedArgs).then(cli => {
           const tmpDir = createSandbox(packageManager, cli);
-          createApp(tmpDir, cli, parsedArgs, name, preset, appName, style);
+          createApp(tmpDir, cli, parsedArgs, name, preset, appName, style, parsedArgs.interactive);
           showCliWarning(preset, parsedArgs);
           showNxWarning(name);
           pointToTutorialAndCourse(preset);
@@ -107,6 +107,8 @@ function showHelp() {
     appName                   the name of the application created by some presets  
 
     cli                       CLI to power the Nx workspace (options: "nx", "angular")
+
+    interactive               Enable interactive mode when using presets (boolean)
 
     [new workspace options]   any 'new workspace' options
 `);
@@ -390,7 +392,8 @@ function createApp(
   name: string,
   preset: Preset,
   appName: string,
-  style: string | null
+  style: string | null,
+  interactive: boolean
 ) {
   // creating the app itself
   const args = [
@@ -402,16 +405,18 @@ function createApp(
           !a.startsWith('--cli') &&
           !a.startsWith('--preset') &&
           !a.startsWith('--appName') &&
-          !a.startsWith('--app-name')
+          !a.startsWith('--app-name') &&
+          !a.startsWith('--interactive')
       ) // not used by the new command
       .map(a => `"${a}"`)
   ].join(' ');
 
   const appNameArg = appName ? ` --appName="${appName}"` : ``;
   const styleArg = style ? ` --style="${style}"` : ``;
+  const interactiveArg = interactive ? ` --interactiveMode=true` : ``;
 
   console.log(
-    `new ${args} --preset="${preset}"${appNameArg}${styleArg} --collection=@nrwl/workspace`
+    `new ${args} --preset="${preset}"${appNameArg}${styleArg}${interactiveArg} --collection=@nrwl/workspace`
   );
   execSync(
     `"${path.join(
@@ -419,7 +424,7 @@ function createApp(
       'node_modules',
       '.bin',
       cli.command
-    )}" new ${args} --preset="${preset}"${appNameArg}${styleArg} --collection=@nrwl/workspace`,
+    )}" new ${args} --preset="${preset}"${appNameArg}${styleArg}${interactiveArg} --collection=@nrwl/workspace`,
     {
       stdio: [0, 1, 2]
     }

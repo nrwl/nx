@@ -86,6 +86,11 @@
       "type": "string",
       "enum": ["nx", "angular"],
       "default": "nx"
+    },
+    "interactiveMode": {
+      "type": "boolean",
+      "description": "Runs the preset with interactive prompts enabled.",
+      "default": false
     }
   }
 }

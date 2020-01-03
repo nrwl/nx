@@ -43,7 +43,7 @@ function createPreset(options: Schema): Rule {
           name: options.name,
           style: options.style
         },
-        { interactive: false }
+        { interactive: options.interactiveMode }
       ),
       setDefaultCollection('@nrwl/angular')
     ]);
@@ -57,7 +57,7 @@ function createPreset(options: Schema): Rule {
           style: options.style,
           linter
         },
-        { interactive: false }
+        { interactive: options.interactiveMode }
       ),
       setDefaultCollection('@nrwl/react')
     ]);
@@ -71,7 +71,7 @@ function createPreset(options: Schema): Rule {
           style: options.style,
           linter
         },
-        { interactive: false }
+        { interactive: options.interactiveMode }
       ),
       setDefaultCollection('@nrwl/next')
     ]);
@@ -85,7 +85,7 @@ function createPreset(options: Schema): Rule {
           style: options.style,
           linter
         },
-        { interactive: false }
+        { interactive: options.interactiveMode }
       ),
       addDepsToPackageJson(
         {},
@@ -105,7 +105,7 @@ function createPreset(options: Schema): Rule {
         '@nrwl/angular',
         'application',
         { name: options.name, style: options.style },
-        { interactive: false }
+        { interactive: options.interactiveMode }
       ),
       externalSchematic(
         '@nrwl/nest',
@@ -114,7 +114,7 @@ function createPreset(options: Schema): Rule {
           name: 'api',
           frontendProject: options.name
         },
-        { interactive: false }
+        { interactive: options.interactiveMode }
       ),
       schematic('library', { name: 'api-interfaces' }, { interactive: false }),
       setDefaultCollection('@nrwl/angular'),
@@ -130,7 +130,7 @@ function createPreset(options: Schema): Rule {
           style: options.style,
           linter
         },
-        { interactive: false }
+        { interactive: options.interactiveMode }
       ),
       externalSchematic(
         '@nrwl/express',
@@ -140,7 +140,7 @@ function createPreset(options: Schema): Rule {
           frontendProject: options.name,
           linter
         },
-        { interactive: false }
+        { interactive: options.interactiveMode }
       ),
       schematic(
         'library',

@@ -110,6 +110,11 @@
     "appName": {
       "type": "string",
       "description": "Application name."
+    },
+    "interactiveMode": {
+      "type": "boolean",
+      "description": "Runs the preset with interactive prompts enabled.",
+      "default": false
     }
   }
 }
