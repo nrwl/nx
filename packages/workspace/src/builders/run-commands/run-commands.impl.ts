@@ -14,6 +14,7 @@ try {
 
 export interface RunCommandsBuilderOptions extends JsonObject {
   commands: { command: string }[];
+  color?: boolean;
   parallel?: boolean;
   readyWhen?: string;
   args?: string;
@@ -67,12 +68,15 @@ function run(
 
 async function runInParallel(options: RunCommandsBuilderOptions) {
   const procs = options.commands.map(c =>
-    createProcess(c.command, options.readyWhen, options.parsedArgs).then(
-      result => ({
-        result,
-        command: c.command
-      })
-    )
+    createProcess(
+      c.command,
+      options.readyWhen,
+      options.parsedArgs,
+      options.color
+    ).then(result => ({
+      result,
+      command: c.command
+    }))
   );
 
   if (options.readyWhen) {
@@ -111,7 +115,8 @@ async function runSerially(
         const success = await createProcess(
           c.command,
           options.readyWhen,
-          options.parsedArgs
+          options.parsedArgs,
+          options.color
         );
         return !success ? c.command : null;
       } else {
@@ -133,11 +138,15 @@ async function runSerially(
 function createProcess(
   command: string,
   readyWhen: string,
-  parsedArgs: { [key: string]: string }
+  parsedArgs: { [key: string]: string },
+  color: boolean
 ): Promise<boolean> {
   command = transformCommand(command, parsedArgs);
   return new Promise(res => {
-    const childProcess = exec(command, { maxBuffer: TEN_MEGABYTES });
+    const childProcess = exec(command, {
+      maxBuffer: TEN_MEGABYTES,
+      env: { ...process.env, FORCE_COLOR: `${color}` }
+    });
     /**
      * Ensure the child process is killed when the parent exits
      */
