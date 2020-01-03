@@ -13,6 +13,7 @@ jest.mock('../../utils/app-root', () => ({ appRootPath: '/root' }));
 describe('project graph', () => {
   let packageJson: any;
   let workspaceJson: any;
+  let tsConfigJson: any;
   let nxJson: NxJson;
   let filesJson: any;
   let filesAtMasterJson: any;
@@ -82,6 +83,15 @@ describe('project graph', () => {
         util: { tags: [] }
       }
     };
+    tsConfigJson = {
+      compilerOptions: {
+        baseUrl: '.',
+        paths: {
+          '@nrwl/ui': ['libs/ui/src/index.ts'],
+          '@nrwl/util': ['libs/util/src/index.ts']
+        }
+      }
+    };
     filesJson = {
       './apps/api/src/index.ts': stripIndents`
         console.log('starting server');
@@ -100,7 +110,8 @@ describe('project graph', () => {
       `,
       './package.json': JSON.stringify(packageJson),
       './nx.json': JSON.stringify(nxJson),
-      './workspace.json': JSON.stringify(workspaceJson)
+      './workspace.json': JSON.stringify(workspaceJson),
+      './tsconfig.json': JSON.stringify(tsConfigJson)
     };
     files = Object.keys(filesJson).map(f => ({
       file: f,
