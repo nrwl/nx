@@ -48,7 +48,8 @@ function generateFiles(options: CypressProjectSchema): Rule {
 function updateNxJson(options: CypressProjectSchema): Rule {
   return updateJsonInTree<NxJson>('nx.json', json => {
     json.projects[options.projectName] = {
-      tags: []
+      tags: [],
+      implicitDependencies: [options.project]
     };
     return json;
   });

@@ -37,7 +37,8 @@ describe('app', () => {
             tags: ['one', 'two']
           },
           'my-app-e2e': {
-            tags: []
+            tags: [],
+            implicitDependencies: ['my-app']
           }
         }
       });

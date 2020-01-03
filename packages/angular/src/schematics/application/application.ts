@@ -26,7 +26,8 @@ import {
   toFileName,
   updateJsonInTree,
   updateWorkspace,
-  addLintFiles
+  addLintFiles,
+  NxJson
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import init from '../init/init';
@@ -545,6 +546,9 @@ function updateProject(options: NormalizedSchema): Rule {
         };
         if (options.e2eTestRunner === 'protractor') {
           resultJson.projects[options.e2eProjectName] = { tags: [] };
+          resultJson.projects[options.e2eProjectName].implicitDependencies = [
+            options.name
+          ];
         }
         return resultJson;
       }),
@@ -697,14 +701,6 @@ export default function(schema: Schema): Rule {
       options.e2eTestRunner === 'protractor'
         ? updateE2eProject(options)
         : noop(),
-      options.e2eTestRunner === 'cypress'
-        ? externalSchematic('@nrwl/cypress', 'cypress-project', {
-            name: options.e2eProjectName,
-            directory: options.directory,
-            project: options.name,
-            linter: options.linter
-          })
-        : noop(),
       move(appProjectRoot, options.appProjectRoot),
       updateProject(options),
       updateComponentTemplate(options),
@@ -723,6 +719,14 @@ export default function(schema: Schema): Rule {
       options.unitTestRunner === 'karma'
         ? schematic('karma-project', {
             project: options.name
+          })
+        : noop(),
+      options.e2eTestRunner === 'cypress'
+        ? externalSchematic('@nrwl/cypress', 'cypress-project', {
+            name: options.e2eProjectName,
+            directory: options.directory,
+            project: options.name,
+            linter: options.linter
           })
         : noop(),
       options.backendProject ? addProxyConfig(options) : noop(),
