@@ -10,6 +10,7 @@ import { extname } from 'path';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName
 } from '../../src/rules/enforce-module-boundaries';
+import { TargetProjectLocator } from '@nrwl/workspace/src/core/project-graph/build-dependencies/target-project-locator';
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('@nrwl/workspace/src/utils/app-root', () => ({
   appRootPath: '/root'
@@ -824,6 +825,9 @@ function runRule(
   (global as any).projectPath = `${process.cwd()}/proj`;
   (global as any).npmScope = 'mycompany';
   (global as any).projectGraph = projectGraph;
+  (global as any).targetProjectLocator = new TargetProjectLocator(
+    projectGraph.nodes
+  );
 
   const config = {
     ...baseConfig,

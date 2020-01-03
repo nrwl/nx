@@ -25,6 +25,7 @@ import {
   readNxJson,
   readWorkspaceJson
 } from '@nrwl/workspace/src/core/file-utils';
+import { TargetProjectLocator } from '@nrwl/workspace/src/core/project-graph/build-dependencies/target-project-locator';
 
 type Options = [
   {
@@ -100,6 +101,15 @@ export default createESLintRule<Options, MessageIds>({
     }
     const npmScope = (global as any).npmScope;
     const projectGraph = (global as any).projectGraph as ProjectGraph;
+
+    if (!(global as any).targetProjectLocator) {
+      (global as any).targetProjectLocator = new TargetProjectLocator(
+        projectGraph.nodes
+      );
+    }
+    const targetProjectLocator = (global as any)
+      .targetProjectLocator as TargetProjectLocator;
+
     return {
       ImportDeclaration(node: TSESTree.ImportDeclaration) {
         const imp = (node.source as TSESTree.Literal).value as string;
@@ -141,6 +151,7 @@ export default createESLintRule<Options, MessageIds>({
           // findProjectUsingImport to take care of same prefix
           const targetProject = findProjectUsingImport(
             projectGraph,
+            targetProjectLocator,
             sourceFilePath,
             imp,
             npmScope

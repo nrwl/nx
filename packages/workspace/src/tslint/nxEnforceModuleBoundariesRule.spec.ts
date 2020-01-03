@@ -8,6 +8,7 @@ import {
   ProjectType
 } from '../core/project-graph';
 import { Rule } from './nxEnforceModuleBoundariesRule';
+import { TargetProjectLocator } from '../core/project-graph/build-dependencies/target-project-locator';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('../utils/app-root', () => ({ appRootPath: '/root' }));
@@ -821,7 +822,8 @@ function runRule(
     options,
     `${process.cwd()}/proj`,
     'mycompany',
-    projectGraph
+    projectGraph,
+    new TargetProjectLocator(projectGraph.nodes)
   );
   return rule.apply(sourceFile);
 }
