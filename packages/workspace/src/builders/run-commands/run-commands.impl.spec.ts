@@ -4,6 +4,7 @@ import { readFileSync } from 'fs';
 import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { Architect } from '@angular-devkit/architect';
 import { join } from 'path';
+import { TEN_MEGABYTES } from '@nrwl/workspace/src/core/file-utils';
 
 function readFile(f: string) {
   return readFileSync(f)
@@ -212,5 +213,50 @@ describe('Command Runner Builder', () => {
 
     expect(result).toEqual(jasmine.objectContaining({ success: true }));
     expect(readFile(f)).toEqual('value');
+  });
+
+  describe('--color', () => {
+    it('should set FORCE_COLOR=true', async () => {
+      const exec = spyOn(require('child_process'), 'exec').and.callThrough();
+      const run = await architect.scheduleBuilder(
+        '@nrwl/workspace:run-commands',
+        {
+          commands: [
+            {
+              command: `echo 'Hello World'`
+            }
+          ]
+        }
+      );
+
+      await run.result;
+
+      expect(exec).toHaveBeenCalledWith(`echo 'Hello World'`, {
+        maxBuffer: TEN_MEGABYTES,
+        env: { ...process.env, FORCE_COLOR: `false` }
+      });
+    });
+
+    it('should set FORCE_COLOR=false when running with --color', async () => {
+      const exec = spyOn(require('child_process'), 'exec').and.callThrough();
+      const run = await architect.scheduleBuilder(
+        '@nrwl/workspace:run-commands',
+        {
+          commands: [
+            {
+              command: `echo 'Hello World'`
+            }
+          ],
+          color: true
+        }
+      );
+
+      await run.result;
+
+      expect(exec).toHaveBeenCalledWith(`echo 'Hello World'`, {
+        maxBuffer: TEN_MEGABYTES,
+        env: { ...process.env, FORCE_COLOR: `true` }
+      });
+    });
   });
 });

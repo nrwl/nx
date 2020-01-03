@@ -29,6 +29,11 @@
     "args": {
       "type": "string",
       "description": "Extra arguments. You can pass them as follows: ng run project:target --args='--wait=100'. You can them use {args.wait} syntax to interpolate them in the workspace config file."
+    },
+    "color": {
+      "type": "boolean",
+      "description": "Use colors when showing output of command",
+      "default": false
     }
   },
   "required": ["commands"]
