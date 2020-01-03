@@ -128,9 +128,13 @@ export class TaskOrchestrator {
       });
 
       p.on('close', code => {
-        this.cache.put(task, out.join(''), taskOutputs).then(() => {
+        if (code === 0) {
+          this.cache.put(task, out.join(''), taskOutputs).then(() => {
+            res(code);
+          });
+        } else {
           res(code);
-        });
+        }
       });
     });
   }

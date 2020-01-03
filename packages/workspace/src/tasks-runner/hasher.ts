@@ -1,13 +1,15 @@
-import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
+import { ProjectGraph } from '../core/project-graph';
 import { NxJson } from '../core/shared-interfaces';
 import { Task } from './tasks-runner';
 import { statSync } from 'fs';
+
 const hasha = require('hasha');
 
 export class Hasher {
   static version = '1.0';
-  implicitDependencies: string;
-  hashes: { [k: string]: string } = {};
+  implicitDependencies: Promise<string>;
+  fileHashes = new FileHashes();
+  projectHashes = new ProjectHashes(this.projectGraph, this.fileHashes);
 
   constructor(
     private readonly projectGraph: ProjectGraph,
@@ -15,9 +17,7 @@ export class Hasher {
   ) {}
 
   async hash(task: Task): Promise<string> {
-    const ps = await Promise.all(
-      this.traverseInDepthFirstOrder(task).map(p => this.hashProjectNode(p))
-    );
+    const hash = await this.projectHashes.hashProject(task.target.project);
     const implicits = await this.implicitDepsHash();
     return hasha(
       [
@@ -27,39 +27,10 @@ export class Hasher {
         task.target.configuration || '',
         JSON.stringify(task.overrides),
         implicits,
-        ...ps
+        hash
       ],
       { algorithm: 'sha256' }
     );
-  }
-
-  private traverseInDepthFirstOrder(task: Task): ProjectGraphNode[] {
-    const r = [];
-    this.traverseNode(task.target.project, r);
-    return r.map(rr => this.projectGraph.nodes[rr]);
-  }
-
-  private traverseNode(project: string, acc: string[]): void {
-    if (acc.indexOf(project) > -1) return;
-    acc.push(project);
-    (this.projectGraph.dependencies[project] || [])
-      .map(t => t.target)
-      .forEach(r => {
-        this.traverseNode(r, acc);
-      });
-  }
-
-  private async hashProjectNode(p: ProjectGraphNode) {
-    if (this.hashes[p.name]) {
-      return this.hashes[p.name];
-    } else {
-      const values = await Promise.all(
-        p.data.files.map(f => this.readFileContents(f.file))
-      );
-      const r = hasha(values, { algorithm: 'sha256' });
-      this.hashes[p.name] = r;
-      return r;
-    }
   }
 
   private async implicitDepsHash() {
@@ -67,16 +38,84 @@ export class Hasher {
 
     const values = await Promise.all([
       ...Object.keys(this.nxJson.implicitDependencies).map(r =>
-        this.readFileContents(r)
+        this.fileHashes.hashFile(r)
       ),
-      this.readFileContents('package-lock.json'),
-      this.readFileContents('yarn.lock')
+      this.fileHashes.hashFile('package-lock.json'),
+      this.fileHashes.hashFile('yarn.lock')
     ]);
     this.implicitDependencies = hasha(values, { algorithm: 'sha256' });
     return this.implicitDependencies;
   }
+}
 
-  private readFileContents(path: string): Promise<string> {
+export class ProjectHashes {
+  projectHashes: { [projectName: string]: Promise<string> } = {};
+
+  constructor(
+    private readonly projectGraph: ProjectGraph,
+    private readonly fileHashes: FileHashes
+  ) {}
+
+  async hashProject(projectName: string) {
+    if (!this.projectHashes[projectName]) {
+      this.projectHashes[projectName] = new Promise(async res => {
+        const deps = (this.projectGraph.dependencies[projectName] || []).map(
+          t => this.hashProject(t.target)
+        );
+        const sources = this.hashProjectNodeSource(projectName);
+        res(hasha(await Promise.all([...deps, sources])));
+      });
+    }
+    return this.projectHashes[projectName];
+  }
+
+  private async hashProjectNodeSource(projectName: string) {
+    const p = this.projectGraph.nodes[projectName];
+    const values = await Promise.all(
+      p.data.files.map(f => this.fileHashes.hashFile(f.file))
+    );
+    return hasha(values, { algorithm: 'sha256' });
+  }
+}
+
+export class FileHashes {
+  private queue = [];
+  private numberOfConcurrentReads = 0;
+  private fileHashes: { [path: string]: Promise<string> } = {};
+  private resolvers: { [path: string]: Function } = {};
+
+  async hashFile(path: string) {
+    if (!this.fileHashes[path]) {
+      this.fileHashes[path] = new Promise(res => {
+        this.resolvers[path] = res;
+        this.pushFileIntoQueue(path);
+      });
+    }
+    return this.fileHashes[path];
+  }
+
+  private pushFileIntoQueue(path: string) {
+    this.queue.push(path);
+    if (this.numberOfConcurrentReads < 2000) {
+      this.numberOfConcurrentReads++;
+      this.takeFromQueue();
+    }
+  }
+
+  private takeFromQueue() {
+    if (this.queue.length > 0) {
+      const path = this.queue.pop();
+      this.processPath(path)
+        .then(value => {
+          this.resolvers[path](value);
+        })
+        .then(() => this.takeFromQueue());
+    } else {
+      this.numberOfConcurrentReads--;
+    }
+  }
+
+  private processPath(path: string) {
     try {
       const stats = statSync(path);
       const fileSizeInMegabytes = stats.size / 1000000;
