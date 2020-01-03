@@ -1975,6 +1975,30 @@
     "@bazel/bazel-linux_x64" "1.2.0"
     "@bazel/bazel-win32_x64" "1.2.0"
 
+"@bazel/buildozer-darwin_x64@0.29.0":
+  version "0.29.0"
+  resolved "https://registry.yarnpkg.com/@bazel/buildozer-darwin_x64/-/buildozer-darwin_x64-0.29.0.tgz#d7b907d96b763f6c8401a664b41c4b0b9efb8a2c"
+  integrity sha512-mXIgemdvCbhHpcOFQzOVLgi/ukogB5NtXFGRQ/jBM5tVv3cbqB7CnlfzA2tNB4FLIGtz5P95EuD2zYi3KUy9Nw==
+
+"@bazel/buildozer-linux_x64@0.29.0":
+  version "0.29.0"
+  resolved "https://registry.yarnpkg.com/@bazel/buildozer-linux_x64/-/buildozer-linux_x64-0.29.0.tgz#c118dd53d6293c517bb8bb71c542a14b7f9f845a"
+  integrity sha512-AZ84DpmGYcuE1C12RjDvvr3K/Jmw0jkuxA0aZHiuEL8+jymBx5UIfpR0HJxGXq4ZLINPOTbdknsLah+ONyClZA==
+
+"@bazel/buildozer-win32_x64@0.29.0":
+  version "0.29.0"
+  resolved "https://registry.yarnpkg.com/@bazel/buildozer-win32_x64/-/buildozer-win32_x64-0.29.0.tgz#440b6cd5ac19f29c92ab8753f3c3a3b11183d348"
+  integrity sha512-yItrsCcUHz/eh5vORBx1g/Hcz4K+uSSq8esiJelBoK5Zxrh4noOLc+ik/8VHTrfXXIa5xu/aWikNMQO22lYh9g==
+
+"@bazel/buildozer@^0.29.0":
+  version "0.29.0"
+  resolved "https://registry.yarnpkg.com/@bazel/buildozer/-/buildozer-0.29.0.tgz#31e3d716011de064aaf3de48ae31588cdfc457ff"
+  integrity sha512-+iVFqueCDSikFRnuwn1UF4xUpoo8ry0spoLVQK6rIHRD0k6XBpHQsPIkIV7OTzzoCw24uF8msdGZY+kiMOcH2Q==
+  optionalDependencies:
+    "@bazel/buildozer-darwin_x64" "0.29.0"
+    "@bazel/buildozer-linux_x64" "0.29.0"
+    "@bazel/buildozer-win32_x64" "0.29.0"
+
 "@bazel/hide-bazel-files@latest":
   version "0.42.3"
   resolved "https://registry.yarnpkg.com/@bazel/hide-bazel-files/-/hide-bazel-files-0.42.3.tgz#967e24b8fdc7ce96d1dbc43557ec6457ccf6d0cd"
