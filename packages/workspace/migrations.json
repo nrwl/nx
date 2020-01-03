@@ -34,6 +34,11 @@
       "version": "8.10.0-beta.1",
       "description": "Fix rules in `tslint.json`",
       "factory": "./src/migrations/update-8-10-0/fix-tslint-json"
+    },
+    "add-implicit-e2e-deps": {
+      "version": "8.12.0-beta.1",
+      "description": "Add implicit e2e dependencies",
+      "factory": "./src/migrations/update-8-12-0/add-implicit-e2e-deps"
     }
   },
   "packageJsonUpdates": {

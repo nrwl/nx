@@ -1,7 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
-import { readJsonInTree, Linter } from '@nrwl/workspace';
+import { readJsonInTree, Linter, NxJson } from '@nrwl/workspace';
 
 describe('schematic:cypress-project', () => {
   let appTree: Tree;
@@ -86,6 +86,20 @@ describe('schematic:cypress-project', () => {
           tsConfig: ['apps/my-app-e2e/tsconfig.e2e.json'],
           exclude: ['**/node_modules/**', '!apps/my-app-e2e/**']
         }
+      });
+    });
+
+    it('should update nx.json', async () => {
+      const tree = await runSchematic(
+        'cypress-project',
+        { name: 'my-app-e2e', project: 'my-app', linter: Linter.EsLint },
+        appTree
+      );
+
+      const nxJson = readJsonInTree<NxJson>(tree, 'nx.json');
+      expect(nxJson.projects['my-app-e2e']).toEqual({
+        tags: [],
+        implicitDependencies: ['my-app']
       });
     });
 
