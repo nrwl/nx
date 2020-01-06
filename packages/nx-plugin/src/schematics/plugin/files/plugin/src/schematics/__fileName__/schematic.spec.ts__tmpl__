@@ -7,7 +7,7 @@ import { <%= className %>SchematicSchema } from './schema';
 
 describe('<%= name %> schematic', () => {
   let appTree: Tree;
-  let options: <%= className %>SchematicSchema = { name: 'test' };
+  const options: <%= className %>SchematicSchema = { name: 'test' };
 
   const testRunner = new SchematicTestRunner(
     '@<%= npmScope %>/<%= name %>',

@@ -1,5 +1,5 @@
 {
-    "name": "@<%= npmScope %>/<%= name %>",
+    "name": "<%= npmPackageName %>",
     "version": "0.0.1",
     "main": "src/index.js",
     "schematics": "src/collection.json",

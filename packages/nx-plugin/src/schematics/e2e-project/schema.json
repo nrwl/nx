@@ -6,7 +6,23 @@
     "pluginName": {
       "type": "string",
       "description": "the name of the pluging to be tested"
+    },
+    "npmPackageName": {
+      "type": "string",
+      "description": "the name of the package that would be published to NPM"
+    },
+    "pluginOutputPath": {
+      "type": "string",
+      "description": "the output path of the plugin after it builds"
+    },
+    "jestConfig": {
+      "type": "string",
+      "description": "Jest config file"
+    },
+    "tsSpecConfig": {
+      "type": "string",
+      "description": "Spec tsconfig file"
     }
   },
-  "required": ["pluginName"]
+  "required": ["pluginName", "npmPackageName"]
 }

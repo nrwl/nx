@@ -6,7 +6,15 @@
     "target": {
       "type": "string",
       "description": "the target Nx Plugin project and build"
+    },
+    "jestConfig": {
+      "type": "string",
+      "description": "Jest config file"
+    },
+    "tsSpecConfig": {
+      "type": "string",
+      "description": "Spec tsconfig file"
     }
   },
-  "required": ["target"]
+  "required": ["target", "jestConfig", "tsSpecConfig"]
 }

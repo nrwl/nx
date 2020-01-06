@@ -1,5 +1,0 @@
-describe('create <%= pluginName %> playground', () => {
-    it('create <%= pluginName %> playground', () => {
-        // createPlayground();
-    })
-})

@@ -4,7 +4,7 @@ forEachCli(currentCLIName => {
   const linter = currentCLIName === 'angular' ? 'tslint' : 'eslint';
 
   describe('Nx Plugin', () => {
-    it('should be able to a Nx Plugin ', async done => {
+    it('should be able to generate a Nx Plugin ', async done => {
       ensureProject();
       const plugin = uniq('plugin');
 

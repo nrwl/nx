@@ -36,6 +36,7 @@ export interface NormalizedSchema extends Schema {
   projectDirectory: string;
   parsedTags: string[];
   npmScope: string;
+  npmPackageName: string;
 }
 
 export default function(schema: NormalizedSchema): Rule {
@@ -50,9 +51,11 @@ export default function(schema: NormalizedSchema): Rule {
       addFiles(options),
       updateWorkspaceJson(options),
       updateTsConfig(options),
-      // schematic('playground-project', {
-      //   pluginName: options.name
-      // }),
+      schematic('e2e-project', {
+        pluginName: options.name,
+        pluginOutputPath: `dist/libs/${options.projectDirectory}`,
+        npmPackageName: options.npmPackageName
+      }),
       formatFiles(options)
     ]);
   };
@@ -73,7 +76,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const parsedTags = options.tags
     ? options.tags.split(',').map(s => s.trim())
     : [];
-
+  const npmPackageName = `@${npmScope}/${name}`;
   const normalized: NormalizedSchema = {
     ...options,
     fileName,
@@ -81,7 +84,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     name: projectName,
     projectRoot,
     projectDirectory,
-    parsedTags
+    parsedTags,
+    npmPackageName
   };
 
   return normalized;
@@ -134,14 +138,6 @@ function updateWorkspaceJson(options: NormalizedSchema): Rule {
         ]
       );
     }
-
-    targets.add({
-      name: 'playground',
-      builder: '@nrwl/nx-plugin:playground',
-      options: {
-        target: `${options.name}:build`
-      }
-    });
   });
 }
 

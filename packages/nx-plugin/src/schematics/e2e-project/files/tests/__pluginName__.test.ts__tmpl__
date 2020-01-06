@@ -1,0 +1,8 @@
+import { ensureProject, forEachCli } from '@nrwl/nx-plugin/testing';
+forEachCli(() => {
+    describe('create <%= pluginName %> playground', () => {
+        it('create <%= pluginName %> playground', () => {
+            ensureProject('<%= npmPackageName %>', '<%= pluginOutputPath %>');
+        })
+    })
+})

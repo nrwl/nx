@@ -1,10 +1,10 @@
 {
   "$schema": "@angular-devkit/architect/src/builders-schema.json",
   "builders": {
-    "playground": {
-      "implementation": "./src/builders/playground/playground.impl",
-      "schema": "./src/builders/playground/schema.json",
-      "description": "Creates a playground for a Nx Plugin"
+    "e2e": {
+      "implementation": "./src/builders/e2e/e2e.impl",
+      "schema": "./src/builders/e2e/schema.json",
+      "description": "Creates and runs an e2e for a Nx Plugin"
     }
   }
 }

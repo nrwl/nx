@@ -8,7 +8,8 @@ import {
   apply,
   template,
   move,
-  url
+  url,
+  externalSchematic
 } from '@angular-devkit/schematics';
 
 import { Schema } from './schema';
@@ -20,13 +21,16 @@ import {
   NxJson,
   updateWorkspaceInTree,
   updateWorkspace,
-  offsetFromRoot
+  offsetFromRoot,
+  readNxJson
 } from '@nrwl/workspace';
 import { WorkspaceDefinition } from '@angular-devkit/core/src/workspace';
+import { Chain } from '@angular/compiler';
 
 export interface NxPluginE2ESchema extends Schema {
   projectRoot: string;
   projectName: string;
+  npmScope: string;
 }
 
 export default function(options: Schema): Rule {
@@ -35,9 +39,10 @@ export default function(options: Schema): Rule {
     validatePlugin(workspace, options.pluginName);
     const normalizedOptions = await normalizeOptions(workspace, options);
     return chain([
+      updateFiles(normalizedOptions),
       updateNxJson(normalizedOptions),
-      updateWorkspaceJson(workspace, normalizedOptions),
-      updateFiles(normalizedOptions)
+      updateWorkspaceJson(normalizedOptions),
+      addJest(normalizedOptions)
     ]);
   };
 }
@@ -57,10 +62,12 @@ function normalizeOptions(
 ): NxPluginE2ESchema {
   const projectName = `${options.pluginName}-e2e`;
   const projectRoot = join(normalize('apps'), projectName);
+  const npmScope = readNxJson().npmScope;
   return {
     ...options,
     projectName,
-    projectRoot
+    projectRoot,
+    npmScope
   };
 }
 
@@ -73,25 +80,29 @@ function updateNxJson(options: NxPluginE2ESchema): Rule {
   });
 }
 
-function updateWorkspaceJson(
-  workspace: WorkspaceDefinition,
-  options: NxPluginE2ESchema
-): Rule {
-  workspace.projects.add({
-    name: options.projectName,
-    root: options.projectRoot,
-    projectType: 'application',
-    sourceRoot: `${options.projectRoot}/src`,
-    targets: {
-      e2e: {
-        builder: '@nrwl/nx-plugin:e2e',
-        options: {
-          target: `${options.pluginName}:build`
+function updateWorkspaceJson(options: NxPluginE2ESchema): Rule {
+  return chain([
+    async (host, context) => {
+      const workspace = await getWorkspace(host);
+      workspace.projects.add({
+        name: options.projectName,
+        root: options.projectRoot,
+        projectType: 'application',
+        sourceRoot: `${options.projectRoot}/src`,
+        targets: {
+          e2e: {
+            builder: '@nrwl/nx-plugin:e2e',
+            options: {
+              target: `${options.pluginName}:build`,
+              npmPackageName: options.npmPackageName,
+              pluginOutputPath: options.pluginOutputPath
+            }
+          }
         }
-      }
+      });
+      return updateWorkspace(workspace);
     }
-  });
-  return updateWorkspace(workspace);
+  ]);
 }
 
 function updateFiles(options: NxPluginE2ESchema): Rule {
@@ -105,4 +116,33 @@ function updateFiles(options: NxPluginE2ESchema): Rule {
       move(options.projectRoot)
     ])
   );
+}
+
+function addJest(options: NxPluginE2ESchema): Rule {
+  return chain([
+    externalSchematic('@nrwl/jest', 'jest-project', {
+      project: options.projectName,
+      setupFile: 'none',
+      supportTsx: false,
+      skipSerializers: true
+    }),
+    async (host, context) => {
+      const workspace = await getWorkspace(host);
+      const project = workspace.projects.get(options.projectName);
+      const testOptions = project.targets.get('test').options;
+      const e2eOptions = project.targets.get('e2e').options;
+      project.targets.get('e2e').options = {
+        ...e2eOptions,
+        ...{
+          jestConfig: testOptions.jestConfig,
+          tsSpecConfig: testOptions.tsConfig
+        }
+      };
+
+      // remove the jest build target
+      project.targets.delete('test');
+
+      return updateWorkspace(workspace);
+    }
+  ]);
 }
