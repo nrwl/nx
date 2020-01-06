@@ -3,16 +3,23 @@ import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import * as nodeExternals from 'webpack-node-externals';
 import * as ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
 
-export function preprocessTypescript(config: any) {
+export function preprocessTypescript(
+  config: any,
+  customizeWebpackConfig: (webpackConfig: any) => any
+) {
   if (!config.env.tsConfig) {
     throw new Error(
       'Please provide an absolute path to a tsconfig.json as cypressConfig.env.tsConfig'
     );
   }
 
+  let webpackConfig = getWebpackConfig(config);
+  if (customizeWebpackConfig) {
+    webpackConfig = customizeWebpackConfig(webpackConfig);
+  }
   return async (...args) =>
     wp({
-      webpackOptions: getWebpackConfig(config)
+      webpackOptions: webpackConfig
     })(...args);
 }
 
