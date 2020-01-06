@@ -24,6 +24,11 @@
       "version": "8.10.0-beta.1",
       "description": "Update React libraries",
       "factory": "./src/migrations/update-8-10-0/update-8-10-0"
+    },
+    "fix-react-tsconfig-8.10.1": {
+      "version": "8.10.1-beta.1",
+      "description": "Fix SVG migration",
+      "factory": "./src/migrations/update-8-10-1/fix-react-tsconfig-8-10-1"
     }
   },
   "packageJsonUpdates": {
