@@ -4,6 +4,7 @@ module.exports = async ({ config, mode }) => {
   config = await rootWebpackConfig({ config, mode });
   <% if(uiFramework === '@storybook/react') { %>
   config.resolve.extensions.push('.tsx');
+  config.resolve.extensions.push('.ts');
   config.module.rules.push({
     test: /\.(ts|tsx)$/,
     loader: require.resolve('babel-loader'),
