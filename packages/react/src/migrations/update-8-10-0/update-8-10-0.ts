@@ -60,8 +60,7 @@ function addCustomTypings(host: Tree) {
             )}node_modules/@nrwl/react/typings/cssmodule.d.ts`,
             `${offsetFromRoot(
               p.root
-            )}node_modules/@nrwl/react/typings/image.d.ts`,
-            `${offsetFromRoot(p.root)}node_modules/@nrwl/react/typings/svg.d.ts`
+            )}node_modules/@nrwl/react/typings/image.d.ts`
           );
           json.files = files;
           return json;
