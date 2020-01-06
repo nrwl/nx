@@ -26,6 +26,12 @@ Type: `boolean`
 
 Serve the application in the dev mode
 
+### environmentFilePath
+
+Type: `string`
+
+Load environment variables from a file.
+
 ### port
 
 Default: `4200`
