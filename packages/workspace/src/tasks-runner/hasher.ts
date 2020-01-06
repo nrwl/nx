@@ -37,7 +37,7 @@ export class Hasher {
     if (this.implicitDependencies) return this.implicitDependencies;
 
     const values = await Promise.all([
-      ...Object.keys(this.nxJson.implicitDependencies).map(r =>
+      ...Object.keys(this.nxJson.implicitDependencies || {}).map(r =>
         this.fileHashes.hashFile(r)
       ),
       this.fileHashes.hashFile('package-lock.json'),
