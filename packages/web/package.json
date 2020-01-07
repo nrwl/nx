@@ -59,7 +59,7 @@
     "caniuse-lite": "1.0.30000989",
     "circular-dependency-plugin": "5.2.0",
     "clean-css": "4.2.1",
-    "copy-webpack-plugin": "5.0.3",
+    "copy-webpack-plugin": "5.1.1",
     "core-js": "^3.2.1",
     "file-loader": "4.2.0",
     "find-cache-dir": "3.0.0",
