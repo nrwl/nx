@@ -19,7 +19,7 @@ function createWebpackConfig(root: string) {
       })
     ];
     config.module.rules.push({
-      test: /\.tsx/,
+      test: /\.tsx?$/,
       use: [defaultLoaders.babel]
     });
     return config;
