@@ -15,6 +15,7 @@ import NextServer from 'next/dist/server/next-dev-server';
 import * as path from 'path';
 import { from, Observable, of } from 'rxjs';
 import { switchMap, concatMap, tap } from 'rxjs/operators';
+import * as url from 'url';
 import { prepareConfig } from '../../utils/config';
 
 try {
@@ -28,6 +29,7 @@ export interface NextBuildBuilderOptions extends JsonObject {
   quiet: boolean;
   buildTarget: string;
   customServerPath: string;
+  hostname: string;
 }
 
 export interface NextServerOptions {
@@ -38,12 +40,15 @@ export interface NextServerOptions {
   conf: any;
   port: number;
   path: string;
+  hostname: string;
 }
 
 export default createBuilder<NextBuildBuilderOptions>(run);
 
 function defaultServer(settings: NextServerOptions) {
-  return startServer(settings, settings.port).then(app => app.prepare());
+  return startServer(settings, settings.port, settings.hostname).then(app =>
+    app.prepare()
+  );
 }
 
 function customServer(settings: NextServerOptions) {
@@ -57,6 +62,7 @@ function run(
   context: BuilderContext
 ): Observable<BuilderOutput> {
   const buildTarget = targetFromTargetString(options.buildTarget);
+  const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;
 
   const build$ = !options.dev
     ? scheduleTargetAndForget(context, buildTarget)
@@ -83,7 +89,8 @@ function run(
             quiet: options.quiet,
             conf: config,
             port: options.port,
-            path: options.customServerPath
+            path: options.customServerPath,
+            hostname: options.hostname
           };
 
           const server = options.customServerPath
@@ -92,13 +99,13 @@ function run(
 
           return from(server(settings)).pipe(
             tap(() => {
-              context.logger.info(`Ready on http://localhost:${settings.port}`);
+              context.logger.info(`Ready on ${baseUrl}`);
             }),
             switchMap(
               e =>
                 new Observable<BuilderOutput>(obs => {
                   obs.next({
-                    baseUrl: `http://localhost:${options.port}`,
+                    baseUrl,
                     success: true
                   });
                 })
