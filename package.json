@@ -112,7 +112,7 @@
     "commitizen": "^4.0.3",
     "confusing-browser-globals": "^1.0.8",
     "conventional-changelog-cli": "^2.0.23",
-    "copy-webpack-plugin": "5.0.3",
+    "copy-webpack-plugin": "5.1.1",
     "core-js": "^2.6.9",
     "cosmiconfig": "^4.0.0",
     "cypress": "3.4.1",
