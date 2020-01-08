@@ -12,7 +12,7 @@ import { readJsonFile } from '../utils/fileutils';
 import { getCommand, getCommandAsString } from './utils';
 import { cliCommand } from '../core/file-utils';
 import { ProjectGraph } from '../core/project-graph';
-import { NxJson } from '@nrwl/workspace/src/core/shared-interfaces';
+import { NxJson } from '../core/shared-interfaces';
 
 export interface DefaultTasksRunnerOptions {
   parallel?: boolean;

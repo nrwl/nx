@@ -5,9 +5,6 @@ import {
   TaskCompleteEvent,
   TasksRunner
 } from './tasks-runner';
-import { output } from '../utils/output';
-import { readJsonFile } from '../utils/fileutils';
-import { cliCommand } from '../core/file-utils';
 import { ProjectGraph } from '../core/project-graph';
 import { NxJson } from '../core/shared-interfaces';
 import { TaskOrderer } from './task-orderer';
@@ -52,7 +49,6 @@ async function runAllTasks(
   options: DefaultTasksRunnerOptions,
   context: { target: string; projectGraph: ProjectGraph; nxJson: NxJson }
 ): Promise<Array<{ task: Task; type: any; success: boolean }>> {
-  assertPackageJsonScriptExists();
   const stages = new TaskOrderer(
     context.target,
     context.projectGraph
@@ -89,27 +85,6 @@ function tasksToStatuses(tasks: Task[], success: boolean) {
     type: AffectedEventType.TaskComplete,
     success
   }));
-}
-
-function assertPackageJsonScriptExists() {
-  const cli = cliCommand();
-  // Make sure the `package.json` has the `nx: "nx"`
-  const packageJson = readJsonFile('./package.json');
-  if (!packageJson.scripts || !packageJson.scripts[cli]) {
-    output.error({
-      title: `The "scripts" section of your 'package.json' must contain "${cli}": "${cli}"`,
-      bodyLines: [
-        output.colors.gray('...'),
-        ' "scripts": {',
-        output.colors.gray('  ...'),
-        `   "${cli}": "${cli}"`,
-        output.colors.gray('  ...'),
-        ' }',
-        output.colors.gray('...')
-      ]
-    });
-    return process.exit(1);
-  }
 }
 
 export default tasksRunnerV2;

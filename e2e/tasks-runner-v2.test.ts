@@ -36,7 +36,7 @@ forEachCli(() => {
     });
 
     describe('Cache', () => {
-      it('should not use cache when it is not enabled', async () => {
+      it('should cache command execution', async () => {
         ensureProject();
 
         const myapp1 = uniq('myapp1');
@@ -127,6 +127,12 @@ forEachCli(() => {
         expect(outputWithNoBuildCached).not.toContain(
           'read the output from cache'
         );
+
+        // build individual project with caching
+        const individualBuildWithCache = runCommand(
+          `npm run nx -- build ${myapp1}`
+        );
+        expect(individualBuildWithCache).toContain('Cached Output');
 
         // run lint with caching
         // --------------------------------------------

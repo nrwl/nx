@@ -268,11 +268,11 @@ forEachCli(() => {
       const build = runCommand(
         `npm run affected:build -- --files="apps/${myapp}/src/main.ts,libs/${mypublishablelib}/src/index.ts" --parallel`
       );
-      console.log(build);
+
       // make sure that the package is done building before we start building the app
       expect(
         build.indexOf('Built Angular Package!') <
-          build.indexOf(`"build" "${myapp}"`)
+          build.indexOf(`Generating ES5 bundles for differential loading.`)
       ).toBeTruthy();
     });
 

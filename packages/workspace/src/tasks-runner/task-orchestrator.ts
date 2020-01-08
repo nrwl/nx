@@ -4,15 +4,16 @@ import { NxJson } from '../core/shared-interfaces';
 import { ProjectGraph } from '../core/project-graph';
 import { AffectedEventType, Task } from './tasks-runner';
 import { getCommand, getOutputs } from './utils';
-import { basename } from 'path';
-import { spawn } from 'child_process';
+import { fork, spawn } from 'child_process';
 import { DefaultTasksRunnerOptions } from './tasks-runner-v2';
 import { output } from '../utils/output';
+import * as path from 'path';
+import { appRootPath } from '../utils/app-root';
 
 export class TaskOrchestrator {
+  workspaceRoot = appRootPath;
   cache = new Cache(this.projectGraph, this.nxJson, this.options);
   cli = cliCommand();
-  isYarn = basename(process.env.npm_execpath || 'npm').startsWith('yarn');
 
   constructor(
     private readonly nxJson: NxJson,
@@ -40,7 +41,7 @@ export class TaskOrchestrator {
       if (left.length > 0) {
         const task = left.pop();
         return that
-          .spawnProcess(task)
+          .forkProcess(task)
           .then(code => {
             res.push({
               task,
@@ -103,39 +104,56 @@ export class TaskOrchestrator {
     }, []);
   }
 
-  private spawnProcess(task: Task) {
+  private forkProcess(task: Task) {
     const taskOutputs = getOutputs(this.projectGraph.nodes, task);
-    return new Promise(res => {
-      const command = this.isYarn ? 'yarn' : 'npm';
-      const commandArgs = this.isYarn
-        ? getCommand(this.cli, this.isYarn, task)
-        : ['run', ...getCommand(this.cli, this.isYarn, task)];
-      const p = spawn(command, commandArgs, {
-        stdio: [process.stdin, 'pipe', 'pipe'],
-        env: { ...process.env, FORCE_COLOR: 'true' }
-      });
-
-      let out = [];
-
-      p.stdout.on('data', data => {
-        out.push(data);
-        process.stdout.write(data);
-      });
-
-      p.stderr.on('data', data => {
-        out.push(data);
-        process.stderr.write(data);
-      });
-
-      p.on('close', code => {
-        if (code === 0) {
-          this.cache.put(task, out.join(''), taskOutputs).then(() => {
-            res(code);
+    return this.cache.temporaryOutputPath(task).then(outputPath => {
+      return new Promise((res, rej) => {
+        try {
+          const p = fork(this.getCommand(), this.getCommandArgs(task), {
+            stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+            env: { ...process.env, NX_TERMINAL_OUTPUT_PATH: outputPath }
           });
-        } else {
-          res(code);
+          p.on('close', code => {
+            if (code === 0) {
+              this.cache.put(task, outputPath, taskOutputs).then(() => {
+                res(code);
+              });
+            } else {
+              res(code);
+            }
+          });
+        } catch (e) {
+          console.error(e);
+          rej(e);
         }
       });
     });
+  }
+
+  private getCommand() {
+    return path.join(
+      this.workspaceRoot,
+      'node_modules',
+      '@nrwl',
+      'cli',
+      'lib',
+      'run-cli.js'
+    );
+  }
+
+  private getCommandArgs(task: Task) {
+    const args = Object.entries(task.overrides || {}).map(
+      ([prop, value]) => `--${prop}=${value}`
+    );
+
+    const config = task.target.configuration
+      ? `:${task.target.configuration}`
+      : '';
+
+    return [
+      'run',
+      `${task.target.project}:${task.target.target}${config}`,
+      ...args
+    ];
   }
 }

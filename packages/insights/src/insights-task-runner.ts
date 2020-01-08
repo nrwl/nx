@@ -51,7 +51,7 @@ class InsightsRemoteCache implements RemoteCache {
       if (e.response && e.response.status === 404) {
         // cache miss. print nothing
       } else if (e.code === 'ECONNREFUSED') {
-        console.error(`Error: Cannot cannot to remote cache.`);
+        console.error(`Error: Cannot connect to remote cache.`);
       } else {
         console.error(e.message);
       }
@@ -79,7 +79,7 @@ class InsightsRemoteCache implements RemoteCache {
       return true;
     } catch (e) {
       if (e.code === 'ECONNREFUSED') {
-        console.error(`Error: Cannot cannot to remote cache.`);
+        console.error(`Error: Cannot connect to remote cache.`);
       } else {
         console.error(e.message);
       }
