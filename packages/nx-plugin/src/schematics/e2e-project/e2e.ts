@@ -22,7 +22,8 @@ import {
   updateWorkspaceInTree,
   updateWorkspace,
   offsetFromRoot,
-  readNxJson
+  readNxJson,
+  toPropertyName
 } from '@nrwl/workspace';
 import { WorkspaceDefinition } from '@angular-devkit/core/src/workspace';
 import { Chain } from '@angular/compiler';
@@ -30,6 +31,7 @@ import { Chain } from '@angular/compiler';
 export interface NxPluginE2ESchema extends Schema {
   projectRoot: string;
   projectName: string;
+  pluginPropertyName: string;
   npmScope: string;
 }
 
@@ -63,9 +65,11 @@ function normalizeOptions(
   const projectName = `${options.pluginName}-e2e`;
   const projectRoot = join(normalize('apps'), projectName);
   const npmScope = readNxJson().npmScope;
+  const pluginPropertyName = toPropertyName(options.pluginName);
   return {
     ...options,
     projectName,
+    pluginPropertyName,
     projectRoot,
     npmScope
   };

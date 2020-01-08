@@ -1,8 +1,10 @@
-import { ensureProject, forEachCli } from '@nrwl/nx-plugin/testing';
-forEachCli(() => {
-    describe('create <%= pluginName %> playground', () => {
-        it('create <%= pluginName %> playground', () => {
-            ensureProject('<%= npmPackageName %>', '<%= pluginOutputPath %>');
-        })
+import { ensureNxProject, uniq, expectTestsPass, runNxCommandAsync } from '@nrwl/nx-plugin/testing';
+describe('<%= pluginName %> e2e', () => {
+    it('should create <%= pluginName %>', async (done) => {
+        const plugin = uniq('<%= pluginName %>');
+        ensureNxProject('<%= npmPackageName %>', '<%= pluginOutputPath %>');
+        await runNxCommandAsync(`generate <%=npmPackageName%>:<%= pluginPropertyName %> ${plugin}`);
+        expectTestsPass(await runNxCommandAsync(`test ${plugin}`));
+        done();
     })
 })

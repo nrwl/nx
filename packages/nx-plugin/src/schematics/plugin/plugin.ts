@@ -127,11 +127,16 @@ function updateWorkspaceJson(options: NormalizedSchema): Rule {
         ...[
           {
             input: `./${options.projectRoot}/src`,
+            glob: '**/*.json',
+            output: './src'
+          },
+          {
+            input: `./${options.projectRoot}`,
             glob: 'collection.json',
             output: '.'
           },
           {
-            input: `./${options.projectRoot}/src`,
+            input: `./${options.projectRoot}`,
             glob: 'builders.json',
             output: '.'
           }
@@ -145,7 +150,7 @@ function updateTsConfig(options: NormalizedSchema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const projectConfig = getProjectConfig(host, options.name);
     return updateJsonInTree(`${projectConfig.root}/tsconfig.lib.json`, json => {
-      delete json.compilerOptions.rootDir;
+      json.compilerOptions.rootDir = '.';
       return json;
     });
   };

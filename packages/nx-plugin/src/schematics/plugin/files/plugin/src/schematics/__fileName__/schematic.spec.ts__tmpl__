@@ -11,7 +11,7 @@ describe('<%= name %> schematic', () => {
 
   const testRunner = new SchematicTestRunner(
     '@<%= npmScope %>/<%= name %>',
-    join(__dirname, '../../collection.json')
+    join(__dirname, '../../../collection.json')
   );
 
   beforeEach(() => {

@@ -1,0 +1,10 @@
+{
+  "$schema": "<%= offsetFromRoot %>node_modules/@angular-devkit/architect/src/builders-schema.json",
+  "builders": {
+    "build": {
+      "implementation": "./src/builders/<%= fileName %>/builder",
+      "schema": "./src/builders/<%= fileName %>/schema.json",
+      "description": "<%= name %> builder"
+    }
+  }
+}
