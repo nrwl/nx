@@ -14,31 +14,6 @@ import { runMany } from './run-many';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
-export const supportedNxCommands = [
-  'affected',
-  'affected:apps',
-  'affected:libs',
-  'affected:build',
-  'affected:test',
-  'affected:e2e',
-  'affected:dep-graph',
-  'affected:lint',
-  'print-affected',
-  'dep-graph',
-  'format',
-  'format:check',
-  'format:write',
-  'workspace-schematic',
-  'workspace-lint',
-  'migrate',
-  'report',
-  'run-many',
-  'list',
-  'help',
-  '--help',
-  '--version'
-];
-
 /**
  * Exposing the Yargs commands object so the documentation generator can
  * parse it. The CLI will consume it and call the `.argv` to bootstrapped

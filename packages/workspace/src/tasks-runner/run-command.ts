@@ -1,13 +1,12 @@
 import { AffectedEventType, Task, TasksRunner } from './tasks-runner';
-import { defaultTasksRunner } from './default-tasks-runner';
-import { isRelativePath } from '../utils/fileutils';
 import { join } from 'path';
 import { appRootPath } from '../utils/app-root';
-import { DefaultReporter, ReporterArgs } from './default-reporter';
+import { ReporterArgs } from './default-reporter';
 import * as yargs from 'yargs';
 import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
 import { Environment, NxJson } from '../core/shared-interfaces';
 import { NxArgs } from '@nrwl/workspace/src/command-line/utils';
+import { isRelativePath } from '../utils/fileutils';
 
 type RunArgs = yargs.Arguments & ReporterArgs;
 
@@ -16,9 +15,9 @@ export function runCommand<T extends RunArgs>(
   projectGraph: ProjectGraph,
   { nxJson, workspace }: Environment,
   nxArgs: NxArgs,
-  overrides: any
+  overrides: any,
+  reporter: any
 ) {
-  const reporter = new DefaultReporter();
   reporter.beforeRun(projectsToRun.map(p => p.name), nxArgs, overrides);
   const tasks: Task[] = projectsToRun.map(project =>
     createTask({
@@ -122,15 +121,17 @@ export function getRunner(
   tasksOptions: unknown;
 } {
   if (!nxJson.tasksRunnerOptions) {
+    const t = require('./default-tasks-runner');
     return {
-      tasksRunner: defaultTasksRunner,
+      tasksRunner: t.defaultTasksRunner,
       tasksOptions: overrides
     };
   }
 
   if (!runner && !nxJson.tasksRunnerOptions.default) {
+    const t = require('./default-tasks-runner');
     return {
-      tasksRunner: defaultTasksRunner,
+      tasksRunner: t.defaultTasksRunner,
       tasksOptions: overrides
     };
   }

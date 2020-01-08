@@ -10,13 +10,21 @@ import {
 } from '../core/project-graph';
 import { readEnvironment } from '../core/file-utils';
 import { projectHasTargetAndConfiguration } from '../utils/project-has-target-and-configuration';
+import { DefaultReporter } from '../tasks-runner/default-reporter';
 
 export function runMany(parsedArgs: yargs.Arguments): void {
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(parsedArgs);
   const env = readEnvironment(nxArgs.target);
   const projectGraph = createProjectGraph();
   const projects = projectsToRun(nxArgs, projectGraph);
-  runCommand(projects, projectGraph, env, nxArgs, overrides);
+  runCommand(
+    projects,
+    projectGraph,
+    env,
+    nxArgs,
+    overrides,
+    new DefaultReporter()
+  );
 }
 
 function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {

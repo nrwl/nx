@@ -2,13 +2,7 @@ import { appRootPath } from '../utils/app-root';
 import { ProjectGraph } from '../core/project-graph';
 import { NxJson } from '../core/shared-interfaces';
 import { Task } from './tasks-runner';
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmdirSync,
-  writeFileSync
-} from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { Hasher } from './hasher';
 import * as fsExtra from 'fs-extra';
@@ -17,10 +11,28 @@ import { DefaultTasksRunnerOptions } from './tasks-runner-v2';
 export type CachedResult = { terminalOutput: string; outputsPath: string };
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 
+class CacheConfig {
+  constructor(private readonly options: DefaultTasksRunnerOptions) {}
+
+  isCacheableTask(task: Task) {
+    return (
+      this.options.cacheableOperations &&
+      this.options.cacheableOperations.indexOf(task.target.target) > -1 &&
+      !this.longRunningTask(task)
+    );
+  }
+
+  private longRunningTask(task: Task) {
+    return task.overrides['watch'] !== undefined;
+  }
+}
+
 export class Cache {
   root = appRootPath;
   cachePath = this.createCacheDir();
+  terminalOutputsDir = this.createTerminalOutputsDir();
   hasher = new Hasher(this.projectGraph, this.nxJson);
+  cacheConfig = new CacheConfig(this.options);
 
   constructor(
     private readonly projectGraph: ProjectGraph,
@@ -29,7 +41,7 @@ export class Cache {
   ) {}
 
   async get(task: Task): Promise<CachedResult> {
-    if (!this.cacheable(task)) return null;
+    if (!this.cacheConfig.isCacheableTask(task)) return null;
 
     const res = await this.getFromLocalDir(task);
 
@@ -47,8 +59,9 @@ export class Cache {
     }
   }
 
-  async put(task: Task, terminalOutput: string, folders: string[]) {
-    if (!this.cacheable(task)) return;
+  async put(task: Task, terminalOutputPath: string, folders: string[]) {
+    if (!this.cacheConfig.isCacheableTask(task)) return;
+    const terminalOutput = readFileSync(terminalOutputPath).toString();
     const hash = await this.hasher.hash(task);
     const td = join(this.cachePath, hash);
     const tdCommit = join(this.cachePath, `${hash}.commit`);
@@ -101,6 +114,10 @@ export class Cache {
     });
   }
 
+  async temporaryOutputPath(task: Task) {
+    return join(this.terminalOutputsDir, await this.hasher.hash(task));
+  }
+
   private async getFromLocalDir(task: Task) {
     const hash = await this.hasher.hash(task);
     const tdCommit = join(this.cachePath, `${hash}.commit`);
@@ -114,13 +131,6 @@ export class Cache {
     } else {
       return null;
     }
-  }
-
-  private cacheable(task: Task) {
-    return (
-      this.options.cacheableOperations &&
-      this.options.cacheableOperations.indexOf(task.target.target) > -1
-    );
   }
 
   private createCacheDir() {
@@ -138,5 +148,11 @@ export class Cache {
       mkdirSync(dir, { recursive: true });
     }
     return dir;
+  }
+
+  private createTerminalOutputsDir() {
+    const path = join(this.cachePath, 'terminalOutputs');
+    mkdirSync(path, { recursive: true });
+    return path;
   }
 }

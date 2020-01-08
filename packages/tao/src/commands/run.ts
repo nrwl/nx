@@ -57,9 +57,6 @@ function parseRunOpts(
     );
     project = defaultProjectName;
   }
-  if (!project || !target) {
-    throwInvalidInvocation();
-  }
   if (runOptions.configuration) {
     configuration = runOptions.configuration;
   }
@@ -68,6 +65,9 @@ function parseRunOpts(
   }
   if (runOptions.project) {
     project = runOptions.project;
+  }
+  if (!project || !target) {
+    throwInvalidInvocation();
   }
   const res = { project, target, configuration, help, runOptions };
   delete runOptions['help'];

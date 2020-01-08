@@ -15,6 +15,7 @@ import {
 import { calculateFileChanges, readEnvironment } from '../core/file-utils';
 import { printAffected } from './print-affected';
 import { projectHasTargetAndConfiguration } from '../utils/project-has-target-and-configuration';
+import { DefaultReporter } from '../tasks-runner/default-reporter';
 
 export function affected(command: string, parsedArgs: yargs.Arguments): void {
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(parsedArgs);
@@ -109,7 +110,8 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
           projectGraph,
           env,
           nxArgs,
-          overrides
+          overrides,
+          new DefaultReporter()
         );
         break;
       }
