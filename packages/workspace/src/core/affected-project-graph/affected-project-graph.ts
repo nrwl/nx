@@ -57,8 +57,8 @@ function filterAffectedProjects(
   const builder = new ProjectGraphBuilder();
   const reversed = reverse(graph);
   ctx.touchedProjects.forEach(p => {
-    addAffectedNodes(p, reversed, builder);
-    addAffectedDependencies(p, reversed, builder);
+    addAffectedNodes(p, reversed, builder, []);
+    addAffectedDependencies(p, reversed, builder, []);
   });
   return builder.build();
 }
@@ -66,23 +66,35 @@ function filterAffectedProjects(
 function addAffectedNodes(
   startingProject: string,
   reversed: ProjectGraph,
-  builder: ProjectGraphBuilder
+  builder: ProjectGraphBuilder,
+  visited: string[]
 ): void {
+  if (visited.indexOf(startingProject) > -1) return;
+  if (!reversed.nodes[startingProject]) {
+    throw new Error(`Invalid project name is detected: "${startingProject}"`);
+  }
   builder.addNode(reversed.nodes[startingProject]);
   const ds = reversed.dependencies[startingProject];
   if (ds) {
-    ds.forEach(({ target }) => addAffectedNodes(target, reversed, builder));
+    ds.forEach(({ target }) =>
+      addAffectedNodes(target, reversed, builder, [...visited, startingProject])
+    );
   }
 }
 
 function addAffectedDependencies(
   startingProject: string,
   reversed: ProjectGraph,
-  builder: ProjectGraphBuilder
+  builder: ProjectGraphBuilder,
+  visited: string[]
 ): void {
+  if (visited.indexOf(startingProject) > -1) return;
   if (reversed.dependencies[startingProject]) {
     reversed.dependencies[startingProject].forEach(({ target }) =>
-      addAffectedDependencies(target, reversed, builder)
+      addAffectedDependencies(target, reversed, builder, [
+        ...visited,
+        startingProject
+      ])
     );
     reversed.dependencies[startingProject].forEach(
       ({ type, source, target }) => {
