@@ -28,6 +28,6 @@
   },
   "dependencies": {
     "@angular-devkit/architect": "0.803.14",
-    "@angular-eslint/builder": "0.0.1-alpha.17"
+    "@angular-eslint/builder": "0.0.1-alpha.18"
   }
 }
