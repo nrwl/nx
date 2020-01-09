@@ -28,6 +28,7 @@ export class TaskOrchestrator {
 
     const r1 = await this.applyCachedResults(cached);
     const r2 = await this.runRest(rest);
+    this.cache.removeOldCacheRecords();
     return [...r1, ...r2];
   }
 
@@ -109,12 +110,16 @@ export class TaskOrchestrator {
     return this.cache.temporaryOutputPath(task).then(outputPath => {
       return new Promise((res, rej) => {
         try {
+          const env = { ...process.env };
+          if (outputPath) {
+            env.NX_TERMINAL_OUTPUT_PATH = outputPath;
+          }
           const p = fork(this.getCommand(), this.getCommandArgs(task), {
             stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-            env: { ...process.env, NX_TERMINAL_OUTPUT_PATH: outputPath }
+            env
           });
           p.on('close', code => {
-            if (code === 0) {
+            if (outputPath && code === 0) {
               this.cache.put(task, outputPath, taskOutputs).then(() => {
                 res(code);
               });

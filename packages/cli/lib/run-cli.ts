@@ -4,7 +4,9 @@ import { findWorkspaceRoot } from './find-workspace-root';
 
 const workspace = findWorkspaceRoot(process.cwd());
 
-setUpOutputWatching();
+if (process.env.NX_TERMINAL_OUTPUT_PATH) {
+  setUpOutputWatching();
+}
 requireCli();
 
 function requireCli() {
