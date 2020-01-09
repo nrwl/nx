@@ -943,6 +943,131 @@ describe('Enforce Module Boundaries', () => {
       'Circular dependency between "mylibName" and "badcirclelibName" detected'
     );
   });
+
+  describe('buildable library imports', () => {
+    it('should error when buildable libraries import non-buildable libraries', () => {
+      const failures = runRule(
+        {},
+        `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
+        'import "@mycompany/nonBuildableLib"',
+        {
+          nodes: {
+            buildableLib: {
+              name: 'buildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/buildableLib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {
+                  build: {
+                    // defines a buildable lib
+                    builder: '@angular-devkit/build-ng-packagr:build'
+                  }
+                },
+                files: [createFile(`libs/buildableLib/src/main.ts`)]
+              }
+            },
+            nonBuildableLib: {
+              name: 'nonBuildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/nonBuildableLib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {},
+                files: [createFile(`libs/nonBuildableLib/src/main.ts`)]
+              }
+            }
+          },
+          dependencies: {}
+        }
+      );
+      expect(failures[0].message).toEqual(
+        'Buildable libs cannot import non-buildable libs'
+      );
+    });
+
+    it('should not error when buildable libraries import another buildable libraries', () => {
+      const failures = runRule(
+        {},
+        `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
+        'import "@mycompany/nonBuildableLib"',
+        {
+          nodes: {
+            buildableLib: {
+              name: 'buildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/buildableLib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {
+                  build: {
+                    // defines a buildable lib
+                    builder: '@angular-devkit/build-ng-packagr:build'
+                  }
+                },
+                files: [createFile(`libs/buildableLib/src/main.ts`)]
+              }
+            },
+            nonBuildableLib: {
+              name: 'nonBuildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/nonBuildableLib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {
+                  build: {
+                    // defines a buildable lib
+                    builder: '@angular-devkit/build-ng-packagr:build'
+                  }
+                },
+                files: [createFile(`libs/nonBuildableLib/src/main.ts`)]
+              }
+            }
+          },
+          dependencies: {}
+        }
+      );
+      expect(failures.length).toBe(0);
+    });
+
+    it('should ignore the buildable library verification if no architect is specified', () => {
+      const failures = runRule(
+        {},
+        `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
+        'import "@mycompany/nonBuildableLib"',
+        {
+          nodes: {
+            buildableLib: {
+              name: 'buildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/buildableLib',
+                tags: [],
+                implicitDependencies: [],
+                files: [createFile(`libs/buildableLib/src/main.ts`)]
+              }
+            },
+            nonBuildableLib: {
+              name: 'nonBuildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/nonBuildableLib',
+                tags: [],
+                implicitDependencies: [],
+                files: [createFile(`libs/nonBuildableLib/src/main.ts`)]
+              }
+            }
+          },
+          dependencies: {}
+        }
+      );
+      expect(failures.length).toBe(0);
+    });
+  });
 });
 
 const linter = new TSESLint.Linter();

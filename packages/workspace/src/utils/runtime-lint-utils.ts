@@ -212,3 +212,18 @@ export function onlyLoadChildren(
 export function getSourceFilePath(sourceFileName: string, projectPath: string) {
   return normalize(sourceFileName).substring(projectPath.length + 1);
 }
+
+/**
+ * Verifies whether the given node has an architect builder attached
+ * @param projectGraph the node to verify
+ */
+export function hasArchitectBuildBuilder(
+  projectGraph: ProjectGraphNode
+): boolean {
+  return (
+    // can the architect not be defined? real use case?
+    projectGraph.data.architect &&
+    projectGraph.data.architect.build &&
+    projectGraph.data.architect.build.builder !== ''
+  );
+}

@@ -10,7 +10,8 @@ import {
   isCircular,
   isRelativeImportIntoAnotherProject,
   matchImportWithWildcard,
-  onlyLoadChildren
+  onlyLoadChildren,
+  hasArchitectBuildBuilder
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import { TSESTree } from '@typescript-eslint/experimental-utils';
 import { createESLintRule } from '../utils/create-eslint-rule';
@@ -37,6 +38,7 @@ export type MessageIds =
   | 'noCircularDependencies'
   | 'noImportsOfApps'
   | 'noDeepImportsIntoLibraries'
+  | 'noImportOfNonBuildableLibraries'
   | 'noImportsOfLazyLoadedLibraries'
   | 'projectWithoutTagsCannotHaveDependencies'
   | 'tagConstraintViolation';
@@ -76,6 +78,8 @@ export default createESLintRule<Options, MessageIds>({
       noCircularDependencies: `Circular dependency between "{{sourceProjectName}}" and "{{targetProjectName}}" detected`,
       noImportsOfApps: 'Imports of apps are forbidden',
       noDeepImportsIntoLibraries: 'Deep imports into libraries are forbidden',
+      noImportOfNonBuildableLibraries:
+        'Buildable libs cannot import non-buildable libs',
       noImportsOfLazyLoadedLibraries: `Imports of lazy-loaded libraries are forbidden`,
       projectWithoutTagsCannotHaveDependencies: `A project without tags cannot depend on any libraries`,
       tagConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{allowedTags}}`
@@ -175,6 +179,23 @@ export default createESLintRule<Options, MessageIds>({
               messageId: 'noImportsOfApps'
             });
             return;
+          }
+
+          // buildable-lib is not allowed to import non-buildable-lib
+          if (
+            sourceProject.type === ProjectType.lib &&
+            targetProject.type === ProjectType.lib
+          ) {
+            if (
+              hasArchitectBuildBuilder(sourceProject) &&
+              !hasArchitectBuildBuilder(targetProject)
+            ) {
+              context.report({
+                node,
+                messageId: 'noImportOfNonBuildableLibraries'
+              });
+              return;
+            }
           }
 
           // deep imports aren't allowed

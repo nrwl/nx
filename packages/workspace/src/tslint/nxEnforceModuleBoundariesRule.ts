@@ -19,7 +19,8 @@ import {
   isCircular,
   isRelativeImportIntoAnotherProject,
   matchImportWithWildcard,
-  onlyLoadChildren
+  onlyLoadChildren,
+  hasArchitectBuildBuilder
 } from '../utils/runtime-lint-utils';
 import { normalize } from '@angular-devkit/core';
 import { ProjectType } from '../core/project-graph';
@@ -174,7 +175,35 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
         return;
       }
 
-      // if we import a library using loadChildre, we should not import it using es6imports
+      // buildable-lib is not allowed to import non-buildable-lib
+      if (
+        sourceProject.type === ProjectType.lib &&
+        targetProject.type === ProjectType.lib
+      ) {
+        if (
+          hasArchitectBuildBuilder(sourceProject) &&
+          !hasArchitectBuildBuilder(targetProject)
+        ) {
+          this.addFailureAt(
+            node.getStart(),
+            node.getWidth(),
+            'buildable libs cannot import non-buildable libs'
+          );
+          return;
+        }
+      }
+
+      // deep imports aren't allowed
+      if (imp !== `@${this.npmScope}/${normalizedProjectRoot(targetProject)}`) {
+        this.addFailureAt(
+          node.getStart(),
+          node.getWidth(),
+          'deep imports into libraries are forbidden'
+        );
+        return;
+      }
+
+      // if we import a library using loadChildren, we should not import it using es6imports
       if (
         onlyLoadChildren(
           this.projectGraph,
