@@ -19,16 +19,13 @@ import {
   NxJson,
   offsetFromRoot,
   toFileName,
-  updateWorkspace
-} from '@nrwl/workspace';
-import {
-  allFilesInDirInHost,
-  getProjectConfig,
+  updateWorkspace,
   readJsonInTree,
-  updateJsonInTree,
-  updateWorkspaceInTree
-} from '@nrwl/workspace/src/utils/ast-utils';
+  getProjectConfig,
+  updateJsonInTree
+} from '@nrwl/workspace';
 import { Schema } from './schema';
+import { allFilesInDirInHost } from '@nrwl/workspace/src/utils/ast-utils';
 export interface NormalizedSchema extends Schema {
   name: string;
   fileName: string;

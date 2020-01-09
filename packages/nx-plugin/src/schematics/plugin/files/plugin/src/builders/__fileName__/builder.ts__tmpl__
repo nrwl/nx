@@ -7,9 +7,6 @@ import { Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { <%= className %>BuilderSchema } from './schema';
 
-
-export default createBuilder(runBuilder);
-
 export function runBuilder(
   options: <%= className %>BuilderSchema,
   context: BuilderContext
@@ -18,3 +15,5 @@ export function runBuilder(
       context.logger.info("Builder ran for <%= name %>");
   }));
 }
+
+export default createBuilder(runBuilder);

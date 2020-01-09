@@ -497,6 +497,28 @@ export function updateWorkspaceInTree<T = any, O = T>(
   };
 }
 
+export function updateNxJsonInTree(
+  callback: (json: NxJson, context: SchematicContext) => NxJson
+): Rule {
+  return (host: Tree, context: SchematicContext): Tree => {
+    host.overwrite(
+      'nx.json',
+      serializeJson(callback(readJsonInTree(host, 'nx.json'), context))
+    );
+    return host;
+  };
+}
+
+export function addProjectToNxJsonInTree(
+  projectName: string,
+  tags: string[]
+): Rule {
+  return updateNxJsonInTree(json => {
+    json.projects[projectName] = { tags };
+    return json;
+  });
+}
+
 export function readWorkspace(host: Tree): any {
   const path = getWorkspacePath(host);
   return readJsonInTree(host, path);

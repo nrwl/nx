@@ -1,4 +1,12 @@
-import { forEachCli, ensureProject, uniq, runCLI, updateFile } from './utils';
+import {
+  forEachCli,
+  ensureProject,
+  uniq,
+  runCLI,
+  updateFile,
+  expectTestsPass,
+  runCLIAsync
+} from './utils';
 
 forEachCli(currentCLIName => {
   const linter = currentCLIName === 'angular' ? 'tslint' : 'eslint';
@@ -12,8 +20,8 @@ forEachCli(currentCLIName => {
       const lintResults = runCLI(`lint ${plugin}`);
       expect(lintResults).toContain('All files pass linting.');
 
-      const testResults = runCLI(`test ${plugin}`);
-      expect(testResults).toContain('Test Suites: 2 passed, 2 total');
-    });
+      expectTestsPass(await runCLIAsync(`test ${plugin}`));
+      done();
+    }, 45000);
   });
 });

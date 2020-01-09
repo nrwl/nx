@@ -1,8 +1,57 @@
-import { Rule, SchematicContext, Tree } from '@angular-devkit/schematics';
+import { Rule, chain } from '@angular-devkit/schematics';
+import { ProjectType, projectRootDir, updateWorkspace, addProjectToNxJsonInTree, toFileName } from '@nrwl/workspace';
 import { <%= className %>SchematicSchema } from './schema';
 
-export default function(options: <%= className %>SchematicSchema): Rule {
- return (tree: Tree, context: SchematicContext) => {
-   return tree;
- };
+/**
+ * Depending on your needs, you can change this to either `Library` or `Application`
+ */
+const projectType = ProjectType.Library
+
+interface NormalizedSchema extends <%= className %>SchematicSchema { 
+  projectName: string;
+  projectRoot: string;
+  projectDirectory: string;
+  parsedTags: string[]
 }
+
+function normalizeOptions(options: <%= className %>SchematicSchema): NormalizedSchema {
+  const name = toFileName(options.name);
+  const projectDirectory = options.directory
+    ? `${toFileName(options.directory)}/${name}`
+    : name;
+  const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
+  const projectRoot = `${projectRootDir(projectType)}/${projectDirectory}`;
+  const parsedTags = options.tags
+    ? options.tags.split(',').map(s => s.trim())
+    : [];
+
+  return {
+    ...options,
+    projectName,
+    projectRoot,
+    projectDirectory,
+    parsedTags
+  };
+}
+
+
+
+export default function(options: <%= className %>SchematicSchema): Rule {
+ const normalizedOptions = normalizeOptions(options);
+  return chain([
+    updateWorkspace(workspace => {
+      workspace.projects.add({
+        name: normalizedOptions.projectName,
+        root: normalizedOptions.projectRoot,
+        sourceRoot: `${normalizedOptions.projectRoot}/src`,
+        projectType
+      }).targets.add({
+        name: 'build',
+        builder: '<%= npmPackageName %>:build'
+      })
+    }),
+    addProjectToNxJsonInTree(normalizedOptions.projectName, normalizedOptions.parsedTags)
+  ]);
+}
+
+

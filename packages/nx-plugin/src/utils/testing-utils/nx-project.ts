@@ -2,11 +2,11 @@ import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
 import { copySync, ensureDirSync, moveSync } from 'fs-extra';
 import { tmpBackupProjPath, tmpProjPath } from './paths';
-import { cleanup, directoryExists } from './utils';
+import { cleanup, directoryExists, copyNodeModules } from './utils';
 import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
 
 function runNxNewCommand(args?: string, silent?: boolean) {
-  const localTmpDir = `./tmp-e2e/nx`;
+  const localTmpDir = `./tmp/nx-e2e`;
   return execSync(
     `npx tao new proj --no-interactive --skip-install --collection=@nrwl/workspace --npmScope=proj ${args ||
       ''}`,
@@ -47,14 +47,10 @@ export function newNxProject(
   npmPackageName: string,
   pluginDistPath: string
 ): void {
-  cleanup();
-  //   if (!directoryExists(tmpBackupProjPath())) {
+  cleanup(); // something goes on here
   runNxNewCommand('', true);
   patchPackageJsonForPlugin(npmPackageName, pluginDistPath);
   runYarnInstall();
-  //     moveSync(tmpProjPath(), tmpBackupProjPath());
-  //   }
-  //   copySync(tmpBackupProjPath(), tmpProjPath(), {});
 }
 
 /**
@@ -69,4 +65,5 @@ export function ensureNxProject(
 ): void {
   ensureDirSync(tmpProjPath());
   newNxProject(npmPackageName, pluginDistPath);
+  copyNodeModules(['@nrwl']);
 }

@@ -6,6 +6,7 @@ export {
   names,
   findModuleParent
 } from './src/utils/name-utils';
+export { ProjectType, projectRootDir } from './src/utils/project-type';
 export {
   serializeJson,
   renameSync,
@@ -42,7 +43,9 @@ export {
   getProjectGraphFromHost,
   readWorkspace,
   renameSyncInTree,
-  renameDirSyncInTree
+  renameDirSyncInTree,
+  updateNxJsonInTree,
+  addProjectToNxJsonInTree
 } from './src/utils/ast-utils';
 
 export {

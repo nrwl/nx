@@ -5,10 +5,25 @@ import {
   removeSync,
   renameSync,
   statSync,
-  writeFileSync
+  writeFileSync,
+  copySync
 } from 'fs-extra';
 import { dirname } from 'path';
 import { tmpProjPath } from './paths';
+
+/**
+ * Copies module folders from the working directory to the e2e directory
+ * @param modules a list of module names or scopes to copy
+ */
+export function copyNodeModules(modules: string[]) {
+  modules.forEach(module => {
+    removeSync(`${tmpProjPath()}/node_modules/${module}`);
+    copySync(
+      `./node_modules/${module}`,
+      `${tmpProjPath()}/node_modules/${module}`
+    );
+  });
+}
 
 /**
  * Assert output from a asynchronous CLI command
