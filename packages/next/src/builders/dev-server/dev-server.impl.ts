@@ -11,11 +11,22 @@ import next from 'next';
 import * as path from 'path';
 import { from, Observable, of } from 'rxjs';
 import { switchMap, concatMap, tap } from 'rxjs/operators';
-import { StartServerFn } from '../../..';
 
 try {
   require('dotenv').config();
 } catch (e) {}
+
+type NextServer = ReturnType<typeof next>;
+
+/**
+ * If a `customServerTarget` is specified, it's assumed to export a `StartServerFn` function.
+ * Nx will call this function when dev-server command is run. This function should call
+ * `nextApp.prepare()`, and then start an HTTP server on the given `settings.port`.
+ */
+export type StartServerFn = (
+  nextApp: NextServer,
+  settings: NextBuildBuilderOptions
+) => Promise<void>;
 
 export interface NextBuildBuilderOptions extends JsonObject {
   dev: boolean;
