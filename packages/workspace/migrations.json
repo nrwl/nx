@@ -39,6 +39,11 @@
       "version": "8.12.0-beta.1",
       "description": "Add implicit e2e dependencies",
       "factory": "./src/migrations/update-8-12-0/add-implicit-e2e-deps"
+    },
+    "update-package-json-deps": {
+      "version": "8.12.0-beta.1",
+      "description": "Add implicit e2e dependencies",
+      "factory": "./src/migrations/update-8-12-0/update-package-json-deps"
     }
   },
   "packageJsonUpdates": {
@@ -290,6 +295,43 @@
         },
         "@schematics/angular": {
           "version": "8.3.14",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "8120": {
+      "version": "8.12.0-beta.1",
+      "packages": {
+        "@angular-devkit/architect": {
+          "version": "0.803.22",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "0.803.22",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-ng-packagr": {
+          "version": "0.803.22",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "0.803.22",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-optimizer": {
+          "version": "0.803.22",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "8.3.22",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cli": {
+          "version": "8.3.22",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "8.3.22",
           "alwaysAddToPackageJson": false
         }
       }
