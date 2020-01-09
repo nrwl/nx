@@ -43,11 +43,6 @@
           }
         ]
       }
-    },
-    "interactiveMode": {
-      "type": "boolean",
-      "description": "Runs the preset with interactive prompts enabled.",
-      "default": false
     }
   }
 }

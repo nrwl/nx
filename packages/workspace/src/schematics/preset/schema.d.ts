@@ -11,5 +11,4 @@ export interface Schema {
     | 'web-components'
     | 'angular-nest'
     | 'react-express';
-  interactiveMode?: boolean;
 }

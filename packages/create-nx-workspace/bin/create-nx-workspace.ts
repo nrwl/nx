@@ -78,7 +78,16 @@ determineWorkspaceName(parsedArgs).then(name => {
       return determineStyle(preset).then(style => {
         return determineCli(preset, parsedArgs).then(cli => {
           const tmpDir = createSandbox(packageManager, cli);
-          createApp(tmpDir, cli, parsedArgs, name, preset, appName, style, parsedArgs.interactive);
+          createApp(
+            tmpDir,
+            cli,
+            parsedArgs,
+            name,
+            preset,
+            appName,
+            style,
+            parsedArgs.interactive
+          );
           showCliWarning(preset, parsedArgs);
           showNxWarning(name);
           pointToTutorialAndCourse(preset);
@@ -413,7 +422,9 @@ function createApp(
 
   const appNameArg = appName ? ` --appName="${appName}"` : ``;
   const styleArg = style ? ` --style="${style}"` : ``;
-  const interactiveArg = interactive ? ` --interactiveMode=true` : ``;
+  const interactiveArg = interactive
+    ? ` --interactive=true`
+    : ` --interactive=false`;
 
   console.log(
     `new ${args} --preset="${preset}"${appNameArg}${styleArg}${interactiveArg} --collection=@nrwl/workspace`

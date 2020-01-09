@@ -9,5 +9,4 @@ export interface Schema {
   style?: string;
   commit?: { name: string; email: string; message?: string };
   cli: 'nx' | 'angular';
-  interactiveMode: boolean?;
 }

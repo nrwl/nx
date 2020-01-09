@@ -44,7 +44,6 @@ export interface Schema {
     | 'react-express'
     | 'next';
   commit?: { name: string; email: string; message?: string };
-  interactiveMode: boolean;
 }
 
 class RunPresetTask {
@@ -57,13 +56,9 @@ class RunPresetTask {
 
 function createPresetTaskExecutor(cli: string, opts: Schema) {
   const cliCommand = cli === 'angular' ? 'ng' : 'nx';
-
-  if (cliCommand === 'nx' && opts['--']) {
-    const intModeArg = opts['--'].find((opt: { name: string, possible: any[] }) => opt.name === 'interactiveMode');
-    if (intModeArg) {
-      opts.interactiveMode = true;
-    }
-  }
+  const interactive = !!process.argv.find(
+    arg => arg.startsWith('--interactive') && !arg.endsWith('false')
+  );
 
   return {
     name: 'RunPreset',
@@ -88,7 +83,7 @@ function createPresetTaskExecutor(cli: string, opts: Schema) {
             : `--npmScope=${opts.name}`,
           opts.preset ? `--preset=${opts.preset}` : null,
           `--cli=${cliCommand}`,
-          opts.interactiveMode ? '--interactiveMode=true' : null,
+          interactive ? '--interactive=true' : '--interactive=false'
         ].filter(e => !!e);
         return new Observable(obs => {
           spawn(executable, args, spawnOptions).on('close', (code: number) => {

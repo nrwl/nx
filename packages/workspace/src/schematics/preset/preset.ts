@@ -36,43 +36,28 @@ function createPreset(options: Schema): Rule {
     return noop();
   } else if (options.preset === 'angular') {
     return chain([
-      externalSchematic(
-        '@nrwl/angular',
-        'application',
-        {
-          name: options.name,
-          style: options.style
-        },
-        { interactive: options.interactiveMode }
-      ),
+      externalSchematic('@nrwl/angular', 'application', {
+        name: options.name,
+        style: options.style
+      }),
       setDefaultCollection('@nrwl/angular')
     ]);
   } else if (options.preset === 'react') {
     return chain([
-      externalSchematic(
-        '@nrwl/react',
-        'application',
-        {
-          name: options.name,
-          style: options.style,
-          linter
-        },
-        { interactive: options.interactiveMode }
-      ),
+      externalSchematic('@nrwl/react', 'application', {
+        name: options.name,
+        style: options.style,
+        linter
+      }),
       setDefaultCollection('@nrwl/react')
     ]);
   } else if (options.preset === 'next') {
     return chain([
-      externalSchematic(
-        '@nrwl/next',
-        'application',
-        {
-          name: options.name,
-          style: options.style,
-          linter
-        },
-        { interactive: options.interactiveMode }
-      ),
+      externalSchematic('@nrwl/next', 'application', {
+        name: options.name,
+        style: options.style,
+        linter
+      }),
       setDefaultCollection('@nrwl/next')
     ]);
   } else if (options.preset === 'web-components') {
@@ -84,8 +69,7 @@ function createPreset(options: Schema): Rule {
           name: options.name,
           style: options.style,
           linter
-        },
-        { interactive: options.interactiveMode }
+        }
       ),
       addDepsToPackageJson(
         {},
@@ -101,47 +85,30 @@ function createPreset(options: Schema): Rule {
     ]);
   } else if (options.preset === 'angular-nest') {
     return chain([
-      externalSchematic(
-        '@nrwl/angular',
-        'application',
-        { name: options.name, style: options.style },
-        { interactive: options.interactiveMode }
-      ),
-      externalSchematic(
-        '@nrwl/nest',
-        'application',
-        {
-          name: 'api',
-          frontendProject: options.name
-        },
-        { interactive: options.interactiveMode }
-      ),
+      externalSchematic('@nrwl/angular', 'application', {
+        name: options.name,
+        style: options.style
+      }),
+      externalSchematic('@nrwl/nest', 'application', {
+        name: 'api',
+        frontendProject: options.name
+      }),
       schematic('library', { name: 'api-interfaces' }, { interactive: false }),
       setDefaultCollection('@nrwl/angular'),
       connectAngularAndNest(options)
     ]);
   } else if (options.preset === 'react-express') {
     return chain([
-      externalSchematic(
-        '@nrwl/react',
-        'application',
-        {
-          name: options.name,
-          style: options.style,
-          linter
-        },
-        { interactive: options.interactiveMode }
-      ),
-      externalSchematic(
-        '@nrwl/express',
-        'application',
-        {
-          name: 'api',
-          frontendProject: options.name,
-          linter
-        },
-        { interactive: options.interactiveMode }
-      ),
+      externalSchematic('@nrwl/react', 'application', {
+        name: options.name,
+        style: options.style,
+        linter
+      }),
+      externalSchematic('@nrwl/express', 'application', {
+        name: 'api',
+        frontendProject: options.name,
+        linter
+      }),
       schematic(
         'library',
         { name: 'api-interfaces', linter },
