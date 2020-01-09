@@ -60,7 +60,7 @@ const angularCliVersion = 'ANGULAR_CLI_VERSION';
 const prettierVersion = 'PRETTIER_VERSION';
 
 const parsedArgs = yargsParser(process.argv, {
-  string: ['cli', 'preset', 'appName'],
+  string: ['cli', 'preset', 'appName', 'style'],
   alias: {
     appName: 'app-name'
   },
@@ -75,7 +75,7 @@ const packageManager = determinePackageManager();
 determineWorkspaceName(parsedArgs).then(name => {
   determinePreset(parsedArgs).then(preset => {
     return determineAppName(preset, parsedArgs).then(appName => {
-      return determineStyle(preset).then(style => {
+      return determineStyle(preset, parsedArgs).then(style => {
         return determineCli(preset, parsedArgs).then(cli => {
           const tmpDir = createSandbox(packageManager, cli);
           createApp(
@@ -116,6 +116,9 @@ function showHelp() {
     appName                   the name of the application created by some presets  
 
     cli                       CLI to power the Nx workspace (options: "nx", "angular")
+    
+    style                     default style option to be used when a non-empty preset is selected 
+                              options: ("css", "scss", "styl", "less") for React/Next.js also ("styled-components", "@emotion/styled")
 
     interactive               Enable interactive mode when using presets (boolean)
 
@@ -317,7 +320,7 @@ function determineCli(preset: Preset, parsedArgs: any) {
   }
 }
 
-function determineStyle(preset: Preset) {
+function determineStyle(preset: Preset, parsedArgs: any) {
   if (preset === Preset.Empty) {
     return Promise.resolve(null);
   }
@@ -354,17 +357,36 @@ function determineStyle(preset: Preset) {
     );
   }
 
-  return inquirer
-    .prompt([
-      {
-        name: 'style',
-        message: `Default stylesheet format          `,
-        default: 'css',
-        type: 'list',
-        choices
-      }
-    ])
-    .then(a => a.style);
+  if (!parsedArgs.style) {
+    return inquirer
+      .prompt([
+        {
+          name: 'style',
+          message: `Default stylesheet format          `,
+          default: 'css',
+          type: 'list',
+          choices
+        }
+      ])
+      .then(a => a.style);
+  }
+
+  const foundStyle = choices.find(choice => choice.value === parsedArgs.style);
+
+  if (foundStyle === undefined) {
+    output.error({
+      title: 'Invalid style',
+      bodyLines: [
+        `It must be one of the following:`,
+        '',
+        ...choices.map(choice => choice.value)
+      ]
+    });
+
+    process.exit(1);
+  }
+
+  return Promise.resolve(parsedArgs.style);
 }
 
 function createSandbox(
