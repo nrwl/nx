@@ -7,6 +7,7 @@ import { join } from 'path';
 import { Hasher } from './hasher';
 import * as fsExtra from 'fs-extra';
 import { DefaultTasksRunnerOptions } from './tasks-runner-v2';
+import { fork, spawn } from 'child_process';
 
 export type CachedResult = { terminalOutput: string; outputsPath: string };
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
@@ -40,6 +41,35 @@ export class Cache {
     private readonly options: DefaultTasksRunnerOptions
   ) {}
 
+  removeOldCacheRecords() {
+    /**
+     * Even though spawning a process is fast, we don't want to do it every time
+     * the user runs a command. Instead, we want to do it once in a while.
+     */
+    const shouldSpawnProcess = Math.floor(Math.random() * 50) === 1;
+    if (shouldSpawnProcess) {
+      const scriptPath = join(
+        this.root,
+        'node_modules',
+        '@nrwl',
+        'workspace',
+        'src',
+        'tasks-runner',
+        'remove-old-cache-records.js'
+      );
+      try {
+        const p = spawn('node', [`"${scriptPath}"`, `"${this.cachePath}"`], {
+          stdio: 'ignore',
+          detached: true
+        });
+        p.unref();
+      } catch (e) {
+        console.log(`Unable to start remove-old-cache-records script:`);
+        console.log(e.message);
+      }
+    }
+  }
+
   async get(task: Task): Promise<CachedResult> {
     if (!this.cacheConfig.isCacheableTask(task)) return null;
 
@@ -60,7 +90,6 @@ export class Cache {
   }
 
   async put(task: Task, terminalOutputPath: string, folders: string[]) {
-    if (!this.cacheConfig.isCacheableTask(task)) return;
     const terminalOutput = readFileSync(terminalOutputPath).toString();
     const hash = await this.hasher.hash(task);
     const td = join(this.cachePath, hash);
@@ -115,7 +144,11 @@ export class Cache {
   }
 
   async temporaryOutputPath(task: Task) {
-    return join(this.terminalOutputsDir, await this.hasher.hash(task));
+    if (this.cacheConfig.isCacheableTask(task)) {
+      return join(this.terminalOutputsDir, await this.hasher.hash(task));
+    } else {
+      return null;
+    }
   }
 
   private async getFromLocalDir(task: Task) {
