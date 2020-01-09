@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "ng-packagr Target",
+  "description": "ng-packagr target options for Build Architect. Use to build library projects.",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The file path for the ng-packagr configuration file, relative to the current workspace."
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "The full path for the TypeScript configuration file, relative to the current workspace."
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Run build when files change.",
+      "default": false
+    }
+  },
+  "additionalProperties": false,
+  "required": ["project"]
+}
