@@ -26,6 +26,7 @@ import {
 } from '@nrwl/workspace';
 import { Schema } from './schema';
 import { allFilesInDirInHost } from '@nrwl/workspace/src/utils/ast-utils';
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 export interface NormalizedSchema extends Schema {
   name: string;
   fileName: string;
@@ -34,6 +35,7 @@ export interface NormalizedSchema extends Schema {
   parsedTags: string[];
   npmScope: string;
   npmPackageName: string;
+  fileTemplate: string;
 }
 
 export default function(schema: NormalizedSchema): Rule {
@@ -74,6 +76,9 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     ? options.tags.split(',').map(s => s.trim())
     : [];
   const npmPackageName = `@${npmScope}/${name}`;
+
+  const fileTemplate = getFileTemplate();
+
   const normalized: NormalizedSchema = {
     ...options,
     fileName,
@@ -82,7 +87,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     projectRoot,
     projectDirectory,
     parsedTags,
-    npmPackageName
+    npmPackageName,
+    fileTemplate
   };
 
   return normalized;
@@ -124,7 +130,7 @@ function updateWorkspaceJson(options: NormalizedSchema): Rule {
         ...[
           {
             input: `./${options.projectRoot}/src`,
-            glob: '**/*.json',
+            glob: '**/*.!(ts|spec.ts)',
             output: './src'
           },
           {
@@ -151,4 +157,10 @@ function updateTsConfig(options: NormalizedSchema): Rule {
       return json;
     });
   };
+}
+
+function getFileTemplate() {
+  return stripIndents`
+    const variable = "<%= projectName %>";
+  `;
 }

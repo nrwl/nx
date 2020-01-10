@@ -1,5 +1,5 @@
-import { Rule, chain } from '@angular-devkit/schematics';
-import { ProjectType, projectRootDir, updateWorkspace, addProjectToNxJsonInTree, toFileName } from '@nrwl/workspace';
+import { Rule, chain, mergeWith, apply, applyTemplates, url, move } from '@angular-devkit/schematics';
+import { ProjectType, projectRootDir, updateWorkspace, addProjectToNxJsonInTree, toFileName, offsetFromRoot, names } from '@nrwl/workspace';
 import { <%= className %>SchematicSchema } from './schema';
 
 /**
@@ -34,7 +34,18 @@ function normalizeOptions(options: <%= className %>SchematicSchema): NormalizedS
   };
 }
 
-
+function addFiles(options: NormalizedSchema): Rule {
+  return mergeWith(
+      apply(url(`./files`), [
+        applyTemplates({
+          ...options,
+          ...names(options.name),
+          offsetFromRoot: offsetFromRoot(options.projectRoot)
+        }),
+        move(options.projectRoot)
+      ])
+    )
+}
 
 export default function(options: <%= className %>SchematicSchema): Rule {
  const normalizedOptions = normalizeOptions(options);
@@ -50,7 +61,8 @@ export default function(options: <%= className %>SchematicSchema): Rule {
         builder: '<%= npmPackageName %>:build'
       })
     }),
-    addProjectToNxJsonInTree(normalizedOptions.projectName, normalizedOptions.parsedTags)
+    addProjectToNxJsonInTree(normalizedOptions.projectName, normalizedOptions.parsedTags),
+    addFiles(normalizedOptions)
   ]);
 }
 
