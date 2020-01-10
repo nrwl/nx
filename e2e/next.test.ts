@@ -68,6 +68,67 @@ module.exports = {
 
       await checkApp(appName, { checkLint: false });
     }, 120000);
+
+    it('should generate a Next.js app that compiles when using a workspace and react lib written in TypeScript', async () => {
+      ensureProject();
+      const appName = uniq('app');
+      const tsLibName = uniq('tslib');
+      const tsxLibName = uniq('tsxlib');
+
+      runCLI(
+        `generate @nrwl/next:app ${appName} --no-interactive --linter=eslint`
+      );
+      runCLI(`generate @nrwl/react:lib ${tsxLibName} --no-interactive`);
+      runCLI(`generate @nrwl/workspace:lib ${tsLibName} --no-interactive`);
+
+      updateFile(
+        `libs/${tsLibName}/src/lib/${tsLibName}.ts`,
+        `
+        export function testFn(): string {
+          return 'Hello Nx';
+        };
+        `
+      );
+
+      updateFile(
+        `libs/${tsxLibName}/src/lib/${tsxLibName}.tsx`,
+        `
+        import React from 'react';
+
+        interface TestComponentProps {
+          text: string;
+        }
+
+        export const TestComponent = ({ text }: TestComponentProps) => {
+          return <span>{text}</span>;
+        };
+
+        export default TestComponent;
+        `
+      );
+
+      const mainPath = `apps/${appName}/pages/index.tsx`;
+      const content = readFile(mainPath);
+
+      updateFile(
+        mainPath,
+        `
+        import { testFn } from '@proj/${tsLibName}';
+        import { TestComponent } from '@proj/${tsxLibName}';\n\n
+        ` +
+          content.replace(
+            `<main>`,
+            `<main>
+              <>
+                {testFn()}
+                <TestComponent text="Hello Next.JS" />
+              </>
+            `
+          )
+      );
+
+      await checkApp(appName, { checkLint: true });
+    }, 120000);
   });
 });
 
