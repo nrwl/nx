@@ -28,15 +28,13 @@ import {
   readNxJson,
   readWorkspaceJson
 } from '@nrwl/workspace/src/core/file-utils';
-import { TargetProjectLocator } from '../core/project-graph/build-dependencies/target-project-locator';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(
     options: IOptions,
     private readonly projectPath?: string,
     private readonly npmScope?: string,
-    private readonly projectGraph?: ProjectGraph,
-    private readonly targetProjectLocator?: TargetProjectLocator
+    private readonly projectGraph?: ProjectGraph
   ) {
     super(options);
 
@@ -53,13 +51,6 @@ export class Rule extends Lint.Rules.AbstractRule {
       }
       this.npmScope = (global as any).npmScope;
       this.projectGraph = (global as any).projectGraph;
-
-      if (!(global as any).targetProjectLocator) {
-        (global as any).targetProjectLocator = new TargetProjectLocator(
-          this.projectGraph.nodes
-        );
-      }
-      this.targetProjectLocator = (global as any).targetProjectLocator;
     }
   }
 
@@ -70,8 +61,7 @@ export class Rule extends Lint.Rules.AbstractRule {
         this.getOptions(),
         this.projectPath,
         this.npmScope,
-        this.projectGraph,
-        this.targetProjectLocator
+        this.projectGraph
       )
     );
   }
@@ -86,8 +76,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     options: IOptions,
     private readonly projectPath: string,
     private readonly npmScope: string,
-    private readonly projectGraph: ProjectGraph,
-    private readonly targetProjectLocator: TargetProjectLocator
+    private readonly projectGraph: ProjectGraph
   ) {
     super(sourceFile, options);
 
@@ -135,18 +124,15 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     // check constraints between libs and apps
     if (imp.startsWith(`@${this.npmScope}/`)) {
       // we should find the name
-      const filePath = getSourceFilePath(
-        this.getSourceFile().fileName,
-        this.projectPath
+      const sourceProject = findSourceProject(
+        this.projectGraph,
+        getSourceFilePath(this.getSourceFile().fileName, this.projectPath)
       );
-      const sourceProject = findSourceProject(this.projectGraph, filePath);
       // findProjectUsingImport to take care of same prefix
       const targetProject = findProjectUsingImport(
         this.projectGraph,
-        this.targetProjectLocator,
-        filePath,
-        imp,
-        this.npmScope
+        this.npmScope,
+        imp
       );
 
       // something went wrong => return.
@@ -174,6 +160,16 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
           node.getStart(),
           node.getWidth(),
           'imports of apps are forbidden'
+        );
+        return;
+      }
+
+      // deep imports aren't allowed
+      if (imp !== `@${this.npmScope}/${normalizedProjectRoot(targetProject)}`) {
+        this.addFailureAt(
+          node.getStart(),
+          node.getWidth(),
+          'deep imports into libraries are forbidden'
         );
         return;
       }
