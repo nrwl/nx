@@ -17,7 +17,9 @@ export class Hasher {
   ) {}
 
   async hash(task: Task): Promise<string> {
-    const hash = await this.projectHashes.hashProject(task.target.project);
+    const hash = await this.projectHashes.hashProject(task.target.project, [
+      task.target.project
+    ]);
     const implicits = await this.implicitDepsHash();
     return hasha(
       [
@@ -49,24 +51,21 @@ export class Hasher {
 }
 
 export class ProjectHashes {
-  projectHashes: { [projectName: string]: Promise<string> } = {};
-
   constructor(
     private readonly projectGraph: ProjectGraph,
     private readonly fileHashes: FileHashes
   ) {}
 
-  async hashProject(projectName: string) {
-    if (!this.projectHashes[projectName]) {
-      this.projectHashes[projectName] = new Promise(async res => {
-        const deps = (this.projectGraph.dependencies[projectName] || []).map(
-          t => this.hashProject(t.target)
-        );
-        const sources = this.hashProjectNodeSource(projectName);
-        res(hasha(await Promise.all([...deps, sources])));
-      });
-    }
-    return this.projectHashes[projectName];
+  async hashProject(projectName: string, visited: string[]) {
+    return Promise.resolve().then(async () => {
+      const deps = (this.projectGraph.dependencies[projectName] || []).map(t =>
+        visited.indexOf(t.target) > -1
+          ? ''
+          : this.hashProject(t.target, [t.target, ...visited])
+      );
+      const sources = this.hashProjectNodeSource(projectName);
+      return hasha(await Promise.all([...deps, sources]));
+    });
   }
 
   private async hashProjectNodeSource(projectName: string) {
