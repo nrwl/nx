@@ -98,6 +98,12 @@ Type: `number`
 
 Number of workers to use for type checking. (defaults to # of CPUS - 2)
 
+### memoryLimit
+
+Type: `number`
+
+Memory limit for type checking service process in MB. (defaults to 2048)
+
 ### namedChunks
 
 Default: `true`

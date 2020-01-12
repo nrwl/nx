@@ -21,6 +21,7 @@ export interface BuildBuilderOptions {
   sourceMap?: boolean | SourceMapOptions;
   optimization?: boolean | OptimizationOptions;
   showCircularDependencies?: boolean;
+  memoryLimit?: number;
   maxWorkers?: number;
   poll?: number;
 
