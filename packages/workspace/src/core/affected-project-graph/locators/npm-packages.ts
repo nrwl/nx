@@ -12,7 +12,8 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
     changes.forEach(c => {
       if (
         isJsonChange(c) &&
-        (c.path[0] === 'dependencies' || c.path[0] === 'devDependencies')
+        (c.path[0] === 'dependencies' || c.path[0] === 'devDependencies') &&
+        c.value.rhs // If rhs is blank then dep was deleted and does not exist in project graph
       ) {
         touched.push(c.path[1]);
       } else if (isWholeFileChange(c)) {

@@ -3,7 +3,7 @@ import { NxJson } from '../../shared-interfaces';
 import { WholeFileChange } from '../..//file-utils';
 import { DiffType } from '../../../utils/json-diff';
 
-describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
+describe('getTouchedNpmPackages', () => {
   let workspaceJson;
   let nxJson: NxJson<string[]>;
   beforeEach(() => {
@@ -44,6 +44,15 @@ describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
               value: {
                 lhs: '0.0.1',
                 rhs: '0.0.2'
+              }
+            },
+            // If it's deleted then it should not exist in project graph.
+            {
+              type: DiffType.Deleted,
+              path: ['dependencies', 'sad-nrwl'],
+              value: {
+                lhs: '0.0.1',
+                rhs: undefined
               }
             }
           ]
