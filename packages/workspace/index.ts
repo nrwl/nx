@@ -45,7 +45,8 @@ export {
   renameSyncInTree,
   renameDirSyncInTree,
   updateNxJsonInTree,
-  addProjectToNxJsonInTree
+  addProjectToNxJsonInTree,
+  readNxJsonInTree
 } from './src/utils/ast-utils';
 
 export {

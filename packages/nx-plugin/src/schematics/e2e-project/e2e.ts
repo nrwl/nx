@@ -23,7 +23,10 @@ import {
   updateWorkspace,
   offsetFromRoot,
   readNxJson,
-  toPropertyName
+  toPropertyName,
+  readNxJsonInTree,
+  updateNxJsonInTree,
+  addProjectToNxJsonInTree
 } from '@nrwl/workspace';
 import { WorkspaceDefinition } from '@angular-devkit/core/src/workspace';
 import { Chain } from '@angular/compiler';
@@ -39,7 +42,7 @@ export default function(options: Schema): Rule {
   return async (host: Tree, context: SchematicContext) => {
     const workspace = await getWorkspace(host);
     validatePlugin(workspace, options.pluginName);
-    const normalizedOptions = await normalizeOptions(workspace, options);
+    const normalizedOptions = normalizeOptions(host, options);
     return chain([
       updateFiles(normalizedOptions),
       updateNxJson(normalizedOptions),
@@ -58,13 +61,10 @@ function validatePlugin(workspace: WorkspaceDefinition, pluginName: string) {
   }
 }
 
-function normalizeOptions(
-  workspace: WorkspaceDefinition,
-  options: Schema
-): NxPluginE2ESchema {
+function normalizeOptions(host: Tree, options: Schema): NxPluginE2ESchema {
   const projectName = `${options.pluginName}-e2e`;
   const projectRoot = join(normalize('apps'), projectName);
-  const npmScope = readNxJson().npmScope;
+  const npmScope = readNxJsonInTree(host).npmScope;
   const pluginPropertyName = toPropertyName(options.pluginName);
   return {
     ...options,
@@ -76,11 +76,9 @@ function normalizeOptions(
 }
 
 function updateNxJson(options: NxPluginE2ESchema): Rule {
-  return updateJsonInTree<NxJson>('nx.json', json => {
-    json.projects[options.projectName] = {
-      tags: []
-    };
-    return json;
+  return addProjectToNxJsonInTree(options.projectName, {
+    tags: [],
+    implicitDependencies: [options.pluginName]
   });
 }
 

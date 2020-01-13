@@ -82,7 +82,7 @@ function createFiles(options: NormalizedSchema): Rule {
 }
 
 function updateNxJson(options: NormalizedSchema): Rule {
-  return addProjectToNxJsonInTree(options.name, options.parsedTags);
+  return addProjectToNxJsonInTree(options.name, { tags: options.parsedTags });
 }
 
 export default function(schema: Schema): Rule {

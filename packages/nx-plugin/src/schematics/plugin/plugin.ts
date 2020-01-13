@@ -1,4 +1,5 @@
-import { normalize, Path, JsonArray } from '@angular-devkit/core';
+import { JsonArray, normalize, Path } from '@angular-devkit/core';
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
   apply,
   chain,
@@ -7,26 +8,24 @@ import {
   mergeWith,
   move,
   Rule,
+  schematic,
   SchematicContext,
   template,
   Tree,
-  url,
-  schematic
+  url
 } from '@angular-devkit/schematics';
 import {
   formatFiles,
-  names,
-  NxJson,
-  offsetFromRoot,
-  toFileName,
-  updateWorkspace,
-  readJsonInTree,
   getProjectConfig,
-  updateJsonInTree
+  names,
+  offsetFromRoot,
+  readNxJsonInTree,
+  toFileName,
+  updateJsonInTree,
+  updateWorkspace
 } from '@nrwl/workspace';
-import { Schema } from './schema';
 import { allFilesInDirInHost } from '@nrwl/workspace/src/utils/ast-utils';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { Schema } from './schema';
 export interface NormalizedSchema extends Schema {
   name: string;
   fileName: string;
@@ -61,7 +60,7 @@ export default function(schema: NormalizedSchema): Rule {
 }
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
-  const nxJson = readJsonInTree<NxJson>(host, 'nx.json');
+  const nxJson = readNxJsonInTree(host);
   const npmScope = nxJson.npmScope;
   const name = toFileName(options.name);
   const projectDirectory = options.directory
