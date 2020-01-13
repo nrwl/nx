@@ -26,7 +26,7 @@ import {
   readNxJson,
   readWorkspaceJson
 } from '@nrwl/workspace/src/core/file-utils';
-import { TargetProjectLocator } from '@nrwl/workspace/src/core/project-graph/build-dependencies/target-project-locator';
+import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
 
 type Options = [
   {

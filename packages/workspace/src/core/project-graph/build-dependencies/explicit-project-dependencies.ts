@@ -5,7 +5,7 @@ import {
   ProjectGraphNodeRecords
 } from '../project-graph-models';
 import { TypeScriptImportLocator } from './typescript-import-locator';
-import { TargetProjectLocator } from './target-project-locator';
+import { TargetProjectLocator } from '../../target-project-locator';
 
 export function buildExplicitTypeScriptDependencies(
   ctx: ProjectGraphContext,

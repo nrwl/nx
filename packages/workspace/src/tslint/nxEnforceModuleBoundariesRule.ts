@@ -29,7 +29,7 @@ import {
   readNxJson,
   readWorkspaceJson
 } from '@nrwl/workspace/src/core/file-utils';
-import { TargetProjectLocator } from '../core/project-graph/build-dependencies/target-project-locator';
+import { TargetProjectLocator } from '../core/target-project-locator';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(

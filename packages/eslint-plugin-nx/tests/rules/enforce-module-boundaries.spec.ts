@@ -10,7 +10,7 @@ import { extname } from 'path';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName
 } from '../../src/rules/enforce-module-boundaries';
-import { TargetProjectLocator } from '@nrwl/workspace/src/core/project-graph/build-dependencies/target-project-locator';
+import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('@nrwl/workspace/src/utils/app-root', () => ({
   appRootPath: '/root'

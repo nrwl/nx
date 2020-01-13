@@ -8,7 +8,7 @@ import {
   ProjectType
 } from '../core/project-graph';
 import { Rule } from './nxEnforceModuleBoundariesRule';
-import { TargetProjectLocator } from '../core/project-graph/build-dependencies/target-project-locator';
+import { TargetProjectLocator } from '../core/target-project-locator';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('../utils/app-root', () => ({ appRootPath: '/root' }));

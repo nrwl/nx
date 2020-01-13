@@ -7,7 +7,7 @@ import {
   ProjectGraphDependency,
   ProjectGraphNode
 } from '../core/project-graph';
-import { TargetProjectLocator } from '../core/project-graph/build-dependencies/target-project-locator';
+import { TargetProjectLocator } from '../core/target-project-locator';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 export type DepConstraint = {
