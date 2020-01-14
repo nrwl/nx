@@ -61,7 +61,7 @@ export default function(options: <%= className %>SchematicSchema): Rule {
         builder: '<%= npmPackageName %>:build'
       })
     }),
-    addProjectToNxJsonInTree(normalizedOptions.projectName, normalizedOptions.parsedTags),
+    addProjectToNxJsonInTree(normalizedOptions.projectName, { tags: normalizedOptions.parsedTags }),
     addFiles(normalizedOptions)
   ]);
 }
