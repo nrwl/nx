@@ -8,7 +8,7 @@ import * as withSASS from '@zeit/next-sass';
 import * as withSTYLUS from '@zeit/next-stylus';
 
 function createWebpackConfig(root: string) {
-  return function webpackConfig(config, { defaultLoaders }) {
+  return function webpackConfig(config) {
     const mainFields = ['es2015', 'module', 'main'];
     const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
     config.resolve.plugins = [
@@ -18,10 +18,6 @@ function createWebpackConfig(root: string) {
         mainFields
       })
     ];
-    config.module.rules.push({
-      test: /\.tsx/,
-      use: [defaultLoaders.babel]
-    });
     return config;
   };
 }
@@ -40,6 +36,6 @@ export function prepareConfig(
   config.outdir = `${offsetFromRoot(root)}${outputPath}`;
   const userWebpack = config.webpack;
   config.webpack = (a, b) =>
-    createWebpackConfig(absoluteRoot)(userWebpack(a, b), b);
+    createWebpackConfig(absoluteRoot)(userWebpack(a, b));
   return config;
 }
