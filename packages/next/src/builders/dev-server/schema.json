@@ -31,6 +31,11 @@
       "type": "string",
       "description": "Use a custom server script",
       "default": null
+    },
+    "hostname": {
+      "type": "string",
+      "description": "Hostname on which the application is served.",
+      "default": null
     }
   },
   "required": []
