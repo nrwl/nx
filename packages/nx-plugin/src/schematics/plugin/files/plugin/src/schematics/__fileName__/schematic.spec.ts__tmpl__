@@ -15,8 +15,7 @@ describe('<%= name %> schematic', () => {
   );
 
   beforeEach(() => {
-    appTree = Tree.empty();
-    appTree = createEmptyWorkspace(appTree);
+    appTree = createEmptyWorkspace(Tree.empty());
   });
 
   it('should run successfully', async () => {

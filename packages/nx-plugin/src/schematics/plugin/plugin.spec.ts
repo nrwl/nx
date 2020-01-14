@@ -1,14 +1,12 @@
-import { Tree } from '@angular-devkit/schematics';
+import * as ngSchematics from '@angular-devkit/schematics';
+import { readJsonInTree, readWorkspace } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
-import { readWorkspace, readJsonInTree } from '@nrwl/workspace';
 
 describe('NxPlugin plugin', () => {
-  let appTree: Tree;
-
+  let appTree: ngSchematics.Tree;
   beforeEach(() => {
-    appTree = Tree.empty();
-    appTree = createEmptyWorkspace(appTree);
+    appTree = createEmptyWorkspace(ngSchematics.Tree.empty());
   });
 
   it('should update the workspace.json file', async () => {
@@ -96,6 +94,11 @@ describe('NxPlugin plugin', () => {
       )
     ).toBeTruthy();
     expect(
+      tree.readContent(
+        'libs/my-plugin/src/schematics/my-plugin/files/src/index.ts.template'
+      )
+    ).toContain('const variable = "<%= projectName %>";');
+    expect(
       tree.exists('libs/my-plugin/src/builders/my-plugin/builder.ts')
     ).toBeTruthy();
     expect(
@@ -109,6 +112,28 @@ describe('NxPlugin plugin', () => {
     ).toBeTruthy();
   });
 
-  it('should include a index.ts.template file', () => {});
-  it('should call the @nrwl/nx-plugin:e2e', () => {});
+  it('should call the @nrwl/node:lib schematic', async () => {
+    const externalSchematicSpy = jest.spyOn(ngSchematics, 'externalSchematic');
+    await runSchematic('plugin', { name: 'myPlugin' }, appTree);
+    expect(externalSchematicSpy).toBeCalledWith(
+      '@nrwl/node',
+      'lib',
+      expect.objectContaining({
+        publishable: true
+      })
+    );
+  });
+
+  it('should call the @nrwl/nx-plugin:e2e schematic', async () => {
+    const schematicSpy = jest.spyOn(ngSchematics, 'schematic');
+    const tree = await runSchematic('plugin', { name: 'myPlugin' }, appTree);
+    expect(schematicSpy).toBeCalledWith(
+      'e2e-project',
+      expect.objectContaining({
+        pluginName: 'my-plugin',
+        pluginOutputPath: `dist/libs/my-plugin`,
+        npmPackageName: '@proj/my-plugin'
+      })
+    );
+  });
 });

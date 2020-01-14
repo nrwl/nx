@@ -1,35 +1,28 @@
-import {
-  Rule,
-  Tree,
-  SchematicContext,
-  chain,
-  SchematicsException,
-  mergeWith,
-  apply,
-  template,
-  move,
-  url,
-  externalSchematic
-} from '@angular-devkit/schematics';
-
-import { Schema } from './schema';
-import { join } from 'path';
 import { normalize } from '@angular-devkit/core';
-import {
-  getWorkspace,
-  updateJsonInTree,
-  NxJson,
-  updateWorkspaceInTree,
-  updateWorkspace,
-  offsetFromRoot,
-  readNxJson,
-  toPropertyName,
-  readNxJsonInTree,
-  updateNxJsonInTree,
-  addProjectToNxJsonInTree
-} from '@nrwl/workspace';
 import { WorkspaceDefinition } from '@angular-devkit/core/src/workspace';
-import { Chain } from '@angular/compiler';
+import {
+  apply,
+  chain,
+  externalSchematic,
+  mergeWith,
+  move,
+  Rule,
+  SchematicContext,
+  SchematicsException,
+  template,
+  Tree,
+  url
+} from '@angular-devkit/schematics';
+import {
+  addProjectToNxJsonInTree,
+  getWorkspace,
+  offsetFromRoot,
+  readNxJsonInTree,
+  toPropertyName,
+  updateWorkspace
+} from '@nrwl/workspace';
+import { join } from 'path';
+import { Schema } from './schema';
 
 export interface NxPluginE2ESchema extends Schema {
   projectRoot: string;
