@@ -82,6 +82,7 @@ determineWorkspaceName(parsedArgs).then(name => {
           showCliWarning(preset, parsedArgs);
           showNxWarning(name);
           pointToTutorial(preset);
+          pointToCourse();
         });
       });
     });
@@ -506,4 +507,14 @@ function pointToTutorial(preset: Preset) {
       });
       break;
   }
+}
+
+function pointToCourse(): void {
+  output.addVerticalSeparator();
+  output.note({
+    title: `Prefer watching videos? We made en entire course for Nx available on YouTube.`,
+    bodyLines: [
+      `https://www.youtube.com/watch?v=2mYLe9Kp9VM&list=PLakNactNC1dH38AfqmwabvOszDmKriGco`
+    ]
+  });
 }
