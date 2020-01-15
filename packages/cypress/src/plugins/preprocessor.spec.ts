@@ -21,7 +21,8 @@ describe('getWebpackConfig', () => {
       options: {
         configFile: './tsconfig.json',
         // https://github.com/TypeStrong/ts-loader/pull/685
-        experimentalWatchApi: true
+        experimentalWatchApi: true,
+        transpileOnly: true
       }
     });
   });
