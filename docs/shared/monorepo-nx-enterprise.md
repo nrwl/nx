@@ -163,7 +163,7 @@ Schematics is a library used by Nx to do code generation. `nx g lib mylib` invok
 
 Nx simplifies it. With Nx, we can create custom schematics in the `tools/schematics` and invoke them without having to do compile, build, deploy anything.
 
-Read more about workspace schematics [here](https://auth0.com/blog/create-custom-schematics-with-nx/).
+Read more about workspace schematics in the Workspace Schematics guide.
 
 ### Workspace Lint Checks
 
