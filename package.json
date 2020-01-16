@@ -23,8 +23,7 @@
     "checkformat": "./scripts/check_format.sh",
     "checkimports": "node ./scripts/check-imports.js",
     "checkversions": "ts-node ./scripts/check-versions.ts",
-    "documentation": "./scripts/documentation/documentation.sh && ./scripts/documentation/check-documentation.sh",
-    "prepush": "yarn checkcommit && yarn documentation && yarn checkformat"
+    "documentation": "./scripts/documentation/documentation.sh && ./scripts/documentation/check-documentation.sh"
   },
   "devDependencies": {
     "@angular-devkit/architect": "0.803.22",
@@ -250,6 +249,11 @@
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-customizable"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "pre-push": "yarn checkcommit && yarn documentation && yarn checkformat"
     }
   }
 }
