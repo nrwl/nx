@@ -33,6 +33,16 @@ export function createBabelConfig(
       [
         require.resolve('@babel/plugin-proposal-class-properties'),
         { loose: true }
+      ],
+      // Adds syntax support for optional chaining (.?)
+      [
+        require.resolve('@babel/plugin-proposal-optional-chaining'),
+        { loose: true }
+      ],
+      // Adds syntax support for default value using ?? operator
+      [
+        require.resolve('@babel/plugin-proposal-nullish-coalescing-operator'),
+        { loose: true }
       ]
     ],
     overrides: [
