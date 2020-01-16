@@ -17,6 +17,8 @@ import {
   TouchedProjectLocator
 } from './affected-project-graph-models';
 import { normalizeNxJson } from '../normalize-nx-json';
+import { getTouchedProjectsInNxJson } from './locators/nx-json-changes';
+import { getTouchedProjectsInWorkspaceJson } from './locators/workspace-json-changes';
 
 export function filterAffected(
   graph: ProjectGraph,
@@ -31,7 +33,9 @@ export function filterAffected(
     getTouchedProjects,
     getImplicitlyTouchedProjects,
     getTouchedNpmPackages,
-    getImplicitlyTouchedProjectsByJsonChanges
+    getImplicitlyTouchedProjectsByJsonChanges,
+    getTouchedProjectsInNxJson,
+    getTouchedProjectsInWorkspaceJson
   ];
   const touchedProjects = touchedProjectLocators.reduce(
     (acc, f) => {
