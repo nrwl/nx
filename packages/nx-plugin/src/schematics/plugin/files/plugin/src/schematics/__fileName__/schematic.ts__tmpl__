@@ -1,5 +1,21 @@
-import { Rule, chain, mergeWith, apply, applyTemplates, url, move } from '@angular-devkit/schematics';
-import { ProjectType, projectRootDir, updateWorkspace, addProjectToNxJsonInTree, toFileName, offsetFromRoot, names } from '@nrwl/workspace';
+import {
+  apply,
+  applyTemplates,
+  chain,
+  mergeWith,
+  move,
+  Rule,
+  url
+} from '@angular-devkit/schematics';
+import {
+  addProjectToNxJsonInTree,
+  names,
+  offsetFromRoot,
+  projectRootDir,
+  ProjectType,
+  toFileName,
+  updateWorkspace
+} from '@nrwl/workspace';
 import { <%= className %>SchematicSchema } from './schema';
 
 /**
