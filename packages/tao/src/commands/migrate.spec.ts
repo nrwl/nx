@@ -1,4 +1,4 @@
-import { Migrator } from './migrate';
+import { Migrator, normalizeVersion, parseMigrationsOptions } from './migrate';
 
 describe('Migration', () => {
   describe('packageJson patch', () => {
@@ -428,6 +428,98 @@ describe('Migration', () => {
           newChild: { version: '3.0.0', alwaysAddToPackageJson: false }
         }
       });
+    });
+  });
+
+  describe('normalizeVersions', () => {
+    it('should return version when it meets semver requirements', () => {
+      expect(normalizeVersion('1.2.3')).toEqual('1.2.3');
+      expect(normalizeVersion('1.2.3-beta.1')).toEqual('1.2.3-beta.1');
+    });
+
+    it('should handle versions missing a patch or a minor', () => {
+      expect(normalizeVersion('1.2')).toEqual('1.2.0');
+      expect(normalizeVersion('1')).toEqual('1.0.0');
+      expect(normalizeVersion('1-beta.1')).toEqual('1.0.0-beta.1');
+    });
+
+    it('should handle incorrect versions', () => {
+      expect(normalizeVersion('1-invalid-version')).toEqual('1.0.0-invalid');
+      expect(normalizeVersion('1.invalid-version')).toEqual('1.0.0');
+      expect(normalizeVersion('invalid-version')).toEqual('0.0.0');
+    });
+  });
+
+  describe('parseMigrationsOptions', () => {
+    it('should work', () => {
+      const r = parseMigrationsOptions([
+        '8.12.0',
+        '--from',
+        '@myscope/a@12.3,@myscope/b@1.1.1',
+        '--to',
+        '@myscope/c@12.3.1'
+      ]);
+      expect(r).toEqual({
+        type: 'generateMigrations',
+        targetPackage: '@nrwl/workspace',
+        targetVersion: '8.12.0',
+        from: {
+          '@myscope/a': '12.3.0',
+          '@myscope/b': '1.1.1'
+        },
+        to: {
+          '@myscope/c': '12.3.1'
+        }
+      });
+    });
+
+    it('should handle different variations of the target package', () => {
+      expect(parseMigrationsOptions(['8.12'])).toMatchObject({
+        targetPackage: '@nrwl/workspace',
+        targetVersion: '8.12.0'
+      });
+      expect(parseMigrationsOptions(['8'])).toMatchObject({
+        targetPackage: '@nrwl/workspace',
+        targetVersion: '8.0.0'
+      });
+      expect(parseMigrationsOptions(['@nrwl/workspace@8.12'])).toMatchObject({
+        targetPackage: '@nrwl/workspace',
+        targetVersion: '8.12.0'
+      });
+      expect(parseMigrationsOptions(['mypackage@8.12'])).toMatchObject({
+        targetPackage: 'mypackage',
+        targetVersion: '8.12.0'
+      });
+      expect(() => parseMigrationsOptions(['mypackage@latest'])).toThrowError(
+        `Incorrect version "latest". You must use a semver version (cannot use "latest" or "next").`
+      );
+      expect(() => parseMigrationsOptions(['@nrwl/workspace'])).toThrowError(
+        `Provide the correct package name and version. E.g., @nrwl/workspace@9.0.0.`
+      );
+    });
+
+    it('should handle incorrect from', () => {
+      expect(() =>
+        parseMigrationsOptions(['8.12.0', '--from', '@myscope/a@'])
+      ).toThrowError(`Incorrect 'from' section. Use --from="package@version"`);
+      expect(() =>
+        parseMigrationsOptions(['8.12.0', '--from', '@myscope/a'])
+      ).toThrowError(`Incorrect 'from' section. Use --from="package@version"`);
+      expect(() =>
+        parseMigrationsOptions(['8.12.0', '--from', 'myscope'])
+      ).toThrowError(`Incorrect 'from' section. Use --from="package@version"`);
+    });
+
+    it('should handle incorrect from', () => {
+      expect(() =>
+        parseMigrationsOptions(['8.12.0', '--to', '@myscope/a@'])
+      ).toThrowError(`Incorrect 'to' section. Use --to="package@version"`);
+      expect(() =>
+        parseMigrationsOptions(['8.12.0', '--to', '@myscope/a'])
+      ).toThrowError(`Incorrect 'to' section. Use --to="package@version"`);
+      expect(() =>
+        parseMigrationsOptions(['8.12.0', '--to', 'myscope'])
+      ).toThrowError(`Incorrect 'to' section. Use --to="package@version"`);
     });
   });
 });
