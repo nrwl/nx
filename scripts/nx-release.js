@@ -6,16 +6,17 @@ const fs = require('fs');
 const path = require('path');
 
 const parsedArgs = yargsParser(process.argv, {
-  boolean: ['dry-run', 'nobazel'],
+  boolean: ['dry-run', 'nobazel', 'local'],
   alias: {
     d: 'dry-run',
-    h: 'help'
+    h: 'help',
+    l: 'local'
   }
 });
 
 console.log('parsedArgs', parsedArgs);
 
-if (!process.env.GITHUB_TOKEN_RELEASE_IT_NX) {
+if (!parsedArgs.local && !process.env.GITHUB_TOKEN_RELEASE_IT_NX) {
   console.error('process.env.GITHUB_TOKEN_RELEASE_IT_NX is not set');
   process.exit(1);
 }
@@ -35,6 +36,7 @@ if (parsedArgs.help) {
       Options:
         --dry-run           Do not touch or write anything, but show the commands
         --help              Show this message
+        --local             Publish to local npm registry (IMPORTANT: install & run Verdaccio first & set registry in .npmrc)
 
     `);
   process.exit(0);
@@ -175,7 +177,9 @@ const options = {
      * The environment variable containing a valid GitHub
      * auth token with "repo" access (no other permissions required)
      */
-    token: process.env.GITHUB_TOKEN_RELEASE_IT_NX
+    token: !parsedArgs.local
+      ? process.env.GITHUB_TOKEN_RELEASE_IT_NX
+      : 'dummy-gh-token'
   },
   npm: {
     /**
@@ -204,7 +208,9 @@ releaseIt(options)
      * We always use either "latest" or "next" (i.e. no separate tags for alpha, beta etc)
      */
     const npmTag = parsedVersion.isPrerelease ? 'next' : 'latest';
-    const npmPublishCommand = `./scripts/publish.sh ${output.version} ${npmTag}`;
+    const npmPublishCommand = `./scripts/publish.sh ${
+      output.version
+    } ${npmTag} ${parsedArgs.local ? '--local' : ''}`;
     console.log('Executing publishing script for all packages:');
     console.log(`> ${npmPublishCommand}`);
     console.log(
