@@ -201,6 +201,10 @@
       "description": "Show circular dependency warnings on builds.",
       "default": true
     },
+    "memoryLimit": {
+      "type": "number",
+      "description": "Memory limit for type checking service process in MB. (defaults to 2048)"
+    },
     "maxWorkers": {
       "type": "number",
       "description": "Number of workers to use for type checking. (defaults to # of CPUS - 2)"

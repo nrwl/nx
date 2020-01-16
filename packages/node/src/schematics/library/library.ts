@@ -123,7 +123,7 @@ function addProject(options: NormalizedSchema): Rule {
           tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
           packageJson: `${options.projectRoot}/package.json`,
           main: `${options.projectRoot}/src/index.ts`,
-          assets: [`${options.projectRoot}/**/*.md`]
+          assets: [`${options.projectRoot}/*.md`]
         }
       };
     }

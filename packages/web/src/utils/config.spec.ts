@@ -268,6 +268,20 @@ describe('getBaseWebpackPartial', () => {
     });
   });
 
+  describe('the memory limit option', () => {
+    it('should set the memory limit for the type checker', () => {
+      const result = getBaseWebpackPartial({
+        ...input,
+        memoryLimit: 1024
+      });
+
+      const typeCheckerPlugin = result.plugins.find(
+        plugin => plugin instanceof ForkTsCheckerWebpackPlugin
+      ) as ForkTsCheckerWebpackPlugin;
+      expect(typeCheckerPlugin.options.memoryLimit).toEqual(1024);
+    });
+  });
+
   describe('the max workers option', () => {
     it('should set the maximum workers for the type checker', () => {
       const result = getBaseWebpackPartial({

@@ -27,6 +27,12 @@ Type: `boolean`
 
 Serve the application in the dev mode
 
+### hostname
+
+Type: `string`
+
+Hostname on which the application is served.
+
 ### port
 
 Default: `4200`

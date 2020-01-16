@@ -74,6 +74,9 @@ export function getBaseWebpackPartial(
     plugins: [
       new ForkTsCheckerWebpackPlugin({
         tsconfig: options.tsConfig,
+        memoryLimit:
+          options.memoryLimit ||
+          ForkTsCheckerWebpackPlugin.DEFAULT_MEMORY_LIMIT,
         workers: options.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE,
         useTypescriptIncrementalApi: false
       })
