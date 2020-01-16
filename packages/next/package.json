@@ -34,6 +34,6 @@
   },
   "dependencies": {
     "@nrwl/react": "*",
-    "@angular-devkit/schematics": "8.3.22"
+    "@angular-devkit/schematics": "8.3.23"
   }
 }

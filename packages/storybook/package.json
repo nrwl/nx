@@ -39,7 +39,7 @@
   "dependencies": {
     "@nrwl/cypress": "*",
     "core-js": "^3.2.1",
-    "tree-kill": "1.2.1",
+    "tree-kill": "1.2.2",
     "ts-loader": "5.3.1",
     "tsconfig-paths-webpack-plugin": "3.2.0",
     "webpack-node-externals": "1.7.2"
