@@ -1,27 +1,18 @@
 import { Tree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { join } from 'path';
 import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { callRule, runSchematic } from '../../utils/testing';
 
 describe('init', () => {
   let tree: Tree;
-  let testRunner: SchematicTestRunner;
 
   beforeEach(() => {
     tree = Tree.empty();
     tree = createEmptyWorkspace(tree);
-    testRunner = new SchematicTestRunner(
-      '@nrwl/express',
-      join(__dirname, '../../../collection.json')
-    );
   });
 
   it('should add dependencies', async () => {
-    const result = await testRunner
-      .runSchematicAsync('init', {}, tree)
-      .toPromise();
+    const result = await runSchematic('init', {}, tree);
     const packageJson = readJsonInTree(result, 'package.json');
     expect(packageJson.dependencies['@nrwl/express']).toBeUndefined();
     expect(packageJson.devDependencies['@nrwl/express']).toBeDefined();
