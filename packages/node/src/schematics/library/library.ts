@@ -21,12 +21,14 @@ import {
   offsetFromRoot,
   toFileName,
   updateJsonInTree,
-  updateWorkspaceInTree
+  updateWorkspaceInTree,
+  getNpmScope
 } from '@nrwl/workspace';
 import { Schema } from './schema';
 
 export interface NormalizedSchema extends Schema {
   name: string;
+  prefix: string;
   fileName: string;
   projectRoot: Path;
   projectDirectory: string;
@@ -35,7 +37,7 @@ export interface NormalizedSchema extends Schema {
 
 export default function(schema: NormalizedSchema): Rule {
   return (host: Tree, context: SchematicContext) => {
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(host, schema);
 
     return chain([
       externalSchematic('@nrwl/workspace', 'lib', schema),
@@ -47,7 +49,8 @@ export default function(schema: NormalizedSchema): Rule {
   };
 }
 
-function normalizeOptions(options: Schema): NormalizedSchema {
+function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
+  const defaultPrefix = getNpmScope(host);
   const name = toFileName(options.name);
   const projectDirectory = options.directory
     ? `${toFileName(options.directory)}/${name}`
@@ -63,6 +66,7 @@ function normalizeOptions(options: Schema): NormalizedSchema {
 
   const normalized: NormalizedSchema = {
     ...options,
+    prefix: defaultPrefix, // we could also allow customizing this
     fileName,
     name: projectName,
     projectRoot,
