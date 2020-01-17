@@ -33,24 +33,24 @@ describe('Update 8.12.0: package.json deps', () => {
 
       const packageJson = readJsonInTree(result, 'package.json');
       expect(packageJson.devDependencies['@angular-devkit/architect']).toEqual(
-        '0.803.22'
+        '0.803.23'
       );
       expect(
         packageJson.devDependencies['@angular-devkit/build-angular']
-      ).toEqual('0.803.22');
+      ).toEqual('0.803.23');
       expect(
         packageJson.devDependencies['@angular-devkit/build-ng-packagr']
-      ).toEqual('0.803.22');
+      ).toEqual('0.803.23');
       expect(
         packageJson.devDependencies['@angular-devkit/build-optimizer']
-      ).toEqual('0.803.22');
+      ).toEqual('0.803.23');
       expect(
         packageJson.devDependencies['@angular-devkit/build-webpack']
-      ).toEqual('0.803.22');
+      ).toEqual('0.803.23');
       expect(packageJson.devDependencies['@angular-devkit/schematics']).toEqual(
-        '8.3.22'
+        '8.3.23'
       );
-      expect(packageJson.devDependencies['@angular/cli']).toEqual('8.3.22');
+      expect(packageJson.devDependencies['@angular/cli']).toEqual('8.3.23');
     });
   });
 });
