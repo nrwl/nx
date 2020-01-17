@@ -60,11 +60,11 @@ const angularCliVersion = 'ANGULAR_CLI_VERSION';
 const prettierVersion = 'PRETTIER_VERSION';
 
 const parsedArgs = yargsParser(process.argv, {
-  string: ['cli', 'preset', 'appName', 'interactive'],
+  string: ['cli', 'preset', 'appName'],
   alias: {
     appName: 'app-name'
   },
-  boolean: ['help']
+  boolean: ['help', 'interactive']
 });
 
 if (parsedArgs.help) {

@@ -62,15 +62,11 @@ function createPreset(options: Schema): Rule {
     ]);
   } else if (options.preset === 'web-components') {
     return chain([
-      externalSchematic(
-        '@nrwl/web',
-        'application',
-        {
-          name: options.name,
-          style: options.style,
-          linter
-        }
-      ),
+      externalSchematic('@nrwl/web', 'application', {
+        name: options.name,
+        style: options.style,
+        linter
+      }),
       addDepsToPackageJson(
         {},
         {

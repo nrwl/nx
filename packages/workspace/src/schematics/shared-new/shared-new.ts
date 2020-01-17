@@ -26,6 +26,7 @@ import * as path from 'path';
 import { Observable } from 'rxjs';
 import { spawn } from 'child_process';
 import { platform } from 'os';
+import yargsParser = require('yargs-parser');
 
 export interface Schema {
   directory: string;
@@ -56,9 +57,9 @@ class RunPresetTask {
 
 function createPresetTaskExecutor(cli: string, opts: Schema) {
   const cliCommand = cli === 'angular' ? 'ng' : 'nx';
-  const interactive = !!process.argv.find(
-    arg => arg.startsWith('--interactive') && !arg.endsWith('false')
-  );
+  const parsedArgs = yargsParser(process.argv, {
+    boolean: ['interactive']
+  });
 
   return {
     name: 'RunPreset',
@@ -83,7 +84,7 @@ function createPresetTaskExecutor(cli: string, opts: Schema) {
             : `--npmScope=${opts.name}`,
           opts.preset ? `--preset=${opts.preset}` : null,
           `--cli=${cliCommand}`,
-          interactive ? '--interactive=true' : '--interactive=false'
+          parsedArgs.interactive ? '--interactive=true' : '--interactive=false'
         ].filter(e => !!e);
         return new Observable(obs => {
           spawn(executable, args, spawnOptions).on('close', (code: number) => {
