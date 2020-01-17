@@ -117,7 +117,7 @@
     "cosmiconfig": "^4.0.0",
     "css-loader": "3.4.2",
     "css-modules-typescript-loader": "4.0.0",
-    "cypress": "3.4.1",
+    "cypress": "^3.8.2",
     "cz-conventional-changelog": "^3.0.2",
     "cz-customizable": "^6.2.0",
     "document-register-element": "^1.13.1",
