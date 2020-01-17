@@ -1,15 +1,17 @@
 import {
   readJsonInTree,
   renameSyncInTree,
-  renameDirSyncInTree
+  renameDirSyncInTree,
+  addDepsToPackageJson
 } from './ast-utils';
 import {
   SchematicTestRunner,
   UnitTestTree
 } from '@angular-devkit/schematics/testing';
 import { join } from 'path';
-import { Tree } from '@angular-devkit/schematics';
+import { Tree, SchematicContext, TaskId } from '@angular-devkit/schematics';
 import { serializeJson } from './fileutils';
+import { createEmptyWorkspace } from './testing-utils';
 
 describe('readJsonInTree', () => {
   let tree: Tree;
@@ -122,5 +124,42 @@ describe('renameDirSyncInTree', () => {
       expect(tree.files).not.toContain('/dir/sub1/sub2/e');
       expect(tree.files).not.toContain('/dir/sub1/sub2/f');
     });
+  });
+});
+
+describe('addDepsToPackageJson', () => {
+  let appTree: Tree;
+
+  beforeEach(() => {
+    appTree = Tree.empty();
+    appTree = createEmptyWorkspace(appTree);
+  });
+
+  it('should not update the package.json if dependencies have already been added', async () => {
+    const devDeps = {
+      '@nrwl/jest': '1.2.3'
+    };
+
+    appTree.overwrite(
+      '/package.json',
+      JSON.stringify({
+        dependencies: {},
+        devDependencies: {
+          ...devDeps
+        }
+      })
+    );
+
+    const testRunner = new SchematicTestRunner('@nrwl/jest', null);
+
+    await testRunner
+      .callRule(() => {
+        return addDepsToPackageJson({}, devDeps);
+      }, appTree)
+      .toPromise();
+
+    expect(
+      testRunner.tasks.find(x => x.name === 'node-package')
+    ).not.toBeDefined();
   });
 });

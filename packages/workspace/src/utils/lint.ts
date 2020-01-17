@@ -68,67 +68,81 @@ export function addLintFiles(
       );
     }
 
+    const chainedCommands = [];
+
     if (linter === 'tslint') {
-      if (!host.exists('/tslint.json')) {
-        host.create('/tslint.json', globalTsLint);
-      }
-      if (!options.onlyGlobal) {
-        host.create(
-          join(projectRoot as any, `tslint.json`),
-          JSON.stringify({
-            extends: `${offsetFromRoot(projectRoot)}tslint.json`,
-            rules: {}
-          })
-        );
-      }
-      return;
+      chainedCommands.push((host: Tree) => {
+        if (!host.exists('/tslint.json')) {
+          host.create('/tslint.json', globalTsLint);
+        }
+        if (!options.onlyGlobal) {
+          host.create(
+            join(projectRoot as any, `tslint.json`),
+            JSON.stringify({
+              extends: `${offsetFromRoot(projectRoot)}tslint.json`,
+              rules: {}
+            })
+          );
+        }
+      });
+
+      return chain(chainedCommands);
     }
 
+    debugger;
     if (linter === 'eslint') {
       if (!host.exists('/.eslintrc')) {
-        host.create('/.eslintrc', globalESLint);
-        addDepsToPackageJson(
-          {
-            ...(options.extraPackageDeps
-              ? options.extraPackageDeps.dependencies
-              : {})
-          },
-          {
-            '@nrwl/eslint-plugin-nx': nxVersion,
-            '@typescript-eslint/parser': typescriptESLintVersion,
-            '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
-            eslint: eslintVersion,
-            'eslint-config-prettier': eslintConfigPrettierVersion,
-            ...(options.extraPackageDeps
-              ? options.extraPackageDeps.devDependencies
-              : {})
-          }
-        )(host, context);
+        chainedCommands.push((host: Tree) => {
+          host.create('/.eslintrc', globalESLint);
+
+          return addDepsToPackageJson(
+            {
+              ...(options.extraPackageDeps
+                ? options.extraPackageDeps.dependencies
+                : {})
+            },
+            {
+              '@nrwl/eslint-plugin-nx': nxVersion,
+              '@typescript-eslint/parser': typescriptESLintVersion,
+              '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
+              eslint: eslintVersion,
+              'eslint-config-prettier': eslintConfigPrettierVersion,
+              ...(options.extraPackageDeps
+                ? options.extraPackageDeps.devDependencies
+                : {})
+            }
+          );
+        });
       }
+
       if (!options.onlyGlobal) {
-        let configJson;
-        const rootConfig = `${offsetFromRoot(projectRoot)}.eslintrc`;
-        if (options.localConfig) {
-          const extendsOption = options.localConfig.extends
-            ? Array.isArray(options.localConfig.extends)
-              ? options.localConfig.extends
-              : [options.localConfig.extends]
-            : [];
-          configJson = {
-            ...options.localConfig,
-            extends: [...extendsOption, rootConfig]
-          };
-        } else {
-          configJson = {
-            extends: rootConfig,
-            rules: {}
-          };
-        }
-        host.create(
-          join(projectRoot as any, `.eslintrc`),
-          JSON.stringify(configJson)
-        );
+        chainedCommands.push((host: Tree) => {
+          let configJson;
+          const rootConfig = `${offsetFromRoot(projectRoot)}.eslintrc`;
+          if (options.localConfig) {
+            const extendsOption = options.localConfig.extends
+              ? Array.isArray(options.localConfig.extends)
+                ? options.localConfig.extends
+                : [options.localConfig.extends]
+              : [];
+            configJson = {
+              ...options.localConfig,
+              extends: [...extendsOption, rootConfig]
+            };
+          } else {
+            configJson = {
+              extends: rootConfig,
+              rules: {}
+            };
+          }
+          host.create(
+            join(projectRoot as any, `.eslintrc`),
+            JSON.stringify(configJson)
+          );
+        });
       }
+
+      return chain(chainedCommands);
     }
   };
 }
