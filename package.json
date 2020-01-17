@@ -213,7 +213,7 @@
     "tsickle": "^0.37.0",
     "tslib": "^1.9.3",
     "tslint": "5.11.0",
-    "typescript": "~3.7.4",
+    "typescript": "~3.5.3",
     "url-loader": "^2.2.0",
     "webpack": "4.41.2",
     "webpack-dev-middleware": "3.7.0",
