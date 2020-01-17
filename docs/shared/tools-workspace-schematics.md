@@ -1,6 +1,6 @@
 # Using Workspace Schematics
 
-Workspace schematics provide a way to automate many tasks you regularly perform as part of your development workflow. Whether its scaffolding out components, features, or ensuring libraries are generated and structured in a certain way, schematics help you standardize these tasks in a consistent, and predictable way. Nx provides tooling around creating, and running custom schematics from within your workspace. This guide shows you how to create, run, and customize workspace schematics within your Nx workspace.
+Workspace schematics provide a way to automate many tasks you regularly perform as part of your development workflow. Whether it is scaffolding out components, features, or ensuring libraries are generated and structured in a certain way, schematics help you standardize these tasks in a consistent, and predictable manner. Nx provides tooling around creating, and running custom schematics from within your workspace. This guide shows you how to create, run, and customize workspace schematics within your Nx workspace.
 
 ## Creating a workspace schematic
 
@@ -43,7 +43,7 @@ export default function(schema: any): Rule {
 }
 ```
 
-The `chain` function takes a an array of rules and combines them into a single rule. You use this function to perform multiple operations against your workspace in a single schematic. The `externalSchematic` function allows you to call schematics provided from an installed npm package external.
+The `chain` function takes a an array of rules and combines them into a single rule. You use this function to perform multiple operations against your workspace in a single schematic. The `externalSchematic` function allows you to call schematics provided from by an installed npm package.
 
 In the schema.json file for your schematic, the `name` is provided as a default option.
 
@@ -78,7 +78,7 @@ nx workspace-schematic my-schematic mylib
 
 ## Creating custom rules
 
-Schematics provide an API for managing files within your workspace. You can use schematics to do such things as create, update, move, and delete files. Files with static or dynamic content can also be created.
+Schematics provide an API for managing files within your workspace. You can use schematics to do things such as create, update, move, and delete files. Files with static or dynamic content can also be created.
 
 The schematic below shows you how to generate a library, and then scaffold out additional files with the newly created library.
 
