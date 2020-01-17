@@ -2,6 +2,7 @@ import { Tree } from '@angular-devkit/schematics';
 import { NxJson, readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
+import { expectTestsPass } from 'e2e/utils';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -237,6 +238,23 @@ describe('lib', () => {
       expect(
         workspaceJson.projects['my-lib'].architect.lint.options.tsConfig
       ).toEqual(['libs/my-lib/tsconfig.lib.json']);
+    });
+  });
+
+  describe('publishable package', () => {
+    it('should update package.json', async () => {
+      const publishableTree = await runSchematic(
+        'lib',
+        { name: 'mylib', publishable: true },
+        appTree
+      );
+
+      let packageJsonContent = readJsonInTree(
+        publishableTree,
+        'libs/mylib/package.json'
+      );
+
+      expect(packageJsonContent.name).toEqual('@proj/mylib');
     });
   });
 });
