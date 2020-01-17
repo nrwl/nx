@@ -35,9 +35,15 @@
   "dependencies": {
     "@nrwl/node": "*",
     "@nrwl/linter": "*",
+    "@nrwl/workspace": "*",
     "@nrwl/tao": "*",
     "@angular-devkit/architect": "0.803.23",
     "@angular-devkit/core": "8.3.23",
-    "@angular-devkit/schematics": "8.3.23"
+    "@angular-devkit/schematics": "8.3.23",
+    "fs-extra": "7.0.1",
+    "tmp": "0.0.33",
+    "yargs-parser": "10.0.0",
+    "yargs": "^11.0.0",
+    "inquirer": "^6.3.1"
   }
 }

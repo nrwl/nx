@@ -23,6 +23,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i "" "s|ANGULAR_CLI_VERSION|$ANGULAR_CLI_VERSION|g" create-nx-workspace/bin/create-nx-workspace.js
     sed -i "" "s|TYPESCRIPT_VERSION|$TYPESCRIPT_VERSION|g" create-nx-workspace/bin/create-nx-workspace.js
     sed -i "" "s|PRETTIER_VERSION|$PRETTIER_VERSION|g" create-nx-workspace/bin/create-nx-workspace.js
+    sed -i "" "s|NX_VERSION|$NX_VERSION|g" nx-plugin/bin/create.js
     sed -i "" "s|ANGULAR_CLI_VERSION|$ANGULAR_CLI_VERSION|g" nx-plugin/bin/create.js
     sed -i "" "s|TYPESCRIPT_VERSION|$TYPESCRIPT_VERSION|g" nx-plugin/bin/create.js
     sed -i "" "s|PRETTIER_VERSION|$PRETTIER_VERSION|g" nx-plugin/bin/create.js
@@ -33,6 +34,7 @@ else
     sed -i "s|ANGULAR_CLI_VERSION|$ANGULAR_CLI_VERSION|g" create-nx-workspace/bin/create-nx-workspace.js
     sed -i "s|TYPESCRIPT_VERSION|$TYPESCRIPT_VERSION|g" create-nx-workspace/bin/create-nx-workspace.js
     sed -i "s|PRETTIER_VERSION|$PRETTIER_VERSION|g" create-nx-workspace/bin/create-nx-workspace.js
+    sed -i "s|NX_VERSION|$NX_VERSION|g" nx-plugin/bin/create.js
     sed -i "s|ANGULAR_CLI_VERSION|$ANGULAR_CLI_VERSION|g" nx-plugin/bin/create.js
     sed -i "s|TYPESCRIPT_VERSION|$TYPESCRIPT_VERSION|g" nx-plugin/bin/create.js
     sed -i "s|PRETTIER_VERSION|$PRETTIER_VERSION|g" nx-plugin/bin/create.js
