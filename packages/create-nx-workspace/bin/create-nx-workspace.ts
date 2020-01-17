@@ -81,7 +81,7 @@ determineWorkspaceName(parsedArgs).then(name => {
           createApp(tmpDir, cli, parsedArgs, name, preset, appName, style);
           showCliWarning(preset, parsedArgs);
           showNxWarning(name);
-          pointToTutorial(preset);
+          pointToTutorialAndCourse(preset);
         });
       });
     });
@@ -479,31 +479,49 @@ function showCliWarning(preset: Preset, parsedArgs: yargsParser.Arguments) {
   }
 }
 
-function pointToTutorial(preset: Preset) {
+function pointToTutorialAndCourse(preset: Preset) {
+  const title = `First time using Nx? Check out this interactive Nx tutorial.`;
   switch (preset) {
     case Preset.React:
     case Preset.ReactWithExpress:
     case Preset.NextJs:
       output.addVerticalSeparator();
       output.note({
-        title: `First time using Nx? Check out this interactive Nx tutorial.`,
-        bodyLines: [`https://nx.dev/react/tutorial/01-create-application`]
+        title: title,
+        bodyLines: [
+          `https://nx.dev/react/tutorial/01-create-application`,
+          ...pointToCourse()
+        ]
       });
       break;
     case Preset.Angular:
     case Preset.AngularWithNest:
       output.addVerticalSeparator();
       output.note({
-        title: `First time using Nx? Check out this interactive Nx tutorial.`,
-        bodyLines: [`https://nx.dev/angular/tutorial/01-create-application`]
+        title: title,
+        bodyLines: [
+          `https://nx.dev/angular/tutorial/01-create-application`,
+          ...pointToCourse()
+        ]
       });
       break;
     case Preset.WebComponents:
       output.addVerticalSeparator();
       output.note({
-        title: `First time using Nx? Check out this interactive Nx tutorial.`,
-        bodyLines: [`https://nx.dev/web/tutorial/01-create-application`]
+        title: title,
+        bodyLines: [
+          `https://nx.dev/web/tutorial/01-create-application`,
+          ...pointToCourse()
+        ]
       });
       break;
   }
+}
+
+function pointToCourse(): string[] {
+  return [
+    ``,
+    `Prefer watching videos? Check out this free Nx course on YouTube.`,
+    `https://www.youtube.com/watch?v=2mYLe9Kp9VM&list=PLakNactNC1dH38AfqmwabvOszDmKriGco`
+  ];
 }

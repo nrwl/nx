@@ -35,8 +35,8 @@ chmod +x build/packages/tao/index.js
 # React-specifc typings
 cp packages/react/typings/* build/packages/react/typings
 
-rm -rf build/packages/install
 rm -rf build/packages/nx/dist
+rm -rf build/packages/install
 rm -rf build/packages/nx/spec
 cp README.md build/packages/builders
 cp README.md build/packages/schematics
@@ -57,7 +57,6 @@ cp README.md build/packages/cli
 cp README.md build/packages/tao
 cp README.md build/packages/eslint-plugin-nx
 cp README.md build/packages/linter
-cp README.md build/packages/insights
 cp README.md build/packages/bazel
 
 cp LICENSE build/packages/builders
@@ -79,7 +78,6 @@ cp LICENSE build/packages/cli
 cp LICENSE build/packages/tao
 cp LICENSE build/packages/eslint-plugin-nx
 cp LICENSE build/packages/linter
-cp LICENSE build/packages/insights
 cp LICENSE build/packages/bazel
 
 echo "Nx libraries available at build/packages:"

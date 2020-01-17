@@ -7,7 +7,7 @@ import { join } from 'path';
 import { Hasher } from './hasher';
 import * as fsExtra from 'fs-extra';
 import { DefaultTasksRunnerOptions } from './tasks-runner-v2';
-import { fork, spawn } from 'child_process';
+import { spawn } from 'child_process';
 
 export type CachedResult = { terminalOutput: string; outputsPath: string };
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
@@ -96,11 +96,11 @@ export class Cache {
     const tdCommit = join(this.cachePath, `${hash}.commit`);
 
     // might be left overs from partially-completed cache invocations
-    if (existsSync(td)) {
-      fsExtra.removeSync(td);
-    }
     if (existsSync(tdCommit)) {
       fsExtra.removeSync(tdCommit);
+    }
+    if (existsSync(td)) {
+      fsExtra.removeSync(td);
     }
 
     mkdirSync(td);
@@ -111,7 +111,7 @@ export class Cache {
       const srcDir = join(this.root, f);
       if (existsSync(srcDir)) {
         const cachedDir = join(td, 'outputs', f);
-        mkdirSync(cachedDir, { recursive: true });
+        fsExtra.ensureDirSync(cachedDir);
         fsExtra.copySync(srcDir, cachedDir);
       }
     });
@@ -137,7 +137,7 @@ export class Cache {
         if (existsSync(srcDir)) {
           fsExtra.removeSync(srcDir);
         }
-        mkdirSync(srcDir, { recursive: true });
+        fsExtra.ensureDirSync(srcDir);
         fsExtra.copySync(cachedDir, srcDir);
       }
     });
@@ -178,14 +178,14 @@ export class Cache {
       dir = join(this.root, 'node_modules', '.cache', 'nx');
     }
     if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
+      fsExtra.ensureDirSync(dir);
     }
     return dir;
   }
 
   private createTerminalOutputsDir() {
     const path = join(this.cachePath, 'terminalOutputs');
-    mkdirSync(path, { recursive: true });
+    fsExtra.ensureDirSync(path);
     return path;
   }
 }

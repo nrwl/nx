@@ -163,8 +163,7 @@ const options = {
     'build/npm/cli/package.json',
     'build/npm/tao/package.json',
     'build/npm/eslint-plugin-nx/package.json',
-    'build/npm/linter/package.json',
-    'build/npm/insights/package.json'
+    'build/npm/linter/package.json'
   ],
   increment: parsedVersion.version,
   requireUpstream: false,

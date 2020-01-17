@@ -11,7 +11,6 @@ import * as stripJsonComments from 'strip-json-comments';
 import { dirSync } from 'tmp';
 import { getLogger } from '../shared/logger';
 import { convertToCamelCase, handleErrors } from '../shared/params';
-import { commandName } from '../shared/print-help';
 import minimist = require('minimist');
 
 export type MigrationsJson = {
@@ -231,19 +230,54 @@ export class Migrator {
   }
 
   private gt(v1: string, v2: string) {
-    return gt(this.normalizeVersion(v1), this.normalizeVersion(v2));
+    return gt(normalizeVersion(v1), normalizeVersion(v2));
   }
 
   private lte(v1: string, v2: string) {
-    return lte(this.normalizeVersion(v1), this.normalizeVersion(v2));
+    return lte(normalizeVersion(v1), normalizeVersion(v2));
   }
+}
 
-  private normalizeVersion(v: string) {
-    if (v.startsWith('8-')) return '8.0.0-beta.1';
-    if (v.startsWith('9-')) return '9.0.0-beta.1';
-    if (v.startsWith('10-')) return '9.0.0-beta.1';
-    if (v.startsWith('11-')) return '9.0.0-beta.1';
-    return v;
+export function normalizeVersionWithTagCheck(version: string) {
+  if (version[0].match(/[0-9]/)) {
+    return normalizeVersion(version);
+  } else {
+    throw new Error(
+      `Incorrect version "${version}". You must use a semver version (cannot use "latest" or "next").`
+    );
+  }
+}
+
+export function normalizeVersion(version: string) {
+  const [v, t] = version.split('-');
+  const [major, minor, patch] = v.split('.');
+  const newV = `${major || 0}.${minor || 0}.${patch || 0}`;
+  const newVersion = t ? `${newV}-${t}` : newV;
+
+  try {
+    gt(newVersion, '0.0.0');
+    return newVersion;
+  } catch (e) {
+    try {
+      gt(newV, '0.0.0');
+      return newV;
+    } catch (e) {
+      const withoutPatch = `${major || 0}.${minor || 0}.0`;
+      try {
+        if (gt(withoutPatch, '0.0.0')) {
+          return withoutPatch;
+        }
+      } catch (e) {
+        const withoutPatchAndMinor = `${major || 0}.0.0`;
+        try {
+          if (gt(withoutPatchAndMinor, '0.0.0')) {
+            return withoutPatchAndMinor;
+          }
+        } catch (e) {
+          return '0.0.0';
+        }
+      }
+    }
   }
 }
 
@@ -256,7 +290,7 @@ type GenerateMigrations = {
 };
 type RunMigrations = { type: 'runMigrations'; runMigrations: string };
 
-function parseMigrationsOptions(
+export function parseMigrationsOptions(
   args: string[]
 ): GenerateMigrations | RunMigrations {
   const options = convertToCamelCase(
@@ -268,36 +302,11 @@ function parseMigrationsOptions(
     })
   );
   if (!options.runMigrations) {
-    let from = {};
-    if (options.from) {
-      options.from.split(',').forEach(p => {
-        const split = p.lastIndexOf('@');
-        from[p.substring(0, split)] = p.substring(split + 1);
-      });
-    }
-
-    let to = {};
-    if (options.to) {
-      options.to.split(',').forEach(p => {
-        const split = p.lastIndexOf('@');
-        to[p.substring(0, split)] = p.substring(split + 1);
-      });
-    }
-
-    let targetPackage;
-    let targetVersion;
-    if (args[0] && args[0].indexOf('@') > 1) {
-      const i = args[0].lastIndexOf('@');
-      targetPackage = args[0].substring(0, i);
-      targetVersion = args[0].substring(i + 1);
-    } else if (args[0]) {
-      targetPackage = '@nrwl/workspace';
-      targetVersion = args[0];
-    } else {
-      targetPackage = '@nrwl/workspace';
-      targetVersion = 'latest';
-    }
-
+    const from = options.from ? versionOverrides(options.from, 'from') : {};
+    const to = options.to ? versionOverrides(options.to, 'to') : {};
+    const { targetPackage, targetVersion } = parseTargetPackageAndVersion(
+      args[0]
+    );
     return {
       type: 'generateMigrations',
       targetPackage,
@@ -308,6 +317,53 @@ function parseMigrationsOptions(
   } else {
     return { type: 'runMigrations', runMigrations: options.runMigrations };
   }
+}
+
+function parseTargetPackageAndVersion(args: string) {
+  if (!args) {
+    throw new Error(
+      `Provide the correct package name and version. E.g., @nrwl/workspace@9.0.0.`
+    );
+  }
+
+  if (args.indexOf('@') > -1) {
+    const i = args.lastIndexOf('@');
+    const targetPackage = args.substring(0, i);
+    const maybeVersion = args.substring(i + 1);
+    if (!targetPackage || !maybeVersion) {
+      throw new Error(
+        `Provide the correct package name and version. E.g., @nrwl/workspace@9.0.0.`
+      );
+    }
+    const targetVersion = normalizeVersionWithTagCheck(maybeVersion);
+    return { targetPackage, targetVersion };
+  } else {
+    return {
+      targetPackage: '@nrwl/workspace',
+      targetVersion: normalizeVersionWithTagCheck(args)
+    };
+  }
+}
+
+function versionOverrides(overrides: string, param: string) {
+  const res = {};
+  overrides.split(',').forEach(p => {
+    const split = p.lastIndexOf('@');
+    if (split === -1 || split === 0) {
+      throw new Error(
+        `Incorrect '${param}' section. Use --${param}="package@version"`
+      );
+    }
+    const selectedPackage = p.substring(0, split).trim();
+    const selectedVersion = p.substring(split + 1).trim();
+    if (!selectedPackage || !selectedVersion) {
+      throw new Error(
+        `Incorrect '${param}' section. Use --${param}="package@version"`
+      );
+    }
+    res[selectedPackage] = normalizeVersionWithTagCheck(selectedVersion);
+  });
+  return res;
 }
 
 function versions(root: string, from: { [p: string]: string }) {
