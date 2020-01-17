@@ -125,6 +125,11 @@
             "file": "angular/guides/modernize-storybook"
           },
           {
+            "name": "Workspace Schematics",
+            "id": "workspace-schematics",
+            "file": "shared/tools-workspace-schematics"
+          },
+          {
             "name": "Rebuilding and Retesting What is Affected",
             "id": "monorepo-affected",
             "file": "shared/monorepo-affected"
@@ -302,6 +307,11 @@
             "file": "shared/modernize-jest"
           },
           {
+            "name": "Workspace Schematics",
+            "id": "workspace-schematics",
+            "file": "shared/tools-workspace-schematics"
+          },
+          {
             "name": "Rebuilding and Retesting What is Affected",
             "id": "monorepo-affected",
             "file": "shared/monorepo-affected"
@@ -454,6 +464,11 @@
             "name": "Using Storybook",
             "id": "modernize-storybook-react",
             "file": "react/guides/modernize-storybook"
+          },
+          {
+            "name": "Workspace Schematics",
+            "id": "workspace-schematics",
+            "file": "shared/tools-workspace-schematics"
           },
           {
             "name": "Rebuilding and Retesting What is Affected",
