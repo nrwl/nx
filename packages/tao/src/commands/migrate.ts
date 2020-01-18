@@ -238,14 +238,9 @@ export class Migrator {
   }
 }
 
-export function normalizeVersionWithTagCheck(version: string) {
-  if (version[0].match(/[0-9]/)) {
-    return normalizeVersion(version);
-  } else {
-    throw new Error(
-      `Incorrect version "${version}". You must use a semver version (cannot use "latest" or "next").`
-    );
-  }
+function normalizeVersionWithTagCheck(version: string) {
+  if (version === 'latest' || version === 'next') return version;
+  return normalizeVersion(version);
 }
 
 export function normalizeVersion(version: string) {
@@ -328,20 +323,33 @@ function parseTargetPackageAndVersion(args: string) {
 
   if (args.indexOf('@') > -1) {
     const i = args.lastIndexOf('@');
-    const targetPackage = args.substring(0, i);
-    const maybeVersion = args.substring(i + 1);
-    if (!targetPackage || !maybeVersion) {
-      throw new Error(
-        `Provide the correct package name and version. E.g., @nrwl/workspace@9.0.0.`
-      );
+    if (i === 0) {
+      const targetPackage = args.trim();
+      const targetVersion = 'latest';
+      return { targetPackage, targetVersion };
+    } else {
+      const targetPackage = args.substring(0, i);
+      const maybeVersion = args.substring(i + 1);
+      if (!targetPackage || !maybeVersion) {
+        throw new Error(
+          `Provide the correct package name and version. E.g., @nrwl/workspace@9.0.0.`
+        );
+      }
+      const targetVersion = normalizeVersionWithTagCheck(maybeVersion);
+      return { targetPackage, targetVersion };
     }
-    const targetVersion = normalizeVersionWithTagCheck(maybeVersion);
-    return { targetPackage, targetVersion };
   } else {
-    return {
-      targetPackage: '@nrwl/workspace',
-      targetVersion: normalizeVersionWithTagCheck(args)
-    };
+    if (args.match(/[0-9]/) || args === 'latest' || args === 'next') {
+      return {
+        targetPackage: '@nrwl/workspace',
+        targetVersion: normalizeVersionWithTagCheck(args)
+      };
+    } else {
+      return {
+        targetPackage: args,
+        targetVersion: 'latest'
+      };
+    }
   }
 }
 
