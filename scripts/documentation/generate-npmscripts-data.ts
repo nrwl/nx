@@ -322,6 +322,40 @@ const examples = {
       command: 'run-many --target=test --projects=proj1,proj2 --with-deps',
       description: 'Build proj1 and proj2 and all their dependencies.'
     }
+  ],
+  migrate: [
+    {
+      command: 'migrate next',
+      description:
+        'Update @nrwl/workspace to "next". This will update other packages and will generate migrations.json.'
+    },
+    {
+      command: 'migrate 9.0.0',
+      description:
+        'Update @nrwl/workspace to "9.0.0". This will update other packages and will generate migrations.json.'
+    },
+    {
+      command:
+        'migrate @nrwl/workspace@9.0.0 --from="@nrwl/workspace@8.0.0,@nrwl/node@8.0.0"',
+      description:
+        'Update @nrwl/workspace and generate the list of migrations starting with version 8.0.0 of @nrwl/workspace and @nrwl/node, regardless of what installed locally.'
+    },
+    {
+      command:
+        'migrate @nrwl/workspace@9.0.0 --to="@nrwl/react@9.0.1,@nrwl/angular@9.0.1"',
+      description:
+        'Update @nrwl/workspace to "9.0.0". If it tries to update @nrwl/react or @nrwl/angular, use version "9.0.1".'
+    },
+    {
+      command: 'migrate another-package@12.0.0',
+      description:
+        'Update another-package to "12.0.0". This will update other packages and will generate migrations.json file.'
+    },
+    {
+      command: 'migrate --run-migrations=migrations.json',
+      description:
+        'Run migrations from the migrations.json file. You can modify migrations.json and run this command many times.'
+    }
   ]
 };
 console.log('Generating npmscript Documentation');
