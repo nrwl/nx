@@ -12,11 +12,10 @@ import { appRootPath } from '../utils/app-root';
 
 export class TaskOrchestrator {
   workspaceRoot = appRootPath;
-  cache = new Cache(this.projectGraph, this.nxJson, this.options);
+  cache = new Cache(this.options);
   cli = cliCommand();
 
   constructor(
-    private readonly nxJson: NxJson,
     private readonly projectGraph: ProjectGraph,
     private readonly options: DefaultTasksRunnerOptions
   ) {}
@@ -107,31 +106,30 @@ export class TaskOrchestrator {
 
   private forkProcess(task: Task) {
     const taskOutputs = getOutputs(this.projectGraph.nodes, task);
-    return this.cache.temporaryOutputPath(task).then(outputPath => {
-      return new Promise((res, rej) => {
-        try {
-          const env = { ...process.env };
-          if (outputPath) {
-            env.NX_TERMINAL_OUTPUT_PATH = outputPath;
-          }
-          const p = fork(this.getCommand(), this.getCommandArgs(task), {
-            stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-            env
-          });
-          p.on('close', code => {
-            if (outputPath && code === 0) {
-              this.cache.put(task, outputPath, taskOutputs).then(() => {
-                res(code);
-              });
-            } else {
-              res(code);
-            }
-          });
-        } catch (e) {
-          console.error(e);
-          rej(e);
+    const outputPath = this.cache.temporaryOutputPath(task);
+    return new Promise((res, rej) => {
+      try {
+        const env = { ...process.env };
+        if (outputPath) {
+          env.NX_TERMINAL_OUTPUT_PATH = outputPath;
         }
-      });
+        const p = fork(this.getCommand(), this.getCommandArgs(task), {
+          stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+          env
+        });
+        p.on('close', code => {
+          if (outputPath && code === 0) {
+            this.cache.put(task, outputPath, taskOutputs).then(() => {
+              res(code);
+            });
+          } else {
+            res(code);
+          }
+        });
+      } catch (e) {
+        console.error(e);
+        rej(e);
+      }
     });
   }
 
