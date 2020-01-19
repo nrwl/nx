@@ -8,6 +8,7 @@ export interface Task {
   id: string;
   target: Target;
   overrides: Object;
+  hash?: string;
 }
 
 export enum AffectedEventType {

@@ -54,11 +54,7 @@ async function runAllTasks(
     context.projectGraph
   ).splitTasksIntoStages(tasks);
 
-  const orchestrator = new TaskOrchestrator(
-    context.nxJson,
-    context.projectGraph,
-    options
-  );
+  const orchestrator = new TaskOrchestrator(context.projectGraph, options);
 
   const res = [];
   for (let i = 0; i < stages.length; ++i) {

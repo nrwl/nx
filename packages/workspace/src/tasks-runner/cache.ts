@@ -1,10 +1,7 @@
 import { appRootPath } from '../utils/app-root';
-import { ProjectGraph } from '../core/project-graph';
-import { NxJson } from '../core/shared-interfaces';
 import { Task } from './tasks-runner';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { Hasher } from './hasher';
 import * as fsExtra from 'fs-extra';
 import { DefaultTasksRunnerOptions } from './tasks-runner-v2';
 import { spawn } from 'child_process';
@@ -32,14 +29,9 @@ export class Cache {
   root = appRootPath;
   cachePath = this.createCacheDir();
   terminalOutputsDir = this.createTerminalOutputsDir();
-  hasher = new Hasher(this.projectGraph, this.nxJson);
   cacheConfig = new CacheConfig(this.options);
 
-  constructor(
-    private readonly projectGraph: ProjectGraph,
-    private readonly nxJson: NxJson,
-    private readonly options: DefaultTasksRunnerOptions
-  ) {}
+  constructor(private readonly options: DefaultTasksRunnerOptions) {}
 
   removeOldCacheRecords() {
     /**
@@ -73,15 +65,12 @@ export class Cache {
   async get(task: Task): Promise<CachedResult> {
     if (!this.cacheConfig.isCacheableTask(task)) return null;
 
-    const res = await this.getFromLocalDir(task);
+    const res = this.getFromLocalDir(task);
 
     // didn't find it locally but we have a remote cache
     if (!res && this.options.remoteCache) {
       // attempt remote cache
-      await this.options.remoteCache.retrieve(
-        await this.hasher.hash(task),
-        this.cachePath
-      );
+      await this.options.remoteCache.retrieve(task.hash, this.cachePath);
       // try again from local cache
       return this.getFromLocalDir(task);
     } else {
@@ -91,9 +80,8 @@ export class Cache {
 
   async put(task: Task, terminalOutputPath: string, folders: string[]) {
     const terminalOutput = readFileSync(terminalOutputPath).toString();
-    const hash = await this.hasher.hash(task);
-    const td = join(this.cachePath, hash);
-    const tdCommit = join(this.cachePath, `${hash}.commit`);
+    const td = join(this.cachePath, task.hash);
+    const tdCommit = join(this.cachePath, `${task.hash}.commit`);
 
     // might be left overs from partially-completed cache invocations
     if (existsSync(tdCommit)) {
@@ -122,10 +110,7 @@ export class Cache {
     writeFileSync(tdCommit, 'true');
 
     if (this.options.remoteCache) {
-      await this.options.remoteCache.store(
-        await this.hasher.hash(task),
-        this.cachePath
-      );
+      await this.options.remoteCache.store(task.hash, this.cachePath);
     }
   }
 
@@ -143,18 +128,17 @@ export class Cache {
     });
   }
 
-  async temporaryOutputPath(task: Task) {
+  temporaryOutputPath(task: Task) {
     if (this.cacheConfig.isCacheableTask(task)) {
-      return join(this.terminalOutputsDir, await this.hasher.hash(task));
+      return join(this.terminalOutputsDir, task.hash);
     } else {
       return null;
     }
   }
 
-  private async getFromLocalDir(task: Task) {
-    const hash = await this.hasher.hash(task);
-    const tdCommit = join(this.cachePath, `${hash}.commit`);
-    const td = join(this.cachePath, hash);
+  private getFromLocalDir(task: Task) {
+    const tdCommit = join(this.cachePath, `${task.hash}.commit`);
+    const td = join(this.cachePath, task.hash);
 
     if (existsSync(tdCommit)) {
       return {

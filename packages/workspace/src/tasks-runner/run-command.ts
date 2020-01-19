@@ -7,10 +7,11 @@ import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
 import { Environment, NxJson } from '../core/shared-interfaces';
 import { NxArgs } from '@nrwl/workspace/src/command-line/utils';
 import { isRelativePath } from '../utils/fileutils';
+import { Hasher } from './hasher';
 
 type RunArgs = yargs.Arguments & ReporterArgs;
 
-export function runCommand<T extends RunArgs>(
+export async function runCommand<T extends RunArgs>(
   projectsToRun: ProjectGraphNode[],
   projectGraph: ProjectGraph,
   { nxJson, workspace }: Environment,
@@ -19,6 +20,12 @@ export function runCommand<T extends RunArgs>(
   reporter: any
 ) {
   reporter.beforeRun(projectsToRun.map(p => p.name), nxArgs, overrides);
+
+  const { tasksRunner, tasksOptions } = getRunner(nxArgs.runner, nxJson, {
+    ...nxArgs,
+    ...overrides
+  });
+
   const tasks: Task[] = projectsToRun.map(project =>
     createTask({
       project,
@@ -28,10 +35,15 @@ export function runCommand<T extends RunArgs>(
     })
   );
 
-  const { tasksRunner, tasksOptions } = getRunner(nxArgs.runner, nxJson, {
-    ...nxArgs,
-    ...overrides
-  });
+  if (tasksRunner !== require('./default-tasks-runner').defaultTasksRunner) {
+    const hasher = new Hasher(projectGraph, nxJson);
+    await Promise.all(
+      tasks.map(async t => {
+        t.hash = await hasher.hash(t);
+      })
+    );
+  }
+
   const cached = [];
   tasksRunner(tasks, tasksOptions, {
     target: nxArgs.target,
