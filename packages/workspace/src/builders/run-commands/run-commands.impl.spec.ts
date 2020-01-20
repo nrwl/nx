@@ -87,10 +87,10 @@ describe('Command Runner Builder', () => {
         {
           commands: [
             {
-              command: `sleep 0.2 && echo 1 >> ${f}`
+              command: `echo 1 >> ${f}`
             },
             {
-              command: `sleep 0.1 && echo 2 >> ${f}`
+              command: `echo 2 >> ${f}`
             }
           ],
           parallel: true
@@ -99,7 +99,9 @@ describe('Command Runner Builder', () => {
       const result = await run.result;
 
       expect(result).toEqual(jasmine.objectContaining({ success: true }));
-      expect(readFile(f)).toEqual('21');
+      const contents = readFile(f);
+      expect(contents).toContain(1);
+      expect(contents).toContain(2);
     });
   });
 
