@@ -18,17 +18,34 @@ function getWebpackConfig(config: Configuration) {
     },
     {
       test: /\.svg$/,
-      issuer: {
-        test: /\.[jt]sx?$/
-      },
-      use: [
-        '@svgr/webpack?-svgo,+titleProp,+ref![path]',
+      oneOf: [
+        // If coming from JS/TS file, then transform into React component using SVGR.
         {
-          loader: 'url-loader',
-          options: {
-            limit: 10000, // 10kB
-            name: '[name].[hash:7].[ext]'
-          }
+          issuer: {
+            test: /\.[jt]sx?$/
+          },
+          use: [
+            '@svgr/webpack?-svgo,+titleProp,+ref![path]',
+            {
+              loader: 'url-loader',
+              options: {
+                limit: 10000, // 10kB
+                name: '[name].[hash:7].[ext]'
+              }
+            }
+          ]
+        },
+        // Fallback to plain URL loader.
+        {
+          use: [
+            {
+              loader: 'url-loader',
+              options: {
+                limit: 10000, // 10kB
+                name: '[name].[hash:7].[ext]'
+              }
+            }
+          ]
         }
       ]
     }
