@@ -25,7 +25,7 @@ describe('NxPlugin plugin', () => {
           'libs/my-plugin/*.md',
           {
             input: './libs/my-plugin/src',
-            glob: '**/*.!(ts|spec.ts)',
+            glob: '**/*.!(ts)',
             output: './src'
           },
           {

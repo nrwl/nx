@@ -129,7 +129,7 @@ function updateWorkspaceJson(options: NormalizedSchema): Rule {
         ...[
           {
             input: `./${options.projectRoot}/src`,
-            glob: '**/*.!(ts|spec.ts)',
+            glob: '**/*.!(ts)',
             output: './src'
           },
           {
