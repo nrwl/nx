@@ -70,6 +70,7 @@ export class Rule extends Lint.Rules.AbstractRule {
 
 class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
   private readonly allow: string[];
+  private readonly enforceBuildableLibDependency: boolean = false; // for backwards compat
   private readonly depConstraints: DepConstraint[];
 
   constructor(
@@ -88,6 +89,9 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     this.depConstraints = Array.isArray(this.getOptions()[0].depConstraints)
       ? this.getOptions()[0].depConstraints
       : [];
+
+    this.enforceBuildableLibDependency =
+      this.getOptions()[0].enforceBuildableLibDependency === true;
   }
 
   public visitImportDeclaration(node: ts.ImportDeclaration) {
@@ -177,6 +181,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
 
       // buildable-lib is not allowed to import non-buildable-lib
       if (
+        this.enforceBuildableLibDependency === true &&
         sourceProject.type === ProjectType.lib &&
         targetProject.type === ProjectType.lib
       ) {

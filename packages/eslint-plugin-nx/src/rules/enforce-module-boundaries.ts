@@ -31,6 +31,7 @@ type Options = [
   {
     allow: string[];
     depConstraints: DepConstraint[];
+    enforceBuildableLibDependency: boolean;
   }
 ];
 export type MessageIds =
@@ -58,6 +59,7 @@ export default createESLintRule<Options, MessageIds>({
       {
         type: 'object',
         properties: {
+          enforceBuildableLibDependency: { type: 'boolean' },
           allow: [{ type: 'string' }],
           depConstraints: [
             {
@@ -88,10 +90,11 @@ export default createESLintRule<Options, MessageIds>({
   defaultOptions: [
     {
       allow: [],
-      depConstraints: []
+      depConstraints: [],
+      enforceBuildableLibDependency: false
     }
   ],
-  create(context, [{ allow, depConstraints }]) {
+  create(context, [{ allow, depConstraints, enforceBuildableLibDependency }]) {
     /**
      * Globally cached info about workspace
      */
@@ -183,6 +186,7 @@ export default createESLintRule<Options, MessageIds>({
 
           // buildable-lib is not allowed to import non-buildable-lib
           if (
+            enforceBuildableLibDependency === true &&
             sourceProject.type === ProjectType.lib &&
             targetProject.type === ProjectType.lib
           ) {

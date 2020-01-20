@@ -42,8 +42,13 @@
     },
     "update-package-json-deps": {
       "version": "8.12.0-beta.1",
-      "description": "Add implicit e2e dependencies",
+      "description": "Update package.json dependencies",
       "factory": "./src/migrations/update-8-12-0/update-package-json-deps"
+    },
+    "update-enforce-boundary-lint-rule": {
+      "version": "8.12.0-beta.1",
+      "description": "Add enforceBuildableLibDependency flag to the nx enforce boundary lint rule",
+      "factory": "./src/migrations/update-8-12-0/update-enforce-boundary-lint-rule"
     }
   },
   "packageJsonUpdates": {

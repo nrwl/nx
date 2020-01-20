@@ -942,9 +942,54 @@ describe('Enforce Module Boundaries', () => {
   });
 
   describe('buildable library imports', () => {
+    it('should ignore the buildable library verification if the enforceBuildableLibDependency is set to false', () => {
+      const failures = runRule(
+        {
+          enforceBuildableLibDependency: false
+        },
+        `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
+        'import "@mycompany/nonBuildableLib"',
+        {
+          nodes: {
+            buildableLib: {
+              name: 'buildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/buildableLib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {
+                  build: {
+                    // defines a buildable lib
+                    builder: '@angular-devkit/build-ng-packagr:build'
+                  }
+                },
+                files: [createFile(`libs/buildableLib/src/main.ts`)]
+              }
+            },
+            nonBuildableLib: {
+              name: 'nonBuildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/nonBuildableLib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {},
+                files: [createFile(`libs/nonBuildableLib/src/main.ts`)]
+              }
+            }
+          },
+          dependencies: {}
+        }
+      );
+      expect(failures.length).toBe(0);
+    });
+
     it('should error when buildable libraries import non-buildable libraries', () => {
       const failures = runRule(
-        {},
+        {
+          enforceBuildableLibDependency: true
+        },
         `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
         'import "@mycompany/nonBuildableLib"',
         {
@@ -987,7 +1032,9 @@ describe('Enforce Module Boundaries', () => {
 
     it('should not error when buildable libraries import another buildable libraries', () => {
       const failures = runRule(
-        {},
+        {
+          enforceBuildableLibDependency: true
+        },
         `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
         'import "@mycompany/nonBuildableLib"',
         {
@@ -1008,11 +1055,11 @@ describe('Enforce Module Boundaries', () => {
                 files: [createFile(`libs/buildableLib/src/main.ts`)]
               }
             },
-            nonBuildableLib: {
-              name: 'nonBuildableLib',
+            anotherBuildableLib: {
+              name: 'anotherBuildableLib',
               type: ProjectType.lib,
               data: {
-                root: 'libs/nonBuildableLib',
+                root: 'libs/anotherBuildableLib',
                 tags: [],
                 implicitDependencies: [],
                 architect: {
@@ -1021,7 +1068,7 @@ describe('Enforce Module Boundaries', () => {
                     builder: '@angular-devkit/build-ng-packagr:build'
                   }
                 },
-                files: [createFile(`libs/nonBuildableLib/src/main.ts`)]
+                files: [createFile(`libs/anotherBuildableLib/src/main.ts`)]
               }
             }
           },
@@ -1033,7 +1080,9 @@ describe('Enforce Module Boundaries', () => {
 
     it('should ignore the buildable library verification if no architect is specified', () => {
       const failures = runRule(
-        {},
+        {
+          enforceBuildableLibDependency: true
+        },
         `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
         'import "@mycompany/nonBuildableLib"',
         {
