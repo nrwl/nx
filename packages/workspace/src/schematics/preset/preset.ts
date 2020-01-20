@@ -10,6 +10,8 @@ import {
 import { Schema } from './schema';
 
 import {
+  addDepsToPackageJson,
+  addGlobal,
   insert,
   insertImport,
   updateWorkspaceInTree
@@ -18,7 +20,7 @@ import {
 import { formatFiles } from '../../utils/rules/format-files';
 
 import * as ts from 'typescript';
-import { toFileName } from '@nrwl/workspace/src/utils/name-utils';
+import { toFileName } from '../../utils/name-utils';
 
 export default function(options: Schema): Rule {
   options = normalizeOptions(options);
@@ -85,6 +87,16 @@ function createPreset(options: Schema): Rule {
         },
         { interactive: false }
       ),
+      addDepsToPackageJson(
+        {},
+        {
+          '@webcomponents/custom-elements': '1.3.2'
+        }
+      ),
+      addPolyfills(`apps/${toFileName(options.name)}/src/polyfills.ts`, [
+        '@webcomponents/custom-elements/custom-elements.min',
+        '@webcomponents/custom-elements/src/native-shim'
+      ]),
       setDefaultCollection('@nrwl/web')
     ]);
   } else if (options.preset === 'angular-nest') {
@@ -363,6 +375,26 @@ function setDefaultCollection(defaultCollection: string) {
     json.cli.defaultCollection = defaultCollection;
     return json;
   });
+}
+
+function addPolyfills(polyfillsPath: string, polyfills: string[]): Rule {
+  return (host: Tree) => {
+    const polyfillsSource = host.read(polyfillsPath)!.toString('utf-8');
+    const polyfillsSourceFile = ts.createSourceFile(
+      polyfillsPath,
+      polyfillsSource,
+      ts.ScriptTarget.Latest,
+      true
+    );
+
+    insert(host, polyfillsPath, [
+      ...addGlobal(
+        polyfillsSourceFile,
+        polyfillsPath,
+        `\n${polyfills.map(im => `import '${im}';`).join('\n')}\n`
+      )
+    ]);
+  };
 }
 
 function normalizeOptions(options: Schema): Schema {
