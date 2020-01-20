@@ -22,7 +22,7 @@ describe('NxPlugin plugin', () => {
         packageJson: 'libs/my-plugin/package.json',
         main: 'libs/my-plugin/src/index.ts',
         assets: [
-          'libs/my-plugin/**/*.md',
+          'libs/my-plugin/*.md',
           {
             input: './libs/my-plugin/src',
             glob: '**/*.!(ts|spec.ts)',
