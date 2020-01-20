@@ -12,6 +12,8 @@ import { dirSync } from 'tmp';
 import { getLogger } from '../shared/logger';
 import { convertToCamelCase, handleErrors } from '../shared/params';
 import minimist = require('minimist');
+import { NodePackageName } from '@angular-devkit/schematics/tasks/node-package/options';
+import { TaskExecutor } from '@angular-devkit/schematics';
 
 export type MigrationsJson = {
   version: string;
@@ -548,8 +550,30 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 }
 
 class MigrationEngineHost extends NodeModulesEngineHost {
-  constructor() {
+  private nodeInstallLogPrinted = false;
+
+  constructor(logger: logging.Logger) {
     super();
+
+    // Overwrite the original CLI node package executor with a new one that does basically nothing
+    // since nx migrate doesn't do npm installs by itself
+    // (https://github.com/angular/angular-cli/blob/5df776780deadb6be5048b3ab006a5d3383650dc/packages/angular_devkit/schematics/tools/workflow/node-workflow.ts#L41)
+    this.registerTaskExecutor({
+      name: NodePackageName,
+      create: () =>
+        Promise.resolve<TaskExecutor>(() => {
+          return new Promise(res => {
+            if (!this.nodeInstallLogPrinted) {
+              logger.warn(
+                `An installation of node_modules has been required. Make sure to run it after the migration`
+              );
+              this.nodeInstallLogPrinted = true;
+            }
+
+            res();
+          });
+        })
+    });
   }
 
   protected _resolveCollectionPath(name: string): string {
@@ -595,10 +619,10 @@ class MigrationEngineHost extends NodeModulesEngineHost {
 }
 
 class MigrationsWorkflow extends BaseWorkflow {
-  constructor(host: virtualFs.Host) {
+  constructor(host: virtualFs.Host, logger: logging.Logger) {
     super({
       host,
-      engineHost: new MigrationEngineHost(),
+      engineHost: new MigrationEngineHost(logger),
       force: true,
       dryRun: false
     });
@@ -617,7 +641,7 @@ async function runMigrations(
   );
 
   const host = new virtualFs.ScopedHost(new NodeJsSyncHost(), normalize(root));
-  const workflow = new MigrationsWorkflow(host);
+  const workflow = new MigrationsWorkflow(host, logger);
   let p = Promise.resolve(null);
   migrationsFile.migrations.forEach(m => {
     p = p.then(() => {
