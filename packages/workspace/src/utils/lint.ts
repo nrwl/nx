@@ -187,6 +187,7 @@ const globalTsLint = `
     "nx-enforce-module-boundaries": [
       true,
       {
+        "enforceBuildableLibDependency": true,
         "allow": [],
         "depConstraints": [
           { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }
@@ -221,6 +222,7 @@ const globalESLint = `
     "@nrwl/nx/enforce-module-boundaries": [
       "error",
       {
+        "enforceBuildableLibDependency": true,
         "allow": [],
         "depConstraints": [
           { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }
