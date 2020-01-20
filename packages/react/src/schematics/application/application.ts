@@ -76,7 +76,7 @@ export default function(schema: Schema): Rule {
       updateJestConfig(options),
       addStyledModuleDependencies(options),
       addRouting(options, context),
-      addBabel(options),
+      addBabelPresetForReact(options),
       setDefaults(options),
       formatFiles(options)
     ]);
@@ -273,49 +273,13 @@ function addRouting(
     : noop();
 }
 
-function addBabel(options: NormalizedSchema): Rule {
-  return chain([
-    addDepsToPackageJson(
-      {},
-      {
-        '@babel/preset-react': babelPresetReactVersion
-      }
-    ),
-    addPolyfillForBabel(options)
-  ]);
-}
-
-function addPolyfillForBabel(options: NormalizedSchema): Rule {
-  return (host: Tree) => {
-    const polyfillsPath = join(
-      options.appProjectRoot,
-      maybeJs(options, `src/polyfills.ts`)
-    );
-    const polyfillsSource = host.read(polyfillsPath)!.toString('utf-8');
-    const polyfillsSourceFile = ts.createSourceFile(
-      polyfillsPath,
-      polyfillsSource,
-      ts.ScriptTarget.Latest,
-      true
-    );
-
-    insert(host, polyfillsPath, [
-      ...addGlobal(
-        polyfillsSourceFile,
-        polyfillsPath,
-        `
-/*
- * Polyfill stable language features.
- * It's recommended to use @babel/preset-env and browserslist
- * to only include the polyfills necessary for the target browsers.
- */
-import 'core-js/stable';
-
-import 'regenerator-runtime/runtime';
-`
-      )
-    ]);
-  };
+function addBabelPresetForReact(options: NormalizedSchema): Rule {
+  return addDepsToPackageJson(
+    {},
+    {
+      '@babel/preset-react': babelPresetReactVersion
+    }
+  );
 }
 
 function setDefaults(options: NormalizedSchema): Rule {
