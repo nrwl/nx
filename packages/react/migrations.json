@@ -29,6 +29,11 @@
       "version": "8.10.1-beta.1",
       "description": "Fix SVG migration",
       "factory": "./src/migrations/update-8-10-1/fix-react-tsconfig-8-10-1"
+    },
+    "update-8.12.0": {
+      "version": "8.12.0-beta.1",
+      "description": "Update styled-components",
+      "factory": "./src/migrations/update-8-12-0/update-8-12-0"
     }
   },
   "packageJsonUpdates": {
@@ -155,6 +160,19 @@
         },
         "eslint-plugin-react": {
           "version": "7.17.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "8.12.0": {
+      "version": "8.12.0-beta.1",
+      "packages": {
+        "styled-components": {
+          "version": "5.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/styled-components": {
+          "version": "4.4.2",
           "alwaysAddToPackageJson": false
         }
       }
