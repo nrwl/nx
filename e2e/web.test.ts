@@ -98,5 +98,27 @@ forEachCli(currentCLIName => {
         expect(e2eResults).toContain('All specs passed!');
       }
     });
+
+    it('should support CSS modules', () => {
+      ensureProject();
+      const appName = uniq('app');
+
+      runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+      updateFile(
+        `apps/${appName}/src/app/app.module.css`,
+        '.foo { color: red; }'
+      );
+      const mainPath = `apps/${appName}/src/app/app.element.ts`;
+      const content = readFile(mainPath);
+      updateFile(
+        mainPath,
+        `import styles from './app.module.css';\n${content}`
+      );
+
+      if (supportUi()) {
+        const e2eResults = runCLI(`e2e ${appName}-e2e`);
+        expect(e2eResults).toContain('All specs passed!');
+      }
+    });
   });
 });

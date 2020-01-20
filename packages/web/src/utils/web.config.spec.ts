@@ -61,18 +61,6 @@ describe('getWebConfig', () => {
     expect(result.resolve.mainFields).toContain('browser');
   });
 
-  it('should use the style-loader to load styles', () => {
-    const result = getWebPartial(root, sourceRoot, input, logger, false, false);
-    expect(
-      result.module.rules.find(rule => rule.test.test('styles.css')).use[0]
-        .loader
-    ).toEqual('style-loader');
-    expect(
-      result.module.rules.find(rule => rule.test.test('styles.scss')).use[0]
-        .loader
-    ).toEqual('style-loader');
-  });
-
   describe('without differential loading', () => {
     describe('polyfills', () => {
       it('should set the polyfills entry', () => {

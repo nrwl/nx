@@ -106,7 +106,7 @@ function getCommonPartial(wco: any): Configuration {
 
 function getStylesPartial(wco: any): Configuration {
   const partial = getStylesConfig(wco);
-  partial.module.rules = partial.module.rules.map(rule => {
+  const rules = partial.module.rules.map(rule => {
     if (!Array.isArray(rule.use)) {
       return rule;
     }
@@ -123,6 +123,28 @@ function getStylesPartial(wco: any): Configuration {
     });
     return rule;
   });
+  partial.module.rules = [
+    {
+      test: /\.css$|\.scss$|\.sass$|\.less$|\.styl$/,
+      oneOf: [
+        {
+          test: /\.module\.css$/,
+          use: [
+            { loader: 'style-loader' },
+            { loader: 'css-modules-typescript-loader' },
+            {
+              loader: 'css-loader',
+              options: {
+                modules: true,
+                importLoaders: 1
+              }
+            }
+          ]
+        },
+        ...rules
+      ]
+    }
+  ];
   return partial;
 }
 

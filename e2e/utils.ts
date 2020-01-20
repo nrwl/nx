@@ -274,6 +274,8 @@ export function copyMissingPackages(): void {
     'istanbul-instrumenter-loader',
     'semver',
 
+    'css-loader',
+    'css-modules-typescript-loader',
     'mime',
     'less',
     'send',
