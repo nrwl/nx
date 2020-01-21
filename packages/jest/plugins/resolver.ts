@@ -44,7 +44,8 @@ module.exports = function(path: string, options: ResolveOptions) {
     ext === '.scss' ||
     ext === '.sass' ||
     ext === '.less' ||
-    ext === '.styl'
+    ext === '.styl' ||
+    ext === '.svg'
   ) {
     return require.resolve('identity-obj-proxy');
   }
