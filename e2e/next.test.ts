@@ -1,4 +1,5 @@
 import { capitalize } from '@nrwl/workspace/src/utils/strings';
+import { fork } from 'child_process';
 import * as http from 'http';
 import {
   checkFilesExist,
@@ -7,6 +8,8 @@ import {
   readFile,
   runCLI,
   runCLIAsync,
+  supportUi,
+  tmpProjPath,
   uniq,
   updateFile
 } from './utils';
@@ -140,37 +143,43 @@ async function checkApp(appName: string, opts: { checkLint: boolean }) {
   const testResults = await runCLIAsync(`test ${appName}`);
   expect(testResults.stderr).toContain('Test Suites: 1 passed, 1 total');
 
-  // const server = fork(
-  //   `./node_modules/@nrwl/cli/bin/nx.js`,
-  //   [`serve`, appName],
-  //   {
-  //     cwd: tmpProjPath(),
-  //     silent: true
-  //   }
-  // );
-  // expect(server).toBeTruthy();
-  // await new Promise(resolve => {
-  //   setTimeout(() => {
-  //     getPage().then(page => {
-  //       expect(page).toContain(`Here are some things you can do with Nx`);
-  //       treeKill(server.pid, 'SIGTERM', err => {
-  //         expect(err).toBeFalsy();
-  //         resolve();
-  //       });
-  //     });
-  //   }, 5000);
-  // });
-  // if (supportUi()) {
-  //   const e2eResults = runCLI(`e2e ${appName}-e2e`);
-  //   expect(e2eResults).toContain('All specs passed!');
-  // }
+  // This adds about 80s to the e2e run
+  // expectAppToRun(appName);
 
   const buildResult = runCLI(`build ${appName}`);
   expect(buildResult).toContain(`Compiled successfully`);
   checkFilesExist(`dist/apps/${appName}/build-manifest.json`);
 
   const exportResult = runCLI(`export ${appName}`);
+  expect(exportResult).toContain('Exporting (3/3)');
   checkFilesExist(`dist/apps/${appName}/exported/index.html`);
+}
+
+async function expectAppToRun(appName: string) {
+  const server = fork(
+    `./node_modules/@nrwl/cli/bin/nx.js`,
+    [`serve`, appName],
+    {
+      cwd: tmpProjPath(),
+      silent: true
+    }
+  );
+  expect(server).toBeTruthy();
+  await new Promise(resolve => {
+    setTimeout(() => {
+      getPage().then(page => {
+        expect(page).toContain(`Here are some things you can do with Nx`);
+        treeKill(server.pid, 'SIGTERM', err => {
+          expect(err).toBeFalsy();
+          resolve();
+        });
+      });
+    }, 5000);
+  });
+  if (supportUi()) {
+    const e2eResults = runCLI(`e2e ${appName}-e2e`);
+    expect(e2eResults).toContain('All specs passed!');
+  }
 }
 
 function getPage(): Promise<string> {
