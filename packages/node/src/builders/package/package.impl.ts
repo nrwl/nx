@@ -11,7 +11,7 @@ import { copy, removeSync } from 'fs-extra';
 import * as glob from 'glob';
 import { basename, dirname, join, normalize, relative } from 'path';
 import { Observable, Subscriber } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import { switchMap, tap, map } from 'rxjs/operators';
 import * as treeKill from 'tree-kill';
 
 export interface NodePackageBuilderOptions extends JsonObject {
@@ -26,6 +26,7 @@ export interface NodePackageBuilderOptions extends JsonObject {
 
 interface NormalizedBuilderOptions extends NodePackageBuilderOptions {
   files: Array<FileInputOutput>;
+  normalizedOutputPath: string;
   relativeMainFileOutput: string;
 }
 
@@ -51,6 +52,12 @@ export function runNodePackageBuilder(
     }),
     switchMap(() => {
       return copyAssetFiles(normalizedOptions, context);
+    }),
+    map(value => {
+      return {
+        ...value,
+        outputPath: normalizedOptions.outputPath
+      };
     })
   );
 }
@@ -109,7 +116,8 @@ function normalizeOptions(
   return {
     ...options,
     files,
-    relativeMainFileOutput
+    relativeMainFileOutput,
+    normalizedOutputPath: join(context.workspaceRoot, options.outputPath)
   };
 }
 
@@ -122,7 +130,7 @@ function compileTypeScriptFiles(
     killProcess(context);
   }
   // Cleaning the /dist folder
-  removeSync(join(context.workspaceRoot, options.outputPath));
+  removeSync(options.normalizedOutputPath);
 
   return Observable.create((subscriber: Subscriber<BuilderOutput>) => {
     try {
@@ -130,7 +138,7 @@ function compileTypeScriptFiles(
         '-p',
         join(context.workspaceRoot, options.tsConfig),
         '--outDir',
-        join(context.workspaceRoot, options.outputPath)
+        options.normalizedOutputPath
       ];
 
       if (options.sourceMap) {

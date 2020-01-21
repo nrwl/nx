@@ -23,7 +23,10 @@ import {
 } from '../core/project-graph';
 import { FileData } from '../core/file-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
-import { NxJson } from '@nrwl/workspace/src/core/shared-interfaces';
+import {
+  NxJson,
+  NxJsonProjectConfig
+} from '@nrwl/workspace/src/core/shared-interfaces';
 
 function nodesByPosition(first: ts.Node, second: ts.Node): number {
   return first.getStart() - second.getStart();
@@ -495,6 +498,35 @@ export function updateWorkspaceInTree<T = any, O = T>(
     );
     return host;
   };
+}
+
+export function readNxJsonInTree(host: Tree) {
+  return readJsonInTree<NxJson>(host, 'nx.json');
+}
+
+export function updateNxJsonInTree(
+  callback: (json: NxJson, context: SchematicContext) => NxJson
+): Rule {
+  return (host: Tree, context: SchematicContext): Tree => {
+    host.overwrite(
+      'nx.json',
+      serializeJson(callback(readJsonInTree(host, 'nx.json'), context))
+    );
+    return host;
+  };
+}
+
+export function addProjectToNxJsonInTree(
+  projectName: string,
+  options: NxJsonProjectConfig
+): Rule {
+  const defaultOptions = {
+    tags: []
+  };
+  return updateNxJsonInTree(json => {
+    json.projects[projectName] = { ...defaultOptions, ...options };
+    return json;
+  });
 }
 
 export function readWorkspace(host: Tree): any {

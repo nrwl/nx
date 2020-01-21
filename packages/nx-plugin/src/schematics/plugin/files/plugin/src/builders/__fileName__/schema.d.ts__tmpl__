@@ -1,0 +1,3 @@
+import { JsonObject } from '@angular-devkit/core';
+
+export interface <%= className %>BuilderSchema extends JsonObject {}

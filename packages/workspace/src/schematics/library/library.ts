@@ -20,6 +20,7 @@ import { toFileName, names } from '@nrwl/workspace';
 import { formatFiles } from '@nrwl/workspace';
 import { offsetFromRoot } from '@nrwl/workspace';
 import { generateProjectLint, addLintFiles } from '../../utils/lint';
+import { addProjectToNxJsonInTree } from '../../utils/ast-utils';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -81,10 +82,7 @@ function createFiles(options: NormalizedSchema): Rule {
 }
 
 function updateNxJson(options: NormalizedSchema): Rule {
-  return updateJsonInTree<NxJson>('nx.json', json => {
-    json.projects[options.name] = { tags: options.parsedTags };
-    return json;
-  });
+  return addProjectToNxJsonInTree(options.name, { tags: options.parsedTags });
 }
 
 export default function(schema: Schema): Rule {
@@ -117,6 +115,8 @@ function normalizeOptions(options: Schema): NormalizedSchema {
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = options.simpleModuleName ? name : projectName;
+
+  // const projectRoot = `libs/${projectDirectory}`;
   const projectRoot = `libs/${projectDirectory}`;
 
   const parsedTags = options.tags

@@ -1,0 +1,18 @@
+{
+  "name": "Nx Plugin",
+  "version": "0.1",
+  "extends": ["@nrwl/workspace"],
+  "schematics": {
+    "plugin": {
+      "factory": "./src/schematics/plugin/plugin",
+      "schema": "./src/schematics/plugin/schema.json",
+      "description": "Create a Nx Plugin"
+    },
+    "e2e-project": {
+      "factory": "./src/schematics/e2e-project/e2e",
+      "schema": "./src/schematics/e2e-project/schema.json",
+      "description": "Create a e2e application for a Nx Plugin",
+      "hidden": true
+    }
+  }
+}
