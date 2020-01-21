@@ -10,6 +10,7 @@ import React from 'react';
 %>
 
 import './<%= fileName %>.<%= style %>';
+import { environment } from '../environments/environment';
 
 <% } 
 %>
@@ -157,7 +158,7 @@ var innerJsx = `
       width="75"
       src="https://nx.dev/assets/images/nx-logo-white.svg"
     />
-    <h1>Welcome to ${name}!</h1>
+    <h1>Welcome to ${name}! [{environment.production ? 'PROD' : 'DEV'}]</h1>
   </header>
   <main>
     <h2>Resources &amp; Tools</h2>

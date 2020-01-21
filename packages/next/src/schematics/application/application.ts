@@ -216,6 +216,16 @@ function addProject(options: NormalizedSchema): Rule {
       options: {
         root: options.appProjectRoot,
         outputPath: join(normalize('dist'), options.appProjectRoot)
+      },
+      configurations: {
+        production: {
+          fileReplacements: [
+            {
+              replace: `${options.appProjectRoot}/environments/environment.ts`,
+              with: `${options.appProjectRoot}/environments/environment.prod.ts`
+            }
+          ]
+        }
       }
     };
 
@@ -227,6 +237,7 @@ function addProject(options: NormalizedSchema): Rule {
       },
       configurations: {
         production: {
+          buildTarget: `${options.projectName}:build:production`,
           dev: false
         }
       }
@@ -242,7 +253,7 @@ function addProject(options: NormalizedSchema): Rule {
     architect.export = {
       builder: '@nrwl/next:export',
       options: {
-        buildTarget: `${options.projectName}:build`
+        buildTarget: `${options.projectName}:build:production`
       }
     };
 

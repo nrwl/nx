@@ -2,10 +2,9 @@ import {
   BuilderContext,
   BuilderOutput,
   createBuilder,
-  targetFromTargetString,
-  scheduleTargetAndForget
+  scheduleTargetAndForget,
+  targetFromTargetString
 } from '@angular-devkit/architect';
-import { JsonObject } from '@angular-devkit/core';
 import {
   PHASE_DEVELOPMENT_SERVER,
   PHASE_PRODUCTION_SERVER
@@ -14,23 +13,16 @@ import startServer from 'next/dist/server/lib/start-server';
 import NextServer from 'next/dist/server/next-dev-server';
 import * as path from 'path';
 import { from, Observable, of } from 'rxjs';
-import { switchMap, concatMap, tap } from 'rxjs/operators';
-import * as url from 'url';
+import { concatMap, switchMap, tap } from 'rxjs/operators';
 import { prepareConfig } from '../../utils/config';
+import {
+  NextBuildBuilderOptions,
+  NextServeBuilderOptions
+} from '../../utils/types';
 
 try {
   require('dotenv').config();
 } catch (e) {}
-
-export interface NextBuildBuilderOptions extends JsonObject {
-  dev: boolean;
-  port: number;
-  staticMarkup: boolean;
-  quiet: boolean;
-  buildTarget: string;
-  customServerPath: string;
-  hostname: string;
-}
 
 export interface NextServerOptions {
   dev: boolean;
@@ -43,7 +35,7 @@ export interface NextServerOptions {
   hostname: string;
 }
 
-export default createBuilder<NextBuildBuilderOptions>(run);
+export default createBuilder<NextServeBuilderOptions>(run);
 
 function defaultServer(settings: NextServerOptions) {
   return startServer(settings, settings.port, settings.hostname).then(app =>
@@ -58,7 +50,7 @@ function customServer(settings: NextServerOptions) {
 }
 
 function run(
-  options: NextBuildBuilderOptions,
+  options: NextServeBuilderOptions,
   context: BuilderContext
 ): Observable<BuilderOutput> {
   const buildTarget = targetFromTargetString(options.buildTarget);
@@ -72,13 +64,14 @@ function run(
     concatMap(r => {
       if (!r.success) return of(r);
       return from(context.getTargetOptions(buildTarget)).pipe(
-        concatMap((buildOptions: any) => {
+        concatMap((buildOptions: NextBuildBuilderOptions) => {
           const root = path.resolve(context.workspaceRoot, buildOptions.root);
 
           const config = prepareConfig(
             context.workspaceRoot,
             buildOptions.root,
             buildOptions.outputPath,
+            buildOptions.fileReplacements,
             options.dev ? PHASE_DEVELOPMENT_SERVER : PHASE_PRODUCTION_SERVER
           );
 
