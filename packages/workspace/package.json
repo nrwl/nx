@@ -49,8 +49,8 @@
     "prettier": "^1.18.2"
   },
   "dependencies": {
-    "@angular-devkit/core": "8.3.14",
-    "@angular-devkit/schematics": "8.3.14",
+    "@angular-devkit/core": "8.3.23",
+    "@angular-devkit/schematics": "8.3.23",
     "cosmiconfig": "4.0.0",
     "fs-extra": "6.0.0",
     "ignore": "5.0.4",
