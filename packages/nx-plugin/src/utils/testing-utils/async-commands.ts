@@ -2,7 +2,8 @@ import { exec } from 'child_process';
 import { tmpProjPath } from './paths';
 
 /**
- * Run a command asynchronously
+ * Run a command asynchronously inside the e2e directory.
+ *
  * @param command
  * @param opts
  */
@@ -29,7 +30,7 @@ export function runCommandAsync(
 }
 
 /**
- * Run a nx command asynchronously
+ * Run a nx command asynchronously inside the e2e directory
  * @param command
  * @param opts
  */
