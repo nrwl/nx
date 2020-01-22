@@ -31,7 +31,6 @@ describe('NxPluginE2EBuilder', () => {
     contextBuilderSpy = jest
       .spyOn(context, 'scheduleBuilder')
       .mockImplementation((name, overrides) => {
-        console.log('hello');
         return new Promise((res, rej) => {
           res({
             result: of({ success: true }).toPromise(),

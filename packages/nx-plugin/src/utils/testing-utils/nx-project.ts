@@ -28,11 +28,17 @@ function patchPackageJsonForPlugin(npmPackageName: string, distPath: string) {
 /**
  * Generate a unique name for running CLI commands
  * @param prefix
+ *
+ * @returns `'<prefix><random number>'`
  */
 export function uniq(prefix: string) {
   return `${prefix}${Math.floor(Math.random() * 10000000)}`;
 }
 
+/**
+ * Run yarn install in the e2e directory
+ * @param silent silent output from the install
+ */
 export function runYarnInstall(silent: boolean = true) {
   const install = execSync('yarn install', {
     cwd: tmpProjPath(),
@@ -42,8 +48,10 @@ export function runYarnInstall(silent: boolean = true) {
 }
 
 /**
- * Sets up a new project in the temporary project path
- * for the currently selected CLI.
+ * Creates a new nx project in the e2e directory
+ *
+ * @param npmPackageName package name to test
+ * @param pluginDistPath dist path where the plugin was outputted to
  */
 export function newNxProject(
   npmPackageName: string,
@@ -56,10 +64,8 @@ export function newNxProject(
 }
 
 /**
- * Ensures that a project has been setup
- * in the temporary project path
- *
- * If one is not found, it creates a new project.
+ * Ensures that a project has been setup in the e2e directory
+ * It will also copy `@nrwl` packages to the e2e directory
  */
 export function ensureNxProject(
   npmPackageName?: string,

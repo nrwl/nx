@@ -180,6 +180,11 @@
           {
             "name": "Changes between Nx 7 and Nx 8",
             "id": "nx7-to-nx8"
+          },
+          {
+            "name": "Creating a Nx Plugin",
+            "id": "creating-a-nx-plugin",
+            "file": "shared/nx-plugin"
           }
         ]
       }
@@ -330,6 +335,11 @@
             "name": "Imposing Constraints on the Dependency Graph",
             "id": "monorepo-tags",
             "file": "shared/monorepo-tags"
+          },
+          {
+            "name": "Creating a Nx Plugin",
+            "id": "creating-a-nx-plugin",
+            "file": "shared/nx-plugin"
           }
         ]
       }
@@ -489,6 +499,11 @@
             "name": "Imposing Constraints on the Dependency Graph",
             "id": "monorepo-tags",
             "file": "shared/monorepo-tags"
+          },
+          {
+            "name": "Creating a Nx Plugin",
+            "id": "creating-a-nx-plugin",
+            "file": "shared/nx-plugin"
           }
         ]
       }

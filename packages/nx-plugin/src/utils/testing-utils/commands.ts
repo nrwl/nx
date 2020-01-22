@@ -2,9 +2,11 @@ import { execSync } from 'child_process';
 import { tmpProjPath } from './paths';
 
 /**
- * Run a nx command
+ * Run a nx command inside the e2e directory
  * @param command
  * @param opts
+ *
+ * @see tmpProjPath
  */
 export function runNxCommand(
   command?: string,
