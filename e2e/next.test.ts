@@ -8,14 +8,13 @@ import {
   runCLI,
   runCLIAsync,
   uniq,
-  updateFile,
-  supportUi
+  updateFile
 } from './utils';
 import treeKill = require('tree-kill');
 
 forEachCli('nx', () => {
   describe('Next.js Applications', () => {
-    it('should generate a Nest.jx app that consumes a react lib', async () => {
+    it('should generate a Next.js app that consumes a react lib', async () => {
       ensureProject();
       const appName = uniq('app');
       const libName = uniq('lib');
@@ -45,7 +44,7 @@ module.exports = {
       expect(readFile(`dist/apps/${appName}/BUILD_ID`)).toEqual('fixed');
     }, 120000);
 
-    xit('should generate a Next.js app dynamically loading a lib', async () => {
+    it('should generate a Next.js app dynamically loading a lib', async () => {
       ensureProject();
       const appName = uniq('app');
       const libName = uniq('lib');

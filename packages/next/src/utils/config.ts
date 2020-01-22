@@ -1,11 +1,11 @@
-import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-import loadConfig from 'next/dist/next-server/server/config';
 import { offsetFromRoot } from '@nrwl/workspace';
-import * as path from 'path';
 import * as withCSS from '@zeit/next-css';
 import * as withLESS from '@zeit/next-less';
 import * as withSASS from '@zeit/next-sass';
 import * as withSTYLUS from '@zeit/next-stylus';
+import loadConfig from 'next/dist/next-server/server/config';
+import * as path from 'path';
+import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 
 function createWebpackConfig(root: string) {
   return function webpackConfig(config, { defaultLoaders }) {
@@ -18,10 +18,45 @@ function createWebpackConfig(root: string) {
         mainFields
       })
     ];
-    config.module.rules.push({
-      test: /\.tsx?$/,
-      use: [defaultLoaders.babel]
-    });
+    config.module.rules.push(
+      {
+        test: /\.tsx?$/,
+        use: [defaultLoaders.babel]
+      },
+      {
+        test: /\.svg$/,
+        oneOf: [
+          // If coming from JS/TS file, then transform into React component using SVGR.
+          {
+            issuer: {
+              test: /\.[jt]sx?$/
+            },
+            use: [
+              '@svgr/webpack?-svgo,+titleProp,+ref![path]',
+              {
+                loader: 'url-loader',
+                options: {
+                  limit: 10000, // 10kB
+                  name: '[name].[hash:7].[ext]'
+                }
+              }
+            ]
+          },
+          // Fallback to plain URL loader.
+          {
+            use: [
+              {
+                loader: 'url-loader',
+                options: {
+                  limit: 10000, // 10kB
+                  name: '[name].[hash:7].[ext]'
+                }
+              }
+            ]
+          }
+        ]
+      }
+    );
     return config;
   };
 }

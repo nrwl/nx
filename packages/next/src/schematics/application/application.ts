@@ -1,9 +1,9 @@
 import {
+  dirname,
   join,
   JsonObject,
   normalize,
-  Path,
-  dirname
+  Path
 } from '@angular-devkit/core';
 import {
   apply,
@@ -21,9 +21,9 @@ import {
 } from '@angular-devkit/schematics';
 import {
   assertValidStyle,
+  CSS_IN_JS_DEPENDENCIES,
   extraEslintDependencies,
-  reactEslintJson,
-  CSS_IN_JS_DEPENDENCIES
+  reactEslintJson
 } from '@nrwl/react';
 import {
   addLintFiles,
@@ -37,8 +37,8 @@ import {
   updateWorkspace
 } from '@nrwl/workspace';
 import {
-  updateWorkspaceInTree,
-  addDepsToPackageJson
+  addDepsToPackageJson,
+  updateWorkspaceInTree
 } from '@nrwl/workspace/src/utils/ast-utils';
 import init from '../init/init';
 import { Schema } from './schema';
