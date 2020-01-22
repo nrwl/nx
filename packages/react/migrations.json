@@ -34,6 +34,11 @@
       "version": "8.12.0-beta.1",
       "description": "Update styled-components",
       "factory": "./src/migrations/update-8-12-0/update-8-12-0"
+    },
+    "fix-react-files-8.12.0": {
+      "version": "8.12.0-beta.1",
+      "description": "Ensure React correct webpack config and babel preset",
+      "factory": "./src/migrations/update-8-12-0/fix-react-files-8-12-0"
     }
   },
   "packageJsonUpdates": {
