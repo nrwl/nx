@@ -5,6 +5,8 @@ Real-world applications do not live in isolation — they need APIs to talk 
 **Let's change our application to fetch the data from the API.**
 
 ```typescript jsx
+import React, { useEffect, useState } from 'react';
+
 const App = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
 
