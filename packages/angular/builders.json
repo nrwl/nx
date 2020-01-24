@@ -1,0 +1,10 @@
+{
+  "$schema": "@angular-devkit/architect/src/builders-schema.json",
+  "builders": {
+    "package": {
+      "implementation": "./src/builders/package/package.impl",
+      "schema": "./src/builders/package/schema.json",
+      "description": "Build an Angular library"
+    }
+  }
+}

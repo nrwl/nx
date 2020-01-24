@@ -9,6 +9,11 @@
       "version": "8.5.0-beta.1",
       "description": "Upgrades Angular CLI to 8.3.0 and NgRx dependencies to version 8.2",
       "factory": "./src/migrations/update-8-5-0/upgrade-cli-8-3"
+    },
+    "change-angular-lib-builder": {
+      "version": "8.12.0-beta.1",
+      "description": "Changes Angular library builder to @nrwl/angular:package",
+      "factory": "./src/migrations/update-8-12-0/change-angular-lib-builder"
     }
   }
 }
