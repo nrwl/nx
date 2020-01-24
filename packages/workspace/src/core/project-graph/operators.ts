@@ -1,5 +1,9 @@
 import { ProjectGraphBuilder } from './project-graph-builder';
-import { ProjectGraph, ProjectGraphNode } from './project-graph-models';
+import {
+  ProjectGraph,
+  ProjectGraphNode,
+  ProjectGraphNodeRecords
+} from './project-graph-models';
 
 const reverseMemo = new Map<ProjectGraph, ProjectGraph>();
 
@@ -45,9 +49,31 @@ export function filterNodes(
   };
 }
 
-export const onlyWorkspaceProjects = filterNodes(
-  n => n.type === 'app' || n.type === 'lib' || n.type === 'e2e'
-);
+export function isWorkspaceProject(project: ProjectGraphNode) {
+  return (
+    project.type === 'app' || project.type === 'lib' || project.type === 'e2e'
+  );
+}
+
+export function getSortedProjectNodes(nodes: ProjectGraphNodeRecords) {
+  return Object.values(nodes).sort((nodeA, nodeB) => {
+    // If a or b is not a nx project, leave them in the same spot
+    if (!isWorkspaceProject(nodeA) && !isWorkspaceProject(nodeB)) {
+      return 0;
+    }
+    // sort all non-projects lower
+    if (!isWorkspaceProject(nodeA) && isWorkspaceProject(nodeB)) {
+      return 1;
+    }
+    if (isWorkspaceProject(nodeA) && !isWorkspaceProject(nodeB)) {
+      return -1;
+    }
+
+    return nodeA.data.root.length > nodeB.data.root.length ? -1 : 1;
+  });
+}
+
+export const onlyWorkspaceProjects = filterNodes(isWorkspaceProject);
 
 export function withDeps(
   original: ProjectGraph,
