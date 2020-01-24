@@ -1,6 +1,7 @@
 import * as wp from '@cypress/webpack-preprocessor';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import * as nodeExternals from 'webpack-node-externals';
+import * as ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
 
 export function preprocessTypescript(config: any) {
   if (!config.env.tsConfig) {
@@ -9,9 +10,10 @@ export function preprocessTypescript(config: any) {
     );
   }
 
-  return wp({
-    webpackOptions: getWebpackConfig(config)
-  });
+  return async (...args) =>
+    wp({
+      webpackOptions: getWebpackConfig(config)
+    })(...args);
 }
 
 export function getWebpackConfig(config: any) {
@@ -35,12 +37,18 @@ export function getWebpackConfig(config: any) {
           options: {
             configFile: config.env.tsConfig,
             // https://github.com/TypeStrong/ts-loader/pull/685
-            experimentalWatchApi: true
+            experimentalWatchApi: true,
+            transpileOnly: true
           }
         }
       ]
     },
-    plugins: [],
+    plugins: [
+      new ForkTsCheckerWebpackPlugin({
+        tsconfig: config.env.tsConfig,
+        useTypescriptIncrementalApi: false
+      })
+    ],
     externals: [nodeExternals()]
   };
 }
