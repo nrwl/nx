@@ -26,6 +26,8 @@ npm init nx-workspace
 yarn create nx-workspace
 ```
 
+> Workspaces are created using a set of reasonable defaults. To further customize the initial workspace, provide the `--interactive` flag when running the command.
+
 After creating the workspace, change into the newly created workspace directory.
 
 ```bash

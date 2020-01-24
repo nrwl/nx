@@ -36,57 +36,37 @@ function createPreset(options: Schema): Rule {
     return noop();
   } else if (options.preset === 'angular') {
     return chain([
-      externalSchematic(
-        '@nrwl/angular',
-        'application',
-        {
-          name: options.name,
-          style: options.style
-        },
-        { interactive: false }
-      ),
+      externalSchematic('@nrwl/angular', 'application', {
+        name: options.name,
+        style: options.style
+      }),
       setDefaultCollection('@nrwl/angular')
     ]);
   } else if (options.preset === 'react') {
     return chain([
-      externalSchematic(
-        '@nrwl/react',
-        'application',
-        {
-          name: options.name,
-          style: options.style,
-          linter
-        },
-        { interactive: false }
-      ),
+      externalSchematic('@nrwl/react', 'application', {
+        name: options.name,
+        style: options.style,
+        linter
+      }),
       setDefaultCollection('@nrwl/react')
     ]);
   } else if (options.preset === 'next') {
     return chain([
-      externalSchematic(
-        '@nrwl/next',
-        'application',
-        {
-          name: options.name,
-          style: options.style,
-          linter
-        },
-        { interactive: false }
-      ),
+      externalSchematic('@nrwl/next', 'application', {
+        name: options.name,
+        style: options.style,
+        linter
+      }),
       setDefaultCollection('@nrwl/next')
     ]);
   } else if (options.preset === 'web-components') {
     return chain([
-      externalSchematic(
-        '@nrwl/web',
-        'application',
-        {
-          name: options.name,
-          style: options.style,
-          linter
-        },
-        { interactive: false }
-      ),
+      externalSchematic('@nrwl/web', 'application', {
+        name: options.name,
+        style: options.style,
+        linter
+      }),
       addDepsToPackageJson(
         {},
         {
@@ -101,47 +81,30 @@ function createPreset(options: Schema): Rule {
     ]);
   } else if (options.preset === 'angular-nest') {
     return chain([
-      externalSchematic(
-        '@nrwl/angular',
-        'application',
-        { name: options.name, style: options.style },
-        { interactive: false }
-      ),
-      externalSchematic(
-        '@nrwl/nest',
-        'application',
-        {
-          name: 'api',
-          frontendProject: options.name
-        },
-        { interactive: false }
-      ),
+      externalSchematic('@nrwl/angular', 'application', {
+        name: options.name,
+        style: options.style
+      }),
+      externalSchematic('@nrwl/nest', 'application', {
+        name: 'api',
+        frontendProject: options.name
+      }),
       schematic('library', { name: 'api-interfaces' }, { interactive: false }),
       setDefaultCollection('@nrwl/angular'),
       connectAngularAndNest(options)
     ]);
   } else if (options.preset === 'react-express') {
     return chain([
-      externalSchematic(
-        '@nrwl/react',
-        'application',
-        {
-          name: options.name,
-          style: options.style,
-          linter
-        },
-        { interactive: false }
-      ),
-      externalSchematic(
-        '@nrwl/express',
-        'application',
-        {
-          name: 'api',
-          frontendProject: options.name,
-          linter
-        },
-        { interactive: false }
-      ),
+      externalSchematic('@nrwl/react', 'application', {
+        name: options.name,
+        style: options.style,
+        linter
+      }),
+      externalSchematic('@nrwl/express', 'application', {
+        name: 'api',
+        frontendProject: options.name,
+        linter
+      }),
       schematic(
         'library',
         { name: 'api-interfaces', linter },
