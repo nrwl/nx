@@ -75,8 +75,10 @@ describe('Command Runner Builder', () => {
           parallel: false
         }
       );
+      //wait a tick for the serial runner to schedule the first task
+      await Promise.resolve();
       const processesCreated = exec.calls.count();
-      expect(processesCreated).toBeLessThan(2);
+      expect(processesCreated).toBe(1);
       const run = await scheduleRun;
       const result = await run.result;
 
