@@ -60,7 +60,8 @@ describe('Command Runner Builder', () => {
   describe('no readyCondition', () => {
     it('should run commands serially', async () => {
       const f = fileSync().name;
-      const run = await architect.scheduleBuilder(
+      const exec = spyOn(require('child_process'), 'exec').and.callThrough();
+      const scheduleRun = await architect.scheduleBuilder(
         '@nrwl/workspace:run-commands',
         {
           commands: [
@@ -74,6 +75,11 @@ describe('Command Runner Builder', () => {
           parallel: false
         }
       );
+      //wait a tick for the serial runner to schedule the first task
+      await Promise.resolve();
+      const processesCreated = exec.calls.count();
+      expect(processesCreated).toBe(1);
+      const run = await scheduleRun;
       const result = await run.result;
 
       expect(result).toEqual(jasmine.objectContaining({ success: true }));
@@ -82,24 +88,29 @@ describe('Command Runner Builder', () => {
 
     it('should run commands in parallel', async () => {
       const f = fileSync().name;
-      const run = await architect.scheduleBuilder(
+      const exec = spyOn(require('child_process'), 'exec').and.callThrough();
+      const scheduleRun = await architect.scheduleBuilder(
         '@nrwl/workspace:run-commands',
         {
           commands: [
             {
-              command: `sleep 0.2 && echo 1 >> ${f}`
+              command: `echo 1 >> ${f}`
             },
             {
-              command: `sleep 0.1 && echo 2 >> ${f}`
+              command: `echo 2 >> ${f}`
             }
           ],
           parallel: true
         }
       );
+      const processesCreated = exec.calls.count();
+      expect(processesCreated).toBe(2);
+      const run = await scheduleRun;
       const result = await run.result;
-
       expect(result).toEqual(jasmine.objectContaining({ success: true }));
-      expect(readFile(f)).toEqual('21');
+      const contents = readFile(f);
+      expect(contents).toContain(1);
+      expect(contents).toContain(2);
     });
   });
 
