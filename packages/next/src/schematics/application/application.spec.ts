@@ -77,6 +77,20 @@ describe('app', () => {
     );
   });
 
+  it('should setup jest with SVGR support', async () => {
+    const tree = await runSchematic(
+      'app',
+      {
+        name: 'my-app'
+      },
+      appTree
+    );
+
+    expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
+      `'^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest'`
+    );
+  });
+
   it('should set up the nrwl next build builder', async () => {
     const tree = await runSchematic(
       'app',

@@ -10,6 +10,7 @@ import React from 'react';
 %>
 
 import './<%= fileName %>.<%= style %>';
+import { ReactComponent as NxLogo } from '../assets/nx-logo-white.svg';
 import { environment } from '../environments/environment';
 
 <% } 
@@ -153,11 +154,7 @@ summary {
 <%
 var innerJsx = `
   <header className="flex">
-    <img
-      alt=""
-      width="75"
-      src="https://nx.dev/assets/images/nx-logo-white.svg"
-    />
+    <NxLogo alt="" width="75" height="50" />
     <h1>Welcome to ${name}! [{environment.production ? 'PROD' : 'DEV'}]</h1>
   </header>
   <main>
