@@ -14,6 +14,11 @@
       "version": "8.10.0-beta.1",
       "description": "Update Cypress to 3.6.1",
       "factory": "./src/migrations/update-8-10-0/update-8-10-0"
+    },
+    "update-8.12.0": {
+      "version": "8.12.0-beta.1",
+      "description": "Update Cypress to ^3.8.2",
+      "factory": "./src/migrations/update-8-12-0/update-8-12-0"
     }
   },
   "packageJsonUpdates": {
@@ -22,6 +27,15 @@
       "packages": {
         "cypress": {
           "version": "3.6.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "8.12.0": {
+      "version": "8.12.0-beta.1",
+      "packages": {
+        "cypress": {
+          "version": "^3.8.2",
           "alwaysAddToPackageJson": false
         }
       }
