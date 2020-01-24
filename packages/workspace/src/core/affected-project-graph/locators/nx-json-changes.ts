@@ -30,7 +30,7 @@ export const getTouchedProjectsInNxJson: TouchedProjectLocator<
   for (let i = 0; i < changes.length; i++) {
     const change = changes[i];
     if (!isJsonChange(change) || change.path[0] !== 'projects') {
-      return;
+      continue;
     }
 
     if (nxJson.projects[change.path[1]]) {

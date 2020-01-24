@@ -36,7 +36,7 @@ export const getTouchedProjectsInWorkspaceJson: TouchedProjectLocator<
   for (let i = 0; i < changes.length; i++) {
     const change = changes[i];
     if (!isJsonChange(change) || change.path[0] !== 'projects') {
-      return;
+      continue;
     }
 
     if (workspaceJson.projects[change.path[1]]) {
