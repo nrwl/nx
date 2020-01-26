@@ -8,6 +8,7 @@ import * as path from 'path';
 import { execSync } from 'child_process';
 import * as inquirer from 'inquirer';
 import yargsParser = require('yargs-parser');
+import { determinePackageManager, showNxWarning } from './shared';
 
 const tsVersion = 'TYPESCRIPT_VERSION';
 const cliVersion = 'NX_VERSION';
@@ -29,7 +30,7 @@ if (parsedArgs.help) {
 
 const packageManager = determinePackageManager();
 determineWorkspaceName(parsedArgs).then(workspaceName => {
-  return determinPluginName(parsedArgs).then(pluginName => {
+  return determinePluginName(parsedArgs).then(pluginName => {
     const tmpDir = createSandbox(packageManager);
     createWorkspace(tmpDir, packageManager, parsedArgs, workspaceName);
     createNxPlugin(workspaceName, pluginName);
@@ -113,72 +114,6 @@ function commitChanges(workspaceName) {
   });
 }
 
-function showNxWarning(workspaceName: string) {
-  try {
-    const pathToRunNxCommand = path.resolve(process.cwd(), workspaceName);
-    execSync('nx --version', {
-      cwd: pathToRunNxCommand,
-      stdio: ['ignore', 'ignore', 'ignore']
-    });
-  } catch (e) {
-    // no nx found
-    output.addVerticalSeparator();
-    output.note({
-      title: `Nx CLI is not installed globally.`,
-      bodyLines: [
-        `This means that you might have to use "yarn nx" or "npm nx" to execute commands in the workspace.`,
-        `Run "yarn global add @nrwl/cli" or "npm install -g @nrwl/cli" to be able to execute command directly.`
-      ]
-    });
-  }
-}
-
-// Move to @nrwl/workspace package?
-function determinePackageManager() {
-  let packageManager = getPackageManagerFromAngularCLI();
-  if (packageManager === 'npm' || isPackageManagerInstalled(packageManager)) {
-    return packageManager;
-  }
-
-  if (isPackageManagerInstalled('yarn')) {
-    return 'yarn';
-  }
-
-  if (isPackageManagerInstalled('pnpm')) {
-    return 'pnpm';
-  }
-
-  return 'npm';
-}
-
-function getPackageManagerFromAngularCLI(): string {
-  // If you have Angular CLI installed, read Angular CLI config.
-  // If it isn't installed, default to 'yarn'.
-  try {
-    return execSync('ng config -g cli.packageManager', {
-      stdio: ['ignore', 'pipe', 'ignore'],
-      timeout: 500
-    })
-      .toString()
-      .trim();
-  } catch (e) {
-    return 'yarn';
-  }
-}
-
-function isPackageManagerInstalled(packageManager: string) {
-  let isInstalled = false;
-  try {
-    execSync(`${packageManager} --version`, {
-      stdio: ['ignore', 'ignore', 'ignore']
-    });
-    isInstalled = true;
-  } catch (e) {
-    /* do nothing */
-  }
-  return isInstalled;
-}
-
 function determineWorkspaceName(parsedArgs: any): Promise<string> {
   const workspaceName: string = parsedArgs._[2];
 
@@ -206,7 +141,7 @@ function determineWorkspaceName(parsedArgs: any): Promise<string> {
     });
 }
 
-function determinPluginName(parsedArgs) {
+function determinePluginName(parsedArgs) {
   if (parsedArgs.pluginName) {
     return Promise.resolve(parsedArgs.pluginName);
   }
@@ -239,7 +174,7 @@ function showHelp() {
 
   Args: 
 
-    name           workspace name
+    name           workspace name (e.g., org name)
 
   Options:
 

@@ -18,7 +18,8 @@
     "CLI"
   ],
   "bin": {
-    "create-nx-workspace": "./bin/create-nx-workspace.js"
+    "create-nx-workspace": "./bin/create-nx-workspace.js",
+    "create-nx-plugin": "./bin/create-nx-plugin.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",

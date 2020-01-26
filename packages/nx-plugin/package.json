@@ -1,22 +1,18 @@
 {
   "name": "@nrwl/nx-plugin",
   "version": "0.0.1",
-  "description": "Node Plugin for Nx",
+  "description": "Plugin for creating plugins for Nx :)",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nrwl/nx.git"
   },
   "keywords": [
     "Monorepo",
-    "Node",
-    "Nest",
-    "Jest",
-    "Cypress",
+    "Nx",
     "CLI"
   ],
   "main": "./index.js",
   "types": "./index.d.ts",
-  "bin": "./bin/create.js",
   "author": "Nrwl",
   "license": "MIT",
   "bugs": {
@@ -35,8 +31,6 @@
   "dependencies": {
     "@nrwl/node": "*",
     "@nrwl/linter": "*",
-    "@nrwl/workspace": "*",
-    "@nrwl/tao": "*",
     "@angular-devkit/architect": "0.803.23",
     "@angular-devkit/core": "8.3.23",
     "@angular-devkit/schematics": "8.3.23",

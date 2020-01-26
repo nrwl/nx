@@ -8,6 +8,7 @@ import * as inquirer from 'inquirer';
 import * as path from 'path';
 import { dirSync } from 'tmp';
 import * as yargsParser from 'yargs-parser';
+import { determinePackageManager, showNxWarning } from './shared';
 
 enum Preset {
   Empty = 'empty',
@@ -109,7 +110,7 @@ function showHelp() {
 
   Options:
 
-    name                      workspace name
+    name                      workspace name (e.g., org name)
 
     preset                    What to create in a new workspace (options: ${options})
 
@@ -124,51 +125,6 @@ function showHelp() {
 
     [new workspace options]   any 'new workspace' options
 `);
-}
-
-function determinePackageManager() {
-  let packageManager = getPackageManagerFromAngularCLI();
-  if (packageManager === 'npm' || isPackageManagerInstalled(packageManager)) {
-    return packageManager;
-  }
-
-  if (isPackageManagerInstalled('yarn')) {
-    return 'yarn';
-  }
-
-  if (isPackageManagerInstalled('pnpm')) {
-    return 'pnpm';
-  }
-
-  return 'npm';
-}
-
-function getPackageManagerFromAngularCLI(): string {
-  // If you have Angular CLI installed, read Angular CLI config.
-  // If it isn't installed, default to 'yarn'.
-  try {
-    return execSync('ng config -g cli.packageManager', {
-      stdio: ['ignore', 'pipe', 'ignore'],
-      timeout: 500
-    })
-      .toString()
-      .trim();
-  } catch (e) {
-    return 'yarn';
-  }
-}
-
-function isPackageManagerInstalled(packageManager: string) {
-  let isInstalled = false;
-  try {
-    execSync(`${packageManager} --version`, {
-      stdio: ['ignore', 'ignore', 'ignore']
-    });
-    isInstalled = true;
-  } catch (e) {
-    /* do nothing */
-  }
-  return isInstalled;
 }
 
 function determineWorkspaceName(parsedArgs: any): Promise<string> {
@@ -462,26 +418,6 @@ function createApp(
       stdio: [0, 1, 2]
     }
   );
-}
-
-function showNxWarning(workspaceName: string) {
-  try {
-    const pathToRunNxCommand = path.resolve(process.cwd(), workspaceName);
-    execSync('nx --version', {
-      cwd: pathToRunNxCommand,
-      stdio: ['ignore', 'ignore', 'ignore']
-    });
-  } catch (e) {
-    // no nx found
-    output.addVerticalSeparator();
-    output.note({
-      title: `Nx CLI is not installed globally.`,
-      bodyLines: [
-        `This means that you might have to use "yarn nx" or "npm nx" to execute commands in the workspace.`,
-        `Run "yarn global add @nrwl/cli" or "npm install -g @nrwl/cli" to be able to execute command directly.`
-      ]
-    });
-  }
 }
 
 function showCliWarning(preset: Preset, parsedArgs: yargsParser.Arguments) {
