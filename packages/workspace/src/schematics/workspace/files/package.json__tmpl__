@@ -26,7 +26,10 @@
 
     <% if(cli === 'angular') { %>
     "update": "ng update @nrwl/workspace",
-    "update:check": "ng update",
+    <% } %>
+
+    <% if(cli === 'nx') { %>
+    "update": "nx migrate latest",
     <% } %>
 
     "workspace-schematic": "nx workspace-schematic",
