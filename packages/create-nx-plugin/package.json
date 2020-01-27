@@ -1,5 +1,5 @@
 {
-  "name": "create-nx-workspace",
+  "name": "create-nx-plugin",
   "version": "0.0.2",
   "description": "Extensible Dev Tools for Monorepos",
   "repository": {
@@ -18,7 +18,7 @@
     "CLI"
   ],
   "bin": {
-    "create-nx-workspace": "./bin/create-nx-workspace.js"
+    "create-nx-plugin": "./bin/create-nx-plugin.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",

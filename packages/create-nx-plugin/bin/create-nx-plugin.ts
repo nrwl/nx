@@ -150,7 +150,7 @@ function determinePluginName(parsedArgs) {
     .prompt([
       {
         name: 'PluginName',
-        message: `Plugin name                   `,
+        message: `Plugin name                        `,
         type: 'string'
       }
     ])

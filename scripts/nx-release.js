@@ -151,6 +151,7 @@ const options = {
     'package.json',
     'build/npm/schematics/package.json',
     'build/npm/create-nx-workspace/package.json',
+    'build/npm/create-nx-plugin/package.json',
     'build/npm/jest/package.json',
     'build/npm/cypress/package.json',
     'build/npm/storybook/package.json',
