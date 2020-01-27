@@ -29,7 +29,7 @@ rm -rf build/packages/angular/bundles/nrwl-angular-testing.umd.min.js.bak
 
 rsync -a --exclude=*.ts packages/ build/packages
 chmod +x build/packages/create-nx-workspace/bin/create-nx-workspace.js
-chmod +x build/packages/create-nx-workspace/bin/create-nx-plugin.js
+chmod +x build/packages/create-nx-plugin/bin/create-nx-plugin.js
 chmod +x build/packages/cli/bin/nx.js
 chmod +x build/packages/tao/index.js
 
@@ -43,6 +43,7 @@ cp README.md build/packages/builders
 cp README.md build/packages/schematics
 cp README.md build/packages/nx
 cp README.md build/packages/create-nx-workspace
+cp README.md build/packages/create-nx-plugin
 cp README.md build/packages/workspace
 cp README.md build/packages/node
 cp README.md build/packages/express
@@ -65,6 +66,7 @@ cp LICENSE build/packages/builders
 cp LICENSE build/packages/schematics
 cp LICENSE build/packages/nx
 cp LICENSE build/packages/create-nx-workspace
+cp LICENSE build/packages/create-nx-plugin
 cp LICENSE build/packages/workspace
 cp LICENSE build/packages/node
 cp LICENSE build/packages/express
