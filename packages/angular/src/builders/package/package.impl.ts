@@ -6,7 +6,7 @@ import {
 import { JsonObject } from '@angular-devkit/core';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import * as ng from '@angular/compiler-cli';
-import { readJsonFile } from '@nrwl/workspace';
+import { readJsonFile, output } from '@nrwl/workspace';
 import {
   createProjectGraph,
   ProjectGraphNode,
@@ -149,6 +149,15 @@ export function calculateLibraryDependencies(
     .filter(x => !!x);
 }
 
+// verify whether the package.json already specifies the dep
+function hasDependency(outputJson, depConfigName: string, packageName: string) {
+  if (outputJson[depConfigName]) {
+    return outputJson[depConfigName][packageName];
+  } else {
+    return false;
+  }
+}
+
 /**
  * Updates the peerDependencies section in the `dist/lib/xyz/package.json` with
  * the proper dependency and version
@@ -168,11 +177,16 @@ function updatePackageJsonDependencies(
   const jsonOutputFile = `${distLibOutputPath}/package.json`;
   if (libDependencies && libDependencies.length > 0) {
     const outputJson = readJsonFile(jsonOutputFile);
+    let writeJson = false;
 
     outputJson.dependencies = outputJson.dependencies || {};
 
     libDependencies.forEach(entry => {
-      if (!outputJson.dependencies[entry.scope]) {
+      if (
+        !hasDependency(outputJson, 'dependencies', entry.scope) &&
+        !hasDependency(outputJson, 'devDependencies', entry.scope) &&
+        !hasDependency(outputJson, 'peerDependencies', entry.scope)
+      ) {
         // read the lib version (should we read the one from the dist?)
         const packageJsonPath = join(
           context.workspaceRoot,
@@ -182,10 +196,13 @@ function updatePackageJsonDependencies(
         const depNodePackageJson = readJsonFile(packageJsonPath);
 
         outputJson.dependencies[entry.scope] = depNodePackageJson.version;
+        writeJson = true;
       }
     });
 
-    writeJsonFile(jsonOutputFile, outputJson);
+    if (writeJson) {
+      writeJsonFile(jsonOutputFile, outputJson);
+    }
   }
 }
 

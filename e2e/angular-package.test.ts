@@ -67,7 +67,6 @@ forEachCli('angular', cli => {
             `
         );
       };
-      debugger;
 
       createDep(parentLib, [childLib, childLib2]);
     });
