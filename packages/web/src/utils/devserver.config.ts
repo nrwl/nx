@@ -34,14 +34,18 @@ export function getDevServerConfig(
     serveOptions,
     buildOptions
   );
-  webpackConfig.plugins = [...webpackConfig.plugins,
+  webpackConfig.plugins = [
+    ...webpackConfig.plugins,
     new ForkTsCheckerWebpackPlugin({
-    memoryLimit:
-      serveOptions.memoryLimit ||
-      ForkTsCheckerWebpackPlugin.DEFAULT_MEMORY_LIMIT,
-    workers: serveOptions.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE,
-    useTypescriptIncrementalApi: false
-  })];
+      tsconfig: buildOptions.tsConfig,
+      memoryLimit:
+        serveOptions.memoryLimit ||
+        ForkTsCheckerWebpackPlugin.DEFAULT_MEMORY_LIMIT,
+      workers:
+        serveOptions.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE,
+      useTypescriptIncrementalApi: false
+    })
+  ];
   if (serveOptions.liveReload) {
     webpackConfig.entry['main'].unshift(getLiveReloadEntry(serveOptions));
   }
