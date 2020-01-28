@@ -1,18 +1,24 @@
-# Creating a Nx Plugin
+# Nx Plugins
+
+Nx plugins are npm packages that contain schematics and builders to extend a Nx workspace. Schematics are blueprints to create new files from templates, and builders execute those files. These plugins also update the `nx.json` when generating new libs or apps.
+
+This guide will explain how to generate a new plugin, build on it, test it and publish it.
+
+> A list of plugins that is maintained by Nrwl is found in the [Nrwl/nx repo](https://github.com/nrwl/nx/tree/master/packages).
 
 ## Generating a Plugin
 
-To get started with building a Nx Plugin, you can run the following command:
+To get started with building a Nx Plugin, run the following command:
 
 ```bash
 npx create-nx-plugin my-org --pluginName my-plugin
 ```
 
-This command will create a brand new workspace, and set up a pre-configured plugin with the specified name.
+This command creates a brand new workspace, and sets up a pre-configured plugin with the specified name.
 
 ## Workspace Structure
 
-After executing the above command, the following tree structure will be created:
+After executing the above command, the following tree structure is created:
 
 ```treeview
 my-org/
@@ -61,20 +67,20 @@ my-org/
 └── yarn.lock
 ```
 
-> If you do not want to create a new workspace, you can install install the `@nrwl/nx-plugin` dependency in an already existing workspace with npm or yarn. Then run `nx g @nrwl/nx-plugin:plugin [pluginName]`.
+> If you do not want to create a new workspace, install the `@nrwl/nx-plugin` dependency in an already existing workspace with npm or yarn. Then run `nx g @nrwl/nx-plugin:plugin [pluginName]`.
 
-Whenever a new plugin is created, it will include a default schematic, builder, and e2e app.
+A new plugin is created with a default schematic, builder, and e2e app.
 
 ## Schematic
 
-The generated schematic will contain boilerplate that will do the following:
+The generated schematic contains boilerplate that will do the following:
 
-- Normalize a schema (the options that the schematic will accept)
-- Update the `workspace.json` (or `angular.json` if you would like your plugin be used in a Angular CLI workspace)
+- Normalize a schema (the options that the schematic accepts)
+- Update the `workspace.json` (or `angular.json` if the plugin is used in a Angular CLI workspace)
 - Add the plugin's project to the `nx.json` file
 - Add files to the disk using templates
 
-To change the type of project the plugin will generate, you can change the `projectType` const with the `ProjectType` enum. This will ensure that generated projects with your plugin will go in to the correct workspace directory (`libs/` or `apps/`).
+To change the type of project the plugin generates, change the `projectType` const with the `ProjectType` enum. This ensures that generated projects with the plugin will go in to the correct workspace directory (`libs/` or `apps/`).
 
 ```typescript
 const projectType = ProjectType.Library;
@@ -84,13 +90,13 @@ const projectType = ProjectType.Library;
 
 ### Schematic options
 
-There will be a generated `schema.d.ts` file that will contain all the options that the schematic supports. By default, we include `directory`, `tags`, and `name` as the options. If you need to add more, please update this file and the `schema.json` file.
+The `schema.d.ts` file contains all the options that the schematic supports. By default, it includes `directory`, `tags`, and `name` as the options. If more options need to be added, please update this file and the `schema.json` file.
 
-> Note: The `schema.d.ts` file is used for type checking inside your implementation file. It should match the properties in `schema.json`.
+> Note: The `schema.d.ts` file is used for type checking inside the implementation file. It should match the properties in `schema.json`.
 
 ### Adding more schematics
 
-To add more schematics to your plugin, create a new folder that contains a implementation file, a `schema.json` file, and a `schema.d.ts` file. After, edit the `collection.json` file and add your new schematic there.
+To add more schematics to the plugin, create a new folder that contains a implementation file, a `schema.json` file, and a `schema.d.ts` file. After, edit the `collection.json` file and add the new schematic there.
 
 ```json
 {
@@ -113,17 +119,17 @@ To add more schematics to your plugin, create a new folder that contains a imple
 }
 ```
 
-To read more about schematics and how they work, you can go to the documentation at [angular.io/guide/schematics-authoring](https://angular.io/guide/schematics-authoring)
+For more information on how schematics work, see [angular.io/guide/schematics-authoring](https://angular.io/guide/schematics-authoring)
 
 ### Schematic Testing
 
-The schematic spec file will include boilerplate to help you get started with testing. This includes setting up a empty workspace, and the schematic test runner.
+The schematic spec file includes boilerplate to help get started with testing. This includes setting up a empty workspace, and the schematic test runner.
 
 Full E2Es are supported (and recommended) and will run everything on the file system like a user would.
 
 ## Builder
 
-The generated builder is set up to just emit output. It's up to you to decide what you would like to actually want the builder to do. Some examples of what a builder can do are:
+The default builder is set up to just emit a console log. Some examples of what a builder can do are:
 
 - Use the .NET core compiler (or something similar)
 - Compile Stencil/Svelte/Vue components
@@ -133,7 +139,7 @@ The generated builder is set up to just emit output. It's up to you to decide wh
 
 ### Adding more builders
 
-Adding more builders to your plugin is exactly the same as adding more schematics. Create a new folder then add a implementation, `schema.json` and `schema.d.ts` files. Then edit the `builders.json` file in the root of your plugin project.
+Adding more builders to the plugin is exactly the same as adding more schematics. Create a new folder and add a implementation, `schema.json` and `schema.d.ts` files. Then edit the `builders.json` file in the root of the plugin project.
 
 ```json
 {
@@ -154,27 +160,27 @@ Adding more builders to your plugin is exactly the same as adding more schematic
 }
 ```
 
-> Note: to use your new builder in any target (inside the `workspace.json` or `angular.json`), you would use the following `@my-org/my-plugin:newBuilder`
+> Note: to use builders in any target (inside the `workspace.json` or `angular.json`), use the following syntax `@my-org/my-plugin:newBuilder`
 
-To read more about builders and how they work, you can go to the documentation at [angular.io/guide/cli-builder](https://angular.io/guide/cli-builder)
+For more information on how builders work, see [angular.io/guide/cli-builder](https://angular.io/guide/cli-builder)
 
 ### Builder testing
 
 The builder spec file contains boilerplate to set up the `CoreSchemaRegistry`, `TestingArchitectHost` and adds the builder from a package.json.
 
-There are some additional comments to help with these tests. To read more about testing builders, you can go to the [angular.io/guide/cli-builder#testing-a-builder](https://angular.io/guide/cli-builder#testing-a-builder) docs.
+There are some additional comments to help with these tests. For more information about testing builders, see [angular.io/guide/cli-builder#testing-a-builder](https://angular.io/guide/cli-builder#testing-a-builder).
 
 Full E2Es are supported (and recommended) and will run everything on the file system like a user would.
 
-## E2Es
+## Testing your plugin
 
-One of the biggest benefits that the Nx Plugin package provides is support for E2E testing your plugin.
+One of the biggest benefits that the Nx Plugin package provides is support for E2E testing.
 
-When running a E2E, we create a temporary E2E directory in the root of your workspace. This temporary directory is a blank Nx workspace, and will have your plugin's built package installed locally.
+When the E2E app runs, a temporary E2E directory is created in the root of the workspace. This directory is a blank Nx workspace, and will have the plugin's built package installed locally.
 
 ### E2E Testing file
 
-When a new plugin is generated, a test file will be created in the `my-plugin-e2e` app. Inside this test file, there is already tests for making sure that the builder ran, checking if directories are created with the `--directory` option, and checking if tags are added to `nx.json`.
+When the plugin is generated, a test file is created in the `my-plugin-e2e` app. Inside this test file, there are already tests for making sure that the builder ran, checking if directories are created with the `--directory` option, and checking if tags are added to `nx.json`.
 
 We'll go over a few parts of a test file below:
 
@@ -197,11 +203,11 @@ it('should create my-plugin', async done => {
 
 There are additional functions that the `@nrwl/nx-plugin/testing` package exports. Most of them are file utilities to manipulate and read files in the E2E directory.
 
-## Assets
+## Including Assets
 
-Sometimes you might want to include some assets with your plugin. This might be a image or some additional binaries.
+Sometimes you might want to include some assets with the plugin. This might be a image or some additional binaries.
 
-To make sure that assets are copied to the dist folder, open the `workspace.json` (or `angular.json`) file, and find the plugin's project. Inside the `build` property, you can add additional assets. By default, we include all `.md` files in the root, all non-ts files in folders, and the `collection.json` and `builders.json` files.
+To make sure that assets are copied to the dist folder, open the `workspace.json` (or `angular.json`) file, and find the plugin's project. Inside the `build` property, add additional assets. By default, all `.md` files in the root, all non-ts files in folders, and the `collection.json` and `builders.json` files are included.
 
 ```json
 "build": {
@@ -236,13 +242,13 @@ To publish your plugin follow these steps:
 
 1. Build your plugin with the command `nx run my-plugin:build`
 1. `npm publish ./dist/libs/my-plugin` and follow the prompts from npm.
-1. Thats it!
+1. That's it!
 
 > Note: currently you will have to modify the `package.json` version by yourself or with a tool.
 
 After that, you can then install your plugin like any other npm package,
-`npm i -D @my-org/my-plugin`.
+`npm i -D @my-org/my-plugin` or `yarn add -D @my-org/my-plugin`.
 
-### Nx listing
+### Listing your Nx Plugin
 
 If you would like your plugin to be included with the `nx list` command, open up an issue on the [Nrwl/nx repo](https://github.com/nrwl/nx/issues/new) and let's discuss!
