@@ -32,7 +32,7 @@ forEachCli(cli => {
        */
       it('should work for apps', () => {
         const moveOutput = runCLI(
-          `generate @nrwl/angular:move --projectName=${app1} --destination=${newPath}`
+          `generate @nrwl/angular:move --project ${app1} ${newPath}`
         );
 
         // just check the output
