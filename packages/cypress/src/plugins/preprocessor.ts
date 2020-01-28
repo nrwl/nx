@@ -5,7 +5,7 @@ import * as ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
 
 export function preprocessTypescript(
   config: any,
-  customizeWebpackConfig: (webpackConfig: any) => any
+  customizeWebpackConfig?: (webpackConfig: any) => any
 ) {
   if (!config.env.tsConfig) {
     throw new Error(
