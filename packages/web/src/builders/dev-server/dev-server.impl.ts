@@ -35,7 +35,7 @@ export interface WebDevServerOptions extends JsonObject {
   liveReload: boolean;
   watch: boolean;
   allowedHosts: string;
-  maxWorkers?:number;
+  maxWorkers?: number;
   memoryLimit?: number;
 }
 
