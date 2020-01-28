@@ -12,6 +12,7 @@ import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { WebDevServerOptions } from '../builders/dev-server/dev-server.impl';
 import { buildServePath } from './serve-path';
 import { OptimizationOptions } from './types';
+import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 export function getDevServerConfig(
   root: string,
@@ -87,6 +88,15 @@ function getDevServerPartial(
       errors: !(scriptsOptimization || stylesOptimization),
       warnings: false
     },
+    plugins: [
+      new ForkTsCheckerWebpackPlugin({
+        memoryLimit:
+          options.memoryLimit ||
+          ForkTsCheckerWebpackPlugin.DEFAULT_MEMORY_LIMIT,
+        workers: options.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE,
+        useTypescriptIncrementalApi: false
+      })
+    ],
     watchOptions: {
       poll: buildOptions.poll
     },
