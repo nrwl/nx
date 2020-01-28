@@ -48,7 +48,7 @@ forEachCli(cli => {
       );
 
       const moveOutput = runCLI(
-        `generate @nrwl/workspace:move --projectName=${lib1}-data-access --destination=shared/${lib1}/data-access`
+        `generate @nrwl/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access`
       );
 
       expect(moveOutput).toContain(`DELETE libs/${lib1}/data-access`);

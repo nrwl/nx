@@ -26,6 +26,14 @@ Show what will be generated without writing to disk:
 nx g move ... --dry-run
 ```
 
+### Examples
+
+Move libs/my-feature-lib to libs/shared/my-feature-lib:
+
+```bash
+nx g @nrwl/workspace:move --project my-feature-lib shared/my-feature-lib
+```
+
 ## Options
 
 ### destination
@@ -35,6 +43,8 @@ Type: `string`
 The folder to move the project into
 
 ### projectName
+
+Alias(es): project
 
 Type: `string`
 
