@@ -1,6 +1,7 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, readFile, writeFileSync, exists, statSync } from 'fs';
 import * as http from 'http';
 import * as opn from 'opn';
+import * as url from 'url';
 import {
   createProjectGraph,
   onlyWorkspaceProjects,
@@ -8,7 +9,25 @@ import {
   ProjectGraphNode
 } from '../core/project-graph';
 import { output } from '../utils/output';
-import { join } from 'path';
+import { join, normalize, parse } from 'path';
+
+// maps file extention to MIME types
+const mimeType = {
+  '.ico': 'image/x-icon',
+  '.html': 'text/html',
+  '.js': 'text/javascript',
+  '.json': 'application/json',
+  '.css': 'text/css',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.wav': 'audio/wav',
+  '.mp3': 'audio/mpeg',
+  '.svg': 'image/svg+xml',
+  '.pdf': 'application/pdf',
+  '.doc': 'application/msword',
+  '.eot': 'appliaction/vnd.ms-fontobject',
+  '.ttf': 'aplication/font-sfnt'
+};
 
 export function generateGraph(
   args: { file?: string; filter?: string[]; exclude?: string[] },
@@ -60,8 +79,49 @@ function startServer(
     );
 
   const app = http.createServer((req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end(html);
+    // parse URL
+    const parsedUrl = url.parse(req.url);
+
+    // extract URL path
+    // Avoid https://en.wikipedia.org/wiki/Directory_traversal_attack
+    // e.g curl --path-as-is http://localhost:9000/../fileInDanger.txt
+    // by limiting the path to current directory only
+    const sanitizePath = normalize(parsedUrl.pathname).replace(
+      /^(\.\.[\/\\])+/,
+      ''
+    );
+    let pathname = join(__dirname, '../core/dep-graph/', sanitizePath);
+
+    exists(pathname, function(exist) {
+      if (!exist) {
+        // if the file is not found, return 404
+        res.statusCode = 404;
+        res.end(`File ${pathname} not found!`);
+        return;
+      }
+
+      // if is a directory, then look for index.html
+      if (statSync(pathname).isDirectory()) {
+        // pathname += '/index.html';
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(html);
+        return;
+      }
+
+      // read file from file system
+      readFile(pathname, function(err, data) {
+        if (err) {
+          res.statusCode = 500;
+          res.end(`Error getting the file: ${err}.`);
+        } else {
+          // based on the URL path, extract the file extention. e.g. .js, .doc, ...
+          const ext = parse(pathname).ext;
+          // if the file is found, set Content-type and send data
+          res.setHeader('Content-type', mimeType[ext] || 'text/plain');
+          res.end(data);
+        }
+      });
+    });
   });
 
   app.listen(4211, '127.0.0.1');
