@@ -14,9 +14,13 @@ import { DefaultReporter } from '../tasks-runner/default-reporter';
 
 export function runMany(parsedArgs: yargs.Arguments): void {
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(parsedArgs);
-  const env = readEnvironment(nxArgs.target);
   const projectGraph = createProjectGraph();
   const projects = projectsToRun(nxArgs, projectGraph);
+  const projectMap: Record<string, ProjectGraphNode> = {};
+  projects.forEach(proj => {
+    projectMap[proj.name] = proj;
+  });
+  const env = readEnvironment(nxArgs.target, projectMap);
   runCommand(
     projects,
     projectGraph,

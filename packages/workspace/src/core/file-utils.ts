@@ -199,12 +199,15 @@ export function readWorkspaceFiles(): FileData[] {
   return files;
 }
 
-export function readEnvironment(target: string): Environment {
+export function readEnvironment(
+  target: string,
+  projects: Record<string, ProjectGraphNode>
+): Environment {
   const nxJson = readNxJson();
   const workspaceJson = readWorkspaceJson();
-  const workspace = new WorkspaceResults(target);
+  const workspaceResults = new WorkspaceResults(target, projects);
 
-  return { nxJson, workspaceJson, workspace };
+  return { nxJson, workspaceJson, workspaceResults };
 }
 
 /**

@@ -20,7 +20,6 @@ import { DefaultReporter } from '../tasks-runner/default-reporter';
 export function affected(command: string, parsedArgs: yargs.Arguments): void {
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(parsedArgs);
 
-  const env = readEnvironment(nxArgs.target);
   const projectGraph = createProjectGraph();
   let affectedGraph = nxArgs.all
     ? projectGraph
@@ -33,11 +32,13 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
       withDeps(projectGraph, Object.values(affectedGraph.nodes))
     );
   }
-  const affectedProjects = Object.values(
-    parsedArgs.all ? projectGraph.nodes : affectedGraph.nodes
-  )
+  const projects = parsedArgs.all ? projectGraph.nodes : affectedGraph.nodes;
+  const env = readEnvironment(nxArgs.target, projects);
+  const affectedProjects = Object.values(projects)
     .filter(n => !parsedArgs.exclude.includes(n.name))
-    .filter(n => !parsedArgs.onlyFailed || !env.workspace.getResult(n.name));
+    .filter(
+      n => !parsedArgs.onlyFailed || !env.workspaceResults.getResult(n.name)
+    );
 
   try {
     switch (command) {
