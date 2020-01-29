@@ -26,7 +26,7 @@ export default function update(): Rule {
     displayInformation,
     updatePackagesInPackageJson(
       path.join(__dirname, '../../../', 'migrations.json'),
-      '8.10.0'
+      '9.0.0'
     ),
     updateJestConfigs,
     formatFiles()
@@ -54,18 +54,28 @@ function updateJestConfigs(host: Tree) {
     const workspaceConfig = readWorkspace(host);
     const jestConfigsToUpdate = [];
 
-    Object.keys(workspaceConfig.projects).forEach(name => {
-      const project = workspaceConfig.projects[name];
-      if (
-        project.architect &&
-        project.architect.test &&
-        project.architect.test.builder === '@nrwl/jest:jest' &&
-        project.architect.test.options &&
-        project.architect.test.options.jestConfig ===
-          project.root + 'jest.config.js'
-      ) {
-        jestConfigsToUpdate.push(project.root + 'jest.config.js');
+    Object.values<any>(workspaceConfig.projects).forEach(project => {
+      if (!project.architect) {
+        return;
       }
+
+      Object.values<any>(project.architect).forEach(target => {
+        if (target.builder !== '@nrwl/jest:jest') {
+          return;
+        }
+
+        if (target.options.jestConfig) {
+          jestConfigsToUpdate.push(target.options.jestConfig);
+        }
+
+        if (target.configurations) {
+          Object.values<any>(target.configurations).forEach(config => {
+            if (config.jestConfig) {
+              jestConfigsToUpdate.push(config.jestConfig);
+            }
+          });
+        }
+      });
     });
 
     jestConfigsToUpdate.forEach(configPath => {
@@ -91,7 +101,7 @@ function updateJestConfigs(host: Tree) {
                 new InsertChange(
                   configPath,
                   node.getStart(sourceFile),
-                  `'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js'\n`
+                  `'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',\n`
                 )
               );
 
