@@ -1,7 +1,5 @@
 import {
-  apply,
   chain,
-  mergeWith,
   move,
   Rule,
   SchematicContext,
@@ -16,8 +14,6 @@ import { getSourceNodes } from '@nrwl/workspace/src/utils/ast-utils';
 
 export interface CreateComponentStoriesFileSchema {
   libPath: string;
-  moduleFileName: string;
-  ngModuleClassName: string;
   componentName: string;
   componentPath: string;
   componentFileName: string;
@@ -29,21 +25,11 @@ export default function(schema: CreateComponentStoriesFileSchema): Rule {
 
 export function createComponentStoriesFile({
   libPath,
-  moduleFileName,
-  ngModuleClassName,
   componentName,
   componentPath,
   componentFileName
 }: CreateComponentStoriesFileSchema): Rule {
   return (tree: Tree, context: SchematicContext): Rule => {
-    const relativeModulePath =
-      componentPath
-        .split('/')
-        .filter(segment => segment !== '.')
-        .map(() => '..')
-        .join('/') +
-      '/' +
-      moduleFileName.replace(/\.ts$/, '');
     const props = getInputDescriptors(
       tree,
       libPath + '/' + componentPath + '/' + componentFileName + '.ts'
@@ -52,8 +38,6 @@ export function createComponentStoriesFile({
       template({
         componentFileName: componentFileName,
         componentName: componentName,
-        relativeModulePath,
-        moduleName: ngModuleClassName,
         props,
         tmpl: ''
       }),
