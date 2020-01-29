@@ -1,6 +1,5 @@
 import { Cache, TaskWithCachedResult } from './cache';
 import { cliCommand } from '../core/file-utils';
-import { NxJson } from '../core/shared-interfaces';
 import { ProjectGraph } from '../core/project-graph';
 import { AffectedEventType, Task } from './tasks-runner';
 import { getCommand, getOutputs } from './utils';
@@ -88,10 +87,14 @@ export class TaskOrchestrator {
 
   private applyCachedResults(tasks: TaskWithCachedResult[]) {
     tasks.forEach(t => {
+      this.options.lifeCycle.startTask(t.task);
+
       output.note({ title: `Cached Output:` });
       process.stdout.write(t.cachedResult.terminalOutput);
       const outputs = getOutputs(this.projectGraph.nodes, t.task);
       this.cache.copyFilesFromCache(t.cachedResult, outputs);
+
+      this.options.lifeCycle.endTask(t.task, 0);
     });
 
     return tasks.reduce((m, c) => {
@@ -109,6 +112,8 @@ export class TaskOrchestrator {
     const outputPath = this.cache.temporaryOutputPath(task);
     return new Promise((res, rej) => {
       try {
+        this.options.lifeCycle.startTask(task);
+
         const env = { ...process.env };
         if (outputPath) {
           env.NX_TERMINAL_OUTPUT_PATH = outputPath;
@@ -120,9 +125,11 @@ export class TaskOrchestrator {
         p.on('close', code => {
           if (outputPath && code === 0) {
             this.cache.put(task, outputPath, taskOutputs).then(() => {
+              this.options.lifeCycle.endTask(task, code);
               res(code);
             });
           } else {
+            this.options.lifeCycle.endTask(task, code);
             res(code);
           }
         });
