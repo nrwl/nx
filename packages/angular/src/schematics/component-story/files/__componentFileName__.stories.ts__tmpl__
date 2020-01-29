@@ -8,7 +8,7 @@ export default {
 
 export const primary = () => ({
   moduleMetadata: {
-    imports: []
+    imports: [<%= moduleName %>]
   },
   component: <%=componentName%>,
   props: {<% for (let prop of props) { %>
