@@ -9,9 +9,11 @@ export function runOne(opts: {
   configuration: string;
   overrides: any;
 }): void {
-  const env = readEnvironment(opts.target);
   const projectGraph = createProjectGraph();
   const projects = [projectGraph.nodes[opts.project]];
+  const env = readEnvironment(opts.target, {
+    [opts.project]: projectGraph.nodes[opts.project]
+  });
   runCommand(
     projects,
     projectGraph,

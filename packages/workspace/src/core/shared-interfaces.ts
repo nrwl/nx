@@ -1,3 +1,5 @@
+import { WorkspaceResults } from '@nrwl/workspace/src/command-line/workspace-results';
+
 export type ImplicitDependencyEntry<T = '*' | string[]> = {
   [key: string]: T | ImplicitJsonSubsetDependency<T>;
 };
@@ -28,5 +30,5 @@ export interface NxJsonProjectConfig {
 export interface Environment {
   nxJson: NxJson;
   workspaceJson: any;
-  workspace: any;
+  workspaceResults: WorkspaceResults;
 }
