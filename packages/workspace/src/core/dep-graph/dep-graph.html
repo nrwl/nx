@@ -1,161 +1,132 @@
 <!DOCTYPE html>
 <head>
-  <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
-  <script src="https://dagrejs.github.io/project/dagre-d3/latest/dagre-d3.js"></script>
-
-  <style id="css">
-    .clusters rect {
-      fill: #00ffd0;
-      stroke: #000;
-      stroke-width: 1.5px;
-    }
-
-    text {
-      font-weight: 300;
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serf;
-      font-size: 14px;
-    }
-
-    .node rect {
-      stroke: #000;
-      fill: #fff;
-      stroke-width: 1.5px;
-    }
-
-    .node ellipse {
-      stroke: #000;
-      fill: #fff;
-      stroke-width: 1.5px;
-    }
-
-    g.affected > rect {
-      stroke: red;
-    }
-
-    g.affected > ellipse {
-      stroke: red;
-    }
-
-    g.affected > path {
-      stroke: red;
-    }
-
-    .edgePath path {
-      stroke: #000;
-      stroke-width: 1.5px;
-    }
-
-    form {
-      width: 100%;
-      background-color: #f5f5f5;
-      padding: 20px;
-    }
-  </style>
+  <link
+    href="https://fonts.googleapis.com/css?family=Montserrat&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="dep-graph.css" />
 </head>
+<body>
+  <div id="app">
+    <div class="sidebar">
+      <div class="sidebar-content">
+        <div id="focused-project" class="sidebar-section" hidden>
+          <h4>Focused on <span id="focused-project-name"></span></h4>
+          <button onclick="window.unfocusProject()">Unfocus</button>
+        </div>
 
-<script>
-  window.projects = null;
-  window.graph = null;
-  window.affected = null;
+        <div class="sidebar-section">
+          <h4>Display Options</h4>
+          <div class="flex">
+            <button
+              id="select-affected-button"
+              onclick="window.selectAffectedProjects()"
+            >
+              Select Affected
+            </button>
+            <button id="select-all-button" onclick="window.selectAllProjects()">
+              Select All
+            </button>
+          </div>
 
-  window.filteredProjects = window.projects;
+          <label>
+            <input
+              type="checkbox"
+              name="displayOptions"
+              value="groupByFolder"
+            />
+            group by folder
+          </label>
+        </div>
+        <div id="project-lists"></div>
+      </div>
+    </div>
 
-  function hasPath(target, node, visited) {
-    if (target === node) return true;
+    <div id="main-content">
+      <svg id="svg-canvas" width="960" height="600">
+        <defs>
+          <filter
+            id="sofGlowFocus"
+            height="300%"
+            width="300%"
+            x="-75%"
+            y="-75%"
+          >
+            <!-- Thicken out the original shape -->
+            <feMorphology
+              operator="dilate"
+              radius="4"
+              in="SourceAlpha"
+              result="thicken"
+            />
 
-    for (let d of window.graph.dependencies[node] || []) {
-      if (visited.indexOf(d.target) > -1) continue;
-      if (hasPath(target, d.target, [...visited, d.target])) return true;
-    }
-    return false;
-  }
+            <!-- Use a gaussian blur to create the soft blurriness of the glow -->
+            <feGaussianBlur in="thicken" stdDeviation="10" result="blurred" />
 
-  window.filter = function(e) {
-    const filter = document.querySelector('#filter').value.trim();
-    const filteredProjects =
-      filter.length > 0 ? filter.split(',').map(r => r.trim()) : [];
+            <!-- Change the colour -->
+            <feFlood flood-color="rgb(8, 108, 159)" result="glowColor" />
 
-    const exclude = document.querySelector('#exclude').value.trim();
-    const excludedProjects =
-      exclude.length > 0 ? exclude.split(',').map(r => r.trim()) : [];
+            <!-- Color in the glows -->
+            <feComposite
+              in="glowColor"
+              in2="blurred"
+              operator="in"
+              result="softGlow_colored"
+            />
 
-    window.filteredProjects = window.projects.filter(p => {
-      const filtered =
-        filteredProjects.length > 0
-          ? filteredProjects.find(
-              f => hasPath(f, p.name, []) || hasPath(p.name, f, [])
-            )
-          : true;
-      return excludedProjects.indexOf(p.name) === -1 && filtered;
-    });
+            <!--	Layer the effects together -->
+            <feMerge>
+              <feMergeNode in="softGlow_colored" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
 
-    render();
+          <filter
+            id="sofGlowFocusAffected"
+            height="300%"
+            width="300%"
+            x="-75%"
+            y="-75%"
+          >
+            <!-- Thicken out the original shape -->
+            <feMorphology
+              operator="dilate"
+              radius="4"
+              in="SourceAlpha"
+              result="thicken"
+            />
 
-    return false;
-  };
+            <!-- Use a gaussian blur to create the soft blurriness of the glow -->
+            <feGaussianBlur in="thicken" stdDeviation="10" result="blurred" />
 
-  setTimeout(() => {
-    render();
-  });
+            <!-- Change the colour -->
+            <feFlood flood-color="rgb(248,84,119)" result="glowColor" />
 
-  function render() {
-    var g = new window.dagreD3.graphlib.Graph({ compound: true });
-    g.setGraph({});
-    g.setDefaultEdgeLabel(function() {
-      return {};
-    });
+            <!-- Color in the glows -->
+            <feComposite
+              in="glowColor"
+              in2="blurred"
+              operator="in"
+              result="softGlow_colored"
+            />
 
-    window.filteredProjects.forEach(p => {
-      if (window.filteredProjects.indexOf(p) > -1) {
-        const shape = p.type === 'lib' ? 'ellipse' : 'rect';
-        const clazz =
-          window.affected.indexOf(p.name) > -1 ? 'affected' : 'no-affected';
-        g.setNode(p.name, { label: p.name, shape: shape, class: clazz });
-      }
-    });
-
-    Object.keys(graph.dependencies).forEach(p => {
-      const filteredProjectNames = window.filteredProjects.map(f => f.name);
-      graph.dependencies[p].forEach(d => {
-        if (
-          filteredProjectNames.indexOf(p) > -1 &&
-          filteredProjectNames.indexOf(d.target) > -1
-        ) {
-          const clazz =
-            window.affected.indexOf(p) > -1 &&
-            window.affected.indexOf(d.target) > -1
-              ? 'affected'
-              : 'no-affected';
-          const label =
-            d.type === 'implicit'
-              ? 'implicit'
-              : d.type === 'dynamic'
-              ? 'lazy'
-              : undefined;
-
-          g.setEdge(p, d.target, { label: label, class: clazz });
-        }
-      });
-    });
-
-    var svg = d3.select('svg'),
-      svgGroup = svg.append('g');
-
-    var render = new window.dagreD3.render();
-
-    render(d3.select('svg g'), g);
-
-    svg.attr('height', g.graph().height + 40);
-    svg.attr('width', g.graph().width + 100);
-
-    var xCenterOffset = (svg.attr('width') - g.graph().width) / 2;
-    svgGroup.attr('transform', 'translate(' + xCenterOffset + ', 20)');
-  }
-</script>
-<form onsubmit="return window.filter()">
-  <div>
-    Filter <input id="filter" /> Exclude <input id="exclude" />
-    <button>Apply</button>
+            <!--	Layer the effects together -->
+            <feMerge>
+              <feMergeNode in="softGlow_colored" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+      </svg>
+    </div>
   </div>
-</form>
-<svg id="svg-canvas" width="1024" height="960"></svg>
+
+  <script>
+    window.projects = null;
+    window.graph = null;
+    window.affected = null;
+  </script>
+
+  <script src="vendor.js"></script>
+  <script src="dep-graph.js"></script>
+</body>
