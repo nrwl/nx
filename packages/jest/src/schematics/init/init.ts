@@ -14,29 +14,6 @@ import { Rule } from '@angular-devkit/schematics';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { noop } from 'rxjs';
 
-/**
- * verifies whether the given packageJson dependencies require an update
- * given the deps & devDeps passed in
- */
-const requiresAddingOfPackages = (packageJsonFile, deps, devDeps): boolean => {
-  let needsDepsUpdate = false;
-  let needsDevDepsUpdate = false;
-
-  if (Object.keys(deps).length > 0 && packageJsonFile.dependencies) {
-    needsDepsUpdate = !Object.keys(deps).find(
-      entry => packageJsonFile.dependencies[entry]
-    );
-  }
-
-  if (Object.keys(devDeps).length > 0 && packageJsonFile.dependencies) {
-    needsDevDepsUpdate = !Object.keys(devDeps).find(
-      entry => packageJsonFile.devDependencies[entry]
-    );
-  }
-
-  return needsDepsUpdate || needsDevDepsUpdate;
-};
-
 const removeNrwlJestFromDeps = (host: Tree) => {
   // check whether to update the packge.json is necessary
   const currentPackageJson = readJsonInTree(host, 'package.json');
