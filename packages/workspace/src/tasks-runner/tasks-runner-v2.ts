@@ -15,12 +15,23 @@ export interface RemoteCache {
   store: (hash: string, cacheDirectory: string) => Promise<boolean>;
 }
 
+export interface LifeCycle {
+  startTask(task: Task): void;
+  endTask(task: Task, code: number): void;
+}
+
+class NoopLifeCycle implements LifeCycle {
+  startTask(task: Task): void {}
+  endTask(task: Task, code: number): void {}
+}
+
 export interface DefaultTasksRunnerOptions {
   parallel?: boolean;
   maxParallel?: number;
   cacheableOperations?: string[];
   cacheDirectory?: string;
   remoteCache?: RemoteCache;
+  lifeCycle?: LifeCycle;
 }
 
 export const tasksRunnerV2: TasksRunner<DefaultTasksRunnerOptions> = (
@@ -28,6 +39,10 @@ export const tasksRunnerV2: TasksRunner<DefaultTasksRunnerOptions> = (
   options: DefaultTasksRunnerOptions,
   context: { target: string; projectGraph: ProjectGraph; nxJson: NxJson }
 ): Observable<TaskCompleteEvent> => {
+  if (!options.lifeCycle) {
+    options.lifeCycle = new NoopLifeCycle();
+  }
+
   return new Observable(subscriber => {
     runAllTasks(tasks, options, context)
       .then(data => data.forEach(d => subscriber.next(d)))
