@@ -1,6 +1,4 @@
-import { fork } from 'child_process';
 import { stringUtils } from '@nrwl/workspace';
-import * as http from 'http';
 import {
   checkFilesExist,
   ensureProject,
@@ -8,16 +6,77 @@ import {
   readFile,
   runCLI,
   runCLIAsync,
-  supportUi,
-  tmpProjPath,
   uniq,
   updateFile
 } from './utils';
-import treeKill = require('tree-kill');
 
 forEachCli('nx', () => {
   describe('Next.js Applications', () => {
-    it('should generate a Next.js app that consumes a react lib', async () => {
+    it('should be able to serve with a proxy configuration', async () => {
+      ensureProject();
+      const appName = uniq('app');
+
+      runCLI(
+        `generate @nrwl/next:app ${appName} --no-interactive --linter=eslint`
+      );
+
+      const proxyConf = {
+        '/external-api': {
+          target: 'http://localhost:4200',
+          pathRewrite: {
+            '^/external-api/hello': '/api/hello'
+          }
+        }
+      };
+      updateFile(`apps/${appName}/proxy.conf.json`, JSON.stringify(proxyConf));
+
+      updateFile(
+        `apps/${appName}-e2e/src/integration/app.spec.ts`,
+        `
+        describe('next-app', () => {
+          beforeEach(() => cy.visit('/'));
+        
+          it('should ', () => {
+            cy.get('h1').contains('Hello Next.js!');
+          });
+        });
+        `
+      );
+
+      updateFile(
+        `apps/${appName}/pages/index.tsx`,
+        `
+        import React, { useEffect, useState } from 'react';
+
+        export const Index = () => {
+          const [greeting, setGreeting] = useState('');
+        
+          useEffect(() => {
+            fetch('/external-api/hello')
+              .then(r => r.text())
+              .then(setGreeting);
+          }, []);
+        
+          return <h1>{greeting}</h1>;
+        };
+        export default Index;        
+      `
+      );
+
+      updateFile(
+        `apps/${appName}/pages/api/hello.js`,
+        `
+        export default (_req, res) => {
+          res.status(200).send('Hello Next.js!');
+        };            
+      `
+      );
+
+      const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
+      expect(e2eResults).toContain('All specs passed!');
+    }, 120000);
+
+    it('should be able to consume a react lib', async () => {
       ensureProject();
       const appName = uniq('app');
       const libName = uniq('lib');
@@ -47,7 +106,7 @@ module.exports = {
       expect(readFile(`dist/apps/${appName}/BUILD_ID`)).toEqual('fixed');
     }, 120000);
 
-    it('should generate a Next.js app dynamically loading a lib', async () => {
+    it('should be able to dynamically load a lib', async () => {
       ensureProject();
       const appName = uniq('app');
       const libName = uniq('lib');
@@ -73,7 +132,7 @@ module.exports = {
       await checkApp(appName, { checkLint: false });
     }, 120000);
 
-    it('should generate a Next.js app that compiles when using a workspace and react lib written in TypeScript', async () => {
+    it('should compile when using a workspace and react lib written in TypeScript', async () => {
       ensureProject();
       const appName = uniq('app');
       const tsLibName = uniq('tslib');
@@ -145,8 +204,8 @@ async function checkApp(appName: string, opts: { checkLint: boolean }) {
   const testResults = await runCLIAsync(`test ${appName}`);
   expect(testResults.stderr).toContain('Test Suites: 1 passed, 1 total');
 
-  // This adds about 80s to the e2e run
-  // expectAppToRun(appName);
+  const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
+  expect(e2eResults).toContain('All specs passed!');
 
   const buildResult = runCLI(`build ${appName}`);
   expect(buildResult).toContain(`Compiled successfully`);
@@ -155,47 +214,6 @@ async function checkApp(appName: string, opts: { checkLint: boolean }) {
   const exportResult = runCLI(`export ${appName}`);
   expect(exportResult).toContain('Exporting (3/3)');
   checkFilesExist(`dist/apps/${appName}/exported/index.html`);
-}
-
-async function expectAppToRun(appName: string) {
-  const server = fork(
-    `./node_modules/@nrwl/cli/bin/nx.js`,
-    [`serve`, appName],
-    {
-      cwd: tmpProjPath(),
-      silent: true
-    }
-  );
-  expect(server).toBeTruthy();
-  await new Promise(resolve => {
-    setTimeout(() => {
-      getPage().then(page => {
-        expect(page).toContain(`Here are some things you can do with Nx`);
-        treeKill(server.pid, 'SIGTERM', err => {
-          expect(err).toBeFalsy();
-          resolve();
-        });
-      });
-    }, 5000);
-  });
-  if (supportUi()) {
-    const e2eResults = runCLI(`e2e ${appName}-e2e`);
-    expect(e2eResults).toContain('All specs passed!');
-  }
-}
-
-function getPage(): Promise<string> {
-  return new Promise(resolve => {
-    http.get('http://localhost:4200/', res => {
-      let data = '';
-      res.on('data', chunk => {
-        data += chunk;
-      });
-      res.once('end', () => {
-        resolve(data);
-      });
-    });
-  });
 }
 
 forEachCli('angular', () => {

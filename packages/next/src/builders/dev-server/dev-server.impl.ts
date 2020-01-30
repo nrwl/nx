@@ -5,51 +5,36 @@ import {
   scheduleTargetAndForget,
   targetFromTargetString
 } from '@angular-devkit/architect';
+import { terminal } from '@angular-devkit/core';
+import * as fs from 'fs';
 import {
   PHASE_DEVELOPMENT_SERVER,
   PHASE_PRODUCTION_SERVER
 } from 'next/dist/next-server/lib/constants';
-import startServer from 'next/dist/server/lib/start-server';
-import NextServer from 'next/dist/server/next-dev-server';
 import * as path from 'path';
 import { from, Observable, of } from 'rxjs';
 import { concatMap, switchMap, tap } from 'rxjs/operators';
 import { prepareConfig } from '../../utils/config';
 import {
   NextBuildBuilderOptions,
-  NextServeBuilderOptions
+  NextServeBuilderOptions,
+  NextServer,
+  NextServerOptions,
+  ProxyConfig
 } from '../../utils/types';
+import { customServer } from './lib/custom-server';
+import { defaultServer } from './lib/default-server';
 
 try {
   require('dotenv').config();
 } catch (e) {}
 
-export interface NextServerOptions {
-  dev: boolean;
-  dir: string;
-  staticMarkup: boolean;
-  quiet: boolean;
-  conf: any;
-  port: number;
-  path: string;
-  hostname: string;
-}
-
 export default createBuilder<NextServeBuilderOptions>(run);
 
-function defaultServer(settings: NextServerOptions) {
-  return startServer(settings, settings.port, settings.hostname).then(app =>
-    app.prepare()
-  );
-}
+const infoPrefix = `[ ${terminal.dim(terminal.cyan('info'))} ] `;
+const readyPrefix = `[ ${terminal.green('ready')} ]`;
 
-function customServer(settings: NextServerOptions) {
-  const nextApp = new NextServer(settings);
-
-  return require(path.resolve(settings.dir, settings.path))(nextApp, settings);
-}
-
-function run(
+export function run(
   options: NextServeBuilderOptions,
   context: BuilderContext
 ): Observable<BuilderOutput> {
@@ -75,7 +60,7 @@ function run(
             options.dev ? PHASE_DEVELOPMENT_SERVER : PHASE_PRODUCTION_SERVER
           );
 
-          const settings = {
+          const settings: NextServerOptions = {
             dev: options.dev,
             dir: root,
             staticMarkup: options.staticMarkup,
@@ -86,13 +71,25 @@ function run(
             hostname: options.hostname
           };
 
-          const server = options.customServerPath
+          const server: NextServer = options.customServerPath
             ? customServer
             : defaultServer;
 
-          return from(server(settings)).pipe(
+          // look for the proxy.conf.json
+          let proxyConfig: ProxyConfig;
+          const proxyConfigPath = options.proxyConfig
+            ? path.join(context.workspaceRoot, options.proxyConfig)
+            : path.join(root, 'proxy.conf.json');
+          if (fs.existsSync(proxyConfigPath)) {
+            context.logger.info(
+              `${infoPrefix} found proxy configuration at ${proxyConfigPath}`
+            );
+            proxyConfig = require(proxyConfigPath);
+          }
+
+          return from(server(settings, proxyConfig)).pipe(
             tap(() => {
-              context.logger.info(`Ready on ${baseUrl}`);
+              context.logger.info(`${readyPrefix} on ${baseUrl}`);
             }),
             switchMap(
               e =>
