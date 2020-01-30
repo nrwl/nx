@@ -64,7 +64,7 @@ forEachCli(currentCLIName => {
       expectTestsPass(results);
 
       done();
-    }, 75000);
+    }, 150000);
 
     describe('--directory', () => {
       it('should create a plugin in the specified directory', () => {
