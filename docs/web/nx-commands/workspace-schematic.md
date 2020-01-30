@@ -1,11 +1,11 @@
-# workspace-schematic [name]
+# workspace-schematic
 
 Runs a workspace schematic from the tools/schematics directory
 
 ## Usage
 
 ```bash
-nx workspace-schematic [name]
+nx workspace-schematic
 ```
 
 Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
