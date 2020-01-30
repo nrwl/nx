@@ -36,12 +36,5 @@
       "examples": ["awesome.component"]
     }
   },
-  "required": [
-    "libPath",
-    "moduleFileName",
-    "ngModuleClassName",
-    "componentName",
-    "componentPath",
-    "componentFileName"
-  ]
+  "required": ["libPath", "componentName", "componentPath", "componentFileName"]
 }
