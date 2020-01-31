@@ -1,11 +1,10 @@
 import { logging, normalize, virtualFs } from '@angular-devkit/core';
-import * as core from '@angular-devkit/core/node';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { BaseWorkflow } from '@angular-devkit/schematics/src/workflow';
 import { NodeModulesEngineHost } from '@angular-devkit/schematics/tools';
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
-import * as path from 'path';
+import { dirname, extname, join, resolve } from 'path';
 import { gt, lte } from 'semver';
 import * as stripJsonComments from 'strip-json-comments';
 import { dirSync } from 'tmp';
@@ -383,7 +382,7 @@ function versions(root: string, from: { [p: string]: string }) {
         return from[packageName];
       }
       const content = readFileSync(
-        path.join(root, `./node_modules/${packageName}/package.json`)
+        join(root, `./node_modules/${packageName}/package.json`)
       );
       return JSON.parse(stripJsonComments(content.toString()))['version'];
     } catch (e) {
@@ -408,7 +407,7 @@ function createFetcher(logger: logging.Logger) {
       const json = JSON.parse(
         stripJsonComments(
           readFileSync(
-            path.join(dir, 'node_modules', packageName, 'package.json')
+            join(dir, 'node_modules', packageName, 'package.json')
           ).toString()
         )
       );
@@ -427,7 +426,7 @@ function createFetcher(logger: logging.Logger) {
           const json = JSON.parse(
             stripJsonComments(
               readFileSync(
-                path.join(dir, 'node_modules', packageName, migrationsFile)
+                join(dir, 'node_modules', packageName, migrationsFile)
               ).toString()
             )
           );
@@ -458,7 +457,7 @@ function createFetcher(logger: logging.Logger) {
 
 function createMigrationsFile(root: string, migrations: any[]) {
   writeFileSync(
-    path.join(root, 'migrations.json'),
+    join(root, 'migrations.json'),
     JSON.stringify({ migrations }, null, 2)
   );
 }
@@ -469,7 +468,7 @@ function updatePackageJson(
     [p: string]: { version: string; alwaysAddToPackageJson: boolean };
   }
 ) {
-  const packageJsonPath = path.join(root, 'package.json');
+  const packageJsonPath = join(root, 'package.json');
   const json = JSON.parse(
     stripJsonComments(readFileSync(packageJsonPath).toString())
   );
@@ -579,20 +578,22 @@ class MigrationEngineHost extends NodeModulesEngineHost {
   protected _resolveCollectionPath(name: string): string {
     let collectionPath: string | undefined = undefined;
 
-    if (name.replace(/\\/g, '/').split('/').length > (name[0] == '@' ? 2 : 1)) {
-      try {
-        collectionPath = this._resolvePath(name, process.cwd());
-      } catch {}
+    try {
+      return super._resolveCollectionPath(name);
+    } catch {}
+
+    if (name.startsWith('.') || name.startsWith('/')) {
+      name = resolve(name);
     }
 
-    if (!collectionPath) {
-      let packageJsonPath = this._resolvePackageJson(name, process.cwd());
-      if (!core.fs.isFile(packageJsonPath)) {
-        packageJsonPath = path.join(packageJsonPath, 'package.json');
-      }
-      let pkgJsonSchematics = require(packageJsonPath)['nx-migrations'];
+    if (extname(name)) {
+      collectionPath = require.resolve(name);
+    } else {
+      const packageJsonPath = require.resolve(join(name, 'package.json'));
+      const packageJson = require(packageJsonPath);
+      let pkgJsonSchematics = packageJson['nx-migrations'];
       if (!pkgJsonSchematics) {
-        pkgJsonSchematics = require(packageJsonPath)['ng-update'];
+        pkgJsonSchematics = packageJson['ng-update'];
         if (!pkgJsonSchematics) {
           throw new Error(`Could find migrations in package: "${name}"`);
         }
@@ -600,10 +601,7 @@ class MigrationEngineHost extends NodeModulesEngineHost {
       if (typeof pkgJsonSchematics != 'string') {
         pkgJsonSchematics = pkgJsonSchematics.migrations;
       }
-      collectionPath = this._resolvePath(
-        pkgJsonSchematics,
-        path.dirname(packageJsonPath)
-      );
+      collectionPath = resolve(dirname(packageJsonPath), pkgJsonSchematics);
     }
 
     try {
@@ -635,9 +633,7 @@ async function runMigrations(
   opts: { runMigrations: string }
 ) {
   const migrationsFile = JSON.parse(
-    stripJsonComments(
-      readFileSync(path.join(root, opts.runMigrations)).toString()
-    )
+    stripJsonComments(readFileSync(join(root, opts.runMigrations)).toString())
   );
 
   const host = new virtualFs.ScopedHost(new NodeJsSyncHost(), normalize(root));

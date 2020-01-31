@@ -57,7 +57,6 @@ describe('@nrwl/bazel:sync', () => {
         yarn_install(
           # Name this npm so that Bazel Label references look like @npm//package
           name = "npm",
-          data = ["//patches"],
           package_json = "//:package.json",
           yarn_lock = "//:yarn.lock",
         )

@@ -36,8 +36,8 @@
     "cypress": "^3.8.2"
   },
   "dependencies": {
-    "@angular-devkit/architect": "0.803.23",
-    "@angular-devkit/core": "8.3.23",
+    "@angular-devkit/architect": "0.900.0-rc.12",
+    "@angular-devkit/core": "9.0.0-rc.12",
     "@cypress/webpack-preprocessor": "~4.1.0",
     "tree-kill": "1.2.2",
     "ts-loader": "^5.3.1",

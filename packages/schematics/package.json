@@ -39,7 +39,7 @@
     "graphviz": "0.0.8",
     "ignore": "5.0.4",
     "opn": "^5.3.0",
-    "rxjs": "^6.4.0",
+    "rxjs": "6.5.3",
     "semver": "5.4.1",
     "strip-json-comments": "2.0.1",
     "tmp": "0.0.33",

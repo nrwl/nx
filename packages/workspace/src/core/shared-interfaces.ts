@@ -17,7 +17,7 @@ export interface NxJson<T = '*' | string[]> {
   tasksRunnerOptions?: {
     [tasksRunnerName: string]: {
       runner: string;
-      options?: unknown;
+      options?: object;
     };
   };
 }

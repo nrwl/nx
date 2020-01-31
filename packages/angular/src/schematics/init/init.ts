@@ -10,17 +10,19 @@ import {
   readJsonInTree,
   addDepsToPackageJson,
   updateWorkspace,
-  formatFiles
+  formatFiles,
+  updateJsonInTree
 } from '@nrwl/workspace';
 import {
   angularVersion,
   angularDevkitVersion,
-  rxjsVersion
+  rxjsVersion,
+  jestPresetAngularVersion
 } from '../../utils/versions';
 import { Schema } from './schema';
 import { UnitTestRunner, E2eTestRunner } from '../../utils/test-runners';
-import { jestPresetAngularVersion } from '../../utils/versions';
 import { JsonObject } from '@angular-devkit/core';
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 function updateDependencies(): Rule {
   const deps = {
@@ -152,9 +154,32 @@ export function setDefaults(options: Schema): Rule {
   });
 }
 
+function addPostinstall(): Rule {
+  return updateJsonInTree('package.json', (json, context) => {
+    json.scripts = json.scripts || {};
+
+    if (!json.scripts.postinstall) {
+      json.scripts.postinstall =
+        'ngcc --properties es2015 browser module main --first-only --create-ivy-entry-points';
+    } else if (!json.scripts.postinstall.includes('ngcc')) {
+      context.logger.warn(
+        stripIndents`
+            ---------------------------------------------------------------------------------------
+            Angular Ivy requires you to run ngcc after every npm install.
+            The easiest way to accomplish this is to update your postinstall script to invoke ngcc.
+            ---------------------------------------------------------------------------------------
+          `
+      );
+    }
+    return json;
+  });
+}
+
 export default function(options: Schema): Rule {
   return chain([
     setDefaults(options),
+    // TODO: Remove this when ngcc can be run in parallel
+    addPostinstall(),
     updateDependencies(),
     addUnitTestRunner(options),
     addE2eTestRunner(options),

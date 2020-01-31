@@ -116,7 +116,8 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
                     if (IGNORED_WEBPACK_OUTPUT.every(r => !r.test(msg))) {
                       context.logger.info(msg);
                     }
-                  }
+                  },
+                  webpackFactory: require('webpack')
                 });
               } else {
                 return of();

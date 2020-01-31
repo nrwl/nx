@@ -374,7 +374,6 @@ describe('app', () => {
         tree,
         'apps/my-app/tsconfig.app.json'
       );
-      expect(tsconfigAppJson.exclude).toEqual(['src/test.ts', '**/*.spec.ts']);
       expect(tsconfigAppJson.compilerOptions.outDir).toEqual(
         '../../dist/out-tsc'
       );
@@ -527,18 +526,6 @@ describe('app', () => {
 
       expect(tree.readContent('apps/my-app/tsconfig.app.json')).not.toContain(
         'exclude'
-      );
-    });
-
-    it('should only include dts files in the tsconfig.app.json', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'my-app', enableIvy: true },
-        appTree
-      );
-
-      expect(tree.readContent('apps/my-app/tsconfig.app.json')).toContain(
-        `\"include\": [\"src/**/*.d.ts\"]`
       );
     });
   });
