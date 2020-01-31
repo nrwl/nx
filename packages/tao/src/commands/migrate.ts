@@ -13,6 +13,7 @@ import { convertToCamelCase, handleErrors } from '../shared/params';
 import minimist = require('minimist');
 import { NodePackageName } from '@angular-devkit/schematics/tasks/node-package/options';
 import { TaskExecutor } from '@angular-devkit/schematics';
+import { BuiltinTaskExecutor } from '@angular-devkit/schematics/tasks/node';
 
 export type MigrationsJson = {
   version: string;
@@ -573,14 +574,12 @@ class MigrationEngineHost extends NodeModulesEngineHost {
           });
         })
     });
+
+    this.registerTaskExecutor(BuiltinTaskExecutor.RunSchematic);
   }
 
   protected _resolveCollectionPath(name: string): string {
     let collectionPath: string | undefined = undefined;
-
-    try {
-      return super._resolveCollectionPath(name);
-    } catch {}
 
     if (name.startsWith('.') || name.startsWith('/')) {
       name = resolve(name);
