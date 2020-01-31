@@ -9,9 +9,8 @@ import {
   url,
   noop
 } from '@angular-devkit/schematics';
+import { join, normalize } from '@angular-devkit/core';
 import { Schema } from './schema';
-import * as path from 'path';
-import { join } from 'path';
 import {
   angularCliVersion,
   nxVersion,
@@ -34,6 +33,7 @@ import {
 import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../workspace/workspace';
 import { JsonArray } from '@angular-devkit/core';
 import { updateWorkspace } from '../../utils/workspace';
+import { basename } from 'path';
 
 function updatePackageJson() {
   return updateJsonInTree('package.json', packageJson => {
@@ -88,17 +88,17 @@ function updateAngularCLIJson(options: Schema): Rule {
   return updateWorkspace(workspace => {
     const appName: string = workspace.extensions.defaultProject as string;
     const e2eName = appName + '-e2e';
-    const e2eRoot = join('apps', e2eName);
+    const e2eRoot = join(normalize('apps'), e2eName);
     workspace.extensions.newProjectRoot = '';
     const defaultProject = workspace.projects.get(appName);
 
     const oldSourceRoot = defaultProject.sourceRoot;
-    const newRoot = join('apps', appName);
+    const newRoot = join(normalize('apps'), appName);
     defaultProject.root = newRoot;
     defaultProject.sourceRoot = join(newRoot, 'src');
     function convertBuildOptions(buildOptions) {
       buildOptions.outputPath =
-        buildOptions.outputPath && join('dist', 'apps', appName);
+        buildOptions.outputPath && join(normalize('dist'), 'apps', appName);
       buildOptions.index =
         buildOptions.index && convertAsset(buildOptions.index as string);
       buildOptions.main =
@@ -159,11 +159,12 @@ function updateAngularCLIJson(options: Schema): Rule {
     function convertServerOptions(serverOptions) {
       serverOptions.outputPath =
         serverOptions.outputPath &&
-        path.join('dist', 'apps', options.name + '-server');
+        join(normalize('dist'), 'apps', options.name + '-server');
       serverOptions.main =
         serverOptions.main && convertAsset(serverOptions.main);
       serverOptions.tsConfig =
-        serverOptions.tsConfig && join('apps', appName, 'tsconfig.server.json');
+        serverOptions.tsConfig &&
+        join(normalize('apps'), appName, 'tsconfig.server.json');
       serverOptions.fileReplacements =
         serverOptions.fileReplacements &&
         serverOptions.fileReplacements.map(replacement => ({
@@ -333,9 +334,9 @@ function moveOutOfSrc(
   filePath: string,
   context?: SchematicContext
 ) {
-  const filename = !!filePath ? path.basename(filePath) : '';
+  const filename = !!filePath ? basename(filePath) : '';
   const from = filePath;
-  const to = path.join('apps', appName, filename);
+  const to = join(normalize('apps'), appName, filename);
   renameSyncInTree(tree, from, to, err => {
     if (!context) {
       return;
@@ -411,7 +412,11 @@ function moveExistingFiles(options: Schema) {
       );
     }
     const oldAppSourceRoot = app.sourceRoot;
-    const newAppSourceRoot = join('apps', options.name, app.sourceRoot);
+    const newAppSourceRoot = join(
+      normalize('apps'),
+      options.name,
+      app.sourceRoot
+    );
     renameDirSyncInTree(host, oldAppSourceRoot, newAppSourceRoot, err => {
       if (!err) {
         context.logger.info(
@@ -425,7 +430,10 @@ function moveExistingFiles(options: Schema) {
 
     if (e2eApp) {
       const oldE2eRoot = 'e2e';
-      const newE2eRoot = join('apps', getE2eKey(workspaceJson) + '-e2e');
+      const newE2eRoot = join(
+        normalize('apps'),
+        getE2eKey(workspaceJson) + '-e2e'
+      );
       renameDirSyncInTree(host, oldE2eRoot, newE2eRoot, err => {
         if (!err) {
           context.logger.info(`Renamed ${oldE2eRoot} -> ${newE2eRoot}`);
