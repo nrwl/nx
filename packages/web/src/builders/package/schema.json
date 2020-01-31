@@ -1,6 +1,6 @@
 {
-  "title": "Web Library Bundle Target (Experimental)",
-  "description": "Bundles a library for web different web usages (UMD, ESM, CJS).",
+  "title": "Web Library Package Target (Experimental)",
+  "description": "Pckages a library for web different web usages (UMD, ESM, CJS).",
   "type": "object",
   "properties": {
     "project": {

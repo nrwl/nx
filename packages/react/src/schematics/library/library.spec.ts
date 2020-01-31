@@ -326,7 +326,7 @@ describe('lib', () => {
       const workspaceJson = readJsonInTree(tree, '/workspace.json');
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
-        builder: '@nrwl/web:bundle',
+        builder: '@nrwl/web:package',
         options: {
           entryFile: 'libs/my-lib/src/index.ts',
           outputPath: 'dist/libs/my-lib',
