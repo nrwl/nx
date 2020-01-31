@@ -1,8 +1,8 @@
 import { exec, execSync } from 'child_process';
+import * as fs from 'fs';
 import { readFileSync, renameSync, statSync, writeFileSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
-import * as fs from 'fs';
 
 export let cli;
 

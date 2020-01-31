@@ -1,0 +1,61 @@
+# remove
+
+Remove an application or library
+
+## Usage
+
+```bash
+ng generate remove ...
+```
+
+```bash
+ng g rm ... # same
+```
+
+By default, Nx will search for `remove` in the default collection provisioned in `angular.json`.
+
+You can specify the collection explicitly as follows:
+
+```bash
+ng g @nrwl/workspace:remove ...
+```
+
+Show what will be generated without writing to disk:
+
+```bash
+ng g remove ... --dry-run
+```
+
+### Examples
+
+Remove my-feature-lib from the workspace:
+
+```bash
+ng g @nrwl/workspace:remove my-feature-lib
+```
+
+Force removal of my-feature-lib from the workspace:
+
+```bash
+ng g @nrwl/workspace:remove my-feature-lib --forceRemove
+```
+
+## Options
+
+### forceRemove
+
+Alias(es): force-remove
+
+Default: `false`
+
+Type: `boolean`
+
+When true, forces removal even if the project is still in use.
+
+### projectName
+
+Alias(es): project
+
+Type: `string`
+
+The name of the project to remove
