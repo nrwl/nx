@@ -8,11 +8,7 @@ import {
 } from '@angular-devkit/schematics';
 import { getProjectConfig } from '@nrwl/workspace';
 import { SyntaxKind } from 'typescript';
-import {
-  getTsSourceFile,
-  getDecoratorMetadata,
-  getFirstNgModuleName
-} from '../../utils/ast-utils';
+import { getTsSourceFile, getDecoratorMetadata } from '../../utils/ast-utils';
 import { CreateComponentSpecFileSchema } from '../component-cypress-spec/component-cypress-spec';
 import { CreateComponentStoriesFileSchema } from '../component-story/component-story';
 
@@ -114,8 +110,6 @@ export function createAllStories(
             }
           });
 
-          const moduleName = getFirstNgModuleName(file);
-
           return chain(
             componentInfo
               .filter(info => info !== undefined)
@@ -125,8 +119,6 @@ export function createAllStories(
                     'component-story',
                     {
                       libPath,
-                      moduleFileName: fileName,
-                      ngModuleClassName: moduleName,
                       componentName: info.name,
                       componentPath: info.path,
                       componentFileName: info.componentFileName
