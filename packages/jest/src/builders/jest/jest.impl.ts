@@ -72,7 +72,10 @@ function run(
     require.resolve('jest-preset-angular');
     Object.assign(tsJestConfig, {
       stringifyContentPathRegex: '\\.(html|svg)$',
-      astTransformers: ['jest-preset-angular/InlineHtmlStripStylesTransformer']
+      astTransformers: [
+        'jest-preset-angular/build/InlineFilesTransformer',
+        'jest-preset-angular/build/StripStylesTransformer'
+      ]
     });
   } catch (e) {}
 

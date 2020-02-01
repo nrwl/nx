@@ -57,7 +57,8 @@ describe('Jest Builder', () => {
               tsConfig: '/root/tsconfig.test.json',
               stringifyContentPathRegex: '\\.(html|svg)$',
               astTransformers: [
-                'jest-preset-angular/InlineHtmlStripStylesTransformer'
+                'jest-preset-angular/build/InlineFilesTransformer',
+                'jest-preset-angular/build/StripStylesTransformer'
               ]
             }
           }),
@@ -99,7 +100,8 @@ describe('Jest Builder', () => {
               tsConfig: '/root/tsconfig.test.json',
               stringifyContentPathRegex: '\\.(html|svg)$',
               astTransformers: [
-                'jest-preset-angular/InlineHtmlStripStylesTransformer'
+                'jest-preset-angular/build/InlineFilesTransformer',
+                'jest-preset-angular/build/StripStylesTransformer'
               ]
             }
           }),
@@ -142,7 +144,8 @@ describe('Jest Builder', () => {
               tsConfig: '/root/tsconfig.test.json',
               stringifyContentPathRegex: '\\.(html|svg)$',
               astTransformers: [
-                'jest-preset-angular/InlineHtmlStripStylesTransformer'
+                'jest-preset-angular/build/InlineFilesTransformer',
+                'jest-preset-angular/build/StripStylesTransformer'
               ]
             }
           }),
@@ -199,7 +202,8 @@ describe('Jest Builder', () => {
               tsConfig: '/root/tsconfig.test.json',
               stringifyContentPathRegex: '\\.(html|svg)$',
               astTransformers: [
-                'jest-preset-angular/InlineHtmlStripStylesTransformer'
+                'jest-preset-angular/build/InlineFilesTransformer',
+                'jest-preset-angular/build/StripStylesTransformer'
               ]
             }
           }),
@@ -251,7 +255,8 @@ describe('Jest Builder', () => {
               tsConfig: '/root/tsconfig.test.json',
               stringifyContentPathRegex: '\\.(html|svg)$',
               astTransformers: [
-                'jest-preset-angular/InlineHtmlStripStylesTransformer'
+                'jest-preset-angular/build/InlineFilesTransformer',
+                'jest-preset-angular/build/StripStylesTransformer'
               ]
             }
           }),
@@ -307,7 +312,8 @@ describe('Jest Builder', () => {
               tsConfig: '/root/tsconfig.test.json',
               stringifyContentPathRegex: '\\.(html|svg)$',
               astTransformers: [
-                'jest-preset-angular/InlineHtmlStripStylesTransformer'
+                'jest-preset-angular/build/InlineFilesTransformer',
+                'jest-preset-angular/build/StripStylesTransformer'
               ]
             }
           }),
