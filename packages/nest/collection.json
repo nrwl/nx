@@ -16,6 +16,13 @@
       "schema": "./src/schematics/application/schema.json",
       "aliases": ["app"],
       "description": "Create a nest application"
+    },
+
+    "library": {
+      "factory": "./src/schematics/library/library",
+      "schema": "./src/schematics/library/schema.json",
+      "aliases": ["lib"],
+      "description": "Create a nest library"
     }
   }
 }
