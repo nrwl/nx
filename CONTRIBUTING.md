@@ -42,6 +42,25 @@ To build all the packages, run:
 yarn build
 ```
 
+## Publishing to a local registry
+
+To test if your changes will actually work once the changes are published,
+it can be useful to publish to a local registry.
+
+Here are some useful commands for doing so:
+
+```bash
+# Starts the local registry. Keep this running in a separate terminal.
+yarn local-registry start
+
+# Set npm and yarn to use the local registry.
+# Note: This reroutes your installs to your local registry
+yarn local-registry enable
+
+# Revert npm and yarn to use their default registries
+yarn local-registry disable
+```
+
 ### Running Unit Tests
 
 To make sure your changes do not break any unit tests, run the following:
