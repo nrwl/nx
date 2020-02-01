@@ -23,6 +23,7 @@
     "checkformat": "./scripts/check_format.sh",
     "checkimports": "node ./scripts/check-imports.js",
     "checkversions": "ts-node ./scripts/check-versions.ts",
+    "local-registry": "./scripts/local-registry.sh",
     "documentation": "./scripts/documentation/documentation.sh && ./scripts/documentation/check-documentation.sh"
   },
   "devDependencies": {
@@ -218,6 +219,7 @@
     "tslint": "5.11.0",
     "typescript": "~3.7.4",
     "url-loader": "^2.2.0",
+    "verdaccio": "^4.4.2",
     "webpack": "4.41.2",
     "webpack-dev-middleware": "3.7.0",
     "webpack-dev-server": "3.9.0",
