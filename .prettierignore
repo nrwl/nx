@@ -14,3 +14,4 @@ packages/jest/src/schematics/**/files/**/*.json
 /.idea
 /.github
 /coverage
+/.yarn
