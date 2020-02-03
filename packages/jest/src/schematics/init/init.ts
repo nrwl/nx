@@ -44,8 +44,7 @@ const createJestConfig = (host: Tree) => {
     },
     resolver: '@nrwl/jest/plugins/resolver',
     moduleFileExtensions: ['ts', 'js', 'html'],
-    coverageReporters: ['html'],
-    passWithNoTests: true
+    coverageReporters: ['html']
   };`
     );
   }
