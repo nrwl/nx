@@ -12,10 +12,13 @@ import { formatFiles } from '@nrwl/workspace/src/utils/rules/format-files';
 
 const addE2eImplicitDependencies = updateJsonInTree<NxJson>('nx.json', json => {
   Object.keys(json.projects).forEach(proj => {
-    if (proj.endsWith('-e2e') && json.projects[proj.replace(/-e2e$/, '')]) {
+    const implicitE2eName = proj.replace(/-e2e$/, '');
+    if (proj.endsWith('-e2e') && json.projects[implicitE2eName]) {
       json.projects[proj].implicitDependencies =
         json.projects[proj].implicitDependencies || [];
-      json.projects[proj].implicitDependencies.push(proj.replace(/-e2e$/, ''));
+      if (!json.projects[proj].implicitDependencies.includes(implicitE2eName)) {
+        json.projects[proj].implicitDependencies.push(implicitE2eName);
+      }
     }
   });
   return json;
