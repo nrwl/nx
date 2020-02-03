@@ -1,6 +1,6 @@
-# bundle
+# package
 
-Bundle a library
+Package a library
 
 Builder properties can be configured in angular.json when defining the builder, or when invoking it.
 

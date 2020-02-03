@@ -107,7 +107,7 @@ function addProject(options: NormalizedSchema): Rule {
 
     if (options.publishable) {
       architect.build = {
-        builder: '@nrwl/web:bundle',
+        builder: '@nrwl/web:package',
         options: {
           outputPath: `dist/libs/${options.projectDirectory}`,
           tsConfig: `${options.projectRoot}/tsconfig.lib.json`,

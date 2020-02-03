@@ -6,14 +6,14 @@ import { workspaces } from '@angular-devkit/core';
 import * as f from '@nrwl/workspace/src/utils/fileutils';
 import { MockBuilderContext } from '@nrwl/workspace/testing';
 
-import * as impl from './bundle.impl';
+import * as impl from './package.impl';
 import * as rr from './run-rollup';
 import { getMockContext } from '../../utils/testing';
 import { BundleBuilderOptions } from '../../utils/types';
 
 jest.mock('tsconfig-paths-webpack-plugin');
 
-describe('WebBuildBuilder', () => {
+describe('WebPackagebuilder', () => {
   let context: MockBuilderContext;
   let testOptions: BundleBuilderOptions;
   let runRollup: jasmine.Spy;
