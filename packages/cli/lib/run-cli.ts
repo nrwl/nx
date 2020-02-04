@@ -5,7 +5,7 @@ import { findWorkspaceRoot } from './find-workspace-root';
 const workspace = findWorkspaceRoot(process.cwd());
 
 if (process.env.NX_TERMINAL_OUTPUT_PATH) {
-  setUpOutputWatching();
+  setUpOutputWatching(process.env.NX_TERMINAL_CAPTURE_STDERR === 'true');
 }
 requireCli();
 
@@ -40,7 +40,7 @@ function requireCli() {
  * And the cached output should be correct unless the CLI bypasses process.stdout or console.log and uses some
  * C-binary to write to stdout.
  */
-function setUpOutputWatching() {
+function setUpOutputWatching(captureStderr: boolean) {
   const stdoutWrite = process.stdout._write;
   const stderrWrite = process.stderr._write;
 
@@ -60,7 +60,9 @@ function setUpOutputWatching() {
     encoding: string,
     callback: Function
   ) => {
-    out.push(chunk.toString());
+    if (captureStderr) {
+      out.push(chunk.toString());
+    }
     stderrWrite.apply(process.stderr, [chunk, encoding, callback]);
   };
 

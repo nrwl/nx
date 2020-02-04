@@ -117,6 +117,9 @@ export class TaskOrchestrator {
         const env = { ...process.env };
         if (outputPath) {
           env.NX_TERMINAL_OUTPUT_PATH = outputPath;
+          if (this.options.captureStderr) {
+            env.NX_TERMINAL_CAPTURE_STDERR = 'true';
+          }
         }
         const p = fork(this.getCommand(), this.getCommandArgs(task), {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],

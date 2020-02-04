@@ -30,6 +30,12 @@ Type: `string`
 
 Command to run in child process
 
+### outputPath
+
+Type: `string`
+
+Tells Nx where the files will be created
+
 ### parallel
 
 Default: `true`

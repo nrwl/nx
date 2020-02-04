@@ -32,6 +32,7 @@ export interface DefaultTasksRunnerOptions {
   cacheDirectory?: string;
   remoteCache?: RemoteCache;
   lifeCycle?: LifeCycle;
+  captureStderr?: boolean;
 }
 
 export const tasksRunnerV2: TasksRunner<DefaultTasksRunnerOptions> = (

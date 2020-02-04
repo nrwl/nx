@@ -34,6 +34,20 @@
       "type": "boolean",
       "description": "Use colors when showing output of command",
       "default": false
+    },
+    "outputPath": {
+      "description": "Tells Nx where the files will be created",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
     }
   },
   "required": ["commands"]
