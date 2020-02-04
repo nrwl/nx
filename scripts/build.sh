@@ -39,8 +39,6 @@ cp packages/react/typings/* build/packages/react/typings
 rm -rf build/packages/nx/dist
 rm -rf build/packages/install
 rm -rf build/packages/nx/spec
-cp README.md build/packages/builders
-cp README.md build/packages/schematics
 cp README.md build/packages/nx
 cp README.md build/packages/create-nx-workspace
 cp README.md build/packages/create-nx-plugin
@@ -62,8 +60,6 @@ cp README.md build/packages/linter
 cp README.md build/packages/bazel
 cp README.md build/packages/nx-plugin
 
-cp LICENSE build/packages/builders
-cp LICENSE build/packages/schematics
 cp LICENSE build/packages/nx
 cp LICENSE build/packages/create-nx-workspace
 cp LICENSE build/packages/create-nx-plugin
