@@ -12,6 +12,7 @@
     "e2e": "./scripts/e2e.sh",
     "e2e-rerun": "./scripts/e2e-rerun.sh",
     "create-playground": "./scripts/e2e.sh create-playground",
+    "update-playground": "./scripts/update-playground.sh",
     "e2e-ci1": "./scripts/e2e-ci1.sh",
     "e2e-ci2": "./scripts/e2e-ci2.sh",
     "format": "./scripts/format.sh",
