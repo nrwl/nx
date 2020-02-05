@@ -300,7 +300,7 @@ function determineStyle(preset: Preset, parsedArgs: any) {
     }
   ];
 
-  if (preset === Preset.ReactWithExpress || preset === Preset.React) {
+  if ([Preset.ReactWithExpress, Preset.React, Preset.NextJs].includes(preset)) {
     choices.push(
       {
         value: 'styled-components',
