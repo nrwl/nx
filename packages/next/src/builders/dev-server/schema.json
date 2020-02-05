@@ -36,6 +36,11 @@
       "type": "string",
       "description": "Hostname on which the application is served.",
       "default": null
+    },
+    "proxyConfig": {
+      "type": "string",
+      "description": "Path to the proxy configuration file.",
+      "default": null
     }
   },
   "required": []

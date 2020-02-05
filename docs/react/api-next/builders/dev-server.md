@@ -41,6 +41,12 @@ Type: `number`
 
 Port to listen on.
 
+### proxyConfig
+
+Type: `string`
+
+Path to the proxy configuration file.
+
 ### quiet
 
 Default: `false`
