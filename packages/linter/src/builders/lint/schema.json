@@ -26,25 +26,30 @@
         }
       ]
     },
+    "outputFile": {
+      "type": "string",
+      "description": "Output file for formatted output."
+    },
     "format": {
       "type": "string",
-      "description": "Output format (prose, json, stylish, verbose, pmd, msbuild, checkstyle, vso, fileslist).",
-      "default": "prose",
+      "description": "ESLint Output formatter (https://eslint.org/docs/user-guide/formatters).",
+      "default": "stylish",
       "anyOf": [
         {
           "enum": [
-            "checkstyle",
-            "codeFrame",
-            "filesList",
-            "json",
-            "junit",
-            "msbuild",
-            "pmd",
-            "prose",
             "stylish",
-            "tap",
-            "verbose",
-            "vso"
+            "compact",
+            "codeframe",
+            "unix",
+            "visualstudio",
+            "table",
+            "checkstyle",
+            "html",
+            "jslint-xml",
+            "json",
+            "json-with-metadata",
+            "junit",
+            "tap"
           ]
         },
         { "minLength": 1 }

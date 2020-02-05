@@ -11,8 +11,7 @@ function run(options: any, context: BuilderContext): Observable<BuilderOutput> {
     delete options.linter;
     options.eslintConfig = options.config;
     delete options.config;
-    // Use whatever the default formatter is
-    delete options.format;
+
     return from(
       context.scheduleBuilder('@angular-eslint/builder:lint', options, {
         logger: patchedLogger(context)

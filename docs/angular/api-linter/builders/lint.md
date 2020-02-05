@@ -34,11 +34,11 @@ Fixes linting errors (may overwrite linted files).
 
 ### format
 
-Default: `prose`
+Default: `stylish`
 
 Type: `string`
 
-Output format (prose, json, stylish, verbose, pmd, msbuild, checkstyle, vso, fileslist).
+ESLint Output formatter (https://eslint.org/docs/user-guide/formatters).
 
 ### linter
 
@@ -49,6 +49,12 @@ Type: `string`
 Possible values: `eslint`, `tslint`
 
 The tool to use for running lint checks.
+
+### outputFile
+
+Type: `string`
+
+Output file for formatted output.
 
 ### tsConfig
 
