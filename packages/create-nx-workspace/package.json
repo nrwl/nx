@@ -1,6 +1,6 @@
 {
   "name": "create-nx-workspace",
-  "version": "0.0.2",
+  "version": "0.0.1",
   "description": "Extensible Dev Tools for Monorepos",
   "repository": {
     "type": "git",

@@ -132,6 +132,27 @@ childProcess.execSync(`find build/npm -maxdepth 1 -name "*.tgz" -delete`, {
  */
 const DRY_RUN = !!parsedArgs['dry-run'];
 
+const pkgFiles = [
+  'package.json',
+  'build/npm/create-nx-workspace/package.json',
+  'build/npm/create-nx-plugin/package.json',
+  'build/npm/jest/package.json',
+  'build/npm/cypress/package.json',
+  'build/npm/storybook/package.json',
+  'build/npm/angular/package.json',
+  'build/npm/react/package.json',
+  'build/npm/next/package.json',
+  'build/npm/web/package.json',
+  'build/npm/node/package.json',
+  'build/npm/express/package.json',
+  'build/npm/nest/package.json',
+  'build/npm/workspace/package.json',
+  'build/npm/cli/package.json',
+  'build/npm/tao/package.json',
+  'build/npm/eslint-plugin-nx/package.json',
+  'build/npm/linter/package.json',
+  'build/npm/nx-plugin/package.json'
+];
 /**
  * Set the static options for release-it
  */
@@ -147,27 +168,7 @@ const options = {
    * All the package.json files that will have their version updated
    * by release-it
    */
-  pkgFiles: [
-    'package.json',
-    'build/npm/create-nx-workspace/package.json',
-    'build/npm/create-nx-plugin/package.json',
-    'build/npm/jest/package.json',
-    'build/npm/cypress/package.json',
-    'build/npm/storybook/package.json',
-    'build/npm/angular/package.json',
-    'build/npm/react/package.json',
-    'build/npm/next/package.json',
-    'build/npm/web/package.json',
-    'build/npm/node/package.json',
-    'build/npm/express/package.json',
-    'build/npm/nest/package.json',
-    'build/npm/workspace/package.json',
-    'build/npm/cli/package.json',
-    'build/npm/tao/package.json',
-    'build/npm/eslint-plugin-nx/package.json',
-    'build/npm/linter/package.json',
-    'build/npm/nx-plugin/package.json'
-  ],
+  pkgFiles: pkgFiles,
   increment: parsedVersion.version,
   requireUpstream: false,
   github: {
@@ -191,37 +192,46 @@ const options = {
   requireCleanWorkingDir: false
 };
 
-releaseIt(options)
-  .then(output => {
-    if (DRY_RUN) {
-      console.warn('WARNING: In DRY_RUN mode - not running publishing script');
-      process.exit(0);
-      return;
-    }
+childProcess.execSync('rm -rf ./build/packages/bazel');
+childProcess.execSync('rm -rf ./build/npm/bazel');
 
-    // if (parsedArgs.nobazel) {
-    childProcess.execSync('rm -rf ./build/packages/bazel');
-    childProcess.execSync('rm -rf ./build/npm/bazel');
-    // }
-
-    /**
-     * We always use either "latest" or "next" (i.e. no separate tags for alpha, beta etc)
-     */
-    const npmTag = parsedVersion.isPrerelease ? 'next' : 'latest';
-    const npmPublishCommand = `./scripts/publish.sh ${
-      output.version
-    } ${npmTag} ${parsedArgs.local ? '--local' : ''}`;
-    console.log('Executing publishing script for all packages:');
-    console.log(`> ${npmPublishCommand}`);
-    console.log(
-      `Note: You will need to authenticate with your NPM credentials`
-    );
-    childProcess.execSync(npmPublishCommand, {
-      stdio: [0, 1, 2]
-    });
-    process.exit(0);
-  })
-  .catch(err => {
-    console.error(err.message);
-    process.exit(1);
+if (parsedArgs.local) {
+  pkgFiles.forEach(p => {
+    const content = JSON.parse(fs.readFileSync(p).toString());
+    content.version = parsedVersion.version;
+    fs.writeFileSync(p, JSON.stringify(content, null, 2));
   });
+  childProcess.execSync(
+    `./scripts/publish.sh ${parsedVersion.version} latest --local`,
+    {
+      stdio: [0, 1, 2]
+    }
+  );
+  process.exit(0);
+} else {
+  releaseIt(options)
+    .then(output => {
+      if (DRY_RUN) {
+        console.warn(
+          'WARNING: In DRY_RUN mode - not running publishing script'
+        );
+        process.exit(0);
+        return;
+      }
+      const npmTag = parsedVersion.isPrerelease ? 'next' : 'latest';
+      const npmPublishCommand = `./scripts/publish.sh ${output.version} ${npmTag}`;
+      console.log('Executing publishing script for all packages:');
+      console.log(`> ${npmPublishCommand}`);
+      console.log(
+        `Note: You will need to authenticate with your NPM credentials`
+      );
+      childProcess.execSync(npmPublishCommand, {
+        stdio: [0, 1, 2]
+      });
+      process.exit(0);
+    })
+    .catch(err => {
+      console.error(err.message);
+      process.exit(1);
+    });
+}
