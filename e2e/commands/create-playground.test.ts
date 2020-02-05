@@ -1,4 +1,4 @@
-import { ensureProject, forEachCli, newProject, runCLI } from './utils';
+import { ensureProject, forEachCli, newProject, runCLI } from '../utils';
 
 forEachCli(() => {
   describe('create playground', () => {

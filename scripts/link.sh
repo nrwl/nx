@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [ "$1" = "fast" ]; then
-  ./scripts/build_for_test.sh
+  ./scripts/build-for-test.sh
 fi
 
 if [ "$1" != "fast" ]; then

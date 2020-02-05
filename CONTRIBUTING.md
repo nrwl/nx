@@ -61,6 +61,8 @@ yarn local-registry enable
 yarn local-registry disable
 ```
 
+You can also run `yarn test-create-nx-workspace 30.0.0`. It will set up local registry, publish the packages, create the workspace with Angular and React applications in it, and will run some basic checks against the workspace.
+
 ### Running Unit Tests
 
 To make sure your changes do not break any unit tests, run the following:
