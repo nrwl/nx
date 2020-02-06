@@ -17,9 +17,11 @@ import {
   getSourceNodes,
   InsertChange,
   readJsonInTree,
-  ReplaceChange
+  ReplaceChange,
+  RemoveChange
 } from '@nrwl/workspace/src/utils/ast-utils';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { updateWorkspace } from '@nrwl/workspace/src/utils/workspace';
 
 export default function update(): Rule {
   return chain([
@@ -28,10 +30,26 @@ export default function update(): Rule {
       path.join(__dirname, '../../../', 'migrations.json'),
       '9.0.0'
     ),
+    addPassWithNoTestsToWorkspace,
     updateJestConfigs,
+    removePassWithNoTestsFromJestConfig,
     formatFiles()
   ]);
 }
+
+const addPassWithNoTestsToWorkspace = updateWorkspace(workspace => {
+  workspace.projects.forEach(project => {
+    project.targets.forEach(target => {
+      if (
+        target.builder === '@nrwl/jest:jest' &&
+        target.options &&
+        target.options.passWithNoTests === undefined
+      ) {
+        target.options.passWithNoTests = true;
+      }
+    });
+  });
+});
 
 function displayInformation(host: Tree, context: SchematicContext) {
   const config = readJsonInTree(host, 'package.json');
@@ -135,5 +153,39 @@ function updateJestConfigs(host: Tree) {
         );
       }
     });
+  }
+}
+
+function removePassWithNoTestsFromJestConfig(host: Tree) {
+  if (host.exists('jest.config.js')) {
+    const contents = host.read('jest.config.js').toString();
+    const sourceFile = ts.createSourceFile(
+      'jest.config.js',
+      contents,
+      ts.ScriptTarget.Latest
+    );
+    const changes: RemoveChange[] = [];
+    const sourceNodes = getSourceNodes(sourceFile);
+    sourceNodes.forEach((node, index) => {
+      if (
+        ts.isPropertyAssignment(node) &&
+        ts.isIdentifier(node.name) &&
+        node.name.text === 'passWithNoTests'
+      ) {
+        const expectedCommaNode = sourceNodes[index + 4];
+        const isFollowedByComma =
+          expectedCommaNode.kind === ts.SyntaxKind.CommaToken;
+        changes.push(
+          new RemoveChange(
+            'jest.config.js',
+            node.getStart(sourceFile),
+            isFollowedByComma
+              ? node.getFullText(sourceFile)
+              : node.getText(sourceFile)
+          )
+        );
+      }
+    });
+    insert(host, 'jest.config.js', changes);
   }
 }
