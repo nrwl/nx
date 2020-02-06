@@ -296,7 +296,8 @@ forEachCli('angular', () => {
       ]);
     });
 
-    it('should convert a project with common libraries in the ecosystem', () => {
+    // TODO(FrozenPandaz): reenable after angular 9
+    xit('should convert a project with common libraries in the ecosystem', () => {
       // create a new AngularCLI app
       runNew();
 
