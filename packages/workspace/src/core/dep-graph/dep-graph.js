@@ -477,6 +477,9 @@ setTimeout(() => {
   addProjectCheckboxes();
   checkForAffected();
 
+  document
+    .querySelector('input[name=displayOptions][value=groupByFolder]')
+    .addEventListener('change', () => window.filterProjects());
   window.addEventListener('resize', () => render());
 
   filterProjects();

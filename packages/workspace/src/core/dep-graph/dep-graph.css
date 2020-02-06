@@ -7,7 +7,7 @@
   --color-nrwl-black: #231f20;
   --color-nrwl-red: rgb(248, 84, 119);
 
-  --color-primary: var(--color-nrwl-blue);
+  --color-primary: var(--color-nrwl-navy);
   --font-family: 'Montserrat', 'Helvetica Neue', sans-serif;
 }
 
@@ -24,8 +24,6 @@ html {
 
 button {
   padding: 0.5em 1em;
-  color: var(--color-darkGrey);
-  background: var(--color-lightGrey);
   border-radius: 4px;
   border: 1px solid transparent;
   font-size: 1em;
@@ -53,6 +51,11 @@ button.icon {
   padding: 0;
   text-align: center;
   line-height: 50%;
+}
+
+button.icon img {
+  width: 1.25em;
+  height: 1.25em;
 }
 
 .form-line {
@@ -147,7 +150,7 @@ html {
 }
 
 .clusters rect {
-  fill: var(--color-nrwl-light-blue);
+  fill: var(--color-nrwl-twilight);
   opacity: 0.5;
   stroke: var(--color-nrwl-black);
   stroke-width: 1.5px;
@@ -214,8 +217,12 @@ g.affected ellipse {
   flex: 1;
 }
 
+.sidebar-content h5 {
+  color: var(--color-nrwl-twilight);
+}
+
 .tippy-tooltip {
-  background-color: var(--color-nrwl-gray);
+  background-color: var(--color-nrwl-twilight);
 }
 
 .tippy-content {
