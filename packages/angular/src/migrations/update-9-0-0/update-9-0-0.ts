@@ -13,8 +13,8 @@ export default function() {
       )
     );
     return chain([
-      addUpdateTask('@angular/core', '9.0.0-rc.14', [postInstallTask]),
-      addUpdateTask('@angular/cli', '9.0.0-rc.14', [postInstallTask])
+      addUpdateTask('@angular/core', '9.0.0', [postInstallTask]),
+      addUpdateTask('@angular/cli', '9.0.0', [postInstallTask])
     ]);
   };
 }
