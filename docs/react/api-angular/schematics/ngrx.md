@@ -50,7 +50,7 @@ Create a Facade class for the the Feature.
 
 ### minimal
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 
@@ -118,7 +118,7 @@ Do not update the package.json with NgRx dependencies.
 
 ### syntax
 
-Default: `classes`
+Default: `creators`
 
 Type: `string`
 
@@ -128,7 +128,7 @@ Specifies whether to use class-based or creator functions for actions, reducers,
 
 ### useDataPersistence
 
-Default: `true`
+Default: `false`
 
 Type: `boolean`
 

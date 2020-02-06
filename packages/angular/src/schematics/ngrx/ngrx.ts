@@ -54,9 +54,10 @@ export default function generateNgrxCollection(_options: Schema): Rule {
       options.onlyAddFiles = true;
     }
 
-    const fileGeneration = !options.onlyEmptyRoot
-      ? [generateNgrxFilesFromTemplates(options)]
-      : [];
+    const fileGeneration =
+      !options.onlyEmptyRoot || (!options.root && options.minimal)
+        ? [generateNgrxFilesFromTemplates(options)]
+        : [];
 
     const moduleModification = !options.onlyAddFiles
       ? [

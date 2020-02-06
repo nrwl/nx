@@ -29,7 +29,9 @@ describe('ngrx', () => {
       {
         name: 'state',
         module: 'apps/myapp/src/app/app.module.ts',
-        onlyEmptyRoot: true
+        onlyEmptyRoot: true,
+        minimal: false,
+        root: true
       },
       appTree
     );
@@ -77,7 +79,8 @@ describe('ngrx', () => {
       {
         name: 'app',
         module: 'apps/myapp/src/app/app.module.ts',
-        root: true
+        root: true,
+        minimal: false
       },
       appTree
     );
@@ -124,7 +127,8 @@ describe('ngrx', () => {
         name: 'app',
         module: 'apps/myapp/src/app/app.module.ts',
         root: true,
-        facade: true
+        facade: true,
+        minimal: false
       },
       appTree
     );
@@ -180,7 +184,8 @@ describe('ngrx', () => {
       'ngrx',
       {
         name: 'state',
-        module: 'apps/myapp/src/app/app.module.ts'
+        module: 'apps/myapp/src/app/app.module.ts',
+        minimal: false
       },
       appTree
     );
@@ -201,7 +206,8 @@ describe('ngrx', () => {
       {
         name: 'state',
         module: 'apps/myapp/src/app/app.module.ts',
-        directory: 'myCustomState'
+        directory: 'myCustomState',
+        minimal: false
       },
       appTree
     );
@@ -223,7 +229,8 @@ describe('ngrx', () => {
         name: 'state',
         module: 'apps/myapp/src/app/app.module.ts',
         onlyAddFiles: true,
-        facade: true
+        facade: true,
+        minimal: false
       },
       appTree
     );
@@ -253,7 +260,8 @@ describe('ngrx', () => {
         module: 'apps/myapp/src/app/app.module.ts',
         onlyAddFiles: false,
         skipImport: true,
-        facade: true
+        facade: true,
+        minimal: false
       },
       appTree
     );
@@ -519,7 +527,8 @@ import {
         'ngrx',
         {
           name: 'super-users',
-          module: appConfig.appModule
+          module: appConfig.appModule,
+          minimal: false
         },
         appTree
       );
@@ -549,7 +558,9 @@ import {
           name: 'users',
           module: appConfig.appModule,
           syntax: 'creators',
-          facade: true
+          minimal: false,
+          facade: true,
+          useDataPersistance: false
         },
         appTree
       );
@@ -588,7 +599,7 @@ import {
 
       [
         `import { createEffect, Actions, ofType } from '@ngrx/effects';`,
-        'this.dataPersistence.fetch(UsersActions.loadUsers, {'
+        'fetch({'
       ].forEach(text => {
         expect(content).toContain(text);
       });
@@ -645,7 +656,7 @@ import {
           module: appConfig.appModule,
           syntax: 'creators',
           facade: true,
-          useDataPersistence: false
+          minimal: false
         },
         appTree
       );
@@ -701,7 +712,10 @@ import {
       {
         name: featureName,
         module: appConfig.appModule,
-        facade: withFacade
+        facade: withFacade,
+        syntax: 'classes',
+        minimal: false,
+        useDataPersistance: true
       },
       appTree
     );

@@ -46,7 +46,7 @@ To get started with NgRx in an Angular application, you set up the root level st
 The example below shows you how to setup NgRx in the root of your application.
 
 ```bash
-ng g @nrwl/angular:ngrx app --module=apps/<appname>/src/app/app.module.ts --root --minimal
+ng g @nrwl/angular:ngrx app --module=apps/<appname>/src/app/app.module.ts --root
 ```
 
 The above command applies the following changes to the provided module:
@@ -75,7 +75,7 @@ To manage the feature state:
 - Provide a path to the `products` library module.
 
 ```bash
-ng g @nrwl/angular:ngrx products --module=libs/products/src/lib/products.module.ts --directory +state/products --syntax=creators --defaults
+ng g @nrwl/angular:ngrx products --module=libs/products/src/lib/products.module.ts --directory +state/products --defaults
 ```
 
 > Use the `--facade` option to generate an injectable Facade class along with the feature.
