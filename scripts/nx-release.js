@@ -156,6 +156,11 @@ const pkgFiles = [
 /**
  * Set the static options for release-it
  */
+
+process.env.GITHUB_TOKEN = parsedArgs.local
+  ? 'dummy'
+  : process.env.GITHUB_TOKEN_RELEASE_IT_NX;
+
 const options = {
   'dry-run': DRY_RUN,
   changelogCommand: 'conventional-changelog -p angular | tail -n +3',
@@ -174,13 +179,7 @@ const options = {
   github: {
     preRelease: parsedVersion.isPrerelease,
     release: true,
-    /**
-     * The environment variable containing a valid GitHub
-     * auth token with "repo" access (no other permissions required)
-     */
-    token: !parsedArgs.local
-      ? process.env.GITHUB_TOKEN_RELEASE_IT_NX
-      : 'dummy-gh-token'
+    force: true
   },
   npm: {
     /**
@@ -232,6 +231,7 @@ if (parsedArgs.local) {
     })
     .catch(err => {
       console.error(err.message);
+      console.error(err);
       process.exit(1);
     });
 }
