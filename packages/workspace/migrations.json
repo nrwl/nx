@@ -350,11 +350,43 @@
       "version": "9.0.0-beta.1",
       "packages": {
         "@angular/cli": {
-          "version": "9.0.0",
+          "version": "9.0.1",
           "alwaysAddToPackageJson": false
         },
         "typescript": {
           "version": "~3.7.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "0.900.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "0.900.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-ng-packagr": {
+          "version": "0.900.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "0.900.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-optimizer": {
+          "version": "0.900.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "9.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "9.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "9.0.1",
           "alwaysAddToPackageJson": false
         }
       }
