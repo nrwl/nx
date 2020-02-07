@@ -32,7 +32,8 @@ describe('lib', () => {
         builder: '@nrwl/jest:jest',
         options: {
           jestConfig: 'libs/my-lib/jest.config.js',
-          tsConfig: 'libs/my-lib/tsconfig.spec.json'
+          tsConfig: 'libs/my-lib/tsconfig.spec.json',
+          passWithNoTests: true
         }
       });
     });
