@@ -7,6 +7,10 @@ version: 2.1
 executors:
   default:
     working_directory: ~/repo
+    environment:
+      # install Cypress in Linux-like cache folder
+      CYPRESS_CACHE_FOLDER: "~/.cache/Cypress"
+
     docker:
       - image: circleci/node:12-browsers
 
@@ -21,24 +25,37 @@ commands:
       - run: yarn install --frozen-lockfile --non-interactive
       - run: ./node_modules/.bin/cypress verify
       - save_cache:
-          key: nrwl-nx-node12-{{ checksum "yarn.lock" }}
+          key: nrwl-nx-node12-yarn-{{ checksum "yarn.lock" }}
           paths:
-            - ~/.cache
-            - node_modules
+            - ~/.cache/yarn
+      - save_cache:
+          key: nrwl-nx-node12-cypress-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/Cypress
+  restore_cypress_cache:
+    description: 'Restore Cypress Cache'
+    steps:
+      - restore_cache:
+          keys:
+            - nrwl-nx-node12-cypress-{{ checksum "yarn.lock" }}
+            # fallback to using the latest cache if no exact match is found
+            - nrwl-nx-node12-cypress-
   restore_yarn_cache:
     description: 'Restore Cached Dependencies'
     steps:
       - restore_cache:
           keys:
-            - nrwl-nx-node12-{{ checksum "yarn.lock" }}
+            - nrwl-nx-node12-yarn-{{ checksum "yarn.lock" }}
             # fallback to using the latest cache if no exact match is found
-            - nrwl-nx-node12-
+            - nrwl-nx-node12-yarn-
   setup:
     description: 'Setup Executor'
     steps:
       - checkout
-      - restore_yarn_cache
       - install_rsync
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: ..
 
 jobs:
   install:
@@ -46,7 +63,16 @@ jobs:
     steps:
       - checkout
       - restore_yarn_cache
+      - restore_cypress_cache
       - yarn_install
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
+          # taken to be the root directory of the workspace.
+          root: ..
+          # Must be relative path from root
+          paths:
+            - repo/node_modules
+            - .cache/Cypress
   checks-and-unit-tests:
     executor: default
     steps:
