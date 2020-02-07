@@ -34,7 +34,7 @@
     "@nrwl/cypress": "*",
     "@nrwl/jest": "*",
     "@nrwl/web": "*",
-    "@angular-devkit/schematics": "9.0.0",
+    "@angular-devkit/schematics": "9.0.1",
     "@svgr/webpack": "^4.3.3",
     "confusing-browser-globals": "^1.0.8",
     "eslint-plugin-import": "^2.19.1",

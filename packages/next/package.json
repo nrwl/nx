@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "@nrwl/react": "*",
-    "@angular-devkit/schematics": "9.0.0",
+    "@angular-devkit/schematics": "9.0.1",
     "@svgr/webpack": "^4.3.3",
     "url-loader": "^2.2.0"
   }
