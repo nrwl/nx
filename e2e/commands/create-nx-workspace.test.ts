@@ -24,9 +24,11 @@ describe('create-nx-workspace', () => {
       `yarn nx-release ${process.env.PUBLISHED_VERSION} --local`
     );
 
+    await wait(3000);
+
     await execCommand(
       `Create a workspace in "${workspaceDir}"`,
-      `npx create-nx-workspace@latest happyorg --preset=angular --appName=ngapp --style=css`,
+      `npx create-nx-workspace@${process.env.PUBLISHED_VERSION} happyorg --preset=angular --appName=ngapp --style=css`,
       tmpFolder
     );
     await execCommand(
@@ -65,12 +67,12 @@ describe('create-nx-workspace', () => {
     );
 
     done();
-  }, 120000);
+  }, 520000);
 });
 
-function wait() {
+function wait(value = 500) {
   return new Promise(r => {
-    setTimeout(() => r(), 500);
+    setTimeout(() => r(), value);
   });
 }
 
@@ -117,15 +119,15 @@ function addReact(workspaceDir: string) {
     `${workspaceDir}/package.json`,
     JSON.stringify(packageJson, null, 2)
   );
-  execSync(`npm config set registry http://localhost:4873/ && npm install`, {
-    cwd: workspaceDir,
-    shell: 'bash'
+  execSync(`npm install --registry=http://localhost:4873/`, {
+    stdio: [0, 1, 2],
+    cwd: workspaceDir
   });
 }
 
 async function execCommand(description: string, cmd: string, cwd?: string) {
   console.log(description);
-  execSync(cmd, {
+  execSync(`npm_config_registry=http://localhost:4873/ && ${cmd}`, {
     stdio: [0, 1, 2],
     cwd
   });
