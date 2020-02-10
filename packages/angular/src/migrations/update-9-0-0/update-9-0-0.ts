@@ -14,7 +14,7 @@ export default function() {
     );
     return chain([
       addUpdateTask('@angular/core', '9.0.0', [postInstallTask]),
-      addUpdateTask('@angular/cli', '9.0.0', [postInstallTask])
+      addUpdateTask('@angular/cli', '9.0.1', [postInstallTask])
     ]);
   };
 }
