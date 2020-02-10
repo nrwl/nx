@@ -182,6 +182,7 @@ The scope must be one of the following:
 - docs - anything related to docs infrastructure
 - nextjs - anything Next specific
 - node - anything Node specific
+- linter - anything Linter specific
 - react - anything React specific
 - storybook - anything Storybook specific
 - testing - anything testing specific (e.g., jest or cypress)

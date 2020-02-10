@@ -7,6 +7,20 @@ Read more about how to use builders and the CLI here: https://nx.dev/web/guides/
 
 ## Properties
 
+### cache
+
+Default: `false`
+
+Type: `boolean`
+
+Only check changed files.
+
+### cacheLocation
+
+Type: `string`
+
+Path to the cache file or directory.
+
 ### config
 
 Type: `string`
@@ -33,13 +47,21 @@ Type: `boolean`
 
 Fixes linting errors (may overwrite linted files).
 
+### force
+
+Default: `false`
+
+Type: `boolean`
+
+Succeeds even if there was linting errors.
+
 ### format
 
-Default: `prose`
+Default: `stylish`
 
 Type: `string`
 
-Output format (prose, json, stylish, verbose, pmd, msbuild, checkstyle, vso, fileslist).
+ESLint Output formatter (https://eslint.org/docs/user-guide/formatters).
 
 ### linter
 
@@ -50,6 +72,20 @@ Type: `string`
 Possible values: `eslint`, `tslint`
 
 The tool to use for running lint checks.
+
+### outputFile
+
+Type: `string`
+
+File to write report to.
+
+### silent
+
+Default: `false`
+
+Type: `boolean`
+
+Hide output text.
 
 ### tsConfig
 

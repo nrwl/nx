@@ -6,7 +6,7 @@ const gitMessage = require('child_process')
   .toString()
   .trim();
 
-const matchCommit = /(chore|feat|fix|cleanup|docs)\((angular|bazel|core|docs|nextjs|node|nx-plugin|react|storybook|testing|repo|misc)\):\s(([a-z0-9:\-\s])+)/g.test(
+const matchCommit = /(chore|feat|fix|cleanup|docs)\((angular|bazel|core|docs|nextjs|linter|node|nx-plugin|react|storybook|testing|repo|misc)\):\s(([a-z0-9:\-\s])+)/g.test(
   gitMessage
 );
 const matchRevert = /Revert/gi.test(gitMessage);
@@ -27,7 +27,7 @@ if (exitCode === 0) {
   console.log('\n');
   console.log('possible types: chore|build|feat|fix|cleanup|docs');
   console.log(
-    'possible scopes: angular|bazel|core|docs|nextjs|node|react|storybook|testing|repo|misc (if unsure use "core")'
+    'possible scopes: angular|bazel|core|docs|nextjs|linter|node|react|storybook|testing|repo|misc (if unsure use "core")'
   );
   console.log(
     '\nEXAMPLE: \n' +

@@ -24,10 +24,11 @@
   "homepage": "https://nx.dev",
   "builders": "./builders.json",
   "peerDependencies": {
-    "@nrwl/workspace": "*"
+    "@nrwl/workspace": "*",
+    "eslint": "*",
+    "typescript": "*"
   },
   "dependencies": {
-    "@angular-devkit/architect": "~0.900.1",
-    "@angular-eslint/builder": "0.0.1-alpha.18"
+    "@angular-devkit/architect": "~0.900.1"
   }
 }
