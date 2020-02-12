@@ -135,6 +135,16 @@
             "file": "shared/monorepo-affected"
           },
           {
+            "name": "Distributed CI Using Azure Pipelines",
+            "id": "monorepo-ci-azure",
+            "file": "shared/monorepo-ci-azure"
+          },
+          {
+            "name": "Distributed CI Using Jenkins",
+            "id": "monorepo-ci-jenkins",
+            "file": "shared/monorepo-ci-jenkins"
+          },
+          {
             "name": "Analyzing & Visualizing Workspaces",
             "id": "monorepo-dependency-diagrams",
             "file": "shared/monorepo-dependency-diagrams"
@@ -317,6 +327,16 @@
             "file": "shared/monorepo-affected"
           },
           {
+            "name": "Distributed CI Using Azure Pipelines",
+            "id": "monorepo-ci-azure",
+            "file": "shared/monorepo-ci-azure"
+          },
+          {
+            "name": "Distributed CI Using Jenkins",
+            "id": "monorepo-ci-jenkins",
+            "file": "shared/monorepo-ci-jenkins"
+          },
+          {
             "name": "Analyzing & Visualizing Workspaces",
             "id": "monorepo-dependency-diagrams",
             "file": "shared/monorepo-dependency-diagrams"
@@ -474,6 +494,16 @@
             "name": "Rebuilding and Retesting What is Affected",
             "id": "monorepo-affected",
             "file": "shared/monorepo-affected"
+          },
+          {
+            "name": "Distributed CI Using Azure Pipelines",
+            "id": "monorepo-ci-azure",
+            "file": "shared/monorepo-ci-azure"
+          },
+          {
+            "name": "Distributed CI Using Jenkins",
+            "id": "monorepo-ci-jenkins",
+            "file": "shared/monorepo-ci-jenkins"
           },
           {
             "name": "Analyzing & Visualizing Workspaces",
