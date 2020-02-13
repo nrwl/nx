@@ -76,6 +76,10 @@ Latest commit of the current branch (usually HEAD)
 
 Show help
 
+### host
+
+Bind the dep graph server to a specific ip address.
+
 ### only-failed
 
 Default: `false`

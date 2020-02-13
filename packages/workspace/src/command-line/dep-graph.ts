@@ -11,7 +11,7 @@ import { output } from '../utils/output';
 import { join } from 'path';
 
 export function generateGraph(
-  args: { file?: string; filter?: string[]; exclude?: string[] },
+  args: { file?: string; filter?: string[]; exclude?: string[]; host?: string },
   affectedProjects: string[]
 ): void {
   const graph = onlyWorkspaceProjects(createProjectGraph());
@@ -36,14 +36,20 @@ export function generateGraph(
       )
     );
   } else {
-    startServer(renderProjects, graph, affectedProjects);
+    startServer(
+      renderProjects,
+      graph,
+      affectedProjects,
+      args.host || '127.0.0.1'
+    );
   }
 }
 
 function startServer(
   projects: ProjectGraphNode[],
   graph: ProjectGraph,
-  affected: string[]
+  affected: string[],
+  host: string
 ) {
   const f = readFileSync(
     join(__dirname, '../core/dep-graph/dep-graph.html')
@@ -64,12 +70,13 @@ function startServer(
     res.end(html);
   });
 
-  app.listen(4211, '127.0.0.1');
+  app.listen(4211, host);
+
   output.note({
-    title: 'Dep graph started at http://localhost:4211'
+    title: `Dep graph started at http://${host}:4211`
   });
 
-  opn('http://localhost:4211', {
+  opn(`http://${host}:4211`, {
     wait: false
   });
 }

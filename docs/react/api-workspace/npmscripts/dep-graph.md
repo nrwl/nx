@@ -54,6 +54,10 @@ Use to limit the dependency graph to only show specific projects, list of projec
 
 Show help
 
+### host
+
+Bind the dep graph server to a specific ip address.
+
 ### version
 
 Show version number
