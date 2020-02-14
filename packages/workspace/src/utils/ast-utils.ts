@@ -547,14 +547,14 @@ function requiresAddingOfPackages(packageJsonFile, deps, devDeps): boolean {
   packageJsonFile.devDependencies = packageJsonFile.devDependencies || {};
 
   if (Object.keys(deps).length > 0) {
-    needsDepsUpdate = !Object.keys(deps).find(
-      entry => packageJsonFile.dependencies[entry]
+    needsDepsUpdate = Object.keys(deps).some(
+      entry => !packageJsonFile.dependencies[entry]
     );
   }
 
   if (Object.keys(devDeps).length > 0) {
-    needsDevDepsUpdate = !Object.keys(devDeps).find(
-      entry => packageJsonFile.devDependencies[entry]
+    needsDevDepsUpdate = Object.keys(devDeps).some(
+      entry => !packageJsonFile.devDependencies[entry]
     );
   }
 

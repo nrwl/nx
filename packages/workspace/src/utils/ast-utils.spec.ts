@@ -162,4 +162,31 @@ describe('addDepsToPackageJson', () => {
       testRunner.tasks.find(x => x.name === 'node-package')
     ).not.toBeDefined();
   });
+
+  it('should update the package.json if some of the dependencies are missing', async () => {
+    const devDeps = {
+      '@nrwl/jest': '1.2.3',
+      '@nrwl/workspace': '1.1.1'
+    };
+
+    appTree.overwrite(
+      '/package.json',
+      JSON.stringify({
+        dependencies: {},
+        devDependencies: {
+          '@nrwl/jest': '1.2.3'
+        }
+      })
+    );
+
+    const testRunner = new SchematicTestRunner('@nrwl/jest', null);
+
+    await testRunner
+      .callRule(() => {
+        return addDepsToPackageJson({}, devDeps);
+      }, appTree)
+      .toPromise();
+
+    expect(testRunner.tasks.find(x => x.name === 'node-package')).toBeDefined();
+  });
 });
