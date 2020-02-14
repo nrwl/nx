@@ -18,7 +18,7 @@ But they come with their own technical challenges. The more code you add into yo
 
 If you run `nx dep-graph`, you will see somethign like this:
 
-<p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx-azure-build/master/readme-assets/graph.png" width="800"></p>
+![dependency-graph](/shared/ci-graph.png)
 
 ### CI Provider
 
@@ -51,7 +51,7 @@ The easiest way to make your CI faster is to do less work, and Nx is great at th
 
 Nx knows what is affected by your PR, so it doesn't have to test/build/lint everything. Say the PR only touches `ng-lib9`. If you run `nx affected:dep-graph`, you will see something like this:
 
-<p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx-azure-build/master/readme-assets/graph-one-affected.png" width="800"></p>
+![dependency-graph one library affected](/shared/ci-graph-one-affected.png)
 
 If you update `azure-pipelines.yml` to use `nx affected` instead of `nx run-many`:
 
@@ -72,7 +72,7 @@ the CI time will go down from 45 minutes to 8 minutes.
 
 This is a good result. It helps to lower the average CI time, but doesn't help with the worst case scenario. Some PR are going to affect a large portion of the repo.
 
-<p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx-azure-build/master/readme-assets/graph-everything-affected.png" width="800"></p>
+![dependency-graph everything affected](/shared/ci-graph-everything-affected.png)
 
 You could make it faster by running the commands in parallel:
 
