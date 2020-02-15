@@ -97,6 +97,18 @@ function defaultReadFileAtRevision(
   }
 }
 
+export function getFileData(filePath: string): FileData {
+  const stat = fs.statSync(filePath);
+  return {
+    file: path
+      .relative(appRootPath, filePath)
+      .split(path.sep)
+      .join('/'),
+    ext: path.extname(filePath),
+    mtime: stat.mtimeMs
+  };
+}
+
 export function allFilesInDir(
   dirName: string,
   recurse: boolean = true
@@ -185,6 +197,13 @@ export function readNxJson(): NxJson {
 export function readWorkspaceFiles(): FileData[] {
   const workspaceJson = readWorkspaceJson();
   const files = [];
+
+  files.push(
+    getFileData(`${appRootPath}/package.json`),
+    getFileData(`${appRootPath}/${workspaceFileName()}`),
+    getFileData(`${appRootPath}/nx.json`),
+    getFileData(`${appRootPath}/tsconfig.json`)
+  );
 
   // Add known workspace files and directories
   files.push(...allFilesInDir(appRootPath, false));
