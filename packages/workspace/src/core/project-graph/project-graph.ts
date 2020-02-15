@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync } from 'fs';
+import { mkdirSync } from 'fs';
 import { ProjectGraph } from './project-graph-models';
 import { ProjectGraphBuilder } from './project-graph-builder';
 import { appRootPath } from '../../utils/app-root';

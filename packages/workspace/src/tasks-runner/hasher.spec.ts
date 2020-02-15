@@ -10,6 +10,9 @@ describe('Hasher', () => {
     hasha.mockImplementation(values => values.join('|'));
     hasha.fromFile.mockImplementation(path => Promise.resolve(hashes[path]));
     fs.statSync.mockReturnValue({ size: 100 });
+    fs.readFileSync.mockImplementation(() =>
+      JSON.stringify({ dependencies: {}, devDependencies: {} })
+    );
   });
 
   it('should create project hash', async done => {
