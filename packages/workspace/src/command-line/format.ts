@@ -8,7 +8,7 @@ import { createProjectGraph } from '../core/project-graph';
 import { filterAffected } from '../core/affected-project-graph';
 import { calculateFileChanges } from '../core/file-utils';
 import * as yargs from 'yargs';
-import { NxArgs } from './utils';
+import { NxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
 
 const PRETTIER_EXTENSIONS = [
   'ts',
@@ -26,8 +26,13 @@ const PRETTIER_EXTENSIONS = [
 export function format(command: 'check' | 'write', args: yargs.Arguments) {
   let patterns: string[];
 
+  const { nxArgs } = splitArgsIntoNxArgsAndOverrides(args);
+
   try {
-    patterns = getPatterns(args as any);
+    patterns = getPatterns({
+      ...args,
+      ...nxArgs
+    } as any);
   } catch (e) {
     output.error({
       title: e.message,
