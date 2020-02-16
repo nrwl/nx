@@ -33,14 +33,14 @@ describe('create-nx-workspace', () => {
     );
     await execCommand(
       'Add ngrx to the Angular app',
-      `ng g @nrwl/angular:ngrx state --module=apps/ngapp/src/app/app.module.ts --root`,
+      `ng g @nrwl/angular:ngrx state --module=apps/ngapp/src/app/app.module.ts --root --no-facade`,
       workspaceDir
     );
 
     await addReact(workspaceDir);
     await execCommand(
       `Generate a React app`,
-      `ng g @nrwl/react:app reactapp --linter=eslint`,
+      `ng g @nrwl/react:app reactapp --linter=eslint --style=css --no-router`,
       workspaceDir
     );
     await execCommand(`Building angular app`, `ng build ngapp`, workspaceDir);
@@ -51,6 +51,12 @@ describe('create-nx-workspace', () => {
 
     await execCommand(`Linting angular app`, `ng lint ngapp`, workspaceDir);
     await execCommand(`Linting react app`, `ng lint reactapp`, workspaceDir);
+
+    expect(
+      execSync(`npm_config_registry=http://localhost:4873/ && npm audit`, {
+        cwd: workspaceDir
+      }).toString()
+    ).toContain(`0 vulnerabilities`);
 
     const webpacks = allVersionsOf(workspaceDir, 'webpack');
     if (webpacks.length > 1) {
