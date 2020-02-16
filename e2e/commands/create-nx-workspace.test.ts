@@ -40,11 +40,17 @@ describe('create-nx-workspace', () => {
     await addReact(workspaceDir);
     await execCommand(
       `Generate a React app`,
-      `ng g @nrwl/react:app reactapp`,
+      `ng g @nrwl/react:app reactapp --linter=eslint`,
       workspaceDir
     );
     await execCommand(`Building angular app`, `ng build ngapp`, workspaceDir);
     await execCommand(`Building react app`, `ng build reactapp`, workspaceDir);
+
+    await execCommand(`Testing angular app`, `ng test ngapp`, workspaceDir);
+    await execCommand(`Testing react app`, `ng test reactapp`, workspaceDir);
+
+    await execCommand(`Linting angular app`, `ng lint ngapp`, workspaceDir);
+    await execCommand(`Linting react app`, `ng lint reactapp`, workspaceDir);
 
     const webpacks = allVersionsOf(workspaceDir, 'webpack');
     if (webpacks.length > 1) {

@@ -89,7 +89,6 @@ export function addLintFiles(
       return chain(chainedCommands);
     }
 
-    debugger;
     if (linter === 'eslint') {
       if (!host.exists('/.eslintrc')) {
         chainedCommands.push((host: Tree) => {
