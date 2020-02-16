@@ -1,12 +1,35 @@
-import { Rule, Tree, chain } from '@angular-devkit/schematics';
-import { insert, formatFiles } from '@nrwl/workspace';
+import { chain, Rule, Tree } from '@angular-devkit/schematics';
+import { formatFiles, insert } from '@nrwl/workspace';
 import * as ts from 'typescript';
 import {
   getSourceNodes,
   RemoveChange
 } from '@nrwl/workspace/src/utils/ast-utils';
+import { updateWorkspace } from '@nrwl/workspace/src/utils/workspace';
 
-function updateJestConfig(host: Tree) {
+export default function update(): Rule {
+  return chain([
+    addPassWithNoTestsToWorkspace,
+    removePassWithNoTestsFromJestConfig,
+    formatFiles()
+  ]);
+}
+
+const addPassWithNoTestsToWorkspace = updateWorkspace(workspace => {
+  workspace.projects.forEach(project => {
+    project.targets.forEach(target => {
+      if (
+        target.builder === '@nrwl/jest:jest' &&
+        target.options &&
+        target.options.passWithNoTests === undefined
+      ) {
+        target.options.passWithNoTests = true;
+      }
+    });
+  });
+});
+
+function removePassWithNoTestsFromJestConfig(host: Tree) {
   if (host.exists('jest.config.js')) {
     const contents = host.read('jest.config.js').toString();
     const sourceFile = ts.createSourceFile(
@@ -20,7 +43,7 @@ function updateJestConfig(host: Tree) {
       if (
         ts.isPropertyAssignment(node) &&
         ts.isIdentifier(node.name) &&
-        node.name.text === 'collectCoverage'
+        node.name.text === 'passWithNoTests'
       ) {
         const expectedCommaNode = sourceNodes[index + 4];
         const isFollowedByComma =
@@ -38,8 +61,4 @@ function updateJestConfig(host: Tree) {
     });
     insert(host, 'jest.config.js', changes);
   }
-}
-
-export default function(): Rule {
-  return chain([updateJestConfig, formatFiles()]);
 }

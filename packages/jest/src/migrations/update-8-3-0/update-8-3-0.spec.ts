@@ -31,5 +31,10 @@ describe('Update 8.3.0', () => {
     const updatedJestConfigFile = result.readContent('jest.config.js');
 
     expect(updatedJestConfigFile).not.toContain('collectCoverage: true');
+
+    //check if the file is still valid
+    expect(updatedJestConfigFile.match(/,/g) || []).toHaveLength(6);
+    expect(updatedJestConfigFile).toContain('}');
+    expect(updatedJestConfigFile).toContain('{');
   });
 });
