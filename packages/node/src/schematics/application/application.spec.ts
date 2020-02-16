@@ -78,6 +78,7 @@ describe('app', () => {
           tags: ['one', 'two'],
         },
       });
+      expect(nxJson.defaultBranch).toBe('master');
     });
 
     it('should generate files', async () => {
@@ -147,6 +148,7 @@ describe('app', () => {
           tags: ['one', 'two'],
         },
       });
+      expect(nxJson.defaultBranch).toBe('master');
     });
 
     it('should generate files', async () => {

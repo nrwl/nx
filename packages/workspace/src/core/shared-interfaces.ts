@@ -11,6 +11,7 @@ export interface ImplicitJsonSubsetDependency<T = '*' | string[]> {
 export interface NxJson<T = '*' | string[]> {
   implicitDependencies?: ImplicitDependencyEntry<T>;
   npmScope: string;
+  defaultBranch?: string;
   projects: {
     [projectName: string]: NxJsonProjectConfig;
   };
