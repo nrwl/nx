@@ -47,19 +47,35 @@ export function parseFiles(options: NxArgs): { files: string[] } {
       files: getUntrackedFiles()
     };
   } else if (base && head) {
-    return {
-      files: getFilesUsingBaseAndHead(base, head)
-    };
+    try {
+      return {
+        files: getFilesUsingBaseAndHead(base, head)
+      };
+    } catch (e) {
+      if (e.message.includes('fatal: Not a valid object name')) {
+        throw new Error(
+          `Branch ${base} does not exist, check the branch and try again.`
+        );
+      }
+    }
   } else if (base) {
-    return {
-      files: Array.from(
-        new Set([
-          ...getFilesUsingBaseAndHead(base, 'HEAD'),
-          ...getUncommittedFiles(),
-          ...getUntrackedFiles()
-        ])
-      )
-    };
+    try {
+      return {
+        files: Array.from(
+          new Set([
+            ...getFilesUsingBaseAndHead(base, 'HEAD'),
+            ...getUncommittedFiles(),
+            ...getUntrackedFiles()
+          ])
+        )
+      };
+    } catch (e) {
+      if (e.message.includes('fatal: Not a valid object name')) {
+        throw new Error(
+          `Branch ${base} does not exist, check the branch and try again.`
+        );
+      }
+    }
   }
 }
 

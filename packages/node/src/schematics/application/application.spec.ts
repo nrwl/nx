@@ -75,6 +75,7 @@ describe('app', () => {
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson).toEqual({
         npmScope: 'proj',
+        defaultBranch: 'master',
         projects: {
           'my-node-app': {
             tags: ['one', 'two']
@@ -147,6 +148,7 @@ describe('app', () => {
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson).toEqual({
         npmScope: 'proj',
+        defaultBranch: 'master',
         projects: {
           'my-dir-my-node-app': {
             tags: ['one', 'two']

@@ -1,6 +1,11 @@
-import { splitArgsIntoNxArgsAndOverrides } from './utils';
+import { splitArgsIntoNxArgsAndOverrides, getDefaultBranch } from './utils';
+import * as fileUtils from '../core/file-utils';
+jest.mock('../core/file-utils');
 
 describe('splitArgs', () => {
+  beforeEach(() => {
+    jest.spyOn(fileUtils, 'readNxJson').mockReturnThis();
+  });
   it('should split nx specific arguments into nxArgs', () => {
     expect(
       splitArgsIntoNxArgsAndOverrides(
@@ -35,6 +40,41 @@ describe('splitArgs', () => {
       base: 'master',
       projects: [],
       skipNxCache: false
+    });
+  });
+
+  it('should read base of develop from nx.json', () => {
+    jest.spyOn(fileUtils, 'readNxJson').mockReturnValue({
+      npmScope: 'testing',
+      defaultBranch: 'develop',
+      projects: {}
+    });
+    expect(
+      splitArgsIntoNxArgsAndOverrides({
+        notNxArg: true,
+        _: ['--override'],
+        $0: ''
+      }).nxArgs
+    ).toEqual({
+      base: 'develop',
+      projects: []
+    });
+  });
+
+  it('should not find a base in nx.json returns master', () => {
+    jest.spyOn(fileUtils, 'readNxJson').mockReturnValue({
+      npmScope: 'testing',
+      projects: {}
+    });
+    expect(
+      splitArgsIntoNxArgsAndOverrides({
+        notNxArg: true,
+        _: ['--override'],
+        $0: ''
+      }).nxArgs
+    ).toEqual({
+      base: 'master',
+      projects: []
     });
   });
 
@@ -75,5 +115,21 @@ describe('splitArgs', () => {
       notNxArg: true,
       override: true
     });
+  });
+});
+
+describe('getDefaultBranch', () => {
+  it('should return undefined when defaultBranch is undefined in nx.json', () => {
+    jest.spyOn(fileUtils, 'readNxJson').mockReturnThis();
+    expect(getDefaultBranch()).toEqual('master');
+  });
+
+  it('should return default branch when its defined in nx.json', () => {
+    jest.spyOn(fileUtils, 'readNxJson').mockReturnValue({
+      npmScope: 'testing',
+      defaultBranch: 'testing',
+      projects: {}
+    });
+    expect(getDefaultBranch()).toEqual('testing');
   });
 });

@@ -64,6 +64,11 @@
       "version": "9.1.0-beta.1",
       "description": "Update eslint and tslint config to provide better IDE support",
       "factory": "./src/migrations/update-9-1-0/update-lint-config"
+    },
+    "update-30-0-1": {
+      "version": "30.0.1",
+      "description": "Add default branch to nx.json",
+      "factory": "./src/migrations/update-30-0-2/update-30-0-2"
     }
   },
   "packageJsonUpdates": {
@@ -438,6 +443,12 @@
           "alwaysAddToPackageJson": false
         }
       }
+    }
+  },
+  "nxJsonUpdates": {
+    "30.0.1": {
+      "defaultBranch": "master",
+      "alwaysAddToNxJson": false
     }
   }
 }

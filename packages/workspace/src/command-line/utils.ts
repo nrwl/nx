@@ -1,5 +1,6 @@
 import * as yargsParser from 'yargs-parser';
 import * as yargs from 'yargs';
+import * as fileUtils from '../core/file-utils';
 
 const runOne = [
   'target',
@@ -103,7 +104,7 @@ export function splitArgsIntoNxArgsAndOverrides(
     nxArgs.base = args._[0];
     nxArgs.head = args._[1];
   } else if (!nxArgs.base) {
-    nxArgs.base = 'master';
+    nxArgs.base = getDefaultBranch();
   }
 
   if (!nxArgs.skipNxCache) {
@@ -111,4 +112,9 @@ export function splitArgsIntoNxArgsAndOverrides(
   }
 
   return { nxArgs, overrides };
+}
+
+export function getDefaultBranch(): string {
+  const config = fileUtils.readNxJson();
+  return config.defaultBranch ? config.defaultBranch : 'master';
 }
