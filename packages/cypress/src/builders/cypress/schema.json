@@ -69,6 +69,10 @@
     "ciBuildId": {
       "type": "string",
       "description": "A unique identifier for a run to enable grouping or parallelization."
+    },
+    "group": {
+      "type": "string",
+      "description": "A named group for recorded runs in the Cypress dashboard."
     }
   },
   "additionalProperties": false,
