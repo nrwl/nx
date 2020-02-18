@@ -78,9 +78,20 @@ forEachCli(() => {
       expectTestsPass(await runCLIAsync(`test my-dir-${mylib} --no-watch`));
 
       if (supportUi()) {
-        expect(
-          runCLI(`e2e my-dir-${myapp}-e2e --headless --no-watch`)
-        ).toContain('All specs passed!');
+        try {
+          const r = runCLI(`e2e my-dir-${myapp}-e2e --headless --no-watch`);
+          console.log(r);
+          expect(r).toContain('All specs passed!');
+        } catch (e) {
+          console.log(e);
+          if (e.stdout) {
+            console.log(e.stdout.toString());
+          }
+          if (e.stderr) {
+            console.log(e.stdout.toString());
+          }
+          throw e;
+        }
       }
     }, 1000000);
 
