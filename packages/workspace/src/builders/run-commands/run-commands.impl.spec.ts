@@ -5,6 +5,7 @@ import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { Architect } from '@angular-devkit/architect';
 import { join } from 'path';
 import { TEN_MEGABYTES } from '@nrwl/workspace/src/core/file-utils';
+import { SchemaValidationException } from '@angular-devkit/core/src/json/schema';
 
 function readFile(f: string) {
   return readFileSync(f)
@@ -23,8 +24,7 @@ describe('Command Runner Builder', () => {
     await testArchitectHost.addBuilderFromPackage(join(__dirname, '../../..'));
   });
 
-  // TODO re-enable test when https://github.com/angular/angular-cli/pull/14315 is merged
-  xit('should error when no commands are given', async () => {
+  it('should error when no commands are given', async () => {
     try {
       const run = await architect.scheduleBuilder(
         '@nrwl/workspace:run-commands',
@@ -33,14 +33,14 @@ describe('Command Runner Builder', () => {
       await run.output.toPromise();
       fail('should throw');
     } catch (e) {
-      expect(e).toEqual(
-        `ERROR: Bad builder config for @nrwl/run-command - "command" option is required`
+      expect(e.message).toContain(`Schema validation failed`);
+      expect(e.message).toContain(
+        `path "" should have required property 'commands'`
       );
     }
   });
 
-  // TODO re-enable test when https://github.com/angular/angular-cli/pull/14315 is merged
-  xit('should error when no command is given', async () => {
+  it('should error when no command is given', async () => {
     try {
       const run = await architect.scheduleBuilder(
         '@nrwl/workspace:run-commands',
@@ -51,8 +51,9 @@ describe('Command Runner Builder', () => {
       await run.result;
       fail('should throw');
     } catch (e) {
-      expect(e).toEqual(
-        `ERROR: Bad builder config for @nrwl/run-command - "command" option is required`
+      expect(e.message).toContain(`Schema validation failed`);
+      expect(e.message).toContain(
+        `path ".commands[0]" should have required property 'command'`
       );
     }
   });
@@ -268,6 +269,40 @@ describe('Command Runner Builder', () => {
         maxBuffer: TEN_MEGABYTES,
         env: { ...process.env, FORCE_COLOR: `true` }
       });
+    });
+
+    it('should run the task in the specified working directory', async () => {
+      const f = fileSync().name;
+      let run = await architect.scheduleBuilder(
+        '@nrwl/workspace:run-commands',
+        {
+          commands: [
+            {
+              command: `pwd >> ${f}`
+            }
+          ]
+        }
+      );
+
+      let result = await run.result;
+
+      expect(result).toEqual(jasmine.objectContaining({ success: true }));
+      expect(readFile(f)).toContain('nx');
+      expect(readFile(f)).not.toContain('packages');
+
+      run = await architect.scheduleBuilder('@nrwl/workspace:run-commands', {
+        commands: [
+          {
+            command: `pwd >> ${f}`
+          }
+        ],
+        cwd: 'packages'
+      });
+
+      result = await run.result;
+
+      expect(result).toEqual(jasmine.objectContaining({ success: true }));
+      expect(readFile(f)).toContain('nx/packages');
     });
   });
 
