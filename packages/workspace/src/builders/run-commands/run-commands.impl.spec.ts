@@ -269,40 +269,36 @@ describe('Command Runner Builder', () => {
         env: { ...process.env, FORCE_COLOR: `true` }
       });
     });
+  });
 
-    it('should run the task in the specified working directory', async () => {
-      const f = fileSync().name;
-      let run = await architect.scheduleBuilder(
-        '@nrwl/workspace:run-commands',
+  it('should run the task in the specified working directory', async () => {
+    const f = fileSync().name;
+    let run = await architect.scheduleBuilder('@nrwl/workspace:run-commands', {
+      commands: [
         {
-          commands: [
-            {
-              command: `pwd >> ${f}`
-            }
-          ]
+          command: `pwd >> ${f}`
         }
-      );
-
-      let result = await run.result;
-
-      expect(result).toEqual(jasmine.objectContaining({ success: true }));
-      expect(readFile(f)).toContain('nx');
-      expect(readFile(f)).not.toContain('packages');
-
-      run = await architect.scheduleBuilder('@nrwl/workspace:run-commands', {
-        commands: [
-          {
-            command: `pwd >> ${f}`
-          }
-        ],
-        cwd: 'packages'
-      });
-
-      result = await run.result;
-
-      expect(result).toEqual(jasmine.objectContaining({ success: true }));
-      expect(readFile(f)).toContain('nx/packages');
+      ]
     });
+
+    let result = await run.result;
+
+    expect(result).toEqual(jasmine.objectContaining({ success: true }));
+    expect(readFile(f)).not.toContain('/packages');
+
+    run = await architect.scheduleBuilder('@nrwl/workspace:run-commands', {
+      commands: [
+        {
+          command: `pwd >> ${f}`
+        }
+      ],
+      cwd: 'packages'
+    });
+
+    result = await run.result;
+
+    expect(result).toEqual(jasmine.objectContaining({ success: true }));
+    expect(readFile(f)).toContain('/packages');
   });
 
   describe('dotenv', () => {
