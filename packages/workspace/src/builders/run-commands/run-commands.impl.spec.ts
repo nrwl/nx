@@ -5,7 +5,6 @@ import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { Architect } from '@angular-devkit/architect';
 import { join } from 'path';
 import { TEN_MEGABYTES } from '@nrwl/workspace/src/core/file-utils';
-import { SchemaValidationException } from '@angular-devkit/core/src/json/schema';
 
 function readFile(f: string) {
   return readFileSync(f)
