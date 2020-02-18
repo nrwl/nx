@@ -37,6 +37,12 @@ Type: `string`
 
 You may specify a custom .env file path if your file containing environment variables is located elsewhere.
 
+### cwd
+
+Type: `string`
+
+Current working directory of the commands.
+
 ### outputPath
 
 Type: `string`
