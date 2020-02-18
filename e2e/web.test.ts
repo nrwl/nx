@@ -1,15 +1,16 @@
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
   checkFilesExist,
   ensureProject,
+  forEachCli,
   readFile,
   runCLI,
   runCLIAsync,
-  uniq,
-  forEachCli,
+  setMaxWorkers,
   supportUi,
+  uniq,
   updateFile
 } from './utils';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 forEachCli(currentCLIName => {
   describe('Web Components Applications', () => {
@@ -21,6 +22,8 @@ forEachCli(currentCLIName => {
       runCLI(
         `generate @nrwl/web:app ${appName} --no-interactive --linter=${linter}`
       );
+
+      setMaxWorkers(appName);
 
       const lintResults = runCLI(`lint ${appName}`);
       expect(lintResults).toContain('All files pass linting.');
@@ -119,6 +122,31 @@ forEachCli(currentCLIName => {
         const e2eResults = runCLI(`e2e ${appName}-e2e`);
         expect(e2eResults).toContain('All specs passed!');
       }
+    });
+  });
+
+  describe('CLI - Environment Variables', () => {
+    it('should support NX environment variables', () => {
+      ensureProject();
+
+      const appName = uniq('app');
+      const main = `apps/${appName}/src/main.ts`;
+      const newCode = `const envVars = [process.env.NODE_ENV, process.env.NX_BUILD, process.env.NX_API];`;
+
+      runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+
+      setMaxWorkers(appName);
+
+      const content = readFile(main);
+
+      updateFile(main, `${newCode}\n${content}`);
+
+      runCLI(`build ${appName}`, {
+        env: { ...process.env, NODE_ENV: 'test', NX_BUILD: '52', NX_API: 'QA' }
+      });
+      expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
+        'var envVars = ["test", "52", "QA"];'
+      );
     });
   });
 });

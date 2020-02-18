@@ -32,13 +32,14 @@ export function getBaseWebpackPartial(
   const chunkFilename = isScriptOptimizeOn
     ? `[name]${hashFormat.chunk}${suffixFormat}.js`
     : '[name].js';
+  const mode = isScriptOptimizeOn ? 'production' : 'development';
 
   const webpackConfig: Configuration = {
     entry: {
       main: [options.main]
     },
     devtool: options.sourceMap ? 'source-map' : false,
-    mode: isScriptOptimizeOn ? 'production' : 'development',
+    mode,
     output: {
       path: options.outputPath,
       filename,
@@ -84,7 +85,8 @@ export function getBaseWebpackPartial(
           ForkTsCheckerWebpackPlugin.DEFAULT_MEMORY_LIMIT,
         workers: options.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE,
         useTypescriptIncrementalApi: false
-      })
+      }),
+      new webpack.DefinePlugin(getClientEnvironment(mode).stringified)
     ],
     watch: options.watch,
     watchOptions: {
@@ -203,4 +205,35 @@ function getStatsConfig(options: BuildBuilderOptions): Stats.ToStringOptions {
     usedExports: !!options.verbose,
     warningsFilter: IGNORED_WEBPACK_WARNINGS
   };
+}
+
+// This is shamelessly taken from CRA and modified for NX use
+// https://github.com/facebook/create-react-app/blob/4784997f0682e75eb32a897b4ffe34d735912e6c/packages/react-scripts/config/env.js#L71
+function getClientEnvironment(mode) {
+  // Grab NODE_ENV and NX_* environment variables and prepare them to be
+  // injected into the application via DefinePlugin in webpack configuration.
+  const NX_APP = /^NX_/i;
+
+  const raw = Object.keys(process.env)
+    .filter(key => NX_APP.test(key))
+    .reduce(
+      (env, key) => {
+        env[key] = process.env[key];
+        return env;
+      },
+      {
+        // Useful for determining whether we’re running in production mode.
+        NODE_ENV: process.env.NODE_ENV || mode
+      }
+    );
+
+  // Stringify all values so we can feed into webpack DefinePlugin
+  const stringified = {
+    'process.env': Object.keys(raw).reduce((env, key) => {
+      env[key] = JSON.stringify(raw[key]);
+      return env;
+    }, {})
+  };
+
+  return { stringified };
 }
