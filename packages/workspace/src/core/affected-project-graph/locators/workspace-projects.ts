@@ -6,12 +6,15 @@ export const getTouchedProjects: TouchedProjectLocator = (
 ): string[] => {
   // sort project names with the most nested first,
   // e.g. ['libs/a/b/c', 'libs/a/b', 'libs/a']
-  const projectKeys = Object.keys(workspaceJson.projects).sort((a, b) =>
-    b.localeCompare(a)
-  );
+  const projectNames = Object.entries(workspaceJson.projects)
+    .sort(([name1, p1]: any, [name2, p2]: any) =>
+      p1.root.length > p2.root.length ? -1 : 1
+    )
+    .map(([name]) => name);
+
   return touchedFiles
     .map(f => {
-      return projectKeys.find(projectName => {
+      return projectNames.find(projectName => {
         const p = workspaceJson.projects[projectName];
         const projectRoot = p.root.endsWith('/') ? p.root : p.root + '/';
         return f.file.startsWith(projectRoot);
