@@ -9,6 +9,11 @@ import {
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
 
+interface RunCmdOpts {
+  silenceError?: boolean;
+  env?: Record<string, string>;
+}
+
 export let cli;
 
 export function uniq(prefix: string) {
@@ -208,6 +213,7 @@ export function copyMissingPackages(): void {
     'cypress',
     'jest',
     '@types/jest',
+    '@types/node',
     'jest-preset-angular',
     'identity-obj-proxy',
     'karma',
@@ -339,13 +345,14 @@ function copyNodeModule(name: string) {
 
 export function runCommandAsync(
   command: string,
-  opts = {
-    silenceError: false
+  opts: RunCmdOpts = {
+    silenceError: false,
+    env: process.env
   }
 ): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     exec(
-      command,
+      `${command}`,
       {
         cwd: tmpProjPath()
       },
@@ -361,8 +368,9 @@ export function runCommandAsync(
 
 export function runCLIAsync(
   command: string,
-  opts = {
-    silenceError: false
+  opts: RunCmdOpts = {
+    silenceError: false,
+    env: process.env
   }
 ): Promise<{ stdout: string; stderr: string }> {
   return runCommandAsync(
@@ -373,13 +381,15 @@ export function runCLIAsync(
 
 export function runNgAdd(
   command?: string,
-  opts = {
-    silenceError: false
+  opts: RunCmdOpts = {
+    silenceError: false,
+    env: process.env
   }
 ): string {
   try {
     return execSync(`./node_modules/.bin/ng ${command}`, {
-      cwd: tmpProjPath()
+      cwd: tmpProjPath(),
+      env: opts.env
     })
       .toString()
       .replace(
@@ -398,13 +408,15 @@ export function runNgAdd(
 
 export function runCLI(
   command?: string,
-  opts = {
-    silenceError: false
+  opts: RunCmdOpts = {
+    silenceError: false,
+    env: process.env
   }
 ): string {
   try {
     const r = execSync(`node ./node_modules/@nrwl/cli/bin/nx.js ${command}`, {
-      cwd: tmpProjPath()
+      cwd: tmpProjPath(),
+      env: opts.env
     })
       .toString()
       .replace(
