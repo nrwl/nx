@@ -11,18 +11,18 @@ import {
   checkFilesExist,
   tmpProjPath,
   supportUi
-} from './utils';
-import { toClassName } from '@nrwl/workspace';
+} from "./utils";
+import { toClassName } from "@nrwl/workspace";
 
 forEachCli(() => {
-  describe('Create New Workspace', () => {
+  describe("Create New Workspace", () => {
     beforeEach(() => {
       ensureProject();
     });
 
-    it('should work', async () => {
-      const myapp = uniq('myapp');
-      const mylib = uniq('mylib');
+    it("should work", async () => {
+      const myapp = uniq("myapp");
+      const mylib = uniq("mylib");
       runCLI(
         `generate @nrwl/angular:app ${myapp} --directory=myDir --no-interactive`
       );
@@ -78,15 +78,20 @@ forEachCli(() => {
       expectTestsPass(await runCLIAsync(`test my-dir-${mylib} --no-watch`));
 
       if (supportUi()) {
-        expect(
-          runCLI(`e2e my-dir-${myapp}-e2e --headless --no-watch`)
-        ).toContain('All specs passed!');
+        try {
+          const r = runCLI(`e2e my-dir-${myapp}-e2e --headless --no-watch`);
+          console.log(r);
+          expect(r).toContain("All specs passed!");
+        } catch (e) {
+          console.log(e);
+          throw e;
+        }
       }
     }, 1000000);
 
-    it('should support router config generation (lazy)', async () => {
-      const myapp = uniq('myapp');
-      const mylib = uniq('mylib');
+    it("should support router config generation (lazy)", async () => {
+      const myapp = uniq("myapp");
+      const mylib = uniq("mylib");
       runCLI(`generate @nrwl/angular:app ${myapp} --directory=myDir --routing`);
       runCLI(
         `generate @nrwl/angular:lib ${mylib} --directory=myDir --routing --lazy --parentModule=apps/my-dir/${myapp}/src/app/app.module.ts`
@@ -96,10 +101,10 @@ forEachCli(() => {
       expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
     }, 1000000);
 
-    it('should support router config generation (eager)', async () => {
-      const myapp = uniq('myapp');
+    it("should support router config generation (eager)", async () => {
+      const myapp = uniq("myapp");
       runCLI(`generate @nrwl/angular:app ${myapp} --directory=myDir --routing`);
-      const mylib = uniq('mylib');
+      const mylib = uniq("mylib");
       runCLI(
         `generate @nrwl/angular:lib ${mylib} --directory=myDir --routing --parentModule=apps/my-dir/${myapp}/src/app/app.module.ts`
       );
@@ -108,8 +113,8 @@ forEachCli(() => {
       expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
     }, 1000000);
 
-    it('should support Ivy', async () => {
-      const myapp = uniq('myapp');
+    it("should support Ivy", async () => {
+      const myapp = uniq("myapp");
       runCLI(
         `generate @nrwl/angular:app ${myapp} --directory=myDir --routing --enable-ivy`
       );
