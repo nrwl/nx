@@ -43,8 +43,6 @@ Number of workers to use for type checking.
 
 ### memoryLimit
 
-Default: `2048`
-
 Type: `number`
 
 Memory limit for type checking service process in MB.

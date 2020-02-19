@@ -55,13 +55,11 @@
     },
     "memoryLimit": {
       "type": "number",
-      "description": "Memory limit for type checking service process in MB.",
-      "default": 2048
+      "description": "Memory limit for type checking service process in MB."
     },
     "maxWorkers": {
       "type": "number",
-      "description": "Number of workers to use for type checking.",
-      "default": "# of CPUS-2"
+      "description": "Number of workers to use for type checking."
     }
   }
 }
