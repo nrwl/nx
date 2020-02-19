@@ -451,6 +451,11 @@
             "file": "shared/update"
           },
           {
+            "name": "Adding Images, Fonts, and Files",
+            "id": "adding-assets-react",
+            "file": "react/guides/adding-assets"
+          },
+          {
             "name": "Using Cypress",
             "id": "modernize-cypress",
             "file": "shared/modernize-cypress"
