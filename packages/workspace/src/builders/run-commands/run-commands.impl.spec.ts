@@ -1,6 +1,6 @@
 import { schema } from '@angular-devkit/core';
 import { fileSync } from 'tmp';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { Architect } from '@angular-devkit/architect';
 import { join } from 'path';
@@ -268,6 +268,81 @@ describe('Command Runner Builder', () => {
         maxBuffer: TEN_MEGABYTES,
         env: { ...process.env, FORCE_COLOR: `true` }
       });
+    });
+  });
+
+  describe('dotenv', () => {
+    beforeAll(() => {
+      writeFileSync('.env', 'NRWL_SITE=https://nrwl.io/');
+    });
+
+    beforeEach(() => {
+      delete process.env.NRWL_SITE;
+      delete process.env.NX_SITE;
+    });
+
+    afterAll(() => {
+      unlinkSync('.env');
+    });
+
+    it('should load the root .env file by default if there is one', async () => {
+      let f = fileSync().name;
+      let run = await architect.scheduleBuilder(
+        '@nrwl/workspace:run-commands',
+        {
+          commands: [
+            {
+              command: `echo $NRWL_SITE >> ${f}`
+            }
+          ]
+        }
+      );
+
+      let result = await run.result;
+
+      expect(result).toEqual(jasmine.objectContaining({ success: true }));
+      expect(readFile(f)).toEqual('https://nrwl.io/');
+    });
+
+    it('should load the specified .env file instead of the root one', async () => {
+      const devEnv = fileSync().name;
+      writeFileSync(devEnv, 'NX_SITE=https://nx.dev/');
+      let f = fileSync().name;
+      let run = await architect.scheduleBuilder(
+        '@nrwl/workspace:run-commands',
+        {
+          commands: [
+            {
+              command: `echo $NX_SITE >> ${f} && echo $NRWL_SITE >> ${f}`
+            }
+          ],
+          envFile: devEnv
+        }
+      );
+
+      let result = await run.result;
+
+      expect(result).toEqual(jasmine.objectContaining({ success: true }));
+      expect(readFile(f)).toEqual('https://nx.dev/');
+    });
+
+    it('should error if the specified .env file does not exist', async () => {
+      let f = fileSync().name;
+      let run = await architect.scheduleBuilder(
+        '@nrwl/workspace:run-commands',
+        {
+          commands: [
+            {
+              command: `echo $NX_SITE >> ${f} && echo $NRWL_SITE >> ${f}`
+            }
+          ],
+          envFile: '/somePath/.fakeEnv'
+        }
+      );
+
+      await expect(run.result).rejects.toThrow(
+        `no such file or directory, open '/somePath/.fakeEnv'`
+      );
     });
   });
 });
