@@ -8,9 +8,18 @@ import { exec } from 'child_process';
 import { Observable } from 'rxjs';
 import { TEN_MEGABYTES } from '@nrwl/workspace/src/core/file-utils';
 
-try {
-  require('dotenv').config();
-} catch (e) {}
+function loadEnvVars(path?: string) {
+  if (path) {
+    const result = require('dotenv').config({ path });
+    if (result.error) {
+      throw result.error;
+    }
+  } else {
+    try {
+      require('dotenv').config();
+    } catch (e) {}
+  }
+}
 
 export interface RunCommandsBuilderOptions extends JsonObject {
   commands: { command: string }[];
@@ -18,6 +27,7 @@ export interface RunCommandsBuilderOptions extends JsonObject {
   parallel?: boolean;
   readyWhen?: string;
   args?: string;
+  envFile?: string;
   parsedArgs?: { [key: string]: string };
 }
 
@@ -27,6 +37,7 @@ function run(
   options: RunCommandsBuilderOptions,
   context: BuilderContext
 ): Observable<BuilderOutput> {
+  loadEnvVars(options.envFile);
   options.parsedArgs = parseArgs(options.args);
   return Observable.create(async observer => {
     if (!options.commands) {
