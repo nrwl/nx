@@ -77,22 +77,22 @@ forEachCli(() => {
       // running tests for the lib
       expectTestsPass(await runCLIAsync(`test my-dir-${mylib} --no-watch`));
 
-      if (supportUi()) {
-        try {
-          const r = runCLI(`e2e my-dir-${myapp}-e2e --headless --no-watch`);
-          console.log(r);
-          expect(r).toContain('All specs passed!');
-        } catch (e) {
-          console.log(e);
-          if (e.stdout) {
-            console.log(e.stdout.toString());
-          }
-          if (e.stderr) {
-            console.log(e.stdout.toString());
-          }
-          throw e;
-        }
-      }
+      // if (supportUi()) {
+      //   try {
+      //     const r = runCLI(`e2e my-dir-${myapp}-e2e --headless --no-watch`);
+      //     console.log(r);
+      //     expect(r).toContain('All specs passed!');
+      //   } catch (e) {
+      //     console.log(e);
+      //     if (e.stdout) {
+      //       console.log(e.stdout.toString());
+      //     }
+      //     if (e.stderr) {
+      //       console.log(e.stdout.toString());
+      //     }
+      //     throw e;
+      //   }
+      // }
     }, 1000000);
 
     it('should support router config generation (lazy)', async () => {
