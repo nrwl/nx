@@ -41,6 +41,12 @@ export function normalizeBuildOptions<T extends BuildBuilderOptions>(
   return {
     ...options,
     main: resolve(root, options.main),
+    secondaryEntries: options.secondaryEntries
+      ? Object.keys(options.secondaryEntries).reduce((entries, name) => {
+          entries[name] = resolve(root, options.secondaryEntries[name]);
+          return entries;
+        }, {})
+      : undefined,
     outputPath: resolve(root, options.outputPath),
     tsConfig: resolve(root, options.tsConfig),
     fileReplacements: normalizeFileReplacements(root, options.fileReplacements),

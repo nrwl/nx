@@ -43,11 +43,28 @@ export function getWebConfig(
   };
   return mergeWebpack([
     _getBaseWebpackPartial(options, esm, isScriptOptimizeOn),
+    getSecondaryEntriesPartial(options),
     getPolyfillsPartial(options, esm, isScriptOptimizeOn),
     getStylesPartial(wco),
     getCommonPartial(wco),
     getBrowserPartial(wco, options, isScriptOptimizeOn)
   ]);
+}
+
+function getSecondaryEntriesPartial(
+  options: WebBuildBuilderOptions
+): Configuration {
+  const config = {
+    entry: {} as { [key: string]: string[] }
+  };
+
+  if (options.secondaryEntries) {
+    Object.keys(options.secondaryEntries).forEach(name => {
+      config.entry[name] = [options.secondaryEntries[name]];
+    });
+  }
+
+  return config;
 }
 
 function getBrowserPartial(
@@ -63,6 +80,7 @@ function getBrowserPartial(
       subresourceIntegrity,
       scripts = [],
       styles = [],
+      secondaryEntries = {},
       index,
       baseHref
     } = options;
@@ -72,7 +90,11 @@ function getBrowserPartial(
         input: resolve(wco.root, index),
         output: basename(index),
         baseHref,
-        entrypoints: generateEntryPoints({ scripts, styles }),
+        entrypoints: generateEntryPoints({
+          scripts,
+          styles,
+          secondaryEntries: Object.keys(secondaryEntries)
+        }),
         deployUrl: deployUrl,
         sri: subresourceIntegrity,
         noModuleEntrypoints: ['polyfills-es5']

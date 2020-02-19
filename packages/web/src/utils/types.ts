@@ -15,6 +15,7 @@ export interface SourceMapOptions {
 
 export interface BuildBuilderOptions {
   main: string;
+  secondaryEntries?: { [name: string]: string };
   outputPath: string;
   tsConfig: string;
   watch?: boolean;

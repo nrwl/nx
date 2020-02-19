@@ -39,6 +39,7 @@ export interface WriteIndexHtmlOptions {
   sri?: boolean;
   scripts?: ExtraEntryPoint[];
   styles?: ExtraEntryPoint[];
+  secondaryEntries?: ExtraEntryPoint[];
   postTransform?: IndexHtmlTransform;
   crossOrigin?: CrossOriginValue;
 }
@@ -57,6 +58,7 @@ export function writeIndexHtml({
   sri = false,
   scripts = [],
   styles = [],
+  secondaryEntries = [],
   postTransform,
   crossOrigin
 }: WriteIndexHtmlOptions): Observable<void> {
@@ -70,7 +72,7 @@ export function writeIndexHtml({
         deployUrl,
         crossOrigin,
         sri,
-        entrypoints: generateEntryPoints({ scripts, styles }),
+        entrypoints: generateEntryPoints({ scripts, styles, secondaryEntries }),
         files: filterAndMapBuildFiles(files, ['.js', '.css']),
         noModuleFiles: filterAndMapBuildFiles(noModuleFiles, '.js'),
         moduleFiles: filterAndMapBuildFiles(moduleFiles, '.js'),

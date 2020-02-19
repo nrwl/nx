@@ -11,6 +11,7 @@ import { normalizeExtraEntryPoints } from '../models/webpack-configs/utils';
 export function generateEntryPoints(appConfig: {
   styles: ExtraEntryPoint[];
   scripts: ExtraEntryPoint[];
+  secondaryEntries: ExtraEntryPoint[];
 }) {
   // Add all styles/scripts, except lazy-loaded ones.
   const extraEntryPoints = (
@@ -37,7 +38,8 @@ export function generateEntryPoints(appConfig: {
     ...extraEntryPoints(appConfig.styles, 'styles'),
     ...extraEntryPoints(appConfig.scripts, 'scripts'),
     'vendor',
-    'main'
+    'main',
+    ...appConfig.secondaryEntries
   ];
 
   const duplicates = [

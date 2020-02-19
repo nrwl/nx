@@ -149,7 +149,8 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
               baseHref: options.baseHref,
               deployUrl: options.deployUrl,
               scripts: options.scripts,
-              styles: options.styles
+              styles: options.styles,
+              secondaryEntries: Object.keys(options.secondaryEntries)
             })
           : of(null)
         ).pipe(
