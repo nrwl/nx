@@ -150,7 +150,9 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
               deployUrl: options.deployUrl,
               scripts: options.scripts,
               styles: options.styles,
-              secondaryEntries: Object.keys(options.secondaryEntries)
+              secondaryEntries: options.secondaryEntries
+                ? Object.keys(options.secondaryEntries)
+                : undefined
             })
           : of(null)
         ).pipe(

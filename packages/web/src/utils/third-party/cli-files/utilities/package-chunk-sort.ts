@@ -11,7 +11,7 @@ import { normalizeExtraEntryPoints } from '../models/webpack-configs/utils';
 export function generateEntryPoints(appConfig: {
   styles: ExtraEntryPoint[];
   scripts: ExtraEntryPoint[];
-  secondaryEntries: ExtraEntryPoint[];
+  secondaryEntries: string[];
 }) {
   // Add all styles/scripts, except lazy-loaded ones.
   const extraEntryPoints = (

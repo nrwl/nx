@@ -39,7 +39,7 @@ export interface WriteIndexHtmlOptions {
   sri?: boolean;
   scripts?: ExtraEntryPoint[];
   styles?: ExtraEntryPoint[];
-  secondaryEntries?: ExtraEntryPoint[];
+  secondaryEntries?: string[];
   postTransform?: IndexHtmlTransform;
   crossOrigin?: CrossOriginValue;
 }
