@@ -38,6 +38,7 @@ describe('NodeExecuteBuilder', () => {
     testOptions = {
       inspect: true,
       args: [],
+      runtimeArgs: [],
       buildTarget: 'nodeapp:build',
       port: 9229,
       waitUntilTargets: [],
@@ -152,6 +153,27 @@ describe('NodeExecuteBuilder', () => {
             '--inspect=localhost:1234'
           ]
         });
+      });
+    });
+  });
+
+  describe('--runtimeArgs', () => {
+    it('should add runtime args to the node process', async () => {
+      await nodeExecuteBuilderHandler(
+        {
+          ...testOptions,
+          runtimeArgs: ['-r', 'node-register']
+        },
+        context
+      ).toPromise();
+      expect(fork).toHaveBeenCalledWith('outfile.js', [], {
+        execArgv: [
+          '-r',
+          'source-map-support/register',
+          '-r',
+          'node-register',
+          '--inspect=localhost:9229'
+        ]
       });
     });
   });
