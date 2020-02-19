@@ -226,7 +226,11 @@ describe('NodeCompileBuilder', () => {
             nodelib: {
               type: ProjectType.lib,
               name: 'nodelib',
-              data: { files: [], root: 'libs/nodelib' }
+              data: {
+                files: [],
+                root: 'libs/nodelib',
+                architect: { build: { builder: 'any builder' } }
+              }
             },
             'nodelib-child': {
               type: ProjectType.lib,

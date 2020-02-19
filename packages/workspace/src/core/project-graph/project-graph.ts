@@ -14,7 +14,9 @@ import {
   mtime,
   readNxJson,
   readWorkspaceFiles,
-  readWorkspaceJson
+  readWorkspaceJson,
+  rootWorkspaceFileData,
+  rootWorkspaceFileNames
 } from '../file-utils';
 import { createFileMap, FileMap } from '../file-graph';
 import {
@@ -41,6 +43,9 @@ export function createProjectGraph(
   assertWorkspaceValidity(workspaceJson, nxJson);
 
   const normalizedNxJson = normalizeNxJson(nxJson);
+  if (cache && maxMTime(rootWorkspaceFileData()) > cache.mtime) {
+    cache = false;
+  }
 
   if (!cache || maxMTime(workspaceFiles) > cache.mtime) {
     const fileMap = createFileMap(workspaceJson, workspaceFiles);

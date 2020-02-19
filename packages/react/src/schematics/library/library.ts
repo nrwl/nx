@@ -89,6 +89,7 @@ export default function(schema: Schema): Rule {
         routing: options.routing,
         js: options.js
       }),
+      updateLibPackageNpmScope(options),
       updateAppRoutes(options, context),
       formatFiles(options)
     ])(host, context);
@@ -315,6 +316,15 @@ function normalizeOptions(
   assertValidStyle(normalized.style);
 
   return normalized;
+}
+
+function updateLibPackageNpmScope(options: NormalizedSchema): Rule {
+  return (host: Tree) => {
+    return updateJsonInTree(`${options.projectRoot}/package.json`, json => {
+      json.name = `@${getNpmScope(host)}/${options.name}`;
+      return json;
+    });
+  };
 }
 
 function maybeJs(options: NormalizedSchema, path: string): string {

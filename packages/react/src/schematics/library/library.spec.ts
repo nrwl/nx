@@ -350,7 +350,7 @@ describe('lib', () => {
 
       const packageJson = readJsonInTree(tree, '/libs/my-lib/package.json');
 
-      expect(packageJson.name).toEqual('my-lib');
+      expect(packageJson.name).toEqual('@proj/my-lib');
     });
   });
 

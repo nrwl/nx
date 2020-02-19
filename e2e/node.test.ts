@@ -357,7 +357,7 @@ forEachCli(currentCLIName => {
             runCLI(`build ${parentLib}`);
           } catch (e) {
             expect(e.stderr.toString()).toContain(
-              `Some of the library ${parentLib}'s dependencies have not been built yet. Please build these libraries before:`
+              `Some of the project ${parentLib}'s dependencies have not been built yet. Please build these libraries before:`
             );
             expect(e.stderr.toString()).toContain(`${childLib}`);
           }

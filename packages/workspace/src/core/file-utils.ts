@@ -192,6 +192,10 @@ export function rootWorkspaceFileNames(): string[] {
   return [`package.json`, workspaceFileName(), `nx.json`, `tsconfig.json`];
 }
 
+export function rootWorkspaceFileData(): FileData[] {
+  return rootWorkspaceFileNames().map(f => getFileData(`${appRootPath}/${f}`));
+}
+
 export function readWorkspaceFiles(): FileData[] {
   const workspaceJson = readWorkspaceJson();
   const files = [];

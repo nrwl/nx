@@ -5,8 +5,8 @@ import {
   createBuilder
 } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
-import { from, Observable } from 'rxjs';
-import { map, mergeScan, tap } from 'rxjs/operators';
+import { from, Observable, of } from 'rxjs';
+import { map, mergeScan, switchMap, tap } from 'rxjs/operators';
 import { runRollup } from './run-rollup';
 import { createBabelConfig as _createBabelConfig } from '../../utils/babel-config';
 import * as autoprefixer from 'autoprefixer';
@@ -20,11 +20,18 @@ import { BundleBuilderOptions } from '../../utils/types';
 import { normalizeBundleOptions } from '../../utils/normalize';
 import { toClassName } from '@nrwl/workspace/src/utils/name-utils';
 import { BuildResult } from '@angular-devkit/build-webpack';
-import { writeFileSync } from 'fs';
 import {
   readJsonFile,
   writeJsonFile
 } from '@nrwl/workspace/src/utils/fileutils';
+import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import {
+  calculateProjectDependencies,
+  checkDependentProjectsHaveBeenBuilt,
+  updateBuildableProjectPackageJsonDependencies,
+  updatePaths
+} from '@nrwl/workspace/src/utils/buildale-libs-utils';
+import * as ts from 'typescript';
 
 // These use require because the ES import isn't correct.
 const resolve = require('rollup-plugin-node-resolve');
@@ -52,106 +59,134 @@ export function run(
   _options: BundleBuilderOptions,
   context: BuilderContext
 ): Observable<BuilderOutput> {
-  const options = normalizeBundleOptions(_options, context.workspaceRoot);
-  const rollupOptions: rollup.InputOptions[] = outputConfigs.map(
-    ({ format, esm, extension }) => {
-      const plugins = [
-        peerDepsExternal({
-          packageJsonPath: options.project
-        }),
-        postcss({
-          inject: true,
-          extract: false,
-          autoModules: true,
-          plugins: [autoprefixer]
-        }),
-        localResolve(),
-        resolve({ extensions: fileExtensions }),
-        babel({
-          ...createBabelConfig(options, options.projectRoot, esm),
-          extensions: fileExtensions,
-          externalHelpers: false,
-          exclude: 'node_modules/**'
-        }),
-        commonjs(),
-        filesize()
-      ];
-      if (esm) {
-        // TS plugin has to come first before types are stripped, otherwise
-        plugins.unshift(
-          typescript({
-            check: true,
-            tsconfig: options.tsConfig,
-            tsconfigOverride: {
-              compilerOptions: {
-                rootDir: options.entryRoot,
-                allowJs: false,
-                declaration: true
-              }
+  const projGraph = createProjectGraph();
+  const { target, dependencies } = calculateProjectDependencies(
+    projGraph,
+    context
+  );
+
+  return of(checkDependentProjectsHaveBeenBuilt(context, dependencies)).pipe(
+    switchMap(result => {
+      if (!result) {
+        return of({ success: false });
+      }
+      const options = normalizeBundleOptions(_options, context.workspaceRoot);
+      const rollupOptions: rollup.InputOptions[] = outputConfigs.map(
+        ({ format, esm, extension }) => {
+          const parsedTSConfig = ts.readConfigFile(
+            options.tsConfig,
+            ts.sys.readFile
+          ).config;
+          parsedTSConfig.compilerOptions = parsedTSConfig.compilerOptions || {};
+          parsedTSConfig.compilerOptions.paths =
+            parsedTSConfig.compilerOptions.paths || {};
+          updatePaths(dependencies, parsedTSConfig.compilerOptions.paths);
+
+          const plugins = [
+            peerDepsExternal({
+              packageJsonPath: options.project
+            }),
+            postcss({
+              inject: true,
+              extract: false,
+              autoModules: true,
+              plugins: [autoprefixer]
+            }),
+            localResolve(),
+            resolve({ extensions: fileExtensions }),
+            babel({
+              ...createBabelConfig(options, options.projectRoot, esm),
+              extensions: fileExtensions,
+              externalHelpers: false,
+              exclude: 'node_modules/**'
+            }),
+            commonjs(),
+            filesize()
+          ];
+          if (esm) {
+            // TS plugin has to come first before types are stripped, otherwise
+            plugins.unshift(
+              typescript({
+                check: true,
+                tsconfig: options.tsConfig,
+                tsconfigOverride: {
+                  compilerOptions: {
+                    rootDir: options.entryRoot,
+                    allowJs: false,
+                    declaration: true,
+                    paths: parsedTSConfig.compilerOptions.paths
+                  }
+                }
+              })
+            );
+          }
+          const entryFileTmpl = `${options.outputPath}/${context.target.project}.<%= extension %>.js`;
+          const rollupConfig = {
+            input: options.entryFile,
+            output: {
+              format,
+              file: entryFileTmpl.replace('<%= extension %>', extension),
+              name: toClassName(context.target.project)
+            },
+            external: dependencies.map(d => d.name),
+            plugins
+          };
+          return options.rollupConfig
+            ? require(options.rollupConfig)(rollupConfig)
+            : rollupConfig;
+        }
+      );
+
+      if (options.watch) {
+        return new Observable<BuildResult>(obs => {
+          const watcher = rollup.watch(rollupOptions);
+          watcher.on('event', ({ code, error }) => {
+            if (code === 'START') {
+              context.logger.info('Bundling...');
+            } else if (code === 'END') {
+              updatePackageJson(options, context, target, dependencies);
+              context.logger.info(
+                'Bundle complete. Watching for file changes...'
+              );
+              obs.next({ success: true });
+            } else if (code === 'ERROR') {
+              context.logger.error(`Error during bundle: ${error.message}`);
+              obs.next({ success: false });
+            } else if (code === 'FATAL') {
+              // Cannot continue, stop the observable.
+              context.logger.error(
+                `Fatal error during bundle: ${error.message}`
+              );
+              obs.complete();
+            }
+          });
+          // Teardown logic. Close watcher when unsubscribed.
+          return () => watcher.close();
+        });
+      } else {
+        context.logger.info('Bundling...');
+        return from(rollupOptions).pipe(
+          mergeScan(
+            (acc, options) =>
+              runRollup(options).pipe(
+                map(result => {
+                  return {
+                    success: acc.success && result.success
+                  };
+                })
+              ),
+            { success: true }
+          ),
+          tap({
+            complete: () => {
+              updatePackageJson(options, context, target, dependencies);
+              context.logger.info('Bundle complete.');
             }
           })
         );
       }
-      const entryFileTmpl = `${options.outputPath}/${context.target.project}.<%= extension %>.js`;
-      const rollupConfig = {
-        input: options.entryFile,
-        output: {
-          format,
-          file: entryFileTmpl.replace('<%= extension %>', extension),
-          name: toClassName(context.target.project)
-        },
-        plugins
-      };
-      return options.rollupConfig
-        ? require(options.rollupConfig)(rollupConfig)
-        : rollupConfig;
-    }
+    })
   );
-
-  if (options.watch) {
-    return new Observable<BuildResult>(obs => {
-      const watcher = rollup.watch(rollupOptions);
-      watcher.on('event', ({ code, error }) => {
-        if (code === 'START') {
-          context.logger.info('Bundling...');
-        } else if (code === 'END') {
-          updatePackageJson(options, context);
-          context.logger.info('Bundle complete. Watching for file changes...');
-          obs.next({ success: true });
-        } else if (code === 'ERROR') {
-          context.logger.error(`Error during bundle: ${error.message}`);
-          obs.next({ success: false });
-        } else if (code === 'FATAL') {
-          // Cannot continue, stop the observable.
-          context.logger.error(`Fatal error during bundle: ${error.message}`);
-          obs.complete();
-        }
-      });
-      // Teardown logic. Close watcher when unsubscribed.
-      return () => watcher.close();
-    });
-  } else {
-    context.logger.info('Bundling...');
-    return from(rollupOptions).pipe(
-      mergeScan(
-        (acc, options) =>
-          runRollup(options).pipe(
-            map(result => {
-              return {
-                success: acc.success && result.success
-              };
-            })
-          ),
-        { success: true }
-      ),
-      tap({
-        complete: () => {
-          updatePackageJson(options, context);
-          context.logger.info('Bundle complete.');
-        }
-      })
-    );
-  }
 }
 
 // -----------------------------------------------------------------------------
@@ -199,7 +234,7 @@ function upsert(
   }
 }
 
-function updatePackageJson(options, context) {
+function updatePackageJson(options, context, target, dependencies) {
   const entryFileTmpl = `./${context.target.project}.<%= extension %>.js`;
   const typingsFile = relative(options.entryRoot, options.entryFile).replace(
     /\.[jt]sx?$/,
@@ -211,4 +246,12 @@ function updatePackageJson(options, context) {
   packageJson.es2015 = entryFileTmpl.replace('<%= extension %>', 'esm2015');
   packageJson.typings = `./${typingsFile}`;
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
+
+  if (dependencies.length > 0) {
+    updateBuildableProjectPackageJsonDependencies(
+      context,
+      target,
+      dependencies
+    );
+  }
 }
