@@ -45,8 +45,29 @@ describe('getTouchedNpmPackages', () => {
                 lhs: '0.0.1',
                 rhs: '0.0.2'
               }
-            },
-            // If it's deleted then it should not exist in project graph.
+            }
+          ]
+        }
+      ],
+      workspaceJson,
+      nxJson,
+      {
+        dependencies: {
+          'happy-nrwl': '0.0.2'
+        }
+      }
+    );
+    expect(result).toEqual(['happy-nrwl']);
+  });
+
+  it('should handle package deletion', () => {
+    const result = getTouchedNpmPackages(
+      [
+        {
+          file: 'package.json',
+          mtime: 0,
+          ext: '.json',
+          getChanges: () => [
             {
               type: DiffType.Deleted,
               path: ['dependencies', 'sad-nrwl'],
@@ -88,6 +109,6 @@ describe('getTouchedNpmPackages', () => {
         }
       }
     );
-    expect(result).toEqual(['happy-nrwl', 'awesome-nrwl']);
+    expect(result).toEqual(['proj1', 'proj2']);
   });
 });
