@@ -58,6 +58,5 @@
       "description": "Current working directory of the commands."
     }
   },
-  "required": ["commands"],
-  "additionalProperties": false
+  "required": ["commands"]
 }
