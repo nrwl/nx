@@ -29,7 +29,8 @@ describe('getWebConfig', () => {
       },
       optimization: {
         scripts: false,
-        styles: false
+        styles: false,
+        html: false
       },
       styles: [],
       scripts: [],

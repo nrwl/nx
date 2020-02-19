@@ -4,6 +4,7 @@ import { Path } from '@angular-devkit/core';
 export interface OptimizationOptions {
   scripts: boolean;
   styles: boolean;
+  html: boolean;
 }
 
 export interface SourceMapOptions {

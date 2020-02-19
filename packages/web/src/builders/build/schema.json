@@ -154,6 +154,11 @@
               "type": "boolean",
               "description": "Enables optimization of the styles output.",
               "default": true
+            },
+            "html": {
+              "type": "boolean",
+              "description": "Enables optimization of the html output.",
+              "default": true
             }
           },
           "additionalProperties": false

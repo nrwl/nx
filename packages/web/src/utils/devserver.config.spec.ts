@@ -31,7 +31,8 @@ describe('getDevServerConfig', () => {
       },
       optimization: {
         scripts: false,
-        styles: false
+        styles: false,
+        html: false
       },
       styles: [],
       scripts: [],
@@ -184,7 +185,8 @@ describe('getDevServerConfig', () => {
             ...buildInput,
             optimization: {
               scripts: true,
-              styles: false
+              styles: false,
+              html: false
             }
           },
           serveInput,
@@ -202,7 +204,8 @@ describe('getDevServerConfig', () => {
             ...buildInput,
             optimization: {
               scripts: false,
-              styles: true
+              styles: true,
+              html: false
             }
           },
           serveInput,
@@ -220,7 +223,8 @@ describe('getDevServerConfig', () => {
             ...buildInput,
             optimization: {
               scripts: true,
-              styles: true
+              styles: true,
+              html: false
             }
           },
           serveInput,
@@ -238,7 +242,8 @@ describe('getDevServerConfig', () => {
             ...buildInput,
             optimization: {
               scripts: false,
-              styles: false
+              styles: false,
+              html: false
             }
           },
           serveInput,
@@ -256,7 +261,8 @@ describe('getDevServerConfig', () => {
             ...buildInput,
             optimization: {
               scripts: true,
-              styles: true
+              styles: true,
+              html: false
             }
           },
           serveInput,
@@ -331,7 +337,8 @@ describe('getDevServerConfig', () => {
             ...buildInput,
             optimization: {
               scripts: true,
-              styles: true
+              styles: true,
+              html: false
             }
           },
           serveInput,

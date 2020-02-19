@@ -132,7 +132,14 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
       ),
       switchMap(([result1, result2 = { success: true, emittedFiles: [] }]) => {
         const success = [result1, result2].every(result => result.success);
-        return (options.optimization
+        const isHtmlOptimizeOn =
+          typeof options.optimization === 'boolean'
+            ? options.optimization
+            : options.optimization && options.optimization.html
+            ? options.optimization.html
+            : false;
+
+        return (isHtmlOptimizeOn
           ? writeIndexHtml({
               host,
               outputPath: devkitJoin(

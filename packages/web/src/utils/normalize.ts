@@ -128,7 +128,8 @@ export function normalizeWebBuildOptions(
       typeof options.optimization !== 'object'
         ? {
             scripts: options.optimization,
-            styles: options.optimization
+            styles: options.optimization,
+            html: options.optimization
           }
         : options.optimization,
     sourceMap:
