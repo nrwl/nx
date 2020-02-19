@@ -20,7 +20,8 @@ export function getWebConfig(
   options: WebBuildBuilderOptions,
   logger: LoggerApi,
   esm?: boolean,
-  isScriptOptimizeOn?: boolean
+  isScriptOptimizeOn?: boolean,
+  isHtmlOptimizeOn?: boolean
 ) {
   const tsConfig = readTsConfig(options.tsConfig);
 
@@ -46,18 +47,18 @@ export function getWebConfig(
     getPolyfillsPartial(options, esm, isScriptOptimizeOn),
     getStylesPartial(wco),
     getCommonPartial(wco),
-    getBrowserPartial(wco, options, isScriptOptimizeOn)
+    getBrowserPartial(wco, options, isHtmlOptimizeOn)
   ]);
 }
 
 function getBrowserPartial(
   wco: any,
   options: WebBuildBuilderOptions,
-  isScriptOptimizeOn: boolean
+  isHtmlOptimizeOn: boolean
 ) {
   const config = getBrowserConfig(wco);
 
-  if (!isScriptOptimizeOn) {
+  if (!isHtmlOptimizeOn) {
     const {
       deployUrl,
       subresourceIntegrity,

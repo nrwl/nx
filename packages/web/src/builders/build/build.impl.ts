@@ -50,6 +50,12 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
       : options.optimization && options.optimization.scripts
       ? options.optimization.scripts
       : false;
+  const isHtmlOptimizeOn =
+    typeof options.optimization === 'boolean'
+      ? options.optimization
+      : options.optimization && options.optimization.html
+      ? options.optimization.html
+      : false;
 
   // Node versions 12.2-12.8 has a bug where prod builds will hang for 2-3 minutes
   // after the program exits.
@@ -78,7 +84,8 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
             options,
             context.logger,
             true,
-            isScriptOptimizeOn
+            isScriptOptimizeOn,
+            isHtmlOptimizeOn
           ),
           // ES5 build for legacy browsers.
           isScriptOptimizeOn
@@ -88,7 +95,8 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
                 options,
                 context.logger,
                 false,
-                isScriptOptimizeOn
+                isScriptOptimizeOn,
+                isHtmlOptimizeOn
               )
             : undefined
         ]
@@ -132,13 +140,6 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
       ),
       switchMap(([result1, result2 = { success: true, emittedFiles: [] }]) => {
         const success = [result1, result2].every(result => result.success);
-        const isHtmlOptimizeOn =
-          typeof options.optimization === 'boolean'
-            ? options.optimization
-            : options.optimization && options.optimization.html
-            ? options.optimization.html
-            : false;
-
         return (isHtmlOptimizeOn
           ? writeIndexHtml({
               host,
