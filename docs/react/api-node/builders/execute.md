@@ -43,6 +43,12 @@ Type: `number`
 
 The port to inspect the process on. Setting port to 0 will assign random free ports to all forked processes.
 
+### runtimeArgs
+
+Type: `array`
+
+Extra args passed to the node process
+
 ### waitUntilTargets
 
 Type: `array`
