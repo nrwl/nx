@@ -87,7 +87,7 @@ function defaultReadFileAtRevision(
   try {
     return !revision
       ? readFileSync(file).toString()
-      : execSync(`git show ${revision}:${file}`, {
+      : execSync(`git show ${revision}:${appRootPath}/${file}`, {
           maxBuffer: TEN_MEGABYTES
         })
           .toString()
