@@ -160,6 +160,7 @@ forEachCli(currentCLIName => {
       ); // respects "extends" inside tsconfigs
 
       expect(config.options.emitDecoratorMetadata).toEqual(true); // required by nest to function properly
+      expect(config.options.target).toEqual(ts.ScriptTarget.ES2015); // required by nest swagger to function properly
       cleanup();
     }, 120000);
 
