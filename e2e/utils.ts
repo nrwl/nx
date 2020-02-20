@@ -183,7 +183,7 @@ export function ensureProject(): void {
 
 export function supportUi() {
   // TEMPORARY TURN IT OFF TO MAKE MASTER GREEN
-  return false;
+  return true;
   // return !process.env.NO_CHROME;
 }
 
@@ -414,6 +414,7 @@ export function runCLI(
     if (opts.silenceError) {
       return e.stdout.toString();
     } else {
+      console.log('Cypress failed to start!!!')
       console.log(e.stdout.toString(), e.stderr.toString());
       throw e;
     }
