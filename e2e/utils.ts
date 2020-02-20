@@ -272,7 +272,6 @@ export function copyMissingPackages(): void {
     'autoprefixer',
     'mini-css-extract-plugin',
     'postcss-import',
-    '@ngtools/webpack',
     'worker-plugin',
     'regenerator-runtime',
     'clean-css',
