@@ -279,6 +279,14 @@ Dynamic options can prompt the user to select from a list of options. To define 
 
 Running the schematic without providing a value for the type will prompt the user to make a selection.
 
+## Debugging Workspace schematics
+
+...
+
+### With VSCode launch config
+
+### With Terminal
+
 ## Workspace schematic utilities
 
 The `@nrwl/workspace` package provides many utility functions that can be used in schematics to help with modifying files, reading and updating configuration files, and working with an Abstract Syntax Tree (AST).
