@@ -393,6 +393,7 @@ function createApp(
           !a.startsWith('--preset') &&
           !a.startsWith('--appName') &&
           !a.startsWith('--app-name') &&
+          !a.startsWith('--style') &&
           !a.startsWith('--interactive')
       ) // not used by the new command
       .map(a => `"${a}"`)
