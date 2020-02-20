@@ -1,6 +1,8 @@
 import { calculateFileChanges, WholeFileChange } from './file-utils';
 import { DiffType, JsonChange, jsonDiff } from '../utils/json-diff';
 
+const ignore = require('ignore');
+
 describe('calculateFileChanges', () => {
   it('should return a whole file change by default', () => {
     const changes = calculateFileChanges(
@@ -62,5 +64,19 @@ describe('calculateFileChanges', () => {
         rhs: '0.0.1'
       }
     });
+  });
+
+  it('should ignore *.md changes', () => {
+    const ig = ignore();
+    ig.add('*.md');
+    const changes = calculateFileChanges(
+      ['proj/readme.md'],
+      undefined,
+      (path, revision) => {
+        return revision === 'sha1' ? '' : 'const a = 0;';
+      },
+      ig
+    );
+    expect(changes.length).toEqual(0);
   });
 });

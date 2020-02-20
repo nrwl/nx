@@ -41,8 +41,12 @@ export function calculateFileChanges(
   readFileAtRevision: (
     f: string,
     r: void | string
-  ) => string = defaultReadFileAtRevision
+  ) => string = defaultReadFileAtRevision,
+  ignore?: any
 ): FileChange[] {
+  if (ignore) {
+    files = files.filter(f => !ignore.ignores(f));
+  }
   return files.map(f => {
     const ext = extname(f);
     const _mtime = mtime(`${appRootPath}/${f}`);
@@ -140,7 +144,7 @@ export function allFilesInDir(
   return res;
 }
 
-function getIgnoredGlobs() {
+export function getIgnoredGlobs() {
   const ig = ignore();
   ig.add(readFileIfExisting(`${appRootPath}/.gitignore`));
   ig.add(readFileIfExisting(`${appRootPath}/.nxignore`));
