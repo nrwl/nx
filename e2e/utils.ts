@@ -416,6 +416,7 @@ export function runCLI(
     } else {
       console.log('Cypress failed to start!!!')
       console.log(e.stdout.toString(), e.stderr.toString());
+      console.log(e)
       throw e;
     }
   }

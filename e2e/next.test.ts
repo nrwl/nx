@@ -12,7 +12,7 @@ import {
 
 forEachCli('nx', () => {
   describe('Next.js Applications', () => {
-    it('should be able to serve with a proxy configuration', async () => {
+    fit('should be able to serve with a proxy configuration', async () => {
       ensureProject();
       const appName = uniq('app');
 
@@ -73,6 +73,7 @@ forEachCli('nx', () => {
       );
 
       const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
+      console.log(e2eResults)
       expect(e2eResults).toContain('All specs passed!');
     }, 120000);
 
