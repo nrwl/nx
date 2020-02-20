@@ -42,7 +42,7 @@ export function calculateFileChanges(
     f: string,
     r: void | string
   ) => string = defaultReadFileAtRevision,
-  ignore?: any
+  ignore: any = null
 ): FileChange[] {
   if (ignore) {
     files = files.filter(f => !ignore.ignores(f));
