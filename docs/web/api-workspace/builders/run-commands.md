@@ -31,17 +31,17 @@ Type: `string`
 
 Command to run in child process
 
-### envFile
-
-Type: `string`
-
-You may specify a custom .env file path if your file containing environment variables is located elsewhere.
-
 ### cwd
 
 Type: `string`
 
 Current working directory of the commands.
+
+### envFile
+
+Type: `string`
+
+You may specify a custom .env file path if your file containing environment variables is located elsewhere.
 
 ### outputPath
 
