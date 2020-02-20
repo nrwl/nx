@@ -31,6 +31,12 @@ Type: `string`
 
 Command to run in child process
 
+### cwd
+
+Type: `string`
+
+Current working directory of the commands.
+
 ### envFile
 
 Type: `string`

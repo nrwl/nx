@@ -52,6 +52,10 @@
           }
         }
       ]
+    },
+    "cwd": {
+      "type": "string",
+      "description": "Current working directory of the commands."
     }
   },
   "required": ["commands"]
