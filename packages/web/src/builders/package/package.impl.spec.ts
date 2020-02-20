@@ -10,6 +10,11 @@ import * as impl from './package.impl';
 import * as rr from './run-rollup';
 import { getMockContext } from '../../utils/testing';
 import { BundleBuilderOptions } from '../../utils/types';
+import * as projectGraphUtils from '@nrwl/workspace/src/core/project-graph';
+import {
+  ProjectGraph,
+  ProjectType
+} from '@nrwl/workspace/src/core/project-graph';
 
 jest.mock('tsconfig-paths-webpack-plugin');
 
@@ -42,6 +47,13 @@ describe('WebPackagebuilder', () => {
       name: 'example'
     });
     writeJsonFile = spyOn(f, 'writeJsonFile');
+
+    spyOn(projectGraphUtils, 'createProjectGraph').and.callFake(() => {
+      return {
+        nodes: {},
+        dependencies: {}
+      } as ProjectGraph;
+    });
   });
 
   describe('run', () => {

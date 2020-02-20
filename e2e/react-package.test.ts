@@ -1,4 +1,3 @@
-import { toClassName } from '@nrwl/workspace';
 import {
   ensureProject,
   forEachCli,
@@ -8,8 +7,8 @@ import {
   updateFile
 } from './utils';
 
-forEachCli('angular', cli => {
-  describe('Build Angular library', () => {
+forEachCli('nx', cli => {
+  describe('Build React library', () => {
     /**
      * Graph:
      *
@@ -33,37 +32,22 @@ forEachCli('angular', cli => {
       ensureProject();
 
       runCLI(
-        `generate @nrwl/angular:library ${parentLib} --publishable=true --no-interactive`
+        `generate @nrwl/react:library ${parentLib} --publishable=true --no-interactive`
       );
       runCLI(
-        `generate @nrwl/angular:library ${childLib} --publishable=true --no-interactive`
+        `generate @nrwl/react:library ${childLib} --publishable=true --no-interactive`
       );
       runCLI(
-        `generate @nrwl/angular:library ${childLib2} --publishable=true --no-interactive`
+        `generate @nrwl/react:library ${childLib2} --publishable=true --no-interactive`
       );
 
       // create dependencies by importing
       const createDep = (parent, children: string[]) => {
         updateFile(
-          `libs/${parent}/src/lib/${parent}.module.ts`,
+          `libs/${parent}/src/lib/${parent}.tsx`,
           `
-              import { NgModule } from '@angular/core';
-              import { CommonModule } from '@angular/common';
-              ${children
-                .map(
-                  entry =>
-                    `import { ${toClassName(
-                      entry
-                    )}Module } from '@proj/${entry}';`
-                )
-                .join('\n')}
-              
-              @NgModule({
-                imports: [CommonModule, ${children
-                  .map(entry => `${toClassName(entry)}Module`)
-                  .join(',')}]
-              })
-              export class ${toClassName(parent)}Module {}          
+              ${children.map(entry => `import '@proj/${entry}';`).join('\n')}
+
             `
         );
       };
@@ -85,18 +69,24 @@ forEachCli('angular', cli => {
     });
 
     it('should build the library when it does not have any deps', () => {
-      const parentLibOutput = runCLI(`build ${childLib}`);
-      expect(parentLibOutput).toContain(`Built @proj/${childLib}`);
+      const output = runCLI(`build ${childLib}`);
+      expect(output).toContain(`${childLib}.esm5.js`);
+      expect(output).toContain(`Bundle complete`);
     });
 
-    it('should properly add references to any dependency into the parent package.json', () => {
+    fit('should properly add references to any dependency into the parent package.json', () => {
       const childLibOutput = runCLI(`build ${childLib}`);
       const childLib2Output = runCLI(`build ${childLib2}`);
       const parentLibOutput = runCLI(`build ${parentLib}`);
 
-      expect(childLibOutput).toContain(`Built @proj/${childLib}`);
-      expect(childLib2Output).toContain(`Built @proj/${childLib2}`);
-      expect(parentLibOutput).toContain(`Built @proj/${parentLib}`);
+      expect(childLibOutput).toContain(`${childLib}.esm5.js`);
+      expect(childLibOutput).toContain(`Bundle complete`);
+
+      expect(childLib2Output).toContain(`${childLib2}.esm5.js`);
+      expect(childLib2Output).toContain(`Bundle complete`);
+
+      expect(parentLibOutput).toContain(`${parentLib}.esm5.js`);
+      expect(parentLibOutput).toContain(`Bundle complete`);
 
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
       expect(jsonFile.dependencies).toEqual({
@@ -107,7 +97,7 @@ forEachCli('angular', cli => {
   });
 });
 
-forEachCli('nx', () => {
+forEachCli('angular', () => {
   describe('Build Angular library', () => {
     it('should work', async () => {}, 1000000);
   });
