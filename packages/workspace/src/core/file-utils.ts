@@ -42,7 +42,7 @@ export function calculateFileChanges(
     f: string,
     r: void | string
   ) => string = defaultReadFileAtRevision,
-  ignore: any = null
+  ignore = getIgnoredGlobs()
 ): FileChange[] {
   if (ignore) {
     files = files.filter(f => !ignore.ignores(f));
@@ -144,7 +144,7 @@ export function allFilesInDir(
   return res;
 }
 
-export function getIgnoredGlobs() {
+function getIgnoredGlobs() {
   const ig = ignore();
   ig.add(readFileIfExisting(`${appRootPath}/.gitignore`));
   ig.add(readFileIfExisting(`${appRootPath}/.nxignore`));

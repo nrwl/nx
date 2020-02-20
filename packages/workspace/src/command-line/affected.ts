@@ -12,11 +12,7 @@ import {
   ProjectType,
   withDeps
 } from '../core/project-graph';
-import {
-  calculateFileChanges,
-  readEnvironment,
-  getIgnoredGlobs
-} from '../core/file-utils';
+import { calculateFileChanges, readEnvironment } from '../core/file-utils';
 import { printAffected } from './print-affected';
 import { projectHasTargetAndConfiguration } from '../utils/project-has-target-and-configuration';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
@@ -29,11 +25,7 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
     ? projectGraph
     : filterAffected(
         projectGraph,
-        calculateFileChanges(
-          parseFiles(nxArgs).files,
-          nxArgs,
-          getIgnoredGlobs()
-        )
+        calculateFileChanges(parseFiles(nxArgs).files, nxArgs)
       );
   if (parsedArgs.withDeps) {
     affectedGraph = onlyWorkspaceProjects(
