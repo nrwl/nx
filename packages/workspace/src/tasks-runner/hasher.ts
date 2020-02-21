@@ -2,6 +2,7 @@ import { ProjectGraph } from '../core/project-graph';
 import { NxJson } from '../core/shared-interfaces';
 import { Task } from './tasks-runner';
 import { statSync } from 'fs';
+import { rootWorkspaceFileNames } from '../core/file-utils';
 
 const hasha = require('hasha');
 
@@ -42,6 +43,7 @@ export class Hasher {
       ...Object.keys(this.nxJson.implicitDependencies || {}).map(r =>
         this.fileHashes.hashFile(r)
       ),
+      ...rootWorkspaceFileNames().map(r => this.fileHashes.hashFile(r)),
       this.fileHashes.hashFile('package-lock.json'),
       this.fileHashes.hashFile('yarn.lock')
     ]);

@@ -2,63 +2,40 @@ import {
   BuilderContext,
   BuilderOutput,
   createBuilder,
-  targetFromTargetString,
-  scheduleTargetAndForget
+  scheduleTargetAndForget,
+  targetFromTargetString
 } from '@angular-devkit/architect';
-import { JsonObject } from '@angular-devkit/core';
+import { terminal } from '@angular-devkit/core';
+import * as fs from 'fs';
 import {
   PHASE_DEVELOPMENT_SERVER,
   PHASE_PRODUCTION_SERVER
 } from 'next/dist/next-server/lib/constants';
-import startServer from 'next/dist/server/lib/start-server';
-import NextServer from 'next/dist/server/next-dev-server';
 import * as path from 'path';
 import { from, Observable, of } from 'rxjs';
-import { switchMap, concatMap, tap } from 'rxjs/operators';
-import * as url from 'url';
+import { concatMap, switchMap, tap } from 'rxjs/operators';
 import { prepareConfig } from '../../utils/config';
+import {
+  NextBuildBuilderOptions,
+  NextServeBuilderOptions,
+  NextServer,
+  NextServerOptions,
+  ProxyConfig
+} from '../../utils/types';
+import { customServer } from './lib/custom-server';
+import { defaultServer } from './lib/default-server';
 
 try {
   require('dotenv').config();
 } catch (e) {}
 
-export interface NextBuildBuilderOptions extends JsonObject {
-  dev: boolean;
-  port: number;
-  staticMarkup: boolean;
-  quiet: boolean;
-  buildTarget: string;
-  customServerPath: string;
-  hostname: string;
-}
+export default createBuilder<NextServeBuilderOptions>(run);
 
-export interface NextServerOptions {
-  dev: boolean;
-  dir: string;
-  staticMarkup: boolean;
-  quiet: boolean;
-  conf: any;
-  port: number;
-  path: string;
-  hostname: string;
-}
+const infoPrefix = `[ ${terminal.dim(terminal.cyan('info'))} ] `;
+const readyPrefix = `[ ${terminal.green('ready')} ]`;
 
-export default createBuilder<NextBuildBuilderOptions>(run);
-
-function defaultServer(settings: NextServerOptions) {
-  return startServer(settings, settings.port, settings.hostname).then(app =>
-    app.prepare()
-  );
-}
-
-function customServer(settings: NextServerOptions) {
-  const nextApp = new NextServer(settings);
-
-  return require(path.resolve(settings.dir, settings.path))(nextApp, settings);
-}
-
-function run(
-  options: NextBuildBuilderOptions,
+export function run(
+  options: NextServeBuilderOptions,
   context: BuilderContext
 ): Observable<BuilderOutput> {
   const buildTarget = targetFromTargetString(options.buildTarget);
@@ -72,17 +49,18 @@ function run(
     concatMap(r => {
       if (!r.success) return of(r);
       return from(context.getTargetOptions(buildTarget)).pipe(
-        concatMap((buildOptions: any) => {
+        concatMap((buildOptions: NextBuildBuilderOptions) => {
           const root = path.resolve(context.workspaceRoot, buildOptions.root);
 
           const config = prepareConfig(
             context.workspaceRoot,
             buildOptions.root,
             buildOptions.outputPath,
+            buildOptions.fileReplacements,
             options.dev ? PHASE_DEVELOPMENT_SERVER : PHASE_PRODUCTION_SERVER
           );
 
-          const settings = {
+          const settings: NextServerOptions = {
             dev: options.dev,
             dir: root,
             staticMarkup: options.staticMarkup,
@@ -93,13 +71,25 @@ function run(
             hostname: options.hostname
           };
 
-          const server = options.customServerPath
+          const server: NextServer = options.customServerPath
             ? customServer
             : defaultServer;
 
-          return from(server(settings)).pipe(
+          // look for the proxy.conf.json
+          let proxyConfig: ProxyConfig;
+          const proxyConfigPath = options.proxyConfig
+            ? path.join(context.workspaceRoot, options.proxyConfig)
+            : path.join(root, 'proxy.conf.json');
+          if (fs.existsSync(proxyConfigPath)) {
+            context.logger.info(
+              `${infoPrefix} found proxy configuration at ${proxyConfigPath}`
+            );
+            proxyConfig = require(proxyConfigPath);
+          }
+
+          return from(server(settings, proxyConfig)).pipe(
             tap(() => {
-              context.logger.info(`Ready on ${baseUrl}`);
+              context.logger.info(`${readyPrefix} on ${baseUrl}`);
             }),
             switchMap(
               e =>

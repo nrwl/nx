@@ -70,7 +70,10 @@ export function addImportsToModule(context: RequestContext): Rule {
     const hasRouter = sourceText.indexOf('RouterModule') > -1;
     const hasNxModule = sourceText.includes('NxModule.forRoot()');
 
-    if (context.options.onlyEmptyRoot || context.options.minimal) {
+    if (
+      (context.options.onlyEmptyRoot || context.options.minimal) &&
+      context.options.root
+    ) {
       insert(host, modulePath, [
         addImport.apply(this, storeModule),
         addImport.apply(this, effectsModule),

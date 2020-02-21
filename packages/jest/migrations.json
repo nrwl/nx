@@ -9,6 +9,27 @@
       "version": "8.7.0",
       "description": "Update Jest testPathPattern option",
       "factory": "./src/migrations/update-8-7-0/update-8-7-0"
+    },
+    "update-9.0.0": {
+      "version": "9.0.0-beta.1",
+      "description": "Upgrades jest-preset-angular to 8.0.0",
+      "factory": "./src/migrations/update-9-0-0/update-9-0-0"
+    },
+    "update-9.0.1": {
+      "version": "9.0.1-beta.1",
+      "description": "Correctly sets passWithNoTests option",
+      "factory": "./src/migrations/update-9-0-1/update-9-0-1"
+    }
+  },
+  "packageJsonUpdates": {
+    "9.0.0": {
+      "version": "9.0.0-beta.1",
+      "packages": {
+        "jest-preset-angular": {
+          "version": "8.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

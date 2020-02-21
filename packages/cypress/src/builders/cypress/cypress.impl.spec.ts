@@ -9,6 +9,7 @@ import * as fsExtras from 'fs-extra';
 import { Architect } from '@angular-devkit/architect';
 import * as devkitArchitect from '@angular-devkit/architect';
 import { of } from 'rxjs';
+
 const Cypress = require('cypress');
 
 describe('Cypress builder', () => {
@@ -194,6 +195,28 @@ describe('Cypress builder', () => {
       expect(res.success).toBe(false);
       done();
     });
+  });
+
+  it('should call `Cypress.run` with provided cypressConfig as project and configFile', async done => {
+    const cfg = {
+      ...cypressBuilderOptions,
+      cypressConfig: 'some/project/my-cypress.json'
+    };
+
+    const run = await architect.scheduleBuilder('@nrwl/cypress:cypress', cfg);
+    run.result.then(async () => {
+      await run.stop();
+      expect(cypressRun).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          project: path.dirname(cfg.cypressConfig),
+          configFile: path.basename(cfg.cypressConfig)
+        })
+      );
+      expect(cypressOpen).not.toHaveBeenCalled();
+      done();
+    });
+
+    fakeEventEmitter.emit('exit', 0); // Passing tsc command
   });
 
   describe('legacy', () => {

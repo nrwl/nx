@@ -130,9 +130,24 @@
             "file": "shared/tools-workspace-schematics"
           },
           {
+            "name": "Nx Plugins",
+            "id": "nx-plugin",
+            "file": "shared/nx-plugin"
+          },
+          {
             "name": "Rebuilding and Retesting What is Affected",
             "id": "monorepo-affected",
             "file": "shared/monorepo-affected"
+          },
+          {
+            "name": "Distributed CI Using Azure Pipelines",
+            "id": "monorepo-ci-azure",
+            "file": "shared/monorepo-ci-azure"
+          },
+          {
+            "name": "Distributed CI Using Jenkins",
+            "id": "monorepo-ci-jenkins",
+            "file": "shared/monorepo-ci-jenkins"
           },
           {
             "name": "Analyzing & Visualizing Workspaces",
@@ -312,9 +327,24 @@
             "file": "shared/tools-workspace-schematics"
           },
           {
+            "name": "Nx Plugins",
+            "id": "nx-plugin",
+            "file": "shared/nx-plugin"
+          },
+          {
             "name": "Rebuilding and Retesting What is Affected",
             "id": "monorepo-affected",
             "file": "shared/monorepo-affected"
+          },
+          {
+            "name": "Distributed CI Using Azure Pipelines",
+            "id": "monorepo-ci-azure",
+            "file": "shared/monorepo-ci-azure"
+          },
+          {
+            "name": "Distributed CI Using Jenkins",
+            "id": "monorepo-ci-jenkins",
+            "file": "shared/monorepo-ci-jenkins"
           },
           {
             "name": "Analyzing & Visualizing Workspaces",
@@ -451,6 +481,11 @@
             "file": "shared/update"
           },
           {
+            "name": "Adding Images, Fonts, and Files",
+            "id": "adding-assets-react",
+            "file": "react/guides/adding-assets"
+          },
+          {
             "name": "Using Cypress",
             "id": "modernize-cypress",
             "file": "shared/modernize-cypress"
@@ -471,9 +506,24 @@
             "file": "shared/tools-workspace-schematics"
           },
           {
+            "name": "Nx Plugins",
+            "id": "nx-plugin",
+            "file": "shared/nx-plugin"
+          },
+          {
             "name": "Rebuilding and Retesting What is Affected",
             "id": "monorepo-affected",
             "file": "shared/monorepo-affected"
+          },
+          {
+            "name": "Distributed CI Using Azure Pipelines",
+            "id": "monorepo-ci-azure",
+            "file": "shared/monorepo-ci-azure"
+          },
+          {
+            "name": "Distributed CI Using Jenkins",
+            "id": "monorepo-ci-jenkins",
+            "file": "shared/monorepo-ci-jenkins"
           },
           {
             "name": "Analyzing & Visualizing Workspaces",

@@ -1,5 +1,4 @@
 <% if(props.length > 0) { %>import { text, number, boolean } from '@storybook/addon-knobs';<% } %>
-import { <%=moduleName%> } from '<%=relativeModulePath%>';
 import { <%=componentName%> } from './<%=componentFileName%>';
 
 export default {

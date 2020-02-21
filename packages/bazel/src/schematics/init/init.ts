@@ -6,13 +6,9 @@ import {
   template,
   url
 } from '@angular-devkit/schematics';
-import {
-  addDepsToPackageJson,
-  readJsonInTree,
-  updateJsonInTree
-} from '@nrwl/workspace';
+import { addDepsToPackageJson, readJsonInTree } from '@nrwl/workspace';
 import ignore from 'ignore';
-import { bazelVersion, iBazelVersion, patchVersion } from '../utils/versions';
+import { bazelVersion, iBazelVersion } from '../utils/versions';
 import { noop } from 'rxjs';
 
 function updateGitIgnore(): Rule {
@@ -37,50 +33,22 @@ function updateGitIgnore(): Rule {
 const addRequiredPackages = addDepsToPackageJson(
   {},
   {
-    'patch-package': patchVersion,
     '@bazel/bazel': bazelVersion,
     '@bazel/ibazel': iBazelVersion
   },
   true
 );
 
-const addPostInstall = updateJsonInTree('package.json', json => {
-  if (!json.scripts) {
-    json.scripts = {};
-  }
-
-  if (
-    json.scripts['postinstall'] &&
-    json.scripts['postinstall'].includes('patch-package')
-  ) {
-    return json;
-  }
-
-  if (json.scripts.postinstall) {
-    if (!(json.scripts.postinstall as string).includes('patch-package')) {
-      json.scripts.postinstall = `patch-package && ${json.script.postinstall}`;
-    }
-  } else {
-    json.scripts.postinstall = 'patch-package';
-  }
-  return json;
-});
-
 function addFiles() {
   return host => {
-    if (host.exists('patches/BUILD.bazel')) {
+    if (host.exists('/.bazelrc')) {
       return noop;
     }
     return mergeWith(
       apply(url('./files/root'), [
         template({
           tmpl: ''
-        }),
-        () => {
-          if (host.exists('BUILD.bazel')) {
-            host.delete('BUILD.bazel');
-          }
-        }
+        })
       ])
     );
   };
@@ -92,7 +60,6 @@ export default (): Rule => {
     return chain([
       updateGitIgnore(),
       !packageJson.devDependencies['@bazel/bazel'] ? addRequiredPackages : noop,
-      addPostInstall,
       addFiles()
     ]);
   };

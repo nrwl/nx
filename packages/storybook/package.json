@@ -28,13 +28,7 @@
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "@nrwl/workspace": "*",
-    "@storybook/angular": "^5.2.5",
-    "@storybook/react": "^5.2.5",
-    "@storybook/core": "^5.2.5",
-    "@storybook/addon-knobs": "^5.2.5",
-    "babel-loader": "^8.0.6",
-    "@babel/core": "^7.5.4"
+    "@nrwl/workspace": "*"
   },
   "dependencies": {
     "@nrwl/cypress": "*",

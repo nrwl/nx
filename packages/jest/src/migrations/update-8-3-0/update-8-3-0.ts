@@ -1,5 +1,5 @@
-import { Rule, Tree } from '@angular-devkit/schematics';
-import { insert } from '@nrwl/workspace';
+import { Rule, Tree, chain } from '@angular-devkit/schematics';
+import { insert, formatFiles } from '@nrwl/workspace';
 import * as ts from 'typescript';
 import {
   getSourceNodes,
@@ -15,18 +15,23 @@ function updateJestConfig(host: Tree) {
       ts.ScriptTarget.Latest
     );
     const changes: RemoveChange[] = [];
-
-    getSourceNodes(sourceFile).forEach(node => {
+    const sourceNodes = getSourceNodes(sourceFile);
+    sourceNodes.forEach((node, index) => {
       if (
         ts.isPropertyAssignment(node) &&
         ts.isIdentifier(node.name) &&
         node.name.text === 'collectCoverage'
       ) {
+        const expectedCommaNode = sourceNodes[index + 4];
+        const isFollowedByComma =
+          expectedCommaNode.kind === ts.SyntaxKind.CommaToken;
         changes.push(
           new RemoveChange(
             'jest.config.js',
             node.getStart(sourceFile),
-            node.getFullText(sourceFile)
+            isFollowedByComma
+              ? node.getFullText(sourceFile)
+              : node.getText(sourceFile)
           )
         );
       }
@@ -36,5 +41,5 @@ function updateJestConfig(host: Tree) {
 }
 
 export default function(): Rule {
-  return updateJestConfig;
+  return chain([updateJestConfig, formatFiles()]);
 }

@@ -49,6 +49,11 @@
       "version": "8.12.0-beta.1",
       "description": "Add enforceBuildableLibDependency flag to the nx enforce boundary lint rule",
       "factory": "./src/migrations/update-8-12-0/update-enforce-boundary-lint-rule"
+    },
+    "update-9-0-0": {
+      "version": "9.0.0-beta.1",
+      "description": "Update typescript to 3.6 and angular/cli to version 9",
+      "factory": "./src/migrations/update-9-0-0/update-9-0-0"
     }
   },
   "packageJsonUpdates": {
@@ -337,6 +342,51 @@
         },
         "@schematics/angular": {
           "version": "8.3.23",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "9.0.0": {
+      "version": "9.0.0-beta.1",
+      "packages": {
+        "@angular/cli": {
+          "version": "~9.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "typescript": {
+          "version": "~3.7.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.900.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~0.900.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-ng-packagr": {
+          "version": "~0.900.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.900.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-optimizer": {
+          "version": "~0.900.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~9.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~9.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~9.0.1",
           "alwaysAddToPackageJson": false
         }
       }

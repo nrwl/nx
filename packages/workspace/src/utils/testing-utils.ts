@@ -9,7 +9,7 @@ import {
   TestingArchitectHost,
   TestLogger
 } from '@angular-devkit/architect/testing';
-import { JsonObject } from '@angular-devkit/core';
+import { json, JsonObject } from '@angular-devkit/core';
 import { ScheduleOptions } from '@angular-devkit/architect/src/api';
 
 export function getFileContent(tree: Tree, path: string): string {
@@ -136,4 +136,13 @@ export class MockBuilderContext implements BuilderContext {
   reportProgress(current: number, total?: number, status?: string) {}
 
   addTeardown(teardown: () => Promise<void> | void) {}
+
+  async getProjectMetadata(
+    target: Target | string
+  ): Promise<json.JsonObject | null> {
+    return (
+      this.architectHost &&
+      this.architectHost.getProjectMetadata(target as string)
+    );
+  }
 }

@@ -42,6 +42,27 @@ To build all the packages, run:
 yarn build
 ```
 
+## Publishing to a local registry
+
+To test if your changes will actually work once the changes are published,
+it can be useful to publish to a local registry.
+
+Here are some useful commands for doing so:
+
+```bash
+# Starts the local registry. Keep this running in a separate terminal.
+yarn local-registry start
+
+# Set npm and yarn to use the local registry.
+# Note: This reroutes your installs to your local registry
+yarn local-registry enable
+
+# Revert npm and yarn to use their default registries
+yarn local-registry disable
+```
+
+You can also run `yarn test-create-nx-workspace 30.0.0`. It will set up local registry, publish the packages, create the workspace with Angular and React applications in it, and will run some basic checks against the workspace.
+
 ### Running Unit Tests
 
 To make sure your changes do not break any unit tests, run the following:
@@ -80,7 +101,7 @@ While developing you may want to try out the changes you have made. The easier w
 yarn create-playground
 ```
 
-You can then go to `tmp/nx` (this is set up to use Nx CLI) or `tmp/angular` (this is set up to use Angular CLI), where you will find an empty workspace with your changes in it, something this that:
+You can then go to `tmp/nx` (this is set up to use Nx CLI) or `tmp/angular` (this is set up to use Angular CLI), where you will find an empty workspace with your changes in it.:
 
 ```bash
 yarn create-playground

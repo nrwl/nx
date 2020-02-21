@@ -81,7 +81,8 @@ function updateWorkspaceJson(options: JestProjectSchema): Rule {
       builder: '@nrwl/jest:jest',
       options: {
         jestConfig: join(normalize(projectConfig.root), 'jest.config.js'),
-        tsConfig: join(normalize(projectConfig.root), 'tsconfig.spec.json')
+        tsConfig: join(normalize(projectConfig.root), 'tsconfig.spec.json'),
+        passWithNoTests: true
       }
     };
     if (options.setupFile !== 'none') {

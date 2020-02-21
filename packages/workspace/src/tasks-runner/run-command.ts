@@ -14,7 +14,7 @@ type RunArgs = yargs.Arguments & ReporterArgs;
 export async function runCommand<T extends RunArgs>(
   projectsToRun: ProjectGraphNode[],
   projectGraph: ProjectGraph,
-  { nxJson, workspace }: Environment,
+  { nxJson, workspaceResults }: Environment,
   nxArgs: NxArgs,
   overrides: any,
   reporter: any
@@ -53,11 +53,11 @@ export async function runCommand<T extends RunArgs>(
     next: (event: any) => {
       switch (event.type) {
         case AffectedEventType.TaskComplete: {
-          workspace.setResult(event.task.target.project, event.success);
+          workspaceResults.setResult(event.task.target.project, event.success);
           break;
         }
         case AffectedEventType.TaskCacheRead: {
-          workspace.setResult(event.task.target.project, event.success);
+          workspaceResults.setResult(event.task.target.project, event.success);
           cached.push(event.task.target.project);
           break;
         }
@@ -68,15 +68,15 @@ export async function runCommand<T extends RunArgs>(
       // fix for https://github.com/nrwl/nx/issues/1666
       if (process.stdin['unref']) (process.stdin as any).unref();
 
-      workspace.saveResults();
+      workspaceResults.saveResults();
       reporter.printResults(
         nxArgs,
-        workspace.failedProjects,
-        workspace.startedWithFailedProjects,
+        workspaceResults.failedProjects,
+        workspaceResults.startedWithFailedProjects,
         cached
       );
 
-      if (workspace.hasFailure) {
+      if (workspaceResults.hasFailure) {
         process.exit(1);
       }
     }

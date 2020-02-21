@@ -97,6 +97,18 @@ function defaultReadFileAtRevision(
   }
 }
 
+function getFileData(filePath: string): FileData {
+  const stat = fs.statSync(filePath);
+  return {
+    file: path
+      .relative(appRootPath, filePath)
+      .split(path.sep)
+      .join('/'),
+    ext: path.extname(filePath),
+    mtime: stat.mtimeMs
+  };
+}
+
 export function allFilesInDir(
   dirName: string,
   recurse: boolean = true
@@ -118,14 +130,7 @@ export function allFilesInDir(
         const s = fs.statSync(child);
         if (!s.isDirectory()) {
           // add starting with "apps/myapp/..." or "libs/mylib/..."
-          res.push({
-            file: path
-              .relative(appRootPath, child)
-              .split(path.sep)
-              .join('/'),
-            ext: path.extname(child),
-            mtime: s.mtimeMs
-          });
+          res.push(getFileData(child));
         } else if (s.isDirectory() && recurse) {
           res = [...res, ...allFilesInDir(child)];
         }
@@ -182,9 +187,22 @@ export function readNxJson(): NxJson {
   return config;
 }
 
+// TODO: Make this list extensible
+export function rootWorkspaceFileNames(): string[] {
+  return [`package.json`, workspaceFileName(), `nx.json`, `tsconfig.json`];
+}
+
+export function rootWorkspaceFileData(): FileData[] {
+  return rootWorkspaceFileNames().map(f => getFileData(`${appRootPath}/${f}`));
+}
+
 export function readWorkspaceFiles(): FileData[] {
   const workspaceJson = readWorkspaceJson();
   const files = [];
+
+  files.push(
+    ...rootWorkspaceFileNames().map(f => getFileData(`${appRootPath}/${f}`))
+  );
 
   // Add known workspace files and directories
   files.push(...allFilesInDir(appRootPath, false));
@@ -199,12 +217,15 @@ export function readWorkspaceFiles(): FileData[] {
   return files;
 }
 
-export function readEnvironment(target: string): Environment {
+export function readEnvironment(
+  target: string,
+  projects: Record<string, ProjectGraphNode>
+): Environment {
   const nxJson = readNxJson();
   const workspaceJson = readWorkspaceJson();
-  const workspace = new WorkspaceResults(target);
+  const workspaceResults = new WorkspaceResults(target, projects);
 
-  return { nxJson, workspaceJson, workspace };
+  return { nxJson, workspaceJson, workspaceResults };
 }
 
 /**

@@ -18,7 +18,7 @@ forEachCli(() => {
 
       // Generate root ngrx state management
       runCLI(
-        `generate @nrwl/angular:ngrx users --module=apps/${myapp}/src/app/app.module.ts --root`
+        `generate @nrwl/angular:ngrx users --module=apps/${myapp}/src/app/app.module.ts --root --minimal=false --syntax=classes --useDataPersistence=true`
       );
       const packageJson = readJson('package.json');
       expect(packageJson.dependencies['@ngrx/store']).toBeDefined();
@@ -30,7 +30,7 @@ forEachCli(() => {
       // Generate feature library and ngrx state within that library
       runCLI(`g @nrwl/angular:lib ${mylib} --prefix=fl`);
       runCLI(
-        `generate @nrwl/angular:ngrx flights --module=libs/${mylib}/src/lib/${mylib}.module.ts --facade`
+        `generate @nrwl/angular:ngrx flights --module=libs/${mylib}/src/lib/${mylib}.module.ts --facade --syntax=classes`
       );
 
       expect(runCLI(`build ${myapp}`)).toContain(
@@ -51,7 +51,7 @@ forEachCli(() => {
 
       // Generate root ngrx state management
       runCLI(
-        `generate @nrwl/angular:ngrx users --module=apps/${myapp}/src/app/app.module.ts --root --minimal --syntax=creators`
+        `generate @nrwl/angular:ngrx users --module=apps/${myapp}/src/app/app.module.ts --root`
       );
       const packageJson = readJson('package.json');
       expect(packageJson.dependencies['@ngrx/entity']).toBeDefined();
@@ -65,7 +65,7 @@ forEachCli(() => {
       // Generate feature library and ngrx state within that library
       runCLI(`g @nrwl/angular:lib ${mylib} --prefix=fl`);
 
-      const flags = `--facade --syntax=creators --useDataPersistence=false --barrels`;
+      const flags = `--facade --barrels`;
       runCLI(
         `generate @nrwl/angular:ngrx flights --module=libs/${mylib}/src/lib/${mylib}.module.ts ${flags}`
       );

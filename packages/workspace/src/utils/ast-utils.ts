@@ -9,7 +9,8 @@ import {
   Rule,
   Tree,
   SchematicContext,
-  DirEntry
+  DirEntry,
+  noop
 } from '@angular-devkit/schematics';
 import * as ts from 'typescript';
 import * as stripJsonComments from 'strip-json-comments';
@@ -534,30 +535,77 @@ export function readWorkspace(host: Tree): any {
   return readJsonInTree(host, path);
 }
 
+/**
+ * verifies whether the given packageJson dependencies require an update
+ * given the deps & devDeps passed in
+ */
+function requiresAddingOfPackages(packageJsonFile, deps, devDeps): boolean {
+  let needsDepsUpdate = false;
+  let needsDevDepsUpdate = false;
+
+  packageJsonFile.dependencies = packageJsonFile.dependencies || {};
+  packageJsonFile.devDependencies = packageJsonFile.devDependencies || {};
+
+  if (Object.keys(deps).length > 0) {
+    needsDepsUpdate = Object.keys(deps).some(
+      entry => !packageJsonFile.dependencies[entry]
+    );
+  }
+
+  if (Object.keys(devDeps).length > 0) {
+    needsDevDepsUpdate = Object.keys(devDeps).some(
+      entry => !packageJsonFile.devDependencies[entry]
+    );
+  }
+
+  return needsDepsUpdate || needsDevDepsUpdate;
+}
+
 let installAdded = false;
 
+/**
+ * Updates the package.json given the passed deps and/or devDeps. Only updates
+ * if the packages are not yet present
+ *
+ * @param host the schematic tree
+ * @param deps the package.json dependencies to add
+ * @param devDeps the package.json devDependencies to add
+ * @param addInstall default `true`; set to false to avoid installs
+ */
 export function addDepsToPackageJson(
   deps: any,
   devDeps: any,
   addInstall = true
 ): Rule {
-  return updateJsonInTree('package.json', (json, context: SchematicContext) => {
-    json.dependencies = {
-      ...(json.dependencies || {}),
-      ...deps,
-      ...(json.dependencies || {})
-    };
-    json.devDependencies = {
-      ...(json.devDependencies || {}),
-      ...devDeps,
-      ...(json.devDependencies || {})
-    };
-    if (addInstall && !installAdded) {
-      context.addTask(new NodePackageInstallTask());
-      installAdded = true;
+  return (host: Tree, context: SchematicContext) => {
+    const currentPackageJson = readJsonInTree(host, 'package.json');
+
+    if (requiresAddingOfPackages(currentPackageJson, deps, devDeps)) {
+      return updateJsonInTree(
+        'package.json',
+        (json, context: SchematicContext) => {
+          json.dependencies = {
+            ...(json.dependencies || {}),
+            ...deps,
+            ...(json.dependencies || {})
+          };
+          json.devDependencies = {
+            ...(json.devDependencies || {}),
+            ...devDeps,
+            ...(json.devDependencies || {})
+          };
+
+          if (addInstall && !installAdded) {
+            context.addTask(new NodePackageInstallTask());
+            installAdded = true;
+          }
+          return json;
+        }
+      );
+    } else {
+      return noop();
     }
-    return json;
-  });
+  };
 }
 
 export function updatePackageJsonDependencies(

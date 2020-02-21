@@ -8,16 +8,27 @@ import { exec } from 'child_process';
 import { Observable } from 'rxjs';
 import { TEN_MEGABYTES } from '@nrwl/workspace/src/core/file-utils';
 
-try {
-  require('dotenv').config();
-} catch (e) {}
+function loadEnvVars(path?: string) {
+  if (path) {
+    const result = require('dotenv').config({ path });
+    if (result.error) {
+      throw result.error;
+    }
+  } else {
+    try {
+      require('dotenv').config();
+    } catch (e) {}
+  }
+}
 
 export interface RunCommandsBuilderOptions extends JsonObject {
   commands: { command: string }[];
   color?: boolean;
   parallel?: boolean;
   readyWhen?: string;
+  cwd?: string;
   args?: string;
+  envFile?: string;
   parsedArgs?: { [key: string]: string };
 }
 
@@ -27,6 +38,7 @@ function run(
   options: RunCommandsBuilderOptions,
   context: BuilderContext
 ): Observable<BuilderOutput> {
+  loadEnvVars(options.envFile);
   options.parsedArgs = parseArgs(options.args);
   return Observable.create(async observer => {
     if (!options.commands) {
@@ -72,7 +84,8 @@ async function runInParallel(options: RunCommandsBuilderOptions) {
       c.command,
       options.readyWhen,
       options.parsedArgs,
-      options.color
+      options.color,
+      options.cwd
     ).then(result => ({
       result,
       command: c.command
@@ -116,7 +129,8 @@ async function runSerially(
           c.command,
           options.readyWhen,
           options.parsedArgs,
-          options.color
+          options.color,
+          options.cwd
         );
         return !success ? c.command : null;
       } else {
@@ -139,13 +153,15 @@ function createProcess(
   command: string,
   readyWhen: string,
   parsedArgs: { [key: string]: string },
-  color: boolean
+  color: boolean,
+  cwd: string
 ): Promise<boolean> {
   command = transformCommand(command, parsedArgs);
   return new Promise(res => {
     const childProcess = exec(command, {
       maxBuffer: TEN_MEGABYTES,
-      env: { ...process.env, FORCE_COLOR: `${color}` }
+      env: { ...process.env, FORCE_COLOR: `${color}` },
+      cwd
     });
     /**
      * Ensure the child process is killed when the parent exits

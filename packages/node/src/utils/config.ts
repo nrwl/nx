@@ -37,6 +37,7 @@ export function getBaseWebpackPartial(
         {
           test: /\.(j|t)sx?$/,
           loader: `ts-loader`,
+          exclude: /node_modules/,
           options: {
             configFile: options.tsConfig,
             transpileOnly: true,

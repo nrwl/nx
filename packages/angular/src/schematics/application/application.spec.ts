@@ -91,6 +91,17 @@ describe('app', () => {
       expect(tsconfigE2E.extends).toEqual('./tsconfig.json');
     });
 
+    it('should setup jest with serializers', async () => {
+      const tree = await runSchematic('app', { name: 'myApp' }, appTree);
+
+      expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
+        `'jest-preset-angular/build/AngularSnapshotSerializer.js'`
+      );
+      expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
+        `'jest-preset-angular/build/HTMLCommentSerializer.js'`
+      );
+    });
+
     it('should default the prefix to npmScope', async () => {
       const noPrefix = await runSchematic(
         'app',
@@ -350,54 +361,71 @@ describe('app', () => {
     });
   });
 
-  describe('--unit-test-runner karma', () => {
-    it('should generate a karma config', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myApp', unitTestRunner: 'karma' },
-        appTree
-      );
+  describe('--unit-test-runner', () => {
+    describe('default (jest)', () => {
+      it('should generate jest.config.js with serializers', async () => {
+        const tree = await runSchematic('app', { name: 'myApp' }, appTree);
 
-      expect(tree.exists('apps/my-app/tsconfig.spec.json')).toBeTruthy();
-      expect(tree.exists('apps/my-app/karma.conf.js')).toBeTruthy();
-      const workspaceJson = readJsonInTree(tree, 'workspace.json');
-      expect(workspaceJson.projects['my-app'].architect.test.builder).toEqual(
-        '@angular-devkit/build-angular:karma'
-      );
-      expect(
-        workspaceJson.projects['my-app'].architect.lint.options.tsConfig
-      ).toEqual([
-        'apps/my-app/tsconfig.app.json',
-        'apps/my-app/tsconfig.spec.json'
-      ]);
-      const tsconfigAppJson = readJsonInTree(
-        tree,
-        'apps/my-app/tsconfig.app.json'
-      );
-      expect(tsconfigAppJson.exclude).toEqual(['src/test.ts', '**/*.spec.ts']);
-      expect(tsconfigAppJson.compilerOptions.outDir).toEqual(
-        '../../dist/out-tsc'
-      );
+        expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
+          `'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js'`
+        );
+        expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
+          `'jest-preset-angular/build/AngularSnapshotSerializer.js'`
+        );
+        expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
+          `'jest-preset-angular/build/HTMLCommentSerializer.js'`
+        );
+      });
     });
-  });
 
-  describe('--unit-test-runner none', () => {
-    it('should not generate test configuration', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myApp', unitTestRunner: 'none' },
-        appTree
-      );
-      expect(tree.exists('apps/my-app/src/test-setup.ts')).toBeFalsy();
-      expect(tree.exists('apps/my-app/src/test.ts')).toBeFalsy();
-      expect(tree.exists('apps/my-app/tsconfig.spec.json')).toBeFalsy();
-      expect(tree.exists('apps/my-app/jest.config.js')).toBeFalsy();
-      expect(tree.exists('apps/my-app/karma.config.js')).toBeFalsy();
-      const workspaceJson = readJsonInTree(tree, 'workspace.json');
-      expect(workspaceJson.projects['my-app'].architect.test).toBeUndefined();
-      expect(
-        workspaceJson.projects['my-app'].architect.lint.options.tsConfig
-      ).toEqual(['apps/my-app/tsconfig.app.json']);
+    describe('karma', () => {
+      it('should generate a karma config', async () => {
+        const tree = await runSchematic(
+          'app',
+          { name: 'myApp', unitTestRunner: 'karma' },
+          appTree
+        );
+
+        expect(tree.exists('apps/my-app/tsconfig.spec.json')).toBeTruthy();
+        expect(tree.exists('apps/my-app/karma.conf.js')).toBeTruthy();
+        const workspaceJson = readJsonInTree(tree, 'workspace.json');
+        expect(workspaceJson.projects['my-app'].architect.test.builder).toEqual(
+          '@angular-devkit/build-angular:karma'
+        );
+        expect(
+          workspaceJson.projects['my-app'].architect.lint.options.tsConfig
+        ).toEqual([
+          'apps/my-app/tsconfig.app.json',
+          'apps/my-app/tsconfig.spec.json'
+        ]);
+        const tsconfigAppJson = readJsonInTree(
+          tree,
+          'apps/my-app/tsconfig.app.json'
+        );
+        expect(tsconfigAppJson.compilerOptions.outDir).toEqual(
+          '../../dist/out-tsc'
+        );
+      });
+    });
+
+    describe('none', () => {
+      it('should not generate test configuration', async () => {
+        const tree = await runSchematic(
+          'app',
+          { name: 'myApp', unitTestRunner: 'none' },
+          appTree
+        );
+        expect(tree.exists('apps/my-app/src/test-setup.ts')).toBeFalsy();
+        expect(tree.exists('apps/my-app/src/test.ts')).toBeFalsy();
+        expect(tree.exists('apps/my-app/tsconfig.spec.json')).toBeFalsy();
+        expect(tree.exists('apps/my-app/jest.config.js')).toBeFalsy();
+        expect(tree.exists('apps/my-app/karma.config.js')).toBeFalsy();
+        const workspaceJson = readJsonInTree(tree, 'workspace.json');
+        expect(workspaceJson.projects['my-app'].architect.test).toBeUndefined();
+        expect(
+          workspaceJson.projects['my-app'].architect.lint.options.tsConfig
+        ).toEqual(['apps/my-app/tsconfig.app.json']);
+      });
     });
   });
 
@@ -527,18 +555,6 @@ describe('app', () => {
 
       expect(tree.readContent('apps/my-app/tsconfig.app.json')).not.toContain(
         'exclude'
-      );
-    });
-
-    it('should only include dts files in the tsconfig.app.json', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'my-app', enableIvy: true },
-        appTree
-      );
-
-      expect(tree.readContent('apps/my-app/tsconfig.app.json')).toContain(
-        `\"include\": [\"src/**/*.d.ts\"]`
       );
     });
   });

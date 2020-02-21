@@ -3,21 +3,47 @@ import * as withCSS from '@zeit/next-css';
 import * as withLESS from '@zeit/next-less';
 import * as withSASS from '@zeit/next-sass';
 import * as withSTYLUS from '@zeit/next-stylus';
+import {
+  PHASE_DEVELOPMENT_SERVER,
+  PHASE_EXPORT,
+  PHASE_PRODUCTION_BUILD,
+  PHASE_PRODUCTION_SERVER
+} from 'next/dist/next-server/lib/constants';
 import loadConfig from 'next/dist/next-server/server/config';
-import * as path from 'path';
-import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
+import { resolve } from 'path';
+import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
+import { Configuration } from 'webpack';
+import { FileReplacement } from './types';
 
-function createWebpackConfig(root: string) {
-  return function webpackConfig(config, { defaultLoaders }) {
+export function createWebpackConfig(
+  workspaceRoot: string,
+  projectRoot: string,
+  fileReplacements: FileReplacement[] = []
+): (a, b) => Configuration {
+  return function webpackConfig(
+    config: Configuration,
+    { defaultLoaders }
+  ): Configuration {
     const mainFields = ['es2015', 'module', 'main'];
     const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
     config.resolve.plugins = [
-      new TsConfigPathsPlugin({
-        configFile: path.resolve(root, 'tsconfig.json'),
+      new TsconfigPathsPlugin({
+        configFile: resolve(workspaceRoot, projectRoot, 'tsconfig.json'),
         extensions,
         mainFields
       })
     ];
+
+    fileReplacements
+      .map(fileReplacement => ({
+        replace: resolve(workspaceRoot, fileReplacement.replace),
+        with: resolve(workspaceRoot, fileReplacement.with)
+      }))
+      .reduce((alias, replacement) => {
+        alias[replacement.replace] = replacement.with;
+        return alias;
+      }, config.resolve.alias);
+
     config.module.rules.push(
       {
         test: /\.tsx?$/,
@@ -63,18 +89,26 @@ function createWebpackConfig(root: string) {
 
 export function prepareConfig(
   workspaceRoot: string,
-  root: string,
+  projectRoot: string,
   outputPath: string,
-  phase: string
+  fileReplacements: FileReplacement[],
+  phase:
+    | typeof PHASE_PRODUCTION_BUILD
+    | typeof PHASE_EXPORT
+    | typeof PHASE_DEVELOPMENT_SERVER
+    | typeof PHASE_PRODUCTION_SERVER
 ) {
-  const absoluteRoot = path.resolve(workspaceRoot, root);
   const config = withSTYLUS(
-    withSASS(withLESS(withCSS(loadConfig(phase, root, null))))
+    withSASS(withLESS(withCSS(loadConfig(phase, projectRoot, null))))
   );
-  config.distDir = `${offsetFromRoot(root)}${outputPath}`;
-  config.outdir = `${offsetFromRoot(root)}${outputPath}`;
+  // Yes, these do have different capitalisation...
+  config.distDir = `${offsetFromRoot(projectRoot)}${outputPath}`;
+  config.outdir = `${offsetFromRoot(projectRoot)}${outputPath}`;
   const userWebpack = config.webpack;
   config.webpack = (a, b) =>
-    createWebpackConfig(absoluteRoot)(userWebpack(a, b), b);
+    createWebpackConfig(workspaceRoot, projectRoot, fileReplacements)(
+      userWebpack(a, b),
+      b
+    );
   return config;
 }

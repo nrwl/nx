@@ -332,6 +332,10 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
         'List of projects delimited by commas to exclude from the dependency graph.',
       type: 'array',
       coerce: parseCSV
+    })
+    .option('host', {
+      describe: 'Bind the dep graph server to a specific ip address.',
+      type: 'string'
     });
 }
 

@@ -300,7 +300,7 @@ function determineStyle(preset: Preset, parsedArgs: any) {
     }
   ];
 
-  if (preset === Preset.ReactWithExpress || preset === Preset.React) {
+  if ([Preset.ReactWithExpress, Preset.React, Preset.NextJs].includes(preset)) {
     choices.push(
       {
         value: 'styled-components',
@@ -393,6 +393,7 @@ function createApp(
           !a.startsWith('--preset') &&
           !a.startsWith('--appName') &&
           !a.startsWith('--app-name') &&
+          !a.startsWith('--style') &&
           !a.startsWith('--interactive')
       ) // not used by the new command
       .map(a => `"${a}"`)

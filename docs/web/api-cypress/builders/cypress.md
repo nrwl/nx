@@ -53,6 +53,12 @@ Type: `boolean`
 
 Whether or not the Cypress Test Runner will stay open after running tests in a spec file
 
+### group
+
+Type: `string`
+
+A named group for recorded runs in the Cypress dashboard.
+
 ### headless
 
 Default: `false`

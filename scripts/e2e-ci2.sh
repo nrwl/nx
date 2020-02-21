@@ -21,3 +21,5 @@ jest --maxWorkers=1 ./build/e2e/storybook.test.js &&
 jest --maxWorkers=1 ./build/e2e/upgrade-module.test.js &&
 jest --maxWorkers=1 ./build/e2e/web.test.js &&
 jest --maxWorkers=1 ./build/e2e/tasks-runner-v2.test.js
+jest --maxWorkers=1 ./build/e2e/angular-package.test.js
+jest --maxWorkers=1 ./build/e2e/react-package.test.js

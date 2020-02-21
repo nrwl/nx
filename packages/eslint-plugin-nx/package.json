@@ -29,9 +29,9 @@
   "homepage": "https://nx.dev",
   "peerDependencies": {
     "@nrwl/workspace": "*",
-    "@typescript-eslint/parser": "^2.3.2"
+    "@typescript-eslint/parser": "^2.19.2"
   },
   "dependencies": {
-    "@typescript-eslint/experimental-utils": "^2.3.2"
+    "@typescript-eslint/experimental-utils": "^2.19.2"
   }
 }

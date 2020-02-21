@@ -10,9 +10,22 @@ import { ChildProcess, fork } from 'child_process';
 import { copy, removeSync } from 'fs-extra';
 import * as glob from 'glob';
 import { basename, dirname, join, normalize, relative } from 'path';
-import { Observable, Subscriber } from 'rxjs';
-import { switchMap, tap, map } from 'rxjs/operators';
+import { Observable, of, Subscriber } from 'rxjs';
+import { finalize, map, switchMap, tap } from 'rxjs/operators';
 import * as treeKill from 'tree-kill';
+import {
+  createProjectGraph,
+  ProjectGraph
+} from '@nrwl/workspace/src/core/project-graph';
+import * as ts from 'typescript';
+import { unlinkSync } from 'fs';
+import {
+  calculateProjectDependencies,
+  checkDependentProjectsHaveBeenBuilt,
+  DependentBuildableProjectNode,
+  updateBuildableProjectPackageJsonDependencies,
+  updatePaths
+} from '@nrwl/workspace/src/utils/buildale-libs-utils';
 
 export interface NodePackageBuilderOptions extends JsonObject {
   main: string;
@@ -39,19 +52,49 @@ type AssetGlob = FileInputOutput & {
   ignore: string[];
 };
 
+/**
+ * -----------------------------------------------------------
+ */
+
 export default createBuilder(runNodePackageBuilder);
 
 export function runNodePackageBuilder(
   options: NodePackageBuilderOptions,
   context: BuilderContext
 ) {
+  const projGraph = createProjectGraph();
   const normalizedOptions = normalizeOptions(options, context);
-  return compileTypeScriptFiles(normalizedOptions, context).pipe(
-    tap(() => {
-      updatePackageJson(normalizedOptions, context);
-    }),
-    switchMap(() => {
-      return copyAssetFiles(normalizedOptions, context);
+  const { target, dependencies } = calculateProjectDependencies(
+    projGraph,
+    context
+  );
+
+  return of(checkDependentProjectsHaveBeenBuilt(context, dependencies)).pipe(
+    switchMap(result => {
+      if (result) {
+        return compileTypeScriptFiles(
+          normalizedOptions,
+          context,
+          projGraph,
+          dependencies
+        ).pipe(
+          tap(() => {
+            updatePackageJson(normalizedOptions, context);
+            if (dependencies.length > 0) {
+              updateBuildableProjectPackageJsonDependencies(
+                context,
+                target,
+                dependencies
+              );
+            }
+          }),
+          switchMap(() => {
+            return copyAssetFiles(normalizedOptions, context);
+          })
+        );
+      } else {
+        return of({ success: false });
+      }
     }),
     map(value => {
       return {
@@ -124,22 +167,47 @@ function normalizeOptions(
 let tscProcess: ChildProcess;
 function compileTypeScriptFiles(
   options: NormalizedBuilderOptions,
-  context: BuilderContext
+  context: BuilderContext,
+  projGraph: ProjectGraph,
+  projectDependencies: DependentBuildableProjectNode[]
 ): Observable<BuilderOutput> {
   if (tscProcess) {
     killProcess(context);
   }
   // Cleaning the /dist folder
   removeSync(options.normalizedOutputPath);
+  let tsConfigPath = join(context.workspaceRoot, options.tsConfig);
 
   return Observable.create((subscriber: Subscriber<BuilderOutput>) => {
+    if (projectDependencies.length > 0) {
+      // const parsedTSConfig = readTsConfig(tsConfigPath);
+      const parsedTSConfig = ts.readConfigFile(tsConfigPath, ts.sys.readFile)
+        .config;
+
+      // update TSConfig paths to point to the dist folder
+      parsedTSConfig.compilerOptions = parsedTSConfig.compilerOptions || {};
+      parsedTSConfig.compilerOptions.paths =
+        parsedTSConfig.compilerOptions.paths || {};
+      updatePaths(projectDependencies, parsedTSConfig.compilerOptions.paths);
+
+      // find the library root folder
+      const libRoot = projGraph.nodes[context.target.project].data.root;
+
+      // write the tmp tsconfig needed for building
+      const tmpTsConfigPath = join(
+        context.workspaceRoot,
+        libRoot,
+        'tsconfig.lib.nx-tmp'
+      );
+      writeJsonFile(tmpTsConfigPath, parsedTSConfig);
+
+      // adjust the tsConfig path s.t. it points to the temporary one
+      // with the adjusted paths
+      tsConfigPath = tmpTsConfigPath;
+    }
+
     try {
-      let args = [
-        '-p',
-        join(context.workspaceRoot, options.tsConfig),
-        '--outDir',
-        options.normalizedOutputPath
-      ];
+      let args = ['-p', tsConfigPath, '--outDir', options.normalizedOutputPath];
 
       if (options.sourceMap) {
         args.push('--sourceMap');
@@ -155,11 +223,15 @@ function compileTypeScriptFiles(
         tscProcess = fork(tscPath, args, { stdio: [0, 1, 2, 'ipc'] });
         subscriber.next({ success: true });
       } else {
-        context.logger.info('Compiling TypeScript files...');
+        context.logger.info(
+          `Compiling TypeScript files for library ${context.target.project}...`
+        );
         tscProcess = fork(tscPath, args, { stdio: [0, 1, 2, 'ipc'] });
         tscProcess.on('exit', code => {
           if (code === 0) {
-            context.logger.info('Done compiling TypeScript files.');
+            context.logger.info(
+              `Done compiling TypeScript files for library ${context.target.project}`
+            );
             subscriber.next({ success: true });
           } else {
             subscriber.error('Could not compile Typescript files');
@@ -175,7 +247,17 @@ function compileTypeScriptFiles(
         new Error(`Could not compile Typescript files: \n ${error}`)
       );
     }
-  });
+  }).pipe(
+    finalize(() => {
+      cleanupTmpTsConfigFile(tsConfigPath);
+    })
+  );
+}
+
+function cleanupTmpTsConfigFile(tsConfigPath) {
+  if (tsConfigPath.indexOf('.nx-tmp') > -1) {
+    unlinkSync(tsConfigPath);
+  }
 }
 
 function killProcess(context: BuilderContext): void {
@@ -209,6 +291,7 @@ function updatePackageJson(
   packageJson.typings = normalize(
     `./${options.relativeMainFileOutput}/${typingsFile}`
   );
+
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
 }
 

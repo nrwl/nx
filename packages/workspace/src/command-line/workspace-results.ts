@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import { readJsonFile, writeJsonFile } from '../utils/fileutils';
 import { unlinkSync } from 'fs';
+import { ProjectGraphNode } from '../core/project-graph';
 
 const RESULTS_FILE = 'dist/.nx-results';
 
@@ -26,7 +27,10 @@ export class WorkspaceResults {
     return Object.values(this.commandResults.results).some(result => !result);
   }
 
-  constructor(private command: string) {
+  constructor(
+    private command: string,
+    private projects: Record<string, ProjectGraphNode>
+  ) {
     const resultsExists = fs.existsSync(RESULTS_FILE);
     this.startedWithFailedProjects = false;
     if (resultsExists) {
@@ -35,6 +39,7 @@ export class WorkspaceResults {
         this.startedWithFailedProjects = commandResults.command === command;
         if (this.startedWithFailedProjects) {
           this.commandResults = commandResults;
+          this.invalidateOldResults();
         }
       } catch {
         /**
@@ -60,5 +65,13 @@ export class WorkspaceResults {
 
   setResult(projectName: string, result: boolean) {
     this.commandResults.results[projectName] = result;
+  }
+
+  private invalidateOldResults() {
+    Object.keys(this.commandResults.results).forEach(projectName => {
+      if (!this.projects[projectName]) {
+        delete this.commandResults.results[projectName];
+      }
+    });
   }
 }

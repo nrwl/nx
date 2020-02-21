@@ -47,7 +47,7 @@
     },
     "minimal": {
       "type": "boolean",
-      "default": false,
+      "default": true,
       "description": "Only register the root state management setup or feature state."
     },
     "onlyEmptyRoot": {
@@ -68,12 +68,12 @@
     "syntax": {
       "type": "string",
       "enum": ["classes", "creators"],
-      "default": "classes",
+      "default": "creators",
       "description": "Specifies whether to use class-based or creator functions for actions, reducers, and effects."
     },
     "useDataPersistence": {
       "type": "boolean",
-      "default": true,
+      "default": false,
       "description": "Generate NgRx Effects with the DataPersistence helper service. Set to false to use plain effects data persistence operators."
     },
     "barrels": {

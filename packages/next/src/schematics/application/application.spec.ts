@@ -1,6 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
+import { NxJson, readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { readJsonInTree, NxJson } from '@nrwl/workspace';
 import { runSchematic } from '../../utils/testing';
 
 describe('app', () => {
@@ -77,6 +77,20 @@ describe('app', () => {
     );
   });
 
+  it('should setup jest with SVGR support', async () => {
+    const tree = await runSchematic(
+      'app',
+      {
+        name: 'my-app'
+      },
+      appTree
+    );
+
+    expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
+      `'^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest'`
+    );
+  });
+
   it('should set up the nrwl next build builder', async () => {
     const tree = await runSchematic(
       'app',
@@ -92,9 +106,19 @@ describe('app', () => {
       root: 'apps/my-app',
       outputPath: 'dist/apps/my-app'
     });
+    expect(architectConfig.build.configurations).toEqual({
+      production: {
+        fileReplacements: [
+          {
+            replace: 'environments/environment.ts',
+            with: 'environments/environment.prod.ts'
+          }
+        ]
+      }
+    });
   });
 
-  it('should set up the nrwl next dev exportr builder', async () => {
+  it('should set up the nrwl next dev-server builder', async () => {
     const tree = await runSchematic(
       'app',
       {
@@ -110,7 +134,7 @@ describe('app', () => {
       dev: true
     });
     expect(architectConfig.serve.configurations).toEqual({
-      production: { dev: false }
+      production: { dev: false, buildTarget: 'my-app:build:production' }
     });
   });
 
@@ -126,7 +150,7 @@ describe('app', () => {
     const architectConfig = workspaceJson.projects['my-app'].architect;
     expect(architectConfig.export.builder).toEqual('@nrwl/next:export');
     expect(architectConfig.export.options).toEqual({
-      buildTarget: 'my-app:build'
+      buildTarget: 'my-app:build:production'
     });
   });
 

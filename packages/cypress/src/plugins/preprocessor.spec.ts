@@ -1,5 +1,9 @@
-import { getWebpackConfig } from './preprocessor';
+import { getWebpackConfig, preprocessTypescript } from './preprocessor';
+jest.mock('@cypress/webpack-preprocessor', () => {
+  return jest.fn(() => (...args) => Promise.resolve());
+});
 jest.mock('tsconfig-paths-webpack-plugin');
+import * as wp from '@cypress/webpack-preprocessor';
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 
 describe('getWebpackConfig', () => {
@@ -64,5 +68,41 @@ describe('getWebpackConfig', () => {
     const callback = jest.fn();
     config.externals[0](null, '@nestjs/core', callback);
     expect(callback).toHaveBeenCalledWith(null, 'commonjs @nestjs/core');
+  });
+});
+
+describe('preprocessTypescript', () => {
+  it('should work if no customizer is passed', async () => {
+    const preprocessor = preprocessTypescript({
+      env: {
+        tsConfig: './tsconfig.json'
+      }
+    });
+    await preprocessor('arg0', 'arg1');
+    expect(wp).toBeCalled();
+    expect(
+      wp.mock.calls[wp.mock.calls.length - 1][0].webpackOptions.resolve
+        .extensions
+    ).toEqual(['.ts', '.tsx', '.mjs', '.js', '.jsx']);
+  });
+
+  it('should support customizing the webpack config', async () => {
+    const preprocessor = preprocessTypescript(
+      {
+        env: {
+          tsConfig: './tsconfig.json'
+        }
+      },
+      webpackConfig => {
+        webpackConfig.resolve.extensions.push('.mdx');
+        return webpackConfig;
+      }
+    );
+    await preprocessor('arg0', 'arg1');
+    expect(wp).toBeCalled();
+    expect(
+      wp.mock.calls[wp.mock.calls.length - 1][0].webpackOptions.resolve
+        .extensions
+    ).toEqual(['.ts', '.tsx', '.mjs', '.js', '.jsx', '.mdx']);
   });
 });

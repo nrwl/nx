@@ -9,7 +9,7 @@ import { Observable, of, noop } from 'rxjs';
 import { catchError, concatMap, tap, map, take } from 'rxjs/operators';
 import { fromPromise } from 'rxjs/internal-compatibility';
 import { JsonObject } from '@angular-devkit/core';
-import { dirname, join, relative } from 'path';
+import { dirname, join, relative, basename } from 'path';
 import { readJsonFile } from '@nrwl/workspace';
 import { legacyCompile } from './legacy';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
@@ -32,6 +32,7 @@ export interface CypressBuilderOptions extends JsonObject {
   spec?: string;
   copyFiles?: string;
   ciBuildId?: string;
+  group?: string;
 }
 
 try {
@@ -77,7 +78,8 @@ function run(
         options.browser,
         options.env,
         options.spec,
-        options.ciBuildId
+        options.ciBuildId,
+        options.group
       )
     ),
     options.watch ? tap(noop) : take(1),
@@ -109,6 +111,7 @@ function run(
  * @param env
  * @param spec
  * @param ciBuildId
+ * @param group
  */
 function initCypress(
   cypressConfig: string,
@@ -122,12 +125,14 @@ function initCypress(
   browser?: string,
   env?: Record<string, string>,
   spec?: string,
-  ciBuildId?: string
+  ciBuildId?: string,
+  group?: string
 ): Observable<BuilderOutput> {
   // Cypress expects the folder where a `cypress.json` is present
   const projectFolderPath = dirname(cypressConfig);
   const options: any = {
-    project: projectFolderPath
+    project: projectFolderPath,
+    configFile: basename(cypressConfig)
   };
 
   // If not, will use the `baseUrl` normally from `cypress.json`
@@ -152,6 +157,7 @@ function initCypress(
   options.key = key;
   options.parallel = parallel;
   options.ciBuildId = ciBuildId;
+  options.group = group;
 
   return fromPromise<any>(
     !isWatching || headless ? Cypress.run(options) : Cypress.open(options)
