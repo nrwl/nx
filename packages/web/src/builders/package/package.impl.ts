@@ -6,7 +6,15 @@ import {
 } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
 import { from, Observable, of } from 'rxjs';
-import { map, mergeScan, switchMap, tap } from 'rxjs/operators';
+import {
+  map,
+  mergeScan,
+  switchMap,
+  tap,
+  last,
+  mergeMap,
+  scan
+} from 'rxjs/operators';
 import { runRollup } from './run-rollup';
 import { createBabelConfig as _createBabelConfig } from '../../utils/babel-config';
 import * as autoprefixer from 'autoprefixer';
@@ -42,15 +50,13 @@ export default createBuilder<BundleBuilderOptions & JsonObject>(run);
 
 interface OutputConfig {
   format: rollup.ModuleFormat;
-  esm: boolean;
   extension: string;
   declaration?: boolean;
 }
 
 const outputConfigs: OutputConfig[] = [
-  { format: 'umd', esm: false, extension: 'umd' },
-  { format: 'esm', esm: true, extension: 'esm2015' },
-  { format: 'esm', esm: false, extension: 'esm5' }
+  { format: 'umd', extension: 'umd' },
+  { format: 'esm', extension: 'esm' }
 ];
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
@@ -72,7 +78,7 @@ export function run(
       }
       const options = normalizeBundleOptions(_options, context.workspaceRoot);
       const rollupOptions: rollup.InputOptions[] = outputConfigs.map(
-        ({ format, esm, extension }) => {
+        ({ format, extension }, index) => {
           const parsedTSConfig = ts.readConfigFile(
             options.tsConfig,
             ts.sys.readFile
@@ -83,6 +89,18 @@ export function run(
           updatePaths(dependencies, parsedTSConfig.compilerOptions.paths);
 
           const plugins = [
+            typescript({
+              check: true,
+              tsconfig: options.tsConfig,
+              tsconfigOverride: {
+                compilerOptions: {
+                  rootDir: options.entryRoot,
+                  allowJs: false,
+                  declaration: index === 0,
+                  paths: parsedTSConfig.compilerOptions.paths
+                }
+              }
+            }),
             peerDepsExternal({
               packageJsonPath: options.project
             }),
@@ -95,7 +113,7 @@ export function run(
             localResolve(),
             resolve({ extensions: fileExtensions }),
             babel({
-              ...createBabelConfig(options, options.projectRoot, esm),
+              ...createBabelConfig(options, options.projectRoot),
               extensions: fileExtensions,
               externalHelpers: false,
               exclude: 'node_modules/**'
@@ -103,23 +121,7 @@ export function run(
             commonjs(),
             filesize()
           ];
-          if (esm) {
-            // TS plugin has to come first before types are stripped, otherwise
-            plugins.unshift(
-              typescript({
-                check: true,
-                tsconfig: options.tsConfig,
-                tsconfigOverride: {
-                  compilerOptions: {
-                    rootDir: options.entryRoot,
-                    allowJs: false,
-                    declaration: true,
-                    paths: parsedTSConfig.compilerOptions.paths
-                  }
-                }
-              })
-            );
-          }
+
           const entryFileTmpl = `${options.outputPath}/${context.target.project}.<%= extension %>.js`;
           const rollupConfig = {
             input: options.entryFile,
@@ -166,21 +168,24 @@ export function run(
       } else {
         context.logger.info('Bundling...');
         return from(rollupOptions).pipe(
-          mergeScan(
-            (acc, options) =>
-              runRollup(options).pipe(
-                map(result => {
-                  return {
-                    success: acc.success && result.success
-                  };
-                })
-              ),
+          mergeMap(options => runRollup(options)),
+          scan(
+            (acc, result) => {
+              return {
+                success: acc.success && result.success
+              };
+            },
             { success: true }
           ),
+          last(),
           tap({
-            complete: () => {
-              updatePackageJson(options, context, target, dependencies);
-              context.logger.info('Bundle complete.');
+            next: result => {
+              if (result.success) {
+                updatePackageJson(options, context, target, dependencies);
+                context.logger.info('Bundle complete.');
+              } else {
+                context.logger.error('Bundle failed.');
+              }
             }
           })
         );
@@ -191,12 +196,8 @@ export function run(
 
 // -----------------------------------------------------------------------------
 
-function createBabelConfig(
-  options: BundleBuilderOptions,
-  projectRoot: string,
-  esm: boolean
-) {
-  let babelConfig: any = _createBabelConfig(projectRoot, esm, false);
+function createBabelConfig(options: BundleBuilderOptions, projectRoot: string) {
+  let babelConfig: any = _createBabelConfig(projectRoot, false, false);
   if (options.babelConfig) {
     babelConfig = require(options.babelConfig)(babelConfig, options);
   }
@@ -242,8 +243,7 @@ function updatePackageJson(options, context, target, dependencies) {
   );
   const packageJson = readJsonFile(options.project);
   packageJson.main = entryFileTmpl.replace('<%= extension %>', 'umd');
-  packageJson.module = entryFileTmpl.replace('<%= extension %>', 'esm5');
-  packageJson.es2015 = entryFileTmpl.replace('<%= extension %>', 'esm2015');
+  packageJson.module = entryFileTmpl.replace('<%= extension %>', 'esm');
   packageJson.typings = `./${typingsFile}`;
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
 

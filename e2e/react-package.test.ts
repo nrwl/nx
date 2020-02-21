@@ -79,13 +79,16 @@ forEachCli('nx', cli => {
       const childLib2Output = runCLI(`build ${childLib2}`);
       const parentLibOutput = runCLI(`build ${parentLib}`);
 
-      expect(childLibOutput).toContain(`${childLib}.esm5.js`);
+      expect(childLibOutput).toContain(`${childLib}.esm.js`);
+      expect(childLibOutput).toContain(`${childLib}.umd.js`);
       expect(childLibOutput).toContain(`Bundle complete`);
 
-      expect(childLib2Output).toContain(`${childLib2}.esm5.js`);
+      expect(childLib2Output).toContain(`${childLib2}.esm.js`);
+      expect(childLib2Output).toContain(`${childLib2}.umd.js`);
       expect(childLib2Output).toContain(`Bundle complete`);
 
-      expect(parentLibOutput).toContain(`${parentLib}.esm5.js`);
+      expect(parentLibOutput).toContain(`${parentLib}.esm.js`);
+      expect(parentLibOutput).toContain(`${parentLib}.umd.js`);
       expect(parentLibOutput).toContain(`Bundle complete`);
 
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);

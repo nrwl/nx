@@ -52,11 +52,30 @@ forEachCli(currentCLIName => {
       expect(libTestResults.stdout).toContain('Bundle complete.');
 
       checkFilesExist(
+        `dist/libs/${libName}/package.json`,
         `dist/libs/${libName}/index.d.ts`,
-        `dist/libs/${libName}/${libName}.esm5.js`,
-        `dist/libs/${libName}/${libName}.esm2015.js`,
+        `dist/libs/${libName}/${libName}.esm.js`,
         `dist/libs/${libName}/${libName}.umd.js`
       );
+    }, 120000);
+
+    it('should not create a dist folder if there is an error', async () => {
+      ensureProject();
+      const libName = uniq('lib');
+
+      runCLI(
+        `generate @nrwl/react:lib ${libName} --publishable --no-interactive`
+      );
+
+      const mainPath = `libs/${libName}/src/lib/${libName}.tsx`;
+      updateFile(mainPath, readFile(mainPath) + `\n console.log(a);`); // should error - "a" will be undefined
+
+      await expect(runCLIAsync(`build ${libName}`)).rejects.toThrow(
+        /Bundle failed/
+      );
+      expect(() => {
+        checkFilesExist(`dist/libs/${libName}/package.json`);
+      }).toThrow();
     }, 120000);
 
     it('should generate app with routing', async () => {
