@@ -9,7 +9,7 @@ Storybook is a development environment for UI components. It allows you to brows
 ### Add the Storybook plugin
 
 ```bash
-yarn add @nrwl/storybook
+yarn add --dev @nrwl/storybook
 ```
 
 ### Generating Storybook Configuration
