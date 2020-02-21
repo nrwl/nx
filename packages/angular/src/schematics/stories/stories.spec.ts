@@ -131,6 +131,12 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     }),
     appTree
   );
+  const modulePath = `libs/${libName}/src/lib/${libName}.module.ts`;
+  appTree.overwrite(
+    modulePath,
+    `import * as ButtonExports from './test-button/test-button.component';
+    ${appTree.read(modulePath)}`
+  );
   appTree.overwrite(
     `libs/${libName}/src/lib/test-button/test-button.component.ts`,
     `
