@@ -77,11 +77,12 @@ function addAffectedNodes(
   if (!reversed.nodes[startingProject]) {
     throw new Error(`Invalid project name is detected: "${startingProject}"`);
   }
+  visited.push(startingProject);
   builder.addNode(reversed.nodes[startingProject]);
   const ds = reversed.dependencies[startingProject];
   if (ds) {
     ds.forEach(({ target }) =>
-      addAffectedNodes(target, reversed, builder, [...visited, startingProject])
+      addAffectedNodes(target, reversed, builder, visited)
     );
   }
 }
@@ -93,12 +94,10 @@ function addAffectedDependencies(
   visited: string[]
 ): void {
   if (visited.indexOf(startingProject) > -1) return;
+  visited.push(startingProject);
   if (reversed.dependencies[startingProject]) {
     reversed.dependencies[startingProject].forEach(({ target }) =>
-      addAffectedDependencies(target, reversed, builder, [
-        ...visited,
-        startingProject
-      ])
+      addAffectedDependencies(target, reversed, builder, visited)
     );
     reversed.dependencies[startingProject].forEach(
       ({ type, source, target }) => {
