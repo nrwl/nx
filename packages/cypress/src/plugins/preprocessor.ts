@@ -48,12 +48,7 @@ export function getWebpackConfig(config: any) {
         }
       ]
     },
-    plugins: [
-      new ForkTsCheckerWebpackPlugin({
-        tsconfig: config.env.tsConfig,
-        useTypescriptIncrementalApi: false
-      })
-    ],
+    plugins: [],
     externals: [nodeExternals()]
   };
 }
