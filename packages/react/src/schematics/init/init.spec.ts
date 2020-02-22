@@ -33,42 +33,5 @@ describe('init', () => {
         true
       );
     });
-
-    it('should be set if @nrwl/workspace was set before', async () => {
-      tree = await callRule(
-        updateJsonInTree('workspace.json', json => {
-          json.cli = {
-            defaultCollection: '@nrwl/workspace'
-          };
-
-          return json;
-        }),
-        tree
-      );
-      const result = await runSchematic('init', {}, tree);
-      const workspaceJson = readJsonInTree(result, 'workspace.json');
-      expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/react');
-      expect(workspaceJson.schematics['@nrwl/react'].application.babel).toBe(
-        true
-      );
-    });
-
-    it('should not be set if something else was set before', async () => {
-      tree = await callRule(
-        updateJsonInTree('workspace.json', json => {
-          json.cli = {
-            defaultCollection: '@nrwl/angular'
-          };
-
-          json.schematics = {};
-
-          return json;
-        }),
-        tree
-      );
-      const result = await runSchematic('init', {}, tree);
-      const workspaceJson = readJsonInTree(result, 'workspace.json');
-      expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/angular');
-    });
   });
 });

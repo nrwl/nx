@@ -12,6 +12,7 @@ import {
 } from '../../utils/versions';
 import { updateWorkspace } from '@nrwl/workspace';
 import { JsonObject } from '@angular-devkit/core';
+import { setDefaultCollection } from '@nrwl/workspace/src/utils/rules/workspace';
 
 function addDependencies(): Rule {
   return addDepsToPackageJson(
@@ -33,23 +34,9 @@ function moveDependency(): Rule {
   });
 }
 
-function setDefault(): Rule {
-  return updateWorkspace(workspace => {
-    workspace.extensions.cli = workspace.extensions.cli || {};
-
-    const defaultCollection: string =
-      workspace.extensions.cli &&
-      ((workspace.extensions.cli as JsonObject).defaultCollection as string);
-
-    if (!defaultCollection || defaultCollection === '@nrwl/workspace') {
-      (workspace.extensions.cli as JsonObject).defaultCollection = '@nrwl/web';
-    }
-  });
-}
-
 export default function(schema: Schema) {
   return chain([
-    setDefault(),
+    setDefaultCollection('@nrwl/web'),
     addPackageWithInit('@nrwl/jest'),
     addPackageWithInit('@nrwl/cypress'),
     addDependencies(),

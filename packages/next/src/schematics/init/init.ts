@@ -13,6 +13,7 @@ import {
   zeitNextStylus
 } from '../../utils/versions';
 import { Schema } from './schema';
+import { setDefaultCollection } from '@nrwl/workspace/src/utils/rules/workspace';
 
 export function addDependencies(): Rule {
   return addDepsToPackageJson(
@@ -27,23 +28,9 @@ export function addDependencies(): Rule {
   );
 }
 
-function setDefault(): Rule {
-  return updateWorkspace(workspace => {
-    // Set workspace default collection to 'react' if not already set.
-    workspace.extensions.cli = workspace.extensions.cli || {};
-    const defaultCollection: string =
-      workspace.extensions.cli &&
-      ((workspace.extensions.cli as JsonObject).defaultCollection as string);
-
-    if (!defaultCollection || defaultCollection === '@nrwl/workspace') {
-      (workspace.extensions.cli as JsonObject).defaultCollection = '@nrwl/next';
-    }
-  });
-}
-
 export default function(schema: Schema) {
   return chain([
-    setDefault(),
+    setDefaultCollection('@nrwl/next'),
     addPackageWithInit('@nrwl/jest'),
     addPackageWithInit('@nrwl/cypress'),
     addPackageWithInit('@nrwl/web'),
