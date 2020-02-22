@@ -41,8 +41,12 @@ export function calculateFileChanges(
   readFileAtRevision: (
     f: string,
     r: void | string
-  ) => string = defaultReadFileAtRevision
+  ) => string = defaultReadFileAtRevision,
+  ignore = getIgnoredGlobs()
 ): FileChange[] {
+  if (ignore) {
+    files = files.filter(f => !ignore.ignores(f));
+  }
   return files.map(f => {
     const ext = extname(f);
     const _mtime = mtime(`${appRootPath}/${f}`);
