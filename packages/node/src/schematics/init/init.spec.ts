@@ -1,7 +1,8 @@
 import { Tree } from '@angular-devkit/schematics';
+import { addDepsToPackageJson, readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { callRule, runSchematic } from '../../utils/testing';
+import { nxVersion } from '../../utils/versions';
 
 describe('init', () => {
   let tree: Tree;
@@ -12,10 +13,22 @@ describe('init', () => {
   });
 
   it('should add dependencies', async () => {
+    const existing = 'existing';
+    const existingVersion = '1.0.0';
+    await callRule(
+      addDepsToPackageJson(
+        { '@nrwl/node': nxVersion, [existing]: existingVersion },
+        { [existing]: existingVersion },
+        false
+      ),
+      tree
+    );
     const result = await runSchematic('init', {}, tree);
     const packageJson = readJsonInTree(result, 'package.json');
     expect(packageJson.dependencies['@nrwl/node']).toBeUndefined();
+    expect(packageJson.dependencies[existing]).toBeDefined();
     expect(packageJson.devDependencies['@nrwl/node']).toBeDefined();
+    expect(packageJson.devDependencies[existing]).toBeDefined();
   });
 
   describe('defaultCollection', () => {

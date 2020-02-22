@@ -1,35 +1,27 @@
-import { Rule, chain } from '@angular-devkit/schematics';
+import { chain, Rule } from '@angular-devkit/schematics';
 import {
-  updateJsonInTree,
   addPackageWithInit,
-  formatFiles
+  formatFiles,
+  updateJsonInTree
 } from '@nrwl/workspace';
-import { addDepsToPackageJson } from '@nrwl/workspace';
 import { Schema } from './schema';
 import {
-  nxVersion,
-  documentRegisterElementVersion
+  documentRegisterElementVersion,
+  nxVersion
 } from '../../utils/versions';
-import { updateWorkspace } from '@nrwl/workspace';
-import { JsonObject } from '@angular-devkit/core';
 import { setDefaultCollection } from '@nrwl/workspace/src/utils/rules/workspace';
 
-function addDependencies(): Rule {
-  return addDepsToPackageJson(
-    {
-      'document-register-element': documentRegisterElementVersion
-    },
-    {
-      '@nrwl/web': nxVersion
-    }
-  );
-}
-
-function moveDependency(): Rule {
+function updateDependencies(): Rule {
   return updateJsonInTree('package.json', json => {
-    json.dependencies = json.dependencies || {};
-
     delete json.dependencies['@nrwl/web'];
+    json.dependencies = {
+      ...json.dependencies,
+      'document-register-element': documentRegisterElementVersion
+    };
+    json.devDependencies = {
+      ...json.devDependencies,
+      '@nrwl/web': nxVersion
+    };
     return json;
   });
 }
@@ -39,8 +31,7 @@ export default function(schema: Schema) {
     setDefaultCollection('@nrwl/web'),
     addPackageWithInit('@nrwl/jest'),
     addPackageWithInit('@nrwl/cypress'),
-    addDependencies(),
-    moveDependency(),
+    updateDependencies(),
     formatFiles(schema)
   ]);
 }

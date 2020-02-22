@@ -1,8 +1,8 @@
 import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { readJsonInTree } from '@nrwl/workspace';
-import { updateJsonInTree } from '@nrwl/workspace';
-import { runSchematic, callRule } from '../../utils/testing';
+import { addDepsToPackageJson, readJsonInTree } from '@nrwl/workspace';
+import { callRule, runSchematic } from '../../utils/testing';
+import { reactVersion } from '../../utils/versions';
 
 describe('init', () => {
   let tree: Tree;
@@ -13,6 +13,10 @@ describe('init', () => {
   });
 
   it('should add react dependencies', async () => {
+    await callRule(
+      addDepsToPackageJson({ '@nrwl/react': reactVersion }, {}, false),
+      tree
+    );
     const result = await runSchematic('init', {}, tree);
     const packageJson = readJsonInTree(result, 'package.json');
     expect(packageJson.dependencies['@nrwl/react']).toBeUndefined();

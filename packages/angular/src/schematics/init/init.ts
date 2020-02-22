@@ -1,32 +1,31 @@
 import {
   chain,
-  Rule,
-  Tree,
-  noop,
   externalSchematic,
-  schematic
+  noop,
+  Rule,
+  schematic,
+  Tree
 } from '@angular-devkit/schematics';
 import {
-  readJsonInTree,
   addDepsToPackageJson,
-  updateWorkspace,
   formatFiles,
-  updateJsonInTree
+  readJsonInTree,
+  updateJsonInTree,
+  updateWorkspace
 } from '@nrwl/workspace';
 import {
-  angularVersion,
   angularDevkitVersion,
-  rxjsVersion,
-  jestPresetAngularVersion
+  angularVersion,
+  jestPresetAngularVersion,
+  rxjsVersion
 } from '../../utils/versions';
 import { Schema } from './schema';
-import { UnitTestRunner, E2eTestRunner } from '../../utils/test-runners';
-import { JsonObject } from '@angular-devkit/core';
+import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { setDefaultCollection } from '@nrwl/workspace/src/utils/rules/workspace';
 
-function updateDependencies(): Rule {
-  const deps = {
+const updateDependencies = addDepsToPackageJson(
+  {
     '@angular/animations': angularVersion,
     '@angular/common': angularVersion,
     '@angular/compiler': angularVersion,
@@ -38,16 +37,14 @@ function updateDependencies(): Rule {
     'core-js': '^2.5.4',
     rxjs: rxjsVersion,
     'zone.js': '^0.10.2'
-  };
-  const devDeps = {
+  },
+  {
     '@angular/compiler-cli': angularVersion,
     '@angular/language-service': angularVersion,
     '@angular-devkit/build-angular': angularDevkitVersion,
     codelyzer: '~5.0.1'
-  };
-
-  return addDepsToPackageJson(deps, devDeps);
-}
+  }
+);
 
 export function addUnitTestRunner(
   options: Pick<Schema, 'unitTestRunner'>
@@ -173,7 +170,7 @@ export default function(options: Schema): Rule {
     setDefaults(options),
     // TODO: Remove this when ngcc can be run in parallel
     addPostinstall(),
-    updateDependencies(),
+    updateDependencies,
     addUnitTestRunner(options),
     addE2eTestRunner(options),
     formatFiles()

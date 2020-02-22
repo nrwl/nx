@@ -1,7 +1,9 @@
 import { Tree } from '@angular-devkit/schematics';
-import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
+import { addDepsToPackageJson, readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { callRule, runSchematic } from '../../utils/testing';
+import { runSchematic } from '../../utils/testing';
+import { callRule } from '../../../../cypress/src/utils/testing';
+import { cypressVersion } from '../../../../cypress/src/utils/versions';
 
 describe('init', () => {
   let tree: Tree;
@@ -12,12 +14,25 @@ describe('init', () => {
   });
 
   it('should add dependencies', async () => {
+    const existing = 'existing';
+    const existingVersion = '1.0.0';
+    await callRule(
+      addDepsToPackageJson(
+        { '@nrwl/express': cypressVersion, [existing]: existingVersion },
+        { [existing]: existingVersion },
+        false
+      ),
+      tree
+    );
     const result = await runSchematic('init', {}, tree);
     const packageJson = readJsonInTree(result, 'package.json');
     expect(packageJson.dependencies['@nrwl/express']).toBeUndefined();
     expect(packageJson.devDependencies['@nrwl/express']).toBeDefined();
-    expect(packageJson.dependencies['express']).toBeDefined();
     expect(packageJson.devDependencies['@types/express']).toBeDefined();
+    expect(packageJson.devDependencies[existing]).toBeDefined();
+    expect(packageJson.dependencies['express']).toBeDefined();
+    expect(packageJson.dependencies['@nrwl/express']).toBeUndefined();
+    expect(packageJson.dependencies[existing]).toBeDefined();
   });
 
   describe('defaultCollection', () => {
