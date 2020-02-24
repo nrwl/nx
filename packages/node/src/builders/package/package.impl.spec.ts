@@ -59,6 +59,7 @@ describe('NodeCompileBuilder', () => {
     });
     fsUtility.writeJsonFile.mockImplementation(() => {});
     context = await getMockContext();
+    context.target.target = 'build';
     context.target.project = 'nodelib';
     testOptions = {
       assets: [],

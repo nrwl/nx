@@ -11,26 +11,19 @@ import {
   writeJsonFile
 } from '@nrwl/workspace/src/utils/fileutils';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { getOutputsForTargetAndConfiguration } from '@nrwl/workspace/src/tasks-runner/utils';
 
-function isBuildable(projectGraph: ProjectGraphNode): boolean {
+function isBuildable(target: string, node: ProjectGraphNode): boolean {
   return (
-    projectGraph.data.architect &&
-    projectGraph.data.architect.build &&
-    projectGraph.data.architect.build.builder !== ''
+    node.data.architect &&
+    node.data.architect[target] &&
+    node.data.architect[target].builder !== ''
   );
-}
-
-function getOutputPath(projectGraph: ProjectGraphNode): string {
-  const opts = projectGraph.data.architect.build.options;
-  if (opts && opts.outputPath) {
-    return opts.outputPath;
-  } else {
-    return `dist/${projectGraph.data.root}`;
-  }
 }
 
 export type DependentBuildableProjectNode = {
   name: string;
+  outputs: string[];
   node: ProjectGraphNode;
 };
 
@@ -44,13 +37,21 @@ export function calculateProjectDependencies(
     .map(dependency => {
       const depNode = projGraph.nodes[dependency.target];
 
-      if (depNode.type === ProjectType.lib && isBuildable(depNode)) {
+      if (
+        depNode.type === ProjectType.lib &&
+        isBuildable(context.target.target, depNode)
+      ) {
         const libPackageJson = readJsonFile(
           join(context.workspaceRoot, depNode.data.root, 'package.json')
         );
 
         return {
           name: libPackageJson.name, // i.e. @workspace/mylib
+          outputs: getOutputsForTargetAndConfiguration(
+            context.target.target,
+            context.target.configuration,
+            depNode
+          ),
           node: depNode
         };
       } else {
@@ -69,14 +70,11 @@ export function checkDependentProjectsHaveBeenBuilt(
 
   // verify whether all dependent libraries have been built
   projectDependencies.forEach(dep => {
-    // check whether dependent library has been built => that's necessary
-    const packageJsonPath = join(
-      context.workspaceRoot,
-      getOutputPath(dep.node),
-      'package.json'
+    const paths = dep.outputs.map(p =>
+      join(context.workspaceRoot, p, 'package.json')
     );
 
-    if (!fileExists(packageJsonPath)) {
+    if (!paths.some(fileExists)) {
       depLibsToBuildFirst.push(dep);
     }
   });
@@ -88,7 +86,9 @@ export function checkDependentProjectsHaveBeenBuilt(
       }'s dependencies have not been built yet. Please build these libraries before:
       ${depLibsToBuildFirst.map(x => ` - ${x.node.name}`).join('\n')}
 
-      Try: nx run-many --target build --projects ${context.target.project},...
+      Try: nx run-many --target ${context.target.target} --projects ${
+      context.target.project
+    },...
     `);
 
     return false;
@@ -101,9 +101,9 @@ export function updatePaths(
   dependencies: DependentBuildableProjectNode[],
   paths: { [k: string]: string[] }
 ) {
-  dependencies.forEach(depp => {
-    if (isBuildable(depp.node)) {
-      paths[depp.name] = [getOutputPath(depp.node)];
+  dependencies.forEach(dep => {
+    if (dep.outputs && dep.outputs.length > 0) {
+      paths[dep.name] = dep.outputs;
     }
   });
 }
@@ -114,12 +114,23 @@ export function updatePaths(
  */
 export function updateBuildableProjectPackageJsonDependencies(
   context: BuilderContext,
-  target: ProjectGraphNode,
+  node: ProjectGraphNode,
   dependencies: DependentBuildableProjectNode[]
 ) {
-  // if we have dependencies, update the `dependencies` section of the package.json
-  const packageJsonPath = `${getOutputPath(target)}/package.json`;
-  const packageJson = readJsonFile(packageJsonPath);
+  const outputs = getOutputsForTargetAndConfiguration(
+    context.target.target,
+    context.target.configuration,
+    node
+  );
+
+  const packageJsonPath = `${outputs[0]}/package.json`;
+  let packageJson;
+  try {
+    packageJson = readJsonFile(packageJsonPath);
+  } catch (e) {
+    // cannot find or invalid package.json
+    return;
+  }
 
   packageJson.dependencies = packageJson.dependencies || {};
 
@@ -130,16 +141,24 @@ export function updateBuildableProjectPackageJsonDependencies(
       !hasDependency(packageJson, 'devDependencies', entry.name) &&
       !hasDependency(packageJson, 'peerDependencies', entry.name)
     ) {
-      // read the lib version (should we read the one from the dist?)
-      const depPackageJsonPath = join(
-        context.workspaceRoot,
-        getOutputPath(entry.node),
-        'package.json'
-      );
-      const depPackageJson = readJsonFile(depPackageJsonPath);
+      try {
+        const outputs = getOutputsForTargetAndConfiguration(
+          context.target.target,
+          context.target.configuration,
+          entry.node
+        );
+        const depPackageJsonPath = join(
+          context.workspaceRoot,
+          outputs[0],
+          'package.json'
+        );
+        const depPackageJson = readJsonFile(depPackageJsonPath);
 
-      packageJson.dependencies[entry.name] = depPackageJson.version;
-      updatePackageJson = true;
+        packageJson.dependencies[entry.name] = depPackageJson.version;
+        updatePackageJson = true;
+      } catch (e) {
+        // skip if cannot find package.json
+      }
     }
   });
 
