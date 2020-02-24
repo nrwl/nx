@@ -70,19 +70,23 @@ export class TaskOrchestrator {
   private async splitTasksIntoCachedAndNotCached(
     tasks: Task[]
   ): Promise<{ cached: TaskWithCachedResult[]; rest: Task[] }> {
-    const cached: TaskWithCachedResult[] = [];
-    const rest: Task[] = [];
-    await Promise.all(
-      tasks.map(async task => {
-        const cachedResult = await this.cache.get(task);
-        if (cachedResult) {
-          cached.push({ task, cachedResult });
-        } else {
-          rest.push(task);
-        }
-      })
-    );
-    return { cached, rest };
+    if (this.options.skipNxCache || this.options.skipNxCache === undefined) {
+      return { cached: [], rest: tasks };
+    } else {
+      const cached: TaskWithCachedResult[] = [];
+      const rest: Task[] = [];
+      await Promise.all(
+        tasks.map(async task => {
+          const cachedResult = await this.cache.get(task);
+          if (cachedResult) {
+            cached.push({ task, cachedResult });
+          } else {
+            rest.push(task);
+          }
+        })
+      );
+      return { cached, rest };
+    }
   }
 
   private applyCachedResults(tasks: TaskWithCachedResult[]) {

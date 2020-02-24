@@ -76,6 +76,12 @@ Produces a plain output for affected:apps and affected:libs
 
 This is the name of the tasks runner configured in nx.json
 
+### skip-nx-cache
+
+Default: `false`
+
+Rerun the tasks even when the results are available in the cache
+
 ### uncommitted
 
 Uncommitted changes
