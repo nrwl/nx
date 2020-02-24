@@ -30,7 +30,9 @@ const dummyOptions: NxArgs = {
   withDeps: false,
   'with-deps': false,
   projects: [],
-  select: ''
+  select: '',
+  skipNxCache: false,
+  'skip-nx-cache': false
 } as any;
 
 const nxSpecific = Object.keys(dummyOptions);
@@ -60,6 +62,8 @@ export interface NxArgs {
   'with-deps'?: boolean;
   projects?: string[];
   select?: string;
+  skipNxCache?: boolean;
+  'skip-nx-cache'?: boolean;
 }
 
 const ignoreArgs = ['$0', '_'];

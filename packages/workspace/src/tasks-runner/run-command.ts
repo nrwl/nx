@@ -21,7 +21,7 @@ export async function runCommand<T extends RunArgs>(
 ) {
   reporter.beforeRun(projectsToRun.map(p => p.name), nxArgs, overrides);
 
-  const { tasksRunner, tasksOptions } = getRunner(nxArgs.runner, nxJson, {
+  const { tasksRunner, tasksOptions } = getRunner(nxArgs, nxJson, {
     ...nxArgs,
     ...overrides
   });
@@ -125,13 +125,14 @@ function getId({
 }
 
 export function getRunner(
-  runner: string | undefined,
+  nxArgs: NxArgs,
   nxJson: NxJson,
   overrides: any
 ): {
   tasksRunner: TasksRunner;
   tasksOptions: unknown;
 } {
+  let runner = nxArgs.runner;
   if (!nxJson.tasksRunnerOptions) {
     const t = require('./default-tasks-runner');
     return {
@@ -166,7 +167,8 @@ export function getRunner(
       tasksRunner,
       tasksOptions: {
         ...nxJson.tasksRunnerOptions[runner].options,
-        ...overrides
+        ...overrides,
+        skipNxCache: nxArgs.skipNxCache
       }
     };
   } else {

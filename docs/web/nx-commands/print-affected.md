@@ -96,6 +96,12 @@ This is the name of the tasks runner configured in nx.json
 
 ### select
 
+### skip-nx-cache
+
+Default: `false`
+
+Rerun the tasks even when the results are available in the cache
+
 ### uncommitted
 
 Uncommitted changes

@@ -250,6 +250,12 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       describe: 'This is the name of the tasks runner configured in nx.json',
       type: 'string'
     })
+    .options('skip-nx-cache', {
+      describe:
+        'Rerun the tasks even when the results are available in the cache',
+      type: 'boolean',
+      default: false
+    })
     .options('configuration', {
       describe:
         'This is the configuration to use when performing tasks on projects',
@@ -290,6 +296,12 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
     .options('runner', {
       describe: 'This is the name of the tasks runner configured in nx.json',
       type: 'string'
+    })
+    .options('skip-nx-cache', {
+      describe:
+        'Rerun the tasks even when the results are available in the cache',
+      type: 'boolean',
+      default: false
     })
     .options('configuration', {
       describe:
