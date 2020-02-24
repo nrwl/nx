@@ -15,6 +15,8 @@
     "update-playground": "./scripts/update-playground.sh",
     "e2e-ci1": "./scripts/e2e-ci1.sh",
     "e2e-ci2": "./scripts/e2e-ci2.sh",
+    "e2e-ci3": "./scripts/e2e-ci3.sh",
+    "e2e-ci4": "./scripts/e2e-ci4.sh",
     "test-create-nx-workspace": "./scripts/test-create-nx-workspace.sh",
     "format": "./scripts/format.sh",
     "linknpm": "./scripts/link.sh",

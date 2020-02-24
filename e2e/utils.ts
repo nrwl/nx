@@ -182,9 +182,7 @@ export function ensureProject(): void {
 }
 
 export function supportUi() {
-  // TEMPORARY TURN IT OFF TO MAKE MASTER GREEN
-  return false;
-  // return !process.env.NO_CHROME;
+  return !process.env.NO_CHROME;
 }
 
 export function copyMissingPackages(): void {
