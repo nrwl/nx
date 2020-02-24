@@ -36,7 +36,7 @@ export async function runCommand<T extends RunArgs>(
   );
 
   if (tasksRunner !== require('./default-tasks-runner').defaultTasksRunner) {
-    const hasher = new Hasher(projectGraph, nxJson);
+    const hasher = new Hasher(projectGraph, nxJson, tasksOptions);
     await Promise.all(
       tasks.map(async t => {
         t.hash = await hasher.hash(t);
