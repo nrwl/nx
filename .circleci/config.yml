@@ -80,6 +80,20 @@ jobs:
       - run:
           name: Nx CLI E2E Tests Part 2
           command: yarn e2e-ci2 nx
+  e2e-nx-3:
+    executor: default
+    steps:
+      - setup
+      - run:
+          name: Nx CLI E2E Tests Part 3
+          command: yarn e2e-ci3 nx
+  e2e-nx-4:
+    executor: default
+    steps:
+      - setup
+      - run:
+          name: Nx CLI E2E Tests Part 4
+          command: yarn e2e-ci4 nx
   e2e-ng-1:
     executor: default
     steps:
@@ -94,6 +108,20 @@ jobs:
       - run:
           name: Angular CLI E2E Tests Part 2
           command: yarn e2e-ci2 angular
+  e2e-ng-3:
+    executor: default
+    steps:
+      - setup
+      - run:
+          name: Angular CLI E2E Tests Part 3
+          command: yarn e2e-ci3 angular
+  e2e-ng-4:
+    executor: default
+    steps:
+      - setup
+      - run:
+          name: Angular CLI E2E Tests Part 4
+          command: yarn e2e-ci4 angular
 
 workflows:
   version: 2.1
@@ -109,9 +137,21 @@ workflows:
       - e2e-nx-2:
           requires:
             - install
+      - e2e-nx-3:
+          requires:
+            - install
+      - e2e-nx-4:
+          requires:
+            - install
       - e2e-ng-1:
           requires:
             - install
       - e2e-ng-2:
+          requires:
+            - install
+      - e2e-ng-3:
+          requires:
+            - install
+      - e2e-ng-4:
           requires:
             - install
