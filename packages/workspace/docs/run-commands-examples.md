@@ -1,12 +1,3 @@
-# run-commands
-
-Run any custom commands with Nx
-
-Builder properties can be configured in workspace.json when defining the builder, or when invoking it.
-Read more about how to use builders and the CLI here: https://nx.dev/web/guides/cli.
-
-## Examples
-
 `workspace.json`:
 
 ```json
@@ -29,7 +20,7 @@ Read more about how to use builders and the CLI here: https://nx.dev/web/guides/
 ```
 
 ```bash
-nx run frontend:ls-project-root
+<%= cli %> run frontend:ls-project-root
 ```
 
 ##### Chaining commands, interpolating args and setting the cwd
@@ -68,7 +59,7 @@ By setting the `cwd` option, each command will run in the `apps/frontend` folder
 We run the above with:
 
 ```bash
-nx run frontend:create-script --args="--name=example"
+<%= cli %> run frontend:create-script --args="--name=example"
 ```
 
 Notice the `--args="--name=example"` syntax: we can send custom arguments that will be interpolated into our commands via `{args.name}`
@@ -90,7 +81,7 @@ Normally, `run-commands` considers the commands done when all of them have finis
 ```
 
 ```bash
-nx run frontend:finish-when-ready
+<%= cli %> run frontend:finish-when-ready
 ```
 
 The above command will finish immediately, instead of waiting for 5 seconds.
@@ -138,61 +129,3 @@ nx affected --target=generate-docs
     }
 }
 ```
-
-## Properties
-
-### args
-
-Type: `string`
-
-Extra arguments. You can pass them as follows: ng run project:target --args='--wait=100'. You can then use {args.wait} syntax to interpolate them in the workspace config file. See example [above](#chaining-commands-interpolating-args-and-setting-the-cwd)
-
-### color
-
-Default: `false`
-
-Type: `boolean`
-
-Use colors when showing output of command
-
-### commands
-
-Type: `array` of `object`
-
-#### command
-
-Type: `string`
-
-Command to run in child process
-
-### cwd
-
-Type: `string`
-
-Current working directory of the commands.
-
-### envFile
-
-Type: `string`
-
-You may specify a custom .env file path
-
-### outputPath
-
-Type: `string`
-
-Tells Nx where the files will be created
-
-### parallel
-
-Default: `true`
-
-Type: `boolean`
-
-Run commands in parallel
-
-### readyWhen
-
-Type: `string`
-
-String to appear in stdout or stderr that indicates that the task is done. This option can only be used when parallel is set to true. If not specified, the task is done when all the child processes complete.
