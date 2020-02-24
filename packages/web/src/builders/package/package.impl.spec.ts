@@ -63,6 +63,7 @@ describe('WebPackagebuilder', () => {
           success: true
         });
       });
+      spyOn(context.logger, 'info');
 
       const result = await impl.run(testOptions, context).toPromise();
 
@@ -79,17 +80,13 @@ describe('WebPackagebuilder', () => {
           },
           {
             format: 'esm',
-            file: '/root/dist/ui/example.esm2015.js',
-            name: 'Example'
-          },
-          {
-            format: 'esm',
-            file: '/root/dist/ui/example.esm5.js',
+            file: '/root/dist/ui/example.esm.js',
             name: 'Example'
           }
         ])
       );
       expect(result.success).toBe(true);
+      expect(context.logger.info).toHaveBeenCalledWith('Bundle complete.');
     });
 
     it('should return failure when one run fails', async () => {
@@ -99,10 +96,12 @@ describe('WebPackagebuilder', () => {
           success: count++ === 0
         });
       });
-
+      spyOn(context.logger, 'error');
       const result = await impl.run(testOptions, context).toPromise();
 
       expect(result.success).toBe(false);
+      expect(f.writeJsonFile).not.toHaveBeenCalled();
+      expect(context.logger.error).toHaveBeenCalledWith('Bundle failed.');
     });
 
     it('updates package.json', async () => {
@@ -111,7 +110,6 @@ describe('WebPackagebuilder', () => {
           success: true
         });
       });
-
       await impl.run(testOptions, context).toPromise();
 
       expect(f.writeJsonFile).toHaveBeenCalled();
@@ -120,8 +118,7 @@ describe('WebPackagebuilder', () => {
       expect(content).toMatchObject({
         name: 'example',
         main: './example.umd.js',
-        module: './example.esm5.js',
-        es2015: './example.esm2015.js',
+        module: './example.esm.js',
         typings: './index.d.ts'
       });
     });
