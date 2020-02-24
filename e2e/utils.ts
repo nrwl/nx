@@ -241,11 +241,10 @@ export function copyMissingPackages(): void {
 
     // For testing web bundle
     'rollup',
+    '@rollup',
     'rollup-plugin-babel',
-    'rollup-plugin-commonjs',
     'rollup-plugin-filesize',
     'rollup-plugin-local-resolve',
-    'rollup-plugin-node-resolve',
     'rollup-plugin-peer-deps-external',
     'rollup-plugin-postcss',
     'rollup-plugin-typescript2',
@@ -284,7 +283,6 @@ export function copyMissingPackages(): void {
     'tree-kill',
     'speed-measure-webpack-plugin',
     'webpack-merge',
-    'istanbul-instrumenter-loader',
     'semver',
 
     'css-loader',
@@ -467,6 +465,15 @@ export function checkFilesExist(...expectedFiles: string[]) {
   expectedFiles.forEach(f => {
     const ff = f.startsWith('/') ? f : tmpProjPath(f);
     if (!exists(ff)) {
+      throw new Error(`File '${ff}' does not exist`);
+    }
+  });
+}
+
+export function checkFilesDoNotExist(...expectedFiles: string[]) {
+  expectedFiles.forEach(f => {
+    const ff = f.startsWith('/') ? f : tmpProjPath(f);
+    if (exists(ff)) {
       throw new Error(`File '${ff}' does not exist`);
     }
   });

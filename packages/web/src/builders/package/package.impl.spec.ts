@@ -1,4 +1,4 @@
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { join } from 'path';
 
 import { workspaces } from '@angular-devkit/core';
@@ -57,7 +57,7 @@ describe('WebPackagebuilder', () => {
   });
 
   describe('run', () => {
-    it('should call runRollup with esm, cjs, and umd', async () => {
+    it('should call runRollup with esm and umd', async () => {
       runRollup = spyOn(rr, 'runRollup').and.callFake(() => {
         return of({
           success: true
@@ -68,35 +68,17 @@ describe('WebPackagebuilder', () => {
       const result = await impl.run(testOptions, context).toPromise();
 
       expect(runRollup).toHaveBeenCalled();
-      expect(runRollup.calls.allArgs().map(x => x[0].output.format)).toEqual(
+      expect(runRollup.calls.allArgs()[0][0].output.map(o => o.format)).toEqual(
         expect.arrayContaining(['esm', 'umd'])
-      );
-      expect(runRollup.calls.allArgs().map(x => x[0].output)).toEqual(
-        expect.arrayContaining([
-          {
-            format: 'umd',
-            file: '/root/dist/ui/example.umd.js',
-            name: 'Example'
-          },
-          {
-            format: 'esm',
-            file: '/root/dist/ui/example.esm.js',
-            name: 'Example'
-          }
-        ])
       );
       expect(result.success).toBe(true);
       expect(context.logger.info).toHaveBeenCalledWith('Bundle complete.');
     });
 
-    it('should return failure when one run fails', async () => {
-      let count = 0;
-      runRollup = spyOn(rr, 'runRollup').and.callFake(() => {
-        return of({
-          success: count++ === 0
-        });
-      });
+    it('should return failure when rollup fails', async () => {
+      runRollup = spyOn(rr, 'runRollup').and.callFake(() => throwError('Oops'));
       spyOn(context.logger, 'error');
+
       const result = await impl.run(testOptions, context).toPromise();
 
       expect(result.success).toBe(false);
