@@ -181,6 +181,7 @@ The scope must be one of the following:
 - core - anything Nx core specific
 - docs - anything related to docs infrastructure
 - nextjs - anything Next specific
+- nest - anything Nest specific
 - node - anything Node specific
 - react - anything React specific
 - storybook - anything Storybook specific
