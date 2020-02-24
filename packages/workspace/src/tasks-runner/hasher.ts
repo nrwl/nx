@@ -3,37 +3,69 @@ import { NxJson } from '../core/shared-interfaces';
 import { Task } from './tasks-runner';
 import { statSync } from 'fs';
 import { rootWorkspaceFileNames } from '../core/file-utils';
+import { execSync } from 'child_process';
 
 const hasha = require('hasha');
 
 export class Hasher {
   static version = '1.0';
   implicitDependencies: Promise<string>;
+  runtimeInputs: Promise<string>;
   fileHashes = new FileHashes();
   projectHashes = new ProjectHashes(this.projectGraph, this.fileHashes);
 
   constructor(
     private readonly projectGraph: ProjectGraph,
-    private readonly nxJson: NxJson
+    private readonly nxJson: NxJson,
+    private readonly options: any
   ) {}
 
   async hash(task: Task): Promise<string> {
-    const hash = await this.projectHashes.hashProject(task.target.project, [
-      task.target.project
+    const args = [
+      task.target.project || '',
+      task.target.target || '',
+      task.target.configuration || '',
+      JSON.stringify(task.overrides)
+    ];
+
+    const values = await Promise.all([
+      this.projectHashes.hashProject(task.target.project, [
+        task.target.project
+      ]),
+      this.implicitDepsHash(),
+      this.runtimeInputsHash()
     ]);
-    const implicits = await this.implicitDepsHash();
-    return hasha(
-      [
-        Hasher.version,
-        task.target.project || '',
-        task.target.target || '',
-        task.target.configuration || '',
-        JSON.stringify(task.overrides),
-        implicits,
-        hash
-      ],
-      { algorithm: 'sha256' }
-    );
+
+    return hasha([Hasher.version, ...args, ...values], { algorithm: 'sha256' });
+  }
+
+  private async runtimeInputsHash() {
+    if (this.runtimeInputs) return this.runtimeInputs;
+
+    const inputs =
+      this.options && this.options.runtimeCacheInputs
+        ? this.options.runtimeCacheInputs
+        : [];
+    if (inputs.length > 0) {
+      try {
+        const values = await Promise.all(
+          inputs.map(async i =>
+            execSync(i)
+              .toString()
+              .trim()
+          )
+        );
+        this.runtimeInputs = hasha(values, { algorithm: 'sha256' });
+      } catch (e) {
+        throw new Error(
+          `Nx failed to execute runtimeCacheInputs defined in nx.json failed:\n${e.message}`
+        );
+      }
+    } else {
+      this.runtimeInputs = Promise.resolve('');
+    }
+
+    return this.runtimeInputs;
   }
 
   private async implicitDepsHash() {

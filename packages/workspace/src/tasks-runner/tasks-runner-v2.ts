@@ -29,6 +29,7 @@ export interface DefaultTasksRunnerOptions {
   parallel?: boolean;
   maxParallel?: number;
   cacheableOperations?: string[];
+  runtimeCacheInputs?: string[];
   cacheDirectory?: string;
   remoteCache?: RemoteCache;
   lifeCycle?: LifeCycle;

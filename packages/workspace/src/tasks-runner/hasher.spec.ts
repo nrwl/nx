@@ -1,4 +1,5 @@
 import { Hasher } from './hasher';
+
 const hasha = require('hasha');
 const fs = require('fs');
 jest.mock('hasha');
@@ -30,7 +31,10 @@ describe('Hasher', () => {
           proj: []
         }
       },
-      {} as any
+      {} as any,
+      {
+        runtimeCacheInputs: ['echo runtime123', 'echo runtime456']
+      }
     );
 
     const hash = await hasher.hash({
@@ -44,8 +48,37 @@ describe('Hasher', () => {
     expect(hash).toContain('prop-value'); //overrides
     expect(hash).toContain('proj'); //project
     expect(hash).toContain('build'); //target
+    expect(hash).toContain('runtime123'); //target
+    expect(hash).toContain('runtime456'); //target
 
     done();
+  });
+
+  it('should throw an error when failed to execute runtimeCacheInputs', async () => {
+    const hasher = new Hasher(
+      {
+        nodes: {},
+        dependencies: {}
+      },
+      {} as any,
+      {
+        runtimeCacheInputs: ['boom']
+      }
+    );
+
+    try {
+      await hasher.hash({
+        target: { project: 'proj', target: 'build' },
+        id: 'proj-build',
+        overrides: {}
+      });
+      fail('Should not be here');
+    } catch (e) {
+      expect(e.message).toContain(
+        'Nx failed to execute runtimeCacheInputs defined in nx.json failed:'
+      );
+      expect(e.message).toContain('boom: not found');
+    }
   });
 
   it('should hash when circular dependencies', async done => {
@@ -70,7 +103,8 @@ describe('Hasher', () => {
           projb: [{ source: 'projb', target: 'proja', type: 'static' }]
         }
       },
-      {} as any
+      {} as any,
+      {}
     );
 
     const hasha = await hasher.hash({
@@ -119,7 +153,8 @@ describe('Hasher', () => {
         },
         dependencies: {}
       },
-      {} as any
+      {} as any,
+      {}
     );
 
     const hash = await hasher.hash({
