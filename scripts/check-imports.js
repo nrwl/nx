@@ -28,10 +28,6 @@ function check() {
   const exceptions = [
     'packages/create-nx-workspace/bin/create-nx-workspace.ts',
     'packages/create-nx-plugin/bin/create-nx-plugin.ts',
-    'packages/web/src/builders/build/build.impl.ts',
-    'packages/web/src/builders/build/build.impl.spec.ts',
-    'packages/web/src/utils/web.config.ts',
-    'packages/web/src/utils/web.config.spec.ts',
     'packages/workspace/src/command-line/affected.ts',
     'packages/workspace/src/core/file-utils.ts',
     'packages/workspace/src/schematics/preset/preset.ts',
