@@ -57,7 +57,7 @@ describe('AngularLibraryWebBuildBuilder', () => {
 
     context.target = {
       project: 'buildable-parent',
-      target: null
+      target: 'build'
     };
 
     testOptions = {
