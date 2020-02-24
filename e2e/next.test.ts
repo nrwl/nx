@@ -16,9 +16,7 @@ forEachCli('nx', () => {
       ensureProject();
       const appName = uniq('app');
 
-      runCLI(
-        `generate @nrwl/next:app ${appName} --no-interactive --linter=eslint`
-      );
+      runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
 
       const proxyConf = {
         '/external-api': {
@@ -81,9 +79,7 @@ forEachCli('nx', () => {
       const appName = uniq('app');
       const libName = uniq('lib');
 
-      runCLI(
-        `generate @nrwl/next:app ${appName} --no-interactive --linter=eslint`
-      );
+      runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
 
       runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
 
@@ -111,9 +107,7 @@ module.exports = {
       const appName = uniq('app');
       const libName = uniq('lib');
 
-      runCLI(
-        `generate @nrwl/next:app ${appName} --no-interactive --linter=eslint`
-      );
+      runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
       runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
 
       const mainPath = `apps/${appName}/pages/index.tsx`;
@@ -138,9 +132,7 @@ module.exports = {
       const tsLibName = uniq('tslib');
       const tsxLibName = uniq('tsxlib');
 
-      runCLI(
-        `generate @nrwl/next:app ${appName} --no-interactive --linter=eslint`
-      );
+      runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
       runCLI(`generate @nrwl/react:lib ${tsxLibName} --no-interactive`);
       runCLI(`generate @nrwl/workspace:lib ${tsLibName} --no-interactive`);
 
@@ -191,6 +183,26 @@ module.exports = {
       );
 
       await checkApp(appName, { checkLint: true });
+    }, 120000);
+
+    it('should support --style=styled-components', async () => {
+      const appName = uniq('app');
+
+      runCLI(
+        `generate @nrwl/next:app ${appName} --no-interactive --style=styled-components`
+      );
+
+      await checkApp(appName, { checkLint: false });
+    }, 120000);
+
+    it('should support --style=@emotion/styled', async () => {
+      const appName = uniq('app');
+
+      runCLI(
+        `generate @nrwl/next:app ${appName} --no-interactive --style=@emotion/styled`
+      );
+
+      await checkApp(appName, { checkLint: false });
     }, 120000);
   });
 });
