@@ -6,15 +6,7 @@ import {
 } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
 import { from, Observable, of } from 'rxjs';
-import {
-  map,
-  mergeScan,
-  switchMap,
-  tap,
-  last,
-  mergeMap,
-  scan
-} from 'rxjs/operators';
+import { switchMap, tap, last, mergeMap, catchError } from 'rxjs/operators';
 import { runRollup } from './run-rollup';
 import { createBabelConfig as _createBabelConfig } from '../../utils/babel-config';
 import * as autoprefixer from 'autoprefixer';
@@ -169,14 +161,10 @@ export function run(
         context.logger.info('Bundling...');
         return from(rollupOptions).pipe(
           mergeMap(options => runRollup(options)),
-          scan(
-            (acc, result) => {
-              return {
-                success: acc.success && result.success
-              };
-            },
-            { success: true }
-          ),
+          catchError(e => {
+            console.error(e);
+            return of({ success: false });
+          }),
           last(),
           tap({
             next: result => {
