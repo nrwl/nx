@@ -107,6 +107,13 @@ describe('lib', () => {
           '})\n' +
           'export class MyLibModule {}\n'
       );
+
+      const barrel = getFileContent(tree, 'libs/my-lib/src/index.ts');
+      expect(barrel).toEqual(
+        "export * from './lib/my-lib.module';" +
+          "\nexport * from './lib/my-lib.service';" +
+          "\nexport * from './lib/my-lib.controller';\n"
+      );
     });
 
     it('should update nx.json', async () => {

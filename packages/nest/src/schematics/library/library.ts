@@ -22,9 +22,14 @@ import {
   toFileName,
   updateJsonInTree,
   updateWorkspaceInTree,
-  getNpmScope
+  getNpmScope,
+  insert,
+  addGlobal
 } from '@nrwl/workspace';
 import { Schema } from './schema';
+import * as path from 'path';
+import * as ts from '@schematics/angular/third_party/github.com/Microsoft/TypeScript/lib/typescript';
+import { RemoveChange } from '@nrwl/workspace/src/utils/ast-utils';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -42,6 +47,7 @@ export default function(schema: NormalizedSchema): Rule {
     return chain([
       externalSchematic('@nrwl/workspace', 'lib', schema),
       createFiles(options),
+      addExportsToBarrelFile(options),
       updateTsConfig(options),
       addProject(options),
       formatFiles(options)
@@ -75,6 +81,45 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   };
 
   return normalized;
+}
+
+function addExportsToBarrelFile(options: NormalizedSchema): Rule {
+  return (host: Tree) => {
+    const indexFilePath = `${options.projectRoot}/src/index.ts`;
+    const buffer = host.read(indexFilePath);
+    if (!!buffer) {
+      const indexSource = buffer!.toString('utf-8');
+      const indexSourceFile = ts.createSourceFile(
+        indexFilePath,
+        indexSource,
+        ts.ScriptTarget.Latest,
+        true
+      );
+
+      insert(host, indexFilePath, [
+          new RemoveChange(indexFilePath, 0, 'export * from \'./lib/my-lib\';'),
+        ...addGlobal(
+          indexSourceFile,
+          indexFilePath,
+          `export * from './lib/${options.fileName}.module';`
+        ),
+        ...(options.service
+          ? addGlobal(
+              indexSourceFile,
+              indexFilePath,
+              `export * from './lib/${options.fileName}.service';`
+            )
+          : []),
+        ...(options.controller
+          ? addGlobal(
+              indexSourceFile,
+              indexFilePath,
+              `export * from './lib/${options.fileName}.controller';`
+            )
+          : [])
+      ]);
+    }
+  };
 }
 
 function createFiles(options: NormalizedSchema): Rule {
