@@ -88,7 +88,8 @@ export default function(schema: Schema): Rule {
         skipTests: options.unitTestRunner === 'none',
         export: true,
         routing: options.routing,
-        js: options.js
+        js: options.js,
+        pascalCaseFiles: options.pascalCaseFiles
       }),
       updateLibPackageNpmScope(options),
       updateAppRoutes(options, context),
