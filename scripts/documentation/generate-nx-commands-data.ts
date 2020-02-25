@@ -358,14 +358,14 @@ const examples = {
     }
   ]
 };
-console.log('Generating npmscript Documentation');
+console.log('Generating Nx Commands Documentation');
 Promise.all(
   ['web', 'angular', 'react'].map(async framework => {
     const commandsOutputDirectory = path.join(
       __dirname,
       '../../docs/',
       framework,
-      'api-workspace/npmscripts'
+      'nx-commands'
     );
     fs.removeSync(commandsOutputDirectory);
     function getCommands(command) {
@@ -376,15 +376,15 @@ Promise.all(
       const builderDescriptions = builder.getUsageInstance().getDescriptions();
       const builderDefaultOptions = builder.getOptions().default;
       return {
-        command: command['original'],
+        command: name,
         description: command['description'],
         options:
-          Object.keys(builderDescriptions).map(name => ({
-            command: '--'.concat(name),
-            description: builderDescriptions[name]
-              ? builderDescriptions[name].replace('__yargsString__:', '')
+          Object.keys(builderDescriptions).map(key => ({
+            command: '--'.concat(key),
+            description: builderDescriptions[key]
+              ? builderDescriptions[key].replace('__yargsString__:', '')
               : '',
-            default: builderDefaultOptions[name]
+            default: builderDefaultOptions[key]
           })) || null
       };
     }
@@ -446,12 +446,11 @@ Promise.all(
     }
 
     // TODO: Try to add option's type, examples, and group?
-    // TODO: split one command per page / Create an index
-    const npmscripts = getCommands(commandsObject);
+    const nxCommands = getCommands(commandsObject);
     await Promise.all(
-      Object.keys(npmscripts)
+      Object.keys(nxCommands)
         .filter(name => !name.startsWith('run') && !name.startsWith('generate'))
-        .map(name => parseCommandInstance(name, npmscripts[name]))
+        .map(name => parseCommandInstance(name, nxCommands[name]))
         .map(command => generateMarkdown(command))
         .map(templateObject =>
           generateMarkdownFile(commandsOutputDirectory, templateObject)
@@ -459,5 +458,5 @@ Promise.all(
     );
   })
 ).then(() => {
-  console.log('Finished generating npmscripts Documentation');
+  console.log('Finished generating Nx Commands Documentation');
 });
