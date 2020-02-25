@@ -47,6 +47,11 @@
         }
       ]
     },
+    "docsMode": {
+      "type": "boolean",
+      "description": "Build a documentation-only site using addon-docs.",
+      "default": false
+    },
     "quiet": {
       "type": "boolean",
       "description": "Suppress verbose build output.",

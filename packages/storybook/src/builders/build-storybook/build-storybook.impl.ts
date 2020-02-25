@@ -27,6 +27,8 @@ export interface StorybookBuilderOptions extends JsonObject {
   uiFramework: string;
   config: StorybookConfig;
   quiet?: boolean;
+  outputPath?: string;
+  docsMode?: boolean;
 }
 
 try {
@@ -85,8 +87,8 @@ async function storybookOptionMapper(
     configDir: storybookConfig,
     ...frameworkOptions,
     frameworkPresets: [...(frameworkOptions.frameworkPresets || [])],
-
-    watch: false
+    watch: false,
+    docsMode: builderOptions.docsMode
   };
   optionsWithFramework.config;
   return optionsWithFramework;
