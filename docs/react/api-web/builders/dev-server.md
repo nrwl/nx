@@ -35,6 +35,18 @@ Type: `boolean`
 
 Whether to reload the page on change, using live-reload.
 
+### maxWorkers
+
+Type: `number`
+
+Number of workers to use for type checking.
+
+### memoryLimit
+
+Type: `number`
+
+Memory limit for type checking service process in MB.
+
 ### open
 
 Default: `false`

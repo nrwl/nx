@@ -52,6 +52,14 @@
     "allowedHosts": {
       "type": "string",
       "description": "This option allows you to whitelist services that are allowed to access the dev server."
+    },
+    "memoryLimit": {
+      "type": "number",
+      "description": "Memory limit for type checking service process in MB."
+    },
+    "maxWorkers": {
+      "type": "number",
+      "description": "Number of workers to use for type checking."
     }
   }
 }
