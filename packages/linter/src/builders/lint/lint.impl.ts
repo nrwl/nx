@@ -1,44 +1,139 @@
-import {
-  BuilderContext,
-  BuilderOutput,
-  createBuilder
-} from '@angular-devkit/architect';
-import { from, Observable } from 'rxjs';
-import { concatMap } from 'rxjs/operators';
-
-function run(options: any, context: BuilderContext): Observable<BuilderOutput> {
-  if (options.linter === 'eslint') {
-    delete options.linter;
-    options.eslintConfig = options.config;
-    delete options.config;
-    // Use whatever the default formatter is
-    delete options.format;
-    return from(
-      context.scheduleBuilder('@angular-eslint/builder:lint', options, {
-        logger: patchedLogger(context)
-      })
-    ).pipe(concatMap(r => r.output));
-  }
-
+import { createBuilder } from '@angular-devkit/architect';
+import { CLIEngine } from 'eslint';
+import { writeFileSync } from 'fs';
+import * as path from 'path';
+import { Schema } from './schema';
+import { BuilderContext } from '@angular-devkit/architect';
+import { createProgram } from './utility/ts-utils';
+import { lint, loadESLint } from './utility/eslint-utils';
+/**
+ * Adapted from @angular-eslint/builder source
+ */
+async function run(options: Schema, context: BuilderContext): Promise<any> {
   if (options.linter === 'tslint') {
     throw new Error(
       `'tslint' option is no longer supported. Update your angular.json to use "@angular-eslint/builder:lint" builder directly.`
     );
   }
 
-  throw new Error(
-    `"${options.linter}" is not a supported linter option: use either eslint or tslint`
-  );
-}
+  const systemRoot = context.workspaceRoot;
+  process.chdir(context.currentDirectory);
+  const projectName = (context.target && context.target.project) || '<???>';
 
-// remove once https://github.com/angular/angular-cli/issues/15053 is fixed
-function patchedLogger(context: any): any {
-  const s = context.logger._subject.next;
-  context.logger._subject.next = (v: any) => {
-    v.message = v.message.replace('<???>', context.target.project);
-    return s.apply(context.logger._subject, [v]);
+  const printInfo = options.format && !options.silent;
+
+  context.reportStatus(`Linting ${JSON.stringify(projectName)}...`);
+  if (printInfo) {
+    context.logger.info(`\nLinting ${JSON.stringify(projectName)}...`);
+  }
+
+  const projectESLint = await loadESLint();
+  const version =
+    (projectESLint.Linter as any).version &&
+    (projectESLint.Linter as any).version.split('.');
+  if (
+    !version ||
+    version.length < 2 ||
+    Number(version[0]) < 6 ||
+    Number(version[1]) < 1
+  ) {
+    throw new Error('ESLint must be version 6.1 or higher.');
+  }
+
+  const eslintConfigPath = path.resolve(systemRoot, options.config);
+
+  let lintReports: CLIEngine.LintReport[] = [];
+  const lintedFiles = new Set<string>();
+
+  if (options.tsConfig) {
+    const tsConfigs: string[] = Array.isArray(options.tsConfig)
+      ? options.tsConfig
+      : [options.tsConfig];
+    context.reportProgress(0, tsConfigs.length);
+    const allPrograms = tsConfigs.map((tsConfig: any) =>
+      createProgram(path.resolve(systemRoot, tsConfig))
+    );
+
+    let i = 0;
+    for (const program of allPrograms) {
+      lintReports = [
+        ...lintReports,
+        ...(await lint(
+          systemRoot,
+          eslintConfigPath,
+          options,
+          lintedFiles,
+          program,
+          allPrograms
+        ))
+      ];
+      context.reportProgress(++i, allPrograms.length);
+    }
+  } else {
+    lintReports = [
+      ...lintReports,
+      ...(await lint(systemRoot, eslintConfigPath, options, lintedFiles))
+    ];
+  }
+
+  if (lintReports.length === 0) {
+    throw new Error('Invalid lint configuration. Nothing to lint.');
+  }
+
+  const formatter: CLIEngine.Formatter = (projectESLint.CLIEngine as any).getFormatter(
+    options.format
+  );
+
+  const bundledReport: CLIEngine.LintReport = {
+    errorCount: 0,
+    fixableErrorCount: 0,
+    fixableWarningCount: 0,
+    warningCount: 0,
+    results: [],
+    usedDeprecatedRules: []
   };
-  return context.logger;
+  for (const report of lintReports) {
+    // output fixes to disk
+    projectESLint.CLIEngine.outputFixes(report);
+
+    if (report.errorCount || report.warningCount) {
+      bundledReport.errorCount += report.errorCount;
+      bundledReport.warningCount += report.warningCount;
+      bundledReport.fixableErrorCount += report.fixableErrorCount;
+      bundledReport.fixableWarningCount += report.fixableWarningCount;
+      bundledReport.results.push(...report.results);
+      bundledReport.usedDeprecatedRules.push(...report.usedDeprecatedRules);
+    }
+  }
+
+  const formattedResults = formatter(bundledReport.results);
+  context.logger.info(formattedResults);
+
+  if (options.outputFile) {
+    writeFileSync(
+      path.join(context.workspaceRoot, options.outputFile),
+      formattedResults
+    );
+  }
+  if (bundledReport.warningCount > 0 && printInfo) {
+    context.logger.warn('Lint warnings found in the listed files.\n');
+  }
+
+  if (bundledReport.errorCount > 0 && printInfo) {
+    context.logger.error('Lint errors found in the listed files.\n');
+  }
+
+  if (
+    bundledReport.warningCount === 0 &&
+    bundledReport.errorCount === 0 &&
+    printInfo
+  ) {
+    context.logger.info('All files pass linting.\n');
+  }
+
+  return {
+    success: options.force || bundledReport.errorCount === 0
+  };
 }
 
 export default createBuilder<any>(run);
