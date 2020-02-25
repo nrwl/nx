@@ -9,13 +9,15 @@ export interface FileReplacement {
   with: string;
 }
 
-export function normalizeBundleOptions<T extends BundleBuilderOptions>(
-  options: T,
-  root
-): T & {
+export interface NormalizedBundleBuilderOptions extends BundleBuilderOptions {
   entryRoot: string;
   projectRoot: string;
-} {
+}
+
+export function normalizeBundleOptions(
+  options: BundleBuilderOptions,
+  root
+): NormalizedBundleBuilderOptions {
   const entryFile = `${root}/${options.entryFile}`;
   const entryRoot = dirname(entryFile);
   const project = `${root}/${options.project}`;
@@ -51,7 +53,7 @@ export function normalizeBuildOptions<T extends BuildBuilderOptions>(
 
 function normalizePluginPath(pluginPath: void | string, root: string) {
   if (!pluginPath) {
-    return pluginPath;
+    return '';
   }
   try {
     return require.resolve(pluginPath);

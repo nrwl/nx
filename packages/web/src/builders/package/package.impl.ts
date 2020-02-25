@@ -17,26 +17,34 @@ import * as postcss from 'rollup-plugin-postcss';
 import * as filesize from 'rollup-plugin-filesize';
 import * as localResolve from 'rollup-plugin-local-resolve';
 import { BundleBuilderOptions } from '../../utils/types';
-import { normalizeBundleOptions } from '../../utils/normalize';
+import {
+  normalizeBundleOptions,
+  NormalizedBundleBuilderOptions
+} from '../../utils/normalize';
 import { toClassName } from '@nrwl/workspace/src/utils/name-utils';
 import { BuildResult } from '@angular-devkit/build-webpack';
 import {
   readJsonFile,
   writeJsonFile
 } from '@nrwl/workspace/src/utils/fileutils';
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import {
+  createProjectGraph,
+  ProjectGraphNode
+} from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
+  DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,
   updatePaths
 } from '@nrwl/workspace/src/utils/buildale-libs-utils';
 import * as ts from 'typescript';
 
 // These use require because the ES import isn't correct.
-const resolve = require('rollup-plugin-node-resolve');
-const commonjs = require('rollup-plugin-commonjs');
+const resolve = require('@rollup/plugin-node-resolve');
+const commonjs = require('@rollup/plugin-commonjs');
 const typescript = require('rollup-plugin-typescript2');
+const image = require('@rollup/plugin-image');
 
 export default createBuilder<BundleBuilderOptions & JsonObject>(run);
 
@@ -69,89 +77,37 @@ export function run(
         return of({ success: false });
       }
       const options = normalizeBundleOptions(_options, context.workspaceRoot);
-      const rollupOptions: rollup.InputOptions[] = outputConfigs.map(
-        ({ format, extension }, index) => {
-          const parsedTSConfig = ts.readConfigFile(
-            options.tsConfig,
-            ts.sys.readFile
-          ).config;
-          parsedTSConfig.compilerOptions = parsedTSConfig.compilerOptions || {};
-          parsedTSConfig.compilerOptions.paths =
-            parsedTSConfig.compilerOptions.paths || {};
-          updatePaths(dependencies, parsedTSConfig.compilerOptions.paths);
-
-          const plugins = [
-            typescript({
-              check: true,
-              tsconfig: options.tsConfig,
-              tsconfigOverride: {
-                compilerOptions: {
-                  rootDir: options.entryRoot,
-                  allowJs: false,
-                  declaration: index === 0,
-                  paths: parsedTSConfig.compilerOptions.paths
-                }
-              }
-            }),
-            peerDepsExternal({
-              packageJsonPath: options.project
-            }),
-            postcss({
-              inject: true,
-              extract: false,
-              autoModules: true,
-              plugins: [autoprefixer]
-            }),
-            localResolve(),
-            resolve({ extensions: fileExtensions }),
-            babel({
-              ...createBabelConfig(options, options.projectRoot),
-              extensions: fileExtensions,
-              externalHelpers: false,
-              exclude: 'node_modules/**'
-            }),
-            commonjs(),
-            filesize()
-          ];
-
-          const entryFileTmpl = `${options.outputPath}/${context.target.project}.<%= extension %>.js`;
-          const rollupConfig = {
-            input: options.entryFile,
-            output: {
-              format,
-              file: entryFileTmpl.replace('<%= extension %>', extension),
-              name: toClassName(context.target.project)
-            },
-            external: dependencies.map(d => d.name),
-            plugins
-          };
-          return options.rollupConfig
-            ? require(options.rollupConfig)(rollupConfig)
-            : rollupConfig;
-        }
+      const packageJson = readJsonFile(options.project);
+      const rollupOptions = createRollupOptions(
+        options,
+        dependencies,
+        context,
+        packageJson
       );
 
       if (options.watch) {
         return new Observable<BuildResult>(obs => {
-          const watcher = rollup.watch(rollupOptions);
-          watcher.on('event', ({ code, error }) => {
-            if (code === 'START') {
+          const watcher = rollup.watch([rollupOptions]);
+          watcher.on('event', data => {
+            if (data.code === 'START') {
               context.logger.info('Bundling...');
-            } else if (code === 'END') {
-              updatePackageJson(options, context, target, dependencies);
+            } else if (data.code === 'END') {
+              updatePackageJson(
+                options,
+                context,
+                target,
+                dependencies,
+                packageJson
+              );
               context.logger.info(
                 'Bundle complete. Watching for file changes...'
               );
               obs.next({ success: true });
-            } else if (code === 'ERROR') {
-              context.logger.error(`Error during bundle: ${error.message}`);
-              obs.next({ success: false });
-            } else if (code === 'FATAL') {
-              // Cannot continue, stop the observable.
+            } else if (data.code === 'ERROR') {
               context.logger.error(
-                `Fatal error during bundle: ${error.message}`
+                `Error during bundle: ${data.error.message}`
               );
-              obs.complete();
+              obs.next({ success: false });
             }
           });
           // Teardown logic. Close watcher when unsubscribed.
@@ -159,8 +115,7 @@ export function run(
         });
       } else {
         context.logger.info('Bundling...');
-        return from(rollupOptions).pipe(
-          mergeMap(options => runRollup(options)),
+        return runRollup(rollupOptions).pipe(
           catchError(e => {
             console.error(e);
             return of({ success: false });
@@ -169,7 +124,13 @@ export function run(
           tap({
             next: result => {
               if (result.success) {
-                updatePackageJson(options, context, target, dependencies);
+                updatePackageJson(
+                  options,
+                  context,
+                  target,
+                  dependencies,
+                  packageJson
+                );
                 context.logger.info('Bundle complete.');
               } else {
                 context.logger.error('Bundle failed.');
@@ -183,6 +144,88 @@ export function run(
 }
 
 // -----------------------------------------------------------------------------
+
+function createRollupOptions(
+  options: NormalizedBundleBuilderOptions,
+  dependencies: DependentBuildableProjectNode[],
+  context: BuilderContext,
+  packageJson: any
+): rollup.InputOptions {
+  const parsedTSConfig = ts.readConfigFile(options.tsConfig, ts.sys.readFile)
+    .config;
+  parsedTSConfig.compilerOptions = parsedTSConfig.compilerOptions || {};
+  parsedTSConfig.compilerOptions.paths =
+    parsedTSConfig.compilerOptions.paths || {};
+  updatePaths(dependencies, parsedTSConfig.compilerOptions.paths);
+
+  const plugins = [
+    image(),
+    typescript({
+      check: true,
+      tsconfig: options.tsConfig,
+      tsconfigOverride: {
+        compilerOptions: {
+          rootDir: options.entryRoot,
+          allowJs: false,
+          declaration: true,
+          paths: parsedTSConfig.compilerOptions.paths
+        }
+      }
+    }),
+    peerDepsExternal({
+      packageJsonPath: options.project
+    }),
+    postcss({
+      inject: true,
+      extract: options.extractCss,
+      autoModules: true,
+      plugins: [autoprefixer]
+    }),
+    localResolve(),
+    resolve({
+      preferBuiltins: true,
+      extensions: fileExtensions
+    }),
+    babel({
+      ...createBabelConfig(options, options.projectRoot),
+      extensions: fileExtensions,
+      externalHelpers: false,
+      exclude: 'node_modules/**'
+    }),
+    commonjs(),
+    filesize()
+  ];
+
+  const globals = options.globals
+    ? options.globals.reduce((acc, item) => {
+        acc[item.moduleId] = item.global;
+        return acc;
+      }, {})
+    : {};
+
+  const externalPackages = dependencies
+    .map(d => d.name)
+    .concat(options.external || [])
+    .concat(Object.keys(packageJson.dependencies || {}));
+
+  const rollupConfig = {
+    input: options.entryFile,
+    output: outputConfigs.map(o => {
+      return {
+        globals,
+        format: o.format,
+        file: `${options.outputPath}/${context.target.project}.${o.extension}.js`,
+        name: toClassName(context.target.project)
+      };
+    }),
+    external: id => externalPackages.includes(id),
+    plugins
+  };
+
+  return options.rollupConfig
+    ? require(options.rollupConfig)(rollupConfig)
+    : rollupConfig;
+}
 
 function createBabelConfig(options: BundleBuilderOptions, projectRoot: string) {
   let babelConfig: any = _createBabelConfig(projectRoot, false, false);
@@ -223,13 +266,18 @@ function upsert(
   }
 }
 
-function updatePackageJson(options, context, target, dependencies) {
+function updatePackageJson(
+  options,
+  context,
+  target,
+  dependencies,
+  packageJson
+) {
   const entryFileTmpl = `./${context.target.project}.<%= extension %>.js`;
   const typingsFile = relative(options.entryRoot, options.entryFile).replace(
     /\.[jt]sx?$/,
     '.d.ts'
   );
-  const packageJson = readJsonFile(options.project);
   packageJson.main = entryFileTmpl.replace('<%= extension %>', 'umd');
   packageJson.module = entryFileTmpl.replace('<%= extension %>', 'esm');
   packageJson.typings = `./${typingsFile}`;

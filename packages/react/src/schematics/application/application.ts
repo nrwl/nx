@@ -14,7 +14,6 @@ import {
   url
 } from '@angular-devkit/schematics';
 import {
-  addGlobal,
   addLintFiles,
   formatFiles,
   generateProjectLint,
@@ -37,7 +36,6 @@ import { Schema } from './schema';
 import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
 import { addInitialRoutes } from '../../utils/ast-utils';
 import {
-  babelPresetReactVersion,
   typesReactRouterDomVersion,
   reactRouterDomVersion
 } from '../../utils/versions';
@@ -76,7 +74,6 @@ export default function(schema: Schema): Rule {
       updateJestConfig(options),
       addStyledModuleDependencies(options),
       addRouting(options, context),
-      addBabelPresetForReact(options),
       setDefaults(options),
       formatFiles(options)
     ]);
@@ -271,15 +268,6 @@ function addRouting(
         )
       ])
     : noop();
-}
-
-function addBabelPresetForReact(options: NormalizedSchema): Rule {
-  return addDepsToPackageJson(
-    {},
-    {
-      '@babel/preset-react': babelPresetReactVersion
-    }
-  );
 }
 
 function setDefaults(options: NormalizedSchema): Rule {

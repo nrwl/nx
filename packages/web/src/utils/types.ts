@@ -40,11 +40,19 @@ export interface BuildBuilderOptions {
   sourceRoot?: Path;
 }
 
+export interface Globals {
+  moduleId: string;
+  global: string;
+}
+
 export interface BundleBuilderOptions {
   outputPath: string;
   tsConfig: string;
   project: string;
   entryFile: string;
+  extractCss?: boolean;
+  globals?: Globals[];
+  external?: string[];
   rollupConfig?: string;
   babelConfig?: string;
   watch?: boolean;
