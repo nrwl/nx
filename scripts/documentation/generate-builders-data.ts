@@ -37,13 +37,21 @@ function generateSchematicList(
   fs.removeSync(config.builderOutput);
   const builderCollection = fs.readJsonSync(builderCollectionFile).builders;
   return Object.keys(builderCollection).map(builderName => {
-    const builder = {
+    const schemaPath = path.join(
+      config.root,
+      builderCollection[builderName]['schema']
+    );
+    let builder = {
       name: builderName,
       ...builderCollection[builderName],
-      rawSchema: fs.readJsonSync(
-        path.join(config.root, builderCollection[builderName]['schema'])
-      )
+      rawSchema: fs.readJsonSync(schemaPath)
     };
+    if (builder.rawSchema.examplesFile) {
+      builder.examplesFileFullPath = path.join(
+        schemaPath.replace('schema.json', ''),
+        builder.rawSchema.examplesFile
+      );
+    }
     return parseJsonSchemaToOptions(registry, builder.rawSchema)
       .then(options => ({ ...builder, options }))
       .catch(error =>
@@ -57,6 +65,7 @@ function generateTemplate(
   builder
 ): { name: string; template: string } {
   const filename = framework === 'angular' ? 'angular.json' : 'workspace.json';
+  const cliCommand = framework === 'angular' ? 'ng' : 'nx';
 
   let template = dedent`
     # ${builder.name}
@@ -69,6 +78,15 @@ function generateTemplate(
         : ``
     }
     \n`;
+
+  if (builder.examplesFileFullPath) {
+    template += `## Examples\n`;
+    let examples = fs
+      .readFileSync(builder.examplesFileFullPath)
+      .toString()
+      .replace(/<%= cli %>/gm, cliCommand);
+    template += dedent`${examples}`;
+  }
 
   if (Array.isArray(builder.options) && !!builder.options.length) {
     template += '## Properties';

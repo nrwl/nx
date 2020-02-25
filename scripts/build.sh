@@ -27,7 +27,7 @@ sed -i.bak "s/define(\[/define('@nrwl\/angular\/testing',\[/" build/packages/ang
 rm -rf build/packages/angular/bundles/nrwl-angular-testing.umd.js.bak
 rm -rf build/packages/angular/bundles/nrwl-angular-testing.umd.min.js.bak
 
-rsync -a --exclude=*.ts packages/ build/packages
+rsync -a --exclude=*.ts --exclude=docs/ packages/ build/packages
 chmod +x build/packages/create-nx-workspace/bin/create-nx-workspace.js
 chmod +x build/packages/create-nx-plugin/bin/create-nx-plugin.js
 chmod +x build/packages/cli/bin/nx.js
