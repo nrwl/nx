@@ -119,7 +119,8 @@ function normalizeOptions(
   ) => {
     return glob.sync(pattern, {
       cwd: input,
-      ignore: ignore
+      nodir: true,
+      ignore
     });
   };
 
@@ -307,8 +308,9 @@ function copyAssetFiles(
         success: true
       };
     })
-    .catch(err => {
+    .catch((err: Error) => {
       return {
+        error: err.message,
         success: false
       };
     });
