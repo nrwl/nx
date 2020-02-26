@@ -34,6 +34,7 @@ interface NormalizedSchema extends Schema {
   fileName: string;
   className: string;
   styledModule: null | string;
+  hasStyles: boolean;
 }
 
 export default function(schema: Schema): Rule {
@@ -71,7 +72,7 @@ function createComponentFiles(options: NormalizedSchema): Rule {
           tmpl: ''
         }),
         options.skipTests ? filter(file => !/.*spec.tsx/.test(file)) : noop(),
-        options.styledModule
+        options.styledModule || !options.hasStyles
           ? filter(file => !file.endsWith(`.${options.style}`))
           : noop(),
         move(directory),
@@ -146,7 +147,7 @@ function normalizeOptions(
     options.project
   );
   const directory = options.flat ? '' : options.directory || fileName;
-  const styledModule = /^(css|scss|less|styl)$/.test(options.style)
+  const styledModule = /^(css|scss|less|styl|none)$/.test(options.style)
     ? null
     : options.style;
 
@@ -160,6 +161,7 @@ function normalizeOptions(
     ...options,
     directory,
     styledModule,
+    hasStyles: options.style !== 'none',
     className,
     fileName: componentFileName,
     projectSourceRoot

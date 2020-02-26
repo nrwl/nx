@@ -50,6 +50,14 @@ Type: `string`
 
 The application project to add the library route to
 
+### component
+
+Default: `true`
+
+Type: `boolean`
+
+Generate a default component
+
 ### directory
 
 Alias(es): d
@@ -128,7 +136,7 @@ Default: `css`
 
 Type: `string`
 
-Possible values: `css`, `scss`, `styl`, `less`, `styled-components`, `@emotion/styled`
+Possible values: `css`, `scss`, `styl`, `less`, `styled-components`, `@emotion/styled`, `none`
 
 The file extension to be used for style files.
 

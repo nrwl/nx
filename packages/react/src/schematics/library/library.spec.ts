@@ -245,6 +245,45 @@ describe('lib', () => {
     });
   });
 
+  describe('--style none', () => {
+    it('should not use styles when style none', async () => {
+      const result = await runSchematic(
+        'lib',
+        { name: 'myLib', style: 'none' },
+        appTree
+      );
+
+      expect(result.exists('libs/my-lib/src/lib/my-lib.tsx')).toBeTruthy();
+      expect(result.exists('libs/my-lib/src/lib/my-lib.spec.tsx')).toBeTruthy();
+      expect(result.exists('libs/my-lib/src/lib/my-lib.css')).toBeFalsy();
+      expect(result.exists('libs/my-lib/src/lib/my-lib.scss')).toBeFalsy();
+      expect(result.exists('libs/my-lib/src/lib/my-lib.styl')).toBeFalsy();
+
+      const content = result.read('libs/my-lib/src/lib/my-lib.tsx').toString();
+      expect(content).not.toContain('styled-components');
+      expect(content).not.toContain('<StyledApp>');
+      expect(content).not.toContain('@emotion/styled');
+      expect(content).not.toContain('<StyledApp>');
+
+      //for imports
+      expect(content).not.toContain('app.styl');
+      expect(content).not.toContain('app.css');
+      expect(content).not.toContain('app.scss');
+    });
+  });
+
+  describe('--no-component', () => {
+    it('should not generate components or styles', async () => {
+      const result = await runSchematic(
+        'lib',
+        { name: 'myLib', component: false },
+        appTree
+      );
+
+      expect(result.exists('libs/my-lib/src/lib')).toBeFalsy();
+    });
+  });
+
   describe('--unit-test-runner none', () => {
     it('should not generate test configuration', async () => {
       const resultTree = await runSchematic(
@@ -375,6 +414,26 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
           external: ['react', 'react-dom', '@emotion/styled', '@emotion/core']
+        }
+      });
+    });
+
+    it('should support style none', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          publishable: true,
+          style: 'none'
+        },
+        appTree
+      );
+
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+
+      expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
+        options: {
+          external: ['react', 'react-dom']
         }
       });
     });

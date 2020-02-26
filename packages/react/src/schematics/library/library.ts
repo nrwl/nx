@@ -63,6 +63,9 @@ export default function(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema, context);
 
+    if (!options.component) {
+      options.style = 'none';
+    }
     return chain([
       addLintFiles(options.projectRoot, options.linter, {
         localConfig: reactEslintJson,
@@ -80,17 +83,19 @@ export default function(schema: Schema): Rule {
             skipSerializers: true
           })
         : noop(),
-      externalSchematic('@nrwl/react', 'component', {
-        name: options.name,
-        project: options.name,
-        flat: true,
-        style: options.style,
-        skipTests: options.unitTestRunner === 'none',
-        export: true,
-        routing: options.routing,
-        js: options.js,
-        pascalCaseFiles: options.pascalCaseFiles
-      }),
+      options.component
+        ? externalSchematic('@nrwl/react', 'component', {
+            name: options.name,
+            project: options.name,
+            flat: true,
+            style: options.style,
+            skipTests: options.unitTestRunner === 'none',
+            export: true,
+            routing: options.routing,
+            js: options.js,
+            pascalCaseFiles: options.pascalCaseFiles
+          })
+        : noop(),
       updateLibPackageNpmScope(options),
       updateAppRoutes(options, context),
       formatFiles(options)
@@ -114,8 +119,9 @@ function addProject(options: NormalizedSchema): Rule {
       if (
         options.style !== 'css' &&
         options.style !== 'scss' &&
-        options.style !== 'style' &&
-        options.style !== 'less'
+        options.style !== 'styl' &&
+        options.style !== 'less' &&
+        options.style !== 'none'
       ) {
         external.push(
           ...Object.keys(CSS_IN_JS_DEPENDENCIES[options.style].dependencies)
