@@ -92,11 +92,26 @@ interface ProjectGraphCache {
   fileMap: FileMap;
 }
 
-const nxDepsPath = `${appRootPath}/dist/nxdeps.json`;
+const distPath = `${appRootPath}/dist`;
+const nxDepsPath = `${distPath}/nxdeps.json`;
 
 function readCache(): false | { data: ProjectGraphCache; mtime: number } {
-  if (!directoryExists(`${appRootPath}/dist`)) {
-    mkdirSync(`${appRootPath}/dist`);
+  try {
+    mkdirSync(distPath);
+  } catch (e) {
+    /*
+     * @jeffbcross: Node JS docs recommend against checking for existence of directory immediately before creating it.
+     * Instead, just try to create the directory and handle the error.
+     *
+     * We ran into race conditions when running scripts concurrently, where multiple scripts were
+     * arriving here simultaneously, checking for directory existence, then trying to create the directory simultaneously.
+     *
+     * In this case, we're creating the directory. If the operation failed, we ensure that the directory
+     * exists before continuing (or raise an exception).
+     */
+    if (!directoryExists(distPath)) {
+      throw new Error(`Failed to create directory: ${distPath}`);
+    }
   }
 
   const data = getValidCache(
