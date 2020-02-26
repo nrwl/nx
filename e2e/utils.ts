@@ -182,7 +182,8 @@ export function ensureProject(): void {
 }
 
 export function supportUi() {
-  return !process.env.NO_CHROME;
+  return false;
+  // return !process.env.NO_CHROME;
 }
 
 export function copyMissingPackages(): void {

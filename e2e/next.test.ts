@@ -6,6 +6,7 @@ import {
   readFile,
   runCLI,
   runCLIAsync,
+  supportUi,
   uniq,
   updateFile
 } from './utils';
@@ -216,8 +217,10 @@ async function checkApp(appName: string, opts: { checkLint: boolean }) {
   const testResults = await runCLIAsync(`test ${appName}`);
   expect(testResults.stderr).toContain('Test Suites: 1 passed, 1 total');
 
-  const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
-  expect(e2eResults).toContain('All specs passed!');
+  if (supportUi()) {
+    const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
+    expect(e2eResults).toContain('All specs passed!');
+  }
 
   const buildResult = runCLI(`build ${appName}`);
   expect(buildResult).toContain(`Compiled successfully`);
