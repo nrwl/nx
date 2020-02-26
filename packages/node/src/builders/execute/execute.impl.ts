@@ -150,8 +150,9 @@ function startBuild(
       }
     }),
     concatMap(
-      () =>
+      options =>
         scheduleTargetAndForget(context, target, {
+          ...options,
           watch: true
         }) as Observable<NodeBuildEvent>
     )
