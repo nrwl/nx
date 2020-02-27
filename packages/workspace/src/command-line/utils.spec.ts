@@ -3,41 +3,52 @@ import { splitArgsIntoNxArgsAndOverrides } from './utils';
 describe('splitArgs', () => {
   it('should split nx specific arguments into nxArgs', () => {
     expect(
-      splitArgsIntoNxArgsAndOverrides({
-        base: 'sha1',
-        head: 'sha2',
-        notNxArg: true,
-        _: ['--override'],
-        $0: ''
-      }).nxArgs
+      splitArgsIntoNxArgsAndOverrides(
+        {
+          base: 'sha1',
+          head: 'sha2',
+          notNxArg: true,
+          _: ['--override'],
+          $0: ''
+        },
+        'affected'
+      ).nxArgs
     ).toEqual({
       base: 'sha1',
       head: 'sha2',
-      projects: []
+      projects: [],
+      skipNxCache: false
     });
   });
 
   it('should default to having a base of master', () => {
     expect(
-      splitArgsIntoNxArgsAndOverrides({
-        notNxArg: true,
-        _: ['--override'],
-        $0: ''
-      }).nxArgs
+      splitArgsIntoNxArgsAndOverrides(
+        {
+          notNxArg: true,
+          _: ['--override'],
+          $0: ''
+        },
+        'affected'
+      ).nxArgs
     ).toEqual({
       base: 'master',
-      projects: []
+      projects: [],
+      skipNxCache: false
     });
   });
 
   it('should split non nx specific arguments into target args', () => {
     expect(
-      splitArgsIntoNxArgsAndOverrides({
-        files: [''],
-        notNxArg: true,
-        _: ['--override'],
-        $0: ''
-      }).overrides
+      splitArgsIntoNxArgsAndOverrides(
+        {
+          files: [''],
+          notNxArg: true,
+          _: ['--override'],
+          $0: ''
+        },
+        'affected'
+      ).overrides
     ).toEqual({
       notNxArg: true,
       override: true
@@ -45,16 +56,20 @@ describe('splitArgs', () => {
   });
 
   it('should add other args to nx args', () => {
-    const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides({
-      notNxArg: true,
-      _: ['sha1', 'sha2', '--override'],
-      $0: ''
-    });
+    const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
+      {
+        notNxArg: true,
+        _: ['sha1', 'sha2', '--override'],
+        $0: ''
+      },
+      'affected'
+    );
 
     expect(nxArgs).toEqual({
       base: 'sha1',
       head: 'sha2',
-      projects: []
+      projects: [],
+      skipNxCache: false
     });
     expect(overrides).toEqual({
       notNxArg: true,

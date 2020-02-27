@@ -1,41 +1,39 @@
 import * as yargsParser from 'yargs-parser';
 import * as yargs from 'yargs';
 
-/**
- * These options are only for getting an array with properties of AffectedOptions.
- *
- * @remark They are not defaults or useful for anything else
- */
-const dummyOptions: NxArgs = {
-  target: '',
-  configuration: '',
-  runner: '',
-  parallel: false,
-  maxParallel: 0,
-  'max-parallel': 0,
-  untracked: false,
-  uncommitted: false,
-  all: false,
-  base: 'base',
-  head: 'head',
-  exclude: ['exclude'],
-  files: [''],
-  onlyFailed: false,
-  'only-failed': false,
-  verbose: false,
-  help: false,
-  version: false,
-  quiet: false,
-  plain: false,
-  withDeps: false,
-  'with-deps': false,
-  projects: [],
-  select: '',
-  skipNxCache: false,
-  'skip-nx-cache': false
-} as any;
+const runOne = [
+  'target',
+  'configuration',
+  'runner',
+  'parallel',
+  'maxParallel',
+  'max-parallel',
+  'exclude',
+  'onlyFailed',
+  'only-failed',
+  'verbose',
+  'help',
+  'version',
+  'withDeps',
+  'with-deps',
+  'skipNxCache',
+  'skip-nx-cache'
+];
 
-const nxSpecific = Object.keys(dummyOptions);
+const runMany = [...runOne, 'projects', 'quiet', 'all'];
+
+const runAffected = [
+  ...runOne,
+  'untracked',
+  'uncommitted',
+  'all',
+  'base',
+  'head',
+  'files',
+  'quiet',
+  'plain',
+  'select'
+];
 
 export interface NxArgs {
   target?: string;
@@ -69,8 +67,12 @@ export interface NxArgs {
 const ignoreArgs = ['$0', '_'];
 
 export function splitArgsIntoNxArgsAndOverrides(
-  args: yargs.Arguments
+  args: yargs.Arguments,
+  mode: 'run-one' | 'run-many' | 'affected'
 ): { nxArgs: NxArgs; overrides: yargs.Arguments } {
+  const nxSpecific =
+    mode === 'run-one' ? runOne : mode === 'run-many' ? runMany : runAffected;
+
   const nxArgs: any = {};
   const overrides = yargsParser(args._);
   delete overrides._;
@@ -102,6 +104,10 @@ export function splitArgsIntoNxArgsAndOverrides(
     nxArgs.head = args._[1];
   } else if (!nxArgs.base) {
     nxArgs.base = 'master';
+  }
+
+  if (!nxArgs.skipNxCache) {
+    nxArgs.skipNxCache = false;
   }
 
   return { nxArgs, overrides };

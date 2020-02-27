@@ -26,7 +26,7 @@ const PRETTIER_EXTENSIONS = [
 export function format(command: 'check' | 'write', args: yargs.Arguments) {
   let patterns: string[];
 
-  const { nxArgs } = splitArgsIntoNxArgsAndOverrides(args);
+  const { nxArgs } = splitArgsIntoNxArgsAndOverrides(args, 'affected');
 
   try {
     patterns = getPatterns({
@@ -38,7 +38,7 @@ export function format(command: 'check' | 'write', args: yargs.Arguments) {
       title: e.message,
       bodyLines: [
         `Pass the SHA range: ${output.bold(
-          `npm run format:${command} -- SHA1 SHA2`
+          `npm run format:${command} -- --base=SHA1 --head=SHA2`
         )}`,
         '',
         `Or pass the list of files: ${output.bold(

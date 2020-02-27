@@ -97,7 +97,11 @@ export function validateTargetAndConfiguration(
   workspace: WorkspaceDefinition,
   opts: RunOptions
 ) {
-  const targets = workspace.projects.get(opts.project).targets;
+  const architect = workspace.projects.get(opts.project);
+  if (!architect) {
+    throw new Error(`Could not find project "${opts.project}"`);
+  }
+  const targets = architect.targets;
 
   const target = targets.get(opts.target);
   if (!target) {

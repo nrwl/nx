@@ -4,7 +4,7 @@ export function parseRunOneOptions(
   nxJson: any,
   workspaceConfigJson: any,
   args: string[]
-): false | { project; target; configuration; overrides; skipNxCache } {
+): false | { project; target; configuration; parsedArgs } {
   // custom runner is not set, no tasks runner
   if (
     !nxJson.tasksRunnerOptions ||
@@ -28,38 +28,36 @@ export function parseRunOneOptions(
     defaultProjectName = workspaceConfigJson.cli.defaultProjectName;
   } catch (e) {}
 
-  const overrides = yargsParser(args, {
-    boolean: ['prod', 'skip-nx-cache'],
+  const parsedArgs = yargsParser(args, {
+    boolean: ['prod'],
     string: ['configuration', 'project']
   });
 
   let project;
   let target;
   let configuration;
-  let skipNxCache = false;
 
-  if (overrides._[0] === 'run') {
-    [project, target, configuration] = overrides._[1].split(':');
+  if (parsedArgs._[0] === 'run') {
+    [project, target, configuration] = parsedArgs._[1].split(':');
+    parsedArgs._ = parsedArgs._.slice(1);
   } else {
-    target = overrides._[0];
-    project = overrides._[1];
+    target = parsedArgs._[0];
+    project = parsedArgs._[1];
+    parsedArgs._ = parsedArgs._.slice(2);
   }
 
   if (!project && defaultProjectName) {
     project = defaultProjectName;
   }
 
-  if (overrides.configuration) {
-    configuration = overrides.configuration;
+  if (parsedArgs.configuration) {
+    configuration = parsedArgs.configuration;
   }
-  if (overrides.prod) {
+  if (parsedArgs.prod) {
     configuration = 'production';
   }
-  if (overrides.project) {
-    project = overrides.project;
-  }
-  if (overrides['skip-nx-cache']) {
-    skipNxCache = overrides['skip-nx-cache'];
+  if (parsedArgs.project) {
+    project = parsedArgs.project;
   }
 
   // we need both to be able to run a target, no tasks runner
@@ -70,12 +68,10 @@ export function parseRunOneOptions(
   // we need both to be able to run a target, no tasks runner
   if (!workspaceConfigJson.projects[project]) return false;
 
-  const res = { project, target, configuration, overrides, skipNxCache };
-  delete overrides['_'];
-  delete overrides['configuration'];
-  delete overrides['prod'];
-  delete overrides['project'];
-  delete overrides['skip-nx-cache'];
+  const res = { project, target, configuration, parsedArgs };
+  delete parsedArgs['configuration'];
+  delete parsedArgs['prod'];
+  delete parsedArgs['project'];
 
   return res;
 }

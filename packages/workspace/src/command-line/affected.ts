@@ -18,7 +18,10 @@ import { projectHasTargetAndConfiguration } from '../utils/project-has-target-an
 import { DefaultReporter } from '../tasks-runner/default-reporter';
 
 export function affected(command: string, parsedArgs: yargs.Arguments): void {
-  const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(parsedArgs);
+  const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
+    parsedArgs,
+    'affected'
+  );
 
   const projectGraph = createProjectGraph();
   let affectedGraph = nxArgs.all

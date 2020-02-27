@@ -2,6 +2,7 @@ import {
   ensureProject,
   forEachCli,
   listFiles,
+  newProject,
   rmDist,
   runCLI,
   runCommand,
@@ -11,33 +12,54 @@ import {
 
 forEachCli(() => {
   describe('Task Runner V2', () => {
-    describe('Parallel', () => {
+    describe('run-one with deps', () => {
       it('should be able to run tasks in parallel', () => {
-        ensureProject();
+        newProject();
 
+        updateFile('nx.json', c => {
+          const nxJson = JSON.parse(c);
+          nxJson.tasksRunnerOptions = {
+            default: {
+              runner: '@nrwl/workspace/src/tasks-runner/tasks-runner-v2',
+              options: {
+                cacheableOperations: ['build', 'test', 'lint']
+              }
+            }
+          };
+          return JSON.stringify(nxJson, null, 2);
+        });
+
+        const myapp = uniq('myapp');
         const mylib1 = uniq('mylib1');
         const mylib2 = uniq('mylib1');
+        runCLI(`generate @nrwl/react:app ${myapp}`);
         runCLI(`generate @nrwl/workspace:lib ${mylib1}`);
         runCLI(`generate @nrwl/workspace:lib ${mylib2}`);
 
-        const files = `--files="libs/${mylib1}/src/index.ts,libs/${mylib2}/src/index.ts"`;
-        const output = runCommand(
-          `npm run affected:test -- ${files} --parallel`
+        updateFile(
+          `apps/${myapp}/src/main.ts`,
+          `
+          import "@proj/${mylib1}";
+          import "@proj/${mylib2}";
+        `
         );
 
-        const startTestingLib1 = output.indexOf(`"test" "${mylib1}"`);
-        const startTestingLib2 = output.indexOf(`"test" "${mylib2}"`);
+        const testsWithDeps = runCLI(`test ${myapp} --with-deps`);
+        expect(testsWithDeps).toContain(
+          `NX  Running target test for projects:`
+        );
+        expect(testsWithDeps).toContain(myapp);
+        expect(testsWithDeps).toContain(mylib1);
+        expect(testsWithDeps).toContain(mylib2);
 
-        const stopTesting = output.indexOf(`No tests found`);
-
-        expect(startTestingLib1).toBeLessThan(stopTesting);
-        expect(startTestingLib2).toBeLessThan(stopTesting);
+        const testsWithoutDeps = runCLI(`test ${myapp}`);
+        expect(testsWithoutDeps).not.toContain(mylib1);
       });
     });
 
     describe('Cache', () => {
       it('should cache command execution', async () => {
-        ensureProject();
+        newProject();
 
         const myapp1 = uniq('myapp1');
         const myapp2 = uniq('myapp2');
@@ -72,7 +94,7 @@ forEachCli(() => {
             default: {
               runner: '@nrwl/workspace/src/tasks-runner/tasks-runner-v2',
               options: {
-                cacheableOperations: ['build', 'lint']
+                cacheableOperations: ['build', 'test', 'lint']
               }
             }
           };

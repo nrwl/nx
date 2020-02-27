@@ -62,7 +62,7 @@ function loadCli(workspace: Workspace) {
 
 function runOneOptions(
   workspace: Workspace
-): false | { project; target; configuration; overrides } {
+): false | { project; target; configuration; parsedArgs } {
   try {
     const nxJson = JSON.parse(
       fs.readFileSync(path.join(workspace.dir, 'nx.json')).toString()

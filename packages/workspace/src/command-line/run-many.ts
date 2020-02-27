@@ -13,7 +13,10 @@ import { projectHasTargetAndConfiguration } from '../utils/project-has-target-an
 import { DefaultReporter } from '../tasks-runner/default-reporter';
 
 export function runMany(parsedArgs: yargs.Arguments): void {
-  const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(parsedArgs);
+  const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
+    parsedArgs,
+    'run-many'
+  );
   const projectGraph = createProjectGraph();
   const projects = projectsToRun(nxArgs, projectGraph);
   const projectMap: Record<string, ProjectGraphNode> = {};
