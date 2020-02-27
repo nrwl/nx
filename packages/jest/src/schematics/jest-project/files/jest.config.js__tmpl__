@@ -5,7 +5,8 @@ module.exports = {
   transform: {
     '^.+\\.[tj]sx?$': 'ts-jest'
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],<% } %>
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],<% } %><% if(testEnvironment) { %>
+  testEnvironment: <%= testEnvironment %>,<% } %>
   coverageDirectory: '<%= offsetFromRoot %>coverage/<%= projectRoot %>'<% if(!skipSerializers) { %>,
   snapshotSerializers: [
     'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
