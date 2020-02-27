@@ -3,6 +3,7 @@ import { NxJson, readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 import { expectTestsPass } from 'e2e/utils';
+import { stripIndents, trimNewlines } from '@angular-devkit/core/src/utils/literals';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -74,15 +75,14 @@ describe('lib', () => {
         tree,
         'libs/my-lib/src/lib/my-lib.module.ts'
       );
-      expect(module).toEqual(
+      expect(stripIndents`${module}`).toEqual(
         "import { Module, Global } from '@nestjs/common';\n" +
-          '\n' +
-          '@Global()\n' +
+          '\n@Global()\n' +
           '@Module({' +
-          '\n  controllers: [],' +
-          '\n  providers: [],' +
-          '\n  exports: []\n})\n' +
-          'export class MyLibModule {}\n'
+          '\ncontrollers: [],' +
+          '\nproviders: [],' +
+          '\nexports: []\n})\n' +
+          'export class MyLibModule {}'
       );
     });
 
@@ -96,16 +96,15 @@ describe('lib', () => {
         tree,
         'libs/my-lib/src/lib/my-lib.module.ts'
       );
-      expect(module).toEqual(
-        "import { Module } from '@nestjs/common';" +
-          "\nimport { MyLibService } from './my-lib.service';" +
-          '\n\n' +
-          '@Module({' +
-          '\n  controllers: [MyLibController],' +
-          '\n  providers: [MyLibService],' +
-          '\n  exports: [MyLibService]\n' +
+      expect(stripIndents`${module}`).toEqual(
+        "import { Module } from '@nestjs/common';\n" +
+          "import { MyLibService } from './my-lib.service';\n\n" +
+          '@Module({\n' +
+          'controllers: [MyLibController],\n' +
+          'providers: [MyLibService],\n' +
+          'exports: [MyLibService]\n' +
           '})\n' +
-          'export class MyLibModule {}\n'
+          'export class MyLibModule {}'
       );
 
       const barrel = getFileContent(tree, 'libs/my-lib/src/index.ts');
@@ -147,7 +146,8 @@ describe('lib', () => {
       expect(tsconfigJson).toEqual({
         extends: '../../tsconfig.json',
         compilerOptions: {
-          types: ['node', 'jest']
+          types: ['node', 'jest'],
+          target: 'es6'
         },
         include: ['**/*.ts']
       });
@@ -284,7 +284,8 @@ describe('lib', () => {
       expect(tsconfigJson).toEqual({
         extends: '../../../tsconfig.json',
         compilerOptions: {
-          types: ['node', 'jest']
+          types: ['node', 'jest'],
+          target: 'es6'
         },
         include: ['**/*.ts']
       });
@@ -310,7 +311,8 @@ describe('lib', () => {
       expect(tsconfigJson).toEqual({
         extends: '../../tsconfig.json',
         compilerOptions: {
-          types: ['node']
+          types: ['node'],
+          target: 'es6'
         },
         include: ['**/*.ts']
       });
@@ -336,4 +338,36 @@ describe('lib', () => {
       expect(packageJsonContent.name).toEqual('@proj/mylib');
     });
   });
+
+  describe('compiler options target', () => {
+
+    it('should set target to es6 in tsconfig.json by default', async () => {
+      const tree = await runSchematic(
+          'lib',
+          { name: 'myLib', directory: 'myDir' },
+          appTree
+      );
+
+      const tsconfigJson = readJsonInTree(
+          tree,
+          'libs/my-dir/my-lib/tsconfig.json'
+      );
+      expect(tsconfigJson.compilerOptions.target).toEqual('es6');
+    });
+
+    it('should set target to es2020 in tsconfig.json', async () => {
+      const tree = await runSchematic(
+          'lib',
+          { name: 'myLib', directory: 'myDir', target: 'es2020' },
+          appTree
+      );
+
+      const tsconfigJson = readJsonInTree(
+          tree,
+          'libs/my-dir/my-lib/tsconfig.json'
+      );
+      expect(tsconfigJson.compilerOptions.target).toEqual('es2020');
+    });
+
+  })
 });

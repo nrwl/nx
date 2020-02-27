@@ -69,6 +69,17 @@
       "type": "boolean",
       "description": "Include a controller with the library",
       "default": false
+    },
+    "testEnvironment": {
+      "type": "string",
+      "description": "The test environment for jest, for node applications this should stay as node unless doing DOM testing.",
+      "default": "node"
+    },
+    "target": {
+      "type": "string",
+      "description": "The es target, Nest suggest using es6 or higher.",
+      "default": "es6",
+      "enum": ["es5", "es6", "esnext", "es2015", "es2016", "es2017", "es2018", "es2019", "es2020"]
     }
   },
   "required": ["name"]

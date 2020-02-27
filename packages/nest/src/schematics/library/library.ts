@@ -45,7 +45,7 @@ export default function(schema: NormalizedSchema): Rule {
     const options = normalizeOptions(host, schema);
 
     return chain([
-      externalSchematic('@nrwl/workspace', 'lib', schema),
+      externalSchematic('@nrwl/node', 'lib', schema),
       createFiles(options),
       addExportsToBarrelFile(options),
       updateTsConfig(options),
@@ -148,14 +148,10 @@ function createFiles(options: NormalizedSchema): Rule {
 }
 
 function updateTsConfig(options: NormalizedSchema): Rule {
-  if (options.unitTestRunner === 'none') {
-    return noop();
-  }
-
   return (host: Tree, context: SchematicContext) => {
     const projectConfig = getProjectConfig(host, options.name);
     return updateJsonInTree(`${projectConfig.root}/tsconfig.json`, json => {
-      json.compilerOptions.types.push('jest');
+      json.compilerOptions.target = options.target;
       return json;
     });
   };

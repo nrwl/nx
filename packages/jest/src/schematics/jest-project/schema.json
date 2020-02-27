@@ -32,6 +32,11 @@
       "type": "boolean",
       "description": "Setup tsx support",
       "default": false
+    },
+    "testEnvironment": {
+      "type": "string",
+      "description": "The test environment for jest",
+      "default": "jsdom"
     }
   },
   "required": []

@@ -114,6 +114,24 @@ Type: `string`
 
 Add tags to the library (used for linting)
 
+### target
+
+Default: `es6`
+
+Type: `string`
+
+Possible values: `es5`, `es6`, `esnext`, `es2015`, `es2016`, `es2017`, `es2018`, `es2019`, `es2020`
+
+The es target, Nest suggest using es6 or higher.
+
+### testEnvironment
+
+Default: `node`
+
+Type: `string`
+
+The test environment for jest, for node applications this should stay as node unless doing DOM testing.
+
 ### unitTestRunner
 
 Default: `jest`
