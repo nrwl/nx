@@ -107,10 +107,6 @@
       "description": "Display individual test results with the test suite hierarchy. (https://jestjs.io/docs/en/cli#verbose)",
       "type": "boolean"
     },
-    "coverage": {
-      "description": "Indicates that test coverage information should be collected and reported in the output. This option is also aliased by --collectCoverage. (https://jestjs.io/docs/en/cli#coverage)",
-      "type": "boolean"
-    },
     "coverageReporters": {
       "description": "A list of reporter names that Jest uses when writing coverage reports. Any istanbul reporter",
       "type": "string"
