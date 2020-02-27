@@ -4,6 +4,10 @@ import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { expectTestsPass } from 'e2e/utils';
+import {
+  stripIndents,
+  trimNewlines
+} from '@angular-devkit/core/src/utils/literals';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -396,8 +400,7 @@ describe('lib', () => {
       );
       expect(tsconfigJson.compilerOptions.target).toEqual('es2020');
     });
-
-    it('should set target jest testEnvironment to node', async () => {
+it('should set target jest testEnvironment to node', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
 
       const jestConfig = getFileContent(tree, 'libs/my-lib/jest.config.js');
