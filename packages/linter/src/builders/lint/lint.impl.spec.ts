@@ -344,14 +344,19 @@ describe('Linter Builder', () => {
     it('should attempt to write the lint results to the output file, if specified', async () => {
       setupMocks();
       jest.spyOn(fs, 'writeFileSync').mockImplementation();
+      jest.mock('@nrwl/workspace', () => ({
+        createDirectory: jest.fn()
+      }));
+      const { createDirectory } = require('@nrwl/workspace');
       await runBuilder({
         linter: 'eslint',
         config: './.eslintrc',
         files: ['includedFile1'],
-        outputFile: 'outputFile1'
+        outputFile: 'a/b/c/outputFile1'
       });
+      expect(createDirectory).toHaveBeenCalledWith('/root/a/b/c');
       expect(fs.writeFileSync).toHaveBeenCalledWith(
-        '/root/outputFile1',
+        '/root/a/b/c/outputFile1',
         formattedReports
       );
     });

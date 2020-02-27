@@ -13,7 +13,8 @@ export {
   updateJsonFile,
   readJsonFile,
   readWorkspaceConfigPath,
-  copyFile
+  copyFile,
+  createDirectory
 } from './src/utils/fileutils';
 export {
   offsetFromRoot,
