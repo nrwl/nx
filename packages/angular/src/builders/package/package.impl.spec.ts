@@ -3,7 +3,6 @@ import { MockBuilderContext } from '@nrwl/workspace/testing';
 import { BuildAngularLibraryBuilderOptions, run } from './package.impl';
 import { getMockContext } from '../../utils/testing';
 import * as projectGraphUtils from '@nrwl/workspace/src/core/project-graph';
-import * as workspaceUtils from '@nrwl/workspace';
 import {
   ProjectGraph,
   ProjectType
@@ -58,7 +57,7 @@ describe('AngularLibraryWebBuildBuilder', () => {
 
     context.target = {
       project: 'buildable-parent',
-      target: null
+      target: 'build'
     };
 
     testOptions = {
@@ -97,7 +96,15 @@ describe('AngularLibraryWebBuildBuilder', () => {
             'buildable-parent': {
               type: ProjectType.lib,
               name: 'buildable-parent',
-              data: { files: [], root: 'libs/buildable-parent' }
+              data: {
+                files: [],
+                root: 'libs/buildable-parent',
+                architect: {
+                  build: {
+                    builder: 'any builder'
+                  }
+                }
+              }
             },
             'buildable-child': {
               type: ProjectType.lib,
@@ -129,7 +136,7 @@ describe('AngularLibraryWebBuildBuilder', () => {
     });
 
     it('should properly set the TSConfig paths', async () => {
-      spyOn(workspaceUtils, 'readJsonFile').and.returnValue({
+      spyOn(fileUtils, 'readJsonFile').and.returnValue({
         name: '@proj/buildable-child',
         version: '1.2.3'
       });
@@ -149,7 +156,7 @@ describe('AngularLibraryWebBuildBuilder', () => {
     });
 
     it('should update the package.json', async () => {
-      spyOn(workspaceUtils, 'readJsonFile').and.callFake((path: string) => {
+      spyOn(fileUtils, 'readJsonFile').and.callFake((path: string) => {
         if (path.endsWith('buildable-parent/package.json')) {
           return {
             name: '@proj/buildable-parent',
@@ -181,7 +188,7 @@ describe('AngularLibraryWebBuildBuilder', () => {
     ['dependencies', 'devDependencies', 'peerDependencies'].forEach(
       (depConfigName: string) => {
         it(`should not update the package.json if the ${depConfigName} already contain a matching entry`, async () => {
-          spyOn(workspaceUtils, 'readJsonFile').and.callFake((path: string) => {
+          spyOn(fileUtils, 'readJsonFile').and.callFake((path: string) => {
             if (path.endsWith('buildable-parent/package.json')) {
               return {
                 name: '@proj/buildable-parent',

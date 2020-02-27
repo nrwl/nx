@@ -1,4 +1,4 @@
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { join } from 'path';
 
 import { workspaces } from '@angular-devkit/core';
@@ -10,6 +10,11 @@ import * as impl from './package.impl';
 import * as rr from './run-rollup';
 import { getMockContext } from '../../utils/testing';
 import { BundleBuilderOptions } from '../../utils/types';
+import * as projectGraphUtils from '@nrwl/workspace/src/core/project-graph';
+import {
+  ProjectGraph,
+  ProjectType
+} from '@nrwl/workspace/src/core/project-graph';
 
 jest.mock('tsconfig-paths-webpack-plugin');
 
@@ -42,55 +47,43 @@ describe('WebPackagebuilder', () => {
       name: 'example'
     });
     writeJsonFile = spyOn(f, 'writeJsonFile');
+
+    spyOn(projectGraphUtils, 'createProjectGraph').and.callFake(() => {
+      return {
+        nodes: {},
+        dependencies: {}
+      } as ProjectGraph;
+    });
   });
 
   describe('run', () => {
-    it('should call runRollup with esm, cjs, and umd', async () => {
+    it('should call runRollup with esm and umd', async () => {
       runRollup = spyOn(rr, 'runRollup').and.callFake(() => {
         return of({
           success: true
         });
       });
+      spyOn(context.logger, 'info');
 
       const result = await impl.run(testOptions, context).toPromise();
 
       expect(runRollup).toHaveBeenCalled();
-      expect(runRollup.calls.allArgs().map(x => x[0].output.format)).toEqual(
+      expect(runRollup.calls.allArgs()[0][0].output.map(o => o.format)).toEqual(
         expect.arrayContaining(['esm', 'umd'])
       );
-      expect(runRollup.calls.allArgs().map(x => x[0].output)).toEqual(
-        expect.arrayContaining([
-          {
-            format: 'umd',
-            file: '/root/dist/ui/example.umd.js',
-            name: 'Example'
-          },
-          {
-            format: 'esm',
-            file: '/root/dist/ui/example.esm2015.js',
-            name: 'Example'
-          },
-          {
-            format: 'esm',
-            file: '/root/dist/ui/example.esm5.js',
-            name: 'Example'
-          }
-        ])
-      );
       expect(result.success).toBe(true);
+      expect(context.logger.info).toHaveBeenCalledWith('Bundle complete.');
     });
 
-    it('should return failure when one run fails', async () => {
-      let count = 0;
-      runRollup = spyOn(rr, 'runRollup').and.callFake(() => {
-        return of({
-          success: count++ === 0
-        });
-      });
+    it('should return failure when rollup fails', async () => {
+      runRollup = spyOn(rr, 'runRollup').and.callFake(() => throwError('Oops'));
+      spyOn(context.logger, 'error');
 
       const result = await impl.run(testOptions, context).toPromise();
 
       expect(result.success).toBe(false);
+      expect(f.writeJsonFile).not.toHaveBeenCalled();
+      expect(context.logger.error).toHaveBeenCalledWith('Bundle failed.');
     });
 
     it('updates package.json', async () => {
@@ -99,7 +92,6 @@ describe('WebPackagebuilder', () => {
           success: true
         });
       });
-
       await impl.run(testOptions, context).toPromise();
 
       expect(f.writeJsonFile).toHaveBeenCalled();
@@ -108,8 +100,7 @@ describe('WebPackagebuilder', () => {
       expect(content).toMatchObject({
         name: 'example',
         main: './example.umd.js',
-        module: './example.esm5.js',
-        es2015: './example.esm2015.js',
+        module: './example.esm.js',
         typings: './index.d.ts'
       });
     });

@@ -251,7 +251,7 @@ nx dep-graph
 
 ![Full Stack Dependencies](./full-stack-deps.png)
 
-If you change the data library, Nx will know that both the backend and the frontend can be affected by the change. This information can be used to test and build all areas affected by a change making Nx a powerful full-stack development environment that scales. You can read more about this Nx capability in the[Monorepos and Automation](/react/fundamentals/monorepos-automation) guide.
+If you change the data library, Nx will know that both the backend and the frontend can be affected by the change. This information can be used to test and build all areas affected by a change making Nx a powerful full-stack development environment that scales. You can read more about this Nx capability in the [Monorepos and Automation](/react/fundamentals/monorepos-automation) guide.
 
 ## Summary
 

@@ -26,6 +26,7 @@ export const enum InspectType {
 
 export interface NodeExecuteBuilderOptions extends JsonObject {
   inspect: boolean | InspectType;
+  runtimeArgs: string[];
   args: string[];
   waitUntilTargets: string[];
   buildTarget: string;
@@ -77,7 +78,7 @@ function runProcess(event: NodeBuildEvent, options: NodeExecuteBuilderOptions) {
 }
 
 function getExecArgv(options: NodeExecuteBuilderOptions) {
-  const args = ['-r', 'source-map-support/register'];
+  const args = ['-r', 'source-map-support/register', ...options.runtimeArgs];
 
   if (options.inspect === true) {
     options.inspect = InspectType.Inspect;
@@ -149,8 +150,9 @@ function startBuild(
       }
     }),
     concatMap(
-      () =>
+      options =>
         scheduleTargetAndForget(context, target, {
+          ...options,
           watch: true
         }) as Observable<NodeBuildEvent>
     )

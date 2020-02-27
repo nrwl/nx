@@ -1,14 +1,15 @@
 import * as rollup from 'rollup';
-import { from, of } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { from } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 
 export function runRollup(options: rollup.RollupOptions) {
   return from(rollup.rollup(options)).pipe(
-    switchMap(bundle => from(bundle.write(options.output))),
-    map(() => ({ success: true })),
-    catchError(e => {
-      console.error(e);
-      return of({ success: false });
-    })
+    switchMap(bundle => {
+      const outputOptions = Array.isArray(options.output)
+        ? options.output
+        : [options.output];
+      return from(Promise.all(outputOptions.map(o => bundle.write(o))));
+    }),
+    map(() => ({ success: true }))
   );
 }

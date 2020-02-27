@@ -25,7 +25,7 @@
     },
     "directory": {
       "type": "string",
-      "description": "A directory where the app is placed",
+      "description": "A directory where the lib is placed",
       "alias": "d"
     },
     "style": {

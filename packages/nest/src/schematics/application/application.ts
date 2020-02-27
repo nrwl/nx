@@ -73,6 +73,7 @@ export default function(schema: Schema): Rule {
       addAppFiles(options),
       updateJsonInTree(join(options.appProjectRoot, 'tsconfig.json'), json => {
         json.compilerOptions.emitDecoratorMetadata = true;
+        json.compilerOptions.target = 'es2015';
         return json;
       }),
       formatFiles(options)

@@ -19,10 +19,8 @@ import {
   runNgAdd,
   copyMissingPackages,
   setMaxWorkers,
-  fileExists,
   newProject
 } from './utils';
-import { toClassName } from '@nrwl/workspace';
 
 function getData(): Promise<any> {
   return new Promise(resolve => {
@@ -160,6 +158,7 @@ forEachCli(currentCLIName => {
       ); // respects "extends" inside tsconfigs
 
       expect(config.options.emitDecoratorMetadata).toEqual(true); // required by nest to function properly
+      expect(config.options.target).toEqual(ts.ScriptTarget.ES2015); // required by nest swagger to function properly
       cleanup();
     }, 120000);
 
@@ -247,199 +246,223 @@ forEachCli(currentCLIName => {
       }).toString();
       expect(result).toContain('Hello World!');
     }, 60000);
+  });
+  describe('Node Libraries', () => {
+    it('should be able to generate a node library', async () => {
+      ensureProject();
+      const nodelib = uniq('nodelib');
 
-    describe('Node Libraries', () => {
+      runCLI(`generate @nrwl/node:lib ${nodelib}`);
+
+      const lintResults = runCLI(`lint ${nodelib}`);
+      expect(lintResults).toContain('All files pass linting.');
+
+      const jestResult = await runCLIAsync(`test ${nodelib}`);
+      expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
+    }, 60000);
+
+    it('should be able to generate a publishable node library', async () => {
+      ensureProject();
+
+      const nodeLib = uniq('nodelib');
+      runCLI(`generate @nrwl/node:lib ${nodeLib} --publishable`);
+      checkFilesExist(`libs/${nodeLib}/package.json`);
+      const tslibConfig = readJson(`libs/${nodeLib}/tsconfig.lib.json`);
+      expect(tslibConfig).toEqual({
+        extends: './tsconfig.json',
+        compilerOptions: {
+          module: 'commonjs',
+          outDir: '../../dist/out-tsc',
+          declaration: true,
+          rootDir: './src',
+          types: ['node']
+        },
+        exclude: ['**/*.spec.ts'],
+        include: ['**/*.ts']
+      });
+      await runCLIAsync(`build ${nodeLib}`);
+      checkFilesExist(
+        `dist/libs/${nodeLib}/index.js`,
+        `dist/libs/${nodeLib}/index.d.ts`,
+        `dist/libs/${nodeLib}/package.json`
+      );
+
+      const packageJson = readJson(`dist/libs/${nodeLib}/package.json`);
+      expect(packageJson).toEqual({
+        name: `@proj/${nodeLib}`,
+        version: '0.0.1',
+        main: 'index.js',
+        typings: 'index.d.ts'
+      });
+    }, 60000);
+
+    it('should be able to copy assets', () => {
+      ensureProject();
+      const nodelib = uniq('nodelib');
+      const nglib = uniq('nglib');
+
+      // Generating two libraries just to have a lot of files to copy
+      runCLI(`generate @nrwl/node:lib ${nodelib} --publishable`);
+      /**
+       * The angular lib contains a lot sub directories that would fail without
+       * `nodir: true` in the package.impl.ts
+       */
+      runCLI(`generate @nrwl/angular:lib ${nglib} --publishable`);
+      const workspace = readJson(workspaceConfigName());
+      workspace.projects[nodelib].architect.build.options.assets.push({
+        input: `./dist/libs/${nglib}`,
+        glob: '**/*',
+        output: '.'
+      });
+
+      updateFile(workspaceConfigName(), JSON.stringify(workspace));
+
+      runCLI(`build ${nglib}`);
+      runCLI(`build ${nodelib}`);
+      checkFilesExist(`./dist/libs/${nodelib}/esm2015/index.js`);
+    }, 60000);
+
+    describe('with dependencies', () => {
       beforeAll(() => {
         // force a new project to avoid collissions with the npmScope that has been altered before
         newProject();
       });
 
-      it('should be able to generate a node library', async () => {
+      /**
+       * Graph:
+       *
+       *                 childLib
+       *               /
+       * parentLib =>
+       *               \
+       *                \
+       *                 childLib2
+       *
+       */
+      let parentLib: string;
+      let childLib: string;
+      let childLib2: string;
+
+      beforeEach(() => {
+        parentLib = uniq('parentlib');
+        childLib = uniq('childlib');
+        childLib2 = uniq('childlib2');
+
         ensureProject();
-        const nodelib = uniq('nodelib');
 
-        runCLI(`generate @nrwl/node:lib ${nodelib}`);
+        runCLI(`generate @nrwl/node:lib ${parentLib} --publishable=true`);
+        runCLI(`generate @nrwl/node:lib ${childLib} --publishable=true`);
+        runCLI(`generate @nrwl/node:lib ${childLib2} --publishable=true`);
 
-        const lintResults = runCLI(`lint ${nodelib}`);
-        expect(lintResults).toContain('All files pass linting.');
+        // create dependencies by importing
+        const createDep = (parent, children: string[]) => {
+          updateFile(
+            `libs/${parent}/src/lib/${parent}.ts`,
+            `
+                ${children
+                  .map(entry => `import { ${entry} } from '@proj/${entry}';`)
+                  .join('\n')}
 
-        const jestResult = await runCLIAsync(`test ${nodelib}`);
-        expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
-      }, 60000);
+                export function ${parent}(): string {
+                  return '${parent}' + ' ' + ${children
+              .map(entry => `${entry}()`)
+              .join('+')}
+                }
+                `
+          );
+        };
 
-      it('should be able to generate a publishable node library', async () => {
-        ensureProject();
+        createDep(parentLib, [childLib, childLib2]);
+      });
 
-        const nodeLib = uniq('nodelib');
-        runCLI(`generate @nrwl/node:lib ${nodeLib} --publishable`);
-        fileExists(`libs/${nodeLib}/package.json`);
-        const tslibConfig = readJson(`libs/${nodeLib}/tsconfig.lib.json`);
-        expect(tslibConfig).toEqual({
-          extends: './tsconfig.json',
-          compilerOptions: {
-            module: 'commonjs',
-            outDir: '../../dist/out-tsc',
-            declaration: true,
-            rootDir: './src',
-            types: ['node']
-          },
-          exclude: ['**/*.spec.ts'],
-          include: ['**/*.ts']
-        });
-        await runCLIAsync(`build ${nodeLib}`);
-        checkFilesExist(
-          `dist/libs/${nodeLib}/index.js`,
-          `dist/libs/${nodeLib}/index.d.ts`,
-          `dist/libs/${nodeLib}/package.json`
+      it('should throw an error if the dependent library has not been built before building the parent lib', () => {
+        expect.assertions(2);
+
+        try {
+          runCLI(`build ${parentLib}`);
+        } catch (e) {
+          expect(e.stderr.toString()).toContain(
+            `Some of the project ${parentLib}'s dependencies have not been built yet. Please build these libraries before:`
+          );
+          expect(e.stderr.toString()).toContain(`${childLib}`);
+        }
+      });
+
+      it('should build a library without dependencies', () => {
+        const childLibOutput = runCLI(`build ${childLib}`);
+
+        expect(childLibOutput).toContain(
+          `Done compiling TypeScript files for library ${childLib}`
+        );
+      });
+
+      it('should build a parent library if the dependent libraries have been built before', () => {
+        const childLibOutput = runCLI(`build ${childLib}`);
+        expect(childLibOutput).toContain(
+          `Done compiling TypeScript files for library ${childLib}`
         );
 
-        const packageJson = readJson(`dist/libs/${nodeLib}/package.json`);
-        expect(packageJson).toEqual({
-          name: `@proj/${nodeLib}`,
-          version: '0.0.1',
-          main: 'index.js',
-          typings: 'index.d.ts'
-        });
-      }, 60000);
+        const childLib2Output = runCLI(`build ${childLib2}`);
+        expect(childLib2Output).toContain(
+          `Done compiling TypeScript files for library ${childLib2}`
+        );
 
-      describe('with dependencies', () => {
-        /**
-         * Graph:
-         *
-         *                 childLib
-         *               /
-         * parentLib =>
-         *               \
-         *                \
-         *                 childLib2
-         *
-         */
-        let parentLib: string;
-        let childLib: string;
-        let childLib2: string;
+        const parentLibOutput = runCLI(`build ${parentLib}`);
+        expect(parentLibOutput).toContain(
+          `Done compiling TypeScript files for library ${parentLib}`
+        );
 
-        beforeEach(() => {
-          parentLib = uniq('parentlib');
-          childLib = uniq('childlib');
-          childLib2 = uniq('childlib2');
+        //   assert package.json deps have been set
+        const assertPackageJson = (
+          parent: string,
+          lib: string,
+          version: string
+        ) => {
+          const jsonFile = readJson(`dist/libs/${parent}/package.json`);
+          const childDependencyVersion = jsonFile.dependencies[`@proj/${lib}`];
+          expect(childDependencyVersion).toBe(version);
+        };
 
-          ensureProject();
-
-          runCLI(`generate @nrwl/node:lib ${parentLib} --publishable=true`);
-          runCLI(`generate @nrwl/node:lib ${childLib} --publishable=true`);
-          runCLI(`generate @nrwl/node:lib ${childLib2} --publishable=true`);
-
-          // create dependencies by importing
-          const createDep = (parent, children: string[]) => {
-            updateFile(
-              `libs/${parent}/src/lib/${parent}.ts`,
-              `
-              ${children
-                .map(entry => `import { ${entry} } from '@proj/${entry}';`)
-                .join('\n')}
-
-              export function ${parent}(): string {
-                return '${parent}' + ' ' + ${children
-                .map(entry => `${entry}()`)
-                .join('+')}
-              }
-              `
-            );
-          };
-
-          createDep(parentLib, [childLib, childLib2]);
-        });
-
-        it('should throw an error if the dependent library has not been built before building the parent lib', () => {
-          expect.assertions(2);
-
-          try {
-            runCLI(`build ${parentLib}`);
-          } catch (e) {
-            expect(e.stderr.toString()).toContain(
-              `Some of the library ${parentLib}'s dependencies have not been built yet. Please build these libraries before:`
-            );
-            expect(e.stderr.toString()).toContain(`${childLib}`);
-          }
-        });
-
-        it('should build a library without dependencies', () => {
-          const childLibOutput = runCLI(`build ${childLib}`);
-
-          expect(childLibOutput).toContain(
-            `Done compiling TypeScript files for library ${childLib}`
-          );
-        });
-
-        it('should build a parent library if the dependent libraries have been built before', () => {
-          const childLibOutput = runCLI(`build ${childLib}`);
-          expect(childLibOutput).toContain(
-            `Done compiling TypeScript files for library ${childLib}`
-          );
-
-          const childLib2Output = runCLI(`build ${childLib2}`);
-          expect(childLib2Output).toContain(
-            `Done compiling TypeScript files for library ${childLib2}`
-          );
-
-          const parentLibOutput = runCLI(`build ${parentLib}`);
-          expect(parentLibOutput).toContain(
-            `Done compiling TypeScript files for library ${parentLib}`
-          );
-
-          //   assert package.json deps have been set
-          const assertPackageJson = (
-            parent: string,
-            lib: string,
-            version: string
-          ) => {
-            const jsonFile = readJson(`dist/libs/${parent}/package.json`);
-            const childDependencyVersion =
-              jsonFile.dependencies[`@proj/${lib}`];
-            expect(childDependencyVersion).toBe(version);
-          };
-
-          assertPackageJson(parentLib, childLib, '0.0.1');
-          assertPackageJson(parentLib, childLib2, '0.0.1');
-        });
-
-        // it('should automatically build all deps and update package.json when passing --withDeps flags', () => {
-        //   const parentLibOutput = runCLI(`build ${parentLib} --withDeps`);
-
-        //   expect(parentLibOutput).toContain(
-        //     `Done compiling TypeScript files for library ${parentLib}`
-        //   );
-        //   expect(parentLibOutput).toContain(
-        //     `Done compiling TypeScript files for library ${childLib}`
-        //   );
-        //   expect(parentLibOutput).toContain(
-        //     `Done compiling TypeScript files for library ${childChildLib}`
-        //   );
-        //   expect(parentLibOutput).toContain(
-        //     `Done compiling TypeScript files for library ${childLib2}`
-        //   );
-        //   expect(parentLibOutput).toContain(
-        //     `Done compiling TypeScript files for library ${childLibShared}`
-        //   );
-
-        //   //   // assert package.json deps have been set
-        //   const assertPackageJson = (
-        //     parent: string,
-        //     lib: string,
-        //     version: string
-        //   ) => {
-        //     const jsonFile = readJson(`dist/libs/${parent}/package.json`);
-        //     const childDependencyVersion =
-        //       jsonFile.dependencies[`@proj/${lib}`];
-        //     expect(childDependencyVersion).toBe(version);
-        //   };
-
-        //   assertPackageJson(parentLib, childLib, '0.0.1');
-        //   assertPackageJson(childLib, childChildLib, '0.0.1');
-        //   assertPackageJson(childLib, childLibShared, '0.0.1');
-        //   assertPackageJson(childLib2, childLibShared, '0.0.1');
-        // });
+        assertPackageJson(parentLib, childLib, '0.0.1');
+        assertPackageJson(parentLib, childLib2, '0.0.1');
       });
+
+      // it('should automatically build all deps and update package.json when passing --withDeps flags', () => {
+      //   const parentLibOutput = runCLI(`build ${parentLib} --withDeps`);
+
+      //   expect(parentLibOutput).toContain(
+      //     `Done compiling TypeScript files for library ${parentLib}`
+      //   );
+      //   expect(parentLibOutput).toContain(
+      //     `Done compiling TypeScript files for library ${childLib}`
+      //   );
+      //   expect(parentLibOutput).toContain(
+      //     `Done compiling TypeScript files for library ${childChildLib}`
+      //   );
+      //   expect(parentLibOutput).toContain(
+      //     `Done compiling TypeScript files for library ${childLib2}`
+      //   );
+      //   expect(parentLibOutput).toContain(
+      //     `Done compiling TypeScript files for library ${childLibShared}`
+      //   );
+
+      //   //   // assert package.json deps have been set
+      //   const assertPackageJson = (
+      //     parent: string,
+      //     lib: string,
+      //     version: string
+      //   ) => {
+      //     const jsonFile = readJson(`dist/libs/${parent}/package.json`);
+      //     const childDependencyVersion =
+      //       jsonFile.dependencies[`@proj/${lib}`];
+      //     expect(childDependencyVersion).toBe(version);
+      //   };
+
+      //   assertPackageJson(parentLib, childLib, '0.0.1');
+      //   assertPackageJson(childLib, childChildLib, '0.0.1');
+      //   assertPackageJson(childLib, childLibShared, '0.0.1');
+      //   assertPackageJson(childLib2, childLibShared, '0.0.1');
+      // });
     });
   });
 });

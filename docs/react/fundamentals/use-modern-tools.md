@@ -8,7 +8,7 @@ Of course, it's not the case that Cypress is always better than Protractor or Ne
 
 Next.js is a React framework designed for building server-prerendered applications.
 
-Add the Nex.js capability to your workspace:
+Add the Next.js capability to your workspace:
 
 ```bash
 yarn add --dev @nrwl/next

@@ -7,6 +7,14 @@ Read more about how to use builders and the CLI here: https://nx.dev/react/guide
 
 ## Properties
 
+### docsMode
+
+Default: `false`
+
+Type: `boolean`
+
+Build a documentation-only site using addon-docs.
+
 ### outputPath
 
 Type: `string`

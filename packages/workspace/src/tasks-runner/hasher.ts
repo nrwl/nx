@@ -53,6 +53,8 @@ export class Hasher {
 }
 
 export class ProjectHashes {
+  private sourceHashes: { [projectName: string]: Promise<string> } = {};
+
   constructor(
     private readonly projectGraph: ProjectGraph,
     private readonly fileHashes: FileHashes
@@ -60,10 +62,15 @@ export class ProjectHashes {
 
   async hashProject(projectName: string, visited: string[]) {
     return Promise.resolve().then(async () => {
-      const deps = (this.projectGraph.dependencies[projectName] || []).map(t =>
-        visited.indexOf(t.target) > -1
-          ? ''
-          : this.hashProject(t.target, [t.target, ...visited])
+      const deps = (this.projectGraph.dependencies[projectName] || []).map(
+        t => {
+          if (visited.indexOf(t.target) > -1) {
+            return '';
+          } else {
+            visited.push(t.target);
+            return this.hashProject(t.target, visited);
+          }
+        }
       );
       const sources = this.hashProjectNodeSource(projectName);
       return hasha(await Promise.all([...deps, sources]));
@@ -71,11 +78,16 @@ export class ProjectHashes {
   }
 
   private async hashProjectNodeSource(projectName: string) {
-    const p = this.projectGraph.nodes[projectName];
-    const values = await Promise.all(
-      p.data.files.map(f => this.fileHashes.hashFile(f.file))
-    );
-    return hasha(values, { algorithm: 'sha256' });
+    if (!this.sourceHashes[projectName]) {
+      this.sourceHashes[projectName] = new Promise(async res => {
+        const p = this.projectGraph.nodes[projectName];
+        const values = await Promise.all(
+          p.data.files.map(f => this.fileHashes.hashFile(f.file))
+        );
+        res(hasha(values, { algorithm: 'sha256' }));
+      });
+    }
+    return this.sourceHashes[projectName];
   }
 }
 

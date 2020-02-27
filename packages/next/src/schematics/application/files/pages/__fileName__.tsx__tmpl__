@@ -10,11 +10,11 @@ import React from 'react';
 %>
 
 import './<%= fileName %>.<%= style %>';
+
+<% }
+%>
 import { ReactComponent as NxLogo } from '../assets/nx-logo-white.svg';
 import { environment } from '../environments/environment';
-
-<% } 
-%>
 
 <% if (styledModule) { %>
 const StyledApp = styled.div`

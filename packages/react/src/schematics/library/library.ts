@@ -46,6 +46,7 @@ import {
 import { assertValidStyle } from '../../utils/assertion';
 import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
+import { CSS_IN_JS_DEPENDENCIES } from '@nrwl/react';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -89,6 +90,7 @@ export default function(schema: Schema): Rule {
         routing: options.routing,
         js: options.js
       }),
+      updateLibPackageNpmScope(options),
       updateAppRoutes(options, context),
       formatFiles(options)
     ])(host, context);
@@ -106,6 +108,18 @@ function addProject(options: NormalizedSchema): Rule {
     );
 
     if (options.publishable) {
+      const external = ['react', 'react-dom'];
+      // Also exclude CSS-in-JS packages from build
+      if (
+        options.style !== 'css' &&
+        options.style !== 'scss' &&
+        options.style !== 'style' &&
+        options.style !== 'less'
+      ) {
+        external.push(
+          ...Object.keys(CSS_IN_JS_DEPENDENCIES[options.style].dependencies)
+        );
+      }
       architect.build = {
         builder: '@nrwl/web:package',
         options: {
@@ -113,6 +127,7 @@ function addProject(options: NormalizedSchema): Rule {
           tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
           project: `${options.projectRoot}/package.json`,
           entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
+          external,
           babelConfig: `@nrwl/react/plugins/bundle-babel`,
           rollupConfig: `@nrwl/react/plugins/bundle-rollup`
         }
@@ -315,6 +330,15 @@ function normalizeOptions(
   assertValidStyle(normalized.style);
 
   return normalized;
+}
+
+function updateLibPackageNpmScope(options: NormalizedSchema): Rule {
+  return (host: Tree) => {
+    return updateJsonInTree(`${options.projectRoot}/package.json`, json => {
+      json.name = `@${getNpmScope(host)}/${options.name}`;
+      return json;
+    });
+  };
 }
 
 function maybeJs(options: NormalizedSchema, path: string): string {

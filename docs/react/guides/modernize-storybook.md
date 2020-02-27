@@ -6,6 +6,12 @@ Storybook is a development environment for UI components. It allows you to brows
 
 ## How to Use Storybook in an Nx Repo
 
+### Add the Storybook plugin
+
+```bash
+yarn add --dev @nrwl/storybook
+```
+
 ### Generating Storybook Configuration
 
 You can generate Storybook configuration for an individual project with this command:

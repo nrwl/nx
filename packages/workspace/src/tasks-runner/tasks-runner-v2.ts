@@ -33,6 +33,7 @@ export interface DefaultTasksRunnerOptions {
   remoteCache?: RemoteCache;
   lifeCycle?: LifeCycle;
   captureStderr?: boolean;
+  skipNxCache?: boolean;
 }
 
 export const tasksRunnerV2: TasksRunner<DefaultTasksRunnerOptions> = (

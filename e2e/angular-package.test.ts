@@ -78,7 +78,7 @@ forEachCli('angular', cli => {
         runCLI(`build ${parentLib}`);
       } catch (e) {
         expect(e.stderr.toString()).toContain(
-          `Some of the library ${parentLib}'s dependencies have not been built yet. Please build these libraries before:`
+          `Some of the project ${parentLib}'s dependencies have not been built yet. Please build these libraries before:`
         );
         expect(e.stderr.toString()).toContain(`${childLib}`);
       }
@@ -98,19 +98,17 @@ forEachCli('angular', cli => {
       expect(childLib2Output).toContain(`Built @proj/${childLib2}`);
       expect(parentLibOutput).toContain(`Built @proj/${parentLib}`);
 
-      // assert package.json deps have been set
-      const assertPackageJson = (
-        parent: string,
-        lib: string,
-        version: string
-      ) => {
-        const jsonFile = readJson(`dist/libs/${parent}/package.json`);
-        const childDependencyVersion = jsonFile.dependencies[`@proj/${lib}`];
-        expect(childDependencyVersion).toBe(version);
-      };
-
-      assertPackageJson(parentLib, childLib, '0.0.1');
-      assertPackageJson(parentLib, childLib2, '0.0.1');
+      const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
+      expect(jsonFile.dependencies).toEqual({
+        [`@proj/${childLib}`]: '0.0.1',
+        [`@proj/${childLib2}`]: '0.0.1'
+      });
     });
+  });
+});
+
+forEachCli('nx', () => {
+  describe('Build Angular library', () => {
+    it('should work', async () => {}, 1000000);
   });
 });

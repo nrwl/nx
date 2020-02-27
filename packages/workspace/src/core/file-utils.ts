@@ -41,8 +41,12 @@ export function calculateFileChanges(
   readFileAtRevision: (
     f: string,
     r: void | string
-  ) => string = defaultReadFileAtRevision
+  ) => string = defaultReadFileAtRevision,
+  ignore = getIgnoredGlobs()
 ): FileChange[] {
+  if (ignore) {
+    files = files.filter(f => !ignore.ignores(f));
+  }
   return files.map(f => {
     const ext = extname(f);
     const _mtime = mtime(`${appRootPath}/${f}`);
@@ -190,6 +194,10 @@ export function readNxJson(): NxJson {
 // TODO: Make this list extensible
 export function rootWorkspaceFileNames(): string[] {
   return [`package.json`, workspaceFileName(), `nx.json`, `tsconfig.json`];
+}
+
+export function rootWorkspaceFileData(): FileData[] {
+  return rootWorkspaceFileNames().map(f => getFileData(`${appRootPath}/${f}`));
 }
 
 export function readWorkspaceFiles(): FileData[] {
