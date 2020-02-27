@@ -11,7 +11,12 @@ import {
   Tree,
   url
 } from '@angular-devkit/schematics';
-import { getProjectConfig, offsetFromRoot, updateJsonInTree, updateWorkspaceInTree } from '@nrwl/workspace';
+import {
+  getProjectConfig,
+  offsetFromRoot,
+  updateJsonInTree,
+  updateWorkspaceInTree
+} from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import init from '../init/init';
 
@@ -21,7 +26,7 @@ export interface JestProjectSchema {
   skipSetupFile: boolean;
   setupFile: 'angular' | 'web-components' | 'none';
   skipSerializers: boolean;
-  testEnvironment?: 'node' | 'jsdom' | ''
+  testEnvironment?: 'node' | 'jsdom' | '';
 }
 
 function generateFiles(options: JestProjectSchema): Rule {
