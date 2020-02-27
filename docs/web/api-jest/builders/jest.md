@@ -53,12 +53,6 @@ Type: `string`
 
 The path to a Jest config file specifying how to find and execute tests. If no rootDir is set in the config, the directory containing the config file is assumed to be the rootDir for the project. This can also be a JSON-encoded value which Jest will use as configuration
 
-### coverage
-
-Type: `boolean`
-
-Indicates that test coverage information should be collected and reported in the output. This option is also aliased by --collectCoverage. (https://jestjs.io/docs/en/cli#coverage)
-
 ### coverageDirectory
 
 Type: `string`
