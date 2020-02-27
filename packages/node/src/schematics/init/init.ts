@@ -1,53 +1,26 @@
-import { Rule, chain } from '@angular-devkit/schematics';
+import { chain, Rule } from '@angular-devkit/schematics';
 import {
-  addDepsToPackageJson,
-  updateJsonInTree,
   addPackageWithInit,
-  updateWorkspace,
-  formatFiles
+  formatFiles,
+  updateJsonInTree
 } from '@nrwl/workspace';
-import { Schema } from './schema';
 import { nxVersion } from '../../utils/versions';
-import { JsonObject } from '@angular-devkit/core';
+import { Schema } from './schema';
+import { setDefaultCollection } from '@nrwl/workspace/src/utils/rules/workspace';
 
-function addDependencies(): Rule {
-  return addDepsToPackageJson(
-    {},
-    {
-      '@nrwl/node': nxVersion
-    }
-  );
-}
-
-function moveDependency(): Rule {
+function updateDependencies(): Rule {
   return updateJsonInTree('package.json', json => {
-    json.dependencies = json.dependencies || {};
-
     delete json.dependencies['@nrwl/node'];
+    json.devDependencies['@nrwl/node'] = nxVersion;
     return json;
-  });
-}
-
-function setDefault(): Rule {
-  return updateWorkspace(workspace => {
-    workspace.extensions.cli = workspace.extensions.cli || {};
-
-    const defaultCollection: string =
-      workspace.extensions.cli &&
-      ((workspace.extensions.cli as JsonObject).defaultCollection as string);
-
-    if (!defaultCollection || defaultCollection === '@nrwl/workspace') {
-      (workspace.extensions.cli as JsonObject).defaultCollection = '@nrwl/node';
-    }
   });
 }
 
 export default function(schema: Schema) {
   return chain([
-    setDefault(),
+    setDefaultCollection('@nrwl/node'),
     addPackageWithInit('@nrwl/jest'),
-    addDependencies(),
-    moveDependency(),
+    updateDependencies(),
     formatFiles(schema)
   ]);
 }

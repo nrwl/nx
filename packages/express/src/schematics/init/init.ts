@@ -1,62 +1,36 @@
-import { Rule, chain } from '@angular-devkit/schematics';
+import { chain, Rule } from '@angular-devkit/schematics';
 import {
-  addDepsToPackageJson,
-  updateJsonInTree,
   addPackageWithInit,
-  updateWorkspace,
-  formatFiles
+  formatFiles,
+  updateJsonInTree
 } from '@nrwl/workspace';
-import { Schema } from './schema';
 import {
   expressTypingsVersion,
   expressVersion,
   nxVersion
 } from '../../utils/versions';
-import { JsonObject } from '@angular-devkit/core';
+import { Schema } from './schema';
+import { setDefaultCollection } from '@nrwl/workspace/src/utils/rules/workspace';
 
-function addDependencies(): Rule {
-  return addDepsToPackageJson(
-    {
-      express: expressVersion
-    },
-    {
+function updateDependencies(): Rule {
+  return updateJsonInTree('package.json', json => {
+    delete json.dependencies['@nrwl/express'];
+    json.dependencies['express'] = expressVersion;
+    json.devDependencies = {
+      ...json.devDependencies,
       '@types/express': expressTypingsVersion,
       '@nrwl/express': nxVersion
-    }
-  );
-}
-
-function moveDependency(): Rule {
-  return updateJsonInTree('package.json', json => {
-    json.dependencies = json.dependencies || {};
-
-    delete json.dependencies['@nrwl/express'];
+    };
     return json;
-  });
-}
-
-function setDefault(): Rule {
-  return updateWorkspace(workspace => {
-    workspace.extensions.cli = workspace.extensions.cli || {};
-
-    const defaultCollection: string =
-      workspace.extensions.cli &&
-      ((workspace.extensions.cli as JsonObject).defaultCollection as string);
-
-    if (!defaultCollection || defaultCollection === '@nrwl/workspace') {
-      (workspace.extensions.cli as JsonObject).defaultCollection =
-        '@nrwl/express';
-    }
   });
 }
 
 export default function(schema: Schema) {
   return chain([
-    setDefault(),
+    setDefaultCollection('@nrwl/express'),
     addPackageWithInit('@nrwl/node'),
     addPackageWithInit('@nrwl/jest'),
-    addDependencies(),
-    moveDependency(),
+    updateDependencies(),
     formatFiles(schema)
   ]);
 }

@@ -3,8 +3,7 @@ import {
   addDepsToPackageJson,
   addPackageWithInit,
   formatFiles,
-  updateJsonInTree,
-  updateWorkspace
+  updateJsonInTree
 } from '@nrwl/workspace';
 import { Schema } from './schema';
 import {
@@ -13,23 +12,21 @@ import {
   nxVersion,
   reflectMetadataVersion
 } from '../../utils/versions';
-import { JsonObject } from '@angular-devkit/core';
+import { setDefaultCollection } from '@nrwl/workspace/src/utils/rules/workspace';
 
-export function addDependencies(): Rule {
-  return addDepsToPackageJson(
-    {
-      '@nestjs/common': nestJsVersion,
-      '@nestjs/core': nestJsVersion,
-      '@nestjs/platform-express': nestJsVersion,
-      'reflect-metadata': reflectMetadataVersion
-    },
-    {
-      '@nestjs/schematics': nestJsSchematicsVersion,
-      '@nestjs/testing': nestJsVersion,
-      '@nrwl/nest': nxVersion
-    }
-  );
-}
+export const updateDependencies = addDepsToPackageJson(
+  {
+    '@nestjs/common': nestJsVersion,
+    '@nestjs/core': nestJsVersion,
+    '@nestjs/platform-express': nestJsVersion,
+    'reflect-metadata': reflectMetadataVersion
+  },
+  {
+    '@nestjs/schematics': nestJsSchematicsVersion,
+    '@nestjs/testing': nestJsVersion,
+    '@nrwl/nest': nxVersion
+  }
+);
 
 function moveDependency(): Rule {
   return updateJsonInTree('package.json', json => {
@@ -40,26 +37,12 @@ function moveDependency(): Rule {
   });
 }
 
-function setDefault(): Rule {
-  return updateWorkspace(workspace => {
-    workspace.extensions.cli = workspace.extensions.cli || {};
-
-    const defaultCollection: string =
-      workspace.extensions.cli &&
-      ((workspace.extensions.cli as JsonObject).defaultCollection as string);
-
-    if (!defaultCollection || defaultCollection === '@nrwl/workspace') {
-      (workspace.extensions.cli as JsonObject).defaultCollection = '@nrwl/nest';
-    }
-  });
-}
-
 export default function(schema: Schema) {
   return chain([
-    setDefault(),
+    setDefaultCollection('@nrwl/nest'),
     addPackageWithInit('@nrwl/node'),
     addPackageWithInit('@nrwl/jest'),
-    addDependencies(),
+    updateDependencies,
     moveDependency(),
     formatFiles(schema)
   ]);

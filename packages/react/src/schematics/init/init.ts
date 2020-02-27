@@ -1,58 +1,42 @@
 import { chain, Rule } from '@angular-devkit/schematics';
 import {
-  addDepsToPackageJson,
-  updateJsonInTree,
   addPackageWithInit,
+  updateJsonInTree,
   updateWorkspace
 } from '@nrwl/workspace';
 import { Schema } from './schema';
 import {
-  reactVersion,
-  typesReactVersion,
-  typesReactDomVersion,
-  testingLibraryReactVersion,
   nxVersion,
-  reactDomVersion
+  reactDomVersion,
+  reactVersion,
+  testingLibraryReactVersion,
+  typesReactDomVersion,
+  typesReactVersion
 } from '../../utils/versions';
 import { JsonObject } from '@angular-devkit/core';
+import { setDefaultCollection } from '@nrwl/workspace/src/utils/rules/workspace';
 
-export function addDependencies(): Rule {
-  return addDepsToPackageJson(
-    {
+export function updateDependencies(): Rule {
+  return updateJsonInTree('package.json', json => {
+    delete json.dependencies['@nrwl/react'];
+    json.dependencies = {
+      ...json.dependencies,
       react: reactVersion,
       'react-dom': reactDomVersion
-    },
-    {
+    };
+    json.devDependencies = {
+      ...json.devDependencies,
       '@nrwl/react': nxVersion,
       '@types/react': typesReactVersion,
       '@types/react-dom': typesReactDomVersion,
       '@testing-library/react': testingLibraryReactVersion
-    }
-  );
-}
-
-function moveDependency(): Rule {
-  return updateJsonInTree('package.json', json => {
-    json.dependencies = json.dependencies || {};
-
-    delete json.dependencies['@nrwl/react'];
+    };
     return json;
   });
 }
 
 function setDefault(): Rule {
-  return updateWorkspace(workspace => {
-    // Set workspace default collection to 'react' if not already set.
-    workspace.extensions.cli = workspace.extensions.cli || {};
-    const defaultCollection: string =
-      workspace.extensions.cli &&
-      ((workspace.extensions.cli as JsonObject).defaultCollection as string);
-
-    if (!defaultCollection || defaultCollection === '@nrwl/workspace') {
-      (workspace.extensions.cli as JsonObject).defaultCollection =
-        '@nrwl/react';
-    }
-
+  const updateReactWorkspace = updateWorkspace(workspace => {
     // Also generate all new react apps with babel.
     workspace.extensions.schematics =
       jsonIdentity(workspace.extensions.schematics) || {};
@@ -68,6 +52,7 @@ function setDefault(): Rule {
       }
     };
   });
+  return chain([setDefaultCollection('@nrwl/react'), updateReactWorkspace]);
 }
 
 function jsonIdentity(x: any): JsonObject {
@@ -80,7 +65,6 @@ export default function(schema: Schema) {
     addPackageWithInit('@nrwl/jest'),
     addPackageWithInit('@nrwl/cypress'),
     addPackageWithInit('@nrwl/web'),
-    addDependencies(),
-    moveDependency()
+    updateDependencies()
   ]);
 }

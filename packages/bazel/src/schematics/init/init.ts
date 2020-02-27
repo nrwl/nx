@@ -30,7 +30,7 @@ function updateGitIgnore(): Rule {
   };
 }
 
-const addRequiredPackages = addDepsToPackageJson(
+const updateDependencies = addDepsToPackageJson(
   {},
   {
     '@bazel/bazel': bazelVersion,
@@ -59,7 +59,7 @@ export default (): Rule => {
     const packageJson = readJsonInTree(host, 'package.json');
     return chain([
       updateGitIgnore(),
-      !packageJson.devDependencies['@bazel/bazel'] ? addRequiredPackages : noop,
+      !packageJson.devDependencies['@bazel/bazel'] ? updateDependencies : noop,
       addFiles()
     ]);
   };

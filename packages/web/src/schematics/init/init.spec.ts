@@ -1,8 +1,8 @@
 import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { readJsonInTree } from '@nrwl/workspace';
+import { addDepsToPackageJson, readJsonInTree } from '@nrwl/workspace';
 import { callRule, runSchematic } from '../../utils/testing';
-import { updateJsonInTree } from '@nrwl/workspace/src/utils/ast-utils';
+import { nxVersion } from '../../utils/versions';
 
 describe('init', () => {
   let tree: Tree;
@@ -13,11 +13,23 @@ describe('init', () => {
   });
 
   it('should add web dependencies', async () => {
+    const existing = 'existing';
+    const existingVersion = '1.0.0';
+    await callRule(
+      addDepsToPackageJson(
+        { '@nrwl/web': nxVersion, [existing]: existingVersion },
+        { [existing]: existingVersion },
+        false
+      ),
+      tree
+    );
     const result = await runSchematic('init', {}, tree);
     const packageJson = readJsonInTree(result, 'package.json');
+    expect(packageJson.devDependencies['@nrwl/web']).toBeDefined();
+    expect(packageJson.devDependencies[existing]).toBeDefined();
     expect(packageJson.dependencies['@nrwl/web']).toBeUndefined();
     expect(packageJson.dependencies['document-register-element']).toBeDefined();
-    expect(packageJson.devDependencies['@nrwl/web']).toBeDefined();
+    expect(packageJson.dependencies[existing]).toBeDefined();
   });
 
   describe('defaultCollection', () => {
@@ -25,38 +37,6 @@ describe('init', () => {
       const result = await runSchematic('init', {}, tree);
       const workspaceJson = readJsonInTree(result, 'workspace.json');
       expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/web');
-    });
-
-    it('should be set if @nrwl/workspace was set before', async () => {
-      tree = await callRule(
-        updateJsonInTree('workspace.json', json => {
-          json.cli = {
-            defaultCollection: '@nrwl/workspace'
-          };
-
-          return json;
-        }),
-        tree
-      );
-      const result = await runSchematic('init', {}, tree);
-      const workspaceJson = readJsonInTree(result, 'workspace.json');
-      expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/web');
-    });
-
-    it('should not be set if something else was set before', async () => {
-      tree = await callRule(
-        updateJsonInTree('workspace.json', json => {
-          json.cli = {
-            defaultCollection: '@nrwl/angular'
-          };
-
-          return json;
-        }),
-        tree
-      );
-      const result = await runSchematic('init', {}, tree);
-      const workspaceJson = readJsonInTree(result, 'workspace.json');
-      expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/angular');
     });
   });
 });

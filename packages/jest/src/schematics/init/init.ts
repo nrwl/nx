@@ -1,16 +1,15 @@
-import { mergeWith, chain, url, Tree } from '@angular-devkit/schematics';
+import { chain, Rule, Tree } from '@angular-devkit/schematics';
 import {
   addDepsToPackageJson,
-  updateJsonInTree,
-  readJsonInTree
+  readJsonInTree,
+  updateJsonInTree
 } from '@nrwl/workspace';
 import {
-  jestVersion,
   jestTypesVersion,
-  tsJestVersion,
-  nxVersion
+  jestVersion,
+  nxVersion,
+  tsJestVersion
 } from '../../utils/versions';
-import { Rule } from '@angular-devkit/schematics';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { noop } from 'rxjs';
 
@@ -50,18 +49,16 @@ const createJestConfig = (host: Tree) => {
   }
 };
 
+const updateDependencies = addDepsToPackageJson(
+  {},
+  {
+    '@nrwl/jest': nxVersion,
+    jest: jestVersion,
+    '@types/jest': jestTypesVersion,
+    'ts-jest': tsJestVersion
+  }
+);
+
 export default function(): Rule {
-  return chain([
-    createJestConfig,
-    addDepsToPackageJson(
-      {},
-      {
-        '@nrwl/jest': nxVersion,
-        jest: jestVersion,
-        '@types/jest': jestTypesVersion,
-        'ts-jest': tsJestVersion
-      }
-    ),
-    removeNrwlJestFromDeps
-  ]);
+  return chain([createJestConfig, updateDependencies, removeNrwlJestFromDeps]);
 }
