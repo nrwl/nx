@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { WebDevServerOptions } from '../builders/dev-server/dev-server.impl';
 import { join } from 'path';
+import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 describe('getDevServerConfig', () => {
   let buildInput: WebBuildBuilderOptions;
@@ -440,6 +441,40 @@ describe('getDevServerConfig', () => {
         ) as any;
 
         expect(result.allowedHosts).toEqual([]);
+      });
+
+      describe('the max workers option', () => {
+        it('should set the maximum workers for the type checker', () => {
+          const result = getDevServerConfig(
+            root,
+            sourceRoot,
+            buildInput,
+            { ...serveInput, maxWorkers: 1 },
+            logger
+          ) as any;
+
+          const typeCheckerPlugin = result.plugins.find(
+            plugin => plugin instanceof ForkTsCheckerWebpackPlugin
+          ) as ForkTsCheckerWebpackPlugin;
+          expect(typeCheckerPlugin.options.workers).toEqual(1);
+        });
+      });
+
+      describe('the memory limit option', () => {
+        it('should set the memory limit for the type checker', () => {
+          const result = getDevServerConfig(
+            root,
+            sourceRoot,
+            buildInput,
+            { ...serveInput, memoryLimit: 1024 },
+            logger
+          ) as any;
+
+          const typeCheckerPlugin = result.plugins.find(
+            plugin => plugin instanceof ForkTsCheckerWebpackPlugin
+          ) as ForkTsCheckerWebpackPlugin;
+          expect(typeCheckerPlugin.options.memoryLimit).toEqual(1024);
+        });
       });
     });
   });

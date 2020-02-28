@@ -23,7 +23,11 @@ export function getDevServerConfig(
   const webpackConfig: Configuration = getWebConfig(
     root,
     sourceRoot,
-    buildOptions,
+    {
+      ...buildOptions,
+      maxWorkers: serveOptions.maxWorkers,
+      memoryLimit: serveOptions.memoryLimit
+    },
     logger,
     true, // Don't need to support legacy browsers for dev.
     false
