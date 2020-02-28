@@ -47,7 +47,7 @@
     ]
   },
   "peerDependencies": {
-    "prettier": "^1.18.2"
+    "prettier": "^1.19.1"
   },
   "dependencies": {
     "@angular-devkit/core": "~9.0.1",
