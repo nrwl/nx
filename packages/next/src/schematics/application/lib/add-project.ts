@@ -19,8 +19,14 @@ export function addProject(options: NormalizedSchema): Rule {
         production: {
           fileReplacements: [
             {
-              replace: `environments/environment.ts`,
-              with: `environments/environment.prod.ts`
+              replace: join(
+                options.appProjectRoot,
+                `environments/environment.ts`
+              ),
+              with: join(
+                options.appProjectRoot,
+                `environments/environment.prod.ts`
+              )
             }
           ]
         }
