@@ -89,9 +89,17 @@ function defaultReadFileAtRevision(
   revision: void | string
 ): string {
   try {
+    const fileFullPath = `${appRootPath}${path.sep}${file}`;
+    const gitRepositoryPath = execSync('git rev-parse --show-toplevel')
+      .toString()
+      .trim();
+    const filePathInGitRepository = path
+      .relative(gitRepositoryPath, fileFullPath)
+      .split(path.sep)
+      .join('/');
     return !revision
       ? readFileSync(file).toString()
-      : execSync(`git show ${revision}:${file}`, {
+      : execSync(`git show ${revision}:${filePathInGitRepository}`, {
           maxBuffer: TEN_MEGABYTES
         })
           .toString()
