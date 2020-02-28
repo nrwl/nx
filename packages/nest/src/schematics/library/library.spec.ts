@@ -131,13 +131,6 @@ describe('lib', () => {
           export * from './lib/my-lib.service';
           export * from './lib/my-lib.controller';`
       );
-
-      const barrel = getFileContent(tree, 'libs/my-lib/src/index.ts');
-      expect(stripIndents`${barrel}`).toEqual(
-        stripIndents`export * from './lib/my-lib.module';
-          export * from './lib/my-lib.service';
-          export * from './lib/my-lib.controller';`
-      );
     });
 
     it('should update nx.json', async () => {

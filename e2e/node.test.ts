@@ -22,6 +22,8 @@ import {
   newProject,
   checkFilesDoNotExist
 } from './utils';
+import { getFileContent } from '@nrwl/workspace/testing';
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { readFile } from './utils';
 
