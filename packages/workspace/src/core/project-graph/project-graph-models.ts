@@ -16,7 +16,11 @@ export enum DependencyType {
 export interface ProjectGraphNode<T extends {} = {}> {
   type: string;
   name: string;
-  data: T & { files: FileData[]; [k: string]: any };
+  data: T & {
+    architect?: { [k: string]: any };
+    files: FileData[];
+    [k: string]: any;
+  };
 }
 
 export type ProjectGraphNodeRecords = Record<string, ProjectGraphNode>;

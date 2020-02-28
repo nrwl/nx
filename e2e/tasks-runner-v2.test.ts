@@ -13,7 +13,7 @@ import {
 forEachCli(() => {
   describe('Task Runner V2', () => {
     describe('run-one with deps', () => {
-      it('should be able to run tasks in parallel', () => {
+      it('should be able to run the task for the specified project and its dependencies', () => {
         newProject();
 
         updateFile('nx.json', c => {

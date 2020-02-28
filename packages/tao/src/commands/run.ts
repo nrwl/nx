@@ -103,13 +103,14 @@ export function validateTargetAndConfiguration(
   }
   const targets = architect.targets;
 
+  const availableTargets = [...targets.keys()];
   const target = targets.get(opts.target);
   if (!target) {
     throw new Error(
       `Could not find target "${opts.target}" in the ${
         opts.project
       } project. Valid targets are: ${terminal.bold(
-        Object.keys(targets).join(', ')
+        availableTargets.join(', ')
       )}`
     );
   }

@@ -14,7 +14,7 @@ import {
 } from '../core/project-graph';
 import { calculateFileChanges, readEnvironment } from '../core/file-utils';
 import { printAffected } from './print-affected';
-import { projectHasTargetAndConfiguration } from '../utils/project-has-target-and-configuration';
+import { projectHasTarget } from '../utils/project-graph-utils';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
 
 export function affected(command: string, parsedArgs: yargs.Arguments): void {
@@ -87,12 +87,12 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
 
       case 'print-affected':
         if (nxArgs.target) {
-          const projectWithTargetAndConfig = allProjectsWithTargetAndConfiguration(
+          const projectsWithTarget = allProjectsWithTarget(
             affectedProjects,
             nxArgs
           );
           printAffected(
-            projectWithTargetAndConfig,
+            projectsWithTarget,
             affectedProjects,
             projectGraph,
             nxArgs,
@@ -104,13 +104,13 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
         break;
 
       case 'affected': {
-        const projectWithTargetAndConfig = allProjectsWithTargetAndConfiguration(
+        const projectsWithTarget = allProjectsWithTarget(
           affectedProjects,
           nxArgs
         );
         printArgsWarning(nxArgs);
         runCommand(
-          projectWithTargetAndConfig,
+          projectsWithTarget,
           projectGraph,
           env,
           nxArgs,
@@ -126,13 +126,8 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
   }
 }
 
-function allProjectsWithTargetAndConfiguration(
-  projects: ProjectGraphNode[],
-  nxArgs: NxArgs
-) {
-  return projects.filter(p =>
-    projectHasTargetAndConfiguration(p, nxArgs.target, nxArgs.configuration)
-  );
+function allProjectsWithTarget(projects: ProjectGraphNode[], nxArgs: NxArgs) {
+  return projects.filter(p => projectHasTarget(p, nxArgs.target));
 }
 
 function printError(e: any, verbose?: boolean) {

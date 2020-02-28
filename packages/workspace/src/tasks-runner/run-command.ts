@@ -8,6 +8,7 @@ import { Environment, NxJson } from '../core/shared-interfaces';
 import { NxArgs } from '@nrwl/workspace/src/command-line/utils';
 import { isRelativePath } from '../utils/fileutils';
 import { Hasher } from './hasher';
+import { projectHasTargetAndConfiguration } from '../utils/project-graph-utils';
 
 type RunArgs = yargs.Arguments & ReporterArgs;
 
@@ -26,14 +27,14 @@ export async function runCommand<T extends RunArgs>(
     ...overrides
   });
 
-  const tasks: Task[] = projectsToRun.map(project =>
-    createTask({
+  const tasks: Task[] = projectsToRun.map(project => {
+    return createTask({
       project,
       target: nxArgs.target,
       configuration: nxArgs.configuration,
       overrides: overrides
-    })
-  );
+    });
+  });
 
   if (tasksRunner !== require('./default-tasks-runner').defaultTasksRunner) {
     const hasher = new Hasher(projectGraph, nxJson, tasksOptions);
@@ -96,10 +97,17 @@ export function createTask({
   configuration,
   overrides
 }: TaskParams): Task {
+  const config = projectHasTargetAndConfiguration(
+    project,
+    target,
+    configuration
+  )
+    ? configuration
+    : undefined;
   const qualifiedTarget = {
     project: project.name,
     target,
-    configuration
+    configuration: config
   };
   return {
     id: getId(qualifiedTarget),
