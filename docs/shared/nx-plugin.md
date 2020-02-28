@@ -6,6 +6,8 @@ This guide will explain how to generate a new plugin, build on it, test it and p
 
 > A list of plugins that is maintained by Nrwl is found in the [Nrwl/nx repo](https://github.com/nrwl/nx/tree/master/packages).
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/XYO689PAhow" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 ## Generating a Plugin
 
 To get started with building a Nx Plugin, run the following command:
