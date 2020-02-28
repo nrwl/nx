@@ -32,6 +32,11 @@ describe('schematic:stories', () => {
           'libs/test-ui-lib/src/lib/test-other/test-other.component.stories.ts'
         )
       ).toBeTruthy();
+      expect(
+        tree.exists(
+          'libs/test-ui-lib/src/lib/nested/nested-button/nested-button.component.stories.ts'
+        )
+      ).toBeTruthy();
       const propLines = [
         `buttonType: text('buttonType', 'button'),`,
         `style: text('style', 'default'),`,
@@ -136,6 +141,23 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     modulePath,
     `import * as ButtonExports from './test-button/test-button.component';
     ${appTree.read(modulePath)}`
+  );
+  appTree = await callRule(
+    externalSchematic('@schematics/angular', 'module', {
+      name: 'nested',
+      project: libName,
+      path: `libs/${libName}/src/lib`
+    }),
+    appTree
+  );
+  appTree = await callRule(
+    externalSchematic('@schematics/angular', 'component', {
+      name: 'nested-button',
+      project: libName,
+      module: 'nested',
+      path: `libs/${libName}/src/lib/nested`
+    }),
+    appTree
   );
   appTree.overwrite(
     `libs/${libName}/src/lib/test-button/test-button.component.ts`,
