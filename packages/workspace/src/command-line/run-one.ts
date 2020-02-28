@@ -1,14 +1,9 @@
 import { runCommand } from '../tasks-runner/run-command';
-import {
-  createProjectGraph,
-  onlyWorkspaceProjects,
-  ProjectGraph,
-  withDeps
-} from '../core/project-graph';
+import { createProjectGraph, ProjectGraph } from '../core/project-graph';
 import { readEnvironment } from '../core/file-utils';
 import { EmptyReporter } from '../tasks-runner/empty-reporter';
 import { splitArgsIntoNxArgsAndOverrides } from './utils';
-import { DefaultReporter } from '../tasks-runner/default-reporter';
+import { projectHasTarget } from '../utils/project-graph-utils';
 
 export function runOne(opts: {
   project: string;
@@ -30,11 +25,12 @@ export function runOne(opts: {
   const { projects, projectsMap } = getProjects(
     projectGraph,
     nxArgs.withDeps,
-    opts.project
+    opts.project,
+    opts.target
   );
   const env = readEnvironment(opts.target, projectsMap);
   const reporter = nxArgs.withDeps
-    ? new DefaultReporter()
+    ? new (require(`../tasks-runner/default-reporter`)).DefaultReporter()
     : new EmptyReporter();
 
   runCommand(projects, projectGraph, env, nxArgs, overrides, reporter);
@@ -43,20 +39,24 @@ export function runOne(opts: {
 function getProjects(
   projectGraph: ProjectGraph,
   includeDeps: boolean,
-  project: string
-) {
+  project: string,
+  target: string
+): any {
   let projects = [projectGraph.nodes[project]];
   let projectsMap = {
     [project]: projectGraph.nodes[project]
   };
 
   if (includeDeps) {
-    const projectWithDeps = onlyWorkspaceProjects(
-      withDeps(projectGraph, projects)
-    ).nodes;
+    const s = require(`../core/project-graph`);
+    const deps = s.onlyWorkspaceProjects(s.withDeps(projectGraph, projects))
+      .nodes;
+    const projectsWithTarget = Object.values(deps).filter((p: any) =>
+      projectHasTarget(p, target)
+    );
     return {
-      projects: Object.values(projectWithDeps),
-      projectsMap: projectWithDeps
+      projects: projectsWithTarget,
+      projectsMap: deps
     };
   } else {
     return { projects, projectsMap };

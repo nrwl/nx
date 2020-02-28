@@ -1,7 +1,6 @@
 import * as yargs from 'yargs';
 import { runCommand } from '../tasks-runner/run-command';
-import { splitArgsIntoNxArgsAndOverrides, NxArgs } from './utils';
-import { output } from '../utils/output';
+import { NxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
 import {
   createProjectGraph,
   ProjectGraph,
@@ -9,8 +8,9 @@ import {
   withDeps
 } from '../core/project-graph';
 import { readEnvironment } from '../core/file-utils';
-import { projectHasTargetAndConfiguration } from '../utils/project-has-target-and-configuration';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
+import { projectHasTarget } from '../utils/project-graph-utils';
+import { output } from '@nrwl/workspace';
 
 export function runMany(parsedArgs: yargs.Arguments): void {
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
@@ -37,11 +37,7 @@ export function runMany(parsedArgs: yargs.Arguments): void {
 function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
   const allProjects = Object.values(projectGraph.nodes);
   if (nxArgs.all) {
-    return runnableForTargetAndConfiguration(
-      allProjects,
-      nxArgs.target,
-      nxArgs.configuration
-    );
+    return runnableForTarget(allProjects, nxArgs.target);
   } else {
     checkForInvalidProjects(nxArgs, allProjects);
     let selectedProjects = allProjects.filter(
@@ -52,12 +48,7 @@ function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
         withDeps(projectGraph, selectedProjects).nodes
       );
     }
-    return runnableForTargetAndConfiguration(
-      selectedProjects,
-      nxArgs.target,
-      nxArgs.configuration,
-      true
-    );
+    return runnableForTarget(selectedProjects, nxArgs.target, true);
   }
 }
 
@@ -73,17 +64,16 @@ function checkForInvalidProjects(
   }
 }
 
-function runnableForTargetAndConfiguration(
+function runnableForTarget(
   projects: ProjectGraphNode[],
   target: string,
-  configuration?: string,
   strict = false
 ): ProjectGraphNode[] {
   const notRunnable = [];
   const runnable = [];
 
   for (let project of projects) {
-    if (projectHasTargetAndConfiguration(project, target, configuration)) {
+    if (projectHasTarget(project, target)) {
       runnable.push(project);
     } else {
       notRunnable.push(project);

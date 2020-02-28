@@ -13,11 +13,13 @@ forEachCli(() => {
   describe('Run Many', () => {
     it('should build specific and all projects', () => {
       newProject();
+      const appA = uniq('appa-rand');
       const libA = uniq('liba-rand');
       const libB = uniq('libb-rand');
       const libC = uniq('libc-rand');
       const libD = uniq('libd-rand');
 
+      l(runCLI(`generate @nrwl/angular:app ${appA}`));
       l(runCLI(`generate @nrwl/angular:lib ${libA} --publishable --defaults`));
       l(runCLI(`generate @nrwl/angular:lib ${libB} --publishable --defaults`));
       l(runCLI(`generate @nrwl/angular:lib ${libC} --publishable --defaults`));
@@ -75,6 +77,20 @@ forEachCli(() => {
       expect(buildWithDeps).toContain('Running target "build" succeeded');
 
       l('=======> testing run many --with-deps complete');
+
+      l('=======> testing run many --configuration');
+
+      const buildConfig = l(
+        runCLI(
+          `run-many --target=build --projects="${appA},${libA}" --configuration=production`
+        )
+      );
+      expect(buildConfig).toContain(`Running target build for projects:`);
+      expect(buildConfig).toContain(`build ${appA} --configuration production`);
+      expect(buildConfig).toContain(`build ${libA}`);
+      expect(buildConfig).toContain('Running target "build" succeeded');
+
+      l('=======> testing run many --configuration');
     }, 1000000);
   });
 });
