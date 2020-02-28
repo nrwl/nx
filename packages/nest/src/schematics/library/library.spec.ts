@@ -3,11 +3,7 @@ import { NxJson, readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { expectTestsPass } from 'e2e/utils';
-import {
-  stripIndents,
-  trimNewlines
-} from '@angular-devkit/core/src/utils/literals';
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -137,10 +133,10 @@ describe('lib', () => {
       );
 
       const barrel = getFileContent(tree, 'libs/my-lib/src/index.ts');
-      expect(barrel).toEqual(
-        "export * from './lib/my-lib.module';" +
-          "\nexport * from './lib/my-lib.service';" +
-          "\nexport * from './lib/my-lib.controller';\n"
+      expect(stripIndents`${barrel}`).toEqual(
+        stripIndents`export * from './lib/my-lib.module';
+          export * from './lib/my-lib.service';
+          export * from './lib/my-lib.controller';`
       );
     });
 
