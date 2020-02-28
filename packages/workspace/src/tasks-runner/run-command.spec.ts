@@ -18,22 +18,14 @@ describe('getRunner', () => {
   });
 
   it('gets a default runner when runner is not defined in the nx json', () => {
-    const { tasksRunner, tasksOptions } = getRunner(
-      undefined,
-      nxJson,
-      overrides
-    );
+    const { tasksRunner, tasksOptions } = getRunner({}, nxJson, overrides);
 
     expect(tasksRunner).toEqual(defaultTaskRunner);
     expect(tasksOptions).toEqual(overrides);
   });
 
   it('gets a default runner when default options are not configured', () => {
-    const { tasksRunner, tasksOptions } = getRunner(
-      undefined,
-      nxJson,
-      overrides
-    );
+    const { tasksRunner, tasksOptions } = getRunner({}, nxJson, overrides);
 
     expect(tasksRunner).toEqual(defaultTaskRunner);
     expect(tasksOptions).toEqual(overrides);
@@ -51,7 +43,7 @@ describe('getRunner', () => {
     };
 
     const { tasksRunner, tasksOptions } = getRunner(
-      'custom',
+      { runner: 'custom' },
       nxJson,
       overrides
     );
@@ -75,7 +67,7 @@ describe('getRunner', () => {
     };
 
     const { tasksRunner, tasksOptions } = getRunner(
-      'custom',
+      { runner: 'custom' },
       nxJson,
       overrides
     );
@@ -97,7 +89,7 @@ describe('getRunner', () => {
       }
     };
 
-    const { tasksRunner } = getRunner(undefined, nxJson, overrides);
+    const { tasksRunner } = getRunner({}, nxJson, overrides);
 
     expect(tasksRunner).toEqual(mockRunner);
   });

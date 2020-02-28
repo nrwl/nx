@@ -158,7 +158,7 @@ describe('normalizeBundleOptions', () => {
 
     const result = normalizeBundleOptions(testOptions, root);
 
-    expect(result.babelConfig).toBeUndefined();
-    expect(result.rollupConfig).toBeUndefined();
+    expect(result.babelConfig).toEqual('');
+    expect(result.rollupConfig).toEqual('');
   });
 });

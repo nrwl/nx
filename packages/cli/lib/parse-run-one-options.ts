@@ -4,7 +4,7 @@ export function parseRunOneOptions(
   nxJson: any,
   workspaceConfigJson: any,
   args: string[]
-): false | { project; target; configuration; overrides } {
+): false | { project; target; configuration; overrides; skipNxCache } {
   // custom runner is not set, no tasks runner
   if (
     !nxJson.tasksRunnerOptions ||
@@ -29,13 +29,14 @@ export function parseRunOneOptions(
   } catch (e) {}
 
   const overrides = yargsParser(args, {
-    boolean: ['prod'],
+    boolean: ['prod', 'skip-nx-cache'],
     string: ['configuration', 'project']
   });
 
   let project;
   let target;
   let configuration;
+  let skipNxCache = false;
 
   if (overrides._[0] === 'run') {
     [project, target, configuration] = overrides._[1].split(':');
@@ -57,6 +58,9 @@ export function parseRunOneOptions(
   if (overrides.project) {
     project = overrides.project;
   }
+  if (overrides['skip-nx-cache']) {
+    skipNxCache = overrides['skip-nx-cache'];
+  }
 
   // we need both to be able to run a target, no tasks runner
   if (!project || !target) {
@@ -66,11 +70,12 @@ export function parseRunOneOptions(
   // we need both to be able to run a target, no tasks runner
   if (!workspaceConfigJson.projects[project]) return false;
 
-  const res = { project, target, configuration, overrides };
+  const res = { project, target, configuration, overrides, skipNxCache };
   delete overrides['_'];
   delete overrides['configuration'];
   delete overrides['prod'];
   delete overrides['project'];
+  delete overrides['skip-nx-cache'];
 
   return res;
 }

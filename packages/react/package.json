@@ -31,16 +31,17 @@
     "@nrwl/workspace": "*"
   },
   "dependencies": {
+    "@babel/core": "^7.8.4",
+    "@babel/preset-react": "^7.8.3",
     "@nrwl/cypress": "*",
     "@nrwl/jest": "*",
     "@nrwl/web": "*",
     "@angular-devkit/schematics": "~9.0.1",
-    "@svgr/webpack": "^4.3.3",
-    "confusing-browser-globals": "^1.0.8",
-    "eslint-plugin-import": "^2.19.1",
+    "@svgr/webpack": "^5.2.0",
+    "confusing-browser-globals": "^1.0.9",
+    "eslint-plugin-import": "^2.20.1",
     "eslint-plugin-jsx-a11y": "^6.2.3",
-    "eslint-plugin-react": "^7.17.0",
-    "eslint-plugin-react-hooks": "^2.3.0",
-    "url-loader": "^2.2.0"
+    "eslint-plugin-react": "^7.18.3",
+    "eslint-plugin-react-hooks": "^2.4.0"
   }
 }

@@ -61,7 +61,7 @@ happynrwl/
 │       ├── src/
 │       │   ├── integrations/
 │       │   │   └── app.spec.ts
-│       │   ├── fixutres/
+│       │   ├── fixtures/
 │       │   ├── plugins/
 │       │   └── support/
 │       ├── cypress.json

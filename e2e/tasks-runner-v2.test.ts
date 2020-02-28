@@ -10,7 +10,7 @@ import {
 } from './utils';
 
 forEachCli(() => {
-  describe('defaultTasksRunner', () => {
+  describe('Task Runner V2', () => {
     describe('Parallel', () => {
       it('should be able to run tasks in parallel', () => {
         ensureProject();
@@ -101,6 +101,14 @@ forEachCli(() => {
         expect(listFiles(`dist/apps/${myapp1}`)).toEqual(filesApp1);
         expect(listFiles(`dist/apps/${myapp2}`)).toEqual(filesApp2);
 
+        // run with skipping cache
+        const outputWithBothBuildTasksCachedButSkipped = runCommand(
+          `npm run affected:build -- ${files} --skip-nx-cache`
+        );
+        expect(outputWithBothBuildTasksCachedButSkipped).not.toContain(
+          `read the output from cache`
+        );
+
         // touch myapp1
         // --------------------------------------------
         updateFile(`apps/${myapp1}/src/main.ts`, c => {
@@ -133,6 +141,12 @@ forEachCli(() => {
           `npm run nx -- build ${myapp1}`
         );
         expect(individualBuildWithCache).toContain('Cached Output');
+
+        // skip caching when building individual projects
+        const individualBuildWithSkippedCache = runCommand(
+          `npm run nx -- build ${myapp1} --skip-nx-cache`
+        );
+        expect(individualBuildWithSkippedCache).not.toContain('Cached Output');
 
         // run lint with caching
         // --------------------------------------------

@@ -328,12 +328,53 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         builder: '@nrwl/web:package',
         options: {
+          external: ['react', 'react-dom'],
           entryFile: 'libs/my-lib/src/index.ts',
           outputPath: 'dist/libs/my-lib',
           project: 'libs/my-lib/package.json',
           tsConfig: 'libs/my-lib/tsconfig.lib.json',
           babelConfig: '@nrwl/react/plugins/bundle-babel',
           rollupConfig: '@nrwl/react/plugins/bundle-rollup'
+        }
+      });
+    });
+
+    it('should support styled-components', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          publishable: true,
+          style: 'styled-components'
+        },
+        appTree
+      );
+
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+
+      expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
+        options: {
+          external: ['react', 'react-dom', 'styled-components']
+        }
+      });
+    });
+
+    it('should support @emotion/styled', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          publishable: true,
+          style: '@emotion/styled'
+        },
+        appTree
+      );
+
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+
+      expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
+        options: {
+          external: ['react', 'react-dom', '@emotion/styled', '@emotion/core']
         }
       });
     });
@@ -350,7 +391,7 @@ describe('lib', () => {
 
       const packageJson = readJsonInTree(tree, '/libs/my-lib/package.json');
 
-      expect(packageJson.name).toEqual('my-lib');
+      expect(packageJson.name).toEqual('@proj/my-lib');
     });
   });
 

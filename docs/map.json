@@ -130,6 +130,11 @@
             "file": "shared/tools-workspace-schematics"
           },
           {
+            "name": "Custom commands",
+            "id": "custom-commands",
+            "file": "shared/running-custom-commands"
+          },
+          {
             "name": "Nx Plugins",
             "id": "nx-plugin",
             "file": "shared/nx-plugin"
@@ -327,6 +332,11 @@
             "file": "shared/tools-workspace-schematics"
           },
           {
+            "name": "Custom commands",
+            "id": "custom-commands",
+            "file": "shared/running-custom-commands"
+          },
+          {
             "name": "Nx Plugins",
             "id": "nx-plugin",
             "file": "shared/nx-plugin"
@@ -504,6 +514,11 @@
             "name": "Workspace Schematics",
             "id": "workspace-schematics",
             "file": "shared/tools-workspace-schematics"
+          },
+          {
+            "name": "Custom commands",
+            "id": "custom-commands",
+            "file": "shared/running-custom-commands"
           },
           {
             "name": "Nx Plugins",

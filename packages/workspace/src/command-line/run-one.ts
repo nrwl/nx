@@ -6,6 +6,7 @@ import { EmptyReporter } from '../tasks-runner/empty-reporter';
 export function runOne(opts: {
   project: string;
   target: string;
+  skipNxCache: boolean;
   configuration: string;
   overrides: any;
 }): void {

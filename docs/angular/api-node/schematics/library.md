@@ -42,7 +42,7 @@ Alias(es): d
 
 Type: `string`
 
-A directory where the app is placed
+A directory where the lib is placed
 
 ### linter
 

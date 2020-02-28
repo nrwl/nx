@@ -6,6 +6,14 @@ Builder properties can be configured in angular.json when defining the builder, 
 
 ## Properties
 
+### docsMode
+
+Default: `false`
+
+Type: `boolean`
+
+Build a documentation-only site using addon-docs.
+
 ### outputPath
 
 Type: `string`

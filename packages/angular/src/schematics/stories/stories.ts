@@ -80,11 +80,14 @@ export function createAllStories(
           const componentInfo = declaredComponents.map(componentName => {
             try {
               const importStatement = imports.find(statement => {
-                const importedIdentifiers = statement
+                const namedImports = statement
                   .getChildren()
                   .find(node => node.kind === SyntaxKind.ImportClause)
                   .getChildren()
-                  .find(node => node.kind === SyntaxKind.NamedImports)
+                  .find(node => node.kind === SyntaxKind.NamedImports);
+                if (namedImports === undefined) return false;
+
+                const importedIdentifiers = namedImports
                   .getChildren()
                   .find(node => node.kind === SyntaxKind.SyntaxList)
                   .getChildren()

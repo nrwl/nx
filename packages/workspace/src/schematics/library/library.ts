@@ -74,7 +74,8 @@ function createFiles(options: NormalizedSchema): Rule {
         ...options,
         ...names(options.name),
         tmpl: '',
-        offsetFromRoot: offsetFromRoot(options.projectRoot)
+        offsetFromRoot: offsetFromRoot(options.projectRoot),
+        hasUnitTestRunner: options.unitTestRunner !== 'none'
       }),
       move(options.projectRoot)
     ])

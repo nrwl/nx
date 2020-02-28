@@ -26,6 +26,7 @@ export interface RunCommandsBuilderOptions extends JsonObject {
   color?: boolean;
   parallel?: boolean;
   readyWhen?: string;
+  cwd?: string;
   args?: string;
   envFile?: string;
   parsedArgs?: { [key: string]: string };
@@ -83,7 +84,8 @@ async function runInParallel(options: RunCommandsBuilderOptions) {
       c.command,
       options.readyWhen,
       options.parsedArgs,
-      options.color
+      options.color,
+      options.cwd
     ).then(result => ({
       result,
       command: c.command
@@ -127,7 +129,8 @@ async function runSerially(
           c.command,
           options.readyWhen,
           options.parsedArgs,
-          options.color
+          options.color,
+          options.cwd
         );
         return !success ? c.command : null;
       } else {
@@ -150,13 +153,15 @@ function createProcess(
   command: string,
   readyWhen: string,
   parsedArgs: { [key: string]: string },
-  color: boolean
+  color: boolean,
+  cwd: string
 ): Promise<boolean> {
   command = transformCommand(command, parsedArgs);
   return new Promise(res => {
     const childProcess = exec(command, {
       maxBuffer: TEN_MEGABYTES,
-      env: { ...process.env, FORCE_COLOR: `${color}` }
+      env: { ...process.env, FORCE_COLOR: `${color}` },
+      cwd
     });
     /**
      * Ensure the child process is killed when the parent exits

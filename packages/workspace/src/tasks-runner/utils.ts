@@ -47,20 +47,34 @@ export function getCommand(cliCommand: string, isYarn: boolean, task: Task) {
 }
 
 export function getOutputs(p: Record<string, ProjectGraphNode>, task: Task) {
-  const architect = p[task.target.project].data.architect[task.target.target];
+  return getOutputsForTargetAndConfiguration(
+    task.target.target,
+    task.target.configuration,
+    p[task.target.project]
+  );
+}
+
+export function getOutputsForTargetAndConfiguration(
+  target: string,
+  configuration: string,
+  node: ProjectGraphNode
+) {
+  const architect = node.data.architect[target];
+  if (architect && architect.outputs) return architect.outputs;
+
   let opts = architect.options || {};
-  if (
-    architect.configurations &&
-    architect.configurations[task.target.configuration]
-  ) {
+  if (architect.configurations && architect.configurations[configuration]) {
     opts = {
       ...opts,
-      ...architect.configurations[task.target.configuration]
+      ...architect.configurations[configuration]
     };
   }
-  let outputs = [];
+
   if (opts.outputPath) {
-    outputs.push(opts.outputPath);
+    return [opts.outputPath];
+  } else if (target === 'build') {
+    return [`dist/${node.data.root}`];
+  } else {
+    return [];
   }
-  return outputs;
 }

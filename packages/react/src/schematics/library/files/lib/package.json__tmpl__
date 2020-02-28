@@ -1,8 +1,4 @@
 {
   "name": "<%= name %>",
-  "version": "0.0.1",
-  "peerDependencies": {
-    "react": "*",
-    "react-dom": "*"
-  }
+  "version": "0.0.1"
 }

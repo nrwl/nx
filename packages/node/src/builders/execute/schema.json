@@ -22,7 +22,7 @@
     },
     "port": {
       "type": "number",
-      "default": 7777,
+      "default": 0,
       "description": "The port to inspect the process on. Setting port to 0 will assign random free ports to all forked processes."
     },
     "watch": {
@@ -42,6 +42,14 @@
       ],
       "description": "Ensures the app is starting with debugging",
       "default": "inspect"
+    },
+    "runtimeArgs": {
+      "type": "array",
+      "description": "Extra args passed to the node process",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
     },
     "args": {
       "type": "array",

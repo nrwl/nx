@@ -361,6 +361,27 @@ describe('app', () => {
     expect(appContent).not.toMatch(/extends Component/);
   });
 
+  it('should add .eslintrc and dependencies', async () => {
+    const tree = await runSchematic(
+      'app',
+      { name: 'myApp', linter: 'eslint' },
+      appTree
+    );
+
+    const eslintJson = readJsonInTree(tree, '/apps/my-app/.eslintrc');
+    const packageJson = readJsonInTree(tree, '/package.json');
+
+    expect(eslintJson.plugins).toEqual(
+      expect.arrayContaining(['react', 'react-hooks'])
+    );
+    expect(packageJson).toMatchObject({
+      devDependencies: {
+        'eslint-plugin-react': expect.anything(),
+        'eslint-plugin-react-hooks': expect.anything()
+      }
+    });
+  });
+
   describe('--class-component', () => {
     it('should generate class components', async () => {
       const tree = await runSchematic(
@@ -524,29 +545,6 @@ describe('app', () => {
         },
         library: {
           style: 'styled-components'
-        }
-      });
-    });
-  });
-
-  describe('--linter=eslint', () => {
-    it('should add .eslintrc and dependencies', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myApp', linter: 'eslint' },
-        appTree
-      );
-
-      const eslintJson = readJsonInTree(tree, '/apps/my-app/.eslintrc');
-      const packageJson = readJsonInTree(tree, '/package.json');
-
-      expect(eslintJson.plugins).toEqual(
-        expect.arrayContaining(['react', 'react-hooks'])
-      );
-      expect(packageJson).toMatchObject({
-        devDependencies: {
-          'eslint-plugin-react': expect.anything(),
-          'eslint-plugin-react-hooks': expect.anything()
         }
       });
     });

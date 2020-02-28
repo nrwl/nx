@@ -28,23 +28,24 @@
     },
     "format": {
       "type": "string",
-      "description": "Output format (prose, json, stylish, verbose, pmd, msbuild, checkstyle, vso, fileslist).",
-      "default": "prose",
+      "description": "ESLint Output formatter (https://eslint.org/docs/user-guide/formatters).",
+      "default": "stylish",
       "anyOf": [
         {
           "enum": [
-            "checkstyle",
-            "codeFrame",
-            "filesList",
-            "json",
-            "junit",
-            "msbuild",
-            "pmd",
-            "prose",
             "stylish",
-            "tap",
-            "verbose",
-            "vso"
+            "compact",
+            "codeframe",
+            "unix",
+            "visualstudio",
+            "table",
+            "checkstyle",
+            "html",
+            "jslint-xml",
+            "json",
+            "json-with-metadata",
+            "junit",
+            "tap"
           ]
         },
         { "minLength": 1 }
@@ -66,10 +67,33 @@
         "type": "string"
       }
     },
+    "force": {
+      "type": "boolean",
+      "description": "Succeeds even if there was linting errors.",
+      "default": false
+    },
+    "silent": {
+      "type": "boolean",
+      "description": "Hide output text.",
+      "default": false
+    },
     "fix": {
       "type": "boolean",
       "description": "Fixes linting errors (may overwrite linted files).",
       "default": false
+    },
+    "cache": {
+      "type": "boolean",
+      "description": "Only check changed files.",
+      "default": false
+    },
+    "cacheLocation": {
+      "type": "string",
+      "description": "Path to the cache file or directory."
+    },
+    "outputFile": {
+      "type": "string",
+      "description": "File to write report to."
     }
   },
   "additionalProperties": false,

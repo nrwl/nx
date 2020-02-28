@@ -40,7 +40,7 @@ describe('create-nx-workspace', () => {
     await addReact(workspaceDir);
     await execCommand(
       `Generate a React app`,
-      `ng g @nrwl/react:app reactapp --linter=eslint --style=css --no-router`,
+      `ng g @nrwl/react:app reactapp --style=css --no-router`,
       workspaceDir
     );
     await execCommand(`Building angular app`, `ng build ngapp`, workspaceDir);

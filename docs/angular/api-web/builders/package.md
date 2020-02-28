@@ -24,6 +24,32 @@ Type: `array`
 
 A list of external modules that will not be bundled (react, react-dom, etc.).
 
+### extractCss
+
+Default: `true`
+
+Type: `boolean`
+
+CSS files will be extracted to the output folder.
+
+### globals
+
+Type: `array` of `object`
+
+A mapping of node modules to their UMD global names. Used by the UMD bundle
+
+#### moduleId
+
+Type: `string`
+
+The node module to map from (e.g. `react-dom`).
+
+#### global
+
+Type: `string`
+
+The global name to map to (e.g. `ReactDOM`).
+
 ### outputPath
 
 Type: `string`
