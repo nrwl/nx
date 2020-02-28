@@ -218,6 +218,7 @@ export function copyMissingPackages(): void {
     '@nestjs',
     'express',
     '@types/express',
+    'protractor',
 
     'react',
     'react-dom',
