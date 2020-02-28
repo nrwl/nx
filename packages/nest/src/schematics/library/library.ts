@@ -96,7 +96,11 @@ function addExportsToBarrelFile(options: NormalizedSchema): Rule {
       );
 
       insert(host, indexFilePath, [
-        new RemoveChange(indexFilePath, 0, "export * from './lib/my-lib';"),
+        new RemoveChange(
+          indexFilePath,
+          0,
+          `export * from './lib/${options.fileName}';`
+        ),
         ...addGlobal(
           indexSourceFile,
           indexFilePath,

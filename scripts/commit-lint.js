@@ -27,7 +27,7 @@ if (exitCode === 0) {
   console.log('\n');
   console.log('possible types: chore|build|feat|fix|cleanup|docs');
   console.log(
-    'possible scopes: angular|bazel|core|docs|nextjs||nestlinter|linter|node|react|storybook|testing|repo|misc (if unsure use "core")'
+    'possible scopes: angular|bazel|core|docs|nextjs|nest|linter|linter|node|react|storybook|testing|repo|misc (if unsure use "core")'
   );
   console.log(
     '\nEXAMPLE: \n' +

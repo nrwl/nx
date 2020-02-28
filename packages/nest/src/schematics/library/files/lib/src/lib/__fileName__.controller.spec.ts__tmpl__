@@ -1,4 +1,6 @@
 import { Test } from '@nestjs/testing';
+import { <%= className %>Controller } from './<%= fileName %>.controller';
+<% if(service) { %>import { <%= className %>Service } from './<%= fileName %>.service';<% } %>
 
 describe('<%= className %>Controller', () => {
 

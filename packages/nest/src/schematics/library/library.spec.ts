@@ -100,6 +100,7 @@ describe('lib', () => {
       expect(stripIndents`${module}`).toEqual(
         stripIndents`import { Module } from '@nestjs/common';
           import { MyLibService } from './my-lib.service';
+          import { MyLibController } from './my-lib.controller';
           
           @Module({
           controllers: [MyLibController],
@@ -107,6 +108,20 @@ describe('lib', () => {
           exports: [MyLibService]
           })
           export class MyLibModule {}`
+      );
+
+      const controller = getFileContent(
+        tree,
+        'libs/my-lib/src/lib/my-lib.controller.ts'
+      );
+      expect(stripIndents`${controller}`).toEqual(
+        stripIndents`import { Controller } from '@nestjs/common';
+          import { MyLibService } from './my-lib.service';
+          
+          @Controller('my-lib')
+          export class MyLibController {
+            constructor(private myLibService: MyLibService) {}
+          }`
       );
 
       const barrel = getFileContent(tree, 'libs/my-lib/src/index.ts');

@@ -21,6 +21,8 @@ import {
   setMaxWorkers,
   newProject
 } from './utils';
+import { getFileContent } from '@nrwl/workspace/testing';
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 function getData(): Promise<any> {
   return new Promise(resolve => {
@@ -232,6 +234,10 @@ forEachCli(currentCLIName => {
         const nestlib = uniq('nestlib');
 
         runCLI(`generate @nrwl/nest:lib ${nestlib}`);
+
+        const jestConfig = require(`libs/${nestlib}/jest.config.js`);
+
+        expect(jestConfig.testEnvironment).toEqual('node');
 
         const lintResults = runCLI(`lint ${nestlib}`);
         expect(lintResults).toContain('All files pass linting.');
