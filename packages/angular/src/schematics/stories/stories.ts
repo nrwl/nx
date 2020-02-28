@@ -29,120 +29,121 @@ export function createAllStories(
     context.logger.debug('adding .storybook folder to lib');
 
     const libPath = getProjectConfig(tree, projectName).sourceRoot + '/lib';
+    let moduleFilePaths = [] as string[];
+    tree.getDir(libPath).visit(filePath => {
+      if (!filePath.endsWith('.module.ts')) {
+        return;
+      }
+      moduleFilePaths.push(filePath);
+    });
     return chain(
-      tree
-        .getDir(libPath)
-        .subfiles.filter(fileName => fileName.endsWith('.module.ts'))
-        .map(fileName => {
-          const filePath = libPath + '/' + fileName;
-          const file = getTsSourceFile(tree, filePath);
+      moduleFilePaths.map(filePath => {
+        const file = getTsSourceFile(tree, filePath);
 
-          const ngModuleDecorators = getDecoratorMetadata(
-            file,
-            'NgModule',
-            '@angular/core'
+        const ngModuleDecorators = getDecoratorMetadata(
+          file,
+          'NgModule',
+          '@angular/core'
+        );
+        if (ngModuleDecorators.length === 0) {
+          throw new SchematicsException(
+            `No @NgModule decorator in ${filePath}`
           );
-          if (ngModuleDecorators.length === 0) {
-            throw new SchematicsException(
-              `No @NgModule decorator in ${filePath}`
+        }
+        const ngModuleDecorator = ngModuleDecorators[0];
+        const syntaxList = ngModuleDecorator.getChildren().find(node => {
+          return node.kind === SyntaxKind.SyntaxList;
+        });
+        const declarationsPropertyAssignment = syntaxList
+          .getChildren()
+          .find(node => {
+            return (
+              node.kind === SyntaxKind.PropertyAssignment &&
+              node.getChildren()[0].getText() === 'declarations'
             );
-          }
-          const ngModuleDecorator = ngModuleDecorators[0];
-          const syntaxList = ngModuleDecorator.getChildren().find(node => {
-            return node.kind === SyntaxKind.SyntaxList;
           });
-          const declarationsPropertyAssignment = syntaxList
-            .getChildren()
-            .find(node => {
-              return (
-                node.kind === SyntaxKind.PropertyAssignment &&
-                node.getChildren()[0].getText() === 'declarations'
-              );
-            });
-          if (!declarationsPropertyAssignment) {
-            throw new SchematicsException(
-              `No declarations array in the @NgModule decorator in ${filePath}`
-            );
-          }
-          const declaredComponents = declarationsPropertyAssignment
-            .getChildren()
-            .find(node => node.kind === SyntaxKind.ArrayLiteralExpression)
-            .getChildren()
-            .find(node => node.kind === SyntaxKind.SyntaxList)
-            .getChildren()
-            .filter(node => node.kind === SyntaxKind.Identifier)
-            .map(node => node.getText())
-            .filter(name => name.endsWith('Component'));
-
-          const imports = file.statements.filter(
-            statement => statement.kind === SyntaxKind.ImportDeclaration
+        if (!declarationsPropertyAssignment) {
+          throw new SchematicsException(
+            `No declarations array in the @NgModule decorator in ${filePath}`
           );
-          const componentInfo = declaredComponents.map(componentName => {
-            try {
-              const importStatement = imports.find(statement => {
-                const namedImports = statement
-                  .getChildren()
-                  .find(node => node.kind === SyntaxKind.ImportClause)
-                  .getChildren()
-                  .find(node => node.kind === SyntaxKind.NamedImports);
-                if (namedImports === undefined) return false;
+        }
+        const declaredComponents = declarationsPropertyAssignment
+          .getChildren()
+          .find(node => node.kind === SyntaxKind.ArrayLiteralExpression)
+          .getChildren()
+          .find(node => node.kind === SyntaxKind.SyntaxList)
+          .getChildren()
+          .filter(node => node.kind === SyntaxKind.Identifier)
+          .map(node => node.getText())
+          .filter(name => name.endsWith('Component'));
 
-                const importedIdentifiers = namedImports
-                  .getChildren()
-                  .find(node => node.kind === SyntaxKind.SyntaxList)
-                  .getChildren()
-                  .filter(node => node.kind === SyntaxKind.ImportSpecifier)
-                  .map(node => node.getText());
-                return importedIdentifiers.includes(componentName);
-              });
-              const fullPath = importStatement
+        const imports = file.statements.filter(
+          statement => statement.kind === SyntaxKind.ImportDeclaration
+        );
+        const componentInfo = declaredComponents.map(componentName => {
+          try {
+            const importStatement = imports.find(statement => {
+              const namedImports = statement
                 .getChildren()
-                .find(node => node.kind === SyntaxKind.StringLiteral)
-                .getText()
-                .slice(1, -1);
-              const path = fullPath.slice(0, fullPath.lastIndexOf('/'));
-              const componentFileName = fullPath.slice(
-                fullPath.lastIndexOf('/') + 1
-              );
-              return { name: componentName, path, componentFileName };
-            } catch (ex) {
-              context.logger.warn(
-                `Could not generate a story for ${componentName}.  Error: ${ex}`
-              );
-              return undefined;
-            }
-          });
+                .find(node => node.kind === SyntaxKind.ImportClause)
+                .getChildren()
+                .find(node => node.kind === SyntaxKind.NamedImports);
+              if (namedImports === undefined) return false;
 
-          return chain(
-            componentInfo
-              .filter(info => info !== undefined)
-              .map(info =>
-                chain([
-                  schematic<CreateComponentStoriesFileSchema>(
-                    'component-story',
-                    {
-                      libPath,
-                      componentName: info.name,
-                      componentPath: info.path,
-                      componentFileName: info.componentFileName
-                    }
-                  ),
-                  generateCypressSpecs
-                    ? schematic<CreateComponentSpecFileSchema>(
-                        'component-cypress-spec',
-                        {
-                          projectName,
-                          libPath,
-                          componentName: info.name,
-                          componentPath: info.path,
-                          componentFileName: info.componentFileName
-                        }
-                      )
-                    : () => {}
-                ])
-              )
-          );
-        })
+              const importedIdentifiers = namedImports
+                .getChildren()
+                .find(node => node.kind === SyntaxKind.SyntaxList)
+                .getChildren()
+                .filter(node => node.kind === SyntaxKind.ImportSpecifier)
+                .map(node => node.getText());
+              return importedIdentifiers.includes(componentName);
+            });
+            const fullPath = importStatement
+              .getChildren()
+              .find(node => node.kind === SyntaxKind.StringLiteral)
+              .getText()
+              .slice(1, -1);
+            const path = fullPath.slice(0, fullPath.lastIndexOf('/'));
+            const componentFileName = fullPath.slice(
+              fullPath.lastIndexOf('/') + 1
+            );
+            return { name: componentName, path, componentFileName };
+          } catch (ex) {
+            context.logger.warn(
+              `Could not generate a story for ${componentName}.  Error: ${ex}`
+            );
+            return undefined;
+          }
+        });
+
+        const modulePath = filePath.substr(0, filePath.lastIndexOf('/'));
+        return chain(
+          componentInfo
+            .filter(info => info !== undefined)
+            .map(info =>
+              chain([
+                schematic<CreateComponentStoriesFileSchema>('component-story', {
+                  libPath: modulePath,
+                  componentName: info.name,
+                  componentPath: info.path,
+                  componentFileName: info.componentFileName
+                }),
+                generateCypressSpecs
+                  ? schematic<CreateComponentSpecFileSchema>(
+                      'component-cypress-spec',
+                      {
+                        projectName,
+                        libPath: modulePath,
+                        componentName: info.name,
+                        componentPath: info.path,
+                        componentFileName: info.componentFileName
+                      }
+                    )
+                  : () => {}
+              ])
+            )
+        );
+      })
     );
   };
 }
