@@ -110,8 +110,8 @@ describe('app', () => {
       production: {
         fileReplacements: [
           {
-            replace: 'environments/environment.ts',
-            with: 'environments/environment.prod.ts'
+            replace: 'apps/my-app/environments/environment.ts',
+            with: 'apps/my-app/environments/environment.prod.ts'
           }
         ]
       }
