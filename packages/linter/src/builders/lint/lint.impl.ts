@@ -1,11 +1,12 @@
 import { createBuilder } from '@angular-devkit/architect';
 import { CLIEngine } from 'eslint';
-import { writeFileSync } from 'fs';
+import { writeFileSync, mkdirSync } from 'fs';
 import * as path from 'path';
 import { Schema } from './schema';
 import { BuilderContext } from '@angular-devkit/architect';
 import { createProgram } from './utility/ts-utils';
 import { lint, loadESLint } from './utility/eslint-utils';
+import { createDirectory } from '@nrwl/workspace';
 /**
  * Adapted from @angular-eslint/builder source
  */
@@ -110,10 +111,9 @@ async function run(options: Schema, context: BuilderContext): Promise<any> {
   context.logger.info(formattedResults);
 
   if (options.outputFile) {
-    writeFileSync(
-      path.join(context.workspaceRoot, options.outputFile),
-      formattedResults
-    );
+    const pathToFile = path.join(context.workspaceRoot, options.outputFile);
+    createDirectory(path.dirname(pathToFile));
+    writeFileSync(pathToFile, formattedResults);
   }
   if (bundledReport.warningCount > 0 && printInfo) {
     context.logger.warn('Lint warnings found in the listed files.\n');

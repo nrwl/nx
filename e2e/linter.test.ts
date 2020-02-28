@@ -118,7 +118,7 @@ forEachCli('nx', () => {
       updateFile('.eslintrc', JSON.stringify(eslintrc, null, 2));
       updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
 
-      const outputFile = 'lint-output.json';
+      const outputFile = 'a/b/c/lint-output.json';
       expect(() => {
         checkFilesExist(outputFile);
       }).toThrow();
