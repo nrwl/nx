@@ -590,8 +590,14 @@ function updateE2eProject(options: NormalizedSchema): Rule {
     const content = host.read(spec).toString();
     host.overwrite(
       spec,
-      content.replace('my-app app is running!', `Welcome to ${options.name}!`)
+      content.replace(
+        `${options.name} app is running!`,
+        `Welcome to ${options.name}!`
+      )
     );
+    const page = `${options.e2eProjectRoot}/src/app.po.ts`;
+    const pageContent = host.read(page).toString();
+    host.overwrite(page, pageContent.replace(`.content span`, `header h1`));
 
     return chain([
       updateJsonInTree(getWorkspacePath(host), json => {

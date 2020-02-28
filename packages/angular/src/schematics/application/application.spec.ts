@@ -468,6 +468,21 @@ describe('app', () => {
           }
         });
       });
+
+      it('should update E2E spec files to match the app name', async () => {
+        const tree = await runSchematic(
+          'app',
+          { name: 'myApp', e2eTestRunner: 'protractor' },
+          appTree
+        );
+
+        expect(
+          tree.readContent('apps/my-app-e2e/src/app.e2e-spec.ts')
+        ).toContain(`'Welcome to my-app!'`);
+        expect(tree.readContent('apps/my-app-e2e/src/app.po.ts')).toContain(
+          `'proj-root header h1'`
+        );
+      });
     });
 
     describe('none', () => {
