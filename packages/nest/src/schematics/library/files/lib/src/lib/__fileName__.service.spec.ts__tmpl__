@@ -1,6 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
 
-@Injectable()
-export class <%= className %>Service {
-    constructor() {}
-}
+describe('<%= className %>Service', () => {
+
+    let service: <%= className %>Service;
+
+    beforeEach(async () => {
+        const module = await Test.createTestingModule({
+            providers: [
+                <%= className %>Service
+            ]
+        }).compile();
+
+        service = module.get(<%= className %>Service);
+    });
+
+    it('should be defined', () => {
+        expect(service).toBeTruthy();
+    });
+
+})

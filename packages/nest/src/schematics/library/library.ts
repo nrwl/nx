@@ -15,20 +15,19 @@ import {
   url
 } from '@angular-devkit/schematics';
 import {
+  addGlobal,
   formatFiles,
+  getNpmScope,
   getProjectConfig,
+  insert,
   names,
   offsetFromRoot,
   toFileName,
   updateJsonInTree,
-  updateWorkspaceInTree,
-  getNpmScope,
-  insert,
-  addGlobal
+  updateWorkspaceInTree
 } from '@nrwl/workspace';
 import { Schema } from './schema';
-import * as path from 'path';
-import * as ts from '@schematics/angular/third_party/github.com/Microsoft/TypeScript/lib/typescript';
+import * as ts from 'typescript';
 import { RemoveChange } from '@nrwl/workspace/src/utils/ast-utils';
 
 export interface NormalizedSchema extends Schema {
@@ -138,10 +137,16 @@ function createFiles(options: NormalizedSchema): Rule {
       options.publishable
         ? noop()
         : filter(file => !file.endsWith('package.json')),
-      options.service ? noop() : filter(file => !file.endsWith('service.ts')),
+      options.service ? noop() : filter(file => !file.endsWith('.service.ts')),
       options.controller
         ? noop()
-        : filter(file => !file.endsWith('controller.ts'))
+        : filter(file => !file.endsWith('.controller.ts')),
+      !options.controller || options.unitTestRunner === 'none'
+        ? filter(file => !file.endsWith('.controller.spec.ts'))
+        : noop(),
+      !options.service || options.unitTestRunner === 'none'
+        ? filter(file => !file.endsWith('.service.spec.ts'))
+        : noop()
     ]),
     MergeStrategy.Overwrite
   );

@@ -2,11 +2,7 @@ import { Tree } from '@angular-devkit/schematics';
 import { NxJson, readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
-import { expectTestsPass } from 'e2e/utils';
-import {
-  stripIndents,
-  trimNewlines
-} from '@angular-devkit/core/src/utils/literals';
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -79,17 +75,19 @@ describe('lib', () => {
         'libs/my-lib/src/lib/my-lib.module.ts'
       );
       expect(stripIndents`${module}`).toEqual(
-        "import { Module, Global } from '@nestjs/common';\n" +
-          '\n@Global()\n' +
-          '@Module({' +
-          '\ncontrollers: [],' +
-          '\nproviders: [],' +
-          '\nexports: []\n})\n' +
-          'export class MyLibModule {}'
+        stripIndents`import { Module, Global } from '@nestjs/common';
+          
+          @Global()
+          @Module({
+          controllers: [],
+          providers: [],
+          exports: []
+          })
+          export class MyLibModule {}`
       );
     });
 
-    it('should provider the controller and service', async () => {
+    it('should provide the controller and service', async () => {
       const tree = await runSchematic(
         'lib',
         { name: 'myLib', service: true, controller: true },
@@ -100,21 +98,22 @@ describe('lib', () => {
         'libs/my-lib/src/lib/my-lib.module.ts'
       );
       expect(stripIndents`${module}`).toEqual(
-        "import { Module } from '@nestjs/common';\n" +
-          "import { MyLibService } from './my-lib.service';\n\n" +
-          '@Module({\n' +
-          'controllers: [MyLibController],\n' +
-          'providers: [MyLibService],\n' +
-          'exports: [MyLibService]\n' +
-          '})\n' +
-          'export class MyLibModule {}'
+        stripIndents`import { Module } from '@nestjs/common';
+          import { MyLibService } from './my-lib.service';
+          
+          @Module({
+          controllers: [MyLibController],
+          providers: [MyLibService],
+          exports: [MyLibService]
+          })
+          export class MyLibModule {}`
       );
 
       const barrel = getFileContent(tree, 'libs/my-lib/src/index.ts');
-      expect(barrel).toEqual(
-        "export * from './lib/my-lib.module';" +
-          "\nexport * from './lib/my-lib.service';" +
-          "\nexport * from './lib/my-lib.controller';\n"
+      expect(stripIndents`${barrel}`).toEqual(
+        stripIndents`export * from './lib/my-lib.module';
+          export * from './lib/my-lib.service';
+          export * from './lib/my-lib.controller';`
       );
     });
 

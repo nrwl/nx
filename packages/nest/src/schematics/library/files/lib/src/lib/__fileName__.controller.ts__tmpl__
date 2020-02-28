@@ -2,5 +2,5 @@ import { Controller } from '@nestjs/common';
 
 @Controller(<%= fileName %>)
 export class <%= className %>Controller {
-    constructor(<% if(service) { %><%= className %>Service %><% } %>) {}
+    constructor(<% if(service) { %><%= className %>Service<% } %>) {}
 }
