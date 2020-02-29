@@ -1,9 +1,8 @@
 import { Tree } from '@angular-devkit/schematics';
 import { addDepsToPackageJson, readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runSchematic } from '../../utils/testing';
-import { callRule } from '../../../../cypress/src/utils/testing';
-import { cypressVersion } from '../../../../cypress/src/utils/versions';
+import { runSchematic, callRule } from '../../utils/testing';
+import { expressVersion } from '../../utils/versions';
 
 describe('init', () => {
   let tree: Tree;
@@ -18,7 +17,7 @@ describe('init', () => {
     const existingVersion = '1.0.0';
     await callRule(
       addDepsToPackageJson(
-        { '@nrwl/express': cypressVersion, [existing]: existingVersion },
+        { '@nrwl/express': expressVersion, [existing]: existingVersion },
         { [existing]: existingVersion },
         false
       ),
