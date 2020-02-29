@@ -192,6 +192,7 @@ describe('lib', () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
+      expect(tree.exists(`libs/my-lib/src/lib/my-lib.spec.ts`)).toBeFalsy();
     });
   });
 
@@ -247,6 +248,7 @@ describe('lib', () => {
       );
       expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
+      expect(tree.exists(`libs/my-dir/my-lib/src/lib/my-lib.spec.ts`)).toBeFalsy();
     });
 
     it('should update workspace.json', async () => {
