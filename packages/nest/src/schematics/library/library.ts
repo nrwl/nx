@@ -46,15 +46,14 @@ export default function(schema: NormalizedSchema): Rule {
 
     return chain([
       externalSchematic('@nrwl/node', 'lib', schema),
-      deleteFile(
-        `libs/${options.projectDirectory}/src/lib/${options.name}.spec.ts`
-      ),
       createFiles(options),
       addExportsToBarrelFile(options),
       updateTsConfig(options),
       addProject(options),
       formatFiles(options),
-      deleteFile(`/${options.projectRoot}/src/lib/${options.fileName}.spec.ts`)
+      deleteFile(
+        `/${options.projectRoot}/src/lib/${options.fileName}.spec.ts`
+      )
     ]);
   };
 }

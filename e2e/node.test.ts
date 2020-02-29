@@ -22,9 +22,7 @@ import {
   newProject,
   checkFilesDoNotExist
 } from './utils';
-import { getFileContent } from '@nrwl/workspace/testing';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import * as fs from 'fs';
 import { readFile } from './utils';
 
 function getData(): Promise<any> {
