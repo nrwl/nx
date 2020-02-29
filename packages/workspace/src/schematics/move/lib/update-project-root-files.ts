@@ -22,14 +22,14 @@ export function updateProjectRootFiles(schema: Schema): Rule {
         const project = workspace.projects.get(schema.projectName);
         const destination = getDestination(schema, workspace);
 
-        const newRelativeRoot = path.relative(
-          path.join(appRootPath, destination),
-          appRootPath
-        );
-        const oldRelativeRoot = path.relative(
-          path.join(appRootPath, project.root),
-          appRootPath
-        );
+        const newRelativeRoot = path
+          .relative(path.join(appRootPath, destination), appRootPath)
+          .split(path.sep)
+          .join('/');
+        const oldRelativeRoot = path
+          .relative(path.join(appRootPath, project.root), appRootPath)
+          .split(path.sep)
+          .join('/');
 
         if (newRelativeRoot === oldRelativeRoot) {
           // nothing to do

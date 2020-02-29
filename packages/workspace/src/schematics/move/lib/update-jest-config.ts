@@ -31,11 +31,11 @@ export function updateJestConfig(schema: Schema): Rule {
 
         const oldContent = tree.read(jestConfigPath).toString('utf-8');
 
-        const findName = new RegExp(schema.projectName, 'g');
+        const findName = new RegExp(`'${schema.projectName}'`, 'g');
         const findDir = new RegExp(project.root, 'g');
 
         const newContent = oldContent
-          .replace(findName, newProjectName)
+          .replace(findName, `'${newProjectName}'`)
           .replace(findDir, destination);
         tree.overwrite(jestConfigPath, newContent);
 

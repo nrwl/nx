@@ -32,7 +32,7 @@ export function updateModuleName(schema: Schema) {
           to: classify(newProjectName)
         };
 
-        const findModuleName = new RegExp(moduleName.from, 'g');
+        const findModuleName = new RegExp(`\\b${moduleName.from}`, 'g');
 
         const moduleFile = {
           from: `${schema.projectName}.module`,
