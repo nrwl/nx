@@ -23,6 +23,8 @@ import {
 } from './utils';
 import { getFileContent } from '@nrwl/workspace/testing';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import * as fs from 'fs';
+import { readFile } from './utils';
 
 function getData(): Promise<any> {
   return new Promise(resolve => {
@@ -235,9 +237,21 @@ forEachCli(currentCLIName => {
 
         runCLI(`generate @nrwl/nest:lib ${nestlib}`);
 
-        const jestConfig = require(`libs/${nestlib}/jest.config.js`);
+        const jestConfigContent = readFile(`libs/${nestlib}/jest.config.js`);
 
-        expect(jestConfig.testEnvironment).toEqual('node');
+        expect(stripIndents`${jestConfigContent}`).toEqual(
+          stripIndents`module.exports = {
+                name: '${nestlib}',
+                preset: '../../jest.config.js',
+                testEnvironment: 'node',
+                 transform: {
+                '^.+\\.[tj]sx?$': 'ts-jest'
+                },
+                moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+                coverageDirectory: '../../coverage/libs/${nestlib}'
+            };
+            `
+        );
 
         const lintResults = runCLI(`lint ${nestlib}`);
         expect(lintResults).toContain('All files pass linting.');

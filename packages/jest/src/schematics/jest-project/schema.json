@@ -35,6 +35,7 @@
     },
     "testEnvironment": {
       "type": "string",
+      "enum": ["jsdom", "node"],
       "description": "The test environment for jest",
       "default": "jsdom"
     }

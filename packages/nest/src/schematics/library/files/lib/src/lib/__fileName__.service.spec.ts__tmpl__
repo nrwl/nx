@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { <%= className %>Service } from './<%= fileName %>.service';
 
 describe('<%= className %>Service', () => {
 

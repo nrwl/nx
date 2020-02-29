@@ -130,6 +130,8 @@ Default: `node`
 
 Type: `string`
 
+Possible values: `jsdom`, `node`
+
 The test environment for jest, for node applications this should stay as node unless doing DOM testing.
 
 ### unitTestRunner

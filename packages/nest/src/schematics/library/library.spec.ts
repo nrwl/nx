@@ -384,5 +384,22 @@ describe('lib', () => {
       );
       expect(tsconfigJson.compilerOptions.target).toEqual('es2020');
     });
+
+    it('should set target jest testEnvironment to node', async () => {
+      const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
+
+      const jestConfig = getFileContent(tree, 'libs/my-lib/jest.config.js');
+      expect(stripIndents`${jestConfig}`)
+        .toEqual(stripIndents`module.exports = {
+      name: 'my-lib',
+      preset: '../../jest.config.js',
+      testEnvironment: 'node',
+      transform: {
+        '^.+\\.[tj]sx?$': 'ts-jest'
+      },
+      moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+      coverageDirectory: '../../coverage/libs/my-lib'
+      };`);
+    });
   });
 });

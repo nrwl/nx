@@ -26,7 +26,7 @@ export interface JestProjectSchema {
   skipSetupFile: boolean;
   setupFile: 'angular' | 'web-components' | 'none';
   skipSerializers: boolean;
-  testEnvironment?: 'node' | 'jsdom' | '';
+  testEnvironment: 'node' | 'jsdom' | '';
 }
 
 function generateFiles(options: JestProjectSchema): Rule {

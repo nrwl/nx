@@ -48,6 +48,12 @@
       "type": "boolean",
       "default": false,
       "description": "Do not update tsconfig.json for development experience."
+    },
+    "testEnvironment": {
+      "type": "string",
+      "enum": ["jsdom", "node"],
+      "description": "The test environment to use if unitTestRunner is set to jest",
+      "default": "jsdom"
     }
   },
   "required": ["name"]
