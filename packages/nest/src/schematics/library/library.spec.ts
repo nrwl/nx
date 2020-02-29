@@ -248,7 +248,9 @@ describe('lib', () => {
       );
       expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
-      expect(tree.exists(`libs/my-dir/my-lib/src/lib/my-lib.spec.ts`)).toBeFalsy();
+      expect(
+        tree.exists(`libs/my-dir/my-lib/src/lib/my-lib.spec.ts`)
+      ).toBeFalsy();
     });
 
     it('should update workspace.json', async () => {

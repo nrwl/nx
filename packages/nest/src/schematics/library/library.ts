@@ -51,9 +51,7 @@ export default function(schema: NormalizedSchema): Rule {
       updateTsConfig(options),
       addProject(options),
       formatFiles(options),
-      deleteFile(
-        `/${options.projectRoot}/src/lib/${options.fileName}.spec.ts`
-      )
+      deleteFile(`/${options.projectRoot}/src/lib/${options.fileName}.spec.ts`)
     ]);
   };
 }
