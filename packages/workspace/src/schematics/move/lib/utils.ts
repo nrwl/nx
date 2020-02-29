@@ -27,7 +27,10 @@ export function getDestination(
   if (projectType === 'application') {
     rootFolder = 'apps';
   }
-  return path.join(rootFolder, schema.destination);
+  return path
+    .join(rootFolder, schema.destination)
+    .split(path.sep)
+    .join('/');
 }
 
 /**
