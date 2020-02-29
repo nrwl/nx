@@ -253,9 +253,6 @@ forEachCli(currentCLIName => {
 
         const lintResults = runCLI(`lint ${nestlib}`);
         expect(lintResults).toContain('All files pass linting.');
-
-        const jestResult = await runCLIAsync(`test ${nestlib}`);
-        expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
       }, 60000);
 
       it('should be able to generate a nest library w/ service', async () => {
