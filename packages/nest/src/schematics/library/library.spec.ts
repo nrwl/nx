@@ -389,7 +389,8 @@ describe('lib', () => {
       );
       expect(tsconfigJson.compilerOptions.target).toEqual('es2020');
     });
-it('should set target jest testEnvironment to node', async () => {
+
+    it('should set target jest testEnvironment to node', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
 
       const jestConfig = getFileContent(tree, 'libs/my-lib/jest.config.js');

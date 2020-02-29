@@ -46,6 +46,9 @@ export default function(schema: NormalizedSchema): Rule {
 
     return chain([
       externalSchematic('@nrwl/node', 'lib', schema),
+      deleteFile(
+        `libs/${options.projectDirectory}/src/lib/${options.name}.spec.ts`
+      ),
       createFiles(options),
       addExportsToBarrelFile(options),
       updateTsConfig(options),
