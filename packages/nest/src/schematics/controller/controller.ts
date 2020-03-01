@@ -9,12 +9,12 @@ import {
 import { Schema } from './schema';
 import { normalizeProjectOptions } from '../../utils/normalize';
 import { addExportsToBarrelFile, createFiles } from '../../utils/files';
+import { formatFiles } from '@nrwl/workspace';
 
 export interface NormalizedSchema extends Schema {
   fileName: string;
   projectRoot: string;
   projectDirectory: string;
-  parsedTags: string[];
 }
 
 export default function(schema: Schema): Rule {
@@ -29,7 +29,8 @@ export default function(schema: Schema): Rule {
       ...runExternalSchematics(options),
       addExportsToBarrelFile(options, [
         `export * from './lib/${options.fileName}.controller';`
-      ])
+      ]),
+      formatFiles(options)
     ]);
   };
 }

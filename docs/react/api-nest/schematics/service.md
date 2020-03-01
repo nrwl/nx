@@ -68,22 +68,6 @@ Type: `boolean`
 
 Skip formatting files
 
-### skipTsConfig
-
-Default: `false`
-
-Type: `boolean`
-
-Do not update tsconfig.json for development experience.
-
-### tags
-
-Alias(es): t
-
-Type: `string`
-
-Add tags to the service (used for linting)
-
 ### unitTestRunner
 
 Default: `jest`

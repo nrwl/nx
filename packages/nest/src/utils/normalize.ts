@@ -12,17 +12,12 @@ export async function normalizeProjectOptions(
 
   const fileName = name.replace(new RegExp('/', 'g'), '-');
 
-  const parsedTags = schema.tags
-    ? schema.tags.split(',').map(s => s.trim())
-    : [];
-
   const normalized = {
     ...schema,
     fileName,
     name,
     projectRoot: project.root,
-    projectDirectory: project.sourceRoot,
-    parsedTags
+    projectDirectory: project.sourceRoot
   };
 
   return normalized;
