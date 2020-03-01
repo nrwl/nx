@@ -1,0 +1,38 @@
+import * as request from 'supertest';
+import { Test } from '@nestjs/testing';
+import { INestApplication, Post, Controller, HttpStatus, UsePipes, Body } from '@nestjs/common';
+import { <%= className %>Pipe } from './<%= fileName %>.pipe';
+
+@Controller('')
+class <%= className %>Controller {
+
+    @Post('')
+    @UsePipes(<%= className %>Pipe)
+    get(@Body() body: any): any {
+        return body;
+    }
+
+}
+
+describe('<%= className %>Pipe', () => {
+    let app: INestApplication;
+
+    beforeAll(async () => {
+        const module = await Test.createTestingModule({
+            controllers: [
+                <%= className %>Controller
+            ]
+        }).compile();
+
+        app = module.createNestApplication();
+        await app.init();
+    })
+
+    it('should transform the request body', () => {
+        return request(app.getHttpServer())
+            .post('/')
+            .send({validated: true})
+            .expect(201)
+            .expect({ nested: { validated: true } });
+    })
+})

@@ -71,6 +71,21 @@
       "description": "Include a controller with the library",
       "default": false
     },
+    "guard": {
+      "type": "boolean",
+      "description": "Include a guard with the library",
+      "default": false
+    },
+    "middleware": {
+      "type": "boolean",
+      "description": "Include a middleware with the library",
+      "default": false
+    },
+    "interceptor": {
+      "type": "boolean",
+      "description": "Include an interceptor with the library",
+      "default": false
+    },
     "testEnvironment": {
       "type": "string",
       "enum": ["jsdom", "node"],

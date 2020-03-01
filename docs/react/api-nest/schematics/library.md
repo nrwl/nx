@@ -60,6 +60,22 @@ Type: `boolean`
 
 Add the Global decorator to the generated module.
 
+### guard
+
+Default: `false`
+
+Type: `boolean`
+
+Include a guard with the library
+
+### interceptor
+
+Default: `false`
+
+Type: `boolean`
+
+Include an interceptor with the library
+
 ### linter
 
 Default: `tslint`
@@ -69,6 +85,14 @@ Type: `string`
 Possible values: `eslint`, `tslint`
 
 The tool to use for running lint checks.
+
+### middleware
+
+Default: `false`
+
+Type: `boolean`
+
+Include a middleware with the library
 
 ### name
 

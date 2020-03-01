@@ -15,12 +15,10 @@ import {
   url
 } from '@angular-devkit/schematics';
 import {
-  addGlobal,
   deleteFile,
   formatFiles,
   getNpmScope,
   getProjectConfig,
-  insert,
   names,
   offsetFromRoot,
   toFileName,
@@ -28,8 +26,7 @@ import {
   updateWorkspaceInTree
 } from '@nrwl/workspace';
 import { Schema } from './schema';
-import * as ts from 'typescript';
-import { RemoveChange } from '@nrwl/workspace/src/utils/ast-utils';
+import { addExportsToBarrelFile } from '../../utils/files';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -47,13 +44,60 @@ export default function(schema: NormalizedSchema): Rule {
     return chain([
       externalSchematic('@nrwl/node', 'lib', schema),
       createFiles(options),
-      addExportsToBarrelFile(options),
+      options.controller || options.service || options.global
+        ? addExportsToBarrelFile(options, [
+            `export * from './lib/${options.fileName}.module';`
+          ])
+        : noop(),
+      ...runExternalSchematics(options),
       updateTsConfig(options),
       addProject(options),
       formatFiles(options),
+      deleteFile(`/${options.projectRoot}/src/lib/${options.fileName}.ts`),
       deleteFile(`/${options.projectRoot}/src/lib/${options.fileName}.spec.ts`)
     ]);
   };
+}
+
+function runExternalSchematics(options: NormalizedSchema): Rule[] {
+  return [
+    options.guard
+      ? externalSchematic('@nrwl/nest', 'guard', {
+          ...options,
+          project: options.name
+        })
+      : noop(),
+    options.middleware
+      ? externalSchematic('@nrwl/nest', 'middleware', {
+          ...options,
+          project: options.name
+        })
+      : noop(),
+    options.controller
+      ? externalSchematic('@nrwl/nest', 'controller', {
+          ...options,
+          project: options.name
+        })
+      : noop(),
+    options.service && !options.controller
+      ? externalSchematic('@nrwl/nest', 'service', {
+          ...options,
+          project: options.name
+        })
+      : noop(),
+    options.interceptor
+      ? externalSchematic('@nrwl/nest', 'interceptor', {
+          ...options,
+          project: options.name
+        })
+      : noop(),
+    options.pipe
+      ? externalSchematic('@nrwl/nest', 'pipe', {
+          ...options,
+          project: options.name
+        })
+      : noop()
+  ];
 }
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
@@ -84,49 +128,6 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   return normalized;
 }
 
-function addExportsToBarrelFile(options: NormalizedSchema): Rule {
-  return (host: Tree) => {
-    const indexFilePath = `${options.projectRoot}/src/index.ts`;
-    const buffer = host.read(indexFilePath);
-    if (!!buffer) {
-      const indexSource = buffer!.toString('utf-8');
-      const indexSourceFile = ts.createSourceFile(
-        indexFilePath,
-        indexSource,
-        ts.ScriptTarget.Latest,
-        true
-      );
-
-      insert(host, indexFilePath, [
-        new RemoveChange(
-          indexFilePath,
-          0,
-          `export * from './lib/${options.fileName}';`
-        ),
-        ...addGlobal(
-          indexSourceFile,
-          indexFilePath,
-          `export * from './lib/${options.fileName}.module';`
-        ),
-        ...(options.service
-          ? addGlobal(
-              indexSourceFile,
-              indexFilePath,
-              `export * from './lib/${options.fileName}.service';`
-            )
-          : []),
-        ...(options.controller
-          ? addGlobal(
-              indexSourceFile,
-              indexFilePath,
-              `export * from './lib/${options.fileName}.controller';`
-            )
-          : [])
-      ]);
-    }
-  };
-}
-
 function createFiles(options: NormalizedSchema): Rule {
   return mergeWith(
     apply(url(`./files/lib`), [
@@ -152,6 +153,9 @@ function createFiles(options: NormalizedSchema): Rule {
         : noop(),
       !options.service || options.unitTestRunner === 'none'
         ? filter(file => !file.endsWith('.service.spec.ts'))
+        : noop(),
+      !options.controller && !options.service && !options.global
+        ? filter(file => !file.endsWith('.module.ts'))
         : noop()
     ]),
     MergeStrategy.Overwrite

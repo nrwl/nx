@@ -1,0 +1,50 @@
+import * as request from 'supertest';
+import { Test } from '@nestjs/testing';
+import { Module, NestModule, MiddlewareConsumer, INestApplication, Get, Req, Controller } from '@nestjs/common';
+import { <%= className %>Middleware } from './<%= fileName %>.middleware';
+import { Request } from 'express';
+
+@Controller('')
+class <%= className %>Controller {
+
+    @Get('')
+    get(@Req() req: Request): any {
+        return { middleware: req.headers['middleware'] };
+    }
+
+}
+
+@Module({
+    controllers: [
+        <%= className %>Controller
+    ]
+})
+class <%= className %>Module implements NestModule {
+    configure(consumer: MiddlewareConsumer) {
+        consumer
+            .apply(<%= className %>Middleware)
+            .forRoutes(<%= className %>Controller);
+    }
+}
+
+describe('<%= className %>Guard', () => {
+    let app: INestApplication;
+
+    beforeAll(async () => {
+        const module = await Test.createTestingModule({
+            imports: [
+                <%= className %>Module
+            ]
+        }).compile();
+
+        app = module.createNestApplication();
+        await app.init();
+    })
+
+    it('should trigger middleware and modify headers', () => {
+        return request(app.getHttpServer())
+            .get('/')
+            .expect(200)
+            .expect({ middleware: 'true' });
+    });
+})

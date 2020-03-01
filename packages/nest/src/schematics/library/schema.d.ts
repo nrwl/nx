@@ -11,7 +11,11 @@ export interface Schema {
   publishable?: boolean;
   global?: boolean;
   service?: boolean;
+  middleware?: boolean;
+  interceptor?: boolean;
+  pipe?: boolean;
   controller?: boolean;
+  guard?: boolean;
   target?:
     | 'es5'
     | 'es6'

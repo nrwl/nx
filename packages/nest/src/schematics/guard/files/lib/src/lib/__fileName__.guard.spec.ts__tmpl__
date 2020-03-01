@@ -1,0 +1,44 @@
+import * as request from 'supertest';
+import { Test } from '@nestjs/testing';
+import { INestApplication, Post, Controller, HttpStatus, UseGuards } from '@nestjs/common';
+import { <%= className %>Guard } from './<%= fileName %>.guard';
+
+@Controller('')
+class <%= className %>Controller {
+
+    @Post('')
+    @UseGuards(<%= className %>Guard)
+    get(): HttpStatus {
+        return HttpStatus.CREATED;
+    }
+
+}
+
+describe('<%= className %>Guard', () => {
+    let app: INestApplication;
+
+    beforeAll(async () => {
+        const module = await Test.createTestingModule({
+            controllers: [
+                <%= className %>Controller
+            ]
+        }).compile();
+
+        app = module.createNestApplication();
+        await app.init();
+    })
+
+    it('should be allowed', () => {
+        return request(app.getHttpServer())
+            .post('/')
+            .send({ validated: true })
+            .expect(201);
+    })
+
+    it('should not be allowed', () => {
+        return request(app.getHttpServer())
+            .post('/')
+            .send({ validated: false })
+            .expect(403);
+    })
+})

@@ -1,8 +1,12 @@
+import * as request from 'supertest';
 import { Test } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
 import { <%= className %>Controller } from './<%= fileName %>.controller';
 <% if(service) { %>import { <%= className %>Service } from './<%= fileName %>.service';<% } %>
 
 describe('<%= className %>Controller', () => {
+
+    let app: INestApplication;
 
     let controller: <%= className %>Controller;
 
@@ -16,6 +20,10 @@ describe('<%= className %>Controller', () => {
             ]
         }).compile();
 
+        app = module.createNestApplication();
+
+        await app.init();
+
         controller = module.get(<%= className %>Controller);
     });
 
@@ -23,4 +31,9 @@ describe('<%= className %>Controller', () => {
         expect(controller).toBeTruthy();
     });
 
+    it('should return 200 OK', () => {
+        return request(app.getHttpServer())
+            .get('/')
+            .expect(200);
+    })
 })

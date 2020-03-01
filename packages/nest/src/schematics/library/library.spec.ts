@@ -88,7 +88,7 @@ describe('lib', () => {
       );
     });
 
-    it('should provide the controller and service', async () => {
+    it('should register the controller and provide the service', async () => {
       const tree = await runSchematic(
         'lib',
         { name: 'myLib', service: true, controller: true },
@@ -116,20 +116,79 @@ describe('lib', () => {
         'libs/my-lib/src/lib/my-lib.controller.ts'
       );
       expect(stripIndents`${controller}`).toEqual(
-        stripIndents`import { Controller } from '@nestjs/common';
+        stripIndents`import { Controller, Get, HttpStatus } from '@nestjs/common';
           import { MyLibService } from './my-lib.service';
           
           @Controller('my-lib')
           export class MyLibController {
             constructor(private myLibService: MyLibService) {}
+            
+            @Get('')
+            get() {
+              return HttpStatus.OK;
+            }
           }`
       );
 
       const barrel = getFileContent(tree, 'libs/my-lib/src/index.ts');
       expect(stripIndents`${barrel}`).toEqual(
-        stripIndents`export * from './lib/my-lib.module';
+        stripIndents`export * from './lib/my-lib.controller';
           export * from './lib/my-lib.service';
-          export * from './lib/my-lib.controller';`
+          export * from './lib/my-lib.module';`
+      );
+    });
+
+    it('should register the controller and apply middleware', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', middleware: true, controller: true },
+        appTree
+      );
+      const module = getFileContent(
+        tree,
+        'libs/my-lib/src/lib/my-lib.module.ts'
+      );
+      expect(stripIndents`${module}`).toEqual(
+        stripIndents`import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+          
+          import { MyLibController } from './my-lib.controller';
+          import { MyLibMiddleware } from './my-lib.middleware';
+          
+          @Module({
+          controllers: [MyLibController],
+          providers: [],
+          exports: []
+          })
+          export class MyLibModule implements NestModule {
+            configure(consumer: MiddlewareConsumer) {
+              consumer.apply(MyLibMiddleware).forRoutes(MyLibController);
+            }
+          }`
+      );
+
+      const controller = getFileContent(
+        tree,
+        'libs/my-lib/src/lib/my-lib.controller.ts'
+      );
+      expect(stripIndents`${controller}`).toEqual(
+        stripIndents`import { Controller, Get, HttpStatus } from '@nestjs/common';
+          
+          @Controller('my-lib')
+          export class MyLibController {
+            constructor() {}
+            
+            @Get('')
+            get() {
+              return HttpStatus.OK;
+            }
+          }`
+      );
+
+      const barrel = getFileContent(tree, 'libs/my-lib/src/index.ts');
+      expect(stripIndents`${barrel}`).toEqual(
+        stripIndents`export * from './lib/my-lib.controller';
+          export * from './lib/my-lib.middleware';
+          export * from './lib/my-lib.module';`
       );
     });
 
@@ -405,6 +464,107 @@ describe('lib', () => {
       moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
       coverageDirectory: '../../coverage/libs/my-lib'
       };`);
+    });
+  });
+
+  describe('every nest flag', function() {
+    it('should generate all ts and spec files for every flag', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          service: true,
+          controller: true,
+          pipe: true,
+          middleware: true,
+          interceptor: true,
+          guard: true
+        },
+        appTree
+      );
+
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
+      expect(tree.exists(`libs/my-lib/src/lib/my-lib.service.ts`)).toBeTruthy();
+      expect(
+        tree.exists(`libs/my-lib/src/lib/my-lib.controller.ts`)
+      ).toBeTruthy();
+      expect(tree.exists(`libs/my-lib/src/lib/my-lib.pipe.ts`)).toBeTruthy();
+      expect(
+        tree.exists(`libs/my-lib/src/lib/my-lib.middleware.ts`)
+      ).toBeTruthy();
+      expect(
+        tree.exists(`libs/my-lib/src/lib/my-lib.interceptor.ts`)
+      ).toBeTruthy();
+      expect(tree.exists(`libs/my-lib/src/lib/my-lib.guard.ts`)).toBeTruthy();
+
+      expect(
+        tree.exists(`libs/my-lib/src/lib/my-lib.service.spec.ts`)
+      ).toBeTruthy();
+      expect(
+        tree.exists(`libs/my-lib/src/lib/my-lib.controller.spec.ts`)
+      ).toBeTruthy();
+      expect(
+        tree.exists(`libs/my-lib/src/lib/my-lib.pipe.spec.ts`)
+      ).toBeTruthy();
+      expect(
+        tree.exists(`libs/my-lib/src/lib/my-lib.middleware.spec.ts`)
+      ).toBeTruthy();
+      expect(
+        tree.exists(`libs/my-lib/src/lib/my-lib.interceptor.spec.ts`)
+      ).toBeTruthy();
+      expect(
+        tree.exists(`libs/my-lib/src/lib/my-lib.guard.spec.ts`)
+      ).toBeTruthy();
+    });
+
+    it('should generate all ts and no spec files for every flag', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          service: true,
+          controller: true,
+          pipe: true,
+          middleware: true,
+          interceptor: true,
+          guard: true,
+          unitTestRunner: 'none'
+        },
+        appTree
+      );
+
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
+      expect(tree.exists(`libs/my-lib/src/lib/my-lib.service.ts`)).toBeTruthy();
+      expect(
+        tree.exists(`libs/my-lib/src/lib/my-lib.controller.ts`)
+      ).toBeTruthy();
+      expect(tree.exists(`libs/my-lib/src/lib/my-lib.pipe.ts`)).toBeTruthy();
+      expect(
+        tree.exists(`libs/my-lib/src/lib/my-lib.middleware.ts`)
+      ).toBeTruthy();
+      expect(
+        tree.exists(`libs/my-lib/src/lib/my-lib.interceptor.ts`)
+      ).toBeTruthy();
+      expect(tree.exists(`libs/my-lib/src/lib/my-lib.guard.ts`)).toBeTruthy();
+
+      expect(
+        tree.exists(`libs/my-lib/src/lib/my-lib.service.spec.ts`)
+      ).toBeFalsy();
+      expect(
+        tree.exists(`libs/my-lib/src/lib/my-lib.controller.spec.ts`)
+      ).toBeFalsy();
+      expect(
+        tree.exists(`libs/my-lib/src/lib/my-lib.pipe.spec.ts`)
+      ).toBeFalsy();
+      expect(
+        tree.exists(`libs/my-lib/src/lib/my-lib.middleware.spec.ts`)
+      ).toBeFalsy();
+      expect(
+        tree.exists(`libs/my-lib/src/lib/my-lib.interceptor.spec.ts`)
+      ).toBeFalsy();
+      expect(
+        tree.exists(`libs/my-lib/src/lib/my-lib.guard.spec.ts`)
+      ).toBeFalsy();
     });
   });
 });

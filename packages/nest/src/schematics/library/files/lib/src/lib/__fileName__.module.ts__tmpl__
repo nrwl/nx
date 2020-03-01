@@ -1,6 +1,7 @@
-import { Module<% if(global) { %>, Global<% } %> } from '@nestjs/common';
+import { Module<% if(global) { %>, Global<% } %><% if(middleware) { %>, NestModule, MiddlewareConsumer<% } %> } from '@nestjs/common';
 <% if(service) { %>import { <%= className %>Service } from './<%= fileName %>.service';<% } %>
 <% if(controller) { %>import { <%= className %>Controller } from './<%= fileName %>.controller';<% } %>
+<% if(middleware) { %><% if(controller) { %>import { <%= className %>Middleware } from './<%= fileName %>.middleware';<% } %><% } %>
 
 <% if(global) { %>@Global()<% } %>
 @Module({
@@ -14,5 +15,10 @@ import { Module<% if(global) { %>, Global<% } %> } from '@nestjs/common';
         <% if(service) { %><%= className %>Service<% } %>
     ]
 })
-export class <%= className %>Module {
+export class <%= className %>Module <% if(middleware) { %>implements NestModule<% } %> {
+    <% if(middleware) { %><% if(controller) { %>configure(consumer: MiddlewareConsumer) {
+        consumer
+            .apply(<%= className %>Middleware)
+            .forRoutes(<%= className %>Controller);
+    }<% } %><% } %>
 }
