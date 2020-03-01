@@ -37,6 +37,8 @@ describe('schematic:cypress-project', () => {
     );
     expect(project.architect.e2e.options.headless).toBeUndefined();
     expect(project.architect.e2e.options.watch).toBeUndefined();
-    expect(project.architect.e2e.configurations.headless).toBeUndefined();
+    expect(project.architect.e2e.configurations).toEqual({
+      ci: { devServerTarget: `test-ui-lib:storybook:ci` }
+    });
   });
 });
