@@ -13,7 +13,11 @@ describe('controller', () => {
 
   describe('without service', function() {
     it('should generate controller and spec', async () => {
-      const libTree = await runSchematic('lib', { name: 'myLib' }, appTree);
+      const libTree = await runSchematic(
+        'lib',
+        { name: 'myLib', global: true },
+        appTree
+      );
 
       const controllerTree = await runSchematic(
         'controller',
@@ -38,7 +42,11 @@ describe('controller', () => {
     });
 
     it('should generate only controller', async () => {
-      const libTree = await runSchematic('lib', { name: 'myLib' }, appTree);
+      const libTree = await runSchematic(
+        'lib',
+        { name: 'myLib', global: true },
+        appTree
+      );
 
       const controllerTree = await runSchematic(
         'controller',
@@ -65,7 +73,11 @@ describe('controller', () => {
 
   describe('with service', function() {
     it('should generate controller and spec', async () => {
-      const libTree = await runSchematic('lib', { name: 'myLib' }, appTree);
+      const libTree = await runSchematic(
+        'lib',
+        { name: 'myLib', global: true },
+        appTree
+      );
 
       const controllerTree = await runSchematic(
         'controller',
@@ -100,7 +112,11 @@ describe('controller', () => {
     });
 
     it('should generate only controller', async () => {
-      const libTree = await runSchematic('lib', { name: 'myLib' }, appTree);
+      const libTree = await runSchematic(
+        'lib',
+        { name: 'myLib', global: true },
+        appTree
+      );
 
       const controllerTree = await runSchematic(
         'controller',

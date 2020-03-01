@@ -12,7 +12,11 @@ describe('service', () => {
   });
 
   it('should generate service and spec', async () => {
-    const libTree = await runSchematic('lib', { name: 'myLib' }, appTree);
+    const libTree = await runSchematic(
+      'lib',
+      { name: 'myLib', global: true },
+      appTree
+    );
 
     const serviceTree = await runSchematic(
       'service',
@@ -35,7 +39,11 @@ describe('service', () => {
   });
 
   it('should generate only service', async () => {
-    const libTree = await runSchematic('lib', { name: 'myLib' }, appTree);
+    const libTree = await runSchematic(
+      'lib',
+      { name: 'myLib', global: true },
+      appTree
+    );
 
     const serviceTree = await runSchematic(
       'service',
