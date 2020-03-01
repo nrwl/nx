@@ -33,7 +33,7 @@ describe('<%= className %>Controller', () => {
 
     it('should return 200 OK', () => {
         return request(app.getHttpServer())
-            .get('/')
+            .get('/<%= fileName %>')
             .expect(200);
     })
 })
