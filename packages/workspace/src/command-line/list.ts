@@ -1,14 +1,15 @@
 import yargs = require('yargs');
 import { terminal } from '@angular-devkit/core';
 import { appRootPath } from '../utils/app-root';
+import { listCommunityPlugins } from '../utils/community-plugins';
 import { detectPackageManager } from '../utils/detect-package-manager';
+import { output } from '../utils/output';
 import {
   getPluginCapabilities,
   getPluginVersion,
   readCapabilitiesFromNodeModules
 } from '../utils/plugin-utils';
 import { approvedPlugins } from '../utils/plugins';
-import { output } from '../utils/output';
 
 export interface YargsListArgs extends yargs.Arguments, ListArgs {}
 
@@ -40,7 +41,7 @@ async function listHandler(args: YargsListArgs) {
   if (args.plugin) {
     listCapabilities(args.plugin);
   } else {
-    listPlugins();
+    await listPlugins();
   }
 }
 
@@ -134,7 +135,7 @@ function listCapabilities(pluginName: string) {
   });
 }
 
-function listPlugins() {
+async function listPlugins() {
   const installedPlugins = readCapabilitiesFromNodeModules(appRootPath);
 
   // The following packages are present in any workspace. Hide them to avoid confusion.
@@ -161,10 +162,13 @@ function listPlugins() {
     })
   });
 
-  const pluginMap: Set<string> = new Set<string>(
+  const installedPluginsMap: Set<string> = new Set<string>(
     installedPlugins.map(p => p.name)
   );
-  const alsoAvailable = approvedPlugins.filter(p => !pluginMap.has(p.name));
+
+  const alsoAvailable = approvedPlugins.filter(
+    p => !installedPluginsMap.has(p.name)
+  );
 
   if (alsoAvailable.length) {
     output.log({
@@ -174,6 +178,8 @@ function listPlugins() {
       })
     });
   }
+
+  await listCommunityPlugins(installedPluginsMap);
 
   output.note({
     title: `Use "nx list [plugin]" to find out more`
