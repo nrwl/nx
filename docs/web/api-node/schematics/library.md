@@ -90,6 +90,16 @@ Type: `string`
 
 Add tags to the library (used for linting)
 
+### testEnvironment
+
+Default: `jsdom`
+
+Type: `string`
+
+Possible values: `jsdom`, `node`
+
+The test environment to use if unitTestRunner is set to jest
+
 ### unitTestRunner
 
 Default: `jest`

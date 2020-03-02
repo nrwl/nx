@@ -1,6 +1,7 @@
 module.exports = {
   name: '<%= project %>',
-  preset: '<%= offsetFromRoot %>jest.config.js',<% if (supportTsx) { %>
+  preset: '<%= offsetFromRoot %>jest.config.js',<% if(testEnvironment) { %>
+  testEnvironment: '<%= testEnvironment %>',<% } %><% if (supportTsx) { %>
   transform: {
     '^.+\\.[tj]sx?$': 'ts-jest'
   },

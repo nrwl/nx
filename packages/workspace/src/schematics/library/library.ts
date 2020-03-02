@@ -100,7 +100,8 @@ export default function(schema: Schema): Rule {
             project: options.name,
             setupFile: 'none',
             supportTsx: true,
-            skipSerializers: true
+            skipSerializers: true,
+            testEnvironment: options.testEnvironment
           })
         : noop(),
       formatFiles(options)

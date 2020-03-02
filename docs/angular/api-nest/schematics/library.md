@@ -1,29 +1,29 @@
 # library
 
-Create a library
+Create a new nest library
 
 ## Usage
 
 ```bash
-nx generate library ...
+ng generate library ...
 ```
 
 ```bash
-nx g lib ... # same
+ng g lib ... # same
 ```
 
-By default, Nx will search for `library` in the default collection provisioned in `workspace.json`.
+By default, Nx will search for `library` in the default collection provisioned in `angular.json`.
 
 You can specify the collection explicitly as follows:
 
 ```bash
-nx g @nrwl/node:library ...
+ng g @nrwl/nest:library ...
 ```
 
 Show what will be generated without writing to disk:
 
 ```bash
-nx g library ... --dry-run
+ng g library ... --dry-run
 ```
 
 ### Examples
@@ -31,10 +31,18 @@ nx g library ... --dry-run
 Generate libs/myapp/mylib:
 
 ```bash
-nx g lib mylib --directory=myapp
+ng g lib mylib --directory=myapp
 ```
 
 ## Options
+
+### controller
+
+Default: `false`
+
+Type: `boolean`
+
+Include a controller with the library
 
 ### directory
 
@@ -42,7 +50,15 @@ Alias(es): d
 
 Type: `string`
 
-A directory where the lib is placed
+A directory where the app is placed
+
+### global
+
+Default: `false`
+
+Type: `boolean`
+
+Add the Global decorator to the generated module.
 
 ### linter
 
@@ -65,6 +81,14 @@ Library name
 Type: `boolean`
 
 Create a publishable library. A "build" architect will be added for this project the workspace configuration.
+
+### service
+
+Default: `false`
+
+Type: `boolean`
+
+Include a service with the library.
 
 ### skipFormat
 
@@ -90,15 +114,25 @@ Type: `string`
 
 Add tags to the library (used for linting)
 
+### target
+
+Default: `es6`
+
+Type: `string`
+
+Possible values: `es5`, `es6`, `esnext`, `es2015`, `es2016`, `es2017`, `es2018`, `es2019`, `es2020`
+
+The es target, Nest suggest using es6 or higher.
+
 ### testEnvironment
 
-Default: `jsdom`
+Default: `node`
 
 Type: `string`
 
 Possible values: `jsdom`, `node`
 
-The test environment to use if unitTestRunner is set to jest
+The test environment for jest, for node applications this should stay as node unless doing DOM testing.
 
 ### unitTestRunner
 

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "NxNodeLibrary",
-  "title": "Create a Node Library for Nx",
+  "id": "NxNestLibrary",
+  "title": "Create a Nest Library for Nx",
   "type": "object",
   "examples": [
     {
@@ -21,7 +21,7 @@
     },
     "directory": {
       "type": "string",
-      "description": "A directory where the lib is placed",
+      "description": "A directory where the app is placed",
       "alias": "d"
     },
     "linter": {
@@ -55,11 +55,42 @@
       "type": "boolean",
       "description": "Create a publishable library. A \"build\" architect will be added for this project the workspace configuration."
     },
+    "global": {
+      "type": "boolean",
+      "description": "Add the Global decorator to the generated module.",
+      "default": false
+    },
+    "service": {
+      "type": "boolean",
+      "description": "Include a service with the library.",
+      "default": false
+    },
+    "controller": {
+      "type": "boolean",
+      "description": "Include a controller with the library",
+      "default": false
+    },
     "testEnvironment": {
       "type": "string",
       "enum": ["jsdom", "node"],
-      "description": "The test environment to use if unitTestRunner is set to jest",
-      "default": "jsdom"
+      "description": "The test environment for jest, for node applications this should stay as node unless doing DOM testing.",
+      "default": "node"
+    },
+    "target": {
+      "type": "string",
+      "description": "The es target, Nest suggest using es6 or higher.",
+      "default": "es6",
+      "enum": [
+        "es5",
+        "es6",
+        "esnext",
+        "es2015",
+        "es2016",
+        "es2017",
+        "es2018",
+        "es2019",
+        "es2020"
+      ]
     }
   },
   "required": ["name"]

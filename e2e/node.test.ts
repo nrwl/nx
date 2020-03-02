@@ -21,6 +21,8 @@ import {
   setMaxWorkers,
   newProject
 } from './utils';
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { readFile } from './utils';
 
 function getData(): Promise<any> {
   return new Promise(resolve => {
@@ -225,6 +227,73 @@ forEachCli(currentCLIName => {
         });
       });
     }, 120000);
+
+    describe('nest libraries', function() {
+      it('should be able to generate a nest library', async () => {
+        ensureProject();
+        const nestlib = uniq('nestlib');
+
+        runCLI(`generate @nrwl/nest:lib ${nestlib}`);
+
+        const jestConfigContent = readFile(`libs/${nestlib}/jest.config.js`);
+
+        expect(stripIndents`${jestConfigContent}`).toEqual(
+          stripIndents`module.exports = {
+                name: '${nestlib}',
+                preset: '../../jest.config.js',
+                testEnvironment: 'node',
+                 transform: {
+                '^.+\\.[tj]sx?$': 'ts-jest'
+                },
+                moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+                coverageDirectory: '../../coverage/libs/${nestlib}'
+            };
+            `
+        );
+
+        const lintResults = runCLI(`lint ${nestlib}`);
+        expect(lintResults).toContain('All files pass linting.');
+      }, 60000);
+
+      it('should be able to generate a nest library w/ service', async () => {
+        ensureProject();
+        const nestlib = uniq('nestlib');
+
+        runCLI(`generate @nrwl/nest:lib ${nestlib} --service`);
+
+        const lintResults = runCLI(`lint ${nestlib}`);
+        expect(lintResults).toContain('All files pass linting.');
+
+        const jestResult = await runCLIAsync(`test ${nestlib}`);
+        expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
+      }, 60000);
+
+      it('should be able to generate a nest library w/ controller', async () => {
+        ensureProject();
+        const nestlib = uniq('nestlib');
+
+        runCLI(`generate @nrwl/nest:lib ${nestlib} --controller`);
+
+        const lintResults = runCLI(`lint ${nestlib}`);
+        expect(lintResults).toContain('All files pass linting.');
+
+        const jestResult = await runCLIAsync(`test ${nestlib}`);
+        expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
+      }, 60000);
+
+      it('should be able to generate a nest library w/ controller and service', async () => {
+        ensureProject();
+        const nestlib = uniq('nestlib');
+
+        runCLI(`generate @nrwl/nest:lib ${nestlib} --controller --service`);
+
+        const lintResults = runCLI(`lint ${nestlib}`);
+        expect(lintResults).toContain('All files pass linting.');
+
+        const jestResult = await runCLIAsync(`test ${nestlib}`);
+        expect(jestResult.stderr).toContain('Test Suites: 2 passed, 2 total');
+      }, 60000);
+    });
 
     it('should be able to generate an empty application', async () => {
       ensureProject();
