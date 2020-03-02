@@ -5,7 +5,7 @@ import { extname } from 'path';
 import { jsonDiff } from '../utils/json-diff';
 import { readFileSync } from 'fs';
 import { execSync } from 'child_process';
-import { readJsonFile } from '../utils/fileutils';
+import { readJsonFile, fileExists } from '../utils/fileutils';
 import { Environment, NxJson } from './shared-interfaces';
 import { ProjectGraphNode } from './project-graph';
 import { WorkspaceResults } from '../command-line/workspace-results';
@@ -172,15 +172,10 @@ export function cliCommand() {
 }
 
 export function workspaceFileName() {
-  const packageJson = readPackageJson();
-  if (
-    packageJson.devDependencies['@angular/cli'] ||
-    packageJson.dependencies['@angular/cli']
-  ) {
+  if (fileExists(`${appRootPath}/angular.json`)) {
     return 'angular.json';
-  } else {
-    return 'workspace.json';
   }
+  return 'workspace.json';
 }
 
 export function defaultFileRead(filePath: string) {
