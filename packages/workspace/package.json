@@ -65,6 +65,7 @@
     "yargs-parser": "10.0.0",
     "yargs": "^11.0.0",
     "chalk": "2.4.2",
-    "@nrwl/cli": "*"
+    "@nrwl/cli": "*",
+    "axios": "0.19.2"
   }
 }
