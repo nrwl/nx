@@ -20,7 +20,8 @@ const PRETTIER_EXTENSIONS = [
   'css',
   'html',
   'json',
-  'md'
+  'md',
+  'mdx'
 ];
 
 export function format(command: 'check' | 'write', args: yargs.Arguments) {
