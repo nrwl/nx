@@ -396,6 +396,71 @@ describe('app', () => {
     });
   });
 
+  describe('--style none', () => {
+    it('should not generate any styles', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', style: 'none' },
+        appTree
+      );
+
+      expect(tree.exists('apps/my-app/src/app/app.tsx')).toBeTruthy();
+      expect(tree.exists('apps/my-app/src/app/app.spec.tsx')).toBeTruthy();
+      expect(tree.exists('apps/my-app/src/app/app.css')).toBeFalsy();
+      expect(tree.exists('apps/my-app/src/app/app.scss')).toBeFalsy();
+      expect(tree.exists('apps/my-app/src/app/app.styl')).toBeFalsy();
+
+      const content = tree.read('apps/my-app/src/app/app.tsx').toString();
+      expect(content).not.toContain('styled-components');
+      expect(content).not.toContain('<StyledApp>');
+      expect(content).not.toContain('@emotion/styled');
+      expect(content).not.toContain('<StyledApp>');
+
+      //for imports
+      expect(content).not.toContain('app.styl');
+      expect(content).not.toContain('app.css');
+      expect(content).not.toContain('app.scss');
+    });
+
+    it('should set defaults when style: none', async () => {
+      const tree = await runSchematic(
+        'app',
+        {
+          name: 'myApp',
+          style: 'none'
+        },
+        appTree
+      );
+
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      expect(workspaceJson.schematics['@nrwl/react']).toMatchObject({
+        application: {
+          style: 'none'
+        },
+        component: {
+          style: 'none'
+        },
+        library: {
+          style: 'none'
+        }
+      });
+    });
+
+    it('should exclude styles from workspace.json', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', style: 'none' },
+        appTree
+      );
+
+      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+
+      expect(
+        workspaceJson.projects['my-app'].architect.build.options.styles
+      ).toEqual([]);
+    });
+  });
+
   describe('--style styled-components', () => {
     it('should use styled-components as the styled API library', async () => {
       const tree = await runSchematic(

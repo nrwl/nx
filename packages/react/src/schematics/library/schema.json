@@ -57,6 +57,10 @@
           {
             "value": "@emotion/styled",
             "label": "emotion           [ https://emotion.sh            ]"
+          },
+          {
+            "value": "none",
+            "label": "None"
           }
         ]
       }
@@ -106,6 +110,11 @@
     "publishable": {
       "type": "boolean",
       "description": "Create a publishable library. A \"build\" architect will be added for this project the workspace configuration."
+    },
+    "component": {
+      "type": "boolean",
+      "description": "Generate a default component",
+      "default": true
     },
     "js": {
       "type": "boolean",

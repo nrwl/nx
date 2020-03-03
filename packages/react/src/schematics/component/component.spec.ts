@@ -84,6 +84,36 @@ describe('component', () => {
     });
   });
 
+  describe('--style none', () => {
+    it('should generate component files without styles', async () => {
+      const tree = await runSchematic(
+        'component',
+        { name: 'hello', project: projectName, style: 'none' },
+        appTree
+      );
+      expect(tree.exists('libs/my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
+      expect(
+        tree.exists('libs/my-lib/src/lib/hello/hello.spec.tsx')
+      ).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/hello/hello.css')).toBeFalsy();
+      expect(tree.exists('libs/my-lib/src/lib/hello/hello.scss')).toBeFalsy();
+      expect(tree.exists('libs/my-lib/src/lib/hello/hello.styl')).toBeFalsy();
+
+      const content = tree
+        .read('libs/my-lib/src/lib/hello/hello.tsx')
+        .toString();
+      expect(content).not.toContain('styled-components');
+      expect(content).not.toContain('<StyledHello>');
+      expect(content).not.toContain('@emotion/styled');
+      expect(content).not.toContain('<StyledHello>');
+
+      //for imports
+      expect(content).not.toContain('hello.styl');
+      expect(content).not.toContain('hello.css');
+      expect(content).not.toContain('hello.scss');
+    });
+  });
+
   describe('--style styled-components', () => {
     it('should use styled-components as the styled API library', async () => {
       const tree = await runSchematic(

@@ -99,6 +99,29 @@ forEachCli(currentCLIName => {
       );
     }, 120000);
 
+    it('should be able to generate a react lib with no components', async () => {
+      ensureProject();
+      const appName = uniq('app');
+      const libName = uniq('lib');
+
+      runCLI(
+        `generate @nrwl/react:app ${appName} --no-interactive --linter=${linter}`
+      );
+      runCLI(
+        `generate @nrwl/react:lib ${libName} --no-interactive --no-component`
+      );
+
+      setMaxWorkers(appName);
+
+      const mainPath = `apps/${appName}/src/main.tsx`;
+      updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
+
+      const libTestResults = await runCLIAsync(`test ${libName}`);
+      expect(libTestResults.stderr).toBe('');
+
+      await testGeneratedApp(appName, { checkStyles: true, checkLinter: true });
+    }, 120000);
+
     it('should not create a dist folder if there is an error', async () => {
       ensureProject();
       const libName = uniq('lib');
@@ -145,6 +168,29 @@ forEachCli(currentCLIName => {
         checkStyles: false,
         checkLinter: true
       });
+    }, 120000);
+
+    it('should generate an app with no styles', async () => {
+      ensureProject();
+      const appName = uniq('app');
+
+      runCLI(
+        `generate @nrwl/react:app ${appName} --style none --no-interactive --linter=${linter}`
+      );
+
+      setMaxWorkers(appName);
+
+      await testGeneratedApp(appName, {
+        checkStyles: false,
+        checkLinter: true
+      });
+
+      expect(() => checkFilesExist(`dist/apps/${appName}/styles.css`)).toThrow(
+        /does not exist/
+      );
+      expect(readFile(`dist/apps/${appName}/index.html`)).not.toContain(
+        `<link rel="stylesheet" href="styles.css">`
+      );
     }, 120000);
 
     it('should be able to use JSX', async () => {

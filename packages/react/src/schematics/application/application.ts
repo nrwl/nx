@@ -52,6 +52,7 @@ interface NormalizedSchema extends Schema {
   parsedTags: string[];
   fileName: string;
   styledModule: null | string;
+  hasStyles: boolean;
 }
 
 export default function(schema: Schema): Rule {
@@ -89,7 +90,7 @@ function createApplicationFiles(options: NormalizedSchema): Rule {
         tmpl: '',
         offsetFromRoot: offsetFromRoot(options.appProjectRoot)
       }),
-      options.styledModule
+      options.styledModule || !options.hasStyles
         ? filter(file => !file.endsWith(`.${options.style}`))
         : noop(),
       options.unitTestRunner === 'none'
@@ -138,9 +139,10 @@ function addProject(options: NormalizedSchema): Rule {
           join(options.appProjectRoot, 'src/favicon.ico'),
           join(options.appProjectRoot, 'src/assets')
         ],
-        styles: options.styledModule
-          ? []
-          : [join(options.appProjectRoot, `src/styles.${options.style}`)],
+        styles:
+          options.styledModule || !options.hasStyles
+            ? []
+            : [join(options.appProjectRoot, `src/styles.${options.style}`)],
         scripts: [],
         webpackConfig: '@nrwl/react/plugins/webpack'
       },
@@ -327,7 +329,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   const fileName = options.pascalCaseFiles ? 'App' : 'app';
 
-  const styledModule = /^(css|scss|less|styl)$/.test(options.style)
+  const styledModule = /^(css|scss|less|styl|none)$/.test(options.style)
     ? null
     : options.style;
 
@@ -342,7 +344,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     e2eProjectName,
     parsedTags,
     fileName,
-    styledModule
+    styledModule,
+    hasStyles: options.style !== 'none'
   };
 }
 

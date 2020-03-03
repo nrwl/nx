@@ -7,15 +7,18 @@ import React from 'react';
 <% if (routing) { %>
 import { Route, Link } from 'react-router-dom';
 <% } %>
-<% if (styledModule) {
-  var wrapper = 'Styled' + className;
-%>
-import styled from '<%= styledModule %>';
-<% } else {
-  var wrapper = 'div';
-%>
-import './<%= fileName %>.<%= style %>';
-<% } %>
+
+<% if (hasStyles) {
+   if (styledModule) {
+    var wrapper = 'Styled' + className;
+  %>
+  import styled from '<%= styledModule %>';
+  <% } else {
+    var wrapper = 'div';
+  %>
+  import './<%= fileName %>.<%= style %>';
+  <% }
+} else { var wrapper = 'div'; } %>
 
 /* eslint-disable-next-line */
 export interface <%= className %>Props {

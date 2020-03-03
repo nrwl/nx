@@ -142,7 +142,7 @@ Default: `css`
 
 Type: `string`
 
-Possible values: `css`, `scss`, `styl`, `less`, `styled-components`, `@emotion/styled`
+Possible values: `css`, `scss`, `styl`, `less`, `styled-components`, `@emotion/styled`, `none`
 
 The file extension to be used for style files.
 

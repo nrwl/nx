@@ -1,8 +1,9 @@
 import { Linter } from '@nrwl/workspace';
+import { SupportedStyles } from 'packages/react/typings/style';
 
 export interface Schema {
   name: string;
-  style?: string;
+  style?: SupportedStyles;
   skipFormat: boolean;
   directory?: string;
   tags?: string;
