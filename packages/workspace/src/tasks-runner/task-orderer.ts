@@ -11,6 +11,8 @@ export class TaskOrderer {
     if (this.target !== 'build') return [tasks];
     if (tasks.length === 0) return [];
     const res = [];
+
+    // console.log(this.topologicallySortTasks(tasks))
     this.topologicallySortTasks(tasks).forEach(t => {
       const stageWithNoDeps = res.find(
         tasksInStage => !this.taskDependsOnDeps(t, tasksInStage)
@@ -48,12 +50,24 @@ export class TaskOrderer {
   }
 
   private topologicallySortTasks(tasks: Task[]) {
+    const visited: { [k: string]: boolean } = {};
+    const sorted = [];
+
+    const visitNode = (id: string) => {
+      if (visited[id]) return;
+      visited[id] = true;
+      this.projectGraph.dependencies[id].forEach(d => {
+        visitNode(d.target);
+      });
+      sorted.push(id);
+    };
+    tasks.forEach(t => visitNode(t.target.project));
     const sortedTasks = [...tasks];
-    sortedTasks.sort((a, b) => {
-      if (this.taskDependsOnDeps(a, [b])) return 1;
-      if (this.taskDependsOnDeps(b, [a])) return -1;
-      return 0;
-    });
+    sortedTasks.sort((a, b) =>
+      sorted.indexOf(a.target.project) > sorted.indexOf(b.target.project)
+        ? 1
+        : -1
+    );
     return sortedTasks;
   }
 }

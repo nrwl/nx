@@ -42,7 +42,8 @@ const graph: ProjectGraph = {
         source: 'lib2',
         target: 'lib3'
       }
-    ]
+    ],
+    lib3: []
   }
 };
 
@@ -65,6 +66,7 @@ describe('reverse', () => {
             target: 'app1-e2e'
           }
         ],
+        'app1-e2e': [],
         lib1: [
           {
             type: DependencyType.static,
@@ -166,7 +168,8 @@ describe('withDeps', () => {
             source: 'app1-e2e',
             target: 'app1'
           }
-        ]
+        ],
+        lib3: []
       }
     });
   });
@@ -187,7 +190,8 @@ describe('filterNodes', () => {
             source: 'app1-e2e',
             target: 'app1'
           }
-        ]
+        ],
+        app1: []
       }
     });
   });

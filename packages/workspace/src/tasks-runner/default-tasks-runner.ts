@@ -45,12 +45,22 @@ function taskDependsOnDeps(
 }
 
 function topologicallySortTasks(tasks: Task[], projectGraph: ProjectGraph) {
+  const visited: { [k: string]: boolean } = {};
+  const sorted = [];
+
+  const visitNode = (id: string) => {
+    if (visited[id]) return;
+    visited[id] = true;
+    projectGraph.dependencies[id].forEach(d => {
+      visitNode(d.target);
+    });
+    sorted.push(id);
+  };
+  tasks.forEach(t => visitNode(t.target.project));
   const sortedTasks = [...tasks];
-  sortedTasks.sort((a, b) => {
-    if (taskDependsOnDeps(a, [b], projectGraph)) return 1;
-    if (taskDependsOnDeps(b, [a], projectGraph)) return -1;
-    return 0;
-  });
+  sortedTasks.sort((a, b) =>
+    sorted.indexOf(a.target.project) > sorted.indexOf(b.target.project) ? 1 : -1
+  );
   return sortedTasks;
 }
 
