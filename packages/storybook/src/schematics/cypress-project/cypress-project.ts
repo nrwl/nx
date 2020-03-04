@@ -79,6 +79,11 @@ function updateAngularJsonBuilder(
       options: <any>{
         ...e2eTarget.options,
         devServerTarget: `${targetProjectName}:storybook`
+      },
+      configurations: {
+        ci: {
+          devServerTarget: `${targetProjectName}:storybook:ci`
+        }
       }
     };
     return workspace;
