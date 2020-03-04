@@ -50,8 +50,7 @@
     },
     "browser": {
       "type": "string",
-      "description": "The browser to run tests in.",
-      "enum": ["electron", "chrome", "chromium", "canary"]
+      "description": "The browser to run tests in."
     },
     "env": {
       "type": "object",

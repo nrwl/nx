@@ -33,7 +33,7 @@
   },
   "peerDependencies": {
     "@nrwl/workspace": "*",
-    "cypress": "^3.8.2"
+    "cypress": "^4.1.0"
   },
   "dependencies": {
     "@angular-devkit/architect": "~0.900.1",

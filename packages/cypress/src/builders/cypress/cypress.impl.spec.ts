@@ -1,14 +1,18 @@
-import { CypressBuilderOptions } from './cypress.impl';
-import { TestingArchitectHost } from '@angular-devkit/architect/testing';
-import { normalize, schema } from '@angular-devkit/core';
-import { EventEmitter } from 'events';
-import * as child_process from 'child_process';
-import * as path from 'path';
-import * as fsUtility from '@nrwl/workspace';
-import * as fsExtras from 'fs-extra';
-import { Architect } from '@angular-devkit/architect';
 import * as devkitArchitect from '@angular-devkit/architect';
+import { Architect } from '@angular-devkit/architect';
+import { TestingArchitectHost } from '@angular-devkit/architect/testing';
+import { schema } from '@angular-devkit/core';
+import * as fsUtility from '@nrwl/workspace';
+import { MockBuilderContext } from '@nrwl/workspace/testing';
+import * as child_process from 'child_process';
+import { EventEmitter } from 'events';
+import * as fsExtras from 'fs-extra';
+import * as path from 'path';
 import { of } from 'rxjs';
+import { CypressBuilderOptions, cypressBuilderRunner } from './cypress.impl';
+
+jest.mock('../../utils/cypress-version');
+import { installedCypressVersion } from '../../utils/cypress-version';
 
 const Cypress = require('cypress');
 
@@ -19,6 +23,10 @@ describe('Cypress builder', () => {
   let fakeEventEmitter: EventEmitter;
   let fork: jasmine.Spy;
   let cypressConfig: any;
+  let mockedBuilderContext: MockBuilderContext;
+  let mockedInstalledCypressVersion: jest.Mock<
+    ReturnType<typeof installedCypressVersion>
+  > = installedCypressVersion as any;
   const cypressBuilderOptions: CypressBuilderOptions = {
     cypressConfig: 'apps/my-app-e2e/cypress.json',
     parallel: false,
@@ -40,6 +48,8 @@ describe('Cypress builder', () => {
     await testArchitectHost.addBuilderFromPackage(
       path.join(__dirname, '../../..')
     );
+
+    mockedBuilderContext = new MockBuilderContext(architect, testArchitectHost);
 
     (devkitArchitect as any).scheduleTargetAndForget = jest
       .fn()
@@ -217,6 +227,37 @@ describe('Cypress builder', () => {
     });
 
     fakeEventEmitter.emit('exit', 0); // Passing tsc command
+  });
+
+  it('should show warnings if using unsupported browsers v3', async done => {
+    mockedInstalledCypressVersion.mockReturnValue(3);
+    const result = await cypressBuilderRunner(
+      { ...cypressBuilderOptions, browser: 'edge' },
+      mockedBuilderContext
+    ).toPromise();
+
+    expect(
+      mockedBuilderContext.logger.includes(
+        'You are using a browser that is not supported by cypress v3.'
+      )
+    ).toBeTruthy();
+    done();
+  });
+
+  it('should show warnings if using unsupported browsers v4', async done => {
+    mockedInstalledCypressVersion.mockReturnValue(4);
+
+    const result = await cypressBuilderRunner(
+      { ...cypressBuilderOptions, browser: 'canary' },
+      mockedBuilderContext
+    ).toPromise();
+
+    expect(
+      mockedBuilderContext.logger.includes(
+        'You are using a browser that is not supported by cypress v4+.'
+      )
+    ).toBeTruthy();
+    done();
   });
 
   describe('legacy', () => {

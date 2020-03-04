@@ -13,6 +13,7 @@ import { dirname, join, relative, basename } from 'path';
 import { readJsonFile } from '@nrwl/workspace';
 import { legacyCompile } from './legacy';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { installedCypressVersion } from '../../utils/cypress-version';
 
 const Cypress = require('cypress'); // @NOTE: Importing via ES6 messes the whole test dependencies.
 
@@ -39,14 +40,14 @@ try {
   require('dotenv').config();
 } catch (e) {}
 
-export default createBuilder<CypressBuilderOptions>(run);
+export default createBuilder<CypressBuilderOptions>(cypressBuilderRunner);
 
 /**
  * @whatItDoes This is the starting point of the builder.
  * @param options
  * @param context
  */
-function run(
+export function cypressBuilderRunner(
   options: CypressBuilderOptions,
   context: BuilderContext
 ): Observable<BuilderOutput> {
@@ -58,6 +59,8 @@ function run(
   if (options.tsConfig) {
     options.env.tsConfig = join(context.workspaceRoot, options.tsConfig);
   }
+
+  checkSupportedBrowser(options, context);
 
   return (!legacy
     ? options.devServerTarget
@@ -238,4 +241,37 @@ function showLegacyWarning(context: BuilderContext) {
   Warning:
   You are using the legacy configuration for cypress.
   Please run "ng update @nrwl/cypress --from 8.1.0 --to 8.2.0 --migrate-only".`);
+}
+
+function checkSupportedBrowser(
+  { browser }: CypressBuilderOptions,
+  context: BuilderContext
+) {
+  // Browser was not passed in as an option, cypress will use whatever default it has set and we dont need to check it
+  if (!browser) {
+    return;
+  }
+
+  if (installedCypressVersion() >= 4 && browser == 'canary') {
+    context.logger.warn(stripIndents`
+  Warning:
+  You are using a browser that is not supported by cypress v4+.
+
+  Read here for more info:
+  https://docs.cypress.io/guides/references/migration-guide.html#Launching-Chrome-Canary-with-browser
+  `);
+    return;
+  }
+
+  const supportedV3Browsers = ['electron', 'chrome', 'canary', 'chromium'];
+  if (
+    installedCypressVersion() <= 3 &&
+    !supportedV3Browsers.includes(browser)
+  ) {
+    context.logger.warn(stripIndents`
+    Warning:
+    You are using a browser that is not supported by cypress v3.
+    `);
+    return;
+  }
 }
