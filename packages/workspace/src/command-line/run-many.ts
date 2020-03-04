@@ -10,7 +10,7 @@ import {
 import { readEnvironment } from '../core/file-utils';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
 import { projectHasTarget } from '../utils/project-graph-utils';
-import { output } from '@nrwl/workspace';
+import { output } from "../utils/output";
 
 export function runMany(parsedArgs: yargs.Arguments): void {
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
