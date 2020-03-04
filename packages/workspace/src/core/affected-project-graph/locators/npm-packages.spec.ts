@@ -87,7 +87,7 @@ describe('getTouchedNpmPackages', () => {
         }
       }
     );
-    expect(result).toEqual(['happy-nrwl']);
+    expect(result).toEqual(['proj1', 'proj2']);
   });
 
   it('should handle whole file changes', () => {
@@ -109,6 +109,6 @@ describe('getTouchedNpmPackages', () => {
         }
       }
     );
-    expect(result).toEqual(['proj1', 'proj2']);
+    expect(result).toEqual(['happy-nrwl', 'awesome-nrwl']);
   });
 });
