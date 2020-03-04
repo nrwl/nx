@@ -8,5 +8,16 @@ export function updateBabelOptions(options: any): void {
       useBuiltIns: true
     }
   ]);
+  options.plugins.splice(
+    0,
+    0,
+    [
+      require.resolve('babel-plugin-styled-components'),
+      {
+        pure: true
+      }
+    ],
+    require.resolve('babel-plugin-emotion')
+  );
   return options;
 }

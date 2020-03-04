@@ -38,6 +38,8 @@
     "@nrwl/web": "*",
     "@angular-devkit/schematics": "~9.0.1",
     "@svgr/webpack": "^5.2.0",
+    "babel-plugin-emotion": "^10.0.29",
+    "babel-plugin-styled-components": "^1.10.7",
     "confusing-browser-globals": "^1.0.9",
     "eslint-plugin-import": "^2.20.1",
     "eslint-plugin-jsx-a11y": "^6.2.3",
