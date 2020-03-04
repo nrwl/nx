@@ -16,19 +16,19 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
       isJsonChange(c) &&
       (c.path[0] === 'dependencies' || c.path[0] === 'devDependencies')
     ) {
-      // A package was deleted so mark all packages as touched
-      // so projects with any package dependency will be affected.
+      // A package was deleted so mark all workspace projects as touched.
       if (c.type === DiffType.Deleted) {
-        touched = Object.keys({
-          ...(packageJson.dependencies || {}),
-          ...(packageJson.devDependencies || {})
-        });
+        touched = Object.keys(workspaceJson.projects);
         break;
       } else {
         touched.push(c.path[1]);
       }
     } else if (isWholeFileChange(c)) {
-      touched = Object.keys(workspaceJson.projects);
+      // Whole file was touched, so all npm packages are touched.
+      touched = Object.keys({
+        ...(packageJson.dependencies || {}),
+        ...(packageJson.devDependencies || {})
+      });
       break;
     }
   }
