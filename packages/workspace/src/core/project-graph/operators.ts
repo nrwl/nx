@@ -2,6 +2,7 @@ import { ProjectGraphBuilder } from './project-graph-builder';
 import { ProjectGraph, ProjectGraphNode } from './project-graph-models';
 
 const reverseMemo = new Map<ProjectGraph, ProjectGraph>();
+
 export function reverse(graph: ProjectGraph): ProjectGraph {
   let result = reverseMemo.get(graph);
   if (!result) {
@@ -61,18 +62,14 @@ export function withDeps(
   function recur(node) {
     const ds = original.dependencies[node.name];
     // 1. Recursively add all source nodes
-    if (ds) {
-      ds.forEach(n => {
-        recur(original.nodes[n.target]);
-      });
-    }
+    ds.forEach(n => {
+      recur(original.nodes[n.target]);
+    });
     // 2. Add current node
     builder.addNode(node);
     // 3. Add all source dependencies
-    if (ds) {
-      ds.forEach(n => {
-        builder.addDependency(n.type, n.source, n.target);
-      });
-    }
+    ds.forEach(n => {
+      builder.addDependency(n.type, n.source, n.target);
+    });
   }
 }

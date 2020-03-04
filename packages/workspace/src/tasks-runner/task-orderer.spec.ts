@@ -72,4 +72,60 @@ describe('TaskStages', () => {
       ]
     ]);
   });
+
+  it('should split tasks into stages based on their dependencies when there are unrelated packages', () => {
+    const stages = new TaskOrderer('build', {
+      nodes: {},
+      dependencies: {
+        app1: [
+          {
+            source: 'app1',
+            target: 'common1',
+            type: DependencyType.static
+          }
+        ],
+        app2: [
+          {
+            source: 'app2',
+            target: 'common2',
+            type: DependencyType.static
+          }
+        ],
+        common1: [],
+        common2: []
+      }
+    }).splitTasksIntoStages([
+      {
+        target: { project: 'app1' }
+      },
+      {
+        target: { project: 'app2' }
+      },
+      {
+        target: { project: 'common1' }
+      },
+      {
+        target: { project: 'common2' }
+      }
+    ] as any);
+
+    expect(stages).toEqual([
+      [
+        {
+          target: { project: 'common1' }
+        },
+        {
+          target: { project: 'common2' }
+        }
+      ],
+      [
+        {
+          target: { project: 'app1' }
+        },
+        {
+          target: { project: 'app2' }
+        }
+      ]
+    ]);
+  });
 });

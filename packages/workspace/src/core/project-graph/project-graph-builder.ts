@@ -23,6 +23,7 @@ export class ProjectGraphBuilder {
 
   addNode(node: ProjectGraphNode) {
     this.nodes[node.name] = node;
+    this.dependencies[node.name] = {};
   }
 
   addDependency(
@@ -39,8 +40,6 @@ export class ProjectGraphBuilder {
     if (!this.nodes[targetProjectName]) {
       throw new Error(`Target project does not exist: ${targetProjectName}`);
     }
-    this.dependencies[sourceProjectName] =
-      this.dependencies[sourceProjectName] || {};
     this.dependencies[sourceProjectName][
       `${sourceProjectName} -> ${targetProjectName}`
     ] = {

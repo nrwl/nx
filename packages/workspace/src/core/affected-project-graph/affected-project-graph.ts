@@ -45,6 +45,7 @@ export function filterAffected(
     },
     [] as string[]
   );
+
   return filterAffectedProjects(graph, {
     workspaceJson,
     nxJson: normalizedNxJson,
@@ -62,6 +63,8 @@ function filterAffectedProjects(
   const reversed = reverse(graph);
   ctx.touchedProjects.forEach(p => {
     addAffectedNodes(p, reversed, builder, []);
+  });
+  ctx.touchedProjects.forEach(p => {
     addAffectedDependencies(p, reversed, builder, []);
   });
   return builder.build();
@@ -79,12 +82,9 @@ function addAffectedNodes(
   }
   visited.push(startingProject);
   builder.addNode(reversed.nodes[startingProject]);
-  const ds = reversed.dependencies[startingProject];
-  if (ds) {
-    ds.forEach(({ target }) =>
-      addAffectedNodes(target, reversed, builder, visited)
-    );
-  }
+  reversed.dependencies[startingProject].forEach(({ target }) =>
+    addAffectedNodes(target, reversed, builder, visited)
+  );
 }
 
 function addAffectedDependencies(
@@ -95,16 +95,13 @@ function addAffectedDependencies(
 ): void {
   if (visited.indexOf(startingProject) > -1) return;
   visited.push(startingProject);
-  if (reversed.dependencies[startingProject]) {
-    reversed.dependencies[startingProject].forEach(({ target }) =>
-      addAffectedDependencies(target, reversed, builder, visited)
-    );
-    reversed.dependencies[startingProject].forEach(
-      ({ type, source, target }) => {
-        // Since source and target was reversed,
-        // we need to reverse it back to original direction.
-        builder.addDependency(type, target, source);
-      }
-    );
-  }
+
+  reversed.dependencies[startingProject].forEach(({ target }) =>
+    addAffectedDependencies(target, reversed, builder, visited)
+  );
+  reversed.dependencies[startingProject].forEach(({ type, source, target }) => {
+    // Since source and target was reversed,
+    // we need to reverse it back to original direction.
+    builder.addDependency(type, target, source);
+  });
 }
