@@ -40,7 +40,7 @@ nx run-many --target=test --projects=proj1,proj2 --with-deps
 
 ### all
 
-All projects
+Run the target on all projects in the workspace
 
 ### configuration
 
@@ -54,13 +54,13 @@ Show help
 
 Default: `3`
 
-Max number of parallel processes
+Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.
 
 ### only-failed
 
 Default: `false`
 
-Isolate projects which previously failed
+Only run the target on projects which previously failed
 
 ### parallel
 
@@ -74,7 +74,7 @@ Projects to run (comma delimited)
 
 ### runner
 
-This is the name of the tasks runner configured in nx.json
+Override the tasks runner in `nx.json`
 
 ### skip-nx-cache
 

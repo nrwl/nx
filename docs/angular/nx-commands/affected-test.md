@@ -84,7 +84,7 @@ Show help
 
 Default: `3`
 
-Max number of parallel processes
+Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.
 
 ### only-failed
 
