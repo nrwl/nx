@@ -162,10 +162,6 @@ You are good to go!
   </tr>
 </table>
 
-### Workshop
-
-- [Nx Workshop for Angular developers](https://nx-workshop.eventbrite.com/?aff=github) in San Francisco: March 19, 2020
-
 ### Books
 
 - [Effective React Development with Nx](https://go.nrwl.io/effective-react-development-with-nx-new-book)
