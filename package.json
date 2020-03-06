@@ -28,7 +28,8 @@
     "checkimports": "node ./scripts/check-imports.js",
     "checkversions": "ts-node ./scripts/check-versions.ts",
     "local-registry": "./scripts/local-registry.sh",
-    "documentation": "./scripts/documentation/documentation.sh && ./scripts/documentation/check-documentation.sh"
+    "documentation": "./scripts/documentation/documentation.sh && ./scripts/documentation/check-documentation.sh",
+    "submit-plugin": "node ./scripts/submit-plugin.js"
   },
   "devDependencies": {
     "@angular-devkit/architect": "~0.900.1",
