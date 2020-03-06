@@ -130,7 +130,7 @@ function listCapabilities(pluginName: string) {
   }
 
   output.log({
-    title: `Capabilities in ${plugin.name} :`,
+    title: `Capabilities in ${plugin.name}:`,
     bodyLines
   });
 }
@@ -149,7 +149,7 @@ async function listPlugins() {
   const filtered = installedPlugins.filter(p => hide.indexOf(p.name) === -1);
 
   output.log({
-    title: `Installed plugins :`,
+    title: `Installed plugins:`,
     bodyLines: filtered.map(p => {
       const capabilities = [];
       if (hasElements(p.builders)) {
@@ -172,7 +172,7 @@ async function listPlugins() {
 
   if (alsoAvailable.length) {
     output.log({
-      title: `Also available :`,
+      title: `Also available:`,
       bodyLines: alsoAvailable.map(p => {
         return `${terminal.bold(p.name)} (${p.capabilities})`;
       })
