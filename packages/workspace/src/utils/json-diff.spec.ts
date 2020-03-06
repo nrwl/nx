@@ -108,6 +108,38 @@ describe('jsonDiff', () => {
     });
   });
 
+  it('should work for added array values', () => {
+    const result = jsonDiff(
+      {
+        rules: undefined
+      },
+      {
+        rules: ['rule1']
+      }
+    );
+
+    expect(result).toEqual(
+      expect.arrayContaining([
+        {
+          type: DiffType.Modified,
+          path: ['rules'],
+          value: {
+            lhs: undefined,
+            rhs: ['rule1']
+          }
+        },
+        {
+          type: DiffType.Added,
+          path: ['rules', '0'],
+          value: {
+            lhs: undefined,
+            rhs: 'rule1'
+          }
+        }
+      ])
+    );
+  });
+
   it('should work for added array items', () => {
     const result = jsonDiff(
       {

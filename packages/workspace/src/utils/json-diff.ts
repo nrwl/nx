@@ -49,7 +49,7 @@ export function jsonDiff(lhs: any, rhs: any): JsonChange[] {
         }
       });
     }
-    return typeof lhsValue === 'object';
+    return typeof lhsValue === 'object' || Array.isArray(lhsValue);
   });
 
   walkJsonTree(rhs, [], (path, rhsValue) => {
@@ -63,9 +63,8 @@ export function jsonDiff(lhs: any, rhs: any): JsonChange[] {
           rhs: rhsValue
         }
       });
-      return false;
     }
-    return typeof rhsValue === 'object';
+    return typeof rhsValue === 'object' || Array.isArray(rhsValue);
   });
 
   return result;
