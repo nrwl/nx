@@ -14,7 +14,8 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
   for (const c of changes) {
     if (
       isJsonChange(c) &&
-      (c.path[0] === 'dependencies' || c.path[0] === 'devDependencies')
+      (c.path[0] === 'dependencies' || c.path[0] === 'devDependencies') &&
+      c.path.length === 2
     ) {
       // A package was deleted so mark all workspace projects as touched.
       if (c.type === DiffType.Deleted) {

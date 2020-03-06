@@ -97,6 +97,16 @@ describe('getTouchedProjectsInNxJson', () => {
           getChanges: () => [
             {
               type: DiffType.Added,
+              path: ['projects', 'proj1'],
+              value: {
+                lhs: undefined,
+                rhs: {
+                  tags: []
+                }
+              }
+            },
+            {
+              type: DiffType.Added,
               path: ['projects', 'proj1', 'tags'],
               value: {
                 lhs: undefined,
@@ -122,7 +132,7 @@ describe('getTouchedProjectsInNxJson', () => {
     expect(result).toEqual(['proj1']);
   });
 
-  it('should not return projects removed in nx.json', () => {
+  it('should return all projects when a project is removed', () => {
     const result = getTouchedProjectsInNxJson(
       [
         {
@@ -132,9 +142,11 @@ describe('getTouchedProjectsInNxJson', () => {
           getChanges: () => [
             {
               type: DiffType.Deleted,
-              path: ['projects', 'proj3', 'tags'],
+              path: ['projects', 'proj3'],
               value: {
-                lhs: [],
+                lhs: {
+                  tags: []
+                },
                 rhs: undefined
               }
             }
@@ -165,6 +177,24 @@ describe('getTouchedProjectsInNxJson', () => {
           ext: '.json',
           mtime: 0,
           getChanges: () => [
+            {
+              type: DiffType.Modified,
+              path: ['projects', 'proj1'],
+              value: {
+                lhs: { tags: ['scope:feat'] },
+                rhs: {
+                  tags: ['scope:shared']
+                }
+              }
+            },
+            {
+              type: DiffType.Modified,
+              path: ['projects', 'proj1', 'tags'],
+              value: {
+                lhs: ['scope:feat'],
+                rhs: ['scope:shared']
+              }
+            },
             {
               type: DiffType.Modified,
               path: ['projects', 'proj1', 'tags', '0'],
