@@ -407,7 +407,9 @@ export function addRoute(
   }
 }
 
-function getListOfRoutes(source: ts.SourceFile): ts.NodeArray<ts.Expression> {
+function getListOfRoutes(
+  source: ts.SourceFile
+): ts.NodeArray<ts.Expression> | null {
   const imports: any = getMatchingProperty(
     source,
     'imports',
@@ -418,7 +420,7 @@ function getListOfRoutes(source: ts.SourceFile): ts.NodeArray<ts.Expression> {
   if (imports.initializer.kind === ts.SyntaxKind.ArrayLiteralExpression) {
     const a = imports.initializer as ts.ArrayLiteralExpression;
 
-    for (let e of a.elements) {
+    for (const e of a.elements) {
       if (e.kind === ts.SyntaxKind.CallExpression) {
         const ee = e as ts.CallExpression;
         const text = ee.expression.getText(source);
@@ -430,6 +432,21 @@ function getListOfRoutes(source: ts.SourceFile): ts.NodeArray<ts.Expression> {
           const routes = ee.arguments[0];
           if (routes.kind === ts.SyntaxKind.ArrayLiteralExpression) {
             return (routes as ts.ArrayLiteralExpression).elements;
+          } else if (routes.kind === ts.SyntaxKind.Identifier) {
+            // find the array expression
+            const variableDeclarations = findNodes(
+              source,
+              ts.SyntaxKind.VariableDeclaration
+            ) as ts.VariableDeclaration[];
+
+            const routesDeclaration = variableDeclarations.find(x => {
+              return x.name.getText() === routes.getText();
+            });
+
+            if (routesDeclaration) {
+              return (routesDeclaration.initializer as ts.ArrayLiteralExpression)
+                .elements;
+            }
           }
         }
       }
