@@ -4,6 +4,10 @@ import { createApp, runSchematic } from '../../utils/testing';
 import * as stripJsonComments from 'strip-json-comments';
 import { NxJson, readJsonInTree } from '@nrwl/workspace';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
+import {
+  stripIndents,
+  stripIndent
+} from '@angular-devkit/core/src/utils/literals';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -672,6 +676,55 @@ describe('lib', () => {
           '../../libs/my-dir/my-lib3/src/index.ts'
         ]);
       });
+
+      it('should update the parent module even if the route is declared outside the .forRoot(...)', async () => {
+        appTree = createApp(appTree, 'myapp');
+        appTree.overwrite(
+          'apps/myapp/src/app/app.module.ts',
+          `
+          import { NgModule } from '@angular/core';
+          import { BrowserModule } from '@angular/platform-browser';
+          import { RouterModule } from '@angular/router';
+          import { AppComponent } from './app.component';
+
+          const routes = [];
+
+          @NgModule({
+            imports: [BrowserModule, RouterModule.forRoot(routes)],
+            declarations: [AppComponent],
+            bootstrap: [AppComponent]
+          })
+          export class AppModule {}
+        `
+        );
+
+        const tree = await runSchematic(
+          'lib',
+          {
+            name: 'myLib',
+            directory: 'myDir',
+            routing: true,
+            lazy: true,
+            framework: 'angular',
+            parentModule: 'apps/myapp/src/app/app.module.ts'
+          },
+          appTree
+        );
+
+        const moduleContents = getFileContent(
+          tree,
+          'apps/myapp/src/app/app.module.ts'
+        );
+        expect(moduleContents).toContain('RouterModule.forRoot(routes)');
+        expect(moduleContents).toContain(stripIndent`
+        const routes = [
+          {
+            path: 'my-dir-my-lib',
+            loadChildren: () =>
+              import('@proj/my-dir/my-lib').then(module => module.MyDirMyLibModule)
+          }
+        ];`);
+      });
     });
 
     describe('eager', () => {
@@ -797,6 +850,49 @@ describe('lib', () => {
         );
         expect(moduleContents3).toContain(
           "{ path: 'my-lib3', children: myLib3Routes }"
+        );
+      });
+
+      it('should update the parent module even if the route is declared outside the .forRoot(...)', async () => {
+        appTree = createApp(appTree, 'myapp');
+        appTree.overwrite(
+          'apps/myapp/src/app/app.module.ts',
+          `
+          import { NgModule } from '@angular/core';
+          import { BrowserModule } from '@angular/platform-browser';
+          import { RouterModule } from '@angular/router';
+          import { AppComponent } from './app.component';
+
+          const routes = [];
+
+          @NgModule({
+            imports: [BrowserModule, RouterModule.forRoot(routes)],
+            declarations: [AppComponent],
+            bootstrap: [AppComponent]
+          })
+          export class AppModule {}
+        `
+        );
+
+        const tree = await runSchematic(
+          'lib',
+          {
+            name: 'myLib',
+            directory: 'myDir',
+            routing: true,
+            framework: 'angular',
+            parentModule: 'apps/myapp/src/app/app.module.ts'
+          },
+          appTree
+        );
+
+        const moduleContents = getFileContent(
+          tree,
+          'apps/myapp/src/app/app.module.ts'
+        );
+        expect(moduleContents).toContain('RouterModule.forRoot(routes)');
+        expect(moduleContents).toContain(
+          `const routes = [{ path: 'my-dir-my-lib', children: myDirMyLibRoutes }];`
         );
       });
     });
