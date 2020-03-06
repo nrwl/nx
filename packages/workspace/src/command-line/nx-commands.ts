@@ -286,7 +286,9 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       describe: 'Projects to run (comma delimited)',
       type: 'string'
     })
-    .option('all', { describe: 'All projects' })
+    .option('all', {
+      describe: 'Run the target on all projects in the workspace'
+    })
     .nargs('all', 0)
     .check(({ all, projects }) => {
       if ((all && projects) || (!all && !projects))
@@ -294,7 +296,7 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       return true;
     })
     .options('runner', {
-      describe: 'This is the name of the tasks runner configured in nx.json',
+      describe: 'Override the tasks runner in `nx.json`',
       type: 'string'
     })
     .options('skip-nx-cache', {
@@ -315,7 +317,7 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       default: false
     })
     .options('only-failed', {
-      describe: 'Isolate projects which previously failed',
+      describe: 'Only run the target on projects which previously failed',
       type: 'boolean',
       default: false
     })
@@ -370,7 +372,8 @@ function withParallel(yargs: yargs.Argv): yargs.Argv {
       default: false
     })
     .option('maxParallel', {
-      describe: 'Max number of parallel processes',
+      describe:
+        'Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.',
       type: 'number',
       default: 3
     });

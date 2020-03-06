@@ -358,6 +358,9 @@ const examples = {
     }
   ]
 };
+
+const unwantedCommands = ['run', 'generate'];
+
 console.log('Generating Nx Commands Documentation');
 Promise.all(
   ['web', 'angular', 'react'].map(async framework => {
@@ -372,6 +375,21 @@ Promise.all(
       return command.getCommandInstance().getCommandHandlers();
     }
     function parseCommandInstance(name, command) {
+      // It is not a function return a strip down version of the command
+      if (
+        !(
+          command.builder &&
+          command.builder.constructor &&
+          command.builder.call &&
+          command.builder.apply
+        )
+      ) {
+        return {
+          command: name,
+          description: command['description']
+        };
+      }
+      // Show all the options we can get from yargs
       const builder = command.builder(importFresh('yargs')().resetOptions());
       const builderDescriptions = builder.getUsageInstance().getDescriptions();
       const builderDefaultOptions = builder.getOptions().default;
@@ -449,7 +467,7 @@ Promise.all(
     const nxCommands = getCommands(commandsObject);
     await Promise.all(
       Object.keys(nxCommands)
-        .filter(name => !name.startsWith('run') && !name.startsWith('generate'))
+        .filter(name => !unwantedCommands.includes(name))
         .map(name => parseCommandInstance(name, nxCommands[name]))
         .map(command => generateMarkdown(command))
         .map(templateObject =>
