@@ -95,10 +95,21 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
           getChanges: () => [
             {
               type: DiffType.Added,
-              path: ['projects', 'proj1', 'tags'],
+              path: ['projects', 'proj1'],
               value: {
                 lhs: undefined,
-                rhs: []
+                rhs: {
+                  root: 'proj1'
+                }
+              }
+            },
+
+            {
+              type: DiffType.Added,
+              path: ['projects', 'proj1', 'root'],
+              value: {
+                lhs: undefined,
+                rhs: 'proj1'
               }
             }
           ]
@@ -125,9 +136,11 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
           getChanges: () => [
             {
               type: DiffType.Deleted,
-              path: ['projects', 'proj3', 'root'],
+              path: ['projects', 'proj3'],
               value: {
-                lhs: 'proj3',
+                lhs: {
+                  root: 'proj3'
+                },
                 rhs: undefined
               }
             }
@@ -156,6 +169,18 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
           ext: '.json',
           mtime: 0,
           getChanges: () => [
+            {
+              type: DiffType.Modified,
+              path: ['projects', 'proj1'],
+              value: {
+                lhs: {
+                  root: 'proj3'
+                },
+                rhs: {
+                  root: 'proj1'
+                }
+              }
+            },
             {
               type: DiffType.Modified,
               path: ['projects', 'proj1', 'root'],

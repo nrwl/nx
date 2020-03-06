@@ -65,5 +65,5 @@ function getTouchedProjects(path: string[], implicitDependencyConfig: any) {
       break;
     }
   }
-  return found ? curr : [];
+  return found && Array.isArray(curr) ? curr : [];
 }

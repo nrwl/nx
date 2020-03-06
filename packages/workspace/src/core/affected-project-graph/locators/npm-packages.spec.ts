@@ -90,6 +90,37 @@ describe('getTouchedNpmPackages', () => {
     expect(result).toEqual(['proj1', 'proj2']);
   });
 
+  it('should handle package addition', () => {
+    const result = getTouchedNpmPackages(
+      [
+        {
+          file: 'package.json',
+          mtime: 0,
+          ext: '.json',
+          getChanges: () => [
+            {
+              type: DiffType.Added,
+              path: ['dependencies', 'awesome-nrwl'],
+              value: {
+                lhs: undefined,
+                rhs: '0.0.1'
+              }
+            }
+          ]
+        }
+      ],
+      workspaceJson,
+      nxJson,
+      {
+        dependencies: {
+          'happy-nrwl': '0.0.2',
+          'awesome-nrwl': '0.0.1'
+        }
+      }
+    );
+    expect(result).toEqual(['awesome-nrwl']);
+  });
+
   it('should handle whole file changes', () => {
     const result = getTouchedNpmPackages(
       [
