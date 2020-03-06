@@ -1,6 +1,4 @@
 import { mkdirSync } from 'fs';
-import { ProjectGraph } from './project-graph-models';
-import { ProjectGraphBuilder } from './project-graph-builder';
 import { appRootPath } from '../../utils/app-root';
 import {
   directoryExists,
@@ -8,42 +6,43 @@ import {
   readJsonFile,
   writeJsonFile
 } from '../../utils/fileutils';
+import { assertWorkspaceValidity } from '../assert-workspace-validity';
+import { createFileMap, FileMap } from '../file-graph';
 import {
   defaultFileRead,
   FileData,
   mtime,
   readNxJson,
   readWorkspaceFiles,
-  readWorkspaceJson,
-  rootWorkspaceFileData,
-  rootWorkspaceFileNames
+  readWorkspaceJson
 } from '../file-utils';
-import { createFileMap, FileMap } from '../file-graph';
-import {
-  BuildNodes,
-  buildNpmPackageNodes,
-  buildWorkspaceProjectNodes
-} from './build-nodes';
+import { normalizeNxJson } from '../normalize-nx-json';
 import {
   BuildDependencies,
   buildExplicitNpmDependencies,
   buildExplicitTypeScriptDependencies,
   buildImplicitProjectDependencies
 } from './build-dependencies';
-import { assertWorkspaceValidity } from '../assert-workspace-validity';
-import { normalizeNxJson } from '../normalize-nx-json';
+import {
+  BuildNodes,
+  buildNpmPackageNodes,
+  buildWorkspaceProjectNodes
+} from './build-nodes';
+import { ProjectGraphBuilder } from './project-graph-builder';
+import { ProjectGraph } from './project-graph-models';
 
 export function createProjectGraph(
   workspaceJson = readWorkspaceJson(),
   nxJson = readNxJson(),
   workspaceFiles = readWorkspaceFiles(),
   fileRead: (s: string) => string = defaultFileRead,
-  cache: false | { data: ProjectGraphCache; mtime: number } = readCache()
+  cache: false | { data: ProjectGraphCache; mtime: number } = readCache(),
+  shouldCache: boolean = true
 ): ProjectGraph {
   assertWorkspaceValidity(workspaceJson, nxJson);
 
   const normalizedNxJson = normalizeNxJson(nxJson);
-  if (cache && maxMTime(rootWorkspaceFileData()) > cache.mtime) {
+  if (cache && maxMTime(rootWorkspaceFileData(workspaceFiles)) > cache.mtime) {
     cache = false;
   }
 
@@ -73,10 +72,12 @@ export function createProjectGraph(
     );
 
     const projectGraph = builder.build();
-    writeCache({
-      projectGraph,
-      fileMap
-    });
+    if (shouldCache) {
+      writeCache({
+        projectGraph,
+        fileMap
+      });
+    }
     return projectGraph;
   } else {
     // Cache file was modified _after_ all workspace files.
@@ -134,6 +135,22 @@ function writeCache(cache: ProjectGraphCache): void {
 
 function maxMTime(files: FileData[]) {
   return Math.max(...files.map(f => f.mtime));
+}
+
+function rootWorkspaceFileData(workspaceFiles: FileData[]): FileData[] {
+  return [
+    `/package.json`,
+    '/workspace.json',
+    '/angular.json',
+    `/nx.json`,
+    `/tsconfig.json`
+  ].reduce((acc: FileData[], curr: string) => {
+    const fileData = workspaceFiles.find(x => x.file === curr);
+    if (fileData) {
+      acc.push(fileData);
+    }
+    return acc;
+  }, []);
 }
 
 function modifiedSinceCache(

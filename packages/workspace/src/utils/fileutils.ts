@@ -1,8 +1,7 @@
 import * as fs from 'fs';
-import * as path from 'path';
 import { ensureDirSync } from 'fs-extra';
+import * as path from 'path';
 import * as stripJsonComments from 'strip-json-comments';
-import { appRootPath } from './app-root';
 const ignore = require('ignore');
 
 export function writeToFile(filePath: string, str: string) {

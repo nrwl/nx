@@ -1,11 +1,16 @@
-import { Rule, SchematicContext, Tree } from '@angular-devkit/schematics';
-import { getWorkspace, NxJson, readJsonInTree } from '@nrwl/workspace';
-import { from, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Rule, Tree } from '@angular-devkit/schematics';
+import { FileData } from '@nrwl/workspace/src/core/file-utils';
+import {
+  readNxJsonInTree,
+  readWorkspace
+} from '@nrwl/workspace/src/utils/ast-utils';
+import { getWorkspacePath } from '@nrwl/workspace/src/utils/cli-config-utils';
+import * as path from 'path';
 import {
   createProjectGraph,
-  DependencyType,
-  ProjectGraph
+  onlyWorkspaceProjects,
+  ProjectGraph,
+  reverse
 } from '../../../core/project-graph';
 import { Schema } from '../schema';
 
@@ -21,31 +26,41 @@ export function checkDependencies(schema: Schema): Rule {
     return (tree: Tree) => tree;
   }
 
-  return (tree: Tree, context: SchematicContext): Observable<Tree> => {
-    return from(getWorkspace(tree)).pipe(
-      map(workspace => {
-        const graph: ProjectGraph = createProjectGraph();
-        const deps = graph.dependencies[schema.projectName];
+  return (tree: Tree): Tree => {
+    const files: FileData[] = [];
+    const mtime = Date.now(); //can't get mtime data from the tree :(
+    const workspaceDir = path.dirname(getWorkspacePath(tree));
+    tree.visit(file => {
+      files.push({
+        file: path.relative(workspaceDir, file),
+        ext: path.extname(file),
+        mtime
+      });
+    });
 
-        if (deps.length === 0) {
-          return tree;
-        }
+    const graph: ProjectGraph = createProjectGraph(
+      readWorkspace(tree),
+      readNxJsonInTree(tree),
+      files,
+      file => tree.read(file).toString('utf-8'),
+      false,
+      false
+    );
 
-        const implicitDeps = deps.filter(
-          x => x.type === DependencyType.implicit
-        );
-        const dynamicDeps = deps.filter(x => x.type === DependencyType.dynamic);
+    const reverseGraph = onlyWorkspaceProjects(reverse(graph));
 
-        const nxJson = readJsonInTree<NxJson>(tree, 'nx.json');
-        const project = workspace.projects.get(schema.projectName);
+    const deps = reverseGraph.dependencies[schema.projectName] || [];
 
-        if (project.extensions['projectType'] === 'application') {
-          // These shouldn't be imported anywhere
-          return tree;
-        }
+    if (deps.length === 0) {
+      return tree;
+    }
 
-        return tree;
-      })
+    throw new Error(
+      `${
+        schema.projectName
+      } is still depended on by the following projects:\n${deps
+        .map(x => x.target)
+        .join('\n')}`
     );
   };
 }
