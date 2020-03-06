@@ -442,6 +442,9 @@ function updateLinting(options: NormalizedSchema): Rule {
     }),
     updateJsonInTree(`${options.appProjectRoot}/tslint.json`, json => {
       json.extends = `${offsetFromRoot(options.appProjectRoot)}tslint.json`;
+      json.linterOptions = {
+        exclude: ['!**/*']
+      };
       return json;
     })
   ]);

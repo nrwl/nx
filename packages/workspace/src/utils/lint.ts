@@ -80,6 +80,10 @@ export function addLintFiles(
             join(projectRoot as any, `tslint.json`),
             JSON.stringify({
               extends: `${offsetFromRoot(projectRoot)}tslint.json`,
+              // Include project files to be linted since the global one excludes all files.
+              linterOptions: {
+                exclude: ['!**/*']
+              },
               rules: {}
             })
           );
@@ -134,6 +138,8 @@ export function addLintFiles(
               rules: {}
             };
           }
+          // Include all project files to be linted (since they are turned off in the root eslintrc file).
+          configJson.ignorePatterns = ['!**/*'];
           host.create(
             join(projectRoot as any, `.eslintrc`),
             JSON.stringify(configJson)
@@ -149,6 +155,9 @@ export function addLintFiles(
 const globalTsLint = `
 {
   "rulesDirectory": ["node_modules/@nrwl/workspace/src/tslint"],
+  "linterOptions": {
+    "exclude": ["**/*"]
+  },
   "rules": {
     "arrow-return-shorthand": true,
     "callable-types": true,
@@ -220,6 +229,7 @@ const globalESLint = `
     "sourceType": "module",
     "project": "./tsconfig.json"
   },
+  "ignorePatterns": ["**/*"],
   "plugins": ["@typescript-eslint", "@nrwl/nx"],
   "extends": [
     'eslint:recommended',
