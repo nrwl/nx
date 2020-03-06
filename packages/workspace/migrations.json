@@ -57,8 +57,13 @@
     },
     "update-9-1-0": {
       "version": "9.1.0-beta.1",
-      "description": "Update prettier to 1.19.1 with support for typescript 3.7",
-      "factory": "./src/migrations/update-9-0-0/update-9-0-0"
+      "description": "Update prettier to 1.19.1 with support for typescript 3.7; Update eslint and tslint",
+      "factory": "./src/migrations/update-9-1-0/update-9-1-0"
+    },
+    "update-lint-config-9-1-0": {
+      "version": "9.1.0-beta.1",
+      "description": "Update eslint and tslint config to provide better IDE support",
+      "factory": "./src/migrations/update-9-1-0/update-lint-config"
     }
   },
   "packageJsonUpdates": {
@@ -396,11 +401,17 @@
         }
       }
     },
-    "9.0.0": {
-      "version": "9.0.0-beta.1",
+    "9.1.0": {
+      "version": "9.1.0-beta.1",
       "packages": {
+        "eslint": {
+          "version": "6.8.0"
+        },
         "prettier": {
           "version": "1.19.1"
+        },
+        "tslint": {
+          "version": "6.0.0"
         }
       }
     }

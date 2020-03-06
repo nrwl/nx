@@ -6,7 +6,6 @@ const updatePackages = updatePackagesInPackageJson(
   join(__dirname, '../../../', 'migrations.json'),
   '9.1.0'
 );
-
 export default function() {
   return chain([updatePackages]);
 }

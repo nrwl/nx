@@ -379,7 +379,10 @@ function updateProject(options: NormalizedSchema): Rule {
       updateJsonInTree(`${options.projectRoot}/tslint.json`, json => {
         return {
           ...json,
-          extends: `${offsetFromRoot(options.projectRoot)}tslint.json`
+          extends: `${offsetFromRoot(options.projectRoot)}tslint.json`,
+          linterOptions: {
+            exclude: ['!**/*']
+          }
         };
       }),
       updateJsonInTree(`/nx.json`, json => {
