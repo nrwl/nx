@@ -17,8 +17,6 @@ Use this to pass directly the address of your distant server address with the po
 
 Type: `string`
 
-Possible values: `electron`, `chrome`, `chromium`, `canary`
-
 The browser to run tests in.
 
 ### ciBuildId
