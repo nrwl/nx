@@ -148,6 +148,8 @@ The exported function calls the two rules, first creating the library, then crea
 
 Next, run the schematic:
 
+> Use the `-d` or `--dry-run` flag to see your changes without applying them.
+
 ```sh
 nx workspace-schematic my-schematic mylib
 ```
@@ -171,8 +173,6 @@ UPDATE angular.json (4751 bytes)
 UPDATE nx.json (438 bytes)
 UPDATE package.json (1959 bytes)
 ```
-
-> Use the `-d` or `--dry-run` flag to see your changes without applying them.
 
 ## Customizing schematic options
 
@@ -281,11 +281,27 @@ Running the schematic without providing a value for the type will prompt the use
 
 ## Debugging Workspace schematics
 
-...
+### With Visual Studio Code
 
-### With VSCode launch config
+First of all make sure to enable the `debug.node.autoAttach` option. You can set it either in your workspace settings file inside `.vscode/settings.json` or your global `settings.json`. Simply add:
 
-### With Terminal
+```json
+{
+  "debug.node.autoAttach": "on"
+}
+```
+
+Alternatively press <kbd>Cmd</kbd>+<kbd>P</kbd> (or <kbd>Ctrl</kbd>+<kbd>P</kbd>) to open VSCode's command palette and type "Debug: Toggle Auto Attach".
+
+Once you've activated the `autoAttach` option, set a breakpoint in VSCode and execute your schematic with the `--inspect-brk` flag:
+
+```sh
+node --inspect-brk ./node_modules/@nrwl/cli/bin/nx.js workspace-schematic my-schematic mylib --dry-run
+```
+
+You may want to use the `--dry-run` flag to not actually apply the changes to the file system.
+
+![](/shared/vscode-schematics-debug.png)
 
 ## Workspace schematic utilities
 
