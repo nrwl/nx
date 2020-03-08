@@ -86,8 +86,8 @@ forEachCli(() => {
         )
       );
       expect(buildConfig).toContain(`Running target build for projects:`);
-      expect(buildConfig).toContain(`build ${appA} --configuration production`);
-      expect(buildConfig).toContain(`build ${libA}`);
+      expect(buildConfig).toContain(`run ${appA}:build:production`);
+      expect(buildConfig).toContain(`run ${libA}:build:production`);
       expect(buildConfig).toContain('Running target "build" succeeded');
 
       l('=======> testing run many --configuration');

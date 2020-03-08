@@ -3,7 +3,7 @@ import { Task } from './tasks-runner';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import * as fsExtra from 'fs-extra';
-import { DefaultTasksRunnerOptions } from './tasks-runner-v2';
+import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn } from 'child_process';
 
 export type CachedResult = { terminalOutput: string; outputsPath: string };

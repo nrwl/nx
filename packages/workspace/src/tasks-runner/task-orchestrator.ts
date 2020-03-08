@@ -2,9 +2,9 @@ import { Cache, TaskWithCachedResult } from './cache';
 import { cliCommand } from '../core/file-utils';
 import { ProjectGraph } from '../core/project-graph';
 import { AffectedEventType, Task } from './tasks-runner';
-import { getCommand, getOutputs } from './utils';
-import { fork, spawn } from 'child_process';
-import { DefaultTasksRunnerOptions } from './tasks-runner-v2';
+import { getOutputs } from './utils';
+import { fork } from 'child_process';
+import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { output } from '../utils/output';
 import * as path from 'path';
 import { appRootPath } from '../utils/app-root';
@@ -125,7 +125,9 @@ export class TaskOrchestrator {
             env.NX_TERMINAL_CAPTURE_STDERR = 'true';
           }
         }
-        const p = fork(this.getCommand(), this.getCommandArgs(task), {
+        const args = this.getCommandArgs(task);
+        console.log(`> ${this.cli} ${args.join(' ')}`);
+        const p = fork(this.getCommand(), args, {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
           env
         });
