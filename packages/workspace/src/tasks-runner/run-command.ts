@@ -36,14 +36,12 @@ export async function runCommand<T extends RunArgs>(
     });
   });
 
-  if (tasksRunner !== require('./default-tasks-runner').defaultTasksRunner) {
-    const hasher = new Hasher(projectGraph, nxJson, tasksOptions);
-    await Promise.all(
-      tasks.map(async t => {
-        t.hash = await hasher.hash(t);
-      })
-    );
-  }
+  const hasher = new Hasher(projectGraph, nxJson, tasksOptions);
+  await Promise.all(
+    tasks.map(async t => {
+      t.hash = await hasher.hash(t);
+    })
+  );
 
   const cached = [];
   tasksRunner(tasks, tasksOptions, {
@@ -161,14 +159,20 @@ export function getRunner(
 
   if (nxJson.tasksRunnerOptions[runner]) {
     let modulePath: string = nxJson.tasksRunnerOptions[runner].runner;
-    if (isRelativePath(modulePath)) {
-      modulePath = join(appRootPath, modulePath);
-    }
 
-    let tasksRunner = require(modulePath);
-    // to support both babel and ts formats
-    if (tasksRunner.default) {
-      tasksRunner = tasksRunner.default;
+    let tasksRunner;
+    if (modulePath) {
+      if (isRelativePath(modulePath)) {
+        modulePath = join(appRootPath, modulePath);
+      }
+
+      tasksRunner = require(modulePath);
+      // to support both babel and ts formats
+      if (tasksRunner.default) {
+        tasksRunner = tasksRunner.default;
+      }
+    } else {
+      tasksRunner = require('./default-tasks-runner').defaultTasksRunner;
     }
 
     return {

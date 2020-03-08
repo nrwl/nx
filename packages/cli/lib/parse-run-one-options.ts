@@ -5,15 +5,6 @@ export function parseRunOneOptions(
   workspaceConfigJson: any,
   args: string[]
 ): false | { project; target; configuration; parsedArgs } {
-  // custom runner is not set, no tasks runner
-  if (
-    !nxJson.tasksRunnerOptions ||
-    !nxJson.tasksRunnerOptions.default ||
-    !nxJson.tasksRunnerOptions.default.runner
-  ) {
-    return false;
-  }
-
   // the list of all possible tasks doesn't include the given name, no tasks runner
   let allPossibleTasks = ['run'];
   Object.values(workspaceConfigJson.projects || {}).forEach((p: any) => {
