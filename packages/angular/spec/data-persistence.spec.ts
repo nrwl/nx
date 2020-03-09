@@ -4,7 +4,10 @@ import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Actions, Effect, EffectsModule, ofType } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
-import { StoreRouterConnectingModule } from '@ngrx/router-store';
+import {
+  StoreRouterConnectingModule,
+  DefaultRouterStateSerializer
+} from '@ngrx/router-store';
 import { Store, StoreModule } from '@ngrx/store';
 import { Observable, of, Subject, throwError } from 'rxjs';
 import { delay, withLatestFrom } from 'rxjs/operators';
@@ -89,7 +92,9 @@ describe('DataPersistence', () => {
               }
             }
           ),
-          StoreRouterConnectingModule.forRoot(),
+          StoreRouterConnectingModule.forRoot({
+            serializer: DefaultRouterStateSerializer
+          }),
           RouterTestingModule.withRoutes([
             { path: 'todo/:id', component: TodoComponent }
           ]),
