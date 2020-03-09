@@ -3,5 +3,10 @@
     "name": "@nxtend/ionic-react",
     "description": "An Nx plugin for developing Ionic React applications and libraries.",
     "url": "https://github.com/devinshoemaker/nxtend"
+  },
+  {
+    "name": "@angular-architects/ddd",
+    "description": "Nx plugin for structuring a monorepo with domains and layers",
+    "url": "https://github.com/angular-architects/nx-ddd-plugin"
   }
 ]

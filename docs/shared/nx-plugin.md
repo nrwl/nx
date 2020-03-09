@@ -253,10 +253,12 @@ After that, you can then install your plugin like any other npm package,
 
 ### Listing your Nx Plugin
 
-Nx provides a utility (`nx list`) that lists all approved plugins.
+Nx provides a utility (`nx list`) that lists all approved plugins. To submit your plugin, please follow the steps below:
 
-To add your plugin modify the `community/approved-plugins.json` file in the [Nrwl/nx](https://github.com/nrwl/nx/blob/master/community/approved-plugins.json) repo and create a pull request with `yarn submit-plugin`.
+- Update the [`community/approved-plugins.json` file](https://github.com/nrwl/nx/blob/master/community/approved-plugins.json) with a new entry for your plugin that includes name, url and description
+- Use the following commit message template: `chore(core): nx plugin submission [PLUGIN_NAME]`
+- push your changes, and run `yarn submit-plugin`
 
-The `yarn submit-plugin` command automatically opens the Github pull request process with the correct template.
+> The `yarn submit-plugin` command automatically opens the Github pull request process with the correct template.
 
 We will then verify the plugin, offer suggestions or merge the pull request!
