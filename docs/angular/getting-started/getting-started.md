@@ -173,9 +173,3 @@ When the app is ready, visit `http://localhost:4200` in your browser.
 That's it! You've created your first application in an Nx workspace. To become more familiar with Nx:
 
 - Go through a [complete tutorial](/angular/tutorial/01-create-application) on using Nx to build a full-stack application.
-
-## Using Angular Console
-
-You can also create a new Nx project using [Angular Console](https://angularconsole.com)--UI for the CLI:
-
-![Create Workspace](./create-workspace.gif)
