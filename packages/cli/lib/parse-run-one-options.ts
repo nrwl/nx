@@ -5,15 +5,6 @@ export function parseRunOneOptions(
   workspaceConfigJson: any,
   args: string[]
 ): false | { project; target; configuration; parsedArgs } {
-  // the list of all possible tasks doesn't include the given name, no tasks runner
-  let allPossibleTasks = ['run'];
-  Object.values(workspaceConfigJson.projects || {}).forEach((p: any) => {
-    allPossibleTasks.push(...Object.keys(p.architect || {}));
-  });
-  if (allPossibleTasks.indexOf(args[0]) === -1) {
-    return false;
-  }
-
   let defaultProjectName = null;
   try {
     defaultProjectName = workspaceConfigJson.cli.defaultProjectName;
@@ -57,7 +48,8 @@ export function parseRunOneOptions(
   }
 
   // we need both to be able to run a target, no tasks runner
-  if (!workspaceConfigJson.projects[project]) return false;
+  const p = workspaceConfigJson.projects[project];
+  if (!p || !p.architect || !p.architect[target]) return false;
 
   const res = { project, target, configuration, parsedArgs };
   delete parsedArgs['configuration'];
