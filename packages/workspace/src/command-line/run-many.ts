@@ -69,8 +69,8 @@ function runnableForTarget(
   target: string,
   strict = false
 ): ProjectGraphNode[] {
-  const notRunnable = [];
-  const runnable = [];
+  const notRunnable = [] as ProjectGraphNode[];
+  const runnable = [] as ProjectGraphNode[];
 
   for (let project of projects) {
     if (projectHasTarget(project, target)) {
@@ -83,7 +83,7 @@ function runnableForTarget(
   if (strict && notRunnable.length) {
     output.warn({
       title: `the following do not have configuration for "${target}"`,
-      bodyLines: notRunnable.map(p => '- ' + p)
+      bodyLines: notRunnable.map(p => '- ' + p.name)
     });
   }
 
