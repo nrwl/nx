@@ -4,6 +4,7 @@ import * as yargs from 'yargs';
 const runOne = [
   'target',
   'configuration',
+  'prod',
   'runner',
   'parallel',
   'maxParallel',
@@ -89,6 +90,11 @@ export function splitArgsIntoNxArgsAndOverrides(
     nxArgs.projects = [];
   } else {
     nxArgs.projects = args.projects.split(',').map((p: string) => p.trim());
+  }
+
+  if (nxArgs.prod) {
+    delete nxArgs.prod;
+    nxArgs.configuration = 'production';
   }
 
   if (

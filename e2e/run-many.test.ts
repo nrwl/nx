@@ -81,9 +81,7 @@ forEachCli(() => {
       l('=======> testing run many --configuration');
 
       const buildConfig = l(
-        runCLI(
-          `run-many --target=build --projects="${appA},${libA}" --configuration=production`
-        )
+        runCLI(`run-many --target=build --projects="${appA},${libA}" --prod`)
       );
       expect(buildConfig).toContain(`Running target build for projects:`);
       expect(buildConfig).toContain(`run ${appA}:build:production`);
