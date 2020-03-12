@@ -99,6 +99,7 @@ jobs:
       - run:
           name: Nx CLI E2E Tests Part 1
           command: yarn e2e-ci1 nx
+          no_output_timeout: 30m
   e2e-nx-2:
     executor: default
     steps:
@@ -106,6 +107,7 @@ jobs:
       - run:
           name: Nx CLI E2E Tests Part 2
           command: yarn e2e-ci2 nx
+          no_output_timeout: 30m
   e2e-nx-3:
     executor: default
     steps:
@@ -113,6 +115,7 @@ jobs:
       - run:
           name: Nx CLI E2E Tests Part 3
           command: yarn e2e-ci3 nx
+          no_output_timeout: 30m
   e2e-nx-4:
     executor: default
     steps:
@@ -120,6 +123,7 @@ jobs:
       - run:
           name: Nx CLI E2E Tests Part 4
           command: yarn e2e-ci4 nx
+          no_output_timeout: 30m
   e2e-ng-1:
     executor: default
     steps:
@@ -127,6 +131,7 @@ jobs:
       - run:
           name: Angular CLI E2E Tests Part 1
           command: yarn e2e-ci1 angular
+          no_output_timeout: 30m
   e2e-ng-2:
     executor: default
     steps:
@@ -134,6 +139,7 @@ jobs:
       - run:
           name: Angular CLI E2E Tests Part 2
           command: yarn e2e-ci2 angular
+          no_output_timeout: 30m
   e2e-ng-3:
     executor: default
     steps:
@@ -141,6 +147,7 @@ jobs:
       - run:
           name: Angular CLI E2E Tests Part 3
           command: yarn e2e-ci3 angular
+          no_output_timeout: 30m
   e2e-ng-4:
     executor: default
     steps:
@@ -148,6 +155,7 @@ jobs:
       - run:
           name: Angular CLI E2E Tests Part 4
           command: yarn e2e-ci4 angular
+          no_output_timeout: 30m
 
 workflows:
   version: 2.1

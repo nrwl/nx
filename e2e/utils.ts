@@ -399,7 +399,7 @@ export function runCLI(
   }
 ): string {
   try {
-    return execSync(`node ./node_modules/@nrwl/cli/bin/nx.js ${command}`, {
+    const r = execSync(`node ./node_modules/@nrwl/cli/bin/nx.js ${command}`, {
       cwd: tmpProjPath()
     })
       .toString()
@@ -407,6 +407,8 @@ export function runCLI(
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
         ''
       );
+    console.log(r);
+    return r;
   } catch (e) {
     if (opts.silenceError) {
       return e.stdout.toString();
@@ -424,10 +426,12 @@ export function expectTestsPass(v: { stdout: string; stderr: string }) {
 
 export function runCommand(command: string): string {
   try {
-    return execSync(command, {
+    const r = execSync(command, {
       cwd: tmpProjPath(),
       stdio: ['pipe', 'pipe', 'pipe']
     }).toString();
+    console.log(r);
+    return r;
   } catch (e) {
     return e.stdout.toString() + e.stderr.toString();
   }
