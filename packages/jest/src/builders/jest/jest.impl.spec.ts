@@ -111,7 +111,7 @@ describe('Jest Builder', () => {
           colors: false,
           reporters: ['/test/path'],
           verbose: false,
-          coverageReporters: 'test',
+          coverageReporters: ['test'],
           coverageDirectory: '/test/path',
           watch: false
         },
@@ -220,7 +220,7 @@ describe('Jest Builder', () => {
           colors: false,
           verbose: false,
           reporters: ['/test/path'],
-          coverageReporters: 'test',
+          coverageReporters: ['test'],
           coverageDirectory: '/test/path',
           testResultsProcessor: 'results-processor',
           updateSnapshot: true,
