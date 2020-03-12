@@ -144,7 +144,7 @@ function run(
   if(options.coverageReporters) {
     // coverageReporters is an array of string in jest
     // https://jestjs.io/docs/en/configuration#coveragereporters-arraystring
-    config.coverageReporters: [options.coverageReporters],
+    config.coverageReporters = [options.coverageReporters],
   }
 
   return from(runCLI(config, [options.jestConfig])).pipe(
