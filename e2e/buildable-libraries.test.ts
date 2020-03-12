@@ -1,4 +1,11 @@
-import { forEachCli, newProject, runCLI, uniq, updateFile } from './utils';
+import {
+  forEachCli,
+  newProject,
+  runCLI,
+  setMaxWorkers,
+  uniq,
+  updateFile
+} from './utils';
 
 forEachCli(() => {
   describe('Buildable Libraries', () => {
@@ -6,6 +13,8 @@ forEachCli(() => {
       newProject();
 
       const myapp = uniq('myapp');
+      setMaxWorkers(myapp);
+
       const mylib1 = uniq('mylib1');
       const mylib2 = uniq('mylib1');
       runCLI(`generate @nrwl/react:app ${myapp}`);
