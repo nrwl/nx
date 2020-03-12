@@ -9,8 +9,8 @@ forEachCli(() => {
       const mylib1 = uniq('mylib1');
       const mylib2 = uniq('mylib1');
       runCLI(`generate @nrwl/react:app ${myapp}`);
-      runCLI(`generate @nrwl/workspace:lib ${mylib1}`);
-      runCLI(`generate @nrwl/workspace:lib ${mylib2}`);
+      runCLI(`generate @nrwl/react:lib ${mylib1} --publishable`);
+      runCLI(`generate @nrwl/react:lib ${mylib2} --publishable`);
 
       updateFile(
         `apps/${myapp}/src/main.ts`,
@@ -19,6 +19,12 @@ forEachCli(() => {
           import "@proj/${mylib2}";
         `
       );
+
+      const buildWithDeps = runCLI(`build ${myapp} --with-deps --prod`);
+      expect(buildWithDeps).toContain(`Running target "build" succeeded`);
+      expect(buildWithDeps).toContain(`nx run ${myapp}:build:production`);
+      expect(buildWithDeps).toContain(`nx run ${mylib1}:build`);
+      expect(buildWithDeps).toContain(`nx run ${mylib2}:build`);
 
       const testsWithDeps = runCLI(`test ${myapp} --with-deps`);
       expect(testsWithDeps).toContain(`NX  Running target test for projects:`);
