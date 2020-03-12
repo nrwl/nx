@@ -15,7 +15,7 @@ import {
 import { toClassName } from '@nrwl/workspace';
 
 forEachCli(() => {
-  describe('Create New Workspace', () => {
+  describe('Angular Package', () => {
     beforeEach(() => {
       ensureProject();
     });
