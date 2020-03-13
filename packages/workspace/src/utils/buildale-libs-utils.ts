@@ -1,17 +1,18 @@
-import {
-  ProjectGraph,
-  ProjectGraphNode,
-  ProjectType
-} from '../core/project-graph';
 import { BuilderContext } from '@angular-devkit/architect';
-import { join } from 'path';
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { getOutputsForTargetAndConfiguration } from '@nrwl/workspace/src/tasks-runner/utils';
 import {
   fileExists,
   readJsonFile,
   writeJsonFile
 } from '@nrwl/workspace/src/utils/fileutils';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { getOutputsForTargetAndConfiguration } from '@nrwl/workspace/src/tasks-runner/utils';
+import { join } from 'path';
+
+import {
+  ProjectGraph,
+  ProjectGraphNode,
+  ProjectType
+} from '../core/project-graph';
 
 function isBuildable(target: string, node: ProjectGraphNode): boolean {
   return (
@@ -62,6 +63,31 @@ export function calculateProjectDependencies(
   return { target, dependencies };
 }
 
+interface NgPackagrOptions {
+  dest?: string;
+  [key: string]: any;
+}
+
+export function getNgPackgrOptions(
+  basePath: string
+): NgPackagrOptions | undefined {
+  const srcNgPackagePath = join(basePath, 'ng-package.json');
+  if (fileExists(srcNgPackagePath)) {
+    return readJsonFile<NgPackagrOptions>(srcNgPackagePath);
+  }
+  const srcPackageJsonPath = join(basePath, 'package.json');
+  if (fileExists(srcPackageJsonPath)) {
+    const packageJsonInfo = readJsonFile<{
+      ngPackage?: {
+        dest?: string;
+      };
+    }>(srcPackageJsonPath);
+    return packageJsonInfo.ngPackage;
+  }
+
+  return undefined;
+}
+
 export function checkDependentProjectsHaveBeenBuilt(
   context: BuilderContext,
   projectDependencies: DependentBuildableProjectNode[]
@@ -70,9 +96,16 @@ export function checkDependentProjectsHaveBeenBuilt(
 
   // verify whether all dependent libraries have been built
   projectDependencies.forEach(dep => {
-    const paths = dep.outputs.map(p =>
-      join(context.workspaceRoot, p, 'package.json')
-    );
+    const paths = dep.outputs.map(p => {
+      if (dep.node.data.root) {
+        const projectDir = join(context.workspaceRoot, dep.node.data.root);
+        const options = getNgPackgrOptions(projectDir);
+        if (options && options.dest) {
+          return join(projectDir, options.dest, 'package.json');
+        }
+      }
+      return join(context.workspaceRoot, p, 'package.json');
+    });
 
     if (!paths.some(fileExists)) {
       depLibsToBuildFirst.push(dep);
