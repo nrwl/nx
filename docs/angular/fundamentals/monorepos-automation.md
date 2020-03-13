@@ -106,7 +106,7 @@ Creating a new application will result in something like this:
 └── tslint.json
 ```
 
-No matter what what kind of application it is, you can run:
+No matter what kind of application it is, you can run:
 
 - `ng serve myapp` to serve the application
 - `ng build myapp` to build the application
