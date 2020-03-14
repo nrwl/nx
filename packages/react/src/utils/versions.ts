@@ -5,8 +5,8 @@ export const reactDomVersion = '16.12.0';
 export const typesReactVersion = '16.9.17';
 export const typesReactDomVersion = '16.9.4';
 
-export const styledComponentsVersion = '5.0.0';
-export const typesStyledComponentsVersion = '4.4.2';
+export const styledComponentsVersion = '5.0.1';
+export const typesStyledComponentsVersion = '5.0.1';
 
 export const emotionStyledVersion = '10.0.27';
 export const emotionCoreVersion = '10.0.27';
