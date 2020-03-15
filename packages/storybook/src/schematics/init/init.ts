@@ -5,7 +5,11 @@ import {
   Tree
 } from '@angular-devkit/schematics';
 import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
-import { babelLoaderVersion, storybookVersion } from '../../utils/versions';
+import {
+  babelLoaderVersion,
+  babelCoreVersion,
+  storybookVersion
+} from '../../utils/versions';
 import { Schema } from './schema';
 
 function checkDependenciesInstalled(): Rule {
@@ -19,7 +23,7 @@ function checkDependenciesInstalled(): Rule {
       devDependencies['@storybook/react'] = storybookVersion;
       devDependencies['@storybook/addon-knobs'] = storybookVersion;
       devDependencies['babel-loader'] = babelLoaderVersion;
-      devDependencies['@babel/core'] = babelLoaderVersion;
+      devDependencies['@babel/core'] = babelCoreVersion;
     }
     if (
       !packageJson.dependencies['@angular/forms'] &&
