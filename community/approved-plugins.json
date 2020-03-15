@@ -13,5 +13,10 @@
     "name": "@offeringsolutions/nx-karma-to-jest",
     "description": "Nx plugin for replacing karma with jest in an Nx workspace",
     "url": "https://github.com/FabianGosebrink/nx-karma-to-jest"
+  },
+  {
+    "name": "@flowaccount/nx-serverless",
+    "description": "Nx plugin for node/angular-universal schematics and deployment builders in an Nx workspace",
+    "url": "https://github.com/flowaccount/nx-plugins"
   }
 ]
