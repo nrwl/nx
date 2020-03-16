@@ -253,7 +253,7 @@ After that, you can then install your plugin like any other npm package,
 
 ### Listing your Nx Plugin
 
-Nx provides a utility (`nx list`) that lists all approved plugins. To submit your plugin, please follow the steps below:
+Nx provides a utility (`nx list`) that lists both core and community plugins. To submit your plugin, please follow the steps below:
 
 - Fork the [Nx repo](https://github.com/nrwl/nx/fork) (if you haven't already)
 - Update the [`community/approved-plugins.json` file](https://github.com/nrwl/nx/blob/master/community/approved-plugins.json) with a new entry for your plugin that includes name, url and description

@@ -1,27 +1,27 @@
 import { terminal } from '@angular-devkit/core';
 import axios from 'axios';
-import { output } from './output';
+import { output } from '../output';
+import { CommunityPlugin, PluginCapabilities } from './models';
 
-const APPROVED_PLUGINS_JSON_URL =
+const COMMUNITY_PLUGINS_JSON_URL =
   'https://raw.githubusercontent.com/nrwl/nx/master/community/approved-plugins.json';
 
-interface CommunityPlugin {
-  name: string;
-  url: string;
-  description: string;
-}
-
-async function fetchCommunityPlugins(): Promise<CommunityPlugin[]> {
+export async function fetchCommunityPlugins(): Promise<CommunityPlugin[]> {
   const response = await axios.get<CommunityPlugin[]>(
-    APPROVED_PLUGINS_JSON_URL
+    COMMUNITY_PLUGINS_JSON_URL
   );
 
   return response.data;
 }
 
-export async function listCommunityPlugins(installedPluginsMap: Set<string>) {
+export function listCommunityPlugins(
+  installedPlugins: PluginCapabilities[],
+  communityPlugins: CommunityPlugin[]
+) {
   try {
-    const communityPlugins = await fetchCommunityPlugins();
+    const installedPluginsMap: Set<string> = new Set<string>(
+      installedPlugins.map(p => p.name)
+    );
 
     const availableCommunityPlugins = communityPlugins.filter(
       p => !installedPluginsMap.has(p.name)
