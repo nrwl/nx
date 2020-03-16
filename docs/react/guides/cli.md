@@ -82,7 +82,7 @@ nx list @nrwl/web
 
 This will list all the schematics in the `@nrwl/web` collection.
 
-`nx list` will also output a list of Nrwl-approved plugins that you may want to consider adding to your workspace.
+`nx list` will also output a list of Nrwl core and community plugins that you may want to consider adding to your workspace.
 
 > Visit the [CLI Commands](/react/guides/cli#cli-commands) section to see more available commands.
 

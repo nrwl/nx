@@ -100,7 +100,7 @@ nx list @nrwl/web
 
 This will list all the capabilities in the `@nrwl/web` collection.
 
-`nx list` will also output a list of Nrwl-approved plugins that you may want to consider adding to your workspace.
+Alongside the Nrwl core plugins `nx list` will also display some community plugins that you may want to consider adding to your workspace.
 
 ## Creating an application
 

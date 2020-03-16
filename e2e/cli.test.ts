@@ -1,3 +1,5 @@
+import { packagesWeCareAbout } from '@nrwl/workspace/src/command-line/report';
+import { renameSync } from 'fs';
 import {
   ensureProject,
   forEachCli,
@@ -9,8 +11,6 @@ import {
   tmpProjPath,
   updateFile
 } from './utils';
-import { packagesWeCareAbout } from '@nrwl/workspace/src/command-line/report';
-import { renameSync } from 'fs';
 
 forEachCli('nx', () => {
   describe('Help', () => {
@@ -91,8 +91,6 @@ forEachCli(() => {
 
       // just check for some, not all
       expect(listOutput).toContain('@nrwl/angular');
-      expect(listOutput).toContain('@schematics/angular');
-      expect(listOutput).toContain('@ngrx/store');
 
       expect(listOutput).not.toContain('NX  Also available');
 
@@ -118,7 +116,7 @@ forEachCli(() => {
       // check for builders
       expect(listOutput).toContain('run-commands');
 
-      // look for uninstalled approved plugin
+      // look for uninstalled core plugin
       listOutput = runCommand('npm run nx -- list @nrwl/angular');
 
       expect(listOutput).toContain(
@@ -129,7 +127,7 @@ forEachCli(() => {
       listOutput = runCommand('npm run nx -- list @wibble/fish');
 
       expect(listOutput).toContain(
-        'NX   ERROR  Could not find plugin @wibble/fish'
+        'NX   NOTE  @wibble/fish is not currently installed'
       );
 
       // put back the @nrwl/angular module (or all the other e2e tests after this will fail)
