@@ -19,6 +19,7 @@ export interface CLINoteMessageConfig {
 
 export interface CLISuccessMessageConfig {
   title: string;
+  bodyLines?: string[];
 }
 
 /**
@@ -86,6 +87,10 @@ class CLIOutput {
     this.writeToStdOut(`\n${chalk.gray(this.VERTICAL_SEPARATOR)}\n\n`);
   }
 
+  addVerticalSeparatorWithoutNewLines() {
+    this.writeToStdOut(`${chalk.gray(this.VERTICAL_SEPARATOR)}\n`);
+  }
+
   error({ title, slug, bodyLines }: CLIErrorMessageConfig) {
     this.addNewline();
 
@@ -151,13 +156,15 @@ class CLIOutput {
     this.addNewline();
   }
 
-  success({ title }: CLISuccessMessageConfig) {
+  success({ title, bodyLines }: CLISuccessMessageConfig) {
     this.addNewline();
 
     this.writeOutputTitle({
       label: chalk.reset.inverse.bold.green(' SUCCESS '),
       title: chalk.bold.green(title)
     });
+
+    this.writeOptionalOutputBody(bodyLines);
 
     this.addNewline();
   }
@@ -168,6 +175,14 @@ class CLIOutput {
     this.writeOutputTitle({
       title: message
     });
+
+    this.addNewline();
+  }
+
+  logCommand(message: string) {
+    this.addNewline();
+
+    this.writeToStdOut(chalk.bold(`> ${message} `));
 
     this.addNewline();
   }

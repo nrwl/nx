@@ -61,7 +61,9 @@ forEachCli(cliName => {
       expect(buildWithDeps).toContain(`${cliCommand} run ${mylib2}:build`);
 
       const testsWithDeps = runCLI(`test ${myapp} --with-deps`);
-      expect(testsWithDeps).toContain(`NX  Running target test for projects:`);
+      expect(testsWithDeps).toContain(
+        `NX  Running target test for project ${myapp} and its 2 deps`
+      );
       expect(testsWithDeps).toContain(myapp);
       expect(testsWithDeps).toContain(mylib1);
       expect(testsWithDeps).toContain(mylib2);
@@ -647,15 +649,27 @@ forEachCli(cliName => {
       ]);
     }, 120000);
 
-    function expectCached(actual: string, expected: string[]) {
-      const section = actual.split('read the output from cache')[1];
-      const r = section
-        .split('\n')
-        .filter(l => l.trim().startsWith('-'))
-        .map(l => l.split('- ')[1].trim());
-      r.sort((a, b) => a.localeCompare(b));
-      expected.sort((a, b) => a.localeCompare(b));
-      expect(r).toEqual(expected);
+    function expectCached(
+      actualOutput: string,
+      expectedCachedProjects: string[]
+    ) {
+      const cachedProjects = [];
+      const lines = actualOutput.split('\n');
+      lines.forEach((s, i) => {
+        if (s.startsWith(`> ${cliCommand} run`)) {
+          const projectName = s
+            .split(`> ${cliCommand} run `)[1]
+            .split(':')[0]
+            .trim();
+          if (lines[i + 2].indexOf('Cached Output') > -1) {
+            cachedProjects.push(projectName);
+          }
+        }
+      });
+
+      cachedProjects.sort((a, b) => a.localeCompare(b));
+      expectedCachedProjects.sort((a, b) => a.localeCompare(b));
+      expect(cachedProjects).toEqual(expectedCachedProjects);
     }
   });
 });

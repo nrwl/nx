@@ -115,7 +115,8 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
           env,
           nxArgs,
           overrides,
-          new DefaultReporter()
+          new DefaultReporter(),
+          null
         );
         break;
       }

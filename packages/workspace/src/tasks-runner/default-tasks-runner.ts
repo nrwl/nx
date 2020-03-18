@@ -40,7 +40,12 @@ export interface DefaultTasksRunnerOptions {
 export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
   tasks: Task[],
   options: DefaultTasksRunnerOptions,
-  context: { target: string; projectGraph: ProjectGraph; nxJson: NxJson }
+  context: {
+    target: string;
+    initiatingProject?: string;
+    projectGraph: ProjectGraph;
+    nxJson: NxJson;
+  }
 ): Observable<TaskCompleteEvent> => {
   if (!options.lifeCycle) {
     options.lifeCycle = new NoopLifeCycle();
@@ -65,14 +70,23 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
 async function runAllTasks(
   tasks: Task[],
   options: DefaultTasksRunnerOptions,
-  context: { target: string; projectGraph: ProjectGraph; nxJson: NxJson }
+  context: {
+    target: string;
+    initiatingProject?: string;
+    projectGraph: ProjectGraph;
+    nxJson: NxJson;
+  }
 ): Promise<Array<{ task: Task; type: any; success: boolean }>> {
   const stages = new TaskOrderer(
     context.target,
     context.projectGraph
   ).splitTasksIntoStages(tasks);
 
-  const orchestrator = new TaskOrchestrator(context.projectGraph, options);
+  const orchestrator = new TaskOrchestrator(
+    context.initiatingProject,
+    context.projectGraph,
+    options
+  );
 
   const res = [];
   for (let i = 0; i < stages.length; ++i) {

@@ -31,6 +31,7 @@ export type TasksRunner<T = unknown> = (
   options: T,
   context?: {
     target?: string;
+    initiatingProject?: string | null;
     projectGraph: ProjectGraph;
     nxJson: NxJson;
   }

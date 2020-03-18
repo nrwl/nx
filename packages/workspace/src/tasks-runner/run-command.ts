@@ -18,7 +18,8 @@ export async function runCommand<T extends RunArgs>(
   { nxJson, workspaceResults }: Environment,
   nxArgs: NxArgs,
   overrides: any,
-  reporter: any
+  reporter: any,
+  initiatingProject: string | null
 ) {
   reporter.beforeRun(projectsToRun.map(p => p.name), nxArgs, overrides);
 
@@ -45,6 +46,7 @@ export async function runCommand<T extends RunArgs>(
 
   const cached = [];
   tasksRunner(tasks, tasksOptions, {
+    initiatingProject: initiatingProject,
     target: nxArgs.target,
     projectGraph,
     nxJson
