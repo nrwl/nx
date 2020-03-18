@@ -1,8 +1,13 @@
 import { exec, execSync } from 'child_process';
-import { readFileSync, renameSync, statSync, writeFileSync } from 'fs';
+import {
+  readdirSync,
+  readFileSync,
+  renameSync,
+  statSync,
+  writeFileSync
+} from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
-import * as fs from 'fs';
 
 export let cli;
 
@@ -486,7 +491,7 @@ export function checkFilesDoNotExist(...expectedFiles: string[]) {
 }
 
 export function listFiles(dirName: string) {
-  return fs.readdirSync(tmpProjPath(dirName));
+  return readdirSync(tmpProjPath(dirName));
 }
 
 export function readJson(f: string): any {

@@ -30,6 +30,13 @@
       "description": "Move an application or library to another folder"
     },
 
+    "remove": {
+      "factory": "./src/schematics/remove/remove",
+      "schema": "./src/schematics/remove/schema.json",
+      "aliases": ["rm"],
+      "description": "Remove an application or library"
+    },
+
     "ng-new": {
       "factory": "./src/schematics/ng-new/ng-new",
       "schema": "./src/schematics/ng-new/schema.json",

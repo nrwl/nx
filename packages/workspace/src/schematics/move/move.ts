@@ -1,4 +1,4 @@
-import { chain } from '@angular-devkit/schematics';
+import { chain, Rule } from '@angular-devkit/schematics';
 import { checkDestination } from './lib/check-destination';
 import { checkProjectExists } from './lib/check-project-exists';
 import { moveProject } from './lib/move-project';
@@ -10,7 +10,7 @@ import { updateProjectRootFiles } from './lib/update-project-root-files';
 import { updateWorkspace } from './lib/update-workspace';
 import { Schema } from './schema';
 
-export default function(schema: Schema) {
+export default function(schema: Schema): Rule {
   return chain([
     checkProjectExists(schema),
     checkDestination(schema),

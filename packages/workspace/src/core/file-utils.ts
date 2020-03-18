@@ -1,15 +1,15 @@
-import * as path from 'path';
-import * as fs from 'fs';
-import { appRootPath } from '../utils/app-root';
-import { extname } from 'path';
-import { jsonDiff } from '../utils/json-diff';
-import { readFileSync } from 'fs';
 import { execSync } from 'child_process';
-import { readJsonFile } from '../utils/fileutils';
-import { Environment, NxJson } from './shared-interfaces';
-import { ProjectGraphNode } from './project-graph';
-import { WorkspaceResults } from '../command-line/workspace-results';
+import * as fs from 'fs';
+import { readFileSync } from 'fs';
+import * as path from 'path';
+import { extname } from 'path';
 import { NxArgs } from '../command-line/utils';
+import { WorkspaceResults } from '../command-line/workspace-results';
+import { appRootPath } from '../utils/app-root';
+import { readJsonFile } from '../utils/fileutils';
+import { jsonDiff } from '../utils/json-diff';
+import { ProjectGraphNode } from './project-graph';
+import { Environment, NxJson } from './shared-interfaces';
 
 const ignore = require('ignore');
 
@@ -202,10 +202,6 @@ export function readNxJson(): NxJson {
 // TODO: Make this list extensible
 export function rootWorkspaceFileNames(): string[] {
   return [`package.json`, workspaceFileName(), `nx.json`, `tsconfig.json`];
-}
-
-export function rootWorkspaceFileData(): FileData[] {
-  return rootWorkspaceFileNames().map(f => getFileData(`${appRootPath}/${f}`));
 }
 
 export function readWorkspaceFiles(): FileData[] {
