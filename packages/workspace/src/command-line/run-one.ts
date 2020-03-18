@@ -30,10 +30,20 @@ export function runOne(opts: {
   );
   const env = readEnvironment(opts.target, projectsMap);
   const reporter = nxArgs.withDeps
-    ? new (require(`../tasks-runner/default-reporter`)).DefaultReporter()
+    ? new (require(`../tasks-runner/run-one-reporter`)).RunOneReporter(
+        opts.project
+      )
     : new EmptyReporter();
 
-  runCommand(projects, projectGraph, env, nxArgs, overrides, reporter);
+  runCommand(
+    projects,
+    projectGraph,
+    env,
+    nxArgs,
+    overrides,
+    reporter,
+    opts.project
+  );
 }
 
 function getProjects(

@@ -7,6 +7,7 @@ import { fork } from 'child_process';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { output } from '../utils/output';
 import * as path from 'path';
+import * as fs from 'fs';
 import { appRootPath } from '../utils/app-root';
 
 export class TaskOrchestrator {
@@ -15,6 +16,7 @@ export class TaskOrchestrator {
   cli = cliCommand();
 
   constructor(
+    private readonly initiatingProject: string | undefined,
     private readonly projectGraph: ProjectGraph,
     private readonly options: DefaultTasksRunnerOptions
   ) {}
@@ -93,8 +95,16 @@ export class TaskOrchestrator {
     tasks.forEach(t => {
       this.options.lifeCycle.startTask(t.task);
 
-      output.note({ title: `Cached Output:` });
-      process.stdout.write(t.cachedResult.terminalOutput);
+      if (
+        !this.initiatingProject ||
+        this.initiatingProject === t.task.target.project
+      ) {
+        const args = this.getCommandArgs(t.task);
+        output.logCommand(`${this.cli} ${args.join(' ')}`);
+        output.note({ title: `Cached Output:` });
+        process.stdout.write(t.cachedResult.terminalOutput);
+      }
+
       const outputs = getOutputs(this.projectGraph.nodes, t.task);
       this.cache.copyFilesFromCache(t.cachedResult, outputs);
 
@@ -117,21 +127,25 @@ export class TaskOrchestrator {
     return new Promise((res, rej) => {
       try {
         this.options.lifeCycle.startTask(task);
-
-        const env = { ...process.env };
-        if (outputPath) {
-          env.NX_TERMINAL_OUTPUT_PATH = outputPath;
-          if (this.options.captureStderr) {
-            env.NX_TERMINAL_CAPTURE_STDERR = 'true';
-          }
-        }
+        const forwardOutput = this.shouldForwardOutput(outputPath, task);
+        const env = this.envForForkedProcess(outputPath, forwardOutput);
         const args = this.getCommandArgs(task);
-        console.log(`> ${this.cli} ${args.join(' ')}`);
+        const commandLine = `${this.cli} ${args.join(' ')}`;
+
+        if (forwardOutput) {
+          output.logCommand(commandLine);
+        }
         const p = fork(this.getCommand(), args, {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
           env
         });
         p.on('close', code => {
+          // we didn't print any output as we were running the command
+          // print all the collected output
+          if (!forwardOutput) {
+            output.logCommand(commandLine);
+            process.stdout.write(fs.readFileSync(outputPath));
+          }
           if (outputPath && code === 0) {
             this.cache.put(task, outputPath, taskOutputs).then(() => {
               this.options.lifeCycle.endTask(task, code);
@@ -147,6 +161,27 @@ export class TaskOrchestrator {
         rej(e);
       }
     });
+  }
+
+  private envForForkedProcess(outputPath: string, forwardOutput: boolean) {
+    const env = { ...process.env };
+    if (outputPath) {
+      env.NX_TERMINAL_OUTPUT_PATH = outputPath;
+      if (this.options.captureStderr) {
+        env.NX_TERMINAL_CAPTURE_STDERR = 'true';
+      }
+      if (forwardOutput) {
+        env.NX_FORWARD_OUTPUT = 'true';
+      }
+    }
+    return env;
+  }
+
+  private shouldForwardOutput(outputPath: string | undefined, task: Task) {
+    if (!outputPath) return true;
+    if (!this.options.parallel) return true;
+    if (task.target.project === this.initiatingProject) return true;
+    return false;
   }
 
   private getCommand() {

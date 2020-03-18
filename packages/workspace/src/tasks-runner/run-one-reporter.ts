@@ -6,40 +6,24 @@ export interface ReporterArgs {
   onlyFailed?: boolean;
 }
 
-export class DefaultReporter {
+export class RunOneReporter {
   private projectNames: string[];
+  constructor(private readonly initiatingProject: string) {}
 
   beforeRun(projectNames: string[], args: ReporterArgs, taskOverrides: any) {
     this.projectNames = projectNames;
+    const numberOfDeps = projectNames.length - 1;
 
-    if (projectNames.length <= 0) {
-      let description = `with "${args.target}"`;
-      if (args.configuration) {
-        description += ` that are configured for "${args.configuration}"`;
-      }
-      output.logSingleLine(`No projects ${description} were run`);
-      return;
+    if (numberOfDeps > 0) {
+      output.log({
+        title: `${output.colors.gray('Running target')} ${
+          args.target
+        } ${output.colors.gray('for project')} ${
+          this.initiatingProject
+        } ${output.colors.gray(`and its ${numberOfDeps} deps.`)}`
+      });
+      output.addVerticalSeparatorWithoutNewLines();
     }
-
-    const bodyLines = projectNames.map(
-      affectedProject => `${output.colors.gray('-')} ${affectedProject}`
-    );
-    if (Object.keys(taskOverrides).length > 0) {
-      bodyLines.push('');
-      bodyLines.push(`${output.colors.gray('With flags:')}`);
-      Object.entries(taskOverrides)
-        .map(([flag, value]) => `  --${flag}=${value}`)
-        .forEach(arg => bodyLines.push(arg));
-    }
-
-    output.log({
-      title: `${output.colors.gray('Running target')} ${
-        args.target
-      } ${output.colors.gray('for projects:')}`,
-      bodyLines
-    });
-
-    output.addVerticalSeparatorWithoutNewLines();
   }
 
   printResults(
@@ -86,14 +70,6 @@ export class DefaultReporter {
           project => `${output.colors.gray('-')} ${project}`
         )
       ];
-      if (!args.onlyFailed && !startedWithFailedProjects) {
-        bodyLines.push('');
-        bodyLines.push(
-          `${output.colors.gray(
-            'You can isolate the above projects by passing:'
-          )} ${output.bold('--only-failed')}`
-        );
-      }
       output.error({
         title: `Running target "${args.target}" failed`,
         bodyLines

@@ -3,6 +3,8 @@ import { runCommand } from '../tasks-runner/run-command';
 import { NxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
 import {
   createProjectGraph,
+  isWorkspaceProject,
+  onlyWorkspaceProjects,
   ProjectGraph,
   ProjectGraphNode,
   withDeps
@@ -30,7 +32,8 @@ export function runMany(parsedArgs: yargs.Arguments): void {
     env,
     nxArgs,
     overrides,
-    new DefaultReporter()
+    new DefaultReporter(),
+    null
   );
 }
 
@@ -75,7 +78,7 @@ function runnableForTarget(
   for (let project of projects) {
     if (projectHasTarget(project, target)) {
       runnable.push(project);
-    } else {
+    } else if (isWorkspaceProject(project)) {
       notRunnable.push(project);
     }
   }
