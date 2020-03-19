@@ -1,17 +1,10 @@
 import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import {
-  updateJsonInTree,
-  readJsonInTree,
-  updateWorkspaceInTree,
-  readWorkspace,
-  getWorkspacePath
-} from '@nrwl/workspace';
+import { readWorkspace } from '@nrwl/workspace';
 
 import * as path from 'path';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
-describe('Update 8-5-0', () => {
+describe('set buildLibsFromSource to true', () => {
   let tree: Tree;
   let schematicRunner: SchematicTestRunner;
 
@@ -23,7 +16,7 @@ describe('Update 8-5-0', () => {
     );
   });
 
-  it(`should remove differentialLoading as an option for build builder`, async () => {
+  it(`should set buildLibsFromSource to true`, async () => {
     tree.create(
       'workspace.json',
       JSON.stringify({
@@ -34,9 +27,7 @@ describe('Update 8-5-0', () => {
             architect: {
               build: {
                 builder: '@nrwl/web:build',
-                options: {
-                  differentialLoading: true
-                }
+                options: {}
               }
             }
           }
@@ -45,10 +36,12 @@ describe('Update 8-5-0', () => {
     );
 
     tree = await schematicRunner
-      .runSchematicAsync('update-builder-8.5.0', {}, tree)
+      .runSchematicAsync('set-build-libs-from-source', {}, tree)
       .toPromise();
 
     const config = readWorkspace(tree);
-    expect(config.projects.demo.architect.build.options).toEqual({});
+    expect(config.projects.demo.architect.build.options).toEqual({
+      buildLibsFromSource: true
+    });
   });
 });

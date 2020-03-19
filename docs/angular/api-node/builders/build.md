@@ -12,6 +12,14 @@ Type: `array`
 
 List of static application assets.
 
+### buildLibsFromSource
+
+Default: `false`
+
+Type: `boolean`
+
+Read buildable libraries from source instead of building them separately.
+
 ### externalDependencies
 
 Default: `all`

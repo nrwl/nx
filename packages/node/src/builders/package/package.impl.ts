@@ -11,21 +11,19 @@ import { copy, removeSync } from 'fs-extra';
 import * as glob from 'glob';
 import { basename, dirname, join, normalize, relative } from 'path';
 import { Observable, of, Subscriber } from 'rxjs';
-import { finalize, map, switchMap, tap } from 'rxjs/operators';
+import { map, switchMap, tap } from 'rxjs/operators';
 import * as treeKill from 'tree-kill';
 import {
   createProjectGraph,
   ProjectGraph
 } from '@nrwl/workspace/src/core/project-graph';
-import * as ts from 'typescript';
-import { unlinkSync } from 'fs';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
+  createTmpTsConfig,
   DependentBuildableProjectNode,
-  updateBuildableProjectPackageJsonDependencies,
-  updatePaths
-} from '@nrwl/workspace/src/utils/buildale-libs-utils';
+  updateBuildableProjectPackageJsonDependencies
+} from '@nrwl/workspace/src/utils/buildable-libs-utils';
 
 export interface NodePackageBuilderOptions extends JsonObject {
   main: string;
@@ -181,30 +179,13 @@ function compileTypeScriptFiles(
 
   return Observable.create((subscriber: Subscriber<BuilderOutput>) => {
     if (projectDependencies.length > 0) {
-      // const parsedTSConfig = readTsConfig(tsConfigPath);
-      const parsedTSConfig = ts.readConfigFile(tsConfigPath, ts.sys.readFile)
-        .config;
-
-      // update TSConfig paths to point to the dist folder
-      parsedTSConfig.compilerOptions = parsedTSConfig.compilerOptions || {};
-      parsedTSConfig.compilerOptions.paths =
-        parsedTSConfig.compilerOptions.paths || {};
-      updatePaths(projectDependencies, parsedTSConfig.compilerOptions.paths);
-
-      // find the library root folder
       const libRoot = projGraph.nodes[context.target.project].data.root;
-
-      // write the tmp tsconfig needed for building
-      const tmpTsConfigPath = join(
+      tsConfigPath = createTmpTsConfig(
+        tsConfigPath,
         context.workspaceRoot,
         libRoot,
-        'tsconfig.lib.nx-tmp'
+        projectDependencies
       );
-      writeJsonFile(tmpTsConfigPath, parsedTSConfig);
-
-      // adjust the tsConfig path s.t. it points to the temporary one
-      // with the adjusted paths
-      tsConfigPath = tmpTsConfigPath;
     }
 
     try {
@@ -248,17 +229,7 @@ function compileTypeScriptFiles(
         new Error(`Could not compile Typescript files: \n ${error}`)
       );
     }
-  }).pipe(
-    finalize(() => {
-      cleanupTmpTsConfigFile(tsConfigPath);
-    })
-  );
-}
-
-function cleanupTmpTsConfigFile(tsConfigPath) {
-  if (tsConfigPath.indexOf('.nx-tmp') > -1) {
-    unlinkSync(tsConfigPath);
-  }
+  });
 }
 
 function killProcess(context: BuilderContext): void {

@@ -64,11 +64,13 @@ The prefix to apply to generated selectors.
 
 ### publishable
 
+Alias(es): buildable
+
 Default: `false`
 
 Type: `boolean`
 
-Generate a simple TS library when set to true.
+Generate a buildable library.
 
 ### routing
 

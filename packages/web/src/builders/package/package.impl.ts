@@ -5,8 +5,8 @@ import {
   createBuilder
 } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
-import { from, Observable, of } from 'rxjs';
-import { switchMap, tap, last, mergeMap, catchError } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { catchError, last, switchMap, tap } from 'rxjs/operators';
 import { runRollup } from './run-rollup';
 import { createBabelConfig as _createBabelConfig } from '../../utils/babel-config';
 import * as autoprefixer from 'autoprefixer';
@@ -27,18 +27,14 @@ import {
   readJsonFile,
   writeJsonFile
 } from '@nrwl/workspace/src/utils/fileutils';
-import {
-  createProjectGraph,
-  ProjectGraphNode
-} from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   DependentBuildableProjectNode,
-  updateBuildableProjectPackageJsonDependencies,
-  updatePaths
-} from '@nrwl/workspace/src/utils/buildale-libs-utils';
-import * as ts from 'typescript';
+  readTsConfigWithRemappedPaths,
+  updateBuildableProjectPackageJsonDependencies
+} from '@nrwl/workspace/src/utils/buildable-libs-utils';
 
 // These use require because the ES import isn't correct.
 const resolve = require('@rollup/plugin-node-resolve');
@@ -151,12 +147,10 @@ function createRollupOptions(
   context: BuilderContext,
   packageJson: any
 ): rollup.InputOptions {
-  const parsedTSConfig = ts.readConfigFile(options.tsConfig, ts.sys.readFile)
-    .config;
-  parsedTSConfig.compilerOptions = parsedTSConfig.compilerOptions || {};
-  parsedTSConfig.compilerOptions.paths =
-    parsedTSConfig.compilerOptions.paths || {};
-  updatePaths(dependencies, parsedTSConfig.compilerOptions.paths);
+  const parsedTSConfig = readTsConfigWithRemappedPaths(
+    options.tsConfig,
+    dependencies
+  );
 
   const plugins = [
     image(),

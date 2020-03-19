@@ -62,9 +62,11 @@ Library name
 
 ### publishable
 
+Alias(es): buildable
+
 Type: `boolean`
 
-Create a publishable library. A "build" architect will be added for this project the workspace configuration.
+Create a publishable library.
 
 ### skipFormat
 

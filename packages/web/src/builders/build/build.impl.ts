@@ -5,7 +5,7 @@ import {
   normalize
 } from '@angular-devkit/core';
 import { BuildResult, runWebpack } from '@angular-devkit/build-webpack';
-import { from, Observable, of } from 'rxjs';
+import { from, of } from 'rxjs';
 import { normalizeWebBuildOptions } from '../../utils/normalize';
 import { getWebConfig } from '../../utils/web.config';
 import { BuildBuilderOptions } from '../../utils/types';
@@ -16,6 +16,11 @@ import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { execSync } from 'child_process';
 import { Range, satisfies } from 'semver';
 import { basename } from 'path';
+import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import {
+  calculateProjectDependencies,
+  createTmpTsConfig
+} from '@nrwl/workspace/src/utils/buildable-libs-utils';
 
 const IGNORED_WEBPACK_OUTPUT = [/WARNING in The comment file/i];
 
@@ -38,6 +43,7 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   subresourceIntegrity?: boolean;
 
   verbose?: boolean;
+  buildLibsFromSource?: boolean;
 }
 
 export default createBuilder<WebBuildBuilderOptions & JsonObject>(run);
@@ -62,6 +68,21 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
       `Node version ${nodeVersion} is not supported. Supported range is "${supportedRange.raw}".`
     );
   }
+
+  if (!options.buildLibsFromSource) {
+    const projGraph = createProjectGraph();
+    const { target, dependencies } = calculateProjectDependencies(
+      projGraph,
+      context
+    );
+    options.tsConfig = createTmpTsConfig(
+      options.tsConfig,
+      context.workspaceRoot,
+      target.data.root,
+      dependencies
+    );
+  }
+
   return from(getSourceRoot(context, host))
     .pipe(
       map(sourceRoot => {
