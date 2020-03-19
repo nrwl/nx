@@ -10,6 +10,7 @@ import {
   readJson,
   runCLI,
   runCommand,
+  runCommandAsync,
   tmpProjPath,
   uniq,
   updateFile,
@@ -163,10 +164,12 @@ forEachCli(cli => {
       expect(runCommand('npm run -s format:check -- --all')).toEqual('');
     });
 
-    it('should support workspace-specific schematics', () => {
+    it('should support workspace-specific schematics', async () => {
       ensureProject();
       const custom = uniq('custom');
+      const failing = uniq('custom-failing');
       runCLI(`g workspace-schematic ${custom} --no-interactive`);
+      runCLI(`g workspace-schematic ${failing} --no-interactive`);
       checkFilesExist(
         `tools/schematics/${custom}/index.ts`,
         `tools/schematics/${custom}/schema.json`
@@ -214,6 +217,30 @@ forEachCli(cli => {
       const another = uniq('another');
       runCLI(`g workspace-schematic ${another} --no-interactive`);
 
+      const jsonFailing = readJson(`tools/schematics/${failing}/schema.json`);
+      jsonFailing.properties = {};
+      jsonFailing.required = [];
+      updateFile(
+        `tools/schematics/${failing}/schema.json`,
+        JSON.stringify(jsonFailing)
+      );
+
+      updateFile(
+        `tools/schematics/${failing}/index.ts`,
+        `
+          export default function() {
+            throw new Error();
+          }
+        `
+      );
+
+      try {
+        const err = await runCommandAsync(
+          `npm run workspace-schematic -- ${failing} --no-interactive`
+        );
+        fail(`Should exit 1 for a workspace-schematic that throws an error`);
+      } catch (e) {}
+
       const listSchematicsOutput = runCommand(
         'npm run workspace-schematic -- --list-schematics'
       );
@@ -221,6 +248,7 @@ forEachCli(cli => {
         'nx workspace-schematic "--list-schematics"'
       );
       expect(listSchematicsOutput).toContain(custom);
+      expect(listSchematicsOutput).toContain(failing);
       expect(listSchematicsOutput).toContain(another);
 
       const promptOutput = runCommand(

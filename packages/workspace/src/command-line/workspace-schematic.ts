@@ -33,7 +33,7 @@ import { output } from '../utils/output';
 
 const rootDirectory = appRootPath;
 
-export function workspaceSchematic(args: string[]) {
+export async function workspaceSchematic(args: string[]) {
   const outDir = compileTools();
   const parsedArgs = parseOptions(args, outDir);
   const logger = createConsoleLogger(
@@ -49,7 +49,11 @@ export function workspaceSchematic(args: string[]) {
   }
   const schematicName = args[0];
   const workflow = createWorkflow(parsedArgs.dryRun);
-  executeSchematic(schematicName, parsedArgs, workflow, outDir, logger);
+  try {
+    await executeSchematic(schematicName, parsedArgs, workflow, outDir, logger);
+  } catch (e) {
+    process.exit(1);
+  }
 }
 
 // compile tools
@@ -314,6 +318,7 @@ async function executeSchematic(
     } else {
       logger.fatal(err.stack || err.message);
     }
+    throw err;
   }
 }
 
@@ -324,9 +329,11 @@ function parseOptions(args: string[], outDir: string): { [k: string]: any } {
     const { properties } = readJsonFile(
       path.join(outDir, args[0], 'schema.json')
     );
-    booleanProps = Object.keys(properties).filter(
-      key => properties[key].type === 'boolean'
-    );
+    if (properties) {
+      booleanProps = Object.keys(properties).filter(
+        key => properties[key].type === 'boolean'
+      );
+    }
   }
   return yargsParser(args, {
     boolean: ['dryRun', 'listSchematics', 'interactive', ...booleanProps],
