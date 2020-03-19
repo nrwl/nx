@@ -14,7 +14,7 @@ import {
   DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,
   updatePaths
-} from '@nrwl/workspace/src/utils/buildale-libs-utils';
+} from '@nrwl/workspace/src/utils/buildable-libs-utils';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 
 export interface BuildAngularLibraryBuilderOptions {

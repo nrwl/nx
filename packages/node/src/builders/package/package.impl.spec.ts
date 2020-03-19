@@ -1,18 +1,19 @@
-import { Architect } from '@angular-devkit/architect';
 import { EventEmitter } from 'events';
 import { join } from 'path';
-import { getMockContext, getTestArchitect } from '../../utils/testing';
+import { getMockContext } from '../../utils/testing';
 import { MockBuilderContext } from '@nrwl/workspace/testing';
+import * as projectGraphUtils from '@nrwl/workspace/src/core/project-graph';
 import {
   ProjectGraph,
   ProjectType
 } from '@nrwl/workspace/src/core/project-graph';
-import * as projectGraphUtils from '@nrwl/workspace/src/core/project-graph';
 
 import {
   NodePackageBuilderOptions,
   runNodePackageBuilder
 } from './package.impl';
+import * as fsMock from 'fs';
+
 jest.mock('glob');
 let glob = require('glob');
 jest.mock('fs-extra');
@@ -23,7 +24,6 @@ jest.mock('child_process');
 let { fork } = require('child_process');
 jest.mock('tree-kill');
 let treeKill = require('tree-kill');
-import * as fsMock from 'fs';
 
 describe('NodeCompileBuilder', () => {
   let testOptions: NodePackageBuilderOptions;
@@ -284,11 +284,7 @@ describe('NodeCompileBuilder', () => {
     });
 
     it('should call the tsc compiler with the modified tsconfig.json', done => {
-      let tmpTsConfigPath = join(
-        context.workspaceRoot,
-        'libs/nodelib',
-        'tsconfig.lib.nx-tmp'
-      );
+      let tmpTsConfigPath = join('libs/nodelib', 'tsconfig.nx-tmp');
 
       runNodePackageBuilder(testOptions, context).subscribe({
         complete: () => {
@@ -308,9 +304,6 @@ describe('NodeCompileBuilder', () => {
         }
       });
       fakeEventEmitter.emit('exit', 0);
-
-      // assert temp tsconfig file gets deleted again
-      expect(fsMock.unlinkSync).toHaveBeenCalledWith(tmpTsConfigPath);
     });
   });
 });

@@ -27,6 +27,14 @@ Type: `array`
 
 Budget thresholds to ensure parts of your application stay within boundaries which you set.
 
+### buildLibsFromSource
+
+Default: `false`
+
+Type: `boolean`
+
+Read buildable libraries from source instead of building them separately.
+
 ### commonChunk
 
 Default: `true`

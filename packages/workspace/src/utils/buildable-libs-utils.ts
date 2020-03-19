@@ -4,7 +4,7 @@ import {
   ProjectType
 } from '../core/project-graph';
 import { BuilderContext } from '@angular-devkit/architect';
-import { join } from 'path';
+import { join, resolve, dirname } from 'path';
 import {
   fileExists,
   readJsonFile,
@@ -12,6 +12,8 @@ import {
 } from '@nrwl/workspace/src/utils/fileutils';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { getOutputsForTargetAndConfiguration } from '@nrwl/workspace/src/tasks-runner/utils';
+import * as ts from 'typescript';
+import { unlinkSync } from 'fs';
 
 function isBuildable(target: string, node: ProjectGraphNode): boolean {
   return (
@@ -33,10 +35,13 @@ export function calculateProjectDependencies(
 ): { target: ProjectGraphNode; dependencies: DependentBuildableProjectNode[] } {
   const target = projGraph.nodes[context.target.project];
   // gather the library dependencies
-  const dependencies = (projGraph.dependencies[context.target.project] || [])
-    .map(dependency => {
-      const depNode = projGraph.nodes[dependency.target];
-
+  const dependencies = recursivelyCollectDependencies(
+    context.target.project,
+    projGraph,
+    []
+  )
+    .map(dep => {
+      const depNode = projGraph.nodes[dep];
       if (
         depNode.type === ProjectType.lib &&
         isBuildable(context.target.target, depNode)
@@ -60,6 +65,83 @@ export function calculateProjectDependencies(
     })
     .filter(x => !!x);
   return { target, dependencies };
+}
+
+function recursivelyCollectDependencies(
+  project: string,
+  projGraph: ProjectGraph,
+  acc: string[]
+) {
+  (projGraph.dependencies[project] || []).forEach(dependency => {
+    if (acc.indexOf(dependency.target) === -1) {
+      acc.push(dependency.target);
+      recursivelyCollectDependencies(dependency.target, projGraph, acc);
+    }
+  });
+  return acc;
+}
+
+export function readTsConfigWithRemappedPaths(
+  tsConfig: string,
+  dependencies: DependentBuildableProjectNode[]
+) {
+  const parsedTSConfig = ts.readConfigFile(tsConfig, ts.sys.readFile).config;
+  parsedTSConfig.compilerOptions = parsedTSConfig.compilerOptions || {};
+  parsedTSConfig.compilerOptions.paths = readPaths(tsConfig) || {};
+  updatePaths(dependencies, parsedTSConfig.compilerOptions.paths);
+  return parsedTSConfig;
+}
+
+function readPaths(tsConfig: string) {
+  try {
+    const parsedTSConfig = ts.readConfigFile(tsConfig, ts.sys.readFile).config;
+    if (
+      parsedTSConfig.compilerOptions &&
+      parsedTSConfig.compilerOptions.paths
+    ) {
+      return parsedTSConfig.compilerOptions.paths;
+    } else if (parsedTSConfig.extends) {
+      return readPaths(resolve(dirname(tsConfig), parsedTSConfig.extends));
+    } else {
+      return null;
+    }
+  } catch (e) {
+    return null;
+  }
+}
+
+export function createTmpTsConfig(
+  tsconfigPath: string,
+  workspaceRoot: string,
+  projectRoot: string,
+  dependencies: DependentBuildableProjectNode[]
+) {
+  const parsedTSConfig = readTsConfigWithRemappedPaths(
+    tsconfigPath,
+    dependencies
+  );
+  const tmpTsConfigPath = join(workspaceRoot, projectRoot, 'tsconfig.nx-tmp');
+  process.on('exit', () => {
+    cleanupTmpTsConfigFile(tmpTsConfigPath);
+  });
+  process.on('SIGTERM', () => {
+    cleanupTmpTsConfigFile(tmpTsConfigPath);
+    process.exit(0);
+  });
+  process.on('SIGINT', () => {
+    cleanupTmpTsConfigFile(tmpTsConfigPath);
+    process.exit(0);
+  });
+  writeJsonFile(tmpTsConfigPath, parsedTSConfig);
+  return join(projectRoot, 'tsconfig.nx-tmp');
+}
+
+function cleanupTmpTsConfigFile(tmpTsConfigPath) {
+  try {
+    if (tmpTsConfigPath) {
+      unlinkSync(tmpTsConfigPath);
+    }
+  } catch (e) {}
 }
 
 export function checkDependentProjectsHaveBeenBuilt(
@@ -86,9 +168,7 @@ export function checkDependentProjectsHaveBeenBuilt(
       }'s dependencies have not been built yet. Please build these libraries before:
       ${depLibsToBuildFirst.map(x => ` - ${x.node.name}`).join('\n')}
 
-      Try: nx run-many --target ${context.target.target} --projects ${
-      context.target.project
-    },...
+      Try: nx run ${context.target.project}:${context.target.target} --with-deps
     `);
 
     return false;

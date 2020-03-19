@@ -230,6 +230,11 @@
     "webpackConfig": {
       "type": "string",
       "description": "Path to a function which takes a webpack config, some context and returns the resulting webpack config"
+    },
+    "buildLibsFromSource": {
+      "type": "boolean",
+      "description": "Read buildable libraries from source instead of building them separately.",
+      "default": false
     }
   },
   "required": ["tsConfig", "main", "index"],
