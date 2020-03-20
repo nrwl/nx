@@ -15,7 +15,9 @@ describe('updateWorkspace Rule', () => {
     tree = createEmptyWorkspace(tree) as UnitTestTree;
 
     schema = {
-      projectName: 'ng-app'
+      projectName: 'ng-app',
+      skipFormat: false,
+      forceRemove: false
     };
 
     tree = (await callRule(

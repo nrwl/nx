@@ -13,7 +13,9 @@ describe('moveProject Rule', () => {
     tree = await runSchematic('lib', { name: 'my-lib' }, tree);
 
     schema = {
-      projectName: 'my-lib'
+      projectName: 'my-lib',
+      skipFormat: false,
+      forceRemove: false
     };
   });
 

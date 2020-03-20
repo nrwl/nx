@@ -1,6 +1,6 @@
 import { chain, Rule } from '@angular-devkit/schematics';
+import { checkProjectExists } from '../../utils/rules/check-project-exists';
 import { checkDestination } from './lib/check-destination';
-import { checkProjectExists } from './lib/check-project-exists';
 import { moveProject } from './lib/move-project';
 import { updateCypressJson } from './lib/update-cypress-json';
 import { updateImports } from './lib/update-imports';
