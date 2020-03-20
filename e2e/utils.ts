@@ -272,7 +272,6 @@ export function copyMissingPackages(): void {
     'browserslist',
     'license-webpack-plugin',
     'webpack-subresource-integrity',
-    'copy-webpack-plugin',
     'autoprefixer',
     'mini-css-extract-plugin',
     'postcss-import',
