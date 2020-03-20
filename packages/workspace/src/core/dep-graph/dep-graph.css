@@ -241,3 +241,7 @@ g.affected ellipse {
   letter-spacing: 0.5px;
   margin-right: 0.4em;
 }
+
+.hide {
+  display: none;
+}

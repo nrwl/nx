@@ -9,7 +9,7 @@ function groupProjectsByDirectory(projects) {
   let groups = {};
 
   projects.forEach(project => {
-    const split = project.data.sourceRoot.split('/');
+    const split = project.data.root.split('/');
     const directory = split.slice(1, -2).join('/');
 
     if (!groups.hasOwnProperty(directory)) {
@@ -131,7 +131,8 @@ function hasPath(target, node, visited) {
 
   for (let d of window.graph.dependencies[node] || []) {
     if (visited.indexOf(d.target) > -1) continue;
-    if (hasPath(target, d.target, [...visited, d.target])) return true;
+    visited.push(d.target);
+    if (hasPath(target, d.target, visited)) return true;
   }
   return false;
 }
@@ -147,7 +148,7 @@ function checkForAffected() {
     const selectedAffectedButton = document.getElementById(
       'select-affected-button'
     );
-    selectedAffectedButton.classList.remove('d-none');
+    selectedAffectedButton.classList.remove('hide');
 
     selectAffectedProjects();
   }
@@ -215,8 +216,6 @@ function generateLayout() {
 
   g.setGraph({
     ranksep: 150,
-    // align: 'BL',
-    // ranker: 'tight-tree',
     edgesep: 100
   });
 
@@ -225,39 +224,35 @@ function generateLayout() {
   });
 
   window.filteredProjects.forEach(p => {
-    if (window.filteredProjects.indexOf(p) > -1) {
-      const shape =
-        p.name === window.focusedProject
-          ? p.type === 'app' || p.type === 'e2e'
-            ? 'glowRect'
-            : 'glowEllipse'
-          : p.type === 'app' || p.type === 'e2e'
-          ? 'rect'
-          : 'ellipse';
+    const shape =
+      p.name === window.focusedProject
+        ? p.type === 'app' || p.type === 'e2e'
+          ? 'glowRect'
+          : 'glowEllipse'
+        : p.type === 'app' || p.type === 'e2e'
+        ? 'rect'
+        : 'ellipse';
 
-      const clazz = window.affected.includes(p.name)
-        ? 'affected'
-        : 'no-affected';
+    const clazz = window.affected.includes(p.name) ? 'affected' : 'no-affected';
 
-      g.setNode(p.name, { label: p.name, shape: shape, class: clazz });
+    g.setNode(p.name, { label: p.name, shape: shape, class: clazz });
 
-      if (
-        groupByFolder &&
-        p.type == 'lib' &&
-        p.data.hasOwnProperty('sourceRoot')
-      ) {
-        const split = p.data.sourceRoot.split('/');
-        let directories = split.slice(1, -2);
+    if (
+      groupByFolder &&
+      p.type == 'lib' &&
+      p.data.hasOwnProperty('sourceRoot')
+    ) {
+      const split = p.data.sourceRoot.split('/');
+      let directories = split.slice(1, -2);
 
-        if (directories.length > 0) {
-          let directory = directories.join('/');
+      if (directories.length > 0) {
+        let directory = directories.join('/');
 
-          createDirectoryParents(g, directories);
+        createDirectoryParents(g, directories);
 
-          let directoryId = `dir-${directory}`;
+        let directoryId = `dir-${directory}`;
 
-          g.setParent(p.name, directoryId);
-        }
+        g.setParent(p.name, directoryId);
       }
     }
   });
@@ -278,12 +273,7 @@ function generateLayout() {
           clazz += ' lazy';
         }
 
-        const label =
-          d.type === 'implicit'
-            ? 'implicit'
-            : // : d.type === 'dynamic'
-              // ? 'lazy'
-              undefined;
+        const label = d.type === 'implicit' ? 'implicit' : undefined;
 
         g.setEdge(p, d.target, {
           label: label,
@@ -362,24 +352,26 @@ function render() {
   svg.call(zoom);
 
   // Run the renderer. This is what draws the final graph.
-  render(inner, g);
+  setTimeout(() => {
+    render(inner, g);
 
-  // Center the graph
-  var initialScale = 0.75;
+    // Center the graph
+    var initialScale = 0.75;
 
-  const mainContent = document.getElementById('main-content');
+    const mainContent = document.getElementById('main-content');
 
-  svg.call(
-    zoom.transform,
-    d3.zoomIdentity
-      .translate((svg.attr('width') - g.graph().width * initialScale) / 2, 20)
-      .scale(initialScale)
-  );
+    svg.call(
+      zoom.transform,
+      d3.zoomIdentity
+        .translate((svg.attr('width') - g.graph().width * initialScale) / 2, 20)
+        .scale(initialScale)
+    );
 
-  svg.attr('height', mainContent.offsetHeight);
-  svg.attr('width', mainContent.offsetWidth);
+    svg.attr('height', mainContent.offsetHeight);
+    svg.attr('width', mainContent.offsetWidth);
 
-  addTooltips(inner);
+    addTooltips(inner);
+  });
 }
 
 function addTooltips(inner) {
@@ -462,13 +454,17 @@ window.filterProjects = () => {
     .filter(checkbox => !checkbox.checked)
     .map(checkbox => checkbox.value);
 
-  window.filteredProjects = window.projects.filter(p => {
-    const filtered = selectedProjects.find(
-      f => hasPath(f, p.name, []) || hasPath(p.name, f, [])
-    );
+  if (selectedProjects.length === window.projects.length) {
+    window.filteredProjects = window.projects;
+  } else {
+    window.filteredProjects = window.projects.filter(p => {
+      const filtered = selectedProjects.find(
+        f => hasPath(f, p.name, []) || hasPath(p.name, f, [])
+      );
 
-    return unselectedProjects.indexOf(p.name) === -1 && filtered;
-  });
+      return unselectedProjects.indexOf(p.name) === -1 && filtered;
+    });
+  }
 
   render();
 };
