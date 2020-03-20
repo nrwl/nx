@@ -22,8 +22,6 @@ import {
   createTmpTsConfig
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
 
-const IGNORED_WEBPACK_OUTPUT = [/WARNING in The comment file/i];
-
 export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   index: string;
   budgets: any[];
@@ -133,10 +131,7 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
               if (acc.success) {
                 return runWebpack(config, context, {
                   logging: stats => {
-                    const msg = stats.toString(config.stats);
-                    if (IGNORED_WEBPACK_OUTPUT.every(r => !r.test(msg))) {
-                      context.logger.info(msg);
-                    }
+                    context.logger.info(stats.toString(config.stats));
                   },
                   webpackFactory: require('webpack')
                 });
