@@ -12,6 +12,11 @@ import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 import { getOutputHashFormat } from './hash-format';
 import { createBabelConfig } from './babel-config';
 
+const IGNORED_WEBPACK_WARNINGS = [
+  /The comment file/i,
+  /could not find any license/i
+];
+
 export function getBaseWebpackPartial(
   options: BuildBuilderOptions,
   esm?: boolean,
@@ -195,6 +200,7 @@ function getStatsConfig(options: BuildBuilderOptions): Stats.ToStringOptions {
     version: !!options.verbose,
     errorDetails: !!options.verbose,
     moduleTrace: !!options.verbose,
-    usedExports: !!options.verbose
+    usedExports: !!options.verbose,
+    warningsFilter: IGNORED_WEBPACK_WARNINGS
   };
 }
