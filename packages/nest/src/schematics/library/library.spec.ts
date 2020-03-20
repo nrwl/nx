@@ -3,7 +3,6 @@ import { NxJson, readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 describe('lib', () => {
   let appTree: Tree;

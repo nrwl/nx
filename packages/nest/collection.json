@@ -1,7 +1,7 @@
 {
   "name": "nx/nest",
   "version": "0.1",
-  "extends": ["@nrwl/workspace"],
+  "extends": ["@nrwl/workspace", "@nestjs/schematics"],
   "schematics": {
     "init": {
       "factory": "./src/schematics/init/init",
@@ -23,48 +23,6 @@
       "schema": "./src/schematics/library/schema.json",
       "aliases": ["lib"],
       "description": "Create a new nest library"
-    },
-
-    "guard": {
-      "factory": "./src/schematics/guard/guard",
-      "schema": "./src/schematics/guard/schema.json",
-      "aliases": ["gu"],
-      "description": "Create a new nest guard"
-    },
-
-    "middleware": {
-      "factory": "./src/schematics/middleware/middleware",
-      "schema": "./src/schematics/middleware/schema.json",
-      "aliases": ["mi"],
-      "description": "Create a new nest middleware"
-    },
-
-    "controller": {
-      "factory": "./src/schematics/controller/controller",
-      "schema": "./src/schematics/controller/schema.json",
-      "aliases": ["co"],
-      "description": "Create a new nest controller"
-    },
-
-    "service": {
-      "factory": "./src/schematics/service/service",
-      "schema": "./src/schematics/service/schema.json",
-      "aliases": ["s"],
-      "description": "Create a new nest service"
-    },
-
-    "interceptor": {
-      "factory": "./src/schematics/interceptor/interceptor",
-      "schema": "./src/schematics/interceptor/schema.json",
-      "aliases": ["in"],
-      "description": "Create a new nest interceptor"
-    },
-
-    "pipe": {
-      "factory": "./src/schematics/pipe/pipe",
-      "schema": "./src/schematics/pipe/schema.json",
-      "aliases": ["pi"],
-      "description": "Create a new nest pipe"
     }
   }
 }
