@@ -1,7 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { callRule, runSchematic } from '../../../utils/testing';
-import { Schema } from '../schema';
+import { callRule, runSchematic } from '../../utils/testing';
 import { checkProjectExists } from './check-project-exists';
 
 describe('checkProjectExists Rule', () => {
@@ -12,9 +11,8 @@ describe('checkProjectExists Rule', () => {
   });
 
   it('should throw an error if the project does NOT exist', async () => {
-    const schema: Schema = {
-      projectName: 'my-lib',
-      destination: 'my-destination'
+    const schema = {
+      projectName: 'my-lib'
     };
 
     await expect(callRule(checkProjectExists(schema), tree)).rejects.toThrow(
@@ -25,9 +23,8 @@ describe('checkProjectExists Rule', () => {
   it('should NOT throw an error if the project exists', async () => {
     tree = await runSchematic('lib', { name: 'my-lib' }, tree);
 
-    const schema: Schema = {
-      projectName: 'my-lib',
-      destination: 'my-destination'
+    const schema = {
+      projectName: 'my-lib'
     };
 
     await expect(

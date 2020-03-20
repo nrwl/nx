@@ -15,7 +15,9 @@ describe('updateImports Rule', () => {
     tree = createEmptyWorkspace(tree) as UnitTestTree;
 
     schema = {
-      projectName: 'my-source'
+      projectName: 'my-source',
+      skipFormat: false,
+      forceRemove: false
     };
 
     tree = await runSchematic('lib', { name: 'my-dependent' }, tree);

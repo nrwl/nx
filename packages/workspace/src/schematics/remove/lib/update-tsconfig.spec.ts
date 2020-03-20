@@ -15,7 +15,9 @@ describe('updateTsconfig Rule', () => {
     tree = createEmptyWorkspace(tree) as UnitTestTree;
 
     schema = {
-      projectName: 'my-lib'
+      projectName: 'my-lib',
+      skipFormat: false,
+      forceRemove: false
     };
   });
 

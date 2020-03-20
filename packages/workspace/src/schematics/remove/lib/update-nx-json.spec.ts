@@ -21,7 +21,9 @@ describe('updateNxJson Rule', () => {
     expect(nxJson.projects['my-lib']).toBeDefined();
 
     const schema: Schema = {
-      projectName: 'my-lib'
+      projectName: 'my-lib',
+      skipFormat: false,
+      forceRemove: false
     };
 
     tree = (await callRule(updateNxJson(schema), tree)) as UnitTestTree;

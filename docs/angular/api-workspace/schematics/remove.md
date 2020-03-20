@@ -59,3 +59,13 @@ Alias(es): project
 Type: `string`
 
 The name of the project to remove
+
+### skipFormat
+
+Alias(es): skip-format
+
+Default: `false`
+
+Type: `boolean`
+
+Skip formatting files.

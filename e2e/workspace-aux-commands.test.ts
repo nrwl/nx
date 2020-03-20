@@ -1,19 +1,20 @@
+import { NxJson } from '@nrwl/workspace';
+import { classify } from '@nrwl/workspace/src/utils/strings';
 import {
   checkFilesExist,
+  ensureProject,
+  exists,
+  forEachCli,
   newProject,
   readFile,
   readJson,
   runCLI,
   runCommand,
-  updateFile,
-  exists,
-  ensureProject,
+  tmpProjPath,
   uniq,
-  forEachCli,
+  updateFile,
   workspaceConfigName
 } from './utils';
-import { classify } from '@nrwl/workspace/src/utils/strings';
-import { NxJson } from '@nrwl/workspace';
 
 forEachCli(cli => {
   describe('lint', () => {
@@ -595,6 +596,37 @@ forEachCli(cli => {
       expect(lib2File).toContain(
         `import { fromLibOne } from '@proj/shared/${lib1}/data-access';`
       );
+    });
+  });
+
+  describe('Remove Project', () => {
+    const workspace: string = cli === 'angular' ? 'angular' : 'workspace';
+
+    /**
+     * Tries creating then deleting a lib
+     */
+    it('should work', () => {
+      const lib = uniq('mylib');
+
+      newProject();
+
+      runCLI(`generate @nrwl/workspace:lib ${lib}`);
+      expect(exists(tmpProjPath(`libs/${lib}`))).toBeTruthy();
+
+      const removeOutput = runCLI(
+        `generate @nrwl/workspace:remove --project ${lib}`
+      );
+
+      expect(removeOutput).toContain(`DELETE libs/${lib}`);
+      expect(exists(tmpProjPath(`libs/${lib}`))).toBeFalsy();
+
+      expect(removeOutput).toContain(`UPDATE nx.json`);
+      const nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+      expect(nxJson.projects[`${lib}`]).toBeUndefined();
+
+      expect(removeOutput).toContain(`UPDATE ${workspace}.json`);
+      const workspaceJson = readJson(`${workspace}.json`);
+      expect(workspaceJson.projects[`${lib}`]).toBeUndefined();
     });
   });
 });
