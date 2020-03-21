@@ -117,7 +117,7 @@ Creating a new application will result in something like this:
 └── tsconfig.json
 ```
 
-No matter what what kind of application it is, you can run:
+No matter what kind of application it is, you can run:
 
 - `nx serve myapp` to serve the application
 - `nx build myapp` to build the application
@@ -271,7 +271,7 @@ In addition to implementing monorepo-style of development, Nx brings in another 
 
 ### Workspace Schematics
 
-Schematics is what what powers all Nx code generation. With Nx, you can easily create workspace-specific schematics that you can then use to enforce your own best practices. Read more about workspace schematics [here](/web/guides/workspace-schematics).
+Schematics is what powers all Nx code generation. With Nx, you can easily create workspace-specific schematics that you can then use to enforce your own best practices. Read more about workspace schematics [here](/web/guides/workspace-schematics).
 
 ### Code Formatting
 
