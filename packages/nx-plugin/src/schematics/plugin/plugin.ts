@@ -116,7 +116,11 @@ function addFiles(options: NormalizedSchema): Rule {
         move(options.projectRoot)
       ]),
       MergeStrategy.Overwrite
-    )
+    ),
+    schematic('schematic', {
+      project: options.name,
+      name: options.name
+    })
   ]);
 }
 

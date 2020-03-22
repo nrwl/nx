@@ -137,4 +137,16 @@ describe('NxPlugin plugin', () => {
       })
     );
   });
+
+  it('should call the @nrwl/nx-plugin:schematic schematic', async () => {
+    const schematicSpy = jest.spyOn(ngSchematics, 'schematic');
+    const tree = await runSchematic('plugin', { name: 'myPlugin' }, appTree);
+    expect(schematicSpy).toBeCalledWith(
+      'schematic',
+      expect.objectContaining({
+        project: 'my-plugin',
+        name: `my-plugin`
+      })
+    );
+  });
 });

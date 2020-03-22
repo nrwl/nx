@@ -2,11 +2,5 @@
   "$schema": "<%= offsetFromRoot %>node_modules/@angular-devkit/schematics/collection-schema.json",
   "name": "<%= name %>",
   "version": "0.0.1",
-  "schematics": {
-    "<%= propertyName %>": {
-      "factory": "./src/schematics/<%= fileName %>/schematic",
-      "schema": "./src/schematics/<%= fileName %>/schema.json",
-      "description": "<%= name %> schematic"
-    }
-  }
+  "schematics": {}
 }
