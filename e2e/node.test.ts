@@ -1,29 +1,27 @@
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { execSync, fork, spawn } from 'child_process';
 import * as http from 'http';
 import * as path from 'path';
 import * as treeKill from 'tree-kill';
 import * as ts from 'typescript';
 import {
+  checkFilesDoNotExist,
+  checkFilesExist,
+  cleanup,
+  copyMissingPackages,
   ensureProject,
+  forEachCli,
+  readFile,
   readJson,
   runCLI,
   runCLIAsync,
-  uniq,
-  updateFile,
-  forEachCli,
-  checkFilesExist,
-  tmpProjPath,
-  workspaceConfigName,
-  cleanup,
   runNew,
   runNgAdd,
-  copyMissingPackages,
-  setMaxWorkers,
-  newProject,
-  checkFilesDoNotExist
+  tmpProjPath,
+  uniq,
+  updateFile,
+  workspaceConfigName
 } from './utils';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { readFile } from './utils';
 
 function getData(): Promise<any> {
   return new Promise(resolve => {
@@ -49,8 +47,6 @@ forEachCli(currentCLIName => {
       const nodeapp = uniq('nodeapp');
 
       runCLI(`generate @nrwl/node:app ${nodeapp} --linter=${linter}`);
-
-      setMaxWorkers(nodeapp);
 
       const lintResults = runCLI(`lint ${nodeapp}`);
       expect(lintResults).toContain('All files pass linting.');
@@ -190,8 +186,6 @@ forEachCli(currentCLIName => {
       ensureProject();
       const nestapp = uniq('nestapp');
       runCLI(`generate @nrwl/nest:app ${nestapp} --linter=${linter}`);
-
-      setMaxWorkers(nestapp);
 
       const lintResults = runCLI(`lint ${nestapp}`);
       expect(lintResults).toContain('All files pass linting.');
@@ -420,8 +414,6 @@ forEachCli(currentCLIName => {
       ensureProject();
 
       runCLI(`generate @nrwl/express:app ${app}`);
-      setMaxWorkers(app);
-
       runCLI(`generate @nrwl/node:lib ${parentLib} --publishable=true`);
       runCLI(`generate @nrwl/node:lib ${childLib} --publishable=true`);
       runCLI(`generate @nrwl/node:lib ${childLib2} --publishable=true`);

@@ -1,20 +1,19 @@
+import { serializeJson } from '@nrwl/workspace';
 import {
+  checkFilesDoNotExist,
+  checkFilesExist,
   ensureProject,
+  forEachCli,
+  readFile,
+  readJson,
+  renameFile,
   runCLI,
+  runCLIAsync,
+  supportUi,
   uniq,
   updateFile,
-  readFile,
-  runCLIAsync,
-  checkFilesExist,
-  renameFile,
-  readJson,
-  forEachCli,
-  supportUi,
-  workspaceConfigName,
-  setMaxWorkers,
-  checkFilesDoNotExist
+  workspaceConfigName
 } from './utils';
-import { serializeJson } from '@nrwl/workspace';
 
 forEachCli(currentCLIName => {
   const linter = currentCLIName === 'angular' ? 'tslint' : 'eslint';
@@ -29,8 +28,6 @@ forEachCli(currentCLIName => {
         `generate @nrwl/react:app ${appName} --no-interactive --linter=${linter}`
       );
       runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
-
-      setMaxWorkers(appName);
 
       const mainPath = `apps/${appName}/src/main.tsx`;
       updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
@@ -111,8 +108,6 @@ forEachCli(currentCLIName => {
         `generate @nrwl/react:lib ${libName} --no-interactive --no-component`
       );
 
-      setMaxWorkers(appName);
-
       const mainPath = `apps/${appName}/src/main.tsx`;
       updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
 
@@ -149,8 +144,6 @@ forEachCli(currentCLIName => {
         `generate @nrwl/react:app ${appName} --routing --no-interactive --linter=${linter}`
       );
 
-      setMaxWorkers(appName);
-
       await testGeneratedApp(appName, { checkStyles: true, checkLinter: true });
     }, 120000);
 
@@ -161,8 +154,6 @@ forEachCli(currentCLIName => {
       runCLI(
         `generate @nrwl/react:app ${appName} --style styled-components --no-interactive --linter=${linter}`
       );
-
-      setMaxWorkers(appName);
 
       await testGeneratedApp(appName, {
         checkStyles: false,
@@ -177,8 +168,6 @@ forEachCli(currentCLIName => {
       runCLI(
         `generate @nrwl/react:app ${appName} --style none --no-interactive --linter=${linter}`
       );
-
-      setMaxWorkers(appName);
 
       await testGeneratedApp(appName, {
         checkStyles: false,
@@ -202,8 +191,6 @@ forEachCli(currentCLIName => {
         `generate @nrwl/react:app ${appName} --no-interactive --linter=${linter}`
       );
       runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
-
-      setMaxWorkers(appName);
 
       renameFile(
         `apps/${appName}/src/main.tsx`,

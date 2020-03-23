@@ -4,7 +4,6 @@ import {
   forEachCli,
   readJson,
   runCLI,
-  setMaxWorkers,
   uniq,
   updateFile
 } from './utils';
@@ -35,7 +34,6 @@ forEachCli('nx', cli => {
       ensureProject();
 
       runCLI(`generate @nrwl/react:app ${app}`);
-      setMaxWorkers(app);
 
       runCLI(
         `generate @nrwl/react:library ${parentLib} --buildable --no-interactive`
