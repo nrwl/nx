@@ -554,6 +554,11 @@
             "name": "Imposing Constraints on the Dependency Graph",
             "id": "monorepo-tags",
             "file": "shared/monorepo-tags"
+          },
+          {
+            "name": "Using Environment Variables",
+            "id": "environment-variables",
+            "file": "react/guides/environment-variables"
           }
         ]
       }

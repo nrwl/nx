@@ -105,7 +105,7 @@ You can then go to `tmp/nx` (this is set up to use Nx CLI) or `tmp/angular` (thi
 
 ```bash
 yarn create-playground
-cd tmp/nx
+cd tmp/nx/proj
 nx g @nrwl/express:app backend
 nx build backend
 ```
