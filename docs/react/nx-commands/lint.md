@@ -4,8 +4,16 @@ Runs linting tools on application code in a given project folder using the confi
 
 ## Usage
 
+The `lint` command is a built-in alias to the [run command](/angular/nx-commands/run).
+
+These two commands are equivalent:
+
 ```bash
 nx lint <project> [options]
+```
+
+```bash
+nx run <project>:lint [options]
 ```
 
 Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.

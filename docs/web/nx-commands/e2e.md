@@ -4,8 +4,16 @@ Builds and serves an app, then runs end-to-end tests using the configured E2E te
 
 ## Usage
 
+The `e2e` command is a built-in alias to the [run command](/angular/nx-commands/run).
+
+These two commands are equivalent:
+
 ```bash
 nx e2e <project>
+```
+
+```bash
+nx run <project>:e2e
 ```
 
 Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
