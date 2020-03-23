@@ -359,7 +359,15 @@ const examples = {
   ]
 };
 
-const unwantedCommands = ['run', 'generate'];
+const sharedCommands = [
+  'build',
+  'e2e',
+  'generate',
+  'lint',
+  'run',
+  'serve',
+  'test'
+];
 
 console.log('Generating Nx Commands Documentation');
 Promise.all(
@@ -467,12 +475,38 @@ Promise.all(
     const nxCommands = getCommands(commandsObject);
     await Promise.all(
       Object.keys(nxCommands)
-        .filter(name => !unwantedCommands.includes(name))
+        .filter(name => !sharedCommands.includes(name))
         .map(name => parseCommandInstance(name, nxCommands[name]))
         .map(command => generateMarkdown(command))
         .map(templateObject =>
           generateMarkdownFile(commandsOutputDirectory, templateObject)
         )
+    );
+
+    await Promise.all(
+      sharedCommands.map(command => {
+        const sharedCommandsDirectory = path.join(
+          __dirname,
+          '../../docs/shared/nx-commands'
+        );
+        const sharedCommandsOutputDirectory = path.join(
+          __dirname,
+          '../../docs/',
+          framework,
+          'nx-commands'
+        );
+        const templateObject = {
+          name: command,
+          template: fs
+            .readFileSync(path.join(sharedCommandsDirectory, `${command}.md`))
+            .toString('utf-8')
+        };
+
+        return generateMarkdownFile(
+          sharedCommandsOutputDirectory,
+          templateObject
+        );
+      })
     );
   })
 ).then(() => {
