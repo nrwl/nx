@@ -6,7 +6,6 @@ import {
   readFile,
   runCLI,
   runCLIAsync,
-  setMaxWorkers,
   supportUi,
   uniq,
   updateFile
@@ -22,8 +21,6 @@ forEachCli(currentCLIName => {
       runCLI(
         `generate @nrwl/web:app ${appName} --no-interactive --linter=${linter}`
       );
-
-      setMaxWorkers(appName);
 
       const lintResults = runCLI(`lint ${appName}`);
       expect(lintResults).toContain('All files pass linting.');
@@ -134,8 +131,6 @@ forEachCli(currentCLIName => {
       const newCode = `const envVars = [process.env.NODE_ENV, process.env.NX_BUILD, process.env.NX_API];`;
 
       runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
-
-      setMaxWorkers(appName);
 
       const content = readFile(main);
 

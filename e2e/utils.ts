@@ -424,6 +424,12 @@ export function runCLI(
         ''
       );
     console.log(r);
+
+    const needsMaxWorkers = /g.*(express|nest|node|web|react):app.*/;
+    if (needsMaxWorkers.test(command)) {
+      setMaxWorkers();
+    }
+
     return r;
   } catch (e) {
     if (opts.silenceError) {
@@ -454,14 +460,34 @@ export function runCommand(command: string): string {
 }
 
 /**
- * Sets maxWorkers in CircleCI so that it doesn't try to run it with 34 workers
- * @param appName Name of the app to update
+ * Sets maxWorkers in CircleCI on all projects that require it
+ * so that it doesn't try to run it with 34 workers
+ *
+ * maxWorkers required for: node, web, jest
  */
-export function setMaxWorkers(appName: string) {
+function setMaxWorkers() {
   if (process.env['CIRCLECI']) {
     const workspaceFile = workspaceConfigName();
     const workspace = readJson(workspaceFile);
-    workspace.projects[appName].architect.build.options.maxWorkers = 4;
+
+    Object.keys(workspace.projects).forEach(appName => {
+      const {
+        architect: { build }
+      } = workspace.projects[appName];
+
+      if (!build) {
+        return;
+      }
+
+      if (
+        build.builder.startsWith('@nrwl/node') ||
+        build.builder.startsWith('@nrwl/web') ||
+        build.builder.startsWith('@nrwl/jest')
+      ) {
+        build.options.maxWorkers = 4;
+      }
+    });
+
     updateFile(workspaceFile, JSON.stringify(workspace));
   }
 }

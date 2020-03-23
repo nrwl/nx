@@ -1,16 +1,14 @@
 import {
   checkFilesExist,
+  ensureProject,
+  forEachCli,
+  newProject,
+  readFile,
   readJson,
   runCLI,
-  updateFile,
-  readFile,
-  ensureProject,
-  uniq,
-  newProject,
-  forEachCli,
   supportUi,
-  workspaceConfigName,
-  setMaxWorkers
+  uniq,
+  updateFile
 } from './utils';
 
 forEachCli(currentCLIName => {
@@ -51,10 +49,6 @@ forEachCli(currentCLIName => {
           runCLI(
             `generate @nrwl/${nrwlPackageName}:app ${myapp} --e2eTestRunner=cypress --linter=${linter}`
           );
-
-          if (currentCLIName === 'nx') {
-            setMaxWorkers(myapp);
-          }
 
           expect(runCLI(`e2e ${myapp}-e2e --headless --no-watch`)).toContain(
             'All specs passed!'

@@ -1,5 +1,5 @@
+import { NxJson } from '@nrwl/workspace';
 import {
-  cli,
   ensureProject,
   forEachCli,
   listFiles,
@@ -9,12 +9,10 @@ import {
   rmDist,
   runCLI,
   runCommand,
-  setMaxWorkers,
   uniq,
   updateFile,
   workspaceConfigName
 } from './utils';
-import { NxJson } from '@nrwl/workspace';
 
 let originalCIValue: any;
 
@@ -40,7 +38,6 @@ forEachCli(cliName => {
       const mylib1 = uniq('mylib1');
       const mylib2 = uniq('mylib1');
       runCLI(`generate @nrwl/react:app ${myapp}`);
-      setMaxWorkers(myapp);
       runCLI(`generate @nrwl/react:lib ${mylib1} --publishable`);
       runCLI(`generate @nrwl/react:lib ${mylib2} --publishable`);
 
