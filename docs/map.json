@@ -7,16 +7,9 @@
         "id": "getting-started",
         "itemList": [
           {
-            "name": "What is Nx?",
-            "id": "what-is-nx"
-          },
-          {
-            "name": "Getting Started",
-            "id": "getting-started"
-          },
-          {
-            "name": "Nx and Angular CLI",
-            "id": "nx-and-cli"
+            "name": "Why Nx?",
+            "id": "why-nx",
+            "file": "shared/why-nx"
           },
           {
             "name": "Resources",
@@ -84,20 +77,367 @@
         ]
       },
       {
-        "name": "Fundamentals",
-        "id": "fundamentals",
+        "name": "Migration",
+        "id": "migration",
         "itemList": [
           {
-            "name": "Using Modern Tools",
-            "id": "use-modern-tools"
+            "name": "Overview",
+            "id": "migration-overview",
+            "file": "shared/migration-overview"
           },
           {
-            "name": "Building Full-Stack Applications",
-            "id": "build-full-stack-applications"
+            "name": "From Angular CLI",
+            "id": "migration-angular"
           },
           {
-            "name": "Monorepos and Automation",
-            "id": "monorepos-automation"
+            "name": "From AngularJS",
+            "id": "migration-angularjs"
+          }
+        ]
+      },
+      {
+        "name": "Nx CLI",
+        "id": "nx-commands",
+        "itemList": [
+          {
+            "name": "Overview",
+            "id": "cli-overview",
+            "file": "shared/cli-overview"
+          },
+          {
+            "name": "Nx and the Angular CLI",
+            "id": "nx-and-cli",
+            "file": "angular/getting-started/nx-and-cli"
+          }
+        ]
+      },
+      {
+        "name": "Nx Plugins",
+        "id": "plugins",
+        "itemList": [
+          {
+            "name": "Overview",
+            "id": "plugins-overview",
+            "file": "shared/plugins-overview"
+          },
+          {
+            "name": "Community Plugins",
+            "id": "community-plugins",
+            "file": "shared/community-plugins"
+          },
+          {
+            "name": "Workspace",
+            "id": "workspace",
+            "itemList": [
+              {
+                "id": "nrwl-workspace-overview",
+                "name": "Overview"
+              },
+              {
+                "id": "schematics",
+                "name": "Schematics",
+                "itemList": [
+                  {
+                    "name": "library",
+                    "id": "library"
+                  },
+                  {
+                    "name": "move",
+                    "id": "move"
+                  },
+                  {
+                    "name": "remove",
+                    "id": "remove"
+                  },
+                  {
+                    "name": "workspace-schematic",
+                    "id": "workspace-schematic"
+                  }
+                ]
+              },
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "run-commands",
+                    "id": "run-commands"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "web",
+            "id": "web",
+            "itemList": [
+              {
+                "id": "schematics",
+                "name": "Schematics",
+                "itemList": [
+                  {
+                    "name": "application",
+                    "id": "application"
+                  }
+                ]
+              },
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "build",
+                    "id": "build"
+                  },
+                  {
+                    "name": "dev-server",
+                    "id": "dev-server"
+                  },
+                  {
+                    "name": "package",
+                    "id": "package"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "angular",
+            "id": "angular",
+            "itemList": [
+              {
+                "id": "schematics",
+                "name": "Schematics",
+                "itemList": [
+                  {
+                    "name": "application",
+                    "id": "application"
+                  },
+                  {
+                    "name": "downgrade-module",
+                    "id": "downgrade-module"
+                  },
+                  {
+                    "name": "karma-project",
+                    "id": "karma-project"
+                  },
+                  {
+                    "name": "karma",
+                    "id": "karma"
+                  },
+                  {
+                    "name": "library",
+                    "id": "library"
+                  },
+                  {
+                    "name": "move",
+                    "id": "move"
+                  },
+                  {
+                    "name": "ngrx",
+                    "id": "ngrx"
+                  },
+                  {
+                    "name": "stories",
+                    "id": "stories"
+                  },
+                  {
+                    "name": "storybook-configuration",
+                    "id": "storybook-configuration"
+                  },
+                  {
+                    "name": "upgrade-module",
+                    "id": "upgrade-module"
+                  }
+                ]
+              },
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "package",
+                    "id": "package"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "react",
+            "id": "react",
+            "itemList": [
+              {
+                "id": "schematics",
+                "name": "Schematics",
+                "itemList": [
+                  {
+                    "name": "application",
+                    "id": "application"
+                  },
+                  {
+                    "name": "component",
+                    "id": "component"
+                  },
+                  {
+                    "name": "library",
+                    "id": "library"
+                  },
+                  {
+                    "name": "redux",
+                    "id": "redux"
+                  },
+                  {
+                    "name": "storybook-configuration",
+                    "id": "storybook-configuration"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "jest",
+            "id": "jest",
+            "itemList": [
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "jest",
+                    "id": "jest"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "cypress",
+            "id": "cypress",
+            "itemList": [
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "cypress",
+                    "id": "cypress"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "node",
+            "id": "node",
+            "itemList": [
+              {
+                "id": "schematics",
+                "name": "Schematics",
+                "itemList": [
+                  {
+                    "name": "application",
+                    "id": "application"
+                  },
+                  {
+                    "name": "library",
+                    "id": "library"
+                  }
+                ]
+              },
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "build",
+                    "id": "build"
+                  },
+                  {
+                    "name": "execute",
+                    "id": "execute"
+                  },
+                  {
+                    "name": "package",
+                    "id": "package"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "express",
+            "id": "express",
+            "itemList": [
+              {
+                "id": "schematics",
+                "name": "Schematics",
+                "itemList": [
+                  {
+                    "name": "application",
+                    "id": "application"
+                  },
+                  {
+                    "name": "init",
+                    "id": "init"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "nest",
+            "id": "nest",
+            "itemList": [
+              {
+                "id": "schematics",
+                "name": "Schematics",
+                "itemList": [
+                  {
+                    "name": "application",
+                    "id": "application"
+                  },
+                  {
+                    "name": "library",
+                    "id": "library"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "next",
+            "id": "next",
+            "itemList": [
+              {
+                "id": "schematics",
+                "name": "Schematics",
+                "itemList": [
+                  {
+                    "name": "application",
+                    "id": "application"
+                  }
+                ]
+              },
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "build",
+                    "id": "build"
+                  },
+                  {
+                    "name": "dev-server",
+                    "id": "dev-server"
+                  },
+                  {
+                    "name": "export",
+                    "id": "export"
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -173,20 +513,12 @@
             "id": "react"
           },
           {
-            "name": "Building Angular and React Applications Together With Nx",
-            "id": "react-and-angular"
-          },
-          {
             "name": "Using NgRx",
             "id": "misc-ngrx"
           },
           {
             "name": "Using DataPersistence",
             "id": "misc-data-persistence"
-          },
-          {
-            "name": "Upgrading AngularJS Applications",
-            "id": "misc-upgrade"
           },
           {
             "name": "Using Nx at Enterprises",
@@ -202,174 +534,14 @@
             "id": "nx7-to-nx8"
           }
         ]
-      }
-    ]
-  },
-  {
-    "id": "web",
-    "itemList": [
-      {
-        "name": "Getting Started",
-        "id": "getting-started",
-        "itemList": [
-          {
-            "name": "What is Nx?",
-            "id": "what-is-nx"
-          },
-          {
-            "name": "Getting Started",
-            "id": "getting-started"
-          },
-          {
-            "name": "Resources",
-            "id": "resources"
-          },
-          {
-            "name": "About",
-            "id": "about",
-            "file": "shared/about"
-          }
-        ]
       },
       {
-        "name": "Tutorial",
-        "id": "tutorial",
+        "name": "Examples",
+        "id": "examples",
         "itemList": [
           {
-            "name": "1 - Create Application",
-            "id": "01-create-application"
-          },
-          {
-            "name": "2 - Add E2E Test",
-            "id": "02-add-e2e-test"
-          },
-          {
-            "name": "3 - Display Todos",
-            "id": "03-display-todos"
-          },
-          {
-            "name": "4 - Connect to API",
-            "id": "04-connect-to-api"
-          },
-          {
-            "name": "5 - Add Node Application",
-            "id": "05-add-node-app"
-          },
-          {
-            "name": "6 - Configure Proxy",
-            "id": "06-proxy"
-          },
-          {
-            "name": "7 - Share Code",
-            "id": "07-share-code"
-          },
-          {
-            "name": "8 - Create Libraries",
-            "id": "08-create-libs"
-          },
-          {
-            "name": "9 - Dep Graph",
-            "id": "09-dep-graph"
-          },
-          {
-            "name": "10 - Test Affected Projects",
-            "id": "10-test-affected-projects"
-          },
-          {
-            "name": "11 - Build Affected Projects",
-            "id": "11-build-affected-projects"
-          },
-          {
-            "name": "12 - Summary",
-            "id": "12-summary"
-          }
-        ]
-      },
-      {
-        "name": "Fundamentals",
-        "id": "fundamentals",
-        "itemList": [
-          {
-            "name": "Using Modern Tools",
-            "id": "use-modern-tools"
-          },
-          {
-            "name": "Building Full-Stack Applications",
-            "id": "build-full-stack-applications"
-          },
-          {
-            "name": "Monorepos and Automation",
-            "id": "monorepos-automation"
-          }
-        ]
-      },
-      {
-        "name": "Guides",
-        "id": "guides",
-        "itemList": [
-          {
-            "name": "Nx CLI",
-            "id": "cli"
-          },
-          {
-            "name": "Updating Nx",
-            "id": "update",
-            "file": "shared/update"
-          },
-          {
-            "name": "Using Cypress",
-            "id": "modernize-cypress",
-            "file": "shared/modernize-cypress"
-          },
-          {
-            "name": "Using Jest",
-            "id": "modernize-jest",
-            "file": "shared/modernize-jest"
-          },
-          {
-            "name": "Workspace Schematics",
-            "id": "workspace-schematics",
-            "file": "shared/tools-workspace-schematics"
-          },
-          {
-            "name": "Custom commands",
-            "id": "custom-commands",
-            "file": "shared/running-custom-commands"
-          },
-          {
-            "name": "Nx Plugins",
-            "id": "nx-plugin",
-            "file": "shared/nx-plugin"
-          },
-          {
-            "name": "Rebuilding and Retesting What is Affected",
-            "id": "monorepo-affected",
-            "file": "shared/monorepo-affected"
-          },
-          {
-            "name": "Distributed CI Using Azure Pipelines",
-            "id": "monorepo-ci-azure",
-            "file": "shared/monorepo-ci-azure"
-          },
-          {
-            "name": "Distributed CI Using Jenkins",
-            "id": "monorepo-ci-jenkins",
-            "file": "shared/monorepo-ci-jenkins"
-          },
-          {
-            "name": "Analyzing & Visualizing Workspaces",
-            "id": "monorepo-dependency-diagrams",
-            "file": "shared/monorepo-dependency-diagrams"
-          },
-          {
-            "name": "Using Nx at Enterprises",
-            "id": "monorepo-nx-enterprise",
-            "file": "shared/monorepo-nx-enterprise"
-          },
-          {
-            "name": "Imposing Constraints on the Dependency Graph",
-            "id": "monorepo-tags",
-            "file": "shared/monorepo-tags"
+            "name": "Building Angular and React Applications Together With Nx",
+            "id": "react-and-angular"
           }
         ]
       }
@@ -383,12 +555,9 @@
         "id": "getting-started",
         "itemList": [
           {
-            "name": "What is Nx?",
-            "id": "what-is-nx"
-          },
-          {
-            "name": "Getting Started",
-            "id": "getting-started"
+            "name": "Why Nx?",
+            "id": "why-nx",
+            "file": "shared/why-nx"
           },
           {
             "name": "Resources",
@@ -456,20 +625,40 @@
         ]
       },
       {
-        "name": "Fundamentals",
-        "id": "fundamentals",
+        "name": "Migration",
+        "id": "migration",
         "itemList": [
           {
-            "name": "Using Modern Tools",
-            "id": "use-modern-tools"
+            "name": "Overview",
+            "id": "migration-overview",
+            "file": "shared/migration-overview"
+          }
+        ]
+      },
+      {
+        "name": "Nx CLI",
+        "id": "nx-commands",
+        "itemList": [
+          {
+            "name": "Overview",
+            "id": "cli-overview",
+            "file": "shared/cli-overview"
+          }
+        ]
+      },
+      {
+        "name": "Nx Plugins",
+        "id": "plugins",
+        "itemList": [
+          {
+            "name": "Overview",
+            "id": "plugins-overview",
+            "file": "shared/plugins-overview"
           },
           {
-            "name": "Building Full-Stack Applications",
-            "id": "build-full-stack-applications"
-          },
-          {
-            "name": "Monorepos and Automation",
-            "id": "monorepos-automation"
+            "name": "Community Plugins",
+            "id": "community-plugins",
+            "file": "shared/community-plugins"
           }
         ]
       },
