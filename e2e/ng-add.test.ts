@@ -1,10 +1,8 @@
 import {
   checkFilesExist,
   cleanup,
-  copyMissingPackages,
   readJson,
   runCLI,
-  runCLIAsync,
   runCommand,
   runNew,
   updateFile,
@@ -51,8 +49,7 @@ forEachCli('angular', () => {
       updateFile('angular.json', JSON.stringify(angularCLIJson, null, 2));
 
       // run the command
-      runNgAdd('add @nrwl/workspace --npmScope projscope --skip-install');
-      copyMissingPackages();
+      runNgAdd('add @nrwl/workspace --npmScope projscope');
 
       // check that prettier config exits and that files have been moved!
       checkFilesExist(

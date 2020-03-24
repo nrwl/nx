@@ -9,7 +9,6 @@ LOCALBUILD=$3
 PACKAGE_SOURCE=build/packages
 NPM_DEST=build/npm
 ORIG_DIRECTORY=`pwd`
-NPM_REGISTRY=`npm config get registry` # for local releases
 
 # We are running inside of a child_process, so we need to reauth
 npm adduser

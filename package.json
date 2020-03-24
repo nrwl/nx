@@ -19,7 +19,7 @@
     "e2e-ci4": "./scripts/e2e-ci4.sh",
     "test-create-nx-workspace": "./scripts/test-create-nx-workspace.sh",
     "format": "./scripts/format.sh",
-    "linknpm": "./scripts/link.sh",
+    "linknpm": "./scripts/link.sh --local",
     "nx-release": "./scripts/nx-release.js",
     "copy": "./scripts/copy.sh",
     "test": "yarn linknpm fast && ./scripts/test.sh",

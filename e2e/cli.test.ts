@@ -40,7 +40,7 @@ forEachCli('nx', () => {
       expect(affectedHelp).toContain('Run task for affected projects');
 
       const version = runCLI(`--version`);
-      expect(version).toContain('*'); // stub value
+      expect(version).toContain(process.env.PUBLISHED_VERSION); // stub value
     }, 120000);
   });
 });
@@ -72,7 +72,7 @@ forEachCli('angular', () => {
       expect(affectedHelp).toContain('Run task for affected projects');
 
       const version = runCLI(`--version`);
-      expect(version).toContain('*'); // stub value
+      expect(version).toContain(process.env.PUBLISHED_VERSION); // stub value
     }, 120000);
   });
 });
