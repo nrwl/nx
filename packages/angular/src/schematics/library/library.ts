@@ -333,7 +333,7 @@ function updateProject(options: NormalizedSchema): Rule {
           fixedProject.schematics = {
             ...fixedProject.schematics,
             '@nrwl/angular:component': {
-              styleext: options.style
+              style: options.style
             }
           };
         }

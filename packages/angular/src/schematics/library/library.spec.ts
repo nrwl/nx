@@ -910,7 +910,7 @@ describe('lib', () => {
 
       expect(workspaceJson.projects['my-lib'].schematics).toEqual({
         '@nrwl/angular:component': {
-          styleext: 'scss'
+          style: 'scss'
         }
       });
     });
