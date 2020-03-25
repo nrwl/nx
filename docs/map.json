@@ -96,23 +96,148 @@
         ]
       },
       {
-        "name": "Nx CLI",
-        "id": "nx-commands",
+        "name": "CLI",
+        "id": "cli",
         "itemList": [
           {
             "name": "Overview",
-            "id": "cli-overview",
+            "id": "overview",
             "file": "shared/cli-overview"
           },
           {
             "name": "Nx and the Angular CLI",
             "id": "nx-and-cli",
             "file": "angular/getting-started/nx-and-cli"
+          },
+          {
+            "name": "generate",
+            "id": "generate",
+            "file": "angular/cli/generate"
+          },
+          {
+            "name": "serve",
+            "id": "serve",
+            "file": "angular/cli/serve"
+          },
+          {
+            "name": "build",
+            "id": "build",
+            "file": "angular/cli/build"
+          },
+          {
+            "name": "test",
+            "id": "test",
+            "file": "angular/cli/test"
+          },
+          {
+            "name": "lint",
+            "id": "lint",
+            "file": "angular/cli/lint"
+          },
+          {
+            "name": "e2e",
+            "id": "e2e",
+            "file": "angular/cli/e2e"
+          },
+          {
+            "name": "run",
+            "id": "run",
+            "file": "angular/cli/run"
+          },
+          {
+            "name": "dep-graph",
+            "id": "dep-graph",
+            "file": "angular/cli/dep-graph"
+          },
+          {
+            "name": "run-many",
+            "id": "run-many",
+            "file": "angular/cli/run-many"
+          },
+          {
+            "name": "affected",
+            "id": "affected",
+            "file": "angular/cli/affected"
+          },
+          {
+            "name": "affected:build",
+            "id": "affected-build",
+            "file": "angular/cli/affected-build"
+          },
+          {
+            "name": "affected:test",
+            "id": "affected-test",
+            "file": "angular/cli/affected-test"
+          },
+          {
+            "name": "affected:lint",
+            "id": "affected-lint",
+            "file": "angular/cli/affected-lint"
+          },
+          {
+            "name": "affected:e2e",
+            "id": "affected-e2e",
+            "file": "angular/cli/affected-e2e"
+          },
+          {
+            "name": "affected:dep-graph",
+            "id": "affected-dep-graph",
+            "file": "angular/cli/affected-dep-graph"
+          },
+          {
+            "name": "affected:apps",
+            "id": "affected-apps",
+            "file": "angular/cli/affected-apps"
+          },
+          {
+            "name": "affected:libs",
+            "id": "affected-libs",
+            "file": "angular/cli/affected-libs"
+          },
+          {
+            "name": "print-affected",
+            "id": "print-affected",
+            "file": "angular/cli/print-affected"
+          },
+          {
+            "name": "format:check",
+            "id": "format-check",
+            "file": "angular/cli/format-check"
+          },
+          {
+            "name": "format:write",
+            "id": "format-write",
+            "file": "angular/cli/format-write"
+          },
+          {
+            "name": "migrate",
+            "id": "migrate",
+            "file": "angular/cli/migrate"
+          },
+          {
+            "name": "report",
+            "id": "report",
+            "file": "angular/cli/report"
+          },
+          {
+            "name": "list",
+            "id": "list",
+            "file": "angular/cli/list"
+          },
+          {
+            "name": "workspace-lint",
+            "id": "workspace-lint",
+            "file": "angular/cli/workspace-lint"
+          },
+          {
+            "name": "workspace-schematic",
+            "id": "workspace-schematic",
+            "file": "angular/cli/workspace-schematic"
           }
         ]
       },
       {
-        "name": "Nx Plugins",
+        "name": "Plugins",
         "id": "plugins",
         "itemList": [
           {
@@ -636,18 +761,143 @@
         ]
       },
       {
-        "name": "Nx CLI",
-        "id": "nx-commands",
+        "name": "CLI",
+        "id": "cli",
         "itemList": [
           {
             "name": "Overview",
-            "id": "cli-overview",
+            "id": "overview",
             "file": "shared/cli-overview"
+          },
+          {
+            "name": "generate",
+            "id": "generate",
+            "file": "react/cli/generate"
+          },
+          {
+            "name": "serve",
+            "id": "serve",
+            "file": "react/cli/serve"
+          },
+          {
+            "name": "build",
+            "id": "build",
+            "file": "react/cli/build"
+          },
+          {
+            "name": "test",
+            "id": "test",
+            "file": "react/cli/test"
+          },
+          {
+            "name": "lint",
+            "id": "lint",
+            "file": "react/cli/lint"
+          },
+          {
+            "name": "e2e",
+            "id": "e2e",
+            "file": "react/cli/e2e"
+          },
+          {
+            "name": "run",
+            "id": "run",
+            "file": "react/cli/run"
+          },
+          {
+            "name": "dep-graph",
+            "id": "dep-graph",
+            "file": "react/cli/dep-graph"
+          },
+          {
+            "name": "run-many",
+            "id": "run-many",
+            "file": "react/cli/run-many"
+          },
+          {
+            "name": "affected",
+            "id": "affected",
+            "file": "react/cli/affected"
+          },
+          {
+            "name": "affected:build",
+            "id": "affected-build",
+            "file": "react/cli/affected-build"
+          },
+          {
+            "name": "affected:test",
+            "id": "affected-test",
+            "file": "react/cli/affected-test"
+          },
+          {
+            "name": "affected:lint",
+            "id": "affected-lint",
+            "file": "react/cli/affected-lint"
+          },
+          {
+            "name": "affected:e2e",
+            "id": "affected-e2e",
+            "file": "react/cli/affected-e2e"
+          },
+          {
+            "name": "affected:dep-graph",
+            "id": "affected-dep-graph",
+            "file": "react/cli/affected-dep-graph"
+          },
+          {
+            "name": "affected:apps",
+            "id": "affected-apps",
+            "file": "react/cli/affected-apps"
+          },
+          {
+            "name": "affected:libs",
+            "id": "affected-libs",
+            "file": "react/cli/affected-libs"
+          },
+          {
+            "name": "print-affected",
+            "id": "print-affected",
+            "file": "react/cli/print-affected"
+          },
+          {
+            "name": "format:check",
+            "id": "format-check",
+            "file": "react/cli/format-check"
+          },
+          {
+            "name": "format:write",
+            "id": "format-write",
+            "file": "react/cli/format-write"
+          },
+          {
+            "name": "migrate",
+            "id": "migrate",
+            "file": "react/cli/migrate"
+          },
+          {
+            "name": "report",
+            "id": "report",
+            "file": "react/cli/report"
+          },
+          {
+            "name": "list",
+            "id": "list",
+            "file": "react/cli/list"
+          },
+          {
+            "name": "workspace-lint",
+            "id": "workspace-lint",
+            "file": "react/cli/workspace-lint"
+          },
+          {
+            "name": "workspace-schematic",
+            "id": "workspace-schematic",
+            "file": "react/cli/workspace-schematic"
           }
         ]
       },
       {
-        "name": "Nx Plugins",
+        "name": "Plugins",
         "id": "plugins",
         "itemList": [
           {
