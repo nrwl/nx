@@ -127,7 +127,6 @@
     "core-js": "^2.6.9",
     "cosmiconfig": "^4.0.0",
     "css-loader": "3.4.2",
-    "css-modules-typescript-loader": "4.0.0",
     "cypress": "^4.1.0",
     "cz-conventional-changelog": "^3.0.2",
     "cz-customizable": "^6.2.0",

@@ -14,6 +14,8 @@ import { IndexHtmlWebpackPlugin } from './third-party/cli-files/plugins/index-ht
 import { generateEntryPoints } from './third-party/cli-files/utilities/package-chunk-sort';
 import { ScriptTarget } from 'typescript';
 
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+
 export function getWebConfig(
   root,
   sourceRoot,
@@ -44,7 +46,7 @@ export function getWebConfig(
   return mergeWebpack([
     _getBaseWebpackPartial(options, esm, isScriptOptimizeOn),
     getPolyfillsPartial(options, esm, isScriptOptimizeOn),
-    getStylesPartial(wco),
+    getStylesPartial(wco, options),
     getCommonPartial(wco),
     getBrowserPartial(wco, options, isScriptOptimizeOn)
   ]);
@@ -104,7 +106,10 @@ function getCommonPartial(wco: any): Configuration {
   return commonConfig;
 }
 
-function getStylesPartial(wco: any): Configuration {
+function getStylesPartial(
+  wco: any,
+  options: WebBuildBuilderOptions
+): Configuration {
   const partial = getStylesConfig(wco);
   const rules = partial.module.rules.map(rule => {
     if (!Array.isArray(rule.use)) {
@@ -130,8 +135,28 @@ function getStylesPartial(wco: any): Configuration {
         {
           test: /\.module\.css$/,
           use: [
-            { loader: 'style-loader' },
-            { loader: 'css-modules-typescript-loader' },
+            {
+              loader: options.extractCss
+                ? MiniCssExtractPlugin.loader
+                : 'style-loader'
+            },
+            {
+              loader: 'css-loader',
+              options: {
+                modules: true,
+                importLoaders: 1
+              }
+            }
+          ]
+        },
+        {
+          test: /\.module\.(scss|sass)$/,
+          use: [
+            {
+              loader: options.extractCss
+                ? MiniCssExtractPlugin.loader
+                : 'style-loader'
+            },
             {
               loader: 'css-loader',
               options: {
