@@ -30,16 +30,13 @@ describe('app', () => {
         appTree
       );
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
-      expect(nxJson).toEqual({
-        npmScope: 'proj',
-        projects: {
-          'my-app': {
-            tags: ['one', 'two']
-          },
-          'my-app-e2e': {
-            tags: [],
-            implicitDependencies: ['my-app']
-          }
+      expect(nxJson.projects).toEqual({
+        'my-app': {
+          tags: ['one', 'two']
+        },
+        'my-app-e2e': {
+          tags: [],
+          implicitDependencies: ['my-app']
         }
       });
     });

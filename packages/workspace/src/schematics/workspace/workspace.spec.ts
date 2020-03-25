@@ -32,6 +32,14 @@ describe('workspace', () => {
         'tslint.json': '*',
         'nx.json': '*'
       },
+      tasksRunnerOptions: {
+        default: {
+          runner: '@nrwl/workspace/tasks-runners/default',
+          options: {
+            cacheableOperations: ['build', 'lint', 'test', 'e2e']
+          }
+        }
+      },
       projects: {}
     });
   });

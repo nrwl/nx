@@ -39,7 +39,18 @@ export function createEmptyWorkspace(tree: Tree): Tree {
   );
   tree.create(
     '/nx.json',
-    JSON.stringify(<NxJson>{ npmScope: 'proj', projects: {} })
+    JSON.stringify(<NxJson>{
+      npmScope: 'proj',
+      projects: {},
+      tasksRunnerOptions: {
+        default: {
+          runner: '@nrwl/workspace/tasks-runners/default',
+          options: {
+            cacheableOperations: ['build', 'lint', 'test', 'e2e']
+          }
+        }
+      }
+    })
   );
   tree.create(
     '/tsconfig.json',
