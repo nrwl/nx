@@ -43,6 +43,35 @@ function checkDependenciesInstalled(): Rule {
   };
 }
 
+export const addCacheableOperation = updateJsonInTree('nx.json', nxJson => {
+  if (
+    !nxJson.tasksRunnerOptions ||
+    !nxJson.tasksRunnerOptions.default ||
+    nxJson.tasksRunnerOptions.default.runner !==
+      '@nrwl/workspace/tasks-runners/default'
+  ) {
+    return nxJson;
+  }
+
+  nxJson.tasksRunnerOptions.default.options =
+    nxJson.tasksRunnerOptions.default.options || {};
+
+  nxJson.tasksRunnerOptions.default.options.cacheableOperations =
+    nxJson.tasksRunnerOptions.default.options.cacheableOperations || [];
+
+  if (
+    !nxJson.tasksRunnerOptions.default.options.cacheableOperations.includes(
+      'build-storybook'
+    )
+  ) {
+    nxJson.tasksRunnerOptions.default.options.cacheableOperations.push(
+      'build-storybook'
+    );
+  }
+
+  return nxJson;
+});
+
 export default function(schema: Schema) {
-  return chain([checkDependenciesInstalled()]);
+  return chain([checkDependenciesInstalled(), addCacheableOperation]);
 }

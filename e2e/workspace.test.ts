@@ -500,20 +500,6 @@ forEachCli(cliName => {
   });
 
   describe('cache', () => {
-    afterAll(() => {
-      updateFile('nx.json', c => {
-        const nxJson = JSON.parse(c);
-        nxJson.tasksRunnerOptions = {
-          default: {
-            options: {
-              cacheableOperations: []
-            }
-          }
-        };
-        return JSON.stringify(nxJson, null, 2);
-      });
-    });
-
     it('should cache command execution', async () => {
       ensureProject();
 
@@ -523,44 +509,13 @@ forEachCli(cliName => {
       runCLI(`generate @nrwl/web:app ${myapp2}`);
       const files = `--files="apps/${myapp1}/src/main.ts,apps/${myapp2}/src/main.ts"`;
 
-      // run without caching
-      // --------------------------------------------
-      const outputWithoutCachingEnabled1 = runCommand(
-        `npm run affected:build -- ${files}`
-      );
-      const filesApp1 = listFiles(`dist/apps/${myapp1}`);
-      const filesApp2 = listFiles(`dist/apps/${myapp2}`);
-
-      expect(outputWithoutCachingEnabled1).not.toContain(
-        'read the output from cache'
-      );
-
-      const outputWithoutCachingEnabled2 = runCommand(
-        `npm run affected:build -- ${files}`
-      );
-      expect(outputWithoutCachingEnabled2).not.toContain(
-        'read the output from cache'
-      );
-
-      // enable caching
-      // --------------------------------------------
-      updateFile('nx.json', c => {
-        const nxJson = JSON.parse(c);
-        nxJson.tasksRunnerOptions = {
-          default: {
-            options: {
-              cacheableOperations: ['build', 'test', 'lint']
-            }
-          }
-        };
-        return JSON.stringify(nxJson, null, 2);
-      });
-
       // run build with caching
       // --------------------------------------------
       const outputThatPutsDataIntoCache = runCommand(
         `npm run affected:build -- ${files}`
       );
+      const filesApp1 = listFiles(`dist/apps/${myapp1}`);
+      const filesApp2 = listFiles(`dist/apps/${myapp2}`);
       // now the data is in cache
       expect(outputThatPutsDataIntoCache).not.toContain(
         'read the output from cache'
@@ -644,6 +599,38 @@ forEachCli(cliName => {
         `${myapp1}-e2e`,
         `${myapp2}-e2e`
       ]);
+
+      // run without caching
+      // --------------------------------------------
+
+      // disable caching
+      // --------------------------------------------
+      updateFile('nx.json', c => {
+        const nxJson = JSON.parse(c);
+        nxJson.tasksRunnerOptions = {
+          default: {
+            options: {
+              cacheableOperations: []
+            }
+          }
+        };
+        return JSON.stringify(nxJson, null, 2);
+      });
+
+      const outputWithoutCachingEnabled1 = runCommand(
+        `npm run affected:build -- ${files}`
+      );
+
+      expect(outputWithoutCachingEnabled1).not.toContain(
+        'read the output from cache'
+      );
+
+      const outputWithoutCachingEnabled2 = runCommand(
+        `npm run affected:build -- ${files}`
+      );
+      expect(outputWithoutCachingEnabled2).not.toContain(
+        'read the output from cache'
+      );
     }, 120000);
 
     function expectCached(

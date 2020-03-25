@@ -125,12 +125,9 @@ describe('lib', () => {
         appTree
       );
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
-      expect(nxJson).toEqual({
-        npmScope: 'proj',
-        projects: {
-          'my-lib': {
-            tags: ['one', 'two']
-          }
+      expect(nxJson.projects).toEqual({
+        'my-lib': {
+          tags: ['one', 'two']
         }
       });
     });
@@ -324,12 +321,9 @@ describe('lib', () => {
         appTree
       );
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
-      expect(nxJson).toEqual({
-        npmScope: 'proj',
-        projects: {
-          'my-dir-my-lib': {
-            tags: ['one']
-          }
+      expect(nxJson.projects).toEqual({
+        'my-dir-my-lib': {
+          tags: ['one']
         }
       });
 
@@ -345,15 +339,12 @@ describe('lib', () => {
         tree
       );
       const nxJson2 = readJsonInTree<NxJson>(tree2, '/nx.json');
-      expect(nxJson2).toEqual({
-        npmScope: 'proj',
-        projects: {
-          'my-dir-my-lib': {
-            tags: ['one']
-          },
-          'my-dir-my-lib2': {
-            tags: ['one', 'two']
-          }
+      expect(nxJson2.projects).toEqual({
+        'my-dir-my-lib': {
+          tags: ['one']
+        },
+        'my-dir-my-lib2': {
+          tags: ['one', 'two']
         }
       });
     });

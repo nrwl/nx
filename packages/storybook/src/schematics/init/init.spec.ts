@@ -1,6 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
 
-import { addDepsToPackageJson, readJsonInTree } from '@nrwl/workspace';
+import { addDepsToPackageJson, NxJson, readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 
 import { callRule, runSchematic } from '../../utils/testing';
@@ -36,5 +36,13 @@ describe('init', () => {
     expect(packageJson.devDependencies['babel-loader']).toBeDefined();
     expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();
     expect(packageJson.dependencies[existing]).toBeDefined();
+  });
+
+  it('should add build-storybook to cacheable operations', async () => {
+    const tree = await runSchematic('init', {}, appTree);
+    const nxJson = readJsonInTree(tree, 'nx.json');
+    expect(
+      nxJson.tasksRunnerOptions.default.options.cacheableOperations
+    ).toContain('build-storybook');
   });
 });

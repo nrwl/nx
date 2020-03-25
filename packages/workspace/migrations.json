@@ -64,6 +64,11 @@
       "version": "9.1.0-beta.1",
       "description": "Update eslint and tslint config to provide better IDE support",
       "factory": "./src/migrations/update-9-1-0/update-lint-config"
+    },
+    "update-9-2-0": {
+      "version": "9.2.0-beta.1",
+      "description": "Add cacheable operations to nx.json",
+      "factory": "./src/migrations/update-9-2-0/update-9-2-0"
     }
   },
   "packageJsonUpdates": {
