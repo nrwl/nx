@@ -28,6 +28,8 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   baseHref: string;
   deployUrl: string;
 
+  extractCss?: boolean;
+
   polyfills?: string;
   es2015Polyfills?: string;
 

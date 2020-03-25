@@ -298,7 +298,6 @@ export function copyMissingPackages(): void {
     'semver',
 
     'css-loader',
-    'css-modules-typescript-loader',
     'mime',
     'less',
     'send',
