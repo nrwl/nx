@@ -5,10 +5,8 @@
 # For additional information regarding the format and rule options, please see:
 # https://github.com/browserslist/browserslist#queries
 #
-# For IE 9-11 support, please remove 'not' from the last line of the file and adjust as needed
+# If you need to support different browsers in production, you may tweak the list below.
 
-> 0.5%
-last 2 versions
-Firefox ESR
+> 0.2%
 not dead
-not IE 9-11
+not op_mini all
