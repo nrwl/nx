@@ -10,7 +10,7 @@ import init from '../init/init';
 import { addCypress } from './lib/add-cypress';
 import { addJest } from './lib/add-jest';
 import { addProject } from './lib/add-project';
-import { addStyledModuleDependencies } from './lib/add-styled-module-dependencies';
+import { addStyleDependencies } from './lib/add-style-dependencies';
 import { createApplicationFiles } from './lib/create-application-files';
 import { createNextServerFiles } from './lib/create-next-server-files';
 import { normalizeOptions } from './lib/normalize-options';
@@ -38,7 +38,7 @@ export default function(schema: Schema): Rule {
       addCypress(options),
       addJest(options),
       updateJestConfig(options),
-      addStyledModuleDependencies(options),
+      addStyleDependencies(options),
       setDefaults(options),
       formatFiles(options)
     ]);

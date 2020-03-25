@@ -35,13 +35,7 @@ function run(
       return from(context.getTargetOptions(buildTarget)).pipe(
         concatMap((buildOptions: NextBuildBuilderOptions) => {
           const root = path.resolve(context.workspaceRoot, buildOptions.root);
-          const config = prepareConfig(
-            context.workspaceRoot,
-            buildOptions.root,
-            buildOptions.outputPath,
-            buildOptions.fileReplacements,
-            PHASE_EXPORT
-          );
+          const config = prepareConfig(PHASE_EXPORT, buildOptions, context);
           return from(
             exportApp(
               root,

@@ -53,11 +53,9 @@ export function run(
           const root = path.resolve(context.workspaceRoot, buildOptions.root);
 
           const config = prepareConfig(
-            context.workspaceRoot,
-            buildOptions.root,
-            buildOptions.outputPath,
-            buildOptions.fileReplacements,
-            options.dev ? PHASE_DEVELOPMENT_SERVER : PHASE_PRODUCTION_SERVER
+            options.dev ? PHASE_DEVELOPMENT_SERVER : PHASE_PRODUCTION_SERVER,
+            buildOptions,
+            context
           );
 
           const settings: NextServerOptions = {

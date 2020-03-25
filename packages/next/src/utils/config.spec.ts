@@ -3,10 +3,6 @@ import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { createWebpackConfig, prepareConfig } from './config';
 
 jest.mock('tsconfig-paths-webpack-plugin');
-jest.mock('@zeit/next-css', () => (config: any) => config);
-jest.mock('@zeit/next-less', () => (config: any) => config);
-jest.mock('@zeit/next-sass', () => (config: any) => config);
-jest.mock('@zeit/next-stylus', () => (config: any) => config);
 jest.mock('next/dist/next-server/server/config', () => ({
   __esModule: true,
   default: () => ({
@@ -71,11 +67,13 @@ describe('Next.js webpack config builder', () => {
   describe('prepareConfig', () => {
     it('should set the dist and out directories', () => {
       const config = prepareConfig(
-        '/root',
-        'apps/wibble',
-        'dist/apps/wibble',
-        [],
-        PHASE_PRODUCTION_BUILD
+        PHASE_PRODUCTION_BUILD,
+        {
+          root: 'apps/wibble',
+          outputPath: 'dist/apps/wibble',
+          fileReplacements: []
+        },
+        { workspaceRoot: '/root' } as any
       );
 
       expect(config).toEqual(

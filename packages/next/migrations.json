@@ -4,6 +4,11 @@
       "version": "8.10.0-beta.1",
       "description": "Update Next.js libraries",
       "factory": "./src/migrations/update-8-10-0/update-8-10-0"
+    },
+    "create-next-config-9.2.0": {
+      "version": "9.2.0-beta.1",
+      "description": "Add next.config.js file to Next apps",
+      "factory": "./src/migrations/update-9-2-0/create-next-config"
     }
   },
   "packageJsonUpdates": {

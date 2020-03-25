@@ -89,15 +89,17 @@ forEachCli('nx', () => {
       updateFile(
         `apps/${appName}/next.config.js`,
         `
-module.exports = {
+const withCSS = require('@zeit/next-css');
+module.exports = withCSS({
+  cssModules: false,
   generateBuildId: function () {
     return 'fixed';
   }
-};
+});
       `
       );
 
-      await checkApp(appName, { checkLint: true });
+      await checkApp(appName, { checkLint: true, checkE2E: true });
 
       // check that the configuration was consumed
       expect(readFile(`dist/apps/${appName}/BUILD_ID`)).toEqual('fixed');
@@ -124,7 +126,7 @@ module.exports = {
       ` + readFile(mainPath)
       );
 
-      await checkApp(appName, { checkLint: false });
+      await checkApp(appName, { checkLint: false, checkE2E: false });
     }, 120000);
 
     it('should compile when using a workspace and react lib written in TypeScript', async () => {
@@ -183,7 +185,7 @@ module.exports = {
           )
       );
 
-      await checkApp(appName, { checkLint: true });
+      await checkApp(appName, { checkLint: true, checkE2E: true });
     }, 120000);
 
     it('should support --style=styled-components', async () => {
@@ -193,7 +195,7 @@ module.exports = {
         `generate @nrwl/next:app ${appName} --no-interactive --style=styled-components`
       );
 
-      await checkApp(appName, { checkLint: false });
+      await checkApp(appName, { checkLint: false, checkE2E: false });
     }, 120000);
 
     it('should support --style=@emotion/styled', async () => {
@@ -203,12 +205,15 @@ module.exports = {
         `generate @nrwl/next:app ${appName} --no-interactive --style=@emotion/styled`
       );
 
-      await checkApp(appName, { checkLint: false });
+      await checkApp(appName, { checkLint: false, checkE2E: false });
     }, 120000);
   });
 });
 
-async function checkApp(appName: string, opts: { checkLint: boolean }) {
+async function checkApp(
+  appName: string,
+  opts: { checkLint: boolean; checkE2E: boolean }
+) {
   if (opts.checkLint) {
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
