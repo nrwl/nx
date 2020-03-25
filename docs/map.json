@@ -332,6 +332,11 @@
             "id": "node",
             "itemList": [
               {
+                "id": "overview",
+                "name": "Overview",
+                "file": "shared/node-plugin"
+              },
+              {
                 "id": "schematics",
                 "name": "Schematics",
                 "itemList": [
