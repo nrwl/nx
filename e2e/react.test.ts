@@ -182,6 +182,30 @@ forEachCli(currentCLIName => {
       );
     }, 120000);
 
+    it('should be able to use babel-jest', async () => {
+      ensureProject();
+      const appName = uniq('app');
+      const libName = uniq('lib');
+
+      runCLI(
+        `generate @nrwl/react:app ${appName} --no-interactive --babelJest`
+      );
+      runCLI(
+        `generate @nrwl/react:lib ${libName} --no-interactive --babelJest`
+      );
+
+      checkFilesExist(
+        `apps/${appName}/babel-jest.config.json`,
+        `libs/${libName}/babel-jest.config.json`
+      );
+
+      const appTestResults = await runCLIAsync(`test ${appName}`);
+      expect(appTestResults.stderr).toContain('Test Suites: 1 passed, 1 total');
+
+      const libTestResults = await runCLIAsync(`test ${libName}`);
+      expect(libTestResults.stderr).toContain('Test Suites: 1 passed, 1 total');
+    }, 120000);
+
     it('should be able to use JSX', async () => {
       ensureProject();
       const appName = uniq('app');

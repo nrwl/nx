@@ -1,56 +1,20 @@
 import {
   BuilderContext,
-  createBuilder,
-  BuilderOutput
+  BuilderOutput,
+  createBuilder
 } from '@angular-devkit/architect';
-
+import { runCLI } from 'jest';
+import * as path from 'path';
 import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-
-import * as path from 'path';
-import { JsonObject } from '@angular-devkit/core';
+import { JestBuilderOptions } from './schema';
 
 try {
   require('dotenv').config();
 } catch (e) {}
 
-import { runCLI } from 'jest';
-
 if (process.env.NODE_ENV == null || process.env.NODE_ENV == undefined) {
   (process.env as any).NODE_ENV = 'test';
-}
-export interface JestBuilderOptions extends JsonObject {
-  codeCoverage?: boolean;
-  config?: string;
-  jestConfig: string;
-  testFile?: string;
-  setupFile?: string;
-  tsConfig: string;
-  bail?: number;
-  ci?: boolean;
-  color?: boolean;
-  clearCache?: boolean;
-  findRelatedTests?: string;
-  json?: boolean;
-  maxWorkers?: number;
-  onlyChanged?: boolean;
-  outputFile?: string;
-  passWithNoTests?: boolean;
-  runInBand?: boolean;
-  silent?: boolean;
-  testNamePattern?: string;
-  testPathPattern?: string[];
-  colors?: boolean;
-  reporters?: string[];
-  verbose?: boolean;
-  coverageReporters?: string;
-  coverageDirectory?: string;
-  testResultsProcessor?: string;
-  updateSnapshot?: boolean;
-  useStderr?: boolean;
-  watch?: boolean;
-  watchAll?: boolean;
-  testLocationInResults?: boolean;
 }
 
 export default createBuilder<JestBuilderOptions>(run);
@@ -61,32 +25,47 @@ function run(
 ): Observable<BuilderOutput> {
   options.jestConfig = path.resolve(context.workspaceRoot, options.jestConfig);
 
-  const tsJestConfig = {
-    tsConfig: path.resolve(context.workspaceRoot, options.tsConfig)
-  };
+  const jestConfig: {
+    transform: any;
+    globals: any;
+  } = require(options.jestConfig);
 
-  // TODO: This is hacky, We should probably just configure it in the user's workspace
-  // If jest-preset-angular is installed, apply settings
-  try {
-    require.resolve('jest-preset-angular');
-    Object.assign(tsJestConfig, {
-      stringifyContentPathRegex: '\\.(html|svg)$',
-      astTransformers: [
-        'jest-preset-angular/build/InlineFilesTransformer',
-        'jest-preset-angular/build/StripStylesTransformer'
-      ]
-    });
-  } catch (e) {}
+  let transformers = Object.values<string>(jestConfig.transform || {});
+  if (transformers.includes('babel-jest') && transformers.includes('ts-jest')) {
+    throw new Error(
+      'Using babel-jest and ts-jest together is not supported.\n' +
+        'See ts-jest documentation for babel integration: https://kulshekhar.github.io/ts-jest/user/config/babelConfig'
+    );
+  }
 
-  // merge the jestConfig globals with our 'ts-jest' override
-  const jestConfig: { globals: any } = require(options.jestConfig);
+  // use ts-jest by default
   const globals = jestConfig.globals || {};
-  Object.assign(globals, {
-    'ts-jest': {
-      ...(globals['ts-jest'] || {}),
-      ...tsJestConfig
-    }
-  });
+  if (!transformers.includes('babel-jest')) {
+    const tsJestConfig = {
+      tsConfig: path.resolve(context.workspaceRoot, options.tsConfig)
+    };
+
+    // TODO: This is hacky, We should probably just configure it in the user's workspace
+    // If jest-preset-angular is installed, apply settings
+    try {
+      require.resolve('jest-preset-angular');
+      Object.assign(tsJestConfig, {
+        stringifyContentPathRegex: '\\.(html|svg)$',
+        astTransformers: [
+          'jest-preset-angular/build/InlineFilesTransformer',
+          'jest-preset-angular/build/StripStylesTransformer'
+        ]
+      });
+    } catch (e) {}
+
+    // merge the jestConfig globals with our 'ts-jest' override
+    Object.assign(globals, {
+      'ts-jest': {
+        ...(globals['ts-jest'] || {}),
+        ...tsJestConfig
+      }
+    });
+  }
 
   const config: any = {
     _: [],

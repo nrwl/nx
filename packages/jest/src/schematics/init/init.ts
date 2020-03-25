@@ -1,20 +1,26 @@
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { chain, Rule, Tree } from '@angular-devkit/schematics';
 import {
   addDepsToPackageJson,
   readJsonInTree,
   updateJsonInTree
 } from '@nrwl/workspace';
+import { noop } from 'rxjs';
 import {
+  babelCoreVersion,
+  babelJestVersion,
+  babelPresetEnvVersion,
+  babelPresetReactVersion,
+  babelPresetTypescriptVersion,
   jestTypesVersion,
   jestVersion,
   nxVersion,
   tsJestVersion
 } from '../../utils/versions';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { noop } from 'rxjs';
+import { JestInitOptions } from './schema';
 
 const removeNrwlJestFromDeps = (host: Tree) => {
-  // check whether to update the packge.json is necessary
+  // check whether updating the package.json is necessary
   const currentPackageJson = readJsonInTree(host, 'package.json');
 
   if (
@@ -49,16 +55,29 @@ const createJestConfig = (host: Tree) => {
   }
 };
 
-const updateDependencies = addDepsToPackageJson(
-  {},
-  {
+function updateDependencies(options: JestInitOptions): Rule {
+  const devDeps = {
     '@nrwl/jest': nxVersion,
     jest: jestVersion,
     '@types/jest': jestTypesVersion,
     'ts-jest': tsJestVersion
-  }
-);
+  };
 
-export default function(): Rule {
-  return chain([createJestConfig, updateDependencies, removeNrwlJestFromDeps]);
+  if (options.babelJest) {
+    devDeps['@babel/core'] = babelCoreVersion;
+    devDeps['@babel/preset-env'] = babelPresetEnvVersion;
+    devDeps['@babel/preset-typescript'] = babelPresetTypescriptVersion;
+    devDeps['@babel/preset-react'] = babelPresetReactVersion;
+    devDeps['babel-jest'] = babelJestVersion;
+  }
+
+  return addDepsToPackageJson({}, devDeps);
+}
+
+export default function(options: JestInitOptions): Rule {
+  return chain([
+    createJestConfig,
+    updateDependencies(options),
+    removeNrwlJestFromDeps
+  ]);
 }

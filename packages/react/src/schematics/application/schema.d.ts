@@ -8,6 +8,7 @@ export interface Schema {
   directory?: string;
   tags?: string;
   unitTestRunner: 'jest' | 'none';
+  babelJest: boolean;
   e2eTestRunner: 'cypress' | 'none';
   linter: Linter;
   pascalCaseFiles?: boolean;

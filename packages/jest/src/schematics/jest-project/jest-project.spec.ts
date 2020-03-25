@@ -1,7 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
-import { runSchematic, callRule } from '../../utils/testing';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
+import { callRule, runSchematic } from '../../utils/testing';
 
 describe('jestProject', () => {
   let appTree: Tree;
@@ -130,6 +130,38 @@ describe('jestProject', () => {
       },
       files: ['src/test-setup.ts'],
       include: ['**/*.spec.ts', '**/*.d.ts']
+    });
+  });
+
+  describe('--babelJest', () => {
+    it('should have a babel config when true', async () => {
+      const resultTree = await runSchematic(
+        'jest-project',
+        {
+          project: 'lib1',
+          setupFile: 'none',
+          babelJest: true
+        },
+        appTree
+      );
+      expect(
+        resultTree.exists('/libs/lib1/babel-jest.config.json')
+      ).toBeTruthy();
+    });
+
+    it('should NOT have a babel config when false', async () => {
+      const resultTree = await runSchematic(
+        'jest-project',
+        {
+          project: 'lib1',
+          setupFile: 'none',
+          babelJest: false
+        },
+        appTree
+      );
+      expect(
+        resultTree.exists('/libs/lib1/babel-jest.config.json')
+      ).toBeFalsy();
     });
   });
 

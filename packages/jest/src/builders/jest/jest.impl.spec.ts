@@ -1,7 +1,8 @@
-import { schema } from '@angular-devkit/core';
-import { TestingArchitectHost } from '@angular-devkit/architect/testing';
-import * as path from 'path';
 import { Architect } from '@angular-devkit/architect';
+import { TestingArchitectHost } from '@angular-devkit/architect/testing';
+import { schema } from '@angular-devkit/core';
+import * as path from 'path';
+import { JestBuilderOptions } from './schema';
 
 describe('Jest Builder', () => {
   let architect: Architect;
@@ -35,7 +36,15 @@ describe('Jest Builder', () => {
 
   describe('when the jest config file is untouched', () => {
     beforeEach(() => {
-      jest.doMock('/root/jest.config.js', () => ({}), { virtual: true });
+      jest.doMock(
+        '/root/jest.config.js',
+        () => ({
+          transform: {
+            '^.+\\.[tj]sx?$': 'ts-jest'
+          }
+        }),
+        { virtual: true }
+      );
     });
 
     it('should send appropriate options to jestCLI', async () => {
@@ -286,6 +295,9 @@ describe('Jest Builder', () => {
       jest.doMock(
         '/root/jest.config.js',
         () => ({
+          transform: {
+            '^.+\\.[tj]sx?$': 'ts-jest'
+          },
           globals: { hereToStay: true, 'ts-jest': { diagnostics: false } }
         }),
         { virtual: true }
@@ -320,6 +332,72 @@ describe('Jest Builder', () => {
           watch: false
         },
         ['/root/jest.config.js']
+      );
+    });
+  });
+
+  describe('when we use babel-jest', () => {
+    beforeEach(() => {
+      jest.doMock(
+        '/root/jest.config.js',
+        () => ({
+          transform: {
+            '^.+\\.[tj]sx?$': 'babel-jest'
+          }
+        }),
+        { virtual: true }
+      );
+    });
+
+    it('should send appropriate options to jestCLI', async () => {
+      const options: JestBuilderOptions = {
+        jestConfig: './jest.config.js',
+        tsConfig: './tsconfig.test.json',
+        watch: false
+      };
+
+      const run = await architect.scheduleBuilder('@nrwl/jest:jest', options);
+      expect(await run.result).toEqual(
+        jasmine.objectContaining({
+          success: true
+        })
+      );
+      expect(runCLI).toHaveBeenCalledWith(
+        {
+          _: [],
+          globals: '{}',
+          testPathPattern: [],
+          watch: false
+        },
+        ['/root/jest.config.js']
+      );
+    });
+  });
+
+  describe('when the user tries to use babel-jest AND ts-jest', () => {
+    beforeEach(() => {
+      jest.doMock(
+        '/root/jest.config.js',
+        () => ({
+          transform: {
+            '^.+\\.tsx?$': 'ts-jest',
+            '^.+\\.jsx?$': 'babel-jest'
+          }
+        }),
+        { virtual: true }
+      );
+    });
+
+    it('should throw an appropriate error', async () => {
+      const options: JestBuilderOptions = {
+        jestConfig: './jest.config.js',
+        tsConfig: './tsconfig.test.json',
+        watch: false
+      };
+
+      const run = await architect.scheduleBuilder('@nrwl/jest:jest', options);
+      await expect(run.result).rejects.toThrow(
+        /Using babel-jest and ts-jest together is not supported/
       );
     });
   });

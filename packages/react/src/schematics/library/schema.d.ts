@@ -12,6 +12,7 @@ export interface Schema {
   routing?: boolean;
   appProject?: string;
   unitTestRunner: 'jest' | 'none';
+  babelJest: boolean;
   linter: Linter;
   component?: boolean;
   publishable?: boolean;
