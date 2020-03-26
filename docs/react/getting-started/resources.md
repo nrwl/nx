@@ -19,7 +19,7 @@
 ## Books and Blogs
 
 - [Nx blog posts](https://blog.nrwl.io/react/home)
-- [Effective React Development with Nx](https://go.nrwl.io/effective-react-development-with-nx-new-book)
+- [Effective React Development with Nx (free)](https://go.nrwl.io/effective-react-development-with-nx-new-book)
 
 ## Misc
 
