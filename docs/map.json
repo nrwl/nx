@@ -14,11 +14,6 @@
           {
             "name": "Resources",
             "id": "resources"
-          },
-          {
-            "name": "About",
-            "id": "about",
-            "file": "shared/about"
           }
         ]
       },
@@ -701,11 +696,6 @@
           {
             "name": "Resources",
             "id": "resources"
-          },
-          {
-            "name": "About",
-            "id": "about",
-            "file": "shared/about"
           }
         ]
       },
