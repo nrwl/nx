@@ -331,6 +331,10 @@
             "id": "angular",
             "itemList": [
               {
+                "id": "plugin-overview",
+                "name": "Overview"
+              },
+              {
                 "id": "schematics",
                 "name": "Schematics",
                 "itemList": [
