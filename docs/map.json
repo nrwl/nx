@@ -63,12 +63,12 @@
             "id": "09-dep-graph"
           },
           {
-            "name": "10 - Test Affected Projects",
-            "id": "10-test-affected-projects"
+            "name": "10 - Use Computation Caching",
+            "id": "10-computation-caching"
           },
           {
-            "name": "11 - Build Affected Projects",
-            "id": "11-build-affected-projects"
+            "name": "11 - Test Affected Projects",
+            "id": "11-test-affected-projects"
           },
           {
             "name": "12 - Summary",
@@ -736,12 +736,12 @@
             "id": "09-dep-graph"
           },
           {
-            "name": "10 - Test Affected Projects",
-            "id": "10-test-affected-projects"
+            "name": "10 - Use Computation Caching",
+            "id": "10-computation-caching"
           },
           {
-            "name": "11 - Build Affected Projects",
-            "id": "11-build-affected-projects"
+            "name": "11 - Test Affected Projects",
+            "id": "11-test-affected-projects"
           },
           {
             "name": "12 - Summary",

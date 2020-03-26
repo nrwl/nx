@@ -7,8 +7,6 @@ In this tutorial you:
 - Created a UI library
 - Used Nx dep graph capabilities to only retest and rebuild what is affected
 
-### Read Fundamentals
+## Learn More
 
-- [Using Modern Tools](/angular/fundamentals/use-modern-tools)
-- [Building Full-Stack Applications](/angular/fundamentals/build-full-stack-applications)
-- [Developing Like Google: Monorepos and Automation](/angular/fundamentals/monorepos-automation)
+LINKS LINKS

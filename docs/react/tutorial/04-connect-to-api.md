@@ -7,6 +7,10 @@ Real-world applications do not live in isolation — they need APIs to talk 
 ```typescript jsx
 import React, { useEffect, useState } from 'react';
 
+interface Todo {
+  title: string;
+}
+
 const App = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
 
@@ -46,7 +50,7 @@ export default App;
 ```
 
 !!!!!
-Run "nx serve todos" and open http://localhost:4200. What do you see?
+Run `nx serve todos` and open http://localhost:4200. What do you see?
 !!!!!
 "the server responded with a status of 404 (Not Found)" in Console.
 Blank screen.

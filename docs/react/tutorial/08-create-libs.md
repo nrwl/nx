@@ -71,7 +71,7 @@ Here, you can either change the UI component or generate a new one.
 **Add a component to the newly created ui library by running:**
 
 ```bash
-nx g @nrwl/react:component todos --project=ui
+nx g @nrwl/react:component todos --project=ui --export
 ```
 
 ```treeview
@@ -124,13 +124,6 @@ export const Todos = (props: { todos: Todo[] }) => {
 export default Todos;
 ```
 
-**Re-export it from the index file.**
-
-```typescript
-export * from './lib/ui/ui';
-export * from './lib/todos/todos';
-```
-
 ## Use the UI Library
 
 **Now import `Todos` into `apps/todos/src/app/app.tsx`.**
@@ -140,10 +133,25 @@ import React, { useEffect, useState } from 'react';
 import { Todo } from '@myorg/data';
 import { Todos } from '@myorg/ui';
 
-export const App = () => {
+const App = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
 
-  //... addTodo
+  useEffect(() => {
+    fetch('/api/todos')
+      .then(_ => _.json())
+      .then(setTodos);
+  }, []);
+
+  function addTodo() {
+    fetch('/api/addTodo', {
+      method: 'POST',
+      body: ''
+    })
+      .then(_ => _.json())
+      .then(newTodo => {
+        setTodos([...todos, newTodo]);
+      });
+  }
 
   return (
     <>
@@ -160,6 +168,8 @@ export default App;
 ```
 
 **Restart both `nx serve api` and `nx serve todos` and you should see the application running.**
+
+> Nx helps you explore code generation options. Run `nx g @nrwl/react:component --help` to see all options available. Pass `--dry-run` to the command to see what would be generated without actually changing anything, like this: `nx g @nrwl/react:component mycmp --project=ui --dry-run`.
 
 !!!!!
 Libraries' public API is defined in...

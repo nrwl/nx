@@ -1,4 +1,4 @@
-# Step 10: Test Affected Projects
+# Step 11: Test Affected Projects
 
 Because Nx understands the dependency graph of your workspace, Nx can be efficient at retesting and rebuilding your projects.
 
@@ -7,6 +7,7 @@ Because Nx understands the dependency graph of your workspace, Nx can be efficie
 ```bash
 git add .
 git commit -am 'init'
+git checkout -b testbranch
 ```
 
 **Open `libs/ui/src/lib/todos/todos.component.html` and change the template:**
@@ -25,34 +26,40 @@ git commit -am 'init'
 
 Printing the affected projects can be handy, but usually you want to do something with them. For instance, you may want to test everything that has been affected.
 
-**Run `npm run affected:test` to retest only the projects affected by the change.**
+**Run `nx affected:test` to retest only the projects affected by the change.**
 
 You will see the following:
 
-```
-Running test for projects:
- ui,
- todos
+```bash
+>  NX  Running target test for projects:
+
+  - ui
+  - todos
 
 ...
 
-Running test for affected projects failed.
-Failed projects: todos
-You can isolate the above projects by passing --only-failed
+  Failed projects:
+
+  - todos
+  - ui
 ```
 
-One of the projects failed. Instead of retesting every single project on every change, pass `--only-failed` to only retest the failed ones.
+Note that Nx only tried to retest `ui` and `todos`. It didn't retest `api` or `data` because there is no way that could be affected by the changes in this branch.
 
 **Run `npm run affected:test -- --only-failed` to retest the failed projects.**
 
-## Testing in Parallel
+## Affected:\*
 
-Some changes affect many projects in the repository. To speed up the testing of this change, pass `--parallel`.
+You can run any target against the affected projects in the graph like this:
 
-**Run `npm run affected:test -- --parallel` to test affected projects in parallel**
+```bash
+# The following are equivalent
+nx affected --target=build
+nx affected:build
+```
 
 !!!!!
-Check in the changes into master and run `npm run affected:test`. What do you see?
+Run "nx affected --target=invalid --base=master". What do you see?
 !!!!!
 No projects to run test
 The `todos` project failed as before
