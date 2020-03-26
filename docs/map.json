@@ -525,6 +525,11 @@
             "id": "nest",
             "itemList": [
               {
+                "id": "overview",
+                "name": "Overview",
+                "file": "shared/nest-plugin"
+              },
+              {
                 "id": "schematics",
                 "name": "Schematics",
                 "itemList": [
