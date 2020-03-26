@@ -9,6 +9,7 @@ import {
   runCLI,
   runCommand,
   tmpProjPath,
+  uniq,
   updateFile
 } from './utils';
 
@@ -16,6 +17,8 @@ forEachCli('nx', () => {
   describe('Help', () => {
     it('should show help', async () => {
       ensureProject();
+      const myapp = uniq('myapp');
+      runCLI(`generate @nrwl/web:app ${myapp}`);
 
       let mainHelp = runCLI(`--help`);
       expect(mainHelp).toContain('Run a target for a project');
@@ -30,6 +33,9 @@ forEachCli('nx', () => {
         'The file extension to be used for style files. (default: css)'
       );
 
+      const buildHelp = runCLI(`build ${myapp} --help`);
+      expect(buildHelp).toContain('The name of the main entry-point file.');
+
       const affectedHelp = runCLI(`affected --help`);
       expect(affectedHelp).toContain('Run task for affected projects');
 
@@ -43,6 +49,8 @@ forEachCli('angular', () => {
   describe('help', () => {
     it('should show help', async () => {
       ensureProject();
+      const myapp = uniq('myapp');
+      runCLI(`generate @nrwl/web:app ${myapp}`);
 
       let mainHelp = runCLI(`--help`);
       expect(mainHelp).toContain('Run a target for a project');
@@ -56,6 +64,9 @@ forEachCli('angular', () => {
       expect(genHelp).toContain(
         'The file extension to be used for style files.'
       );
+
+      const buildHelp = runCLI(`build ${myapp} --help`);
+      expect(buildHelp).toContain('The name of the main entry-point file.');
 
       const affectedHelp = runCLI(`affected --help`);
       expect(affectedHelp).toContain('Run task for affected projects');
