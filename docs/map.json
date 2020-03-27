@@ -451,6 +451,11 @@
             "id": "jest",
             "itemList": [
               {
+                "id": "overview",
+                "name": "Overview",
+                "file": "shared/jest-plugin"
+              },
+              {
                 "id": "builders",
                 "name": "Builders",
                 "itemList": [
@@ -467,6 +472,11 @@
             "name": "cypress",
             "id": "cypress",
             "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "file": "shared/cypress-plugin"
+              },
               {
                 "id": "builders",
                 "name": "Builders",
