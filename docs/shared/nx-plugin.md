@@ -2,9 +2,8 @@
 
 Nx plugins are npm packages that contain schematics and builders to extend a Nx workspace. Schematics are blueprints to create new files from templates, and builders execute those files. These plugins also update the `nx.json` when generating new libs or apps.
 
-This guide will explain how to generate a new plugin, build on it, test it and publish it.
-
-> A list of plugins that is maintained by Nrwl is found in the [Nrwl/nx repo](https://github.com/nrwl/nx/tree/master/packages).
+> A list of plugins that is maintained by Nrwl is found in the [Nrwl/nx repo](https://github.com/nrwl/nx/tree/master/packages). \
+> A list of custom plugins created by the community is found in the [Plugins](/nx-plugins) section.
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/XYO689PAhow" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 

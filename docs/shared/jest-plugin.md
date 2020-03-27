@@ -1,4 +1,4 @@
-# Using Jest
+# Jest Plugin
 
 ![Jest logo](/shared/jest-logo.png)
 
@@ -22,7 +22,7 @@ By default, Nx will use Jest when creating applications and libraries.
 │   ├── frontend/
 │   │   ├── src/
 │   │   ├── browserslist
-│   │   ├── jest.conf.js # <== jest config
+│   │   ├── jest.config.js # <== jest config
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.json
 │   │   └── tsconfig.spec.json

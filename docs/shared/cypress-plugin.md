@@ -1,4 +1,4 @@
-# Using Cypress
+# Cypress Plugin
 
 ![Cypress logo](/shared/cypress-logo.png)
 
