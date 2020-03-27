@@ -1,4 +1,4 @@
-# Changes between Nx 7 and Nx 8
+# Nx 7 => Nx 8
 
 If you have used Nx since before version 8, things might seem different now. Prior to Nx 8 our packages were `@nrwl/schematics` and `@nrwl/builders`. These packages were organized by which Angular CLI feature they depended on. `@nrwl/schematics` contained the core of Nx + schematics for all of our features: Angular, React, Node, and Nest. This organization had very little meaning to users and made it impossible to install only capabilities needed for Angular. To solve this, in Nx 8, we have organized our packages by feature.
 

@@ -581,17 +581,17 @@
             "file": "shared/computation-caching"
           },
           {
-            "name": "Distributed Builds and Distributed CI",
+            "name": "Distributed CI: Overview",
             "id": "distributed-builds",
             "file": "shared/distributed-builds"
           },
           {
-            "name": "Distributed CI Using Azure Pipelines",
+            "name": "Distributed CI: Azure",
             "id": "monorepo-ci-azure",
             "file": "shared/monorepo-ci-azure"
           },
           {
-            "name": "Distributed CI Using Jenkins",
+            "name": "Distributed CI: Jenkins",
             "id": "monorepo-ci-jenkins",
             "file": "shared/monorepo-ci-jenkins"
           },
@@ -601,19 +601,19 @@
             "file": "shared/incremental-builds"
           },
           {
-            "name": "Using Cypress",
-            "id": "modernize-cypress",
-            "file": "shared/modernize-cypress"
+            "name": "Rebuild Only What is Affected",
+            "id": "monorepo-affected",
+            "file": "shared/monorepo-affected"
           },
           {
-            "name": "Using Jest",
-            "id": "modernize-jest",
-            "file": "shared/modernize-jest"
+            "name": "Visualizing Workspaces",
+            "id": "monorepo-dependency-diagrams",
+            "file": "shared/monorepo-dependency-diagrams"
           },
           {
-            "name": "Using Storybook",
-            "id": "modernize-storybook-angular",
-            "file": "angular/guides/modernize-storybook"
+            "name": "Using Tags",
+            "id": "monorepo-tags",
+            "file": "shared/monorepo-tags"
           },
           {
             "name": "Workspace Schematics",
@@ -621,37 +621,9 @@
             "file": "shared/tools-workspace-schematics"
           },
           {
-            "name": "Custom commands",
+            "name": "Custom Commands",
             "id": "custom-commands",
             "file": "shared/running-custom-commands"
-          },
-          {
-            "name": "Nx Plugins",
-            "id": "nx-plugin",
-            "file": "shared/nx-plugin"
-          },
-          {
-            "name": "Rebuilding and Retesting What is Affected",
-            "id": "monorepo-affected",
-            "file": "shared/monorepo-affected"
-          },
-          {
-            "name": "Analyzing & Visualizing Workspaces",
-            "id": "monorepo-dependency-diagrams",
-            "file": "shared/monorepo-dependency-diagrams"
-          },
-          {
-            "name": "Imposing Constraints on the Dependency Graph",
-            "id": "monorepo-tags",
-            "file": "shared/monorepo-tags"
-          },
-          {
-            "name": "Updating Nx",
-            "id": "update"
-          },
-          {
-            "name": "Using React",
-            "id": "react"
           },
           {
             "name": "Using NgRx",
@@ -667,12 +639,17 @@
             "file": "shared/monorepo-nx-enterprise"
           },
           {
-            "name": "Lazy Loading Code",
-            "id": "misc-lazy-loading"
+            "name": "Updating Nx",
+            "id": "update"
           },
           {
-            "name": "Changes between Nx 7 and Nx 8",
+            "name": "Nx 7 => Nx 8",
             "id": "nx7-to-nx8"
+          },
+          {
+            "name": "Nx Plugins",
+            "id": "nx-plugin",
+            "file": "shared/nx-plugin"
           }
         ]
       },
@@ -757,6 +734,17 @@
           {
             "name": "12 - Summary",
             "id": "12-summary"
+          }
+        ]
+      },
+      {
+        "name": "Migration",
+        "id": "migration",
+        "itemList": [
+          {
+            "name": "Overview",
+            "id": "migration-overview",
+            "file": "shared/migration-overview"
           }
         ]
       },
@@ -926,17 +914,17 @@
             "file": "shared/computation-caching"
           },
           {
-            "name": "Distributed Builds and Distributed CI",
+            "name": "Distributed CI: Overview",
             "id": "distributed-builds",
             "file": "shared/distributed-builds"
           },
           {
-            "name": "Distributed CI Using Azure Pipelines",
+            "name": "Distributed CI: Azure",
             "id": "monorepo-ci-azure",
             "file": "shared/monorepo-ci-azure"
           },
           {
-            "name": "Distributed CI Using Jenkins",
+            "name": "Distributed CI: Jenkins",
             "id": "monorepo-ci-jenkins",
             "file": "shared/monorepo-ci-jenkins"
           },
@@ -946,33 +934,19 @@
             "file": "shared/incremental-builds"
           },
           {
-            "name": "Next.js",
-            "id": "nextjs"
+            "name": "Rebuilding What is Affected",
+            "id": "monorepo-affected",
+            "file": "shared/monorepo-affected"
           },
           {
-            "name": "Updating Nx",
-            "id": "update",
-            "file": "shared/update"
+            "name": "Visualizing Workspaces",
+            "id": "monorepo-dependency-diagrams",
+            "file": "shared/monorepo-dependency-diagrams"
           },
           {
-            "name": "Adding Images, Fonts, and Files",
-            "id": "adding-assets-react",
-            "file": "react/guides/adding-assets"
-          },
-          {
-            "name": "Using Cypress",
-            "id": "modernize-cypress",
-            "file": "shared/modernize-cypress"
-          },
-          {
-            "name": "Using Jest",
-            "id": "modernize-jest",
-            "file": "shared/modernize-jest"
-          },
-          {
-            "name": "Using Storybook",
-            "id": "modernize-storybook-react",
-            "file": "react/guides/modernize-storybook"
+            "name": "Using Tags",
+            "id": "monorepo-tags",
+            "file": "shared/monorepo-tags"
           },
           {
             "name": "Workspace Schematics",
@@ -985,19 +959,14 @@
             "file": "shared/running-custom-commands"
           },
           {
-            "name": "Nx Plugins",
-            "id": "nx-plugin",
-            "file": "shared/nx-plugin"
+            "name": "Adding Images, Fonts, and Files",
+            "id": "adding-assets-react",
+            "file": "react/guides/adding-assets"
           },
           {
-            "name": "Rebuilding and Retesting What is Affected",
-            "id": "monorepo-affected",
-            "file": "shared/monorepo-affected"
-          },
-          {
-            "name": "Analyzing & Visualizing Workspaces",
-            "id": "monorepo-dependency-diagrams",
-            "file": "shared/monorepo-dependency-diagrams"
+            "name": "Using Environment Variables",
+            "id": "environment-variables",
+            "file": "react/guides/environment-variables"
           },
           {
             "name": "Using Nx at Enterprises",
@@ -1005,14 +974,14 @@
             "file": "shared/monorepo-nx-enterprise"
           },
           {
-            "name": "Imposing Constraints on the Dependency Graph",
-            "id": "monorepo-tags",
-            "file": "shared/monorepo-tags"
+            "name": "Updating Nx",
+            "id": "update",
+            "file": "shared/update"
           },
           {
-            "name": "Using Environment Variables",
-            "id": "environment-variables",
-            "file": "react/guides/environment-variables"
+            "name": "Nx Plugins",
+            "id": "nx-plugin",
+            "file": "shared/nx-plugin"
           }
         ]
       }

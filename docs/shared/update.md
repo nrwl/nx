@@ -10,7 +10,7 @@ We recommend waiting for Nx to update these dependencies for you as we verify th
 
 ### Generate migrations.json
 
-All you you have to do to update Nx to the latest version is run the following:
+All you have to do to update Nx to the latest version is run the following:
 
 ```bash
 nx migrate @nrwl/workspace
