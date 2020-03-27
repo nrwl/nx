@@ -1,6 +1,6 @@
 # Nx Plugin for React
 
-The Nx Plugin for React contains schematics for managing React applications, and libraries within an Nx workspace. It provides:
+The Nx Plugin for React contains schematics for managing React applications and libraries within an Nx workspace. It provides:
 
 - Integration with libraries such as Jest, Cypress, and Storybook.
 - Scaffolding for state management with Redux Toolkit libraries.
