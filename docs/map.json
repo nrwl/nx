@@ -237,7 +237,8 @@
             "itemList": [
               {
                 "id": "nrwl-workspace-overview",
-                "name": "Overview"
+                "name": "Overview",
+                "file": "shared/workspace-plugin"
               },
               {
                 "id": "schematics",
@@ -832,17 +833,6 @@
         ]
       },
       {
-        "name": "Migration",
-        "id": "migration",
-        "itemList": [
-          {
-            "name": "Overview",
-            "id": "migration-overview",
-            "file": "shared/migration-overview"
-          }
-        ]
-      },
-      {
         "name": "CLI",
         "id": "cli",
         "itemList": [
@@ -993,7 +983,8 @@
             "itemList": [
               {
                 "id": "nrwl-workspace-overview",
-                "name": "Overview"
+                "name": "Overview",
+                "file": "shared/workspace-plugin"
               },
               {
                 "id": "schematics",
