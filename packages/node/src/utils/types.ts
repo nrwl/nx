@@ -26,6 +26,7 @@ export interface BuildBuilderOptions {
   optimization?: boolean | OptimizationOptions;
   showCircularDependencies?: boolean;
   maxWorkers?: number;
+  memoryLimit?: number;
   poll?: number;
 
   fileReplacements: FileReplacement[];
