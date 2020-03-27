@@ -41,3 +41,7 @@ Use the `nx list` command to see installed and available plugins. Both Nrwl main
   @flowaccount/nx-serverless - Nx plugin for node/angular-universal schematics and deployment builders in an Nx workspace
   @dev-thought/nx-deploy-it - Nx plugin to deploy applications on your favorite cloud provider
 ```
+
+## See Also
+
+[Nx Plugins](/angular/plugins/community-plugins)
