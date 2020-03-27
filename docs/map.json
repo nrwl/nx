@@ -237,7 +237,8 @@
             "itemList": [
               {
                 "id": "nrwl-workspace-overview",
-                "name": "Overview"
+                "name": "Overview",
+                "file": "shared/workspace-plugin"
               },
               {
                 "id": "schematics",
@@ -982,7 +983,8 @@
             "itemList": [
               {
                 "id": "nrwl-workspace-overview",
-                "name": "Overview"
+                "name": "Overview",
+                "file": "shared/workspace-plugin"
               },
               {
                 "id": "schematics",
