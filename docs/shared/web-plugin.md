@@ -1,6 +1,6 @@
 # Nx Plugin for Web Components
 
-The Nx Plugin for Web Components contains schematics for managing Web Component applications, and libraries within an Nx workspace. It provides:
+The Nx Plugin for Web Components contains schematics for managing Web Component applications and libraries within an Nx workspace. It provides:
 
 - Integration with libraries such as Jest, Cypress, and Storybook.
 - Scaffolding for creating buildable libraries that can be published to npm.
