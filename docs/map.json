@@ -76,17 +76,8 @@
         "id": "migration",
         "itemList": [
           {
-            "name": "Overview",
-            "id": "migration-overview",
-            "file": "shared/migration-overview"
-          },
-          {
             "name": "From Angular CLI",
             "id": "migration-angular"
-          },
-          {
-            "name": "From AngularJS",
-            "id": "migration-angularjs"
           }
         ]
       },
@@ -770,17 +761,6 @@
           {
             "name": "12 - Summary",
             "id": "12-summary"
-          }
-        ]
-      },
-      {
-        "name": "Migration",
-        "id": "migration",
-        "itemList": [
-          {
-            "name": "Overview",
-            "id": "migration-overview",
-            "file": "shared/migration-overview"
           }
         ]
       },
