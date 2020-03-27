@@ -59,7 +59,8 @@ function parseGenerateOpts(
     minimist(args, {
       boolean: ['help', 'dryRun', 'debug', 'force', 'interactive'],
       alias: {
-        dryRun: 'dry-run'
+        dryRun: 'dry-run',
+        d: 'dryRun'
       },
       default: {
         debug: false,
@@ -102,6 +103,7 @@ function parseGenerateOpts(
   };
 
   delete schematicOptions.debug;
+  delete schematicOptions.d;
   delete schematicOptions.dryRun;
   delete schematicOptions.force;
   delete schematicOptions.interactive;
