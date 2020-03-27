@@ -3,7 +3,8 @@ import {
   updateWorkspaceInTree,
   readWorkspaceJson,
   readWorkspace,
-  updateJsonInTree
+  updateJsonInTree,
+  formatFiles
 } from '@nrwl/workspace';
 
 export default function update(): Rule {
@@ -56,6 +57,7 @@ export default function update(): Rule {
         }
       });
       return chain(tsconfigUpdateRules);
-    }
+    },
+    formatFiles()
   ]);
 }

@@ -7,6 +7,7 @@ import {
   Tree
 } from '@angular-devkit/schematics';
 import {
+  formatFiles,
   insert,
   readJsonInTree,
   updateJsonInTree,
@@ -28,7 +29,8 @@ export default function update(): Rule {
     updatePackagesInPackageJson(
       path.join(__dirname, '../../../', 'migrations.json'),
       '8.9.0'
-    )
+    ),
+    formatFiles()
   ]);
 }
 

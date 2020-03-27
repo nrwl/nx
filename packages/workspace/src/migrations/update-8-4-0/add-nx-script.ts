@@ -1,4 +1,6 @@
 import { updateJsonInTree } from '../../utils/ast-utils';
+import { chain } from '@angular-devkit/schematics';
+import { formatFiles } from '@nrwl/workspace';
 
 const addNxScript = updateJsonInTree('package.json', json => {
   if (json.scripts && !json.scripts.nx) {
@@ -8,5 +10,5 @@ const addNxScript = updateJsonInTree('package.json', json => {
 });
 
 export default function() {
-  return addNxScript;
+  return chain([addNxScript, formatFiles()]);
 }

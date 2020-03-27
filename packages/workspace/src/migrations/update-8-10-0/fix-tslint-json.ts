@@ -9,6 +9,7 @@ import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 import { updateJsonInTree } from '../../utils/ast-utils';
 import { getWorkspace } from '../../utils/workspace';
+import { formatFiles } from '@nrwl/workspace';
 
 async function fixTslints(host: Tree) {
   const workspace = await getWorkspace(host);
@@ -32,6 +33,8 @@ async function fixTslints(host: Tree) {
       );
     }
   });
+
+  rules.push(formatFiles());
 
   return chain(rules);
 }

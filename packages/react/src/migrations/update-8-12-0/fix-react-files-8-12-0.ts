@@ -1,12 +1,17 @@
 import { chain, Rule } from '@angular-devkit/schematics';
-import { addDepsToPackageJson, updateWorkspaceInTree } from '@nrwl/workspace';
+import {
+  addDepsToPackageJson,
+  formatFiles,
+  updateWorkspaceInTree
+} from '@nrwl/workspace';
 
 const ignore = require('ignore');
 
 export default function update(): Rule {
   return chain([
     updateWorkspaceInTree(updateBuilderWebpackOption),
-    addDepsToPackageJson({}, { '@babel/preset-react': '7.8.3' })
+    addDepsToPackageJson({}, { '@babel/preset-react': '7.8.3' }),
+    formatFiles()
   ]);
 }
 

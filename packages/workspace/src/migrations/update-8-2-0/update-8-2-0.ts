@@ -1,5 +1,7 @@
 import { updateWorkspace } from '../../utils/workspace';
 import { join, JsonArray, normalize } from '@angular-devkit/core';
+import { formatFiles } from '@nrwl/workspace';
+import { chain } from '@angular-devkit/schematics';
 
 const addExcludes = updateWorkspace(workspace => {
   workspace.projects.forEach(project => {
@@ -21,5 +23,5 @@ const addExcludes = updateWorkspace(workspace => {
 });
 
 export default function() {
-  return addExcludes;
+  return chain([addExcludes, formatFiles()]);
 }

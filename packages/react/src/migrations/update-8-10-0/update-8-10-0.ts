@@ -6,6 +6,7 @@ import {
   Tree
 } from '@angular-devkit/schematics';
 import {
+  formatFiles,
   offsetFromRoot,
   readWorkspace,
   updateJsonInTree,
@@ -45,8 +46,8 @@ function displayInformation(host: Tree, context: SchematicContext) {
 
 function addCustomTypings(host: Tree) {
   const workspace = readWorkspace(host);
-  return chain(
-    Object.keys(workspace.projects).map(k => {
+  return chain([
+    ...Object.keys(workspace.projects).map(k => {
       const p = workspace.projects[k];
       if (p.projectType !== 'application') {
         return noop();
@@ -68,8 +69,9 @@ function addCustomTypings(host: Tree) {
       } else {
         return noop();
       }
-    })
-  );
+    }),
+    formatFiles()
+  ]);
 }
 
 function updateBuilderWebpackOption(json) {

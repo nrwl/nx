@@ -1,5 +1,5 @@
 import { chain } from '@angular-devkit/schematics';
-import { updateJsonInTree } from '@nrwl/workspace';
+import { formatFiles, updateJsonInTree } from '@nrwl/workspace';
 
 const addCacheableOperations = updateJsonInTree('nx.json', nxJson => {
   nxJson.tasksRunnerOptions = nxJson.tasksRunnerOptions || {};
@@ -47,5 +47,5 @@ const addCacheableOperations = updateJsonInTree('nx.json', nxJson => {
 });
 
 export default function() {
-  return chain([addCacheableOperations]);
+  return chain([addCacheableOperations, formatFiles()]);
 }
