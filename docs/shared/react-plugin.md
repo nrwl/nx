@@ -69,8 +69,8 @@ myorg/
 
 ## See Also
 
-- [Using Cypress](/react/guides/modernize-cypress)
-- [Using Jest](/react/guides/modernize-jest)
+- [Using Cypress](/react/plugins_cypress/overview)
+- [Using Jest](/react/plugins_jest/overview)
 - [Using Storybook](/react/guides/modernize-storybook-react)
 
 ## Schematics
