@@ -250,19 +250,23 @@
                 "itemList": [
                   {
                     "name": "library",
-                    "id": "library"
+                    "id": "library",
+                    "file": "angular/api-workspace/schematics/library"
                   },
                   {
                     "name": "move",
-                    "id": "move"
+                    "id": "move",
+                    "file": "angular/api-workspace/schematics/move"
                   },
                   {
                     "name": "remove",
-                    "id": "remove"
+                    "id": "remove",
+                    "file": "angular/api-workspace/schematics/remove"
                   },
                   {
                     "name": "workspace-schematic",
-                    "id": "workspace-schematic"
+                    "id": "workspace-schematic",
+                    "file": "angular/api-workspace/schematics/workspace-schematic"
                   }
                 ]
               },
@@ -272,7 +276,8 @@
                 "itemList": [
                   {
                     "name": "run-commands",
-                    "id": "run-commands"
+                    "id": "run-commands",
+                    "file": "angular/api-workspace/builders/run-commands"
                   }
                 ]
               }
@@ -283,12 +288,18 @@
             "id": "web",
             "itemList": [
               {
+                "id": "overview",
+                "name": "Overview",
+                "file": "shared/web-plugin"
+              },
+              {
                 "id": "schematics",
                 "name": "Schematics",
                 "itemList": [
                   {
                     "name": "application",
-                    "id": "application"
+                    "id": "application",
+                    "file": "angular/api-web/schematics/application"
                   }
                 ]
               },
@@ -298,15 +309,18 @@
                 "itemList": [
                   {
                     "name": "build",
-                    "id": "build"
+                    "id": "build",
+                    "file": "angular/api-web/builders/build"
                   },
                   {
                     "name": "dev-server",
-                    "id": "dev-server"
+                    "id": "dev-server",
+                    "file": "angular/api-web/builders/dev-server"
                   },
                   {
                     "name": "package",
-                    "id": "package"
+                    "id": "package",
+                    "file": "angular/api-web/builders/package"
                   }
                 ]
               }
@@ -317,8 +331,9 @@
             "id": "angular",
             "itemList": [
               {
-                "id": "plugin-overview",
-                "name": "Overview"
+                "id": "overview",
+                "name": "Overview",
+                "file": "shared/angular-plugin"
               },
               {
                 "id": "schematics",
@@ -326,43 +341,53 @@
                 "itemList": [
                   {
                     "name": "application",
-                    "id": "application"
+                    "id": "application",
+                    "file": "angular/api-angular/schematics/application"
                   },
                   {
                     "name": "downgrade-module",
-                    "id": "downgrade-module"
+                    "id": "downgrade-module",
+                    "file": "angular/api-angular/schematics/downgrade-module"
                   },
                   {
                     "name": "karma-project",
-                    "id": "karma-project"
+                    "id": "karma-project",
+                    "file": "angular/api-angular/schematics/karma-project"
                   },
                   {
                     "name": "karma",
-                    "id": "karma"
+                    "id": "karma",
+                    "file": "angular/api-angular/schematics/karma"
                   },
                   {
                     "name": "library",
-                    "id": "library"
+                    "id": "library",
+                    "file": "angular/api-angular/schematics/library"
                   },
                   {
                     "name": "move",
-                    "id": "move"
+                    "id": "move",
+                    "file": "angular/api-angular/schematics/move"
                   },
                   {
                     "name": "ngrx",
-                    "id": "ngrx"
+                    "id": "ngrx",
+                    "file": "angular/api-angular/schematics/ngrx"
                   },
                   {
                     "name": "stories",
-                    "id": "stories"
+                    "id": "stories",
+                    "file": "angular/api-angular/schematics/stories"
                   },
                   {
                     "name": "storybook-configuration",
-                    "id": "storybook-configuration"
+                    "id": "storybook-configuration",
+                    "file": "angular/api-angular/schematics/storybook-configuration"
                   },
                   {
                     "name": "upgrade-module",
-                    "id": "upgrade-module"
+                    "id": "upgrade-module",
+                    "file": "angular/api-angular/schematics/upgrade-module"
                   }
                 ]
               },
@@ -372,7 +397,8 @@
                 "itemList": [
                   {
                     "name": "package",
-                    "id": "package"
+                    "id": "package",
+                    "file": "angular/api-angular/builders/package"
                   }
                 ]
               }
@@ -383,28 +409,38 @@
             "id": "react",
             "itemList": [
               {
+                "id": "overview",
+                "name": "Overview",
+                "file": "shared/react-plugin"
+              },
+              {
                 "id": "schematics",
                 "name": "Schematics",
                 "itemList": [
                   {
                     "name": "application",
-                    "id": "application"
+                    "id": "application",
+                    "file": "angular/api-react/schematics/application"
                   },
                   {
                     "name": "component",
-                    "id": "component"
+                    "id": "component",
+                    "file": "angular/api-react/schematics/component"
                   },
                   {
                     "name": "library",
-                    "id": "library"
+                    "id": "library",
+                    "file": "angular/api-react/schematics/library"
                   },
                   {
                     "name": "redux",
-                    "id": "redux"
+                    "id": "redux",
+                    "file": "angular/api-react/schematics/redux"
                   },
                   {
                     "name": "storybook-configuration",
-                    "id": "storybook-configuration"
+                    "id": "storybook-configuration",
+                    "file": "angular/api-react/schematics/storybook-configuration"
                   }
                 ]
               }
@@ -420,7 +456,8 @@
                 "itemList": [
                   {
                     "name": "jest",
-                    "id": "jest"
+                    "id": "jest",
+                    "file": "angular/api-jest/builders/jest"
                   }
                 ]
               }
@@ -436,7 +473,8 @@
                 "itemList": [
                   {
                     "name": "cypress",
-                    "id": "cypress"
+                    "id": "cypress",
+                    "file": "angular/api-cypress/builders/cypress"
                   }
                 ]
               }
@@ -457,11 +495,13 @@
                 "itemList": [
                   {
                     "name": "application",
-                    "id": "application"
+                    "id": "application",
+                    "file": "angular/api-node/schematics/application"
                   },
                   {
                     "name": "library",
-                    "id": "library"
+                    "id": "library",
+                    "file": "angular/api-node/schematics/library"
                   }
                 ]
               },
@@ -471,15 +511,18 @@
                 "itemList": [
                   {
                     "name": "build",
-                    "id": "build"
+                    "id": "build",
+                    "file": "angular/api-node/builders/build"
                   },
                   {
                     "name": "execute",
-                    "id": "execute"
+                    "id": "execute",
+                    "file": "angular/api-node/builders/execute"
                   },
                   {
                     "name": "package",
-                    "id": "package"
+                    "id": "package",
+                    "file": "angular/api-node/builders/package"
                   }
                 ]
               }
@@ -500,11 +543,13 @@
                 "itemList": [
                   {
                     "name": "application",
-                    "id": "application"
+                    "id": "application",
+                    "file": "angular/api-express/schematics/application"
                   },
                   {
                     "name": "init",
-                    "id": "init"
+                    "id": "init",
+                    "file": "angular/api-express/schematics/init"
                   }
                 ]
               }
@@ -525,11 +570,13 @@
                 "itemList": [
                   {
                     "name": "application",
-                    "id": "application"
+                    "id": "application",
+                    "file": "angular/api-next/schematics/application"
                   },
                   {
                     "name": "library",
-                    "id": "library"
+                    "id": "library",
+                    "file": "angular/api-next/schematics/library"
                   }
                 ]
               }
@@ -540,12 +587,18 @@
             "id": "next",
             "itemList": [
               {
+                "id": "overview",
+                "name": "Overview",
+                "file": "shared/next-plugin"
+              },
+              {
                 "id": "schematics",
                 "name": "Schematics",
                 "itemList": [
                   {
                     "name": "application",
-                    "id": "application"
+                    "id": "application",
+                    "file": "angular/api-next/schematics/application"
                   }
                 ]
               },
@@ -555,15 +608,18 @@
                 "itemList": [
                   {
                     "name": "build",
-                    "id": "build"
+                    "id": "build",
+                    "file": "angular/api-next/builders/build"
                   },
                   {
                     "name": "dev-server",
-                    "id": "dev-server"
+                    "id": "dev-server",
+                    "file": "angular/api-next/builders/dev-server"
                   },
                   {
                     "name": "export",
-                    "id": "export"
+                    "id": "export",
+                    "file": "angular/api-next/builders/export"
                   }
                 ]
               }
@@ -897,6 +953,395 @@
             "name": "Community Plugins",
             "id": "community-plugins",
             "file": "shared/community-plugins"
+          },
+          {
+            "name": "Workspace",
+            "id": "workspace",
+            "itemList": [
+              {
+                "id": "nrwl-workspace-overview",
+                "name": "Overview"
+              },
+              {
+                "id": "schematics",
+                "name": "Schematics",
+                "itemList": [
+                  {
+                    "name": "library",
+                    "id": "library",
+                    "file": "react/api-workspace/schematics/library"
+                  },
+                  {
+                    "name": "move",
+                    "id": "move",
+                    "file": "react/api-workspace/schematics/move"
+                  },
+                  {
+                    "name": "remove",
+                    "id": "remove",
+                    "file": "react/api-workspace/schematics/remove"
+                  },
+                  {
+                    "name": "workspace-schematic",
+                    "id": "workspace-schematic",
+                    "file": "react/api-workspace/schematics/workspace-schematic"
+                  }
+                ]
+              },
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "run-commands",
+                    "id": "run-commands",
+                    "file": "react/api-workspace/builders/run-commands"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "web",
+            "id": "web",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "file": "shared/web-plugin"
+              },
+              {
+                "id": "schematics",
+                "name": "Schematics",
+                "itemList": [
+                  {
+                    "name": "application",
+                    "id": "application",
+                    "file": "react/api-web/schematics/application"
+                  }
+                ]
+              },
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "build",
+                    "id": "build",
+                    "file": "react/api-web/builders/build"
+                  },
+                  {
+                    "name": "dev-server",
+                    "id": "dev-server",
+                    "file": "react/api-web/builders/dev-server"
+                  },
+                  {
+                    "name": "package",
+                    "id": "package",
+                    "file": "react/api-web/builders/package"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "angular",
+            "id": "angular",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "file": "shared/angular-plugin"
+              },
+              {
+                "id": "schematics",
+                "name": "Schematics",
+                "itemList": [
+                  {
+                    "name": "application",
+                    "id": "application",
+                    "file": "react/api-angular/schematics/application"
+                  },
+                  {
+                    "name": "downgrade-module",
+                    "id": "downgrade-module",
+                    "file": "react/api-angular/schematics/downgrade-module"
+                  },
+                  {
+                    "name": "karma-project",
+                    "id": "karma-project",
+                    "file": "react/api-angular/schematics/karma-project"
+                  },
+                  {
+                    "name": "karma",
+                    "id": "karma",
+                    "file": "react/api-angular/schematics/karma"
+                  },
+                  {
+                    "name": "library",
+                    "id": "library",
+                    "file": "react/api-angular/schematics/library"
+                  },
+                  {
+                    "name": "move",
+                    "id": "move",
+                    "file": "react/api-angular/schematics/move"
+                  },
+                  {
+                    "name": "ngrx",
+                    "id": "ngrx",
+                    "file": "react/api-angular/schematics/ngrx"
+                  },
+                  {
+                    "name": "stories",
+                    "id": "stories",
+                    "file": "react/api-angular/schematics/stories"
+                  },
+                  {
+                    "name": "storybook-configuration",
+                    "id": "storybook-configuration",
+                    "file": "react/api-angular/schematics/storybook-configuration"
+                  },
+                  {
+                    "name": "upgrade-module",
+                    "id": "upgrade-module",
+                    "file": "react/api-angular/schematics/upgrade-module"
+                  }
+                ]
+              },
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "package",
+                    "id": "package",
+                    "file": "react/api-angular/builders/package"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "react",
+            "id": "react",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "file": "shared/react-plugin"
+              },
+              {
+                "id": "schematics",
+                "name": "Schematics",
+                "itemList": [
+                  {
+                    "name": "application",
+                    "id": "application",
+                    "file": "react/api-react/schematics/application"
+                  },
+                  {
+                    "name": "component",
+                    "id": "component",
+                    "file": "react/api-react/schematics/component"
+                  },
+                  {
+                    "name": "library",
+                    "id": "library",
+                    "file": "react/api-react/schematics/library"
+                  },
+                  {
+                    "name": "redux",
+                    "id": "redux",
+                    "file": "react/api-react/schematics/redux"
+                  },
+                  {
+                    "name": "storybook-configuration",
+                    "id": "storybook-configuration",
+                    "file": "react/api-react/schematics/storybook-configuration"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "jest",
+            "id": "jest",
+            "itemList": [
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "jest",
+                    "id": "jest",
+                    "file": "react/api-jest/builders/jest"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "cypress",
+            "id": "cypress",
+            "itemList": [
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "cypress",
+                    "id": "cypress",
+                    "file": "react/api-cypress/builders/cypress"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "node",
+            "id": "node",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "file": "shared/node-plugin"
+              },
+              {
+                "id": "schematics",
+                "name": "Schematics",
+                "itemList": [
+                  {
+                    "name": "application",
+                    "id": "application",
+                    "file": "react/api-node/schematics/application"
+                  },
+                  {
+                    "name": "library",
+                    "id": "library",
+                    "file": "react/api-node/schematics/library"
+                  }
+                ]
+              },
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "build",
+                    "id": "build",
+                    "file": "react/api-node/builders/build"
+                  },
+                  {
+                    "name": "execute",
+                    "id": "execute",
+                    "file": "react/api-node/builders/execute"
+                  },
+                  {
+                    "name": "package",
+                    "id": "package",
+                    "file": "react/api-node/builders/package"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "express",
+            "id": "express",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "file": "shared/express-plugin"
+              },
+              {
+                "id": "schematics",
+                "name": "Schematics",
+                "itemList": [
+                  {
+                    "name": "application",
+                    "id": "application",
+                    "file": "react/api-express/schematics/application"
+                  },
+                  {
+                    "name": "init",
+                    "id": "init",
+                    "file": "react/api-express/schematics/init"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "nest",
+            "id": "nest",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "file": "shared/nest-plugin"
+              },
+              {
+                "id": "schematics",
+                "name": "Schematics",
+                "itemList": [
+                  {
+                    "name": "application",
+                    "id": "application",
+                    "file": "react/api-next/schematics/application"
+                  },
+                  {
+                    "name": "library",
+                    "id": "library",
+                    "file": "react/api-next/schematics/library"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "next",
+            "id": "next",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "file": "shared/next-plugin"
+              },
+              {
+                "id": "schematics",
+                "name": "Schematics",
+                "itemList": [
+                  {
+                    "name": "application",
+                    "id": "application",
+                    "file": "react/api-next/schematics/application"
+                  }
+                ]
+              },
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "build",
+                    "id": "build",
+                    "file": "react/api-next/builders/build"
+                  },
+                  {
+                    "name": "dev-server",
+                    "id": "dev-server",
+                    "file": "react/api-next/builders/dev-server"
+                  },
+                  {
+                    "name": "export",
+                    "id": "export",
+                    "file": "react/api-next/builders/export"
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
