@@ -1,4 +1,4 @@
-# Nx Plugin for Angular
+# Angular Plugin
 
 The Nx Plugin for Angular contains builders, schematics, and utilities for managing Angular applications, and libraries within an Nx workspace. It provides:
 
@@ -7,6 +7,20 @@ The Nx Plugin for Angular contains builders, schematics, and utilities for manag
 - Scaffolding for upgrading AngularJS applications.
 - Scaffolding for creating buildable libraries that can be published to npm.
 - Utilities for automatic workspace refactoring.
+
+## Adding the Angular plugin
+
+Adding the Angular plugin to a workspace can be done with the following:
+
+```shell script
+#yarn
+yarn add -D @nrwl/angular
+```
+
+```shell script
+#npm
+npm install -D @nrwl/angular
+```
 
 ## Angular Projects in an Nx Workspace
 
@@ -73,7 +87,7 @@ myorg/
 
 ## Builders
 
-- package - Bundles artifacts for a buildable library that can be distributed as an NPM package.
+- [package](/angular/api/angular/builders/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
 
 ## Schematics
 
