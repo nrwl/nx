@@ -21,7 +21,7 @@ yarn add -D @nrwl/react
 npm install -D @nrwl/react
 ```
 
-> Note: You can create new workspace that has React set up by doing `npx create-nx-workspace@latest --preset=react`
+> Note: You can create a new workspace that has React set up by doing `npx create-nx-workspace@latest --preset=react`
 
 The file structure for a React application looks like:
 
