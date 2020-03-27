@@ -1,6 +1,6 @@
 # Next.js Plugin
 
-The Nx Plugin for Next.js contains builders, and schematics for managing Next.js applications, and libraries within an Nx workspace. It provides:
+The Nx Plugin for Next.js contains builders and schematics for managing Next.js applications and libraries within an Nx workspace. It provides:
 
 - Scaffolding for creating, building, serving, linting, and testing Next.js applications.
 - Integration with building, serving, and exporting a Next.js application.
