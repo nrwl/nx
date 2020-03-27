@@ -1,5 +1,6 @@
-import { Rule } from '@angular-devkit/schematics';
+import { chain, Rule } from '@angular-devkit/schematics';
 import { updateWorkspace } from '@nrwl/workspace/src/utils/workspace';
+import { formatFiles } from '@nrwl/workspace';
 
 const convertToArray = updateWorkspace(workspace => {
   workspace.projects.forEach(project => {
@@ -16,5 +17,5 @@ const convertToArray = updateWorkspace(workspace => {
 });
 
 export default function(): Rule {
-  return convertToArray;
+  return chain([convertToArray, formatFiles()]);
 }

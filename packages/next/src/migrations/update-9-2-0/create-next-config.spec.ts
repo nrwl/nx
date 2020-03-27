@@ -63,7 +63,10 @@ describe('create-next-config-9.2.0', () => {
 
     // Creates config for Next apps
     const content = tree.read('apps/demo1/next.config.js').toString();
-    expect(content).toContain('withStylus(withLess(withSass(withCSS({');
+    expect(content).toContain('withStylus(');
+    expect(content).toContain('withLess(');
+    expect(content).toContain('withSass(');
+    expect(content).toContain('withCSS(');
 
     // Doesn't create config for non-Next apps
     expect(tree.exists('apps/demo2/next.config.js')).toBe(false);

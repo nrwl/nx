@@ -1,5 +1,5 @@
 import { chain, noop, Rule, Tree } from '@angular-devkit/schematics';
-import { readWorkspace, updateJsonInTree } from '@nrwl/workspace';
+import { formatFiles, readWorkspace, updateJsonInTree } from '@nrwl/workspace';
 import * as path from 'path';
 
 const ignore = require('ignore');
@@ -7,8 +7,8 @@ const ignore = require('ignore');
 export default function update(): Rule {
   return (host: Tree) => {
     const workspace = readWorkspace(host);
-    return chain(
-      Object.keys(workspace.projects).map(k => {
+    return chain([
+      ...Object.keys(workspace.projects).map(k => {
         const p = workspace.projects[k];
         if (p.projectType !== 'application') {
           return noop();
@@ -23,8 +23,9 @@ export default function update(): Rule {
         } else {
           return noop();
         }
-      })
-    );
+      }),
+      formatFiles()
+    ]);
   };
 }
 

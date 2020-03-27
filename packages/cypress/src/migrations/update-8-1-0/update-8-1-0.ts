@@ -4,7 +4,7 @@ import {
   SchematicContext,
   Tree
 } from '@angular-devkit/schematics';
-import { updateJsonInTree } from '@nrwl/workspace';
+import { formatFiles, updateJsonInTree } from '@nrwl/workspace';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 function displayInformation(host: Tree, context: SchematicContext) {
@@ -28,6 +28,7 @@ export default function(): Rule {
 
       return json;
     }),
-    displayInformation
+    displayInformation,
+    formatFiles()
   ]);
 }

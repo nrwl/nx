@@ -64,5 +64,5 @@ function updateNgrx(updateDeps: TaskId[]) {
 
 export default function() {
   const { rule: updateCLIRule, tasks } = updateCLI();
-  return chain([updateCLIRule, updateNgrx(tasks)]);
+  return chain([updateCLIRule, updateNgrx(tasks), formatFiles()]);
 }

@@ -1,5 +1,5 @@
 import { chain, SchematicContext } from '@angular-devkit/schematics';
-import { addUpdateTask } from '@nrwl/workspace';
+import { addUpdateTask, formatFiles } from '@nrwl/workspace';
 import { RunSchematicTask } from '@angular-devkit/schematics/tasks';
 import { join } from 'path';
 
@@ -14,7 +14,8 @@ export default function() {
     );
     return chain([
       addUpdateTask('@angular/core', '9.0.0', [postInstallTask]),
-      addUpdateTask('@angular/cli', '9.0.1', [postInstallTask])
+      addUpdateTask('@angular/cli', '9.0.1', [postInstallTask]),
+      formatFiles()
     ]);
   };
 }

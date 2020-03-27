@@ -1,4 +1,6 @@
 import { updateJsonInTree } from '../../utils/ast-utils';
+import { formatFiles } from '@nrwl/workspace';
+import { chain } from '@angular-devkit/schematics';
 
 const updateLint = updateJsonInTree('package.json', json => {
   if (
@@ -15,5 +17,5 @@ const updateLint = updateJsonInTree('package.json', json => {
 });
 
 export default function() {
-  return updateLint;
+  return chain([updateLint, formatFiles()]);
 }

@@ -1,5 +1,5 @@
-import { Rule, Tree } from '@angular-devkit/schematics';
-import { readWorkspace } from '@nrwl/workspace';
+import { chain, Rule, Tree } from '@angular-devkit/schematics';
+import { formatFiles, readWorkspace } from '@nrwl/workspace';
 import { CONFIG_FILE } from 'next/dist/next-server/lib/constants';
 import { join } from 'path';
 
@@ -23,22 +23,25 @@ module.exports = withStylus(withLess(withSass(withCSS({
 `;
 
 export default function update(): Rule {
-  return (host: Tree) => {
-    const workspaceJson = readWorkspace(host);
-    const nextProjects = Object.keys(workspaceJson.projects)
-      .map(name => {
-        const p = workspaceJson.projects[name];
-        const buildBuilder =
-          p.architect && p.architect.build && p.architect.build.builder;
-        return buildBuilder === '@nrwl/next:build' ? p : null;
-      })
-      .filter(Boolean);
+  return chain([
+    (host: Tree) => {
+      const workspaceJson = readWorkspace(host);
+      const nextProjects = Object.keys(workspaceJson.projects)
+        .map(name => {
+          const p = workspaceJson.projects[name];
+          const buildBuilder =
+            p.architect && p.architect.build && p.architect.build.builder;
+          return buildBuilder === '@nrwl/next:build' ? p : null;
+        })
+        .filter(Boolean);
 
-    nextProjects.forEach(p => {
-      const configPath = join(p.root, CONFIG_FILE);
-      if (!host.exists(configPath)) {
-        host.create(configPath, defaultConfig);
-      }
-    });
-  };
+      nextProjects.forEach(p => {
+        const configPath = join(p.root, CONFIG_FILE);
+        if (!host.exists(configPath)) {
+          host.create(configPath, defaultConfig);
+        }
+      });
+    },
+    formatFiles()
+  ]);
 }

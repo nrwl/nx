@@ -1,5 +1,5 @@
-import { SchematicContext, Tree } from '@angular-devkit/schematics';
-import { readWorkspace, updateJsonInTree } from '@nrwl/workspace';
+import { chain, SchematicContext, Tree } from '@angular-devkit/schematics';
+import { formatFiles, readWorkspace, updateJsonInTree } from '@nrwl/workspace';
 
 function updateLintConfigurations(host: Tree, context: SchematicContext) {
   const workspaceJson = readWorkspace(host);
@@ -52,5 +52,5 @@ function updateJson(visitor, path, host, context) {
 }
 
 export default function() {
-  return updateLintConfigurations;
+  return chain([updateLintConfigurations, formatFiles()]);
 }

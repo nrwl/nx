@@ -1,4 +1,4 @@
-import { updateJsonInTree } from '@nrwl/workspace';
+import { formatFiles, updateJsonInTree } from '@nrwl/workspace';
 import { chain, SchematicContext } from '@angular-devkit/schematics';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
@@ -16,5 +16,5 @@ const addInstall = (_: any, context: SchematicContext) => {
 };
 
 export default function() {
-  return chain([updateCypress, addInstall]);
+  return chain([updateCypress, addInstall, formatFiles()]);
 }

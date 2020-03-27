@@ -14,7 +14,6 @@ export default function(): Rule {
       path.join(__dirname, '../../..', 'migrations.json'),
       '8120'
     ),
-    // addInstall,
     formatFiles()
   ]);
 }
