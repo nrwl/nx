@@ -76,6 +76,7 @@ function patchPackageJsonDeps(addWorkspace = true) {
   const angularPath = path.join(getCwd(), 'build', 'packages', 'angular');
   const reactPath = path.join(getCwd(), 'build', 'packages', 'react');
   const storybookPath = path.join(getCwd(), 'build', 'packages', 'storybook');
+  const jestPath = path.join(getCwd(), 'build', 'packages', 'jest');
 
   if (addWorkspace) {
     p.devDependencies['@nrwl/workspace'] = `file:${workspacePath}`;
@@ -83,6 +84,7 @@ function patchPackageJsonDeps(addWorkspace = true) {
   p.devDependencies['@nrwl/angular'] = `file:${angularPath}`;
   p.devDependencies['@nrwl/react'] = `file:${reactPath}`;
   p.devDependencies['@nrwl/storybook'] = `file:${storybookPath}`;
+  p.devDependencies['@nrwl/jest'] = `file:${jestPath}`;
   writeFileSync(tmpProjPath('package.json'), JSON.stringify(p, null, 2));
 }
 
@@ -211,6 +213,7 @@ export function copyMissingPackages(): void {
 
     'ng-packagr',
     'cypress',
+    '@jest',
     'jest',
     '@types/jest',
     '@types/node',
