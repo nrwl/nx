@@ -576,10 +576,6 @@
         "id": "guides",
         "itemList": [
           {
-            "name": "Transitioning to Nx",
-            "id": "transition-to-nx"
-          },
-          {
             "name": "Computation Caching",
             "id": "computation-caching",
             "file": "shared/computation-caching"
