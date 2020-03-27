@@ -149,6 +149,7 @@ export default function(schema: Schema): Rule {
     const options = normalizeOptions(schema);
     return chain([
       init({
+        ...options,
         skipFormat: true
       }),
       addLintFiles(options.appProjectRoot, options.linter),

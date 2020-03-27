@@ -1,4 +1,4 @@
-import { chain } from '@angular-devkit/schematics';
+import { chain, noop } from '@angular-devkit/schematics';
 import { addDepsToPackageJson, addPackageWithInit } from '@nrwl/workspace';
 import {
   nextVersion,
@@ -20,10 +20,14 @@ const updateDependencies = addDepsToPackageJson(
 export default function(schema: Schema) {
   return chain([
     setDefaultCollection('@nrwl/next'),
-    addPackageWithInit('@nrwl/jest'),
-    addPackageWithInit('@nrwl/cypress'),
-    addPackageWithInit('@nrwl/web'),
-    addPackageWithInit('@nrwl/react'),
+    schema.unitTestRunner === 'jest'
+      ? addPackageWithInit('@nrwl/jest')
+      : noop(),
+    schema.e2eTestRunner === 'cypress'
+      ? addPackageWithInit('@nrwl/cypress')
+      : noop(),
+    addPackageWithInit('@nrwl/web', schema),
+    addPackageWithInit('@nrwl/react', schema),
     updateDependencies
   ]);
 }

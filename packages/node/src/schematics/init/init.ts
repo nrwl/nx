@@ -1,4 +1,4 @@
-import { chain, Rule } from '@angular-devkit/schematics';
+import { chain, noop, Rule } from '@angular-devkit/schematics';
 import {
   addPackageWithInit,
   formatFiles,
@@ -19,7 +19,9 @@ function updateDependencies(): Rule {
 export default function(schema: Schema) {
   return chain([
     setDefaultCollection('@nrwl/node'),
-    addPackageWithInit('@nrwl/jest'),
+    schema.unitTestRunner === 'jest'
+      ? addPackageWithInit('@nrwl/jest')
+      : noop(),
     updateDependencies(),
     formatFiles(schema)
   ]);

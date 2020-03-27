@@ -309,6 +309,7 @@ describe('app', () => {
         { name: 'myApp', unitTestRunner: 'none' },
         appTree
       );
+      expect(tree.exists('jest.config.js')).toBeFalsy();
       expect(tree.exists('apps/my-app/src/app/app.spec.tsx')).toBeFalsy();
       expect(tree.exists('apps/my-app/tsconfig.spec.json')).toBeFalsy();
       expect(tree.exists('apps/my-app/jest.config.js')).toBeFalsy();

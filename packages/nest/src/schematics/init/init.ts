@@ -1,4 +1,4 @@
-import { chain, Rule } from '@angular-devkit/schematics';
+import { chain, noop, Rule } from '@angular-devkit/schematics';
 import {
   addDepsToPackageJson,
   addPackageWithInit,
@@ -40,8 +40,10 @@ function moveDependency(): Rule {
 export default function(schema: Schema) {
   return chain([
     setDefaultCollection('@nrwl/nest'),
-    addPackageWithInit('@nrwl/node'),
-    addPackageWithInit('@nrwl/jest'),
+    addPackageWithInit('@nrwl/node', schema),
+    schema.unitTestRunner === 'jest'
+      ? addPackageWithInit('@nrwl/jest')
+      : noop(),
     updateDependencies,
     moveDependency(),
     formatFiles(schema)
