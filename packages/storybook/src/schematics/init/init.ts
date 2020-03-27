@@ -4,21 +4,26 @@ import {
   SchematicContext,
   Tree
 } from '@angular-devkit/schematics';
-import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
+import {
+  addDepsToPackageJson,
+  readJsonInTree,
+  updateJsonInTree
+} from '@nrwl/workspace';
 import {
   babelLoaderVersion,
   babelCoreVersion,
-  storybookVersion
+  storybookVersion,
+  nxVersion
 } from '../../utils/versions';
 import { Schema } from './schema';
 
 function checkDependenciesInstalled(): Rule {
   return (host: Tree, context: SchematicContext): Rule => {
     const packageJson = readJsonInTree(host, 'package.json');
-    const devDependencies = { ...packageJson.devDependencies };
-    const dependencies = { ...packageJson.dependencies };
+    const devDependencies = {};
+    const dependencies = {};
     if (!packageJson.devDependencies['@storybook/angular']) {
-      devDependencies['@nrwl/storybook'] = '*';
+      devDependencies['@nrwl/storybook'] = nxVersion;
       devDependencies['@storybook/angular'] = storybookVersion;
       devDependencies['@storybook/react'] = storybookVersion;
       devDependencies['@storybook/addon-knobs'] = storybookVersion;
@@ -31,15 +36,7 @@ function checkDependenciesInstalled(): Rule {
     ) {
       devDependencies['@angular/forms'] = '*';
     }
-    if (packageJson.dependencies['@nrwl/storybook']) {
-      delete dependencies['@nrwl/storybook'];
-    }
-
-    return updateJsonInTree('package.json', json => {
-      json.dependencies = dependencies;
-      json.devDependencies = devDependencies;
-      return json;
-    });
+    return addDepsToPackageJson(dependencies, devDependencies);
   };
 }
 
@@ -72,6 +69,22 @@ export const addCacheableOperation = updateJsonInTree('nx.json', nxJson => {
   return nxJson;
 });
 
+const moveToDevDependencies = updateJsonInTree('package.json', packageJson => {
+  packageJson.dependencies = packageJson.dependencies || {};
+  packageJson.devDependencies = packageJson.devDependencies || {};
+
+  if (packageJson.dependencies['@nrwl/storybook']) {
+    packageJson.devDependencies['@nrwl/storybook'] =
+      packageJson.dependencies['@nrwl/storybook'];
+    delete packageJson.dependencies['@nrwl/storybook'];
+  }
+  return packageJson;
+});
+
 export default function(schema: Schema) {
-  return chain([checkDependenciesInstalled(), addCacheableOperation]);
+  return chain([
+    checkDependenciesInstalled(),
+    moveToDevDependencies,
+    addCacheableOperation
+  ]);
 }
