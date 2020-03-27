@@ -832,17 +832,6 @@
         ]
       },
       {
-        "name": "Migration",
-        "id": "migration",
-        "itemList": [
-          {
-            "name": "Overview",
-            "id": "migration-overview",
-            "file": "shared/migration-overview"
-          }
-        ]
-      },
-      {
         "name": "CLI",
         "id": "cli",
         "itemList": [
