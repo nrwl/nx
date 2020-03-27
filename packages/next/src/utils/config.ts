@@ -1,8 +1,4 @@
 import { offsetFromRoot } from '@nrwl/workspace';
-import * as withCSS from '@zeit/next-css';
-import * as withLESS from '@zeit/next-less';
-import * as withSASS from '@zeit/next-sass';
-import * as withSTYLUS from '@zeit/next-stylus';
 import {
   PHASE_DEVELOPMENT_SERVER,
   PHASE_EXPORT,
@@ -13,7 +9,12 @@ import loadConfig from 'next/dist/next-server/server/config';
 import { resolve } from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
-import { FileReplacement } from './types';
+import {
+  FileReplacement,
+  NextBuildBuilderOptions,
+  NextServeBuilderOptions
+} from './types';
+import { BuilderContext } from '@angular-devkit/architect';
 
 export function createWebpackConfig(
   workspaceRoot: string,
@@ -88,27 +89,24 @@ export function createWebpackConfig(
 }
 
 export function prepareConfig(
-  workspaceRoot: string,
-  projectRoot: string,
-  outputPath: string,
-  fileReplacements: FileReplacement[],
   phase:
     | typeof PHASE_PRODUCTION_BUILD
     | typeof PHASE_EXPORT
     | typeof PHASE_DEVELOPMENT_SERVER
-    | typeof PHASE_PRODUCTION_SERVER
+    | typeof PHASE_PRODUCTION_SERVER,
+  options: NextBuildBuilderOptions,
+  context: BuilderContext
 ) {
-  const config = withSTYLUS(
-    withSASS(withLESS(withCSS(loadConfig(phase, projectRoot, null))))
-  );
+  const config = loadConfig(phase, options.root, null);
   // Yes, these do have different capitalisation...
-  config.distDir = `${offsetFromRoot(projectRoot)}${outputPath}`;
-  config.outdir = `${offsetFromRoot(projectRoot)}${outputPath}`;
+  config.distDir = `${offsetFromRoot(options.root)}${options.outputPath}`;
+  config.outdir = `${offsetFromRoot(options.root)}${options.outputPath}`;
   const userWebpack = config.webpack;
   config.webpack = (a, b) =>
-    createWebpackConfig(workspaceRoot, projectRoot, fileReplacements)(
-      userWebpack(a, b),
-      b
-    );
+    createWebpackConfig(
+      context.workspaceRoot,
+      options.root,
+      options.fileReplacements
+    )(userWebpack ? userWebpack(a, b) : a, b);
   return config;
 }

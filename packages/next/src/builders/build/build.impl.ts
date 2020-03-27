@@ -22,12 +22,6 @@ export function run(
   context: BuilderContext
 ): Observable<BuilderOutput> {
   const root = path.resolve(context.workspaceRoot, options.root);
-  const config = prepareConfig(
-    context.workspaceRoot,
-    options.root,
-    options.outputPath,
-    options.fileReplacements,
-    PHASE_PRODUCTION_BUILD
-  );
+  const config = prepareConfig(PHASE_PRODUCTION_BUILD, options, context);
   return from(build(root, config as any)).pipe(map(() => ({ success: true })));
 }

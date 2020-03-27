@@ -12,11 +12,7 @@ import { setDefaultCollection } from '@nrwl/workspace/src/utils/rules/workspace'
 
 const updateDependencies = addDepsToPackageJson(
   {
-    next: nextVersion,
-    '@zeit/next-css': zeitNextCss,
-    '@zeit/next-sass': zeitNextLess,
-    '@zeit/next-less': zeitNextSass,
-    '@zeit/next-stylus': zeitNextStylus
+    next: nextVersion
   },
   {}
 );
