@@ -487,6 +487,49 @@
             ]
           },
           {
+            "name": "storybook",
+            "id": "storybook",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "file": "angular/guides/storybook-plugin"
+              },
+              {
+                "id": "schematics",
+                "name": "Schematics",
+                "itemList": [
+                  {
+                    "name": "configuration",
+                    "id": "configuration",
+                    "file": "angular/api-storybook/schematics/configuration"
+                  },
+                  {
+                    "name": "cypress-project",
+                    "id": "cypress-project",
+                    "file": "angular/api-storybook/schematics/cypress-project"
+                  }
+                ]
+              },
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "build",
+                    "id": "build",
+                    "file": "angular/api-storybook/builders/build"
+                  },
+                  {
+                    "name": "storybook",
+                    "id": "storybook",
+                    "file": "angular/api-storybook/builders/storybook"
+                  }
+                ]
+              }
+            ]
+          },
+          {
             "name": "node",
             "id": "node",
             "itemList": [
@@ -1227,6 +1270,49 @@
                     "name": "cypress",
                     "id": "cypress",
                     "file": "react/api-cypress/builders/cypress"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "storybook",
+            "id": "storybook",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "file": "react/guides/storybook-plugin"
+              },
+              {
+                "id": "schematics",
+                "name": "Schematics",
+                "itemList": [
+                  {
+                    "name": "configuration",
+                    "id": "configuration",
+                    "file": "react/api-storybook/schematics/configuration"
+                  },
+                  {
+                    "name": "cypress-project",
+                    "id": "cypress-project",
+                    "file": "react/api-storybook/schematics/cypress-project"
+                  }
+                ]
+              },
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "build",
+                    "id": "build",
+                    "file": "react/api-storybook/builders/build"
+                  },
+                  {
+                    "name": "storybook",
+                    "id": "storybook",
+                    "file": "react/api-storybook/builders/storybook"
                   }
                 ]
               }
