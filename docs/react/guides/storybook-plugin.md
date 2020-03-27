@@ -1,4 +1,4 @@
-# Using Storybook
+# Storybook
 
 ![Storybook logo](/shared/storybook-logo.png)
 
@@ -17,7 +17,7 @@ yarn add --dev @nrwl/storybook
 You can generate Storybook configuration for an individual project with this command:
 
 ```bash
-nx g @nrwl/angular:storybook-configuration project-name
+nx g @nrwl/react:storybook-configuration project-name
 ```
 
 If there's no `.storybook` folder at the root of the workspace, one is created.
@@ -59,16 +59,6 @@ Serve Storybook using this command:
 nx run project-name:storybook
 ```
 
-### Auto-generate Stories
-
-The `@nrwl/angular:storybook-configuration` schematic has the option to automatically generate `*.stories.ts` files for each component declared in the library.
-
-```treeview
-<some-folder>/
-├── my.component.ts
-└── my.component.stories.ts
-```
-
 ### Run Cypress Tests Against a Storybook Instance
 
 Both `storybook-configuration` schematic gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
@@ -91,27 +81,18 @@ Changing knobs in the url query parameters allows your Cypress tests to test dif
 
 ### Example Files
 
-**\*.component.stories.ts file**
+**\*.stories.tsx file**
 
 ```ts
-import { text, number, boolean } from '@storybook/addon-knobs';
-import { ButtonComponent } from './button.component';
+import React from 'react';
+import { text, number } from '@storybook/addon-knobs';
+import { Button } from './button';
 
-export default {
-  title: 'ButtonComponent'
-};
+export default { title: 'Button' };
 
-export const primary = () => ({
-  moduleMetadata: {
-    imports: []
-  },
-  component: ButtonComponent,
-  props: {
-    text: text('text', 'Click me!'),
-    padding: number('padding', 0),
-    style: text('style', 'default')
-  }
-});
+export const primary = () => (
+  <Button padding={number('Padding', 0)} text={text('Text', 'Click me')} />
+);
 ```
 
 **Cypress \*.spec.ts file**
