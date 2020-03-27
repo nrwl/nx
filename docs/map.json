@@ -76,17 +76,8 @@
         "id": "migration",
         "itemList": [
           {
-            "name": "Overview",
-            "id": "migration-overview",
-            "file": "shared/migration-overview"
-          },
-          {
             "name": "From Angular CLI",
             "id": "migration-angular"
-          },
-          {
-            "name": "From AngularJS",
-            "id": "migration-angularjs"
           }
         ]
       },
@@ -585,10 +576,6 @@
         "id": "guides",
         "itemList": [
           {
-            "name": "Transitioning to Nx",
-            "id": "transition-to-nx"
-          },
-          {
             "name": "Computation Caching",
             "id": "computation-caching",
             "file": "shared/computation-caching"
@@ -770,17 +757,6 @@
           {
             "name": "12 - Summary",
             "id": "12-summary"
-          }
-        ]
-      },
-      {
-        "name": "Migration",
-        "id": "migration",
-        "itemList": [
-          {
-            "name": "Overview",
-            "id": "migration-overview",
-            "file": "shared/migration-overview"
           }
         ]
       },
