@@ -32,7 +32,7 @@ Use the `nx list` command to see installed and available plugins. Both Nrwl main
 
 >  NX  Community plugins:
 
-  @nxtend/ionic-react - An Nx plugin for developing Ionic React applications and libraries.
+  @nxtend/ionic-react - An Nx plugin for developing Ionic React applications and libraries
   @angular-architects/ddd - Nx plugin for structuring a monorepo with domains and layers
   @offeringsolutions/nx-karma-to-jest - Nx plugin for replacing karma with jest in an Nx workspace
   @flowaccount/nx-serverless - Nx plugin for node/angular-universal schematics and deployment builders in an Nx workspace

@@ -31,7 +31,7 @@ Nx is an open platform with plugins for many modern tools and frameworks. **To s
 
 >  NX  Community plugins:
 
-  @nxtend/ionic-react - An Nx plugin for developing Ionic React applications and libraries.
+  @nxtend/ionic-react - An Nx plugin for developing Ionic React applications and libraries
   @angular-architects/ddd - Nx plugin for structuring a monorepo with domains and layers
   ...
 ```
