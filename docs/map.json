@@ -9,11 +9,16 @@
           {
             "name": "Why Nx?",
             "id": "why-nx",
-            "file": "shared/why-nx"
+            "file": "angular/getting-started/why-nx"
           },
           {
             "name": "Resources",
             "id": "resources"
+          },
+          {
+            "name": "Nx and Angular CLI",
+            "id": "nx-and-cli",
+            "file": "angular/getting-started/nx-and-cli"
           }
         ]
       },
@@ -88,12 +93,7 @@
           {
             "name": "Overview",
             "id": "overview",
-            "file": "shared/cli-overview"
-          },
-          {
-            "name": "Nx and the Angular CLI",
-            "id": "nx-and-cli",
-            "file": "angular/getting-started/nx-and-cli"
+            "file": "angular/guides/cli-overview"
           },
           {
             "name": "generate",
@@ -813,7 +813,7 @@
           {
             "name": "Why Nx?",
             "id": "why-nx",
-            "file": "shared/why-nx"
+            "file": "react/getting-started/why-nx"
           },
           {
             "name": "Resources",
@@ -882,7 +882,7 @@
           {
             "name": "Overview",
             "id": "overview",
-            "file": "shared/cli-overview"
+            "file": "react/guides/cli-overview"
           },
           {
             "name": "generate",
@@ -1502,10 +1502,6 @@
         "name": "Guides",
         "id": "guides",
         "itemList": [
-          {
-            "name": "Nx CLI",
-            "id": "cli"
-          },
           {
             "name": "Computation Caching",
             "id": "computation-caching",

@@ -6,6 +6,10 @@ Nx is the preeminent toolkit for Monorepo development, which helps you to build 
 - Has a growing ecosystem, and a community plugin market
 - Many leading enterprises are already using Nx to build the software you know and love
 
+## 10-Minute Nx Overview
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/mVKMse-gFBI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 ## Why Monorepos?
 
 A monorepo is a single git repository that holds the source code for multiple applications and libraries, along with the tooling for them.
@@ -43,9 +47,13 @@ Nx provides tools to give you the benefits of a monorepo without the drawbacks o
 
 ## Next Steps
 
-- Dive in with a Tutorial
-- Migrate your current system to Nx
-- Learn about the Nx CLI
-- Extend Nx with Plugins
-- Follow Step-by-Step Guides
-- Browse Some Example Repositories
+**Learn Nx Fundamentals:**
+
+- [Interactive Nx Tutorial](/angular/tutorial/01-create-application)
+- [Free Nx Course on YouTube](https://www.youtube.com/watch?time_continue=49&v=2mYLe9Kp9VM&feature=emb_logo)
+
+**Dive Deep:**
+
+- [Nx CLI](/angular/cli/overview)
+- [Computation Caching](/angular/guides/computation-caching)
+- [Rebuilding What is Affected](/angular/guides/monorepo-affected)

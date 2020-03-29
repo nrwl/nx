@@ -293,7 +293,7 @@ const examples = {
     }
   ],
   'workspace-schematic': [],
-  'list [plugin]': [
+  list: [
     {
       command: 'list',
       description: 'List the plugins installed in the current workspace'
