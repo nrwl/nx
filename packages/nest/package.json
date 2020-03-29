@@ -29,7 +29,8 @@
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "@nrwl/workspace": "*"
+    "@nrwl/workspace": "*",
+    "@nestjs/schematics": "^6.3.0"
   },
   "dependencies": {
     "@nrwl/node": "*",
