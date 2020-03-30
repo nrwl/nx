@@ -48,6 +48,16 @@ nx g app myapp --routing
 
 ## Options
 
+### babelJest
+
+Alias(es): babel-jest
+
+Default: `false`
+
+Type: `boolean`
+
+Use babel-jest instead of ts-jest
+
 ### classComponent
 
 Alias(es): C

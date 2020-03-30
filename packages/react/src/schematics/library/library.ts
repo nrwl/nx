@@ -1,3 +1,4 @@
+import { join, normalize, Path } from '@angular-devkit/core';
 import {
   apply,
   chain,
@@ -12,6 +13,7 @@ import {
   Tree,
   url
 } from '@angular-devkit/schematics';
+import { CSS_IN_JS_DEPENDENCIES } from '@nrwl/react';
 import {
   addDepsToPackageJson,
   addLintFiles,
@@ -29,24 +31,21 @@ import {
   updateJsonInTree,
   updateWorkspaceInTree
 } from '@nrwl/workspace';
-import { join, normalize, Path } from '@angular-devkit/core';
+import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import * as ts from 'typescript';
-
-import { Schema } from './schema';
+import { assertValidStyle } from '../../utils/assertion';
 import {
   addBrowserRouter,
   addInitialRoutes,
   addRoute,
   findComponentImportPath
 } from '../../utils/ast-utils';
-import {
-  typesReactRouterDomVersion,
-  reactRouterDomVersion
-} from '../../utils/versions';
-import { assertValidStyle } from '../../utils/assertion';
 import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
-import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
-import { CSS_IN_JS_DEPENDENCIES } from '@nrwl/react';
+import {
+  reactRouterDomVersion,
+  typesReactRouterDomVersion
+} from '../../utils/versions';
+import { Schema } from './schema';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -80,7 +79,8 @@ export default function(schema: Schema): Rule {
             project: options.name,
             setupFile: 'none',
             supportTsx: true,
-            skipSerializers: true
+            skipSerializers: true,
+            babelJest: options.babelJest
           })
         : noop(),
       options.component

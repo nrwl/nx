@@ -29,20 +29,19 @@ import {
   addDepsToPackageJson,
   updateWorkspaceInTree
 } from '@nrwl/workspace/src/utils/ast-utils';
-import init from '../init/init';
-import * as ts from 'typescript';
-
-import { Schema } from './schema';
-import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
-import { addInitialRoutes } from '../../utils/ast-utils';
-import {
-  typesReactRouterDomVersion,
-  reactRouterDomVersion
-} from '../../utils/versions';
-import { assertValidStyle } from '../../utils/assertion';
-import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
-import { updateJestConfigContent } from '../../utils/jest-utils';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
+import * as ts from 'typescript';
+import { assertValidStyle } from '../../utils/assertion';
+import { addInitialRoutes } from '../../utils/ast-utils';
+import { updateJestConfigContent } from '../../utils/jest-utils';
+import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
+import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
+import {
+  reactRouterDomVersion,
+  typesReactRouterDomVersion
+} from '../../utils/versions';
+import init from '../init/init';
+import { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -227,7 +226,8 @@ function addJest(options: NormalizedSchema): Rule {
         project: options.projectName,
         supportTsx: true,
         skipSerializers: true,
-        setupFile: 'none'
+        setupFile: 'none',
+        babelJest: options.babelJest
       })
     : noop();
 }
