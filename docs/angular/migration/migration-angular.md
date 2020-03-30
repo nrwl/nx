@@ -19,8 +19,8 @@ ng add @nrwl/workspace
 This installs the `@nrwl/workspace` package into your workspace and runs a schematic to transform your workspace. The schematic applies the following changes to your workspace:
 
 - Installs the packages for the `Nx` plugin `@nrwl/angular` in your package.json.
-- Creates an [nx.json](/angular/fundamentals/monorepos-automation#understanding-nx-json) file in the root of your workspace.
-- Creates configuration files for [Prettier](/angular/fundamentals/use-modern-tools#prettier).
+- Creates an nx.json file in the root of your workspace.
+- Creates configuration files for Prettier.
 - Creates an `apps` folder for generating applications.
 - Creates a `libs` folder for generating libraries.
 - Creates a `tools` folder that includes files for custom workspace tooling, such as workspace-specific schematics and scripts.

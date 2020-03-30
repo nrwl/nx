@@ -14,8 +14,6 @@ nx g <schematic>
 
 Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
 
-> When used within an Nx workspace with the Angular CLI as the primary CLI, the Nx CLI delegates the `generate` command to the Angular CLI's `generate` command.
-
 ### Examples
 
 Generate a new Angular application:

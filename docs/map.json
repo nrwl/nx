@@ -228,7 +228,7 @@
         "itemList": [
           {
             "name": "Overview",
-            "id": "plugins-overview",
+            "id": "overview",
             "file": "shared/plugins-overview"
           },
           {
@@ -797,7 +797,8 @@
         "itemList": [
           {
             "name": "Building Angular and React Applications Together With Nx",
-            "id": "react-and-angular"
+            "id": "react-and-angular",
+            "file": "angular/guides/react-and-angular"
           }
         ]
       }
@@ -1017,7 +1018,7 @@
         "itemList": [
           {
             "name": "Overview",
-            "id": "plugins-overview",
+            "id": "overview",
             "file": "shared/plugins-overview"
           },
           {

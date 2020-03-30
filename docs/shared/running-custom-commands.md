@@ -29,7 +29,7 @@ For each project for which you want to enable compodoc, add a target in `angular
 }
 ```
 
-For more information, see the [run-commands api doc](https://nx.dev/api/workspace/builders/run-commands).
+For more information, see the [run-commands api doc](/{{framework}}/plugins_workspace_builders/run-commands).
 
 Note: Replace `apps/my-app/tsconfig.app.json` with the appropriate `tsconfig.json` path for each project.
 
@@ -47,4 +47,4 @@ To run the builder for all affected projects:
 nx affected --target=compodoc
 ```
 
-For more information, see the [nx affected api doc](https://nx.dev/api/npmscripts/affected).
+For more information, see the [nx affected](/{{framework}}/cli/affected).

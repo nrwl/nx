@@ -9,4 +9,10 @@ In this tutorial you:
 
 ## Learn More
 
-LINKS LINKS
+- [Free Nx Course on YouTube](https://www.youtube.com/watch?time_continue=49&v=2mYLe9Kp9VM&feature=emb_logo)
+
+**Dive Deep:**
+
+- [Nx CLI](/{{framework}}/cli/overview)
+- [Computation Caching](/{{framework}}/guides/computation-caching)
+- [Rebuilding What is Affected](/{{framework}}/guides/monorepo-affected)
