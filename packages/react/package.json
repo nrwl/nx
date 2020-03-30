@@ -36,7 +36,7 @@
     "@nrwl/cypress": "*",
     "@nrwl/jest": "*",
     "@nrwl/web": "*",
-    "@angular-devkit/schematics": "~9.0.1",
+    "@angular-devkit/schematics": "~9.1.0",
     "@svgr/webpack": "^5.2.0",
     "babel-plugin-emotion": "^10.0.29",
     "babel-plugin-styled-components": "^1.10.7",

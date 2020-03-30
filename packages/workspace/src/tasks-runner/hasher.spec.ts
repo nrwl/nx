@@ -77,7 +77,8 @@ describe('Hasher', () => {
       expect(e.message).toContain(
         'Nx failed to execute runtimeCacheInputs defined in nx.json failed:'
       );
-      expect(e.message).toContain('boom: not found');
+      expect(e.message).toContain('boom:');
+      expect(e.message).toContain(' not found');
     }
   });
 
