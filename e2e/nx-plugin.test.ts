@@ -66,6 +66,46 @@ forEachCli(currentCLIName => {
       done();
     }, 150000);
 
+    it('should be able to generate a schematic', async done => {
+      ensureProject();
+      const plugin = uniq('plugin');
+      const schematic = uniq('schematic');
+
+      runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter}`);
+      runCLI(
+        `generate @nrwl/nx-plugin:schematic ${schematic} --project=${plugin}`
+      );
+
+      const lintResults = runCLI(`lint ${plugin}`);
+      expect(lintResults).toContain('All files pass linting.');
+
+      expectTestsPass(await runCLIAsync(`test ${plugin}`));
+
+      const buildResults = runCLI(`build ${plugin}`);
+      expect(buildResults).toContain('Done compiling TypeScript files');
+      checkFilesExist(
+        `libs/${plugin}/src/schematics/${schematic}/schema.d.ts`,
+        `libs/${plugin}/src/schematics/${schematic}/schema.json`,
+        `libs/${plugin}/src/schematics/${schematic}/schematic.ts`,
+        `libs/${plugin}/src/schematics/${schematic}/schematic.spec.ts`,
+        `dist/libs/${plugin}/src/schematics/${schematic}/schema.d.ts`,
+        `dist/libs/${plugin}/src/schematics/${schematic}/schema.json`,
+        `dist/libs/${plugin}/src/schematics/${schematic}/schematic.js`,
+        `dist/libs/${plugin}/src/schematics/${schematic}/schematic.spec.ts`
+      );
+      const collectionJson = readJson(`libs/${plugin}/collection.json`);
+      expect(collectionJson).toMatchObject({
+        schematics: expect.objectContaining({
+          [schematic]: {
+            factory: `./src/schematics/${schematic}/schematic`,
+            schema: `./src/schematics/${schematic}/schema.json`,
+            description: `${schematic} schematic`
+          }
+        })
+      });
+      done();
+    }, 45000);
+
     describe('--directory', () => {
       it('should create a plugin in the specified directory', () => {
         ensureProject();

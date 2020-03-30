@@ -13,6 +13,11 @@
       "schema": "./src/schematics/e2e-project/schema.json",
       "description": "Create a e2e application for a Nx Plugin",
       "hidden": true
+    },
+    "schematic": {
+      "factory": "./src/schematics/schematic/schematic",
+      "schema": "./src/schematics/schematic/schema.json",
+      "description": "Create a schematic for an Nx Plugin"
     }
   }
 }
