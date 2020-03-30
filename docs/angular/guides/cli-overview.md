@@ -15,7 +15,7 @@ Nx **is not** a replacement for Angular CLI. Under the hood, Nx uses the Angular
 
 When you run `nx build myapp`, Nx will invoke `ng build myapp` under the hood. When you run `nx g component mycmp`, Nx will invoke `ng g component mycmp` under the hood.
 
-When it comes to generating code and running tasks, since `nx` delegates to `ng`, both CLIs will always produce the same result, except that running `nx` will often run a lot faster.
+When it comes to generating code and running tasks, since `nx` delegates to `ng`, both CLIs will always produce the same result, except that running `nx` will often be a lot faster.
 
 How?
 

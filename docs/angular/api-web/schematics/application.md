@@ -5,11 +5,11 @@ Create an application
 ## Usage
 
 ```bash
-ng generate application ...
+nx generate application ...
 ```
 
 ```bash
-ng g app ... # same
+nx g app ... # same
 ```
 
 By default, Nx will search for `application` in the default collection provisioned in `angular.json`.
@@ -17,13 +17,13 @@ By default, Nx will search for `application` in the default collection provision
 You can specify the collection explicitly as follows:
 
 ```bash
-ng g @nrwl/web:application ...
+nx g @nrwl/web:application ...
 ```
 
 Show what will be generated without writing to disk:
 
 ```bash
-ng g application ... --dry-run
+nx g application ... --dry-run
 ```
 
 ## Options

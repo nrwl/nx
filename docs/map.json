@@ -1576,6 +1576,11 @@
             "name": "Nx Plugins",
             "id": "nx-plugin",
             "file": "shared/nx-plugin"
+          },
+          {
+            "name": "JavaScript and TypeScript",
+            "id": "js-and-ts",
+            "file": "react/guides/js-and-ts"
           }
         ]
       }

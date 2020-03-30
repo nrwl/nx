@@ -5,7 +5,7 @@ Initialize the @nrwl/express plugin
 ## Usage
 
 ```bash
-ng generate init ...
+nx generate init ...
 ```
 
 By default, Nx will search for `init` in the default collection provisioned in `angular.json`.
@@ -13,13 +13,13 @@ By default, Nx will search for `init` in the default collection provisioned in `
 You can specify the collection explicitly as follows:
 
 ```bash
-ng g @nrwl/express:init ...
+nx g @nrwl/express:init ...
 ```
 
 Show what will be generated without writing to disk:
 
 ```bash
-ng g init ... --dry-run
+nx g init ... --dry-run
 ```
 
 ## Options

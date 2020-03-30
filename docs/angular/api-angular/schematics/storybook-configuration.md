@@ -5,7 +5,7 @@ Create stories/specs for all components declared in a library
 ## Usage
 
 ```bash
-ng generate storybook-configuration ...
+nx generate storybook-configuration ...
 ```
 
 By default, Nx will search for `storybook-configuration` in the default collection provisioned in `angular.json`.
@@ -13,13 +13,13 @@ By default, Nx will search for `storybook-configuration` in the default collecti
 You can specify the collection explicitly as follows:
 
 ```bash
-ng g @nrwl/angular:storybook-configuration ...
+nx g @nrwl/angular:storybook-configuration ...
 ```
 
 Show what will be generated without writing to disk:
 
 ```bash
-ng g storybook-configuration ... --dry-run
+nx g storybook-configuration ... --dry-run
 ```
 
 ## Options

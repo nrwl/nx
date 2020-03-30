@@ -5,11 +5,11 @@ Remove an application or library
 ## Usage
 
 ```bash
-ng generate remove ...
+nx generate remove ...
 ```
 
 ```bash
-ng g rm ... # same
+nx g rm ... # same
 ```
 
 By default, Nx will search for `remove` in the default collection provisioned in `angular.json`.
@@ -17,13 +17,13 @@ By default, Nx will search for `remove` in the default collection provisioned in
 You can specify the collection explicitly as follows:
 
 ```bash
-ng g @nrwl/workspace:remove ...
+nx g @nrwl/workspace:remove ...
 ```
 
 Show what will be generated without writing to disk:
 
 ```bash
-ng g remove ... --dry-run
+nx g remove ... --dry-run
 ```
 
 ### Examples
@@ -31,13 +31,13 @@ ng g remove ... --dry-run
 Remove my-feature-lib from the workspace:
 
 ```bash
-ng g @nrwl/workspace:remove my-feature-lib
+nx g @nrwl/workspace:remove my-feature-lib
 ```
 
 Force removal of my-feature-lib from the workspace:
 
 ```bash
-ng g @nrwl/workspace:remove my-feature-lib --forceRemove
+nx g @nrwl/workspace:remove my-feature-lib --forceRemove
 ```
 
 ## Options

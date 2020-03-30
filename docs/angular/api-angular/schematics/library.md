@@ -5,11 +5,11 @@ Create an Angular library
 ## Usage
 
 ```bash
-ng generate library ...
+nx generate library ...
 ```
 
 ```bash
-ng g lib ... # same
+nx g lib ... # same
 ```
 
 By default, Nx will search for `library` in the default collection provisioned in `angular.json`.
@@ -17,13 +17,13 @@ By default, Nx will search for `library` in the default collection provisioned i
 You can specify the collection explicitly as follows:
 
 ```bash
-ng g @nrwl/angular:library ...
+nx g @nrwl/angular:library ...
 ```
 
 Show what will be generated without writing to disk:
 
 ```bash
-ng g library ... --dry-run
+nx g library ... --dry-run
 ```
 
 ## Options

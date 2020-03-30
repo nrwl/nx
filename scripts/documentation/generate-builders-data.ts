@@ -65,7 +65,7 @@ function generateTemplate(
   builder
 ): { name: string; template: string } {
   const filename = framework === 'angular' ? 'angular.json' : 'workspace.json';
-  const cliCommand = framework === 'angular' ? 'ng' : 'nx';
+  const cliCommand = 'nx';
 
   let template = dedent`
     # ${builder.name}
