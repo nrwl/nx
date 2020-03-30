@@ -103,7 +103,6 @@ describe('project graph', () => {
       './apps/demo/src/index.ts': stripIndents`
         import * as ui from '@nrwl/ui';
         import * as data from '@nrwl/shared-util-data;
-
         const s = { loadChildren: '@nrwl/lazy-lib#LAZY' }
       `,
       './apps/demo-e2e/src/integration/app.spec.ts': stripIndents`
@@ -131,6 +130,7 @@ describe('project graph', () => {
       ext: extname(f),
       mtime: 1
     }));
+    vol.reset();
     vol.fromJSON(filesJson, '/root');
   });
 
@@ -175,6 +175,21 @@ describe('project graph', () => {
           target: 'happy-nrwl'
         }
       ]
+    });
+  });
+
+  it('should update the graph if the workspace file changes ', async () => {
+    let graph = createProjectGraph();
+    expect(graph.nodes).toMatchObject({
+      demo: { name: 'demo', type: 'app' }
+    });
+    workspaceJson.projects.demo.projectType = 'library';
+    //wait a tick to ensure the modified time of workspace.json will be after the creation of the project graph file
+    await new Promise(resolve => setTimeout(resolve, 1));
+    fs.writeFileSync('/root/workspace.json', JSON.stringify(workspaceJson));
+    graph = createProjectGraph();
+    expect(graph.nodes).toMatchObject({
+      demo: { name: 'demo', type: 'lib' }
     });
   });
 

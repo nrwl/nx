@@ -139,11 +139,11 @@ function maxMTime(files: FileData[]) {
 
 function rootWorkspaceFileData(workspaceFiles: FileData[]): FileData[] {
   return [
-    `/package.json`,
-    '/workspace.json',
-    '/angular.json',
-    `/nx.json`,
-    `/tsconfig.json`
+    `package.json`,
+    'workspace.json',
+    'angular.json',
+    `nx.json`,
+    `tsconfig.json`
   ].reduce((acc: FileData[], curr: string) => {
     const fileData = workspaceFiles.find(x => x.file === curr);
     if (fileData) {
