@@ -5,7 +5,7 @@ Nx has built-in computation caching, which helps drastically improve the perform
 **To see it in action, run `nx build todos`:**
 
 ```bash
-> ng run todos:build
+> nx run todos:build
 Generating ES5 bundles for differential loading...
 ES5 bundle generation complete.
 
@@ -24,7 +24,7 @@ chunk {vendor} vendor-es5.js, vendor-es5.js.map (vendor) 2.75 MB [initial] [rend
 **Now, run `nx build todos` again, and you will see the results appearing instantly:**
 
 ```bash
-> ng run todos:build
+> nx run todos:build
 
 >  NX   NOTE  Cached Output:
 
