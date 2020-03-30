@@ -443,6 +443,55 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "9.2.0": {
+      "version": "9.2.0-beta.1",
+      "packages": {
+        "@angular/cli": {
+          "version": "~9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "typescript": {
+          "version": "~3.8.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.901.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~0.901.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-ng-packagr": {
+          "version": "~0.901.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.901.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-optimizer": {
+          "version": "~0.901.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "rxjs": {
+          "version": "~6.5.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
