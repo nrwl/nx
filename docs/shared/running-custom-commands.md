@@ -38,7 +38,7 @@ Note: Replace `apps/my-app/tsconfig.app.json` with the appropriate `tsconfig.jso
 To run the builder for a single project:
 
 ```bash
-ng run my-app:compodoc
+nx run my-app:compodoc
 ```
 
 To run the builder for all affected projects:
