@@ -155,6 +155,7 @@ function initCypress(
   }
 
   options.exit = exit;
+  options.headed = !headless;
   options.headless = headless;
   options.record = record;
   options.key = key;
