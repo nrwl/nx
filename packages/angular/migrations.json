@@ -25,6 +25,11 @@
       "version": "9.0.0-beta.1",
       "description": "Upgrades Angular and Angular CLI to 9.0.0",
       "factory": "./src/migrations/update-9-0-0/update-9-0-0"
+    },
+    "update-9-2-2": {
+      "version": "9.2.2-beta.1",
+      "description": "Upgrades Angular to 9.1.0",
+      "factory": "./src/migrations/update-9-2-2/update-9-2-2"
     }
   }
 }
