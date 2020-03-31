@@ -490,6 +490,54 @@
         "rxjs": {
           "version": "~6.5.4",
           "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/common": {
+          "version": "~9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/forms": {
+          "version": "~9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler": {
+          "version": "~9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler-cli": {
+          "version": "~9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser": {
+          "version": "~9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser-dynamic": {
+          "version": "~9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/router": {
+          "version": "~9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/upgrade": {
+          "version": "~9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/language-service": {
+          "version": "~9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/animations": {
+          "version": "~9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/service-worker": {
+          "version": "~9.1.0",
+          "alwaysAddToPackageJson": false
         }
       }
     }

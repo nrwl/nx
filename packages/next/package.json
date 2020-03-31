@@ -30,7 +30,7 @@
   },
   "peerDependencies": {
     "@nrwl/workspace": "*",
-    "next": "^9.1.0"
+    "next": "^9.3.3"
   },
   "dependencies": {
     "@nrwl/react": "*",
