@@ -761,7 +761,7 @@
           {
             "name": "Custom Commands",
             "id": "custom-commands",
-            "file": "shared/running-custom-commands"
+            "file": "angular/guides/running-custom-commands"
           },
           {
             "name": "Using NgRx",
