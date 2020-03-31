@@ -20,6 +20,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "9.2.0": {
+      "version": "9.2.0",
+      "packages": {
+        "next": {
+          "version": "9.3.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
