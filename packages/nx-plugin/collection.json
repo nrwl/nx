@@ -23,6 +23,11 @@
       "factory": "./src/schematics/schematic/schematic",
       "schema": "./src/schematics/schematic/schema.json",
       "description": "Create a schematic for an Nx Plugin"
+    },
+    "builder": {
+      "factory": "./src/schematics/builder/builder",
+      "schema": "./src/schematics/builder/schema.json",
+      "description": "Create a builder for an Nx Plugin"
     }
   }
 }

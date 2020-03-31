@@ -143,6 +143,44 @@ forEachCli(currentCLIName => {
       done();
     }, 45000);
 
+    it('should be able to generate a builder', async done => {
+      ensureProject();
+      const plugin = uniq('plugin');
+      const builder = uniq('builder');
+
+      runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter}`);
+      runCLI(`generate @nrwl/nx-plugin:builder ${builder} --project=${plugin}`);
+
+      const lintResults = runCLI(`lint ${plugin}`);
+      expect(lintResults).toContain('All files pass linting.');
+
+      expectTestsPass(await runCLIAsync(`test ${plugin}`));
+
+      const buildResults = runCLI(`build ${plugin}`);
+      expect(buildResults).toContain('Done compiling TypeScript files');
+      checkFilesExist(
+        `libs/${plugin}/src/builders/${builder}/schema.d.ts`,
+        `libs/${plugin}/src/builders/${builder}/schema.json`,
+        `libs/${plugin}/src/builders/${builder}/builder.ts`,
+        `libs/${plugin}/src/builders/${builder}/builder.spec.ts`,
+        `dist/libs/${plugin}/src/builders/${builder}/schema.d.ts`,
+        `dist/libs/${plugin}/src/builders/${builder}/schema.json`,
+        `dist/libs/${plugin}/src/builders/${builder}/builder.js`,
+        `dist/libs/${plugin}/src/builders/${builder}/builder.spec.ts`
+      );
+      const buildersJson = readJson(`libs/${plugin}/builders.json`);
+      expect(buildersJson).toMatchObject({
+        builders: expect.objectContaining({
+          [builder]: {
+            implementation: `./src/builders/${builder}/builder`,
+            schema: `./src/builders/${builder}/schema.json`,
+            description: `${builder} builder`
+          }
+        })
+      });
+      done();
+    }, 45000);
+
     describe('--directory', () => {
       it('should create a plugin in the specified directory', () => {
         ensureProject();
