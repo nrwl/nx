@@ -18,7 +18,6 @@ import {
 } from '../../utils/versions';
 import { from } from 'rxjs';
 import { mapTo, tap } from 'rxjs/operators';
-import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import {
   offsetFromRoot,
   readJsonInTree,
@@ -28,7 +27,8 @@ import {
   updateJsonInTree,
   getWorkspacePath,
   renameSyncInTree,
-  renameDirSyncInTree
+  renameDirSyncInTree,
+  addInstallTask
 } from '@nrwl/workspace';
 import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../workspace/workspace';
 import { JsonArray } from '@angular-devkit/core';
@@ -551,15 +551,6 @@ function checkCanConvertToWorkspace(options: Schema) {
       );
       throw e;
     }
-  };
-}
-
-function addInstallTask(options: Schema) {
-  return (host: Tree, context: SchematicContext) => {
-    if (!options.skipInstall) {
-      context.addTask(new NodePackageInstallTask());
-    }
-    return host;
   };
 }
 

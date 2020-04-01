@@ -10,12 +10,12 @@ import {
   Tree,
   SchematicContext,
   DirEntry,
-  noop
+  noop,
+  chain
 } from '@angular-devkit/schematics';
 import * as ts from 'typescript';
 import * as stripJsonComments from 'strip-json-comments';
 import { serializeJson } from './fileutils';
-import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { getWorkspacePath } from './cli-config-utils';
 import {
   createProjectGraph,
@@ -24,10 +24,8 @@ import {
 } from '../core/project-graph';
 import { FileData } from '../core/file-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
-import {
-  NxJson,
-  NxJsonProjectConfig
-} from '@nrwl/workspace/src/core/shared-interfaces';
+import { NxJson, NxJsonProjectConfig } from '../core/shared-interfaces';
+import { addInstallTask } from './rules/add-install-task';
 
 function nodesByPosition(first: ts.Node, second: ts.Node): number {
   return first.getStart() - second.getStart();
@@ -561,8 +559,6 @@ function requiresAddingOfPackages(packageJsonFile, deps, devDeps): boolean {
   return needsDepsUpdate || needsDevDepsUpdate;
 }
 
-let installAdded = false;
-
 /**
  * Updates the package.json given the passed deps and/or devDeps. Only updates
  * if the packages are not yet present
@@ -581,9 +577,8 @@ export function addDepsToPackageJson(
     const currentPackageJson = readJsonInTree(host, 'package.json');
 
     if (requiresAddingOfPackages(currentPackageJson, deps, devDeps)) {
-      return updateJsonInTree(
-        'package.json',
-        (json, context: SchematicContext) => {
+      return chain([
+        updateJsonInTree('package.json', (json, context: SchematicContext) => {
           json.dependencies = {
             ...(json.dependencies || {}),
             ...deps,
@@ -595,13 +590,12 @@ export function addDepsToPackageJson(
             ...(json.devDependencies || {})
           };
 
-          if (addInstall && !installAdded) {
-            context.addTask(new NodePackageInstallTask());
-            installAdded = true;
-          }
           return json;
-        }
-      );
+        }),
+        addInstallTask({
+          skipInstall: !addInstall
+        })
+      ]);
     } else {
       return noop();
     }
@@ -613,21 +607,22 @@ export function updatePackageJsonDependencies(
   devDeps: any,
   addInstall = true
 ): Rule {
-  return updateJsonInTree('package.json', (json, context: SchematicContext) => {
-    json.dependencies = {
-      ...(json.dependencies || {}),
-      ...deps
-    };
-    json.devDependencies = {
-      ...(json.devDependencies || {}),
-      ...devDeps
-    };
-    if (addInstall && !installAdded) {
-      context.addTask(new NodePackageInstallTask());
-      installAdded = true;
-    }
-    return json;
-  });
+  return chain([
+    updateJsonInTree('package.json', (json, context: SchematicContext) => {
+      json.dependencies = {
+        ...(json.dependencies || {}),
+        ...deps
+      };
+      json.devDependencies = {
+        ...(json.devDependencies || {}),
+        ...devDeps
+      };
+      return json;
+    }),
+    addInstallTask({
+      skipInstall: !addInstall
+    })
+  ]);
 }
 
 export function getProjectConfig(host: Tree, name: string): any {
