@@ -19,6 +19,11 @@
       "version": "9.0.1-beta.1",
       "description": "Correctly sets passWithNoTests option",
       "factory": "./src/migrations/update-9-0-1/update-9-0-1"
+    },
+    "update-9.2.0": {
+      "version": "9.2.0-beta.3",
+      "description": "Update jest to v25",
+      "factory": "./src/migrations/update-9-2-0/update-9-2-0"
     }
   },
   "packageJsonUpdates": {
