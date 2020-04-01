@@ -183,6 +183,7 @@ export class Migrator {
           '@nrwl/nest',
           '@nrwl/next',
           '@nrwl/node',
+          '@nrwl/nx-plugin',
           '@nrwl/react',
           '@nrwl/storybook',
           '@nrwl/tao',
