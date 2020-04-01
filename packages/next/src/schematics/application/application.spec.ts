@@ -103,19 +103,9 @@ describe('app', () => {
       root: 'apps/my-app',
       outputPath: 'dist/apps/my-app'
     });
-    expect(architectConfig.build.configurations).toEqual({
-      production: {
-        fileReplacements: [
-          {
-            replace: 'apps/my-app/environments/environment.ts',
-            with: 'apps/my-app/environments/environment.prod.ts'
-          }
-        ]
-      }
-    });
   });
 
-  it('should set up the nrwl next dev-server builder', async () => {
+  it('should set up the nrwl next server builder', async () => {
     const tree = await runSchematic(
       'app',
       {
@@ -125,7 +115,7 @@ describe('app', () => {
     );
     const workspaceJson = readJsonInTree(tree, 'workspace.json');
     const architectConfig = workspaceJson.projects['my-app'].architect;
-    expect(architectConfig.serve.builder).toEqual('@nrwl/next:dev-server');
+    expect(architectConfig.serve.builder).toEqual('@nrwl/next:server');
     expect(architectConfig.serve.options).toEqual({
       buildTarget: 'my-app:build',
       dev: true

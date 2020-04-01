@@ -40,14 +40,7 @@ describe('addProject Rule', () => {
     expect(project.architect.build).toEqual({
       builder: '@nrwl/next:build',
       configurations: {
-        production: {
-          fileReplacements: [
-            {
-              replace: '/apps/todos/environments/environment.ts',
-              with: '/apps/todos/environments/environment.prod.ts'
-            }
-          ]
-        }
+        production: {}
       },
       options: {
         outputPath: 'dist/apps/todos',

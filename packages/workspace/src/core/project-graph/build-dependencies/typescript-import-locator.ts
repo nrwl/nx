@@ -70,6 +70,17 @@ export class TypeScriptImportLocator {
       return;
     }
 
+    if (
+      ts.isCallExpression(node) &&
+      node.expression.getText() === 'require' &&
+      node.arguments.length === 1 &&
+      ts.isStringLiteral(node.arguments[0])
+    ) {
+      const imp = this.getStringLiteralValue(node.arguments[0]);
+      visitor(imp, filePath, DependencyType.static);
+      return;
+    }
+
     if (node.kind === ts.SyntaxKind.PropertyAssignment) {
       const name = this.getPropertyAssignmentName(
         (node as ts.PropertyAssignment).name
@@ -83,6 +94,7 @@ export class TypeScriptImportLocator {
         }
       }
     }
+
     /**
      * Continue traversing down the AST from the current node
      */

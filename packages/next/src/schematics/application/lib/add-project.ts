@@ -15,26 +15,15 @@ export function addProject(options: NormalizedSchema): Rule {
         root: options.appProjectRoot,
         outputPath: join(normalize('dist'), options.appProjectRoot)
       },
+      // This has to be here so `nx serve [app] --prod` will work. Otherwise
+      // a missing configuration error will be thrown.
       configurations: {
-        production: {
-          fileReplacements: [
-            {
-              replace: join(
-                options.appProjectRoot,
-                `environments/environment.ts`
-              ),
-              with: join(
-                options.appProjectRoot,
-                `environments/environment.prod.ts`
-              )
-            }
-          ]
-        }
+        production: {}
       }
     };
 
     architect.serve = {
-      builder: '@nrwl/next:dev-server',
+      builder: '@nrwl/next:server',
       options: {
         buildTarget: `${options.projectName}:build`,
         dev: true

@@ -14,7 +14,6 @@ import './<%= fileName %>.<%= style %>';
 <% }
 %>
 import { ReactComponent as NxLogo } from '../assets/nx-logo-white.svg';
-import { environment } from '../environments/environment';
 
 <% if (styledModule) { %>
 const StyledApp = styled.div`
@@ -155,7 +154,7 @@ summary {
 var innerJsx = `
   <header className="flex">
     <NxLogo alt="" width="75" height="50" />
-    <h1>Welcome to ${name}! [{environment.production ? 'PROD' : 'DEV'}]</h1>
+    <h1>Welcome to ${name}!</h1>
   </header>
   <main>
     <h2>Resources &amp; Tools</h2>

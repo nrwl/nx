@@ -6,7 +6,7 @@ import {
   PHASE_PRODUCTION_SERVER
 } from 'next/dist/next-server/lib/constants';
 import loadConfig from 'next/dist/next-server/server/config';
-import { resolve } from 'path';
+import { join, resolve } from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
 import {
@@ -99,8 +99,8 @@ export function prepareConfig(
 ) {
   const config = loadConfig(phase, options.root, null);
   // Yes, these do have different capitalisation...
-  config.distDir = `${offsetFromRoot(options.root)}${options.outputPath}`;
   config.outdir = `${offsetFromRoot(options.root)}${options.outputPath}`;
+  config.distDir = join(config.outdir, '.next');
   const userWebpack = config.webpack;
   config.webpack = (a, b) =>
     createWebpackConfig(
