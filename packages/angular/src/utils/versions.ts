@@ -1,5 +1,5 @@
 export const nxVersion = '*';
-export const angularVersion = '9.1.0';
+export const angularVersion = '^9.1.0';
 export const angularDevkitVersion = '0.901.0';
 export const angularJsVersion = '1.6.6';
 export const ngrxVersion = '9.0.0';
