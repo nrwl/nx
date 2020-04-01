@@ -249,11 +249,12 @@ export function mtime(filePath: string): number {
 
 export function normalizedProjectRoot(p: ProjectGraphNode): string {
   if (p.data && p.data.root) {
-    return p.data.root
-      .split('/')
-      .filter(v => !!v)
-      .slice(1)
-      .join('/');
+    const path = p.data.root.split('/').filter(v => !!v);
+    if (path.length === 1) {
+      return path[0];
+    }
+    // Remove the first part of the path, usually 'libs'
+    return path.slice(1).join('/');
   } else {
     return '';
   }
