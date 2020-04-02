@@ -8,7 +8,7 @@ The Nx Plugin for Next.js contains builders and schematics for managing Next.js 
 
 ## Installing the Next.js Plugin
 
-Installing the Nest plugin to a workspace can be done with the following:
+Installing the Next plugin to a workspace can be done with the following:
 
 ```shell script
 yarn add -D @nrwl/next
@@ -60,7 +60,7 @@ myorg/
 
 ## See Also
 
-- [Using Next.js](/{{framework}}/plugins_next/overview)
+- [Using Next.js](https://nextjs.org/docs/getting-started)
 
 ## Builders
 
