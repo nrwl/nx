@@ -6,7 +6,8 @@ import {
   zeitNextCss,
   zeitNextLess,
   zeitNextSass,
-  zeitNextStylus
+  zeitNextStylus,
+  nodeSass
 } from '../../../utils/versions';
 
 const NEXT_SPECIFIC_STYLE_DEPENDENCIES = {
@@ -15,7 +16,9 @@ const NEXT_SPECIFIC_STYLE_DEPENDENCIES = {
     dependencies: {
       '@zeit/next-css': zeitNextCss
     },
-    devDependencies: {}
+    devDependencies: {
+      'node-sass': nodeSass
+    }
   },
   scss: {
     dependencies: {
