@@ -54,7 +54,7 @@ export default function(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(schema);
     return chain([
-      init({ skipFormat: true }),
+      init({ ...options, skipFormat: true }),
       externalSchematic('@nrwl/node', 'application', schema),
       addMainFile(options),
       addTypes(options),

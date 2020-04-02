@@ -7,7 +7,8 @@
       "factory": "./src/schematics/init/init",
       "schema": "./src/schematics/init/schema.json",
       "description": "Initialize the @nrwl/express plugin",
-      "alias": ["ng-add"]
+      "alias": ["ng-add"],
+      "hidden": true
     },
 
     "application": {

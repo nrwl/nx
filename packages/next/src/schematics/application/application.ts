@@ -25,6 +25,7 @@ export default function(schema: Schema): Rule {
 
     return chain([
       init({
+        ...options,
         skipFormat: true
       }),
       addLintFiles(options.appProjectRoot, options.linter, {
