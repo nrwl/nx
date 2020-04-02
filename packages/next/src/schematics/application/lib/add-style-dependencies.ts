@@ -16,15 +16,15 @@ const NEXT_SPECIFIC_STYLE_DEPENDENCIES = {
     dependencies: {
       '@zeit/next-css': zeitNextCss
     },
-    devDependencies: {
-      'node-sass': nodeSass
-    }
+    devDependencies: {}
   },
   scss: {
     dependencies: {
       '@zeit/next-sass': zeitNextSass
     },
-    devDependencies: {}
+    devDependencies: {
+      'node-sass': nodeSass
+    }
   },
   less: {
     dependencies: {
