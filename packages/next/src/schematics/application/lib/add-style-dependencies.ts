@@ -38,8 +38,7 @@ const NEXT_SPECIFIC_STYLE_DEPENDENCIES = {
 };
 
 export function addStyleDependencies(options: NormalizedSchema): Rule {
-  const extraDependencies =
-    NEXT_SPECIFIC_STYLE_DEPENDENCIES[options.styledModule];
+  const extraDependencies = NEXT_SPECIFIC_STYLE_DEPENDENCIES[options.style];
   return extraDependencies
     ? addDepsToPackageJson(
         extraDependencies.dependencies,
