@@ -833,6 +833,11 @@
             ]
           },
           {
+            "name": "Configuration",
+            "id": "configuration",
+            "file": "angular/guides/configuration"
+          },
+          {
             "name": "Visualizing Workspaces",
             "id": "monorepo-dependency-diagrams",
             "file": "shared/monorepo-dependency-diagrams"
@@ -1688,6 +1693,11 @@
                 "file": "shared/incremental-builds"
               }
             ]
+          },
+          {
+            "name": "Configuration",
+            "id": "configuration",
+            "file": "react/guides/configuration"
           },
           {
             "name": "Visualizing Workspaces",

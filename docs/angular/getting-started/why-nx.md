@@ -55,5 +55,6 @@ Nx provides tools to give you the benefits of a monorepo without the drawbacks o
 **Dive Deep:**
 
 - [Nx CLI](/{{framework}}/cli/overview)
+- [Configuration Files](/{{framework}}/workspace/configuration)
 - [Computation Caching](/{{framework}}/workspace/computation-caching)
 - [Rebuilding What is Affected](/{{framework}}/guides/ci/monorepo-affected)
