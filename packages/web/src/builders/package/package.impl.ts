@@ -32,7 +32,7 @@ import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   DependentBuildableProjectNode,
-  readTsConfigWithRemappedPaths,
+  computeCompilerOptionsPaths,
   updateBuildableProjectPackageJsonDependencies
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
 
@@ -147,7 +147,7 @@ function createRollupOptions(
   context: BuilderContext,
   packageJson: any
 ): rollup.InputOptions {
-  const parsedTSConfig = readTsConfigWithRemappedPaths(
+  const compilerOptionPaths = computeCompilerOptionsPaths(
     options.tsConfig,
     dependencies
   );
@@ -162,7 +162,7 @@ function createRollupOptions(
           rootDir: options.entryRoot,
           allowJs: false,
           declaration: true,
-          paths: parsedTSConfig.compilerOptions.paths
+          paths: compilerOptionPaths
         }
       }
     }),

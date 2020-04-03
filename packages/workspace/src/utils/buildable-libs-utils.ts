@@ -4,7 +4,7 @@ import {
   ProjectType
 } from '../core/project-graph';
 import { BuilderContext } from '@angular-devkit/architect';
-import { join, resolve, dirname } from 'path';
+import { join, resolve, dirname, relative } from 'path';
 import {
   fileExists,
   readJsonFile,
@@ -81,15 +81,27 @@ function recursivelyCollectDependencies(
   return acc;
 }
 
-export function readTsConfigWithRemappedPaths(
+function readTsConfigWithRemappedPaths(
   tsConfig: string,
+  generatedTsConfigPath: string,
   dependencies: DependentBuildableProjectNode[]
 ) {
-  const parsedTSConfig = ts.readConfigFile(tsConfig, ts.sys.readFile).config;
-  parsedTSConfig.compilerOptions = parsedTSConfig.compilerOptions || {};
-  parsedTSConfig.compilerOptions.paths = readPaths(tsConfig) || {};
-  updatePaths(dependencies, parsedTSConfig.compilerOptions.paths);
-  return parsedTSConfig;
+  const generatedTsConfig: any = { compilerOptions: {} };
+  generatedTsConfig.extends = relative(
+    dirname(generatedTsConfigPath),
+    tsConfig
+  );
+  generatedTsConfig.compilerOptions.paths = computeCompilerOptionsPaths(
+    tsConfig,
+    dependencies
+  );
+  return generatedTsConfig;
+}
+
+export function computeCompilerOptionsPaths(tsConfig, dependencies) {
+  const paths = readPaths(tsConfig) || {};
+  updatePaths(dependencies, paths);
+  return paths;
 }
 
 function readPaths(tsConfig: string) {
@@ -116,11 +128,17 @@ export function createTmpTsConfig(
   projectRoot: string,
   dependencies: DependentBuildableProjectNode[]
 ) {
+  const tmpTsConfigPath = join(
+    workspaceRoot,
+    'tmp',
+    projectRoot,
+    'tsconfig.generated.json'
+  );
   const parsedTSConfig = readTsConfigWithRemappedPaths(
     tsconfigPath,
+    tmpTsConfigPath,
     dependencies
   );
-  const tmpTsConfigPath = join(workspaceRoot, projectRoot, 'tsconfig.nx-tmp');
   process.on('exit', () => {
     cleanupTmpTsConfigFile(tmpTsConfigPath);
   });
@@ -133,7 +151,7 @@ export function createTmpTsConfig(
     process.exit(0);
   });
   writeJsonFile(tmpTsConfigPath, parsedTSConfig);
-  return join(projectRoot, 'tsconfig.nx-tmp');
+  return join(tmpTsConfigPath);
 }
 
 function cleanupTmpTsConfigFile(tmpTsConfigPath) {

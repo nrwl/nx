@@ -284,7 +284,12 @@ describe('NodeCompileBuilder', () => {
     });
 
     it('should call the tsc compiler with the modified tsconfig.json', done => {
-      let tmpTsConfigPath = join('libs/nodelib', 'tsconfig.nx-tmp');
+      let tmpTsConfigPath = join(
+        '/root',
+        'tmp',
+        'libs/nodelib',
+        'tsconfig.generated.json'
+      );
 
       runNodePackageBuilder(testOptions, context).subscribe({
         complete: () => {
