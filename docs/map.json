@@ -744,6 +744,11 @@
             "file": "shared/monorepo-affected"
           },
           {
+            "name": "Configuration",
+            "id": "configuration",
+            "file": "angular/guides/configuration"
+          },
+          {
             "name": "Visualizing Workspaces",
             "id": "monorepo-dependency-diagrams",
             "file": "shared/monorepo-dependency-diagrams"
@@ -1532,6 +1537,11 @@
             "name": "Rebuilding What is Affected",
             "id": "monorepo-affected",
             "file": "shared/monorepo-affected"
+          },
+          {
+            "name": "Configuration",
+            "id": "configuration",
+            "file": "react/guides/configuration"
           },
           {
             "name": "Visualizing Workspaces",
