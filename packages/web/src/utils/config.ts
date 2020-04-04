@@ -97,7 +97,7 @@ export function getBaseWebpackPartial(
 
   if (isScriptOptimizeOn) {
     webpackConfig.optimization = {
-      minimizer: [createTerserPlugin(esm)],
+      minimizer: [createTerserPlugin(esm, !!options.sourceMap)],
       runtimeChunk: true
     };
   }
@@ -167,10 +167,11 @@ function getAliases(options: BuildBuilderOptions): { [key: string]: string } {
   );
 }
 
-export function createTerserPlugin(esm: boolean) {
+export function createTerserPlugin(esm: boolean, sourceMap: boolean) {
   return new TerserWebpackPlugin({
     parallel: true,
     cache: true,
+    sourceMap,
     terserOptions: {
       ecma: esm ? 6 : 5,
       safari10: true,
