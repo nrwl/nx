@@ -31,7 +31,7 @@ The host to inspect the process on
 
 Default: `inspect`
 
-Type: `string`
+Type: `string | boolean`
 
 Ensures the app is starting with debugging
 
