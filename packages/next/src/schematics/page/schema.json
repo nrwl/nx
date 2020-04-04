@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "id": "NxReactApp",
-  "title": "Create a React Component for Nx",
+  "title": "Create a Page for Next",
   "type": "object",
   "examples": [
     {
@@ -69,48 +69,26 @@
         ]
       }
     },
-    "js": {
+    "withTests": {
       "type": "boolean",
-      "description": "Generate JavaScript files rather than TypeScript files.",
-      "default": false
-    },
-    "skipTests": {
-      "type": "boolean",
-      "description": "When true, does not create \"spec.ts\" test files for the new component.",
-      "default": false
-    },
-    "directory": {
-      "type": "string",
-      "description": "Create the component under this directory (can be nested).",
-      "alias": "d"
-    },
-    "flat": {
-      "type": "boolean",
-      "description": "Create component at the source root rather than its own directory.",
+      "description": "When true, creates a \"spec.ts\" test file for the new page.",
       "default": false
     },
     "export": {
       "type": "boolean",
       "description": "When true, the component is exported from the project index.ts (if it exists).",
       "alias": "e",
-      "default": false,
-      "x-prompt": "Should this component be exported in the project?"
-    },
-    "pascalCaseFiles": {
-      "type": "boolean",
-      "description": "Use pascal case component file name (e.g. App.tsx).",
-      "alias": "P",
       "default": false
     },
-    "classComponent": {
+    "js": {
       "type": "boolean",
-      "alias": "C",
-      "description": "Use class components instead of functional component.",
+      "description": "Generate JavaScript files rather than TypeScript files.",
       "default": false
     },
-    "routing": {
+    "flat": {
       "type": "boolean",
-      "description": "Generate a library with routes."
+      "description": "Create component at the source root rather than its own directory.",
+      "default": false
     }
   },
   "required": ["name", "project"]

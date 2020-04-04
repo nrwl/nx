@@ -10,7 +10,5 @@ export interface Schema {
   unitTestRunner: 'jest' | 'none';
   e2eTestRunner: 'cypress' | 'none';
   linter: Linter;
-  pascalCaseFiles?: boolean;
   skipWorkspaceJson?: boolean;
-  classComponent: boolean;
 }
