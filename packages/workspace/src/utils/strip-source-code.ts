@@ -4,6 +4,9 @@ export function stripSourceCode(scanner: Scanner, contents: string): string {
   if (contents.indexOf('loadChildren') > -1) {
     return contents;
   }
+  if (contents.indexOf('require') > -1) {
+    return contents;
+  }
 
   scanner.setText(contents);
   let token = scanner.scan();

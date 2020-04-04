@@ -1,9 +1,7 @@
-import { extname } from 'path';
 import { vol, fs } from 'memfs';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { createProjectGraph } from './project-graph';
 import { DependencyType } from './project-graph-models';
-import { FileData } from '../file-utils';
 import { NxJson } from '../shared-interfaces';
 
 jest.mock('fs', () => require('memfs').fs);
@@ -15,12 +13,12 @@ describe('project graph', () => {
   let nxJson: NxJson;
   let tsConfigJson: any;
   let filesJson: any;
-  let files: FileData[];
 
   beforeEach(() => {
     packageJson = {
       name: '@nrwl/workspace-src',
       dependencies: {
+        express: '4.0.0',
         'happy-nrwl': '1.0.0'
       },
       devDependencies: {
@@ -98,7 +96,7 @@ describe('project graph', () => {
     };
     filesJson = {
       './apps/api/src/index.ts': stripIndents`
-        console.log('starting server');
+        require('express');
       `,
       './apps/demo/src/index.ts': stripIndents`
         import * as ui from '@nrwl/ui';
@@ -110,6 +108,7 @@ describe('project graph', () => {
       `,
       './libs/ui/src/index.ts': stripIndents`
         import * as util from '@nrwl/shared/util';
+        import('@nrwl/lazy-lib');
       `,
       './libs/shared/util/src/index.ts': stripIndents`
         import * as happyNrwl from 'happy-nrwl/a/b/c';
@@ -125,11 +124,6 @@ describe('project graph', () => {
       './workspace.json': JSON.stringify(workspaceJson),
       './tsconfig.json': JSON.stringify(tsConfigJson)
     };
-    files = Object.keys(filesJson).map(f => ({
-      file: f,
-      ext: extname(f),
-      mtime: 1
-    }));
     vol.reset();
     vol.fromJSON(filesJson, '/root');
   });
@@ -145,9 +139,11 @@ describe('project graph', () => {
       'shared-util': { name: 'shared-util', type: 'lib' },
       'shared-util-data': { name: 'shared-util-data', type: 'lib' },
       'lazy-lib': { name: 'lazy-lib', type: 'lib' },
-      'happy-nrwl': { name: 'happy-nrwl', type: 'npm' }
+      'happy-nrwl': { name: 'happy-nrwl', type: 'npm' },
+      express: { name: 'express', type: 'npm' }
     });
     expect(graph.dependencies).toMatchObject({
+      api: [{ type: DependencyType.static, source: 'api', target: 'express' }],
       'demo-e2e': [
         { type: DependencyType.implicit, source: 'demo-e2e', target: 'demo' }
       ],
@@ -166,7 +162,8 @@ describe('project graph', () => {
         { type: DependencyType.implicit, source: 'demo', target: 'api' }
       ],
       ui: [
-        { type: DependencyType.static, source: 'ui', target: 'shared-util' }
+        { type: DependencyType.static, source: 'ui', target: 'shared-util' },
+        { type: DependencyType.dynamic, source: 'ui', target: 'lazy-lib' }
       ],
       'shared-util': [
         {
@@ -213,6 +210,11 @@ describe('project graph', () => {
         type: DependencyType.static,
         source: 'ui',
         target: 'shared-util'
+      },
+      {
+        type: DependencyType.dynamic,
+        source: 'ui',
+        target: 'lazy-lib'
       }
     ]);
   });

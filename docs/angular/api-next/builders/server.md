@@ -1,4 +1,4 @@
-# dev-server
+# server
 
 Serve a Next.js app
 

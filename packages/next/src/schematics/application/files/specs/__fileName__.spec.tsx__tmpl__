@@ -11,6 +11,6 @@ describe('Index', () => {
 
   it('should have a greeting as the title', () => {
     const { getByText } = render(<Index />);
-    expect(getByText('Welcome to <%= projectName %>! [DEV]')).toBeTruthy();
+    expect(getByText('Welcome to <%= projectName %>!')).toBeTruthy();
   });
 });

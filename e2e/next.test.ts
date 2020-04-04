@@ -4,6 +4,7 @@ import {
   ensureProject,
   forEachCli,
   readFile,
+  readJson,
   runCLI,
   runCLIAsync,
   supportUi,
@@ -102,7 +103,7 @@ module.exports = withCSS({
       await checkApp(appName, { checkLint: true, checkE2E: true });
 
       // check that the configuration was consumed
-      expect(readFile(`dist/apps/${appName}/BUILD_ID`)).toEqual('fixed');
+      expect(readFile(`dist/apps/${appName}/.next/BUILD_ID`)).toEqual('fixed');
     }, 120000);
 
     it('should be able to dynamically load a lib', async () => {
@@ -229,7 +230,12 @@ async function checkApp(
 
   const buildResult = runCLI(`build ${appName}`);
   expect(buildResult).toContain(`Compiled successfully`);
-  checkFilesExist(`dist/apps/${appName}/build-manifest.json`);
+  checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);
+
+  const packageJson = readJson(`dist/apps/${appName}/package.json`);
+  expect(packageJson.dependencies.react).toBeDefined();
+  expect(packageJson.dependencies['react-dom']).toBeDefined();
+  expect(packageJson.dependencies.next).toBeDefined();
 
   const exportResult = runCLI(`export ${appName}`);
   expect(exportResult).toContain('Exporting (3/3)');
