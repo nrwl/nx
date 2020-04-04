@@ -178,7 +178,7 @@ You may specify a custom .env file path
 
 ### outputPath
 
-Type: `string`
+Type: `string | array`
 
 Tells Nx where the files will be created
 

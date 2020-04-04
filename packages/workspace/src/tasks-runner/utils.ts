@@ -71,7 +71,7 @@ export function getOutputsForTargetAndConfiguration(
   }
 
   if (opts.outputPath) {
-    return [opts.outputPath];
+    return Array.isArray(opts.outputPath) ? opts.outputPath : [opts.outputPath];
   } else if (target === 'build') {
     return [`dist/${node.data.root}`];
   } else {

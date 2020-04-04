@@ -111,11 +111,19 @@ function generateTemplate(
               option.default === undefined || option.default === ''
                 ? ''
                 : `Default: \`${option.default}\`\n`
-            }
-            Type: \`${option.type}\` ${
-          option.arrayOfType ? `of \`${option.arrayOfType}\`` : ''
-        } \n 
-            
+            }`;
+
+        if (option.types && option.types.length) {
+          template += dedent`
+              Type: \`${option.types.join(' | ')} \`\n`;
+        } else {
+          template += dedent`
+              Type: \`${option.type}\` ${
+            option.arrayOfType ? `of \`${option.arrayOfType}\`` : ''
+          } \n`;
+        }
+
+        template += dedent`  
             ${enumStr} 
             ${option.description}
           `;
