@@ -8,7 +8,11 @@ export function runRollup(options: rollup.RollupOptions) {
       const outputOptions = Array.isArray(options.output)
         ? options.output
         : [options.output];
-      return from(Promise.all(outputOptions.map(o => bundle.write(o))));
+      return from(
+        Promise.all(
+          (<Array<rollup.OutputOptions>>outputOptions).map(o => bundle.write(o))
+        )
+      );
     }),
     map(() => ({ success: true }))
   );
