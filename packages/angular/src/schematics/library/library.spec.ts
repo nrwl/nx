@@ -118,6 +118,18 @@ describe('lib', () => {
       ).not.toBeDefined();
     });
 
+    it('should remove tsconfib.lib.prod.json when library is not publishable', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', publishable: false },
+        appTree
+      );
+
+      const libProdConfig = tree.read('libs/my-lib/tsconfig.lib.prod.json');
+
+      expect(libProdConfig).toBeFalsy();
+    });
+
     it('should update nx.json', async () => {
       const tree = await runSchematic(
         'lib',
