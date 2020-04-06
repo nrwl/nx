@@ -51,7 +51,7 @@
           "version": "25.1.4",
           "alwaysAddToPackageJson": false
         },
-        "jest-angular-preset": {
+        "jest-preset-angular": {
           "version": "8.1.3",
           "alwaysAddToPackageJson": false
         }
