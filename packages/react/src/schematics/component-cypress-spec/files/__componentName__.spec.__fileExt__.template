@@ -1,0 +1,12 @@
+describe('<%=projectName%>: <%= componentSelector %> component', () => {
+  beforeEach(() => cy.visit('/iframe.html?id=<%= componentSelector.toLowerCase() %>--primary<%
+    for(let prop of props) {
+      %>&knob-<%=prop.name%><%
+      if(prop.defaultValue !== undefined) {
+        %>=<%=prop.defaultValue%><%
+      } %><%}%>'));
+    
+    it('should render the component', () => {
+      cy.get('h1').should('contain', 'Welcome to <%=projectName%>!');
+    });
+});

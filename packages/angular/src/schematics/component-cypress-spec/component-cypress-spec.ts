@@ -16,15 +16,12 @@ import {
   PropertyDeclaration,
   SyntaxKind
 } from 'typescript';
-import {
-  getTsSourceFile,
-  getDecoratorMetadata,
-  applyWithSkipExisting
-} from '../../utils/ast-utils';
+import { getTsSourceFile, getDecoratorMetadata } from '../../utils/ast-utils';
 import {
   getInputPropertyDeclarations,
   getKnobType
 } from '../component-story/component-story';
+import { applyWithSkipExisting } from '@nrwl/workspace/src/utils/ast-utils';
 
 export default function(schema: CreateComponentSpecFileSchema): Rule {
   return chain([createComponentSpecFile(schema)]);

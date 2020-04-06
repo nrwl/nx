@@ -92,7 +92,23 @@ function updateWorkspaceJson(options: CypressProjectSchema): Rule {
 export default function(options: CypressProjectSchema): Rule {
   options = normalizeOptions(options);
   return chain([
-    addLintFiles(options.projectRoot, options.linter),
+    addLintFiles(options.projectRoot, options.linter, {
+      localConfig: {
+        // we need this overrides because we enabled
+        // allowJS in the tsconfig to allow for JS based
+        // Cypress tests. That however leads to issues
+        // with the CommonJS Cypress plugin file
+        overrides: [
+          {
+            files: ['src/plugins/index.js'],
+            rules: {
+              '@typescript-eslint/no-var-requires': 'off',
+              'no-undef': 'off'
+            }
+          }
+        ]
+      }
+    }),
     generateFiles(options),
     updateWorkspaceJson(options),
     updateNxJson(options)

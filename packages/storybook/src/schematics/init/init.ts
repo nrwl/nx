@@ -13,7 +13,8 @@ import {
   babelLoaderVersion,
   babelCoreVersion,
   storybookVersion,
-  nxVersion
+  nxVersion,
+  babelPresetTypescriptVersion
 } from '../../utils/versions';
 import { Schema } from './schema';
 
@@ -29,6 +30,9 @@ function checkDependenciesInstalled(): Rule {
       devDependencies['@storybook/addon-knobs'] = storybookVersion;
       devDependencies['babel-loader'] = babelLoaderVersion;
       devDependencies['@babel/core'] = babelCoreVersion;
+      devDependencies[
+        '@babel/preset-typescript'
+      ] = babelPresetTypescriptVersion;
     }
     if (
       !packageJson.dependencies['@angular/forms'] &&

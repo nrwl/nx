@@ -11,7 +11,11 @@ import {
   SchematicContext,
   DirEntry,
   noop,
-  chain
+  chain,
+  Source,
+  mergeWith,
+  apply,
+  forEach
 } from '@angular-devkit/schematics';
 import * as ts from 'typescript';
 import * as stripJsonComments from 'strip-json-comments';
@@ -794,4 +798,25 @@ function renameFile(tree: Tree, from: string, to: string) {
   }
   tree.create(to, buffer.toString());
   tree.delete(from);
+}
+
+/**
+ * Applies a template merge but skips for already existing entries
+ */
+export function applyWithSkipExisting(source: Source, rules: Rule[]): Rule {
+  return (tree: Tree, _context: SchematicContext) => {
+    const rule = mergeWith(
+      apply(source, [
+        ...rules,
+        forEach(fileEntry => {
+          if (tree.exists(fileEntry.path)) {
+            return null;
+          }
+          return fileEntry;
+        })
+      ])
+    );
+
+    return rule(tree, _context);
+  };
 }
