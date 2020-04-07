@@ -21,6 +21,7 @@ import {
   calculateProjectDependencies,
   createTmpTsConfig
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
+import { CrossOriginValue } from '../../utils/third-party/cli-files/utilities/index-file/augment-index-html';
 
 export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   index: string;
@@ -29,6 +30,7 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   deployUrl: string;
 
   extractCss?: boolean;
+  crossOrigin?: CrossOriginValue;
 
   polyfills?: string;
   es2015Polyfills?: string;
@@ -152,6 +154,7 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
         const success = [result1, result2].every(result => result.success);
         return (options.optimization
           ? writeIndexHtml({
+              crossOrigin: options.crossOrigin,
               host,
               outputPath: devkitJoin(
                 normalize(options.outputPath),
