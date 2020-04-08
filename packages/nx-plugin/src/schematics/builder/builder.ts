@@ -1,9 +1,10 @@
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
   apply,
   chain,
+  filter,
   mergeWith,
   move,
+  noop,
   Rule,
   SchematicContext,
   template,
@@ -72,6 +73,9 @@ function addFiles(options: NormalizedSchema): Rule {
         ...names(options.name),
         tmpl: ''
       }),
+      options.unitTestRunner === 'none'
+        ? filter(file => !file.endsWith('.spec.ts'))
+        : noop(),
       move(`${options.projectSourceRoot}/builders`)
     ])
   );

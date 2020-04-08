@@ -36,9 +36,9 @@ forEachCli(currentCLIName => {
         `dist/libs/${plugin}/src/schematics/${plugin}/schema.d.ts`,
         `dist/libs/${plugin}/src/schematics/${plugin}/schematic.js`,
         `dist/libs/${plugin}/src/schematics/${plugin}/files/src/index.ts.template`,
-        `dist/libs/${plugin}/src/builders/${plugin}/builder.js`,
-        `dist/libs/${plugin}/src/builders/${plugin}/schema.d.ts`,
-        `dist/libs/${plugin}/src/builders/${plugin}/schema.json`
+        `dist/libs/${plugin}/src/builders/build/builder.js`,
+        `dist/libs/${plugin}/src/builders/build/schema.d.ts`,
+        `dist/libs/${plugin}/src/builders/build/schema.json`
       );
       const nxJson = readJson('nx.json');
       expect(nxJson).toMatchObject({

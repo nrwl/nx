@@ -32,6 +32,12 @@
       "type": "string",
       "description": "Builder description",
       "alias": "d"
+    },
+    "unitTestRunner": {
+      "type": "string",
+      "enum": ["jest", "none"],
+      "description": "Test runner to use for unit tests",
+      "default": "jest"
     }
   },
   "required": ["project", "name"]
