@@ -530,6 +530,11 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       logger.info(
         `- there are no migrations to run, so migrations.json has not been created.`
       );
+
+      logger.info(`Next steps:`);
+      logger.info(
+        `- Make sure package.json changes make sense and then run 'npm install' or 'yarn'`
+      );
     }
   } catch (e) {
     const startVersion = versions(root, {})('@nrwl/workspace');
