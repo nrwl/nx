@@ -1,40 +1,53 @@
-import {
-  <%= propertyName %>Reducer,
-  get<%= className %>Start,
-  get<%= className %>Failure,
-  get<%= className %>Success
-} from './<%= fileName %>.slice';
+import { <%= propertyName %>Actions, <%= propertyName %>Adapter, <%= propertyName %>Reducer } from './<%= fileName %>.slice';
 
 describe('<%= propertyName %> reducer', () => {
   it('should handle initial state', () => {
-    expect(<%= propertyName %>Reducer(undefined, { type: '' })).toMatchObject({
-      entities: []
+    const expected = <%= propertyName %>Adapter.getInitialState({
+      loadingStatus: 'not loaded',
+      error: null
     });
+
+    expect(<%= propertyName %>Reducer(undefined, { type: '' })).toEqual(expected);
   });
 
-  it('should handle get <%= propertyName %> actions', () => {
-    let state = <%= propertyName %>Reducer(undefined, get<%= className %>Start());
+  it('should handle fetch<%= className %>s', () => {
+    let state = <%= propertyName %>Reducer(
+      undefined,
+      <%= propertyName %>Actions.fetch<%= className %>s.pending(null, null)
+    );
 
-    expect(state).toEqual({
-      loaded: false,
-      error: null,
-      entities: []
-    });
+    expect(state).toEqual(
+      expect.objectContaining({
+        loadingStatus: 'loading',
+        error: null,
+        entities: {}
+      })
+    );
 
-    state = <%= propertyName %>Reducer(state, get<%= className %>Success([{ id: 1 }]));
+    state = <%= propertyName %>Reducer(
+      state,
+      <%= propertyName %>Actions.fetch<%= className %>s.fulfilled([{ id: 1 }], null, null)
+    );
 
-    expect(state).toEqual({
-      loaded: true,
-      error: null,
-      entities: [{ id: 1 }]
-    });
+    expect(state).toEqual(
+      expect.objectContaining({
+        loadingStatus: 'loaded',
+        error: null,
+        entities: { 1: { id: 1 } }
+      })
+    );
 
-    state = <%= propertyName %>Reducer(state, get<%= className %>Failure('Uh oh'));
+    state = <%= propertyName %>Reducer(
+      state,
+      <%= propertyName %>Actions.fetch<%= className %>s.rejected(new Error('Uh oh'), null, null)
+    );
 
-    expect(state).toEqual({
-      loaded: true,
-      error: 'Uh oh',
-      entities: [{ id: 1 }]
-    });
+    expect(state).toEqual(
+      expect.objectContaining({
+        loadingStatus: 'error',
+        error: 'Uh oh',
+        entities: { 1: { id: 1 } }
+      })
+    );
   });
 });
