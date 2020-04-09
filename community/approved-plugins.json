@@ -28,5 +28,10 @@
     "name": "@offeringsolutions/nx-protractor-to-cypress",
     "description": "Nx plugin to replace protractor with cypress in an nx workspace",
     "url": "https://github.com/FabianGosebrink/nx-protractor-to-cypress"
+  },
+  {
+    "name": "@gperdomor/nx-docker",
+    "description": "Nx plugin to build docker images of your affected apps",
+    "url": "https://github.com/gperdomor/nx-tools/tree/master/libs/nx-docker" 
   }
 ]
