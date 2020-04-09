@@ -258,6 +258,7 @@ function updateProject(options: NormalizedSchema): Rule {
     if (!options.publishable) {
       host.delete(path.join(options.projectRoot, 'ng-package.json'));
       host.delete(path.join(options.projectRoot, 'package.json'));
+      host.delete(path.join(options.projectRoot, 'tsconfig.lib.prod.json'));
     }
 
     host.delete(path.join(options.projectRoot, 'karma.conf.js'));
