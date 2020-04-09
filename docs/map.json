@@ -92,6 +92,7 @@
         "itemList": [
           {
             "name": "Overview",
+            "searchResultsName": "CLI Overview",
             "id": "overview",
             "file": "angular/guides/cli-overview"
           },
@@ -228,6 +229,7 @@
         "itemList": [
           {
             "name": "Overview",
+            "searchResultsName": "Plugins Overview",
             "id": "overview",
             "file": "shared/plugins-overview"
           },
@@ -238,6 +240,7 @@
               {
                 "id": "nrwl-workspace-overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/workspace Overview",
                 "file": "shared/workspace-plugin"
               },
               {
@@ -286,6 +289,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/web Overview",
                 "file": "shared/web-plugin"
               },
               {
@@ -329,6 +333,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/angular Overview",
                 "file": "shared/angular-plugin"
               },
               {
@@ -407,6 +412,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/react Overview",
                 "file": "shared/react-plugin"
               },
               {
@@ -449,6 +455,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/jest Overview",
                 "file": "shared/jest-plugin"
               },
               {
@@ -471,6 +478,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/cypress Overview",
                 "file": "shared/cypress-plugin"
               },
               {
@@ -493,6 +501,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/storybook Overview",
                 "file": "angular/guides/storybook-plugin"
               },
               {
@@ -536,6 +545,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/node Overview",
                 "file": "shared/node-plugin"
               },
               {
@@ -584,6 +594,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/express Overview",
                 "file": "shared/express-plugin"
               },
               {
@@ -611,6 +622,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/nest Overview",
                 "file": "shared/nest-plugin"
               },
               {
@@ -638,6 +650,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/next Overview",
                 "file": "shared/next-plugin"
               },
               {
@@ -681,6 +694,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/nx-plugin Overview",
                 "file": "shared/nx-plugin"
               },
               {
@@ -710,58 +724,109 @@
         ]
       },
       {
-        "name": "Guides",
-        "id": "guides",
+        "name": "Workspace",
+        "id": "workspace",
         "itemList": [
+          {
+            "name": "Overview",
+            "searchResultsName": "Workspace Overview",
+            "id": "workspace-overview",
+            "file": "shared/workspace-overview"
+          },
+          {
+            "name": "Builders",
+            "id": "builders",
+            "itemList": [
+              {
+                "name": "Using Builders",
+                "id": "using-builders",
+                "file": "shared/using-builders"
+              },
+              {
+                "name": "Run Commands Builder",
+                "id": "run-commands-builder",
+                "file": "shared/running-custom-commands"
+              }
+            ]
+          },
           {
             "name": "Computation Caching",
             "id": "computation-caching",
             "file": "shared/computation-caching"
           },
           {
-            "name": "Distributed CI: Overview",
-            "id": "distributed-builds",
-            "file": "shared/distributed-builds"
+            "name": "Schematics",
+            "id": "schematics",
+            "itemList": [
+              {
+                "name": "Using Schematics",
+                "id": "using-schematics",
+                "file": "shared/using-schematics"
+              },
+              {
+                "name": "Workspace Schematics",
+                "id": "workspace-schematics",
+                "file": "shared/tools-workspace-schematics"
+              }
+            ]
           },
           {
-            "name": "Distributed CI: Azure",
-            "id": "monorepo-ci-azure",
-            "file": "shared/monorepo-ci-azure"
+            "name": "Structure",
+            "id": "structure",
+            "itemList": [
+              {
+                "name": "Using Tags",
+                "id": "monorepo-tags",
+                "file": "shared/monorepo-tags"
+              }
+            ]
           },
           {
-            "name": "Distributed CI: Jenkins",
-            "id": "monorepo-ci-jenkins",
-            "file": "shared/monorepo-ci-jenkins"
-          },
+            "name": "Updating Nx",
+            "id": "update",
+            "file": "shared/update"
+          }
+        ]
+      },
+      {
+        "name": "Guides",
+        "id": "guides",
+        "itemList": [
           {
-            "name": "Incremental Builds",
-            "id": "incremental-builds",
-            "file": "shared/incremental-builds"
-          },
-          {
-            "name": "Rebuild Only What is Affected",
-            "id": "monorepo-affected",
-            "file": "shared/monorepo-affected"
+            "name": "CI",
+            "id": "ci",
+            "itemList": [
+              {
+                "name": "Rebuild Only What is Affected",
+                "id": "monorepo-affected",
+                "file": "shared/monorepo-affected"
+              },
+              {
+                "name": "Distributed CI: Overview",
+                "id": "distributed-builds",
+                "file": "shared/distributed-builds"
+              },
+              {
+                "name": "Distributed CI: Azure",
+                "id": "monorepo-ci-azure",
+                "file": "shared/monorepo-ci-azure"
+              },
+              {
+                "name": "Distributed CI: Jenkins",
+                "id": "monorepo-ci-jenkins",
+                "file": "shared/monorepo-ci-jenkins"
+              },
+              {
+                "name": "Incremental Builds",
+                "id": "incremental-builds",
+                "file": "shared/incremental-builds"
+              }
+            ]
           },
           {
             "name": "Visualizing Workspaces",
             "id": "monorepo-dependency-diagrams",
             "file": "shared/monorepo-dependency-diagrams"
-          },
-          {
-            "name": "Using Tags",
-            "id": "monorepo-tags",
-            "file": "shared/monorepo-tags"
-          },
-          {
-            "name": "Workspace Schematics",
-            "id": "workspace-schematics",
-            "file": "shared/tools-workspace-schematics"
-          },
-          {
-            "name": "Custom Commands",
-            "id": "custom-commands",
-            "file": "angular/guides/running-custom-commands"
           },
           {
             "name": "Using NgRx",
@@ -777,17 +842,8 @@
             "file": "shared/monorepo-nx-enterprise"
           },
           {
-            "name": "Updating Nx",
-            "id": "update"
-          },
-          {
             "name": "Nx 7 => Nx 8",
             "id": "nx7-to-nx8"
-          },
-          {
-            "name": "Nx Plugins",
-            "id": "nx-plugin",
-            "file": "shared/nx-plugin"
           }
         ]
       },
@@ -882,6 +938,7 @@
         "itemList": [
           {
             "name": "Overview",
+            "searchResultsName": "CLI Overview",
             "id": "overview",
             "file": "react/guides/cli-overview"
           },
@@ -1018,6 +1075,7 @@
         "itemList": [
           {
             "name": "Overview",
+            "searchResultsName": "Plugins Overview",
             "id": "overview",
             "file": "shared/plugins-overview"
           },
@@ -1028,6 +1086,7 @@
               {
                 "id": "nrwl-workspace-overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/workspace Overview",
                 "file": "shared/workspace-plugin"
               },
               {
@@ -1076,6 +1135,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/web Overview",
                 "file": "shared/web-plugin"
               },
               {
@@ -1119,6 +1179,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/angular Overview",
                 "file": "shared/angular-plugin"
               },
               {
@@ -1197,6 +1258,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/react Overview",
                 "file": "shared/react-plugin"
               },
               {
@@ -1239,6 +1301,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/jest Overview",
                 "file": "shared/jest-plugin"
               },
               {
@@ -1261,6 +1324,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/cypress Overview",
                 "file": "shared/cypress-plugin"
               },
               {
@@ -1283,6 +1347,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/storybook Overview",
                 "file": "react/guides/storybook-plugin"
               },
               {
@@ -1326,6 +1391,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/node Overview",
                 "file": "shared/node-plugin"
               },
               {
@@ -1374,6 +1440,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/express Overview",
                 "file": "shared/express-plugin"
               },
               {
@@ -1401,6 +1468,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/nest Overview",
                 "file": "shared/nest-plugin"
               },
               {
@@ -1428,6 +1496,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/next Overview",
                 "file": "shared/next-plugin"
               },
               {
@@ -1471,6 +1540,7 @@
               {
                 "id": "overview",
                 "name": "Overview",
+                "searchResultsName": "@nrwl/nx-plugin Overview",
                 "file": "shared/nx-plugin"
               },
               {
@@ -1500,58 +1570,78 @@
         ]
       },
       {
-        "name": "Guides",
-        "id": "guides",
+        "name": "Workspace",
+        "id": "workspace",
         "itemList": [
+          {
+            "name": "Overview",
+            "searchResultsName": "Workspace Overview",
+            "id": "workspace-overview",
+            "file": "shared/workspace-overview"
+          },
+          {
+            "name": "Builders",
+            "id": "builders",
+            "itemList": [
+              {
+                "name": "Using Builders",
+                "id": "using-builders",
+                "file": "shared/using-builders"
+              },
+              {
+                "name": "Run Commands Builder",
+                "id": "run-commands-builder",
+                "file": "shared/running-custom-commands"
+              }
+            ]
+          },
           {
             "name": "Computation Caching",
             "id": "computation-caching",
             "file": "shared/computation-caching"
           },
           {
-            "name": "Distributed CI: Overview",
-            "id": "distributed-builds",
-            "file": "shared/distributed-builds"
+            "name": "Schematics",
+            "id": "schematics",
+            "itemList": [
+              {
+                "name": "Using Schematics",
+                "id": "using-schematics",
+                "file": "shared/using-schematics"
+              },
+              {
+                "name": "Workspace Schematics",
+                "id": "workspace-schematics",
+                "file": "shared/tools-workspace-schematics"
+              }
+            ]
           },
           {
-            "name": "Distributed CI: Azure",
-            "id": "monorepo-ci-azure",
-            "file": "shared/monorepo-ci-azure"
+            "name": "Structure",
+            "id": "structure",
+            "itemList": [
+              {
+                "name": "Using Tags",
+                "id": "monorepo-tags",
+                "file": "shared/monorepo-tags"
+              }
+            ]
           },
           {
-            "name": "Distributed CI: Jenkins",
-            "id": "monorepo-ci-jenkins",
-            "file": "shared/monorepo-ci-jenkins"
-          },
-          {
-            "name": "Incremental Builds",
-            "id": "incremental-builds",
-            "file": "shared/incremental-builds"
-          },
-          {
-            "name": "Rebuilding What is Affected",
-            "id": "monorepo-affected",
-            "file": "shared/monorepo-affected"
-          },
+            "name": "Updating Nx",
+            "id": "update",
+            "file": "shared/update"
+          }
+        ]
+      },
+      {
+        "name": "Guides",
+        "id": "guides",
+        "itemList": [
           {
             "name": "Visualizing Workspaces",
             "id": "monorepo-dependency-diagrams",
             "file": "shared/monorepo-dependency-diagrams"
-          },
-          {
-            "name": "Using Tags",
-            "id": "monorepo-tags",
-            "file": "shared/monorepo-tags"
-          },
-          {
-            "name": "Workspace Schematics",
-            "id": "workspace-schematics",
-            "file": "shared/tools-workspace-schematics"
-          },
-          {
-            "name": "Custom commands",
-            "id": "custom-commands",
-            "file": "shared/running-custom-commands"
           },
           {
             "name": "Adding Images, Fonts, and Files",
@@ -1567,16 +1657,6 @@
             "name": "Using Nx at Enterprises",
             "id": "monorepo-nx-enterprise",
             "file": "shared/monorepo-nx-enterprise"
-          },
-          {
-            "name": "Updating Nx",
-            "id": "update",
-            "file": "shared/update"
-          },
-          {
-            "name": "Nx Plugins",
-            "id": "nx-plugin",
-            "file": "shared/nx-plugin"
           },
           {
             "name": "JavaScript and TypeScript",
