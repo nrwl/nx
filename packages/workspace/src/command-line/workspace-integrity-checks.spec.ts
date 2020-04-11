@@ -68,7 +68,7 @@ describe('WorkspaceIntegrityChecks', () => {
               '-'
             )} Cannot find project 'project1' in 'libs/project1'`
           ],
-          title: 'The angular.json file is out of sync'
+          title: 'The workspace.json file is out of sync'
         }
       ]);
     });
