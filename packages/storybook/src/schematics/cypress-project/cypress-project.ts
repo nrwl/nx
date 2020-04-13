@@ -5,11 +5,16 @@ import {
   SchematicContext,
   Tree
 } from '@angular-devkit/schematics';
-import { getProjectConfig, updateWorkspaceInTree } from '@nrwl/workspace';
+import {
+  getProjectConfig,
+  Linter,
+  updateWorkspaceInTree
+} from '@nrwl/workspace';
 import { parseJsonAtPath, safeFileDelete } from '../../utils/utils';
 
 export interface CypressConfigureSchema {
   name: string;
+  linter: Linter;
   js?: boolean;
 }
 
@@ -19,6 +24,7 @@ export default function(schema: CypressConfigureSchema): Rule {
     externalSchematic('@nrwl/cypress', 'cypress-project', {
       name: e2eProjectName,
       project: schema.name,
+      linter: schema.linter,
       js: schema.js
     }),
     removeUnneededFiles(e2eProjectName, schema.js),

@@ -1,5 +1,6 @@
+import * as ngSchematics from '@angular-devkit/schematics';
 import { Tree } from '@angular-devkit/schematics';
-import { readJsonInTree, getProjectConfig } from '@nrwl/workspace';
+import { readJsonInTree, getProjectConfig, Linter } from '@nrwl/workspace';
 import { createTestUILib, runSchematic } from '../../utils/testing';
 
 describe('schematic:cypress-project', () => {
@@ -39,6 +40,48 @@ describe('schematic:cypress-project', () => {
     expect(project.architect.e2e.options.watch).toBeUndefined();
     expect(project.architect.e2e.configurations).toEqual({
       ci: { devServerTarget: `test-ui-lib:storybook:ci` }
+    });
+  });
+
+  describe('--linter', () => {
+    it('should generate tslint files', async () => {
+      const externalSchematicSpy = jest.spyOn(
+        ngSchematics,
+        'externalSchematic'
+      );
+      await runSchematic(
+        'cypress-project',
+        { name: 'test-ui-lib', linter: Linter.TsLint },
+        appTree
+      );
+
+      expect(externalSchematicSpy).toBeCalledWith(
+        '@nrwl/cypress',
+        'cypress-project',
+        expect.objectContaining({
+          linter: Linter.TsLint
+        })
+      );
+    });
+
+    it('should generate eslint files', async () => {
+      const externalSchematicSpy = jest.spyOn(
+        ngSchematics,
+        'externalSchematic'
+      );
+      await runSchematic(
+        'cypress-project',
+        { name: 'test-ui-lib', linter: Linter.EsLint },
+        appTree
+      );
+
+      expect(externalSchematicSpy).toBeCalledWith(
+        '@nrwl/cypress',
+        'cypress-project',
+        expect.objectContaining({
+          linter: Linter.EsLint
+        })
+      );
     });
   });
 });

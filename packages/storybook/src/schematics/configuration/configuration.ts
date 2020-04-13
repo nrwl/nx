@@ -14,7 +14,8 @@ import {
   getProjectConfig,
   offsetFromRoot,
   readJsonFile,
-  updateWorkspace
+  updateWorkspace,
+  Linter
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import { StorybookStoriesSchema } from '../../../../angular/src/schematics/stories/stories';
@@ -33,6 +34,7 @@ export default function(schema: StorybookConfigureSchema): Rule {
     schema.configureCypress
       ? schematic<CypressConfigureSchema>('cypress-project', {
           name: schema.name,
+          linter: Linter.TsLint,
           js: schema.js
         })
       : () => {}
