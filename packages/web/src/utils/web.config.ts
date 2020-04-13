@@ -138,7 +138,8 @@ function getStylesPartial(wco: any): Configuration {
                 modules: true,
                 importLoaders: 1
               }
-            }
+            },
+            { loader: 'sass-loader' }
           ]
         },
         ...rules
