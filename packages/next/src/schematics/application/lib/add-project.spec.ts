@@ -20,7 +20,6 @@ describe('addProject Rule', () => {
       unitTestRunner: 'jest',
       e2eTestRunner: 'cypress',
       linter: Linter.EsLint,
-      classComponent: false,
       projectName: 'todos',
       appProjectRoot: normalize('/apps/todos'),
       e2eProjectName: 'todos-e2e',

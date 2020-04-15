@@ -56,7 +56,7 @@ export interface UiProps {}
 export const Ui = (props: UiProps) => {
   return (
     <div>
-      <h1>Welcome to ui component!</h1>
+      <h1>Welcome to ui!</h1>
     </div>
   );
 };

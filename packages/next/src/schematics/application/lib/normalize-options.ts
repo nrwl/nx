@@ -32,7 +32,7 @@ export function normalizeOptions(
     ? options.tags.split(',').map(s => s.trim())
     : [];
 
-  const fileName = options.pascalCaseFiles ? 'Index' : 'index';
+  const fileName = 'index';
 
   const styledModule = /^(css|scss|less|styl)$/.test(options.style)
     ? null

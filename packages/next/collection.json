@@ -9,12 +9,21 @@
       "description": "Initialize the @nrwl/next plugin",
       "hidden": true
     },
-
     "application": {
       "factory": "./src/schematics/application/application",
       "schema": "./src/schematics/application/schema.json",
       "aliases": ["app"],
       "description": "Create a Next.js application"
+    },
+    "page": {
+      "factory": "./src/schematics/page/page",
+      "schema": "./src/schematics/page/schema.json",
+      "description": "Create a Next.js page component"
+    },
+    "component": {
+      "factory": "./src/schematics/component/component",
+      "schema": "./src/schematics/component/schema.json",
+      "description": "Create a React component"
     }
   }
 }

@@ -1,3 +1,5 @@
+import { noop, Rule } from '@angular-devkit/schematics';
+import { addDepsToPackageJson } from '@nrwl/workspace';
 import { CSS_IN_JS_DEPENDENCIES } from '@nrwl/react';
 import {
   babelPluginStyledComponentsVersion,
@@ -51,3 +53,13 @@ export const NEXT_SPECIFIC_STYLE_DEPENDENCIES = {
     devDependencies: {}
   }
 };
+
+export function addStyleDependencies(style: string): Rule {
+  const extraDependencies = NEXT_SPECIFIC_STYLE_DEPENDENCIES[style];
+  return extraDependencies
+    ? addDepsToPackageJson(
+        extraDependencies.dependencies,
+        extraDependencies.devDependencies
+      )
+    : noop();
+}

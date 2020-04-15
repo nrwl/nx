@@ -1,8 +1,4 @@
-<% if (classComponent) { %>
-import React, { Component } from 'react';
-<% } else { %>
 import React from 'react';
-<% } %>
 <% if (styledModule) {
   var wrapper = 'StyledApp';
 %>import styled from '<%= styledModule %>';<% } else {
@@ -242,17 +238,6 @@ nx affected:e2e
 `;
 %>
 
-<% if (classComponent) { %>
-export class Index extends Component {
-  render() {
-    return (
-      <<%= wrapper %>>
-        <%= innerJsx %>
-      </<%= wrapper %>>
-    );
-  }
-}
-<% } else { %>
 export const Index = () => {
   /*
    * Replace the elements below with your own.
@@ -265,6 +250,5 @@ export const Index = () => {
     </<%= wrapper %>>
   );
 };
-<% } %>
 
 export default Index;
