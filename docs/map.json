@@ -1639,6 +1639,37 @@
         "id": "guides",
         "itemList": [
           {
+            "name": "CI",
+            "id": "ci",
+            "itemList": [
+              {
+                "name": "Rebuild Only What is Affected",
+                "id": "monorepo-affected",
+                "file": "shared/monorepo-affected"
+              },
+              {
+                "name": "Distributed CI: Overview",
+                "id": "distributed-builds",
+                "file": "shared/distributed-builds"
+              },
+              {
+                "name": "Distributed CI: Azure",
+                "id": "monorepo-ci-azure",
+                "file": "shared/monorepo-ci-azure"
+              },
+              {
+                "name": "Distributed CI: Jenkins",
+                "id": "monorepo-ci-jenkins",
+                "file": "shared/monorepo-ci-jenkins"
+              },
+              {
+                "name": "Incremental Builds",
+                "id": "incremental-builds",
+                "file": "shared/incremental-builds"
+              }
+            ]
+          },
+          {
             "name": "Visualizing Workspaces",
             "id": "monorepo-dependency-diagrams",
             "file": "shared/monorepo-dependency-diagrams"
