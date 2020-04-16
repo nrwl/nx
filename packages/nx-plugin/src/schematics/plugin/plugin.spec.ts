@@ -100,16 +100,16 @@ describe('NxPlugin plugin', () => {
       )
     ).toContain('const variable = "<%= projectName %>";');
     expect(
-      tree.exists('libs/my-plugin/src/builders/my-plugin/builder.ts')
+      tree.exists('libs/my-plugin/src/builders/build/builder.ts')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/builders/my-plugin/builder.spec.ts')
+      tree.exists('libs/my-plugin/src/builders/build/builder.spec.ts')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/builders/my-plugin/schema.json')
+      tree.exists('libs/my-plugin/src/builders/build/schema.json')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/builders/my-plugin/schema.d.ts')
+      tree.exists('libs/my-plugin/src/builders/build/schema.d.ts')
     ).toBeTruthy();
   });
 
@@ -146,6 +146,18 @@ describe('NxPlugin plugin', () => {
       expect.objectContaining({
         project: 'my-plugin',
         name: `my-plugin`
+      })
+    );
+  });
+
+  it('should call the @nrwl/nx-plugin:builder schematic', async () => {
+    const schematicSpy = jest.spyOn(ngSchematics, 'schematic');
+    const tree = await runSchematic('plugin', { name: 'myPlugin' }, appTree);
+    expect(schematicSpy).toBeCalledWith(
+      'builder',
+      expect.objectContaining({
+        project: 'my-plugin',
+        name: `build`
       })
     );
   });

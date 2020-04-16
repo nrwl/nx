@@ -120,6 +120,11 @@ function addFiles(options: NormalizedSchema): Rule {
     schematic('schematic', {
       project: options.name,
       name: options.name
+    }),
+    schematic('builder', {
+      project: options.name,
+      name: 'build',
+      unitTestRunner: 'jest'
     })
   ]);
 }
