@@ -66,6 +66,43 @@ forEachCli(currentCLIName => {
       done();
     }, 150000);
 
+    it('should be able to generate a migration', async done => {
+      ensureProject();
+      const plugin = uniq('plugin');
+      const version = '1.0.0';
+
+      runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter}`);
+      runCLI(
+        `generate @nrwl/nx-plugin:migration --project=${plugin} --version=${version} --packageJsonUpdates=false`
+      );
+
+      const lintResults = runCLI(`lint ${plugin}`);
+      expect(lintResults).toContain('All files pass linting.');
+
+      expectTestsPass(await runCLIAsync(`test ${plugin}`));
+
+      const buildResults = runCLI(`build ${plugin}`);
+      expect(buildResults).toContain('Done compiling TypeScript files');
+      checkFilesExist(
+        `dist/libs/${plugin}/src/migrations/update-${version}/update-${version}.js`,
+        `dist/libs/${plugin}/src/migrations/update-${version}/update-${version}.ts`,
+        `dist/libs/${plugin}/src/migrations/update-${version}/update-${version}.spec.ts`,
+        `libs/${plugin}/src/migrations/update-${version}/update-${version}.ts`,
+        `libs/${plugin}/src/migrations/update-${version}/update-${version}.spec.ts`
+      );
+      const migrationsJson = readJson(`libs/${plugin}/migrations.json`);
+      expect(migrationsJson).toMatchObject({
+        schematics: expect.objectContaining({
+          [`update-${version}`]: {
+            version: version,
+            description: `update-${version}`,
+            factory: `./src/migrations/update-${version}/update-${version}`
+          }
+        })
+      });
+      done();
+    }, 45000);
+
     describe('--directory', () => {
       it('should create a plugin in the specified directory', () => {
         ensureProject();
