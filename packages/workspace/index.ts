@@ -63,6 +63,7 @@ export { getWorkspace, updateWorkspace } from './src/utils/workspace';
 export { addUpdateTask } from './src/utils/update-task';
 export { addLintFiles, generateProjectLint, Linter } from './src/utils/lint';
 
+export { addInstallTask } from './src/utils/rules/add-install-task';
 export { formatFiles } from './src/utils/rules/format-files';
 export { deleteFile } from './src/utils/rules/deleteFile';
 export * from './src/utils/rules/ng-add';

@@ -203,6 +203,7 @@ describe('app', () => {
         { name: 'myNodeApp', unitTestRunner: 'none' },
         appTree
       );
+      expect(tree.exists('jest.config.js')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/src/test-setup.ts')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/src/test.ts')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/tsconfig.spec.json')).toBeFalsy();

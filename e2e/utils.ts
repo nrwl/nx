@@ -96,9 +96,10 @@ export function runYarnInstall(silent: boolean = true) {
   return install ? install.toString() : '';
 }
 
-export function runNgcc(silent: boolean = true) {
+export function runNgcc(silent: boolean = true, async: boolean = true) {
   const install = execSync(
-    'node ./node_modules/@angular/compiler-cli/ngcc/main-ngcc.js',
+    'node ./node_modules/@angular/compiler-cli/ngcc/main-ngcc.js' +
+      (!async ? ' --async=false' : ''),
     {
       cwd: tmpProjPath(),
       ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
@@ -172,8 +173,8 @@ function default_1(factoryOptions = {}) {
 }
 exports.default = default_1;`
     );
-
-    runNgcc();
+    const inCI = process.env['CIRCLECI'] ? true : false;
+    runNgcc(!inCI, !inCI);
 
     execSync(`mv ${tmpProjPath()} ${tmpBackupProjPath()}`);
   }

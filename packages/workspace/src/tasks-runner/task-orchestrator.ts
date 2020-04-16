@@ -128,7 +128,7 @@ export class TaskOrchestrator {
       try {
         this.options.lifeCycle.startTask(task);
         const forwardOutput = this.shouldForwardOutput(outputPath, task);
-        const env = this.envForForkedProcess(outputPath, forwardOutput);
+        const env = this.envForForkedProcess(task, outputPath, forwardOutput);
         const args = this.getCommandArgs(task);
         const commandLine = `${this.cli} ${args.join(' ')}`;
 
@@ -163,11 +163,19 @@ export class TaskOrchestrator {
     });
   }
 
-  private envForForkedProcess(outputPath: string, forwardOutput: boolean) {
+  private envForForkedProcess(
+    task: Task,
+    outputPath: string,
+    forwardOutput: boolean
+  ) {
     const env = { ...process.env };
     if (outputPath) {
       env.NX_TERMINAL_OUTPUT_PATH = outputPath;
       if (this.options.captureStderr) {
+        env.NX_TERMINAL_CAPTURE_STDERR = 'true';
+      }
+      // TODO: remove this once we have a reasonable way to configure it
+      if (task.target.target === 'test') {
         env.NX_TERMINAL_CAPTURE_STDERR = 'true';
       }
       if (forwardOutput) {

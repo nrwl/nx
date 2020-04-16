@@ -4,9 +4,9 @@ import {
   readJsonInTree,
   formatFiles,
   updateJsonInTree,
-  checkAndCleanWithSemver
+  checkAndCleanWithSemver,
+  addInstallTask
 } from '@nrwl/workspace';
-import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { gt } from 'semver';
 
 function updateCLI() {
@@ -39,9 +39,7 @@ function updateCLI() {
 
       return json;
     }),
-    (host, context) => {
-      tasks.push(context.addTask(new NodePackageInstallTask()));
-    }
+    addInstallTask()
   ]);
 
   return { rule, tasks };

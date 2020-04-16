@@ -35,7 +35,11 @@ forEachCli(currentCLIName => {
       const libTestResults = await runCLIAsync(`test ${libName}`);
       expect(libTestResults.stderr).toContain('Test Suites: 1 passed, 1 total');
 
-      await testGeneratedApp(appName, { checkStyles: true, checkLinter: true });
+      await testGeneratedApp(appName, {
+        checkStyles: true,
+        checkLinter: true,
+        checkE2E: true
+      });
     }, 120000);
 
     it('should be able to generate a publishable react lib', async () => {
@@ -114,7 +118,11 @@ forEachCli(currentCLIName => {
       const libTestResults = await runCLIAsync(`test ${libName}`);
       expect(libTestResults.stderr).toBe('');
 
-      await testGeneratedApp(appName, { checkStyles: true, checkLinter: true });
+      await testGeneratedApp(appName, {
+        checkStyles: true,
+        checkLinter: true,
+        checkE2E: false
+      });
     }, 120000);
 
     it('should not create a dist folder if there is an error', async () => {
@@ -144,7 +152,11 @@ forEachCli(currentCLIName => {
         `generate @nrwl/react:app ${appName} --routing --no-interactive --linter=${linter}`
       );
 
-      await testGeneratedApp(appName, { checkStyles: true, checkLinter: true });
+      await testGeneratedApp(appName, {
+        checkStyles: true,
+        checkLinter: true,
+        checkE2E: false
+      });
     }, 120000);
 
     it('should generate app with styled-components', async () => {
@@ -157,7 +169,8 @@ forEachCli(currentCLIName => {
 
       await testGeneratedApp(appName, {
         checkStyles: false,
-        checkLinter: true
+        checkLinter: true,
+        checkE2E: false
       });
     }, 120000);
 
@@ -171,7 +184,8 @@ forEachCli(currentCLIName => {
 
       await testGeneratedApp(appName, {
         checkStyles: false,
-        checkLinter: true
+        checkLinter: true,
+        checkE2E: false
       });
 
       expect(() => checkFilesExist(`dist/apps/${appName}/styles.css`)).toThrow(
@@ -247,13 +261,14 @@ forEachCli(currentCLIName => {
 
       await testGeneratedApp(appName, {
         checkStyles: true,
-        checkLinter: false
+        checkLinter: false,
+        checkE2E: false
       });
     }, 30000);
 
     async function testGeneratedApp(
       appName,
-      opts: { checkStyles: boolean; checkLinter: boolean }
+      opts: { checkStyles: boolean; checkLinter: boolean; checkE2E: boolean }
     ) {
       if (opts.checkLinter) {
         const lintResults = runCLI(`lint ${appName}`);
@@ -297,7 +312,7 @@ forEachCli(currentCLIName => {
       const testResults = await runCLIAsync(`test ${appName}`);
       expect(testResults.stderr).toContain('Test Suites: 1 passed, 1 total');
 
-      if (supportUi()) {
+      if (opts.checkE2E) {
         const e2eResults = runCLI(`e2e ${appName}-e2e`);
         expect(e2eResults).toContain('All specs passed!');
       }

@@ -14,6 +14,11 @@
       "description": "Create a e2e application for a Nx Plugin",
       "hidden": true
     },
+    "migration": {
+      "factory": "./src/schematics/migration/migration",
+      "schema": "./src/schematics/migration/schema.json",
+      "description": "Create a migration for an Nx Plugin"
+    },
     "schematic": {
       "factory": "./src/schematics/schematic/schematic",
       "schema": "./src/schematics/schematic/schema.json",

@@ -2,9 +2,6 @@
 
 Nx plugins are npm packages that contain schematics and builders to extend a Nx workspace. Schematics are blueprints to create or modify code, and builders perform actions on the code.
 
-> A list of plugins maintained by Nrwl is found in the [Nrwl/nx repo](https://github.com/nrwl/nx/tree/master/packages). \
-> A list of custom plugins created by the community is found in the [Plugins](/nx-plugins) section.
-
 ## nx list
 
 Use the `nx list` command to see installed and available plugins. Both Nrwl maintained (`@nrwl/something`) and community plugins are listed.
@@ -35,7 +32,7 @@ Use the `nx list` command to see installed and available plugins. Both Nrwl main
 
 >  NX  Community plugins:
 
-  @nxtend/ionic-react - An Nx plugin for developing Ionic React applications and libraries.
+  @nxtend/ionic-react - An Nx plugin for developing Ionic React applications and libraries
   @angular-architects/ddd - Nx plugin for structuring a monorepo with domains and layers
   @offeringsolutions/nx-karma-to-jest - Nx plugin for replacing karma with jest in an Nx workspace
   @flowaccount/nx-serverless - Nx plugin for node/angular-universal schematics and deployment builders in an Nx workspace
@@ -44,4 +41,4 @@ Use the `nx list` command to see installed and available plugins. Both Nrwl main
 
 ## See Also
 
-[Nx Plugins](/angular/plugins/community-plugins)
+[Nx Community Plugins](/nx-plugins)

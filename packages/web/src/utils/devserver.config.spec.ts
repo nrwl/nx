@@ -448,8 +448,8 @@ describe('getDevServerConfig', () => {
           const result = getDevServerConfig(
             root,
             sourceRoot,
-            buildInput,
-            { ...serveInput, maxWorkers: 1 },
+            { ...buildInput, maxWorkers: 1 },
+            serveInput,
             logger
           ) as any;
 
@@ -465,8 +465,8 @@ describe('getDevServerConfig', () => {
           const result = getDevServerConfig(
             root,
             sourceRoot,
-            buildInput,
-            { ...serveInput, memoryLimit: 1024 },
+            { ...buildInput, memoryLimit: 1024 },
+            serveInput,
             logger
           ) as any;
 

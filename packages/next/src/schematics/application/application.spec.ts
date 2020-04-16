@@ -103,19 +103,9 @@ describe('app', () => {
       root: 'apps/my-app',
       outputPath: 'dist/apps/my-app'
     });
-    expect(architectConfig.build.configurations).toEqual({
-      production: {
-        fileReplacements: [
-          {
-            replace: 'apps/my-app/environments/environment.ts',
-            with: 'apps/my-app/environments/environment.prod.ts'
-          }
-        ]
-      }
-    });
   });
 
-  it('should set up the nrwl next dev-server builder', async () => {
+  it('should set up the nrwl next server builder', async () => {
     const tree = await runSchematic(
       'app',
       {
@@ -125,7 +115,7 @@ describe('app', () => {
     );
     const workspaceJson = readJsonInTree(tree, 'workspace.json');
     const architectConfig = workspaceJson.projects['my-app'].architect;
-    expect(architectConfig.serve.builder).toEqual('@nrwl/next:dev-server');
+    expect(architectConfig.serve.builder).toEqual('@nrwl/next:server');
     expect(architectConfig.serve.options).toEqual({
       buildTarget: 'my-app:build',
       dev: true
@@ -158,6 +148,7 @@ describe('app', () => {
         { name: 'myApp', unitTestRunner: 'none' },
         appTree
       );
+      expect(tree.exists('jest.config.js')).toBeFalsy();
       expect(tree.exists('apps/my-app/specs/index.spec.tsx')).toBeFalsy();
     });
   });
@@ -175,19 +166,6 @@ describe('app', () => {
     });
   });
 
-  describe('--pascalCaseFiles', () => {
-    it('should use upper case app file', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myApp', pascalCaseFiles: true },
-        appTree
-      );
-
-      expect(tree.exists('apps/my-app/pages/Index.tsx')).toBeTruthy();
-      expect(tree.exists('apps/my-app/specs/Index.spec.tsx')).toBeTruthy();
-    });
-  });
-
   it('should generate functional components by default', async () => {
     const tree = await runSchematic('app', { name: 'myApp' }, appTree);
 
@@ -195,96 +173,6 @@ describe('app', () => {
 
     expect(appContent).not.toMatch(/extends Component/);
   });
-
-  describe('--class-component', () => {
-    it('should generate class components', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myApp', classComponent: true },
-        appTree
-      );
-
-      const appContent = tree.read('apps/my-app/pages/index.tsx').toString();
-
-      expect(appContent).toMatch(/extends Component/);
-    });
-  });
-
-  // uncomment
-  // describe('--style styled-components', () => {
-  //   it('should use styled-components as the styled API library', async () => {
-  //     const tree = await runSchematic(
-  //       'app',
-  //       { name: 'myApp', style: 'styled-components' },
-  //       appTree
-  //     );
-
-  //     expect(
-  //       tree.exists('apps/my-app/src/app/app.styled-components')
-  //     ).toBeFalsy();
-  //     expect(tree.exists('apps/my-app/src/app/app.tsx')).toBeTruthy();
-
-  //     const content = tree.read('apps/my-app/src/app/app.tsx').toString();
-  //     expect(content).toContain('styled-component');
-  //     expect(content).toContain('<StyledApp>');
-  //   });
-
-  //   it('should add dependencies to package.json', async () => {
-  //     const tree = await runSchematic(
-  //       'app',
-  //       { name: 'myApp', style: 'styled-components' },
-  //       appTree
-  //     );
-
-  //     const packageJSON = readJsonInTree(tree, 'package.json');
-  //     expect(packageJSON.dependencies['styled-components']).toBeDefined();
-  //   });
-  // });
-
-  // describe('--style @emotion/styled', () => {
-  //   it('should use @emotion/styled as the styled API library', async () => {
-  //     const tree = await runSchematic(
-  //       'app',
-  //       { name: 'myApp', style: '@emotion/styled' },
-  //       appTree
-  //     );
-
-  //     expect(
-  //       tree.exists('apps/my-app/src/app/app.@emotion/styled')
-  //     ).toBeFalsy();
-  //     expect(tree.exists('apps/my-app/src/app/app.tsx')).toBeTruthy();
-
-  //     const content = tree.read('apps/my-app/src/app/app.tsx').toString();
-  //     expect(content).toContain('@emotion/styled');
-  //     expect(content).toContain('<StyledApp>');
-  //   });
-
-  //   it('should exclude styles from workspace.json', async () => {
-  //     const tree = await runSchematic(
-  //       'app',
-  //       { name: 'myApp', style: '@emotion/styled' },
-  //       appTree
-  //     );
-
-  //     const workspaceJson = readJsonInTree(tree, 'workspace.json');
-
-  //     expect(
-  //       workspaceJson.projects['my-app'].architect.build.options.styles
-  //     ).toEqual([]);
-  //   });
-
-  //   it('should add dependencies to package.json', async () => {
-  //     const tree = await runSchematic(
-  //       'app',
-  //       { name: 'myApp', style: '@emotion/styled' },
-  //       appTree
-  //     );
-
-  //     const packageJSON = readJsonInTree(tree, 'package.json');
-  //     expect(packageJSON.dependencies['@emotion/core']).toBeDefined();
-  //     expect(packageJSON.dependencies['@emotion/styled']).toBeDefined();
-  //   });
-  // });
 
   describe('--linter=eslint', () => {
     it('should add .eslintrc and dependencies', async () => {

@@ -4,7 +4,7 @@ Runs unit tests in a project using the configured unit test runner.
 
 ## Usage
 
-The `test` command is a built-in alias to the [run command](/angular/cli/run).
+The `test` command is a built-in alias to the [run command](/{{framework}}/cli/run).
 
 These two commands are equivalent:
 
@@ -17,8 +17,6 @@ nx run <project>:test [options]
 ```
 
 Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
-
-> When used within an Nx workspace with the Angular CLI as the primary CLI, the Nx CLI delegates the `test` command to the Angular CLI's `test` command.
 
 ### Examples
 

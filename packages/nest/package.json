@@ -29,11 +29,12 @@
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "@nrwl/workspace": "*"
+    "@nrwl/workspace": "*",
+    "@nestjs/schematics": "^6.3.0"
   },
   "dependencies": {
     "@nrwl/node": "*",
     "@nrwl/jest": "*",
-    "@angular-devkit/schematics": "~9.0.1"
+    "@angular-devkit/schematics": "~9.1.0"
   }
 }

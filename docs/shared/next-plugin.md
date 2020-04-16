@@ -8,7 +8,7 @@ The Nx Plugin for Next.js contains builders and schematics for managing Next.js 
 
 ## Installing the Next.js Plugin
 
-Installing the Nest plugin to a workspace can be done with the following:
+Installing the Next plugin to a workspace can be done with the following:
 
 ```shell script
 yarn add -D @nrwl/next
@@ -60,14 +60,14 @@ myorg/
 
 ## See Also
 
-- [Using Next.js](/react/guides/nextjs)
+- [Using Next.js](https://nextjs.org/docs/getting-started)
 
 ## Builders
 
-- [build](/react/api/next/builders/build) - Builds a Next.js application
-- [dev-server](/react/api/next/builders/dev-server) - Builds and serves a Next.js application
-- [export](/react/api/next/builders/package) - Export a Next.js app. The exported application is located at `dist/$outputPath/exported`
+- [build](/{{framework}}/plugins_next_builders/build) - Builds a Next.js application
+- [dev-server](/{{framework}}/plugins_next_builders/dev-server) - Builds and serves a Next.js application
+- [export](/{{framework}}/plugins_next_builders/package) - Export a Next.js app. The exported application is located at `dist/$outputPath/exported`
 
 ## Schematics
 
-- [application](/react/api/next/schematics/application) - Create an Next.js application
+- [application](/{{framework}}/plugins_next_schematics/application) - Create an Next.js application

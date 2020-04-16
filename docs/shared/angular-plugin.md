@@ -81,26 +81,26 @@ myorg/
 
 ## See Also
 
-- [Using DataPersistence](/angular/guides/misc-data-persistence)
-- [Using NgRx](/angular/guides/misc-ngrx)
-- [Upgrading an AngularJS application to Angular](/angular/guides/misc-angular)
+- [Using DataPersistence](/{{framework}}/guides/misc-data-persistence)
+- [Using NgRx](/{{framework}}/guides/misc-ngrx)
+- [Upgrading an AngularJS application to Angular](/{{framework}}/guides/misc-angular)
 
 ## Builders
 
-- [package](/angular/api/angular/builders/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
+- [package](/{{framework}}/plugins_angular_builders/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
 
 ## Schematics
 
-- [application](/angular/api/angular/schematics/application) - Create an Angular application
-- [downgrade-module](/angular/api/angular/schematics/downgrade-module) - Setup Downgrade Module
-- [karma](/angular/api/angular/schematics/karma) - Add karma configuration to a workspace
-- [karma-project](/angular/api/angular/schematics/karma-project) - Add karma testing to a project
-- [library](/angular/api/angular/schematics/library) - Create an Angular library
-- [move](/angular/api/angular/schematics/move) - Move an Angular application or library to another folder within the workspace
-- [ngrx](/angular/api/angular/schematics/ngrx) - Add and use NgRx for state management
-- [stories](/angular/api/angular/schematics/stories) - Create stories/specs for all components declared in a library
-- [storybook-configuration](/angular/api/angular/schematics/storybook-configuration) - Setup configuration for Storybook
-- [upgrade-module](/angular/api/angular/schematics/upgrade-module) - Add an upgrade module
+- [application](/{{framework}}/plugins_angular_schematics/application) - Create an Angular application
+- [downgrade-module](/{{framework}}/plugins_angular_schematics/downgrade-module) - Setup Downgrade Module
+- [karma](/{{framework}}/plugins_angular_schematics/karma) - Add karma configuration to a workspace
+- [karma-project](/{{framework}}/plugins_angular_schematics/karma-project) - Add karma testing to a project
+- [library](/{{framework}}/plugins_angular_schematics/library) - Create an Angular library
+- [move](/{{framework}}/plugins_angular_schematics/move) - Move an Angular application or library to another folder within the workspace
+- [ngrx](/{{framework}}/plugins_angular_schematics/ngrx) - Add and use NgRx for state management
+- [stories](/{{framework}}/plugins_angular_schematics/stories) - Create stories/specs for all components declared in a library
+- [storybook-configuration](/{{framework}}/plugins_angular_schematics/storybook-configuration) - Setup configuration for Storybook
+- [upgrade-module](/{{framework}}/plugins_angular_schematics/upgrade-module) - Add an upgrade module
 
 ## Public API
 

@@ -23,6 +23,10 @@ export function createApplicationFiles(options: NormalizedSchema): Rule {
       options.styledModule
         ? filter(file => !file.endsWith(`.${options.style}`))
         : noop(),
+      // Custom document is used for styled-components SSR in Next.js
+      options.style === 'styled-components'
+        ? noop()
+        : filter(file => file.indexOf('_document.tsx') === -1),
       options.unitTestRunner === 'none'
         ? filter(file => file !== `/specs/index.spec.tsx`)
         : noop(),

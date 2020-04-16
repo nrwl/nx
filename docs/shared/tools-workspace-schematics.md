@@ -1,4 +1,4 @@
-# Using Workspace Schematics
+# Workspace Schematics
 
 Workspace schematics provide a way to automate many tasks you regularly perform as part of your development workflow. Whether it is scaffolding out components, features, or ensuring libraries are generated and structured in a certain way, schematics help you standardize these tasks in a consistent, and predictable manner. Nx provides tooling around creating, and running custom schematics from within your workspace. This guide shows you how to create, run, and customize workspace schematics within your Nx workspace.
 

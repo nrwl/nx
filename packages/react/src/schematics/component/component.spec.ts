@@ -207,17 +207,45 @@ describe('component', () => {
         appTree
       );
 
-      expect(tree.exists('/libs/my-lib/src/lib/components/hello.tsx'));
+      expect(tree.exists('/libs/my-lib/src/components/hello/hello.tsx'));
     });
 
     it('should create with nested directories', async () => {
       const tree = await runSchematic(
         'component',
-        { name: 'helloWorld', project: projectName, directory: 'foo' },
+        { name: 'helloWorld', project: projectName, directory: 'lib/foo' },
         appTree
       );
 
-      expect(tree.exists('/libs/my-lib/src/lib/foo/bar/faz/hello-world.tsx'));
+      expect(
+        tree.exists('/libs/my-lib/src/lib/foo/hello-world/hello-world.tsx')
+      );
+    });
+  });
+
+  describe('--flat', () => {
+    it('should create in project directory rather than in its own folder', async () => {
+      const tree = await runSchematic(
+        'component',
+        { name: 'hello', project: projectName, flat: true },
+        appTree
+      );
+
+      expect(tree.exists('/libs/my-lib/src/lib/hello.tsx'));
+    });
+    it('should work with custom directory path', async () => {
+      const tree = await runSchematic(
+        'component',
+        {
+          name: 'hello',
+          project: projectName,
+          flat: true,
+          directory: 'components'
+        },
+        appTree
+      );
+
+      expect(tree.exists('/libs/my-lib/src/components/hello.tsx'));
     });
   });
 });

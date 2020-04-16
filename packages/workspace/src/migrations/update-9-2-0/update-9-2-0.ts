@@ -1,5 +1,15 @@
 import { chain } from '@angular-devkit/schematics';
-import { formatFiles, updateJsonInTree } from '@nrwl/workspace';
+import {
+  formatFiles,
+  updateJsonInTree,
+  updatePackagesInPackageJson
+} from '@nrwl/workspace';
+import { join } from 'path';
+
+const updatePackages = updatePackagesInPackageJson(
+  join(__dirname, '../../../', 'migrations.json'),
+  '9.2.0'
+);
 
 const addCacheableOperations = updateJsonInTree('nx.json', nxJson => {
   nxJson.tasksRunnerOptions = nxJson.tasksRunnerOptions || {};
@@ -47,5 +57,5 @@ const addCacheableOperations = updateJsonInTree('nx.json', nxJson => {
 });
 
 export default function() {
-  return chain([addCacheableOperations, formatFiles()]);
+  return chain([updatePackages, addCacheableOperations, formatFiles()]);
 }

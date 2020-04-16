@@ -78,7 +78,7 @@ describe('Next.js webpack config builder', () => {
 
       expect(config).toEqual(
         expect.objectContaining({
-          distDir: '../../dist/apps/wibble',
+          distDir: '../../dist/apps/wibble/.next',
           outdir: '../../dist/apps/wibble'
         })
       );

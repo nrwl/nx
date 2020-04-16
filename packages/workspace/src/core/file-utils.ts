@@ -6,7 +6,7 @@ import { extname } from 'path';
 import { NxArgs } from '../command-line/utils';
 import { WorkspaceResults } from '../command-line/workspace-results';
 import { appRootPath } from '../utils/app-root';
-import { readJsonFile } from '../utils/fileutils';
+import { readJsonFile, fileExists } from '../utils/fileutils';
 import { jsonDiff } from '../utils/json-diff';
 import { ProjectGraphNode } from './project-graph';
 import { Environment, NxJson } from './shared-interfaces';
@@ -172,11 +172,7 @@ export function cliCommand() {
 }
 
 export function workspaceFileName() {
-  const packageJson = readPackageJson();
-  if (
-    packageJson.devDependencies['@angular/cli'] ||
-    packageJson.dependencies['@angular/cli']
-  ) {
+  if (fileExists(`${appRootPath}/angular.json`)) {
     return 'angular.json';
   } else {
     return 'workspace.json';
@@ -249,11 +245,12 @@ export function mtime(filePath: string): number {
 
 export function normalizedProjectRoot(p: ProjectGraphNode): string {
   if (p.data && p.data.root) {
-    return p.data.root
-      .split('/')
-      .filter(v => !!v)
-      .slice(1)
-      .join('/');
+    const path = p.data.root.split('/').filter(v => !!v);
+    if (path.length === 1) {
+      return path[0];
+    }
+    // Remove the first part of the path, usually 'libs'
+    return path.slice(1).join('/');
   } else {
     return '';
   }

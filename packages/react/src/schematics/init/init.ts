@@ -1,4 +1,4 @@
-import { chain, Rule } from '@angular-devkit/schematics';
+import { chain, noop, Rule } from '@angular-devkit/schematics';
 import {
   addPackageWithInit,
   updateJsonInTree,
@@ -62,9 +62,13 @@ function jsonIdentity(x: any): JsonObject {
 export default function(schema: Schema) {
   return chain([
     setDefault(),
-    addPackageWithInit('@nrwl/jest'),
-    addPackageWithInit('@nrwl/cypress'),
-    addPackageWithInit('@nrwl/web'),
+    schema.unitTestRunner === 'jest'
+      ? addPackageWithInit('@nrwl/jest')
+      : noop(),
+    schema.e2eTestRunner === 'cypress'
+      ? addPackageWithInit('@nrwl/cypress')
+      : noop(),
+    addPackageWithInit('@nrwl/web', schema),
     updateDependencies()
   ]);
 }

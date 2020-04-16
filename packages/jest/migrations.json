@@ -19,6 +19,11 @@
       "version": "9.0.1-beta.1",
       "description": "Correctly sets passWithNoTests option",
       "factory": "./src/migrations/update-9-0-1/update-9-0-1"
+    },
+    "update-9.2.0": {
+      "version": "9.2.0-beta.3",
+      "description": "Update jest to v25",
+      "factory": "./src/migrations/update-9-2-0/update-9-2-0"
     }
   },
   "packageJsonUpdates": {
@@ -27,6 +32,27 @@
       "packages": {
         "jest-preset-angular": {
           "version": "8.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "9.2.0": {
+      "version": "9.2.0-beta.3",
+      "packages": {
+        "jest": {
+          "version": "25.2.4",
+          "alwaysAddToPackageJson": false
+        },
+        "ts-jest": {
+          "version": "25.2.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jest": {
+          "version": "25.1.4",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-preset-angular": {
+          "version": "8.1.3",
           "alwaysAddToPackageJson": false
         }
       }

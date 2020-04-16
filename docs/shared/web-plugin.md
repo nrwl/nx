@@ -1,4 +1,4 @@
-# Nx Plugin for Web Components
+# Nx Plugin for Web
 
 The Nx Plugin for Web Components contains schematics for managing Web Component applications and libraries within an Nx workspace. It provides:
 
@@ -6,9 +6,9 @@ The Nx Plugin for Web Components contains schematics for managing Web Component 
 - Scaffolding for creating buildable libraries that can be published to npm.
 - Utilities for automatic workspace refactoring.
 
-## Adding the Web Components plugin
+## Adding the Web plugin
 
-Adding the Web Components plugin to a workspace can be done with the following:
+Adding the Web plugin to a workspace can be done with the following:
 
 ```shell script
 #yarn
@@ -20,7 +20,7 @@ yarn add -D @nrwl/web
 npm install -D @nrwl/web
 ```
 
-> Note: You can create new workspace that has Web Components set up by doing `npx create-nx-workspace@latest --preset=web-components`
+> Note: You can create a new workspace that has Web Components set up by doing `npx create-nx-workspace@latest --preset=web-components`
 
 The file structure for a Web Components application looks like:
 
@@ -68,19 +68,19 @@ myorg/
 
 ## See Also
 
-- [Using Cypress](/react/plugins_cypress/overview)
-- [Using Jest](/react/plugins_jest/overview)
+- [Using Cypress](/{{framework}}/plugins_cypress/overview)
+- [Using Jest](/{{framework}}/plugins_cypress/overview)
 
 ## Builders
 
-- [build](/web/api/web/builders/build) - Builds a web components application
-- [dev-server](/web/api/web/builders/package) - Builds and serves a web application
-- [package](/web/api/web/builders/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
+- [build](/{{framework}}/plugins_web_builders/build) - Builds a web components application
+- [dev-server](/{{framework}}/plugins_web_builders/package) - Builds and serves a web application
+- [package](/{{framework}}/plugins_web_builders/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
 
 ## Schematics
 
-- [application](/react/api/react/schematics/application) - Create an Web Components application
-- [component](/react/api/react/schematics/component) - Create an Web Components library
-- [library](/react/api/react/schematics/library) - Create an Web Components library
-- [redux](/react/api/react/schematics/redux) - Generate a Redux slice for a project
-- [storybook-configuration](/react/api/react/schematics/storybook-configuration) - Set up Storybook for a react library
+- [application](/{{framework}}/plugins_web_schematics/application) - Create an Web Components application
+- [component](/{{framework}}/plugins_web_schematics/component) - Create an Web Components library
+- [library](/{{framework}}/plugins_web_schematics/library) - Create an Web Components library
+- [redux](/{{framework}}/plugins_web_schematics/redux) - Generate a Redux slice for a project
+- [storybook-configuration](/{{framework}}/plugins_web_schematics/storybook-configuration) - Set up Storybook for a react library

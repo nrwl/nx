@@ -49,11 +49,11 @@ Nx provides tools to give you the benefits of a monorepo without the drawbacks o
 
 **Learn Nx Fundamentals:**
 
-- [Interactive Nx Tutorial](/react/tutorial/01-create-application)
+- [Interactive Nx Tutorial](/{{framework}}/tutorial/01-create-application)
 - [Free Nx Course on YouTube](https://www.youtube.com/watch?time_continue=49&v=2mYLe9Kp9VM&feature=emb_logo)
 
 **Dive Deep:**
 
-- [Nx CLI](/react/cli/overview)
-- [Computation Caching](/react/guides/computation-caching)
-- [Rebuilding What is Affected](/react/guides/monorepo-affected)
+- [Nx CLI](/{{framework}}/cli/overview)
+- [Computation Caching](/{{framework}}/guides/computation-caching)
+- [Rebuilding What is Affected](/{{framework}}/guides/monorepo-affected)

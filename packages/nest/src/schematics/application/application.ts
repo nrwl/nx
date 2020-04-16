@@ -66,6 +66,7 @@ export default function(schema: Schema): Rule {
     const options = normalizeOptions(schema);
     return chain([
       init({
+        ...options,
         skipFormat: true
       }),
       externalSchematic('@nrwl/node', 'application', schema),

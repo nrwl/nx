@@ -6,10 +6,6 @@
     {
       "command": "g app myapp --directory=myorg",
       "description": "Generate apps/myorg/myapp and apps/myorg/myapp-e2e"
-    },
-    {
-      "command": "g app myapp --classComponent",
-      "description": "Use class components instead of functional components"
     }
   ],
   "type": "object",
@@ -98,18 +94,6 @@
       "type": "string",
       "description": "Add tags to the application (used for linting)",
       "alias": "t"
-    },
-    "pascalCaseFiles": {
-      "type": "boolean",
-      "description": "Use pascal case component file name (e.g. App.tsx)",
-      "alias": "P",
-      "default": false
-    },
-    "classComponent": {
-      "type": "boolean",
-      "description": "Use class components instead of functional component",
-      "alias": "C",
-      "default": false
     }
   },
   "required": []

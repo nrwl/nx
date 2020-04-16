@@ -118,10 +118,16 @@ function run(
 
 function getBuildOptions(
   options: WebDevServerOptions,
-  context: BuilderContext,
-  overrides?: Partial<WebBuildBuilderOptions>
+  context: BuilderContext
 ): Observable<WebBuildBuilderOptions> {
   const target = targetFromTargetString(options.buildTarget);
+  const overrides: Partial<WebBuildBuilderOptions> = {};
+  if (options.maxWorkers) {
+    overrides.maxWorkers = options.maxWorkers;
+  }
+  if (options.memoryLimit) {
+    overrides.memoryLimit = options.memoryLimit;
+  }
   return from(
     Promise.all([
       context.getTargetOptions(target),

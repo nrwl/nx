@@ -7,9 +7,10 @@ import build from 'next/dist/build';
 import { PHASE_PRODUCTION_BUILD } from 'next/dist/next-server/lib/constants';
 import * as path from 'path';
 import { from, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { concatMap, map } from 'rxjs/operators';
 import { prepareConfig } from '../../utils/config';
 import { NextBuildBuilderOptions } from '../../utils/types';
+import { createPackageJson } from './lib/create-package-json';
 
 try {
   require('dotenv').config();
@@ -23,5 +24,8 @@ export function run(
 ): Observable<BuilderOutput> {
   const root = path.resolve(context.workspaceRoot, options.root);
   const config = prepareConfig(PHASE_PRODUCTION_BUILD, options, context);
-  return from(build(root, config as any)).pipe(map(() => ({ success: true })));
+  return from(build(root, config as any)).pipe(
+    concatMap(() => from(createPackageJson(options, context))),
+    map(() => ({ success: true }))
+  );
 }
