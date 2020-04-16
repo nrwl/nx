@@ -18,6 +18,11 @@
       "factory": "./src/schematics/migration/migration",
       "schema": "./src/schematics/migration/schema.json",
       "description": "Create a migration for an Nx Plugin"
+    },
+    "schematic": {
+      "factory": "./src/schematics/schematic/schematic",
+      "schema": "./src/schematics/schematic/schema.json",
+      "description": "Create a schematic for an Nx Plugin"
     }
   }
 }

@@ -81,5 +81,3 @@ export default function(options: <%= className %>SchematicSchema): Rule {
     addFiles(normalizedOptions)
   ]);
 }
-
-

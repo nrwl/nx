@@ -20,7 +20,7 @@ describe('<%= name %> schematic', () => {
 
   it('should run successfully', async () => {
     await expect(testRunner.runSchematicAsync(
-        '<%= propertyName %>',
+        '<%= fileName %>',
         options,
         appTree
       ).toPromise()
