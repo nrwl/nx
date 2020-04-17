@@ -12,7 +12,9 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
+  filter,
+  noop
 } from '@angular-devkit/schematics';
 import {
   formatFiles,
@@ -44,7 +46,8 @@ export default function(schema: NormalizedSchema): Rule {
     return chain([
       externalSchematic('@nrwl/node', 'lib', {
         ...schema,
-        publishable: true
+        publishable: true,
+        unitTestRunner: options.unitTestRunner
       }),
       addFiles(options),
       updateWorkspaceJson(options),
@@ -113,18 +116,22 @@ function addFiles(options: NormalizedSchema): Rule {
           tmpl: '',
           offsetFromRoot: offsetFromRoot(options.projectRoot)
         }),
+        options.unitTestRunner === 'none'
+          ? filter(file => !file.endsWith('.spec.tsx'))
+          : noop(),
         move(options.projectRoot)
       ]),
       MergeStrategy.Overwrite
     ),
     schematic('schematic', {
       project: options.name,
-      name: options.name
+      name: options.name,
+      unitTestRunner: options.unitTestRunner
     }),
     schematic('builder', {
       project: options.name,
       name: 'build',
-      unitTestRunner: 'jest'
+      unitTestRunner: options.unitTestRunner
     })
   ]);
 }

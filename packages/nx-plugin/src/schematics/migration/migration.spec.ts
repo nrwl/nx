@@ -142,4 +142,30 @@ describe('NxPlugin migration', () => {
       }
     });
   });
+
+  describe('--unitTestRunner', () => {
+    it('should not generate test files', async () => {
+      const tree = await runSchematic(
+        'migration',
+        {
+          project: projectName,
+          name: 'my-migration',
+          version: '1.0.0',
+          unitTestRunner: 'none'
+        },
+        appTree
+      );
+
+      expect(
+        tree.exists(
+          'libs/my-plugin/src/migrations/my-migration/my-migration.ts'
+        )
+      ).toBeTruthy();
+      expect(
+        tree.exists(
+          'libs/my-plugin/src/migrations/my-migration/my-migration.spec.ts'
+        )
+      ).toBeFalsy();
+    });
+  });
 });

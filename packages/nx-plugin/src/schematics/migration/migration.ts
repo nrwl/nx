@@ -8,7 +8,9 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
+  filter,
+  noop
 } from '@angular-devkit/schematics';
 import {
   getProjectConfig,
@@ -75,6 +77,9 @@ function addFiles(options: NormalizedSchema): Rule {
         ...options,
         tmpl: ''
       }),
+      options.unitTestRunner === 'none'
+        ? filter(file => !file.endsWith('.spec.ts'))
+        : noop(),
       move(`${options.projectSourceRoot}/migrations`)
     ])
   );
