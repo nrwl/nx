@@ -109,25 +109,27 @@ describe('NxPlugin schematic', () => {
   });
 
   describe('--unitTestRunner', () => {
-    it('should generate files', async () => {
-      const tree = await runSchematic(
-        'schematic',
-        {
-          project: projectName,
-          name: 'my-schematic',
-          unitTestRunner: 'none'
-        },
-        appTree
-      );
+    describe('none', () => {
+      it('should generate files', async () => {
+        const tree = await runSchematic(
+          'schematic',
+          {
+            project: projectName,
+            name: 'my-schematic',
+            unitTestRunner: 'none'
+          },
+          appTree
+        );
 
-      expect(
-        tree.exists('libs/my-plugin/src/schematics/my-schematic/schematic.ts')
-      ).toBeTruthy();
-      expect(
-        tree.exists(
-          'libs/my-plugin/src/schematics/my-schematic/schematic.spec.ts'
-        )
-      ).toBeFalsy();
+        expect(
+          tree.exists('libs/my-plugin/src/schematics/my-schematic/schematic.ts')
+        ).toBeTruthy();
+        expect(
+          tree.exists(
+            'libs/my-plugin/src/schematics/my-schematic/schematic.spec.ts'
+          )
+        ).toBeFalsy();
+      });
     });
   });
 });

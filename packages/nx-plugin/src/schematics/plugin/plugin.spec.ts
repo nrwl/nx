@@ -163,38 +163,42 @@ describe('NxPlugin plugin', () => {
   });
 
   describe('--unitTestRunner', () => {
-    it('should not generate test files', async () => {
-      const externalSchematicSpy = jest.spyOn(
-        ngSchematics,
-        'externalSchematic'
-      );
-      const tree = await runSchematic(
-        'plugin',
-        { name: 'myPlugin', unitTestRunner: 'none' },
-        appTree
-      );
+    describe('none', () => {
+      it('should not generate test files', async () => {
+        const externalSchematicSpy = jest.spyOn(
+          ngSchematics,
+          'externalSchematic'
+        );
+        const tree = await runSchematic(
+          'plugin',
+          { name: 'myPlugin', unitTestRunner: 'none' },
+          appTree
+        );
 
-      expect(externalSchematicSpy).toBeCalledWith(
-        '@nrwl/node',
-        'lib',
-        expect.objectContaining({
-          unitTestRunner: 'none'
-        })
-      );
+        expect(externalSchematicSpy).toBeCalledWith(
+          '@nrwl/node',
+          'lib',
+          expect.objectContaining({
+            unitTestRunner: 'none'
+          })
+        );
 
-      expect(
-        tree.exists('libs/my-plugin/src/schematics/my-plugin/schematic.ts')
-      ).toBeTruthy();
-      expect(
-        tree.exists('libs/my-plugin/src/schematics/my-plugin/schematic.spec.ts')
-      ).toBeFalsy();
+        expect(
+          tree.exists('libs/my-plugin/src/schematics/my-plugin/schematic.ts')
+        ).toBeTruthy();
+        expect(
+          tree.exists(
+            'libs/my-plugin/src/schematics/my-plugin/schematic.spec.ts'
+          )
+        ).toBeFalsy();
 
-      expect(
-        tree.exists('libs/my-plugin/src/builders/build/builder.ts')
-      ).toBeTruthy();
-      expect(
-        tree.exists('libs/my-plugin/src/builders/build/builder.spec.ts')
-      ).toBeFalsy();
+        expect(
+          tree.exists('libs/my-plugin/src/builders/build/builder.ts')
+        ).toBeTruthy();
+        expect(
+          tree.exists('libs/my-plugin/src/builders/build/builder.spec.ts')
+        ).toBeFalsy();
+      });
     });
   });
 });
