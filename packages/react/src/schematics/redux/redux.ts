@@ -1,13 +1,4 @@
-import * as ts from 'typescript';
 import { join, Path, strings } from '@angular-devkit/core';
-import '@nrwl/tao/src/compat/compat';
-import {
-  addDepsToPackageJson,
-  addGlobal,
-  getProjectConfig,
-  insert,
-  readJsonInTree
-} from '@nrwl/workspace/src/utils/ast-utils';
 import {
   apply,
   chain,
@@ -20,17 +11,25 @@ import {
   Tree,
   url
 } from '@angular-devkit/schematics';
-
-import { NormalizedSchema, Schema } from './schema';
+import '@nrwl/tao/src/compat/compat';
 import { formatFiles, getWorkspace, names, toFileName } from '@nrwl/workspace';
+import {
+  addDepsToPackageJson,
+  addGlobal,
+  getProjectConfig,
+  insert,
+  readJsonInTree
+} from '@nrwl/workspace/src/utils/ast-utils';
+import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import * as path from 'path';
+import * as ts from 'typescript';
 import { addReduxStoreToMain, updateReduxStore } from '../../utils/ast-utils';
 import {
-  typesReactReduxVersion,
   reactReduxVersion,
-  reduxjsToolkitVersion
+  reduxjsToolkitVersion,
+  typesReactReduxVersion
 } from '../../utils/versions';
-import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
+import { NormalizedSchema, Schema } from './schema';
 
 export default function(schema: any): Rule {
   return async (host: Tree, context: SchematicContext) => {

@@ -9,7 +9,6 @@ import {
   renameFile,
   runCLI,
   runCLIAsync,
-  supportUi,
   uniq,
   updateFile,
   workspaceConfigName
@@ -218,6 +217,23 @@ forEachCli(currentCLIName => {
 
       const libTestResults = await runCLIAsync(`test ${libName}`);
       expect(libTestResults.stderr).toContain('Test Suites: 1 passed, 1 total');
+    }, 120000);
+
+    it('should be able to add a redux slice', async () => {
+      ensureProject();
+      const appName = uniq('app');
+      const libName = uniq('lib');
+
+      runCLI(`g @nrwl/react:app ${appName} --no-interactive`);
+      runCLI(`g @nrwl/react:redux lemon --project=${appName}`);
+      runCLI(`g @nrwl/react:lib ${libName} --no-interactive`);
+      runCLI(`g @nrwl/react:redux orange --project=${libName}`);
+
+      const appTestResults = await runCLIAsync(`test ${appName}`);
+      expect(appTestResults.stderr).toContain('Test Suites: 2 passed, 2 total');
+
+      const libTestResults = await runCLIAsync(`test ${libName}`);
+      expect(libTestResults.stderr).toContain('Test Suites: 2 passed, 2 total');
     }, 120000);
 
     it('should be able to use JSX', async () => {

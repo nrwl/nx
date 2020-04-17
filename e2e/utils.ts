@@ -237,10 +237,14 @@ export function copyMissingPackages(): void {
 
     'react',
     'react-dom',
+    'react-redux',
     'react-router-dom',
+    '@reduxjs',
+    '@reduxjs/toolkit',
     'styled-components',
     '@types/react',
     '@types/react-dom',
+    '@types/react-redux',
     '@types/react-router-dom',
     '@testing-library',
 
@@ -342,8 +346,11 @@ export function copyMissingPackages(): void {
 }
 
 function copyNodeModule(name: string) {
-  execSync(`rm -rf ${tmpProjPath('node_modules/' + name)}`);
-  execSync(`cp -a node_modules/${name} ${tmpProjPath('node_modules/' + name)}`);
+  const source = `node_modules/${name}`;
+  const destination = tmpProjPath(source);
+
+  execSync(`rm -rf ${destination}`);
+  execSync(`cp -a ${source} ${destination}`);
 }
 
 export function runCommandAsync(
