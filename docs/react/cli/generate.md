@@ -19,7 +19,7 @@ Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `
 Generate a new Angular application:
 
 ```bash
-nx generate @nrwl/node:app myapp
+nx generate @nrwl/angular:app myapp
 ```
 
 Generate a new React application:
