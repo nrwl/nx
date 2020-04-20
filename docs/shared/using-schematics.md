@@ -1,5 +1,15 @@
 # Using Schematics
 
+## Overview
+
+Schematics provide a way to automate many tasks you regularly perform as part of your development workflow. Whether it is scaffolding out components, features, ensuring libraries are generated and structured in a certain way, or updating your configuration files, schematics help you standardize these tasks in a consistent, and predictable manner.
+
+Schematics are developed by the Angular Team at Google as part of the Angular DevKit, but are provided independently of the Angular framework. The DevKit packages are provided under the [@angular-devkit](https://npmjs.com/~angular-devkit) scope on npm. Nx provides additional tooling around creating, and running custom schematics from within your workspace.
+
+To read more about the concepts of Schematics, and building an example schematic, see the Schematics Authoring Guide[https://angular.io/guide/schematics-authoring].
+
+The [Workspace Schematics](/{{framework}}/workspace_schematics/workspace-schematics) guide shows you how to create, run, and customize workspace schematics within your Nx workspace.
+
 ## Types of Schematics
 
 There are three main types of schematics:
