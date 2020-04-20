@@ -25,7 +25,7 @@ Read buildable libraries from source instead of building them separately.
 
 Default: `all`
 
-Type: `string | array`
+Type: `string | string[]`
 
 Dependencies to keep external to the bundle. ("all" (default), "none", or an array of module names)
 
@@ -39,7 +39,7 @@ Extract all licenses in a separate file, in the case of production builds only.
 
 ### fileReplacements
 
-Type: `array` of `object`
+Type: `object[]`
 
 Replace files with other files in the build.
 

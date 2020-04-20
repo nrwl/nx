@@ -72,7 +72,7 @@ Extract all licenses in a separate file, in the case of production builds only.
 
 ### fileReplacements
 
-Type: `array` of `object`
+Type: `object[]`
 
 Replace files with other files in the build.
 
