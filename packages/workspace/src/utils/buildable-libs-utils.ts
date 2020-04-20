@@ -59,6 +59,12 @@ export function calculateProjectDependencies(
           ),
           node: depNode,
         };
+      } else if (depNode.type === 'npm') {
+        return {
+          name: depNode.name,
+          outputs: [],
+          node: depNode,
+        };
       } else {
         return null;
       }
@@ -170,6 +176,10 @@ export function checkDependentProjectsHaveBeenBuilt(
 
   // verify whether all dependent libraries have been built
   projectDependencies.forEach((dep) => {
+    if (dep.node.type !== ProjectType.lib) {
+      return;
+    }
+
     const paths = dep.outputs.map((p) =>
       join(context.workspaceRoot, p, 'package.json')
     );
@@ -240,19 +250,25 @@ export function updateBuildableProjectPackageJsonDependencies(
       !hasDependency(packageJson, 'peerDependencies', entry.name)
     ) {
       try {
-        const outputs = getOutputsForTargetAndConfiguration(
-          context.target.target,
-          context.target.configuration,
-          entry.node
-        );
-        const depPackageJsonPath = join(
-          context.workspaceRoot,
-          outputs[0],
-          'package.json'
-        );
-        const depPackageJson = readJsonFile(depPackageJsonPath);
+        let depVersion;
+        if (entry.node.type === ProjectType.lib) {
+          const outputs = getOutputsForTargetAndConfiguration(
+            context.target.target,
+            context.target.configuration,
+            entry.node
+          );
 
-        packageJson.dependencies[entry.name] = depPackageJson.version;
+          const depPackageJsonPath = join(
+            context.workspaceRoot,
+            outputs[0],
+            'package.json'
+          );
+          depVersion = readJsonFile(depPackageJsonPath).version;
+        } else if (entry.node.type === 'npm') {
+          depVersion = entry.node.data.version;
+        }
+
+        packageJson.dependencies[entry.name] = depVersion;
         updatePackageJson = true;
       } catch (e) {
         // skip if cannot find package.json
