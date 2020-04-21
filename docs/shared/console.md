@@ -47,4 +47,4 @@ Nx Console is an UI for Nx. It will work for any schematic or any architect comm
 
 ## Useful for Both Experts and Beginners
 
-Even though we started building Nx Console as a tool for expert, we also aimed to make Nx Console a great tool for developers who are new to Angular or Nx. You can create projects, interact with your editor, run generators and commands, install extensions without ever touching the terminal or having to install any node packages globally. Also, Nx Console highlights the properties you are likely to use for build-in generators and commands . So if you haven't used the CLI, you don't get overwhelmed.
+Even though we started building Nx Console as a tool for experts, we also aimed to make Nx Console a great tool for developers who are new to development or Nx. You can create projects, interact with your editor, run generators and commands, install extensions without ever touching the terminal or having to install any node packages globally. Also, Nx Console highlights the properties you are likely to use for built-in generators and commands, so if you haven't used the CLI, you don't get overwhelmed.
