@@ -33,6 +33,7 @@ export interface StorybookBuilderOptions extends JsonObject {
   sslKey?: string;
   staticDir?: number[];
   watch?: boolean;
+  docsMode?: boolean;
 }
 
 try {
