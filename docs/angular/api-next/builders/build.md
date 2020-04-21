@@ -8,7 +8,7 @@ Builder properties can be configured in angular.json when defining the builder, 
 
 ### fileReplacements
 
-Type: `array` of `object`
+Type: `object[]`
 
 Replace files with other files in the build.
 
