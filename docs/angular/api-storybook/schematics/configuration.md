@@ -58,6 +58,6 @@ Library name
 
 Type: `string`
 
-Possible values: `@storybook/angular`, `@storybook/react`, `@storybook/web`
+Possible values: `@storybook/angular`, `@storybook/react`
 
 Storybook UI Framework to use
