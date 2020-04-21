@@ -6,7 +6,7 @@ import { TouchedProjectLocator } from '../affected-project-graph-models';
 import {
   getSortedProjectNodes,
   onlyWorkspaceProjects,
-  ProjectGraphNode
+  ProjectGraphNode,
 } from '../../project-graph';
 import { appRootPath } from '../../../utils/app-root';
 
@@ -14,7 +14,7 @@ export const getTouchedProjectsFromTsConfig: TouchedProjectLocator<
   WholeFileChange | JsonChange
 > = (touchedFiles, _a, _b, _c, graph): string[] => {
   const tsConfigJsonChanges = touchedFiles.find(
-    change => change.file === 'tsconfig.json'
+    (change) => change.file === 'tsconfig.json'
   );
   if (!tsConfigJsonChanges) {
     return [];
@@ -63,8 +63,8 @@ function getProjectsAffectedByPaths(
   const result = [];
 
   const paths: string[] = [change.value.lhs, change.value.rhs];
-  paths.forEach(path => {
-    sortedNodes.forEach(project => {
+  paths.forEach((path) => {
+    sortedNodes.forEach((project) => {
       if (
         path &&
         project.data.root &&

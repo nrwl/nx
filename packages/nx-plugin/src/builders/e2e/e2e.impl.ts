@@ -2,7 +2,7 @@ import {
   BuilderContext,
   createBuilder,
   scheduleTargetAndForget,
-  targetFromTargetString
+  targetFromTargetString,
 } from '@angular-devkit/architect';
 import { switchMap, concatMap } from 'rxjs/operators';
 import { Schema } from './schema';
@@ -25,9 +25,9 @@ export function runNxPluginE2EBuilder(
         context.scheduleBuilder('@nrwl/jest:jest', {
           tsConfig: options.tsSpecConfig,
           jestConfig: options.jestConfig,
-          watch: false
+          watch: false,
         })
-      ).pipe(concatMap(run => run.output));
+      ).pipe(concatMap((run) => run.output));
     })
   );
 }

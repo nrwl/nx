@@ -5,18 +5,18 @@ import {
   schema,
   tags,
   terminal,
-  virtualFs
+  virtualFs,
 } from '@angular-devkit/core';
 import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
 import {
   formats,
   SchematicEngine,
-  UnsuccessfulWorkflowExecution
+  UnsuccessfulWorkflowExecution,
 } from '@angular-devkit/schematics';
 import {
   NodeModulesEngineHost,
   NodeWorkflow,
-  validateOptionsWithSchema
+  validateOptionsWithSchema,
 } from '@angular-devkit/schematics/tools';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
@@ -90,7 +90,7 @@ function compileToolsDir(outDir: string) {
   try {
     execSync(`${tsc} -p tools/tsconfig.tools.json`, {
       stdio: 'inherit',
-      cwd: rootDirectory
+      cwd: rootDirectory,
     });
   } catch (e) {
     process.exit(1);
@@ -99,20 +99,20 @@ function compileToolsDir(outDir: string) {
 
 function constructCollection() {
   const schematics = {};
-  fs.readdirSync(schematicsDir()).forEach(c => {
+  fs.readdirSync(schematicsDir()).forEach((c) => {
     const childDir = path.join(schematicsDir(), c);
     if (exists(path.join(childDir, 'schema.json'))) {
       schematics[c] = {
         factory: `./${c}`,
         schema: `./${path.join(c, 'schema.json')}`,
-        description: `Schematic ${c}`
+        description: `Schematic ${c}`,
       };
     }
   });
   return {
     name: 'workspace-schematics',
     version: '1.0',
-    schematics
+    schematics,
   };
 }
 
@@ -134,7 +134,7 @@ function createWorkflow(dryRun: boolean) {
     packageManager: detectPackageManager(),
     root,
     dryRun,
-    registry: new schema.CoreSchemaRegistry(formats.standardFormats)
+    registry: new schema.CoreSchemaRegistry(formats.standardFormats),
   });
 }
 
@@ -154,16 +154,16 @@ function listSchematics(collectionName: string, logger: logging.Logger) {
 
 function createPromptProvider(): schema.PromptProvider {
   return (definitions: Array<schema.PromptDefinition>) => {
-    const questions: inquirer.Questions = definitions.map(definition => {
+    const questions: inquirer.Questions = definitions.map((definition) => {
       const question: inquirer.Question = {
         name: definition.id,
         message: definition.message,
-        default: definition.default
+        default: definition.default,
       };
 
       const validator = definition.validator;
       if (validator) {
-        question.validate = input => validator(input);
+        question.validate = (input) => validator(input);
       }
 
       switch (definition.type) {
@@ -175,16 +175,16 @@ function createPromptProvider(): schema.PromptProvider {
             type: !!definition.multiselect ? 'checkbox' : 'list',
             choices:
               definition.items &&
-              definition.items.map(item => {
+              definition.items.map((item) => {
                 if (typeof item == 'string') {
                   return item;
                 } else {
                   return {
                     name: item.label,
-                    value: item.value
+                    value: item.value,
                   };
                 }
-              })
+              }),
           };
         default:
           return { ...question, type: definition.type };
@@ -258,10 +258,10 @@ async function executeSchematic(
     }
   });
 
-  workflow.lifeCycle.subscribe(event => {
+  workflow.lifeCycle.subscribe((event) => {
     if (event.kind === 'workflow-end' || event.kind === 'post-tasks-start') {
       if (!hasError) {
-        loggingQueue.forEach(log => logger.info(log));
+        loggingQueue.forEach((log) => logger.info(log));
       }
 
       loggingQueue = [];
@@ -300,7 +300,7 @@ async function executeSchematic(
         collection: path.join(outDir, 'workspace-schematics.json'),
         schematic: schematicName,
         options: options,
-        logger: logger
+        logger: logger,
       })
       .toPromise();
 
@@ -331,7 +331,7 @@ function parseOptions(args: string[], outDir: string): { [k: string]: any } {
     );
     if (properties) {
       booleanProps = Object.keys(properties).filter(
-        key => properties[key].type === 'boolean'
+        (key) => properties[key].type === 'boolean'
       );
     }
   }
@@ -339,11 +339,11 @@ function parseOptions(args: string[], outDir: string): { [k: string]: any } {
     boolean: ['dryRun', 'listSchematics', 'interactive', ...booleanProps],
     alias: {
       dryRun: ['d'],
-      listSchematics: ['l']
+      listSchematics: ['l'],
     },
     default: {
-      interactive: true
-    }
+      interactive: true,
+    },
   });
 }
 

@@ -5,14 +5,14 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import { findNodes } from '@nrwl/workspace';
 import { PropertyDeclaration, SyntaxKind } from 'typescript';
 import { getTsSourceFile } from '../../utils/ast-utils';
 import {
   getSourceNodes,
-  applyWithSkipExisting
+  applyWithSkipExisting,
 } from '@nrwl/workspace/src/utils/ast-utils';
 
 export interface CreateComponentStoriesFileSchema {
@@ -22,7 +22,7 @@ export interface CreateComponentStoriesFileSchema {
   componentFileName: string;
 }
 
-export default function(schema: CreateComponentStoriesFileSchema): Rule {
+export default function (schema: CreateComponentStoriesFileSchema): Rule {
   return chain([createComponentStoriesFile(schema)]);
 }
 
@@ -30,7 +30,7 @@ export function createComponentStoriesFile({
   libPath,
   componentName,
   componentPath,
-  componentFileName
+  componentFileName,
 }: CreateComponentStoriesFileSchema): Rule {
   return (tree: Tree, context: SchematicContext): Rule => {
     const props = getInputDescriptors(
@@ -42,9 +42,9 @@ export function createComponentStoriesFile({
         componentFileName: componentFileName,
         componentName: componentName,
         props,
-        tmpl: ''
+        tmpl: '',
       }),
-      move(libPath + '/' + componentPath)
+      move(libPath + '/' + componentPath),
     ]);
   };
 }
@@ -63,23 +63,23 @@ export function getInputPropertyDeclarations(
   const file = getTsSourceFile(tree, path);
 
   const decorators = getSourceNodes(file).filter(
-    node => node.kind === SyntaxKind.Decorator
+    (node) => node.kind === SyntaxKind.Decorator
   );
 
   return decorators
-    .filter(decorator =>
+    .filter((decorator) =>
       findNodes(decorator, SyntaxKind.Identifier).some(
-        node => node.getText() === 'Input'
+        (node) => node.getText() === 'Input'
       )
     )
-    .map(node => node.parent as PropertyDeclaration);
+    .map((node) => node.parent as PropertyDeclaration);
 }
 
 export function getInputDescriptors(
   tree: Tree,
   path: string
 ): InputDescriptor[] {
-  return getInputPropertyDeclarations(tree, path).map(node => {
+  return getInputPropertyDeclarations(tree, path).map((node) => {
     const decoratorContent = findNodes(
       findNodes(node, SyntaxKind.Decorator)[0],
       SyntaxKind.StringLiteral
@@ -94,7 +94,7 @@ export function getInputDescriptors(
     return {
       name,
       type,
-      defaultValue
+      defaultValue,
     };
   });
 }
@@ -105,7 +105,7 @@ export function getKnobType(property: PropertyDeclaration): KnobType {
     const typeNameToKnobType: Record<string, KnobType> = {
       string: 'text',
       number: 'number',
-      boolean: 'boolean'
+      boolean: 'boolean',
     };
     return typeNameToKnobType[typeName] || 'text';
   }
@@ -114,7 +114,7 @@ export function getKnobType(property: PropertyDeclaration): KnobType {
       [SyntaxKind.StringLiteral]: 'text',
       [SyntaxKind.NumericLiteral]: 'number',
       [SyntaxKind.TrueKeyword]: 'boolean',
-      [SyntaxKind.FalseKeyword]: 'boolean'
+      [SyntaxKind.FalseKeyword]: 'boolean',
     };
     return initializerKindToKnobType[property.initializer.kind] || 'text';
   }
@@ -125,7 +125,7 @@ export function getKnobDefaultValue(property: PropertyDeclaration): string {
   const typeNameToDefault = {
     string: "''",
     number: '0',
-    boolean: 'false'
+    boolean: 'false',
   };
   return property.initializer
     ? property.initializer.getText()

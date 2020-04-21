@@ -14,7 +14,7 @@ import {
   Tree,
   url,
   filter,
-  noop
+  noop,
 } from '@angular-devkit/schematics';
 import {
   formatFiles,
@@ -24,7 +24,7 @@ import {
   readNxJsonInTree,
   toFileName,
   updateJsonInTree,
-  updateWorkspace
+  updateWorkspace,
 } from '@nrwl/workspace';
 import { allFilesInDirInHost } from '@nrwl/workspace/src/utils/ast-utils';
 import { Schema } from './schema';
@@ -39,7 +39,7 @@ export interface NormalizedSchema extends Schema {
   fileTemplate: string;
 }
 
-export default function(schema: NormalizedSchema): Rule {
+export default function (schema: NormalizedSchema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
 
@@ -47,7 +47,7 @@ export default function(schema: NormalizedSchema): Rule {
       externalSchematic('@nrwl/node', 'lib', {
         ...schema,
         publishable: true,
-        unitTestRunner: options.unitTestRunner
+        unitTestRunner: options.unitTestRunner,
       }),
       addFiles(options),
       updateWorkspaceJson(options),
@@ -55,9 +55,9 @@ export default function(schema: NormalizedSchema): Rule {
       schematic('e2e-project', {
         pluginName: options.name,
         pluginOutputPath: `dist/libs/${options.projectDirectory}`,
-        npmPackageName: options.npmPackageName
+        npmPackageName: options.npmPackageName,
       }),
-      formatFiles(options)
+      formatFiles(options),
     ]);
   };
 }
@@ -75,7 +75,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const projectRoot = normalize(`libs/${projectDirectory}`);
 
   const parsedTags = options.tags
-    ? options.tags.split(',').map(s => s.trim())
+    ? options.tags.split(',').map((s) => s.trim())
     : [];
   const npmPackageName = `@${npmScope}/${name}`;
 
@@ -90,7 +90,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     projectDirectory,
     parsedTags,
     npmPackageName,
-    fileTemplate
+    fileTemplate,
   };
 
   return normalized;
@@ -98,11 +98,11 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
 function addFiles(options: NormalizedSchema): Rule {
   return chain([
-    host => {
+    (host) => {
       allFilesInDirInHost(
         host,
         normalize(`${options.projectRoot}/src/lib`)
-      ).forEach(file => {
+      ).forEach((file) => {
         host.delete(file);
       });
 
@@ -114,27 +114,27 @@ function addFiles(options: NormalizedSchema): Rule {
           ...options,
           ...names(options.name),
           tmpl: '',
-          offsetFromRoot: offsetFromRoot(options.projectRoot)
+          offsetFromRoot: offsetFromRoot(options.projectRoot),
         }),
-        move(options.projectRoot)
+        move(options.projectRoot),
       ]),
       MergeStrategy.Overwrite
     ),
     schematic('schematic', {
       project: options.name,
       name: options.name,
-      unitTestRunner: options.unitTestRunner
+      unitTestRunner: options.unitTestRunner,
     }),
     schematic('builder', {
       project: options.name,
       name: 'build',
-      unitTestRunner: options.unitTestRunner
-    })
+      unitTestRunner: options.unitTestRunner,
+    }),
   ]);
 }
 
 function updateWorkspaceJson(options: NormalizedSchema): Rule {
-  return updateWorkspace(workspace => {
+  return updateWorkspace((workspace) => {
     const targets = workspace.projects.get(options.name).targets;
     const build = targets.get('build');
     if (build) {
@@ -143,18 +143,18 @@ function updateWorkspaceJson(options: NormalizedSchema): Rule {
           {
             input: `./${options.projectRoot}/src`,
             glob: '**/*.!(ts)',
-            output: './src'
+            output: './src',
           },
           {
             input: `./${options.projectRoot}`,
             glob: 'collection.json',
-            output: '.'
+            output: '.',
           },
           {
             input: `./${options.projectRoot}`,
             glob: 'builders.json',
-            output: '.'
-          }
+            output: '.',
+          },
         ]
       );
     }
@@ -164,10 +164,13 @@ function updateWorkspaceJson(options: NormalizedSchema): Rule {
 function updateTsConfig(options: NormalizedSchema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const projectConfig = getProjectConfig(host, options.name);
-    return updateJsonInTree(`${projectConfig.root}/tsconfig.lib.json`, json => {
-      json.compilerOptions.rootDir = '.';
-      return json;
-    });
+    return updateJsonInTree(
+      `${projectConfig.root}/tsconfig.lib.json`,
+      (json) => {
+        json.compilerOptions.rootDir = '.';
+        return json;
+      }
+    );
   };
 }
 

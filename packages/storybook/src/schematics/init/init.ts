@@ -2,19 +2,19 @@ import {
   chain,
   Rule,
   SchematicContext,
-  Tree
+  Tree,
 } from '@angular-devkit/schematics';
 import {
   addDepsToPackageJson,
   readJsonInTree,
-  updateJsonInTree
+  updateJsonInTree,
 } from '@nrwl/workspace';
 import {
   babelLoaderVersion,
   babelCoreVersion,
   storybookVersion,
   nxVersion,
-  babelPresetTypescriptVersion
+  babelPresetTypescriptVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
 
@@ -44,7 +44,7 @@ function checkDependenciesInstalled(): Rule {
   };
 }
 
-export const addCacheableOperation = updateJsonInTree('nx.json', nxJson => {
+export const addCacheableOperation = updateJsonInTree('nx.json', (nxJson) => {
   if (
     !nxJson.tasksRunnerOptions ||
     !nxJson.tasksRunnerOptions.default ||
@@ -73,22 +73,25 @@ export const addCacheableOperation = updateJsonInTree('nx.json', nxJson => {
   return nxJson;
 });
 
-const moveToDevDependencies = updateJsonInTree('package.json', packageJson => {
-  packageJson.dependencies = packageJson.dependencies || {};
-  packageJson.devDependencies = packageJson.devDependencies || {};
+const moveToDevDependencies = updateJsonInTree(
+  'package.json',
+  (packageJson) => {
+    packageJson.dependencies = packageJson.dependencies || {};
+    packageJson.devDependencies = packageJson.devDependencies || {};
 
-  if (packageJson.dependencies['@nrwl/storybook']) {
-    packageJson.devDependencies['@nrwl/storybook'] =
-      packageJson.dependencies['@nrwl/storybook'];
-    delete packageJson.dependencies['@nrwl/storybook'];
+    if (packageJson.dependencies['@nrwl/storybook']) {
+      packageJson.devDependencies['@nrwl/storybook'] =
+        packageJson.dependencies['@nrwl/storybook'];
+      delete packageJson.dependencies['@nrwl/storybook'];
+    }
+    return packageJson;
   }
-  return packageJson;
-});
+);
 
-export default function(schema: Schema) {
+export default function (schema: Schema) {
   return chain([
     checkDependenciesInstalled(),
     moveToDevDependencies,
-    addCacheableOperation
+    addCacheableOperation,
   ]);
 }

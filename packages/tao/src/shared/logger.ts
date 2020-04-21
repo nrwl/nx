@@ -11,22 +11,22 @@ let logger: logging.Logger;
 export const getLogger = (isVerbose: boolean = false): logging.Logger => {
   if (!logger) {
     logger = createConsoleLogger(isVerbose, process.stdout, process.stderr, {
-      warn: s => terminal.bold(terminal.yellow(s)),
-      error: s => {
+      warn: (s) => terminal.bold(terminal.yellow(s)),
+      error: (s) => {
         if (s.startsWith('NX ')) {
           return `\n${NX_ERROR} ${terminal.bold(terminal.red(s.substr(3)))}\n`;
         }
 
         return terminal.bold(terminal.red(s));
       },
-      fatal: s => terminal.bold(terminal.red(s)),
-      info: s => {
+      fatal: (s) => terminal.bold(terminal.red(s)),
+      info: (s) => {
         if (s.startsWith('NX ')) {
           return `\n${NX_PREFIX} ${terminal.bold(s.substr(3))}\n`;
         }
 
         return terminal.white(s);
-      }
+      },
     });
   }
 

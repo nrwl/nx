@@ -4,7 +4,7 @@ import {
   directoryExists,
   fileExists,
   readJsonFile,
-  writeJsonFile
+  writeJsonFile,
 } from '../../utils/fileutils';
 import { assertWorkspaceValidity } from '../assert-workspace-validity';
 import { createFileMap, FileMap } from '../file-graph';
@@ -14,19 +14,19 @@ import {
   mtime,
   readNxJson,
   readWorkspaceFiles,
-  readWorkspaceJson
+  readWorkspaceJson,
 } from '../file-utils';
 import { normalizeNxJson } from '../normalize-nx-json';
 import {
   BuildDependencies,
   buildExplicitNpmDependencies,
   buildExplicitTypeScriptDependencies,
-  buildImplicitProjectDependencies
+  buildImplicitProjectDependencies,
 } from './build-dependencies';
 import {
   BuildNodes,
   buildNpmPackageNodes,
-  buildWorkspaceProjectNodes
+  buildWorkspaceProjectNodes,
 } from './build-nodes';
 import { ProjectGraphBuilder } from './project-graph-builder';
 import { ProjectGraph } from './project-graph-models';
@@ -52,22 +52,24 @@ export function createProjectGraph(
     const ctx = {
       workspaceJson,
       nxJson: normalizedNxJson,
-      fileMap: incremental.fileMap
+      fileMap: incremental.fileMap,
     };
     const builder = new ProjectGraphBuilder(incremental.projectGraph);
     const buildNodesFns: BuildNodes[] = [
       buildWorkspaceProjectNodes,
-      buildNpmPackageNodes
+      buildNpmPackageNodes,
     ];
     const buildDependenciesFns: BuildDependencies[] = [
       buildExplicitTypeScriptDependencies,
       buildImplicitProjectDependencies,
-      buildExplicitNpmDependencies
+      buildExplicitNpmDependencies,
     ];
 
-    buildNodesFns.forEach(f => f(ctx, builder.addNode.bind(builder), fileRead));
+    buildNodesFns.forEach((f) =>
+      f(ctx, builder.addNode.bind(builder), fileRead)
+    );
 
-    buildDependenciesFns.forEach(f =>
+    buildDependenciesFns.forEach((f) =>
       f(ctx, builder.nodes, builder.addDependency.bind(builder), fileRead)
     );
 
@@ -75,7 +77,7 @@ export function createProjectGraph(
     if (shouldCache) {
       writeCache({
         projectGraph,
-        fileMap
+        fileMap,
       });
     }
     return projectGraph;
@@ -134,7 +136,7 @@ function writeCache(cache: ProjectGraphCache): void {
 }
 
 function maxMTime(files: FileData[]) {
-  return Math.max(...files.map(f => f.mtime));
+  return Math.max(...files.map((f) => f.mtime));
 }
 
 function rootWorkspaceFileData(workspaceFiles: FileData[]): FileData[] {
@@ -143,9 +145,9 @@ function rootWorkspaceFileData(workspaceFiles: FileData[]): FileData[] {
     'workspace.json',
     'angular.json',
     `nx.json`,
-    `tsconfig.json`
+    `tsconfig.json`,
   ].reduce((acc: FileData[], curr: string) => {
-    const fileData = workspaceFiles.find(x => x.file === curr);
+    const fileData = workspaceFiles.find((x) => x.file === curr);
     if (fileData) {
       acc.push(fileData);
     }
@@ -176,10 +178,10 @@ function modifiedSinceCache(
 
   // Projects are same -> compute projects with file changes
   const modifiedSince: FileMap = {};
-  currentProjects.forEach(p => {
+  currentProjects.forEach((p) => {
     let projectFilesChanged = false;
     for (const f of fileMap[p]) {
-      const fromCache = cachedFileMap[p].find(x => x.file === f.file);
+      const fromCache = cachedFileMap[p].find((x) => x.file === f.file);
       if (!fromCache || f.mtime > fromCache.mtime) {
         projectFilesChanged = true;
         break;
@@ -191,7 +193,7 @@ function modifiedSinceCache(
   });
 
   // Re-compute nodes and dependencies for each project in file map.
-  Object.keys(modifiedSince).forEach(key => {
+  Object.keys(modifiedSince).forEach((key) => {
     delete c.data.projectGraph.dependencies[key];
   });
 

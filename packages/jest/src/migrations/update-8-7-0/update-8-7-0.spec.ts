@@ -26,21 +26,21 @@ describe('Update 8.7.0', () => {
               jest1: {
                 builder: '@nrwl/jest:jest',
                 options: {
-                  testPathPattern: 'some/test/path'
-                }
+                  testPathPattern: 'some/test/path',
+                },
               },
               jest2: {
                 builder: '@nrwl/jest:jest',
                 options: {
-                  foo: 'bar'
-                }
+                  foo: 'bar',
+                },
               },
               jest3: {
-                builder: '@nrwl/jest:jest'
-              }
-            }
-          }
-        }
+                builder: '@nrwl/jest:jest',
+              },
+            },
+          },
+        },
       })
     );
 

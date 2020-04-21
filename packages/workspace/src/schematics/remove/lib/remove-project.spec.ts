@@ -15,7 +15,7 @@ describe('moveProject Rule', () => {
     schema = {
       projectName: 'my-lib',
       skipFormat: false,
-      forceRemove: false
+      forceRemove: false,
     };
   });
 

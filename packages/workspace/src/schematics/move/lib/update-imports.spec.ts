@@ -16,7 +16,7 @@ describe('updateImports Rule', () => {
 
     schema = {
       projectName: 'my-source',
-      destination: 'my-destination'
+      destination: 'my-destination',
     };
   });
 
@@ -50,14 +50,14 @@ describe('updateImports Rule', () => {
 
     let tsConfig = readJsonInTree(tree, '/tsconfig.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
-      '@proj/my-source': ['libs/my-source/src/index.ts']
+      '@proj/my-source': ['libs/my-source/src/index.ts'],
     });
 
     tree = (await callRule(updateImports(schema), tree)) as UnitTestTree;
 
     tsConfig = readJsonInTree(tree, '/tsconfig.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
-      '@proj/my-destination': ['libs/my-destination/src/index.ts']
+      '@proj/my-destination': ['libs/my-destination/src/index.ts'],
     });
   });
 });

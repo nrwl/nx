@@ -5,13 +5,13 @@ import { join } from 'path';
 export function updateBabelOptions(options: any): void {
   // Add react babel preset
   const idx = options.presets.findIndex(
-    p => Array.isArray(p) && p[0].indexOf('@babel/preset-env') !== -1
+    (p) => Array.isArray(p) && p[0].indexOf('@babel/preset-env') !== -1
   );
   options.presets.splice(idx + 1, 0, [
     require.resolve('@babel/preset-react'),
     {
-      useBuiltIns: true
-    }
+      useBuiltIns: true,
+    },
   ]);
 
   // TODO: Remove this once we have composable webpack and babel plugins.
@@ -27,8 +27,8 @@ export function updateBabelOptions(options: any): void {
     options.plugins.splice(0, 0, [
       require.resolve('babel-plugin-styled-components'),
       {
-        pure: true
-      }
+        pure: true,
+      },
     ]);
   }
   if (hasEmotion && !hasStyledComponents) {

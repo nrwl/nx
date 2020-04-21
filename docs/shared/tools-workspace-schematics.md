@@ -34,11 +34,11 @@ The initial schematic entry point contains a rule to generate a library.
 ```ts
 import { chain, externalSchematic, Rule } from '@angular-devkit/schematics';
 
-export default function(schema: any): Rule {
+export default function (schema: any): Rule {
   return chain([
     externalSchematic('@nrwl/workspace', 'lib', {
-      name: schema.name
-    })
+      name: schema.name,
+    }),
   ]);
 }
 ```
@@ -112,13 +112,13 @@ import {
   SchematicContext,
   Tree,
   url,
-  externalSchematic
+  externalSchematic,
 } from '@angular-devkit/schematics';
 import { getProjectConfig } from '@nrwl/workspace';
 
 function generateLibrary(schema: any): Rule {
   return externalSchematic('@nrwl/workspace', 'lib', {
-    name: schema.name
+    name: schema.name,
   });
 }
 
@@ -127,14 +127,14 @@ function generateFiles(schema: any): Rule {
     context.logger.info('adding NOTES.md to lib');
 
     const templateSource = apply(url('./files'), [
-      move(getProjectConfig(tree, schema.name).root)
+      move(getProjectConfig(tree, schema.name).root),
     ]);
 
     return chain([mergeWith(templateSource)])(tree, context);
   };
 }
 
-export default function(schema: any): Rule {
+export default function (schema: any): Rule {
   return (tree: Tree, context: SchematicContext) => {
     return chain([generateLibrary(schema), generateFiles(schema)])(
       tree,
@@ -193,12 +193,12 @@ Import the TypeScript schema into your schematic file and replace the any in you
 import { chain, externalSchematic, Rule } from '@angular-devkit/schematics';
 import { SchematicOptions } from './schema';
 
-export default function(schema: SchematicOptions): Rule {
+export default function (schema: SchematicOptions): Rule {
   return chain([
     externalSchematic('@nrwl/workspace', 'lib', {
       name: `${schema.name}-${schema.type || ''}`,
-      unitTestRunner: 'none'
-    })
+      unitTestRunner: 'none',
+    }),
   ]);
 }
 ```

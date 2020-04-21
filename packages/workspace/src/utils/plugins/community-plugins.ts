@@ -20,23 +20,23 @@ export function listCommunityPlugins(
 ) {
   try {
     const installedPluginsMap: Set<string> = new Set<string>(
-      installedPlugins.map(p => p.name)
+      installedPlugins.map((p) => p.name)
     );
 
     const availableCommunityPlugins = communityPlugins.filter(
-      p => !installedPluginsMap.has(p.name)
+      (p) => !installedPluginsMap.has(p.name)
     );
 
     output.log({
       title: `Community plugins:`,
-      bodyLines: availableCommunityPlugins.map(p => {
+      bodyLines: availableCommunityPlugins.map((p) => {
         return `${terminal.bold(p.name)} - ${p.description}`;
-      })
+      }),
     });
   } catch (error) {
     output.warn({
       title: `Community plugins:`,
-      bodyLines: [`Error fetching plugins.`, error]
+      bodyLines: [`Error fetching plugins.`, error],
     });
   }
 }

@@ -14,16 +14,19 @@ export function updateTsConfig(options: JestProjectSchema): Rule {
         )} to exist. Please create one.`
       );
     }
-    return updateJsonInTree(join(projectConfig.root, 'tsconfig.json'), json => {
-      return {
-        ...json,
-        compilerOptions: {
-          ...json.compilerOptions,
-          types: Array.from(
-            new Set([...(json.compilerOptions.types || []), 'node', 'jest'])
-          )
-        }
-      };
-    });
+    return updateJsonInTree(
+      join(projectConfig.root, 'tsconfig.json'),
+      (json) => {
+        return {
+          ...json,
+          compilerOptions: {
+            ...json.compilerOptions,
+            types: Array.from(
+              new Set([...(json.compilerOptions.types || []), 'node', 'jest'])
+            ),
+          },
+        };
+      }
+    );
   };
 }

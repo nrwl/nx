@@ -24,7 +24,7 @@ export class TargetProjectLocator {
       filePath
     );
 
-    return this._sortedNodeNames.find(projectName => {
+    return this._sortedNodeNames.find((projectName) => {
       const p = this.nodes[projectName];
 
       if (!isWorkspaceProject(p)) {

@@ -50,7 +50,7 @@ function fileExists(
 function isPackageManagerInstalled(packageManager: string) {
   try {
     execSync(`${packageManager} --version`, {
-      stdio: ['ignore', 'ignore', 'ignore']
+      stdio: ['ignore', 'ignore', 'ignore'],
     });
     return true;
   } catch (e) {

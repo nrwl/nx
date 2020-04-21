@@ -54,7 +54,7 @@ export default postcss.plugin(
       resourcesOutputPath = '',
       rebaseRootRelative = false,
       filename,
-      loader
+      loader,
     } = options;
 
     const dedupeSlashes = (url: string) => url.replace(/\/\/+/g, '/');
@@ -165,9 +165,9 @@ export default postcss.plugin(
       });
     };
 
-    return root => {
+    return (root) => {
       const urlDeclarations: Array<postcss.Declaration> = [];
-      root.walkDecls(decl => {
+      root.walkDecls((decl) => {
         if (decl.value && decl.value.includes('url')) {
           urlDeclarations.push(decl);
         }
@@ -180,7 +180,7 @@ export default postcss.plugin(
       const resourceCache = new Map<string, string>();
 
       return Promise.all(
-        urlDeclarations.map(async decl => {
+        urlDeclarations.map(async (decl) => {
           const value = decl.value;
           const urlRegex = /url\(\s*(?:"([^"]+)"|'([^']+)'|(.+?))\s*\)/g;
           const segments: string[] = [];

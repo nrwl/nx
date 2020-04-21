@@ -5,7 +5,7 @@ import { TouchedProjectLocator } from '../affected-project-graph-models';
 export const getTouchedNpmPackages: TouchedProjectLocator<
   WholeFileChange | JsonChange
 > = (touchedFiles, workspaceJson, nxJson, packageJson): string[] => {
-  const packageJsonChange = touchedFiles.find(f => f.file === 'package.json');
+  const packageJsonChange = touchedFiles.find((f) => f.file === 'package.json');
   if (!packageJsonChange) return [];
 
   let touched = [];
@@ -28,7 +28,7 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
       // Whole file was touched, so all npm packages are touched.
       touched = Object.keys({
         ...(packageJson.dependencies || {}),
-        ...(packageJson.devDependencies || {})
+        ...(packageJson.devDependencies || {}),
       });
       break;
     }

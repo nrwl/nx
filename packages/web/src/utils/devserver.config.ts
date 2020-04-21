@@ -1,6 +1,6 @@
 import {
   Configuration as WebpackDevServerConfiguration,
-  HistoryApiFallbackConfig
+  HistoryApiFallbackConfig,
 } from 'webpack-dev-server';
 import { readFileSync } from 'fs';
 import * as path from 'path';
@@ -68,7 +68,7 @@ function getDevServerPartial(
 
   const {
     scripts: scriptsOptimization,
-    styles: stylesOptimization
+    styles: stylesOptimization,
   } = buildOptions.optimization as OptimizationOptions;
 
   const config: WebpackDevServerConfiguration = {
@@ -78,22 +78,22 @@ function getDevServerPartial(
     historyApiFallback: {
       index: `${servePath}/${path.basename(buildOptions.index)}`,
       disableDotRule: true,
-      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml']
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
     } as HistoryApiFallbackConfig,
     stats: false,
     compress: scriptsOptimization || stylesOptimization,
     https: options.ssl,
     overlay: {
       errors: !(scriptsOptimization || stylesOptimization),
-      warnings: false
+      warnings: false,
     },
     watchOptions: {
-      poll: buildOptions.poll
+      poll: buildOptions.poll,
     },
     public: options.publicHost,
     publicPath: servePath,
     contentBase: false,
-    allowedHosts: []
+    allowedHosts: [],
   };
 
   if (options.ssl && options.sslKey && options.sslCert) {
@@ -114,7 +114,7 @@ function getDevServerPartial(
 function getSslConfig(root: string, options: WebDevServerOptions) {
   return {
     key: readFileSync(path.resolve(root, options.sslKey), 'utf-8'),
-    cert: readFileSync(path.resolve(root, options.sslCert), 'utf-8')
+    cert: readFileSync(path.resolve(root, options.sslCert), 'utf-8'),
   };
 }
 

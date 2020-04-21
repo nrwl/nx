@@ -17,7 +17,7 @@ describe('react:storybook-configuration', () => {
       'storybook-configuration',
       <StorybookConfigureSchema>{
         name: 'test-ui-lib',
-        configureCypress: true
+        configureCypress: true,
       },
       appTree
     );
@@ -36,7 +36,7 @@ describe('react:storybook-configuration', () => {
       'storybook-configuration',
       <StorybookConfigureSchema>{
         name: 'test-ui-lib',
-        generateStories: true
+        generateStories: true,
       },
       appTree
     );
@@ -73,7 +73,7 @@ describe('react:storybook-configuration', () => {
         name: 'test-ui-lib',
         generateCypressSpecs: true,
         generateStories: true,
-        js: true
+        js: true,
       },
       appTree
     );
@@ -93,7 +93,7 @@ export async function createTestUILib(
   appTree = await callRule(
     externalSchematic('@nrwl/react', 'library', {
       name: libName,
-      js: plainJS
+      js: plainJS,
     }),
     appTree
   );

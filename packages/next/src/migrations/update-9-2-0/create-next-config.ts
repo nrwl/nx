@@ -27,7 +27,7 @@ export default function update(): Rule {
     (host: Tree) => {
       const workspaceJson = readWorkspace(host);
       const nextProjects = Object.keys(workspaceJson.projects)
-        .map(name => {
+        .map((name) => {
           const p = workspaceJson.projects[name];
           const buildBuilder =
             p.architect && p.architect.build && p.architect.build.builder;
@@ -35,13 +35,13 @@ export default function update(): Rule {
         })
         .filter(Boolean);
 
-      nextProjects.forEach(p => {
+      nextProjects.forEach((p) => {
         const configPath = join(p.root, CONFIG_FILE);
         if (!host.exists(configPath)) {
           host.create(configPath, defaultConfig);
         }
       });
     },
-    formatFiles()
+    formatFiles(),
   ]);
 }

@@ -30,7 +30,7 @@ describe('updateProjectRootFiles Rule', () => {
 
     const schema: Schema = {
       projectName: 'my-source',
-      destination: 'subfolder/my-destination'
+      destination: 'subfolder/my-destination',
     };
 
     tree = (await callRule(

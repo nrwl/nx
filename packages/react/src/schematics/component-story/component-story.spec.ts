@@ -4,7 +4,6 @@ import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { callRule, runSchematic } from '../../utils/testing';
 import { CreateComponentStoriesFileSchema } from './component-story';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { updateWorkspaceInTree } from '@nrwl/workspace';
 
 describe('react:component-story', () => {
   let appTree: Tree;
@@ -25,13 +24,13 @@ describe('react:component-story', () => {
         );
       });
 
-      it('should fail with a descriptive error message', async done => {
+      it('should fail with a descriptive error message', async (done) => {
         try {
           tree = await runSchematic(
             'component-story',
             <CreateComponentStoriesFileSchema>{
               componentPath: 'lib/test-ui-lib.tsx',
-              project: 'test-ui-lib'
+              project: 'test-ui-lib',
             },
             appTree
           );
@@ -50,7 +49,7 @@ describe('react:component-story', () => {
           'component-story',
           <CreateComponentStoriesFileSchema>{
             componentPath: 'lib/test-ui-lib.tsx',
-            project: 'test-ui-lib'
+            project: 'test-ui-lib',
           },
           appTree
         );
@@ -61,21 +60,23 @@ describe('react:component-story', () => {
       });
 
       it('should properly set up the story', () => {
-        expect(tree.readContent(storyFilePath))
-          .toContain(`import React from 'react';
-import { TestUiLib, TestUiLibProps } from './test-ui-lib';
-
-export default {
-  component: TestUiLib,
-  title: 'TestUiLib'
-};
-
-export const primary = () => {
-  /* eslint-disable-next-line */
-  const props: TestUiLibProps = {};
-
-  return <TestUiLib />;
-};`);
+        expect(stripIndents`${tree.readContent(storyFilePath)}`)
+          .toContain(stripIndents`
+            import React from 'react';
+            import { TestUiLib, TestUiLibProps } from './test-ui-lib';
+            
+            export default {
+              component: TestUiLib,
+              title: 'TestUiLib',
+            };
+            
+            export const primary = () => {
+              /* eslint-disable-next-line */
+              const props: TestUiLibProps = {};
+            
+              return <TestUiLib />;
+            };
+          `);
       });
     });
 
@@ -106,7 +107,7 @@ export const primary = () => {
           'component-story',
           <CreateComponentStoriesFileSchema>{
             componentPath: 'lib/test-ui-libplain.jsx',
-            project: 'test-ui-lib'
+            project: 'test-ui-lib',
           },
           appTree
         );
@@ -117,21 +118,23 @@ export const primary = () => {
       });
 
       it('should properly set up the story', () => {
-        expect(tree.readContent(storyFilePathPlain))
-          .toContain(`import React from 'react';
-import { Test } from './test-ui-libplain';
-
-export default {
-  component: Test,
-  title: 'Test'
-};
-
-export const primary = () => {
-  /* eslint-disable-next-line */
-  const props = {};
-
-  return <Test />;
-};`);
+        expect(stripIndents`${tree.readContent(storyFilePathPlain)}`)
+          .toContain(stripIndents`
+            import React from 'react';
+            import { Test } from './test-ui-libplain';
+            
+            export default {
+              component: Test,
+              title: 'Test',
+            };
+            
+            export const primary = () => {
+              /* eslint-disable-next-line */
+              const props = {};
+            
+              return <Test />;
+            };
+          `);
       });
     });
 
@@ -159,26 +162,27 @@ export const primary = () => {
           'component-story',
           <CreateComponentStoriesFileSchema>{
             componentPath: 'lib/test-ui-lib.tsx',
-            project: 'test-ui-lib'
+            project: 'test-ui-lib',
           },
           appTree
         );
       });
 
       it('should create a story without knobs', () => {
-        expect(tree.readContent(storyFilePath))
-          .toContain(`import React from 'react';
-import { Test } from './test-ui-lib';
-
-export default {
-  component: Test,
-  title: 'Test'
-};
-
-export const primary = () => {
-  return <Test />;
-};
-`);
+        expect(stripIndents`${tree.readContent(storyFilePath)}`)
+          .toContain(stripIndents`
+            import React from 'react';
+            import { Test } from './test-ui-lib';
+            
+            export default {
+              component: Test,
+              title: 'Test',
+            };
+            
+            export const primary = () => {
+              return <Test />;
+            };
+          `);
       });
     });
 
@@ -211,32 +215,33 @@ export const primary = () => {
           'component-story',
           <CreateComponentStoriesFileSchema>{
             componentPath: 'lib/test-ui-lib.tsx',
-            project: 'test-ui-lib'
+            project: 'test-ui-lib',
           },
           appTree
         );
       });
 
       it('should setup knobs based on the component props', () => {
-        expect(tree.readContent(storyFilePath))
-          .toContain(`import { text, boolean } from '@storybook/addon-knobs';
-import React from 'react';
-import { Test, TestProps } from './test-ui-lib';
-
-export default {
-  component: Test,
-  title: 'Test'
-};
-
-export const primary = () => {
-  const props: TestProps = {
-    name: text('name', ''),
-    displayAge: boolean('displayAge', false)
-  };
-
-  return <Test name={props.name} displayAge={props.displayAge} />;
-};
-`);
+        expect(stripIndents`${tree.readContent(storyFilePath)}`)
+          .toContain(stripIndents`
+            import { text, boolean } from '@storybook/addon-knobs';
+            import React from 'react';
+            import { Test, TestProps } from './test-ui-lib';
+            
+            export default {
+              component: Test,
+              title: 'Test',
+            };
+            
+            export const primary = () => {
+              const props: TestProps = {
+                name: text('name', ''),
+                displayAge: boolean('displayAge', false),
+              };
+            
+              return <Test name={props.name} displayAge={props.displayAge} />;
+            };
+          `);
       });
     });
 
@@ -250,7 +255,7 @@ export const primary = () => {
           </div>
         );
       };
-      `
+      `,
       },
       {
         name: 'function and then export',
@@ -263,7 +268,7 @@ export const primary = () => {
         );
       };
       export default Test;
-      `
+      `,
       },
       {
         name: 'arrow function',
@@ -276,14 +281,14 @@ export const primary = () => {
         );
       };
       export default Test;
-      `
+      `,
       },
       {
         name: 'arrow function without {..}',
         src: `
       const Test = (props: TestProps) => <div><h1>Welcome to test component, {props.name}</h1></div>;
       export default Test
-      `
+      `,
       },
       {
         name: 'direct export of component class',
@@ -293,7 +298,7 @@ export const primary = () => {
             return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
           }
         }
-        `
+        `,
       },
       {
         name: 'component class & then default export',
@@ -304,7 +309,7 @@ export const primary = () => {
           }
         }
         export default Test
-        `
+        `,
       },
       {
         name: 'PureComponent class & then default export',
@@ -315,9 +320,9 @@ export const primary = () => {
           }
         }
         export default Test
-        `
-      }
-    ].forEach(config => {
+        `,
+      },
+    ].forEach((config) => {
       describe(`React component defined as:${config.name}`, () => {
         beforeEach(async () => {
           appTree.overwrite(
@@ -339,31 +344,33 @@ export const primary = () => {
             'component-story',
             <CreateComponentStoriesFileSchema>{
               componentPath: 'lib/test-ui-lib.tsx',
-              project: 'test-ui-lib'
+              project: 'test-ui-lib',
             },
             appTree
           );
         });
 
         it('should properly setup the knobs based on the component props', () => {
-          expect(tree.readContent(storyFilePath))
-            .toContain(`import { text, boolean } from '@storybook/addon-knobs';
-import React from 'react';
-import { Test, TestProps } from './test-ui-lib';
-
-export default {
-  component: Test,
-  title: 'Test'
-};
-
-export const primary = () => {
-  const props: TestProps = {
-    name: text('name', ''),
-    displayAge: boolean('displayAge', false)
-  };
-
-  return <Test name={props.name} displayAge={props.displayAge} />;
-};`);
+          expect(stripIndents`${tree.readContent(storyFilePath)}`)
+            .toContain(stripIndents`
+            import { text, boolean } from '@storybook/addon-knobs';
+            import React from 'react';
+            import { Test, TestProps } from './test-ui-lib';
+            
+            export default {
+              component: Test,
+              title: 'Test',
+            };
+            
+            export const primary = () => {
+              const props: TestProps = {
+                name: text('name', ''),
+                displayAge: boolean('displayAge', false),
+              };
+            
+              return <Test name={props.name} displayAge={props.displayAge} />;
+            };
+          `);
         });
       });
     });
@@ -376,28 +383,30 @@ export const primary = () => {
         'component-story',
         <CreateComponentStoriesFileSchema>{
           componentPath: 'lib/test-ui-lib.tsx',
-          project: 'test-ui-lib'
+          project: 'test-ui-lib',
         },
         appTree
       );
     });
 
     it('should properly set up the story', () => {
-      expect(tree.readContent(storyFilePath))
-        .toContain(`import React from 'react';
-import { TestUiLib, TestUiLibProps } from './test-ui-lib';
-
-export default {
-  component: TestUiLib,
-  title: 'TestUiLib'
-};
-
-export const primary = () => {
-  /* tslint-disable-next-line */
-  const props: TestUiLibProps = {};
-
-  return <TestUiLib />;
-};`);
+      expect(stripIndents`${tree.readContent(storyFilePath)}`)
+        .toContain(stripIndents`
+          import React from 'react';
+          import { TestUiLib, TestUiLibProps } from './test-ui-lib';
+          
+          export default {
+            component: TestUiLib,
+            title: 'TestUiLib',
+          };
+          
+          export const primary = () => {
+            /* tslint-disable-next-line */
+            const props: TestUiLibProps = {};
+          
+            return <TestUiLib />;
+          };
+        `);
     });
   });
 });
@@ -410,7 +419,7 @@ export async function createTestUILib(
   appTree = createEmptyWorkspace(appTree);
   appTree = await callRule(
     externalSchematic('@nrwl/react', 'library', {
-      name: libName
+      name: libName,
     }),
     appTree
   );

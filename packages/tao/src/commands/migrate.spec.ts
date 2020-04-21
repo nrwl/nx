@@ -9,7 +9,7 @@ describe('Migration', () => {
           throw new Error('cannot fetch');
         },
         from: {},
-        to: {}
+        to: {},
       });
 
       try {
@@ -25,14 +25,14 @@ describe('Migration', () => {
         versions: () => '1.0.0',
         fetch: (p, v) => Promise.resolve({ version: '2.0.0' }),
         from: {},
-        to: {}
+        to: {},
       });
 
       expect(await migrator.updatePackageJson('mypackage', '2.0.0')).toEqual({
         migrations: [],
         packageJson: {
-          mypackage: { version: '2.0.0', alwaysAddToPackageJson: false }
-        }
+          mypackage: { version: '2.0.0', alwaysAddToPackageJson: false },
+        },
       });
     });
 
@@ -48,11 +48,14 @@ describe('Migration', () => {
                   version: '2.0.0',
                   packages: {
                     child: { version: '2.0.0' },
-                    newChild: { version: '3.0.0', alwaysAddToPackageJson: true }
-                  }
-                }
+                    newChild: {
+                      version: '3.0.0',
+                      alwaysAddToPackageJson: true,
+                    },
+                  },
+                },
               },
-              schematics: {}
+              schematics: {},
             });
           } else if (p === 'child') {
             return Promise.resolve({ version: '2.0.0' });
@@ -63,7 +66,7 @@ describe('Migration', () => {
           }
         },
         from: {},
-        to: {}
+        to: {},
       });
 
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
@@ -71,8 +74,8 @@ describe('Migration', () => {
         packageJson: {
           parent: { version: '2.0.0', alwaysAddToPackageJson: false },
           child: { version: '2.0.0', alwaysAddToPackageJson: false },
-          newChild: { version: '2.0.0', alwaysAddToPackageJson: true }
-        }
+          newChild: { version: '2.0.0', alwaysAddToPackageJson: true },
+        },
       });
     });
 
@@ -87,11 +90,11 @@ describe('Migration', () => {
                 version2: {
                   version: '2.0.0',
                   packages: {
-                    child: { version: '2.0.0' }
-                  }
-                }
+                    child: { version: '2.0.0' },
+                  },
+                },
               },
-              schematics: {}
+              schematics: {},
             });
           } else if (p === 'child') {
             return Promise.resolve({
@@ -100,26 +103,26 @@ describe('Migration', () => {
                 version2: {
                   version: '2.0.0',
                   packages: {
-                    parent: { version: '2.0.0' }
-                  }
-                }
+                    parent: { version: '2.0.0' },
+                  },
+                },
               },
-              schematics: {}
+              schematics: {},
             });
           } else {
             return Promise.resolve(null);
           }
         },
         from: {},
-        to: {}
+        to: {},
       });
 
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
         migrations: [],
         packageJson: {
           parent: { version: '2.0.0', alwaysAddToPackageJson: false },
-          child: { version: '2.0.0', alwaysAddToPackageJson: false }
-        }
+          child: { version: '2.0.0', alwaysAddToPackageJson: false },
+        },
       });
     });
 
@@ -135,11 +138,11 @@ describe('Migration', () => {
                   version: '2.0.0',
                   packages: {
                     child1: { version: '2.0.0' },
-                    child2: { version: '2.0.0' }
-                  }
-                }
+                    child2: { version: '2.0.0' },
+                  },
+                },
               },
-              schematics: {}
+              schematics: {},
             });
           } else if (p === 'child1') {
             return Promise.resolve({
@@ -148,11 +151,11 @@ describe('Migration', () => {
                 version2: {
                   version: '2.0.0',
                   packages: {
-                    grandchild: { version: '3.0.0' }
-                  }
-                }
+                    grandchild: { version: '3.0.0' },
+                  },
+                },
               },
-              schematics: {}
+              schematics: {},
             });
           } else if (p === 'child2') {
             return Promise.resolve({
@@ -161,18 +164,18 @@ describe('Migration', () => {
                 version2: {
                   version: '2.0.0',
                   packages: {
-                    grandchild: { version: '4.0.0' }
-                  }
-                }
+                    grandchild: { version: '4.0.0' },
+                  },
+                },
               },
-              schematics: {}
+              schematics: {},
             });
           } else {
             return Promise.resolve({ version: '4.0.0' });
           }
         },
         from: {},
-        to: {}
+        to: {},
       });
 
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
@@ -181,8 +184,8 @@ describe('Migration', () => {
           parent: { version: '2.0.0', alwaysAddToPackageJson: false },
           child1: { version: '2.0.0', alwaysAddToPackageJson: false },
           child2: { version: '2.0.0', alwaysAddToPackageJson: false },
-          grandchild: { version: '4.0.0', alwaysAddToPackageJson: false }
-        }
+          grandchild: { version: '4.0.0', alwaysAddToPackageJson: false },
+        },
       });
     });
 
@@ -197,11 +200,11 @@ describe('Migration', () => {
                 version2: {
                   version: '2.0.0',
                   packages: {
-                    child: { version: '2.0.0' }
-                  }
-                }
+                    child: { version: '2.0.0' },
+                  },
+                },
               },
-              schematics: {}
+              schematics: {},
             });
           } else if (p === 'child') {
             return Promise.resolve({
@@ -210,32 +213,32 @@ describe('Migration', () => {
                 version2: {
                   version: '1.0.0',
                   packages: {
-                    grandchild: { version: '2.0.0' }
-                  }
-                }
+                    grandchild: { version: '2.0.0' },
+                  },
+                },
               },
-              schematics: {}
+              schematics: {},
             });
           } else {
             return Promise.resolve({ version: '2.0.0' });
           }
         },
         from: {},
-        to: {}
+        to: {},
       });
 
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
         migrations: [],
         packageJson: {
           parent: { version: '2.0.0', alwaysAddToPackageJson: false },
-          child: { version: '2.0.0', alwaysAddToPackageJson: false }
-        }
+          child: { version: '2.0.0', alwaysAddToPackageJson: false },
+        },
       });
     });
 
     it('should conditionally process packages if they are installed', async () => {
       const migrator = new Migrator({
-        versions: p => (p !== 'not-installed' ? '1.0.0' : null),
+        versions: (p) => (p !== 'not-installed' ? '1.0.0' : null),
         fetch: (p, v) => {
           if (p === 'parent') {
             return Promise.resolve({
@@ -247,12 +250,12 @@ describe('Migration', () => {
                     child1: { version: '2.0.0', ifPackageInstalled: 'other' },
                     child2: {
                       version: '2.0.0',
-                      ifPackageInstalled: 'not-installed'
-                    }
-                  }
-                }
+                      ifPackageInstalled: 'not-installed',
+                    },
+                  },
+                },
               },
-              schematics: {}
+              schematics: {},
             });
           } else if (p === 'child1') {
             return Promise.resolve({ version: '2.0.0' });
@@ -263,15 +266,15 @@ describe('Migration', () => {
           }
         },
         from: {},
-        to: {}
+        to: {},
       });
 
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
         migrations: [],
         packageJson: {
           parent: { version: '2.0.0', alwaysAddToPackageJson: false },
-          child1: { version: '2.0.0', alwaysAddToPackageJson: false }
-        }
+          child1: { version: '2.0.0', alwaysAddToPackageJson: false },
+        },
       });
     });
 
@@ -282,7 +285,7 @@ describe('Migration', () => {
         versions: () => '1.0.0',
         fetch: (p, v) => Promise.resolve({ version: '2.0.0' }),
         from: {},
-        to: {}
+        to: {},
       });
 
       expect(
@@ -292,13 +295,13 @@ describe('Migration', () => {
         packageJson: {
           '@nrwl/workspace': {
             version: '2.0.0',
-            alwaysAddToPackageJson: false
+            alwaysAddToPackageJson: false,
           },
           '@nrwl/angular': { version: '2.0.0', alwaysAddToPackageJson: false },
           '@nrwl/cypress': { version: '2.0.0', alwaysAddToPackageJson: false },
           '@nrwl/eslint-plugin-nx': {
             version: '2.0.0',
-            alwaysAddToPackageJson: false
+            alwaysAddToPackageJson: false,
           },
           '@nrwl/express': { version: '2.0.0', alwaysAddToPackageJson: false },
           '@nrwl/jest': { version: '2.0.0', alwaysAddToPackageJson: false },
@@ -308,47 +311,47 @@ describe('Migration', () => {
           '@nrwl/node': { version: '2.0.0', alwaysAddToPackageJson: false },
           '@nrwl/nx-plugin': {
             version: '2.0.0',
-            alwaysAddToPackageJson: false
+            alwaysAddToPackageJson: false,
           },
           '@nrwl/react': { version: '2.0.0', alwaysAddToPackageJson: false },
           '@nrwl/storybook': {
             version: '2.0.0',
-            alwaysAddToPackageJson: false
+            alwaysAddToPackageJson: false,
           },
           '@nrwl/tao': { version: '2.0.0', alwaysAddToPackageJson: false },
-          '@nrwl/web': { version: '2.0.0', alwaysAddToPackageJson: false }
-        }
+          '@nrwl/web': { version: '2.0.0', alwaysAddToPackageJson: false },
+        },
       });
     });
 
     it('should not throw when packages are missing', async () => {
       const migrator = new Migrator({
-        versions: p => (p === '@nrwl/nest' ? null : '1.0.0'),
+        versions: (p) => (p === '@nrwl/nest' ? null : '1.0.0'),
         fetch: (p, v) =>
           Promise.resolve({
             version: '2.0.0',
-            packageJsonUpdates: { one: { version: '2.0.0', packages: {} } }
+            packageJsonUpdates: { one: { version: '2.0.0', packages: {} } },
           }),
         from: {},
-        to: {}
+        to: {},
       });
       await migrator.updatePackageJson('@nrwl/workspace', '2.0.0');
     });
 
     it('should only fetch packages that are installed', async () => {
       const migrator = new Migrator({
-        versions: p => (p === '@nrwl/nest' ? null : '1.0.0'),
+        versions: (p) => (p === '@nrwl/nest' ? null : '1.0.0'),
         fetch: (p, v) => {
           if (p === '@nrwl/nest') {
             throw new Error('Boom');
           }
           return Promise.resolve({
             version: '2.0.0',
-            packageJsonUpdates: { one: { version: '2.0.0', packages: {} } }
+            packageJsonUpdates: { one: { version: '2.0.0', packages: {} } },
           });
         },
         from: {},
-        to: {}
+        to: {},
       });
       await migrator.updatePackageJson('@nrwl/workspace', '2.0.0');
     });
@@ -357,7 +360,7 @@ describe('Migration', () => {
   describe('migrations', () => {
     it('should create a list of migrations to run', async () => {
       const migrator = new Migrator({
-        versions: p => {
+        versions: (p) => {
           if (p === 'parent') return '1.0.0';
           if (p === 'child') return '1.0.0';
           return null;
@@ -372,17 +375,17 @@ describe('Migration', () => {
                   packages: {
                     child: { version: '2.0.0' },
                     newChild: {
-                      version: '3.0.0'
-                    }
-                  }
-                }
+                      version: '3.0.0',
+                    },
+                  },
+                },
               },
               schematics: {
                 version2: {
                   version: '2.0.0',
-                  factory: 'parent-factory'
-                }
-              }
+                  factory: 'parent-factory',
+                },
+              },
             });
           } else if (p === 'child') {
             return Promise.resolve({
@@ -390,9 +393,9 @@ describe('Migration', () => {
               schematics: {
                 version2: {
                   version: '2.0.0',
-                  factory: 'child-factory'
-                }
-              }
+                  factory: 'child-factory',
+                },
+              },
             });
           } else if (p === 'newChild') {
             return Promise.resolve({
@@ -400,16 +403,16 @@ describe('Migration', () => {
               schematics: {
                 version2: {
                   version: '2.0.0',
-                  factory: 'new-child-factory'
-                }
-              }
+                  factory: 'new-child-factory',
+                },
+              },
             });
           } else {
             return Promise.resolve(null);
           }
         },
         from: {},
-        to: {}
+        to: {},
       });
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
         migrations: [
@@ -417,20 +420,20 @@ describe('Migration', () => {
             package: 'parent',
             version: '2.0.0',
             name: 'version2',
-            factory: 'parent-factory'
+            factory: 'parent-factory',
           },
           {
             package: 'child',
             version: '2.0.0',
             name: 'version2',
-            factory: 'child-factory'
-          }
+            factory: 'child-factory',
+          },
         ],
         packageJson: {
           parent: { version: '2.0.0', alwaysAddToPackageJson: false },
           child: { version: '2.0.0', alwaysAddToPackageJson: false },
-          newChild: { version: '3.0.0', alwaysAddToPackageJson: false }
-        }
+          newChild: { version: '3.0.0', alwaysAddToPackageJson: false },
+        },
       });
     });
   });
@@ -461,7 +464,7 @@ describe('Migration', () => {
         '--from',
         '@myscope/a@12.3,@myscope/b@1.1.1',
         '--to',
-        '@myscope/c@12.3.1'
+        '@myscope/c@12.3.1',
       ]);
       expect(r).toEqual({
         type: 'generateMigrations',
@@ -469,42 +472,42 @@ describe('Migration', () => {
         targetVersion: '8.12.0',
         from: {
           '@myscope/a': '12.3.0',
-          '@myscope/b': '1.1.1'
+          '@myscope/b': '1.1.1',
         },
         to: {
-          '@myscope/c': '12.3.1'
-        }
+          '@myscope/c': '12.3.1',
+        },
       });
     });
 
     it('should handle different variations of the target package', () => {
       expect(parseMigrationsOptions(['8.12'])).toMatchObject({
         targetPackage: '@nrwl/workspace',
-        targetVersion: '8.12.0'
+        targetVersion: '8.12.0',
       });
       expect(parseMigrationsOptions(['8'])).toMatchObject({
         targetPackage: '@nrwl/workspace',
-        targetVersion: '8.0.0'
+        targetVersion: '8.0.0',
       });
       expect(parseMigrationsOptions(['next'])).toMatchObject({
         targetPackage: '@nrwl/workspace',
-        targetVersion: 'next'
+        targetVersion: 'next',
       });
       expect(parseMigrationsOptions(['@nrwl/workspace@8.12'])).toMatchObject({
         targetPackage: '@nrwl/workspace',
-        targetVersion: '8.12.0'
+        targetVersion: '8.12.0',
       });
       expect(parseMigrationsOptions(['mypackage@8.12'])).toMatchObject({
         targetPackage: 'mypackage',
-        targetVersion: '8.12.0'
+        targetVersion: '8.12.0',
       });
       expect(parseMigrationsOptions(['mypackage'])).toMatchObject({
         targetPackage: 'mypackage',
-        targetVersion: 'latest'
+        targetVersion: 'latest',
       });
       expect(parseMigrationsOptions(['@nrwl/workspace@latest'])).toMatchObject({
         targetPackage: '@nrwl/workspace',
-        targetVersion: 'latest'
+        targetVersion: 'latest',
       });
     });
 

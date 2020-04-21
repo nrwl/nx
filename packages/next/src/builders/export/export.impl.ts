@@ -3,7 +3,7 @@ import {
   BuilderOutput,
   createBuilder,
   scheduleTargetAndForget,
-  targetFromTargetString
+  targetFromTargetString,
 } from '@angular-devkit/architect';
 import exportApp from 'next/dist/export';
 import { PHASE_EXPORT } from 'next/dist/next-server/lib/constants';
@@ -13,7 +13,7 @@ import { concatMap, map } from 'rxjs/operators';
 import { prepareConfig } from '../../utils/config';
 import {
   NextBuildBuilderOptions,
-  NextExportBuilderOptions
+  NextExportBuilderOptions,
 } from '../../utils/types';
 
 try {
@@ -30,7 +30,7 @@ function run(
   const build$ = scheduleTargetAndForget(context, buildTarget);
 
   return build$.pipe(
-    concatMap(r => {
+    concatMap((r) => {
       if (!r.success) return of(r);
       return from(context.getTargetOptions(buildTarget)).pipe(
         concatMap((buildOptions: NextBuildBuilderOptions) => {
@@ -42,7 +42,7 @@ function run(
               {
                 silent: options.silent,
                 threads: options.threads,
-                outdir: `${buildOptions.outputPath}/exported`
+                outdir: `${buildOptions.outputPath}/exported`,
               } as any,
               config
             )

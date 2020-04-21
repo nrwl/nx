@@ -3,7 +3,7 @@ import {
   chain,
   Rule,
   Tree,
-  SchematicContext
+  SchematicContext,
 } from '@angular-devkit/schematics';
 import { addDepsToPackageJson } from './ast-utils';
 import { offsetFromRoot } from './common';
@@ -11,13 +11,13 @@ import {
   eslintVersion,
   typescriptESLintVersion,
   eslintConfigPrettierVersion,
-  nxVersion
+  nxVersion,
 } from './versions';
 
 export const enum Linter {
   TsLint = 'tslint',
   EsLint = 'eslint',
-  None = 'none'
+  None = 'none',
 }
 
 export function generateProjectLint(
@@ -30,8 +30,8 @@ export function generateProjectLint(
       builder: '@angular-devkit/build-angular:tslint',
       options: {
         tsConfig: [tsConfigPath],
-        exclude: ['**/node_modules/**', '!' + projectRoot + '/**']
-      }
+        exclude: ['**/node_modules/**', '!' + projectRoot + '/**'],
+      },
     };
   } else if (linter === Linter.EsLint) {
     return {
@@ -40,8 +40,8 @@ export function generateProjectLint(
         linter: 'eslint',
         config: projectRoot + '/.eslintrc',
         tsConfig: [tsConfigPath],
-        exclude: ['**/node_modules/**', '!' + projectRoot + '/**']
-      }
+        exclude: ['**/node_modules/**', '!' + projectRoot + '/**'],
+      },
     };
   } else {
     return undefined;
@@ -82,9 +82,9 @@ export function addLintFiles(
               extends: `${offsetFromRoot(projectRoot)}tslint.json`,
               // Include project files to be linted since the global one excludes all files.
               linterOptions: {
-                exclude: ['!**/*']
+                exclude: ['!**/*'],
               },
-              rules: {}
+              rules: {},
             })
           );
         }
@@ -102,7 +102,7 @@ export function addLintFiles(
             {
               ...(options.extraPackageDeps
                 ? options.extraPackageDeps.dependencies
-                : {})
+                : {}),
             },
             {
               '@nrwl/eslint-plugin-nx': nxVersion,
@@ -112,7 +112,7 @@ export function addLintFiles(
               'eslint-config-prettier': eslintConfigPrettierVersion,
               ...(options.extraPackageDeps
                 ? options.extraPackageDeps.devDependencies
-                : {})
+                : {}),
             }
           );
         });
@@ -131,12 +131,12 @@ export function addLintFiles(
             configJson = {
               rules: {},
               ...options.localConfig,
-              extends: [...extendsOption, rootConfig]
+              extends: [...extendsOption, rootConfig],
             };
           } else {
             configJson = {
               extends: rootConfig,
-              rules: {}
+              rules: {},
             };
           }
           // Include all project files to be linted (since they are turned off in the root eslintrc file).

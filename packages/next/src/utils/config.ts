@@ -3,7 +3,7 @@ import {
   PHASE_DEVELOPMENT_SERVER,
   PHASE_EXPORT,
   PHASE_PRODUCTION_BUILD,
-  PHASE_PRODUCTION_SERVER
+  PHASE_PRODUCTION_SERVER,
 } from 'next/dist/next-server/lib/constants';
 import loadConfig from 'next/dist/next-server/server/config';
 import { join, resolve } from 'path';
@@ -12,7 +12,7 @@ import { Configuration } from 'webpack';
 import {
   FileReplacement,
   NextBuildBuilderOptions,
-  NextServeBuilderOptions
+  NextServeBuilderOptions,
 } from './types';
 import { BuilderContext } from '@angular-devkit/architect';
 
@@ -31,14 +31,14 @@ export function createWebpackConfig(
       new TsconfigPathsPlugin({
         configFile: resolve(workspaceRoot, projectRoot, 'tsconfig.json'),
         extensions,
-        mainFields
-      })
+        mainFields,
+      }),
     ];
 
     fileReplacements
-      .map(fileReplacement => ({
+      .map((fileReplacement) => ({
         replace: resolve(workspaceRoot, fileReplacement.replace),
-        with: resolve(workspaceRoot, fileReplacement.with)
+        with: resolve(workspaceRoot, fileReplacement.with),
       }))
       .reduce((alias, replacement) => {
         alias[replacement.replace] = replacement.with;
@@ -48,7 +48,7 @@ export function createWebpackConfig(
     config.module.rules.push(
       {
         test: /\.tsx?$/,
-        use: [defaultLoaders.babel]
+        use: [defaultLoaders.babel],
       },
       {
         test: /\.svg$/,
@@ -56,7 +56,7 @@ export function createWebpackConfig(
           // If coming from JS/TS file, then transform into React component using SVGR.
           {
             issuer: {
-              test: /\.[jt]sx?$/
+              test: /\.[jt]sx?$/,
             },
             use: [
               '@svgr/webpack?-svgo,+titleProp,+ref![path]',
@@ -64,10 +64,10 @@ export function createWebpackConfig(
                 loader: 'url-loader',
                 options: {
                   limit: 10000, // 10kB
-                  name: '[name].[hash:7].[ext]'
-                }
-              }
-            ]
+                  name: '[name].[hash:7].[ext]',
+                },
+              },
+            ],
           },
           // Fallback to plain URL loader.
           {
@@ -76,12 +76,12 @@ export function createWebpackConfig(
                 loader: 'url-loader',
                 options: {
                   limit: 10000, // 10kB
-                  name: '[name].[hash:7].[ext]'
-                }
-              }
-            ]
-          }
-        ]
+                  name: '[name].[hash:7].[ext]',
+                },
+              },
+            ],
+          },
+        ],
       }
     );
     return config;

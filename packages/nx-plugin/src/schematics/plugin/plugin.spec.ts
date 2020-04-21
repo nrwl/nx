@@ -26,20 +26,20 @@ describe('NxPlugin plugin', () => {
           {
             input: './libs/my-plugin/src',
             glob: '**/*.!(ts)',
-            output: './src'
+            output: './src',
           },
           {
             input: './libs/my-plugin',
             glob: 'collection.json',
-            output: '.'
+            output: '.',
           },
           {
             input: './libs/my-plugin',
             glob: 'builders.json',
-            output: '.'
-          }
-        ]
-      }
+            output: '.',
+          },
+        ],
+      },
     });
     expect(project.architect.lint).toEqual({
       builder: '@angular-devkit/build-angular:tslint',
@@ -47,17 +47,17 @@ describe('NxPlugin plugin', () => {
         exclude: ['**/node_modules/**', '!libs/my-plugin/**'],
         tsConfig: [
           'libs/my-plugin/tsconfig.lib.json',
-          'libs/my-plugin/tsconfig.spec.json'
-        ]
-      }
+          'libs/my-plugin/tsconfig.spec.json',
+        ],
+      },
     });
     expect(project.architect.test).toEqual({
       builder: '@nrwl/jest:jest',
       options: {
         jestConfig: 'libs/my-plugin/jest.config.js',
         tsConfig: 'libs/my-plugin/tsconfig.spec.json',
-        passWithNoTests: true
-      }
+        passWithNoTests: true,
+      },
     });
   });
 
@@ -120,7 +120,7 @@ describe('NxPlugin plugin', () => {
       '@nrwl/node',
       'lib',
       expect.objectContaining({
-        publishable: true
+        publishable: true,
       })
     );
   });
@@ -133,7 +133,7 @@ describe('NxPlugin plugin', () => {
       expect.objectContaining({
         pluginName: 'my-plugin',
         pluginOutputPath: `dist/libs/my-plugin`,
-        npmPackageName: '@proj/my-plugin'
+        npmPackageName: '@proj/my-plugin',
       })
     );
   });
@@ -145,7 +145,7 @@ describe('NxPlugin plugin', () => {
       'schematic',
       expect.objectContaining({
         project: 'my-plugin',
-        name: `my-plugin`
+        name: `my-plugin`,
       })
     );
   });
@@ -157,7 +157,7 @@ describe('NxPlugin plugin', () => {
       'builder',
       expect.objectContaining({
         project: 'my-plugin',
-        name: `build`
+        name: `build`,
       })
     );
   });
@@ -179,7 +179,7 @@ describe('NxPlugin plugin', () => {
           '@nrwl/node',
           'lib',
           expect.objectContaining({
-            unitTestRunner: 'none'
+            unitTestRunner: 'none',
           })
         );
 

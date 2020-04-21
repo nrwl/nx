@@ -41,7 +41,7 @@ describe('react:stories', () => {
     tree = await runSchematic(
       'stories',
       <StorybookStoriesSchema>{
-        project: 'test-ui-lib'
+        project: 'test-ui-lib',
       },
       appTree
     );
@@ -59,7 +59,7 @@ describe('react:stories', () => {
       'stories',
       <StorybookStoriesSchema>{
         project: 'test-ui-lib',
-        generateCypressSpecs: true
+        generateCypressSpecs: true,
       },
       appTree
     );
@@ -88,7 +88,7 @@ describe('react:stories', () => {
     tree = await runSchematic(
       'stories',
       <StorybookStoriesSchema>{
-        project: 'test-ui-lib'
+        project: 'test-ui-lib',
       },
       appTree
     );
@@ -109,7 +109,7 @@ export async function createTestUILib(
   appTree = createEmptyWorkspace(appTree);
   appTree = await callRule(
     externalSchematic('@nrwl/react', 'library', {
-      name: libName
+      name: libName,
     }),
     appTree
   );
@@ -119,7 +119,7 @@ export async function createTestUILib(
   appTree = await callRule(
     externalSchematic('@nrwl/react', 'application', {
       name: `${libName}-e2e`,
-      js: plainJS
+      js: plainJS,
     } as Partial<Schema>),
     appTree
   );

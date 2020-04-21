@@ -8,9 +8,9 @@ import { getNewProjectName } from './utils';
  * @param schema The options provided to the schematic
  */
 export function updateNxJson(schema: Schema) {
-  return updateJsonInTree<NxJson>('nx.json', json => {
+  return updateJsonInTree<NxJson>('nx.json', (json) => {
     json.projects[getNewProjectName(schema.destination)] = {
-      ...json.projects[schema.projectName]
+      ...json.projects[schema.projectName],
     };
     delete json.projects[schema.projectName];
     return json;

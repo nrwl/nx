@@ -10,7 +10,7 @@ import {
   onlyWorkspaceProjects,
   ProjectGraphNode,
   ProjectType,
-  withDeps
+  withDeps,
 } from '../core/project-graph';
 import { calculateFileChanges, readEnvironment } from '../core/file-utils';
 import { printAffected } from './print-affected';
@@ -38,17 +38,17 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
   const projects = parsedArgs.all ? projectGraph.nodes : affectedGraph.nodes;
   const env = readEnvironment(nxArgs.target, projects);
   const affectedProjects = Object.values(projects)
-    .filter(n => !parsedArgs.exclude.includes(n.name))
+    .filter((n) => !parsedArgs.exclude.includes(n.name))
     .filter(
-      n => !parsedArgs.onlyFailed || !env.workspaceResults.getResult(n.name)
+      (n) => !parsedArgs.onlyFailed || !env.workspaceResults.getResult(n.name)
     );
 
   try {
     switch (command) {
       case 'apps':
         const apps = affectedProjects
-          .filter(p => p.type === ProjectType.app)
-          .map(p => p.name);
+          .filter((p) => p.type === ProjectType.app)
+          .map((p) => p.name);
         if (parsedArgs.plain) {
           console.log(apps.join(' '));
         } else {
@@ -56,7 +56,7 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
           if (apps.length) {
             output.log({
               title: 'Affected apps:',
-              bodyLines: apps.map(app => `${output.colors.gray('-')} ${app}`)
+              bodyLines: apps.map((app) => `${output.colors.gray('-')} ${app}`),
             });
           }
         }
@@ -64,8 +64,8 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
 
       case 'libs':
         const libs = affectedProjects
-          .filter(p => p.type === ProjectType.lib)
-          .map(p => p.name);
+          .filter((p) => p.type === ProjectType.lib)
+          .map((p) => p.name);
         if (parsedArgs.plain) {
           console.log(libs.join(' '));
         } else {
@@ -73,14 +73,14 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
           if (libs.length) {
             output.log({
               title: 'Affected libs:',
-              bodyLines: libs.map(lib => `${output.colors.gray('-')} ${lib}`)
+              bodyLines: libs.map((lib) => `${output.colors.gray('-')} ${lib}`),
             });
           }
         }
         break;
 
       case 'dep-graph':
-        const projectNames = affectedProjects.map(p => p.name);
+        const projectNames = affectedProjects.map((p) => p.name);
         printArgsWarning(nxArgs);
         generateGraph(parsedArgs as any, projectNames);
         break;
@@ -128,7 +128,7 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
 }
 
 function allProjectsWithTarget(projects: ProjectGraphNode[], nxArgs: NxArgs) {
-  return projects.filter(p => projectHasTarget(p, nxArgs.target));
+  return projects.filter((p) => projectHasTarget(p, nxArgs.target));
 }
 
 function printError(e: any, verbose?: boolean) {
@@ -139,6 +139,6 @@ function printError(e: any, verbose?: boolean) {
   }
   output.error({
     title: 'There was a critical error when running your command',
-    bodyLines
+    bodyLines,
   });
 }

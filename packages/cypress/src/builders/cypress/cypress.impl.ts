@@ -3,7 +3,7 @@ import {
   createBuilder,
   BuilderOutput,
   scheduleTargetAndForget,
-  targetFromTargetString
+  targetFromTargetString,
 } from '@angular-devkit/architect';
 import { Observable, of, noop } from 'rxjs';
 import { catchError, concatMap, tap, map, take } from 'rxjs/operators';
@@ -86,11 +86,11 @@ export function cypressBuilderRunner(
       )
     ),
     options.watch ? tap(noop) : take(1),
-    catchError(error => {
+    catchError((error) => {
       context.reportStatus(`Error: ${error.message}`);
       context.logger.error(error.message);
       return of({
-        success: false
+        success: false,
       });
     })
   );
@@ -135,7 +135,7 @@ function initCypress(
   const projectFolderPath = dirname(cypressConfig);
   const options: any = {
     project: projectFolderPath,
-    configFile: basename(cypressConfig)
+    configFile: basename(cypressConfig),
   };
 
   // If not, will use the `baseUrl` normally from `cypress.json`
@@ -167,13 +167,13 @@ function initCypress(
     !isWatching || headless ? Cypress.run(options) : Cypress.open(options)
   ).pipe(
     // tap(() => (isWatching && !headless ? process.exit() : null)), // Forcing `cypress.open` to give back the terminal
-    map(result => ({
+    map((result) => ({
       /**
        * `cypress.open` is returning `0` and is not of the same type as `cypress.run`.
        * `cypress.open` is the graphical UI, so it will be obvious to know what wasn't
        * working. Forcing the build to success when `cypress.open` is used.
        */
-      success: !result.totalFailed && !result.failures
+      success: !result.totalFailed && !result.failures,
     }))
   );
 }
@@ -192,14 +192,14 @@ export function startDevServer(
 ): Observable<string> {
   // Overrides dev server watch setting.
   const overrides = {
-    watch: isWatching
+    watch: isWatching,
   };
   return scheduleTargetAndForget(
     context,
     targetFromTargetString(devServerTarget),
     overrides
   ).pipe(
-    map(output => {
+    map((output) => {
       if (!output.success && !isWatching) {
         throw new Error('Could not compile application files');
       }

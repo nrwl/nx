@@ -25,7 +25,7 @@ export class BuildBrowserFeatures {
     private scriptTarget: ts.ScriptTarget
   ) {
     this._supportedBrowsers = browserslist(undefined, {
-      path: this.projectRoot
+      path: this.projectRoot,
     });
     this._es6TargetOrLater = this.scriptTarget > ts.ScriptTarget.ES5;
   }
@@ -58,7 +58,7 @@ export class BuildBrowserFeatures {
 
     const safariBrowsers = ['safari 10.1', 'ios_saf 10.3'];
 
-    return this._supportedBrowsers.some(browser =>
+    return this._supportedBrowsers.some((browser) =>
       safariBrowsers.includes(browser)
     );
   }
@@ -75,7 +75,7 @@ export class BuildBrowserFeatures {
 
     const data = feature(features[featureId]);
 
-    return !this._supportedBrowsers.some(browser => {
+    return !this._supportedBrowsers.some((browser) => {
       const [agentId, version] = browser.split(' ');
 
       const browserData = data.stats[agentId];

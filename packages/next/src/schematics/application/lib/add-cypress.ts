@@ -7,7 +7,7 @@ export function addCypress(options: NormalizedSchema): Rule {
         ...options,
         name: options.name + '-e2e',
         directory: options.directory,
-        project: options.projectName
+        project: options.projectName,
       })
     : noop();
 }

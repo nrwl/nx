@@ -1,21 +1,21 @@
 jest.mock('./file-utils', () => ({
-  getFilesToLint: jest.fn()
+  getFilesToLint: jest.fn(),
 }));
 
 jest.mock('eslint', () => ({
-  CLIEngine: jest.fn()
+  CLIEngine: jest.fn(),
 }));
 
 const { CLIEngine } = require('eslint');
 (<jest.SpyInstance>CLIEngine).mockImplementation(() => ({
-  executeOnFiles: (args: string[]) => args
+  executeOnFiles: (args: string[]) => args,
 }));
 
 const { lint } = require('./eslint-utils');
 
 function prog(sourceFile: string) {
   return {
-    getSourceFile: (file: string) => (sourceFile === file ? true : undefined)
+    getSourceFile: (file: string) => (sourceFile === file ? true : undefined),
   };
 }
 
@@ -53,7 +53,7 @@ describe('eslint-util', () => {
       useEslintrc: false,
       fix: true,
       cache: true,
-      cacheLocation: '/root/cache'
+      cacheLocation: '/root/cache',
     });
   });
   it('should not lint the same files twice', async () => {
@@ -63,7 +63,7 @@ describe('eslint-util', () => {
       'file2',
       'file1',
       'file3',
-      'file4'
+      'file4',
     ]);
     const lintedFiles = new Set();
     lintedFiles.add('file4');
@@ -81,7 +81,7 @@ describe('eslint-util', () => {
       'file1',
       'file2',
       'file1',
-      'file3'
+      'file3',
     ]);
     const program = prog('file8');
     const allPrograms = [prog('file1'), prog('file2')];
@@ -104,7 +104,7 @@ describe('eslint-util', () => {
       'file1',
       'file2',
       'file1',
-      'file3'
+      'file3',
     ]);
     const program = prog('file2');
     const allPrograms = [prog('file1'), prog('file2'), prog('file3')];

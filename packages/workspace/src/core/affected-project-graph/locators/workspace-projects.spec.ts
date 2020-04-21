@@ -8,19 +8,19 @@ describe('getTouchedProjects', () => {
         file: 'libs/a/index.ts',
         ext: '.ts',
         mtime: 0,
-        getChanges: () => [new WholeFileChange()]
+        getChanges: () => [new WholeFileChange()],
       },
       {
         file: 'libs/b/index.ts',
         ext: '.ts',
         mtime: 0,
-        getChanges: () => [new WholeFileChange()]
-      }
+        getChanges: () => [new WholeFileChange()],
+      },
     ];
     const projects = {
       a: { root: 'libs/a' },
       b: { root: 'libs/b' },
-      c: { root: 'libs/c' }
+      c: { root: 'libs/c' },
     };
     expect(getTouchedProjects(fileChanges, { projects })).toEqual(['a', 'b']);
   });
@@ -31,13 +31,13 @@ describe('getTouchedProjects', () => {
         file: 'libs/a-b/index.ts',
         ext: '.ts',
         mtime: 0,
-        getChanges: () => [new WholeFileChange()]
-      }
+        getChanges: () => [new WholeFileChange()],
+      },
     ];
     const projects = {
       a: { root: 'libs/a' },
       abc: { root: 'libs/a-b-c' },
-      ab: { root: 'libs/a-b' }
+      ab: { root: 'libs/a-b' },
     };
     expect(getTouchedProjects(fileChanges, { projects })).toEqual(['ab']);
   });
@@ -48,13 +48,13 @@ describe('getTouchedProjects', () => {
         file: 'libs/a-b/index.ts',
         ext: '.ts',
         mtime: 0,
-        getChanges: () => [new WholeFileChange()]
-      }
+        getChanges: () => [new WholeFileChange()],
+      },
     ];
     const projects = {
       aaaaa: { root: 'libs/a' },
       abc: { root: 'libs/a-b-c' },
-      ab: { root: 'libs/a-b' }
+      ab: { root: 'libs/a-b' },
     };
     expect(getTouchedProjects(fileChanges, { projects })).toEqual(['ab']);
   });
@@ -65,12 +65,12 @@ describe('getTouchedProjects', () => {
         file: 'libs/a/b/index.ts',
         ext: '.ts',
         mtime: 0,
-        getChanges: () => [new WholeFileChange()]
-      }
+        getChanges: () => [new WholeFileChange()],
+      },
     ];
     const projects = {
       aaaaa: { root: 'libs/a' },
-      ab: { root: 'libs/a/b' }
+      ab: { root: 'libs/a/b' },
     };
     expect(getTouchedProjects(fileChanges, { projects })).toEqual(['ab']);
   });

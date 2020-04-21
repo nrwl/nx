@@ -78,7 +78,7 @@ If you have an Angular component that has an AngularJS child component you may n
 @Component({
   selector: 'app-ticket-list',
   templateUrl: './ticket-list.component.html',
-  styleUrls: ['./ticket-list.component.css']
+  styleUrls: ['./ticket-list.component.css'],
 })
 export class TicketListComponent implements OnInit {
   @Input() tuskTickets;
@@ -87,7 +87,7 @@ export class TicketListComponent implements OnInit {
   constructor(@Inject('$rootScope') private rootScope: any) {}
 
   onNotifyAll() {
-    this.notifyList = this.tuskTickets.map(function(t) {
+    this.notifyList = this.tuskTickets.map(function (t) {
       return t.id;
     });
     // we need to force digest to trigger angularjs change detection

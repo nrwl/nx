@@ -7,7 +7,7 @@ import {
   updateFile,
   ensureProject,
   uniq,
-  forEachCli
+  forEachCli,
 } from './utils';
 
 forEachCli('nx', () => {
@@ -100,7 +100,7 @@ forEachCli('nx', () => {
 
       expect(() => checkFilesExist(`my-cache`)).toThrow();
       runCLI(`lint ${myapp} --cache --cache-location="my-cache"`, {
-        silenceError: true
+        silenceError: true,
       });
       expect(() => checkFilesExist(`my-cache`)).not.toThrow();
       const cacheInfo = readFile('my-cache');
@@ -125,14 +125,16 @@ forEachCli('nx', () => {
       const stdout = runCLI(
         `lint ${myapp} --output-file="${outputFile}" --format=json`,
         {
-          silenceError: true
+          silenceError: true,
         }
       );
       expect(stdout).toContain('Unexpected console statement');
       expect(() => checkFilesExist(outputFile)).not.toThrow();
       const outputContents = JSON.parse(readFile(outputFile));
-      const outputForApp: any = Object.values(outputContents).filter(
-        (result: any) => result.filePath.includes(`${myapp}/src/main.ts`)
+      const outputForApp: any = Object.values(
+        outputContents
+      ).filter((result: any) =>
+        result.filePath.includes(`${myapp}/src/main.ts`)
       )[0];
       expect(outputForApp.errorCount).toBe(1);
       expect(outputForApp.messages[0].ruleId).toBe('no-console');

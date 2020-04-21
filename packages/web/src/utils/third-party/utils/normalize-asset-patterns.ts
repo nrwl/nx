@@ -14,7 +14,7 @@ import {
   normalize,
   relative,
   resolve,
-  virtualFs
+  virtualFs,
 } from '@angular-devkit/core';
 import { AssetPattern, AssetPatternClass } from '../browser/schema';
 
@@ -39,7 +39,7 @@ export function normalizeAssetPatterns(
     return [];
   }
 
-  return assetPatterns.map(assetPattern => {
+  return assetPatterns.map((assetPattern) => {
     // Normalize string asset patterns to objects.
     if (typeof assetPattern === 'string') {
       const assetPath = normalize(assetPattern);

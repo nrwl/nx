@@ -12,7 +12,7 @@ import {
   getSystemPath,
   join,
   normalize,
-  virtualFs
+  virtualFs,
 } from '@angular-devkit/core';
 import { FileReplacement } from '../browser/schema';
 
@@ -36,7 +36,7 @@ export function normalizeFileReplacements(
     return [];
   }
 
-  const normalizedReplacement = fileReplacements.map(replacement =>
+  const normalizedReplacement = fileReplacements.map((replacement) =>
     normalizeFileReplacement(replacement, root)
   );
 

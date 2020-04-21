@@ -44,7 +44,7 @@ describe('react:component-cypress-spec', () => {
       };
       
       export default Test;        
-      `
+      `,
     },
     {
       plainJS: true,
@@ -72,9 +72,9 @@ describe('react:component-cypress-spec', () => {
       };
       
       export default Test;        
-      `
-    }
-  ].forEach(testConfig => {
+      `,
+    },
+  ].forEach((testConfig) => {
     let fileCmpExt = testConfig.plainJS ? 'js' : 'tsx';
     let fileExt = testConfig.plainJS ? 'js' : 'ts';
 
@@ -98,7 +98,7 @@ describe('react:component-cypress-spec', () => {
               <CreateComponentSpecFileSchema>{
                 componentPath: `lib/test-ui-lib.${fileCmpExt}`,
                 project: 'test-ui-lib',
-                js: testConfig.plainJS
+                js: testConfig.plainJS,
               },
               appTree
             );
@@ -129,7 +129,7 @@ describe('react:component-cypress-spec', () => {
             <CreateComponentSpecFileSchema>{
               componentPath: `lib/test-ui-lib.${fileCmpExt}`,
               project: 'test-ui-lib',
-              js: testConfig.plainJS
+              js: testConfig.plainJS,
             },
             appTree
           );
@@ -160,7 +160,7 @@ export async function createTestUILib(
   appTree = await callRule(
     externalSchematic('@nrwl/react', 'library', {
       name: libName,
-      js: plainJS
+      js: plainJS,
     }),
     appTree
   );
@@ -170,7 +170,7 @@ export async function createTestUILib(
   appTree = await callRule(
     externalSchematic('@nrwl/react', 'application', {
       name: `${libName}-e2e`,
-      js: plainJS
+      js: plainJS,
     }),
     appTree
   );

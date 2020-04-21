@@ -5,7 +5,7 @@ import {
   readJsonInTree,
   updateWorkspaceInTree,
   readWorkspace,
-  getWorkspacePath
+  getWorkspacePath,
 } from '@nrwl/workspace';
 
 import * as path from 'path';
@@ -35,12 +35,12 @@ describe('Update 8-5-0', () => {
               build: {
                 builder: '@nrwl/web:build',
                 options: {
-                  differentialLoading: true
-                }
-              }
-            }
-          }
-        }
+                  differentialLoading: true,
+                },
+              },
+            },
+          },
+        },
       })
     );
 

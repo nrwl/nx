@@ -7,20 +7,20 @@ import {
   move,
   url,
   SchematicsException,
-  applyTemplates
+  applyTemplates,
 } from '@angular-devkit/schematics';
 import { normalize } from '@angular-devkit/core';
 import { getProjectConfig, formatFiles } from '@nrwl/workspace';
 import { join } from 'path';
 import {
   applyWithSkipExisting,
-  findNodes
+  findNodes,
 } from '@nrwl/workspace/src/utils/ast-utils';
 import * as ts from 'typescript';
 import {
   findDefaultExport,
   getComponentName,
-  getComponentPropsInterface
+  getComponentPropsInterface,
 } from '../../utils/ast-utils';
 
 export interface CreateComponentStoriesFileSchema {
@@ -35,7 +35,7 @@ export function getKnobDefaultValue(property: ts.SyntaxKind): string {
   const typeNameToDefault: Record<number, any> = {
     [ts.SyntaxKind.StringKeyword]: "''",
     [ts.SyntaxKind.NumberKeyword]: 0,
-    [ts.SyntaxKind.BooleanKeyword]: false
+    [ts.SyntaxKind.BooleanKeyword]: false,
   };
 
   const resolvedValue = typeNameToDefault[property];
@@ -49,7 +49,7 @@ export function getKnobDefaultValue(property: ts.SyntaxKind): string {
 export function createComponentStoriesFile({
   // name,
   project,
-  componentPath
+  componentPath,
 }: CreateComponentStoriesFileSchema): Rule {
   return (tree: Tree, context: SchematicContext): Rule => {
     const proj = getProjectConfig(tree, project);
@@ -114,13 +114,13 @@ export function createComponentStoriesFile({
         const initializerKindToKnobType: Record<number, KnobType> = {
           [ts.SyntaxKind.StringKeyword]: 'text',
           [ts.SyntaxKind.NumberKeyword]: 'number',
-          [ts.SyntaxKind.BooleanKeyword]: 'boolean'
+          [ts.SyntaxKind.BooleanKeyword]: 'boolean',
         };
 
         return {
           name: (member.name as ts.Identifier).text,
           type: initializerKindToKnobType[member.type.kind],
-          defaultValue: getKnobDefaultValue(member.type.kind)
+          defaultValue: getKnobDefaultValue(member.type.kind),
         };
       });
     }
@@ -131,18 +131,18 @@ export function createComponentStoriesFile({
           componentFileName: name,
           propsTypeName,
           props,
-          usedKnobs: props.map(x => x.type).join(', '),
+          usedKnobs: props.map((x) => x.type).join(', '),
           componentName: (cmpDeclaration as any).name.text,
           isPlainJs,
           fileExt,
-          usesEsLint
+          usesEsLint,
         }),
-        move(normalize(componentDirectory))
-      ])
+        move(normalize(componentDirectory)),
+      ]),
     ]);
   };
 }
 
-export default function(schema: CreateComponentStoriesFileSchema): Rule {
+export default function (schema: CreateComponentStoriesFileSchema): Rule {
   return chain([createComponentStoriesFile(schema), formatFiles()]);
 }

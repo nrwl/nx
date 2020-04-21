@@ -25,7 +25,7 @@ export function assertWorkspaceValidity(workspaceJson, nxJson) {
 
   const projects = {
     ...workspaceJson.projects,
-    ...nxJson.projects
+    ...nxJson.projects,
   };
 
   const invalidImplicitDependencies = new Map<string, string[]>();
@@ -40,7 +40,7 @@ export function assertWorkspaceValidity(workspaceJson, nxJson) {
         } else if (Array.isArray(value)) {
           acc.push([entry[0], value]);
         } else {
-          Object.values(value).forEach(v => {
+          Object.values(value).forEach((v) => {
             recur(v, acc);
           });
         }
@@ -54,7 +54,7 @@ export function assertWorkspaceValidity(workspaceJson, nxJson) {
     }, invalidImplicitDependencies);
 
   nxJsonProjects
-    .filter(nxJsonProjectName => {
+    .filter((nxJsonProjectName) => {
       const project = nxJson.projects[nxJsonProjectName];
       return !!project.implicitDependencies;
     })
@@ -77,7 +77,7 @@ export function assertWorkspaceValidity(workspaceJson, nxJson) {
   `;
   invalidImplicitDependencies.forEach((projectNames, key) => {
     const str = `  ${key}
-    ${projectNames.map(projectName => `    ${projectName}`).join('\n')}`;
+    ${projectNames.map((projectName) => `    ${projectName}`).join('\n')}`;
     message += str;
   });
 
@@ -91,7 +91,7 @@ function detectAndSetInvalidProjectValues(
   validProjects: any
 ) {
   const invalidProjects = desiredProjectNames.filter(
-    projectName => !validProjects[projectName]
+    (projectName) => !validProjects[projectName]
   );
   if (invalidProjects.length > 0) {
     map.set(sourceName, invalidProjects);
@@ -100,8 +100,8 @@ function detectAndSetInvalidProjectValues(
 
 function minus(a: string[], b: string[]): string[] {
   const res = [];
-  a.forEach(aa => {
-    if (!b.find(bb => bb === aa)) {
+  a.forEach((aa) => {
+    if (!b.find((bb) => bb === aa)) {
       res.push(aa);
     }
   });

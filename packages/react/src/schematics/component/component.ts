@@ -11,7 +11,7 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import { formatFiles, getWorkspace, names, toFileName } from '@nrwl/workspace';
@@ -19,12 +19,12 @@ import {
   addDepsToPackageJson,
   addGlobal,
   getProjectConfig,
-  insert
+  insert,
 } from '@nrwl/workspace/src/utils/ast-utils';
 import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
 import {
   typesReactRouterDomVersion,
-  reactRouterDomVersion
+  reactRouterDomVersion,
 } from '../../utils/versions';
 import { assertValidStyle } from '../../utils/assertion';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
@@ -37,7 +37,7 @@ interface NormalizedSchema extends Schema {
   hasStyles: boolean;
 }
 
-export default function(schema: Schema): Rule {
+export default function (schema: Schema): Rule {
   return async (host: Tree, context: SchematicContext) => {
     const options = await normalizeOptions(host, schema, context);
     return chain([
@@ -50,7 +50,7 @@ export default function(schema: Schema): Rule {
             { '@types/react-router-dom': typesReactRouterDomVersion }
           )
         : noop(),
-      formatFiles({ skipFormat: false })
+      formatFiles({ skipFormat: false }),
     ]);
   };
 }
@@ -61,14 +61,14 @@ function createComponentFiles(options: NormalizedSchema): Rule {
     apply(url(`./files`), [
       template({
         ...options,
-        tmpl: ''
+        tmpl: '',
       }),
-      options.skipTests ? filter(file => !/.*spec.tsx/.test(file)) : noop(),
+      options.skipTests ? filter((file) => !/.*spec.tsx/.test(file)) : noop(),
       options.styledModule || !options.hasStyles
-        ? filter(file => !file.endsWith(`.${options.style}`))
+        ? filter((file) => !file.endsWith(`.${options.style}`))
         : noop(),
       move(componentDir),
-      options.js ? toJS() : noop()
+      options.js ? toJS() : noop(),
     ])
   );
 }
@@ -155,7 +155,7 @@ async function normalizeOptions(
     hasStyles: options.style !== 'none',
     className,
     fileName: componentFileName,
-    projectSourceRoot
+    projectSourceRoot,
   };
 }
 
@@ -179,10 +179,10 @@ function assertValidOptions(options: Schema) {
   assertValidStyle(options.style);
 
   const slashes = ['/', '\\'];
-  slashes.forEach(s => {
+  slashes.forEach((s) => {
     if (options.name.indexOf(s) !== -1) {
       const [name, ...rest] = options.name.split(s).reverse();
-      let suggestion = rest.map(x => x.toLowerCase()).join(s);
+      let suggestion = rest.map((x) => x.toLowerCase()).join(s);
       if (options.directory) {
         suggestion = `${options.directory}${s}${suggestion}`;
       }

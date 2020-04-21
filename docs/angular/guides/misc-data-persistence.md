@@ -27,9 +27,9 @@ class TodoEffects {
           // dispatch an undo action to undo the changes in the client state
           return {
             type: 'UNDO_TODO_UPDATE',
-            todo: action.todo
+            todo: action.todo,
           };
-        }
+        },
       })
     )
   );
@@ -57,9 +57,9 @@ class TodoEffects {
           // update the backend first, and then dispatch an action that will
           // update the client side
           return this.backend.updateTodo(action.todo.id, action.todo).pipe(
-            map(updated => ({
+            map((updated) => ({
               type: 'UPDATE_TODO_SUCCESS',
-              todo: updated
+              todo: updated,
             }))
           );
         },
@@ -67,7 +67,7 @@ class TodoEffects {
           // we don't need to undo the changes on the client side.
           // we can dispatch an error, or simply log the error here and return `null`
           return null;
-        }
+        },
       })
     )
   );
@@ -93,9 +93,9 @@ class TodoEffects {
         // provides an action
         run: (a: GetTodos) => {
           return this.backend.getAll().pipe(
-            map(response => ({
+            map((response) => ({
               type: 'TODOS',
-              todos: response.todos
+              todos: response.todos,
             }))
           );
         },
@@ -103,7 +103,7 @@ class TodoEffects {
         onError: (action: GetTodos, error: any) => {
           // dispatch an undo action to undo the changes in the client state
           return null;
-        }
+        },
       })
     )
   );
@@ -130,16 +130,16 @@ class TodoEffects {
 
         // provides an action
         run: (todo: GetTodo) => {
-          return this.backend.getTodo(todo.id).map(response => ({
+          return this.backend.getTodo(todo.id).map((response) => ({
             type: 'LOAD_TODO_SUCCESS',
-            todo: response.todo
+            todo: response.todo,
           }));
         },
 
         onError: (action: GetTodo, error: any) => {
           // dispatch an undo action to undo the changes in the client state
           return null;
-        }
+        },
       })
     )
   );
@@ -170,9 +170,9 @@ class TodoEffects {
           return this.backend
             .fetchTodo(activatedRouteSnapshot.params['id'])
             .pipe(
-              map(todo => ({
+              map((todo) => ({
                 type: 'LOAD_TODO_SUCCESS',
-                todo: todo
+                todo: todo,
               }))
             );
         },
@@ -184,7 +184,7 @@ class TodoEffects {
           // we can log and error here and return null
           // we can also navigate back
           return null;
-        }
+        },
       })
     )
   );

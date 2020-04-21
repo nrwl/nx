@@ -25,13 +25,13 @@ export function createApp(tree: Tree, appName: string): Promise<Tree> {
   const { fileName } = names(appName);
 
   return callRule(
-    updateWorkspace(workspace => {
+    updateWorkspace((workspace) => {
       workspace.projects.add({
         name: fileName,
         root: `apps/${fileName}`,
         projectType: 'application',
         sourceRoot: `apps/${fileName}/src`,
-        targets: {}
+        targets: {},
       });
     }),
     tree

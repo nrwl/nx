@@ -14,7 +14,7 @@ describe('moveProject Rule', () => {
   it('should copy all files and delete the source folder', async () => {
     const schema: Schema = {
       projectName: 'my-lib',
-      destination: 'my-destination'
+      destination: 'my-destination',
     };
 
     // TODO - Currently this test will fail due to
