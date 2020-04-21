@@ -114,13 +114,18 @@ function generateTemplate(
             }`;
 
         if (option.types && option.types.length) {
+          const displayTypeList = option.types.map(type =>
+            type === 'array' ? `${option.type}[]` : type
+          );
           template += dedent`
-              Type: \`${option.types.join(' | ')} \`\n`;
+              Type: \`${displayTypeList.join(' | ')} \`\n`;
         } else {
           template += dedent`
-              Type: \`${option.type}\` ${
-            option.arrayOfType ? `of \`${option.arrayOfType}\`` : ''
-          } \n`;
+              Type: ${
+                option.arrayOfType
+                  ? `\`${option.arrayOfType}[]\``
+                  : `\`${option.type}\``
+              } \n`;
         }
 
         template += dedent`  
