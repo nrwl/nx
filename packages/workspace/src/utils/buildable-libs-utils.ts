@@ -269,12 +269,12 @@ export function updateBuildableProjectPackageJsonDependencies(
           );
           depVersion = readJsonFile(depPackageJsonPath).version;
         } else if (entry.node.type === 'npm') {
-          depVersion = entry.node.data.version;
-        }
+          // If an npm dep is part of the workspace devDependencies, do not include it the library
+          if (!!workspacePackageJson.devDependencies?.[entry.name]) {
+            return;
+          }
 
-        // If an npm dep is part of the workspace devDependencies, do not include it the library
-        if (!!workspacePackageJson.devDependencies[entry.name]) {
-          return;
+          depVersion = entry.node.data.version;
         }
 
         packageJson.dependencies[entry.name] = depVersion;
