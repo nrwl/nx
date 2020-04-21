@@ -19,7 +19,7 @@ function updateDependencies(): Rule {
       delete dependencies['@nrwl/cypress'];
     }
 
-    return updateJsonInTree('package.json', json => {
+    return updateJsonInTree('package.json', (json) => {
       json.dependencies = dependencies;
       json.devDependencies = devDependencies;
       return json;
@@ -27,6 +27,6 @@ function updateDependencies(): Rule {
   };
 }
 
-export default function(schema: Schema) {
+export default function (schema: Schema) {
   return updateDependencies();
 }

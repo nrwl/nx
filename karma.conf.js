@@ -1,4 +1,4 @@
-module.exports = function(config) {
+module.exports = function (config) {
   const webpackConfig = {
     node: {
       fs: 'empty',
@@ -9,8 +9,8 @@ module.exports = function(config) {
       process: true,
       module: false,
       clearImmediate: false,
-      setImmediate: false
-    }
+      setImmediate: false,
+    },
   };
   config.set({
     basePath: '.',
@@ -28,7 +28,7 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'build/test.js': ['webpack']
+      'build/test.js': ['webpack'],
     },
 
     reporters: ['dots'],
@@ -36,13 +36,13 @@ module.exports = function(config) {
     webpack: webpackConfig,
 
     webpackMiddleware: {
-      stats: 'errors-only'
+      stats: 'errors-only',
     },
 
     plugins: [
       require('karma-jasmine'),
       require('karma-chrome-launcher'),
-      require('karma-webpack')
+      require('karma-webpack'),
     ],
 
     // web server port
@@ -60,14 +60,14 @@ module.exports = function(config) {
     customLaunchers: {
       Chrome_travis_ci: {
         base: 'Chrome',
-        flags: ['--no-sandbox']
-      }
+        flags: ['--no-sandbox'],
+      },
     },
 
     browsers: process.env.TRAVIS ? ['Chrome_travis_ci'] : ['Chrome'],
 
     // Concurrency level
     // how many browser should be started simultaneous
-    concurrency: Infinity
+    concurrency: Infinity,
   });
 };

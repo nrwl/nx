@@ -32,10 +32,10 @@ describe('updateWorkspace Rule', () => {
                 aot: false,
                 assets: [
                   'apps/my-source/src/favicon.ico',
-                  'apps/my-source/src/assets'
+                  'apps/my-source/src/assets',
                 ],
                 styles: ['apps/my-source/src/styles.scss'],
-                scripts: []
+                scripts: [],
               },
               configurations: {
                 production: {
@@ -43,8 +43,8 @@ describe('updateWorkspace Rule', () => {
                     {
                       replace: 'apps/my-source/src/environments/environment.ts',
                       with:
-                        'apps/my-source/src/environments/environment.prod.ts'
-                    }
+                        'apps/my-source/src/environments/environment.prod.ts',
+                    },
                   ],
                   optimization: true,
                   outputHashing: 'all',
@@ -59,53 +59,53 @@ describe('updateWorkspace Rule', () => {
                     {
                       type: 'initial',
                       maximumWarning: '2mb',
-                      maximumError: '5mb'
+                      maximumError: '5mb',
                     },
                     {
                       type: 'anyComponentStyle',
                       maximumWarning: '6kb',
-                      maximumError: '10kb'
-                    }
-                  ]
-                }
-              }
+                      maximumError: '10kb',
+                    },
+                  ],
+                },
+              },
             },
             serve: {
               builder: '@angular-devkit/build-angular:dev-server',
               options: {
-                browserTarget: 'my-source:build'
+                browserTarget: 'my-source:build',
               },
               configurations: {
                 production: {
-                  browserTarget: 'my-source:build:production'
-                }
-              }
+                  browserTarget: 'my-source:build:production',
+                },
+              },
             },
             'extract-i18n': {
               builder: '@angular-devkit/build-angular:extract-i18n',
               options: {
-                browserTarget: 'my-source:build'
-              }
+                browserTarget: 'my-source:build',
+              },
             },
             lint: {
               builder: '@angular-devkit/build-angular:tslint',
               options: {
                 tsConfig: [
                   'apps/my-source/tsconfig.app.json',
-                  'apps/my-source/tsconfig.spec.json'
+                  'apps/my-source/tsconfig.spec.json',
                 ],
-                exclude: ['**/node_modules/**', '!apps/my-source/**']
-              }
+                exclude: ['**/node_modules/**', '!apps/my-source/**'],
+              },
             },
             test: {
               builder: '@nrwl/jest:jest',
               options: {
                 jestConfig: 'apps/my-source/jest.config.js',
                 tsConfig: 'apps/my-source/tsconfig.spec.json',
-                setupFile: 'apps/my-source/src/test-setup.ts'
-              }
-            }
-          }
+                setupFile: 'apps/my-source/src/test-setup.ts',
+              },
+            },
+          },
         },
         'my-source-e2e': {
           root: 'apps/my-source-e2e',
@@ -117,25 +117,25 @@ describe('updateWorkspace Rule', () => {
               options: {
                 cypressConfig: 'apps/my-source-e2e/cypress.json',
                 tsConfig: 'apps/my-source-e2e/tsconfig.e2e.json',
-                devServerTarget: 'my-source:serve'
+                devServerTarget: 'my-source:serve',
               },
               configurations: {
                 production: {
-                  devServerTarget: 'my-source:serve:production'
-                }
-              }
+                  devServerTarget: 'my-source:serve:production',
+                },
+              },
             },
             lint: {
               builder: '@angular-devkit/build-angular:tslint',
               options: {
                 tsConfig: ['apps/my-source-e2e/tsconfig.e2e.json'],
-                exclude: ['**/node_modules/**', '!apps/my-source-e2e/**']
-              }
-            }
-          }
-        }
+                exclude: ['**/node_modules/**', '!apps/my-source-e2e/**'],
+              },
+            },
+          },
+        },
       },
-      defaultProject: 'my-source'
+      defaultProject: 'my-source',
     };
 
     tree.overwrite('workspace.json', JSON.stringify(workspace));
@@ -144,7 +144,7 @@ describe('updateWorkspace Rule', () => {
   it('should rename the project', async () => {
     const schema: Schema = {
       projectName: 'my-source',
-      destination: 'subfolder/my-destination'
+      destination: 'subfolder/my-destination',
     };
 
     tree = (await callRule(updateWorkspace(schema), tree)) as UnitTestTree;
@@ -158,7 +158,7 @@ describe('updateWorkspace Rule', () => {
   it('should update the default project', async () => {
     const schema: Schema = {
       projectName: 'my-source',
-      destination: 'subfolder/my-destination'
+      destination: 'subfolder/my-destination',
     };
 
     tree = (await callRule(updateWorkspace(schema), tree)) as UnitTestTree;
@@ -171,7 +171,7 @@ describe('updateWorkspace Rule', () => {
   it('should update paths in only the intended project', async () => {
     const schema: Schema = {
       projectName: 'my-source',
-      destination: 'subfolder/my-destination'
+      destination: 'subfolder/my-destination',
     };
 
     tree = (await callRule(updateWorkspace(schema), tree)) as UnitTestTree;
@@ -191,7 +191,7 @@ describe('updateWorkspace Rule', () => {
   it('should update build targets', async () => {
     const schema: Schema = {
       projectName: 'my-source',
-      destination: 'subfolder/my-destination'
+      destination: 'subfolder/my-destination',
     };
 
     tree = (await callRule(updateWorkspace(schema), tree)) as UnitTestTree;

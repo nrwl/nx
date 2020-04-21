@@ -26,7 +26,7 @@ function hook(
     (compilation: compilation.Compilation) => {
       compilation.hooks.optimizeChunkAssets.tapPromise(
         'cleancss-webpack-plugin',
-        chunks => action(compilation, chunks)
+        (chunks) => action(compilation, chunks)
       );
     }
   );
@@ -38,8 +38,8 @@ export class CleanCssWebpackPlugin {
   constructor(options: Partial<CleanCssWebpackPluginOptions>) {
     this._options = {
       sourceMap: false,
-      test: file => file.endsWith('.css'),
-      ...options
+      test: (file) => file.endsWith('.css'),
+      ...options,
     };
   }
 
@@ -53,26 +53,26 @@ export class CleanCssWebpackPlugin {
             2: {
               skipProperties: [
                 'transition', // Fixes #12408
-                'font' // Fixes #9648
-              ]
-            }
+                'font', // Fixes #9648
+              ],
+            },
           },
           inline: false,
           returnPromise: true,
-          sourceMap: this._options.sourceMap
+          sourceMap: this._options.sourceMap,
         });
 
         const files: string[] = [...compilation.additionalChunkAssets];
 
-        chunks.forEach(chunk => {
+        chunks.forEach((chunk) => {
           if (chunk.files && chunk.files.length > 0) {
             files.push(...chunk.files);
           }
         });
 
         const actions = files
-          .filter(file => this._options.test(file))
-          .map(async file => {
+          .filter((file) => this._options.test(file))
+          .map(async (file) => {
             const asset = compilation.assets[file] as Source;
             if (!asset) {
               return;

@@ -9,7 +9,7 @@ describe('splitArgs', () => {
           head: 'sha2',
           notNxArg: true,
           _: ['--override'],
-          $0: ''
+          $0: '',
         },
         'affected'
       ).nxArgs
@@ -17,7 +17,7 @@ describe('splitArgs', () => {
       base: 'sha1',
       head: 'sha2',
       projects: [],
-      skipNxCache: false
+      skipNxCache: false,
     });
   });
 
@@ -27,14 +27,14 @@ describe('splitArgs', () => {
         {
           notNxArg: true,
           _: ['--override'],
-          $0: ''
+          $0: '',
         },
         'affected'
       ).nxArgs
     ).toEqual({
       base: 'master',
       projects: [],
-      skipNxCache: false
+      skipNxCache: false,
     });
   });
 
@@ -45,13 +45,13 @@ describe('splitArgs', () => {
           files: [''],
           notNxArg: true,
           _: ['--override'],
-          $0: ''
+          $0: '',
         },
         'affected'
       ).overrides
     ).toEqual({
       notNxArg: true,
-      override: true
+      override: true,
     });
   });
 
@@ -60,7 +60,7 @@ describe('splitArgs', () => {
       {
         notNxArg: true,
         _: ['sha1', 'sha2', '--override'],
-        $0: ''
+        $0: '',
       },
       'affected'
     );
@@ -69,11 +69,11 @@ describe('splitArgs', () => {
       base: 'sha1',
       head: 'sha2',
       projects: [],
-      skipNxCache: false
+      skipNxCache: false,
     });
     expect(overrides).toEqual({
       notNxArg: true,
-      override: true
+      override: true,
     });
   });
 });

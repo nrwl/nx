@@ -122,7 +122,7 @@ import { AppService } from './app.service';
 @Module({
   imports: [],
   controllers: [AppController],
-  providers: [AppService]
+  providers: [AppService],
 })
 export class AppModule {}
 ```
@@ -150,7 +150,7 @@ export class AppService {
 
   addTodo() {
     this.todos.push({
-      title: `New todo ${Math.floor(Math.random() * 1000)}`
+      title: `New todo ${Math.floor(Math.random() * 1000)}`,
     });
   }
 }

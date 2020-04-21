@@ -12,7 +12,7 @@ export function parseRunOneOptions(
 
   const parsedArgs = yargsParser(args, {
     boolean: ['prod', 'help'],
-    string: ['configuration', 'project']
+    string: ['configuration', 'project'],
   });
 
   if (parsedArgs['help']) {

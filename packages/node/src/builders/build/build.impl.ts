@@ -13,7 +13,7 @@ import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
-  createTmpTsConfig
+  createTmpTsConfig,
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
 
 try {
@@ -52,25 +52,25 @@ function run(
   }
 
   return from(getSourceRoot(context)).pipe(
-    map(sourceRoot =>
+    map((sourceRoot) =>
       normalizeBuildOptions(options, context.workspaceRoot, sourceRoot)
     ),
-    map(options => {
+    map((options) => {
       let config = getNodeWebpackConfig(options);
       if (options.webpackConfig) {
         config = require(options.webpackConfig)(config, {
           options,
-          configuration: context.target.configuration
+          configuration: context.target.configuration,
         });
       }
       return config;
     }),
-    concatMap(config =>
+    concatMap((config) =>
       runWebpack(config, context, {
-        logging: stats => {
+        logging: (stats) => {
           context.logger.info(stats.toString(config.stats));
         },
-        webpackFactory: require('webpack')
+        webpackFactory: require('webpack'),
       })
     ),
     map((buildEvent: BuildResult) => {

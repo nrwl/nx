@@ -5,7 +5,7 @@ import { runMigration } from '../../utils/testing';
 import { createEmptyWorkspace } from '../../utils/testing-utils';
 import {
   _test_addWorkspaceFile,
-  WorkspaceFormat
+  WorkspaceFormat,
 } from '@angular-devkit/core/src/workspace/core';
 import { NxJson } from '../../core/shared-interfaces';
 
@@ -28,7 +28,7 @@ describe('Add update-enforce-boundary-lint rule', () => {
       JSON.stringify({
         name: 'test-name',
         dependencies: {},
-        devDependencies: {}
+        devDependencies: {},
       })
     );
     tree.create(
@@ -52,10 +52,10 @@ describe('Add update-enforce-boundary-lint rule', () => {
               {
                 npmScope: '<%= npmScope %>',
                 lazyLoad: [],
-                allow: []
-              }
-            ]
-          }
+                allow: [],
+              },
+            ],
+          },
         })
       );
     });
@@ -86,10 +86,10 @@ describe('Add update-enforce-boundary-lint rule', () => {
               {
                 npmScope: '<%= npmScope %>',
                 lazyLoad: [],
-                allow: []
-              }
-            ]
-          }
+                allow: [],
+              },
+            ],
+          },
         })
       );
     });

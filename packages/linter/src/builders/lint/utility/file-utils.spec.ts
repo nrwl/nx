@@ -1,11 +1,11 @@
 jest.mock('glob', () => ({
-  sync: jest.fn().mockImplementation(file => file)
+  sync: jest.fn().mockImplementation((file) => file),
 }));
 
 jest.mock('path', () => ({
   join: (...paths) => paths.join('/'),
-  normalize: path => path,
-  relative: (...paths) => paths[1]
+  normalize: (path) => path,
+  relative: (...paths) => paths[1],
 }));
 
 const { sync } = require('glob');
@@ -18,12 +18,12 @@ describe('file-utility', () => {
     expect(sync).toHaveBeenNthCalledWith(1, 'file1', {
       cwd: '/root',
       ignore: ['file2'],
-      nodir: true
+      nodir: true,
     });
     expect(sync).toHaveBeenNthCalledWith(2, 'file2', {
       cwd: '/root',
       ignore: ['file2'],
-      nodir: true
+      nodir: true,
     });
     expect(toLint).toEqual(['/root/file1', '/root/file2']);
   });
@@ -38,11 +38,11 @@ describe('file-utility', () => {
       { fileName: 'foo.d.ts', isFromExternalLib: false },
       { fileName: 'foo.json', isFromExternalLib: false },
       { fileName: 'bar.ts', isFromExternalLib: true },
-      { fileName: 'bar.ts', isFromExternalLib: false }
+      { fileName: 'bar.ts', isFromExternalLib: false },
     ];
     const program = {
       getSourceFiles: () => sourceFiles,
-      isSourceFileFromExternalLibrary: (file: any) => file.isFromExternalLib
+      isSourceFileFromExternalLibrary: (file: any) => file.isFromExternalLib,
     };
     const toLint = getFilesToLint('/root', {}, program);
     expect(toLint).toEqual(['foo.ts', 'bar.ts']);
@@ -51,12 +51,12 @@ describe('file-utility', () => {
     const sourceFiles = [
       { fileName: 'foo.ts' },
       { fileName: 'bar.spec.ts' },
-      { fileName: 'bar.ts' }
+      { fileName: 'bar.ts' },
     ];
     const exclude = ['*.spec.ts'];
     const program = {
       getSourceFiles: () => sourceFiles,
-      isSourceFileFromExternalLibrary: () => false
+      isSourceFileFromExternalLibrary: () => false,
     };
     const toLint = getFilesToLint('/root', { exclude }, program);
     expect(toLint).toEqual(['foo.ts', 'bar.ts']);

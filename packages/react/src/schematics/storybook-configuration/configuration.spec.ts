@@ -10,7 +10,7 @@ describe('react:storybook-configuration', () => {
       'storybook-configuration',
       <StorybookConfigureSchema>{
         name: 'test-ui-lib',
-        configureCypress: true
+        configureCypress: true,
       },
       appTree
     );
@@ -28,7 +28,7 @@ export async function createTestUILib(libName: string): Promise<Tree> {
   appTree = createEmptyWorkspace(appTree);
   appTree = await callRule(
     externalSchematic('@nrwl/react', 'library', {
-      name: libName
+      name: libName,
     }),
     appTree
   );

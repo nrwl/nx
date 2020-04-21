@@ -11,12 +11,12 @@ import {
   runCommand,
   uniq,
   updateFile,
-  workspaceConfigName
+  workspaceConfigName,
 } from './utils';
 
 let originalCIValue: any;
 
-forEachCli(cliName => {
+forEachCli((cliName) => {
   const cliCommand = cliName === 'angular' ? 'ng' : 'nx';
 
   /**
@@ -269,8 +269,8 @@ forEachCli(cliName => {
         results: {
           [myapp]: false,
           [mylib]: true,
-          [mypublishablelib]: true
-        }
+          [mypublishablelib]: true,
+        },
       });
 
       // Fix failing Unit Test
@@ -429,11 +429,11 @@ forEachCli(cliName => {
           overrides: {},
           target: {
             project: myapp,
-            target: 'test'
+            target: 'test',
           },
           command: `npm run ${cliCommand} -- test ${myapp}`,
-          outputs: []
-        }
+          outputs: [],
+        },
       ]);
       compareTwoArrays(resWithTarget.projects, [`${myapp}-e2e`, myapp]);
 
@@ -448,27 +448,27 @@ forEachCli(cliName => {
           overrides: {},
           target: {
             project: mypublishablelib,
-            target: 'build'
+            target: 'build',
           },
           command: `npm run ${cliCommand} -- build ${mypublishablelib}`,
-          outputs: [`dist/libs/${mypublishablelib}`]
+          outputs: [`dist/libs/${mypublishablelib}`],
         },
         {
           id: `${myapp}:build`,
           overrides: {},
           target: {
             project: myapp,
-            target: 'build'
+            target: 'build',
           },
           command: `npm run ${cliCommand} -- build ${myapp}`,
-          outputs: [`dist/apps/${myapp}`]
-        }
+          outputs: [`dist/apps/${myapp}`],
+        },
       ]);
       compareTwoArrays(resWithDeps.projects, [
         mylib,
         mypublishablelib,
         myapp,
-        `${myapp}-e2e`
+        `${myapp}-e2e`,
       ]);
 
       const resWithTargetWithSelect1 = runCommand(
@@ -487,8 +487,8 @@ forEachCli(cliName => {
 
     function compareTwoSerializedArrays(a: string, b: string) {
       compareTwoArrays(
-        a.split(',').map(_ => _.trim()),
-        b.split(',').map(_ => _.trim())
+        a.split(',').map((_) => _.trim()),
+        b.split(',').map((_) => _.trim())
       );
     }
 
@@ -543,7 +543,7 @@ forEachCli(cliName => {
 
       // touch myapp1
       // --------------------------------------------
-      updateFile(`apps/${myapp1}/src/main.ts`, c => {
+      updateFile(`apps/${myapp1}/src/main.ts`, (c) => {
         return `${c}\n//some comment`;
       });
       const outputWithBuildApp2Cached = runCommand(
@@ -554,7 +554,7 @@ forEachCli(cliName => {
 
       // touch package.json
       // --------------------------------------------
-      updateFile(`package.json`, c => {
+      updateFile(`package.json`, (c) => {
         const r = JSON.parse(c);
         r.description = 'different';
         return JSON.stringify(r);
@@ -597,7 +597,7 @@ forEachCli(cliName => {
         myapp1,
         myapp2,
         `${myapp1}-e2e`,
-        `${myapp2}-e2e`
+        `${myapp2}-e2e`,
       ]);
 
       // run without caching
@@ -605,14 +605,14 @@ forEachCli(cliName => {
 
       // disable caching
       // --------------------------------------------
-      updateFile('nx.json', c => {
+      updateFile('nx.json', (c) => {
         const nxJson = JSON.parse(c);
         nxJson.tasksRunnerOptions = {
           default: {
             options: {
-              cacheableOperations: []
-            }
-          }
+              cacheableOperations: [],
+            },
+          },
         };
         return JSON.stringify(nxJson, null, 2);
       });

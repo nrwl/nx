@@ -64,7 +64,7 @@ describe('addRoute', () => {
 
   beforeEach(() => {
     context = {
-      warn: jest.fn()
+      warn: jest.fn(),
     };
     tree = Tree.empty();
   });
@@ -137,7 +137,7 @@ export default App;
         {
           routePath: '/about',
           componentName: 'About',
-          moduleName: '@example/about'
+          moduleName: '@example/about',
         },
         context
       )
@@ -156,7 +156,7 @@ describe('addBrowserRouter', () => {
 
   beforeEach(() => {
     context = {
-      warn: jest.fn()
+      warn: jest.fn(),
     };
     tree = Tree.empty();
   });
@@ -193,7 +193,7 @@ describe('findMainRenderStatement', () => {
 
   beforeEach(() => {
     context = {
-      warn: jest.fn()
+      warn: jest.fn(),
     };
     tree = Tree.empty();
   });
@@ -255,7 +255,7 @@ describe('addReduxStoreToMain', () => {
 
   beforeEach(() => {
     context = {
-      warn: jest.fn()
+      warn: jest.fn(),
     };
     tree = Tree.empty();
   });
@@ -294,7 +294,7 @@ describe('updateReduxStore', () => {
 
   beforeEach(() => {
     context = {
-      warn: jest.fn()
+      warn: jest.fn(),
     };
     tree = Tree.empty();
   });
@@ -320,7 +320,7 @@ const store = configureStore({
       utils.updateReduxStore('/main.tsx', source, context, {
         keyName: 'SLICE_KEY',
         reducerName: 'sliceReducer',
-        modulePath: '@test/slice'
+        modulePath: '@test/slice',
       })
     );
 
@@ -350,7 +350,7 @@ const store = createStore(combineReducer({}));
       utils.updateReduxStore('/main.tsx', source, context, {
         keyName: 'SLICE_KEY',
         reducerName: 'sliceReducer',
-        modulePath: '@test/slice'
+        modulePath: '@test/slice',
       })
     );
 

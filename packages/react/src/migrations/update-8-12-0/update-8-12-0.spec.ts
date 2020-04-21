@@ -22,11 +22,11 @@ describe('Update 8-10-0', () => {
       'package.json',
       JSON.stringify({
         dependencies: {
-          'styled-components': '4.3.2'
+          'styled-components': '4.3.2',
         },
         devDependencies: {
-          '@types/styled-components': '4.4.1'
-        }
+          '@types/styled-components': '4.4.1',
+        },
       })
     );
 
@@ -37,11 +37,11 @@ describe('Update 8-10-0', () => {
     const packageJson = readJsonInTree(tree, '/package.json');
     expect(packageJson).toMatchObject({
       dependencies: {
-        'styled-components': '5.0.0'
+        'styled-components': '5.0.0',
       },
       devDependencies: {
-        '@types/styled-components': '4.4.2'
-      }
+        '@types/styled-components': '4.4.2',
+      },
     });
   });
 });

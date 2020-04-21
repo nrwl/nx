@@ -2,7 +2,7 @@ import {
   AddProjectDependency,
   DependencyType,
   ProjectGraphContext,
-  ProjectGraphNodeRecords
+  ProjectGraphNodeRecords,
 } from '../project-graph-models';
 
 export function buildImplicitProjectDependencies(
@@ -11,10 +11,10 @@ export function buildImplicitProjectDependencies(
   addDependency: AddProjectDependency,
   fileRead: (s: string) => string
 ) {
-  Object.keys(ctx.nxJson.projects).forEach(source => {
+  Object.keys(ctx.nxJson.projects).forEach((source) => {
     const p = ctx.nxJson.projects[source];
     if (p.implicitDependencies && p.implicitDependencies.length > 0) {
-      p.implicitDependencies.forEach(target => {
+      p.implicitDependencies.forEach((target) => {
         addDependency(DependencyType.implicit, source, target);
       });
     }

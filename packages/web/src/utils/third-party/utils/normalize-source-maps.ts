@@ -18,6 +18,6 @@ export function normalizeSourceMaps(sourceMap: SourceMapUnion): SourceMapClass {
     vendor,
     hidden,
     scripts,
-    styles
+    styles,
   };
 }

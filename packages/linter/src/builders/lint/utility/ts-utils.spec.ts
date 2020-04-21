@@ -8,17 +8,17 @@ jest.mock('typescript', () => ({
   parseJsonConfigFileContent: mockParseJsonConfigFileContent,
   formatDiagnostics: jest.fn().mockReturnValue('error details'),
   createCompilerHost: jest.fn(),
-  createProgram: jest.fn()
+  createProgram: jest.fn(),
 }));
 
 jest.mock('path', () => ({
   dirname: jest.fn(),
-  resolve: jest.fn().mockReturnValue('proj-dir')
+  resolve: jest.fn().mockReturnValue('proj-dir'),
 }));
 
 jest.mock('fs', () => ({
   readFileSync: jest.fn().mockReturnValue('fs-read-file'),
-  existsSync: () => {}
+  existsSync: () => {},
 }));
 
 const ts = require('typescript');
@@ -28,7 +28,7 @@ describe('ts-utility', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockReadConfigFile.mockReturnValue({
-      config: 'read-config-file'
+      config: 'read-config-file',
     });
   });
   it('should read and parse config file', () => {
@@ -40,7 +40,7 @@ describe('ts-utility', () => {
         fileExists: expect.any(Function),
         readDirectory: 'sys-dir',
         readFile: expect.any(Function),
-        useCaseSensitiveFileNames: true
+        useCaseSensitiveFileNames: true,
       }),
       'proj-dir',
       { noEmit: true }
@@ -59,8 +59,8 @@ describe('ts-utility', () => {
       errors: [
         { category: 'diag-categ-error', code: 1 },
         { category: 'unexpected-category', code: 1 },
-        { category: 'diag-categ-error', code: 18003 }
-      ]
+        { category: 'diag-categ-error', code: 18003 },
+      ],
     });
     try {
       createProgram('tsconfig-1');
@@ -79,8 +79,8 @@ describe('ts-utility', () => {
       errors: [
         { category: 'diag-categ-error', code: 18003 },
         { category: 'unexpected-category', code: 1 },
-        { category: 'diag-categ-error', code: 18003 }
-      ]
+        { category: 'diag-categ-error', code: 18003 },
+      ],
     });
     expect(() => createProgram('tsconfig-1')).not.toThrow();
   });

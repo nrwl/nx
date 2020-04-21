@@ -7,7 +7,7 @@ import {
   normalize,
   schema,
   terminal,
-  workspaces
+  workspaces,
 } from '@angular-devkit/core';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { getLogger } from '../shared/logger';
@@ -15,7 +15,7 @@ import {
   coerceTypes,
   convertToCamelCase,
   handleErrors,
-  Schema
+  Schema,
 } from '../shared/params';
 import { commandName, printHelp } from '../shared/print-help';
 import minimist = require('minimist');
@@ -43,7 +43,7 @@ function parseRunOpts(
   const runOptions = convertToCamelCase(
     minimist(args, {
       boolean: ['help', 'prod'],
-      string: ['configuration', 'project']
+      string: ['configuration', 'project'],
     })
   );
   const help = runOptions.help;
@@ -164,7 +164,7 @@ export async function run(root: string, args: string[], isVerbose: boolean) {
 
     const builderConf = await architectHost.getBuilderNameForTarget({
       project: opts.project,
-      target: opts.target
+      target: opts.target,
     });
     const builderDesc = await architectHost.resolveBuilder(builderConf);
     const flattenedSchema = await registry
@@ -181,7 +181,7 @@ export async function run(root: string, args: string[], isVerbose: boolean) {
       {
         project: opts.project,
         target: opts.target,
-        configuration: opts.configuration
+        configuration: opts.configuration,
       },
       runOptions,
       { logger }

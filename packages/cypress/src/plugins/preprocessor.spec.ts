@@ -8,15 +8,15 @@ import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 
 describe('getWebpackConfig', () => {
   beforeEach(() => {
-    (<any>TsConfigPathsPlugin).mockImplementation(
-      function MockPathsPlugin() {}
-    );
+    (<any>(
+      TsConfigPathsPlugin
+    )).mockImplementation(function MockPathsPlugin() {});
   });
   it('should load typescript', () => {
     const config = getWebpackConfig({
       env: {
-        tsConfig: './tsconfig.json'
-      }
+        tsConfig: './tsconfig.json',
+      },
     });
     expect(config.module.rules).toContainEqual({
       test: /\.(j|t)sx?$/,
@@ -26,20 +26,20 @@ describe('getWebpackConfig', () => {
         configFile: './tsconfig.json',
         // https://github.com/TypeStrong/ts-loader/pull/685
         experimentalWatchApi: true,
-        transpileOnly: true
-      }
+        transpileOnly: true,
+      },
     });
   });
 
   it('should resolve tsconfig paths', () => {
     const config = getWebpackConfig({
       env: {
-        tsConfig: './tsconfig.json'
-      }
+        tsConfig: './tsconfig.json',
+      },
     });
     expect(
       config.resolve.plugins.some(
-        plugin => plugin instanceof TsConfigPathsPlugin
+        (plugin) => plugin instanceof TsConfigPathsPlugin
       )
     ).toEqual(true);
   });
@@ -47,23 +47,23 @@ describe('getWebpackConfig', () => {
   it('should resolve relevant extensions', () => {
     const config = getWebpackConfig({
       env: {
-        tsConfig: './tsconfig.json'
-      }
+        tsConfig: './tsconfig.json',
+      },
     });
     expect(config.resolve.extensions).toEqual([
       '.ts',
       '.tsx',
       '.mjs',
       '.js',
-      '.jsx'
+      '.jsx',
     ]);
   });
 
   it('should keep node_modules external', () => {
     const config = getWebpackConfig({
       env: {
-        tsConfig: './tsconfig.json'
-      }
+        tsConfig: './tsconfig.json',
+      },
     });
     const callback = jest.fn();
     config.externals[0](null, '@nestjs/core', callback);
@@ -75,8 +75,8 @@ describe('preprocessTypescript', () => {
   it('should work if no customizer is passed', async () => {
     const preprocessor = preprocessTypescript({
       env: {
-        tsConfig: './tsconfig.json'
-      }
+        tsConfig: './tsconfig.json',
+      },
     });
     await preprocessor('arg0', 'arg1');
     expect(wp).toBeCalled();
@@ -90,10 +90,10 @@ describe('preprocessTypescript', () => {
     const preprocessor = preprocessTypescript(
       {
         env: {
-          tsConfig: './tsconfig.json'
-        }
+          tsConfig: './tsconfig.json',
+        },
       },
-      webpackConfig => {
+      (webpackConfig) => {
         webpackConfig.resolve.extensions.push('.mdx');
         return webpackConfig;
       }

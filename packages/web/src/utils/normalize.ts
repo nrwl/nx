@@ -31,7 +31,7 @@ export function normalizeBundleOptions(
     entryRoot,
     project,
     projectRoot,
-    outputPath
+    outputPath,
   };
 }
 
@@ -47,7 +47,7 @@ export function normalizeBuildOptions<T extends BuildBuilderOptions>(
     tsConfig: resolve(root, options.tsConfig),
     fileReplacements: normalizeFileReplacements(root, options.fileReplacements),
     assets: normalizeAssets(options.assets, root, sourceRoot),
-    webpackConfig: normalizePluginPath(options.webpackConfig, root)
+    webpackConfig: normalizePluginPath(options.webpackConfig, root),
   };
 }
 
@@ -67,7 +67,7 @@ function normalizeAssets(
   root: string,
   sourceRoot: string
 ): any[] {
-  return assets.map(asset => {
+  return assets.map((asset) => {
     if (typeof asset === 'string') {
       const assetPath = normalize(asset);
       const resolvedAssetPath = resolve(root, assetPath);
@@ -88,7 +88,7 @@ function normalizeAssets(
       return {
         input,
         output,
-        glob
+        glob,
       };
     } else {
       if (asset.output.startsWith('..')) {
@@ -103,7 +103,7 @@ function normalizeAssets(
         ...asset,
         input: resolvedAssetPath,
         // Now we remove starting slash to make Webpack place it from the output root.
-        output: asset.output.replace(/^\//, '')
+        output: asset.output.replace(/^\//, ''),
       };
     }
   });
@@ -113,9 +113,9 @@ function normalizeFileReplacements(
   root: string,
   fileReplacements: FileReplacement[]
 ): FileReplacement[] {
-  return fileReplacements.map(fileReplacement => ({
+  return fileReplacements.map((fileReplacement) => ({
     replace: resolve(root, fileReplacement.replace),
-    with: resolve(root, fileReplacement.with)
+    with: resolve(root, fileReplacement.with),
   }));
 }
 
@@ -130,7 +130,7 @@ export function normalizeWebBuildOptions(
       typeof options.optimization !== 'object'
         ? {
             scripts: options.optimization,
-            styles: options.optimization
+            styles: options.optimization,
           }
         : options.optimization,
     sourceMap:
@@ -140,12 +140,12 @@ export function normalizeWebBuildOptions(
             scripts: options.sourceMap,
             styles: options.sourceMap,
             hidden: false,
-            vendors: false
+            vendors: false,
           },
     polyfills: options.polyfills ? resolve(root, options.polyfills) : undefined,
     es2015Polyfills: options.es2015Polyfills
       ? resolve(root, options.es2015Polyfills)
-      : undefined
+      : undefined,
   };
 }
 
@@ -157,6 +157,6 @@ export function convertBuildOptions(buildOptions: WebBuildBuilderOptions): any {
     aot: false,
     forkTypeChecker: false,
     lazyModules: [] as string[],
-    assets: [] as string[]
+    assets: [] as string[],
   };
 }

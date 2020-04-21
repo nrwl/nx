@@ -2,7 +2,7 @@ import {
   AddProjectDependency,
   DependencyType,
   ProjectGraphContext,
-  ProjectGraphNodeRecords
+  ProjectGraphNodeRecords,
 } from '../project-graph-models';
 import { TypeScriptImportLocator } from './typescript-import-locator';
 
@@ -14,12 +14,12 @@ export function buildExplicitNpmDependencies(
 ) {
   const importLocator = new TypeScriptImportLocator(fileRead);
 
-  Object.keys(ctx.fileMap).forEach(source => {
-    Object.values(ctx.fileMap[source]).forEach(f => {
+  Object.keys(ctx.fileMap).forEach((source) => {
+    Object.values(ctx.fileMap[source]).forEach((f) => {
       importLocator.fromFile(
         f.file,
         (importExpr: string, filePath: string, type: DependencyType) => {
-          const key = Object.keys(nodes).find(k =>
+          const key = Object.keys(nodes).find((k) =>
             isNpmPackageImport(k, importExpr)
           );
           const target = nodes[key];

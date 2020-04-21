@@ -13,11 +13,11 @@ describe('getNodePartial', () => {
       tsConfig: 'tsconfig.json',
       externalDependencies: 'all',
       fileReplacements: [],
-      statsJson: false
+      statsJson: false,
     };
-    (<any>TsConfigPathsPlugin).mockImplementation(
-      function MockPathsPlugin() {}
-    );
+    (<any>(
+      TsConfigPathsPlugin
+    )).mockImplementation(function MockPathsPlugin() {});
   });
 
   describe('unconditionally', () => {
@@ -43,7 +43,7 @@ describe('getNodePartial', () => {
     it('should not minify', () => {
       const result = getNodeWebpackConfig({
         ...input,
-        optimization: true
+        optimization: true,
       });
 
       expect(result.optimization.minimize).toEqual(false);
@@ -52,7 +52,7 @@ describe('getNodePartial', () => {
     it('should not concatenate modules', () => {
       const result = getNodeWebpackConfig({
         ...input,
-        optimization: true
+        optimization: true,
       });
 
       expect(result.optimization.concatenateModules).toEqual(false);
@@ -70,7 +70,7 @@ describe('getNodePartial', () => {
     it('should change given module names to commonjs imports but not others', () => {
       const result = getNodeWebpackConfig({
         ...input,
-        externalDependencies: ['module1']
+        externalDependencies: ['module1'],
       });
       const callback = jest.fn();
       result.externals[0](null, 'module1', callback);
@@ -82,7 +82,7 @@ describe('getNodePartial', () => {
     it('should not change any modules to commonjs imports', () => {
       const result = getNodeWebpackConfig({
         ...input,
-        externalDependencies: 'none'
+        externalDependencies: 'none',
       });
 
       expect(result.externals).not.toBeDefined();

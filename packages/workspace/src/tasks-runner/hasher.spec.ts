@@ -8,15 +8,15 @@ jest.mock('fs');
 describe('Hasher', () => {
   let hashes = { 'yarn.lock': 'yarn.lock.hash' };
   beforeEach(() => {
-    hasha.mockImplementation(values => values.join('|'));
-    hasha.fromFile.mockImplementation(path => Promise.resolve(hashes[path]));
+    hasha.mockImplementation((values) => values.join('|'));
+    hasha.fromFile.mockImplementation((path) => Promise.resolve(hashes[path]));
     fs.statSync.mockReturnValue({ size: 100 });
     fs.readFileSync.mockImplementation(() =>
       JSON.stringify({ dependencies: {}, devDependencies: {} })
     );
   });
 
-  it('should create project hash', async done => {
+  it('should create project hash', async (done) => {
     hashes['/file'] = 'file.hash';
     const hasher = new Hasher(
       {
@@ -24,23 +24,23 @@ describe('Hasher', () => {
           proj: {
             name: 'proj',
             type: 'lib',
-            data: { files: [{ file: '/file', ext: '.ts', mtime: 1 }] }
-          }
+            data: { files: [{ file: '/file', ext: '.ts', mtime: 1 }] },
+          },
         },
         dependencies: {
-          proj: []
-        }
+          proj: [],
+        },
       },
       {} as any,
       {
-        runtimeCacheInputs: ['echo runtime123', 'echo runtime456']
+        runtimeCacheInputs: ['echo runtime123', 'echo runtime456'],
       }
     );
 
     const hash = await hasher.hash({
       target: { project: 'proj', target: 'build' },
       id: 'proj-build',
-      overrides: { prop: 'prop-value' }
+      overrides: { prop: 'prop-value' },
     });
 
     expect(hash).toContain('yarn.lock.hash'); //implicits
@@ -58,11 +58,11 @@ describe('Hasher', () => {
     const hasher = new Hasher(
       {
         nodes: {},
-        dependencies: {}
+        dependencies: {},
       },
       {} as any,
       {
-        runtimeCacheInputs: ['boom']
+        runtimeCacheInputs: ['boom'],
       }
     );
 
@@ -70,7 +70,7 @@ describe('Hasher', () => {
       await hasher.hash({
         target: { project: 'proj', target: 'build' },
         id: 'proj-build',
-        overrides: {}
+        overrides: {},
       });
       fail('Should not be here');
     } catch (e) {
@@ -82,7 +82,7 @@ describe('Hasher', () => {
     }
   });
 
-  it('should hash when circular dependencies', async done => {
+  it('should hash when circular dependencies', async (done) => {
     hashes['/filea'] = 'a.hash';
     hashes['/fileb'] = 'b.hash';
     const hasher = new Hasher(
@@ -91,18 +91,18 @@ describe('Hasher', () => {
           proja: {
             name: 'proja',
             type: 'lib',
-            data: { files: [{ file: '/filea', ext: '.ts', mtime: 1 }] }
+            data: { files: [{ file: '/filea', ext: '.ts', mtime: 1 }] },
           },
           projb: {
             name: 'projb',
             type: 'lib',
-            data: { files: [{ file: '/fileb', ext: '.ts', mtime: 1 }] }
-          }
+            data: { files: [{ file: '/fileb', ext: '.ts', mtime: 1 }] },
+          },
         },
         dependencies: {
           proja: [{ source: 'proja', target: 'projb', type: 'static' }],
-          projb: [{ source: 'projb', target: 'proja', type: 'static' }]
-        }
+          projb: [{ source: 'projb', target: 'proja', type: 'static' }],
+        },
       },
       {} as any,
       {}
@@ -111,7 +111,7 @@ describe('Hasher', () => {
     const hasha = await hasher.hash({
       target: { project: 'proja', target: 'build' },
       id: 'proja-build',
-      overrides: { prop: 'prop-value' }
+      overrides: { prop: 'prop-value' },
     });
 
     expect(hasha).toContain('yarn.lock.hash'); //implicits
@@ -124,7 +124,7 @@ describe('Hasher', () => {
     const hashb = await hasher.hash({
       target: { project: 'projb', target: 'build' },
       id: 'projb-build',
-      overrides: { prop: 'prop-value' }
+      overrides: { prop: 'prop-value' },
     });
 
     expect(hashb).toContain('yarn.lock.hash'); //implicits
@@ -137,8 +137,8 @@ describe('Hasher', () => {
     done();
   });
 
-  it('should handle large binary files in a special way', async done => {
-    fs.statSync.mockImplementation(f => {
+  it('should handle large binary files in a special way', async (done) => {
+    fs.statSync.mockImplementation((f) => {
       if (f === '/file') return { size: 1000000 * 5 + 1 };
       return { size: 100 };
     });
@@ -149,10 +149,10 @@ describe('Hasher', () => {
           proja: {
             name: 'proj',
             type: 'lib',
-            data: { files: [{ file: '/file', ext: '.ts', mtime: 1 }] }
-          }
+            data: { files: [{ file: '/file', ext: '.ts', mtime: 1 }] },
+          },
         },
-        dependencies: {}
+        dependencies: {},
       },
       {} as any,
       {}
@@ -161,7 +161,7 @@ describe('Hasher', () => {
     const hash = await hasher.hash({
       target: { project: 'proja', target: 'build' },
       id: 'proja-build',
-      overrides: { prop: 'prop-value' }
+      overrides: { prop: 'prop-value' },
     });
 
     expect(hash).toContain('yarn.lock.hash'); //implicits

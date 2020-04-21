@@ -7,7 +7,7 @@ import { run } from './build.impl';
 jest.mock('next/dist/build');
 jest.mock('./lib/create-package-json', () => {
   return {
-    createPackageJson: () => Promise.resolve({})
+    createPackageJson: () => Promise.resolve({}),
   };
 });
 
@@ -24,9 +24,9 @@ describe('Next.js Builder', () => {
       fileReplacements: [
         {
           replace: 'apps/wibble/src/environment.ts',
-          with: 'apps/wibble/src/environment.prod.ts'
-        }
-      ]
+          with: 'apps/wibble/src/environment.prod.ts',
+        },
+      ],
     };
 
     jest.spyOn(build, 'default').mockReturnValue(Promise.resolve());
@@ -39,7 +39,7 @@ describe('Next.js Builder', () => {
       '/root/apps/wibble',
       expect.objectContaining({
         distDir: '../../dist/apps/wibble/.next',
-        outdir: '../../dist/apps/wibble'
+        outdir: '../../dist/apps/wibble',
       })
     );
   });

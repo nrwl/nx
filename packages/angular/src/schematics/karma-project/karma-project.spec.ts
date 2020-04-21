@@ -13,7 +13,7 @@ describe('karmaProject', () => {
       'lib',
       {
         name: 'lib1',
-        unitTestRunner: 'none'
+        unitTestRunner: 'none',
       },
       appTree
     );
@@ -21,7 +21,7 @@ describe('karmaProject', () => {
       'app',
       {
         name: 'app1',
-        unitTestRunner: 'none'
+        unitTestRunner: 'none',
       },
       appTree
     );
@@ -31,7 +31,7 @@ describe('karmaProject', () => {
     const resultTree = await runSchematic(
       'karma-project',
       {
-        project: 'lib1'
+        project: 'lib1',
       },
       appTree
     );
@@ -43,7 +43,7 @@ describe('karmaProject', () => {
     const resultTree = await runSchematic(
       'karma-project',
       {
-        project: 'lib1'
+        project: 'lib1',
       },
       appTree
     );
@@ -71,7 +71,7 @@ module.exports = function(config) {
     const resultTree = await runSchematic(
       'karma-project',
       {
-        project: 'lib1'
+        project: 'lib1',
       },
       appTree
     );
@@ -85,7 +85,7 @@ module.exports = function(config) {
       const resultTree = await runSchematic(
         'karma-project',
         {
-          project: 'lib1'
+          project: 'lib1',
         },
         appTree
       );
@@ -95,8 +95,8 @@ module.exports = function(config) {
         options: {
           main: 'libs/lib1/src/test.ts',
           tsConfig: 'libs/lib1/tsconfig.spec.json',
-          karmaConfig: 'libs/lib1/karma.conf.js'
-        }
+          karmaConfig: 'libs/lib1/karma.conf.js',
+        },
       });
       expect(
         workspaceJson.projects.lib1.architect.lint.options.tsConfig
@@ -107,7 +107,7 @@ module.exports = function(config) {
       const resultTree = await runSchematic(
         'karma-project',
         {
-          project: 'lib1'
+          project: 'lib1',
         },
         appTree
       );
@@ -119,10 +119,10 @@ module.exports = function(config) {
         extends: './tsconfig.json',
         compilerOptions: {
           outDir: '../../dist/out-tsc',
-          types: ['jasmine', 'node']
+          types: ['jasmine', 'node'],
         },
         files: ['src/test.ts'],
-        include: ['**/*.spec.ts', '**/*.d.ts']
+        include: ['**/*.spec.ts', '**/*.d.ts'],
       });
     });
 
@@ -130,7 +130,7 @@ module.exports = function(config) {
       const resultTree = await runSchematic(
         'karma-project',
         {
-          project: 'lib1'
+          project: 'lib1',
         },
         appTree
       );
@@ -145,7 +145,7 @@ module.exports = function(config) {
       const resultTree = await runSchematic(
         'karma-project',
         {
-          project: 'app1'
+          project: 'app1',
         },
         appTree
       );
@@ -159,8 +159,8 @@ module.exports = function(config) {
           karmaConfig: 'apps/app1/karma.conf.js',
           styles: [],
           scripts: [],
-          assets: []
-        }
+          assets: [],
+        },
       });
       expect(
         workspaceJson.projects.app1.architect.lint.options.tsConfig
@@ -171,7 +171,7 @@ module.exports = function(config) {
       const resultTree = await runSchematic(
         'karma-project',
         {
-          project: 'app1'
+          project: 'app1',
         },
         appTree
       );
@@ -183,10 +183,10 @@ module.exports = function(config) {
         extends: './tsconfig.json',
         compilerOptions: {
           outDir: '../../dist/out-tsc',
-          types: ['jasmine', 'node']
+          types: ['jasmine', 'node'],
         },
         files: ['src/test.ts', 'src/polyfills.ts'],
-        include: ['**/*.spec.ts', '**/*.d.ts']
+        include: ['**/*.spec.ts', '**/*.d.ts'],
       });
     });
 
@@ -194,7 +194,7 @@ module.exports = function(config) {
       const resultTree = await runSchematic(
         'karma-project',
         {
-          project: 'app1'
+          project: 'app1',
         },
         appTree
       );

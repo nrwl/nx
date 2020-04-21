@@ -12,7 +12,7 @@ import {
   PostcssCliResources,
   RawCssLoader,
   RemoveHashPlugin,
-  SuppressExtractedTextChunksWebpackPlugin
+  SuppressExtractedTextChunksWebpackPlugin,
 } from '../../plugins/webpack';
 import { WebpackConfigOptions } from '../build-options';
 import { getOutputHashFormat, normalizeExtraEntryPoints } from './utils';
@@ -46,7 +46,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
   // Determine hashing format.
   const hashFormat = getOutputHashFormat(buildOptions.outputHashing as string);
 
-  const postcssPluginCreator = function(loader: webpack.loader.LoaderContext) {
+  const postcssPluginCreator = function (loader: webpack.loader.LoaderContext) {
     return [
       postcssImports({
         resolve: (url: string) => (url.startsWith('~') ? url.substr(1) : url),
@@ -63,7 +63,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
               resolve(content);
             });
           });
-        }
+        },
       }),
       PostcssCliResources({
         baseHref: buildOptions.baseHref,
@@ -71,9 +71,9 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
         resourcesOutputPath: buildOptions.resourcesOutputPath,
         loader,
         rebaseRootRelative: buildOptions.rebaseRootRelativeCssUrls,
-        filename: `[name]${hashFormat.file}.[ext]`
+        filename: `[name]${hashFormat.file}.[ext]`,
       }),
-      autoprefixer()
+      autoprefixer(),
     ];
   };
 
@@ -91,7 +91,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
         includePaths.push(path.resolve(root, includePath))
     );
     lessPathOptions = {
-      paths: includePaths
+      paths: includePaths,
     };
   }
 
@@ -99,23 +99,25 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
   if (buildOptions.styles.length > 0) {
     const chunkNames: string[] = [];
 
-    normalizeExtraEntryPoints(buildOptions.styles, 'styles').forEach(style => {
-      const resolvedPath = path.resolve(root, style.input);
-      // Add style entry points.
-      if (entryPoints[style.bundleName]) {
-        entryPoints[style.bundleName].push(resolvedPath);
-      } else {
-        entryPoints[style.bundleName] = [resolvedPath];
-      }
+    normalizeExtraEntryPoints(buildOptions.styles, 'styles').forEach(
+      (style) => {
+        const resolvedPath = path.resolve(root, style.input);
+        // Add style entry points.
+        if (entryPoints[style.bundleName]) {
+          entryPoints[style.bundleName].push(resolvedPath);
+        } else {
+          entryPoints[style.bundleName] = [resolvedPath];
+        }
 
-      // Add non injected styles to the list.
-      if (!style.inject) {
-        chunkNames.push(style.bundleName);
-      }
+        // Add non injected styles to the list.
+        if (!style.inject) {
+          chunkNames.push(style.bundleName);
+        }
 
-      // Add global css paths.
-      globalStylePaths.push(resolvedPath);
-    });
+        // Add global css paths.
+        globalStylePaths.push(resolvedPath);
+      }
+    );
 
     if (chunkNames.length > 0) {
       // Add plugin to remove hashes from lazy styles.
@@ -151,10 +153,10 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
             sourceMap: cssSourceMap,
             // bootstrap-sass requires a minimum precision of 8
             precision: 8,
-            includePaths
-          }
-        }
-      ]
+            includePaths,
+          },
+        },
+      ],
     },
     {
       test: /\.less$/,
@@ -164,10 +166,10 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
           options: {
             sourceMap: cssSourceMap,
             javascriptEnabled: true,
-            ...lessPathOptions
-          }
-        }
-      ]
+            ...lessPathOptions,
+          },
+        },
+      ],
     },
     {
       test: /\.styl$/,
@@ -176,11 +178,11 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
           loader: 'stylus-loader',
           options: {
             sourceMap: cssSourceMap,
-            paths: includePaths
-          }
-        }
-      ]
-    }
+            paths: includePaths,
+          },
+        },
+      ],
+    },
   ];
 
   // load component css as raw strings
@@ -203,11 +205,11 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
             // for component css.
             !buildOptions.sourceMap.hidden
               ? 'inline'
-              : false
-        }
+              : false,
+        },
       },
-      ...(use as webpack.Loader[])
-    ]
+      ...(use as webpack.Loader[]),
+    ],
   }));
 
   // load global css as css files
@@ -232,11 +234,11 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
                   !buildOptions.extractCss &&
                   !buildOptions.sourceMap.hidden
                     ? 'inline'
-                    : cssSourceMap
-              }
+                    : cssSourceMap,
+              },
             },
-            ...(use as webpack.Loader[])
-          ]
+            ...(use as webpack.Loader[]),
+          ],
         };
       })
     );
@@ -254,6 +256,6 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
   return {
     entry: entryPoints,
     module: { rules },
-    plugins: extraPlugins
+    plugins: extraPlugins,
   };
 }

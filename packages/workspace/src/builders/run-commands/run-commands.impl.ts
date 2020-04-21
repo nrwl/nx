@@ -1,7 +1,7 @@
 import {
   BuilderContext,
   BuilderOutput,
-  createBuilder
+  createBuilder,
 } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
 import { exec } from 'child_process';
@@ -40,12 +40,12 @@ function run(
 ): Observable<BuilderOutput> {
   loadEnvVars(options.envFile);
   options.parsedArgs = parseArgs(options.args);
-  return Observable.create(async observer => {
+  return Observable.create(async (observer) => {
     if (!options.commands) {
       observer.next({
         success: false,
         error:
-          'ERROR: Bad builder config for @nrwl/run-command - "commands" option is required'
+          'ERROR: Bad builder config for @nrwl/run-command - "commands" option is required',
       });
       return;
     }
@@ -57,7 +57,7 @@ function run(
       return;
     }
 
-    if (options.commands.some(c => !c.command)) {
+    if (options.commands.some((c) => !c.command)) {
       observer.error(
         'ERROR: Bad builder config for @nrwl/run-command - "command" option is required'
       );
@@ -79,16 +79,16 @@ function run(
 }
 
 async function runInParallel(options: RunCommandsBuilderOptions) {
-  const procs = options.commands.map(c =>
+  const procs = options.commands.map((c) =>
     createProcess(
       c.command,
       options.readyWhen,
       options.parsedArgs,
       options.color,
       options.cwd
-    ).then(result => ({
+    ).then((result) => ({
       result,
-      command: c.command
+      command: c.command,
     }))
   );
 
@@ -104,9 +104,9 @@ async function runInParallel(options: RunCommandsBuilderOptions) {
     }
   } else {
     const r = await Promise.all(procs);
-    const failed = r.filter(v => !v.result);
+    const failed = r.filter((v) => !v.result);
     if (failed.length > 0) {
-      failed.forEach(f => {
+      failed.forEach((f) => {
         process.stderr.write(
           `Warning: @nrwl/run-command command "${f.command}" exited with non-zero status code`
         );
@@ -157,29 +157,29 @@ function createProcess(
   cwd: string
 ): Promise<boolean> {
   command = transformCommand(command, parsedArgs);
-  return new Promise(res => {
+  return new Promise((res) => {
     const childProcess = exec(command, {
       maxBuffer: TEN_MEGABYTES,
       env: { ...process.env, FORCE_COLOR: `${color}` },
-      cwd
+      cwd,
     });
     /**
      * Ensure the child process is killed when the parent exits
      */
     process.on('exit', () => childProcess.kill());
-    childProcess.stdout.on('data', data => {
+    childProcess.stdout.on('data', (data) => {
       process.stdout.write(data);
       if (readyWhen && data.toString().indexOf(readyWhen) > -1) {
         res(true);
       }
     });
-    childProcess.stderr.on('data', err => {
+    childProcess.stderr.on('data', (err) => {
       process.stderr.write(err);
       if (readyWhen && err.toString().indexOf(readyWhen) > -1) {
         res(true);
       }
     });
-    childProcess.on('close', code => {
+    childProcess.on('close', (code) => {
       if (!readyWhen) {
         res(code === 0);
       }
@@ -198,7 +198,7 @@ function parseArgs(args: string) {
   }
   return args
     .split(' ')
-    .map(t => t.trim())
+    .map((t) => t.trim())
     .reduce((m, c) => {
       if (!c.startsWith('--')) {
         throw new Error(`Invalid args: ${args}`);

@@ -4,7 +4,7 @@ import {
   OverwriteFileAction,
   Rule,
   SchematicContext,
-  Tree
+  Tree,
 } from '@angular-devkit/schematics';
 let prettier;
 try {
@@ -24,27 +24,27 @@ export function formatFiles(
   return (host: Tree, context: SchematicContext) => {
     const files = new Set(
       host.actions
-        .filter(action => action.kind !== 'd' && action.kind !== 'r')
+        .filter((action) => action.kind !== 'd' && action.kind !== 'r')
         .map((action: OverwriteFileAction | CreateFileAction) => ({
           path: action.path,
-          content: action.content.toString()
+          content: action.content.toString(),
         }))
     );
     if (files.size === 0) {
       return host;
     }
     return from(files).pipe(
-      filter(file => host.exists(file.path)),
-      mergeMap(async file => {
+      filter((file) => host.exists(file.path)),
+      mergeMap(async (file) => {
         const systemPath = path.join(appRootPath, file.path);
         let options: any = {
-          filepath: systemPath
+          filepath: systemPath,
         };
         const resolvedOptions = await prettier.resolveConfig(systemPath);
         if (resolvedOptions) {
           options = {
             ...options,
-            ...resolvedOptions
+            ...resolvedOptions,
           };
         }
         const support = await prettier.getFileInfo(systemPath, options);

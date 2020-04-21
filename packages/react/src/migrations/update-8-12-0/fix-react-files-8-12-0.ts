@@ -2,7 +2,7 @@ import { chain, Rule } from '@angular-devkit/schematics';
 import {
   addDepsToPackageJson,
   formatFiles,
-  updateWorkspaceInTree
+  updateWorkspaceInTree,
 } from '@nrwl/workspace';
 
 const ignore = require('ignore');
@@ -11,12 +11,12 @@ export default function update(): Rule {
   return chain([
     updateWorkspaceInTree(updateBuilderWebpackOption),
     addDepsToPackageJson({}, { '@babel/preset-react': '7.8.3' }),
-    formatFiles()
+    formatFiles(),
   ]);
 }
 
 function updateBuilderWebpackOption(json) {
-  Object.keys(json.projects).map(k => {
+  Object.keys(json.projects).map((k) => {
     const p = json.projects[k];
     if (isReactProject(p) && !p.architect.build.options.webpackConfig) {
       p.architect.build.options.webpackConfig = '@nrwl/react/plugins/webpack';

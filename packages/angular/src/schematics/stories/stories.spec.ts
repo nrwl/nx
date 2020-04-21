@@ -3,7 +3,7 @@ import { StorybookStoriesSchema } from './stories';
 import {
   runSchematic,
   runExternalSchematic,
-  callRule
+  callRule,
 } from '../../utils/testing';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 
@@ -41,12 +41,12 @@ describe('schematic:stories', () => {
         `buttonType: text('buttonType', 'button'),`,
         `style: text('style', 'default'),`,
         `age: number('age', ''),`,
-        `isOn: boolean('isOn', false),    `
+        `isOn: boolean('isOn', false),    `,
       ];
       const storyContent = tree.readContent(
         'libs/test-ui-lib/src/lib/test-button/test-button.component.stories.ts'
       );
-      propLines.forEach(propLine => {
+      propLines.forEach((propLine) => {
         storyContent.includes(propLine);
       });
     });
@@ -78,12 +78,12 @@ describe('schematic:stories', () => {
         `buttonType: text('buttonType', 'button'),`,
         `style: text('style', 'default'),`,
         `age: number('age', ''),`,
-        `isOn: boolean('isOn', false),    `
+        `isOn: boolean('isOn', false),    `,
       ];
       const storyContent = tree.readContent(
         'libs/test-ui-lib/src/lib/test-button/test-button.component.stories.ts'
       );
-      propLines.forEach(propLine => {
+      propLines.forEach((propLine) => {
         storyContent.includes(propLine);
       });
 
@@ -125,14 +125,14 @@ export async function createTestUILib(libName: string): Promise<Tree> {
   appTree = createEmptyWorkspace(appTree);
   appTree = await callRule(
     externalSchematic('@nrwl/angular', 'library', {
-      name: libName
+      name: libName,
     }),
     appTree
   );
   appTree = await callRule(
     externalSchematic('@schematics/angular', 'component', {
       name: 'test-button',
-      project: libName
+      project: libName,
     }),
     appTree
   );
@@ -146,7 +146,7 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     externalSchematic('@schematics/angular', 'module', {
       name: 'nested',
       project: libName,
-      path: `libs/${libName}/src/lib`
+      path: `libs/${libName}/src/lib`,
     }),
     appTree
   );
@@ -155,7 +155,7 @@ export async function createTestUILib(libName: string): Promise<Tree> {
       name: 'nested-button',
       project: libName,
       module: 'nested',
-      path: `libs/${libName}/src/lib/nested`
+      path: `libs/${libName}/src/lib/nested`,
     }),
     appTree
   );
@@ -192,7 +192,7 @@ export class TestButtonComponent implements OnInit {
   appTree = await callRule(
     externalSchematic('@schematics/angular', 'component', {
       name: 'test-other',
-      project: libName
+      project: libName,
     }),
     appTree
   );

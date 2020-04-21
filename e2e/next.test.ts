@@ -9,7 +9,7 @@ import {
   runCLIAsync,
   supportUi,
   uniq,
-  updateFile
+  updateFile,
 } from './utils';
 
 forEachCli('nx', () => {
@@ -24,9 +24,9 @@ forEachCli('nx', () => {
         '/external-api': {
           target: 'http://localhost:4200',
           pathRewrite: {
-            '^/external-api/hello': '/api/hello'
-          }
-        }
+            '^/external-api/hello': '/api/hello',
+          },
+        },
       };
       updateFile(`apps/${appName}/proxy.conf.json`, JSON.stringify(proxyConf));
 

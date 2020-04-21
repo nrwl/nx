@@ -11,10 +11,10 @@ import {
   runCLIAsync,
   uniq,
   updateFile,
-  workspaceConfigName
+  workspaceConfigName,
 } from './utils';
 
-forEachCli(currentCLIName => {
+forEachCli((currentCLIName) => {
   const linter = currentCLIName === 'angular' ? 'tslint' : 'eslint';
 
   describe('React Applications', () => {
@@ -37,7 +37,7 @@ forEachCli(currentCLIName => {
       await testGeneratedApp(appName, {
         checkStyles: true,
         checkLinter: true,
-        checkE2E: true
+        checkE2E: true,
       });
     }, 120000);
 
@@ -120,7 +120,7 @@ forEachCli(currentCLIName => {
       await testGeneratedApp(appName, {
         checkStyles: true,
         checkLinter: true,
-        checkE2E: false
+        checkE2E: false,
       });
     }, 120000);
 
@@ -154,7 +154,7 @@ forEachCli(currentCLIName => {
       await testGeneratedApp(appName, {
         checkStyles: true,
         checkLinter: true,
-        checkE2E: false
+        checkE2E: false,
       });
     }, 120000);
 
@@ -169,7 +169,7 @@ forEachCli(currentCLIName => {
       await testGeneratedApp(appName, {
         checkStyles: false,
         checkLinter: true,
-        checkE2E: false
+        checkE2E: false,
       });
     }, 120000);
 
@@ -184,7 +184,7 @@ forEachCli(currentCLIName => {
       await testGeneratedApp(appName, {
         checkStyles: false,
         checkLinter: true,
-        checkE2E: false
+        checkE2E: false,
       });
 
       expect(() => checkFilesExist(`dist/apps/${appName}/styles.css`)).toThrow(
@@ -278,7 +278,7 @@ forEachCli(currentCLIName => {
       await testGeneratedApp(appName, {
         checkStyles: true,
         checkLinter: false,
-        checkE2E: false
+        checkE2E: false,
       });
     }, 30000);
 
@@ -297,7 +297,7 @@ forEachCli(currentCLIName => {
         `dist/apps/${appName}/polyfills.js`,
         `dist/apps/${appName}/runtime.js`,
         `dist/apps/${appName}/vendor.js`,
-        `dist/apps/${appName}/main.js`
+        `dist/apps/${appName}/main.js`,
       ];
       if (opts.checkStyles) {
         filesToCheck.push(`dist/apps/${appName}/styles.js`);
@@ -313,7 +313,7 @@ forEachCli(currentCLIName => {
         `dist/apps/${appName}/polyfills.esm.js`,
         `dist/apps/${appName}/main.esm.js`,
         `dist/apps/${appName}/polyfills.es5.js`,
-        `dist/apps/${appName}/main.es5.js`
+        `dist/apps/${appName}/main.es5.js`,
       ];
       if (opts.checkStyles) {
         filesToCheck.push(`dist/apps/${appName}/styles.css`);

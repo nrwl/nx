@@ -6,7 +6,7 @@ import { NormalizedSchema } from './normalize-options';
 export function setDefaults(options: NormalizedSchema): Rule {
   return options.skipWorkspaceJson
     ? noop()
-    : updateWorkspace(workspace => {
+    : updateWorkspace((workspace) => {
         workspace.extensions.schematics = jsonIdentity(
           workspace.extensions.schematics || {}
         );
@@ -23,9 +23,9 @@ export function setDefaults(options: NormalizedSchema): Rule {
             application: {
               style: options.style,
               linter: options.linter,
-              ...jsonIdentity(prev.application)
-            }
-          }
+              ...jsonIdentity(prev.application),
+            },
+          },
         };
       });
 }

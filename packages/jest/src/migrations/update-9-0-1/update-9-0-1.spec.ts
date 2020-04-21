@@ -52,36 +52,36 @@ describe('Update 9.0.1', () => {
               test: {
                 builder: '@nrwl/jest:jest',
                 options: {
-                  jestConfig: 'apps/angular-one/jest.config.js'
-                }
-              }
-            }
+                  jestConfig: 'apps/angular-one/jest.config.js',
+                },
+              },
+            },
           },
           'angular-two': {
             architect: {
               test: {
                 builder: '@nrwl/jest:jest',
                 options: {
-                  passWithNoTests: false
-                }
-              }
-            }
+                  passWithNoTests: false,
+                },
+              },
+            },
           },
           other1: {
             architect: {
               'other-architect': {
                 builder: 'other',
                 options: {
-                  foo: 'bar'
-                }
+                  foo: 'bar',
+                },
               },
               test: {
                 builder: '@nrwl/jest:jest',
-                options: {}
-              }
-            }
-          }
-        }
+                options: {},
+              },
+            },
+          },
+        },
       })
     );
 
@@ -118,24 +118,24 @@ describe('Update 9.0.1', () => {
               jest1: {
                 builder: '@nrwl/jest:jest',
                 options: {
-                  foo: 'bar'
-                }
+                  foo: 'bar',
+                },
               },
               jest2: {
                 builder: '@nrwl/jest:jest',
                 options: {
                   foo: 'bar',
-                  passWithNoTests: false
-                }
+                  passWithNoTests: false,
+                },
               },
               other1: {
                 options: {
-                  foo: 'bar'
-                }
-              }
-            }
-          }
-        }
+                  foo: 'bar',
+                },
+              },
+            },
+          },
+        },
       })
     );
 

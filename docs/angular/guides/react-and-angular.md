@@ -93,7 +93,7 @@ if (environment.production) {
 
 platformBrowserDynamic()
   .bootstrapModule(AppModule)
-  .catch(err => console.error(err));
+  .catch((err) => console.error(err));
 ```
 
 And the template of the generated component will look as follows:
@@ -313,7 +313,7 @@ if (environment.production) {
 
 platformBrowserDynamic()
   .bootstrapModule(AppModule)
-  .catch(err => console.error(err));
+  .catch((err) => console.error(err));
 ```
 
 ### Registering CUSTOM_ELEMENTS_SCHEMA
@@ -326,7 +326,7 @@ Next, let's register the `CUSTOM_ELEMENTS_SCHEMA` schema, which will tell the An
   imports: [BrowserModule],
   providers: [],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
 export class AppModule {}
 ```

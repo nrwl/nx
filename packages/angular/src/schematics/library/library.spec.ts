@@ -6,7 +6,7 @@ import { NxJson, readJsonInTree } from '@nrwl/workspace';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
 import {
   stripIndents,
-  stripIndent
+  stripIndent,
 } from '@angular-devkit/core/src/utils/literals';
 
 describe('lib', () => {
@@ -97,7 +97,7 @@ describe('lib', () => {
         workspaceJson.projects['my-lib'].architect.lint.options.tsConfig
       ).toEqual([
         'libs/my-lib/tsconfig.lib.json',
-        'libs/my-lib/tsconfig.spec.json'
+        'libs/my-lib/tsconfig.spec.json',
       ]);
       expect(
         workspaceJson.projects['my-lib'].architect.lint.options.exclude
@@ -139,8 +139,8 @@ describe('lib', () => {
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-lib': {
-          tags: ['one', 'two']
-        }
+          tags: ['one', 'two'],
+        },
       });
     });
 
@@ -148,7 +148,7 @@ describe('lib', () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
       const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'libs/my-lib/src/index.ts'
+        'libs/my-lib/src/index.ts',
       ]);
     });
 
@@ -158,9 +158,9 @@ describe('lib', () => {
       expect(tsconfigJson).toEqual({
         extends: '../../tsconfig.json',
         compilerOptions: {
-          types: ['node', 'jest']
+          types: ['node', 'jest'],
         },
-        include: ['**/*.ts']
+        include: ['**/*.ts'],
       });
     });
 
@@ -195,7 +195,7 @@ describe('lib', () => {
         );
         expect(tsconfigJson.exclude).toEqual([
           'src/test-setup.ts',
-          '**/*.spec.ts'
+          '**/*.spec.ts',
         ]);
       });
 
@@ -300,7 +300,7 @@ describe('lib', () => {
             'lib',
             {
               name: 'myLib',
-              framework: 'none'
+              framework: 'none',
             },
             appTree
           );
@@ -328,15 +328,15 @@ describe('lib', () => {
           name: 'myLib',
           directory: 'myDir',
           framework: 'angular',
-          tags: 'one'
+          tags: 'one',
         },
         appTree
       );
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-dir-my-lib': {
-          tags: ['one']
-        }
+          tags: ['one'],
+        },
       });
 
       const tree2 = await runSchematic(
@@ -346,18 +346,18 @@ describe('lib', () => {
           directory: 'myDir',
           framework: 'angular',
           tags: 'one,two',
-          simpleModuleName: true
+          simpleModuleName: true,
         },
         tree
       );
       const nxJson2 = readJsonInTree<NxJson>(tree2, '/nx.json');
       expect(nxJson2.projects).toEqual({
         'my-dir-my-lib': {
-          tags: ['one']
+          tags: ['one'],
         },
         'my-dir-my-lib2': {
-          tags: ['one', 'two']
-        }
+          tags: ['one', 'two'],
+        },
       });
     });
 
@@ -392,7 +392,7 @@ describe('lib', () => {
           name: 'myLib2',
           directory: 'myDir',
           framework: 'angular',
-          simpleModuleName: true
+          simpleModuleName: true,
         },
         tree
       );
@@ -423,7 +423,7 @@ describe('lib', () => {
           name: 'myLib',
           directory: 'myDir',
           framework: 'angular',
-          publishable: true
+          publishable: true,
         },
         appTree
       );
@@ -451,7 +451,7 @@ describe('lib', () => {
         workspaceJson.projects['my-dir-my-lib'].architect.lint.options.tsConfig
       ).toEqual([
         'libs/my-dir/my-lib/tsconfig.lib.json',
-        'libs/my-dir/my-lib/tsconfig.spec.json'
+        'libs/my-dir/my-lib/tsconfig.spec.json',
       ]);
       expect(
         workspaceJson.projects['my-dir-my-lib'].architect.lint.options.exclude
@@ -465,9 +465,9 @@ describe('lib', () => {
         appTree
       );
       const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
-      expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
-        ['libs/my-dir/my-lib/src/index.ts']
-      );
+      expect(
+        tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']
+      ).toEqual(['libs/my-dir/my-lib/src/index.ts']);
       expect(
         tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
       ).toBeUndefined();
@@ -487,9 +487,9 @@ describe('lib', () => {
       expect(tsconfigJson).toEqual({
         extends: '../../../tsconfig.json',
         compilerOptions: {
-          types: ['node', 'jest']
+          types: ['node', 'jest'],
         },
-        include: ['**/*.ts']
+        include: ['**/*.ts'],
       });
     });
   });
@@ -513,7 +513,7 @@ describe('lib', () => {
             directory: 'myDir',
             framework: 'angular',
             routing: true,
-            lazy: true
+            lazy: true,
           },
           appTree
         );
@@ -536,7 +536,7 @@ describe('lib', () => {
             routing: true,
             framework: 'angular',
             lazy: true,
-            simpleModuleName: true
+            simpleModuleName: true,
           },
           tree
         );
@@ -559,7 +559,7 @@ describe('lib', () => {
             routing: true,
             lazy: true,
             framework: 'angular',
-            parentModule: 'apps/myapp/src/app/app.module.ts'
+            parentModule: 'apps/myapp/src/app/app.module.ts',
           },
           appTree
         );
@@ -582,7 +582,7 @@ describe('lib', () => {
         );
         expect(tsConfigAppJson.include).toEqual([
           '**/*.ts',
-          '../../libs/my-dir/my-lib/src/index.ts'
+          '../../libs/my-dir/my-lib/src/index.ts',
         ]);
 
         const tree2 = await runSchematic(
@@ -593,7 +593,7 @@ describe('lib', () => {
             routing: true,
             framework: 'angular',
             lazy: true,
-            parentModule: 'apps/myapp/src/app/app.module.ts'
+            parentModule: 'apps/myapp/src/app/app.module.ts',
           },
           tree
         );
@@ -625,7 +625,7 @@ describe('lib', () => {
         expect(tsConfigAppJson2.include).toEqual([
           '**/*.ts',
           '../../libs/my-dir/my-lib/src/index.ts',
-          '../../libs/my-dir/my-lib2/src/index.ts'
+          '../../libs/my-dir/my-lib2/src/index.ts',
         ]);
 
         const tree3 = await runSchematic(
@@ -637,7 +637,7 @@ describe('lib', () => {
             framework: 'angular',
             lazy: true,
             parentModule: 'apps/myapp/src/app/app.module.ts',
-            simpleModuleName: true
+            simpleModuleName: true,
           },
           tree2
         );
@@ -676,7 +676,7 @@ describe('lib', () => {
           '**/*.ts',
           '../../libs/my-dir/my-lib/src/index.ts',
           '../../libs/my-dir/my-lib2/src/index.ts',
-          '../../libs/my-dir/my-lib3/src/index.ts'
+          '../../libs/my-dir/my-lib3/src/index.ts',
         ]);
       });
 
@@ -709,7 +709,7 @@ describe('lib', () => {
             routing: true,
             lazy: true,
             framework: 'angular',
-            parentModule: 'apps/myapp/src/app/app.module.ts'
+            parentModule: 'apps/myapp/src/app/app.module.ts',
           },
           appTree
         );
@@ -738,7 +738,7 @@ describe('lib', () => {
             name: 'myLib',
             directory: 'myDir',
             framework: 'angular',
-            routing: true
+            routing: true,
           },
           appTree
         );
@@ -765,7 +765,7 @@ describe('lib', () => {
             directory: 'myDir',
             routing: true,
             framework: 'angular',
-            simpleModuleName: true
+            simpleModuleName: true,
           },
           tree
         );
@@ -789,7 +789,7 @@ describe('lib', () => {
             directory: 'myDir',
             routing: true,
             framework: 'angular',
-            parentModule: 'apps/myapp/src/app/app.module.ts'
+            parentModule: 'apps/myapp/src/app/app.module.ts',
           },
           appTree
         );
@@ -810,7 +810,7 @@ describe('lib', () => {
             directory: 'myDir',
             routing: true,
             framework: 'angular',
-            parentModule: 'apps/myapp/src/app/app.module.ts'
+            parentModule: 'apps/myapp/src/app/app.module.ts',
           },
           tree
         );
@@ -835,7 +835,7 @@ describe('lib', () => {
             routing: true,
             framework: 'angular',
             parentModule: 'apps/myapp/src/app/app.module.ts',
-            simpleModuleName: true
+            simpleModuleName: true,
           },
           tree2
         );
@@ -884,7 +884,7 @@ describe('lib', () => {
             directory: 'myDir',
             routing: true,
             framework: 'angular',
-            parentModule: 'apps/myapp/src/app/app.module.ts'
+            parentModule: 'apps/myapp/src/app/app.module.ts',
           },
           appTree
         );
@@ -913,8 +913,8 @@ describe('lib', () => {
 
       expect(workspaceJson.projects['my-lib'].schematics).toEqual({
         '@nrwl/angular:component': {
-          style: 'scss'
-        }
+          style: 'scss',
+        },
       });
     });
   });
@@ -939,7 +939,7 @@ describe('lib', () => {
         workspaceJson.projects['my-lib'].architect.lint.options.tsConfig
       ).toEqual([
         'libs/my-lib/tsconfig.lib.json',
-        'libs/my-lib/tsconfig.spec.json'
+        'libs/my-lib/tsconfig.spec.json',
       ]);
       expect(
         workspaceJson.projects['my-lib'].architect.lint.options.exclude

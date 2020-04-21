@@ -52,7 +52,7 @@ export class Cache {
       try {
         const p = spawn('node', [`"${scriptPath}"`, `"${this.cachePath}"`], {
           stdio: 'ignore',
-          detached: true
+          detached: true,
         });
         p.unref();
       } catch (e) {
@@ -95,7 +95,7 @@ export class Cache {
     writeFileSync(join(td, 'terminalOutput'), terminalOutput);
 
     mkdirSync(join(td, 'outputs'));
-    folders.forEach(f => {
+    folders.forEach((f) => {
       const srcDir = join(this.root, f);
       if (existsSync(srcDir)) {
         const cachedDir = join(td, 'outputs', f);
@@ -115,7 +115,7 @@ export class Cache {
   }
 
   copyFilesFromCache(cachedResult: CachedResult, outputs: string[]) {
-    outputs.forEach(f => {
+    outputs.forEach((f) => {
       const cachedDir = join(cachedResult.outputsPath, f);
       if (existsSync(cachedDir)) {
         const srcDir = join(this.root, f);
@@ -143,7 +143,7 @@ export class Cache {
     if (existsSync(tdCommit)) {
       return {
         terminalOutput: readFileSync(join(td, 'terminalOutput')).toString(),
-        outputsPath: join(td, 'outputs')
+        outputsPath: join(td, 'outputs'),
       };
     } else {
       return null;

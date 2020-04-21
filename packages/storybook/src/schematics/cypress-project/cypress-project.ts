@@ -3,7 +3,7 @@ import {
   externalSchematic,
   Rule,
   SchematicContext,
-  Tree
+  Tree,
 } from '@angular-devkit/schematics';
 import { getProjectConfig, updateWorkspaceInTree } from '@nrwl/workspace';
 import { parseJsonAtPath, safeFileDelete } from '../../utils/utils';
@@ -13,17 +13,17 @@ export interface CypressConfigureSchema {
   js?: boolean;
 }
 
-export default function(schema: CypressConfigureSchema): Rule {
+export default function (schema: CypressConfigureSchema): Rule {
   const e2eProjectName = schema.name + '-e2e';
   return chain([
     externalSchematic('@nrwl/cypress', 'cypress-project', {
       name: e2eProjectName,
       project: schema.name,
-      js: schema.js
+      js: schema.js,
     }),
     removeUnneededFiles(e2eProjectName, schema.js),
     addBaseUrlToCypressConfig(e2eProjectName),
-    updateAngularJsonBuilder(e2eProjectName, schema.name)
+    updateAngularJsonBuilder(e2eProjectName, schema.name),
   ]);
 }
 
@@ -71,20 +71,20 @@ function updateAngularJsonBuilder(
   e2eProjectName: string,
   targetProjectName
 ): Rule {
-  return updateWorkspaceInTree(workspace => {
+  return updateWorkspaceInTree((workspace) => {
     const project = workspace.projects[e2eProjectName];
     const e2eTarget = project.architect['e2e'];
     project.architect['e2e'] = {
       ...e2eTarget,
       options: <any>{
         ...e2eTarget.options,
-        devServerTarget: `${targetProjectName}:storybook`
+        devServerTarget: `${targetProjectName}:storybook`,
       },
       configurations: {
         ci: {
-          devServerTarget: `${targetProjectName}:storybook:ci`
-        }
-      }
+          devServerTarget: `${targetProjectName}:storybook:ci`,
+        },
+      },
     };
     return workspace;
   });

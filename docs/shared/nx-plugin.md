@@ -186,7 +186,7 @@ When the plugin is generated, a test file is created in the `my-plugin-e2e` app.
 We'll go over a few parts of a test file below:
 
 ```typescript
-it('should create my-plugin', async done => {
+it('should create my-plugin', async (done) => {
   const plugin = uniq('my-plugin');
   ensureNxProject('@my-org/my-plugin', 'dist/libs/my-plugin');
   await runNxCommandAsync(`generate @my-org/my-plugin:myPlugin ${plugin}`);

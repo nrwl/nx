@@ -15,7 +15,7 @@ describe('checkDestination Rule', () => {
   it('should throw an error if the path is not explicit', async () => {
     const schema: Schema = {
       projectName: 'my-lib',
-      destination: '../apps/not-an-app'
+      destination: '../apps/not-an-app',
     };
 
     await expect(callRule(checkDestination(schema), tree)).rejects.toThrow(
@@ -28,7 +28,7 @@ describe('checkDestination Rule', () => {
 
     const schema: Schema = {
       projectName: 'my-lib',
-      destination: 'my-other-lib'
+      destination: 'my-other-lib',
     };
 
     await expect(callRule(checkDestination(schema), tree)).rejects.toThrow(
@@ -39,7 +39,7 @@ describe('checkDestination Rule', () => {
   it('should NOT throw an error if the path is available', async () => {
     const schema: Schema = {
       projectName: 'my-lib',
-      destination: 'my-other-lib'
+      destination: 'my-other-lib',
     };
 
     await expect(
@@ -50,7 +50,7 @@ describe('checkDestination Rule', () => {
   it('should normalize the destination', async () => {
     const schema: Schema = {
       projectName: 'my-lib',
-      destination: '/my-other-lib//wibble'
+      destination: '/my-other-lib//wibble',
     };
 
     await callRule(checkDestination(schema), tree);

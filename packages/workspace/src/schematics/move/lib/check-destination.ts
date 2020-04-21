@@ -17,7 +17,7 @@ import { getDestination, normalizeSlashes } from './utils';
 export function checkDestination(schema: Schema): Rule {
   return (tree: Tree, _context: SchematicContext): Observable<Tree> => {
     return from(getWorkspace(tree)).pipe(
-      map(workspace => {
+      map((workspace) => {
         const INVALID_DESTINATION = `Invalid destination: [${schema.destination}]`;
 
         if (schema.destination.includes('..')) {

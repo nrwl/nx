@@ -8,7 +8,7 @@ describe('ast-utils', () => {
     const fileName = 'app.module.ts';
     const createTemplate = (content: string, close: string) => ({
       start: content.length,
-      text: content + close
+      text: content + close,
     });
     const createStockModule = (content: string) =>
       createSourceFile(fileName, content, ScriptTarget.Latest, true);
@@ -23,7 +23,7 @@ describe('ast-utils', () => {
       const source = createStockModule(text);
       const change = addProviderToModule(source, fileName, toAdd);
       const expectedChange = [
-        new InsertChange(fileName, start, `  providers: [${toAdd}]\n`)
+        new InsertChange(fileName, start, `  providers: [${toAdd}]\n`),
       ];
 
       expect(change).toEqual(expectedChange);
@@ -53,7 +53,7 @@ describe('ast-utils', () => {
       let source = createStockModule(template.text);
       let change = addProviderToModule(source, fileName, toAdd);
       let expectedChange = [
-        new InsertChange(fileName, template.start, `, ${toAdd}`)
+        new InsertChange(fileName, template.start, `, ${toAdd}`),
       ];
 
       expect(change).toEqual(expectedChange);
@@ -66,7 +66,7 @@ describe('ast-utils', () => {
       source = createStockModule(template.text);
       change = addProviderToModule(source, fileName, toAdd);
       expectedChange = [
-        new InsertChange(fileName, template.start, `, ${toAdd}`)
+        new InsertChange(fileName, template.start, `, ${toAdd}`),
       ];
 
       expect(change).toEqual(expectedChange);
@@ -78,7 +78,7 @@ describe('ast-utils', () => {
       source = createStockModule(template.text);
       change = addProviderToModule(source, fileName, toAdd);
       expectedChange = [
-        new InsertChange(fileName, template.start, `, ${toAdd}`)
+        new InsertChange(fileName, template.start, `, ${toAdd}`),
       ];
 
       expect(change).toEqual(expectedChange);
@@ -91,7 +91,7 @@ describe('ast-utils', () => {
       source = createStockModule(template.text);
       change = addProviderToModule(source, fileName, toAdd);
       expectedChange = [
-        new InsertChange(fileName, template.start, `, ${toAdd}`)
+        new InsertChange(fileName, template.start, `, ${toAdd}`),
       ];
 
       expect(change).toEqual(expectedChange);
@@ -103,7 +103,7 @@ describe('ast-utils', () => {
       source = createStockModule(template.text);
       change = addProviderToModule(source, fileName, toAdd);
       expectedChange = [
-        new InsertChange(fileName, template.start, `, ${toAdd}`)
+        new InsertChange(fileName, template.start, `, ${toAdd}`),
       ];
 
       expect(change).toEqual(expectedChange);

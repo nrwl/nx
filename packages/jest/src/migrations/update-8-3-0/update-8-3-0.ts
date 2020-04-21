@@ -3,7 +3,7 @@ import { insert, formatFiles } from '@nrwl/workspace';
 import * as ts from 'typescript';
 import {
   getSourceNodes,
-  RemoveChange
+  RemoveChange,
 } from '@nrwl/workspace/src/utils/ast-utils';
 
 function updateJestConfig(host: Tree) {
@@ -40,6 +40,6 @@ function updateJestConfig(host: Tree) {
   }
 }
 
-export default function(): Rule {
+export default function (): Rule {
   return chain([updateJestConfig, formatFiles()]);
 }

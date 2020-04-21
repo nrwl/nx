@@ -4,7 +4,7 @@ import { fileExists } from './fileutils';
 export function detectPackageManager(): string {
   try {
     const output = execSync(`nx config cli.packageManager`, {
-      stdio: ['ignore', 'pipe', 'ignore']
+      stdio: ['ignore', 'pipe', 'ignore'],
     })
       .toString()
       .trim()

@@ -33,12 +33,12 @@ describe('app', () => {
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-app': {
-          tags: ['one', 'two']
+          tags: ['one', 'two'],
         },
         'my-app-e2e': {
           tags: [],
-          implicitDependencies: ['my-app']
-        }
+          implicitDependencies: ['my-app'],
+        },
       });
     });
 
@@ -102,12 +102,12 @@ describe('app', () => {
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-dir-my-app': {
-          tags: ['one', 'two']
+          tags: ['one', 'two'],
         },
         'my-dir-my-app-e2e': {
           tags: [],
-          implicitDependencies: ['my-dir-my-app']
-        }
+          implicitDependencies: ['my-dir-my-app'],
+        },
       });
     });
 
@@ -129,8 +129,8 @@ describe('app', () => {
         'apps/my-dir/my-app/src/main.tsx',
         'apps/my-dir/my-app/src/app/app.tsx',
         'apps/my-dir/my-app/src/app/app.spec.tsx',
-        'apps/my-dir/my-app/src/app/app.css'
-      ].forEach(path => {
+        'apps/my-dir/my-app/src/app/app.css',
+      ].forEach((path) => {
         expect(tree.exists(path)).toBeTruthy();
       });
 
@@ -138,29 +138,29 @@ describe('app', () => {
       [
         {
           path: 'apps/my-dir/my-app/tsconfig.json',
-          lookupFn: json => json.extends,
-          expectedValue: '../../../tsconfig.json'
+          lookupFn: (json) => json.extends,
+          expectedValue: '../../../tsconfig.json',
         },
         {
           path: 'apps/my-dir/my-app/tsconfig.app.json',
-          lookupFn: json => json.compilerOptions.outDir,
-          expectedValue: '../../../dist/out-tsc'
+          lookupFn: (json) => json.compilerOptions.outDir,
+          expectedValue: '../../../dist/out-tsc',
         },
         {
           path: 'apps/my-dir/my-app-e2e/tsconfig.json',
-          lookupFn: json => json.extends,
-          expectedValue: '../../../tsconfig.json'
+          lookupFn: (json) => json.extends,
+          expectedValue: '../../../tsconfig.json',
         },
         {
           path: 'apps/my-dir/my-app-e2e/tsconfig.e2e.json',
-          lookupFn: json => json.compilerOptions.outDir,
-          expectedValue: '../../../dist/out-tsc'
+          lookupFn: (json) => json.compilerOptions.outDir,
+          expectedValue: '../../../dist/out-tsc',
         },
         {
           path: 'apps/my-dir/my-app/tslint.json',
-          lookupFn: json => json.extends,
-          expectedValue: '../../../tslint.json'
-        }
+          lookupFn: (json) => json.extends,
+          expectedValue: '../../../tslint.json',
+        },
       ].forEach(hasJsonValue);
     });
   });
@@ -192,7 +192,7 @@ describe('app', () => {
     const tree = await runSchematic(
       'app',
       {
-        name: 'my-app'
+        name: 'my-app',
       },
       appTree
     );
@@ -206,7 +206,7 @@ describe('app', () => {
     const tree = await runSchematic(
       'app',
       {
-        name: 'my-app'
+        name: 'my-app',
       },
       appTree
     );
@@ -220,7 +220,7 @@ describe('app', () => {
     const tree = await runSchematic(
       'app',
       {
-        name: 'my-app'
+        name: 'my-app',
       },
       appTree
     );
@@ -236,7 +236,7 @@ describe('app', () => {
       scripts: [],
       styles: ['apps/my-app/src/styles.css'],
       tsConfig: 'apps/my-app/tsconfig.app.json',
-      webpackConfig: '@nrwl/react/plugins/webpack'
+      webpackConfig: '@nrwl/react/plugins/webpack',
     });
     expect(architectConfig.build.configurations.production).toEqual({
       optimization: true,
@@ -244,21 +244,21 @@ describe('app', () => {
         {
           maximumError: '5mb',
           maximumWarning: '2mb',
-          type: 'initial'
-        }
+          type: 'initial',
+        },
       ],
       extractCss: true,
       extractLicenses: true,
       fileReplacements: [
         {
           replace: 'apps/my-app/src/environments/environment.ts',
-          with: 'apps/my-app/src/environments/environment.prod.ts'
-        }
+          with: 'apps/my-app/src/environments/environment.prod.ts',
+        },
       ],
       namedChunks: false,
       outputHashing: 'all',
       sourceMap: false,
-      vendorChunk: false
+      vendorChunk: false,
     });
   });
 
@@ -266,7 +266,7 @@ describe('app', () => {
     const tree = await runSchematic(
       'app',
       {
-        name: 'my-app'
+        name: 'my-app',
       },
       appTree
     );
@@ -274,10 +274,10 @@ describe('app', () => {
     const architectConfig = workspaceJson.projects['my-app'].architect;
     expect(architectConfig.serve.builder).toEqual('@nrwl/web:dev-server');
     expect(architectConfig.serve.options).toEqual({
-      buildTarget: 'my-app:build'
+      buildTarget: 'my-app:build',
     });
     expect(architectConfig.serve.configurations.production).toEqual({
-      buildTarget: 'my-app:build:production'
+      buildTarget: 'my-app:build:production',
     });
   });
 
@@ -285,7 +285,7 @@ describe('app', () => {
     const tree = await runSchematic(
       'app',
       {
-        name: 'my-app'
+        name: 'my-app',
       },
       appTree
     );
@@ -296,9 +296,9 @@ describe('app', () => {
         exclude: ['**/node_modules/**', '!apps/my-app/**'],
         tsConfig: [
           'apps/my-app/tsconfig.app.json',
-          'apps/my-app/tsconfig.spec.json'
-        ]
-      }
+          'apps/my-app/tsconfig.spec.json',
+        ],
+      },
     });
   });
 
@@ -372,8 +372,8 @@ describe('app', () => {
     expect(packageJson).toMatchObject({
       devDependencies: {
         'eslint-plugin-react': expect.anything(),
-        'eslint-plugin-react-hooks': expect.anything()
-      }
+        'eslint-plugin-react-hooks': expect.anything(),
+      },
     });
   });
 
@@ -422,7 +422,7 @@ describe('app', () => {
         'app',
         {
           name: 'myApp',
-          style: 'none'
+          style: 'none',
         },
         appTree
       );
@@ -430,14 +430,14 @@ describe('app', () => {
       const workspaceJson = readJsonInTree(tree, '/workspace.json');
       expect(workspaceJson.schematics['@nrwl/react']).toMatchObject({
         application: {
-          style: 'none'
+          style: 'none',
         },
         component: {
-          style: 'none'
+          style: 'none',
         },
         library: {
-          style: 'none'
-        }
+          style: 'none',
+        },
       });
     });
 
@@ -589,7 +589,7 @@ describe('app', () => {
           name: 'myApp',
           babel: true,
           style: 'styled-components',
-          skipWorkspaceJson: false
+          skipWorkspaceJson: false,
         },
         appTree
       );
@@ -598,14 +598,14 @@ describe('app', () => {
       expect(workspaceJson.schematics['@nrwl/react']).toMatchObject({
         application: {
           babel: true,
-          style: 'styled-components'
+          style: 'styled-components',
         },
         component: {
-          style: 'styled-components'
+          style: 'styled-components',
         },
         library: {
-          style: 'styled-components'
-        }
+          style: 'styled-components',
+        },
       });
     });
   });

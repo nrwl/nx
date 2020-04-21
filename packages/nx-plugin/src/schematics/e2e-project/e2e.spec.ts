@@ -4,7 +4,7 @@ import {
   updateWorkspace,
   readJsonInTree,
   readWorkspace,
-  getWorkspace
+  getWorkspace,
 } from '@nrwl/workspace';
 import { runSchematic } from '../../utils/testing';
 
@@ -13,7 +13,7 @@ describe('NxPlugin e2e-project', () => {
   beforeEach(() => {
     appTree = createEmptyWorkspace(Tree.empty());
     // add a plugin project to the workspace for validations
-    updateWorkspace(workspace => {
+    updateWorkspace((workspace) => {
       workspace.projects.add({ name: 'my-plugin', root: 'libs/my-plugin' });
     })(appTree, null);
   });
@@ -25,7 +25,7 @@ describe('NxPlugin e2e-project', () => {
         {
           pluginName: 'my-plugin',
           pluginOutputPath: `dist/libs/my-plugin`,
-          npmPackageName: '@proj/my-plugin'
+          npmPackageName: '@proj/my-plugin',
         },
         appTree
       )
@@ -37,7 +37,7 @@ describe('NxPlugin e2e-project', () => {
         {
           pluginName: 'my-nonexistentplugin',
           pluginOutputPath: `dist/libs/my-nonexistentplugin`,
-          npmPackageName: '@proj/my-nonexistentplugin'
+          npmPackageName: '@proj/my-nonexistentplugin',
         },
         appTree
       )
@@ -50,7 +50,7 @@ describe('NxPlugin e2e-project', () => {
       {
         pluginName: 'my-plugin',
         pluginOutputPath: `dist/libs/my-plugin`,
-        npmPackageName: '@proj/my-plugin'
+        npmPackageName: '@proj/my-plugin',
       },
       appTree
     );
@@ -66,7 +66,7 @@ describe('NxPlugin e2e-project', () => {
       {
         pluginName: 'my-plugin',
         pluginOutputPath: `dist/libs/my-plugin`,
-        npmPackageName: '@proj/my-plugin'
+        npmPackageName: '@proj/my-plugin',
       },
       appTree
     );
@@ -74,9 +74,9 @@ describe('NxPlugin e2e-project', () => {
       projects: {
         'my-plugin-e2e': {
           tags: [],
-          implicitDependencies: ['my-plugin']
-        }
-      }
+          implicitDependencies: ['my-plugin'],
+        },
+      },
     });
   });
 
@@ -86,7 +86,7 @@ describe('NxPlugin e2e-project', () => {
       {
         pluginName: 'my-plugin',
         pluginOutputPath: `dist/libs/my-plugin`,
-        npmPackageName: '@proj/my-plugin'
+        npmPackageName: '@proj/my-plugin',
       },
       appTree
     );
@@ -100,8 +100,8 @@ describe('NxPlugin e2e-project', () => {
       options: expect.objectContaining({
         target: 'my-plugin:build',
         npmPackageName: '@proj/my-plugin',
-        pluginOutputPath: 'dist/libs/my-plugin'
-      })
+        pluginOutputPath: 'dist/libs/my-plugin',
+      }),
     });
   });
 
@@ -111,7 +111,7 @@ describe('NxPlugin e2e-project', () => {
       {
         pluginName: 'my-plugin',
         pluginOutputPath: `dist/libs/my-plugin`,
-        npmPackageName: '@proj/my-plugin'
+        npmPackageName: '@proj/my-plugin',
       },
       appTree
     );
@@ -120,8 +120,8 @@ describe('NxPlugin e2e-project', () => {
     expect(project.targets.get('e2e')).toMatchObject({
       options: expect.objectContaining({
         tsSpecConfig: 'apps/my-plugin-e2e/tsconfig.spec.json',
-        jestConfig: 'apps/my-plugin-e2e/jest.config.js'
-      })
+        jestConfig: 'apps/my-plugin-e2e/jest.config.js',
+      }),
     });
 
     expect(tree.exists('apps/my-plugin-e2e/tsconfig.spec.json')).toBeTruthy();

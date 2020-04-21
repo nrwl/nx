@@ -2,13 +2,13 @@ window.focusedProject = null;
 window.filteredProjects = window.projects;
 
 function getProjectsByType(type) {
-  return window.projects.filter(project => project.type === type);
+  return window.projects.filter((project) => project.type === type);
 }
 
 function groupProjectsByDirectory(projects) {
   let groups = {};
 
-  projects.forEach(project => {
+  projects.forEach((project) => {
     const split = project.data.root.split('/');
     const directory = split.slice(1, -2).join('/');
 
@@ -29,11 +29,11 @@ function createProjectList(headerText, projects) {
   formGroup.className = 'form-group';
 
   let sortedProjects = [...projects];
-  sortedProjects.sort(function(a, b) {
+  sortedProjects.sort(function (a, b) {
     return a.name.localeCompare(b.name);
   });
 
-  projects.forEach(project => {
+  projects.forEach((project) => {
     let formLine = document.createElement('div');
     formLine.className = 'form-line';
 
@@ -99,7 +99,7 @@ function addProjectCheckboxes() {
 
   const sortedDirectories = Object.keys(libDirectoryGroups).sort();
 
-  sortedDirectories.forEach(directoryName => {
+  sortedDirectories.forEach((directoryName) => {
     createProjectList(directoryName, libDirectoryGroups[directoryName]);
   });
 }
@@ -107,19 +107,19 @@ function addProjectCheckboxes() {
 function autoExclude() {
   const dependencyCounts = {};
 
-  window.projects.forEach(p => {
+  window.projects.forEach((p) => {
     dependencyCounts[p.name] = 0;
   });
 
-  Object.keys(graph.dependencies).forEach(p => {
-    graph.dependencies[p].forEach(d => {
+  Object.keys(graph.dependencies).forEach((p) => {
+    graph.dependencies[p].forEach((d) => {
       dependencyCounts[d.target]++;
     });
   });
 
   Object.keys(dependencyCounts)
-    .filter(d => dependencyCounts[d] > 5 || dependencyCounts[d] === 0)
-    .forEach(d => {
+    .filter((d) => dependencyCounts[d] > 5 || dependencyCounts[d] === 0)
+    .forEach((d) => {
       document.querySelector(
         `input[name=projectName][value=${d}]`
       ).checked = false;
@@ -159,7 +159,7 @@ window.selectAffectedProjects = () => {
   document.getElementById('focused-project').hidden = true;
   document.getElementById('focused-project-name').innerText = '';
 
-  getProjectCheckboxes().forEach(checkbox => {
+  getProjectCheckboxes().forEach((checkbox) => {
     checkbox.checked = window.affected.includes(checkbox.value);
   });
 
@@ -171,7 +171,7 @@ window.selectAllProjects = () => {
   document.getElementById('focused-project').hidden = true;
   document.getElementById('focused-project-name').innerText = '';
 
-  getProjectCheckboxes().forEach(checkbox => {
+  getProjectCheckboxes().forEach((checkbox) => {
     checkbox.checked = true;
   });
 
@@ -185,7 +185,7 @@ function createDirectoryParents(g, directories) {
   if (!g.hasNode(childDirectoryId)) {
     g.setNode(childDirectoryId, {
       label: childDirectory,
-      clusterLabelPos: 'top'
+      clusterLabelPos: 'top',
     });
   }
 
@@ -195,7 +195,7 @@ function createDirectoryParents(g, directories) {
     if (!g.hasNode(parentDirectoryId)) {
       g.setNode(parentDirectoryId, {
         label: parentDirectory,
-        clusterLabelPos: 'top'
+        clusterLabelPos: 'top',
       });
     }
     g.setParent(childDirectoryId, parentDirectoryId);
@@ -207,7 +207,7 @@ function createDirectoryParents(g, directories) {
 function generateLayout() {
   const g = new window.dagreD3.graphlib.Graph({
     compound: true,
-    orderRestarts: 10
+    orderRestarts: 10,
   });
 
   const groupByFolder = document.querySelector(
@@ -216,14 +216,14 @@ function generateLayout() {
 
   g.setGraph({
     ranksep: 150,
-    edgesep: 100
+    edgesep: 100,
   });
 
-  g.setDefaultEdgeLabel(function() {
+  g.setDefaultEdgeLabel(function () {
     return {};
   });
 
-  window.filteredProjects.forEach(p => {
+  window.filteredProjects.forEach((p) => {
     const shape =
       p.name === window.focusedProject
         ? p.type === 'app' || p.type === 'e2e'
@@ -257,9 +257,9 @@ function generateLayout() {
     }
   });
 
-  Object.keys(graph.dependencies).forEach(p => {
-    const filteredProjectNames = window.filteredProjects.map(f => f.name);
-    graph.dependencies[p].forEach(d => {
+  Object.keys(graph.dependencies).forEach((p) => {
+    const filteredProjectNames = window.filteredProjects.map((f) => f.name);
+    graph.dependencies[p].forEach((d) => {
       if (
         filteredProjectNames.indexOf(p) > -1 &&
         filteredProjectNames.indexOf(d.target) > -1
@@ -278,7 +278,7 @@ function generateLayout() {
         g.setEdge(p, d.target, {
           label: label,
           class: clazz,
-          curve: window.d3.curveBasis
+          curve: window.d3.curveBasis,
         });
       }
     });
@@ -302,7 +302,7 @@ function createRenderer() {
       .attr('height', bbox.height)
       .attr('filter', `url(#${filter})`);
 
-    node.intersect = function(point) {
+    node.intersect = function (point) {
       return window.dagreD3.intersect.rect(node, point);
     };
 
@@ -324,7 +324,7 @@ function createRenderer() {
       .attr('ry', ry)
       .attr('filter', `url(#${filter})`);
 
-    node.intersect = function(point) {
+    node.intersect = function (point) {
       return window.dagreD3.intersect.ellipse(node, rx, ry, point);
     };
 
@@ -346,7 +346,7 @@ function render() {
   let inner = svg.append('g');
 
   // Set up zoom support
-  var zoom = d3.zoom().on('zoom', function() {
+  var zoom = d3.zoom().on('zoom', function () {
     inner.attr('transform', d3.event.transform);
   });
   svg.call(zoom);
@@ -375,7 +375,7 @@ function render() {
 }
 
 function addTooltips(inner) {
-  const createTipTemplate = project => {
+  const createTipTemplate = (project) => {
     return `
       <h4><span class="tag">${project.type}</span>${project.name}</h4>
       <p><strong>tags</strong><br> ${project.data.tags.join(', ')}</p>
@@ -388,26 +388,26 @@ function addTooltips(inner) {
   `;
   };
 
-  inner.selectAll('g.node').each(function(id) {
-    const project = window.projects.find(p => p.name === id);
+  inner.selectAll('g.node').each(function (id) {
+    const project = window.projects.find((p) => p.name === id);
     tippy(this, {
       content: createTipTemplate(project),
       interactive: true,
       appendTo: document.body,
       interactiveBorder: 10,
-      trigger: 'click'
+      trigger: 'click',
     });
   });
 }
 
-window.focusProject = id => {
+window.focusProject = (id) => {
   window.focusedProject = id;
 
   document.getElementById('focused-project').hidden = false;
   document.getElementById('focused-project-name').innerText = id;
 
   Array.from(document.querySelectorAll('input[name=projectName]')).forEach(
-    checkbox => {
+    (checkbox) => {
       const showProject =
         hasPath(id, checkbox.value, []) || hasPath(checkbox.value, id, []);
       checkbox.checked = showProject;
@@ -424,7 +424,7 @@ window.unfocusProject = () => {
   document.getElementById('focused-project-name').innerText = '';
 
   Array.from(document.querySelectorAll('input[name=projectName]')).forEach(
-    checkbox => {
+    (checkbox) => {
       checkbox.checked = true;
       checkbox.parentElement.hidden = false;
     }
@@ -433,7 +433,7 @@ window.unfocusProject = () => {
   window.filterProjects();
 };
 
-window.excludeProject = id => {
+window.excludeProject = (id) => {
   document.querySelector(
     `input[name=projectName][value=${id}]`
   ).checked = false;
@@ -447,19 +447,19 @@ window.filterProjects = () => {
   );
 
   const selectedProjects = checkboxes
-    .filter(checkbox => checkbox.checked)
-    .map(checkbox => checkbox.value);
+    .filter((checkbox) => checkbox.checked)
+    .map((checkbox) => checkbox.value);
 
   const unselectedProjects = checkboxes
-    .filter(checkbox => !checkbox.checked)
-    .map(checkbox => checkbox.value);
+    .filter((checkbox) => !checkbox.checked)
+    .map((checkbox) => checkbox.value);
 
   if (selectedProjects.length === window.projects.length) {
     window.filteredProjects = window.projects;
   } else {
-    window.filteredProjects = window.projects.filter(p => {
+    window.filteredProjects = window.projects.filter((p) => {
       const filtered = selectedProjects.find(
-        f => hasPath(f, p.name, []) || hasPath(p.name, f, [])
+        (f) => hasPath(f, p.name, []) || hasPath(p.name, f, [])
       );
 
       return unselectedProjects.indexOf(p.name) === -1 && filtered;

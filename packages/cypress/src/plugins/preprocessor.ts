@@ -29,9 +29,9 @@ export function getWebpackConfig(config: any) {
       plugins: [
         new TsconfigPathsPlugin({
           configFile: config.env.tsConfig,
-          extensions
-        })
-      ]
+          extensions,
+        }),
+      ],
     },
     module: {
       rules: [
@@ -43,17 +43,17 @@ export function getWebpackConfig(config: any) {
             configFile: config.env.tsConfig,
             // https://github.com/TypeStrong/ts-loader/pull/685
             experimentalWatchApi: true,
-            transpileOnly: true
-          }
-        }
-      ]
+            transpileOnly: true,
+          },
+        },
+      ],
     },
     plugins: [
       new ForkTsCheckerWebpackPlugin({
         tsconfig: config.env.tsConfig,
-        useTypescriptIncrementalApi: false
-      })
+        useTypescriptIncrementalApi: false,
+      }),
     ],
-    externals: [nodeExternals()]
+    externals: [nodeExternals()],
   };
 }

@@ -3,7 +3,7 @@ import {
   Change,
   findNodes,
   InsertChange,
-  ReplaceChange
+  ReplaceChange,
 } from '@nrwl/workspace/src/utils/ast-utils';
 import * as ts from 'typescript';
 import { SchematicContext } from '@angular-devkit/schematics';
@@ -34,7 +34,7 @@ export function findMainRenderStatement(
     ts.SyntaxKind.ImportDeclaration
   ) as ts.ImportDeclaration[];
   const hasRenderImport = imports.some(
-    i =>
+    (i) =>
       i.moduleSpecifier.getText().includes('react-dom') &&
       /\brender\b/.test(i.importClause.namedBindings.getText())
   );
@@ -72,8 +72,8 @@ export function findDefaultExportDeclaration(
     >;
 
     const exported = all
-      .filter(x => x.name.kind === ts.SyntaxKind.Identifier)
-      .find(x => (x.name as ts.Identifier).text === identifier.text);
+      .filter((x) => x.name.kind === ts.SyntaxKind.Identifier)
+      .find((x) => (x.name as ts.Identifier).text === identifier.text);
 
     return exported || null;
   } else {
@@ -90,8 +90,8 @@ export function findDefaultExportIdentifier(
   ) as ts.ExportAssignment[];
 
   const identifier = exports
-    .map(x => x.expression)
-    .find(x => x.kind === ts.SyntaxKind.Identifier) as ts.Identifier;
+    .map((x) => x.expression)
+    .find((x) => x.kind === ts.SyntaxKind.Identifier) as ts.Identifier;
 
   return identifier || null;
 }
@@ -119,8 +119,8 @@ function hasDefaultExportModifier(
   x: ts.ClassDeclaration | ts.FunctionDeclaration
 ) {
   return (
-    x.modifiers.some(m => m.kind === ts.SyntaxKind.ExportKeyword) &&
-    x.modifiers.some(m => m.kind === ts.SyntaxKind.DefaultKeyword)
+    x.modifiers.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) &&
+    x.modifiers.some((m) => m.kind === ts.SyntaxKind.DefaultKeyword)
   );
 }
 
@@ -151,9 +151,9 @@ export function findComponentImportPath(
 export function findElements(source: ts.SourceFile, tagName: string) {
   const nodes = findNodes(source, [
     ts.SyntaxKind.JsxSelfClosingElement,
-    ts.SyntaxKind.JsxOpeningElement
+    ts.SyntaxKind.JsxOpeningElement,
   ]);
-  return nodes.filter(node => isTag(tagName, node));
+  return nodes.filter((node) => isTag(tagName, node));
 }
 
 export function findClosestOpening(tagName: string, node: ts.Node) {
@@ -193,7 +193,7 @@ export function addInitialRoutes(
 ): Change[] {
   const jsxClosingElements = findNodes(source, [
     ts.SyntaxKind.JsxClosingElement,
-    ts.SyntaxKind.JsxClosingFragment
+    ts.SyntaxKind.JsxClosingFragment,
   ]);
   const outerMostJsxClosing = jsxClosingElements[jsxClosingElements.length - 1];
 
@@ -244,7 +244,7 @@ export function addInitialRoutes(
       sourcePath,
       `import { Route, Link } from 'react-router-dom';`
     ),
-    insertRoutes
+    insertRoutes,
   ];
 }
 
@@ -326,7 +326,7 @@ export function addBrowserRouter(
         `import { BrowserRouter } from 'react-router-dom';`
       ),
       new InsertChange(sourcePath, app.getStart(), `<BrowserRouter>`),
-      new InsertChange(sourcePath, app.getEnd(), `</BrowserRouter>`)
+      new InsertChange(sourcePath, app.getEnd(), `</BrowserRouter>`),
     ];
   } else {
     context.logger.warn(
@@ -365,7 +365,7 @@ const store = configureStore({
 `
     ),
     new InsertChange(sourcePath, jsx.getStart(), `<Provider store={store}>`),
-    new InsertChange(sourcePath, jsx.getEnd(), `</Provider>`)
+    new InsertChange(sourcePath, jsx.getEnd(), `</Provider>`),
   ];
 }
 
@@ -442,6 +442,6 @@ export function updateReduxStore(
       `[${feature.keyName}]: ${feature.reducerName}${
         reducerDescriptor.properties.length > 0 ? ',' : ''
       }`
-    )
+    ),
   ];
 }

@@ -8,25 +8,25 @@ import {
   SchematicsException,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import { findNodes, getProjectConfig } from '@nrwl/workspace';
 import {
   PropertyAssignment,
   PropertyDeclaration,
-  SyntaxKind
+  SyntaxKind,
 } from 'typescript';
 import {
   getTsSourceFile,
   getDecoratorMetadata,
-  applyWithSkipExisting
+  applyWithSkipExisting,
 } from '../../utils/ast-utils';
 import {
   getInputPropertyDeclarations,
-  getKnobType
+  getKnobType,
 } from '../component-story/component-story';
 
-export default function(schema: CreateComponentSpecFileSchema): Rule {
+export default function (schema: CreateComponentSpecFileSchema): Rule {
   return chain([createComponentSpecFile(schema)]);
 }
 
@@ -43,7 +43,7 @@ export function createComponentSpecFile({
   libPath,
   componentName,
   componentPath,
-  componentFileName
+  componentFileName,
 }: CreateComponentSpecFileSchema): Rule {
   return (tree: Tree, context: SchematicContext): Rule => {
     const e2eLibIntegrationFolderPath =
@@ -51,7 +51,7 @@ export function createComponentSpecFile({
     const fullComponentPath =
       libPath + '/' + componentPath + '/' + componentFileName + '.ts';
     const props = getInputPropertyDeclarations(tree, fullComponentPath).map(
-      node => {
+      (node) => {
         const decoratorContent = findNodes(
           findNodes(node, SyntaxKind.Decorator)[0],
           SyntaxKind.StringLiteral
@@ -66,7 +66,7 @@ export function createComponentSpecFile({
         return {
           name,
           type,
-          defaultValue
+          defaultValue,
         };
       }
     );
@@ -78,9 +78,9 @@ export function createComponentSpecFile({
         componentName: componentName,
         componentSelector,
         props,
-        tmpl: ''
+        tmpl: '',
       }),
-      move(e2eLibIntegrationFolderPath + '/' + componentPath)
+      move(e2eLibIntegrationFolderPath + '/' + componentPath),
     ]);
   };
 }

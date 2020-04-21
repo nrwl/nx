@@ -8,7 +8,7 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import { join, normalize, Path } from '@angular-devkit/core';
 import { Schema } from './schema';
@@ -54,30 +54,33 @@ function addAppFiles(options: NormalizedSchema): Rule {
       template({
         tmpl: '',
         name: options.name,
-        root: options.appProjectRoot
+        root: options.appProjectRoot,
       }),
-      move(join(options.appProjectRoot, 'src'))
+      move(join(options.appProjectRoot, 'src')),
     ])
   );
 }
 
-export default function(schema: Schema): Rule {
+export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(schema);
     return chain([
       init({
         ...options,
-        skipFormat: true
+        skipFormat: true,
       }),
       externalSchematic('@nrwl/node', 'application', schema),
       addMainFile(options),
       addAppFiles(options),
-      updateJsonInTree(join(options.appProjectRoot, 'tsconfig.json'), json => {
-        json.compilerOptions.emitDecoratorMetadata = true;
-        json.compilerOptions.target = 'es2015';
-        return json;
-      }),
-      formatFiles(options)
+      updateJsonInTree(
+        join(options.appProjectRoot, 'tsconfig.json'),
+        (json) => {
+          json.compilerOptions.emitDecoratorMetadata = true;
+          json.compilerOptions.target = 'es2015';
+          return json;
+        }
+      ),
+      formatFiles(options),
     ])(host, context);
   };
 }
@@ -90,6 +93,6 @@ function normalizeOptions(options: Schema): NormalizedSchema {
 
   return {
     ...options,
-    appProjectRoot
+    appProjectRoot,
   };
 }

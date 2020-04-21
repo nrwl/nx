@@ -19,7 +19,7 @@ describe('NxPlugin migration', () => {
       'migration',
       {
         project: projectName,
-        version: '1.0.0'
+        version: '1.0.0',
       },
       appTree
     );
@@ -29,7 +29,7 @@ describe('NxPlugin migration', () => {
     expect(project.architect.build.options.assets).toContainEqual({
       input: './libs/my-plugin',
       glob: 'migrations.json',
-      output: '.'
+      output: '.',
     });
   });
 
@@ -40,7 +40,7 @@ describe('NxPlugin migration', () => {
         project: projectName,
         name: 'my-migration',
         description: 'my-migration description',
-        version: '1.0.0'
+        version: '1.0.0',
       },
       appTree
     );
@@ -78,7 +78,7 @@ describe('NxPlugin migration', () => {
       {
         project: projectName,
         description: 'my-migration description',
-        version: '1.0.0'
+        version: '1.0.0',
       },
       appTree
     );
@@ -103,7 +103,7 @@ describe('NxPlugin migration', () => {
       {
         project: projectName,
         name: 'my-migration',
-        version: '1.0.0'
+        version: '1.0.0',
       },
       appTree
     );
@@ -125,7 +125,7 @@ describe('NxPlugin migration', () => {
         project: projectName,
         name: 'my-migration',
         version: '1.0.0',
-        packageJsonUpdates: true
+        packageJsonUpdates: true,
       },
       appTree
     );
@@ -138,8 +138,8 @@ describe('NxPlugin migration', () => {
     expect(migrationsJson.packageJsonUpdates).toEqual({
       ['1.0.0']: {
         version: '1.0.0',
-        packages: {}
-      }
+        packages: {},
+      },
     });
   });
 });

@@ -5,7 +5,7 @@ const VALID_STYLES = [
   'styl',
   'styled-components',
   '@emotion/styled',
-  'none'
+  'none',
 ];
 export function assertValidStyle(style: string): void {
   if (VALID_STYLES.indexOf(style) === -1) {

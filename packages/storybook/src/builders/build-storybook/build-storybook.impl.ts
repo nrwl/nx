@@ -1,7 +1,7 @@
 import {
   BuilderContext,
   createBuilder,
-  BuilderOutput
+  BuilderOutput,
 } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
 import { Observable, from } from 'rxjs';
@@ -50,15 +50,15 @@ export function run(
 
   const frameworkPath = `${options.uiFramework}/dist/server/options`;
   return from(import(frameworkPath)).pipe(
-    map(m => m.default),
-    switchMap(frameworkOptions =>
+    map((m) => m.default),
+    switchMap((frameworkOptions) =>
       from(storybookOptionMapper(options, frameworkOptions, context))
     ),
-    switchMap(option => {
+    switchMap((option) => {
       context.logger.info(`Storybook builder starting ...`);
       return runInstance(option);
     }),
-    map(loaded => {
+    map((loaded) => {
       context.logger.info(`Storybook builder finished ...`);
       context.logger.info(`Storybook files availble in ${options.outputPath}`);
       const builder: BuilderOutput = { success: true } as BuilderOutput;
@@ -88,7 +88,7 @@ async function storybookOptionMapper(
     ...frameworkOptions,
     frameworkPresets: [...(frameworkOptions.frameworkPresets || [])],
     watch: false,
-    docsMode: builderOptions.docsMode
+    docsMode: builderOptions.docsMode,
   };
   optionsWithFramework.config;
   return optionsWithFramework;

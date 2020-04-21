@@ -24,9 +24,9 @@ describe('lib', () => {
           exclude: ['**/node_modules/**', '!libs/my-lib/**'],
           tsConfig: [
             'libs/my-lib/tsconfig.lib.json',
-            'libs/my-lib/tsconfig.spec.json'
-          ]
-        }
+            'libs/my-lib/tsconfig.spec.json',
+          ],
+        },
       });
     });
 
@@ -39,8 +39,8 @@ describe('lib', () => {
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-lib': {
-          tags: ['one', 'two']
-        }
+          tags: ['one', 'two'],
+        },
       });
     });
 
@@ -48,7 +48,7 @@ describe('lib', () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
       const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'libs/my-lib/src/index.ts'
+        'libs/my-lib/src/index.ts',
       ]);
     });
 
@@ -62,13 +62,13 @@ describe('lib', () => {
           jsx: 'react',
           allowSyntheticDefaultImports: true,
           esModuleInterop: true,
-          types: ['node', 'jest']
+          types: ['node', 'jest'],
         },
         files: [
           '../../node_modules/@nrwl/react/typings/cssmodule.d.ts',
-          '../../node_modules/@nrwl/react/typings/image.d.ts'
+          '../../node_modules/@nrwl/react/typings/image.d.ts',
         ],
-        include: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx']
+        include: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
       });
     });
 
@@ -107,15 +107,15 @@ describe('lib', () => {
         {
           name: 'myLib',
           directory: 'myDir',
-          tags: 'one'
+          tags: 'one',
         },
         appTree
       );
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-dir-my-lib': {
-          tags: ['one']
-        }
+          tags: ['one'],
+        },
       });
 
       const tree2 = await runSchematic(
@@ -123,18 +123,18 @@ describe('lib', () => {
         {
           name: 'myLib2',
           directory: 'myDir',
-          tags: 'one,two'
+          tags: 'one,two',
         },
         tree
       );
       const nxJson2 = readJsonInTree<NxJson>(tree2, '/nx.json');
       expect(nxJson2.projects).toEqual({
         'my-dir-my-lib': {
-          tags: ['one']
+          tags: ['one'],
         },
         'my-dir-my-lib2': {
-          tags: ['one', 'two']
-        }
+          tags: ['one', 'two'],
+        },
       });
     });
 
@@ -174,9 +174,9 @@ describe('lib', () => {
           exclude: ['**/node_modules/**', '!libs/my-dir/my-lib/**'],
           tsConfig: [
             'libs/my-dir/my-lib/tsconfig.lib.json',
-            'libs/my-dir/my-lib/tsconfig.spec.json'
-          ]
-        }
+            'libs/my-dir/my-lib/tsconfig.spec.json',
+          ],
+        },
       });
     });
 
@@ -187,9 +187,9 @@ describe('lib', () => {
         appTree
       );
       const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
-      expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
-        ['libs/my-dir/my-lib/src/index.ts']
-      );
+      expect(
+        tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']
+      ).toEqual(['libs/my-dir/my-lib/src/index.ts']);
       expect(
         tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
       ).toBeUndefined();
@@ -213,13 +213,13 @@ describe('lib', () => {
           jsx: 'react',
           allowSyntheticDefaultImports: true,
           esModuleInterop: true,
-          types: ['node', 'jest']
+          types: ['node', 'jest'],
         },
         files: [
           '../../../node_modules/@nrwl/react/typings/cssmodule.d.ts',
-          '../../../node_modules/@nrwl/react/typings/image.d.ts'
+          '../../../node_modules/@nrwl/react/typings/image.d.ts',
         ],
-        include: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx']
+        include: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
       });
     });
   });
@@ -304,7 +304,7 @@ describe('lib', () => {
         'lib',
         {
           name: 'myLib',
-          appProject: 'my-app'
+          appProject: 'my-app',
         },
         appTree
       );
@@ -326,7 +326,7 @@ describe('lib', () => {
         'lib',
         {
           name: 'myLib',
-          appProject: 'my-app'
+          appProject: 'my-app',
         },
         appTree
       );
@@ -348,7 +348,7 @@ describe('lib', () => {
         'lib',
         {
           name: 'myLib',
-          publishable: true
+          publishable: true,
         },
         appTree
       );
@@ -364,8 +364,8 @@ describe('lib', () => {
           project: 'libs/my-lib/package.json',
           tsConfig: 'libs/my-lib/tsconfig.lib.json',
           babelConfig: '@nrwl/react/plugins/bundle-babel',
-          rollupConfig: '@nrwl/react/plugins/bundle-rollup'
-        }
+          rollupConfig: '@nrwl/react/plugins/bundle-rollup',
+        },
       });
     });
 
@@ -375,7 +375,7 @@ describe('lib', () => {
         {
           name: 'myLib',
           publishable: true,
-          style: 'styled-components'
+          style: 'styled-components',
         },
         appTree
       );
@@ -384,8 +384,8 @@ describe('lib', () => {
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
-          external: ['react', 'react-dom', 'styled-components']
-        }
+          external: ['react', 'react-dom', 'styled-components'],
+        },
       });
     });
 
@@ -395,7 +395,7 @@ describe('lib', () => {
         {
           name: 'myLib',
           publishable: true,
-          style: '@emotion/styled'
+          style: '@emotion/styled',
         },
         appTree
       );
@@ -404,8 +404,8 @@ describe('lib', () => {
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
-          external: ['react', 'react-dom', '@emotion/styled', '@emotion/core']
-        }
+          external: ['react', 'react-dom', '@emotion/styled', '@emotion/core'],
+        },
       });
     });
 
@@ -415,7 +415,7 @@ describe('lib', () => {
         {
           name: 'myLib',
           publishable: true,
-          style: 'none'
+          style: 'none',
         },
         appTree
       );
@@ -424,8 +424,8 @@ describe('lib', () => {
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
-          external: ['react', 'react-dom']
-        }
+          external: ['react', 'react-dom'],
+        },
       });
     });
 
@@ -434,7 +434,7 @@ describe('lib', () => {
         'lib',
         {
           name: 'myLib',
-          publishable: true
+          publishable: true,
         },
         appTree
       );
@@ -451,7 +451,7 @@ describe('lib', () => {
         'lib',
         {
           name: 'myLib',
-          js: true
+          js: true,
         },
         appTree
       );

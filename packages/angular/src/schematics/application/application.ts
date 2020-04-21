@@ -10,7 +10,7 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as ts from 'typescript';
@@ -27,19 +27,19 @@ import {
   updateJsonInTree,
   updateWorkspace,
   addLintFiles,
-  NxJson
+  NxJson,
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import init from '../init/init';
 import {
   addImportToModule,
   addImportToTestBed,
-  getDecoratorPropertyValueNode
+  getDecoratorPropertyValueNode,
 } from '../../utils/ast-utils';
 import {
   insertImport,
   getProjectConfig,
-  updateWorkspaceInTree
+  updateWorkspaceInTree,
 } from '@nrwl/workspace/src/utils/ast-utils';
 
 interface NormalizedSchema extends Schema {
@@ -272,7 +272,7 @@ summary {
   width: 16px;
   margin-right: 4px;
 }
-  `
+  `,
 };
 
 function addRouterRootConfiguration(options: NormalizedSchema): Rule {
@@ -291,7 +291,7 @@ function addRouterRootConfiguration(options: NormalizedSchema): Rule {
         sourceFile,
         modulePath,
         `RouterModule.forRoot([], {initialNavigation: 'enabled'})`
-      )
+      ),
     ]);
 
     return host;
@@ -307,7 +307,7 @@ function updateComponentStyles(options: NormalizedSchema): Rule {
         css: `${options.appProjectRoot}/src/app/app.component.css`,
         scss: `${options.appProjectRoot}/src/app/app.component.scss`,
         less: `${options.appProjectRoot}/src/app/app.component.less`,
-        styl: `${options.appProjectRoot}/src/app/app.component.styl`
+        styl: `${options.appProjectRoot}/src/app/app.component.styl`,
       };
       return host.overwrite(filesMap[options.style], content);
     }
@@ -401,7 +401,7 @@ function updateComponentSpec(options: NormalizedSchema) {
             componentSpecSourceFile,
             componentSpecPath,
             `RouterTestingModule`
-          )
+          ),
         ]);
       }
     }
@@ -412,7 +412,7 @@ function updateComponentSpec(options: NormalizedSchema) {
 
 function updateLinting(options: NormalizedSchema): Rule {
   return chain([
-    updateJsonInTree('tslint.json', json => {
+    updateJsonInTree('tslint.json', (json) => {
       if (
         json.rulesDirectory &&
         json.rulesDirectory.indexOf('node_modules/codelyzer') === -1
@@ -434,18 +434,18 @@ function updateLinting(options: NormalizedSchema): Rule {
           'template-banana-in-box': true,
           'template-no-negated-async': true,
           'use-lifecycle-interface': true,
-          'use-pipe-transform-interface': true
+          'use-pipe-transform-interface': true,
         };
       }
       return json;
     }),
-    updateJsonInTree(`${options.appProjectRoot}/tslint.json`, json => {
+    updateJsonInTree(`${options.appProjectRoot}/tslint.json`, (json) => {
       json.extends = `${offsetFromRoot(options.appProjectRoot)}tslint.json`;
       json.linterOptions = {
-        exclude: ['!**/*']
+        exclude: ['!**/*'],
       };
       return json;
-    })
+    }),
   ]);
 }
 
@@ -454,23 +454,23 @@ function addSchematicFiles(
   options: NormalizedSchema
 ): Rule {
   return chain([
-    host => host.delete(`${appProjectRoot}/src/favicon.ico`),
+    (host) => host.delete(`${appProjectRoot}/src/favicon.ico`),
     mergeWith(
       apply(url('./files'), [
         template({
           ...options,
-          offsetFromRoot: offsetFromRoot(options.appProjectRoot)
+          offsetFromRoot: offsetFromRoot(options.appProjectRoot),
         }),
-        move(options.appProjectRoot)
+        move(options.appProjectRoot),
       ])
-    )
+    ),
   ]);
 }
 
 function updateProject(options: NormalizedSchema): Rule {
   return (host: Tree) => {
     return chain([
-      updateJsonInTree(getWorkspacePath(host), json => {
+      updateJsonInTree(getWorkspacePath(host), (json) => {
         const project = json.projects[options.name];
         let fixedProject = replaceAppNameWithPath(
           project,
@@ -485,11 +485,11 @@ function updateProject(options: NormalizedSchema): Rule {
           'guard',
           'module',
           'pipe',
-          'service'
+          'service',
         ];
 
         if (fixedProject.schematics) {
-          angularSchematicNames.forEach(type => {
+          angularSchematicNames.forEach((type) => {
             const schematic = `@schematics/angular:${type}`;
             if (schematic in fixedProject.schematics) {
               fixedProject.schematics[`@nrwl/angular:${type}`] =
@@ -502,7 +502,7 @@ function updateProject(options: NormalizedSchema): Rule {
         delete fixedProject.architect.test;
 
         fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
-          path =>
+          (path) =>
             path !==
               join(normalize(options.appProjectRoot), 'tsconfig.spec.json') &&
             path !==
@@ -518,53 +518,56 @@ function updateProject(options: NormalizedSchema): Rule {
         json.projects[options.name] = fixedProject;
         return json;
       }),
-      updateJsonInTree(`${options.appProjectRoot}/tsconfig.app.json`, json => {
-        return {
-          ...json,
-          extends: `./tsconfig.json`,
-          compilerOptions: {
-            ...json.compilerOptions,
-            outDir: `${offsetFromRoot(options.appProjectRoot)}dist/out-tsc`
-          },
-          exclude: options.enableIvy
-            ? undefined
-            : options.unitTestRunner === 'jest'
-            ? ['src/test-setup.ts', '**/*.spec.ts']
-            : ['src/test.ts', '**/*.spec.ts'],
-          include: options.enableIvy ? undefined : ['src/**/*.d.ts']
-        };
-      }),
-      host => {
+      updateJsonInTree(
+        `${options.appProjectRoot}/tsconfig.app.json`,
+        (json) => {
+          return {
+            ...json,
+            extends: `./tsconfig.json`,
+            compilerOptions: {
+              ...json.compilerOptions,
+              outDir: `${offsetFromRoot(options.appProjectRoot)}dist/out-tsc`,
+            },
+            exclude: options.enableIvy
+              ? undefined
+              : options.unitTestRunner === 'jest'
+              ? ['src/test-setup.ts', '**/*.spec.ts']
+              : ['src/test.ts', '**/*.spec.ts'],
+            include: options.enableIvy ? undefined : ['src/**/*.d.ts'],
+          };
+        }
+      ),
+      (host) => {
         host.delete(`${options.appProjectRoot}/tsconfig.spec.json`);
         return host;
       },
-      updateJsonInTree(`/nx.json`, json => {
+      updateJsonInTree(`/nx.json`, (json) => {
         const resultJson = {
           ...json,
           projects: {
             ...json.projects,
-            [options.name]: { tags: options.parsedTags }
-          }
+            [options.name]: { tags: options.parsedTags },
+          },
         };
         if (options.e2eTestRunner === 'protractor') {
           resultJson.projects[options.e2eProjectName] = { tags: [] };
           resultJson.projects[options.e2eProjectName].implicitDependencies = [
-            options.name
+            options.name,
           ];
         }
         return resultJson;
       }),
-      host => {
+      (host) => {
         host.delete(`${options.appProjectRoot}/karma.conf.js`);
         host.delete(`${options.appProjectRoot}/src/test.ts`);
-      }
+      },
     ]);
   };
 }
 
 function removeE2e(options: NormalizedSchema, e2eProjectRoot: string): Rule {
   return chain([
-    host => {
+    (host) => {
       if (host.read(`${e2eProjectRoot}/src/app.e2e-spec.ts`)) {
         host.delete(`${e2eProjectRoot}/src/app.e2e-spec.ts`);
       }
@@ -578,9 +581,9 @@ function removeE2e(options: NormalizedSchema, e2eProjectRoot: string): Rule {
         host.delete(`${e2eProjectRoot}/tsconfig.json`);
       }
     },
-    updateWorkspace(workspace => {
+    updateWorkspace((workspace) => {
       workspace.projects.get(options.name).targets.delete('e2e');
-    })
+    }),
   ]);
 }
 
@@ -602,7 +605,7 @@ function updateE2eProject(options: NormalizedSchema): Rule {
     host.overwrite(page, pageContent.replace(`.content span`, `header h1`));
 
     return chain([
-      updateJsonInTree(getWorkspacePath(host), json => {
+      updateJsonInTree(getWorkspacePath(host), (json) => {
         const project = {
           root: options.e2eProjectRoot,
           projectType: 'application',
@@ -614,11 +617,11 @@ function updateE2eProject(options: NormalizedSchema): Rule {
                 tsConfig: `${options.e2eProjectRoot}/tsconfig.e2e.json`,
                 exclude: [
                   '**/node_modules/**',
-                  '!' + join(normalize(options.e2eProjectRoot), '**')
-                ]
-              }
-            }
-          }
+                  '!' + join(normalize(options.e2eProjectRoot), '**'),
+                ],
+              },
+            },
+          },
         };
 
         project.architect.e2e.options.protractorConfig = `${options.e2eProjectRoot}/protractor.conf.js`;
@@ -627,16 +630,19 @@ function updateE2eProject(options: NormalizedSchema): Rule {
         delete json.projects[options.name].architect.e2e;
         return json;
       }),
-      updateJsonInTree(`${options.e2eProjectRoot}/tsconfig.e2e.json`, json => {
-        return {
-          ...json,
-          extends: `./tsconfig.json`,
-          compilerOptions: {
-            ...json.compilerOptions,
-            outDir: `${offsetFromRoot(options.e2eProjectRoot)}dist/out-tsc`
-          }
-        };
-      })
+      updateJsonInTree(
+        `${options.e2eProjectRoot}/tsconfig.e2e.json`,
+        (json) => {
+          return {
+            ...json,
+            extends: `./tsconfig.json`,
+            compilerOptions: {
+              ...json.compilerOptions,
+              outDir: `${offsetFromRoot(options.e2eProjectRoot)}dist/out-tsc`,
+            },
+          };
+        }
+      ),
     ]);
   };
 }
@@ -648,25 +654,25 @@ function addProxyConfig(options: NormalizedSchema): Rule {
       const pathToProxyFile = `${projectConfig.root}/proxy.conf.json`;
 
       return chain([
-        updateJsonInTree(pathToProxyFile, json => {
+        updateJsonInTree(pathToProxyFile, (json) => {
           return {
             [`/${options.backendProject}`]: {
               target: 'http://localhost:3333',
-              secure: false
-            }
+              secure: false,
+            },
           };
         }),
-        updateWorkspaceInTree(json => {
+        updateWorkspaceInTree((json) => {
           projectConfig.architect.serve.options.proxyConfig = pathToProxyFile;
           json.projects[options.name] = projectConfig;
           return json;
-        })
+        }),
       ])(host, context);
     }
   };
 }
 
-export default function(schema: Schema): Rule {
+export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
 
@@ -684,10 +690,10 @@ export default function(schema: Schema): Rule {
     return chain([
       init({
         ...options,
-        skipFormat: true
+        skipFormat: true,
       }),
       addLintFiles(options.appProjectRoot, options.linter, {
-        onlyGlobal: true
+        onlyGlobal: true,
       }),
       externalSchematic('@schematics/angular', 'application', {
         name: options.name,
@@ -700,7 +706,7 @@ export default function(schema: Schema): Rule {
         enableIvy: options.enableIvy,
         routing: false,
         skipInstall: true,
-        skipPackageJson: false
+        skipPackageJson: false,
       }),
       addSchematicFiles(appProjectRoot, options),
       options.e2eTestRunner === 'protractor'
@@ -721,12 +727,12 @@ export default function(schema: Schema): Rule {
             project: options.name,
             supportTsx: false,
             skipSerializers: false,
-            setupFile: 'angular'
+            setupFile: 'angular',
           })
         : noop(),
       options.unitTestRunner === 'karma'
         ? schematic('karma-project', {
-            project: options.name
+            project: options.name,
           })
         : noop(),
       options.e2eTestRunner === 'cypress'
@@ -734,11 +740,11 @@ export default function(schema: Schema): Rule {
             name: options.e2eProjectName,
             directory: options.directory,
             project: options.name,
-            linter: options.linter
+            linter: options.linter,
           })
         : noop(),
       options.backendProject ? addProxyConfig(options) : noop(),
-      formatFiles(options)
+      formatFiles(options),
     ])(host, context);
   };
 }
@@ -758,7 +764,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const e2eProjectRoot = `apps/${appDirectory}-e2e`;
 
   const parsedTags = options.tags
-    ? options.tags.split(',').map(s => s.trim())
+    ? options.tags.split(',').map((s) => s.trim())
     : [];
 
   const defaultPrefix = getNpmScope(host);
@@ -769,6 +775,6 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     appProjectRoot,
     e2eProjectRoot,
     e2eProjectName,
-    parsedTags
+    parsedTags,
   };
 }

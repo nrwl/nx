@@ -10,11 +10,12 @@ function runNxNewCommand(args?: string, silent?: boolean) {
   return execSync(
     `node ${require.resolve(
       '@nrwl/tao'
-    )} new proj --no-interactive --skip-install --collection=@nrwl/workspace --npmScope=proj ${args ||
-      ''}`,
+    )} new proj --no-interactive --skip-install --collection=@nrwl/workspace --npmScope=proj ${
+      args || ''
+    }`,
     {
       cwd: localTmpDir,
-      ...(silent && false ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
+      ...(silent && false ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
     }
   );
 }
@@ -42,7 +43,7 @@ export function uniq(prefix: string) {
 export function runYarnInstall(silent: boolean = true) {
   const install = execSync('yarn install', {
     cwd: tmpProjPath(),
-    ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
+    ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
   });
   return install ? install.toString() : '';
 }

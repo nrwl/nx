@@ -67,7 +67,7 @@ export async function parseJsonSchemaToOptions(
     // We only support number, string or boolean (or array of those), so remove everything else.
 
     const types = Array.from(typeSet)
-      .filter(x => {
+      .filter((x) => {
         switch (x) {
           case 'boolean':
           case 'number':
@@ -79,7 +79,7 @@ export async function parseJsonSchemaToOptions(
             return false;
         }
       })
-      .map(x => _getEnumFromValue(x, OptionType, OptionType.String));
+      .map((x) => _getEnumFromValue(x, OptionType, OptionType.String));
 
     if (types.length == 0) {
       // This means it's not usable on the command line. e.g. an Object.
@@ -90,7 +90,7 @@ export async function parseJsonSchemaToOptions(
     const enumValues = (
       (json.isJsonArray(current.enum) && current.enum) ||
       []
-    ).filter(x => {
+    ).filter((x) => {
       switch (typeof x) {
         case 'boolean':
         case 'number':
@@ -136,7 +136,7 @@ export async function parseJsonSchemaToOptions(
       ? current.required.indexOf(name) != -1
       : false;
     const aliases = json.isJsonArray(current.aliases)
-      ? [...current.aliases].map(x => '' + x)
+      ? [...current.aliases].map((x) => '' + x)
       : current.alias
       ? ['' + current.alias]
       : [];
@@ -169,7 +169,7 @@ export async function parseJsonSchemaToOptions(
       hidden,
       ...(userAnalytics ? { userAnalytics } : {}),
       ...(deprecated !== undefined ? { deprecated } : {}),
-      ...(positional !== undefined ? { positional } : {})
+      ...(positional !== undefined ? { positional } : {}),
     };
 
     if (current.type === 'array' && current.items) {
@@ -182,10 +182,10 @@ export async function parseJsonSchemaToOptions(
 
       if (items.properties) {
         option.arrayOfType = items.type;
-        option.arrayOfValues = Object.keys(items.properties).map(key => ({
+        option.arrayOfValues = Object.keys(items.properties).map((key) => ({
           name: key,
           ...items.properties[key],
-          isRequired: items.required && items.required.includes(key)
+          isRequired: items.required && items.required.includes(key),
         }));
       }
     }

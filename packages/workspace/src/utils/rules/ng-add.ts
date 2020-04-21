@@ -2,7 +2,7 @@ import {
   Rule,
   Tree,
   externalSchematic,
-  noop
+  noop,
 } from '@angular-devkit/schematics';
 
 import { readJsonInTree } from '../ast-utils';

@@ -9,7 +9,7 @@ describe('updateModuleName Rule', () => {
   let tree: UnitTestTree;
   const schema: Schema = {
     projectName: 'my-source',
-    destination: 'my-destination'
+    destination: 'my-destination',
   };
 
   const modulePath = '/libs/my-destination/src/lib/my-destination.module.ts';

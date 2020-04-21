@@ -4,7 +4,7 @@ import * as ts from 'typescript';
 import {
   createProjectGraph,
   ProjectGraph,
-  ProjectGraphNode
+  ProjectGraphNode,
 } from '../core/project-graph';
 import { appRootPath } from '../utils/app-root';
 import {
@@ -20,14 +20,14 @@ import {
   isRelativeImportIntoAnotherProject,
   matchImportWithWildcard,
   onlyLoadChildren,
-  hasArchitectBuildBuilder
+  hasArchitectBuildBuilder,
 } from '../utils/runtime-lint-utils';
 import { normalize } from '@angular-devkit/core';
 import { ProjectType } from '../core/project-graph';
 import {
   normalizedProjectRoot,
   readNxJson,
-  readWorkspaceJson
+  readWorkspaceJson,
 } from '@nrwl/workspace/src/core/file-utils';
 import { TargetProjectLocator } from '../core/target-project-locator';
 
@@ -94,7 +94,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     super(sourceFile, options);
 
     this.allow = Array.isArray(this.getOptions()[0].allow)
-      ? this.getOptions()[0].allow.map(a => `${a}`)
+      ? this.getOptions()[0].allow.map((a) => `${a}`)
       : [];
 
     this.depConstraints = Array.isArray(this.getOptions()[0].depConstraints)
@@ -111,7 +111,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       .substring(1, node.moduleSpecifier.getText().length - 1);
 
     // whitelisted import
-    if (this.allow.some(a => matchImportWithWildcard(a, imp))) {
+    if (this.allow.some((a) => matchImportWithWildcard(a, imp))) {
       super.visitImportDeclaration(node);
       return;
     }
@@ -243,7 +243,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
             )
           ) {
             const allowedTags = constraint.onlyDependOnLibsWithTags
-              .map(s => `"${s}"`)
+              .map((s) => `"${s}"`)
               .join(', ');
             const error = `A project tagged with "${constraint.sourceTag}" can only depend on libs tagged with ${allowedTags}`;
             this.addFailureAt(node.getStart(), node.getWidth(), error);

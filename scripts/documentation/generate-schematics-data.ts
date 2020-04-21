@@ -6,16 +6,16 @@ import { Schematic } from '@angular-devkit/schematics/collection-schema';
 import { CoreSchemaRegistry } from '@angular-devkit/core/src/json/schema';
 import {
   htmlSelectorFormat,
-  pathFormat
+  pathFormat,
 } from '@angular-devkit/schematics/src/formats';
 import {
   generateJsonFile,
   generateMarkdownFile,
-  sortAlphabeticallyFunction
+  sortAlphabeticallyFunction,
 } from './utils';
 import {
   Configuration,
-  getPackageConfigurations
+  getPackageConfigurations,
 } from './get-package-configurations';
 import { optionalCallExpression } from '@babel/types';
 
@@ -38,7 +38,7 @@ function generateSchematicList(
   fs.removeSync(config.schematicOutput);
   const schematicCollection = fs.readJsonSync(schematicCollectionFile)
     .schematics;
-  return Object.keys(schematicCollection).map(schematicName => {
+  return Object.keys(schematicCollection).map((schematicName) => {
     const schematic = {
       name: schematicName,
       collectionName: `@nrwl/${config.name}`,
@@ -48,12 +48,12 @@ function generateSchematicList(
         : null,
       rawSchema: fs.readJsonSync(
         path.join(config.root, schematicCollection[schematicName]['schema'])
-      )
+      ),
     };
 
     return parseJsonSchemaToOptions(registry, schematic.rawSchema)
-      .then(options => ({ ...schematic, options }))
-      .catch(error =>
+      .then((options) => ({ ...schematic, options }))
+      .catch((error) =>
         console.error(
           `Can't parse schema option of ${schematic.name}:\n${error}`
         )
@@ -102,7 +102,7 @@ function generateTemplate(
 
   if (schematic.rawSchema.examples) {
     template += `### Examples`;
-    schematic.rawSchema.examples.forEach(example => {
+    schematic.rawSchema.examples.forEach((example) => {
       template += dedent`
       ${example.description}:
       \`\`\`bash
@@ -117,7 +117,7 @@ function generateTemplate(
 
     schematic.options
       .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
-      .forEach(option => {
+      .forEach((option) => {
         let enumValues = [];
         const rawSchemaProp = schematic.rawSchema.properties[option.name];
         if (
@@ -125,11 +125,11 @@ function generateTemplate(
           rawSchemaProp['x-prompt'] &&
           rawSchemaProp['x-prompt'].items
         ) {
-          rawSchemaProp['x-prompt'].items.forEach(p => {
+          rawSchemaProp['x-prompt'].items.forEach((p) => {
             enumValues.push(`\`${p.value}\``);
           });
         } else if (option.enum) {
-          enumValues = option.enum.map(e => `\`${e}\``);
+          enumValues = option.enum.map((e) => `\`${e}\``);
         }
 
         const enumStr =
@@ -168,17 +168,17 @@ Promise.all(
   getPackageConfigurations().map(({ framework, configs }) => {
     return Promise.all(
       configs
-        .filter(item => item.hasSchematics)
-        .map(config => {
+        .filter((item) => item.hasSchematics)
+        .map((config) => {
           return Promise.all(generateSchematicList(config, registry))
-            .then(schematicList =>
+            .then((schematicList) =>
               schematicList
-                .filter(s => !s.hidden)
-                .map(s => generateTemplate(framework, s))
+                .filter((s) => !s.hidden)
+                .map((s) => generateTemplate(framework, s))
             )
-            .then(markdownList =>
+            .then((markdownList) =>
               Promise.all(
-                markdownList.map(template =>
+                markdownList.map((template) =>
                   generateMarkdownFile(config.schematicOutput, template)
                 )
               )
@@ -197,8 +197,8 @@ Promise.all(
 
 getPackageConfigurations().forEach(async ({ framework, configs }) => {
   const schematics = configs
-    .filter(item => item.hasSchematics)
-    .map(item => item.name);
+    .filter((item) => item.hasSchematics)
+    .map((item) => item.name);
   await generateJsonFile(
     path.join(__dirname, '../../docs', framework, 'schematics.json'),
     schematics

@@ -17,7 +17,7 @@ describe('schematic:configuration', () => {
         name: 'test-ui-lib',
         configureCypress: false,
         generateCypressSpecs: false,
-        generateStories: false
+        generateStories: false,
       },
       appTree
     );
@@ -56,7 +56,7 @@ describe('schematic:configuration', () => {
         name: 'test-ui-lib',
         configureCypress: true,
         generateCypressSpecs: true,
-        generateStories: true
+        generateStories: true,
       },
       appTree
     );

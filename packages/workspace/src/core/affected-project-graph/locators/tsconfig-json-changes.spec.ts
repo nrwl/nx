@@ -13,28 +13,28 @@ describe('getTouchedProjectsFromTsConfig', () => {
           type: 'app',
           data: {
             root: 'proj1',
-            files: []
-          }
+            files: [],
+          },
         },
         proj2: {
           name: 'proj2',
           type: 'lib',
           data: {
             root: 'proj2',
-            files: []
-          }
-        }
+            files: [],
+          },
+        },
       },
       dependencies: {
         proj1: [
           {
             type: DependencyType.static,
             source: 'proj1',
-            target: 'proj2'
-          }
+            target: 'proj2',
+          },
         ],
-        proj2: []
-      }
+        proj2: [],
+      },
     };
   });
   it('should not return changes when tsconfig.json is not touched', () => {
@@ -44,17 +44,17 @@ describe('getTouchedProjectsFromTsConfig', () => {
           file: 'source.ts',
           ext: '.ts',
           mtime: 0,
-          getChanges: () => [new WholeFileChange()]
-        }
+          getChanges: () => [new WholeFileChange()],
+        },
       ],
       {},
       {
         npmScope: 'proj',
         projects: {
           proj1: {
-            tags: []
-          }
-        }
+            tags: [],
+          },
+        },
       }
     );
     expect(result).toEqual([]);
@@ -68,8 +68,8 @@ describe('getTouchedProjectsFromTsConfig', () => {
             file: 'tsconfig.json',
             ext: '.json',
             mtime: 0,
-            getChanges: () => [new WholeFileChange()]
-          }
+            getChanges: () => [new WholeFileChange()],
+          },
         ],
         null,
         null,
@@ -92,16 +92,16 @@ describe('getTouchedProjectsFromTsConfig', () => {
               jsonDiff(
                 {
                   compilerOptions: {
-                    strict: false
-                  }
+                    strict: false,
+                  },
                 },
                 {
                   compilerOptions: {
-                    strict: true
-                  }
+                    strict: true,
+                  },
                 }
-              )
-          }
+              ),
+          },
         ],
         null,
         null,
@@ -124,18 +124,18 @@ describe('getTouchedProjectsFromTsConfig', () => {
               jsonDiff(
                 {
                   compilerOptions: {
-                    paths: {}
-                  }
+                    paths: {},
+                  },
                 },
                 {
                   compilerOptions: {
                     paths: {
-                      '@proj/proj1': ['proj1/index.ts']
-                    }
-                  }
+                      '@proj/proj1': ['proj1/index.ts'],
+                    },
+                  },
                 }
-              )
-          }
+              ),
+          },
         ],
         null,
         null,
@@ -156,18 +156,18 @@ describe('getTouchedProjectsFromTsConfig', () => {
               jsonDiff(
                 {
                   compilerOptions: {
-                    paths: {}
-                  }
+                    paths: {},
+                  },
                 },
                 {
                   compilerOptions: {
                     paths: {
-                      '@proj/proj1': ['./proj1/index.ts']
-                    }
-                  }
+                      '@proj/proj1': ['./proj1/index.ts'],
+                    },
+                  },
                 }
-              )
-          }
+              ),
+          },
         ],
         null,
         null,
@@ -191,17 +191,17 @@ describe('getTouchedProjectsFromTsConfig', () => {
                 {
                   compilerOptions: {
                     paths: {
-                      '@proj/proj1': ['proj1/index.ts']
-                    }
-                  }
+                      '@proj/proj1': ['proj1/index.ts'],
+                    },
+                  },
                 },
                 {
                   compilerOptions: {
-                    paths: {}
-                  }
+                    paths: {},
+                  },
                 }
-              )
-          }
+              ),
+          },
         ],
         null,
         null,
@@ -223,19 +223,19 @@ describe('getTouchedProjectsFromTsConfig', () => {
                 {
                   compilerOptions: {
                     paths: {
-                      '@proj/proj1': ['proj1/index.ts', 'proj1/index2.ts']
-                    }
-                  }
+                      '@proj/proj1': ['proj1/index.ts', 'proj1/index2.ts'],
+                    },
+                  },
                 },
                 {
                   compilerOptions: {
                     paths: {
-                      '@proj/proj1': ['proj1/index.ts']
-                    }
-                  }
+                      '@proj/proj1': ['proj1/index.ts'],
+                    },
+                  },
                 }
-              )
-          }
+              ),
+          },
         ],
         null,
         null,
@@ -260,19 +260,19 @@ describe('getTouchedProjectsFromTsConfig', () => {
                 {
                   compilerOptions: {
                     paths: {
-                      '@proj/proj1': ['proj1/index.ts']
-                    }
-                  }
+                      '@proj/proj1': ['proj1/index.ts'],
+                    },
+                  },
                 },
                 {
                   compilerOptions: {
                     paths: {
-                      '@proj/proj1': ['proj1/index2.ts']
-                    }
-                  }
+                      '@proj/proj1': ['proj1/index2.ts'],
+                    },
+                  },
                 }
-              )
-          }
+              ),
+          },
         ],
         null,
         null,
@@ -295,19 +295,19 @@ describe('getTouchedProjectsFromTsConfig', () => {
                 {
                   compilerOptions: {
                     paths: {
-                      '@proj/proj1': ['proj1/index.ts']
-                    }
-                  }
+                      '@proj/proj1': ['proj1/index.ts'],
+                    },
+                  },
                 },
                 {
                   compilerOptions: {
                     paths: {
-                      '@proj/proj1': ['proj2/index.ts']
-                    }
-                  }
+                      '@proj/proj1': ['proj2/index.ts'],
+                    },
+                  },
                 }
-              )
-          }
+              ),
+          },
         ],
         null,
         null,

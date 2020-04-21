@@ -6,7 +6,7 @@ import { addUpgradeToPackageJson } from '../../utils/upgrade';
 import {
   addEntryComponents,
   readBootstrapInfo,
-  removeFromNgModule
+  removeFromNgModule,
 } from '../../utils/ast-utils';
 
 function updateMain(angularJsImport: string, options: Schema): Rule {
@@ -16,7 +16,7 @@ function updateMain(angularJsImport: string, options: Schema): Rule {
       moduleClassName,
       moduleSpec,
       bootstrapComponentClassName,
-      bootstrapComponentFileName
+      bootstrapComponentFileName,
     } = readBootstrapInfo(host, options.project);
 
     host.overwrite(
@@ -64,9 +64,9 @@ function rewriteBootstrapLogic(options: Schema): Rule {
       ...addMethod(moduleSource, modulePath, {
         className: moduleClassName,
         methodHeader: 'ngDoBootstrap(): void',
-        body: ``
+        body: ``,
       }),
-      ...removeFromNgModule(moduleSource, modulePath, 'bootstrap')
+      ...removeFromNgModule(moduleSource, modulePath, 'bootstrap'),
     ]);
     return host;
   };
@@ -76,7 +76,7 @@ function addEntryComponentsToModule(options: Schema): Rule {
     const {
       modulePath,
       moduleSource,
-      bootstrapComponentClassName
+      bootstrapComponentClassName,
     } = readBootstrapInfo(host, options.project);
     insert(
       host,
@@ -87,7 +87,7 @@ function addEntryComponentsToModule(options: Schema): Rule {
   };
 }
 
-export default function(options: Schema): Rule {
+export default function (options: Schema): Rule {
   const angularJsImport = options.angularJsImport
     ? options.angularJsImport
     : options.name;
@@ -97,6 +97,6 @@ export default function(options: Schema): Rule {
     addEntryComponentsToModule(options),
     rewriteBootstrapLogic(options),
     options.skipPackageJson ? noop() : addUpgradeToPackageJson(),
-    formatFiles(options)
+    formatFiles(options),
   ]);
 }

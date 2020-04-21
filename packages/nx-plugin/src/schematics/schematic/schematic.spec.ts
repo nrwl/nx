@@ -19,7 +19,7 @@ describe('NxPlugin schematic', () => {
       'schematic',
       {
         project: projectName,
-        name: 'my-schematic'
+        name: 'my-schematic',
       },
       appTree
     );
@@ -46,7 +46,7 @@ describe('NxPlugin schematic', () => {
       {
         project: projectName,
         name: 'my-schematic',
-        description: 'my-schematic description'
+        description: 'my-schematic description',
       },
       appTree
     );
@@ -72,7 +72,7 @@ describe('NxPlugin schematic', () => {
       'schematic',
       {
         project: projectName,
-        name: 'my-schematic'
+        name: 'my-schematic',
       },
       appTree
     );
@@ -93,7 +93,7 @@ describe('NxPlugin schematic', () => {
       {
         project: projectName,
         name: 'my-schematic',
-        description: 'my-schematic custom description'
+        description: 'my-schematic custom description',
       },
       appTree
     );

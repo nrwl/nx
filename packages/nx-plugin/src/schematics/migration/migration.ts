@@ -8,13 +8,13 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import {
   getProjectConfig,
   toFileName,
   updateJsonInTree,
-  updateWorkspace
+  updateWorkspace,
 } from '@nrwl/workspace';
 import * as path from 'path';
 import { Schema } from './schema';
@@ -24,7 +24,7 @@ export interface NormalizedSchema extends Schema {
   projectSourceRoot: string;
 }
 
-export default function(schema: NormalizedSchema): Rule {
+export default function (schema: NormalizedSchema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
 
@@ -32,7 +32,7 @@ export default function(schema: NormalizedSchema): Rule {
       addFiles(options),
       updateMigrationsJson(options),
       updateWorkspaceJson(options),
-      updatePackageJson(options)
+      updatePackageJson(options),
     ]);
   };
 }
@@ -62,7 +62,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     name,
     description,
     projectRoot,
-    projectSourceRoot
+    projectSourceRoot,
   };
 
   return normalized;
@@ -73,15 +73,15 @@ function addFiles(options: NormalizedSchema): Rule {
     apply(url(`./files/migration`), [
       template({
         ...options,
-        tmpl: ''
+        tmpl: '',
       }),
-      move(`${options.projectSourceRoot}/migrations`)
+      move(`${options.projectSourceRoot}/migrations`),
     ])
   );
 }
 
 function updateWorkspaceJson(options: NormalizedSchema): Rule {
-  return updateWorkspace(workspace => {
+  return updateWorkspace((workspace) => {
     const targets = workspace.projects.get(options.project).targets;
     const build = targets.get('build');
     if (build) {
@@ -90,8 +90,8 @@ function updateWorkspaceJson(options: NormalizedSchema): Rule {
           {
             input: `./${options.projectRoot}`,
             glob: 'migrations.json',
-            output: '.'
-          }
+            output: '.',
+          },
         ]
       );
     }
@@ -101,12 +101,12 @@ function updateWorkspaceJson(options: NormalizedSchema): Rule {
 function updateMigrationsJson(options: NormalizedSchema): Rule {
   return updateJsonInTree(
     path.join(options.projectRoot, 'migrations.json'),
-    json => {
+    (json) => {
       const schematics = json.schematics ? json.schematics : {};
       schematics[options.name] = {
         version: options.version,
         description: options.description,
-        factory: `./src/migrations/${options.name}/${options.name}`
+        factory: `./src/migrations/${options.name}/${options.name}`,
       };
       json.schematics = schematics;
 
@@ -117,7 +117,7 @@ function updateMigrationsJson(options: NormalizedSchema): Rule {
         if (!packageJsonUpdatesObj[options.version]) {
           packageJsonUpdatesObj[options.version] = {
             version: options.version,
-            packages: {}
+            packages: {},
           };
         }
         json.packageJsonUpdates = packageJsonUpdatesObj;
@@ -131,13 +131,13 @@ function updateMigrationsJson(options: NormalizedSchema): Rule {
 function updatePackageJson(options: NormalizedSchema): Rule {
   return updateJsonInTree(
     path.join(options.projectRoot, 'package.json'),
-    json => {
+    (json) => {
       if (!json['ng-update'] || !json['ng-update'].migrations) {
         if (json['ng-update']) {
           json['ng-update'].migrations = './migrations.json';
         } else {
           json['ng-update'] = {
-            migrations: './migrations.json'
+            migrations: './migrations.json',
           };
         }
       }

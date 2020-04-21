@@ -10,7 +10,7 @@ import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 
 import {
   createEmptyWorkspace,
-  MockBuilderContext
+  MockBuilderContext,
 } from '@nrwl/workspace/testing';
 
 const testRunner = new SchematicTestRunner(
@@ -46,14 +46,14 @@ export async function createTestUILib(libName: string): Promise<Tree> {
   appTree = createEmptyWorkspace(appTree);
   appTree = await callRule(
     externalSchematic('@nrwl/angular', 'library', {
-      name: libName
+      name: libName,
     }),
     appTree
   );
   appTree = await callRule(
     externalSchematic('@nrwl/angular', 'component', {
       name: 'test-button',
-      project: libName
+      project: libName,
     }),
     appTree
   );
@@ -92,7 +92,7 @@ export class TestButtonComponent implements OnInit {
   appTree = await callRule(
     externalSchematic('@nrwl/angular', 'component', {
       name: 'test-other',
-      project: libName
+      project: libName,
     }),
     appTree
   );

@@ -33,7 +33,9 @@ export function _findDefaultServePath(
   // normalize baseHref
   // for nx serve the starting base is always `/` so a relative
   // and root relative value are identical
-  const baseHrefParts = (baseHref || '').split('/').filter(part => part !== '');
+  const baseHrefParts = (baseHref || '')
+    .split('/')
+    .filter((part) => part !== '');
   if (baseHref && !baseHref.endsWith('/')) {
     baseHrefParts.pop();
   }

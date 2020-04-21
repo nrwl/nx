@@ -5,7 +5,7 @@ import {
   uniq,
   ensureProject,
   readJson,
-  forEachCli
+  forEachCli,
 } from './utils';
 
 forEachCli(() => {

@@ -9,7 +9,7 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import '@nrwl/tao/src/compat/compat';
 import { formatFiles, getWorkspace, names, toFileName } from '@nrwl/workspace';
@@ -18,7 +18,7 @@ import {
   addGlobal,
   getProjectConfig,
   insert,
-  readJsonInTree
+  readJsonInTree,
 } from '@nrwl/workspace/src/utils/ast-utils';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import * as path from 'path';
@@ -27,11 +27,11 @@ import { addReduxStoreToMain, updateReduxStore } from '../../utils/ast-utils';
 import {
   reactReduxVersion,
   reduxjsToolkitVersion,
-  typesReactReduxVersion
+  typesReactReduxVersion,
 } from '../../utils/versions';
 import { NormalizedSchema, Schema } from './schema';
 
-export default function(schema: any): Rule {
+export default function (schema: any): Rule {
   return async (host: Tree, context: SchematicContext) => {
     const options = await normalizeOptions(host, schema);
 
@@ -41,7 +41,7 @@ export default function(schema: any): Rule {
       addReduxPackageDependencies,
       addStoreConfiguration(options, context),
       updateReducerConfiguration(options, context),
-      formatFiles()
+      formatFiles(),
     ]);
   };
 }
@@ -50,7 +50,7 @@ function generateReduxFiles(options: NormalizedSchema) {
   const templateSource = apply(url('./files'), [
     template({ ...options, tmpl: '' }),
     move(options.filesPath),
-    options.js ? toJS() : noop()
+    options.js ? toJS() : noop(),
   ]);
 
   return mergeWith(templateSource);
@@ -61,7 +61,7 @@ function addReduxPackageDependencies(): Rule {
     {
       '@reduxjs/toolkit': reduxjsToolkitVersion,
       'react-redux': reactReduxVersion,
-      '@types/react-redux': typesReactReduxVersion
+      '@types/react-redux': typesReactReduxVersion,
     },
     {}
   );
@@ -93,7 +93,7 @@ function addExportsToBarrel(options: NormalizedSchema): Rule {
           indexSourceFile,
           indexFilePath,
           `export * from '${statePath}.slice';`
-        )
+        ),
       ]);
     }
 
@@ -149,7 +149,7 @@ function updateReducerConfiguration(
           updateReduxStore(options.appMainFilePath, mainSourceFile, context, {
             keyName: `${options.constantName}_FEATURE_KEY`,
             reducerName: `${options.propertyName}Reducer`,
-            modulePath: `${options.projectModulePath}`
+            modulePath: `${options.projectModulePath}`,
           })
         );
         return host;
@@ -175,8 +175,8 @@ async function normalizeOptions(
   const modulePath =
     projectType === 'application'
       ? `./app/${extraNames.fileName}.slice`
-      : Object.keys(tsPaths).find(k =>
-          tsPaths[k].some(s => s.includes(sourceRoot))
+      : Object.keys(tsPaths).find((k) =>
+          tsPaths[k].some((s) => s.includes(sourceRoot))
         );
   // If --project is set to an app, automatically configure store
   // for it without needing to specify --appProject.
@@ -211,6 +211,6 @@ async function normalizeOptions(
     projectModulePath: modulePath,
     appProjectSourcePath,
     appMainFilePath,
-    filesPath: join(sourceRoot, projectType === 'application' ? 'app' : 'lib')
+    filesPath: join(sourceRoot, projectType === 'application' ? 'app' : 'lib'),
   };
 }
