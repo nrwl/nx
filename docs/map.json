@@ -97,6 +97,11 @@
             "file": "angular/guides/cli-overview"
           },
           {
+            "name": "Console",
+            "id": "console",
+            "file": "shared/console"
+          },
+          {
             "name": "generate",
             "id": "generate",
             "file": "angular/cli/generate"
@@ -941,6 +946,11 @@
             "searchResultsName": "CLI Overview",
             "id": "overview",
             "file": "react/guides/cli-overview"
+          },
+          {
+            "name": "Console",
+            "id": "console",
+            "file": "shared/console"
           },
           {
             "name": "generate",
