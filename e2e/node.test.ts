@@ -336,10 +336,10 @@ forEachCli(currentCLIName => {
                 preset: '../../jest.config.js',
                 testEnvironment: 'node',
                  transform: {
-                '^.+\\.[tj]sx?$': 'ts-jest'
+                '^.+\\.[tj]sx?$': 'ts-jest',
                 },
                 moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
-                coverageDirectory: '../../coverage/libs/${nestlib}'
+                coverageDirectory: '../../coverage/libs/${nestlib}',
             };
             `
       );
