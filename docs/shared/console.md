@@ -25,7 +25,7 @@ With Nx, you can get a full-stack application up and running in minutes, no need
 
 ## Why Nx Console?
 
-Professional developers use both command-line tools and user interfaces. They commit in the terminal, but resolve conflicts in VSCode or WebStorm. They use the right tool for the job.
+Developers use both command-line tools and user interfaces. They commit in the terminal, but resolve conflicts in VSCode or WebStorm. They use the right tool for the job.
 
 Nx is a command-line tool, which works great when you want to serve an application or generate a simple component. But it falls short once you start doing advanced things.
 
