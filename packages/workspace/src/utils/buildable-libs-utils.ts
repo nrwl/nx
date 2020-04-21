@@ -233,8 +233,12 @@ export function updateBuildableProjectPackageJsonDependencies(
 
   const packageJsonPath = `${outputs[0]}/package.json`;
   let packageJson;
+  let workspacePackageJson;
   try {
     packageJson = readJsonFile(packageJsonPath);
+    workspacePackageJson = readJsonFile(
+      `${context.workspaceRoot}/package.json`
+    );
   } catch (e) {
     // cannot find or invalid package.json
     return;
@@ -266,6 +270,11 @@ export function updateBuildableProjectPackageJsonDependencies(
           depVersion = readJsonFile(depPackageJsonPath).version;
         } else if (entry.node.type === 'npm') {
           depVersion = entry.node.data.version;
+        }
+
+        // If an npm dep is part of the workspace devDependencies, do not include it the library
+        if (!!workspacePackageJson.devDependencies[entry.name]) {
+          return;
         }
 
         packageJson.dependencies[entry.name] = depVersion;
