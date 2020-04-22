@@ -164,6 +164,12 @@ Type: `string`
 
 Command to run in child process
 
+### customArgs
+
+Type: `string`
+
+Custom arguments to append to the command
+
 ### cwd
 
 Type: `string`
