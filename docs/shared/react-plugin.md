@@ -69,22 +69,22 @@ myorg/
 
 ## See Also
 
-- [Using Cypress](/{{framework}}/plugins_cypress/overview)
-- [Using Jest](/{{framework}}/plugins_jest/overview)
-- [Using Storybook](/{{framework}}/guides/modernize-storybook-react)
+- [Using Cypress](/{{framework}}/plugins/cypress/overview)
+- [Using Jest](/{{framework}}/plugins/jest/overview)
+- [Using Storybook](/{{framework}}/plugins/storybook/overview)
 
 ## Builders
 
 React applications are built using the builders from the `@nrwl/web` plugin.
 
-- [build](/{{framework}}/plugins_web_builders/build) - Builds a web components application
-- [dev-server](/{{framework}}/plugins_web_builders/package) - Builds and serves a web application
-- [package](/{{framework}}/plugins_web_builders/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
+- [build](/{{framework}}/plugins/web/builders/build) - Builds a web components application
+- [dev-server](/{{framework}}/plugins/web/builders/package) - Builds and serves a web application
+- [package](/{{framework}}/plugins/web/builders/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
 
 ## Schematics
 
-- [application](/{{framework}}/plugins_react_schematics/application) - Create an React application
-- [component](/{{framework}}/plugins_react_schematics/component) - Create an React library
-- [library](/{{framework}}/plugins_react_schematics/library) - Create an React library
-- [redux](/{{framework}}/plugins_react_schematics/redux) - Generate a Redux slice for a project
-- [storybook-configuration](/{{framework}}/plugins_react_schematics/storybook-configuration) - Set up Storybook for a react library
+- [application](/{{framework}}/plugins/react/schematics/application) - Create an React application
+- [component](/{{framework}}/plugins/react/schematics/component) - Create an React library
+- [library](/{{framework}}/plugins/react/schematics/library) - Create an React library
+- [redux](/{{framework}}/plugins/react/schematics/redux) - Generate a Redux slice for a project
+- [storybook-configuration](/{{framework}}/plugins/react/schematics/storybook-configuration) - Set up Storybook for a react library
