@@ -36,7 +36,7 @@ describe('Update 9.0.1', () => {
     expect(updatedJestConfigFile).not.toContain('passWithNoTests: true');
 
     //check if the file is still valid
-    expect(updatedJestConfigFile.match(/,/g) || []).toHaveLength(6);
+    expect(updatedJestConfigFile.match(/,/g) || []).toHaveLength(8);
     expect(updatedJestConfigFile).toContain('}');
     expect(updatedJestConfigFile).toContain('{');
   });

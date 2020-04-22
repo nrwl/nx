@@ -455,7 +455,7 @@ import {
   LoadUsers,
   UsersLoaded,
   UsersLoadError,
-  UsersActionTypes
+  UsersActionTypes,
 } from './users.actions';`,
         `loadUsers$`,
         `run: (action: LoadUsers, state: UsersPartialState)`,
@@ -614,7 +614,7 @@ import {
   USERS_FEATURE_KEY,
   State,
   UsersPartialState,
-  usersAdapter
+  usersAdapter,
 } from './users.reducer';`,
         `const { selectAll, selectEntities } = usersAdapter.getSelectors();`,
       ].forEach((text) => {

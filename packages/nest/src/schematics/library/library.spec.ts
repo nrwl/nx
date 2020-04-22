@@ -81,7 +81,7 @@ describe('lib', () => {
           @Module({
           controllers: [],
           providers: [],
-          exports: []
+          exports: [],
           })
           export class MyLibModule {}`
       );
@@ -105,7 +105,7 @@ describe('lib', () => {
           @Module({
           controllers: [MyLibController],
           providers: [MyLibService],
-          exports: [MyLibService]
+          exports: [MyLibService],
           })
           export class MyLibModule {}`
       );
@@ -390,10 +390,10 @@ describe('lib', () => {
       preset: '../../jest.config.js',
       testEnvironment: 'node',
       transform: {
-        '^.+\\.[tj]sx?$': 'ts-jest'
+        '^.+\\.[tj]sx?$': 'ts-jest',
       },
       moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
-      coverageDirectory: '../../coverage/libs/my-lib'
+      coverageDirectory: '../../coverage/libs/my-lib',
       };`);
     });
   });

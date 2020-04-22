@@ -572,7 +572,9 @@ describe('lib', () => {
       {
         path: 'my-dir-my-lib',
         loadChildren: () =>
-          import('@proj/my-dir/my-lib').then(module => module.MyDirMyLibModule)
+          import('@proj/my-dir/my-lib').then(
+            (module) => module.MyDirMyLibModule
+          ),
       }`);
 
         const tsConfigAppJson = JSON.parse(
@@ -606,15 +608,17 @@ describe('lib', () => {
       {
         path: 'my-dir-my-lib',
         loadChildren: () =>
-          import('@proj/my-dir/my-lib').then(module => module.MyDirMyLibModule)
+          import('@proj/my-dir/my-lib').then(
+            (module) => module.MyDirMyLibModule
+          ),
       }`);
         expect(moduleContents2).toContain(`
       {
         path: 'my-dir-my-lib2',
         loadChildren: () =>
           import('@proj/my-dir/my-lib2').then(
-            module => module.MyDirMyLib2Module
-          )
+            (module) => module.MyDirMyLib2Module
+          ),
       }`);
 
         const tsConfigAppJson2 = JSON.parse(
@@ -650,21 +654,23 @@ describe('lib', () => {
       {
         path: 'my-dir-my-lib',
         loadChildren: () =>
-          import('@proj/my-dir/my-lib').then(module => module.MyDirMyLibModule)
+          import('@proj/my-dir/my-lib').then(
+            (module) => module.MyDirMyLibModule
+          ),
       }`);
         expect(moduleContents3).toContain(`
       {
         path: 'my-dir-my-lib2',
         loadChildren: () =>
           import('@proj/my-dir/my-lib2').then(
-            module => module.MyDirMyLib2Module
-          )
+            (module) => module.MyDirMyLib2Module
+          ),
       }`);
         expect(moduleContents3).toContain(`
       {
         path: 'my-lib3',
         loadChildren: () =>
-          import('@proj/my-dir/my-lib3').then(module => module.MyLib3Module)
+          import('@proj/my-dir/my-lib3').then((module) => module.MyLib3Module),
       }`);
 
         const tsConfigAppJson3 = JSON.parse(
@@ -724,8 +730,8 @@ describe('lib', () => {
           {
             path: 'my-dir-my-lib',
             loadChildren: () =>
-              import('@proj/my-dir/my-lib').then(module => module.MyDirMyLibModule)
-          }
+              import('@proj/my-dir/my-lib').then((module) => module.MyDirMyLibModule),
+          },
         ];`);
       });
     });

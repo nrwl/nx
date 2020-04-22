@@ -132,7 +132,9 @@ describe('Update 8.2.0', () => {
   it('should transpile plugin files', async () => {
     const result = await runMigration('update-8.2.0', {}, initialTree);
     const newPluginsFile = result.readContent('project/src/plugins/index.js');
-    expect(newPluginsFile).toContain('module.exports = function(on, config) {');
+    expect(newPluginsFile).toContain(
+      'module.exports = function (on, config) {'
+    );
     expect(newPluginsFile).toContain(
       `const { preprocessTypescript } = require('@nrwl/cypress/plugins/preprocessor');`
     );
