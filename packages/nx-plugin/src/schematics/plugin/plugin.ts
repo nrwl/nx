@@ -116,9 +116,6 @@ function addFiles(options: NormalizedSchema): Rule {
           tmpl: '',
           offsetFromRoot: offsetFromRoot(options.projectRoot)
         }),
-        options.unitTestRunner === 'none'
-          ? filter(file => !file.endsWith('.spec.tsx'))
-          : noop(),
         move(options.projectRoot)
       ]),
       MergeStrategy.Overwrite
