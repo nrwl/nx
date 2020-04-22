@@ -73,6 +73,36 @@ nx run frontend:create-script --args="--name=example"
 
 Notice the `--args="--name=example"` syntax: we can send custom arguments that will be interpolated into our commands via `{args.name}`
 
+##### Passing custom args
+
+Sometimes you need two variations of the same command and you want to send down an extra arg to the command. You can accomplish this with the `--customArgs` parameter.
+
+```json
+"generate-code": {
+    "builder": "@nrwl/workspace:run-commands",
+    "options": {
+        "commands": [
+            {
+            "command": "generate-code"
+            }
+        ],
+        "cwd": "apps/frontend"
+    }
+}
+```
+
+You can now run:
+
+```sh
+nx run frontend:generate-code
+```
+
+Which will run it only once, or if the `generate-code` binary allows it you can add `--watch`:
+
+```sh
+nx run frontend:generate-code --customArgs="--watch"
+```
+
 ##### Custom **done** conditions
 
 Normally, `run-commands` considers the commands done when all of them have finished running. If you don't need to wait until they're all done, you can set a special string, that considers the command finished the moment the string appears in `stdout` or `stderr`:
@@ -164,6 +194,12 @@ Type: `object[]`
 Type: `string`
 
 Command to run in child process
+
+### customArgs
+
+Type: `string`
+
+Custom arguments to append to the command
 
 ### cwd
 

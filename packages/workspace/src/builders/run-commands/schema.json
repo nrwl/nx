@@ -40,6 +40,11 @@
       "description": "Use colors when showing output of command",
       "default": false
     },
+    "customArgs": {
+      "type": "string",
+      "description": "Custom arguments to append to the command",
+      "default": ""
+    },
     "outputPath": {
       "description": "Tells Nx where the files will be created",
       "oneOf": [

@@ -375,4 +375,28 @@ describe('Command Runner Builder', () => {
       );
     });
   });
+
+  describe('--customArgs', () => {
+    it('should append custom arguments', async () => {
+      const exec = spyOn(require('child_process'), 'exec').and.callThrough();
+      const run = await architect.scheduleBuilder(
+        '@nrwl/workspace:run-commands',
+        {
+          commands: [
+            {
+              command: `ls`
+            }
+          ],
+          customArgs: '-lah'
+        }
+      );
+
+      await run.result;
+
+      expect(exec).toHaveBeenCalledWith(`ls -lah`, {
+        maxBuffer: TEN_MEGABYTES,
+        env: { ...process.env, FORCE_COLOR: `false` }
+      });
+    });
+  });
 });

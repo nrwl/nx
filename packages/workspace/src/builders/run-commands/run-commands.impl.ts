@@ -30,6 +30,7 @@ export interface RunCommandsBuilderOptions extends JsonObject {
   args?: string;
   envFile?: string;
   parsedArgs?: { [key: string]: string };
+  customArgs: string;
 }
 
 export default createBuilder<RunCommandsBuilderOptions>(run);
@@ -84,6 +85,7 @@ async function runInParallel(options: RunCommandsBuilderOptions) {
       c.command,
       options.readyWhen,
       options.parsedArgs,
+      options.customArgs,
       options.color,
       options.cwd
     ).then(result => ({
@@ -129,6 +131,7 @@ async function runSerially(
           c.command,
           options.readyWhen,
           options.parsedArgs,
+          options.customArgs,
           options.color,
           options.cwd
         );
@@ -153,10 +156,11 @@ function createProcess(
   command: string,
   readyWhen: string,
   parsedArgs: { [key: string]: string },
+  customArgs: string,
   color: boolean,
   cwd: string
 ): Promise<boolean> {
-  command = transformCommand(command, parsedArgs);
+  command = transformCommand(command, parsedArgs, customArgs);
   return new Promise(res => {
     const childProcess = exec(command, {
       maxBuffer: TEN_MEGABYTES,
@@ -187,9 +191,11 @@ function createProcess(
   });
 }
 
-function transformCommand(command: string, args: any) {
+function transformCommand(command: string, args: any, customArgs: string) {
   const regex = /{args\.([^}]+)}/g;
-  return command.replace(regex, (_, group: string) => args[group]);
+  return `${command.replace(regex, (_, group: string) => args[group])}${
+    customArgs ? ` ${customArgs}` : ''
+  }`;
 }
 
 function parseArgs(args: string) {
