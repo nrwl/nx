@@ -610,11 +610,6 @@
                     "name": "application",
                     "id": "application",
                     "file": "angular/api-express/schematics/application"
-                  },
-                  {
-                    "name": "init",
-                    "id": "init",
-                    "file": "angular/api-express/schematics/init"
                   }
                 ]
               }
@@ -637,12 +632,12 @@
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "angular/api-next/schematics/application"
+                    "file": "angular/api-nest/schematics/application"
                   },
                   {
                     "name": "library",
                     "id": "library",
-                    "file": "angular/api-next/schematics/library"
+                    "file": "angular/api-nest/schematics/library"
                   }
                 ]
               }
@@ -679,9 +674,9 @@
                     "file": "angular/api-next/builders/build"
                   },
                   {
-                    "name": "dev-server",
-                    "id": "dev-server",
-                    "file": "angular/api-next/builders/dev-server"
+                    "name": "server",
+                    "id": "server",
+                    "file": "angular/api-next/builders/server"
                   },
                   {
                     "name": "export",
@@ -1461,11 +1456,6 @@
                     "name": "application",
                     "id": "application",
                     "file": "react/api-express/schematics/application"
-                  },
-                  {
-                    "name": "init",
-                    "id": "init",
-                    "file": "react/api-express/schematics/init"
                   }
                 ]
               }
@@ -1493,7 +1483,7 @@
                   {
                     "name": "library",
                     "id": "library",
-                    "file": "react/api-next/schematics/library"
+                    "file": "react/api-nest/schematics/library"
                   }
                 ]
               }
@@ -1530,9 +1520,9 @@
                     "file": "react/api-next/builders/build"
                   },
                   {
-                    "name": "dev-server",
-                    "id": "dev-server",
-                    "file": "react/api-next/builders/dev-server"
+                    "name": "server",
+                    "id": "server",
+                    "file": "react/api-next/builders/server"
                   },
                   {
                     "name": "export",
