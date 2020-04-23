@@ -68,19 +68,19 @@ myorg/
 
 ## See Also
 
-- [Using Cypress](/{{framework}}/plugins_cypress/overview)
-- [Using Jest](/{{framework}}/plugins_cypress/overview)
+- [Using Cypress](/{{framework}}/plugins/cypress/overview)
+- [Using Jest](/{{framework}}/plugins/cypress/overview)
 
 ## Builders
 
-- [build](/{{framework}}/plugins_web_builders/build) - Builds a web components application
-- [dev-server](/{{framework}}/plugins_web_builders/package) - Builds and serves a web application
-- [package](/{{framework}}/plugins_web_builders/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
+- [build](/{{framework}}/plugins/web/builders/build) - Builds a web components application
+- [dev-server](/{{framework}}/plugins/web/builders/package) - Builds and serves a web application
+- [package](/{{framework}}/plugins/web/builders/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
 
 ## Schematics
 
-- [application](/{{framework}}/plugins_web_schematics/application) - Create an Web Components application
-- [component](/{{framework}}/plugins_web_schematics/component) - Create an Web Components library
-- [library](/{{framework}}/plugins_web_schematics/library) - Create an Web Components library
-- [redux](/{{framework}}/plugins_web_schematics/redux) - Generate a Redux slice for a project
-- [storybook-configuration](/{{framework}}/plugins_web_schematics/storybook-configuration) - Set up Storybook for a react library
+- [application](/{{framework}}/plugins/web/schematics/application) - Create an Web Components application
+- [component](/{{framework}}/plugins/web/schematics/component) - Create an Web Components library
+- [library](/{{framework}}/plugins/web/schematics/library) - Create an Web Components library
+- [redux](/{{framework}}/plugins/web/schematics/redux) - Generate a Redux slice for a project
+- [storybook-configuration](/{{framework}}/plugins/web/schematics/storybook-configuration) - Set up Storybook for a react library
