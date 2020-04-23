@@ -74,10 +74,10 @@ Your workspace is now powered by Nx! You can verify out that your application st
 
 Learn more about the advantages of Nx in the following guides:
 
-- [Using Cypress for e2e tests](/angular/plugins_cypress/overview)
-- [Using Jest for unit tests](/angular/plugins_jest/overview)
-- [Computation Caching](/angular/guides/computation-caching)
-- [Rebuilding and Retesting What is Affected](/angular/guides/monorepo-affected)
+- [Using Cypress for e2e tests](/angular/plugins/cypress/overview)
+- [Using Jest for unit tests](/angular/plugins/jest/overview)
+- [Computation Caching](/angular/workspace/computation-caching)
+- [Rebuilding and Retesting What is Affected](/angular/guides/ci/monorepo-affected)
 
 ## Transitioning Manually
 
@@ -359,6 +359,6 @@ yarn lint
 
 Learn more about the advantages of Nx in the following guides:
 
-[Using Cypress for e2e tests](/angular/plugins_cypress/overview) \
-[Using Jest for unit tests](/angular/plugins_jest/overview) \
-[Rebuilding and Retesting What is Affected](/angular/guides/monorepo-affected)
+[Using Cypress for e2e tests](/angular/plugins/cypress/overview) \
+[Using Jest for unit tests](/angular/plugins/jest/overview) \
+[Rebuilding and Retesting What is Affected](/angular/guides/ci/monorepo-affected)

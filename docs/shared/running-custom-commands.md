@@ -42,7 +42,7 @@ For each project for which you want to enable `make`, add a target in `workspace
 }
 ```
 
-For more information, see the [run-commands api doc](/{{framework}}/plugins_workspace_builders/run-commands).
+For more information, see the [run-commands api doc](/{{framework}}/plugins/workspace/builders/run-commands).
 
 ##### 3. Trigger the builder from the terminal
 
