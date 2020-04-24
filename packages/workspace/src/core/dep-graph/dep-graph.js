@@ -178,6 +178,18 @@ window.selectAllProjects = () => {
   window.filterProjects();
 };
 
+window.deselectAllProjects = () => {
+  window.focusedProject = null;
+  document.getElementById('focused-project').hidden = true;
+  document.getElementById('focused-project-name').innerText = '';
+
+  getProjectCheckboxes().forEach(checkbox => {
+    checkbox.checked = false;
+  });
+
+  window.filterProjects();
+};
+
 function createDirectoryParents(g, directories) {
   let childDirectory = directories.join('/');
   let childDirectoryId = `dir-${childDirectory}`;
