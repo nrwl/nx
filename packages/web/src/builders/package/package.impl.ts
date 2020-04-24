@@ -113,7 +113,7 @@ export function run(
         context.logger.info('Bundling...');
         return runRollup(rollupOptions).pipe(
           catchError(e => {
-            console.error(e);
+            context.logger.error(`Error during bundle: ${e}`);
             return of({ success: false });
           }),
           last(),
