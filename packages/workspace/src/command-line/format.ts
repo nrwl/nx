@@ -51,7 +51,7 @@ export function format(command: 'check' | 'write', args: yargs.Arguments) {
   }
 
   // Chunkify the patterns array to prevent crashing the windows terminal
-  const chunkList: string[][] = chunkify(patterns, 70);
+  const chunkList: string[][] = chunkify(patterns, 50);
 
   switch (command) {
     case 'write':
