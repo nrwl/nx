@@ -6,6 +6,10 @@ export default function update(): Rule {
     updateWorkspaceInTree(workspaceJson => {
       Object.entries<any>(workspaceJson.projects).forEach(
         ([projectName, project]) => {
+          if (!project.architect) {
+            return;
+          }
+
           Object.entries<any>(project.architect).forEach(
             ([targetName, targetConfig]) => {
               if (targetConfig.builder === '@nrwl/node:build') {
