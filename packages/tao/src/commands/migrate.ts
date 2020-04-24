@@ -1,6 +1,9 @@
 import { logging, normalize, virtualFs } from '@angular-devkit/core';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
+import { TaskExecutor } from '@angular-devkit/schematics';
 import { BaseWorkflow } from '@angular-devkit/schematics/src/workflow';
+import { BuiltinTaskExecutor } from '@angular-devkit/schematics/tasks/node';
+import { NodePackageName } from '@angular-devkit/schematics/tasks/node-package/options';
 import { NodeModulesEngineHost } from '@angular-devkit/schematics/tools';
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
@@ -11,9 +14,6 @@ import { dirSync } from 'tmp';
 import { getLogger } from '../shared/logger';
 import { convertToCamelCase, handleErrors } from '../shared/params';
 import minimist = require('minimist');
-import { NodePackageName } from '@angular-devkit/schematics/tasks/node-package/options';
-import { TaskExecutor } from '@angular-devkit/schematics';
-import { BuiltinTaskExecutor } from '@angular-devkit/schematics/tasks/node';
 
 export type MigrationsJson = {
   version: string;
@@ -515,23 +515,23 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     if (migrations.length > 0) {
       createMigrationsFile(root, migrations);
 
-      logger.info(`The migrate command has run successfully.`);
+      logger.info(`NX The migrate command has run successfully.`);
       logger.info(`- package.json has been updated`);
       logger.info(`- migrations.json has been generated`);
 
-      logger.info(`Next steps:`);
+      logger.info(`NX Next steps:`);
       logger.info(
         `- Make sure package.json changes make sense and then run 'npm install' or 'yarn'`
       );
       logger.info(`- Run 'nx migrate --run-migrations=migrations.json'`);
     } else {
-      logger.info(`The migrate command has run successfully.`);
+      logger.info(`NX The migrate command has run successfully.`);
       logger.info(`- package.json has been updated`);
       logger.info(
         `- there are no migrations to run, so migrations.json has not been created.`
       );
 
-      logger.info(`Next steps:`);
+      logger.info(`NX Next steps:`);
       logger.info(
         `- Make sure package.json changes make sense and then run 'npm install' or 'yarn'`
       );
@@ -539,7 +539,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
   } catch (e) {
     const startVersion = versions(root, {})('@nrwl/workspace');
     logger.error(
-      `The migrate command failed. Try the following to migrate your workspace:`
+      `NX The migrate command failed. Try the following to migrate your workspace:`
     );
     logger.error(`> npm install --save-dev @nrwl/workspace@latest`);
     logger.error(
@@ -600,7 +600,7 @@ class MigrationEngineHost extends NodeModulesEngineHost {
       if (!pkgJsonSchematics) {
         pkgJsonSchematics = packageJson['ng-update'];
         if (!pkgJsonSchematics) {
-          throw new Error(`Could find migrations in package: "${name}"`);
+          throw new Error(`Could not find migrations in package: "${name}"`);
         }
       }
       if (typeof pkgJsonSchematics != 'string') {
