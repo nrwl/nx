@@ -44,7 +44,9 @@ export async function runCommand<T extends RunArgs>(
   const hasher = new Hasher(projectGraph, nxJson, tasksOptions);
   await Promise.all(
     tasks.map(async (t) => {
-      t.hash = await hasher.hash(t);
+      const hash = await hasher.hash(t);
+      t.hash = hash.value;
+      t.hashDetails = hash.details;
     })
   );
 

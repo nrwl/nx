@@ -7,10 +7,35 @@ import { execSync } from 'child_process';
 
 const hasha = require('hasha');
 
+export interface Hash {
+  value: string;
+  details: {
+    command: string;
+    sources: { [projectName: string]: string };
+    implicitDeps: { [key: string]: string };
+    runtime: { [input: string]: string };
+  };
+}
+
+interface ProjectHashResult {
+  value: string;
+  sources: { [projectName: string]: string };
+}
+
+interface ImplicitHashResult {
+  value: string;
+  sources: { [fileName: string]: string };
+}
+
+interface RuntimeHashResult {
+  value: string;
+  runtime: { [input: string]: string };
+}
+
 export class Hasher {
   static version = '1.0';
-  implicitDependencies: Promise<string>;
-  runtimeInputs: Promise<string>;
+  implicitDependencies: Promise<ImplicitHashResult>;
+  runtimeInputs: Promise<RuntimeHashResult>;
   fileHashes = new FileHashes();
   projectHashes = new ProjectHashes(this.projectGraph, this.fileHashes);
 
@@ -20,13 +45,16 @@ export class Hasher {
     private readonly options: any
   ) {}
 
-  async hash(task: Task): Promise<string> {
-    const args = [
-      task.target.project || '',
-      task.target.target || '',
-      task.target.configuration || '',
-      JSON.stringify(task.overrides),
-    ];
+  async hash(task: Task): Promise<Hash> {
+    const command = hasha(
+      [
+        task.target.project || '',
+        task.target.target || '',
+        task.target.configuration || '',
+        JSON.stringify(task.overrides),
+      ],
+      { algorithm: 'sha256' }
+    );
 
     const values = await Promise.all([
       this.projectHashes.hashProject(task.target.project, [
@@ -36,10 +64,25 @@ export class Hasher {
       this.runtimeInputsHash(),
     ]);
 
-    return hasha([Hasher.version, ...args, ...values], { algorithm: 'sha256' });
+    const value = hasha(
+      [Hasher.version, command, ...values.map((v) => v.value)],
+      {
+        algorithm: 'sha256',
+      }
+    );
+
+    return {
+      value,
+      details: {
+        command,
+        sources: values[0].sources,
+        implicitDeps: values[1].sources,
+        runtime: values[2].runtime,
+      },
+    };
   }
 
-  private async runtimeInputsHash() {
+  private async runtimeInputsHash(): Promise<RuntimeHashResult> {
     if (this.runtimeInputs) return this.runtimeInputs;
 
     const inputs =
@@ -48,34 +91,65 @@ export class Hasher {
         : [];
     if (inputs.length > 0) {
       try {
-        const values = await Promise.all(
-          inputs.map(async (i) => execSync(i).toString().trim())
+        const values = (await Promise.all(
+          inputs.map(async (input) => {
+            const value = execSync(input).toString().trim();
+            return { input, value };
+          })
+        )) as any;
+
+        const value = await hasha(
+          values.map((v) => v.value),
+          {
+            algorithm: 'sha256',
+          }
         );
-        this.runtimeInputs = hasha(values, { algorithm: 'sha256' });
+        const runtime = values.reduce(
+          (m, c) => ((m[c.input] = c.value), m),
+          {}
+        );
+        return { value, runtime };
       } catch (e) {
         throw new Error(
           `Nx failed to execute runtimeCacheInputs defined in nx.json failed:\n${e.message}`
         );
       }
     } else {
-      this.runtimeInputs = Promise.resolve('');
+      this.runtimeInputs = Promise.resolve({ value: '', runtime: {} });
     }
 
     return this.runtimeInputs;
   }
 
-  private async implicitDepsHash() {
+  private async implicitDepsHash(): Promise<ImplicitHashResult> {
     if (this.implicitDependencies) return this.implicitDependencies;
 
-    const values = await Promise.all([
-      ...Object.keys(this.nxJson.implicitDependencies || {}).map((r) =>
-        this.fileHashes.hashFile(r)
-      ),
-      ...rootWorkspaceFileNames().map((r) => this.fileHashes.hashFile(r)),
-      this.fileHashes.hashFile('package-lock.json'),
-      this.fileHashes.hashFile('yarn.lock'),
-    ]);
-    this.implicitDependencies = hasha(values, { algorithm: 'sha256' });
+    const fileNames = [
+      ...Object.keys(this.nxJson.implicitDependencies || {}),
+      ...rootWorkspaceFileNames(),
+      'package-lock.json',
+      'yarn.lock',
+    ];
+
+    this.implicitDependencies = Promise.resolve().then(async () => {
+      const fileHashes = await Promise.all(
+        fileNames.map(async (file) => {
+          const hash = await this.fileHashes.hashFile(file);
+          return { file, hash };
+        })
+      );
+
+      const combinedHash = await hasha(
+        fileHashes.map((v) => v.hash),
+        {
+          algorithm: 'sha256',
+        }
+      );
+      return {
+        value: combinedHash,
+        sources: fileHashes.reduce((m, c) => ((m[c.file] = c.hash), m), {}),
+      };
+    });
     return this.implicitDependencies;
   }
 }
@@ -88,20 +162,36 @@ export class ProjectHashes {
     private readonly fileHashes: FileHashes
   ) {}
 
-  async hashProject(projectName: string, visited: string[]) {
+  async hashProject(
+    projectName: string,
+    visited: string[]
+  ): Promise<ProjectHashResult> {
     return Promise.resolve().then(async () => {
-      const deps = (this.projectGraph.dependencies[projectName] || []).map(
-        (t) => {
-          if (visited.indexOf(t.target) > -1) {
-            return '';
-          } else {
-            visited.push(t.target);
-            return this.hashProject(t.target, visited);
-          }
-        }
+      const deps = this.projectGraph.dependencies[projectName] || [];
+      const depHashes = (
+        await Promise.all(
+          deps.map(async (d) => {
+            if (visited.indexOf(d.target) > -1) {
+              return null;
+            } else {
+              visited.push(d.target);
+              return await this.hashProject(d.target, visited);
+            }
+          })
+        )
+      ).filter((r) => !!r);
+      const projectHash = await this.hashProjectNodeSource(projectName);
+      const sources = depHashes.reduce(
+        (m, c) => {
+          return { ...m, ...c.sources };
+        },
+        { [projectName]: projectHash }
       );
-      const sources = this.hashProjectNodeSource(projectName);
-      return hasha(await Promise.all([...deps, sources]));
+      const value = await hasha([
+        ...depHashes.map((d) => d.value),
+        projectHash,
+      ]);
+      return { value, sources };
     });
   }
 
