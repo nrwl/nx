@@ -129,6 +129,7 @@ export function addLintFiles(
                 : [options.localConfig.extends]
               : [];
             configJson = {
+              rules: {},
               ...options.localConfig,
               extends: [...extendsOption, rootConfig]
             };

@@ -6,7 +6,10 @@ import {
   ReplaceChange
 } from '@nrwl/workspace/src/utils/ast-utils';
 import * as ts from 'typescript';
-import { SchematicContext } from '@angular-devkit/schematics';
+import {
+  SchematicContext,
+  SchematicsException
+} from '@angular-devkit/schematics';
 
 export function findMainRenderStatement(
   source: ts.SourceFile
@@ -67,8 +70,9 @@ export function findDefaultExportDeclaration(
   if (identifier) {
     const variables = findNodes(source, ts.SyntaxKind.VariableDeclaration);
     const fns = findNodes(source, ts.SyntaxKind.FunctionDeclaration);
-    const all = variables.concat(fns) as Array<
-      ts.VariableDeclaration | ts.FunctionDeclaration
+    const cls = findNodes(source, ts.SyntaxKind.ClassDeclaration);
+    const all = [...variables, ...fns, ...cls] as Array<
+      ts.VariableDeclaration | ts.FunctionDeclaration | ts.ClassDeclaration
     >;
 
     const exported = all
@@ -119,6 +123,7 @@ function hasDefaultExportModifier(
   x: ts.ClassDeclaration | ts.FunctionDeclaration
 ) {
   return (
+    x.modifiers &&
     x.modifiers.some(m => m.kind === ts.SyntaxKind.ExportKeyword) &&
     x.modifiers.some(m => m.kind === ts.SyntaxKind.DefaultKeyword)
   );
@@ -444,4 +449,86 @@ export function updateReduxStore(
       }`
     )
   ];
+}
+
+export function getComponentName(sourceFile: ts.SourceFile): ts.Node | null {
+  const defaultExport = findDefaultExport(sourceFile);
+
+  if (
+    !(
+      defaultExport &&
+      findNodes(defaultExport, ts.SyntaxKind.JsxElement).length > 0
+    )
+  ) {
+    return null;
+  }
+
+  return defaultExport;
+}
+
+export function getComponentPropsInterface(
+  sourceFile: ts.SourceFile
+): ts.InterfaceDeclaration | null {
+  const cmpDeclaration = getComponentName(sourceFile);
+  let propsTypeName: string = null;
+
+  if (ts.isFunctionDeclaration(cmpDeclaration)) {
+    const propsParam: ts.ParameterDeclaration = cmpDeclaration.parameters.find(
+      x => ts.isParameter(x) && (x.name as ts.Identifier).text === 'props'
+    );
+
+    if (propsParam && propsParam.type) {
+      propsTypeName = ((propsParam.type as ts.TypeReferenceNode)
+        .typeName as ts.Identifier).text;
+    }
+  } else if (
+    (cmpDeclaration as ts.VariableDeclaration).initializer &&
+    ts.isArrowFunction((cmpDeclaration as ts.VariableDeclaration).initializer)
+  ) {
+    const arrowFn = (cmpDeclaration as ts.VariableDeclaration)
+      .initializer as ts.ArrowFunction;
+
+    const propsParam: ts.ParameterDeclaration = arrowFn.parameters.find(
+      x => ts.isParameter(x) && (x.name as ts.Identifier).text === 'props'
+    );
+
+    if (propsParam && propsParam.type) {
+      propsTypeName = ((propsParam.type as ts.TypeReferenceNode)
+        .typeName as ts.Identifier).text;
+    }
+  } else if (
+    // do we have a class component extending from React.Component
+    ts.isClassDeclaration(cmpDeclaration) &&
+    cmpDeclaration.heritageClauses &&
+    cmpDeclaration.heritageClauses.length > 0
+  ) {
+    const heritageClause = cmpDeclaration.heritageClauses[0];
+
+    if (heritageClause) {
+      const propsTypeExpression = heritageClause.types.find(
+        x =>
+          (x.expression as ts.PropertyAccessExpression).name.text ===
+            'Component' ||
+          (x.expression as ts.PropertyAccessExpression).name.text ===
+            'PureComponent'
+      );
+
+      if (propsTypeExpression && propsTypeExpression.typeArguments) {
+        propsTypeName = (propsTypeExpression
+          .typeArguments[0] as ts.TypeReferenceNode).typeName.getText();
+      }
+    }
+  } else {
+    return null;
+  }
+
+  if (propsTypeName) {
+    return findNodes(sourceFile, ts.SyntaxKind.InterfaceDeclaration).find(
+      (x: ts.InterfaceDeclaration) => {
+        return (x.name as ts.Identifier).getText() === propsTypeName;
+      }
+    ) as ts.InterfaceDeclaration;
+  } else {
+    return null;
+  }
 }

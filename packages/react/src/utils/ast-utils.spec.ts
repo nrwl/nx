@@ -56,6 +56,41 @@ describe('findDefaultExport', () => {
     expect(result).toBeDefined();
     expect(result.name.text).toEqual('main');
   });
+
+  it('should find default class export', () => {
+    const sourceCode = `
+        export default class Main {};
+      `;
+    const source = ts.createSourceFile(
+      'test.ts',
+      sourceCode,
+      ts.ScriptTarget.Latest,
+      true
+    );
+
+    const result = utils.findDefaultExport(source) as any;
+
+    expect(result).toBeDefined();
+    expect(result.name.text).toEqual('Main');
+  });
+
+  it('should find exported class', () => {
+    const sourceCode = `
+        class Main {};
+        export default Main;
+      `;
+    const source = ts.createSourceFile(
+      'test.ts',
+      sourceCode,
+      ts.ScriptTarget.Latest,
+      true
+    );
+
+    const result = utils.findDefaultExport(source) as any;
+
+    expect(result).toBeDefined();
+    expect(result.name.text).toEqual('Main');
+  });
 });
 
 describe('addRoute', () => {
@@ -359,5 +394,105 @@ const store = createStore(combineReducer({}));
       "import { SLICE_KEY, sliceReducer } from '@test/slice'"
     );
     expect(result).toContain('[SLICE_KEY]: sliceReducer');
+  });
+});
+
+describe('getComponentName', () => {
+  [
+    {
+      testName: 'exporting a function',
+      src: `export default function Test(props: TestProps) {
+        return (
+          <div>
+            <h1>Welcome to test component, {props.name}</h1>
+          </div>
+        );`,
+      expectedName: 'Test'
+    },
+    {
+      testName: 'defining a function and then default exporting it',
+      src: `
+      function Test(props: TestProps) {
+        return (
+          <div>
+            <h1>Welcome to test component, {props.name}</h1>
+          </div>
+        );
+      };
+      export default Test;
+      `,
+      expectedName: 'Test'
+    },
+    {
+      testName: 'defining an arrow function and then exporting it',
+      src: `
+      const Test = (props: TestProps) => {
+        return (
+          <div>
+            <h1>Welcome to test component, {props.name}</h1>
+          </div>
+        );
+      };
+      export default Test;
+      `,
+      expectedName: 'Test'
+    },
+    {
+      testName: 'defining an arrow function that directly returns JSX',
+      src: `
+    const Test = (props: TestProps) => <div><h1>Welcome to test component, {props.name}</h1></div>;
+    export default Test
+    `,
+      expectedName: 'Test'
+    },
+    {
+      testName: 'exporting a react class component',
+      src: `
+      export default class Test extends React.Component<TestProps> {
+        render() {
+          return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+        }
+      }
+      `,
+      expectedName: 'Test'
+    },
+    {
+      testName: 'defining a react class component & then default exporting it',
+      src: `
+      export default class Test extends React.Component<TestProps> {
+        render() {
+          return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+        }
+      }
+      `,
+      expectedName: 'Test'
+    }
+  ].forEach(testConfig => {
+    it(`should find the component when ${testConfig.testName}`, () => {
+      const source = ts.createSourceFile(
+        'some-component.tsx',
+        testConfig.src,
+        ts.ScriptTarget.Latest,
+        true
+      );
+
+      const result = utils.getComponentName(source) as any;
+
+      expect(result).toBeDefined();
+      expect((result as any).name.text).toEqual(testConfig.expectedName);
+    });
+  });
+
+  it('should return null if there is no component', () => {
+    const source = ts.createSourceFile(
+      'some-component.tsx',
+      `console.log('hi there');`,
+      ts.ScriptTarget.Latest,
+      true
+    );
+
+    const result = utils.getComponentName(source) as any;
+
+    expect(result).toBeNull();
   });
 });

@@ -9,8 +9,11 @@ import {
 } from '@angular-devkit/schematics';
 import { findNodes } from '@nrwl/workspace';
 import { PropertyDeclaration, SyntaxKind } from 'typescript';
-import { getTsSourceFile, applyWithSkipExisting } from '../../utils/ast-utils';
-import { getSourceNodes } from '@nrwl/workspace/src/utils/ast-utils';
+import { getTsSourceFile } from '../../utils/ast-utils';
+import {
+  getSourceNodes,
+  applyWithSkipExisting
+} from '@nrwl/workspace/src/utils/ast-utils';
 
 export interface CreateComponentStoriesFileSchema {
   libPath: string;

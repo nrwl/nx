@@ -16,6 +16,11 @@
       "description": "Run the cypress-configure schematic",
       "x-prompt": "Configure a cypress e2e app to run against the storybook instance?"
     },
+    "generateStories": {
+      "type": "boolean",
+      "description": "Automatically generate *.stories.ts files for components declared in this library",
+      "x-prompt": "Automatically generate story files for components declared in this library?"
+    },
     "js": {
       "type": "boolean",
       "description": "Generate JavaScript files rather than TypeScript files",
