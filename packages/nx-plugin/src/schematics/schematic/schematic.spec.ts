@@ -110,7 +110,7 @@ describe('NxPlugin schematic', () => {
 
   describe('--unitTestRunner', () => {
     describe('none', () => {
-      it('should generate files', async () => {
+      it('should not generate files', async () => {
         const tree = await runSchematic(
           'schematic',
           {
