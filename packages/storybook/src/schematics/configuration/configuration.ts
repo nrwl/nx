@@ -107,6 +107,7 @@ function addStorybookTask(projectName: string, uiFramework: string): Rule {
       options: {
         uiFramework,
         port: 4400,
+        staticDir: [`${projectConfig.root}/src/assets`],
         config: {
           configFolder: `${projectConfig.root}/.storybook`
         }
