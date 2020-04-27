@@ -92,6 +92,7 @@ describe('lib', () => {
 
     it('should generate files', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
+      expect(tree.exists('libs/my-lib/package.json')).toBeFalsy();
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.tsx')).toBeTruthy();

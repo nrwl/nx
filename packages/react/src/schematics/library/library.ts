@@ -96,7 +96,7 @@ export default function(schema: Schema): Rule {
             pascalCaseFiles: options.pascalCaseFiles
           })
         : noop(),
-      updateLibPackageNpmScope(options),
+      options.publishable ? updateLibPackageNpmScope(options) : noop(),
       updateAppRoutes(options, context),
       formatFiles(options)
     ])(host, context);
