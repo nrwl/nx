@@ -246,7 +246,11 @@ function printGenHelp(
       ...schema,
       properties: {
         ...schema.properties,
-        dryRun: `Runs through and reports activity without writing to disk.`
+        dryRun: {
+          type: 'boolean',
+          default: false,
+          description: `Runs through and reports activity without writing to disk.`
+        }
       }
     },
     logger
