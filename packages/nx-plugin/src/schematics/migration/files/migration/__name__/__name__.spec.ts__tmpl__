@@ -25,7 +25,6 @@ describe('<%= name %>', () => {
   });
 
   it(`should update dependencies`, async () => {
-    // eslint-disable-next-line require-atomic-updates
     const result = await schematicRunner
       .runSchematicAsync('<%= name %>', {}, initialTree)
       .toPromise();
