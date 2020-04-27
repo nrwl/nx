@@ -97,21 +97,23 @@ describe('NxPlugin builder', () => {
     );
   });
 
-  describe('--unitTestRunner none', () => {
-    it('should not generate unit test files', async () => {
-      const tree = await runSchematic(
-        'builder',
-        {
-          project: projectName,
-          name: 'my-builder',
-          unitTestRunner: 'none'
-        },
-        appTree
-      );
+  describe('--unitTestRunner', () => {
+    describe('none', () => {
+      it('should not generate unit test files', async () => {
+        const tree = await runSchematic(
+          'builder',
+          {
+            project: projectName,
+            name: 'my-builder',
+            unitTestRunner: 'none'
+          },
+          appTree
+        );
 
-      expect(
-        tree.exists('libs/my-plugin/src/builders/my-builder/builder.spec.ts')
-      ).toBeFalsy();
+        expect(
+          tree.exists('libs/my-plugin/src/builders/my-builder/builder.spec.ts')
+        ).toBeFalsy();
+      });
     });
   });
 });
