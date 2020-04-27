@@ -33,5 +33,10 @@
     "name": "@gperdomor/nx-docker",
     "description": "Nx plugin to build docker images of your affected apps",
     "url": "https://github.com/gperdomor/nx-tools/tree/master/libs/nx-docker"
+  },
+  {
+    "name": "@nx-plus/docusaurus",
+    "description": "Nx plugin adding first class support for Docusaurus in your Nx workspace.",
+    "url": "https://github.com/ZachJW34/nx-plus/tree/master/libs/docusaurus"
   }
 ]
