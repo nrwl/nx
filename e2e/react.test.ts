@@ -29,6 +29,9 @@ forEachCli(currentCLIName => {
       );
       runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
 
+      // Libs should not include package.json by default
+      checkFilesDoNotExist(`libs/${libName}/package.json`);
+
       const mainPath = `apps/${appName}/src/main.tsx`;
       updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
 
