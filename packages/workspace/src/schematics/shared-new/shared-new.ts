@@ -239,8 +239,10 @@ function setDefaultLinter(linter: string) {
     json.schematics['@nrwl/cypress'] = { 'cypress-project': { linter } };
     json.schematics['@nrwl/react'] = {
       application: { linter },
-      library: { linter }
+      library: { linter },
+      'storybook-configuration': { linter }
     };
+
     json.schematics['@nrwl/next'] = {
       application: { linter }
     };

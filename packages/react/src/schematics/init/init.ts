@@ -42,9 +42,11 @@ function setDefault(): Rule {
       jsonIdentity(workspace.extensions.schematics) || {};
     const reactSchematics =
       jsonIdentity(workspace.extensions.schematics['@nrwl/react']) || {};
+
     workspace.extensions.schematics = {
       ...workspace.extensions.schematics,
       '@nrwl/react': {
+        ...reactSchematics,
         application: {
           ...jsonIdentity(reactSchematics.application),
           babel: true
