@@ -74,5 +74,4 @@ export function ensureNxProject(
 ): void {
   ensureDirSync(tmpProjPath());
   newNxProject(npmPackageName, pluginDistPath);
-  copyNodeModules(['@nrwl']);
 }
