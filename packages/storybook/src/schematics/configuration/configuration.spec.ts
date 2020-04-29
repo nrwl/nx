@@ -2,7 +2,7 @@ import { Tree } from '@angular-devkit/schematics';
 import {
   readJsonInTree,
   readWorkspaceJson,
-  getProjectConfig
+  getProjectConfig,
 } from '@nrwl/workspace';
 import { createTestUILib, runSchematic } from '../../utils/testing';
 import { StorybookConfigureSchema } from './schema';
@@ -40,15 +40,15 @@ describe('schematic:configuration', () => {
       builder: '@nrwl/storybook:storybook',
       configurations: {
         ci: {
-          quiet: true
-        }
+          quiet: true,
+        },
       },
       options: {
         port: 4400,
         config: {
-          configFolder: 'libs/test-ui-lib/.storybook'
-        }
-      }
+          configFolder: 'libs/test-ui-lib/.storybook',
+        },
+      },
     });
   });
 

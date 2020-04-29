@@ -69,6 +69,11 @@
       "version": "9.2.0-beta.1",
       "description": "Add cacheable operations to nx.json",
       "factory": "./src/migrations/update-9-2-0/update-9-2-0"
+    },
+    "update-9-3-0": {
+      "version": "9.3.0-beta.1",
+      "description": "Update prettier to v2",
+      "factory": "./src/migrations/update-9-3-0/update-9-3-0"
     }
   },
   "packageJsonUpdates": {
@@ -538,6 +543,14 @@
         "@angular/service-worker": {
           "version": "~9.1.0",
           "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "9.3.0": {
+      "version": "9.3.0-beta.1",
+      "packages": {
+        "prettier": {
+          "version": "2.0.4"
         }
       }
     }

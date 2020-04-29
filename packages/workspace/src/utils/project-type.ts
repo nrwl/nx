@@ -1,6 +1,6 @@
 export enum ProjectType {
   Application = 'application',
-  Library = 'library'
+  Library = 'library',
 }
 
 export function projectRootDir(projectType: ProjectType) {

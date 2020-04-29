@@ -1,7 +1,7 @@
 import {
   BuilderContext,
   createBuilder,
-  targetFromTargetString
+  targetFromTargetString,
 } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
 
@@ -18,7 +18,7 @@ import { buildServePath } from '../../utils/serve-path';
 import { getSourceRoot } from '../../utils/source-root';
 import {
   runWebpackDevServer,
-  DevServerBuildOutput
+  DevServerBuildOutput,
 } from '@angular-devkit/build-webpack';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 
@@ -66,7 +66,7 @@ function run(
       if (buildOptions.webpackConfig) {
         webpackConfig = require(buildOptions.webpackConfig)(webpackConfig, {
           buildOptions,
-          configuration: serveOptions.buildTarget.split(':')[2]
+          configuration: serveOptions.buildTarget.split(':')[2],
         });
       }
       return [webpackConfig, buildOptions] as [
@@ -80,7 +80,7 @@ function run(
         protocol: serveOptions.ssl ? 'https' : 'http',
         hostname: serveOptions.host,
         port: serveOptions.port.toString(),
-        pathname: path
+        pathname: path,
       });
 
       context.logger.info(stripIndents`
@@ -90,7 +90,7 @@ function run(
           `);
       if (serveOptions.open) {
         opn(serverUrl, {
-          wait: false
+          wait: false,
         });
       }
       return [_, options, serverUrl] as [
@@ -101,13 +101,13 @@ function run(
     }),
     switchMap(([config, options, serverUrl]) => {
       return runWebpackDevServer(config, context, {
-        logging: stats => {
+        logging: (stats) => {
           context.logger.info(stats.toString(config.stats));
         },
         webpackFactory: require('webpack'),
-        webpackDevServerFactory: require('webpack-dev-server')
+        webpackDevServerFactory: require('webpack-dev-server'),
       }).pipe(
-        map(output => {
+        map((output) => {
           output.baseUrl = serverUrl;
           return output;
         })
@@ -131,7 +131,7 @@ function getBuildOptions(
   return from(
     Promise.all([
       context.getTargetOptions(target),
-      context.getBuilderNameForTarget(target)
+      context.getBuilderNameForTarget(target),
     ])
       .then(([options, builderName]) =>
         context.validateOptions<WebBuildBuilderOptions & JsonObject>(
@@ -139,9 +139,9 @@ function getBuildOptions(
           builderName
         )
       )
-      .then(options => ({
+      .then((options) => ({
         ...options,
-        ...overrides
+        ...overrides,
       }))
   );
 }

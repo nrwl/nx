@@ -5,10 +5,10 @@ import {
   readJson,
   runCLI,
   uniq,
-  updateFile
+  updateFile,
 } from './utils';
 
-forEachCli('nx', cli => {
+forEachCli('nx', (cli) => {
   describe('Build React libraries and apps', () => {
     /**
      * Graph:
@@ -50,7 +50,7 @@ forEachCli('nx', cli => {
         updateFile(
           `libs/${parent}/src/lib/${parent}.tsx`,
           `
-              ${children.map(entry => `import '@proj/${entry}';`).join('\n')}
+              ${children.map((entry) => `import '@proj/${entry}';`).join('\n')}
 
             `
         );
@@ -66,7 +66,7 @@ forEachCli('nx', cli => {
       );
 
       // we are setting paths to {} to make sure built libs are read from dist
-      updateFile('tsconfig.json', c => {
+      updateFile('tsconfig.json', (c) => {
         const json = JSON.parse(c);
         json.compilerOptions.paths = {};
         return JSON.stringify(json, null, 2);
@@ -112,7 +112,7 @@ forEachCli('nx', cli => {
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
       expect(jsonFile.dependencies).toEqual({
         [`@proj/${childLib}`]: '0.0.1',
-        [`@proj/${childLib2}`]: '0.0.1'
+        [`@proj/${childLib2}`]: '0.0.1',
       });
     });
 

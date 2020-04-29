@@ -12,7 +12,7 @@ describe('checkProjectExists Rule', () => {
 
   it('should throw an error if the project does NOT exist', async () => {
     const schema = {
-      projectName: 'my-lib'
+      projectName: 'my-lib',
     };
 
     await expect(callRule(checkProjectExists(schema), tree)).rejects.toThrow(
@@ -24,7 +24,7 @@ describe('checkProjectExists Rule', () => {
     tree = await runSchematic('lib', { name: 'my-lib' }, tree);
 
     const schema = {
-      projectName: 'my-lib'
+      projectName: 'my-lib',
     };
 
     await expect(

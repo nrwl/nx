@@ -6,18 +6,18 @@ import {
   schema,
   tags,
   terminal,
-  virtualFs
+  virtualFs,
 } from '@angular-devkit/core';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import {
   DryRunEvent,
   formats,
   HostTree,
-  Schematic
+  Schematic,
 } from '@angular-devkit/schematics';
 import {
   NodeWorkflow,
-  validateOptionsWithSchema
+  validateOptionsWithSchema,
 } from '@angular-devkit/schematics/tools';
 import * as fs from 'fs';
 import * as inquirer from 'inquirer';
@@ -27,7 +27,7 @@ import {
   convertToCamelCase,
   handleErrors,
   Schema,
-  validateOptions
+  validateOptions,
 } from '../shared/params';
 import { commandName, printHelp } from '../shared/print-help';
 import minimist = require('minimist');
@@ -60,13 +60,13 @@ function parseGenerateOpts(
       boolean: ['help', 'dryRun', 'debug', 'force', 'interactive'],
       alias: {
         dryRun: 'dry-run',
-        d: 'dryRun'
+        d: 'dryRun',
       },
       default: {
         debug: false,
         dryRun: false,
-        interactive: true
-      }
+        interactive: true,
+      },
     })
   );
 
@@ -99,7 +99,7 @@ function parseGenerateOpts(
     dryRun: schematicOptions.dryRun,
     force: schematicOptions.force,
     interactive: schematicOptions.interactive,
-    defaults: schematicOptions.defaults
+    defaults: schematicOptions.defaults,
   };
 
   delete schematicOptions.debug;
@@ -159,7 +159,7 @@ async function createWorkflow(
     dryRun: opts.dryRun,
     packageManager: await detectPackageManager(fsHost),
     root: normalize(root),
-    registry: new schema.CoreSchemaRegistry(formats.standardFormats)
+    registry: new schema.CoreSchemaRegistry(formats.standardFormats),
   });
   const _params = opts.schematicOptions._;
   delete opts.schematicOptions._;
@@ -184,11 +184,11 @@ async function createWorkflow(
   if (opts.interactive !== false && isTTY()) {
     workflow.registry.usePromptProvider(
       (definitions: Array<schema.PromptDefinition>) => {
-        const questions: inquirer.Questions = definitions.map(definition => {
+        const questions: inquirer.Questions = definitions.map((definition) => {
           const question = {
             name: definition.id,
             message: definition.message,
-            default: definition.default as any
+            default: definition.default as any,
           } as any;
 
           const validator = definition.validator;
@@ -204,13 +204,13 @@ async function createWorkflow(
               question.type = !!definition.multiselect ? 'checkbox' : 'list';
               question.choices =
                 definition.items &&
-                definition.items.map(item => {
+                definition.items.map((item) => {
                   if (typeof item == 'string') {
                     return item;
                   } else {
                     return {
                       name: item.label,
-                      value: item.value
+                      value: item.value,
                     };
                   }
                 });
@@ -246,8 +246,12 @@ function printGenHelp(
       ...schema,
       properties: {
         ...schema.properties,
-        dryRun: `Runs through and reports activity without writing to disk.`
-      }
+        dryRun: {
+          type: 'boolean',
+          default: false,
+          description: `Runs through and reports activity without writing to disk.`,
+        },
+      },
     },
     logger
   );
@@ -318,7 +322,7 @@ async function runSchematic(
   );
 
   if (schematicOptions['--'] && !allowAdditionalArgs) {
-    schematicOptions['--'].forEach(unmatched => {
+    schematicOptions['--'].forEach((unmatched) => {
       const message =
         `Could not match option '${unmatched.name}' to the ${opts.collectionName}:${opts.schematicName} schema.` +
         (unmatched.possible.length > 0
@@ -336,12 +340,12 @@ async function runSchematic(
       schematic: opts.schematicName,
       options: { ...defaults, ...schematicOptions },
       debug: opts.debug,
-      logger
+      logger,
     })
     .toPromise();
 
   if (!record.error) {
-    record.loggingQueue.forEach(log => logger.info(log));
+    record.loggingQueue.forEach((log) => logger.info(log));
   }
 
   if (opts.dryRun) {

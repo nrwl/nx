@@ -3,7 +3,7 @@ import { angularJsVersion } from './versions';
 import { updateJsonInTree } from '@nrwl/workspace';
 
 export function addUpgradeToPackageJson(): Rule {
-  return updateJsonInTree('package.json', packageJson => {
+  return updateJsonInTree('package.json', (packageJson) => {
     if (!packageJson['dependencies']) {
       packageJson['dependencies'] = {};
     }

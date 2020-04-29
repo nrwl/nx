@@ -2,7 +2,7 @@ import {
   chain,
   Rule,
   SchematicContext,
-  Tree
+  Tree,
 } from '@angular-devkit/schematics';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
@@ -10,19 +10,24 @@ import { updateJsonInTree } from '../../utils/ast-utils';
 import { NxJson } from '../../core/shared-interfaces';
 import { formatFiles } from '@nrwl/workspace/src/utils/rules/format-files';
 
-const addE2eImplicitDependencies = updateJsonInTree<NxJson>('nx.json', json => {
-  Object.keys(json.projects).forEach(proj => {
-    const implicitE2eName = proj.replace(/-e2e$/, '');
-    if (proj.endsWith('-e2e') && json.projects[implicitE2eName]) {
-      json.projects[proj].implicitDependencies =
-        json.projects[proj].implicitDependencies || [];
-      if (!json.projects[proj].implicitDependencies.includes(implicitE2eName)) {
-        json.projects[proj].implicitDependencies.push(implicitE2eName);
+const addE2eImplicitDependencies = updateJsonInTree<NxJson>(
+  'nx.json',
+  (json) => {
+    Object.keys(json.projects).forEach((proj) => {
+      const implicitE2eName = proj.replace(/-e2e$/, '');
+      if (proj.endsWith('-e2e') && json.projects[implicitE2eName]) {
+        json.projects[proj].implicitDependencies =
+          json.projects[proj].implicitDependencies || [];
+        if (
+          !json.projects[proj].implicitDependencies.includes(implicitE2eName)
+        ) {
+          json.projects[proj].implicitDependencies.push(implicitE2eName);
+        }
       }
-    }
-  });
-  return json;
-});
+    });
+    return json;
+  }
+);
 
 function showInfo(host: Tree, context: SchematicContext) {
   context.logger.info(stripIndents`
@@ -32,6 +37,6 @@ function showInfo(host: Tree, context: SchematicContext) {
   `);
 }
 
-export default function(): Rule {
+export default function (): Rule {
   return chain([showInfo, addE2eImplicitDependencies, formatFiles()]);
 }

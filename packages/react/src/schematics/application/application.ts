@@ -11,7 +11,7 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import {
   addLintFiles,
@@ -23,11 +23,11 @@ import {
   offsetFromRoot,
   toFileName,
   updateJsonInTree,
-  updateWorkspace
+  updateWorkspace,
 } from '@nrwl/workspace';
 import {
   addDepsToPackageJson,
-  updateWorkspaceInTree
+  updateWorkspaceInTree,
 } from '@nrwl/workspace/src/utils/ast-utils';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import * as ts from 'typescript';
@@ -38,7 +38,7 @@ import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
 import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
 import {
   reactRouterDomVersion,
-  typesReactRouterDomVersion
+  typesReactRouterDomVersion,
 } from '../../utils/versions';
 import init from '../init/init';
 import { Schema } from './schema';
@@ -54,18 +54,18 @@ interface NormalizedSchema extends Schema {
   hasStyles: boolean;
 }
 
-export default function(schema: Schema): Rule {
+export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
 
     return chain([
       init({
         ...options,
-        skipFormat: true
+        skipFormat: true,
       }),
       addLintFiles(options.appProjectRoot, options.linter, {
         localConfig: reactEslintJson,
-        extraPackageDeps: extraEslintDependencies
+        extraPackageDeps: extraEslintDependencies,
       }),
       createApplicationFiles(options),
       updateNxJson(options),
@@ -76,7 +76,7 @@ export default function(schema: Schema): Rule {
       addStyledModuleDependencies(options),
       addRouting(options, context),
       setDefaults(options),
-      formatFiles(options)
+      formatFiles(options),
     ]);
   };
 }
@@ -88,16 +88,16 @@ function createApplicationFiles(options: NormalizedSchema): Rule {
         ...names(options.name),
         ...options,
         tmpl: '',
-        offsetFromRoot: offsetFromRoot(options.appProjectRoot)
+        offsetFromRoot: offsetFromRoot(options.appProjectRoot),
       }),
       options.styledModule || !options.hasStyles
-        ? filter(file => !file.endsWith(`.${options.style}`))
+        ? filter((file) => !file.endsWith(`.${options.style}`))
         : noop(),
       options.unitTestRunner === 'none'
-        ? filter(file => file !== `/src/app/${options.fileName}.spec.tsx`)
+        ? filter((file) => file !== `/src/app/${options.fileName}.spec.tsx`)
         : noop(),
       move(options.appProjectRoot),
-      options.js ? toJS() : noop()
+      options.js ? toJS() : noop(),
     ])
   );
 }
@@ -105,7 +105,7 @@ function createApplicationFiles(options: NormalizedSchema): Rule {
 function updateJestConfig(options: NormalizedSchema): Rule {
   return options.unitTestRunner === 'none'
     ? noop()
-    : host => {
+    : (host) => {
         const configPath = `${options.appProjectRoot}/jest.config.js`;
         const originalContent = host.read(configPath).toString();
         const content = updateJestConfigContent(originalContent);
@@ -114,14 +114,14 @@ function updateJestConfig(options: NormalizedSchema): Rule {
 }
 
 function updateNxJson(options: NormalizedSchema): Rule {
-  return updateJsonInTree<NxJson>('nx.json', json => {
+  return updateJsonInTree<NxJson>('nx.json', (json) => {
     json.projects[options.projectName] = { tags: options.parsedTags };
     return json;
   });
 }
 
 function addProject(options: NormalizedSchema): Rule {
-  return updateWorkspaceInTree(json => {
+  return updateWorkspaceInTree((json) => {
     const architect: { [key: string]: any } = {};
 
     architect.build = {
@@ -137,14 +137,14 @@ function addProject(options: NormalizedSchema): Rule {
         tsConfig: join(options.appProjectRoot, 'tsconfig.app.json'),
         assets: [
           join(options.appProjectRoot, 'src/favicon.ico'),
-          join(options.appProjectRoot, 'src/assets')
+          join(options.appProjectRoot, 'src/assets'),
         ],
         styles:
           options.styledModule || !options.hasStyles
             ? []
             : [join(options.appProjectRoot, `src/styles.${options.style}`)],
         scripts: [],
-        webpackConfig: '@nrwl/react/plugins/webpack'
+        webpackConfig: '@nrwl/react/plugins/webpack',
       },
       configurations: {
         production: {
@@ -157,8 +157,8 @@ function addProject(options: NormalizedSchema): Rule {
               with: join(
                 options.appProjectRoot,
                 maybeJs(options, `src/environments/environment.prod.ts`)
-              )
-            }
+              ),
+            },
           ],
           optimization: true,
           outputHashing: 'all',
@@ -171,23 +171,23 @@ function addProject(options: NormalizedSchema): Rule {
             {
               type: 'initial',
               maximumWarning: '2mb',
-              maximumError: '5mb'
-            }
-          ]
-        }
-      }
+              maximumError: '5mb',
+            },
+          ],
+        },
+      },
     };
 
     architect.serve = {
       builder: '@nrwl/web:dev-server',
       options: {
-        buildTarget: `${options.projectName}:build`
+        buildTarget: `${options.projectName}:build`,
       },
       configurations: {
         production: {
-          buildTarget: `${options.projectName}:build:production`
-        }
-      }
+          buildTarget: `${options.projectName}:build:production`,
+        },
+      },
     };
 
     architect.lint = generateProjectLint(
@@ -201,7 +201,7 @@ function addProject(options: NormalizedSchema): Rule {
       sourceRoot: join(options.appProjectRoot, 'src'),
       projectType: 'application',
       schematics: {},
-      architect
+      architect,
     };
 
     json.defaultProject = json.defaultProject || options.projectName;
@@ -216,7 +216,7 @@ function addCypress(options: NormalizedSchema): Rule {
         ...options,
         name: options.name + '-e2e',
         directory: options.directory,
-        project: options.projectName
+        project: options.projectName,
       })
     : noop();
 }
@@ -228,7 +228,7 @@ function addJest(options: NormalizedSchema): Rule {
         supportTsx: true,
         skipSerializers: true,
         setupFile: 'none',
-        babelJest: options.babelJest
+        babelJest: options.babelJest,
       })
     : noop();
 }
@@ -268,7 +268,7 @@ function addRouting(
         addDepsToPackageJson(
           { 'react-router-dom': reactRouterDomVersion },
           { '@types/react-router-dom': typesReactRouterDomVersion }
-        )
+        ),
       ])
     : noop();
 }
@@ -276,7 +276,7 @@ function addRouting(
 function setDefaults(options: NormalizedSchema): Rule {
   return options.skipWorkspaceJson
     ? noop()
-    : updateWorkspace(workspace => {
+    : updateWorkspace((workspace) => {
         workspace.extensions.schematics = jsonIdentity(
           workspace.extensions.schematics || {}
         );
@@ -293,18 +293,18 @@ function setDefaults(options: NormalizedSchema): Rule {
             application: {
               style: options.style,
               linter: options.linter,
-              ...jsonIdentity(prev.application)
+              ...jsonIdentity(prev.application),
             },
             component: {
               style: options.style,
-              ...jsonIdentity(prev.component)
+              ...jsonIdentity(prev.component),
             },
             library: {
               style: options.style,
               linter: options.linter,
-              ...jsonIdentity(prev.library)
-            }
-          }
+              ...jsonIdentity(prev.library),
+            },
+          },
         };
       });
 }
@@ -325,7 +325,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const e2eProjectRoot = normalize(`apps/${appDirectory}-e2e`);
 
   const parsedTags = options.tags
-    ? options.tags.split(',').map(s => s.trim())
+    ? options.tags.split(',').map((s) => s.trim())
     : [];
 
   const fileName = options.pascalCaseFiles ? 'App' : 'app';
@@ -346,7 +346,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     parsedTags,
     fileName,
     styledModule,
-    hasStyles: options.style !== 'none'
+    hasStyles: options.style !== 'none',
   };
 }
 

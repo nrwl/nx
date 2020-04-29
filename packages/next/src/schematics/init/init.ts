@@ -5,19 +5,19 @@ import { Schema } from './schema';
 import { setDefaultCollection } from '@nrwl/workspace/src/utils/rules/workspace';
 import {
   reactDomVersion,
-  reactVersion
+  reactVersion,
 } from '../../../../react/src/utils/versions';
 
 const updateDependencies = addDepsToPackageJson(
   {
     next: nextVersion,
     react: reactVersion,
-    'react-dom': reactDomVersion
+    'react-dom': reactDomVersion,
   },
   {}
 );
 
-export default function(schema: Schema) {
+export default function (schema: Schema) {
   return chain([
     setDefaultCollection('@nrwl/next'),
     schema.unitTestRunner === 'jest'
@@ -28,6 +28,6 @@ export default function(schema: Schema) {
       : noop(),
     addPackageWithInit('@nrwl/web', schema),
     addPackageWithInit('@nrwl/react', schema),
-    updateDependencies
+    updateDependencies,
   ]);
 }

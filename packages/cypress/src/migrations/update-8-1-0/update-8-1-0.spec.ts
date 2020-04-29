@@ -13,7 +13,7 @@ describe('Update 8.1.0', () => {
     initialTree.create(
       'package.json',
       serializeJson({
-        scripts: {}
+        scripts: {},
       })
     );
     schematicRunner = new SchematicTestRunner(

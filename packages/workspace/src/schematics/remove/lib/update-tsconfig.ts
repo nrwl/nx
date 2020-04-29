@@ -3,7 +3,7 @@ import {
   getWorkspace,
   NxJson,
   readJsonInTree,
-  serializeJson
+  serializeJson,
 } from '@nrwl/workspace';
 import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -17,7 +17,7 @@ import { Schema } from '../schema';
 export function updateTsconfig(schema: Schema) {
   return (tree: Tree, _context: SchematicContext): Observable<Tree> => {
     return from(getWorkspace(tree)).pipe(
-      map(workspace => {
+      map((workspace) => {
         const nxJson = readJsonInTree<NxJson>(tree, 'nx.json');
         const project = workspace.projects.get(schema.projectName);
 

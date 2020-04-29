@@ -2,13 +2,13 @@ import { Tree, SchematicContext, chain } from '@angular-devkit/schematics';
 import { readWorkspace, readJsonInTree } from '../../utils/ast-utils';
 import { formatFiles } from '@nrwl/workspace';
 
-export default function() {
+export default function () {
   return chain([
     (host: Tree) => {
       const config = readWorkspace(host);
 
       const configsToUpdate = [];
-      Object.keys(config.projects).forEach(name => {
+      Object.keys(config.projects).forEach((name) => {
         const project = config.projects[name];
         if (
           project.projectType === 'library' &&
@@ -23,7 +23,7 @@ export default function() {
         }
       });
 
-      configsToUpdate.forEach(config => {
+      configsToUpdate.forEach((config) => {
         const tsconfig = readJsonInTree(host, config);
         if (tsconfig.exclude && tsconfig.exclude[0] === 'src/test.ts') {
           tsconfig.exclude[0] = 'src/test-setup.ts';
@@ -31,6 +31,6 @@ export default function() {
         }
       });
     },
-    formatFiles()
+    formatFiles(),
   ]);
 }

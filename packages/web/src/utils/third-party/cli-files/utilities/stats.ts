@@ -41,11 +41,11 @@ export function generateBundleStats(
   const y = (x: string) => (colors ? bold(yellow(x)) : x);
 
   const size = typeof info.size === 'number' ? ` ${formatSize(info.size)}` : '';
-  const files = info.files.map(f => path.basename(f)).join(', ');
+  const files = info.files.map((f) => path.basename(f)).join(', ');
   const names = info.names ? ` (${info.names.join(', ')})` : '';
   const initial = y(info.entry ? '[entry]' : info.initial ? '[initial]' : '');
   const flags = ['rendered', 'recorded']
-    .map(f => (f && (info as any)[f] ? g(` [${f}]`) : ''))
+    .map((f) => (f && (info as any)[f] ? g(` [${f}]`) : ''))
     .join('');
 
   return `chunk {${y(info.id.toString())}} ${g(

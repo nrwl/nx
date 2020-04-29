@@ -4,7 +4,7 @@ import {
   Path,
   JsonAstObject,
   parseJsonAst,
-  JsonValue
+  JsonValue,
 } from '@angular-devkit/core';
 
 import {
@@ -15,7 +15,7 @@ import {
   Rule,
   mergeWith,
   apply,
-  forEach
+  forEach,
 } from '@angular-devkit/schematics';
 
 import { get } from 'http';
@@ -30,10 +30,10 @@ export const Constants = {
   addonDependencies: ['@storybook/addons'],
   tsConfigExclusions: ['stories', '**/*.stories.ts'],
   pkgJsonScripts: {
-    storybook: 'start-storybook -p 9001 -c .storybook'
+    storybook: 'start-storybook -p 9001 -c .storybook',
   },
   jsonIndentLevel: 2,
-  coreAddonPrefix: '@storybook/addon-'
+  coreAddonPrefix: '@storybook/addon-',
 };
 
 export function safeFileDelete(tree: Tree, path: string): boolean {
@@ -55,10 +55,10 @@ export function getLatestNodeVersion(
 ): Promise<NodePackage> {
   const DEFAULT_VERSION = 'latest';
 
-  return new Promise(resolve => {
-    return get(`http://registry.npmjs.org/${packageName}`, res => {
+  return new Promise((resolve) => {
+    return get(`http://registry.npmjs.org/${packageName}`, (res) => {
       let rawData = '';
-      res.on('data', chunk => (rawData += chunk));
+      res.on('data', (chunk) => (rawData += chunk));
       res.on('end', () => {
         try {
           const response = JSON.parse(rawData);
@@ -128,13 +128,13 @@ export function applyWithOverwrite(source: Source, rules: Rule[]): Rule {
     const rule = mergeWith(
       apply(source, [
         ...rules,
-        forEach(fileEntry => {
+        forEach((fileEntry) => {
           if (tree.exists(fileEntry.path)) {
             tree.overwrite(fileEntry.path, fileEntry.content);
             return null;
           }
           return fileEntry;
-        })
+        }),
       ])
     );
 
@@ -147,12 +147,12 @@ export function applyWithSkipExisting(source: Source, rules: Rule[]): Rule {
     const rule = mergeWith(
       apply(source, [
         ...rules,
-        forEach(fileEntry => {
+        forEach((fileEntry) => {
           if (tree.exists(fileEntry.path)) {
             return null;
           }
           return fileEntry;
-        })
+        }),
       ])
     );
 

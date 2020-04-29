@@ -13,7 +13,7 @@ export interface Task {
 
 export enum AffectedEventType {
   TaskComplete = '[Task] Complete',
-  TaskCacheRead = '[Task] CacheRead'
+  TaskCacheRead = '[Task] CacheRead',
 }
 
 export interface AffectedEvent {

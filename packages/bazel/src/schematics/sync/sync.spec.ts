@@ -102,7 +102,7 @@ describe('@nrwl/bazel:sync', () => {
     beforeEach(async () => {
       tree = await callRule(
         chain([
-          updateWorkspace(workspace => {
+          updateWorkspace((workspace) => {
             workspace.projects.add({
               name: 'proj',
               root: 'proj',
@@ -111,21 +111,21 @@ describe('@nrwl/bazel:sync', () => {
                   builder: '@nrwl/web:build',
                   options: {},
                   configurations: {
-                    production: {}
-                  }
+                    production: {},
+                  },
                 },
                 serve: {
                   builder: '@nrwl/web:dev-server',
                   options: {},
                   configurations: {
-                    production: {}
-                  }
+                    production: {},
+                  },
                 },
                 test: {
                   builder: '@nrwl/jest:jest',
-                  options: {}
-                }
-              }
+                  options: {},
+                },
+              },
             });
             workspace.projects.add({
               name: 'proj2',
@@ -135,28 +135,28 @@ describe('@nrwl/bazel:sync', () => {
                   builder: '@angular-devkit/build-angular:browser',
                   options: {},
                   configurations: {
-                    production: {}
-                  }
+                    production: {},
+                  },
                 },
                 serve: {
                   builder: '@angular-devkit/build-angular:dev-server',
                   options: {},
                   configurations: {
-                    production: {}
-                  }
+                    production: {},
+                  },
                 },
                 test: {
                   builder: '@angular-devkit/build-angular:karma',
-                  options: {}
-                }
-              }
+                  options: {},
+                },
+              },
             });
           }),
-          updateJsonInTree<NxJson>('nx.json', json => {
+          updateJsonInTree<NxJson>('nx.json', (json) => {
             json.projects['proj'] = {};
             json.projects['proj2'] = {};
             return json;
-          })
+          }),
         ]),
         tree
       );

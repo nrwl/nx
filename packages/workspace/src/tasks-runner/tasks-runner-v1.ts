@@ -5,7 +5,7 @@ import {
   AffectedEventType,
   Task,
   TaskCompleteEvent,
-  TasksRunner
+  TasksRunner,
 } from './tasks-runner';
 import { output } from '../utils/output';
 import { readJsonFile } from '../utils/fileutils';
@@ -29,17 +29,17 @@ function taskDependsOnDeps(
       return false;
     }
 
-    if (projectGraph.dependencies[source].find(d => d.target === target)) {
+    if (projectGraph.dependencies[source].find((d) => d.target === target)) {
       return true;
     }
 
-    return !!projectGraph.dependencies[source].find(r => {
+    return !!projectGraph.dependencies[source].find((r) => {
       if (visitedProjects.indexOf(r.target) > -1) return null;
       return hasDep(r.target, target, [...visitedProjects, r.target]);
     });
   }
 
-  return !!deps.find(dep =>
+  return !!deps.find((dep) =>
     hasDep(task.target.project, dep.target.project, [])
   );
 }
@@ -51,12 +51,12 @@ function topologicallySortTasks(tasks: Task[], projectGraph: ProjectGraph) {
   const visitNode = (id: string) => {
     if (visited[id]) return;
     visited[id] = true;
-    projectGraph.dependencies[id].forEach(d => {
+    projectGraph.dependencies[id].forEach((d) => {
       visitNode(d.target);
     });
     sorted.push(id);
   };
-  tasks.forEach(t => visitNode(t.target.project));
+  tasks.forEach((t) => visitNode(t.target.project));
   const sortedTasks = [...tasks];
   sortedTasks.sort((a, b) =>
     sorted.indexOf(a.target.project) > sorted.indexOf(b.target.project) ? 1 : -1
@@ -70,9 +70,9 @@ export function splitTasksIntoStages(
 ) {
   if (tasks.length === 0) return [];
   const res = [];
-  topologicallySortTasks(tasks, projectGraph).forEach(t => {
+  topologicallySortTasks(tasks, projectGraph).forEach((t) => {
     const stageWithNoDeps = res.find(
-      tasksInStage => !taskDependsOnDeps(t, tasksInStage, projectGraph)
+      (tasksInStage) => !taskDependsOnDeps(t, tasksInStage, projectGraph)
     );
     if (stageWithNoDeps) {
       stageWithNoDeps.push(t);
@@ -88,10 +88,10 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
   options: DefaultTasksRunnerOptions,
   context: { target: string; projectGraph: ProjectGraph; nxJson: NxJson }
 ): Observable<TaskCompleteEvent> => {
-  return new Observable(subscriber => {
+  return new Observable((subscriber) => {
     runTasks(tasks, options, context)
-      .then(data => data.forEach(d => subscriber.next(d)))
-      .catch(e => {
+      .then((data) => data.forEach((d) => subscriber.next(d)))
+      .catch((e) => {
         console.error('Unexpected error:');
         console.error(e);
         process.exit(1);
@@ -122,7 +122,7 @@ async function runTasks(
   for (let i = 0; i < stages.length; ++i) {
     const tasksInStage = stages[i];
     try {
-      const commands = tasksInStage.map(t =>
+      const commands = tasksInStage.map((t) =>
         getCommandAsString(cli, isYarn, t)
       );
       await runAll(commands, {
@@ -131,7 +131,7 @@ async function runTasks(
         continueOnError: true,
         stdin: process.stdin,
         stdout: process.stdout,
-        stderr: process.stderr
+        stderr: process.stderr,
       });
       res.push(...tasksToStatuses(tasksInStage, true));
     } catch (e) {
@@ -139,7 +139,7 @@ async function runTasks(
         res.push({
           task: tasksInStage[i],
           type: AffectedEventType.TaskComplete,
-          success: result.code === 0
+          success: result.code === 0,
         });
       });
       res.push(...markStagesAsNotSuccessful(stages.splice(i + 1)));
@@ -154,10 +154,10 @@ function markStagesAsNotSuccessful(stages: Task[][]) {
 }
 
 function tasksToStatuses(tasks: Task[], success: boolean) {
-  return tasks.map(task => ({
+  return tasks.map((task) => ({
     task,
     type: AffectedEventType.TaskComplete,
-    success
+    success,
   }));
 }
 
@@ -174,8 +174,8 @@ function assertPackageJsonScriptExists(cli: string) {
         `   "${cli}": "${cli}"`,
         output.colors.gray('  ...'),
         ' }',
-        output.colors.gray('...')
-      ]
+        output.colors.gray('...'),
+      ],
     });
     return process.exit(1);
   }

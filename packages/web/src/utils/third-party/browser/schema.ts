@@ -300,7 +300,7 @@ export enum Type {
   AnyComponentStyle = 'anyComponentStyle',
   AnyScript = 'anyScript',
   Bundle = 'bundle',
-  Initial = 'initial'
+  Initial = 'initial',
 }
 
 /**
@@ -309,7 +309,7 @@ export enum Type {
 export enum CrossOrigin {
   Anonymous = 'anonymous',
   None = 'none',
-  UseCredentials = 'use-credentials'
+  UseCredentials = 'use-credentials',
 }
 
 export interface FileReplacement {
@@ -325,7 +325,7 @@ export interface FileReplacement {
 export enum I18NMissingTranslation {
   Error = 'error',
   Ignore = 'ignore',
-  Warning = 'warning'
+  Warning = 'warning',
 }
 
 /**
@@ -370,7 +370,7 @@ export enum OutputHashing {
   All = 'all',
   Bundles = 'bundles',
   Media = 'media',
-  None = 'none'
+  None = 'none',
 }
 
 export type ExtraEntryPoint = ExtraEntryPointClass | string;

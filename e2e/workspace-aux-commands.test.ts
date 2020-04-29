@@ -14,10 +14,10 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-  workspaceConfigName
+  workspaceConfigName,
 } from './utils';
 
-forEachCli(cli => {
+forEachCli((cli) => {
   describe('lint', () => {
     it('lint should ensure module boundaries', () => {
       ensureProject();
@@ -39,7 +39,7 @@ forEachCli(cli => {
       const tslint = readJson('tslint.json');
       tslint.rules['nx-enforce-module-boundaries'][1].depConstraints = [
         { sourceTag: 'validtag', onlyDependOnLibsWithTags: ['validtag'] },
-        ...tslint.rules['nx-enforce-module-boundaries'][1].depConstraints
+        ...tslint.rules['nx-enforce-module-boundaries'][1].depConstraints,
       ];
       updateFile('tslint.json', JSON.stringify(tslint, null, 2));
 
@@ -178,11 +178,11 @@ forEachCli(cli => {
       const json = readJson(`tools/schematics/${custom}/schema.json`);
       json.properties['directory'] = {
         type: 'string',
-        description: 'lib directory'
+        description: 'lib directory',
       };
       json.properties['skipTsConfig'] = {
         type: 'boolean',
-        description: 'skip changes to tsconfig'
+        description: 'skip changes to tsconfig',
       };
       updateFile(
         `tools/schematics/${custom}/schema.json`,
@@ -299,47 +299,47 @@ forEachCli(cli => {
           {
             source: 'myapp3-e2e',
             target: 'myapp3',
-            type: 'implicit'
-          }
+            type: 'implicit',
+          },
         ],
         myapp2: [
           {
             source: 'myapp2',
             target: 'mylib',
-            type: 'static'
-          }
+            type: 'static',
+          },
         ],
         'myapp2-e2e': [
           {
             source: 'myapp2-e2e',
             target: 'myapp2',
-            type: 'implicit'
-          }
+            type: 'implicit',
+          },
         ],
         mylib: [
           {
             source: 'mylib',
             target: 'mylib2',
-            type: 'static'
-          }
+            type: 'static',
+          },
         ],
         mylib2: [],
         myapp: [
           {
             source: 'myapp',
             target: 'mylib',
-            type: 'static'
+            type: 'static',
           },
-          { source: 'myapp', target: 'mylib2', type: 'dynamic' }
+          { source: 'myapp', target: 'mylib2', type: 'dynamic' },
         ],
         'myapp-e2e': [
           {
             source: 'myapp-e2e',
             target: 'myapp',
-            type: 'implicit'
-          }
+            type: 'implicit',
+          },
         ],
-        myapp3: []
+        myapp3: [],
       });
 
       runCommand(
@@ -592,7 +592,7 @@ forEachCli(cli => {
       const nxJson = JSON.parse(readFile('nx.json')) as NxJson;
       expect(nxJson.projects[`${lib1}-data-access`]).toBeUndefined();
       expect(nxJson.projects[newName]).toEqual({
-        tags: []
+        tags: [],
       });
 
       expect(moveOutput).toContain('UPDATE tsconfig.json');
@@ -613,7 +613,7 @@ forEachCli(cli => {
       expect(project.sourceRoot).toBe(`${newPath}/src`);
       expect(project.architect.lint.options.tsConfig).toEqual([
         `libs/shared/${lib1}/data-access/tsconfig.lib.json`,
-        `libs/shared/${lib1}/data-access/tsconfig.spec.json`
+        `libs/shared/${lib1}/data-access/tsconfig.spec.json`,
       ]);
 
       /**

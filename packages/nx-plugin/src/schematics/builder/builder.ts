@@ -9,14 +9,14 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import {
   getProjectConfig,
   names,
   readNxJsonInTree,
   toFileName,
-  updateJsonInTree
+  updateJsonInTree,
 } from '@nrwl/workspace';
 import * as path from 'path';
 import { Schema } from './schema';
@@ -28,7 +28,7 @@ export interface NormalizedSchema extends Schema {
   npmScope: string;
 }
 
-export default function(schema: NormalizedSchema): Rule {
+export default function (schema: NormalizedSchema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
 
@@ -59,7 +59,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     description,
     projectRoot,
     projectSourceRoot,
-    npmScope
+    npmScope,
   };
 
   return normalized;
@@ -71,12 +71,12 @@ function addFiles(options: NormalizedSchema): Rule {
       template({
         ...options,
         ...names(options.name),
-        tmpl: ''
+        tmpl: '',
       }),
       options.unitTestRunner === 'none'
-        ? filter(file => !file.endsWith('.spec.ts'))
+        ? filter((file) => !file.endsWith('.spec.ts'))
         : noop(),
-      move(`${options.projectSourceRoot}/builders`)
+      move(`${options.projectSourceRoot}/builders`),
     ])
   );
 }
@@ -84,12 +84,12 @@ function addFiles(options: NormalizedSchema): Rule {
 function updateBuildersJson(options: NormalizedSchema): Rule {
   return updateJsonInTree(
     path.join(options.projectRoot, 'builders.json'),
-    json => {
+    (json) => {
       const builders = json.builders ? json.builders : {};
       builders[options.name] = {
         implementation: `./src/builders/${options.name}/builder`,
         schema: `./src/builders/${options.name}/schema.json`,
-        description: options.description
+        description: options.description,
       };
       json.builders = builders;
 

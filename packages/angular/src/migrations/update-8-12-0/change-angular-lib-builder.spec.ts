@@ -4,7 +4,7 @@ import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runMigration } from '@nrwl/workspace/src/utils/testing';
 import {
   SchematicTestRunner,
-  UnitTestTree
+  UnitTestTree,
 } from '@angular-devkit/schematics/testing';
 import { join } from 'path';
 
@@ -30,23 +30,23 @@ describe('Update Angular library builder', () => {
             projectType: 'library',
             architect: {
               build: {
-                builder: '@angular-devkit/build-ng-packagr:build'
-              }
-            }
+                builder: '@angular-devkit/build-ng-packagr:build',
+              },
+            },
           },
           ['anotherbuildable-lib']: {
             projectType: 'library',
             architect: {
               build: {
-                builder: '@angular-devkit/build-ng-packagr:build'
-              }
-            }
+                builder: '@angular-devkit/build-ng-packagr:build',
+              },
+            },
           },
           ['nonbuildable-lib']: {
             projectType: 'library',
-            architect: {}
-          }
-        }
+            architect: {},
+          },
+        },
       })
     );
 

@@ -5,13 +5,13 @@ describe('assertValidStyle', () => {
     const schemas = [
       require('../schematics/application/schema.json'),
       require('../schematics/component/schema.json'),
-      require('../schematics/library/schema.json')
+      require('../schematics/library/schema.json'),
     ];
 
-    schemas.forEach(schema => {
+    schemas.forEach((schema) => {
       const values = schema.properties.style['x-prompt'].items;
       expect(() =>
-        values.forEach(value => assertValidStyle(value)).not.toThrow()
+        values.forEach((value) => assertValidStyle(value)).not.toThrow()
       );
     });
   });

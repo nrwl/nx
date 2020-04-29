@@ -19,7 +19,7 @@ describe('NxPlugin builder', () => {
       'builder',
       {
         project: projectName,
-        name: 'my-builder'
+        name: 'my-builder',
       },
       appTree
     );
@@ -44,7 +44,7 @@ describe('NxPlugin builder', () => {
       {
         project: projectName,
         name: 'my-builder',
-        description: 'my-builder description'
+        description: 'my-builder description',
       },
       appTree
     );
@@ -67,7 +67,7 @@ describe('NxPlugin builder', () => {
       'builder',
       {
         project: projectName,
-        name: 'my-builder'
+        name: 'my-builder',
       },
       appTree
     );
@@ -85,7 +85,7 @@ describe('NxPlugin builder', () => {
       {
         project: projectName,
         name: 'my-builder',
-        description: 'my-builder custom description'
+        description: 'my-builder custom description',
       },
       appTree
     );
@@ -97,21 +97,23 @@ describe('NxPlugin builder', () => {
     );
   });
 
-  describe('--unitTestRunner none', () => {
-    it('should not generate unit test files', async () => {
-      const tree = await runSchematic(
-        'builder',
-        {
-          project: projectName,
-          name: 'my-builder',
-          unitTestRunner: 'none'
-        },
-        appTree
-      );
+  describe('--unitTestRunner', () => {
+    describe('none', () => {
+      it('should not generate unit test files', async () => {
+        const tree = await runSchematic(
+          'builder',
+          {
+            project: projectName,
+            name: 'my-builder',
+            unitTestRunner: 'none',
+          },
+          appTree
+        );
 
-      expect(
-        tree.exists('libs/my-plugin/src/builders/my-builder/builder.spec.ts')
-      ).toBeFalsy();
+        expect(
+          tree.exists('libs/my-plugin/src/builders/my-builder/builder.spec.ts')
+        ).toBeFalsy();
+      });
     });
   });
 });

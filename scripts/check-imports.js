@@ -6,14 +6,14 @@ const fs = require('fs');
 function allFilesInDir(dirName) {
   let res = [];
   try {
-    fs.readdirSync(dirName).forEach(c => {
+    fs.readdirSync(dirName).forEach((c) => {
       const child = path.join(dirName, c);
       try {
         const s = fs.statSync(child);
         if (path.extname(child) === '.ts') {
           res.push({
             name: child,
-            content: fs.readFileSync(child).toString()
+            content: fs.readFileSync(child).toString(),
           });
         } else if (s.isDirectory()) {
           res = [...res, ...allFilesInDir(child)];
@@ -35,7 +35,7 @@ function check() {
     'packages/workspace/src/utils/update-task.ts',
     'packages/workspace/src/migrations/update-8-3-0/update-8-3-0.spec.ts',
     'packages/workspace/src/migrations/update-8-3-0/update-ng-cli-8-1.ts',
-    'packages/workspace/src/migrations/update-8-12-0/update-package-json-deps.spec.ts'
+    'packages/workspace/src/migrations/update-8-12-0/update-package-json-deps.spec.ts',
   ];
 
   const files = [
@@ -48,11 +48,11 @@ function check() {
     ...allFilesInDir('packages/node'),
     ...allFilesInDir('packages/react'),
     ...allFilesInDir('packages/web'),
-    ...allFilesInDir('packages/workspace')
+    ...allFilesInDir('packages/workspace'),
   ];
 
   const invalidFiles = [];
-  files.forEach(f => {
+  files.forEach((f) => {
     if (f.content.indexOf('@schematics/angular') > -1) {
       invalidFiles.push(f.name);
     }
@@ -67,7 +67,7 @@ function check() {
     }
   });
 
-  return invalidFiles.filter(f => !exceptions.includes(f));
+  return invalidFiles.filter((f) => !exceptions.includes(f));
 }
 
 const invalid = check();
@@ -75,7 +75,7 @@ if (invalid.length > 0) {
   console.error(
     'The following files import @schematics/angular or @angular/* or @angular-devkit/build-angular'
   );
-  invalid.forEach(e => console.log(e));
+  invalid.forEach((e) => console.log(e));
   process.exit(1);
 } else {
   process.exit(0);

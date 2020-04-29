@@ -52,7 +52,7 @@ export function getPluginCapabilities(
         packageJson.schematics,
         'schematics'
       ),
-      builders: tryGetCollection(pluginPath, packageJson.builders, 'builders')
+      builders: tryGetCollection(pluginPath, packageJson.builders, 'builders'),
     };
   } catch {
     return null;
@@ -66,8 +66,8 @@ export function listPluginCapabilities(pluginName: string) {
     output.note({
       title: `${pluginName} is not currently installed`,
       bodyLines: [
-        `Use "${getPackageManagerInstallCommand()} ${pluginName}" to add new capabilities`
-      ]
+        `Use "${getPackageManagerInstallCommand()} ${pluginName}" to add new capabilities`,
+      ],
     });
 
     return;
@@ -88,7 +88,7 @@ export function listPluginCapabilities(pluginName: string) {
     bodyLines.push('');
     bodyLines.push(
       ...Object.keys(plugin.schematics).map(
-        name =>
+        (name) =>
           `${terminal.bold(name)} : ${plugin.schematics[name].description}`
       )
     );
@@ -102,13 +102,14 @@ export function listPluginCapabilities(pluginName: string) {
     bodyLines.push('');
     bodyLines.push(
       ...Object.keys(plugin.builders).map(
-        name => `${terminal.bold(name)} : ${plugin.builders[name].description}`
+        (name) =>
+          `${terminal.bold(name)} : ${plugin.builders[name].description}`
       )
     );
   }
 
   output.log({
     title: `Capabilities in ${plugin.name}:`,
-    bodyLines
+    bodyLines,
   });
 }

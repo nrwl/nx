@@ -8,13 +8,13 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import {
   getProjectConfig,
   offsetFromRoot,
   readJsonFile,
-  updateWorkspace
+  updateWorkspace,
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import { StorybookStoriesSchema } from '../../../../angular/src/schematics/stories/stories';
@@ -23,7 +23,7 @@ import { CypressConfigureSchema } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 
-export default function(schema: StorybookConfigureSchema): Rule {
+export default function (schema: StorybookConfigureSchema): Rule {
   return chain([
     schematic('ng-add', {}),
     createRootStorybookDir(schema.name, schema.js),
@@ -33,9 +33,10 @@ export default function(schema: StorybookConfigureSchema): Rule {
     schema.configureCypress
       ? schematic<CypressConfigureSchema>('cypress-project', {
           name: schema.name,
-          js: schema.js
+          js: schema.js,
+          linter: schema.linter,
         })
-      : () => {}
+      : () => {},
   ]);
 }
 
@@ -44,7 +45,7 @@ function createRootStorybookDir(projectName: string, js: boolean): Rule {
     context.logger.debug('adding .storybook folder to lib');
 
     return chain([
-      applyWithSkipExisting(url('./root-files'), [js ? toJS() : noop()])
+      applyWithSkipExisting(url('./root-files'), [js ? toJS() : noop()]),
     ])(tree, context);
   };
 }
@@ -62,11 +63,11 @@ function createLibStorybookDir(
         template({
           tmpl: '',
           uiFramework,
-          offsetFromRoot: offsetFromRoot(projectConfig.root)
+          offsetFromRoot: offsetFromRoot(projectConfig.root),
         }),
         move(projectConfig.root),
-        js ? toJS() : noop()
-      ])
+        js ? toJS() : noop(),
+      ]),
     ])(tree, context);
   };
 }
@@ -88,7 +89,7 @@ function configureTsConfig(projectName: string): Rule {
     tsConfigContent.exclude = [
       ...tsConfigContent.exclude,
       '**/*.stories.ts',
-      '**/*.stories.js'
+      '**/*.stories.js',
     ];
 
     tree.overwrite(
@@ -100,7 +101,7 @@ function configureTsConfig(projectName: string): Rule {
 }
 
 function addStorybookTask(projectName: string, uiFramework: string): Rule {
-  return updateWorkspace(workspace => {
+  return updateWorkspace((workspace) => {
     const projectConfig = workspace.projects.get(projectName);
     projectConfig.targets.set('storybook', {
       builder: '@nrwl/storybook:storybook',
@@ -108,14 +109,14 @@ function addStorybookTask(projectName: string, uiFramework: string): Rule {
         uiFramework,
         port: 4400,
         config: {
-          configFolder: `${projectConfig.root}/.storybook`
-        }
+          configFolder: `${projectConfig.root}/.storybook`,
+        },
       },
       configurations: {
         ci: {
-          quiet: true
-        }
-      }
+          quiet: true,
+        },
+      },
     });
     projectConfig.targets.set('build-storybook', {
       builder: '@nrwl/storybook:build',
@@ -127,14 +128,14 @@ function addStorybookTask(projectName: string, uiFramework: string): Rule {
           projectName
         ),
         config: {
-          configFolder: `${projectConfig.root}/.storybook`
-        }
+          configFolder: `${projectConfig.root}/.storybook`,
+        },
       },
       configurations: {
         ci: {
-          quiet: true
-        }
-      }
+          quiet: true,
+        },
+      },
     });
   });
 }

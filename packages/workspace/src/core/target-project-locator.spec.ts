@@ -2,12 +2,12 @@ import { fs, vol } from 'memfs';
 import { join } from 'path';
 import {
   ProjectGraphContext,
-  ProjectGraphNode
+  ProjectGraphNode,
 } from './project-graph/project-graph-models';
 import { TargetProjectLocator } from './target-project-locator';
 
 jest.mock('../utils/app-root', () => ({
-  appRootPath: '/root'
+  appRootPath: '/root',
 }));
 jest.mock('fs', () => require('memfs').fs);
 
@@ -19,14 +19,14 @@ describe('findTargetProjectWithImport', () => {
   beforeEach(() => {
     const workspaceJson = {
       projects: {
-        proj1: {}
-      }
+        proj1: {},
+      },
     };
     const nxJson = {
       npmScope: 'proj',
       projects: {
-        proj1: {}
-      }
+        proj1: {},
+      },
     };
     const tsConfig = {
       compilerOptions: {
@@ -37,9 +37,9 @@ describe('findTargetProjectWithImport', () => {
           '@proj/project-3': ['libs/proj3a/index.ts'],
           '@proj/proj123': ['libs/proj123/index.ts'],
           '@proj/proj1234': ['libs/proj1234/index.ts'],
-          '@proj/proj1234-child': ['libs/proj1234-child/index.ts']
-        }
-      }
+          '@proj/proj1234-child': ['libs/proj1234-child/index.ts'],
+        },
+      },
     };
     fsJson = {
       './workspace.json': JSON.stringify(workspaceJson),
@@ -54,7 +54,7 @@ describe('findTargetProjectWithImport', () => {
       './libs/proj4ab/index.ts': `export const a = 4;`,
       './libs/proj123/index.ts': 'export const a = 5',
       './libs/proj1234/index.ts': 'export const a = 6',
-      './libs/proj1234-child/index.ts': 'export const a = 7'
+      './libs/proj1234-child/index.ts': 'export const a = 7',
     };
     vol.fromJSON(fsJson, '/root');
 
@@ -66,52 +66,52 @@ describe('findTargetProjectWithImport', () => {
           {
             file: 'libs/proj/index.ts',
             mtime: 0,
-            ext: '.ts'
-          }
+            ext: '.ts',
+          },
         ],
         proj2: [
           {
             file: 'libs/proj2/index.ts',
             mtime: 0,
-            ext: '.ts'
-          }
+            ext: '.ts',
+          },
         ],
         proj3a: [
           {
             file: 'libs/proj3a/index.ts',
             mtime: 0,
-            ext: '.ts'
-          }
+            ext: '.ts',
+          },
         ],
         proj4ab: [
           {
             file: 'libs/proj4ab/index.ts',
             mtime: 0,
-            ext: '.ts'
-          }
+            ext: '.ts',
+          },
         ],
         proj123: [
           {
             file: 'libs/proj123/index.ts',
             mtime: 0,
-            ext: '.ts'
-          }
+            ext: '.ts',
+          },
         ],
         proj1234: [
           {
             file: 'libs/proj1234/index.ts',
             mtime: 0,
-            ext: '.ts'
-          }
+            ext: '.ts',
+          },
         ],
         'proj1234-child': [
           {
             file: 'libs/proj1234-child/index.ts',
             mtime: 0,
-            ext: '.ts'
-          }
-        ]
-      }
+            ext: '.ts',
+          },
+        ],
+      },
     };
 
     projects = {
@@ -120,78 +120,78 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj3a',
-          files: []
-        }
+          files: [],
+        },
       },
       proj2: {
         name: 'proj2',
         type: 'lib',
         data: {
           root: 'libs/proj2',
-          files: []
-        }
+          files: [],
+        },
       },
       proj: {
         name: 'proj',
         type: 'lib',
         data: {
           root: 'libs/proj',
-          files: []
-        }
+          files: [],
+        },
       },
       proj1234: {
         name: 'proj1234',
         type: 'lib',
         data: {
           root: 'libs/proj1234',
-          files: []
-        }
+          files: [],
+        },
       },
       proj123: {
         name: 'proj123',
         type: 'lib',
         data: {
           root: 'libs/proj123',
-          files: []
-        }
+          files: [],
+        },
       },
       proj4ab: {
         name: 'proj4ab',
         type: 'lib',
         data: {
           root: 'libs/proj4ab',
-          files: []
-        }
+          files: [],
+        },
       },
       '@ng/core': {
         name: '@ng/core',
         type: 'npm',
         data: {
-          files: []
-        }
+          files: [],
+        },
       },
       '@ng/common': {
         name: '@ng/common',
         type: 'npm',
         data: {
-          files: []
-        }
+          files: [],
+        },
       },
       'npm-package': {
         name: 'npm-package',
         type: 'npm',
         data: {
-          files: []
-        }
+          files: [],
+        },
       },
       'proj1234-child': {
         name: 'proj1234-child',
         type: 'lib',
         data: {
           root: 'libs/proj1234-child',
-          files: []
-        }
-      }
+          files: [],
+        },
+      },
     };
 
     targetProjectLocator = new TargetProjectLocator(projects);
@@ -255,7 +255,7 @@ describe('findTargetProjectWithImport', () => {
       'proj',
       '@ng/core',
       '@ng/common',
-      'npm-package'
+      'npm-package',
     ]);
   });
 });

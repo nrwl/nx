@@ -13,8 +13,8 @@ export const getTouchedProjects: TouchedProjectLocator = (
     .map(([name]) => name);
 
   return touchedFiles
-    .map(f => {
-      return projectNames.find(projectName => {
+    .map((f) => {
+      return projectNames.find((projectName) => {
         const p = workspaceJson.projects[projectName];
         const projectRoot = p.root.endsWith('/') ? p.root : p.root + '/';
         return f.file.startsWith(projectRoot);
@@ -38,7 +38,7 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
     nxJson.implicitDependencies
   )) {
     const implicitDependencyWasChanged = fileChanges.some(
-      f => f.file === filePath
+      (f) => f.file === filePath
     );
     if (!implicitDependencyWasChanged) {
       continue;

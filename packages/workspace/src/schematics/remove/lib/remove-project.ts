@@ -12,7 +12,7 @@ import { Schema } from '../schema';
 export function removeProject(schema: Schema) {
   return (tree: Tree, _context: SchematicContext): Observable<Tree> => {
     return from(getWorkspace(tree)).pipe(
-      map(workspace => {
+      map((workspace) => {
         const project = workspace.projects.get(schema.projectName);
         tree.delete(project.root);
         return tree;

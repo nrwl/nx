@@ -13,7 +13,7 @@ interface Schema {
  * extra dependencies for css, sass, less, styl style options, and make sure
  * it is under `pages` folder.
  */
-export default function(options: Schema): Rule {
+export default function (options: Schema): Rule {
   return chain([
     externalSchematic('@nrwl/react', 'component', {
       ...options,
@@ -23,8 +23,8 @@ export default function(options: Schema): Rule {
       classComponent: false,
       routing: false,
       skipTests: !options.withTests,
-      flat: false
+      flat: false,
     }),
-    addStyleDependencies(options.style)
+    addStyleDependencies(options.style),
   ]);
 }

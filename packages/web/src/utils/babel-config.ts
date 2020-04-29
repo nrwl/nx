@@ -21,10 +21,10 @@ export function createBabelConfig(
           exclude: ['transform-typeof-symbol'],
           // Let babel-env figure which modern browsers to support.
           // See: https://github.com/babel/babel/blob/master/packages/babel-preset-env/data/built-in-modules.json
-          targets: esm ? { esmodules: true } : undefined
-        }
+          targets: esm ? { esmodules: true } : undefined,
+        },
       ],
-      [require.resolve('@babel/preset-typescript')]
+      [require.resolve('@babel/preset-typescript')],
     ],
     plugins: [
       require.resolve('babel-plugin-macros'),
@@ -32,8 +32,8 @@ export function createBabelConfig(
       [require.resolve('@babel/plugin-proposal-decorators'), { legacy: true }],
       [
         require.resolve('@babel/plugin-proposal-class-properties'),
-        { loose: true }
-      ]
+        { loose: true },
+      ],
     ],
     overrides: [
       {
@@ -42,11 +42,11 @@ export function createBabelConfig(
           [
             require.resolve('babel-plugin-const-enum'),
             {
-              transform: 'removeConst'
-            }
-          ]
-        ]
-      }
-    ]
+              transform: 'removeConst',
+            },
+          ],
+        ],
+      },
+    ],
   };
 }

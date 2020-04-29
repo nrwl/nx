@@ -32,12 +32,12 @@ describe('app', () => {
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-app': {
-          tags: ['one', 'two']
+          tags: ['one', 'two'],
         },
         'my-app-e2e': {
           tags: [],
-          implicitDependencies: ['my-app']
-        }
+          implicitDependencies: ['my-app'],
+        },
       });
     });
 
@@ -64,7 +64,7 @@ describe('app', () => {
     const tree = await runSchematic(
       'app',
       {
-        name: 'my-app'
+        name: 'my-app',
       },
       appTree
     );
@@ -78,7 +78,7 @@ describe('app', () => {
     const tree = await runSchematic(
       'app',
       {
-        name: 'my-app'
+        name: 'my-app',
       },
       appTree
     );
@@ -92,7 +92,7 @@ describe('app', () => {
     const tree = await runSchematic(
       'app',
       {
-        name: 'my-app'
+        name: 'my-app',
       },
       appTree
     );
@@ -101,7 +101,7 @@ describe('app', () => {
     expect(architectConfig.build.builder).toEqual('@nrwl/next:build');
     expect(architectConfig.build.options).toEqual({
       root: 'apps/my-app',
-      outputPath: 'dist/apps/my-app'
+      outputPath: 'dist/apps/my-app',
     });
   });
 
@@ -109,7 +109,7 @@ describe('app', () => {
     const tree = await runSchematic(
       'app',
       {
-        name: 'my-app'
+        name: 'my-app',
       },
       appTree
     );
@@ -118,10 +118,10 @@ describe('app', () => {
     expect(architectConfig.serve.builder).toEqual('@nrwl/next:server');
     expect(architectConfig.serve.options).toEqual({
       buildTarget: 'my-app:build',
-      dev: true
+      dev: true,
     });
     expect(architectConfig.serve.configurations).toEqual({
-      production: { dev: false, buildTarget: 'my-app:build:production' }
+      production: { dev: false, buildTarget: 'my-app:build:production' },
     });
   });
 
@@ -129,7 +129,7 @@ describe('app', () => {
     const tree = await runSchematic(
       'app',
       {
-        name: 'my-app'
+        name: 'my-app',
       },
       appTree
     );
@@ -137,7 +137,7 @@ describe('app', () => {
     const architectConfig = workspaceJson.projects['my-app'].architect;
     expect(architectConfig.export.builder).toEqual('@nrwl/next:export');
     expect(architectConfig.export.options).toEqual({
-      buildTarget: 'my-app:build:production'
+      buildTarget: 'my-app:build:production',
     });
   });
 
@@ -191,8 +191,8 @@ describe('app', () => {
       expect(packageJson).toMatchObject({
         devDependencies: {
           'eslint-plugin-react': expect.anything(),
-          'eslint-plugin-react-hooks': expect.anything()
-        }
+          'eslint-plugin-react-hooks': expect.anything(),
+        },
       });
     });
   });

@@ -1,6 +1,6 @@
 import {
   createProjectGraph,
-  onlyWorkspaceProjects
+  onlyWorkspaceProjects,
 } from '../core/project-graph';
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
 import * as path from 'path';
@@ -17,7 +17,7 @@ export function workspaceLint() {
   ).run();
 
   if (cliErrorOutputConfigs.length > 0) {
-    cliErrorOutputConfigs.forEach(errorConfig => {
+    cliErrorOutputConfigs.forEach((errorConfig) => {
       output.error(errorConfig);
     });
     process.exit(1);
@@ -26,7 +26,7 @@ export function workspaceLint() {
 
 function readAllFilesFromAppsAndLibs() {
   return [
-    ...allFilesInDir(`${appRootPath}/apps`).map(f => f.file),
-    ...allFilesInDir(`${appRootPath}/libs`).map(f => f.file)
-  ].filter(f => !path.basename(f).startsWith('.'));
+    ...allFilesInDir(`${appRootPath}/apps`).map((f) => f.file),
+    ...allFilesInDir(`${appRootPath}/libs`).map((f) => f.file),
+  ].filter((f) => !path.basename(f).startsWith('.'));
 }

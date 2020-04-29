@@ -8,6 +8,6 @@ export default function update(): Rule {
       path.join(__dirname, '../../../', 'migrations.json'),
       '8.10.0'
     ),
-    formatFiles()
+    formatFiles(),
   ]);
 }

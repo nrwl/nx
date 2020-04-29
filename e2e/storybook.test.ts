@@ -6,7 +6,7 @@ import {
   ensureProject,
   tmpProjPath,
   checkFilesExist,
-  readFile
+  readFile,
 } from './utils';
 import { writeFileSync, mkdirSync } from 'fs';
 

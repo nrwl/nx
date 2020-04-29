@@ -4,7 +4,7 @@ import { Tree, Rule, externalSchematic } from '@angular-devkit/schematics';
 import { names, toFileName } from '@nrwl/workspace/src/utils/name-utils';
 import {
   createEmptyWorkspace,
-  MockBuilderContext
+  MockBuilderContext,
 } from '@nrwl/workspace/testing';
 import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { schema } from '@angular-devkit/core';
@@ -82,7 +82,7 @@ export function createApp(
   // save for getAppDir() lookup by external *.spec.ts tests
   appConfig = {
     appName,
-    appModule: `/apps/${appName}/src/app/app.module.ts`
+    appModule: `/apps/${appName}/src/app/app.module.ts`,
   };
 
   tree.create(
@@ -121,13 +121,13 @@ export function createApp(
   tree.create(
     `/apps/${appName}/tsconfig.app.json`,
     JSON.stringify({
-      include: ['**/*.ts']
+      include: ['**/*.ts'],
     })
   );
   tree.create(
     `/apps/${appName}-e2e/tsconfig.e2e.json`,
     JSON.stringify({
-      include: ['../**/*.ts']
+      include: ['../**/*.ts'],
     })
   );
   tree.overwrite(
@@ -142,15 +142,15 @@ export function createApp(
           architect: {
             build: {
               options: {
-                main: `apps/${appName}/src/main.ts`
-              }
+                main: `apps/${appName}/src/main.ts`,
+              },
             },
             serve: {
-              options: {}
-            }
-          }
-        }
-      }
+              options: {},
+            },
+          },
+        },
+      },
     })
   );
   return tree;
@@ -162,7 +162,7 @@ export function createLib(tree: Tree, libName: string): Tree {
   libConfig = {
     name,
     module: `/libs/${propertyName}/src/lib/${fileName}.module.ts`,
-    barrel: `/libs/${propertyName}/src/index.ts`
+    barrel: `/libs/${propertyName}/src/index.ts`,
   };
 
   tree.create(

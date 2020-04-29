@@ -18,10 +18,10 @@ export function createFileMap(workspaceJson: any, files: FileData[]): FileMap {
         ? -1
         : 1;
     })
-    .forEach(projectName => {
+    .forEach((projectName) => {
       const p = workspaceJson.projects[projectName];
       fileMap[projectName] = fileMap[projectName] || [];
-      files.forEach(f => {
+      files.forEach((f) => {
         if (seen.has(f.file)) {
           return;
         }

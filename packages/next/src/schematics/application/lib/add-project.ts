@@ -5,7 +5,7 @@ import { updateWorkspaceInTree } from '@nrwl/workspace/src/utils/ast-utils';
 import { NormalizedSchema } from './normalize-options';
 
 export function addProject(options: NormalizedSchema): Rule {
-  return updateWorkspaceInTree(json => {
+  return updateWorkspaceInTree((json) => {
     const architect: { [key: string]: any } = {};
     const { server } = options;
 
@@ -13,41 +13,41 @@ export function addProject(options: NormalizedSchema): Rule {
       builder: '@nrwl/next:build',
       options: {
         root: options.appProjectRoot,
-        outputPath: join(normalize('dist'), options.appProjectRoot)
+        outputPath: join(normalize('dist'), options.appProjectRoot),
       },
       // This has to be here so `nx serve [app] --prod` will work. Otherwise
       // a missing configuration error will be thrown.
       configurations: {
-        production: {}
-      }
+        production: {},
+      },
     };
 
     architect.serve = {
       builder: '@nrwl/next:server',
       options: {
         buildTarget: `${options.projectName}:build`,
-        dev: true
+        dev: true,
       },
       configurations: {
         production: {
           buildTarget: `${options.projectName}:build:production`,
-          dev: false
-        }
-      }
+          dev: false,
+        },
+      },
     };
 
     if (server) {
       architect.serve.options = {
         ...architect.serve.options,
-        customServerPath: options.server
+        customServerPath: options.server,
       };
     }
 
     architect.export = {
       builder: '@nrwl/next:export',
       options: {
-        buildTarget: `${options.projectName}:build:production`
-      }
+        buildTarget: `${options.projectName}:build:production`,
+      },
     };
 
     architect.lint = generateProjectLint(
@@ -61,7 +61,7 @@ export function addProject(options: NormalizedSchema): Rule {
       sourceRoot: options.appProjectRoot,
       projectType: 'application',
       schematics: {},
-      architect
+      architect,
     };
 
     json.defaultProject = json.defaultProject || options.projectName;

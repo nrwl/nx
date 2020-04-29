@@ -7,7 +7,7 @@ export function showNxWarning(workspaceName: string) {
     const pathToRunNxCommand = path.resolve(process.cwd(), workspaceName);
     execSync('nx --version', {
       cwd: pathToRunNxCommand,
-      stdio: ['ignore', 'ignore', 'ignore']
+      stdio: ['ignore', 'ignore', 'ignore'],
     });
   } catch (e) {
     // no nx found
@@ -16,8 +16,8 @@ export function showNxWarning(workspaceName: string) {
       title: `Nx CLI is not installed globally.`,
       bodyLines: [
         `This means that you might have to use "yarn nx" or "npm nx" to execute commands in the workspace.`,
-        `Run "yarn global add @nrwl/cli" or "npm install -g @nrwl/cli" to be able to execute command directly.`
-      ]
+        `Run "yarn global add @nrwl/cli" or "npm install -g @nrwl/cli" to be able to execute command directly.`,
+      ],
     });
   }
 }
@@ -45,7 +45,7 @@ function getPackageManagerFromAngularCLI(): string {
   try {
     return execSync('ng config -g cli.packageManager', {
       stdio: ['ignore', 'pipe', 'ignore'],
-      timeout: 500
+      timeout: 500,
     })
       .toString()
       .trim();
@@ -58,7 +58,7 @@ function isPackageManagerInstalled(packageManager: string) {
   let isInstalled = false;
   try {
     execSync(`${packageManager} --version`, {
-      stdio: ['ignore', 'ignore', 'ignore']
+      stdio: ['ignore', 'ignore', 'ignore'],
     });
     isInstalled = true;
   } catch (e) {

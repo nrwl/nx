@@ -3,13 +3,13 @@ import {
   BuilderOutput,
   createBuilder,
   scheduleTargetAndForget,
-  targetFromTargetString
+  targetFromTargetString,
 } from '@angular-devkit/architect';
 import { terminal } from '@angular-devkit/core';
 import * as fs from 'fs';
 import {
   PHASE_DEVELOPMENT_SERVER,
-  PHASE_PRODUCTION_SERVER
+  PHASE_PRODUCTION_SERVER,
 } from 'next/dist/next-server/lib/constants';
 import * as path from 'path';
 import { from, Observable, of, throwError } from 'rxjs';
@@ -20,7 +20,7 @@ import {
   NextServeBuilderOptions,
   NextServer,
   NextServerOptions,
-  ProxyConfig
+  ProxyConfig,
 } from '../../utils/types';
 import { customServer } from './lib/custom-server';
 import { defaultServer } from './lib/default-server';
@@ -59,7 +59,7 @@ export function run(
         conf: config,
         port: options.port,
         path: options.customServerPath,
-        hostname: options.hostname
+        hostname: options.hostname,
       };
 
       const server: NextServer = options.customServerPath
@@ -79,7 +79,7 @@ export function run(
       }
 
       return from(server(settings, proxyConfig)).pipe(
-        catchError(err => {
+        catchError((err) => {
           if (options.dev) {
             throw err;
           } else {
@@ -92,11 +92,11 @@ export function run(
           context.logger.info(`${readyPrefix} on ${baseUrl}`);
         }),
         switchMap(
-          e =>
-            new Observable<BuilderOutput>(obs => {
+          (e) =>
+            new Observable<BuilderOutput>((obs) => {
               obs.next({
                 baseUrl,
-                success: true
+                success: true,
               });
             })
         )

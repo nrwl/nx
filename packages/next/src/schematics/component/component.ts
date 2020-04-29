@@ -13,7 +13,7 @@ interface Schema {
  * This schematic is basically the React one, but for Next we need
  * extra dependencies for css, sass, less, styl style options.
  */
-export default function(options: Schema): Rule {
+export default function (options: Schema): Rule {
   return chain([
     externalSchematic('@nrwl/react', 'component', {
       ...options,
@@ -21,8 +21,8 @@ export default function(options: Schema): Rule {
       pascalCaseFiles: false,
       export: false,
       classComponent: false,
-      routing: false
+      routing: false,
     }),
-    addStyleDependencies(options.style)
+    addStyleDependencies(options.style),
   ]);
 }

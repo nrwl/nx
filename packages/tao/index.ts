@@ -59,7 +59,7 @@ export async function invokeCommand(
         root,
         [
           `${projectName}:${command}`,
-          ...(projectNameIncluded ? commandArgs.slice(1) : commandArgs)
+          ...(projectNameIncluded ? commandArgs.slice(1) : commandArgs),
         ],
         isVerbose
       );

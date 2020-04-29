@@ -9,18 +9,18 @@ import {
   Source,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import {
   getProjectGraphFromHost,
   getWorkspace,
   readJsonInTree,
-  readWorkspace
+  readWorkspace,
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import {
   ProjectGraph,
-  ProjectGraphNode
+  ProjectGraphNode,
 } from '@nrwl/workspace/src/core/project-graph';
 import { rulesNodeJSSha, rulesNodeJSVersion } from '../utils/versions';
 import { TargetDefinition } from '@angular-devkit/core/src/workspace';
@@ -30,7 +30,7 @@ const buildBuilders = {
   '@angular-devkit/build-angular:server': 'outputPath',
   '@angular-devkit/build-angular:ng-packagr': 'outputPath',
   '@angular-devkit/build-webpack:webpack': 'outputPath',
-  '@nrwl/web:build': 'outputPath'
+  '@nrwl/web:build': 'outputPath',
 };
 
 const testBuilders = new Set([
@@ -39,7 +39,7 @@ const testBuilders = new Set([
   '@angular-devkit/build-angular:tslint',
   '@nrwl/jest:jest',
   '@nrwl/cypress:cypress',
-  '@nrwl/linter:lint'
+  '@nrwl/linter:lint',
 ]);
 
 function createBuildFile(
@@ -58,8 +58,8 @@ function createBuildFile(
     outputArgument: string;
   }[] = [];
   labelsMetadata
-    .map(metadata =>
-      metadata.configurations.map(config => {
+    .map((metadata) =>
+      metadata.configurations.map((config) => {
         const isTestTarget = testBuilders.has(metadata.target.builder);
         const isBuildTarget = !!buildBuilders[metadata.target.builder];
         const outputArgument = buildBuilders[metadata.target.builder];
@@ -72,12 +72,12 @@ function createBuildFile(
             config === '__nx_default__' ? '' : `__${config}`
           }`,
           isBuildTarget,
-          outputArgument
+          outputArgument,
         };
       })
     )
-    .forEach(arr => {
-      arr.forEach(label => labels.push(label));
+    .forEach((arr) => {
+      arr.forEach((label) => labels.push(label));
     });
 
   return apply(url('./files/build-file'), [
@@ -87,14 +87,14 @@ function createBuildFile(
       projectGraph,
       dependencies: projectGraph.dependencies[project.name]
         ? projectGraph.dependencies[project.name].map(
-            dep =>
+            (dep) =>
               `//${normalize(projectGraph.nodes[dep.target].data.root)}:${
                 dep.target
               }`
           )
         : [],
-      labels
-    })
+      labels,
+    }),
   ]);
 }
 
@@ -111,15 +111,15 @@ function updateBuildFile(
       target,
       configurations: [
         '__nx_default__',
-        ...Object.keys(target.configurations || {})
-      ]
+        ...Object.keys(target.configurations || {}),
+      ],
     }));
     const buildFile = createBuildFile(project, projectGraph, labelsMetadata);
     const buildFilePath = join(normalize(project.data.root), 'BUILD.bazel');
 
     return mergeWith(
       apply(buildFile, [
-        sourceHost => {
+        (sourceHost) => {
           if (host.exists(buildFilePath)) {
             const contents = sourceHost.read('BUILD.bazel').toString();
             const customPart = host
@@ -130,7 +130,7 @@ function updateBuildFile(
             sourceHost.overwrite('BUILD.bazel', customPart + contents);
           }
         },
-        move(project.data.root)
+        move(project.data.root),
       ]),
       MergeStrategy.Overwrite
     );
@@ -138,20 +138,20 @@ function updateBuildFile(
 }
 
 function createWorkspaceFile() {
-  return host => {
+  return (host) => {
     return mergeWith(
       apply(url('./files/workspace-file'), [
         template({
           tmpl: '',
           name: readJsonInTree(host, '/package.json').name.replace('-', '_'),
           rulesNodeJSVersion,
-          rulesNodeJSSha
+          rulesNodeJSSha,
         }),
         () => {
           if (host.exists('WORKSPACE')) {
             host.delete('WORKSPACE');
           }
-        }
+        },
       ]),
       MergeStrategy.Overwrite
     );
@@ -161,20 +161,20 @@ function createWorkspaceFile() {
 const ignoredFromRootBuildFile = ['WORKSPACE', '.bazelrc', 'BUILD.bazel'];
 
 function createRootBuildFile() {
-  return host => {
+  return (host) => {
     return mergeWith(
       apply(url('./files/root-build-file'), [
         template({
           tmpl: '',
           rootFiles: host
             .getDir('/')
-            .subfiles.filter(f => !ignoredFromRootBuildFile.includes(f))
+            .subfiles.filter((f) => !ignoredFromRootBuildFile.includes(f)),
         }),
         () => {
           if (host.exists('BUILD.bazel')) {
             host.delete('BUILD.bazel');
           }
-        }
+        },
       ]),
       MergeStrategy.Overwrite
     );
@@ -191,9 +191,9 @@ export default (): Rule => {
       runInit,
       createWorkspaceFile(),
       createRootBuildFile(),
-      ...Object.values(projectGraph.nodes).map(project =>
+      ...Object.values(projectGraph.nodes).map((project) =>
         updateBuildFile(project, projectGraph)
-      )
+      ),
     ]);
   };
 };

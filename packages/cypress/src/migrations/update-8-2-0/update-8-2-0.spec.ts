@@ -5,7 +5,7 @@ import { callRule, runMigration } from '../../utils/testing';
 import {
   updateWorkspace,
   readJsonInTree,
-  updateJsonInTree
+  updateJsonInTree,
 } from '@nrwl/workspace';
 
 describe('Update 8.2.0', () => {
@@ -15,7 +15,7 @@ describe('Update 8.2.0', () => {
     initialTree = createEmptyWorkspace(Tree.empty());
     initialTree = await callRule(
       chain([
-        updateWorkspace(workspace => {
+        updateWorkspace((workspace) => {
           workspace.projects.add({
             root: 'project',
             name: 'proejct',
@@ -25,17 +25,17 @@ describe('Update 8.2.0', () => {
                 options: {
                   cypressConfig: 'project/cypress.json',
                   tsConfig: 'project/tsconfig.e2e.json',
-                  devServerTarget: 'project:serve'
+                  devServerTarget: 'project:serve',
                 },
                 configurations: {
                   production: {
                     cypressConfig: 'project/cypress.prod.json',
                     tsConfig: 'project/tsconfig.e2e.json',
-                    devServerTarget: 'project:serve:production'
-                  }
-                }
-              }
-            }
+                    devServerTarget: 'project:serve:production',
+                  },
+                },
+              },
+            },
           });
         }),
         updateJsonInTree('project/cypress.json', () => ({
@@ -46,7 +46,7 @@ describe('Update 8.2.0', () => {
           supportFile: false,
           video: true,
           videosFolder: '../dist/out-tsc/project/videos',
-          screenshotsFolder: '../dist/out-tsc/project/screenshots'
+          screenshotsFolder: '../dist/out-tsc/project/screenshots',
         })),
         updateJsonInTree('project/cypress.prod.json', () => ({
           fileServerFolder: '../dist/out-tsc/project',
@@ -57,21 +57,21 @@ describe('Update 8.2.0', () => {
           video: true,
           videosFolder: '../dist/out-tsc/project/videos',
           screenshotsFolder: '../dist/out-tsc/project/screenshots',
-          baseUrl: 'https://www.example.com'
+          baseUrl: 'https://www.example.com',
         })),
         updateJsonInTree('project/tsconfig.e2e.json', () => ({
           extends: '../tsconfig.json',
           compilerOptions: {
-            outDir: '../dist/out-tsc'
+            outDir: '../dist/out-tsc',
           },
-          include: ['**/*']
+          include: ['**/*'],
         })),
         updateJsonInTree('tsconfig.json', () => ({
           compilerOptions: {
-            rootDir: '.'
-          }
+            rootDir: '.',
+          },
         })),
-        host => {
+        (host) => {
           host.create(
             'project/src/plugins/index.ts',
             `
@@ -98,7 +98,7 @@ describe('Update 8.2.0', () => {
 
             `
           );
-        }
+        },
       ]),
       initialTree
     );
@@ -114,7 +114,7 @@ describe('Update 8.2.0', () => {
       supportFile: false,
       video: true,
       videosFolder: '../dist/out-tsc/project/videos',
-      screenshotsFolder: '../dist/out-tsc/project/screenshots'
+      screenshotsFolder: '../dist/out-tsc/project/screenshots',
     });
     expect(readJsonInTree(result, 'project/cypress.prod.json')).toEqual({
       fileServerFolder: './',
@@ -125,14 +125,16 @@ describe('Update 8.2.0', () => {
       video: true,
       videosFolder: '../dist/out-tsc/project/videos',
       screenshotsFolder: '../dist/out-tsc/project/screenshots',
-      baseUrl: 'https://www.example.com'
+      baseUrl: 'https://www.example.com',
     });
   });
 
   it('should transpile plugin files', async () => {
     const result = await runMigration('update-8.2.0', {}, initialTree);
     const newPluginsFile = result.readContent('project/src/plugins/index.js');
-    expect(newPluginsFile).toContain('module.exports = function(on, config) {');
+    expect(newPluginsFile).toContain(
+      'module.exports = function (on, config) {'
+    );
     expect(newPluginsFile).toContain(
       `const { preprocessTypescript } = require('@nrwl/cypress/plugins/preprocessor');`
     );

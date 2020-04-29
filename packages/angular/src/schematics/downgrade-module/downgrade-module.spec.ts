@@ -17,7 +17,7 @@ describe('downgrade-module', () => {
       'downgrade-module',
       {
         name: 'legacy',
-        project: 'myapp'
+        project: 'myapp',
       },
       appTree
     );
@@ -35,7 +35,7 @@ describe('downgrade-module', () => {
       'downgrade-module',
       {
         name: 'legacy',
-        project: 'myapp'
+        project: 'myapp',
       },
       appTree
     );
@@ -51,8 +51,8 @@ describe('downgrade-module', () => {
       `/package.json`,
       JSON.stringify({
         dependencies: {
-          '@angular/core': '4.4.4'
-        }
+          '@angular/core': '4.4.4',
+        },
       })
     );
 
@@ -60,7 +60,7 @@ describe('downgrade-module', () => {
       'downgrade-module',
       {
         name: 'legacy',
-        project: 'myapp'
+        project: 'myapp',
       },
       appTree
     );
@@ -75,8 +75,8 @@ describe('downgrade-module', () => {
       `/package.json`,
       JSON.stringify({
         dependencies: {
-          '@angular/core': '4.4.4'
-        }
+          '@angular/core': '4.4.4',
+        },
       })
     );
 
@@ -85,7 +85,7 @@ describe('downgrade-module', () => {
       {
         name: 'legacy',
         skipPackageJson: true,
-        project: 'myapp'
+        project: 'myapp',
       },
       appTree
     );
@@ -100,7 +100,7 @@ describe('downgrade-module', () => {
       {
         name: 'legacy',
         angularJsImport: 'legacy-app',
-        project: 'myapp'
+        project: 'myapp',
       },
       appTree
     );

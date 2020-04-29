@@ -6,7 +6,7 @@ import { Actions, Effect, EffectsModule, ofType } from '@ngrx/effects';
 import { provideMockActions } from '@ngrx/effects/testing';
 import {
   StoreRouterConnectingModule,
-  DefaultRouterStateSerializer
+  DefaultRouterStateSerializer,
 } from '@ngrx/router-store';
 import { Store, StoreModule } from '@ngrx/store';
 import { Observable, of, Subject, throwError } from 'rxjs';
@@ -17,7 +17,7 @@ import {
   pessimisticUpdate,
   optimisticUpdate,
   fetch,
-  NxModule
+  NxModule,
 } from '../index';
 import { readAll } from '../testing';
 
@@ -59,9 +59,7 @@ function userReducer(): string {
 }
 
 @Component({
-  template: `
-    ROOT[<router-outlet></router-outlet>]
-  `
+  template: ` ROOT[<router-outlet></router-outlet>] `,
 })
 class RootCmp {}
 
@@ -70,7 +68,7 @@ class RootCmp {}
     Todo [
     <div *ngIf="todo | async as t">ID {{ t.id }} User {{ t.user }}</div>
     ]
-  `
+  `,
 })
 class TodoComponent {
   todo = this.store.select('todos', 'selected');
@@ -88,18 +86,18 @@ describe('DataPersistence', () => {
             {
               runtimeChecks: {
                 strictStateImmutability: false,
-                strictStateSerializability: false
-              }
+                strictStateSerializability: false,
+              },
             }
           ),
           StoreRouterConnectingModule.forRoot({
-            serializer: DefaultRouterStateSerializer
+            serializer: DefaultRouterStateSerializer,
           }),
           RouterTestingModule.withRoutes([
-            { path: 'todo/:id', component: TodoComponent }
+            { path: 'todo/:id', component: TodoComponent },
           ]),
-          NxModule.forRoot()
-        ]
+          NxModule.forRoot(),
+        ],
       });
     });
 
@@ -111,10 +109,10 @@ describe('DataPersistence', () => {
           run: (a, state) => {
             return {
               type: 'TODO_LOADED',
-              payload: { id: a.params['id'], user: state.user }
+              payload: { id: a.params['id'], user: state.user },
             };
           },
-          onError: () => null
+          onError: () => null,
         });
 
         constructor(private s: DataPersistence<TodosState>) {}
@@ -122,7 +120,7 @@ describe('DataPersistence', () => {
 
       beforeEach(() => {
         TestBed.configureTestingModule({
-          imports: [EffectsModule.forRoot([TodoEffects])]
+          imports: [EffectsModule.forRoot([TodoEffects])],
         });
       });
 
@@ -150,18 +148,18 @@ describe('DataPersistence', () => {
             } else {
               return {
                 type: 'TODO_LOADED',
-                payload: { id: a.params['id'], user: state.user }
+                payload: { id: a.params['id'], user: state.user },
               };
             }
           },
-          onError: (a, e) => ({ type: 'ERROR', payload: { error: e } })
+          onError: (a, e) => ({ type: 'ERROR', payload: { error: e } }),
         });
         constructor(private s: DataPersistence<TodosState>) {}
       }
 
       beforeEach(() => {
         TestBed.configureTestingModule({
-          imports: [EffectsModule.forRoot([TodoEffects])]
+          imports: [EffectsModule.forRoot([TodoEffects])],
         });
       });
 
@@ -176,9 +174,9 @@ describe('DataPersistence', () => {
         tick(0);
         root.detectChanges(false);
         expect(root.elementRef.nativeElement.innerHTML).not.toContain('ID 123');
-        expect(actions.map(a => a.type)).toContain('ERROR');
+        expect(actions.map((a) => a.type)).toContain('ERROR');
         expect(
-          actions.find(a => a.type === 'ERROR').payload.error.message
+          actions.find((a) => a.type === 'ERROR').payload.error.message
         ).toEqual('boom');
 
         // can recover after an error
@@ -200,18 +198,18 @@ describe('DataPersistence', () => {
             } else {
               return {
                 type: 'TODO_LOADED',
-                payload: { id: a.params['id'], user: state.user }
+                payload: { id: a.params['id'], user: state.user },
               };
             }
           },
-          onError: (a, e) => ({ type: 'ERROR', payload: { error: e } })
+          onError: (a, e) => ({ type: 'ERROR', payload: { error: e } }),
         });
         constructor(private s: DataPersistence<TodosState>) {}
       }
 
       beforeEach(() => {
         TestBed.configureTestingModule({
-          imports: [EffectsModule.forRoot([TodoEffects])]
+          imports: [EffectsModule.forRoot([TodoEffects])],
         });
       });
 
@@ -226,8 +224,8 @@ describe('DataPersistence', () => {
         tick(0);
         root.detectChanges(false);
         expect(root.elementRef.nativeElement.innerHTML).not.toContain('ID 123');
-        expect(actions.map(a => a.type)).toContain('ERROR');
-        expect(actions.find(a => a.type === 'ERROR').payload.error).toEqual(
+        expect(actions.map((a) => a.type)).toContain('ERROR');
+        expect(actions.find((a) => a.type === 'ERROR').payload.error).toEqual(
           'boom'
         );
 
@@ -257,11 +255,11 @@ describe('DataPersistence', () => {
             // we need to introduce the delay to "enable" switchMap
             return of({
               type: 'TODOS',
-              payload: { user: state.user, todos: 'some todos' }
+              payload: { user: state.user, todos: 'some todos' },
             }).pipe(delay(1));
           },
 
-          onError: () => null
+          onError: () => null,
         });
 
         @Effect()
@@ -272,9 +270,9 @@ describe('DataPersistence', () => {
             run: (action, state) => {
               return of({
                 type: 'TODOS',
-                payload: { user: state.user, todos: 'some todos' }
+                payload: { user: state.user, todos: 'some todos' },
               }).pipe(delay(1));
-            }
+            },
           })
         );
 
@@ -297,15 +295,15 @@ describe('DataPersistence', () => {
               {
                 runtimeChecks: {
                   strictStateImmutability: false,
-                  strictStateSerializability: false
-                }
+                  strictStateSerializability: false,
+                },
               }
-            )
-          ]
+            ),
+          ],
         });
       });
 
-      it('should work', async done => {
+      it('should work', async (done) => {
         actions = of(
           { type: 'GET_TODOS', payload: {} },
           { type: 'GET_TODOS', payload: {} }
@@ -313,13 +311,13 @@ describe('DataPersistence', () => {
 
         expect(await readAll(TestBed.get(TodoEffects).loadTodos)).toEqual([
           { type: 'TODOS', payload: { user: 'bob', todos: 'some todos' } },
-          { type: 'TODOS', payload: { user: 'bob', todos: 'some todos' } }
+          { type: 'TODOS', payload: { user: 'bob', todos: 'some todos' } },
         ]);
 
         done();
       });
 
-      it('should work with an operator', async done => {
+      it('should work with an operator', async (done) => {
         actions = of(
           { type: 'GET_TODOS', payload: {} },
           { type: 'GET_TODOS', payload: {} }
@@ -329,7 +327,7 @@ describe('DataPersistence', () => {
           await readAll(TestBed.get(TodoEffects).loadTodosWithOperator)
         ).toEqual([
           { type: 'TODOS', payload: { user: 'bob', todos: 'some todos' } },
-          { type: 'TODOS', payload: { user: 'bob', todos: 'some todos' } }
+          { type: 'TODOS', payload: { user: 'bob', todos: 'some todos' } },
         ]);
 
         done();
@@ -346,9 +344,9 @@ describe('DataPersistence', () => {
       class TodoEffects {
         @Effect()
         loadTodo = this.s.fetch<GetTodo>('GET_TODO', {
-          id: a => a.payload.id,
-          run: a => of({ type: 'TODO', payload: a.payload }).pipe(delay(1)),
-          onError: () => null
+          id: (a) => a.payload.id,
+          run: (a) => of({ type: 'TODO', payload: a.payload }).pipe(delay(1)),
+          onError: () => null,
         });
 
         constructor(private s: DataPersistence<TodosState>) {}
@@ -370,15 +368,15 @@ describe('DataPersistence', () => {
               {
                 runtimeChecks: {
                   strictStateImmutability: false,
-                  strictStateSerializability: false
-                }
+                  strictStateSerializability: false,
+                },
               }
-            )
-          ]
+            ),
+          ],
         });
       });
 
-      it('should work', async done => {
+      it('should work', async (done) => {
         actions = of(
           { type: 'GET_TODO', payload: { id: 1, value: '1' } },
           { type: 'GET_TODO', payload: { id: 2, value: '2a' } },
@@ -387,7 +385,7 @@ describe('DataPersistence', () => {
 
         expect(await readAll(TestBed.get(TodoEffects).loadTodo)).toEqual([
           { type: 'TODO', payload: { id: 1, value: '1' } },
-          { type: 'TODO', payload: { id: 2, value: '2b' } }
+          { type: 'TODO', payload: { id: 2, value: '2b' } },
         ]);
 
         done();
@@ -407,9 +405,9 @@ describe('DataPersistence', () => {
         loadTodo = this.s.pessimisticUpdate<UpdateTodo>('UPDATE_TODO', {
           run: (a, state) => ({
             type: 'TODO_UPDATED',
-            payload: { user: state.user, newTitle: a.payload.newTitle }
+            payload: { user: state.user, newTitle: a.payload.newTitle },
           }),
-          onError: () => null
+          onError: () => null,
         });
 
         @Effect()
@@ -419,9 +417,9 @@ describe('DataPersistence', () => {
           pessimisticUpdate({
             run: (a, state) => ({
               type: 'TODO_UPDATED',
-              payload: { user: state.user, newTitle: a.payload.newTitle }
+              payload: { user: state.user, newTitle: a.payload.newTitle },
             }),
-            onError: () => null
+            onError: () => null,
           })
         );
 
@@ -444,34 +442,34 @@ describe('DataPersistence', () => {
               {
                 runtimeChecks: {
                   strictStateImmutability: false,
-                  strictStateSerializability: false
-                }
+                  strictStateSerializability: false,
+                },
               }
-            )
-          ]
+            ),
+          ],
         });
       });
 
-      it('should work', async done => {
+      it('should work', async (done) => {
         actions = of({
           type: 'UPDATE_TODO',
-          payload: { newTitle: 'newTitle' }
+          payload: { newTitle: 'newTitle' },
         });
 
         expect(await readAll(TestBed.get(TodoEffects).loadTodo)).toEqual([
           {
             type: 'TODO_UPDATED',
-            payload: { user: 'bob', newTitle: 'newTitle' }
-          }
+            payload: { user: 'bob', newTitle: 'newTitle' },
+          },
         ]);
 
         done();
       });
 
-      it('should work with an operator', async done => {
+      it('should work with an operator', async (done) => {
         actions = of({
           type: 'UPDATE_TODO',
-          payload: { newTitle: 'newTitle' }
+          payload: { newTitle: 'newTitle' },
         });
 
         expect(
@@ -479,8 +477,8 @@ describe('DataPersistence', () => {
         ).toEqual([
           {
             type: 'TODO_UPDATED',
-            payload: { user: 'bob', newTitle: 'newTitle' }
-          }
+            payload: { user: 'bob', newTitle: 'newTitle' },
+          },
         ]);
 
         done();
@@ -498,8 +496,8 @@ describe('DataPersistence', () => {
 
           onError: (a, e: any) => ({
             type: 'ERROR',
-            payload: { error: e }
-          })
+            payload: { error: e },
+          }),
         });
 
         constructor(private s: DataPersistence<TodosState>) {}
@@ -521,18 +519,18 @@ describe('DataPersistence', () => {
               {
                 runtimeChecks: {
                   strictStateImmutability: false,
-                  strictStateSerializability: false
-                }
+                  strictStateSerializability: false,
+                },
               }
-            )
-          ]
+            ),
+          ],
         });
       });
 
-      it('should work', async done => {
+      it('should work', async (done) => {
         actions = of({
           type: 'UPDATE_TODO',
-          payload: { newTitle: 'newTitle' }
+          payload: { newTitle: 'newTitle' },
         });
 
         const [a]: any = await readAll(TestBed.get(TodoEffects).loadTodo);
@@ -555,8 +553,8 @@ describe('DataPersistence', () => {
 
           onError: (a, e: any) => ({
             type: 'ERROR',
-            payload: { error: e }
-          })
+            payload: { error: e },
+          }),
         });
 
         constructor(private s: DataPersistence<TodosState>) {}
@@ -578,18 +576,18 @@ describe('DataPersistence', () => {
               {
                 runtimeChecks: {
                   strictStateImmutability: false,
-                  strictStateSerializability: false
-                }
+                  strictStateSerializability: false,
+                },
               }
-            )
-          ]
+            ),
+          ],
         });
       });
 
-      it('should work', async done => {
+      it('should work', async (done) => {
         actions = of({
           type: 'UPDATE_TODO',
-          payload: { newTitle: 'newTitle' }
+          payload: { newTitle: 'newTitle' },
         });
 
         const [a]: any = await readAll(TestBed.get(TodoEffects).loadTodo);
@@ -616,10 +614,10 @@ describe('DataPersistence', () => {
             throw new Error('boom');
           },
 
-          undoAction: a => ({
+          undoAction: (a) => ({
             type: 'UNDO_UPDATE_TODO',
-            payload: a.payload
-          })
+            payload: a.payload,
+          }),
         });
 
         @Effect()
@@ -631,10 +629,10 @@ describe('DataPersistence', () => {
               throw new Error('boom');
             },
 
-            undoAction: a => ({
+            undoAction: (a) => ({
               type: 'UNDO_UPDATE_TODO',
-              payload: a.payload
-            })
+              payload: a.payload,
+            }),
           })
         );
 
@@ -657,18 +655,18 @@ describe('DataPersistence', () => {
               {
                 runtimeChecks: {
                   strictStateImmutability: false,
-                  strictStateSerializability: false
-                }
+                  strictStateSerializability: false,
+                },
               }
-            )
-          ]
+            ),
+          ],
         });
       });
 
-      it('should work', async done => {
+      it('should work', async (done) => {
         actions = of({
           type: 'UPDATE_TODO',
-          payload: { newTitle: 'newTitle' }
+          payload: { newTitle: 'newTitle' },
         });
 
         const [a]: any = await readAll(TestBed.get(TodoEffects).loadTodo);
@@ -679,10 +677,10 @@ describe('DataPersistence', () => {
         done();
       });
 
-      it('should work with an operator', async done => {
+      it('should work with an operator', async (done) => {
         actions = of({
           type: 'UPDATE_TODO',
-          payload: { newTitle: 'newTitle' }
+          payload: { newTitle: 'newTitle' },
         });
 
         const [a]: any = await readAll(

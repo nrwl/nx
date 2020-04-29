@@ -11,7 +11,7 @@ import {
   SchematicsException,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import {
   addProjectToNxJsonInTree,
@@ -19,7 +19,7 @@ import {
   offsetFromRoot,
   readNxJsonInTree,
   toPropertyName,
-  updateWorkspace
+  updateWorkspace,
 } from '@nrwl/workspace';
 import { join } from 'path';
 import { Schema } from './schema';
@@ -31,7 +31,7 @@ export interface NxPluginE2ESchema extends Schema {
   npmScope: string;
 }
 
-export default function(options: Schema): Rule {
+export default function (options: Schema): Rule {
   return async (host: Tree, context: SchematicContext) => {
     const workspace = await getWorkspace(host);
     validatePlugin(workspace, options.pluginName);
@@ -40,7 +40,7 @@ export default function(options: Schema): Rule {
       updateFiles(normalizedOptions),
       updateNxJson(normalizedOptions),
       updateWorkspaceJson(normalizedOptions),
-      addJest(normalizedOptions)
+      addJest(normalizedOptions),
     ]);
   };
 }
@@ -64,14 +64,14 @@ function normalizeOptions(host: Tree, options: Schema): NxPluginE2ESchema {
     projectName,
     pluginPropertyName,
     projectRoot,
-    npmScope
+    npmScope,
   };
 }
 
 function updateNxJson(options: NxPluginE2ESchema): Rule {
   return addProjectToNxJsonInTree(options.projectName, {
     tags: [],
-    implicitDependencies: [options.pluginName]
+    implicitDependencies: [options.pluginName],
   });
 }
 
@@ -90,13 +90,13 @@ function updateWorkspaceJson(options: NxPluginE2ESchema): Rule {
             options: {
               target: `${options.pluginName}:build`,
               npmPackageName: options.npmPackageName,
-              pluginOutputPath: options.pluginOutputPath
-            }
-          }
-        }
+              pluginOutputPath: options.pluginOutputPath,
+            },
+          },
+        },
       });
       return updateWorkspace(workspace);
-    }
+    },
   ]);
 }
 
@@ -106,9 +106,9 @@ function updateFiles(options: NxPluginE2ESchema): Rule {
       template({
         tmpl: '',
         ...options,
-        offsetFromRoot: offsetFromRoot(options.projectRoot)
+        offsetFromRoot: offsetFromRoot(options.projectRoot),
       }),
-      move(options.projectRoot)
+      move(options.projectRoot),
     ])
   );
 }
@@ -119,7 +119,7 @@ function addJest(options: NxPluginE2ESchema): Rule {
       project: options.projectName,
       setupFile: 'none',
       supportTsx: false,
-      skipSerializers: true
+      skipSerializers: true,
     }),
     async (host, context) => {
       const workspace = await getWorkspace(host);
@@ -130,14 +130,14 @@ function addJest(options: NxPluginE2ESchema): Rule {
         ...e2eOptions,
         ...{
           jestConfig: testOptions.jestConfig,
-          tsSpecConfig: testOptions.tsConfig
-        }
+          tsSpecConfig: testOptions.tsConfig,
+        },
       };
 
       // remove the jest build target
       project.targets.delete('test');
 
       return updateWorkspace(workspace);
-    }
+    },
   ]);
 }

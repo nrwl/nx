@@ -47,7 +47,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @NgModule({
-  imports: [CommonModule]
+  imports: [CommonModule],
 })
 export class UiModule {}
 ```
@@ -100,7 +100,7 @@ import { Todo } from '@myorg/data';
 @Component({
   selector: 'myorg-todos',
   templateUrl: './todos.component.html',
-  styleUrls: ['./todos.component.css']
+  styleUrls: ['./todos.component.css'],
 })
 export class TodosComponent implements OnInit {
   @Input() todos: Todo[];
@@ -135,7 +135,7 @@ import { UiModule } from '@myorg/ui';
   declarations: [AppComponent],
   imports: [BrowserModule, HttpClientModule, UiModule],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
 export class AppModule {}
 ```

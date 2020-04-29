@@ -9,7 +9,7 @@ import { updateTsconfig } from './lib/update-tsconfig';
 import { updateWorkspace } from './lib/update-workspace';
 import { Schema } from './schema';
 
-export default function(schema: Schema): Rule {
+export default function (schema: Schema): Rule {
   return chain([
     checkProjectExists(schema),
     checkDependencies(schema),
@@ -18,6 +18,6 @@ export default function(schema: Schema): Rule {
     updateNxJson(schema),
     updateTsconfig(schema),
     updateWorkspace(schema),
-    formatFiles(schema)
+    formatFiles(schema),
   ]);
 }

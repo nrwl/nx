@@ -32,10 +32,10 @@ describe('Update 9.0.0', () => {
               test: {
                 builder: '@nrwl/jest:jest',
                 options: {
-                  jestConfig: 'apps/angular-one/jest.config.js'
-                }
-              }
-            }
+                  jestConfig: 'apps/angular-one/jest.config.js',
+                },
+              },
+            },
           },
           'angular-two': {
             root: 'apps/angular-two/',
@@ -43,10 +43,10 @@ describe('Update 9.0.0', () => {
               test: {
                 builder: '@nrwl/jest:jest',
                 options: {
-                  jestConfig: 'apps/angular-two/jest.config.js'
-                }
-              }
-            }
+                  jestConfig: 'apps/angular-two/jest.config.js',
+                },
+              },
+            },
           },
           'non-angular-one': {
             root: 'apps/non-angular-one/',
@@ -54,12 +54,12 @@ describe('Update 9.0.0', () => {
               test: {
                 builder: '@nrwl/jest:jest',
                 options: {
-                  jestConfig: 'apps/non-angular-one/jest.config.js'
-                }
-              }
-            }
-          }
-        }
+                  jestConfig: 'apps/non-angular-one/jest.config.js',
+                },
+              },
+            },
+          },
+        },
       })
     );
 

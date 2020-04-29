@@ -22,7 +22,7 @@ describe('Update 8-12-0', () => {
       'package.json',
       JSON.stringify({
         dependencies: {},
-        devDependencies: {}
+        devDependencies: {},
       })
     );
 
@@ -35,12 +35,12 @@ describe('Update 8-12-0', () => {
               build: {
                 builder: '@nrwl/web:build',
                 options: {
-                  main: 'apps/demo/src/main.tsx'
-                }
-              }
-            }
-          }
-        }
+                  main: 'apps/demo/src/main.tsx',
+                },
+              },
+            },
+          },
+        },
       })
     );
 
@@ -58,18 +58,18 @@ describe('Update 8-12-0', () => {
               builder: '@nrwl/web:build',
               options: {
                 main: 'apps/demo/src/main.tsx',
-                webpackConfig: '@nrwl/react/plugins/webpack'
-              }
-            }
-          }
-        }
-      }
+                webpackConfig: '@nrwl/react/plugins/webpack',
+              },
+            },
+          },
+        },
+      },
     });
     expect(packageJson).toMatchObject({
       dependencies: {},
       devDependencies: {
-        '@babel/preset-react': '7.8.3'
-      }
+        '@babel/preset-react': '7.8.3',
+      },
     });
   });
 });

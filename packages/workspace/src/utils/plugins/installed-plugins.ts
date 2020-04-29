@@ -17,9 +17,9 @@ function getPackagesFromNodeModules(
   }
 
   const nodeModulesDir = path.join(workspaceRoot, 'node_modules');
-  readdirSync(nodeModulesDir).forEach(npmPackageOrScope => {
+  readdirSync(nodeModulesDir).forEach((npmPackageOrScope) => {
     if (npmPackageOrScope.startsWith('@')) {
-      readdirSync(path.join(nodeModulesDir, npmPackageOrScope)).forEach(p => {
+      readdirSync(path.join(nodeModulesDir, npmPackageOrScope)).forEach((p) => {
         packageList.push(`${npmPackageOrScope}/${p}`);
       });
     } else {
@@ -35,24 +35,24 @@ export function getInstalledPluginsFromNodeModules(
   corePlugins: CorePlugin[],
   communityPlugins: CommunityPlugin[]
 ): Array<PluginCapabilities> {
-  const corePluginNames = corePlugins.map(p => p.name);
-  const communityPluginNames = communityPlugins.map(p => p.name);
+  const corePluginNames = corePlugins.map((p) => p.name);
+  const communityPluginNames = communityPlugins.map((p) => p.name);
   const packages = getPackagesFromNodeModules(workspaceRoot);
 
   return packages
     .filter(
-      name =>
+      (name) =>
         corePluginNames.indexOf(name) > -1 ||
         communityPluginNames.indexOf(name) > -1
     )
-    .map(name => getPluginCapabilities(workspaceRoot, name))
-    .filter(x => x && !!(x.schematics || x.builders));
+    .map((name) => getPluginCapabilities(workspaceRoot, name))
+    .filter((x) => x && !!(x.schematics || x.builders));
 }
 
 export function listInstalledPlugins(installedPlugins: PluginCapabilities[]) {
   output.log({
     title: `Installed plugins:`,
-    bodyLines: installedPlugins.map(p => {
+    bodyLines: installedPlugins.map((p) => {
       const capabilities = [];
       if (hasElements(p.builders)) {
         capabilities.push('builders');
@@ -61,6 +61,6 @@ export function listInstalledPlugins(installedPlugins: PluginCapabilities[]) {
         capabilities.push('schematics');
       }
       return `${terminal.bold(p.name)} (${capabilities.join()})`;
-    })
+    }),
   });
 }

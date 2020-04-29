@@ -1,7 +1,7 @@
 import {
   BuilderContext,
   BuilderOutput,
-  createBuilder
+  createBuilder,
 } from '@angular-devkit/architect';
 import build from 'next/dist/build';
 import { PHASE_PRODUCTION_BUILD } from 'next/dist/next-server/lib/constants';

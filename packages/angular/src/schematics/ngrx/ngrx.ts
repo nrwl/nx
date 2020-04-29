@@ -9,7 +9,7 @@ import {
   filter,
   Rule,
   Tree,
-  SchematicContext
+  SchematicContext,
 } from '@angular-devkit/schematics';
 
 import { Schema } from './schema';
@@ -21,7 +21,7 @@ import {
   addImportsToModule,
   addNgRxToPackageJson,
   addExportsToBarrel,
-  RequestContext
+  RequestContext,
 } from './rules';
 import { formatFiles } from '@nrwl/workspace';
 
@@ -43,7 +43,7 @@ export default function generateNgrxCollection(_options: Schema): Rule {
       featureName: options.name,
       moduleDir: path.dirname(options.module),
       options,
-      host
+      host,
     };
 
     if (options.minimal) {
@@ -62,7 +62,7 @@ export default function generateNgrxCollection(_options: Schema): Rule {
     const moduleModification = !options.onlyAddFiles
       ? [
           addImportsToModule(requestContext),
-          addExportsToBarrel(requestContext.options)
+          addExportsToBarrel(requestContext.options),
         ]
       : [];
 
@@ -74,7 +74,7 @@ export default function generateNgrxCollection(_options: Schema): Rule {
       ...fileGeneration,
       ...moduleModification,
       ...packageJsonModification,
-      formatFiles(options)
+      formatFiles(options),
     ])(host, context);
   };
 }
@@ -89,14 +89,14 @@ export default function generateNgrxCollection(_options: Schema): Rule {
 function generateNgrxFilesFromTemplates(options: Schema) {
   const name = options.name;
   const moduleDir = path.dirname(options.module);
-  const excludeFacade = path => path.match(/^((?!facade).)*$/);
+  const excludeFacade = (path) => path.match(/^((?!facade).)*$/);
 
   const templateSource = apply(
     url(options.syntax === 'creators' ? './creator-files' : './files'),
     [
       !options.facade ? filter(excludeFacade) : noop(),
       template({ ...options, tmpl: '', ...names(name) }),
-      move(moduleDir)
+      move(moduleDir),
     ]
   );
 
@@ -109,6 +109,6 @@ function generateNgrxFilesFromTemplates(options: Schema) {
 function normalizeOptions(options: Schema): Schema {
   return {
     ...options,
-    directory: toFileName(options.directory)
+    directory: toFileName(options.directory),
   };
 }

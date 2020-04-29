@@ -7,7 +7,7 @@ import { Schema } from '../schema';
  * @param schema The options provided to the schematic
  */
 export function updateWorkspace(schema: Schema) {
-  return updateWorkspaceInTree(workspace => {
+  return updateWorkspaceInTree((workspace) => {
     delete workspace.projects[schema.projectName];
     return workspace;
   });

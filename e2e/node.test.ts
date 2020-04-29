@@ -20,15 +20,15 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-  workspaceConfigName
+  workspaceConfigName,
 } from './utils';
 
 function getData(): Promise<any> {
-  return new Promise(resolve => {
-    http.get('http://localhost:3333/api', res => {
+  return new Promise((resolve) => {
+    http.get('http://localhost:3333/api', (res) => {
       expect(res.statusCode).toEqual(200);
       let data = '';
-      res.on('data', chunk => {
+      res.on('data', (chunk) => {
         data += chunk;
       });
       res.once('end', () => {
@@ -38,7 +38,7 @@ function getData(): Promise<any> {
   });
 }
 
-forEachCli(currentCLIName => {
+forEachCli((currentCLIName) => {
   const linter = currentCLIName === 'angular' ? 'tslint' : 'eslint';
 
   describe('Node Applications', () => {
@@ -56,12 +56,12 @@ forEachCli(currentCLIName => {
 
       checkFilesExist(`dist/apps/${nodeapp}/main.js`);
       const result = execSync(`node dist/apps/${nodeapp}/main.js`, {
-        cwd: tmpProjPath()
+        cwd: tmpProjPath(),
       }).toString();
       expect(result).toContain('Hello World!');
     }, 60000);
 
-    it('should be able to generate an express application', async done => {
+    it('should be able to generate an express application', async (done) => {
       ensureProject();
       const nodeapp = uniq('nodeapp');
 
@@ -93,18 +93,18 @@ forEachCli(currentCLIName => {
 
       const server = fork(`./dist/apps/${nodeapp}/main.js`, [], {
         cwd: tmpProjPath(),
-        silent: true
+        silent: true,
       });
       expect(server).toBeTruthy();
-      await new Promise(resolve => {
-        server.stdout.once('data', async data => {
+      await new Promise((resolve) => {
+        server.stdout.once('data', async (data) => {
           expect(data.toString()).toContain(
             'Listening at http://localhost:3333'
           );
           const result = await getData();
 
           expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
-          treeKill(server.pid, 'SIGTERM', err => {
+          treeKill(server.pid, 'SIGTERM', (err) => {
             expect(err).toBeFalsy();
             resolve();
           });
@@ -116,22 +116,22 @@ forEachCli(currentCLIName => {
         options: {
           commands: [
             {
-              command: 'sleep 1 && echo DONE'
-            }
+              command: 'sleep 1 && echo DONE',
+            },
           ],
-          readyWhen: 'DONE'
-        }
+          readyWhen: 'DONE',
+        },
       };
 
       config.projects[nodeapp].architect.serve.options.waitUntilTargets = [
-        `${nodeapp}:waitAndPrint`
+        `${nodeapp}:waitAndPrint`,
       ];
       updateFile(workspaceConfigName(), JSON.stringify(config));
       const process = spawn(
         'node',
         ['./node_modules/.bin/nx', 'serve', nodeapp],
         {
-          cwd: tmpProjPath()
+          cwd: tmpProjPath(),
         }
       );
       let collectedOutput = '';
@@ -143,7 +143,7 @@ forEachCli(currentCLIName => {
 
         const result = await getData();
         expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
-        treeKill(process.pid, 'SIGTERM', err => {
+        treeKill(process.pid, 'SIGTERM', (err) => {
           expect(collectedOutput.indexOf('DONE') > -1).toBeTruthy();
           expect(err).toBeFalsy();
           done();
@@ -182,7 +182,7 @@ forEachCli(currentCLIName => {
       cleanup();
     }, 120000);
 
-    it('should be able to generate a nest application', async done => {
+    it('should be able to generate a nest application', async (done) => {
       ensureProject();
       const nestapp = uniq('nestapp');
       runCLI(`generate @nrwl/nest:app ${nestapp} --linter=${linter}`);
@@ -204,18 +204,18 @@ forEachCli(currentCLIName => {
 
       const server = fork(`./dist/apps/${nestapp}/main.js`, [], {
         cwd: tmpProjPath(),
-        silent: true
+        silent: true,
       });
       expect(server).toBeTruthy();
 
-      await new Promise(resolve => {
-        server.stdout.on('data', async data => {
+      await new Promise((resolve) => {
+        server.stdout.on('data', async (data) => {
           const message = data.toString();
           if (message.includes('Listening at http://localhost:3333')) {
             const result = await getData();
 
             expect(result.message).toEqual(`Welcome to ${nestapp}!`);
-            treeKill(server.pid, 'SIGTERM', err => {
+            treeKill(server.pid, 'SIGTERM', (err) => {
               expect(err).toBeFalsy();
               resolve();
             });
@@ -227,7 +227,7 @@ forEachCli(currentCLIName => {
         'node',
         ['./node_modules/@nrwl/cli/bin/nx', 'serve', nestapp],
         {
-          cwd: tmpProjPath()
+          cwd: tmpProjPath(),
         }
       );
 
@@ -237,7 +237,7 @@ forEachCli(currentCLIName => {
         }
         const result = await getData();
         expect(result.message).toEqual(`Welcome to ${nestapp}!`);
-        treeKill(process.pid, 'SIGTERM', err => {
+        treeKill(process.pid, 'SIGTERM', (err) => {
           expect(err).toBeFalsy();
           done();
         });
@@ -273,10 +273,10 @@ forEachCli(currentCLIName => {
           outDir: '../../dist/out-tsc',
           declaration: true,
           rootDir: './src',
-          types: ['node']
+          types: ['node'],
         },
         exclude: ['**/*.spec.ts'],
-        include: ['**/*.ts']
+        include: ['**/*.ts'],
       });
       await runCLIAsync(`build ${nodeLib}`);
       checkFilesExist(
@@ -290,7 +290,7 @@ forEachCli(currentCLIName => {
         name: `@proj/${nodeLib}`,
         version: '0.0.1',
         main: 'index.js',
-        typings: 'index.d.ts'
+        typings: 'index.d.ts',
       });
     }, 60000);
 
@@ -310,7 +310,7 @@ forEachCli(currentCLIName => {
       workspace.projects[nodelib].architect.build.options.assets.push({
         input: `./dist/libs/${nglib}`,
         glob: '**/*',
-        output: '.'
+        output: '.',
       });
 
       updateFile(workspaceConfigName(), JSON.stringify(workspace));
@@ -321,7 +321,7 @@ forEachCli(currentCLIName => {
     }, 60000);
   });
 
-  describe('nest libraries', function() {
+  describe('nest libraries', function () {
     it('should be able to generate a nest library', async () => {
       ensureProject();
       const nestlib = uniq('nestlib');
@@ -336,10 +336,10 @@ forEachCli(currentCLIName => {
                 preset: '../../jest.config.js',
                 testEnvironment: 'node',
                  transform: {
-                '^.+\\.[tj]sx?$': 'ts-jest'
+                '^.+\\.[tj]sx?$': 'ts-jest',
                 },
                 moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
-                coverageDirectory: '../../coverage/libs/${nestlib}'
+                coverageDirectory: '../../coverage/libs/${nestlib}',
             };
             `
       );
@@ -424,12 +424,12 @@ forEachCli(currentCLIName => {
           `libs/${parent}/src/lib/${parent}.ts`,
           `
                 ${children
-                  .map(entry => `import { ${entry} } from '@proj/${entry}';`)
+                  .map((entry) => `import { ${entry} } from '@proj/${entry}';`)
                   .join('\n')}
 
                 export function ${parent}(): string {
                   return '${parent}' + ' ' + ${children
-            .map(entry => `${entry}()`)
+            .map((entry) => `${entry}()`)
             .join('+')}
                 }
                 `
@@ -446,7 +446,7 @@ forEachCli(currentCLIName => {
       );
 
       // we are setting paths to {} to make sure built libs are read from dist
-      updateFile('tsconfig.json', c => {
+      updateFile('tsconfig.json', (c) => {
         const json = JSON.parse(c);
         json.compilerOptions.paths = {};
         return JSON.stringify(json, null, 2);

@@ -67,7 +67,7 @@ function compileTypescriptFiles(
         subscriber.next({ success: true });
       } else {
         tscProcess = fork(tscPath, args, { stdio: [0, 1, 2, 'ipc'] });
-        tscProcess.on('exit', code => {
+        tscProcess.on('exit', (code) => {
           code === 0
             ? subscriber.next({ success: true })
             : subscriber.error('Could not compile Typescript files');
@@ -134,12 +134,12 @@ function copyIntegrationFilesByRegex(
       dirname(join(context.workspaceRoot, cypressConfigPath)),
       cypressConfig.integrationFolder
     ),
-    { filter: file => regExp.test(file) }
+    { filter: (file) => regExp.test(file) }
   );
 }
 
 function killProcess(context: BuilderContext): void {
-  return treeKill(tscProcess.pid, 'SIGTERM', error => {
+  return treeKill(tscProcess.pid, 'SIGTERM', (error) => {
     tscProcess = null;
     if (error) {
       if (Array.isArray(error) && error[0] && error[2]) {

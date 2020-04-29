@@ -8,10 +8,10 @@ import {
   runCLI,
   supportUi,
   uniq,
-  updateFile
+  updateFile,
 } from './utils';
 
-forEachCli(currentCLIName => {
+forEachCli((currentCLIName) => {
   const linter = currentCLIName === 'angular' ? 'tslint' : 'eslint';
   const nrwlPackageName = currentCLIName === 'angular' ? 'angular' : 'react';
 

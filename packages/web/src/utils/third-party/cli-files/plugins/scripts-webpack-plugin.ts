@@ -21,7 +21,7 @@ import {
   ConcatSource,
   OriginalSource,
   RawSource,
-  Source
+  Source,
 } from 'webpack-sources';
 import { interpolateName } from 'loader-utils';
 import * as path from 'path';
@@ -111,8 +111,8 @@ export class ScriptsWebpackPlugin {
     }
 
     const scripts = this.options.scripts
-      .filter(script => !!script)
-      .map(script => path.resolve(this.options.basePath || '', script));
+      .filter((script) => !!script)
+      .map((script) => path.resolve(this.options.basePath || '', script));
 
     hook(compiler, (compilation, callback) => {
       if (this.shouldSkip(compilation, scripts)) {
@@ -126,7 +126,7 @@ export class ScriptsWebpackPlugin {
         return;
       }
 
-      const sourceGetters = scripts.map(fullPath => {
+      const sourceGetters = scripts.map((fullPath) => {
         return new Promise<Source>((resolve, reject) => {
           compilation.inputFileSystem.readFile(
             fullPath,
@@ -158,9 +158,9 @@ export class ScriptsWebpackPlugin {
       });
 
       Promise.all(sourceGetters)
-        .then(sources => {
+        .then((sources) => {
           const concatSource = new ConcatSource();
-          sources.forEach(source => {
+          sources.forEach((source) => {
             concatSource.add(source);
             concatSource.add('\n;');
           });

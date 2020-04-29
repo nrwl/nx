@@ -10,7 +10,7 @@ import { updateJsonInTree } from '../ast-utils';
 describe('updateKarmaConf', () => {
   let tree: Tree;
   let schematicRunner: SchematicTestRunner;
-  beforeEach(done => {
+  beforeEach((done) => {
     schematicRunner = new SchematicTestRunner(
       '@nrwl/workspace',
       path.join(__dirname, '../../../collection.json')
@@ -18,16 +18,16 @@ describe('updateKarmaConf', () => {
     tree = createEmptyWorkspace(Tree.empty());
     tree.create('apps/projectName/karma.conf.js', '');
     const process$ = schematicRunner.callRule(
-      updateJsonInTree('/workspace.json', workspaceJson => {
+      updateJsonInTree('/workspace.json', (workspaceJson) => {
         workspaceJson.projects.projectName = {
           root: 'apps/projectName',
           architect: {
             test: {
               options: {
-                karmaConfig: 'apps/projectName/karma.conf.js'
-              }
-            }
-          }
+                karmaConfig: 'apps/projectName/karma.conf.js',
+              },
+            },
+          },
         };
         return workspaceJson;
       }),
@@ -35,16 +35,16 @@ describe('updateKarmaConf', () => {
     );
 
     process$.subscribe(
-      _ => done(),
-      error => {
+      (_) => done(),
+      (error) => {
         console.log(error);
       }
     );
   });
 
-  it('should overwrite the karma.conf.js', done => {
+  it('should overwrite the karma.conf.js', (done) => {
     const replaceKarmaConf = updateKarmaConf({ projectName: 'projectName' });
-    schematicRunner.callRule(replaceKarmaConf, tree).subscribe(result => {
+    schematicRunner.callRule(replaceKarmaConf, tree).subscribe((result) => {
       const contents = result.read('apps/projectName/karma.conf.js');
       expect(contents.toString()).toEqual(UPDATED_KARMA_CONF);
       done();

@@ -3,7 +3,7 @@ import {
   externalSchematic,
   Rule,
   SchematicContext,
-  Tree
+  Tree,
 } from '@angular-devkit/schematics';
 import { join, normalize, Path } from '@angular-devkit/core';
 import { Schema } from './schema';
@@ -17,7 +17,7 @@ interface NormalizedSchema extends Schema {
 
 function addTypes(options: NormalizedSchema): Rule {
   const tsConfigPath = join(options.appProjectRoot, 'tsconfig.json');
-  return updateJsonInTree(tsConfigPath, json => {
+  return updateJsonInTree(tsConfigPath, (json) => {
     json.compilerOptions.types = [...json.compilerOptions.types, 'express'];
     return json;
   });
@@ -50,7 +50,7 @@ server.on('error', console.error);
   };
 }
 
-export default function(schema: Schema): Rule {
+export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(schema);
     return chain([
@@ -58,7 +58,7 @@ export default function(schema: Schema): Rule {
       externalSchematic('@nrwl/node', 'application', schema),
       addMainFile(options),
       addTypes(options),
-      formatFiles(options)
+      formatFiles(options),
     ])(host, context);
   };
 }
@@ -71,6 +71,6 @@ function normalizeOptions(options: Schema): NormalizedSchema {
 
   return {
     ...options,
-    appProjectRoot
+    appProjectRoot,
   };
 }

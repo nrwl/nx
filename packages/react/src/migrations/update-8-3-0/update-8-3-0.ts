@@ -2,7 +2,7 @@ import {
   chain,
   Rule,
   SchematicContext,
-  Tree
+  Tree,
 } from '@angular-devkit/schematics';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
@@ -10,13 +10,13 @@ import {
   insert,
   readJsonInTree,
   updateJsonInTree,
-  updatePackageJsonDependencies
+  updatePackageJsonDependencies,
 } from '@nrwl/workspace';
 import {
   createSourceFile,
   isImportDeclaration,
   isStringLiteral,
-  ScriptTarget
+  ScriptTarget,
 } from 'typescript';
 import { ReplaceChange } from '@nrwl/workspace/src/utils/ast-utils';
 import { relative } from 'path';
@@ -29,7 +29,7 @@ export default function update(): Rule {
     displayInformation,
     updateDependencies,
     updateImports,
-    formatFiles()
+    formatFiles(),
   ]);
 }
 
@@ -67,7 +67,7 @@ function updateDependencies(tree: Tree) {
     '@types/react-dom': '16.8.5',
     'styled-components': '4.3.2',
     '@types/styled-components': '4.1.18',
-    '@emotion/styled': '10.0.14'
+    '@emotion/styled': '10.0.14',
   };
 
   const updated = Object.entries(candidates).reduce(
@@ -82,8 +82,8 @@ function updateDependencies(tree: Tree) {
     {
       dependencies: {},
       devDependencies: {
-        '@testing-library/react': testingLibraryReactVersion
-      }
+        '@testing-library/react': testingLibraryReactVersion,
+      },
     }
   );
 
@@ -102,7 +102,7 @@ function updateImports(host: Tree) {
     ig = ig.add(host.read('.gitignore').toString());
   }
 
-  host.visit(path => {
+  host.visit((path) => {
     if (ig.ignores(relative('/', path)) || !/\.tsx?$/.test(path)) {
       return;
     }
@@ -114,7 +114,7 @@ function updateImports(host: Tree) {
       true
     );
     const changes = [];
-    sourceFile.statements.forEach(statement => {
+    sourceFile.statements.forEach((statement) => {
       if (
         isImportDeclaration(statement) &&
         isStringLiteral(statement.moduleSpecifier)

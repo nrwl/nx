@@ -20,5 +20,5 @@ export const supportedNxCommands = [
   'list',
   'help',
   '--help',
-  '--version'
+  '--version',
 ];
