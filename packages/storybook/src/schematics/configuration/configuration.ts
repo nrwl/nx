@@ -33,7 +33,8 @@ export default function(schema: StorybookConfigureSchema): Rule {
     schema.configureCypress
       ? schematic<CypressConfigureSchema>('cypress-project', {
           name: schema.name,
-          js: schema.js
+          js: schema.js,
+          linter: schema.linter
         })
       : () => {}
   ]);
