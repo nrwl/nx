@@ -2,7 +2,7 @@ import { relative } from 'path';
 import {
   BuilderContext,
   BuilderOutput,
-  createBuilder
+  createBuilder,
 } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
 import { Observable, of } from 'rxjs';
@@ -19,13 +19,13 @@ import * as localResolve from 'rollup-plugin-local-resolve';
 import { BundleBuilderOptions } from '../../utils/types';
 import {
   normalizeBundleOptions,
-  NormalizedBundleBuilderOptions
+  NormalizedBundleBuilderOptions,
 } from '../../utils/normalize';
 import { toClassName } from '@nrwl/workspace/src/utils/name-utils';
 import { BuildResult } from '@angular-devkit/build-webpack';
 import {
   readJsonFile,
-  writeJsonFile
+  writeJsonFile,
 } from '@nrwl/workspace/src/utils/fileutils';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
@@ -33,7 +33,7 @@ import {
   checkDependentProjectsHaveBeenBuilt,
   DependentBuildableProjectNode,
   computeCompilerOptionsPaths,
-  updateBuildableProjectPackageJsonDependencies
+  updateBuildableProjectPackageJsonDependencies,
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
 
 // These use require because the ES import isn't correct.
@@ -52,7 +52,7 @@ interface OutputConfig {
 
 const outputConfigs: OutputConfig[] = [
   { format: 'umd', extension: 'umd' },
-  { format: 'esm', extension: 'esm' }
+  { format: 'esm', extension: 'esm' },
 ];
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
@@ -68,7 +68,7 @@ export function run(
   );
 
   return of(checkDependentProjectsHaveBeenBuilt(context, dependencies)).pipe(
-    switchMap(result => {
+    switchMap((result) => {
       if (!result) {
         return of({ success: false });
       }
@@ -82,9 +82,9 @@ export function run(
       );
 
       if (options.watch) {
-        return new Observable<BuildResult>(obs => {
+        return new Observable<BuildResult>((obs) => {
           const watcher = rollup.watch([rollupOptions]);
-          watcher.on('event', data => {
+          watcher.on('event', (data) => {
             if (data.code === 'START') {
               context.logger.info('Bundling...');
             } else if (data.code === 'END') {
@@ -112,13 +112,13 @@ export function run(
       } else {
         context.logger.info('Bundling...');
         return runRollup(rollupOptions).pipe(
-          catchError(e => {
+          catchError((e) => {
             console.error(e);
             return of({ success: false });
           }),
           last(),
           tap({
-            next: result => {
+            next: (result) => {
               if (result.success) {
                 updatePackageJson(
                   options,
@@ -131,7 +131,7 @@ export function run(
               } else {
                 context.logger.error('Bundle failed.');
               }
-            }
+            },
           })
         );
       }
@@ -162,32 +162,32 @@ function createRollupOptions(
           rootDir: options.entryRoot,
           allowJs: false,
           declaration: true,
-          paths: compilerOptionPaths
-        }
-      }
+          paths: compilerOptionPaths,
+        },
+      },
     }),
     peerDepsExternal({
-      packageJsonPath: options.project
+      packageJsonPath: options.project,
     }),
     postcss({
       inject: true,
       extract: options.extractCss,
       autoModules: true,
-      plugins: [autoprefixer]
+      plugins: [autoprefixer],
     }),
     localResolve(),
     resolve({
       preferBuiltins: true,
-      extensions: fileExtensions
+      extensions: fileExtensions,
     }),
     babel({
       ...createBabelConfig(options, options.projectRoot),
       extensions: fileExtensions,
       externalHelpers: false,
-      exclude: 'node_modules/**'
+      exclude: 'node_modules/**',
     }),
     commonjs(),
-    filesize()
+    filesize(),
   ];
 
   const globals = options.globals
@@ -198,22 +198,22 @@ function createRollupOptions(
     : {};
 
   const externalPackages = dependencies
-    .map(d => d.name)
+    .map((d) => d.name)
     .concat(options.external || [])
     .concat(Object.keys(packageJson.dependencies || {}));
 
   const rollupConfig = {
     input: options.entryFile,
-    output: outputConfigs.map(o => {
+    output: outputConfigs.map((o) => {
       return {
         globals,
         format: o.format,
         file: `${options.outputPath}/${context.target.project}.${o.extension}.js`,
-        name: toClassName(context.target.project)
+        name: toClassName(context.target.project),
       };
     }),
-    external: id => externalPackages.includes(id),
-    plugins
+    external: (id) => externalPackages.includes(id),
+    plugins,
   };
 
   return options.rollupConfig
@@ -250,7 +250,7 @@ function upsert(
 ) {
   if (
     !config[type].some(
-      p =>
+      (p) =>
         (Array.isArray(p) && p[0].indexOf(pluginOrPreset) !== -1) ||
         p.indexOf(pluginOrPreset) !== -1
     )

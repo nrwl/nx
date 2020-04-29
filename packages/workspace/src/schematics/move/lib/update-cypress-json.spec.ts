@@ -21,7 +21,7 @@ describe('updateCypressJson Rule', () => {
 
     const schema: Schema = {
       projectName: 'my-lib',
-      destination: 'my-destination'
+      destination: 'my-destination',
     };
 
     await expect(
@@ -39,7 +39,7 @@ describe('updateCypressJson Rule', () => {
       video: true,
       videosFolder: '../../dist/cypress/libs/my-lib/videos',
       screenshotsFolder: '../../dist/cypress/libs/my-lib/screenshots',
-      chromeWebSecurity: false
+      chromeWebSecurity: false,
     };
 
     tree = await runSchematic('lib', { name: 'my-lib' }, tree);
@@ -52,7 +52,7 @@ describe('updateCypressJson Rule', () => {
 
     const schema: Schema = {
       projectName: 'my-lib',
-      destination: 'my-destination'
+      destination: 'my-destination',
     };
 
     tree = (await callRule(updateCypressJson(schema), tree)) as UnitTestTree;
@@ -60,7 +60,7 @@ describe('updateCypressJson Rule', () => {
     expect(readJsonInTree(tree, '/libs/my-destination/cypress.json')).toEqual({
       ...cypressJson,
       videosFolder: '../../dist/cypress/libs/my-destination/videos',
-      screenshotsFolder: '../../dist/cypress/libs/my-destination/screenshots'
+      screenshotsFolder: '../../dist/cypress/libs/my-destination/screenshots',
     });
   });
 });

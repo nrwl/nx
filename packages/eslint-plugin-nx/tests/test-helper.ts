@@ -16,7 +16,7 @@ export class RuleTester extends TSESLint.RuleTester {
   constructor(options: RuleTesterConfig) {
     super({
       ...options,
-      parser: require.resolve(options.parser)
+      parser: require.resolve(options.parser),
     });
 
     if (options.parserOptions && options.parserOptions.project) {
@@ -35,18 +35,18 @@ export class RuleTester extends TSESLint.RuleTester {
     const errorMessage = `Do not set the parser at the test level unless you want to use a parser other than ${parser}`;
 
     if (this.filename) {
-      tests.valid = tests.valid.map(test => {
+      tests.valid = tests.valid.map((test) => {
         if (typeof test === 'string') {
           return {
             code: test,
-            filename: this.filename
+            filename: this.filename,
           };
         }
         return test;
       });
     }
 
-    tests.valid.forEach(test => {
+    tests.valid.forEach((test) => {
       if (typeof test !== 'string') {
         if (test.parser === parser) {
           throw new Error(errorMessage);
@@ -56,7 +56,7 @@ export class RuleTester extends TSESLint.RuleTester {
         }
       }
     });
-    tests.invalid.forEach(test => {
+    tests.invalid.forEach((test) => {
       if (test.parser === parser) {
         throw new Error(errorMessage);
       }

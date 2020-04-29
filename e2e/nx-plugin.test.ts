@@ -8,14 +8,14 @@ import {
   runCLIAsync,
   checkFilesExist,
   readJson,
-  workspaceConfigName
+  workspaceConfigName,
 } from './utils';
 
-forEachCli(currentCLIName => {
+forEachCli((currentCLIName) => {
   const linter = currentCLIName === 'angular' ? 'tslint' : 'eslint';
 
   describe('Nx Plugin', () => {
-    it('should be able to generate a Nx Plugin ', async done => {
+    it('should be able to generate a Nx Plugin ', async (done) => {
       ensureProject();
       const plugin = uniq('plugin');
 
@@ -44,18 +44,18 @@ forEachCli(currentCLIName => {
       expect(nxJson).toMatchObject({
         projects: expect.objectContaining({
           [plugin]: {
-            tags: []
+            tags: [],
           },
           [`${plugin}-e2e`]: {
             tags: [],
-            implicitDependencies: [`${plugin}`]
-          }
-        })
+            implicitDependencies: [`${plugin}`],
+          },
+        }),
       });
       done();
     }, 45000);
 
-    it(`should run the plugin's e2e tests`, async done => {
+    it(`should run the plugin's e2e tests`, async (done) => {
       ensureProject();
       const plugin = uniq('plugin');
       runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter}`);
@@ -66,7 +66,7 @@ forEachCli(currentCLIName => {
       done();
     }, 150000);
 
-    it('should be able to generate a migration', async done => {
+    it('should be able to generate a migration', async (done) => {
       ensureProject();
       const plugin = uniq('plugin');
       const version = '1.0.0';
@@ -96,14 +96,14 @@ forEachCli(currentCLIName => {
           [`update-${version}`]: {
             version: version,
             description: `update-${version}`,
-            factory: `./src/migrations/update-${version}/update-${version}`
-          }
-        })
+            factory: `./src/migrations/update-${version}/update-${version}`,
+          },
+        }),
       });
       done();
     }, 45000);
 
-    it('should be able to generate a schematic', async done => {
+    it('should be able to generate a schematic', async (done) => {
       ensureProject();
       const plugin = uniq('plugin');
       const schematic = uniq('schematic');
@@ -136,14 +136,14 @@ forEachCli(currentCLIName => {
           [schematic]: {
             factory: `./src/schematics/${schematic}/schematic`,
             schema: `./src/schematics/${schematic}/schema.json`,
-            description: `${schematic} schematic`
-          }
-        })
+            description: `${schematic} schematic`,
+          },
+        }),
       });
       done();
     }, 45000);
 
-    it('should be able to generate a builder', async done => {
+    it('should be able to generate a builder', async (done) => {
       ensureProject();
       const plugin = uniq('plugin');
       const builder = uniq('builder');
@@ -174,9 +174,9 @@ forEachCli(currentCLIName => {
           [builder]: {
             implementation: `./src/builders/${builder}/builder`,
             schema: `./src/builders/${builder}/schema.json`,
-            description: `${builder} builder`
-          }
-        })
+            description: `${builder} builder`,
+          },
+        }),
       });
       done();
     }, 45000);

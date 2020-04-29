@@ -29,7 +29,7 @@ export function normalizeOptions(
   const e2eProjectRoot = normalize(`apps/${appDirectory}-e2e`);
 
   const parsedTags = options.tags
-    ? options.tags.split(',').map(s => s.trim())
+    ? options.tags.split(',').map((s) => s.trim())
     : [];
 
   const fileName = 'index';
@@ -49,6 +49,6 @@ export function normalizeOptions(
     e2eProjectName,
     parsedTags,
     fileName,
-    styledModule
+    styledModule,
   };
 }

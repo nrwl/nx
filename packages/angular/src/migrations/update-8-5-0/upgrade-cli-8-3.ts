@@ -5,7 +5,7 @@ import {
   formatFiles,
   updateJsonInTree,
   checkAndCleanWithSemver,
-  addInstallTask
+  addInstallTask,
 } from '@nrwl/workspace';
 import { gt } from 'semver';
 
@@ -14,7 +14,7 @@ const updateAngular = addUpdateTask('@angular/core', '8.2.4');
 function updateCLI() {
   const tasks: TaskId[] = [];
   const rule = chain([
-    updateJsonInTree('package.json', json => {
+    updateJsonInTree('package.json', (json) => {
       json.devDependencies = json.devDependencies || {};
       const cliVersion = json.devDependencies['@angular/cli'];
       const cleanCliVersion = checkAndCleanWithSemver(
@@ -41,7 +41,7 @@ function updateCLI() {
 
       return json;
     }),
-    addInstallTask()
+    addInstallTask(),
   ]);
 
   return { rule, tasks };
@@ -54,7 +54,7 @@ function updateNgrx(updateDeps: TaskId[]) {
     if (dependencies && dependencies['@ngrx/store']) {
       return chain([
         addUpdateTask('@ngrx/store', '8.3.0', updateDeps),
-        formatFiles()
+        formatFiles(),
       ]);
     }
 
@@ -62,12 +62,12 @@ function updateNgrx(updateDeps: TaskId[]) {
   };
 }
 
-export default function() {
+export default function () {
   const { rule: updateCLIRule, tasks } = updateCLI();
   return chain([
     updateAngular,
     updateCLIRule,
     updateNgrx(tasks),
-    formatFiles()
+    formatFiles(),
   ]);
 }

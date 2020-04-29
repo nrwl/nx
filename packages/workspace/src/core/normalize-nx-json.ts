@@ -22,7 +22,7 @@ export function normalizeNxJson(nxJson: NxJson): NxJson<string[]> {
               }, {});
             }
           }
-        }, {})
+        }, {}),
       }
     : (nxJson as NxJson<string[]>);
 }

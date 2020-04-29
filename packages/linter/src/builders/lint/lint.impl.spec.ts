@@ -25,15 +25,15 @@ function mockEslint() {
     loadESLint: () => ({
       CLIEngine: MockCliEngine,
       Linter: {
-        version: mockEslintVersion
-      }
-    })
+        version: mockEslintVersion,
+      },
+    }),
   }));
 }
 
 function mockCreateProgram() {
   jest.doMock('./utility/ts-utils', () => ({
-    createProgram: jest.fn().mockImplementation(path => path + '-program')
+    createProgram: jest.fn().mockImplementation((path) => path + '-program'),
   }));
 }
 
@@ -56,7 +56,7 @@ async function runBuilder(options: JsonObject) {
   const logger = new logging.Logger('');
   logger.subscribe(loggerSpy);
   const run = await architect.scheduleBuilder('@nrwl/linter:lint', options, {
-    logger
+    logger,
   });
 
   return run.result;
@@ -76,7 +76,7 @@ describe('Linter Builder', () => {
     const result = runBuilder({
       linter: 'eslint',
       config: './.eslintrc',
-      files: []
+      files: [],
     });
     await expect(result).rejects.toThrow(
       /ESLint must be version 6.1 or higher/
@@ -89,7 +89,7 @@ describe('Linter Builder', () => {
     const result = runBuilder({
       linter: 'eslint',
       config: './.eslintrc',
-      files: []
+      files: [],
     });
     await expect(result).resolves.not.toThrow();
   });
@@ -98,7 +98,7 @@ describe('Linter Builder', () => {
     const result = runBuilder({
       linter: 'tslint',
       config: './.eslintrc',
-      files: []
+      files: [],
     });
     await expect(result).rejects.toThrow(
       /'tslint' option is no longer supported/
@@ -113,7 +113,7 @@ describe('Linter Builder', () => {
       await runBuilder({
         linter: 'eslint',
         config: './.eslintrc',
-        tsConfig: './tsconfig.json'
+        tsConfig: './tsconfig.json',
       });
       expect(createProgram).toHaveBeenCalledTimes(1);
       expect(createProgram).toHaveBeenCalledWith('/root/tsconfig.json');
@@ -134,7 +134,7 @@ describe('Linter Builder', () => {
       await runBuilder({
         linter: 'eslint',
         config: './.eslintrc',
-        tsConfig: ['./tsconfig.json', './tsconfig2.json']
+        tsConfig: ['./tsconfig.json', './tsconfig2.json'],
       });
       expect(createProgram).toHaveBeenCalledTimes(2);
       expect(createProgram).toHaveBeenNthCalledWith(1, '/root/tsconfig.json');
@@ -166,7 +166,7 @@ describe('Linter Builder', () => {
       await runBuilder({
         linter: 'eslint',
         config: './.eslintrc',
-        files: []
+        files: [],
       });
       expect(createProgram).not.toHaveBeenCalled();
       expect(lint).toHaveBeenCalledTimes(1);
@@ -189,7 +189,7 @@ describe('Linter Builder', () => {
       exclude: ['excludedFile1'],
       fix: true,
       cache: true,
-      cacheLocation: 'cacheLocation1'
+      cacheLocation: 'cacheLocation1',
     });
     expect(lint).toHaveBeenCalledWith(
       expect.anything(),
@@ -206,7 +206,7 @@ describe('Linter Builder', () => {
         linter: 'eslint',
         outputFile: undefined,
         silent: false,
-        tsConfig: undefined
+        tsConfig: undefined,
       },
       expect.any(Set)
     );
@@ -217,7 +217,7 @@ describe('Linter Builder', () => {
     const result = runBuilder({
       linter: 'eslint',
       config: './.eslintrc',
-      files: ['includedFile1']
+      files: ['includedFile1'],
     });
     await expect(result).rejects.toThrow(
       /Invalid lint configuration. Nothing to lint./
@@ -229,14 +229,14 @@ describe('Linter Builder', () => {
       linter: 'eslint',
       config: './.eslintrc',
       files: ['includedFile1'],
-      format: 'json'
+      format: 'json',
     });
     expect(mockGetFormatter).toHaveBeenCalledWith('json');
     await runBuilder({
       linter: 'eslint',
       config: './.eslintrc',
       files: ['includedFile1'],
-      format: 'html'
+      format: 'html',
     });
     expect(mockGetFormatter).toHaveBeenCalledWith('html');
   });
@@ -247,7 +247,7 @@ describe('Linter Builder', () => {
       config: './.eslintrc',
       files: ['includedFile1'],
       format: 'json',
-      fix: false
+      fix: false,
     });
     expect(mockOutputFixes).toHaveBeenCalled();
   });
@@ -259,14 +259,14 @@ describe('Linter Builder', () => {
           errorCount: 1,
           warningCount: 4,
           results: [],
-          usedDeprecatedRules: []
+          usedDeprecatedRules: [],
         },
         {
           errorCount: 3,
           warningCount: 6,
           results: [],
-          usedDeprecatedRules: []
-        }
+          usedDeprecatedRules: [],
+        },
       ];
       setupMocks();
       await runBuilder({
@@ -274,7 +274,7 @@ describe('Linter Builder', () => {
         config: './.eslintrc',
         files: ['includedFile1'],
         format: 'json',
-        silent: false
+        silent: false,
       });
       const flattenedCalls = loggerSpy.mock.calls.reduce((logs, call) => {
         return [...logs, call[0]];
@@ -283,14 +283,14 @@ describe('Linter Builder', () => {
         expect.objectContaining({
           message: expect.stringContaining(
             'Lint errors found in the listed files.'
-          )
+          ),
         })
       );
       expect(flattenedCalls).toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining(
             'Lint warnings found in the listed files.'
-          )
+          ),
         })
       );
     });
@@ -300,14 +300,14 @@ describe('Linter Builder', () => {
           errorCount: 0,
           warningCount: 0,
           results: [],
-          usedDeprecatedRules: []
+          usedDeprecatedRules: [],
         },
         {
           errorCount: 0,
           warningCount: 0,
           results: [],
-          usedDeprecatedRules: []
-        }
+          usedDeprecatedRules: [],
+        },
       ];
       setupMocks();
       const output = await runBuilder({
@@ -315,7 +315,7 @@ describe('Linter Builder', () => {
         config: './.eslintrc',
         files: ['includedFile1'],
         format: 'json',
-        silent: false
+        silent: false,
       });
       const flattenedCalls = loggerSpy.mock.calls.reduce((logs, call) => {
         return [...logs, call[0]];
@@ -324,19 +324,19 @@ describe('Linter Builder', () => {
         expect.objectContaining({
           message: expect.stringContaining(
             'Lint errors found in the listed files.'
-          )
+          ),
         })
       );
       expect(flattenedCalls).not.toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining(
             'Lint warnings found in the listed files.'
-          )
+          ),
         })
       );
       expect(flattenedCalls).toContainEqual(
         expect.objectContaining({
-          message: expect.stringContaining('All files pass linting.')
+          message: expect.stringContaining('All files pass linting.'),
         })
       );
     });
@@ -345,14 +345,14 @@ describe('Linter Builder', () => {
       setupMocks();
       jest.spyOn(fs, 'writeFileSync').mockImplementation();
       jest.mock('@nrwl/workspace', () => ({
-        createDirectory: jest.fn()
+        createDirectory: jest.fn(),
       }));
       const { createDirectory } = require('@nrwl/workspace');
       await runBuilder({
         linter: 'eslint',
         config: './.eslintrc',
         files: ['includedFile1'],
-        outputFile: 'a/b/c/outputFile1'
+        outputFile: 'a/b/c/outputFile1',
       });
       expect(createDirectory).toHaveBeenCalledWith('/root/a/b/c');
       expect(fs.writeFileSync).toHaveBeenCalledWith(
@@ -366,7 +366,7 @@ describe('Linter Builder', () => {
       await runBuilder({
         linter: 'eslint',
         config: './.eslintrc',
-        files: ['includedFile1']
+        files: ['includedFile1'],
       });
       expect(fs.writeFileSync).not.toHaveBeenCalled();
     });
@@ -376,14 +376,14 @@ describe('Linter Builder', () => {
           errorCount: 1,
           warningCount: 4,
           results: [],
-          usedDeprecatedRules: []
+          usedDeprecatedRules: [],
         },
         {
           errorCount: 3,
           warningCount: 6,
           results: [],
-          usedDeprecatedRules: []
-        }
+          usedDeprecatedRules: [],
+        },
       ];
       setupMocks();
       const output = await runBuilder({
@@ -391,7 +391,7 @@ describe('Linter Builder', () => {
         config: './.eslintrc',
         files: ['includedFile1'],
         format: 'json',
-        silent: true
+        silent: true,
       });
       const flattenedCalls = loggerSpy.mock.calls.reduce((logs, call) => {
         return [...logs, call[0]];
@@ -400,14 +400,14 @@ describe('Linter Builder', () => {
         expect.objectContaining({
           message: expect.stringContaining(
             'Lint errors found in the listed files.'
-          )
+          ),
         })
       );
       expect(flattenedCalls).not.toContainEqual(
         expect.objectContaining({
           message: expect.stringContaining(
             'Lint warnings found in the listed files.'
-          )
+          ),
         })
       );
     });
@@ -419,14 +419,14 @@ describe('Linter Builder', () => {
         errorCount: 0,
         warningCount: 4,
         results: [],
-        usedDeprecatedRules: []
+        usedDeprecatedRules: [],
       },
       {
         errorCount: 0,
         warningCount: 6,
         results: [],
-        usedDeprecatedRules: []
-      }
+        usedDeprecatedRules: [],
+      },
     ];
     setupMocks();
     const output = await runBuilder({
@@ -434,7 +434,7 @@ describe('Linter Builder', () => {
       config: './.eslintrc',
       files: ['includedFile1'],
       format: 'json',
-      silent: true
+      silent: true,
     });
     expect(output.success).toBeTruthy();
   });
@@ -444,14 +444,14 @@ describe('Linter Builder', () => {
         errorCount: 2,
         warningCount: 4,
         results: [],
-        usedDeprecatedRules: []
+        usedDeprecatedRules: [],
       },
       {
         errorCount: 3,
         warningCount: 6,
         results: [],
-        usedDeprecatedRules: []
-      }
+        usedDeprecatedRules: [],
+      },
     ];
     setupMocks();
     const output = await runBuilder({
@@ -460,7 +460,7 @@ describe('Linter Builder', () => {
       files: ['includedFile1'],
       format: 'json',
       silent: true,
-      force: true
+      force: true,
     });
     expect(output.success).toBeTruthy();
   });
@@ -470,14 +470,14 @@ describe('Linter Builder', () => {
         errorCount: 2,
         warningCount: 4,
         results: [],
-        usedDeprecatedRules: []
+        usedDeprecatedRules: [],
       },
       {
         errorCount: 3,
         warningCount: 6,
         results: [],
-        usedDeprecatedRules: []
-      }
+        usedDeprecatedRules: [],
+      },
     ];
     setupMocks();
     const output = await runBuilder({
@@ -486,7 +486,7 @@ describe('Linter Builder', () => {
       files: ['includedFile1'],
       format: 'json',
       silent: true,
-      force: false
+      force: false,
     });
     expect(output.success).toBeFalsy();
   });

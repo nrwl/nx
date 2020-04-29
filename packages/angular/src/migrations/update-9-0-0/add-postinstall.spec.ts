@@ -6,7 +6,10 @@ describe('add-postinstall', () => {
   let tree: Tree;
   beforeEach(async () => {
     tree = Tree.empty();
-    tree = await callRule(updateJsonInTree('package.json', () => ({})), tree);
+    tree = await callRule(
+      updateJsonInTree('package.json', () => ({})),
+      tree
+    );
   });
   it('should add a postinstall for "ngcc"', async () => {
     const result = await runMigration('add-postinstall', {}, tree);
@@ -20,9 +23,9 @@ describe('add-postinstall', () => {
 
   it('should not add a postinstall if one exists', async () => {
     tree = await callRule(
-      updateJsonInTree('package.json', json => {
+      updateJsonInTree('package.json', (json) => {
         json.scripts = {
-          postinstall: './postinstall.sh'
+          postinstall: './postinstall.sh',
         };
         return json;
       }),

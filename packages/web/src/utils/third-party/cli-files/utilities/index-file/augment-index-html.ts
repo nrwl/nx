@@ -64,7 +64,7 @@ export async function augmentIndexHtml(
     files,
     noModuleFiles = [],
     moduleFiles = [],
-    entrypoints
+    entrypoints,
   } = params;
 
   let { crossOrigin = 'none' } = params;
@@ -98,7 +98,7 @@ export async function augmentIndexHtml(
   const treeAdapter = parse5.treeAdapters.default;
   const document = parse5.parse(params.inputContent, {
     treeAdapter,
-    locationInfo: true
+    locationInfo: true,
   });
   let headElement;
   let bodyElement;
@@ -146,7 +146,7 @@ export async function augmentIndexHtml(
   let scriptElements = '';
   for (const script of scripts) {
     const attrs: { name: string; value: string | null }[] = [
-      { name: 'src', value: (params.deployUrl || '') + script }
+      { name: 'src', value: (params.deployUrl || '') + script },
     ];
 
     if (crossOrigin !== 'none') {
@@ -183,7 +183,7 @@ export async function augmentIndexHtml(
     }
 
     const attributes = attrs
-      .map(attr =>
+      .map((attr) =>
         attr.value === null ? attr.name : `${attr.name}="${attr.value}"`
       )
       .join(' ');
@@ -205,7 +205,7 @@ export async function augmentIndexHtml(
 
     if (!baseElement) {
       baseElement = treeAdapter.createElement('base', undefined, [
-        { name: 'href', value: params.baseHref }
+        { name: 'href', value: params.baseHref },
       ]);
 
       treeAdapter.appendChild(baseFragment, baseElement);
@@ -239,7 +239,7 @@ export async function augmentIndexHtml(
   for (const stylesheet of stylesheets) {
     const attrs = [
       { name: 'rel', value: 'stylesheet' },
-      { name: 'href', value: (params.deployUrl || '') + stylesheet }
+      { name: 'href', value: (params.deployUrl || '') + stylesheet },
     ];
 
     if (crossOrigin !== 'none') {
@@ -265,9 +265,7 @@ export async function augmentIndexHtml(
 
 function _generateSriAttributes(content: string) {
   const algo = 'sha384';
-  const hash = createHash(algo)
-    .update(content, 'utf8')
-    .digest('base64');
+  const hash = createHash(algo).update(content, 'utf8').digest('base64');
 
   return [{ name: 'integrity', value: `${algo}-${hash}` }];
 }

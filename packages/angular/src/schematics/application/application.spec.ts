@@ -45,12 +45,12 @@ describe('app', () => {
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-app': {
-          tags: ['one', 'two']
+          tags: ['one', 'two'],
         },
         'my-app-e2e': {
           implicitDependencies: ['my-app'],
-          tags: []
-        }
+          tags: [],
+        },
       });
     });
 
@@ -138,9 +138,9 @@ describe('app', () => {
 
     xit('should work if the new project root is changed', async () => {
       appTree = await callRule(
-        updateJsonInTree('/workspace.json', json => ({
+        updateJsonInTree('/workspace.json', (json) => ({
           ...json,
-          newProjectRoot: 'newProjectRoot'
+          newProjectRoot: 'newProjectRoot',
         })),
         appTree
       );
@@ -191,12 +191,12 @@ describe('app', () => {
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-dir-my-app': {
-          tags: ['one', 'two']
+          tags: ['one', 'two'],
         },
         'my-dir-my-app-e2e': {
           implicitDependencies: ['my-dir-my-app'],
-          tags: []
-        }
+          tags: [],
+        },
       });
     });
 
@@ -222,8 +222,8 @@ describe('app', () => {
         'apps/my-dir/my-app/src/main.ts',
         'apps/my-dir/my-app/src/app/app.module.ts',
         'apps/my-dir/my-app/src/app/app.component.ts',
-        'apps/my-dir/my-app-e2e/cypress.json'
-      ].forEach(path => {
+        'apps/my-dir/my-app-e2e/cypress.json',
+      ].forEach((path) => {
         expect(tree.exists(path)).toBeTruthy();
       });
 
@@ -231,18 +231,18 @@ describe('app', () => {
       [
         {
           path: 'apps/my-dir/my-app/tsconfig.json',
-          lookupFn: json => json.extends,
-          expectedValue: '../../../tsconfig.json'
+          lookupFn: (json) => json.extends,
+          expectedValue: '../../../tsconfig.json',
         },
         {
           path: 'apps/my-dir/my-app/tsconfig.app.json',
-          lookupFn: json => json.compilerOptions.outDir,
-          expectedValue: '../../../dist/out-tsc'
+          lookupFn: (json) => json.compilerOptions.outDir,
+          expectedValue: '../../../dist/out-tsc',
         },
         {
           path: 'apps/my-dir/my-app-e2e/tsconfig.json',
-          lookupFn: json => json.extends,
-          expectedValue: '../../../tsconfig.json'
+          lookupFn: (json) => json.extends,
+          expectedValue: '../../../tsconfig.json',
         },
         // {
         //   path: 'apps/my-dir/my-app-e2e/tsconfig.e2e.json',
@@ -251,9 +251,9 @@ describe('app', () => {
         // },
         {
           path: 'apps/my-dir/my-app/tslint.json',
-          lookupFn: json => json.extends,
-          expectedValue: '../../../tslint.json'
-        }
+          lookupFn: (json) => json.extends,
+          expectedValue: '../../../tslint.json',
+        },
       ].forEach(hasJsonValue);
     });
   });
@@ -349,8 +349,8 @@ describe('app', () => {
 
       expect(workspaceJson.projects['my-app'].schematics).toEqual({
         '@nrwl/angular:component': {
-          style: 'scss'
-        }
+          style: 'scss',
+        },
       });
     });
   });
@@ -390,7 +390,7 @@ describe('app', () => {
           workspaceJson.projects['my-app'].architect.lint.options.tsConfig
         ).toEqual([
           'apps/my-app/tsconfig.app.json',
-          'apps/my-app/tsconfig.spec.json'
+          'apps/my-app/tsconfig.spec.json',
         ]);
         const tsconfigAppJson = readJsonInTree(
           tree,
@@ -444,22 +444,22 @@ describe('app', () => {
               builder: '@angular-devkit/build-angular:protractor',
               options: {
                 devServerTarget: 'my-app:serve',
-                protractorConfig: 'apps/my-app-e2e/protractor.conf.js'
+                protractorConfig: 'apps/my-app-e2e/protractor.conf.js',
               },
               configurations: {
                 production: {
-                  devServerTarget: 'my-app:serve:production'
-                }
-              }
+                  devServerTarget: 'my-app:serve:production',
+                },
+              },
             },
             lint: {
               builder: '@angular-devkit/build-angular:tslint',
               options: {
                 tsConfig: 'apps/my-app-e2e/tsconfig.e2e.json',
-                exclude: ['**/node_modules/**', '!apps/my-app-e2e/**']
-              }
-            }
-          }
+                exclude: ['**/node_modules/**', '!apps/my-app-e2e/**'],
+              },
+            },
+          },
         });
       });
 
@@ -527,8 +527,8 @@ describe('app', () => {
           {
             '/customer-api': {
               target: 'http://localhost:3333',
-              secure: false
-            }
+              secure: false,
+            },
           },
           null,
           2

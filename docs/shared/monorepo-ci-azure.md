@@ -139,7 +139,7 @@ console.log(
   JSON.stringify({
     ...commands('lint'),
     ...commands('test'),
-    ...commands('build')
+    ...commands('build'),
   })
 );
 
@@ -148,7 +148,7 @@ function commands(target) {
     execSync(`npx nx print-affected --base=${baseSha} --target=${target}`)
       .toString()
       .trim()
-  ).tasks.map(t => t.target.project);
+  ).tasks.map((t) => t.target.project);
 
   array.sort(() => 0.5 - Math.random());
   const third = Math.floor(array.length / 3);
@@ -158,7 +158,7 @@ function commands(target) {
   return {
     [target + '1']: a1,
     [target + '2']: a2,
-    [target + '3']: a3
+    [target + '3']: a3,
   };
 }
 ```
@@ -221,7 +221,7 @@ execSync(
     ','
   )} --parallel`,
   {
-    stdio: [0, 1, 2]
+    stdio: [0, 1, 2],
   }
 );
 ```

@@ -18,7 +18,7 @@ describe('NxPluginE2EBuilder', () => {
     testOptions = {
       jestConfig: 'apps/plugin-e2e/jest.config.js',
       tsSpecConfig: 'apps/plugin-e2e/tsconfig.spec.js',
-      target: 'plugin:build'
+      target: 'plugin:build',
     };
 
     scheduleTargetAndForgetSpy = jest
@@ -38,11 +38,11 @@ describe('NxPluginE2EBuilder', () => {
             info: {
               builderName: 'builder',
               description: '',
-              optionSchema: {}
+              optionSchema: {},
             },
             output: of({ success: true }),
             progress: of({} as any),
-            stop: jest.fn()
+            stop: jest.fn(),
           });
         });
       });
@@ -52,12 +52,12 @@ describe('NxPluginE2EBuilder', () => {
     await runNxPluginE2EBuilder(testOptions, context).toPromise();
     expect(scheduleTargetAndForgetSpy).toHaveBeenCalledWith(context, {
       project: 'plugin',
-      target: 'build'
+      target: 'build',
     });
     expect(contextBuilderSpy).toHaveBeenCalledWith('@nrwl/jest:jest', {
       tsConfig: testOptions.tsSpecConfig,
       jestConfig: testOptions.jestConfig,
-      watch: false
+      watch: false,
     });
   });
 });

@@ -4,13 +4,13 @@ import {
   uniq,
   runCLI,
   forEachCli,
-  updateFile
+  updateFile,
 } from './utils';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 forEachCli(() => {
   describe('Jest', () => {
-    it('should be able test projects using jest', async done => {
+    it('should be able test projects using jest', async (done) => {
       ensureProject();
       const mylib = uniq('mylib');
       const myapp = uniq('myapp');
@@ -21,7 +21,7 @@ forEachCli(() => {
         runCLIAsync(`generate @nrwl/angular:service test --project ${myapp}`),
         runCLIAsync(`generate @nrwl/angular:component test --project ${myapp}`),
         runCLIAsync(`generate @nrwl/angular:service test --project ${mylib}`),
-        runCLIAsync(`generate @nrwl/angular:component test --project ${mylib}`)
+        runCLIAsync(`generate @nrwl/angular:component test --project ${mylib}`),
       ]);
       const appResult = await runCLIAsync(`test ${myapp} --no-watch`);
       expect(appResult.stderr).toContain('Test Suites: 3 passed, 3 total');
@@ -30,7 +30,7 @@ forEachCli(() => {
       done();
     }, 45000);
 
-    it('should merge with jest config globals', async done => {
+    it('should merge with jest config globals', async (done) => {
       ensureProject();
       const testGlobal = `'My Test Global'`;
       const mylib = uniq('mylib');
@@ -68,7 +68,7 @@ forEachCli(() => {
       done();
     }, 45000);
 
-    it('should set the NODE_ENV to `test`', async done => {
+    it('should set the NODE_ENV to `test`', async (done) => {
       ensureProject();
       const mylib = uniq('mylib');
       runCLI(`generate @nrwl/workspace:lib ${mylib} --unit-test-runner jest`);

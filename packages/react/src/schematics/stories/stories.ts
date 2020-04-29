@@ -5,7 +5,7 @@ import {
   SchematicContext,
   Tree,
   SchematicsException,
-  noop
+  noop,
 } from '@angular-devkit/schematics';
 import { getProjectConfig } from '@nrwl/workspace';
 import { join } from 'path';
@@ -49,7 +49,7 @@ export function createAllStories(
     const libPath = join(projectSrcRoot, '/lib');
 
     let componentPaths: string[] = [];
-    tree.getDir(libPath).visit(filePath => {
+    tree.getDir(libPath).visit((filePath) => {
       if (
         (filePath.endsWith('.tsx') && !filePath.endsWith('.spec.tsx')) ||
         (filePath.endsWith('.js') && !filePath.endsWith('.spec.js')) ||
@@ -60,7 +60,7 @@ export function createAllStories(
     });
 
     return chain(
-      componentPaths.map(componentPath => {
+      componentPaths.map((componentPath) => {
         const relativeCmpDir = componentPath.replace(
           join('/', projectSrcRoot, '/'),
           ''
@@ -73,7 +73,7 @@ export function createAllStories(
         return chain([
           schematic<CreateComponentStoriesFileSchema>('component-story', {
             componentPath: relativeCmpDir,
-            project: projectName
+            project: projectName,
           }),
           generateCypressSpecs
             ? schematic<CreateComponentSpecFileSchema>(
@@ -81,18 +81,18 @@ export function createAllStories(
                 {
                   project: projectName,
                   componentPath: relativeCmpDir,
-                  js
+                  js,
                 }
               )
-            : () => {}
+            : () => {},
         ]);
       })
     );
   };
 }
 
-export default function(schema: StorybookStoriesSchema): Rule {
+export default function (schema: StorybookStoriesSchema): Rule {
   return chain([
-    createAllStories(schema.project, schema.generateCypressSpecs, schema.js)
+    createAllStories(schema.project, schema.generateCypressSpecs, schema.js),
   ]);
 }

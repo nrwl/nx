@@ -10,7 +10,7 @@ import { updateProjectRootFiles } from './lib/update-project-root-files';
 import { updateWorkspace } from './lib/update-workspace';
 import { Schema } from './schema';
 
-export default function(schema: Schema): Rule {
+export default function (schema: Schema): Rule {
   return chain([
     checkProjectExists(schema),
     checkDestination(schema),
@@ -20,6 +20,6 @@ export default function(schema: Schema): Rule {
     updateJestConfig(schema),
     updateNxJson(schema),
     updateImports(schema),
-    updateWorkspace(schema) // Have to do this last because all previous rules need the information in here
+    updateWorkspace(schema), // Have to do this last because all previous rules need the information in here
   ]);
 }

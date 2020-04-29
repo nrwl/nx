@@ -43,11 +43,11 @@ export class TaskOrchestrator {
         const task = left.pop();
         return that
           .forkProcess(task)
-          .then(code => {
+          .then((code) => {
             res.push({
               task,
               success: code === 0,
-              type: AffectedEventType.TaskComplete
+              type: AffectedEventType.TaskComplete,
             });
           })
           .then(takeFromQueue)
@@ -78,7 +78,7 @@ export class TaskOrchestrator {
       const cached: TaskWithCachedResult[] = [];
       const rest: Task[] = [];
       await Promise.all(
-        tasks.map(async task => {
+        tasks.map(async (task) => {
           const cachedResult = await this.cache.get(task);
           if (cachedResult) {
             cached.push({ task, cachedResult });
@@ -92,7 +92,7 @@ export class TaskOrchestrator {
   }
 
   private applyCachedResults(tasks: TaskWithCachedResult[]) {
-    tasks.forEach(t => {
+    tasks.forEach((t) => {
       this.options.lifeCycle.startTask(t.task);
 
       if (
@@ -115,7 +115,7 @@ export class TaskOrchestrator {
       m.push({
         task: c.task,
         type: AffectedEventType.TaskCacheRead,
-        success: true
+        success: true,
       });
       return m;
     }, []);
@@ -137,9 +137,9 @@ export class TaskOrchestrator {
         }
         const p = fork(this.getCommand(), args, {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-          env
+          env,
         });
-        p.on('close', code => {
+        p.on('close', (code) => {
           // we didn't print any output as we were running the command
           // print all the collected output
           if (!forwardOutput) {
@@ -215,7 +215,7 @@ export class TaskOrchestrator {
     return [
       'run',
       `${task.target.project}:${task.target.target}${config}`,
-      ...args
+      ...args,
     ];
   }
 }

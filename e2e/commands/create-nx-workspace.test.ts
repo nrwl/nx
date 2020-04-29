@@ -8,7 +8,7 @@ describe('create-nx-workspace', () => {
     execSync(`yarn local-registry disable`);
   });
 
-  it('creates a new project', async done => {
+  it('creates a new project', async (done) => {
     if (!process.env.PUBLISHED_VERSION) {
       console.error(`Please provision the version you are publishing`);
       process.exit(1);
@@ -54,7 +54,7 @@ describe('create-nx-workspace', () => {
 
     expect(
       execSync(`npm_config_registry=http://localhost:4873/ && npm audit`, {
-        cwd: workspaceDir
+        cwd: workspaceDir,
       }).toString()
     ).toContain(`0 vulnerabilities`);
 
@@ -66,7 +66,7 @@ describe('create-nx-workspace', () => {
 
     // filtering out rxjs in the listr package.
     const rxjs = allVersionsOf(workspaceDir, 'rxjs').filter(
-      value => value !== '5.5.12'
+      (value) => value !== '5.5.12'
     );
     if (rxjs.length > 1) {
       console.log(`more than one version of rxjs: ${rxjs.join(', ')}`);
@@ -83,7 +83,7 @@ describe('create-nx-workspace', () => {
 });
 
 function wait(value = 500) {
-  return new Promise(r => {
+  return new Promise((r) => {
     setTimeout(() => r(), value);
   });
 }
@@ -91,13 +91,13 @@ function wait(value = 500) {
 function startRegistry() {
   return new Promise((res, rej) => {
     const server = exec('yarn local-registry start');
-    server.stdout.on('data', d => {
+    server.stdout.on('data', (d) => {
       if (d.toString().indexOf('http address') > -1) {
         res();
       }
     });
 
-    server.on('exit', s => {
+    server.on('exit', (s) => {
       if (s !== 0) {
         rej(`Cannot start local registry`);
       }
@@ -107,7 +107,7 @@ function startRegistry() {
 
 function allVersionsOf(dir: string, packageToCheck: string) {
   const r = packageJsonFilesInNodeModules(`${dir}/node_modules`)
-    .map(p => {
+    .map((p) => {
       try {
         const parsed = JSON.parse(readFileSync(p).toString());
         if (parsed.name == packageToCheck) {
@@ -118,7 +118,7 @@ function allVersionsOf(dir: string, packageToCheck: string) {
         return null;
       }
     })
-    .filter(p => !!p);
+    .filter((p) => !!p);
   return r.filter((value, index, self) => self.indexOf(value) === index);
 }
 
@@ -133,7 +133,7 @@ function addReact(workspaceDir: string) {
   );
   execSync(`npm install --registry=http://localhost:4873/`, {
     stdio: [0, 1, 2],
-    cwd: workspaceDir
+    cwd: workspaceDir,
   });
 }
 
@@ -141,7 +141,7 @@ async function execCommand(description: string, cmd: string, cwd?: string) {
   console.log(description);
   execSync(`npm_config_registry=http://localhost:4873/ && ${cmd}`, {
     stdio: [0, 1, 2],
-    cwd
+    cwd,
   });
   await wait();
 }
@@ -149,7 +149,7 @@ async function execCommand(description: string, cmd: string, cwd?: string) {
 function packageJsonFilesInNodeModules(dirName: string): string[] {
   let res = [];
   try {
-    readdirSync(dirName).forEach(c => {
+    readdirSync(dirName).forEach((c) => {
       try {
         const child = path.join(dirName, c);
         const s = statSync(child);

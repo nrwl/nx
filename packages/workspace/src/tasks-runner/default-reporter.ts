@@ -22,21 +22,21 @@ export class DefaultReporter {
     }
 
     const bodyLines = projectNames.map(
-      affectedProject => `${output.colors.gray('-')} ${affectedProject}`
+      (affectedProject) => `${output.colors.gray('-')} ${affectedProject}`
     );
     if (Object.keys(taskOverrides).length > 0) {
       bodyLines.push('');
       bodyLines.push(`${output.colors.gray('With flags:')}`);
       Object.entries(taskOverrides)
         .map(([flag, value]) => `  --${flag}=${value}`)
-        .forEach(arg => bodyLines.push(arg));
+        .forEach((arg) => bodyLines.push(arg));
     }
 
     output.log({
       title: `${output.colors.gray('Running target')} ${
         args.target
       } ${output.colors.gray('for projects:')}`,
-      bodyLines
+      bodyLines,
     });
 
     output.addVerticalSeparatorWithoutNewLines();
@@ -57,13 +57,13 @@ export class DefaultReporter {
           ? [
               output.colors.gray(
                 `Nx read the output from cache instead of running the command for ${cachedProjectNames.length} out of ${this.projectNames.length} projects.`
-              )
+              ),
             ]
           : [];
 
       output.success({
         title: `Running target "${args.target}" succeeded`,
-        bodyLines
+        bodyLines,
       });
 
       if (args.onlyFailed && startedWithFailedProjects) {
@@ -74,8 +74,8 @@ export class DefaultReporter {
           bodyLines: [
             `You should verify by running ${output.underline(
               'without'
-            )} ${output.bold('--only-failed')}`
-          ]
+            )} ${output.bold('--only-failed')}`,
+          ],
         });
       }
     } else {
@@ -83,8 +83,8 @@ export class DefaultReporter {
         output.colors.gray('Failed projects:'),
         '',
         ...failedProjectNames.map(
-          project => `${output.colors.gray('-')} ${project}`
-        )
+          (project) => `${output.colors.gray('-')} ${project}`
+        ),
       ];
       if (!args.onlyFailed && !startedWithFailedProjects) {
         bodyLines.push('');
@@ -96,7 +96,7 @@ export class DefaultReporter {
       }
       output.error({
         title: `Running target "${args.target}" failed`,
-        bodyLines
+        bodyLines,
       });
     }
   }

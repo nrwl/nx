@@ -27,10 +27,7 @@ export function getDestination(
   if (projectType === 'application') {
     rootFolder = 'apps';
   }
-  return path
-    .join(rootFolder, schema.destination)
-    .split(path.sep)
-    .join('/');
+  return path.join(rootFolder, schema.destination).split(path.sep).join('/');
 }
 
 /**
@@ -50,6 +47,6 @@ export function getNewProjectName(path: string): string {
 export function normalizeSlashes(input: string): string {
   return input
     .split('/')
-    .filter(x => !!x)
+    .filter((x) => !!x)
     .join('/');
 }

@@ -7,6 +7,6 @@ const updatePackages = updatePackagesInPackageJson(
   '9.0.0'
 );
 
-export default function() {
+export default function () {
   return chain([updatePackages, formatFiles()]);
 }

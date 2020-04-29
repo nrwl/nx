@@ -11,7 +11,7 @@ import { WebpackConfigOptions } from '../build-options';
 import {
   getSourceMapDevTool,
   isPolyfillsEntry,
-  normalizeExtraEntryPoints
+  normalizeExtraEntryPoints,
 } from './utils';
 
 const SubresourceIntegrityPlugin = require('webpack-subresource-integrity');
@@ -25,12 +25,12 @@ export function getBrowserConfig(
   let isEval = false;
   const {
     styles: stylesOptimization,
-    scripts: scriptsOptimization
+    scripts: scriptsOptimization,
   } = buildOptions.optimization;
   const {
     styles: stylesSourceMap,
     scripts: scriptsSourceMap,
-    hidden: hiddenSourceMap
+    hidden: hiddenSourceMap,
   } = buildOptions.sourceMap;
 
   // See https://webpack.js.org/configuration/devtool/ for sourcemap types.
@@ -47,7 +47,7 @@ export function getBrowserConfig(
   if (buildOptions.subresourceIntegrity) {
     extraPlugins.push(
       new SubresourceIntegrityPlugin({
-        hashFuncNames: ['sha384']
+        hashFuncNames: ['sha384'],
       })
     );
   }
@@ -57,10 +57,10 @@ export function getBrowserConfig(
       new LicenseWebpackPlugin({
         stats: {
           warnings: false,
-          errors: false
+          errors: false,
         },
         perChunkOutput: false,
-        outputFilename: `3rdpartylicenses.txt`
+        outputFilename: `3rdpartylicenses.txt`,
       })
     );
   }
@@ -78,7 +78,7 @@ export function getBrowserConfig(
   const globalStylesBundleNames = normalizeExtraEntryPoints(
     buildOptions.styles,
     'styles'
-  ).map(style => style.bundleName);
+  ).map((style) => style.bundleName);
 
   return {
     devtool: isEval ? 'eval' : false,
@@ -87,13 +87,13 @@ export function getBrowserConfig(
         ...(wco.supportES2015 ? ['es2015'] : []),
         'browser',
         'module',
-        'main'
-      ]
+        'main',
+      ],
     },
     output: {
       crossOriginLoading: buildOptions.subresourceIntegrity
         ? 'anonymous'
-        : false
+        : false,
     },
     optimization: {
       runtimeChunk: 'single',
@@ -103,14 +103,14 @@ export function getBrowserConfig(
           default: !!buildOptions.commonChunk && {
             chunks: 'async',
             minChunks: 2,
-            priority: 10
+            priority: 10,
           },
           common: !!buildOptions.commonChunk && {
             name: 'common',
             chunks: 'async',
             minChunks: 2,
             enforce: true,
-            priority: 5
+            priority: 5,
           },
           vendors: false,
           vendor: !!buildOptions.vendorChunk && {
@@ -133,12 +133,12 @@ export function getBrowserConfig(
                     globalStylesBundleNames.includes(name)
                 )
               );
-            }
-          }
-        }
-      }
+            },
+          },
+        },
+      },
     },
     plugins: extraPlugins,
-    node: false
+    node: false,
   };
 }

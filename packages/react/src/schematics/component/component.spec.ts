@@ -240,7 +240,7 @@ describe('component', () => {
           name: 'hello',
           project: projectName,
           flat: true,
-          directory: 'components'
+          directory: 'components',
         },
         appTree
       );

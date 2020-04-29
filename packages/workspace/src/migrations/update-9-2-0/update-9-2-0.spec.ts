@@ -20,9 +20,9 @@ describe('Update 9.2.0', () => {
         default: {
           runner: '@nrwl/workspace/tasks-runners/default',
           options: {
-            cacheableOperations: ['build', 'lint', 'test', 'e2e']
-          }
-        }
+            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
+          },
+        },
       });
     });
   });
@@ -31,14 +31,14 @@ describe('Update 9.2.0', () => {
     describe('with @nrwl/workspace/src/tasks-runner/default-task-runner', () => {
       it('should add configuration for cacheable operations', async () => {
         tree = await callRule(
-          updateJsonInTree('nx.json', json => {
+          updateJsonInTree('nx.json', (json) => {
             json.tasksRunnerOptions = {
               default: {
                 runner: '@nrwl/workspace/src/tasks-runner/default-task-runner',
                 options: {
-                  cacheableOperations: ['custom-operation']
-                }
-              }
+                  cacheableOperations: ['custom-operation'],
+                },
+              },
             };
 
             return json;
@@ -56,10 +56,10 @@ describe('Update 9.2.0', () => {
                 'build',
                 'lint',
                 'test',
-                'e2e'
-              ]
-            }
-          }
+                'e2e',
+              ],
+            },
+          },
         });
       });
     });
@@ -67,14 +67,14 @@ describe('Update 9.2.0', () => {
     describe('with @nrwl/workspace/src/tasks-runner/tasks-runner-v2', () => {
       it('should add configuration for cacheable operations', async () => {
         tree = await callRule(
-          updateJsonInTree('nx.json', json => {
+          updateJsonInTree('nx.json', (json) => {
             json.tasksRunnerOptions = {
               default: {
                 runner: '@nrwl/workspace/src/tasks-runner/tasks-runner-v2',
                 options: {
-                  cacheableOperations: ['custom-operation']
-                }
-              }
+                  cacheableOperations: ['custom-operation'],
+                },
+              },
             };
 
             return json;
@@ -92,10 +92,10 @@ describe('Update 9.2.0', () => {
                 'build',
                 'lint',
                 'test',
-                'e2e'
-              ]
-            }
-          }
+                'e2e',
+              ],
+            },
+          },
         });
       });
     });

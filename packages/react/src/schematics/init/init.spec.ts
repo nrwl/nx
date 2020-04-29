@@ -43,7 +43,7 @@ describe('init', () => {
     const result = await runSchematic(
       'init',
       {
-        unitTestRunner: 'none'
+        unitTestRunner: 'none',
       },
       tree
     );

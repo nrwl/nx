@@ -28,14 +28,14 @@ export function getOutputHashFormat(option: string, length = 20): HashFormat {
       chunk: `.[chunkhash:${length}]`,
       extract: `.[contenthash:${length}]`,
       file: '',
-      script: `.[hash:${length}]`
+      script: `.[hash:${length}]`,
     },
     all: {
       chunk: `.[chunkhash:${length}]`,
       extract: `.[contenthash:${length}]`,
       file: `.[hash:${length}]`,
-      script: `.[hash:${length}]`
-    }
+      script: `.[hash:${length}]`,
+    },
   };
   return hashFormats[option] || hashFormats['none'];
 }
@@ -48,13 +48,13 @@ export function normalizeExtraEntryPoints(
   extraEntryPoints: ExtraEntryPoint[],
   defaultBundleName: string
 ): NormalizedEntryPoint[] {
-  return extraEntryPoints.map(entry => {
+  return extraEntryPoints.map((entry) => {
     let normalizedEntry;
     if (typeof entry === 'string') {
       normalizedEntry = {
         input: entry,
         inject: true,
-        bundleName: defaultBundleName
+        bundleName: defaultBundleName,
       };
     } else {
       const { lazy, inject = true, ...newEntry } = entry;
@@ -103,7 +103,7 @@ export function getSourceMapDevTool(
     // there is no way to set the 'webRoot'
     sourceRoot: inlineSourceMap ? '' : 'webpack:///',
     moduleFilenameTemplate: '[resource-path]',
-    append: hiddenSourceMap ? false : undefined
+    append: hiddenSourceMap ? false : undefined,
   });
 }
 

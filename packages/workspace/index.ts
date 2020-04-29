@@ -4,7 +4,7 @@ export {
   toClassName,
   toFileName,
   names,
-  findModuleParent
+  findModuleParent,
 } from './src/utils/name-utils';
 export { ProjectType, projectRootDir } from './src/utils/project-type';
 export {
@@ -14,12 +14,12 @@ export {
   readJsonFile,
   readWorkspaceConfigPath,
   copyFile,
-  createDirectory
+  createDirectory,
 } from './src/utils/fileutils';
 export {
   offsetFromRoot,
   ExistingPrettierConfig,
-  resolveUserExistingPrettierConfig
+  resolveUserExistingPrettierConfig,
 } from './src/utils/common';
 export { output } from './src/utils/output';
 export { commandsObject } from './src/command-line/nx-commands';
@@ -47,7 +47,7 @@ export {
   renameDirSyncInTree,
   updateNxJsonInTree,
   addProjectToNxJsonInTree,
-  readNxJsonInTree
+  readNxJsonInTree,
 } from './src/utils/ast-utils';
 
 export {
@@ -56,7 +56,7 @@ export {
   replaceAppNameWithPath,
   editTarget,
   parseTarget,
-  serializeTarget
+  serializeTarget,
 } from './src/utils/cli-config-utils';
 
 export { getWorkspace, updateWorkspace } from './src/utils/workspace';
@@ -70,8 +70,6 @@ export * from './src/utils/rules/ng-add';
 export { updateKarmaConf } from './src/utils/rules/update-karma-conf';
 import * as strings from './src/utils/strings';
 export { checkAndCleanWithSemver } from './src/utils/version-utils';
-export {
-  updatePackagesInPackageJson
-} from './src/utils/update-packages-in-package-json';
+export { updatePackagesInPackageJson } from './src/utils/update-packages-in-package-json';
 
 export const stringUtils = strings;

@@ -25,15 +25,15 @@ export class Hasher {
       task.target.project || '',
       task.target.target || '',
       task.target.configuration || '',
-      JSON.stringify(task.overrides)
+      JSON.stringify(task.overrides),
     ];
 
     const values = await Promise.all([
       this.projectHashes.hashProject(task.target.project, [
-        task.target.project
+        task.target.project,
       ]),
       this.implicitDepsHash(),
-      this.runtimeInputsHash()
+      this.runtimeInputsHash(),
     ]);
 
     return hasha([Hasher.version, ...args, ...values], { algorithm: 'sha256' });
@@ -49,11 +49,7 @@ export class Hasher {
     if (inputs.length > 0) {
       try {
         const values = await Promise.all(
-          inputs.map(async i =>
-            execSync(i)
-              .toString()
-              .trim()
-          )
+          inputs.map(async (i) => execSync(i).toString().trim())
         );
         this.runtimeInputs = hasha(values, { algorithm: 'sha256' });
       } catch (e) {
@@ -72,12 +68,12 @@ export class Hasher {
     if (this.implicitDependencies) return this.implicitDependencies;
 
     const values = await Promise.all([
-      ...Object.keys(this.nxJson.implicitDependencies || {}).map(r =>
+      ...Object.keys(this.nxJson.implicitDependencies || {}).map((r) =>
         this.fileHashes.hashFile(r)
       ),
-      ...rootWorkspaceFileNames().map(r => this.fileHashes.hashFile(r)),
+      ...rootWorkspaceFileNames().map((r) => this.fileHashes.hashFile(r)),
       this.fileHashes.hashFile('package-lock.json'),
-      this.fileHashes.hashFile('yarn.lock')
+      this.fileHashes.hashFile('yarn.lock'),
     ]);
     this.implicitDependencies = hasha(values, { algorithm: 'sha256' });
     return this.implicitDependencies;
@@ -95,7 +91,7 @@ export class ProjectHashes {
   async hashProject(projectName: string, visited: string[]) {
     return Promise.resolve().then(async () => {
       const deps = (this.projectGraph.dependencies[projectName] || []).map(
-        t => {
+        (t) => {
           if (visited.indexOf(t.target) > -1) {
             return '';
           } else {
@@ -111,10 +107,10 @@ export class ProjectHashes {
 
   private async hashProjectNodeSource(projectName: string) {
     if (!this.sourceHashes[projectName]) {
-      this.sourceHashes[projectName] = new Promise(async res => {
+      this.sourceHashes[projectName] = new Promise(async (res) => {
         const p = this.projectGraph.nodes[projectName];
         const values = await Promise.all(
-          p.data.files.map(f => this.fileHashes.hashFile(f.file))
+          p.data.files.map((f) => this.fileHashes.hashFile(f.file))
         );
         res(hasha(values, { algorithm: 'sha256' }));
       });
@@ -131,7 +127,7 @@ export class FileHashes {
 
   async hashFile(path: string) {
     if (!this.fileHashes[path]) {
-      this.fileHashes[path] = new Promise(res => {
+      this.fileHashes[path] = new Promise((res) => {
         this.resolvers[path] = res;
         this.pushFileIntoQueue(path);
       });
@@ -151,7 +147,7 @@ export class FileHashes {
     if (this.queue.length > 0) {
       const path = this.queue.pop();
       this.processPath(path)
-        .then(value => {
+        .then((value) => {
           this.resolvers[path](value);
         })
         .then(() => this.takeFromQueue());

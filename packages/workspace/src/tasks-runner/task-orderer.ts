@@ -13,9 +13,9 @@ export class TaskOrderer {
     const res = [];
 
     // console.log(this.topologicallySortTasks(tasks))
-    this.topologicallySortTasks(tasks).forEach(t => {
+    this.topologicallySortTasks(tasks).forEach((t) => {
       const stageWithNoDeps = res.find(
-        tasksInStage => !this.taskDependsOnDeps(t, tasksInStage)
+        (tasksInStage) => !this.taskDependsOnDeps(t, tasksInStage)
       );
       if (stageWithNoDeps) {
         stageWithNoDeps.push(t);
@@ -34,17 +34,17 @@ export class TaskOrderer {
         return false;
       }
 
-      if (g.dependencies[source].find(d => d.target === target)) {
+      if (g.dependencies[source].find((d) => d.target === target)) {
         return true;
       }
 
-      return !!g.dependencies[source].find(r => {
+      return !!g.dependencies[source].find((r) => {
         if (visitedProjects.indexOf(r.target) > -1) return null;
         return hasDep(r.target, target, [...visitedProjects, r.target]);
       });
     }
 
-    return !!deps.find(dep =>
+    return !!deps.find((dep) =>
       hasDep(task.target.project, dep.target.project, [])
     );
   }
@@ -56,12 +56,12 @@ export class TaskOrderer {
     const visitNode = (id: string) => {
       if (visited[id]) return;
       visited[id] = true;
-      this.projectGraph.dependencies[id].forEach(d => {
+      this.projectGraph.dependencies[id].forEach((d) => {
         visitNode(d.target);
       });
       sorted.push(id);
     };
-    tasks.forEach(t => visitNode(t.target.project));
+    tasks.forEach((t) => visitNode(t.target.project));
     const sortedTasks = [...tasks];
     sortedTasks.sort((a, b) =>
       sorted.indexOf(a.target.project) > sorted.indexOf(b.target.project)

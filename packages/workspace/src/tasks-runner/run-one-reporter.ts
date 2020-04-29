@@ -20,7 +20,7 @@ export class RunOneReporter {
           args.target
         } ${output.colors.gray('for project')} ${
           this.initiatingProject
-        } ${output.colors.gray(`and its ${numberOfDeps} deps.`)}`
+        } ${output.colors.gray(`and its ${numberOfDeps} deps.`)}`,
       });
       output.addVerticalSeparatorWithoutNewLines();
     }
@@ -41,13 +41,13 @@ export class RunOneReporter {
           ? [
               output.colors.gray(
                 `Nx read the output from cache instead of running the command for ${cachedProjectNames.length} out of ${this.projectNames.length} projects.`
-              )
+              ),
             ]
           : [];
 
       output.success({
         title: `Running target "${args.target}" succeeded`,
-        bodyLines
+        bodyLines,
       });
 
       if (args.onlyFailed && startedWithFailedProjects) {
@@ -58,8 +58,8 @@ export class RunOneReporter {
           bodyLines: [
             `You should verify by running ${output.underline(
               'without'
-            )} ${output.bold('--only-failed')}`
-          ]
+            )} ${output.bold('--only-failed')}`,
+          ],
         });
       }
     } else {
@@ -67,12 +67,12 @@ export class RunOneReporter {
         output.colors.gray('Failed projects:'),
         '',
         ...failedProjectNames.map(
-          project => `${output.colors.gray('-')} ${project}`
-        )
+          (project) => `${output.colors.gray('-')} ${project}`
+        ),
       ];
       output.error({
         title: `Running target "${args.target}" failed`,
-        bodyLines
+        bodyLines,
       });
     }
   }

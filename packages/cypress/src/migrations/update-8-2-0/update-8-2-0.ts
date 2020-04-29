@@ -2,13 +2,13 @@ import {
   chain,
   Rule,
   SchematicContext,
-  Tree
+  Tree,
 } from '@angular-devkit/schematics';
 import {
   formatFiles,
   getWorkspace,
   readJsonInTree,
-  updateJsonInTree
+  updateJsonInTree,
 } from '@nrwl/workspace';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
@@ -25,7 +25,7 @@ import {
   isFunctionExpression,
   isArrowFunction,
   isBlock,
-  ScriptTarget
+  ScriptTarget,
 } from 'typescript';
 import { dirname, join, relative } from 'path';
 import { normalize } from '@angular-devkit/core';
@@ -34,24 +34,24 @@ async function updateCypressJson(host: Tree, context: SchematicContext) {
   const rules: Rule[] = [];
   const workspace = await getWorkspace(host);
 
-  workspace.projects.forEach(project => {
-    project.targets.forEach(target => {
+  workspace.projects.forEach((project) => {
+    project.targets.forEach((target) => {
       if (target.builder !== '@nrwl/cypress:cypress') {
         return;
       }
 
       const parseConfigHost: ParseConfigHost = {
         useCaseSensitiveFileNames: true,
-        fileExists: path => host.exists(path),
-        readDirectory: dir => host.getDir(dir).subfiles,
-        readFile: path => host.read(path).toString()
+        fileExists: (path) => host.exists(path),
+        readDirectory: (dir) => host.getDir(dir).subfiles,
+        readFile: (path) => host.read(path).toString(),
       };
 
       const updatedCypressJsons = new Set<string>();
       updatedCypressJsons.add(target.options.cypressConfig as string);
 
       rules.push(
-        updateJsonInTree(target.options.cypressConfig as string, json => {
+        updateJsonInTree(target.options.cypressConfig as string, (json) => {
           function getUpdatedPath(path: string) {
             if (typeof path !== 'string') {
               return path;
@@ -88,13 +88,13 @@ async function updateCypressJson(host: Tree, context: SchematicContext) {
         })
       );
 
-      Object.values<any>(target.configurations).forEach(config => {
+      Object.values<any>(target.configurations).forEach((config) => {
         if (
           config.cypressConfig &&
           !updatedCypressJsons.has(config.cypressConfig)
         ) {
           rules.push(
-            updateJsonInTree(config.cypressConfig as string, json => {
+            updateJsonInTree(config.cypressConfig as string, (json) => {
               function getUpdatedPath(path: string) {
                 if (typeof path !== 'string') {
                   return path;
@@ -143,14 +143,14 @@ async function updateCypressJson(host: Tree, context: SchematicContext) {
 async function updatePlugins(host: Tree, context: SchematicContext) {
   const workspace = await getWorkspace(host);
 
-  workspace.projects.forEach(project => {
-    project.targets.forEach(target => {
+  workspace.projects.forEach((project) => {
+    project.targets.forEach((target) => {
       if (target.builder !== '@nrwl/cypress:cypress') {
         return;
       }
 
       [target.options, ...Object.values(target.configurations)].forEach(
-        config => {
+        (config) => {
           if (!config.cypressConfig) {
             return;
           }
@@ -176,8 +176,8 @@ async function updatePlugins(host: Tree, context: SchematicContext) {
 
           const result = transpileModule(host.read(pluginFile).toString(), {
             compilerOptions: {
-              module: ModuleKind.CommonJS
-            }
+              module: ModuleKind.CommonJS,
+            },
           });
           host.create(newPluginFile, result.outputText);
           host.delete(pluginFile);
@@ -194,7 +194,7 @@ async function updatePlugins(host: Tree, context: SchematicContext) {
             0,
             `const { preprocessTypescript } = require('@nrwl/cypress/plugins/preprocessor');`
           );
-          sourceFile.statements.forEach(statement => {
+          sourceFile.statements.forEach((statement) => {
             if (
               isExpressionStatement(statement) &&
               isBinaryExpression(statement.expression) &&
@@ -236,6 +236,6 @@ async function updatePlugins(host: Tree, context: SchematicContext) {
   });
 }
 
-export default function(): Rule {
+export default function (): Rule {
   return chain([updateCypressJson, updatePlugins, formatFiles()]);
 }

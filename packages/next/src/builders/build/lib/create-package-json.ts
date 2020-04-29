@@ -15,21 +15,21 @@ export async function createPackageJson(
 
   const allWorkspaceDeps = {
     ...rootPackageJson.dependencies,
-    ...rootPackageJson.devDependencies
+    ...rootPackageJson.devDependencies,
   };
 
   const outPackageJson = {
     name: context.target.project,
     version: '0.0.1',
     scripts: {
-      start: 'next start'
+      start: 'next start',
     },
     dependencies: {
       next: allWorkspaceDeps.next,
       react: allWorkspaceDeps.react || reactVersion,
-      'react-dom': allWorkspaceDeps['react-dom'] || reactDomVersion
+      'react-dom': allWorkspaceDeps['react-dom'] || reactDomVersion,
     },
-    devDependencies: {}
+    devDependencies: {},
   };
 
   writeFileSync(

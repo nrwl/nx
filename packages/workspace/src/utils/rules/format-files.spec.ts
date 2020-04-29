@@ -14,14 +14,14 @@ describe('formatFiles', () => {
       '@nrwl/workspace',
       path.join(__dirname, '../../../collection.json')
     );
-    spyOn(prettier, 'format').and.callFake(input => 'formatted :: ' + input);
+    spyOn(prettier, 'format').and.callFake((input) => 'formatted :: ' + input);
     tree = Tree.empty();
   });
 
   it('should format created files', async () => {
     spyOn(prettier, 'resolveConfig').and.returnValue(
       Promise.resolve({
-        printWidth: 80
+        printWidth: 80,
       })
     );
     tree.create('a.ts', 'const a=a');
@@ -30,7 +30,7 @@ describe('formatFiles', () => {
       .toPromise();
     expect(prettier.format).toHaveBeenCalledWith('const a=a', {
       printWidth: 80,
-      filepath: appRoot.resolve('a.ts')
+      filepath: appRoot.resolve('a.ts'),
     });
     expect(result.read('a.ts').toString()).toEqual('formatted :: const a=a');
   });
@@ -38,7 +38,7 @@ describe('formatFiles', () => {
   it('should not format deleted files', async () => {
     spyOn(prettier, 'resolveConfig').and.returnValue(
       Promise.resolve({
-        printWidth: 80
+        printWidth: 80,
       })
     );
     tree.create('b.ts', '');
@@ -58,7 +58,7 @@ describe('formatFiles', () => {
       .callRule(formatFiles(), tree)
       .toPromise();
     expect(prettier.format).toHaveBeenCalledWith('const a=b', {
-      filepath: appRoot.resolve('a.ts')
+      filepath: appRoot.resolve('a.ts'),
     });
     expect(result.read('a.ts').toString()).toEqual('formatted :: const a=b');
   });
@@ -71,7 +71,7 @@ describe('formatFiles', () => {
       .callRule(formatFiles(), tree)
       .toPromise();
     expect(prettier.format).toHaveBeenCalledWith('const a=a', {
-      filepath: appRoot.resolve('b.ts')
+      filepath: appRoot.resolve('b.ts'),
     });
     expect(result.read('b.ts').toString()).toEqual('formatted :: const a=a');
   });
@@ -80,21 +80,21 @@ describe('formatFiles', () => {
     it('should not format created files', async () => {
       spyOn(prettier, 'resolveConfig').and.returnValue(
         Promise.resolve({
-          printWidth: 80
+          printWidth: 80,
         })
       );
       tree.create('a.ts', 'const a=a');
       const result = await schematicRunner
         .callRule(
           formatFiles({
-            skipFormat: true
+            skipFormat: true,
           }),
           tree
         )
         .toPromise();
       expect(prettier.format).not.toHaveBeenCalledWith('const a=a', {
         printWidth: 80,
-        filepath: appRoot.resolve('a.ts')
+        filepath: appRoot.resolve('a.ts'),
       });
       expect(result.read('a.ts').toString()).toEqual('const a=a');
     });

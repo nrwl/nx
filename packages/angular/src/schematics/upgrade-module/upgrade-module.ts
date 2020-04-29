@@ -9,7 +9,7 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 
 import { names, toClassName, toFileName } from '@nrwl/workspace';
@@ -24,7 +24,7 @@ import {
   addImportToModule,
   getBootstrapComponent,
   readBootstrapInfo,
-  removeFromNgModule
+  removeFromNgModule,
 } from '../../utils/ast-utils';
 import { insertImport } from '@nrwl/workspace/src/utils/ast-utils';
 
@@ -58,7 +58,7 @@ function addImportsToModule(options: Schema): Rule {
         moduleSource,
         modulePath,
         getBootstrapComponent(moduleSource, moduleClassName)
-      )
+      ),
     ]);
 
     return host;
@@ -75,7 +75,7 @@ function addNgDoBootstrapToModule(options: Schema): Rule {
     insert(host, modulePath, [
       ...addParameterToConstructor(moduleSource, modulePath, {
         className: moduleClassName,
-        param: 'private upgrade: UpgradeModule'
+        param: 'private upgrade: UpgradeModule',
       }),
       ...addMethod(moduleSource, modulePath, {
         className: moduleClassName,
@@ -83,9 +83,9 @@ function addNgDoBootstrapToModule(options: Schema): Rule {
         body: `
 configure${toClassName(options.name)}(this.upgrade.injector);
 this.upgrade.bootstrap(document.body, ['downgraded', '${options.name}']);
-        `
+        `,
       }),
-      ...removeFromNgModule(moduleSource, modulePath, 'bootstrap')
+      ...removeFromNgModule(moduleSource, modulePath, 'bootstrap'),
     ]);
 
     return host;
@@ -99,7 +99,7 @@ function createFiles(angularJsImport: string, options: Schema): Rule {
       mainPath,
       moduleSpec,
       bootstrapComponentClassName,
-      bootstrapComponentFileName
+      bootstrapComponentFileName,
     } = readBootstrapInfo(host, options.project);
 
     const dir = path.dirname(mainPath);
@@ -113,16 +113,16 @@ function createFiles(angularJsImport: string, options: Schema): Rule {
         angularJsModule: options.name,
         bootstrapComponentClassName,
         bootstrapComponentFileName,
-        ...names(options.name)
+        ...names(options.name),
       }),
-      move(dir)
+      move(dir),
     ]);
     const r = branchAndMerge(chain([mergeWith(templateSource)]));
     return r(host, context);
   };
 }
 
-export default function(options: Schema): Rule {
+export default function (options: Schema): Rule {
   const angularJsImport = options.angularJsImport
     ? options.angularJsImport
     : options.name;
@@ -132,6 +132,6 @@ export default function(options: Schema): Rule {
     addImportsToModule(options),
     addNgDoBootstrapToModule(options),
     options.skipPackageJson ? noop() : addUpgradeToPackageJson(),
-    formatFiles(options)
+    formatFiles(options),
   ]);
 }

@@ -37,8 +37,8 @@ describe('Build storybook', () => {
           srcRoot: join(
             __dirname,
             `/../../schematics/configuration/root-files/.storybook/tsconfig.json`
-          )
-        }
+          ),
+        },
       },
       context
     ).toPromise();

@@ -17,7 +17,7 @@ describe('updateTsconfig Rule', () => {
     schema = {
       projectName: 'my-lib',
       skipFormat: false,
-      forceRemove: false
+      forceRemove: false,
     };
   });
 
@@ -26,7 +26,7 @@ describe('updateTsconfig Rule', () => {
 
     let tsConfig = readJsonInTree(tree, '/tsconfig.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
-      '@proj/my-lib': ['libs/my-lib/src/index.ts']
+      '@proj/my-lib': ['libs/my-lib/src/index.ts'],
     });
 
     tree = (await callRule(updateTsconfig(schema), tree)) as UnitTestTree;

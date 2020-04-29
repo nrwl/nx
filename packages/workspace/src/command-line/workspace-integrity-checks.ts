@@ -11,11 +11,11 @@ export class WorkspaceIntegrityChecks {
 
   private projectWithoutFilesCheck(): CLIErrorMessageConfig[] {
     const errors = Object.values(this.projectGraph.nodes)
-      .filter(n => n.data.files.length === 0)
-      .map(p => `Cannot find project '${p.name}' in '${p.data.root}'`);
+      .filter((n) => n.data.files.length === 0)
+      .map((p) => `Cannot find project '${p.name}' in '${p.data.root}'`);
 
     const errorGroupBodyLines = errors.map(
-      f => `${output.colors.gray('-')} ${f}`
+      (f) => `${output.colors.gray('-')} ${f}`
     );
 
     return errors.length === 0
@@ -23,12 +23,12 @@ export class WorkspaceIntegrityChecks {
       : [
           {
             title: `The ${workspaceFileName()} file is out of sync`,
-            bodyLines: errorGroupBodyLines
+            bodyLines: errorGroupBodyLines,
             /**
              * TODO(JamesHenry): Add support for error documentation
              */
             // slug: 'project-has-no-files'
-          }
+          },
         ];
   }
 
@@ -41,7 +41,7 @@ export class WorkspaceIntegrityChecks {
         : allFilesWithoutProjects;
 
     const errorGroupBodyLines = first5FilesWithoutProjects.map(
-      f => `${output.colors.gray('-')} ${f}`
+      (f) => `${output.colors.gray('-')} ${f}`
     );
 
     return first5FilesWithoutProjects.length === 0
@@ -49,23 +49,23 @@ export class WorkspaceIntegrityChecks {
       : [
           {
             title: `The following file(s) do not belong to any projects:`,
-            bodyLines: errorGroupBodyLines
+            bodyLines: errorGroupBodyLines,
             /**
              * TODO(JamesHenry): Add support for error documentation
              */
             // slug: 'file-does-not-belong-to-project'
-          }
+          },
         ];
   }
 
   private allProjectFiles() {
     return Object.values(this.projectGraph.nodes).reduce(
-      (m, c) => [...m, ...c.data.files.map(f => f.file)],
+      (m, c) => [...m, ...c.data.files.map((f) => f.file)],
       []
     );
   }
 }
 
 function minus(a: string[], b: string[]): string[] {
-  return a.filter(aa => b.indexOf(aa) === -1);
+  return a.filter((aa) => b.indexOf(aa) === -1);
 }

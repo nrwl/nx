@@ -15,7 +15,7 @@ export function names(
     name,
     className: toClassName(name),
     propertyName: toPropertyName(name),
-    fileName: toFileName(name)
+    fileName: toFileName(name),
   };
 }
 
@@ -34,7 +34,7 @@ export function toPropertyName(s: string): string {
     .replace(/(-|_|\.|\s)+(.)?/g, (_, __, chr) =>
       chr ? chr.toUpperCase() : ''
     )
-    .replace(/^([A-Z])/, m => m.toLowerCase());
+    .replace(/^([A-Z])/, (m) => m.toLowerCase());
 }
 
 /**

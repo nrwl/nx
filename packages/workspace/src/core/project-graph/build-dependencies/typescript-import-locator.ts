@@ -98,7 +98,7 @@ export class TypeScriptImportLocator {
     /**
      * Continue traversing down the AST from the current node
      */
-    ts.forEachChild(node, child => this.fromNode(filePath, child, visitor));
+    ts.forEachChild(node, (child) => this.fromNode(filePath, child, visitor));
   }
 
   private getPropertyAssignmentName(nameNode: ts.PropertyName) {

@@ -8,13 +8,13 @@ import {
   SchematicContext,
   move,
   template,
-  schematic
+  schematic,
 } from '@angular-devkit/schematics';
 import {
   readJsonInTree,
   updateJsonInTree,
   offsetFromRoot,
-  updateWorkspaceInTree
+  updateWorkspaceInTree,
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import { getProjectConfig } from '@nrwl/workspace';
@@ -35,9 +35,9 @@ function generateFiles(options: KarmaProjectSchema): Rule {
           ...options,
           projectRoot: projectConfig.root,
           isLibrary: projectConfig.projectType === 'library',
-          offsetFromRoot: offsetFromRoot(projectConfig.root)
+          offsetFromRoot: offsetFromRoot(projectConfig.root),
         }),
-        move(projectConfig.root)
+        move(projectConfig.root),
       ])
     )(host, context);
   };
@@ -46,17 +46,20 @@ function generateFiles(options: KarmaProjectSchema): Rule {
 function updateTsConfig(options: KarmaProjectSchema): Rule {
   return (host: Tree) => {
     const projectConfig = getProjectConfig(host, options.project);
-    return updateJsonInTree(join(projectConfig.root, 'tsconfig.json'), json => {
-      return {
-        ...json,
-        compilerOptions: {
-          ...json.compilerOptions,
-          types: Array.from(
-            new Set([...(json.compilerOptions.types || []), 'jasmine'])
-          )
-        }
-      };
-    });
+    return updateJsonInTree(
+      join(projectConfig.root, 'tsconfig.json'),
+      (json) => {
+        return {
+          ...json,
+          compilerOptions: {
+            ...json.compilerOptions,
+            types: Array.from(
+              new Set([...(json.compilerOptions.types || []), 'jasmine'])
+            ),
+          },
+        };
+      }
+    );
   };
 }
 
@@ -67,10 +70,10 @@ function updateTsSpecConfig(options: KarmaProjectSchema): Rule {
       projectConfig.projectType === 'library' ? [] : ['src/polyfills.ts'];
     return updateJsonInTree(
       join(projectConfig.root, 'tsconfig.spec.json'),
-      json => {
+      (json) => {
         return {
           ...json,
-          files: [...json.files, ...extraFiles]
+          files: [...json.files, ...extraFiles],
         };
       }
     );
@@ -78,15 +81,15 @@ function updateTsSpecConfig(options: KarmaProjectSchema): Rule {
 }
 
 function updateworkspaceJson(options: KarmaProjectSchema): Rule {
-  return updateWorkspaceInTree(json => {
+  return updateWorkspaceInTree((json) => {
     const projectConfig = json.projects[options.project];
     projectConfig.architect.test = {
       builder: '@angular-devkit/build-angular:karma',
       options: {
         main: join(normalize(projectConfig.sourceRoot), 'test.ts'),
         tsConfig: join(normalize(projectConfig.root), 'tsconfig.spec.json'),
-        karmaConfig: join(normalize(projectConfig.root), 'karma.conf.js')
-      }
+        karmaConfig: join(normalize(projectConfig.root), 'karma.conf.js'),
+      },
     };
 
     if (projectConfig.projectType === 'application') {
@@ -95,13 +98,13 @@ function updateworkspaceJson(options: KarmaProjectSchema): Rule {
         polyfills: join(normalize(projectConfig.sourceRoot), 'polyfills.ts'),
         styles: [],
         scripts: [],
-        assets: []
+        assets: [],
       };
     }
     if (projectConfig.architect.lint) {
       projectConfig.architect.lint.options.tsConfig = [
         ...projectConfig.architect.lint.options.tsConfig,
-        join(normalize(projectConfig.root), 'tsconfig.spec.json')
+        join(normalize(projectConfig.root), 'tsconfig.spec.json'),
       ];
     }
     return json;
@@ -119,12 +122,12 @@ function check(options: KarmaProjectSchema): Rule {
   };
 }
 
-export default function(options: KarmaProjectSchema): Rule {
+export default function (options: KarmaProjectSchema): Rule {
   return chain([
     check(options),
     generateFiles(options),
     updateTsConfig(options),
     updateTsSpecConfig(options),
-    updateworkspaceJson(options)
+    updateworkspaceJson(options),
   ]);
 }

@@ -99,7 +99,7 @@ describe('addRoute', () => {
 
   beforeEach(() => {
     context = {
-      warn: jest.fn()
+      warn: jest.fn(),
     };
     tree = Tree.empty();
   });
@@ -172,7 +172,7 @@ export default App;
         {
           routePath: '/about',
           componentName: 'About',
-          moduleName: '@example/about'
+          moduleName: '@example/about',
         },
         context
       )
@@ -191,7 +191,7 @@ describe('addBrowserRouter', () => {
 
   beforeEach(() => {
     context = {
-      warn: jest.fn()
+      warn: jest.fn(),
     };
     tree = Tree.empty();
   });
@@ -228,7 +228,7 @@ describe('findMainRenderStatement', () => {
 
   beforeEach(() => {
     context = {
-      warn: jest.fn()
+      warn: jest.fn(),
     };
     tree = Tree.empty();
   });
@@ -290,7 +290,7 @@ describe('addReduxStoreToMain', () => {
 
   beforeEach(() => {
     context = {
-      warn: jest.fn()
+      warn: jest.fn(),
     };
     tree = Tree.empty();
   });
@@ -329,7 +329,7 @@ describe('updateReduxStore', () => {
 
   beforeEach(() => {
     context = {
-      warn: jest.fn()
+      warn: jest.fn(),
     };
     tree = Tree.empty();
   });
@@ -355,7 +355,7 @@ const store = configureStore({
       utils.updateReduxStore('/main.tsx', source, context, {
         keyName: 'SLICE_KEY',
         reducerName: 'sliceReducer',
-        modulePath: '@test/slice'
+        modulePath: '@test/slice',
       })
     );
 
@@ -385,7 +385,7 @@ const store = createStore(combineReducer({}));
       utils.updateReduxStore('/main.tsx', source, context, {
         keyName: 'SLICE_KEY',
         reducerName: 'sliceReducer',
-        modulePath: '@test/slice'
+        modulePath: '@test/slice',
       })
     );
 
@@ -407,7 +407,7 @@ describe('getComponentName', () => {
             <h1>Welcome to test component, {props.name}</h1>
           </div>
         );`,
-      expectedName: 'Test'
+      expectedName: 'Test',
     },
     {
       testName: 'defining a function and then default exporting it',
@@ -421,7 +421,7 @@ describe('getComponentName', () => {
       };
       export default Test;
       `,
-      expectedName: 'Test'
+      expectedName: 'Test',
     },
     {
       testName: 'defining an arrow function and then exporting it',
@@ -435,7 +435,7 @@ describe('getComponentName', () => {
       };
       export default Test;
       `,
-      expectedName: 'Test'
+      expectedName: 'Test',
     },
     {
       testName: 'defining an arrow function that directly returns JSX',
@@ -443,7 +443,7 @@ describe('getComponentName', () => {
     const Test = (props: TestProps) => <div><h1>Welcome to test component, {props.name}</h1></div>;
     export default Test
     `,
-      expectedName: 'Test'
+      expectedName: 'Test',
     },
     {
       testName: 'exporting a react class component',
@@ -454,7 +454,7 @@ describe('getComponentName', () => {
         }
       }
       `,
-      expectedName: 'Test'
+      expectedName: 'Test',
     },
     {
       testName: 'defining a react class component & then default exporting it',
@@ -465,9 +465,9 @@ describe('getComponentName', () => {
         }
       }
       `,
-      expectedName: 'Test'
-    }
-  ].forEach(testConfig => {
+      expectedName: 'Test',
+    },
+  ].forEach((testConfig) => {
     it(`should find the component when ${testConfig.testName}`, () => {
       const source = ts.createSourceFile(
         'some-component.tsx',

@@ -24,9 +24,9 @@ describe('Cypress builder', () => {
   let fork: jasmine.Spy;
   let cypressConfig: any;
   let mockedBuilderContext: MockBuilderContext;
-  let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as any;
+  let mockedInstalledCypressVersion: jest.Mock<ReturnType<
+    typeof installedCypressVersion
+  >> = installedCypressVersion as any;
   const cypressBuilderOptions: CypressBuilderOptions = {
     cypressConfig: 'apps/my-app-e2e/cypress.json',
     parallel: false,
@@ -36,7 +36,7 @@ describe('Cypress builder', () => {
     exit: true,
     record: false,
     baseUrl: undefined,
-    watch: false
+    watch: false,
   };
 
   beforeEach(async () => {
@@ -56,7 +56,7 @@ describe('Cypress builder', () => {
       .mockReturnValue(
         of({
           success: true,
-          baseUrl: 'http://localhost:4200'
+          baseUrl: 'http://localhost:4200',
         })
       );
     fakeEventEmitter = new EventEmitter();
@@ -65,14 +65,14 @@ describe('Cypress builder', () => {
     cypressOpen = spyOn(Cypress, 'open').and.returnValue(Promise.resolve({}));
     cypressConfig = {
       fixturesFolder: './src/fixtures',
-      integrationFolder: './src/integration'
+      integrationFolder: './src/integration',
     };
-    spyOn(fsUtility, 'readJsonFile').and.callFake(path => {
+    spyOn(fsUtility, 'readJsonFile').and.callFake((path) => {
       return path.endsWith('tsconfig.json')
         ? {
             compilerOptions: {
-              outDir: '../../dist/out-tsc/apps/my-app-e2e/src'
-            }
+              outDir: '../../dist/out-tsc/apps/my-app-e2e/src',
+            },
           }
         : cypressConfig;
     });
@@ -80,7 +80,7 @@ describe('Cypress builder', () => {
     spyOn(process, 'exit');
   });
 
-  it('should call `Cypress.run` if headless mode is `true`', async done => {
+  it('should call `Cypress.run` if headless mode is `true`', async (done) => {
     const run = await architect.scheduleBuilder(
       '@nrwl/cypress:cypress',
       cypressBuilderOptions
@@ -90,7 +90,7 @@ describe('Cypress builder', () => {
       expect(cypressRun).toHaveBeenCalledWith(
         jasmine.objectContaining({
           config: { baseUrl: 'http://localhost:4200' },
-          project: path.dirname(cypressBuilderOptions.cypressConfig)
+          project: path.dirname(cypressBuilderOptions.cypressConfig),
         })
       );
       expect(cypressOpen).not.toHaveBeenCalled();
@@ -99,18 +99,18 @@ describe('Cypress builder', () => {
     fakeEventEmitter.emit('exit', 0); // Passing tsc command
   });
 
-  it('should call `Cypress.open` if headless mode is `false`', async done => {
+  it('should call `Cypress.open` if headless mode is `false`', async (done) => {
     const run = await architect.scheduleBuilder('@nrwl/cypress:cypress', {
       ...cypressBuilderOptions,
       headless: false,
-      watch: true
+      watch: true,
     });
     run.result.then(async () => {
       await run.stop();
       expect(cypressOpen).toHaveBeenCalledWith(
         jasmine.objectContaining({
           config: { baseUrl: 'http://localhost:4200' },
-          project: path.dirname(cypressBuilderOptions.cypressConfig)
+          project: path.dirname(cypressBuilderOptions.cypressConfig),
         })
       );
       expect(cypressRun).not.toHaveBeenCalled();
@@ -119,20 +119,20 @@ describe('Cypress builder', () => {
     fakeEventEmitter.emit('exit', 0); // Passing tsc command
   });
 
-  it('should call `Cypress.run` with provided baseUrl', async done => {
+  it('should call `Cypress.run` with provided baseUrl', async (done) => {
     const run = await architect.scheduleBuilder('@nrwl/cypress:cypress', {
       ...cypressBuilderOptions,
       devServerTarget: undefined,
-      baseUrl: 'http://my-distant-host.com'
+      baseUrl: 'http://my-distant-host.com',
     });
     run.result.then(async () => {
       await run.stop();
       expect(cypressRun).toHaveBeenCalledWith(
         jasmine.objectContaining({
           config: {
-            baseUrl: 'http://my-distant-host.com'
+            baseUrl: 'http://my-distant-host.com',
           },
-          project: path.dirname(cypressBuilderOptions.cypressConfig)
+          project: path.dirname(cypressBuilderOptions.cypressConfig),
         })
       );
       done();
@@ -142,17 +142,17 @@ describe('Cypress builder', () => {
     fakeEventEmitter.emit('exit', 0); // Passing tsc command
   });
 
-  it('should call `Cypress.run` with provided browser', async done => {
+  it('should call `Cypress.run` with provided browser', async (done) => {
     const run = await architect.scheduleBuilder('@nrwl/cypress:cypress', {
       ...cypressBuilderOptions,
-      browser: 'chrome'
+      browser: 'chrome',
     });
     run.result.then(async () => {
       await run.stop();
       expect(cypressRun).toHaveBeenCalledWith(
         jasmine.objectContaining({
           browser: 'chrome',
-          project: path.dirname(cypressBuilderOptions.cypressConfig)
+          project: path.dirname(cypressBuilderOptions.cypressConfig),
         })
       );
       expect(cypressOpen).not.toHaveBeenCalled();
@@ -162,7 +162,7 @@ describe('Cypress builder', () => {
     fakeEventEmitter.emit('exit', 0); // Passing tsc command
   });
 
-  it('should call `Cypress.run` without baseUrl nor dev server target value', async done => {
+  it('should call `Cypress.run` without baseUrl nor dev server target value', async (done) => {
     const run = await architect.scheduleBuilder('@nrwl/cypress:cypress', {
       cypressConfig: 'apps/my-app-e2e/cypress.json',
       tsConfig: 'apps/my-app-e2e/tsconfig.json',
@@ -172,13 +172,13 @@ describe('Cypress builder', () => {
       parallel: false,
       record: false,
       baseUrl: undefined,
-      watch: false
+      watch: false,
     });
     run.result.then(async () => {
       await run.stop();
       expect(cypressRun).toHaveBeenCalledWith(
         jasmine.objectContaining({
-          project: path.dirname(cypressBuilderOptions.cypressConfig)
+          project: path.dirname(cypressBuilderOptions.cypressConfig),
         })
       );
       expect(cypressOpen).not.toHaveBeenCalled();
@@ -188,29 +188,29 @@ describe('Cypress builder', () => {
     fakeEventEmitter.emit('exit', 0); // Passing tsc command
   });
 
-  it('should fail early if application build fails', async done => {
+  it('should fail early if application build fails', async (done) => {
     (devkitArchitect as any).scheduleTargetAndForget = jest
       .fn()
       .mockReturnValue(
         of({
-          success: false
+          success: false,
         })
       );
     const run = await architect.scheduleBuilder(
       '@nrwl/cypress:cypress',
       cypressBuilderOptions
     );
-    run.result.then(async res => {
+    run.result.then(async (res) => {
       await run.stop();
       expect(res.success).toBe(false);
       done();
     });
   });
 
-  it('should call `Cypress.run` with provided cypressConfig as project and configFile', async done => {
+  it('should call `Cypress.run` with provided cypressConfig as project and configFile', async (done) => {
     const cfg = {
       ...cypressBuilderOptions,
-      cypressConfig: 'some/project/my-cypress.json'
+      cypressConfig: 'some/project/my-cypress.json',
     };
 
     const run = await architect.scheduleBuilder('@nrwl/cypress:cypress', cfg);
@@ -219,7 +219,7 @@ describe('Cypress builder', () => {
       expect(cypressRun).toHaveBeenCalledWith(
         jasmine.objectContaining({
           project: path.dirname(cfg.cypressConfig),
-          configFile: path.basename(cfg.cypressConfig)
+          configFile: path.basename(cfg.cypressConfig),
         })
       );
       expect(cypressOpen).not.toHaveBeenCalled();
@@ -229,7 +229,7 @@ describe('Cypress builder', () => {
     fakeEventEmitter.emit('exit', 0); // Passing tsc command
   });
 
-  it('should show warnings if using unsupported browsers v3', async done => {
+  it('should show warnings if using unsupported browsers v3', async (done) => {
     mockedInstalledCypressVersion.mockReturnValue(3);
     const result = await cypressBuilderRunner(
       { ...cypressBuilderOptions, browser: 'edge' },
@@ -244,7 +244,7 @@ describe('Cypress builder', () => {
     done();
   });
 
-  it('should show warnings if using unsupported browsers v4', async done => {
+  it('should show warnings if using unsupported browsers v4', async (done) => {
     mockedInstalledCypressVersion.mockReturnValue(4);
 
     const result = await cypressBuilderRunner(
@@ -264,7 +264,7 @@ describe('Cypress builder', () => {
     beforeEach(() => {
       cypressConfig = {
         fixturesFolder: '../../dist/out-tsc/apps/my-app-e2e/src/fixtures',
-        integrationFolder: '../../dist/out-tsc/apps/my-app-e2e/src/integration'
+        integrationFolder: '../../dist/out-tsc/apps/my-app-e2e/src/integration',
       };
     });
 
@@ -283,14 +283,16 @@ describe('Cypress builder', () => {
       );
     });
 
-    it('should copy fixtures folder to out-dir', async done => {
+    it('should copy fixtures folder to out-dir', async (done) => {
       const run = await architect.scheduleBuilder(
         '@nrwl/cypress:cypress',
         cypressBuilderOptions
       );
       run.result.then(async () => {
         await run.stop();
-        expect(fsExtras.copySync).toHaveBeenCalledWith(
+        expect(
+          fsExtras.copySync
+        ).toHaveBeenCalledWith(
           '/root/apps/my-app-e2e/src/fixtures',
           '/root/dist/out-tsc/apps/my-app-e2e/src/fixtures',
           { overwrite: true }
@@ -301,7 +303,7 @@ describe('Cypress builder', () => {
       fakeEventEmitter.emit('exit', 0); // Passing tsc command
     });
 
-    it('should not copy fixtures folder if they are not defined in the cypress config', async done => {
+    it('should not copy fixtures folder if they are not defined in the cypress config', async (done) => {
       delete cypressConfig.fixturesFolder;
       const run = await architect.scheduleBuilder(
         '@nrwl/cypress:cypress',
@@ -316,16 +318,18 @@ describe('Cypress builder', () => {
       fakeEventEmitter.emit('exit', 0); // Passing tsc command
     });
 
-    it('should copy regex files to out-dir', async done => {
+    it('should copy regex files to out-dir', async (done) => {
       const regex: string = '^.+\\.feature$';
 
       const run = await architect.scheduleBuilder('@nrwl/cypress:cypress', {
         ...cypressBuilderOptions,
-        copyFiles: regex
+        copyFiles: regex,
       });
       run.result.then(async () => {
         await run.stop();
-        expect(fsExtras.copySync).toHaveBeenCalledWith(
+        expect(
+          fsExtras.copySync
+        ).toHaveBeenCalledWith(
           '/root/apps/my-app-e2e/src/integration',
           '/root/dist/out-tsc/apps/my-app-e2e/src/integration',
           { filter: jasmine.any(Function) }
@@ -336,16 +340,18 @@ describe('Cypress builder', () => {
       fakeEventEmitter.emit('exit', 0); // Passing tsc command
     });
 
-    it('should not copy regex files if the regex is not defined', async done => {
+    it('should not copy regex files if the regex is not defined', async (done) => {
       const regex: string = undefined;
 
       const run = await architect.scheduleBuilder('@nrwl/cypress:cypress', {
         ...cypressBuilderOptions,
-        copyFiles: regex
+        copyFiles: regex,
       });
       run.result.then(async () => {
         await run.stop();
-        expect(fsExtras.copySync).not.toHaveBeenCalledWith(
+        expect(
+          fsExtras.copySync
+        ).not.toHaveBeenCalledWith(
           '/root/apps/my-app-e2e/src/integration',
           '/root/dist/out-tsc/apps/my-app-e2e/src/integration',
           { filter: jasmine.any(Function) }
@@ -356,14 +362,14 @@ describe('Cypress builder', () => {
       fakeEventEmitter.emit('exit', 0); // Passing tsc command
     });
 
-    it('should not copy regex files if the integration files are not defined in the cypress config', async done => {
+    it('should not copy regex files if the integration files are not defined in the cypress config', async (done) => {
       delete cypressConfig.integrationFolder;
 
       const regex: string = '^.+\\.feature$';
 
       const run = await architect.scheduleBuilder('@nrwl/cypress:cypress', {
         ...cypressBuilderOptions,
-        copyFiles: regex
+        copyFiles: regex,
       });
       run.result
         .then(async () => {
@@ -378,12 +384,12 @@ describe('Cypress builder', () => {
       fakeEventEmitter.emit('exit', 0); // Passing tsc command
     });
 
-    it('should fail early if integration files fail to compile', async done => {
+    it('should fail early if integration files fail to compile', async (done) => {
       const run = await architect.scheduleBuilder(
         '@nrwl/cypress:cypress',
         cypressBuilderOptions
       );
-      run.result.then(async res => {
+      run.result.then(async (res) => {
         await run.stop();
         expect(res.success).toBe(false);
         done();

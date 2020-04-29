@@ -6,7 +6,7 @@ import {
   TaskExecutor,
   TaskExecutorFactory,
   TaskId,
-  Tree
+  Tree,
 } from '@angular-devkit/schematics';
 import { Observable } from 'rxjs';
 import { fork } from 'child_process';
@@ -30,7 +30,7 @@ export function addUpdateTask(
 
       taskRegistered = true;
     }
-    (context.engine as any)._taskSchedulers.forEach(scheduler => {
+    (context.engine as any)._taskSchedulers.forEach((scheduler) => {
       if (
         scheduler._queue.peek() &&
         scheduler._queue.peek().configuration.name === 'RunUpdate' &&
@@ -57,8 +57,8 @@ class RunUpdateTask implements TaskConfigurationGenerator<UpdateTaskOptions> {
       name: 'RunUpdate',
       options: {
         package: this._pkg,
-        to: this._to
-      }
+        to: this._to,
+      },
     };
   }
 }
@@ -72,16 +72,16 @@ function createRunUpdateTask(): TaskExecutorFactory<UpdateTaskOptions> {
           context.logger.info(`Updating ${options.package} to ${options.to}`);
           const forkOptions = {
             stdio: [process.stdin, process.stdout, process.stderr, 'ipc'],
-            shell: true
+            shell: true,
           };
           const ng = join('./node_modules', '@angular/cli', 'bin/ng');
           const args = [
             'update',
             `${options.package}@${options.to}`,
             '--force',
-            '--allow-dirty'
-          ].filter(e => !!e);
-          return new Observable(obs => {
+            '--allow-dirty',
+          ].filter((e) => !!e);
+          return new Observable((obs) => {
             fork(ng, args, forkOptions as any).on('close', (code: number) => {
               if (code === 0) {
                 obs.next();
@@ -94,6 +94,6 @@ function createRunUpdateTask(): TaskExecutorFactory<UpdateTaskOptions> {
           });
         }
       );
-    }
+    },
   };
 }

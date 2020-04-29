@@ -17,7 +17,7 @@ describe('updateImports Rule', () => {
     schema = {
       projectName: 'my-source',
       skipFormat: false,
-      forceRemove: false
+      forceRemove: false,
     };
 
     tree = await runSchematic('lib', { name: 'my-dependent' }, tree);
@@ -61,7 +61,7 @@ describe('updateImports Rule', () => {
   describe('implicit dependencies', () => {
     beforeEach(async () => {
       tree = (await callRule(
-        updateJsonInTree('nx.json', json => {
+        updateJsonInTree('nx.json', (json) => {
           json.projects['my-dependent'].implicitDependencies = ['my-source'];
           return json;
         }),

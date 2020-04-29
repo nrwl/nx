@@ -8,16 +8,16 @@ import { getBaseWebpackPartial } from './config';
 function getNodePartial(options: BuildNodeBuilderOptions) {
   const webpackConfig: Configuration = {
     output: {
-      libraryTarget: 'commonjs'
+      libraryTarget: 'commonjs',
     },
     target: 'node',
-    node: false
+    node: false,
   };
 
   if (options.optimization) {
     webpackConfig.optimization = {
       minimize: false,
-      concatenateModules: false
+      concatenateModules: false,
     };
   }
 
@@ -25,14 +25,14 @@ function getNodePartial(options: BuildNodeBuilderOptions) {
     webpackConfig.externals = [nodeExternals()];
   } else if (Array.isArray(options.externalDependencies)) {
     webpackConfig.externals = [
-      function(context, request, callback: Function) {
+      function (context, request, callback: Function) {
         if (options.externalDependencies.includes(request)) {
           // not bundled
           return callback(null, 'commonjs ' + request);
         }
         // bundled
         callback();
-      }
+      },
     ];
   }
   return webpackConfig;
@@ -41,6 +41,6 @@ function getNodePartial(options: BuildNodeBuilderOptions) {
 export function getNodeWebpackConfig(options: BuildNodeBuilderOptions) {
   return mergeWebpack([
     getBaseWebpackPartial(options),
-    getNodePartial(options)
+    getNodePartial(options),
   ]);
 }

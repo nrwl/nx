@@ -36,13 +36,13 @@ export function createApp(tree: Tree, appName: string): Promise<Tree> {
   const { fileName } = names(appName);
 
   return callRule(
-    updateWorkspace(workspace => {
+    updateWorkspace((workspace) => {
       workspace.projects.add({
         name: fileName,
         root: `apps/${fileName}`,
         projectType: 'application',
         sourceRoot: `apps/${fileName}/src`,
-        targets: {}
+        targets: {},
       });
     }),
     tree
@@ -55,13 +55,13 @@ export function createLib(tree: Tree, libName: string): Promise<Tree> {
   tree.create(`/libs/${fileName}/src/index.ts`, `\n`);
 
   return callRule(
-    updateWorkspace(workspace => {
+    updateWorkspace((workspace) => {
       workspace.projects.add({
         name: fileName,
         root: `libs/${fileName}`,
         projectType: 'library',
         sourceRoot: `libs/${fileName}/src`,
-        targets: {}
+        targets: {},
       });
     }),
     tree

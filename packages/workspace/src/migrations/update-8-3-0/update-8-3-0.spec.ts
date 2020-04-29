@@ -2,7 +2,7 @@ import { Tree } from '@angular-devkit/schematics';
 import { readJsonInTree } from '@nrwl/workspace';
 import {
   SchematicTestRunner,
-  UnitTestTree
+  UnitTestTree,
 } from '@angular-devkit/schematics/testing';
 import { serializeJson } from '@nrwl/workspace';
 import { join } from 'path';
@@ -20,8 +20,8 @@ describe('Update 8.3.0', () => {
         devDependencies: {
           '@angular/cli': '8.0.0',
           '@angular-devkit/build-angular': '^0.800.0',
-          '@angular-devkit/build-ng-packagr': '~0.800.0'
-        }
+          '@angular-devkit/build-ng-packagr': '~0.800.0',
+        },
       })
     );
 

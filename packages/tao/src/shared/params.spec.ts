@@ -5,30 +5,30 @@ describe('params', () => {
     it('should convert dash case to camel case', () => {
       expect(
         convertToCamelCase({
-          'one-two': 1
+          'one-two': 1,
         })
       ).toEqual({
-        oneTwo: 1
+        oneTwo: 1,
       });
     });
 
     it('should not convert camel case', () => {
       expect(
         convertToCamelCase({
-          oneTwo: 1
+          oneTwo: 1,
         })
       ).toEqual({
-        oneTwo: 1
+        oneTwo: 1,
       });
     });
 
     it('should handle mixed case', () => {
       expect(
         convertToCamelCase({
-          'one-Two': 1
+          'one-Two': 1,
         })
       ).toEqual({
-        oneTwo: 1
+        oneTwo: 1,
       });
     });
   });
@@ -41,7 +41,7 @@ describe('params', () => {
           {
             properties: { directory: { type: 'string', alias: 'd' } },
             required: [],
-            description: ''
+            description: '',
           }
         )
       ).toEqual({ directory: 'test' });
@@ -54,16 +54,16 @@ describe('params', () => {
           {
             properties: { directory: { type: 'string' } },
             required: [],
-            description: ''
+            description: '',
           }
         )
       ).toEqual({
         '--': [
           {
             name: 'd',
-            possible: []
-          }
-        ]
+            possible: [],
+          },
+        ],
       });
     });
   });
@@ -76,23 +76,23 @@ describe('params', () => {
             '--': [
               {
                 name: 'directoy',
-                possible: []
-              }
-            ]
+                possible: [],
+              },
+            ],
           },
           {
             properties: { directory: { type: 'string' } },
             required: [],
-            description: ''
+            description: '',
           }
         )
       ).toEqual({
         '--': [
           {
             name: 'directoy',
-            possible: ['directory']
-          }
-        ]
+            possible: ['directory'],
+          },
+        ],
       });
     });
 
@@ -103,23 +103,23 @@ describe('params', () => {
             '--': [
               {
                 name: 'directoy',
-                possible: []
-              }
-            ]
+                possible: [],
+              },
+            ],
           },
           {
             properties: { faraway: { type: 'string' } },
             required: [],
-            description: ''
+            description: '',
           }
         )
       ).toEqual({
         '--': [
           {
             name: 'directoy',
-            possible: []
-          }
-        ]
+            possible: [],
+          },
+        ],
       });
     });
   });

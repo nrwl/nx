@@ -18,7 +18,7 @@ describe('updateJestConfig Rule', () => {
 
     const schema: Schema = {
       projectName: 'my-source',
-      destination: 'my-destination'
+      destination: 'my-destination',
     };
 
     await expect(
@@ -43,7 +43,7 @@ describe('updateJestConfig Rule', () => {
 
     const schema: Schema = {
       projectName: 'my-source',
-      destination: 'my-destination'
+      destination: 'my-destination',
     };
 
     tree = (await callRule(updateJestConfig(schema), tree)) as UnitTestTree;

@@ -22,14 +22,14 @@ describe('Update 8-0-0', () => {
             react: '16.8.1',
             'react-dom': '16.8.1',
             'react-router-dom': '5.0.0',
-            'styled-components': '4.0.0'
+            'styled-components': '4.0.0',
           },
           devDependencies: {
             '@types/styled-components': '4.0.0',
             'react-testing-library': '5.0.0',
             '@types/react': '16.8.0',
-            '@types/react-dom': '16.8.0'
-          }
+            '@types/react-dom': '16.8.0',
+          },
         })),
         tree
       )

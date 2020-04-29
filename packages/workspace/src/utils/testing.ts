@@ -39,7 +39,7 @@ export function createLibWithTests(
   tree.create(`/libs/${fileName}/src/index.ts`, `\n`);
 
   return callRule(
-    updateWorkspace(workspace => {
+    updateWorkspace((workspace) => {
       workspace.projects.add({
         name: fileName,
         root: `libs/${fileName}`,
@@ -49,10 +49,10 @@ export function createLibWithTests(
           test: {
             builder: testBuilder,
             options: {
-              setupFile: `libs/${fileName}/src/${testSetupFile}`
-            }
-          }
-        }
+              setupFile: `libs/${fileName}/src/${testSetupFile}`,
+            },
+          },
+        },
       });
     }),
     tree

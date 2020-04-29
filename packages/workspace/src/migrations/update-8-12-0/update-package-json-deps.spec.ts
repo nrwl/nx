@@ -24,8 +24,8 @@ describe('Update 8.12.0: package.json deps', () => {
             '@angular-devkit/build-optimizer': '0.803.14',
             '@angular-devkit/build-webpack': '0.803.14',
             '@angular-devkit/schematics': '8.3.14',
-            '@angular/cli': '8.3.14'
-          }
+            '@angular/cli': '8.3.14',
+          },
         })
       );
 

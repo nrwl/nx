@@ -10,7 +10,7 @@ import {
   forEachCli,
   checkFilesExist,
   tmpProjPath,
-  supportUi
+  supportUi,
 } from './utils';
 import { toClassName } from '@nrwl/workspace';
 

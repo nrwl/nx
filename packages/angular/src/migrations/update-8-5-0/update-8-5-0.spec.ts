@@ -2,7 +2,7 @@ import { Tree } from '@angular-devkit/schematics';
 import { readJsonInTree } from '@nrwl/workspace';
 import {
   SchematicTestRunner,
-  UnitTestTree
+  UnitTestTree,
 } from '@angular-devkit/schematics/testing';
 import { serializeJson } from '@nrwl/workspace';
 import { runMigration } from '../../utils/testing';
@@ -21,8 +21,8 @@ describe('Update 8.5.0', () => {
         'package.json',
         serializeJson({
           devDependencies: {
-            '@angular/cli': '8.0.0'
-          }
+            '@angular/cli': '8.0.0',
+          },
         })
       );
 
@@ -38,8 +38,8 @@ describe('Update 8.5.0', () => {
         'package.json',
         serializeJson({
           devDependencies: {
-            '@angular/cli': '^8.0.0'
-          }
+            '@angular/cli': '^8.0.0',
+          },
         })
       );
 
@@ -55,8 +55,8 @@ describe('Update 8.5.0', () => {
         'package.json',
         serializeJson({
           devDependencies: {
-            '@angular/cli': '~8.0.0'
-          }
+            '@angular/cli': '~8.0.0',
+          },
         })
       );
 
@@ -74,8 +74,8 @@ describe('Update 8.5.0', () => {
         'package.json',
         serializeJson({
           devDependencies: {
-            '@angular/cli': '>=8.0.0'
-          }
+            '@angular/cli': '>=8.0.0',
+          },
         })
       );
 

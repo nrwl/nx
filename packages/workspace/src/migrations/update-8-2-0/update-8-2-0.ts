@@ -3,9 +3,9 @@ import { join, JsonArray, normalize } from '@angular-devkit/core';
 import { formatFiles } from '@nrwl/workspace';
 import { chain } from '@angular-devkit/schematics';
 
-const addExcludes = updateWorkspace(workspace => {
-  workspace.projects.forEach(project => {
-    project.targets.forEach(target => {
+const addExcludes = updateWorkspace((workspace) => {
+  workspace.projects.forEach((project) => {
+    project.targets.forEach((target) => {
       if (target.builder !== '@angular-devkit/build-angular:tslint') {
         return;
       }
@@ -22,6 +22,6 @@ const addExcludes = updateWorkspace(workspace => {
   });
 });
 
-export default function() {
+export default function () {
   return chain([addExcludes, formatFiles()]);
 }

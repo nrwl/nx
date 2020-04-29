@@ -2,7 +2,7 @@ import {
   chain,
   Rule,
   SchematicContext,
-  Tree
+  Tree,
 } from '@angular-devkit/schematics';
 import { extraEslintDependencies, reactEslintJson } from '@nrwl/react';
 import { addLintFiles, formatFiles } from '@nrwl/workspace';
@@ -19,18 +19,18 @@ import { updateNxJson } from './lib/update-nx-json';
 import { Schema } from './schema';
 import { addStyleDependencies } from '../../utils/styles';
 
-export default function(schema: Schema): Rule {
+export default function (schema: Schema): Rule {
   return (host: Tree, _context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
 
     return chain([
       init({
         ...options,
-        skipFormat: true
+        skipFormat: true,
       }),
       addLintFiles(options.appProjectRoot, options.linter, {
         localConfig: reactEslintJson,
-        extraPackageDeps: extraEslintDependencies
+        extraPackageDeps: extraEslintDependencies,
       }),
       createApplicationFiles(options),
       createNextServerFiles(options),
@@ -41,7 +41,7 @@ export default function(schema: Schema): Rule {
       updateJestConfig(options),
       addStyleDependencies(options.style),
       setDefaults(options),
-      formatFiles(options)
+      formatFiles(options),
     ]);
   };
 }

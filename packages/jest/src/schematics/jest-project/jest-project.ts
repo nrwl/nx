@@ -17,17 +17,17 @@ function normalizeOptions(options: JestProjectSchema): JestProjectSchema {
 
   return {
     ...options,
-    setupFile: 'none'
+    setupFile: 'none',
   };
 }
 
-export default function(options: JestProjectSchema): Rule {
+export default function (options: JestProjectSchema): Rule {
   options = normalizeOptions(options);
   return chain([
     init(options),
     checkForTestTarget(options),
     generateFiles(options),
     updateTsConfig(options),
-    updateWorkspace(options)
+    updateWorkspace(options),
   ]);
 }

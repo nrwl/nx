@@ -19,7 +19,7 @@ describe('NxPlugin builder', () => {
       'builder',
       {
         project: projectName,
-        name: 'my-builder'
+        name: 'my-builder',
       },
       appTree
     );
@@ -44,7 +44,7 @@ describe('NxPlugin builder', () => {
       {
         project: projectName,
         name: 'my-builder',
-        description: 'my-builder description'
+        description: 'my-builder description',
       },
       appTree
     );
@@ -67,7 +67,7 @@ describe('NxPlugin builder', () => {
       'builder',
       {
         project: projectName,
-        name: 'my-builder'
+        name: 'my-builder',
       },
       appTree
     );
@@ -85,7 +85,7 @@ describe('NxPlugin builder', () => {
       {
         project: projectName,
         name: 'my-builder',
-        description: 'my-builder custom description'
+        description: 'my-builder custom description',
       },
       appTree
     );
@@ -105,7 +105,7 @@ describe('NxPlugin builder', () => {
           {
             project: projectName,
             name: 'my-builder',
-            unitTestRunner: 'none'
+            unitTestRunner: 'none',
           },
           appTree
         );

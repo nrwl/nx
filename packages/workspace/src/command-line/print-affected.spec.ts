@@ -7,15 +7,15 @@ describe('print-affected', () => {
       tasks: [
         {
           target: {
-            project: 'one'
-          }
+            project: 'one',
+          },
         },
         {
           target: {
-            project: 'two'
-          }
-        }
-      ]
+            project: 'two',
+          },
+        },
+      ],
     };
 
     it('should return the result if select is empty', () => {

@@ -17,7 +17,7 @@ import { getDestination, getNewProjectName } from './utils';
 export function updateJestConfig(schema: Schema): Rule {
   return (tree: Tree, _context: SchematicContext): Observable<Tree> => {
     return from(getWorkspace(tree)).pipe(
-      map(workspace => {
+      map((workspace) => {
         const project = workspace.projects.get(schema.projectName);
         const destination = getDestination(schema, workspace);
         const newProjectName = getNewProjectName(schema.destination);

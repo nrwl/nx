@@ -1,13 +1,13 @@
 export {
   fetchCommunityPlugins,
-  listCommunityPlugins
+  listCommunityPlugins,
 } from './community-plugins';
 export { fetchCorePlugins, listCorePlugins } from './core-plugins';
 export {
   getInstalledPluginsFromNodeModules,
-  listInstalledPlugins
+  listInstalledPlugins,
 } from './installed-plugins';
 export {
   getPluginCapabilities,
-  listPluginCapabilities
+  listPluginCapabilities,
 } from './plugin-capabilities';

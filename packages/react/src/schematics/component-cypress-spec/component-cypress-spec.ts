@@ -7,7 +7,7 @@ import {
   SchematicsException,
   applyTemplates,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import { findNodes, getProjectConfig } from '@nrwl/workspace';
 import { applyWithSkipExisting } from '@nrwl/workspace/src/utils/ast-utils';
@@ -15,7 +15,7 @@ import { join } from 'path';
 import ts = require('typescript');
 import {
   getComponentName,
-  getComponentPropsInterface
+  getComponentPropsInterface,
 } from '../../utils/ast-utils';
 
 export interface CreateComponentSpecFileSchema {
@@ -24,7 +24,7 @@ export interface CreateComponentSpecFileSchema {
   js?: boolean;
 }
 
-export default function(schema: CreateComponentSpecFileSchema): Rule {
+export default function (schema: CreateComponentSpecFileSchema): Rule {
   return chain([createComponentSpecFile(schema)]);
 }
 
@@ -33,7 +33,7 @@ export function getKnobDefaultValue(property: ts.SyntaxKind): string {
   const typeNameToDefault: Record<number, any> = {
     [ts.SyntaxKind.StringKeyword]: '',
     [ts.SyntaxKind.NumberKeyword]: 0,
-    [ts.SyntaxKind.BooleanKeyword]: false
+    [ts.SyntaxKind.BooleanKeyword]: false,
   };
 
   const resolvedValue = typeNameToDefault[property];
@@ -47,7 +47,7 @@ export function getKnobDefaultValue(property: ts.SyntaxKind): string {
 export function createComponentSpecFile({
   project,
   componentPath,
-  js
+  js,
 }: CreateComponentSpecFileSchema): Rule {
   return (tree: Tree, context: SchematicContext): Rule => {
     const e2eLibIntegrationFolderPath =
@@ -91,7 +91,7 @@ export function createComponentSpecFile({
       props = propsInterface.members.map((member: ts.PropertySignature) => {
         return {
           name: (member.name as ts.Identifier).text,
-          defaultValue: getKnobDefaultValue(member.type.kind)
+          defaultValue: getKnobDefaultValue(member.type.kind),
         };
       });
     }
@@ -102,9 +102,9 @@ export function createComponentSpecFile({
         componentName,
         componentSelector: (cmpDeclaration as any).name.text,
         props,
-        fileExt: js ? 'js' : 'ts'
+        fileExt: js ? 'js' : 'ts',
       }),
-      move(e2eLibIntegrationFolderPath + '/' + componentName)
+      move(e2eLibIntegrationFolderPath + '/' + componentName),
     ]);
   };
 }

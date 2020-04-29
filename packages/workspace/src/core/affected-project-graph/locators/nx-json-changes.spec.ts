@@ -10,17 +10,17 @@ describe('getTouchedProjectsInNxJson', () => {
           file: 'source.ts',
           ext: '.ts',
           mtime: 0,
-          getChanges: () => [new WholeFileChange()]
-        }
+          getChanges: () => [new WholeFileChange()],
+        },
       ],
       {},
       {
         npmScope: 'proj',
         projects: {
           proj1: {
-            tags: []
-          }
-        }
+            tags: [],
+          },
+        },
       }
     );
     expect(result).toEqual([]);
@@ -33,20 +33,20 @@ describe('getTouchedProjectsInNxJson', () => {
           file: 'nx.json',
           ext: '.json',
           mtime: 0,
-          getChanges: () => [new WholeFileChange()]
-        }
+          getChanges: () => [new WholeFileChange()],
+        },
       ],
       {},
       {
         npmScope: 'proj',
         projects: {
           proj1: {
-            tags: []
+            tags: [],
           },
           proj2: {
-            tags: []
-          }
-        }
+            tags: [],
+          },
+        },
       }
     );
     expect(result).toEqual(['proj1', 'proj2']);
@@ -65,23 +65,23 @@ describe('getTouchedProjectsInNxJson', () => {
               path: ['npmScope'],
               value: {
                 lhs: 'proj',
-                rhs: 'awesome-proj'
-              }
-            }
-          ]
-        }
+                rhs: 'awesome-proj',
+              },
+            },
+          ],
+        },
       ],
       {},
       {
         npmScope: 'proj',
         projects: {
           proj1: {
-            tags: []
+            tags: [],
           },
           proj2: {
-            tags: []
-          }
-        }
+            tags: [],
+          },
+        },
       }
     );
     expect(result).toEqual(['proj1', 'proj2']);
@@ -101,32 +101,32 @@ describe('getTouchedProjectsInNxJson', () => {
               value: {
                 lhs: undefined,
                 rhs: {
-                  tags: []
-                }
-              }
+                  tags: [],
+                },
+              },
             },
             {
               type: DiffType.Added,
               path: ['projects', 'proj1', 'tags'],
               value: {
                 lhs: undefined,
-                rhs: []
-              }
-            }
-          ]
-        }
+                rhs: [],
+              },
+            },
+          ],
+        },
       ],
       {},
       {
         npmScope: 'proj',
         projects: {
           proj1: {
-            tags: []
+            tags: [],
           },
           proj2: {
-            tags: []
-          }
-        }
+            tags: [],
+          },
+        },
       }
     );
     expect(result).toEqual(['proj1']);
@@ -145,25 +145,25 @@ describe('getTouchedProjectsInNxJson', () => {
               path: ['projects', 'proj3'],
               value: {
                 lhs: {
-                  tags: []
+                  tags: [],
                 },
-                rhs: undefined
-              }
-            }
-          ]
-        }
+                rhs: undefined,
+              },
+            },
+          ],
+        },
       ],
       {},
       {
         npmScope: 'proj',
         projects: {
           proj1: {
-            tags: []
+            tags: [],
           },
           proj2: {
-            tags: []
-          }
-        }
+            tags: [],
+          },
+        },
       }
     );
     expect(result).toEqual(['proj1', 'proj2']);
@@ -183,40 +183,40 @@ describe('getTouchedProjectsInNxJson', () => {
               value: {
                 lhs: { tags: ['scope:feat'] },
                 rhs: {
-                  tags: ['scope:shared']
-                }
-              }
+                  tags: ['scope:shared'],
+                },
+              },
             },
             {
               type: DiffType.Modified,
               path: ['projects', 'proj1', 'tags'],
               value: {
                 lhs: ['scope:feat'],
-                rhs: ['scope:shared']
-              }
+                rhs: ['scope:shared'],
+              },
             },
             {
               type: DiffType.Modified,
               path: ['projects', 'proj1', 'tags', '0'],
               value: {
                 lhs: 'scope:feat',
-                rhs: 'scope:shared'
-              }
-            }
-          ]
-        }
+                rhs: 'scope:shared',
+              },
+            },
+          ],
+        },
       ],
       {},
       {
         npmScope: 'proj',
         projects: {
           proj1: {
-            tags: []
+            tags: [],
           },
           proj2: {
-            tags: []
-          }
-        }
+            tags: [],
+          },
+        },
       }
     );
     expect(result).toEqual(['proj1']);
