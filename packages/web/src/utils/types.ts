@@ -45,7 +45,7 @@ export interface Globals {
   global: string;
 }
 
-export interface BundleBuilderOptions {
+export interface PackageBuilderOptions {
   outputPath: string;
   tsConfig: string;
   project: string;
@@ -56,4 +56,5 @@ export interface BundleBuilderOptions {
   rollupConfig?: string;
   babelConfig?: string;
   watch?: boolean;
+  assets?: any[];
 }
