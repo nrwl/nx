@@ -20,7 +20,7 @@ describe('component', () => {
       appTree
     );
 
-    expect(tree.exists('apps/my-app/src/pages/hello/hello.tsx')).toBeTruthy();
-    expect(tree.exists('apps/my-app/src/pages/hello/hello.css')).toBeTruthy();
+    expect(tree.exists('apps/my-app/src/pages/hello.tsx')).toBeTruthy();
+    expect(tree.exists('apps/my-app/src/pages/hello.css')).toBeTruthy();
   });
 });

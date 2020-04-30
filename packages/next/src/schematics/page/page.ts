@@ -23,7 +23,7 @@ export default function (options: Schema): Rule {
       classComponent: false,
       routing: false,
       skipTests: !options.withTests,
-      flat: false,
+      flat: true,
     }),
     addStyleDependencies(options.style),
   ]);
