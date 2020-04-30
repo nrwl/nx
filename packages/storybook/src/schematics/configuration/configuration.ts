@@ -25,7 +25,9 @@ import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 
 export default function (schema: StorybookConfigureSchema): Rule {
   return chain([
-    schematic('ng-add', {}),
+    schematic('ng-add', {
+      uiFramework: schema.uiFramework,
+    }),
     createRootStorybookDir(schema.name, schema.js),
     createLibStorybookDir(schema.name, schema.uiFramework, schema.js),
     configureTsConfig(schema.name),
