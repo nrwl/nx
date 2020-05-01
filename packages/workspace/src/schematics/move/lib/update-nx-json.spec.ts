@@ -19,7 +19,7 @@ describe('updateNxJson Rule', () => {
 
     const schema: Schema = {
       projectName: 'my-source',
-      destination: 'my-destination'
+      destination: 'my-destination',
     };
 
     tree = (await callRule(updateNxJson(schema), tree)) as UnitTestTree;
@@ -28,7 +28,7 @@ describe('updateNxJson Rule', () => {
 
     expect(nxJson.projects['my-source']).toBeUndefined();
     expect(nxJson.projects['my-destination']).toEqual({
-      tags: []
+      tags: [],
     });
   });
 });

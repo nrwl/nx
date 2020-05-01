@@ -21,8 +21,8 @@ export function updatePackagesInPackageJson(
   const updatedPackages = packageJsonUpdates.packages;
   let needsInstall = false;
   return chain([
-    updateJsonInTree('package.json', json => {
-      Object.keys(updatedPackages).forEach(p => {
+    updateJsonInTree('package.json', (json) => {
+      Object.keys(updatedPackages).forEach((p) => {
         /**
          * Check the updated version against semver
          */
@@ -60,6 +60,6 @@ export function updatePackagesInPackageJson(
       });
       return json;
     }),
-    needsInstall ? addInstallTask(options) : noop()
+    needsInstall ? addInstallTask(options) : noop(),
   ]);
 }

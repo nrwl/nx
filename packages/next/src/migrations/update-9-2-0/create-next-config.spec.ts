@@ -28,9 +28,9 @@ describe('create-next-config-9.2.0', () => {
             architect: {
               build: {
                 builder: '@nrwl/next:build',
-                options: {}
-              }
-            }
+                options: {},
+              },
+            },
           },
           demo2: {
             root: 'apps/demo2',
@@ -38,9 +38,9 @@ describe('create-next-config-9.2.0', () => {
             architect: {
               build: {
                 builder: '@nrwl/react:build',
-                options: {}
-              }
-            }
+                options: {},
+              },
+            },
           },
           demo3: {
             root: 'apps/demo3',
@@ -48,12 +48,12 @@ describe('create-next-config-9.2.0', () => {
             architect: {
               build: {
                 builder: '@nrwl/next:build',
-                options: {}
-              }
-            }
-          }
+                options: {},
+              },
+            },
+          },
         },
-        newProjectRoot: ''
+        newProjectRoot: '',
       })
     );
 
@@ -84,12 +84,12 @@ describe('create-next-config-9.2.0', () => {
             architect: {
               build: {
                 builder: '@nrwl/next:build',
-                options: {}
-              }
-            }
-          }
+                options: {},
+              },
+            },
+          },
         },
-        newProjectRoot: ''
+        newProjectRoot: '',
       })
     );
 

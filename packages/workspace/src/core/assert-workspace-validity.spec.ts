@@ -8,24 +8,24 @@ describe('assertWorkspaceValidity', () => {
     mockNxJson = {
       projects: {
         app1: {
-          tags: []
+          tags: [],
         },
         'app1-e2e': {
-          tags: []
+          tags: [],
         },
         app2: {
-          tags: []
+          tags: [],
         },
         'app2-e2e': {
-          tags: []
+          tags: [],
         },
         lib1: {
-          tags: []
+          tags: [],
         },
         lib2: {
-          tags: []
-        }
-      }
+          tags: [],
+        },
+      },
     };
     mockWorkspaceJson = {
       projects: {
@@ -34,8 +34,8 @@ describe('assertWorkspaceValidity', () => {
         app2: {},
         'app2-e2e': {},
         lib1: {},
-        lib2: {}
-      }
+        lib2: {},
+      },
     };
   });
 
@@ -65,7 +65,7 @@ describe('assertWorkspaceValidity', () => {
 
   it('should throw for an invalid top-level implicit dependency', () => {
     mockNxJson.implicitDependencies = {
-      'README.md': ['invalidproj']
+      'README.md': ['invalidproj'],
     };
     try {
       assertWorkspaceValidity(mockWorkspaceJson, mockNxJson);

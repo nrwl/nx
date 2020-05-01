@@ -10,7 +10,7 @@ export interface ProjectGraph {
 export enum DependencyType {
   static = 'static',
   dynamic = 'dynamic',
-  implicit = 'implicit'
+  implicit = 'implicit',
 }
 
 export interface ProjectGraphNode<T extends {} = {}> {
@@ -48,5 +48,5 @@ export interface ProjectGraphContext {
 export enum ProjectType {
   app = 'app',
   e2e = 'e2e',
-  lib = 'lib'
+  lib = 'lib',
 }

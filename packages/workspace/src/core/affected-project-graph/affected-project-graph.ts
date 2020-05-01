@@ -3,18 +3,18 @@ import {
   FileChange,
   readNxJson,
   readPackageJson,
-  readWorkspaceJson
+  readWorkspaceJson,
 } from '../file-utils';
 import { NxJson } from '../shared-interfaces';
 import {
   getImplicitlyTouchedProjects,
-  getTouchedProjects
+  getTouchedProjects,
 } from './locators/workspace-projects';
 import { getTouchedNpmPackages } from './locators/npm-packages';
 import { getImplicitlyTouchedProjectsByJsonChanges } from './locators/implicit-json-changes';
 import {
   AffectedProjectGraphContext,
-  TouchedProjectLocator
+  TouchedProjectLocator,
 } from './affected-project-graph-models';
 import { normalizeNxJson } from '../normalize-nx-json';
 import { getTouchedProjectsInNxJson } from './locators/nx-json-changes';
@@ -37,21 +37,18 @@ export function filterAffected(
     getImplicitlyTouchedProjectsByJsonChanges,
     getTouchedProjectsInNxJson,
     getTouchedProjectsInWorkspaceJson,
-    getTouchedProjectsFromTsConfig
+    getTouchedProjectsFromTsConfig,
   ];
-  const touchedProjects = touchedProjectLocators.reduce(
-    (acc, f) => {
-      return acc.concat(
-        f(touchedFiles, workspaceJson, normalizedNxJson, packageJson, graph)
-      );
-    },
-    [] as string[]
-  );
+  const touchedProjects = touchedProjectLocators.reduce((acc, f) => {
+    return acc.concat(
+      f(touchedFiles, workspaceJson, normalizedNxJson, packageJson, graph)
+    );
+  }, [] as string[]);
 
   return filterAffectedProjects(graph, {
     workspaceJson,
     nxJson: normalizedNxJson,
-    touchedProjects
+    touchedProjects,
   });
 }
 
@@ -63,10 +60,10 @@ function filterAffectedProjects(
 ): ProjectGraph {
   const builder = new ProjectGraphBuilder();
   const reversed = reverse(graph);
-  ctx.touchedProjects.forEach(p => {
+  ctx.touchedProjects.forEach((p) => {
     addAffectedNodes(p, reversed, builder, []);
   });
-  ctx.touchedProjects.forEach(p => {
+  ctx.touchedProjects.forEach((p) => {
     addAffectedDependencies(p, reversed, builder, []);
   });
   return builder.build();

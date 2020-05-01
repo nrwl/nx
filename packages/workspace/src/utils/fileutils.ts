@@ -55,7 +55,7 @@ export function copyFile(file: string, target: string) {
   const source = fs.createReadStream(file);
   const dest = fs.createWriteStream(path.resolve(target, f));
   source.pipe(dest);
-  source.on('error', e => console.error(e));
+  source.on('error', (e) => console.error(e));
 }
 
 export function directoryExists(name) {

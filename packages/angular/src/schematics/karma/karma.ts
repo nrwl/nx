@@ -1,7 +1,7 @@
 import { Tree, noop, chain, mergeWith, url } from '@angular-devkit/schematics';
 import { readJsonInTree, addDepsToPackageJson } from '@nrwl/workspace';
 
-export default function() {
+export default function () {
   return (host: Tree) => {
     const packageJson = readJsonInTree(host, 'package.json');
     if (packageJson.devDependencies['karma']) {
@@ -19,9 +19,9 @@ export default function() {
           'karma-jasmine-html-reporter': '^0.2.2',
           'jasmine-core': '~2.99.1',
           'jasmine-spec-reporter': '~4.2.1',
-          '@types/jasmine': '~2.8.8'
+          '@types/jasmine': '~2.8.8',
         }
-      )
+      ),
     ]);
   };
 }

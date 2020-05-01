@@ -3,9 +3,13 @@ import { formatFiles, updateWorkspaceInTree } from '@nrwl/workspace';
 
 export default function update(): Rule {
   return chain([
-    updateWorkspaceInTree(workspaceJson => {
+    updateWorkspaceInTree((workspaceJson) => {
       Object.entries<any>(workspaceJson.projects).forEach(
         ([projectName, project]) => {
+          if (!project.architect) {
+            return;
+          }
+
           Object.entries<any>(project.architect).forEach(
             ([targetName, targetConfig]) => {
               if (targetConfig.builder === '@nrwl/node:build') {
@@ -21,6 +25,6 @@ export default function update(): Rule {
       );
       return workspaceJson;
     }),
-    formatFiles()
+    formatFiles(),
   ]);
 }

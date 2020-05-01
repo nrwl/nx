@@ -5,7 +5,7 @@ import { callRule } from '../testing';
 import { setDefaultCollection } from './workspace';
 import {
   _test_addWorkspaceFile,
-  WorkspaceFormat
+  WorkspaceFormat,
 } from '@angular-devkit/core/src/workspace/core';
 
 describe('Workspace', () => {
@@ -38,9 +38,9 @@ describe('Workspace', () => {
     it(`should be set if ${nrwlWorkspaceName} was set before`, async () => {
       tree = new UnitTestTree(
         await callRule(
-          updateJsonInTree(workspaceJsonFileName, json => {
+          updateJsonInTree(workspaceJsonFileName, (json) => {
             json.cli = {
-              defaultCollection: nrwlWorkspaceName
+              defaultCollection: nrwlWorkspaceName,
             };
 
             return json;
@@ -61,9 +61,9 @@ describe('Workspace', () => {
       const otherCollection = '@nrwl/angular';
       tree = new UnitTestTree(
         await callRule(
-          updateJsonInTree(workspaceJsonFileName, json => {
+          updateJsonInTree(workspaceJsonFileName, (json) => {
             json.cli = {
-              defaultCollection: otherCollection
+              defaultCollection: otherCollection,
             };
 
             json.schematics = {};

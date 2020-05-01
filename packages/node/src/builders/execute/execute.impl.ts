@@ -3,7 +3,7 @@ import {
   createBuilder,
   BuilderOutput,
   targetFromTargetString,
-  scheduleTargetAndForget
+  scheduleTargetAndForget,
 } from '@angular-devkit/architect';
 import { ChildProcess, fork } from 'child_process';
 import * as treeKill from 'tree-kill';
@@ -21,7 +21,7 @@ try {
 
 export const enum InspectType {
   Inspect = 'inspect',
-  InspectBrk = 'inspect-brk'
+  InspectBrk = 'inspect-brk',
 }
 
 export interface NodeExecuteBuilderOptions extends JsonObject {
@@ -46,7 +46,7 @@ export function nodeExecuteBuilderHandler(
   context: BuilderContext
 ): Observable<BuilderOutput> {
   return runWaitUntilTargets(options, context).pipe(
-    concatMap(v => {
+    concatMap((v) => {
       if (!v.success) {
         context.logger.error(
           `One of the tasks specified in waitUntilTargets failed`
@@ -73,7 +73,7 @@ function runProcess(event: NodeBuildEvent, options: NodeExecuteBuilderOptions) {
   if (subProcess || !event.success) return;
 
   subProcess = fork(event.outfile, options.args, {
-    execArgv: getExecArgv(options)
+    execArgv: getExecArgv(options),
   });
 }
 
@@ -110,7 +110,7 @@ function killProcess(context: BuilderContext): Observable<void | Error> {
 
   const observableTreeKill = bindCallback<number, string, Error>(treeKill);
   return observableTreeKill(subProcess.pid, 'SIGTERM').pipe(
-    tap(err => {
+    tap((err) => {
       subProcess = null;
       if (err) {
         if (Array.isArray(err) && err[0] && err[2]) {
@@ -132,12 +132,12 @@ function startBuild(
   return from(
     Promise.all([
       context.getTargetOptions(target),
-      context.getBuilderNameForTarget(target)
+      context.getBuilderNameForTarget(target),
     ]).then(([options, builderName]) =>
       context.validateOptions(options, builderName)
     )
   ).pipe(
-    tap(options => {
+    tap((options) => {
       if (options.optimization) {
         context.logger.warn(stripIndents`
             ************************************************
@@ -150,10 +150,10 @@ function startBuild(
       }
     }),
     concatMap(
-      options =>
+      (options) =>
         scheduleTargetAndForget(context, target, {
           ...options,
-          watch: true
+          watch: true,
         }) as Observable<NodeBuildEvent>
     )
   );
@@ -167,15 +167,15 @@ function runWaitUntilTargets(
     return of({ success: true });
 
   return zip(
-    ...options.waitUntilTargets.map(b => {
+    ...options.waitUntilTargets.map((b) => {
       return scheduleTargetAndForget(context, targetFromTargetString(b)).pipe(
-        filter(e => e.success !== undefined),
+        filter((e) => e.success !== undefined),
         first()
       );
     })
   ).pipe(
-    map(results => {
-      return { success: !results.some(r => !r.success) };
+    map((results) => {
+      return { success: !results.some((r) => !r.success) };
     })
   );
 }

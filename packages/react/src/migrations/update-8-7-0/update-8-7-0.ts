@@ -2,12 +2,12 @@ import {
   chain,
   Rule,
   SchematicContext,
-  Tree
+  Tree,
 } from '@angular-devkit/schematics';
 import {
   formatFiles,
   readJsonInTree,
-  updatePackagesInPackageJson
+  updatePackagesInPackageJson,
 } from '@nrwl/workspace';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import * as path from 'path';
@@ -19,7 +19,7 @@ export default function update(): Rule {
       path.join(__dirname, '../../../', 'migrations.json'),
       '8.7.0'
     ),
-    formatFiles()
+    formatFiles(),
   ]);
 }
 

@@ -36,7 +36,7 @@ export async function lint(
     useEslintrc: false,
     fix: !!options.fix,
     cache: !!options.cache,
-    cacheLocation: options.cacheLocation
+    cacheLocation: options.cacheLocation,
   });
 
   const lintReports: CLIEngine.LintReport[] = [];
@@ -44,7 +44,7 @@ export async function lint(
   for (const file of files) {
     if (program && allPrograms) {
       // If it cannot be found in ANY program, then this is an error.
-      if (allPrograms.every(p => p.getSourceFile(file) === undefined)) {
+      if (allPrograms.every((p) => p.getSourceFile(file) === undefined)) {
         throw new Error(
           `File ${JSON.stringify(file)} is not part of a TypeScript project '${
             options.tsConfig

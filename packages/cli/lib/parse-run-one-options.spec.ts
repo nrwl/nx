@@ -10,7 +10,7 @@ describe('parseRunOneOptions', () => {
       project: 'myproj',
       target: 'build',
       configuration: 'production',
-      overrides: { flag: 'true' }
+      overrides: { flag: 'true' },
     });
   });
 
@@ -19,13 +19,13 @@ describe('parseRunOneOptions', () => {
       parseRunOneOptions(nxJson, workspaceJson, [
         'run',
         'myproj:build:production',
-        '--flag=true'
+        '--flag=true',
       ])
     ).toEqual({
       project: 'myproj',
       target: 'build',
       configuration: 'production',
-      overrides: { flag: 'true' }
+      overrides: { flag: 'true' },
     });
   });
 
@@ -39,7 +39,7 @@ describe('parseRunOneOptions', () => {
     ).toEqual({
       project: 'myproj',
       target: 'build',
-      overrides: { flag: 'true' }
+      overrides: { flag: 'true' },
     });
   });
 

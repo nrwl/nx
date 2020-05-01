@@ -3,7 +3,7 @@ import {
   AffectedEventType,
   Task,
   TaskCompleteEvent,
-  TasksRunner
+  TasksRunner,
 } from './tasks-runner';
 import { ProjectGraph } from '../core/project-graph';
 import { NxJson } from '../core/shared-interfaces';
@@ -51,10 +51,10 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
     options.lifeCycle = new NoopLifeCycle();
   }
 
-  return new Observable(subscriber => {
+  return new Observable((subscriber) => {
     runAllTasks(tasks, options, context)
-      .then(data => data.forEach(d => subscriber.next(d)))
-      .catch(e => {
+      .then((data) => data.forEach((d) => subscriber.next(d)))
+      .catch((e) => {
         console.error('Unexpected error:');
         console.error(e);
         process.exit(1);
@@ -95,7 +95,7 @@ async function runAllTasks(
     res.push(...statuses);
 
     // any task failed, we need to skip further stages
-    if (statuses.find(s => !s.success)) {
+    if (statuses.find((s) => !s.success)) {
       res.push(...markStagesAsNotSuccessful(stages.splice(i + 1)));
       return res;
     }
@@ -108,10 +108,10 @@ function markStagesAsNotSuccessful(stages: Task[][]) {
 }
 
 function tasksToStatuses(tasks: Task[], success: boolean) {
-  return tasks.map(task => ({
+  return tasks.map((task) => ({
     task,
     type: AffectedEventType.TaskComplete,
-    success
+    success,
   }));
 }
 

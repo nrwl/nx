@@ -23,11 +23,11 @@ describe('Update 8-10-0', () => {
       JSON.stringify({
         dependencies: {
           '@emotion/core': '10.0.23',
-          '@emotion/styled': '10.0.23'
+          '@emotion/styled': '10.0.23',
         },
         devDependencies: {
-          '@types/react': '16.9.13'
-        }
+          '@types/react': '16.9.13',
+        },
       })
     );
 
@@ -39,11 +39,11 @@ describe('Update 8-10-0', () => {
     expect(packageJson).toMatchObject({
       dependencies: {
         '@emotion/core': '10.0.27',
-        '@emotion/styled': '10.0.27'
+        '@emotion/styled': '10.0.27',
       },
       devDependencies: {
-        '@types/react': '16.9.17'
-      }
+        '@types/react': '16.9.17',
+      },
     });
   });
 
@@ -90,11 +90,11 @@ describe('Update 8-10-0', () => {
           build: {
             builder: '@nrwl/web:build',
             options: {
-              webpackConfig: '@nrwl/react/plugins/babel'
-            }
-          }
-        }
-      }
+              webpackConfig: '@nrwl/react/plugins/babel',
+            },
+          },
+        },
+      },
     };
     tree.overwrite('/workspace.json', JSON.stringify(workspaceJson));
 
@@ -111,11 +111,11 @@ describe('Update 8-10-0', () => {
           build: {
             builder: '@nrwl/web:build',
             options: {
-              webpackConfig: '@nrwl/react/plugins/webpack'
-            }
-          }
-        }
-      }
+              webpackConfig: '@nrwl/react/plugins/webpack',
+            },
+          },
+        },
+      },
     });
   });
 });

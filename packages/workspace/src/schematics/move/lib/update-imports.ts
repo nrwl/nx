@@ -3,7 +3,7 @@ import {
   getWorkspace,
   NxJson,
   readJsonInTree,
-  serializeJson
+  serializeJson,
 } from '@nrwl/workspace';
 import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -18,7 +18,7 @@ import { normalizeSlashes } from './utils';
 export function updateImports(schema: Schema) {
   return (tree: Tree, _context: SchematicContext): Observable<Tree> => {
     return from(getWorkspace(tree)).pipe(
-      map(workspace => {
+      map((workspace) => {
         const nxJson = readJsonInTree<NxJson>(tree, 'nx.json');
         const project = workspace.projects.get(schema.projectName);
 
@@ -31,7 +31,7 @@ export function updateImports(schema: Schema) {
           from: normalizeSlashes(
             `@${nxJson.npmScope}/${project.root.substr(5)}`
           ),
-          to: normalizeSlashes(`@${nxJson.npmScope}/${schema.destination}`)
+          to: normalizeSlashes(`@${nxJson.npmScope}/${schema.destination}`),
         };
 
         const replaceProjectRef = new RegExp(projectRef.from, 'g');
@@ -42,7 +42,7 @@ export function updateImports(schema: Schema) {
           }
 
           const projectDir = tree.getDir(definition.root);
-          projectDir.visit(file => {
+          projectDir.visit((file) => {
             const contents = tree.read(file).toString('utf-8');
             if (!replaceProjectRef.test(contents)) {
               return;
@@ -58,7 +58,7 @@ export function updateImports(schema: Schema) {
 
         const projectRoot = {
           from: project.root.substr(5),
-          to: schema.destination
+          to: schema.destination,
         };
 
         const tsConfigPath = 'tsconfig.json';
@@ -68,7 +68,7 @@ export function updateImports(schema: Schema) {
             projectRef.from
           ] as string[];
 
-          contents.compilerOptions.paths[projectRef.to] = path.map(x =>
+          contents.compilerOptions.paths[projectRef.to] = path.map((x) =>
             x.replace(new RegExp(projectRoot.from, 'g'), projectRoot.to)
           );
           delete contents.compilerOptions.paths[projectRef.from];

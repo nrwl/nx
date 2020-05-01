@@ -1,0 +1,29 @@
+import { Tree } from '@angular-devkit/schematics';
+import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
+import { join } from 'path'
+
+import { <%= className %>SchematicSchema } from './schema';
+
+describe('<%= name %> schematic', () => {
+  let appTree: Tree;
+  const options: <%= className %>SchematicSchema = { name: 'test' };
+
+  const testRunner = new SchematicTestRunner(
+    '@<%= npmScope %>/<%= name %>',
+    join(__dirname, '../../../collection.json')
+  );
+
+  beforeEach(() => {
+    appTree = createEmptyWorkspace(Tree.empty());
+  });
+
+  it('should run successfully', async () => {
+    await expect(testRunner.runSchematicAsync(
+        '<%= fileName %>',
+        options,
+        appTree
+      ).toPromise()
+    ).resolves.not.toThrowError();
+  })
+});

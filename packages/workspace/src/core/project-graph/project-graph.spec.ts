@@ -1,9 +1,7 @@
-import { extname } from 'path';
 import { vol, fs } from 'memfs';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { createProjectGraph } from './project-graph';
 import { DependencyType } from './project-graph-models';
-import { FileData } from '../file-utils';
 import { NxJson } from '../shared-interfaces';
 
 jest.mock('fs', () => require('memfs').fs);
@@ -15,65 +13,65 @@ describe('project graph', () => {
   let nxJson: NxJson;
   let tsConfigJson: any;
   let filesJson: any;
-  let files: FileData[];
 
   beforeEach(() => {
     packageJson = {
       name: '@nrwl/workspace-src',
       dependencies: {
-        'happy-nrwl': '1.0.0'
+        express: '4.0.0',
+        'happy-nrwl': '1.0.0',
       },
       devDependencies: {
-        '@nrwl/workspace': '*'
-      }
+        '@nrwl/workspace': '*',
+      },
     };
     workspaceJson = {
       projects: {
         demo: {
           root: 'apps/demo/',
           sourceRoot: 'apps/demo/src',
-          projectType: 'application'
+          projectType: 'application',
         },
         'demo-e2e': {
           root: 'apps/demo-e2e/',
           sourceRoot: 'apps/demo-e2e/src',
-          projectType: 'application'
+          projectType: 'application',
         },
         ui: {
           root: 'libs/ui/',
           sourceRoot: 'libs/ui/src',
-          projectType: 'library'
+          projectType: 'library',
         },
         'shared-util': {
           root: 'libs/shared/util/',
           sourceRoot: 'libs/shared/util/src',
-          projectType: 'library'
+          projectType: 'library',
         },
         'shared-util-data': {
           root: 'libs/shared/util/data',
           sourceRoot: 'libs/shared/util/data/src',
-          projectType: 'library'
+          projectType: 'library',
         },
         'lazy-lib': {
           root: 'libs/lazy-lib',
           sourceRoot: 'libs/lazy-lib',
-          projectType: 'library'
+          projectType: 'library',
         },
         api: {
           root: 'apps/api/',
           sourceRoot: 'apps/api/src',
-          projectType: 'application'
-        }
-      }
+          projectType: 'application',
+        },
+      },
     };
     nxJson = {
       npmScope: 'nrwl',
       implicitDependencies: {
         'package.json': {
           scripts: {
-            deploy: '*'
-          }
-        }
+            deploy: '*',
+          },
+        },
       },
       projects: {
         api: { tags: [] },
@@ -82,8 +80,8 @@ describe('project graph', () => {
         ui: { tags: [] },
         'shared-util': { tags: [] },
         'shared-util-data': { tags: [] },
-        'lazy-lib': { tags: [] }
-      }
+        'lazy-lib': { tags: [] },
+      },
     };
     tsConfigJson = {
       compilerOptions: {
@@ -92,13 +90,13 @@ describe('project graph', () => {
           '@nrwl/shared/util': ['libs/shared/util/src/index.ts'],
           '@nrwl/shared-util-data': ['libs/shared/util/data/src/index.ts'],
           '@nrwl/ui': ['libs/ui/src/index.ts'],
-          '@nrwl/lazy-lib': ['libs/lazy-lib/src/index.ts']
-        }
-      }
+          '@nrwl/lazy-lib': ['libs/lazy-lib/src/index.ts'],
+        },
+      },
     };
     filesJson = {
       './apps/api/src/index.ts': stripIndents`
-        console.log('starting server');
+        require('express');
       `,
       './apps/demo/src/index.ts': stripIndents`
         import * as ui from '@nrwl/ui';
@@ -110,6 +108,7 @@ describe('project graph', () => {
       `,
       './libs/ui/src/index.ts': stripIndents`
         import * as util from '@nrwl/shared/util';
+        import('@nrwl/lazy-lib');
       `,
       './libs/shared/util/src/index.ts': stripIndents`
         import * as happyNrwl from 'happy-nrwl/a/b/c';
@@ -123,13 +122,8 @@ describe('project graph', () => {
       './package.json': JSON.stringify(packageJson),
       './nx.json': JSON.stringify(nxJson),
       './workspace.json': JSON.stringify(workspaceJson),
-      './tsconfig.json': JSON.stringify(tsConfigJson)
+      './tsconfig.json': JSON.stringify(tsConfigJson),
     };
-    files = Object.keys(filesJson).map(f => ({
-      file: f,
-      ext: extname(f),
-      mtime: 1
-    }));
     vol.reset();
     vol.fromJSON(filesJson, '/root');
   });
@@ -145,51 +139,54 @@ describe('project graph', () => {
       'shared-util': { name: 'shared-util', type: 'lib' },
       'shared-util-data': { name: 'shared-util-data', type: 'lib' },
       'lazy-lib': { name: 'lazy-lib', type: 'lib' },
-      'happy-nrwl': { name: 'happy-nrwl', type: 'npm' }
+      'happy-nrwl': { name: 'happy-nrwl', type: 'npm' },
+      express: { name: 'express', type: 'npm' },
     });
     expect(graph.dependencies).toMatchObject({
+      api: [{ type: DependencyType.static, source: 'api', target: 'express' }],
       'demo-e2e': [
-        { type: DependencyType.implicit, source: 'demo-e2e', target: 'demo' }
+        { type: DependencyType.implicit, source: 'demo-e2e', target: 'demo' },
       ],
       demo: [
         { type: DependencyType.static, source: 'demo', target: 'ui' },
         {
           type: DependencyType.static,
           source: 'demo',
-          target: 'shared-util-data'
+          target: 'shared-util-data',
         },
         {
           type: DependencyType.dynamic,
           source: 'demo',
-          target: 'lazy-lib'
+          target: 'lazy-lib',
         },
-        { type: DependencyType.implicit, source: 'demo', target: 'api' }
+        { type: DependencyType.implicit, source: 'demo', target: 'api' },
       ],
       ui: [
-        { type: DependencyType.static, source: 'ui', target: 'shared-util' }
+        { type: DependencyType.static, source: 'ui', target: 'shared-util' },
+        { type: DependencyType.dynamic, source: 'ui', target: 'lazy-lib' },
       ],
       'shared-util': [
         {
           type: DependencyType.static,
           source: 'shared-util',
-          target: 'happy-nrwl'
-        }
-      ]
+          target: 'happy-nrwl',
+        },
+      ],
     });
   });
 
   it('should update the graph if the workspace file changes ', async () => {
     let graph = createProjectGraph();
     expect(graph.nodes).toMatchObject({
-      demo: { name: 'demo', type: 'app' }
+      demo: { name: 'demo', type: 'app' },
     });
     workspaceJson.projects.demo.projectType = 'library';
     //wait a tick to ensure the modified time of workspace.json will be after the creation of the project graph file
-    await new Promise(resolve => setTimeout(resolve, 1));
+    await new Promise((resolve) => setTimeout(resolve, 1));
     fs.writeFileSync('/root/workspace.json', JSON.stringify(workspaceJson));
     graph = createProjectGraph();
     expect(graph.nodes).toMatchObject({
-      demo: { name: 'demo', type: 'lib' }
+      demo: { name: 'demo', type: 'lib' },
     });
   });
 
@@ -205,15 +202,20 @@ describe('project graph', () => {
       {
         type: DependencyType.static,
         source: 'shared-util',
-        target: 'ui'
-      }
+        target: 'ui',
+      },
     ]);
     expect(graph.dependencies['ui']).toEqual([
       {
         type: DependencyType.static,
         source: 'ui',
-        target: 'shared-util'
-      }
+        target: 'shared-util',
+      },
+      {
+        type: DependencyType.dynamic,
+        source: 'ui',
+        target: 'lazy-lib',
+      },
     ]);
   });
 });

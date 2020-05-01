@@ -20,14 +20,13 @@ describe('addProject Rule', () => {
       unitTestRunner: 'jest',
       e2eTestRunner: 'cypress',
       linter: Linter.EsLint,
-      classComponent: false,
       projectName: 'todos',
       appProjectRoot: normalize('/apps/todos'),
       e2eProjectName: 'todos-e2e',
       e2eProjectRoot: normalize('/apps/todos-e2e'),
       parsedTags: [],
       fileName: 'index',
-      styledModule: null
+      styledModule: null,
     };
   });
 
@@ -40,19 +39,12 @@ describe('addProject Rule', () => {
     expect(project.architect.build).toEqual({
       builder: '@nrwl/next:build',
       configurations: {
-        production: {
-          fileReplacements: [
-            {
-              replace: '/apps/todos/environments/environment.ts',
-              with: '/apps/todos/environments/environment.prod.ts'
-            }
-          ]
-        }
+        production: {},
       },
       options: {
         outputPath: 'dist/apps/todos',
-        root: '/apps/todos'
-      }
+        root: '/apps/todos',
+      },
     });
   });
 });

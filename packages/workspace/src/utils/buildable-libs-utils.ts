@@ -1,14 +1,14 @@
 import {
   ProjectGraph,
   ProjectGraphNode,
-  ProjectType
+  ProjectType,
 } from '../core/project-graph';
 import { BuilderContext } from '@angular-devkit/architect';
-import { join, resolve, dirname } from 'path';
+import { join, resolve, dirname, relative } from 'path';
 import {
   fileExists,
   readJsonFile,
-  writeJsonFile
+  writeJsonFile,
 } from '@nrwl/workspace/src/utils/fileutils';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { getOutputsForTargetAndConfiguration } from '@nrwl/workspace/src/tasks-runner/utils';
@@ -40,7 +40,7 @@ export function calculateProjectDependencies(
     projGraph,
     []
   )
-    .map(dep => {
+    .map((dep) => {
       const depNode = projGraph.nodes[dep];
       if (
         depNode.type === ProjectType.lib &&
@@ -57,13 +57,13 @@ export function calculateProjectDependencies(
             context.target.configuration,
             depNode
           ),
-          node: depNode
+          node: depNode,
         };
       } else {
         return null;
       }
     })
-    .filter(x => !!x);
+    .filter((x) => !!x);
   return { target, dependencies };
 }
 
@@ -72,7 +72,7 @@ function recursivelyCollectDependencies(
   projGraph: ProjectGraph,
   acc: string[]
 ) {
-  (projGraph.dependencies[project] || []).forEach(dependency => {
+  (projGraph.dependencies[project] || []).forEach((dependency) => {
     if (acc.indexOf(dependency.target) === -1) {
       acc.push(dependency.target);
       recursivelyCollectDependencies(dependency.target, projGraph, acc);
@@ -81,15 +81,27 @@ function recursivelyCollectDependencies(
   return acc;
 }
 
-export function readTsConfigWithRemappedPaths(
+function readTsConfigWithRemappedPaths(
   tsConfig: string,
+  generatedTsConfigPath: string,
   dependencies: DependentBuildableProjectNode[]
 ) {
-  const parsedTSConfig = ts.readConfigFile(tsConfig, ts.sys.readFile).config;
-  parsedTSConfig.compilerOptions = parsedTSConfig.compilerOptions || {};
-  parsedTSConfig.compilerOptions.paths = readPaths(tsConfig) || {};
-  updatePaths(dependencies, parsedTSConfig.compilerOptions.paths);
-  return parsedTSConfig;
+  const generatedTsConfig: any = { compilerOptions: {} };
+  generatedTsConfig.extends = relative(
+    dirname(generatedTsConfigPath),
+    tsConfig
+  );
+  generatedTsConfig.compilerOptions.paths = computeCompilerOptionsPaths(
+    tsConfig,
+    dependencies
+  );
+  return generatedTsConfig;
+}
+
+export function computeCompilerOptionsPaths(tsConfig, dependencies) {
+  const paths = readPaths(tsConfig) || {};
+  updatePaths(dependencies, paths);
+  return paths;
 }
 
 function readPaths(tsConfig: string) {
@@ -116,11 +128,17 @@ export function createTmpTsConfig(
   projectRoot: string,
   dependencies: DependentBuildableProjectNode[]
 ) {
+  const tmpTsConfigPath = join(
+    workspaceRoot,
+    'tmp',
+    projectRoot,
+    'tsconfig.generated.json'
+  );
   const parsedTSConfig = readTsConfigWithRemappedPaths(
     tsconfigPath,
+    tmpTsConfigPath,
     dependencies
   );
-  const tmpTsConfigPath = join(workspaceRoot, projectRoot, 'tsconfig.nx-tmp');
   process.on('exit', () => {
     cleanupTmpTsConfigFile(tmpTsConfigPath);
   });
@@ -133,7 +151,7 @@ export function createTmpTsConfig(
     process.exit(0);
   });
   writeJsonFile(tmpTsConfigPath, parsedTSConfig);
-  return join(projectRoot, 'tsconfig.nx-tmp');
+  return join(tmpTsConfigPath);
 }
 
 function cleanupTmpTsConfigFile(tmpTsConfigPath) {
@@ -151,8 +169,8 @@ export function checkDependentProjectsHaveBeenBuilt(
   const depLibsToBuildFirst: DependentBuildableProjectNode[] = [];
 
   // verify whether all dependent libraries have been built
-  projectDependencies.forEach(dep => {
-    const paths = dep.outputs.map(p =>
+  projectDependencies.forEach((dep) => {
+    const paths = dep.outputs.map((p) =>
       join(context.workspaceRoot, p, 'package.json')
     );
 
@@ -166,7 +184,7 @@ export function checkDependentProjectsHaveBeenBuilt(
       Some of the project ${
         context.target.project
       }'s dependencies have not been built yet. Please build these libraries before:
-      ${depLibsToBuildFirst.map(x => ` - ${x.node.name}`).join('\n')}
+      ${depLibsToBuildFirst.map((x) => ` - ${x.node.name}`).join('\n')}
 
       Try: nx run ${context.target.project}:${context.target.target} --with-deps
     `);
@@ -181,7 +199,7 @@ export function updatePaths(
   dependencies: DependentBuildableProjectNode[],
   paths: { [k: string]: string[] }
 ) {
-  dependencies.forEach(dep => {
+  dependencies.forEach((dep) => {
     if (dep.outputs && dep.outputs.length > 0) {
       paths[dep.name] = dep.outputs;
     }
@@ -215,7 +233,7 @@ export function updateBuildableProjectPackageJsonDependencies(
   packageJson.dependencies = packageJson.dependencies || {};
 
   let updatePackageJson = false;
-  dependencies.forEach(entry => {
+  dependencies.forEach((entry) => {
     if (
       !hasDependency(packageJson, 'dependencies', entry.name) &&
       !hasDependency(packageJson, 'devDependencies', entry.name) &&

@@ -1,4 +1,4 @@
-import { join, Path } from '@angular-devkit/core';
+import { join, normalize, Path } from '@angular-devkit/core';
 import * as ts from 'typescript';
 import {
   apply,
@@ -11,20 +11,20 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
-import { formatFiles, getWorkspace, names } from '@nrwl/workspace';
+import { formatFiles, getWorkspace, names, toFileName } from '@nrwl/workspace';
 import {
   addDepsToPackageJson,
   addGlobal,
   getProjectConfig,
-  insert
+  insert,
 } from '@nrwl/workspace/src/utils/ast-utils';
 import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
 import {
   typesReactRouterDomVersion,
-  reactRouterDomVersion
+  reactRouterDomVersion,
 } from '../../utils/versions';
 import { assertValidStyle } from '../../utils/assertion';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
@@ -37,9 +37,9 @@ interface NormalizedSchema extends Schema {
   hasStyles: boolean;
 }
 
-export default function(schema: Schema): Rule {
-  return (host: Tree, context: SchematicContext) => {
-    const options = normalizeOptions(host, schema, context);
+export default function (schema: Schema): Rule {
+  return async (host: Tree, context: SchematicContext) => {
+    const options = await normalizeOptions(host, schema, context);
     return chain([
       createComponentFiles(options),
       addStyledModuleDependencies(options),
@@ -50,36 +50,27 @@ export default function(schema: Schema): Rule {
             { '@types/react-router-dom': typesReactRouterDomVersion }
           )
         : noop(),
-      formatFiles({ skipFormat: false })
+      formatFiles({ skipFormat: false }),
     ]);
   };
 }
 
 function createComponentFiles(options: NormalizedSchema): Rule {
-  return async (host: Tree, context: SchematicContext) => {
-    const workspace = await getWorkspace(host);
-    const directory = join(
-      options.projectSourceRoot,
-      workspace.projects.get(options.project).extensions.projectType ===
-        'application'
-        ? 'app'
-        : 'lib'
-    );
-    return mergeWith(
-      apply(url(`./files`), [
-        template({
-          ...options,
-          tmpl: ''
-        }),
-        options.skipTests ? filter(file => !/.*spec.tsx/.test(file)) : noop(),
-        options.styledModule || !options.hasStyles
-          ? filter(file => !file.endsWith(`.${options.style}`))
-          : noop(),
-        move(directory),
-        options.js ? toJS() : noop()
-      ])
-    );
-  };
+  const componentDir = join(options.projectSourceRoot, options.directory);
+  return mergeWith(
+    apply(url(`./files`), [
+      template({
+        ...options,
+        tmpl: '',
+      }),
+      options.skipTests ? filter((file) => !/.*spec.tsx/.test(file)) : noop(),
+      options.styledModule || !options.hasStyles
+        ? filter((file) => !file.endsWith(`.${options.style}`))
+        : noop(),
+      move(componentDir),
+      options.js ? toJS() : noop(),
+    ])
+  );
 }
 
 function addStyledModuleDependencies(options: NormalizedSchema): Rule {
@@ -120,9 +111,7 @@ function addExportsToBarrel(options: NormalizedSchema): Rule {
               addGlobal(
                 indexSourceFile,
                 indexFilePath,
-                options.directory
-                  ? `export * from './lib/${options.directory}/${options.fileName}';`
-                  : `export * from './lib/${options.fileName}';`
+                `export * from './${options.directory}/${options.fileName}';`
               )
             );
           }
@@ -133,11 +122,11 @@ function addExportsToBarrel(options: NormalizedSchema): Rule {
   };
 }
 
-function normalizeOptions(
+async function normalizeOptions(
   host: Tree,
   options: Schema,
   context: SchematicContext
-): NormalizedSchema {
+): Promise<NormalizedSchema> {
   assertValidOptions(options);
 
   const { className, fileName } = names(options.name);
@@ -146,7 +135,9 @@ function normalizeOptions(
     host,
     options.project
   );
-  const directory = options.flat ? '' : options.directory || fileName;
+
+  const directory = await getDirectory(host, options);
+
   const styledModule = /^(css|scss|less|styl|none)$/.test(options.style)
     ? null
     : options.style;
@@ -164,18 +155,34 @@ function normalizeOptions(
     hasStyles: options.style !== 'none',
     className,
     fileName: componentFileName,
-    projectSourceRoot
+    projectSourceRoot,
   };
+}
+
+async function getDirectory(host: Tree, options: Schema) {
+  const fileName = toFileName(options.name);
+  const workspace = await getWorkspace(host);
+  let baseDir: string;
+  if (options.directory) {
+    baseDir = options.directory;
+  } else {
+    baseDir =
+      workspace.projects.get(options.project).extensions.projectType ===
+      'application'
+        ? 'app'
+        : 'lib';
+  }
+  return options.flat ? baseDir : join(normalize(baseDir), fileName);
 }
 
 function assertValidOptions(options: Schema) {
   assertValidStyle(options.style);
 
   const slashes = ['/', '\\'];
-  slashes.forEach(s => {
+  slashes.forEach((s) => {
     if (options.name.indexOf(s) !== -1) {
       const [name, ...rest] = options.name.split(s).reverse();
-      let suggestion = rest.map(x => x.toLowerCase()).join(s);
+      let suggestion = rest.map((x) => x.toLowerCase()).join(s);
       if (options.directory) {
         suggestion = `${options.directory}${s}${suggestion}`;
       }

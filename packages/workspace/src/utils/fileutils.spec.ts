@@ -21,7 +21,7 @@ describe('fileutils', () => {
         './apps/demo/src/index.ts': 'console.log("hello");',
         './apps/demo/tmp.txt': '...',
         './apps/demo/tmp.js': 'console.log("tmp")',
-        './workspace.json': '{}'
+        './workspace.json': '{}',
       },
       '/root'
     );

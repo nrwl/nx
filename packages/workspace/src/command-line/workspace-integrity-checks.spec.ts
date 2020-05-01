@@ -17,11 +17,11 @@ describe('WorkspaceIntegrityChecks', () => {
                 tags: [],
                 implicitDependencies: [],
                 architect: {},
-                files: [createFile('libs/project1/src/index.ts')]
-              }
-            }
+                files: [createFile('libs/project1/src/index.ts')],
+              },
+            },
           },
-          dependencies: {}
+          dependencies: {},
         },
         ['libs/project1/src/index.ts']
       );
@@ -40,8 +40,8 @@ describe('WorkspaceIntegrityChecks', () => {
                 tags: [],
                 implicitDependencies: [],
                 architect: {},
-                files: []
-              }
+                files: [],
+              },
             },
             project2: {
               name: 'project2',
@@ -51,11 +51,11 @@ describe('WorkspaceIntegrityChecks', () => {
                 tags: [],
                 implicitDependencies: [],
                 architect: {},
-                files: [createFile('libs/project2/src/index.ts')]
-              }
-            }
+                files: [createFile('libs/project2/src/index.ts')],
+              },
+            },
           },
-          dependencies: {}
+          dependencies: {},
         },
         ['libs/project2/src/index.ts']
       );
@@ -66,10 +66,10 @@ describe('WorkspaceIntegrityChecks', () => {
           bodyLines: [
             `${chalk.grey(
               '-'
-            )} Cannot find project 'project1' in 'libs/project1'`
+            )} Cannot find project 'project1' in 'libs/project1'`,
           ],
-          title: 'The angular.json file is out of sync'
-        }
+          title: 'The workspace.json file is out of sync',
+        },
       ]);
     });
 
@@ -85,11 +85,11 @@ describe('WorkspaceIntegrityChecks', () => {
                 tags: [],
                 implicitDependencies: [],
                 architect: {},
-                files: [createFile('libs/project1/src/index.ts')]
-              }
-            }
+                files: [createFile('libs/project1/src/index.ts')],
+              },
+            },
           },
-          dependencies: {}
+          dependencies: {},
         },
         ['libs/project1/src/index.ts', 'libs/project2/src/index.ts']
       );
@@ -98,8 +98,8 @@ describe('WorkspaceIntegrityChecks', () => {
       expect(errors).toEqual([
         {
           bodyLines: [`${chalk.grey('-')} libs/project2/src/index.ts`],
-          title: 'The following file(s) do not belong to any projects:'
-        }
+          title: 'The following file(s) do not belong to any projects:',
+        },
       ]);
     });
   });

@@ -6,7 +6,7 @@ import {
   createProjectGraph,
   onlyWorkspaceProjects,
   ProjectGraph,
-  ProjectGraphNode
+  ProjectGraphNode,
 } from '../core/project-graph';
 import { output } from '../utils/output';
 import { join, normalize, parse } from 'path';
@@ -26,7 +26,7 @@ const mimeType = {
   '.pdf': 'application/pdf',
   '.doc': 'application/msword',
   '.eot': 'appliaction/vnd.ms-fontobject',
-  '.ttf': 'aplication/font-sfnt'
+  '.ttf': 'aplication/font-sfnt',
 };
 
 export function generateGraph(
@@ -48,7 +48,7 @@ export function generateGraph(
         {
           graph,
           affectedProjects,
-          criticalPath: affectedProjects
+          criticalPath: affectedProjects,
         },
         null,
         2
@@ -98,7 +98,7 @@ function startServer(
     );
     let pathname = join(__dirname, '../core/dep-graph/', sanitizePath);
 
-    exists(pathname, function(exist) {
+    exists(pathname, function (exist) {
       if (!exist) {
         // if the file is not found, return 404
         res.statusCode = 404;
@@ -115,7 +115,7 @@ function startServer(
       }
 
       // read file from file system
-      readFile(pathname, function(err, data) {
+      readFile(pathname, function (err, data) {
         if (err) {
           res.statusCode = 500;
           res.end(`Error getting the file: ${err}.`);
@@ -133,11 +133,11 @@ function startServer(
   app.listen(4211, host);
 
   output.note({
-    title: `Dep graph started at http://${host}:4211`
+    title: `Dep graph started at http://${host}:4211`,
   });
 
   opn(`http://${host}:4211`, {
-    wait: false
+    wait: false,
   });
 }
 
@@ -146,11 +146,12 @@ function filterProjects(
   filter: string[],
   exclude: string[]
 ) {
-  const filteredProjects = Object.values(graph.nodes).filter(p => {
+  const filteredProjects = Object.values(graph.nodes).filter((p) => {
     const filtered =
       filter && filter.length > 0
         ? filter.find(
-            f => hasPath(graph, f, p.name, []) || hasPath(graph, p.name, f, [])
+            (f) =>
+              hasPath(graph, f, p.name, []) || hasPath(graph, p.name, f, [])
           )
         : true;
     return !exclude

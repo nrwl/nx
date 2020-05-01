@@ -7,7 +7,7 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import { strings } from '@angular-devkit/core';
@@ -16,14 +16,14 @@ import {
   prettierVersion,
   typescriptVersion,
   eslintVersion,
-  nxVersion
+  nxVersion,
 } from '../../utils/versions';
 
 export const DEFAULT_NRWL_PRETTIER_CONFIG = {
-  singleQuote: true
+  singleQuote: true,
 };
 
-export default function(options: Schema): Rule {
+export default function (options: Schema): Rule {
   if (!options.name) {
     throw new Error(`Invalid options, "name" is required.`);
   }
@@ -50,8 +50,8 @@ export default function(options: Schema): Rule {
           DEFAULT_NRWL_PRETTIER_CONFIG,
           null,
           2
-        )
-      })
+        ),
+      }),
     ]);
     return chain([branchAndMerge(chain([mergeWith(templateSource)]))])(
       host,

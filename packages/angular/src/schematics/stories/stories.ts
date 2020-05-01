@@ -4,7 +4,7 @@ import {
   schematic,
   SchematicContext,
   SchematicsException,
-  Tree
+  Tree,
 } from '@angular-devkit/schematics';
 import { getProjectConfig } from '@nrwl/workspace';
 import { SyntaxKind } from 'typescript';
@@ -17,7 +17,7 @@ export interface StorybookStoriesSchema {
   generateCypressSpecs: boolean;
 }
 
-export default function(schema: StorybookStoriesSchema): Rule {
+export default function (schema: StorybookStoriesSchema): Rule {
   return chain([createAllStories(schema.name, schema.generateCypressSpecs)]);
 }
 
@@ -30,14 +30,14 @@ export function createAllStories(
 
     const libPath = getProjectConfig(tree, projectName).sourceRoot + '/lib';
     let moduleFilePaths = [] as string[];
-    tree.getDir(libPath).visit(filePath => {
+    tree.getDir(libPath).visit((filePath) => {
       if (!filePath.endsWith('.module.ts')) {
         return;
       }
       moduleFilePaths.push(filePath);
     });
     return chain(
-      moduleFilePaths.map(filePath => {
+      moduleFilePaths.map((filePath) => {
         const file = getTsSourceFile(tree, filePath);
 
         const ngModuleDecorators = getDecoratorMetadata(
@@ -51,12 +51,12 @@ export function createAllStories(
           );
         }
         const ngModuleDecorator = ngModuleDecorators[0];
-        const syntaxList = ngModuleDecorator.getChildren().find(node => {
+        const syntaxList = ngModuleDecorator.getChildren().find((node) => {
           return node.kind === SyntaxKind.SyntaxList;
         });
         const declarationsPropertyAssignment = syntaxList
           .getChildren()
-          .find(node => {
+          .find((node) => {
             return (
               node.kind === SyntaxKind.PropertyAssignment &&
               node.getChildren()[0].getText() === 'declarations'
@@ -69,38 +69,38 @@ export function createAllStories(
         }
         const declaredComponents = declarationsPropertyAssignment
           .getChildren()
-          .find(node => node.kind === SyntaxKind.ArrayLiteralExpression)
+          .find((node) => node.kind === SyntaxKind.ArrayLiteralExpression)
           .getChildren()
-          .find(node => node.kind === SyntaxKind.SyntaxList)
+          .find((node) => node.kind === SyntaxKind.SyntaxList)
           .getChildren()
-          .filter(node => node.kind === SyntaxKind.Identifier)
-          .map(node => node.getText())
-          .filter(name => name.endsWith('Component'));
+          .filter((node) => node.kind === SyntaxKind.Identifier)
+          .map((node) => node.getText())
+          .filter((name) => name.endsWith('Component'));
 
         const imports = file.statements.filter(
-          statement => statement.kind === SyntaxKind.ImportDeclaration
+          (statement) => statement.kind === SyntaxKind.ImportDeclaration
         );
-        const componentInfo = declaredComponents.map(componentName => {
+        const componentInfo = declaredComponents.map((componentName) => {
           try {
-            const importStatement = imports.find(statement => {
+            const importStatement = imports.find((statement) => {
               const namedImports = statement
                 .getChildren()
-                .find(node => node.kind === SyntaxKind.ImportClause)
+                .find((node) => node.kind === SyntaxKind.ImportClause)
                 .getChildren()
-                .find(node => node.kind === SyntaxKind.NamedImports);
+                .find((node) => node.kind === SyntaxKind.NamedImports);
               if (namedImports === undefined) return false;
 
               const importedIdentifiers = namedImports
                 .getChildren()
-                .find(node => node.kind === SyntaxKind.SyntaxList)
+                .find((node) => node.kind === SyntaxKind.SyntaxList)
                 .getChildren()
-                .filter(node => node.kind === SyntaxKind.ImportSpecifier)
-                .map(node => node.getText());
+                .filter((node) => node.kind === SyntaxKind.ImportSpecifier)
+                .map((node) => node.getText());
               return importedIdentifiers.includes(componentName);
             });
             const fullPath = importStatement
               .getChildren()
-              .find(node => node.kind === SyntaxKind.StringLiteral)
+              .find((node) => node.kind === SyntaxKind.StringLiteral)
               .getText()
               .slice(1, -1);
             const path = fullPath.slice(0, fullPath.lastIndexOf('/'));
@@ -119,14 +119,14 @@ export function createAllStories(
         const modulePath = filePath.substr(0, filePath.lastIndexOf('/'));
         return chain(
           componentInfo
-            .filter(info => info !== undefined)
-            .map(info =>
+            .filter((info) => info !== undefined)
+            .map((info) =>
               chain([
                 schematic<CreateComponentStoriesFileSchema>('component-story', {
                   libPath: modulePath,
                   componentName: info.name,
                   componentPath: info.path,
-                  componentFileName: info.componentFileName
+                  componentFileName: info.componentFileName,
                 }),
                 generateCypressSpecs
                   ? schematic<CreateComponentSpecFileSchema>(
@@ -136,10 +136,10 @@ export function createAllStories(
                         libPath: modulePath,
                         componentName: info.name,
                         componentPath: info.path,
-                        componentFileName: info.componentFileName
+                        componentFileName: info.componentFileName,
                       }
                     )
-                  : () => {}
+                  : () => {},
               ])
             )
         );

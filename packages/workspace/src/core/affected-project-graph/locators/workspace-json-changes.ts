@@ -1,7 +1,7 @@
 import {
   isWholeFileChange,
   WholeFileChange,
-  workspaceFileName
+  workspaceFileName,
 } from '../../file-utils';
 import { DiffType, isJsonChange, JsonChange } from '../../../utils/json-diff';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
@@ -10,7 +10,7 @@ export const getTouchedProjectsInWorkspaceJson: TouchedProjectLocator<
   WholeFileChange | JsonChange
 > = (touchedFiles, workspaceJson): string[] => {
   const workspaceChange = touchedFiles.find(
-    change => change.file === workspaceFileName()
+    (change) => change.file === workspaceFileName()
   );
   if (!workspaceChange) {
     return [];
@@ -19,7 +19,7 @@ export const getTouchedProjectsInWorkspaceJson: TouchedProjectLocator<
   const changes = workspaceChange.getChanges();
 
   if (
-    changes.some(change => {
+    changes.some((change) => {
       if (isJsonChange(change)) {
         return change.path[0] !== 'projects';
       }

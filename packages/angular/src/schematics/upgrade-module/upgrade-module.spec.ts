@@ -17,7 +17,7 @@ describe('upgrade-module', () => {
       'upgrade-module',
       {
         name: 'legacy',
-        project: 'myapp'
+        project: 'myapp',
       },
       appTree
     );
@@ -39,8 +39,8 @@ describe('upgrade-module', () => {
       `/package.json`,
       JSON.stringify({
         dependencies: {
-          '@angular/core': '4.4.4'
-        }
+          '@angular/core': '4.4.4',
+        },
       })
     );
 
@@ -48,7 +48,7 @@ describe('upgrade-module', () => {
       'upgrade-module',
       {
         name: 'legacy',
-        project: 'myapp'
+        project: 'myapp',
       },
       appTree
     );
@@ -63,8 +63,8 @@ describe('upgrade-module', () => {
       `/package.json`,
       JSON.stringify({
         dependencies: {
-          '@angular/core': '4.4.4'
-        }
+          '@angular/core': '4.4.4',
+        },
       })
     );
 
@@ -73,7 +73,7 @@ describe('upgrade-module', () => {
       {
         name: 'legacy',
         skipPackageJson: true,
-        project: 'myapp'
+        project: 'myapp',
       },
       appTree
     );
@@ -88,7 +88,7 @@ describe('upgrade-module', () => {
       {
         name: 'legacy',
         router: true,
-        project: 'myapp'
+        project: 'myapp',
       },
       appTree
     );
@@ -103,7 +103,7 @@ describe('upgrade-module', () => {
       {
         name: 'legacy',
         angularJsImport: 'legacy-app',
-        project: 'myapp'
+        project: 'myapp',
       },
       appTree
     );

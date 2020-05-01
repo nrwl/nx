@@ -14,7 +14,7 @@ import { createBabelConfig } from './babel-config';
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
-  /could not find any license/i
+  /could not find any license/i,
 ];
 
 export function getBaseWebpackPartial(
@@ -36,14 +36,14 @@ export function getBaseWebpackPartial(
 
   const webpackConfig: Configuration = {
     entry: {
-      main: [options.main]
+      main: [options.main],
     },
     devtool: options.sourceMap ? 'source-map' : false,
     mode,
     output: {
       path: options.outputPath,
       filename,
-      chunkFilename
+      chunkFilename,
     },
     module: {
       rules: [
@@ -54,10 +54,10 @@ export function getBaseWebpackPartial(
           options: {
             ...createBabelConfig(dirname(options.main), esm, options.verbose),
             cacheDirectory: true,
-            cacheCompression: false
-          }
-        }
-      ]
+            cacheCompression: false,
+          },
+        },
+      ],
     },
     resolve: {
       extensions,
@@ -66,16 +66,16 @@ export function getBaseWebpackPartial(
         new TsConfigPathsPlugin({
           configFile: options.tsConfig,
           extensions,
-          mainFields
-        })
+          mainFields,
+        }),
       ],
       // Search closest node_modules first, and then fallback to to default node module resolution scheme.
       // This ensures we are pulling the correct versions of dependencies, such as `core-js`.
       modules: [resolve(__dirname, '..', '..', 'node_modules'), 'node_modules'],
-      mainFields
+      mainFields,
     },
     performance: {
-      hints: false
+      hints: false,
     },
     plugins: [
       new ForkTsCheckerWebpackPlugin({
@@ -84,21 +84,21 @@ export function getBaseWebpackPartial(
           options.memoryLimit ||
           ForkTsCheckerWebpackPlugin.DEFAULT_MEMORY_LIMIT,
         workers: options.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE,
-        useTypescriptIncrementalApi: false
+        useTypescriptIncrementalApi: false,
       }),
-      new webpack.DefinePlugin(getClientEnvironment(mode).stringified)
+      new webpack.DefinePlugin(getClientEnvironment(mode).stringified),
     ],
     watch: options.watch,
     watchOptions: {
-      poll: options.poll
+      poll: options.poll,
     },
-    stats: getStatsConfig(options)
+    stats: getStatsConfig(options),
   };
 
   if (isScriptOptimizeOn) {
     webpackConfig.optimization = {
-      minimizer: [createTerserPlugin(esm)],
-      runtimeChunk: true
+      minimizer: [createTerserPlugin(esm, !!options.sourceMap)],
+      runtimeChunk: true,
     };
   }
 
@@ -109,13 +109,15 @@ export function getBaseWebpackPartial(
   }
 
   if (options.extractLicenses) {
-    extraPlugins.push((new LicenseWebpackPlugin({
-      stats: {
-        errors: false
-      },
-      perChunkOutput: false,
-      outputFilename: `3rdpartylicenses.txt`
-    }) as unknown) as webpack.Plugin);
+    extraPlugins.push(
+      (new LicenseWebpackPlugin({
+        stats: {
+          errors: false,
+        },
+        perChunkOutput: false,
+        outputFilename: `3rdpartylicenses.txt`,
+      }) as unknown) as webpack.Plugin
+    );
   }
 
   // process asset entries
@@ -128,13 +130,13 @@ export function getBaseWebpackPartial(
         ignore: asset.ignore,
         from: {
           glob: asset.glob,
-          dot: true
-        }
+          dot: true,
+        },
       };
     });
 
     const copyWebpackPluginOptions = {
-      ignore: ['.gitkeep', '**/.DS_Store', '**/Thumbs.db']
+      ignore: ['.gitkeep', '**/.DS_Store', '**/Thumbs.db'],
     };
 
     const copyWebpackPluginInstance = new CopyWebpackPlugin(
@@ -147,7 +149,7 @@ export function getBaseWebpackPartial(
   if (options.showCircularDependencies) {
     extraPlugins.push(
       new CircularDependencyPlugin({
-        exclude: /[\\\/]node_modules[\\\/]/
+        exclude: /[\\\/]node_modules[\\\/]/,
       })
     );
   }
@@ -161,25 +163,26 @@ function getAliases(options: BuildBuilderOptions): { [key: string]: string } {
   return options.fileReplacements.reduce(
     (aliases, replacement) => ({
       ...aliases,
-      [replacement.replace]: replacement.with
+      [replacement.replace]: replacement.with,
     }),
     {}
   );
 }
 
-export function createTerserPlugin(esm: boolean) {
+export function createTerserPlugin(esm: boolean, sourceMap: boolean) {
   return new TerserWebpackPlugin({
     parallel: true,
     cache: true,
+    sourceMap,
     terserOptions: {
       ecma: esm ? 6 : 5,
       safari10: true,
       output: {
         ascii_only: true,
         comments: false,
-        webkit: true
-      }
-    }
+        webkit: true,
+      },
+    },
   });
 }
 
@@ -203,7 +206,7 @@ function getStatsConfig(options: BuildBuilderOptions): Stats.ToStringOptions {
     errorDetails: !!options.verbose,
     moduleTrace: !!options.verbose,
     usedExports: !!options.verbose,
-    warningsFilter: IGNORED_WEBPACK_WARNINGS
+    warningsFilter: IGNORED_WEBPACK_WARNINGS,
   };
 }
 
@@ -215,7 +218,7 @@ function getClientEnvironment(mode) {
   const NX_APP = /^NX_/i;
 
   const raw = Object.keys(process.env)
-    .filter(key => NX_APP.test(key))
+    .filter((key) => NX_APP.test(key))
     .reduce(
       (env, key) => {
         env[key] = process.env[key];
@@ -223,7 +226,7 @@ function getClientEnvironment(mode) {
       },
       {
         // Useful for determining whether we’re running in production mode.
-        NODE_ENV: process.env.NODE_ENV || mode
+        NODE_ENV: process.env.NODE_ENV || mode,
       }
     );
 
@@ -232,7 +235,7 @@ function getClientEnvironment(mode) {
     'process.env': Object.keys(raw).reduce((env, key) => {
       env[key] = JSON.stringify(raw[key]);
       return env;
-    }, {})
+    }, {}),
   };
 
   return { stringified };

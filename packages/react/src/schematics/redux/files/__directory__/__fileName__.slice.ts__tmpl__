@@ -1,12 +1,12 @@
-import { createSlice, createSelector, Action, PayloadAction } from '@reduxjs/toolkit';
-import { ThunkAction } from 'redux-thunk';
+import {
+  createAsyncThunk,
+  createEntityAdapter,
+  createSlice,
+  EntityState,
+  PayloadAction
+} from '@reduxjs/toolkit';
 
 export const <%= constantName %>_FEATURE_KEY = '<%= propertyName %>';
-
-/*
- * Change this from `any` if there is a more specific error type.
- */
-export type <%= className %>Error = any;
 
 /*
  * Update these interfaces according to your requirements.
@@ -15,32 +15,54 @@ export interface <%= className %>Entity {
   id: number;
 }
 
-export interface <%= className %>State {
-  entities: <%= className %>Entity[];
-  loaded: boolean;
-  error: <%= className %>Error;
+export interface <%= className %>State extends EntityState<<%= className %>Entity> {
+  loadingStatus: 'not loaded' | 'loading' | 'loaded' | 'error';
+  error: string;
 }
 
-export const initial<%= className %>State: <%= className %>State = {
-  entities: [],
-  loaded: false,
+export const <%= propertyName %>Adapter = createEntityAdapter<<%= className %>Entity>();
+
+/**
+ * Export an effect using createAsyncThunk from
+ * the Redux Toolkit: https://redux-toolkit.js.org/api/createAsyncThunk
+ */
+export const fetch<%= className %>s = createAsyncThunk(
+  '<%= propertyName %>/fetchStatus',
+  async (_, thunkAPI) => {
+    /**
+     * Replace this with your custom fetch call.
+     * For example, `return myApi.get<%= className %>s()`;
+     * Right now we just return an empty array.
+     */
+    return Promise.resolve([]);
+  }
+);
+
+export const initial<%= className %>State: <%= className %>State = <%= propertyName %>Adapter.getInitialState({
+  loadingStatus: 'not loaded',
   error: null
-};
+});
 
 export const <%= propertyName %>Slice = createSlice({
   name: <%= constantName %>_FEATURE_KEY,
-  initialState: initial<%= className %>State as <%= className %>State,
+  initialState: initial<%= className %>State,
   reducers: {
-    get<%= className %>Start: (state, action: PayloadAction<undefined>) => {
-      state.loaded = false;
-    },
-    get<%= className %>Success: (state, action: PayloadAction<<%= className %>Entity[]>) => {
-      state.loaded = true;
-      state.entities = action.payload;
-    },
-    get<%= className %>Failure: (state, action: PayloadAction<<%= className %>Error>) => {
-      state.error = action.payload;
-    }
+    add<%= className %>: <%= propertyName %>Adapter.addOne,
+    remove<%= className %>: <%= propertyName %>Adapter.removeOne
+    // ...
+  },
+  extraReducers: builder => {
+    builder.addCase(fetch<%= className %>s.pending, (state: <%= className %>State) => {
+      state.loadingStatus = 'loading';
+    });
+    builder.addCase(fetch<%= className %>s.fulfilled, (state: <%= className %>State, action: PayloadAction<<%= className %>Entity[]>) => {
+      <%= propertyName %>Adapter.addMany(state, action.payload);
+      state.loadingStatus = 'loaded';
+    });
+    builder.addCase(fetch<%= className %>s.rejected, (state: <%= className %>State, action) => {
+      state.loadingStatus = 'error';
+      state.error = action.error.message;
+    });
   }
 });
 
@@ -55,16 +77,15 @@ export const <%= propertyName %>Reducer = <%= propertyName %>Slice.reducer;
  * e.g.
  * ```
  * const dispatch = useDispatch();
- * dispatch(get<%= className %>Success([{ id: 1 }]));
+ * dispatch(<%= propertyName %>Actions.add<%= className %>([{ id: 1 }]));
  * ```
  *
  * See: https://react-redux.js.org/next/api/hooks#usedispatch
  */
-export const {
-  get<%= className %>Start,
-  get<%= className %>Success,
-  get<%= className %>Failure
-} = <%= propertyName %>Slice.actions;
+export const <%= propertyName %>Actions = {
+  ...<%= propertyName %>Slice.actions,
+  fetch<%= className %>s
+};
 
 /*
  * Export selectors to query state. For use with the `useSelector` hook.
@@ -76,42 +97,7 @@ export const {
  *
  * See: https://react-redux.js.org/next/api/hooks#useselector
  */
-export const get<%= className %>State = (rootState: any): <%= className %>State =>
-  rootState[<%= constantName %>_FEATURE_KEY];
-
-export const select<%= className %>Entities = createSelector(
-  get<%= className %>State,
-  s => s.entities
-);
-
-export const select<%= className %>Loaded = createSelector(
-  get<%= className %>State,
-  s => s.loaded
-);
-
-export const select<%= className %>Error = createSelector(
-  get<%= className %>State,
-  s => s.error
-);
-
-/*
- * Export default effect, handled by redux-thunk.
- * You can replace this with your own effects solution.
- */
-export const fetch<%= className %> = (): ThunkAction<
-  void,
-  any,
-  null,
-  Action<string>
-> => async dispatch => {
-  try {
-    dispatch(get<%= className %>Start());
-    // Replace this with your custom fetch call.
-    // For example, `const data = await myApi.get<%= className %>`;
-    // Right now we just load an empty array.
-    const data = [];
-    dispatch(get<%= className %>Success(data));
-  } catch (err) {
-    dispatch(get<%= className %>Failure(err));
-  }
+export const <%= propertyName %>Selectors = {
+  get<%= className %>State: (rootState: unknown): <%= className %>State => rootState[<%= constantName %>_FEATURE_KEY],
+  ...<%= propertyName %>Adapter.getSelectors()
 };

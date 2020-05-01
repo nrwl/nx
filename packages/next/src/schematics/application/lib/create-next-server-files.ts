@@ -15,7 +15,7 @@ export function createNextServerFiles(options: NormalizedSchema) {
 
       /**
        * @typedef {import('http').Server} Server
-       * @typedef {import('next/dist/server/next-dev-server').default} DevServer
+       * @typedef {import('next/dist/server/next-server').default} DevServer
        */
 
       const express = require('express');

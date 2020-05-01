@@ -7,7 +7,7 @@ describe('normalizeNxJson', () => {
       projects: {
         demo: { tags: [] },
         ui: { tags: [] },
-        util: { tags: [] }
+        util: { tags: [] },
       },
       implicitDependencies: {
         'package.json': '*',
@@ -16,12 +16,12 @@ describe('normalizeNxJson', () => {
             b: {
               c: ['demo'],
               d: {
-                e: '*'
-              }
-            }
-          }
-        }
-      }
+                e: '*',
+              },
+            },
+          },
+        },
+      },
     });
 
     expect(result.implicitDependencies).toEqual({
@@ -31,11 +31,11 @@ describe('normalizeNxJson', () => {
           b: {
             c: ['demo'],
             d: {
-              e: ['demo', 'ui', 'util']
-            }
-          }
-        }
-      }
+              e: ['demo', 'ui', 'util'],
+            },
+          },
+        },
+      },
     });
   });
 });

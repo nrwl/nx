@@ -1,23 +1,23 @@
 import { chain, noop } from '@angular-devkit/schematics';
 import { addDepsToPackageJson, addPackageWithInit } from '@nrwl/workspace';
-import {
-  nextVersion,
-  zeitNextCss,
-  zeitNextLess,
-  zeitNextSass,
-  zeitNextStylus
-} from '../../utils/versions';
+import { nextVersion } from '../../utils/versions';
 import { Schema } from './schema';
 import { setDefaultCollection } from '@nrwl/workspace/src/utils/rules/workspace';
+import {
+  reactDomVersion,
+  reactVersion,
+} from '../../../../react/src/utils/versions';
 
 const updateDependencies = addDepsToPackageJson(
   {
-    next: nextVersion
+    next: nextVersion,
+    react: reactVersion,
+    'react-dom': reactDomVersion,
   },
   {}
 );
 
-export default function(schema: Schema) {
+export default function (schema: Schema) {
   return chain([
     setDefaultCollection('@nrwl/next'),
     schema.unitTestRunner === 'jest'
@@ -28,6 +28,6 @@ export default function(schema: Schema) {
       : noop(),
     addPackageWithInit('@nrwl/web', schema),
     addPackageWithInit('@nrwl/react', schema),
-    updateDependencies
+    updateDependencies,
   ]);
 }

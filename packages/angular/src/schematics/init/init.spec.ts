@@ -36,7 +36,7 @@ describe('init', () => {
     const tree = await runSchematic(
       'init',
       {
-        unitTestRunner: 'karma'
+        unitTestRunner: 'karma',
       },
       appTree
     );
@@ -54,7 +54,7 @@ describe('init', () => {
         const tree = await runSchematic(
           'init',
           {
-            unitTestRunner: 'karma'
+            unitTestRunner: 'karma',
           },
           appTree
         );
@@ -75,7 +75,7 @@ describe('init', () => {
         const tree = await runSchematic(
           'init',
           {
-            unitTestRunner: 'karma'
+            unitTestRunner: 'karma',
           },
           appTree
         );
@@ -86,7 +86,7 @@ describe('init', () => {
         const tree = await runSchematic(
           'init',
           {
-            unitTestRunner: 'karma'
+            unitTestRunner: 'karma',
           },
           appTree
         );
@@ -105,7 +105,7 @@ describe('init', () => {
         const tree = await runSchematic(
           'init',
           {
-            unitTestRunner: 'jest'
+            unitTestRunner: 'jest',
           },
           appTree
         );
@@ -119,7 +119,7 @@ describe('init', () => {
         const tree = await runSchematic(
           'init',
           {
-            unitTestRunner: 'jest'
+            unitTestRunner: 'jest',
           },
           appTree
         );
@@ -130,7 +130,7 @@ describe('init', () => {
         const tree = await runSchematic(
           'init',
           {
-            unitTestRunner: 'jest'
+            unitTestRunner: 'jest',
           },
           appTree
         );
@@ -152,7 +152,7 @@ describe('init', () => {
           'init',
           {
             unitTestRunner: 'none',
-            e2eTestRunner: 'cypress'
+            e2eTestRunner: 'cypress',
           },
           appTree
         );
@@ -165,7 +165,7 @@ describe('init', () => {
         const tree = await runSchematic(
           'init',
           {
-            e2eTestRunner: 'cypress'
+            e2eTestRunner: 'cypress',
           },
           appTree
         );
@@ -181,7 +181,7 @@ describe('init', () => {
         const tree = await runSchematic(
           'init',
           {
-            e2eTestRunner: 'protractor'
+            e2eTestRunner: 'protractor',
           },
           appTree
         );
@@ -197,7 +197,7 @@ describe('init', () => {
         const tree = await runSchematic(
           'init',
           {
-            e2eTestRunner: 'protractor'
+            e2eTestRunner: 'protractor',
           },
           appTree
         );

@@ -9,6 +9,6 @@ export default () => {
       join(__dirname, '../../../migrations.json'),
       '8.12.0'
     ),
-    formatFiles()
+    formatFiles(),
   ]);
 };

@@ -157,7 +157,7 @@ Use colors when showing output of command
 
 ### commands
 
-Type: `array` of `object`
+Type: `object[]`
 
 #### command
 
@@ -179,7 +179,7 @@ You may specify a custom .env file path
 
 ### outputPath
 
-Type: `string`
+Type: `string | string[]`
 
 Tells Nx where the files will be created
 

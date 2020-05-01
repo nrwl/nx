@@ -5,7 +5,7 @@ import {
   readJsonInTree,
   updateWorkspaceInTree,
   readWorkspace,
-  getWorkspacePath
+  getWorkspacePath,
 } from '@nrwl/workspace';
 
 import * as path from 'path';
@@ -28,8 +28,8 @@ describe('Update 8-9-0', () => {
       'package.json',
       JSON.stringify({
         dependencies: {
-          react: '16.0.0'
-        }
+          react: '16.0.0',
+        },
       })
     );
 
@@ -39,7 +39,7 @@ describe('Update 8-9-0', () => {
 
     const packageJson = readJsonInTree(tree, '/package.json');
     expect(packageJson.dependencies).toEqual({
-      react: '16.12.0'
+      react: '16.12.0',
     });
   });
 
@@ -48,8 +48,8 @@ describe('Update 8-9-0', () => {
       'package.json',
       JSON.stringify({
         dependencies: {
-          'redux-starter-kit': '0.8.0'
-        }
+          'redux-starter-kit': '0.8.0',
+        },
       })
     );
 
@@ -65,7 +65,7 @@ describe('Update 8-9-0', () => {
 
     const packageJson = readJsonInTree(tree, '/package.json');
     expect(packageJson.dependencies).toEqual({
-      '@reduxjs/toolkit': '1.0.4'
+      '@reduxjs/toolkit': '1.0.4',
     });
 
     const sourceCode = tree.read('apps/demo/src/main.tsx').toString();

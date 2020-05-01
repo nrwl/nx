@@ -12,7 +12,7 @@ import { getDestination, getNewProjectName } from './utils';
  * @param schema The options provided to the schematic
  */
 export function updateWorkspace(schema: Schema) {
-  return updateWorkspaceInTree(workspace => {
+  return updateWorkspaceInTree((workspace) => {
     const project = workspace.projects[schema.projectName];
     const newProjectName = getNewProjectName(schema.destination);
 

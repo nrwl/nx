@@ -30,7 +30,7 @@ export function calculateSizes(
     anyScript: AnyScriptCalculator,
     anyComponentStyle: AnyComponentStyleCalculator,
     bundle: BundleCalculator,
-    initial: InitialCalculator
+    initial: InitialCalculator,
   };
 
   const ctor = calculatorMap[budget.type];
@@ -51,7 +51,7 @@ export abstract class Calculator {
 class BundleCalculator extends Calculator {
   calculate() {
     const size: number = this.compilation.chunks
-      .filter(chunk => chunk.name === this.budget.name)
+      .filter((chunk) => chunk.name === this.budget.name)
       .reduce((files, chunk) => [...files, ...chunk.files], [])
       .filter((file: string) => !file.endsWith('.map'))
       .map((file: string) => this.compilation.assets[file].size())
@@ -66,7 +66,7 @@ class BundleCalculator extends Calculator {
  */
 class InitialCalculator extends Calculator {
   calculate() {
-    const initialChunks = this.compilation.chunks.filter(chunk =>
+    const initialChunks = this.compilation.chunks.filter((chunk) =>
       chunk.isOnlyInitial()
     );
     const size: number = initialChunks
@@ -85,9 +85,9 @@ class InitialCalculator extends Calculator {
 class AllScriptCalculator extends Calculator {
   calculate() {
     const size: number = Object.keys(this.compilation.assets)
-      .filter(key => key.endsWith('.js'))
-      .map(key => this.compilation.assets[key])
-      .map(asset => asset.size())
+      .filter((key) => key.endsWith('.js'))
+      .map((key) => this.compilation.assets[key])
+      .map((asset) => asset.size())
       .reduce((total: number, size: number) => total + size, 0);
 
     return [{ size, label: 'total scripts' }];
@@ -100,8 +100,8 @@ class AllScriptCalculator extends Calculator {
 class AllCalculator extends Calculator {
   calculate() {
     const size: number = Object.keys(this.compilation.assets)
-      .filter(key => !key.endsWith('.map'))
-      .map(key => this.compilation.assets[key].size())
+      .filter((key) => !key.endsWith('.map'))
+      .map((key) => this.compilation.assets[key].size())
       .reduce((total: number, size: number) => total + size, 0);
 
     return [{ size, label: 'total' }];
@@ -114,10 +114,10 @@ class AllCalculator extends Calculator {
 class AnyComponentStyleCalculator extends Calculator {
   calculate() {
     return Object.keys(this.compilation.assets)
-      .filter(key => key.endsWith('.css'))
-      .map(key => ({
+      .filter((key) => key.endsWith('.css'))
+      .map((key) => ({
         size: this.compilation.assets[key].size(),
-        label: key
+        label: key,
       }));
   }
 }
@@ -128,13 +128,13 @@ class AnyComponentStyleCalculator extends Calculator {
 class AnyScriptCalculator extends Calculator {
   calculate() {
     return Object.keys(this.compilation.assets)
-      .filter(key => key.endsWith('.js'))
-      .map(key => {
+      .filter((key) => key.endsWith('.js'))
+      .map((key) => {
         const asset = this.compilation.assets[key];
 
         return {
           size: asset.size(),
-          label: key
+          label: key,
         };
       });
   }
@@ -146,13 +146,13 @@ class AnyScriptCalculator extends Calculator {
 class AnyCalculator extends Calculator {
   calculate() {
     return Object.keys(this.compilation.assets)
-      .filter(key => !key.endsWith('.map'))
-      .map(key => {
+      .filter((key) => !key.endsWith('.map'))
+      .map((key) => {
         const asset = this.compilation.assets[key];
 
         return {
           size: asset.size(),
-          label: key
+          label: key,
         };
       });
   }

@@ -6,7 +6,7 @@ import { extname } from 'path';
 import { NxArgs } from '../command-line/utils';
 import { WorkspaceResults } from '../command-line/workspace-results';
 import { appRootPath } from '../utils/app-root';
-import { readJsonFile } from '../utils/fileutils';
+import { readJsonFile, fileExists } from '../utils/fileutils';
 import { jsonDiff } from '../utils/json-diff';
 import { ProjectGraphNode } from './project-graph';
 import { Environment, NxJson } from './shared-interfaces';
@@ -45,9 +45,9 @@ export function calculateFileChanges(
   ignore = getIgnoredGlobs()
 ): FileChange[] {
   if (ignore) {
-    files = files.filter(f => !ignore.ignores(f));
+    files = files.filter((f) => !ignore.ignores(f));
   }
-  return files.map(f => {
+  return files.map((f) => {
     const ext = extname(f);
     const _mtime = mtime(`${appRootPath}/${f}`);
     // Memoize results so we don't recalculate on successive invocation.
@@ -77,7 +77,7 @@ export function calculateFileChanges(
           default:
             return [new WholeFileChange()];
         }
-      }
+      },
     };
   });
 }
@@ -100,7 +100,7 @@ function defaultReadFileAtRevision(
     return !revision
       ? readFileSync(file).toString()
       : execSync(`git show ${revision}:${filePathInGitRepository}`, {
-          maxBuffer: TEN_MEGABYTES
+          maxBuffer: TEN_MEGABYTES,
         })
           .toString()
           .trim();
@@ -112,12 +112,9 @@ function defaultReadFileAtRevision(
 function getFileData(filePath: string): FileData {
   const stat = fs.statSync(filePath);
   return {
-    file: path
-      .relative(appRootPath, filePath)
-      .split(path.sep)
-      .join('/'),
+    file: path.relative(appRootPath, filePath).split(path.sep).join('/'),
     ext: path.extname(filePath),
-    mtime: stat.mtimeMs
+    mtime: stat.mtimeMs,
   };
 }
 
@@ -133,7 +130,7 @@ export function allFilesInDir(
 
   let res = [];
   try {
-    fs.readdirSync(dirName).forEach(c => {
+    fs.readdirSync(dirName).forEach((c) => {
       const child = path.join(dirName, c);
       if (ignoredGlobs.ignores(path.relative(appRootPath, child))) {
         return;
@@ -172,11 +169,7 @@ export function cliCommand() {
 }
 
 export function workspaceFileName() {
-  const packageJson = readPackageJson();
-  if (
-    packageJson.devDependencies['@angular/cli'] ||
-    packageJson.dependencies['@angular/cli']
-  ) {
+  if (fileExists(`${appRootPath}/angular.json`)) {
     return 'angular.json';
   } else {
     return 'workspace.json';
@@ -209,7 +202,7 @@ export function readWorkspaceFiles(): FileData[] {
   const files = [];
 
   files.push(
-    ...rootWorkspaceFileNames().map(f => getFileData(`${appRootPath}/${f}`))
+    ...rootWorkspaceFileNames().map((f) => getFileData(`${appRootPath}/${f}`))
   );
 
   // Add known workspace files and directories
@@ -217,7 +210,7 @@ export function readWorkspaceFiles(): FileData[] {
   files.push(...allFilesInDir(`${appRootPath}/tools`));
 
   // Add files for workspace projects
-  Object.keys(workspaceJson.projects).forEach(projectName => {
+  Object.keys(workspaceJson.projects).forEach((projectName) => {
     const project = workspaceJson.projects[projectName];
     files.push(...allFilesInDir(`${appRootPath}/${project.root}`));
   });
@@ -249,7 +242,7 @@ export function mtime(filePath: string): number {
 
 export function normalizedProjectRoot(p: ProjectGraphNode): string {
   if (p.data && p.data.root) {
-    const path = p.data.root.split('/').filter(v => !!v);
+    const path = p.data.root.split('/').filter((v) => !!v);
     if (path.length === 1) {
       return path[0];
     }

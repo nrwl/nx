@@ -11,7 +11,7 @@ import {
   isRelativeImportIntoAnotherProject,
   matchImportWithWildcard,
   onlyLoadChildren,
-  hasArchitectBuildBuilder
+  hasArchitectBuildBuilder,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import { TSESTree } from '@typescript-eslint/experimental-utils';
 import { createESLintRule } from '../utils/create-eslint-rule';
@@ -19,12 +19,12 @@ import { normalize } from '@angular-devkit/core';
 import {
   createProjectGraph,
   ProjectGraph,
-  ProjectType
+  ProjectType,
 } from '@nrwl/workspace/src/core/project-graph';
 import {
   normalizedProjectRoot,
   readNxJson,
-  readWorkspaceJson
+  readWorkspaceJson,
 } from '@nrwl/workspace/src/core/file-utils';
 import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
 
@@ -53,7 +53,7 @@ export default createESLintRule<Options, MessageIds>({
     docs: {
       description: `Ensure that module boundaries are respected within the monorepo`,
       category: 'Best Practices',
-      recommended: 'error'
+      recommended: 'error',
     },
     fixable: 'code',
     schema: [
@@ -67,14 +67,14 @@ export default createESLintRule<Options, MessageIds>({
               type: 'object',
               properties: {
                 sourceTag: { type: 'string' },
-                onlyDependOnLibsWithTags: [{ type: 'string' }]
+                onlyDependOnLibsWithTags: [{ type: 'string' }],
               },
-              additionalProperties: false
-            }
-          ]
+              additionalProperties: false,
+            },
+          ],
         },
-        additionalProperties: false
-      }
+        additionalProperties: false,
+      },
     ],
     messages: {
       noRelativeOrAbsoluteImportsAcrossLibraries: `Library imports must start with @{{npmScope}}/`,
@@ -85,15 +85,15 @@ export default createESLintRule<Options, MessageIds>({
         'Buildable libs cannot import non-buildable libs',
       noImportsOfLazyLoadedLibraries: `Imports of lazy-loaded libraries are forbidden`,
       projectWithoutTagsCannotHaveDependencies: `A project without tags cannot depend on any libraries`,
-      tagConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{allowedTags}}`
-    }
+      tagConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{allowedTags}}`,
+    },
   },
   defaultOptions: [
     {
       allow: [],
       depConstraints: [],
-      enforceBuildableLibDependency: false
-    }
+      enforceBuildableLibDependency: false,
+    },
   ],
   create(context, [{ allow, depConstraints, enforceBuildableLibDependency }]) {
     /**
@@ -127,7 +127,7 @@ export default createESLintRule<Options, MessageIds>({
         );
 
         // whitelisted import
-        if (allow.some(a => matchImportWithWildcard(a, imp))) {
+        if (allow.some((a) => matchImportWithWildcard(a, imp))) {
           return;
         }
 
@@ -145,8 +145,8 @@ export default createESLintRule<Options, MessageIds>({
             node,
             messageId: 'noRelativeOrAbsoluteImportsAcrossLibraries',
             data: {
-              npmScope
-            }
+              npmScope,
+            },
           });
           return;
         }
@@ -176,8 +176,8 @@ export default createESLintRule<Options, MessageIds>({
               messageId: 'noCircularDependencies',
               data: {
                 sourceProjectName: sourceProject.name,
-                targetProjectName: targetProject.name
-              }
+                targetProjectName: targetProject.name,
+              },
             });
             return;
           }
@@ -191,7 +191,7 @@ export default createESLintRule<Options, MessageIds>({
           if (targetProject.type !== ProjectType.lib) {
             context.report({
               node,
-              messageId: 'noImportsOfApps'
+              messageId: 'noImportsOfApps',
             });
             return;
           }
@@ -208,7 +208,7 @@ export default createESLintRule<Options, MessageIds>({
             ) {
               context.report({
                 node,
-                messageId: 'noImportOfNonBuildableLibraries'
+                messageId: 'noImportOfNonBuildableLibraries',
               });
               return;
             }
@@ -218,7 +218,7 @@ export default createESLintRule<Options, MessageIds>({
           if (imp !== `@${npmScope}/${normalizedProjectRoot(targetProject)}`) {
             context.report({
               node,
-              messageId: 'noDeepImportsIntoLibraries'
+              messageId: 'noDeepImportsIntoLibraries',
             });
             return;
           }
@@ -234,7 +234,7 @@ export default createESLintRule<Options, MessageIds>({
           ) {
             context.report({
               node,
-              messageId: 'noImportsOfLazyLoadedLibraries'
+              messageId: 'noImportsOfLazyLoadedLibraries',
             });
             return;
           }
@@ -249,7 +249,7 @@ export default createESLintRule<Options, MessageIds>({
             if (constraints.length === 0) {
               context.report({
                 node,
-                messageId: 'projectWithoutTagsCannotHaveDependencies'
+                messageId: 'projectWithoutTagsCannotHaveDependencies',
               });
               return;
             }
@@ -262,22 +262,22 @@ export default createESLintRule<Options, MessageIds>({
                 )
               ) {
                 const allowedTags = constraint.onlyDependOnLibsWithTags
-                  .map(s => `"${s}"`)
+                  .map((s) => `"${s}"`)
                   .join(', ');
                 context.report({
                   node,
                   messageId: 'tagConstraintViolation',
                   data: {
                     sourceTag: constraint.sourceTag,
-                    allowedTags
-                  }
+                    allowedTags,
+                  },
                 });
                 return;
               }
             }
           }
         }
-      }
+      },
     };
-  }
+  },
 });

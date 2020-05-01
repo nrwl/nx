@@ -23,7 +23,7 @@ export function deleteOutputDir(
   }
 
   return host.exists(resolvedOutputPath).pipe(
-    concatMap(exists => (exists ? host.delete(resolvedOutputPath) : EMPTY)),
+    concatMap((exists) => (exists ? host.delete(resolvedOutputPath) : EMPTY)),
     last(null, null)
   );
 }

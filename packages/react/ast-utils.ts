@@ -5,5 +5,5 @@ export {
   findElements,
   findDefaultExport,
   findClosestOpening,
-  isTag
+  isTag,
 } from './src/utils/ast-utils';

@@ -12,7 +12,7 @@ export function printArgsWarning(options: NxArgs) {
     output.note({
       title: `Affected criteria defaulted to --base=${output.bold(
         'master'
-      )} --head=${output.bold('HEAD')}`
+      )} --head=${output.bold('HEAD')}`,
     });
   }
 
@@ -25,8 +25,8 @@ export function printArgsWarning(options: NxArgs) {
         '',
         output.colors.gray(
           'Learn more about checking only what is affected: '
-        ) + 'https://nx.dev/guides/monorepo-affected.'
-      ]
+        ) + 'https://nx.dev/guides/monorepo-affected.',
+      ],
     });
   }
 }
@@ -36,19 +36,19 @@ export function parseFiles(options: NxArgs): { files: string[] } {
 
   if (files) {
     return {
-      files
+      files,
     };
   } else if (uncommitted) {
     return {
-      files: getUncommittedFiles()
+      files: getUncommittedFiles(),
     };
   } else if (untracked) {
     return {
-      files: getUntrackedFiles()
+      files: getUntrackedFiles(),
     };
   } else if (base && head) {
     return {
-      files: getFilesUsingBaseAndHead(base, head)
+      files: getFilesUsingBaseAndHead(base, head),
     };
   } else if (base) {
     return {
@@ -56,9 +56,9 @@ export function parseFiles(options: NxArgs): { files: string[] } {
         new Set([
           ...getFilesUsingBaseAndHead(base, 'HEAD'),
           ...getUncommittedFiles(),
-          ...getUntrackedFiles()
+          ...getUntrackedFiles(),
         ])
-      )
+      ),
     };
   }
 }
@@ -73,7 +73,7 @@ function getUntrackedFiles(): string[] {
 
 function getFilesUsingBaseAndHead(base: string, head: string): string[] {
   const mergeBase = execSync(`git merge-base ${base} ${head}`, {
-    maxBuffer: TEN_MEGABYTES
+    maxBuffer: TEN_MEGABYTES,
   })
     .toString()
     .trim();
@@ -84,8 +84,8 @@ function parseGitOutput(command: string): string[] {
   return execSync(command, { maxBuffer: TEN_MEGABYTES })
     .toString('utf-8')
     .split('\n')
-    .map(a => a.trim())
-    .filter(a => a.length > 0);
+    .map((a) => a.trim())
+    .filter((a) => a.length > 0);
 }
 
 // TODO: remove it in Nx 10
@@ -99,5 +99,5 @@ export function getProjectNodes(
 
 export function getProjectRoots(projectNames: string[]): string[] {
   const { projects } = readWorkspaceJson();
-  return projectNames.map(name => projects[name].root);
+  return projectNames.map((name) => projects[name].root);
 }

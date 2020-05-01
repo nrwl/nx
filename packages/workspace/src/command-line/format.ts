@@ -21,7 +21,7 @@ const PRETTIER_EXTENSIONS = [
   'html',
   'json',
   'md',
-  'mdx'
+  'mdx',
 ];
 
 export function format(command: 'check' | 'write', args: yargs.Arguments) {
@@ -32,7 +32,7 @@ export function format(command: 'check' | 'write', args: yargs.Arguments) {
   try {
     patterns = getPatterns({
       ...args,
-      ...nxArgs
+      ...nxArgs,
     } as any);
   } catch (e) {
     output.error({
@@ -44,21 +44,21 @@ export function format(command: 'check' | 'write', args: yargs.Arguments) {
         '',
         `Or pass the list of files: ${output.bold(
           `npm run format:${command} -- --files="libs/mylib/index.ts,libs/mylib2/index.ts"`
-        )}`
-      ]
+        )}`,
+      ],
     });
     process.exit(1);
   }
 
   // Chunkify the patterns array to prevent crashing the windows terminal
-  const chunkList: string[][] = chunkify(patterns, 70);
+  const chunkList: string[][] = chunkify(patterns, 50);
 
   switch (command) {
     case 'write':
-      chunkList.forEach(chunk => write(chunk));
+      chunkList.forEach((chunk) => write(chunk));
       break;
     case 'check':
-      chunkList.forEach(chunk => check(chunk));
+      chunkList.forEach((chunk) => check(chunk));
       break;
   }
 }
@@ -74,15 +74,15 @@ function getPatterns(args: NxArgs & { libsAndApps: boolean; _: string[] }) {
     printArgsWarning(args);
     const p = parseFiles(args);
     let patterns = p.files
-      .filter(f => fileExists(f))
-      .filter(f =>
-        PRETTIER_EXTENSIONS.map(ext => '.' + ext).includes(path.extname(f))
+      .filter((f) => fileExists(f))
+      .filter((f) =>
+        PRETTIER_EXTENSIONS.map((ext) => '.' + ext).includes(path.extname(f))
       );
 
     const libsAndApp = args.libsAndApps;
     return libsAndApp
       ? getPatternsFromApps(patterns)
-      : patterns.map(f => `"${f}"`);
+      : patterns.map((f) => `"${f}"`);
   } catch (e) {
     return allFilesPattern;
   }
@@ -95,7 +95,9 @@ function getPatternsFromApps(affectedFiles: string[]): string[] {
     calculateFileChanges(affectedFiles)
   );
   const roots = getProjectRoots(Object.keys(affectedGraph.nodes));
-  return roots.map(root => `"${root}/**/*.{${PRETTIER_EXTENSIONS.join(',')}}"`);
+  return roots.map(
+    (root) => `"${root}/**/*.{${PRETTIER_EXTENSIONS.join(',')}}"`
+  );
 }
 
 function chunkify(target: string[], size: number): string[][] {
@@ -109,7 +111,7 @@ function chunkify(target: string[], size: number): string[][] {
 function write(patterns: string[]) {
   if (patterns.length > 0) {
     execSync(`node "${prettierPath()}" --write ${patterns.join(' ')}`, {
-      stdio: [0, 1, 2]
+      stdio: [0, 1, 2],
     });
   }
 }
@@ -120,7 +122,7 @@ function check(patterns: string[]) {
       execSync(
         `node "${prettierPath()}" --list-different ${patterns.join(' ')}`,
         {
-          stdio: [0, 1, 2]
+          stdio: [0, 1, 2],
         }
       );
     } catch (e) {

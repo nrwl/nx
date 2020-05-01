@@ -12,7 +12,7 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import * as path from 'path';
@@ -34,7 +34,7 @@ import {
   toClassName,
   toFileName,
   toPropertyName,
-  updateJsonInTree
+  updateJsonInTree,
 } from '@nrwl/workspace';
 import { addUnitTestRunner } from '../init/init';
 import { addImportToModule, addRoute } from '../../utils/ast-utils';
@@ -74,7 +74,7 @@ function addLazyLoadedRouterConfiguration(options: NormalizedSchema): Rule {
         RouterModule.forChild([
         /* {path: '', pathMatch: 'full', component: InsertYourComponentHere} */
        ]) `
-      )
+      ),
     ]);
     return host;
   };
@@ -107,7 +107,7 @@ function addRouterConfiguration(options: NormalizedSchema): Rule {
         moduleSourceFile,
         options.modulePath,
         `export const ${constName}: Route[] = [];`
-      )
+      ),
     ]);
     return host;
   };
@@ -138,7 +138,7 @@ function addLoadChildren(options: NormalizedSchema): Rule {
         )}', loadChildren: () => import('@${npmScope}/${
           options.projectDirectory
         }').then(module => module.${options.moduleName})}`
-      )
+      ),
     ]);
 
     const tsConfig = findClosestTsConfigApp(host, options.parentModule);
@@ -157,7 +157,7 @@ function addLoadChildren(options: NormalizedSchema): Rule {
           tsConfig,
           tsConfigAppFile,
           `\n    , "${offset}${options.projectRoot}/src/index.ts"\n`
-        )
+        ),
       ]);
     } else {
       // we should warn the user about not finding the config
@@ -213,7 +213,7 @@ function addChildren(options: NormalizedSchema): Rule {
         options.parentModule,
         sourceFile,
         `{path: '${toFileName(options.fileName)}', children: ${constName}}`
-      )
+      ),
     ]);
     return host;
   };
@@ -227,7 +227,7 @@ function updateNgPackage(options: NormalizedSchema): Rule {
     options.projectDirectory
   }`;
   return chain([
-    updateJsonInTree(`${options.projectRoot}/ng-package.json`, json => {
+    updateJsonInTree(`${options.projectRoot}/ng-package.json`, (json) => {
       let $schema = json.$schema;
       if (json.$schema && json.$schema.indexOf('node_modules') >= 0) {
         $schema = `${offsetFromRoot(
@@ -240,9 +240,9 @@ function updateNgPackage(options: NormalizedSchema): Rule {
       return {
         ...json,
         dest,
-        $schema
+        $schema,
       };
-    })
+    }),
   ]);
 }
 
@@ -258,6 +258,7 @@ function updateProject(options: NormalizedSchema): Rule {
     if (!options.publishable) {
       host.delete(path.join(options.projectRoot, 'ng-package.json'));
       host.delete(path.join(options.projectRoot, 'package.json'));
+      host.delete(path.join(options.projectRoot, 'tsconfig.lib.prod.json'));
     }
 
     host.delete(path.join(options.projectRoot, 'karma.conf.js'));
@@ -314,13 +315,13 @@ function updateProject(options: NormalizedSchema): Rule {
         apply(url('./files/lib'), [
           template({
             ...options,
-            offsetFromRoot: offsetFromRoot(options.projectRoot)
+            offsetFromRoot: offsetFromRoot(options.projectRoot),
           }),
-          move(options.projectRoot)
+          move(options.projectRoot),
         ]),
         MergeStrategy.Overwrite
       ),
-      updateJsonInTree(getWorkspacePath(host), json => {
+      updateJsonInTree(getWorkspacePath(host), (json) => {
         const project = json.projects[options.name];
         const fixedProject = replaceAppNameWithPath(
           project,
@@ -333,8 +334,8 @@ function updateProject(options: NormalizedSchema): Rule {
           fixedProject.schematics = {
             ...fixedProject.schematics,
             '@nrwl/angular:component': {
-              style: options.style
-            }
+              style: options.style,
+            },
           };
         }
 
@@ -348,7 +349,7 @@ function updateProject(options: NormalizedSchema): Rule {
         delete fixedProject.architect.test;
 
         fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
-          path =>
+          (path) =>
             path !== join(normalize(options.projectRoot), 'tsconfig.spec.json')
         );
         fixedProject.architect.lint.options.exclude.push(
@@ -358,7 +359,7 @@ function updateProject(options: NormalizedSchema): Rule {
         json.projects[options.name] = fixedProject;
         return json;
       }),
-      updateJsonInTree(`${options.projectRoot}/tsconfig.lib.json`, json => {
+      updateJsonInTree(`${options.projectRoot}/tsconfig.lib.json`, (json) => {
         if (options.unitTestRunner === 'jest') {
           json.exclude = ['src/test-setup.ts', '**/*.spec.ts'];
         } else if (options.unitTestRunner === 'none') {
@@ -372,29 +373,29 @@ function updateProject(options: NormalizedSchema): Rule {
           extends: `./tsconfig.json`,
           compilerOptions: {
             ...json.compilerOptions,
-            outDir: `${offsetFromRoot(options.projectRoot)}dist/out-tsc`
-          }
+            outDir: `${offsetFromRoot(options.projectRoot)}dist/out-tsc`,
+          },
         };
       }),
-      updateJsonInTree(`${options.projectRoot}/tslint.json`, json => {
+      updateJsonInTree(`${options.projectRoot}/tslint.json`, (json) => {
         return {
           ...json,
           extends: `${offsetFromRoot(options.projectRoot)}tslint.json`,
           linterOptions: {
-            exclude: ['!**/*']
-          }
+            exclude: ['!**/*'],
+          },
         };
       }),
-      updateJsonInTree(`/nx.json`, json => {
+      updateJsonInTree(`/nx.json`, (json) => {
         return {
           ...json,
           projects: {
             ...json.projects,
-            [options.name]: { tags: options.parsedTags }
-          }
+            [options.name]: { tags: options.parsedTags },
+          },
         };
       }),
-      updateNgPackage(options)
+      updateNgPackage(options),
     ])(host, context);
   };
 }
@@ -403,21 +404,21 @@ function updateTsConfig(options: NormalizedSchema): Rule {
   return chain([
     (host: Tree, context: SchematicContext) => {
       const nxJson = readJsonInTree<NxJson>(host, 'nx.json');
-      return updateJsonInTree('tsconfig.json', json => {
+      return updateJsonInTree('tsconfig.json', (json) => {
         const c = json.compilerOptions;
         delete c.paths[options.name];
         c.paths[`@${nxJson.npmScope}/${options.projectDirectory}`] = [
-          `libs/${options.projectDirectory}/src/index.ts`
+          `libs/${options.projectDirectory}/src/index.ts`,
         ];
         return json;
       })(host, context);
-    }
+    },
   ]);
 }
 
 function updateLibPackageNpmScope(options: NormalizedSchema): Rule {
   return (host: Tree) => {
-    return updateJsonInTree(`${options.projectRoot}/package.json`, json => {
+    return updateJsonInTree(`${options.projectRoot}/package.json`, (json) => {
       json.name = `@${getNpmScope(host)}/${options.name}`;
       return json;
     });
@@ -435,11 +436,11 @@ function addModule(options: NormalizedSchema): Rule {
     options.routing && !options.lazy ? addRouterConfiguration(options) : noop(),
     options.routing && !options.lazy && options.parentModule
       ? addChildren(options)
-      : noop()
+      : noop(),
   ]);
 }
 
-export default function(schema: Schema): Rule {
+export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
     if (!options.routing && options.lazy) {
@@ -455,7 +456,7 @@ export default function(schema: Schema): Rule {
         style: options.style,
         entryFile: 'index',
         skipPackageJson: !options.publishable,
-        skipTsConfig: true
+        skipTsConfig: true,
       }),
 
       move(options.name, options.projectRoot),
@@ -466,17 +467,17 @@ export default function(schema: Schema): Rule {
             project: options.name,
             setupFile: 'angular',
             supportTsx: false,
-            skipSerializers: false
+            skipSerializers: false,
           })
         : noop(),
       options.unitTestRunner === 'karma'
         ? schematic('karma-project', {
-            project: options.name
+            project: options.name,
           })
         : noop(),
       options.publishable ? updateLibPackageNpmScope(options) : noop(),
       addModule(options),
-      formatFiles(options)
+      formatFiles(options),
     ])(host, context);
   };
 }
@@ -493,7 +494,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   const moduleName = `${toClassName(fileName)}Module`;
   const parsedTags = options.tags
-    ? options.tags.split(',').map(s => s.trim())
+    ? options.tags.split(',').map((s) => s.trim())
     : [];
   const modulePath = `${projectRoot}/src/lib/${fileName}.module.ts`;
   const defaultPrefix = getNpmScope(host);
@@ -508,6 +509,6 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     projectDirectory,
     modulePath,
     parsedTags,
-    fileName
+    fileName,
   };
 }

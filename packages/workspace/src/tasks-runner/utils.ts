@@ -8,9 +8,7 @@ export function getCommandAsString(
   isYarn: boolean,
   task: Task
 ) {
-  return getCommand(cliCommand, isYarn, task)
-    .join(' ')
-    .trim();
+  return getCommand(cliCommand, isYarn, task).join(' ').trim();
 }
 
 export function getCommand(cliCommand: string, isYarn: boolean, task: Task) {
@@ -29,7 +27,7 @@ export function getCommand(cliCommand: string, isYarn: boolean, task: Task) {
       task.target.target,
       task.target.project,
       ...config,
-      ...args
+      ...args,
     ];
   } else {
     const config = task.target.configuration
@@ -41,7 +39,7 @@ export function getCommand(cliCommand: string, isYarn: boolean, task: Task) {
       ...(isYarn ? [] : ['--']),
       'run',
       `${task.target.project}:${task.target.target}${config}`,
-      ...args
+      ...args,
     ];
   }
 }
@@ -66,12 +64,12 @@ export function getOutputsForTargetAndConfiguration(
   if (architect.configurations && architect.configurations[configuration]) {
     opts = {
       ...opts,
-      ...architect.configurations[configuration]
+      ...architect.configurations[configuration],
     };
   }
 
   if (opts.outputPath) {
-    return [opts.outputPath];
+    return Array.isArray(opts.outputPath) ? opts.outputPath : [opts.outputPath];
   } else if (target === 'build') {
     return [`dist/${node.data.root}`];
   } else {

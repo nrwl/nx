@@ -37,7 +37,7 @@ function getCompilerSetup(rootDir: string) {
 
 let compilerSetup;
 
-module.exports = function(path: string, options: ResolveOptions) {
+module.exports = function (path: string, options: ResolveOptions) {
   const ext = extname(path);
   if (
     ext === '.css' ||

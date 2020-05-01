@@ -8,23 +8,26 @@ export default function update(): Rule {
   return (host: Tree) => {
     const workspace = readWorkspace(host);
     return chain([
-      ...Object.keys(workspace.projects).map(k => {
+      ...Object.keys(workspace.projects).map((k) => {
         const p = workspace.projects[k];
         if (p.projectType !== 'application') {
           return noop();
         }
         if (isReactProject(p)) {
-          return updateJsonInTree(path.join(p.root, 'tsconfig.json'), json => {
-            json.files = json.files.filter(
-              f => f.indexOf('@nrwl/react/typings/svg.d.ts') === -1
-            );
-            return json;
-          });
+          return updateJsonInTree(
+            path.join(p.root, 'tsconfig.json'),
+            (json) => {
+              json.files = json.files.filter(
+                (f) => f.indexOf('@nrwl/react/typings/svg.d.ts') === -1
+              );
+              return json;
+            }
+          );
         } else {
           return noop();
         }
       }),
-      formatFiles()
+      formatFiles(),
     ]);
   };
 }

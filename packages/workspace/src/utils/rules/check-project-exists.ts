@@ -12,7 +12,7 @@ import { getWorkspace } from '../workspace';
 export function checkProjectExists(schema: { projectName: string }): Rule {
   return (tree: Tree, _context: SchematicContext): Observable<Tree> => {
     return from(getWorkspace(tree)).pipe(
-      map(workspace => {
+      map((workspace) => {
         if (!workspace.projects.has(schema.projectName)) {
           throw new Error(
             `Project not found in workspace: [${schema.projectName}]`

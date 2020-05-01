@@ -5,12 +5,12 @@ import { MockBuilderContext } from '@nrwl/workspace/testing';
 import * as projectGraphUtils from '@nrwl/workspace/src/core/project-graph';
 import {
   ProjectGraph,
-  ProjectType
+  ProjectType,
 } from '@nrwl/workspace/src/core/project-graph';
 
 import {
   NodePackageBuilderOptions,
-  runNodePackageBuilder
+  runNodePackageBuilder,
 } from './package.impl';
 import * as fsMock from 'fs';
 
@@ -46,14 +46,14 @@ describe('NodeCompileBuilder', () => {
             outDir: '../../dist/out-tsc',
             declaration: true,
             rootDir: './src',
-            types: ['node']
+            types: ['node'],
           },
           exclude: ['**/*.spec.ts'],
-          include: ['**/*.ts']
+          include: ['**/*.ts'],
         };
       } else {
         return {
-          name: 'nodelib'
+          name: 'nodelib',
         };
       }
     });
@@ -68,7 +68,7 @@ describe('NodeCompileBuilder', () => {
       packageJson: 'libs/nodelib/package.json',
       tsConfig: 'libs/nodelib/tsconfig.lib.json',
       watch: false,
-      sourceMap: false
+      sourceMap: false,
     };
   });
 
@@ -78,32 +78,34 @@ describe('NodeCompileBuilder', () => {
       spyOn(projectGraphUtils, 'createProjectGraph').and.callFake(() => {
         return {
           nodes: {},
-          dependencies: {}
+          dependencies: {},
         } as ProjectGraph;
       });
     });
 
-    it('should call tsc to compile', done => {
+    it('should call tsc to compile', (done) => {
       runNodePackageBuilder(testOptions, context).subscribe({
         complete: () => {
-          expect(fork).toHaveBeenCalledWith(
+          expect(
+            fork
+          ).toHaveBeenCalledWith(
             `${context.workspaceRoot}/node_modules/typescript/bin/tsc`,
             [
               '-p',
               join(context.workspaceRoot, testOptions.tsConfig),
               '--outDir',
-              join(context.workspaceRoot, testOptions.outputPath)
+              join(context.workspaceRoot, testOptions.outputPath),
             ],
             { stdio: [0, 1, 2, 'ipc'] }
           );
 
           done();
-        }
+        },
       });
       fakeEventEmitter.emit('exit', 0);
     });
 
-    it('should update the package.json after compiling typescript', done => {
+    it('should update the package.json after compiling typescript', (done) => {
       runNodePackageBuilder(testOptions, context).subscribe({
         complete: () => {
           expect(fork).toHaveBeenCalled();
@@ -112,24 +114,24 @@ describe('NodeCompileBuilder', () => {
             {
               name: 'nodelib',
               main: 'index.js',
-              typings: 'index.d.ts'
+              typings: 'index.d.ts',
             }
           );
 
           done();
-        }
+        },
       });
       fakeEventEmitter.emit('exit', 0);
     });
 
-    it('should have the output path in the BuilderOutput', done => {
+    it('should have the output path in the BuilderOutput', (done) => {
       runNodePackageBuilder(testOptions, context).subscribe({
-        next: value => {
+        next: (value) => {
           expect(value.outputPath).toEqual(testOptions.outputPath);
         },
         complete: () => {
           done();
-        }
+        },
       });
       fakeEventEmitter.emit('exit', 0);
     });
@@ -139,7 +141,7 @@ describe('NodeCompileBuilder', () => {
         jest.clearAllMocks();
       });
 
-      it('should be able to copy assets using the glob object', done => {
+      it('should be able to copy assets using the glob object', (done) => {
         glob.sync.mockReturnValue(['logo.png']);
         runNodePackageBuilder(
           {
@@ -149,9 +151,9 @@ describe('NodeCompileBuilder', () => {
                 glob: '**.*',
                 input: 'lib/nodelib/src/assets',
                 output: './newfolder',
-                ignore: []
-              }
-            ]
+                ignore: [],
+              },
+            ],
           },
           context
         ).subscribe({
@@ -163,17 +165,17 @@ describe('NodeCompileBuilder', () => {
             );
 
             done();
-          }
+          },
         });
         fakeEventEmitter.emit('exit', 0);
       });
-      it('should be able to copy assets with a regular string', done => {
+      it('should be able to copy assets with a regular string', (done) => {
         glob.sync.mockReturnValue(['lib/nodelib/src/LICENSE']);
 
         runNodePackageBuilder(
           {
             ...testOptions,
-            assets: ['lib/nodelib/src/LICENSE']
+            assets: ['lib/nodelib/src/LICENSE'],
           },
           context
         ).subscribe({
@@ -184,20 +186,20 @@ describe('NodeCompileBuilder', () => {
               `${context.workspaceRoot}/${testOptions.outputPath}/LICENSE`
             );
             done();
-          }
+          },
         });
         fakeEventEmitter.emit('exit', 0);
       });
 
-      it('should be able to copy assets with a glob string', done => {
+      it('should be able to copy assets with a glob string', (done) => {
         glob.sync.mockReturnValue([
           'lib/nodelib/src/README.md',
-          'lib/nodelib/src/CONTRIBUTING.md'
+          'lib/nodelib/src/CONTRIBUTING.md',
         ]);
         runNodePackageBuilder(
           {
             ...testOptions,
-            assets: ['lib/nodelib/src/*.MD']
+            assets: ['lib/nodelib/src/*.MD'],
           },
           context
         ).subscribe({
@@ -212,7 +214,7 @@ describe('NodeCompileBuilder', () => {
               `${context.workspaceRoot}/${testOptions.outputPath}/CONTRIBUTING.md`
             );
             done();
-          }
+          },
         });
         fakeEventEmitter.emit('exit', 0);
       });
@@ -230,8 +232,8 @@ describe('NodeCompileBuilder', () => {
               data: {
                 files: [],
                 root: 'libs/nodelib',
-                architect: { build: { builder: 'any builder' } }
-              }
+                architect: { build: { builder: 'any builder' } },
+              },
             },
             'nodelib-child': {
               type: ProjectType.lib,
@@ -248,23 +250,23 @@ describe('NodeCompileBuilder', () => {
                       main: 'libs/nodelib-child/src/index.ts',
                       outputPath: 'dist/libs/nodelib-child',
                       packageJson: 'libs/nodelib-child/package.json',
-                      tsConfig: 'libs/nodelib-child/tsconfig.lib.json'
-                    }
-                  }
-                }
-              }
-            }
+                      tsConfig: 'libs/nodelib-child/tsconfig.lib.json',
+                    },
+                  },
+                },
+              },
+            },
           },
           dependencies: {
             nodelib: [
               {
                 type: ProjectType.lib,
                 target: 'nodelib-child',
-                source: null
-              }
+                source: null,
+              },
             ],
-            'nodelib-child': []
-          }
+            'nodelib-child': [],
+          },
         } as ProjectGraph;
       });
 
@@ -283,8 +285,13 @@ describe('NodeCompileBuilder', () => {
       spyOn(fsMock, 'unlinkSync');
     });
 
-    it('should call the tsc compiler with the modified tsconfig.json', done => {
-      let tmpTsConfigPath = join('libs/nodelib', 'tsconfig.nx-tmp');
+    it('should call the tsc compiler with the modified tsconfig.json', (done) => {
+      let tmpTsConfigPath = join(
+        '/root',
+        'tmp',
+        'libs/nodelib',
+        'tsconfig.generated.json'
+      );
 
       runNodePackageBuilder(testOptions, context).subscribe({
         complete: () => {
@@ -295,13 +302,13 @@ describe('NodeCompileBuilder', () => {
               tmpTsConfigPath,
               // join(context.workspaceRoot, testOptions.tsConfig),
               '--outDir',
-              join(context.workspaceRoot, testOptions.outputPath)
+              join(context.workspaceRoot, testOptions.outputPath),
             ],
             { stdio: [0, 1, 2, 'ipc'] }
           );
 
           done();
-        }
+        },
       });
       fakeEventEmitter.emit('exit', 0);
     });

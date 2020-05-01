@@ -14,7 +14,7 @@ export function checkTargets(schema: Schema) {
     return (tree: Tree) => tree;
   }
 
-  return updateWorkspaceInTree(workspace => {
+  return updateWorkspaceInTree((workspace) => {
     const findTarget = new RegExp(`${schema.projectName}:`);
 
     const usedIn = [];

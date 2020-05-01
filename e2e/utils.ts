@@ -4,7 +4,7 @@ import {
   readFileSync,
   renameSync,
   statSync,
-  writeFileSync
+  writeFileSync,
 } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
@@ -38,7 +38,7 @@ export function forEachCli(
   }
 
   const cb: any = callback ? callback : selectedCliOrFunction;
-  clis.forEach(c => {
+  clis.forEach((c) => {
     describe(`[${c}]`, () => {
       beforeEach(() => {
         cli = c;
@@ -91,7 +91,7 @@ function patchPackageJsonDeps(addWorkspace = true) {
 export function runYarnInstall(silent: boolean = true) {
   const install = execSync('yarn install', {
     cwd: tmpProjPath(),
-    ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
+    ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
   });
   return install ? install.toString() : '';
 }
@@ -102,7 +102,7 @@ export function runNgcc(silent: boolean = true, async: boolean = true) {
       (!async ? ' --async=false' : ''),
     {
       cwd: tmpProjPath(),
-      ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
+      ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
     }
   );
   return install ? install.toString() : '';
@@ -123,20 +123,22 @@ export function runNew(
   let gen;
   if (cli === 'angular') {
     gen = execSync(
-      `../../node_modules/.bin/ng new proj --no-interactive --skip-install ${args ||
-        ''}`,
+      `../../node_modules/.bin/ng new proj --no-interactive --skip-install ${
+        args || ''
+      }`,
       {
         cwd: `./tmp/${cli}`,
-        ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
+        ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
       }
     );
   } else {
     gen = execSync(
-      `node ../../node_modules/@nrwl/tao/index.js new proj --no-interactive --skip-install ${args ||
-        ''}`,
+      `node ../../node_modules/@nrwl/tao/index.js new proj --no-interactive --skip-install ${
+        args || ''
+      }`,
       {
         cwd: `./tmp/${cli}`,
-        ...(silent && false ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
+        ...(silent && false ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
       }
     );
   }
@@ -237,10 +239,14 @@ export function copyMissingPackages(): void {
 
     'react',
     'react-dom',
+    'react-redux',
     'react-router-dom',
+    '@reduxjs',
+    '@reduxjs/toolkit',
     'styled-components',
     '@types/react',
     '@types/react-dom',
+    '@types/react-redux',
     '@types/react-router-dom',
     '@testing-library',
 
@@ -306,9 +312,9 @@ export function copyMissingPackages(): void {
     'less',
     'send',
 
-    '@bazel'
+    '@bazel',
   ];
-  modulesToCopy.forEach(m => copyNodeModule(m));
+  modulesToCopy.forEach((m) => copyNodeModule(m));
   updateFile(
     'node_modules/@angular-devkit/schematics/tasks/node-package/executor.js',
     `
@@ -342,22 +348,25 @@ export function copyMissingPackages(): void {
 }
 
 function copyNodeModule(name: string) {
-  execSync(`rm -rf ${tmpProjPath('node_modules/' + name)}`);
-  execSync(`cp -a node_modules/${name} ${tmpProjPath('node_modules/' + name)}`);
+  const source = `node_modules/${name}`;
+  const destination = tmpProjPath(source);
+
+  execSync(`rm -rf ${destination}`);
+  execSync(`cp -a ${source} ${destination}`);
 }
 
 export function runCommandAsync(
   command: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: process.env
+    env: process.env,
   }
 ): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     exec(
       `${command}`,
       {
-        cwd: tmpProjPath()
+        cwd: tmpProjPath(),
       },
       (err, stdout, stderr) => {
         if (!opts.silenceError && err) {
@@ -373,7 +382,7 @@ export function runCLIAsync(
   command: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: process.env
+    env: process.env,
   }
 ): Promise<{ stdout: string; stderr: string }> {
   return runCommandAsync(
@@ -386,13 +395,13 @@ export function runNgAdd(
   command?: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: process.env
+    env: process.env,
   }
 ): string {
   try {
     return execSync(`./node_modules/.bin/ng ${command}`, {
       cwd: tmpProjPath(),
-      env: opts.env
+      env: opts.env,
     })
       .toString()
       .replace(
@@ -413,13 +422,13 @@ export function runCLI(
   command?: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: process.env
+    env: process.env,
   }
 ): string {
   try {
     const r = execSync(`node ./node_modules/@nrwl/cli/bin/nx.js ${command}`, {
       cwd: tmpProjPath(),
-      env: opts.env
+      env: opts.env,
     })
       .toString()
       .replace(
@@ -453,7 +462,7 @@ export function runCommand(command: string): string {
   try {
     const r = execSync(command, {
       cwd: tmpProjPath(),
-      stdio: ['pipe', 'pipe', 'pipe']
+      stdio: ['pipe', 'pipe', 'pipe'],
     }).toString();
     console.log(r);
     return r;
@@ -473,9 +482,9 @@ function setMaxWorkers() {
     const workspaceFile = workspaceConfigName();
     const workspace = readJson(workspaceFile);
 
-    Object.keys(workspace.projects).forEach(appName => {
+    Object.keys(workspace.projects).forEach((appName) => {
       const {
-        architect: { build }
+        architect: { build },
       } = workspace.projects[appName];
 
       if (!build) {
@@ -513,7 +522,7 @@ export function renameFile(f: string, newPath: string): void {
 }
 
 export function checkFilesExist(...expectedFiles: string[]) {
-  expectedFiles.forEach(f => {
+  expectedFiles.forEach((f) => {
     const ff = f.startsWith('/') ? f : tmpProjPath(f);
     if (!exists(ff)) {
       throw new Error(`File '${ff}' does not exist`);
@@ -522,7 +531,7 @@ export function checkFilesExist(...expectedFiles: string[]) {
 }
 
 export function checkFilesDoNotExist(...expectedFiles: string[]) {
-  expectedFiles.forEach(f => {
+  expectedFiles.forEach((f) => {
     const ff = f.startsWith('/') ? f : tmpProjPath(f);
     if (exists(ff)) {
       throw new Error(`File '${ff}' does not exist`);

@@ -7,7 +7,7 @@ function updateLintConfigurations(host: Tree, context: SchematicContext) {
     if (!config.architect || !config.architect.lint) return;
     if (config.architect.lint.builder === '@nrwl/linter:lint') {
       updateJson(
-        json => {
+        (json) => {
           // Prefix it so that previously ignored files will override the whitelist.
           json.ignorePatterns = ['!**/*', ...(json.ignorePatterns || [])];
           return json;
@@ -21,14 +21,14 @@ function updateLintConfigurations(host: Tree, context: SchematicContext) {
       config.architect.lint.builder === '@angular-devkit/build-angular:tslint'
     ) {
       updateJson(
-        json => {
+        (json) => {
           json.linterOptions = {
             ...json.linterOptions,
             // Prefix it so that previously ignored files will override the whitelist.
             exclude: [
               '!**/*',
-              ...((json.linterOptions && json.linterOptions.exclude) || [])
-            ]
+              ...((json.linterOptions && json.linterOptions.exclude) || []),
+            ],
           };
           return json;
         },
@@ -51,6 +51,6 @@ function updateJson(visitor, path, host, context) {
   }
 }
 
-export default function() {
+export default function () {
   return chain([updateLintConfigurations, formatFiles()]);
 }

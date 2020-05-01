@@ -2,7 +2,7 @@ import {
   Rule,
   chain,
   SchematicContext,
-  Tree
+  Tree,
 } from '@angular-devkit/schematics';
 import { formatFiles, updateJsonInTree } from '@nrwl/workspace';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
@@ -16,19 +16,19 @@ function displayInformation(host: Tree, context: SchematicContext) {
   );
 }
 
-export default function(): Rule {
+export default function (): Rule {
   return chain([
-    updateJsonInTree('package.json', json => {
+    updateJsonInTree('package.json', (json) => {
       json.devDependencies = json.devDependencies || {};
 
       json.devDependencies = {
         ...json.devDependencies,
-        cypress: '~3.3.1'
+        cypress: '~3.3.1',
       };
 
       return json;
     }),
     displayInformation,
-    formatFiles()
+    formatFiles(),
   ]);
 }

@@ -1,7 +1,7 @@
 import {
   BuilderContext,
   BuilderOutput,
-  createBuilder
+  createBuilder,
 } from '@angular-devkit/architect';
 import { runCLI } from 'jest';
 import * as path from 'path';
@@ -42,7 +42,7 @@ function run(
   const globals = jestConfig.globals || {};
   if (!transformers.includes('babel-jest')) {
     const tsJestConfig = {
-      tsConfig: path.resolve(context.workspaceRoot, options.tsConfig)
+      tsConfig: path.resolve(context.workspaceRoot, options.tsConfig),
     };
 
     // TODO: This is hacky, We should probably just configure it in the user's workspace
@@ -53,8 +53,8 @@ function run(
         stringifyContentPathRegex: '\\.(html|svg)$',
         astTransformers: [
           'jest-preset-angular/build/InlineFilesTransformer',
-          'jest-preset-angular/build/StripStylesTransformer'
-        ]
+          'jest-preset-angular/build/StripStylesTransformer',
+        ],
       });
     } catch (e) {}
 
@@ -62,8 +62,8 @@ function run(
     Object.assign(globals, {
       'ts-jest': {
         ...(globals['ts-jest'] || {}),
-        ...tsJestConfig
-      }
+        ...tsJestConfig,
+      },
     });
   }
 
@@ -93,12 +93,12 @@ function run(
     useStderr: options.useStderr,
     watch: options.watch,
     watchAll: options.watchAll,
-    globals: JSON.stringify(globals)
+    globals: JSON.stringify(globals),
   };
 
   if (options.setupFile) {
     config.setupFilesAfterEnv = [
-      path.resolve(context.workspaceRoot, options.setupFile)
+      path.resolve(context.workspaceRoot, options.setupFile),
     ];
   }
 
@@ -107,7 +107,9 @@ function run(
   }
 
   if (options.findRelatedTests) {
-    const parsedTests = options.findRelatedTests.split(',').map(s => s.trim());
+    const parsedTests = options.findRelatedTests
+      .split(',')
+      .map((s) => s.trim());
     config._.push(...parsedTests);
     config.findRelatedTests = true;
   }
@@ -121,9 +123,9 @@ function run(
   }
 
   return from(runCLI(config, [options.jestConfig])).pipe(
-    map(results => {
+    map((results) => {
       return {
-        success: results.results.success
+        success: results.results.success,
       };
     })
   );

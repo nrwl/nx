@@ -14,7 +14,7 @@ export function offsetFromRoot(fullPathToSourceDir: string): string {
 }
 
 export const DEFAULT_NRWL_PRETTIER_CONFIG = {
-  singleQuote: true
+  singleQuote: true,
 };
 
 export interface ExistingPrettierConfig {
@@ -28,20 +28,20 @@ export function resolveUserExistingPrettierConfig(): Promise<ExistingPrettierCon
     cache: false,
     rcExtensions: true,
     stopDir: process.cwd(),
-    transform: result => {
+    transform: (result) => {
       if (result && result.config) {
         delete result.config.$schema;
       }
       return result;
-    }
+    },
   });
-  return Promise.resolve(explorer.load(process.cwd())).then(result => {
+  return Promise.resolve(explorer.load(process.cwd())).then((result) => {
     if (!result) {
       return null;
     }
     return {
       sourceFilepath: result.filepath,
-      config: result.config
+      config: result.config,
     };
   });
 }

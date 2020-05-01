@@ -5,7 +5,7 @@ import {
   readJsonInTree,
   updateWorkspaceInTree,
   readWorkspace,
-  getWorkspacePath
+  getWorkspacePath,
 } from '@nrwl/workspace';
 
 import * as path from 'path';
@@ -30,13 +30,13 @@ describe('Update 8-5-0', () => {
         schematics: {
           '@nrwl/react': {
             application: {
-              babel: true
-            }
+              babel: true,
+            },
           },
           '@nrwl/react:application': {
-            babel: true
-          }
-        }
+            babel: true,
+          },
+        },
       })
     );
 
@@ -48,10 +48,10 @@ describe('Update 8-5-0', () => {
     expect(config).toEqual({
       schematics: {
         '@nrwl/react': {
-          application: {}
+          application: {},
         },
-        '@nrwl/react:application': {}
-      }
+        '@nrwl/react:application': {},
+      },
     });
   });
 });

@@ -5,7 +5,7 @@ import {
   updateFile,
   forEachCli,
   supportUi,
-  patchKarmaToWorkOnWSL
+  patchKarmaToWorkOnWSL,
 } from './utils';
 
 forEachCli('angular', () => {

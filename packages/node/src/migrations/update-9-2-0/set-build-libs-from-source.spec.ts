@@ -27,11 +27,11 @@ describe('set buildLibsFromSource to true', () => {
             architect: {
               build: {
                 builder: '@nrwl/node:build',
-                options: {}
-              }
-            }
-          }
-        }
+                options: {},
+              },
+            },
+          },
+        },
       })
     );
 
@@ -41,7 +41,7 @@ describe('set buildLibsFromSource to true', () => {
 
     const config = readWorkspace(tree);
     expect(config.projects.demo.architect.build.options).toEqual({
-      buildLibsFromSource: true
+      buildLibsFromSource: true,
     });
   });
 });

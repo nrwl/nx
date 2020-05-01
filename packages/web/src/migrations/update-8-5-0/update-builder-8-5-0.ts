@@ -3,9 +3,9 @@ import { formatFiles, updateWorkspaceInTree } from '@nrwl/workspace';
 
 export default function update(): Rule {
   return chain([
-    updateWorkspaceInTree(config => {
+    updateWorkspaceInTree((config) => {
       const filteredProjects = [];
-      Object.keys(config.projects).forEach(name => {
+      Object.keys(config.projects).forEach((name) => {
         if (
           config.projects[name].architect &&
           config.projects[name].architect.build &&
@@ -14,11 +14,11 @@ export default function update(): Rule {
           filteredProjects.push(config.projects[name]);
         }
       });
-      filteredProjects.forEach(p => {
+      filteredProjects.forEach((p) => {
         delete p.architect.build.options.differentialLoading;
       });
       return config;
     }),
-    formatFiles()
+    formatFiles(),
   ]);
 }

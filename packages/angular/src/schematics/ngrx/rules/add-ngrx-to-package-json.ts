@@ -8,11 +8,11 @@ export function addNgRxToPackageJson(): Rule {
       '@ngrx/store': ngrxVersion,
       '@ngrx/effects': ngrxVersion,
       '@ngrx/entity': ngrxVersion,
-      '@ngrx/router-store': ngrxVersion
+      '@ngrx/router-store': ngrxVersion,
     },
     {
       '@ngrx/schematics': ngrxVersion,
-      '@ngrx/store-devtools': ngrxVersion
+      '@ngrx/store-devtools': ngrxVersion,
     }
   );
 }

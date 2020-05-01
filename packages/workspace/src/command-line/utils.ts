@@ -18,7 +18,7 @@ const runOne = [
   'withDeps',
   'with-deps',
   'skipNxCache',
-  'skip-nx-cache'
+  'skip-nx-cache',
 ];
 
 const runMany = [...runOne, 'projects', 'quiet', 'all'];
@@ -33,7 +33,7 @@ const runAffected = [
   'files',
   'quiet',
   'plain',
-  'select'
+  'select',
 ];
 
 export interface NxArgs {

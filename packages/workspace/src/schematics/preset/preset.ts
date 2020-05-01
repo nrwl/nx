@@ -5,7 +5,7 @@ import {
   Rule,
   schematic,
   SchematicContext,
-  Tree
+  Tree,
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 
@@ -14,7 +14,7 @@ import {
   addGlobal,
   insert,
   insertImport,
-  updateWorkspaceInTree
+  updateWorkspaceInTree,
 } from '../../utils/ast-utils';
 
 import { formatFiles } from '../../utils/rules/format-files';
@@ -22,7 +22,7 @@ import { formatFiles } from '../../utils/rules/format-files';
 import * as ts from 'typescript';
 import { toFileName } from '../../utils/name-utils';
 
-export default function(options: Schema): Rule {
+export default function (options: Schema): Rule {
   options = normalizeOptions(options);
   return (host: Tree, context: SchematicContext) => {
     return chain([createPreset(options), formatFiles()])(host, context);
@@ -38,72 +38,72 @@ function createPreset(options: Schema): Rule {
     return chain([
       externalSchematic('@nrwl/angular', 'application', {
         name: options.name,
-        style: options.style
+        style: options.style,
       }),
-      setDefaultCollection('@nrwl/angular')
+      setDefaultCollection('@nrwl/angular'),
     ]);
   } else if (options.preset === 'react') {
     return chain([
       externalSchematic('@nrwl/react', 'application', {
         name: options.name,
         style: options.style,
-        linter
+        linter,
       }),
-      setDefaultCollection('@nrwl/react')
+      setDefaultCollection('@nrwl/react'),
     ]);
   } else if (options.preset === 'next') {
     return chain([
       externalSchematic('@nrwl/next', 'application', {
         name: options.name,
         style: options.style,
-        linter
+        linter,
       }),
-      setDefaultCollection('@nrwl/next')
+      setDefaultCollection('@nrwl/next'),
     ]);
   } else if (options.preset === 'web-components') {
     return chain([
       externalSchematic('@nrwl/web', 'application', {
         name: options.name,
         style: options.style,
-        linter
+        linter,
       }),
       addDepsToPackageJson(
         {},
         {
-          '@webcomponents/custom-elements': '1.3.2'
+          '@webcomponents/custom-elements': '1.3.2',
         }
       ),
       addPolyfills(`apps/${toFileName(options.name)}/src/polyfills.ts`, [
         '@webcomponents/custom-elements/custom-elements.min',
-        '@webcomponents/custom-elements/src/native-shim'
+        '@webcomponents/custom-elements/src/native-shim',
       ]),
-      setDefaultCollection('@nrwl/web')
+      setDefaultCollection('@nrwl/web'),
     ]);
   } else if (options.preset === 'angular-nest') {
     return chain([
       externalSchematic('@nrwl/angular', 'application', {
         name: options.name,
-        style: options.style
+        style: options.style,
       }),
       externalSchematic('@nrwl/nest', 'application', {
         name: 'api',
-        frontendProject: options.name
+        frontendProject: options.name,
       }),
       schematic('library', { name: 'api-interfaces' }, { interactive: false }),
       setDefaultCollection('@nrwl/angular'),
-      connectAngularAndNest(options)
+      connectAngularAndNest(options),
     ]);
   } else if (options.preset === 'react-express') {
     return chain([
       externalSchematic('@nrwl/react', 'application', {
         name: options.name,
         style: options.style,
-        linter
+        linter,
       }),
       externalSchematic('@nrwl/express', 'application', {
         name: 'api',
         frontendProject: options.name,
-        linter
+        linter,
       }),
       schematic(
         'library',
@@ -111,7 +111,7 @@ function createPreset(options: Schema): Rule {
         { interactive: false }
       ),
       setDefaultCollection('@nrwl/react'),
-      connectReactAndExpress(options)
+      connectReactAndExpress(options),
     ]);
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
@@ -145,7 +145,7 @@ function connectAngularAndNest(options: Schema) {
         moduleFile,
         `@angular/common/http`,
         `HttpClientModule`
-      )
+      ),
     ]);
 
     const scope = options.npmScope;
@@ -331,7 +331,7 @@ server.on('error', console.error);
 }
 
 function setDefaultCollection(defaultCollection: string) {
-  return updateWorkspaceInTree(json => {
+  return updateWorkspaceInTree((json) => {
     if (!json.cli) {
       json.cli = {};
     }
@@ -354,8 +354,8 @@ function addPolyfills(polyfillsPath: string, polyfills: string[]): Rule {
       ...addGlobal(
         polyfillsSourceFile,
         polyfillsPath,
-        `\n${polyfills.map(im => `import '${im}';`).join('\n')}\n`
-      )
+        `\n${polyfills.map((im) => `import '${im}';`).join('\n')}\n`
+      ),
     ]);
   };
 }

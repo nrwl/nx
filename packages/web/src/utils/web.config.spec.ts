@@ -25,17 +25,17 @@ describe('getWebConfig', () => {
         scripts: true,
         styles: true,
         hidden: false,
-        vendors: false
+        vendors: false,
       },
       optimization: {
         scripts: false,
-        styles: false
+        styles: false,
       },
       styles: [],
       scripts: [],
       outputPath: 'dist',
       tsConfig: 'tsconfig.json',
-      fileReplacements: []
+      fileReplacements: [],
     };
     root = join(__dirname, '../../../..');
     sourceRoot = join(root, 'apps/app');
@@ -43,16 +43,16 @@ describe('getWebConfig', () => {
 
     mockCompilerOptions = {
       target: 'es2015',
-      paths: { path: ['mapped/path'] }
+      paths: { path: ['mapped/path'] },
     };
-    (<any>TsConfigPathsPlugin).mockImplementation(
-      function MockPathsPlugin() {}
-    );
+    (<any>(
+      TsConfigPathsPlugin
+    )).mockImplementation(function MockPathsPlugin() {});
 
     spyOn(ts, 'readConfigFile').and.callFake(() => ({
       config: {
-        compilerOptions: mockCompilerOptions
-      }
+        compilerOptions: mockCompilerOptions,
+      },
     }));
   });
 
@@ -69,7 +69,7 @@ describe('getWebConfig', () => {
           sourceRoot,
           {
             ...input,
-            polyfills: 'polyfills.ts'
+            polyfills: 'polyfills.ts',
           },
           logger,
           false,
@@ -86,7 +86,7 @@ describe('getWebConfig', () => {
           sourceRoot,
           {
             ...input,
-            es2015Polyfills: 'polyfills.es2015.ts'
+            es2015Polyfills: 'polyfills.es2015.ts',
           },
           logger,
           false,
@@ -105,7 +105,7 @@ describe('getWebConfig', () => {
           sourceRoot,
           {
             ...input,
-            polyfills: 'polyfills.ts'
+            polyfills: 'polyfills.ts',
           },
           logger,
           true,
@@ -117,7 +117,7 @@ describe('getWebConfig', () => {
           sourceRoot,
           {
             ...input,
-            polyfills: 'polyfills.ts'
+            polyfills: 'polyfills.ts',
           },
           logger,
           false,
@@ -135,7 +135,7 @@ describe('getWebConfig', () => {
           {
             ...input,
             polyfills: 'polyfills.ts',
-            es2015Polyfills: 'polyfills.es2015.ts'
+            es2015Polyfills: 'polyfills.es2015.ts',
           },
           logger,
           false,
@@ -152,7 +152,7 @@ describe('getWebConfig', () => {
           sourceRoot,
           {
             ...input,
-            polyfills: 'polyfills.ts'
+            polyfills: 'polyfills.ts',
           },
           logger,
           true,

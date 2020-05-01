@@ -28,12 +28,12 @@ describe('workspace', () => {
             architect: {
               e2e: {
                 options: {
-                  protractorConfig: 'e2e/protractor.conf.js'
-                }
-              }
-            }
-          }
-        }
+                  protractorConfig: 'e2e/protractor.conf.js',
+                },
+              },
+            },
+          },
+        },
       })
     );
 
@@ -66,8 +66,8 @@ describe('workspace', () => {
           proj1: {},
           'proj1-e2e': {},
           proj2: {},
-          'proj2-e2e': {}
-        }
+          'proj2-e2e': {},
+        },
       })
     );
     try {
@@ -91,28 +91,28 @@ describe('workspace', () => {
             architect: {
               build: {
                 options: {
-                  tsConfig: 'tsconfig.app.json'
+                  tsConfig: 'tsconfig.app.json',
                 },
-                configurations: {}
+                configurations: {},
               },
               test: {
                 options: {
-                  tsConfig: 'tsconfig.spec.json'
-                }
+                  tsConfig: 'tsconfig.spec.json',
+                },
               },
               lint: {
                 options: {
-                  tsConfig: 'tsconfig.app.json'
-                }
+                  tsConfig: 'tsconfig.app.json',
+                },
               },
               e2e: {
                 options: {
-                  protractorConfig: 'e2e/protractor.conf.js'
-                }
-              }
-            }
-          }
-        }
+                  protractorConfig: 'e2e/protractor.conf.js',
+                },
+              },
+            },
+          },
+        },
       })
     );
     appTree.create(
@@ -144,28 +144,28 @@ describe('workspace', () => {
             architect: {
               build: {
                 options: {
-                  tsConfig: 'src/tsconfig.app.json'
+                  tsConfig: 'src/tsconfig.app.json',
                 },
-                configurations: {}
+                configurations: {},
               },
               test: {
                 options: {
-                  tsConfig: 'src/tsconfig.spec.json'
-                }
+                  tsConfig: 'src/tsconfig.spec.json',
+                },
               },
               lint: {
                 options: {
-                  tsConfig: 'src/tsconfig.app.json'
-                }
+                  tsConfig: 'src/tsconfig.app.json',
+                },
               },
               e2e: {
                 options: {
-                  protractorConfig: 'e2e/protractor.conf.js'
-                }
-              }
-            }
-          }
-        }
+                  protractorConfig: 'e2e/protractor.conf.js',
+                },
+              },
+            },
+          },
+        },
       })
     );
     appTree.create(
@@ -198,13 +198,13 @@ describe('workspace', () => {
             architect: {
               build: {
                 options: {
-                  tsConfig: 'tsconfig.app.json'
+                  tsConfig: 'tsconfig.app.json',
                 },
-                configurations: {}
-              }
-            }
-          }
-        }
+                configurations: {},
+              },
+            },
+          },
+        },
       })
     );
     appTree.create(
