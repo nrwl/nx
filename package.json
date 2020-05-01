@@ -106,7 +106,7 @@
     "@zeit/next-sass": "1.0.1",
     "@zeit/next-stylus": "1.0.1",
     "ajv": "6.10.2",
-    "angular": "1.6.6",
+    "angular": "1.7.9",
     "app-root-path": "^2.0.1",
     "autoprefixer": "9.7.4",
     "axios": "^0.19.0",
