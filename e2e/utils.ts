@@ -188,9 +188,7 @@ export function newProject(): void {
  * If one is not found, it creates a new project.
  */
 export function ensureProject(): void {
-  if (!directoryExists(tmpProjPath())) {
-    newProject();
-  }
+  newProject();
 }
 
 export function supportUi() {

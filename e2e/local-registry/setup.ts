@@ -5,8 +5,6 @@ import { getDirectories } from '../utils';
 const asyncExec = promisify(exec);
 
 process.env.PUBLISHED_VERSION = `9999.0.0`;
-process.env.NPM_CONFIG_REGISTRY = process.env.YARN_REGISTRY =
-  'http://localhost:4872/';
 
 async function spawnLocalRegistry() {
   const localRegistryProcess = spawn('npx', [
@@ -42,12 +40,10 @@ async function updateVersion(packagePath) {
 }
 
 async function publishPackage(packagePath) {
-  await asyncExec(
-    `npm_config_registry=${process.env.NPM_CONFIG_REGISTRY} npm publish`,
-    {
-      cwd: packagePath
-    }
-  );
+  await asyncExec(`npm publish`, {
+    cwd: packagePath,
+    env: process.env
+  });
 }
 
 module.exports = async function setup() {
