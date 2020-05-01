@@ -1,11 +1,11 @@
-import { relative } from 'path';
+import { join, relative } from 'path';
 import {
   BuilderContext,
   BuilderOutput,
   createBuilder,
 } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
-import { Observable, of } from 'rxjs';
+import { from, Observable, of } from 'rxjs';
 import { catchError, last, switchMap, tap } from 'rxjs/operators';
 import { runRollup } from './run-rollup';
 import { createBabelConfig as _createBabelConfig } from '../../utils/babel-config';
@@ -16,10 +16,11 @@ import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import * as postcss from 'rollup-plugin-postcss';
 import * as filesize from 'rollup-plugin-filesize';
 import * as localResolve from 'rollup-plugin-local-resolve';
-import { BundleBuilderOptions } from '../../utils/types';
+import { PackageBuilderOptions } from '../../utils/types';
 import {
-  normalizeBundleOptions,
+  normalizePackageOptions,
   NormalizedBundleBuilderOptions,
+  NormalizedCopyAssetOption,
 } from '../../utils/normalize';
 import { toClassName } from '@nrwl/workspace/src/utils/name-utils';
 import { BuildResult } from '@angular-devkit/build-webpack';
@@ -31,18 +32,21 @@ import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
-  DependentBuildableProjectNode,
   computeCompilerOptionsPaths,
+  DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
+import { getSourceRoot } from '../../utils/source-root';
+import { NodeJsSyncHost } from '@angular-devkit/core/node';
 
 // These use require because the ES import isn't correct.
 const resolve = require('@rollup/plugin-node-resolve');
 const commonjs = require('@rollup/plugin-commonjs');
 const typescript = require('rollup-plugin-typescript2');
 const image = require('@rollup/plugin-image');
+const copy = require('rollup-plugin-copy');
 
-export default createBuilder<BundleBuilderOptions & JsonObject>(run);
+export default createBuilder<PackageBuilderOptions & JsonObject>(run);
 
 interface OutputConfig {
   format: rollup.ModuleFormat;
@@ -58,21 +62,27 @@ const outputConfigs: OutputConfig[] = [
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
 
 export function run(
-  _options: BundleBuilderOptions,
+  rawOptions: PackageBuilderOptions,
   context: BuilderContext
 ): Observable<BuilderOutput> {
+  const host = new NodeJsSyncHost();
   const projGraph = createProjectGraph();
   const { target, dependencies } = calculateProjectDependencies(
     projGraph,
     context
   );
 
-  return of(checkDependentProjectsHaveBeenBuilt(context, dependencies)).pipe(
-    switchMap((result) => {
-      if (!result) {
+  return from(getSourceRoot(context, host)).pipe(
+    switchMap((sourceRoot) => {
+      if (!checkDependentProjectsHaveBeenBuilt(context, dependencies)) {
         return of({ success: false });
       }
-      const options = normalizeBundleOptions(_options, context.workspaceRoot);
+
+      const options = normalizePackageOptions(
+        rawOptions,
+        context.workspaceRoot,
+        sourceRoot
+      );
       const packageJson = readJsonFile(options.project);
       const rollupOptions = createRollupOptions(
         options,
@@ -153,6 +163,12 @@ function createRollupOptions(
   );
 
   const plugins = [
+    copy({
+      targets: convertCopyAssetsToRollupOptions(
+        options.outputPath,
+        options.assets
+      ),
+    }),
     image(),
     typescript({
       check: true,
@@ -221,7 +237,10 @@ function createRollupOptions(
     : rollupConfig;
 }
 
-function createBabelConfig(options: BundleBuilderOptions, projectRoot: string) {
+function createBabelConfig(
+  options: PackageBuilderOptions,
+  projectRoot: string
+) {
   let babelConfig: any = _createBabelConfig(projectRoot, false, false);
   if (options.babelConfig) {
     babelConfig = require(options.babelConfig)(babelConfig, options);
@@ -284,4 +303,21 @@ function updatePackageJson(
       dependencies
     );
   }
+}
+
+interface RollupCopyAssetOption {
+  src: string;
+  dest: string;
+}
+
+function convertCopyAssetsToRollupOptions(
+  outputPath: string,
+  assets: NormalizedCopyAssetOption[]
+): RollupCopyAssetOption[] {
+  return assets
+    ? assets.map((a) => ({
+        src: join(a.input, a.glob),
+        dest: join(outputPath, a.output),
+      }))
+    : undefined;
 }

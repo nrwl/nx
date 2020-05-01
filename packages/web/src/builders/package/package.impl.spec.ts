@@ -9,18 +9,15 @@ import { MockBuilderContext } from '@nrwl/workspace/testing';
 import * as impl from './package.impl';
 import * as rr from './run-rollup';
 import { getMockContext } from '../../utils/testing';
-import { BundleBuilderOptions } from '../../utils/types';
+import { PackageBuilderOptions } from '../../utils/types';
 import * as projectGraphUtils from '@nrwl/workspace/src/core/project-graph';
-import {
-  ProjectGraph,
-  ProjectType,
-} from '@nrwl/workspace/src/core/project-graph';
+import { ProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 
 jest.mock('tsconfig-paths-webpack-plugin');
 
 describe('WebPackagebuilder', () => {
   let context: MockBuilderContext;
-  let testOptions: BundleBuilderOptions;
+  let testOptions: PackageBuilderOptions;
   let runRollup: jasmine.Spy;
   let writeJsonFile: jasmine.Spy;
 

@@ -1,7 +1,7 @@
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { normalize } from '@angular-devkit/core';
-import { resolve, dirname, relative, basename } from 'path';
-import { BuildBuilderOptions, BundleBuilderOptions } from './types';
+import { resolve, dirname, relative, basename, join } from 'path';
+import { BuildBuilderOptions, PackageBuilderOptions } from './types';
 import { statSync } from 'fs';
 
 export interface FileReplacement {
@@ -9,14 +9,16 @@ export interface FileReplacement {
   with: string;
 }
 
-export interface NormalizedBundleBuilderOptions extends BundleBuilderOptions {
+export interface NormalizedBundleBuilderOptions extends PackageBuilderOptions {
   entryRoot: string;
   projectRoot: string;
+  assets: NormalizedCopyAssetOption[];
 }
 
-export function normalizeBundleOptions(
-  options: BundleBuilderOptions,
-  root
+export function normalizePackageOptions(
+  options: PackageBuilderOptions,
+  root: string,
+  sourceRoot: string
 ): NormalizedBundleBuilderOptions {
   const entryFile = `${root}/${options.entryFile}`;
   const entryRoot = dirname(entryFile);
@@ -27,6 +29,9 @@ export function normalizeBundleOptions(
     ...options,
     babelConfig: normalizePluginPath(options.babelConfig, root),
     rollupConfig: normalizePluginPath(options.rollupConfig, root),
+    assets: options.assets
+      ? normalizeAssets(options.assets, root, sourceRoot)
+      : undefined,
     entryFile,
     entryRoot,
     project,
@@ -62,11 +67,17 @@ function normalizePluginPath(pluginPath: void | string, root: string) {
   }
 }
 
-function normalizeAssets(
+export interface NormalizedCopyAssetOption {
+  glob: string;
+  input: string;
+  output: string;
+}
+
+export function normalizeAssets(
   assets: any[],
   root: string,
   sourceRoot: string
-): any[] {
+): NormalizedCopyAssetOption[] {
   return assets.map((asset) => {
     if (typeof asset === 'string') {
       const assetPath = normalize(asset);

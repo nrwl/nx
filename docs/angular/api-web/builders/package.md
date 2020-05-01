@@ -6,6 +6,12 @@ Builder properties can be configured in angular.json when defining the builder, 
 
 ## Properties
 
+### assets
+
+Type: `array`
+
+List of static assets.
+
 ### babelConfig
 
 Type: `string`

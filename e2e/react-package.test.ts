@@ -1,5 +1,6 @@
 import {
   checkFilesDoNotExist,
+  checkFilesExist,
   ensureProject,
   forEachCli,
   readJson,
@@ -71,6 +72,16 @@ forEachCli('nx', (cli) => {
         json.compilerOptions.paths = {};
         return JSON.stringify(json, null, 2);
       });
+
+      // Add assets to child lib
+      updateFile(cli === 'angular' ? 'angular.json' : 'workspace.json', (c) => {
+        const json = JSON.parse(c);
+        json.projects[childLib].architect.build.options.assets = [
+          `libs/${childLib}/src/assets`,
+        ];
+        return JSON.stringify(json, null, 2);
+      });
+      updateFile(`libs/${childLib}/src/assets/hello.txt`, 'Hello World!');
     });
 
     it('should throw an error if the dependent library has not been built before building the parent lib', () => {
@@ -90,6 +101,7 @@ forEachCli('nx', (cli) => {
       const output = runCLI(`build ${childLib}`);
       expect(output).toContain(`${childLib}.esm.js`);
       expect(output).toContain(`Bundle complete`);
+      checkFilesExist(`dist/libs/${childLib}/assets/hello.txt`);
     });
 
     it('should properly add references to any dependency into the parent package.json', () => {
