@@ -551,6 +551,30 @@
       "packages": {
         "prettier": {
           "version": "2.0.4"
+        },
+        "@ngrx/store": {
+          "version": "9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/effects": {
+          "version": "9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/entity": {
+          "version": "9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/router-store": {
+          "version": "9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/schematics": {
+          "version": "9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store-devtools": {
+          "version": "9.1.0",
+          "alwaysAddToPackageJson": false
         }
       }
     }
