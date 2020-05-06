@@ -42,6 +42,6 @@
   {
     "name": "@nx-plus/docusaurus",
     "description": "Nx plugin adding first class support for Docusaurus in your Nx workspace.",
-    "url": "https://github.com/ZachJW34/nx-plus/tree/master/libs/docusaurus" 
+    "url": "https://github.com/ZachJW34/nx-plus/tree/master/libs/docusaurus"
   }
 ]
