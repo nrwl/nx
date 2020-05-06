@@ -40,6 +40,11 @@
     "url": "https://github.com/mauriziovitale/angular-plugins/tree/master/libs/lite-serve"
   },
   {
+    "name": "@nx-plus/docusaurus",
+    "description": "Nx plugin adding first class support for Docusaurus in your Nx workspace.",
+    "url": "https://github.com/ZachJW34/nx-plus/tree/master/libs/docusaurus"
+  },
+  {
     "name": "@twittwer/compodoc",
     "description": "Nx Plugin to integrate the generation of documentation with Compodoc in the Nx workflow",
     "url": "https://github.com/twittwer/nx-tools/tree/master/libs/compodoc#readme"

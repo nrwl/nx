@@ -52,6 +52,7 @@ export default function (schema: NormalizedSchema): Rule {
       addProject(options),
       formatFiles(options),
       deleteFile(`/${options.projectRoot}/src/lib/${options.fileName}.spec.ts`),
+      deleteFile(`/${options.projectRoot}/src/lib/${options.fileName}.ts`),
     ]);
   };
 }

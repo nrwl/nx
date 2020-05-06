@@ -87,6 +87,16 @@ describe('lib', () => {
       );
     });
 
+    it('should remove the default file from @nrwl/node:lib', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', global: true },
+        appTree
+      );
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.ts')).toBeFalsy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.ts')).toBeFalsy();
+    });
+
     it('should provide the controller and service', async () => {
       const tree = await runSchematic(
         'lib',
