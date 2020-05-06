@@ -197,11 +197,19 @@ export function checkDependentProjectsHaveBeenBuilt(
 
 export function updatePaths(
   dependencies: DependentBuildableProjectNode[],
-  paths: { [k: string]: string[] }
+  paths: Record<string, string[]>
 ) {
+  const pathsKeys = Object.keys(paths);
   dependencies.forEach((dep) => {
     if (dep.outputs && dep.outputs.length > 0) {
       paths[dep.name] = dep.outputs;
+      // check for secondary entrypoints, only available for ng-packagr projects
+      for (const path of pathsKeys) {
+        if (path.startsWith(`${dep.name}/`)) {
+          const [, nestedPart] = path.split(`${dep.name}/`);
+          paths[path] = dep.outputs.map((o) => `${o}/${nestedPart}`);
+        }
+      }
     }
   });
 }
