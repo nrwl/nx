@@ -114,7 +114,7 @@ import { Todo } from '@myorg/data';
 export const Todos = (props: { todos: Todo[] }) => {
   return (
     <ul>
-      {props.todos.map(t => (
+      {props.todos.map((t) => (
         <li className={'todo'}>{t.title}</li>
       ))}
     </ul>
@@ -138,17 +138,17 @@ const App = () => {
 
   useEffect(() => {
     fetch('/api/todos')
-      .then(_ => _.json())
+      .then((_) => _.json())
       .then(setTodos);
   }, []);
 
   function addTodo() {
     fetch('/api/addTodo', {
       method: 'POST',
-      body: ''
+      body: '',
     })
-      .then(_ => _.json())
-      .then(newTodo => {
+      .then((_) => _.json())
+      .then((newTodo) => {
         setTodos([...todos, newTodo]);
       });
   }

@@ -10,28 +10,28 @@ describe('jestProject', () => {
     appTree = Tree.empty();
     appTree = createEmptyWorkspace(appTree);
     appTree = await callRule(
-      updateJsonInTree('workspace.json', json => {
+      updateJsonInTree('workspace.json', (json) => {
         json.projects.lib1 = {
           root: 'libs/lib1',
           architect: {
             lint: {
               builder: '@angular-devkit/build-angular:tslint',
               options: {
-                tsConfig: []
-              }
-            }
-          }
+                tsConfig: [],
+              },
+            },
+          },
         };
         return json;
       }),
       appTree
     );
     appTree = await callRule(
-      updateJsonInTree('libs/lib1/tsconfig.json', json => {
+      updateJsonInTree('libs/lib1/tsconfig.json', (json) => {
         return {
           compilerOptions: {
-            types: []
-          }
+            types: [],
+          },
         };
       }),
       appTree
@@ -43,7 +43,7 @@ describe('jestProject', () => {
       'jest-project',
       {
         project: 'lib1',
-        setupFile: 'angular'
+        setupFile: 'angular',
       },
       appTree
     );
@@ -57,7 +57,7 @@ describe('jestProject', () => {
       'jest-project',
       {
         project: 'lib1',
-        setupFile: 'angular'
+        setupFile: 'angular',
       },
       appTree
     );
@@ -68,8 +68,8 @@ describe('jestProject', () => {
         jestConfig: 'libs/lib1/jest.config.js',
         setupFile: 'libs/lib1/src/test-setup.ts',
         tsConfig: 'libs/lib1/tsconfig.spec.json',
-        passWithNoTests: true
-      }
+        passWithNoTests: true,
+      },
     });
     expect(
       workspaceJson.projects.lib1.architect.lint.options.tsConfig
@@ -80,7 +80,7 @@ describe('jestProject', () => {
     const resultTree = await runSchematic(
       'jest-project',
       {
-        project: 'lib1'
+        project: 'lib1',
       },
       appTree
     );
@@ -102,7 +102,7 @@ describe('jestProject', () => {
     const resultTree = await runSchematic(
       'jest-project',
       {
-        project: 'lib1'
+        project: 'lib1',
       },
       appTree
     );
@@ -116,7 +116,7 @@ describe('jestProject', () => {
       'jest-project',
       {
         project: 'lib1',
-        setupFile: 'angular'
+        setupFile: 'angular',
       },
       appTree
     );
@@ -126,10 +126,10 @@ describe('jestProject', () => {
       compilerOptions: {
         module: 'commonjs',
         outDir: '../../dist/out-tsc',
-        types: ['jest', 'node']
+        types: ['jest', 'node'],
       },
       files: ['src/test-setup.ts'],
-      include: ['**/*.spec.ts', '**/*.d.ts']
+      include: ['**/*.spec.ts', '**/*.d.ts'],
     });
   });
 
@@ -140,7 +140,7 @@ describe('jestProject', () => {
         {
           project: 'lib1',
           setupFile: 'none',
-          babelJest: true
+          babelJest: true,
         },
         appTree
       );
@@ -155,7 +155,7 @@ describe('jestProject', () => {
         {
           project: 'lib1',
           setupFile: 'none',
-          babelJest: false
+          babelJest: false,
         },
         appTree
       );
@@ -171,7 +171,7 @@ describe('jestProject', () => {
         'jest-project',
         {
           project: 'lib1',
-          setupFile: 'none'
+          setupFile: 'none',
         },
         appTree
       );
@@ -183,7 +183,7 @@ describe('jestProject', () => {
         'jest-project',
         {
           project: 'lib1',
-          setupFile: 'none'
+          setupFile: 'none',
         },
         appTree
       );
@@ -198,7 +198,7 @@ describe('jestProject', () => {
         'jest-project',
         {
           project: 'lib1',
-          setupFile: 'none'
+          setupFile: 'none',
         },
         appTree
       );
@@ -216,7 +216,7 @@ describe('jestProject', () => {
         'jest-project',
         {
           project: 'lib1',
-          skipSetupFile: true
+          skipSetupFile: true,
         },
         appTree
       );
@@ -228,7 +228,7 @@ describe('jestProject', () => {
         'jest-project',
         {
           project: 'lib1',
-          skipSetupFile: true
+          skipSetupFile: true,
         },
         appTree
       );
@@ -243,7 +243,7 @@ describe('jestProject', () => {
         'jest-project',
         {
           project: 'lib1',
-          skipSetupFile: true
+          skipSetupFile: true,
         },
         appTree
       );
@@ -261,7 +261,7 @@ describe('jestProject', () => {
         'jest-project',
         {
           project: 'lib1',
-          skipSerializers: true
+          skipSerializers: true,
         },
         appTree
       );
@@ -282,7 +282,7 @@ describe('jestProject', () => {
         'jest-project',
         {
           project: 'lib1',
-          supportTsx: true
+          supportTsx: true,
         },
         appTree
       );

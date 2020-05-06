@@ -1,5 +1,5 @@
-import { normalizeBuildOptions, normalizeBundleOptions } from './normalize';
-import { BuildBuilderOptions, BundleBuilderOptions } from './types';
+import { normalizeBuildOptions, normalizePackageOptions } from './normalize';
+import { BuildBuilderOptions, PackageBuilderOptions } from './types';
 import { Path, normalize } from '@angular-devkit/core';
 
 import * as fs from 'fs';
@@ -17,16 +17,16 @@ describe('normalizeBuildOptions', () => {
       fileReplacements: [
         {
           replace: 'apps/environment/environment.ts',
-          with: 'apps/environment/environment.prod.ts'
+          with: 'apps/environment/environment.prod.ts',
         },
         {
           replace: 'module1.ts',
-          with: 'module2.ts'
-        }
+          with: 'module2.ts',
+        },
       ],
       assets: [],
       statsJson: false,
-      webpackConfig: 'apps/nodeapp/webpack.config'
+      webpackConfig: 'apps/nodeapp/webpack.config',
     };
     root = '/root';
     sourceRoot = normalize('apps/nodeapp/src');
@@ -49,7 +49,7 @@ describe('normalizeBuildOptions', () => {
 
   it('should normalize asset patterns', () => {
     spyOn(fs, 'statSync').and.returnValue({
-      isDirectory: () => true
+      isDirectory: () => true,
     });
     const result = normalizeBuildOptions(
       <BuildBuilderOptions>{
@@ -61,9 +61,9 @@ describe('normalizeBuildOptions', () => {
             input: 'outsideproj',
             output: 'output',
             glob: '**/*',
-            ignore: ['**/*.json']
-          }
-        ]
+            ignore: ['**/*.json'],
+          },
+        ],
       },
       root,
       sourceRoot
@@ -72,14 +72,14 @@ describe('normalizeBuildOptions', () => {
       {
         input: '/root/apps/nodeapp/src/assets',
         output: 'assets',
-        glob: '**/*'
+        glob: '**/*',
       },
       {
         input: '/root/outsideproj',
         output: 'output',
         glob: '**/*',
-        ignore: ['**/*.json']
-      }
+        ignore: ['**/*.json'],
+      },
     ]);
   });
 
@@ -88,12 +88,12 @@ describe('normalizeBuildOptions', () => {
     expect(result.fileReplacements).toEqual([
       {
         replace: '/root/apps/environment/environment.ts',
-        with: '/root/apps/environment/environment.prod.ts'
+        with: '/root/apps/environment/environment.prod.ts',
       },
       {
         replace: '/root/module1.ts',
-        with: '/root/module2.ts'
-      }
+        with: '/root/module2.ts',
+      },
     ]);
   });
 
@@ -104,7 +104,7 @@ describe('normalizeBuildOptions', () => {
     result = normalizeBuildOptions(
       {
         ...testOptions,
-        webpackConfig: 'react' // something that exists in node_modules
+        webpackConfig: 'react', // something that exists in node_modules
       },
       root,
       sourceRoot
@@ -114,8 +114,8 @@ describe('normalizeBuildOptions', () => {
   });
 });
 
-describe('normalizeBundleOptions', () => {
-  let testOptions: BundleBuilderOptions;
+describe('normalizePackageOptions', () => {
+  let testOptions: PackageBuilderOptions;
   let root: string;
   let sourceRoot: Path;
 
@@ -126,25 +126,26 @@ describe('normalizeBundleOptions', () => {
       entryFile: 'apps/nodeapp/src/main.ts',
       tsConfig: 'apps/nodeapp/tsconfig.app.json',
       babelConfig: 'apps/nodeapp/babel.config',
-      rollupConfig: 'apps/nodeapp/rollup.config'
+      rollupConfig: 'apps/nodeapp/rollup.config',
     };
     root = '/root';
     sourceRoot = normalize('apps/nodeapp/src');
   });
 
   it('should resolve both node modules and relative path for babelConfig/rollupConfig', () => {
-    let result = normalizeBundleOptions(testOptions, root);
+    let result = normalizePackageOptions(testOptions, root, sourceRoot);
     expect(result.babelConfig).toEqual('/root/apps/nodeapp/babel.config');
     expect(result.rollupConfig).toEqual('/root/apps/nodeapp/rollup.config');
 
-    result = normalizeBundleOptions(
+    result = normalizePackageOptions(
       {
         ...testOptions,
         // something that exists in node_modules
         rollupConfig: 'react',
-        babelConfig: 'react'
+        babelConfig: 'react',
       },
-      root
+      root,
+      sourceRoot
     );
     expect(result.babelConfig).toMatch('react');
     expect(result.babelConfig).not.toMatch(root);
@@ -152,11 +153,11 @@ describe('normalizeBundleOptions', () => {
     expect(result.rollupConfig).not.toMatch(root);
   });
 
-  it('should handle babelConfig/rollupCofig being undefined', () => {
+  it('should handle babelConfig/rollupConfig being undefined', () => {
     delete testOptions.babelConfig;
     delete testOptions.rollupConfig;
 
-    const result = normalizeBundleOptions(testOptions, root);
+    const result = normalizePackageOptions(testOptions, root, sourceRoot);
 
     expect(result.babelConfig).toEqual('');
     expect(result.rollupConfig).toEqual('');

@@ -3,10 +3,10 @@ import { formatFiles, updateWorkspaceInTree } from '@nrwl/workspace';
 
 export default function update(): Rule {
   return chain([
-    updateWorkspaceInTree(config => {
+    updateWorkspaceInTree((config) => {
       const a = [];
       const b = [];
-      Object.keys(config.schematics).forEach(name => {
+      Object.keys(config.schematics).forEach((name) => {
         if (name === '@nrwl/react' && config.schematics[name].application) {
           a.push(config.schematics[name]);
         }
@@ -14,14 +14,14 @@ export default function update(): Rule {
           b.push(config.schematics[name]);
         }
       });
-      a.forEach(x => {
+      a.forEach((x) => {
         delete x.application.babel;
       });
-      b.forEach(x => {
+      b.forEach((x) => {
         delete x.babel;
       });
       return config;
     }),
-    formatFiles()
+    formatFiles(),
   ]);
 }

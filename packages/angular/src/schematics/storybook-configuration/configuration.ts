@@ -3,12 +3,12 @@ import {
   externalSchematic,
   Rule,
   schematic,
-  noop
+  noop,
 } from '@angular-devkit/schematics';
 import { StorybookStoriesSchema } from '../stories/stories';
 import { StorybookConfigureSchema } from './schema';
 
-export default function(schema: StorybookConfigureSchema): Rule {
+export default function (schema: StorybookConfigureSchema): Rule {
   if (schema.generateCypressSpecs && !schema.generateStories) {
     throw new Error(
       'Cannot set generateCypressSpecs to true when generateStories is set to false.'
@@ -19,9 +19,9 @@ export default function(schema: StorybookConfigureSchema): Rule {
     externalSchematic('@nrwl/storybook', 'configuration', {
       name: schema.name,
       uiFramework: '@storybook/angular',
-      configureCypress: schema.configureCypress
+      configureCypress: schema.configureCypress,
     }),
-    schema.generateStories ? generateStories(schema) : noop()
+    schema.generateStories ? generateStories(schema) : noop(),
   ]);
 }
 
@@ -30,7 +30,7 @@ function generateStories(schema: StorybookConfigureSchema): Rule {
     return schematic<StorybookStoriesSchema>('stories', {
       name: schema.name,
       generateCypressSpecs:
-        schema.configureCypress && schema.generateCypressSpecs
+        schema.configureCypress && schema.generateCypressSpecs,
     });
   };
 }

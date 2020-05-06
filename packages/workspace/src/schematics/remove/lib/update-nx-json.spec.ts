@@ -23,7 +23,7 @@ describe('updateNxJson Rule', () => {
     const schema: Schema = {
       projectName: 'my-lib',
       skipFormat: false,
-      forceRemove: false
+      forceRemove: false,
     };
 
     tree = (await callRule(updateNxJson(schema), tree)) as UnitTestTree;

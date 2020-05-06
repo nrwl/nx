@@ -13,9 +13,9 @@ describe('WorkspacesResults', () => {
         name: 'proj',
         type: ProjectType.app,
         data: {
-          files: []
-        }
-      }
+          files: [],
+        },
+      },
     });
   });
 
@@ -65,8 +65,8 @@ describe('WorkspacesResults', () => {
         serializeJson({
           command: 'test',
           results: {
-            proj: false
-          }
+            proj: false,
+          },
         })
       );
     });
@@ -82,8 +82,8 @@ describe('WorkspacesResults', () => {
         serializeJson({
           command: 'test',
           results: {
-            proj: false
-          }
+            proj: false,
+          },
         })
       );
 
@@ -92,9 +92,9 @@ describe('WorkspacesResults', () => {
           name: 'proj',
           type: ProjectType.app,
           data: {
-            files: []
-          }
-        }
+            files: [],
+          },
+        },
       });
 
       expect(fs.readFileSync).toHaveBeenCalledWith('dist/.nx-results', 'utf-8');
@@ -110,9 +110,9 @@ describe('WorkspacesResults', () => {
             name: 'proj',
             type: ProjectType.app,
             data: {
-              files: []
-            }
-          }
+              files: [],
+            },
+          },
         });
       };
 
@@ -125,8 +125,8 @@ describe('WorkspacesResults', () => {
         serializeJson({
           command: 'test',
           results: {
-            proj: false
-          }
+            proj: false,
+          },
         })
       );
 
@@ -135,9 +135,9 @@ describe('WorkspacesResults', () => {
           name: 'proj',
           type: ProjectType.app,
           data: {
-            files: []
-          }
-        }
+            files: [],
+          },
+        },
       });
 
       expect(results.getResult('proj')).toBeUndefined();
@@ -149,8 +149,8 @@ describe('WorkspacesResults', () => {
           command: 'test',
           results: {
             proj: true,
-            proj2: false
-          }
+            proj2: false,
+          },
         })
       );
 
@@ -159,9 +159,9 @@ describe('WorkspacesResults', () => {
           name: 'proj',
           type: ProjectType.app,
           data: {
-            files: []
-          }
-        }
+            files: [],
+          },
+        },
       });
 
       expect(results.hasFailure).toEqual(false);

@@ -6,7 +6,7 @@ import {
   noop,
   Rule,
   template,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import { names, offsetFromRoot } from '@nrwl/workspace';
 import { NormalizedSchema } from './normalize-options';
@@ -18,19 +18,19 @@ export function createApplicationFiles(options: NormalizedSchema): Rule {
         ...names(options.name),
         ...options,
         tmpl: '',
-        offsetFromRoot: offsetFromRoot(options.appProjectRoot)
+        offsetFromRoot: offsetFromRoot(options.appProjectRoot),
       }),
       options.styledModule
-        ? filter(file => !file.endsWith(`.${options.style}`))
+        ? filter((file) => !file.endsWith(`.${options.style}`))
         : noop(),
       // Custom document is used for styled-components SSR in Next.js
       options.style === 'styled-components'
         ? noop()
-        : filter(file => file.indexOf('_document.tsx') === -1),
+        : filter((file) => file.indexOf('_document.tsx') === -1),
       options.unitTestRunner === 'none'
-        ? filter(file => file !== `/specs/index.spec.tsx`)
+        ? filter((file) => file !== `/specs/index.spec.tsx`)
         : noop(),
-      move(options.appProjectRoot)
+      move(options.appProjectRoot),
     ])
   );
 }

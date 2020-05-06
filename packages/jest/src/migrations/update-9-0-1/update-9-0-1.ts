@@ -3,7 +3,7 @@ import { formatFiles, insert } from '@nrwl/workspace';
 import * as ts from 'typescript';
 import {
   getSourceNodes,
-  RemoveChange
+  RemoveChange,
 } from '@nrwl/workspace/src/utils/ast-utils';
 import { updateWorkspace } from '@nrwl/workspace/src/utils/workspace';
 
@@ -11,13 +11,13 @@ export default function update(): Rule {
   return chain([
     addPassWithNoTestsToWorkspace,
     removePassWithNoTestsFromJestConfig,
-    formatFiles()
+    formatFiles(),
   ]);
 }
 
-const addPassWithNoTestsToWorkspace = updateWorkspace(workspace => {
-  workspace.projects.forEach(project => {
-    project.targets.forEach(target => {
+const addPassWithNoTestsToWorkspace = updateWorkspace((workspace) => {
+  workspace.projects.forEach((project) => {
+    project.targets.forEach((target) => {
       if (
         target.builder === '@nrwl/jest:jest' &&
         target.options &&

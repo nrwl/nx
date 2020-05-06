@@ -83,7 +83,7 @@ export function addExportsToBarrel(options: Schema): Rule {
                 indexFilePath,
                 `export * from '${statePath}.facade';`
               )
-            : [])
+            : []),
         ]);
       }
     }

@@ -24,17 +24,17 @@ describe('lib', () => {
           exclude: ['**/node_modules/**', '!libs/my-lib/**'],
           tsConfig: [
             'libs/my-lib/tsconfig.lib.json',
-            'libs/my-lib/tsconfig.spec.json'
-          ]
-        }
+            'libs/my-lib/tsconfig.spec.json',
+          ],
+        },
       });
       expect(workspaceJson.projects['my-lib'].architect.test).toEqual({
         builder: '@nrwl/jest:jest',
         options: {
           jestConfig: 'libs/my-lib/jest.config.js',
           tsConfig: 'libs/my-lib/tsconfig.spec.json',
-          passWithNoTests: true
-        }
+          passWithNoTests: true,
+        },
       });
     });
 
@@ -81,10 +81,20 @@ describe('lib', () => {
           @Module({
           controllers: [],
           providers: [],
-          exports: []
+          exports: [],
           })
           export class MyLibModule {}`
       );
+    });
+
+    it('should remove the default file from @nrwl/node:lib', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', global: true },
+        appTree
+      );
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.ts')).toBeFalsy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.ts')).toBeFalsy();
     });
 
     it('should provide the controller and service', async () => {
@@ -105,7 +115,7 @@ describe('lib', () => {
           @Module({
           controllers: [MyLibController],
           providers: [MyLibService],
-          exports: [MyLibService]
+          exports: [MyLibService],
           })
           export class MyLibModule {}`
       );
@@ -141,8 +151,8 @@ describe('lib', () => {
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-lib': {
-          tags: ['one', 'two']
-        }
+          tags: ['one', 'two'],
+        },
       });
     });
 
@@ -150,7 +160,7 @@ describe('lib', () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
       const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'libs/my-lib/src/index.ts'
+        'libs/my-lib/src/index.ts',
       ]);
     });
 
@@ -161,9 +171,9 @@ describe('lib', () => {
         extends: '../../tsconfig.json',
         compilerOptions: {
           types: ['node', 'jest'],
-          target: 'es6'
+          target: 'es6',
         },
-        include: ['**/*.ts']
+        include: ['**/*.ts'],
       });
     });
 
@@ -200,15 +210,15 @@ describe('lib', () => {
         {
           name: 'myLib',
           directory: 'myDir',
-          tags: 'one'
+          tags: 'one',
         },
         appTree
       );
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-dir-my-lib': {
-          tags: ['one']
-        }
+          tags: ['one'],
+        },
       });
 
       const tree2 = await runSchematic(
@@ -216,18 +226,18 @@ describe('lib', () => {
         {
           name: 'myLib2',
           directory: 'myDir',
-          tags: 'one,two'
+          tags: 'one,two',
         },
         tree
       );
       const nxJson2 = readJsonInTree<NxJson>(tree2, '/nx.json');
       expect(nxJson2.projects).toEqual({
         'my-dir-my-lib': {
-          tags: ['one']
+          tags: ['one'],
         },
         'my-dir-my-lib2': {
-          tags: ['one', 'two']
-        }
+          tags: ['one', 'two'],
+        },
       });
     });
 
@@ -261,9 +271,9 @@ describe('lib', () => {
           exclude: ['**/node_modules/**', '!libs/my-dir/my-lib/**'],
           tsConfig: [
             'libs/my-dir/my-lib/tsconfig.lib.json',
-            'libs/my-dir/my-lib/tsconfig.spec.json'
-          ]
-        }
+            'libs/my-dir/my-lib/tsconfig.spec.json',
+          ],
+        },
       });
     });
 
@@ -274,9 +284,9 @@ describe('lib', () => {
         appTree
       );
       const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
-      expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
-        ['libs/my-dir/my-lib/src/index.ts']
-      );
+      expect(
+        tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']
+      ).toEqual(['libs/my-dir/my-lib/src/index.ts']);
       expect(
         tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
       ).toBeUndefined();
@@ -297,9 +307,9 @@ describe('lib', () => {
         extends: '../../../tsconfig.json',
         compilerOptions: {
           types: ['node', 'jest'],
-          target: 'es6'
+          target: 'es6',
         },
-        include: ['**/*.ts']
+        include: ['**/*.ts'],
       });
     });
   });
@@ -324,9 +334,9 @@ describe('lib', () => {
         extends: '../../tsconfig.json',
         compilerOptions: {
           types: ['node'],
-          target: 'es6'
+          target: 'es6',
         },
-        include: ['**/*.ts']
+        include: ['**/*.ts'],
       });
       expect(
         workspaceJson.projects['my-lib'].architect.lint.options.tsConfig
@@ -390,10 +400,10 @@ describe('lib', () => {
       preset: '../../jest.config.js',
       testEnvironment: 'node',
       transform: {
-        '^.+\\.[tj]sx?$': 'ts-jest'
+        '^.+\\.[tj]sx?$': 'ts-jest',
       },
       moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
-      coverageDirectory: '../../coverage/libs/my-lib'
+      coverageDirectory: '../../coverage/libs/my-lib',
       };`);
     });
   });

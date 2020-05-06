@@ -7,6 +7,12 @@ Read more about how to use builders and the CLI here: https://nx.dev/react/guide
 
 ## Properties
 
+### assets
+
+Type: `array`
+
+List of static assets.
+
 ### babelConfig
 
 Type: `string`

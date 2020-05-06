@@ -11,7 +11,7 @@ import { RawSource } from 'webpack-sources';
 import {
   CrossOriginValue,
   FileInfo,
-  augmentIndexHtml
+  augmentIndexHtml,
 } from '../utilities/index-file/augment-index-html';
 import { IndexHtmlTransform } from '../utilities/index-file/write-index-html';
 import { stripBom } from '../utilities/strip-bom';
@@ -60,14 +60,14 @@ export class IndexHtmlWebpackPlugin {
       noModuleEntrypoints: [],
       moduleEntrypoints: [],
       sri: false,
-      ...options
+      ...options,
     };
   }
 
   apply(compiler: Compiler) {
     compiler.hooks.emit.tapPromise(
       'index-html-webpack-plugin',
-      async compilation => {
+      async (compilation) => {
         // Get input html file
         const inputContent = await readFile(this._options.input, compilation);
         compilation.fileDependencies.add(this._options.input);
@@ -85,7 +85,7 @@ export class IndexHtmlWebpackPlugin {
             (f: string): FileInfo => ({
               name: entryName,
               file: f,
-              extension: path.extname(f)
+              extension: path.extname(f),
             })
           );
 
@@ -111,7 +111,7 @@ export class IndexHtmlWebpackPlugin {
           noModuleFiles,
           loadOutputFile,
           moduleFiles,
-          entrypoints: this._options.entrypoints
+          entrypoints: this._options.entrypoints,
         });
 
         if (this._options.postTransform) {

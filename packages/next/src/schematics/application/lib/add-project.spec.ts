@@ -26,7 +26,7 @@ describe('addProject Rule', () => {
       e2eProjectRoot: normalize('/apps/todos-e2e'),
       parsedTags: [],
       fileName: 'index',
-      styledModule: null
+      styledModule: null,
     };
   });
 
@@ -39,12 +39,12 @@ describe('addProject Rule', () => {
     expect(project.architect.build).toEqual({
       builder: '@nrwl/next:build',
       configurations: {
-        production: {}
+        production: {},
       },
       options: {
         outputPath: 'dist/apps/todos',
-        root: '/apps/todos'
-      }
+        root: '/apps/todos',
+      },
     });
   });
 });

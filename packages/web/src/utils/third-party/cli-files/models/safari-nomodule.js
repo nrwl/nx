@@ -1,10 +1,10 @@
-(function() {
+(function () {
   var check = document.createElement('script');
   if (!('noModule' in check) && 'onbeforeload' in check) {
     var support = false;
     document.addEventListener(
       'beforeload',
-      function(e) {
+      function (e) {
         if (e.target === check) {
           support = true;
         } else if (!e.target.hasAttribute('nomodule') || !support) {

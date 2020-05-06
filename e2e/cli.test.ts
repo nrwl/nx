@@ -10,7 +10,7 @@ import {
   runCommand,
   tmpProjPath,
   uniq,
-  updateFile
+  updateFile,
 } from './utils';
 
 forEachCli('nx', () => {
@@ -84,7 +84,7 @@ forEachCli(() => {
 
       const reportOutput = runCommand('npm run nx report');
 
-      packagesWeCareAbout.forEach(p => {
+      packagesWeCareAbout.forEach((p) => {
         expect(reportOutput).toContain(p);
       });
     }, 120000);
@@ -157,7 +157,7 @@ forEachCli(() => {
         `./node_modules/migrate-parent-package/package.json`,
         JSON.stringify({
           version: '1.0.0',
-          'nx-migrations': './migrations.json'
+          'nx-migrations': './migrations.json',
         })
       );
 
@@ -168,14 +168,14 @@ forEachCli(() => {
             run11: {
               version: '1.1.0',
               description: '1.1.0',
-              factory: './run11'
+              factory: './run11',
             },
             run20: {
               version: '2.0.0',
               description: '2.0.0',
-              factory: './run20'
-            }
-          }
+              factory: './run20',
+            },
+          },
         })
       );
 
@@ -204,13 +204,13 @@ forEachCli(() => {
       updateFile(
         `./node_modules/migrate-child-package/package.json`,
         JSON.stringify({
-          version: '1.0.0'
+          version: '1.0.0',
         })
       );
 
       updateFile(
         './node_modules/@nrwl/tao/src/commands/migrate.js',
-        content => {
+        (content) => {
           const start = content.indexOf('// testing-fetch-start');
           const end = content.indexOf('// testing-fetch-end');
 
@@ -262,14 +262,14 @@ forEachCli(() => {
           {
             package: 'migrate-parent-package',
             version: '1.1.0',
-            name: 'run11'
+            name: 'run11',
           },
           {
             package: 'migrate-parent-package',
             version: '2.0.0',
-            name: 'run20'
-          }
-        ]
+            name: 'run20',
+          },
+        ],
       });
 
       // runs migrations

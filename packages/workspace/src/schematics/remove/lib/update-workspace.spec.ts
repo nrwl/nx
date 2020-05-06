@@ -17,11 +17,11 @@ describe('updateWorkspace Rule', () => {
     schema = {
       projectName: 'ng-app',
       skipFormat: false,
-      forceRemove: false
+      forceRemove: false,
     };
 
     tree = (await callRule(
-      updateWorkspaceInTree(workspace => {
+      updateWorkspaceInTree((workspace) => {
         return {
           version: 1,
           projects: {
@@ -34,9 +34,9 @@ describe('updateWorkspace Rule', () => {
               architect: {
                 build: {
                   builder: '@angular-devkit/build-angular:browser',
-                  options: {}
-                }
-              }
+                  options: {},
+                },
+              },
             },
             'ng-app-e2e': {
               root: 'apps/ng-app-e2e',
@@ -48,12 +48,12 @@ describe('updateWorkspace Rule', () => {
                   options: {
                     cypressConfig: 'apps/ng-app-e2e/cypress.json',
                     tsConfig: 'apps/ng-app-e2e/tsconfig.e2e.json',
-                    devServerTarget: 'ng-app:serve'
-                  }
-                }
-              }
-            }
-          }
+                    devServerTarget: 'ng-app:serve',
+                  },
+                },
+              },
+            },
+          },
         };
       }),
       tree

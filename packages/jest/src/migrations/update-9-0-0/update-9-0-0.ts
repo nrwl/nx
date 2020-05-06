@@ -2,13 +2,13 @@ import {
   chain,
   Rule,
   SchematicContext,
-  Tree
+  Tree,
 } from '@angular-devkit/schematics';
 import {
   formatFiles,
   insert,
   readWorkspace,
-  updatePackagesInPackageJson
+  updatePackagesInPackageJson,
 } from '@nrwl/workspace';
 import * as ts from 'typescript';
 import * as path from 'path';
@@ -17,7 +17,7 @@ import {
   getSourceNodes,
   InsertChange,
   readJsonInTree,
-  ReplaceChange
+  ReplaceChange,
 } from '@nrwl/workspace/src/utils/ast-utils';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
@@ -29,7 +29,7 @@ export default function update(): Rule {
       '9.0.0'
     ),
     updateJestConfigs,
-    formatFiles()
+    formatFiles(),
   ]);
 }
 
@@ -54,12 +54,12 @@ function updateJestConfigs(host: Tree) {
     const workspaceConfig = readWorkspace(host);
     const jestConfigsToUpdate = [];
 
-    Object.values<any>(workspaceConfig.projects).forEach(project => {
+    Object.values<any>(workspaceConfig.projects).forEach((project) => {
       if (!project.architect) {
         return;
       }
 
-      Object.values<any>(project.architect).forEach(target => {
+      Object.values<any>(project.architect).forEach((target) => {
         if (target.builder !== '@nrwl/jest:jest') {
           return;
         }
@@ -69,7 +69,7 @@ function updateJestConfigs(host: Tree) {
         }
 
         if (target.configurations) {
-          Object.values<any>(target.configurations).forEach(config => {
+          Object.values<any>(target.configurations).forEach((config) => {
             if (config.jestConfig) {
               jestConfigsToUpdate.push(config.jestConfig);
             }
@@ -78,7 +78,7 @@ function updateJestConfigs(host: Tree) {
       });
     });
 
-    jestConfigsToUpdate.forEach(configPath => {
+    jestConfigsToUpdate.forEach((configPath) => {
       if (host.exists(configPath)) {
         const contents = host.read(configPath).toString();
         const sourceFile = ts.createSourceFile(
@@ -89,7 +89,7 @@ function updateJestConfigs(host: Tree) {
 
         const changes: Change[] = [];
 
-        getSourceNodes(sourceFile).forEach(node => {
+        getSourceNodes(sourceFile).forEach((node) => {
           if (node && ts.isStringLiteral(node)) {
             const nodeText = node.text;
 

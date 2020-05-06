@@ -2,7 +2,7 @@ import { formatFiles, updateJsonInTree } from '@nrwl/workspace';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { chain } from '@angular-devkit/schematics';
 
-export default function() {
+export default function () {
   return chain([
     updateJsonInTree('package.json', (json, context) => {
       json.scripts = json.scripts || {};
@@ -24,6 +24,6 @@ export default function() {
       }
       return json;
     }),
-    formatFiles()
+    formatFiles(),
   ]);
 }

@@ -8,14 +8,16 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
+  filter,
+  noop,
 } from '@angular-devkit/schematics';
 import {
   getProjectConfig,
   names,
   readNxJsonInTree,
   toFileName,
-  updateJsonInTree
+  updateJsonInTree,
 } from '@nrwl/workspace';
 import * as path from 'path';
 import { Schema } from './schema';
@@ -29,7 +31,7 @@ export interface NormalizedSchema extends Schema {
   fileTemplate: string;
 }
 
-export default function(schema: NormalizedSchema): Rule {
+export default function (schema: NormalizedSchema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
 
@@ -66,7 +68,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     projectSourceRoot,
     npmScope,
     npmPackageName,
-    fileTemplate
+    fileTemplate,
   };
 
   return normalized;
@@ -78,9 +80,12 @@ function addFiles(options: NormalizedSchema): Rule {
       template({
         ...options,
         ...names(options.name),
-        tmpl: ''
+        tmpl: '',
       }),
-      move(`${options.projectSourceRoot}/schematics`)
+      options.unitTestRunner === 'none'
+        ? filter((file) => !file.endsWith('.spec.ts'))
+        : noop(),
+      move(`${options.projectSourceRoot}/schematics`),
     ])
   );
 }
@@ -88,12 +93,12 @@ function addFiles(options: NormalizedSchema): Rule {
 function updateCollectionJson(options: NormalizedSchema): Rule {
   return updateJsonInTree(
     path.join(options.projectRoot, 'collection.json'),
-    json => {
+    (json) => {
       const schematics = json.schematics ? json.schematics : {};
       schematics[options.name] = {
         factory: `./src/schematics/${options.name}/schematic`,
         schema: `./src/schematics/${options.name}/schema.json`,
-        description: options.description
+        description: options.description,
       };
       json.schematics = schematics;
 

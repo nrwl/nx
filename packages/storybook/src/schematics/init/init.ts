@@ -2,45 +2,54 @@ import {
   chain,
   Rule,
   SchematicContext,
-  Tree
+  Tree,
 } from '@angular-devkit/schematics';
 import {
   addDepsToPackageJson,
   readJsonInTree,
-  updateJsonInTree
+  updateJsonInTree,
 } from '@nrwl/workspace';
 import {
   babelLoaderVersion,
   babelCoreVersion,
   storybookVersion,
-  nxVersion
+  nxVersion,
+  babelPresetTypescriptVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
 
-function checkDependenciesInstalled(): Rule {
+function checkDependenciesInstalled(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext): Rule => {
     const packageJson = readJsonInTree(host, 'package.json');
     const devDependencies = {};
     const dependencies = {};
-    if (!packageJson.devDependencies['@storybook/angular']) {
-      devDependencies['@nrwl/storybook'] = nxVersion;
+
+    // base deps
+    devDependencies['@nrwl/storybook'] = nxVersion;
+    devDependencies['@storybook/addon-knobs'] = storybookVersion;
+
+    if (schema.uiFramework === '@storybook/angular') {
       devDependencies['@storybook/angular'] = storybookVersion;
+      if (
+        !packageJson.dependencies['@angular/forms'] &&
+        !packageJson.devDependencies['@angular/forms']
+      ) {
+        devDependencies['@angular/forms'] = '*';
+      }
+    } else if (schema.uiFramework === '@storybook/react') {
       devDependencies['@storybook/react'] = storybookVersion;
-      devDependencies['@storybook/addon-knobs'] = storybookVersion;
       devDependencies['babel-loader'] = babelLoaderVersion;
       devDependencies['@babel/core'] = babelCoreVersion;
+      devDependencies[
+        '@babel/preset-typescript'
+      ] = babelPresetTypescriptVersion;
     }
-    if (
-      !packageJson.dependencies['@angular/forms'] &&
-      !packageJson.devDependencies['@angular/forms']
-    ) {
-      devDependencies['@angular/forms'] = '*';
-    }
+
     return addDepsToPackageJson(dependencies, devDependencies);
   };
 }
 
-export const addCacheableOperation = updateJsonInTree('nx.json', nxJson => {
+export const addCacheableOperation = updateJsonInTree('nx.json', (nxJson) => {
   if (
     !nxJson.tasksRunnerOptions ||
     !nxJson.tasksRunnerOptions.default ||
@@ -69,22 +78,25 @@ export const addCacheableOperation = updateJsonInTree('nx.json', nxJson => {
   return nxJson;
 });
 
-const moveToDevDependencies = updateJsonInTree('package.json', packageJson => {
-  packageJson.dependencies = packageJson.dependencies || {};
-  packageJson.devDependencies = packageJson.devDependencies || {};
+const moveToDevDependencies = updateJsonInTree(
+  'package.json',
+  (packageJson) => {
+    packageJson.dependencies = packageJson.dependencies || {};
+    packageJson.devDependencies = packageJson.devDependencies || {};
 
-  if (packageJson.dependencies['@nrwl/storybook']) {
-    packageJson.devDependencies['@nrwl/storybook'] =
-      packageJson.dependencies['@nrwl/storybook'];
-    delete packageJson.dependencies['@nrwl/storybook'];
+    if (packageJson.dependencies['@nrwl/storybook']) {
+      packageJson.devDependencies['@nrwl/storybook'] =
+        packageJson.dependencies['@nrwl/storybook'];
+      delete packageJson.dependencies['@nrwl/storybook'];
+    }
+    return packageJson;
   }
-  return packageJson;
-});
+);
 
-export default function(schema: Schema) {
+export default function (schema: Schema) {
   return chain([
-    checkDependenciesInstalled(),
+    checkDependenciesInstalled(schema),
     moveToDevDependencies,
-    addCacheableOperation
+    addCacheableOperation,
   ]);
 }

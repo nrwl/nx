@@ -1,7 +1,7 @@
 import {
   BuilderContext,
   BuilderOutput,
-  createBuilder
+  createBuilder,
 } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
 import { readJsonFile } from '@nrwl/workspace';
@@ -15,14 +15,14 @@ import { map, switchMap, tap } from 'rxjs/operators';
 import * as treeKill from 'tree-kill';
 import {
   createProjectGraph,
-  ProjectGraph
+  ProjectGraph,
 } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
   DependentBuildableProjectNode,
-  updateBuildableProjectPackageJsonDependencies
+  updateBuildableProjectPackageJsonDependencies,
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
 
 export interface NodePackageBuilderOptions extends JsonObject {
@@ -68,7 +68,7 @@ export function runNodePackageBuilder(
   );
 
   return of(checkDependentProjectsHaveBeenBuilt(context, dependencies)).pipe(
-    switchMap(result => {
+    switchMap((result) => {
       if (result) {
         return compileTypeScriptFiles(
           normalizedOptions,
@@ -94,10 +94,10 @@ export function runNodePackageBuilder(
         return of({ success: false });
       }
     }),
-    map(value => {
+    map((value) => {
       return {
         ...value,
-        outputPath: normalizedOptions.outputPath
+        outputPath: normalizedOptions.outputPath,
       };
     })
   );
@@ -118,16 +118,16 @@ function normalizeOptions(
     return glob.sync(pattern, {
       cwd: input,
       nodir: true,
-      ignore
+      ignore,
     });
   };
 
-  options.assets.forEach(asset => {
+  options.assets.forEach((asset) => {
     if (typeof asset === 'string') {
-      globbedFiles(asset, context.workspaceRoot).forEach(globbedFile => {
+      globbedFiles(asset, context.workspaceRoot).forEach((globbedFile) => {
         files.push({
           input: join(context.workspaceRoot, globbedFile),
-          output: join(context.workspaceRoot, outDir, basename(globbedFile))
+          output: join(context.workspaceRoot, outDir, basename(globbedFile)),
         });
       });
     } else {
@@ -135,10 +135,15 @@ function normalizeOptions(
         asset.glob,
         join(context.workspaceRoot, asset.input),
         asset.ignore
-      ).forEach(globbedFile => {
+      ).forEach((globbedFile) => {
         files.push({
           input: join(context.workspaceRoot, asset.input, globbedFile),
-          output: join(context.workspaceRoot, outDir, asset.output, globbedFile)
+          output: join(
+            context.workspaceRoot,
+            outDir,
+            asset.output,
+            globbedFile
+          ),
         });
       });
     }
@@ -159,7 +164,7 @@ function normalizeOptions(
     ...options,
     files,
     relativeMainFileOutput,
-    normalizedOutputPath: join(context.workspaceRoot, options.outputPath)
+    normalizedOutputPath: join(context.workspaceRoot, options.outputPath),
   };
 }
 
@@ -209,7 +214,7 @@ function compileTypeScriptFiles(
           `Compiling TypeScript files for library ${context.target.project}...`
         );
         tscProcess = fork(tscPath, args, { stdio: [0, 1, 2, 'ipc'] });
-        tscProcess.on('exit', code => {
+        tscProcess.on('exit', (code) => {
           if (code === 0) {
             context.logger.info(
               `Done compiling TypeScript files for library ${context.target.project}`
@@ -233,7 +238,7 @@ function compileTypeScriptFiles(
 }
 
 function killProcess(context: BuilderContext): void {
-  return treeKill(tscProcess.pid, 'SIGTERM', error => {
+  return treeKill(tscProcess.pid, 'SIGTERM', (error) => {
     tscProcess = null;
     if (error) {
       if (Array.isArray(error) && error[0] && error[2]) {
@@ -272,17 +277,17 @@ function copyAssetFiles(
   context: BuilderContext
 ): Promise<BuilderOutput> {
   context.logger.info('Copying asset files...');
-  return Promise.all(options.files.map(file => copy(file.input, file.output)))
+  return Promise.all(options.files.map((file) => copy(file.input, file.output)))
     .then(() => {
       context.logger.info('Done copying asset files.');
       return {
-        success: true
+        success: true,
       };
     })
     .catch((err: Error) => {
       return {
         error: err.message,
-        success: false
+        success: false,
       };
     });
 }

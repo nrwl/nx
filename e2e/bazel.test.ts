@@ -6,10 +6,10 @@ import {
   runCLI,
   runCommand,
   uniq,
-  updateFile
+  updateFile,
 } from './utils';
 
-forEachCli(currentCLIName => {
+forEachCli((currentCLIName) => {
   describe('Bazel', () => {
     const ngapp = uniq('ngapp');
     const reactapp = uniq('reactapp');

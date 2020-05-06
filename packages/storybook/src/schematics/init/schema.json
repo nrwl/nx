@@ -3,5 +3,12 @@
   "id": "Nx Storybook Project Schematics Schema",
   "title": "Add Storybook Configuration to the workspace",
   "type": "object",
-  "properties": {}
+  "properties": {
+    "uiFramework": {
+      "type": "string",
+      "description": "Storybook UI Framework to use",
+      "enum": ["@storybook/angular", "@storybook/react"],
+      "x-prompt": "What UI framework plugin should storybook use?"
+    }
+  }
 }

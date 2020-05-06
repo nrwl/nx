@@ -19,7 +19,7 @@ describe('NxPlugin schematic', () => {
       'schematic',
       {
         project: projectName,
-        name: 'my-schematic'
+        name: 'my-schematic',
       },
       appTree
     );
@@ -46,7 +46,7 @@ describe('NxPlugin schematic', () => {
       {
         project: projectName,
         name: 'my-schematic',
-        description: 'my-schematic description'
+        description: 'my-schematic description',
       },
       appTree
     );
@@ -72,7 +72,7 @@ describe('NxPlugin schematic', () => {
       'schematic',
       {
         project: projectName,
-        name: 'my-schematic'
+        name: 'my-schematic',
       },
       appTree
     );
@@ -93,7 +93,7 @@ describe('NxPlugin schematic', () => {
       {
         project: projectName,
         name: 'my-schematic',
-        description: 'my-schematic custom description'
+        description: 'my-schematic custom description',
       },
       appTree
     );
@@ -106,5 +106,30 @@ describe('NxPlugin schematic', () => {
     expect(collectionJson.schematics['my-schematic'].description).toEqual(
       'my-schematic custom description'
     );
+  });
+
+  describe('--unitTestRunner', () => {
+    describe('none', () => {
+      it('should not generate files', async () => {
+        const tree = await runSchematic(
+          'schematic',
+          {
+            project: projectName,
+            name: 'my-schematic',
+            unitTestRunner: 'none',
+          },
+          appTree
+        );
+
+        expect(
+          tree.exists('libs/my-plugin/src/schematics/my-schematic/schematic.ts')
+        ).toBeTruthy();
+        expect(
+          tree.exists(
+            'libs/my-plugin/src/schematics/my-schematic/schematic.spec.ts'
+          )
+        ).toBeFalsy();
+      });
+    });
   });
 });

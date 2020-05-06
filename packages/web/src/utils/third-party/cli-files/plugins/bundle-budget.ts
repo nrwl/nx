@@ -10,7 +10,7 @@ import { Budget, Type } from '../../browser/schema';
 import {
   Size,
   calculateBytes,
-  calculateSizes
+  calculateSizes,
 } from '../utilities/bundle-calculator';
 import { formatSize } from '../utilities/stats';
 
@@ -54,7 +54,7 @@ export class BundleBudgetPlugin {
             }
 
             const filteredBudgets = budgets.filter(
-              budget => budget.type === Type.AnyComponentStyle
+              (budget) => budget.type === Type.AnyComponentStyle
             );
             this.runChecks(filteredBudgets, compilation);
           }
@@ -66,7 +66,7 @@ export class BundleBudgetPlugin {
       'BundleBudgetPlugin',
       (compilation: compilation.Compilation) => {
         const filteredBudgets = budgets.filter(
-          budget => budget.type !== Type.AnyComponentStyle
+          (budget) => budget.type !== Type.AnyComponentStyle
         );
         this.runChecks(filteredBudgets, compilation);
       }
@@ -170,13 +170,13 @@ export class BundleBudgetPlugin {
 
   private runChecks(budgets: Budget[], compilation: compilation.Compilation) {
     budgets
-      .map(budget => ({
+      .map((budget) => ({
         budget,
         thresholds: this.calculate(budget),
-        sizes: calculateSizes(budget, compilation)
+        sizes: calculateSizes(budget, compilation),
       }))
-      .forEach(budgetCheck => {
-        budgetCheck.sizes.forEach(size => {
+      .forEach((budgetCheck) => {
+        budgetCheck.sizes.forEach((size) => {
           this.checkMaximum(
             budgetCheck.thresholds.maximumWarning,
             size,

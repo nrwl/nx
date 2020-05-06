@@ -6,7 +6,7 @@ import {
   removeSync,
   renameSync,
   statSync,
-  writeFileSync
+  writeFileSync,
 } from 'fs-extra';
 import { dirname, isAbsolute } from 'path';
 import { tmpProjPath } from './paths';
@@ -16,7 +16,7 @@ import { tmpProjPath } from './paths';
  * @param modules a list of module names or scopes to copy
  */
 export function copyNodeModules(modules: string[]) {
-  modules.forEach(module => {
+  modules.forEach((module) => {
     removeSync(`${tmpProjPath()}/node_modules/${module}`);
     copySync(
       `./node_modules/${module}`,
@@ -79,7 +79,7 @@ export function renameFile(path: string, newPath: string): void {
  * @usage `checkFileExists('file1', 'file2', '/var/user/file')`
  */
 export function checkFilesExist(...expectedPaths: string[]) {
-  expectedPaths.forEach(path => {
+  expectedPaths.forEach((path) => {
     const filePath = isAbsolute(path) ? path : tmpProjPath(path);
     if (!exists(filePath)) {
       throw new Error(`'${filePath}' does not exist`);

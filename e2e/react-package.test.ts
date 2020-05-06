@@ -1,14 +1,15 @@
 import {
   checkFilesDoNotExist,
+  checkFilesExist,
   ensureProject,
   forEachCli,
   readJson,
   runCLI,
   uniq,
-  updateFile
+  updateFile,
 } from './utils';
 
-forEachCli('nx', cli => {
+forEachCli('nx', (cli) => {
   describe('Build React libraries and apps', () => {
     /**
      * Graph:
@@ -50,7 +51,7 @@ forEachCli('nx', cli => {
         updateFile(
           `libs/${parent}/src/lib/${parent}.tsx`,
           `
-              ${children.map(entry => `import '@proj/${entry}';`).join('\n')}
+              ${children.map((entry) => `import '@proj/${entry}';`).join('\n')}
 
             `
         );
@@ -66,11 +67,21 @@ forEachCli('nx', cli => {
       );
 
       // we are setting paths to {} to make sure built libs are read from dist
-      updateFile('tsconfig.json', c => {
+      updateFile('tsconfig.json', (c) => {
         const json = JSON.parse(c);
         json.compilerOptions.paths = {};
         return JSON.stringify(json, null, 2);
       });
+
+      // Add assets to child lib
+      updateFile(cli === 'angular' ? 'angular.json' : 'workspace.json', (c) => {
+        const json = JSON.parse(c);
+        json.projects[childLib].architect.build.options.assets = [
+          `libs/${childLib}/src/assets`,
+        ];
+        return JSON.stringify(json, null, 2);
+      });
+      updateFile(`libs/${childLib}/src/assets/hello.txt`, 'Hello World!');
     });
 
     it('should throw an error if the dependent library has not been built before building the parent lib', () => {
@@ -90,6 +101,7 @@ forEachCli('nx', cli => {
       const output = runCLI(`build ${childLib}`);
       expect(output).toContain(`${childLib}.esm.js`);
       expect(output).toContain(`Bundle complete`);
+      checkFilesExist(`dist/libs/${childLib}/assets/hello.txt`);
     });
 
     it('should properly add references to any dependency into the parent package.json', () => {
@@ -112,7 +124,7 @@ forEachCli('nx', cli => {
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
       expect(jsonFile.dependencies).toEqual({
         [`@proj/${childLib}`]: '0.0.1',
-        [`@proj/${childLib2}`]: '0.0.1'
+        [`@proj/${childLib2}`]: '0.0.1',
       });
     });
 

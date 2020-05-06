@@ -4,7 +4,7 @@ import {
   mergeWith,
   Rule,
   template,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import { addDepsToPackageJson, readJsonInTree } from '@nrwl/workspace';
 import ignore from 'ignore';
@@ -12,7 +12,7 @@ import { bazelVersion, iBazelVersion } from '../utils/versions';
 import { noop } from 'rxjs';
 
 function updateGitIgnore(): Rule {
-  return host => {
+  return (host) => {
     if (!host.exists('.gitignore')) {
       return;
     }
@@ -34,33 +34,33 @@ const updateDependencies = addDepsToPackageJson(
   {},
   {
     '@bazel/bazel': bazelVersion,
-    '@bazel/ibazel': iBazelVersion
+    '@bazel/ibazel': iBazelVersion,
   },
   true
 );
 
 function addFiles() {
-  return host => {
+  return (host) => {
     if (host.exists('/.bazelrc')) {
       return noop;
     }
     return mergeWith(
       apply(url('./files/root'), [
         template({
-          tmpl: ''
-        })
+          tmpl: '',
+        }),
       ])
     );
   };
 }
 
 export default (): Rule => {
-  return host => {
+  return (host) => {
     const packageJson = readJsonInTree(host, 'package.json');
     return chain([
       updateGitIgnore(),
       !packageJson.devDependencies['@bazel/bazel'] ? updateDependencies : noop,
-      addFiles()
+      addFiles(),
     ]);
   };
 };

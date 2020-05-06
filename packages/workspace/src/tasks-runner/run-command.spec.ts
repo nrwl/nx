@@ -11,7 +11,7 @@ describe('getRunner', () => {
   beforeEach(() => {
     nxJson = {
       npmScope: 'proj',
-      projects: {}
+      projects: {},
     };
     mockRunner = jest.fn();
     overrides = { foo: 'bar' };
@@ -33,13 +33,13 @@ describe('getRunner', () => {
 
   it('gets a custom task runner', () => {
     jest.mock('custom-runner', () => mockRunner, {
-      virtual: true
+      virtual: true,
     });
 
     nxJson.tasksRunnerOptions = {
       custom: {
-        runner: 'custom-runner'
-      }
+        runner: 'custom-runner',
+      },
     };
 
     const { tasksRunner, tasksOptions } = getRunner(
@@ -54,16 +54,16 @@ describe('getRunner', () => {
 
   it('gets a custom task runner with options', () => {
     jest.mock('custom-runner2', () => mockRunner, {
-      virtual: true
+      virtual: true,
     });
 
     nxJson.tasksRunnerOptions = {
       custom: {
         runner: 'custom-runner2',
         options: {
-          runnerOption: 'runner-option'
-        }
-      }
+          runnerOption: 'runner-option',
+        },
+      },
     };
 
     const { tasksRunner, tasksOptions } = getRunner(
@@ -74,19 +74,19 @@ describe('getRunner', () => {
     expect(tasksRunner).toBe(mockRunner);
     expect(tasksOptions).toEqual({
       runnerOption: 'runner-option',
-      foo: 'bar'
+      foo: 'bar',
     });
   });
 
   it('gets a custom defined default task runner', () => {
     jest.mock('custom-default-runner', () => mockRunner, {
-      virtual: true
+      virtual: true,
     });
 
     nxJson.tasksRunnerOptions = {
       default: {
-        runner: 'custom-default-runner'
-      }
+        runner: 'custom-default-runner',
+      },
     };
 
     const { tasksRunner } = getRunner({}, nxJson, overrides);

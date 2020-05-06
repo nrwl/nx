@@ -10,11 +10,11 @@ describe('utils', () => {
           data: {
             architect: {
               build: {
-                outputs: ['one', 'two']
-              }
+                outputs: ['one', 'two'],
+              },
             },
-            files: []
-          }
+            files: [],
+          },
         })
       ).toEqual(['one', 'two']);
     });
@@ -28,17 +28,17 @@ describe('utils', () => {
             architect: {
               build: {
                 options: {
-                  outputPath: 'one'
+                  outputPath: 'one',
                 },
                 configurations: {
                   production: {
-                    outputPath: 'two'
-                  }
-                }
-              }
+                    outputPath: 'two',
+                  },
+                },
+              },
             },
-            files: []
-          }
+            files: [],
+          },
         })
       ).toEqual(['two']);
     });
@@ -52,15 +52,15 @@ describe('utils', () => {
             architect: {
               build: {
                 options: {
-                  outputPath: 'one'
+                  outputPath: 'one',
                 },
                 configurations: {
-                  production: {}
-                }
-              }
+                  production: {},
+                },
+              },
             },
-            files: []
-          }
+            files: [],
+          },
         })
       ).toEqual(['one']);
     });
@@ -74,12 +74,12 @@ describe('utils', () => {
             architect: {
               build: {
                 options: {
-                  outputPath: 'one'
-                }
-              }
+                  outputPath: 'one',
+                },
+              },
             },
-            files: []
-          }
+            files: [],
+          },
         })
       ).toEqual(['one']);
     });
@@ -92,10 +92,10 @@ describe('utils', () => {
           data: {
             root: 'root-myapp',
             architect: {
-              build: {}
+              build: {},
             },
-            files: []
-          }
+            files: [],
+          },
         })
       ).toEqual(['dist/root-myapp']);
     });

@@ -12,7 +12,7 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import {
   addGlobal,
@@ -25,7 +25,7 @@ import {
   offsetFromRoot,
   toFileName,
   updateJsonInTree,
-  updateWorkspaceInTree
+  updateWorkspaceInTree,
 } from '@nrwl/workspace';
 import { Schema } from './schema';
 import * as ts from 'typescript';
@@ -40,7 +40,7 @@ export interface NormalizedSchema extends Schema {
   parsedTags: string[];
 }
 
-export default function(schema: NormalizedSchema): Rule {
+export default function (schema: NormalizedSchema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
 
@@ -51,7 +51,8 @@ export default function(schema: NormalizedSchema): Rule {
       updateTsConfig(options),
       addProject(options),
       formatFiles(options),
-      deleteFile(`/${options.projectRoot}/src/lib/${options.fileName}.spec.ts`)
+      deleteFile(`/${options.projectRoot}/src/lib/${options.fileName}.spec.ts`),
+      deleteFile(`/${options.projectRoot}/src/lib/${options.fileName}.ts`),
     ]);
   };
 }
@@ -68,7 +69,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const projectRoot = normalize(`libs/${projectDirectory}`);
 
   const parsedTags = options.tags
-    ? options.tags.split(',').map(s => s.trim())
+    ? options.tags.split(',').map((s) => s.trim())
     : [];
 
   const normalized: NormalizedSchema = {
@@ -78,7 +79,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     name: projectName,
     projectRoot,
     projectDirectory,
-    parsedTags
+    parsedTags,
   };
 
   return normalized;
@@ -121,7 +122,7 @@ function addExportsToBarrelFile(options: NormalizedSchema): Rule {
               indexFilePath,
               `export * from './lib/${options.fileName}.controller';`
             )
-          : [])
+          : []),
       ]);
     }
   };
@@ -134,25 +135,27 @@ function createFiles(options: NormalizedSchema): Rule {
         ...options,
         ...names(options.name),
         tmpl: '',
-        offsetFromRoot: offsetFromRoot(options.projectRoot)
+        offsetFromRoot: offsetFromRoot(options.projectRoot),
       }),
       move(options.projectRoot),
       options.unitTestRunner === 'none'
-        ? filter(file => !file.endsWith('spec.ts'))
+        ? filter((file) => !file.endsWith('spec.ts'))
         : noop(),
       options.publishable
         ? noop()
-        : filter(file => !file.endsWith('package.json')),
-      options.service ? noop() : filter(file => !file.endsWith('.service.ts')),
+        : filter((file) => !file.endsWith('package.json')),
+      options.service
+        ? noop()
+        : filter((file) => !file.endsWith('.service.ts')),
       options.controller
         ? noop()
-        : filter(file => !file.endsWith('.controller.ts')),
+        : filter((file) => !file.endsWith('.controller.ts')),
       !options.controller || options.unitTestRunner === 'none'
-        ? filter(file => !file.endsWith('.controller.spec.ts'))
+        ? filter((file) => !file.endsWith('.controller.spec.ts'))
         : noop(),
       !options.service || options.unitTestRunner === 'none'
-        ? filter(file => !file.endsWith('.service.spec.ts'))
-        : noop()
+        ? filter((file) => !file.endsWith('.service.spec.ts'))
+        : noop(),
     ]),
     MergeStrategy.Overwrite
   );
@@ -161,7 +164,7 @@ function createFiles(options: NormalizedSchema): Rule {
 function updateTsConfig(options: NormalizedSchema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const projectConfig = getProjectConfig(host, options.name);
-    return updateJsonInTree(`${projectConfig.root}/tsconfig.json`, json => {
+    return updateJsonInTree(`${projectConfig.root}/tsconfig.json`, (json) => {
       json.compilerOptions.target = options.target;
       return json;
     });
@@ -173,7 +176,7 @@ function addProject(options: NormalizedSchema): Rule {
     return noop();
   }
 
-  return updateWorkspaceInTree(json => {
+  return updateWorkspaceInTree((json) => {
     const architect = json.projects[options.name].architect;
     if (architect) {
       architect.build = {
@@ -183,8 +186,8 @@ function addProject(options: NormalizedSchema): Rule {
           tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
           packageJson: `${options.projectRoot}/package.json`,
           main: `${options.projectRoot}/src/index.ts`,
-          assets: [`${options.projectRoot}/*.md`]
-        }
+          assets: [`${options.projectRoot}/*.md`],
+        },
       };
     }
     return json;

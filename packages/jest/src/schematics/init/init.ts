@@ -3,7 +3,7 @@ import { chain, Rule, Tree } from '@angular-devkit/schematics';
 import {
   addDepsToPackageJson,
   readJsonInTree,
-  updateJsonInTree
+  updateJsonInTree,
 } from '@nrwl/workspace';
 import { noop } from 'rxjs';
 import {
@@ -15,7 +15,7 @@ import {
   jestTypesVersion,
   jestVersion,
   nxVersion,
-  tsJestVersion
+  tsJestVersion,
 } from '../../utils/versions';
 import { JestInitOptions } from './schema';
 
@@ -27,7 +27,7 @@ const removeNrwlJestFromDeps = (host: Tree) => {
     currentPackageJson.dependencies &&
     currentPackageJson.dependencies['@nrwl/jest']
   ) {
-    return updateJsonInTree('package.json', json => {
+    return updateJsonInTree('package.json', (json) => {
       json.dependencies = json.dependencies || {};
       delete json.dependencies['@nrwl/jest'];
       return json;
@@ -60,7 +60,7 @@ function updateDependencies(options: JestInitOptions): Rule {
     '@nrwl/jest': nxVersion,
     jest: jestVersion,
     '@types/jest': jestTypesVersion,
-    'ts-jest': tsJestVersion
+    'ts-jest': tsJestVersion,
   };
 
   if (options.babelJest) {
@@ -74,10 +74,10 @@ function updateDependencies(options: JestInitOptions): Rule {
   return addDepsToPackageJson({}, devDeps);
 }
 
-export default function(options: JestInitOptions): Rule {
+export default function (options: JestInitOptions): Rule {
   return chain([
     createJestConfig,
     updateDependencies(options),
-    removeNrwlJestFromDeps
+    removeNrwlJestFromDeps,
   ]);
 }

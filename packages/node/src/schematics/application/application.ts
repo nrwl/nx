@@ -9,7 +9,7 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import { join, normalize, Path } from '@angular-devkit/core';
 import { Schema } from './schema';
@@ -17,7 +17,7 @@ import {
   updateJsonInTree,
   updateWorkspaceInTree,
   generateProjectLint,
-  addLintFiles
+  addLintFiles,
 } from '@nrwl/workspace';
 import { toFileName } from '@nrwl/workspace';
 import { getProjectConfig } from '@nrwl/workspace';
@@ -30,13 +30,13 @@ interface NormalizedSchema extends Schema {
 }
 
 function updateNxJson(options: NormalizedSchema): Rule {
-  return updateJsonInTree(`/nx.json`, json => {
+  return updateJsonInTree(`/nx.json`, (json) => {
     return {
       ...json,
       projects: {
         ...json.projects,
-        [options.name]: { tags: options.parsedTags }
-      }
+        [options.name]: { tags: options.parsedTags },
+      },
     };
   });
 }
@@ -48,7 +48,7 @@ function getBuildConfig(project: any, options: NormalizedSchema) {
       outputPath: join(normalize('dist'), options.appProjectRoot),
       main: join(project.sourceRoot, 'main.ts'),
       tsConfig: join(options.appProjectRoot, 'tsconfig.app.json'),
-      assets: [join(project.sourceRoot, 'assets')]
+      assets: [join(project.sourceRoot, 'assets')],
     },
     configurations: {
       production: {
@@ -58,11 +58,11 @@ function getBuildConfig(project: any, options: NormalizedSchema) {
         fileReplacements: [
           {
             replace: join(project.sourceRoot, 'environments/environment.ts'),
-            with: join(project.sourceRoot, 'environments/environment.prod.ts')
-          }
-        ]
-      }
-    }
+            with: join(project.sourceRoot, 'environments/environment.prod.ts'),
+          },
+        ],
+      },
+    },
   };
 }
 
@@ -70,20 +70,20 @@ function getServeConfig(options: NormalizedSchema) {
   return {
     builder: '@nrwl/node:execute',
     options: {
-      buildTarget: `${options.name}:build`
-    }
+      buildTarget: `${options.name}:build`,
+    },
   };
 }
 
 function updateWorkspaceJson(options: NormalizedSchema): Rule {
-  return updateWorkspaceInTree(workspaceJson => {
+  return updateWorkspaceInTree((workspaceJson) => {
     const project = {
       root: options.appProjectRoot,
       sourceRoot: join(options.appProjectRoot, 'src'),
       projectType: 'application',
       prefix: options.name,
       schematics: {},
-      architect: <any>{}
+      architect: <any>{},
     };
 
     project.architect.build = getBuildConfig(project, options);
@@ -109,9 +109,9 @@ function addAppFiles(options: NormalizedSchema): Rule {
         tmpl: '',
         name: options.name,
         root: options.appProjectRoot,
-        offset: offsetFromRoot(options.appProjectRoot)
+        offset: offsetFromRoot(options.appProjectRoot),
       }),
-      move(options.appProjectRoot)
+      move(options.appProjectRoot),
     ])
   );
 }
@@ -127,15 +127,15 @@ function addProxy(options: NormalizedSchema): Rule {
           {
             '/api': {
               target: 'http://localhost:3333',
-              secure: false
-            }
+              secure: false,
+            },
           },
           null,
           2
         )
       );
 
-      updateWorkspaceInTree(json => {
+      updateWorkspaceInTree((json) => {
         projectConfig.architect.serve.options.proxyConfig = pathToProxyFile;
         json.projects[options.frontendProject] = projectConfig;
         return json;
@@ -144,13 +144,13 @@ function addProxy(options: NormalizedSchema): Rule {
   };
 }
 
-export default function(schema: Schema): Rule {
+export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(schema);
     return chain([
       init({
         ...options,
-        skipFormat: true
+        skipFormat: true,
       }),
       addLintFiles(options.appProjectRoot, options.linter),
       addAppFiles(options),
@@ -160,10 +160,10 @@ export default function(schema: Schema): Rule {
         ? externalSchematic('@nrwl/jest', 'jest-project', {
             project: options.name,
             setupFile: 'none',
-            skipSerializers: true
+            skipSerializers: true,
           })
         : noop(),
-      options.frontendProject ? addProxy(options) : noop()
+      options.frontendProject ? addProxy(options) : noop(),
     ])(host, context);
   };
 }
@@ -178,7 +178,7 @@ function normalizeOptions(options: Schema): NormalizedSchema {
   const appProjectRoot = join(normalize('apps'), appDirectory);
 
   const parsedTags = options.tags
-    ? options.tags.split(',').map(s => s.trim())
+    ? options.tags.split(',').map((s) => s.trim())
     : [];
 
   return {
@@ -188,6 +188,6 @@ function normalizeOptions(options: Schema): NormalizedSchema {
       ? toFileName(options.frontendProject)
       : undefined,
     appProjectRoot,
-    parsedTags
+    parsedTags,
   };
 }

@@ -2,7 +2,7 @@ import { Rule, Tree } from '@angular-devkit/schematics';
 import { FileData } from '@nrwl/workspace/src/core/file-utils';
 import {
   readNxJsonInTree,
-  readWorkspace
+  readWorkspace,
 } from '@nrwl/workspace/src/utils/ast-utils';
 import { getWorkspacePath } from '@nrwl/workspace/src/utils/cli-config-utils';
 import * as path from 'path';
@@ -10,7 +10,7 @@ import {
   createProjectGraph,
   onlyWorkspaceProjects,
   ProjectGraph,
-  reverse
+  reverse,
 } from '../../../core/project-graph';
 import { Schema } from '../schema';
 
@@ -30,11 +30,11 @@ export function checkDependencies(schema: Schema): Rule {
     const files: FileData[] = [];
     const mtime = Date.now(); //can't get mtime data from the tree :(
     const workspaceDir = path.dirname(getWorkspacePath(tree));
-    tree.visit(file => {
+    tree.visit((file) => {
       files.push({
         file: path.relative(workspaceDir, file),
         ext: path.extname(file),
-        mtime
+        mtime,
       });
     });
 
@@ -42,7 +42,7 @@ export function checkDependencies(schema: Schema): Rule {
       readWorkspace(tree),
       readNxJsonInTree(tree),
       files,
-      file => tree.read(file).toString('utf-8'),
+      (file) => tree.read(file).toString('utf-8'),
       false,
       false
     );
@@ -59,7 +59,7 @@ export function checkDependencies(schema: Schema): Rule {
       `${
         schema.projectName
       } is still depended on by the following projects:\n${deps
-        .map(x => x.target)
+        .map((x) => x.target)
         .join('\n')}`
     );
   };

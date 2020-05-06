@@ -14,7 +14,7 @@ export function printAffected(
   nxArgs: NxArgs,
   overrides: yargs.Arguments
 ) {
-  const projectNames = affectedProjects.map(p => p.name);
+  const projectNames = affectedProjects.map((p) => p.name);
   const tasksJson = createTasks(
     affectedProjectsWithTargetAndConfig,
     projectGraph,
@@ -24,7 +24,7 @@ export function printAffected(
   const result = {
     tasks: tasksJson,
     projects: projectNames,
-    projectGraph: serializeProjectGraph(projectGraph)
+    projectGraph: serializeProjectGraph(projectGraph),
   };
   if (nxArgs.select) {
     console.log(selectPrintAffected(result, nxArgs.select));
@@ -40,17 +40,17 @@ function createTasks(
   overrides: yargs.Arguments
 ) {
   const tasks: Task[] = affectedProjectsWithTargetAndConfig.map(
-    affectedProject =>
+    (affectedProject) =>
       createTask({
         project: affectedProject,
         target: nxArgs.target,
         configuration: nxArgs.configuration,
-        overrides: overrides
+        overrides: overrides,
       })
   );
   const cli = cliCommand();
   const isYarn = basename(process.env.npm_execpath || 'npm').startsWith('yarn');
-  return tasks.map(task => ({
+  return tasks.map((task) => ({
     id: task.id,
     overrides: overrides,
     target: task.target,
@@ -59,12 +59,12 @@ function createTasks(
       isYarn,
       task
     )}`,
-    outputs: getOutputs(projectGraph.nodes, task)
+    outputs: getOutputs(projectGraph.nodes, task),
   }));
 }
 
 function serializeProjectGraph(projectGraph: ProjectGraph) {
-  const nodes = Object.values(projectGraph.nodes).map(n => n.name);
+  const nodes = Object.values(projectGraph.nodes).map((n) => n.name);
   return { nodes, dependencies: projectGraph.dependencies };
 }
 
@@ -80,7 +80,7 @@ export function selectPrintAffected(wholeJson: any, wholeSelect: string) {
       const rest = restKeys.join('.');
 
       if (Array.isArray(first)) {
-        return first.map(q => _select(q, rest)).join(', ');
+        return first.map((q) => _select(q, rest)).join(', ');
       } else {
         return _select(first, rest);
       }

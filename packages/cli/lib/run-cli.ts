@@ -77,7 +77,7 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
     }
   };
 
-  process.on('exit', code => {
+  process.on('exit', (code) => {
     if (code === 0) {
       fs.writeFileSync(
         process.env.NX_TERMINAL_OUTPUT_PATH,

@@ -9,16 +9,16 @@ export function buildNpmPackageNodes(
   const packageJson = JSON.parse(stripJsonComments(fileRead('package.json')));
   const deps = {
     ...packageJson.dependencies,
-    ...packageJson.devDependencies
+    ...packageJson.devDependencies,
   };
-  Object.keys(deps).forEach(d => {
+  Object.keys(deps).forEach((d) => {
     addNode({
       type: 'npm',
       name: d,
       data: {
         version: deps[d],
-        files: []
-      }
+        files: [],
+      },
     });
   });
 }

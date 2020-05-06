@@ -5,10 +5,10 @@ import {
   readJson,
   runCLI,
   uniq,
-  updateFile
+  updateFile,
 } from './utils';
 
-forEachCli('angular', cli => {
+forEachCli('angular', (cli) => {
   describe('Build Angular library', () => {
     /**
      * Graph:
@@ -51,7 +51,7 @@ forEachCli('angular', cli => {
               import { CommonModule } from '@angular/common';
               ${children
                 .map(
-                  entry =>
+                  (entry) =>
                     `import { ${toClassName(
                       entry
                     )}Module } from '@proj/${entry}';`
@@ -60,7 +60,7 @@ forEachCli('angular', cli => {
               
               @NgModule({
                 imports: [CommonModule, ${children
-                  .map(entry => `${toClassName(entry)}Module`)
+                  .map((entry) => `${toClassName(entry)}Module`)
                   .join(',')}]
               })
               export class ${toClassName(parent)}Module {}          
@@ -101,7 +101,7 @@ forEachCli('angular', cli => {
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
       expect(jsonFile.dependencies).toEqual({
         [`@proj/${childLib}`]: '0.0.1',
-        [`@proj/${childLib2}`]: '0.0.1'
+        [`@proj/${childLib2}`]: '0.0.1',
       });
     });
   });

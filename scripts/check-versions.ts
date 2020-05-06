@@ -27,7 +27,7 @@ const scoped = [
   'testing-library',
   'types',
 
-  'zeit'
+  'zeit',
 ];
 
 try {
@@ -45,14 +45,14 @@ try {
 function checkFiles(files: string[]) {
   console.log(chalk.blue(`Checking versions in the following files...\n`));
   console.log(`  - ${files.join('\n  - ')}\n`);
-  const maxFileNameLength = Math.max(...files.map(f => f.length));
+  const maxFileNameLength = Math.max(...files.map((f) => f.length));
 
-  files.forEach(f => {
+  files.forEach((f) => {
     const versions = getVersions(f);
     const npmPackages = getPackages(versions);
     const results = npmPackages.map(([p, v]) => getVersionData(p, v));
     const logContext = `${f.padEnd(maxFileNameLength)}`;
-    results.forEach(r => {
+    results.forEach((r) => {
       if (r.outdated) {
         console.log(
           `${logContext} ❗ ${chalk.bold(
@@ -79,21 +79,18 @@ function getVersions(path: string) {
 }
 
 function getPackages(versions: Record<string, string>): string[][] {
-  return Object.entries(versions).reduce(
-    (acc, [name, version]) => {
-      if (!excluded.includes(name)) {
-        const npmName = getNpmName(name);
-        acc.push([npmName, version]);
-      }
-      return acc;
-    },
-    [] as string[][]
-  );
+  return Object.entries(versions).reduce((acc, [name, version]) => {
+    if (!excluded.includes(name)) {
+      const npmName = getNpmName(name);
+      acc.push([npmName, version]);
+    }
+    return acc;
+  }, [] as string[][]);
 }
 
 function getNpmName(name: string): string {
   const dashedName = dasherize(name.replace(/Version$/, ''));
-  const scope = scoped.find(s => dashedName.startsWith(`${s}-`));
+  const scope = scoped.find((s) => dashedName.startsWith(`${s}-`));
 
   if (scope) {
     const rest = dashedName.split(`${scope}-`)[1];

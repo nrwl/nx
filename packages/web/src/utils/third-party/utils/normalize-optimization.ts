@@ -15,6 +15,6 @@ export function normalizeOptimization(
     scripts:
       typeof optimization === 'object' ? !!optimization.scripts : optimization,
     styles:
-      typeof optimization === 'object' ? !!optimization.styles : optimization
+      typeof optimization === 'object' ? !!optimization.styles : optimization,
   };
 }

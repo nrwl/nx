@@ -3,7 +3,7 @@ import { Change } from '../core/file-utils';
 export enum DiffType {
   Deleted = 'JsonPropertyDeleted',
   Added = 'JsonPropertyAdded',
-  Modified = 'JsonPropertyModified'
+  Modified = 'JsonPropertyModified',
 }
 
 export interface JsonChange extends Change {
@@ -36,8 +36,8 @@ export function jsonDiff(lhs: any, rhs: any): JsonChange[] {
         path,
         value: {
           lhs: lhsValue,
-          rhs: undefined
-        }
+          rhs: undefined,
+        },
       });
     } else if (!deepEquals(lhsValue, rhsValue)) {
       result.push({
@@ -45,8 +45,8 @@ export function jsonDiff(lhs: any, rhs: any): JsonChange[] {
         path,
         value: {
           lhs: lhsValue,
-          rhs: rhsValue
-        }
+          rhs: rhsValue,
+        },
       });
     }
     return typeof lhsValue === 'object' || Array.isArray(lhsValue);
@@ -60,8 +60,8 @@ export function jsonDiff(lhs: any, rhs: any): JsonChange[] {
         path,
         value: {
           lhs: undefined,
-          rhs: rhsValue
-        }
+          rhs: rhsValue,
+        },
       });
     }
     return typeof rhsValue === 'object' || Array.isArray(rhsValue);
@@ -79,7 +79,7 @@ export function walkJsonTree(
   if (!json || typeof json !== 'object') {
     return;
   }
-  Object.keys(json).forEach(key => {
+  Object.keys(json).forEach((key) => {
     const path = currPath.concat([key]);
     const shouldContinue = visitor(path, json[key]);
     if (shouldContinue) {

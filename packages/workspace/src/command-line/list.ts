@@ -8,7 +8,7 @@ import {
   listCommunityPlugins,
   listCorePlugins,
   listInstalledPlugins,
-  listPluginCapabilities
+  listPluginCapabilities,
 } from '../utils/plugins';
 
 export interface YargsListArgs extends yargs.Arguments, ListArgs {}
@@ -24,9 +24,9 @@ export const list = {
   builder: (yargs: yargs.Argv) =>
     yargs.positional('plugin', {
       default: null,
-      description: 'The name of an installed plugin to query'
+      description: 'The name of an installed plugin to query',
     }),
-  handler: listHandler
+  handler: listHandler,
 };
 
 /**
@@ -53,7 +53,7 @@ async function listHandler(args: YargsListArgs) {
     listCommunityPlugins(installedPlugins, communityPlugins);
 
     output.note({
-      title: `Use "nx list [plugin]" to find out more`
+      title: `Use "nx list [plugin]" to find out more`,
     });
   }
 }

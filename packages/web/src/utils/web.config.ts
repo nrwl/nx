@@ -41,14 +41,14 @@ export function getWebConfig(
     esm,
     logger,
     tsConfig,
-    tsConfigPath: options.tsConfig
+    tsConfigPath: options.tsConfig,
   };
   return mergeWebpack([
     _getBaseWebpackPartial(options, esm, isScriptOptimizeOn),
     getPolyfillsPartial(options, esm, isScriptOptimizeOn),
     getStylesPartial(wco, options),
     getCommonPartial(wco),
-    getBrowserPartial(wco, options, isScriptOptimizeOn)
+    getBrowserPartial(wco, options, isScriptOptimizeOn),
   ]);
 }
 
@@ -66,7 +66,7 @@ function getBrowserPartial(
       scripts = [],
       styles = [],
       index,
-      baseHref
+      baseHref,
     } = options;
 
     config.plugins.push(
@@ -77,7 +77,7 @@ function getBrowserPartial(
         entrypoints: generateEntryPoints({ scripts, styles }),
         deployUrl: deployUrl,
         sri: subresourceIntegrity,
-        noModuleEntrypoints: ['polyfills-es5']
+        noModuleEntrypoints: ['polyfills-es5'],
       })
     );
   }
@@ -111,17 +111,17 @@ function getStylesPartial(
   options: WebBuildBuilderOptions
 ): Configuration {
   const partial = getStylesConfig(wco);
-  const rules = partial.module.rules.map(rule => {
+  const rules = partial.module.rules.map((rule) => {
     if (!Array.isArray(rule.use)) {
       return rule;
     }
-    rule.use = rule.use.map(loaderConfig => {
+    rule.use = rule.use.map((loaderConfig) => {
       if (
         typeof loaderConfig === 'object' &&
         loaderConfig.loader === 'raw-loader'
       ) {
         return {
-          loader: 'style-loader'
+          loader: 'style-loader',
         };
       }
       return loaderConfig;
@@ -138,16 +138,16 @@ function getStylesPartial(
             {
               loader: options.extractCss
                 ? MiniCssExtractPlugin.loader
-                : 'style-loader'
+                : 'style-loader',
             },
             {
               loader: 'css-loader',
               options: {
                 modules: true,
-                importLoaders: 1
-              }
-            }
-          ]
+                importLoaders: 1,
+              },
+            },
+          ],
         },
         {
           test: /\.module\.(scss|sass)$/,
@@ -155,20 +155,20 @@ function getStylesPartial(
             {
               loader: options.extractCss
                 ? MiniCssExtractPlugin.loader
-                : 'style-loader'
+                : 'style-loader',
             },
             {
               loader: 'css-loader',
               options: {
                 modules: true,
-                importLoaders: 1
-              }
-            }
-          ]
+                importLoaders: 1,
+              },
+            },
+          ],
         },
-        ...rules
-      ]
-    }
+        ...rules,
+      ],
+    },
   ];
   return partial;
 }
@@ -179,7 +179,7 @@ function getPolyfillsPartial(
   isScriptOptimizeOn: boolean
 ): Configuration {
   const config = {
-    entry: {} as { [key: string]: string[] }
+    entry: {} as { [key: string]: string[] },
   };
 
   if (options.polyfills && esm && isScriptOptimizeOn) {
@@ -189,12 +189,12 @@ function getPolyfillsPartial(
       require.resolve(
         '@nrwl/web/src/utils/third-party/cli-files/models/safari-nomodule.js'
       ),
-      ...(options.polyfills ? [options.polyfills] : [])
+      ...(options.polyfills ? [options.polyfills] : []),
     ];
   } else if (options.es2015Polyfills && !esm && isScriptOptimizeOn) {
     config.entry.polyfills = [
       options.es2015Polyfills,
-      ...(options.polyfills ? [options.polyfills] : [])
+      ...(options.polyfills ? [options.polyfills] : []),
     ];
   } else {
     if (options.polyfills) {

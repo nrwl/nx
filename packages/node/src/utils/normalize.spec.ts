@@ -17,15 +17,15 @@ describe('normalizeBuildOptions', () => {
       fileReplacements: [
         {
           replace: 'apps/environment/environment.ts',
-          with: 'apps/environment/environment.prod.ts'
+          with: 'apps/environment/environment.prod.ts',
         },
         {
           replace: 'module1.ts',
-          with: 'module2.ts'
-        }
+          with: 'module2.ts',
+        },
       ],
       assets: [],
-      statsJson: false
+      statsJson: false,
     };
     root = '/root';
     sourceRoot = normalize('apps/nodeapp/src');
@@ -52,7 +52,7 @@ describe('normalizeBuildOptions', () => {
 
   it('should normalize asset patterns', () => {
     spyOn(fs, 'statSync').and.returnValue({
-      isDirectory: () => true
+      isDirectory: () => true,
     });
     const result = normalizeBuildOptions(
       <BuildBuilderOptions>{
@@ -64,9 +64,9 @@ describe('normalizeBuildOptions', () => {
             input: 'outsideproj',
             output: 'output',
             glob: '**/*',
-            ignore: ['**/*.json']
-          }
-        ]
+            ignore: ['**/*.json'],
+          },
+        ],
       },
       root,
       sourceRoot
@@ -75,14 +75,14 @@ describe('normalizeBuildOptions', () => {
       {
         input: '/root/apps/nodeapp/src/assets',
         output: 'assets',
-        glob: '**/*'
+        glob: '**/*',
       },
       {
         input: '/root/outsideproj',
         output: 'output',
         glob: '**/*',
-        ignore: ['**/*.json']
-      }
+        ignore: ['**/*.json'],
+      },
     ]);
   });
 
@@ -91,12 +91,12 @@ describe('normalizeBuildOptions', () => {
     expect(result.fileReplacements).toEqual([
       {
         replace: '/root/apps/environment/environment.ts',
-        with: '/root/apps/environment/environment.prod.ts'
+        with: '/root/apps/environment/environment.prod.ts',
       },
       {
         replace: '/root/module1.ts',
-        with: '/root/module2.ts'
-      }
+        with: '/root/module2.ts',
+      },
     ]);
   });
 });

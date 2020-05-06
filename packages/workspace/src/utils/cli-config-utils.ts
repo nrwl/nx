@@ -4,7 +4,7 @@ import { NxJson } from '@nrwl/workspace/src/core/shared-interfaces';
 
 export function getWorkspacePath(host: Tree) {
   const possibleFiles = ['/workspace.json', '/angular.json', '/.angular.json'];
-  return possibleFiles.filter(path => host.exists(path))[0];
+  return possibleFiles.filter((path) => host.exists(path))[0];
 }
 
 export function getNpmScope(host: Tree) {
@@ -16,7 +16,7 @@ export function parseTarget(targetString: string) {
   return {
     project,
     target,
-    config
+    config,
   };
 }
 
@@ -26,7 +26,7 @@ export function editTarget(targetString: string, callback) {
 }
 
 export function serializeTarget({ project, target, config }) {
-  return [project, target, config].filter(part => !!part).join(':');
+  return [project, target, config].filter((part) => !!part).join(':');
 }
 
 export function replaceAppNameWithPath(
@@ -52,12 +52,12 @@ export function replaceAppNameWithPath(
       return node;
     }
   } else if (Array.isArray(node)) {
-    return node.map(j => replaceAppNameWithPath(j, appName, root));
+    return node.map((j) => replaceAppNameWithPath(j, appName, root));
   } else if (typeof node === 'object' && node) {
     const forbiddenPropertyList: string[] = [
       'prefix',
       'builder',
-      'browserTarget'
+      'browserTarget',
     ]; // Some of the properties should not be renamed
     return Object.keys(node).reduce(
       (m, c) => (

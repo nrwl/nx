@@ -3,14 +3,14 @@ import {
   addDepsToPackageJson,
   addPackageWithInit,
   formatFiles,
-  updateJsonInTree
+  updateJsonInTree,
 } from '@nrwl/workspace';
 import { Schema } from './schema';
 import {
   nestJsSchematicsVersion,
   nestJsVersion,
   nxVersion,
-  reflectMetadataVersion
+  reflectMetadataVersion,
 } from '../../utils/versions';
 import { setDefaultCollection } from '@nrwl/workspace/src/utils/rules/workspace';
 
@@ -19,17 +19,17 @@ export const updateDependencies = addDepsToPackageJson(
     '@nestjs/common': nestJsVersion,
     '@nestjs/core': nestJsVersion,
     '@nestjs/platform-express': nestJsVersion,
-    'reflect-metadata': reflectMetadataVersion
+    'reflect-metadata': reflectMetadataVersion,
   },
   {
     '@nestjs/schematics': nestJsSchematicsVersion,
     '@nestjs/testing': nestJsVersion,
-    '@nrwl/nest': nxVersion
+    '@nrwl/nest': nxVersion,
   }
 );
 
 function moveDependency(): Rule {
-  return updateJsonInTree('package.json', json => {
+  return updateJsonInTree('package.json', (json) => {
     json.dependencies = json.dependencies || {};
 
     delete json.dependencies['@nrwl/nest'];
@@ -37,7 +37,7 @@ function moveDependency(): Rule {
   });
 }
 
-export default function(schema: Schema) {
+export default function (schema: Schema) {
   return chain([
     setDefaultCollection('@nrwl/nest'),
     addPackageWithInit('@nrwl/node', schema),
@@ -46,6 +46,6 @@ export default function(schema: Schema) {
       : noop(),
     updateDependencies,
     moveDependency(),
-    formatFiles(schema)
+    formatFiles(schema),
   ]);
 }

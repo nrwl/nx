@@ -8,10 +8,10 @@ import {
   runCLIAsync,
   supportUi,
   uniq,
-  updateFile
+  updateFile,
 } from './utils';
 
-forEachCli(currentCLIName => {
+forEachCli((currentCLIName) => {
   describe('Web Components Applications', () => {
     it('should be able to generate a web app', async () => {
       ensureProject();
@@ -137,7 +137,7 @@ forEachCli(currentCLIName => {
       updateFile(main, `${newCode}\n${content}`);
 
       runCLI(`build ${appName}`, {
-        env: { ...process.env, NODE_ENV: 'test', NX_BUILD: '52', NX_API: 'QA' }
+        env: { ...process.env, NODE_ENV: 'test', NX_BUILD: '52', NX_API: 'QA' },
       });
       expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
         'var envVars = ["test", "52", "QA"];'
