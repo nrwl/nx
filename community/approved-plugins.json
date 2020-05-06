@@ -38,5 +38,10 @@
     "name": "@angular-custom-builders/lite-serve",
     "description": "Nx plugin to run the e2e test on an existing dist folder",
     "url": "https://github.com/mauriziovitale/angular-plugins/tree/master/libs/lite-serve"
+  },
+  {
+    "name": "@nx-plus/docusaurus",
+    "description": "Nx plugin adding first class support for Docusaurus in your Nx workspace.",
+    "url": "https://github.com/ZachJW34/nx-plus/tree/master/libs/docusaurus" 
   }
 ]
