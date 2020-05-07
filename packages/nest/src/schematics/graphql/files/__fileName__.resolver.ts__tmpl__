@@ -1,0 +1,11 @@
+import { Args, Resolver, Query } from '@nestjs/graphql';
+
+@Resolver()
+export class <%= className %> {
+
+  @Query(() => String)
+  hello(@Args('name') name: string) {
+    return `Hello ${name}`
+  }
+
+}

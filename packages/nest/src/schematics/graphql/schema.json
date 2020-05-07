@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "NxNestGraphQL",
+  "title": "Configure the @nestjs/graphql module",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project"
+    },
+    "skipFormat": {
+      "description": "Skip formatting files",
+      "type": "boolean",
+      "default": false
+    },
+    "skipInstall": {
+      "description": "Skip installing dependency packages.",
+      "type": "boolean",
+      "default": false
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add @nestjs/graphql to package.json (e.g., --skipPackageJson)"
+    }
+  },
+  "required": ["project"]
+}

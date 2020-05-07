@@ -649,6 +649,11 @@
                     "file": "angular/api-nest/schematics/application"
                   },
                   {
+                    "name": "graphql",
+                    "id": "graphql",
+                    "file": "angular/api-nest/schematics/graphql"
+                  },
+                  {
                     "name": "library",
                     "id": "library",
                     "file": "angular/api-nest/schematics/library"
@@ -1547,7 +1552,12 @@
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "react/api-next/schematics/application"
+                    "file": "react/api-nest/schematics/application"
+                  },
+                  {
+                    "name": "graphql",
+                    "id": "graphql",
+                    "file": "react/api-nest/schematics/graphql"
                   },
                   {
                     "name": "library",

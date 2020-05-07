@@ -1,6 +1,9 @@
 export const nxVersion = '*';
 
+export const apolloServerExpressVersion = '^2.15.1';
+
 export const nestJsVersion = '^7.0.0';
+export const nestJsGraphQLVersion = '^7.0.0';
 export const nestJsSchematicsVersion = '^7.0.0';
 
 export const rxjsVersion = '~6.5.5';

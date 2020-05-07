@@ -18,6 +18,12 @@
       "description": "Create a nest application"
     },
 
+    "graphql": {
+      "factory": "./src/schematics/graphql/graphql",
+      "schema": "./src/schematics/graphql/schema.json",
+      "description": "Configure the @nestjs/graphql module"
+    },
+
     "library": {
       "factory": "./src/schematics/library/library",
       "schema": "./src/schematics/library/schema.json",
