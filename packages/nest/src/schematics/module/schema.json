@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "NxNestInit",
+  "title": "Add Nest Module",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Module name",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use for the module?"
+    },
+    "project": {
+      "type": "string",
+      "description": "The name of the project"
+    },
+    "path": {
+      "type": "string",
+      "format": "path",
+      "description": "The path to create the module.",
+      "default": "/"
+    },
+    "skipImport": {
+      "type": "boolean",
+      "description": "Flag to skip the module import.",
+      "default": false
+    },
+    "flat": {
+      "type": "boolean",
+      "description": "Create module at the source root rather than its own directory.",
+      "default": false
+    }
+  },
+  "required": ["name", "project"]
+}

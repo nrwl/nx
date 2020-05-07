@@ -23,6 +23,13 @@
       "schema": "./src/schematics/library/schema.json",
       "aliases": ["lib"],
       "description": "Create a new nest library"
+    },
+
+    "module": {
+      "factory": "./src/schematics/module/module",
+      "schema": "./src/schematics/module/schema.json",
+      "aliases": ["m"],
+      "description": "Create a new nest module"
     }
   }
 }
