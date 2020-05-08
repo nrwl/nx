@@ -3,6 +3,7 @@ import { JsonObject } from '@angular-devkit/core';
 export interface JestBuilderOptions extends JsonObject {
   codeCoverage?: boolean;
   config?: string;
+  detectOpenHandles?: boolean;
   jestConfig: string;
   testFile?: string;
   setupFile?: string;

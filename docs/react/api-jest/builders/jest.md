@@ -65,6 +65,12 @@ Type: `string`
 
 A list of reporter names that Jest uses when writing coverage reports. Any istanbul reporter
 
+### detectOpenHandles
+
+Type: `boolean`
+
+Attempt to collect and print open handles preventing Jest from exiting cleanly (https://jestjs.io/docs/en/cli.html#--detectopenhandles)
+
 ### findRelatedTests
 
 Type: `string`
