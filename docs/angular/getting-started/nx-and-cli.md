@@ -14,6 +14,8 @@ The `Nx CLI` also supports a lot more commands than the Angular CLI. It can run 
 
 **What does Nx add in addition to being faster?**
 
+Here are a few tasks that are made possible by Nx.
+
 ## Using effective development practices pioneered at Google
 
 Using Nx, you can implement monorepo-style development--an approach popularized by Google and used by many tech companies today (Facebook, Uber, Twitter, etc..).
