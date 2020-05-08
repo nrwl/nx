@@ -81,6 +81,7 @@ function run(
     outputFile: options.outputFile,
     passWithNoTests: options.passWithNoTests,
     runInBand: options.runInBand,
+    showConfig: options.showConfig,
     silent: options.silent,
     testLocationInResults: options.testLocationInResults,
     testNamePattern: options.testNamePattern,
