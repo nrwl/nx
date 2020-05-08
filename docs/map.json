@@ -789,6 +789,21 @@
             "id": "structure",
             "itemList": [
               {
+                "name": "Creating Libraries",
+                "id": "creating-libraries",
+                "file": "shared/workspace/creating-libraries"
+              },
+              {
+                "name": "Library Types",
+                "id": "library-types",
+                "file": "shared/workspace/library-types"
+              },
+              {
+                "name": "Grouping Libraries",
+                "id": "grouping-libraries",
+                "file": "shared/workspace/grouping-libraries"
+              },
+              {
                 "name": "Using Tags",
                 "id": "monorepo-tags",
                 "file": "shared/monorepo-tags"
@@ -1650,6 +1665,21 @@
             "name": "Structure",
             "id": "structure",
             "itemList": [
+              {
+                "name": "Creating Libraries",
+                "id": "creating-libraries",
+                "file": "shared/workspace/creating-libraries"
+              },
+              {
+                "name": "Library Types",
+                "id": "library-types",
+                "file": "shared/workspace/library-types"
+              },
+              {
+                "name": "Grouping Libraries",
+                "id": "grouping-libraries",
+                "file": "shared/workspace/grouping-libraries"
+              },
               {
                 "name": "Using Tags",
                 "id": "monorepo-tags",
