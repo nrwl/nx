@@ -174,6 +174,7 @@ const options = {
   github: {
     preRelease: parsedVersion.isPrerelease,
     release: true,
+    assets: [],
     /**
      * The environment variable containing a valid GitHub
      * auth token with "repo" access (no other permissions required)
