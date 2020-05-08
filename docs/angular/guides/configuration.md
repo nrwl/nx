@@ -83,7 +83,7 @@ For instance, the following configures `mylib`.
 
 - `root` tells Nx the location of the library including its sources and configuration files.
 - `sourceRoot` tells Nx the location of the library's source files.
-- `projecType` is either 'application' or 'library'.
+- `projectType` is either 'application' or 'library'.
 - `architect` configures all the targets which define what tasks you can run against the library.
 
 > Nx uses the architect library built by the Angular team at Google. The naming reflects that. Important to note: it's a general purpose library that **does not** have any dependency on Angular.
@@ -167,7 +167,7 @@ You can select a configuration like this: `nx build myapp --configuration=produc
 The following show how the builder options get constructed:
 
 ```bash
-require(`@nrw/jest`).builders['jest']({...options, ...selectedConfiguration, ...commandLineArgs}}) // Pseudocode
+require(`@nrwl/jest`).builders['jest']({...options, ...selectedConfiguration, ...commandLineArgs}}) // Pseudocode
 ```
 
 The selected configuration adds/overrides the default options, and the provided command line args add/override the configuration options.
@@ -200,7 +200,7 @@ The following command will generate a new library: `nx g @nrwl/angular:lib mylib
 
 ## `nx.json`
 
-The `nx.json` contain extra configuration options mostly related to the project graph.
+The `nx.json` file contains extra configuration options mostly related to the project graph.
 
 ```json
 {
@@ -254,7 +254,7 @@ Tasks runners can accept different options. The following are the options suppor
 - `maxParallel` defines the max number of processes used.
 - `captureStderr` defines whether the cache will capture stderr or just stdout
 - `cacheDirectory` defines where the local cache is stored, which is `node_modules/.cache/nx` by default.
-- `runtimeCacheInputs` define the list of commands that will be ran by the runner to include into the computation hash value.
+- `runtimeCacheInputs` define the list of commands that will be run by the runner to include into the computation hash value.
 
 `runtimeCacheInputs` can be set as follows:
 
