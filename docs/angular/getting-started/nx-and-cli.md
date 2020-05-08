@@ -16,7 +16,7 @@ The `Nx CLI` also supports a lot more commands than the Angular CLI. It can run 
 
 Here are a few tasks that are made possible by Nx.
 
-## Use effective development practices pioneered at Google
+## Using effective development practices pioneered at Google
 
 Using Nx, you can implement monorepo-style development--an approach popularized by Google and used by many tech companies today (Facebook, Uber, Twitter, etc..).
 
@@ -24,13 +24,13 @@ _Doesn't Angular CLI support having multiple projects in the same workspace?_
 
 Yes, starting with Angular CLI 6 you can add different types of projects to a single workspace (by default you can add applications and libraries). This is great, but is not sufficient to enable the monorepo-style development. Nx adds an extra layer of tooling to make this possible.
 
-### Analyze and Visualize the Dependency Graph
+### Analyzing and Visualizing the Dependency Graph
 
 To be able to support the monorepo-style development, the tools must know how different projects in your workspace depend on each other. Nx uses advanced code analysis to build this dependency graph. Run `nx dep-graph` to see the dependency diagram of your workspace.
 
 ![Dependency Diagram](./dep-graph.png)
 
-### Rebuild and Retest What is Affected
+### Rebuilding and Retesting What is Affected
 
 To be productive in a monorepo, you need to be able to check that your change is safe, and rebuilding and retesting everything on every change won’t scale. Nx uses code analysis to determine what needs to be rebuilt and retested.
 
