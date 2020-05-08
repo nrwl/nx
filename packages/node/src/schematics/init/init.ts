@@ -2,11 +2,11 @@ import { chain, noop, Rule } from '@angular-devkit/schematics';
 import {
   addPackageWithInit,
   formatFiles,
+  setDefaultCollection,
   updateJsonInTree,
 } from '@nrwl/workspace';
 import { nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
-import { setDefaultCollection } from '@nrwl/workspace/src/utils/rules/workspace';
 
 function updateDependencies(): Rule {
   return updateJsonInTree('package.json', (json) => {

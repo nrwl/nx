@@ -1,8 +1,11 @@
 import { chain, noop } from '@angular-devkit/schematics';
-import { addDepsToPackageJson, addPackageWithInit } from '@nrwl/workspace';
+import {
+  addDepsToPackageJson,
+  addPackageWithInit,
+  setDefaultCollection,
+} from '@nrwl/workspace';
 import { nextVersion } from '../../utils/versions';
 import { Schema } from './schema';
-import { setDefaultCollection } from '@nrwl/workspace/src/utils/rules/workspace';
 import {
   reactDomVersion,
   reactVersion,

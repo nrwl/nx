@@ -10,6 +10,7 @@ import {
   addDepsToPackageJson,
   formatFiles,
   readJsonInTree,
+  setDefaultCollection,
   updateJsonInTree,
   updateWorkspace,
 } from '@nrwl/workspace';
@@ -22,7 +23,6 @@ import {
 import { Schema } from './schema';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { setDefaultCollection } from '@nrwl/workspace/src/utils/rules/workspace';
 
 const updateDependencies = addDepsToPackageJson(
   {
