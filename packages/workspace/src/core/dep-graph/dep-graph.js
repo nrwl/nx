@@ -10,7 +10,7 @@ function groupProjectsByDirectory(projects) {
 
   projects.forEach((project) => {
     const split = project.data.root.split('/');
-    const directory = split.slice(1, -2).join('/');
+    const directory = split.slice(1, -1).join('/');
 
     if (!groups.hasOwnProperty(directory)) {
       groups[directory] = [];
