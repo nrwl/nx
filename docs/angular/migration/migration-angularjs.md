@@ -614,7 +614,7 @@ ng test
 
 You should see green text as your test passes.
 
-//screenshot of tests passing
+![Unit tests passing](./migration-angularjs-unit-tests-passing.png)
 
 ## End to End testing
 
