@@ -76,6 +76,10 @@
       "description": "Run all tests serially in the current process (rather than creating a worker pool of child processes that run tests). This is sometimes useful for debugging, but such use cases are pretty rare. Useful for CI. (https://jestjs.io/docs/en/cli#runinband)",
       "type": "boolean"
     },
+    "showConfig": {
+      "description": "Print your Jest config and then exits. (https://jestjs.io/docs/en/cli#--showconfig)",
+      "type": "boolean"
+    },
     "silent": {
       "description": "Prevent tests from printing messages through the console. (https://jestjs.io/docs/en/cli#silent)",
       "type": "boolean"

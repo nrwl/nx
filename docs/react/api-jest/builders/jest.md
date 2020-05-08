@@ -131,6 +131,12 @@ Type: `string`
 
 The name of a setup file used by Jest. (https://jestjs.io/docs/en/configuration#setupfilesafterenv-array)
 
+### showConfig
+
+Type: `boolean`
+
+Print your Jest config and then exits. (https://jestjs.io/docs/en/cli#--showconfig)
+
 ### silent
 
 Type: `boolean`
