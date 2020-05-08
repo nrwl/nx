@@ -51,8 +51,14 @@ function updateNxJson(options: CypressProjectSchema): Rule {
   return updateJsonInTree<NxJson>('nx.json', (json) => {
     json.projects[options.projectName] = {
       tags: [],
-      implicitDependencies: [options.project],
     };
+
+    if (options.project) {
+      json.projects[options.projectName].implicitDependencies = [
+        options.project,
+      ];
+    }
+
     return json;
   });
 }

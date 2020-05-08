@@ -221,5 +221,20 @@ describe('schematic:cypress-project', () => {
         );
       });
     });
+
+    describe('--project', () => {
+      describe('none', () => {
+        it('should not add any implicit dependencies', async () => {
+          const tree = await runSchematic(
+            'cypress-project',
+            { name: 'my-app-e2e' },
+            appTree
+          );
+
+          const nxJson = readJsonInTree(tree, 'nx.json');
+          expect(nxJson.projects['my-app-e2e']).toEqual({ tags: [] });
+        });
+      });
+    });
   });
 });
