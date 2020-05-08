@@ -12,17 +12,17 @@ async function spawnLocalRegistry() {
     '--config',
     './e2e/local-registry/config.yml',
     '--listen',
-    '4872'
+    '4872',
   ]);
   try {
     await new Promise((res, rej) => {
-      localRegistryProcess.stdout.on('data', data => {
+      localRegistryProcess.stdout.on('data', (data) => {
         // wait for local-registry to come online
         if (data.includes('http address')) {
           res();
         }
       });
-      localRegistryProcess.on('error', err => {
+      localRegistryProcess.on('error', (err) => {
         rej(err);
       });
     });
@@ -35,14 +35,14 @@ async function spawnLocalRegistry() {
 
 async function updateVersion(packagePath) {
   return exec(`npm version ${process.env.PUBLISHED_VERSION}`, {
-    cwd: packagePath
+    cwd: packagePath,
   });
 }
 
 async function publishPackage(packagePath) {
   await asyncExec(`npm publish`, {
     cwd: packagePath,
-    env: process.env
+    env: process.env,
   });
 }
 
@@ -50,7 +50,7 @@ module.exports = async function setup() {
   // @ts-ignore
   global.localRegistryProcess = await spawnLocalRegistry();
   await Promise.all(
-    getDirectories('./build/packages').map(async pkg => {
+    getDirectories('./build/packages').map(async (pkg) => {
       await updateVersion(`./build/packages/${pkg}`);
       return await publishPackage(`./build/packages/${pkg}`);
     })

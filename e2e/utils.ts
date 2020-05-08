@@ -107,10 +107,10 @@ export function yarnAdd(pkg: string) {
   return install ? install.toString() : '';
 }
 
-export const getDirectories = source =>
+export const getDirectories = (source) =>
   readdirSync(source, { withFileTypes: true })
-    .filter(dirent => dirent.isDirectory())
-    .map(dirent => dirent.name);
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
 
 export function runNgcc(silent: boolean = true, async: boolean = true) {
   const install = execSync(
@@ -143,17 +143,18 @@ export function runNew(
       `../../node_modules/.bin/ng new proj --no-interactive ${args || ''}`,
       {
         cwd: `./tmp/${cli}`,
-        ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
+        ...(silent ? { stdio: [0, 1, 2] } : {}),
         env: process.env,
       }
     );
   } else {
     gen = execSync(
-      `node ../../node_modules/@nrwl/tao/index.js new proj --no-interactive ${args ||
-        ''}`,
+      `node ../../node_modules/@nrwl/tao/index.js new proj --no-interactive ${
+        args || ''
+      }`,
       {
         cwd: `./tmp/${cli}`,
-        ...(silent && false ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
+        ...(silent && false ? { stdio: [0, 1, 2] } : {}),
         env: process.env,
       }
     );
@@ -171,8 +172,8 @@ export function newProject(): void {
     runNew('--collection=@nrwl/workspace --npmScope=proj', true);
 
     const packages = getDirectories('./build/packages')
-      .filter(pkg => !pkg.startsWith('create-'))
-      .map(pkg => `@nrwl/${pkg}`);
+      .filter((pkg) => !pkg.startsWith('create-'))
+      .map((pkg) => `@nrwl/${pkg}`);
     yarnAdd(packages.join(' '));
 
     execSync(`mv ${tmpProjPath()} ${tmpBackupProjPath()}`);

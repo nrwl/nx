@@ -90,7 +90,7 @@
     "@types/jasmine": "~2.8.6",
     "@types/jasminewd2": "~2.0.3",
     "@types/jest": "25.1.4",
-    "@types/node": "10.0.1",
+    "@types/node": "12.12.38",
     "@types/prettier": "2.0.0",
     "@types/react": "16.9.17",
     "@types/react-dom": "16.9.4",
