@@ -1,6 +1,6 @@
 # Library Types
 
-There are many different types of libraries in a workspace. In order to maintain a certain sense of order, we recommend having a small number of types, such as the below four (4) types of libraries:
+There are many different types of libraries in a workspace. In order to maintain a certain sense of order, we recommend having a small number of types, such as the below four (4) types of libraries.
 
 **Feature libraries:**
 
@@ -101,3 +101,10 @@ An example ui lib module: **libs/shared/util-formatting**
 export { formatDate, formatTime } from './src/format-date-fns';
 export { formatCurrency } from './src/format-currency';
 ```
+
+## Other Types
+
+You will probably come up with other library types that make sense for your organization. That's fine. Just keep a few things in mind:
+
+- Keep the number of library types low
+- Clearly document what each type of library means

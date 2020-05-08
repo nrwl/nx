@@ -2,6 +2,16 @@
 
 Libraries should be grouped by _scope_. A library's scope is either application to which it belongs or (for larger applications) a section within that application.
 
+## Move Schematic
+
+Don't be too anxious about choosing the exact right folder structure from the beginning. Libraries can be moved or renamed using the [`@nrwl/workspace:move` schematic](/{{framework}}/plugins/workspace/schematics/move).
+
+For instance, if a library under the `booking` folder is now being shared by multiple apps, you can move it to the shared folder like this:
+
+```bash
+nx g move --project booking-some-library shared/some-library
+```
+
 ## Example Workspace
 
 Let's use Nrwl Airlines as an example organization. This organization has two apps, `booking` and `check-in`. In the Nx workspace, libraries related to `booking` are grouped under a `libs/booking` folder, libraries related to `check-in` are grouped under a `libs/check-in` folder and libraries used in both applications are placed in `libs/shared`. You can also have nested grouping folders, (i.e. `libs/shared/seatmap`).
