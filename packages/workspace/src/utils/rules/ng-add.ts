@@ -17,5 +17,13 @@ export function addPackageWithInit(
     e2eTestRunner?: 'cypress' | 'none';
   } = { unitTestRunner: 'jest', e2eTestRunner: 'cypress' }
 ): Rule {
-  return externalSchematic(packageName, 'init', { ...testRunners });
+  return (host: Tree) => {
+    const { dependencies, devDependencies } = readJsonInTree(
+      host,
+      'package.json'
+    );
+    return dependencies[packageName] || devDependencies[packageName]
+      ? noop()
+      : externalSchematic(packageName, 'init', { ...testRunners });
+  };
 }
