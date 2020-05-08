@@ -743,6 +743,11 @@
             "file": "shared/workspace-overview"
           },
           {
+            "name": "Configuration",
+            "id": "configuration",
+            "file": "angular/guides/configuration"
+          },
+          {
             "name": "Builders",
             "id": "builders",
             "itemList": [
@@ -1598,6 +1603,11 @@
             "searchResultsName": "Workspace Overview",
             "id": "workspace-overview",
             "file": "shared/workspace-overview"
+          },
+          {
+            "name": "Configuration",
+            "id": "configuration",
+            "file": "react/guides/configuration"
           },
           {
             "name": "Builders",
