@@ -143,7 +143,7 @@ export function runNew(
       `../../node_modules/.bin/ng new proj --no-interactive ${args || ''}`,
       {
         cwd: `./tmp/${cli}`,
-        ...(silent ? { stdio: [0, 1, 2] } : {}),
+        ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
         env: process.env,
       }
     );
@@ -154,7 +154,7 @@ export function runNew(
       }`,
       {
         cwd: `./tmp/${cli}`,
-        ...(silent && false ? { stdio: [0, 1, 2] } : {}),
+        ...(silent && false ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
         env: process.env,
       }
     );
