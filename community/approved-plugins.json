@@ -48,5 +48,10 @@
     "name": "@twittwer/compodoc",
     "description": "Nx Plugin to integrate the generation of documentation with Compodoc in the Nx workflow",
     "url": "https://github.com/twittwer/nx-tools/tree/master/libs/compodoc#readme"
+  },
+  {
+    "name": "@nxext/stencil",
+    "description": "Nx plugin to use StencilJs within nx workspaces",
+    "url": "https://github.com/DominikPieper/nx-extensions"
   }
 ]
