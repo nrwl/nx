@@ -74,6 +74,7 @@ function run(
     bail: options.bail,
     ci: options.ci,
     color: options.color,
+    detectOpenHandles: options.detectOpenHandles,
     json: options.json,
     maxWorkers: options.maxWorkers,
     onlyChanged: options.onlyChanged,
