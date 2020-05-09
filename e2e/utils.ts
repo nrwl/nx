@@ -89,12 +89,28 @@ function patchPackageJsonDeps(addWorkspace = true) {
 }
 
 export function runYarnInstall(silent: boolean = true) {
-  const install = execSync('yarn install', {
+  const install = execSync(`yarn install`, {
     cwd: tmpProjPath(),
     ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
+    env: process.env,
   });
   return install ? install.toString() : '';
 }
+
+export function yarnAdd(pkg: string) {
+  console.log(`YARN ADDING PACKAGES: ${pkg}`);
+  const install = execSync(`yarn add ${pkg}`, {
+    cwd: tmpProjPath(),
+    ...{ stdio: ['ignore', 'ignore', 'ignore'] },
+    env: process.env,
+  });
+  return install ? install.toString() : '';
+}
+
+export const getDirectories = (source) =>
+  readdirSync(source, { withFileTypes: true })
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
 
 export function runNgcc(silent: boolean = true, async: boolean = true) {
   const install = execSync(
@@ -103,6 +119,7 @@ export function runNgcc(silent: boolean = true, async: boolean = true) {
     {
       cwd: tmpProjPath(),
       ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
+      env: process.env,
     }
   );
   return install ? install.toString() : '';
@@ -123,29 +140,26 @@ export function runNew(
   let gen;
   if (cli === 'angular') {
     gen = execSync(
-      `../../node_modules/.bin/ng new proj --no-interactive --skip-install ${
-        args || ''
-      }`,
+      `../../node_modules/.bin/ng new proj --no-interactive ${args || ''}`,
       {
         cwd: `./tmp/${cli}`,
         ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
+        env: process.env,
       }
     );
   } else {
     gen = execSync(
-      `node ../../node_modules/@nrwl/tao/index.js new proj --no-interactive --skip-install ${
+      `node ../../node_modules/@nrwl/tao/index.js new proj --no-interactive ${
         args || ''
       }`,
       {
         cwd: `./tmp/${cli}`,
         ...(silent && false ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
+        env: process.env,
       }
     );
   }
-
-  patchPackageJsonDeps(addWorkspace);
-  const install = runYarnInstall(silent && false);
-  return silent ? null : `${gen ? gen.toString() : ''}${install}`;
+  return silent ? null : `${gen ? gen.toString() : ''}`;
 }
 
 /**
@@ -156,27 +170,11 @@ export function newProject(): void {
   cleanup();
   if (!directoryExists(tmpBackupProjPath())) {
     runNew('--collection=@nrwl/workspace --npmScope=proj', true);
-    copyMissingPackages();
 
-    writeFileSync(
-      tmpProjPath(
-        'node_modules/@angular-devkit/schematics/tasks/node-package/executor.js'
-      ),
-      `
-      "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const rxjs_1 = require("rxjs");
-function default_1(factoryOptions = {}) {
-    return (options) => {
-        return new rxjs_1.Observable(obs => {
-          obs.complete();
-        });
-    };
-}
-exports.default = default_1;`
-    );
-    const inCI = process.env['CIRCLECI'] ? true : false;
-    runNgcc(!inCI, !inCI);
+    const packages = getDirectories('./build/packages')
+      .filter((pkg) => !pkg.startsWith('create-'))
+      .map((pkg) => `@nrwl/${pkg}`);
+    yarnAdd(packages.join(' '));
 
     execSync(`mv ${tmpProjPath()} ${tmpBackupProjPath()}`);
   }
@@ -191,168 +189,12 @@ exports.default = default_1;`
  * If one is not found, it creates a new project.
  */
 export function ensureProject(): void {
-  if (!directoryExists(tmpProjPath())) {
-    newProject();
-  }
+  newProject();
 }
 
 export function supportUi() {
   return false;
   // return !process.env.NO_CHROME;
-}
-
-export function copyMissingPackages(): void {
-  const modulesToCopy = [
-    '@ngrx',
-    '@nrwl',
-    'angular',
-    '@angular',
-    '@angular-devkit',
-    'codelyzer',
-    'ngrx-store-freeze',
-    'npm-run-all',
-    'yargs',
-    'yargs-parser',
-
-    'ng-packagr',
-    'cypress',
-    '@jest',
-    'jest',
-    '@types/jest',
-    '@types/node',
-    'jest-preset-angular',
-    'identity-obj-proxy',
-    'karma',
-    'karma-chrome-launcher',
-    'karma-coverage-istanbul-reporter',
-    'karma-jasmine',
-    'karma-jasmine-html-reporter',
-    'jasmine-core',
-    'jasmine-spec-reporter',
-    'jasmine-marbles',
-    '@types/jasmine',
-    '@types/jasminewd2',
-    '@nestjs',
-    'express',
-    '@types/express',
-    'protractor',
-
-    'react',
-    'react-dom',
-    'react-redux',
-    'react-router-dom',
-    '@reduxjs',
-    '@reduxjs/toolkit',
-    'styled-components',
-    '@types/react',
-    '@types/react-dom',
-    '@types/react-redux',
-    '@types/react-router-dom',
-    '@testing-library',
-
-    // For testing webpack config with babel-loader
-    '@babel',
-    '@svgr/webpack',
-    'babel-loader',
-    'babel-plugin-const-enum',
-    'babel-plugin-macros',
-    'eslint-plugin-import',
-    'eslint-plugin-jsx-a11y',
-    'eslint-plugin-react',
-    'eslint-plugin-react-hooks',
-    'url-loader',
-
-    // For testing web bundle
-    'rollup',
-    '@rollup',
-    'rollup-plugin-babel',
-    'rollup-plugin-filesize',
-    'rollup-plugin-local-resolve',
-    'rollup-plugin-peer-deps-external',
-    'rollup-plugin-postcss',
-    'rollup-plugin-typescript2',
-
-    'next',
-    'document-register-element',
-
-    '@angular/forms',
-    '@storybook',
-
-    'fork-ts-checker-webpack-plugin',
-
-    // For web builder with inlined build-angular
-    'source-map',
-    'webpack-sources',
-    'terser',
-    'caniuse-lite',
-    'browserslist',
-    'license-webpack-plugin',
-    'webpack-subresource-integrity',
-    'autoprefixer',
-    'mini-css-extract-plugin',
-    'postcss-import',
-    'worker-plugin',
-    'regenerator-runtime',
-    'clean-css',
-    'loader-utils',
-    'postcss',
-    'url',
-    'circular-dependency-plugin',
-    'terser-webpack-plugin',
-    'parse5',
-    'cacache',
-    'find-cache-dir',
-    'tree-kill',
-    'speed-measure-webpack-plugin',
-    'webpack-merge',
-    'semver',
-
-    'css-loader',
-    'mime',
-    'less',
-    'send',
-
-    '@bazel',
-  ];
-  modulesToCopy.forEach((m) => copyNodeModule(m));
-  updateFile(
-    'node_modules/@angular-devkit/schematics/tasks/node-package/executor.js',
-    `
-    function default_1() {
-      return () => {
-        const rxjs = require("rxjs");
-        return new rxjs.Observable(obs => {
-          obs.next();
-          obs.complete();
-        });
-      };
-    }
-    exports.default = default_1;
-  `
-  );
-
-  execSync(`rm -rf ${tmpProjPath('node_modules/.bin/webpack')}`);
-  execSync(
-    `cp -a node_modules/.bin/webpack ${tmpProjPath(
-      'node_modules/.bin/webpack'
-    )}`
-  );
-
-  execSync(`rm -rf ${tmpProjPath('node_modules/.bin/bazel')}`);
-  execSync(
-    `cp -a node_modules/.bin/bazel ${tmpProjPath('node_modules/.bin/bazel')}`
-  );
-  execSync(`rm -rf ${tmpProjPath('node_modules/cypress/node_modules/@types')}`);
-  execSync(`rm -rf node_modules/karma/node_modules/mime`);
-  execSync(`rm -rf node_modules/ng-packagr/node_modules/mime`);
-}
-
-function copyNodeModule(name: string) {
-  const source = `node_modules/${name}`;
-  const destination = tmpProjPath(source);
-
-  execSync(`rm -rf ${destination}`);
-  execSync(`cp -a ${source} ${destination}`);
 }
 
 export function runCommandAsync(
@@ -364,9 +206,10 @@ export function runCommandAsync(
 ): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     exec(
-      `${command}`,
+      command,
       {
         cwd: tmpProjPath(),
+        env: process.env,
       },
       (err, stdout, stderr) => {
         if (!opts.silenceError && err) {
@@ -385,10 +228,7 @@ export function runCLIAsync(
     env: process.env,
   }
 ): Promise<{ stdout: string; stderr: string }> {
-  return runCommandAsync(
-    `node ./node_modules/@nrwl/cli/bin/nx.js ${command}`,
-    opts
-  );
+  return runCommandAsync(`./node_modules/.bin/nx ${command}`, opts);
 }
 
 export function runNgAdd(
@@ -426,7 +266,7 @@ export function runCLI(
   }
 ): string {
   try {
-    const r = execSync(`node ./node_modules/@nrwl/cli/bin/nx.js ${command}`, {
+    const r = execSync(`./node_modules/.bin/nx ${command}`, {
       cwd: tmpProjPath(),
       env: opts.env,
     })
@@ -463,6 +303,7 @@ export function runCommand(command: string): string {
     const r = execSync(command, {
       cwd: tmpProjPath(),
       stdio: ['pipe', 'pipe', 'pipe'],
+      env: process.env,
     }).toString();
     console.log(r);
     return r;

@@ -8,7 +8,6 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanup,
-  copyMissingPackages,
   ensureProject,
   forEachCli,
   readFile,
@@ -21,6 +20,7 @@ import {
   uniq,
   updateFile,
   workspaceConfigName,
+  yarnAdd,
 } from './utils';
 
 function getData(): Promise<any> {
@@ -161,8 +161,8 @@ forEachCli((currentCLIName) => {
         // them from their config files as happened with emitDecoratorMetadata.
         cleanup();
         runNew('', false, false);
-        runNgAdd('add @nrwl/workspace --npmScope projscope --skip-install');
-        copyMissingPackages();
+        runNgAdd('add @nrwl/workspace --npmScope projscope');
+        yarnAdd('@nrwl/nest');
       } else {
         ensureProject();
       }

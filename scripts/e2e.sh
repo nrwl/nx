@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-
-./scripts/link.sh
+./scripts/link.sh 9999.0.0
 
 rm -rf tmp
 mkdir -p tmp/angular
@@ -11,10 +10,10 @@ if [ -n "$1" ]; then
   COMMAND_FILE="./build/e2e/commands/$1.test.js"
 
   if [ -f "$TEST_FILE" ]; then
-    jest --maxWorkers=1 $TEST_FILE
+    PUBLISHED_VERSION=9999.0.0 NPM_CONFIG_REGISTRY=http://localhost:4872/ jest -c "./build/e2e/jest-config.js" --maxWorkers=1 $TEST_FILE
   else
-    jest --maxWorkers=1 $COMMAND_FILE
+    PUBLISHED_VERSION=9999.0.0 NPM_CONFIG_REGISTRY=http://localhost:4872/ jest -c "./build/e2e/jest-config.js" --maxWorkers=1 $COMMAND_FILE
   fi
 else
-  jest --maxWorkers=1 ./build/e2e/*.test.js
+  PUBLISHED_VERSION=9999.0.0 NPM_CONFIG_REGISTRY=http://localhost:4872/ jest -c "./build/e2e/jest-config.js" --maxWorkers=1 ./build/e2e/*.test.js
 fi

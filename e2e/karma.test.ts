@@ -13,8 +13,16 @@ forEachCli(() => {
     it('should be able to generate a testable library using karma', async (done) => {
       ensureProject();
 
+      // run an app
+      const myapp = uniq('myapp');
+      runCLI(
+        `generate @nrwl/angular:app ${myapp} --unit-test-runner karma --no-interactive`
+      );
+
       const mylib = uniq('mylib');
-      runCLI(`generate @nrwl/angular:lib ${mylib} --unit-test-runner karma`);
+      runCLI(
+        `generate @nrwl/angular:lib ${mylib} --unit-test-runner karma --no-interactive`
+      );
       patchKarmaToWorkOnWSL();
 
       await Promise.all([
@@ -24,13 +32,16 @@ forEachCli(() => {
 
       const karmaResult = await runCLIAsync(`test ${mylib}`);
       expect(karmaResult.stdout).toContain('3 SUCCESS');
+
       done();
-    }, 30000);
+    }, 45000);
 
     it('should be able to generate a testable application using karma', async (done) => {
       ensureProject();
       const myapp = uniq('myapp');
-      runCLI(`generate @nrwl/angular:app ${myapp} --unit-test-runner karma`);
+      runCLI(
+        `generate @nrwl/angular:app ${myapp} --unit-test-runner karma --no-interactive`
+      );
       patchKarmaToWorkOnWSL();
 
       await Promise.all([
