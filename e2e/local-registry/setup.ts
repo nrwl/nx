@@ -4,7 +4,7 @@ import { getDirectories } from '../utils';
 
 const asyncExec = promisify(exec);
 
-process.env.PUBLISHED_VERSION = `9999.0.0`;
+process.env.PUBLISHED_VERSION = `9999.0.1`;
 
 async function spawnLocalRegistry() {
   const localRegistryProcess = spawn('npx', [
@@ -40,6 +40,13 @@ async function updateVersion(packagePath) {
 }
 
 async function publishPackage(packagePath) {
+  if (process.env.npm_config_registry.indexOf('http://localhost') === -1) {
+    throw Error(`
+      ------------------
+      💣 ERROR 💣 => $NPM_REGISTRY does not look like a local registry'
+      ------------------
+    `);
+  }
   await asyncExec(`npm publish`, {
     cwd: packagePath,
     env: process.env,
