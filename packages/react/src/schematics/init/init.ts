@@ -1,6 +1,7 @@
 import { chain, noop, Rule } from '@angular-devkit/schematics';
 import {
   addPackageWithInit,
+  setDefaultCollection,
   updateJsonInTree,
   updateWorkspace,
 } from '@nrwl/workspace';
@@ -14,7 +15,6 @@ import {
   typesReactVersion,
 } from '../../utils/versions';
 import { JsonObject } from '@angular-devkit/core';
-import { setDefaultCollection } from '@nrwl/workspace/src/utils/rules/workspace';
 
 export function updateDependencies(): Rule {
   return updateJsonInTree('package.json', (json) => {

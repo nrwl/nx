@@ -3,6 +3,7 @@ import {
   addDepsToPackageJson,
   addPackageWithInit,
   formatFiles,
+  setDefaultCollection,
   updateJsonInTree,
 } from '@nrwl/workspace';
 import { Schema } from './schema';
@@ -12,7 +13,6 @@ import {
   nxVersion,
   reflectMetadataVersion,
 } from '../../utils/versions';
-import { setDefaultCollection } from '@nrwl/workspace/src/utils/rules/workspace';
 
 export const updateDependencies = addDepsToPackageJson(
   {
