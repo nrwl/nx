@@ -9,9 +9,7 @@ LOCALBUILD=$3
 PACKAGE_SOURCE=build/packages
 NPM_DEST=build/npm
 ORIG_DIRECTORY=`pwd`
-
-# We are running inside of a child_process, so we need to reauth
-npm adduser
+NPM_REGISTRY=`npm config get registry` # for local releases
 
 if [ "$LOCALBUILD" = "--local" ]; then
   echo
@@ -31,6 +29,9 @@ if [ "$LOCALBUILD" = "--local" ]; then
   fi
 else
   echo "Publishing to public npm"
+
+  # We are running inside of a child_process, so we need to reauth
+  npm adduser
 fi
 
 for package in $NPM_DEST/*/
