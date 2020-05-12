@@ -7,8 +7,8 @@ import {
   SchematicsException,
   noop,
 } from '@angular-devkit/schematics';
+import { join, Path } from '@angular-devkit/core';
 import { getProjectConfig } from '@nrwl/workspace';
-import { join } from 'path';
 import { CreateComponentStoriesFileSchema } from '../component-story/component-story';
 import { CreateComponentSpecFileSchema } from '../component-cypress-spec/component-cypress-spec';
 import { getComponentName } from '../../utils/ast-utils';
@@ -62,7 +62,7 @@ export function createAllStories(
     return chain(
       componentPaths.map((componentPath) => {
         const relativeCmpDir = componentPath.replace(
-          join('/', projectSrcRoot, '/'),
+          join('/' as Path, projectSrcRoot, '/'),
           ''
         );
 

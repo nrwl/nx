@@ -9,9 +9,8 @@ import {
   SchematicsException,
   applyTemplates,
 } from '@angular-devkit/schematics';
-import { normalize } from '@angular-devkit/core';
+import { normalize, join } from '@angular-devkit/core';
 import { getProjectConfig, formatFiles } from '@nrwl/workspace';
-import { join } from 'path';
 import {
   applyWithSkipExisting,
   findNodes,
