@@ -139,11 +139,25 @@ describe('project graph', () => {
       'shared-util': { name: 'shared-util', type: 'lib' },
       'shared-util-data': { name: 'shared-util-data', type: 'lib' },
       'lazy-lib': { name: 'lazy-lib', type: 'lib' },
-      'happy-nrwl': { name: 'happy-nrwl', type: 'npm' },
-      express: { name: 'express', type: 'npm' },
+      'npm:happy-nrwl': {
+        name: 'npm:happy-nrwl',
+        type: 'npm',
+        data: {
+          packageName: 'happy-nrwl',
+        },
+      },
+      'npm:express': {
+        name: 'npm:express',
+        type: 'npm',
+        data: {
+          packageName: 'express',
+        },
+      },
     });
     expect(graph.dependencies).toMatchObject({
-      api: [{ type: DependencyType.static, source: 'api', target: 'express' }],
+      api: [
+        { type: DependencyType.static, source: 'api', target: 'npm:express' },
+      ],
       'demo-e2e': [
         { type: DependencyType.implicit, source: 'demo-e2e', target: 'demo' },
       ],
@@ -169,7 +183,7 @@ describe('project graph', () => {
         {
           type: DependencyType.static,
           source: 'shared-util',
-          target: 'happy-nrwl',
+          target: 'npm:happy-nrwl',
         },
       ],
     });

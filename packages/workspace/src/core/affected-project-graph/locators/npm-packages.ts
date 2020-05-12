@@ -4,12 +4,22 @@ import { TouchedProjectLocator } from '../affected-project-graph-models';
 
 export const getTouchedNpmPackages: TouchedProjectLocator<
   WholeFileChange | JsonChange
-> = (touchedFiles, workspaceJson, nxJson, packageJson): string[] => {
+> = (
+  touchedFiles,
+  workspaceJson,
+  nxJson,
+  packageJson,
+  projectGraph
+): string[] => {
   const packageJsonChange = touchedFiles.find((f) => f.file === 'package.json');
   if (!packageJsonChange) return [];
 
   let touched = [];
   const changes = packageJsonChange.getChanges();
+
+  const npmPackages = Object.values(projectGraph.nodes).filter(
+    (node) => node.type === 'npm'
+  );
 
   for (const c of changes) {
     if (
@@ -22,14 +32,13 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
         touched = Object.keys(workspaceJson.projects);
         break;
       } else {
-        touched.push(c.path[1]);
+        touched.push(
+          npmPackages.find((pkg) => pkg.data.packageName === c.path[1]).name
+        );
       }
     } else if (isWholeFileChange(c)) {
       // Whole file was touched, so all npm packages are touched.
-      touched = Object.keys({
-        ...(packageJson.dependencies || {}),
-        ...(packageJson.devDependencies || {}),
-      });
+      touched = npmPackages.map((pkg) => pkg.name);
       break;
     }
   }

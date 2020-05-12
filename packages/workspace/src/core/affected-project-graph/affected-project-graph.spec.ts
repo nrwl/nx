@@ -218,9 +218,9 @@ describe('project graph', () => {
 
     expect(affected).toEqual({
       nodes: {
-        'happy-nrwl': {
+        'npm:happy-nrwl': {
           type: 'npm',
-          name: 'happy-nrwl',
+          name: 'npm:happy-nrwl',
           data: expect.anything(),
         },
         util: {
@@ -245,7 +245,7 @@ describe('project graph', () => {
         },
       },
       dependencies: {
-        'happy-nrwl': [],
+        'npm:happy-nrwl': [],
         'demo-e2e': [
           {
             type: 'implicit',
@@ -261,7 +261,7 @@ describe('project graph', () => {
           },
         ],
         ui: [{ type: 'static', source: 'ui', target: 'util' }],
-        util: [{ type: 'static', source: 'util', target: 'happy-nrwl' }],
+        util: [{ type: 'static', source: 'util', target: 'npm:happy-nrwl' }],
       },
     });
   });
@@ -306,7 +306,7 @@ describe('project graph', () => {
     ]);
 
     expect(Object.keys(affected.nodes)).toEqual([
-      '@nrwl/workspace',
+      'npm:@nrwl/workspace',
       'api',
       'demo',
       'demo-e2e',
