@@ -205,7 +205,7 @@
     "rollup-plugin-typescript2": "0.26.0",
     "rxjs": "6.5.4",
     "sass": "1.26.3",
-    "sass-loader": "7.2.0",
+    "sass-loader": "8.0.2",
     "semver": "6.3.0",
     "shelljs": "^0.8.3",
     "source-map": "0.7.3",
