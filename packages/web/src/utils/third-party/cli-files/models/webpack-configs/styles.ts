@@ -149,11 +149,13 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
           loader: 'sass-loader',
           options: {
             implementation: sassImplementation,
-            fiber,
             sourceMap: cssSourceMap,
-            // bootstrap-sass requires a minimum precision of 8
-            precision: 8,
-            includePaths,
+            sassOptions: {
+              fiber,
+              // bootstrap-sass requires a minimum precision of 8
+              precision: 8,
+              includePaths,
+            },
           },
         },
       ],
