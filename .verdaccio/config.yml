@@ -1,5 +1,5 @@
 # path to a directory with all packages
-storage: ./build/local-registry/storage
+storage: ../build/local-registry/storage
 
 auth:
   htpasswd:
