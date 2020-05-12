@@ -9,9 +9,9 @@ import {
   Tree,
   url,
 } from '@angular-devkit/schematics';
+import { join } from '@angular-devkit/core';
 import { findNodes, getProjectConfig } from '@nrwl/workspace';
 import { applyWithSkipExisting } from '@nrwl/workspace/src/utils/ast-utils';
-import { join } from 'path';
 import ts = require('typescript');
 import {
   getComponentName,
