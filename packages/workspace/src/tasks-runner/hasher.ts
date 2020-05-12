@@ -1,10 +1,10 @@
 import { ProjectGraph } from '../core/project-graph';
 import { NxJson } from '../core/shared-interfaces';
 import { Task } from './tasks-runner';
-import { statSync } from 'fs';
+import { statSync, readFileSync } from 'fs';
 import { rootWorkspaceFileNames } from '../core/file-utils';
 import { execSync } from 'child_process';
-
+const resolve = require('resolve');
 const hasha = require('hasha');
 
 export interface Hash {
@@ -32,9 +32,14 @@ interface RuntimeHashResult {
   runtime: { [input: string]: string };
 }
 
+interface NodeModulesResult {
+  value: string;
+}
+
 export class Hasher {
   static version = '1.0';
   implicitDependencies: Promise<ImplicitHashResult>;
+  nodeModules: Promise<NodeModulesResult>;
   runtimeInputs: Promise<RuntimeHashResult>;
   fileHashes = new FileHashes();
   projectHashes = new ProjectHashes(this.projectGraph, this.fileHashes);
@@ -56,13 +61,19 @@ export class Hasher {
       { algorithm: 'sha256' }
     );
 
-    const values = await Promise.all([
+    const values = (await Promise.all([
       this.projectHashes.hashProject(task.target.project, [
         task.target.project,
       ]),
       this.implicitDepsHash(),
       this.runtimeInputsHash(),
-    ]);
+      this.nodeModulesHash(),
+    ])) as [
+      ProjectHashResult,
+      ImplicitHashResult,
+      RuntimeHashResult,
+      NodeModulesResult
+    ];
 
     const value = hasha(
       [Hasher.version, command, ...values.map((v) => v.value)],
@@ -151,6 +162,37 @@ export class Hasher {
       };
     });
     return this.implicitDependencies;
+  }
+
+  private async nodeModulesHash() {
+    if (this.nodeModules) return this.nodeModules;
+
+    this.nodeModules = Promise.resolve().then(async () => {
+      try {
+        const j = JSON.parse(readFileSync('package.json').toString());
+        const allPackages = [
+          ...Object.keys(j.dependencies),
+          ...Object.keys(j.devDependencies),
+        ];
+        const packageJsonHashes = await Promise.all(
+          allPackages.map((d) => {
+            try {
+              const path = resolve.sync(`${d}/package.json`, {
+                basedir: process.cwd(),
+              });
+              return this.fileHashes.hashFile(path).catch(() => '');
+            } catch (e) {
+              return '';
+            }
+          })
+        );
+        return { value: await hasha(packageJsonHashes) };
+      } catch (e) {
+        return { value: '' };
+      }
+    });
+
+    return this.nodeModules;
   }
 }
 
