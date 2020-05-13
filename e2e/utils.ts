@@ -70,31 +70,27 @@ export function workspaceConfigName() {
   return cli === 'angular' ? 'angular.json' : 'workspace.json';
 }
 
-function patchPackageJsonDeps(addWorkspace = true) {
-  const p = JSON.parse(readFileSync(tmpProjPath('package.json')).toString());
-  const workspacePath = path.join(getCwd(), 'build', 'packages', 'workspace');
-  const angularPath = path.join(getCwd(), 'build', 'packages', 'angular');
-  const reactPath = path.join(getCwd(), 'build', 'packages', 'react');
-  const storybookPath = path.join(getCwd(), 'build', 'packages', 'storybook');
-  const jestPath = path.join(getCwd(), 'build', 'packages', 'jest');
-
-  if (addWorkspace) {
-    p.devDependencies['@nrwl/workspace'] = `file:${workspacePath}`;
+export function runCreateWorkspace(
+  name: string,
+  {
+    preset,
+    appName,
+    style,
+  }: { preset: string; appName?: string; style?: string }
+) {
+  let command = `npx create-nx-workspace@${process.env.PUBLISHED_VERSION} ${name} --cli=${cli} --preset=${preset} --no-interactive`;
+  if (appName) {
+    command += ` --appName ${appName}`;
   }
-  p.devDependencies['@nrwl/angular'] = `file:${angularPath}`;
-  p.devDependencies['@nrwl/react'] = `file:${reactPath}`;
-  p.devDependencies['@nrwl/storybook'] = `file:${storybookPath}`;
-  p.devDependencies['@nrwl/jest'] = `file:${jestPath}`;
-  writeFileSync(tmpProjPath('package.json'), JSON.stringify(p, null, 2));
-}
-
-export function runYarnInstall(silent: boolean = true) {
-  const install = execSync(`yarn install`, {
-    cwd: tmpProjPath(),
-    ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
+  if (style) {
+    command += ` --style ${style}`;
+  }
+  const create = execSync(command, {
+    cwd: `./tmp/${cli}`,
+    stdio: ['pipe', 'pipe', 'pipe'],
     env: process.env,
   });
-  return install ? install.toString() : '';
+  return create.toString();
 }
 
 export function yarnAdd(pkg: string) {
