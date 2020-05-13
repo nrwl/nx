@@ -230,6 +230,10 @@ const examples = {
       description:
         'Print the names of all the apps affected by the last commit on master',
     },
+    {
+      command: 'nx affected:apps --target=custom-target',
+      description: 'Run custom target for all affected apps',
+    },
   ],
   'affected:libs': [
     {
@@ -246,6 +250,10 @@ const examples = {
       command: 'affected:libs --base=master~1 --head=master',
       description:
         'Print the names of all the libs affected by the last commit on master',
+    },
+    {
+      command: 'nx affected:libs --target=custom-target',
+      description: 'Run custom target for all affected libs',
     },
   ],
   'format:write': [],
@@ -418,9 +426,9 @@ Promise.all(
       let template = dedent`
       # ${command.command}
       ${command.description}
-      
+
       ## Usage
-      \`\`\`bash 
+      \`\`\`bash
       nx ${command.command}
       \`\`\`
 

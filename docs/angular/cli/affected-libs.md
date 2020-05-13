@@ -1,6 +1,6 @@
 # affected:libs
 
-Print libraries affected by changes
+Print or run task for libraries affected by changes
 
 ## Usage
 
@@ -28,6 +28,12 @@ Print the names of all the libs affected by the last commit on master:
 
 ```bash
 nx affected:libs --base=master~1 --head=master
+```
+
+Run custom target for all affected libs:
+
+```bash
+nx nx affected:libs --target=custom-target
 ```
 
 ## Options
@@ -62,11 +68,23 @@ Latest commit of the current branch (usually HEAD)
 
 Show help
 
+### maxParallel
+
+Default: `3`
+
+Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.
+
 ### only-failed
 
 Default: `false`
 
 Isolate projects which previously failed
+
+### parallel
+
+Default: `false`
+
+Parallelize the command
 
 ### plain
 
@@ -81,6 +99,10 @@ This is the name of the tasks runner configured in nx.json
 Default: `false`
 
 Rerun the tasks even when the results are available in the cache
+
+### target
+
+Task to run for affected projects
 
 ### uncommitted
 

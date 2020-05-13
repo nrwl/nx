@@ -46,38 +46,46 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
   try {
     switch (command) {
       case 'apps':
-        const apps = affectedProjects
-          .filter((p) => p.type === ProjectType.app)
-          .map((p) => p.name);
-        if (parsedArgs.plain) {
-          console.log(apps.join(' '));
-        } else {
-          printArgsWarning(nxArgs);
-          if (apps.length) {
-            output.log({
-              title: 'Affected apps:',
-              bodyLines: apps.map((app) => `${output.colors.gray('-')} ${app}`),
-            });
-          }
-        }
-        break;
+      case 'libs': {
+        const projectTypeToFilter =
+          command === 'apps' ? ProjectType.app : ProjectType.lib;
 
-      case 'libs':
-        const libs = affectedProjects
-          .filter((p) => p.type === ProjectType.lib)
-          .map((p) => p.name);
+        const projects = affectedProjects.filter(
+          (p) => p.type === projectTypeToFilter
+        );
+
         if (parsedArgs.plain) {
-          console.log(libs.join(' '));
+          const affectedProjectsNames = projects.map((p) => p.name);
+          console.log(affectedProjectsNames.join(' '));
+        } else if (nxArgs.target) {
+          const libsWithTarget = allProjectsWithTarget(projects, nxArgs);
+
+          runCommand(
+            libsWithTarget,
+            projectGraph,
+            env,
+            nxArgs,
+            overrides,
+            new DefaultReporter(),
+            null
+          );
         } else {
+          const affectedProjectsNames = projects.map((p) => p.name);
+
           printArgsWarning(nxArgs);
-          if (libs.length) {
+          if (affectedProjectsNames.length) {
+            const title = `Affected ${command === 'apps' ? 'apps' : 'libs'}:`;
             output.log({
-              title: 'Affected libs:',
-              bodyLines: libs.map((lib) => `${output.colors.gray('-')} ${lib}`),
+              title,
+              bodyLines: affectedProjectsNames.map(
+                (lib) => `${output.colors.gray('-')} ${lib}`
+              ),
             });
           }
         }
+
         break;
+      }
 
       case 'dep-graph':
         const projectNames = affectedProjects.map((p) => p.name);
