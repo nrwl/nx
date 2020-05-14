@@ -51,6 +51,7 @@ Nx provides tools to give you the benefits of a monorepo without the drawbacks o
 
 - [Interactive Nx Tutorial](/{{framework}}/tutorial/01-create-application)
 - [Free Nx Course on YouTube](https://www.youtube.com/watch?time_continue=49&v=2mYLe9Kp9VM&feature=emb_logo)
+- [45-Minute Walkthrough on YouTube](https://www.youtube.com/watch?v=h5FIGDn5YM0)
 
 **Dive Deep:**
 
