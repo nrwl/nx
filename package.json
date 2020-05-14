@@ -187,6 +187,7 @@
     "postcss-loader": "3.0.0",
     "precise-commits": "1.0.2",
     "prettier": "2.0.4",
+    "pretty-quick": "^2.0.1",
     "protractor": "5.4.3",
     "raw-loader": "3.1.0",
     "react": "16.10.2",
@@ -269,7 +270,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-push": "yarn checkcommit && yarn documentation && yarn checkformat"
+      "pre-push": "yarn checkcommit && yarn documentation && pretty-quick --check"
     }
   }
 }
