@@ -20,17 +20,19 @@
 
 ## Nx Helps You
 
-### Use Modern Tools
-
-Using Nx, you can add TypeScript, Cypress, Jest, Prettier, Angular, React, Storybook, Next.js and Nest into your dev workflow. Nx sets up these tools and allows you to use them seamlessly. Nx fully integrates with the other modern tools you already use and love.
-
-### Build Full-Stack Applications
-
-With Nx, you can build full-stack applications using modern frameworks. You can share code between the frontend and the backend. And you can use the same `build/test/serve` commands throughout the whole dev experience.
-
 ### Develop like Google, Facebook, and Microsoft
 
-With Nx, you can develop multiple full-stack applications holistically and share code between them all in the same workspace. Nx provides advanced tools which help you scale your enterprise development. Nx also helps enforce your organization’s standards and community best practices.
+Nx helps scale your development from one team building one application to many teams building multiple frontend and backend applications all in the same workspace. When using Nx, developers have a holistic dev experience powered by an advanced CLI (with editor plugins), capabilities for controlled code sharing and consistent code generation.
+
+### Use Intelligent Build System with Distributed Caching
+
+Nx is smart. It analyzes your workspace and figures out what can be affected by every code change. That's why Nx doesn't rebuild and retest everything on every commit--it only rebuilds what is necessary.
+
+Nx also uses a distributed computation cache. If someone has already built or tested similar code, Nx will use their results to speed up the command for everyone else instead of rebuilding or retesting the code from scratch. This, in combination with Nx’s support for distributed and incremental builds, can help teams see up to 10x reduction in build and test times.
+
+### Use Modern Tools
+
+Nx is an open platform with plugins for many modern tools and frameworks. It has support for TypeScript, React, Angular, Cypress, Jest, Prettier, Nest.js, Next.js, Storybook, Ionic among others. With Nx, you get a consistent dev experience regardless of the tools used.
 
 # Getting Started
 
@@ -54,64 +56,29 @@ npm init nx-workspace
 yarn create nx-workspace
 ```
 
+The `create-nx-workspace` command will ask you to select a preset, which will configure some plugins and create your applications to help you get started.
+
+```
+? What to create in the new workspace (Use arrow keys)
+❯ empty             [an empty workspace]
+  web components    [a workspace with a single app built using web components]
+  angular           [a workspace with a single Angular application]
+  angular-nest      [a workspace with a full stack application (Angular + Nest)]
+  react             [a workspace with a single React application]
+  react-express     [a workspace with a full stack application (React + Express)]
+  next.js           [a workspace with a single Next.js application]
+```
+
+Select the preset that works best for you. You can always add plugins later.
+
+```
+? Workspace name (e.g., org name)     happyorg
+? What to create in the new workspace web components    [a workspace with a single app built using web components]
+? Application name                    myapp
+? Default stylesheet format           CSS
+```
+
 If it's your first Nx project, the command will recommend you to install `@nrwl/cli` globally, so you can invoke `nx` directly without going through yarn or npm.
-
-## Creating First Application
-
-By default, an Nx workspace starts blank. There are no applications to build, serve, and test. To create one, you need to add capabilities to the workspace.
-
-**To add a web components app, run:**
-
-```bash
-yarn add --dev @nrwl/web
-nx g @nrwl/web:app myapp # or just "nx g myapp"
-```
-
-```bash
-npm install --save-dev @nrwl/web
-nx g @nrwl/web:app myapp # or just "nx g myapp"
-```
-
-**To add an Angular app, run:**
-
-```bash
-yarn add --dev @nrwl/angular
-nx g @nrwl/angular:app myapp # or just "nx g myapp"
-```
-
-```bash
-npm install --save-dev @nrwl/angular
-nx g @nrwl/angular:app myapp # or just "nx g myapp"
-```
-
-**To add a React app, run:**
-
-```bash
-yarn add --dev @nrwl/react
-nx g @nrwl/react:app myapp # or just "nx g myapp"
-```
-
-```bash
-npm install --save-dev @nrwl/react
-nx g @nrwl/react:app myapp # or just "nx g myapp"
-```
-
-If `nx g` fails, use: `yarn nx g @nrwl/web:app myapp` or `npm run nx -- g @nrwl/web:app myapp`.
-
-Regardless of what framework you chose, the resulting file tree will look like this:
-
-```treeview
-<workspace name>/
-├── apps/
-│   ├── myapp/
-│   └── myapp-e2e/
-├── libs/
-├── tools/
-├── nx.json
-├── package.json
-├── tsconfig.json
-└── tslint.json
-```
 
 ## Serving Application
 
@@ -169,8 +136,8 @@ You are good to go!
 
 ### Videos
 
-- [Building Angular full-stack applications in a monorepo.](https://www.youtube.com/watch?v=XZpp52IqD2A&t=1292s)
-- [Building React full-stack applications in a monorepo.](https://www.youtube.com/watch?v=Jxh_--FeJeY&t=2s)
+- [45-Minute Walkthrough (React)](https://www.youtube.com/watch?v=jCf92IyR-GE)
+- [45-Minute Walkthrough (Angular)](https://www.youtube.com/watch?v=h5FIGDn5YM0)
 
 ### Talks
 
