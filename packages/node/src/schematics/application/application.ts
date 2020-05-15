@@ -23,6 +23,7 @@ import { toFileName } from '@nrwl/workspace';
 import { getProjectConfig } from '@nrwl/workspace';
 import { offsetFromRoot } from '@nrwl/workspace';
 import init from '../init/init';
+import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -146,7 +147,7 @@ function addProxy(options: NormalizedSchema): Rule {
 
 export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(host, schema);
     return chain([
       init({
         ...options,
@@ -168,14 +169,14 @@ export default function (schema: Schema): Rule {
   };
 }
 
-function normalizeOptions(options: Schema): NormalizedSchema {
+function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appDirectory = options.directory
     ? `${toFileName(options.directory)}/${toFileName(options.name)}`
     : toFileName(options.name);
 
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
 
-  const appProjectRoot = join(normalize('apps'), appDirectory);
+  const appProjectRoot = join(normalize(appsDir(host)), appDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

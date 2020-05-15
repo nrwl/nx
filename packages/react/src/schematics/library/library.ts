@@ -46,6 +46,7 @@ import {
   typesReactRouterDomVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
+import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -60,7 +61,7 @@ export interface NormalizedSchema extends Schema {
 
 export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
-    const options = normalizeOptions(host, schema, context);
+    const options = normalizeOptions(host, schema);
 
     if (!options.component) {
       options.style = 'none';
@@ -104,7 +105,7 @@ export default function (schema: Schema): Rule {
 }
 
 function addProject(options: NormalizedSchema): Rule {
-  return updateWorkspaceInTree((json) => {
+  return updateWorkspaceInTree((json, context, host) => {
     const architect: { [key: string]: any } = {};
 
     architect.lint = generateProjectLint(
@@ -130,7 +131,7 @@ function addProject(options: NormalizedSchema): Rule {
       architect.build = {
         builder: '@nrwl/web:package',
         options: {
-          outputPath: `dist/libs/${options.projectDirectory}`,
+          outputPath: `dist/${libsDir(host)}/${options.projectDirectory}`,
           tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
           project: `${options.projectRoot}/package.json`,
           entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
@@ -160,7 +161,10 @@ function updateTsConfig(options: NormalizedSchema): Rule {
         const c = json.compilerOptions;
         delete c.paths[options.name];
         c.paths[`@${nxJson.npmScope}/${options.projectDirectory}`] = [
-          maybeJs(options, `libs/${options.projectDirectory}/src/index.ts`),
+          maybeJs(
+            options,
+            `${libsDir(host)}/${options.projectDirectory}/src/index.ts`
+          ),
         ];
         return json;
       })(host, context);
@@ -287,11 +291,7 @@ function readComponent(
   return { content, source };
 }
 
-function normalizeOptions(
-  host: Tree,
-  options: Schema,
-  context: SchematicContext
-): NormalizedSchema {
+function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const name = toFileName(options.name);
   const projectDirectory = options.directory
     ? `${toFileName(options.directory)}/${name}`
@@ -299,7 +299,7 @@ function normalizeOptions(
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = projectName;
-  const projectRoot = normalize(`libs/${projectDirectory}`);
+  const projectRoot = normalize(`${libsDir(host)}/${projectDirectory}`);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

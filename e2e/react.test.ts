@@ -4,6 +4,7 @@ import {
   checkFilesExist,
   ensureProject,
   forEachCli,
+  newProject,
   readFile,
   readJson,
   renameFile,

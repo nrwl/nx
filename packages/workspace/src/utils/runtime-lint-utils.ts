@@ -122,6 +122,7 @@ export function findTargetProject(
 }
 
 export function isAbsoluteImportIntoAnotherProject(imp: string) {
+  // TODO: vsavkin: check if this needs to be fixed once we generalize lint rules
   return (
     imp.startsWith('libs/') ||
     imp.startsWith('/libs/') ||

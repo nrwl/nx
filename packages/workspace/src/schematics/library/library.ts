@@ -20,7 +20,7 @@ import { toFileName, names } from '@nrwl/workspace';
 import { formatFiles } from '@nrwl/workspace';
 import { offsetFromRoot } from '@nrwl/workspace';
 import { generateProjectLint, addLintFiles } from '../../utils/lint';
-import { addProjectToNxJsonInTree } from '../../utils/ast-utils';
+import { addProjectToNxJsonInTree, libsDir } from '../../utils/ast-utils';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -59,7 +59,7 @@ function updateTsConfig(options: NormalizedSchema): Rule {
         const c = json.compilerOptions;
         delete c.paths[options.name];
         c.paths[`@${nxJson.npmScope}/${options.projectDirectory}`] = [
-          `libs/${options.projectDirectory}/src/index.ts`,
+          `${libsDir(host)}/${options.projectDirectory}/src/index.ts`,
         ];
         return json;
       })(host, context);
@@ -88,7 +88,7 @@ function updateNxJson(options: NormalizedSchema): Rule {
 
 export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(host, schema);
     return chain([
       addLintFiles(options.projectRoot, options.linter),
       createFiles(options),
@@ -109,7 +109,7 @@ export default function (schema: Schema): Rule {
   };
 }
 
-function normalizeOptions(options: Schema): NormalizedSchema {
+function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const name = toFileName(options.name);
   const projectDirectory = options.directory
     ? `${toFileName(options.directory)}/${name}`
@@ -119,7 +119,7 @@ function normalizeOptions(options: Schema): NormalizedSchema {
   const fileName = options.simpleModuleName ? name : projectName;
 
   // const projectRoot = `libs/${projectDirectory}`;
-  const projectRoot = `libs/${projectDirectory}`;
+  const projectRoot = `${libsDir(host)}/${projectDirectory}`;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

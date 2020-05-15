@@ -10,6 +10,7 @@ import { Schema } from './schema';
 import { updateJsonInTree } from '@nrwl/workspace';
 import { toFileName, formatFiles } from '@nrwl/workspace';
 import init from '../init/init';
+import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -52,7 +53,7 @@ server.on('error', console.error);
 
 export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(host, schema);
     return chain([
       init({ ...options, skipFormat: true }),
       externalSchematic('@nrwl/node', 'application', schema),
@@ -63,11 +64,11 @@ export default function (schema: Schema): Rule {
   };
 }
 
-function normalizeOptions(options: Schema): NormalizedSchema {
+function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appDirectory = options.directory
     ? `${toFileName(options.directory)}/${toFileName(options.name)}`
     : toFileName(options.name);
-  const appProjectRoot = join(normalize('apps'), appDirectory);
+  const appProjectRoot = join(normalize(appsDir(host)), appDirectory);
 
   return {
     ...options,

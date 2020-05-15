@@ -27,6 +27,7 @@ import {
   addLintFiles,
 } from '@nrwl/workspace';
 import init from '../init/init';
+import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -189,8 +190,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
   const e2eProjectName = `${appProjectName}-e2e`;
 
-  const appProjectRoot = `apps/${appDirectory}`;
-  const e2eProjectRoot = `apps/${appDirectory}-e2e`;
+  const appProjectRoot = `${appsDir(host)}/${appDirectory}`;
+  const e2eProjectRoot = `${appsDir(host)}/${appDirectory}-e2e`;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

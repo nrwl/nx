@@ -151,7 +151,7 @@ forEachCli(() => {
 
   describe('migrate', () => {
     it('should run migrations', () => {
-      ensureProject();
+      newProject();
 
       updateFile(
         `./node_modules/migrate-parent-package/package.json`,

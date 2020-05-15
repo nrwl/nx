@@ -489,13 +489,13 @@ export function updateJsonInTree<T = any, O = T>(
 }
 
 export function updateWorkspaceInTree<T = any, O = T>(
-  callback: (json: T, context: SchematicContext) => O
+  callback: (json: T, context: SchematicContext, host: Tree) => O
 ): Rule {
   return (host: Tree, context: SchematicContext): Tree => {
     const path = getWorkspacePath(host);
     host.overwrite(
       path,
-      serializeJson(callback(readJsonInTree(host, path), context))
+      serializeJson(callback(readJsonInTree(host, path), context, host))
     );
     return host;
   };
@@ -503,6 +503,20 @@ export function updateWorkspaceInTree<T = any, O = T>(
 
 export function readNxJsonInTree(host: Tree) {
   return readJsonInTree<NxJson>(host, 'nx.json');
+}
+
+export function libsDir(host: Tree) {
+  const json = readJsonInTree<NxJson>(host, 'nx.json');
+  return json && json.workspaceLayout && json.workspaceLayout.libsDir
+    ? json.workspaceLayout.libsDir
+    : 'libs';
+}
+
+export function appsDir(host: Tree) {
+  const json = readJsonInTree<NxJson>(host, 'nx.json');
+  return json && json.workspaceLayout && json.workspaceLayout.appsDir
+    ? json.workspaceLayout.appsDir
+    : 'apps';
 }
 
 export function updateNxJsonInTree(

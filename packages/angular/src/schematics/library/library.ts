@@ -38,7 +38,7 @@ import {
 } from '@nrwl/workspace';
 import { addUnitTestRunner } from '../init/init';
 import { addImportToModule, addRoute } from '../../utils/ast-utils';
-import { insertImport } from '@nrwl/workspace/src/utils/ast-utils';
+import { insertImport, libsDir } from '@nrwl/workspace/src/utils/ast-utils';
 
 interface NormalizedSchema extends Schema {
   name: string;
@@ -219,11 +219,11 @@ function addChildren(options: NormalizedSchema): Rule {
   };
 }
 
-function updateNgPackage(options: NormalizedSchema): Rule {
+function updateNgPackage(host: Tree, options: NormalizedSchema): Rule {
   if (!options.publishable) {
     return noop();
   }
-  const dest = `${offsetFromRoot(options.projectRoot)}dist/libs/${
+  const dest = `${offsetFromRoot(options.projectRoot)}dist/${libsDir(host)}/${
     options.projectDirectory
   }`;
   return chain([
@@ -395,7 +395,7 @@ function updateProject(options: NormalizedSchema): Rule {
           },
         };
       }),
-      updateNgPackage(options),
+      updateNgPackage(host, options),
     ])(host, context);
   };
 }
@@ -408,7 +408,7 @@ function updateTsConfig(options: NormalizedSchema): Rule {
         const c = json.compilerOptions;
         delete c.paths[options.name];
         c.paths[`@${nxJson.npmScope}/${options.projectDirectory}`] = [
-          `libs/${options.projectDirectory}/src/index.ts`,
+          `${libsDir(host)}/${options.projectDirectory}/src/index.ts`,
         ];
         return json;
       })(host, context);
@@ -490,7 +490,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = options.simpleModuleName ? name : projectName;
-  const projectRoot = `libs/${projectDirectory}`;
+  const projectRoot = `${libsDir(host)}/${projectDirectory}`;
 
   const moduleName = `${toClassName(fileName)}Module`;
   const parsedTags = options.tags

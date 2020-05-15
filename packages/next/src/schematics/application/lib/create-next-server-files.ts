@@ -1,6 +1,7 @@
 import { dirname, join } from '@angular-devkit/core';
 import { Tree } from '@angular-devkit/schematics';
 import { NormalizedSchema } from './normalize-options';
+import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
 
 export function createNextServerFiles(options: NormalizedSchema) {
   return (host: Tree) => {
@@ -48,6 +49,8 @@ export function createNextServerFiles(options: NormalizedSchema) {
       `
       );
 
+      const apps = appsDir(host);
+
       host.create(
         join(directory, 'server.js'),
         `
@@ -71,7 +74,7 @@ export function createNextServerFiles(options: NormalizedSchema) {
       const express = require('express');
 
       const nextApp = new NextServer({
-        dir: './dist/apps/<%= name %>',
+        dir: './dist/${apps}/<%= name %>',
         staticMarkup: false,
         quiet: false,
         conf: {
