@@ -2,7 +2,7 @@
 
 There are three top-level configuration files every Nx workspace has: `angular.json`, `nx.json`, and `tsconfig.json`. Many Nx plugins will modify these files when generating new code, but you can also modify them manually.
 
-## `angular.json`
+## angular.json
 
 The `angular.json` configuration file contains information about the targets and schematics. Let's look at the following example:
 
@@ -198,7 +198,7 @@ The following command will generate a new library: `nx g @nrwl/angular:lib mylib
 }
 ```
 
-## `nx.json`
+## nx.json
 
 The `nx.json` file contains extra configuration options mostly related to the project graph.
 
@@ -315,3 +315,14 @@ You can also add dependencies between projects. For instance, the example below 
   }
 }
 ```
+
+## .nxignore
+
+You may optionally add an `.nxignore` file to the root. This file is used to specify files in your workspace that should be completely ignored by nx.
+
+The syntax is the same as a [`.gitignore` file](https://git-scm.com/book/en/v2/Git-Basics-Recording-Changes-to-the-Repository#_ignoring).
+
+**When a file is specified in the `.nxignore` file:**
+
+1. Changes to that file will not be taken into account in the `affected` calculations.
+2. Even if the file is outside an app or library, `nx workspace-lint` will not warn about it.
