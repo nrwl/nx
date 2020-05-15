@@ -5,6 +5,7 @@ import {
   readWorkspace,
 } from '@nrwl/workspace/src/utils/ast-utils';
 import { getWorkspacePath } from '@nrwl/workspace/src/utils/cli-config-utils';
+import ignore from 'ignore';
 import * as path from 'path';
 import {
   createProjectGraph,
@@ -25,18 +26,28 @@ export function checkDependencies(schema: Schema): Rule {
   if (schema.forceRemove) {
     return (tree: Tree) => tree;
   }
+  let ig = ignore();
 
   return (tree: Tree): Tree => {
+    if (tree.exists('.gitignore')) {
+      ig = ig.add(tree.read('.gitignore').toString());
+    }
     const files: FileData[] = [];
     const mtime = Date.now(); //can't get mtime data from the tree :(
     const workspaceDir = path.dirname(getWorkspacePath(tree));
-    tree.visit((file) => {
-      files.push({
-        file: path.relative(workspaceDir, file),
-        ext: path.extname(file),
-        mtime,
+
+    for (const dir of tree.getDir('/').subdirs) {
+      if (ig.ignores(dir)) {
+        return;
+      }
+      tree.getDir(dir).visit((file) => {
+        files.push({
+          file: path.relative(workspaceDir, file),
+          ext: path.extname(file),
+          mtime,
+        });
       });
-    });
+    }
 
     const graph: ProjectGraph = createProjectGraph(
       readWorkspace(tree),
