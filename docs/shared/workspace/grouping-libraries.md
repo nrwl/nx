@@ -17,7 +17,7 @@ nx g move --project booking-some-library shared/some-library
 Similarly, if you no longer need a library, you can remove it with the [`@nrwl/workspace:remove` schematic](/{{framework}}/plugins/workspace/schematics/remove).
 
 ```bash
-nx g remove --project booking-some-library
+nx g remove booking-some-library
 ```
 
 ## Example Workspace
