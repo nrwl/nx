@@ -1,6 +1,6 @@
 # workspace-lint
 
-Lint workspace or list of files. Note: To exclude files from this lint rule, you can add them to the `.nxignore` file
+Lint workspace or list of files. Note: To exclude files from this lint rule, you can add them to the ".nxignore" file
 
 ## Usage
 
