@@ -12,6 +12,14 @@ For instance, if a library under the `booking` folder is now being shared by mul
 nx g move --project booking-some-library shared/some-library
 ```
 
+## Remove Schematic
+
+Similarly, if you no longer need a library, you can remove it with the [`@nrwl/workspace:remove` schematic](/{{framework}}/plugins/workspace/schematics/remove).
+
+```bash
+nx g remove booking-some-library
+```
+
 ## Example Workspace
 
 Let's use Nrwl Airlines as an example organization. This organization has two apps, `booking` and `check-in`. In the Nx workspace, libraries related to `booking` are grouped under a `libs/booking` folder, libraries related to `check-in` are grouped under a `libs/check-in` folder and libraries used in both applications are placed in `libs/shared`. You can also have nested grouping folders, (i.e. `libs/shared/seatmap`).
