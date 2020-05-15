@@ -29,6 +29,8 @@ Deletes the Jest cache directory and then exits without running tests. Will dele
 
 ### codeCoverage
 
+Alias(es): coverage
+
 Type: `boolean`
 
 Indicates that test coverage information should be collected and reported in the output. (https://jestjs.io/docs/en/cli#coverage)
