@@ -146,7 +146,7 @@ export const commandsObject = yargs
   .alias('format:write', 'format')
   .command(
     'workspace-lint [files..]',
-    'Lint workspace or list of files',
+    'Lint workspace or list of files.  Note: To exclude files from this lint rule, you can add them to the ".nxignore" file',
     noop,
     (_) => workspaceLint()
   )
