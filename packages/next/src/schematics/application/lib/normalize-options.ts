@@ -3,6 +3,7 @@ import { Tree } from '@angular-devkit/schematics';
 import { assertValidStyle } from '@nrwl/react';
 import { toFileName } from '@nrwl/workspace';
 import { Schema } from '../schema';
+import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
 
 export interface NormalizedSchema extends Schema {
   projectName: string;
@@ -15,7 +16,7 @@ export interface NormalizedSchema extends Schema {
 }
 
 export function normalizeOptions(
-  _host: Tree,
+  host: Tree,
   options: Schema
 ): NormalizedSchema {
   const appDirectory = options.directory
@@ -25,8 +26,8 @@ export function normalizeOptions(
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
   const e2eProjectName = `${appProjectName}-e2e`;
 
-  const appProjectRoot = normalize(`apps/${appDirectory}`);
-  const e2eProjectRoot = normalize(`apps/${appDirectory}-e2e`);
+  const appProjectRoot = normalize(`${appsDir(host)}/${appDirectory}`);
+  const e2eProjectRoot = normalize(`${appsDir(host)}/${appDirectory}-e2e`);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

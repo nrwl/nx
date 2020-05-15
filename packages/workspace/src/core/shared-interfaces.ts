@@ -14,6 +14,10 @@ export interface NxJson<T = '*' | string[]> {
   projects: {
     [projectName: string]: NxJsonProjectConfig;
   };
+  workspaceLayout?: {
+    libsDir?: string;
+    appsDir?: string;
+  };
   tasksRunnerOptions?: {
     [tasksRunnerName: string]: {
       runner: string;

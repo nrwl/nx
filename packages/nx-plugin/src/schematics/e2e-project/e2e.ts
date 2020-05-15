@@ -23,6 +23,7 @@ import {
 } from '@nrwl/workspace';
 import { join } from 'path';
 import { Schema } from './schema';
+import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
 
 export interface NxPluginE2ESchema extends Schema {
   projectRoot: string;
@@ -56,7 +57,7 @@ function validatePlugin(workspace: WorkspaceDefinition, pluginName: string) {
 
 function normalizeOptions(host: Tree, options: Schema): NxPluginE2ESchema {
   const projectName = `${options.pluginName}-e2e`;
-  const projectRoot = join(normalize('apps'), projectName);
+  const projectRoot = join(normalize(appsDir(host)), projectName);
   const npmScope = readNxJsonInTree(host).npmScope;
   const pluginPropertyName = toPropertyName(options.pluginName);
   return {

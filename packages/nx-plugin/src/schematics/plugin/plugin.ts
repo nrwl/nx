@@ -26,7 +26,10 @@ import {
   updateJsonInTree,
   updateWorkspace,
 } from '@nrwl/workspace';
-import { allFilesInDirInHost } from '@nrwl/workspace/src/utils/ast-utils';
+import {
+  allFilesInDirInHost,
+  libsDir,
+} from '@nrwl/workspace/src/utils/ast-utils';
 import { Schema } from './schema';
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -54,7 +57,7 @@ export default function (schema: NormalizedSchema): Rule {
       updateTsConfig(options),
       schematic('e2e-project', {
         pluginName: options.name,
-        pluginOutputPath: `dist/libs/${options.projectDirectory}`,
+        pluginOutputPath: `dist/${libsDir(host)}/${options.projectDirectory}`,
         npmPackageName: options.npmPackageName,
       }),
       formatFiles(options),
@@ -72,7 +75,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = projectName;
-  const projectRoot = normalize(`libs/${projectDirectory}`);
+  const projectRoot = normalize(`${libsDir(host)}/${projectDirectory}`);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

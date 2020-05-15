@@ -40,6 +40,7 @@ import {
   insertImport,
   getProjectConfig,
   updateWorkspaceInTree,
+  appsDir,
 } from '@nrwl/workspace/src/utils/ast-utils';
 
 interface NormalizedSchema extends Schema {
@@ -760,8 +761,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     e2eProjectName = `${appProjectName}-e2e`;
   }
 
-  const appProjectRoot = `apps/${appDirectory}`;
-  const e2eProjectRoot = `apps/${appDirectory}-e2e`;
+  const appProjectRoot = `${appsDir(host)}/${appDirectory}`;
+  const e2eProjectRoot = `${appsDir(host)}/${appDirectory}-e2e`;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

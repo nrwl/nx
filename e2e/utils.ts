@@ -166,11 +166,9 @@ export function newProject(): void {
   cleanup();
   if (!directoryExists(tmpBackupProjPath())) {
     runNew('--collection=@nrwl/workspace --npmScope=proj', true);
-
-    const packages = getDirectories('./build/packages')
-      .filter((pkg) => !pkg.startsWith('create-'))
-      .map((pkg) => `@nrwl/${pkg}`);
-    yarnAdd(packages.join(' '));
+    yarnAdd(
+      `@nrwl/angular @nrwl/express @nrwl/nest @nrwl/next @nrwl/react @nrwl/storybook @nrwl/nx-plugin @nrwl/bazel`
+    );
 
     execSync(`mv ${tmpProjPath()} ${tmpBackupProjPath()}`);
   }
@@ -185,7 +183,9 @@ export function newProject(): void {
  * If one is not found, it creates a new project.
  */
 export function ensureProject(): void {
+  // if (!directoryExists(tmpProjPath())) {
   newProject();
+  // }
 }
 
 export function supportUi() {
@@ -271,7 +271,10 @@ export function runCLI(
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
         ''
       );
-    console.log(r);
+
+    if (process.env.VERBOSE_OUTPUT) {
+      console.log(r);
+    }
 
     const needsMaxWorkers = /g.*(express|nest|node|web|react):app.*/;
     if (needsMaxWorkers.test(command)) {

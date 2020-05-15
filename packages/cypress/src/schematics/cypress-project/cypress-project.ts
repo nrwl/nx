@@ -5,7 +5,9 @@ import {
   move,
   noop,
   Rule,
+  SchematicContext,
   template,
+  Tree,
   url,
 } from '@angular-devkit/schematics';
 import { join, normalize } from '@angular-devkit/core';
@@ -21,6 +23,7 @@ import { offsetFromRoot } from '@nrwl/workspace';
 import { toFileName } from '@nrwl/workspace';
 import { Schema } from './schema';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
+import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
 
 export interface CypressProjectSchema extends Schema {
   projectName: string;
@@ -29,7 +32,6 @@ export interface CypressProjectSchema extends Schema {
 
 function generateFiles(options: CypressProjectSchema): Rule {
   return (): Rule => {
-    // host.delete(`${options.projectRoot}/tsconfig.e2e.json`);
     return mergeWith(
       apply(url('./files'), [
         template({
@@ -90,38 +92,47 @@ function updateWorkspaceJson(options: CypressProjectSchema): Rule {
 }
 
 export default function (options: CypressProjectSchema): Rule {
-  options = normalizeOptions(options);
-  return chain([
-    addLintFiles(options.projectRoot, options.linter, {
-      localConfig: {
-        // we need this overrides because we enabled
-        // allowJS in the tsconfig to allow for JS based
-        // Cypress tests. That however leads to issues
-        // with the CommonJS Cypress plugin file
-        overrides: [
-          {
-            files: ['src/plugins/index.js'],
-            rules: {
-              '@typescript-eslint/no-var-requires': 'off',
-              'no-undef': 'off',
+  return (host: Tree, context: SchematicContext) => {
+    options = normalizeOptions(host, options);
+    return chain([
+      addLintFiles(options.projectRoot, options.linter, {
+        localConfig: {
+          // we need this overrides because we enabled
+          // allowJS in the tsconfig to allow for JS based
+          // Cypress tests. That however leads to issues
+          // with the CommonJS Cypress plugin file
+          overrides: [
+            {
+              files: ['src/plugins/index.js'],
+              rules: {
+                '@typescript-eslint/no-var-requires': 'off',
+                'no-undef': 'off',
+              },
             },
-          },
-        ],
-      },
-    }),
-    generateFiles(options),
-    updateWorkspaceJson(options),
-    updateNxJson(options),
-  ]);
+          ],
+        },
+      }),
+      generateFiles(options),
+      updateWorkspaceJson(options),
+      updateNxJson(options),
+    ])(host, context);
+  };
 }
 
-function normalizeOptions(options: CypressProjectSchema): CypressProjectSchema {
+function normalizeOptions(
+  host: Tree,
+  options: CypressProjectSchema
+): CypressProjectSchema {
   const projectName = options.directory
     ? toFileName(options.directory) + '-' + options.name
     : options.name;
   const projectRoot = options.directory
-    ? join(normalize('apps'), toFileName(options.directory), options.name)
-    : join(normalize('apps'), options.name);
+    ? join(
+        normalize(appsDir(host)),
+        toFileName(options.directory),
+        options.name
+      )
+    : join(normalize(appsDir(host)), options.name);
   return {
     ...options,
     projectName,

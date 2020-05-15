@@ -25,6 +25,7 @@ import {
   getNpmScope,
 } from '@nrwl/workspace';
 import { Schema } from './schema';
+import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -58,7 +59,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = projectName;
-  const projectRoot = normalize(`libs/${projectDirectory}`);
+  const projectRoot = normalize(`${libsDir(host)}/${projectDirectory}`);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -117,13 +118,13 @@ function addProject(options: NormalizedSchema): Rule {
     return noop();
   }
 
-  return updateWorkspaceInTree((json) => {
+  return updateWorkspaceInTree((json, context, host) => {
     const architect = json.projects[options.name].architect;
     if (architect) {
       architect.build = {
         builder: '@nrwl/node:package',
         options: {
-          outputPath: `dist/libs/${options.projectDirectory}`,
+          outputPath: `dist/${libsDir(host)}/${options.projectDirectory}`,
           tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
           packageJson: `${options.projectRoot}/package.json`,
           main: `${options.projectRoot}/src/index.ts`,

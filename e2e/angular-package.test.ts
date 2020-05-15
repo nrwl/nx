@@ -1,7 +1,7 @@
 import { toClassName } from '@nrwl/workspace';
 import {
-  ensureProject,
   forEachCli,
+  newProject,
   readJson,
   runCLI,
   uniq,
@@ -30,7 +30,7 @@ forEachCli('angular', (cli) => {
       childLib = uniq('childlib');
       childLib2 = uniq('childlib2');
 
-      ensureProject();
+      newProject();
 
       runCLI(
         `generate @nrwl/angular:library ${parentLib} --publishable=true --no-interactive`
