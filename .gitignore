@@ -11,3 +11,4 @@ tmp
 .ng_pkg_build
 jest.debug.config.js
 .tool-versions
+/.verdaccio/build/local-registry
