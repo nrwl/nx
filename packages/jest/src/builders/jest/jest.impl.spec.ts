@@ -246,6 +246,36 @@ describe('Jest Builder', () => {
       );
     });
 
+    it('should support passing string type for maxWorkers option to jestCLI', async () => {
+      const run = await architect.scheduleBuilder('@nrwl/jest:jest', {
+        jestConfig: './jest.config.js',
+        tsConfig: './tsconfig.test.json',
+        maxWorkers: '50%',
+      });
+      expect(await run.result).toEqual(
+        jasmine.objectContaining({
+          success: true,
+        })
+      );
+      expect(runCLI).toHaveBeenCalledWith(
+        {
+          _: [],
+          globals: JSON.stringify({
+            'ts-jest': {
+              tsConfig: '/root/tsconfig.test.json',
+              stringifyContentPathRegex: '\\.(html|svg)$',
+              astTransformers: [
+                'jest-preset-angular/build/InlineFilesTransformer',
+                'jest-preset-angular/build/StripStylesTransformer',
+              ],
+            },
+          }),
+          maxWorkers: '50%',
+        },
+        ['/root/jest.config.js']
+      );
+    });
+
     it('should send the main to runCLI', async () => {
       const run = await architect.scheduleBuilder('@nrwl/jest:jest', {
         jestConfig: './jest.config.js',

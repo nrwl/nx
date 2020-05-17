@@ -61,7 +61,7 @@
     "maxWorkers": {
       "alias": "w",
       "description": "Specifies the maximum number of workers the worker-pool will spawn for running tests. This defaults to the number of the cores available on your machine. Useful for CI. (its usually best not to override this default) (https://jestjs.io/docs/en/cli#maxworkers-num)",
-      "type": "number"
+      "oneOf": [{ "type": "number" }, { "type": "string" }]
     },
     "onlyChanged": {
       "alias": "o",

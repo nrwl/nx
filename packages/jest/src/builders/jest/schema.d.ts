@@ -14,7 +14,7 @@ export interface JestBuilderOptions extends JsonObject {
   clearCache?: boolean;
   findRelatedTests?: string;
   json?: boolean;
-  maxWorkers?: number;
+  maxWorkers?: number | string;
   onlyChanged?: boolean;
   outputFile?: string;
   passWithNoTests?: boolean;
