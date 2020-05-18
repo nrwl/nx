@@ -271,6 +271,7 @@ describe('Jest Builder', () => {
             },
           }),
           maxWorkers: '50%',
+          testPathPattern: [],
         },
         ['/root/jest.config.js']
       );
