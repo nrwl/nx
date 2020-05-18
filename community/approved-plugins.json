@@ -48,5 +48,10 @@
     "name": "@twittwer/compodoc",
     "description": "Nx Plugin to integrate the generation of documentation with Compodoc in the Nx workflow",
     "url": "https://github.com/twittwer/nx-tools/tree/master/libs/compodoc#readme"
+  },
+  {
+    "name": "@nxpm/schematics",
+    "description": "Nx Plugin for creating a publishable schematics library",
+    "url": "https://github.com/nxpm/nxpm/tree/master/libs/schematics"
   }
 ]
