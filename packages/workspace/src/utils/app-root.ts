@@ -1,8 +1,11 @@
 import { fileExists } from './fileutils';
 import * as path from 'path';
 
-// TODO: vsavkin normalize the path
-export const appRootPath = pathInner(__dirname);
+function normalizeBackslashes(dir) {
+	return dir.replace(/\\/g,'/')
+}
+
+export const appRootPath = normalizeBackslashes(pathInner(__dirname));
 
 function pathInner(dir: string): string {
   if (path.dirname(dir) === dir) return process.cwd();
