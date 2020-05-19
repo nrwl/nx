@@ -1,0 +1,86 @@
+{
+  "npmScope": "nrwl",
+  "implicitDependencies": {
+    "workspace.json": "*",
+    "package.json": {
+      "dependencies": "*",
+      "devDependencies": "*"
+    },
+    "tsconfig.json": "*",
+    "tslint.json": "*",
+    "nx.json": "*"
+  },
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "@nrwl/workspace/tasks-runners/default",
+      "options": {
+        "cacheableOperations": ["build", "lint", "test", "e2e"]
+      }
+    }
+  },
+  "workspaceLayout": {
+    "libsDir": "packages"
+  },
+  "projects": {
+    "tao": {
+      "tags": []
+    },
+    "workspace": {
+      "tags": []
+    },
+    "web": {
+      "tags": [],
+      "implicitDependencies": ["cypress"]
+    },
+    "cypress": {
+      "tags": []
+    },
+    "jest": {
+      "tags": []
+    },
+    "react": {
+      "tags": []
+    },
+    "storybook": {
+      "tags": [],
+      "implicitDependencies": ["cypress"]
+    },
+    "nx-plugin": {
+      "tags": []
+    },
+    "node": {
+      "tags": []
+    },
+    "next": {
+      "tags": [],
+      "implicitDependencies": ["cypress"]
+    },
+    "nest": {
+      "tags": []
+    },
+    "linter": {
+      "tags": []
+    },
+    "express": {
+      "tags": []
+    },
+    "eslint-plugin-nx": {
+      "tags": []
+    },
+    "create-nx-workspace": {
+      "tags": []
+    },
+    "create-nx-plugin": {
+      "tags": []
+    },
+    "cli": {
+      "tags": []
+    },
+    "bazel": {
+      "tags": []
+    },
+    "angular": {
+      "tags": []
+    }
+  }
+}

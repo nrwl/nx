@@ -3,6 +3,7 @@ import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { readJsonInTree } from '@nrwl/workspace';
 import * as path from 'path';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
+import { join } from 'path';
 
 describe('Update 8-10-0', () => {
   let tree: Tree;
@@ -14,6 +15,11 @@ describe('Update 8-10-0', () => {
     schematicRunner = new SchematicTestRunner(
       '@nrwl/react',
       path.join(__dirname, '../../../migrations.json')
+    );
+
+    schematicRunner.registerCollection(
+      '@nrwl/cypress',
+      join(__dirname, '../../../../cypress/collection.json')
     );
   });
 
@@ -51,6 +57,11 @@ describe('Update 8-10-0', () => {
     const reactRunner = new SchematicTestRunner(
       '@nrwl/react',
       path.join(__dirname, '../../../collection.json')
+    );
+
+    reactRunner.registerCollection(
+      '@nrwl/cypress',
+      join(__dirname, '../../../../cypress/collection.json')
     );
     tree = await reactRunner
       .runSchematicAsync('app', { name: 'demo' }, tree)

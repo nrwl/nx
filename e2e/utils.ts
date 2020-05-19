@@ -108,54 +108,11 @@ export const getDirectories = (source) =>
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
 
-export function runNgcc(silent: boolean = true, async: boolean = true) {
-  const install = execSync(
-    'node ./node_modules/@angular/compiler-cli/ngcc/main-ngcc.js' +
-      (!async ? ' --async=false' : ''),
-    {
-      cwd: tmpProjPath(),
-      ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
-      env: process.env,
-    }
-  );
-  return install ? install.toString() : '';
-}
-
-/**
- * Run the `new` command for the currently selected CLI
- *
- * @param args Extra arguments to pass to the `new` command
- * @param silent Run in silent mode (no output)
- * @param addWorkspace Include `@nrwl/workspace` when patching the `package.json` paths
- */
-export function runNew(
-  args?: string,
-  silent?: boolean,
-  addWorkspace = true
-): string {
-  let gen;
-  if (cli === 'angular') {
-    gen = execSync(
-      `../../node_modules/.bin/ng new proj --no-interactive ${args || ''}`,
-      {
-        cwd: `./tmp/${cli}`,
-        ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
-        env: process.env,
-      }
-    );
-  } else {
-    gen = execSync(
-      `node ../../node_modules/@nrwl/tao/index.js new proj --no-interactive ${
-        args || ''
-      }`,
-      {
-        cwd: `./tmp/${cli}`,
-        ...(silent && false ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
-        env: process.env,
-      }
-    );
-  }
-  return silent ? null : `${gen ? gen.toString() : ''}`;
+export function runNgNew(): string {
+  return execSync(`../../node_modules/.bin/ng new proj --no-interactive`, {
+    cwd: `./tmp/${cli}`,
+    env: process.env,
+  }).toString();
 }
 
 /**
@@ -165,7 +122,7 @@ export function runNew(
 export function newProject(): void {
   cleanup();
   if (!directoryExists(tmpBackupProjPath())) {
-    runNew('--collection=@nrwl/workspace --npmScope=proj', true);
+    runCreateWorkspace('proj', { preset: 'empty' });
     const packages = [
       `@nrwl/angular`,
       `@nrwl/express`,
@@ -174,14 +131,14 @@ export function newProject(): void {
       `@nrwl/react`,
       `@nrwl/storybook`,
       `@nrwl/nx-plugin`,
+      `@nrwl/eslint-plugin-nx`,
     ];
-    yarnAdd([`@nrwl/eslint-plugin-nx`].concat(packages).join(` `));
+    yarnAdd(packages.join(` `));
     packages
-      .filter((f) => f != '@nrwl/nx-plugin')
+      .filter((f) => f !== '@nrwl/nx-plugin' && f !== `@nrwl/eslint-plugin-nx`)
       .forEach((p) => {
         runCLI(`g ${p}:init`);
       });
-
     execSync(`mv ${tmpProjPath()} ${tmpBackupProjPath()}`);
   }
   execSync(`cp -a ${tmpBackupProjPath()} ${tmpProjPath()}`);
@@ -412,10 +369,6 @@ export function cleanup() {
 
 export function rmDist() {
   execSync(`rm -rf ${tmpProjPath()}/dist`);
-}
-
-export function getCwd(): string {
-  return process.cwd();
 }
 
 export function directoryExists(filePath: string): boolean {

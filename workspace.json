@@ -1,0 +1,1005 @@
+{
+  "version": 1,
+  "projects": {
+    "tao": {
+      "root": "packages/tao",
+      "sourceRoot": "packages/tao",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/tao/jest.config.js",
+            "tsConfig": "packages/tao/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build-base": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/tao",
+            "tsConfig": "packages/tao/tsconfig.lib.json",
+            "packageJson": "packages/tao/package.json",
+            "main": "packages/tao/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              { "input": "packages/tao", "glob": "**/files/**", "output": "/" },
+              {
+                "input": "packages/tao",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              { "input": "packages/tao", "glob": "**/*.json", "output": "/" },
+              { "input": "packages/tao", "glob": "**/*.js", "output": "/" },
+              "LICENSE",
+              "README.md"
+            ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/tao"],
+          "options": {
+            "commands": [
+              { "command": "nx build-base tao" },
+              { "command": "chmod +x build/packages/tao/index.js" }
+            ],
+            "parallel": false
+          }
+        }
+      }
+    },
+    "workspace": {
+      "root": "packages/workspace",
+      "sourceRoot": "packages/workspace",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/workspace/jest.config.js",
+            "tsConfig": "packages/workspace/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build-base": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/workspace",
+            "tsConfig": "packages/workspace/tsconfig.lib.json",
+            "packageJson": "packages/workspace/package.json",
+            "main": "packages/workspace/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/workspace",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/workspace",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/workspace",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/workspace",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE",
+              "README.md"
+            ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/workspace"],
+          "options": {
+            "commands": [{ "command": "nx build-base workspace" }],
+            "parallel": false
+          }
+        }
+      }
+    },
+    "web": {
+      "root": "packages/web",
+      "sourceRoot": "packages/web",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/web/jest.config.js",
+            "tsConfig": "packages/web/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/web",
+            "tsConfig": "packages/web/tsconfig.lib.json",
+            "packageJson": "packages/web/package.json",
+            "main": "packages/web/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              { "input": "packages/web", "glob": "**/files/**", "output": "/" },
+              {
+                "input": "packages/web",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/web",
+                "glob": "**/files/**/.babelrc__tmpl__",
+                "output": "/"
+              },
+              { "input": "packages/web", "glob": "**/*.json", "output": "/" },
+              { "input": "packages/web", "glob": "**/*.js", "output": "/" },
+              "LICENSE",
+              "README.md"
+            ]
+          }
+        }
+      }
+    },
+    "cypress": {
+      "root": "packages/cypress",
+      "sourceRoot": "packages/cypress",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/cypress/jest.config.js",
+            "tsConfig": "packages/cypress/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/cypress",
+            "tsConfig": "packages/cypress/tsconfig.lib.json",
+            "packageJson": "packages/cypress/package.json",
+            "main": "packages/cypress/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/cypress",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/cypress",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/cypress",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              { "input": "packages/cypress", "glob": "**/*.js", "output": "/" },
+              "LICENSE",
+              "README.md"
+            ]
+          }
+        }
+      }
+    },
+    "jest": {
+      "root": "packages/jest",
+      "sourceRoot": "packages/jest",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/jest/jest.config.js",
+            "tsConfig": "packages/jest/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/jest",
+            "tsConfig": "packages/jest/tsconfig.lib.json",
+            "packageJson": "packages/jest/package.json",
+            "main": "packages/jest/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/jest",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/jest",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              { "input": "packages/jest", "glob": "**/*.json", "output": "/" },
+              { "input": "packages/jest", "glob": "**/*.js", "output": "/" },
+              "LICENSE",
+              "README.md"
+            ]
+          }
+        }
+      }
+    },
+    "storybook": {
+      "root": "packages/storybook",
+      "sourceRoot": "packages/storybook",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/storybook/jest.config.js",
+            "tsConfig": "packages/storybook/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/storybook",
+            "tsConfig": "packages/storybook/tsconfig.lib.json",
+            "packageJson": "packages/storybook/package.json",
+            "main": "packages/storybook/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/storybook",
+                "glob": "**/lib-files/.storybook/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/storybook",
+                "glob": "**/root-files/.storybook/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/storybook",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/storybook",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE",
+              "README.md"
+            ]
+          }
+        }
+      }
+    },
+    "react": {
+      "root": "packages/react",
+      "sourceRoot": "packages/react",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/react/jest.config.js",
+            "tsConfig": "packages/react/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/react",
+            "tsConfig": "packages/react/tsconfig.lib.json",
+            "packageJson": "packages/react/package.json",
+            "main": "packages/react/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/react",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/react",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/react",
+                "glob": "**/files/**/.babelrc__tmpl__",
+                "output": "/"
+              },
+              { "input": "packages/react", "glob": "**/*.json", "output": "/" },
+              { "input": "packages/react", "glob": "**/*.d.ts", "output": "/" },
+              { "input": "packages/react", "glob": "**/*.js", "output": "/" },
+              "LICENSE",
+              "README.md"
+            ]
+          }
+        }
+      }
+    },
+    "nx-plugin": {
+      "root": "packages/nx-plugin",
+      "sourceRoot": "packages/nx-plugin",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/nx-plugin/jest.config.js",
+            "tsConfig": "packages/nx-plugin/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/nx-plugin",
+            "tsConfig": "packages/nx-plugin/tsconfig.lib.json",
+            "packageJson": "packages/nx-plugin/package.json",
+            "main": "packages/nx-plugin/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/nx-plugin",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/nx-plugin",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/nx-plugin",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/nx-plugin",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE",
+              "README.md"
+            ]
+          }
+        }
+      }
+    },
+    "node": {
+      "root": "packages/node",
+      "sourceRoot": "packages/node",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/node/jest.config.js",
+            "tsConfig": "packages/node/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/node",
+            "tsConfig": "packages/node/tsconfig.lib.json",
+            "packageJson": "packages/node/package.json",
+            "main": "packages/node/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/node",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/node",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              { "input": "packages/node", "glob": "**/*.json", "output": "/" },
+              { "input": "packages/node", "glob": "**/*.js", "output": "/" },
+              "LICENSE",
+              "README.md"
+            ]
+          }
+        }
+      }
+    },
+    "next": {
+      "root": "packages/next",
+      "sourceRoot": "packages/next",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/next/jest.config.js",
+            "tsConfig": "packages/next/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/next",
+            "tsConfig": "packages/next/tsconfig.lib.json",
+            "packageJson": "packages/next/package.json",
+            "main": "packages/next/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/next",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/next",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/next",
+                "glob": "**/files/**/.babelrc__tmpl__",
+                "output": "/"
+              },
+              { "input": "packages/next", "glob": "**/*.json", "output": "/" },
+              { "input": "packages/next", "glob": "**/*.js", "output": "/" },
+              "LICENSE",
+              "README.md"
+            ]
+          }
+        }
+      }
+    },
+    "nest": {
+      "root": "packages/nest",
+      "sourceRoot": "packages/nest",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/nest/jest.config.js",
+            "tsConfig": "packages/nest/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/nest",
+            "tsConfig": "packages/nest/tsconfig.lib.json",
+            "packageJson": "packages/nest/package.json",
+            "main": "packages/nest/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/nest",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/nest",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              { "input": "packages/nest", "glob": "**/*.json", "output": "/" },
+              { "input": "packages/nest", "glob": "**/*.js", "output": "/" },
+              "LICENSE",
+              "README.md"
+            ]
+          }
+        }
+      }
+    },
+    "linter": {
+      "root": "packages/linter",
+      "sourceRoot": "packages/linter",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/linter/jest.config.js",
+            "tsConfig": "packages/linter/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/linter",
+            "tsConfig": "packages/linter/tsconfig.lib.json",
+            "packageJson": "packages/linter/package.json",
+            "main": "packages/linter/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/linter",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/linter",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/linter",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              { "input": "packages/linter", "glob": "**/*.js", "output": "/" },
+              "LICENSE",
+              "README.md"
+            ]
+          }
+        }
+      }
+    },
+    "express": {
+      "root": "packages/express",
+      "sourceRoot": "packages/express",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/express/jest.config.js",
+            "tsConfig": "packages/express/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/express",
+            "tsConfig": "packages/express/tsconfig.lib.json",
+            "packageJson": "packages/express/package.json",
+            "main": "packages/express/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/express",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/express",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/express",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              { "input": "packages/express", "glob": "**/*.js", "output": "/" },
+              "LICENSE",
+              "README.md"
+            ]
+          }
+        }
+      }
+    },
+    "eslint-plugin-nx": {
+      "root": "packages/eslint-plugin-nx",
+      "sourceRoot": "packages/eslint-plugin-nx",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/eslint-plugin-nx/jest.config.js",
+            "tsConfig": "packages/eslint-plugin-nx/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/eslint-plugin-nx",
+            "tsConfig": "packages/eslint-plugin-nx/tsconfig.lib.json",
+            "packageJson": "packages/eslint-plugin-nx/package.json",
+            "main": "packages/eslint-plugin-nx/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/eslint-plugin-nx",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/eslint-plugin-nx",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/eslint-plugin-nx",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/eslint-plugin-nx",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE",
+              "README.md"
+            ]
+          }
+        }
+      }
+    },
+    "create-nx-workspace": {
+      "root": "packages/create-nx-workspace",
+      "sourceRoot": "packages/create-nx-workspace",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/create-nx-workspace/jest.config.js",
+            "tsConfig": "packages/create-nx-workspace/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build-base": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/create-nx-workspace",
+            "tsConfig": "packages/create-nx-workspace/tsconfig.lib.json",
+            "packageJson": "packages/create-nx-workspace/package.json",
+            "main": "packages/create-nx-workspace/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/create-nx-workspace",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/create-nx-workspace",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/create-nx-workspace",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/create-nx-workspace",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE",
+              "README.md"
+            ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/create-nx-workspace"],
+          "options": {
+            "commands": [
+              { "command": "nx build-base create-nx-workspace" },
+              {
+                "command": "chmod +x build/packages/create-nx-workspace/bin/create-nx-workspace.js"
+              }
+            ],
+            "parallel": false
+          }
+        }
+      }
+    },
+    "create-nx-plugin": {
+      "root": "packages/create-nx-plugin",
+      "sourceRoot": "packages/create-nx-plugin",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/create-nx-plugin/jest.config.js",
+            "tsConfig": "packages/create-nx-plugin/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build-base": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/create-nx-plugin",
+            "tsConfig": "packages/create-nx-plugin/tsconfig.lib.json",
+            "packageJson": "packages/create-nx-plugin/package.json",
+            "main": "packages/create-nx-plugin/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/create-nx-plugin",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/create-nx-plugin",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/create-nx-plugin",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/create-nx-plugin",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE",
+              "README.md"
+            ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/create-nx-plugin"],
+          "options": {
+            "commands": [
+              { "command": "nx build-base create-nx-plugin" },
+              {
+                "command": "chmod +x build/packages/create-nx-plugin/bin/create-nx-plugin.js"
+              }
+            ],
+            "parallel": false
+          }
+        }
+      }
+    },
+    "cli": {
+      "root": "packages/cli",
+      "sourceRoot": "packages/cli",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/cli/jest.config.js",
+            "tsConfig": "packages/cli/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build-base": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/cli",
+            "tsConfig": "packages/cli/tsconfig.lib.json",
+            "packageJson": "packages/cli/package.json",
+            "main": "packages/cli/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              { "input": "packages/cli", "glob": "**/files/**", "output": "/" },
+              {
+                "input": "packages/cli",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              { "input": "packages/cli", "glob": "**/*.json", "output": "/" },
+              { "input": "packages/cli", "glob": "**/*.js", "output": "/" },
+              "LICENSE",
+              "README.md"
+            ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/cli"],
+          "options": {
+            "commands": [
+              { "command": "nx build-base cli" },
+              { "command": "chmod +x build/packages/cli/bin/nx.js" }
+            ],
+            "parallel": false
+          }
+        }
+      }
+    },
+    "bazel": {
+      "root": "packages/bazel",
+      "sourceRoot": "packages/bazel",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/bazel/jest.config.js",
+            "tsConfig": "packages/bazel/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/bazel",
+            "tsConfig": "packages/bazel/tsconfig.lib.json",
+            "packageJson": "packages/bazel/package.json",
+            "main": "packages/bazel/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/bazel",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/bazel",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              { "input": "packages/bazel", "glob": "**/*.json", "output": "/" },
+              { "input": "packages/bazel", "glob": "**/*.js", "output": "/" },
+              "LICENSE",
+              "README.md"
+            ]
+          }
+        }
+      }
+    },
+    "angular": {
+      "root": "packages/angular",
+      "sourceRoot": "packages/angular",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/angular/jest.config.js",
+            "tsConfig": "packages/angular/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build-base": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/angular",
+            "tsConfig": "packages/angular/tsconfig.lib.json",
+            "packageJson": "packages/angular/package.json",
+            "main": "packages/angular/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/angular",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/angular",
+                "glob": "**/creator-files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/angular",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/angular",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              { "input": "packages/angular", "glob": "**/*.js", "output": "/" },
+              "LICENSE",
+              "README.md"
+            ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/angular"],
+          "options": {
+            "commands": [
+              { "command": "nx build-base angular" },
+              { "command": "./scripts/build-angular.sh" }
+            ],
+            "parallel": false
+          }
+        }
+      }
+    }
+  },
+  "cli": {
+    "defaultCollection": "@nrwl/workspace"
+  },
+  "schematics": {
+    "@nrwl/workspace": {
+      "library": {
+        "linter": "eslint"
+      }
+    },
+    "@nrwl/cypress": {
+      "cypress-project": {
+        "linter": "eslint"
+      }
+    },
+    "@nrwl/react": {
+      "application": {
+        "linter": "eslint"
+      },
+      "library": {
+        "linter": "eslint"
+      },
+      "storybook-configuration": {
+        "linter": "eslint"
+      }
+    },
+    "@nrwl/next": {
+      "application": {
+        "linter": "eslint"
+      }
+    },
+    "@nrwl/web": {
+      "application": {
+        "linter": "eslint"
+      }
+    },
+    "@nrwl/node": {
+      "application": {
+        "linter": "eslint"
+      },
+      "library": {
+        "linter": "eslint"
+      }
+    },
+    "@nrwl/nx-plugin": {
+      "plugin": {
+        "linter": "eslint"
+      }
+    },
+    "@nrwl/nest": {
+      "application": {
+        "linter": "eslint"
+      }
+    },
+    "@nrwl/express": {
+      "application": {
+        "linter": "eslint"
+      },
+      "library": {
+        "linter": "eslint"
+      }
+    }
+  }
+}

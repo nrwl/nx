@@ -30,6 +30,7 @@ import {
   validateOptions,
 } from '../shared/params';
 import { commandName, printHelp } from '../shared/print-help';
+// @ts-ignore
 import minimist = require('minimist');
 
 interface GenerateOptions {
@@ -67,7 +68,7 @@ function parseGenerateOpts(
         dryRun: false,
         interactive: true,
       },
-    })
+    }) as any
   );
 
   let collectionName = null;

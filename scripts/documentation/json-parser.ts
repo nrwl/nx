@@ -1,9 +1,11 @@
 import { json } from '@angular-devkit/core';
-import { Option, OptionType, Value } from '@angular/cli/models/interface';
 
-interface NxOption extends Option {
-  arrayOfType?: string;
-  arrayOfValues?: Option[];
+export enum OptionType {
+  Any = 'any',
+  Array = 'array',
+  Boolean = 'boolean',
+  Number = 'number',
+  String = 'string',
 }
 
 function _getEnumFromValue<E, T extends E[keyof E]>(
@@ -27,8 +29,8 @@ function _getEnumFromValue<E, T extends E[keyof E]>(
 export async function parseJsonSchemaToOptions(
   registry: json.schema.SchemaRegistry,
   schema: json.JsonObject
-): Promise<Option[]> {
-  const options: Option[] = [];
+): Promise<any[]> {
+  const options: any[] = [];
 
   function visitor(
     current: json.JsonObject | json.JsonArray,
@@ -100,7 +102,7 @@ export async function parseJsonSchemaToOptions(
         default:
           return false;
       }
-    }) as Value[];
+    }) as any[];
 
     let defaultValue: string | number | boolean | undefined = undefined;
     if (current.default !== undefined) {
@@ -152,7 +154,7 @@ export async function parseJsonSchemaToOptions(
         ? xDeprecated
         : undefined;
 
-    const option: NxOption = {
+    const option: any = {
       name,
       description:
         '' + (current.description === undefined ? '' : current.description),

@@ -18,6 +18,11 @@ const testRunner = new SchematicTestRunner(
   join(__dirname, '../../collection.json')
 );
 
+testRunner.registerCollection(
+  '@nrwl/cypress',
+  join(__dirname, '../../../cypress/collection.json')
+);
+
 const migrationRunner = new SchematicTestRunner(
   '@nrwl/storybook/migrations',
   join(__dirname, '../../migrations.json')

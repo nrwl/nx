@@ -297,7 +297,7 @@ export function parseMigrationsOptions(
       alias: {
         runMigrations: 'run-migrations',
       },
-    })
+    }) as any
   );
   if (!options.runMigrations) {
     const from = options.from ? versionOverrides(options.from, 'from') : {};

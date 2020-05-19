@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "target": "es2015",
-    "module": "commonjs",
+    "sourceMap": true,
+    "importHelpers": true,
+    "module": "esnext",
     "moduleResolution": "node",
     "outDir": "build",
     "typeRoots": ["node_modules/@types"],
@@ -12,6 +14,7 @@
     "lib": ["es2018"],
     "declaration": true,
     "baseUrl": ".",
+    "rootDir": ".",
     "paths": {
       "@nrwl/tao": ["./packages/tao"],
       "@nrwl/tao/*": ["./packages/tao/*"],
@@ -21,22 +24,9 @@
       "@nrwl/react": ["./packages/react"],
       "@nrwl/react/*": ["./packages/react/*"],
       "@nrwl/web": ["./packages/web"],
-      "@nrwl/web/*": ["./packages/web/*"]
+      "@nrwl/web/*": ["./packages/web/*"],
+      "@nrwl/angular": ["./packages/angular"],
+      "@nrwl/angular/*": ["./packages/angular/*"]
     }
-  },
-  "exclude": [
-    "tmp",
-    "build",
-    "packages/schematics/src/*/files/**/*",
-    "packages/workspace/src/*/files/**/*",
-    "packages/jest/src/*/files/**/*",
-    "packages/cypress/src/*/files/**/*",
-    "packages/node/src/*/files/**/*",
-    "packages/express/src/*/files/**/*",
-    "packages/nest/src/*/files/**/*",
-    "packages/angular/src/*/files/**/*",
-    "packages/react/src/*/files/**/*",
-    "packages/web/src/*/files/**/*",
-    "scripts"
-  ]
+  }
 }

@@ -10,7 +10,6 @@
     "commit": "git-cz",
     "checkcommit": "node ./scripts/commit-lint.js",
     "e2e": "./scripts/e2e.sh",
-    "e2e-rerun": "./scripts/e2e-rerun.sh",
     "create-playground": "./scripts/create-playground.sh",
     "update-playground": "./scripts/update-playground.sh",
     "e2e-ci1": "./scripts/e2e-ci1.sh",
@@ -19,11 +18,8 @@
     "e2e-ci4": "./scripts/e2e-ci4.sh",
     "test-create-nx-workspace": "./scripts/test-create-nx-workspace.sh",
     "format": "./scripts/format.sh",
-    "linknpm": "./scripts/link.sh --local",
     "nx-release": "./scripts/nx-release.js",
-    "copy": "./scripts/copy.sh",
-    "test": "yarn linknpm fast && ./scripts/test.sh",
-    "test:all": "yarn linknpm fast && scripts/test-angular-runtime.sh && ./scripts/test.sh",
+    "test": "nx run-many --target=test --all --parallel",
     "checkformat": "scripts/check-format.sh",
     "checkimports": "node ./scripts/check-imports.js",
     "checkversions": "ts-node ./scripts/check-versions.ts",
@@ -39,7 +35,7 @@
     "@angular-devkit/build-webpack": "~0.901.0",
     "@angular-devkit/core": "~9.1.0",
     "@angular-devkit/schematics": "~9.1.0",
-    "@angular/cli": "~9.1.0",
+    "@angular/cli": "9.1.0",
     "@angular/common": "^9.1.0",
     "@angular/compiler": "^9.1.0",
     "@angular/compiler-cli": "^9.1.0",
@@ -242,27 +238,15 @@
     "worker-plugin": "3.2.0",
     "yargs": "^11.0.0",
     "yargs-parser": "10.0.0",
-    "zone.js": "^0.10.0"
+    "zone.js": "^0.10.0",
+    "@nrwl/workspace": "9.4.0-beta.5",
+    "@nrwl/node": "9.4.0-beta.5",
+    "@nrwl/eslint-plugin-nx": "9.4.0-beta.5",
+    "@nrwl/jest": "9.4.0-beta.5",
+    "ts-jest": "25.2.1"
   },
   "author": "Victor Savkin",
   "license": "MIT",
-  "jest": {
-    "modulePathIgnorePatterns": [
-      "tmp",
-      "<rootDir>/test",
-      "<rootDir>/packages",
-      "collection/.*/files"
-    ],
-    "testPathIgnorePatterns": [
-      "node_modules",
-      "<rootDir>/build/packages/angular/spec",
-      "packages/web/src/utils/third-party/cli-files/models/webpack-configs"
-    ],
-    "coverageReporters": [
-      "html"
-    ],
-    "coverageDirectory": "coverage"
-  },
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-customizable"
@@ -272,5 +256,6 @@
     "hooks": {
       "pre-push": "yarn checkcommit && yarn documentation && pretty-quick --check"
     }
-  }
+  },
+  "dependencies": {}
 }

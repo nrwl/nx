@@ -18,6 +18,7 @@ import {
   Schema,
 } from '../shared/params';
 import { commandName, printHelp } from '../shared/print-help';
+// @ts-ignore
 import minimist = require('minimist');
 import { WorkspaceDefinition } from '@angular-devkit/core/src/workspace';
 
@@ -44,7 +45,7 @@ function parseRunOpts(
     minimist(args, {
       boolean: ['help', 'prod'],
       string: ['configuration', 'project'],
-    })
+    }) as any
   );
   const help = runOptions.help;
   if (!runOptions._ || !runOptions._[0]) {

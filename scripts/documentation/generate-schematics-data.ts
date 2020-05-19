@@ -1,6 +1,5 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { parseJsonSchemaToOptions } from '@angular/cli/utilities/json-schema';
 import { dedent } from 'tslint/lib/utils';
 import { Schematic } from '@angular-devkit/schematics/collection-schema';
 import { CoreSchemaRegistry } from '@angular-devkit/core/src/json/schema';
@@ -17,7 +16,7 @@ import {
   Configuration,
   getPackageConfigurations,
 } from './get-package-configurations';
-import { optionalCallExpression } from '@babel/types';
+import { parseJsonSchemaToOptions } from './json-parser';
 
 /**
  * @WhatItDoes: Generates default documentation from the schematics' schema.

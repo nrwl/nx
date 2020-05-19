@@ -1,61 +1,6 @@
-import {
-  coerceTypes,
-  convertAliases,
-  convertToCamelCase,
-  lookupUnmatched,
-} from './params';
+import { convertAliases, convertToCamelCase, lookupUnmatched } from './params';
 
 describe('params', () => {
-  describe('coerceTypes', () => {
-    it('should handle booleans', () => {
-      const opts = coerceTypes({ a: true, b: 'true', c: false, d: 'true' }, {
-        properties: {
-          a: { type: 'boolean' },
-          b: { type: 'boolean' },
-          c: { type: 'boolean' },
-          d: { type: 'string' },
-        },
-      } as any);
-
-      expect(opts).toEqual({
-        a: true,
-        b: true,
-        c: false,
-        d: 'true',
-      });
-    });
-
-    it('should handle numbers', () => {
-      const opts = coerceTypes({ a: 1, b: '2', c: '3' }, {
-        properties: {
-          a: { type: 'number' },
-          b: { type: 'number' },
-          c: { type: 'string' },
-        },
-      } as any);
-
-      expect(opts).toEqual({
-        a: 1,
-        b: 2,
-        c: '3',
-      });
-    });
-
-    it('should handle arrays', () => {
-      const opts = coerceTypes({ a: 'one,two', b: 'three,four' }, {
-        properties: {
-          a: { type: 'array' },
-          b: { type: 'string' },
-        },
-      } as any);
-
-      expect(opts).toEqual({
-        a: ['one', 'two'],
-        b: 'three,four',
-      });
-    });
-  });
-
   describe('convertToCamelCase', () => {
     it('should convert dash case to camel case', () => {
       expect(
