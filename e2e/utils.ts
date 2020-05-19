@@ -166,9 +166,21 @@ export function newProject(): void {
   cleanup();
   if (!directoryExists(tmpBackupProjPath())) {
     runNew('--collection=@nrwl/workspace --npmScope=proj', true);
-    yarnAdd(
-      `@nrwl/angular @nrwl/express @nrwl/nest @nrwl/next @nrwl/react @nrwl/storybook @nrwl/nx-plugin @nrwl/bazel`
-    );
+    const packages = [
+      `@nrwl/angular`,
+      `@nrwl/express`,
+      `@nrwl/nest`,
+      `@nrwl/next`,
+      `@nrwl/react`,
+      `@nrwl/storybook`,
+      `@nrwl/nx-plugin`,
+    ];
+    yarnAdd(packages.join(` `));
+    packages
+      .filter((f) => f != '@nrwl/nx-plugin')
+      .forEach((p) => {
+        runCLI(`g ${p}:init`);
+      });
 
     execSync(`mv ${tmpProjPath()} ${tmpBackupProjPath()}`);
   }
@@ -304,7 +316,9 @@ export function runCommand(command: string): string {
       stdio: ['pipe', 'pipe', 'pipe'],
       env: process.env,
     }).toString();
-    console.log(r);
+    if (process.env.VERBOSE_OUTPUT) {
+      console.log(r);
+    }
     return r;
   } catch (e) {
     return e.stdout.toString() + e.stderr.toString();

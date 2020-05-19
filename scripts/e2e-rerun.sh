@@ -7,6 +7,7 @@ rm -rf tmp/angular/proj/node_modules/@nrwl
 cp -r node_modules/@nrwl tmp/nx/proj/node_modules/@nrwl
 cp -r node_modules/@nrwl tmp/angular/proj/node_modules/@nrwl
 
+export SELECTED_CLI=$SELECTED_CLI
 if [ -n "$1" ]; then
   PUBLISHED_VERSION=9999.0.1 npm_config_registry=http://localhost:4872/ jest -c "./build/e2e/jest-config.js" --maxWorkers=1 ./build/e2e/$1.test.js
 else

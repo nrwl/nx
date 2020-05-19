@@ -103,8 +103,6 @@ forEachCli(() => {
       // just check for some, not all
       expect(listOutput).toContain('@nrwl/angular');
 
-      expect(listOutput).not.toContain('NX  Also available');
-
       // temporarily make it look like this isn't installed
       renameSync(
         tmpProjPath('node_modules/@nrwl/angular'),
@@ -127,7 +125,7 @@ forEachCli(() => {
       // check for builders
       expect(listOutput).toContain('run-commands');
 
-      // look for uninstalled core plugin
+      // // look for uninstalled core plugin
       listOutput = runCommand('npm run nx -- list @nrwl/angular');
 
       expect(listOutput).toContain(
