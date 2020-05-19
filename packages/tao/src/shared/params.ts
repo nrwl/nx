@@ -67,8 +67,6 @@ export function coerceTypes(opts: Options, schema: Schema): Options {
       opts[k] = opts[k] === true || opts[k] === 'true';
     } else if (schema.properties[k] && schema.properties[k].type == 'number') {
       opts[k] = Number(opts[k]);
-    } else if (schema.properties[k] && schema.properties[k].type == 'array') {
-      opts[k] = opts[k].toString().split(',');
     }
   });
   return opts;

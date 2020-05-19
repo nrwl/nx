@@ -30,7 +30,7 @@ export function parseRunOneOptions(
 
   if (parsedArgs._[0] === 'run') {
     [project, target, configuration] = parsedArgs._[1].split(':');
-    parsedArgs._ = parsedArgs._.slice(1);
+    parsedArgs._ = parsedArgs._.slice(2);
   } else {
     target = parsedArgs._[0];
     project = parsedArgs._[1];
@@ -57,7 +57,8 @@ export function parseRunOneOptions(
   }
 
   // we need both to be able to run a target, no tasks runner
-  const p = workspaceConfigJson.projects[project];
+  const p =
+    workspaceConfigJson.projects && workspaceConfigJson.projects[project];
   if (!p || !p.architect || !p.architect[target]) return false;
 
   const res = { project, target, configuration, parsedArgs };

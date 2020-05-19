@@ -10,6 +10,16 @@ const testRunner = new SchematicTestRunner(
   join(__dirname, '../../collection.json')
 );
 
+testRunner.registerCollection(
+  '@nrwl/cypress',
+  join(__dirname, '../../../cypress/collection.json')
+);
+
+testRunner.registerCollection(
+  '@nrwl/storybook',
+  join(__dirname, '../../../storybook/collection.json')
+);
+
 export function runSchematic<SchemaOptions = any>(
   schematicName: string,
   options: SchemaOptions,

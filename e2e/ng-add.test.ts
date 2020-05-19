@@ -4,7 +4,7 @@ import {
   readJson,
   runCLI,
   runCommand,
-  runNew,
+  runNgNew,
   updateFile,
   forEachCli,
   runNgAdd,
@@ -16,7 +16,7 @@ forEachCli('angular', () => {
     afterAll(cleanup);
 
     it('should generate a workspace', () => {
-      runNew('', false, false);
+      runNgNew();
 
       // update package.json
       const packageJson = readJson('package.json');
@@ -246,7 +246,7 @@ forEachCli('angular', () => {
 
     it('should generate a workspace and not change dependencies, devDependencies, or vscode extensions if they already exist', () => {
       // create a new AngularCLI app
-      runNew();
+      runNgNew();
       const nxVersion = '0.0.0';
       const schematicsVersion = '0.0.0';
       const ngrxVersion = '0.0.0';
@@ -295,7 +295,7 @@ forEachCli('angular', () => {
 
     it('should handle different types of errors', () => {
       // create a new AngularCLI app
-      runNew();
+      runNgNew();
 
       // Only remove e2e directory
       runCommand('mv e2e e2e-bak');
@@ -339,7 +339,7 @@ forEachCli('angular', () => {
     });
 
     it('should support preserveAngularCLILayout', () => {
-      runNew('', false, false);
+      runNgNew();
       runNgAdd('add @nrwl/workspace --preserveAngularCLILayout');
 
       const updatedAngularCLIJson = readJson('angular.json');

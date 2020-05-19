@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-./scripts/link.sh 9999.0.1
+./scripts/package.sh 9999.0.1 "~9.1.0" "3.8.3" "2.0.4"
 
 rm -rf tmp
 mkdir -p tmp/angular

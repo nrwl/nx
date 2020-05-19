@@ -1,6 +1,5 @@
 import {
   chain,
-  externalSchematic,
   move,
   noop,
   Rule,
@@ -13,11 +12,9 @@ import {
 import {
   getProjectConfig,
   offsetFromRoot,
-  readJsonFile,
   updateWorkspace,
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
-import { StorybookStoriesSchema } from '../../../../angular/src/schematics/stories/stories';
 import { applyWithSkipExisting, parseJsonAtPath } from '../../utils/utils';
 import { CypressConfigureSchema } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';

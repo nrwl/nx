@@ -6,10 +6,7 @@ import {
 } from '@nrwl/workspace';
 import { nextVersion } from '../../utils/versions';
 import { Schema } from './schema';
-import {
-  reactDomVersion,
-  reactVersion,
-} from '../../../../react/src/utils/versions';
+import { reactDomVersion, reactVersion } from '@nrwl/react/src/utils/versions';
 
 const updateDependencies = addDepsToPackageJson(
   {

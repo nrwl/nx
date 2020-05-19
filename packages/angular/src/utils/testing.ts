@@ -1,11 +1,8 @@
 import { join } from 'path';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { Tree, Rule, externalSchematic } from '@angular-devkit/schematics';
+import { Rule, Tree } from '@angular-devkit/schematics';
 import { names, toFileName } from '@nrwl/workspace/src/utils/name-utils';
-import {
-  createEmptyWorkspace,
-  MockBuilderContext,
-} from '@nrwl/workspace/testing';
+import { MockBuilderContext } from '@nrwl/workspace/testing';
 import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { schema } from '@angular-devkit/core';
 import { Architect } from '@angular-devkit/architect';
@@ -13,6 +10,16 @@ import { Architect } from '@angular-devkit/architect';
 const testRunner = new SchematicTestRunner(
   '@nrwl/angular',
   join(__dirname, '../../collection.json')
+);
+
+testRunner.registerCollection(
+  '@nrwl/cypress',
+  join(__dirname, '../../../cypress/collection.json')
+);
+
+testRunner.registerCollection(
+  '@nrwl/storybook',
+  join(__dirname, '../../../storybook/collection.json')
 );
 
 const migrationTestRunner = new SchematicTestRunner(

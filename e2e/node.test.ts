@@ -14,7 +14,7 @@ import {
   readJson,
   runCLI,
   runCLIAsync,
-  runNew,
+  runNgNew,
   runNgAdd,
   tmpProjPath,
   uniq,
@@ -160,7 +160,7 @@ forEachCli((currentCLIName) => {
         // described in the docs) the tsconfig file could miss required options if Angular removes
         // them from their config files as happened with emitDecoratorMetadata.
         cleanup();
-        runNew('', false, false);
+        runNgNew();
         runNgAdd('add @nrwl/workspace --npmScope projscope');
         yarnAdd('@nrwl/nest');
       } else {

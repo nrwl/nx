@@ -119,7 +119,7 @@ function createPreset(options: Schema): Rule {
 }
 
 function connectAngularAndNest(options: Schema) {
-  const addImportToModule = require('@nrwl/angular/src/utils/ast-utils')
+  const addImportToModule = require('@nrwl/' + 'angular/src/utils/ast-utils')
     .addImportToModule;
   return (host: Tree) => {
     host.overwrite(

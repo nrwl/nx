@@ -10,7 +10,7 @@ describe('parseRunOneOptions', () => {
       project: 'myproj',
       target: 'build',
       configuration: 'production',
-      overrides: { flag: 'true' },
+      parsedArgs: { _: [], flag: 'true' },
     });
   });
 
@@ -25,7 +25,7 @@ describe('parseRunOneOptions', () => {
       project: 'myproj',
       target: 'build',
       configuration: 'production',
-      overrides: { flag: 'true' },
+      parsedArgs: { _: [], flag: 'true' },
     });
   });
 
@@ -39,22 +39,8 @@ describe('parseRunOneOptions', () => {
     ).toEqual({
       project: 'myproj',
       target: 'build',
-      overrides: { flag: 'true' },
+      parsedArgs: { _: [], flag: 'true' },
     });
-  });
-
-  it('should return false when no runner is set', () => {
-    expect(parseRunOneOptions({}, workspaceJson, args)).toBe(false);
-    expect(
-      parseRunOneOptions({ tasksRunnerOptions: {} }, workspaceJson, args)
-    ).toBe(false);
-    expect(
-      parseRunOneOptions(
-        { tasksRunnerOptions: { default: {} } },
-        workspaceJson,
-        args
-      )
-    ).toBe(false);
   });
 
   it('should return false when the task is not recognized', () => {

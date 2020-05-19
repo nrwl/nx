@@ -79,7 +79,7 @@ jobs:
       - setup
       - run:
           name: Run Unit Tests
-          command: yarn test:all
+          command: yarn test
       - run:
           name: Check Documentation
           command: yarn documentation
