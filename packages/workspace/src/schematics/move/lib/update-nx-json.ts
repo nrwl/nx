@@ -9,6 +9,16 @@ import { getNewProjectName } from './utils';
  */
 export function updateNxJson(schema: Schema) {
   return updateJsonInTree<NxJson>('nx.json', (json) => {
+    Object.values(json.projects).forEach((project) => {
+      if (project.implicitDependencies) {
+        const index = project.implicitDependencies.indexOf(schema.projectName);
+        if (index !== -1) {
+          project.implicitDependencies[index] = getNewProjectName(
+            schema.destination
+          );
+        }
+      }
+    });
     json.projects[getNewProjectName(schema.destination)] = {
       ...json.projects[schema.projectName],
     };
