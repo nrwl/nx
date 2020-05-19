@@ -6,4 +6,4 @@ mkdir -p tmp/angular
 mkdir -p tmp/nx
 
 export SELECTED_CLI=$1
-PUBLISHED_VERSION=9999.0.1 npm_config_registry=http://localhost:4872/ jest -c "./build/e2e/jest-config.js" --maxWorkers=1 "./build/e2e/(angular|cli|workspace|workspace-aux-commands|cypress|custom-layout).test.js"
+PUBLISHED_VERSION=9999.0.1 npm_config_registry=http://localhost:4872/ jest -c "./build/e2e/jest-config.js" --maxWorkers=1 "./build/e2e/(angular|cli|workspace|workspace-aux-commands).test.js"
