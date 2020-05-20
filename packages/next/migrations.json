@@ -9,6 +9,11 @@
       "version": "9.2.0-beta.1",
       "description": "Add next.config.js file to Next apps",
       "factory": "./src/migrations/update-9-2-0/create-next-config"
+    },
+    "update-9.3.1": {
+      "version": "9.3.1-beta.1",
+      "description": "Rename @nrwl/next:dev-server to @nrwl/next:server",
+      "factory": "./src/migrations/update-9.3.1/update-9.3.1"
     }
   },
   "packageJsonUpdates": {
