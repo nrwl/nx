@@ -6,11 +6,11 @@ import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as TerserWebpackPlugin from 'terser-webpack-plugin';
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 
-import { BuildBuilderOptions } from './types';
-import CircularDependencyPlugin = require('circular-dependency-plugin');
-import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+import { AssetGlobPattern, BuildBuilderOptions } from './types';
 import { getOutputHashFormat } from './hash-format';
 import { createBabelConfig } from './babel-config';
+import CircularDependencyPlugin = require('circular-dependency-plugin');
+import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
@@ -120,30 +120,8 @@ export function getBaseWebpackPartial(
     );
   }
 
-  // process asset entries
   if (options.assets) {
-    const copyWebpackPluginPatterns = options.assets.map((asset: any) => {
-      return {
-        context: asset.input,
-        // Now we remove starting slash to make Webpack place it from the output root.
-        to: asset.output,
-        ignore: asset.ignore,
-        from: {
-          glob: asset.glob,
-          dot: true,
-        },
-      };
-    });
-
-    const copyWebpackPluginOptions = {
-      ignore: ['.gitkeep', '**/.DS_Store', '**/Thumbs.db'],
-    };
-
-    const copyWebpackPluginInstance = new CopyWebpackPlugin(
-      copyWebpackPluginPatterns,
-      copyWebpackPluginOptions
-    );
-    extraPlugins.push(copyWebpackPluginInstance);
+    extraPlugins.push(createCopyPlugin(options.assets));
   }
 
   if (options.showCircularDependencies) {
@@ -239,4 +217,24 @@ function getClientEnvironment(mode) {
   };
 
   return { stringified };
+}
+
+export function createCopyPlugin(assets: AssetGlobPattern[]) {
+  return new CopyWebpackPlugin(
+    assets.map((asset) => {
+      return {
+        context: asset.input,
+        // Now we remove starting slash to make Webpack place it from the output root.
+        to: asset.output,
+        ignore: asset.ignore,
+        from: {
+          glob: asset.glob,
+          dot: true,
+        },
+      };
+    }),
+    {
+      ignore: ['.gitkeep', '**/.DS_Store', '**/Thumbs.db'],
+    }
+  );
 }

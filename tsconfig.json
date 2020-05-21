@@ -19,7 +19,9 @@
       "@nrwl/workspace/*": ["./packages/workspace/*"],
       "@nrwl/workspace/testing": ["./packages/workspace/testing"],
       "@nrwl/react": ["./packages/react"],
-      "@nrwl/react/*": ["./packages/react/*"]
+      "@nrwl/react/*": ["./packages/react/*"],
+      "@nrwl/web": ["./packages/web"],
+      "@nrwl/web/*": ["./packages/web/*"]
     }
   },
   "exclude": [
