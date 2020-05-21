@@ -51,7 +51,7 @@ class TodoEffects {
   updateTodo$ = createEffect(() =>
     this.actions$.pipe(
       ofType('UPDATE_TODO'),
-      optimisticUpdate({
+      pessimisticUpdate({
         // provides an action
         run: (action: UpdateTodo) => {
           // update the backend first, and then dispatch an action that will
