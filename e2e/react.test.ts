@@ -308,7 +308,7 @@ forEachCli((currentCLIName) => {
       }
       checkFilesExist(...filesToCheck);
       expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
-        'var App = () => {'
+        'const App = () =>'
       );
       runCLI(`build ${appName} --prod --output-hashing none`);
       filesToCheck = [

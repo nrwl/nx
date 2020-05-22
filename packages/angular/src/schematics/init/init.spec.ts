@@ -23,7 +23,6 @@ describe('init', () => {
     expect(dependencies['@angular/platform-browser']).toBeDefined();
     expect(dependencies['@angular/platform-browser-dynamic']).toBeDefined();
     expect(dependencies['@angular/router']).toBeDefined();
-    expect(dependencies['core-js']).toBeDefined();
     expect(dependencies['rxjs']).toBeDefined();
     expect(dependencies['zone.js']).toBeDefined();
     expect(devDependencies['@angular/compiler-cli']).toBeDefined();
