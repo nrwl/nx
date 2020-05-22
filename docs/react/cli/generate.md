@@ -28,6 +28,12 @@ Generate a new React application:
 nx generate @nrwl/react:app myapp
 ```
 
+Generate a new web component application:
+
+```bash
+nx generate @nrwl/web:app myapp
+```
+
 Generate a new Node application:
 
 ```bash
