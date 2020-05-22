@@ -73,7 +73,7 @@ It helps with good editor integration (see [VSCode Support](https://nx.dev/react
 But, most importantly, it provides a holistic dev experience regardless of the tools used, and enables advanced build features like distributed computation caching and distributed builds).
 
 !!!!!
-Now run both "nx serve todos" and "nx serve api", open http://localhost:4200. What do you see?
+Now run both "nx serve todos" and "nx serve api" in separate terminals, open http://localhost:4200. What do you see?
 !!!!!
 Todos application is working!
 404 in the console
