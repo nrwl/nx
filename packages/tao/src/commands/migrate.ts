@@ -3,7 +3,7 @@ import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { TaskExecutor } from '@angular-devkit/schematics';
 import { BaseWorkflow } from '@angular-devkit/schematics/src/workflow';
 import { BuiltinTaskExecutor } from '@angular-devkit/schematics/tasks/node';
-import { NodePackageName } from '@angular-devkit/schematics/tasks/node-package/options';
+import { NodePackageName } from '@angular-devkit/schematics/tasks/package-manager/options';
 import { NodeModulesEngineHost } from '@angular-devkit/schematics/tools';
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
