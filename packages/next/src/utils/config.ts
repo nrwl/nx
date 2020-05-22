@@ -9,12 +9,9 @@ import loadConfig from 'next/dist/next-server/server/config';
 import { join, resolve } from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
-import {
-  FileReplacement,
-  NextBuildBuilderOptions,
-  NextServeBuilderOptions,
-} from './types';
+import { FileReplacement, NextBuildBuilderOptions } from './types';
 import { BuilderContext } from '@angular-devkit/architect';
+import { createCopyPlugin } from '@nrwl/web/src/utils/config';
 
 export function createWebpackConfig(
   workspaceRoot: string,
@@ -84,6 +81,19 @@ export function createWebpackConfig(
         ],
       }
     );
+
+    config.plugins.push(
+      createCopyPlugin([
+        {
+          input: 'public',
+          // distDir is `dist/apps/[name]/.next` and we want public to be copied
+          // to `dist/apps/[name]/public` thus the `..` here.
+          output: '../public',
+          glob: '**/*',
+        },
+      ])
+    );
+
     return config;
   };
 }

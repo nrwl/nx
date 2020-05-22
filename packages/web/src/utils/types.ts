@@ -1,5 +1,5 @@
 import { FileReplacement } from './normalize';
-import { Path } from '@angular-devkit/core';
+import { JsonObject, Path } from '@angular-devkit/core';
 
 export interface OptimizationOptions {
   scripts: boolean;
@@ -57,4 +57,11 @@ export interface PackageBuilderOptions {
   babelConfig?: string;
   watch?: boolean;
   assets?: any[];
+}
+
+export interface AssetGlobPattern extends JsonObject {
+  glob: string;
+  input: string;
+  output: string;
+  ignore?: string[];
 }
