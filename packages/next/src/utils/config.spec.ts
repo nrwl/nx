@@ -19,8 +19,8 @@ describe('Next.js webpack config builder', () => {
     it('should set the resolve plugins', () => {
       const webpackConfig = createWebpackConfig('/root', 'apps/wibble', []);
 
-      const config = webpackConfig(
-        { resolve: { alias: {} }, module: { rules: [] } },
+      webpackConfig(
+        { resolve: { alias: {} }, module: { rules: [] }, plugins: [] },
         { defaultLoaders: {} }
       );
 
@@ -40,7 +40,7 @@ describe('Next.js webpack config builder', () => {
       ]);
 
       const config = webpackConfig(
-        { resolve: { alias: {} }, module: { rules: [] } },
+        { resolve: { alias: {} }, module: { rules: [] }, plugins: [] },
         { defaultLoaders: {} }
       );
 
@@ -54,7 +54,7 @@ describe('Next.js webpack config builder', () => {
       const webpackConfig = createWebpackConfig('/root', 'apps/wibble', []);
 
       const config = webpackConfig(
-        { resolve: { alias: {} }, module: { rules: [] } },
+        { resolve: { alias: {} }, module: { rules: [] }, plugins: [] },
         { defaultLoaders: {} }
       );
 

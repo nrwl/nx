@@ -71,9 +71,6 @@ forEachCli('nx', () => {
         };            
       `
       );
-      //
-      // const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
-      // expect(e2eResults).toContain('All specs passed!');
     }, 120000);
 
     it('should be able to consume a react lib', async () => {
@@ -178,10 +175,10 @@ module.exports = withCSS({
           content.replace(
             `<main>`,
             `<main>
-              <>
+              <div>
                 {testFn()}
                 <TestComponent text="Hello Next.JS" />
-              </>
+              </div>
             `
           )
       );
@@ -208,6 +205,20 @@ module.exports = withCSS({
 
       await checkApp(appName, { checkLint: false, checkE2E: false });
     }, 120000);
+
+    it('should build with public folder', async () => {
+      const appName = uniq('app');
+
+      runCLI(
+        `generate @nrwl/next:app ${appName} --no-interactive --style=@emotion/styled`
+      );
+
+      updateFile(`apps/${appName}/public/a/b.txt`, `Hello World!`);
+
+      runCLI(`build ${appName}`);
+
+      checkFilesExist(`dist/apps/${appName}/public/a/b.txt`);
+    }, 120000);
   });
 });
 
@@ -231,6 +242,7 @@ async function checkApp(
   const buildResult = runCLI(`build ${appName}`);
   expect(buildResult).toContain(`Compiled successfully`);
   checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);
+  checkFilesExist(`dist/apps/${appName}/public/star.svg`);
 
   const packageJson = readJson(`dist/apps/${appName}/package.json`);
   expect(packageJson.dependencies.react).toBeDefined();
