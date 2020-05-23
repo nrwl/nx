@@ -22,6 +22,19 @@ export class ProjectGraphBuilder {
   }
 
   addNode(node: ProjectGraphNode) {
+    // Check if project with the same name already exists
+    if (this.nodes[node.name]) {
+      // Throw if existing project is of a different type
+      if (this.nodes[node.name].type !== node.type) {
+        throw new Error(
+          `Multiple projects are named "${node.name}". One is of type "${
+            node.type
+          }" and the other is of type "${
+            this.nodes[node.name].type
+          }". Please resolve the conflicting project names.`
+        );
+      }
+    }
     this.nodes[node.name] = node;
     this.dependencies[node.name] = {};
   }

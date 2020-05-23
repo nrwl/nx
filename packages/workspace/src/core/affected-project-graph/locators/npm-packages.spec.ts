@@ -1,11 +1,13 @@
 import { getTouchedNpmPackages } from './npm-packages';
 import { NxJson } from '../../shared-interfaces';
-import { WholeFileChange } from '../..//file-utils';
+import { WholeFileChange } from '../../file-utils';
 import { DiffType } from '../../../utils/json-diff';
+import { ProjectGraph } from '../../project-graph';
 
 describe('getTouchedNpmPackages', () => {
   let workspaceJson;
   let nxJson: NxJson<string[]>;
+  let projectGraph: ProjectGraph;
   beforeEach(() => {
     workspaceJson = {
       projects: {
@@ -26,6 +28,36 @@ describe('getTouchedNpmPackages', () => {
       projects: {
         proj1: {},
         proj2: {},
+      },
+    };
+    projectGraph = {
+      nodes: {
+        proj1: {
+          type: 'app',
+          name: 'proj1',
+          data: {
+            files: [],
+          },
+        },
+        proj2: {
+          type: 'lib',
+          name: 'proj2',
+          data: {
+            files: [],
+          },
+        },
+        'npm:happy-nrwl': {
+          name: 'npm:happy-nrwl',
+          type: 'npm',
+          data: {
+            packageName: 'happy-nrwl',
+            files: [],
+          },
+        },
+      },
+      dependencies: {
+        proj1: [],
+        proj2: [],
       },
     };
   });
@@ -55,9 +87,10 @@ describe('getTouchedNpmPackages', () => {
         dependencies: {
           'happy-nrwl': '0.0.2',
         },
-      }
+      },
+      projectGraph
     );
-    expect(result).toEqual(['happy-nrwl']);
+    expect(result).toEqual(['npm:happy-nrwl']);
   });
 
   it('should handle package deletion', () => {
@@ -85,12 +118,21 @@ describe('getTouchedNpmPackages', () => {
         dependencies: {
           'happy-nrwl': '0.0.2',
         },
-      }
+      },
+      projectGraph
     );
     expect(result).toEqual(['proj1', 'proj2']);
   });
 
   it('should handle package addition', () => {
+    projectGraph.nodes['npm:awesome-nrwl'] = {
+      name: 'npm:awesome-nrwl',
+      type: 'npm',
+      data: {
+        packageName: 'awesome-nrwl',
+        files: [],
+      },
+    };
     const result = getTouchedNpmPackages(
       [
         {
@@ -116,12 +158,21 @@ describe('getTouchedNpmPackages', () => {
           'happy-nrwl': '0.0.2',
           'awesome-nrwl': '0.0.1',
         },
-      }
+      },
+      projectGraph
     );
-    expect(result).toEqual(['awesome-nrwl']);
+    expect(result).toEqual(['npm:awesome-nrwl']);
   });
 
   it('should handle whole file changes', () => {
+    projectGraph.nodes['npm:awesome-nrwl'] = {
+      name: 'npm:awesome-nrwl',
+      type: 'npm',
+      data: {
+        packageName: 'awesome-nrwl',
+        files: [],
+      },
+    };
     const result = getTouchedNpmPackages(
       [
         {
@@ -138,8 +189,9 @@ describe('getTouchedNpmPackages', () => {
           'happy-nrwl': '0.0.1',
           'awesome-nrwl': '0.0.1',
         },
-      }
+      },
+      projectGraph
     );
-    expect(result).toEqual(['happy-nrwl', 'awesome-nrwl']);
+    expect(result).toEqual(['npm:happy-nrwl', 'npm:awesome-nrwl']);
   });
 });

@@ -14,9 +14,10 @@ export function buildNpmPackageNodes(
   Object.keys(deps).forEach((d) => {
     addNode({
       type: 'npm',
-      name: d,
+      name: `npm:${d}`,
       data: {
         version: deps[d],
+        packageName: d,
         files: [],
       },
     });

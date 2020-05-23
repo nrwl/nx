@@ -31,6 +31,11 @@ import {
 import { ProjectGraphBuilder } from './project-graph-builder';
 import { ProjectGraph } from './project-graph-models';
 
+/**
+ * This version is stored in the project graph cache to determine if it can be reused.
+ */
+const projectGraphCacheVersion = '1';
+
 export function createProjectGraph(
   workspaceJson = readWorkspaceJson(),
   nxJson = readNxJson(),
@@ -76,6 +81,7 @@ export function createProjectGraph(
     const projectGraph = builder.build();
     if (shouldCache) {
       writeCache({
+        version: projectGraphCacheVersion,
         projectGraph,
         fileMap,
       });
@@ -91,6 +97,7 @@ export function createProjectGraph(
 // -----------------------------------------------------------------------------
 
 interface ProjectGraphCache {
+  version: string;
   projectGraph: ProjectGraph;
   fileMap: FileMap;
 }
@@ -128,7 +135,16 @@ function getValidCache(cache: ProjectGraphCache | null) {
   if (!cache) {
     return null;
   }
-  return cache.projectGraph && cache.fileMap ? cache : null;
+  if (
+    cache.projectGraph &&
+    cache.fileMap &&
+    cache.version &&
+    cache.version === projectGraphCacheVersion
+  ) {
+    return cache;
+  } else {
+    return null;
+  }
 }
 
 function writeCache(cache: ProjectGraphCache): void {

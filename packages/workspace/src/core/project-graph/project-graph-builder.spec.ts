@@ -63,6 +63,17 @@ describe('ProjectGraphBuilder', () => {
       },
     });
   });
+
+  it('should throw an error when there are projects with conflicting names', () => {
+    const builder = new ProjectGraphBuilder();
+    const projA = createNode('proj', 'app');
+    const projB = createNode('proj', 'lib');
+    builder.addNode(projA);
+
+    expect(() => {
+      builder.addNode(projB);
+    }).toThrow();
+  });
 });
 
 function createNode(name: string, type: string): ProjectGraphNode {
