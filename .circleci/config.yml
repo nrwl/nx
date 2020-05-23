@@ -9,7 +9,7 @@ executors:
     working_directory: ~/repo
     environment:
       # install Cypress in Linux-like cache folder
-      CYPRESS_CACHE_FOLDER: "~/.cache/Cypress"
+      CYPRESS_CACHE_FOLDER: '~/.cache/Cypress'
 
     docker:
       - image: circleci/node:12-browsers
@@ -78,20 +78,20 @@ jobs:
     steps:
       - setup
       - run:
+          name: Run Unit Tests
+          command: yarn test:all
+      - run:
+          name: Check Documentation
+          command: yarn documentation
+      - run:
+          name: Check Imports
+          command: yarn checkimports
+      - run:
           name: Check Formatting
           command: yarn checkformat
       - run:
           name: Check Commit Message Format
           command: yarn checkcommit
-      - run:
-          name: Check Imports
-          command: yarn checkimports
-      - run:
-          name: Check Documentation
-          command: yarn documentation
-      - run:
-          name: Run Unit Tests
-          command: yarn test:all
   e2e-nx-1:
     executor: default
     steps:
