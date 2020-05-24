@@ -54,6 +54,7 @@
     "@angular-devkit/schematics": "~9.1.0",
     "cosmiconfig": "4.0.0",
     "fs-extra": "6.0.0",
+    "dotenv": "8.2.0",
     "ignore": "5.0.4",
     "npm-run-all": "4.1.5",
     "hasha": "5.1.0",

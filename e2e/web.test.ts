@@ -7,7 +7,9 @@ import {
   runCLIAsync,
   uniq,
   updateFile,
+  tmpProjPath,
 } from './utils';
+import { writeFileSync } from 'fs';
 
 forEachCli((currentCLIName) => {
   describe('Web Components Applications', () => {
@@ -58,12 +60,29 @@ forEachCli((currentCLIName) => {
   });
 
   describe('CLI - Environment Variables', () => {
-    it('should support NX environment variables', () => {
+    it('should automatically load workspace and per-project environment variables', () => {
       ensureProject();
 
       const appName = uniq('app');
+      //test if the Nx CLI loads root .env vars
+      updateFile(
+        `.env`,
+        'NX_WS_BASE=ws-base\nNX_SHARED_ENV=shared-in-workspace-base'
+      );
+      updateFile(
+        `.local.env`,
+        'NX_WS_LOCAL=ws-local\nNX_SHARED_ENV=shared-in-workspace-local'
+      );
+      updateFile(
+        `apps/${appName}/.env`,
+        'NX_APP_BASE=app-base\nNX_SHARED_ENV=shared-in-app-base'
+      );
+      updateFile(
+        `apps/${appName}/.local.env`,
+        'NX_APP_LOCAL=app-local\nNX_SHARED_ENV=shared-in-app-local'
+      );
       const main = `apps/${appName}/src/main.ts`;
-      const newCode = `const envVars = [process.env.NODE_ENV, process.env.NX_BUILD, process.env.NX_API];`;
+      const newCode = `const envVars = [process.env.NODE_ENV, process.env.NX_BUILD, process.env.NX_API, process.env.NX_WS_BASE, process.env.NX_WS_LOCAL, process.env.NX_APP_BASE, process.env.NX_APP_LOCAL, process.env.NX_SHARED_ENV];`;
 
       runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
 
@@ -71,11 +90,38 @@ forEachCli((currentCLIName) => {
 
       updateFile(main, `${newCode}\n${content}`);
 
-      runCLI(`build ${appName}`, {
-        env: { ...process.env, NODE_ENV: 'test', NX_BUILD: '52', NX_API: 'QA' },
+      const appName2 = uniq('app');
+
+      updateFile(
+        `apps/${appName2}/.env`,
+        'NX_APP_BASE=app2-base\nNX_SHARED_ENV=shared2-in-app-base'
+      );
+      updateFile(
+        `apps/${appName2}/.local.env`,
+        'NX_APP_LOCAL=app2-local\nNX_SHARED_ENV=shared2-in-app-local'
+      );
+      const main2 = `apps/${appName2}/src/main.ts`;
+      const newCode2 = `const envVars = [process.env.NODE_ENV, process.env.NX_BUILD, process.env.NX_API, process.env.NX_WS_BASE, process.env.NX_WS_LOCAL, process.env.NX_APP_BASE, process.env.NX_APP_LOCAL, process.env.NX_SHARED_ENV];`;
+
+      runCLI(`generate @nrwl/web:app ${appName2} --no-interactive`);
+
+      const content2 = readFile(main2);
+
+      updateFile(main2, `${newCode2}\n${content2}`);
+
+      runCLI(`run-many --target=build --all`, {
+        env: {
+          ...process.env,
+          NODE_ENV: 'test',
+          NX_BUILD: '52',
+          NX_API: 'QA',
+        },
       });
       expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
-        'const envVars = ["test", "52", "QA"];'
+        'const envVars = ["test", "52", "QA", "ws-base", "ws-local", "app-base", "app-local", "shared-in-app-local"];'
+      );
+      expect(readFile(`dist/apps/${appName2}/main.js`)).toContain(
+        'const envVars = ["test", "52", "QA", "ws-base", "ws-local", "app2-base", "app2-local", "shared2-in-app-local"];'
       );
     });
   });

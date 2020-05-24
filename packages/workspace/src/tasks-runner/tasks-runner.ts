@@ -9,6 +9,7 @@ export interface Task {
   target: Target;
   overrides: Object;
   hash?: string;
+  projectRoot?: string;
   hashDetails?: {
     command: string;
     sources: { [projectName: string]: string };

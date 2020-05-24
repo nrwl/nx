@@ -118,6 +118,7 @@ export function createTask({
   return {
     id: getId(qualifiedTarget),
     target: qualifiedTarget,
+    projectRoot: project.data.root,
     overrides: interpolateOverrides(overrides, project.name, project.data),
   };
 }
