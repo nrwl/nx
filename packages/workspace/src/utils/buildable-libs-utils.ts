@@ -256,10 +256,13 @@ export function updateBuildableProjectPackageJsonDependencies(
 
   let updatePackageJson = false;
   dependencies.forEach((entry) => {
+    const packageName =
+      entry.node.type === 'npm' ? entry.node.data.packageName : entry.name;
+
     if (
-      !hasDependency(packageJson, 'dependencies', entry.name) &&
-      !hasDependency(packageJson, 'devDependencies', entry.name) &&
-      !hasDependency(packageJson, 'peerDependencies', entry.name)
+      !hasDependency(packageJson, 'dependencies', packageName) &&
+      !hasDependency(packageJson, 'devDependencies', packageName) &&
+      !hasDependency(packageJson, 'peerDependencies', packageName)
     ) {
       try {
         let depVersion;
@@ -277,7 +280,7 @@ export function updateBuildableProjectPackageJsonDependencies(
           );
           depVersion = readJsonFile(depPackageJsonPath).version;
 
-          packageJson.dependencies[entry.name] = depVersion;
+          packageJson.dependencies[packageName] = depVersion;
         } else if (entry.node.type === 'npm') {
           // If an npm dep is part of the workspace devDependencies, do not include it the library
           if (
