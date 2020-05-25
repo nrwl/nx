@@ -260,6 +260,11 @@ const examples = {
       description: 'Save the dep graph into a json file',
     },
     {
+      command: 'dep-graph --file=output.html',
+      description:
+        'Generate a static website with dep graph into an html file, accompanied by an asset folder called static',
+    },
+    {
       command: 'dep-graph --filter=todos-feature-main',
       description:
         'Show the graph where every node is either an ancestor or a descendant of todos-feature-main.',
@@ -285,6 +290,12 @@ const examples = {
         'affected:dep-graph --base=master --head=HEAD --file=output.json',
       description:
         'Save the dep graph of the workspace in a json file, and highlight the projects affected by the changes between master and HEAD (e.g., PR)',
+    },
+    {
+      command:
+        'affected:dep-graph --base=master --head=HEAD --file=output.html',
+      description:
+        'Generate a static website with dep graph data in an html file, highlighting the projects affected by the changes between master and HEAD (e.g., PR)',
     },
     {
       command: 'affected:dep-graph --base=master~1 --head=master',
@@ -418,9 +429,9 @@ Promise.all(
       let template = dedent`
       # ${command.command}
       ${command.description}
-      
+
       ## Usage
-      \`\`\`bash 
+      \`\`\`bash
       nx ${command.command}
       \`\`\`
 
