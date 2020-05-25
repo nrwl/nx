@@ -123,6 +123,12 @@ export function generateGraph(
         title: `JSON output created in ${folder}`,
         bodyLines: [filename],
       });
+    } else {
+      output.error({
+        title: `Please specify a filename with either .json or .html extension.`,
+        bodyLines: [`You provided --file=${args.file}`],
+      });
+      process.exit(1);
     }
   } else {
     startServer(
