@@ -256,10 +256,17 @@ export function updateBuildableProjectPackageJsonDependencies(
 
   let updatePackageJson = false;
   dependencies.forEach((entry) => {
+    const entryName = entry.name.split(':');
+    /**
+     * Dependency names could potentially come in with `:` in them (ie. `npm:@npmscope/core`)
+     *
+     * We want to make sure that we do comparisons here without the first section (before `:`)
+     */
+    const packageName = entryName.length === 2 ? entryName[1] : entryName[0];
     if (
-      !hasDependency(packageJson, 'dependencies', entry.name) &&
-      !hasDependency(packageJson, 'devDependencies', entry.name) &&
-      !hasDependency(packageJson, 'peerDependencies', entry.name)
+      !hasDependency(packageJson, 'dependencies', packageName) &&
+      !hasDependency(packageJson, 'devDependencies', packageName) &&
+      !hasDependency(packageJson, 'peerDependencies', packageName)
     ) {
       try {
         let depVersion;
@@ -277,7 +284,7 @@ export function updateBuildableProjectPackageJsonDependencies(
           );
           depVersion = readJsonFile(depPackageJsonPath).version;
 
-          packageJson.dependencies[entry.name] = depVersion;
+          packageJson.dependencies[packageName] = depVersion;
         } else if (entry.node.type === 'npm') {
           // If an npm dep is part of the workspace devDependencies, do not include it the library
           if (

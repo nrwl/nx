@@ -138,9 +138,14 @@ forEachCli('angular', (cli) => {
       expect(parentLibOutput).toContain(`Built @proj/${parentLib}`);
 
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
-      expect(jsonFile.dependencies).toMatchObject({
+      expect(jsonFile.dependencies).toEqual({
+        tslib: '^1.10.0',
         [`@proj/${childLib}`]: '0.0.1',
         [`@proj/${childLib2}`]: '0.0.1',
+      });
+      expect(jsonFile.peerDependencies).toEqual({
+        '@angular/common': '^9.1.0',
+        '@angular/core': '^9.1.0',
       });
     });
   });
