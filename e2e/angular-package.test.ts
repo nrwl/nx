@@ -138,7 +138,7 @@ forEachCli('angular', (cli) => {
       expect(parentLibOutput).toContain(`Built @proj/${parentLib}`);
 
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
-      expect(jsonFile.dependencies).toEqual({
+      expect(jsonFile.dependencies).toMatchObject({
         [`@proj/${childLib}`]: '0.0.1',
         [`@proj/${childLib2}`]: '0.0.1',
       });
