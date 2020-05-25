@@ -1,0 +1,25 @@
+on:
+  schedule:
+    - cron: "* */12 * * *"
+name: Stale Bot workflow
+jobs:
+  build:
+    name: stale
+    runs-on: ubuntu-latest
+    steps:
+      - name: stale
+        id: stale
+        uses: actions/stale@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-stale: 30
+          days-before-close: -1
+          stale-issue-label: "status: stale"
+          operations-per-run: 300
+          remove-stale-when-updated: true
+          stale-issue-message: |
+            This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
+            If we missed this issue please reply to keep it active.
+            Thanks for being a part of the Nrwl community! 🙏
+          exempt-issue-labels: |
+            community
