@@ -256,13 +256,9 @@ export function updateBuildableProjectPackageJsonDependencies(
 
   let updatePackageJson = false;
   dependencies.forEach((entry) => {
-    const entryName = entry.name.split(':');
-    /**
-     * Dependency names could potentially come in with `:` in them (ie. `npm:@npmscope/core`)
-     *
-     * We want to make sure that we do comparisons here without the first section (before `:`)
-     */
-    const packageName = entryName.length === 2 ? entryName[1] : entryName[0];
+    const packageName =
+      entry.node.type === 'npm' ? entry.node.data.packageName : entry.name;
+
     if (
       !hasDependency(packageJson, 'dependencies', packageName) &&
       !hasDependency(packageJson, 'devDependencies', packageName) &&
