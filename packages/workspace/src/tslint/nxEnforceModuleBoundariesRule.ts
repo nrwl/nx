@@ -129,7 +129,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       this.addFailureAt(
         node.getStart(),
         node.getWidth(),
-        `libraries cannot be imported by a relative or absolute path`
+        `libraries cannot be imported by a relative or absolute path, and must begin with a npm scope`
       );
       return;
     }

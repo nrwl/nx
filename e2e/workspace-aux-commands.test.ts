@@ -43,11 +43,27 @@ forEachCli((cli) => {
       ];
       updateFile('tslint.json', JSON.stringify(tslint, null, 2));
 
+      const tsConfig = readJson('tsconfig.json');
+
+      /**
+       * apps do not add themselves to the tsconfig file.
+       *
+       * Let's add it so that we can trigger the lint failure
+       */
+      tsConfig.compilerOptions.paths[`@proj/${myapp2}`] = [
+        `apps/${myapp2}/src/main.ts`,
+      ];
+
+      tsConfig.compilerOptions.paths[`@secondScope/${lazylib}`] =
+        tsConfig.compilerOptions.paths[`@proj/${lazylib}`];
+      delete tsConfig.compilerOptions.paths[`@proj/${lazylib}`];
+      updateFile('tsconfig.json', JSON.stringify(tsConfig, null, 2));
+
       updateFile(
         `apps/${myapp}/src/main.ts`,
         `
       import '../../../libs/${mylib}';
-      import '@proj/${lazylib}';
+      import '@secondScope/${lazylib}';
       import '@proj/${myapp2}';
       import '@proj/${invalidtaglib}';
       import '@proj/${validtaglib}';
@@ -57,7 +73,9 @@ forEachCli((cli) => {
       );
 
       const out = runCLI(`lint ${myapp}`, { silenceError: true });
-      expect(out).toContain('library imports must start with @proj/');
+      expect(out).toContain(
+        'libraries cannot be imported by a relative or absolute path, and must begin with a npm scope'
+      );
       expect(out).toContain('imports of lazy-loaded libraries are forbidden');
       expect(out).toContain('imports of apps are forbidden');
       expect(out).toContain(
