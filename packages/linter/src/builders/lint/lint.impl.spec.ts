@@ -207,6 +207,7 @@ describe('Linter Builder', () => {
         outputFile: undefined,
         silent: false,
         tsConfig: undefined,
+        maxWarnings: -1,
       },
       expect.any(Set)
     );
@@ -487,6 +488,33 @@ describe('Linter Builder', () => {
       format: 'json',
       silent: true,
       force: false,
+    });
+    expect(output.success).toBeFalsy();
+  });
+  it('should be a failure if there are no errors, but warnings and maxWarnings is set to 0', async () => {
+    mockReports = [
+      {
+        errorCount: 0,
+        warningCount: 1,
+        results: [],
+        usedDeprecatedRules: [],
+      },
+      {
+        errorCount: 0,
+        warningCount: 0,
+        results: [],
+        usedDeprecatedRules: [],
+      },
+    ];
+    setupMocks();
+    const output = await runBuilder({
+      linter: 'eslint',
+      config: './.eslintrc',
+      files: ['includedFile1'],
+      format: 'json',
+      silent: true,
+      force: false,
+      maxWarnings: 1,
     });
     expect(output.success).toBeFalsy();
   });

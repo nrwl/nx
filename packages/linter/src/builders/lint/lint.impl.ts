@@ -132,7 +132,11 @@ async function run(options: Schema, context: BuilderContext): Promise<any> {
   }
 
   return {
-    success: options.force || bundledReport.errorCount === 0,
+    success:
+      options.force ||
+      (bundledReport.errorCount === 0 &&
+        (options.maxWarnings === -1 ||
+          bundledReport.warningCount < options.maxWarnings)),
   };
 }
 
