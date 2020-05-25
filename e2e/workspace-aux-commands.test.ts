@@ -355,6 +355,10 @@ forEachCli((cli) => {
       expect(jsonFileContents2.criticalPath).toContain('mylib');
       expect(jsonFileContents2.criticalPath).not.toContain('mylib2');
     }, 1000000);
+
+    it.todo(
+      'dep-graph should output a deployable static website in an html file accompanied by a folder with static assets'
+    );
   });
 
   describe('Move Angular Project', () => {

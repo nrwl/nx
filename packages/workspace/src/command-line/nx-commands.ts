@@ -26,9 +26,9 @@ export const commandsObject = yargs
   .command(
     'run [project][:target][:configuration] [options, ...]',
     `
-    Run a target for a project 
-    (e.g., nx run myapp:serve:production). 
-    
+    Run a target for a project
+    (e.g., nx run myapp:serve:production).
+
     You can also use the infix notation to run a target:
     (e.g., nx serve myapp --configuration=production)
     `
@@ -37,7 +37,7 @@ export const commandsObject = yargs
     'generate [schematic-collection:][schematic] [options, ...]',
     `
     Generate code
-    (e.g., nx generate @nrwl/web:app myapp). 
+    (e.g., nx generate @nrwl/web:app myapp).
     `
   )
   .command(
@@ -175,8 +175,8 @@ export const commandsObject = yargs
   .command(
     'migrate',
     `Creates a migrations file or runs migrations from the migrations file.
-- Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)      
-- Run migrations (e.g., nx migrate --run-migrations=migrations.json)      
+- Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)
+- Run migrations (e.g., nx migrate --run-migrations=migrations.json)
     `,
     (yargs) => yargs,
     () => {
@@ -332,7 +332,8 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
 function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .option('file', {
-      describe: 'output file (e.g. --file=output.json)',
+      describe:
+        'output file (e.g. --file=output.json or --file=dep-graph.html)',
       type: 'string',
     })
     .option('filter', {

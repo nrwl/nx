@@ -1,6 +1,8 @@
-import { readFileSync, readFile, writeFileSync, exists, statSync } from 'fs';
+import { exists, readFile, readFileSync, statSync, writeFileSync } from 'fs';
+import { copySync } from 'fs-extra';
 import * as http from 'http';
 import * as opn from 'opn';
+import { join, normalize, parse } from 'path';
 import * as url from 'url';
 import {
   createProjectGraph,
@@ -8,8 +10,8 @@ import {
   ProjectGraph,
   ProjectGraphNode,
 } from '../core/project-graph';
+import { appRootPath } from '../utils/app-root';
 import { output } from '../utils/output';
-import { join, normalize, parse } from 'path';
 
 // maps file extention to MIME types
 const mimeType = {
@@ -29,6 +31,26 @@ const mimeType = {
   '.ttf': 'aplication/font-sfnt',
 };
 
+function projectsToHtml(
+  projects: ProjectGraphNode[],
+  graph: ProjectGraph,
+  affected: string[]
+) {
+  const f = readFileSync(
+    join(__dirname, '../core/dep-graph/dep-graph.html')
+  ).toString();
+  return f
+    .replace(
+      `window.projects = null`,
+      `window.projects = ${JSON.stringify(projects)}`
+    )
+    .replace(`window.graph = null`, `window.graph = ${JSON.stringify(graph)}`)
+    .replace(
+      `window.affected = null`,
+      `window.affected = ${JSON.stringify(affected)}`
+    );
+}
+
 export function generateGraph(
   args: { file?: string; filter?: string[]; exclude?: string[]; host?: string },
   affectedProjects: string[]
@@ -42,18 +64,66 @@ export function generateGraph(
   );
 
   if (args.file) {
-    writeFileSync(
-      args.file,
-      JSON.stringify(
-        {
-          graph,
-          affectedProjects,
-          criticalPath: affectedProjects,
+    let folder = appRootPath;
+    let filename = args.file;
+    let ext = args.file.replace(/^.*\.(.*)$/, '$1');
+
+    if (ext === 'html') {
+      if (filename.includes('/')) {
+        const [_match, _folder, _file] = /^(.*)\/([^/]*\.(.*))$/.exec(
+          args.file
+        );
+        folder = `${appRootPath}/${_folder}`;
+        filename = _file;
+      }
+      filename = `${folder}/${filename}`;
+
+      const assetsFolder = `${folder}/static`;
+      const assets: string[] = [];
+      copySync(join(__dirname, '../core/dep-graph'), assetsFolder, {
+        filter: (src, dest) => {
+          const isntHtml = !/dep-graph\.html/.test(dest);
+          if (isntHtml && dest.includes('.')) {
+            assets.push(dest);
+          }
+          return isntHtml;
         },
-        null,
-        2
-      )
-    );
+      });
+      const html = projectsToHtml(
+        renderProjects,
+        graph,
+        affectedProjects
+      ).replace(
+        /<(script.*|link.*)="(.*\.(?:js|css))"(><\/script>| \/>?)/g,
+        '<$1="static/$2"$3'
+      );
+      writeFileSync(filename, html);
+
+      output.success({
+        title: `HTML output created in ${folder}`,
+        bodyLines: [filename, ...assets],
+      });
+    } else if (ext === 'json') {
+      filename = `${folder}/${filename}`;
+
+      writeFileSync(
+        filename,
+        JSON.stringify(
+          {
+            graph,
+            affectedProjects,
+            criticalPath: affectedProjects,
+          },
+          null,
+          2
+        )
+      );
+
+      output.success({
+        title: `JSON output created in ${folder}`,
+        bodyLines: [filename],
+      });
+    }
   } else {
     startServer(
       renderProjects,
@@ -70,19 +140,7 @@ function startServer(
   affected: string[],
   host: string
 ) {
-  const f = readFileSync(
-    join(__dirname, '../core/dep-graph/dep-graph.html')
-  ).toString();
-  const html = f
-    .replace(
-      `window.projects = null`,
-      `window.projects = ${JSON.stringify(projects)}`
-    )
-    .replace(`window.graph = null`, `window.graph = ${JSON.stringify(graph)}`)
-    .replace(
-      `window.affected = null`,
-      `window.affected = ${JSON.stringify(affected)}`
-    );
+  const html = projectsToHtml(projects, graph, affected);
 
   const app = http.createServer((req, res) => {
     // parse URL

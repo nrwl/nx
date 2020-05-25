@@ -30,6 +30,12 @@ Save the dep graph of the workspace in a json file, and highlight the projects a
 nx affected:dep-graph --base=master --head=HEAD --file=output.json
 ```
 
+Generate a static website with dep graph data in an html file, highlighting the projects affected by the changes between master and HEAD (e.g., PR):
+
+```bash
+nx affected:dep-graph --base=master --head=HEAD --file=output.html
+```
+
 Open the dep graph of the workspace in the browser, and highlight the projects affected by the last commit on master:
 
 ```bash
@@ -58,7 +64,7 @@ Exclude certain projects from being processed
 
 ### file
 
-output file (e.g. --file=output.json)
+output file (e.g. --file=output.json or --file=dep-graph.html)
 
 ### files
 

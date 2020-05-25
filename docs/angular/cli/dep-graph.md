@@ -24,6 +24,12 @@ Save the dep graph into a json file:
 nx dep-graph --file=output.json
 ```
 
+Generate a static website with dep graph into an html file, accompanied by an asset folder called static:
+
+```bash
+nx dep-graph --file=output.html
+```
+
 Show the graph where every node is either an ancestor or a descendant of todos-feature-main.:
 
 ```bash
@@ -44,7 +50,7 @@ List of projects delimited by commas to exclude from the dependency graph.
 
 ### file
 
-output file (e.g. --file=output.json)
+output file (e.g. --file=output.json or --file=dep-graph.html)
 
 ### filter
 
