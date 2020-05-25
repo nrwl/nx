@@ -72,6 +72,14 @@ Possible values: `eslint`, `tslint`
 
 The tool to use for running lint checks.
 
+### maxWarnings
+
+Default: `-1`
+
+Type: `number`
+
+Number of warnings to trigger nonzero exit code - default: -1
+
 ### outputFile
 
 Type: `string`

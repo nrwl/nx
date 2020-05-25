@@ -11,6 +11,7 @@ export interface Schema {
   cache: boolean;
   outputFile: string;
   cacheLocation: string;
+  maxWarnings: number;
 }
 
 type Formatter =
