@@ -4,28 +4,25 @@ import * as ts from 'typescript';
 import {
   createProjectGraph,
   ProjectGraph,
-  ProjectGraphNode,
+  ProjectType,
 } from '../core/project-graph';
 import { appRootPath } from '../utils/app-root';
 import {
   DepConstraint,
-  Deps,
   findConstraintsFor,
   findProjectUsingImport,
   findSourceProject,
   getSourceFilePath,
+  hasArchitectBuildBuilder,
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
   isCircular,
   isRelativeImportIntoAnotherProject,
   matchImportWithWildcard,
   onlyLoadChildren,
-  hasArchitectBuildBuilder,
 } from '../utils/runtime-lint-utils';
 import { normalize } from '@angular-devkit/core';
-import { ProjectType } from '../core/project-graph';
 import {
-  normalizedProjectRoot,
   readNxJson,
   readWorkspaceJson,
 } from '@nrwl/workspace/src/core/file-utils';
@@ -132,123 +129,118 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       this.addFailureAt(
         node.getStart(),
         node.getWidth(),
-        `library imports must start with @${this.npmScope}/`
+        `libraries cannot be imported by a relative or absolute path`
       );
       return;
     }
 
-    // check constraints between libs and apps
-    if (imp.startsWith(`@${this.npmScope}/`)) {
-      // we should find the name
-      const filePath = getSourceFilePath(
-        this.getSourceFile().fileName,
-        this.projectPath
+    const filePath = getSourceFilePath(
+      this.getSourceFile().fileName,
+      this.projectPath
+    );
+
+    const sourceProject = findSourceProject(this.projectGraph, filePath);
+    const targetProject = findProjectUsingImport(
+      this.projectGraph,
+      this.targetProjectLocator,
+      filePath,
+      imp
+    );
+
+    // If source or target are not part of an nx workspace, return.
+    if (!sourceProject || !targetProject) {
+      super.visitImportDeclaration(node);
+      return;
+    }
+
+    // check for circular dependency
+    if (isCircular(this.projectGraph, sourceProject, targetProject)) {
+      const error = `Circular dependency between "${sourceProject.name}" and "${targetProject.name}" detected`;
+      this.addFailureAt(node.getStart(), node.getWidth(), error);
+      return;
+    }
+
+    // same project => allow
+    if (sourceProject === targetProject) {
+      super.visitImportDeclaration(node);
+      return;
+    }
+
+    // cannot import apps
+    if (targetProject.type !== ProjectType.lib) {
+      this.addFailureAt(
+        node.getStart(),
+        node.getWidth(),
+        'imports of apps are forbidden'
       );
-      const sourceProject = findSourceProject(this.projectGraph, filePath);
-      // findProjectUsingImport to take care of same prefix
-      const targetProject = findProjectUsingImport(
+      return;
+    }
+
+    // buildable-lib is not allowed to import non-buildable-lib
+    if (
+      this.enforceBuildableLibDependency === true &&
+      sourceProject.type === ProjectType.lib &&
+      targetProject.type === ProjectType.lib
+    ) {
+      if (
+        hasArchitectBuildBuilder(sourceProject) &&
+        !hasArchitectBuildBuilder(targetProject)
+      ) {
+        this.addFailureAt(
+          node.getStart(),
+          node.getWidth(),
+          'buildable libraries cannot import non-buildable libraries'
+        );
+        return;
+      }
+    }
+
+    // if we import a library using loadChildren, we should not import it using es6imports
+    if (
+      onlyLoadChildren(
         this.projectGraph,
-        this.targetProjectLocator,
-        filePath,
-        imp,
-        this.npmScope
+        sourceProject.name,
+        targetProject.name,
+        []
+      )
+    ) {
+      this.addFailureAt(
+        node.getStart(),
+        node.getWidth(),
+        'imports of lazy-loaded libraries are forbidden'
       );
+      return;
+    }
 
-      // something went wrong => return.
-      if (!sourceProject || !targetProject) {
-        super.visitImportDeclaration(node);
-        return;
-      }
-
-      // check for circular dependency
-      if (isCircular(this.projectGraph, sourceProject, targetProject)) {
-        const error = `Circular dependency between "${sourceProject.name}" and "${targetProject.name}" detected`;
-        this.addFailureAt(node.getStart(), node.getWidth(), error);
-        return;
-      }
-
-      // same project => allow
-      if (sourceProject === targetProject) {
-        super.visitImportDeclaration(node);
-        return;
-      }
-
-      // cannot import apps
-      if (targetProject.type !== ProjectType.lib) {
+    // check that dependency constraints are satisfied
+    if (this.depConstraints.length > 0) {
+      const constraints = findConstraintsFor(
+        this.depConstraints,
+        sourceProject
+      );
+      // when no constrains found => error. Force the user to provision them.
+      if (constraints.length === 0) {
         this.addFailureAt(
           node.getStart(),
           node.getWidth(),
-          'imports of apps are forbidden'
+          `A project without tags cannot depend on any libraries`
         );
         return;
       }
 
-      // buildable-lib is not allowed to import non-buildable-lib
-      if (
-        this.enforceBuildableLibDependency === true &&
-        sourceProject.type === ProjectType.lib &&
-        targetProject.type === ProjectType.lib
-      ) {
+      for (let constraint of constraints) {
         if (
-          hasArchitectBuildBuilder(sourceProject) &&
-          !hasArchitectBuildBuilder(targetProject)
+          hasNoneOfTheseTags(
+            targetProject,
+            constraint.onlyDependOnLibsWithTags || []
+          )
         ) {
-          this.addFailureAt(
-            node.getStart(),
-            node.getWidth(),
-            'buildable libs cannot import non-buildable libs'
-          );
+          const allowedTags = constraint.onlyDependOnLibsWithTags
+            .map((s) => `"${s}"`)
+            .join(', ');
+          const error = `A project tagged with "${constraint.sourceTag}" can only depend on libs tagged with ${allowedTags}`;
+          this.addFailureAt(node.getStart(), node.getWidth(), error);
           return;
-        }
-      }
-
-      // if we import a library using loadChildren, we should not import it using es6imports
-      if (
-        onlyLoadChildren(
-          this.projectGraph,
-          sourceProject.name,
-          targetProject.name,
-          []
-        )
-      ) {
-        this.addFailureAt(
-          node.getStart(),
-          node.getWidth(),
-          'imports of lazy-loaded libraries are forbidden'
-        );
-        return;
-      }
-
-      // check that dependency constraints are satisfied
-      if (this.depConstraints.length > 0) {
-        const constraints = findConstraintsFor(
-          this.depConstraints,
-          sourceProject
-        );
-        // when no constrains found => error. Force the user to provision them.
-        if (constraints.length === 0) {
-          this.addFailureAt(
-            node.getStart(),
-            node.getWidth(),
-            `A project without tags cannot depend on any libraries`
-          );
-          return;
-        }
-
-        for (let constraint of constraints) {
-          if (
-            hasNoneOfTheseTags(
-              targetProject,
-              constraint.onlyDependOnLibsWithTags || []
-            )
-          ) {
-            const allowedTags = constraint.onlyDependOnLibsWithTags
-              .map((s) => `"${s}"`)
-              .join(', ');
-            const error = `A project tagged with "${constraint.sourceTag}" can only depend on libs tagged with ${allowedTags}`;
-            this.addFailureAt(node.getStart(), node.getWidth(), error);
-            return;
-          }
         }
       }
     }

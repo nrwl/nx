@@ -135,14 +135,11 @@ export function findProjectUsingImport(
   projectGraph: ProjectGraph,
   targetProjectLocator: TargetProjectLocator,
   filePath: string,
-  imp: string,
-  npmScope: string
+  imp: string
 ) {
-  const target = targetProjectLocator.findProjectWithImport(
-    imp,
-    filePath,
-    npmScope
-  );
+  // Npm scope shouldn't be used in linting anymore.
+  // We should just be able to find the import with typescript
+  const target = targetProjectLocator.findProjectWithImport(imp, filePath, '');
   return projectGraph.nodes[target];
 }
 
