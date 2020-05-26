@@ -64,8 +64,9 @@ const parsedArgs = yargsParser(process.argv, {
   string: ['cli', 'preset', 'appName', 'style'],
   alias: {
     appName: 'app-name',
+    nxCloud: 'nx-cloud',
   },
-  boolean: ['help', 'interactive'],
+  boolean: ['help', 'interactive', 'nxCloud'],
 });
 
 if (parsedArgs.help) {
@@ -78,20 +79,22 @@ determineWorkspaceName(parsedArgs).then((name) => {
     return determineAppName(preset, parsedArgs).then((appName) => {
       return determineStyle(preset, parsedArgs).then((style) => {
         return determineCli(preset, parsedArgs).then((cli) => {
-          const tmpDir = createSandbox(packageManager, cli);
-          createApp(
-            tmpDir,
-            cli,
-            parsedArgs,
-            name,
-            preset,
-            appName,
-            style,
-            parsedArgs.interactive
-          );
-          showCliWarning(preset, parsedArgs);
-          showNxWarning(name);
-          pointToTutorialAndCourse(preset);
+          return askAboutNxCloud(parsedArgs).then((cloud) => {
+            const tmpDir = createSandbox(packageManager, cli);
+            createApp(
+              tmpDir,
+              cli,
+              parsedArgs,
+              name,
+              preset,
+              appName,
+              style,
+              cloud,
+              parsedArgs.interactive
+            );
+            showNxWarning(name);
+            pointToTutorialAndCourse(preset);
+          });
         });
       });
     });
@@ -382,6 +385,7 @@ function createApp(
   preset: Preset,
   appName: string,
   style: string | null,
+  nxCloud: boolean,
   interactive: boolean
 ) {
   // creating the app itself
@@ -396,6 +400,8 @@ function createApp(
           !a.startsWith('--appName') &&
           !a.startsWith('--app-name') &&
           !a.startsWith('--style') &&
+          !a.startsWith('--nxCloud') &&
+          !a.startsWith('--nx-cloud') &&
           !a.startsWith('--interactive')
       ) // not used by the new command
       .map((a) => `"${a}"`),
@@ -403,12 +409,13 @@ function createApp(
 
   const appNameArg = appName ? ` --appName="${appName}"` : ``;
   const styleArg = style ? ` --style="${style}"` : ``;
+  const nxCloudArg = nxCloud ? ` --nxCloud` : ``;
   const interactiveArg = interactive
     ? ` --interactive=true`
     : ` --interactive=false`;
 
   console.log(
-    `new ${args} --preset="${preset}"${appNameArg}${styleArg}${interactiveArg} --collection=@nrwl/workspace`
+    `new ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg} --collection=@nrwl/workspace`
   );
   execSync(
     `"${path.join(
@@ -416,44 +423,37 @@ function createApp(
       'node_modules',
       '.bin',
       cli.command
-    )}" new ${args} --preset="${preset}"${appNameArg}${styleArg}${interactiveArg} --collection=@nrwl/workspace`,
+    )}" new ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg} --collection=@nrwl/workspace`,
     {
       stdio: [0, 1, 2],
     }
   );
+
+  if (nxCloud) {
+    execSync(`./node_modules/.bin/nx g @nrwl/nx-cloud:init --no-analytics`, {
+      stdio: [0, 1, 2],
+      cwd: path.join(process.cwd(), name),
+    });
+  }
 }
 
-function showCliWarning(preset: Preset, parsedArgs: yargsParser.Arguments) {
-  if (!parsedArgs.cli) {
-    switch (preset) {
-      case Preset.Angular:
-      case Preset.AngularWithNest:
-        {
-          output.addVerticalSeparator();
-          output.note({
-            title: `Because you selected an Angular-specific preset, we generated an Nx workspace powered by the Angular CLI.`,
-            bodyLines: [
-              `Run 'create-nx-workspace --help' to see how to select a different CLI.`,
-            ],
-          });
-        }
-        break;
-      case Preset.WebComponents:
-      case Preset.React:
-      case Preset.ReactWithExpress:
-      case Preset.NextJs:
-        {
-          output.addVerticalSeparator();
-          output.note({
-            title: `We generated an Nx workspace powered by the Nx CLI.`,
-            bodyLines: [
-              `Run 'create-nx-workspace --help' to see how to select a different CLI.`,
-            ],
-          });
-        }
-        break;
-    }
-  }
+async function askAboutNxCloud(parsedArgs: any) {
+  return parsedArgs.nxCloud;
+  // TODO: vsavkin: reenable prompt before release Nx 9.4
+  // if (parsedArgs.nxCloud === undefined) {
+  //   return inquirer
+  //     .prompt([
+  //       {
+  //         name: 'NxCloud',
+  //         message: `Connect to the free tier of the distributed cache provided by Nx Cloud`,
+  //         default: false,
+  //         type: 'confirm',
+  //       },
+  //     ])
+  //     .then((a: { NxCloud: boolean }) => a.NxCloud);
+  // } else {
+  //   return parsedArgs.nxCloud;
+  // }
 }
 
 function pointToTutorialAndCourse(preset: Preset) {

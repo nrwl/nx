@@ -36,6 +36,7 @@ export interface Schema {
   skipInstall?: boolean;
   skipGit?: boolean;
   style?: string;
+  nxCloud?: boolean;
   preset:
     | 'empty'
     | 'angular'
@@ -106,9 +107,13 @@ export function sharedNew(cli: string, options: Schema): Rule {
   if (options.skipInstall && options.preset !== 'empty') {
     throw new Error(`Cannot select a preset when skipInstall is set to true.`);
   }
+  if (options.skipInstall && options.nxCloud) {
+    throw new Error(`Cannot select nxCloud when skipInstall is set to true.`);
+  }
 
   options = normalizeOptions(options);
-  const workspaceOpts = { ...options, preset: undefined };
+
+  const workspaceOpts = { ...options, preset: undefined, nxCloud: undefined };
   return (host: Tree, context: SchematicContext) => {
     const engineHost = (context.engine.workflow as any).engineHost;
     engineHost.registerTaskExecutor(createPresetTaskExecutor(cli, options));
@@ -116,7 +121,8 @@ export function sharedNew(cli: string, options: Schema): Rule {
     return chain([
       schematic('workspace', { ...workspaceOpts, cli }),
       cli === 'angular' ? noop() : setDefaultLinter('eslint'),
-      addDependencies(options),
+      addPresetDependencies(options),
+      addCloudDependencies(options),
       move('/', options.directory),
       addTasks(options),
       formatFiles(),
@@ -124,7 +130,13 @@ export function sharedNew(cli: string, options: Schema): Rule {
   };
 }
 
-function addDependencies(options: Schema) {
+function addCloudDependencies(options: Schema) {
+  return options.nxCloud
+    ? addDepsToPackageJson({}, { '@nrwl/nx-cloud': 'latest' })
+    : noop();
+}
+
+function addPresetDependencies(options: Schema) {
   if (options.preset === 'empty') {
     return noop();
   } else if (options.preset === 'web-components') {

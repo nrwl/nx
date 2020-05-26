@@ -110,6 +110,11 @@
     "appName": {
       "type": "string",
       "description": "Application name."
+    },
+    "nxCloud": {
+      "description": "Connect the workspace to the free tier of the distributed cache provided by Nx Cloud",
+      "type": "boolean",
+      "default": false
     }
   }
 }
