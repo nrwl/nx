@@ -1,5 +1,6 @@
 import { Linter } from '@nrwl/workspace';
 import { SupportedStyles } from 'packages/react/typings/style';
+import { Path } from '@angular-devkit/core';
 
 export interface Schema {
   name: string;
@@ -16,4 +17,14 @@ export interface Schema {
   routing?: boolean;
   skipWorkspaceJson?: boolean;
   js?: boolean;
+}
+
+export interface NormalizedSchema extends Schema {
+  projectName: string;
+  appProjectRoot: Path;
+  e2eProjectName: string;
+  parsedTags: string[];
+  fileName: string;
+  styledModule: null | string;
+  hasStyles: boolean;
 }

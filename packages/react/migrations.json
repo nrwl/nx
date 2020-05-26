@@ -39,6 +39,16 @@
       "version": "8.12.0-beta.1",
       "description": "Ensure React correct webpack config and babel preset",
       "factory": "./src/migrations/update-8-12-0/fix-react-files-8-12-0"
+    },
+    "update-9.4.0": {
+      "version": "9.4.0-beta.1",
+      "description": "Update libraries",
+      "factory": "./src/migrations/update-9-4-0/update-9-4-0"
+    },
+    "babelrc-9.4.0": {
+      "version": "9.4.0-beta.1",
+      "description": "Migrate to new babel setup for greater flexibility",
+      "factory": "./src/migrations/update-9-4-0/babelrc-9-4-0"
     }
   },
   "packageJsonUpdates": {
@@ -178,6 +188,79 @@
         },
         "@types/styled-components": {
           "version": "4.4.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "9.4.0": {
+      "version": "9.4.0-beta.1",
+      "packages": {
+        "react": {
+          "version": "16.13.1",
+          "alwaysAddToPackageJson": false
+        },
+        "react-dom": {
+          "version": "16.13.1",
+          "alwaysAddToPackageJson": false
+        },
+        "react-is": {
+          "version": "16.13.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react": {
+          "version": "16.9.35",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-dom": {
+          "version": "16.9.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-is": {
+          "version": "16.7.1",
+          "alwaysAddToPackageJson": false
+        },
+        "styled-components": {
+          "version": "5.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/styled-components": {
+          "version": "5.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-router-dom": {
+          "version": "5.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-router-dom": {
+          "version": "5.1.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react": {
+          "version": "10.0.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@reduxjs/toolkit": {
+          "version": "1.3.6",
+          "alwaysAddToPackageJson": false
+        },
+        "react-redux": {
+          "version": "7.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-redux": {
+          "version": "7.1.9",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-import": {
+          "version": "2.20.2",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-react": {
+          "version": "7.20.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-react-hooks": {
+          "version": "4.0.2",
           "alwaysAddToPackageJson": false
         }
       }
