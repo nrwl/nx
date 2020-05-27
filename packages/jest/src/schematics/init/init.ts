@@ -7,11 +7,7 @@ import {
 } from '@nrwl/workspace';
 import { noop } from 'rxjs';
 import {
-  babelCoreVersion,
   babelJestVersion,
-  babelPresetEnvVersion,
-  babelPresetReactVersion,
-  babelPresetTypescriptVersion,
   jestTypesVersion,
   jestVersion,
   nxVersion,
@@ -64,10 +60,8 @@ function updateDependencies(options: JestInitOptions): Rule {
   };
 
   if (options.babelJest) {
-    devDeps['@babel/core'] = babelCoreVersion;
-    devDeps['@babel/preset-env'] = babelPresetEnvVersion;
-    devDeps['@babel/preset-typescript'] = babelPresetTypescriptVersion;
-    devDeps['@babel/preset-react'] = babelPresetReactVersion;
+    devDeps['@nrwl/web'] = nxVersion;
+    devDeps['@nrwl/react'] = nxVersion;
     devDeps['babel-jest'] = babelJestVersion;
   }
 

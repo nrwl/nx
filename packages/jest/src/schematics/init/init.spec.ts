@@ -34,12 +34,8 @@ describe('jest', () => {
   it('should add babel dependencies', async () => {
     const resultTree = await runSchematic('init', { babelJest: true }, appTree);
     const packageJson = readJsonInTree(resultTree, 'package.json');
-    expect(packageJson.devDependencies['@babel/core']).toBeDefined();
-    expect(packageJson.devDependencies['@babel/preset-env']).toBeDefined();
-    expect(
-      packageJson.devDependencies['@babel/preset-typescript']
-    ).toBeDefined();
-    expect(packageJson.devDependencies['@babel/preset-react']).toBeDefined();
+    expect(packageJson.devDependencies['@nrwl/web']).toBeDefined();
+    expect(packageJson.devDependencies['@nrwl/react']).toBeDefined();
     expect(packageJson.devDependencies['babel-jest']).toBeDefined();
   });
 });

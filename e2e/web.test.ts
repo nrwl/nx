@@ -75,7 +75,7 @@ forEachCli((currentCLIName) => {
         env: { ...process.env, NODE_ENV: 'test', NX_BUILD: '52', NX_API: 'QA' },
       });
       expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
-        'const envVars = ["test", "52", "QA"];'
+        'envVars = ["test", "52", "QA"];'
       );
     });
   });

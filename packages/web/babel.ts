@@ -18,7 +18,6 @@ module.exports = function (api: any, options: {}) {
           // Do not transform modules to CJS
           modules: false,
           targets: api.env('legacy') ? undefined : { esmodules: true },
-          bugfixes: true,
           // Exclude transforms that make all code slower
           exclude: ['transform-typeof-symbol'],
         },
