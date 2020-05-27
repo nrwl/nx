@@ -21,7 +21,7 @@ class CacheConfig {
   }
 
   private longRunningTask(task: Task) {
-    return task.overrides['watch'] !== undefined;
+    return !!task.overrides['watch'];
   }
 }
 

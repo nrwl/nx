@@ -2,12 +2,9 @@ import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import { createApp, runSchematic } from '../../utils/testing';
 import * as stripJsonComments from 'strip-json-comments';
-import { NxJson, readJsonInTree } from '@nrwl/workspace';
+import { NxJson, readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import {
-  stripIndents,
-  stripIndent,
-} from '@angular-devkit/core/src/utils/literals';
+import { stripIndent } from '@angular-devkit/core/src/utils/literals';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -463,6 +460,26 @@ describe('lib', () => {
         'lib',
         { name: 'myLib', directory: 'myDir' },
         appTree
+      );
+      const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
+      expect(
+        tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']
+      ).toEqual(['libs/my-dir/my-lib/src/index.ts']);
+      expect(
+        tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
+      ).toBeUndefined();
+    });
+
+    it('should update tsconfig.json (no existing path mappings)', async () => {
+      const updatedTree: any = updateJsonInTree('tsconfig.json', (json) => {
+        json.compilerOptions.paths = undefined;
+        return json;
+      })(appTree, null);
+
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', directory: 'myDir' },
+        updatedTree
       );
       const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
       expect(
