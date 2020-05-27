@@ -40,7 +40,7 @@ describe('Update 8.2.0', () => {
       builder: '@angular-devkit/build-angular:tslint',
       options: {
         tsConfig: ['my-app/tsconfig.json'],
-        exclude: ['**/node_modules/**', '!my-app/**'],
+        exclude: ['**/node_modules/**', '!my-app/**/*'],
       },
     });
   });

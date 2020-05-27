@@ -94,7 +94,7 @@ describe('updateWorkspace Rule', () => {
                   'apps/my-source/tsconfig.app.json',
                   'apps/my-source/tsconfig.spec.json',
                 ],
-                exclude: ['**/node_modules/**', '!apps/my-source/**'],
+                exclude: ['**/node_modules/**', '!apps/my-source/**/*'],
               },
             },
             test: {
@@ -129,7 +129,7 @@ describe('updateWorkspace Rule', () => {
               builder: '@angular-devkit/build-angular:tslint',
               options: {
                 tsConfig: ['apps/my-source-e2e/tsconfig.e2e.json'],
-                exclude: ['**/node_modules/**', '!apps/my-source-e2e/**'],
+                exclude: ['**/node_modules/**', '!apps/my-source-e2e/**/*'],
               },
             },
           },

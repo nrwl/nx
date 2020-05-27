@@ -98,7 +98,7 @@ describe('lib', () => {
       ]);
       expect(
         workspaceJson.projects['my-lib'].architect.lint.options.exclude
-      ).toEqual(['**/node_modules/**', '!libs/my-lib/**']);
+      ).toEqual(['**/node_modules/**', '!libs/my-lib/**/*']);
     });
 
     it('should remove "build" target from workspace.json when a library is not publishable', async () => {
@@ -452,7 +452,7 @@ describe('lib', () => {
       ]);
       expect(
         workspaceJson.projects['my-dir-my-lib'].architect.lint.options.exclude
-      ).toEqual(['**/node_modules/**', '!libs/my-dir/my-lib/**']);
+      ).toEqual(['**/node_modules/**', '!libs/my-dir/my-lib/**/*']);
     });
 
     it('should update tsconfig.json', async () => {
@@ -966,7 +966,7 @@ describe('lib', () => {
       ]);
       expect(
         workspaceJson.projects['my-lib'].architect.lint.options.exclude
-      ).toEqual(['**/node_modules/**', '!libs/my-lib/**']);
+      ).toEqual(['**/node_modules/**', '!libs/my-lib/**/*']);
     });
   });
 

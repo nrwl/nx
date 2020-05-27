@@ -59,7 +59,7 @@ describe('app', () => {
             'apps/my-node-app/tsconfig.app.json',
             'apps/my-node-app/tsconfig.spec.json',
           ],
-          exclude: ['**/node_modules/**', '!apps/my-node-app/**'],
+          exclude: ['**/node_modules/**', '!apps/my-node-app/**/*'],
         },
       });
       expect(workspaceJson.projects['my-node-app-e2e']).toBeUndefined();
@@ -127,7 +127,7 @@ describe('app', () => {
             'apps/my-dir/my-node-app/tsconfig.app.json',
             'apps/my-dir/my-node-app/tsconfig.spec.json',
           ],
-          exclude: ['**/node_modules/**', '!apps/my-dir/my-node-app/**'],
+          exclude: ['**/node_modules/**', '!apps/my-dir/my-node-app/**/*'],
         },
       });
 
