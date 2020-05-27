@@ -1,6 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { readJsonInTree } from '@nrwl/workspace';
+import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { NxJson } from '@nrwl/workspace';
 import { runSchematic } from '../../utils/testing';
 
@@ -47,6 +47,19 @@ describe('lib', () => {
 
     it('should update root tsconfig.json', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
+      const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
+      expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
+        'libs/my-lib/src/index.ts',
+      ]);
+    });
+
+    it('should update root tsconfig.json (no existing path mappings)', async () => {
+      const updatedTree: any = updateJsonInTree('tsconfig.json', (json) => {
+        json.compilerOptions.paths = undefined;
+        return json;
+      })(appTree, null);
+
+      const tree = await runSchematic('lib', { name: 'myLib' }, updatedTree);
       const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
         'libs/my-lib/src/index.ts',
