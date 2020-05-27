@@ -406,6 +406,7 @@ function updateTsConfig(options: NormalizedSchema): Rule {
       const nxJson = readJsonInTree<NxJson>(host, 'nx.json');
       return updateJsonInTree('tsconfig.json', (json) => {
         const c = json.compilerOptions;
+        c.paths = c.paths || {};
         delete c.paths[options.name];
         c.paths[`@${nxJson.npmScope}/${options.projectDirectory}`] = [
           `libs/${options.projectDirectory}/src/index.ts`,
