@@ -16,7 +16,7 @@ List of static assets.
 
 Type: `string`
 
-(deprecated) Path to a function which takes a babel config and returns an updated babel config
+Path to a function which takes a babel config and returns an updated babel config
 
 ### entryFile
 

@@ -199,7 +199,7 @@ forEachCli((currentCLIName) => {
       );
     }, 120000);
 
-    it('should be able to use babel-jest', async () => {
+    xit('should be able to use babel-jest', async () => {
       ensureProject();
       const appName = uniq('app');
       const libName = uniq('lib');
@@ -308,7 +308,7 @@ forEachCli((currentCLIName) => {
       }
       checkFilesExist(...filesToCheck);
       expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
-        'const App = () =>'
+        'var App = () => {'
       );
       runCLI(`build ${appName} --prod --output-hashing none`);
       filesToCheck = [

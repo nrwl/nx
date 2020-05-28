@@ -5,7 +5,6 @@ import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import { ProgressPlugin } from 'webpack';
 import { BuildBuilderOptions } from './types';
-import { normalize } from '@angular-devkit/core';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
@@ -20,7 +19,6 @@ describe('getBaseWebpackPartial', () => {
       tsConfig: 'tsconfig.json',
       fileReplacements: [],
       root: '/root',
-      sourceRoot: normalize('/root/src'),
       statsJson: false,
     };
     (<any>(
@@ -166,8 +164,12 @@ describe('getBaseWebpackPartial', () => {
 
       expect(
         (result.module.rules.find((rule) => rule.loader === 'babel-loader')
-          .options as any).envName
-      ).toMatch('modern');
+          .options as any).presets.find(
+          (p) => p[0].indexOf('@babel/preset-env') !== -1
+        )[1]
+      ).toMatchObject({
+        targets: { esmodules: true },
+      });
     });
 
     it('should not override preset-env target for es5', () => {
@@ -175,8 +177,12 @@ describe('getBaseWebpackPartial', () => {
 
       expect(
         (result.module.rules.find((rule) => rule.loader === 'babel-loader')
-          .options as any).envName
-      ).toMatch('legacy');
+          .options as any).presets.find(
+          (p) => p[0].indexOf('@babel/preset-env') !== -1
+        )[1]
+      ).toMatchObject({
+        targets: undefined,
+      });
     });
   });
 

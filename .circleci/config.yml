@@ -25,7 +25,7 @@ commands:
       - run: yarn install --frozen-lockfile --non-interactive
       - run: ./node_modules/.bin/cypress verify
       - save_cache:
-          key: nrwl-nx-node12-yarn-{{ checksum "yarn.lock" }}
+          key: nrwl-nx-node12-yarn-key-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
       - save_cache:
@@ -45,9 +45,9 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - nrwl-nx-node12-yarn-{{ checksum "yarn.lock" }}
+            - nrwl-nx-node12-yarn-key-{{ checksum "yarn.lock" }}
             # fallback to using the latest cache if no exact match is found
-            - nrwl-nx-node12-yarn-
+            - nrwl-nx-node12-yarn-key-
   setup:
     description: 'Setup Executor'
     steps:

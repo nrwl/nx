@@ -175,7 +175,7 @@ export function newProject(): void {
       `@nrwl/storybook`,
       `@nrwl/nx-plugin`,
     ];
-    yarnAdd([`@nrwl/eslint-plugin-nx`].concat(packages).join(` `));
+    yarnAdd(packages.join(` `));
     packages
       .filter((f) => f != '@nrwl/nx-plugin')
       .forEach((p) => {

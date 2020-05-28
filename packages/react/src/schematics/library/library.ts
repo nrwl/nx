@@ -47,7 +47,6 @@ import {
 } from '../../utils/versions';
 import { Schema } from './schema';
 import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
-import { initRootBabelConfig } from '@nrwl/web/src/utils/rules';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -100,7 +99,6 @@ export default function (schema: Schema): Rule {
         : noop(),
       options.publishable ? updateLibPackageNpmScope(options) : noop(),
       updateAppRoutes(options, context),
-      initRootBabelConfig(),
       formatFiles(options),
     ])(host, context);
   };

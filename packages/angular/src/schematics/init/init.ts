@@ -34,6 +34,7 @@ const updateDependencies = addDepsToPackageJson(
     '@angular/platform-browser': angularVersion,
     '@angular/platform-browser-dynamic': angularVersion,
     '@angular/router': angularVersion,
+    'core-js': '^2.5.4',
     rxjs: rxjsVersion,
     'zone.js': '^0.10.2',
   },

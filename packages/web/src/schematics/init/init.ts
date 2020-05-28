@@ -1,4 +1,4 @@
-import { chain, noop, Rule, Tree } from '@angular-devkit/schematics';
+import { chain, noop, Rule } from '@angular-devkit/schematics';
 import {
   addPackageWithInit,
   formatFiles,
@@ -10,7 +10,6 @@ import {
   documentRegisterElementVersion,
   nxVersion,
 } from '../../utils/versions';
-import { initRootBabelConfig } from '../../utils/rules';
 
 function updateDependencies(): Rule {
   return updateJsonInTree('package.json', (json) => {
@@ -37,7 +36,6 @@ export default function (schema: Schema) {
       ? addPackageWithInit('@nrwl/cypress')
       : noop(),
     updateDependencies(),
-    initRootBabelConfig(),
     formatFiles(schema),
   ]);
 }

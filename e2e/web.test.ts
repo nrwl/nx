@@ -1,3 +1,4 @@
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
   checkFilesExist,
   ensureProject,
@@ -5,6 +6,7 @@ import {
   readFile,
   runCLI,
   runCLIAsync,
+  supportUi,
   uniq,
   updateFile,
 } from './utils';
@@ -52,9 +54,72 @@ forEachCli((currentCLIName) => {
       const lintE2eResults = runCLI(`lint ${appName}-e2e`);
       expect(lintE2eResults).toContain('All files pass linting.');
 
-      const e2eResults = runCLI(`e2e ${appName}-e2e`);
-      expect(e2eResults).toContain('All specs passed!');
+      if (supportUi()) {
+        const e2eResults = runCLI(`e2e ${appName}-e2e`);
+        expect(e2eResults).toContain('All specs passed!');
+      }
     }, 120000);
+
+    it('should support same syntax as TypeScript', () => {
+      ensureProject();
+      const appName = uniq('app');
+
+      runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+
+      const mainPath = `apps/${appName}/src/app/app.element.ts`;
+      const content = readFile(mainPath);
+      updateFile(
+        mainPath,
+        content
+          // Testing decorators
+          .replace(
+            `export class AppElement extends HTMLElement`,
+            stripIndents`
+          function myDecorator(ctor) {
+            ctor.title = '${appName}';
+          }
+
+          @myDecorator
+          export class AppElement extends HTMLElement`
+          )
+          .replace('${title}', '${(AppElement as any).title}') +
+          // Testing const enums
+          stripIndents`
+            export const enum MyEnum {
+              a,
+              b,
+              b
+            };
+          `
+      );
+
+      if (supportUi()) {
+        const e2eResults = runCLI(`e2e ${appName}-e2e`);
+        expect(e2eResults).toContain('All specs passed!');
+      }
+    });
+
+    it('should support CSS modules', () => {
+      ensureProject();
+      const appName = uniq('app');
+
+      runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+      updateFile(
+        `apps/${appName}/src/app/app.module.css`,
+        '.foo { color: red; }'
+      );
+      const mainPath = `apps/${appName}/src/app/app.element.ts`;
+      const content = readFile(mainPath);
+      updateFile(
+        mainPath,
+        `import styles from './app.module.css';\n${content}`
+      );
+
+      if (supportUi()) {
+        const e2eResults = runCLI(`e2e ${appName}-e2e`);
+        expect(e2eResults).toContain('All specs passed!');
+      }
+    });
   });
 
   describe('CLI - Environment Variables', () => {
@@ -75,7 +140,7 @@ forEachCli((currentCLIName) => {
         env: { ...process.env, NODE_ENV: 'test', NX_BUILD: '52', NX_API: 'QA' },
       });
       expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
-        'const envVars = ["test", "52", "QA"];'
+        'var envVars = ["test", "52", "QA"];'
       );
     });
   });

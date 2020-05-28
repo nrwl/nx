@@ -1,5 +1,5 @@
 import { FileReplacement } from './normalize';
-import { JsonObject } from '@angular-devkit/core';
+import { JsonObject, Path } from '@angular-devkit/core';
 
 export interface OptimizationOptions {
   scripts: boolean;
@@ -37,7 +37,7 @@ export interface BuildBuilderOptions {
   webpackConfig?: string;
 
   root?: string;
-  sourceRoot?: string;
+  sourceRoot?: Path;
 }
 
 export interface Globals {

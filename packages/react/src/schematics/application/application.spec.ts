@@ -1,7 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import * as stripJsonComments from 'strip-json-comments';
-import { NxJson, readJsonInTree } from '@nrwl/workspace';
+import { readJsonInTree, NxJson } from '@nrwl/workspace';
 import { runSchematic } from '../../utils/testing';
 
 describe('app', () => {
@@ -44,7 +44,6 @@ describe('app', () => {
 
     it('should generate files', async () => {
       const tree = await runSchematic('app', { name: 'myApp' }, appTree);
-      expect(tree.exists('apps/my-app/.babelrc')).toBeTruthy();
       expect(tree.exists('apps/my-app/src/main.tsx')).toBeTruthy();
       expect(tree.exists('apps/my-app/src/app/app.tsx')).toBeTruthy();
       expect(tree.exists('apps/my-app/src/app/app.spec.tsx')).toBeTruthy();

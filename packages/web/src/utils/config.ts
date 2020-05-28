@@ -1,6 +1,6 @@
 import * as webpack from 'webpack';
 import { Configuration, ProgressPlugin, Stats } from 'webpack';
-import { join, resolve } from 'path';
+import { dirname, resolve } from 'path';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as TerserWebpackPlugin from 'terser-webpack-plugin';
@@ -8,6 +8,7 @@ import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 
 import { AssetGlobPattern, BuildBuilderOptions } from './types';
 import { getOutputHashFormat } from './hash-format';
+import { createBabelConfig } from './babel-config';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
@@ -51,10 +52,7 @@ export function getBaseWebpackPartial(
           loader: `babel-loader`,
           exclude: /node_modules/,
           options: {
-            rootMode: 'upward',
-            cwd: join(options.root, options.sourceRoot),
-            envName: esm ? 'modern' : 'legacy',
-            babelrc: true,
+            ...createBabelConfig(dirname(options.main), esm, options.verbose),
             cacheDirectory: true,
             cacheCompression: false,
           },
@@ -155,8 +153,7 @@ export function createTerserPlugin(esm: boolean, sourceMap: boolean) {
     cache: true,
     sourceMap,
     terserOptions: {
-      ecma: esm ? 8 : 5,
-      // Don't remove safari 10 workaround for ES modules
+      ecma: esm ? 6 : 5,
       safari10: true,
       output: {
         ascii_only: true,

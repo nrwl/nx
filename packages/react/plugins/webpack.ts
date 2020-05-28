@@ -1,7 +1,12 @@
 import { Configuration } from 'webpack';
+import { updateBabelOptions } from '../src/utils/babel-utils';
 
 // Add React-specific configuration
 function getWebpackConfig(config: Configuration) {
+  const idx = config.module.rules.findIndex((r) => r.loader === 'babel-loader');
+  const babelRuleOptions = config.module.rules[idx].options as any;
+  updateBabelOptions(babelRuleOptions);
+
   config.module.rules.push(
     {
       test: /\.(png|jpe?g|gif|webp)$/,

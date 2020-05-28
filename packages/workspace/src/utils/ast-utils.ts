@@ -6,16 +6,16 @@
  * found in the LICENSE file at https://angular.io/license
  */
 import {
-  apply,
-  chain,
-  DirEntry,
-  forEach,
-  mergeWith,
-  noop,
   Rule,
-  SchematicContext,
-  Source,
   Tree,
+  SchematicContext,
+  DirEntry,
+  noop,
+  chain,
+  Source,
+  mergeWith,
+  apply,
+  forEach,
 } from '@angular-devkit/schematics';
 import * as ts from 'typescript';
 import * as stripJsonComments from 'strip-json-comments';
@@ -395,10 +395,6 @@ export function readJsonInTree<T = any>(host: Tree, path: string): T {
  * Method for utilizing the project graph in schematics
  */
 export function getProjectGraphFromHost(host: Tree): ProjectGraph {
-  return onlyWorkspaceProjects(getFullProjectGraphFromHost(host));
-}
-
-export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
   const workspaceJson = readJsonInTree(host, getWorkspacePath(host));
   const nxJson = readJsonInTree<NxJson>(host, '/nx.json');
 
@@ -429,12 +425,8 @@ export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
     );
   });
 
-  return createProjectGraph(
-    workspaceJson,
-    nxJson,
-    workspaceFiles,
-    fileRead,
-    false
+  return onlyWorkspaceProjects(
+    createProjectGraph(workspaceJson, nxJson, workspaceFiles, fileRead, false)
   );
 }
 

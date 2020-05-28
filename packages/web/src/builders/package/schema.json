@@ -37,7 +37,7 @@
     },
     "babelConfig": {
       "type": "string",
-      "description": "(deprecated) Path to a function which takes a babel config and returns an updated babel config"
+      "description": "Path to a function which takes a babel config and returns an updated babel config"
     },
     "umdName": {
       "type": "string",

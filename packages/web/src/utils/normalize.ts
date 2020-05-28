@@ -47,8 +47,6 @@ export function normalizeBuildOptions<T extends BuildBuilderOptions>(
 ): T {
   return {
     ...options,
-    root,
-    sourceRoot,
     main: resolve(root, options.main),
     outputPath: resolve(root, options.outputPath),
     tsConfig: resolve(root, options.tsConfig),

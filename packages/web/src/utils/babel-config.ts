@@ -1,5 +1,3 @@
-/** @deprecated We no longer use this function and will be removed in Nx 10. */
-// TODO(jack): Remove this in Nx 10
 export function createBabelConfig(
   context: string,
   esm: boolean,

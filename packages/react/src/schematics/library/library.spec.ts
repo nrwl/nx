@@ -1,6 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { NxJson, readJsonInTree } from '@nrwl/workspace';
+import { readJsonInTree } from '@nrwl/workspace';
+import { NxJson } from '@nrwl/workspace';
 import { runSchematic } from '../../utils/testing';
 
 describe('lib', () => {
@@ -384,7 +385,7 @@ describe('lib', () => {
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
-          external: ['react', 'react-dom', 'react-is', 'styled-components'],
+          external: ['react', 'react-dom', 'styled-components'],
         },
       });
     });
@@ -429,7 +430,7 @@ describe('lib', () => {
       });
     });
 
-    it('should add package.json and .babelrc', async () => {
+    it('should add package.json', async () => {
       const tree = await runSchematic(
         'lib',
         {
@@ -440,8 +441,8 @@ describe('lib', () => {
       );
 
       const packageJson = readJsonInTree(tree, '/libs/my-lib/package.json');
+
       expect(packageJson.name).toEqual('@proj/my-lib');
-      expect(tree.exists('/libs/my-lib/.babelrc'));
     });
   });
 
