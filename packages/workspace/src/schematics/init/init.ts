@@ -29,6 +29,7 @@ import {
   renameSyncInTree,
   renameDirSyncInTree,
   addInstallTask,
+  addDepsToPackageJson,
 } from '@nrwl/workspace';
 import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../workspace/workspace';
 import { JsonArray } from '@angular-devkit/core';
@@ -557,27 +558,70 @@ function checkCanConvertToWorkspace(options: Schema) {
   };
 }
 
+const createNxJson = (host: Tree) => {
+  const json = JSON.parse(host.read('angular.json').toString());
+  if (Object.keys(json.projects || {}).length !== 1) {
+    throw new Error(
+      `The schematic can only be used with Angular CLI workspaces with a single project.`
+    );
+  }
+  const name = Object.keys(json.projects)[0];
+  host.create(
+    'nx.json',
+    serializeJson({
+      npmScope: name,
+      implicitDependencies: {
+        'angular.json': '*',
+        'package.json': '*',
+        'tsconfig.json': '*',
+        'tslint.json': '*',
+        'nx.json': '*',
+      },
+      projects: {
+        [name]: {
+          tags: [],
+        },
+      },
+      tasksRunnerOptions: {
+        default: {
+          runner: '@nrwl/workspace/tasks-runners/default',
+          options: {
+            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
+          },
+        },
+      },
+    })
+  );
+};
+
 export default function (schema: Schema): Rule {
-  const options = {
-    ...schema,
-    npmScope: toFileName(schema.npmScope || schema.name),
-  };
-  const templateSource = apply(url('./files'), [
-    template({
-      tmpl: '',
-    }),
-  ]);
-  return chain([
-    checkCanConvertToWorkspace(options),
-    moveExistingFiles(options),
-    mergeWith(templateSource),
-    createAdditionalFiles(options),
-    updatePackageJson(),
-    updateAngularCLIJson(options),
-    updateTsLint(),
-    updateProjectTsLint(options),
-    updateTsConfig(options),
-    updateTsConfigsJson(options),
-    addInstallTask(options),
-  ]);
+  if (schema.preserveAngularCLILayout) {
+    return chain([
+      addDepsToPackageJson({}, { '@nrwl/workspace': nxVersion }),
+      createNxJson,
+    ]);
+  } else {
+    const options = {
+      ...schema,
+      npmScope: toFileName(schema.npmScope || schema.name),
+    };
+    const templateSource = apply(url('./files'), [
+      template({
+        tmpl: '',
+      }),
+    ]);
+    return chain([
+      checkCanConvertToWorkspace(options),
+      moveExistingFiles(options),
+      mergeWith(templateSource),
+      createAdditionalFiles(options),
+      updatePackageJson(),
+      updateAngularCLIJson(options),
+      updateTsLint(),
+      updateProjectTsLint(options),
+      updateTsConfig(options),
+      updateTsConfigsJson(options),
+      addInstallTask(options),
+    ]);
+  }
 }
