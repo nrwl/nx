@@ -293,22 +293,6 @@ forEachCli('angular', () => {
       ]);
     });
 
-    // TODO(FrozenPandaz): reenable after angular 9
-    xit('should convert a project with common libraries in the ecosystem', () => {
-      // create a new AngularCLI app
-      runNew();
-
-      // Add some Angular libraries
-      runNgAdd('add @angular/elements');
-      runNgAdd('add @angular/material');
-      runNgAdd('add @angular/pwa');
-      runNgAdd('add @ngrx/store');
-      runNgAdd('add @ngrx/effects');
-
-      // Add Nx
-      runNgAdd('add @nrwl/workspace --skip-install');
-    });
-
     it('should handle different types of errors', () => {
       // create a new AngularCLI app
       runNew();
@@ -352,6 +336,18 @@ forEachCli('angular', () => {
 
       // Put src back
       runCommand('mv src-bak src');
+    });
+
+    it('should support preserveAngularCLILayout', () => {
+      runNew('', false, false);
+      runNgAdd('add @nrwl/workspace --preserveAngularCLILayout');
+
+      const updatedAngularCLIJson = readJson('angular.json');
+      expect(updatedAngularCLIJson.projects.proj.root).toEqual('');
+      expect(updatedAngularCLIJson.projects.proj.sourceRoot).toEqual('src');
+
+      const output = runCLI('build');
+      expect(output).toContain(`> ng run proj:build`);
     });
   });
 });
