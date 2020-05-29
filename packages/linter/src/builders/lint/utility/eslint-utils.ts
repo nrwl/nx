@@ -33,7 +33,7 @@ export async function lint(
   const projectESLint = await loadESLint();
   const cli: CLIEngine = new projectESLint.CLIEngine({
     configFile: eslintConfigPath,
-    useEslintrc: false,
+    useEslintrc: true,
     fix: !!options.fix,
     cache: !!options.cache,
     cacheLocation: options.cacheLocation,

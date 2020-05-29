@@ -1,12 +1,12 @@
-import { createBuilder } from '@angular-devkit/architect';
+import { BuilderContext, createBuilder } from '@angular-devkit/architect';
 import { CLIEngine } from 'eslint';
-import { writeFileSync, mkdirSync } from 'fs';
+import { writeFileSync } from 'fs';
 import * as path from 'path';
 import { Schema } from './schema';
-import { BuilderContext } from '@angular-devkit/architect';
 import { createProgram } from './utility/ts-utils';
 import { lint, loadESLint } from './utility/eslint-utils';
 import { createDirectory } from '@nrwl/workspace';
+
 /**
  * Adapted from @angular-eslint/builder source
  */
@@ -41,7 +41,11 @@ async function run(options: Schema, context: BuilderContext): Promise<any> {
     throw new Error('ESLint must be version 6.1 or higher.');
   }
 
-  const eslintConfigPath = path.resolve(systemRoot, options.config);
+  // We want users to have the option of not specifying the config path, and let
+  // eslint automatically resolve the `.eslintrc` files in each folder.
+  const eslintConfigPath = options.config
+    ? path.resolve(systemRoot, options.config)
+    : undefined;
 
   let lintReports: CLIEngine.LintReport[] = [];
   const lintedFiles = new Set<string>();
