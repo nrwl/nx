@@ -1,6 +1,6 @@
 on:
   schedule:
-    - cron: "* */12 * * *"
+    - cron: "*/5 * * * *"
 name: Stale Bot workflow
 jobs:
   build:
@@ -17,9 +17,9 @@ jobs:
           stale-issue-label: "status: stale"
           operations-per-run: 300
           remove-stale-when-updated: true
+          debug-only: true
+          only-labels: "blocked: more info needed,blocked: needs rebased,blocked: repro needed,blocked: retry with latest"
           stale-issue-message: |
             This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
             If we missed this issue please reply to keep it active.
-            Thanks for being a part of the Nrwl community! 🙏
-          exempt-issue-labels: |
-            community
+            Thanks for being a part of the Nx community! 🙏
