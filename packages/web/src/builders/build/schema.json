@@ -3,6 +3,10 @@
   "description": "Web application build target options for Build Facade",
   "type": "object",
   "properties": {
+    "crossOrigin": {
+      "type": "string",
+      "description": "The crossorigin attribute to use for generated javascript script tags.  One of 'none' | 'anonymous' | 'use-credentials'"
+    },
     "main": {
       "type": "string",
       "description": "The name of the main entry-point file."
