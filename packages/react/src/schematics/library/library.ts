@@ -140,6 +140,13 @@ function addProject(options: NormalizedSchema): Rule {
           external,
           babelConfig: `@nrwl/react/plugins/bundle-babel`,
           rollupConfig: `@nrwl/react/plugins/bundle-rollup`,
+          assets: [
+            {
+              glob: 'README.md',
+              input: '.',
+              output: '.',
+            },
+          ],
         },
       };
     }

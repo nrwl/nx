@@ -104,6 +104,12 @@ forEachCli('nx', (cli) => {
       checkFilesExist(`dist/libs/${childLib}/assets/hello.txt`);
     });
 
+    it('should copy the README to dist', () => {
+      const output = runCLI(`build ${childLib2}`);
+      expect(output).toContain(`Bundle complete`);
+      checkFilesExist(`dist/libs/${childLib2}/README.md`);
+    });
+
     it('should properly add references to any dependency into the parent package.json', () => {
       const childLibOutput = runCLI(`build ${childLib}`);
       const childLib2Output = runCLI(`build ${childLib2}`);
