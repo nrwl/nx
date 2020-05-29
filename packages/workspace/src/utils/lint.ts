@@ -37,8 +37,10 @@ export function generateProjectLint(
     return {
       builder: '@nrwl/linter:lint',
       options: {
+        // No config option here because eslint resolve them automatically.
+        // By not specifying a config option we allow eslint to support
+        // nested configurations.
         linter: 'eslint',
-        config: projectRoot + '/.eslintrc',
         tsConfig: [tsConfigPath],
         exclude: ['**/node_modules/**', '!' + projectRoot + '/**'],
       },
