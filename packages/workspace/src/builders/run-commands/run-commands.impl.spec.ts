@@ -21,95 +21,138 @@ describe('Command Runner Builder', () => {
     await testArchitectHost.addBuilderFromPackage(join(__dirname, '../../..'));
   });
 
-  it('should error when no commands are given', async () => {
-    try {
-      const run = await architect.scheduleBuilder(
-        '@nrwl/workspace:run-commands',
-        {}
-      );
-      await run.output.toPromise();
-      fail('should throw');
-    } catch (e) {
-      expect(e.message).toContain(`Schema validation failed`);
-      expect(e.message).toContain(
-        `path "" should have required property 'commands'`
-      );
-    }
+  it('should run one command', async () => {
+    const f = fileSync().name;
+    const scheduleRun = await architect.scheduleBuilder(
+      '@nrwl/workspace:run-commands',
+      {
+        command: `echo 1 >> ${f}`,
+      }
+    );
+    //wait a tick for the serial runner to schedule the first task
+    await Promise.resolve();
+    const run = await scheduleRun;
+    const result = await run.result;
+
+    expect(result).toEqual(jasmine.objectContaining({ success: true }));
+    expect(readFile(f)).toEqual('1');
   });
 
-  it('should error when no command is given', async () => {
+  it('should interpolate provided --args', async () => {
+    const f = fileSync().name;
+    const scheduleRun = await architect.scheduleBuilder(
+      '@nrwl/workspace:run-commands',
+      {
+        command: `echo {args.key} >> ${f}`,
+        args: '--key=123',
+      }
+    );
+    //wait a tick for the serial runner to schedule the first task
+    await Promise.resolve();
+    const run = await scheduleRun;
+    const result = await run.result;
+
+    expect(result).toEqual(jasmine.objectContaining({ success: true }));
+    expect(readFile(f)).toEqual('123');
+  });
+
+  it('should interpolate all unknown args as if they were --args', async () => {
+    const f = fileSync().name;
+    const scheduleRun = await architect.scheduleBuilder(
+      '@nrwl/workspace:run-commands',
+      {
+        command: `echo {args.key} >> ${f}`,
+        key: 123,
+      }
+    );
+    //wait a tick for the serial runner to schedule the first task
+    await Promise.resolve();
+    const run = await scheduleRun;
+    const result = await run.result;
+
+    expect(result).toEqual(jasmine.objectContaining({ success: true }));
+    expect(readFile(f)).toEqual('123');
+  });
+
+  it('should add all args to the command if no interpolation in the command', async () => {
+    const exec = spyOn(require('child_process'), 'execSync').and.callThrough();
+
+    const scheduleRun = await architect.scheduleBuilder(
+      '@nrwl/workspace:run-commands',
+      {
+        command: `echo`,
+        a: 123,
+        b: 456,
+      }
+    );
+
+    //wait a tick for the serial runner to schedule the first task
+    await Promise.resolve();
+    const run = await scheduleRun;
+    const result = await run.result;
+
+    expect(exec).toHaveBeenCalledWith(`echo --a=123 --b=456`, {
+      stdio: [0, 1, 2],
+      cwd: undefined,
+      env: process.env,
+    });
+  });
+
+  it('should throw when invalid args', async () => {
     try {
       const run = await architect.scheduleBuilder(
         '@nrwl/workspace:run-commands',
         {
-          commands: [{}],
+          command: `echo {args.key}`,
+          args: 'key=value',
         }
       );
       await run.result;
-      fail('should throw');
     } catch (e) {
-      expect(e.message).toContain(`Schema validation failed`);
-      expect(e.message).toContain(
-        `path ".commands[0]" should have required property 'command'`
-      );
+      expect(e.message).toEqual('Invalid args: key=value');
     }
   });
 
-  describe('no readyCondition', () => {
-    it('should run commands serially', async () => {
-      const f = fileSync().name;
-      const exec = spyOn(require('child_process'), 'exec').and.callThrough();
-      const scheduleRun = await architect.scheduleBuilder(
-        '@nrwl/workspace:run-commands',
-        {
-          commands: [
-            {
-              command: `sleep 0.2 && echo 1 >> ${f}`,
-            },
-            {
-              command: `sleep 0.1 && echo 2 >> ${f}`,
-            },
-          ],
-          parallel: false,
-        }
-      );
-      //wait a tick for the serial runner to schedule the first task
-      await Promise.resolve();
-      const processesCreated = exec.calls.count();
-      expect(processesCreated).toBe(1);
-      const run = await scheduleRun;
-      const result = await run.result;
+  it('should run commands serially', async () => {
+    const f = fileSync().name;
+    const scheduleRun = await architect.scheduleBuilder(
+      '@nrwl/workspace:run-commands',
+      {
+        commands: [`sleep 0.2 && echo 1 >> ${f}`, `echo 2 >> ${f}`],
+        parallel: false,
+      }
+    );
+    //wait a tick for the serial runner to schedule the first task
+    await Promise.resolve();
+    const run = await scheduleRun;
+    const result = await run.result;
 
-      expect(result).toEqual(jasmine.objectContaining({ success: true }));
-      expect(readFile(f)).toEqual('12');
-    });
+    expect(result).toEqual(jasmine.objectContaining({ success: true }));
+    expect(readFile(f)).toEqual('12');
+  });
 
-    it('should run commands in parallel', async () => {
-      const f = fileSync().name;
-      const exec = spyOn(require('child_process'), 'exec').and.callThrough();
-      const scheduleRun = await architect.scheduleBuilder(
-        '@nrwl/workspace:run-commands',
-        {
-          commands: [
-            {
-              command: `echo 1 >> ${f}`,
-            },
-            {
-              command: `echo 2 >> ${f}`,
-            },
-          ],
-          parallel: true,
-        }
-      );
-      const processesCreated = exec.calls.count();
-      expect(processesCreated).toBe(2);
-      const run = await scheduleRun;
-      const result = await run.result;
-      expect(result).toEqual(jasmine.objectContaining({ success: true }));
-      const contents = readFile(f);
-      expect(contents).toContain(1);
-      expect(contents).toContain(2);
-    });
+  it('should run commands in parallel', async () => {
+    const f = fileSync().name;
+    const scheduleRun = await architect.scheduleBuilder(
+      '@nrwl/workspace:run-commands',
+      {
+        commands: [
+          {
+            command: `echo 1 >> ${f}`,
+          },
+          {
+            command: `echo 2 >> ${f}`,
+          },
+        ],
+        parallel: true,
+      }
+    );
+    const run = await scheduleRun;
+    const result = await run.result;
+    expect(result).toEqual(jasmine.objectContaining({ success: true }));
+    const contents = readFile(f);
+    expect(contents).toContain(1);
+    expect(contents).toContain(2);
   });
 
   describe('readyWhen', () => {
@@ -127,7 +170,7 @@ describe('Command Runner Builder', () => {
         fail('should throw');
       } catch (e) {
         expect(e).toEqual(
-          `ERROR: Bad builder config for @nrwl/run-command - "readyWhen" can only be used when parallel=true`
+          `ERROR: Bad builder config for @nrwl/run-commands - "readyWhen" can only be used when parallel=true`
         );
       }
     });
@@ -162,70 +205,22 @@ describe('Command Runner Builder', () => {
 
   it('should stop execution when a command fails', async () => {
     const f = fileSync().name;
-    const run = await architect.scheduleBuilder(
-      '@nrwl/workspace:run-commands',
-      {
-        commands: [
-          {
-            command: `echo 1 >> ${f} && exit 1`,
-          },
-          {
-            command: `echo 2 >> ${f}`,
-          },
-        ],
-        parallel: false,
-      }
-    );
-
-    const result = await run.result;
-
-    expect(result).toEqual(jasmine.objectContaining({ success: false }));
-    expect(readFile(f)).toEqual('1');
-  });
-
-  it('should throw when invalid args', async () => {
-    const f = fileSync().name;
 
     try {
       const run = await architect.scheduleBuilder(
         '@nrwl/workspace:run-commands',
         {
-          commands: [
-            {
-              command: `echo {args.key} >> ${f}`,
-            },
-          ],
-          args: 'key=value',
+          commands: [`echo 1 >> ${f} && exit 1`, `echo 2 >> ${f}`],
+          parallel: false,
         }
       );
       await run.result;
-    } catch (e) {
-      expect(e.message).toEqual('Invalid args: key=value');
-    }
-  });
-
-  it('should enable parameter substitution', async () => {
-    const f = fileSync().name;
-    const run = await architect.scheduleBuilder(
-      '@nrwl/workspace:run-commands',
-      {
-        commands: [
-          {
-            command: `echo {args.key} >> ${f}`,
-          },
-        ],
-        args: '--key=value',
-      }
-    );
-
-    const result = await run.result;
-
-    expect(result).toEqual(jasmine.objectContaining({ success: true }));
-    expect(readFile(f)).toEqual('value');
+    } catch (e) {}
+    expect(readFile(f)).toEqual('1');
   });
 
   describe('--color', () => {
-    it('should set FORCE_COLOR=true', async () => {
+    it('should not set FORCE_COLOR=true', async () => {
       const exec = spyOn(require('child_process'), 'exec').and.callThrough();
       const run = await architect.scheduleBuilder(
         '@nrwl/workspace:run-commands',
@@ -242,11 +237,11 @@ describe('Command Runner Builder', () => {
 
       expect(exec).toHaveBeenCalledWith(`echo 'Hello World'`, {
         maxBuffer: TEN_MEGABYTES,
-        env: { ...process.env, FORCE_COLOR: `false` },
+        env: { ...process.env },
       });
     });
 
-    it('should set FORCE_COLOR=false when running with --color', async () => {
+    it('should set FORCE_COLOR=true when running with --color', async () => {
       const exec = spyOn(require('child_process'), 'exec').and.callThrough();
       const run = await architect.scheduleBuilder(
         '@nrwl/workspace:run-commands',

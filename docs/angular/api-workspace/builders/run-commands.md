@@ -16,11 +16,7 @@ Builder properties can be configured in angular.json when defining the builder, 
         "ls-project-root": {
             "builder": "@nrwl/workspace:run-commands",
             "options": {
-                "commands": [
-                    {
-                    "command": "ls apps/frontend/src"
-                    }
-                ]
+                "command": "ls apps/frontend/src"
             }
         }
     }
@@ -46,15 +42,9 @@ You can run them sequentially by setting `parallel: false`:
     "builder": "@nrwl/workspace:run-commands",
     "options": {
         "commands": [
-            {
-            "command": "mkdir -p scripts"
-            },
-            {
-            "command": "touch scripts/{args.name}.sh"
-            },
-            {
-            "command": "chmod +x scripts/{args.name}.sh"
-            }
+          "mkdir -p scripts",
+          "touch scripts/{args.name}.sh",
+          "chmod +x scripts/{args.name}.sh"
         ],
         "cwd": "apps/frontend",
         "parallel": false
@@ -70,7 +60,11 @@ We run the above with:
 nx run frontend:create-script --args="--name=example"
 ```
 
-Notice the `--args="--name=example"` syntax: we can send custom arguments that will be interpolated into our commands via `{args.name}`
+or simply with:
+
+```bash
+nx run frontend:create-script --name=example
+```
 
 ##### Custom **done** conditions
 
@@ -80,8 +74,8 @@ Normally, `run-commands` considers the commands done when all of them have finis
 "finish-when-ready": {
     "builder": "@nrwl/workspace:run-commands",
     "options": {
-        "commands": [
-            { "command": "echo 'READY' && sleep 5 && echo 'FINISHED'" }
+        "command": [
+            "echo 'READY' && sleep 5 && echo 'FINISHED'"
         ],
         "readyWhen": "READY"
     }
@@ -112,11 +106,7 @@ nx affected --target=generate-docs
         "generate-docs": {
             "builder": "@nrwl/workspace:run-commands",
             "options": {
-                "commands": [
-                    {
-                    "command": "npx compodoc -p apps/frontend/tsconfig.app.json"
-                    }
-                ]
+                "command": "npx compodoc -p apps/frontend/tsconfig.app.json"
             }
         }
     }
@@ -127,11 +117,7 @@ nx affected --target=generate-docs
         "generate-docs": {
             "builder": "@nrwl/workspace:run-commands",
             "options": {
-                "commands": [
-                    {
-                    "command": "npx compodoc -p apps/api/tsconfig.app.json"
-                    }
-                ]
+                "command":  "npx compodoc -p apps/api/tsconfig.app.json"
             }
         }
     }
@@ -154,15 +140,15 @@ Type: `boolean`
 
 Use colors when showing output of command
 
-### commands
-
-Type: `object[]`
-
-#### command
+### command
 
 Type: `string`
 
 Command to run in child process
+
+### commands
+
+Type: `array`
 
 ### cwd
 
