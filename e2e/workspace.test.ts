@@ -138,6 +138,60 @@ forEachCli((cliName) => {
       expect(buildConfig).toContain(`run ${libA}:build:production`);
       expect(buildConfig).toContain('Running target "build" succeeded');
     }, 1000000);
+
+    it('should run only failed projects', () => {
+      ensureProject();
+      const myapp = uniq('myapp');
+      const myapp2 = uniq('myapp2');
+      runCLI(`generate @nrwl/angular:app ${myapp}`);
+      runCLI(`generate @nrwl/angular:app ${myapp2}`);
+
+      // set broken test for myapp
+      updateFile(
+        `apps/${myapp}/src/app/app.component.spec.ts`,
+        `
+              describe('sample test', () => {
+                it('should test', () => {
+                  expect(1).toEqual(2);
+                });
+              });
+            `
+      );
+
+      const failedTests = runCLI(`run-many --target=test --all`, {
+        silenceError: true,
+      });
+      expect(failedTests).toContain(`Running target test for projects:`);
+      expect(failedTests).toContain(`- ${myapp}`);
+      expect(failedTests).toContain(`- ${myapp2}`);
+      expect(failedTests).toContain(`Failed projects:`);
+      expect(readJson('dist/.nx-results')).toEqual({
+        command: 'test',
+        results: {
+          [myapp]: false,
+          [myapp2]: true,
+        },
+      });
+
+      // Fix failing Unit Test
+      updateFile(
+        `apps/${myapp}/src/app/app.component.spec.ts`,
+        readFile(`apps/${myapp}/src/app/app.component.spec.ts`).replace(
+          '.toEqual(2)',
+          '.toEqual(1)'
+        )
+      );
+
+      const isolatedTests = runCLI(
+        `run-many --target=test --all --only-failed`
+      );
+      expect(isolatedTests).toContain(`Running target test for projects`);
+      expect(isolatedTests).toContain(`- ${myapp}`);
+      expect(isolatedTests).not.toContain(`- ${myapp2}`);
+
+      const interpolatedTests = runCLI(`run-many --target=test --all`);
+      expect(interpolatedTests).toContain(`Running target \"test\" succeeded`);
+    }, 1000000);
   });
 
   describe('affected:*', () => {

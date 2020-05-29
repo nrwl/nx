@@ -26,8 +26,11 @@ export function runMany(parsedArgs: yargs.Arguments): void {
     projectMap[proj.name] = proj;
   });
   const env = readEnvironment(nxArgs.target, projectMap);
+  const filteredProjects = Object.values(projects).filter(
+    (n) => !parsedArgs.onlyFailed || !env.workspaceResults.getResult(n.name)
+  );
   runCommand(
-    projects,
+    filteredProjects,
     projectGraph,
     env,
     nxArgs,
