@@ -7,28 +7,22 @@ import {
 import { JsonObject } from '@angular-devkit/core';
 import { from, Observable, of } from 'rxjs';
 import { catchError, last, switchMap, tap } from 'rxjs/operators';
-import { runRollup } from './run-rollup';
-import { createBabelConfig as _createBabelConfig } from '../../utils/babel-config';
+import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import * as autoprefixer from 'autoprefixer';
 import * as rollup from 'rollup';
-import * as babel from 'rollup-plugin-babel';
 import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import * as postcss from 'rollup-plugin-postcss';
 import * as filesize from 'rollup-plugin-filesize';
 import * as localResolve from 'rollup-plugin-local-resolve';
-import { PackageBuilderOptions } from '../../utils/types';
-import {
-  normalizePackageOptions,
-  NormalizedBundleBuilderOptions,
-  NormalizedCopyAssetOption,
-} from '../../utils/normalize';
 import { toClassName } from '@nrwl/workspace/src/utils/name-utils';
+import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { BuildResult } from '@angular-devkit/build-webpack';
 import {
   readJsonFile,
   writeJsonFile,
 } from '@nrwl/workspace/src/utils/fileutils';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
@@ -36,8 +30,15 @@ import {
   DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
+import { PackageBuilderOptions } from '../../utils/types';
+import { runRollup } from './run-rollup';
+import {
+  NormalizedBundleBuilderOptions,
+  NormalizedCopyAssetOption,
+  normalizePackageOptions,
+} from '../../utils/normalize';
 import { getSourceRoot } from '../../utils/source-root';
-import { NodeJsSyncHost } from '@angular-devkit/core/node';
+import { createBabelConfig } from '../../utils/babel-config';
 
 // These use require because the ES import isn't correct.
 const resolve = require('@rollup/plugin-node-resolve');
@@ -88,7 +89,8 @@ export function run(
         options,
         dependencies,
         context,
-        packageJson
+        packageJson,
+        sourceRoot
       );
 
       if (options.watch) {
@@ -155,7 +157,8 @@ function createRollupOptions(
   options: NormalizedBundleBuilderOptions,
   dependencies: DependentBuildableProjectNode[],
   context: BuilderContext,
-  packageJson: any
+  packageJson: any,
+  sourceRoot: string
 ): rollup.InputOptions {
   const compilerOptionPaths = computeCompilerOptionsPaths(
     options.tsConfig,
@@ -196,11 +199,20 @@ function createRollupOptions(
       preferBuiltins: true,
       extensions: fileExtensions,
     }),
-    babel({
-      ...createBabelConfig(options, options.projectRoot),
+    getBabelInputPlugin({
+      // TODO(jack): Remove this in Nx 10
+      ...legacyCreateBabelConfig(options, options.projectRoot),
+
+      cwd: join(context.workspaceRoot, sourceRoot),
+      rootMode: 'upward',
+      babelrc: true,
       extensions: fileExtensions,
-      externalHelpers: false,
-      exclude: 'node_modules/**',
+      babelHelpers: 'bundled',
+      exclude: /node_modules/,
+      plugins: [
+        'babel-plugin-transform-async-to-promises',
+        ['@babel/plugin-transform-regenerator', { async: false }],
+      ],
     }),
     commonjs(),
     filesize(),
@@ -237,45 +249,46 @@ function createRollupOptions(
     : rollupConfig;
 }
 
-function createBabelConfig(
+function legacyCreateBabelConfig(
   options: PackageBuilderOptions,
   projectRoot: string
 ) {
-  let babelConfig: any = _createBabelConfig(projectRoot, false, false);
   if (options.babelConfig) {
+    let babelConfig: any = createBabelConfig(projectRoot, false, false);
     babelConfig = require(options.babelConfig)(babelConfig, options);
+    // Ensure async functions are transformed to promises properly.
+    upsert(
+      'plugins',
+      'babel-plugin-transform-async-to-promises',
+      null,
+      babelConfig
+    );
+    upsert(
+      'plugins',
+      '@babel/plugin-transform-regenerator',
+      { async: false },
+      babelConfig
+    );
+  } else {
+    return {};
   }
-  // Ensure async functions are transformed to promises properly.
-  upsert(
-    'plugins',
-    'babel-plugin-transform-async-to-promises',
-    null,
-    babelConfig
-  );
-  upsert(
-    'plugins',
-    '@babel/plugin-transform-regenerator',
-    { async: false },
-    babelConfig
-  );
-  return babelConfig;
-}
 
-function upsert(
-  type: 'presets' | 'plugins',
-  pluginOrPreset: string,
-  opts: null | JsonObject,
-  config: any
-) {
-  if (
-    !config[type].some(
-      (p) =>
-        (Array.isArray(p) && p[0].indexOf(pluginOrPreset) !== -1) ||
-        p.indexOf(pluginOrPreset) !== -1
-    )
+  function upsert(
+    type: 'presets' | 'plugins',
+    pluginOrPreset: string,
+    opts: null | JsonObject,
+    config: any
   ) {
-    const fullPath = require.resolve(pluginOrPreset);
-    config[type] = config[type].concat([opts ? [fullPath, opts] : fullPath]);
+    if (
+      !config[type].some(
+        (p) =>
+          (Array.isArray(p) && p[0].indexOf(pluginOrPreset) !== -1) ||
+          p.indexOf(pluginOrPreset) !== -1
+      )
+    ) {
+      const fullPath = require.resolve(pluginOrPreset);
+      config[type] = config[type].concat([opts ? [fullPath, opts] : fullPath]);
+    }
   }
 }
 

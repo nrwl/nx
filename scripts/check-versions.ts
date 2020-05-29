@@ -59,8 +59,6 @@ function checkFiles(files: string[]) {
             r.package
           )} has new version ${chalk.bold(r.latest)} (current: ${r.prev})`
         );
-      } else {
-        console.log(`${logContext} ✔️  ${r.package} is update to date`);
       }
     });
   });

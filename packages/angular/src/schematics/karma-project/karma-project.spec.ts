@@ -135,7 +135,6 @@ module.exports = function(config) {
         appTree
       );
       const testTs = resultTree.read('libs/lib1/src/test.ts').toString();
-      expect(testTs).toContain("import 'core-js/es7/reflect';");
       expect(testTs).toContain("import 'zone.js/dist/zone';");
     });
   });
@@ -199,7 +198,6 @@ module.exports = function(config) {
         appTree
       );
       const testTs = resultTree.read('apps/app1/src/test.ts').toString();
-      expect(testTs).not.toContain("import 'core-js/es7/reflect';");
       expect(testTs).not.toContain("import 'zone.js/dist/zone';");
     });
   });

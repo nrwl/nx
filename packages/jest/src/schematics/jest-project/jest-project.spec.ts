@@ -133,38 +133,6 @@ describe('jestProject', () => {
     });
   });
 
-  describe('--babelJest', () => {
-    it('should have a babel config when true', async () => {
-      const resultTree = await runSchematic(
-        'jest-project',
-        {
-          project: 'lib1',
-          setupFile: 'none',
-          babelJest: true,
-        },
-        appTree
-      );
-      expect(
-        resultTree.exists('/libs/lib1/babel-jest.config.json')
-      ).toBeTruthy();
-    });
-
-    it('should NOT have a babel config when false', async () => {
-      const resultTree = await runSchematic(
-        'jest-project',
-        {
-          project: 'lib1',
-          setupFile: 'none',
-          babelJest: false,
-        },
-        appTree
-      );
-      expect(
-        resultTree.exists('/libs/lib1/babel-jest.config.json')
-      ).toBeFalsy();
-    });
-  });
-
   describe('--setup-file', () => {
     it('should generate src/test-setup.ts', async () => {
       const resultTree = await runSchematic(

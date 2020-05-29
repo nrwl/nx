@@ -1,12 +1,13 @@
 import { getDevServerConfig } from './devserver.config';
 import { Logger } from '@angular-devkit/core/src/logger';
-jest.mock('tsconfig-paths-webpack-plugin');
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import * as ts from 'typescript';
 import * as fs from 'fs';
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { WebDevServerOptions } from '../builders/dev-server/dev-server.impl';
 import { join } from 'path';
+
+jest.mock('tsconfig-paths-webpack-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 describe('getDevServerConfig', () => {
@@ -18,6 +19,8 @@ describe('getDevServerConfig', () => {
   let sourceRoot: string;
 
   beforeEach(() => {
+    root = join(__dirname, '../../../..');
+    sourceRoot = join(root, 'apps/app');
     buildInput = {
       main: 'main.ts',
       index: 'index.html',
@@ -39,9 +42,9 @@ describe('getDevServerConfig', () => {
       outputPath: 'dist',
       tsConfig: 'tsconfig.json',
       fileReplacements: [],
+      root,
+      sourceRoot,
     };
-    root = join(__dirname, '../../../..');
-    sourceRoot = join(root, 'apps/app');
 
     serveInput = {
       host: 'localhost',

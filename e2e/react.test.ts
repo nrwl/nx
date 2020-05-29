@@ -199,7 +199,7 @@ forEachCli((currentCLIName) => {
       );
     }, 120000);
 
-    xit('should be able to use babel-jest', async () => {
+    it('should be able to use babel-jest', async () => {
       ensureProject();
       const appName = uniq('app');
       const libName = uniq('lib');
@@ -209,11 +209,6 @@ forEachCli((currentCLIName) => {
       );
       runCLI(
         `generate @nrwl/react:lib ${libName} --no-interactive --babelJest`
-      );
-
-      checkFilesExist(
-        `apps/${appName}/babel-jest.config.json`,
-        `libs/${libName}/babel-jest.config.json`
       );
 
       const appTestResults = await runCLIAsync(`test ${appName}`);
@@ -308,7 +303,7 @@ forEachCli((currentCLIName) => {
       }
       checkFilesExist(...filesToCheck);
       expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
-        'var App = () => {'
+        'const App = () =>'
       );
       runCLI(`build ${appName} --prod --output-hashing none`);
       filesToCheck = [
