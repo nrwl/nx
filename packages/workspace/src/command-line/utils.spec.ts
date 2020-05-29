@@ -16,7 +16,6 @@ describe('splitArgs', () => {
     ).toEqual({
       base: 'sha1',
       head: 'sha2',
-      projects: [],
       skipNxCache: false,
     });
   });
@@ -33,7 +32,6 @@ describe('splitArgs', () => {
       ).nxArgs
     ).toEqual({
       base: 'master',
-      projects: [],
       skipNxCache: false,
     });
   });
@@ -55,7 +53,7 @@ describe('splitArgs', () => {
     });
   });
 
-  it('should add other args to nx args', () => {
+  it('should set base and head in the affected mode', () => {
     const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
       {
         notNxArg: true,
@@ -68,12 +66,30 @@ describe('splitArgs', () => {
     expect(nxArgs).toEqual({
       base: 'sha1',
       head: 'sha2',
-      projects: [],
       skipNxCache: false,
     });
     expect(overrides).toEqual({
       notNxArg: true,
       override: true,
+    });
+  });
+
+  it('should not set base and head in the run-one mode', () => {
+    const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
+      {
+        notNxArg: true,
+        _: ['--exclude=file'],
+        $0: '',
+      },
+      'run-one'
+    );
+
+    expect(nxArgs).toEqual({
+      skipNxCache: false,
+    });
+    expect(overrides).toEqual({
+      notNxArg: true,
+      exclude: 'file',
     });
   });
 });

@@ -16,7 +16,6 @@ export function runOne(opts: {
       ...opts.parsedArgs,
       configuration: opts.configuration,
       target: opts.target,
-      _: [],
     },
     'run-one'
   );
