@@ -1,11 +1,5 @@
 # Analyzing & Visualizing Workspaces
 
-To be able to support the monorepo-style development, the tools must know how different projects in your workspace depend on each other. Nx uses advanced code analysis to construct this dependency graph.
+To be able to support the monorepo-style development, the tools must know how different projects in your workspace depend on each other. Nx uses advanced code analysis to construct this dependency graph. And it gives you a way to explore it:
 
-You can visualize it by running `nx dep-graph`.
-
-![dependency-graph](/shared/dependency-graph.png)
-
-You can also visualize what is affected by your change, by using the `nx affected:dep-graph` command.
-
-![dependency-graph-affected](/shared/affected.png)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/cMZ-ReC-jWU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>

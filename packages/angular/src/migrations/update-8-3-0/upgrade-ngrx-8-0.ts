@@ -4,15 +4,15 @@ import {
   readJsonInTree,
   formatFiles,
   updateJsonInTree,
-  checkAndCleanWithSemver
+  checkAndCleanWithSemver,
+  addInstallTask,
 } from '@nrwl/workspace';
-import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { gt } from 'semver';
 
 function updateCLI() {
   const tasks: TaskId[] = [];
   const rule = chain([
-    updateJsonInTree('package.json', json => {
+    updateJsonInTree('package.json', (json) => {
       json.devDependencies = json.devDependencies || {};
       const cliVersion = json.devDependencies['@angular/cli'];
       const cleanCliVersion = checkAndCleanWithSemver(
@@ -39,9 +39,7 @@ function updateCLI() {
 
       return json;
     }),
-    (host, context) => {
-      tasks.push(context.addTask(new NodePackageInstallTask()));
-    }
+    addInstallTask(),
   ]);
 
   return { rule, tasks };
@@ -54,7 +52,7 @@ function updateNgrx(updateDeps: TaskId[]) {
     if (dependencies && dependencies['@ngrx/store']) {
       return chain([
         addUpdateTask('@ngrx/store', '8.1.0', updateDeps),
-        formatFiles()
+        formatFiles(),
       ]);
     }
 
@@ -62,7 +60,7 @@ function updateNgrx(updateDeps: TaskId[]) {
   };
 }
 
-export default function() {
+export default function () {
   const { rule: updateCLIRule, tasks } = updateCLI();
-  return chain([updateCLIRule, updateNgrx(tasks)]);
+  return chain([updateCLIRule, updateNgrx(tasks), formatFiles()]);
 }

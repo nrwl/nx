@@ -50,6 +50,16 @@ Type: `string`
 
 The application project to add the library route to
 
+### babelJest
+
+Alias(es): babel-jest
+
+Default: `false`
+
+Type: `boolean`
+
+Use babel-jest instead of ts-jest
+
 ### component
 
 Default: `true`
@@ -102,9 +112,11 @@ Use pascal case component file name (e.g. App.tsx)
 
 ### publishable
 
+Alias(es): buildable
+
 Type: `boolean`
 
-Create a publishable library. A "build" architect will be added for this project the workspace configuration.
+Create a buildable library.
 
 ### routing
 

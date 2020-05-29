@@ -1,15 +1,13 @@
 import {
   checkFilesExist,
   cleanup,
-  copyMissingPackages,
   readJson,
   runCLI,
-  runCLIAsync,
   runCommand,
   runNew,
   updateFile,
   forEachCli,
-  runNgAdd
+  runNgAdd,
 } from './utils';
 
 forEachCli('angular', () => {
@@ -43,16 +41,15 @@ forEachCli('angular', () => {
       // update angular-cli.json
       const angularCLIJson = readJson('angular.json');
       angularCLIJson.projects.proj.architect.build.options.scripts = angularCLIJson.projects.proj.architect.test.options.scripts = [
-        'src/scripts.ts'
+        'src/scripts.ts',
       ];
       angularCLIJson.projects.proj.architect.test.options.styles = [
-        'src/styles.css'
+        'src/styles.css',
       ];
       updateFile('angular.json', JSON.stringify(angularCLIJson, null, 2));
 
       // run the command
-      runNgAdd('add @nrwl/workspace --npmScope projscope --skip-install');
-      copyMissingPackages();
+      runNgAdd('add @nrwl/workspace --npmScope projscope');
 
       // check that prettier config exits and that files have been moved!
       checkFilesExist(
@@ -66,7 +63,7 @@ forEachCli('angular', () => {
         'nrwl.angular-console',
         'angular.ng-template',
         'ms-vscode.vscode-typescript-tslint-plugin',
-        'esbenp.prettier-vscode'
+        'esbenp.prettier-vscode',
       ]);
 
       // check that package.json got merged
@@ -95,7 +92,7 @@ forEachCli('angular', () => {
         'update:check': 'ng update',
         'dep-graph': 'nx dep-graph',
         'workspace-schematic': 'nx workspace-schematic',
-        help: 'nx help'
+        help: 'nx help',
       });
       expect(
         updatedPackageJson.devDependencies['@nrwl/workspace']
@@ -110,16 +107,16 @@ forEachCli('angular', () => {
           'package.json': '*',
           'tslint.json': '*',
           'tsconfig.json': '*',
-          'nx.json': '*'
+          'nx.json': '*',
         },
         projects: {
           proj: {
-            tags: []
+            tags: [],
           },
           'proj-e2e': {
-            tags: []
-          }
-        }
+            tags: [],
+          },
+        },
       });
 
       // check if angular-cli.json get merged
@@ -140,27 +137,27 @@ forEachCli('angular', () => {
           tsConfig: 'apps/proj/tsconfig.app.json',
           assets: ['apps/proj/src/favicon.ico', 'apps/proj/src/assets'],
           styles: ['apps/proj/src/styles.css'],
-          scripts: ['apps/proj/src/scripts.ts']
+          scripts: ['apps/proj/src/scripts.ts'],
         },
         configurations: {
           production: {
             fileReplacements: [
               {
                 replace: 'apps/proj/src/environments/environment.ts',
-                with: 'apps/proj/src/environments/environment.prod.ts'
-              }
+                with: 'apps/proj/src/environments/environment.prod.ts',
+              },
             ],
             budgets: [
               {
                 maximumError: '5mb',
                 maximumWarning: '2mb',
-                type: 'initial'
+                type: 'initial',
               },
               {
                 maximumError: '10kb',
                 maximumWarning: '6kb',
-                type: 'anyComponentStyle'
-              }
+                type: 'anyComponentStyle',
+              },
             ],
             optimization: true,
             outputHashing: 'all',
@@ -169,20 +166,20 @@ forEachCli('angular', () => {
             namedChunks: false,
             extractLicenses: true,
             vendorChunk: false,
-            buildOptimizer: true
-          }
-        }
+            buildOptimizer: true,
+          },
+        },
       });
       expect(updatedAngularCLIJson.projects.proj.architect.serve).toEqual({
         builder: '@angular-devkit/build-angular:dev-server',
         options: {
-          browserTarget: 'proj:build'
+          browserTarget: 'proj:build',
         },
         configurations: {
           production: {
-            browserTarget: 'proj:build:production'
-          }
-        }
+            browserTarget: 'proj:build:production',
+          },
+        },
       });
 
       expect(updatedAngularCLIJson.projects.proj.architect.test).toEqual({
@@ -194,8 +191,8 @@ forEachCli('angular', () => {
           karmaConfig: 'apps/proj/karma.conf.js',
           styles: ['apps/proj/src/styles.css'],
           scripts: ['apps/proj/src/scripts.ts'],
-          assets: ['apps/proj/src/favicon.ico', 'apps/proj/src/assets']
-        }
+          assets: ['apps/proj/src/favicon.ico', 'apps/proj/src/assets'],
+        },
       });
 
       expect(updatedAngularCLIJson.projects.proj.architect.lint).toEqual({
@@ -203,10 +200,10 @@ forEachCli('angular', () => {
         options: {
           tsConfig: [
             'apps/proj/tsconfig.app.json',
-            'apps/proj/tsconfig.spec.json'
+            'apps/proj/tsconfig.spec.json',
           ],
-          exclude: ['**/node_modules/**']
-        }
+          exclude: ['**/node_modules/**'],
+        },
       });
 
       expect(updatedAngularCLIJson.projects['proj-e2e'].root).toEqual(
@@ -216,21 +213,21 @@ forEachCli('angular', () => {
         builder: '@angular-devkit/build-angular:protractor',
         configurations: {
           production: {
-            devServerTarget: 'proj:serve:production'
-          }
+            devServerTarget: 'proj:serve:production',
+          },
         },
         options: {
           protractorConfig: 'apps/proj-e2e/protractor.conf.js',
-          devServerTarget: 'proj:serve'
-        }
+          devServerTarget: 'proj:serve',
+        },
       });
       expect(updatedAngularCLIJson.projects['proj-e2e'].architect.lint).toEqual(
         {
           builder: '@angular-devkit/build-angular:tslint',
           options: {
             tsConfig: 'apps/proj-e2e/tsconfig.json',
-            exclude: ['**/node_modules/**']
-          }
+            exclude: ['**/node_modules/**'],
+          },
         }
       );
 
@@ -239,8 +236,8 @@ forEachCli('angular', () => {
         true,
         {
           allow: [],
-          depConstraints: [{ sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }]
-        }
+          depConstraints: [{ sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }],
+        },
       ]);
 
       runCLI('build --prod --outputHashing none');
@@ -267,7 +264,7 @@ forEachCli('angular', () => {
       updateFile(
         '.vscode/extensions.json',
         JSON.stringify({
-          recommendations: ['eamodio.gitlens', 'angular.ng-template']
+          recommendations: ['eamodio.gitlens', 'angular.ng-template'],
         })
       );
       // run the command
@@ -292,24 +289,8 @@ forEachCli('angular', () => {
         'angular.ng-template',
         'nrwl.angular-console',
         'ms-vscode.vscode-typescript-tslint-plugin',
-        'esbenp.prettier-vscode'
+        'esbenp.prettier-vscode',
       ]);
-    });
-
-    // TODO(FrozenPandaz): reenable after angular 9
-    xit('should convert a project with common libraries in the ecosystem', () => {
-      // create a new AngularCLI app
-      runNew();
-
-      // Add some Angular libraries
-      runNgAdd('add @angular/elements');
-      runNgAdd('add @angular/material');
-      runNgAdd('add @angular/pwa');
-      runNgAdd('add @ngrx/store');
-      runNgAdd('add @ngrx/effects');
-
-      // Add Nx
-      runNgAdd('add @nrwl/workspace --skip-install');
     });
 
     it('should handle different types of errors', () => {
@@ -355,6 +336,18 @@ forEachCli('angular', () => {
 
       // Put src back
       runCommand('mv src-bak src');
+    });
+
+    it('should support preserveAngularCLILayout', () => {
+      runNew('', false, false);
+      runNgAdd('add @nrwl/workspace --preserveAngularCLILayout');
+
+      const updatedAngularCLIJson = readJson('angular.json');
+      expect(updatedAngularCLIJson.projects.proj.root).toEqual('');
+      expect(updatedAngularCLIJson.projects.proj.sourceRoot).toEqual('src');
+
+      const output = runCLI('build');
+      expect(output).toContain(`> ng run proj:build`);
     });
   });
 });

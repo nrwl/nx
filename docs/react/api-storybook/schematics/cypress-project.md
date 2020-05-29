@@ -32,6 +32,16 @@ Type: `boolean`
 
 Generate JavaScript files rather than TypeScript files
 
+### linter
+
+Default: `tslint`
+
+Type: `string`
+
+Possible values: `eslint`, `tslint`
+
+The tool to use for running lint checks.
+
 ### name
 
 Type: `string`

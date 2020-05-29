@@ -4,11 +4,12 @@ import {
   ensureProject,
   forEachCli,
   readFile,
+  readJson,
   runCLI,
   runCLIAsync,
   supportUi,
   uniq,
-  updateFile
+  updateFile,
 } from './utils';
 
 forEachCli('nx', () => {
@@ -23,9 +24,9 @@ forEachCli('nx', () => {
         '/external-api': {
           target: 'http://localhost:4200',
           pathRewrite: {
-            '^/external-api/hello': '/api/hello'
-          }
-        }
+            '^/external-api/hello': '/api/hello',
+          },
+        },
       };
       updateFile(`apps/${appName}/proxy.conf.json`, JSON.stringify(proxyConf));
 
@@ -70,9 +71,6 @@ forEachCli('nx', () => {
         };            
       `
       );
-      //
-      // const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
-      // expect(e2eResults).toContain('All specs passed!');
     }, 120000);
 
     it('should be able to consume a react lib', async () => {
@@ -89,18 +87,20 @@ forEachCli('nx', () => {
       updateFile(
         `apps/${appName}/next.config.js`,
         `
-module.exports = {
+const withCSS = require('@zeit/next-css');
+module.exports = withCSS({
+  cssModules: false,
   generateBuildId: function () {
     return 'fixed';
   }
-};
+});
       `
       );
 
-      await checkApp(appName, { checkLint: true });
+      await checkApp(appName, { checkLint: true, checkE2E: true });
 
       // check that the configuration was consumed
-      expect(readFile(`dist/apps/${appName}/BUILD_ID`)).toEqual('fixed');
+      expect(readFile(`dist/apps/${appName}/.next/BUILD_ID`)).toEqual('fixed');
     }, 120000);
 
     it('should be able to dynamically load a lib', async () => {
@@ -124,7 +124,7 @@ module.exports = {
       ` + readFile(mainPath)
       );
 
-      await checkApp(appName, { checkLint: false });
+      await checkApp(appName, { checkLint: false, checkE2E: false });
     }, 120000);
 
     it('should compile when using a workspace and react lib written in TypeScript', async () => {
@@ -175,15 +175,15 @@ module.exports = {
           content.replace(
             `<main>`,
             `<main>
-              <>
+              <div>
                 {testFn()}
                 <TestComponent text="Hello Next.JS" />
-              </>
+              </div>
             `
           )
       );
 
-      await checkApp(appName, { checkLint: true });
+      await checkApp(appName, { checkLint: true, checkE2E: true });
     }, 120000);
 
     it('should support --style=styled-components', async () => {
@@ -193,7 +193,7 @@ module.exports = {
         `generate @nrwl/next:app ${appName} --no-interactive --style=styled-components`
       );
 
-      await checkApp(appName, { checkLint: false });
+      await checkApp(appName, { checkLint: false, checkE2E: false });
     }, 120000);
 
     it('should support --style=@emotion/styled', async () => {
@@ -203,12 +203,29 @@ module.exports = {
         `generate @nrwl/next:app ${appName} --no-interactive --style=@emotion/styled`
       );
 
-      await checkApp(appName, { checkLint: false });
+      await checkApp(appName, { checkLint: false, checkE2E: false });
+    }, 120000);
+
+    it('should build with public folder', async () => {
+      const appName = uniq('app');
+
+      runCLI(
+        `generate @nrwl/next:app ${appName} --no-interactive --style=@emotion/styled`
+      );
+
+      updateFile(`apps/${appName}/public/a/b.txt`, `Hello World!`);
+
+      runCLI(`build ${appName}`);
+
+      checkFilesExist(`dist/apps/${appName}/public/a/b.txt`);
     }, 120000);
   });
 });
 
-async function checkApp(appName: string, opts: { checkLint: boolean }) {
+async function checkApp(
+  appName: string,
+  opts: { checkLint: boolean; checkE2E: boolean }
+) {
   if (opts.checkLint) {
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -224,7 +241,13 @@ async function checkApp(appName: string, opts: { checkLint: boolean }) {
 
   const buildResult = runCLI(`build ${appName}`);
   expect(buildResult).toContain(`Compiled successfully`);
-  checkFilesExist(`dist/apps/${appName}/build-manifest.json`);
+  checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);
+  checkFilesExist(`dist/apps/${appName}/public/star.svg`);
+
+  const packageJson = readJson(`dist/apps/${appName}/package.json`);
+  expect(packageJson.dependencies.react).toBeDefined();
+  expect(packageJson.dependencies['react-dom']).toBeDefined();
+  expect(packageJson.dependencies.next).toBeDefined();
 
   const exportResult = runCLI(`export ${appName}`);
   expect(exportResult).toContain('Exporting (3/3)');

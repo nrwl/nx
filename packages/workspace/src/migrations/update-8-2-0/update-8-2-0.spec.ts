@@ -3,7 +3,7 @@ import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { callRule, runMigration } from '../../utils/testing';
 import {
   readJsonInTree,
-  updateJsonInTree
+  updateJsonInTree,
 } from '@nrwl/workspace/src/utils/ast-utils';
 
 describe('Update 8.2.0', () => {
@@ -12,7 +12,7 @@ describe('Update 8.2.0', () => {
   beforeEach(async () => {
     tree = createEmptyWorkspace(Tree.empty());
     tree = await callRule(
-      updateJsonInTree('workspace.json', json => {
+      updateJsonInTree('workspace.json', (json) => {
         json.projects['my-app'] = {
           root: 'my-app',
           architect: {
@@ -20,10 +20,10 @@ describe('Update 8.2.0', () => {
               builder: '@angular-devkit/build-angular:tslint',
               options: {
                 tsConfig: ['my-app/tsconfig.json'],
-                exclude: ['**/node_modules/**']
-              }
-            }
-          }
+                exclude: ['**/node_modules/**'],
+              },
+            },
+          },
         };
 
         return json;
@@ -40,8 +40,8 @@ describe('Update 8.2.0', () => {
       builder: '@angular-devkit/build-angular:tslint',
       options: {
         tsConfig: ['my-app/tsconfig.json'],
-        exclude: ['**/node_modules/**', '!my-app/**']
-      }
+        exclude: ['**/node_modules/**', '!my-app/**'],
+      },
     });
   });
 });

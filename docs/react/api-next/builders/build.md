@@ -9,7 +9,7 @@ Read more about how to use builders and the CLI here: https://nx.dev/react/guide
 
 ### fileReplacements
 
-Type: `array` of `object`
+Type: `object[]`
 
 Replace files with other files in the build.
 

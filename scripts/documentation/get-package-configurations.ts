@@ -21,15 +21,15 @@ export interface Configuration {
 export function getPackageConfigurations(
   packagesDirectory: string = 'packages',
   documentationsDirectory: string = 'docs'
-): { framework: 'web' | 'angular' | 'react'; configs: Configuration[] }[] {
-  return ['web', 'angular', 'react'].map(framework => {
+): { framework: 'angular' | 'react'; configs: Configuration[] }[] {
+  return ['angular', 'react'].map((framework) => {
     const packagesDir = path.resolve(
       path.join(__dirname, '../../', packagesDirectory)
     );
     const documentationDir = path.resolve(
       path.join(__dirname, '../../', documentationsDirectory)
     );
-    const configs = shelljs.ls(packagesDir).map(folderName => {
+    const configs = shelljs.ls(packagesDir).map((folderName) => {
       const itemList = shelljs.ls(path.join(packagesDir, folderName));
       const output = path.join(
         documentationDir,
@@ -45,7 +45,7 @@ export function getPackageConfigurations(
         builderOutput: path.join(output, 'builders'),
         schematicOutput: path.join(output, 'schematics'),
         hasBuilders: itemList.includes('builders.json'),
-        hasSchematics: itemList.includes('collection.json')
+        hasSchematics: itemList.includes('collection.json'),
       };
     });
     return { framework: framework as any, configs };

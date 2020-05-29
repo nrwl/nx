@@ -1,7 +1,7 @@
 import {
   BuilderContext,
   BuilderOutput,
-  createBuilder
+  createBuilder,
 } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
 import * as ng from '@angular/compiler-cli';
@@ -13,8 +13,8 @@ import {
   checkDependentProjectsHaveBeenBuilt,
   DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,
-  updatePaths
-} from '@nrwl/workspace/src/utils/buildale-libs-utils';
+  updatePaths,
+} from '@nrwl/workspace/src/utils/buildable-libs-utils';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 
 export interface BuildAngularLibraryBuilderOptions {
@@ -61,10 +61,10 @@ export function run(
     context
   );
   return of(checkDependentProjectsHaveBeenBuilt(context, dependencies)).pipe(
-    switchMap(result => {
+    switchMap((result) => {
       if (result) {
         return from(initializeNgPackagr(options, context, dependencies)).pipe(
-          switchMap(packager =>
+          switchMap((packager) =>
             options.watch ? packager.watch() : packager.build()
           ),
           tap(() => {

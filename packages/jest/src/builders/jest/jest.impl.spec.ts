@@ -1,7 +1,8 @@
-import { schema } from '@angular-devkit/core';
-import { TestingArchitectHost } from '@angular-devkit/architect/testing';
-import * as path from 'path';
 import { Architect } from '@angular-devkit/architect';
+import { TestingArchitectHost } from '@angular-devkit/architect/testing';
+import { schema } from '@angular-devkit/core';
+import * as path from 'path';
+import { JestBuilderOptions } from './schema';
 
 describe('Jest Builder', () => {
   let architect: Architect;
@@ -12,7 +13,7 @@ describe('Jest Builder', () => {
 
     runCLI = jest.fn();
     jest.doMock('jest', () => ({
-      runCLI
+      runCLI,
     }));
 
     const registry = new schema.CoreSchemaRegistry();
@@ -27,26 +28,34 @@ describe('Jest Builder', () => {
     runCLI.mockReturnValue(
       Promise.resolve({
         results: {
-          success: true
-        }
+          success: true,
+        },
       })
     );
   });
 
   describe('when the jest config file is untouched', () => {
     beforeEach(() => {
-      jest.doMock('/root/jest.config.js', () => ({}), { virtual: true });
+      jest.doMock(
+        '/root/jest.config.js',
+        () => ({
+          transform: {
+            '^.+\\.[tj]sx?$': 'ts-jest',
+          },
+        }),
+        { virtual: true }
+      );
     });
 
     it('should send appropriate options to jestCLI', async () => {
       const run = await architect.scheduleBuilder('@nrwl/jest:jest', {
         jestConfig: './jest.config.js',
         tsConfig: './tsconfig.test.json',
-        watch: false
+        watch: false,
       });
       expect(await run.result).toEqual(
         jasmine.objectContaining({
-          success: true
+          success: true,
         })
       );
       expect(runCLI).toHaveBeenCalledWith(
@@ -58,12 +67,12 @@ describe('Jest Builder', () => {
               stringifyContentPathRegex: '\\.(html|svg)$',
               astTransformers: [
                 'jest-preset-angular/build/InlineFilesTransformer',
-                'jest-preset-angular/build/StripStylesTransformer'
-              ]
-            }
+                'jest-preset-angular/build/StripStylesTransformer',
+              ],
+            },
           }),
           testPathPattern: [],
-          watch: false
+          watch: false,
         },
         ['/root/jest.config.js']
       );
@@ -83,11 +92,11 @@ describe('Jest Builder', () => {
         verbose: false,
         coverageReporters: 'test',
         coverageDirectory: '/test/path',
-        watch: false
+        watch: false,
       });
       expect(await run.result).toEqual(
         jasmine.objectContaining({
-          success: true
+          success: true,
         })
       );
 
@@ -100,9 +109,9 @@ describe('Jest Builder', () => {
               stringifyContentPathRegex: '\\.(html|svg)$',
               astTransformers: [
                 'jest-preset-angular/build/InlineFilesTransformer',
-                'jest-preset-angular/build/StripStylesTransformer'
-              ]
-            }
+                'jest-preset-angular/build/StripStylesTransformer',
+              ],
+            },
           }),
           coverage: false,
           runInBand: true,
@@ -113,7 +122,7 @@ describe('Jest Builder', () => {
           verbose: false,
           coverageReporters: 'test',
           coverageDirectory: '/test/path',
-          watch: false
+          watch: false,
         },
         ['/root/jest.config.js']
       );
@@ -127,11 +136,11 @@ describe('Jest Builder', () => {
         codeCoverage: false,
         runInBand: true,
         testNamePattern: 'should load',
-        watch: false
+        watch: false,
       });
       expect(await run.result).toEqual(
         jasmine.objectContaining({
-          success: true
+          success: true,
         })
       );
 
@@ -144,16 +153,16 @@ describe('Jest Builder', () => {
               stringifyContentPathRegex: '\\.(html|svg)$',
               astTransformers: [
                 'jest-preset-angular/build/InlineFilesTransformer',
-                'jest-preset-angular/build/StripStylesTransformer'
-              ]
-            }
+                'jest-preset-angular/build/StripStylesTransformer',
+              ],
+            },
           }),
           coverage: false,
           findRelatedTests: true,
           runInBand: true,
           testNamePattern: 'should load',
           testPathPattern: [],
-          watch: false
+          watch: false,
         },
         ['/root/jest.config.js']
       );
@@ -167,11 +176,13 @@ describe('Jest Builder', () => {
         bail: 1,
         color: false,
         ci: true,
+        detectOpenHandles: true,
         json: true,
         maxWorkers: 2,
         onlyChanged: true,
         outputFile: 'abc.txt',
         passWithNoTests: true,
+        showConfig: true,
         silent: true,
         testNamePattern: 'test',
         testPathPattern: ['/test/path'],
@@ -185,11 +196,11 @@ describe('Jest Builder', () => {
         useStderr: true,
         watch: false,
         watchAll: false,
-        testLocationInResults: true
+        testLocationInResults: true,
       });
       expect(await run.result).toEqual(
         jasmine.objectContaining({
-          success: true
+          success: true,
         })
       );
       expect(runCLI).toHaveBeenCalledWith(
@@ -201,19 +212,21 @@ describe('Jest Builder', () => {
               stringifyContentPathRegex: '\\.(html|svg)$',
               astTransformers: [
                 'jest-preset-angular/build/InlineFilesTransformer',
-                'jest-preset-angular/build/StripStylesTransformer'
-              ]
-            }
+                'jest-preset-angular/build/StripStylesTransformer',
+              ],
+            },
           }),
           coverage: true,
           bail: 1,
           color: false,
           ci: true,
+          detectOpenHandles: true,
           json: true,
           maxWorkers: 2,
           onlyChanged: true,
           outputFile: 'abc.txt',
           passWithNoTests: true,
+          showConfig: true,
           silent: true,
           testNamePattern: 'test',
           testPathPattern: ['/test/path'],
@@ -227,22 +240,21 @@ describe('Jest Builder', () => {
           useStderr: true,
           watch: false,
           watchAll: false,
-          testLocationInResults: true
+          testLocationInResults: true,
         },
         ['/root/jest.config.js']
       );
     });
 
-    it('should send the main to runCLI', async () => {
+    it('should support passing string type for maxWorkers option to jestCLI', async () => {
       const run = await architect.scheduleBuilder('@nrwl/jest:jest', {
         jestConfig: './jest.config.js',
         tsConfig: './tsconfig.test.json',
-        setupFile: './test-setup.ts',
-        watch: false
+        maxWorkers: '50%',
       });
       expect(await run.result).toEqual(
         jasmine.objectContaining({
-          success: true
+          success: true,
         })
       );
       expect(runCLI).toHaveBeenCalledWith(
@@ -254,27 +266,59 @@ describe('Jest Builder', () => {
               stringifyContentPathRegex: '\\.(html|svg)$',
               astTransformers: [
                 'jest-preset-angular/build/InlineFilesTransformer',
-                'jest-preset-angular/build/StripStylesTransformer'
-              ]
-            }
+                'jest-preset-angular/build/StripStylesTransformer',
+              ],
+            },
           }),
-          setupFilesAfterEnv: ['/root/test-setup.ts'],
+          maxWorkers: '50%',
           testPathPattern: [],
-          watch: false
         },
         ['/root/jest.config.js']
       );
     });
 
-    it('should return the proper result', async done => {
+    it('should send the main to runCLI', async () => {
       const run = await architect.scheduleBuilder('@nrwl/jest:jest', {
         jestConfig: './jest.config.js',
         tsConfig: './tsconfig.test.json',
-        watch: false
+        setupFile: './test-setup.ts',
+        watch: false,
       });
       expect(await run.result).toEqual(
         jasmine.objectContaining({
-          success: true
+          success: true,
+        })
+      );
+      expect(runCLI).toHaveBeenCalledWith(
+        {
+          _: [],
+          globals: JSON.stringify({
+            'ts-jest': {
+              tsConfig: '/root/tsconfig.test.json',
+              stringifyContentPathRegex: '\\.(html|svg)$',
+              astTransformers: [
+                'jest-preset-angular/build/InlineFilesTransformer',
+                'jest-preset-angular/build/StripStylesTransformer',
+              ],
+            },
+          }),
+          setupFilesAfterEnv: ['/root/test-setup.ts'],
+          testPathPattern: [],
+          watch: false,
+        },
+        ['/root/jest.config.js']
+      );
+    });
+
+    it('should return the proper result', async (done) => {
+      const run = await architect.scheduleBuilder('@nrwl/jest:jest', {
+        jestConfig: './jest.config.js',
+        tsConfig: './tsconfig.test.json',
+        watch: false,
+      });
+      expect(await run.result).toEqual(
+        jasmine.objectContaining({
+          success: true,
         })
       );
       done();
@@ -286,7 +330,10 @@ describe('Jest Builder', () => {
       jest.doMock(
         '/root/jest.config.js',
         () => ({
-          globals: { hereToStay: true, 'ts-jest': { diagnostics: false } }
+          transform: {
+            '^.+\\.[tj]sx?$': 'ts-jest',
+          },
+          globals: { hereToStay: true, 'ts-jest': { diagnostics: false } },
         }),
         { virtual: true }
       );
@@ -297,7 +344,7 @@ describe('Jest Builder', () => {
         jestConfig: './jest.config.js',
         tsConfig: './tsconfig.test.json',
         setupFile: './test-setup.ts',
-        watch: false
+        watch: false,
       });
 
       expect(runCLI).toHaveBeenCalledWith(
@@ -311,15 +358,81 @@ describe('Jest Builder', () => {
               stringifyContentPathRegex: '\\.(html|svg)$',
               astTransformers: [
                 'jest-preset-angular/build/InlineFilesTransformer',
-                'jest-preset-angular/build/StripStylesTransformer'
-              ]
-            }
+                'jest-preset-angular/build/StripStylesTransformer',
+              ],
+            },
           }),
           setupFilesAfterEnv: ['/root/test-setup.ts'],
           testPathPattern: [],
-          watch: false
+          watch: false,
         },
         ['/root/jest.config.js']
+      );
+    });
+  });
+
+  describe('when we use babel-jest', () => {
+    beforeEach(() => {
+      jest.doMock(
+        '/root/jest.config.js',
+        () => ({
+          transform: {
+            '^.+\\.[tj]sx?$': 'babel-jest',
+          },
+        }),
+        { virtual: true }
+      );
+    });
+
+    it('should send appropriate options to jestCLI', async () => {
+      const options: JestBuilderOptions = {
+        jestConfig: './jest.config.js',
+        tsConfig: './tsconfig.test.json',
+        watch: false,
+      };
+
+      const run = await architect.scheduleBuilder('@nrwl/jest:jest', options);
+      expect(await run.result).toEqual(
+        jasmine.objectContaining({
+          success: true,
+        })
+      );
+      expect(runCLI).toHaveBeenCalledWith(
+        {
+          _: [],
+          globals: '{}',
+          testPathPattern: [],
+          watch: false,
+        },
+        ['/root/jest.config.js']
+      );
+    });
+  });
+
+  describe('when the user tries to use babel-jest AND ts-jest', () => {
+    beforeEach(() => {
+      jest.doMock(
+        '/root/jest.config.js',
+        () => ({
+          transform: {
+            '^.+\\.tsx?$': 'ts-jest',
+            '^.+\\.jsx?$': 'babel-jest',
+          },
+        }),
+        { virtual: true }
+      );
+    });
+
+    it('should throw an appropriate error', async () => {
+      const options: JestBuilderOptions = {
+        jestConfig: './jest.config.js',
+        tsConfig: './tsconfig.test.json',
+        watch: false,
+      };
+
+      const run = await architect.scheduleBuilder('@nrwl/jest:jest', options);
+      await expect(run.result).rejects.toThrow(
+        /Using babel-jest and ts-jest together is not supported/
       );
     });
   });

@@ -1,34 +1,89 @@
-import { convertAliases, convertToCamelCase, lookupUnmatched } from './params';
+import {
+  coerceTypes,
+  convertAliases,
+  convertToCamelCase,
+  lookupUnmatched,
+} from './params';
 
 describe('params', () => {
+  describe('coerceTypes', () => {
+    it('should handle booleans', () => {
+      const opts = coerceTypes({ a: true, b: 'true', c: false, d: 'true' }, {
+        properties: {
+          a: { type: 'boolean' },
+          b: { type: 'boolean' },
+          c: { type: 'boolean' },
+          d: { type: 'string' },
+        },
+      } as any);
+
+      expect(opts).toEqual({
+        a: true,
+        b: true,
+        c: false,
+        d: 'true',
+      });
+    });
+
+    it('should handle numbers', () => {
+      const opts = coerceTypes({ a: 1, b: '2', c: '3' }, {
+        properties: {
+          a: { type: 'number' },
+          b: { type: 'number' },
+          c: { type: 'string' },
+        },
+      } as any);
+
+      expect(opts).toEqual({
+        a: 1,
+        b: 2,
+        c: '3',
+      });
+    });
+
+    it('should handle arrays', () => {
+      const opts = coerceTypes({ a: 'one,two', b: 'three,four' }, {
+        properties: {
+          a: { type: 'array' },
+          b: { type: 'string' },
+        },
+      } as any);
+
+      expect(opts).toEqual({
+        a: ['one', 'two'],
+        b: 'three,four',
+      });
+    });
+  });
+
   describe('convertToCamelCase', () => {
     it('should convert dash case to camel case', () => {
       expect(
         convertToCamelCase({
-          'one-two': 1
+          'one-two': 1,
         })
       ).toEqual({
-        oneTwo: 1
+        oneTwo: 1,
       });
     });
 
     it('should not convert camel case', () => {
       expect(
         convertToCamelCase({
-          oneTwo: 1
+          oneTwo: 1,
         })
       ).toEqual({
-        oneTwo: 1
+        oneTwo: 1,
       });
     });
 
     it('should handle mixed case', () => {
       expect(
         convertToCamelCase({
-          'one-Two': 1
+          'one-Two': 1,
         })
       ).toEqual({
-        oneTwo: 1
+        oneTwo: 1,
       });
     });
   });
@@ -41,7 +96,7 @@ describe('params', () => {
           {
             properties: { directory: { type: 'string', alias: 'd' } },
             required: [],
-            description: ''
+            description: '',
           }
         )
       ).toEqual({ directory: 'test' });
@@ -54,16 +109,16 @@ describe('params', () => {
           {
             properties: { directory: { type: 'string' } },
             required: [],
-            description: ''
+            description: '',
           }
         )
       ).toEqual({
         '--': [
           {
             name: 'd',
-            possible: []
-          }
-        ]
+            possible: [],
+          },
+        ],
       });
     });
   });
@@ -76,23 +131,23 @@ describe('params', () => {
             '--': [
               {
                 name: 'directoy',
-                possible: []
-              }
-            ]
+                possible: [],
+              },
+            ],
           },
           {
             properties: { directory: { type: 'string' } },
             required: [],
-            description: ''
+            description: '',
           }
         )
       ).toEqual({
         '--': [
           {
             name: 'directoy',
-            possible: ['directory']
-          }
-        ]
+            possible: ['directory'],
+          },
+        ],
       });
     });
 
@@ -103,23 +158,23 @@ describe('params', () => {
             '--': [
               {
                 name: 'directoy',
-                possible: []
-              }
-            ]
+                possible: [],
+              },
+            ],
           },
           {
             properties: { faraway: { type: 'string' } },
             required: [],
-            description: ''
+            description: '',
           }
         )
       ).toEqual({
         '--': [
           {
             name: 'directoy',
-            possible: []
-          }
-        ]
+            possible: [],
+          },
+        ],
       });
     });
   });

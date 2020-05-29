@@ -5,11 +5,11 @@ Create a redux slice for a project
 ## Usage
 
 ```bash
-ng generate redux ...
+nx generate redux ...
 ```
 
 ```bash
-ng g slice ... # same
+nx g slice ... # same
 ```
 
 By default, Nx will search for `redux` in the default collection provisioned in `angular.json`.
@@ -17,13 +17,13 @@ By default, Nx will search for `redux` in the default collection provisioned in 
 You can specify the collection explicitly as follows:
 
 ```bash
-ng g @nrwl/react:redux ...
+nx g @nrwl/react:redux ...
 ```
 
 Show what will be generated without writing to disk:
 
 ```bash
-ng g redux ... --dry-run
+nx g redux ... --dry-run
 ```
 
 ## Options

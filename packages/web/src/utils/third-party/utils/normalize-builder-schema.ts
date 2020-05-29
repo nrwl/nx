@@ -12,12 +12,12 @@ import {
   AssetPatternClass,
   OptimizationClass,
   Schema as BrowserBuilderSchema,
-  SourceMapClass
+  SourceMapClass,
 } from '../browser/schema';
 import { normalizeAssetPatterns } from './normalize-asset-patterns';
 import {
   NormalizedFileReplacement,
-  normalizeFileReplacements
+  normalizeFileReplacements,
 } from './normalize-file-replacements';
 import { normalizeOptimization } from './normalize-optimization';
 import { normalizeSourceMaps } from './normalize-source-maps';
@@ -74,8 +74,8 @@ export function normalizeBrowserSchema(
       includePaths:
         (options.stylePreprocessorOptions &&
           options.stylePreprocessorOptions.includePaths) ||
-        []
+        [],
     },
-    lazyModules: options.lazyModules || []
+    lazyModules: options.lazyModules || [],
   };
 }

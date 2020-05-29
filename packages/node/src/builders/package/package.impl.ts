@@ -1,7 +1,7 @@
 import {
   BuilderContext,
   BuilderOutput,
-  createBuilder
+  createBuilder,
 } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
 import { readJsonFile } from '@nrwl/workspace';
@@ -11,21 +11,19 @@ import { copy, removeSync } from 'fs-extra';
 import * as glob from 'glob';
 import { basename, dirname, join, normalize, relative } from 'path';
 import { Observable, of, Subscriber } from 'rxjs';
-import { finalize, map, switchMap, tap } from 'rxjs/operators';
+import { map, switchMap, tap } from 'rxjs/operators';
 import * as treeKill from 'tree-kill';
 import {
   createProjectGraph,
-  ProjectGraph
+  ProjectGraph,
 } from '@nrwl/workspace/src/core/project-graph';
-import * as ts from 'typescript';
-import { unlinkSync } from 'fs';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
+  createTmpTsConfig,
   DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,
-  updatePaths
-} from '@nrwl/workspace/src/utils/buildale-libs-utils';
+} from '@nrwl/workspace/src/utils/buildable-libs-utils';
 
 export interface NodePackageBuilderOptions extends JsonObject {
   main: string;
@@ -70,7 +68,7 @@ export function runNodePackageBuilder(
   );
 
   return of(checkDependentProjectsHaveBeenBuilt(context, dependencies)).pipe(
-    switchMap(result => {
+    switchMap((result) => {
       if (result) {
         return compileTypeScriptFiles(
           normalizedOptions,
@@ -96,10 +94,10 @@ export function runNodePackageBuilder(
         return of({ success: false });
       }
     }),
-    map(value => {
+    map((value) => {
       return {
         ...value,
-        outputPath: normalizedOptions.outputPath
+        outputPath: normalizedOptions.outputPath,
       };
     })
   );
@@ -120,16 +118,16 @@ function normalizeOptions(
     return glob.sync(pattern, {
       cwd: input,
       nodir: true,
-      ignore
+      ignore,
     });
   };
 
-  options.assets.forEach(asset => {
+  options.assets.forEach((asset) => {
     if (typeof asset === 'string') {
-      globbedFiles(asset, context.workspaceRoot).forEach(globbedFile => {
+      globbedFiles(asset, context.workspaceRoot).forEach((globbedFile) => {
         files.push({
           input: join(context.workspaceRoot, globbedFile),
-          output: join(context.workspaceRoot, outDir, basename(globbedFile))
+          output: join(context.workspaceRoot, outDir, basename(globbedFile)),
         });
       });
     } else {
@@ -137,10 +135,15 @@ function normalizeOptions(
         asset.glob,
         join(context.workspaceRoot, asset.input),
         asset.ignore
-      ).forEach(globbedFile => {
+      ).forEach((globbedFile) => {
         files.push({
           input: join(context.workspaceRoot, asset.input, globbedFile),
-          output: join(context.workspaceRoot, outDir, asset.output, globbedFile)
+          output: join(
+            context.workspaceRoot,
+            outDir,
+            asset.output,
+            globbedFile
+          ),
         });
       });
     }
@@ -161,7 +164,7 @@ function normalizeOptions(
     ...options,
     files,
     relativeMainFileOutput,
-    normalizedOutputPath: join(context.workspaceRoot, options.outputPath)
+    normalizedOutputPath: join(context.workspaceRoot, options.outputPath),
   };
 }
 
@@ -181,30 +184,13 @@ function compileTypeScriptFiles(
 
   return Observable.create((subscriber: Subscriber<BuilderOutput>) => {
     if (projectDependencies.length > 0) {
-      // const parsedTSConfig = readTsConfig(tsConfigPath);
-      const parsedTSConfig = ts.readConfigFile(tsConfigPath, ts.sys.readFile)
-        .config;
-
-      // update TSConfig paths to point to the dist folder
-      parsedTSConfig.compilerOptions = parsedTSConfig.compilerOptions || {};
-      parsedTSConfig.compilerOptions.paths =
-        parsedTSConfig.compilerOptions.paths || {};
-      updatePaths(projectDependencies, parsedTSConfig.compilerOptions.paths);
-
-      // find the library root folder
       const libRoot = projGraph.nodes[context.target.project].data.root;
-
-      // write the tmp tsconfig needed for building
-      const tmpTsConfigPath = join(
+      tsConfigPath = createTmpTsConfig(
+        tsConfigPath,
         context.workspaceRoot,
         libRoot,
-        'tsconfig.lib.nx-tmp'
+        projectDependencies
       );
-      writeJsonFile(tmpTsConfigPath, parsedTSConfig);
-
-      // adjust the tsConfig path s.t. it points to the temporary one
-      // with the adjusted paths
-      tsConfigPath = tmpTsConfigPath;
     }
 
     try {
@@ -228,7 +214,7 @@ function compileTypeScriptFiles(
           `Compiling TypeScript files for library ${context.target.project}...`
         );
         tscProcess = fork(tscPath, args, { stdio: [0, 1, 2, 'ipc'] });
-        tscProcess.on('exit', code => {
+        tscProcess.on('exit', (code) => {
           if (code === 0) {
             context.logger.info(
               `Done compiling TypeScript files for library ${context.target.project}`
@@ -248,21 +234,11 @@ function compileTypeScriptFiles(
         new Error(`Could not compile Typescript files: \n ${error}`)
       );
     }
-  }).pipe(
-    finalize(() => {
-      cleanupTmpTsConfigFile(tsConfigPath);
-    })
-  );
-}
-
-function cleanupTmpTsConfigFile(tsConfigPath) {
-  if (tsConfigPath.indexOf('.nx-tmp') > -1) {
-    unlinkSync(tsConfigPath);
-  }
+  });
 }
 
 function killProcess(context: BuilderContext): void {
-  return treeKill(tscProcess.pid, 'SIGTERM', error => {
+  return treeKill(tscProcess.pid, 'SIGTERM', (error) => {
     tscProcess = null;
     if (error) {
       if (Array.isArray(error) && error[0] && error[2]) {
@@ -301,17 +277,17 @@ function copyAssetFiles(
   context: BuilderContext
 ): Promise<BuilderOutput> {
   context.logger.info('Copying asset files...');
-  return Promise.all(options.files.map(file => copy(file.input, file.output)))
+  return Promise.all(options.files.map((file) => copy(file.input, file.output)))
     .then(() => {
       context.logger.info('Done copying asset files.');
       return {
-        success: true
+        success: true,
       };
     })
     .catch((err: Error) => {
       return {
         error: err.message,
-        success: false
+        success: false,
       };
     });
 }

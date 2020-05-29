@@ -1,3 +1,4 @@
+import { join, normalize, Path } from '@angular-devkit/core';
 import {
   apply,
   chain,
@@ -10,8 +11,9 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
+import { CSS_IN_JS_DEPENDENCIES } from '@nrwl/react';
 import {
   addDepsToPackageJson,
   addLintFiles,
@@ -27,26 +29,25 @@ import {
   toClassName,
   toFileName,
   updateJsonInTree,
-  updateWorkspaceInTree
+  updateWorkspaceInTree,
 } from '@nrwl/workspace';
-import { join, normalize, Path } from '@angular-devkit/core';
+import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import * as ts from 'typescript';
-
-import { Schema } from './schema';
+import { assertValidStyle } from '../../utils/assertion';
 import {
   addBrowserRouter,
   addInitialRoutes,
   addRoute,
-  findComponentImportPath
+  findComponentImportPath,
 } from '../../utils/ast-utils';
-import {
-  typesReactRouterDomVersion,
-  reactRouterDomVersion
-} from '../../utils/versions';
-import { assertValidStyle } from '../../utils/assertion';
 import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
-import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
-import { CSS_IN_JS_DEPENDENCIES } from '@nrwl/react';
+import {
+  reactRouterDomVersion,
+  typesReactRouterDomVersion,
+} from '../../utils/versions';
+import { Schema } from './schema';
+import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
+import { initRootBabelConfig } from '@nrwl/web/src/utils/rules';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -59,9 +60,9 @@ export interface NormalizedSchema extends Schema {
   appSourceRoot?: Path;
 }
 
-export default function(schema: Schema): Rule {
+export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
-    const options = normalizeOptions(host, schema, context);
+    const options = normalizeOptions(host, schema);
 
     if (!options.component) {
       options.style = 'none';
@@ -69,7 +70,7 @@ export default function(schema: Schema): Rule {
     return chain([
       addLintFiles(options.projectRoot, options.linter, {
         localConfig: reactEslintJson,
-        extraPackageDeps: extraEslintDependencies
+        extraPackageDeps: extraEslintDependencies,
       }),
       createFiles(options),
       !options.skipTsConfig ? updateTsConfig(options) : noop(),
@@ -80,7 +81,8 @@ export default function(schema: Schema): Rule {
             project: options.name,
             setupFile: 'none',
             supportTsx: true,
-            skipSerializers: true
+            skipSerializers: true,
+            babelJest: options.babelJest,
           })
         : noop(),
       options.component
@@ -93,18 +95,19 @@ export default function(schema: Schema): Rule {
             export: true,
             routing: options.routing,
             js: options.js,
-            pascalCaseFiles: options.pascalCaseFiles
+            pascalCaseFiles: options.pascalCaseFiles,
           })
         : noop(),
-      updateLibPackageNpmScope(options),
+      options.publishable ? updateLibPackageNpmScope(options) : noop(),
       updateAppRoutes(options, context),
-      formatFiles(options)
+      initRootBabelConfig(),
+      formatFiles(options),
     ])(host, context);
   };
 }
 
 function addProject(options: NormalizedSchema): Rule {
-  return updateWorkspaceInTree(json => {
+  return updateWorkspaceInTree((json, context, host) => {
     const architect: { [key: string]: any } = {};
 
     architect.lint = generateProjectLint(
@@ -130,14 +133,14 @@ function addProject(options: NormalizedSchema): Rule {
       architect.build = {
         builder: '@nrwl/web:package',
         options: {
-          outputPath: `dist/libs/${options.projectDirectory}`,
+          outputPath: `dist/${libsDir(host)}/${options.projectDirectory}`,
           tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
           project: `${options.projectRoot}/package.json`,
           entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
           external,
           babelConfig: `@nrwl/react/plugins/bundle-babel`,
-          rollupConfig: `@nrwl/react/plugins/bundle-rollup`
-        }
+          rollupConfig: `@nrwl/react/plugins/bundle-rollup`,
+        },
       };
     }
 
@@ -146,7 +149,7 @@ function addProject(options: NormalizedSchema): Rule {
       sourceRoot: join(normalize(options.projectRoot), 'src'),
       projectType: 'library',
       schematics: {},
-      architect
+      architect,
     };
     return json;
   });
@@ -156,15 +159,19 @@ function updateTsConfig(options: NormalizedSchema): Rule {
   return chain([
     (host: Tree, context: SchematicContext) => {
       const nxJson = readJsonInTree<NxJson>(host, 'nx.json');
-      return updateJsonInTree('tsconfig.json', json => {
+      return updateJsonInTree('tsconfig.json', (json) => {
         const c = json.compilerOptions;
+        c.paths = c.paths || {};
         delete c.paths[options.name];
         c.paths[`@${nxJson.npmScope}/${options.projectDirectory}`] = [
-          maybeJs(options, `libs/${options.projectDirectory}/src/index.ts`)
+          maybeJs(
+            options,
+            `${libsDir(host)}/${options.projectDirectory}/src/index.ts`
+          ),
         ];
         return json;
       })(host, context);
-    }
+    },
   ]);
 }
 
@@ -175,19 +182,19 @@ function createFiles(options: NormalizedSchema): Rule {
         ...options,
         ...names(options.name),
         tmpl: '',
-        offsetFromRoot: offsetFromRoot(options.projectRoot)
+        offsetFromRoot: offsetFromRoot(options.projectRoot),
       }),
       move(options.projectRoot),
       options.publishable
         ? noop()
-        : filter(file => !file.endsWith('package.json')),
-      options.js ? toJS() : noop()
+        : filter((file) => !file.endsWith('package.json')),
+      options.js ? toJS() : noop(),
     ])
   );
 }
 
 function updateNxJson(options: NormalizedSchema): Rule {
-  return updateJsonInTree<NxJson>('nx.json', json => {
+  return updateJsonInTree<NxJson>('nx.json', (json) => {
     json.projects[options.name] = { tags: options.parsedTags };
     return json;
   });
@@ -256,13 +263,13 @@ function updateAppRoutes(
             {
               routePath: options.routePath,
               componentName: toClassName(options.name),
-              moduleName: `@${npmScope}/${options.projectDirectory}`
+              moduleName: `@${npmScope}/${options.projectDirectory}`,
             },
             context
           )
         );
       },
-      addDepsToPackageJson({ 'react-router-dom': reactRouterDomVersion }, {})
+      addDepsToPackageJson({ 'react-router-dom': reactRouterDomVersion }, {}),
     ]);
   };
 }
@@ -287,11 +294,7 @@ function readComponent(
   return { content, source };
 }
 
-function normalizeOptions(
-  host: Tree,
-  options: Schema,
-  context: SchematicContext
-): NormalizedSchema {
+function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const name = toFileName(options.name);
   const projectDirectory = options.directory
     ? `${toFileName(options.directory)}/${name}`
@@ -299,10 +302,10 @@ function normalizeOptions(
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = projectName;
-  const projectRoot = normalize(`libs/${projectDirectory}`);
+  const projectRoot = normalize(`${libsDir(host)}/${projectDirectory}`);
 
   const parsedTags = options.tags
-    ? options.tags.split(',').map(s => s.trim())
+    ? options.tags.split(',').map((s) => s.trim())
     : [];
 
   const normalized: NormalizedSchema = {
@@ -312,7 +315,7 @@ function normalizeOptions(
     name: projectName,
     projectRoot,
     projectDirectory,
-    parsedTags
+    parsedTags,
   };
 
   if (options.appProject) {
@@ -341,7 +344,7 @@ function normalizeOptions(
 
 function updateLibPackageNpmScope(options: NormalizedSchema): Rule {
   return (host: Tree) => {
-    return updateJsonInTree(`${options.projectRoot}/package.json`, json => {
+    return updateJsonInTree(`${options.projectRoot}/package.json`, (json) => {
       json.name = `@${getNpmScope(host)}/${options.name}`;
       return json;
     });

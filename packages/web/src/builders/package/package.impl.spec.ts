@@ -9,18 +9,15 @@ import { MockBuilderContext } from '@nrwl/workspace/testing';
 import * as impl from './package.impl';
 import * as rr from './run-rollup';
 import { getMockContext } from '../../utils/testing';
-import { BundleBuilderOptions } from '../../utils/types';
+import { PackageBuilderOptions } from '../../utils/types';
 import * as projectGraphUtils from '@nrwl/workspace/src/core/project-graph';
-import {
-  ProjectGraph,
-  ProjectType
-} from '@nrwl/workspace/src/core/project-graph';
+import { ProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 
 jest.mock('tsconfig-paths-webpack-plugin');
 
 describe('WebPackagebuilder', () => {
   let context: MockBuilderContext;
-  let testOptions: BundleBuilderOptions;
+  let testOptions: PackageBuilderOptions;
   let runRollup: jasmine.Spy;
   let writeJsonFile: jasmine.Spy;
 
@@ -32,26 +29,26 @@ describe('WebPackagebuilder', () => {
       outputPath: 'dist/ui',
       project: 'libs/ui/package.json',
       tsConfig: 'libs/ui/tsconfig.json',
-      watch: false
+      watch: false,
     };
     spyOn(workspaces, 'readWorkspace').and.returnValue({
       workspace: {
         projects: {
           get: () => ({
-            sourceRoot: join(__dirname, '../../..')
-          })
-        }
-      }
+            sourceRoot: join(__dirname, '../../..'),
+          }),
+        },
+      },
     });
     spyOn(f, 'readJsonFile').and.returnValue({
-      name: 'example'
+      name: 'example',
     });
     writeJsonFile = spyOn(f, 'writeJsonFile');
 
     spyOn(projectGraphUtils, 'createProjectGraph').and.callFake(() => {
       return {
         nodes: {},
-        dependencies: {}
+        dependencies: {},
       } as ProjectGraph;
     });
   });
@@ -60,7 +57,7 @@ describe('WebPackagebuilder', () => {
     it('should call runRollup with esm and umd', async () => {
       runRollup = spyOn(rr, 'runRollup').and.callFake(() => {
         return of({
-          success: true
+          success: true,
         });
       });
       spyOn(context.logger, 'info');
@@ -68,9 +65,9 @@ describe('WebPackagebuilder', () => {
       const result = await impl.run(testOptions, context).toPromise();
 
       expect(runRollup).toHaveBeenCalled();
-      expect(runRollup.calls.allArgs()[0][0].output.map(o => o.format)).toEqual(
-        expect.arrayContaining(['esm', 'umd'])
-      );
+      expect(
+        runRollup.calls.allArgs()[0][0].output.map((o) => o.format)
+      ).toEqual(expect.arrayContaining(['esm', 'umd']));
       expect(result.success).toBe(true);
       expect(context.logger.info).toHaveBeenCalledWith('Bundle complete.');
     });
@@ -89,7 +86,7 @@ describe('WebPackagebuilder', () => {
     it('updates package.json', async () => {
       runRollup = spyOn(rr, 'runRollup').and.callFake(() => {
         return of({
-          success: true
+          success: true,
         });
       });
       await impl.run(testOptions, context).toPromise();
@@ -101,7 +98,7 @@ describe('WebPackagebuilder', () => {
         name: 'example',
         main: './example.umd.js',
         module: './example.esm.js',
-        typings: './index.d.ts'
+        typings: './index.d.ts',
       });
     });
   });

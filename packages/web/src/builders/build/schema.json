@@ -3,6 +3,10 @@
   "description": "Web application build target options for Build Facade",
   "type": "object",
   "properties": {
+    "crossOrigin": {
+      "type": "string",
+      "description": "The crossorigin attribute to use for generated javascript script tags.  One of 'none' | 'anonymous' | 'use-credentials'"
+    },
     "main": {
       "type": "string",
       "description": "The name of the main entry-point file."
@@ -230,6 +234,11 @@
     "webpackConfig": {
       "type": "string",
       "description": "Path to a function which takes a webpack config, some context and returns the resulting webpack config"
+    },
+    "buildLibsFromSource": {
+      "type": "boolean",
+      "description": "Read buildable libraries from source instead of building them separately.",
+      "default": false
     }
   },
   "required": ["tsConfig", "main", "index"],

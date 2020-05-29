@@ -6,28 +6,30 @@
  * found in the LICENSE file at https://angular.io/license
  */
 import {
-  Rule,
-  Tree,
-  SchematicContext,
+  apply,
+  chain,
   DirEntry,
-  noop
+  forEach,
+  mergeWith,
+  noop,
+  Rule,
+  SchematicContext,
+  Source,
+  Tree,
 } from '@angular-devkit/schematics';
 import * as ts from 'typescript';
 import * as stripJsonComments from 'strip-json-comments';
 import { serializeJson } from './fileutils';
-import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import { getWorkspacePath } from './cli-config-utils';
 import {
   createProjectGraph,
   onlyWorkspaceProjects,
-  ProjectGraph
+  ProjectGraph,
 } from '../core/project-graph';
 import { FileData } from '../core/file-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
-import {
-  NxJson,
-  NxJsonProjectConfig
-} from '@nrwl/workspace/src/core/shared-interfaces';
+import { NxJson, NxJsonProjectConfig } from '../core/shared-interfaces';
+import { addInstallTask } from './rules/add-install-task';
 
 function nodesByPosition(first: ts.Node, second: ts.Node): number {
   return first.getStart() - second.getStart();
@@ -46,9 +48,7 @@ function insertAfterLastOccurrence(
     throw new Error();
   }
   if (syntaxKind) {
-    lastItem = findNodes(lastItem, syntaxKind)
-      .sort(nodesByPosition)
-      .pop();
+    lastItem = findNodes(lastItem, syntaxKind).sort(nodesByPosition).pop();
   }
   if (!lastItem && fallbackPos == undefined) {
     throw new Error(
@@ -79,7 +79,7 @@ export function findNodes(
   }
   if (max > 0) {
     for (const child of node.getChildren()) {
-      findNodes(child, kind, max).forEach(node => {
+      findNodes(child, kind, max).forEach((node) => {
         if (max > 0) {
           arr.push(node);
         }
@@ -147,7 +147,7 @@ export class InsertChange implements Change {
   }
 
   apply(host: any) {
-    return host.read(this.path).then(content => {
+    return host.read(this.path).then((content) => {
       const prefix = content.substring(0, this.pos);
       const suffix = content.substring(this.pos);
 
@@ -174,7 +174,7 @@ export class RemoveChange implements Change {
   }
 
   apply(host: any): Promise<void> {
-    return host.read(this.path).then(content => {
+    return host.read(this.path).then((content) => {
       const prefix = content.substring(0, this.pos);
       const suffix = content.substring(this.pos + this.toRemove.length);
       return host.write(this.path, `${prefix}${suffix}`);
@@ -201,7 +201,7 @@ export class ReplaceChange implements Change {
   }
 
   apply(host: any): Promise<void> {
-    return host.read(this.path).then(content => {
+    return host.read(this.path).then((content) => {
       const prefix = content.substring(0, this.pos);
       const suffix = content.substring(this.pos + this.oldText.length);
       const text = content.substring(this.pos, this.pos + this.oldText.length);
@@ -222,7 +222,7 @@ export function addParameterToConstructor(
 ): Change[] {
   const clazz = findClass(source, opts.className);
   const constructor = clazz.members.filter(
-    m => m.kind === ts.SyntaxKind.Constructor
+    (m) => m.kind === ts.SyntaxKind.Constructor
   )[0];
   if (constructor) {
     throw new Error('Should be tested');
@@ -231,7 +231,7 @@ export function addParameterToConstructor(
     return addMethod(source, modulePath, {
       className: opts.className,
       methodHeader,
-      body: null
+      body: null,
     });
   }
 }
@@ -264,7 +264,7 @@ export function findClass(
 
   const clazz = <any>(
     nodes.filter(
-      n =>
+      (n) =>
         n.kind === ts.SyntaxKind.ClassDeclaration &&
         (<any>n).name.text === className
     )[0]
@@ -285,7 +285,7 @@ export function offset(
   const lines = text
     .trim()
     .split('\n')
-    .map(line => {
+    .map((line) => {
       let tabs = '';
       for (let c = 0; c < numberOfTabs; ++c) {
         tabs += '  ';
@@ -329,7 +329,7 @@ export function getImport(
       .replace('{', '')
       .replace('}', '')
       .split(',')
-      .map(q => q.trim());
+      .map((q) => q.trim());
     return { moduleSpec, bindings };
   });
 }
@@ -343,7 +343,7 @@ export function addGlobal(
   if (allImports.length > 0) {
     const lastImport = allImports[allImports.length - 1];
     return [
-      new InsertChange(modulePath, lastImport.end + 1, `\n${statement}\n`)
+      new InsertChange(modulePath, lastImport.end + 1, `\n${statement}\n`),
     ];
   } else {
     return [new InsertChange(modulePath, 0, `${statement}\n`)];
@@ -395,6 +395,10 @@ export function readJsonInTree<T = any>(host: Tree, path: string): T {
  * Method for utilizing the project graph in schematics
  */
 export function getProjectGraphFromHost(host: Tree): ProjectGraph {
+  return onlyWorkspaceProjects(getFullProjectGraphFromHost(host));
+}
+
+export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
   const workspaceJson = readJsonInTree(host, getWorkspacePath(host));
   const nxJson = readJsonInTree<NxJson>(host, '/nx.json');
 
@@ -405,28 +409,32 @@ export function getProjectGraphFromHost(host: Tree): ProjectGraph {
   const mtime = +Date.now();
 
   workspaceFiles.push(
-    ...allFilesInDirInHost(host, normalize(''), { recursive: false }).map(f =>
+    ...allFilesInDirInHost(host, normalize(''), { recursive: false }).map((f) =>
       getFileDataInHost(host, f, mtime)
     )
   );
   workspaceFiles.push(
-    ...allFilesInDirInHost(host, normalize('tools')).map(f =>
+    ...allFilesInDirInHost(host, normalize('tools')).map((f) =>
       getFileDataInHost(host, f, mtime)
     )
   );
 
   // Add files for workspace projects
-  Object.keys(workspaceJson.projects).forEach(projectName => {
+  Object.keys(workspaceJson.projects).forEach((projectName) => {
     const project = workspaceJson.projects[projectName];
     workspaceFiles.push(
-      ...allFilesInDirInHost(host, normalize(project.root)).map(f =>
+      ...allFilesInDirInHost(host, normalize(project.root)).map((f) =>
         getFileDataInHost(host, f, mtime)
       )
     );
   });
 
-  return onlyWorkspaceProjects(
-    createProjectGraph(workspaceJson, nxJson, workspaceFiles, fileRead, false)
+  return createProjectGraph(
+    workspaceJson,
+    nxJson,
+    workspaceFiles,
+    fileRead,
+    false
   );
 }
 
@@ -438,7 +446,7 @@ export function getFileDataInHost(
   return {
     file: path,
     ext: extname(normalize(path)),
-    mtime
+    mtime,
   };
 }
 
@@ -451,7 +459,7 @@ export function allFilesInDirInHost(
 ): Path[] {
   const dir = host.getDir(path);
   const res: Path[] = [];
-  dir.subfiles.forEach(p => {
+  dir.subfiles.forEach((p) => {
     res.push(join(path, p));
   });
 
@@ -459,7 +467,7 @@ export function allFilesInDirInHost(
     return res;
   }
 
-  dir.subdirs.forEach(p => {
+  dir.subdirs.forEach((p) => {
     res.push(...allFilesInDirInHost(host, join(path, p)));
   });
   return res;
@@ -489,13 +497,13 @@ export function updateJsonInTree<T = any, O = T>(
 }
 
 export function updateWorkspaceInTree<T = any, O = T>(
-  callback: (json: T, context: SchematicContext) => O
+  callback: (json: T, context: SchematicContext, host: Tree) => O
 ): Rule {
   return (host: Tree, context: SchematicContext): Tree => {
     const path = getWorkspacePath(host);
     host.overwrite(
       path,
-      serializeJson(callback(readJsonInTree(host, path), context))
+      serializeJson(callback(readJsonInTree(host, path), context, host))
     );
     return host;
   };
@@ -503,6 +511,20 @@ export function updateWorkspaceInTree<T = any, O = T>(
 
 export function readNxJsonInTree(host: Tree) {
   return readJsonInTree<NxJson>(host, 'nx.json');
+}
+
+export function libsDir(host: Tree) {
+  const json = readJsonInTree<NxJson>(host, 'nx.json');
+  return json && json.workspaceLayout && json.workspaceLayout.libsDir
+    ? json.workspaceLayout.libsDir
+    : 'libs';
+}
+
+export function appsDir(host: Tree) {
+  const json = readJsonInTree<NxJson>(host, 'nx.json');
+  return json && json.workspaceLayout && json.workspaceLayout.appsDir
+    ? json.workspaceLayout.appsDir
+    : 'apps';
 }
 
 export function updateNxJsonInTree(
@@ -522,9 +544,9 @@ export function addProjectToNxJsonInTree(
   options: NxJsonProjectConfig
 ): Rule {
   const defaultOptions = {
-    tags: []
+    tags: [],
   };
-  return updateNxJsonInTree(json => {
+  return updateNxJsonInTree((json) => {
     json.projects[projectName] = { ...defaultOptions, ...options };
     return json;
   });
@@ -548,20 +570,18 @@ function requiresAddingOfPackages(packageJsonFile, deps, devDeps): boolean {
 
   if (Object.keys(deps).length > 0) {
     needsDepsUpdate = Object.keys(deps).some(
-      entry => !packageJsonFile.dependencies[entry]
+      (entry) => !packageJsonFile.dependencies[entry]
     );
   }
 
   if (Object.keys(devDeps).length > 0) {
     needsDevDepsUpdate = Object.keys(devDeps).some(
-      entry => !packageJsonFile.devDependencies[entry]
+      (entry) => !packageJsonFile.devDependencies[entry]
     );
   }
 
   return needsDepsUpdate || needsDevDepsUpdate;
 }
-
-let installAdded = false;
 
 /**
  * Updates the package.json given the passed deps and/or devDeps. Only updates
@@ -581,27 +601,25 @@ export function addDepsToPackageJson(
     const currentPackageJson = readJsonInTree(host, 'package.json');
 
     if (requiresAddingOfPackages(currentPackageJson, deps, devDeps)) {
-      return updateJsonInTree(
-        'package.json',
-        (json, context: SchematicContext) => {
+      return chain([
+        updateJsonInTree('package.json', (json, context: SchematicContext) => {
           json.dependencies = {
             ...(json.dependencies || {}),
             ...deps,
-            ...(json.dependencies || {})
+            ...(json.dependencies || {}),
           };
           json.devDependencies = {
             ...(json.devDependencies || {}),
             ...devDeps,
-            ...(json.devDependencies || {})
+            ...(json.devDependencies || {}),
           };
 
-          if (addInstall && !installAdded) {
-            context.addTask(new NodePackageInstallTask());
-            installAdded = true;
-          }
           return json;
-        }
-      );
+        }),
+        addInstallTask({
+          skipInstall: !addInstall,
+        }),
+      ]);
     } else {
       return noop();
     }
@@ -613,21 +631,22 @@ export function updatePackageJsonDependencies(
   devDeps: any,
   addInstall = true
 ): Rule {
-  return updateJsonInTree('package.json', (json, context: SchematicContext) => {
-    json.dependencies = {
-      ...(json.dependencies || {}),
-      ...deps
-    };
-    json.devDependencies = {
-      ...(json.devDependencies || {}),
-      ...devDeps
-    };
-    if (addInstall && !installAdded) {
-      context.addTask(new NodePackageInstallTask());
-      installAdded = true;
-    }
-    return json;
-  });
+  return chain([
+    updateJsonInTree('package.json', (json, context: SchematicContext) => {
+      json.dependencies = {
+        ...(json.dependencies || {}),
+        ...deps,
+      };
+      json.devDependencies = {
+        ...(json.devDependencies || {}),
+        ...devDeps,
+      };
+      return json;
+    }),
+    addInstallTask({
+      skipInstall: !addInstall,
+    }),
+  ]);
 }
 
 export function getProjectConfig(host: Tree, name: string): any {
@@ -659,21 +678,21 @@ export function insertImport(
   const allImports = findNodes(rootNode, ts.SyntaxKind.ImportDeclaration);
 
   // get nodes that map to import statements from the file fileName
-  const relevantImports = allImports.filter(node => {
+  const relevantImports = allImports.filter((node) => {
     // StringLiteral of the ImportDeclaration is the import file (fileName in this case).
     const importFiles = node
       .getChildren()
-      .filter(child => child.kind === ts.SyntaxKind.StringLiteral)
-      .map(n => (n as ts.StringLiteral).text);
+      .filter((child) => child.kind === ts.SyntaxKind.StringLiteral)
+      .map((n) => (n as ts.StringLiteral).text);
 
-    return importFiles.filter(file => file === fileName).length === 1;
+    return importFiles.filter((file) => file === fileName).length === 1;
   });
 
   if (relevantImports.length > 0) {
     let importsAsterisk = false;
     // imports from import file
     const imports: ts.Node[] = [];
-    relevantImports.forEach(n => {
+    relevantImports.forEach((n) => {
       Array.prototype.push.apply(
         imports,
         findNodes(n, ts.SyntaxKind.Identifier)
@@ -689,7 +708,7 @@ export function insertImport(
     }
 
     const importTextNodes = imports.filter(
-      n => (n as ts.Identifier).text === symbolName
+      (n) => (n as ts.Identifier).text === symbolName
     );
 
     // insert import if it's not there
@@ -750,7 +769,7 @@ export function replaceNodeValue(
       node.getStart(node.getSourceFile()),
       node.getFullText(),
       content
-    )
+    ),
   ]);
 }
 
@@ -781,7 +800,7 @@ export function renameDirSyncInTree(
     cb(`Path: ${from} does not exist`);
     return;
   }
-  dir.visit(path => {
+  dir.visit((path) => {
     const destination = path.replace(from, to);
     renameFile(tree, path, destination);
   });
@@ -799,4 +818,25 @@ function renameFile(tree: Tree, from: string, to: string) {
   }
   tree.create(to, buffer.toString());
   tree.delete(from);
+}
+
+/**
+ * Applies a template merge but skips for already existing entries
+ */
+export function applyWithSkipExisting(source: Source, rules: Rule[]): Rule {
+  return (tree: Tree, _context: SchematicContext) => {
+    const rule = mergeWith(
+      apply(source, [
+        ...rules,
+        forEach((fileEntry) => {
+          if (tree.exists(fileEntry.path)) {
+            return null;
+          }
+          return fileEntry;
+        }),
+      ])
+    );
+
+    return rule(tree, _context);
+  };
 }

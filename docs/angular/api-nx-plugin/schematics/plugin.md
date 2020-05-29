@@ -5,7 +5,7 @@ Create a Nx Plugin
 ## Usage
 
 ```bash
-ng generate plugin ...
+nx generate plugin ...
 ```
 
 By default, Nx will search for `plugin` in the default collection provisioned in `angular.json`.
@@ -13,13 +13,13 @@ By default, Nx will search for `plugin` in the default collection provisioned in
 You can specify the collection explicitly as follows:
 
 ```bash
-ng g @nrwl/nx-plugin:plugin ...
+nx g @nrwl/nx-plugin:plugin ...
 ```
 
 Show what will be generated without writing to disk:
 
 ```bash
-ng g plugin ... --dry-run
+nx g plugin ... --dry-run
 ```
 
 ### Examples
@@ -27,7 +27,7 @@ ng g plugin ... --dry-run
 Generate libs/plugins/my-plugin:
 
 ```bash
-ng g plugin my-plugin --directory=plugins
+nx g plugin my-plugin --directory=plugins
 ```
 
 ## Options

@@ -5,7 +5,7 @@ Set up storybook for a react library
 ## Usage
 
 ```bash
-ng generate storybook-configuration ...
+nx generate storybook-configuration ...
 ```
 
 By default, Nx will search for `storybook-configuration` in the default collection provisioned in `angular.json`.
@@ -13,13 +13,13 @@ By default, Nx will search for `storybook-configuration` in the default collecti
 You can specify the collection explicitly as follows:
 
 ```bash
-ng g @nrwl/react:storybook-configuration ...
+nx g @nrwl/react:storybook-configuration ...
 ```
 
 Show what will be generated without writing to disk:
 
 ```bash
-ng g storybook-configuration ... --dry-run
+nx g storybook-configuration ... --dry-run
 ```
 
 ## Options
@@ -30,6 +30,12 @@ Type: `boolean`
 
 Run the cypress-configure schematic
 
+### generateStories
+
+Type: `boolean`
+
+Automatically generate \*.stories.ts files for components declared in this library
+
 ### js
 
 Default: `false`
@@ -37,6 +43,16 @@ Default: `false`
 Type: `boolean`
 
 Generate JavaScript files rather than TypeScript files
+
+### linter
+
+Default: `tslint`
+
+Type: `string`
+
+Possible values: `eslint`, `tslint`
+
+The tool to use for running lint checks.
 
 ### name
 

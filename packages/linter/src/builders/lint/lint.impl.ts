@@ -66,14 +66,14 @@ async function run(options: Schema, context: BuilderContext): Promise<any> {
           lintedFiles,
           program,
           allPrograms
-        ))
+        )),
       ];
       context.reportProgress(++i, allPrograms.length);
     }
   } else {
     lintReports = [
       ...lintReports,
-      ...(await lint(systemRoot, eslintConfigPath, options, lintedFiles))
+      ...(await lint(systemRoot, eslintConfigPath, options, lintedFiles)),
     ];
   }
 
@@ -91,7 +91,7 @@ async function run(options: Schema, context: BuilderContext): Promise<any> {
     fixableWarningCount: 0,
     warningCount: 0,
     results: [],
-    usedDeprecatedRules: []
+    usedDeprecatedRules: [],
   };
   for (const report of lintReports) {
     // output fixes to disk
@@ -132,7 +132,11 @@ async function run(options: Schema, context: BuilderContext): Promise<any> {
   }
 
   return {
-    success: options.force || bundledReport.errorCount === 0
+    success:
+      options.force ||
+      (bundledReport.errorCount === 0 &&
+        (options.maxWarnings === -1 ||
+          bundledReport.warningCount < options.maxWarnings)),
   };
 }
 

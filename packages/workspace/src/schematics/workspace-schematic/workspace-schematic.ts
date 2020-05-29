@@ -6,25 +6,25 @@ import {
   Rule,
   template,
   url,
-  move
+  move,
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import { formatFiles } from '@nrwl/workspace';
 import { toFileName } from '@nrwl/workspace';
 
-export default function(schema: Schema): Rule {
+export default function (schema: Schema): Rule {
   const options = normalizeOptions(schema);
   const templateSource = apply(url('./files'), [
     template({
       dot: '.',
       tmpl: '',
-      ...(options as any)
+      ...(options as any),
     }),
-    move('tools/schematics')
+    move('tools/schematics'),
   ]);
   return chain([
     branchAndMerge(chain([mergeWith(templateSource)])),
-    formatFiles(options)
+    formatFiles(options),
   ]);
 }
 

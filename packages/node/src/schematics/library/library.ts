@@ -12,7 +12,7 @@ import {
   SchematicContext,
   template,
   Tree,
-  url
+  url,
 } from '@angular-devkit/schematics';
 import {
   formatFiles,
@@ -22,9 +22,10 @@ import {
   toFileName,
   updateJsonInTree,
   updateWorkspaceInTree,
-  getNpmScope
+  getNpmScope,
 } from '@nrwl/workspace';
 import { Schema } from './schema';
+import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -35,7 +36,7 @@ export interface NormalizedSchema extends Schema {
   parsedTags: string[];
 }
 
-export default function(schema: NormalizedSchema): Rule {
+export default function (schema: NormalizedSchema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
 
@@ -44,7 +45,7 @@ export default function(schema: NormalizedSchema): Rule {
       createFiles(options),
       updateTsConfig(options),
       addProject(options),
-      formatFiles(options)
+      formatFiles(options),
     ]);
   };
 }
@@ -58,10 +59,10 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = projectName;
-  const projectRoot = normalize(`libs/${projectDirectory}`);
+  const projectRoot = normalize(`${libsDir(host)}/${projectDirectory}`);
 
   const parsedTags = options.tags
-    ? options.tags.split(',').map(s => s.trim())
+    ? options.tags.split(',').map((s) => s.trim())
     : [];
 
   const normalized: NormalizedSchema = {
@@ -71,7 +72,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     name: projectName,
     projectRoot,
     projectDirectory,
-    parsedTags
+    parsedTags,
   };
 
   return normalized;
@@ -84,15 +85,15 @@ function createFiles(options: NormalizedSchema): Rule {
         ...options,
         ...names(options.name),
         tmpl: '',
-        offsetFromRoot: offsetFromRoot(options.projectRoot)
+        offsetFromRoot: offsetFromRoot(options.projectRoot),
       }),
       move(options.projectRoot),
       options.unitTestRunner === 'none'
-        ? filter(file => !file.endsWith('spec.ts'))
+        ? filter((file) => !file.endsWith('spec.ts'))
         : noop(),
       options.publishable
         ? noop()
-        : filter(file => !file.endsWith('package.json'))
+        : filter((file) => !file.endsWith('package.json')),
     ]),
     MergeStrategy.Overwrite
   );
@@ -105,7 +106,7 @@ function updateTsConfig(options: NormalizedSchema): Rule {
 
   return (host: Tree, context: SchematicContext) => {
     const projectConfig = getProjectConfig(host, options.name);
-    return updateJsonInTree(`${projectConfig.root}/tsconfig.json`, json => {
+    return updateJsonInTree(`${projectConfig.root}/tsconfig.json`, (json) => {
       json.compilerOptions.types.push('jest');
       return json;
     });
@@ -117,18 +118,18 @@ function addProject(options: NormalizedSchema): Rule {
     return noop();
   }
 
-  return updateWorkspaceInTree(json => {
+  return updateWorkspaceInTree((json, context, host) => {
     const architect = json.projects[options.name].architect;
     if (architect) {
       architect.build = {
         builder: '@nrwl/node:package',
         options: {
-          outputPath: `dist/libs/${options.projectDirectory}`,
+          outputPath: `dist/${libsDir(host)}/${options.projectDirectory}`,
           tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
           packageJson: `${options.projectRoot}/package.json`,
           main: `${options.projectRoot}/src/index.ts`,
-          assets: [`${options.projectRoot}/*.md`]
-        }
+          assets: [`${options.projectRoot}/*.md`],
+        },
       };
     }
     return json;

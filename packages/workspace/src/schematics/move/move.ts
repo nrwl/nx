@@ -1,6 +1,6 @@
-import { chain } from '@angular-devkit/schematics';
+import { chain, Rule } from '@angular-devkit/schematics';
+import { checkProjectExists } from '../../utils/rules/check-project-exists';
 import { checkDestination } from './lib/check-destination';
-import { checkProjectExists } from './lib/check-project-exists';
 import { moveProject } from './lib/move-project';
 import { updateCypressJson } from './lib/update-cypress-json';
 import { updateImports } from './lib/update-imports';
@@ -10,7 +10,7 @@ import { updateProjectRootFiles } from './lib/update-project-root-files';
 import { updateWorkspace } from './lib/update-workspace';
 import { Schema } from './schema';
 
-export default function(schema: Schema) {
+export default function (schema: Schema): Rule {
   return chain([
     checkProjectExists(schema),
     checkDestination(schema),
@@ -20,6 +20,6 @@ export default function(schema: Schema) {
     updateJestConfig(schema),
     updateNxJson(schema),
     updateImports(schema),
-    updateWorkspace(schema) // Have to do this last because all previous rules need the information in here
+    updateWorkspace(schema), // Have to do this last because all previous rules need the information in here
   ]);
 }

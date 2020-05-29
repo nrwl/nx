@@ -5,7 +5,7 @@ import { TouchedProjectLocator } from '../affected-project-graph-models';
 export const getTouchedProjectsInNxJson: TouchedProjectLocator<
   WholeFileChange | JsonChange
 > = (touchedFiles, workspaceJson, nxJson): string[] => {
-  const nxJsonChange = touchedFiles.find(change => change.file === 'nx.json');
+  const nxJsonChange = touchedFiles.find((change) => change.file === 'nx.json');
   if (!nxJsonChange) {
     return [];
   }
@@ -13,7 +13,7 @@ export const getTouchedProjectsInNxJson: TouchedProjectLocator<
   const changes = nxJsonChange.getChanges();
 
   if (
-    changes.some(change => {
+    changes.some((change) => {
       if (isJsonChange(change)) {
         return change.path[0] !== 'projects';
       }

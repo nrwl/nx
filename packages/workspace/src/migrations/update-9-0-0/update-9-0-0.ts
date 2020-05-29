@@ -1,5 +1,5 @@
 import { chain } from '@angular-devkit/schematics';
-import { updatePackagesInPackageJson } from '@nrwl/workspace';
+import { formatFiles, updatePackagesInPackageJson } from '@nrwl/workspace';
 import { join } from 'path';
 
 const updatePackages = updatePackagesInPackageJson(
@@ -7,6 +7,6 @@ const updatePackages = updatePackagesInPackageJson(
   '9.0.0'
 );
 
-export default function() {
-  return chain([updatePackages]);
+export default function () {
+  return chain([updatePackages, formatFiles()]);
 }

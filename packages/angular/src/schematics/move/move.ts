@@ -9,9 +9,9 @@ import { Schema } from './schema';
  * to the workspace, so it can't use the same tricks as the `@nrwl/workspace` rules
  * to get the before and after names and paths.
  */
-export default function(schema: Schema) {
+export default function (schema: Schema) {
   return chain([
     externalSchematic('@nrwl/workspace', 'move', schema),
-    updateModuleName(schema)
+    updateModuleName(schema),
   ]);
 }

@@ -3,14 +3,15 @@ import {
   updateWorkspaceInTree,
   readWorkspaceJson,
   readWorkspace,
-  updateJsonInTree
+  updateJsonInTree,
+  formatFiles,
 } from '@nrwl/workspace';
 
 export default function update(): Rule {
   return chain([
-    updateWorkspaceInTree(config => {
+    updateWorkspaceInTree((config) => {
       const filteredProjects = [];
-      Object.keys(config.projects).forEach(name => {
+      Object.keys(config.projects).forEach((name) => {
         if (
           config.projects[name].architect &&
           config.projects[name].architect.e2e &&
@@ -23,7 +24,7 @@ export default function update(): Rule {
           filteredProjects.push(config.projects[name]);
         }
       });
-      filteredProjects.forEach(p => {
+      filteredProjects.forEach((p) => {
         delete p.architect.e2e.options.headless;
         delete p.architect.e2e.options.watch;
         delete p.architect.e2e.configurations;
@@ -33,7 +34,7 @@ export default function update(): Rule {
     (tree, context) => {
       const workspace = readWorkspace(tree);
       const tsconfigUpdateRules = [];
-      Object.keys(workspace.projects).forEach(name => {
+      Object.keys(workspace.projects).forEach((name) => {
         if (
           workspace.projects[name].architect &&
           workspace.projects[name].architect.storybook &&
@@ -46,16 +47,20 @@ export default function update(): Rule {
             workspace.projects[name].architect.storybook.options.config
               .configFolder;
           tsconfigUpdateRules.push(
-            updateJsonInTree(`${storybookFolderPath}/tsconfig.json`, json => ({
-              ...json,
-              compilerOptions: {
-                emitDecoratorMetadata: true
-              }
-            }))
+            updateJsonInTree(
+              `${storybookFolderPath}/tsconfig.json`,
+              (json) => ({
+                ...json,
+                compilerOptions: {
+                  emitDecoratorMetadata: true,
+                },
+              })
+            )
           );
         }
       });
       return chain(tsconfigUpdateRules);
-    }
+    },
+    formatFiles(),
   ]);
 }

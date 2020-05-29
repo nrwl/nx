@@ -1,12 +1,12 @@
 # Resources
 
-## Learn Nx in 10 Minutes
+## 45-Minute Walkthrough
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/jCf92IyR-GE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+## Quick Introductions (10 minutes)
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/E188J7E_MDU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-## Building React Full Stack Applications
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/Jxh_--FeJeY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## Nx Workspace (free)
 
@@ -19,7 +19,7 @@
 ## Books and Blogs
 
 - [Nx blog posts](https://blog.nrwl.io/react/home)
-- [Effective React Development with Nx](https://go.nrwl.io/effective-react-development-with-nx-new-book)
+- [Effective React Development with Nx (free)](https://go.nrwl.io/effective-react-development-with-nx-new-book)
 
 ## Misc
 

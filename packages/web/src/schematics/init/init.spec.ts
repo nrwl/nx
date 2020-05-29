@@ -39,4 +39,55 @@ describe('init', () => {
       expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/web');
     });
   });
+
+  it('should not add jest config if unitTestRunner is none', async () => {
+    const result = await runSchematic(
+      'init',
+      {
+        unitTestRunner: 'none',
+      },
+      tree
+    );
+    expect(result.exists('jest.config.js')).toBe(false);
+  });
+
+  describe('babel config', () => {
+    it('should create babel config if not present', async () => {
+      const result = await runSchematic(
+        'init',
+        {
+          unitTestRunner: 'none',
+        },
+        tree
+      );
+      expect(result.exists('babel.config.json')).toBe(true);
+    });
+
+    it('should not overwrite existing babel config', async () => {
+      tree.create('babel.config.json', '{ "preset": ["preset-awesome"] }');
+
+      const result = await runSchematic(
+        'init',
+        {
+          unitTestRunner: 'none',
+        },
+        tree
+      );
+
+      const existing = result.read('babel.config.json').toString();
+      expect(existing).toMatch('{ "preset": ["preset-awesome"] }');
+    });
+
+    it('should not overwrite existing babel config (.js)', async () => {
+      tree.create('/babel.config.js', 'module.exports = () => {};');
+      const result = await runSchematic(
+        'init',
+        {
+          unitTestRunner: 'none',
+        },
+        tree
+      );
+      expect(result.exists('babel.config.json')).toBe(false);
+    });
+  });
 });

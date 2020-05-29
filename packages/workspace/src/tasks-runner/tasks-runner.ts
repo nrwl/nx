@@ -9,11 +9,17 @@ export interface Task {
   target: Target;
   overrides: Object;
   hash?: string;
+  hashDetails?: {
+    command: string;
+    sources: { [projectName: string]: string };
+    implicitDeps: { [key: string]: string };
+    runtime: { [input: string]: string };
+  };
 }
 
 export enum AffectedEventType {
   TaskComplete = '[Task] Complete',
-  TaskCacheRead = '[Task] CacheRead'
+  TaskCacheRead = '[Task] CacheRead',
 }
 
 export interface AffectedEvent {
@@ -31,6 +37,7 @@ export type TasksRunner<T = unknown> = (
   options: T,
   context?: {
     target?: string;
+    initiatingProject?: string | null;
     projectGraph: ProjectGraph;
     nxJson: NxJson;
   }

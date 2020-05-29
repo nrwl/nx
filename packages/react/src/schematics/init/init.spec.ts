@@ -38,4 +38,15 @@ describe('init', () => {
       );
     });
   });
+
+  it('should not add jest config if unitTestRunner is none', async () => {
+    const result = await runSchematic(
+      'init',
+      {
+        unitTestRunner: 'none',
+      },
+      tree
+    );
+    expect(result.exists('jest.config.js')).toEqual(false);
+  });
 });

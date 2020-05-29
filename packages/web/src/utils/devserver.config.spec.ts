@@ -1,12 +1,13 @@
 import { getDevServerConfig } from './devserver.config';
 import { Logger } from '@angular-devkit/core/src/logger';
-jest.mock('tsconfig-paths-webpack-plugin');
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import * as ts from 'typescript';
 import * as fs from 'fs';
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { WebDevServerOptions } from '../builders/dev-server/dev-server.impl';
 import { join } from 'path';
+
+jest.mock('tsconfig-paths-webpack-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 describe('getDevServerConfig', () => {
@@ -18,6 +19,8 @@ describe('getDevServerConfig', () => {
   let sourceRoot: string;
 
   beforeEach(() => {
+    root = join(__dirname, '../../../..');
+    sourceRoot = join(root, 'apps/app');
     buildInput = {
       main: 'main.ts',
       index: 'index.html',
@@ -28,20 +31,20 @@ describe('getDevServerConfig', () => {
         scripts: true,
         styles: true,
         hidden: false,
-        vendors: false
+        vendors: false,
       },
       optimization: {
         scripts: false,
-        styles: false
+        styles: false,
       },
       styles: [],
       scripts: [],
       outputPath: 'dist',
       tsConfig: 'tsconfig.json',
-      fileReplacements: []
+      fileReplacements: [],
+      root,
+      sourceRoot,
     };
-    root = join(__dirname, '../../../..');
-    sourceRoot = join(root, 'apps/app');
 
     serveInput = {
       host: 'localhost',
@@ -51,21 +54,21 @@ describe('getDevServerConfig', () => {
       liveReload: true,
       open: false,
       watch: true,
-      allowedHosts: null
+      allowedHosts: null,
     };
 
-    (<any>TsConfigPathsPlugin).mockImplementation(
-      function MockPathsPlugin() {}
-    );
+    (<any>(
+      TsConfigPathsPlugin
+    )).mockImplementation(function MockPathsPlugin() {});
 
     mockCompilerOptions = {
-      target: 'es2015'
+      target: 'es2015',
     };
 
     spyOn(ts, 'readConfigFile').and.callFake(() => ({
       config: {
-        compilerOptions: mockCompilerOptions
-      }
+        compilerOptions: mockCompilerOptions,
+      },
     }));
   });
 
@@ -160,7 +163,7 @@ describe('getDevServerConfig', () => {
       expect(result.historyApiFallback).toEqual({
         index: '//index.html',
         disableDotRule: true,
-        htmlAcceptHeaders: ['text/html', 'application/xhtml+xml']
+        htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
       });
     });
 
@@ -185,8 +188,8 @@ describe('getDevServerConfig', () => {
             ...buildInput,
             optimization: {
               scripts: true,
-              styles: false
-            }
+              styles: false,
+            },
           },
           serveInput,
           logger
@@ -203,8 +206,8 @@ describe('getDevServerConfig', () => {
             ...buildInput,
             optimization: {
               scripts: false,
-              styles: true
-            }
+              styles: true,
+            },
           },
           serveInput,
           logger
@@ -221,8 +224,8 @@ describe('getDevServerConfig', () => {
             ...buildInput,
             optimization: {
               scripts: true,
-              styles: true
-            }
+              styles: true,
+            },
           },
           serveInput,
           logger
@@ -239,8 +242,8 @@ describe('getDevServerConfig', () => {
             ...buildInput,
             optimization: {
               scripts: false,
-              styles: false
-            }
+              styles: false,
+            },
           },
           serveInput,
           logger
@@ -257,8 +260,8 @@ describe('getDevServerConfig', () => {
             ...buildInput,
             optimization: {
               scripts: true,
-              styles: true
-            }
+              styles: true,
+            },
           },
           serveInput,
           logger
@@ -290,7 +293,7 @@ describe('getDevServerConfig', () => {
           buildInput,
           {
             ...serveInput,
-            publicHost: 'www.example.com'
+            publicHost: 'www.example.com',
           },
           logger
         );
@@ -310,7 +313,7 @@ describe('getDevServerConfig', () => {
           {
             ...serveInput,
             ssl: true,
-            publicHost: 'www.example.com'
+            publicHost: 'www.example.com',
           },
           logger
         );
@@ -332,8 +335,8 @@ describe('getDevServerConfig', () => {
             ...buildInput,
             optimization: {
               scripts: true,
-              styles: true
-            }
+              styles: true,
+            },
           },
           serveInput,
           logger
@@ -343,7 +346,7 @@ describe('getDevServerConfig', () => {
       });
 
       it('should configure it with the key and cert provided when on', () => {
-        spyOn(fs, 'readFileSync').and.callFake(path => {
+        spyOn(fs, 'readFileSync').and.callFake((path) => {
           if (path.endsWith('ssl.key')) {
             return 'sslKeyContents';
           } else if (path.endsWith('ssl.cert')) {
@@ -359,14 +362,14 @@ describe('getDevServerConfig', () => {
             ...serveInput,
             ssl: true,
             sslKey: 'ssl.key',
-            sslCert: 'ssl.cert'
+            sslCert: 'ssl.cert',
           },
           logger
         ) as any;
 
         expect(result.https).toEqual({
           key: 'sslKeyContents',
-          cert: 'sslCertContents'
+          cert: 'sslCertContents',
         });
       });
     });
@@ -376,10 +379,10 @@ describe('getDevServerConfig', () => {
         jest.mock(
           join(root, 'proxy.conf'),
           () => ({
-            proxyConfig: 'proxyConfig'
+            proxyConfig: 'proxyConfig',
           }),
           {
-            virtual: true
+            virtual: true,
           }
         );
 
@@ -389,13 +392,13 @@ describe('getDevServerConfig', () => {
           buildInput,
           {
             ...serveInput,
-            proxyConfig: 'proxy.conf'
+            proxyConfig: 'proxy.conf',
           },
           logger
         ) as any;
 
         expect(result.proxy).toEqual({
-          proxyConfig: 'proxyConfig'
+          proxyConfig: 'proxyConfig',
         });
       });
     });
@@ -408,7 +411,7 @@ describe('getDevServerConfig', () => {
           buildInput,
           {
             ...serveInput,
-            allowedHosts: 'host.com,subdomain.host.com'
+            allowedHosts: 'host.com,subdomain.host.com',
           },
           logger
         ) as any;
@@ -423,7 +426,7 @@ describe('getDevServerConfig', () => {
           buildInput,
           {
             ...serveInput,
-            allowedHosts: 'host.com'
+            allowedHosts: 'host.com',
           },
           logger
         ) as any;
@@ -448,13 +451,13 @@ describe('getDevServerConfig', () => {
           const result = getDevServerConfig(
             root,
             sourceRoot,
-            buildInput,
-            { ...serveInput, maxWorkers: 1 },
+            { ...buildInput, maxWorkers: 1 },
+            serveInput,
             logger
           ) as any;
 
           const typeCheckerPlugin = result.plugins.find(
-            plugin => plugin instanceof ForkTsCheckerWebpackPlugin
+            (plugin) => plugin instanceof ForkTsCheckerWebpackPlugin
           ) as ForkTsCheckerWebpackPlugin;
           expect(typeCheckerPlugin.options.workers).toEqual(1);
         });
@@ -465,13 +468,13 @@ describe('getDevServerConfig', () => {
           const result = getDevServerConfig(
             root,
             sourceRoot,
-            buildInput,
-            { ...serveInput, memoryLimit: 1024 },
+            { ...buildInput, memoryLimit: 1024 },
+            serveInput,
             logger
           ) as any;
 
           const typeCheckerPlugin = result.plugins.find(
-            plugin => plugin instanceof ForkTsCheckerWebpackPlugin
+            (plugin) => plugin instanceof ForkTsCheckerWebpackPlugin
           ) as ForkTsCheckerWebpackPlugin;
           expect(typeCheckerPlugin.options.memoryLimit).toEqual(1024);
         });

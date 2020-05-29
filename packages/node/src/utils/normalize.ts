@@ -24,7 +24,7 @@ export function normalizeBuildOptions<T extends BuildBuilderOptions>(
     assets: normalizeAssets(options.assets, root, sourceRoot),
     webpackConfig: options.webpackConfig
       ? resolve(root, options.webpackConfig)
-      : options.webpackConfig
+      : options.webpackConfig,
   };
 }
 
@@ -33,7 +33,7 @@ function normalizeAssets(
   root: string,
   sourceRoot: string
 ): any[] {
-  return assets.map(asset => {
+  return assets.map((asset) => {
     if (typeof asset === 'string') {
       const assetPath = normalize(asset);
       const resolvedAssetPath = resolve(root, assetPath);
@@ -54,7 +54,7 @@ function normalizeAssets(
       return {
         input,
         output,
-        glob
+        glob,
       };
     } else {
       if (asset.output.startsWith('..')) {
@@ -69,7 +69,7 @@ function normalizeAssets(
         ...asset,
         input: resolvedAssetPath,
         // Now we remove starting slash to make Webpack place it from the output root.
-        output: asset.output.replace(/^\//, '')
+        output: asset.output.replace(/^\//, ''),
       };
     }
   });
@@ -79,8 +79,8 @@ function normalizeFileReplacements(
   root: string,
   fileReplacements: FileReplacement[]
 ): FileReplacement[] {
-  return fileReplacements.map(fileReplacement => ({
+  return fileReplacements.map((fileReplacement) => ({
     replace: resolve(root, fileReplacement.replace),
-    with: resolve(root, fileReplacement.with)
+    with: resolve(root, fileReplacement.with),
   }));
 }

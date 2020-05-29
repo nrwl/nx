@@ -5,7 +5,7 @@ Generates a workspace schematic
 ## Usage
 
 ```bash
-ng generate workspace-schematic ...
+nx generate workspace-schematic ...
 ```
 
 By default, Nx will search for `workspace-schematic` in the default collection provisioned in `angular.json`.
@@ -13,13 +13,13 @@ By default, Nx will search for `workspace-schematic` in the default collection p
 You can specify the collection explicitly as follows:
 
 ```bash
-ng g @nrwl/workspace:workspace-schematic ...
+nx g @nrwl/workspace:workspace-schematic ...
 ```
 
 Show what will be generated without writing to disk:
 
 ```bash
-ng g workspace-schematic ... --dry-run
+nx g workspace-schematic ... --dry-run
 ```
 
 ## Options

@@ -5,7 +5,7 @@ import {
   readJsonInTree,
   updateWorkspaceInTree,
   readWorkspace,
-  getWorkspacePath
+  getWorkspacePath,
 } from '@nrwl/workspace';
 
 import * as path from 'path';
@@ -39,11 +39,11 @@ describe('Update 8-8-2', () => {
                   uiFramework: '@storybook/angular',
                   port: 4400,
                   config: {
-                    configFolder: 'libs/home/ui/.storybook'
-                  }
-                }
-              }
-            }
+                    configFolder: 'libs/home/ui/.storybook',
+                  },
+                },
+              },
+            },
           },
           ['home-ui-e2e']: {
             root: 'apps/home-ui-e2e',
@@ -56,18 +56,18 @@ describe('Update 8-8-2', () => {
                   tsConfig: 'apps/home-ui-e2e/tsconfig.e2e.json',
                   devServerTarget: 'home-ui:storybook',
                   headless: false,
-                  watch: true
+                  watch: true,
                 },
                 configurations: {
                   headless: {
                     devServerTarget: 'home-ui:storybook:ci',
-                    headless: true
-                  }
-                }
-              }
-            }
-          }
-        }
+                    headless: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       })
     );
 
@@ -93,7 +93,7 @@ describe('Update 8-8-2', () => {
       JSON.stringify({
         extends: '../tsconfig.json',
         exclude: ['../src/test.ts', '../**/*.spec.ts'],
-        include: ['../src/**/*']
+        include: ['../src/**/*'],
       })
     );
     tree.create(
@@ -112,11 +112,11 @@ describe('Update 8-8-2', () => {
                   uiFramework: '@storybook/angular',
                   port: 4400,
                   config: {
-                    configFolder: 'libs/home/ui/.storybook'
-                  }
-                }
-              }
-            }
+                    configFolder: 'libs/home/ui/.storybook',
+                  },
+                },
+              },
+            },
           },
           ['home-ui-e2e']: {
             root: 'apps/home-ui-e2e',
@@ -129,18 +129,18 @@ describe('Update 8-8-2', () => {
                   tsConfig: 'apps/home-ui-e2e/tsconfig.e2e.json',
                   devServerTarget: 'home-ui:storybook',
                   headless: false,
-                  watch: true
+                  watch: true,
                 },
                 configurations: {
                   headless: {
                     devServerTarget: 'home-ui:storybook:ci',
-                    headless: true
-                  }
-                }
-              }
-            }
-          }
-        }
+                    headless: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       })
     );
 

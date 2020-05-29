@@ -15,7 +15,7 @@ import {
   Budget,
   ExtraEntryPoint,
   OptimizationClass,
-  SourceMapClass
+  SourceMapClass,
 } from '../../browser/schema';
 import { NormalizedFileReplacement } from '../../utils/normalize-file-replacements';
 

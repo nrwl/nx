@@ -6,12 +6,12 @@ module.exports = {
     {
       value: 'cleanup',
       name:
-        'cleanup:  A code change that neither fixes a bug nor adds a feature'
+        'cleanup:  A code change that neither fixes a bug nor adds a feature',
     },
     {
       value: 'chore',
-      name: "chore:    Other changes that don't modify src or test files"
-    }
+      name: "chore:    Other changes that don't modify src or test files",
+    },
   ],
 
   scopes: [
@@ -28,13 +28,13 @@ module.exports = {
     { name: 'storybook', description: 'anything Storybook specific' },
     {
       name: 'testing',
-      description: 'anything testing specific (e.g., jest or cypress)'
+      description: 'anything testing specific (e.g., jest or cypress)',
     },
     {
       name: 'repo',
-      description: 'anything related to managing the repo itself'
+      description: 'anything related to managing the repo itself',
     },
-    { name: 'misc', description: 'misc stuff' }
+    { name: 'misc', description: 'misc stuff' },
   ],
 
   allowTicketNumber: true,
@@ -66,7 +66,7 @@ module.exports = {
     breaking: 'List any BREAKING CHANGES (optional):\n',
     footer:
       'List any ISSUES CLOSED by this change (optional). E.g.: #31, #34:\n',
-    confirmCommit: 'Are you sure you want to proceed with the commit above?'
+    confirmCommit: 'Are you sure you want to proceed with the commit above?',
   },
 
   allowCustomScopes: false,
@@ -75,7 +75,7 @@ module.exports = {
   skipQuestions: ['ticketNumber'],
 
   // limit subject length
-  subjectLimit: 100
+  subjectLimit: 100,
   // breaklineChar: '|', // It is supported for fields body and footer.
   // footerPrefix : 'ISSUES CLOSED:'
   // askForBreakingChangeFirst : true, // default is false

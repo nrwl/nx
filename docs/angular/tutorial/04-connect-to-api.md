@@ -15,7 +15,7 @@ import { HttpClientModule } from '@angular/common/http';
   declarations: [AppComponent],
   imports: [BrowserModule, HttpClientModule],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
 export class AppModule {}
 ```
@@ -33,7 +33,7 @@ interface Todo {
 @Component({
   selector: 'myorg-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
   todos: Todo[] = [];
@@ -43,7 +43,7 @@ export class AppComponent {
   }
 
   fetch() {
-    this.http.get<Todo[]>('/api/todos').subscribe(t => (this.todos = t));
+    this.http.get<Todo[]>('/api/todos').subscribe((t) => (this.todos = t));
   }
 
   addTodo() {
@@ -55,7 +55,7 @@ export class AppComponent {
 ```
 
 !!!!!
-Run "ng serve todos" and open http://localhost:4200. What do you see?
+Run `nx serve todos` and open http://localhost:4200. What do you see?
 !!!!!
 "the server responded with a status of 404 (Not Found)" in Console.
 Blank screen.

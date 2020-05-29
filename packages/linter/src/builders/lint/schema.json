@@ -94,6 +94,11 @@
     "outputFile": {
       "type": "string",
       "description": "File to write report to."
+    },
+    "maxWarnings": {
+      "type": "number",
+      "description": "Number of warnings to trigger nonzero exit code - default: -1",
+      "default": -1
     }
   },
   "additionalProperties": false,

@@ -14,8 +14,8 @@ try {
           "If you want to use 'ng', you need to create a new workspace powered by the Angular CLI.",
           'You can do it by selecting Angular CLI when creating a new workspace.',
           "Or by providing --cli as follows: 'create-nx-workspace --cli=angular'.",
-          "You can invoke the Angular schematics with 'nx generate @nrwl/angular' to generate artifacts."
-        ]
+          "You can invoke the Angular schematics with 'nx generate @nrwl/angular' to generate artifacts.",
+        ],
       });
     }
   }

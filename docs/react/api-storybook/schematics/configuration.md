@@ -38,6 +38,16 @@ Type: `boolean`
 
 Generate JavaScript files rather than TypeScript files
 
+### linter
+
+Default: `tslint`
+
+Type: `string`
+
+Possible values: `eslint`, `tslint`
+
+The tool to use for running lint checks.
+
 ### name
 
 Type: `string`
@@ -48,6 +58,6 @@ Library name
 
 Type: `string`
 
-Possible values: `@storybook/angular`, `@storybook/react`, `@storybook/web`
+Possible values: `@storybook/angular`, `@storybook/react`
 
 Storybook UI Framework to use

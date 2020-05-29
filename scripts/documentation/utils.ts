@@ -38,13 +38,13 @@ export async function generateJsonFile(
 
 export async function formatWithPrettier(filePath: string, content: string) {
   let options: any = {
-    filepath: filePath
+    filepath: filePath,
   };
   const resolvedOptions = await resolveConfig(filePath);
   if (resolvedOptions) {
     options = {
       ...options,
-      ...resolvedOptions
+      ...resolvedOptions,
     };
   }
 
@@ -62,14 +62,14 @@ export function getNxPackageDependencies(
   return {
     name: packageJson.name,
     dependencies: packageJson.dependencies
-      ? Object.keys(packageJson.dependencies).filter(item =>
+      ? Object.keys(packageJson.dependencies).filter((item) =>
           item.includes('@nrwl')
         )
       : [],
     peerDependencies: packageJson.peerDependencies
-      ? Object.keys(packageJson.peerDependencies).filter(item =>
+      ? Object.keys(packageJson.peerDependencies).filter((item) =>
           item.includes('@nrwl')
         )
-      : []
+      : [],
   };
 }

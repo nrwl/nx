@@ -5,11 +5,11 @@ Create a component
 ## Usage
 
 ```bash
-ng generate component ...
+nx generate component ...
 ```
 
 ```bash
-ng g c ... # same
+nx g c ... # same
 ```
 
 By default, Nx will search for `component` in the default collection provisioned in `angular.json`.
@@ -17,13 +17,13 @@ By default, Nx will search for `component` in the default collection provisioned
 You can specify the collection explicitly as follows:
 
 ```bash
-ng g @nrwl/react:component ...
+nx g @nrwl/react:component ...
 ```
 
 Show what will be generated without writing to disk:
 
 ```bash
-ng g component ... --dry-run
+nx g component ... --dry-run
 ```
 
 ### Examples
@@ -31,13 +31,13 @@ ng g component ... --dry-run
 Generate a component in the mylib library:
 
 ```bash
-ng g component my-component --project=mylib
+nx g component my-component --project=mylib
 ```
 
 Generate a class component in the mylib library:
 
 ```bash
-ng g component my-component --project=mylib --classComponent
+nx g component my-component --project=mylib --classComponent
 ```
 
 ## Options

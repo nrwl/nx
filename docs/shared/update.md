@@ -10,7 +10,7 @@ We recommend waiting for Nx to update these dependencies for you as we verify th
 
 ### Generate migrations.json
 
-All you you have to do to update Nx to the latest version is run the following:
+All you have to do to update Nx to the latest version is run the following:
 
 ```bash
 nx migrate @nrwl/workspace
@@ -45,7 +45,7 @@ For large projects, more flexibility is often needed:
 
 Since you can run `nx migrate --run-migrations=migrations.json` as many times as you want, you can achieve all of that by commenting out and reordering items in `migrations.json`.
 
-The migrate process can take a long time, sometimes day, so it can be useful to commit the migrations file.
+The migrate process can take a long time, sometimes a day, so it can be useful to commit the migrations file.
 
 ### Overriding versions
 

@@ -7,43 +7,15 @@ In this tutorial you will use Nx to build a full-stack application out of common
 **Start by creating a new workspace.**
 
 ```bash
-npx create-nx-workspace@latest myorg
+npx create-nx-workspace@latest
+
+? Workspace name (e.g., org name)     myorg
+? What to create in the new workspace angular
+? Application name                    todos
+? Default stylesheet format           CSS
 ```
 
-When asked about 'preset', select `empty`, and `Angular CLI` for the CLI.
-
-```treeview
-myorg/
-├── apps/
-├── libs/
-├── tools/
-├── nx.json
-├── angular.json
-├── package.json
-├── tsconfig.json
-├── tslint.json
-└── README.md
-```
-
-This is an empty Nx workspace without any applications or libraries: nothing to run and nothing to test.
-
-## Create an Angular Application
-
-First, we must add the capability to create [Angular](https://angular.io) applications via:
-
-```bash
-ng add @nrwl/angular --defaults
-```
-
-Now, create your first Angular application.
-
-```bash
-ng g @nrwl/angular:application todos
-```
-
-Nx will ask you a few questions about the application you are trying to create: the directory it will be placed in, the tags used for linting, etc. As your workspace grows, those things become really important. For now the default answers are good enough.
-
-After this is done, you should see something like this:
+When asked about 'preset', select `angular`, and `todos` for the app name.
 
 ```treeview
 myorg/
@@ -101,12 +73,42 @@ The generate command added two projects to our workspace:
 Now that the application is setup, run it locally via:
 
 ```bash
-ng serve todos
+nx serve todos
+```
+
+## Note on `nx serve` and `ng serve`
+
+Internally, the Nx CLI delegates to the Angular CLI when running commands or generating code. The `nx serve` command produces the same result as `ng serve`, and `nx build` produces the same results as `ng build`. However, the Nx CLI supports advanced capabilities that aren't supported by the Angular CLI. For instance, Nx's computation cache only works when using the Nx CLI. In other words, using `nx` instead `ng` will result in the same output, but often will perform a lot better. [Read more about Nx CLI and Angular CLI.](`/angular/cli/nx-and-cli)
+
+Depending on how your dev env is set up, the command above might result in `Command 'nx' not found`.
+
+To fix it, you can either install the `nx` cli globally by running:
+
+```bash
+npm install -g @nrwl/cli
+```
+
+or
+
+```bash
+yarn global add @nrwl/cli
+```
+
+Or you can prepend every command with `npm run`:
+
+```bash
+npm run nx -- serve todos
+```
+
+or
+
+```bash
+yarn nx serve todos
 ```
 
 !!!!!
 Open http://localhost:4200 in the browser. What do you see?
 !!!!!
-Page saying "This is an Angular app built with Nx"
+Page saying "Welcome to Todos!"
 Page saying "This is an Angular app built with the Angular CLI"
 404

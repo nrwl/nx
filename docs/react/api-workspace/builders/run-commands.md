@@ -145,7 +145,7 @@ nx affected --target=generate-docs
 
 Type: `string`
 
-Extra arguments. You can pass them as follows: ng run project:target --args='--wait=100'. You can then use {args.wait} syntax to interpolate them in the workspace config file. See example [above](#chaining-commands-interpolating-args-and-setting-the-cwd)
+Extra arguments. You can pass them as follows: nx run project:target --args='--wait=100'. You can then use {args.wait} syntax to interpolate them in the workspace config file. See example [above](#chaining-commands-interpolating-args-and-setting-the-cwd)
 
 ### color
 
@@ -157,7 +157,7 @@ Use colors when showing output of command
 
 ### commands
 
-Type: `array` of `object`
+Type: `object[]`
 
 #### command
 
@@ -179,7 +179,7 @@ You may specify a custom .env file path
 
 ### outputPath
 
-Type: `string`
+Type: `string | string[]`
 
 Tells Nx where the files will be created
 

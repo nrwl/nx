@@ -1,6 +1,6 @@
-[Compodoc](https://compodoc.app/) is a great tool for automatically generating documentation for Angular projects. In order to use it, you need to run a simple command in the terminal.
+# Running Custom Commands
 
-This recipe will show how to run any terminal command within the nx build-chain using Compodoc as an example.
+This recipe will show how to run any terminal command within the nx build-chain.
 
 ## Steps
 
@@ -9,42 +9,53 @@ This recipe will show how to run any terminal command within the nx build-chain 
 The command we want to run for each project is:
 
 ```bash
-compodoc -p [path/to/tsconfig.json]
+make hello
 ```
 
-##### 2. Update `angular.json`
+With this `Makefile` in the root of the project:
 
-For each project for which you want to enable compodoc, add a target in `angular.json`:
+```shell script
+hello:
+  echo "Hello, world!"
+```
+
+##### 2. Update `workspace.json`
+
+For each project for which you want to enable `make`, add a target in `workspace.json`:
 
 ```json
-"compodoc": {
-    "builder": "@nrwl/workspace:run-commands",
-        "options": {
-        "commands": [
-            {
-                "command": "npx compodoc -p apps/my-app/tsconfig.app.json"
+// ...
+"my-app": {
+    "architect": {
+        "make": {
+            "builder": "@nrwl/workspace:run-commands",
+                "options": {
+                "commands": [
+                    {
+                        "command": "make hello"
+                    }
+                ]
             }
-        ]
+        }
+        // ...
     }
 }
 ```
 
-For more information, see the [run-commands api doc](https://nx.dev/api/workspace/builders/run-commands).
-
-Note: Replace `apps/my-app/tsconfig.app.json` with the appropriate `tsconfig.json` path for each project.
+For more information, see the [run-commands api doc](/{{framework}}/plugins/workspace/builders/run-commands).
 
 ##### 3. Trigger the builder from the terminal
 
 To run the builder for a single project:
 
 ```bash
-ng run my-app:compodoc
+nx run my-app:make
 ```
 
 To run the builder for all affected projects:
 
 ```bash
-nx affected --target=compodoc
+nx affected --target=make
 ```
 
-For more information, see the [nx affected api doc](https://nx.dev/api/npmscripts/affected).
+For more information, see the [nx affected](/{{framework}}/cli/affected).

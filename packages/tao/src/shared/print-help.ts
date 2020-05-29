@@ -6,13 +6,13 @@ export function printHelp(
   schema: Schema,
   logger: logging.Logger
 ) {
-  const allPositional = Object.keys(schema.properties).filter(key => {
+  const allPositional = Object.keys(schema.properties).filter((key) => {
     const p = schema.properties[key];
     return p['$default'] && p['$default']['$source'] === 'argv';
   });
   const positional = allPositional.length > 0 ? ` [${allPositional[0]}]` : '';
   const args = Object.keys(schema.properties)
-    .map(name => {
+    .map((name) => {
       const d = schema.properties[name];
       const def = d.default ? ` (default: ${d.default})` : '';
       return formatOption(name, `${d.description}${def}`);

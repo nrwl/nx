@@ -1,8 +1,7 @@
 import * as fs from 'fs';
-import * as path from 'path';
 import { ensureDirSync } from 'fs-extra';
+import * as path from 'path';
 import * as stripJsonComments from 'strip-json-comments';
-import { appRootPath } from './app-root';
 const ignore = require('ignore');
 
 export function writeToFile(filePath: string, str: string) {
@@ -56,7 +55,7 @@ export function copyFile(file: string, target: string) {
   const source = fs.createReadStream(file);
   const dest = fs.createWriteStream(path.resolve(target, f));
   source.pipe(dest);
-  source.on('error', e => console.error(e));
+  source.on('error', (e) => console.error(e));
 }
 
 export function directoryExists(name) {

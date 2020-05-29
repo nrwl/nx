@@ -11,15 +11,15 @@ describe('Update 8.12.0', () => {
     tree = Tree.empty();
     tree = createEmptyWorkspace(tree);
     tree = await callRule(
-      updateJsonInTree<NxJson>('nx.json', json => {
+      updateJsonInTree<NxJson>('nx.json', (json) => {
         json.projects['my-app'] = {
-          tags: []
+          tags: [],
         };
         json.projects['my-app-e2e'] = {
-          tags: []
+          tags: [],
         };
         json.projects['my-non-existent-app-e2e'] = {
-          tags: []
+          tags: [],
         };
         return json;
       }),
@@ -34,17 +34,17 @@ describe('Update 8.12.0', () => {
 
     expect(nxJson.projects['my-app-e2e']).toEqual({
       tags: [],
-      implicitDependencies: ['my-app']
+      implicitDependencies: ['my-app'],
     });
 
     expect(nxJson.projects['my-non-existent-app-e2e']).toEqual({
-      tags: []
+      tags: [],
     });
   });
 
   it('should not add duplicate implicit dependencies for e2e projects', async () => {
     tree = await callRule(
-      updateJsonInTree<NxJson>('nx.json', json => {
+      updateJsonInTree<NxJson>('nx.json', (json) => {
         json.projects['my-app-e2e'].implicitDependencies = ['my-app'];
         return json;
       }),
@@ -56,11 +56,11 @@ describe('Update 8.12.0', () => {
 
     expect(nxJson.projects['my-app-e2e']).toEqual({
       tags: [],
-      implicitDependencies: ['my-app']
+      implicitDependencies: ['my-app'],
     });
 
     expect(nxJson.projects['my-non-existent-app-e2e']).toEqual({
-      tags: []
+      tags: [],
     });
   });
 });

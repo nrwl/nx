@@ -5,7 +5,7 @@ Create stories/specs for all components declared in a library
 ## Usage
 
 ```bash
-ng generate stories ...
+nx generate stories ...
 ```
 
 By default, Nx will search for `stories` in the default collection provisioned in `angular.json`.
@@ -13,13 +13,13 @@ By default, Nx will search for `stories` in the default collection provisioned i
 You can specify the collection explicitly as follows:
 
 ```bash
-ng g @nrwl/angular:stories ...
+nx g @nrwl/angular:stories ...
 ```
 
 Show what will be generated without writing to disk:
 
 ```bash
-ng g stories ... --dry-run
+nx g stories ... --dry-run
 ```
 
 ## Options

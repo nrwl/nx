@@ -87,6 +87,10 @@
       "type": "number",
       "description": "Number of workers to use for type checking. (defaults to # of CPUS - 2)"
     },
+    "memoryLimit": {
+      "type": "number",
+      "description": "Memory limit for type checking service process in MB. (defaults to 2048)"
+    },
     "fileReplacements": {
       "description": "Replace files with other files in the build.",
       "type": "array",
@@ -108,6 +112,11 @@
     "webpackConfig": {
       "type": "string",
       "description": "Path to a function which takes a webpack config, context and returns the resulting webpack config"
+    },
+    "buildLibsFromSource": {
+      "type": "boolean",
+      "description": "Read buildable libraries from source instead of building them separately.",
+      "default": false
     }
   },
   "required": ["tsConfig", "main"],

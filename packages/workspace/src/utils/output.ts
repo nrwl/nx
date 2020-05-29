@@ -19,6 +19,7 @@ export interface CLINoteMessageConfig {
 
 export interface CLISuccessMessageConfig {
   title: string;
+  bodyLines?: string[];
 }
 
 /**
@@ -45,7 +46,7 @@ class CLIOutput {
    * implementation.
    */
   colors = {
-    gray: chalk.gray
+    gray: chalk.gray,
   };
   bold = chalk.bold;
   underline = chalk.underline;
@@ -56,7 +57,7 @@ class CLIOutput {
 
   private writeOutputTitle({
     label,
-    title
+    title,
   }: {
     label?: string;
     title: string;
@@ -75,7 +76,7 @@ class CLIOutput {
       return;
     }
     this.addNewline();
-    bodyLines.forEach(bodyLine => this.writeToStdOut('  ' + bodyLine + '\n'));
+    bodyLines.forEach((bodyLine) => this.writeToStdOut('  ' + bodyLine + '\n'));
   }
 
   addNewline() {
@@ -86,12 +87,16 @@ class CLIOutput {
     this.writeToStdOut(`\n${chalk.gray(this.VERTICAL_SEPARATOR)}\n\n`);
   }
 
+  addVerticalSeparatorWithoutNewLines() {
+    this.writeToStdOut(`${chalk.gray(this.VERTICAL_SEPARATOR)}\n`);
+  }
+
   error({ title, slug, bodyLines }: CLIErrorMessageConfig) {
     this.addNewline();
 
     this.writeOutputTitle({
       label: chalk.reset.inverse.bold.red(' ERROR '),
-      title: chalk.bold.red(title)
+      title: chalk.bold.red(title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -117,7 +122,7 @@ class CLIOutput {
 
     this.writeOutputTitle({
       label: chalk.reset.inverse.bold.yellow(' WARNING '),
-      title: chalk.bold.yellow(title)
+      title: chalk.bold.yellow(title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -143,7 +148,7 @@ class CLIOutput {
 
     this.writeOutputTitle({
       label: chalk.reset.inverse.bold.keyword('orange')(' NOTE '),
-      title: chalk.bold.keyword('orange')(title)
+      title: chalk.bold.keyword('orange')(title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -151,13 +156,15 @@ class CLIOutput {
     this.addNewline();
   }
 
-  success({ title }: CLISuccessMessageConfig) {
+  success({ title, bodyLines }: CLISuccessMessageConfig) {
     this.addNewline();
 
     this.writeOutputTitle({
       label: chalk.reset.inverse.bold.green(' SUCCESS '),
-      title: chalk.bold.green(title)
+      title: chalk.bold.green(title),
     });
+
+    this.writeOptionalOutputBody(bodyLines);
 
     this.addNewline();
   }
@@ -166,8 +173,16 @@ class CLIOutput {
     this.addNewline();
 
     this.writeOutputTitle({
-      title: message
+      title: message,
     });
+
+    this.addNewline();
+  }
+
+  logCommand(message: string) {
+    this.addNewline();
+
+    this.writeToStdOut(chalk.bold(`> ${message} `));
 
     this.addNewline();
   }
@@ -176,7 +191,7 @@ class CLIOutput {
     this.addNewline();
 
     this.writeOutputTitle({
-      title: chalk.white(title)
+      title: chalk.white(title),
     });
 
     this.writeOptionalOutputBody(bodyLines);

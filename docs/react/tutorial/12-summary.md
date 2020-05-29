@@ -9,12 +9,10 @@ In this tutorial you:
 
 ## Learn More
 
-Watch the video showing how to use Nx build full-stack applications.
+- [Free Nx Course on YouTube](https://www.youtube.com/watch?time_continue=49&v=2mYLe9Kp9VM&feature=emb_logo)
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/Jxh_--FeJeY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+**Dive Deep:**
 
-### Read Fundamentals
-
-- [Using Modern Tools](/react/fundamentals/use-modern-tools)
-- [Building Full-Stack Applications](/react/fundamentals/build-full-stack-applications)
-- [Develop using Monorepos and Automation](/react/fundamentals/monorepos-automation)
+- [Nx CLI](/{{framework}}/cli/overview)
+- [Computation Caching](/{{framework}}/guides/computation-caching)
+- [Rebuilding What is Affected](/{{framework}}/guides/monorepo-affected)

@@ -3,9 +3,11 @@ import { runCommand } from '../tasks-runner/run-command';
 import { NxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
 import {
   createProjectGraph,
+  isWorkspaceProject,
+  onlyWorkspaceProjects,
   ProjectGraph,
   ProjectGraphNode,
-  withDeps
+  withDeps,
 } from '../core/project-graph';
 import { readEnvironment } from '../core/file-utils';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
@@ -20,7 +22,7 @@ export function runMany(parsedArgs: yargs.Arguments): void {
   const projectGraph = createProjectGraph();
   const projects = projectsToRun(nxArgs, projectGraph);
   const projectMap: Record<string, ProjectGraphNode> = {};
-  projects.forEach(proj => {
+  projects.forEach((proj) => {
     projectMap[proj.name] = proj;
   });
   const env = readEnvironment(nxArgs.target, projectMap);
@@ -30,7 +32,8 @@ export function runMany(parsedArgs: yargs.Arguments): void {
     env,
     nxArgs,
     overrides,
-    new DefaultReporter()
+    new DefaultReporter(),
+    null
   );
 }
 
@@ -41,7 +44,7 @@ function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
   } else {
     checkForInvalidProjects(nxArgs, allProjects);
     let selectedProjects = allProjects.filter(
-      p => nxArgs.projects.indexOf(p.name) > -1
+      (p) => nxArgs.projects.indexOf(p.name) > -1
     );
     if (nxArgs.withDeps) {
       selectedProjects = Object.values(
@@ -57,7 +60,7 @@ function checkForInvalidProjects(
   allProjects: ProjectGraphNode[]
 ) {
   const invalid = nxArgs.projects.filter(
-    name => !allProjects.find(p => p.name === name)
+    (name) => !allProjects.find((p) => p.name === name)
   );
   if (invalid.length !== 0) {
     throw new Error(`Invalid projects: ${invalid.join(', ')}`);
@@ -75,7 +78,7 @@ function runnableForTarget(
   for (let project of projects) {
     if (projectHasTarget(project, target)) {
       runnable.push(project);
-    } else {
+    } else if (isWorkspaceProject(project)) {
       notRunnable.push(project);
     }
   }
@@ -83,7 +86,7 @@ function runnableForTarget(
   if (strict && notRunnable.length) {
     output.warn({
       title: `the following do not have configuration for "${target}"`,
-      bodyLines: notRunnable.map(p => '- ' + p.name)
+      bodyLines: notRunnable.map((p) => '- ' + p.name),
     });
   }
 

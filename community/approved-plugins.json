@@ -1,7 +1,7 @@
 [
   {
     "name": "@nxtend/ionic-react",
-    "description": "An Nx plugin for developing Ionic React applications and libraries.",
+    "description": "An Nx plugin for developing Ionic React applications and libraries",
     "url": "https://github.com/devinshoemaker/nxtend"
   },
   {
@@ -13,5 +13,45 @@
     "name": "@offeringsolutions/nx-karma-to-jest",
     "description": "Nx plugin for replacing karma with jest in an Nx workspace",
     "url": "https://github.com/FabianGosebrink/nx-karma-to-jest"
+  },
+  {
+    "name": "@flowaccount/nx-serverless",
+    "description": "Nx plugin for node/angular-universal schematics and deployment builders in an Nx workspace",
+    "url": "https://github.com/flowaccount/nx-plugins"
+  },
+  {
+    "name": "@dev-thought/nx-deploy-it",
+    "description": "Nx plugin to deploy applications on your favorite cloud provider",
+    "url": "https://github.com/Dev-Thought/nx-plugins/tree/master/libs/nx-deploy-it"
+  },
+  {
+    "name": "@offeringsolutions/nx-protractor-to-cypress",
+    "description": "Nx plugin to replace protractor with cypress in an nx workspace",
+    "url": "https://github.com/FabianGosebrink/nx-protractor-to-cypress"
+  },
+  {
+    "name": "@gperdomor/nx-docker",
+    "description": "Nx plugin to build docker images of your affected apps",
+    "url": "https://github.com/gperdomor/nx-tools/tree/master/libs/nx-docker"
+  },
+  {
+    "name": "@angular-custom-builders/lite-serve",
+    "description": "Nx plugin to run the e2e test on an existing dist folder",
+    "url": "https://github.com/mauriziovitale/angular-plugins/tree/master/libs/lite-serve"
+  },
+  {
+    "name": "@nx-plus/docusaurus",
+    "description": "Nx plugin adding first class support for Docusaurus in your Nx workspace.",
+    "url": "https://github.com/ZachJW34/nx-plus/tree/master/libs/docusaurus"
+  },
+  {
+    "name": "@twittwer/compodoc",
+    "description": "Nx Plugin to integrate the generation of documentation with Compodoc in the Nx workflow",
+    "url": "https://github.com/twittwer/nx-tools/tree/master/libs/compodoc#readme"
+  },
+  {
+    "name": "@nxext/stencil",
+    "description": "Nx plugin to use StencilJs within nx workspaces",
+    "url": "https://github.com/DominikPieper/nx-extensions"
   }
 ]

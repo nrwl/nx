@@ -3,13 +3,14 @@ import {
   externalSchematic,
   Rule,
   SchematicContext,
-  Tree
+  Tree,
 } from '@angular-devkit/schematics';
 import { join, normalize, Path } from '@angular-devkit/core';
 import { Schema } from './schema';
 import { updateJsonInTree } from '@nrwl/workspace';
 import { toFileName, formatFiles } from '@nrwl/workspace';
 import init from '../init/init';
+import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -17,7 +18,7 @@ interface NormalizedSchema extends Schema {
 
 function addTypes(options: NormalizedSchema): Rule {
   const tsConfigPath = join(options.appProjectRoot, 'tsconfig.json');
-  return updateJsonInTree(tsConfigPath, json => {
+  return updateJsonInTree(tsConfigPath, (json) => {
     json.compilerOptions.types = [...json.compilerOptions.types, 'express'];
     return json;
   });
@@ -50,27 +51,27 @@ server.on('error', console.error);
   };
 }
 
-export default function(schema: Schema): Rule {
+export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(host, schema);
     return chain([
-      init({ skipFormat: true }),
+      init({ ...options, skipFormat: true }),
       externalSchematic('@nrwl/node', 'application', schema),
       addMainFile(options),
       addTypes(options),
-      formatFiles(options)
+      formatFiles(options),
     ])(host, context);
   };
 }
 
-function normalizeOptions(options: Schema): NormalizedSchema {
+function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appDirectory = options.directory
     ? `${toFileName(options.directory)}/${toFileName(options.name)}`
     : toFileName(options.name);
-  const appProjectRoot = join(normalize('apps'), appDirectory);
+  const appProjectRoot = join(normalize(appsDir(host)), appDirectory);
 
   return {
     ...options,
-    appProjectRoot
+    appProjectRoot,
   };
 }

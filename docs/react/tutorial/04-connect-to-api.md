@@ -7,22 +7,26 @@ Real-world applications do not live in isolation — they need APIs to talk 
 ```typescript jsx
 import React, { useEffect, useState } from 'react';
 
+interface Todo {
+  title: string;
+}
+
 const App = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
 
   useEffect(() => {
     fetch('/api/todos')
-      .then(_ => _.json())
+      .then((_) => _.json())
       .then(setTodos);
   }, []);
 
   function addTodo() {
     fetch('/api/addTodo', {
       method: 'POST',
-      body: ''
+      body: '',
     })
-      .then(_ => _.json())
-      .then(newTodo => {
+      .then((_) => _.json())
+      .then((newTodo) => {
         setTodos([...todos, newTodo]);
       });
   }
@@ -31,7 +35,7 @@ const App = () => {
     <>
       <h1>Todos</h1>
       <ul>
-        {todos.map(t => (
+        {todos.map((t) => (
           <li className={'todo'}>{t.title}</li>
         ))}
       </ul>
@@ -46,7 +50,7 @@ export default App;
 ```
 
 !!!!!
-Run "nx serve todos" and open http://localhost:4200. What do you see?
+Run `nx serve todos` and open http://localhost:4200. What do you see?
 !!!!!
 "the server responded with a status of 404 (Not Found)" in Console.
 Blank screen.

@@ -9,7 +9,7 @@ import {
   url,
   template,
   move,
-  noop
+  noop,
 } from '@angular-devkit/schematics';
 import { join, normalize } from '@angular-devkit/core';
 import { Schema } from './schema';
@@ -20,7 +20,7 @@ import { toFileName, names } from '@nrwl/workspace';
 import { formatFiles } from '@nrwl/workspace';
 import { offsetFromRoot } from '@nrwl/workspace';
 import { generateProjectLint, addLintFiles } from '../../utils/lint';
-import { addProjectToNxJsonInTree } from '../../utils/ast-utils';
+import { addProjectToNxJsonInTree, libsDir } from '../../utils/ast-utils';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -31,7 +31,7 @@ export interface NormalizedSchema extends Schema {
 }
 
 function addProject(options: NormalizedSchema): Rule {
-  return updateWorkspaceInTree(json => {
+  return updateWorkspaceInTree((json) => {
     const architect: { [key: string]: any } = {};
 
     architect.lint = generateProjectLint(
@@ -45,7 +45,7 @@ function addProject(options: NormalizedSchema): Rule {
       sourceRoot: join(normalize(options.projectRoot), 'src'),
       projectType: 'library',
       schematics: {},
-      architect
+      architect,
     };
     return json;
   });
@@ -55,15 +55,16 @@ function updateTsConfig(options: NormalizedSchema): Rule {
   return chain([
     (host: Tree, context: SchematicContext) => {
       const nxJson = readJsonInTree<NxJson>(host, 'nx.json');
-      return updateJsonInTree('tsconfig.json', json => {
+      return updateJsonInTree('tsconfig.json', (json) => {
         const c = json.compilerOptions;
+        c.paths = c.paths || {};
         delete c.paths[options.name];
         c.paths[`@${nxJson.npmScope}/${options.projectDirectory}`] = [
-          `libs/${options.projectDirectory}/src/index.ts`
+          `${libsDir(host)}/${options.projectDirectory}/src/index.ts`,
         ];
         return json;
       })(host, context);
-    }
+    },
   ]);
 }
 
@@ -75,9 +76,9 @@ function createFiles(options: NormalizedSchema): Rule {
         ...names(options.name),
         tmpl: '',
         offsetFromRoot: offsetFromRoot(options.projectRoot),
-        hasUnitTestRunner: options.unitTestRunner !== 'none'
+        hasUnitTestRunner: options.unitTestRunner !== 'none',
       }),
-      move(options.projectRoot)
+      move(options.projectRoot),
     ])
   );
 }
@@ -86,9 +87,9 @@ function updateNxJson(options: NormalizedSchema): Rule {
   return addProjectToNxJsonInTree(options.name, { tags: options.parsedTags });
 }
 
-export default function(schema: Schema): Rule {
+export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(host, schema);
     return chain([
       addLintFiles(options.projectRoot, options.linter),
       createFiles(options),
@@ -101,15 +102,15 @@ export default function(schema: Schema): Rule {
             setupFile: 'none',
             supportTsx: true,
             skipSerializers: true,
-            testEnvironment: options.testEnvironment
+            testEnvironment: options.testEnvironment,
           })
         : noop(),
-      formatFiles(options)
+      formatFiles(options),
     ])(host, context);
   };
 }
 
-function normalizeOptions(options: Schema): NormalizedSchema {
+function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const name = toFileName(options.name);
   const projectDirectory = options.directory
     ? `${toFileName(options.directory)}/${name}`
@@ -119,10 +120,10 @@ function normalizeOptions(options: Schema): NormalizedSchema {
   const fileName = options.simpleModuleName ? name : projectName;
 
   // const projectRoot = `libs/${projectDirectory}`;
-  const projectRoot = `libs/${projectDirectory}`;
+  const projectRoot = `${libsDir(host)}/${projectDirectory}`;
 
   const parsedTags = options.tags
-    ? options.tags.split(',').map(s => s.trim())
+    ? options.tags.split(',').map((s) => s.trim())
     : [];
 
   return {
@@ -131,6 +132,6 @@ function normalizeOptions(options: Schema): NormalizedSchema {
     name: projectName,
     projectRoot,
     projectDirectory,
-    parsedTags
+    parsedTags,
   };
 }

@@ -4,14 +4,15 @@ import {
   noop,
   Rule,
   SchematicContext,
-  Tree
+  Tree,
 } from '@angular-devkit/schematics';
 import {
+  formatFiles,
   insert,
   readJsonInTree,
   updateJsonInTree,
   updatePackageJsonDependencies,
-  updatePackagesInPackageJson
+  updatePackagesInPackageJson,
 } from '@nrwl/workspace';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import * as path from 'path';
@@ -28,7 +29,8 @@ export default function update(): Rule {
     updatePackagesInPackageJson(
       path.join(__dirname, '../../../', 'migrations.json'),
       '8.9.0'
-    )
+    ),
+    formatFiles(),
   ]);
 }
 
@@ -76,7 +78,7 @@ function updateImports(host: Tree) {
     ig = ig.add(host.read('.gitignore').toString());
   }
 
-  host.visit(path => {
+  host.visit((path) => {
     if (ig.ignores(relative('/', path)) || !/\.tsx?$/.test(path)) {
       return;
     }
@@ -88,7 +90,7 @@ function updateImports(host: Tree) {
       true
     );
     const changes = [];
-    sourceFile.statements.forEach(statement => {
+    sourceFile.statements.forEach((statement) => {
       if (
         ts.isImportDeclaration(statement) &&
         ts.isStringLiteral(statement.moduleSpecifier)

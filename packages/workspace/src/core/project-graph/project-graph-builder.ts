@@ -2,7 +2,7 @@ import {
   DependencyType,
   ProjectGraph,
   ProjectGraphDependency,
-  ProjectGraphNode
+  ProjectGraphNode,
 } from './project-graph-models';
 
 export class ProjectGraphBuilder {
@@ -14,14 +14,27 @@ export class ProjectGraphBuilder {
 
   constructor(g?: ProjectGraph) {
     if (g) {
-      Object.values(g.nodes).forEach(n => this.addNode(n));
-      Object.values(g.dependencies).forEach(ds => {
-        ds.forEach(d => this.addDependency(d.type, d.source, d.target));
+      Object.values(g.nodes).forEach((n) => this.addNode(n));
+      Object.values(g.dependencies).forEach((ds) => {
+        ds.forEach((d) => this.addDependency(d.type, d.source, d.target));
       });
     }
   }
 
   addNode(node: ProjectGraphNode) {
+    // Check if project with the same name already exists
+    if (this.nodes[node.name]) {
+      // Throw if existing project is of a different type
+      if (this.nodes[node.name].type !== node.type) {
+        throw new Error(
+          `Multiple projects are named "${node.name}". One is of type "${
+            node.type
+          }" and the other is of type "${
+            this.nodes[node.name].type
+          }". Please resolve the conflicting project names.`
+        );
+      }
+    }
     this.nodes[node.name] = node;
     this.dependencies[node.name] = {};
   }
@@ -45,20 +58,17 @@ export class ProjectGraphBuilder {
     ] = {
       type,
       source: sourceProjectName,
-      target: targetProjectName
+      target: targetProjectName,
     };
   }
 
   build(): ProjectGraph {
     return {
       nodes: this.nodes as ProjectGraph['nodes'],
-      dependencies: Object.keys(this.dependencies).reduce(
-        (acc, k) => {
-          acc[k] = Object.values(this.dependencies[k]);
-          return acc;
-        },
-        {} as ProjectGraph['dependencies']
-      )
+      dependencies: Object.keys(this.dependencies).reduce((acc, k) => {
+        acc[k] = Object.values(this.dependencies[k]);
+        return acc;
+      }, {} as ProjectGraph['dependencies']),
     };
   }
 }

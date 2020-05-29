@@ -8,14 +8,14 @@ import {
   runCLIAsync,
   checkFilesExist,
   readJson,
-  workspaceConfigName
+  workspaceConfigName,
 } from './utils';
 
-forEachCli(currentCLIName => {
+forEachCli((currentCLIName) => {
   const linter = currentCLIName === 'angular' ? 'tslint' : 'eslint';
 
   describe('Nx Plugin', () => {
-    it('should be able to generate a Nx Plugin ', async done => {
+    it('should be able to generate a Nx Plugin ', async (done) => {
       ensureProject();
       const plugin = uniq('plugin');
 
@@ -36,26 +36,26 @@ forEachCli(currentCLIName => {
         `dist/libs/${plugin}/src/schematics/${plugin}/schema.d.ts`,
         `dist/libs/${plugin}/src/schematics/${plugin}/schematic.js`,
         `dist/libs/${plugin}/src/schematics/${plugin}/files/src/index.ts.template`,
-        `dist/libs/${plugin}/src/builders/${plugin}/builder.js`,
-        `dist/libs/${plugin}/src/builders/${plugin}/schema.d.ts`,
-        `dist/libs/${plugin}/src/builders/${plugin}/schema.json`
+        `dist/libs/${plugin}/src/builders/build/builder.js`,
+        `dist/libs/${plugin}/src/builders/build/schema.d.ts`,
+        `dist/libs/${plugin}/src/builders/build/schema.json`
       );
       const nxJson = readJson('nx.json');
       expect(nxJson).toMatchObject({
         projects: expect.objectContaining({
           [plugin]: {
-            tags: []
+            tags: [],
           },
           [`${plugin}-e2e`]: {
             tags: [],
-            implicitDependencies: [`${plugin}`]
-          }
-        })
+            implicitDependencies: [`${plugin}`],
+          },
+        }),
       });
       done();
     }, 45000);
 
-    it(`should run the plugin's e2e tests`, async done => {
+    it(`should run the plugin's e2e tests`, async (done) => {
       ensureProject();
       const plugin = uniq('plugin');
       runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter}`);
@@ -65,6 +65,121 @@ forEachCli(currentCLIName => {
 
       done();
     }, 150000);
+
+    it('should be able to generate a migration', async (done) => {
+      ensureProject();
+      const plugin = uniq('plugin');
+      const version = '1.0.0';
+
+      runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter}`);
+      runCLI(
+        `generate @nrwl/nx-plugin:migration --project=${plugin} --version=${version} --packageJsonUpdates=false`
+      );
+
+      const lintResults = runCLI(`lint ${plugin}`);
+      expect(lintResults).toContain('All files pass linting.');
+
+      expectTestsPass(await runCLIAsync(`test ${plugin}`));
+
+      const buildResults = runCLI(`build ${plugin}`);
+      expect(buildResults).toContain('Done compiling TypeScript files');
+      checkFilesExist(
+        `dist/libs/${plugin}/src/migrations/update-${version}/update-${version}.js`,
+        `dist/libs/${plugin}/src/migrations/update-${version}/update-${version}.ts`,
+        `dist/libs/${plugin}/src/migrations/update-${version}/update-${version}.spec.ts`,
+        `libs/${plugin}/src/migrations/update-${version}/update-${version}.ts`,
+        `libs/${plugin}/src/migrations/update-${version}/update-${version}.spec.ts`
+      );
+      const migrationsJson = readJson(`libs/${plugin}/migrations.json`);
+      expect(migrationsJson).toMatchObject({
+        schematics: expect.objectContaining({
+          [`update-${version}`]: {
+            version: version,
+            description: `update-${version}`,
+            factory: `./src/migrations/update-${version}/update-${version}`,
+          },
+        }),
+      });
+      done();
+    }, 45000);
+
+    it('should be able to generate a schematic', async (done) => {
+      ensureProject();
+      const plugin = uniq('plugin');
+      const schematic = uniq('schematic');
+
+      runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter}`);
+      runCLI(
+        `generate @nrwl/nx-plugin:schematic ${schematic} --project=${plugin}`
+      );
+
+      const lintResults = runCLI(`lint ${plugin}`);
+      expect(lintResults).toContain('All files pass linting.');
+
+      expectTestsPass(await runCLIAsync(`test ${plugin}`));
+
+      const buildResults = runCLI(`build ${plugin}`);
+      expect(buildResults).toContain('Done compiling TypeScript files');
+      checkFilesExist(
+        `libs/${plugin}/src/schematics/${schematic}/schema.d.ts`,
+        `libs/${plugin}/src/schematics/${schematic}/schema.json`,
+        `libs/${plugin}/src/schematics/${schematic}/schematic.ts`,
+        `libs/${plugin}/src/schematics/${schematic}/schematic.spec.ts`,
+        `dist/libs/${plugin}/src/schematics/${schematic}/schema.d.ts`,
+        `dist/libs/${plugin}/src/schematics/${schematic}/schema.json`,
+        `dist/libs/${plugin}/src/schematics/${schematic}/schematic.js`,
+        `dist/libs/${plugin}/src/schematics/${schematic}/schematic.spec.ts`
+      );
+      const collectionJson = readJson(`libs/${plugin}/collection.json`);
+      expect(collectionJson).toMatchObject({
+        schematics: expect.objectContaining({
+          [schematic]: {
+            factory: `./src/schematics/${schematic}/schematic`,
+            schema: `./src/schematics/${schematic}/schema.json`,
+            description: `${schematic} schematic`,
+          },
+        }),
+      });
+      done();
+    }, 45000);
+
+    it('should be able to generate a builder', async (done) => {
+      ensureProject();
+      const plugin = uniq('plugin');
+      const builder = uniq('builder');
+
+      runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter}`);
+      runCLI(`generate @nrwl/nx-plugin:builder ${builder} --project=${plugin}`);
+
+      const lintResults = runCLI(`lint ${plugin}`);
+      expect(lintResults).toContain('All files pass linting.');
+
+      expectTestsPass(await runCLIAsync(`test ${plugin}`));
+
+      const buildResults = runCLI(`build ${plugin}`);
+      expect(buildResults).toContain('Done compiling TypeScript files');
+      checkFilesExist(
+        `libs/${plugin}/src/builders/${builder}/schema.d.ts`,
+        `libs/${plugin}/src/builders/${builder}/schema.json`,
+        `libs/${plugin}/src/builders/${builder}/builder.ts`,
+        `libs/${plugin}/src/builders/${builder}/builder.spec.ts`,
+        `dist/libs/${plugin}/src/builders/${builder}/schema.d.ts`,
+        `dist/libs/${plugin}/src/builders/${builder}/schema.json`,
+        `dist/libs/${plugin}/src/builders/${builder}/builder.js`,
+        `dist/libs/${plugin}/src/builders/${builder}/builder.spec.ts`
+      );
+      const buildersJson = readJson(`libs/${plugin}/builders.json`);
+      expect(buildersJson).toMatchObject({
+        builders: expect.objectContaining({
+          [builder]: {
+            implementation: `./src/builders/${builder}/builder`,
+            schema: `./src/builders/${builder}/schema.json`,
+            description: `${builder} builder`,
+          },
+        }),
+      });
+      done();
+    }, 45000);
 
     describe('--directory', () => {
       it('should create a plugin in the specified directory', () => {

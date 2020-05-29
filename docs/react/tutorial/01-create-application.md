@@ -2,57 +2,22 @@
 
 In this tutorial you will use Nx to build a full-stack application out of common libraries using modern technologies.
 
-> Next.js: Nx also has first-class Next.js support. Read more about it [here](https://nx.dev/react/guides/next.js).
+> Next.js: Nx also has first-class Next.js support. Read more about it LINKLINK
 
 ## Create a New Workspace
 
 **Start by creating a new workspace.**
 
 ```bash
-npx create-nx-workspace@latest myorg
+npx create-nx-workspace@latest
+
+? Workspace name (e.g., org name)     myorg
+? What to create in the new workspace react
+? Application name                    todos
+? Default stylesheet format           CSS
 ```
 
-When asked about 'preset', select `empty`, and `Nx` for the CLI.
-
-```treeview
-myorg/
-├── apps/
-├── libs/
-├── tools/
-├── nx.json
-├── workspace.json
-├── package.json
-├── tsconfig.json
-└── README.md
-```
-
-This is an empty Nx workspace without any applications or libraries: nothing to run, and nothing to test.
-
-## Create an React Application
-
-First, we must add the capability to create [React](https://reactjs.org/) applications via:
-
-Using `npm`:
-
-```bash
-npm install --save-dev @nrwl/react
-```
-
-Using `yarn`:
-
-```bash
-yarn add --dev @nrwl/react
-```
-
-Now, create your first React application.
-
-```bash
-nx generate @nrwl/react:application todos
-```
-
-Nx will ask you a few questions about the application you are trying to create: the directory it will be placed it, the tags used for linting, etc.. As your workspace grows, those things become really important. For now the default answers are good enough.
-
-After this is done, you should see something like this:
+When asked about 'preset', select `react`, and `todos` for the app name.
 
 ```treeview
 myorg/
@@ -107,6 +72,34 @@ Now that the application is setup, run it locally via:
 
 ```bash
 nx serve todos
+```
+
+## Note on the Nx CLI
+
+Depending on how your dev env is set up, the command above might result in `Command 'nx' not found`.
+
+To fix it, you can either install the `nx` cli globally by running:
+
+```bash
+npm install -g @nrwl/cli
+```
+
+or
+
+```bash
+yarn global add @nrwl/cli
+```
+
+Or you can prepend every command with `npm run`:
+
+```bash
+npm run nx -- serve todos
+```
+
+or
+
+```bash
+yarn nx serve todos
 ```
 
 !!!!!

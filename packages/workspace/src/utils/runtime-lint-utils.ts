@@ -5,7 +5,7 @@ import {
   DependencyType,
   ProjectGraph,
   ProjectGraphDependency,
-  ProjectGraphNode
+  ProjectGraphNode,
 } from '../core/project-graph';
 import { TargetProjectLocator } from '../core/target-project-locator';
 
@@ -16,7 +16,7 @@ export type DepConstraint = {
 };
 
 export function hasNoneOfTheseTags(proj: ProjectGraphNode, tags: string[]) {
-  return tags.filter(allowedTag => hasTag(proj, allowedTag)).length === 0;
+  return tags.filter((allowedTag) => hasTag(proj, allowedTag)).length === 0;
 }
 
 function hasTag(proj: ProjectGraphNode, tag: string) {
@@ -28,7 +28,7 @@ function containsFile(
   targetFileWithoutExtension: string
 ): boolean {
   return !!files.filter(
-    f => removeExt(f.file) === targetFileWithoutExtension
+    (f) => removeExt(f.file) === targetFileWithoutExtension
   )[0];
 }
 
@@ -41,9 +41,7 @@ function removeWindowsDriveLetter(osSpecificPath: string): string {
 }
 
 function normalizePath(osSpecificPath: string): string {
-  return removeWindowsDriveLetter(osSpecificPath)
-    .split(path.sep)
-    .join('/');
+  return removeWindowsDriveLetter(osSpecificPath).split(path.sep).join('/');
 }
 
 export function matchImportWithWildcard(
@@ -90,7 +88,7 @@ export function isRelativeImportIntoAnotherProject(
 }
 
 export function findProjectUsingFile(projectGraph: ProjectGraph, file: string) {
-  return Object.values(projectGraph.nodes).filter(n =>
+  return Object.values(projectGraph.nodes).filter((n) =>
     containsFile(n.data.files, file)
   )[0];
 }
@@ -124,6 +122,7 @@ export function findTargetProject(
 }
 
 export function isAbsoluteImportIntoAnotherProject(imp: string) {
+  // TODO: vsavkin: check if this needs to be fixed once we generalize lint rules
   return (
     imp.startsWith('libs/') ||
     imp.startsWith('/libs/') ||
@@ -165,22 +164,22 @@ function isDependingOn(
   if (done[sourceProjectName]) return false;
   if (!graph.dependencies[sourceProjectName]) return false;
   return graph.dependencies[sourceProjectName]
-    .map(dep =>
+    .map((dep) =>
       dep.target === targetProjectName
         ? true
         : isDependingOn(graph, dep.target, targetProjectName, {
             ...done,
-            [`${sourceProjectName}`]: true
+            [`${sourceProjectName}`]: true,
           })
     )
-    .some(result => result);
+    .some((result) => result);
 }
 
 export function findConstraintsFor(
   depConstraints: DepConstraint[],
   sourceProject: ProjectGraphNode
 ) {
-  return depConstraints.filter(f => hasTag(sourceProject, f.sourceTag));
+  return depConstraints.filter((f) => hasTag(sourceProject, f.sourceTag));
 }
 
 export function onlyLoadChildren(
@@ -191,12 +190,12 @@ export function onlyLoadChildren(
 ) {
   if (visited.indexOf(sourceProjectName) > -1) return false;
   return (
-    (graph.dependencies[sourceProjectName] || []).filter(d => {
+    (graph.dependencies[sourceProjectName] || []).filter((d) => {
       if (d.type !== DependencyType.dynamic) return false;
       if (d.target === targetProjectName) return true;
       return onlyLoadChildren(graph, d.target, targetProjectName, [
         ...visited,
-        sourceProjectName
+        sourceProjectName,
       ]);
     }).length > 0
   );

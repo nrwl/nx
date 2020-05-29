@@ -8,7 +8,7 @@ import { updateWorkspace } from '../workspace';
  * @param collectionName Name of the collection to be set as defaultCollection
  */
 export function setDefaultCollection(collectionName: string): Rule {
-  return updateWorkspace(workspace => {
+  return updateWorkspace((workspace) => {
     workspace.extensions.cli = workspace.extensions.cli || {};
 
     const defaultCollection: string =

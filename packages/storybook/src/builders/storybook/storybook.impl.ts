@@ -1,7 +1,7 @@
 import {
   BuilderContext,
   createBuilder,
-  BuilderOutput
+  BuilderOutput,
 } from '@angular-devkit/architect';
 import { Observable, from } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
@@ -51,12 +51,12 @@ function run(
 ): Observable<BuilderOutput> {
   const frameworkPath = `${options.uiFramework}/dist/server/options`;
   return from(import(frameworkPath)).pipe(
-    map(m => m.default),
-    switchMap(frameworkOptions =>
+    map((m) => m.default),
+    switchMap((frameworkOptions) =>
       from(storybookOptionMapper(options, frameworkOptions, context))
     ),
-    switchMap(option => runInstance(option)),
-    map(loaded => {
+    switchMap((option) => runInstance(option)),
+    map((loaded) => {
       const builder: BuilderOutput = { success: true } as BuilderOutput;
       return builder;
     })
@@ -64,10 +64,10 @@ function run(
 }
 
 function runInstance(options: StorybookBuilderOptions) {
-  return new Observable<any>(obs => {
+  return new Observable<any>((obs) => {
     buildDevStandalone({ ...options, ci: true })
-      .then(sucess => obs.next(sucess))
-      .catch(err => obs.error(err));
+      .then((sucess) => obs.next(sucess))
+      .catch((err) => obs.error(err));
   });
 }
 
@@ -85,7 +85,7 @@ async function storybookOptionMapper(
     mode: 'dev',
     configDir: storybookConfig,
     ...frameworkOptions,
-    frameworkPresets: [...(frameworkOptions.frameworkPresets || [])]
+    frameworkPresets: [...(frameworkOptions.frameworkPresets || [])],
   };
   optionsWithFramework.config;
   return optionsWithFramework;

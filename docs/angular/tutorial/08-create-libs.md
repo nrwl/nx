@@ -10,7 +10,7 @@ Every library has an `index.ts` file, which defines its public API. Other applic
 
 To illustrate how useful libraries can be, create a library of Angular components.
 
-**Run `ng g @nrwl/angular:lib ui`.**
+**Run `nx g @nrwl/angular:lib ui`.**
 
 You should see the following:
 
@@ -47,7 +47,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @NgModule({
-  imports: [CommonModule]
+  imports: [CommonModule],
 })
 export class UiModule {}
 ```
@@ -57,7 +57,7 @@ export class UiModule {}
 **Add a component to the newly created ui library by running:**
 
 ```bash
-ng g component todos --project=ui --export
+nx g component todos --project=ui --export
 ```
 
 ```treeview
@@ -100,7 +100,7 @@ import { Todo } from '@myorg/data';
 @Component({
   selector: 'myorg-todos',
   templateUrl: './todos.component.html',
-  styleUrls: ['./todos.component.css']
+  styleUrls: ['./todos.component.css'],
 })
 export class TodosComponent implements OnInit {
   @Input() todos: Todo[];
@@ -135,7 +135,7 @@ import { UiModule } from '@myorg/ui';
   declarations: [AppComponent],
   imports: [BrowserModule, HttpClientModule, UiModule],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
 export class AppModule {}
 ```
@@ -150,7 +150,7 @@ export class AppModule {}
 <button (click)="addTodo()">Add Todo</button>
 ```
 
-**Restart both `ng serve api` and `ng serve todos` and you should see the application running.**
+**Restart both `nx serve api` and `nx serve todos` and you should see the application running.**
 
 !!!!!
 Libraries' public API is defined in...

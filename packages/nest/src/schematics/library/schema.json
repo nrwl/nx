@@ -53,7 +53,8 @@
     },
     "publishable": {
       "type": "boolean",
-      "description": "Create a publishable library. A \"build\" architect will be added for this project the workspace configuration."
+      "description": "Create a buildable library.",
+      "alias": "buildable"
     },
     "global": {
       "type": "boolean",

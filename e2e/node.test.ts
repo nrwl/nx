@@ -1,35 +1,34 @@
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { execSync, fork, spawn } from 'child_process';
 import * as http from 'http';
 import * as path from 'path';
 import * as treeKill from 'tree-kill';
 import * as ts from 'typescript';
 import {
+  checkFilesDoNotExist,
+  checkFilesExist,
+  cleanup,
   ensureProject,
+  forEachCli,
+  readFile,
   readJson,
   runCLI,
   runCLIAsync,
-  uniq,
-  updateFile,
-  forEachCli,
-  checkFilesExist,
-  tmpProjPath,
-  workspaceConfigName,
-  cleanup,
   runNew,
   runNgAdd,
-  copyMissingPackages,
-  setMaxWorkers,
-  newProject
+  tmpProjPath,
+  uniq,
+  updateFile,
+  workspaceConfigName,
+  yarnAdd,
 } from './utils';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { readFile } from './utils';
 
 function getData(): Promise<any> {
-  return new Promise(resolve => {
-    http.get('http://localhost:3333/api', res => {
+  return new Promise((resolve) => {
+    http.get('http://localhost:3333/api', (res) => {
       expect(res.statusCode).toEqual(200);
       let data = '';
-      res.on('data', chunk => {
+      res.on('data', (chunk) => {
         data += chunk;
       });
       res.once('end', () => {
@@ -39,11 +38,30 @@ function getData(): Promise<any> {
   });
 }
 
-forEachCli(currentCLIName => {
+forEachCli((currentCLIName) => {
   const linter = currentCLIName === 'angular' ? 'tslint' : 'eslint';
 
   describe('Node Applications', () => {
-    it('should be able to generate an express application', async done => {
+    it('should be able to generate an empty application', async () => {
+      ensureProject();
+      const nodeapp = uniq('nodeapp');
+
+      runCLI(`generate @nrwl/node:app ${nodeapp} --linter=${linter}`);
+
+      const lintResults = runCLI(`lint ${nodeapp}`);
+      expect(lintResults).toContain('All files pass linting.');
+
+      updateFile(`apps/${nodeapp}/src/main.ts`, `console.log('Hello World!');`);
+      await runCLIAsync(`build ${nodeapp}`);
+
+      checkFilesExist(`dist/apps/${nodeapp}/main.js`);
+      const result = execSync(`node dist/apps/${nodeapp}/main.js`, {
+        cwd: tmpProjPath(),
+      }).toString();
+      expect(result).toContain('Hello World!');
+    }, 60000);
+
+    it('should be able to generate an express application', async (done) => {
       ensureProject();
       const nodeapp = uniq('nodeapp');
 
@@ -75,18 +93,18 @@ forEachCli(currentCLIName => {
 
       const server = fork(`./dist/apps/${nodeapp}/main.js`, [], {
         cwd: tmpProjPath(),
-        silent: true
+        silent: true,
       });
       expect(server).toBeTruthy();
-      await new Promise(resolve => {
-        server.stdout.once('data', async data => {
+      await new Promise((resolve) => {
+        server.stdout.once('data', async (data) => {
           expect(data.toString()).toContain(
             'Listening at http://localhost:3333'
           );
           const result = await getData();
 
           expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
-          treeKill(server.pid, 'SIGTERM', err => {
+          treeKill(server.pid, 'SIGTERM', (err) => {
             expect(err).toBeFalsy();
             resolve();
           });
@@ -98,22 +116,22 @@ forEachCli(currentCLIName => {
         options: {
           commands: [
             {
-              command: 'sleep 1 && echo DONE'
-            }
+              command: 'sleep 1 && echo DONE',
+            },
           ],
-          readyWhen: 'DONE'
-        }
+          readyWhen: 'DONE',
+        },
       };
 
       config.projects[nodeapp].architect.serve.options.waitUntilTargets = [
-        `${nodeapp}:waitAndPrint`
+        `${nodeapp}:waitAndPrint`,
       ];
       updateFile(workspaceConfigName(), JSON.stringify(config));
       const process = spawn(
         'node',
         ['./node_modules/.bin/nx', 'serve', nodeapp],
         {
-          cwd: tmpProjPath()
+          cwd: tmpProjPath(),
         }
       );
       let collectedOutput = '';
@@ -125,7 +143,7 @@ forEachCli(currentCLIName => {
 
         const result = await getData();
         expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
-        treeKill(process.pid, 'SIGTERM', err => {
+        treeKill(process.pid, 'SIGTERM', (err) => {
           expect(collectedOutput.indexOf('DONE') > -1).toBeTruthy();
           expect(err).toBeFalsy();
           done();
@@ -143,8 +161,8 @@ forEachCli(currentCLIName => {
         // them from their config files as happened with emitDecoratorMetadata.
         cleanup();
         runNew('', false, false);
-        runNgAdd('add @nrwl/workspace --npmScope projscope --skip-install');
-        copyMissingPackages();
+        runNgAdd('add @nrwl/workspace --npmScope projscope');
+        yarnAdd('@nrwl/nest');
       } else {
         ensureProject();
       }
@@ -164,12 +182,10 @@ forEachCli(currentCLIName => {
       cleanup();
     }, 120000);
 
-    it('should be able to generate a nest application', async done => {
+    it('should be able to generate a nest application', async (done) => {
       ensureProject();
       const nestapp = uniq('nestapp');
       runCLI(`generate @nrwl/nest:app ${nestapp} --linter=${linter}`);
-
-      setMaxWorkers(nestapp);
 
       const lintResults = runCLI(`lint ${nestapp}`);
       expect(lintResults).toContain('All files pass linting.');
@@ -188,18 +204,18 @@ forEachCli(currentCLIName => {
 
       const server = fork(`./dist/apps/${nestapp}/main.js`, [], {
         cwd: tmpProjPath(),
-        silent: true
+        silent: true,
       });
       expect(server).toBeTruthy();
 
-      await new Promise(resolve => {
-        server.stdout.on('data', async data => {
+      await new Promise((resolve) => {
+        server.stdout.on('data', async (data) => {
           const message = data.toString();
           if (message.includes('Listening at http://localhost:3333')) {
             const result = await getData();
 
             expect(result.message).toEqual(`Welcome to ${nestapp}!`);
-            treeKill(server.pid, 'SIGTERM', err => {
+            treeKill(server.pid, 'SIGTERM', (err) => {
               expect(err).toBeFalsy();
               resolve();
             });
@@ -211,7 +227,7 @@ forEachCli(currentCLIName => {
         'node',
         ['./node_modules/@nrwl/cli/bin/nx', 'serve', nestapp],
         {
-          cwd: tmpProjPath()
+          cwd: tmpProjPath(),
         }
       );
 
@@ -221,101 +237,14 @@ forEachCli(currentCLIName => {
         }
         const result = await getData();
         expect(result.message).toEqual(`Welcome to ${nestapp}!`);
-        treeKill(process.pid, 'SIGTERM', err => {
+        treeKill(process.pid, 'SIGTERM', (err) => {
           expect(err).toBeFalsy();
           done();
         });
       });
     }, 120000);
-
-    describe('nest libraries', function() {
-      it('should be able to generate a nest library', async () => {
-        ensureProject();
-        const nestlib = uniq('nestlib');
-
-        runCLI(`generate @nrwl/nest:lib ${nestlib}`);
-
-        const jestConfigContent = readFile(`libs/${nestlib}/jest.config.js`);
-
-        expect(stripIndents`${jestConfigContent}`).toEqual(
-          stripIndents`module.exports = {
-                name: '${nestlib}',
-                preset: '../../jest.config.js',
-                testEnvironment: 'node',
-                 transform: {
-                '^.+\\.[tj]sx?$': 'ts-jest'
-                },
-                moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
-                coverageDirectory: '../../coverage/libs/${nestlib}'
-            };
-            `
-        );
-
-        const lintResults = runCLI(`lint ${nestlib}`);
-        expect(lintResults).toContain('All files pass linting.');
-      }, 60000);
-
-      it('should be able to generate a nest library w/ service', async () => {
-        ensureProject();
-        const nestlib = uniq('nestlib');
-
-        runCLI(`generate @nrwl/nest:lib ${nestlib} --service`);
-
-        const lintResults = runCLI(`lint ${nestlib}`);
-        expect(lintResults).toContain('All files pass linting.');
-
-        const jestResult = await runCLIAsync(`test ${nestlib}`);
-        expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
-      }, 60000);
-
-      it('should be able to generate a nest library w/ controller', async () => {
-        ensureProject();
-        const nestlib = uniq('nestlib');
-
-        runCLI(`generate @nrwl/nest:lib ${nestlib} --controller`);
-
-        const lintResults = runCLI(`lint ${nestlib}`);
-        expect(lintResults).toContain('All files pass linting.');
-
-        const jestResult = await runCLIAsync(`test ${nestlib}`);
-        expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
-      }, 60000);
-
-      it('should be able to generate a nest library w/ controller and service', async () => {
-        ensureProject();
-        const nestlib = uniq('nestlib');
-
-        runCLI(`generate @nrwl/nest:lib ${nestlib} --controller --service`);
-
-        const lintResults = runCLI(`lint ${nestlib}`);
-        expect(lintResults).toContain('All files pass linting.');
-
-        const jestResult = await runCLIAsync(`test ${nestlib}`);
-        expect(jestResult.stderr).toContain('Test Suites: 2 passed, 2 total');
-      }, 60000);
-    });
-
-    it('should be able to generate an empty application', async () => {
-      ensureProject();
-      const nodeapp = uniq('nodeapp');
-
-      runCLI(`generate @nrwl/node:app ${nodeapp} --linter=${linter}`);
-
-      setMaxWorkers(nodeapp);
-
-      const lintResults = runCLI(`lint ${nodeapp}`);
-      expect(lintResults).toContain('All files pass linting.');
-
-      updateFile(`apps/${nodeapp}/src/main.ts`, `console.log('Hello World!');`);
-      await runCLIAsync(`build ${nodeapp}`);
-
-      checkFilesExist(`dist/apps/${nodeapp}/main.js`);
-      const result = execSync(`node dist/apps/${nodeapp}/main.js`, {
-        cwd: tmpProjPath()
-      }).toString();
-      expect(result).toContain('Hello World!');
-    }, 60000);
   });
+
   describe('Node Libraries', () => {
     it('should be able to generate a node library', async () => {
       ensureProject();
@@ -344,10 +273,10 @@ forEachCli(currentCLIName => {
           outDir: '../../dist/out-tsc',
           declaration: true,
           rootDir: './src',
-          types: ['node']
+          types: ['node'],
         },
         exclude: ['**/*.spec.ts'],
-        include: ['**/*.ts']
+        include: ['**/*.ts'],
       });
       await runCLIAsync(`build ${nodeLib}`);
       checkFilesExist(
@@ -361,7 +290,7 @@ forEachCli(currentCLIName => {
         name: `@proj/${nodeLib}`,
         version: '0.0.1',
         main: 'index.js',
-        typings: 'index.d.ts'
+        typings: 'index.d.ts',
       });
     }, 60000);
 
@@ -381,7 +310,7 @@ forEachCli(currentCLIName => {
       workspace.projects[nodelib].architect.build.options.assets.push({
         input: `./dist/libs/${nglib}`,
         glob: '**/*',
-        output: '.'
+        output: '.',
       });
 
       updateFile(workspaceConfigName(), JSON.stringify(workspace));
@@ -390,148 +319,206 @@ forEachCli(currentCLIName => {
       runCLI(`build ${nodelib}`);
       checkFilesExist(`./dist/libs/${nodelib}/esm2015/index.js`);
     }, 60000);
+  });
 
-    describe('with dependencies', () => {
-      beforeAll(() => {
-        // force a new project to avoid collissions with the npmScope that has been altered before
-        newProject();
-      });
+  describe('nest libraries', function () {
+    it('should be able to generate a nest library', async () => {
+      ensureProject();
+      const nestlib = uniq('nestlib');
 
-      /**
-       * Graph:
-       *
-       *                 childLib
-       *               /
-       * parentLib =>
-       *               \
-       *                \
-       *                 childLib2
-       *
-       */
-      let parentLib: string;
-      let childLib: string;
-      let childLib2: string;
+      runCLI(`generate @nrwl/nest:lib ${nestlib}`);
 
-      beforeEach(() => {
-        parentLib = uniq('parentlib');
-        childLib = uniq('childlib');
-        childLib2 = uniq('childlib2');
+      const jestConfigContent = readFile(`libs/${nestlib}/jest.config.js`);
 
-        ensureProject();
-
-        runCLI(`generate @nrwl/node:lib ${parentLib} --publishable=true`);
-        runCLI(`generate @nrwl/node:lib ${childLib} --publishable=true`);
-        runCLI(`generate @nrwl/node:lib ${childLib2} --publishable=true`);
-
-        // create dependencies by importing
-        const createDep = (parent, children: string[]) => {
-          updateFile(
-            `libs/${parent}/src/lib/${parent}.ts`,
+      expect(stripIndents`${jestConfigContent}`).toEqual(
+        stripIndents`module.exports = {
+                name: '${nestlib}',
+                preset: '../../jest.config.js',
+                testEnvironment: 'node',
+                 transform: {
+                '^.+\\.[tj]sx?$': 'ts-jest',
+                },
+                moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+                coverageDirectory: '../../coverage/libs/${nestlib}',
+            };
             `
+      );
+
+      const lintResults = runCLI(`lint ${nestlib}`);
+      expect(lintResults).toContain('All files pass linting.');
+    }, 60000);
+
+    it('should be able to generate a nest library w/ service', async () => {
+      ensureProject();
+      const nestlib = uniq('nestlib');
+
+      runCLI(`generate @nrwl/nest:lib ${nestlib} --service`);
+
+      const lintResults = runCLI(`lint ${nestlib}`);
+      expect(lintResults).toContain('All files pass linting.');
+
+      const jestResult = await runCLIAsync(`test ${nestlib}`);
+      expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
+    }, 60000);
+
+    it('should be able to generate a nest library w/ controller', async () => {
+      ensureProject();
+      const nestlib = uniq('nestlib');
+
+      runCLI(`generate @nrwl/nest:lib ${nestlib} --controller`);
+
+      const lintResults = runCLI(`lint ${nestlib}`);
+      expect(lintResults).toContain('All files pass linting.');
+
+      const jestResult = await runCLIAsync(`test ${nestlib}`);
+      expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
+    }, 60000);
+
+    it('should be able to generate a nest library w/ controller and service', async () => {
+      ensureProject();
+      const nestlib = uniq('nestlib');
+
+      runCLI(`generate @nrwl/nest:lib ${nestlib} --controller --service`);
+
+      const lintResults = runCLI(`lint ${nestlib}`);
+      expect(lintResults).toContain('All files pass linting.');
+
+      const jestResult = await runCLIAsync(`test ${nestlib}`);
+      expect(jestResult.stderr).toContain('Test Suites: 2 passed, 2 total');
+    }, 60000);
+  });
+
+  describe('with dependencies', () => {
+    /**
+     * Graph:
+     *
+     *                     childLib
+     *                   /
+     * app => parentLib =>
+     *                  \
+     *                   \
+     *                    childLib2
+     *
+     */
+    let app: string;
+    let parentLib: string;
+    let childLib: string;
+    let childLib2: string;
+
+    beforeEach(() => {
+      app = uniq('app');
+      parentLib = uniq('parentlib');
+      childLib = uniq('childlib');
+      childLib2 = uniq('childlib2');
+
+      ensureProject();
+
+      runCLI(`generate @nrwl/express:app ${app}`);
+      runCLI(`generate @nrwl/node:lib ${parentLib} --publishable=true`);
+      runCLI(`generate @nrwl/node:lib ${childLib} --publishable=true`);
+      runCLI(`generate @nrwl/node:lib ${childLib2} --publishable=true`);
+
+      // create dependencies by importing
+      const createDep = (parent, children: string[]) => {
+        updateFile(
+          `libs/${parent}/src/lib/${parent}.ts`,
+          `
                 ${children
-                  .map(entry => `import { ${entry} } from '@proj/${entry}';`)
+                  .map((entry) => `import { ${entry} } from '@proj/${entry}';`)
                   .join('\n')}
 
                 export function ${parent}(): string {
                   return '${parent}' + ' ' + ${children
-              .map(entry => `${entry}()`)
-              .join('+')}
+            .map((entry) => `${entry}()`)
+            .join('+')}
                 }
                 `
-          );
-        };
-
-        createDep(parentLib, [childLib, childLib2]);
-      });
-
-      it('should throw an error if the dependent library has not been built before building the parent lib', () => {
-        expect.assertions(2);
-
-        try {
-          runCLI(`build ${parentLib}`);
-        } catch (e) {
-          expect(e.stderr.toString()).toContain(
-            `Some of the project ${parentLib}'s dependencies have not been built yet. Please build these libraries before:`
-          );
-          expect(e.stderr.toString()).toContain(`${childLib}`);
-        }
-      });
-
-      it('should build a library without dependencies', () => {
-        const childLibOutput = runCLI(`build ${childLib}`);
-
-        expect(childLibOutput).toContain(
-          `Done compiling TypeScript files for library ${childLib}`
         );
+      };
+
+      createDep(parentLib, [childLib, childLib2]);
+
+      updateFile(
+        `apps/${app}/src/main.ts`,
+        `
+        import "@proj/${parentLib}";
+        `
+      );
+
+      // we are setting paths to {} to make sure built libs are read from dist
+      updateFile('tsconfig.json', (c) => {
+        const json = JSON.parse(c);
+        json.compilerOptions.paths = {};
+        return JSON.stringify(json, null, 2);
       });
-
-      it('should build a parent library if the dependent libraries have been built before', () => {
-        const childLibOutput = runCLI(`build ${childLib}`);
-        expect(childLibOutput).toContain(
-          `Done compiling TypeScript files for library ${childLib}`
-        );
-
-        const childLib2Output = runCLI(`build ${childLib2}`);
-        expect(childLib2Output).toContain(
-          `Done compiling TypeScript files for library ${childLib2}`
-        );
-
-        const parentLibOutput = runCLI(`build ${parentLib}`);
-        expect(parentLibOutput).toContain(
-          `Done compiling TypeScript files for library ${parentLib}`
-        );
-
-        //   assert package.json deps have been set
-        const assertPackageJson = (
-          parent: string,
-          lib: string,
-          version: string
-        ) => {
-          const jsonFile = readJson(`dist/libs/${parent}/package.json`);
-          const childDependencyVersion = jsonFile.dependencies[`@proj/${lib}`];
-          expect(childDependencyVersion).toBe(version);
-        };
-
-        assertPackageJson(parentLib, childLib, '0.0.1');
-        assertPackageJson(parentLib, childLib2, '0.0.1');
-      });
-
-      // it('should automatically build all deps and update package.json when passing --withDeps flags', () => {
-      //   const parentLibOutput = runCLI(`build ${parentLib} --withDeps`);
-
-      //   expect(parentLibOutput).toContain(
-      //     `Done compiling TypeScript files for library ${parentLib}`
-      //   );
-      //   expect(parentLibOutput).toContain(
-      //     `Done compiling TypeScript files for library ${childLib}`
-      //   );
-      //   expect(parentLibOutput).toContain(
-      //     `Done compiling TypeScript files for library ${childChildLib}`
-      //   );
-      //   expect(parentLibOutput).toContain(
-      //     `Done compiling TypeScript files for library ${childLib2}`
-      //   );
-      //   expect(parentLibOutput).toContain(
-      //     `Done compiling TypeScript files for library ${childLibShared}`
-      //   );
-
-      //   //   // assert package.json deps have been set
-      //   const assertPackageJson = (
-      //     parent: string,
-      //     lib: string,
-      //     version: string
-      //   ) => {
-      //     const jsonFile = readJson(`dist/libs/${parent}/package.json`);
-      //     const childDependencyVersion =
-      //       jsonFile.dependencies[`@proj/${lib}`];
-      //     expect(childDependencyVersion).toBe(version);
-      //   };
-
-      //   assertPackageJson(parentLib, childLib, '0.0.1');
-      //   assertPackageJson(childLib, childChildLib, '0.0.1');
-      //   assertPackageJson(childLib, childLibShared, '0.0.1');
-      //   assertPackageJson(childLib2, childLibShared, '0.0.1');
-      // });
     });
+
+    it('should throw an error if the dependent library has not been built before building the parent lib', () => {
+      expect.assertions(2);
+
+      try {
+        runCLI(`build ${parentLib}`);
+      } catch (e) {
+        expect(e.stderr.toString()).toContain(
+          `Some of the project ${parentLib}'s dependencies have not been built yet. Please build these libraries before:`
+        );
+        expect(e.stderr.toString()).toContain(`${childLib}`);
+      }
+    });
+
+    it('should build a library without dependencies', () => {
+      const childLibOutput = runCLI(`build ${childLib}`);
+
+      expect(childLibOutput).toContain(
+        `Done compiling TypeScript files for library ${childLib}`
+      );
+    });
+
+    it('should build a parent library if the dependent libraries have been built before', () => {
+      const childLibOutput = runCLI(`build ${childLib}`);
+      expect(childLibOutput).toContain(
+        `Done compiling TypeScript files for library ${childLib}`
+      );
+
+      const childLib2Output = runCLI(`build ${childLib2}`);
+      expect(childLib2Output).toContain(
+        `Done compiling TypeScript files for library ${childLib2}`
+      );
+
+      const parentLibOutput = runCLI(`build ${parentLib}`);
+      expect(parentLibOutput).toContain(
+        `Done compiling TypeScript files for library ${parentLib}`
+      );
+
+      //   assert package.json deps have been set
+      const assertPackageJson = (
+        parent: string,
+        lib: string,
+        version: string
+      ) => {
+        const jsonFile = readJson(`dist/libs/${parent}/package.json`);
+        const childDependencyVersion = jsonFile.dependencies[`@proj/${lib}`];
+        expect(childDependencyVersion).toBe(version);
+      };
+
+      assertPackageJson(parentLib, childLib, '0.0.1');
+      assertPackageJson(parentLib, childLib2, '0.0.1');
+    });
+
+    if (currentCLIName === 'nx') {
+      it('should build an app composed out of buildable libs', () => {
+        const buildWithDeps = runCLI(`build ${app} --with-deps`);
+        expect(buildWithDeps).toContain(`Running target "build" succeeded`);
+        checkFilesDoNotExist(`apps/${app}/tsconfig/tsconfig.nx-tmp`);
+
+        // we remove all path mappings from the root tsconfig, so when trying to build
+        // libs from source, the builder will throw
+        const failedBuild = runCLI(
+          `build ${app} --with-deps --buildLibsFromSource`,
+          { silenceError: true }
+        );
+        expect(failedBuild).toContain(`Can't resolve`);
+      }, 1000000);
+    }
   });
 });

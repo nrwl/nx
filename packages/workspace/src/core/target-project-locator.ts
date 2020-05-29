@@ -1,38 +1,15 @@
 import { resolveModuleByImport } from '../utils/typescript';
 import { normalizedProjectRoot } from './file-utils';
-import {
-  ProjectGraphNodeRecords,
-  ProjectType
-} from './project-graph/project-graph-models';
+import { ProjectGraphNodeRecords } from './project-graph/project-graph-models';
+import { getSortedProjectNodes, isWorkspaceProject } from './project-graph';
 
 export class TargetProjectLocator {
   _sortedNodeNames = [];
 
   constructor(private nodes: ProjectGraphNodeRecords) {
-    this._sortedNodeNames = Object.keys(nodes).sort((a, b) => {
-      // If a or b is not a nx project, leave them in the same spot
-      if (
-        !this._isNxProject(nodes[a].type) &&
-        !this._isNxProject(nodes[b].type)
-      ) {
-        return 0;
-      }
-      // sort all non-projects lower
-      if (
-        !this._isNxProject(nodes[a].type) &&
-        this._isNxProject(nodes[b].type)
-      ) {
-        return 1;
-      }
-      if (
-        this._isNxProject(nodes[a].type) &&
-        !this._isNxProject(nodes[b].type)
-      ) {
-        return -1;
-      }
-
-      return nodes[a].data.root.length > nodes[b].data.root.length ? -1 : 1;
-    });
+    this._sortedNodeNames = getSortedProjectNodes(nodes).map(
+      ({ name }) => name
+    );
   }
 
   findProjectWithImport(
@@ -47,10 +24,10 @@ export class TargetProjectLocator {
       filePath
     );
 
-    return this._sortedNodeNames.find(projectName => {
+    return this._sortedNodeNames.find((projectName) => {
       const p = this.nodes[projectName];
 
-      if (!this._isNxProject(p.type)) {
+      if (!isWorkspaceProject(p)) {
         return false;
       }
 
@@ -62,13 +39,5 @@ export class TargetProjectLocator {
         return normalizedImportExpr.startsWith(projectImport);
       }
     });
-  }
-
-  private _isNxProject(type: string) {
-    return (
-      type === ProjectType.app ||
-      type === ProjectType.lib ||
-      type === ProjectType.e2e
-    );
   }
 }

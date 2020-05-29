@@ -29,6 +29,8 @@ Deletes the Jest cache directory and then exits without running tests. Will dele
 
 ### codeCoverage
 
+Alias(es): coverage
+
 Type: `boolean`
 
 Indicates that test coverage information should be collected and reported in the output. (https://jestjs.io/docs/en/cli#coverage)
@@ -65,6 +67,12 @@ Type: `string`
 
 A list of reporter names that Jest uses when writing coverage reports. Any istanbul reporter
 
+### detectOpenHandles
+
+Type: `boolean`
+
+Attempt to collect and print open handles preventing Jest from exiting cleanly (https://jestjs.io/docs/en/cli.html#--detectopenhandles)
+
 ### findRelatedTests
 
 Type: `string`
@@ -87,7 +95,7 @@ Prints the test results in JSON. This mode will send all other test output and u
 
 Alias(es): w
 
-Type: `number`
+Type: `number | string`
 
 Specifies the maximum number of workers the worker-pool will spawn for running tests. This defaults to the number of the cores available on your machine. Useful for CI. (its usually best not to override this default) (https://jestjs.io/docs/en/cli#maxworkers-num)
 
@@ -130,6 +138,12 @@ Run all tests serially in the current process (rather than creating a worker poo
 Type: `string`
 
 The name of a setup file used by Jest. (https://jestjs.io/docs/en/configuration#setupfilesafterenv-array)
+
+### showConfig
+
+Type: `boolean`
+
+Print your Jest config and then exits. (https://jestjs.io/docs/en/cli#--showconfig)
 
 ### silent
 

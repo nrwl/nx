@@ -1,9 +1,12 @@
-import { updateJsonInTree, checkAndCleanWithSemver } from '@nrwl/workspace';
-import { chain, SchematicContext } from '@angular-devkit/schematics';
-import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
+import {
+  updateJsonInTree,
+  checkAndCleanWithSemver,
+  addInstallTask,
+} from '@nrwl/workspace';
+import { chain } from '@angular-devkit/schematics';
 import { gt } from 'semver';
 
-const updateCLI = updateJsonInTree('package.json', json => {
+const updateCLI = updateJsonInTree('package.json', (json) => {
   json.devDependencies = json.devDependencies || {};
   const cliVersion = json.devDependencies['@angular/cli'];
   const cleanCliVersion = checkAndCleanWithSemver('@angular/cli', cliVersion);
@@ -27,10 +30,6 @@ const updateCLI = updateJsonInTree('package.json', json => {
   return json;
 });
 
-const addInstall = (_: any, context: SchematicContext) => {
-  context.addTask(new NodePackageInstallTask());
-};
-
-export default function() {
-  return chain([updateCLI, addInstall]);
+export default function () {
+  return chain([updateCLI, addInstallTask()]);
 }

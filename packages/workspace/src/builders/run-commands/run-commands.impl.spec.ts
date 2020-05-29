@@ -7,9 +7,7 @@ import { join } from 'path';
 import { TEN_MEGABYTES } from '@nrwl/workspace/src/core/file-utils';
 
 function readFile(f: string) {
-  return readFileSync(f)
-    .toString()
-    .replace(/\s/g, '');
+  return readFileSync(f).toString().replace(/\s/g, '');
 }
 
 describe('Command Runner Builder', () => {
@@ -44,7 +42,7 @@ describe('Command Runner Builder', () => {
       const run = await architect.scheduleBuilder(
         '@nrwl/workspace:run-commands',
         {
-          commands: [{}]
+          commands: [{}],
         }
       );
       await run.result;
@@ -66,13 +64,13 @@ describe('Command Runner Builder', () => {
         {
           commands: [
             {
-              command: `sleep 0.2 && echo 1 >> ${f}`
+              command: `sleep 0.2 && echo 1 >> ${f}`,
             },
             {
-              command: `sleep 0.1 && echo 2 >> ${f}`
-            }
+              command: `sleep 0.1 && echo 2 >> ${f}`,
+            },
           ],
-          parallel: false
+          parallel: false,
         }
       );
       //wait a tick for the serial runner to schedule the first task
@@ -94,13 +92,13 @@ describe('Command Runner Builder', () => {
         {
           commands: [
             {
-              command: `echo 1 >> ${f}`
+              command: `echo 1 >> ${f}`,
             },
             {
-              command: `echo 2 >> ${f}`
-            }
+              command: `echo 2 >> ${f}`,
+            },
           ],
-          parallel: true
+          parallel: true,
         }
       );
       const processesCreated = exec.calls.count();
@@ -122,7 +120,7 @@ describe('Command Runner Builder', () => {
           {
             commands: [{ command: 'some command' }],
             parallel: false,
-            readyWhen: 'READY'
+            readyWhen: 'READY',
           }
         );
         await run.result;
@@ -134,22 +132,22 @@ describe('Command Runner Builder', () => {
       }
     });
 
-    it('should return success true when the string specified is ready condition is found', async done => {
+    it('should return success true when the string specified is ready condition is found', async (done) => {
       const f = fileSync().name;
       const run = await architect.scheduleBuilder(
         '@nrwl/workspace:run-commands',
         {
           commands: [
             {
-              command: `echo READY && sleep 0.1 && echo 1 >> ${f}`
-            }
+              command: `echo READY && sleep 0.1 && echo 1 >> ${f}`,
+            },
           ],
           parallel: true,
-          readyWhen: 'READY'
+          readyWhen: 'READY',
         }
       );
       let successEmitted = false;
-      run.output.subscribe(result => {
+      run.output.subscribe((result) => {
         successEmitted = true;
         expect(result.success).toEqual(true);
         expect(readFile(f)).toEqual('');
@@ -169,13 +167,13 @@ describe('Command Runner Builder', () => {
       {
         commands: [
           {
-            command: `echo 1 >> ${f} && exit 1`
+            command: `echo 1 >> ${f} && exit 1`,
           },
           {
-            command: `echo 2 >> ${f}`
-          }
+            command: `echo 2 >> ${f}`,
+          },
         ],
-        parallel: false
+        parallel: false,
       }
     );
 
@@ -194,10 +192,10 @@ describe('Command Runner Builder', () => {
         {
           commands: [
             {
-              command: `echo {args.key} >> ${f}`
-            }
+              command: `echo {args.key} >> ${f}`,
+            },
           ],
-          args: 'key=value'
+          args: 'key=value',
         }
       );
       await run.result;
@@ -213,10 +211,10 @@ describe('Command Runner Builder', () => {
       {
         commands: [
           {
-            command: `echo {args.key} >> ${f}`
-          }
+            command: `echo {args.key} >> ${f}`,
+          },
         ],
-        args: '--key=value'
+        args: '--key=value',
       }
     );
 
@@ -234,9 +232,9 @@ describe('Command Runner Builder', () => {
         {
           commands: [
             {
-              command: `echo 'Hello World'`
-            }
-          ]
+              command: `echo 'Hello World'`,
+            },
+          ],
         }
       );
 
@@ -244,7 +242,7 @@ describe('Command Runner Builder', () => {
 
       expect(exec).toHaveBeenCalledWith(`echo 'Hello World'`, {
         maxBuffer: TEN_MEGABYTES,
-        env: { ...process.env, FORCE_COLOR: `false` }
+        env: { ...process.env, FORCE_COLOR: `false` },
       });
     });
 
@@ -255,10 +253,10 @@ describe('Command Runner Builder', () => {
         {
           commands: [
             {
-              command: `echo 'Hello World'`
-            }
+              command: `echo 'Hello World'`,
+            },
           ],
-          color: true
+          color: true,
         }
       );
 
@@ -266,7 +264,7 @@ describe('Command Runner Builder', () => {
 
       expect(exec).toHaveBeenCalledWith(`echo 'Hello World'`, {
         maxBuffer: TEN_MEGABYTES,
-        env: { ...process.env, FORCE_COLOR: `true` }
+        env: { ...process.env, FORCE_COLOR: `true` },
       });
     });
   });
@@ -276,9 +274,9 @@ describe('Command Runner Builder', () => {
     let run = await architect.scheduleBuilder('@nrwl/workspace:run-commands', {
       commands: [
         {
-          command: `pwd >> ${f}`
-        }
-      ]
+          command: `pwd >> ${f}`,
+        },
+      ],
     });
 
     let result = await run.result;
@@ -289,10 +287,10 @@ describe('Command Runner Builder', () => {
     run = await architect.scheduleBuilder('@nrwl/workspace:run-commands', {
       commands: [
         {
-          command: `pwd >> ${f}`
-        }
+          command: `pwd >> ${f}`,
+        },
       ],
-      cwd: 'packages'
+      cwd: 'packages',
     });
 
     result = await run.result;
@@ -322,9 +320,9 @@ describe('Command Runner Builder', () => {
         {
           commands: [
             {
-              command: `echo $NRWL_SITE >> ${f}`
-            }
-          ]
+              command: `echo $NRWL_SITE >> ${f}`,
+            },
+          ],
         }
       );
 
@@ -343,10 +341,10 @@ describe('Command Runner Builder', () => {
         {
           commands: [
             {
-              command: `echo $NX_SITE >> ${f} && echo $NRWL_SITE >> ${f}`
-            }
+              command: `echo $NX_SITE >> ${f} && echo $NRWL_SITE >> ${f}`,
+            },
           ],
-          envFile: devEnv
+          envFile: devEnv,
         }
       );
 
@@ -363,10 +361,10 @@ describe('Command Runner Builder', () => {
         {
           commands: [
             {
-              command: `echo $NX_SITE >> ${f} && echo $NRWL_SITE >> ${f}`
-            }
+              command: `echo $NX_SITE >> ${f} && echo $NRWL_SITE >> ${f}`,
+            },
           ],
-          envFile: '/somePath/.fakeEnv'
+          envFile: '/somePath/.fakeEnv',
         }
       );
 

@@ -1,5 +1,5 @@
+import { NxJson } from '@nrwl/workspace';
 import {
-  cli,
   ensureProject,
   forEachCli,
   listFiles,
@@ -9,16 +9,14 @@ import {
   rmDist,
   runCLI,
   runCommand,
-  setMaxWorkers,
   uniq,
   updateFile,
-  workspaceConfigName
+  workspaceConfigName,
 } from './utils';
-import { NxJson } from '@nrwl/workspace';
 
 let originalCIValue: any;
 
-forEachCli(cliName => {
+forEachCli((cliName) => {
   const cliCommand = cliName === 'angular' ? 'ng' : 'nx';
 
   /**
@@ -40,7 +38,6 @@ forEachCli(cliName => {
       const mylib1 = uniq('mylib1');
       const mylib2 = uniq('mylib1');
       runCLI(`generate @nrwl/react:app ${myapp}`);
-      setMaxWorkers(myapp);
       runCLI(`generate @nrwl/react:lib ${mylib1} --publishable`);
       runCLI(`generate @nrwl/react:lib ${mylib2} --publishable`);
 
@@ -61,7 +58,9 @@ forEachCli(cliName => {
       expect(buildWithDeps).toContain(`${cliCommand} run ${mylib2}:build`);
 
       const testsWithDeps = runCLI(`test ${myapp} --with-deps`);
-      expect(testsWithDeps).toContain(`NX  Running target test for projects:`);
+      expect(testsWithDeps).toContain(
+        `NX  Running target test for project ${myapp} and its 2 deps`
+      );
       expect(testsWithDeps).toContain(myapp);
       expect(testsWithDeps).toContain(mylib1);
       expect(testsWithDeps).toContain(mylib2);
@@ -270,8 +269,8 @@ forEachCli(cliName => {
         results: {
           [myapp]: false,
           [mylib]: true,
-          [mypublishablelib]: true
-        }
+          [mypublishablelib]: true,
+        },
       });
 
       // Fix failing Unit Test
@@ -430,11 +429,11 @@ forEachCli(cliName => {
           overrides: {},
           target: {
             project: myapp,
-            target: 'test'
+            target: 'test',
           },
           command: `npm run ${cliCommand} -- test ${myapp}`,
-          outputs: []
-        }
+          outputs: [],
+        },
       ]);
       compareTwoArrays(resWithTarget.projects, [`${myapp}-e2e`, myapp]);
 
@@ -449,27 +448,27 @@ forEachCli(cliName => {
           overrides: {},
           target: {
             project: mypublishablelib,
-            target: 'build'
+            target: 'build',
           },
           command: `npm run ${cliCommand} -- build ${mypublishablelib}`,
-          outputs: [`dist/libs/${mypublishablelib}`]
+          outputs: [`dist/libs/${mypublishablelib}`],
         },
         {
           id: `${myapp}:build`,
           overrides: {},
           target: {
             project: myapp,
-            target: 'build'
+            target: 'build',
           },
           command: `npm run ${cliCommand} -- build ${myapp}`,
-          outputs: [`dist/apps/${myapp}`]
-        }
+          outputs: [`dist/apps/${myapp}`],
+        },
       ]);
       compareTwoArrays(resWithDeps.projects, [
         mylib,
         mypublishablelib,
         myapp,
-        `${myapp}-e2e`
+        `${myapp}-e2e`,
       ]);
 
       const resWithTargetWithSelect1 = runCommand(
@@ -488,8 +487,8 @@ forEachCli(cliName => {
 
     function compareTwoSerializedArrays(a: string, b: string) {
       compareTwoArrays(
-        a.split(',').map(_ => _.trim()),
-        b.split(',').map(_ => _.trim())
+        a.split(',').map((_) => _.trim()),
+        b.split(',').map((_) => _.trim())
       );
     }
 
@@ -501,20 +500,6 @@ forEachCli(cliName => {
   });
 
   describe('cache', () => {
-    afterAll(() => {
-      updateFile('nx.json', c => {
-        const nxJson = JSON.parse(c);
-        nxJson.tasksRunnerOptions = {
-          default: {
-            options: {
-              cacheableOperations: []
-            }
-          }
-        };
-        return JSON.stringify(nxJson, null, 2);
-      });
-    });
-
     it('should cache command execution', async () => {
       ensureProject();
 
@@ -524,44 +509,13 @@ forEachCli(cliName => {
       runCLI(`generate @nrwl/web:app ${myapp2}`);
       const files = `--files="apps/${myapp1}/src/main.ts,apps/${myapp2}/src/main.ts"`;
 
-      // run without caching
-      // --------------------------------------------
-      const outputWithoutCachingEnabled1 = runCommand(
-        `npm run affected:build -- ${files}`
-      );
-      const filesApp1 = listFiles(`dist/apps/${myapp1}`);
-      const filesApp2 = listFiles(`dist/apps/${myapp2}`);
-
-      expect(outputWithoutCachingEnabled1).not.toContain(
-        'read the output from cache'
-      );
-
-      const outputWithoutCachingEnabled2 = runCommand(
-        `npm run affected:build -- ${files}`
-      );
-      expect(outputWithoutCachingEnabled2).not.toContain(
-        'read the output from cache'
-      );
-
-      // enable caching
-      // --------------------------------------------
-      updateFile('nx.json', c => {
-        const nxJson = JSON.parse(c);
-        nxJson.tasksRunnerOptions = {
-          default: {
-            options: {
-              cacheableOperations: ['build', 'test', 'lint']
-            }
-          }
-        };
-        return JSON.stringify(nxJson, null, 2);
-      });
-
       // run build with caching
       // --------------------------------------------
       const outputThatPutsDataIntoCache = runCommand(
         `npm run affected:build -- ${files}`
       );
+      const filesApp1 = listFiles(`dist/apps/${myapp1}`);
+      const filesApp2 = listFiles(`dist/apps/${myapp2}`);
       // now the data is in cache
       expect(outputThatPutsDataIntoCache).not.toContain(
         'read the output from cache'
@@ -589,7 +543,7 @@ forEachCli(cliName => {
 
       // touch myapp1
       // --------------------------------------------
-      updateFile(`apps/${myapp1}/src/main.ts`, c => {
+      updateFile(`apps/${myapp1}/src/main.ts`, (c) => {
         return `${c}\n//some comment`;
       });
       const outputWithBuildApp2Cached = runCommand(
@@ -600,7 +554,7 @@ forEachCli(cliName => {
 
       // touch package.json
       // --------------------------------------------
-      updateFile(`package.json`, c => {
+      updateFile(`package.json`, (c) => {
         const r = JSON.parse(c);
         r.description = 'different';
         return JSON.stringify(r);
@@ -643,19 +597,63 @@ forEachCli(cliName => {
         myapp1,
         myapp2,
         `${myapp1}-e2e`,
-        `${myapp2}-e2e`
+        `${myapp2}-e2e`,
       ]);
+
+      // run without caching
+      // --------------------------------------------
+
+      // disable caching
+      // --------------------------------------------
+      updateFile('nx.json', (c) => {
+        const nxJson = JSON.parse(c);
+        nxJson.tasksRunnerOptions = {
+          default: {
+            options: {
+              cacheableOperations: [],
+            },
+          },
+        };
+        return JSON.stringify(nxJson, null, 2);
+      });
+
+      const outputWithoutCachingEnabled1 = runCommand(
+        `npm run affected:build -- ${files}`
+      );
+
+      expect(outputWithoutCachingEnabled1).not.toContain(
+        'read the output from cache'
+      );
+
+      const outputWithoutCachingEnabled2 = runCommand(
+        `npm run affected:build -- ${files}`
+      );
+      expect(outputWithoutCachingEnabled2).not.toContain(
+        'read the output from cache'
+      );
     }, 120000);
 
-    function expectCached(actual: string, expected: string[]) {
-      const section = actual.split('read the output from cache')[1];
-      const r = section
-        .split('\n')
-        .filter(l => l.trim().startsWith('-'))
-        .map(l => l.split('- ')[1].trim());
-      r.sort((a, b) => a.localeCompare(b));
-      expected.sort((a, b) => a.localeCompare(b));
-      expect(r).toEqual(expected);
+    function expectCached(
+      actualOutput: string,
+      expectedCachedProjects: string[]
+    ) {
+      const cachedProjects = [];
+      const lines = actualOutput.split('\n');
+      lines.forEach((s, i) => {
+        if (s.startsWith(`> ${cliCommand} run`)) {
+          const projectName = s
+            .split(`> ${cliCommand} run `)[1]
+            .split(':')[0]
+            .trim();
+          if (lines[i + 2].indexOf('Cached Output') > -1) {
+            cachedProjects.push(projectName);
+          }
+        }
+      });
+
+      cachedProjects.sort((a, b) => a.localeCompare(b));
+      expectedCachedProjects.sort((a, b) => a.localeCompare(b));
+      expect(cachedProjects).toEqual(expectedCachedProjects);
     }
   });
 });

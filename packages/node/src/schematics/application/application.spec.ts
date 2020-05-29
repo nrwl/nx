@@ -27,7 +27,7 @@ describe('app', () => {
               outputPath: 'dist/apps/my-node-app',
               main: 'apps/my-node-app/src/main.ts',
               tsConfig: 'apps/my-node-app/tsconfig.app.json',
-              assets: ['apps/my-node-app/src/assets']
+              assets: ['apps/my-node-app/src/assets'],
             },
             configurations: {
               production: {
@@ -38,18 +38,18 @@ describe('app', () => {
                   {
                     replace: 'apps/my-node-app/src/environments/environment.ts',
                     with:
-                      'apps/my-node-app/src/environments/environment.prod.ts'
-                  }
-                ]
-              }
-            }
+                      'apps/my-node-app/src/environments/environment.prod.ts',
+                  },
+                ],
+              },
+            },
           },
           serve: {
             builder: '@nrwl/node:execute',
             options: {
-              buildTarget: 'my-node-app:build'
-            }
-          }
+              buildTarget: 'my-node-app:build',
+            },
+          },
         })
       );
       expect(workspaceJson.projects['my-node-app'].architect.lint).toEqual({
@@ -57,10 +57,10 @@ describe('app', () => {
         options: {
           tsConfig: [
             'apps/my-node-app/tsconfig.app.json',
-            'apps/my-node-app/tsconfig.spec.json'
+            'apps/my-node-app/tsconfig.spec.json',
           ],
-          exclude: ['**/node_modules/**', '!apps/my-node-app/**']
-        }
+          exclude: ['**/node_modules/**', '!apps/my-node-app/**'],
+        },
       });
       expect(workspaceJson.projects['my-node-app-e2e']).toBeUndefined();
       expect(workspaceJson.defaultProject).toEqual('my-node-app');
@@ -73,13 +73,10 @@ describe('app', () => {
         appTree
       );
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
-      expect(nxJson).toEqual({
-        npmScope: 'proj',
-        projects: {
-          'my-node-app': {
-            tags: ['one', 'two']
-          }
-        }
+      expect(nxJson.projects).toEqual({
+        'my-node-app': {
+          tags: ['one', 'two'],
+        },
       });
     });
 
@@ -128,10 +125,10 @@ describe('app', () => {
         options: {
           tsConfig: [
             'apps/my-dir/my-node-app/tsconfig.app.json',
-            'apps/my-dir/my-node-app/tsconfig.spec.json'
+            'apps/my-dir/my-node-app/tsconfig.spec.json',
           ],
-          exclude: ['**/node_modules/**', '!apps/my-dir/my-node-app/**']
-        }
+          exclude: ['**/node_modules/**', '!apps/my-dir/my-node-app/**'],
+        },
       });
 
       expect(workspaceJson.projects['my-dir-my-node-app-e2e']).toBeUndefined();
@@ -145,13 +142,10 @@ describe('app', () => {
         appTree
       );
       const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
-      expect(nxJson).toEqual({
-        npmScope: 'proj',
-        projects: {
-          'my-dir-my-node-app': {
-            tags: ['one', 'two']
-          }
-        }
+      expect(nxJson.projects).toEqual({
+        'my-dir-my-node-app': {
+          tags: ['one', 'two'],
+        },
       });
     });
 
@@ -171,8 +165,8 @@ describe('app', () => {
       // Make sure these exist
       [
         `apps/my-dir/my-node-app/jest.config.js`,
-        'apps/my-dir/my-node-app/src/main.ts'
-      ].forEach(path => {
+        'apps/my-dir/my-node-app/src/main.ts',
+      ].forEach((path) => {
         expect(tree.exists(path)).toBeTruthy();
       });
 
@@ -180,24 +174,24 @@ describe('app', () => {
       [
         {
           path: 'apps/my-dir/my-node-app/tsconfig.json',
-          lookupFn: json => json.extends,
-          expectedValue: '../../../tsconfig.json'
+          lookupFn: (json) => json.extends,
+          expectedValue: '../../../tsconfig.json',
         },
         {
           path: 'apps/my-dir/my-node-app/tsconfig.app.json',
-          lookupFn: json => json.compilerOptions.outDir,
-          expectedValue: '../../../dist/out-tsc'
+          lookupFn: (json) => json.compilerOptions.outDir,
+          expectedValue: '../../../dist/out-tsc',
         },
         {
           path: 'apps/my-dir/my-node-app/tsconfig.app.json',
-          lookupFn: json => json.compilerOptions.types,
-          expectedValue: ['node']
+          lookupFn: (json) => json.compilerOptions.types,
+          expectedValue: ['node'],
         },
         {
           path: 'apps/my-dir/my-node-app/tslint.json',
-          lookupFn: json => json.extends,
-          expectedValue: '../../../tslint.json'
-        }
+          lookupFn: (json) => json.extends,
+          expectedValue: '../../../tslint.json',
+        },
       ].forEach(hasJsonValue);
     });
   });
@@ -209,6 +203,7 @@ describe('app', () => {
         { name: 'myNodeApp', unitTestRunner: 'none' },
         appTree
       );
+      expect(tree.exists('jest.config.js')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/src/test-setup.ts')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/src/test.ts')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/tsconfig.spec.json')).toBeFalsy();

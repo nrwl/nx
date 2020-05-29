@@ -1,8 +1,18 @@
 import { exec, execSync } from 'child_process';
-import { readFileSync, renameSync, statSync, writeFileSync } from 'fs';
+import {
+  readdirSync,
+  readFileSync,
+  renameSync,
+  statSync,
+  writeFileSync,
+} from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
-import * as fs from 'fs';
+
+interface RunCmdOpts {
+  silenceError?: boolean;
+  env?: Record<string, string>;
+}
 
 export let cli;
 
@@ -28,7 +38,7 @@ export function forEachCli(
   }
 
   const cb: any = callback ? callback : selectedCliOrFunction;
-  clis.forEach(c => {
+  clis.forEach((c) => {
     describe(`[${c}]`, () => {
       beforeEach(() => {
         cli = c;
@@ -60,36 +70,52 @@ export function workspaceConfigName() {
   return cli === 'angular' ? 'angular.json' : 'workspace.json';
 }
 
-function patchPackageJsonDeps(addWorkspace = true) {
-  const p = JSON.parse(readFileSync(tmpProjPath('package.json')).toString());
-  const workspacePath = path.join(getCwd(), 'build', 'packages', 'workspace');
-  const angularPath = path.join(getCwd(), 'build', 'packages', 'angular');
-  const reactPath = path.join(getCwd(), 'build', 'packages', 'react');
-  const storybookPath = path.join(getCwd(), 'build', 'packages', 'storybook');
-
-  if (addWorkspace) {
-    p.devDependencies['@nrwl/workspace'] = `file:${workspacePath}`;
+export function runCreateWorkspace(
+  name: string,
+  {
+    preset,
+    appName,
+    style,
+  }: { preset: string; appName?: string; style?: string }
+) {
+  let command = `npx create-nx-workspace@${process.env.PUBLISHED_VERSION} ${name} --cli=${cli} --preset=${preset} --no-interactive`;
+  if (appName) {
+    command += ` --appName ${appName}`;
   }
-  p.devDependencies['@nrwl/angular'] = `file:${angularPath}`;
-  p.devDependencies['@nrwl/react'] = `file:${reactPath}`;
-  p.devDependencies['@nrwl/storybook'] = `file:${storybookPath}`;
-  writeFileSync(tmpProjPath('package.json'), JSON.stringify(p, null, 2));
+  if (style) {
+    command += ` --style ${style}`;
+  }
+  const create = execSync(command, {
+    cwd: `./tmp/${cli}`,
+    stdio: ['pipe', 'pipe', 'pipe'],
+    env: process.env,
+  });
+  return create.toString();
 }
 
-export function runYarnInstall(silent: boolean = true) {
-  const install = execSync('yarn install', {
+export function yarnAdd(pkg: string) {
+  console.log(`YARN ADDING PACKAGES: ${pkg}`);
+  const install = execSync(`yarn add ${pkg}`, {
     cwd: tmpProjPath(),
-    ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
+    ...{ stdio: ['ignore', 'ignore', 'ignore'] },
+    env: process.env,
   });
   return install ? install.toString() : '';
 }
 
-export function runNgcc(silent: boolean = true) {
+export const getDirectories = (source) =>
+  readdirSync(source, { withFileTypes: true })
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
+
+export function runNgcc(silent: boolean = true, async: boolean = true) {
   const install = execSync(
-    'node ./node_modules/@angular/compiler-cli/ngcc/main-ngcc.js',
+    'node ./node_modules/@angular/compiler-cli/ngcc/main-ngcc.js' +
+      (!async ? ' --async=false' : ''),
     {
       cwd: tmpProjPath(),
-      ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
+      ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
+      env: process.env,
     }
   );
   return install ? install.toString() : '';
@@ -110,27 +136,26 @@ export function runNew(
   let gen;
   if (cli === 'angular') {
     gen = execSync(
-      `../../node_modules/.bin/ng new proj --no-interactive --skip-install ${args ||
-        ''}`,
+      `../../node_modules/.bin/ng new proj --no-interactive ${args || ''}`,
       {
         cwd: `./tmp/${cli}`,
-        ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
+        ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
+        env: process.env,
       }
     );
   } else {
     gen = execSync(
-      `node ../../node_modules/@nrwl/tao/index.js new proj --no-interactive --skip-install ${args ||
-        ''}`,
+      `node ../../node_modules/@nrwl/tao/index.js new proj --no-interactive ${
+        args || ''
+      }`,
       {
         cwd: `./tmp/${cli}`,
-        ...(silent && false ? { stdio: ['ignore', 'ignore', 'ignore'] } : {})
+        ...(silent && false ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
+        env: process.env,
       }
     );
   }
-
-  patchPackageJsonDeps(addWorkspace);
-  const install = runYarnInstall(silent && false);
-  return silent ? null : `${gen ? gen.toString() : ''}${install}`;
+  return silent ? null : `${gen ? gen.toString() : ''}`;
 }
 
 /**
@@ -141,27 +166,21 @@ export function newProject(): void {
   cleanup();
   if (!directoryExists(tmpBackupProjPath())) {
     runNew('--collection=@nrwl/workspace --npmScope=proj', true);
-    copyMissingPackages();
-
-    writeFileSync(
-      tmpProjPath(
-        'node_modules/@angular-devkit/schematics/tasks/node-package/executor.js'
-      ),
-      `
-      "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const rxjs_1 = require("rxjs");
-function default_1(factoryOptions = {}) {
-    return (options) => {
-        return new rxjs_1.Observable(obs => {
-          obs.complete();
-        });
-    };
-}
-exports.default = default_1;`
-    );
-
-    runNgcc();
+    const packages = [
+      `@nrwl/angular`,
+      `@nrwl/express`,
+      `@nrwl/nest`,
+      `@nrwl/next`,
+      `@nrwl/react`,
+      `@nrwl/storybook`,
+      `@nrwl/nx-plugin`,
+    ];
+    yarnAdd([`@nrwl/eslint-plugin-nx`].concat(packages).join(` `));
+    packages
+      .filter((f) => f != '@nrwl/nx-plugin')
+      .forEach((p) => {
+        runCLI(`g ${p}:init`);
+      });
 
     execSync(`mv ${tmpProjPath()} ${tmpBackupProjPath()}`);
   }
@@ -176,9 +195,9 @@ exports.default = default_1;`
  * If one is not found, it creates a new project.
  */
 export function ensureProject(): void {
-  if (!directoryExists(tmpProjPath())) {
-    newProject();
-  }
+  // if (!directoryExists(tmpProjPath())) {
+  newProject();
+  // }
 }
 
 export function supportUi() {
@@ -186,164 +205,19 @@ export function supportUi() {
   // return !process.env.NO_CHROME;
 }
 
-export function copyMissingPackages(): void {
-  const modulesToCopy = [
-    '@ngrx',
-    '@nrwl',
-    'angular',
-    '@angular',
-    '@angular-devkit',
-    'codelyzer',
-    'ngrx-store-freeze',
-    'npm-run-all',
-    'yargs',
-    'yargs-parser',
-
-    'ng-packagr',
-    'cypress',
-    'jest',
-    '@types/jest',
-    'jest-preset-angular',
-    'identity-obj-proxy',
-    'karma',
-    'karma-chrome-launcher',
-    'karma-coverage-istanbul-reporter',
-    'karma-jasmine',
-    'karma-jasmine-html-reporter',
-    'jasmine-core',
-    'jasmine-spec-reporter',
-    'jasmine-marbles',
-    '@types/jasmine',
-    '@types/jasminewd2',
-    '@nestjs',
-    'express',
-    '@types/express',
-    'protractor',
-
-    'react',
-    'react-dom',
-    'react-router-dom',
-    'styled-components',
-    '@types/react',
-    '@types/react-dom',
-    '@types/react-router-dom',
-    '@testing-library',
-
-    // For testing webpack config with babel-loader
-    '@babel',
-    '@svgr/webpack',
-    'babel-loader',
-    'babel-plugin-const-enum',
-    'babel-plugin-macros',
-    'eslint-plugin-import',
-    'eslint-plugin-jsx-a11y',
-    'eslint-plugin-react',
-    'eslint-plugin-react-hooks',
-    'url-loader',
-
-    // For testing web bundle
-    'rollup',
-    '@rollup',
-    'rollup-plugin-babel',
-    'rollup-plugin-filesize',
-    'rollup-plugin-local-resolve',
-    'rollup-plugin-peer-deps-external',
-    'rollup-plugin-postcss',
-    'rollup-plugin-typescript2',
-
-    'next',
-    'document-register-element',
-
-    '@angular/forms',
-    '@storybook',
-
-    'fork-ts-checker-webpack-plugin',
-
-    // For web builder with inlined build-angular
-    'source-map',
-    'webpack-sources',
-    'terser',
-    'caniuse-lite',
-    'browserslist',
-    'license-webpack-plugin',
-    'webpack-subresource-integrity',
-    'copy-webpack-plugin',
-    'autoprefixer',
-    'mini-css-extract-plugin',
-    'postcss-import',
-    'worker-plugin',
-    'regenerator-runtime',
-    'clean-css',
-    'loader-utils',
-    'postcss',
-    'url',
-    'circular-dependency-plugin',
-    'terser-webpack-plugin',
-    'parse5',
-    'cacache',
-    'find-cache-dir',
-    'tree-kill',
-    'speed-measure-webpack-plugin',
-    'webpack-merge',
-    'semver',
-
-    'css-loader',
-    'css-modules-typescript-loader',
-    'mime',
-    'less',
-    'send',
-
-    '@bazel'
-  ];
-  modulesToCopy.forEach(m => copyNodeModule(m));
-  updateFile(
-    'node_modules/@angular-devkit/schematics/tasks/node-package/executor.js',
-    `
-    function default_1() {
-      return () => {
-        const rxjs = require("rxjs");
-        return new rxjs.Observable(obs => {
-          obs.next();
-          obs.complete();
-        });
-      };
-    }
-    exports.default = default_1;
-  `
-  );
-
-  execSync(`rm -rf ${tmpProjPath('node_modules/.bin/webpack')}`);
-  execSync(
-    `cp -a node_modules/.bin/webpack ${tmpProjPath(
-      'node_modules/.bin/webpack'
-    )}`
-  );
-
-  execSync(`rm -rf ${tmpProjPath('node_modules/.bin/bazel')}`);
-  execSync(
-    `cp -a node_modules/.bin/bazel ${tmpProjPath('node_modules/.bin/bazel')}`
-  );
-  execSync(`rm -rf ${tmpProjPath('node_modules/cypress/node_modules/@types')}`);
-  execSync(`rm -rf node_modules/karma/node_modules/mime`);
-  execSync(`rm -rf node_modules/ng-packagr/node_modules/mime`);
-}
-
-function copyNodeModule(name: string) {
-  execSync(`rm -rf ${tmpProjPath('node_modules/' + name)}`);
-  execSync(`cp -a node_modules/${name} ${tmpProjPath('node_modules/' + name)}`);
-}
-
 export function runCommandAsync(
   command: string,
-  opts = {
-    silenceError: false
+  opts: RunCmdOpts = {
+    silenceError: false,
+    env: process.env,
   }
 ): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     exec(
       command,
       {
-        cwd: tmpProjPath()
+        cwd: tmpProjPath(),
+        env: process.env,
       },
       (err, stdout, stderr) => {
         if (!opts.silenceError && err) {
@@ -357,25 +231,25 @@ export function runCommandAsync(
 
 export function runCLIAsync(
   command: string,
-  opts = {
-    silenceError: false
+  opts: RunCmdOpts = {
+    silenceError: false,
+    env: process.env,
   }
 ): Promise<{ stdout: string; stderr: string }> {
-  return runCommandAsync(
-    `node ./node_modules/@nrwl/cli/bin/nx.js ${command}`,
-    opts
-  );
+  return runCommandAsync(`./node_modules/.bin/nx ${command}`, opts);
 }
 
 export function runNgAdd(
   command?: string,
-  opts = {
-    silenceError: false
+  opts: RunCmdOpts = {
+    silenceError: false,
+    env: process.env,
   }
 ): string {
   try {
     return execSync(`./node_modules/.bin/ng ${command}`, {
-      cwd: tmpProjPath()
+      cwd: tmpProjPath(),
+      env: opts.env,
     })
       .toString()
       .replace(
@@ -394,20 +268,31 @@ export function runNgAdd(
 
 export function runCLI(
   command?: string,
-  opts = {
-    silenceError: false
+  opts: RunCmdOpts = {
+    silenceError: false,
+    env: process.env,
   }
 ): string {
   try {
-    const r = execSync(`node ./node_modules/@nrwl/cli/bin/nx.js ${command}`, {
-      cwd: tmpProjPath()
+    const r = execSync(`./node_modules/.bin/nx ${command}`, {
+      cwd: tmpProjPath(),
+      env: opts.env,
     })
       .toString()
       .replace(
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
         ''
       );
-    console.log(r);
+
+    if (process.env.VERBOSE_OUTPUT) {
+      console.log(r);
+    }
+
+    const needsMaxWorkers = /g.*(express|nest|node|web|react):app.*/;
+    if (needsMaxWorkers.test(command)) {
+      setMaxWorkers();
+    }
+
     return r;
   } catch (e) {
     if (opts.silenceError) {
@@ -428,9 +313,12 @@ export function runCommand(command: string): string {
   try {
     const r = execSync(command, {
       cwd: tmpProjPath(),
-      stdio: ['pipe', 'pipe', 'pipe']
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: process.env,
     }).toString();
-    console.log(r);
+    if (process.env.VERBOSE_OUTPUT) {
+      console.log(r);
+    }
     return r;
   } catch (e) {
     return e.stdout.toString() + e.stderr.toString();
@@ -438,14 +326,34 @@ export function runCommand(command: string): string {
 }
 
 /**
- * Sets maxWorkers in CircleCI so that it doesn't try to run it with 34 workers
- * @param appName Name of the app to update
+ * Sets maxWorkers in CircleCI on all projects that require it
+ * so that it doesn't try to run it with 34 workers
+ *
+ * maxWorkers required for: node, web, jest
  */
-export function setMaxWorkers(appName: string) {
+function setMaxWorkers() {
   if (process.env['CIRCLECI']) {
     const workspaceFile = workspaceConfigName();
     const workspace = readJson(workspaceFile);
-    workspace.projects[appName].architect.build.options.maxWorkers = 4;
+
+    Object.keys(workspace.projects).forEach((appName) => {
+      const {
+        architect: { build },
+      } = workspace.projects[appName];
+
+      if (!build) {
+        return;
+      }
+
+      if (
+        build.builder.startsWith('@nrwl/node') ||
+        build.builder.startsWith('@nrwl/web') ||
+        build.builder.startsWith('@nrwl/jest')
+      ) {
+        build.options.maxWorkers = 4;
+      }
+    });
+
     updateFile(workspaceFile, JSON.stringify(workspace));
   }
 }
@@ -468,7 +376,7 @@ export function renameFile(f: string, newPath: string): void {
 }
 
 export function checkFilesExist(...expectedFiles: string[]) {
-  expectedFiles.forEach(f => {
+  expectedFiles.forEach((f) => {
     const ff = f.startsWith('/') ? f : tmpProjPath(f);
     if (!exists(ff)) {
       throw new Error(`File '${ff}' does not exist`);
@@ -477,7 +385,7 @@ export function checkFilesExist(...expectedFiles: string[]) {
 }
 
 export function checkFilesDoNotExist(...expectedFiles: string[]) {
-  expectedFiles.forEach(f => {
+  expectedFiles.forEach((f) => {
     const ff = f.startsWith('/') ? f : tmpProjPath(f);
     if (exists(ff)) {
       throw new Error(`File '${ff}' does not exist`);
@@ -486,7 +394,7 @@ export function checkFilesDoNotExist(...expectedFiles: string[]) {
 }
 
 export function listFiles(dirName: string) {
-  return fs.readdirSync(tmpProjPath(dirName));
+  return readdirSync(tmpProjPath(dirName));
 }
 
 export function readJson(f: string): any {

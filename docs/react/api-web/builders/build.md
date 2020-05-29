@@ -27,6 +27,14 @@ Type: `array`
 
 Budget thresholds to ensure parts of your application stay within boundaries which you set.
 
+### buildLibsFromSource
+
+Default: `false`
+
+Type: `boolean`
+
+Read buildable libraries from source instead of building them separately.
+
 ### commonChunk
 
 Default: `true`
@@ -34,6 +42,12 @@ Default: `true`
 Type: `boolean`
 
 Use a separate bundle containing code used across multiple bundles.
+
+### crossOrigin
+
+Type: `string`
+
+The crossorigin attribute to use for generated javascript script tags. One of 'none' | 'anonymous' | 'use-credentials'
 
 ### deployUrl
 
@@ -65,7 +79,7 @@ Extract all licenses in a separate file, in the case of production builds only.
 
 ### fileReplacements
 
-Type: `array` of `object`
+Type: `object[]`
 
 Replace files with other files in the build.
 

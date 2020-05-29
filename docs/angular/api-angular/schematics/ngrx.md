@@ -5,7 +5,7 @@ Add an ngrx config to a project
 ## Usage
 
 ```bash
-ng generate ngrx ...
+nx generate ngrx ...
 ```
 
 By default, Nx will search for `ngrx` in the default collection provisioned in `angular.json`.
@@ -13,13 +13,13 @@ By default, Nx will search for `ngrx` in the default collection provisioned in `
 You can specify the collection explicitly as follows:
 
 ```bash
-ng g @nrwl/angular:ngrx ...
+nx g @nrwl/angular:ngrx ...
 ```
 
 Show what will be generated without writing to disk:
 
 ```bash
-ng g ngrx ... --dry-run
+nx g ngrx ... --dry-run
 ```
 
 ## Options

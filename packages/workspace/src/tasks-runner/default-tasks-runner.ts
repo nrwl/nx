@@ -3,7 +3,7 @@ import {
   AffectedEventType,
   Task,
   TaskCompleteEvent,
-  TasksRunner
+  TasksRunner,
 } from './tasks-runner';
 import { ProjectGraph } from '../core/project-graph';
 import { NxJson } from '../core/shared-interfaces';
@@ -40,16 +40,21 @@ export interface DefaultTasksRunnerOptions {
 export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
   tasks: Task[],
   options: DefaultTasksRunnerOptions,
-  context: { target: string; projectGraph: ProjectGraph; nxJson: NxJson }
+  context: {
+    target: string;
+    initiatingProject?: string;
+    projectGraph: ProjectGraph;
+    nxJson: NxJson;
+  }
 ): Observable<TaskCompleteEvent> => {
   if (!options.lifeCycle) {
     options.lifeCycle = new NoopLifeCycle();
   }
 
-  return new Observable(subscriber => {
+  return new Observable((subscriber) => {
     runAllTasks(tasks, options, context)
-      .then(data => data.forEach(d => subscriber.next(d)))
-      .catch(e => {
+      .then((data) => data.forEach((d) => subscriber.next(d)))
+      .catch((e) => {
         console.error('Unexpected error:');
         console.error(e);
         process.exit(1);
@@ -65,14 +70,23 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
 async function runAllTasks(
   tasks: Task[],
   options: DefaultTasksRunnerOptions,
-  context: { target: string; projectGraph: ProjectGraph; nxJson: NxJson }
+  context: {
+    target: string;
+    initiatingProject?: string;
+    projectGraph: ProjectGraph;
+    nxJson: NxJson;
+  }
 ): Promise<Array<{ task: Task; type: any; success: boolean }>> {
   const stages = new TaskOrderer(
     context.target,
     context.projectGraph
   ).splitTasksIntoStages(tasks);
 
-  const orchestrator = new TaskOrchestrator(context.projectGraph, options);
+  const orchestrator = new TaskOrchestrator(
+    context.initiatingProject,
+    context.projectGraph,
+    options
+  );
 
   const res = [];
   for (let i = 0; i < stages.length; ++i) {
@@ -81,7 +95,7 @@ async function runAllTasks(
     res.push(...statuses);
 
     // any task failed, we need to skip further stages
-    if (statuses.find(s => !s.success)) {
+    if (statuses.find((s) => !s.success)) {
       res.push(...markStagesAsNotSuccessful(stages.splice(i + 1)));
       return res;
     }
@@ -94,10 +108,10 @@ function markStagesAsNotSuccessful(stages: Task[][]) {
 }
 
 function tasksToStatuses(tasks: Task[], success: boolean) {
-  return tasks.map(task => ({
+  return tasks.map((task) => ({
     task,
     type: AffectedEventType.TaskComplete,
-    success
+    success,
   }));
 }
 

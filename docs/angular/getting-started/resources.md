@@ -1,29 +1,31 @@
 # Resources
 
-## Learn Nx in 30 Minutes
+## 45-Minute Walkthrough
 
-<iframe width="560" height="380" src="https://www.youtube.com/embed/XZpp52IqD2A" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/h5FIGDn5YM0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-## Angular Enterprise Monorepo Pattens Book
+## Quick Introductions (10 Minutes)
 
-<img src="https://images.ctfassets.net/8eyogtwep6d2/3OywPCi0Bg6zLWVN54j6tY/3b80e9f8c18f943f2f68008442920328/Angular_Enterprise_Monorepo_Pattens_Book.png?w=1024&fm=jpg&fl=progressive">
+<iframe width="560" height="315" src="https://www.youtube.com/embed/mVKMse-gFBI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-[This is a free book](https://go.nrwl.io/angular-enterprise-monorepo-patterns-new-book?utm_campaign=Book%3A%20Monorepo%20Patterns%2C%20Jan%202019&utm_source=Github&utm_medium=Banner%20Ad) on using Nx in large organizations. It is very practical. Even though it covers the general benefits of Google-style development, it focuses on concrete problems and how to effectively use Nx to solve them.
+## Nx Console Overview
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/IIetmfgozgI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## Courses
 
-### Nx Workspace (free)
+## Nx Workspace (free)
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/2mYLe9Kp9VM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-### Advanced Nx Workspace (premium)
+## Advanced Nx Workspace (premium)
 
 [![Advanced Nx Workspace](./advanced-nx-workspace-course.png)](https://nxplaybook.com/p/advanced-nx-workspaces)
 
 ## Books and Blogs
 
-- [Angular Enterprise Monorepo Patters Book](https://go.nrwl.io/angular-enterprise-monorepo-patterns-new-book?utm_campaign=Book%3A%20Monorepo%20Patterns%2C%20Jan%202019&utm_source=Github&utm_medium=Banner%20Ad)
 - [Nx blog posts](https://blog.nrwl.io/nx/home)
+- [Angular Enterprise Monorepo Patterns Book (free)](https://go.nrwl.io/angular-enterprise-monorepo-patterns-new-book?utm_campaign=Book%3A%20Monorepo%20Patterns%2C%20Jan%202019&utm_source=Github&utm_medium=Banner%20Ad)
 
 ## Talks
 

@@ -2,7 +2,7 @@ import {
   eslintPluginImportVersion,
   eslintPluginReactVersion,
   eslintPluginReactHooksVersion,
-  eslintPluginJsxA11yVersion
+  eslintPluginJsxA11yVersion,
 } from './versions';
 import * as restrictedGlobals from 'confusing-browser-globals';
 
@@ -12,8 +12,8 @@ export const extraEslintDependencies = {
     'eslint-plugin-import': eslintPluginImportVersion,
     'eslint-plugin-jsx-a11y': eslintPluginJsxA11yVersion,
     'eslint-plugin-react': eslintPluginReactVersion,
-    'eslint-plugin-react-hooks': eslintPluginReactHooksVersion
-  }
+    'eslint-plugin-react-hooks': eslintPluginReactHooksVersion,
+  },
 };
 
 /**
@@ -25,12 +25,12 @@ export const reactEslintJson = {
     commonjs: true,
     es6: true,
     jest: true,
-    node: true
+    node: true,
   },
   settings: {
     react: {
-      version: 'detect'
-    }
+      version: 'detect',
+    },
   },
   plugins: ['import', 'jsx-a11y', 'react', 'react-hooks'],
 
@@ -78,10 +78,10 @@ export const reactEslintJson = {
           ['&', '|', '^', '~', '<<', '>>', '>>>'],
           ['==', '!=', '===', '!==', '>', '>=', '<', '<='],
           ['&&', '||'],
-          ['in', 'instanceof']
+          ['in', 'instanceof'],
         ],
-        allowSamePrecedence: false
-      }
+        allowSamePrecedence: false,
+      },
     ],
     'no-multi-str': 'warn',
     'no-native-reassign': 'warn',
@@ -113,8 +113,8 @@ export const reactEslintJson = {
       {
         allowShortCircuit: true,
         allowTernary: true,
-        allowTaggedTemplates: true
-      }
+        allowTaggedTemplates: true,
+      },
     ],
     'no-unused-labels': 'warn',
     'no-useless-computed-key': 'warn',
@@ -125,8 +125,8 @@ export const reactEslintJson = {
       {
         ignoreDestructuring: false,
         ignoreImport: false,
-        ignoreExport: false
-      }
+        ignoreExport: false,
+      },
     ],
     'no-with': 'warn',
     'no-whitespace-before-property': 'warn',
@@ -143,14 +143,14 @@ export const reactEslintJson = {
         object: 'require',
         property: 'ensure',
         message:
-          'Please use import() instead. More info: https://facebook.github.io/create-react-app/docs/code-splitting'
+          'Please use import() instead. More info: https://facebook.github.io/create-react-app/docs/code-splitting',
       },
       {
         object: 'System',
         property: 'import',
         message:
-          'Please use import() instead. More info: https://facebook.github.io/create-react-app/docs/code-splitting'
-      }
+          'Please use import() instead. More info: https://facebook.github.io/create-react-app/docs/code-splitting',
+      },
     ],
     'getter-return': 'warn',
 
@@ -175,8 +175,8 @@ export const reactEslintJson = {
       'warn',
       {
         allowAllCaps: true,
-        ignore: []
-      }
+        ignore: [],
+      },
     ],
     'react/jsx-uses-react': 'warn',
     'react/jsx-uses-vars': 'warn',
@@ -198,8 +198,8 @@ export const reactEslintJson = {
     'jsx-a11y/anchor-is-valid': [
       'warn',
       {
-        aspects: ['noHref', 'invalidHref']
-      }
+        aspects: ['noHref', 'invalidHref'],
+      },
     ],
     'jsx-a11y/aria-activedescendant-has-tabindex': 'warn',
     'jsx-a11y/aria-props': 'warn',
@@ -246,18 +246,18 @@ export const reactEslintJson = {
         functions: false,
         classes: false,
         variables: false,
-        typedefs: false
-      }
+        typedefs: false,
+      },
     ],
     'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': [
       'warn',
       {
         args: 'none',
-        ignoreRestSiblings: true
-      }
+        ignoreRestSiblings: true,
+      },
     ],
     'no-useless-constructor': 'off',
-    '@typescript-eslint/no-useless-constructor': 'warn'
-  }
+    '@typescript-eslint/no-useless-constructor': 'warn',
+  },
 };

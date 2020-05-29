@@ -1,7 +1,7 @@
 import {
   AddProjectDependency,
   ProjectGraphContext,
-  ProjectGraphNodeRecords
+  ProjectGraphNodeRecords,
 } from '../project-graph-models';
 
 export interface BuildDependencies {

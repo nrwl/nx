@@ -5,7 +5,8 @@
   "properties": {
     "codeCoverage": {
       "description": "Indicates that test coverage information should be collected and reported in the output. (https://jestjs.io/docs/en/cli#coverage)",
-      "type": "boolean"
+      "type": "boolean",
+      "aliases": ["coverage"]
     },
     "config": {
       "description": "The path to a Jest config file specifying how to find and execute tests. If no rootDir is set in the config, the directory containing the config file is assumed to be the rootDir for the project. This can also be a JSON-encoded value which Jest will use as configuration",
@@ -13,6 +14,10 @@
     },
     "clearCache": {
       "description": "Deletes the Jest cache directory and then exits without running tests. Will delete Jest's default cache directory. _Note: clearing the cache will reduce performance_.",
+      "type": "boolean"
+    },
+    "detectOpenHandles": {
+      "description": "Attempt to collect and print open handles preventing Jest from exiting cleanly (https://jestjs.io/docs/en/cli.html#--detectopenhandles)",
       "type": "boolean"
     },
     "jestConfig": {
@@ -56,7 +61,7 @@
     "maxWorkers": {
       "alias": "w",
       "description": "Specifies the maximum number of workers the worker-pool will spawn for running tests. This defaults to the number of the cores available on your machine. Useful for CI. (its usually best not to override this default) (https://jestjs.io/docs/en/cli#maxworkers-num)",
-      "type": "number"
+      "oneOf": [{ "type": "number" }, { "type": "string" }]
     },
     "onlyChanged": {
       "alias": "o",
@@ -74,6 +79,10 @@
     "runInBand": {
       "alias": "i",
       "description": "Run all tests serially in the current process (rather than creating a worker pool of child processes that run tests). This is sometimes useful for debugging, but such use cases are pretty rare. Useful for CI. (https://jestjs.io/docs/en/cli#runinband)",
+      "type": "boolean"
+    },
+    "showConfig": {
+      "description": "Print your Jest config and then exits. (https://jestjs.io/docs/en/cli#--showconfig)",
       "type": "boolean"
     },
     "silent": {

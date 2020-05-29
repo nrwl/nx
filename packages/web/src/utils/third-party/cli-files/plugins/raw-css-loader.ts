@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 
-export default function(content: string, map: object) {
+export default function (content: string, map: object) {
   const stringifiedContent = JSON.stringify(content);
   const stringifiedMap = map ? JSON.stringify(map) : `''`;
 

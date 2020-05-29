@@ -20,14 +20,14 @@ interface Todo {
 export const App = () => {
   const [todos, setTodos] = useState<Todo[]>([
     { title: 'Todo 1' },
-    { title: 'Todo 2' }
+    { title: 'Todo 2' },
   ]);
 
   return (
     <>
       <h1>Todos</h1>
       <ul>
-        {todos.map(t => (
+        {todos.map((t) => (
           <li className={'todo'}>{t.title}</li>
         ))}
       </ul>
@@ -54,15 +54,15 @@ interface Todo {
 export const App = () => {
   const [todos, setTodos] = useState<Todo[]>([
     { title: 'Todo 1' },
-    { title: 'Todo 2' }
+    { title: 'Todo 2' },
   ]);
 
   function addTodo() {
     setTodos([
       ...todos,
       {
-        title: `New todo ${Math.floor(Math.random() * 1000)}`
-      }
+        title: `New todo ${Math.floor(Math.random() * 1000)}`,
+      },
     ]);
   }
 
@@ -70,7 +70,7 @@ export const App = () => {
     <>
       <h1>Todos</h1>
       <ul>
-        {todos.map(t => (
+        {todos.map((t) => (
           <li className={'todo'}>{t.title}</li>
         ))}
       </ul>
@@ -87,7 +87,7 @@ export default App;
 The tests should pass now.
 
 !!!!!
-What will you see if you run: nx e2e todos-e2e --headless
+What will you see if you run: `nx e2e todos-e2e --headless`
 !!!!!
 Cypress will run in the headless mode, and the test will pass.
 Cypress will run in the headless mode, and the test will fail.

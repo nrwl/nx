@@ -11,7 +11,7 @@ import {
   url,
   externalSchematic,
   noop,
-  filter
+  filter,
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import {
@@ -24,9 +24,10 @@ import {
   formatFiles,
   updateWorkspaceInTree,
   generateProjectLint,
-  addLintFiles
+  addLintFiles,
 } from '@nrwl/workspace';
 import init from '../init/init';
+import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -43,25 +44,25 @@ function createApplicationFiles(options: NormalizedSchema): Rule {
         ...options,
         ...names(options.name),
         tmpl: '',
-        offsetFromRoot: offsetFromRoot(options.appProjectRoot)
+        offsetFromRoot: offsetFromRoot(options.appProjectRoot),
       }),
       options.unitTestRunner === 'none'
-        ? filter(file => file !== '/src/app/app.spec.ts')
+        ? filter((file) => file !== '/src/app/app.spec.ts')
         : noop(),
-      move(options.appProjectRoot)
+      move(options.appProjectRoot),
     ])
   );
 }
 
 function updateNxJson(options: NormalizedSchema): Rule {
-  return updateJsonInTree<NxJson>('nx.json', json => {
+  return updateJsonInTree<NxJson>('nx.json', (json) => {
     json.projects[options.projectName] = { tags: options.parsedTags };
     return json;
   });
 }
 
 function addProject(options: NormalizedSchema): Rule {
-  return updateWorkspaceInTree(json => {
+  return updateWorkspaceInTree((json) => {
     const architect: { [key: string]: any } = {};
 
     architect.build = {
@@ -74,12 +75,15 @@ function addProject(options: NormalizedSchema): Rule {
         tsConfig: join(normalize(options.appProjectRoot), 'tsconfig.app.json'),
         assets: [
           join(normalize(options.appProjectRoot), 'src/favicon.ico'),
-          join(normalize(options.appProjectRoot), 'src/assets')
+          join(normalize(options.appProjectRoot), 'src/assets'),
         ],
         styles: [
-          join(normalize(options.appProjectRoot), `src/styles.${options.style}`)
+          join(
+            normalize(options.appProjectRoot),
+            `src/styles.${options.style}`
+          ),
         ],
-        scripts: []
+        scripts: [],
       },
       configurations: {
         production: {
@@ -92,8 +96,8 @@ function addProject(options: NormalizedSchema): Rule {
               with: join(
                 normalize(options.appProjectRoot),
                 `src/environments/environment.prod.ts`
-              )
-            }
+              ),
+            },
           ],
           optimization: true,
           outputHashing: 'all',
@@ -106,23 +110,23 @@ function addProject(options: NormalizedSchema): Rule {
             {
               type: 'initial',
               maximumWarning: '2mb',
-              maximumError: '5mb'
-            }
-          ]
-        }
-      }
+              maximumError: '5mb',
+            },
+          ],
+        },
+      },
     };
 
     architect.serve = {
       builder: '@nrwl/web:dev-server',
       options: {
-        buildTarget: `${options.projectName}:build`
+        buildTarget: `${options.projectName}:build`,
       },
       configurations: {
         production: {
-          buildTarget: `${options.projectName}:build:production`
-        }
-      }
+          buildTarget: `${options.projectName}:build:production`,
+        },
+      },
     };
 
     architect.lint = generateProjectLint(
@@ -136,7 +140,7 @@ function addProject(options: NormalizedSchema): Rule {
       sourceRoot: join(normalize(options.appProjectRoot), 'src'),
       projectType: 'application',
       schematics: {},
-      architect
+      architect,
     };
 
     json.defaultProject = json.defaultProject || options.projectName;
@@ -145,13 +149,14 @@ function addProject(options: NormalizedSchema): Rule {
   });
 }
 
-export default function(schema: Schema): Rule {
+export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
 
     return chain([
       init({
-        skipFormat: true
+        ...options,
+        skipFormat: true,
       }),
       addLintFiles(options.appProjectRoot, options.linter),
       createApplicationFiles(options),
@@ -162,17 +167,17 @@ export default function(schema: Schema): Rule {
             ...options,
             name: options.name + '-e2e',
             directory: options.directory,
-            project: options.projectName
+            project: options.projectName,
           })
         : noop(),
       options.unitTestRunner === 'jest'
         ? externalSchematic('@nrwl/jest', 'jest-project', {
             project: options.projectName,
             skipSerializers: true,
-            setupFile: 'web-components'
+            setupFile: 'web-components',
           })
         : noop(),
-      formatFiles(options)
+      formatFiles(options),
     ])(host, context);
   };
 }
@@ -185,11 +190,11 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
   const e2eProjectName = `${appProjectName}-e2e`;
 
-  const appProjectRoot = `apps/${appDirectory}`;
-  const e2eProjectRoot = `apps/${appDirectory}-e2e`;
+  const appProjectRoot = `${appsDir(host)}/${appDirectory}`;
+  const e2eProjectRoot = `${appsDir(host)}/${appDirectory}-e2e`;
 
   const parsedTags = options.tags
-    ? options.tags.split(',').map(s => s.trim())
+    ? options.tags.split(',').map((s) => s.trim())
     : [];
 
   const defaultPrefix = getNpmScope(host);
@@ -201,6 +206,6 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     appProjectRoot,
     e2eProjectRoot,
     e2eProjectName,
-    parsedTags
+    parsedTags,
   };
 }

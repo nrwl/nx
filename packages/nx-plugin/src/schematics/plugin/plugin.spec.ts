@@ -26,20 +26,20 @@ describe('NxPlugin plugin', () => {
           {
             input: './libs/my-plugin/src',
             glob: '**/*.!(ts)',
-            output: './src'
+            output: './src',
           },
           {
             input: './libs/my-plugin',
             glob: 'collection.json',
-            output: '.'
+            output: '.',
           },
           {
             input: './libs/my-plugin',
             glob: 'builders.json',
-            output: '.'
-          }
-        ]
-      }
+            output: '.',
+          },
+        ],
+      },
     });
     expect(project.architect.lint).toEqual({
       builder: '@angular-devkit/build-angular:tslint',
@@ -47,17 +47,17 @@ describe('NxPlugin plugin', () => {
         exclude: ['**/node_modules/**', '!libs/my-plugin/**'],
         tsConfig: [
           'libs/my-plugin/tsconfig.lib.json',
-          'libs/my-plugin/tsconfig.spec.json'
-        ]
-      }
+          'libs/my-plugin/tsconfig.spec.json',
+        ],
+      },
     });
     expect(project.architect.test).toEqual({
       builder: '@nrwl/jest:jest',
       options: {
         jestConfig: 'libs/my-plugin/jest.config.js',
         tsConfig: 'libs/my-plugin/tsconfig.spec.json',
-        passWithNoTests: true
-      }
+        passWithNoTests: true,
+      },
     });
   });
 
@@ -100,16 +100,16 @@ describe('NxPlugin plugin', () => {
       )
     ).toContain('const variable = "<%= projectName %>";');
     expect(
-      tree.exists('libs/my-plugin/src/builders/my-plugin/builder.ts')
+      tree.exists('libs/my-plugin/src/builders/build/builder.ts')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/builders/my-plugin/builder.spec.ts')
+      tree.exists('libs/my-plugin/src/builders/build/builder.spec.ts')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/builders/my-plugin/schema.json')
+      tree.exists('libs/my-plugin/src/builders/build/schema.json')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/builders/my-plugin/schema.d.ts')
+      tree.exists('libs/my-plugin/src/builders/build/schema.d.ts')
     ).toBeTruthy();
   });
 
@@ -120,7 +120,7 @@ describe('NxPlugin plugin', () => {
       '@nrwl/node',
       'lib',
       expect.objectContaining({
-        publishable: true
+        publishable: true,
       })
     );
   });
@@ -133,8 +133,72 @@ describe('NxPlugin plugin', () => {
       expect.objectContaining({
         pluginName: 'my-plugin',
         pluginOutputPath: `dist/libs/my-plugin`,
-        npmPackageName: '@proj/my-plugin'
+        npmPackageName: '@proj/my-plugin',
       })
     );
+  });
+
+  it('should call the @nrwl/nx-plugin:schematic schematic', async () => {
+    const schematicSpy = jest.spyOn(ngSchematics, 'schematic');
+    const tree = await runSchematic('plugin', { name: 'myPlugin' }, appTree);
+    expect(schematicSpy).toBeCalledWith(
+      'schematic',
+      expect.objectContaining({
+        project: 'my-plugin',
+        name: `my-plugin`,
+      })
+    );
+  });
+
+  it('should call the @nrwl/nx-plugin:builder schematic', async () => {
+    const schematicSpy = jest.spyOn(ngSchematics, 'schematic');
+    const tree = await runSchematic('plugin', { name: 'myPlugin' }, appTree);
+    expect(schematicSpy).toBeCalledWith(
+      'builder',
+      expect.objectContaining({
+        project: 'my-plugin',
+        name: `build`,
+      })
+    );
+  });
+
+  describe('--unitTestRunner', () => {
+    describe('none', () => {
+      it('should not generate test files', async () => {
+        const externalSchematicSpy = jest.spyOn(
+          ngSchematics,
+          'externalSchematic'
+        );
+        const tree = await runSchematic(
+          'plugin',
+          { name: 'myPlugin', unitTestRunner: 'none' },
+          appTree
+        );
+
+        expect(externalSchematicSpy).toBeCalledWith(
+          '@nrwl/node',
+          'lib',
+          expect.objectContaining({
+            unitTestRunner: 'none',
+          })
+        );
+
+        expect(
+          tree.exists('libs/my-plugin/src/schematics/my-plugin/schematic.ts')
+        ).toBeTruthy();
+        expect(
+          tree.exists(
+            'libs/my-plugin/src/schematics/my-plugin/schematic.spec.ts'
+          )
+        ).toBeFalsy();
+
+        expect(
+          tree.exists('libs/my-plugin/src/builders/build/builder.ts')
+        ).toBeTruthy();
+        expect(
+          tree.exists('libs/my-plugin/src/builders/build/builder.spec.ts')
+        ).toBeFalsy();
+      });
+    });
   });
 });

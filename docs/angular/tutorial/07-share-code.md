@@ -5,7 +5,7 @@ Awesome! The application is working end to end! However, there is a problem. Bot
 **Run the following generator to create a library:**
 
 ```bash
-ng g @nrwl/workspace:lib data
+nx g @nrwl/workspace:lib data
 ```
 
 The result should look like this:
@@ -65,7 +65,7 @@ export class AppService {
 
   addTodo() {
     this.todos.push({
-      title: `New todo ${Math.floor(Math.random() * 1000)}`
+      title: `New todo ${Math.floor(Math.random() * 1000)}`,
     });
   }
 }
@@ -83,7 +83,7 @@ import { Todo } from '@myorg/data';
 @Component({
   selector: 'myorg-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
   todos: Todo[] = [];
@@ -93,7 +93,7 @@ export class AppComponent {
   }
 
   fetch() {
-    this.http.get<Todo[]>('/api/todos').subscribe(t => (this.todos = t));
+    this.http.get<Todo[]>('/api/todos').subscribe((t) => (this.todos = t));
   }
 
   addTodo() {
@@ -104,7 +104,7 @@ export class AppComponent {
 }
 ```
 
-Every time you add a new library, you have to restart `ng serve`. **So restart both `ng serve api` and `ng serve todos` and you should see the application running.**
+Every time you add a new library, you have to restart `nx serve`. **So restart both `nx serve api` and `nx serve todos` and you should see the application running.**
 
 !!!!!
 Nx allows you to share code...

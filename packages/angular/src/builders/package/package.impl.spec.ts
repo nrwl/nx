@@ -5,7 +5,7 @@ import { getMockContext } from '../../utils/testing';
 import * as projectGraphUtils from '@nrwl/workspace/src/core/project-graph';
 import {
   ProjectGraph,
-  ProjectType
+  ProjectType,
 } from '@nrwl/workspace/src/core/project-graph';
 import * as fileUtils from '@nrwl/workspace/src/utils/fileutils';
 
@@ -48,21 +48,21 @@ describe('AngularLibraryWebBuildBuilder', () => {
       return {
         options: {
           paths: {
-            '@proj/buildable-child': []
-          }
-        }
+            '@proj/buildable-child': [],
+          },
+        },
       };
     });
     spyOn(fileUtils, 'fileExists').and.returnValue(true);
 
     context.target = {
       project: 'buildable-parent',
-      target: 'build'
+      target: 'build',
     };
 
     testOptions = {
       tsConfig: 'libs/publishable-parent/tsconfig.lib.json',
-      project: 'libs/publishable-parent/ng-package.json'
+      project: 'libs/publishable-parent/ng-package.json',
     };
   });
 
@@ -73,10 +73,10 @@ describe('AngularLibraryWebBuildBuilder', () => {
           'buildable-parent': {
             type: ProjectType.lib,
             name: 'buildable-parent',
-            data: { files: [], root: 'libs/buildable-parent' }
-          }
+            data: { files: [], root: 'libs/buildable-parent' },
+          },
         },
-        dependencies: {}
+        dependencies: {},
       } as ProjectGraph;
     });
 
@@ -101,10 +101,10 @@ describe('AngularLibraryWebBuildBuilder', () => {
                 root: 'libs/buildable-parent',
                 architect: {
                   build: {
-                    builder: 'any builder'
-                  }
-                }
-              }
+                    builder: 'any builder',
+                  },
+                },
+              },
             },
             'buildable-child': {
               type: ProjectType.lib,
@@ -115,22 +115,22 @@ describe('AngularLibraryWebBuildBuilder', () => {
                 prefix: 'proj',
                 architect: {
                   build: {
-                    builder: 'any builder'
-                  }
-                }
-              }
-            }
+                    builder: 'any builder',
+                  },
+                },
+              },
+            },
           },
           dependencies: {
             'buildable-parent': [
               {
                 type: ProjectType.lib,
                 target: 'buildable-child',
-                source: null
-              }
+                source: null,
+              },
             ],
-            'buildable-child': []
-          }
+            'buildable-child': [],
+          },
         } as ProjectGraph;
       });
     });
@@ -138,7 +138,7 @@ describe('AngularLibraryWebBuildBuilder', () => {
     it('should properly set the TSConfig paths', async () => {
       spyOn(fileUtils, 'readJsonFile').and.returnValue({
         name: '@proj/buildable-child',
-        version: '1.2.3'
+        version: '1.2.3',
       });
 
       // act
@@ -149,8 +149,8 @@ describe('AngularLibraryWebBuildBuilder', () => {
       expect(ngPackagrMock.withTsConfig).toHaveBeenCalledWith(
         jasmine.objectContaining({
           options: {
-            paths: { '@proj/buildable-child': ['dist/libs/buildable-child'] }
-          }
+            paths: { '@proj/buildable-child': ['dist/libs/buildable-child'] },
+          },
         })
       );
     });
@@ -160,27 +160,26 @@ describe('AngularLibraryWebBuildBuilder', () => {
         if (path.endsWith('buildable-parent/package.json')) {
           return {
             name: '@proj/buildable-parent',
-            version: '3.3.3'
+            version: '3.3.3',
           };
         } else {
           return {
             name: '@proj/buildable-child',
-            version: '1.2.3'
+            version: '1.2.3',
           };
         }
       });
 
       // act
       const result = await run(testOptions, context).toPromise();
-
       // assert
       expect(result.success).toBeTruthy();
       expect(fileUtils.writeJsonFile).toHaveBeenCalledWith(
         'dist/libs/buildable-parent/package.json',
         jasmine.objectContaining({
           dependencies: {
-            '@proj/buildable-child': '1.2.3'
-          }
+            '@proj/buildable-child': '1.2.3',
+          },
         })
       );
     });
@@ -194,13 +193,13 @@ describe('AngularLibraryWebBuildBuilder', () => {
                 name: '@proj/buildable-parent',
                 version: '1.2.3',
                 [depConfigName]: {
-                  '@proj/buildable-child': '1.1.1'
-                }
+                  '@proj/buildable-child': '1.1.1',
+                },
               };
             } else {
               return {
                 name: '@proj/buildable-child',
-                version: '1.2.3'
+                version: '1.2.3',
               };
             }
           });

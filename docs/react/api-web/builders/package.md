@@ -7,11 +7,17 @@ Read more about how to use builders and the CLI here: https://nx.dev/react/guide
 
 ## Properties
 
+### assets
+
+Type: `array`
+
+List of static assets.
+
 ### babelConfig
 
 Type: `string`
 
-Path to a function which takes a babel config and returns an updated babel config
+(deprecated) Path to a function which takes a babel config and returns an updated babel config
 
 ### entryFile
 
@@ -35,7 +41,7 @@ CSS files will be extracted to the output folder.
 
 ### globals
 
-Type: `array` of `object`
+Type: `object[]`
 
 A mapping of node modules to their UMD global names. Used by the UMD bundle
 

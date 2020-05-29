@@ -2,10 +2,10 @@ import { BuilderContext, createBuilder } from '@angular-devkit/architect';
 import {
   join as devkitJoin,
   JsonObject,
-  normalize
+  normalize,
 } from '@angular-devkit/core';
 import { BuildResult, runWebpack } from '@angular-devkit/build-webpack';
-import { from, Observable, of } from 'rxjs';
+import { from, of } from 'rxjs';
 import { normalizeWebBuildOptions } from '../../utils/normalize';
 import { getWebConfig } from '../../utils/web.config';
 import { BuildBuilderOptions } from '../../utils/types';
@@ -16,14 +16,21 @@ import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { execSync } from 'child_process';
 import { Range, satisfies } from 'semver';
 import { basename } from 'path';
-
-const IGNORED_WEBPACK_OUTPUT = [/WARNING in The comment file/i];
+import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import {
+  calculateProjectDependencies,
+  createTmpTsConfig,
+} from '@nrwl/workspace/src/utils/buildable-libs-utils';
+import { CrossOriginValue } from '../../utils/third-party/cli-files/utilities/index-file/augment-index-html';
 
 export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   index: string;
   budgets: any[];
   baseHref: string;
   deployUrl: string;
+
+  extractCss?: boolean;
+  crossOrigin?: CrossOriginValue;
 
   polyfills?: string;
   es2015Polyfills?: string;
@@ -38,6 +45,7 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   subresourceIntegrity?: boolean;
 
   verbose?: boolean;
+  buildLibsFromSource?: boolean;
 }
 
 export default createBuilder<WebBuildBuilderOptions & JsonObject>(run);
@@ -53,18 +61,31 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
 
   // Node versions 12.2-12.8 has a bug where prod builds will hang for 2-3 minutes
   // after the program exits.
-  const nodeVersion = execSync(`node --version`)
-    .toString('utf-8')
-    .trim();
+  const nodeVersion = execSync(`node --version`).toString('utf-8').trim();
   const supportedRange = new Range('10 || >=12.9');
   if (!satisfies(nodeVersion, supportedRange)) {
     throw new Error(
       `Node version ${nodeVersion} is not supported. Supported range is "${supportedRange.raw}".`
     );
   }
+
+  if (!options.buildLibsFromSource) {
+    const projGraph = createProjectGraph();
+    const { target, dependencies } = calculateProjectDependencies(
+      projGraph,
+      context
+    );
+    options.tsConfig = createTmpTsConfig(
+      options.tsConfig,
+      context.workspaceRoot,
+      target.data.root,
+      dependencies
+    );
+  }
+
   return from(getSourceRoot(context, host))
     .pipe(
-      map(sourceRoot => {
+      map((sourceRoot) => {
         options = normalizeWebBuildOptions(
           options,
           context.workspaceRoot,
@@ -90,34 +111,31 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
                 false,
                 isScriptOptimizeOn
               )
-            : undefined
+            : undefined,
         ]
           .filter(Boolean)
-          .map(config =>
+          .map((config) =>
             options.webpackConfig
               ? require(options.webpackConfig)(config, {
                   options,
-                  configuration: context.target.configuration
+                  configuration: context.target.configuration,
                 })
               : config
           );
       })
     )
     .pipe(
-      switchMap(configs =>
+      switchMap((configs) =>
         from(configs).pipe(
           // Run build sequentially and bail when first one fails.
           mergeScan(
             (acc, config) => {
               if (acc.success) {
                 return runWebpack(config, context, {
-                  logging: stats => {
-                    const msg = stats.toString(config.stats);
-                    if (IGNORED_WEBPACK_OUTPUT.every(r => !r.test(msg))) {
-                      context.logger.info(msg);
-                    }
+                  logging: (stats) => {
+                    context.logger.info(stats.toString(config.stats));
                   },
-                  webpackFactory: require('webpack')
+                  webpackFactory: require('webpack'),
                 });
               } else {
                 return of();
@@ -131,9 +149,10 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
         )
       ),
       switchMap(([result1, result2 = { success: true, emittedFiles: [] }]) => {
-        const success = [result1, result2].every(result => result.success);
+        const success = [result1, result2].every((result) => result.success);
         return (options.optimization
           ? writeIndexHtml({
+              crossOrigin: options.crossOrigin,
               host,
               outputPath: devkitJoin(
                 normalize(options.outputPath),
@@ -143,13 +162,13 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
                 normalize(context.workspaceRoot),
                 options.index
               ),
-              files: result1.emittedFiles.filter(x => x.extension === '.css'),
+              files: result1.emittedFiles.filter((x) => x.extension === '.css'),
               noModuleFiles: result2.emittedFiles,
               moduleFiles: result1.emittedFiles,
               baseHref: options.baseHref,
               deployUrl: options.deployUrl,
               scripts: options.scripts,
-              styles: options.styles
+              styles: options.styles,
             })
           : of(null)
         ).pipe(
@@ -157,7 +176,10 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
             () =>
               ({
                 success,
-                emittedFiles: [...result1.emittedFiles, ...result2.emittedFiles]
+                emittedFiles: [
+                  ...result1.emittedFiles,
+                  ...result2.emittedFiles,
+                ],
               } as BuildResult)
           )
         );

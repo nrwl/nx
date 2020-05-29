@@ -5,16 +5,16 @@ import {
   Rule,
   schematic,
   SchematicContext,
-  Tree
+  Tree,
 } from '@angular-devkit/schematics';
 import {
   NodePackageInstallTask,
-  RepositoryInitializerTask
+  RepositoryInitializerTask,
 } from '@angular-devkit/schematics/tasks';
 
 import {
   addDepsToPackageJson,
-  updateWorkspaceInTree
+  updateWorkspaceInTree,
 } from '../../utils/ast-utils';
 
 import { toFileName } from '../../utils/name-utils';
@@ -36,6 +36,7 @@ export interface Schema {
   skipInstall?: boolean;
   skipGit?: boolean;
   style?: string;
+  nxCloud?: boolean;
   preset:
     | 'empty'
     | 'angular'
@@ -50,7 +51,7 @@ export interface Schema {
 class RunPresetTask {
   toConfiguration() {
     return {
-      name: 'RunPreset'
+      name: 'RunPreset',
     };
   }
 }
@@ -58,7 +59,7 @@ class RunPresetTask {
 function createPresetTaskExecutor(cli: string, opts: Schema) {
   const cliCommand = cli === 'angular' ? 'ng' : 'nx';
   const parsedArgs = yargsParser(process.argv, {
-    boolean: ['interactive']
+    boolean: ['interactive'],
   });
 
   return {
@@ -68,7 +69,7 @@ function createPresetTaskExecutor(cli: string, opts: Schema) {
         const spawnOptions = {
           stdio: [process.stdin, process.stdout, process.stderr],
           shell: true,
-          cwd: path.join(process.cwd(), opts.directory)
+          cwd: path.join(process.cwd(), opts.directory),
         };
         const executable =
           platform() === 'win32'
@@ -84,9 +85,9 @@ function createPresetTaskExecutor(cli: string, opts: Schema) {
             : `--npmScope=${opts.name}`,
           opts.preset ? `--preset=${opts.preset}` : null,
           `--cli=${cliCommand}`,
-          parsedArgs.interactive ? '--interactive=true' : '--interactive=false'
-        ].filter(e => !!e);
-        return new Observable(obs => {
+          parsedArgs.interactive ? '--interactive=true' : '--interactive=false',
+        ].filter((e) => !!e);
+        return new Observable((obs) => {
           spawn(executable, args, spawnOptions).on('close', (code: number) => {
             if (code === 0) {
               obs.next();
@@ -98,7 +99,7 @@ function createPresetTaskExecutor(cli: string, opts: Schema) {
           });
         });
       });
-    }
+    },
   };
 }
 
@@ -106,9 +107,13 @@ export function sharedNew(cli: string, options: Schema): Rule {
   if (options.skipInstall && options.preset !== 'empty') {
     throw new Error(`Cannot select a preset when skipInstall is set to true.`);
   }
+  if (options.skipInstall && options.nxCloud) {
+    throw new Error(`Cannot select nxCloud when skipInstall is set to true.`);
+  }
 
   options = normalizeOptions(options);
-  const workspaceOpts = { ...options, preset: undefined };
+
+  const workspaceOpts = { ...options, preset: undefined, nxCloud: undefined };
   return (host: Tree, context: SchematicContext) => {
     const engineHost = (context.engine.workflow as any).engineHost;
     engineHost.registerTaskExecutor(createPresetTaskExecutor(cli, options));
@@ -116,29 +121,36 @@ export function sharedNew(cli: string, options: Schema): Rule {
     return chain([
       schematic('workspace', { ...workspaceOpts, cli }),
       cli === 'angular' ? noop() : setDefaultLinter('eslint'),
-      addDependencies(options),
+      addPresetDependencies(options),
+      addCloudDependencies(options),
       move('/', options.directory),
       addTasks(options),
-      formatFiles()
+      formatFiles(),
     ])(Tree.empty(), context);
   };
 }
 
-function addDependencies(options: Schema) {
+function addCloudDependencies(options: Schema) {
+  return options.nxCloud
+    ? addDepsToPackageJson({}, { '@nrwl/nx-cloud': 'latest' })
+    : noop();
+}
+
+function addPresetDependencies(options: Schema) {
   if (options.preset === 'empty') {
     return noop();
   } else if (options.preset === 'web-components') {
     return addDepsToPackageJson(
       {},
       {
-        '@nrwl/web': nxVersion
+        '@nrwl/web': nxVersion,
       },
       false
     );
   } else if (options.preset === 'angular') {
     return addDepsToPackageJson(
       {
-        '@nrwl/angular': nxVersion
+        '@nrwl/angular': nxVersion,
       },
       {},
       false
@@ -146,10 +158,10 @@ function addDependencies(options: Schema) {
   } else if (options.preset === 'angular-nest') {
     return addDepsToPackageJson(
       {
-        '@nrwl/angular': nxVersion
+        '@nrwl/angular': nxVersion,
       },
       {
-        '@nrwl/nest': nxVersion
+        '@nrwl/nest': nxVersion,
       },
       false
     );
@@ -157,7 +169,7 @@ function addDependencies(options: Schema) {
     return addDepsToPackageJson(
       {},
       {
-        '@nrwl/react': nxVersion
+        '@nrwl/react': nxVersion,
       },
       false
     );
@@ -166,7 +178,7 @@ function addDependencies(options: Schema) {
       {},
       {
         '@nrwl/react': nxVersion,
-        '@nrwl/express': nxVersion
+        '@nrwl/express': nxVersion,
       },
       false
     );
@@ -174,7 +186,7 @@ function addDependencies(options: Schema) {
     return addDepsToPackageJson(
       {},
       {
-        '@nrwl/next': nxVersion
+        '@nrwl/next': nxVersion,
       },
       false
     );
@@ -194,7 +206,7 @@ function addTasks(options: Schema) {
     }
     if (options.preset !== 'empty') {
       const createPresetTask = context.addTask(new RunPresetTask(), [
-        packageTask
+        packageTask,
       ]);
 
       presetInstallTask = context.addTask(
@@ -231,7 +243,7 @@ function normalizeOptions(options: Schema): Schema {
 }
 
 function setDefaultLinter(linter: string) {
-  return updateWorkspaceInTree(json => {
+  return updateWorkspaceInTree((json) => {
     if (!json.schematics) {
       json.schematics = {};
     }
@@ -239,23 +251,25 @@ function setDefaultLinter(linter: string) {
     json.schematics['@nrwl/cypress'] = { 'cypress-project': { linter } };
     json.schematics['@nrwl/react'] = {
       application: { linter },
-      library: { linter }
+      library: { linter },
+      'storybook-configuration': { linter },
     };
+
     json.schematics['@nrwl/next'] = {
-      application: { linter }
+      application: { linter },
     };
     json.schematics['@nrwl/web'] = { application: { linter } };
     json.schematics['@nrwl/node'] = {
       application: { linter },
-      library: { linter }
+      library: { linter },
     };
     json.schematics['@nrwl/nx-plugin'] = {
-      plugin: { linter }
+      plugin: { linter },
     };
     json.schematics['@nrwl/nest'] = { application: { linter } };
     json.schematics['@nrwl/express'] = {
       application: { linter },
-      library: { linter }
+      library: { linter },
     };
     return json;
   });

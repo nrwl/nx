@@ -1,3 +1,5 @@
+import { packagesWeCareAbout } from '@nrwl/workspace/src/command-line/report';
+import { renameSync } from 'fs';
 import {
   ensureProject,
   forEachCli,
@@ -7,15 +9,16 @@ import {
   runCLI,
   runCommand,
   tmpProjPath,
-  updateFile
+  uniq,
+  updateFile,
 } from './utils';
-import { packagesWeCareAbout } from '@nrwl/workspace/src/command-line/report';
-import { renameSync } from 'fs';
 
 forEachCli('nx', () => {
   describe('Help', () => {
     it('should show help', async () => {
       ensureProject();
+      const myapp = uniq('myapp');
+      runCLI(`generate @nrwl/web:app ${myapp}`);
 
       let mainHelp = runCLI(`--help`);
       expect(mainHelp).toContain('Run a target for a project');
@@ -30,11 +33,14 @@ forEachCli('nx', () => {
         'The file extension to be used for style files. (default: css)'
       );
 
+      const buildHelp = runCLI(`build ${myapp} --help`);
+      expect(buildHelp).toContain('The name of the main entry-point file.');
+
       const affectedHelp = runCLI(`affected --help`);
       expect(affectedHelp).toContain('Run task for affected projects');
 
       const version = runCLI(`--version`);
-      expect(version).toContain('*'); // stub value
+      expect(version).toContain(process.env.PUBLISHED_VERSION); // stub value
     }, 120000);
   });
 });
@@ -43,6 +49,8 @@ forEachCli('angular', () => {
   describe('help', () => {
     it('should show help', async () => {
       ensureProject();
+      const myapp = uniq('myapp');
+      runCLI(`generate @nrwl/web:app ${myapp}`);
 
       let mainHelp = runCLI(`--help`);
       expect(mainHelp).toContain('Run a target for a project');
@@ -57,11 +65,14 @@ forEachCli('angular', () => {
         'The file extension to be used for style files.'
       );
 
+      const buildHelp = runCLI(`build ${myapp} --help`);
+      expect(buildHelp).toContain('The name of the main entry-point file.');
+
       const affectedHelp = runCLI(`affected --help`);
       expect(affectedHelp).toContain('Run task for affected projects');
 
       const version = runCLI(`--version`);
-      expect(version).toContain('*'); // stub value
+      expect(version).toContain(process.env.PUBLISHED_VERSION); // stub value
     }, 120000);
   });
 });
@@ -73,7 +84,7 @@ forEachCli(() => {
 
       const reportOutput = runCommand('npm run nx report');
 
-      packagesWeCareAbout.forEach(p => {
+      packagesWeCareAbout.forEach((p) => {
         expect(reportOutput).toContain(p);
       });
     }, 120000);
@@ -91,10 +102,6 @@ forEachCli(() => {
 
       // just check for some, not all
       expect(listOutput).toContain('@nrwl/angular');
-      expect(listOutput).toContain('@schematics/angular');
-      expect(listOutput).toContain('@ngrx/store');
-
-      expect(listOutput).not.toContain('NX  Also available');
 
       // temporarily make it look like this isn't installed
       renameSync(
@@ -118,7 +125,7 @@ forEachCli(() => {
       // check for builders
       expect(listOutput).toContain('run-commands');
 
-      // look for uninstalled approved plugin
+      // // look for uninstalled core plugin
       listOutput = runCommand('npm run nx -- list @nrwl/angular');
 
       expect(listOutput).toContain(
@@ -129,7 +136,7 @@ forEachCli(() => {
       listOutput = runCommand('npm run nx -- list @wibble/fish');
 
       expect(listOutput).toContain(
-        'NX   ERROR  Could not find plugin @wibble/fish'
+        'NX   NOTE  @wibble/fish is not currently installed'
       );
 
       // put back the @nrwl/angular module (or all the other e2e tests after this will fail)
@@ -142,13 +149,13 @@ forEachCli(() => {
 
   describe('migrate', () => {
     it('should run migrations', () => {
-      ensureProject();
+      newProject();
 
       updateFile(
         `./node_modules/migrate-parent-package/package.json`,
         JSON.stringify({
           version: '1.0.0',
-          'nx-migrations': './migrations.json'
+          'nx-migrations': './migrations.json',
         })
       );
 
@@ -159,14 +166,14 @@ forEachCli(() => {
             run11: {
               version: '1.1.0',
               description: '1.1.0',
-              factory: './run11'
+              factory: './run11',
             },
             run20: {
               version: '2.0.0',
               description: '2.0.0',
-              factory: './run20'
-            }
-          }
+              factory: './run20',
+            },
+          },
         })
       );
 
@@ -195,13 +202,13 @@ forEachCli(() => {
       updateFile(
         `./node_modules/migrate-child-package/package.json`,
         JSON.stringify({
-          version: '1.0.0'
+          version: '1.0.0',
         })
       );
 
       updateFile(
         './node_modules/@nrwl/tao/src/commands/migrate.js',
-        content => {
+        (content) => {
           const start = content.indexOf('// testing-fetch-start');
           const end = content.indexOf('// testing-fetch-end');
 
@@ -253,14 +260,14 @@ forEachCli(() => {
           {
             package: 'migrate-parent-package',
             version: '1.1.0',
-            name: 'run11'
+            name: 'run11',
           },
           {
             package: 'migrate-parent-package',
             version: '2.0.0',
-            name: 'run20'
-          }
-        ]
+            name: 'run20',
+          },
+        ],
       });
 
       // runs migrations

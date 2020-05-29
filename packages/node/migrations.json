@@ -1,3 +1,9 @@
 {
-  "schematics": {}
+  "schematics": {
+    "set-build-libs-from-source": {
+      "version": "9.2.0-beta.1",
+      "description": "Set buildLibsFromSource property to true to not break existing projects.",
+      "factory": "./src/migrations/update-9-2-0/set-build-libs-from-source"
+    }
+  }
 }

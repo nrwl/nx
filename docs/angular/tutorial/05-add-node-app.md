@@ -2,20 +2,68 @@
 
 The requests fail because the API has not been created yet. Using Nx you can develop node applications next to your Angular applications. You can use same commands to run and test them. You can share code between the backend and the frontend. Use this capability to implement the API service.
 
-## Add Nest Capabilities to your workspace
+## Add NestJS Plugin to Your Workspace
 
-Run the following to add the capability to develop Nest applications in your workspace:
+Nx is an open platform with plugins for many modern tools and frameworks. **To see some plugins, run `nx list`:**
 
 ```bash
-ng add @nrwl/nest
+>  NX  Installed plugins:
+
+  @nrwl/angular (builders,schematics)
+  @nrwl/cypress (builders,schematics)
+  @nrwl/jest (builders,schematics)
+  @nrwl/workspace (builders,schematics)
+
+
+>  NX  Also available:
+
+  @nrwl/bazel (schematics)
+  @nrwl/express (builders,schematics)
+  @nrwl/linter (builders)
+  @nrwl/nest (builders,schematics)
+  @nrwl/next (builders,schematics)
+  @nrwl/node (builders,schematics)
+  @nrwl/nx-plugin (builders,schematics)
+  @nrwl/react (builders,schematics)
+  @nrwl/storybook (builders,schematics)
+  @nrwl/web (builders,schematics)
+
+
+>  NX  Community plugins:
+
+  @angular-architects/ddd - Nx plugin for structuring a monorepo with domains and layers
+  @offeringsolutions/nx-karma-to-jest - Nx plugin for replacing karma with jest in an Nx workspace
+  @dev-thought/nx-deploy-it - Nx plugin to deploy applications on your favorite cloud provider
 ```
 
-## Create a Nest Application
+**Now run `nx list @nrwl/nest`, and you will see:**
+
+```bash
+>  NX   NOTE  @nrwl/nest is not currently installed
+
+  Use "yarn add --dev @nrwl/nest" to add new capabilities
+```
+
+**Add the dependency:**
+
+```bash
+npm install --save-dev @nrwl/nest
+```
+
+or
+
+```bash
+yarn add --dev @nrwl/nest
+```
+
+> `@nrwl/nest` also added `@nrwl/node`. Run `nx list @nrwl/nest` and `nx list @nrwl/node` to see what those plugins provide.
+
+## Create a NestJS Application
 
 **Run the following to generate a new Nest application:**
 
 ```bash
-ng g @nrwl/nest:app api --frontendProject=todos
+nx g @nrwl/nest:app api --frontendProject=todos
 ```
 
 Nx will ask you a few questions, and, as with the Angular application, the defaults will work well here.
@@ -59,9 +107,9 @@ The `apps` directory is where Nx places anything you can run: frontend applicati
 
 You can run:
 
-- `ng serve api` to serve the application
-- `ng build api` to build the application
-- `ng test api` to test the application
+- `nx serve api` to serve the application
+- `nx build api` to build the application
+- `nx test api` to test the application
 
 **Open `apps/api/src/app/app.module.ts`.**
 
@@ -74,12 +122,12 @@ import { AppService } from './app.service';
 @Module({
   imports: [],
   controllers: [AppController],
-  providers: [AppService]
+  providers: [AppService],
 })
 export class AppModule {}
 ```
 
-We recommend using the [Nest](https://nestjs.com) framework when creating node applications. Nest is a powerful framework which helps develop robust node applications. You can also use Express or any node libraries with Nx.
+We recommend using the [Nest](/{{framework}}/plugins/nest/overview) framework when creating node applications. Nest is a powerful framework which helps develop robust node applications. You can also use Express or any node libraries with Nx.
 
 In this case you have an application that registers a service and a controller. Services in Nest are responsible for the business logic, and controllers are responsible for implementing Http endpoints.
 
@@ -102,7 +150,7 @@ export class AppService {
 
   addTodo() {
     this.todos.push({
-      title: `New todo ${Math.floor(Math.random() * 1000)}`
+      title: `New todo ${Math.floor(Math.random() * 1000)}`,
     });
   }
 }
@@ -132,7 +180,7 @@ export class AppController {
 ```
 
 !!!!!
-Run "ng serve api" and open http://localhost:3333/api/todos. What do you see?
+Run "nx serve api" and open http://localhost:3333/api/todos. What do you see?
 !!!!!
 `[{"title":"Todo 1"},{"title":"Todo 2"}]`
 Blank screen

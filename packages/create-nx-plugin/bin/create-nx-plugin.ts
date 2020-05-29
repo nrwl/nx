@@ -18,9 +18,9 @@ const prettierVersion = 'PRETTIER_VERSION';
 const parsedArgs = yargsParser(process.argv, {
   string: ['pluginName'],
   alias: {
-    pluginName: 'plugin-name'
+    pluginName: 'plugin-name',
   },
-  boolean: ['help']
+  boolean: ['help'],
 });
 
 if (parsedArgs.help) {
@@ -29,8 +29,8 @@ if (parsedArgs.help) {
 }
 
 const packageManager = determinePackageManager();
-determineWorkspaceName(parsedArgs).then(workspaceName => {
-  return determinePluginName(parsedArgs).then(pluginName => {
+determineWorkspaceName(parsedArgs).then((workspaceName) => {
+  return determinePluginName(parsedArgs).then((pluginName) => {
     const tmpDir = createSandbox(packageManager);
     createWorkspace(tmpDir, packageManager, parsedArgs, workspaceName);
     createNxPlugin(workspaceName, pluginName);
@@ -49,15 +49,15 @@ function createSandbox(packageManager: string) {
         '@nrwl/workspace': nxVersion,
         '@nrwl/tao': cliVersion,
         typescript: tsVersion,
-        prettier: prettierVersion
+        prettier: prettierVersion,
       },
-      license: 'MIT'
+      license: 'MIT',
     })
   );
 
   execSync(`${packageManager} install --silent`, {
     cwd: tmpDir,
-    stdio: [0, 1, 2]
+    stdio: [0, 1, 2],
   });
 
   return tmpDir;
@@ -71,7 +71,7 @@ function createWorkspace(
 ) {
   const args = [
     name,
-    ...process.argv.slice(parsedArgs._[2] ? 3 : 2).map(a => `"${a}"`)
+    ...process.argv.slice(parsedArgs._[2] ? 3 : 2).map((a) => `"${a}"`),
   ].join(' ');
 
   console.log(`new ${args} --preset=empty --collection=@nrwl/workspace`);
@@ -83,12 +83,12 @@ function createWorkspace(
       'tao'
     )}" new ${args} --preset=empty --collection=@nrwl/workspace`,
     {
-      stdio: [0, 1, 2]
+      stdio: [0, 1, 2],
     }
   );
   execSync(`${packageManager} add -D @nrwl/nx-plugin@${nxVersion}`, {
     cwd: name,
-    stdio: [0, 1, 2]
+    stdio: [0, 1, 2],
   });
 }
 
@@ -98,7 +98,7 @@ function createNxPlugin(workspaceName, pluginName) {
     `node ./node_modules/@nrwl/cli/bin/nx.js generate @nrwl/nx-plugin:plugin ${pluginName}`,
     {
       cwd: workspaceName,
-      stdio: [0, 1, 2]
+      stdio: [0, 1, 2],
     }
   );
 }
@@ -106,11 +106,11 @@ function createNxPlugin(workspaceName, pluginName) {
 function commitChanges(workspaceName) {
   execSync('git add .', {
     cwd: workspaceName,
-    stdio: 'ignore'
+    stdio: 'ignore',
   });
   execSync('git commit --amend --no-edit', {
     cwd: workspaceName,
-    stdio: 'ignore'
+    stdio: 'ignore',
   });
 }
 
@@ -126,14 +126,14 @@ function determineWorkspaceName(parsedArgs: any): Promise<string> {
       {
         name: 'WorkspaceName',
         message: `Workspace name (e.g., org name)    `,
-        type: 'string'
-      }
+        type: 'string',
+      },
     ])
-    .then(a => {
+    .then((a) => {
       if (!a.WorkspaceName) {
         output.error({
           title: 'Invalid workspace name',
-          bodyLines: [`Workspace name cannot be empty`]
+          bodyLines: [`Workspace name cannot be empty`],
         });
         process.exit(1);
       }
@@ -151,14 +151,14 @@ function determinePluginName(parsedArgs) {
       {
         name: 'PluginName',
         message: `Plugin name                        `,
-        type: 'string'
-      }
+        type: 'string',
+      },
     ])
-    .then(a => {
+    .then((a) => {
       if (!a.PluginName) {
         output.error({
           title: 'Invalid name',
-          bodyLines: [`Name cannot be empty`]
+          bodyLines: [`Name cannot be empty`],
         });
         process.exit(1);
       }

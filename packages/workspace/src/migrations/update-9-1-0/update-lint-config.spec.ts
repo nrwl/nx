@@ -15,35 +15,35 @@ describe('Update 9.1.0', () => {
   it('should update tslint.json', async () => {
     tree = await callRule(
       chain([
-        updateWorkspace(workspace => {
+        updateWorkspace((workspace) => {
           workspace.projects.add({
             name: 'proj1',
             root: 'proj1',
             architect: {
               lint: {
-                builder: '@angular-devkit/build-angular:tslint'
-              }
-            }
+                builder: '@angular-devkit/build-angular:tslint',
+              },
+            },
           });
           workspace.projects.add({
             name: 'proj2',
             root: 'proj2',
             architect: {
               lint: {
-                builder: '@angular-devkit/build-angular:tslint'
-              }
-            }
+                builder: '@angular-devkit/build-angular:tslint',
+              },
+            },
           });
         }),
         updateJsonInTree('proj1/tslint.json', () => ({
-          rules: {}
+          rules: {},
         })),
         updateJsonInTree('proj2/tslint.json', () => ({
           rules: {},
           linterOptions: {
-            exclude: ['whatever']
-          }
-        }))
+            exclude: ['whatever'],
+          },
+        })),
       ]),
       tree
     );
@@ -53,22 +53,22 @@ describe('Update 9.1.0', () => {
     expect(readJsonInTree(result, 'proj1/tslint.json')).toEqual({
       rules: {},
       linterOptions: {
-        exclude: ['!**/*']
-      }
+        exclude: ['!**/*'],
+      },
     });
 
     expect(readJsonInTree(result, 'proj2/tslint.json')).toEqual({
       rules: {},
       linterOptions: {
-        exclude: ['!**/*', 'whatever']
-      }
+        exclude: ['!**/*', 'whatever'],
+      },
     });
   });
 
   it('should update .eslintrc', async () => {
     tree = await callRule(
       chain([
-        updateWorkspace(workspace => {
+        updateWorkspace((workspace) => {
           workspace.projects.add({
             name: 'proj1',
             root: 'proj1',
@@ -76,10 +76,10 @@ describe('Update 9.1.0', () => {
               lint: {
                 builder: '@nrwl/linter:lint',
                 options: {
-                  config: 'proj1/.eslintrc'
-                }
-              }
-            }
+                  config: 'proj1/.eslintrc',
+                },
+              },
+            },
           });
           workspace.projects.add({
             name: 'proj2',
@@ -88,19 +88,19 @@ describe('Update 9.1.0', () => {
               lint: {
                 builder: '@nrwl/linter:lint',
                 options: {
-                  config: 'proj2/.eslintrc'
-                }
-              }
-            }
+                  config: 'proj2/.eslintrc',
+                },
+              },
+            },
           });
         }),
         updateJsonInTree('proj1/.eslintrc', () => ({
-          rules: {}
+          rules: {},
         })),
         updateJsonInTree('proj2/.eslintrc', () => ({
           rules: {},
-          ignorePatterns: ['whatever']
-        }))
+          ignorePatterns: ['whatever'],
+        })),
       ]),
       tree
     );
@@ -109,12 +109,12 @@ describe('Update 9.1.0', () => {
 
     expect(readJsonInTree(result, 'proj1/.eslintrc')).toEqual({
       rules: {},
-      ignorePatterns: ['!**/*']
+      ignorePatterns: ['!**/*'],
     });
 
     expect(readJsonInTree(result, 'proj2/.eslintrc')).toEqual({
       rules: {},
-      ignorePatterns: ['!**/*', 'whatever']
+      ignorePatterns: ['!**/*', 'whatever'],
     });
   });
 });

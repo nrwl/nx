@@ -5,11 +5,11 @@ Create a Next.js application
 ## Usage
 
 ```bash
-ng generate application ...
+nx generate application ...
 ```
 
 ```bash
-ng g app ... # same
+nx g app ... # same
 ```
 
 By default, Nx will search for `application` in the default collection provisioned in `angular.json`.
@@ -17,13 +17,13 @@ By default, Nx will search for `application` in the default collection provision
 You can specify the collection explicitly as follows:
 
 ```bash
-ng g @nrwl/next:application ...
+nx g @nrwl/next:application ...
 ```
 
 Show what will be generated without writing to disk:
 
 ```bash
-ng g application ... --dry-run
+nx g application ... --dry-run
 ```
 
 ### Examples
@@ -31,26 +31,10 @@ ng g application ... --dry-run
 Generate apps/myorg/myapp and apps/myorg/myapp-e2e:
 
 ```bash
-ng g app myapp --directory=myorg
-```
-
-Use class components instead of functional components:
-
-```bash
-ng g app myapp --classComponent
+nx g app myapp --directory=myorg
 ```
 
 ## Options
-
-### classComponent
-
-Alias(es): C
-
-Default: `false`
-
-Type: `boolean`
-
-Use class components instead of functional component
 
 ### directory
 
@@ -85,16 +69,6 @@ The tool to use for running lint checks.
 Type: `string`
 
 The name of the application.
-
-### pascalCaseFiles
-
-Alias(es): P
-
-Default: `false`
-
-Type: `boolean`
-
-Use pascal case component file name (e.g. App.tsx)
 
 ### server
 

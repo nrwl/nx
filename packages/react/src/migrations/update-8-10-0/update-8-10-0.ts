@@ -3,14 +3,15 @@ import {
   noop,
   Rule,
   SchematicContext,
-  Tree
+  Tree,
 } from '@angular-devkit/schematics';
 import {
+  formatFiles,
   offsetFromRoot,
   readWorkspace,
   updateJsonInTree,
   updatePackagesInPackageJson,
-  updateWorkspaceInTree
+  updateWorkspaceInTree,
 } from '@nrwl/workspace';
 import * as path from 'path';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
@@ -25,7 +26,7 @@ export default function update(): Rule {
     updatePackagesInPackageJson(
       path.join(__dirname, '../../../', 'migrations.json'),
       '8.10.0'
-    )
+    ),
   ]);
 }
 
@@ -45,14 +46,14 @@ function displayInformation(host: Tree, context: SchematicContext) {
 
 function addCustomTypings(host: Tree) {
   const workspace = readWorkspace(host);
-  return chain(
-    Object.keys(workspace.projects).map(k => {
+  return chain([
+    ...Object.keys(workspace.projects).map((k) => {
       const p = workspace.projects[k];
       if (p.projectType !== 'application') {
         return noop();
       }
       if (isReactProject(p)) {
-        return updateJsonInTree(path.join(p.root, 'tsconfig.json'), json => {
+        return updateJsonInTree(path.join(p.root, 'tsconfig.json'), (json) => {
           const files = json.files || [];
           files.push(
             `${offsetFromRoot(
@@ -68,12 +69,13 @@ function addCustomTypings(host: Tree) {
       } else {
         return noop();
       }
-    })
-  );
+    }),
+    formatFiles(),
+  ]);
 }
 
 function updateBuilderWebpackOption(json) {
-  Object.keys(json.projects).map(k => {
+  Object.keys(json.projects).map((k) => {
     const p = json.projects[k];
     if (isReactProject(p)) {
       p.architect.build.options.webpackConfig = '@nrwl/react/plugins/webpack';

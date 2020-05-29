@@ -35,29 +35,44 @@ describe('ProjectGraphBuilder', () => {
         [libA.name]: libA,
         [libB.name]: libB,
         [libC.name]: libC,
-        [happyNrwl.name]: happyNrwl
+        [happyNrwl.name]: happyNrwl,
       },
       dependencies: {
         [myapp.name]: [
           {
             type: DependencyType.static,
             source: myapp.name,
-            target: libA.name
+            target: libA.name,
           },
-          { type: DependencyType.static, source: myapp.name, target: libB.name }
+          {
+            type: DependencyType.static,
+            source: myapp.name,
+            target: libB.name,
+          },
         ],
         [libB.name]: [
-          { type: DependencyType.static, source: libB.name, target: libC.name }
+          { type: DependencyType.static, source: libB.name, target: libC.name },
         ],
         [libC.name]: [
           {
             type: DependencyType.static,
             source: libC.name,
-            target: happyNrwl.name
-          }
-        ]
-      }
+            target: happyNrwl.name,
+          },
+        ],
+      },
     });
+  });
+
+  it('should throw an error when there are projects with conflicting names', () => {
+    const builder = new ProjectGraphBuilder();
+    const projA = createNode('proj', 'app');
+    const projB = createNode('proj', 'lib');
+    builder.addNode(projA);
+
+    expect(() => {
+      builder.addNode(projB);
+    }).toThrow();
   });
 });
 
@@ -65,6 +80,6 @@ function createNode(name: string, type: string): ProjectGraphNode {
   return {
     type,
     name,
-    data: null
+    data: null,
   };
 }

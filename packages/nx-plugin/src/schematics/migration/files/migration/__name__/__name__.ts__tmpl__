@@ -1,0 +1,12 @@
+import { chain, Rule } from '@angular-devkit/schematics';<% if (packageJsonUpdates) { %>
+import { updatePackagesInPackageJson } from '@nrwl/workspace';
+import * as path from 'path';<% } %>
+
+export default function update(): Rule {
+  return chain([<% if (packageJsonUpdates) { %>
+    updatePackagesInPackageJson(
+      path.join(__dirname, '../../../', 'migrations.json'),
+      '<%= version %>'
+    )
+  <% } %>]);
+}

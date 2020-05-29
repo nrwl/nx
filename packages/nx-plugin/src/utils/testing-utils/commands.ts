@@ -11,12 +11,12 @@ import { tmpProjPath } from './paths';
 export function runNxCommand(
   command?: string,
   opts = {
-    silenceError: false
+    silenceError: false,
   }
 ): string {
   try {
     return execSync(`node ./node_modules/@nrwl/cli/bin/nx.js ${command}`, {
-      cwd: tmpProjPath()
+      cwd: tmpProjPath(),
     })
       .toString()
       .replace(
@@ -37,7 +37,7 @@ export function runCommand(command: string): string {
   try {
     return execSync(command, {
       cwd: tmpProjPath(),
-      stdio: ['pipe', 'pipe', 'pipe']
+      stdio: ['pipe', 'pipe', 'pipe'],
     }).toString();
   } catch (e) {
     return e.stdout.toString() + e.stderr.toString();

@@ -7,18 +7,17 @@ import {
   template,
   Tree,
   url,
-  noop
+  noop,
 } from '@angular-devkit/schematics';
 import { join, normalize } from '@angular-devkit/core';
 import { Schema } from './schema';
 import {
   angularCliVersion,
   nxVersion,
-  prettierVersion
+  prettierVersion,
 } from '../../utils/versions';
 import { from } from 'rxjs';
 import { mapTo, tap } from 'rxjs/operators';
-import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import {
   offsetFromRoot,
   readJsonInTree,
@@ -28,7 +27,9 @@ import {
   updateJsonInTree,
   getWorkspacePath,
   renameSyncInTree,
-  renameDirSyncInTree
+  renameDirSyncInTree,
+  addInstallTask,
+  addDepsToPackageJson,
 } from '@nrwl/workspace';
 import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../workspace/workspace';
 import { JsonArray } from '@angular-devkit/core';
@@ -36,7 +37,7 @@ import { updateWorkspace } from '../../utils/workspace';
 import { basename } from 'path';
 
 function updatePackageJson() {
-  return updateJsonInTree('package.json', packageJson => {
+  return updateJsonInTree('package.json', (packageJson) => {
     packageJson.scripts = packageJson.scripts || {};
     packageJson.scripts = {
       ...packageJson.scripts,
@@ -57,7 +58,7 @@ function updatePackageJson() {
       lint: 'nx workspace-lint && ng lint',
       'dep-graph': 'nx dep-graph',
       'workspace-schematic': 'nx workspace-schematic',
-      help: 'nx help'
+      help: 'nx help',
     };
     packageJson.devDependencies = packageJson.devDependencies || {};
     if (!packageJson.dependencies) {
@@ -85,7 +86,7 @@ function convertPath(name: string, originalPath: string) {
 }
 
 function updateAngularCLIJson(options: Schema): Rule {
-  return updateWorkspace(workspace => {
+  return updateWorkspace((workspace) => {
     const appName: string = workspace.extensions.defaultProject as string;
     const e2eName = appName + '-e2e';
     const e2eRoot = join(normalize('apps'), e2eName);
@@ -119,15 +120,15 @@ function updateAngularCLIJson(options: Schema): Rule {
         (buildOptions.scripts as JsonArray).map(convertAsset);
       buildOptions.fileReplacements =
         buildOptions.fileReplacements &&
-        buildOptions.fileReplacements.map(replacement => ({
+        buildOptions.fileReplacements.map((replacement) => ({
           replace: convertAsset(replacement.replace),
-          with: convertAsset(replacement.with)
+          with: convertAsset(replacement.with),
         }));
     }
     convertBuildOptions(defaultProject.targets.get('build').options);
-    Object.values(defaultProject.targets.get('build').configurations).forEach(
-      config => convertBuildOptions(config)
-    );
+    Object.values(
+      defaultProject.targets.get('build').configurations
+    ).forEach((config) => convertBuildOptions(config));
 
     if (defaultProject.targets.has('test')) {
       const testOptions = defaultProject.targets.get('test').options;
@@ -152,7 +153,7 @@ function updateAngularCLIJson(options: Schema): Rule {
     if (lintTarget) {
       lintTarget.options.tsConfig = [
         join(newRoot, 'tsconfig.app.json'),
-        join(newRoot, 'tsconfig.spec.json')
+        join(newRoot, 'tsconfig.spec.json'),
       ];
     }
 
@@ -167,9 +168,9 @@ function updateAngularCLIJson(options: Schema): Rule {
         join(normalize('apps'), appName, 'tsconfig.server.json');
       serverOptions.fileReplacements =
         serverOptions.fileReplacements &&
-        serverOptions.fileReplacements.map(replacement => ({
+        serverOptions.fileReplacements.map((replacement) => ({
           replace: convertAsset(replacement.replace),
-          with: convertAsset(replacement.with)
+          with: convertAsset(replacement.with),
         }));
     }
 
@@ -178,7 +179,7 @@ function updateAngularCLIJson(options: Schema): Rule {
       convertServerOptions(serverOptions);
       Object.values(
         defaultProject.targets.get('server').configurations
-      ).forEach(config => convertServerOptions(config));
+      ).forEach((config) => convertServerOptions(config));
     }
 
     function convertAsset(asset: string | any) {
@@ -192,7 +193,7 @@ function updateAngularCLIJson(options: Schema): Rule {
           input:
             asset.input && asset.input.startsWith(oldSourceRoot)
               ? convertPath(appName, asset.input)
-              : asset.input
+              : asset.input,
         };
       }
     }
@@ -204,16 +205,16 @@ function updateAngularCLIJson(options: Schema): Rule {
         root: e2eRoot,
         projectType: 'application',
         targets: {
-          e2e: defaultProject.targets.get('e2e')
-        }
+          e2e: defaultProject.targets.get('e2e'),
+        },
       });
       e2eProject.targets.add({
         name: 'lint',
         builder: '@angular-devkit/build-angular:tslint',
         options: {
           ...lintTargetOptions,
-          tsConfig: join(e2eRoot, 'tsconfig.json')
-        }
+          tsConfig: join(e2eRoot, 'tsconfig.json'),
+        },
       });
       e2eProject.targets.get('e2e').options.protractorConfig = join(
         e2eRoot,
@@ -225,7 +226,7 @@ function updateAngularCLIJson(options: Schema): Rule {
 }
 
 function updateTsConfig(options: Schema): Rule {
-  return updateJsonInTree('tsconfig.json', tsConfigJson =>
+  return updateJsonInTree('tsconfig.json', (tsConfigJson) =>
     setUpCompilerOptions(tsConfigJson, options.npmScope, '')
   );
 }
@@ -239,14 +240,14 @@ function updateTsConfigsJson(options: Schema) {
     const offset = '../../';
 
     return chain([
-      updateJsonInTree(app.architect.build.options.tsConfig, json => {
+      updateJsonInTree(app.architect.build.options.tsConfig, (json) => {
         json.extends = `${offset}tsconfig.json`;
         json.compilerOptions.outDir = `${offset}dist/out-tsc`;
         return json;
       }),
 
       app.architect.test
-        ? updateJsonInTree(app.architect.test.options.tsConfig, json => {
+        ? updateJsonInTree(app.architect.test.options.tsConfig, (json) => {
             json.extends = `${offset}tsconfig.json`;
             json.compilerOptions.outDir = `${offset}dist/out-tsc`;
             return json;
@@ -254,35 +255,38 @@ function updateTsConfigsJson(options: Schema) {
         : noop(),
 
       app.architect.server
-        ? updateJsonInTree(app.architect.server.options.tsConfig, json => {
+        ? updateJsonInTree(app.architect.server.options.tsConfig, (json) => {
             json.compilerOptions.outDir = `${offset}dist/out-tsc`;
             return json;
           })
         : noop(),
 
       !!e2eProject
-        ? updateJsonInTree(e2eProject.architect.lint.options.tsConfig, json => {
-            json.extends = `${offsetFromRoot(e2eProject.root)}tsconfig.json`;
-            json.compilerOptions = {
-              ...json.compilerOptions,
-              outDir: `${offsetFromRoot(e2eProject.root)}dist/out-tsc`
-            };
-            return json;
-          })
-        : noop()
+        ? updateJsonInTree(
+            e2eProject.architect.lint.options.tsConfig,
+            (json) => {
+              json.extends = `${offsetFromRoot(e2eProject.root)}tsconfig.json`;
+              json.compilerOptions = {
+                ...json.compilerOptions,
+                outDir: `${offsetFromRoot(e2eProject.root)}dist/out-tsc`,
+              };
+              return json;
+            }
+          )
+        : noop(),
     ]);
   };
 }
 
 function updateTsLint() {
-  return updateJsonInTree('tslint.json', tslintJson => {
+  return updateJsonInTree('tslint.json', (tslintJson) => {
     [
       'no-trailing-whitespace',
       'one-line',
       'quotemark',
       'typedef-whitespace',
-      'whitespace'
-    ].forEach(key => {
+      'whitespace',
+    ].forEach((key) => {
       tslintJson[key] = undefined;
     });
     tslintJson.rulesDirectory = tslintJson.rulesDirectory || [];
@@ -291,8 +295,8 @@ function updateTsLint() {
       true,
       {
         allow: [],
-        depConstraints: [{ sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }]
-      }
+        depConstraints: [{ sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }],
+      },
     ];
     return tslintJson;
   });
@@ -305,7 +309,7 @@ function updateProjectTsLint(options: Schema) {
     const offset = '../../';
 
     if (host.exists(`${app.root}/tslint.json`)) {
-      return updateJsonInTree(`${app.root}/tslint.json`, json => {
+      return updateJsonInTree(`${app.root}/tslint.json`, (json) => {
         json.extends = `${offset}tslint.json`;
         return json;
       });
@@ -337,7 +341,7 @@ function moveOutOfSrc(
   const filename = !!filePath ? basename(filePath) : '';
   const from = filePath;
   const to = join(normalize('apps'), appName, filename);
-  renameSyncInTree(tree, from, to, err => {
+  renameSyncInTree(tree, from, to, (err) => {
     if (!context) {
       return;
     } else if (!err) {
@@ -349,7 +353,7 @@ function moveOutOfSrc(
 }
 
 function getE2eKey(workspaceJson: any) {
-  return Object.keys(workspaceJson.projects).find(key => {
+  return Object.keys(workspaceJson.projects).find((key) => {
     return !!workspaceJson.projects[key].architect.e2e;
   });
 }
@@ -417,7 +421,7 @@ function moveExistingFiles(options: Schema) {
       options.name,
       app.sourceRoot
     );
-    renameDirSyncInTree(host, oldAppSourceRoot, newAppSourceRoot, err => {
+    renameDirSyncInTree(host, oldAppSourceRoot, newAppSourceRoot, (err) => {
       if (!err) {
         context.logger.info(
           `Renamed ${oldAppSourceRoot} -> ${newAppSourceRoot}`
@@ -434,7 +438,7 @@ function moveExistingFiles(options: Schema) {
         normalize('apps'),
         getE2eKey(workspaceJson) + '-e2e'
       );
-      renameDirSyncInTree(host, oldE2eRoot, newE2eRoot, err => {
+      renameDirSyncInTree(host, oldE2eRoot, newE2eRoot, (err) => {
         if (!err) {
           context.logger.info(`Renamed ${oldE2eRoot} -> ${newE2eRoot}`);
         } else {
@@ -464,16 +468,16 @@ function createAdditionalFiles(options: Schema): Rule {
           'package.json': '*',
           'tsconfig.json': '*',
           'tslint.json': '*',
-          'nx.json': '*'
+          'nx.json': '*',
         },
         projects: {
           [options.name]: {
-            tags: []
+            tags: [],
           },
           [getE2eKey(workspaceJson) + '-e2e']: {
-            tags: []
-          }
-        }
+            tags: [],
+          },
+        },
       })
     );
     host.create('libs/.gitkeep', '');
@@ -486,8 +490,8 @@ function createAdditionalFiles(options: Schema): Rule {
           'nrwl.angular-console',
           'angular.ng-template',
           'ms-vscode.vscode-typescript-tslint-plugin',
-          'esbenp.prettier-vscode'
-        ].forEach(extension => {
+          'esbenp.prettier-vscode',
+        ].forEach((extension) => {
           if (!json.recommendations.includes(extension)) {
             json.recommendations.push(extension);
           }
@@ -500,7 +504,7 @@ function createAdditionalFiles(options: Schema): Rule {
     // if the user does not already have a prettier configuration
     // of any kind, create one
     return from(resolveUserExistingPrettierConfig()).pipe(
-      tap(existingPrettierConfig => {
+      tap((existingPrettierConfig) => {
         if (!existingPrettierConfig) {
           host.create(
             '.prettierrc',
@@ -554,36 +558,70 @@ function checkCanConvertToWorkspace(options: Schema) {
   };
 }
 
-function addInstallTask(options: Schema) {
-  return (host: Tree, context: SchematicContext) => {
-    if (!options.skipInstall) {
-      context.addTask(new NodePackageInstallTask());
-    }
-    return host;
-  };
-}
-
-export default function(schema: Schema): Rule {
-  const options = {
-    ...schema,
-    npmScope: toFileName(schema.npmScope || schema.name)
-  };
-  const templateSource = apply(url('./files'), [
-    template({
-      tmpl: ''
+const createNxJson = (host: Tree) => {
+  const json = JSON.parse(host.read('angular.json').toString());
+  if (Object.keys(json.projects || {}).length !== 1) {
+    throw new Error(
+      `The schematic can only be used with Angular CLI workspaces with a single project.`
+    );
+  }
+  const name = Object.keys(json.projects)[0];
+  host.create(
+    'nx.json',
+    serializeJson({
+      npmScope: name,
+      implicitDependencies: {
+        'angular.json': '*',
+        'package.json': '*',
+        'tsconfig.json': '*',
+        'tslint.json': '*',
+        'nx.json': '*',
+      },
+      projects: {
+        [name]: {
+          tags: [],
+        },
+      },
+      tasksRunnerOptions: {
+        default: {
+          runner: '@nrwl/workspace/tasks-runners/default',
+          options: {
+            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
+          },
+        },
+      },
     })
-  ]);
-  return chain([
-    checkCanConvertToWorkspace(options),
-    moveExistingFiles(options),
-    mergeWith(templateSource),
-    createAdditionalFiles(options),
-    updatePackageJson(),
-    updateAngularCLIJson(options),
-    updateTsLint(),
-    updateProjectTsLint(options),
-    updateTsConfig(options),
-    updateTsConfigsJson(options),
-    addInstallTask(options)
-  ]);
+  );
+};
+
+export default function (schema: Schema): Rule {
+  if (schema.preserveAngularCLILayout) {
+    return chain([
+      addDepsToPackageJson({}, { '@nrwl/workspace': nxVersion }),
+      createNxJson,
+    ]);
+  } else {
+    const options = {
+      ...schema,
+      npmScope: toFileName(schema.npmScope || schema.name),
+    };
+    const templateSource = apply(url('./files'), [
+      template({
+        tmpl: '',
+      }),
+    ]);
+    return chain([
+      checkCanConvertToWorkspace(options),
+      moveExistingFiles(options),
+      mergeWith(templateSource),
+      createAdditionalFiles(options),
+      updatePackageJson(),
+      updateAngularCLIJson(options),
+      updateTsLint(),
+      updateProjectTsLint(options),
+      updateTsConfig(options),
+      updateTsConfigsJson(options),
+      addInstallTask(options),
+    ]);
+  }
 }

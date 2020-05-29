@@ -16,7 +16,6 @@ export function runOne(opts: {
       ...opts.parsedArgs,
       configuration: opts.configuration,
       target: opts.target,
-      _: []
     },
     'run-one'
   );
@@ -30,10 +29,20 @@ export function runOne(opts: {
   );
   const env = readEnvironment(opts.target, projectsMap);
   const reporter = nxArgs.withDeps
-    ? new (require(`../tasks-runner/default-reporter`)).DefaultReporter()
+    ? new (require(`../tasks-runner/run-one-reporter`).RunOneReporter)(
+        opts.project
+      )
     : new EmptyReporter();
 
-  runCommand(projects, projectGraph, env, nxArgs, overrides, reporter);
+  runCommand(
+    projects,
+    projectGraph,
+    env,
+    nxArgs,
+    overrides,
+    reporter,
+    opts.project
+  );
 }
 
 function getProjects(
@@ -44,7 +53,7 @@ function getProjects(
 ): any {
   let projects = [projectGraph.nodes[project]];
   let projectsMap = {
-    [project]: projectGraph.nodes[project]
+    [project]: projectGraph.nodes[project],
   };
 
   if (includeDeps) {
@@ -56,7 +65,7 @@ function getProjects(
     );
     return {
       projects: projectsWithTarget,
-      projectsMap: deps
+      projectsMap: deps,
     };
   } else {
     return { projects, projectsMap };

@@ -1,21 +1,23 @@
+import { NxJson } from '@nrwl/workspace';
+import { classify } from '@nrwl/workspace/src/utils/strings';
 import {
   checkFilesExist,
+  ensureProject,
+  exists,
+  forEachCli,
   newProject,
   readFile,
   readJson,
   runCLI,
   runCommand,
-  updateFile,
-  exists,
-  ensureProject,
+  runCommandAsync,
+  tmpProjPath,
   uniq,
-  forEachCli,
-  workspaceConfigName
+  updateFile,
+  workspaceConfigName,
 } from './utils';
-import { classify } from '@nrwl/workspace/src/utils/strings';
-import { NxJson } from '@nrwl/workspace';
 
-forEachCli(cli => {
+forEachCli((cli) => {
   describe('lint', () => {
     it('lint should ensure module boundaries', () => {
       ensureProject();
@@ -37,7 +39,7 @@ forEachCli(cli => {
       const tslint = readJson('tslint.json');
       tslint.rules['nx-enforce-module-boundaries'][1].depConstraints = [
         { sourceTag: 'validtag', onlyDependOnLibsWithTags: ['validtag'] },
-        ...tslint.rules['nx-enforce-module-boundaries'][1].depConstraints
+        ...tslint.rules['nx-enforce-module-boundaries'][1].depConstraints,
       ];
       updateFile('tslint.json', JSON.stringify(tslint, null, 2));
 
@@ -162,10 +164,12 @@ forEachCli(cli => {
       expect(runCommand('npm run -s format:check -- --all')).toEqual('');
     });
 
-    it('should support workspace-specific schematics', () => {
+    it('should support workspace-specific schematics', async () => {
       ensureProject();
       const custom = uniq('custom');
+      const failing = uniq('custom-failing');
       runCLI(`g workspace-schematic ${custom} --no-interactive`);
+      runCLI(`g workspace-schematic ${failing} --no-interactive`);
       checkFilesExist(
         `tools/schematics/${custom}/index.ts`,
         `tools/schematics/${custom}/schema.json`
@@ -174,11 +178,11 @@ forEachCli(cli => {
       const json = readJson(`tools/schematics/${custom}/schema.json`);
       json.properties['directory'] = {
         type: 'string',
-        description: 'lib directory'
+        description: 'lib directory',
       };
       json.properties['skipTsConfig'] = {
         type: 'boolean',
-        description: 'skip changes to tsconfig'
+        description: 'skip changes to tsconfig',
       };
       updateFile(
         `tools/schematics/${custom}/schema.json`,
@@ -213,6 +217,30 @@ forEachCli(cli => {
       const another = uniq('another');
       runCLI(`g workspace-schematic ${another} --no-interactive`);
 
+      const jsonFailing = readJson(`tools/schematics/${failing}/schema.json`);
+      jsonFailing.properties = {};
+      jsonFailing.required = [];
+      updateFile(
+        `tools/schematics/${failing}/schema.json`,
+        JSON.stringify(jsonFailing)
+      );
+
+      updateFile(
+        `tools/schematics/${failing}/index.ts`,
+        `
+          export default function() {
+            throw new Error();
+          }
+        `
+      );
+
+      try {
+        const err = await runCommandAsync(
+          `npm run workspace-schematic -- ${failing} --no-interactive`
+        );
+        fail(`Should exit 1 for a workspace-schematic that throws an error`);
+      } catch (e) {}
+
       const listSchematicsOutput = runCommand(
         'npm run workspace-schematic -- --list-schematics'
       );
@@ -220,6 +248,7 @@ forEachCli(cli => {
         'nx workspace-schematic "--list-schematics"'
       );
       expect(listSchematicsOutput).toContain(custom);
+      expect(listSchematicsOutput).toContain(failing);
       expect(listSchematicsOutput).toContain(another);
 
       const promptOutput = runCommand(
@@ -270,47 +299,47 @@ forEachCli(cli => {
           {
             source: 'myapp3-e2e',
             target: 'myapp3',
-            type: 'implicit'
-          }
+            type: 'implicit',
+          },
         ],
         myapp2: [
           {
             source: 'myapp2',
             target: 'mylib',
-            type: 'static'
-          }
+            type: 'static',
+          },
         ],
         'myapp2-e2e': [
           {
             source: 'myapp2-e2e',
             target: 'myapp2',
-            type: 'implicit'
-          }
+            type: 'implicit',
+          },
         ],
         mylib: [
           {
             source: 'mylib',
             target: 'mylib2',
-            type: 'static'
-          }
+            type: 'static',
+          },
         ],
         mylib2: [],
         myapp: [
           {
             source: 'myapp',
             target: 'mylib',
-            type: 'static'
+            type: 'static',
           },
-          { source: 'myapp', target: 'mylib2', type: 'dynamic' }
+          { source: 'myapp', target: 'mylib2', type: 'dynamic' },
         ],
         'myapp-e2e': [
           {
             source: 'myapp-e2e',
             target: 'myapp',
-            type: 'implicit'
-          }
+            type: 'implicit',
+          },
         ],
-        myapp3: []
+        myapp3: [],
       });
 
       runCommand(
@@ -326,6 +355,10 @@ forEachCli(cli => {
       expect(jsonFileContents2.criticalPath).toContain('mylib');
       expect(jsonFileContents2.criticalPath).not.toContain('mylib2');
     }, 1000000);
+
+    it.todo(
+      'dep-graph should output a deployable static website in an html file accompanied by a folder with static assets'
+    );
   });
 
   describe('Move Angular Project', () => {
@@ -563,7 +596,7 @@ forEachCli(cli => {
       const nxJson = JSON.parse(readFile('nx.json')) as NxJson;
       expect(nxJson.projects[`${lib1}-data-access`]).toBeUndefined();
       expect(nxJson.projects[newName]).toEqual({
-        tags: []
+        tags: [],
       });
 
       expect(moveOutput).toContain('UPDATE tsconfig.json');
@@ -584,7 +617,7 @@ forEachCli(cli => {
       expect(project.sourceRoot).toBe(`${newPath}/src`);
       expect(project.architect.lint.options.tsConfig).toEqual([
         `libs/shared/${lib1}/data-access/tsconfig.lib.json`,
-        `libs/shared/${lib1}/data-access/tsconfig.spec.json`
+        `libs/shared/${lib1}/data-access/tsconfig.spec.json`,
       ]);
 
       /**
@@ -595,6 +628,37 @@ forEachCli(cli => {
       expect(lib2File).toContain(
         `import { fromLibOne } from '@proj/shared/${lib1}/data-access';`
       );
+    });
+  });
+
+  describe('Remove Project', () => {
+    const workspace: string = cli === 'angular' ? 'angular' : 'workspace';
+
+    /**
+     * Tries creating then deleting a lib
+     */
+    it('should work', () => {
+      const lib = uniq('mylib');
+
+      newProject();
+
+      runCLI(`generate @nrwl/workspace:lib ${lib}`);
+      expect(exists(tmpProjPath(`libs/${lib}`))).toBeTruthy();
+
+      const removeOutput = runCLI(
+        `generate @nrwl/workspace:remove --project ${lib}`
+      );
+
+      expect(removeOutput).toContain(`DELETE libs/${lib}`);
+      expect(exists(tmpProjPath(`libs/${lib}`))).toBeFalsy();
+
+      expect(removeOutput).toContain(`UPDATE nx.json`);
+      const nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+      expect(nxJson.projects[`${lib}`]).toBeUndefined();
+
+      expect(removeOutput).toContain(`UPDATE ${workspace}.json`);
+      const workspaceJson = readJson(`${workspace}.json`);
+      expect(workspaceJson.projects[`${lib}`]).toBeUndefined();
     });
   });
 });

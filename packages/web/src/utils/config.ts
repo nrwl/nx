@@ -1,16 +1,20 @@
 import * as webpack from 'webpack';
 import { Configuration, ProgressPlugin, Stats } from 'webpack';
-import { dirname, resolve } from 'path';
+import { join, resolve } from 'path';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as TerserWebpackPlugin from 'terser-webpack-plugin';
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 
-import { BuildBuilderOptions } from './types';
+import { AssetGlobPattern, BuildBuilderOptions } from './types';
+import { getOutputHashFormat } from './hash-format';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-import { getOutputHashFormat } from './hash-format';
-import { createBabelConfig } from './babel-config';
+
+const IGNORED_WEBPACK_WARNINGS = [
+  /The comment file/i,
+  /could not find any license/i,
+];
 
 export function getBaseWebpackPartial(
   options: BuildBuilderOptions,
@@ -27,17 +31,18 @@ export function getBaseWebpackPartial(
   const chunkFilename = isScriptOptimizeOn
     ? `[name]${hashFormat.chunk}${suffixFormat}.js`
     : '[name].js';
+  const mode = isScriptOptimizeOn ? 'production' : 'development';
 
   const webpackConfig: Configuration = {
     entry: {
-      main: [options.main]
+      main: [options.main],
     },
     devtool: options.sourceMap ? 'source-map' : false,
-    mode: isScriptOptimizeOn ? 'production' : 'development',
+    mode,
     output: {
       path: options.outputPath,
       filename,
-      chunkFilename
+      chunkFilename,
     },
     module: {
       rules: [
@@ -46,12 +51,15 @@ export function getBaseWebpackPartial(
           loader: `babel-loader`,
           exclude: /node_modules/,
           options: {
-            ...createBabelConfig(dirname(options.main), esm, options.verbose),
+            rootMode: 'upward',
+            cwd: join(options.root, options.sourceRoot),
+            envName: esm ? 'modern' : 'legacy',
+            babelrc: true,
             cacheDirectory: true,
-            cacheCompression: false
-          }
-        }
-      ]
+            cacheCompression: false,
+          },
+        },
+      ],
     },
     resolve: {
       extensions,
@@ -60,16 +68,16 @@ export function getBaseWebpackPartial(
         new TsConfigPathsPlugin({
           configFile: options.tsConfig,
           extensions,
-          mainFields
-        })
+          mainFields,
+        }),
       ],
       // Search closest node_modules first, and then fallback to to default node module resolution scheme.
       // This ensures we are pulling the correct versions of dependencies, such as `core-js`.
       modules: [resolve(__dirname, '..', '..', 'node_modules'), 'node_modules'],
-      mainFields
+      mainFields,
     },
     performance: {
-      hints: false
+      hints: false,
     },
     plugins: [
       new ForkTsCheckerWebpackPlugin({
@@ -78,20 +86,21 @@ export function getBaseWebpackPartial(
           options.memoryLimit ||
           ForkTsCheckerWebpackPlugin.DEFAULT_MEMORY_LIMIT,
         workers: options.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE,
-        useTypescriptIncrementalApi: false
-      })
+        useTypescriptIncrementalApi: false,
+      }),
+      new webpack.DefinePlugin(getClientEnvironment(mode).stringified),
     ],
     watch: options.watch,
     watchOptions: {
-      poll: options.poll
+      poll: options.poll,
     },
-    stats: getStatsConfig(options)
+    stats: getStatsConfig(options),
   };
 
   if (isScriptOptimizeOn) {
     webpackConfig.optimization = {
-      minimizer: [createTerserPlugin(esm)],
-      runtimeChunk: true
+      minimizer: [createTerserPlugin(esm, !!options.sourceMap)],
+      runtimeChunk: true,
     };
   }
 
@@ -102,45 +111,25 @@ export function getBaseWebpackPartial(
   }
 
   if (options.extractLicenses) {
-    extraPlugins.push((new LicenseWebpackPlugin({
-      stats: {
-        errors: false
-      },
-      perChunkOutput: false,
-      outputFilename: `3rdpartylicenses.txt`
-    }) as unknown) as webpack.Plugin);
+    extraPlugins.push(
+      (new LicenseWebpackPlugin({
+        stats: {
+          errors: false,
+        },
+        perChunkOutput: false,
+        outputFilename: `3rdpartylicenses.txt`,
+      }) as unknown) as webpack.Plugin
+    );
   }
 
-  // process asset entries
   if (options.assets) {
-    const copyWebpackPluginPatterns = options.assets.map((asset: any) => {
-      return {
-        context: asset.input,
-        // Now we remove starting slash to make Webpack place it from the output root.
-        to: asset.output,
-        ignore: asset.ignore,
-        from: {
-          glob: asset.glob,
-          dot: true
-        }
-      };
-    });
-
-    const copyWebpackPluginOptions = {
-      ignore: ['.gitkeep', '**/.DS_Store', '**/Thumbs.db']
-    };
-
-    const copyWebpackPluginInstance = new CopyWebpackPlugin(
-      copyWebpackPluginPatterns,
-      copyWebpackPluginOptions
-    );
-    extraPlugins.push(copyWebpackPluginInstance);
+    extraPlugins.push(createCopyPlugin(options.assets));
   }
 
   if (options.showCircularDependencies) {
     extraPlugins.push(
       new CircularDependencyPlugin({
-        exclude: /[\\\/]node_modules[\\\/]/
+        exclude: /[\\\/]node_modules[\\\/]/,
       })
     );
   }
@@ -154,25 +143,27 @@ function getAliases(options: BuildBuilderOptions): { [key: string]: string } {
   return options.fileReplacements.reduce(
     (aliases, replacement) => ({
       ...aliases,
-      [replacement.replace]: replacement.with
+      [replacement.replace]: replacement.with,
     }),
     {}
   );
 }
 
-export function createTerserPlugin(esm: boolean) {
+export function createTerserPlugin(esm: boolean, sourceMap: boolean) {
   return new TerserWebpackPlugin({
     parallel: true,
     cache: true,
+    sourceMap,
     terserOptions: {
-      ecma: esm ? 6 : 5,
+      ecma: esm ? 8 : 5,
+      // Don't remove safari 10 workaround for ES modules
       safari10: true,
       output: {
         ascii_only: true,
         comments: false,
-        webkit: true
-      }
-    }
+        webkit: true,
+      },
+    },
   });
 }
 
@@ -195,6 +186,58 @@ function getStatsConfig(options: BuildBuilderOptions): Stats.ToStringOptions {
     version: !!options.verbose,
     errorDetails: !!options.verbose,
     moduleTrace: !!options.verbose,
-    usedExports: !!options.verbose
+    usedExports: !!options.verbose,
+    warningsFilter: IGNORED_WEBPACK_WARNINGS,
   };
+}
+
+// This is shamelessly taken from CRA and modified for NX use
+// https://github.com/facebook/create-react-app/blob/4784997f0682e75eb32a897b4ffe34d735912e6c/packages/react-scripts/config/env.js#L71
+function getClientEnvironment(mode) {
+  // Grab NODE_ENV and NX_* environment variables and prepare them to be
+  // injected into the application via DefinePlugin in webpack configuration.
+  const NX_APP = /^NX_/i;
+
+  const raw = Object.keys(process.env)
+    .filter((key) => NX_APP.test(key))
+    .reduce(
+      (env, key) => {
+        env[key] = process.env[key];
+        return env;
+      },
+      {
+        // Useful for determining whether we’re running in production mode.
+        NODE_ENV: process.env.NODE_ENV || mode,
+      }
+    );
+
+  // Stringify all values so we can feed into webpack DefinePlugin
+  const stringified = {
+    'process.env': Object.keys(raw).reduce((env, key) => {
+      env[key] = JSON.stringify(raw[key]);
+      return env;
+    }, {}),
+  };
+
+  return { stringified };
+}
+
+export function createCopyPlugin(assets: AssetGlobPattern[]) {
+  return new CopyWebpackPlugin(
+    assets.map((asset) => {
+      return {
+        context: asset.input,
+        // Now we remove starting slash to make Webpack place it from the output root.
+        to: asset.output,
+        ignore: asset.ignore,
+        from: {
+          glob: asset.glob,
+          dot: true,
+        },
+      };
+    }),
+    {
+      ignore: ['.gitkeep', '**/.DS_Store', '**/Thumbs.db'],
+    }
+  );
 }

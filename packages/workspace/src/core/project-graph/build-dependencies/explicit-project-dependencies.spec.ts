@@ -1,5 +1,5 @@
 jest.mock('../../../utils/app-root', () => ({
-  appRootPath: '/root'
+  appRootPath: '/root',
 }));
 jest.mock('fs', () => require('memfs').fs);
 
@@ -8,7 +8,7 @@ import {
   AddProjectDependency,
   ProjectGraphContext,
   ProjectGraphNode,
-  DependencyType
+  DependencyType,
 } from '../project-graph-models';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import { createFileMap } from '../../file-graph';
@@ -24,30 +24,30 @@ describe('explicit project dependencies', () => {
     const workspaceJson = {
       projects: {
         proj: {
-          root: 'libs/proj'
+          root: 'libs/proj',
         },
         proj2: {
-          root: 'libs/proj2'
+          root: 'libs/proj2',
         },
         proj3a: {
-          root: 'libs/proj3a'
+          root: 'libs/proj3a',
         },
         proj123: {
-          root: 'libs/proj123'
+          root: 'libs/proj123',
         },
         proj1234: {
-          root: 'libs/proj1234'
+          root: 'libs/proj1234',
         },
         'proj1234-child': {
-          root: 'libs/proj1234-child'
-        }
-      }
+          root: 'libs/proj1234-child',
+        },
+      },
     };
     const nxJson = {
       npmScope: 'proj',
       projects: {
-        proj1: {}
-      }
+        proj1: {},
+      },
     };
     const tsConfig = {
       compilerOptions: {
@@ -58,9 +58,9 @@ describe('explicit project dependencies', () => {
           '@proj/project-3': ['libs/proj3a/index.ts'],
           '@proj/proj123': ['libs/proj123/index.ts'],
           '@proj/proj1234': ['libs/proj1234/index.ts'],
-          '@proj/proj1234-child': ['libs/proj1234-child/index.ts']
-        }
-      }
+          '@proj/proj1234-child': ['libs/proj1234-child/index.ts'],
+        },
+      },
     };
     fsJson = {
       './package.json': `{
@@ -82,14 +82,14 @@ describe('explicit project dependencies', () => {
       './libs/proj1234/index.ts': `export const a = 6 
         import { a } from '@proj/proj1234-child'
       `,
-      './libs/proj1234-child/index.ts': 'export const a = 7'
+      './libs/proj1234-child/index.ts': 'export const a = 7',
     };
     vol.fromJSON(fsJson, '/root');
 
     ctx = {
       workspaceJson,
       nxJson,
-      fileMap: createFileMap(workspaceJson, readWorkspaceFiles())
+      fileMap: createFileMap(workspaceJson, readWorkspaceFiles()),
     };
 
     projects = {
@@ -98,57 +98,57 @@ describe('explicit project dependencies', () => {
         type: 'lib',
         data: {
           root: 'libs/proj3a',
-          files: []
-        }
+          files: [],
+        },
       },
       proj2: {
         name: 'proj2',
         type: 'lib',
         data: {
           root: 'libs/proj2',
-          files: []
-        }
+          files: [],
+        },
       },
       proj: {
         name: 'proj',
         type: 'lib',
         data: {
           root: 'libs/proj',
-          files: []
-        }
+          files: [],
+        },
       },
       proj1234: {
         name: 'proj1234',
         type: 'lib',
         data: {
           root: 'libs/proj1234',
-          files: []
-        }
+          files: [],
+        },
       },
       proj123: {
         name: 'proj123',
         type: 'lib',
         data: {
           root: 'libs/proj123',
-          files: []
-        }
+          files: [],
+        },
       },
       proj4ab: {
         name: 'proj4ab',
         type: 'lib',
         data: {
           root: 'libs/proj4ab',
-          files: []
-        }
+          files: [],
+        },
       },
       'proj1234-child': {
         name: 'proj1234-child',
         type: 'lib',
         data: {
           root: 'libs/proj1234-child',
-          files: []
-        }
-      }
+          files: [],
+        },
+      },
     };
   });
 
@@ -161,7 +161,7 @@ describe('explicit project dependencies', () => {
           const depObj = {
             type,
             source,
-            target
+            target,
           };
           if (dependencyMap[source]) {
             dependencyMap[source].push(depObj);
@@ -171,7 +171,7 @@ describe('explicit project dependencies', () => {
         }
       );
 
-    buildExplicitTypeScriptDependencies(ctx, projects, addDependency, s => {
+    buildExplicitTypeScriptDependencies(ctx, projects, addDependency, (s) => {
       return fs.readFileSync(`${appRootPath}/${s}`).toString();
     });
 
@@ -180,26 +180,26 @@ describe('explicit project dependencies', () => {
         {
           source: 'proj1234',
           target: 'proj1234-child',
-          type: DependencyType.static
-        }
+          type: DependencyType.static,
+        },
       ],
       proj: [
         {
           source: 'proj',
           target: 'proj2',
-          type: DependencyType.static
+          type: DependencyType.static,
         },
         {
           source: 'proj',
           target: 'proj3a',
-          type: DependencyType.dynamic
+          type: DependencyType.dynamic,
         },
         {
           source: 'proj',
           target: 'proj4ab',
-          type: DependencyType.dynamic
-        }
-      ]
+          type: DependencyType.dynamic,
+        },
+      ],
     });
   });
 });

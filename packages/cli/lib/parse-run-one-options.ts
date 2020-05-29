@@ -9,11 +9,20 @@ export function parseRunOneOptions(
   try {
     defaultProjectName = workspaceConfigJson.cli.defaultProjectName;
   } catch (e) {}
+  try {
+    if (!defaultProjectName) {
+      defaultProjectName = workspaceConfigJson.defaultProject;
+    }
+  } catch (e) {}
 
   const parsedArgs = yargsParser(args, {
-    boolean: ['prod'],
-    string: ['configuration', 'project']
+    boolean: ['prod', 'help'],
+    string: ['configuration', 'project'],
   });
+
+  if (parsedArgs['help']) {
+    return false;
+  }
 
   let project;
   let target;

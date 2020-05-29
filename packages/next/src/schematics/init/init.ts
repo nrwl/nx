@@ -1,33 +1,36 @@
-import { chain } from '@angular-devkit/schematics';
-import { addDepsToPackageJson, addPackageWithInit } from '@nrwl/workspace';
+import { chain, noop } from '@angular-devkit/schematics';
 import {
-  nextVersion,
-  zeitNextCss,
-  zeitNextLess,
-  zeitNextSass,
-  zeitNextStylus
-} from '../../utils/versions';
+  addDepsToPackageJson,
+  addPackageWithInit,
+  setDefaultCollection,
+} from '@nrwl/workspace';
+import { nextVersion } from '../../utils/versions';
 import { Schema } from './schema';
-import { setDefaultCollection } from '@nrwl/workspace/src/utils/rules/workspace';
+import {
+  reactDomVersion,
+  reactVersion,
+} from '../../../../react/src/utils/versions';
 
 const updateDependencies = addDepsToPackageJson(
   {
     next: nextVersion,
-    '@zeit/next-css': zeitNextCss,
-    '@zeit/next-sass': zeitNextLess,
-    '@zeit/next-less': zeitNextSass,
-    '@zeit/next-stylus': zeitNextStylus
+    react: reactVersion,
+    'react-dom': reactDomVersion,
   },
   {}
 );
 
-export default function(schema: Schema) {
+export default function (schema: Schema) {
   return chain([
     setDefaultCollection('@nrwl/next'),
-    addPackageWithInit('@nrwl/jest'),
-    addPackageWithInit('@nrwl/cypress'),
-    addPackageWithInit('@nrwl/web'),
-    addPackageWithInit('@nrwl/react'),
-    updateDependencies
+    schema.unitTestRunner === 'jest'
+      ? addPackageWithInit('@nrwl/jest')
+      : noop(),
+    schema.e2eTestRunner === 'cypress'
+      ? addPackageWithInit('@nrwl/cypress')
+      : noop(),
+    addPackageWithInit('@nrwl/web', schema),
+    addPackageWithInit('@nrwl/react', schema),
+    updateDependencies,
   ]);
 }

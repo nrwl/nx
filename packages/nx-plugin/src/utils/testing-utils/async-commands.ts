@@ -10,14 +10,14 @@ import { tmpProjPath } from './paths';
 export function runCommandAsync(
   command: string,
   opts = {
-    silenceError: false
+    silenceError: false,
   }
 ): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     exec(
       command,
       {
-        cwd: tmpProjPath()
+        cwd: tmpProjPath(),
       },
       (err, stdout, stderr) => {
         if (!opts.silenceError && err) {
@@ -37,7 +37,7 @@ export function runCommandAsync(
 export function runNxCommandAsync(
   command: string,
   opts = {
-    silenceError: false
+    silenceError: false,
   }
 ): Promise<{ stdout: string; stderr: string }> {
   return runCommandAsync(

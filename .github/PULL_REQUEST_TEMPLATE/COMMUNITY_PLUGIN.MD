@@ -2,7 +2,7 @@ _[Please make sure you have read the submission guidelines before posting an PR]
 
 # Community Plugin Submission
 
-Thanks for submitting your Nx Plugin to our approved plugins list. Make sure to follow the following steps to ensure that your PR is approved in a timely manner.
+Thanks for submitting your Nx Plugin to our community plugins list. Make sure to follow these steps to ensure that your PR is approved in a timely manner.
 
 ## Steps to Submit Your Plugin
 - Use the following commit message template: `chore(core): nx plugin submission [PLUGIN_NAME]`

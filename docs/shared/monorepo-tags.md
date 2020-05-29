@@ -1,6 +1,6 @@
 # Imposing Constraints on the Dependency Graph
 
-If you partition your code into well-defined cohesive units, even a small organization will end up with a dozen apps and dozens or hundreds of libs. If all of them can depend on each other freely, the chaos will ensue and the workspace will become unmanageable.
+If you partition your code into well-defined cohesive units, even a small organization will end up with a dozen apps and dozens or hundreds of libs. If all of them can depend on each other freely, the chaos will ensue, and the workspace will become unmanageable.
 
 To help with that Nx uses code analyses to make sure projects can only depend on each other's well-defined public API. It also allows you to declaratively impose constraints on how projects can depend on each other.
 
@@ -51,7 +51,7 @@ First, use `nx.json` to annotate your projects with tags. In this example, we wi
 }
 ```
 
-Next open the top level `.eslintrc` or `tslint.json` to add the constraints.
+Next open the top-level `.eslintrc` or `tslint.json` to add the constraints.
 
 ```json
 {
@@ -78,7 +78,7 @@ Next open the top level `.eslintrc` or `tslint.json` to add the constraints.
 }
 ```
 
-With these constrains in place, `scope:client` projects can only depend on other `scope:client` projects or on `scope:shared` projects. And `scope:admin` projects can only depend on other `scope:admin` projects or on `scope:shared` projects. So `scope:client` and `scope:admin` cannot depend on each other.
+With these constraints in place, `scope:client` projects can only depend on other `scope:client` projects or on `scope:shared` projects. And `scope:admin` projects can only depend on other `scope:admin` projects or on `scope:shared` projects. So `scope:client` and `scope:admin` cannot depend on each other.
 
 Projects without any tags cannot depend on any other projects. If you add the following, projects without any tags will be able to depend on any other project.
 

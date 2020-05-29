@@ -24,13 +24,13 @@ export function getBaseWebpackPartial(
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
   const webpackConfig: Configuration = {
     entry: {
-      main: [options.main]
+      main: [options.main],
     },
     devtool: options.sourceMap ? 'source-map' : false,
     mode: options.optimization ? 'production' : 'development',
     output: {
       path: options.outputPath,
-      filename: OUT_FILENAME
+      filename: OUT_FILENAME,
     },
     module: {
       rules: [
@@ -42,10 +42,10 @@ export function getBaseWebpackPartial(
             configFile: options.tsConfig,
             transpileOnly: true,
             // https://github.com/TypeStrong/ts-loader/pull/685
-            experimentalWatchApi: true
-          }
-        }
-      ]
+            experimentalWatchApi: true,
+          },
+        },
+      ],
     },
     resolve: {
       extensions,
@@ -54,26 +54,29 @@ export function getBaseWebpackPartial(
         new TsConfigPathsPlugin({
           configFile: options.tsConfig,
           extensions,
-          mainFields
-        })
+          mainFields,
+        }),
       ],
-      mainFields
+      mainFields,
     },
     performance: {
-      hints: false
+      hints: false,
     },
     plugins: [
       new ForkTsCheckerWebpackPlugin({
         tsconfig: options.tsConfig,
+        memoryLimit:
+          options.memoryLimit ||
+          ForkTsCheckerWebpackPlugin.DEFAULT_MEMORY_LIMIT,
         workers: options.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE,
-        useTypescriptIncrementalApi: false
-      })
+        useTypescriptIncrementalApi: false,
+      }),
     ],
     watch: options.watch,
     watchOptions: {
-      poll: options.poll
+      poll: options.poll,
     },
-    stats: getStatsConfig(options)
+    stats: getStatsConfig(options),
   };
 
   const extraPlugins: webpack.Plugin[] = [];
@@ -83,13 +86,15 @@ export function getBaseWebpackPartial(
   }
 
   if (options.extractLicenses) {
-    extraPlugins.push((new LicenseWebpackPlugin({
-      stats: {
-        errors: false
-      },
-      perChunkOutput: false,
-      outputFilename: `3rdpartylicenses.txt`
-    }) as unknown) as webpack.Plugin);
+    extraPlugins.push(
+      (new LicenseWebpackPlugin({
+        stats: {
+          errors: false,
+        },
+        perChunkOutput: false,
+        outputFilename: `3rdpartylicenses.txt`,
+      }) as unknown) as webpack.Plugin
+    );
   }
 
   // process asset entries
@@ -102,13 +107,13 @@ export function getBaseWebpackPartial(
         ignore: asset.ignore,
         from: {
           glob: asset.glob,
-          dot: true
-        }
+          dot: true,
+        },
       };
     });
 
     const copyWebpackPluginOptions = {
-      ignore: ['.gitkeep', '**/.DS_Store', '**/Thumbs.db']
+      ignore: ['.gitkeep', '**/.DS_Store', '**/Thumbs.db'],
     };
 
     const copyWebpackPluginInstance = new CopyWebpackPlugin(
@@ -121,7 +126,7 @@ export function getBaseWebpackPartial(
   if (options.showCircularDependencies) {
     extraPlugins.push(
       new CircularDependencyPlugin({
-        exclude: /[\\\/]node_modules[\\\/]/
+        exclude: /[\\\/]node_modules[\\\/]/,
       })
     );
   }
@@ -135,7 +140,7 @@ function getAliases(options: BuildBuilderOptions): { [key: string]: string } {
   return options.fileReplacements.reduce(
     (aliases, replacement) => ({
       ...aliases,
-      [replacement.replace]: replacement.with
+      [replacement.replace]: replacement.with,
     }),
     {}
   );
@@ -160,6 +165,6 @@ function getStatsConfig(options: BuildBuilderOptions): Stats.ToStringOptions {
     version: !!options.verbose,
     errorDetails: !!options.verbose,
     moduleTrace: !!options.verbose,
-    usedExports: !!options.verbose
+    usedExports: !!options.verbose,
   };
 }

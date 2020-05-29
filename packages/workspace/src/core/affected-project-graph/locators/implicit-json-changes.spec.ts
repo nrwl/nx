@@ -10,23 +10,23 @@ describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
     workspaceJson = {
       projects: {
         proj1: {},
-        proj2: {}
-      }
+        proj2: {},
+      },
     };
     nxJson = {
       implicitDependencies: {
         'package.json': {
           dependencies: ['proj1'],
           some: {
-            'deep-field': ['proj2']
-          }
-        }
+            'deep-field': ['proj2'],
+          },
+        },
       },
       npmScope: 'scope',
       projects: {
         proj1: {},
-        proj2: {}
-      }
+        proj2: {},
+      },
     };
   });
 
@@ -43,11 +43,11 @@ describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
               path: ['some', 'deep-field'],
               value: {
                 lhs: 'before',
-                rhs: 'after'
-              }
-            }
-          ]
-        }
+                rhs: 'after',
+              },
+            },
+          ],
+        },
       ],
       workspaceJson,
       nxJson
@@ -62,8 +62,8 @@ describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
           file: 'package.json',
           mtime: 0,
           ext: '.json',
-          getChanges: () => [new WholeFileChange()]
-        }
+          getChanges: () => [new WholeFileChange()],
+        },
       ],
       workspaceJson,
       nxJson

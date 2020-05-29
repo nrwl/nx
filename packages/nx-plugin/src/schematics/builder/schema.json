@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "NxPluginBuilder",
+  "title": "Create a Builder for an Nx Plugin",
+  "type": "object",
+  "examples": [
+    {
+      "command": "g builder my-builder --project=my-plugin",
+      "description": "Generate libs/my-plugin/src/builders/my-builder"
+    }
+  ],
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project.",
+      "alias": "p",
+      "$default": {
+        "$source": "projectName"
+      },
+      "x-prompt": "What is the name of the project for the builder?"
+    },
+    "name": {
+      "type": "string",
+      "description": "Builder name",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use for the builder?"
+    },
+    "description": {
+      "type": "string",
+      "description": "Builder description",
+      "alias": "d"
+    },
+    "unitTestRunner": {
+      "type": "string",
+      "enum": ["jest", "none"],
+      "description": "Test runner to use for unit tests",
+      "default": "jest"
+    }
+  },
+  "required": ["project", "name"]
+}

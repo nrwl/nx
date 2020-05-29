@@ -1,6 +1,9 @@
 import { logging, normalize, virtualFs } from '@angular-devkit/core';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
+import { TaskExecutor } from '@angular-devkit/schematics';
 import { BaseWorkflow } from '@angular-devkit/schematics/src/workflow';
+import { BuiltinTaskExecutor } from '@angular-devkit/schematics/tasks/node';
+import { NodePackageName } from '@angular-devkit/schematics/tasks/node-package/options';
 import { NodeModulesEngineHost } from '@angular-devkit/schematics/tools';
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
@@ -11,9 +14,6 @@ import { dirSync } from 'tmp';
 import { getLogger } from '../shared/logger';
 import { convertToCamelCase, handleErrors } from '../shared/params';
 import minimist = require('minimist');
-import { NodePackageName } from '@angular-devkit/schematics/tasks/node-package/options';
-import { TaskExecutor } from '@angular-devkit/schematics';
-import { BuiltinTaskExecutor } from '@angular-devkit/schematics/tasks/node';
 
 export type MigrationsJson = {
   version: string;
@@ -64,7 +64,7 @@ export class Migrator {
     [k: string]: { version: string; alwaysAddToPackageJson: boolean };
   }) {
     const migrations = await Promise.all(
-      Object.keys(versions).map(async c => {
+      Object.keys(versions).map(async (c) => {
         const currentVersion = this.versions(c);
         if (currentVersion === null) return [];
 
@@ -73,14 +73,14 @@ export class Migrator {
         if (!migrationsJson.schematics) return [];
         return Object.keys(migrationsJson.schematics)
           .filter(
-            r =>
+            (r) =>
               this.gt(migrationsJson.schematics[r].version, currentVersion) &
               this.lte(migrationsJson.schematics[r].version, target.version)
           )
-          .map(r => ({
+          .map((r) => ({
             ...migrationsJson.schematics[r],
             package: c,
-            name: r
+            name: r,
           }));
       })
     );
@@ -104,8 +104,8 @@ export class Migrator {
       return {
         [targetPackage]: {
           version: target.version,
-          alwaysAddToPackageJson: !!target.alwaysAddToPackageJson
-        }
+          alwaysAddToPackageJson: !!target.alwaysAddToPackageJson,
+        },
       };
     }
 
@@ -130,22 +130,22 @@ export class Migrator {
 
     const childCalls = await Promise.all(
       Object.keys(packages)
-        .filter(r => {
+        .filter((r) => {
           return (
             !collectedVersions[r] ||
             this.gt(packages[r].version, collectedVersions[r].version)
           );
         })
-        .map(u =>
+        .map((u) =>
           this._updatePackageJson(u, packages[u], {
             ...collectedVersions,
-            [targetPackage]: target
+            [targetPackage]: target,
           })
         )
     );
     return childCalls.reduce(
       (m, c) => {
-        Object.keys(c).forEach(r => {
+        Object.keys(c).forEach((r) => {
           if (!m[r] || this.gt(c[r].version, m[r].version)) {
             m[r] = c[r];
           }
@@ -155,8 +155,8 @@ export class Migrator {
       {
         [targetPackage]: {
           version: migrationsJson.version,
-          alwaysAddToPackageJson: target.alwaysAddToPackageJson || false
-        }
+          alwaysAddToPackageJson: target.alwaysAddToPackageJson || false,
+        },
       }
     );
   }
@@ -183,23 +183,24 @@ export class Migrator {
           '@nrwl/nest',
           '@nrwl/next',
           '@nrwl/node',
+          '@nrwl/nx-plugin',
           '@nrwl/react',
           '@nrwl/storybook',
           '@nrwl/tao',
-          '@nrwl/web'
+          '@nrwl/web',
         ].reduce(
           (m, c) => ({
             ...m,
-            [c]: { version: targetVersion, alwaysAddToPackageJson: false }
+            [c]: { version: targetVersion, alwaysAddToPackageJson: false },
           }),
           {}
-        )
+        ),
       };
     }
     if (!m.packageJsonUpdates || !this.versions(packageName)) return {};
 
     return Object.keys(m.packageJsonUpdates)
-      .filter(r => {
+      .filter((r) => {
         return (
           this.gt(
             m.packageJsonUpdates[r].version,
@@ -207,13 +208,13 @@ export class Migrator {
           ) && this.lte(m.packageJsonUpdates[r].version, targetVersion)
         );
       })
-      .map(r => m.packageJsonUpdates[r].packages)
-      .map(packages => {
+      .map((r) => m.packageJsonUpdates[r].packages)
+      .map((packages) => {
         if (!packages) return {};
 
         return Object.keys(packages)
           .filter(
-            p =>
+            (p) =>
               !packages[p].ifPackageInstalled ||
               this.versions(packages[p].ifPackageInstalled)
           )
@@ -222,8 +223,8 @@ export class Migrator {
               ...m,
               [c]: {
                 version: packages[c].version,
-                alwaysAddToPackageJson: packages[c].alwaysAddToPackageJson
-              }
+                alwaysAddToPackageJson: packages[c].alwaysAddToPackageJson,
+              },
             }),
             {}
           );
@@ -294,8 +295,8 @@ export function parseMigrationsOptions(
     minimist(args, {
       string: ['runMigrations', 'from', 'to'],
       alias: {
-        runMigrations: 'run-migrations'
-      }
+        runMigrations: 'run-migrations',
+      },
     })
   );
   if (!options.runMigrations) {
@@ -309,7 +310,7 @@ export function parseMigrationsOptions(
       targetPackage,
       targetVersion,
       from,
-      to
+      to,
     };
   } else {
     return { type: 'runMigrations', runMigrations: options.runMigrations };
@@ -344,12 +345,12 @@ function parseTargetPackageAndVersion(args: string) {
     if (args.match(/[0-9]/) || args === 'latest' || args === 'next') {
       return {
         targetPackage: '@nrwl/workspace',
-        targetVersion: normalizeVersionWithTagCheck(args)
+        targetVersion: normalizeVersionWithTagCheck(args),
       };
     } else {
       return {
         targetPackage: args,
-        targetVersion: 'latest'
+        targetVersion: 'latest',
       };
     }
   }
@@ -357,7 +358,7 @@ function parseTargetPackageAndVersion(args: string) {
 
 function versionOverrides(overrides: string, param: string) {
   const res = {};
-  overrides.split(',').forEach(p => {
+  overrides.split(',').forEach((p) => {
     const split = p.lastIndexOf('@');
     if (split === -1 || split === 0) {
       throw new Error(
@@ -403,7 +404,7 @@ function createFetcher(logger: logging.Logger) {
       const dir = dirSync().name;
       logger.info(`Fetching ${packageName}@${packageVersion}`);
       execSync(`npm install ${packageName}@${packageVersion} --prefix=${dir}`, {
-        stdio: []
+        stdio: [],
       });
       const json = JSON.parse(
         stripJsonComments(
@@ -434,11 +435,11 @@ function createFetcher(logger: logging.Logger) {
           cache[`${packageName}-${packageVersion}`] = {
             version: resolvedVersion,
             schematics: json.schematics,
-            packageJsonUpdates: json.packageJsonUpdates
+            packageJsonUpdates: json.packageJsonUpdates,
           };
         } else {
           cache[`${packageName}-${packageVersion}`] = {
-            version: resolvedVersion
+            version: resolvedVersion,
           };
         }
       } catch (e) {
@@ -446,7 +447,7 @@ function createFetcher(logger: logging.Logger) {
           `Could not find '${migrationsFile}' in '${packageName}'. Skipping it`
         );
         cache[`${packageName}-${packageVersion}`] = {
-          version: resolvedVersion
+          version: resolvedVersion,
         };
       }
     }
@@ -473,7 +474,7 @@ function updatePackageJson(
   const json = JSON.parse(
     stripJsonComments(readFileSync(packageJsonPath).toString())
   );
-  Object.keys(updatedPackages).forEach(p => {
+  Object.keys(updatedPackages).forEach((p) => {
     if (json.devDependencies && json.devDependencies[p]) {
       json.devDependencies[p] = updatedPackages[p].version;
     } else if (json.dependencies && json.dependencies[p]) {
@@ -503,7 +504,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       versions: versions(root, opts.from),
       fetch: createFetcher(logger),
       from: opts.from,
-      to: opts.to
+      to: opts.to,
     });
     const { migrations, packageJson } = await migrator.updatePackageJson(
       opts.targetPackage,
@@ -514,26 +515,31 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     if (migrations.length > 0) {
       createMigrationsFile(root, migrations);
 
-      logger.info(`The migrate command has run successfully.`);
+      logger.info(`NX The migrate command has run successfully.`);
       logger.info(`- package.json has been updated`);
       logger.info(`- migrations.json has been generated`);
 
-      logger.info(`Next steps:`);
+      logger.info(`NX Next steps:`);
       logger.info(
         `- Make sure package.json changes make sense and then run 'npm install' or 'yarn'`
       );
       logger.info(`- Run 'nx migrate --run-migrations=migrations.json'`);
     } else {
-      logger.info(`The migrate command has run successfully.`);
+      logger.info(`NX The migrate command has run successfully.`);
       logger.info(`- package.json has been updated`);
       logger.info(
         `- there are no migrations to run, so migrations.json has not been created.`
+      );
+
+      logger.info(`NX Next steps:`);
+      logger.info(
+        `- Make sure package.json changes make sense and then run 'npm install' or 'yarn'`
       );
     }
   } catch (e) {
     const startVersion = versions(root, {})('@nrwl/workspace');
     logger.error(
-      `The migrate command failed. Try the following to migrate your workspace:`
+      `NX The migrate command failed. Try the following to migrate your workspace:`
     );
     logger.error(`> npm install --save-dev @nrwl/workspace@latest`);
     logger.error(
@@ -562,7 +568,7 @@ class MigrationEngineHost extends NodeModulesEngineHost {
       name: NodePackageName,
       create: () =>
         Promise.resolve<TaskExecutor>(() => {
-          return new Promise(res => {
+          return new Promise((res) => {
             if (!this.nodeInstallLogPrinted) {
               logger.warn(
                 `An installation of node_modules has been required. Make sure to run it after the migration`
@@ -572,7 +578,7 @@ class MigrationEngineHost extends NodeModulesEngineHost {
 
             res();
           });
-        })
+        }),
     });
 
     this.registerTaskExecutor(BuiltinTaskExecutor.RunSchematic);
@@ -594,7 +600,7 @@ class MigrationEngineHost extends NodeModulesEngineHost {
       if (!pkgJsonSchematics) {
         pkgJsonSchematics = packageJson['ng-update'];
         if (!pkgJsonSchematics) {
-          throw new Error(`Could find migrations in package: "${name}"`);
+          throw new Error(`Could not find migrations in package: "${name}"`);
         }
       }
       if (typeof pkgJsonSchematics != 'string') {
@@ -621,7 +627,7 @@ class MigrationsWorkflow extends BaseWorkflow {
       host,
       engineHost: new MigrationEngineHost(logger),
       force: true,
-      dryRun: false
+      dryRun: false,
     });
   }
 }
@@ -638,7 +644,7 @@ async function runMigrations(
   const host = new virtualFs.ScopedHost(new NodeJsSyncHost(), normalize(root));
   const workflow = new MigrationsWorkflow(host, logger);
   let p = Promise.resolve(null);
-  migrationsFile.migrations.forEach(m => {
+  migrationsFile.migrations.forEach((m) => {
     p = p.then(() => {
       logger.info(`Running migration ${m.package}:${m.name}`);
       return workflow
@@ -647,7 +653,7 @@ async function runMigrations(
           schematic: m.name,
           options: {},
           debug: false,
-          logger
+          logger,
         })
         .toPromise()
         .then(() => {

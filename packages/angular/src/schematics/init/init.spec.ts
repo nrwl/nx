@@ -23,7 +23,6 @@ describe('init', () => {
     expect(dependencies['@angular/platform-browser']).toBeDefined();
     expect(dependencies['@angular/platform-browser-dynamic']).toBeDefined();
     expect(dependencies['@angular/router']).toBeDefined();
-    expect(dependencies['core-js']).toBeDefined();
     expect(dependencies['rxjs']).toBeDefined();
     expect(dependencies['zone.js']).toBeDefined();
     expect(devDependencies['@angular/compiler-cli']).toBeDefined();
@@ -36,7 +35,7 @@ describe('init', () => {
     const tree = await runSchematic(
       'init',
       {
-        unitTestRunner: 'karma'
+        unitTestRunner: 'karma',
       },
       appTree
     );
@@ -54,7 +53,7 @@ describe('init', () => {
         const tree = await runSchematic(
           'init',
           {
-            unitTestRunner: 'karma'
+            unitTestRunner: 'karma',
           },
           appTree
         );
@@ -75,7 +74,7 @@ describe('init', () => {
         const tree = await runSchematic(
           'init',
           {
-            unitTestRunner: 'karma'
+            unitTestRunner: 'karma',
           },
           appTree
         );
@@ -86,7 +85,7 @@ describe('init', () => {
         const tree = await runSchematic(
           'init',
           {
-            unitTestRunner: 'karma'
+            unitTestRunner: 'karma',
           },
           appTree
         );
@@ -105,7 +104,7 @@ describe('init', () => {
         const tree = await runSchematic(
           'init',
           {
-            unitTestRunner: 'jest'
+            unitTestRunner: 'jest',
           },
           appTree
         );
@@ -119,7 +118,7 @@ describe('init', () => {
         const tree = await runSchematic(
           'init',
           {
-            unitTestRunner: 'jest'
+            unitTestRunner: 'jest',
           },
           appTree
         );
@@ -130,7 +129,7 @@ describe('init', () => {
         const tree = await runSchematic(
           'init',
           {
-            unitTestRunner: 'jest'
+            unitTestRunner: 'jest',
           },
           appTree
         );
@@ -152,7 +151,7 @@ describe('init', () => {
           'init',
           {
             unitTestRunner: 'none',
-            e2eTestRunner: 'cypress'
+            e2eTestRunner: 'cypress',
           },
           appTree
         );
@@ -165,7 +164,7 @@ describe('init', () => {
         const tree = await runSchematic(
           'init',
           {
-            e2eTestRunner: 'cypress'
+            e2eTestRunner: 'cypress',
           },
           appTree
         );
@@ -181,7 +180,7 @@ describe('init', () => {
         const tree = await runSchematic(
           'init',
           {
-            e2eTestRunner: 'protractor'
+            e2eTestRunner: 'protractor',
           },
           appTree
         );
@@ -197,7 +196,7 @@ describe('init', () => {
         const tree = await runSchematic(
           'init',
           {
-            e2eTestRunner: 'protractor'
+            e2eTestRunner: 'protractor',
           },
           appTree
         );

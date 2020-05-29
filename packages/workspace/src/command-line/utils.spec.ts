@@ -9,15 +9,14 @@ describe('splitArgs', () => {
           head: 'sha2',
           notNxArg: true,
           _: ['--override'],
-          $0: ''
+          $0: '',
         },
         'affected'
       ).nxArgs
     ).toEqual({
       base: 'sha1',
       head: 'sha2',
-      projects: [],
-      skipNxCache: false
+      skipNxCache: false,
     });
   });
 
@@ -27,14 +26,13 @@ describe('splitArgs', () => {
         {
           notNxArg: true,
           _: ['--override'],
-          $0: ''
+          $0: '',
         },
         'affected'
       ).nxArgs
     ).toEqual({
       base: 'master',
-      projects: [],
-      skipNxCache: false
+      skipNxCache: false,
     });
   });
 
@@ -45,22 +43,22 @@ describe('splitArgs', () => {
           files: [''],
           notNxArg: true,
           _: ['--override'],
-          $0: ''
+          $0: '',
         },
         'affected'
       ).overrides
     ).toEqual({
       notNxArg: true,
-      override: true
+      override: true,
     });
   });
 
-  it('should add other args to nx args', () => {
+  it('should set base and head in the affected mode', () => {
     const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
       {
         notNxArg: true,
         _: ['sha1', 'sha2', '--override'],
-        $0: ''
+        $0: '',
       },
       'affected'
     );
@@ -68,12 +66,30 @@ describe('splitArgs', () => {
     expect(nxArgs).toEqual({
       base: 'sha1',
       head: 'sha2',
-      projects: [],
-      skipNxCache: false
+      skipNxCache: false,
     });
     expect(overrides).toEqual({
       notNxArg: true,
-      override: true
+      override: true,
+    });
+  });
+
+  it('should not set base and head in the run-one mode', () => {
+    const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
+      {
+        notNxArg: true,
+        _: ['--exclude=file'],
+        $0: '',
+      },
+      'run-one'
+    );
+
+    expect(nxArgs).toEqual({
+      skipNxCache: false,
+    });
+    expect(overrides).toEqual({
+      notNxArg: true,
+      exclude: 'file',
     });
   });
 });

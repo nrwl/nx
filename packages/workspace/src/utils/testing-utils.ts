@@ -1,13 +1,13 @@
 import { Tree } from '@angular-devkit/schematics';
 import {
   _test_addWorkspaceFile,
-  WorkspaceFormat
+  WorkspaceFormat,
 } from '@angular-devkit/core/src/workspace/core';
 import { NxJson } from '@nrwl/workspace/src/core/shared-interfaces';
 import { Architect, BuilderContext, Target } from '@angular-devkit/architect';
 import {
   TestingArchitectHost,
-  TestLogger
+  TestLogger,
 } from '@angular-devkit/architect/testing';
 import { json, JsonObject } from '@angular-devkit/core';
 import { ScheduleOptions } from '@angular-devkit/architect/src/api';
@@ -34,12 +34,23 @@ export function createEmptyWorkspace(tree: Tree): Tree {
     JSON.stringify({
       name: 'test-name',
       dependencies: {},
-      devDependencies: {}
+      devDependencies: {},
     })
   );
   tree.create(
     '/nx.json',
-    JSON.stringify(<NxJson>{ npmScope: 'proj', projects: {} })
+    JSON.stringify(<NxJson>{
+      npmScope: 'proj',
+      projects: {},
+      tasksRunnerOptions: {
+        default: {
+          runner: '@nrwl/workspace/tasks-runners/default',
+          options: {
+            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
+          },
+        },
+      },
+    })
   );
   tree.create(
     '/tsconfig.json',
@@ -54,10 +65,10 @@ export function createEmptyWorkspace(tree: Tree): Tree {
           {
             npmScope: '<%= npmScope %>',
             lazyLoad: [],
-            allow: []
-          }
-        ]
-      }
+            allow: [],
+          },
+        ],
+      },
     })
   );
   return tree;
@@ -74,7 +85,7 @@ export class MockBuilderContext implements BuilderContext {
 
   target: Target = {
     project: null,
-    target: null
+    target: null,
   };
 
   logger = new TestLogger('test');

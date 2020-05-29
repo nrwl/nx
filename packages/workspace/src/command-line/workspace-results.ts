@@ -14,7 +14,7 @@ export class WorkspaceResults {
   public startedWithFailedProjects: boolean;
   private commandResults: NxResults = {
     command: this.command,
-    results: {}
+    results: {},
   };
 
   get failedProjects() {
@@ -24,7 +24,7 @@ export class WorkspaceResults {
   }
 
   public get hasFailure() {
-    return Object.values(this.commandResults.results).some(result => !result);
+    return Object.values(this.commandResults.results).some((result) => !result);
   }
 
   constructor(
@@ -68,7 +68,7 @@ export class WorkspaceResults {
   }
 
   private invalidateOldResults() {
-    Object.keys(this.commandResults.results).forEach(projectName => {
+    Object.keys(this.commandResults.results).forEach((projectName) => {
       if (!this.projects[projectName]) {
         delete this.commandResults.results[projectName];
       }

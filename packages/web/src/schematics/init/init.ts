@@ -1,37 +1,43 @@
-import { chain, Rule } from '@angular-devkit/schematics';
+import { chain, noop, Rule, Tree } from '@angular-devkit/schematics';
 import {
   addPackageWithInit,
   formatFiles,
-  updateJsonInTree
+  setDefaultCollection,
+  updateJsonInTree,
 } from '@nrwl/workspace';
 import { Schema } from './schema';
 import {
   documentRegisterElementVersion,
-  nxVersion
+  nxVersion,
 } from '../../utils/versions';
-import { setDefaultCollection } from '@nrwl/workspace/src/utils/rules/workspace';
+import { initRootBabelConfig } from '../../utils/rules';
 
 function updateDependencies(): Rule {
-  return updateJsonInTree('package.json', json => {
+  return updateJsonInTree('package.json', (json) => {
     delete json.dependencies['@nrwl/web'];
     json.dependencies = {
       ...json.dependencies,
-      'document-register-element': documentRegisterElementVersion
+      'document-register-element': documentRegisterElementVersion,
     };
     json.devDependencies = {
       ...json.devDependencies,
-      '@nrwl/web': nxVersion
+      '@nrwl/web': nxVersion,
     };
     return json;
   });
 }
 
-export default function(schema: Schema) {
+export default function (schema: Schema) {
   return chain([
     setDefaultCollection('@nrwl/web'),
-    addPackageWithInit('@nrwl/jest'),
-    addPackageWithInit('@nrwl/cypress'),
+    schema.unitTestRunner === 'jest'
+      ? addPackageWithInit('@nrwl/jest')
+      : noop(),
+    schema.e2eTestRunner === 'cypress'
+      ? addPackageWithInit('@nrwl/cypress')
+      : noop(),
     updateDependencies(),
-    formatFiles(schema)
+    initRootBabelConfig(),
+    formatFiles(schema),
   ]);
 }

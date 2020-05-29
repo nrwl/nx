@@ -12,11 +12,19 @@ Type: `array`
 
 List of static application assets.
 
+### buildLibsFromSource
+
+Default: `false`
+
+Type: `boolean`
+
+Read buildable libraries from source instead of building them separately.
+
 ### externalDependencies
 
 Default: `all`
 
-Type: `string`
+Type: `string | string[]`
 
 Dependencies to keep external to the bundle. ("all" (default), "none", or an array of module names)
 
@@ -30,7 +38,7 @@ Extract all licenses in a separate file, in the case of production builds only.
 
 ### fileReplacements
 
-Type: `array` of `object`
+Type: `object[]`
 
 Replace files with other files in the build.
 
@@ -57,6 +65,12 @@ The name of the main entry-point file.
 Type: `number`
 
 Number of workers to use for type checking. (defaults to # of CPUS - 2)
+
+### memoryLimit
+
+Type: `number`
+
+Memory limit for type checking service process in MB. (defaults to 2048)
 
 ### optimization
 

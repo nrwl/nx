@@ -3,24 +3,24 @@ import { WholeFileChange } from '../../file-utils';
 import { DiffType } from '../../../utils/json-diff';
 
 describe('getTouchedProjectsInWorkspaceJson', () => {
-  it('should not return changes when angular.json is not touched', () => {
+  it('should not return changes when workspace.json is not touched', () => {
     const result = getTouchedProjectsInWorkspaceJson(
       [
         {
           file: 'source.ts',
           ext: '.ts',
           mtime: 0,
-          getChanges: () => [new WholeFileChange()]
-        }
+          getChanges: () => [new WholeFileChange()],
+        },
       ],
       {},
       {
         npmScope: 'proj',
         projects: {
           proj1: {
-            tags: []
-          }
-        }
+            tags: [],
+          },
+        },
       }
     );
     expect(result).toEqual([]);
@@ -30,22 +30,22 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
     const result = getTouchedProjectsInWorkspaceJson(
       [
         {
-          file: 'angular.json',
+          file: 'workspace.json',
           ext: '.json',
           mtime: 0,
-          getChanges: () => [new WholeFileChange()]
-        }
+          getChanges: () => [new WholeFileChange()],
+        },
       ],
       {
         npmScope: 'proj',
         projects: {
           proj1: {
-            tags: []
+            tags: [],
           },
           proj2: {
-            tags: []
-          }
-        }
+            tags: [],
+          },
+        },
       }
     );
     expect(result).toEqual(['proj1', 'proj2']);
@@ -55,7 +55,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
     const result = getTouchedProjectsInWorkspaceJson(
       [
         {
-          file: 'angular.json',
+          file: 'workspace.json',
           ext: '.json',
           mtime: 0,
           getChanges: () => [
@@ -64,32 +64,32 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
               path: ['newProjectRoot'],
               value: {
                 lhs: '',
-                rhs: 'projects'
-              }
-            }
-          ]
-        }
+                rhs: 'projects',
+              },
+            },
+          ],
+        },
       ],
       {
         newProjectRoot: 'projects',
         projects: {
           proj1: {
-            tags: []
+            tags: [],
           },
           proj2: {
-            tags: []
-          }
-        }
+            tags: [],
+          },
+        },
       }
     );
     expect(result).toEqual(['proj1', 'proj2']);
   });
 
-  it('should return projects added in angular.json', () => {
+  it('should return projects added in workspace.json', () => {
     const result = getTouchedProjectsInWorkspaceJson(
       [
         {
-          file: 'angular.json',
+          file: 'workspace.json',
           ext: '.json',
           mtime: 0,
           getChanges: () => [
@@ -99,9 +99,9 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
               value: {
                 lhs: undefined,
                 rhs: {
-                  root: 'proj1'
-                }
-              }
+                  root: 'proj1',
+                },
+              },
             },
 
             {
@@ -109,28 +109,28 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
               path: ['projects', 'proj1', 'root'],
               value: {
                 lhs: undefined,
-                rhs: 'proj1'
-              }
-            }
-          ]
-        }
+                rhs: 'proj1',
+              },
+            },
+          ],
+        },
       ],
       {
         projects: {
           proj1: {
-            root: 'proj1'
-          }
-        }
+            root: 'proj1',
+          },
+        },
       }
     );
     expect(result).toEqual(['proj1']);
   });
 
-  it('should affect all projects if a project is removed from angular.json', () => {
+  it('should affect all projects if a project is removed from workspace.json', () => {
     const result = getTouchedProjectsInWorkspaceJson(
       [
         {
-          file: 'angular.json',
+          file: 'workspace.json',
           ext: '.json',
           mtime: 0,
           getChanges: () => [
@@ -139,33 +139,33 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
               path: ['projects', 'proj3'],
               value: {
                 lhs: {
-                  root: 'proj3'
+                  root: 'proj3',
                 },
-                rhs: undefined
-              }
-            }
-          ]
-        }
+                rhs: undefined,
+              },
+            },
+          ],
+        },
       ],
       {
         projects: {
           proj1: {
-            root: 'proj1'
+            root: 'proj1',
           },
           proj2: {
-            root: 'proj2'
-          }
-        }
+            root: 'proj2',
+          },
+        },
       }
     );
     expect(result).toEqual(['proj1', 'proj2']);
   });
 
-  it('should return projects modified in angular.json', () => {
+  it('should return projects modified in workspace.json', () => {
     const result = getTouchedProjectsInWorkspaceJson(
       [
         {
-          file: 'angular.json',
+          file: 'workspace.json',
           ext: '.json',
           mtime: 0,
           getChanges: () => [
@@ -174,33 +174,33 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
               path: ['projects', 'proj1'],
               value: {
                 lhs: {
-                  root: 'proj3'
+                  root: 'proj3',
                 },
                 rhs: {
-                  root: 'proj1'
-                }
-              }
+                  root: 'proj1',
+                },
+              },
             },
             {
               type: DiffType.Modified,
               path: ['projects', 'proj1', 'root'],
               value: {
                 lhs: 'proj3',
-                rhs: 'proj1'
-              }
-            }
-          ]
-        }
+                rhs: 'proj1',
+              },
+            },
+          ],
+        },
       ],
       {
         projects: {
           proj1: {
-            root: 'proj1'
+            root: 'proj1',
           },
           proj2: {
-            root: 'proj2'
-          }
-        }
+            root: 'proj2',
+          },
+        },
       }
     );
     expect(result).toEqual(['proj1']);

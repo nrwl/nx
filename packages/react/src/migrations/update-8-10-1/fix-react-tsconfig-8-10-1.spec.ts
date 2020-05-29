@@ -34,8 +34,8 @@ describe('Update 8-10-0', () => {
         files: [
           '../../node_modules/@nrwl/react/typings/cssmodule.d.ts',
           '../../node_modules/@nrwl/react/typings/image.d.ts',
-          '../../node_modules/@nrwl/react/typings/svg.d.ts'
-        ]
+          '../../node_modules/@nrwl/react/typings/svg.d.ts',
+        ],
       })
     );
 
@@ -47,7 +47,7 @@ describe('Update 8-10-0', () => {
 
     expect(tsConfig.files).toEqual([
       '../../node_modules/@nrwl/react/typings/cssmodule.d.ts',
-      '../../node_modules/@nrwl/react/typings/image.d.ts'
+      '../../node_modules/@nrwl/react/typings/image.d.ts',
     ]);
   });
 });

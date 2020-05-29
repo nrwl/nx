@@ -19,7 +19,7 @@ function terminalOutputs() {
 
 function cachedFiles() {
   try {
-    return fs.readdirSync(folder).filter(f => !f.endsWith('terminalOutputs'));
+    return fs.readdirSync(folder).filter((f) => !f.endsWith('terminalOutputs'));
   } catch (e) {
     return [];
   }
@@ -29,7 +29,7 @@ function removeOld(records: string[]) {
   try {
     const time = mostRecentMTime(records);
 
-    records.forEach(r => {
+    records.forEach((r) => {
       const child = path.join(folder, r);
       try {
         const s = fs.statSync(child);
@@ -48,7 +48,7 @@ function removeOld(records: string[]) {
 
 function mostRecentMTime(records: string[]) {
   let mostRecentTime = 0;
-  records.forEach(r => {
+  records.forEach((r) => {
     const child = path.join(folder, r);
     try {
       const s = fs.statSync(child);

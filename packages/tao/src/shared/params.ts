@@ -62,11 +62,13 @@ function camelCase(input: string): string {
  *
  */
 export function coerceTypes(opts: Options, schema: Schema): Options {
-  Object.keys(opts).forEach(k => {
+  Object.keys(opts).forEach((k) => {
     if (schema.properties[k] && schema.properties[k].type == 'boolean') {
       opts[k] = opts[k] === true || opts[k] === 'true';
     } else if (schema.properties[k] && schema.properties[k].type == 'number') {
       opts[k] = Number(opts[k]);
+    } else if (schema.properties[k] && schema.properties[k].type == 'array') {
+      opts[k] = opts[k].toString().split(',');
     }
   });
   return opts;
@@ -95,7 +97,7 @@ export function convertAliases(opts: Options, schema: Schema): Options {
         }
         acc['--'].push({
           name: k,
-          possible: []
+          possible: [],
         });
       }
     }
@@ -114,9 +116,9 @@ export function lookupUnmatched(opts: Options, schema: Schema): Options {
   if (opts['--']) {
     const props = Object.keys(schema.properties);
 
-    opts['--'].forEach(unmatched => {
+    opts['--'].forEach((unmatched) => {
       unmatched.possible = props.filter(
-        p => levenshtein.get(p, unmatched.name) < 3
+        (p) => levenshtein.get(p, unmatched.name) < 3
       );
     });
   }

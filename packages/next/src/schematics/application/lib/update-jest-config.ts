@@ -4,7 +4,7 @@ import { NormalizedSchema } from './normalize-options';
 export function updateJestConfig(options: NormalizedSchema): Rule {
   return options.unitTestRunner === 'none'
     ? noop()
-    : host => {
+    : (host) => {
         const configPath = `${options.appProjectRoot}/jest.config.js`;
         const originalContent = host.read(configPath).toString();
         const content = originalContent.replace(

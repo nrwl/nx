@@ -1,14 +1,14 @@
 import { toClassName } from '@nrwl/workspace';
 import {
-  ensureProject,
   forEachCli,
+  newProject,
   readJson,
   runCLI,
   uniq,
-  updateFile
+  updateFile,
 } from './utils';
 
-forEachCli('angular', cli => {
+forEachCli('angular', (cli) => {
   describe('Build Angular library', () => {
     /**
      * Graph:
@@ -30,7 +30,7 @@ forEachCli('angular', cli => {
       childLib = uniq('childlib');
       childLib2 = uniq('childlib2');
 
-      ensureProject();
+      newProject();
 
       runCLI(
         `generate @nrwl/angular:library ${parentLib} --publishable=true --no-interactive`
@@ -42,6 +42,44 @@ forEachCli('angular', cli => {
         `generate @nrwl/angular:library ${childLib2} --publishable=true --no-interactive`
       );
 
+      // create secondary entrypoint
+      updateFile(
+        `libs/${childLib}/sub/package.json`,
+        `
+          {
+            "ngPackage": {}
+          }
+        `
+      );
+      updateFile(
+        `libs/${childLib}/sub/src/lib/sub.module.ts`,
+        `
+          import { NgModule } from '@angular/core';
+          import { CommonModule } from '@angular/common';
+          @NgModule({ imports: [CommonModule] })
+          export class SubModule {}
+        `
+      );
+
+      updateFile(
+        `libs/${childLib}/sub/src/public_api.ts`,
+        `export * from './lib/sub.module';`
+      );
+
+      updateFile(
+        `libs/${childLib}/sub/src/index.ts`,
+        `export * from './public_api';`
+      );
+
+      updateFile(`tsconfig.json`, (s) => {
+        return s.replace(
+          `"@proj/${childLib}": ["libs/${childLib}/src/index.ts"],`,
+          `"@proj/${childLib}": ["libs/${childLib}/src/index.ts"],
+      "@proj/${childLib}/sub": ["libs/${childLib}/sub/src/index.ts"],
+        `
+        );
+      });
+
       // create dependencies by importing
       const createDep = (parent, children: string[]) => {
         updateFile(
@@ -51,17 +89,18 @@ forEachCli('angular', cli => {
               import { CommonModule } from '@angular/common';
               ${children
                 .map(
-                  entry =>
+                  (entry) =>
                     `import { ${toClassName(
                       entry
                     )}Module } from '@proj/${entry}';`
                 )
                 .join('\n')}
+              import { SubModule } from '@proj/${childLib}/sub';
               
               @NgModule({
                 imports: [CommonModule, ${children
-                  .map(entry => `${toClassName(entry)}Module`)
-                  .join(',')}]
+                  .map((entry) => `${toClassName(entry)}Module`)
+                  .join(',')}, SubModule]
               })
               export class ${toClassName(parent)}Module {}          
             `
@@ -100,8 +139,13 @@ forEachCli('angular', cli => {
 
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
       expect(jsonFile.dependencies).toEqual({
+        tslib: '^1.10.0',
         [`@proj/${childLib}`]: '0.0.1',
-        [`@proj/${childLib2}`]: '0.0.1'
+        [`@proj/${childLib2}`]: '0.0.1',
+      });
+      expect(jsonFile.peerDependencies).toEqual({
+        '@angular/common': '^9.1.0',
+        '@angular/core': '^9.1.0',
       });
     });
   });

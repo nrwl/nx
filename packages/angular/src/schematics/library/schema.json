@@ -20,7 +20,8 @@
     "publishable": {
       "type": "boolean",
       "default": false,
-      "description": "Generate a simple TS library when set to true."
+      "description": "Generate a buildable library.",
+      "alias": "buildable"
     },
     "prefix": {
       "type": "string",

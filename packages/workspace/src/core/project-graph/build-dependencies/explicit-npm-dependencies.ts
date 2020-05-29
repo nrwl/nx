@@ -2,7 +2,8 @@ import {
   AddProjectDependency,
   DependencyType,
   ProjectGraphContext,
-  ProjectGraphNodeRecords
+  ProjectGraphNode,
+  ProjectGraphNodeRecords,
 } from '../project-graph-models';
 import { TypeScriptImportLocator } from './typescript-import-locator';
 
@@ -14,17 +15,23 @@ export function buildExplicitNpmDependencies(
 ) {
   const importLocator = new TypeScriptImportLocator(fileRead);
 
-  Object.keys(ctx.fileMap).forEach(source => {
-    Object.values(ctx.fileMap[source]).forEach(f => {
+  const npmProjects = Object.values(nodes).filter(
+    (node) => node.type === 'npm'
+  ) as ProjectGraphNode<{ packageName: string; version: string }>[];
+
+  Object.keys(ctx.fileMap).forEach((source) => {
+    Object.values(ctx.fileMap[source]).forEach((f) => {
       importLocator.fromFile(
         f.file,
         (importExpr: string, filePath: string, type: DependencyType) => {
-          const key = Object.keys(nodes).find(k =>
-            isNpmPackageImport(k, importExpr)
+          const pkg = npmProjects.find((pkg) =>
+            isNpmPackageImport(pkg.data.packageName, importExpr)
           );
-          const target = nodes[key];
-          if (source && target && target.type === 'npm') {
-            addDependency(type, source, target.name);
+          if (pkg) {
+            const target = nodes[pkg.name];
+            if (source && target) {
+              addDependency(type, source, target.name);
+            }
           }
         }
       );
@@ -32,7 +39,7 @@ export function buildExplicitNpmDependencies(
   });
 }
 
-function isNpmPackageImport(p, e) {
+function isNpmPackageImport(p: string, e: string) {
   const toMatch = e
     .split(/[\/]/)
     .slice(0, p.startsWith('@') ? 2 : 1)

@@ -5,11 +5,11 @@ Move an application or library to another folder
 ## Usage
 
 ```bash
-ng generate move ...
+nx generate move ...
 ```
 
 ```bash
-ng g mv ... # same
+nx g mv ... # same
 ```
 
 By default, Nx will search for `move` in the default collection provisioned in `angular.json`.
@@ -17,13 +17,13 @@ By default, Nx will search for `move` in the default collection provisioned in `
 You can specify the collection explicitly as follows:
 
 ```bash
-ng g @nrwl/workspace:move ...
+nx g @nrwl/workspace:move ...
 ```
 
 Show what will be generated without writing to disk:
 
 ```bash
-ng g move ... --dry-run
+nx g move ... --dry-run
 ```
 
 ### Examples
@@ -31,7 +31,7 @@ ng g move ... --dry-run
 Move libs/my-feature-lib to libs/shared/my-feature-lib:
 
 ```bash
-ng g @nrwl/workspace:move --project my-feature-lib shared/my-feature-lib
+nx g @nrwl/workspace:move --project my-feature-lib shared/my-feature-lib
 ```
 
 ## Options

@@ -1,52 +1,53 @@
-import { relative } from 'path';
+import { join, relative } from 'path';
 import {
   BuilderContext,
   BuilderOutput,
-  createBuilder
+  createBuilder,
 } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
 import { from, Observable, of } from 'rxjs';
-import { switchMap, tap, last, mergeMap, catchError } from 'rxjs/operators';
-import { runRollup } from './run-rollup';
-import { createBabelConfig as _createBabelConfig } from '../../utils/babel-config';
+import { catchError, last, switchMap, tap } from 'rxjs/operators';
+import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import * as autoprefixer from 'autoprefixer';
 import * as rollup from 'rollup';
-import * as babel from 'rollup-plugin-babel';
 import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import * as postcss from 'rollup-plugin-postcss';
 import * as filesize from 'rollup-plugin-filesize';
 import * as localResolve from 'rollup-plugin-local-resolve';
-import { BundleBuilderOptions } from '../../utils/types';
-import {
-  normalizeBundleOptions,
-  NormalizedBundleBuilderOptions
-} from '../../utils/normalize';
 import { toClassName } from '@nrwl/workspace/src/utils/name-utils';
+import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { BuildResult } from '@angular-devkit/build-webpack';
 import {
   readJsonFile,
-  writeJsonFile
+  writeJsonFile,
 } from '@nrwl/workspace/src/utils/fileutils';
-import {
-  createProjectGraph,
-  ProjectGraphNode
-} from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
+  computeCompilerOptionsPaths,
   DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,
-  updatePaths
-} from '@nrwl/workspace/src/utils/buildale-libs-utils';
-import * as ts from 'typescript';
+} from '@nrwl/workspace/src/utils/buildable-libs-utils';
+import { PackageBuilderOptions } from '../../utils/types';
+import { runRollup } from './run-rollup';
+import {
+  NormalizedBundleBuilderOptions,
+  NormalizedCopyAssetOption,
+  normalizePackageOptions,
+} from '../../utils/normalize';
+import { getSourceRoot } from '../../utils/source-root';
+import { createBabelConfig } from '../../utils/babel-config';
 
 // These use require because the ES import isn't correct.
 const resolve = require('@rollup/plugin-node-resolve');
 const commonjs = require('@rollup/plugin-commonjs');
 const typescript = require('rollup-plugin-typescript2');
 const image = require('@rollup/plugin-image');
+const copy = require('rollup-plugin-copy');
 
-export default createBuilder<BundleBuilderOptions & JsonObject>(run);
+export default createBuilder<PackageBuilderOptions & JsonObject>(run);
 
 interface OutputConfig {
   format: rollup.ModuleFormat;
@@ -56,39 +57,46 @@ interface OutputConfig {
 
 const outputConfigs: OutputConfig[] = [
   { format: 'umd', extension: 'umd' },
-  { format: 'esm', extension: 'esm' }
+  { format: 'esm', extension: 'esm' },
 ];
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
 
 export function run(
-  _options: BundleBuilderOptions,
+  rawOptions: PackageBuilderOptions,
   context: BuilderContext
 ): Observable<BuilderOutput> {
+  const host = new NodeJsSyncHost();
   const projGraph = createProjectGraph();
   const { target, dependencies } = calculateProjectDependencies(
     projGraph,
     context
   );
 
-  return of(checkDependentProjectsHaveBeenBuilt(context, dependencies)).pipe(
-    switchMap(result => {
-      if (!result) {
+  return from(getSourceRoot(context, host)).pipe(
+    switchMap((sourceRoot) => {
+      if (!checkDependentProjectsHaveBeenBuilt(context, dependencies)) {
         return of({ success: false });
       }
-      const options = normalizeBundleOptions(_options, context.workspaceRoot);
+
+      const options = normalizePackageOptions(
+        rawOptions,
+        context.workspaceRoot,
+        sourceRoot
+      );
       const packageJson = readJsonFile(options.project);
       const rollupOptions = createRollupOptions(
         options,
         dependencies,
         context,
-        packageJson
+        packageJson,
+        sourceRoot
       );
 
       if (options.watch) {
-        return new Observable<BuildResult>(obs => {
+        return new Observable<BuildResult>((obs) => {
           const watcher = rollup.watch([rollupOptions]);
-          watcher.on('event', data => {
+          watcher.on('event', (data) => {
             if (data.code === 'START') {
               context.logger.info('Bundling...');
             } else if (data.code === 'END') {
@@ -116,13 +124,13 @@ export function run(
       } else {
         context.logger.info('Bundling...');
         return runRollup(rollupOptions).pipe(
-          catchError(e => {
-            console.error(e);
+          catchError((e) => {
+            context.logger.error(`Error during bundle: ${e}`);
             return of({ success: false });
           }),
           last(),
           tap({
-            next: result => {
+            next: (result) => {
               if (result.success) {
                 updatePackageJson(
                   options,
@@ -135,7 +143,7 @@ export function run(
               } else {
                 context.logger.error('Bundle failed.');
               }
-            }
+            },
           })
         );
       }
@@ -149,16 +157,21 @@ function createRollupOptions(
   options: NormalizedBundleBuilderOptions,
   dependencies: DependentBuildableProjectNode[],
   context: BuilderContext,
-  packageJson: any
+  packageJson: any,
+  sourceRoot: string
 ): rollup.InputOptions {
-  const parsedTSConfig = ts.readConfigFile(options.tsConfig, ts.sys.readFile)
-    .config;
-  parsedTSConfig.compilerOptions = parsedTSConfig.compilerOptions || {};
-  parsedTSConfig.compilerOptions.paths =
-    parsedTSConfig.compilerOptions.paths || {};
-  updatePaths(dependencies, parsedTSConfig.compilerOptions.paths);
+  const compilerOptionPaths = computeCompilerOptionsPaths(
+    options.tsConfig,
+    dependencies
+  );
 
   const plugins = [
+    copy({
+      targets: convertCopyAssetsToRollupOptions(
+        options.outputPath,
+        options.assets
+      ),
+    }),
     image(),
     typescript({
       check: true,
@@ -168,32 +181,41 @@ function createRollupOptions(
           rootDir: options.entryRoot,
           allowJs: false,
           declaration: true,
-          paths: parsedTSConfig.compilerOptions.paths
-        }
-      }
+          paths: compilerOptionPaths,
+        },
+      },
     }),
     peerDepsExternal({
-      packageJsonPath: options.project
+      packageJsonPath: options.project,
     }),
     postcss({
       inject: true,
       extract: options.extractCss,
       autoModules: true,
-      plugins: [autoprefixer]
+      plugins: [autoprefixer],
     }),
     localResolve(),
     resolve({
       preferBuiltins: true,
-      extensions: fileExtensions
-    }),
-    babel({
-      ...createBabelConfig(options, options.projectRoot),
       extensions: fileExtensions,
-      externalHelpers: false,
-      exclude: 'node_modules/**'
+    }),
+    getBabelInputPlugin({
+      // TODO(jack): Remove this in Nx 10
+      ...legacyCreateBabelConfig(options, options.projectRoot),
+
+      cwd: join(context.workspaceRoot, sourceRoot),
+      rootMode: 'upward',
+      babelrc: true,
+      extensions: fileExtensions,
+      babelHelpers: 'bundled',
+      exclude: /node_modules/,
+      plugins: [
+        'babel-plugin-transform-async-to-promises',
+        ['@babel/plugin-transform-regenerator', { async: false }],
+      ],
     }),
     commonjs(),
-    filesize()
+    filesize(),
   ];
 
   const globals = options.globals
@@ -204,22 +226,22 @@ function createRollupOptions(
     : {};
 
   const externalPackages = dependencies
-    .map(d => d.name)
+    .map((d) => d.name)
     .concat(options.external || [])
     .concat(Object.keys(packageJson.dependencies || {}));
 
   const rollupConfig = {
     input: options.entryFile,
-    output: outputConfigs.map(o => {
+    output: outputConfigs.map((o) => {
       return {
         globals,
         format: o.format,
         file: `${options.outputPath}/${context.target.project}.${o.extension}.js`,
-        name: toClassName(context.target.project)
+        name: toClassName(context.target.project),
       };
     }),
-    external: id => externalPackages.includes(id),
-    plugins
+    external: (id) => externalPackages.includes(id),
+    plugins,
   };
 
   return options.rollupConfig
@@ -227,42 +249,46 @@ function createRollupOptions(
     : rollupConfig;
 }
 
-function createBabelConfig(options: BundleBuilderOptions, projectRoot: string) {
-  let babelConfig: any = _createBabelConfig(projectRoot, false, false);
-  if (options.babelConfig) {
-    babelConfig = require(options.babelConfig)(babelConfig, options);
-  }
-  // Ensure async functions are transformed to promises properly.
-  upsert(
-    'plugins',
-    'babel-plugin-transform-async-to-promises',
-    null,
-    babelConfig
-  );
-  upsert(
-    'plugins',
-    '@babel/plugin-transform-regenerator',
-    { async: false },
-    babelConfig
-  );
-  return babelConfig;
-}
-
-function upsert(
-  type: 'presets' | 'plugins',
-  pluginOrPreset: string,
-  opts: null | JsonObject,
-  config: any
+function legacyCreateBabelConfig(
+  options: PackageBuilderOptions,
+  projectRoot: string
 ) {
-  if (
-    !config[type].some(
-      p =>
-        (Array.isArray(p) && p[0].indexOf(pluginOrPreset) !== -1) ||
-        p.indexOf(pluginOrPreset) !== -1
-    )
+  if (options.babelConfig) {
+    let babelConfig: any = createBabelConfig(projectRoot, false, false);
+    babelConfig = require(options.babelConfig)(babelConfig, options);
+    // Ensure async functions are transformed to promises properly.
+    upsert(
+      'plugins',
+      'babel-plugin-transform-async-to-promises',
+      null,
+      babelConfig
+    );
+    upsert(
+      'plugins',
+      '@babel/plugin-transform-regenerator',
+      { async: false },
+      babelConfig
+    );
+  } else {
+    return {};
+  }
+
+  function upsert(
+    type: 'presets' | 'plugins',
+    pluginOrPreset: string,
+    opts: null | JsonObject,
+    config: any
   ) {
-    const fullPath = require.resolve(pluginOrPreset);
-    config[type] = config[type].concat([opts ? [fullPath, opts] : fullPath]);
+    if (
+      !config[type].some(
+        (p) =>
+          (Array.isArray(p) && p[0].indexOf(pluginOrPreset) !== -1) ||
+          p.indexOf(pluginOrPreset) !== -1
+      )
+    ) {
+      const fullPath = require.resolve(pluginOrPreset);
+      config[type] = config[type].concat([opts ? [fullPath, opts] : fullPath]);
+    }
   }
 }
 
@@ -290,4 +316,21 @@ function updatePackageJson(
       dependencies
     );
   }
+}
+
+interface RollupCopyAssetOption {
+  src: string;
+  dest: string;
+}
+
+function convertCopyAssetsToRollupOptions(
+  outputPath: string,
+  assets: NormalizedCopyAssetOption[]
+): RollupCopyAssetOption[] {
+  return assets
+    ? assets.map((a) => ({
+        src: join(a.input, a.glob),
+        dest: join(outputPath, a.output),
+      }))
+    : undefined;
 }

@@ -31,7 +31,20 @@ nx e2e admin-e2e
 
 In many organizations, you would have dozens or hundreds of apps and libs. To be productive in a monorepo, you need to be able to check that your change is safe, and rebuilding and retesting everything on every change won't scale, tracing the dependencies manually (as shown above) won't scale either.
 
-Nx uses code analysis to construct a dependency graph of all projects in the workspace. It then uses the dependency graph to determine what needs to be rebuilt and retested.
+Because Nx has built-in computation caching, you could retest and rebuild everything on every commit:
+
+```bash
+nx run-many --target=test --all
+nx run-many --target=lint --all
+nx run-many --target=e2e --all
+nx run-many --target=build --all
+```
+
+If you use [Nx Cloud](https://nx.app), this can be a viable option.
+
+## Code Changes Analysis
+
+In addition to computation caching, Nx supports code change analysis. Nx uses code analysis to construct a dependency graph of all projects in the workspace. It then uses the dependency graph to determine what needs to be rebuilt and retested based on what you changed in a git branch.
 
 ## Viewing Dep Graph
 
@@ -49,7 +62,7 @@ nx affected:dep-graph --files=libs/admin-feature-permissions/src/index.ts
 
 ![dependency-graph-affected](/shared/affected.png)
 
-In practice it's easier to use git to determine what files have changed.
+In practice, it's easier to use git to determine what files have changed.
 
 ```bash
 nx affected:dep-graph --base=master --head=HEAD
@@ -87,39 +100,6 @@ The SHAs you pass must be defined in the git repository. The `master` and `HEAD`
 ```bash
 nx affected:build --base=origin/master --head=$PR_BRANCH_NAME # where PR_BRANCH_NAME is defined by your CI system
 nx affected:build --base=origin/master~1 --head=origin/master # rerun what is affected by the last commit in master
-```
-
-## Running Targets in Parallel
-
-Running targets in parallel can significantly speed up your CI time. This is particularly useful in CI.
-
-```bash
-nx affected:build --parallel
-nx affected:build --parallel --maxParallel=5
-```
-
-## Rerunning All Targets
-
-You should never do it in CI, but it is sometimes useful to rerun all targets locally.
-
-```bash
-nx affected:build --all
-```
-
-## Running Failed
-
-After you run any affected command, Nx remembers which targets fail. So if you want to rerun only the failed once, pass: `--only-failed`;
-
-```bash
-nx affected:build --only-failed
-```
-
-## Excluding Projects
-
-Finally, you can exclude projects like this:
-
-```bash
-nx affected:test --all --exclude=admin # retests everything except admin
 ```
 
 ## When Nx can't Understand Your Repository
@@ -196,3 +176,17 @@ Nx provides two methods to exclude additional glob patterns (files and folders) 
 
 - Glob patterns defined in your `.gitignore` file are ignored.
 - Glob patterns defined in an optional `.nxignore` file are ignored.
+
+## Caching and Affected
+
+Affected and caching are used to solve the same problem: minimize the computation. But they do it differently, and the combination provides better results than one or the other.
+
+The affected command looks at the before and after states of the workspaces and figures out what can be broken by a change. Because it knows the two states, it can deduce the nature of the change. For instance, this repository uses React and Angular. If a PR updates the version of React in the root package.json, Nx will know that only half of the projects in the workspace can be affected. It knows what was changed--the version of React was bumped up.
+
+Caching simply looks at the current state of the workspace and the environment (e.g., version of Node) and checks if somebody already ran the command against this state. Caching knows that something changed, but because there is no before and after states, it doesn't know the nature of the change. In other words, caching is a lot more conservative.
+
+If we only use affected, the list of projects that will be retested is small, but if we test the PR twice, we will run all the tests twice.
+
+If we only use caching, the list of projects that will be retested is larger, but if we test the PR twice, we will only run tests the first time.
+
+Using both allows us to get the best of both worlds. The list of affected projects is as small as it can be, and we never run anything twice.

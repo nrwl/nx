@@ -24,12 +24,12 @@ export function initGlobal() {
       title: `The current directory isn't part of an Nx workspace.`,
       bodyLines: [
         `To create a workspace run:`,
-        chalk.bold.white(`npx create-nx-workspace@latest <workspace name>`)
-      ]
+        chalk.bold.white(`npx create-nx-workspace@latest <workspace name>`),
+      ],
     });
 
     output.note({
-      title: `For more information please visit https://nx.dev/`
+      title: `For more information please visit https://nx.dev/`,
     });
     process.exit(0);
   }

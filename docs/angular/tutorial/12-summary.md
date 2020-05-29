@@ -7,8 +7,12 @@ In this tutorial you:
 - Created a UI library
 - Used Nx dep graph capabilities to only retest and rebuild what is affected
 
-### Read Fundamentals
+## Learn More
 
-- [Using Modern Tools](/angular/fundamentals/use-modern-tools)
-- [Building Full-Stack Applications](/angular/fundamentals/build-full-stack-applications)
-- [Developing Like Google: Monorepos and Automation](/angular/fundamentals/monorepos-automation)
+- [Free Nx Course on YouTube](https://www.youtube.com/watch?time_continue=49&v=2mYLe9Kp9VM&feature=emb_logo)
+
+**Dive Deep:**
+
+- [Nx CLI](/{{framework}}/cli/overview)
+- [Computation Caching](/{{framework}}/guides/computation-caching)
+- [Rebuilding What is Affected](/{{framework}}/guides/monorepo-affected)

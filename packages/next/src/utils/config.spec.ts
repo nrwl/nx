@@ -3,15 +3,11 @@ import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { createWebpackConfig, prepareConfig } from './config';
 
 jest.mock('tsconfig-paths-webpack-plugin');
-jest.mock('@zeit/next-css', () => (config: any) => config);
-jest.mock('@zeit/next-less', () => (config: any) => config);
-jest.mock('@zeit/next-sass', () => (config: any) => config);
-jest.mock('@zeit/next-stylus', () => (config: any) => config);
 jest.mock('next/dist/next-server/server/config', () => ({
   __esModule: true,
   default: () => ({
-    webpack: () => ({})
-  })
+    webpack: () => ({}),
+  }),
 }));
 
 describe('Next.js webpack config builder', () => {
@@ -23,15 +19,15 @@ describe('Next.js webpack config builder', () => {
     it('should set the resolve plugins', () => {
       const webpackConfig = createWebpackConfig('/root', 'apps/wibble', []);
 
-      const config = webpackConfig(
-        { resolve: { alias: {} }, module: { rules: [] } },
+      webpackConfig(
+        { resolve: { alias: {} }, module: { rules: [] }, plugins: [] },
         { defaultLoaders: {} }
       );
 
       expect(TsconfigPathsPlugin).toHaveBeenCalledWith({
         configFile: '/root/apps/wibble/tsconfig.json',
         extensions: ['.ts', '.tsx', '.mjs', '.js', '.jsx'],
-        mainFields: ['es2015', 'module', 'main']
+        mainFields: ['es2015', 'module', 'main'],
       });
     });
 
@@ -39,18 +35,18 @@ describe('Next.js webpack config builder', () => {
       const webpackConfig = createWebpackConfig('/root', 'apps/wibble', [
         {
           replace: 'apps/wibble/src/environment.ts',
-          with: 'apps/wibble/src/environment.prod.ts'
-        }
+          with: 'apps/wibble/src/environment.prod.ts',
+        },
       ]);
 
       const config = webpackConfig(
-        { resolve: { alias: {} }, module: { rules: [] } },
+        { resolve: { alias: {} }, module: { rules: [] }, plugins: [] },
         { defaultLoaders: {} }
       );
 
       expect(config.resolve.alias).toEqual({
         '/root/apps/wibble/src/environment.ts':
-          '/root/apps/wibble/src/environment.prod.ts'
+          '/root/apps/wibble/src/environment.prod.ts',
       });
     });
 
@@ -58,7 +54,7 @@ describe('Next.js webpack config builder', () => {
       const webpackConfig = createWebpackConfig('/root', 'apps/wibble', []);
 
       const config = webpackConfig(
-        { resolve: { alias: {} }, module: { rules: [] } },
+        { resolve: { alias: {} }, module: { rules: [] }, plugins: [] },
         { defaultLoaders: {} }
       );
 
@@ -71,17 +67,19 @@ describe('Next.js webpack config builder', () => {
   describe('prepareConfig', () => {
     it('should set the dist and out directories', () => {
       const config = prepareConfig(
-        '/root',
-        'apps/wibble',
-        'dist/apps/wibble',
-        [],
-        PHASE_PRODUCTION_BUILD
+        PHASE_PRODUCTION_BUILD,
+        {
+          root: 'apps/wibble',
+          outputPath: 'dist/apps/wibble',
+          fileReplacements: [],
+        },
+        { workspaceRoot: '/root' } as any
       );
 
       expect(config).toEqual(
         expect.objectContaining({
-          distDir: '../../dist/apps/wibble',
-          outdir: '../../dist/apps/wibble'
+          distDir: '../../dist/apps/wibble/.next',
+          outdir: '../../dist/apps/wibble',
         })
       );
     });

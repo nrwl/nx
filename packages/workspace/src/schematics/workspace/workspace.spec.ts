@@ -26,13 +26,21 @@ describe('workspace', () => {
         'workspace.json': '*',
         'package.json': {
           dependencies: '*',
-          devDependencies: '*'
+          devDependencies: '*',
         },
         'tsconfig.json': '*',
         'tslint.json': '*',
-        'nx.json': '*'
+        'nx.json': '*',
       },
-      projects: {}
+      tasksRunnerOptions: {
+        default: {
+          runner: '@nrwl/workspace/tasks-runners/default',
+          options: {
+            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
+          },
+        },
+      },
+      projects: {},
     });
   });
 
@@ -45,7 +53,7 @@ describe('workspace', () => {
 
     expect(recommendations).toEqual([
       'ms-vscode.vscode-typescript-tslint-plugin',
-      'esbenp.prettier-vscode'
+      'esbenp.prettier-vscode',
     ]);
   });
 
@@ -64,7 +72,7 @@ describe('workspace', () => {
       'nrwl.angular-console',
       'angular.ng-template',
       'ms-vscode.vscode-typescript-tslint-plugin',
-      'esbenp.prettier-vscode'
+      'esbenp.prettier-vscode',
     ]);
   });
 });

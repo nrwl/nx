@@ -2,6 +2,8 @@ import { dirname } from 'path';
 import * as ts from 'typescript';
 import { appRootPath } from './app-root';
 
+const normalizedAppRoot = appRootPath.replace(/\\/g, '/');
+
 export function readTsConfig(tsConfigPath: string) {
   const readResult = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
   return ts.parseJsonConfigFileContent(
@@ -38,7 +40,7 @@ export function resolveModuleByImport(importExpr: string, filePath: string) {
   if (!resolvedModule) {
     return;
   } else {
-    return resolvedModule.resolvedFileName.replace(`${appRootPath}/`, '');
+    return resolvedModule.resolvedFileName.replace(`${normalizedAppRoot}/`, '');
   }
 }
 

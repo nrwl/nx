@@ -1,22 +1,21 @@
+import { serializeJson } from '@nrwl/workspace';
 import {
+  checkFilesDoNotExist,
+  checkFilesExist,
   ensureProject,
+  forEachCli,
+  newProject,
+  readFile,
+  readJson,
+  renameFile,
   runCLI,
+  runCLIAsync,
   uniq,
   updateFile,
-  readFile,
-  runCLIAsync,
-  checkFilesExist,
-  renameFile,
-  readJson,
-  forEachCli,
-  supportUi,
   workspaceConfigName,
-  setMaxWorkers,
-  checkFilesDoNotExist
 } from './utils';
-import { serializeJson } from '@nrwl/workspace';
 
-forEachCli(currentCLIName => {
+forEachCli((currentCLIName) => {
   const linter = currentCLIName === 'angular' ? 'tslint' : 'eslint';
 
   describe('React Applications', () => {
@@ -30,7 +29,8 @@ forEachCli(currentCLIName => {
       );
       runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
 
-      setMaxWorkers(appName);
+      // Libs should not include package.json by default
+      checkFilesDoNotExist(`libs/${libName}/package.json`);
 
       const mainPath = `apps/${appName}/src/main.tsx`;
       updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
@@ -38,7 +38,11 @@ forEachCli(currentCLIName => {
       const libTestResults = await runCLIAsync(`test ${libName}`);
       expect(libTestResults.stderr).toContain('Test Suites: 1 passed, 1 total');
 
-      await testGeneratedApp(appName, { checkStyles: true, checkLinter: true });
+      await testGeneratedApp(appName, {
+        checkStyles: true,
+        checkLinter: true,
+        checkE2E: true,
+      });
     }, 120000);
 
     it('should be able to generate a publishable react lib', async () => {
@@ -111,15 +115,17 @@ forEachCli(currentCLIName => {
         `generate @nrwl/react:lib ${libName} --no-interactive --no-component`
       );
 
-      setMaxWorkers(appName);
-
       const mainPath = `apps/${appName}/src/main.tsx`;
       updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
 
       const libTestResults = await runCLIAsync(`test ${libName}`);
       expect(libTestResults.stderr).toBe('');
 
-      await testGeneratedApp(appName, { checkStyles: true, checkLinter: true });
+      await testGeneratedApp(appName, {
+        checkStyles: true,
+        checkLinter: true,
+        checkE2E: false,
+      });
     }, 120000);
 
     it('should not create a dist folder if there is an error', async () => {
@@ -149,9 +155,11 @@ forEachCli(currentCLIName => {
         `generate @nrwl/react:app ${appName} --routing --no-interactive --linter=${linter}`
       );
 
-      setMaxWorkers(appName);
-
-      await testGeneratedApp(appName, { checkStyles: true, checkLinter: true });
+      await testGeneratedApp(appName, {
+        checkStyles: true,
+        checkLinter: true,
+        checkE2E: false,
+      });
     }, 120000);
 
     it('should generate app with styled-components', async () => {
@@ -162,11 +170,10 @@ forEachCli(currentCLIName => {
         `generate @nrwl/react:app ${appName} --style styled-components --no-interactive --linter=${linter}`
       );
 
-      setMaxWorkers(appName);
-
       await testGeneratedApp(appName, {
         checkStyles: false,
-        checkLinter: true
+        checkLinter: true,
+        checkE2E: false,
       });
     }, 120000);
 
@@ -178,11 +185,10 @@ forEachCli(currentCLIName => {
         `generate @nrwl/react:app ${appName} --style none --no-interactive --linter=${linter}`
       );
 
-      setMaxWorkers(appName);
-
       await testGeneratedApp(appName, {
         checkStyles: false,
-        checkLinter: true
+        checkLinter: true,
+        checkE2E: false,
       });
 
       expect(() => checkFilesExist(`dist/apps/${appName}/styles.css`)).toThrow(
@@ -191,6 +197,42 @@ forEachCli(currentCLIName => {
       expect(readFile(`dist/apps/${appName}/index.html`)).not.toContain(
         `<link rel="stylesheet" href="styles.css">`
       );
+    }, 120000);
+
+    it('should be able to use babel-jest', async () => {
+      ensureProject();
+      const appName = uniq('app');
+      const libName = uniq('lib');
+
+      runCLI(
+        `generate @nrwl/react:app ${appName} --no-interactive --babelJest`
+      );
+      runCLI(
+        `generate @nrwl/react:lib ${libName} --no-interactive --babelJest`
+      );
+
+      const appTestResults = await runCLIAsync(`test ${appName}`);
+      expect(appTestResults.stderr).toContain('Test Suites: 1 passed, 1 total');
+
+      const libTestResults = await runCLIAsync(`test ${libName}`);
+      expect(libTestResults.stderr).toContain('Test Suites: 1 passed, 1 total');
+    }, 120000);
+
+    it('should be able to add a redux slice', async () => {
+      ensureProject();
+      const appName = uniq('app');
+      const libName = uniq('lib');
+
+      runCLI(`g @nrwl/react:app ${appName} --no-interactive`);
+      runCLI(`g @nrwl/react:redux lemon --project=${appName}`);
+      runCLI(`g @nrwl/react:lib ${libName} --no-interactive`);
+      runCLI(`g @nrwl/react:redux orange --project=${libName}`);
+
+      const appTestResults = await runCLIAsync(`test ${appName}`);
+      expect(appTestResults.stderr).toContain('Test Suites: 2 passed, 2 total');
+
+      const libTestResults = await runCLIAsync(`test ${libName}`);
+      expect(libTestResults.stderr).toContain('Test Suites: 2 passed, 2 total');
     }, 120000);
 
     it('should be able to use JSX', async () => {
@@ -202,8 +244,6 @@ forEachCli(currentCLIName => {
         `generate @nrwl/react:app ${appName} --no-interactive --linter=${linter}`
       );
       runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
-
-      setMaxWorkers(appName);
 
       renameFile(
         `apps/${appName}/src/main.tsx`,
@@ -236,13 +276,14 @@ forEachCli(currentCLIName => {
 
       await testGeneratedApp(appName, {
         checkStyles: true,
-        checkLinter: false
+        checkLinter: false,
+        checkE2E: false,
       });
     }, 30000);
 
     async function testGeneratedApp(
       appName,
-      opts: { checkStyles: boolean; checkLinter: boolean }
+      opts: { checkStyles: boolean; checkLinter: boolean; checkE2E: boolean }
     ) {
       if (opts.checkLinter) {
         const lintResults = runCLI(`lint ${appName}`);
@@ -255,14 +296,14 @@ forEachCli(currentCLIName => {
         `dist/apps/${appName}/polyfills.js`,
         `dist/apps/${appName}/runtime.js`,
         `dist/apps/${appName}/vendor.js`,
-        `dist/apps/${appName}/main.js`
+        `dist/apps/${appName}/main.js`,
       ];
       if (opts.checkStyles) {
         filesToCheck.push(`dist/apps/${appName}/styles.js`);
       }
       checkFilesExist(...filesToCheck);
       expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
-        'var App = () => {'
+        'const App = () =>'
       );
       runCLI(`build ${appName} --prod --output-hashing none`);
       filesToCheck = [
@@ -271,7 +312,7 @@ forEachCli(currentCLIName => {
         `dist/apps/${appName}/polyfills.esm.js`,
         `dist/apps/${appName}/main.esm.js`,
         `dist/apps/${appName}/polyfills.es5.js`,
-        `dist/apps/${appName}/main.es5.js`
+        `dist/apps/${appName}/main.es5.js`,
       ];
       if (opts.checkStyles) {
         filesToCheck.push(`dist/apps/${appName}/styles.css`);
@@ -286,7 +327,7 @@ forEachCli(currentCLIName => {
       const testResults = await runCLIAsync(`test ${appName}`);
       expect(testResults.stderr).toContain('Test Suites: 1 passed, 1 total');
 
-      if (supportUi()) {
+      if (opts.checkE2E) {
         const e2eResults = runCLI(`e2e ${appName}-e2e`);
         expect(e2eResults).toContain('All specs passed!');
       }

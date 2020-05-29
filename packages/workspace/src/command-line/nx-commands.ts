@@ -26,9 +26,9 @@ export const commandsObject = yargs
   .command(
     'run [project][:target][:configuration] [options, ...]',
     `
-    Run a target for a project 
-    (e.g., nx run myapp:serve:production). 
-    
+    Run a target for a project
+    (e.g., nx run myapp:serve:production).
+
     You can also use the infix notation to run a target:
     (e.g., nx serve myapp --configuration=production)
     `
@@ -37,126 +37,126 @@ export const commandsObject = yargs
     'generate [schematic-collection:][schematic] [options, ...]',
     `
     Generate code
-    (e.g., nx generate @nrwl/web:app myapp). 
+    (e.g., nx generate @nrwl/web:app myapp).
     `
   )
   .command(
     'affected',
     'Run task for affected projects',
-    yargs => withAffectedOptions(withParallel(withTarget(yargs))),
-    args => affected('affected', { ...args })
+    (yargs) => withAffectedOptions(withParallel(withTarget(yargs))),
+    (args) => affected('affected', { ...args })
   )
   .command(
     'run-many',
     'Run task for multiple projects',
-    yargs => withRunManyOptions(withParallel(withTarget(yargs))),
-    args => runMany({ ...args })
+    (yargs) => withRunManyOptions(withParallel(withTarget(yargs))),
+    (args) => runMany({ ...args })
   )
   .command(
     'affected:apps',
     'Print applications affected by changes',
     withAffectedOptions,
-    args => affected('apps', { ...args })
+    (args) => affected('apps', { ...args })
   )
   .command(
     'affected:libs',
     'Print libraries affected by changes',
     withAffectedOptions,
-    args =>
+    (args) =>
       affected('libs', {
-        ...args
+        ...args,
       })
   )
   .command(
     'affected:build',
     'Build applications and publishable libraries affected by changes',
-    yargs => withAffectedOptions(withParallel(yargs)),
-    args =>
+    (yargs) => withAffectedOptions(withParallel(yargs)),
+    (args) =>
       affected('affected', {
         ...args,
-        target: 'build'
+        target: 'build',
       })
   )
   .command(
     'affected:test',
     'Test projects affected by changes',
-    yargs => withAffectedOptions(withParallel(yargs)),
-    args =>
+    (yargs) => withAffectedOptions(withParallel(yargs)),
+    (args) =>
       affected('affected', {
         ...args,
-        target: 'test'
+        target: 'test',
       })
   )
   .command(
     'affected:e2e',
     'Run e2e tests for the applications affected by changes',
-    yargs => withAffectedOptions(withParallel(yargs)),
-    args =>
+    (yargs) => withAffectedOptions(withParallel(yargs)),
+    (args) =>
       affected('affected', {
         ...args,
-        target: 'e2e'
+        target: 'e2e',
       })
   )
   .command(
     'affected:dep-graph',
     'Graph dependencies affected by changes',
-    yargs => withAffectedOptions(withDepGraphOptions(yargs)),
-    args =>
+    (yargs) => withAffectedOptions(withDepGraphOptions(yargs)),
+    (args) =>
       affected('dep-graph', {
-        ...args
+        ...args,
       })
   )
   .command(
     'print-affected',
     'Graph execution plan',
-    yargs => withAffectedOptions(withPrintAffectedOptions(yargs)),
-    args =>
+    (yargs) => withAffectedOptions(withPrintAffectedOptions(yargs)),
+    (args) =>
       affected('print-affected', {
-        ...args
+        ...args,
       })
   )
   .command(
     'affected:lint',
     'Lint projects affected by changes',
-    yargs => withAffectedOptions(withParallel(yargs)),
-    args =>
+    (yargs) => withAffectedOptions(withParallel(yargs)),
+    (args) =>
       affected('affected', {
         ...args,
-        target: 'lint'
+        target: 'lint',
       })
   )
   .command(
     'dep-graph',
     'Graph dependencies within workspace',
-    yargs => withDepGraphOptions(yargs),
-    args => generateGraph(args as any, [])
+    (yargs) => withDepGraphOptions(yargs),
+    (args) => generateGraph(args as any, [])
   )
   .command(
     'format:check',
     'Check for un-formatted files',
     withFormatOptions,
-    args => format('check', args)
+    (args) => format('check', args)
   )
   .command(
     'format:write',
     'Overwrite un-formatted files',
     withFormatOptions,
-    args => format('write', args)
+    (args) => format('write', args)
   )
   .alias('format:write', 'format')
   .command(
     'workspace-lint [files..]',
-    'Lint workspace or list of files',
+    'Lint workspace or list of files.  Note: To exclude files from this lint rule, you can add them to the ".nxignore" file',
     noop,
-    _ => workspaceLint()
+    (_) => workspaceLint()
   )
   .command(
     'workspace-schematic [name]',
     'Runs a workspace schematic from the tools/schematics directory',
-    yargs => {
+    (yargs) => {
       yargs.option('list-schematics', {
         describe: 'List the available workspace-schematics',
-        type: 'boolean'
+        type: 'boolean',
       });
       /**
        * Don't require `name` if only listing available
@@ -165,7 +165,7 @@ export const commandsObject = yargs
       if (yargs.argv.listSchematics !== true) {
         yargs.demandOption(['name']).positional('name', {
           type: 'string',
-          describe: 'The name of your schematic`'
+          describe: 'The name of your schematic`',
         });
       }
       return yargs;
@@ -175,17 +175,17 @@ export const commandsObject = yargs
   .command(
     'migrate',
     `Creates a migrations file or runs migrations from the migrations file.
-- Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)      
-- Run migrations (e.g., nx migrate --run-migrations=migrations.json)      
+- Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)
+- Run migrations (e.g., nx migrate --run-migrations=migrations.json)
     `,
-    yargs => yargs,
+    (yargs) => yargs,
     () => {
       const executable =
         platform() === 'win32'
           ? `.\\node_modules\\.bin\\tao`
           : `./node_modules/.bin/tao`;
       execSync(`${executable} migrate ${process.argv.slice(3).join(' ')}`, {
-        stdio: ['inherit', 'inherit', 'inherit']
+        stdio: ['inherit', 'inherit', 'inherit'],
       });
     }
   )
@@ -197,7 +197,7 @@ export const commandsObject = yargs
 
 function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
   return withAffectedOptions(yargs).option('apps-and-libs', {
-    type: 'boolean'
+    type: 'boolean',
   });
 }
 
@@ -212,7 +212,7 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
         'Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas',
       type: 'array',
       requiresArg: true,
-      coerce: parseCSV
+      coerce: parseCSV,
     })
     .option('uncommitted', { describe: 'Uncommitted changes' })
     .option('untracked', { describe: 'Untracked changes' })
@@ -220,12 +220,12 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     .option('base', {
       describe: 'Base of the current branch (usually master)',
       type: 'string',
-      requiresArg: true
+      requiresArg: true,
     })
     .option('head', {
       describe: 'Latest commit of the current branch (usually HEAD)',
       type: 'string',
-      requiresArg: true
+      requiresArg: true,
     })
     .group(
       ['base'],
@@ -244,39 +244,39 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       describe: 'Exclude certain projects from being processed',
       type: 'array',
       coerce: parseCSV,
-      default: []
+      default: [],
     })
     .options('runner', {
       describe: 'This is the name of the tasks runner configured in nx.json',
-      type: 'string'
+      type: 'string',
     })
     .options('skip-nx-cache', {
       describe:
         'Rerun the tasks even when the results are available in the cache',
       type: 'boolean',
-      default: false
+      default: false,
     })
     .options('configuration', {
       describe:
         'This is the configuration to use when performing tasks on projects',
-      type: 'string'
+      type: 'string',
     })
     .options('only-failed', {
       describe: 'Isolate projects which previously failed',
       type: 'boolean',
-      default: false
+      default: false,
     })
     .option('verbose', {
-      describe: 'Print additional error stack trace on failure'
+      describe: 'Print additional error stack trace on failure',
     })
     .option('plain', {
-      describe: 'Produces a plain output for affected:apps and affected:libs'
+      describe: 'Produces a plain output for affected:apps and affected:libs',
     })
     .conflicts({
       files: ['uncommitted', 'untracked', 'base', 'head', 'all'],
       untracked: ['uncommitted', 'files', 'base', 'head', 'all'],
       uncommitted: ['files', 'untracked', 'base', 'head', 'all'],
-      all: ['files', 'untracked', 'uncommitted', 'base', 'head']
+      all: ['files', 'untracked', 'uncommitted', 'base', 'head'],
     });
 }
 
@@ -284,10 +284,10 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .option('projects', {
       describe: 'Projects to run (comma delimited)',
-      type: 'string'
+      type: 'string',
     })
     .option('all', {
-      describe: 'Run the target on all projects in the workspace'
+      describe: 'Run the target on all projects in the workspace',
     })
     .nargs('all', 0)
     .check(({ all, projects }) => {
@@ -297,71 +297,69 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
     })
     .options('runner', {
       describe: 'Override the tasks runner in `nx.json`',
-      type: 'string'
+      type: 'string',
     })
     .options('skip-nx-cache', {
       describe:
         'Rerun the tasks even when the results are available in the cache',
       type: 'boolean',
-      default: false
+      default: false,
     })
     .options('configuration', {
       describe:
         'This is the configuration to use when performing tasks on projects',
-      type: 'string'
+      type: 'string',
     })
     .options('with-deps', {
       describe:
         'Include dependencies of specified projects when computing what to run',
       type: 'boolean',
-      default: false
+      default: false,
     })
     .options('only-failed', {
       describe: 'Only run the target on projects which previously failed',
       type: 'boolean',
-      default: false
+      default: false,
     })
     .option('verbose', {
-      describe: 'Print additional error stack trace on failure'
+      describe: 'Print additional error stack trace on failure',
     })
     .conflicts({
-      all: 'projects'
+      all: 'projects',
     });
 }
 
 function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .option('file', {
-      describe: 'output file (e.g. --file=output.json)',
-      type: 'string'
+      describe:
+        'output file (e.g. --file=output.json or --file=dep-graph.html)',
+      type: 'string',
     })
     .option('filter', {
       describe:
         'Use to limit the dependency graph to only show specific projects, list of projects delimited by commas.',
       type: 'array',
-      coerce: parseCSV
+      coerce: parseCSV,
     })
     .option('exclude', {
       describe:
         'List of projects delimited by commas to exclude from the dependency graph.',
       type: 'array',
-      coerce: parseCSV
+      coerce: parseCSV,
     })
     .option('host', {
       describe: 'Bind the dep graph server to a specific ip address.',
-      type: 'string'
+      type: 'string',
     });
 }
 
 function parseCSV(args: string[]) {
   return args
-    .map(arg => arg.split(','))
-    .reduce(
-      (acc, value) => {
-        return [...acc, ...value];
-      },
-      [] as string[]
-    );
+    .map((arg) => arg.split(','))
+    .reduce((acc, value) => {
+      return [...acc, ...value];
+    }, [] as string[]);
 }
 
 function withParallel(yargs: yargs.Argv): yargs.Argv {
@@ -369,13 +367,13 @@ function withParallel(yargs: yargs.Argv): yargs.Argv {
     .option('parallel', {
       describe: 'Parallelize the command',
       type: 'boolean',
-      default: false
+      default: false,
     })
     .option('maxParallel', {
       describe:
         'Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.',
       type: 'number',
-      default: 3
+      default: 3,
     });
 }
 
@@ -385,6 +383,6 @@ function withTarget(yargs: yargs.Argv): yargs.Argv {
     type: 'string',
     requiresArg: true,
     demandOption: true,
-    global: false
+    global: false,
   });
 }

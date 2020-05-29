@@ -18,36 +18,44 @@ export async function runCommand<T extends RunArgs>(
   { nxJson, workspaceResults }: Environment,
   nxArgs: NxArgs,
   overrides: any,
-  reporter: any
+  reporter: any,
+  initiatingProject: string | null
 ) {
-  reporter.beforeRun(projectsToRun.map(p => p.name), nxArgs, overrides);
+  reporter.beforeRun(
+    projectsToRun.map((p) => p.name),
+    nxArgs,
+    overrides
+  );
 
   const { tasksRunner, tasksOptions } = getRunner(nxArgs, nxJson, {
     ...nxArgs,
-    ...overrides
+    ...overrides,
   });
 
-  const tasks: Task[] = projectsToRun.map(project => {
+  const tasks: Task[] = projectsToRun.map((project) => {
     return createTask({
       project,
       target: nxArgs.target,
       configuration: nxArgs.configuration,
-      overrides: overrides
+      overrides: overrides,
     });
   });
 
   const hasher = new Hasher(projectGraph, nxJson, tasksOptions);
   await Promise.all(
-    tasks.map(async t => {
-      t.hash = await hasher.hash(t);
+    tasks.map(async (t) => {
+      const hash = await hasher.hash(t);
+      t.hash = hash.value;
+      t.hashDetails = hash.details;
     })
   );
 
   const cached = [];
   tasksRunner(tasks, tasksOptions, {
+    initiatingProject: initiatingProject,
     target: nxArgs.target,
     projectGraph,
-    nxJson
+    nxJson,
   }).subscribe({
     next: (event: any) => {
       switch (event.type) {
@@ -78,7 +86,7 @@ export async function runCommand<T extends RunArgs>(
       if (workspaceResults.hasFailure) {
         process.exit(1);
       }
-    }
+    },
   });
 }
 
@@ -93,7 +101,7 @@ export function createTask({
   project,
   target,
   configuration,
-  overrides
+  overrides,
 }: TaskParams): Task {
   const config = projectHasTargetAndConfiguration(
     project,
@@ -105,19 +113,19 @@ export function createTask({
   const qualifiedTarget = {
     project: project.name,
     target,
-    configuration: config
+    configuration: config,
   };
   return {
     id: getId(qualifiedTarget),
     target: qualifiedTarget,
-    overrides: interpolateOverrides(overrides, project.name, project.data)
+    overrides: interpolateOverrides(overrides, project.name, project.data),
   };
 }
 
 function getId({
   project,
   target,
-  configuration
+  configuration,
 }: {
   project: string;
   target: string;
@@ -143,7 +151,7 @@ export function getRunner(
     const t = require('./default-tasks-runner');
     return {
       tasksRunner: t.defaultTasksRunner,
-      tasksOptions: overrides
+      tasksOptions: overrides,
     };
   }
 
@@ -151,7 +159,7 @@ export function getRunner(
     const t = require('./default-tasks-runner');
     return {
       tasksRunner: t.defaultTasksRunner,
-      tasksOptions: overrides
+      tasksOptions: overrides,
     };
   }
 
@@ -180,8 +188,8 @@ export function getRunner(
       tasksOptions: {
         ...nxJson.tasksRunnerOptions[runner].options,
         ...overrides,
-        skipNxCache: nxArgs.skipNxCache
-      }
+        skipNxCache: nxArgs.skipNxCache,
+      },
     };
   } else {
     throw new Error(`Could not find runner configuration for ${runner}`);

@@ -7,56 +7,66 @@ export interface ReporterArgs {
 }
 
 export class DefaultReporter {
-  beforeRun(
-    affectedProjectNames: string[],
-    affectedArgs: ReporterArgs,
-    taskOverrides: any
-  ) {
-    if (affectedProjectNames.length <= 0) {
-      let description = `with "${affectedArgs.target}"`;
-      if (affectedArgs.configuration) {
-        description += ` that are configured for "${affectedArgs.configuration}"`;
+  private projectNames: string[];
+
+  beforeRun(projectNames: string[], args: ReporterArgs, taskOverrides: any) {
+    this.projectNames = projectNames;
+
+    if (projectNames.length <= 0) {
+      let description = `with "${args.target}"`;
+      if (args.configuration) {
+        description += ` that are configured for "${args.configuration}"`;
       }
       output.logSingleLine(`No projects ${description} were run`);
       return;
     }
 
-    const bodyLines = affectedProjectNames.map(
-      affectedProject => `${output.colors.gray('-')} ${affectedProject}`
+    const bodyLines = projectNames.map(
+      (affectedProject) => `${output.colors.gray('-')} ${affectedProject}`
     );
     if (Object.keys(taskOverrides).length > 0) {
       bodyLines.push('');
       bodyLines.push(`${output.colors.gray('With flags:')}`);
       Object.entries(taskOverrides)
         .map(([flag, value]) => `  --${flag}=${value}`)
-        .forEach(arg => bodyLines.push(arg));
+        .forEach((arg) => bodyLines.push(arg));
     }
 
     output.log({
       title: `${output.colors.gray('Running target')} ${
-        affectedArgs.target
+        args.target
       } ${output.colors.gray('for projects:')}`,
-      bodyLines
+      bodyLines,
     });
 
-    output.addVerticalSeparator();
+    output.addVerticalSeparatorWithoutNewLines();
   }
 
   printResults(
-    affectedArgs: ReporterArgs,
+    args: ReporterArgs,
     failedProjectNames: string[],
     startedWithFailedProjects: boolean,
     cachedProjectNames: string[]
   ) {
     output.addNewline();
-    output.addVerticalSeparator();
+    output.addVerticalSeparatorWithoutNewLines();
 
     if (failedProjectNames.length === 0) {
+      const bodyLines =
+        cachedProjectNames.length > 0
+          ? [
+              output.colors.gray(
+                `Nx read the output from cache instead of running the command for ${cachedProjectNames.length} out of ${this.projectNames.length} projects.`
+              ),
+            ]
+          : [];
+
       output.success({
-        title: `Running target "${affectedArgs.target}" succeeded`
+        title: `Running target "${args.target}" succeeded`,
+        bodyLines,
       });
 
-      if (affectedArgs.onlyFailed && startedWithFailedProjects) {
+      if (args.onlyFailed && startedWithFailedProjects) {
         output.warn({
           title: `Only projects ${output.underline(
             'which had previously failed'
@@ -64,8 +74,8 @@ export class DefaultReporter {
           bodyLines: [
             `You should verify by running ${output.underline(
               'without'
-            )} ${output.bold('--only-failed')}`
-          ]
+            )} ${output.bold('--only-failed')}`,
+          ],
         });
       }
     } else {
@@ -73,10 +83,10 @@ export class DefaultReporter {
         output.colors.gray('Failed projects:'),
         '',
         ...failedProjectNames.map(
-          project => `${output.colors.gray('-')} ${project}`
-        )
+          (project) => `${output.colors.gray('-')} ${project}`
+        ),
       ];
-      if (!affectedArgs.onlyFailed && !startedWithFailedProjects) {
+      if (!args.onlyFailed && !startedWithFailedProjects) {
         bodyLines.push('');
         bodyLines.push(
           `${output.colors.gray(
@@ -85,18 +95,8 @@ export class DefaultReporter {
         );
       }
       output.error({
-        title: `Running target "${affectedArgs.target}" failed`,
-        bodyLines
-      });
-    }
-
-    if (cachedProjectNames.length > 0) {
-      const bodyLines = cachedProjectNames.map(
-        project => `${output.colors.gray('-')} ${project}`
-      );
-      output.note({
-        title: `Nx read the output from cache instead of running the command for the following projects:`,
-        bodyLines
+        title: `Running target "${args.target}" failed`,
+        bodyLines,
       });
     }
   }

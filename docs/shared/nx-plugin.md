@@ -2,9 +2,8 @@
 
 Nx plugins are npm packages that contain schematics and builders to extend a Nx workspace. Schematics are blueprints to create new files from templates, and builders execute those files. These plugins also update the `nx.json` when generating new libs or apps.
 
-This guide will explain how to generate a new plugin, build on it, test it and publish it.
-
-> A list of plugins that is maintained by Nrwl is found in the [Nrwl/nx repo](https://github.com/nrwl/nx/tree/master/packages).
+> A list of plugins that is maintained by Nrwl is found in the [Nrwl/nx repo](https://github.com/nrwl/nx/tree/master/packages). \
+> A list of custom plugins created by the community is found in the [Community](/nx-community) section.
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/XYO689PAhow" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
@@ -187,7 +186,7 @@ When the plugin is generated, a test file is created in the `my-plugin-e2e` app.
 We'll go over a few parts of a test file below:
 
 ```typescript
-it('should create my-plugin', async done => {
+it('should create my-plugin', async (done) => {
   const plugin = uniq('my-plugin');
   ensureNxProject('@my-org/my-plugin', 'dist/libs/my-plugin');
   await runNxCommandAsync(`generate @my-org/my-plugin:myPlugin ${plugin}`);
@@ -253,7 +252,7 @@ After that, you can then install your plugin like any other npm package,
 
 ### Listing your Nx Plugin
 
-Nx provides a utility (`nx list`) that lists all approved plugins. To submit your plugin, please follow the steps below:
+Nx provides a utility (`nx list`) that lists both core and community plugins. To submit your plugin, please follow the steps below:
 
 - Fork the [Nx repo](https://github.com/nrwl/nx/fork) (if you haven't already)
 - Update the [`community/approved-plugins.json` file](https://github.com/nrwl/nx/blob/master/community/approved-plugins.json) with a new entry for your plugin that includes name, url and description

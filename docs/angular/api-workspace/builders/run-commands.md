@@ -28,7 +28,7 @@ Builder properties can be configured in angular.json when defining the builder, 
 ```
 
 ```bash
-ng run frontend:ls-project-root
+nx run frontend:ls-project-root
 ```
 
 ##### Chaining commands, interpolating args and setting the cwd
@@ -67,7 +67,7 @@ By setting the `cwd` option, each command will run in the `apps/frontend` folder
 We run the above with:
 
 ```bash
-ng run frontend:create-script --args="--name=example"
+nx run frontend:create-script --args="--name=example"
 ```
 
 Notice the `--args="--name=example"` syntax: we can send custom arguments that will be interpolated into our commands via `{args.name}`
@@ -89,7 +89,7 @@ Normally, `run-commands` considers the commands done when all of them have finis
 ```
 
 ```bash
-ng run frontend:finish-when-ready
+nx run frontend:finish-when-ready
 ```
 
 The above command will finish immediately, instead of waiting for 5 seconds.
@@ -144,7 +144,7 @@ nx affected --target=generate-docs
 
 Type: `string`
 
-Extra arguments. You can pass them as follows: ng run project:target --args='--wait=100'. You can then use {args.wait} syntax to interpolate them in the workspace config file. See example [above](#chaining-commands-interpolating-args-and-setting-the-cwd)
+Extra arguments. You can pass them as follows: nx run project:target --args='--wait=100'. You can then use {args.wait} syntax to interpolate them in the workspace config file. See example [above](#chaining-commands-interpolating-args-and-setting-the-cwd)
 
 ### color
 
@@ -156,7 +156,7 @@ Use colors when showing output of command
 
 ### commands
 
-Type: `array` of `object`
+Type: `object[]`
 
 #### command
 
@@ -178,7 +178,7 @@ You may specify a custom .env file path
 
 ### outputPath
 
-Type: `string`
+Type: `string | string[]`
 
 Tells Nx where the files will be created
 

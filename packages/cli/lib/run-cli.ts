@@ -5,7 +5,10 @@ import { findWorkspaceRoot } from './find-workspace-root';
 const workspace = findWorkspaceRoot(process.cwd());
 
 if (process.env.NX_TERMINAL_OUTPUT_PATH) {
-  setUpOutputWatching(process.env.NX_TERMINAL_CAPTURE_STDERR === 'true');
+  setUpOutputWatching(
+    process.env.NX_TERMINAL_CAPTURE_STDERR === 'true',
+    process.env.NX_FORWARD_OUTPUT === 'true'
+  );
 }
 requireCli();
 
@@ -40,11 +43,12 @@ function requireCli() {
  * And the cached output should be correct unless the CLI bypasses process.stdout or console.log and uses some
  * C-binary to write to stdout.
  */
-function setUpOutputWatching(captureStderr: boolean) {
+function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
   const stdoutWrite = process.stdout._write;
   const stderrWrite = process.stderr._write;
 
   let out = [];
+  let outWithErr = [];
 
   process.stdout._write = (
     chunk: any,
@@ -52,7 +56,12 @@ function setUpOutputWatching(captureStderr: boolean) {
     callback: Function
   ) => {
     out.push(chunk.toString());
-    stdoutWrite.apply(process.stdout, [chunk, encoding, callback]);
+    outWithErr.push(chunk.toString());
+    if (forwardOutput) {
+      stdoutWrite.apply(process.stdout, [chunk, encoding, callback]);
+    } else {
+      callback();
+    }
   };
 
   process.stderr._write = (
@@ -60,15 +69,27 @@ function setUpOutputWatching(captureStderr: boolean) {
     encoding: string,
     callback: Function
   ) => {
-    if (captureStderr) {
-      out.push(chunk.toString());
+    outWithErr.push(chunk.toString());
+    if (forwardOutput) {
+      stderrWrite.apply(process.stderr, [chunk, encoding, callback]);
+    } else {
+      callback();
     }
-    stderrWrite.apply(process.stderr, [chunk, encoding, callback]);
   };
 
-  process.on('exit', code => {
+  process.on('exit', (code) => {
     if (code === 0) {
-      fs.writeFileSync(process.env.NX_TERMINAL_OUTPUT_PATH, out.join(''));
+      fs.writeFileSync(
+        process.env.NX_TERMINAL_OUTPUT_PATH,
+        captureStderr ? outWithErr.join('') : out.join('')
+      );
+    } else {
+      if (!forwardOutput) {
+        fs.writeFileSync(
+          process.env.NX_TERMINAL_OUTPUT_PATH,
+          outWithErr.join('')
+        );
+      }
     }
   });
 }
