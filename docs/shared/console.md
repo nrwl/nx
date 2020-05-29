@@ -81,7 +81,7 @@ You can also construct the builder command options while staying entirely within
 
 ### Common Nx Commands
 
-You can also launch other common nx commands with the options listed out in the Command Palette.
+You can also launch other common Nx commands with the options listed out in the Command Palette.
 
 <iframe width="560" height="420" src="https://www.youtube.com/embed/v6Tso0lB6S4?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
