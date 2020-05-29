@@ -43,6 +43,12 @@ Type: `boolean`
 
 Use a separate bundle containing code used across multiple bundles.
 
+### crossOrigin
+
+Type: `string`
+
+The crossorigin attribute to use for generated javascript script tags. One of 'none' | 'anonymous' | 'use-credentials'
+
 ### deployUrl
 
 Type: `string`
