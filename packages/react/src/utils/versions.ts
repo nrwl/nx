@@ -1,26 +1,32 @@
 export const nxVersion = '*';
 
-export const reactVersion = '16.12.0';
-export const reactDomVersion = '16.12.0';
-export const typesReactVersion = '16.9.17';
-export const typesReactDomVersion = '16.9.4';
+export const reactVersion = '16.13.1';
+export const reactDomVersion = '16.13.1';
+export const typesReactVersion = '16.9.35';
+export const typesReactDomVersion = '16.9.8';
 
-export const styledComponentsVersion = '5.0.1';
-export const typesStyledComponentsVersion = '5.0.1';
+export const styledComponentsVersion = '5.1.0';
+export const typesStyledComponentsVersion = '5.1.0';
+
+export const reactIsVersion = '16.13.1';
+export const typesReactIsVersion = '16.7.1';
 
 export const emotionStyledVersion = '10.0.27';
 export const emotionCoreVersion = '10.0.27';
+export const emotionBabelPresetCssPropVersion = '10.0.27';
 
-export const reactRouterDomVersion = '5.1.2';
-export const typesReactRouterDomVersion = '5.1.3';
+export const reactRouterDomVersion = '5.2.0';
+export const typesReactRouterDomVersion = '5.1.5';
 
-export const testingLibraryReactVersion = '9.4.0';
+export const testingLibraryReactVersion = '10.0.4';
 
-export const reduxjsToolkitVersion = '1.3.2';
-export const reactReduxVersion = '7.1.3';
-export const typesReactReduxVersion = '7.1.5';
+export const reduxjsToolkitVersion = '1.3.6';
+export const reactReduxVersion = '7.2.0';
+export const typesReactReduxVersion = '7.1.9';
 
-export const eslintPluginImportVersion = '2.19.1';
+export const eslintPluginImportVersion = '2.20.2';
 export const eslintPluginJsxA11yVersion = '6.2.3';
-export const eslintPluginReactVersion = '7.17.0';
-export const eslintPluginReactHooksVersion = '2.3.0';
+export const eslintPluginReactVersion = '7.20.0';
+export const eslintPluginReactHooksVersion = '4.0.2';
+
+export const babelPluginStyledComponentsVersion = '1.10.7';

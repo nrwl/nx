@@ -21,13 +21,13 @@ import {
   getProjectConfig,
   insert,
 } from '@nrwl/workspace/src/utils/ast-utils';
-import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
 import {
-  typesReactRouterDomVersion,
   reactRouterDomVersion,
+  typesReactRouterDomVersion,
 } from '../../utils/versions';
 import { assertValidStyle } from '../../utils/assertion';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
+import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
 
 interface NormalizedSchema extends Schema {
   projectSourceRoot: Path;
@@ -42,7 +42,7 @@ export default function (schema: Schema): Rule {
     const options = await normalizeOptions(host, schema, context);
     return chain([
       createComponentFiles(options),
-      addStyledModuleDependencies(options),
+      addStyledModuleDependencies(options.styledModule),
       addExportsToBarrel(options),
       options.routing
         ? addDepsToPackageJson(
@@ -73,17 +73,6 @@ function createComponentFiles(options: NormalizedSchema): Rule {
   );
 }
 
-function addStyledModuleDependencies(options: NormalizedSchema): Rule {
-  const extraDependencies = CSS_IN_JS_DEPENDENCIES[options.styledModule];
-
-  return extraDependencies
-    ? addDepsToPackageJson(
-        extraDependencies.dependencies,
-        extraDependencies.devDependencies
-      )
-    : noop();
-}
-
 function addExportsToBarrel(options: NormalizedSchema): Rule {
   return async (host: Tree) => {
     const workspace = await getWorkspace(host);
@@ -95,6 +84,7 @@ function addExportsToBarrel(options: NormalizedSchema): Rule {
             options.projectSourceRoot,
             options.js ? 'index.js' : 'index.ts'
           );
+          console.log('index', indexFilePath);
           const buffer = host.read(indexFilePath);
           if (!!buffer) {
             const indexSource = buffer!.toString('utf-8');

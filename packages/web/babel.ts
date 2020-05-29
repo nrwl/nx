@@ -1,32 +1,29 @@
-/** @deprecated We no longer use this function and will be removed in Nx 10. */
-// TODO(jack): Remove this in Nx 10
-export function createBabelConfig(
-  context: string,
-  esm: boolean,
-  debug: boolean
-) {
+/*
+ * Babel preset to provide TypeScript support and module/nomodule for Nx.
+ */
+
+module.exports = function (api: any, options: {}) {
+  api.assertVersion(7);
+
   return {
-    compact: false,
     presets: [
+      // Support module/nomodule pattern.
       [
         require.resolve('@babel/preset-env'),
         {
-          // Allows browserlist file from project to be used.
-          configPath: context,
           // Allow importing core-js in entrypoint and use browserlist to select polyfills.
           // This is needed for differential loading as well.
           useBuiltIns: 'entry',
-          debug,
           corejs: 3,
+          // Do not transform modules to CJS
           modules: false,
+          targets: api.env('legacy') ? undefined : { esmodules: true },
+          bugfixes: true,
           // Exclude transforms that make all code slower
           exclude: ['transform-typeof-symbol'],
-          // Let babel-env figure which modern browsers to support.
-          // See: https://github.com/babel/babel/blob/master/packages/babel-preset-env/data/built-in-modules.json
-          targets: esm ? { esmodules: true } : undefined,
         },
       ],
-      [require.resolve('@babel/preset-typescript')],
+      require.resolve('@babel/preset-typescript'),
     ],
     plugins: [
       require.resolve('babel-plugin-macros'),
@@ -38,6 +35,8 @@ export function createBabelConfig(
       ],
     ],
     overrides: [
+      // Convert `const enum` to `enum`. The former cannot be supported by babel
+      // but at least we can get it to not error out.
       {
         test: /\.tsx?$/,
         plugins: [
@@ -51,4 +50,4 @@ export function createBabelConfig(
       },
     ],
   };
-}
+};

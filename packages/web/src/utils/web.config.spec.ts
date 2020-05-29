@@ -1,11 +1,12 @@
 import { getWebConfig as getWebPartial } from './web.config';
-jest.mock('tsconfig-paths-webpack-plugin');
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import { createConsoleLogger } from '@angular-devkit/core/node';
 import { Logger } from '@angular-devkit/core/src/logger';
 import * as ts from 'typescript';
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { join } from 'path';
+
+jest.mock('tsconfig-paths-webpack-plugin');
 
 describe('getWebConfig', () => {
   let input: WebBuildBuilderOptions;
@@ -15,6 +16,8 @@ describe('getWebConfig', () => {
   let mockCompilerOptions: any;
 
   beforeEach(() => {
+    root = join(__dirname, '../../../..');
+    sourceRoot = join(root, 'apps/app');
     input = {
       main: 'main.ts',
       index: 'index.html',
@@ -36,9 +39,9 @@ describe('getWebConfig', () => {
       outputPath: 'dist',
       tsConfig: 'tsconfig.json',
       fileReplacements: [],
+      root,
+      sourceRoot,
     };
-    root = join(__dirname, '../../../..');
-    sourceRoot = join(root, 'apps/app');
     logger = createConsoleLogger();
 
     mockCompilerOptions = {
