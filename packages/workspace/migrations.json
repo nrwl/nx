@@ -74,6 +74,11 @@
       "version": "9.3.0-beta.1",
       "description": "Update prettier to v2",
       "factory": "./src/migrations/update-9-3-0/update-9-3-0"
+    },
+    "update-eslint-config": {
+      "version": "9.4.0-beta.1",
+      "description": "Remove config builder option when using eslint to enable automatic detection",
+      "factory": "./src/migrations/update-9-4-0/update-eslint-config"
     }
   },
   "packageJsonUpdates": {

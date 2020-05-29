@@ -50,10 +50,10 @@ describe('eslint-util', () => {
     ).catch(() => {});
     expect(CLIEngine).toHaveBeenCalledWith({
       configFile: './.eslintrc',
-      useEslintrc: false,
       fix: true,
       cache: true,
       cacheLocation: '/root/cache',
+      useEslintrc: true,
     });
   });
   it('should not lint the same files twice', async () => {
