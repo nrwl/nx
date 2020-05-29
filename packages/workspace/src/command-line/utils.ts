@@ -86,10 +86,12 @@ export function splitArgsIntoNxArgsAndOverrides(
     }
   });
 
-  if (!nxArgs.projects) {
-    nxArgs.projects = [];
-  } else {
-    nxArgs.projects = args.projects.split(',').map((p: string) => p.trim());
+  if (mode === 'run-many') {
+    if (!nxArgs.projects) {
+      nxArgs.projects = [];
+    } else {
+      nxArgs.projects = args.projects.split(',').map((p: string) => p.trim());
+    }
   }
 
   if (nxArgs.prod) {
@@ -97,19 +99,21 @@ export function splitArgsIntoNxArgsAndOverrides(
     nxArgs.configuration = 'production';
   }
 
-  if (
-    !nxArgs.files &&
-    !nxArgs.uncommitted &&
-    !nxArgs.untracked &&
-    !nxArgs.base &&
-    !nxArgs.head &&
-    !nxArgs.all &&
-    args._.length >= 2
-  ) {
-    nxArgs.base = args._[0];
-    nxArgs.head = args._[1];
-  } else if (!nxArgs.base) {
-    nxArgs.base = 'master';
+  if (mode === 'affected') {
+    if (
+      !nxArgs.files &&
+      !nxArgs.uncommitted &&
+      !nxArgs.untracked &&
+      !nxArgs.base &&
+      !nxArgs.head &&
+      !nxArgs.all &&
+      args._.length >= 2
+    ) {
+      nxArgs.base = args._[0];
+      nxArgs.head = args._[1];
+    } else if (!nxArgs.base) {
+      nxArgs.base = 'master';
+    }
   }
 
   if (!nxArgs.skipNxCache) {
