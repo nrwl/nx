@@ -17,7 +17,6 @@ jobs:
           stale-issue-label: "status: stale"
           operations-per-run: 300
           remove-stale-when-updated: true
-          debug-only: true
           only-labels: "blocked: more info needed"
           stale-issue-message: |
             This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
@@ -34,7 +33,6 @@ jobs:
           stale-issue-label: "status: stale"
           operations-per-run: 300
           remove-stale-when-updated: true
-          debug-only: true
           only-labels: "blocked: needs rebased"
           stale-issue-message: |
             This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
@@ -51,7 +49,6 @@ jobs:
           stale-issue-label: "status: stale"
           operations-per-run: 300
           remove-stale-when-updated: true
-          debug-only: true
           only-labels: "blocked: repro needed,blocked: retry with latest"
           stale-issue-message: |
             This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
@@ -68,7 +65,6 @@ jobs:
           stale-issue-label: "status: stale"
           operations-per-run: 300
           remove-stale-when-updated: true
-          debug-only: true
           only-labels: "blocked: retry with latest"
           stale-issue-message: |
             This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
@@ -86,7 +82,6 @@ jobs:
           stale-issue-label: "status: stale"
           operations-per-run: 300
           remove-stale-when-updated: true
-          debug-only: true
           only-labels: "type: bug"
           stale-issue-message: |
             This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
@@ -103,7 +98,6 @@ jobs:
           stale-issue-label: "status: stale"
           operations-per-run: 300
           remove-stale-when-updated: true
-          debug-only: true
           only-labels: "type: cleanup"
           stale-issue-message: |
             This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
@@ -120,7 +114,6 @@ jobs:
           stale-issue-label: "status: stale"
           operations-per-run: 300
           remove-stale-when-updated: true
-          debug-only: true
           only-labels: "type: docs"
           stale-issue-message: |
             This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
@@ -137,7 +130,6 @@ jobs:
           stale-issue-label: "status: stale"
           operations-per-run: 300
           remove-stale-when-updated: true
-          debug-only: true
           only-labels: "type: enhancement"
           stale-issue-message: |
             This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
@@ -154,7 +146,6 @@ jobs:
           stale-issue-label: "status: stale"
           operations-per-run: 300
           remove-stale-when-updated: true
-          debug-only: true
           only-labels: "type: feature"
           stale-issue-message: |
             This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
@@ -171,7 +162,6 @@ jobs:
           stale-issue-label: "status: stale"
           operations-per-run: 300
           remove-stale-when-updated: true
-          debug-only: true
           only-labels: "type: question / discussion"
           stale-issue-message: |
             This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
