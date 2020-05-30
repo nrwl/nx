@@ -139,13 +139,20 @@ export class TaskOrchestrator {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
           env,
         });
-        p.on('close', (code) => {
+        p.on('exit', (code) => {
           // we didn't print any output as we were running the command
-          // print all the collected output
+          // print all the collected output|
           if (!forwardOutput) {
             output.logCommand(commandLine);
-            process.stdout.write(fs.readFileSync(outputPath));
+            try {
+              process.stdout.write(fs.readFileSync(outputPath));
+            } catch (e) {
+              console.error(
+                `Nx could not find process's output. Run the command without --parallel.`
+              );
+            }
           }
+          // we don't have to worry about this statement. code === 0 guarantees the file is there.
           if (outputPath && code === 0) {
             this.cache.put(task, outputPath, taskOutputs).then(() => {
               this.options.lifeCycle.endTask(task, code);
