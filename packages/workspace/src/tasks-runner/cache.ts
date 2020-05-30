@@ -13,10 +13,10 @@ class CacheConfig {
   constructor(private readonly options: DefaultTasksRunnerOptions) {}
 
   isCacheableTask(task: Task) {
+    const cacheable =
+      this.options.cacheableOperations || this.options.cacheableTargets;
     return (
-      this.options.cacheableOperations &&
-      this.options.cacheableOperations.indexOf(task.target.target) > -1 &&
-      !this.longRunningTask(task)
+      cacheable.indexOf(task.target.target) > -1 && !this.longRunningTask(task)
     );
   }
 
