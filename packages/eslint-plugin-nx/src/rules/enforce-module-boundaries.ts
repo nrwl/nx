@@ -153,7 +153,8 @@ export default createESLintRule<Options, MessageIds>({
           projectGraph,
           targetProjectLocator,
           sourceFilePath,
-          imp
+          imp,
+          npmScope
         );
 
         // If source or target are not part of an nx workspace, return.

@@ -144,7 +144,8 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       this.projectGraph,
       this.targetProjectLocator,
       filePath,
-      imp
+      imp,
+      this.npmScope
     );
 
     // If source or target are not part of an nx workspace, return.
