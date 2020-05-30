@@ -29,7 +29,9 @@ export interface DefaultTasksRunnerOptions {
   parallel?: boolean;
   maxParallel?: number;
   cacheableOperations?: string[];
+  cacheableTargets?: string[];
   runtimeCacheInputs?: string[];
+  strictlyOrderedTargets?: string[];
   cacheDirectory?: string;
   remoteCache?: RemoteCache;
   lifeCycle?: LifeCycle;
@@ -78,6 +80,7 @@ async function runAllTasks(
   }
 ): Promise<Array<{ task: Task; type: any; success: boolean }>> {
   const stages = new TaskOrderer(
+    options,
     context.target,
     context.projectGraph
   ).splitTasksIntoStages(tasks);

@@ -3,7 +3,7 @@ import { DependencyType } from '../core/project-graph';
 
 describe('TaskStages', () => {
   it('should return empty for an empty array', () => {
-    const stages = new TaskOrderer('build', {
+    const stages = new TaskOrderer({} as any, 'build', {
       nodes: {},
       dependencies: {},
     }).splitTasksIntoStages([]);
@@ -11,7 +11,7 @@ describe('TaskStages', () => {
   });
 
   it('should split tasks into stages based on their dependencies', () => {
-    const stages = new TaskOrderer('build', {
+    const stages = new TaskOrderer({} as any, 'build', {
       nodes: {},
       dependencies: {
         child1: [],
@@ -73,8 +73,84 @@ describe('TaskStages', () => {
     ]);
   });
 
+  it('should support custom targets that require strict ordering', () => {
+    const stages = new TaskOrderer(
+      { strictlyOrderedTargets: ['custom'] } as any,
+      'custom',
+      {
+        nodes: {},
+        dependencies: {
+          child1: [],
+          parent: [
+            {
+              source: 'parent',
+              target: 'child1',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      }
+    ).splitTasksIntoStages([
+      {
+        target: { project: 'parent' },
+      },
+      {
+        target: { project: 'child1' },
+      },
+    ] as any);
+
+    expect(stages).toEqual([
+      [
+        {
+          target: { project: 'child1' },
+        },
+      ],
+      [
+        {
+          target: { project: 'parent' },
+        },
+      ],
+    ]);
+
+    const noStages = new TaskOrderer(
+      { strictlyOrderedTargets: ['custom'] } as any,
+      'some-other-custom',
+      {
+        nodes: {},
+        dependencies: {
+          child1: [],
+          parent: [
+            {
+              source: 'parent',
+              target: 'child1',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      }
+    ).splitTasksIntoStages([
+      {
+        target: { project: 'parent' },
+      },
+      {
+        target: { project: 'child1' },
+      },
+    ] as any);
+
+    expect(noStages).toEqual([
+      [
+        {
+          target: { project: 'parent' },
+        },
+        {
+          target: { project: 'child1' },
+        },
+      ],
+    ]);
+  });
+
   it('should split tasks into stages based on their dependencies when there are unrelated packages', () => {
-    const stages = new TaskOrderer('build', {
+    const stages = new TaskOrderer({} as any, 'build', {
       nodes: {},
       dependencies: {
         app1: [

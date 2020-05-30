@@ -1,18 +1,23 @@
 import { ProjectGraph } from '../core/project-graph';
 import { Task } from './tasks-runner';
+import { DefaultTasksRunnerOptions } from '@nrwl/workspace/src/tasks-runner/default-tasks-runner';
 
 export class TaskOrderer {
   constructor(
+    private readonly options: DefaultTasksRunnerOptions,
     private readonly target: string,
     private readonly projectGraph: ProjectGraph
   ) {}
 
   splitTasksIntoStages(tasks: Task[]) {
-    if (this.target !== 'build') return [tasks];
+    if (
+      (this.options.strictlyOrderedTargets || ['build']).indexOf(
+        this.target
+      ) === -1
+    )
+      return [tasks];
     if (tasks.length === 0) return [];
     const res = [];
-
-    // console.log(this.topologicallySortTasks(tasks))
     this.topologicallySortTasks(tasks).forEach((t) => {
       const stageWithNoDeps = res.find(
         (tasksInStage) => !this.taskDependsOnDeps(t, tasksInStage)
