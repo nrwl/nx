@@ -7,7 +7,7 @@ import { findWorkspaceRoot } from '../lib/find-workspace-root';
 import { initGlobal } from '../lib/init-global';
 import { initLocal } from '../lib/init-local';
 
-const workspace = findWorkspaceRoot(__dirname);
+const workspace = findWorkspaceRoot(process.cwd());
 
 if (workspace) {
   initLocal(workspace);
