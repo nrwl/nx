@@ -19,6 +19,14 @@ Type: `string`
 
 The full path for the TypeScript configuration file, relative to the current workspace.
 
+### updateBuildableProjectDepsInPackageJson
+
+Default: `true`
+
+Type: `boolean`
+
+Update buildable project dependencies in package.json
+
 ### watch
 
 Default: `false`

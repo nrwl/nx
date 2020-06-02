@@ -33,6 +33,7 @@ export interface NodePackageBuilderOptions extends JsonObject {
   sourceMap: boolean;
   assets: Array<AssetGlob | string>;
   packageJson: string;
+  updateBuildableProjectDepsInPackageJson?: boolean;
 }
 
 interface NormalizedBuilderOptions extends NodePackageBuilderOptions {
@@ -78,7 +79,10 @@ export function runNodePackageBuilder(
         ).pipe(
           tap(() => {
             updatePackageJson(normalizedOptions, context);
-            if (dependencies.length > 0) {
+            if (
+              dependencies.length > 0 &&
+              options.updateBuildableProjectDepsInPackageJson
+            ) {
               updateBuildableProjectPackageJsonDependencies(
                 context,
                 target,
@@ -86,9 +90,7 @@ export function runNodePackageBuilder(
               );
             }
           }),
-          switchMap(() => {
-            return copyAssetFiles(normalizedOptions, context);
-          })
+          switchMap(() => copyAssetFiles(normalizedOptions, context))
         );
       } else {
         return of({ success: false });

@@ -87,6 +87,14 @@ Type: `string`
 
 The name of your module in UMD format. Defaulted to your project name.
 
+### updateBuildableProjectDepsInPackageJson
+
+Default: `true`
+
+Type: `boolean`
+
+Update buildable project dependencies in package.json
+
 ### watch
 
 Default: `false`

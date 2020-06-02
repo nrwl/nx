@@ -30,6 +30,8 @@ export interface BuildAngularLibraryBuilderOptions {
    * Run build when files change.
    */
   watch?: boolean;
+
+  updateBuildableProjectDepsInPackageJson?: boolean;
 }
 
 async function initializeNgPackagr(
@@ -68,7 +70,10 @@ export function run(
             options.watch ? packager.watch() : packager.build()
           ),
           tap(() => {
-            if (dependencies.length > 0) {
+            if (
+              dependencies.length > 0 &&
+              options.updateBuildableProjectDepsInPackageJson
+            ) {
               updateBuildableProjectPackageJsonDependencies(
                 context,
                 target,

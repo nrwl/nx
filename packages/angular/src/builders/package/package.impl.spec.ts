@@ -171,7 +171,10 @@ describe('AngularLibraryWebBuildBuilder', () => {
       });
 
       // act
-      const result = await run(testOptions, context).toPromise();
+      const result = await run(
+        { ...testOptions, updateBuildableProjectDepsInPackageJson: true },
+        context
+      ).toPromise();
       // assert
       expect(result.success).toBeTruthy();
       expect(fileUtils.writeJsonFile).toHaveBeenCalledWith(
