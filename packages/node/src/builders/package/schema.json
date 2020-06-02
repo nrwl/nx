@@ -25,6 +25,11 @@
       "description": "Output sourcemaps.",
       "default": true
     },
+    "updateBuildableProjectDepsInPackageJson": {
+      "type": "boolean",
+      "description": "Update buildable project dependencies in package.json",
+      "default": true
+    },
     "assets": {
       "type": "array",
       "description": "List of static library assets.",

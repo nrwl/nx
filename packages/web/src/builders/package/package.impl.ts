@@ -309,7 +309,10 @@ function updatePackageJson(
   packageJson.typings = `./${typingsFile}`;
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
 
-  if (dependencies.length > 0) {
+  if (
+    dependencies.length > 0 &&
+    options.updateBuildableProjectDepsInPackageJson
+  ) {
     updateBuildableProjectPackageJsonDependencies(
       context,
       target,

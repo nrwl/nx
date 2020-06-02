@@ -57,6 +57,7 @@ export interface PackageBuilderOptions {
   babelConfig?: string;
   watch?: boolean;
   assets?: any[];
+  updateBuildableProjectDepsInPackageJson?: boolean;
 }
 
 export interface AssetGlobPattern extends JsonObject {

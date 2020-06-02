@@ -45,6 +45,14 @@ Type: `string`
 
 The name of the Typescript configuration file.
 
+### updateBuildableProjectDepsInPackageJson
+
+Default: `true`
+
+Type: `boolean`
+
+Update buildable project dependencies in package.json
+
 ### watch
 
 Default: `false`

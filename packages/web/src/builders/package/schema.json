@@ -31,6 +31,11 @@
       "description": "Enable re-building when files change.",
       "default": false
     },
+    "updateBuildableProjectDepsInPackageJson": {
+      "type": "boolean",
+      "description": "Update buildable project dependencies in package.json",
+      "default": true
+    },
     "rollupConfig": {
       "type": "string",
       "description": "Path to a function which takes a rollup config and returns an updated rollup config"

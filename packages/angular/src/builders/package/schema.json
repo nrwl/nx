@@ -16,6 +16,11 @@
       "type": "boolean",
       "description": "Run build when files change.",
       "default": false
+    },
+    "updateBuildableProjectDepsInPackageJson": {
+      "type": "boolean",
+      "description": "Update buildable project dependencies in package.json",
+      "default": true
     }
   },
   "additionalProperties": false,

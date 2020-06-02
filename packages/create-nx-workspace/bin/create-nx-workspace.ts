@@ -417,13 +417,16 @@ function createApp(
   console.log(
     `new ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg} --collection=@nrwl/workspace`
   );
+  const executablePath = path.join(tmpDir, 'node_modules', '.bin', cli.command);
+  const collectionJsonPath = path.join(
+    tmpDir,
+    'node_modules',
+    '@nrwl',
+    'workspace',
+    'collection.json'
+  );
   execSync(
-    `"${path.join(
-      tmpDir,
-      'node_modules',
-      '.bin',
-      cli.command
-    )}" new ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg} --collection=@nrwl/workspace`,
+    `"${executablePath}" new ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg} --collection=${collectionJsonPath}`,
     {
       stdio: [0, 1, 2],
     }
