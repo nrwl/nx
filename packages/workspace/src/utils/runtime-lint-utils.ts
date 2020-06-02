@@ -138,13 +138,6 @@ export function findProjectUsingImport(
   imp: string,
   npmScope: string
 ) {
-  /**
-   *  Npm scope shouldn't be used in linting anymore, BUT, to improve backward
-   *  compatibility, we fallback to checking the scope.
-   *
-   *  This happens in cases where someone has the dist output in their tsconfigs
-   *  and typescript will find the dist before the src.
-   */
   const target = targetProjectLocator.findProjectWithImport(
     imp,
     filePath,
