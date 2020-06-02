@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "SchematicsRunCommands",
+  "title": "Create a custom target to run any command",
+  "type": "object",
+  "examples": [
+    {
+      "command": "g @nrwl/workspace:run-commands printhello --project my-feature-lib --command 'echo hello'",
+      "description": "Add the printhello target to my-feature-lib"
+    }
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Target name",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use to invoke the command?"
+    },
+    "project": {
+      "description": "Project name",
+      "type": "string",
+      "x-prompt": "What project does the target belong to?"
+    },
+    "command": {
+      "description": "Command to run",
+      "type": "string",
+      "x-prompt": "What command would you like to run?"
+    }
+  },
+  "required": ["name", "command", "project"]
+}

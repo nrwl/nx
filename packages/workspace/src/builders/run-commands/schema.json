@@ -2,21 +2,31 @@
   "title": "Run Commands",
   "description": "Run any custom commands with Nx",
   "type": "object",
-
   "properties": {
     "commands": {
       "type": "array",
       "items": {
-        "type": "object",
-        "properties": {
-          "command": {
-            "type": "string",
-            "description": "Command to run in child process"
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "command": {
+                "type": "string",
+                "description": "Command to run in child process"
+              }
+            },
+            "additionalProperties": false,
+            "required": ["command"]
+          },
+          {
+            "type": "string"
           }
-        },
-        "additionalProperties": false,
-        "required": ["command"]
+        ]
       }
+    },
+    "command": {
+      "type": "string",
+      "description": "Command to run in child process"
     },
     "parallel": {
       "type": "boolean",
@@ -59,6 +69,6 @@
       "description": "Current working directory of the commands."
     }
   },
-  "required": ["commands"],
+  "required": [],
   "examplesFile": "../../../docs/run-commands-examples.md"
 }

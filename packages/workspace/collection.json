@@ -62,6 +62,13 @@
       "factory": "./src/schematics/workspace-schematic/workspace-schematic",
       "schema": "./src/schematics/workspace-schematic/schema.json",
       "description": "Generates a workspace schematic"
+    },
+
+    "run-commands": {
+      "factory": "./src/schematics/run-commands/run-commands",
+      "schema": "./src/schematics/run-commands/schema.json",
+      "aliases": ["run-command", "target"],
+      "description": "Generates a target to run any command in the terminal"
     }
   }
 }

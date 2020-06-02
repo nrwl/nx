@@ -1,10 +1,6 @@
-import {
-  BuilderContext,
-  BuilderOutput,
-  createBuilder,
-} from '@angular-devkit/architect';
+import { BuilderOutput, createBuilder } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
-import { exec } from 'child_process';
+import { exec, execSync } from 'child_process';
 import { Observable } from 'rxjs';
 import { TEN_MEGABYTES } from '@nrwl/workspace/src/core/file-utils';
 
@@ -22,68 +18,68 @@ function loadEnvVars(path?: string) {
 }
 
 export interface RunCommandsBuilderOptions extends JsonObject {
-  commands: { command: string }[];
+  command: string;
+  commands: ({ command: string } | string)[];
   color?: boolean;
   parallel?: boolean;
   readyWhen?: string;
   cwd?: string;
   args?: string;
   envFile?: string;
-  parsedArgs?: { [key: string]: string };
+  outputPath?: string;
+}
+
+const propKeys = [
+  'command',
+  'commands',
+  'color',
+  'parallel',
+  'readyWhen',
+  'cwd',
+  'args',
+  'envFile',
+  'outputPath',
+];
+
+export interface NormalizedRunCommandsBuilderOptions
+  extends RunCommandsBuilderOptions {
+  commands: { command: string }[];
+  parsedArgs: { [k: string]: any };
 }
 
 export default createBuilder<RunCommandsBuilderOptions>(run);
 
-function run(
-  options: RunCommandsBuilderOptions,
-  context: BuilderContext
-): Observable<BuilderOutput> {
+function run(options: RunCommandsBuilderOptions): Observable<BuilderOutput> {
   loadEnvVars(options.envFile);
-  options.parsedArgs = parseArgs(options.args);
-  return Observable.create(async (observer) => {
-    if (!options.commands) {
-      observer.next({
-        success: false,
-        error:
-          'ERROR: Bad builder config for @nrwl/run-command - "commands" option is required',
-      });
-      return;
-    }
+  const normalized = normalizeOptions(options);
 
+  return Observable.create(async (observer) => {
     if (options.readyWhen && !options.parallel) {
       observer.error(
-        'ERROR: Bad builder config for @nrwl/run-command - "readyWhen" can only be used when parallel=true'
-      );
-      return;
-    }
-
-    if (options.commands.some((c) => !c.command)) {
-      observer.error(
-        'ERROR: Bad builder config for @nrwl/run-command - "command" option is required'
+        'ERROR: Bad builder config for @nrwl/run-commands - "readyWhen" can only be used when parallel=true'
       );
       return;
     }
 
     try {
       const success = options.parallel
-        ? await runInParallel(options)
-        : await runSerially(options, context);
+        ? await runInParallel(normalized)
+        : await runSerially(normalized);
       observer.next({ success });
       observer.complete();
     } catch (e) {
       observer.error(
-        `ERROR: Something went wrong in @nrwl/run-command - ${e.message}`
+        `ERROR: Something went wrong in @nrwl/run-commands - ${e.message}`
       );
     }
   });
 }
 
-async function runInParallel(options: RunCommandsBuilderOptions) {
+async function runInParallel(options: NormalizedRunCommandsBuilderOptions) {
   const procs = options.commands.map((c) =>
     createProcess(
       c.command,
       options.readyWhen,
-      options.parsedArgs,
       options.color,
       options.cwd
     ).then((result) => ({
@@ -96,7 +92,7 @@ async function runInParallel(options: RunCommandsBuilderOptions) {
     const r = await Promise.race(procs);
     if (!r.result) {
       process.stderr.write(
-        `Warning: @nrwl/run-command command "${r.command}" exited with non-zero status code`
+        `Warning: @nrwl/run-commands command "${r.command}" exited with non-zero status code`
       );
       return false;
     } else {
@@ -108,7 +104,7 @@ async function runInParallel(options: RunCommandsBuilderOptions) {
     if (failed.length > 0) {
       failed.forEach((f) => {
         process.stderr.write(
-          `Warning: @nrwl/run-command command "${f.command}" exited with non-zero status code`
+          `Warning: @nrwl/run-commands command "${f.command}" exited with non-zero status code`
         );
       });
       return false;
@@ -118,49 +114,45 @@ async function runInParallel(options: RunCommandsBuilderOptions) {
   }
 }
 
-async function runSerially(
-  options: RunCommandsBuilderOptions,
-  context: BuilderContext
-) {
-  const failedCommand = await options.commands.reduce<Promise<string | null>>(
-    async (m, c) => {
-      if ((await m) === null) {
-        const success = await createProcess(
-          c.command,
-          options.readyWhen,
-          options.parsedArgs,
-          options.color,
-          options.cwd
-        );
-        return !success ? c.command : null;
-      } else {
-        return m;
-      }
-    },
-    Promise.resolve(null)
-  );
+function normalizeOptions(
+  options: RunCommandsBuilderOptions
+): NormalizedRunCommandsBuilderOptions {
+  options.parsedArgs = parseArgs(options);
 
-  if (failedCommand) {
-    context.logger.warn(
-      `Warning: @nrwl/run-command command "${failedCommand}" exited with non-zero status code`
+  if (options.command) {
+    options.commands = [{ command: options.command }];
+    options.parallel = false;
+  } else {
+    options.commands = options.commands.map((c) =>
+      typeof c === 'string' ? { command: c } : c
     );
-    return false;
   }
+  (options as NormalizedRunCommandsBuilderOptions).commands.forEach((c) => {
+    c.command = transformCommand(
+      c.command,
+      (options as NormalizedRunCommandsBuilderOptions).parsedArgs
+    );
+  });
+  return options as any;
+}
+
+async function runSerially(options: NormalizedRunCommandsBuilderOptions) {
+  options.commands.forEach((c) => {
+    createSyncProcess(c.command, options.color, options.cwd);
+  });
   return true;
 }
 
 function createProcess(
   command: string,
   readyWhen: string,
-  parsedArgs: { [key: string]: string },
   color: boolean,
   cwd: string
 ): Promise<boolean> {
-  command = transformCommand(command, parsedArgs);
   return new Promise((res) => {
     const childProcess = exec(command, {
       maxBuffer: TEN_MEGABYTES,
-      env: { ...process.env, FORCE_COLOR: `${color}` },
+      env: processEnv(color),
       cwd,
     });
     /**
@@ -187,14 +179,43 @@ function createProcess(
   });
 }
 
-function transformCommand(command: string, args: any) {
-  const regex = /{args\.([^}]+)}/g;
-  return command.replace(regex, (_, group: string) => args[group]);
+function createSyncProcess(command: string, color: boolean, cwd: string) {
+  execSync(command, {
+    env: processEnv(color),
+    stdio: [0, 1, 2],
+    cwd,
+  });
 }
 
-function parseArgs(args: string) {
+function processEnv(color: boolean) {
+  const env = { ...process.env };
+  if (color) {
+    env.FORCE_COLOR = `${color}`;
+  }
+  return env;
+}
+
+function transformCommand(command: string, args: { [key: string]: string }) {
+  if (command.indexOf('{args.') > -1) {
+    const regex = /{args\.([^}]+)}/g;
+    return command.replace(regex, (_, group: string) => args[group]);
+  } else if (Object.keys(args).length > 0) {
+    const stringifiedArgs = Object.keys(args)
+      .map((a) => `--${a}=${args[a]}`)
+      .join(' ');
+    return `${command} ${stringifiedArgs}`;
+  } else {
+    return command;
+  }
+}
+
+function parseArgs(options: RunCommandsBuilderOptions) {
+  const args = options.args;
   if (!args) {
-    return {};
+    const unknownOptionsTreatedAsArgs = Object.keys(options)
+      .filter((p) => propKeys.indexOf(p) === -1)
+      .reduce((m, c) => ((m[c] = options[c]), m), {});
+    return unknownOptionsTreatedAsArgs;
   }
   return args
     .split(' ')
