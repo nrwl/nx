@@ -31,8 +31,8 @@
     "@nrwl/workspace": "*"
   },
   "dependencies": {
-    "@babel/core": "^7.8.4",
-    "@babel/preset-react": "^7.8.3",
+    "@babel/core": "7.8.7",
+    "@babel/preset-react": "7.8.3",
     "@nrwl/cypress": "*",
     "@nrwl/jest": "*",
     "@nrwl/web": "*",
