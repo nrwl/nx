@@ -27,7 +27,7 @@ forEachCli(() => {
         `generate @nrwl/angular:app ${myapp} --directory=myDir --no-interactive`
       );
       runCLI(
-        `generate @nrwl/angular:lib ${mylib} --directory=myDir --no-interactive`
+        `generate @nrwl/angular:lib ${mylib} --directory=myDir --add-module-spec --no-interactive`
       );
 
       updateFile(

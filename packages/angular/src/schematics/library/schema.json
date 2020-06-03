@@ -39,6 +39,11 @@
       "type": "boolean",
       "default": false
     },
+    "addModuleSpec": {
+      "description": "Add a module spec file.",
+      "type": "boolean",
+      "default": false
+    },
     "skipPackageJson": {
       "type": "boolean",
       "default": false,

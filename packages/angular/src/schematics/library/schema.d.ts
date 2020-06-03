@@ -4,6 +4,7 @@ export interface Schema {
   name: string;
   skipFormat: boolean;
   simpleModuleName: boolean;
+  addModuleSpec?: boolean;
   directory?: string;
   sourceDir?: string;
   publishable: boolean;
