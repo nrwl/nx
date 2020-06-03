@@ -63,7 +63,12 @@ export async function lint(
 
     // Give some breathing space to other promises that might be waiting.
     await Promise.resolve();
-    lintReports.push(cli.executeOnFiles([file]));
+    const report = cli.executeOnFiles([file]);
+    if (options.quiet) {
+      report.results = CLIEngine.getErrorResults(report.results);
+      report.errorCount = 0;
+    }
+    lintReports.push(report);
     lintedFiles.add(file);
   }
 

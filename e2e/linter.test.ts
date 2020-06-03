@@ -143,4 +143,28 @@ forEachCli('nx', () => {
       );
     }, 1000000);
   });
+
+  it('supports warning options', () => {
+    newProject();
+    const myapp = uniq('myapp');
+
+    runCLI(`generate @nrwl/react:app ${myapp}`);
+
+    const eslintrc = readJson(`apps/${myapp}/.eslintrc`);
+    eslintrc.rules['no-console'] = 'warn';
+    updateFile(`apps/${myapp}/.eslintrc`, JSON.stringify(eslintrc, null, 2));
+    updateFile(
+      `apps/${myapp}/src/main.ts`,
+      `console.log('once'); console.log('twice');`
+    );
+
+    let stdout = runCLI(`lint ${myapp}`, { silenceError: true });
+    expect(stdout).toMatch(/warnings found/);
+    stdout = runCLI(`lint ${myapp} --maxWarning=1`, { silenceError: true });
+    expect(stdout).toMatch(/warnings found/);
+    stdout = runCLI(`lint ${myapp} --maxWarning=3`, { silenceError: true });
+    expect(stdout).not.toMatch(/warnings found/);
+    stdout = runCLI(`lint ${myapp} --quiet`, { silenceError: true });
+    expect(stdout).not.toMatch(/warnings found/);
+  }, 1000000);
 });
