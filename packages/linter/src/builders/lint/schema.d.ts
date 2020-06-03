@@ -12,6 +12,7 @@ export interface Schema {
   outputFile: string;
   cacheLocation: string;
   maxWarnings: number;
+  quiet: boolean;
 }
 
 type Formatter =

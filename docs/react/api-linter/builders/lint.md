@@ -87,6 +87,14 @@ Type: `string`
 
 File to write report to.
 
+### quiet
+
+Default: `false`
+
+Type: `boolean`
+
+Report errors only - default: false
+
 ### silent
 
 Default: `false`
