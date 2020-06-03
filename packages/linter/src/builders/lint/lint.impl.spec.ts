@@ -206,12 +206,14 @@ describe('Linter Builder', () => {
         linter: 'eslint',
         outputFile: undefined,
         silent: false,
+        quiet: false,
         tsConfig: undefined,
         maxWarnings: -1,
       },
       expect.any(Set)
     );
   });
+
   it('should throw if no reports generated', async () => {
     mockReports = [];
     setupMocks();
