@@ -1,11 +1,10 @@
 import {
+  ensureProject,
+  forEachCli,
+  patchKarmaToWorkOnWSL,
   runCLI,
   runCLIAsync,
-  ensureProject,
   uniq,
-  forEachCli,
-  supportUi,
-  patchKarmaToWorkOnWSL,
 } from './utils';
 
 forEachCli(() => {
@@ -21,7 +20,7 @@ forEachCli(() => {
 
       const mylib = uniq('mylib');
       runCLI(
-        `generate @nrwl/angular:lib ${mylib} --unit-test-runner karma --no-interactive`
+        `generate @nrwl/angular:lib ${mylib} --unit-test-runner karma --add-module-spec --no-interactive`
       );
       patchKarmaToWorkOnWSL();
 

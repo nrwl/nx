@@ -1,12 +1,12 @@
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
-  runCLIAsync,
   ensureProject,
-  uniq,
-  runCLI,
   forEachCli,
+  runCLI,
+  runCLIAsync,
+  uniq,
   updateFile,
 } from './utils';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 forEachCli(() => {
   describe('Jest', () => {
@@ -15,7 +15,9 @@ forEachCli(() => {
       const mylib = uniq('mylib');
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp} --unit-test-runner jest`);
-      runCLI(`generate @nrwl/angular:lib ${mylib} --unit-test-runner jest`);
+      runCLI(
+        `generate @nrwl/angular:lib ${mylib} --unit-test-runner jest --add-module-spec`
+      );
 
       await Promise.all([
         runCLIAsync(`generate @nrwl/angular:service test --project ${myapp}`),

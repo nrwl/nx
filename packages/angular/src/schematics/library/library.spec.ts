@@ -1,10 +1,10 @@
-import { Tree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
-import { createApp, runSchematic } from '../../utils/testing';
-import * as stripJsonComments from 'strip-json-comments';
-import { NxJson, readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
-import { UnitTestTree } from '@angular-devkit/schematics/testing';
 import { stripIndent } from '@angular-devkit/core/src/utils/literals';
+import { Tree } from '@angular-devkit/schematics';
+import { UnitTestTree } from '@angular-devkit/schematics/testing';
+import { NxJson, readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
+import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
+import * as stripJsonComments from 'strip-json-comments';
+import { createApp, runSchematic } from '../../utils/testing';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -953,6 +953,9 @@ describe('lib', () => {
       expect(resultTree.exists('libs/my-lib/src/test-setup.ts')).toBeFalsy();
       expect(resultTree.exists('libs/my-lib/tsconfig.spec.json')).toBeTruthy();
       expect(resultTree.exists('libs/my-lib/karma.conf.js')).toBeTruthy();
+      expect(
+        resultTree.exists('libs/my-lib/src/lib/my-lib.module.spec.ts')
+      ).toBeFalsy();
       expect(resultTree.exists('karma.conf.js')).toBeTruthy();
       const workspaceJson = readJsonInTree(resultTree, 'workspace.json');
       expect(workspaceJson.projects['my-lib'].architect.test.builder).toEqual(
@@ -967,6 +970,18 @@ describe('lib', () => {
       expect(
         workspaceJson.projects['my-lib'].architect.lint.options.exclude
       ).toEqual(['**/node_modules/**', '!libs/my-lib/**']);
+    });
+
+    it('should generate module spec when addModuleSpec is specified', async () => {
+      const resultTree = await runSchematic(
+        'lib',
+        { name: 'myLib', unitTestRunner: 'karma', addModuleSpec: true },
+        appTree
+      );
+
+      expect(
+        resultTree.exists('libs/my-lib/src/lib/my-lib.module.spec.ts')
+      ).toBeTruthy();
     });
   });
 

@@ -28,6 +28,14 @@ nx g library ... --dry-run
 
 ## Options
 
+### addModuleSpec
+
+Default: `false`
+
+Type: `boolean`
+
+Add a module spec file.
+
 ### directory
 
 Type: `string`

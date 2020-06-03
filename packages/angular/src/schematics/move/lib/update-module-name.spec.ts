@@ -23,7 +23,11 @@ describe('updateModuleName Rule', () => {
     tree = createEmptyWorkspace(tree) as UnitTestTree;
 
     // fake a mid-move tree:
-    tree = await runSchematic('lib', { name: 'my-destination' }, tree);
+    tree = await runSchematic(
+      'lib',
+      { name: 'my-destination', addModuleSpec: true },
+      tree
+    );
 
     tree.create(
       '/libs/my-destination/src/lib/my-source.module.ts',
