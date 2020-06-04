@@ -85,6 +85,11 @@
               },
               {
                 "input": "packages/workspace",
+                "glob": "**/**/decorate-angular-cli.js__tmpl__",
+                "output": "/"
+              },
+              {
+                "input": "packages/workspace",
                 "glob": "**/*.json",
                 "output": "/"
               },

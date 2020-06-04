@@ -262,5 +262,17 @@ describe('workspace', () => {
       expect(nxJson.projects).toEqual({ myproj: { tags: [] } });
       expect(nxJson.npmScope).toEqual('myproj');
     });
+
+    it('should create decorate-angular-cli.js', async () => {
+      const tree = await runSchematic(
+        'ng-add',
+        { preserveAngularCLILayout: true },
+        appTree
+      );
+      const s = JSON.parse(tree.readContent('/package.json')).scripts;
+
+      expect(tree.read('/decorate-angular-cli.js')).not.toBe(null);
+      expect(s.postinstall).toEqual('node ./decorate-angular-cli.js');
+    });
   });
 });

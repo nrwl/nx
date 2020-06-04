@@ -13,6 +13,7 @@ if (process.env.NX_TERMINAL_OUTPUT_PATH) {
 requireCli();
 
 function requireCli() {
+  process.env.NX_CLI_SET = 'true';
   if (workspace.type === 'nx') {
     require(path.join(
       workspace.dir,
