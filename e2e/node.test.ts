@@ -161,7 +161,7 @@ forEachCli((currentCLIName) => {
         // them from their config files as happened with emitDecoratorMetadata.
         cleanup();
         runNgNew();
-        runNgAdd('add @nrwl/workspace --npmScope projscope');
+        runNgAdd('--npmScope projscope');
         yarnAdd('@nrwl/nest');
       } else {
         ensureProject();

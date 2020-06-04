@@ -204,10 +204,14 @@ export function runNgAdd(
   }
 ): string {
   try {
-    return execSync(`./node_modules/.bin/ng ${command}`, {
-      cwd: tmpProjPath(),
-      env: opts.env,
-    })
+    yarnAdd('@nrwl/workspace');
+    return execSync(
+      `./node_modules/.bin/ng g @nrwl/workspace:ng-add ${command}`,
+      {
+        cwd: tmpProjPath(),
+        env: opts.env,
+      }
+    )
       .toString()
       .replace(
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,

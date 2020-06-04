@@ -35,6 +35,7 @@ import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../workspace/workspace';
 import { JsonArray } from '@angular-devkit/core';
 import { updateWorkspace } from '../../utils/workspace';
 import { basename } from 'path';
+import { readFileSync } from 'fs';
 
 function updatePackageJson() {
   return updateJsonInTree('package.json', (packageJson) => {
@@ -97,6 +98,7 @@ function updateAngularCLIJson(options: Schema): Rule {
     const newRoot = join(normalize('apps'), appName);
     defaultProject.root = newRoot;
     defaultProject.sourceRoot = join(newRoot, 'src');
+
     function convertBuildOptions(buildOptions) {
       buildOptions.outputPath =
         buildOptions.outputPath && join(normalize('dist'), 'apps', appName);
@@ -125,6 +127,7 @@ function updateAngularCLIJson(options: Schema): Rule {
           with: convertAsset(replacement.with),
         }));
     }
+
     convertBuildOptions(defaultProject.targets.get('build').options);
     Object.values(
       defaultProject.targets.get('build').configurations
@@ -594,11 +597,37 @@ const createNxJson = (host: Tree) => {
   );
 };
 
+const decorateAngularClI = (host: Tree, context: SchematicContext) => {
+  const decorateCli = readFileSync(
+    join(__dirname as any, '..', 'utils', 'decorate-angular-cli.js__tmpl__')
+  ).toString();
+  host.create('decorate-angular-cli.js', decorateCli);
+  updateJsonInTree('package.json', (json) => {
+    if (
+      json.scripts &&
+      json.scripts.postinstall &&
+      !json.scripts.postinstall.includes('decorate-angular-cli.js')
+    ) {
+      // if exists, add execution of this script
+      json.scripts.postinstall += ' && node ./decorate-angular-cli.js';
+    } else {
+      if (!json.scripts) json.scripts = {};
+      // if doesn't exist, set to execute this script
+      json.scripts.postinstall = 'node ./decorate-angular-cli.js';
+    }
+    if (json.scripts.ng) {
+      json.scripts.ng = 'nx';
+    }
+    return json;
+  })(host, context);
+};
+
 export default function (schema: Schema): Rule {
   if (schema.preserveAngularCLILayout) {
     return chain([
       addDepsToPackageJson({}, { '@nrwl/workspace': nxVersion }),
       createNxJson,
+      decorateAngularClI,
     ]);
   } else {
     const options = {
@@ -621,6 +650,7 @@ export default function (schema: Schema): Rule {
       updateProjectTsLint(options),
       updateTsConfig(options),
       updateTsConfigsJson(options),
+      decorateAngularClI,
       addInstallTask(options),
     ]);
   }
