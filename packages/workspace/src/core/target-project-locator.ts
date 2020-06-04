@@ -19,6 +19,11 @@ export class TargetProjectLocator {
   ) {
     const normalizedImportExpr = importExpr.split('#')[0];
 
+    const importedProject = this.nodes[normalizedImportExpr];
+    if (importedProject && !isWorkspaceProject(importedProject)) {
+      return false;
+    }
+
     const resolvedModule = resolveModuleByImport(
       normalizedImportExpr,
       filePath

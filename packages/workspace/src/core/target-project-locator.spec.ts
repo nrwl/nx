@@ -46,6 +46,7 @@ describe('findTargetProjectWithImport', () => {
       './nx.json': JSON.stringify(nxJson),
       './tsconfig.json': JSON.stringify(tsConfig),
       './libs/proj/index.ts': `import {a} from '@proj/my-second-proj';
+                              import {a} from '@proj/proj123-base';
                               import('@proj/project-3');
                               const a = { loadChildren: '@proj/proj4ab#a' };                     
       `,
@@ -192,6 +193,13 @@ describe('findTargetProjectWithImport', () => {
           files: [],
         },
       },
+      '@proj/proj123-base': {
+        name: '@proj/proj123-base',
+        type: 'npm',
+        data: {
+          files: [],
+        },
+      },
     };
 
     targetProjectLocator = new TargetProjectLocator(projects);
@@ -242,6 +250,13 @@ describe('findTargetProjectWithImport', () => {
       ctx.nxJson.npmScope
     );
     expect(parentProj).toEqual('proj1234');
+
+    const similarImportFromNpm = targetProjectLocator.findProjectWithImport(
+      '@proj/proj123-base',
+      'libs/proj/index.ts',
+      ctx.nxJson.npmScope
+    );
+    expect(similarImportFromNpm).toBeFalsy();
   });
 
   it('should be able to sort graph nodes', () => {
@@ -256,6 +271,7 @@ describe('findTargetProjectWithImport', () => {
       '@ng/core',
       '@ng/common',
       'npm-package',
+      '@proj/proj123-base',
     ]);
   });
 });
