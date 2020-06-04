@@ -510,7 +510,7 @@ function updateProject(options: NormalizedSchema): Rule {
               join(normalize(options.appProjectRoot), 'e2e/tsconfig.json')
         );
         fixedProject.architect.lint.options.exclude.push(
-          '!' + join(normalize(options.appProjectRoot), '**')
+          '!' + join(normalize(options.appProjectRoot), '**/*')
         );
 
         if (options.e2eTestRunner === 'none') {
@@ -618,7 +618,7 @@ function updateE2eProject(options: NormalizedSchema): Rule {
                 tsConfig: `${options.e2eProjectRoot}/tsconfig.e2e.json`,
                 exclude: [
                   '**/node_modules/**',
-                  '!' + join(normalize(options.e2eProjectRoot), '**'),
+                  '!' + join(normalize(options.e2eProjectRoot), '**/*'),
                 ],
               },
             },

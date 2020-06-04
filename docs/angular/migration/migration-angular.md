@@ -286,7 +286,7 @@ If you are using `Protractor` for E2E testing:
           "builder": "@angular-devkit/build-angular:tslint",
           "options": {
             "tsConfig": "apps/<app name>-e2e/tsconfig.e2e.json",
-            "exclude": ["**/node_modules/**", "!apps/<app name>-e2e/**"]
+            "exclude": ["**/node_modules/**", "!apps/<app name>-e2e/**/*"]
           }
         }
       }
