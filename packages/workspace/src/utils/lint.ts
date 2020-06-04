@@ -42,7 +42,7 @@ export function generateProjectLint(
         // nested configurations.
         linter: 'eslint',
         tsConfig: [tsConfigPath],
-        exclude: ['**/node_modules/**', '!' + projectRoot + '/**'],
+        exclude: ['**/node_modules/**', '!' + projectRoot + '/**/*'],
       },
     };
   } else {

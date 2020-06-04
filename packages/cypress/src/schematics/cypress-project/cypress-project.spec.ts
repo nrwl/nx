@@ -83,7 +83,7 @@ describe('schematic:cypress-project', () => {
         options: {
           linter: 'eslint',
           tsConfig: ['apps/my-app-e2e/tsconfig.e2e.json'],
-          exclude: ['**/node_modules/**', '!apps/my-app-e2e/**'],
+          exclude: ['**/node_modules/**', '!apps/my-app-e2e/**/*'],
         },
       });
     });

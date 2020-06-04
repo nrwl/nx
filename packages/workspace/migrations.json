@@ -79,6 +79,11 @@
       "version": "9.4.0-beta.1",
       "description": "Remove config builder option when using eslint to enable automatic detection",
       "factory": "./src/migrations/update-9-4-0/update-eslint-config"
+    },
+    "update-eslint-exclude": {
+      "version": "9.4.0-beta.1",
+      "description": "Fix exclude patterns to ensure it does not break linting when a files option is defined",
+      "factory": "./src/migrations/update-9-4-0/update-eslint-exclude"
     }
   },
   "packageJsonUpdates": {
