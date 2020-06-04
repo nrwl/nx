@@ -53,5 +53,10 @@
     "name": "@nxext/stencil",
     "description": "Nx plugin to use StencilJs within nx workspaces",
     "url": "https://github.com/DominikPieper/nx-extensions"
+  },
+    {
+    "name": "@joelcode/gcp-function",
+    "description": "Nx plugin to generate, test, lint, build, serve, & deploy Google Cloud Function",
+    "url": "https://github.com/JoelCode/gcp-function"
   }
 ]
