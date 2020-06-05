@@ -943,6 +943,221 @@
           }
         }
       }
+    },
+    "e2e-utils": {
+      "root": "e2e/utils",
+      "sourceRoot": "e2e/utils",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {}
+    },
+    "e2e-cli": {
+      "root": "e2e/cli",
+      "sourceRoot": "e2e/cli",
+      "projectType": "application",
+      "schematics": {},
+      "architect": {
+        "e2e": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "e2e/cli/jest.config.js",
+            "tsConfig": "e2e/cli/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "e2e-angular": {
+      "root": "e2e/angular",
+      "sourceRoot": "e2e/angular",
+      "projectType": "application",
+      "schematics": {},
+      "architect": {
+        "e2e": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "e2e/angular/jest.config.js",
+            "tsConfig": "e2e/angular/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "e2e-bazel": {
+      "root": "e2e/bazel",
+      "sourceRoot": "e2e/bazel",
+      "projectType": "application",
+      "schematics": {},
+      "architect": {
+        "e2e": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "e2e/bazel/jest.config.js",
+            "tsConfig": "e2e/bazel/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "e2e-cypress": {
+      "root": "e2e/cypress",
+      "sourceRoot": "e2e/cypress",
+      "projectType": "application",
+      "schematics": {},
+      "architect": {
+        "e2e": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "e2e/cypress/jest.config.js",
+            "tsConfig": "e2e/cypress/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "e2e-jest": {
+      "root": "e2e/jest",
+      "sourceRoot": "e2e/jest",
+      "projectType": "application",
+      "schematics": {},
+      "architect": {
+        "e2e": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "e2e/jest/jest.config.js",
+            "tsConfig": "e2e/jest/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "e2e-linter": {
+      "root": "e2e/linter",
+      "sourceRoot": "e2e/linter",
+      "projectType": "application",
+      "schematics": {},
+      "architect": {
+        "e2e": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "e2e/linter/jest.config.js",
+            "tsConfig": "e2e/linter/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "e2e-next": {
+      "root": "e2e/next",
+      "sourceRoot": "e2e/next",
+      "projectType": "application",
+      "schematics": {},
+      "architect": {
+        "e2e": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "e2e/next/jest.config.js",
+            "tsConfig": "e2e/next/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "e2e-node": {
+      "root": "e2e/node",
+      "sourceRoot": "e2e/node",
+      "projectType": "application",
+      "schematics": {},
+      "architect": {
+        "e2e": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "e2e/node/jest.config.js",
+            "tsConfig": "e2e/node/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "e2e-react": {
+      "root": "e2e/react",
+      "sourceRoot": "e2e/react",
+      "projectType": "application",
+      "schematics": {},
+      "architect": {
+        "e2e": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "e2e/react/jest.config.js",
+            "tsConfig": "e2e/react/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "e2e-storybook": {
+      "root": "e2e/storybook",
+      "sourceRoot": "e2e/storybook",
+      "projectType": "application",
+      "schematics": {},
+      "architect": {
+        "e2e": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "e2e/storybook/jest.config.js",
+            "tsConfig": "e2e/storybook/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "e2e-web": {
+      "root": "e2e/web",
+      "sourceRoot": "e2e/web",
+      "projectType": "application",
+      "schematics": {},
+      "architect": {
+        "e2e": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "e2e/web/jest.config.js",
+            "tsConfig": "e2e/web/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "e2e-workspace": {
+      "root": "e2e/workspace",
+      "sourceRoot": "e2e/workspace",
+      "projectType": "application",
+      "schematics": {},
+      "architect": {
+        "e2e": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "e2e/workspace/jest.config.js",
+            "tsConfig": "e2e/workspace/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "e2e-nx-plugin": {
+      "root": "e2e/nx-plugin",
+      "sourceRoot": "e2e/nx-plugin",
+      "projectType": "application",
+      "schematics": {},
+      "architect": {
+        "e2e": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "e2e/nx-plugin/jest.config.js",
+            "tsConfig": "e2e/nx-plugin/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        }
+      }
     }
   },
   "cli": {

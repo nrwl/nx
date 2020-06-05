@@ -4,7 +4,7 @@ import { Tree } from '@angular-devkit/schematics';
 import * as prettier from 'prettier';
 import * as path from 'path';
 import { formatFiles } from './format-files';
-import * as appRoot from 'app-root-path';
+import { appRootPath } from '../app-root';
 
 describe('formatFiles', () => {
   let tree: Tree;
@@ -30,7 +30,7 @@ describe('formatFiles', () => {
       .toPromise();
     expect(prettier.format).toHaveBeenCalledWith('const a=a', {
       printWidth: 80,
-      filepath: appRoot.resolve('a.ts'),
+      filepath: `${appRootPath}/a.ts`,
     });
     expect(result.read('a.ts').toString()).toEqual('formatted :: const a=a');
   });
@@ -58,7 +58,7 @@ describe('formatFiles', () => {
       .callRule(formatFiles(), tree)
       .toPromise();
     expect(prettier.format).toHaveBeenCalledWith('const a=b', {
-      filepath: appRoot.resolve('a.ts'),
+      filepath: `${appRootPath}/a.ts`,
     });
     expect(result.read('a.ts').toString()).toEqual('formatted :: const a=b');
   });
@@ -71,7 +71,7 @@ describe('formatFiles', () => {
       .callRule(formatFiles(), tree)
       .toPromise();
     expect(prettier.format).toHaveBeenCalledWith('const a=a', {
-      filepath: appRoot.resolve('b.ts'),
+      filepath: `${appRootPath}/b.ts`,
     });
     expect(result.read('b.ts').toString()).toEqual('formatted :: const a=a');
   });
@@ -94,7 +94,7 @@ describe('formatFiles', () => {
         .toPromise();
       expect(prettier.format).not.toHaveBeenCalledWith('const a=a', {
         printWidth: 80,
-        filepath: appRoot.resolve('a.ts'),
+        filepath: `${appRootPath}/a.ts`,
       });
       expect(result.read('a.ts').toString()).toEqual('const a=a');
     });

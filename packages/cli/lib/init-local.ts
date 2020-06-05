@@ -9,8 +9,8 @@ import { parseRunOneOptions } from './parse-run-one-options';
  * @param workspace Relevant local workspace properties
  */
 export function initLocal(workspace: Workspace) {
-  const supportedNxCommands = require('@nrwl/workspace/src/command-line/supported-nx-commands')
-    .supportedNxCommands;
+  const supportedNxCommands = require('@nrwl/workspace/' +
+    'src/command-line/supported-nx-commands').supportedNxCommands;
   const runOpts = runOneOptions(workspace);
 
   if (supportedNxCommands.includes(process.argv[2])) {
@@ -26,12 +26,13 @@ export function initLocal(workspace: Workspace) {
         'compat.js'
       ));
     }
-    require('@nrwl/workspace/src/command-line/nx-commands').commandsObject.argv;
+    require('@nrwl/workspace' + '/src/command-line/nx-commands').commandsObject
+      .argv;
   } else {
     if (runOpts === false || process.env.NX_SKIP_TASKS_RUNNER) {
       loadCli(workspace);
     } else {
-      require('@nrwl/workspace/src/command-line/run-one').runOne(runOpts);
+      require('@nrwl/workspace' + '/src/command-line/run-one').runOne(runOpts);
     }
   }
 }

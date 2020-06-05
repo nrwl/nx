@@ -2379,6 +2379,15 @@
     webpack-merge "4.2.1"
     webpack-node-externals "1.7.2"
 
+"@nrwl/nx-cloud@^9.3.2":
+  version "9.3.2"
+  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-9.3.2.tgz#ed21480a8db8099346d507afeb203eef7e691eaf"
+  integrity sha512-ERt1ZFNFwf98FSgan8FSWt8D5KEQY98XKvXko+3qU+JVE6Ok1TDNEh6zLFcB5HJA0DFNpfeslfykaWtKsKsaxA==
+  dependencies:
+    axios "^0.19.0"
+    node-machine-id "^1.1.12"
+    tar "5.0.5"
+
 "@nrwl/tao@9.4.0-beta.5":
   version "9.4.0-beta.5"
   resolved "https://registry.yarnpkg.com/@nrwl/tao/-/tao-9.4.0-beta.5.tgz#4b8b3a747a578641ac003f2dbf1a1b6faa8d4f97"
@@ -15085,6 +15094,11 @@ node-libs-browser@^2.2.1:
     url "^0.11.0"
     util "^0.11.0"
     vm-browserify "^1.0.1"
+
+node-machine-id@^1.1.12:
+  version "1.1.12"
+  resolved "https://registry.yarnpkg.com/node-machine-id/-/node-machine-id-1.1.12.tgz#37904eee1e59b320bb9c5d6c0a59f3b469cb6267"
+  integrity sha512-QNABxbrPa3qEIfrE6GOJ7BYIuignnJw7iQ2YPbc3Nla1HzRJjXzZOiikfF8m7eAMfichLt3M4VgLOetqgDmgGQ==
 
 node-modules-regexp@^1.0.0:
   version "1.0.0"
