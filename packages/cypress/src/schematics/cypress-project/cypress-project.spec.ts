@@ -51,7 +51,7 @@ describe('schematic:cypress-project', () => {
         builder: '@angular-devkit/build-angular:tslint',
         options: {
           tsConfig: ['apps/my-app-e2e/tsconfig.e2e.json'],
-          exclude: ['**/node_modules/**', '!apps/my-app-e2e/**'],
+          exclude: ['**/node_modules/**', '!apps/my-app-e2e/**/*'],
         },
       });
       expect(project.architect.e2e).toEqual({
@@ -83,7 +83,7 @@ describe('schematic:cypress-project', () => {
         options: {
           linter: 'eslint',
           tsConfig: ['apps/my-app-e2e/tsconfig.e2e.json'],
-          exclude: ['**/node_modules/**', '!apps/my-app-e2e/**'],
+          exclude: ['**/node_modules/**', '!apps/my-app-e2e/**/*'],
         },
       });
     });
@@ -160,7 +160,7 @@ describe('schematic:cypress-project', () => {
           builder: '@angular-devkit/build-angular:tslint',
           options: {
             tsConfig: ['apps/my-dir/my-app-e2e/tsconfig.e2e.json'],
-            exclude: ['**/node_modules/**', '!apps/my-dir/my-app-e2e/**'],
+            exclude: ['**/node_modules/**', '!apps/my-dir/my-app-e2e/**/*'],
           },
         });
 
