@@ -91,7 +91,6 @@ function createNxPlugin(workspaceName, pluginName) {
 }
 
 function updateWorkspace(workspaceName: string) {
-  console.log(`updating workspace...`);
   const nxJsonPath = path.join(workspaceName, 'nx.json');
 
   const nxJson = JSON.parse(readFileSync(nxJsonPath).toString('UTF-8'));
