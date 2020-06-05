@@ -37,6 +37,10 @@ const tsconfig = {
       '@mycompany/badcirclelib': ['libs/badcirclelib/src/index.ts'],
       '@mycompany/domain1': ['libs/domain1/src/index.ts'],
       '@mycompany/domain2': ['libs/domain2/src/index.ts'],
+      '@mycompany/buildableLib': ['libs/buildableLib/src/main.ts'],
+      '@nonBuildableScope/nonBuildableLib': [
+        'libs/nonBuildableLib/src/main.ts',
+      ],
     },
     types: ['node'],
   },
@@ -62,6 +66,8 @@ const fileSys = {
   './libs/badcirclelib/src/index.ts': '',
   './libs/domain1/src/index.ts': '',
   './libs/domain2/src/index.ts': '',
+  './libs/buildableLib/src/main.ts': '',
+  './libs/nonBuildableLib/src/main.ts': '',
   './tsconfig.json': JSON.stringify(tsconfig),
 };
 
@@ -463,7 +469,7 @@ describe('Enforce Module Boundaries', () => {
         }
       );
       expect(failures[0].message).toEqual(
-        'Library imports must start with @mycompany/'
+        'Libraries cannot be imported by a relative or absolute path, and must begin with a npm scope'
       );
     });
 
@@ -501,7 +507,7 @@ describe('Enforce Module Boundaries', () => {
         }
       );
       expect(failures[0].message).toEqual(
-        'Library imports must start with @mycompany/'
+        'Libraries cannot be imported by a relative or absolute path, and must begin with a npm scope'
       );
     });
   });
@@ -534,7 +540,7 @@ describe('Enforce Module Boundaries', () => {
 
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toEqual(
-      'Library imports must start with @mycompany/'
+      'Libraries cannot be imported by a relative or absolute path, and must begin with a npm scope'
     );
   });
 
@@ -847,7 +853,7 @@ describe('Enforce Module Boundaries', () => {
           enforceBuildableLibDependency: true,
         },
         `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
-        'import "@mycompany/nonBuildableLib"',
+        'import "@nonBuildableScope/nonBuildableLib"',
         {
           nodes: {
             buildableLib: {
@@ -882,7 +888,7 @@ describe('Enforce Module Boundaries', () => {
         }
       );
       expect(failures[0].message).toEqual(
-        'Buildable libs cannot import non-buildable libs'
+        'Buildable libraries cannot import non-buildable libraries'
       );
     });
 
