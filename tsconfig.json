@@ -26,7 +26,9 @@
       "@nrwl/web": ["./packages/web"],
       "@nrwl/web/*": ["./packages/web/*"],
       "@nrwl/angular": ["./packages/angular"],
-      "@nrwl/angular/*": ["./packages/angular/*"]
+      "@nrwl/angular/*": ["./packages/angular/*"],
+      "@nrwl/e2e/utils": ["./e2e/utils"],
+      "@nrwl/e2e/cli": ["./e2e/cli"]
     }
   }
 }

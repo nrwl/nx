@@ -17,3 +17,4 @@ packages/jest/src/schematics/**/files/**/*.json
 /coverage
 /.yarn
 /.verdaccio/build/local-registry
+/dist

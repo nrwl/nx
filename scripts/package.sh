@@ -12,7 +12,7 @@ if [[ $NX_VERSION == "--local" ]]; then
     NX_VERSION="*"
 fi
 
-./scripts/build.sh
+nx run-many --target=build --all --parallel
 
 cd build/packages
 
