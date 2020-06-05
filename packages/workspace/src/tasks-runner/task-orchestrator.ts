@@ -9,6 +9,7 @@ import { output } from '../utils/output';
 import * as path from 'path';
 import * as fs from 'fs';
 import { appRootPath } from '../utils/app-root';
+import * as dotenv from 'dotenv';
 
 export class TaskOrchestrator {
   workspaceRoot = appRootPath;
@@ -175,7 +176,14 @@ export class TaskOrchestrator {
     outputPath: string,
     forwardOutput: boolean
   ) {
-    const env = { ...process.env };
+    const envsFromFiles = {
+      ...parseEnv('.env'),
+      ...parseEnv('.local.env'),
+      ...parseEnv(`${task.projectRoot}/.env`),
+      ...parseEnv(`${task.projectRoot}/.local.env`),
+    };
+
+    const env = { ...envsFromFiles, ...process.env };
     if (outputPath) {
       env.NX_TERMINAL_OUTPUT_PATH = outputPath;
       if (this.options.captureStderr) {
@@ -225,4 +233,11 @@ export class TaskOrchestrator {
       ...args,
     ];
   }
+}
+
+function parseEnv(path: string) {
+  try {
+    const envContents = fs.readFileSync(path);
+    return dotenv.parse(envContents);
+  } catch (e) {}
 }

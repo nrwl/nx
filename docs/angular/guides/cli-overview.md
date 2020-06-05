@@ -243,6 +243,35 @@ Any flags you pass to `run-many` that aren't Nx specific will be passed down to 
 nx affected --target=build --prod
 ```
 
+## Loading Environment Variables
+
+By default, Nx will load any environment variables you place in the following files:
+
+1. `workspaceRoot/apps/my-app/.local.env`
+2. `workspaceRoot/apps/my-app/.env`
+3. `workspaceRoot/.local.env`
+4. `workspaceRoot/.env`
+
+Order is important. Nx will move through the above list, ignoring files it can't find, and loading environment variables into the current process for the ones it can find. If it finds a variable that has already been loaded into the process, it will ignore it. It does this for two reasons:
+
+1. Developers can't accidentally overwrite important system level variables (like `NODE_ENV`)
+2. Allows developers to create `.local.env` files for their local environment and override any project defaults set in `.env`
+
+For example:
+
+1. `workspaceRoot/apps/my-app/.local.env` contains `AUTH_URL=http://localhost/auth`
+2. `workspaceRoot/apps/my-app/.env` contains `AUTH_URL=https://prod-url.com/auth`
+3. Nx will first load the variables from `apps/my-app/.local.env` into the process. When it tries to load the variables from `apps/my-app/.env`, it will notice that `AUTH_URL` already exists, so it will ignore it.
+
+We recommend nesting your **app** specific `env` files in `apps/your-app`, and creating workspace/root level `env` files for workspace-specific settings (like the [Nx Cloud token](https://nx.dev/angular/workspace/computation-caching#nx-cloud-and-distributed-computation-memoization)).
+
+### Pointing to custom env files
+
+If you want to load variables from `env` files other than the ones listed above:
+
+1. Use the [env-cmd](https://www.npmjs.com/package/env-cmd) package: `env-cmd -f .qa.env nx serve`
+2. Use the `envFile` option of the [run-commands](https://nx.dev/angular/plugins/workspace/builders/run-commands#envfile) builder and execute your command inside of the builder
+
 ## Other Commands
 
 `nx print-affected` prints information about affected projects in the workspace.
