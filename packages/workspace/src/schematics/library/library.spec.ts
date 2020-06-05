@@ -255,4 +255,49 @@ describe('lib', () => {
       ).toEqual(['libs/my-lib/tsconfig.lib.json']);
     });
   });
+
+  describe('--importPath', () => {
+    it('should update the tsconfig with the given import path', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          directory: 'myDir',
+          importPath: '@myorg/lib',
+        },
+        appTree
+      );
+      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
+
+      expect(tsconfigJson.compilerOptions.paths['@myorg/lib']).toBeDefined();
+    });
+
+    it('should fail if the same importPath has already been used', async () => {
+      const tree1 = await runSchematic(
+        'lib',
+        {
+          name: 'myLib1',
+          importPath: '@myorg/lib',
+        },
+        appTree
+      );
+
+      try {
+        await runSchematic(
+          'lib',
+          {
+            name: 'myLib2',
+            importPath: '@myorg/lib',
+          },
+          tree1
+        );
+      } catch (e) {
+        expect(e.message).toContain(
+          'You already have a library using the import path'
+        );
+      }
+
+      expect.assertions(1);
+    });
+  });
 });

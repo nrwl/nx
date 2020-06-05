@@ -7,7 +7,9 @@ export interface Schema {
   addModuleSpec?: boolean;
   directory?: string;
   sourceDir?: string;
+  buildable: boolean;
   publishable: boolean;
+  importPath?: string;
 
   spec?: boolean;
   flat?: boolean;

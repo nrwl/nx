@@ -4,7 +4,7 @@ import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
 import { NormalizedSchema } from './normalized-schema';
 
 export function updateNgPackage(host: Tree, options: NormalizedSchema): Rule {
-  if (!options.publishable) {
+  if (!(options.publishable || options.buildable)) {
     return noop();
   }
   const dest = `${offsetFromRoot(options.projectRoot)}dist/${libsDir(host)}/${

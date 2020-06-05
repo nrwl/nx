@@ -38,8 +38,8 @@ forEachCli((cliName) => {
       const mylib1 = uniq('mylib1');
       const mylib2 = uniq('mylib1');
       runCLI(`generate @nrwl/react:app ${myapp}`);
-      runCLI(`generate @nrwl/react:lib ${mylib1} --publishable`);
-      runCLI(`generate @nrwl/react:lib ${mylib2} --publishable`);
+      runCLI(`generate @nrwl/react:lib ${mylib1} --buildable`);
+      runCLI(`generate @nrwl/react:lib ${mylib2} --buildable`);
 
       updateFile(
         `apps/${myapp}/src/main.ts`,
@@ -80,9 +80,9 @@ forEachCli((cliName) => {
       const libD = uniq('libd-rand');
 
       runCLI(`generate @nrwl/angular:app ${appA}`);
-      runCLI(`generate @nrwl/angular:lib ${libA} --publishable --defaults`);
-      runCLI(`generate @nrwl/angular:lib ${libB} --publishable --defaults`);
-      runCLI(`generate @nrwl/angular:lib ${libC} --publishable --defaults`);
+      runCLI(`generate @nrwl/angular:lib ${libA} --buildable --defaults`);
+      runCLI(`generate @nrwl/angular:lib ${libB} --buildable --defaults`);
+      runCLI(`generate @nrwl/angular:lib ${libC} --buildable --defaults`);
       runCLI(`generate @nrwl/angular:lib ${libD} --defaults`);
 
       // libA depends on libC
@@ -206,7 +206,9 @@ forEachCli((cliName) => {
       runCLI(`generate @nrwl/angular:app ${myapp2}`);
       runCLI(`generate @nrwl/angular:lib ${mylib}`);
       runCLI(`generate @nrwl/angular:lib ${mylib2}`);
-      runCLI(`generate @nrwl/angular:lib ${mypublishablelib} --publishable`);
+      runCLI(
+        `generate @nrwl/angular:lib ${mypublishablelib} --publishable --importPath=@proj/${mypublishablelib}`
+      );
 
       updateFile(
         `apps/${myapp}/src/app/app.component.spec.ts`,
@@ -434,7 +436,7 @@ forEachCli((cliName) => {
       runCLI(`generate @nrwl/react:app ${myapp2}`);
       runCLI(`generate @nrwl/react:lib ${mylib}`);
       runCLI(`generate @nrwl/react:lib ${mylib2}`);
-      runCLI(`generate @nrwl/react:lib ${mypublishablelib} --publishable`);
+      runCLI(`generate @nrwl/react:lib ${mypublishablelib} --buildable`);
 
       updateFile(
         `apps/${myapp}/src/main.tsx`,

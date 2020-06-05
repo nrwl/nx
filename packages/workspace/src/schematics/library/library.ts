@@ -28,6 +28,7 @@ export interface NormalizedSchema extends Schema {
   projectRoot: string;
   projectDirectory: string;
   parsedTags: string[];
+  importPath?: string;
 }
 
 function addProject(options: NormalizedSchema): Rule {
