@@ -95,7 +95,7 @@
               },
               {
                 "input": "packages/workspace",
-                "glob": "**/*.js",
+                "glob": "**/*.{js,css,html}",
                 "output": "/"
               },
               "LICENSE",
