@@ -84,7 +84,6 @@ function addExportsToBarrel(options: NormalizedSchema): Rule {
             options.projectSourceRoot,
             options.js ? 'index.js' : 'index.ts'
           );
-          console.log('index', indexFilePath);
           const buffer = host.read(indexFilePath);
           if (!!buffer) {
             const indexSource = buffer!.toString('utf-8');
