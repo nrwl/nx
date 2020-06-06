@@ -23,15 +23,14 @@ After executing the above command, the following tree structure is created:
 
 ```treeview
 my-org/
-├── apps/
+├── e2e/
 │   └── my-plugin-e2e/
 │       ├── jest.config.js
 │       ├── tests/
 │       │   └── my-plugin.test.ts
 │       ├── tsconfig.json
 │       └── tsconfig.spec.json
-├── jest.config.js
-├── libs/
+├── packages/
 │   └── my-plugin/
 │       ├── README.md
 │       ├── builders.json
@@ -58,11 +57,12 @@ my-org/
 │       ├── tsconfig.json
 │       ├── tsconfig.lib.json
 │       └── tsconfig.spec.json
-├── nx.json
-├── package.json
 ├── tools
 │   ├── schematics/
 │   └── tsconfig.tools.json
+├── jest.config.js
+├── nx.json
+├── package.json
 ├── tsconfig.json
 ├── workspace.json
 └── yarn.lock
@@ -188,7 +188,7 @@ We'll go over a few parts of a test file below:
 ```typescript
 it('should create my-plugin', async (done) => {
   const plugin = uniq('my-plugin');
-  ensureNxProject('@my-org/my-plugin', 'dist/libs/my-plugin');
+  ensureNxProject('@my-org/my-plugin', 'dist/packages/my-plugin');
   await runNxCommandAsync(`generate @my-org/my-plugin:myPlugin ${plugin}`);
 
   const result = await runNxCommandAsync(`build ${plugin}`);
@@ -216,19 +216,19 @@ To make sure that assets are copied to the dist folder, open the `workspace.json
   "options": {
     // shortened...
     "assets": [
-      "libs/my-plugin/*.md",
+      "packages/my-plugin/*.md",
       {
-        "input": "./libs/my-plugin/src",
+        "input": "./packages/my-plugin/src",
         "glob": "**/*.!(ts)",
         "output": "./src"
       },
       {
-        "input": "./libs/my-plugin",
+        "input": "./packages/my-plugin",
         "glob": "collection.json",
         "output": "."
       },
       {
-        "input": "./libs/my-plugin",
+        "input": "./packages/my-plugin",
         "glob": "builders.json",
         "output": "."
       }
@@ -242,7 +242,7 @@ To make sure that assets are copied to the dist folder, open the `workspace.json
 To publish your plugin follow these steps:
 
 1. Build your plugin with the command `nx run my-plugin:build`
-1. `npm publish ./dist/libs/my-plugin` and follow the prompts from npm.
+1. `npm publish ./dist/package/my-plugin` and follow the prompts from npm.
 1. That's it!
 
 > Note: currently you will have to modify the `package.json` version by yourself or with a tool.

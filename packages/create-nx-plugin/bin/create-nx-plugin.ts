@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 
-// we can import from '@nrwl/workspace' because it will require typescript
+// we can't import from '@nrwl/workspace' because it will require typescript
+// eslint-disable-next-line @nrwl/nx/enforce-module-boundaries
 import { output } from '@nrwl/workspace/src/utils/output';
 import { dirSync } from 'tmp';
-import { writeFileSync } from 'fs-extra';
+import { writeFileSync, readFileSync, removeSync } from 'fs-extra';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import * as inquirer from 'inquirer';
+// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// @ts-ignore
 import yargsParser = require('yargs-parser');
 import { determinePackageManager, showNxWarning } from './shared';
 
@@ -21,22 +24,6 @@ const parsedArgs = yargsParser(process.argv, {
     pluginName: 'plugin-name',
   },
   boolean: ['help'],
-});
-
-if (parsedArgs.help) {
-  showHelp();
-  process.exit(0);
-}
-
-const packageManager = determinePackageManager();
-determineWorkspaceName(parsedArgs).then((workspaceName) => {
-  return determinePluginName(parsedArgs).then((pluginName) => {
-    const tmpDir = createSandbox(packageManager);
-    createWorkspace(tmpDir, packageManager, parsedArgs, workspaceName);
-    createNxPlugin(workspaceName, pluginName);
-    commitChanges(workspaceName);
-    showNxWarning(workspaceName);
-  });
 });
 
 function createSandbox(packageManager: string) {
@@ -101,6 +88,22 @@ function createNxPlugin(workspaceName, pluginName) {
       stdio: [0, 1, 2],
     }
   );
+}
+
+function updateWorkspace(workspaceName: string) {
+  const nxJsonPath = path.join(workspaceName, 'nx.json');
+
+  const nxJson = JSON.parse(readFileSync(nxJsonPath).toString('UTF-8'));
+
+  nxJson['workspaceLayout'] = {
+    appsDir: 'e2e',
+    libsDir: 'packages',
+  };
+
+  writeFileSync(nxJsonPath, JSON.stringify(nxJson, undefined, 2));
+
+  removeSync(path.join(workspaceName, 'apps'));
+  removeSync(path.join(workspaceName, 'libs'));
 }
 
 function commitChanges(workspaceName) {
@@ -181,3 +184,20 @@ function showHelp() {
     pluginName     the name of the plugin to be created  
 `);
 }
+
+if (parsedArgs.help) {
+  showHelp();
+  process.exit(0);
+}
+
+const packageManager = determinePackageManager();
+determineWorkspaceName(parsedArgs).then((workspaceName) => {
+  return determinePluginName(parsedArgs).then((pluginName) => {
+    const tmpDir = createSandbox(packageManager);
+    createWorkspace(tmpDir, packageManager, parsedArgs, workspaceName);
+    updateWorkspace(workspaceName);
+    createNxPlugin(workspaceName, pluginName);
+    commitChanges(workspaceName);
+    showNxWarning(workspaceName);
+  });
+});
