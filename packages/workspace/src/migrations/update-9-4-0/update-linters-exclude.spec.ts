@@ -110,6 +110,19 @@ describe('Update eslint and tslint exclude pattern for 9.4.0', () => {
             },
           },
         });
+        workspace.projects.add({
+          name: 'proj8',
+          root: 'proj8',
+          architect: {
+            lint: {
+              builder: '@nrwl/linter:lint',
+            },
+          },
+        });
+        workspace.projects.add({
+          name: 'proj9',
+          root: 'proj9',
+        });
       }),
       tree
     );

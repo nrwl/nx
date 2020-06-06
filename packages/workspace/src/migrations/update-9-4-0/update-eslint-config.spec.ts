@@ -34,6 +34,12 @@ describe('Update eslint config for 9.4.0', () => {
                 linter: 'eslint',
                 config: 'proj2/.eslintrc',
               },
+              configurations: {
+                prod: {
+                  linter: 'eslint',
+                  config: 'proj2/.eslintrc',
+                },
+              },
             },
           },
         });
@@ -63,6 +69,19 @@ describe('Update eslint config for 9.4.0', () => {
             },
           },
         });
+        workspace.projects.add({
+          name: 'proj5',
+          root: 'proj5',
+          architect: {
+            lint: {
+              builder: '@nrwl/linter:lint',
+            },
+          },
+        });
+        workspace.projects.add({
+          name: 'proj6',
+          root: 'proj6',
+        });
       }),
       tree
     );
@@ -77,6 +96,9 @@ describe('Update eslint config for 9.4.0', () => {
       'proj1/tslint.json'
     );
     expect(json.projects.proj2.architect.lint.options.config).toBeUndefined();
+    expect(
+      json.projects.proj2.architect.lint.configurations.prod.config
+    ).toBeUndefined();
     expect(json.projects.proj3.architect.lint.options.config).toMatch(
       'proj3/tslint.json'
     );

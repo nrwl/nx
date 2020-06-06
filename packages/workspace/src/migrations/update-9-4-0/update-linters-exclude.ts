@@ -1,27 +1,26 @@
 import { chain, SchematicContext, Tree } from '@angular-devkit/schematics';
-import { formatFiles, updateWorkspaceInTree } from '@nrwl/workspace';
+import { formatFiles } from '../../utils/rules/format-files';
+import { updateBuilderOptions, updateWorkspace } from '../../utils/workspace';
+import { JsonArray } from '@angular-devkit/core';
 
 function updateExcludePattern(host: Tree, context: SchematicContext) {
-  return updateWorkspaceInTree((json) => {
-    Object.keys(json.projects).forEach((name) => {
-      const p = json.projects[name];
-      const faultyPattern = `!${p.root}/**`;
-      const builders = [
-        '@nrwl/linter:lint',
-        '@angular-devkit/build-angular:tslint',
-      ];
-      if (
-        builders.includes(p.architect?.lint.builder) &&
-        p.architect?.lint.options?.exclude.includes(faultyPattern)
-      ) {
-        const index: number = p.architect?.lint.options?.exclude.indexOf(
-          faultyPattern
-        );
-        p.architect.lint.options.exclude[index] = faultyPattern + '/*';
-      }
-    });
-    return json;
-  });
+  const builders = [
+    '@nrwl/linter:lint',
+    '@angular-devkit/build-angular:tslint',
+  ];
+  return updateBuilderOptions((options, project) => {
+    if (!options?.exclude) {
+      return options;
+    }
+    const faultyPattern = `!${project.root}/**`;
+    if ((options?.exclude as JsonArray).includes(faultyPattern)) {
+      const index: number = (options?.exclude as JsonArray).indexOf(
+        faultyPattern
+      );
+      (options?.exclude as JsonArray)[index] = faultyPattern + '/*';
+    }
+    return options;
+  }, ...builders);
 }
 
 export default function () {
