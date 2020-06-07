@@ -10,6 +10,9 @@ import {
   stripIndents,
 } from '@angular-devkit/core/src/utils/literals';
 import { initRootBabelConfig } from '@nrwl/web/src/utils/rules';
+import { addDepsToPackageJson, formatFiles } from '@nrwl/workspace';
+
+let addedEmotionPreset = false;
 
 /*
  * This migration will do a few things:
@@ -74,6 +77,11 @@ export default function update(): Rule {
       You may want to update them to include the Nx preset "@nrwl/react/babel".
       `);
     }
+    updates.push((host) =>
+      addedEmotionPreset ? addEmotionPresetPackage : host
+    );
+
+    updates.push(formatFiles());
 
     return chain(updates);
   };
@@ -93,6 +101,7 @@ function createBabelrc(host, context, babelrcPath, deps) {
 
   if (deps.some((d) => d.target.startsWith('npm:@emotion'))) {
     babelrc.presets.push('@emotion/babel-preset-css-prop');
+    addedEmotionPreset = true;
     added++;
   }
 
@@ -108,3 +117,10 @@ function createBabelrc(host, context, babelrcPath, deps) {
 
   host.create(babelrcPath, JSON.stringify(babelrc, null, 2));
 }
+
+const addEmotionPresetPackage = addDepsToPackageJson(
+  {},
+  {
+    '@emotion/babel-preset-css-prop': '10.0.27',
+  }
+);

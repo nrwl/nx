@@ -48,7 +48,7 @@ describe('Migrate babel setup', () => {
       .toPromise();
 
     const content = tree.read('/apps/demo/.babelrc').toString();
-    expect(content).toEqual('{}');
+    expect(content.trim()).toEqual('{}');
   });
 
   it(`should not migrate non-React projects`, async () => {
