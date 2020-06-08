@@ -29,6 +29,7 @@ async function spawnLocalRegistry() {
 
   setTimeout(() => {
     if (!resolvedOrRejected) {
+      console.error(`Failed to start the npm registry`);
       console.error(collectedOutput.join(''));
       cleanUp(1);
     }
@@ -116,7 +117,7 @@ async function runTest() {
     } else if (selectedProjects) {
       execSync(`nx run-many --target=e2e --projects=${selectedProjects}`, {
         stdio: [0, 1, 2],
-        NX_TERMINAL_CAPTURE_STDERR: 'true',
+        env: { ...process.env, NX_TERMINAL_CAPTURE_STDERR: 'true' },
       });
     } else {
       execSync(`nx run-many --target=e2e --all`, {
