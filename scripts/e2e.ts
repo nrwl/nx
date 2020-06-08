@@ -116,9 +116,13 @@ async function runTest() {
     } else if (selectedProjects) {
       execSync(`nx run-many --target=e2e --projects=${selectedProjects}`, {
         stdio: [0, 1, 2],
+        NX_TERMINAL_CAPTURE_STDERR: 'true',
       });
     } else {
-      execSync(`nx run-many --target=e2e --all`, { stdio: [0, 1, 2] });
+      execSync(`nx run-many --target=e2e --all`, {
+        stdio: [0, 1, 2],
+        env: { ...process.env, NX_TERMINAL_CAPTURE_STDERR: 'true' },
+      });
     }
     cleanUp(0);
   } catch (e) {
