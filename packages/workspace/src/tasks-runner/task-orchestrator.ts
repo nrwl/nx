@@ -155,10 +155,15 @@ export class TaskOrchestrator {
           }
           // we don't have to worry about this statement. code === 0 guarantees the file is there.
           if (outputPath && code === 0) {
-            this.cache.put(task, outputPath, taskOutputs).then(() => {
-              this.options.lifeCycle.endTask(task, code);
-              res(code);
-            });
+            this.cache
+              .put(task, outputPath, taskOutputs)
+              .then(() => {
+                this.options.lifeCycle.endTask(task, code);
+                res(code);
+              })
+              .catch((e) => {
+                rej(e);
+              });
           } else {
             this.options.lifeCycle.endTask(task, code);
             res(code);

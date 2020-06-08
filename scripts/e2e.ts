@@ -115,15 +115,21 @@ async function runTest() {
     if (selectedProjects === '') {
       console.log('No tests to run');
     } else if (selectedProjects) {
-      execSync(`nx run-many --target=e2e --projects=${selectedProjects}`, {
-        stdio: [0, 1, 2],
-        env: { ...process.env, NX_TERMINAL_CAPTURE_STDERR: 'true' },
-      });
+      execSync(
+        `node --max-old-space-size=4000 ./node_modules/.bin/nx run-many --target=e2e --projects=${selectedProjects}`,
+        {
+          stdio: [0, 1, 2],
+          env: { ...process.env, NX_TERMINAL_CAPTURE_STDERR: 'true' },
+        }
+      );
     } else {
-      execSync(`nx run-many --target=e2e --all`, {
-        stdio: [0, 1, 2],
-        env: { ...process.env, NX_TERMINAL_CAPTURE_STDERR: 'true' },
-      });
+      execSync(
+        `node --max-old-space-size=4000 ./node_modules/.bin/nx run-many --target=e2e --all`,
+        {
+          stdio: [0, 1, 2],
+          env: { ...process.env, NX_TERMINAL_CAPTURE_STDERR: 'true' },
+        }
+      );
     }
     cleanUp(0);
   } catch (e) {
