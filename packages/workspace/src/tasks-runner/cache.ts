@@ -16,7 +16,9 @@ class CacheConfig {
     const cacheable =
       this.options.cacheableOperations || this.options.cacheableTargets;
     return (
-      cacheable.indexOf(task.target.target) > -1 && !this.longRunningTask(task)
+      cacheable &&
+      cacheable.indexOf(task.target.target) > -1 &&
+      !this.longRunningTask(task)
     );
   }
 
