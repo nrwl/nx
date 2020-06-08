@@ -91,11 +91,15 @@ async function runTest() {
     )
       .toString()
       .split(',')
-      .map((s) => s.trim());
-    selectedProjects = selectedProjects
-      .split(',')
-      .filter((s) => affected.indexOf(s) > -1)
-      .join(',');
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    selectedProjects =
+      affected.length === 0
+        ? selectedProjects
+        : selectedProjects
+            .split(',')
+            .filter((s) => affected.indexOf(s) > -1)
+            .join(',');
   }
 
   execSync(`./scripts/package.sh 9999.0.1 "~9.1.0" "3.8.3" "2.0.4"`, {
@@ -107,7 +111,9 @@ async function runTest() {
 
   try {
     await setup();
-    if (selectedProjects) {
+    if (selectedProjects === '') {
+      console.log('No tests to run');
+    } else if (selectedProjects) {
       execSync(`nx run-many --target=e2e --projects=${selectedProjects}`, {
         stdio: [0, 1, 2],
       });
