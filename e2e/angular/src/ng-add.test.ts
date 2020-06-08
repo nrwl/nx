@@ -11,7 +11,7 @@ import {
 } from '@nrwl/e2e/utils';
 
 forEachCli('angular', () => {
-  describe('Nrwl Convert to Nx Workspace', () => {
+  xdescribe('Nrwl Convert to Nx Workspace', () => {
     beforeEach(cleanup);
     afterAll(cleanup);
 
@@ -248,9 +248,9 @@ forEachCli('angular', () => {
     it('should generate a workspace and not change dependencies, devDependencies, or vscode extensions if they already exist', () => {
       // create a new AngularCLI app
       runNgNew();
-      const nxVersion = '0.0.0';
-      const schematicsVersion = '0.0.0';
-      const ngrxVersion = '0.0.0';
+      const nxVersion = '9.3.0';
+      const schematicsVersion = '9.3.0';
+      const ngrxVersion = '9.2.0';
       // update package.json
       const existingPackageJson = readJson('package.json');
       existingPackageJson.devDependencies[
@@ -354,7 +354,7 @@ forEachCli('angular', () => {
 });
 
 forEachCli('nx', () => {
-  describe('ng-add', () => {
+  xdescribe('ng-add', () => {
     it('is not supported', () => {});
   });
 });
