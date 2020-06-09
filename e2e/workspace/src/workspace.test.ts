@@ -32,7 +32,7 @@ forEachCli((cliName) => {
   });
 
   describe('run-one', () => {
-    fit('should build specific project', () => {
+    it('should build specific project', () => {
       ensureProject();
       const myapp = uniq('myapp');
       const mylib1 = uniq('mylib1');
