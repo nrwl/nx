@@ -180,7 +180,9 @@ export class Hasher {
               const path = resolve.sync(`${d}/package.json`, {
                 basedir: process.cwd(),
               });
-              return this.fileHashes.hashFile(path).catch(() => '');
+              return this.fileHashes
+                .hashFile(path, extractNameAndVersion)
+                .catch(() => '');
             } catch (e) {
               return '';
             }
@@ -251,24 +253,42 @@ export class ProjectHashes {
   }
 }
 
+export function extractNameAndVersion(content: string): string {
+  return content
+    .split(`\n`)
+    .filter((r) => {
+      const t = r.trim();
+      return t.startsWith(`"name":`) || t.startsWith(`"version":`);
+    })
+    .join(`\n`);
+}
+
+type PathAndTransformer = {
+  path: string;
+  transformer: (x: string) => string | null;
+};
+
 export class FileHashes {
-  private queue = [];
+  private queue = [] as PathAndTransformer[];
   private numberOfConcurrentReads = 0;
   private fileHashes: { [path: string]: Promise<string> } = {};
   private resolvers: { [path: string]: Function } = {};
 
-  async hashFile(path: string) {
+  async hashFile(
+    path: string,
+    transformer: (x: string) => string | null = null
+  ) {
     if (!this.fileHashes[path]) {
       this.fileHashes[path] = new Promise((res) => {
         this.resolvers[path] = res;
-        this.pushFileIntoQueue(path);
+        this.pushFileIntoQueue({ path, transformer });
       });
     }
     return this.fileHashes[path];
   }
 
-  private pushFileIntoQueue(path: string) {
-    this.queue.push(path);
+  private pushFileIntoQueue(pathAndTransformer: PathAndTransformer) {
+    this.queue.push(pathAndTransformer);
     if (this.numberOfConcurrentReads < 2000) {
       this.numberOfConcurrentReads++;
       this.takeFromQueue();
@@ -277,10 +297,10 @@ export class FileHashes {
 
   private takeFromQueue() {
     if (this.queue.length > 0) {
-      const path = this.queue.pop();
-      this.processPath(path)
+      const pathAndTransformer = this.queue.pop();
+      this.processPath(pathAndTransformer)
         .then((value) => {
-          this.resolvers[path](value);
+          this.resolvers[pathAndTransformer.path](value);
         })
         .then(() => this.takeFromQueue());
     } else {
@@ -288,15 +308,22 @@ export class FileHashes {
     }
   }
 
-  private processPath(path: string) {
+  private processPath(pathAndTransformer: PathAndTransformer) {
     try {
-      const stats = statSync(path);
+      const stats = statSync(pathAndTransformer.path);
       const fileSizeInMegabytes = stats.size / 1000000;
       // large binary file, skip it
       if (fileSizeInMegabytes > 5) {
         return Promise.resolve(stats.size.toString());
+      } else if (pathAndTransformer.transformer) {
+        const transformedFile = pathAndTransformer.transformer(
+          readFileSync(pathAndTransformer.path).toString()
+        );
+        return Promise.resolve('').then(() =>
+          hasha([transformedFile], { algorithm: 'sha256' })
+        );
       } else {
-        return hasha.fromFile(path, { algorithm: 'sha256' });
+        return hasha.fromFile(pathAndTransformer.path, { algorithm: 'sha256' });
       }
     } catch (e) {
       return Promise.resolve('');
