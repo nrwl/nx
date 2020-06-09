@@ -250,9 +250,7 @@ describe('Hasher', () => {
         "version": "1.1.1"
       }
     `);
-      expect(nameAndVersion.replace(/\s/g, '')).toEqual(
-        `"name":"myname","version":"1.1.1"`
-      );
+      expect(nameAndVersion).toEqual(`myname1.1.1`);
     });
   });
 });

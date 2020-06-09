@@ -254,13 +254,12 @@ export class ProjectHashes {
 }
 
 export function extractNameAndVersion(content: string): string {
-  return content
-    .split(`\n`)
-    .filter((r) => {
-      const t = r.trim();
-      return t.startsWith(`"name":`) || t.startsWith(`"version":`);
-    })
-    .join(`\n`);
+  try {
+    const c = JSON.parse(content);
+    return `${c.name}${c.version}`;
+  } catch (e) {
+    return '';
+  }
 }
 
 type PathAndTransformer = {
