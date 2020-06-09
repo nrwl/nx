@@ -162,29 +162,38 @@ workflows:
     jobs:
       - install
       - checks-and-unit-tests:
+          context: cloud
           requires:
             - install
       - e2e-1:
+          context: cloud
           requires:
             - install
       - e2e-2:
+          context: cloud
           requires:
             - install
       - e2e-3:
+          context: cloud
           requires:
             - install
       - e2e-4:
+          context: cloud
           requires:
             - install
       - e2e-5:
+          context: cloud
           requires:
             - install
       - e2e-6:
+          context: cloud
           requires:
             - install
       - e2e-7:
+          context: cloud
           requires:
             - install
       - e2e-8:
+          context: cloud
           requires:
             - install
