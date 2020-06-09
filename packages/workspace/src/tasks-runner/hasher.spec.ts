@@ -1,4 +1,4 @@
-import { Hasher } from './hasher';
+import { Hasher, extractNameAndVersion } from './hasher';
 
 const hasha = require('hasha');
 const fs = require('fs');
@@ -239,5 +239,20 @@ describe('Hasher', () => {
     expect(hash).toContain('build'); //target
 
     done();
+  });
+
+  describe('extractNameAndVersion', () => {
+    it('should work', () => {
+      const nameAndVersion = extractNameAndVersion(`
+      {
+        "name": "myname",
+        "somethingElse": "123",
+        "version": "1.1.1"
+      }
+    `);
+      expect(nameAndVersion.replace(/\s/g, '')).toEqual(
+        `"name":"myname","version":"1.1.1"`
+      );
+    });
   });
 });
