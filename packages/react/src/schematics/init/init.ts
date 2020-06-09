@@ -1,9 +1,11 @@
 import { chain, noop, Rule } from '@angular-devkit/schematics';
+import { JsonObject } from '@angular-devkit/core';
 import {
   addPackageWithInit,
   setDefaultCollection,
   updateJsonInTree,
   updateWorkspace,
+  addDepsToPackageJson,
 } from '@nrwl/workspace';
 import { Schema } from './schema';
 import {
@@ -14,26 +16,6 @@ import {
   typesReactDomVersion,
   typesReactVersion,
 } from '../../utils/versions';
-import { JsonObject } from '@angular-devkit/core';
-
-export function updateDependencies(): Rule {
-  return updateJsonInTree('package.json', (json) => {
-    delete json.dependencies['@nrwl/react'];
-    json.dependencies = {
-      ...json.dependencies,
-      react: reactVersion,
-      'react-dom': reactDomVersion,
-    };
-    json.devDependencies = {
-      ...json.devDependencies,
-      '@nrwl/react': nxVersion,
-      '@types/react': typesReactVersion,
-      '@types/react-dom': typesReactDomVersion,
-      '@testing-library/react': testingLibraryReactVersion,
-    };
-    return json;
-  });
-}
 
 function setDefault(): Rule {
   const updateReactWorkspace = updateWorkspace((workspace) => {
@@ -71,6 +53,17 @@ export default function (schema: Schema) {
       ? addPackageWithInit('@nrwl/cypress')
       : noop(),
     addPackageWithInit('@nrwl/web', schema),
-    updateDependencies(),
+    addDepsToPackageJson(
+      {
+        react: reactVersion,
+        'react-dom': reactDomVersion,
+      },
+      {
+        '@nrwl/react': nxVersion,
+        '@types/react': typesReactVersion,
+        '@types/react-dom': typesReactDomVersion,
+        '@testing-library/react': testingLibraryReactVersion,
+      }
+    ),
   ]);
 }

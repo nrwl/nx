@@ -43,6 +43,19 @@ describe('lib', () => {
       });
     });
 
+    it('should add react and react-dom packages to package.json if not already present', async () => {
+      const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
+
+      const packageJson = readJsonInTree(tree, '/package.json');
+
+      expect(packageJson).toMatchObject({
+        dependencies: {
+          react: expect.anything(),
+          'react-dom': expect.anything(),
+        },
+      });
+    });
+
     it('should update root tsconfig.json', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
       const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');

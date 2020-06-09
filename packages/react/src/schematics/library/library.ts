@@ -44,6 +44,8 @@ import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
 import {
   reactRouterDomVersion,
   typesReactRouterDomVersion,
+  reactDomVersion,
+  reactVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
 import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
@@ -99,6 +101,13 @@ export default function (schema: Schema): Rule {
           })
         : noop(),
       options.publishable ? updateLibPackageNpmScope(options) : noop(),
+      addDepsToPackageJson(
+        {
+          react: reactVersion,
+          'react-dom': reactDomVersion,
+        },
+        {}
+      ),
       updateAppRoutes(options, context),
       initRootBabelConfig(),
       formatFiles(options),

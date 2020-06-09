@@ -19,10 +19,8 @@ describe('init', () => {
     );
     const result = await runSchematic('init', {}, tree);
     const packageJson = readJsonInTree(result, 'package.json');
-    expect(packageJson.dependencies['@nrwl/react']).toBeUndefined();
     expect(packageJson.dependencies['react']).toBeDefined();
     expect(packageJson.dependencies['react-dom']).toBeDefined();
-    expect(packageJson.devDependencies['@nrwl/react']).toBeDefined();
     expect(packageJson.devDependencies['@types/react']).toBeDefined();
     expect(packageJson.devDependencies['@types/react-dom']).toBeDefined();
     expect(packageJson.devDependencies['@testing-library/react']).toBeDefined();
