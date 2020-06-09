@@ -113,18 +113,20 @@ function showHelp() {
 
   Options:
 
-    name                      workspace name (e.g., org name)
+    name                      Workspace name (e.g., org name)
 
     preset                    What to create in a new workspace (options: ${options})
 
-    appName                   the name of the application created by some presets  
+    appName                   The name of the application created by some presets  
 
     cli                       CLI to power the Nx workspace (options: "nx", "angular")
     
-    style                     default style option to be used when a non-empty preset is selected 
+    style                     Default style option to be used when a non-empty preset is selected 
                               options: ("css", "scss", "styl", "less") for React/Next.js also ("styled-components", "@emotion/styled")
 
     interactive               Enable interactive mode when using presets (boolean)
+    
+    nx-cloud                  Connect to distributed computation cache provided by Nx Cloud (boolean)
 
     [new workspace options]   any 'new workspace' options
 `);
@@ -433,6 +435,7 @@ function createApp(
   );
 
   if (nxCloud) {
+    output.addVerticalSeparator();
     execSync(`./node_modules/.bin/nx g @nrwl/nx-cloud:init --no-analytics`, {
       stdio: [0, 1, 2],
       cwd: path.join(process.cwd(), name),
@@ -441,22 +444,32 @@ function createApp(
 }
 
 async function askAboutNxCloud(parsedArgs: any) {
-  return parsedArgs.nxCloud;
-  // TODO: vsavkin: reenable prompt before release Nx 9.4
-  // if (parsedArgs.nxCloud === undefined) {
-  //   return inquirer
-  //     .prompt([
-  //       {
-  //         name: 'NxCloud',
-  //         message: `Connect to the free tier of the distributed cache provided by Nx Cloud`,
-  //         default: false,
-  //         type: 'confirm',
-  //       },
-  //     ])
-  //     .then((a: { NxCloud: boolean }) => a.NxCloud);
-  // } else {
-  //   return parsedArgs.nxCloud;
-  // }
+  if (parsedArgs.nxCloud === undefined) {
+    return inquirer
+      .prompt([
+        {
+          name: 'NxCloud',
+          message: `Use the free tier of the distributed cache provided by Nx Cloud?`,
+          type: 'list',
+          choices: [
+            {
+              value: 'yes',
+              name:
+                'Yes [Faster command execution, faster CI. Learn more at https://nx.app.]',
+            },
+
+            {
+              value: 'no',
+              name: 'No  [Only use local computation cache.]',
+            },
+          ],
+          default: 'no',
+        },
+      ])
+      .then((a: { NxCloud: 'yes' | 'no' }) => a.NxCloud === 'yes');
+  } else {
+    return parsedArgs.nxCloud;
+  }
 }
 
 function pointToTutorialAndCourse(preset: Preset) {
