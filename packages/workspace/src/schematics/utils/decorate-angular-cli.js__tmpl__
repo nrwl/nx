@@ -23,8 +23,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const shelljs = require('shelljs');
 const os = require('os');
+const cp = require('child_process');
 const isWindows = os.platform() === 'win32';
 const { output } = require('@nrwl/workspace');
 
@@ -32,7 +32,7 @@ const { output } = require('@nrwl/workspace');
  * Paths to files being patched
  *
  */
-const angularCLIInitPath = 'node_modules/@angular/cli/lib/init.js';
+const angularCLIInitPath = 'node_modules/@angular/cli/lib/cli/index.js';
 const packageJsonPath = 'package.json';
 
 /**
@@ -42,11 +42,10 @@ function patchAngularCLI(initPath) {
   const angularCLIInit = fs.readFileSync(initPath, 'utf-8').toString();
 
   if (!angularCLIInit.includes('NX_CLI_SET')) {
-    const patchedCLIInit = angularCLIInit.replace('require("symbol-observable");', `
-  require("symbol-observable");
-  const { output } = require('@nrwl/workspace');
-
+    const patchedCLIInit = angularCLIInit.replace('require("util");', `
+  require("util");
   if (!process.env['NX_CLI_SET']) {
+    const { output } = require('@nrwl/workspace');
     output.warn({ title: 'The Angular CLI was invoked instead of the Nx CLI. Use "nx [command]" instead.' });
   }
   `);
@@ -77,7 +76,7 @@ function symlinkNgCLItoNxCLI() {
       fs.symlinkSync(nxPath, ngPath, 'junction');
     } else {
       // If unix-based, symlink
-      shelljs.exec(`ln -sf ./nx ${ngPath}`);
+      cp.execSync(`ln -sf ./nx ${ngPath}`);
     }
   }
   catch(e) {
