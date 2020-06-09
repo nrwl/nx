@@ -61,7 +61,13 @@ yarn local-registry enable
 yarn local-registry disable
 ```
 
-You can also run `yarn test-create-nx-workspace 30.0.0`. It will set up local registry, publish the packages, create the workspace with Angular and React applications in it, and will run some basic checks against the workspace.
+To publish packages to a local registry, do the following:
+
+- Run `yarn local-registry start` in Terminal 1 (keep it running)
+- Run `yarn local-registry enable` in Terminal 2
+- Run `yarn nx-release 999.9.9 --local` in Terminal 2
+- Run `cd /tmp` in Terminal 2
+- Run `npx create-nx-workspace@999.9.9` in Terminal 2
 
 ### Running Unit Tests
 
@@ -71,10 +77,10 @@ To make sure your changes do not break any unit tests, run the following:
 yarn test
 ```
 
-For example, if you need to only run the **jest-project/jest-project.spec.ts** test suite, provide a path to the specific spec file, run:
+For example, if you need to only run the tests for the jest package, run:
 
 ```bash
-yarn test jest/src/schematics/jest-project/jest-project
+nx test jest
 ```
 
 ### Running E2E Tests
@@ -88,29 +94,8 @@ yarn e2e
 Running E2E tests can take some time, so it is often useful to run a single test. To run a single suite of tests, run:
 
 ```bash
-yarn e2e affected
+yarn e2e e2e-cli
 ```
-
-The `yarn e2e` command is going to remove the `tmp` folder and will recreate the sandbox from scratch. This can take a long time. If you are working on the same e2e test, you can use `yarn e2e-rerun affected`, which is significantly faster.
-
-### Playground
-
-While developing you may want to try out the changes you have made. The easier way to do it is to run:
-
-```bash
-yarn create-playground
-```
-
-You can then go to `tmp/nx` (this is set up to use Nx CLI) or `tmp/angular` (this is set up to use Angular CLI), where you will find an empty workspace with your changes in it.:
-
-```bash
-yarn create-playground
-cd tmp/nx/proj
-nx g @nrwl/express:app backend
-nx build backend
-```
-
-You can fix the changed files in `tmp/nx/node_modules/@nrwl/...` and `tmp/angular/node_modules/@nrwl/...`.
 
 ### Developing on Windows
 

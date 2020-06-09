@@ -78,7 +78,7 @@ export function runCreateWorkspace(
     style,
   }: { preset: string; appName?: string; style?: string }
 ) {
-  let command = `npx create-nx-workspace@${process.env.PUBLISHED_VERSION} ${name} --cli=${cli} --preset=${preset} --no-interactive`;
+  let command = `npx create-nx-workspace@${process.env.PUBLISHED_VERSION} ${name} --cli=${cli} --preset=${preset} --no-nxCloud --no-interactive`;
   if (appName) {
     command += ` --appName ${appName}`;
   }

@@ -455,12 +455,12 @@ async function askAboutNxCloud(parsedArgs: any) {
             {
               value: 'yes',
               name:
-                'Yes [Faster command execution, faster CI. Learn more at https://nx.app.]',
+                'Yes [Faster command execution, faster CI. Learn more at https://nx.app]',
             },
 
             {
               value: 'no',
-              name: 'No  [Only use local computation cache.]',
+              name: 'No  [Only use local computation cache]',
             },
           ],
           default: 'no',
