@@ -19,6 +19,11 @@
       "version": "8.12.0-beta.1",
       "description": "Update Cypress to ^3.8.2",
       "factory": "./src/migrations/update-8-12-0/update-8-12-0"
+    },
+    "add-cypress-eslint-plugin-9.4.0": {
+      "version": "9.4.0-beta.1",
+      "description": "Add Cypress ESLint plugin",
+      "factory": "./src/migrations/update-9-4-0/add-cypress-eslint-plugin-9-4-0"
     }
   },
   "packageJsonUpdates": {

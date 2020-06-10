@@ -13,17 +13,20 @@ import {
 import { join, normalize } from '@angular-devkit/core';
 // app
 import {
-  updateJsonInTree,
   NxJson,
-  updateWorkspaceInTree,
-  generateProjectLint,
+  Linter,
+  addDepsToPackageJson,
   addLintFiles,
+  generateProjectLint,
+  offsetFromRoot,
+  toFileName,
+  updateJsonInTree,
+  updateWorkspaceInTree,
 } from '@nrwl/workspace';
-import { offsetFromRoot } from '@nrwl/workspace';
-import { toFileName } from '@nrwl/workspace';
 import { Schema } from './schema';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
+import { eslintPluginCypressVersion } from '../../utils/versions';
 
 export interface CypressProjectSchema extends Schema {
   projectName: string;
@@ -97,27 +100,40 @@ function updateWorkspaceJson(options: CypressProjectSchema): Rule {
   });
 }
 
+function addLinter(options: CypressProjectSchema): Rule {
+  return chain([
+    options.linter === Linter.EsLint
+      ? addDepsToPackageJson(
+          {},
+          { 'eslint-plugin-cypress': eslintPluginCypressVersion }
+        )
+      : noop(),
+    addLintFiles(options.projectRoot, options.linter, {
+      localConfig: {
+        // we need this overrides because we enabled
+        // allowJS in the tsconfig to allow for JS based
+        // Cypress tests. That however leads to issues
+        // with the CommonJS Cypress plugin file
+        overrides: [
+          {
+            files: ['src/plugins/index.js'],
+            rules: {
+              '@typescript-eslint/no-var-requires': 'off',
+              'no-undef': 'off',
+            },
+          },
+        ],
+        extends: ['plugin:cypress/recommended'],
+      },
+    }),
+  ]);
+}
+
 export default function (options: CypressProjectSchema): Rule {
   return (host: Tree, context: SchematicContext) => {
     options = normalizeOptions(host, options);
     return chain([
-      addLintFiles(options.projectRoot, options.linter, {
-        localConfig: {
-          // we need this overrides because we enabled
-          // allowJS in the tsconfig to allow for JS based
-          // Cypress tests. That however leads to issues
-          // with the CommonJS Cypress plugin file
-          overrides: [
-            {
-              files: ['src/plugins/index.js'],
-              rules: {
-                '@typescript-eslint/no-var-requires': 'off',
-                'no-undef': 'off',
-              },
-            },
-          ],
-        },
-      }),
+      addLinter(options),
       generateFiles(options),
       updateWorkspaceJson(options),
       updateNxJson(options),

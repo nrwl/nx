@@ -236,5 +236,27 @@ describe('schematic:cypress-project', () => {
         });
       });
     });
+
+    describe('--linter', () => {
+      describe('eslint', () => {
+        it('should add eslint-plugin-cypress', async () => {
+          const tree = await runSchematic(
+            'cypress-project',
+            { name: 'my-app-e2e', project: 'my-app', linter: Linter.EsLint },
+            appTree
+          );
+          const packageJson = readJsonInTree(tree, 'package.json');
+          const eslintrcJson = readJsonInTree(
+            tree,
+            'apps/my-app-e2e/.eslintrc'
+          );
+
+          expect(
+            packageJson.devDependencies['eslint-plugin-cypress']
+          ).toBeTruthy();
+          expect(eslintrcJson.extends).toContain('plugin:cypress/recommended');
+        });
+      });
+    });
   });
 });
