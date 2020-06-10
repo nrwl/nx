@@ -42,7 +42,7 @@ function patchAngularCLI(initPath) {
     fs.writeFileSync(initPath, `
 if (!process.env['NX_CLI_SET']) {
   const { output } = require('@nrwl/workspace');
-  output.warn({ title: 'The Angular CLI was invoked instead of the Nx CLI. Use "nx [command]" or "npm run ng [command]" instead.' });
+  output.warn({ title: 'The Angular CLI was invoked instead of the Nx CLI. Use "npx ng [command]" or "nx [command]" instead.' });
 }
 ${angularCLIInit}
     `);
