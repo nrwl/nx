@@ -84,6 +84,11 @@
       "version": "9.4.0-beta.1",
       "description": "Fix exclude patterns in tslint and eslint to ensure it does not break linting when a files option is defined",
       "factory": "./src/migrations/update-9-4-0/update-linters-exclude"
+    },
+    "add-decorate-cli": {
+      "version": "9.4.0-beta.1",
+      "description": "Decorate cli to enable computation caching",
+      "factory": "./src/migrations/update-9-4-0/add-decorate-cli"
     }
   },
   "packageJsonUpdates": {

@@ -3,6 +3,7 @@ import {
   branchAndMerge,
   chain,
   mergeWith,
+  noop,
   Rule,
   SchematicContext,
   template,
@@ -10,17 +11,25 @@ import {
   url,
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
-import { strings } from '@angular-devkit/core';
+import { join, strings } from '@angular-devkit/core';
 import {
   angularCliVersion,
-  prettierVersion,
-  typescriptVersion,
   eslintVersion,
   nxVersion,
+  prettierVersion,
+  typescriptVersion,
 } from '../../utils/versions';
+import { readFileSync } from 'fs';
 
 export const DEFAULT_NRWL_PRETTIER_CONFIG = {
   singleQuote: true,
+};
+
+const decorateAngularClI = (host: Tree) => {
+  const decorateCli = readFileSync(
+    join(__dirname as any, '..', 'utils', 'decorate-angular-cli.js__tmpl__')
+  ).toString();
+  host.create('decorate-angular-cli.js', decorateCli);
 };
 
 export default function (options: Schema): Rule {
@@ -53,9 +62,13 @@ export default function (options: Schema): Rule {
         ),
       }),
     ]);
-    return chain([branchAndMerge(chain([mergeWith(templateSource)]))])(
-      host,
-      context
-    );
+    return chain([
+      branchAndMerge(
+        chain([
+          mergeWith(templateSource),
+          options.cli === 'angular' ? decorateAngularClI : noop(),
+        ])
+      ),
+    ])(host, context);
   };
 }
