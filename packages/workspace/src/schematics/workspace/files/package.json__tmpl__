@@ -4,7 +4,8 @@
   "license": "MIT",
   "scripts": {
     <% if(cli === 'angular') { %>
-    "ng": "ng",
+    "ng": "nx",
+    "postinstall": "node ./decorate-angular-cli.js",
     <% } %>
     "nx": "nx",
     "start": "<%= cliCommand %> serve",

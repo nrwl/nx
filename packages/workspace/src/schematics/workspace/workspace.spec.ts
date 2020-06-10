@@ -75,4 +75,28 @@ describe('workspace', () => {
       'esbenp.prettier-vscode',
     ]);
   });
+
+  it('should add decorate-angular-cli when used with angular cli', async () => {
+    const tree = await runSchematic(
+      'workspace',
+      { name: 'proj', cli: 'angular' },
+      projectTree
+    );
+    expect(tree.exists('/decorate-angular-cli.js')).toBe(true);
+    const packageJson = readJsonInTree(tree, '/package.json');
+    expect(packageJson.scripts.postinstall).toEqual(
+      'node ./decorate-angular-cli.js'
+    );
+  });
+
+  it('should not add decorate-angular-cli when used with nx cli', async () => {
+    const tree = await runSchematic(
+      'workspace',
+      { name: 'proj', cli: 'nx' },
+      projectTree
+    );
+    expect(tree.exists('/decorate-angular-cli.js')).toBe(false);
+    const packageJson = readJsonInTree(tree, '/package.json');
+    expect(packageJson.scripts.postinstall).toBeUndefined();
+  });
 });
