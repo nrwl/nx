@@ -146,19 +146,12 @@ export function setDefaults(options: Schema): Rule {
 function addPostinstall(): Rule {
   return updateJsonInTree('package.json', (json, context) => {
     json.scripts = json.scripts || {};
-
+    const command =
+      'ngcc --properties es2015 browser module main --first-only --create-ivy-entry-points';
     if (!json.scripts.postinstall) {
-      json.scripts.postinstall =
-        'ngcc --properties es2015 browser module main --first-only --create-ivy-entry-points';
+      json.scripts.postinstall = command;
     } else if (!json.scripts.postinstall.includes('ngcc')) {
-      context.logger.warn(
-        stripIndents`
-            ---------------------------------------------------------------------------------------
-            Angular Ivy requires you to run ngcc after every npm install.
-            The easiest way to accomplish this is to update your postinstall script to invoke ngcc.
-            ---------------------------------------------------------------------------------------
-          `
-      );
+      json.scripts.postinstall = `${json.scripts.postinstall} && ${command}`;
     }
     return json;
   });
