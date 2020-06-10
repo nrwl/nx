@@ -84,7 +84,7 @@ export default function (schema: Schema): Rule {
             setupFile: 'none',
             supportTsx: true,
             skipSerializers: true,
-            babelJest: options.babelJest,
+            babelJest: true,
           })
         : noop(),
       options.component

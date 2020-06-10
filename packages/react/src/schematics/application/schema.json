@@ -97,12 +97,6 @@
       "description": "Test runner to use for unit tests",
       "default": "jest"
     },
-    "babelJest": {
-      "type": "boolean",
-      "alias": "babel-jest",
-      "description": "Use babel-jest instead of ts-jest",
-      "default": false
-    },
     "e2eTestRunner": {
       "type": "string",
       "enum": ["cypress", "none"],

@@ -8,7 +8,7 @@ export function addJest(options: NormalizedSchema): Rule {
         supportTsx: true,
         skipSerializers: true,
         setupFile: 'none',
-        babelJest: options.babelJest,
+        babelJest: true,
       })
     : noop();
 }
