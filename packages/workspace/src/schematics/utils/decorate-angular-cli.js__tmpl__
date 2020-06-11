@@ -57,18 +57,14 @@ function symlinkNgCLItoNxCLI() {
   try {
     const ngPath = './node_modules/.bin/ng';
     const nxPath = './node_modules/.bin/nx';
-
     if (isWindows) {
       /**
-       * Node has a built-in API to create symlinks
-       * https://nodejs.org/docs/latest-v13.x/api/fs.html
+       * This is the most reliable way to create symlink-like behavior on Windows.
+       * Such that it works in all shells and works with npx.
        */
-      // If Windows, symlink
-      if (fs.existsSync(ngPath)) {
-        fs.unlinkSync(ngPath);
-      }
-
-      fs.symlinkSync(nxPath, ngPath, 'junction');
+      ['', '.cmd', '.ps1'].forEach(ext => {
+        fs.writeFileSync(ngPath + ext, fs.readFileSync(nxPath + ext));
+      });
     } else {
       // If unix-based, symlink
       cp.execSync(`ln -sf ./nx ${ngPath}`);
