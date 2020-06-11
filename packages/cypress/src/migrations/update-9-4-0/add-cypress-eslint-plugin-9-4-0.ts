@@ -4,6 +4,7 @@ import {
   formatFiles,
   readJsonInTree,
   updateJsonInTree,
+  readWorkspace,
 } from '@nrwl/workspace';
 
 async function addCypressPluginToEslintrc(host: Tree) {
@@ -12,8 +13,8 @@ async function addCypressPluginToEslintrc(host: Tree) {
 
   const eslintrcFilePaths = [];
   if (devDependencies && devDependencies['@nrwl/cypress']) {
-    const workspaceJson = readJsonInTree(host, 'workspace.json');
-    Object.values<any>(workspaceJson.projects).forEach((project) => {
+    const workspace = readWorkspace(host);
+    Object.values<any>(workspace.projects).forEach((project) => {
       Object.values<any>(project.architect).forEach((target) => {
         if (target.builder !== '@nrwl/cypress:cypress') {
           return;
