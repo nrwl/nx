@@ -1,18 +1,20 @@
 import { Tree } from '@angular-devkit/schematics';
-import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { readJsonInTree, serializeJson } from '@nrwl/workspace';
-import * as path from 'path';
+import {
+  readJsonInTree,
+  serializeJson,
+  updateJsonInTree,
+} from '@nrwl/workspace';
+import { callRule, runMigration } from '../../utils/testing';
 
 describe('Add Cypress ESLint Plugin 9.4.0', () => {
   let tree: Tree;
-  let schematicRunner: SchematicTestRunner;
 
   beforeEach(() => {
     tree = Tree.empty();
     tree.create(
       'package.json',
       serializeJson({
-        devDependencies: { '@nrwl/cypress': '9.3.0' },
+        devDependencies: { '@nrwl/cypress': '9.3.0', eslint: '6.8.0' },
       })
     );
 
@@ -53,17 +55,14 @@ describe('Add Cypress ESLint Plugin 9.4.0', () => {
         extends: ['../../.eslintrc'],
       })
     );
-
-    schematicRunner = new SchematicTestRunner(
-      '@nrwl/cypress',
-      path.join(__dirname, '../../../migrations.json')
-    );
   });
 
   it('should add eslint-plugin-cypress devDependency', async () => {
-    const result = await schematicRunner
-      .runSchematicAsync('add-cypress-eslint-plugin-9.4.0', {}, tree)
-      .toPromise();
+    const result = await runMigration(
+      'add-cypress-eslint-plugin-9.4.0',
+      {},
+      tree
+    );
 
     const { devDependencies } = readJsonInTree(result, '/package.json');
     const projectOneEslintrcJson = readJsonInTree(
@@ -82,5 +81,23 @@ describe('Add Cypress ESLint Plugin 9.4.0', () => {
     expect(projectTwoEslintrcJson.extends).toContain(
       'plugin:cypress/recommended'
     );
+  });
+
+  it('should not add eslint-plugin-cypress if eslint is not used', async () => {
+    tree = await callRule(
+      updateJsonInTree('package.json', (json) => {
+        delete json.devDependencies.eslint;
+        return json;
+      }),
+      tree
+    );
+
+    const result = await runMigration(
+      'add-cypress-eslint-plugin-9.4.0',
+      {},
+      tree
+    );
+    const { devDependencies } = readJsonInTree(result, '/package.json');
+    expect(devDependencies['eslint-plugin-cypress']).not.toBeDefined();
   });
 });
