@@ -50,16 +50,6 @@ Type: `string`
 
 The application project to add the library route to
 
-### babelJest
-
-Alias(es): babel-jest
-
-Default: `false`
-
-Type: `boolean`
-
-Use babel-jest instead of ts-jest
-
 ### component
 
 Default: `true`
