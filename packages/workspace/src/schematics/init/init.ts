@@ -34,7 +34,7 @@ import {
 import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../workspace/workspace';
 import { JsonArray } from '@angular-devkit/core';
 import { updateWorkspace } from '../../utils/workspace';
-import { basename } from 'path';
+import { basename, join as pathJoin } from 'path';
 import { readFileSync } from 'fs';
 
 function updatePackageJson() {
@@ -599,7 +599,7 @@ const createNxJson = (host: Tree) => {
 
 const decorateAngularClI = (host: Tree, context: SchematicContext) => {
   const decorateCli = readFileSync(
-    join(__dirname as any, '..', 'utils', 'decorate-angular-cli.js__tmpl__')
+    pathJoin(__dirname as any, '..', 'utils', 'decorate-angular-cli.js__tmpl__')
   ).toString();
   host.create('decorate-angular-cli.js', decorateCli);
   updateJsonInTree('package.json', (json) => {
