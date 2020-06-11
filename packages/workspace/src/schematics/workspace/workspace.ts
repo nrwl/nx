@@ -20,6 +20,7 @@ import {
   typescriptVersion,
 } from '../../utils/versions';
 import { readFileSync } from 'fs';
+import { join as pathJoin } from 'path';
 
 export const DEFAULT_NRWL_PRETTIER_CONFIG = {
   singleQuote: true,
@@ -27,7 +28,7 @@ export const DEFAULT_NRWL_PRETTIER_CONFIG = {
 
 const decorateAngularClI = (host: Tree) => {
   const decorateCli = readFileSync(
-    join(__dirname as any, '..', 'utils', 'decorate-angular-cli.js__tmpl__')
+    pathJoin(__dirname as any, '..', 'utils', 'decorate-angular-cli.js__tmpl__')
   ).toString();
   host.create('decorate-angular-cli.js', decorateCli);
 };

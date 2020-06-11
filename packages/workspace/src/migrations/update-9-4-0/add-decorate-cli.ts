@@ -1,13 +1,13 @@
 import { chain, SchematicContext, Tree } from '@angular-devkit/schematics';
 import { formatFiles } from '../../utils/rules/format-files';
-import { join } from '@angular-devkit/core';
 import { readFileSync } from 'fs';
 import { updateJsonInTree } from '@nrwl/workspace';
+import { join as pathJoin } from 'path';
 
 const decorateAngularClI = (host: Tree, context: SchematicContext) => {
   if (host.exists('angular.json')) {
     const decorateCli = readFileSync(
-      join(
+      pathJoin(
         __dirname as any,
         '..',
         '..',
