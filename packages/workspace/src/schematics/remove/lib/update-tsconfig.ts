@@ -23,16 +23,11 @@ export function updateTsconfig(schema: Schema) {
 
         const tsConfigPath = 'tsconfig.json';
         if (tree.exists(tsConfigPath)) {
-          let contents = tree.read(tsConfigPath).toString('utf-8');
-          try {
-              contents = JSON.parse(contents);
-          } catch (e) {
-              throw new Error(`Cannot parse ${tsConfigPath}: ${e.message}`);
-          }
-          delete contents.compilerOptions.paths[
+          const tsConfigJson = readJsonInTree(tree, tsConfigPath);
+          delete tsConfigJson.compilerOptions.paths[
             `@${nxJson.npmScope}/${project.root.substr(5)}`
           ];
-          tree.overwrite(tsConfigPath, serializeJson(contents));
+          tree.overwrite(tsConfigPath, serializeJson(tsConfigJson));
         }
 
         return tree;
