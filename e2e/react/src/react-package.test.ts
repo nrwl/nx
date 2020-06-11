@@ -37,13 +37,13 @@ forEachCli('nx', (cli) => {
       runCLI(`generate @nrwl/react:app ${app}`);
 
       runCLI(
-        `generate @nrwl/react:library ${parentLib} --buildable --no-interactive`
+        `generate @nrwl/react:library ${parentLib} --publishable --importPath=@proj/${parentLib} --no-interactive`
       );
       runCLI(
-        `generate @nrwl/react:library ${childLib} --buildable --no-interactive`
+        `generate @nrwl/react:library ${childLib} --publishable --importPath=@proj/${childLib} --no-interactive`
       );
       runCLI(
-        `generate @nrwl/react:library ${childLib2} --buildable --no-interactive`
+        `generate @nrwl/react:library ${childLib2} --publishable --importPath=@proj/${childLib2} --no-interactive`
       );
 
       // create dependencies by importing

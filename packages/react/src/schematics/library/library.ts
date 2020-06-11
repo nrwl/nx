@@ -9,6 +9,7 @@ import {
   noop,
   Rule,
   SchematicContext,
+  SchematicsException,
   template,
   Tree,
   url,
@@ -65,6 +66,12 @@ export interface NormalizedSchema extends Schema {
 export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
+
+    if (options.publishable === true && !schema.importPath) {
+      throw new SchematicsException(
+        `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
+      );
+    }
 
     if (!options.component) {
       options.style = 'none';
@@ -125,7 +132,7 @@ function addProject(options: NormalizedSchema): Rule {
       options.linter
     );
 
-    if (options.publishable) {
+    if (options.publishable || options.buildable) {
       const external = ['react', 'react-dom'];
       // Also exclude CSS-in-JS packages from build
       if (
@@ -179,12 +186,20 @@ function updateTsConfig(options: NormalizedSchema): Rule {
         const c = json.compilerOptions;
         c.paths = c.paths || {};
         delete c.paths[options.name];
-        c.paths[`@${nxJson.npmScope}/${options.projectDirectory}`] = [
+
+        if (c.paths[options.importPath]) {
+          throw new SchematicsException(
+            `You already have a library using the import path "${options.importPath}". Make sure to specify a unique one.`
+          );
+        }
+
+        c.paths[options.importPath] = [
           maybeJs(
             options,
             `${libsDir(host)}/${options.projectDirectory}/src/index.ts`
           ),
         ];
+
         return json;
       })(host, context);
     },
@@ -201,7 +216,7 @@ function createFiles(options: NormalizedSchema): Rule {
         offsetFromRoot: offsetFromRoot(options.projectRoot),
       }),
       move(options.projectRoot),
-      options.publishable
+      options.publishable || options.buildable
         ? noop()
         : filter((file) => !file.endsWith('package.json')),
       options.js ? toJS() : noop(),
@@ -324,6 +339,9 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
+  const importPath =
+    options.importPath || `@${getNpmScope(host)}/${projectDirectory}`;
+
   const normalized: NormalizedSchema = {
     ...options,
     fileName,
@@ -332,6 +350,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     projectRoot,
     projectDirectory,
     parsedTags,
+    importPath,
   };
 
   if (options.appProject) {
@@ -359,12 +378,10 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 }
 
 function updateLibPackageNpmScope(options: NormalizedSchema): Rule {
-  return (host: Tree) => {
-    return updateJsonInTree(`${options.projectRoot}/package.json`, (json) => {
-      json.name = `@${getNpmScope(host)}/${options.name}`;
-      return json;
-    });
-  };
+  return updateJsonInTree(`${options.projectRoot}/package.json`, (json) => {
+    json.name = options.importPath;
+    return json;
+  });
 }
 
 function maybeJs(options: NormalizedSchema, path: string): string {

@@ -50,6 +50,14 @@ Type: `string`
 
 The application project to add the library route to.
 
+### buildable
+
+Default: `false`
+
+Type: `boolean`
+
+Generate a buildable library.
+
 ### component
 
 Default: `true`
@@ -108,11 +116,9 @@ Use pascal case component file name (e.g. App.tsx).
 
 ### publishable
 
-Alias(es): buildable
-
 Type: `boolean`
 
-Create a buildable library.
+Create a publishable library.
 
 ### routing
 
