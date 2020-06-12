@@ -42,6 +42,12 @@ Open the dep graph of the workspace in the browser, and highlight the projects a
 nx affected:dep-graph --base=master~1 --head=master
 ```
 
+Open the dep graph of the workspace in the browser, highlight the projects affected, but exclude project-one and project-two:
+
+```bash
+nx affected:dep-graph --exclude=project-one,project-two
+```
+
 ## Options
 
 ### all
@@ -70,9 +76,13 @@ output file (e.g. --file=output.json or --file=dep-graph.html)
 
 Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas
 
-### filter
+### focus
 
-Use to limit the dependency graph to only show specific projects, list of projects delimited by commas.
+Use to show the dependency graph for a particular project and every node that is either an ancestor or a descendant.
+
+### groupByFolder
+
+Group projects by folder in dependency graph
 
 ### head
 

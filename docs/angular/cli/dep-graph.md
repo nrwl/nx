@@ -30,16 +30,28 @@ Generate a static website with dep graph into an html file, accompanied by an as
 nx dep-graph --file=output.html
 ```
 
-Show the graph where every node is either an ancestor or a descendant of todos-feature-main.:
+Show the graph where every node is either an ancestor or a descendant of todos-feature-main:
 
 ```bash
-nx dep-graph --filter=todos-feature-main
+nx dep-graph --focus=todos-feature-main
 ```
 
-Exclude project-one and project-two from the dep graph.:
+Include project-one and project-two in the dep graph:
+
+```bash
+nx dep-graph --include=project-one,project-two
+```
+
+Exclude project-one and project-two from the dep graph:
 
 ```bash
 nx dep-graph --exclude=project-one,project-two
+```
+
+Show the graph where every node is either an ancestor or a descendant of todos-feature-main, but exclude project-one and project-two:
+
+```bash
+nx dep-graph --focus=todos-feature-main --exclude=project-one,project-two
 ```
 
 ## Options
@@ -52,9 +64,13 @@ List of projects delimited by commas to exclude from the dependency graph.
 
 output file (e.g. --file=output.json or --file=dep-graph.html)
 
-### filter
+### focus
 
-Use to limit the dependency graph to only show specific projects, list of projects delimited by commas.
+Use to show the dependency graph for a particular project and every node that is either an ancestor or a descendant.
+
+### groupByFolder
+
+Group projects by folder in dependency graph
 
 ### help
 

@@ -9,9 +9,12 @@ import {
   onlyWorkspaceProjects,
   ProjectGraph,
   ProjectGraphNode,
+  ProjectGraphDependency,
 } from '../core/project-graph';
 import { appRootPath } from '../utils/app-root';
 import { output } from '../utils/output';
+import { checkProjectExists } from '../utils/rules/check-project-exists';
+import { filter } from '@angular-devkit/schematics';
 
 // maps file extention to MIME types
 const mimeType = {
@@ -34,12 +37,16 @@ const mimeType = {
 function projectsToHtml(
   projects: ProjectGraphNode[],
   graph: ProjectGraph,
-  affected: string[]
+  affected: string[],
+  focus: string,
+  groupByFolder: boolean,
+  exclude: string[]
 ) {
-  const f = readFileSync(
+  let f = readFileSync(
     join(__dirname, '../core/dep-graph/dep-graph.html')
   ).toString();
-  return f
+
+  f = f
     .replace(
       `window.projects = null`,
       `window.projects = ${JSON.stringify(projects)}`
@@ -48,20 +55,149 @@ function projectsToHtml(
     .replace(
       `window.affected = null`,
       `window.affected = ${JSON.stringify(affected)}`
+    )
+    .replace(
+      `window.groupByFolder = null`,
+      `window.groupByFolder = ${!!groupByFolder}`
+    )
+    .replace(
+      `window.exclude = null`,
+      `window.exclude = ${JSON.stringify(exclude)}`
     );
+
+  if (focus) {
+    f = f.replace(
+      `window.focusedProject = null`,
+      `window.focusedProject = '${focus}'`
+    );
+  }
+
+  return f;
+}
+
+function projectExists(projects: ProjectGraphNode[], projectToFind: string) {
+  return (
+    projects.find((project) => project.name === projectToFind) !== undefined
+  );
+}
+
+function hasPath(
+  graph: ProjectGraph,
+  target: string,
+  node: string,
+  visited: string[]
+) {
+  if (target === node) return true;
+
+  for (let d of graph.dependencies[node] || []) {
+    if (visited.indexOf(d.target) > -1) continue;
+    visited.push(d.target);
+    if (hasPath(graph, target, d.target, visited)) return true;
+  }
+  return false;
+}
+
+function filterGraph(
+  graph: ProjectGraph,
+  focus: string,
+  exclude: string[]
+): ProjectGraph {
+  let projectNames = (Object.values(graph.nodes) as ProjectGraphNode[]).map(
+    (project) => project.name
+  );
+
+  let filteredProjectNames: Set<string>;
+
+  if (focus !== null) {
+    filteredProjectNames = new Set<string>();
+    projectNames.forEach((p) => {
+      const isInPath =
+        hasPath(graph, p, focus, []) || hasPath(graph, focus, p, []);
+
+      if (isInPath) {
+        filteredProjectNames.add(p);
+      }
+    });
+  } else {
+    filteredProjectNames = new Set<string>(projectNames);
+  }
+
+  if (exclude.length !== 0) {
+    exclude.forEach((p) => filteredProjectNames.delete(p));
+  }
+
+  let filteredGraph: ProjectGraph = {
+    nodes: {},
+    dependencies: {},
+  };
+
+  filteredProjectNames.forEach((p) => {
+    filteredGraph.nodes[p] = graph.nodes[p];
+    filteredGraph.dependencies[p] = graph.dependencies[p];
+  });
+
+  return filteredGraph;
 }
 
 export function generateGraph(
-  args: { file?: string; filter?: string[]; exclude?: string[]; host?: string },
+  args: {
+    file?: string;
+    host?: string;
+    focus?: string;
+    exclude?: string[];
+    groupByFolder?: boolean;
+  },
   affectedProjects: string[]
 ): void {
-  const graph = onlyWorkspaceProjects(createProjectGraph());
+  let graph = onlyWorkspaceProjects(createProjectGraph());
 
-  const renderProjects: ProjectGraphNode[] = filterProjects(
-    graph,
-    args.filter,
-    args.exclude
-  );
+  const projects = Object.values(graph.nodes) as ProjectGraphNode[];
+  projects.sort((a, b) => {
+    return a.name.localeCompare(b.name);
+  });
+
+  if (args.focus !== undefined) {
+    if (!projectExists(projects, args.focus)) {
+      output.error({
+        title: `Project to focus does not exist.`,
+        bodyLines: [`You provided --focus=${args.focus}`],
+      });
+      process.exit(1);
+    }
+  }
+
+  if (args.exclude !== undefined) {
+    const invalidExcludes: string[] = [];
+
+    args.exclude.forEach((project) => {
+      if (!projectExists(projects, project)) {
+        invalidExcludes.push(project);
+      }
+    });
+
+    if (invalidExcludes.length > 0) {
+      output.error({
+        title: `The following projects provided to --exclude do not exist:`,
+        bodyLines: invalidExcludes,
+      });
+      process.exit(1);
+    }
+  }
+
+  let html: string;
+
+  if (args.file === undefined || args.file.endsWith('html')) {
+    html = projectsToHtml(
+      projects,
+      graph,
+      affectedProjects,
+      args.focus || null,
+      args.groupByFolder || false,
+      args.exclude || []
+    );
+  } else {
+    graph = filterGraph(graph, args.focus || null, args.exclude || []);
+  }
 
   if (args.file) {
     let folder = appRootPath;
@@ -89,11 +225,8 @@ export function generateGraph(
           return isntHtml;
         },
       });
-      const html = projectsToHtml(
-        renderProjects,
-        graph,
-        affectedProjects
-      ).replace(
+
+      html = html.replace(
         /<(script.*|link.*)="(.*\.(?:js|css))"(><\/script>| \/>?)/g,
         '<$1="static/$2"$3'
       );
@@ -131,23 +264,11 @@ export function generateGraph(
       process.exit(1);
     }
   } else {
-    startServer(
-      renderProjects,
-      graph,
-      affectedProjects,
-      args.host || '127.0.0.1'
-    );
+    startServer(html, args.host || '127.0.0.1');
   }
 }
 
-function startServer(
-  projects: ProjectGraphNode[],
-  graph: ProjectGraph,
-  affected: string[],
-  host: string
-) {
-  const html = projectsToHtml(projects, graph, affected);
-
+function startServer(html: string, host: string) {
   const app = http.createServer((req, res) => {
     // parse URL
     const parsedUrl = url.parse(req.url);
@@ -203,40 +324,4 @@ function startServer(
   opn(`http://${host}:4211`, {
     wait: false,
   });
-}
-
-function filterProjects(
-  graph: ProjectGraph,
-  filter: string[],
-  exclude: string[]
-) {
-  const filteredProjects = Object.values(graph.nodes).filter((p) => {
-    const filtered =
-      filter && filter.length > 0
-        ? filter.find(
-            (f) =>
-              hasPath(graph, f, p.name, []) || hasPath(graph, p.name, f, [])
-          )
-        : true;
-    return !exclude
-      ? filtered
-      : exclude && exclude.indexOf(p.name) === -1 && filtered;
-  });
-
-  return filteredProjects;
-}
-
-function hasPath(
-  graph: ProjectGraph,
-  target: string,
-  node: string,
-  visited: string[]
-) {
-  if (target === node) return true;
-
-  for (let d of graph.dependencies[node] || []) {
-    if (visited.indexOf(d.target) > -1) continue;
-    if (hasPath(graph, target, d.target, [...visited, d.target])) return true;
-  }
-  return false;
 }

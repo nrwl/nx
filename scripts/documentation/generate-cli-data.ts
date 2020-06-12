@@ -265,13 +265,23 @@ const examples = {
         'Generate a static website with dep graph into an html file, accompanied by an asset folder called static',
     },
     {
-      command: 'dep-graph --filter=todos-feature-main',
+      command: 'dep-graph --focus=todos-feature-main',
       description:
-        'Show the graph where every node is either an ancestor or a descendant of todos-feature-main.',
+        'Show the graph where every node is either an ancestor or a descendant of todos-feature-main',
+    },
+    {
+      command: 'dep-graph --include=project-one,project-two',
+      description: 'Include project-one and project-two in the dep graph',
     },
     {
       command: 'dep-graph --exclude=project-one,project-two',
-      description: 'Exclude project-one and project-two from the dep graph.',
+      description: 'Exclude project-one and project-two from the dep graph',
+    },
+    {
+      command:
+        'dep-graph --focus=todos-feature-main --exclude=project-one,project-two',
+      description:
+        'Show the graph where every node is either an ancestor or a descendant of todos-feature-main, but exclude project-one and project-two',
     },
   ],
   'affected:dep-graph': [
@@ -301,6 +311,11 @@ const examples = {
       command: 'affected:dep-graph --base=master~1 --head=master',
       description:
         'Open the dep graph of the workspace in the browser, and highlight the projects affected by the last commit on master',
+    },
+    {
+      command: 'affected:dep-graph --exclude=project-one,project-two',
+      description:
+        'Open the dep graph of the workspace in the browser, highlight the projects affected, but exclude project-one and project-two',
     },
   ],
   'workspace-schematic': [],

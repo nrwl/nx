@@ -336,17 +336,20 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
         'output file (e.g. --file=output.json or --file=dep-graph.html)',
       type: 'string',
     })
-    .option('filter', {
+    .option('focus', {
       describe:
-        'Use to limit the dependency graph to only show specific projects, list of projects delimited by commas.',
-      type: 'array',
-      coerce: parseCSV,
+        'Use to show the dependency graph for a particular project and every node that is either an ancestor or a descendant.',
+      type: 'string',
     })
     .option('exclude', {
       describe:
         'List of projects delimited by commas to exclude from the dependency graph.',
       type: 'array',
       coerce: parseCSV,
+    })
+    .option('groupByFolder', {
+      describe: 'Group projects by folder in dependency graph',
+      type: 'boolean',
     })
     .option('host', {
       describe: 'Bind the dep graph server to a specific ip address.',
