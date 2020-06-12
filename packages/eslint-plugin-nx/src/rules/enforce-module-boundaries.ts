@@ -162,6 +162,11 @@ export default createESLintRule<Options, MessageIds>({
           return;
         }
 
+        // same project => allow
+        if (sourceProject === targetProject) {
+          return;
+        }
+
         // check constraints between libs and apps
         // check for circular dependency
         if (isCircular(projectGraph, sourceProject, targetProject)) {
@@ -173,11 +178,6 @@ export default createESLintRule<Options, MessageIds>({
               targetProjectName: targetProject.name,
             },
           });
-          return;
-        }
-
-        // same project => allow
-        if (sourceProject === targetProject) {
           return;
         }
 
