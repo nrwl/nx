@@ -10,11 +10,12 @@ import {
   template,
   move,
   noop,
+  SchematicsException,
 } from '@angular-devkit/schematics';
 import { join, normalize } from '@angular-devkit/core';
 import { Schema } from './schema';
 
-import { NxJson, updateWorkspaceInTree } from '@nrwl/workspace';
+import { NxJson, updateWorkspaceInTree, getNpmScope } from '@nrwl/workspace';
 import { updateJsonInTree, readJsonInTree } from '@nrwl/workspace';
 import { toFileName, names } from '@nrwl/workspace';
 import { formatFiles } from '@nrwl/workspace';
@@ -53,20 +54,23 @@ function addProject(options: NormalizedSchema): Rule {
 }
 
 function updateTsConfig(options: NormalizedSchema): Rule {
-  return chain([
-    (host: Tree, context: SchematicContext) => {
-      const nxJson = readJsonInTree<NxJson>(host, 'nx.json');
-      return updateJsonInTree('tsconfig.base.json', (json) => {
-        const c = json.compilerOptions;
-        c.paths = c.paths || {};
-        delete c.paths[options.name];
-        c.paths[`@${nxJson.npmScope}/${options.projectDirectory}`] = [
-          `${libsDir(host)}/${options.projectDirectory}/src/index.ts`,
-        ];
-        return json;
-      })(host, context);
-    },
-  ]);
+  return updateJsonInTree('tsconfig.base.json', (json) => {
+    const c = json.compilerOptions;
+    c.paths = c.paths || {};
+    delete c.paths[options.name];
+
+    if (c.paths[options.importPath]) {
+      throw new SchematicsException(
+        `You already have a library using the import path "${options.importPath}". Make sure to specify a unique one.`
+      );
+    }
+
+    c.paths[options.importPath] = [
+      `libs/${options.projectDirectory}/src/index.ts`,
+    ];
+
+    return json;
+  });
 }
 
 function createFiles(options: NormalizedSchema): Rule {
@@ -91,6 +95,7 @@ function updateNxJson(options: NormalizedSchema): Rule {
 export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
+
     return chain([
       addLintFiles(options.projectRoot, options.linter),
       createFiles(options),
@@ -127,6 +132,9 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
+  const defaultImportPath = `@${getNpmScope(host)}/${projectDirectory}`;
+  const importPath = options.importPath || defaultImportPath;
+
   return {
     ...options,
     fileName,
@@ -134,5 +142,6 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     projectRoot,
     projectDirectory,
     parsedTags,
+    importPath,
   };
 }

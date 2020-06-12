@@ -53,8 +53,16 @@
     },
     "publishable": {
       "type": "boolean",
-      "description": "Create a publishable library.",
-      "alias": "buildable"
+      "description": "Create a publishable library."
+    },
+    "buildable": {
+      "type": "boolean",
+      "default": false,
+      "description": "Generate a buildable library."
+    },
+    "importPath": {
+      "type": "string",
+      "description": "The library name used to import it, like @myorg/my-awesome-lib. Must be a valid npm name."
     },
     "testEnvironment": {
       "type": "string",

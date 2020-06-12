@@ -8,6 +8,8 @@ export interface Schema {
   tags?: string;
   unitTestRunner: 'jest' | 'none';
   linter: Linter;
+  buildable?: boolean;
   publishable?: boolean;
+  importPath?: string;
   testEnvironment: 'jsdom' | 'node';
 }
