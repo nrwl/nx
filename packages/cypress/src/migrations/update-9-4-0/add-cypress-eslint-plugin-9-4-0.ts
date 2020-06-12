@@ -1,4 +1,4 @@
-import { chain, Rule, Tree } from '@angular-devkit/schematics';
+import { chain, noop, Rule, Tree } from '@angular-devkit/schematics';
 import {
   addDepsToPackageJson,
   formatFiles,
@@ -47,9 +47,19 @@ async function addCypressPluginToEslintrc(host: Tree) {
 }
 
 export default () => {
-  return chain([
-    addDepsToPackageJson({}, { 'eslint-plugin-cypress': '^2.10.3' }),
-    addCypressPluginToEslintrc,
-    formatFiles(),
-  ]);
+  return (host: Tree) => {
+    const packageJson = readJsonInTree(host, 'package.json');
+    if (
+      packageJson.devDependencies?.eslint ||
+      packageJson.dependencies?.eslint
+    ) {
+      return chain([
+        addDepsToPackageJson({}, { 'eslint-plugin-cypress': '^2.10.3' }),
+        addCypressPluginToEslintrc,
+        formatFiles(),
+      ]);
+    } else {
+      return noop();
+    }
+  };
 };
