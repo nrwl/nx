@@ -45,6 +45,7 @@ describe('app', () => {
     it('should generate files', async () => {
       const tree = await runSchematic('app', { name: 'myApp' }, appTree);
       expect(tree.exists('apps/my-app/.babelrc')).toBeTruthy();
+      expect(tree.exists('apps/my-app/.browserslistrc')).toBeTruthy();
       expect(tree.exists('apps/my-app/src/main.tsx')).toBeTruthy();
       expect(tree.exists('apps/my-app/src/app/app.tsx')).toBeTruthy();
       expect(tree.exists('apps/my-app/src/app/app.spec.tsx')).toBeTruthy();
