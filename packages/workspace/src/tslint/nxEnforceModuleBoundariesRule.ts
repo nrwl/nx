@@ -154,16 +154,16 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       return;
     }
 
+    // same project => allow
+    if (sourceProject === targetProject) {
+      super.visitImportDeclaration(node);
+      return;
+    }
+
     // check for circular dependency
     if (isCircular(this.projectGraph, sourceProject, targetProject)) {
       const error = `Circular dependency between "${sourceProject.name}" and "${targetProject.name}" detected`;
       this.addFailureAt(node.getStart(), node.getWidth(), error);
-      return;
-    }
-
-    // same project => allow
-    if (sourceProject === targetProject) {
-      super.visitImportDeclaration(node);
       return;
     }
 
