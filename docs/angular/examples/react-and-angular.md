@@ -218,7 +218,7 @@ Nx provides a uniform tool for development the commands used for React developme
 
 TypeScript support, Jest, Cypress, source maps, watch mode--all work with React out of the box. If we run ng serve reactapp, we will see the following:
 
-![serve screenshot](./react-serve.png)
+![serve screenshot](/assets/content/angular/examples/react-serve.png)
 
 ## Creating Shared Components
 
@@ -417,7 +417,7 @@ But Nx can do a lot more than that.
 
 If we run `yarn dep-graph`, we will see the following:
 
-![serve screenshot](./react-dep-graph.png)
+![serve screenshot](/assets/content/angular/examples/react-dep-graph.png)
 
 Nx understands how our applications and libraries depend on each other. This is extremely important! To really improve the collaboration between teams and make sure that they can use each other's work, the following two things must be true:
 
@@ -433,7 +433,7 @@ git commit -am 'great commit'
 
 Next, let's create a new branch `git checkout -b angularchange`. In this branch, let's introduce any change to app.component.html and run `yarn affected:dep-graph`.
 
-![serve screenshot](./react-affected.png)
+![serve screenshot](/assets/content/angular/examples/react-affected.png)
 
 As you can see, Nx knows that this change only affects the `angularapp` and nothing else. Nx can use this information to rebuild and retest only the angularapp:
 
@@ -444,7 +444,7 @@ yarn affected:build # only builds angularapp
 
 Now, let's introduce a change to `greeting.element.ts` and run `yarn affected:dep-graph`.
 
-![serve screenshot](./react-affected2.png)
+![serve screenshot](/assets/content/angular/examples/react-affected2.png)
 
 Both `angularapp` and `reactapp` are affected by this change because they both depend on the greeting component.
 

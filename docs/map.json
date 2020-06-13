@@ -881,9 +881,19 @@
         "id": "examples",
         "itemList": [
           {
+            "name": "Nx Micro-Frontend Example",
+            "id": "nx-examples",
+            "file": "shared/examples/nx-examples"
+          },
+          {
             "name": "Building Angular and React Applications Together With Nx",
             "id": "react-and-angular",
-            "file": "angular/guides/react-and-angular"
+            "file": "angular/examples/react-and-angular"
+          },
+          {
+            "name": "Using Apollo GraphQL",
+            "id": "apollo-angular",
+            "file": "angular/examples/apollo-angular"
           }
         ]
       }
@@ -1753,6 +1763,27 @@
             "name": "JavaScript and TypeScript",
             "id": "js-and-ts",
             "file": "react/guides/js-and-ts"
+          }
+        ]
+      },
+      {
+        "name": "Examples",
+        "id": "examples",
+        "itemList": [
+          {
+            "name": "Nx Micro-Frontend Example",
+            "id": "nx-examples",
+            "file": "shared/examples/nx-examples"
+          },
+          {
+            "name": "Powering Up React Development With Nx",
+            "id": "react-nx",
+            "file": "react/examples/react-nx"
+          },
+          {
+            "name": "Using Apollo GraphQL",
+            "id": "apollo-react",
+            "file": "react/examples/apollo-react"
           }
         ]
       }
