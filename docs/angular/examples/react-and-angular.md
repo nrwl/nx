@@ -103,7 +103,7 @@ And the template of the generated component will look as follows:
   Welcome to {{title}}!
   <img
     width="300"
-    src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png"
+    src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png"
   />
 </div>
 
@@ -197,7 +197,7 @@ export class App extends Component {
           <h1>Welcome to {title}!</h1>
           <img
             width="300"
-            src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png"
+            src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png"
           />
         </div>
         <p>
@@ -340,7 +340,7 @@ Finally, we can update `app.component.html` to use our shared web component.
   <happynrwl-greeting [title]="title"></happynrwl-greeting>
   <img
     width="300"
-    src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png"
+    src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png"
   />
 </div>
 
@@ -397,7 +397,7 @@ export class App extends Component {
           <happynrwl-greeting title={title} />
           <img
             width="300"
-            src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png"
+            src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png"
           />
         </div>
         <p>

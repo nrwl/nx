@@ -1,28 +1,24 @@
-# Resources
+## Documentation
 
-## 45-Minute Walkthrough
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/h5FIGDn5YM0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-## Quick Introductions (10 Minutes)
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/mVKMse-gFBI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-## Nx Console Overview
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/IIetmfgozgI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+- [Nx Repo](https://github.com/nrwl/nx)
+- [Nx Documentation and Guides](https://nx.dev)
 
 ## Courses
 
-## Nx Workspace (free)
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/2mYLe9Kp9VM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-## Advanced Nx Workspace (premium)
-
-[![Advanced Nx Workspace](./advanced-nx-workspace-course.png)](https://nxplaybook.com/p/advanced-nx-workspaces)
-
-## Resources
+<table>
+  <tr>
+    <td>
+      <a href="https://www.youtube.com/watch?v=2mYLe9Kp9VM&list=PLakNactNC1dH38AfqmwabvOszDmKriGco" target="_blank">
+        <p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-workspace-course.png" width="350"></p>
+      </a>
+    </td>
+    <td>    
+      <a href="https://nxplaybook.com/p/advanced-nx-workspaces" target="_blank">
+      <p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/advanced-nx-workspace-course.png" width="350"></p>
+      </a>
+    </td>
+  </tr>
+</table>
 
 ### Talks
 

@@ -198,7 +198,7 @@ describe('AppComponent', () => {
   <h1>Welcome to ${options.name}!</h1>
   <img
     width="450"
-    src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png"
+    src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png"
   />
 </div>
 <div>Message: {{ (hello$|async)|json }}</div>
@@ -269,7 +269,7 @@ export const App = () => {
         <h1>Welcome to ${options.name}!</h1>
         <img
           width="450"
-          src="https://raw.githubusercontent.com/nrwl/nx/master/nx-logo.png"
+          src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png"
         />
       </div>
       <div>{m.message}</div>
