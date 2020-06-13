@@ -112,7 +112,7 @@ class TodoEffects {
 }
 ```
 
-This is correct, but we can improve the performance by supplying and id of the data by using an accessor function and adding concurrency to the fetch action for different ToDo's.
+This is correct, but we can improve the performance by supplying an id of the data by using an accessor function and adding concurrency to the fetch action for different ToDo's.
 
 ```typescript
 import { Actions, createEffect, ofType } from '@ngrx/effects';
