@@ -24,14 +24,14 @@ describe('updateTsconfig Rule', () => {
   it('should delete project ref from the tsconfig', async () => {
     tree = await runSchematic('lib', { name: 'my-lib' }, tree);
 
-    let tsConfig = readJsonInTree(tree, '/tsconfig.json');
+    let tsConfig = readJsonInTree(tree, '/tsconfig.base.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
       '@proj/my-lib': ['libs/my-lib/src/index.ts'],
     });
 
     tree = (await callRule(updateTsconfig(schema), tree)) as UnitTestTree;
 
-    tsConfig = readJsonInTree(tree, '/tsconfig.json');
+    tsConfig = readJsonInTree(tree, '/tsconfig.base.json');
     expect(tsConfig.compilerOptions.paths).toEqual({});
   });
 });

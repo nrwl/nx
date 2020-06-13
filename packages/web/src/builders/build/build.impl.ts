@@ -83,7 +83,7 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
     );
   }
 
-  return from(getSourceRoot(context, host))
+  return from(getSourceRoot(context))
     .pipe(
       map((sourceRoot) => {
         options = normalizeWebBuildOptions(

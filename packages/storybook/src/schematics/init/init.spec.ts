@@ -55,7 +55,6 @@ describe('init', () => {
     });
 
     it('should add react related dependencies when using React as uiFramework', async () => {
-      console.log('test');
       const existing = 'existing';
       const existingVersion = '1.0.0';
       await callRule(

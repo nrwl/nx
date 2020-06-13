@@ -158,7 +158,7 @@ describe('lib', () => {
 
     it('should update root tsconfig.json', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
-      const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
+      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
         'libs/my-lib/src/index.ts',
       ]);
@@ -167,14 +167,21 @@ describe('lib', () => {
     it('should create a local tsconfig.json', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
       const tsconfigJson = readJsonInTree(tree, 'libs/my-lib/tsconfig.json');
-      expect(tsconfigJson).toEqual({
-        extends: '../../tsconfig.json',
-        compilerOptions: {
-          types: ['node', 'jest'],
-          target: 'es6',
-        },
-        include: ['**/*.ts'],
-      });
+      expect(tsconfigJson).toMatchInlineSnapshot(`
+        Object {
+          "extends": "../../tsconfig.base.json",
+          "files": Array [],
+          "include": Array [],
+          "references": Array [
+            Object {
+              "path": "./tsconfig.lib.json",
+            },
+            Object {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
     });
 
     it('should extend the local tsconfig.json with tsconfig.spec.json', async () => {
@@ -283,7 +290,7 @@ describe('lib', () => {
         { name: 'myLib', directory: 'myDir' },
         appTree
       );
-      const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
+      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
       expect(
         tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']
       ).toEqual(['libs/my-dir/my-lib/src/index.ts']);
@@ -303,14 +310,21 @@ describe('lib', () => {
         tree,
         'libs/my-dir/my-lib/tsconfig.json'
       );
-      expect(tsconfigJson).toEqual({
-        extends: '../../../tsconfig.json',
-        compilerOptions: {
-          types: ['node', 'jest'],
-          target: 'es6',
-        },
-        include: ['**/*.ts'],
-      });
+      expect(tsconfigJson).toMatchInlineSnapshot(`
+        Object {
+          "extends": "../../../tsconfig.base.json",
+          "files": Array [],
+          "include": Array [],
+          "references": Array [
+            Object {
+              "path": "./tsconfig.lib.json",
+            },
+            Object {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
     });
   });
 
@@ -330,14 +344,18 @@ describe('lib', () => {
         resultTree,
         'libs/my-lib/tsconfig.json'
       );
-      expect(tsconfigJson).toEqual({
-        extends: '../../tsconfig.json',
-        compilerOptions: {
-          types: ['node'],
-          target: 'es6',
-        },
-        include: ['**/*.ts'],
-      });
+      expect(tsconfigJson).toMatchInlineSnapshot(`
+        Object {
+          "extends": "../../tsconfig.base.json",
+          "files": Array [],
+          "include": Array [],
+          "references": Array [
+            Object {
+              "path": "./tsconfig.lib.json",
+            },
+          ],
+        }
+      `);
       expect(
         workspaceJson.projects['my-lib'].architect.lint.options.tsConfig
       ).toEqual(['libs/my-lib/tsconfig.lib.json']);
@@ -362,7 +380,7 @@ describe('lib', () => {
   });
 
   describe('compiler options target', () => {
-    it('should set target to es6 in tsconfig.json by default', async () => {
+    it('should set target to es6 in tsconfig.lib.json by default', async () => {
       const tree = await runSchematic(
         'lib',
         { name: 'myLib', directory: 'myDir' },
@@ -371,12 +389,12 @@ describe('lib', () => {
 
       const tsconfigJson = readJsonInTree(
         tree,
-        'libs/my-dir/my-lib/tsconfig.json'
+        'libs/my-dir/my-lib/tsconfig.lib.json'
       );
       expect(tsconfigJson.compilerOptions.target).toEqual('es6');
     });
 
-    it('should set target to es2020 in tsconfig.json', async () => {
+    it('should set target to es2020 in tsconfig.lib.json', async () => {
       const tree = await runSchematic(
         'lib',
         { name: 'myLib', directory: 'myDir', target: 'es2020' },
@@ -385,7 +403,7 @@ describe('lib', () => {
 
       const tsconfigJson = readJsonInTree(
         tree,
-        'libs/my-dir/my-lib/tsconfig.json'
+        'libs/my-dir/my-lib/tsconfig.lib.json'
       );
       expect(tsconfigJson.compilerOptions.target).toEqual('es2020');
     });

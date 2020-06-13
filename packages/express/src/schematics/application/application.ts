@@ -17,7 +17,7 @@ interface NormalizedSchema extends Schema {
 }
 
 function addTypes(options: NormalizedSchema): Rule {
-  const tsConfigPath = join(options.appProjectRoot, 'tsconfig.json');
+  const tsConfigPath = join(options.appProjectRoot, 'tsconfig.app.json');
   return updateJsonInTree(tsConfigPath, (json) => {
     json.compilerOptions.types = [...json.compilerOptions.types, 'express'];
     return json;

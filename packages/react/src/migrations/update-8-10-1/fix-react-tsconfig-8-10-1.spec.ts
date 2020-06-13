@@ -29,6 +29,11 @@ describe('Update 8-10-0', () => {
     );
 
     reactRunner.registerCollection(
+      '@nrwl/jest',
+      join(__dirname, '../../../../jest/collection.json')
+    );
+
+    reactRunner.registerCollection(
       '@nrwl/cypress',
       join(__dirname, '../../../../cypress/collection.json')
     );

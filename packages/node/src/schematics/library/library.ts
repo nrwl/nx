@@ -16,11 +16,9 @@ import {
 } from '@angular-devkit/schematics';
 import {
   formatFiles,
-  getProjectConfig,
   names,
   offsetFromRoot,
   toFileName,
-  updateJsonInTree,
   updateWorkspaceInTree,
   getNpmScope,
 } from '@nrwl/workspace';
@@ -43,7 +41,6 @@ export default function (schema: NormalizedSchema): Rule {
     return chain([
       externalSchematic('@nrwl/workspace', 'lib', schema),
       createFiles(options),
-      updateTsConfig(options),
       addProject(options),
       formatFiles(options),
     ]);
@@ -97,20 +94,6 @@ function createFiles(options: NormalizedSchema): Rule {
     ]),
     MergeStrategy.Overwrite
   );
-}
-
-function updateTsConfig(options: NormalizedSchema): Rule {
-  if (options.unitTestRunner === 'none') {
-    return noop();
-  }
-
-  return (host: Tree, context: SchematicContext) => {
-    const projectConfig = getProjectConfig(host, options.name);
-    return updateJsonInTree(`${projectConfig.root}/tsconfig.json`, (json) => {
-      json.compilerOptions.types.push('jest');
-      return json;
-    });
-  };
 }
 
 function addProject(options: NormalizedSchema): Rule {

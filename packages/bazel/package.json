@@ -44,8 +44,8 @@
     ]
   },
   "dependencies": {
-    "@angular-devkit/core": "~10.0.0-rc.3",
-    "@angular-devkit/schematics": "~10.0.0-rc.3",
+    "@angular-devkit/core": "~10.0.0-rc.5",
+    "@angular-devkit/schematics": "~10.0.0-rc.5",
     "@nrwl/cli": "*"
   },
   "peerDependencies": {

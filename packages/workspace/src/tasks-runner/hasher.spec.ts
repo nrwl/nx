@@ -11,7 +11,7 @@ describe('Hasher', () => {
     'nx.json': 'nx.json.hash',
     'package-lock.json': 'package-lock.json.hash',
     'package.json': 'package.json.hash',
-    'tsconfig.json': 'tsconfig.json.hash',
+    'tsconfig.base.json': 'tsconfig.base.json.hash',
     'workspace.json': 'workspace.json.hash',
   };
   beforeEach(() => {
@@ -67,7 +67,7 @@ describe('Hasher', () => {
       'nx.json': 'nx.json.hash',
       'package-lock.json': 'package-lock.json.hash',
       'package.json': 'package.json.hash',
-      'tsconfig.json': 'tsconfig.json.hash',
+      'tsconfig.base.json': 'tsconfig.base.json.hash',
       'workspace.json': 'workspace.json.hash',
     });
     expect(hash.details.runtime).toEqual({

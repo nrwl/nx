@@ -31,7 +31,7 @@ describe('workspace', () => {
           dependencies: '*',
           devDependencies: '*',
         },
-        'tsconfig.json': '*',
+        'tsconfig.base.json': '*',
         'tslint.json': '*',
         'nx.json': '*',
       },

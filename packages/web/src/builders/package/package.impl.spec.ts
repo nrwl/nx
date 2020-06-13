@@ -12,6 +12,8 @@ import { getMockContext } from '../../utils/testing';
 import { PackageBuilderOptions } from '../../utils/types';
 import * as projectGraphUtils from '@nrwl/workspace/src/core/project-graph';
 import { ProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createRollupOptions } from './package.impl';
+import { normalizePackageOptions } from '@nrwl/web/src/utils/normalize';
 
 jest.mock('tsconfig-paths-webpack-plugin');
 
@@ -31,75 +33,31 @@ describe('WebPackagebuilder', () => {
       tsConfig: 'libs/ui/tsconfig.json',
       watch: false,
     };
-    spyOn(workspaces, 'readWorkspace').and.returnValue({
-      workspace: {
-        projects: {
-          get: () => ({
-            sourceRoot: join(__dirname, '../../..'),
-          }),
-        },
-      },
-    });
-    spyOn(f, 'readJsonFile').and.returnValue({
-      name: 'example',
-    });
-    writeJsonFile = spyOn(f, 'writeJsonFile');
-
-    spyOn(projectGraphUtils, 'createProjectGraph').and.callFake(() => {
-      return {
-        nodes: {},
-        dependencies: {},
-      } as ProjectGraph;
-    });
   });
 
-  describe('run', () => {
-    it('should call runRollup with esm and umd', async () => {
-      runRollup = spyOn(rr, 'runRollup').and.callFake(() => {
-        return of({
-          success: true,
-        });
-      });
-      spyOn(context.logger, 'info');
-
-      const result = await impl.run(testOptions, context).toPromise();
-
-      expect(runRollup).toHaveBeenCalled();
-      expect(
-        runRollup.calls.allArgs()[0][0].output.map((o) => o.format)
-      ).toEqual(expect.arrayContaining(['esm', 'umd']));
-      expect(result.success).toBe(true);
-      expect(context.logger.info).toHaveBeenCalledWith('Bundle complete.');
-    });
-
-    it('should return failure when rollup fails', async () => {
-      runRollup = spyOn(rr, 'runRollup').and.callFake(() => throwError('Oops'));
-      spyOn(context.logger, 'error');
-
-      const result = await impl.run(testOptions, context).toPromise();
-
-      expect(result.success).toBe(false);
-      expect(f.writeJsonFile).not.toHaveBeenCalled();
-      expect(context.logger.error).toHaveBeenCalledWith('Bundle failed.');
-    });
-
-    it('updates package.json', async () => {
-      runRollup = spyOn(rr, 'runRollup').and.callFake(() => {
-        return of({
-          success: true,
-        });
-      });
-      await impl.run(testOptions, context).toPromise();
-
-      expect(f.writeJsonFile).toHaveBeenCalled();
-
-      const content = writeJsonFile.calls.allArgs()[0][1];
-      expect(content).toMatchObject({
-        name: 'example',
-        main: './example.umd.js',
-        module: './example.esm.js',
-        typings: './index.d.ts',
-      });
+  describe('createRollupOptions', () => {
+    it('should', () => {
+      const result: any = createRollupOptions(
+        normalizePackageOptions(testOptions, '/root', '/root/src'),
+        [],
+        context,
+        { name: 'example' },
+        '/root/src'
+      );
+      expect(result.output).toEqual([
+        {
+          file: '/root/dist/ui/example.umd.js',
+          format: 'umd',
+          globals: {},
+          name: 'Example',
+        },
+        {
+          file: '/root/dist/ui/example.esm.js',
+          format: 'esm',
+          globals: {},
+          name: 'Example',
+        },
+      ]);
     });
   });
 });

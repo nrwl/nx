@@ -28,7 +28,7 @@ forEachCli('angular', () => {
       ).not.toBeDefined();
 
       // update tsconfig.json
-      const tsconfigJson = readJson('tsconfig.json');
+      const tsconfigJson = readJson('tsconfig.base.json');
       tsconfigJson.compilerOptions.paths = { a: ['b'] };
       updateFile('tsconfig.json', JSON.stringify(tsconfigJson, null, 2));
 
@@ -103,7 +103,7 @@ forEachCli('angular', () => {
           'angular.json': '*',
           'package.json': '*',
           'tslint.json': '*',
-          'tsconfig.json': '*',
+          'tsconfig.base.json': '*',
           'nx.json': '*',
         },
         projects: {

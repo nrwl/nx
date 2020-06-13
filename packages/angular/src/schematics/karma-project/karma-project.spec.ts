@@ -76,8 +76,9 @@ module.exports = function(config) {
       appTree
     );
     const tsConfig = readJsonInTree(resultTree, 'libs/lib1/tsconfig.json');
-    expect(tsConfig.compilerOptions.types).toContain('jasmine');
-    expect(tsConfig.compilerOptions.types).not.toContain('node');
+    expect(tsConfig.references).toContainEqual({
+      path: './tsconfig.spec.json',
+    });
   });
 
   describe('library', () => {

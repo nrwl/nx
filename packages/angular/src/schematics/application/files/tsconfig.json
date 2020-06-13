@@ -1,6 +1,10 @@
 {
-  "extends": "<%= offsetFromRoot %>tsconfig.json",
-  "compilerOptions": {
-    "types": []
-  }
+  "extends": "<%= offsetFromRoot %>tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ]
 }

@@ -21,7 +21,7 @@ describe('app', () => {
 
   it('should have es2015 as the tsconfig target', async () => {
     const tree = await runSchematic('app', { name: 'myNodeApp' }, appTree);
-    const tsconfig = readJsonInTree(tree, 'apps/my-node-app/tsconfig.json');
+    const tsconfig = readJsonInTree(tree, 'apps/my-node-app/tsconfig.app.json');
     expect(tsconfig.compilerOptions.target).toBe('es2015');
   });
 });

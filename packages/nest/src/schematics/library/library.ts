@@ -164,10 +164,13 @@ function createFiles(options: NormalizedSchema): Rule {
 function updateTsConfig(options: NormalizedSchema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const projectConfig = getProjectConfig(host, options.name);
-    return updateJsonInTree(`${projectConfig.root}/tsconfig.json`, (json) => {
-      json.compilerOptions.target = options.target;
-      return json;
-    });
+    return updateJsonInTree(
+      `${projectConfig.root}/tsconfig.lib.json`,
+      (json) => {
+        json.compilerOptions.target = options.target;
+        return json;
+      }
+    );
   };
 }
 

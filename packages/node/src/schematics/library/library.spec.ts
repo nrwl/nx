@@ -2,7 +2,6 @@ import { Tree } from '@angular-devkit/schematics';
 import { NxJson, readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
-import { expectTestsPass } from 'e2e/utils';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -52,9 +51,9 @@ describe('lib', () => {
       });
     });
 
-    it('should update root tsconfig.json', async () => {
+    it('should update root tsconfig.base.json', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
-      const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
+      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
         'libs/my-lib/src/index.ts',
       ]);
@@ -63,13 +62,15 @@ describe('lib', () => {
     it('should create a local tsconfig.json', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
       const tsconfigJson = readJsonInTree(tree, 'libs/my-lib/tsconfig.json');
-      expect(tsconfigJson).toEqual({
-        extends: '../../tsconfig.json',
-        compilerOptions: {
-          types: ['node', 'jest'],
+      expect(tsconfigJson.extends).toEqual('../../tsconfig.base.json');
+      expect(tsconfigJson.references).toEqual([
+        {
+          path: './tsconfig.lib.json',
         },
-        include: ['**/*.ts'],
-      });
+        {
+          path: './tsconfig.spec.json',
+        },
+      ]);
     });
 
     it('should extend the local tsconfig.json with tsconfig.spec.json', async () => {
@@ -87,6 +88,7 @@ describe('lib', () => {
         tree,
         'libs/my-lib/tsconfig.lib.json'
       );
+      expect(tsconfigJson.compilerOptions.types).toContain('node');
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
     });
 
@@ -174,7 +176,7 @@ describe('lib', () => {
         { name: 'myLib', directory: 'myDir' },
         appTree
       );
-      const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
+      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
       expect(
         tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']
       ).toEqual(['libs/my-dir/my-lib/src/index.ts']);
@@ -194,13 +196,15 @@ describe('lib', () => {
         tree,
         'libs/my-dir/my-lib/tsconfig.json'
       );
-      expect(tsconfigJson).toEqual({
-        extends: '../../../tsconfig.json',
-        compilerOptions: {
-          types: ['node', 'jest'],
+      expect(tsconfigJson.extends).toEqual('../../../tsconfig.base.json');
+      expect(tsconfigJson.references).toEqual([
+        {
+          path: './tsconfig.lib.json',
         },
-        include: ['**/*.ts'],
-      });
+        {
+          path: './tsconfig.spec.json',
+        },
+      ]);
     });
   });
 
@@ -220,13 +224,12 @@ describe('lib', () => {
         resultTree,
         'libs/my-lib/tsconfig.json'
       );
-      expect(tsconfigJson).toEqual({
-        extends: '../../tsconfig.json',
-        compilerOptions: {
-          types: ['node'],
+      expect(tsconfigJson.extends).toEqual('../../tsconfig.base.json');
+      expect(tsconfigJson.references).toEqual([
+        {
+          path: './tsconfig.lib.json',
         },
-        include: ['**/*.ts'],
-      });
+      ]);
       expect(
         workspaceJson.projects['my-lib'].architect.lint.options.tsConfig
       ).toEqual(['libs/my-lib/tsconfig.lib.json']);

@@ -17,15 +17,12 @@ export function updateTsConfig(options: JestProjectSchema): Rule {
     return updateJsonInTree(
       join(projectConfig.root, 'tsconfig.json'),
       (json) => {
-        return {
-          ...json,
-          compilerOptions: {
-            ...json.compilerOptions,
-            types: Array.from(
-              new Set([...(json.compilerOptions.types || []), 'node', 'jest'])
-            ),
-          },
-        };
+        if (json.references) {
+          json.references.push({
+            path: './tsconfig.spec.json',
+          });
+        }
+        return json;
       }
     );
   };

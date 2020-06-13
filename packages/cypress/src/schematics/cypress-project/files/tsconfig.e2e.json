@@ -3,7 +3,8 @@
   "compilerOptions": {
     "sourceMap": false,
     "outDir": "<%= offsetFromRoot %>dist/out-tsc",
-    "allowJs": true
+    "allowJs": true,
+    "types": ["cypress", "node"]
   },
   "include": ["src/**/*.ts", "src/**/*.js"]
 }

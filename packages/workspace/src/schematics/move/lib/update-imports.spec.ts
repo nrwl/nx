@@ -48,14 +48,14 @@ describe('updateImports Rule', () => {
   it('should update project ref in the tsconfig file', async () => {
     tree = await runSchematic('lib', { name: 'my-source' }, tree);
 
-    let tsConfig = readJsonInTree(tree, '/tsconfig.json');
+    let tsConfig = readJsonInTree(tree, '/tsconfig.base.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
       '@proj/my-source': ['libs/my-source/src/index.ts'],
     });
 
     tree = (await callRule(updateImports(schema), tree)) as UnitTestTree;
 
-    tsConfig = readJsonInTree(tree, '/tsconfig.json');
+    tsConfig = readJsonInTree(tree, '/tsconfig.base.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
       '@proj/my-destination': ['libs/my-destination/src/index.ts'],
     });

@@ -68,7 +68,7 @@ const fileSys = {
   './libs/domain2/src/index.ts': '',
   './libs/buildableLib/src/main.ts': '',
   './libs/nonBuildableLib/src/main.ts': '',
-  './tsconfig.json': JSON.stringify(tsconfig),
+  './tsconfig.base.json': JSON.stringify(tsconfig),
 };
 
 describe('Enforce Module Boundaries', () => {

@@ -43,7 +43,7 @@ forEachCli((cli) => {
       ];
       updateFile('tslint.json', JSON.stringify(tslint, null, 2));
 
-      const tsConfig = readJson('tsconfig.json');
+      const tsConfig = readJson('tsconfig.base.json');
 
       /**
        * apps do not add themselves to the tsconfig file.
@@ -57,7 +57,7 @@ forEachCli((cli) => {
       tsConfig.compilerOptions.paths[`@secondScope/${lazylib}`] =
         tsConfig.compilerOptions.paths[`@proj/${lazylib}`];
       delete tsConfig.compilerOptions.paths[`@proj/${lazylib}`];
-      updateFile('tsconfig.json', JSON.stringify(tsConfig, null, 2));
+      updateFile('tsconfig.base.json', JSON.stringify(tsConfig, null, 2));
 
       updateFile(
         `apps/${myapp}/src/main.ts`,
@@ -103,7 +103,7 @@ forEachCli((cli) => {
         expect(stdout).toContain(
           'The following file(s) do not belong to any projects:'
         );
-        expect(stdout).toContain(`- apps/${appAfter}/browserslist`);
+        expect(stdout).toContain(`- apps/${appAfter}/jest.config.js`);
         expect(stdout).toContain(
           `- apps/${appAfter}/src/app/app.component.css`
         );
@@ -225,7 +225,7 @@ forEachCli((cli) => {
       expect(exists(`libs/dir/${workspace}/src/index.ts`)).toEqual(false);
       expect(dryRunOutput).toContain(`UPDATE ${workspaceConfigName()}`);
       expect(dryRunOutput).toContain('UPDATE nx.json');
-      expect(dryRunOutput).not.toContain('UPDATE tsconfig.json');
+      expect(dryRunOutput).not.toContain('UPDATE tsconfig.base.json');
 
       const output = runCommand(
         `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --directory=dir`
@@ -407,7 +407,7 @@ forEachCli((cli) => {
 
         // just check the output
         expect(moveOutput).toContain(`DELETE apps/${app1}`);
-        expect(moveOutput).toContain(`CREATE apps/${newPath}/browserslist`);
+        expect(moveOutput).toContain(`CREATE apps/${newPath}/.browserslistrc`);
         expect(moveOutput).toContain(`CREATE apps/${newPath}/jest.config.js`);
         expect(moveOutput).toContain(
           `CREATE apps/${newPath}/tsconfig.app.json`
@@ -599,8 +599,6 @@ forEachCli((cli) => {
       const tsConfigPath = `${newPath}/tsconfig.json`;
       expect(moveOutput).toContain(`CREATE ${tsConfigPath}`);
       checkFilesExist(tsConfigPath);
-      const tsConfig = readJson(tsConfigPath);
-      expect(tsConfig.extends).toEqual('../../../../tsconfig.json');
 
       const tsConfigLibPath = `${newPath}/tsconfig.lib.json`;
       expect(moveOutput).toContain(`CREATE ${tsConfigLibPath}`);
@@ -636,8 +634,8 @@ forEachCli((cli) => {
         `shared-${lib1}-data-access`,
       ]);
 
-      expect(moveOutput).toContain('UPDATE tsconfig.json');
-      const rootTsConfig = readJson('tsconfig.json');
+      expect(moveOutput).toContain('UPDATE tsconfig.base.json');
+      const rootTsConfig = readJson('tsconfig.base.json');
       expect(
         rootTsConfig.compilerOptions.paths[`@proj/${lib1}/data-access`]
       ).toBeUndefined();

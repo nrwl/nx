@@ -1,7 +1,10 @@
 {
-  "extends": "<%= offset %>tsconfig.json",
-  "compilerOptions": {
-    "types": ["node"]
-  },
-  "include": ["**/*.ts"]
+  "extends": "<%= offset %>tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ]
 }

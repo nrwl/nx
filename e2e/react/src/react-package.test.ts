@@ -67,7 +67,7 @@ forEachCli('nx', (cli) => {
       );
 
       // we are setting paths to {} to make sure built libs are read from dist
-      updateFile('tsconfig.json', (c) => {
+      updateFile('tsconfig.base.json', (c) => {
         const json = JSON.parse(c);
         json.compilerOptions.paths = {};
         return JSON.stringify(json, null, 2);

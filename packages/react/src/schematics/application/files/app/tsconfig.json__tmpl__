@@ -1,16 +1,16 @@
 {
-  "extends": "<%= offsetFromRoot %>tsconfig.json",
+  "extends": "<%= offsetFromRoot %>tsconfig.base.json",
   "compilerOptions": {
     "jsx": "react",
     "allowJs": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "types": []
+    "allowSyntheticDefaultImports": true
   },
-  "files": [
-    <% if (style === 'styled-jsx') { %>"<%= offsetFromRoot %>node_modules/@nrwl/react/typings/styled-jsx.d.ts",<% } %>
-    "<%= offsetFromRoot %>node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "<%= offsetFromRoot %>node_modules/@nrwl/react/typings/image.d.ts"
-  ],
-  "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"]
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ]
 }

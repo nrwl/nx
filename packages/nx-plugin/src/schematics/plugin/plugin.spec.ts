@@ -113,74 +113,13 @@ describe('NxPlugin plugin', () => {
     ).toBeTruthy();
   });
 
-  it('should call the @nrwl/node:lib schematic', async () => {
-    const externalSchematicSpy = jest.spyOn(ngSchematics, 'externalSchematic');
-    await runSchematic('plugin', { name: 'myPlugin' }, appTree);
-    expect(externalSchematicSpy).toBeCalledWith(
-      '@nrwl/node',
-      'lib',
-      expect.objectContaining({
-        publishable: true,
-      })
-    );
-  });
-
-  it('should call the @nrwl/nx-plugin:e2e schematic', async () => {
-    const schematicSpy = jest.spyOn(ngSchematics, 'schematic');
-    const tree = await runSchematic('plugin', { name: 'myPlugin' }, appTree);
-    expect(schematicSpy).toBeCalledWith(
-      'e2e-project',
-      expect.objectContaining({
-        pluginName: 'my-plugin',
-        pluginOutputPath: `dist/libs/my-plugin`,
-        npmPackageName: '@proj/my-plugin',
-      })
-    );
-  });
-
-  it('should call the @nrwl/nx-plugin:schematic schematic', async () => {
-    const schematicSpy = jest.spyOn(ngSchematics, 'schematic');
-    const tree = await runSchematic('plugin', { name: 'myPlugin' }, appTree);
-    expect(schematicSpy).toBeCalledWith(
-      'schematic',
-      expect.objectContaining({
-        project: 'my-plugin',
-        name: `my-plugin`,
-      })
-    );
-  });
-
-  it('should call the @nrwl/nx-plugin:builder schematic', async () => {
-    const schematicSpy = jest.spyOn(ngSchematics, 'schematic');
-    const tree = await runSchematic('plugin', { name: 'myPlugin' }, appTree);
-    expect(schematicSpy).toBeCalledWith(
-      'builder',
-      expect.objectContaining({
-        project: 'my-plugin',
-        name: `build`,
-      })
-    );
-  });
-
   describe('--unitTestRunner', () => {
     describe('none', () => {
       it('should not generate test files', async () => {
-        const externalSchematicSpy = jest.spyOn(
-          ngSchematics,
-          'externalSchematic'
-        );
         const tree = await runSchematic(
           'plugin',
           { name: 'myPlugin', unitTestRunner: 'none' },
           appTree
-        );
-
-        expect(externalSchematicSpy).toBeCalledWith(
-          '@nrwl/node',
-          'lib',
-          expect.objectContaining({
-            unitTestRunner: 'none',
-          })
         );
 
         expect(

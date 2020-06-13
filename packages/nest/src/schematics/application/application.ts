@@ -75,7 +75,7 @@ export default function (schema: Schema): Rule {
       addMainFile(options),
       addAppFiles(options),
       updateJsonInTree(
-        join(options.appProjectRoot, 'tsconfig.json'),
+        join(options.appProjectRoot, 'tsconfig.app.json'),
         (json) => {
           json.compilerOptions.emitDecoratorMetadata = true;
           json.compilerOptions.target = 'es2015';

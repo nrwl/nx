@@ -8,6 +8,11 @@ const testRunner = new SchematicTestRunner(
 );
 
 testRunner.registerCollection(
+  '@nrwl/jest',
+  join(__dirname, '../../../jest/collection.json')
+);
+
+testRunner.registerCollection(
   '@nrwl/node',
   join(__dirname, '../../../node/collection.json')
 );

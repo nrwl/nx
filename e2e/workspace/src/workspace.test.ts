@@ -244,7 +244,7 @@ forEachCli((cliName) => {
       expect(affectedApps).not.toContain(`${myapp}-e2e`);
 
       const implicitlyAffectedApps = runCommand(
-        'npm run affected:apps -- --files="tsconfig.json"'
+        'npm run affected:apps -- --files="tsconfig.base.json"'
       );
       expect(implicitlyAffectedApps).toContain(myapp);
       expect(implicitlyAffectedApps).toContain(myapp2);

@@ -6,6 +6,7 @@ import {
 } from '@angular-devkit/schematics';
 import { updateJsonInTree } from '@nrwl/workspace';
 import { NormalizedSchema } from './normalize-options';
+import { join } from '@angular-devkit/core';
 
 export function addJest(options: NormalizedSchema): Rule {
   return options.unitTestRunner === 'jest'
@@ -16,11 +17,21 @@ export function addJest(options: NormalizedSchema): Rule {
           skipSerializers: true,
           setupFile: 'none',
         }),
-
         updateJsonInTree(
-          `${options.appProjectRoot}/tsconfig.spec.json`,
+          join(options.appProjectRoot, 'tsconfig.spec.json'),
           (json) => {
-            json.compilerOptions.jsx = 'react';
+            json.compilerOptions = {
+              ...json.compilerOptions,
+              jsx: 'react',
+              module: 'commonjs',
+              allowJs: true,
+              esModuleInterop: true,
+              allowSyntheticDefaultImports: true,
+              forceConsistentCasingInFileNames: true,
+              noEmit: true,
+              resolveJsonModule: true,
+              isolatedModules: true,
+            };
             return json;
           }
         ),

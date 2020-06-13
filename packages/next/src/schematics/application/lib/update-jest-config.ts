@@ -1,5 +1,6 @@
-import { noop, Rule } from '@angular-devkit/schematics';
+import { chain, noop, Rule } from '@angular-devkit/schematics';
 import { NormalizedSchema } from './normalize-options';
+import { offsetFromRoot, updateJsonInTree } from '@nrwl/workspace';
 
 export function updateJestConfig(options: NormalizedSchema): Rule {
   return options.unitTestRunner === 'none'

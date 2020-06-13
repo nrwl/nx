@@ -65,8 +65,12 @@ describe('app', () => {
       ).toContain('class AppModule');
 
       const tsconfig = readJsonInTree(tree, 'apps/my-app/tsconfig.json');
-      expect(tsconfig.extends).toEqual('../../tsconfig.json');
-      expect(tsconfig.compilerOptions.types).toContain('jest');
+      expect(tsconfig.references).toContainEqual({
+        path: './tsconfig.app.json',
+      });
+      expect(tsconfig.references).toContainEqual({
+        path: './tsconfig.spec.json',
+      });
 
       const tsconfigApp = JSON.parse(
         stripJsonComments(getFileContent(tree, 'apps/my-app/tsconfig.app.json'))
@@ -230,25 +234,10 @@ describe('app', () => {
       // Make sure these have properties
       [
         {
-          path: 'apps/my-dir/my-app/tsconfig.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: '../../../tsconfig.json',
-        },
-        {
           path: 'apps/my-dir/my-app/tsconfig.app.json',
           lookupFn: (json) => json.compilerOptions.outDir,
           expectedValue: '../../../dist/out-tsc',
         },
-        {
-          path: 'apps/my-dir/my-app-e2e/tsconfig.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: '../../../tsconfig.json',
-        },
-        // {
-        //   path: 'apps/my-dir/my-app-e2e/tsconfig.e2e.json',
-        //   lookupFn: json => json.compilerOptions.outDir,
-        //   expectedValue: '../../../dist/out-tsc/apps/my-dir/my-app-e2e'
-        // },
         {
           path: 'apps/my-dir/my-app/tslint.json',
           lookupFn: (json) => json.extends,

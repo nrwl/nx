@@ -696,6 +696,12 @@ export default function (schema: Schema): Rule {
       addLintFiles(options.appProjectRoot, options.linter, {
         onlyGlobal: true,
       }),
+      // TODO: Remove this after Angular 10.1.0
+      updateJsonInTree('tsconfig.json', () => ({
+        files: [],
+        include: [],
+        references: [],
+      })),
       externalSchematic('@schematics/angular', 'application', {
         name: options.name,
         inlineStyle: options.inlineStyle,
@@ -709,6 +715,10 @@ export default function (schema: Schema): Rule {
         skipInstall: true,
         skipPackageJson: false,
       }),
+      // TODO: Remove this after Angular 10.1.0
+      (host) => {
+        host.delete('tsconfig.json');
+      },
       addSchematicFiles(appProjectRoot, options),
       options.e2eTestRunner === 'protractor'
         ? move(e2eProjectRoot, options.e2eProjectRoot)

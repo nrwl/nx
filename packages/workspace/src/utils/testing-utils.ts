@@ -56,7 +56,7 @@ export function createEmptyWorkspace(tree: Tree): Tree {
     })
   );
   tree.create(
-    '/tsconfig.json',
+    '/tsconfig.base.json',
     JSON.stringify({ compilerOptions: { paths: {} } })
   );
   tree.create(

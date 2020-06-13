@@ -87,7 +87,7 @@ describe('@nrwl/bazel:sync', () => {
            "workspace.json",
            "package.json",
            "nx.json",
-           "tsconfig.json",
+           "tsconfig.base.json",
            "tslint.json",
            
         ],
