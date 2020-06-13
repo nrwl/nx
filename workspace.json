@@ -24,16 +24,27 @@
             "main": "packages/tao/index.ts",
             "updateBuildableProjectDepsInPackageJson": false,
             "assets": [
-              { "input": "packages/tao", "glob": "**/files/**", "output": "/" },
+              {
+                "input": "packages/tao",
+                "glob": "**/files/**",
+                "output": "/"
+              },
               {
                 "input": "packages/tao",
                 "glob": "**/files/**/.gitkeep",
                 "output": "/"
               },
-              { "input": "packages/tao", "glob": "**/*.json", "output": "/" },
-              { "input": "packages/tao", "glob": "**/*.js", "output": "/" },
-              "LICENSE",
-              "README.md"
+              {
+                "input": "packages/tao",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/tao",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE"
             ]
           }
         },
@@ -42,8 +53,15 @@
           "outputs": ["build/packages/tao"],
           "options": {
             "commands": [
-              { "command": "nx build-base tao" },
-              { "command": "chmod +x build/packages/tao/index.js" }
+              {
+                "command": "nx build-base tao"
+              },
+              {
+                "command": "chmod +x build/packages/tao/index.js"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js tao"
+              }
             ],
             "parallel": false
           }
@@ -98,8 +116,7 @@
                 "glob": "**/*.{js,css,html}",
                 "output": "/"
               },
-              "LICENSE",
-              "README.md"
+              "LICENSE"
             ]
           }
         },
@@ -107,7 +124,14 @@
           "builder": "@nrwl/workspace:run-commands",
           "outputs": ["build/packages/workspace"],
           "options": {
-            "commands": [{ "command": "nx build-base workspace" }],
+            "commands": [
+              {
+                "command": "nx build-base workspace"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js workspace"
+              }
+            ],
             "parallel": false
           }
         }
@@ -127,7 +151,7 @@
             "passWithNoTests": true
           }
         },
-        "build": {
+        "build-base": {
           "builder": "@nrwl/node:package",
           "options": {
             "outputPath": "build/packages/web",
@@ -136,7 +160,11 @@
             "main": "packages/web/index.ts",
             "updateBuildableProjectDepsInPackageJson": false,
             "assets": [
-              { "input": "packages/web", "glob": "**/files/**", "output": "/" },
+              {
+                "input": "packages/web",
+                "glob": "**/files/**",
+                "output": "/"
+              },
               {
                 "input": "packages/web",
                 "glob": "**/files/**/.gitkeep",
@@ -147,11 +175,33 @@
                 "glob": "**/files/**/.babelrc__tmpl__",
                 "output": "/"
               },
-              { "input": "packages/web", "glob": "**/*.json", "output": "/" },
-              { "input": "packages/web", "glob": "**/*.js", "output": "/" },
-              "LICENSE",
-              "README.md"
+              {
+                "input": "packages/web",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/web",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE"
             ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/web"],
+          "options": {
+            "commands": [
+              {
+                "command": "nx build-base web"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js web"
+              }
+            ],
+            "parallel": false
           }
         }
       }
@@ -170,7 +220,7 @@
             "passWithNoTests": true
           }
         },
-        "build": {
+        "build-base": {
           "builder": "@nrwl/node:package",
           "options": {
             "outputPath": "build/packages/cypress",
@@ -194,10 +244,28 @@
                 "glob": "**/*.json",
                 "output": "/"
               },
-              { "input": "packages/cypress", "glob": "**/*.js", "output": "/" },
-              "LICENSE",
-              "README.md"
+              {
+                "input": "packages/cypress",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE"
             ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/cypress"],
+          "options": {
+            "commands": [
+              {
+                "command": "nx build-base cypress"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js cypress"
+              }
+            ],
+            "parallel": false
           }
         }
       }
@@ -216,7 +284,7 @@
             "passWithNoTests": true
           }
         },
-        "build": {
+        "build-base": {
           "builder": "@nrwl/node:package",
           "options": {
             "outputPath": "build/packages/jest",
@@ -235,11 +303,33 @@
                 "glob": "**/files/**/.gitkeep",
                 "output": "/"
               },
-              { "input": "packages/jest", "glob": "**/*.json", "output": "/" },
-              { "input": "packages/jest", "glob": "**/*.js", "output": "/" },
-              "LICENSE",
-              "README.md"
+              {
+                "input": "packages/jest",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/jest",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE"
             ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/jest"],
+          "options": {
+            "commands": [
+              {
+                "command": "nx build-base jest"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js jest"
+              }
+            ],
+            "parallel": false
           }
         }
       }
@@ -258,7 +348,7 @@
             "passWithNoTests": true
           }
         },
-        "build": {
+        "build-base": {
           "builder": "@nrwl/node:package",
           "options": {
             "outputPath": "build/packages/storybook",
@@ -287,9 +377,23 @@
                 "glob": "**/*.js",
                 "output": "/"
               },
-              "LICENSE",
-              "README.md"
+              "LICENSE"
             ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/storybook"],
+          "options": {
+            "commands": [
+              {
+                "command": "nx build-base storybook"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js storybook"
+              }
+            ],
+            "parallel": false
           }
         }
       }
@@ -308,7 +412,7 @@
             "passWithNoTests": true
           }
         },
-        "build": {
+        "build-base": {
           "builder": "@nrwl/node:package",
           "options": {
             "outputPath": "build/packages/react",
@@ -340,9 +444,23 @@
               { "input": "packages/react", "glob": "**/*.json", "output": "/" },
               { "input": "packages/react", "glob": "**/*.d.ts", "output": "/" },
               { "input": "packages/react", "glob": "**/*.js", "output": "/" },
-              "LICENSE",
-              "README.md"
+              "LICENSE"
             ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/react"],
+          "options": {
+            "commands": [
+              {
+                "command": "nx build-base react"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js react"
+              }
+            ],
+            "parallel": false
           }
         }
       }
@@ -361,7 +479,7 @@
             "passWithNoTests": true
           }
         },
-        "build": {
+        "build-base": {
           "builder": "@nrwl/node:package",
           "options": {
             "outputPath": "build/packages/nx-plugin",
@@ -390,9 +508,23 @@
                 "glob": "**/*.js",
                 "output": "/"
               },
-              "LICENSE",
-              "README.md"
+              "LICENSE"
             ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/nx-plugin"],
+          "options": {
+            "commands": [
+              {
+                "command": "nx build-base nx-plugin"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js nx-plugin"
+              }
+            ],
+            "parallel": false
           }
         }
       }
@@ -411,7 +543,7 @@
             "passWithNoTests": true
           }
         },
-        "build": {
+        "build-base": {
           "builder": "@nrwl/node:package",
           "options": {
             "outputPath": "build/packages/node",
@@ -430,11 +562,33 @@
                 "glob": "**/files/**/.gitkeep",
                 "output": "/"
               },
-              { "input": "packages/node", "glob": "**/*.json", "output": "/" },
-              { "input": "packages/node", "glob": "**/*.js", "output": "/" },
-              "LICENSE",
-              "README.md"
+              {
+                "input": "packages/node",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/node",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE"
             ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/node"],
+          "options": {
+            "commands": [
+              {
+                "command": "nx build-base node"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js node"
+              }
+            ],
+            "parallel": false
           }
         }
       }
@@ -453,7 +607,7 @@
             "passWithNoTests": true
           }
         },
-        "build": {
+        "build-base": {
           "builder": "@nrwl/node:package",
           "options": {
             "outputPath": "build/packages/next",
@@ -477,11 +631,33 @@
                 "glob": "**/files/**/.babelrc__tmpl__",
                 "output": "/"
               },
-              { "input": "packages/next", "glob": "**/*.json", "output": "/" },
-              { "input": "packages/next", "glob": "**/*.js", "output": "/" },
-              "LICENSE",
-              "README.md"
+              {
+                "input": "packages/next",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/next",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE"
             ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/next"],
+          "options": {
+            "commands": [
+              {
+                "command": "nx build-base next"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js next"
+              }
+            ],
+            "parallel": false
           }
         }
       }
@@ -500,7 +676,7 @@
             "passWithNoTests": true
           }
         },
-        "build": {
+        "build-base": {
           "builder": "@nrwl/node:package",
           "options": {
             "outputPath": "build/packages/nest",
@@ -519,11 +695,33 @@
                 "glob": "**/files/**/.gitkeep",
                 "output": "/"
               },
-              { "input": "packages/nest", "glob": "**/*.json", "output": "/" },
-              { "input": "packages/nest", "glob": "**/*.js", "output": "/" },
-              "LICENSE",
-              "README.md"
+              {
+                "input": "packages/nest",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/nest",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE"
             ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/nest"],
+          "options": {
+            "commands": [
+              {
+                "command": "nx build-base nest"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js nest"
+              }
+            ],
+            "parallel": false
           }
         }
       }
@@ -542,7 +740,7 @@
             "passWithNoTests": true
           }
         },
-        "build": {
+        "build-base": {
           "builder": "@nrwl/node:package",
           "options": {
             "outputPath": "build/packages/linter",
@@ -566,10 +764,28 @@
                 "glob": "**/*.json",
                 "output": "/"
               },
-              { "input": "packages/linter", "glob": "**/*.js", "output": "/" },
-              "LICENSE",
-              "README.md"
+              {
+                "input": "packages/linter",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE"
             ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/linter"],
+          "options": {
+            "commands": [
+              {
+                "command": "nx build-base linter"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js linter"
+              }
+            ],
+            "parallel": false
           }
         }
       }
@@ -588,7 +804,7 @@
             "passWithNoTests": true
           }
         },
-        "build": {
+        "build-base": {
           "builder": "@nrwl/node:package",
           "options": {
             "outputPath": "build/packages/express",
@@ -612,10 +828,28 @@
                 "glob": "**/*.json",
                 "output": "/"
               },
-              { "input": "packages/express", "glob": "**/*.js", "output": "/" },
-              "LICENSE",
-              "README.md"
+              {
+                "input": "packages/express",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE"
             ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/express"],
+          "options": {
+            "commands": [
+              {
+                "command": "nx build-base express"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js express"
+              }
+            ],
+            "parallel": false
           }
         }
       }
@@ -634,7 +868,7 @@
             "passWithNoTests": true
           }
         },
-        "build": {
+        "build-base": {
           "builder": "@nrwl/node:package",
           "options": {
             "outputPath": "build/packages/eslint-plugin-nx",
@@ -663,9 +897,23 @@
                 "glob": "**/*.js",
                 "output": "/"
               },
-              "LICENSE",
-              "README.md"
+              "LICENSE"
             ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/eslint-plugin-nx"],
+          "options": {
+            "commands": [
+              {
+                "command": "nx build-base eslint-plugin-nx"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js eslint-plugin-nx"
+              }
+            ],
+            "parallel": false
           }
         }
       }
@@ -713,8 +961,7 @@
                 "glob": "**/*.js",
                 "output": "/"
               },
-              "LICENSE",
-              "README.md"
+              "LICENSE"
             ]
           }
         },
@@ -723,9 +970,14 @@
           "outputs": ["build/packages/create-nx-workspace"],
           "options": {
             "commands": [
-              { "command": "nx build-base create-nx-workspace" },
+              {
+                "command": "nx build-base create-nx-workspace"
+              },
               {
                 "command": "chmod +x build/packages/create-nx-workspace/bin/create-nx-workspace.js"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js create-nx-workspace"
               }
             ],
             "parallel": false
@@ -776,8 +1028,7 @@
                 "glob": "**/*.js",
                 "output": "/"
               },
-              "LICENSE",
-              "README.md"
+              "LICENSE"
             ]
           }
         },
@@ -786,9 +1037,14 @@
           "outputs": ["build/packages/create-nx-plugin"],
           "options": {
             "commands": [
-              { "command": "nx build-base create-nx-plugin" },
+              {
+                "command": "nx build-base create-nx-plugin"
+              },
               {
                 "command": "chmod +x build/packages/create-nx-plugin/bin/create-nx-plugin.js"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js create-nx-workspace"
               }
             ],
             "parallel": false
@@ -819,16 +1075,27 @@
             "main": "packages/cli/index.ts",
             "updateBuildableProjectDepsInPackageJson": false,
             "assets": [
-              { "input": "packages/cli", "glob": "**/files/**", "output": "/" },
+              {
+                "input": "packages/cli",
+                "glob": "**/files/**",
+                "output": "/"
+              },
               {
                 "input": "packages/cli",
                 "glob": "**/files/**/.gitkeep",
                 "output": "/"
               },
-              { "input": "packages/cli", "glob": "**/*.json", "output": "/" },
-              { "input": "packages/cli", "glob": "**/*.js", "output": "/" },
-              "LICENSE",
-              "README.md"
+              {
+                "input": "packages/cli",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/cli",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE"
             ]
           }
         },
@@ -837,8 +1104,15 @@
           "outputs": ["build/packages/cli"],
           "options": {
             "commands": [
-              { "command": "nx build-base cli" },
-              { "command": "chmod +x build/packages/cli/bin/nx.js" }
+              {
+                "command": "nx build-base cli"
+              },
+              {
+                "command": "chmod +x build/packages/cli/bin/nx.js"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js cli"
+              }
             ],
             "parallel": false
           }
@@ -859,7 +1133,7 @@
             "passWithNoTests": true
           }
         },
-        "build": {
+        "build-base": {
           "builder": "@nrwl/node:package",
           "options": {
             "outputPath": "build/packages/bazel",
@@ -878,11 +1152,33 @@
                 "glob": "**/files/**/.gitkeep",
                 "output": "/"
               },
-              { "input": "packages/bazel", "glob": "**/*.json", "output": "/" },
-              { "input": "packages/bazel", "glob": "**/*.js", "output": "/" },
-              "LICENSE",
-              "README.md"
+              {
+                "input": "packages/bazel",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/bazel",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE"
             ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/bazel"],
+          "options": {
+            "commands": [
+              {
+                "command": "nx build-base bazel"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js bazel"
+              }
+            ],
+            "parallel": false
           }
         }
       }
@@ -930,9 +1226,12 @@
                 "glob": "**/*.json",
                 "output": "/"
               },
-              { "input": "packages/angular", "glob": "**/*.js", "output": "/" },
-              "LICENSE",
-              "README.md"
+              {
+                "input": "packages/angular",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE"
             ]
           }
         },
@@ -941,8 +1240,15 @@
           "outputs": ["build/packages/angular"],
           "options": {
             "commands": [
-              { "command": "nx build-base angular" },
-              { "command": "./scripts/build-angular.sh" }
+              {
+                "command": "nx build-base angular"
+              },
+              {
+                "command": "./scripts/build-angular.sh"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js angular"
+              }
             ],
             "parallel": false
           }
