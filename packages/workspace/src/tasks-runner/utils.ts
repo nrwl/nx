@@ -45,18 +45,17 @@ export function getCommand(cliCommand: string, isYarn: boolean, task: Task) {
 }
 
 export function getOutputs(p: Record<string, ProjectGraphNode>, task: Task) {
-  return getOutputsForTargetAndConfiguration(
-    task.target.target,
-    task.target.configuration,
-    p[task.target.project]
-  );
+  return getOutputsForTargetAndConfiguration(task, p[task.target.project]);
 }
 
 export function getOutputsForTargetAndConfiguration(
-  target: string,
-  configuration: string,
+  task: Pick<Task, 'target' | 'overrides'>,
   node: ProjectGraphNode
 ) {
+  if (task.overrides?.outputPath) {
+    return [task.overrides?.outputPath];
+  }
+  const { target, configuration } = task.target;
   const architect = node.data.architect[target];
   if (architect && architect.outputs) return architect.outputs;
 

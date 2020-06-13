@@ -7,7 +7,7 @@ import { NxJson } from '../core/shared-interfaces';
 export interface Task {
   id: string;
   target: Target;
-  overrides: Object;
+  overrides: any;
   hash?: string;
   projectRoot?: string;
   hashDetails?: {
