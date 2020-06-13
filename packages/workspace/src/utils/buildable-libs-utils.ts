@@ -53,8 +53,10 @@ export function calculateProjectDependencies(
         return {
           name: libPackageJson.name, // i.e. @workspace/mylib
           outputs: getOutputsForTargetAndConfiguration(
-            context.target.target,
-            context.target.configuration,
+            {
+              overrides: {},
+              target: context.target,
+            },
             depNode
           ),
           node: depNode,
@@ -234,8 +236,10 @@ export function updateBuildableProjectPackageJsonDependencies(
   dependencies: DependentBuildableProjectNode[]
 ) {
   const outputs = getOutputsForTargetAndConfiguration(
-    context.target.target,
-    context.target.configuration,
+    {
+      overrides: {},
+      target: context.target,
+    },
     node
   );
 
@@ -268,8 +272,10 @@ export function updateBuildableProjectPackageJsonDependencies(
         let depVersion;
         if (entry.node.type === ProjectType.lib) {
           const outputs = getOutputsForTargetAndConfiguration(
-            context.target.target,
-            context.target.configuration,
+            {
+              overrides: {},
+              target: context.target,
+            },
             entry.node
           );
 
