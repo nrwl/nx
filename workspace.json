@@ -332,6 +332,11 @@
                 "glob": "**/files/**/.babelrc__tmpl__",
                 "output": "/"
               },
+              {
+                "input": "packages/react",
+                "glob": "**/files/**/.browserslistrc__tmpl__",
+                "output": "/"
+              },
               { "input": "packages/react", "glob": "**/*.json", "output": "/" },
               { "input": "packages/react", "glob": "**/*.d.ts", "output": "/" },
               { "input": "packages/react", "glob": "**/*.js", "output": "/" },
