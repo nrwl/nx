@@ -19,13 +19,13 @@
 
 If it's your first Nx project, the command will recommend you to install `@nrwl/cli` globally, so you can invoke `nx` directly without going through yarn or npm.
 
-## Serving Application
+### Serving Application
 
 - Run `nx serve myapp` to serve the newly generated application!
 - Run `nx test myapp` to test it.
 - Run `nx e2e myapp-e2e` to run e2e tests for it.
 
-## Adding React Plugin Into an Existing Workspace
+### Adding React Plugin Into an Existing Workspace
 
 You can always add the React plugin to an existing workspace by installing `@nrwl/react` and then generating an React application, as follows: `nx g @nrwl/react:app myapp`.
 

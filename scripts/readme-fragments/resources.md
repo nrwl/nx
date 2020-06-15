@@ -3,7 +3,7 @@
 - [Nx Repo](https://github.com/nrwl/nx)
 - [Nx Documentation and Guides](https://nx.dev)
 
-## Courses
+### Courses
 
 <table>
   <tr>

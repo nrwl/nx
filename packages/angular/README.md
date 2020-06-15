@@ -17,7 +17,7 @@
 ? Default stylesheet format           CSS
 ```
 
-## Serving Application
+### Serving Application
 
 - Run `nx serve myapp` to serve the newly generated application!
 - Run `nx test myapp` to test it.
@@ -29,7 +29,7 @@ You can also use `ng` instead of `nx:
 - Run `ng test myapp` to test it.
 - Run `ng e2e myapp-e2e` to run e2e tests for it.
 
-## Adding Angular Plugin Into an Existing Workspace
+### Adding Angular Plugin Into an Existing Workspace
 
 You can always add the Angular plugin to an existing workspace by installing `@nrwl/angular` and then generating an Angular application, as follows: `ng g @nrwl/angular:app myapp`.
 

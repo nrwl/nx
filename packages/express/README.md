@@ -34,7 +34,7 @@ You can also select `empty` and add `@nrwl/express` plugin using yarn or npm, an
 
 If it's your first Nx project, the command will recommend you to install `@nrwl/cli` globally, so you can invoke `nx` directly without going through yarn or npm.
 
-## Serving Application
+### Serving Application
 
 - Run `nx serve myapp` to serve the newly generated application!
 - Run `nx test myapp` to test it.

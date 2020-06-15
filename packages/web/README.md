@@ -18,13 +18,13 @@ Application name myapp ? Default stylesheet format CSS
 
 If it's your first Nx project, the command will recommend you to install `@nrwl/cli` globally, so you can invoke `nx` directly without going through yarn or npm.
 
-## Serving Application
+### Serving Application
 
 - Run `nx serve myapp` to serve the newly generated application!
 - Run `nx test myapp` to test it.
 - Run `nx e2e myapp-e2e` to run e2e tests for it.
 
-## Adding Web Plugin Into an Existing Workspace
+### Adding Web Plugin Into an Existing Workspace
 
 You can always add the web plugin to an existing workspace by installing `@nrwl/web` and then generating a web components application, as follows: `nx g @nrwl/web:app myapp`.
 
