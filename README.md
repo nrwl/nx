@@ -209,7 +209,7 @@ You are good to go!
 
 - [High Quality React apps with Nx & Cypress](https://youtu.be/mfJBLhjYMdo)
 
-### Books amd Blogs
+### Books and Blogs
 
 - [Nx blog posts](https://blog.nrwl.io/nx/home)
 
