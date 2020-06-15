@@ -48,7 +48,9 @@ forEachCli((currentCLIName) => {
         `<link rel="stylesheet" href="styles.css">`
       );
       const testResults = await runCLIAsync(`test ${appName}`);
-      expect(testResults.stderr).toContain('Test Suites: 1 passed, 1 total');
+      expect(testResults.combinedOutput).toContain(
+        'Test Suites: 1 passed, 1 total'
+      );
       const lintE2eResults = runCLI(`lint ${appName}-e2e`);
       expect(lintE2eResults).toContain('All files pass linting.');
 

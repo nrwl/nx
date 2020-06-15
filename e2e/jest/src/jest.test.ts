@@ -26,9 +26,13 @@ forEachCli(() => {
         runCLIAsync(`generate @nrwl/angular:component test --project ${mylib}`),
       ]);
       const appResult = await runCLIAsync(`test ${myapp} --no-watch`);
-      expect(appResult.stderr).toContain('Test Suites: 3 passed, 3 total');
+      expect(appResult.combinedOutput).toContain(
+        'Test Suites: 3 passed, 3 total'
+      );
       const libResult = await runCLIAsync(`test ${mylib}`);
-      expect(libResult.stderr).toContain('Test Suites: 3 passed, 3 total');
+      expect(libResult.combinedOutput).toContain(
+        'Test Suites: 3 passed, 3 total'
+      );
       done();
     }, 45000);
 
@@ -66,7 +70,9 @@ forEachCli(() => {
       );
 
       const appResult = await runCLIAsync(`test ${mylib} --no-watch`);
-      expect(appResult.stderr).toContain('Test Suites: 1 passed, 1 total');
+      expect(appResult.combinedOutput).toContain(
+        'Test Suites: 1 passed, 1 total'
+      );
       done();
     }, 45000);
 
@@ -84,7 +90,9 @@ forEachCli(() => {
         `
       );
       const appResult = await runCLIAsync(`test ${mylib} --no-watch`);
-      expect(appResult.stderr).toContain('Test Suites: 1 passed, 1 total');
+      expect(appResult.combinedOutput).toContain(
+        'Test Suites: 1 passed, 1 total'
+      );
       done();
     }, 45000);
   });
