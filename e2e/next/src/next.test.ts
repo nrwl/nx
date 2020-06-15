@@ -232,7 +232,9 @@ async function checkApp(
   }
 
   const testResults = await runCLIAsync(`test ${appName}`);
-  expect(testResults.stderr).toContain('Test Suites: 1 passed, 1 total');
+  expect(testResults.combinedOutput).toContain(
+    'Test Suites: 1 passed, 1 total'
+  );
 
   if (supportUi()) {
     const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);

@@ -36,7 +36,9 @@ forEachCli((currentCLIName) => {
       updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
 
       const libTestResults = await runCLIAsync(`test ${libName}`);
-      expect(libTestResults.stderr).toContain('Test Suites: 1 passed, 1 total');
+      expect(libTestResults.combinedOutput).toContain(
+        'Test Suites: 1 passed, 1 total'
+      );
 
       await testGeneratedApp(appName, {
         checkStyles: true,
@@ -210,10 +212,14 @@ forEachCli((currentCLIName) => {
       runCLI(`g @nrwl/react:redux orange --project=${libName}`);
 
       const appTestResults = await runCLIAsync(`test ${appName}`);
-      expect(appTestResults.stderr).toContain('Test Suites: 2 passed, 2 total');
+      expect(appTestResults.combinedOutput).toContain(
+        'Test Suites: 2 passed, 2 total'
+      );
 
       const libTestResults = await runCLIAsync(`test ${libName}`);
-      expect(libTestResults.stderr).toContain('Test Suites: 2 passed, 2 total');
+      expect(libTestResults.combinedOutput).toContain(
+        'Test Suites: 2 passed, 2 total'
+      );
     }, 120000);
 
     it('should be able to use JSX', async () => {
@@ -306,7 +312,9 @@ forEachCli((currentCLIName) => {
       }
 
       const testResults = await runCLIAsync(`test ${appName}`);
-      expect(testResults.stderr).toContain('Test Suites: 1 passed, 1 total');
+      expect(testResults.combinedOutput).toContain(
+        'Test Suites: 1 passed, 1 total'
+      );
 
       if (opts.checkE2E) {
         const e2eResults = runCLI(`e2e ${appName}-e2e`);

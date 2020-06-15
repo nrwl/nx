@@ -82,7 +82,9 @@ forEachCli((currentCLIName) => {
 
       updateFile(`apps/${nodeapp}/src/assets/file.txt`, ``);
       const jestResult = await runCLIAsync(`test ${nodeapp}`);
-      expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
+      expect(jestResult.combinedOutput).toContain(
+        'Test Suites: 1 passed, 1 total'
+      );
       await runCLIAsync(`build ${nodeapp}`);
 
       checkFilesExist(
@@ -192,7 +194,9 @@ forEachCli((currentCLIName) => {
 
       updateFile(`apps/${nestapp}/src/assets/file.txt`, ``);
       const jestResult = await runCLIAsync(`test ${nestapp}`);
-      expect(jestResult.stderr).toContain('Test Suites: 2 passed, 2 total');
+      expect(jestResult.combinedOutput).toContain(
+        'Test Suites: 2 passed, 2 total'
+      );
 
       await runCLIAsync(`build ${nestapp}`);
 
@@ -256,7 +260,9 @@ forEachCli((currentCLIName) => {
       expect(lintResults).toContain('All files pass linting.');
 
       const jestResult = await runCLIAsync(`test ${nodelib}`);
-      expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
+      expect(jestResult.combinedOutput).toContain(
+        'Test Suites: 1 passed, 1 total'
+      );
     }, 60000);
 
     it('should be able to generate a publishable node library', async () => {
@@ -358,7 +364,9 @@ forEachCli((currentCLIName) => {
       expect(lintResults).toContain('All files pass linting.');
 
       const jestResult = await runCLIAsync(`test ${nestlib}`);
-      expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
+      expect(jestResult.combinedOutput).toContain(
+        'Test Suites: 1 passed, 1 total'
+      );
     }, 60000);
 
     it('should be able to generate a nest library w/ controller', async () => {
@@ -371,7 +379,9 @@ forEachCli((currentCLIName) => {
       expect(lintResults).toContain('All files pass linting.');
 
       const jestResult = await runCLIAsync(`test ${nestlib}`);
-      expect(jestResult.stderr).toContain('Test Suites: 1 passed, 1 total');
+      expect(jestResult.combinedOutput).toContain(
+        'Test Suites: 1 passed, 1 total'
+      );
     }, 60000);
 
     it('should be able to generate a nest library w/ controller and service', async () => {
@@ -384,7 +394,9 @@ forEachCli((currentCLIName) => {
       expect(lintResults).toContain('All files pass linting.');
 
       const jestResult = await runCLIAsync(`test ${nestlib}`);
-      expect(jestResult.stderr).toContain('Test Suites: 2 passed, 2 total');
+      expect(jestResult.combinedOutput).toContain(
+        'Test Suites: 2 passed, 2 total'
+      );
     }, 60000);
   });
 

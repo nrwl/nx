@@ -172,19 +172,19 @@ export function runCommandAsync(
     silenceError: false,
     env: process.env,
   }
-): Promise<{ stdout: string; stderr: string }> {
+): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   return new Promise((resolve, reject) => {
     exec(
       command,
       {
         cwd: tmpProjPath(),
-        env: process.env,
+        env: { ...process.env, FORCE_COLOR: 'false' },
       },
       (err, stdout, stderr) => {
         if (!opts.silenceError && err) {
           reject(err);
         }
-        resolve({ stdout, stderr });
+        resolve({ stdout, stderr, combinedOutput: `${stdout}${stderr}` });
       }
     );
   });
@@ -196,7 +196,7 @@ export function runCLIAsync(
     silenceError: false,
     env: process.env,
   }
-): Promise<{ stdout: string; stderr: string }> {
+): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   return runCommandAsync(`./node_modules/.bin/nx ${command}`, opts);
 }
 

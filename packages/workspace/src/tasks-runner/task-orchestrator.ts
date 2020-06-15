@@ -42,8 +42,10 @@ export class TaskOrchestrator {
     function takeFromQueue() {
       if (left.length > 0) {
         const task = left.pop();
-        return that
-          .forkProcess(task)
+        const p = that.pipeOutputCapture(task)
+          ? that.forkProcessPipeOutputCapture(task)
+          : that.forkProcessDirectOutputCapture(task);
+        return p
           .then((code) => {
             res.push({
               task,
@@ -122,7 +124,82 @@ export class TaskOrchestrator {
     }, []);
   }
 
-  private forkProcess(task: Task) {
+  private pipeOutputCapture(task: Task) {
+    try {
+      const p = this.projectGraph.nodes[task.target.project];
+      const b = p.data.architect[task.target.target].builder;
+      // this is temporary. we simply want to assess if pipeOutputCapture
+      // works well before making it configurable
+      return (
+        this.cache.temporaryOutputPath(task) &&
+        (b === '@nrwl/workspace:run-commands' || b === '@nrwl/cypress:cypress')
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
+  private forkProcessPipeOutputCapture(task: Task) {
+    const taskOutputs = getOutputs(this.projectGraph.nodes, task);
+    const outputPath = this.cache.temporaryOutputPath(task);
+    return new Promise((res, rej) => {
+      try {
+        this.options.lifeCycle.startTask(task);
+        const forwardOutput = this.shouldForwardOutput(outputPath, task);
+        const env = this.envForForkedProcess(task, undefined, forwardOutput);
+        const args = this.getCommandArgs(task);
+        const commandLine = `${this.cli} ${args.join(' ')}`;
+
+        if (forwardOutput) {
+          output.logCommand(commandLine);
+        }
+        const p = fork(this.getCommand(), args, {
+          stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
+          env,
+        });
+
+        let out = [];
+        let outWithErr = [];
+        p.stdout.on('data', (chunk) => {
+          process.stdout.write(chunk);
+          out.push(chunk.toString());
+          outWithErr.push(chunk.toString());
+        });
+        p.stderr.on('data', (chunk) => {
+          process.stderr.write(chunk);
+          outWithErr.push(chunk.toString());
+        });
+        p.on('exit', (code) => {
+          // we didn't print any output as we were running the command
+          // print all the collected output|
+          if (!forwardOutput) {
+            output.logCommand(commandLine);
+            process.stdout.write(outWithErr.join(''));
+          }
+          if (outputPath && code === 0) {
+            fs.writeFileSync(outputPath, outWithErr.join(''));
+            this.cache
+              .put(task, outputPath, taskOutputs)
+              .then(() => {
+                this.options.lifeCycle.endTask(task, code);
+                res(code);
+              })
+              .catch((e) => {
+                rej(e);
+              });
+          } else {
+            this.options.lifeCycle.endTask(task, code);
+            res(code);
+          }
+        });
+      } catch (e) {
+        console.error(e);
+        rej(e);
+      }
+    });
+  }
+
+  private forkProcessDirectOutputCapture(task: Task) {
     const taskOutputs = getOutputs(this.projectGraph.nodes, task);
     const outputPath = this.cache.temporaryOutputPath(task);
     return new Promise((res, rej) => {
@@ -187,8 +264,9 @@ export class TaskOrchestrator {
       ...parseEnv(`${task.projectRoot}/.env`),
       ...parseEnv(`${task.projectRoot}/.local.env`),
     };
-
-    const env = { ...envsFromFiles, ...process.env };
+    const forceColor =
+      process.env.FORCE_COLOR === undefined ? 'true' : process.env.FORCE_COLOR;
+    const env = { ...envsFromFiles, FORCE_COLOR: forceColor, ...process.env };
     if (outputPath) {
       env.NX_TERMINAL_OUTPUT_PATH = outputPath;
       if (this.options.captureStderr) {
