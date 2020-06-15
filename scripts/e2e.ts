@@ -161,6 +161,8 @@ function cleanUp(code) {
   process.exit(code);
 }
 
+process.on('SIGINT', () => cleanUp(1));
+
 runTest()
   .then(() => {
     process.exit(0);
