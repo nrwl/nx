@@ -146,7 +146,14 @@ export class TaskOrchestrator {
       try {
         this.options.lifeCycle.startTask(task);
         const forwardOutput = this.shouldForwardOutput(outputPath, task);
-        const env = this.envForForkedProcess(task, undefined, forwardOutput);
+        const env = this.envForForkedProcess(
+          task,
+          undefined,
+          forwardOutput,
+          process.env.FORCE_COLOR === undefined
+            ? 'true'
+            : process.env.FORCE_COLOR
+        );
         const args = this.getCommandArgs(task);
         const commandLine = `${this.cli} ${args.join(' ')}`;
 
@@ -206,7 +213,12 @@ export class TaskOrchestrator {
       try {
         this.options.lifeCycle.startTask(task);
         const forwardOutput = this.shouldForwardOutput(outputPath, task);
-        const env = this.envForForkedProcess(task, outputPath, forwardOutput);
+        const env = this.envForForkedProcess(
+          task,
+          outputPath,
+          forwardOutput,
+          undefined
+        );
         const args = this.getCommandArgs(task);
         const commandLine = `${this.cli} ${args.join(' ')}`;
 
@@ -256,7 +268,8 @@ export class TaskOrchestrator {
   private envForForkedProcess(
     task: Task,
     outputPath: string,
-    forwardOutput: boolean
+    forwardOutput: boolean,
+    forceColor: string
   ) {
     const envsFromFiles = {
       ...parseEnv('.env'),
@@ -264,8 +277,6 @@ export class TaskOrchestrator {
       ...parseEnv(`${task.projectRoot}/.env`),
       ...parseEnv(`${task.projectRoot}/.local.env`),
     };
-    const forceColor =
-      process.env.FORCE_COLOR === undefined ? 'true' : process.env.FORCE_COLOR;
     const env = { ...envsFromFiles, FORCE_COLOR: forceColor, ...process.env };
     if (outputPath) {
       env.NX_TERMINAL_OUTPUT_PATH = outputPath;

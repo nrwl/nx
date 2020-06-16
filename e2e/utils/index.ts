@@ -279,7 +279,7 @@ export function runCommand(command: string): string {
     const r = execSync(command, {
       cwd: tmpProjPath(),
       stdio: ['pipe', 'pipe', 'pipe'],
-      env: process.env,
+      env: { ...process.env, FORCE_COLOR: 'false' },
     }).toString();
     if (process.env.VERBOSE_OUTPUT) {
       console.log(r);
