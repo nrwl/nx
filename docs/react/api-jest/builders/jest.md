@@ -11,7 +11,7 @@ Read more about how to use builders and the CLI here: https://nx.dev/react/guide
 
 Alias(es): b
 
-Type: `number`
+Type: `number | boolean`
 
 Exit the test suite immediately after `n` number of failing tests. (https://jestjs.io/docs/en/cli#bail)
 
