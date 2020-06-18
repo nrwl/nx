@@ -1,5 +1,6 @@
 import { logging } from '@angular-devkit/core';
 import { UnsuccessfulWorkflowExecution } from '@angular-devkit/schematics';
+// @ts-ignore
 import levenshtein = require('fast-levenshtein');
 
 export type Schema = {
@@ -126,6 +127,13 @@ export function lookupUnmatched(opts: Options, schema: Schema): Options {
   return opts;
 }
 
+export function coerceTypesAndNormalizeAliases(
+  opts: Options,
+  schema: Schema
+): Options {
+  return convertAliases(coerceTypes(opts, schema), schema);
+}
+
 /**
  * Converts aliases and coerces types according to the schema
  *
@@ -139,8 +147,5 @@ export function lookupUnmatched(opts: Options, schema: Schema): Options {
  *
  */
 export function validateOptions(opts: Options, schema: Schema): Options {
-  return lookupUnmatched(
-    convertAliases(coerceTypes(opts, schema), schema),
-    schema
-  );
+  return lookupUnmatched(coerceTypesAndNormalizeAliases(opts, schema), schema);
 }

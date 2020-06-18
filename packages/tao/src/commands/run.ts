@@ -1,10 +1,8 @@
 import { Architect } from '@angular-devkit/architect';
 import { WorkspaceNodeModulesArchitectHost } from '@angular-devkit/architect/node';
 import {
-  experimental,
   json,
   logging,
-  normalize,
   schema,
   terminal,
   workspaces,
@@ -12,15 +10,15 @@ import {
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { getLogger } from '../shared/logger';
 import {
-  coerceTypes,
+  coerceTypesAndNormalizeAliases,
   convertToCamelCase,
   handleErrors,
   Schema,
 } from '../shared/params';
 import { commandName, printHelp } from '../shared/print-help';
+import { WorkspaceDefinition } from '@angular-devkit/core/src/workspace';
 // @ts-ignore
 import minimist = require('minimist');
-import { WorkspaceDefinition } from '@angular-devkit/core/src/workspace';
 
 export interface RunOptions {
   project: string;
@@ -177,7 +175,10 @@ export async function run(root: string, args: string[], isVerbose: boolean) {
       return 0;
     }
 
-    const runOptions = coerceTypes(opts.runOptions, flattenedSchema as any);
+    const runOptions = coerceTypesAndNormalizeAliases(
+      opts.runOptions,
+      flattenedSchema as any
+    );
     const run = await architect.scheduleTarget(
       {
         project: opts.project,
