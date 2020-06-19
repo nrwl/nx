@@ -313,8 +313,12 @@ export class TaskOrchestrator {
   }
 
   private getCommandArgs(task: Task) {
-    const args = Object.entries(task.overrides || {}).map(
-      ([prop, value]) => `--${prop}=${value}`
+    const args = Object.entries(task.overrides || {}).map(([prop, value]) =>
+      typeof value === 'boolean'
+        ? value
+          ? `--${prop}`
+          : `--no-${prop}`
+        : `--${prop}=${value}`
     );
 
     const config = task.target.configuration
