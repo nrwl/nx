@@ -1,5 +1,3 @@
-import { UnitTestRunner } from '../../utils/test-runners';
-
 export interface Schema {
   directory: string;
   name: string;
@@ -9,4 +7,5 @@ export interface Schema {
   style?: string;
   commit?: { name: string; email: string; message?: string };
   cli: 'nx' | 'angular';
+  layout: 'apps-and-libs' | 'packages';
 }

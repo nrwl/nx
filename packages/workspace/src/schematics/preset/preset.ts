@@ -34,6 +34,8 @@ function createPreset(options: Schema): Rule {
 
   if (options.preset === 'empty') {
     return noop();
+  } else if (options.preset === 'oss') {
+    return noop();
   } else if (options.preset === 'angular') {
     return chain([
       externalSchematic('@nrwl/angular', 'application', {

@@ -1273,7 +1273,8 @@
           "options": {
             "jestConfig": "e2e/cli/jest.config.js",
             "tsConfig": "e2e/cli/tsconfig.spec.json",
-            "passWithNoTests": true
+            "passWithNoTests": true,
+            "runInBand": true
           }
         }
       }
@@ -1289,7 +1290,8 @@
           "options": {
             "jestConfig": "e2e/angular/jest.config.js",
             "tsConfig": "e2e/angular/tsconfig.spec.json",
-            "passWithNoTests": true
+            "passWithNoTests": true,
+            "runInBand": true
           }
         }
       }
@@ -1305,7 +1307,8 @@
           "options": {
             "jestConfig": "e2e/bazel/jest.config.js",
             "tsConfig": "e2e/bazel/tsconfig.spec.json",
-            "passWithNoTests": true
+            "passWithNoTests": true,
+            "runInBand": true
           }
         }
       }
@@ -1321,7 +1324,8 @@
           "options": {
             "jestConfig": "e2e/cypress/jest.config.js",
             "tsConfig": "e2e/cypress/tsconfig.spec.json",
-            "passWithNoTests": true
+            "passWithNoTests": true,
+            "runInBand": true
           }
         }
       }
@@ -1337,7 +1341,8 @@
           "options": {
             "jestConfig": "e2e/jest/jest.config.js",
             "tsConfig": "e2e/jest/tsconfig.spec.json",
-            "passWithNoTests": true
+            "passWithNoTests": true,
+            "runInBand": true
           }
         }
       }
@@ -1353,7 +1358,8 @@
           "options": {
             "jestConfig": "e2e/linter/jest.config.js",
             "tsConfig": "e2e/linter/tsconfig.spec.json",
-            "passWithNoTests": true
+            "passWithNoTests": true,
+            "runInBand": true
           }
         }
       }
@@ -1369,7 +1375,8 @@
           "options": {
             "jestConfig": "e2e/next/jest.config.js",
             "tsConfig": "e2e/next/tsconfig.spec.json",
-            "passWithNoTests": true
+            "passWithNoTests": true,
+            "runInBand": true
           }
         }
       }
@@ -1385,7 +1392,8 @@
           "options": {
             "jestConfig": "e2e/node/jest.config.js",
             "tsConfig": "e2e/node/tsconfig.spec.json",
-            "passWithNoTests": true
+            "passWithNoTests": true,
+            "runInBand": true
           }
         }
       }
@@ -1401,7 +1409,8 @@
           "options": {
             "jestConfig": "e2e/react/jest.config.js",
             "tsConfig": "e2e/react/tsconfig.spec.json",
-            "passWithNoTests": true
+            "passWithNoTests": true,
+            "runInBand": true
           }
         }
       }
@@ -1417,7 +1426,8 @@
           "options": {
             "jestConfig": "e2e/storybook/jest.config.js",
             "tsConfig": "e2e/storybook/tsconfig.spec.json",
-            "passWithNoTests": true
+            "passWithNoTests": true,
+            "runInBand": true
           }
         }
       }
@@ -1433,7 +1443,8 @@
           "options": {
             "jestConfig": "e2e/web/jest.config.js",
             "tsConfig": "e2e/web/tsconfig.spec.json",
-            "passWithNoTests": true
+            "passWithNoTests": true,
+            "runInBand": true
           }
         }
       }
@@ -1449,7 +1460,8 @@
           "options": {
             "jestConfig": "e2e/workspace/jest.config.js",
             "tsConfig": "e2e/workspace/tsconfig.spec.json",
-            "passWithNoTests": true
+            "passWithNoTests": true,
+            "runInBand": true
           }
         }
       }
@@ -1465,7 +1477,8 @@
           "options": {
             "jestConfig": "e2e/nx-plugin/jest.config.js",
             "tsConfig": "e2e/nx-plugin/tsconfig.spec.json",
-            "passWithNoTests": true
+            "passWithNoTests": true,
+            "runInBand": true
           }
         }
       }

@@ -25,7 +25,7 @@ forEachCli('nx', () => {
       updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
 
       const out = runCLI(`lint ${myapp}`, { silenceError: true });
-      expect(out).toContain('Unexpected console statement  no-console');
+      expect(out).toContain('Unexpected console statement');
     }, 1000000);
 
     it('linting should not error when rules are not followed and the force flag is specified', () => {

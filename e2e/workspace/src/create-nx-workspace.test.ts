@@ -9,6 +9,13 @@ forEachCli(() => {
       });
     });
 
+    it('should be able to create an oss workspace', () => {
+      const wsName = uniq('oss');
+      runCreateWorkspace(wsName, {
+        preset: 'oss',
+      });
+    });
+
     it('should be able to create an angular workspace', () => {
       const wsName = uniq('angular');
       const appName = uniq('app');

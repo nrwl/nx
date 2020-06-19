@@ -7,7 +7,6 @@ import * as ts from 'typescript';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
-  cleanup,
   ensureProject,
   forEachCli,
   readFile,
@@ -153,7 +152,7 @@ forEachCli((currentCLIName) => {
       });
     }, 120000);
 
-    it('should have correct ts options for nest application', async () => {
+    xit('should have correct ts options for nest application', async () => {
       if (currentCLIName === 'angular') {
         // Usually the tests use ensureProject() to setup the test workspace. But it will trigger
         // the nx workspace schematic which creates a tsconfig file containing the parameters
@@ -161,7 +160,6 @@ forEachCli((currentCLIName) => {
         // However, when creating an Angular workspace and adding the workspace capability (as
         // described in the docs) the tsconfig file could miss required options if Angular removes
         // them from their config files as happened with emitDecoratorMetadata.
-        cleanup();
         runNgNew();
         runNgAdd('--npmScope projscope');
         yarnAdd('@nrwl/nest');
@@ -181,7 +179,6 @@ forEachCli((currentCLIName) => {
 
       expect(config.options.emitDecoratorMetadata).toEqual(true); // required by nest to function properly
       expect(config.options.target).toEqual(ts.ScriptTarget.ES2015); // required by nest swagger to function properly
-      cleanup();
     }, 120000);
 
     it('should be able to generate a nest application', async (done) => {

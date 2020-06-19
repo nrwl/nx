@@ -12,9 +12,16 @@ import * as path from 'path';
 interface RunCmdOpts {
   silenceError?: boolean;
   env?: Record<string, string>;
+  cwd?: string;
 }
 
 export let cli;
+let projName: string;
+
+export function setCurrentProjName(name: string) {
+  projName = name;
+  return name;
+}
 
 export function uniq(prefix: string) {
   return `${prefix}${Math.floor(Math.random() * 10000000)}`;
@@ -94,9 +101,10 @@ export function runCreateWorkspace(
   return create ? create.toString() : '';
 }
 
-export function yarnAdd(pkg: string) {
+export function yarnAdd(pkg: string, projName?: string) {
+  const cwd = projName ? `./tmp/${cli}/${projName}` : tmpProjPath();
   const install = execSync(`yarn add ${pkg}`, {
-    cwd: tmpProjPath(),
+    cwd,
     // ...{ stdio: ['pipe', 'pipe', 'pipe'] },
     ...{ stdio: [0, 1, 2] },
     env: process.env,
@@ -116,8 +124,8 @@ export function runNgNew(): string {
  * for the currently selected CLI.
  */
 export function newProject(): void {
+  projName = uniq('proj');
   try {
-    cleanup();
     if (!directoryExists(tmpBackupProjPath())) {
       runCreateWorkspace('proj', { preset: 'empty' });
       const packages = [
@@ -130,15 +138,15 @@ export function newProject(): void {
         `@nrwl/nx-plugin`,
         `@nrwl/eslint-plugin-nx`,
       ];
-      yarnAdd(packages.join(` `));
+      yarnAdd(packages.join(` `), 'proj');
       packages
         .filter(
           (f) => f !== '@nrwl/nx-plugin' && f !== `@nrwl/eslint-plugin-nx`
         )
         .forEach((p) => {
-          runCLI(`g ${p}:init`);
+          runCLI(`g ${p}:init`, { cwd: `./tmp/${cli}/proj` });
         });
-      execSync(`mv ${tmpProjPath()} ${tmpBackupProjPath()}`);
+      execSync(`mv ./tmp/${cli}/proj ${tmpBackupProjPath()}`);
     }
     execSync(`cp -a ${tmpBackupProjPath()} ${tmpProjPath()}`);
   } catch (e) {
@@ -177,7 +185,7 @@ export function runCommandAsync(
     exec(
       command,
       {
-        cwd: tmpProjPath(),
+        cwd: opts.cwd || tmpProjPath(),
         env: { ...process.env, FORCE_COLOR: 'false' },
       },
       (err, stdout, stderr) => {
@@ -205,6 +213,7 @@ export function runNgAdd(
   opts: RunCmdOpts = {
     silenceError: false,
     env: process.env,
+    cwd: tmpProjPath(),
   }
 ): string {
   try {
@@ -213,7 +222,7 @@ export function runNgAdd(
       `./node_modules/.bin/ng g @nrwl/workspace:ng-add ${command}`,
       {
         cwd: tmpProjPath(),
-        env: opts.env,
+        env: opts.env as any,
       }
     )
       .toString()
@@ -239,16 +248,14 @@ export function runCLI(
   }
 ): string {
   try {
-    const r = execSync(`./node_modules/.bin/nx ${command}`, {
-      cwd: tmpProjPath(),
-      env: opts.env,
-    })
-      .toString()
-      .replace(
-        /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
-        ''
-      );
-
+    let r = execSync(`./node_modules/.bin/nx ${command}`, {
+      cwd: opts.cwd || tmpProjPath(),
+      env: opts.env as any,
+    }).toString();
+    r = r.replace(
+      /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
+      ''
+    );
     if (process.env.VERBOSE_OUTPUT) {
       console.log(r);
     }
@@ -371,10 +378,6 @@ export function readFile(f: string) {
   return readFileSync(ff).toString();
 }
 
-export function cleanup() {
-  execSync(`rm -rf ${tmpProjPath()}`);
-}
-
 export function rmDist() {
   execSync(`rm -rf ${tmpProjPath()}/dist`);
 }
@@ -404,7 +407,7 @@ export function getSize(filePath: string): number {
 }
 
 export function tmpProjPath(path?: string) {
-  return path ? `./tmp/${cli}/proj/${path}` : `./tmp/${cli}/proj`;
+  return path ? `./tmp/${cli}/${projName}/${path}` : `./tmp/${cli}/${projName}`;
 }
 
 function tmpBackupProjPath(path?: string) {
