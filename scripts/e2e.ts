@@ -86,6 +86,11 @@ export async function setup() {
 async function runTest() {
   let selectedProjects = process.argv[2];
 
+  let testNamePattern = '';
+  if (process.argv[3] === '-t' || process.argv[3] == '--testNamePattern') {
+    testNamePattern = `--testNamePattern "${process.argv[4]}"`;
+  }
+
   if (process.argv[3] === 'affected') {
     const affected = execSync(
       `nx print-affected --base=origin/master --select=projects`
@@ -116,7 +121,7 @@ async function runTest() {
       console.log('No tests to run');
     } else if (selectedProjects) {
       execSync(
-        `node --max-old-space-size=4000 ./node_modules/.bin/nx run-many --target=e2e --projects=${selectedProjects}`,
+        `node --max-old-space-size=4000 ./node_modules/.bin/nx run-many --target=e2e --projects=${selectedProjects} ${testNamePattern}`,
         {
           stdio: [0, 1, 2],
           env: { ...process.env, NX_TERMINAL_CAPTURE_STDERR: 'true' },
@@ -165,8 +170,8 @@ process.on('SIGINT', () => cleanUp(1));
 
 runTest()
   .then(() => {
-    process.exit(0);
     console.log('done');
+    process.exit(0);
   })
   .catch((e) => {
     console.error('error', e);
