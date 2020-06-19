@@ -38,7 +38,7 @@ export function checkDependencies(schema: Schema): Rule {
 
     for (const dir of tree.getDir('/').subdirs) {
       if (ig.ignores(dir)) {
-        return;
+        continue;
       }
 
       tree.getDir(dir).visit((file: string) => {
