@@ -530,6 +530,7 @@ forEachCli((cli) => {
     it('should work for libraries', () => {
       const lib1 = uniq('mylib');
       const lib2 = uniq('mylib');
+      const lib3 = uniq('mylib');
       newProject();
       runCLI(`generate @nrwl/workspace:lib ${lib1}/data-access`);
 
@@ -544,7 +545,7 @@ forEachCli((cli) => {
       );
 
       /**
-       * Create a library which imports a class from the other lib
+       * Create a library which imports a class from lib1
        */
 
       runCLI(`generate @nrwl/workspace:lib ${lib2}/ui`);
@@ -555,6 +556,19 @@ forEachCli((cli) => {
 
         export const fromLibTwo = () => fromLibOne(); }`
       );
+
+      /**
+       * Create a library which has an implicit dependency on lib1
+       */
+
+      runCLI(`generate @nrwl/workspace:lib ${lib3}`);
+      let nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+      nxJson.projects[lib3].implicitDependencies = [`${lib1}-data-access`];
+      updateFile(`nx.json`, JSON.stringify(nxJson));
+
+      /**
+       * Now try to move lib1
+       */
 
       const moveOutput = runCLI(
         `generate @nrwl/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access`
@@ -611,11 +625,14 @@ forEachCli((cli) => {
       checkFilesExist(rootClassPath);
 
       expect(moveOutput).toContain('UPDATE nx.json');
-      const nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+      nxJson = JSON.parse(readFile('nx.json')) as NxJson;
       expect(nxJson.projects[`${lib1}-data-access`]).toBeUndefined();
       expect(nxJson.projects[newName]).toEqual({
         tags: [],
       });
+      expect(nxJson.projects[lib3].implicitDependencies).toEqual([
+        `shared-${lib1}-data-access`,
+      ]);
 
       expect(moveOutput).toContain('UPDATE tsconfig.json');
       const rootTsConfig = readJson('tsconfig.json');
@@ -656,27 +673,58 @@ forEachCli((cli) => {
      * Tries creating then deleting a lib
      */
     it('should work', () => {
-      const lib = uniq('mylib');
+      const lib1 = uniq('mylib');
+      const lib2 = uniq('mylib');
 
       newProject();
 
-      runCLI(`generate @nrwl/workspace:lib ${lib}`);
-      expect(exists(tmpProjPath(`libs/${lib}`))).toBeTruthy();
+      runCLI(`generate @nrwl/workspace:lib ${lib1}`);
+      expect(exists(tmpProjPath(`libs/${lib1}`))).toBeTruthy();
 
-      const removeOutput = runCLI(
-        `generate @nrwl/workspace:remove --project ${lib}`
+      /**
+       * Create a library which has an implicit dependency on lib1
+       */
+
+      runCLI(`generate @nrwl/workspace:lib ${lib2}`);
+      let nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+      nxJson.projects[lib2].implicitDependencies = [lib1];
+      updateFile(`nx.json`, JSON.stringify(nxJson));
+
+      /**
+       * Try removing the project (should fail)
+       */
+
+      let error;
+      try {
+        runCLI(`generate @nrwl/workspace:remove --project ${lib1}`);
+      } catch (e) {
+        error = e;
+      }
+
+      expect(error).toBeDefined();
+      expect(error.stderr.toString()).toContain(
+        `${lib1} is still depended on by the following projects:\n${lib2}`
       );
 
-      expect(removeOutput).toContain(`DELETE libs/${lib}`);
-      expect(exists(tmpProjPath(`libs/${lib}`))).toBeFalsy();
+      /**
+       * Try force removing the project
+       */
 
-      expect(removeOutput).toContain(`UPDATE nx.json`);
-      const nxJson = JSON.parse(readFile('nx.json')) as NxJson;
-      expect(nxJson.projects[`${lib}`]).toBeUndefined();
+      const removeOutputForced = runCLI(
+        `generate @nrwl/workspace:remove --project ${lib1} --forceRemove`
+      );
 
-      expect(removeOutput).toContain(`UPDATE ${workspace}.json`);
+      expect(removeOutputForced).toContain(`DELETE libs/${lib1}`);
+      expect(exists(tmpProjPath(`libs/${lib1}`))).toBeFalsy();
+
+      expect(removeOutputForced).toContain(`UPDATE nx.json`);
+      nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+      expect(nxJson.projects[`${lib1}`]).toBeUndefined();
+      expect(nxJson.projects[lib2].implicitDependencies).toEqual([]);
+
+      expect(removeOutputForced).toContain(`UPDATE ${workspace}.json`);
       const workspaceJson = readJson(`${workspace}.json`);
-      expect(workspaceJson.projects[`${lib}`]).toBeUndefined();
+      expect(workspaceJson.projects[`${lib1}`]).toBeUndefined();
     });
   });
 });

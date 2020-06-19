@@ -40,7 +40,8 @@ export function checkDependencies(schema: Schema): Rule {
       if (ig.ignores(dir)) {
         return;
       }
-      tree.getDir(dir).visit((file) => {
+
+      tree.getDir(dir).visit((file: string) => {
         files.push({
           file: path.relative(workspaceDir, file),
           ext: path.extname(file),
