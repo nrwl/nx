@@ -10,7 +10,7 @@ Builder properties can be configured in angular.json when defining the builder, 
 
 Alias(es): b
 
-Type: `number`
+Type: `number | boolean`
 
 Exit the test suite immediately after `n` number of failing tests. (https://jestjs.io/docs/en/cli#bail)
 

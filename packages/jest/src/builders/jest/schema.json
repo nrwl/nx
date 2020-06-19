@@ -39,7 +39,7 @@
     "bail": {
       "alias": "b",
       "description": "Exit the test suite immediately after `n` number of failing tests. (https://jestjs.io/docs/en/cli#bail)",
-      "type": "number"
+      "oneOf": [{ "type": "number" }, { "type": "boolean" }]
     },
     "ci": {
       "description": "Whether to run Jest in continuous integration (CI) mode. This option is on by default in most popular CI environments. It will prevent snapshots from being written unless explicitly requested. (https://jestjs.io/docs/en/cli#ci)",
