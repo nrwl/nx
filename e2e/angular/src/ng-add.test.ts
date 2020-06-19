@@ -1,20 +1,16 @@
 import {
   checkFilesExist,
-  cleanup,
+  forEachCli,
   readJson,
   runCLI,
   runCommand,
+  runNgAdd,
   runNgNew,
   updateFile,
-  forEachCli,
-  runNgAdd,
 } from '@nrwl/e2e/utils';
 
 forEachCli('angular', () => {
   xdescribe('Nrwl Convert to Nx Workspace', () => {
-    beforeEach(cleanup);
-    afterAll(cleanup);
-
     it('should generate a workspace', () => {
       runNgNew();
 

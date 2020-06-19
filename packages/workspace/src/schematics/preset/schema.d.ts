@@ -5,6 +5,7 @@ export interface Schema {
   cli: string;
   preset:
     | 'empty'
+    | 'oss'
     | 'angular'
     | 'react'
     | 'next'

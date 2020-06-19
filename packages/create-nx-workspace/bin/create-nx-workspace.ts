@@ -12,6 +12,7 @@ import { determinePackageManager, showNxWarning } from './shared';
 
 enum Preset {
   Empty = 'empty',
+  OSS = 'oss',
   WebComponents = 'web-components',
   Angular = 'angular',
   AngularWithNest = 'angular-nest',
@@ -23,7 +24,13 @@ enum Preset {
 const presetOptions = [
   {
     value: Preset.Empty,
-    name: 'empty             [an empty workspace]',
+    name:
+      'empty             [an empty workspace with a layout that works best for building apps]',
+  },
+  {
+    value: 'oss',
+    name:
+      'oss               [an empty workspace with a layout that works best for open-source projects]',
   },
   {
     value: 'web-components',
@@ -190,7 +197,7 @@ function determinePreset(parsedArgs: any): Promise<Preset> {
 }
 
 function determineAppName(preset: Preset, parsedArgs: any): Promise<string> {
-  if (preset === Preset.Empty) {
+  if (preset === Preset.Empty || preset === Preset.OSS) {
     return Promise.resolve('');
   }
 
@@ -247,6 +254,7 @@ function determineCli(preset: Preset, parsedArgs: any) {
     case Preset.AngularWithNest: {
       return Promise.resolve(angular);
     }
+    case Preset.OSS:
     case Preset.WebComponents:
     case Preset.React:
     case Preset.ReactWithExpress:
@@ -265,13 +273,12 @@ function determineCli(preset: Preset, parsedArgs: any) {
               {
                 value: 'nx',
                 name:
-                  'Nx           [Extensible CLI for JavaScript and TypeScript applications]',
+                  'Nx           [Recommended for all applications (React, Node, etc..)]',
               },
 
               {
                 value: 'angular',
-                name:
-                  'Angular CLI  [Extensible CLI for Angular applications. Recommended for Angular projects.]',
+                name: 'Angular CLI  [Recommended for Angular only workspaces]',
               },
             ],
           },
@@ -282,7 +289,7 @@ function determineCli(preset: Preset, parsedArgs: any) {
 }
 
 function determineStyle(preset: Preset, parsedArgs: any) {
-  if (preset === Preset.Empty) {
+  if (preset === Preset.Empty || preset === Preset.OSS) {
     return Promise.resolve(null);
   }
 

@@ -24,7 +24,8 @@ The `create-nx-workspace` command will ask you to select a preset, which will co
 
 ```
 ? What to create in the new workspace (Use arrow keys)
-❯ empty             [an empty workspace]
+❯ empty             [an empty workspace with a layout that works best for building apps]
+  oss               [an empty workspace with a layout that works best for open-source projects]
   web components    [a workspace with a single app built using web components]
   angular           [a workspace with a single Angular application]
   angular-nest      [a workspace with a full stack application (Angular + Nest)]

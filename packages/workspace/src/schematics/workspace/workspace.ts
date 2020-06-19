@@ -21,6 +21,7 @@ import {
 } from '../../utils/versions';
 import { readFileSync } from 'fs';
 import { join as pathJoin } from 'path';
+import { updateJsonInTree } from '@nrwl/workspace';
 
 export const DEFAULT_NRWL_PRETTIER_CONFIG = {
   singleQuote: true,
@@ -32,6 +33,29 @@ const decorateAngularClI = (host: Tree) => {
   ).toString();
   host.create('decorate-angular-cli.js', decorateCli);
 };
+
+function setWorkspaceLayoutProperties(options: Schema) {
+  return updateJsonInTree('nx.json', (json) => {
+    if (options.layout === 'packages') {
+      json.workspaceLayout = {
+        appsDir: 'packages',
+        libsDir: 'packages',
+      };
+    }
+    return json;
+  });
+}
+
+function createAppsAndLibsFolders(options: Schema) {
+  return (host: Tree) => {
+    if (options.layout === 'packages') {
+      host.create('packages/.gitkeep', '');
+    } else {
+      host.create('apps/.gitkeep', '');
+      host.create('libs/.gitkeep', '');
+    }
+  };
+}
 
 export default function (options: Schema): Rule {
   if (!options.name) {
@@ -68,6 +92,8 @@ export default function (options: Schema): Rule {
         chain([
           mergeWith(templateSource),
           options.cli === 'angular' ? decorateAngularClI : noop(),
+          setWorkspaceLayoutProperties(options),
+          createAppsAndLibsFolders(options),
         ])
       ),
     ])(host, context);

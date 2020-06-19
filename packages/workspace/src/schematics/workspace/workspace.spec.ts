@@ -99,4 +99,20 @@ describe('workspace', () => {
     const packageJson = readJsonInTree(tree, '/package.json');
     expect(packageJson.scripts.postinstall).toBeUndefined();
   });
+
+  it('should create a workspace using package layout', async () => {
+    const tree = await runSchematic(
+      'workspace',
+      { name: 'proj', cli: 'nx', layout: 'packages' },
+      projectTree
+    );
+    expect(tree.exists('/packages/.gitkeep')).toBe(true);
+    expect(tree.exists('/apps/.gitkeep')).toBe(false);
+    expect(tree.exists('/libs/.gitkeep')).toBe(false);
+    const nx = readJsonInTree(tree, '/nx.json');
+    expect(nx.workspaceLayout).toEqual({
+      appsDir: 'packages',
+      libsDir: 'packages',
+    });
+  });
 });

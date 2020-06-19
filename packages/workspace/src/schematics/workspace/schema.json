@@ -43,6 +43,12 @@
       "description": "The directory name to create the workspace in.",
       "default": ""
     },
+    "layout": {
+      "type": "string",
+      "description": "Layout of the workspace",
+      "default": "apps-and-libs",
+      "enum": ["apps-and-libs", "packages"]
+    },
     "npmScope": {
       "type": "string",
       "description": "Npm scope for importing libs."

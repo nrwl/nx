@@ -1,27 +1,28 @@
 import {
   checkFilesExist,
   forEachCli,
-  newProject,
   readFile,
   readJson,
   runCLI,
   runCLIAsync,
+  runCreateWorkspace,
+  setCurrentProjName,
   uniq,
-  updateFile,
+  yarnAdd,
 } from '@nrwl/e2e/utils';
 
 forEachCli('nx', () => {
   describe('custom workspace layout', () => {
     it('should work', async () => {
-      newProject();
+      const proj = setCurrentProjName(uniq('custom-layout-proj'));
+      runCreateWorkspace(proj, { preset: 'oss' });
+      yarnAdd('@nrwl/react @nrwl/angular @nrwl/express');
 
       const nxJson = readJson('nx.json');
-      nxJson.workspaceLayout = {
+      expect(nxJson.workspaceLayout).toEqual({
         libsDir: 'packages',
         appsDir: 'packages',
-      };
-
-      updateFile('nx.json', JSON.stringify(nxJson));
+      });
 
       const reactApp = uniq('reactapp');
       const reactLib = uniq('reactlib');

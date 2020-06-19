@@ -55,7 +55,12 @@ forEachCli((currentCLIName) => {
       done();
     }, 45000);
 
-    it(`should run the plugin's e2e tests`, async (done) => {
+    // TODO: vsavkin reenable
+    // the test invoke ensureNxProject, which points to @nrwl/workspace collection
+    // which walks up the directory to find it in the next repo itself, so it
+    // doesn't use the collection we are building
+    // we should change it to point to the right collection using relative path
+    xit(`should run the plugin's e2e tests`, async (done) => {
       ensureProject();
       const plugin = uniq('plugin');
       runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter}`);

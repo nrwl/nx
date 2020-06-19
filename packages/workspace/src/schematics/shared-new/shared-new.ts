@@ -26,6 +26,7 @@ import * as path from 'path';
 import { Observable } from 'rxjs';
 import { spawn } from 'child_process';
 import { platform } from 'os';
+// @ts-ignore
 import yargsParser = require('yargs-parser');
 
 export interface Schema {
@@ -39,6 +40,7 @@ export interface Schema {
   nxCloud?: boolean;
   preset:
     | 'empty'
+    | 'oss'
     | 'angular'
     | 'react'
     | 'web-components'
@@ -104,7 +106,11 @@ function createPresetTaskExecutor(cli: string, opts: Schema) {
 }
 
 export function sharedNew(cli: string, options: Schema): Rule {
-  if (options.skipInstall && options.preset !== 'empty') {
+  if (
+    options.skipInstall &&
+    options.preset !== 'empty' &&
+    options.preset !== 'oss'
+  ) {
     throw new Error(`Cannot select a preset when skipInstall is set to true.`);
   }
   if (options.skipInstall && options.nxCloud) {
@@ -113,7 +119,13 @@ export function sharedNew(cli: string, options: Schema): Rule {
 
   options = normalizeOptions(options);
 
-  const workspaceOpts = { ...options, preset: undefined, nxCloud: undefined };
+  const layout = options.preset === 'oss' ? 'packages' : 'apps-and-libs';
+  const workspaceOpts = {
+    ...options,
+    layout,
+    preset: undefined,
+    nxCloud: undefined,
+  };
   return (host: Tree, context: SchematicContext) => {
     const engineHost = (context.engine.workflow as any).engineHost;
     engineHost.registerTaskExecutor(createPresetTaskExecutor(cli, options));
