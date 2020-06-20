@@ -14,8 +14,18 @@ const testRunner = new SchematicTestRunner(
 );
 
 testRunner.registerCollection(
+  '@nrwl/jest',
+  join(__dirname, '../../../jest/collection.json')
+);
+
+testRunner.registerCollection(
   '@nrwl/cypress',
   join(__dirname, '../../../cypress/collection.json')
+);
+
+testRunner.registerCollection(
+  '@nrwl/react',
+  join(__dirname, '../../../react/collection.json')
 );
 
 export function runSchematic(schematicName: string, options: any, tree: Tree) {

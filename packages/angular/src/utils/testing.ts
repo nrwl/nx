@@ -13,6 +13,16 @@ const testRunner = new SchematicTestRunner(
 );
 
 testRunner.registerCollection(
+  '@nrwl/jest',
+  join(__dirname, '../../../jest/collection.json')
+);
+
+testRunner.registerCollection(
+  '@nrwl/workspace',
+  join(__dirname, '../../../workspace/collection.json')
+);
+
+testRunner.registerCollection(
   '@nrwl/cypress',
   join(__dirname, '../../../cypress/collection.json')
 );
