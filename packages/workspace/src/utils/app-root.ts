@@ -9,12 +9,7 @@ function pathInner(dir: string): string {
     fileExists(path.join(dir, 'workspace.json')) ||
     fileExists(path.join(dir, 'angular.json'))
   ) {
-    // unit test
-    if (process.argv[1].indexOf('jest-worker') > -1) {
-      return `${dir}/tmp/unit`;
-    } else {
-      return dir;
-    }
+    return dir;
   } else {
     return pathInner(path.dirname(dir));
   }
