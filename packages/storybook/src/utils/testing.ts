@@ -19,6 +19,11 @@ const testRunner = new SchematicTestRunner(
 );
 
 testRunner.registerCollection(
+  '@nrwl/angular',
+  join(__dirname, '../../../angular/collection.json')
+);
+
+testRunner.registerCollection(
   '@nrwl/cypress',
   join(__dirname, '../../../cypress/collection.json')
 );

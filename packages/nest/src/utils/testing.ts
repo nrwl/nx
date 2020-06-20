@@ -7,6 +7,11 @@ const testRunner = new SchematicTestRunner(
   join(__dirname, '../../collection.json')
 );
 
+testRunner.registerCollection(
+  '@nrwl/node',
+  join(__dirname, '../../../node/collection.json')
+);
+
 export function runSchematic(schematicName: string, options: any, tree: Tree) {
   return testRunner.runSchematicAsync(schematicName, options, tree).toPromise();
 }

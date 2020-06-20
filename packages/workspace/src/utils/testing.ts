@@ -10,6 +10,11 @@ const testRunner = new SchematicTestRunner(
 );
 
 testRunner.registerCollection(
+  '@nrwl/jest',
+  join(__dirname, '../../../jest/collection.json')
+);
+
+testRunner.registerCollection(
   '@nrwl/cypress',
   join(__dirname, '../../../cypress/collection.json')
 );
@@ -37,6 +42,11 @@ testRunner.registerCollection(
 testRunner.registerCollection(
   '@nrwl/nest',
   join(__dirname, '../../../nest/collection.json')
+);
+
+testRunner.registerCollection(
+  '@nrwl/web',
+  join(__dirname, '../../../web/collection.json')
 );
 
 const migrationTestRunner = new SchematicTestRunner(
