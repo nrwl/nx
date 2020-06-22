@@ -466,7 +466,9 @@ function createAdditionalFiles(options: Schema): Rule {
       'nx.json',
       serializeJson({
         npmScope: options.npmScope,
-        defaultBranch: `${options.defaultBranch}` || 'master',
+        affected: {
+          defaultBase: `${options.defaultBase}` || 'master',
+        },
         implicitDependencies: {
           'angular.json': '*',
           'package.json': '*',

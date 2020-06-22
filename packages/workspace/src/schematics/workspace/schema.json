@@ -53,7 +53,7 @@
       "type": "string",
       "description": "Npm scope for importing libs."
     },
-    "defaultBranch": {
+    "defaultBase": {
       "type": "string",
       "description": "Default base branch for affected.",
       "default": "master"

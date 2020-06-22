@@ -3,15 +3,16 @@ import { output } from '../utils/output';
 import { createProjectGraph, ProjectGraphNode } from '../core/project-graph';
 import { NxJson } from '../core/shared-interfaces';
 import { readWorkspaceJson, TEN_MEGABYTES } from '../core/file-utils';
-import { NxArgs } from './utils';
+import { NxArgs, getAffectedConfig } from './utils';
 
 export function printArgsWarning(options: NxArgs) {
   const { files, uncommitted, untracked, base, head, all } = options;
+  const affectedConfig = getAffectedConfig();
 
   if (!files && !uncommitted && !untracked && !base && !head && !all) {
     output.note({
       title: `Affected criteria defaulted to --base=${output.bold(
-        'master'
+        `${affectedConfig.defaultBase}`
       )} --head=${output.bold('HEAD')}`,
     });
   }

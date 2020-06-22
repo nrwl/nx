@@ -205,6 +205,9 @@ The `nx.json` file contains extra configuration options mostly related to the pr
 ```json
 {
   "npmScope": "happyorg",
+  "affected": {
+    "defaultBase": "master"
+  },
   "tasksRunnerOptions": {
     "default": {
       "runner": "@nrwl/workspace/tasks-runners/default",
@@ -240,6 +243,12 @@ The `nx.json` file contains extra configuration options mostly related to the pr
 **NPM Scope**
 
 Tells Nx what prefix to use when generating library imports.
+
+**Affected**
+
+Tells Nx which branch and HEAD to use when calculating affected projects.
+
+- `defaultBase` defines the default base branch, defaulted to `master`.
 
 ### Tasks Runner Options
 

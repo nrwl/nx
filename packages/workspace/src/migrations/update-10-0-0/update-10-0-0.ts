@@ -1,12 +1,15 @@
 import { chain } from '@angular-devkit/schematics';
-import { join } from 'path';
-import { updateNxJsonDefaultBranch } from '../../utils/update-default-branch-in-nx-json';
+import { updateJsonInTree } from '../../utils/ast-utils';
+import { NxJson } from '../../core/shared-interfaces';
 
-const updatePackages = updateNxJsonDefaultBranch(
-  join(__dirname, '../../../', 'migrations.json'),
-  '10.0.0'
-);
+const addNxJsonAffectedConfig = updateJsonInTree('nx.json', (json: NxJson) => {
+  json.affected = {
+    defaultBase: 'master',
+  };
 
-export default function() {
-  return chain([updatePackages]);
+  return json;
+});
+
+export default function () {
+  return chain([addNxJsonAffectedConfig]);
 }

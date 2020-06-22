@@ -1,4 +1,4 @@
-import { splitArgsIntoNxArgsAndOverrides, getDefaultBranch } from './utils';
+import { splitArgsIntoNxArgsAndOverrides, getAffectedConfig } from './utils';
 import * as fileUtils from '../core/file-utils';
 jest.mock('../core/file-utils');
 
@@ -41,38 +41,46 @@ describe('splitArgs', () => {
     });
   });
 
-  it('should read base of develop from nx.json', () => {
+  it('should return configured base branch from nx.json', () => {
     jest.spyOn(fileUtils, 'readNxJson').mockReturnValue({
       npmScope: 'testing',
-      defaultBranch: 'develop',
-      projects: {}
+      affected: {
+        defaultBase: 'develop',
+      },
+      projects: {},
     });
     expect(
-      splitArgsIntoNxArgsAndOverrides({
-        notNxArg: true,
-        _: ['--override'],
-        $0: ''
-      }).nxArgs
+      splitArgsIntoNxArgsAndOverrides(
+        {
+          notNxArg: true,
+          _: ['--override'],
+          $0: '',
+        },
+        'affected'
+      ).nxArgs
     ).toEqual({
       base: 'develop',
-      projects: []
+      skipNxCache: false,
     });
   });
 
-  it('should not find a base in nx.json returns master', () => {
+  it('should return a default base branch if not configured in nx.json', () => {
     jest.spyOn(fileUtils, 'readNxJson').mockReturnValue({
       npmScope: 'testing',
-      projects: {}
+      projects: {},
     });
     expect(
-      splitArgsIntoNxArgsAndOverrides({
-        notNxArg: true,
-        _: ['--override'],
-        $0: ''
-      }).nxArgs
+      splitArgsIntoNxArgsAndOverrides(
+        {
+          notNxArg: true,
+          _: ['--override'],
+          $0: '',
+        },
+        'affected'
+      ).nxArgs
     ).toEqual({
       base: 'master',
-      projects: []
+      skipNxCache: false,
     });
   });
 
@@ -134,18 +142,22 @@ describe('splitArgs', () => {
   });
 });
 
-describe('getDefaultBranch', () => {
-  it('should return undefined when defaultBranch is undefined in nx.json', () => {
+describe('getAffectedConfig', () => {
+  it('should return defaults when affected is undefined in nx.json', () => {
     jest.spyOn(fileUtils, 'readNxJson').mockReturnThis();
-    expect(getDefaultBranch()).toEqual('master');
+
+    expect(getAffectedConfig().defaultBase).toEqual('master');
   });
 
-  it('should return default branch when its defined in nx.json', () => {
+  it('should return default base branch when its defined in nx.json', () => {
     jest.spyOn(fileUtils, 'readNxJson').mockReturnValue({
       npmScope: 'testing',
-      defaultBranch: 'testing',
-      projects: {}
+      affected: {
+        defaultBase: 'testing',
+      },
+      projects: {},
     });
-    expect(getDefaultBranch()).toEqual('testing');
+
+    expect(getAffectedConfig().defaultBase).toEqual('testing');
   });
 });

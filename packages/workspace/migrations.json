@@ -93,7 +93,7 @@
     "add-default-branch-to-nx-json": {
       "version": "10.0.0-beta.0",
       "description": "Add default branch to nx.json",
-      "factory": "./src/migrations/update-30-0-2/update-30-0-2"
+      "factory": "./src/migrations/update-10-0-0/update-10-0-0"
     }
   },
   "packageJsonUpdates": {
@@ -597,12 +597,6 @@
           "alwaysAddToPackageJson": false
         }
       }
-    }
-  },
-  "nxJsonUpdates": {
-    "10.0.0": {
-      "defaultBranch": "master",
-      "alwaysAddToNxJson": false
     }
   }
 }

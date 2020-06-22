@@ -22,7 +22,9 @@ describe('workspace', () => {
     const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
     expect(nxJson).toEqual({
       npmScope: 'proj',
-      defaultBranch: 'master',
+      affected: {
+        defaultBase: 'master',
+      },
       implicitDependencies: {
         'workspace.json': '*',
         'package.json': {
