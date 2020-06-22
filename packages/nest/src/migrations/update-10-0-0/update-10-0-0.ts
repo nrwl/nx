@@ -1,4 +1,9 @@
-import { chain, Rule, Tree } from '@angular-devkit/schematics';
+import {
+  chain,
+  Rule,
+  SchematicContext,
+  Tree,
+} from '@angular-devkit/schematics';
 import {
   formatFiles,
   insert,
@@ -6,7 +11,6 @@ import {
   updatePackagesInPackageJson,
 } from '@nrwl/workspace';
 import { ReplaceChange } from '@nrwl/workspace/src/utils/ast-utils';
-import ignore from 'ignore';
 import { join, relative } from 'path';
 import {
   createSourceFile,
@@ -16,16 +20,24 @@ import {
   isStringLiteral,
   ScriptTarget,
 } from 'typescript';
+import { getLogger } from '@nrwl/tao/src/shared/logger';
+const ignore = require('ignore');
 
 export default function update(): Rule {
   return chain([
     updatePackagesInPackageJson(
       join(__dirname, '../../../', 'migrations.json'),
-      '9.4.0'
+      '10.0.0'
     ),
     formatFiles(),
     updateImports,
     removeObsoletePackages,
+    (_, context: SchematicContext) => {
+      const logger = getLogger();
+      logger.info(
+        'NX We upgraded Nest.js to v7. Make sure to read the migration guide: https://docs.nestjs.com/migration-guide'
+      );
+    },
   ]);
 }
 
