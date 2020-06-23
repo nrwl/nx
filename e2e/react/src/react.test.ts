@@ -4,7 +4,6 @@ import {
   checkFilesExist,
   ensureProject,
   forEachCli,
-  newProject,
   readFile,
   readJson,
   renameFile,
@@ -15,9 +14,7 @@ import {
   workspaceConfigName,
 } from '@nrwl/e2e/utils';
 
-forEachCli((currentCLIName) => {
-  const linter = currentCLIName === 'angular' ? 'tslint' : 'eslint';
-
+forEachCli('nx', () => {
   describe('React Applications', () => {
     it('should be able to generate a react app + lib', async () => {
       ensureProject();
@@ -25,9 +22,11 @@ forEachCli((currentCLIName) => {
       const libName = uniq('lib');
 
       runCLI(
-        `generate @nrwl/react:app ${appName} --no-interactive --linter=${linter}`
+        `generate @nrwl/react:app ${appName} --style=css --no-interactive`
       );
-      runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/react:lib ${libName} --style=css --no-interactive`
+      );
 
       // Libs should not include package.json by default
       checkFilesDoNotExist(`libs/${libName}/package.json`);
@@ -42,30 +41,10 @@ forEachCli((currentCLIName) => {
 
       await testGeneratedApp(appName, {
         checkStyles: true,
+        checkProdBuild: true,
         checkLinter: true,
         checkE2E: true,
       });
-    }, 120000);
-
-    it('should be able to generate a publishable react lib', async () => {
-      ensureProject();
-      const libName = uniq('lib');
-
-      runCLI(
-        `generate @nrwl/react:lib ${libName} --publishable --no-interactive`
-      );
-
-      const libTestResults = await runCLIAsync(`build ${libName} --extractCss`);
-      expect(libTestResults.stdout).toContain('Bundle complete.');
-
-      checkFilesExist(
-        `dist/libs/${libName}/package.json`,
-        `dist/libs/${libName}/index.d.ts`,
-        `dist/libs/${libName}/${libName}.esm.css`,
-        `dist/libs/${libName}/${libName}.esm.js`,
-        `dist/libs/${libName}/${libName}.umd.css`,
-        `dist/libs/${libName}/${libName}.umd.js`
-      );
     }, 120000);
 
     it('should be able to generate a publishable react lib', async () => {
@@ -110,9 +89,7 @@ forEachCli((currentCLIName) => {
       const appName = uniq('app');
       const libName = uniq('lib');
 
-      runCLI(
-        `generate @nrwl/react:app ${appName} --no-interactive --linter=${linter}`
-      );
+      runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
       runCLI(
         `generate @nrwl/react:lib ${libName} --no-interactive --no-component`
       );
@@ -125,7 +102,8 @@ forEachCli((currentCLIName) => {
 
       await testGeneratedApp(appName, {
         checkStyles: true,
-        checkLinter: true,
+        checkProdBuild: false,
+        checkLinter: false,
         checkE2E: false,
       });
     }, 120000);
@@ -153,13 +131,12 @@ forEachCli((currentCLIName) => {
       ensureProject();
       const appName = uniq('app');
 
-      runCLI(
-        `generate @nrwl/react:app ${appName} --routing --no-interactive --linter=${linter}`
-      );
+      runCLI(`generate @nrwl/react:app ${appName} --routing --no-interactive`);
 
       await testGeneratedApp(appName, {
         checkStyles: true,
-        checkLinter: true,
+        checkProdBuild: false,
+        checkLinter: false,
         checkE2E: false,
       });
     }, 120000);
@@ -169,12 +146,29 @@ forEachCli((currentCLIName) => {
       const appName = uniq('app');
 
       runCLI(
-        `generate @nrwl/react:app ${appName} --style styled-components --no-interactive --linter=${linter}`
+        `generate @nrwl/react:app ${appName} --style styled-components --no-interactive`
       );
 
       await testGeneratedApp(appName, {
         checkStyles: false,
-        checkLinter: true,
+        checkProdBuild: false,
+        checkLinter: false,
+        checkE2E: false,
+      });
+    }, 120000);
+
+    it('should generate app with styled-jsx', async () => {
+      ensureProject();
+      const appName = uniq('app');
+
+      runCLI(
+        `generate @nrwl/react:app ${appName} --style styled-jsx --no-interactive`
+      );
+
+      await testGeneratedApp(appName, {
+        checkStyles: false,
+        checkProdBuild: false,
+        checkLinter: false,
         checkE2E: false,
       });
     }, 120000);
@@ -184,12 +178,13 @@ forEachCli((currentCLIName) => {
       const appName = uniq('app');
 
       runCLI(
-        `generate @nrwl/react:app ${appName} --style none --no-interactive --linter=${linter}`
+        `generate @nrwl/react:app ${appName} --style none --no-interactive`
       );
 
       await testGeneratedApp(appName, {
         checkStyles: false,
-        checkLinter: true,
+        checkProdBuild: false,
+        checkLinter: false,
         checkE2E: false,
       });
 
@@ -227,9 +222,7 @@ forEachCli((currentCLIName) => {
       const appName = uniq('app');
       const libName = uniq('lib');
 
-      runCLI(
-        `generate @nrwl/react:app ${appName} --no-interactive --linter=${linter}`
-      );
+      runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
       runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
 
       renameFile(
@@ -263,6 +256,7 @@ forEachCli((currentCLIName) => {
 
       await testGeneratedApp(appName, {
         checkStyles: true,
+        checkProdBuild: false,
         checkLinter: false,
         checkE2E: false,
       });
@@ -270,7 +264,12 @@ forEachCli((currentCLIName) => {
 
     async function testGeneratedApp(
       appName,
-      opts: { checkStyles: boolean; checkLinter: boolean; checkE2E: boolean }
+      opts: {
+        checkProdBuild: boolean;
+        checkStyles: boolean;
+        checkLinter: boolean;
+        checkE2E: boolean;
+      }
     ) {
       if (opts.checkLinter) {
         const lintResults = runCLI(`lint ${appName}`);
