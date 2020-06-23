@@ -16,7 +16,7 @@
     "test": "nx run-many --target=test --all --parallel",
     "checkformat": "scripts/check-format.sh",
     "checkimports": "node ./scripts/check-imports.js",
-    "checkversions": "ts-node ./scripts/check-versions.ts",
+    "checkversions": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/check-versions.ts",
     "local-registry": "./scripts/local-registry.sh",
     "documentation": "./scripts/documentation/documentation.sh && ./scripts/documentation/check-documentation.sh",
     "submit-plugin": "node ./scripts/submit-plugin.js"
