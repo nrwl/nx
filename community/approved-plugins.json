@@ -2,7 +2,7 @@
   {
     "name": "@nxtend/ionic-react",
     "description": "An Nx plugin for developing Ionic React applications and libraries",
-    "url": "https://github.com/devinshoemaker/nxtend"
+    "url": "https://github.com/nxtend-team/nxtend"
   },
   {
     "name": "@angular-architects/ddd",
