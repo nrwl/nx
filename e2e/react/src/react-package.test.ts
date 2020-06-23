@@ -152,9 +152,3 @@ forEachCli('nx', (cli) => {
     }, 1000000);
   });
 });
-
-forEachCli('angular', () => {
-  describe('Build Angular library', () => {
-    it('should work', async () => {}, 1000000);
-  });
-});
