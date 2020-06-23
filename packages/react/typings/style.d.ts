@@ -5,4 +5,5 @@ export type SupportedStyles =
   | 'less'
   | 'styled-components'
   | '@emotion/styled'
+  | 'styled-jsx'
   | 'none';

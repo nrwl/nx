@@ -316,11 +316,15 @@ function determineStyle(preset: Preset, parsedArgs: any) {
     choices.push(
       {
         value: 'styled-components',
-        name: 'styled-components [ https://styled-components.com ]',
+        name: 'styled-components [ https://styled-components.com            ]',
       },
       {
         value: '@emotion/styled',
-        name: 'emotion           [ https://emotion.sh]',
+        name: 'emotion           [ https://emotion.sh                       ]',
+      },
+      {
+        value: 'styled-jsx',
+        name: 'styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]',
       }
     );
   }

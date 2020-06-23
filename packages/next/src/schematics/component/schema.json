@@ -63,8 +63,8 @@
             "label": "emotion           [ https://emotion.sh            ]"
           },
           {
-            "value": "none",
-            "label": "None"
+            "value": "styled-jsx",
+            "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
           }
         ]
       }
