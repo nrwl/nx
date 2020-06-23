@@ -10,6 +10,10 @@ import {
 } from '@angular-devkit/schematics';
 import { names, offsetFromRoot } from '@nrwl/workspace';
 import { NormalizedSchema } from './normalize-options';
+import {
+  createAppJsx,
+  createStyleRules,
+} from './create-application-files.helpers';
 
 export function createApplicationFiles(options: NormalizedSchema): Rule {
   return mergeWith(
@@ -19,6 +23,12 @@ export function createApplicationFiles(options: NormalizedSchema): Rule {
         ...options,
         tmpl: '',
         offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+        appContent: createAppJsx(options.name),
+        styleContent: createStyleRules({
+          isUsingJsxBasedSolution: !!options.styledModule,
+          createHostBlock:
+            !options.styledModule || options.styledModule === 'styled-jsx',
+        }),
       }),
       options.styledModule
         ? filter((file) => !file.endsWith(`.${options.style}`))

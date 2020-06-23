@@ -5,8 +5,10 @@ import {
   emotionStyledVersion,
   reactIsVersion,
   styledComponentsVersion,
+  styledJsxVersion,
   typesReactIsVersion,
   typesStyledComponentsVersion,
+  typesStyledJsxVersion,
 } from './versions';
 import { PackageDependencies } from './dependencies';
 
@@ -31,6 +33,14 @@ export const CSS_IN_JS_DEPENDENCIES: {
     },
     devDependencies: {
       '@emotion/babel-preset-css-prop': emotionBabelPresetCssPropVersion,
+    },
+  },
+  'styled-jsx': {
+    dependencies: {
+      'styled-jsx': styledJsxVersion,
+    },
+    devDependencies: {
+      '@types/styled-jsx': typesStyledJsxVersion,
     },
   },
 };

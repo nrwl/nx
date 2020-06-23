@@ -533,6 +533,33 @@ describe('app', () => {
     });
   });
 
+  describe('--style styled-jsx', () => {
+    it('should use styled-jsx as the styled API library', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', style: 'styled-jsx' },
+        appTree
+      );
+
+      expect(tree.exists('apps/my-app/src/app/app.styled-jsx')).toBeFalsy();
+      expect(tree.exists('apps/my-app/src/app/app.tsx')).toBeTruthy();
+
+      const content = tree.read('apps/my-app/src/app/app.tsx').toString();
+      expect(content).toContain('<style jsx>');
+    });
+
+    it('should add dependencies to package.json', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', style: 'styled-jsx' },
+        appTree
+      );
+
+      const packageJSON = readJsonInTree(tree, 'package.json');
+      expect(packageJSON.dependencies['styled-jsx']).toBeDefined();
+    });
+  });
+
   describe('--routing', () => {
     it('should add routes to the App component', async () => {
       const tree = await runSchematic(

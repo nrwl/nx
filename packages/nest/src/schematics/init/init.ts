@@ -12,6 +12,7 @@ import {
   nestJsVersion,
   nxVersion,
   reflectMetadataVersion,
+  rxjsVersion,
 } from '../../utils/versions';
 
 export const updateDependencies = addDepsToPackageJson(
@@ -20,6 +21,7 @@ export const updateDependencies = addDepsToPackageJson(
     '@nestjs/core': nestJsVersion,
     '@nestjs/platform-express': nestJsVersion,
     'reflect-metadata': reflectMetadataVersion,
+    rxjs: rxjsVersion,
   },
   {
     '@nestjs/schematics': nestJsSchematicsVersion,

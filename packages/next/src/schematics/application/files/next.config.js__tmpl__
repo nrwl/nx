@@ -26,11 +26,12 @@ module.exports = withCSS({
   // See: https://github.com/css-modules/css-modules
   cssModules: false
 });
-<% } else if (style === 'styled-components') { %>
-module.exports ={};
-<% } else if (style === '@emotion/styled') { %>
-module.exports ={};
-<% } else if (style === 'none') { %>
+<% } else if (
+  style === 'styled-components'
+  ||style === '@emotion/styled'
+  || style === 'styled-jsx'
+  || style === 'none'
+) { %>
 module.exports ={};
 <% } else {
 // Defaults to CSS %>
