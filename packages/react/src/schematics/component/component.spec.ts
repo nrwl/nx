@@ -1,6 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runSchematic, createApp, createLib } from '../../utils/testing';
+import { createApp, createLib, runSchematic } from '../../utils/testing';
 import { readJsonInTree } from '@nrwl/workspace/src/utils/ast-utils';
 
 describe('component', () => {
@@ -176,6 +176,37 @@ describe('component', () => {
       const packageJSON = readJsonInTree(tree, 'package.json');
       expect(packageJSON.dependencies['@emotion/styled']).toBeDefined();
       expect(packageJSON.dependencies['@emotion/core']).toBeDefined();
+    });
+  });
+
+  describe('--style styled-jsx', () => {
+    it('should use styled-jsx as the styled API library', async () => {
+      const tree = await runSchematic(
+        'component',
+        { name: 'hello', project: projectName, style: 'styled-jsx' },
+        appTree
+      );
+
+      expect(
+        tree.exists('libs/my-lib/src/lib/hello/hello.styled-jsx')
+      ).toBeFalsy();
+      expect(tree.exists('libs/my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
+
+      const content = tree
+        .read('libs/my-lib/src/lib/hello/hello.tsx')
+        .toString();
+      expect(content).toContain('<style jsx>');
+    });
+
+    it('should add dependencies to package.json', async () => {
+      const tree = await runSchematic(
+        'component',
+        { name: 'hello', project: projectName, style: 'styled-jsx' },
+        appTree
+      );
+
+      const packageJSON = readJsonInTree(tree, 'package.json');
+      expect(packageJSON.dependencies['styled-jsx']).toBeDefined();
     });
   });
 

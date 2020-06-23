@@ -11,6 +11,10 @@ import {
 import { names, offsetFromRoot } from '@nrwl/workspace';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import { NormalizedSchema } from '../schema';
+import {
+  createAppJsx,
+  createStyleRules,
+} from './create-application-files.helpers';
 
 export function createApplicationFiles(options: NormalizedSchema): Rule {
   return mergeWith(
@@ -20,6 +24,12 @@ export function createApplicationFiles(options: NormalizedSchema): Rule {
         ...options,
         tmpl: '',
         offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+        appContent: createAppJsx(options.name),
+        styleContent: createStyleRules({
+          isUsingJsxBasedSolution: !!options.styledModule,
+          createHostBlock:
+            !options.styledModule || options.styledModule === 'styled-jsx',
+        }),
       }),
       options.styledModule || !options.hasStyles
         ? filter((file) => !file.endsWith(`.${options.style}`))

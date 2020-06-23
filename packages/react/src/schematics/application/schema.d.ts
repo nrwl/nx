@@ -25,6 +25,6 @@ export interface NormalizedSchema extends Schema {
   e2eProjectName: string;
   parsedTags: string[];
   fileName: string;
-  styledModule: null | string;
+  styledModule: null | SupportedStyles;
   hasStyles: boolean;
 }

@@ -435,6 +435,26 @@ describe('lib', () => {
       });
     });
 
+    it('should support styled-jsx', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          publishable: true,
+          style: 'styled-jsx',
+        },
+        appTree
+      );
+
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+
+      expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
+        options: {
+          external: ['react', 'react-dom', 'styled-jsx'],
+        },
+      });
+    });
+
     it('should support style none', async () => {
       const tree = await runSchematic(
         'lib',

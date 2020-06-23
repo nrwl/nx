@@ -8,6 +8,7 @@
     "types": []
   },
   "files": [
+    <% if (style === 'styled-jsx') { %>"<%= offsetFromRoot %>node_modules/@nrwl/react/typings/styled-jsx.d.ts",<% } %>
     "<%= offsetFromRoot %>node_modules/@nrwl/react/typings/cssmodule.d.ts",
     "<%= offsetFromRoot %>node_modules/@nrwl/react/typings/image.d.ts"
   ],

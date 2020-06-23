@@ -60,6 +60,19 @@ describe('app', () => {
     });
   });
 
+  describe('--style styled-jsx', () => {
+    it('should use <style jsx> in index page', async () => {
+      const result = await runSchematic(
+        'app',
+        { name: 'myApp', style: 'styled-jsx' },
+        appTree
+      );
+
+      const content = result.read('apps/my-app/pages/index.tsx').toString();
+      expect(content).toMatch(/<style jsx>/);
+    });
+  });
+
   it('should setup jest with tsx support', async () => {
     const tree = await runSchematic(
       'app',
