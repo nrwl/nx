@@ -47,6 +47,8 @@ function checkFiles(files: string[]) {
   console.log(`  - ${files.join('\n  - ')}\n`);
   const maxFileNameLength = Math.max(...files.map((f) => f.length));
 
+  let hasError = false;
+
   files.forEach((f) => {
     const versions = getVersions(f);
     const npmPackages = getPackages(versions);
@@ -60,8 +62,19 @@ function checkFiles(files: string[]) {
           )} has new version ${chalk.bold(r.latest)} (current: ${r.prev})`
         );
       }
+      if (r.invalid) {
+        hasError = true;
+        console.log(
+          `${logContext} ⚠️ ${chalk.bold(r.package)} has an invalid version (${
+            r.prev
+          }) specified. Latest is ${r.latest}.`
+        );
+      }
     });
   });
+
+  if (hasError)
+    throw new Error('Invalid versions of packages found (please see above).');
 }
 
 function getVersions(path: string) {
@@ -101,16 +114,25 @@ function getNpmName(name: string): string {
 function getVersionData(
   p: string,
   v: string
-): { package: string; outdated: boolean; latest: string; prev?: string } {
+): {
+  package: string;
+  outdated: boolean;
+  invalid: boolean;
+  latest: string;
+  prev?: string;
+} {
   try {
     const latest = JSON.parse(
       shell.exec(`npm view ${p} version --json --silent`, { silent: true })
     );
     if (gt(latest, v)) {
-      return { package: p, outdated: true, latest, prev: v };
+      return { package: p, outdated: true, invalid: false, latest, prev: v };
+    }
+    if (gt(v, latest)) {
+      return { package: p, outdated: false, invalid: true, latest, prev: v };
     }
   } catch {
     // ignored
   }
-  return { package: p, outdated: false, latest: v };
+  return { package: p, outdated: false, invalid: false, latest: v };
 }
