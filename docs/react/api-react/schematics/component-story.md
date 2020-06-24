@@ -28,10 +28,10 @@ nx g component-story ... --dry-run
 
 Type: `string`
 
-Relative path to the component file from the library root?
+Relative path to the component file from the library root
 
 ### project
 
 Type: `string`
 
-The project name where to add the components
+The project name where to add the components.

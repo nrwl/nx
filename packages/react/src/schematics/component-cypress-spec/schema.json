@@ -5,7 +5,7 @@
   "properties": {
     "project": {
       "type": "string",
-      "description": "The project name for which to generate tests",
+      "description": "The project name for which to generate tests.",
       "examples": ["shared-ui-component"],
       "$default": {
         "$source": "projectName",
@@ -21,7 +21,7 @@
     },
     "js": {
       "type": "boolean",
-      "description": "Generate JavaScript files rather than TypeScript files",
+      "description": "Generate JavaScript files rather than TypeScript files.",
       "default": false
     }
   },
