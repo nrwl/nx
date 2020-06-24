@@ -1,4 +1,4 @@
-import { <%= propertyName %>Actions, <%= propertyName %>Adapter, <%= propertyName %>Reducer } from './<%= fileName %>.slice';
+import { fetch<%= className %>, <%= propertyName %>Adapter, <%= propertyName %>Reducer } from './<%= fileName %>.slice';
 
 describe('<%= propertyName %> reducer', () => {
   it('should handle initial state', () => {
@@ -13,7 +13,7 @@ describe('<%= propertyName %> reducer', () => {
   it('should handle fetch<%= className %>s', () => {
     let state = <%= propertyName %>Reducer(
       undefined,
-      <%= propertyName %>Actions.fetch<%= className %>s.pending(null, null)
+      fetch<%= className %>.pending(null, null)
     );
 
     expect(state).toEqual(
@@ -26,7 +26,7 @@ describe('<%= propertyName %> reducer', () => {
 
     state = <%= propertyName %>Reducer(
       state,
-      <%= propertyName %>Actions.fetch<%= className %>s.fulfilled([{ id: 1 }], null, null)
+      fetch<%= className %>.fulfilled([{ id: 1 }], null, null)
     );
 
     expect(state).toEqual(
@@ -39,7 +39,7 @@ describe('<%= propertyName %> reducer', () => {
 
     state = <%= propertyName %>Reducer(
       state,
-      <%= propertyName %>Actions.fetch<%= className %>s.rejected(new Error('Uh oh'), null, null)
+      fetch<%= className %>.rejected(new Error('Uh oh'), null, null)
     );
 
     expect(state).toEqual(

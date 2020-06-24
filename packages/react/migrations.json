@@ -49,6 +49,11 @@
       "version": "9.4.0-beta.1",
       "description": "Migrate to new babel setup for greater flexibility",
       "factory": "./src/migrations/update-9-4-0/babelrc-9-4-0"
+    },
+    "update-9.5.0": {
+      "version": "9.5.0-beta.1",
+      "description": "Update libraries",
+      "factory": "./src/migrations/update-9-5-0/update-9-5-0"
     }
   },
   "packageJsonUpdates": {
@@ -261,6 +266,43 @@
         },
         "eslint-plugin-react-hooks": {
           "version": "4.0.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "9.5.0": {
+      "version": "9.5.0-beta.1",
+      "packages": {
+        "@types/react": {
+          "version": "16.9.38",
+          "alwaysAddToPackageJson": false
+        },
+        "styled-components": {
+          "version": "5.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/core": {
+          "version": "10.0.28",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react": {
+          "version": "10.4.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@reduxjs/toolkit": {
+          "version": "1.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-import": {
+          "version": "2.21.2",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-a11y": {
+          "version": "6.3.1",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-react-hooks": {
+          "version": "4.0.4",
           "alwaysAddToPackageJson": false
         }
       }
