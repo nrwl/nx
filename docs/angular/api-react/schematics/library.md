@@ -48,7 +48,7 @@ Alias(es): a
 
 Type: `string`
 
-The application project to add the library route to
+The application project to add the library route to.
 
 ### component
 
@@ -56,7 +56,7 @@ Default: `true`
 
 Type: `boolean`
 
-Generate a default component
+Generate a default component.
 
 ### directory
 
@@ -64,7 +64,7 @@ Alias(es): d
 
 Type: `string`
 
-A directory where the lib is placed
+A directory where the lib is placed.
 
 ### js
 
@@ -72,7 +72,7 @@ Default: `false`
 
 Type: `boolean`
 
-Generate JavaScript files rather than TypeScript files
+Generate JavaScript files rather than TypeScript files.
 
 ### linter
 
@@ -98,7 +98,7 @@ Default: `false`
 
 Type: `boolean`
 
-Use pascal case component file name (e.g. App.tsx)
+Use pascal case component file name (e.g. App.tsx).
 
 ### publishable
 
@@ -112,7 +112,7 @@ Create a buildable library.
 
 Type: `boolean`
 
-Generate library with routes
+Generate library with routes.
 
 ### skipFormat
 
@@ -120,7 +120,7 @@ Default: `false`
 
 Type: `boolean`
 
-Skip formatting files
+Skip formatting files.
 
 ### skipTsConfig
 
@@ -148,7 +148,7 @@ Alias(es): t
 
 Type: `string`
 
-Add tags to the library (used for linting)
+Add tags to the library (used for linting).
 
 ### unitTestRunner
 
@@ -158,4 +158,4 @@ Type: `string`
 
 Possible values: `jest`, `none`
 
-Test runner to use for unit tests
+Test runner to use for unit tests.

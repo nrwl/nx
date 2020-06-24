@@ -56,7 +56,7 @@ Default: `false`
 
 Type: `boolean`
 
-Use class components instead of functional component
+Use class components instead of functional component.
 
 ### directory
 
@@ -74,7 +74,7 @@ Type: `string`
 
 Possible values: `cypress`, `none`
 
-Test runner to use for end to end (e2e) tests
+Test runner to use for end to end (e2e) tests.
 
 ### js
 
@@ -82,7 +82,7 @@ Default: `false`
 
 Type: `boolean`
 
-Generate JavaScript files rather than TypeScript files
+Generate JavaScript files rather than TypeScript files.
 
 ### linter
 
@@ -108,7 +108,7 @@ Default: `false`
 
 Type: `boolean`
 
-Use pascal case component file name (e.g. App.tsx)
+Use pascal case component file name (e.g. App.tsx).
 
 ### routing
 
@@ -116,7 +116,7 @@ Default: `false`
 
 Type: `boolean`
 
-Generate application with routes
+Generate application with routes.
 
 ### skipFormat
 
@@ -124,7 +124,7 @@ Default: `false`
 
 Type: `boolean`
 
-Skip formatting files
+Skip formatting files.
 
 ### skipWorkspaceJson
 
@@ -132,7 +132,7 @@ Default: `false`
 
 Type: `boolean`
 
-Skip updating workspace.json with default schematic options based on values provided to this app (e.g. babel, style)
+Skip updating workspace.json with default schematic options based on values provided to this app (e.g. babel, style).
 
 ### style
 
@@ -152,7 +152,7 @@ Alias(es): t
 
 Type: `string`
 
-Add tags to the application (used for linting)
+Add tags to the application (used for linting).
 
 ### unitTestRunner
 
@@ -162,4 +162,4 @@ Type: `string`
 
 Possible values: `jest`, `none`
 
-Test runner to use for unit tests
+Test runner to use for unit tests.

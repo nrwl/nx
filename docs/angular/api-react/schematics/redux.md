@@ -50,13 +50,13 @@ Default: `false`
 
 Type: `boolean`
 
-Generate JavaScript files rather than TypeScript files
+Generate JavaScript files rather than TypeScript files.
 
 ### name
 
 Type: `string`
 
-Redux slice name
+Redux slice name.
 
 ### project
 
