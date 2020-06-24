@@ -28,13 +28,13 @@ nx g storybook-configuration ... --dry-run
 
 Type: `boolean`
 
-Run the cypress-configure schematic
+Run the cypress-configure schematic.
 
 ### generateStories
 
 Type: `boolean`
 
-Automatically generate \*.stories.ts files for components declared in this library
+Automatically generate \*.stories.ts files for components declared in this library.
 
 ### js
 
@@ -42,7 +42,7 @@ Default: `false`
 
 Type: `boolean`
 
-Generate JavaScript files rather than TypeScript files
+Generate JavaScript files rather than TypeScript files.
 
 ### linter
 

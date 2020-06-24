@@ -36,10 +36,10 @@ Default: `false`
 
 Type: `boolean`
 
-Generate JavaScript files rather than TypeScript files
+Generate JavaScript files rather than TypeScript files.
 
 ### project
 
 Type: `string`
 
-The project name for which to generate tests
+The project name for which to generate tests.
