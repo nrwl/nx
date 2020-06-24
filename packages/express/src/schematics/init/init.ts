@@ -3,6 +3,7 @@ import {
   addPackageWithInit,
   formatFiles,
   setDefaultCollection,
+  addDepsToPackageJson,
   updateJsonInTree,
 } from '@nrwl/workspace';
 import {
@@ -12,15 +13,9 @@ import {
 } from '../../utils/versions';
 import { Schema } from './schema';
 
-function updateDependencies(): Rule {
+function removeNrwlExpressFromDeps(): Rule {
   return updateJsonInTree('package.json', (json) => {
     delete json.dependencies['@nrwl/express'];
-    json.dependencies['express'] = expressVersion;
-    json.devDependencies = {
-      ...json.devDependencies,
-      '@types/express': expressTypingsVersion,
-      '@nrwl/express': nxVersion,
-    };
     return json;
   });
 }
@@ -32,7 +27,16 @@ export default function (schema: Schema) {
     schema.unitTestRunner === 'jest'
       ? addPackageWithInit('@nrwl/jest')
       : noop(),
-    updateDependencies(),
+    removeNrwlExpressFromDeps(),
+    addDepsToPackageJson(
+      {
+        express: expressVersion,
+      },
+      {
+        '@types/express': expressTypingsVersion,
+        '@nrwl/express': nxVersion,
+      }
+    ),
     formatFiles(schema),
   ]);
 }
