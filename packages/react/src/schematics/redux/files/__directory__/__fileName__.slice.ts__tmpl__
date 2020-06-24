@@ -1,6 +1,7 @@
 import {
   createAsyncThunk,
   createEntityAdapter,
+  createSelector,
   createSlice,
   EntityState,
   PayloadAction
@@ -25,8 +26,21 @@ export const <%= propertyName %>Adapter = createEntityAdapter<<%= className %>En
 /**
  * Export an effect using createAsyncThunk from
  * the Redux Toolkit: https://redux-toolkit.js.org/api/createAsyncThunk
+ *
+ * e.g.
+ * ```
+ * import React, { useEffect } from 'react';
+ * import { useDispatch } from 'react-redux';
+ *
+ * // ...
+ *
+ * const dispatch = useDispatch();
+ * useEffect(() => {
+ *   dispatch(fetch<%= className %>())
+ * }, [dispatch]);
+ * ```
  */
-export const fetch<%= className %>s = createAsyncThunk(
+export const fetch<%= className %> = createAsyncThunk(
   '<%= propertyName %>/fetchStatus',
   async (_, thunkAPI) => {
     /**
@@ -47,22 +61,23 @@ export const <%= propertyName %>Slice = createSlice({
   name: <%= constantName %>_FEATURE_KEY,
   initialState: initial<%= className %>State,
   reducers: {
-    add<%= className %>: <%= propertyName %>Adapter.addOne,
-    remove<%= className %>: <%= propertyName %>Adapter.removeOne
+    add: <%= propertyName %>Adapter.addOne,
+    remove: <%= propertyName %>Adapter.removeOne
     // ...
   },
   extraReducers: builder => {
-    builder.addCase(fetch<%= className %>s.pending, (state: <%= className %>State) => {
-      state.loadingStatus = 'loading';
-    });
-    builder.addCase(fetch<%= className %>s.fulfilled, (state: <%= className %>State, action: PayloadAction<<%= className %>Entity[]>) => {
-      <%= propertyName %>Adapter.addMany(state, action.payload);
-      state.loadingStatus = 'loaded';
-    });
-    builder.addCase(fetch<%= className %>s.rejected, (state: <%= className %>State, action) => {
-      state.loadingStatus = 'error';
-      state.error = action.error.message;
-    });
+    builder
+      .addCase(fetch<%= className %>.pending, (state: <%= className %>State) => {
+        state.loadingStatus = 'loading';
+      })
+      .addCase(fetch<%= className %>.fulfilled, (state: <%= className %>State, action: PayloadAction<<%= className %>Entity[]>) => {
+        <%= propertyName %>Adapter.setAll(state, action.payload);
+        state.loadingStatus = 'loaded';
+      })
+      .addCase(fetch<%= className %>.rejected, (state: <%= className %>State, action) => {
+        state.loadingStatus = 'error';
+        state.error = action.error.message;
+      });
   }
 });
 
@@ -76,28 +91,39 @@ export const <%= propertyName %>Reducer = <%= propertyName %>Slice.reducer;
  *
  * e.g.
  * ```
+ * import React, { useEffect } from 'react';
+ * import { useDispatch } from 'react-redux';
+ *
+ * // ...
+ *
  * const dispatch = useDispatch();
- * dispatch(<%= propertyName %>Actions.add<%= className %>([{ id: 1 }]));
+ * useEffect(() => {
+ *   dispatch(<%= propertyName %>Actions.add({ id: 1 }))
+ * }, [dispatch]);
  * ```
  *
  * See: https://react-redux.js.org/next/api/hooks#usedispatch
  */
-export const <%= propertyName %>Actions = {
-  ...<%= propertyName %>Slice.actions,
-  fetch<%= className %>s
-};
+export const <%= propertyName %>Actions = <%= propertyName %>Slice.actions;
 
 /*
  * Export selectors to query state. For use with the `useSelector` hook.
  *
  * e.g.
  * ```
- * const entities = useSelector(select<%= className %>Entities);
+ * import { useSelector } from 'react-redux';
+ *
+ * // ...
+ *
+ * const entities = useSelector(selectAll<%= className %>);
  * ```
  *
  * See: https://react-redux.js.org/next/api/hooks#useselector
  */
-export const <%= propertyName %>Selectors = {
-  get<%= className %>State: (rootState: unknown): <%= className %>State => rootState[<%= constantName %>_FEATURE_KEY],
-  ...<%= propertyName %>Adapter.getSelectors()
-};
+const { selectAll, selectEntities } = <%= propertyName %>Adapter.getSelectors();
+
+export const get<%= className %>State = (rootState: unknown): <%= className %>State => rootState[<%= constantName %>_FEATURE_KEY];
+
+export const selectAll<%= className %> = createSelector(get<%= className %>State, selectAll);
+
+export const select<%= className %>Entities = createSelector(get<%= className %>State, selectEntities);

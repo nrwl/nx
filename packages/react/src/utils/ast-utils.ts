@@ -356,7 +356,7 @@ export function addReduxStoreToMain(
     ...addGlobal(
       source,
       sourcePath,
-      `import { configureStore } from '@reduxjs/toolkit';
+      `import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';`
     ),
     new InsertChange(
@@ -364,7 +364,12 @@ import { Provider } from 'react-redux';`
       renderStmt.getStart(),
       `
 const store = configureStore({
-  reducer: {}
+  reducer: {},
+  // Additional middleware can be passed to this array
+  middleware: [...getDefaultMiddleware()],
+  devTools: process.env.NODE_ENV !== 'production',
+  // Optional Redux store enhancers
+  enhancers: [],
 });
 
 `
