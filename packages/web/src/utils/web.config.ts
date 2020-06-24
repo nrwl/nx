@@ -164,6 +164,7 @@ function getStylesPartial(
                 importLoaders: 1,
               },
             },
+            { loader: 'sass-loader' },
           ],
         },
         ...rules,
