@@ -83,7 +83,13 @@ export function runCreateWorkspace(
     preset,
     appName,
     style,
-  }: { preset: string; appName?: string; style?: string }
+    base,
+  }: {
+    preset: string;
+    appName?: string;
+    style?: string;
+    base?: string;
+  }
 ) {
   let command = `npx create-nx-workspace@${process.env.PUBLISHED_VERSION} ${name} --cli=${cli} --preset=${preset} --no-nxCloud --no-interactive`;
   if (appName) {
@@ -92,6 +98,11 @@ export function runCreateWorkspace(
   if (style) {
     command += ` --style ${style}`;
   }
+
+  if (base) {
+    command += ` --defaultBase="${base}"`;
+  }
+
   const create = execSync(command, {
     cwd: `./tmp/${cli}`,
     stdio: [0, 1, 2],

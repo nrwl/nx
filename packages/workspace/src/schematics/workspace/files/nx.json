@@ -1,5 +1,8 @@
 {
   "npmScope": "<%= npmScope %>",
+  "affected": {
+    "defaultBase": "<%= defaultBase %>"
+  },
   "implicitDependencies": {
     "<%= workspaceFile %>.json": "*",
     "package.json": {

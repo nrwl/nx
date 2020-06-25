@@ -3,4 +3,5 @@ export interface Schema {
   skipInstall: boolean;
   npmScope?: string;
   preserveAngularCLILayout: boolean;
+  defaultBase?: string;
 }

@@ -1,5 +1,7 @@
 import * as yargsParser from 'yargs-parser';
 import * as yargs from 'yargs';
+import * as fileUtils from '../core/file-utils';
+import { NxAffectedConfig } from '../core/shared-interfaces';
 
 const runOne = [
   'target',
@@ -112,7 +114,9 @@ export function splitArgsIntoNxArgsAndOverrides(
       nxArgs.base = args._[0];
       nxArgs.head = args._[1];
     } else if (!nxArgs.base) {
-      nxArgs.base = 'master';
+      const affectedConfig = getAffectedConfig();
+
+      nxArgs.base = affectedConfig.defaultBase;
     }
   }
 
@@ -121,4 +125,19 @@ export function splitArgsIntoNxArgsAndOverrides(
   }
 
   return { nxArgs, overrides };
+}
+
+export function getAffectedConfig(): NxAffectedConfig {
+  const config = fileUtils.readNxJson();
+  const defaultBase = 'master';
+
+  if (config.affected) {
+    return {
+      defaultBase: config.affected.defaultBase || defaultBase,
+    };
+  } else {
+    return {
+      defaultBase,
+    };
+  }
 }
