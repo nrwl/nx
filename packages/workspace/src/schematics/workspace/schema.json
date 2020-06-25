@@ -53,6 +53,11 @@
       "type": "string",
       "description": "Npm scope for importing libs."
     },
+    "defaultBase": {
+      "type": "string",
+      "description": "Default base branch for affected.",
+      "default": "master"
+    },
     "skipInstall": {
       "description": "Skip installing dependency packages.",
       "type": "boolean",

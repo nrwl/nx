@@ -48,6 +48,7 @@ export interface Schema {
     | 'react-express'
     | 'next';
   commit?: { name: string; email: string; message?: string };
+  defaultBase?: string;
 }
 
 class RunPresetTask {

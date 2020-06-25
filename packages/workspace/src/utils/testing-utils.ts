@@ -42,6 +42,9 @@ export function createEmptyWorkspace(tree: Tree): Tree {
     JSON.stringify(<NxJson>{
       npmScope: 'proj',
       projects: {},
+      affected: {
+        defaultBase: 'master',
+      },
       tasksRunnerOptions: {
         default: {
           runner: '@nrwl/workspace/tasks-runners/default',

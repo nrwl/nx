@@ -1,4 +1,9 @@
-import { forEachCli, runCreateWorkspace, uniq } from '@nrwl/e2e/utils';
+import {
+  forEachCli,
+  runCreateWorkspace,
+  uniq,
+  readJson,
+} from '@nrwl/e2e/utils';
 
 forEachCli(() => {
   describe('create-nx-workspace', () => {
@@ -73,6 +78,14 @@ forEachCli(() => {
         preset: 'react-express',
         style: 'css',
         appName,
+      });
+    });
+
+    it('should be able to create a workspace with a custom base branch and HEAD', () => {
+      const wsName = uniq('branch');
+      runCreateWorkspace(wsName, {
+        preset: 'empty',
+        base: 'main',
       });
     });
   });

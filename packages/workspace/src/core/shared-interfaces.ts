@@ -8,9 +8,14 @@ export interface ImplicitJsonSubsetDependency<T = '*' | string[]> {
   [key: string]: T | ImplicitJsonSubsetDependency<T>;
 }
 
+export interface NxAffectedConfig {
+  defaultBase?: string;
+}
+
 export interface NxJson<T = '*' | string[]> {
   implicitDependencies?: ImplicitDependencyEntry<T>;
   npmScope: string;
+  affected?: NxAffectedConfig;
   projects: {
     [projectName: string]: NxJsonProjectConfig;
   };

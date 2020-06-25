@@ -68,10 +68,11 @@ const angularCliVersion = 'ANGULAR_CLI_VERSION';
 const prettierVersion = 'PRETTIER_VERSION';
 
 const parsedArgs = yargsParser(process.argv, {
-  string: ['cli', 'preset', 'appName', 'style'],
+  string: ['cli', 'preset', 'appName', 'style', 'defaultBase'],
   alias: {
     appName: 'app-name',
     nxCloud: 'nx-cloud',
+    defaultBase: 'default-base',
   },
   boolean: ['help', 'interactive', 'nxCloud'],
 });
@@ -97,7 +98,8 @@ determineWorkspaceName(parsedArgs).then((name) => {
               appName,
               style,
               cloud,
-              parsedArgs.interactive
+              parsedArgs.interactive,
+              parsedArgs.defaultBase
             );
             showNxWarning(name);
             pointToTutorialAndCourse(preset);
@@ -399,7 +401,8 @@ function createApp(
   appName: string,
   style: string | null,
   nxCloud: boolean,
-  interactive: boolean
+  interactive: boolean,
+  defaultBase: string
 ) {
   // creating the app itself
   const args = [
@@ -415,7 +418,9 @@ function createApp(
           !a.startsWith('--style') &&
           !a.startsWith('--nxCloud') &&
           !a.startsWith('--nx-cloud') &&
-          !a.startsWith('--interactive')
+          !a.startsWith('--interactive') &&
+          !a.startsWith('--defaultBase') &&
+          !a.startsWith('--default-base')
       ) // not used by the new command
       .map((a) => `"${a}"`),
   ].join(' ');
@@ -426,9 +431,10 @@ function createApp(
   const interactiveArg = interactive
     ? ` --interactive=true`
     : ` --interactive=false`;
+  const defaultBaseArg = defaultBase ? ` --defaultBase="${defaultBase}"` : ``;
 
   console.log(
-    `new ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg} --collection=@nrwl/workspace`
+    `new ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=@nrwl/workspace`
   );
   const executablePath = path.join(tmpDir, 'node_modules', '.bin', cli.command);
   const collectionJsonPath = path.join(
@@ -439,7 +445,7 @@ function createApp(
     'collection.json'
   );
   execSync(
-    `"${executablePath}" new ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg} --collection=${collectionJsonPath}`,
+    `"${executablePath}" new ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=${collectionJsonPath}`,
     {
       stdio: [0, 1, 2],
     }
