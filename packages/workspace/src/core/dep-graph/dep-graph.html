@@ -45,6 +45,21 @@
             group by folder
           </label>
         </div>
+        <div class="sidebar-section">
+          <div class="flex">
+            <input id="textFilterInput" type="text" name="filter" />
+            <button id="textFilterButton">Filter</button>
+          </div>
+
+          <label>
+            <input
+              type="checkbox"
+              name="textFilterCheckbox"
+              value="includeInPath"
+            />
+            include projects in path
+          </label>
+        </div>
         <div id="project-lists"></div>
       </div>
     </div>
@@ -136,7 +151,7 @@
     window.graph = null;
     window.affected = null;
     window.focusedProject = null;
-    window.filteredProjects = null;
+    window.filteredProjects = [];
     window.groupByFolder = null;
     window.exclude = null;
   </script>

@@ -253,3 +253,12 @@ g.affected ellipse {
   align-items: center;
   justify-content: center;
 }
+
+#textFilterInput {
+  flex: 1;
+  margin-right: 1.5em;
+}
+
+#textFilterButton {
+  flex: none;
+}

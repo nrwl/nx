@@ -496,6 +496,56 @@ window.filterProjects = () => {
   render();
 };
 
+function listenForTextFilterChanges() {
+  const textFilterInput = document.getElementById('textFilterInput');
+  const textFilterButton = document.getElementById('textFilterButton');
+
+  textFilterButton.addEventListener('click', () => {
+    filterProjectsByText(textFilterInput.value.toLowerCase());
+  });
+
+  textFilterInput.addEventListener('keyup', (event) => {
+    if (event.key === 'Enter') {
+      filterProjectsByText(textFilterInput.value.toLowerCase());
+    }
+  });
+}
+
+function filterProjectsByText(text) {
+  const checkboxes = Array.from(
+    document.querySelectorAll('input[name=projectName]')
+  );
+
+  checkboxes.forEach((checkbox) => (checkbox.checked = false));
+
+  const split = text.split(',').map((splitItem) => splitItem.trim());
+
+  const matchedProjects = checkboxes
+    .map((checkbox) => checkbox.value)
+    .filter(
+      (project) =>
+        split.findIndex((splitItem) => project.includes(splitItem)) > -1
+    );
+
+  const includeInPath = document.querySelector('input[name=textFilterCheckbox]')
+    .checked;
+
+  matchedProjects.forEach((project) => {
+    checkboxes.forEach((checkbox) => {
+      if (
+        checkbox.value === project ||
+        (includeInPath &&
+          (hasPath(project, checkbox.value, []) ||
+            hasPath(checkbox.value, project, [])))
+      ) {
+        checkbox.checked = true;
+      }
+    });
+  });
+
+  window.filterProjects();
+}
+
 setTimeout(() => {
   addProjectCheckboxes();
   checkForAffected();
@@ -519,6 +569,8 @@ setTimeout(() => {
   if (window.exclude.length > 0) {
     window.exclude.forEach((project) => excludeProject(project, false));
   }
+
+  listenForTextFilterChanges();
 
   filterProjects();
 });
