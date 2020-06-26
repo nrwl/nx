@@ -29,12 +29,12 @@ function visitNotIgnoredFiles(
       ig.add(host.read('.gitignore').toString());
     }
     function visit(_dir: Path) {
-      if (_dir && ig.ignores(_dir)) {
+      if (_dir && ig?.ignores(_dir)) {
         return;
       }
       const dirEntry = host.getDir(_dir);
       dirEntry.subfiles.forEach((file) => {
-        if (ig.ignores(join(_dir, file))) {
+        if (ig?.ignores(join(_dir, file))) {
           return;
         }
         const maybeRule = visitor(join(_dir, file), host, context);
@@ -52,6 +52,59 @@ function visitNotIgnoredFiles(
   };
 }
 
+function moveIncludesToProjectTsconfig(
+  file: string,
+  extendedTsconfigPath: Path,
+  extendedTsconfig: any
+) {
+  return updateJsonInTree(file, (json) => {
+    json.files =
+      json.files ||
+      extendedTsconfig.files?.map((p: string) =>
+        relative(file, join(extendedTsconfigPath, p))
+      );
+    json.include =
+      json.include ||
+      extendedTsconfig.include?.map((p: string) =>
+        relative(file, join(extendedTsconfigPath, p))
+      );
+    return json;
+  });
+}
+
+function convertToSolutionTsconfig(tsconfigPath: Path): Rule {
+  return updateJsonInTree(tsconfigPath, (json) => {
+    json.files = [];
+    json.include = [];
+    return json;
+  });
+}
+
+function addReference(
+  extendedTsconfigPath: string & { __PRIVATE_DEVKIT_PATH: void },
+  file: Path
+): Rule {
+  return updateJsonInTree(extendedTsconfigPath, (json, context) => {
+    json.references = json.references || [];
+    const relativePath =
+      (relative(dirname(extendedTsconfigPath), file).startsWith('../')
+        ? ''
+        : './') + relative(dirname(extendedTsconfigPath), file);
+    context.logger.info(`Referencing ${file} in ${extendedTsconfigPath}`);
+    json.references.push({
+      path: relativePath,
+    });
+    return json;
+  });
+}
+
+function updateExtend(file: Path): Rule {
+  return updateJsonInTree(file, (json) => {
+    json.extends = json.extends.replace(/tsconfig.json$/, 'tsconfig.base.json');
+    return json;
+  });
+}
+
 export default function (schema: any): Rule {
   return chain([
     renameRootTsconfig,
@@ -67,41 +120,17 @@ export default function (schema: any): Rule {
         }
         const extendedTsconfigPath = join(dirname(file), json.extends);
         if (extendedTsconfigPath === normalize('tsconfig.json')) {
-          return updateJsonInTree(file, (j) => {
-            j.extends = j.extends.replace(
-              /tsconfig.json$/,
-              'tsconfig.base.json'
-            );
-            return j;
-          });
+          return updateExtend(file);
         } else if (basename(json.extends) === 'tsconfig.json') {
           const extendedTsconfig = readJsonInTree(host, extendedTsconfigPath);
           return chain([
-            updateJsonInTree(file, (j) => {
-              j.files =
-                j.files ||
-                extendedTsconfig.files?.map((p: string) =>
-                  relative(file, join(extendedTsconfigPath, p))
-                );
-              j.include =
-                j.include ||
-                extendedTsconfig.include?.map((p: string) =>
-                  relative(file, join(extendedTsconfigPath, p))
-                );
-              return j;
-            }),
-            updateJsonInTree(extendedTsconfigPath, (j) => {
-              j.files = [];
-              j.include = [];
-              j.references = j.references || [];
-              context.logger.info(
-                `Referencing ${file} in ${extendedTsconfigPath}`
-              );
-              j.references.push({
-                path: relative(dirname(extendedTsconfigPath), file),
-              });
-              return j;
-            }),
+            moveIncludesToProjectTsconfig(
+              file,
+              extendedTsconfigPath,
+              extendedTsconfig
+            ),
+            convertToSolutionTsconfig(extendedTsconfigPath),
+            addReference(extendedTsconfigPath, file),
           ]);
         } else {
           return;

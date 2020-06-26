@@ -1,6 +1,4 @@
 import { BuilderContext } from '@angular-devkit/architect';
-import { workspaces } from '@angular-devkit/core';
-import { Host } from '@angular-devkit/core/src/virtual-fs/host';
 
 export async function getSourceRoot(context: BuilderContext): Promise<string> {
   const projectMeta = await context.getProjectMetadata(context.target.project);
