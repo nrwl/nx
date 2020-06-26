@@ -1,7 +1,7 @@
 import * as yargs from 'yargs';
 import { generateGraph } from './dep-graph';
 import { output } from '../utils/output';
-import { parseFiles, printArgsWarning } from './shared';
+import { parseFiles } from './shared';
 import { runCommand } from '../tasks-runner/run-command';
 import { NxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
 import { filterAffected } from '../core/affected-project-graph';
@@ -52,7 +52,6 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
         if (parsedArgs.plain) {
           console.log(apps.join(' '));
         } else {
-          printArgsWarning(nxArgs);
           if (apps.length) {
             output.log({
               title: 'Affected apps:',
@@ -69,7 +68,6 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
         if (parsedArgs.plain) {
           console.log(libs.join(' '));
         } else {
-          printArgsWarning(nxArgs);
           if (libs.length) {
             output.log({
               title: 'Affected libs:',
@@ -81,7 +79,6 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
 
       case 'dep-graph':
         const projectNames = affectedProjects.map((p) => p.name);
-        printArgsWarning(nxArgs);
         generateGraph(parsedArgs as any, projectNames);
         break;
 
@@ -108,7 +105,6 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
           affectedProjects,
           nxArgs
         );
-        printArgsWarning(nxArgs);
         runCommand(
           projectsWithTarget,
           projectGraph,

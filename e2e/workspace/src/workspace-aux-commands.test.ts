@@ -179,7 +179,9 @@ forEachCli((cli) => {
       expect(stdout).not.toContain(`apps/${myapp}/src/app/app.component.ts`);
 
       runCommand('npm run format:write -- --all');
-      expect(runCommand('npm run -s format:check -- --all')).toEqual('');
+      expect(runCommand('npm run -s format:check -- --all')).not.toContain(
+        `apps/${myapp}/src/main.ts`
+      );
     });
 
     it('should support workspace-specific schematics', async () => {
