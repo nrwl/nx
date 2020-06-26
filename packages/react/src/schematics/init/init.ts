@@ -3,7 +3,6 @@ import { JsonObject } from '@angular-devkit/core';
 import {
   addPackageWithInit,
   setDefaultCollection,
-  updateJsonInTree,
   updateWorkspace,
   addDepsToPackageJson,
 } from '@nrwl/workspace';

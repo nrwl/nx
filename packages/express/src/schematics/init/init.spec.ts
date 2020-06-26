@@ -25,12 +25,15 @@ describe('init', () => {
     );
     const result = await runSchematic('init', {}, tree);
     const packageJson = readJsonInTree(result, 'package.json');
+    // add express
+    expect(packageJson.dependencies['express']).toBeDefined();
+    // move `@nrwl/express` to dev
     expect(packageJson.dependencies['@nrwl/express']).toBeUndefined();
     expect(packageJson.devDependencies['@nrwl/express']).toBeDefined();
+    // add express types
     expect(packageJson.devDependencies['@types/express']).toBeDefined();
+    // keep existing packages
     expect(packageJson.devDependencies[existing]).toBeDefined();
-    expect(packageJson.dependencies['express']).toBeDefined();
-    expect(packageJson.dependencies['@nrwl/express']).toBeUndefined();
     expect(packageJson.dependencies[existing]).toBeDefined();
   });
 
