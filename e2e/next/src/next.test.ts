@@ -103,7 +103,7 @@ module.exports = withCSS({
       expect(readFile(`dist/apps/${appName}/.next/BUILD_ID`)).toEqual('fixed');
     }, 120000);
 
-    it('should be able to dynamically load a lib', async () => {
+    xit('should be able to dynamically load a lib', async () => {
       ensureProject();
       const appName = uniq('app');
       const libName = uniq('lib');

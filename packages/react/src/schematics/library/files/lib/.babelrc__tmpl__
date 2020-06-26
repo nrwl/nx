@@ -5,5 +5,6 @@
   ],
   "plugins": [
     <% if (style === 'styled-components') { %>["styled-components", { "pure": true, "ssr": true }]<% } %>
+    <% if (style === 'styled-jsx') { %>"styled-jsx/babel"<% } %>
   ]
 }
