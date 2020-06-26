@@ -616,23 +616,23 @@
         "alwaysAddToPackageJson": false
       },
       "@angular-devkit/architect": {
-        "version": "~0.1000.0-rc.5",
+        "version": "~0.1000.0",
         "alwaysAddToPackageJson": false
       },
       "@angular-devkit/build-angular": {
-        "version": "~0.1000.0-rc.5",
+        "version": "~0.1000.0",
         "alwaysAddToPackageJson": false
       },
       "@angular-devkit/build-ng-packagr": {
-        "version": "~0.1000.0-rc.5",
+        "version": "~0.1000.0",
         "alwaysAddToPackageJson": false
       },
       "@angular-devkit/build-webpack": {
-        "version": "~0.1000.0-rc.5",
+        "version": "~0.1000.0",
         "alwaysAddToPackageJson": false
       },
       "@angular-devkit/build-optimizer": {
-        "version": "~0.1000.0-rc.5",
+        "version": "~0.1000.0",
         "alwaysAddToPackageJson": false
       },
       "@angular-devkit/core": {

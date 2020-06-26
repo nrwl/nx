@@ -35,8 +35,8 @@
     "@nrwl/workspace": "*"
   },
   "dependencies": {
-    "@angular-devkit/architect": "~0.1000.0-rc.5",
-    "@angular-devkit/core": "~10.0.0-rc.5",
-    "@angular-devkit/schematics": "~10.0.0-rc.5"
+    "@angular-devkit/architect": "~0.1000.0",
+    "@angular-devkit/core": "~10.0.0",
+    "@angular-devkit/schematics": "~10.0.0"
   }
 }
