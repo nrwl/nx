@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import * as path from 'path';
 import * as resolve from 'resolve';
-import { getProjectRoots, parseFiles, printArgsWarning } from './shared';
+import { getProjectRoots, parseFiles } from './shared';
 import { fileExists } from '../utils/fileutils';
 import { output } from '../utils/output';
 import { createProjectGraph } from '../core/project-graph';
@@ -71,7 +71,6 @@ function getPatterns(args: NxArgs & { libsAndApps: boolean; _: string[] }) {
       return allFilesPattern;
     }
 
-    printArgsWarning(args);
     const p = parseFiles(args);
     let patterns = p.files
       .filter((f) => fileExists(f))

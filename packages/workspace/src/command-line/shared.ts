@@ -1,36 +1,8 @@
 import { execSync } from 'child_process';
-import { output } from '../utils/output';
 import { createProjectGraph, ProjectGraphNode } from '../core/project-graph';
 import { NxJson } from '../core/shared-interfaces';
 import { readWorkspaceJson, TEN_MEGABYTES } from '../core/file-utils';
-import { NxArgs, getAffectedConfig } from './utils';
-
-export function printArgsWarning(options: NxArgs) {
-  const { files, uncommitted, untracked, base, head, all } = options;
-  const affectedConfig = getAffectedConfig();
-
-  if (!files && !uncommitted && !untracked && !base && !head && !all) {
-    output.note({
-      title: `Affected criteria defaulted to --base=${output.bold(
-        `${affectedConfig.defaultBase}`
-      )} --head=${output.bold('HEAD')}`,
-    });
-  }
-
-  if (all) {
-    output.warn({
-      title: `Running affected:* commands with --all can result in very slow builds.`,
-      bodyLines: [
-        output.bold('--all') +
-          ' is not meant to be used for any sizable project or to be used in CI.',
-        '',
-        output.colors.gray(
-          'Learn more about checking only what is affected: '
-        ) + 'https://nx.dev/guides/monorepo-affected.',
-      ],
-    });
-  }
-}
+import { NxArgs } from './utils';
 
 export function parseFiles(options: NxArgs): { files: string[] } {
   const { files, uncommitted, untracked, base, head } = options;
