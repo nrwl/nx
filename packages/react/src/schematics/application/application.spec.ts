@@ -554,6 +554,22 @@ describe('app', () => {
       const packageJSON = readJsonInTree(tree, 'package.json');
       expect(packageJSON.dependencies['styled-jsx']).toBeDefined();
     });
+
+    it('should update babel config', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', style: 'styled-jsx' },
+        appTree
+      );
+
+      const babelrc = readJsonInTree(tree, 'apps/my-app/.babelrc');
+      const babelJestConfig = readJsonInTree(
+        tree,
+        'apps/my-app/babel-jest.config.json'
+      );
+      expect(babelrc.plugins).toContain('styled-jsx/babel');
+      expect(babelJestConfig.plugins).toContain('styled-jsx/babel');
+    });
   });
 
   describe('--routing', () => {

@@ -43,14 +43,15 @@ import {
 } from '../../utils/ast-utils';
 import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
 import {
-  reactRouterDomVersion,
-  typesReactRouterDomVersion,
   reactDomVersion,
+  reactRouterDomVersion,
   reactVersion,
+  typesReactRouterDomVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
 import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
 import { initRootBabelConfig } from '@nrwl/web/src/utils/rules';
+import { updateBabelJestConfig } from '../../rules/update-babel-jest-config';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -86,13 +87,21 @@ export default function (schema: Schema): Rule {
       addProject(options),
       updateNxJson(options),
       options.unitTestRunner !== 'none'
-        ? externalSchematic('@nrwl/jest', 'jest-project', {
-            project: options.name,
-            setupFile: 'none',
-            supportTsx: true,
-            skipSerializers: true,
-            babelJest: true,
-          })
+        ? chain([
+            externalSchematic('@nrwl/jest', 'jest-project', {
+              project: options.name,
+              setupFile: 'none',
+              supportTsx: true,
+              skipSerializers: true,
+              babelJest: true,
+            }),
+            updateBabelJestConfig(options.projectRoot, (json) => {
+              if (options.style === 'styled-jsx') {
+                json.plugins = (json.plugins || []).concat('styled-jsx/babel');
+              }
+              return json;
+            }),
+          ])
         : noop(),
       options.component
         ? externalSchematic('@nrwl/react', 'component', {

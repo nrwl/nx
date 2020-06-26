@@ -473,12 +473,19 @@ describe('lib', () => {
       );
 
       const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      const babelrc = readJsonInTree(tree, 'libs/my-lib/.babelrc');
+      const babelJestConfig = readJsonInTree(
+        tree,
+        'libs/my-lib/babel-jest.config.json'
+      );
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
           external: ['react', 'react-dom', 'styled-jsx'],
         },
       });
+      expect(babelrc.plugins).toContain('styled-jsx/babel');
+      expect(babelJestConfig.plugins).toContain('styled-jsx/babel');
     });
 
     it('should support style none', async () => {
