@@ -366,7 +366,7 @@ describe('lib', () => {
     it('should update package.json', async () => {
       const publishableTree = await runSchematic(
         'lib',
-        { name: 'mylib', publishable: true },
+        { name: 'mylib', publishable: true, importPath: '@proj/mylib' },
         appTree
       );
 

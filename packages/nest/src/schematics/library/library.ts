@@ -175,7 +175,7 @@ function updateTsConfig(options: NormalizedSchema): Rule {
 }
 
 function addProject(options: NormalizedSchema): Rule {
-  if (!options.publishable) {
+  if (!options.publishable && !options.buildable) {
     return noop();
   }
 
