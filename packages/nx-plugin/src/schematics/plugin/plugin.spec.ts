@@ -10,7 +10,11 @@ describe('NxPlugin plugin', () => {
   });
 
   it('should update the workspace.json file', async () => {
-    const tree = await runSchematic('plugin', { name: 'myPlugin' }, appTree);
+    const tree = await runSchematic(
+      'plugin',
+      { name: 'myPlugin', importPath: '@proj/my-plugin' },
+      appTree
+    );
     const workspace = await readWorkspace(tree);
     const project = workspace.projects['my-plugin'];
     expect(project.root).toEqual('libs/my-plugin');
@@ -62,7 +66,11 @@ describe('NxPlugin plugin', () => {
   });
 
   it('should update the tsconfig.lib.json file', async () => {
-    const tree = await runSchematic('plugin', { name: 'myPlugin' }, appTree);
+    const tree = await runSchematic(
+      'plugin',
+      { name: 'myPlugin', importPath: '@proj/my-plugin' },
+      appTree
+    );
     const tsLibConfig = readJsonInTree(
       tree,
       'libs/my-plugin/tsconfig.lib.json'
@@ -71,7 +79,11 @@ describe('NxPlugin plugin', () => {
   });
 
   it('should create schematic and builder files', async () => {
-    const tree = await runSchematic('plugin', { name: 'myPlugin' }, appTree);
+    const tree = await runSchematic(
+      'plugin',
+      { name: 'myPlugin', importPath: '@proj/my-plugin' },
+      appTree
+    );
     expect(tree.exists('libs/my-plugin/collection.json')).toBeTruthy();
     expect(tree.exists('libs/my-plugin/builders.json')).toBeTruthy();
     expect(
@@ -118,7 +130,11 @@ describe('NxPlugin plugin', () => {
       it('should not generate test files', async () => {
         const tree = await runSchematic(
           'plugin',
-          { name: 'myPlugin', unitTestRunner: 'none' },
+          {
+            name: 'myPlugin',
+            importPath: '@proj/my-plugin',
+            unitTestRunner: 'none',
+          },
           appTree
         );
 

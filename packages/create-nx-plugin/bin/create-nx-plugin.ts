@@ -80,9 +80,11 @@ function createWorkspace(
 }
 
 function createNxPlugin(workspaceName, pluginName) {
-  console.log(`nx generate @nrwl/nx-plugin:plugin ${pluginName}`);
+  console.log(
+    `nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${workspaceName}/${pluginName}`
+  );
   execSync(
-    `node ./node_modules/@nrwl/cli/bin/nx.js generate @nrwl/nx-plugin:plugin ${pluginName}`,
+    `node ./node_modules/@nrwl/cli/bin/nx.js generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${workspaceName}/${pluginName}`,
     {
       cwd: workspaceName,
       stdio: [0, 1, 2],

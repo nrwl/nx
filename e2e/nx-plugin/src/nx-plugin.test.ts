@@ -19,7 +19,9 @@ forEachCli((currentCLIName) => {
       ensureProject();
       const plugin = uniq('plugin');
 
-      runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter}`);
+      runCLI(
+        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter} --importPath=@proj/${plugin}`
+      );
       const lintResults = runCLI(`lint ${plugin}`);
       expect(lintResults).toContain('All files pass linting.');
 
@@ -62,7 +64,9 @@ forEachCli((currentCLIName) => {
     it(`should run the plugin's e2e tests`, async (done) => {
       ensureProject();
       const plugin = uniq('plugin');
-      runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter}`);
+      runCLI(
+        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter} --importPath=@proj/${plugin}`
+      );
       const results = await runCLIAsync(`e2e ${plugin}-e2e`);
       expect(results.stdout).toContain('Compiling TypeScript files');
       expectTestsPass(results);
@@ -75,7 +79,9 @@ forEachCli((currentCLIName) => {
       const plugin = uniq('plugin');
       const version = '1.0.0';
 
-      runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter}`);
+      runCLI(
+        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter} --importPath=@proj/${plugin}`
+      );
       runCLI(
         `generate @nrwl/nx-plugin:migration --project=${plugin} --version=${version} --packageJsonUpdates=false`
       );
@@ -112,7 +118,9 @@ forEachCli((currentCLIName) => {
       const plugin = uniq('plugin');
       const schematic = uniq('schematic');
 
-      runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter}`);
+      runCLI(
+        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter} --importPath=@proj/${plugin}`
+      );
       runCLI(
         `generate @nrwl/nx-plugin:schematic ${schematic} --project=${plugin}`
       );
@@ -152,7 +160,9 @@ forEachCli((currentCLIName) => {
       const plugin = uniq('plugin');
       const builder = uniq('builder');
 
-      runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter}`);
+      runCLI(
+        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter} --importPath=@proj/${plugin}`
+      );
       runCLI(`generate @nrwl/nx-plugin:builder ${builder} --project=${plugin}`);
 
       const lintResults = runCLI(`lint ${plugin}`);
@@ -190,7 +200,7 @@ forEachCli((currentCLIName) => {
         ensureProject();
         const plugin = uniq('plugin');
         runCLI(
-          `generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter} --directory subdir`
+          `generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter} --directory subdir --importPath=@proj/${plugin}`
         );
         checkFilesExist(`libs/subdir/${plugin}/package.json`);
         const workspace = readJson(workspaceConfigName());
@@ -206,7 +216,7 @@ forEachCli((currentCLIName) => {
         ensureProject();
         const plugin = uniq('plugin');
         runCLI(
-          `generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter} --tags=e2etag,e2ePackage`
+          `generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter} --tags=e2etag,e2ePackage --importPath=@proj/${plugin}`
         );
         const nxJson = readJson('nx.json');
         expect(nxJson.projects[plugin].tags).toEqual(['e2etag', 'e2ePackage']);
