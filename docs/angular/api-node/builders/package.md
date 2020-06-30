@@ -12,6 +12,16 @@ Type: `array`
 
 List of static library assets.
 
+### buildableProjectDepsInPackageJsonType
+
+Default: `dependencies`
+
+Type: `string`
+
+Possible values: `dependencies`, `peerDependencies`
+
+When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`
+
 ### main
 
 Type: `string`

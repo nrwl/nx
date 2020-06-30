@@ -138,11 +138,10 @@ forEachCli('angular', (cli) => {
       expect(parentLibOutput).toContain(`Built @proj/${parentLib}`);
 
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
-      expect(jsonFile.dependencies).toEqual({
-        tslib: '^2.0.0',
-        [`@proj/${childLib}`]: '0.0.1',
-        [`@proj/${childLib2}`]: '0.0.1',
-      });
+      expect(jsonFile.dependencies).toEqual({ tslib: '^2.0.0' });
+
+      expect(jsonFile.peerDependencies[`@proj/${childLib}`]).toBeDefined();
+      expect(jsonFile.peerDependencies[`@proj/${childLib2}`]).toBeDefined();
       expect(jsonFile.peerDependencies['@angular/common']).toBeDefined();
       expect(jsonFile.peerDependencies['@angular/core']).toBeDefined();
     });

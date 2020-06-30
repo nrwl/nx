@@ -180,7 +180,7 @@ forEachCli('nx', (cli) => {
       expect(parentLibOutput).toContain(`Bundle complete`);
 
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
-      expect(jsonFile.dependencies).toEqual(
+      expect(jsonFile.peerDependencies).toEqual(
         expect.objectContaining({
           [`@proj/${childLib}`]: '0.0.1',
           [`@proj/${childLib2}`]: '0.0.1',

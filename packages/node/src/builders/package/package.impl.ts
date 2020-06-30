@@ -44,7 +44,8 @@ export function runNodePackageBuilder(
               updateBuildableProjectPackageJsonDependencies(
                 context,
                 target,
-                dependencies
+                dependencies,
+                normalizedOptions.buildableProjectDepsInPackageJsonType
               );
             }
           }),

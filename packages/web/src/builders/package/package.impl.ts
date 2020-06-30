@@ -257,7 +257,7 @@ export function createRollupOptions(
 }
 
 function updatePackageJson(
-  options,
+  options: NormalizedBundleBuilderOptions,
   context,
   target,
   dependencies,
@@ -280,7 +280,8 @@ function updatePackageJson(
     updateBuildableProjectPackageJsonDependencies(
       context,
       target,
-      dependencies
+      dependencies,
+      options.buildableProjectDepsInPackageJsonType
     );
   }
 }

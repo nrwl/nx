@@ -6,6 +6,16 @@ Builder properties can be configured in angular.json when defining the builder, 
 
 ## Properties
 
+### buildableProjectDepsInPackageJsonType
+
+Default: `peerDependencies`
+
+Type: `string`
+
+Possible values: `dependencies`, `peerDependencies`
+
+When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`
+
 ### project
 
 Type: `string`

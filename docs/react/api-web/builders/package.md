@@ -19,6 +19,16 @@ Type: `string`
 
 (deprecated) Path to a function which takes a babel config and returns an updated babel config
 
+### buildableProjectDepsInPackageJsonType
+
+Default: `peerDependencies`
+
+Type: `string`
+
+Possible values: `dependencies`, `peerDependencies`
+
+When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`
+
 ### entryFile
 
 Type: `string`

@@ -21,6 +21,12 @@
       "type": "boolean",
       "description": "Update buildable project dependencies in package.json",
       "default": true
+    },
+    "buildableProjectDepsInPackageJsonType": {
+      "type": "string",
+      "description": "When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`",
+      "enum": ["dependencies", "peerDependencies"],
+      "default": "peerDependencies"
     }
   },
   "additionalProperties": false,
