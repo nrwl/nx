@@ -83,7 +83,11 @@ export function coerceTypes(opts: Options, schema: Schema): Options {
  * @param opts The options passed in by the user
  * @param schema The schema definition to check against
  */
-export function convertAliases(opts: Options, schema: Schema): Options {
+export function convertAliases(
+  opts: Options,
+  schema: Schema,
+  excludeUnmatched: boolean
+): Options {
   return Object.keys(opts).reduce((acc, k) => {
     if (schema.properties[k]) {
       acc[k] = opts[k];
@@ -93,7 +97,7 @@ export function convertAliases(opts: Options, schema: Schema): Options {
       );
       if (found) {
         acc[found[0]] = opts[k];
-      } else {
+      } else if (excludeUnmatched) {
         if (!acc['--']) {
           acc['--'] = [];
         }
@@ -101,6 +105,8 @@ export function convertAliases(opts: Options, schema: Schema): Options {
           name: k,
           possible: [],
         });
+      } else {
+        acc[k] = opts[k];
       }
     }
     return acc;
@@ -125,27 +131,4 @@ export function lookupUnmatched(opts: Options, schema: Schema): Options {
     });
   }
   return opts;
-}
-
-export function coerceTypesAndNormalizeAliases(
-  opts: Options,
-  schema: Schema
-): Options {
-  return convertAliases(coerceTypes(opts, schema), schema);
-}
-
-/**
- * Converts aliases and coerces types according to the schema
- *
- * @param opts The options to check
- * @param schema The schema definition to validate against
- *
- * @remarks
- *
- * Unmatched options are added to opts['--']
- * and listed along with possible schema matches
- *
- */
-export function validateOptions(opts: Options, schema: Schema): Options {
-  return lookupUnmatched(coerceTypesAndNormalizeAliases(opts, schema), schema);
 }

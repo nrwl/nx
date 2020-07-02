@@ -97,12 +97,13 @@ describe('params', () => {
             properties: { directory: { type: 'string', alias: 'd' } },
             required: [],
             description: '',
-          }
+          },
+          true
         )
       ).toEqual({ directory: 'test' });
     });
 
-    it('should filter unknown keys into the leftovers field', () => {
+    it('should filter unknown keys into the leftovers field when excludeUnmatched is true', () => {
       expect(
         convertAliases(
           { d: 'test' },
@@ -110,7 +111,8 @@ describe('params', () => {
             properties: { directory: { type: 'string' } },
             required: [],
             description: '',
-          }
+          },
+          true
         )
       ).toEqual({
         '--': [
@@ -119,6 +121,22 @@ describe('params', () => {
             possible: [],
           },
         ],
+      });
+    });
+
+    it('should not filter unknown keys into the leftovers field when excludeUnmatched is false', () => {
+      expect(
+        convertAliases(
+          { d: 'test' },
+          {
+            properties: { directory: { type: 'string' } },
+            required: [],
+            description: '',
+          },
+          false
+        )
+      ).toEqual({
+        d: 'test',
       });
     });
   });
