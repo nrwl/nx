@@ -27,7 +27,10 @@ import {
   convertToCamelCase,
   handleErrors,
   Schema,
-  validateOptions,
+  Options,
+  lookupUnmatched,
+  convertAliases,
+  coerceTypes,
 } from '../shared/params';
 import { commandName, printHelp } from '../shared/print-help';
 // @ts-ignore
@@ -317,7 +320,7 @@ async function runSchematic(
   const record = { loggingQueue: [] as string[], error: false };
   workflow.reporter.subscribe(createRecorder(record, logger));
 
-  const schematicOptions = validateOptions(
+  const schematicOptions = normalizeOptions(
     opts.schematicOptions,
     flattenedSchema
   );
@@ -419,6 +422,13 @@ export async function taoNew(
       allowAdditionalArgs
     );
   });
+}
+
+function normalizeOptions(opts: Options, schema: Schema): Options {
+  return lookupUnmatched(
+    convertAliases(coerceTypes(opts, schema), schema, true),
+    schema
+  );
 }
 
 function isTTY(): boolean {

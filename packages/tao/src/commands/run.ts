@@ -10,9 +10,11 @@ import {
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { getLogger } from '../shared/logger';
 import {
-  coerceTypesAndNormalizeAliases,
+  coerceTypes,
+  convertAliases,
   convertToCamelCase,
   handleErrors,
+  Options,
   Schema,
 } from '../shared/params';
 import { commandName, printHelp } from '../shared/print-help';
@@ -175,7 +177,7 @@ export async function run(root: string, args: string[], isVerbose: boolean) {
       return 0;
     }
 
-    const runOptions = coerceTypesAndNormalizeAliases(
+    const runOptions = normalizeOptions(
       opts.runOptions,
       flattenedSchema as any
     );
@@ -192,4 +194,8 @@ export async function run(root: string, args: string[], isVerbose: boolean) {
     await run.stop();
     return result.success ? 0 : 1;
   });
+}
+
+function normalizeOptions(opts: Options, schema: Schema): Options {
+  return convertAliases(coerceTypes(opts, schema), schema, false);
 }
