@@ -132,7 +132,9 @@ export class TaskOrchestrator {
       // works well before making it configurable
       return (
         this.cache.temporaryOutputPath(task) &&
-        (b === '@nrwl/workspace:run-commands' || b === '@nrwl/cypress:cypress')
+        (b === '@nrwl/workspace:run-commands' ||
+          b === '@nrwl/cypress:cypress' ||
+          b === '@nrwl/gatsby:build')
       );
     } catch (e) {
       return false;
