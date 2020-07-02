@@ -6,9 +6,9 @@ import {
   uniq,
   updateFile,
   workspaceConfigName,
-} from './utils';
+} from '@nrwl/e2e/utils';
 
-forEachCli('nx', () => {
+forEachCli(() => {
   describe('Run Commands', () => {
     it('should not override environment variables already set when setting a custom env file path', async (done) => {
       ensureProject();
