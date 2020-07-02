@@ -25,9 +25,10 @@ function getCompilerSetup(rootDir) {
 }
 let compilerSetup;
 
-const command = process.argv[3].split(':')[1];
-if (command === 'test') {
-  // this is needed so tests don't create nxdeps.josn in the dist folder
+if (
+  process.argv[1].indexOf('jest-worker') > -1 ||
+  (process.argv.length >= 4 && process.argv[3].split(':')[1] === 'test')
+) {
   process.env.NX_WORKSPACE_ROOT_PATH = path_1.join(
     __dirname,
     '..',
