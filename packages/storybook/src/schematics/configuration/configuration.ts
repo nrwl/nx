@@ -73,8 +73,16 @@ function createLibStorybookDir(
 
 function configureTsConfig(projectName: string): Rule {
   return (tree: Tree) => {
-    const projectPath = getProjectConfig(tree, projectName).root;
-    const tsConfigPath = projectPath + '/tsconfig.lib.json';
+    const projectConfig = getProjectConfig(tree, projectName);
+    const projectPath = projectConfig.root;
+    let tsConfigPath = projectConfig.architect?.build?.options?.tsConfig;
+    if (tsConfigPath === undefined) {
+      tsConfigPath =
+        projectConfig.projectType === 'library'
+          ? projectPath + '/tsconfig.lib.json'
+          : projectPath + '/tsconfig.app.json';
+    }
+
     const projectTsConfig = parseJsonAtPath(tree, tsConfigPath);
 
     let tsConfigContent: any;
