@@ -24,6 +24,18 @@ function getCompilerSetup(rootDir) {
   return { compilerOptions, host };
 }
 let compilerSetup;
+
+const command = process.argv[3].split(':')[1];
+if (command === 'test') {
+  // this is needed so tests don't create nxdeps.josn in the dist folder
+  process.env.NX_WORKSPACE_ROOT_PATH = path_1.join(
+    __dirname,
+    '..',
+    'tmp',
+    'unit'
+  );
+}
+
 module.exports = function (path, options) {
   const ext = path_1.extname(path);
   if (
