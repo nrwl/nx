@@ -10323,7 +10323,7 @@ fs-extra@8.1.0, fs-extra@^8.0.1, fs-extra@^8.1.0:
 
 fs-extra@9.0.0, fs-extra@^9.0.0:
   version "9.0.0"
-  resolved "http://localhost:4873/fs-extra/-/fs-extra-9.0.0.tgz#b6afc31036e247b2466dc99c29ae797d5d4580a3"
+  resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-9.0.0.tgz#b6afc31036e247b2466dc99c29ae797d5d4580a3"
   integrity sha512-pmEYSk3vYsG/bF651KPUXZ+hvjpgWYw/Gc7W9NFUe3ZVLczKKWIij3IKpOrQcdw4TILtibFslZ0UmR8Vvzig4g==
   dependencies:
     at-least-node "^1.0.0"

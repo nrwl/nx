@@ -10,7 +10,7 @@ function runNxNewCommand(args?: string, silent?: boolean) {
   return execSync(
     `node ${require.resolve(
       '@nrwl/tao'
-    )} new proj --no-interactive --skip-install --collection=@nrwl/workspace --npmScope=proj ${
+    )} new proj --no-interactive --skip-install --collection=@nrwl/workspace --npmScope=proj --preset=empty ${
       args || ''
     }`,
     {
