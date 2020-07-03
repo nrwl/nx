@@ -5,7 +5,7 @@ describe('Migration', () => {
     it('should throw an error when the target package is not available', async () => {
       const migrator = new Migrator({
         versions: () => '1.0',
-        fetch: (p, v) => {
+        fetch: (_p, _v) => {
           throw new Error('cannot fetch');
         },
         from: {},
@@ -23,7 +23,7 @@ describe('Migration', () => {
     it('should return a patch to the new version', async () => {
       const migrator = new Migrator({
         versions: () => '1.0.0',
-        fetch: (p, v) => Promise.resolve({ version: '2.0.0' }),
+        fetch: (_p, _v) => Promise.resolve({ version: '2.0.0' }),
         from: {},
         to: {},
       });
@@ -39,7 +39,7 @@ describe('Migration', () => {
     it('should collect the information recursively from upserts', async () => {
       const migrator = new Migrator({
         versions: () => '1.0.0',
-        fetch: (p, v) => {
+        fetch: (p, _v) => {
           if (p === 'parent') {
             return Promise.resolve({
               version: '2.0.0',
@@ -82,7 +82,7 @@ describe('Migration', () => {
     it('should stop recursive calls when exact version', async () => {
       const migrator = new Migrator({
         versions: () => '1.0.0',
-        fetch: (p, v) => {
+        fetch: (p, _v) => {
           if (p === 'parent') {
             return Promise.resolve({
               version: '2.0.0',
@@ -129,7 +129,7 @@ describe('Migration', () => {
     it('should set the version of a dependency to the newest', async () => {
       const migrator = new Migrator({
         versions: () => '1.0.0',
-        fetch: (p, v) => {
+        fetch: (p, _v) => {
           if (p === 'parent') {
             return Promise.resolve({
               version: '2.0.0',
@@ -192,7 +192,7 @@ describe('Migration', () => {
     it('should skip the versions <= currently installed', async () => {
       const migrator = new Migrator({
         versions: () => '1.0.0',
-        fetch: (p, v) => {
+        fetch: (p, _v) => {
           if (p === 'parent') {
             return Promise.resolve({
               version: '2.0.0',
@@ -239,7 +239,7 @@ describe('Migration', () => {
     it('should conditionally process packages if they are installed', async () => {
       const migrator = new Migrator({
         versions: (p) => (p !== 'not-installed' ? '1.0.0' : null),
-        fetch: (p, v) => {
+        fetch: (p, _v) => {
           if (p === 'parent') {
             return Promise.resolve({
               version: '2.0.0',
@@ -283,7 +283,7 @@ describe('Migration', () => {
     it('should special case @nrwl/workspace', async () => {
       const migrator = new Migrator({
         versions: () => '1.0.0',
-        fetch: (p, v) => Promise.resolve({ version: '2.0.0' }),
+        fetch: (_p, _v) => Promise.resolve({ version: '2.0.0' }),
         from: {},
         to: {},
       });
@@ -327,7 +327,7 @@ describe('Migration', () => {
     it('should not throw when packages are missing', async () => {
       const migrator = new Migrator({
         versions: (p) => (p === '@nrwl/nest' ? null : '1.0.0'),
-        fetch: (p, v) =>
+        fetch: (_p, _v) =>
           Promise.resolve({
             version: '2.0.0',
             packageJsonUpdates: { one: { version: '2.0.0', packages: {} } },
@@ -341,7 +341,7 @@ describe('Migration', () => {
     it('should only fetch packages that are installed', async () => {
       const migrator = new Migrator({
         versions: (p) => (p === '@nrwl/nest' ? null : '1.0.0'),
-        fetch: (p, v) => {
+        fetch: (p, _v) => {
           if (p === '@nrwl/nest') {
             throw new Error('Boom');
           }
@@ -365,7 +365,7 @@ describe('Migration', () => {
           if (p === 'child') return '1.0.0';
           return null;
         },
-        fetch: (p, v) => {
+        fetch: (p, _v) => {
           if (p === 'parent') {
             return Promise.resolve({
               version: '2.0.0',

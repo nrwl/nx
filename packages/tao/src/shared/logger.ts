@@ -8,7 +8,7 @@ const NX_PREFIX = `${terminal.cyan('>')} ${terminal.inverse(
 const NX_ERROR = terminal.inverse(terminal.bold(terminal.red(' ERROR ')));
 
 let logger: logging.Logger;
-export const getLogger = (isVerbose: boolean = false): logging.Logger => {
+export const getLogger = (isVerbose = false): logging.Logger => {
   if (!logger) {
     logger = createConsoleLogger(isVerbose, process.stdout, process.stderr, {
       warn: (s) => terminal.bold(terminal.yellow(s)),

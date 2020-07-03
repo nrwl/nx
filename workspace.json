@@ -65,6 +65,18 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/tao/.eslintrc",
+            "tsConfig": [
+              "packages/tao/tsconfig.lib.json",
+              "packages/tao/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
+          }
         }
       }
     },

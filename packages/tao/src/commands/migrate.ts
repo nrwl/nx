@@ -7,13 +7,13 @@ import { NodePackageName } from '@angular-devkit/schematics/tasks/package-manage
 import { NodeModulesEngineHost } from '@angular-devkit/schematics/tools';
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
+import * as minimist from 'minimist';
 import { dirname, extname, join, resolve } from 'path';
 import { gt, lte } from 'semver';
 import * as stripJsonComments from 'strip-json-comments';
 import { dirSync } from 'tmp';
 import { getLogger } from '../shared/logger';
 import { convertToCamelCase, handleErrors } from '../shared/params';
-import minimist = require('minimist');
 
 export type MigrationsJson = {
   version: string;
@@ -31,6 +31,39 @@ export type MigrationsJson = {
     };
   };
 };
+
+export function normalizeVersion(version: string) {
+  const [v, t] = version.split('-');
+  const [major, minor, patch] = v.split('.');
+  const newV = `${major || 0}.${minor || 0}.${patch || 0}`;
+  const newVersion = t ? `${newV}-${t}` : newV;
+
+  try {
+    gt(newVersion, '0.0.0');
+    return newVersion;
+  } catch (e) {
+    try {
+      gt(newV, '0.0.0');
+      return newV;
+    } catch (e) {
+      const withoutPatch = `${major || 0}.${minor || 0}.0`;
+      try {
+        if (gt(withoutPatch, '0.0.0')) {
+          return withoutPatch;
+        }
+      } catch (e) {
+        const withoutPatchAndMinor = `${major || 0}.0.0`;
+        try {
+          if (gt(withoutPatchAndMinor, '0.0.0')) {
+            return withoutPatchAndMinor;
+          }
+        } catch (e) {
+          return '0.0.0';
+        }
+      }
+    }
+  }
+}
 
 export class Migrator {
   private readonly versions: (p: string) => string;
@@ -246,75 +279,25 @@ function normalizeVersionWithTagCheck(version: string) {
   return normalizeVersion(version);
 }
 
-export function normalizeVersion(version: string) {
-  const [v, t] = version.split('-');
-  const [major, minor, patch] = v.split('.');
-  const newV = `${major || 0}.${minor || 0}.${patch || 0}`;
-  const newVersion = t ? `${newV}-${t}` : newV;
-
-  try {
-    gt(newVersion, '0.0.0');
-    return newVersion;
-  } catch (e) {
-    try {
-      gt(newV, '0.0.0');
-      return newV;
-    } catch (e) {
-      const withoutPatch = `${major || 0}.${minor || 0}.0`;
-      try {
-        if (gt(withoutPatch, '0.0.0')) {
-          return withoutPatch;
-        }
-      } catch (e) {
-        const withoutPatchAndMinor = `${major || 0}.0.0`;
-        try {
-          if (gt(withoutPatchAndMinor, '0.0.0')) {
-            return withoutPatchAndMinor;
-          }
-        } catch (e) {
-          return '0.0.0';
-        }
-      }
+function versionOverrides(overrides: string, param: string) {
+  const res = {};
+  overrides.split(',').forEach((p) => {
+    const split = p.lastIndexOf('@');
+    if (split === -1 || split === 0) {
+      throw new Error(
+        `Incorrect '${param}' section. Use --${param}="package@version"`
+      );
     }
-  }
-}
-
-type GenerateMigrations = {
-  type: 'generateMigrations';
-  targetPackage: string;
-  targetVersion: string;
-  from: { [k: string]: string };
-  to: { [k: string]: string };
-};
-type RunMigrations = { type: 'runMigrations'; runMigrations: string };
-
-export function parseMigrationsOptions(
-  args: string[]
-): GenerateMigrations | RunMigrations {
-  const options = convertToCamelCase(
-    minimist(args, {
-      string: ['runMigrations', 'from', 'to'],
-      alias: {
-        runMigrations: 'run-migrations',
-      },
-    }) as any
-  );
-  if (!options.runMigrations) {
-    const from = options.from ? versionOverrides(options.from, 'from') : {};
-    const to = options.to ? versionOverrides(options.to, 'to') : {};
-    const { targetPackage, targetVersion } = parseTargetPackageAndVersion(
-      args[0]
-    );
-    return {
-      type: 'generateMigrations',
-      targetPackage,
-      targetVersion,
-      from,
-      to,
-    };
-  } else {
-    return { type: 'runMigrations', runMigrations: options.runMigrations };
-  }
+    const selectedPackage = p.substring(0, split).trim();
+    const selectedVersion = p.substring(split + 1).trim();
+    if (!selectedPackage || !selectedVersion) {
+      throw new Error(
+        `Incorrect '${param}' section. Use --${param}="package@version"`
+      );
+    }
+    res[selectedPackage] = normalizeVersionWithTagCheck(selectedVersion);
+  });
+  return res;
 }
 
 function parseTargetPackageAndVersion(args: string) {
@@ -356,25 +339,47 @@ function parseTargetPackageAndVersion(args: string) {
   }
 }
 
-function versionOverrides(overrides: string, param: string) {
-  const res = {};
-  overrides.split(',').forEach((p) => {
-    const split = p.lastIndexOf('@');
-    if (split === -1 || split === 0) {
-      throw new Error(
-        `Incorrect '${param}' section. Use --${param}="package@version"`
-      );
-    }
-    const selectedPackage = p.substring(0, split).trim();
-    const selectedVersion = p.substring(split + 1).trim();
-    if (!selectedPackage || !selectedVersion) {
-      throw new Error(
-        `Incorrect '${param}' section. Use --${param}="package@version"`
-      );
-    }
-    res[selectedPackage] = normalizeVersionWithTagCheck(selectedVersion);
-  });
-  return res;
+type GenerateMigrations = {
+  type: 'generateMigrations';
+  targetPackage: string;
+  targetVersion: string;
+  from: { [k: string]: string };
+  to: { [k: string]: string };
+};
+type RunMigrations = { type: 'runMigrations'; runMigrations: string };
+
+export function parseMigrationsOptions(
+  args: string[]
+): GenerateMigrations | RunMigrations {
+  const options = convertToCamelCase(
+    minimist(args, {
+      string: ['runMigrations', 'from', 'to'],
+      alias: {
+        runMigrations: 'run-migrations',
+      },
+    })
+  );
+  if (!options.runMigrations) {
+    const from = options.from
+      ? versionOverrides(options.from as string, 'from')
+      : {};
+    const to = options.to ? versionOverrides(options.to as string, 'to') : {};
+    const { targetPackage, targetVersion } = parseTargetPackageAndVersion(
+      args[0]
+    );
+    return {
+      type: 'generateMigrations',
+      targetPackage,
+      targetVersion,
+      from,
+      to,
+    };
+  } else {
+    return {
+      type: 'runMigrations',
+      runMigrations: options.runMigrations as string,
+    };
+  }
 }
 
 function versions(root: string, from: { [p: string]: string }) {
@@ -395,7 +400,7 @@ function versions(root: string, from: { [p: string]: string }) {
 
 // testing-fetch-start
 function createFetcher(logger: logging.Logger) {
-  let cache = {};
+  const cache = {};
   return async function f(
     packageName: string,
     packageVersion: string
@@ -457,7 +462,14 @@ function createFetcher(logger: logging.Logger) {
 
 // testing-fetch-end
 
-function createMigrationsFile(root: string, migrations: any[]) {
+function createMigrationsFile(
+  root: string,
+  migrations: {
+    package: string;
+    name: string;
+    version: string;
+  }[]
+) {
   writeFileSync(
     join(root, 'migrations.json'),
     JSON.stringify({ migrations }, null, 2)
@@ -595,6 +607,7 @@ class MigrationEngineHost extends NodeModulesEngineHost {
       collectionPath = require.resolve(name);
     } else {
       const packageJsonPath = require.resolve(join(name, 'package.json'));
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const packageJson = require(packageJsonPath);
       let pkgJsonSchematics = packageJson['nx-migrations'];
       if (!pkgJsonSchematics) {
@@ -668,11 +681,7 @@ async function runMigrations(
   await p;
 }
 
-export async function migrate(
-  root: string,
-  args: string[],
-  isVerbose: boolean = false
-) {
+export async function migrate(root: string, args: string[], isVerbose = false) {
   const logger = getLogger(isVerbose);
 
   return handleErrors(logger, isVerbose, async () => {
