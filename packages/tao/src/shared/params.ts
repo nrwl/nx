@@ -1,12 +1,19 @@
 import { logging } from '@angular-devkit/core';
 import { UnsuccessfulWorkflowExecution } from '@angular-devkit/schematics';
-// @ts-ignore
-import levenshtein = require('fast-levenshtein');
+import * as levenshtein from 'fast-levenshtein';
+import { ParsedArgs } from 'minimist';
 
 export type Schema = {
-  properties: { [p: string]: any };
-  required: string[];
-  description: string;
+  properties: {
+    [p: string]: {
+      type: string;
+      alias?: string;
+      description?: string;
+      default?: string | number | boolean | string[];
+    };
+  };
+  required?: string[];
+  description?: string;
 };
 
 export type Unmatched = {
@@ -16,7 +23,7 @@ export type Unmatched = {
 
 export type Options = {
   '--'?: Unmatched[];
-  [k: string]: any;
+  [k: string]: string | number | boolean | string[] | Unmatched[];
 };
 
 export async function handleErrors(
@@ -39,13 +46,6 @@ export async function handleErrors(
   }
 }
 
-export function convertToCamelCase(parsed: Options): Options {
-  return Object.keys(parsed).reduce(
-    (m, c) => ({ ...m, [camelCase(c)]: parsed[c] }),
-    {}
-  );
-}
-
 function camelCase(input: string): string {
   if (input.indexOf('-') > 1) {
     return input
@@ -54,6 +54,13 @@ function camelCase(input: string): string {
   } else {
     return input;
   }
+}
+
+export function convertToCamelCase(parsed: ParsedArgs): Options {
+  return Object.keys(parsed).reduce(
+    (m, c) => ({ ...m, [camelCase(c)]: parsed[c] }),
+    {}
+  );
 }
 
 /**

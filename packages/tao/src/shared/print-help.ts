@@ -1,6 +1,12 @@
 import { logging, tags, terminal } from '@angular-devkit/core';
 import { Schema } from './params';
 
+function formatOption(name: string, description: string) {
+  return `  --${(name + '                     ').substr(0, 22)}${terminal.grey(
+    description
+  )}`;
+}
+
 export function printHelp(
   header: string,
   schema: Schema,
@@ -26,12 +32,6 @@ ${terminal.bold('Options')}:
 ${args}
 ${formatOption('help', 'Show available options for project target.')}
   `);
-}
-
-function formatOption(name: string, description: string) {
-  return `  --${(name + '                     ').substr(0, 22)}${terminal.grey(
-    description
-  )}`;
 }
 
 export let commandName = 'nx';

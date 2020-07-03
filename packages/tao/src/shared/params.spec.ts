@@ -1,8 +1,10 @@
+import { ParsedArgs } from 'minimist';
 import {
   coerceTypes,
   convertAliases,
   convertToCamelCase,
   lookupUnmatched,
+  Schema,
 } from './params';
 
 describe('params', () => {
@@ -15,7 +17,7 @@ describe('params', () => {
           c: { type: 'boolean' },
           d: { type: 'string' },
         },
-      } as any);
+      } as Schema);
 
       expect(opts).toEqual({
         a: true,
@@ -32,7 +34,7 @@ describe('params', () => {
           b: { type: 'number' },
           c: { type: 'string' },
         },
-      } as any);
+      } as Schema);
 
       expect(opts).toEqual({
         a: 1,
@@ -47,7 +49,7 @@ describe('params', () => {
           a: { type: 'array' },
           b: { type: 'string' },
         },
-      } as any);
+      } as Schema);
 
       expect(opts).toEqual({
         a: ['one', 'two'],
@@ -60,8 +62,9 @@ describe('params', () => {
     it('should convert dash case to camel case', () => {
       expect(
         convertToCamelCase({
+          _: undefined,
           'one-two': 1,
-        })
+        } as ParsedArgs)
       ).toEqual({
         oneTwo: 1,
       });
@@ -70,6 +73,7 @@ describe('params', () => {
     it('should not convert camel case', () => {
       expect(
         convertToCamelCase({
+          _: undefined,
           oneTwo: 1,
         })
       ).toEqual({
@@ -80,6 +84,7 @@ describe('params', () => {
     it('should handle mixed case', () => {
       expect(
         convertToCamelCase({
+          _: undefined,
           'one-Two': 1,
         })
       ).toEqual({

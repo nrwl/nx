@@ -1,14 +1,33 @@
-import { virtualFs } from '@angular-devkit/core';
+import { Path, virtualFs } from '@angular-devkit/core';
 import { HostTree } from '@angular-devkit/schematics';
 import { execSync } from 'child_process';
+import { Stats } from 'fs';
+
+function fileExists(
+  host: virtualFs.Host<Stats>,
+  fileName: string
+): Promise<boolean> {
+  return host.exists(fileName as Path).toPromise();
+}
+
+function isPackageManagerInstalled(packageManager: string) {
+  try {
+    execSync(`${packageManager} --version`, {
+      stdio: ['ignore', 'ignore', 'ignore'],
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
 
 export async function detectPackageManager(
-  host: virtualFs.Host<any>
+  host: virtualFs.Host<Stats>
 ): Promise<string> {
   const hostTree = new HostTree(host);
   if (hostTree.get('workspace.json')) {
     const workspaceJson: { cli: { packageManager: string } } = JSON.parse(
-      hostTree.read('workspace.json')!.toString()
+      hostTree.read('workspace.json').toString()
     );
     if (workspaceJson.cli && workspaceJson.cli.packageManager) {
       return workspaceJson.cli.packageManager;
@@ -38,22 +57,4 @@ export async function detectPackageManager(
   }
 
   return 'npm';
-}
-
-function fileExists(
-  host: virtualFs.Host<any>,
-  fileName: string
-): Promise<boolean> {
-  return host.exists(fileName as any).toPromise();
-}
-
-function isPackageManagerInstalled(packageManager: string) {
-  try {
-    execSync(`${packageManager} --version`, {
-      stdio: ['ignore', 'ignore', 'ignore'],
-    });
-    return true;
-  } catch (e) {
-    return false;
-  }
 }
