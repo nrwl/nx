@@ -1,8 +1,7 @@
 module.exports = {
   name: '<%= project %>',
   preset: '<%= offsetFromRoot %>jest.config.js',
-  coverageDirectory: '<%= offsetFromRoot %>coverage/<%= projectRoot %>',
-  <% if(testEnvironment) { %>
+  coverageDirectory: '<%= offsetFromRoot %>coverage/<%= projectRoot %>',<% if(testEnvironment) { %>
   testEnvironment: '<%= testEnvironment %>',
   <% } %><% if(setupFile !== 'none') { %>
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
@@ -17,12 +16,8 @@ module.exports = {
     }
   },
   <% } %><% if (supportTsx) { %>transform: {
-    '^.+\\.[tj]sx?$':
-    <% if (transformer == 'babel-jest') { %>
-        [ 'babel-jest', { cwd: __dirname, configFile: './babel-jest.config.json' }]
-    <% } else { %>
-        'ts-jest'
-    <% } %>
+    '^.+\\.[tj]sx?$':<% if (transformer == 'babel-jest') { %>[ 'babel-jest',
+    { cwd: __dirname, configFile: './babel-jest.config.json' }]<% } else { %> 'ts-jest' <% } %>
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   <% } %><% if(!skipSerializers) { %>snapshotSerializers: [
