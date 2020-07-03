@@ -24,6 +24,11 @@
       "version": "9.2.0-beta.3",
       "description": "Update jest to v25",
       "factory": "./src/migrations/update-9-2-0/update-9-2-0"
+    },
+    "update-10.0.0": {
+      "version": "10.0.0-alpha",
+      "description": "update jest configs to include env files",
+      "factory": "./src/migrations/update-10-0-0/update-jest-configs.ts"
     }
   },
   "packageJsonUpdates": {

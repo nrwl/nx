@@ -136,7 +136,7 @@ Run all tests serially in the current process (rather than creating a worker poo
 
 Type: `string`
 
-The name of a setup file used by Jest. (https://jestjs.io/docs/en/configuration#setupfilesafterenv-array)
+[Deprecated] The name of a setup file used by Jest. (use Jest config file https://jestjs.io/docs/en/configuration#setupfilesafterenv-array)
 
 ### showConfig
 

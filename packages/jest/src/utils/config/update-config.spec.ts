@@ -2,10 +2,11 @@ import { Tree } from '@angular-devkit/schematics';
 import {
   addPropertyToJestConfig,
   getPropertyValueInJestConfig,
-  jestConfigObject,
+  removePropertyFromJestConfig,
 } from './update-config';
 import * as stripJsonComments from 'strip-json-comments';
 import * as ts from 'typescript';
+import { jestConfigObject } from './functions';
 
 function getJsonObj(node: ts.Node) {
   const nodeText = stripJsonComments(node.getFullText());
@@ -24,7 +25,6 @@ describe('Update jest.config.js', () => {
       module.exports = {
         name: 'test',
         boolean: false,
-        numeric: 0,
         preset: 'nrwl-preset',
         "update-me": "hello",
         alreadyExistingArray: ['something'],
@@ -36,7 +36,8 @@ describe('Update jest.config.js', () => {
           'nested-object': {
             childArray: ['value1', 'value2']
           }
-        }
+        },
+        numeric: 0
       }
     `
     );
@@ -265,6 +266,37 @@ describe('Update jest.config.js', () => {
         'doesntexist'
       );
       expect(value).toEqual(null);
+    });
+  });
+
+  describe('removing values', () => {
+    it('should remove single nested properties in the jest config, ', () => {
+      removePropertyFromJestConfig(
+        host,
+        'jest.config.js',
+        'alreadyExistingObject.nested-object.childArray'
+      );
+      const moduleObjectLiteral = jestConfigObject(host, 'jest.config.js');
+      const json = getJsonObj(moduleObjectLiteral);
+      expect(
+        json['alreadyExistingObject']['nested-object']['childArray']
+      ).toEqual(undefined);
+    });
+    it('should remove single properties', () => {
+      removePropertyFromJestConfig(host, 'jest.config.js', 'update-me');
+      const moduleObjectLiteral = jestConfigObject(host, 'jest.config.js');
+      const json = getJsonObj(moduleObjectLiteral);
+      expect(json['update-me']).toEqual(undefined);
+    });
+    it('should remove a whole object', () => {
+      removePropertyFromJestConfig(
+        host,
+        'jest.config.js',
+        'alreadyExistingObject'
+      );
+      const moduleObjectLiteral = jestConfigObject(host, 'jest.config.js');
+      const json = getJsonObj(moduleObjectLiteral);
+      expect(json['alreadyExistingObject']).toEqual(undefined);
     });
   });
 });

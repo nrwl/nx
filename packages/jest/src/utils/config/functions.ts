@@ -1,61 +1,12 @@
 import * as ts from 'typescript';
+import { findNodes, InsertChange, ReplaceChange } from '@nrwl/workspace';
 import { Tree } from '@angular-devkit/schematics';
-import {
-  findNodes,
-  InsertChange,
-  ReplaceChange,
-} from '@nrwl/workspace/src/utils/ast-utils';
-import { insert } from '@nrwl/workspace';
-
-/**
- * Should be used to get the jest config object.
- *
- * @param host
- * @param path
- */
-export function jestConfigObject(
-  host: Tree,
-  path: string
-): ts.ObjectLiteralExpression {
-  if (!host.exists(path)) {
-    throw new Error(`Cannot find '${path}' in your workspace.`);
-  }
-
-  const fileContent = host.read(path).toString('utf-8');
-
-  const sourceFile = ts.createSourceFile(
-    'jest.config.js',
-    fileContent,
-    ts.ScriptTarget.Latest,
-    true
-  );
-
-  const expressions = findNodes(
-    sourceFile,
-    ts.SyntaxKind.BinaryExpression
-  ) as ts.BinaryExpression[];
-
-  const moduleExports = expressions.find(
-    (node) =>
-      node.left.getText() === 'module.exports' &&
-      node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
-      ts.isObjectLiteralExpression(node.right)
-  );
-
-  if (!moduleExports) {
-    throw new Error(
-      `The provided jest config file does not have a standard module.exports expression. See https://jestjs.io/docs/en/configuration for more details.`
-    );
-  }
-
-  return moduleExports.right as ts.ObjectLiteralExpression;
-}
 
 function trailingCommaNeeded(needed: boolean) {
   return needed ? ',' : '';
 }
 
-function insertChange(
+function createInsertChange(
   path: string,
   value: unknown,
   position: number,
@@ -84,7 +35,7 @@ function findPropertyAssignment(
   }) as ts.PropertyAssignment | undefined;
 }
 
-function addOrUpdateProperty(
+export function addOrUpdateProperty(
   object: ts.ObjectLiteralExpression,
   properties: string[],
   value: unknown,
@@ -125,7 +76,7 @@ function addOrUpdateProperty(
       }
 
       return [
-        insertChange(
+        createInsertChange(
           path,
           value,
           arrayLiteral.elements.end,
@@ -150,7 +101,7 @@ function addOrUpdateProperty(
       );
     }
     return [
-      insertChange(
+      createInsertChange(
         path,
         `${JSON.stringify(propertyName)}: ${value}`,
         object.properties.end,
@@ -160,10 +111,10 @@ function addOrUpdateProperty(
   }
 }
 
-function getPropertyValue(
+export function getProperty(
   object: ts.ObjectLiteralExpression,
   properties: string[]
-): unknown {
+): ts.PropertyAssignment | null {
   const propertyName = properties.shift();
   const propertyAssignment = findPropertyAssignment(object, propertyName);
 
@@ -173,55 +124,59 @@ function getPropertyValue(
       propertyAssignment.initializer.kind ===
         ts.SyntaxKind.ObjectLiteralExpression
     ) {
-      return getPropertyValue(
+      return getProperty(
         propertyAssignment.initializer as ts.ObjectLiteralExpression,
         properties
       );
     }
-    return JSON.parse(
-      propertyAssignment.initializer.getText().replace(/'/g, '"')
-    );
+    return propertyAssignment;
   } else {
     return null;
   }
 }
 
 /**
- * Add a property to the jest config
- * @param host
- * @param path - path to the jest config file
- * @param propertyName - Property to update. Can be dot delimited to access deeply nested properties
- * @param value
- */
-export function addPropertyToJestConfig(
-  host: Tree,
-  path: string,
-  propertyName: string,
-  value: unknown
-) {
-  const configObject = jestConfigObject(host, path);
-  const properties = propertyName.split('.');
-  const changes = addOrUpdateProperty(
-    configObject,
-    properties,
-    JSON.stringify(value),
-    path
-  );
-  insert(host, path, changes);
-}
-
-/**
- * Get a property value from the jest config
+ * Should be used to get the jest config object.
+ *
  * @param host
  * @param path
- * @param propertyName - Property to retrieve. Can be dot delimited to access deeply nested properties
  */
-export function getPropertyValueInJestConfig(
+export function jestConfigObject(
   host: Tree,
-  path: string,
-  propertyName: string
-) {
-  const configObject = jestConfigObject(host, path);
+  path: string
+): ts.ObjectLiteralExpression {
+  if (!host.exists(path)) {
+    throw new Error(`Cannot find '${path}' in your workspace.`);
+  }
 
-  return getPropertyValue(configObject, propertyName.split('.'));
+  const fileContent = host.read(path).toString('utf-8');
+
+  const sourceFile = ts.createSourceFile(
+    'jest.config.js',
+    fileContent,
+    ts.ScriptTarget.Latest,
+    true
+  );
+
+  const expressions = findNodes(
+    sourceFile,
+    ts.SyntaxKind.BinaryExpression
+  ) as ts.BinaryExpression[];
+
+  const moduleExports = expressions.find(
+    (node) =>
+      node.left.getText() === 'module.exports' &&
+      node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+      ts.isObjectLiteralExpression(node.right)
+  );
+
+  if (!moduleExports) {
+    throw new Error(
+      `
+       The provided jest config file does not have the expected 'module.exports' expression. 
+       See https://jestjs.io/docs/en/configuration for more details.`
+    );
+  }
+
+  return moduleExports.right as ts.ObjectLiteralExpression;
 }

@@ -33,8 +33,9 @@
       "type": "string"
     },
     "setupFile": {
-      "description": "The name of a setup file used by Jest. (https://jestjs.io/docs/en/configuration#setupfilesafterenv-array)",
-      "type": "string"
+      "description": "[Deprecated] The name of a setup file used by Jest. (use Jest config file https://jestjs.io/docs/en/configuration#setupfilesafterenv-array)",
+      "type": "string",
+      "x-deprecated": true
     },
     "bail": {
       "alias": "b",
