@@ -1,6 +1,5 @@
-import { logging } from '@angular-devkit/core';
+import { logging, strings } from '@angular-devkit/core';
 import { UnsuccessfulWorkflowExecution } from '@angular-devkit/schematics';
-import * as levenshtein from 'fast-levenshtein';
 import { ParsedArgs } from 'minimist';
 
 export type Schema = {
@@ -133,7 +132,7 @@ export function lookupUnmatched(opts: Options, schema: Schema): Options {
 
     opts['--'].forEach((unmatched) => {
       unmatched.possible = props.filter(
-        (p) => levenshtein.get(p, unmatched.name) < 3
+        (p) => strings.levenshtein(p, unmatched.name) < 3
       );
     });
   }
