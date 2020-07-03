@@ -2,6 +2,7 @@ import { Tree } from '@angular-devkit/schematics';
 import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { callRule, runSchematic } from '../../utils/testing';
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 describe('jestProject', () => {
   let appTree: Tree;
@@ -84,8 +85,8 @@ describe('jestProject', () => {
       },
       appTree
     );
-    expect(resultTree.readContent('libs/lib1/jest.config.js'))
-      .toBe(`module.exports = {
+    expect(stripIndents`${resultTree.readContent('libs/lib1/jest.config.js')}`)
+      .toBe(stripIndents`module.exports = {
   name: 'lib1',
   preset: '../../jest.config.js',
   coverageDirectory: '../../coverage/libs/lib1',
