@@ -61,16 +61,6 @@ describe('Jest Builder', () => {
       expect(runCLI).toHaveBeenCalledWith(
         {
           _: [],
-          globals: JSON.stringify({
-            'ts-jest': {
-              tsConfig: '/root/tsconfig.test.json',
-              stringifyContentPathRegex: '\\.(html|svg)$',
-              astTransformers: [
-                'jest-preset-angular/build/InlineFilesTransformer',
-                'jest-preset-angular/build/StripStylesTransformer',
-              ],
-            },
-          }),
           testPathPattern: [],
           watch: false,
         },
@@ -103,16 +93,6 @@ describe('Jest Builder', () => {
       expect(runCLI).toHaveBeenCalledWith(
         {
           _: ['lib.spec.ts'],
-          globals: JSON.stringify({
-            'ts-jest': {
-              tsConfig: '/root/tsconfig.test.json',
-              stringifyContentPathRegex: '\\.(html|svg)$',
-              astTransformers: [
-                'jest-preset-angular/build/InlineFilesTransformer',
-                'jest-preset-angular/build/StripStylesTransformer',
-              ],
-            },
-          }),
           coverage: false,
           runInBand: true,
           testNamePattern: 'should load',
@@ -147,16 +127,6 @@ describe('Jest Builder', () => {
       expect(runCLI).toHaveBeenCalledWith(
         {
           _: ['file1.ts', 'file2.ts'],
-          globals: JSON.stringify({
-            'ts-jest': {
-              tsConfig: '/root/tsconfig.test.json',
-              stringifyContentPathRegex: '\\.(html|svg)$',
-              astTransformers: [
-                'jest-preset-angular/build/InlineFilesTransformer',
-                'jest-preset-angular/build/StripStylesTransformer',
-              ],
-            },
-          }),
           coverage: false,
           findRelatedTests: true,
           runInBand: true,
@@ -206,16 +176,6 @@ describe('Jest Builder', () => {
       expect(runCLI).toHaveBeenCalledWith(
         {
           _: [],
-          globals: JSON.stringify({
-            'ts-jest': {
-              tsConfig: '/root/tsconfig.test.json',
-              stringifyContentPathRegex: '\\.(html|svg)$',
-              astTransformers: [
-                'jest-preset-angular/build/InlineFilesTransformer',
-                'jest-preset-angular/build/StripStylesTransformer',
-              ],
-            },
-          }),
           coverage: true,
           bail: 1,
           color: false,
@@ -260,16 +220,6 @@ describe('Jest Builder', () => {
       expect(runCLI).toHaveBeenCalledWith(
         {
           _: [],
-          globals: JSON.stringify({
-            'ts-jest': {
-              tsConfig: '/root/tsconfig.test.json',
-              stringifyContentPathRegex: '\\.(html|svg)$',
-              astTransformers: [
-                'jest-preset-angular/build/InlineFilesTransformer',
-                'jest-preset-angular/build/StripStylesTransformer',
-              ],
-            },
-          }),
           maxWorkers: '50%',
           testPathPattern: [],
         },
@@ -292,16 +242,6 @@ describe('Jest Builder', () => {
       expect(runCLI).toHaveBeenCalledWith(
         {
           _: [],
-          globals: JSON.stringify({
-            'ts-jest': {
-              tsConfig: '/root/tsconfig.test.json',
-              stringifyContentPathRegex: '\\.(html|svg)$',
-              astTransformers: [
-                'jest-preset-angular/build/InlineFilesTransformer',
-                'jest-preset-angular/build/StripStylesTransformer',
-              ],
-            },
-          }),
           setupFilesAfterEnv: ['/root/test-setup.ts'],
           testPathPattern: [],
           watch: false,
@@ -350,18 +290,6 @@ describe('Jest Builder', () => {
       expect(runCLI).toHaveBeenCalledWith(
         {
           _: [],
-          globals: JSON.stringify({
-            hereToStay: true,
-            'ts-jest': {
-              diagnostics: false,
-              tsConfig: '/root/tsconfig.test.json',
-              stringifyContentPathRegex: '\\.(html|svg)$',
-              astTransformers: [
-                'jest-preset-angular/build/InlineFilesTransformer',
-                'jest-preset-angular/build/StripStylesTransformer',
-              ],
-            },
-          }),
           setupFilesAfterEnv: ['/root/test-setup.ts'],
           testPathPattern: [],
           watch: false,
@@ -400,7 +328,6 @@ describe('Jest Builder', () => {
       expect(runCLI).toHaveBeenCalledWith(
         {
           _: [],
-          globals: '{}',
           testPathPattern: [],
           watch: false,
         },

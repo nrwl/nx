@@ -28,6 +28,7 @@ function run(
   const jestConfig: {
     transform: any;
     globals: any;
+    setupFilesAfterEnv: any;
     // eslint-disable-next-line @typescript-eslint/no-var-requires
   } = require(options.jestConfig);
 
@@ -38,8 +39,6 @@ function run(
         'See ts-jest documentation for babel integration: https://kulshekhar.github.io/ts-jest/user/config/babelConfig'
     );
   }
-
-  const globals = jestConfig.globals || {};
 
   const config: any = {
     _: [],
@@ -69,8 +68,16 @@ function run(
     useStderr: options.useStderr,
     watch: options.watch,
     watchAll: options.watchAll,
-    globals: JSON.stringify(globals),
   };
+
+  // for backwards compatibility
+  if (options.setupFile) {
+    const setupFilesAfterEnvSet = new Set([
+      ...(jestConfig.setupFilesAfterEnv ?? []),
+      path.resolve(context.workspaceRoot, options.setupFile),
+    ]);
+    config.setupFilesAfterEnv = Array.from(setupFilesAfterEnvSet);
+  }
 
   if (options.testFile) {
     config._.push(options.testFile);

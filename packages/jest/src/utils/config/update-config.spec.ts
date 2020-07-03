@@ -4,14 +4,7 @@ import {
   getPropertyValueInJestConfig,
   removePropertyFromJestConfig,
 } from './update-config';
-import * as stripJsonComments from 'strip-json-comments';
-import * as ts from 'typescript';
 import { jestConfigObject } from './functions';
-
-function getJsonObj(node: ts.Node) {
-  const nodeText = stripJsonComments(node.getFullText());
-  return JSON.parse(JSON.stringify(eval(`(${nodeText})`)));
-}
 
 describe('Update jest.config.js', () => {
   let host: Tree;
@@ -47,25 +40,21 @@ describe('Update jest.config.js', () => {
     it('should be able to update an existing property with a primitive value ', () => {
       addPropertyToJestConfig(host, 'jest.config.js', 'name', 'test-case');
 
-      let moduleObjectLiteral = jestConfigObject(host, 'jest.config.js');
-      let json = getJsonObj(moduleObjectLiteral);
+      let json = jestConfigObject(host, 'jest.config.js');
       expect(json.name).toBe('test-case');
 
       addPropertyToJestConfig(host, 'jest.config.js', 'boolean', true);
-      moduleObjectLiteral = jestConfigObject(host, 'jest.config.js');
-      json = getJsonObj(moduleObjectLiteral);
+      json = jestConfigObject(host, 'jest.config.js');
       expect(json.boolean).toBe(true);
 
       addPropertyToJestConfig(host, 'jest.config.js', 'numeric', 1);
-      moduleObjectLiteral = jestConfigObject(host, 'jest.config.js');
-      json = getJsonObj(moduleObjectLiteral);
+      json = jestConfigObject(host, 'jest.config.js');
       expect(json.numeric).toBe(1);
     });
 
     it('should be able to insert a new property with a primitive value', () => {
       addPropertyToJestConfig(host, 'jest.config.js', 'bail', 0);
-      const moduleObjectLiteral = jestConfigObject(host, 'jest.config.js');
-      const json = getJsonObj(moduleObjectLiteral);
+      const json = jestConfigObject(host, 'jest.config.js');
       expect(json.bail).toBe(0);
     });
 
@@ -76,8 +65,7 @@ describe('Update jest.config.js', () => {
         'value2',
       ]);
 
-      const moduleObjectLiteral = jestConfigObject(host, 'jest.config.js');
-      const json = getJsonObj(moduleObjectLiteral);
+      const json = jestConfigObject(host, 'jest.config.js');
       expect(json.myArrayProperty).toEqual(arrayValue);
     });
 
@@ -92,8 +80,7 @@ describe('Update jest.config.js', () => {
         objectValue
       );
 
-      const moduleObjectLiteral = jestConfigObject(host, 'jest.config.js');
-      const json = getJsonObj(moduleObjectLiteral);
+      const json = jestConfigObject(host, 'jest.config.js');
       expect(json.myObjectProperty).toEqual(objectValue);
     });
 
@@ -104,8 +91,7 @@ describe('Update jest.config.js', () => {
         'alreadyExistingArray',
         'something new'
       );
-      const moduleObjectLiteral = jestConfigObject(host, 'jest.config.js');
-      const json = getJsonObj(moduleObjectLiteral);
+      const json = jestConfigObject(host, 'jest.config.js');
       expect(json.alreadyExistingArray).toEqual(['something', 'something new']);
     });
 
@@ -116,8 +102,7 @@ describe('Update jest.config.js', () => {
         'alreadyExistingArray',
         'something'
       );
-      const moduleObjectLiteral = jestConfigObject(host, 'jest.config.js');
-      const json = getJsonObj(moduleObjectLiteral);
+      const json = jestConfigObject(host, 'jest.config.js');
       expect(json.alreadyExistingArray).toEqual(['something']);
     });
 
@@ -129,8 +114,7 @@ describe('Update jest.config.js', () => {
         'alreadyExistingObject.something-new',
         newPropertyValue
       );
-      const moduleObjectLiteral = jestConfigObject(host, 'jest.config.js');
-      const json = getJsonObj(moduleObjectLiteral);
+      const json = jestConfigObject(host, 'jest.config.js');
       expect(json.alreadyExistingObject['something-new']).toEqual(
         newPropertyValue
       );
@@ -144,8 +128,7 @@ describe('Update jest.config.js', () => {
         'alreadyExistingObject.nestedProperty.childArray',
         newPropertyValue
       );
-      const moduleObjectLiteral = jestConfigObject(host, 'jest.config.js');
-      const json = getJsonObj(moduleObjectLiteral);
+      const json = jestConfigObject(host, 'jest.config.js');
       expect(json.alreadyExistingObject.nestedProperty.childArray).toEqual([
         'value1',
         'value2',
@@ -161,8 +144,7 @@ describe('Update jest.config.js', () => {
         'alreadyExistingObject.nestedProperty.primitive',
         newPropertyValue
       );
-      const moduleObjectLiteral = jestConfigObject(host, 'jest.config.js');
-      const json = getJsonObj(moduleObjectLiteral);
+      const json = jestConfigObject(host, 'jest.config.js');
       expect(json.alreadyExistingObject.nestedProperty.primitive).toEqual(
         newPropertyValue
       );
@@ -175,13 +157,11 @@ describe('Update jest.config.js', () => {
         'something-here',
         'newPropertyValue'
       );
-      let moduleObjectLiteral = jestConfigObject(host, 'jest.config.js');
-      let json = getJsonObj(moduleObjectLiteral);
+      let json = jestConfigObject(host, 'jest.config.js');
       expect(json['something-here']).toEqual('newPropertyValue');
 
       addPropertyToJestConfig(host, 'jest.config.js', 'update-me', 'goodbye');
-      moduleObjectLiteral = jestConfigObject(host, 'jest.config.js');
-      json = getJsonObj(moduleObjectLiteral);
+      json = jestConfigObject(host, 'jest.config.js');
       expect(json['update-me']).toEqual('goodbye');
     });
 
@@ -250,6 +230,22 @@ describe('Update jest.config.js', () => {
         'alreadyExistingObject.nested-object.childArray'
       );
       expect(value).toEqual(['value1', 'value2']);
+
+      value = getPropertyValueInJestConfig(
+        host,
+        'jest.config.js',
+        'alreadyExistingObject'
+      );
+      //prettier-ignore
+      expect(value).toEqual({
+        nestedProperty: {
+          primitive: 'string',
+          childArray: ['value1', 'value2']
+        },
+        'nested-object': {
+          childArray: ['value1', 'value2']
+        }
+      });
     });
 
     it('should return null if the property does not exist', () => {
@@ -276,16 +272,14 @@ describe('Update jest.config.js', () => {
         'jest.config.js',
         'alreadyExistingObject.nested-object.childArray'
       );
-      const moduleObjectLiteral = jestConfigObject(host, 'jest.config.js');
-      const json = getJsonObj(moduleObjectLiteral);
+      const json = jestConfigObject(host, 'jest.config.js');
       expect(
         json['alreadyExistingObject']['nested-object']['childArray']
       ).toEqual(undefined);
     });
     it('should remove single properties', () => {
       removePropertyFromJestConfig(host, 'jest.config.js', 'update-me');
-      const moduleObjectLiteral = jestConfigObject(host, 'jest.config.js');
-      const json = getJsonObj(moduleObjectLiteral);
+      const json = jestConfigObject(host, 'jest.config.js');
       expect(json['update-me']).toEqual(undefined);
     });
     it('should remove a whole object', () => {
@@ -294,8 +288,7 @@ describe('Update jest.config.js', () => {
         'jest.config.js',
         'alreadyExistingObject'
       );
-      const moduleObjectLiteral = jestConfigObject(host, 'jest.config.js');
-      const json = getJsonObj(moduleObjectLiteral);
+      const json = jestConfigObject(host, 'jest.config.js');
       expect(json['alreadyExistingObject']).toEqual(undefined);
     });
   });

@@ -144,6 +144,47 @@ describe('jestProject', () => {
         appTree
       );
       expect(resultTree.exists('src/test-setup.ts')).toBeFalsy();
+      expect(resultTree.readContent('libs/lib1/jest.config.js')).not.toContain(
+        `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`
+      );
+    });
+
+    it('should have setupFilesAfterEnv in the jest.config when not "none"', async () => {
+      const resultTree = await runSchematic(
+        'jest-project',
+        {
+          project: 'lib1',
+          setupFile: 'web-components',
+        },
+        appTree
+      );
+      expect(resultTree.readContent('libs/lib1/jest.config.js')).toContain(
+        `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`
+      );
+    });
+
+    it('should have globals ts-jest configured for angular projects', async () => {
+      const resultTree = await runSchematic(
+        'jest-project',
+        {
+          project: 'lib1',
+          setupFile: 'angular',
+        },
+        appTree
+      );
+
+      const jestConfig = resultTree.readContent('libs/lib1/jest.config.js');
+      expect(jestConfig).toContain(
+        `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`
+      );
+      expect(jestConfig).toContain(`globals: {
+    'ts-jest': {
+      tsConfig: '<rootDir>/tsconfig.spec.json',
+      stringifyContentPathRegex: '\\\\.(html|svg)$',
+      astTransformers: [
+        'jest-preset-angular/build/InlineFilesTransformer',
+        'jest-preset-angular/build/StripStylesTransformer'
+      ],`);
     });
 
     it('should not list the setup file in workspace.json', async () => {

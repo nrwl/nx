@@ -1,14 +1,12 @@
 module.exports = {
   name: '<%= project %>',
   preset: '<%= offsetFromRoot %>jest.config.js',
+  coverageDirectory: '<%= offsetFromRoot %>coverage/<%= projectRoot %>',
   <% if(testEnvironment) { %>
   testEnvironment: '<%= testEnvironment %>',
-  <% } %>
-  <% if(setupFile !== 'none') { %>
-  setupFilesAfterEnv: ['<rootDir>/src/test-setup'],
-  <% } %>
-  <% if (setupFile === 'angular') { %>
-  globals: {
+  <% } %><% if(setupFile !== 'none') { %>
+  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+  <% } %><% if (setupFile === 'angular') { %>globals: {
     'ts-jest': {
       tsConfig: '<rootDir>/tsconfig.spec.json',
       stringifyContentPathRegex: '\\.(html|svg)$',
@@ -18,9 +16,7 @@ module.exports = {
       ],
     }
   },
-  <% } %>
-  <% if (supportTsx) { %>
-  transform: {
+  <% } %><% if (supportTsx) { %>transform: {
     '^.+\\.[tj]sx?$':
     <% if (transformer == 'babel-jest') { %>
         [ 'babel-jest', { cwd: __dirname, configFile: './babel-jest.config.json' }]
@@ -29,10 +25,7 @@ module.exports = {
     <% } %>
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
-  <% } %>
-  coverageDirectory: '<%= offsetFromRoot %>coverage/<%= projectRoot %>'
-  <% if(!skipSerializers) { %>,
-  snapshotSerializers: [
+  <% } %><% if(!skipSerializers) { %>snapshotSerializers: [
     'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
     'jest-preset-angular/build/AngularSnapshotSerializer.js',
     'jest-preset-angular/build/HTMLCommentSerializer.js'

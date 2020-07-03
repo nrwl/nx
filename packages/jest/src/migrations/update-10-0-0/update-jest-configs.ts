@@ -8,6 +8,7 @@ import {
   formatFiles,
   getWorkspace,
   getWorkspacePath,
+  serializeJson,
   updateWorkspace,
 } from '@nrwl/workspace';
 
@@ -15,6 +16,10 @@ import {
   addPropertyToJestConfig,
   getPropertyValueInJestConfig,
 } from '../../utils/config';
+
+function checkGlobalTsJestObject(object: unknown): object is object {
+  return object !== null && object.constructor.name === 'Object';
+}
 
 function modifyJestConfig(
   host: Tree,
@@ -25,6 +30,19 @@ function modifyJestConfig(
   tsConfig: string,
   isAngular: boolean
 ) {
+  if (setupFile === '') {
+    return;
+  }
+
+  const globalTsJest = {
+    tsConfig,
+    stringifyContentPathRegex: '\\.(html|svg)$',
+    astTransformers: [
+      'jest-preset-angular/build/InlineFilesTransformer',
+      'jest-preset-angular/build/StripStylesTransformer',
+    ],
+  };
+
   try {
     // add set up env file
     // setupFilesAfterEnv
@@ -33,10 +51,43 @@ function modifyJestConfig(
       jestConfig,
       'setupFilesAfterEnv'
     );
+
+    let setupFilesAfterEnv: string | string[] = [setupFile];
+    if (Array.isArray(existingSetupFiles)) {
+      setupFilesAfterEnv = setupFile;
+    }
+
+    addPropertyToJestConfig(
+      host,
+      jestConfig,
+      'setupFilesAfterEnv',
+      setupFilesAfterEnv
+    );
+
+    if (!isAngular) {
+      return;
+    }
+
+    const existingGlobalTsJest = getPropertyValueInJestConfig(
+      host,
+      jestConfig,
+      'globals.ts-jest'
+    );
+    if (!checkGlobalTsJestObject(existingGlobalTsJest)) {
+      addPropertyToJestConfig(host, jestConfig, 'globals', {
+        'ts-jest': globalTsJest,
+      });
+    }
   } catch {
     context.logger.warn(`
     Cannot update jest config for the ${project} project. 
     This is most likely caused because the jest config at ${jestConfig} it not in a expected configuration format (ie. module.exports = {}).
+    
+    Since this migration could not be ran on this project, please make sure to modify the Jest config file to have the following configured:
+    * setupFilesAfterEnv with: ${setupFile}
+    ${
+      isAngular ? '* globals.ts-jest with:  ' + serializeJson(globalTsJest) : ''
+    }
      `);
   }
 }
@@ -64,22 +115,35 @@ function updateJestConfigForProjects() {
         ?.builder.includes('@angular-devkit/build-angular');
 
       const setupfile = (testTarget.options?.setupFile as string) ?? '';
+      const setupFileWithRootDir = setupfile.replace(
+        projectDefinition.root,
+        '<rootDir>'
+      );
       const jestConfig = (testTarget.options?.jestConfig as string) ?? '';
       const tsConfig = (testTarget.options?.tsConfig as string) ?? '';
+      const tsConfigWithRootDir = tsConfig.replace(
+        projectDefinition.root,
+        '<rootDir>'
+      );
+
       modifyJestConfig(
         host,
         context,
         projectName,
-        setupfile,
+        setupFileWithRootDir,
         jestConfig,
-        tsConfig,
+        tsConfigWithRootDir,
         isAngular
       );
 
-      delete testTarget.options?.setupFile;
+      const updatedOptions = { ...testTarget.options };
+      delete updatedOptions.setupFile;
+      delete updatedOptions.tsConfig;
+
+      testTarget.options = updatedOptions;
     }
 
-    updateWorkspace(workspace);
+    return updateWorkspace(workspace);
   };
 }
 

@@ -1,6 +1,7 @@
 import * as ts from 'typescript';
 import { findNodes, InsertChange, ReplaceChange } from '@nrwl/workspace';
 import { Tree } from '@angular-devkit/schematics';
+import * as stripJsonComments from 'strip-json-comments';
 
 function trailingCommaNeeded(needed: boolean) {
   return needed ? ',' : '';
@@ -33,6 +34,11 @@ function findPropertyAssignment(
 
     return propNameText === propertyName;
   }) as ts.PropertyAssignment | undefined;
+}
+
+export function getJsonObject(object: string) {
+  const value = stripJsonComments(object);
+  return Function(`"use strict";return (${value})`)();
 }
 
 export function addOrUpdateProperty(
@@ -141,7 +147,7 @@ export function getProperty(
  * @param host
  * @param path
  */
-export function jestConfigObject(
+export function jestConfigObjectAst(
   host: Tree,
   path: string
 ): ts.ObjectLiteralExpression {
@@ -179,4 +185,14 @@ export function jestConfigObject(
   }
 
   return moduleExports.right as ts.ObjectLiteralExpression;
+}
+
+/**
+ * Returns the jest config object
+ * @param host
+ * @param path
+ */
+export function jestConfigObject(host: Tree, path: string) {
+  const jestConfigAst = jestConfigObjectAst(host, path);
+  return getJsonObject(jestConfigAst.getText());
 }

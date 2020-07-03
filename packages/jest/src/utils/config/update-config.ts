@@ -2,8 +2,9 @@ import { Tree } from '@angular-devkit/schematics';
 import { insert, RemoveChange } from '@nrwl/workspace';
 import {
   addOrUpdateProperty,
+  getJsonObject,
   getProperty,
-  jestConfigObject,
+  jestConfigObjectAst,
 } from './functions';
 
 /**
@@ -19,7 +20,7 @@ export function addPropertyToJestConfig(
   propertyName: string,
   value: unknown
 ) {
-  const configObject = jestConfigObject(host, path);
+  const configObject = jestConfigObjectAst(host, path);
   const properties = propertyName.split('.');
   const changes = addOrUpdateProperty(
     configObject,
@@ -41,12 +42,16 @@ export function getPropertyValueInJestConfig(
   path: string,
   propertyName: string
 ): unknown {
-  const configObject = jestConfigObject(host, path);
+  const configObject = jestConfigObjectAst(host, path);
   const propertyAssignment = getProperty(configObject, propertyName.split('.'));
 
   if (propertyAssignment) {
     return JSON.parse(
-      propertyAssignment.initializer.getText().replace(/'/g, '"')
+      JSON.stringify(
+        getJsonObject(
+          propertyAssignment.initializer.getText().replace(/'/g, '"')
+        )
+      )
     );
   } else {
     return null;
@@ -64,7 +69,7 @@ export function removePropertyFromJestConfig(
   path: string,
   propertyName: string
 ) {
-  const configObject = jestConfigObject(host, path);
+  const configObject = jestConfigObjectAst(host, path);
   const propertyAssignment = getProperty(configObject, propertyName.split('.'));
 
   if (propertyAssignment) {

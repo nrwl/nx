@@ -1,0 +1,148 @@
+import { Tree } from '@angular-devkit/schematics';
+import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
+import * as path from 'path';
+import { serializeJson } from '@nrwl/workspace';
+import { getPropertyValueInJestConfig } from '../../utils/config';
+
+describe('update 10.0.0', () => {
+  let initialTree: Tree;
+  let schematicRunner: SchematicTestRunner;
+
+  const jestConfig = String.raw`
+    module.exports = {    
+      name: 'test-jest',
+      preset: '../../jest.config.js',
+      coverageDirectory: '../../coverage/libs/test-jest',
+      snapshotSerializers: [
+        'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
+        'jest-preset-angular/build/AngularSnapshotSerializer.js',
+        'jest-preset-angular/build/HTMLCommentSerializer.js'
+      ]
+    }
+  `;
+
+  beforeEach(() => {
+    initialTree = createEmptyWorkspace(Tree.empty());
+
+    initialTree.create('apps/products/jest.config.js', jestConfig);
+    initialTree.create('apps/cart/jest.config.js', jestConfig);
+    initialTree.overwrite(
+      'workspace.json',
+      serializeJson({
+        version: 1,
+        projects: {
+          products: {
+            root: 'apps/products',
+            sourceRoot: 'apps/products/src',
+            architect: {
+              build: {
+                builder: '@angular-devkit/build-angular:browser',
+              },
+              test: {
+                builder: '@nrwl/jest:jest',
+                options: {
+                  jestConfig: 'apps/products/jest.config.js',
+                  tsConfig: 'apps/products/tsconfig.spec.json',
+                  setupFile: 'apps/products/src/test-setup.ts',
+                  passWithNoTests: true,
+                },
+              },
+            },
+          },
+          cart: {
+            root: 'apps/cart',
+            sourceRoot: 'apps/cart/src',
+            architect: {
+              build: {
+                builder: '@nrwl/web:build',
+              },
+              test: {
+                builder: '@nrwl/jest:jest',
+                options: {
+                  jestConfig: 'apps/cart/jest.config.js',
+                  tsConfig: 'apps/cart/tsconfig.spec.json',
+                  setupFile: 'apps/cart/src/test-setup.ts',
+                  passWithNoTests: true,
+                },
+              },
+            },
+          },
+        },
+      })
+    );
+    schematicRunner = new SchematicTestRunner(
+      '@nrwl/jest',
+      path.join(__dirname, '../../../migrations.json')
+    );
+  });
+
+  it('should remove setupFile and tsconfig in test architect from workspace.json', async (done) => {
+    const result = await schematicRunner
+      .runSchematicAsync('update-10.0.0', {}, initialTree)
+      .toPromise();
+
+    const updatedWorkspace = JSON.parse(result.readContent('workspace.json'));
+    expect(updatedWorkspace.projects.products.architect.test.options).toEqual({
+      jestConfig: expect.anything(),
+      passWithNoTests: expect.anything(),
+    });
+    expect(updatedWorkspace.projects.cart.architect.test.options).toEqual({
+      jestConfig: expect.anything(),
+      passWithNoTests: expect.anything(),
+    });
+    done();
+  });
+
+  it('should update the jest.config files', async (done) => {
+    const setupFiles = getPropertyValueInJestConfig(
+      initialTree,
+      'apps/products/jest.config.js',
+      'setupFilesAfterEnv'
+    );
+
+    expect(setupFiles).toBeNull();
+
+    await schematicRunner
+      .runSchematicAsync('update-10.0.0', {}, initialTree)
+      .toPromise();
+
+    const angularSetupFiles = getPropertyValueInJestConfig(
+      initialTree,
+      'apps/products/jest.config.js',
+      'setupFilesAfterEnv'
+    );
+    const angularGlobals = getPropertyValueInJestConfig(
+      initialTree,
+      'apps/products/jest.config.js',
+      'globals'
+    );
+
+    expect(angularSetupFiles).toEqual(['<rootDir>/src/test-setup.ts']);
+    expect(angularGlobals).toEqual({
+      'ts-jest': {
+        tsConfig: '<rootDir>/tsconfig.spec.json',
+        stringifyContentPathRegex: '\\.(html|svg)$',
+        astTransformers: [
+          'jest-preset-angular/build/InlineFilesTransformer',
+          'jest-preset-angular/build/StripStylesTransformer',
+        ],
+      },
+    });
+
+    const reactSetupFiles = getPropertyValueInJestConfig(
+      initialTree,
+      'apps/cart/jest.config.js',
+      'setupFilesAfterEnv'
+    );
+    const reactGlobals = getPropertyValueInJestConfig(
+      initialTree,
+      'apps/cart/jest.config.js',
+      'globals'
+    );
+    expect(reactSetupFiles).toEqual(['<rootDir>/src/test-setup.ts']);
+    expect(reactGlobals).toBeNull();
+
+    done();
+  });
+});

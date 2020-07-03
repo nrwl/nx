@@ -187,7 +187,7 @@ Node module that implements a custom results processor. (https://jestjs.io/docs/
 
 Type: `string`
 
-The name of the Typescript configuration file.
+[Deprecated] The name of the Typescript configuration file. Set the tsconfig option in the jest config file.
 
 ### updateSnapshot
 
