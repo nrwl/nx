@@ -22,11 +22,27 @@ describe('update 10.0.0', () => {
     }
   `;
 
+  const jestConfigReact = String.raw`
+  module.exports = {    
+      name: 'my-react-app',
+      preset: '../../jest.config.js',
+      transform: {
+        '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest',
+        '^.+\\\\.[tj]sx?$': [
+          'babel-jest',
+          { cwd: __dirname, configFile: './babel-jest.config.json' }
+        ]
+      },
+      moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+      coverageDirectory: '../../coverage/apps/my-react-app'
+    }
+  `;
+
   beforeEach(() => {
     initialTree = createEmptyWorkspace(Tree.empty());
 
     initialTree.create('apps/products/jest.config.js', jestConfig);
-    initialTree.create('apps/cart/jest.config.js', jestConfig);
+    initialTree.create('apps/cart/jest.config.js', jestConfigReact);
     initialTree.overwrite(
       'workspace.json',
       serializeJson({
@@ -61,7 +77,6 @@ describe('update 10.0.0', () => {
                 builder: '@nrwl/jest:jest',
                 options: {
                   jestConfig: 'apps/cart/jest.config.js',
-                  tsConfig: 'apps/cart/tsconfig.spec.json',
                   setupFile: 'apps/cart/src/test-setup.ts',
                   passWithNoTests: true,
                 },

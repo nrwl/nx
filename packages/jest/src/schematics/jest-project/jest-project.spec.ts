@@ -89,6 +89,11 @@ describe('jestProject', () => {
       .toBe(stripIndents`module.exports = {
   name: 'lib1',
   preset: '../../jest.config.js',
+  globals: {
+    'ts-jest': {
+      tsConfig: '<rootDir>/tsconfig.spec.json',
+    }
+  },
   coverageDirectory: '../../coverage/libs/lib1',
   snapshotSerializers: [
     'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
@@ -150,7 +155,7 @@ describe('jestProject', () => {
       );
     });
 
-    it('should have setupFilesAfterEnv in the jest.config when not "none"', async () => {
+    it('should have setupFilesAfterEnv in the jest.config when generated for web-components', async () => {
       const resultTree = await runSchematic(
         'jest-project',
         {
@@ -164,7 +169,7 @@ describe('jestProject', () => {
       );
     });
 
-    it('should have globals ts-jest configured for angular projects', async () => {
+    it('should have setupFilesAfterEnv and globals.ts-ject in the jest.config when generated for angular', async () => {
       const resultTree = await runSchematic(
         'jest-project',
         {
@@ -178,10 +183,10 @@ describe('jestProject', () => {
       expect(jestConfig).toContain(
         `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`
       );
-      expect(jestConfig).toContain(`globals: {
+      expect(stripIndents`${jestConfig}`).toContain(stripIndents`globals: {
     'ts-jest': {
       tsConfig: '<rootDir>/tsconfig.spec.json',
-      stringifyContentPathRegex: '\\\\.(html|svg)$',
+      stringifyContentPathRegex: '\\.(html|svg)$',
       astTransformers: [
         'jest-preset-angular/build/InlineFilesTransformer',
         'jest-preset-angular/build/StripStylesTransformer'
@@ -299,6 +304,52 @@ describe('jestProject', () => {
       const jestConfig = resultTree.readContent('libs/lib1/jest.config.js');
       expect(jestConfig).toContain(
         `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],`
+      );
+    });
+  });
+
+  describe('--babelJest', () => {
+    it('should have globals.ts-jest configured when babelJest is false', async () => {
+      const resultTree = await runSchematic(
+        'jest-project',
+        {
+          project: 'lib1',
+          babelJest: false,
+          setupFile: 'none',
+        },
+        appTree
+      );
+      const jestConfig = stripIndents`${resultTree.readContent(
+        'libs/lib1/jest.config.js'
+      )}`;
+      expect(jestConfig).toContain(
+        stripIndents`globals: {
+          'ts-jest': {
+            tsConfig: '<rootDir>/tsconfig.spec.json',
+          }
+        }`
+      );
+    });
+
+    it('should have NOT have globals.ts-jest configured when babelJest is true', async () => {
+      const resultTree = await runSchematic(
+        'jest-project',
+        {
+          project: 'lib1',
+          babelJest: true,
+          setupFile: 'none',
+        },
+        appTree
+      );
+      const jestConfig = stripIndents`${resultTree.readContent(
+        'libs/lib1/jest.config.js'
+      )}`;
+      expect(jestConfig).not.toContain(
+        stripIndents`globals: {
+          'ts-jest': {
+            tsConfig: '<rootDir>/tsconfig.spec.json',
+          }
+        }`
       );
     });
   });

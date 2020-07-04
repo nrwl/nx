@@ -17,7 +17,7 @@ import {
   getPropertyValueInJestConfig,
 } from '../../utils/config';
 
-function checkGlobalTsJestObject(object: unknown): object is object {
+function checkJestPropertyObject(object: unknown): object is object {
   return object !== null && object.constructor.name === 'Object';
 }
 
@@ -34,14 +34,20 @@ function modifyJestConfig(
     return;
   }
 
-  const globalTsJest = {
+  let globalTsJest: any = {
     tsConfig,
-    stringifyContentPathRegex: '\\.(html|svg)$',
-    astTransformers: [
-      'jest-preset-angular/build/InlineFilesTransformer',
-      'jest-preset-angular/build/StripStylesTransformer',
-    ],
   };
+
+  if (isAngular) {
+    globalTsJest = {
+      ...globalTsJest,
+      stringifyContentPathRegex: '\\.(html|svg)$',
+      astTransformers: [
+        'jest-preset-angular/build/InlineFilesTransformer',
+        'jest-preset-angular/build/StripStylesTransformer',
+      ],
+    };
+  }
 
   try {
     // add set up env file
@@ -64,7 +70,27 @@ function modifyJestConfig(
       setupFilesAfterEnv
     );
 
-    if (!isAngular) {
+    // check if jest config has babel transform
+    const transformProperty = getPropertyValueInJestConfig(
+      host,
+      jestConfig,
+      'transform'
+    );
+
+    let hasBabelTransform = false;
+    if (checkJestPropertyObject(transformProperty)) {
+      for (const prop in transformProperty) {
+        const transformPropValue = transformProperty[prop];
+        if (Array.isArray(transformPropValue)) {
+          hasBabelTransform = transformPropValue.some((value) =>
+            value.includes('babel')
+          );
+        } else if (typeof transformPropValue === 'string') {
+          transformPropValue.includes('babel');
+        }
+      }
+    }
+    if (hasBabelTransform) {
       return;
     }
 
@@ -73,7 +99,7 @@ function modifyJestConfig(
       jestConfig,
       'globals.ts-jest'
     );
-    if (!checkGlobalTsJestObject(existingGlobalTsJest)) {
+    if (!checkJestPropertyObject(existingGlobalTsJest)) {
       addPropertyToJestConfig(host, jestConfig, 'globals', {
         'ts-jest': globalTsJest,
       });
@@ -85,10 +111,8 @@ function modifyJestConfig(
     
     Since this migration could not be ran on this project, please make sure to modify the Jest config file to have the following configured:
     * setupFilesAfterEnv with: ${setupFile}
-    ${
-      isAngular ? '* globals.ts-jest with:  ' + serializeJson(globalTsJest) : ''
-    }
-     `);
+    * globals.ts-jest with:   ${serializeJson(globalTsJest)}
+  `);
   }
 }
 
