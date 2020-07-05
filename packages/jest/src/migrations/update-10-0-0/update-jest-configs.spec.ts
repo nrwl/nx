@@ -42,6 +42,10 @@ describe('update 10.0.0', () => {
     initialTree = createEmptyWorkspace(Tree.empty());
 
     initialTree.create('apps/products/jest.config.js', jestConfig);
+    initialTree.create(
+      'apps/products/src/test-setup.ts',
+      `import 'jest-preset-angular'`
+    );
     initialTree.create('apps/cart/jest.config.js', jestConfigReact);
     initialTree.overwrite(
       'workspace.json',

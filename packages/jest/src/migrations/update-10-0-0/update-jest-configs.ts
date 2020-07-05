@@ -123,20 +123,17 @@ function updateJestConfigForProjects() {
     for (const [projectName, projectDefinition] of workspace.projects) {
       // skip projects that do not have test
       if (!projectDefinition.targets.has('test')) {
-        return;
+        continue;
       }
 
       const testTarget = projectDefinition.targets.get('test');
 
       // skip projects that are not using the jest builder
       if (testTarget.builder !== '@nrwl/jest:jest') {
-        return;
+        continue;
       }
 
-      // check if the project is angular so that we can place specific angular configs
-      const isAngular = projectDefinition.targets
-        .get('build')
-        ?.builder.includes('@angular-devkit/build-angular');
+      // check if the setup file has `jest-preset-angular`
 
       const setupfile = (testTarget.options?.setupFile as string) ?? '';
       const setupFileWithRootDir = setupfile.replace(
@@ -149,6 +146,10 @@ function updateJestConfigForProjects() {
         projectDefinition.root,
         '<rootDir>'
       );
+      const isAngular = host
+        .read(setupfile)
+        ?.toString()
+        .includes('jest-preset-angular');
 
       modifyJestConfig(
         host,
