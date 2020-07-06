@@ -1,26 +1,40 @@
 import { workspaceFileName } from './file-utils';
-import { ImplicitJsonSubsetDependency } from '@nrwl/workspace/src/core/shared-interfaces';
+import {
+  ImplicitJsonSubsetDependency,
+  NxJson,
+} from '@nrwl/workspace/src/core/shared-interfaces';
+import { output } from '../utils/output';
 
-export function assertWorkspaceValidity(workspaceJson, nxJson) {
+export function assertWorkspaceValidity(workspaceJson, nxJson: NxJson) {
   const workspaceJsonProjects = Object.keys(workspaceJson.projects);
   const nxJsonProjects = Object.keys(nxJson.projects);
 
   if (minus(workspaceJsonProjects, nxJsonProjects).length > 0) {
-    throw new Error(
-      `${workspaceFileName()} and nx.json are out of sync. The following projects are missing in nx.json: ${minus(
-        workspaceJsonProjects,
-        nxJsonProjects
-      ).join(', ')}`
-    );
+    output.error({
+      title: 'Configuration Error',
+      bodyLines: [
+        `${workspaceFileName()} and nx.json are out of sync. The following projects are missing in nx.json: ${minus(
+          workspaceJsonProjects,
+          nxJsonProjects
+        ).join(', ')}`,
+      ],
+    });
+
+    process.exit(1);
   }
 
   if (minus(nxJsonProjects, workspaceJsonProjects).length > 0) {
-    throw new Error(
-      `${workspaceFileName()} and nx.json are out of sync. The following projects are missing in ${workspaceFileName()}: ${minus(
-        nxJsonProjects,
-        workspaceJsonProjects
-      ).join(', ')}`
-    );
+    output.error({
+      title: 'Configuration Error',
+      bodyLines: [
+        `${workspaceFileName()} and nx.json are out of sync. The following projects are missing in ${workspaceFileName()}: ${minus(
+          nxJsonProjects,
+          workspaceJsonProjects
+        ).join(', ')}`,
+      ],
+    });
+
+    process.exit(1);
   }
 
   const projects = {
@@ -81,7 +95,12 @@ export function assertWorkspaceValidity(workspaceJson, nxJson) {
     message += str;
   });
 
-  throw new Error(message);
+  output.error({
+    title: 'Configuration Error',
+    bodyLines: [message],
+  });
+
+  process.exit(1);
 }
 
 function detectAndSetInvalidProjectValues(
