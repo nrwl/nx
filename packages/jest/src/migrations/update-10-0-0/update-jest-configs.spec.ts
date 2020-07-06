@@ -3,7 +3,7 @@ import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import * as path from 'path';
 import { serializeJson } from '@nrwl/workspace';
-import { getPropertyValueInJestConfig } from '../../utils/config';
+import { jestConfigObject } from '../../..';
 
 describe('update 10.0.0', () => {
   let initialTree: Tree;
@@ -81,7 +81,6 @@ describe('update 10.0.0', () => {
                 builder: '@nrwl/jest:jest',
                 options: {
                   jestConfig: 'apps/cart/jest.config.js',
-                  setupFile: 'apps/cart/src/test-setup.ts',
                   passWithNoTests: true,
                 },
               },
@@ -114,28 +113,17 @@ describe('update 10.0.0', () => {
   });
 
   it('should update the jest.config files', async (done) => {
-    const setupFiles = getPropertyValueInJestConfig(
-      initialTree,
-      'apps/products/jest.config.js',
-      'setupFilesAfterEnv'
-    );
-
-    expect(setupFiles).toBeNull();
-
     await schematicRunner
       .runSchematicAsync('update-10.0.0', {}, initialTree)
       .toPromise();
 
-    const angularSetupFiles = getPropertyValueInJestConfig(
+    const jestObject = jestConfigObject(
       initialTree,
-      'apps/products/jest.config.js',
-      'setupFilesAfterEnv'
+      'apps/products/jest.config.js'
     );
-    const angularGlobals = getPropertyValueInJestConfig(
-      initialTree,
-      'apps/products/jest.config.js',
-      'globals'
-    );
+
+    const angularSetupFiles = jestObject.setupFilesAfterEnv;
+    const angularGlobals = jestObject.globals;
 
     expect(angularSetupFiles).toEqual(['<rootDir>/src/test-setup.ts']);
     expect(angularGlobals).toEqual({
@@ -149,18 +137,15 @@ describe('update 10.0.0', () => {
       },
     });
 
-    const reactSetupFiles = getPropertyValueInJestConfig(
+    const reactJestObject = jestConfigObject(
       initialTree,
-      'apps/cart/jest.config.js',
-      'setupFilesAfterEnv'
+      'apps/cart/jest.config.js'
     );
-    const reactGlobals = getPropertyValueInJestConfig(
-      initialTree,
-      'apps/cart/jest.config.js',
-      'globals'
-    );
-    expect(reactSetupFiles).toEqual(['<rootDir>/src/test-setup.ts']);
-    expect(reactGlobals).toBeNull();
+
+    const reactSetupFiles = reactJestObject.setupFilesAfterEnv;
+    const reactGlobals = reactJestObject.globals;
+    expect(reactSetupFiles).toBeUndefined();
+    expect(reactGlobals).toBeUndefined();
 
     done();
   });

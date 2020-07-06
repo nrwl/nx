@@ -1,7 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
 import {
   addPropertyToJestConfig,
-  getPropertyValueInJestConfig,
   removePropertyFromJestConfig,
 } from './update-config';
 import { jestConfigObject } from './functions';
@@ -203,65 +202,6 @@ describe('Update jest.config.js', () => {
           addPropertyToJestConfig(host, 'jest.doesnotexist.js', '', '');
         }).toThrow();
       });
-    });
-  });
-
-  describe('getting values', () => {
-    it('should return a value that already exists', () => {
-      let value = getPropertyValueInJestConfig(
-        host,
-        'jest.config.js',
-        'alreadyExistingArray'
-      );
-      expect(value).toEqual(['something']);
-
-      value = getPropertyValueInJestConfig(host, 'jest.config.js', 'preset');
-      expect(value).toEqual('nrwl-preset');
-
-      value = getPropertyValueInJestConfig(host, 'jest.config.js', 'boolean');
-      expect(value).toEqual(false);
-
-      value = getPropertyValueInJestConfig(host, 'jest.config.js', 'numeric');
-      expect(value).toEqual(0);
-
-      value = getPropertyValueInJestConfig(
-        host,
-        'jest.config.js',
-        'alreadyExistingObject.nested-object.childArray'
-      );
-      expect(value).toEqual(['value1', 'value2']);
-
-      value = getPropertyValueInJestConfig(
-        host,
-        'jest.config.js',
-        'alreadyExistingObject'
-      );
-      //prettier-ignore
-      expect(value).toEqual({
-        nestedProperty: {
-          primitive: 'string',
-          childArray: ['value1', 'value2']
-        },
-        'nested-object': {
-          childArray: ['value1', 'value2']
-        }
-      });
-    });
-
-    it('should return null if the property does not exist', () => {
-      let value = getPropertyValueInJestConfig(
-        host,
-        'jest.config.js',
-        'alreadyExistingObject.nested-object.doesntexist'
-      );
-      expect(value).toEqual(null);
-
-      value = getPropertyValueInJestConfig(
-        host,
-        'jest.config.js',
-        'doesntexist'
-      );
-      expect(value).toEqual(null);
     });
   });
 

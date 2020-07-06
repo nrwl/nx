@@ -11,11 +11,7 @@ import {
   serializeJson,
   updateWorkspace,
 } from '@nrwl/workspace';
-
-import {
-  addPropertyToJestConfig,
-  getPropertyValueInJestConfig,
-} from '../../utils/config';
+import { addPropertyToJestConfig, jestConfigObject } from '../../..';
 
 function checkJestPropertyObject(object: unknown): object is object {
   return object !== null && object.constructor.name === 'Object';
@@ -50,13 +46,11 @@ function modifyJestConfig(
   }
 
   try {
+    const jestObject = jestConfigObject(host, jestConfig);
+
     // add set up env file
     // setupFilesAfterEnv
-    const existingSetupFiles = getPropertyValueInJestConfig(
-      host,
-      jestConfig,
-      'setupFilesAfterEnv'
-    );
+    const existingSetupFiles = jestObject.setupFilesAfterEnv;
 
     let setupFilesAfterEnv: string | string[] = [setupFile];
     if (Array.isArray(existingSetupFiles)) {
@@ -71,38 +65,42 @@ function modifyJestConfig(
     );
 
     // check if jest config has babel transform
-    const transformProperty = getPropertyValueInJestConfig(
-      host,
-      jestConfig,
-      'transform'
-    );
+    const transformProperty = jestObject.transform;
 
     let hasBabelTransform = false;
-    if (checkJestPropertyObject(transformProperty)) {
+    if (transformProperty) {
       for (const prop in transformProperty) {
         const transformPropValue = transformProperty[prop];
         if (Array.isArray(transformPropValue)) {
-          hasBabelTransform = transformPropValue.some((value) =>
-            value.includes('babel')
+          hasBabelTransform = transformPropValue.some(
+            (value) => typeof value === 'string' && value.includes('babel')
           );
         } else if (typeof transformPropValue === 'string') {
           transformPropValue.includes('babel');
         }
       }
     }
+
     if (hasBabelTransform) {
       return;
     }
 
-    const existingGlobalTsJest = getPropertyValueInJestConfig(
-      host,
-      jestConfig,
-      'globals.ts-jest'
-    );
-    if (!checkJestPropertyObject(existingGlobalTsJest)) {
+    // Add ts-jest configurations
+    const existingGlobals = jestObject.globals;
+    if (!existingGlobals) {
       addPropertyToJestConfig(host, jestConfig, 'globals', {
         'ts-jest': globalTsJest,
       });
+    } else {
+      const existingGlobalTsJest = existingGlobals['ts-jest'];
+      if (!checkJestPropertyObject(existingGlobalTsJest)) {
+        addPropertyToJestConfig(
+          host,
+          jestConfig,
+          'globals.ts-jest',
+          globalTsJest
+        );
+      }
     }
   } catch {
     context.logger.warn(`
@@ -135,21 +133,26 @@ function updateJestConfigForProjects() {
 
       // check if the setup file has `jest-preset-angular`
 
-      const setupfile = (testTarget.options?.setupFile as string) ?? '';
-      const setupFileWithRootDir = setupfile.replace(
-        projectDefinition.root,
-        '<rootDir>'
-      );
+      const setupfile = testTarget.options?.setupFile;
       const jestConfig = (testTarget.options?.jestConfig as string) ?? '';
       const tsConfig = (testTarget.options?.tsConfig as string) ?? '';
       const tsConfigWithRootDir = tsConfig.replace(
         projectDefinition.root,
         '<rootDir>'
       );
-      const isAngular = host
-        .read(setupfile)
-        ?.toString()
-        .includes('jest-preset-angular');
+
+      let isAngular = false;
+      let setupFileWithRootDir = '';
+      if (typeof setupfile === 'string') {
+        isAngular = host
+          .read(setupfile)
+          ?.toString()
+          .includes('jest-preset-angular');
+        setupFileWithRootDir = setupfile.replace(
+          projectDefinition.root,
+          '<rootDir>'
+        );
+      }
 
       modifyJestConfig(
         host,

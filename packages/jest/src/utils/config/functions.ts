@@ -2,6 +2,7 @@ import * as ts from 'typescript';
 import { findNodes, InsertChange, ReplaceChange } from '@nrwl/workspace';
 import { Tree } from '@angular-devkit/schematics';
 import * as stripJsonComments from 'strip-json-comments';
+import { Config } from '@jest/types';
 
 function trailingCommaNeeded(needed: boolean) {
   return needed ? ',' : '';
@@ -38,7 +39,14 @@ function findPropertyAssignment(
 
 export function getJsonObject(object: string) {
   const value = stripJsonComments(object);
-  return Function(`"use strict";return (${value})`)();
+  // react babel-jest has __dirname in the config.
+  // Put a temp variable in the anon function so that it doesnt fail.
+  // Migration script has a catch handler to give instructions on how to update the jest config if this fails.
+  return Function(`
+  "use strict";
+  let __dirname = '';
+  return (${value});
+ `)();
 }
 
 export function addOrUpdateProperty(
@@ -117,7 +125,7 @@ export function addOrUpdateProperty(
   }
 }
 
-export function getProperty(
+export function removeProperty(
   object: ts.ObjectLiteralExpression,
   properties: string[]
 ): ts.PropertyAssignment | null {
@@ -130,7 +138,7 @@ export function getProperty(
       propertyAssignment.initializer.kind ===
         ts.SyntaxKind.ObjectLiteralExpression
     ) {
-      return getProperty(
+      return removeProperty(
         propertyAssignment.initializer as ts.ObjectLiteralExpression,
         properties
       );
@@ -192,7 +200,10 @@ export function jestConfigObjectAst(
  * @param host
  * @param path
  */
-export function jestConfigObject(host: Tree, path: string) {
+export function jestConfigObject(
+  host: Tree,
+  path: string
+): Partial<Config.InitialOptions> & { [index: string]: any } {
   const jestConfigAst = jestConfigObjectAst(host, path);
   return getJsonObject(jestConfigAst.getText());
 }

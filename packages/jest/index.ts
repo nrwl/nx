@@ -1,5 +1,8 @@
 export {
   addPropertyToJestConfig,
-  getPropertyValueInJestConfig,
+  removePropertyFromJestConfig,
 } from './src/utils/config/update-config';
-export { jestConfigObjectAst } from './src/utils/config/functions';
+export {
+  jestConfigObjectAst,
+  jestConfigObject,
+} from './src/utils/config/functions';
