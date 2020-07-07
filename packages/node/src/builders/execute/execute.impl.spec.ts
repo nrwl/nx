@@ -4,7 +4,6 @@ import {
   nodeExecuteBuilderHandler,
 } from './execute.impl';
 import { of, from } from 'rxjs';
-import * as devkitArchitect from '@angular-devkit/architect';
 
 import { MockBuilderContext } from '@nrwl/workspace/testing';
 
@@ -18,7 +17,6 @@ let treeKill = require('tree-kill');
 describe('NodeExecuteBuilder', () => {
   let testOptions: NodeExecuteBuilderOptions;
   let context: MockBuilderContext;
-  let scheduleTargetAndForget: jasmine.Spy;
 
   beforeEach(async () => {
     fork.mockReturnValue({
@@ -45,24 +43,27 @@ describe('NodeExecuteBuilder', () => {
       host: 'localhost',
       watch: true,
     };
-    scheduleTargetAndForget = spyOn(
-      devkitArchitect,
-      'scheduleTargetAndForget'
-    ).and.returnValue(of({ success: true, outfile: 'outfile.js' }));
   });
 
   it('should build the application and start the built file', async () => {
+    spyOn(context, 'scheduleTarget').and.returnValue(
+      of({
+        output: of({ success: true, outfile: 'outfile.js' }),
+        stop: () => Promise.resolve(),
+      })
+    );
+
     await nodeExecuteBuilderHandler(testOptions, context).toPromise();
 
-    expect(scheduleTargetAndForget).toHaveBeenCalledWith(
-      context,
+    expect(context.scheduleTarget).toHaveBeenCalledWith(
       {
         project: 'nodeapp',
         target: 'build',
       },
       {
         watch: true,
-      }
+      },
+      undefined
     );
     expect(fork).toHaveBeenCalledWith('outfile.js', [], {
       execArgv: [
@@ -78,6 +79,13 @@ describe('NodeExecuteBuilder', () => {
   describe('--inspect', () => {
     describe('inspect', () => {
       it('should inspect the process', async () => {
+        spyOn(context, 'scheduleTarget').and.returnValue(
+          of({
+            output: of({ success: true, outfile: 'outfile.js' }),
+            stop: () => Promise.resolve(),
+          })
+        );
+
         await nodeExecuteBuilderHandler(
           {
             ...testOptions,
@@ -97,6 +105,13 @@ describe('NodeExecuteBuilder', () => {
 
     describe('inspect-brk', () => {
       it('should inspect and break at beginning of execution', async () => {
+        spyOn(context, 'scheduleTarget').and.returnValue(
+          of({
+            output: of({ success: true, outfile: 'outfile.js' }),
+            stop: () => Promise.resolve(),
+          })
+        );
+
         await nodeExecuteBuilderHandler(
           {
             ...testOptions,
@@ -118,6 +133,13 @@ describe('NodeExecuteBuilder', () => {
   describe('--host', () => {
     describe('0.0.0.0', () => {
       it('should inspect the process on host 0.0.0.0', async () => {
+        spyOn(context, 'scheduleTarget').and.returnValue(
+          of({
+            output: of({ success: true, outfile: 'outfile.js' }),
+            stop: () => Promise.resolve(),
+          })
+        );
+
         await nodeExecuteBuilderHandler(
           {
             ...testOptions,
@@ -139,6 +161,13 @@ describe('NodeExecuteBuilder', () => {
   describe('--port', () => {
     describe('1234', () => {
       it('should inspect the process on port 1234', async () => {
+        spyOn(context, 'scheduleTarget').and.returnValue(
+          of({
+            output: of({ success: true, outfile: 'outfile.js' }),
+            stop: () => Promise.resolve(),
+          })
+        );
+
         await nodeExecuteBuilderHandler(
           {
             ...testOptions,
@@ -159,6 +188,13 @@ describe('NodeExecuteBuilder', () => {
 
   describe('--runtimeArgs', () => {
     it('should add runtime args to the node process', async () => {
+      spyOn(context, 'scheduleTarget').and.returnValue(
+        of({
+          output: of({ success: true, outfile: 'outfile.js' }),
+          stop: () => Promise.resolve(),
+        })
+      );
+
       await nodeExecuteBuilderHandler(
         {
           ...testOptions,
@@ -183,11 +219,14 @@ describe('NodeExecuteBuilder', () => {
       callback(new Error('Error Message'));
     });
     const loggerError = spyOn(context.logger, 'error');
-    scheduleTargetAndForget = scheduleTargetAndForget.and.returnValue(
-      from([
-        { success: true, outfile: 'outfile.js' },
-        { success: true, outfile: 'outfile.js' },
-      ])
+    spyOn(context, 'scheduleTarget').and.returnValue(
+      of({
+        output: from([
+          { success: true, outfile: 'outfile.js' },
+          { success: true, outfile: 'outfile.js' },
+        ]),
+        stop: () => Promise.resolve(),
+      })
     );
     nodeExecuteBuilderHandler(testOptions, context).subscribe({
       complete: () => {
@@ -202,17 +241,27 @@ describe('NodeExecuteBuilder', () => {
       callback([new Error('error'), '', 'Error Message']);
     });
     const loggerError = spyOn(context.logger, 'error');
-    scheduleTargetAndForget = scheduleTargetAndForget.and.returnValue(
-      from([
-        { success: true, outfile: 'outfile.js' },
-        { success: true, outfile: 'outfile.js' },
-      ])
+    spyOn(context, 'scheduleTarget').and.returnValue(
+      of({
+        output: from([
+          { success: true, outfile: 'outfile.js' },
+          { success: true, outfile: 'outfile.js' },
+        ]),
+        stop: () => Promise.resolve(),
+      })
     );
     await nodeExecuteBuilderHandler(testOptions, context).toPromise();
     expect(loggerError.calls.argsFor(1)).toEqual(['Error Message']);
   });
 
   it('should build the application and start the built file with options', async () => {
+    spyOn(context, 'scheduleTarget').and.returnValue(
+      of({
+        output: of({ success: true, outfile: 'outfile.js' }),
+        stop: () => Promise.resolve(),
+      })
+    );
+
     await nodeExecuteBuilderHandler(
       {
         ...testOptions,
@@ -227,6 +276,13 @@ describe('NodeExecuteBuilder', () => {
   });
 
   it('should warn users who try to use it in production', async () => {
+    spyOn(context, 'scheduleTarget').and.returnValue(
+      of({
+        output: of({ success: true, outfile: 'outfile.js' }),
+        stop: () => Promise.resolve(),
+      })
+    );
+
     spyOn(context, 'validateOptions').and.returnValue(
       Promise.resolve({
         optimization: true,
@@ -239,8 +295,11 @@ describe('NodeExecuteBuilder', () => {
 
   describe('waitUntilTasks', () => {
     it('should run the tasks before starting the build', async () => {
-      scheduleTargetAndForget = scheduleTargetAndForget.and.returnValue(
-        of({ success: true })
+      spyOn(context, 'scheduleTarget').and.returnValue(
+        of({
+          output: of({ success: true }),
+          stop: () => Promise.resolve(),
+        })
       );
       await nodeExecuteBuilderHandler(
         {
@@ -250,20 +309,31 @@ describe('NodeExecuteBuilder', () => {
         context
       ).toPromise();
 
-      expect(scheduleTargetAndForget).toHaveBeenCalledTimes(3);
-      expect(scheduleTargetAndForget).toHaveBeenCalledWith(context, {
-        project: 'project1',
-        target: 'target1',
-      });
-      expect(scheduleTargetAndForget).toHaveBeenCalledWith(context, {
-        project: 'project2',
-        target: 'target2',
-      });
+      expect(context.scheduleTarget).toHaveBeenCalledTimes(3);
+      expect(context.scheduleTarget).toHaveBeenCalledWith(
+        {
+          project: 'project1',
+          target: 'target1',
+        },
+        undefined,
+        undefined
+      );
+      expect(context.scheduleTarget).toHaveBeenCalledWith(
+        {
+          project: 'project2',
+          target: 'target2',
+        },
+        undefined,
+        undefined
+      );
     });
 
     it('should not run the build if any of the tasks fail', async () => {
-      scheduleTargetAndForget = scheduleTargetAndForget.and.callFake((target) =>
-        of({ success: target.target === 'project1' })
+      spyOn(context, 'scheduleTarget').and.callFake((target) =>
+        of({
+          output: of({ success: target.target === 'project1' }),
+          stop: () => Promise.resolve(),
+        })
       );
       const loggerError = spyOn(context.logger, 'error');
 

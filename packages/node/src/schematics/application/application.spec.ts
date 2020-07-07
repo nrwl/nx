@@ -85,10 +85,23 @@ describe('app', () => {
       expect(tree.exists(`apps/my-node-app/jest.config.js`)).toBeTruthy();
       expect(tree.exists('apps/my-node-app/src/main.ts')).toBeTruthy();
 
-      const tsconfig = readJsonInTree(tree, 'apps/my-node-app/tsconfig.json');
-      expect(tsconfig.extends).toEqual('../../tsconfig.json');
-      expect(tsconfig.compilerOptions.types).toContain('node');
-      expect(tsconfig.compilerOptions.types).toContain('jest');
+      expect(tree.readContent('apps/my-node-app/tsconfig.json'))
+        .toMatchInlineSnapshot(`
+        "{
+          \\"extends\\": \\"../../tsconfig.base.json\\",
+          \\"files\\": [],
+          \\"include\\": [],
+          \\"references\\": [
+            {
+              \\"path\\": \\"./tsconfig.app.json\\"
+            },
+            {
+              \\"path\\": \\"./tsconfig.spec.json\\"
+            }
+          ]
+        }
+        "
+      `);
 
       const tsconfigApp = JSON.parse(
         stripJsonComments(
@@ -172,11 +185,6 @@ describe('app', () => {
 
       // Make sure these have properties
       [
-        {
-          path: 'apps/my-dir/my-node-app/tsconfig.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: '../../../tsconfig.json',
-        },
         {
           path: 'apps/my-dir/my-node-app/tsconfig.app.json',
           lookupFn: (json) => json.compilerOptions.outDir,

@@ -122,7 +122,7 @@ describe('project graph', () => {
       './package.json': JSON.stringify(packageJson),
       './nx.json': JSON.stringify(nxJson),
       './workspace.json': JSON.stringify(workspaceJson),
-      './tsconfig.json': JSON.stringify(tsConfigJson),
+      './tsconfig.base.json': JSON.stringify(tsConfigJson),
     };
     vol.reset();
     vol.fromJSON(filesJson, '/root');

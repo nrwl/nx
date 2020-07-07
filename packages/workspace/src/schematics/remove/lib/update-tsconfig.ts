@@ -21,7 +21,7 @@ export function updateTsconfig(schema: Schema) {
         const nxJson = readJsonInTree<NxJson>(tree, 'nx.json');
         const project = workspace.projects.get(schema.projectName);
 
-        const tsConfigPath = 'tsconfig.json';
+        const tsConfigPath = 'tsconfig.base.json';
         if (tree.exists(tsConfigPath)) {
           const tsConfigJson = readJsonInTree(tree, tsConfigPath);
           delete tsConfigJson.compilerOptions.paths[

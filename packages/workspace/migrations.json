@@ -94,6 +94,11 @@
       "version": "10.0.0-beta.0",
       "description": "Add default branch to nx.json",
       "factory": "./src/migrations/update-10-0-0/update-10-0-0"
+    },
+    "solution-tsconfigs": {
+      "version": "10.0.0-beta.0",
+      "description": "Migrate tsconfigs to solution style tsconfigs",
+      "factory": "./src/migrations/update-10-0-0/solution-tsconfigs"
     }
   },
   "packageJsonUpdates": {
@@ -596,6 +601,103 @@
           "version": "9.1.0",
           "alwaysAddToPackageJson": false
         }
+      }
+    }
+  },
+  "10.0.0": {
+    "version": "10.0.0-beta.1",
+    "packages": {
+      "@angular/cli": {
+        "version": "~10.0.0",
+        "alwaysAddToPackageJson": false
+      },
+      "typescript": {
+        "version": "~3.9.3",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular-devkit/architect": {
+        "version": "~0.1000.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular-devkit/build-angular": {
+        "version": "~0.1000.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular-devkit/build-ng-packagr": {
+        "version": "~0.1000.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular-devkit/build-webpack": {
+        "version": "~0.1000.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular-devkit/build-optimizer": {
+        "version": "~0.1000.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular-devkit/core": {
+        "version": "~10.0.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular-devkit/schematics": {
+        "version": "~10.0.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@schematics/angular": {
+        "version": "~10.0.0",
+        "alwaysAddToPackageJson": false
+      },
+      "rxjs": {
+        "version": "~6.5.4",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular/core": {
+        "version": "^10.0.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular/common": {
+        "version": "^10.0.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular/forms": {
+        "version": "^10.0.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular/compiler": {
+        "version": "^10.0.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular/compiler-cli": {
+        "version": "^10.0.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular/platform-browser": {
+        "version": "^10.0.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular/platform-browser-dynamic": {
+        "version": "^10.0.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular/router": {
+        "version": "^10.0.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular/upgrade": {
+        "version": "^10.0.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular/language-service": {
+        "version": "^10.0.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular/animations": {
+        "version": "^10.0.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@angular/service-worker": {
+        "version": "^10.0.0",
+        "alwaysAddToPackageJson": false
       }
     }
   }

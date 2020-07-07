@@ -71,7 +71,7 @@ forEachCli('angular', (cli) => {
         `export * from './public_api';`
       );
 
-      updateFile(`tsconfig.json`, (s) => {
+      updateFile(`tsconfig.base.json`, (s) => {
         return s.replace(
           `"@proj/${childLib}": ["libs/${childLib}/src/index.ts"],`,
           `"@proj/${childLib}": ["libs/${childLib}/src/index.ts"],
@@ -139,13 +139,13 @@ forEachCli('angular', (cli) => {
 
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
       expect(jsonFile.dependencies).toEqual({
-        tslib: '^1.10.0',
+        tslib: '^2.0.0',
         [`@proj/${childLib}`]: '0.0.1',
         [`@proj/${childLib2}`]: '0.0.1',
       });
       expect(jsonFile.peerDependencies).toEqual({
-        '@angular/common': '^9.1.0',
-        '@angular/core': '^9.1.0',
+        '@angular/common': '^10.0.2',
+        '@angular/core': '^10.0.2',
       });
     });
   });

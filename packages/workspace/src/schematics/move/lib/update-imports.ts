@@ -61,7 +61,7 @@ export function updateImports(schema: Schema) {
           to: schema.destination,
         };
 
-        const tsConfigPath = 'tsconfig.json';
+        const tsConfigPath = 'tsconfig.base.json';
         if (tree.exists(tsConfigPath)) {
           let contents = JSON.parse(tree.read(tsConfigPath).toString('utf-8'));
           const path = contents.compilerOptions.paths[

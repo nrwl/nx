@@ -230,7 +230,7 @@ const globalESLint = `
   "parserOptions": {
     "ecmaVersion": 2018,
     "sourceType": "module",
-    "project": "./tsconfig.json"
+    "project": "./tsconfig.base.json"
   },
   "ignorePatterns": ["**/*"],
   "plugins": ["@typescript-eslint", "@nrwl/nx"],

@@ -14,13 +14,13 @@ const testRunner = new SchematicTestRunner(
 );
 
 testRunner.registerCollection(
-  '@nrwl/workspace',
-  join(__dirname, '../../../workspace/collection.json')
+  '@nrwl/jest',
+  join(__dirname, '../../../jest/collection.json')
 );
 
 testRunner.registerCollection(
-  '@nrwl/jest',
-  join(__dirname, '../../../jest/collection.json')
+  '@nrwl/workspace',
+  join(__dirname, '../../../workspace/collection.json')
 );
 
 export function runSchematic(schematicName: string, options: any, tree: Tree) {

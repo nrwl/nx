@@ -49,7 +49,7 @@
     "skipTsConfig": {
       "type": "boolean",
       "default": false,
-      "description": "Do not update tsconfig.json for development experience."
+      "description": "Do not update tsconfig.base.json for development experience."
     },
     "publishable": {
       "type": "boolean",

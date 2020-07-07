@@ -50,26 +50,17 @@ forEachCli(() => {
       );
       runCLI(`build my-dir-${myapp} --prod --output-hashing none`);
 
-      checkFilesExist(
-        `dist/apps/my-dir/${myapp}/main-es2015.js`,
-        `dist/apps/my-dir/${myapp}/main-es5.js`
-      );
+      checkFilesExist(`dist/apps/my-dir/${myapp}/main.js`);
 
       // This is a loose requirement because there are a lot of
       // influences external from this project that affect this.
       const es2015BundleSize = getSize(
-        tmpProjPath(`dist/apps/my-dir/${myapp}/main-es2015.js`)
+        tmpProjPath(`dist/apps/my-dir/${myapp}/main.js`)
       );
       console.log(
         `The current es2015 bundle size is ${es2015BundleSize / 1000} KB`
       );
       expect(es2015BundleSize).toBeLessThanOrEqual(125000);
-
-      const es5BundleSize = getSize(
-        tmpProjPath(`dist/apps/my-dir/${myapp}/main-es5.js`)
-      );
-      console.log(`The current es5 bundle size is ${es5BundleSize / 1000} KB`);
-      expect(es5BundleSize).toBeLessThanOrEqual(150000);
 
       // running tests for the app
       expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));

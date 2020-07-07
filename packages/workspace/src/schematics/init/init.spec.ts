@@ -124,7 +124,7 @@ describe('workspace', () => {
         '/tsconfig.spec.json',
         '{"extends": "../tsconfig.json", "compilerOptions": {}}'
       );
-      appTree.create('/tsconfig.json', '{"compilerOptions": {}}');
+      appTree.create('/tsconfig.base.json', '{"compilerOptions": {}}');
       appTree.create('/tslint.json', '{"rules": {}}');
       appTree.create('/e2e/protractor.conf.js', '// content');
       appTree.create('/src/app/app.module.ts', '// content');
@@ -177,7 +177,7 @@ describe('workspace', () => {
         '/src/tsconfig.spec.json',
         '{"extends": "../tsconfig.json", "compilerOptions": {}}'
       );
-      appTree.create('/tsconfig.json', '{"compilerOptions": {}}');
+      appTree.create('/tsconfig.base.json', '{"compilerOptions": {}}');
       appTree.create('/tslint.json', '{"rules": {}}');
       appTree.create('/e2e/protractor.conf.js', '// content');
       appTree.create('/src/app/app.module.ts', '// content');
@@ -216,7 +216,7 @@ describe('workspace', () => {
         '/tsconfig.spec.json',
         '{"extends": "../tsconfig.json", "compilerOptions": {}}'
       );
-      appTree.create('/tsconfig.json', '{"compilerOptions": {}}');
+      appTree.create('/tsconfig.base.json', '{"compilerOptions": {}}');
       appTree.create('/tslint.json', '{"rules": {}}');
       appTree.create('/e2e/protractor.conf.js', '// content');
       appTree.create('/src/app/app.module.ts', '// content');

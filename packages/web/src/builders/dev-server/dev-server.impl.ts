@@ -20,7 +20,6 @@ import {
   runWebpackDevServer,
   DevServerBuildOutput,
 } from '@angular-devkit/build-webpack';
-import { NodeJsSyncHost } from '@angular-devkit/core/node';
 
 export interface WebDevServerOptions extends JsonObject {
   host: string;
@@ -45,10 +44,9 @@ function run(
   serveOptions: WebDevServerOptions,
   context: BuilderContext
 ): Observable<DevServerBuildOutput> {
-  const host = new NodeJsSyncHost();
   return forkJoin(
     getBuildOptions(serveOptions, context),
-    from(getSourceRoot(context, host))
+    from(getSourceRoot(context))
   ).pipe(
     map(([buildOptions, sourceRoot]) => {
       buildOptions = normalizeWebBuildOptions(

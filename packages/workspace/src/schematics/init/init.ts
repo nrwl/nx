@@ -229,7 +229,7 @@ function updateAngularCLIJson(options: Schema): Rule {
 }
 
 function updateTsConfig(options: Schema): Rule {
-  return updateJsonInTree('tsconfig.json', (tsConfigJson) =>
+  return updateJsonInTree('tsconfig.base.json', (tsConfigJson) =>
     setUpCompilerOptions(tsConfigJson, options.npmScope, '')
   );
 }
@@ -244,14 +244,14 @@ function updateTsConfigsJson(options: Schema) {
 
     return chain([
       updateJsonInTree(app.architect.build.options.tsConfig, (json) => {
-        json.extends = `${offset}tsconfig.json`;
+        json.extends = `${offset}tsconfig.base.json`;
         json.compilerOptions.outDir = `${offset}dist/out-tsc`;
         return json;
       }),
 
       app.architect.test
         ? updateJsonInTree(app.architect.test.options.tsConfig, (json) => {
-            json.extends = `${offset}tsconfig.json`;
+            json.extends = `${offset}tsconfig.base.json`;
             json.compilerOptions.outDir = `${offset}dist/out-tsc`;
             return json;
           })
@@ -268,7 +268,9 @@ function updateTsConfigsJson(options: Schema) {
         ? updateJsonInTree(
             e2eProject.architect.lint.options.tsConfig,
             (json) => {
-              json.extends = `${offsetFromRoot(e2eProject.root)}tsconfig.json`;
+              json.extends = `${offsetFromRoot(
+                e2eProject.root
+              )}tsconfig.base.json`;
               json.compilerOptions = {
                 ...json.compilerOptions,
                 outDir: `${offsetFromRoot(e2eProject.root)}dist/out-tsc`,
@@ -472,7 +474,7 @@ function createAdditionalFiles(options: Schema): Rule {
         implicitDependencies: {
           'angular.json': '*',
           'package.json': '*',
-          'tsconfig.json': '*',
+          'tsconfig.base.json': '*',
           'tslint.json': '*',
           'nx.json': '*',
         },
@@ -579,7 +581,7 @@ const createNxJson = (host: Tree) => {
       implicitDependencies: {
         'angular.json': '*',
         'package.json': '*',
-        'tsconfig.json': '*',
+        'tsconfig.base.json': '*',
         'tslint.json': '*',
         'nx.json': '*',
       },

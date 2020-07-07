@@ -45,7 +45,7 @@ export function resolveModuleByImport(importExpr: string, filePath: string) {
 }
 
 function getCompilerHost() {
-  const { options } = readTsConfig(`${appRootPath}/tsconfig.json`);
+  const { options } = readTsConfig(`${appRootPath}/tsconfig.base.json`);
   const host = ts.createCompilerHost(options, true);
   const moduleResolutionCache = ts.createModuleResolutionCache(
     appRootPath,

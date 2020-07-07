@@ -15,7 +15,6 @@ import * as postcss from 'rollup-plugin-postcss';
 import * as filesize from 'rollup-plugin-filesize';
 import * as localResolve from 'rollup-plugin-local-resolve';
 import { toClassName } from '@nrwl/workspace/src/utils/name-utils';
-import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { BuildResult } from '@angular-devkit/build-webpack';
 import {
   readJsonFile,
@@ -66,14 +65,13 @@ export function run(
   rawOptions: PackageBuilderOptions,
   context: BuilderContext
 ): Observable<BuilderOutput> {
-  const host = new NodeJsSyncHost();
   const projGraph = createProjectGraph();
   const { target, dependencies } = calculateProjectDependencies(
     projGraph,
     context
   );
 
-  return from(getSourceRoot(context, host)).pipe(
+  return from(getSourceRoot(context)).pipe(
     switchMap((sourceRoot) => {
       if (!checkDependentProjectsHaveBeenBuilt(context, dependencies)) {
         return of({ success: false });
@@ -153,7 +151,7 @@ export function run(
 
 // -----------------------------------------------------------------------------
 
-function createRollupOptions(
+export function createRollupOptions(
   options: NormalizedBundleBuilderOptions,
   dependencies: DependentBuildableProjectNode[],
   context: BuilderContext,

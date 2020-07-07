@@ -12,7 +12,7 @@ export function updateTsConfig(options: NormalizedSchema): Rule {
   return chain([
     (host: Tree, context: SchematicContext) => {
       const nxJson = readJsonInTree<NxJson>(host, 'nx.json');
-      return updateJsonInTree('tsconfig.json', (json) => {
+      return updateJsonInTree('tsconfig.base.json', (json) => {
         const c = json.compilerOptions;
         c.paths = c.paths || {};
         delete c.paths[options.name];

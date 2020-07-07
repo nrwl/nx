@@ -33,12 +33,7 @@ forEachCli(() => {
         `generate @nrwl/angular:ngrx flights --module=libs/${mylib}/src/lib/${mylib}.module.ts --facade --syntax=classes`
       );
 
-      expect(runCLI(`build ${myapp}`)).toContain(
-        'chunk {main} main-es2015.js,'
-      );
-      expect(runCLI(`build ${myapp}`)).toContain(
-        'ES5 bundle generation complete'
-      );
+      expect(runCLI(`build ${myapp}`)).toContain('chunk {main} main.js,');
       expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
       expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
     }, 1000000);
@@ -70,12 +65,7 @@ forEachCli(() => {
         `generate @nrwl/angular:ngrx flights --module=libs/${mylib}/src/lib/${mylib}.module.ts ${flags}`
       );
 
-      expect(runCLI(`build ${myapp}`)).toContain(
-        'chunk {main} main-es2015.js,'
-      );
-      expect(runCLI(`build ${myapp}`)).toContain(
-        'ES5 bundle generation complete'
-      );
+      expect(runCLI(`build ${myapp}`)).toContain('chunk {main} main.js,');
       expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
       expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
     }, 1000000);

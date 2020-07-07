@@ -29,9 +29,9 @@ describe('jestProject', () => {
     appTree = await callRule(
       updateJsonInTree('libs/lib1/tsconfig.json', (json) => {
         return {
-          compilerOptions: {
-            types: [],
-          },
+          files: [],
+          include: [],
+          references: [],
         };
       }),
       appTree
@@ -98,7 +98,7 @@ describe('jestProject', () => {
 `);
   });
 
-  it('should update the local tsconfig.json', async () => {
+  it('should add a reference to solution tsconfig.json', async () => {
     const resultTree = await runSchematic(
       'jest-project',
       {
@@ -107,8 +107,9 @@ describe('jestProject', () => {
       appTree
     );
     const tsConfig = readJsonInTree(resultTree, 'libs/lib1/tsconfig.json');
-    expect(tsConfig.compilerOptions.types).toContain('jest');
-    expect(tsConfig.compilerOptions.types).toContain('node');
+    expect(tsConfig.references).toContainEqual({
+      path: './tsconfig.spec.json',
+    });
   });
 
   it('should create a tsconfig.spec.json', async () => {

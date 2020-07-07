@@ -55,8 +55,14 @@ describe('app', () => {
       expect(jestConfig).toContain('@nrwl/react/plugins/jest');
 
       const tsconfig = readJsonInTree(tree, 'apps/my-app/tsconfig.json');
-      expect(tsconfig.extends).toEqual('../../tsconfig.json');
-      expect(tsconfig.compilerOptions.types).toContain('jest');
+      expect(tsconfig.references).toEqual([
+        {
+          path: './tsconfig.app.json',
+        },
+        {
+          path: './tsconfig.spec.json',
+        },
+      ]);
 
       const tsconfigApp = JSON.parse(
         stripJsonComments(tree.readContent('apps/my-app/tsconfig.app.json'))
@@ -139,19 +145,9 @@ describe('app', () => {
       // Make sure these have properties
       [
         {
-          path: 'apps/my-dir/my-app/tsconfig.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: '../../../tsconfig.json',
-        },
-        {
           path: 'apps/my-dir/my-app/tsconfig.app.json',
           lookupFn: (json) => json.compilerOptions.outDir,
           expectedValue: '../../../dist/out-tsc',
-        },
-        {
-          path: 'apps/my-dir/my-app-e2e/tsconfig.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: '../../../tsconfig.json',
         },
         {
           path: 'apps/my-dir/my-app-e2e/tsconfig.e2e.json',

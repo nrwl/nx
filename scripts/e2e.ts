@@ -108,7 +108,7 @@ async function runTest() {
             .join(',');
   }
 
-  execSync(`./scripts/package.sh 9999.0.1 "~9.1.0" "3.8.3" "2.0.4"`, {
+  execSync(`./scripts/package.sh 9999.0.1 "~10.0.0" "3.9.3" "2.0.4"`, {
     stdio: [0, 1, 2],
   });
   execSync(`rm -rf tmp`);

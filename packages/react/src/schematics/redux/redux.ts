@@ -168,7 +168,7 @@ async function normalizeOptions(
   const workspace = await getWorkspace(host);
   const projectType = workspace.projects.get(options.project).extensions
     .projectType as string;
-  const tsConfigJson = readJsonInTree(host, 'tsconfig.json');
+  const tsConfigJson = readJsonInTree(host, 'tsconfig.base.json');
   const tsPaths: { [module: string]: string[] } = tsConfigJson.compilerOptions
     ? tsConfigJson.compilerOptions.paths || {}
     : {};

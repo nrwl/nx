@@ -56,22 +56,25 @@ describe('lib', () => {
       });
     });
 
-    it('should update root tsconfig.json', async () => {
+    it('should update tsconfig.base.json', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
-      const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
+      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
         'libs/my-lib/src/index.ts',
       ]);
     });
 
-    it('should update root tsconfig.json (no existing path mappings)', async () => {
-      const updatedTree: any = updateJsonInTree('tsconfig.json', (json) => {
-        json.compilerOptions.paths = undefined;
-        return json;
-      })(appTree, null);
+    it('should update root tsconfig.base.json (no existing path mappings)', async () => {
+      const updatedTree: any = updateJsonInTree(
+        'tsconfig.base.json',
+        (json) => {
+          json.compilerOptions.paths = undefined;
+          return json;
+        }
+      )(appTree, null);
 
       const tree = await runSchematic('lib', { name: 'myLib' }, updatedTree);
-      const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
+      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
         'libs/my-lib/src/index.ts',
       ]);
@@ -80,21 +83,14 @@ describe('lib', () => {
     it('should create a local tsconfig.json', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
       const tsconfigJson = readJsonInTree(tree, 'libs/my-lib/tsconfig.json');
-      expect(tsconfigJson).toEqual({
-        extends: '../../tsconfig.json',
-        compilerOptions: {
-          allowJs: true,
-          jsx: 'react',
-          allowSyntheticDefaultImports: true,
-          esModuleInterop: true,
-          types: ['node', 'jest'],
+      expect(tsconfigJson.references).toEqual([
+        {
+          path: './tsconfig.lib.json',
         },
-        files: [
-          '../../node_modules/@nrwl/react/typings/cssmodule.d.ts',
-          '../../node_modules/@nrwl/react/typings/image.d.ts',
-        ],
-        include: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
-      });
+        {
+          path: './tsconfig.spec.json',
+        },
+      ]);
     });
 
     it('should extend the local tsconfig.json with tsconfig.spec.json', async () => {
@@ -206,13 +202,13 @@ describe('lib', () => {
       });
     });
 
-    it('should update tsconfig.json', async () => {
+    it('should update tsconfig.base.json', async () => {
       const tree = await runSchematic(
         'lib',
         { name: 'myLib', directory: 'myDir' },
         appTree
       );
-      const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
+      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
       expect(
         tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']
       ).toEqual(['libs/my-dir/my-lib/src/index.ts']);
@@ -232,21 +228,14 @@ describe('lib', () => {
         tree,
         'libs/my-dir/my-lib/tsconfig.json'
       );
-      expect(tsconfigJson).toEqual({
-        extends: '../../../tsconfig.json',
-        compilerOptions: {
-          allowJs: true,
-          jsx: 'react',
-          allowSyntheticDefaultImports: true,
-          esModuleInterop: true,
-          types: ['node', 'jest'],
+      expect(tsconfigJson.references).toEqual([
+        {
+          path: './tsconfig.lib.json',
         },
-        files: [
-          '../../../node_modules/@nrwl/react/typings/cssmodule.d.ts',
-          '../../../node_modules/@nrwl/react/typings/image.d.ts',
-        ],
-        include: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
-      });
+        {
+          path: './tsconfig.spec.json',
+        },
+      ]);
     });
   });
 

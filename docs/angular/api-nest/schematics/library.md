@@ -106,7 +106,7 @@ Default: `false`
 
 Type: `boolean`
 
-Do not update tsconfig.json for development experience.
+Do not update tsconfig.base.json for development experience.
 
 ### tags
 

@@ -29,9 +29,9 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "@angular-devkit/schematics": "~9.1.0",
-    "@angular-devkit/core": "~9.1.0",
-    "@angular-devkit/architect": "~0.901.0",
+    "@angular-devkit/schematics": "~10.0.0",
+    "@angular-devkit/core": "~10.0.0",
+    "@angular-devkit/architect": "~0.1000.0",
     "inquirer": "^6.3.1",
     "minimist": "^1.2.0",
     "strip-json-comments": "2.0.1",

@@ -51,12 +51,12 @@ function updateTsConfig(options: KarmaProjectSchema): Rule {
       (json) => {
         return {
           ...json,
-          compilerOptions: {
-            ...json.compilerOptions,
-            types: Array.from(
-              new Set([...(json.compilerOptions.types || []), 'jasmine'])
-            ),
-          },
+          references: [
+            ...(json.references || []),
+            {
+              path: './tsconfig.spec.json',
+            },
+          ],
         };
       }
     );

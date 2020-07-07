@@ -1,7 +1,10 @@
 {
-  "extends": "<%= offsetFromRoot %>tsconfig.json",
-  "compilerOptions": {
-    "types": ["cypress", "node"]
-  },
-  "include": ["**/*.ts", "**/*.js"]
+  "extends": "<%= offsetFromRoot %>tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.e2e.json"
+    }
+  ]
 }

@@ -18,10 +18,20 @@ describe('app', () => {
     );
   });
 
+  it('should add types to the tsconfig.app.json', async () => {
+    const tree = await runSchematic('app', { name: 'myNodeApp' }, appTree);
+    const tsconfig = readJsonInTree(tree, 'apps/my-node-app/tsconfig.app.json');
+    expect(tsconfig.compilerOptions.types).toContain('express');
+  });
+
   it('should update tsconfig', async () => {
     const tree = await runSchematic('app', { name: 'myNodeApp' }, appTree);
     const tsconfig = readJsonInTree(tree, 'apps/my-node-app/tsconfig.json');
-    expect(tsconfig.extends).toEqual('../../tsconfig.json');
-    expect(tsconfig.compilerOptions.types).toContain('express');
+    expect(tsconfig.references).toContainEqual({
+      path: './tsconfig.app.json',
+    });
+    expect(tsconfig.references).toContainEqual({
+      path: './tsconfig.spec.json',
+    });
   });
 });

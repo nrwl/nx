@@ -7,7 +7,12 @@ import {
   schematic,
   Tree,
 } from '@angular-devkit/schematics';
-import { addLintFiles, formatFiles, Linter } from '@nrwl/workspace';
+import {
+  addLintFiles,
+  formatFiles,
+  Linter,
+  updateJsonInTree,
+} from '@nrwl/workspace';
 import { addUnitTestRunner } from '../init/init';
 import { addModule } from './lib/add-module';
 import { normalizeOptions } from './lib/normalize-options';
@@ -26,6 +31,12 @@ export default function (schema: Schema): Rule {
     return chain([
       addLintFiles(options.projectRoot, Linter.TsLint, { onlyGlobal: true }),
       addUnitTestRunner(options),
+      // TODO: Remove this after Angular 10.1.0
+      updateJsonInTree('tsconfig.json', () => ({
+        files: [],
+        include: [],
+        references: [],
+      })),
       externalSchematic('@schematics/angular', 'library', {
         name: options.name,
         prefix: options.prefix,
@@ -34,6 +45,10 @@ export default function (schema: Schema): Rule {
         skipPackageJson: !options.publishable,
         skipTsConfig: true,
       }),
+      // TODO: Remove this after Angular 10.1.0
+      (host) => {
+        host.delete('tsconfig.json');
+      },
 
       move(options.name, options.projectRoot),
       updateProject(options),

@@ -44,7 +44,7 @@ describe('findTargetProjectWithImport', () => {
     fsJson = {
       './workspace.json': JSON.stringify(workspaceJson),
       './nx.json': JSON.stringify(nxJson),
-      './tsconfig.json': JSON.stringify(tsConfig),
+      './tsconfig.base.json': JSON.stringify(tsConfig),
       './libs/proj/index.ts': `import {a} from '@proj/my-second-proj';
                               import('@proj/project-3');
                               const a = { loadChildren: '@proj/proj4ab#a' };                     

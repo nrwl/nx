@@ -2,7 +2,8 @@ import { EventEmitter } from 'events';
 import { join } from 'path';
 import { getMockContext } from '../../utils/testing';
 import { MockBuilderContext } from '@nrwl/workspace/testing';
-import * as projectGraphUtils from '@nrwl/workspace/src/core/project-graph';
+jest.mock('@nrwl/workspace/src/core/project-graph');
+let projectGraph = require('@nrwl/workspace/src/core/project-graph');
 import {
   ProjectGraph,
   ProjectType,
@@ -25,7 +26,7 @@ let { fork } = require('child_process');
 jest.mock('tree-kill');
 let treeKill = require('tree-kill');
 
-describe('NodeCompileBuilder', () => {
+describe('NodePackageBuilder', () => {
   let testOptions: NodePackageBuilderOptions;
   let context: MockBuilderContext;
   let fakeEventEmitter: EventEmitter;
@@ -75,7 +76,7 @@ describe('NodeCompileBuilder', () => {
   describe('Without library dependencies', () => {
     beforeEach(() => {
       // mock createProjectGraph without deps
-      spyOn(projectGraphUtils, 'createProjectGraph').and.callFake(() => {
+      spyOn(projectGraph, 'createProjectGraph').and.callFake(() => {
         return {
           nodes: {},
           dependencies: {},
@@ -223,7 +224,7 @@ describe('NodeCompileBuilder', () => {
 
   describe('building with dependencies', () => {
     beforeEach(() => {
-      spyOn(projectGraphUtils, 'createProjectGraph').and.callFake(() => {
+      spyOn(projectGraph, 'createProjectGraph').and.callFake(() => {
         return {
           nodes: {
             nodelib: {

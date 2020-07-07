@@ -1,9 +1,10 @@
 import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { readJsonInTree } from '@nrwl/workspace';
+import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import * as path from 'path';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { join } from 'path';
+import { callRule } from '../../../src/utils/testing';
 
 describe('Update 8-10-0', () => {
   let tree: Tree;
@@ -60,6 +61,11 @@ describe('Update 8-10-0', () => {
     );
 
     reactRunner.registerCollection(
+      '@nrwl/jest',
+      join(__dirname, '../../../../jest/collection.json')
+    );
+
+    reactRunner.registerCollection(
       '@nrwl/cypress',
       join(__dirname, '../../../../cypress/collection.json')
     );
@@ -73,6 +79,14 @@ describe('Update 8-10-0', () => {
         tree
       )
       .toPromise();
+
+    tree = await callRule(
+      updateJsonInTree(`nested/nested-app/tsconfig.json`, (json) => {
+        json.files = [];
+        return json;
+      }),
+      tree
+    );
 
     tree = await schematicRunner
       .runSchematicAsync('update-8.10.0', {}, tree)

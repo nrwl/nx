@@ -27,6 +27,6 @@
     "@nrwl/workspace": "*"
   },
   "dependencies": {
-    "@angular-devkit/architect": "~0.901.0"
+    "@angular-devkit/architect": "~0.1000.0"
   }
 }

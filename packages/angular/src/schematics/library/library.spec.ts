@@ -143,7 +143,7 @@ describe('lib', () => {
 
     it('should update root tsconfig.json', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
-      const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
+      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
         'libs/my-lib/src/index.ts',
       ]);
@@ -153,11 +153,17 @@ describe('lib', () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
       const tsconfigJson = readJsonInTree(tree, 'libs/my-lib/tsconfig.json');
       expect(tsconfigJson).toEqual({
-        extends: '../../tsconfig.json',
-        compilerOptions: {
-          types: ['node', 'jest'],
-        },
-        include: ['**/*.ts'],
+        extends: '../../tsconfig.base.json',
+        files: [],
+        include: [],
+        references: [
+          {
+            path: './tsconfig.lib.json',
+          },
+          {
+            path: './tsconfig.spec.json',
+          },
+        ],
       });
     });
 
@@ -461,7 +467,7 @@ describe('lib', () => {
         { name: 'myLib', directory: 'myDir' },
         appTree
       );
-      const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
+      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
       expect(
         tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']
       ).toEqual(['libs/my-dir/my-lib/src/index.ts']);
@@ -471,17 +477,20 @@ describe('lib', () => {
     });
 
     it('should update tsconfig.json (no existing path mappings)', async () => {
-      const updatedTree: any = updateJsonInTree('tsconfig.json', (json) => {
-        json.compilerOptions.paths = undefined;
-        return json;
-      })(appTree, null);
+      const updatedTree: any = updateJsonInTree(
+        'tsconfig.base.json',
+        (json) => {
+          json.compilerOptions.paths = undefined;
+          return json;
+        }
+      )(appTree, null);
 
       const tree = await runSchematic(
         'lib',
         { name: 'myLib', directory: 'myDir' },
         updatedTree
       );
-      const tsconfigJson = readJsonInTree(tree, '/tsconfig.json');
+      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
       expect(
         tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']
       ).toEqual(['libs/my-dir/my-lib/src/index.ts']);
@@ -502,11 +511,17 @@ describe('lib', () => {
         'libs/my-dir/my-lib/tsconfig.json'
       );
       expect(tsconfigJson).toEqual({
-        extends: '../../../tsconfig.json',
-        compilerOptions: {
-          types: ['node', 'jest'],
-        },
-        include: ['**/*.ts'],
+        extends: '../../../tsconfig.base.json',
+        files: [],
+        include: [],
+        references: [
+          {
+            path: './tsconfig.lib.json',
+          },
+          {
+            path: './tsconfig.spec.json',
+          },
+        ],
       });
     });
   });

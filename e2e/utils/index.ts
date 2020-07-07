@@ -93,10 +93,10 @@ export function runCreateWorkspace(
 ) {
   let command = `npx create-nx-workspace@${process.env.PUBLISHED_VERSION} ${name} --cli=${cli} --preset=${preset} --no-nxCloud --no-interactive`;
   if (appName) {
-    command += ` --appName ${appName}`;
+    command += ` --appName=${appName}`;
   }
   if (style) {
-    command += ` --style ${style}`;
+    command += ` --style=${style}`;
   }
 
   if (base) {

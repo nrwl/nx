@@ -161,7 +161,7 @@ function rootWorkspaceFileData(workspaceFiles: FileData[]): FileData[] {
     'workspace.json',
     'angular.json',
     `nx.json`,
-    `tsconfig.json`,
+    `tsconfig.base.json`,
   ].reduce((acc: FileData[], curr: string) => {
     const fileData = workspaceFiles.find((x) => x.file === curr);
     if (fileData) {

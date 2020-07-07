@@ -194,7 +194,7 @@ export function readNxJson(): NxJson {
 
 // TODO: Make this list extensible
 export function rootWorkspaceFileNames(): string[] {
-  return [`package.json`, workspaceFileName(), `nx.json`, `tsconfig.json`];
+  return [`package.json`, workspaceFileName(), `nx.json`, `tsconfig.base.json`];
 }
 
 export function readWorkspaceFiles(): FileData[] {
