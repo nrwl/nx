@@ -4,17 +4,21 @@ import {
   scheduleTargetAndForget,
   targetFromTargetString,
 } from '@angular-devkit/architect';
-import { switchMap, concatMap } from 'rxjs/operators';
-import { Schema } from './schema';
 import { from } from 'rxjs';
+import { concatMap, switchMap } from 'rxjs/operators';
+import { Schema } from './schema';
 
 try {
   require('dotenv').config();
+  // eslint-disable-next-line no-empty
 } catch (e) {}
 
-export interface NxPluginE2EBuilderOptions extends Schema {}
+export type NxPluginE2EBuilderOptions = Schema;
 
-export default createBuilder(runNxPluginE2EBuilder);
+function buildTarget(context: BuilderContext, target: string) {
+  return scheduleTargetAndForget(context, targetFromTargetString(target));
+}
+
 export function runNxPluginE2EBuilder(
   options: NxPluginE2EBuilderOptions,
   context: BuilderContext
@@ -32,6 +36,4 @@ export function runNxPluginE2EBuilder(
   );
 }
 
-function buildTarget(context: BuilderContext, target: string) {
-  return scheduleTargetAndForget(context, targetFromTargetString(target));
-}
+export default createBuilder(runNxPluginE2EBuilder);

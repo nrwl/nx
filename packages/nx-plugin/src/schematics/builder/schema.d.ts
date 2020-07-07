@@ -4,3 +4,10 @@ export interface Schema {
   description?: string;
   unitTestRunner: 'jest' | 'none';
 }
+
+export interface NormalizedSchema extends Schema {
+  fileName: string;
+  projectRoot: string;
+  projectSourceRoot: string;
+  npmScope: string;
+}

@@ -9,3 +9,14 @@ export interface Schema {
   unitTestRunner: 'jest' | 'none';
   linter: Linter;
 }
+
+export interface NormalizedSchema extends Schema {
+  name: string;
+  fileName: string;
+  projectRoot: Path;
+  projectDirectory: string;
+  parsedTags: string[];
+  npmScope: string;
+  npmPackageName: string;
+  fileTemplate: string;
+}

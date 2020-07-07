@@ -6,3 +6,8 @@ export interface Schema {
   packageJsonUpdates: boolean;
   unitTestRunner: 'jest' | 'none';
 }
+
+export interface NormalizedSchema extends Schema {
+  projectRoot: string;
+  projectSourceRoot: string;
+}
