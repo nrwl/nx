@@ -14,6 +14,9 @@ describe('update 10.0.0', () => {
       name: 'test-jest',
       preset: '../../jest.config.js',
       coverageDirectory: '../../coverage/libs/test-jest',
+      globals: {
+        "existing-global": "test"
+      },
       snapshotSerializers: [
         'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
         'jest-preset-angular/build/AngularSnapshotSerializer.js',
@@ -127,6 +130,7 @@ describe('update 10.0.0', () => {
 
     expect(angularSetupFiles).toEqual(['<rootDir>/src/test-setup.ts']);
     expect(angularGlobals).toEqual({
+      'existing-global': 'test',
       'ts-jest': {
         tsConfig: '<rootDir>/tsconfig.spec.json',
         stringifyContentPathRegex: '\\.(html|svg)$',

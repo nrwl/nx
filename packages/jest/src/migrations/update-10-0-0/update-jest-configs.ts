@@ -14,7 +14,7 @@ import {
 import { addPropertyToJestConfig, jestConfigObject } from '../../..';
 
 function checkJestPropertyObject(object: unknown): object is object {
-  return object !== null && object.constructor.name === 'Object';
+  return object !== null && object !== undefined;
 }
 
 function modifyJestConfig(
@@ -108,8 +108,9 @@ function modifyJestConfig(
     This is most likely caused because the jest config at ${jestConfig} it not in a expected configuration format (ie. module.exports = {}).
     
     Since this migration could not be ran on this project, please make sure to modify the Jest config file to have the following configured:
-    * setupFilesAfterEnv with: ${setupFile}
-    * globals.ts-jest with:   ${serializeJson(globalTsJest)}
+    * setupFilesAfterEnv with: "${setupFile}"
+    * globals.ts-jest with: 
+    "${serializeJson(globalTsJest)}"
   `);
   }
 }
