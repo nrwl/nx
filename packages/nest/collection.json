@@ -1,7 +1,7 @@
 {
   "name": "nx/nest",
   "version": "0.1",
-  "extends": ["@nestjs/schematics", "@nrwl/workspace"],
+  "extends": ["@nrwl/workspace"],
   "schematics": {
     "init": {
       "factory": "./src/schematics/init/init",
@@ -10,19 +10,22 @@
       "aliases": ["ng-add"],
       "hidden": true
     },
-
     "application": {
       "factory": "./src/schematics/application/application",
       "schema": "./src/schematics/application/schema.json",
       "aliases": ["app"],
       "description": "Create a nest application"
     },
-
     "library": {
       "factory": "./src/schematics/library/library",
       "schema": "./src/schematics/library/schema.json",
       "aliases": ["lib"],
       "description": "Create a new nest library"
+    },
+    "schematics": {
+      "factory": "./src/schematics/schematics/schematic",
+      "schema": "./src/schematics/schematics/schema.json",
+      "description": "Run Nest schematics targeting Nx projects"
     }
   }
 }
