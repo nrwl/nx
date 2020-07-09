@@ -29,6 +29,14 @@
         "required": ["replace", "with"]
       },
       "default": []
+    },
+    "dependencies": {
+      "description": "Adds more dependencies from root package json into the build.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
     }
   },
   "required": []

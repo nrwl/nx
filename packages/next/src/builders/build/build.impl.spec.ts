@@ -27,6 +27,7 @@ describe('Next.js Builder', () => {
           with: 'apps/wibble/src/environment.prod.ts',
         },
       ],
+      dependencies: [],
     };
 
     jest.spyOn(build, 'default').mockReturnValue(Promise.resolve());

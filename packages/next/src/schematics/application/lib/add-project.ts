@@ -14,6 +14,7 @@ export function addProject(options: NormalizedSchema): Rule {
       options: {
         root: options.appProjectRoot,
         outputPath: join(normalize('dist'), options.appProjectRoot),
+        dependencies: [],
       },
       // This has to be here so `nx serve [app] --prod` will work. Otherwise
       // a missing configuration error will be thrown.

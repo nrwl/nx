@@ -18,6 +18,13 @@ export async function createPackageJson(
     ...rootPackageJson.devDependencies,
   };
 
+  const pickedDependencies = options.dependencies.reduce((acc, value) => {
+    if (allWorkspaceDeps[value]) {
+      acc[value] = allWorkspaceDeps[value];
+    }
+    return acc;
+  }, {});
+
   const outPackageJson = {
     name: context.target.project,
     version: '0.0.1',
@@ -28,6 +35,7 @@ export async function createPackageJson(
       next: allWorkspaceDeps.next,
       react: allWorkspaceDeps.react || reactVersion,
       'react-dom': allWorkspaceDeps['react-dom'] || reactDomVersion,
+      ...pickedDependencies,
     },
     devDependencies: {},
   };

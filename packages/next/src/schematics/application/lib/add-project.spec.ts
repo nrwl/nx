@@ -44,6 +44,7 @@ describe('addProject Rule', () => {
       options: {
         outputPath: 'dist/apps/todos',
         root: '/apps/todos',
+        dependencies: [],
       },
     });
   });

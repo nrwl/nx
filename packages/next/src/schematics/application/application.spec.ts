@@ -115,6 +115,7 @@ describe('app', () => {
     expect(architectConfig.build.options).toEqual({
       root: 'apps/my-app',
       outputPath: 'dist/apps/my-app',
+      dependencies: [],
     });
   });
 

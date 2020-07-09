@@ -7,6 +7,12 @@ Read more about how to use builders and the CLI here: https://nx.dev/react/guide
 
 ## Properties
 
+### dependencies
+
+Type: `array`
+
+Adds more dependencies from root package json into the build.
+
 ### fileReplacements
 
 Type: `object[]`

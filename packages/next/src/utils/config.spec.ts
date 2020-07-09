@@ -72,6 +72,7 @@ describe('Next.js webpack config builder', () => {
           root: 'apps/wibble',
           outputPath: 'dist/apps/wibble',
           fileReplacements: [],
+          dependencies: [],
         },
         { workspaceRoot: '/root' } as any
       );
