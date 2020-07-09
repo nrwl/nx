@@ -13,8 +13,8 @@ labels: "type: feature"
 ## Motivation
 <!-- Why do you believe this behavior would be beneficial? -->
 
-## Suggested Implementaion
+## Suggested Implementation
 <!-- How do you imagine this might work? -->
 
 ## Alternate Implementations
-<!-- How else do you imagine this might work. -->
+<!-- How else do you imagine this might work? -->
