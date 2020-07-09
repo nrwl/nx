@@ -5,7 +5,7 @@ import { join } from 'path';
 
 import { NestSchematicsSchema } from './schema';
 
-describe('schematics schematic', () => {
+describe('nestjs-schematics schematic', () => {
   let appTree: Tree;
   const options: NestSchematicsSchema = {
     name: 'test',
@@ -15,7 +15,7 @@ describe('schematics schematic', () => {
   };
 
   const testRunner = new SchematicTestRunner(
-    '@nrwl/schematics',
+    '@nrwl/nestjs-schematics',
     join(__dirname, '../../../collection.json')
   );
 

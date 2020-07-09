@@ -23,8 +23,8 @@
       "description": "Create a new nest library"
     },
     "schematics": {
-      "factory": "./src/schematics/schematics/schematic",
-      "schema": "./src/schematics/schematics/schema.json",
+      "factory": "./src/schematics/nestjs-schematics/schematics",
+      "schema": "./src/schematics/nestjs-schematics/schema.json",
       "description": "Run Nest schematics targeting Nx projects"
     }
   }
