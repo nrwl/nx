@@ -143,10 +143,8 @@ forEachCli('angular', (cli) => {
         [`@proj/${childLib}`]: '0.0.1',
         [`@proj/${childLib2}`]: '0.0.1',
       });
-      expect(jsonFile.peerDependencies).toEqual({
-        '@angular/common': '^10.0.2',
-        '@angular/core': '^10.0.2',
-      });
+      expect(jsonFile.peerDependencies['@angular/common']).toBeDefined();
+      expect(jsonFile.peerDependencies['@angular/core']).toBeDefined();
     });
   });
 });
