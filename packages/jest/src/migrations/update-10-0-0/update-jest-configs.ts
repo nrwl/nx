@@ -120,56 +120,48 @@ function updateJestConfigForProjects() {
     const workspace = await getWorkspace(host, getWorkspacePath(host));
 
     for (const [projectName, projectDefinition] of workspace.projects) {
-      // skip projects that do not have test
-      if (!projectDefinition.targets.has('test')) {
-        continue;
-      }
+      for (const [, testTarget] of projectDefinition.targets) {
+        if (testTarget.builder !== '@nrwl/jest:jest') {
+          continue;
+        }
 
-      const testTarget = projectDefinition.targets.get('test');
-
-      // skip projects that are not using the jest builder
-      if (testTarget.builder !== '@nrwl/jest:jest') {
-        continue;
-      }
-
-      // check if the setup file has `jest-preset-angular`
-
-      const setupfile = testTarget.options?.setupFile;
-      const jestConfig = (testTarget.options?.jestConfig as string) ?? '';
-      const tsConfig = (testTarget.options?.tsConfig as string) ?? '';
-      const tsConfigWithRootDir = tsConfig.replace(
-        projectDefinition.root,
-        '<rootDir>'
-      );
-
-      let isAngular = false;
-      let setupFileWithRootDir = '';
-      if (typeof setupfile === 'string') {
-        isAngular = host
-          .read(setupfile)
-          ?.toString()
-          .includes('jest-preset-angular');
-        setupFileWithRootDir = setupfile.replace(
+        const setupfile = testTarget.options?.setupFile;
+        const jestConfig = (testTarget.options?.jestConfig as string) ?? '';
+        const tsConfig = (testTarget.options?.tsConfig as string) ?? '';
+        const tsConfigWithRootDir = tsConfig.replace(
           projectDefinition.root,
           '<rootDir>'
         );
+
+        let isAngular = false;
+        let setupFileWithRootDir = '';
+        if (typeof setupfile === 'string') {
+          isAngular = host
+            .read(setupfile)
+            ?.toString()
+            .includes('jest-preset-angular');
+          setupFileWithRootDir = setupfile.replace(
+            projectDefinition.root,
+            '<rootDir>'
+          );
+        }
+
+        modifyJestConfig(
+          host,
+          context,
+          projectName,
+          setupFileWithRootDir,
+          jestConfig,
+          tsConfigWithRootDir,
+          isAngular
+        );
+
+        const updatedOptions = { ...testTarget.options };
+        delete updatedOptions.setupFile;
+        delete updatedOptions.tsConfig;
+
+        testTarget.options = updatedOptions;
       }
-
-      modifyJestConfig(
-        host,
-        context,
-        projectName,
-        setupFileWithRootDir,
-        jestConfig,
-        tsConfigWithRootDir,
-        isAngular
-      );
-
-      const updatedOptions = { ...testTarget.options };
-      delete updatedOptions.setupFile;
-      delete updatedOptions.tsConfig;
-
-      testTarget.options = updatedOptions;
     }
 
     return updateWorkspace(workspace);
