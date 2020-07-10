@@ -43,7 +43,8 @@
       "@nrwl/nx-plugin",
       "@nrwl/react",
       "@nrwl/storybook",
-      "@nrwl/web"
+      "@nrwl/web",
+      "@nrwl/eslint-plugin-nx"
     ]
   },
   "peerDependencies": {
