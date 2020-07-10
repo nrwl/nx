@@ -44,7 +44,7 @@ describe('WebPackagebuilder', () => {
         { name: 'example' },
         '/root/src'
       );
-      expect(result.output).toEqual([
+      expect(result.map((x) => x.output)).toEqual([
         {
           file: '/root/dist/ui/example.umd.js',
           format: 'umd',
