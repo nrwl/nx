@@ -21,6 +21,18 @@ describe('Solution Tsconfigs Migration', () => {
         compilerOptions: {
           module: 'commonjs',
         },
+        files: ['src/index.ts'],
+        include: ['**/*.ts'],
+      })),
+      tree
+    );
+    tree = await callRule(
+      updateJsonInTree('apps/app1/tsconfig.app.json', () => ({
+        extends: './tsconfig.json',
+        compilerOptions: {
+          module: 'esnext',
+          types: [],
+        },
       })),
       tree
     );
@@ -30,6 +42,7 @@ describe('Solution Tsconfigs Migration', () => {
         compilerOptions: {
           module: 'esnext',
         },
+        include: ['**/*.spec.ts'],
       })),
       tree
     );
@@ -63,9 +76,39 @@ describe('Solution Tsconfigs Migration', () => {
       include: [],
       references: [
         {
+          path: './tsconfig.app.json',
+        },
+        {
           path: './tsconfig.spec.json',
         },
       ],
+    });
+  });
+
+  it('should update tsconfig.app.json', async () => {
+    const result = await runMigration('solution-tsconfigs', {}, tree);
+    const json = readJsonInTree(result, 'apps/app1/tsconfig.app.json');
+    expect(json).toEqual({
+      extends: './tsconfig.json',
+      compilerOptions: {
+        module: 'esnext',
+        types: [],
+      },
+      files: ['src/index.ts'],
+      include: ['**/*.ts'],
+    });
+  });
+
+  it('should update tsconfig.spec.json', async () => {
+    const result = await runMigration('solution-tsconfigs', {}, tree);
+    const json = readJsonInTree(result, 'apps/app1/tsconfig.spec.json');
+    expect(json).toEqual({
+      extends: './tsconfig.json',
+      compilerOptions: {
+        module: 'esnext',
+      },
+      files: ['src/index.ts'],
+      include: ['**/*.spec.ts'],
     });
   });
 });
