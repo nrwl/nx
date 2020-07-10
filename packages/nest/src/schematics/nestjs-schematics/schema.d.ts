@@ -18,11 +18,11 @@ export interface NestSchematicsSchema {
   project: string;
   unitTestRunner: 'jest' | 'none';
   directory?: string;
-  // Nest schematics properties
   path?: string;
+  flat: boolean;
+  // Additional Nest schematic properties
   module?: string;
   skipImport?: string;
-  flat?: boolean;
   language?: string;
   spec?: boolean;
 }

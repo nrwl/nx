@@ -22,10 +22,11 @@
       "aliases": ["lib"],
       "description": "Create a new nest library"
     },
-    "schematics": {
-      "factory": "./src/schematics/nestjs-schematics/schematics",
+    "nestjs-schematics": {
+      "factory": "./src/schematics/nestjs-schematics/nestjs-schematics",
       "schema": "./src/schematics/nestjs-schematics/schema.json",
-      "description": "Run Nest schematics targeting Nx projects"
+      "description": "Run Nest schematics targeting Nx projects",
+      "aliases": ["schematics", "schema"]
     }
   }
 }

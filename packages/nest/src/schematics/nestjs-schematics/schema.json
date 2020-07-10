@@ -59,7 +59,12 @@
     "directory": {
       "type": "string",
       "description": "A directory where the resulting files are placed",
-      "alias": "d"
+      "aliases": ["d", "path"]
+    },
+    "flat": {
+      "type": "boolean",
+      "default": false,
+      "description": "Flag to indicate if a directory is created."
     }
   },
   "additionalProperties": true,

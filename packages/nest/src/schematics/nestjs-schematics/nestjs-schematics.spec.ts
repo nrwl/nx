@@ -1,9 +1,8 @@
 import { Tree } from '@angular-devkit/schematics';
-import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { join } from 'path';
 
 import { NestSchematicsSchema } from './schema';
+import { runSchematic } from '../../utils/testing';
 
 describe('nestjs-schematics schematic', () => {
   let appTree: Tree;
@@ -12,12 +11,8 @@ describe('nestjs-schematics schematic', () => {
     unitTestRunner: 'jest',
     type: 'class',
     project: '',
+    flat: false,
   };
-
-  const testRunner = new SchematicTestRunner(
-    '@nrwl/nestjs-schematics',
-    join(__dirname, '../../../collection.json')
-  );
 
   beforeEach(() => {
     appTree = createEmptyWorkspace(Tree.empty());
@@ -25,7 +20,7 @@ describe('nestjs-schematics schematic', () => {
 
   it('should run successfully', async () => {
     await expect(
-      testRunner.runSchematicAsync('schematics', options, appTree).toPromise()
+      runSchematic('nestjs-schematics', options, appTree)
     ).resolves.not.toThrowError();
   });
 });
