@@ -35,16 +35,17 @@
       "@nrwl/angular",
       "@nrwl/bazel",
       "@nrwl/cypress",
+      "@nrwl/eslint-plugin-nx",
       "@nrwl/express",
       "@nrwl/jest",
+      "@nrwl/linter",
       "@nrwl/nest",
       "@nrwl/next",
       "@nrwl/node",
       "@nrwl/nx-plugin",
       "@nrwl/react",
       "@nrwl/storybook",
-      "@nrwl/web",
-      "@nrwl/eslint-plugin-nx"
+      "@nrwl/web"
     ]
   },
   "peerDependencies": {
