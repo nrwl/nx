@@ -53,7 +53,7 @@ function visitNotIgnoredFiles(
 }
 
 function moveIncludesToProjectTsconfig(
-  file: string,
+  file: Path,
   extendedTsconfigPath: Path,
   extendedTsconfig: any
 ) {
@@ -61,12 +61,12 @@ function moveIncludesToProjectTsconfig(
     json.files =
       json.files ||
       extendedTsconfig.files?.map((p: string) =>
-        relative(file, join(extendedTsconfigPath, p))
+        relative(dirname(file), join(dirname(extendedTsconfigPath), p))
       );
     json.include =
       json.include ||
       extendedTsconfig.include?.map((p: string) =>
-        relative(file, join(extendedTsconfigPath, p))
+        relative(dirname(file), join(dirname(extendedTsconfigPath), p))
       );
     return json;
   });
@@ -105,6 +105,8 @@ function updateExtend(file: Path): Rule {
   });
 }
 
+const originalExtendedTsconfigMap = new Map<string, any>();
+
 export default function (schema: any): Rule {
   return chain([
     renameRootTsconfig,
@@ -122,7 +124,17 @@ export default function (schema: any): Rule {
         if (extendedTsconfigPath === normalize('tsconfig.json')) {
           return updateExtend(file);
         } else if (basename(json.extends) === 'tsconfig.json') {
-          const extendedTsconfig = readJsonInTree(host, extendedTsconfigPath);
+          let extendedTsconfig = originalExtendedTsconfigMap.get(
+            extendedTsconfigPath
+          );
+
+          if (!extendedTsconfig) {
+            extendedTsconfig = readJsonInTree(host, extendedTsconfigPath);
+            originalExtendedTsconfigMap.set(
+              extendedTsconfigPath,
+              extendedTsconfig
+            );
+          }
           return chain([
             moveIncludesToProjectTsconfig(
               file,
