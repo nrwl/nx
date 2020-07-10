@@ -297,8 +297,6 @@ forEachCli('nx', () => {
         `dist/apps/${appName}/runtime.js`,
         `dist/apps/${appName}/polyfills.esm.js`,
         `dist/apps/${appName}/main.esm.js`,
-        `dist/apps/${appName}/polyfills.es5.js`,
-        `dist/apps/${appName}/main.es5.js`,
       ];
       if (opts.checkStyles) {
         filesToCheck.push(`dist/apps/${appName}/styles.css`);

@@ -9,7 +9,13 @@ import { from, of } from 'rxjs';
 import { normalizeWebBuildOptions } from '../../utils/normalize';
 import { getWebConfig } from '../../utils/web.config';
 import { BuildBuilderOptions } from '../../utils/types';
-import { bufferCount, map, mergeScan, switchMap } from 'rxjs/operators';
+import {
+  bufferCount,
+  map,
+  mergeScan,
+  switchMap,
+  concatMap,
+} from 'rxjs/operators';
 import { getSourceRoot } from '../../utils/source-root';
 import { writeIndexHtml } from '../../utils/third-party/cli-files/utilities/index-file/write-index-html';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
@@ -22,6 +28,8 @@ import {
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
 import { CrossOriginValue } from '../../utils/third-party/cli-files/utilities/index-file/augment-index-html';
+import { readTsConfig } from '@nrwl/workspace';
+import { BuildBrowserFeatures } from '../../utils/third-party/utils/build-browser-features';
 
 export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   index: string;
@@ -85,12 +93,24 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
 
   return from(getSourceRoot(context))
     .pipe(
-      map((sourceRoot) => {
+      concatMap(async (sourceRoot) => {
         options = normalizeWebBuildOptions(
           options,
           context.workspaceRoot,
           sourceRoot
         );
+        const tsConfig = readTsConfig(options.tsConfig);
+        const scriptTarget = tsConfig.options.target;
+        const metadata = await context.getProjectMetadata(
+          context.target.project
+        );
+        const projectRoot = metadata.root as string;
+
+        const buildBrowserFeatures = new BuildBrowserFeatures(
+          projectRoot,
+          scriptTarget
+        );
+
         return [
           // ESM build for modern browsers.
           getWebConfig(
@@ -102,7 +122,8 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
             isScriptOptimizeOn
           ),
           // ES5 build for legacy browsers.
-          isScriptOptimizeOn
+          isScriptOptimizeOn &&
+          buildBrowserFeatures.isDifferentialLoadingNeeded()
             ? getWebConfig(
                 context.workspaceRoot,
                 sourceRoot,
