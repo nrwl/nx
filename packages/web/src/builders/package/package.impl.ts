@@ -6,7 +6,7 @@ import {
 } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
 import { from, Observable, of } from 'rxjs';
-import { catchError, last, switchMap, tap } from 'rxjs/operators';
+import { catchError, concatMap, last, switchMap, tap } from 'rxjs/operators';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import * as autoprefixer from 'autoprefixer';
 import * as rollup from 'rollup';
@@ -37,7 +37,6 @@ import {
   normalizePackageOptions,
 } from '../../utils/normalize';
 import { getSourceRoot } from '../../utils/source-root';
-import { createBabelConfig } from '../../utils/babel-config';
 
 // These use require because the ES import isn't correct.
 const resolve = require('@rollup/plugin-node-resolve');
@@ -93,7 +92,7 @@ export function run(
 
       if (options.watch) {
         return new Observable<BuildResult>((obs) => {
-          const watcher = rollup.watch([rollupOptions]);
+          const watcher = rollup.watch(rollupOptions);
           watcher.on('event', (data) => {
             if (data.code === 'START') {
               context.logger.info('Bundling...');
@@ -121,28 +120,32 @@ export function run(
         });
       } else {
         context.logger.info('Bundling...');
-        return runRollup(rollupOptions).pipe(
-          catchError((e) => {
-            context.logger.error(`Error during bundle: ${e}`);
-            return of({ success: false });
-          }),
-          last(),
-          tap({
-            next: (result) => {
-              if (result.success) {
-                updatePackageJson(
-                  options,
-                  context,
-                  target,
-                  dependencies,
-                  packageJson
-                );
-                context.logger.info('Bundle complete.');
-              } else {
-                context.logger.error('Bundle failed.');
-              }
-            },
-          })
+        return from(rollupOptions).pipe(
+          concatMap((opts) =>
+            runRollup(opts).pipe(
+              catchError((e) => {
+                context.logger.error(`Error during bundle: ${e}`);
+                return of({ success: false });
+              }),
+              last(),
+              tap({
+                next: (result) => {
+                  if (result.success) {
+                    updatePackageJson(
+                      options,
+                      context,
+                      target,
+                      dependencies,
+                      packageJson
+                    );
+                    context.logger.info('Bundle complete.');
+                  } else {
+                    context.logger.error('Bundle failed.');
+                  }
+                },
+              })
+            )
+          )
         );
       }
     })
@@ -157,137 +160,93 @@ export function createRollupOptions(
   context: BuilderContext,
   packageJson: any,
   sourceRoot: string
-): rollup.InputOptions {
-  const compilerOptionPaths = computeCompilerOptionsPaths(
-    options.tsConfig,
-    dependencies
-  );
+): rollup.InputOptions[] {
+  return outputConfigs.map((config) => {
+    const compilerOptionPaths = computeCompilerOptionsPaths(
+      options.tsConfig,
+      dependencies
+    );
 
-  const plugins = [
-    copy({
-      targets: convertCopyAssetsToRollupOptions(
-        options.outputPath,
-        options.assets
-      ),
-    }),
-    image(),
-    typescript({
-      check: true,
-      tsconfig: options.tsConfig,
-      tsconfigOverride: {
-        compilerOptions: {
-          rootDir: options.entryRoot,
-          allowJs: false,
-          declaration: true,
-          paths: compilerOptionPaths,
+    const plugins = [
+      copy({
+        targets: convertCopyAssetsToRollupOptions(
+          options.outputPath,
+          options.assets
+        ),
+      }),
+      image(),
+      typescript({
+        check: true,
+        tsconfig: options.tsConfig,
+        tsconfigOverride: {
+          compilerOptions: {
+            rootDir: options.entryRoot,
+            allowJs: false,
+            declaration: true,
+            paths: compilerOptionPaths,
+            target: config.format === 'esm' ? 'esnext' : 'es5',
+          },
         },
-      },
-    }),
-    peerDepsExternal({
-      packageJsonPath: options.project,
-    }),
-    postcss({
-      inject: true,
-      extract: options.extractCss,
-      autoModules: true,
-      plugins: [autoprefixer],
-    }),
-    localResolve(),
-    resolve({
-      preferBuiltins: true,
-      extensions: fileExtensions,
-    }),
-    getBabelInputPlugin({
-      // TODO(jack): Remove this in Nx 10
-      ...legacyCreateBabelConfig(options, options.projectRoot),
+      }),
+      peerDepsExternal({
+        packageJsonPath: options.project,
+      }),
+      postcss({
+        inject: true,
+        extract: options.extractCss,
+        autoModules: true,
+        plugins: [autoprefixer],
+      }),
+      localResolve(),
+      resolve({
+        preferBuiltins: true,
+        extensions: fileExtensions,
+      }),
+      getBabelInputPlugin({
+        cwd: join(context.workspaceRoot, sourceRoot),
+        rootMode: 'upward',
+        babelrc: true,
+        extensions: fileExtensions,
+        babelHelpers: 'bundled',
+        exclude: /node_modules/,
+        plugins: [
+          config.format === 'esm'
+            ? undefined
+            : 'babel-plugin-transform-async-to-promises',
+        ].filter(Boolean),
+      }),
+      commonjs(),
+      filesize(),
+    ];
 
-      cwd: join(context.workspaceRoot, sourceRoot),
-      rootMode: 'upward',
-      babelrc: true,
-      extensions: fileExtensions,
-      babelHelpers: 'bundled',
-      exclude: /node_modules/,
-      plugins: [
-        'babel-plugin-transform-async-to-promises',
-        ['@babel/plugin-transform-regenerator', { async: false }],
-      ],
-    }),
-    commonjs(),
-    filesize(),
-  ];
+    const globals = options.globals
+      ? options.globals.reduce((acc, item) => {
+          acc[item.moduleId] = item.global;
+          return acc;
+        }, {})
+      : {};
 
-  const globals = options.globals
-    ? options.globals.reduce((acc, item) => {
-        acc[item.moduleId] = item.global;
-        return acc;
-      }, {})
-    : {};
+    const externalPackages = dependencies
+      .map((d) => d.name)
+      .concat(options.external || [])
+      .concat(Object.keys(packageJson.dependencies || {}));
 
-  const externalPackages = dependencies
-    .map((d) => d.name)
-    .concat(options.external || [])
-    .concat(Object.keys(packageJson.dependencies || {}));
-
-  const rollupConfig = {
-    input: options.entryFile,
-    output: outputConfigs.map((o) => {
-      return {
+    const rollupConfig = {
+      input: options.entryFile,
+      output: {
         globals,
-        format: o.format,
-        file: `${options.outputPath}/${context.target.project}.${o.extension}.js`,
+        format: config.format,
+        file: `${options.outputPath}/${context.target.project}.${config.extension}.js`,
         name: toClassName(context.target.project),
-      };
-    }),
-    external: (id) => externalPackages.includes(id),
-    plugins,
-  };
+      },
+      external: (id) => externalPackages.includes(id),
+      plugins,
+    };
 
-  return options.rollupConfig
-    ? require(options.rollupConfig)(rollupConfig)
-    : rollupConfig;
-}
-
-function legacyCreateBabelConfig(
-  options: PackageBuilderOptions,
-  projectRoot: string
-) {
-  if (options.babelConfig) {
-    let babelConfig: any = createBabelConfig(projectRoot, false, false);
-    babelConfig = require(options.babelConfig)(babelConfig, options);
-    // Ensure async functions are transformed to promises properly.
-    upsert(
-      'plugins',
-      'babel-plugin-transform-async-to-promises',
-      null,
-      babelConfig
-    );
-    upsert(
-      'plugins',
-      '@babel/plugin-transform-regenerator',
-      { async: false },
-      babelConfig
-    );
-  } else {
-    return {};
-  }
-
-  function upsert(
-    type: 'presets' | 'plugins',
-    pluginOrPreset: string,
-    opts: null | JsonObject,
-    config: any
-  ) {
-    if (
-      !config[type].some(
-        (p) =>
-          (Array.isArray(p) && p[0].indexOf(pluginOrPreset) !== -1) ||
-          p.indexOf(pluginOrPreset) !== -1
-      )
-    ) {
-      const fullPath = require.resolve(pluginOrPreset);
-      config[type] = config[type].concat([opts ? [fullPath, opts] : fullPath]);
-    }
-  }
+    return options.rollupConfig
+      ? require(options.rollupConfig)(rollupConfig)
+      : rollupConfig;
+  });
 }
 
 function updatePackageJson(
