@@ -1,6 +1,3 @@
-window.focusedProject = null;
-window.filteredProjects = window.projects;
-
 function getProjectsByType(type) {
   return window.projects.filter((project) => project.type === type);
 }
@@ -55,7 +52,7 @@ function createProjectList(headerText, projects) {
     checkbox.type = 'checkbox';
     checkbox.name = 'projectName';
     checkbox.value = project.name;
-    checkbox.checked = true;
+    checkbox.checked = false;
 
     checkbox.addEventListener('change', filterProjects);
 
@@ -79,6 +76,8 @@ function addProjectCheckboxes() {
   const appProjects = getProjectsByType('app');
   const libProjects = getProjectsByType('lib');
   const e2eProjects = getProjectsByType('e2e');
+  const npmProjects = getProjectsByType('npm');
+
   const libDirectoryGroups = groupProjectsByDirectory(libProjects);
 
   const projectsListContainer = document.getElementById('project-lists');
@@ -102,6 +101,13 @@ function addProjectCheckboxes() {
   sortedDirectories.forEach((directoryName) => {
     createProjectList(directoryName, libDirectoryGroups[directoryName]);
   });
+
+  if (npmProjects.length > 0) {
+    const npmHeader = document.createElement('h4');
+    npmHeader.textContent = 'npm dependencies';
+    projectsListContainer.append(npmHeader);
+    createProjectList('npm', npmProjects);
+  }
 }
 
 function autoExclude() {
@@ -412,7 +418,7 @@ function addTooltips(inner) {
   });
 }
 
-window.focusProject = (id) => {
+window.focusProject = (id, doFilter = true) => {
   window.focusedProject = id;
 
   document.getElementById('focused-project').hidden = false;
@@ -427,7 +433,9 @@ window.focusProject = (id) => {
     }
   );
 
-  window.filterProjects();
+  if (doFilter) {
+    window.filterProjects();
+  }
 };
 
 window.unfocusProject = () => {
@@ -437,7 +445,7 @@ window.unfocusProject = () => {
 
   Array.from(document.querySelectorAll('input[name=projectName]')).forEach(
     (checkbox) => {
-      checkbox.checked = true;
+      checkbox.checked = false;
       checkbox.parentElement.hidden = false;
     }
   );
@@ -445,12 +453,14 @@ window.unfocusProject = () => {
   window.filterProjects();
 };
 
-window.excludeProject = (id) => {
+window.excludeProject = (id, doFilter = true) => {
   document.querySelector(
     `input[name=projectName][value=${id}]`
   ).checked = false;
 
-  window.filterProjects();
+  if (doFilter) {
+    window.filterProjects();
+  }
 };
 
 window.filterProjects = () => {
@@ -478,6 +488,11 @@ window.filterProjects = () => {
     });
   }
 
+  if (window.filteredProjects.length === 0) {
+    document.getElementById('no-projects-chosen').style.display = 'flex';
+  } else {
+    document.getElementById('no-projects-chosen').style.display = 'none';
+  }
   render();
 };
 
@@ -488,7 +503,22 @@ setTimeout(() => {
   document
     .querySelector('input[name=displayOptions][value=groupByFolder]')
     .addEventListener('change', () => window.filterProjects());
+
   window.addEventListener('resize', () => render());
+
+  if (window.groupByFolder) {
+    document.querySelector(
+      'input[name=displayOptions][value=groupByFolder]'
+    ).checked = true;
+  }
+
+  if (window.focusedProject !== null) {
+    focusProject(window.focusedProject, false);
+  }
+
+  if (window.exclude.length > 0) {
+    window.exclude.forEach((project) => excludeProject(project, false));
+  }
 
   filterProjects();
 });

@@ -376,9 +376,77 @@ forEachCli((cli) => {
       expect(jsonFileContents2.criticalPath).not.toContain('mylib2');
     }, 1000000);
 
-    it.todo(
-      'dep-graph should output a deployable static website in an html file accompanied by a folder with static assets'
-    );
+    it('dep-graph should focus requested project', () => {
+      runCommand(
+        `npm run dep-graph -- --focus=myapp --file=project-graph.json`
+      );
+
+      expect(() => checkFilesExist('project-graph.json')).not.toThrow();
+
+      const jsonFileContents = readJson('project-graph.json');
+      const projectNames = Object.keys(jsonFileContents.graph.nodes);
+
+      expect(projectNames).toContain('myapp');
+      expect(projectNames).toContain('mylib');
+      expect(projectNames).toContain('mylib2');
+      expect(projectNames).toContain('myapp-e2e');
+
+      expect(projectNames).not.toContain('myapp2');
+      expect(projectNames).not.toContain('myapp3');
+      expect(projectNames).not.toContain('myapp2-e2e');
+      expect(projectNames).not.toContain('myapp3-e2e');
+    }, 1000000);
+
+    it('dep-graph should exclude requested projects', () => {
+      runCommand(
+        `npm run dep-graph -- --exclude=myapp-e2e,myapp2-e2e,myapp3-e2e --file=project-graph.json`
+      );
+
+      expect(() => checkFilesExist('project-graph.json')).not.toThrow();
+
+      const jsonFileContents = readJson('project-graph.json');
+      const projectNames = Object.keys(jsonFileContents.graph.nodes);
+
+      expect(projectNames).toContain('myapp');
+      expect(projectNames).toContain('mylib');
+      expect(projectNames).toContain('mylib2');
+      expect(projectNames).toContain('myapp2');
+      expect(projectNames).toContain('myapp3');
+
+      expect(projectNames).not.toContain('myapp-e2e');
+      expect(projectNames).not.toContain('myapp2-e2e');
+      expect(projectNames).not.toContain('myapp3-e2e');
+    }, 1000000);
+
+    it('dep-graph should exclude requested projects that were included by a focus', () => {
+      runCommand(
+        `npm run dep-graph -- --focus=myapp --exclude=myapp-e2e --file=project-graph.json`
+      );
+
+      expect(() => checkFilesExist('project-graph.json')).not.toThrow();
+
+      const jsonFileContents = readJson('project-graph.json');
+      const projectNames = Object.keys(jsonFileContents.graph.nodes);
+
+      expect(projectNames).toContain('myapp');
+      expect(projectNames).toContain('mylib');
+      expect(projectNames).toContain('mylib2');
+
+      expect(projectNames).not.toContain('myapp-e2e');
+      expect(projectNames).not.toContain('myapp2');
+      expect(projectNames).not.toContain('myapp3');
+      expect(projectNames).not.toContain('myapp2-e2e');
+      expect(projectNames).not.toContain('myapp3-e2e');
+    }, 1000000);
+
+    it('dep-graph should output a deployable static website in an html file accompanied by a folder with static assets', () => {
+      runCommand(`npm run dep-graph -- --file=project-graph.html`);
+
+      expect(() => checkFilesExist('project-graph.html')).not.toThrow();
+      expect(() => checkFilesExist('static/dep-graph.css')).not.toThrow();
+      expect(() => checkFilesExist('static/dep-graph.js')).not.toThrow();
+      expect(() => checkFilesExist('static/vendor.js')).not.toThrow();
+    });
   });
 
   describe('Move Angular Project', () => {
