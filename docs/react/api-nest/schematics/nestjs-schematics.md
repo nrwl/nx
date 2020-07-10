@@ -1,25 +1,29 @@
-# schematics
+# nestjs-schematics
 
 Run Nest schematics targeting Nx projects
 
 ## Usage
 
 ```bash
-nx generate schematics ...
+nx generate nestjs-schematics ...
 ```
 
-By default, Nx will search for `schematics` in the default collection provisioned in `workspace.json`.
+```bash
+nx g schematics ... # same
+```
+
+By default, Nx will search for `nestjs-schematics` in the default collection provisioned in `workspace.json`.
 
 You can specify the collection explicitly as follows:
 
 ```bash
-nx g @nrwl/nest:schematics ...
+nx g @nrwl/nest:nestjs-schematics ...
 ```
 
 Show what will be generated without writing to disk:
 
 ```bash
-nx g schematics ... --dry-run
+nx g nestjs-schematics ... --dry-run
 ```
 
 ### Examples
@@ -34,11 +38,19 @@ nx g @nrwl/nest:schematics new-class --type=class --project=nest-api
 
 ### directory
 
-Alias(es): d
+Alias(es): d,path
 
 Type: `string`
 
 A directory where the resulting files are placed
+
+### flat
+
+Default: `false`
+
+Type: `boolean`
+
+Flag to indicate if a directory is created.
 
 ### name
 
