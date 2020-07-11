@@ -32,9 +32,9 @@ if (exitCode === 0) {
   );
   console.log('\ntype(scope): subject \n BLANK LINE \n body');
   console.log('\n');
-  console.log('possible types: chore|build|feat|fix|cleanup|docs');
+  console.log(`possible types: ${allowedTypes.join('|')}`);
   console.log(
-    'possible scopes: angular|bazel|core|docs|nextjs|nest|linter|node|react|storybook|testing|repo|misc (if unsure use "core")'
+    `possible scopes: ${allowedScopes.join('|')} (if unsure use "core")`
   );
   console.log(
     '\nEXAMPLE: \n' +
