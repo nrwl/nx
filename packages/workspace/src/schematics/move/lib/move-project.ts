@@ -16,7 +16,7 @@ export function moveProject(schema: Schema) {
       map((workspace) => {
         const project = workspace.projects.get(schema.projectName);
 
-        const destination = getDestination(schema, workspace);
+        const destination = getDestination(schema, workspace, tree);
         const dir = tree.getDir(project.root);
         dir.visit((file) => {
           const newPath = file.replace(project.root, destination);

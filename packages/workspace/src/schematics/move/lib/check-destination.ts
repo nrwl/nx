@@ -26,7 +26,7 @@ export function checkDestination(schema: Schema): Rule {
           );
         }
 
-        const destination = getDestination(schema, workspace);
+        const destination = getDestination(schema, workspace, tree);
 
         if (tree.getDir(destination).subfiles.length > 0) {
           throw new Error(`${INVALID_DESTINATION} - Path is not empty.`);
