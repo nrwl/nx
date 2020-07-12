@@ -19,7 +19,7 @@ export function updateJestConfig(schema: Schema): Rule {
     return from(getWorkspace(tree)).pipe(
       map((workspace) => {
         const project = workspace.projects.get(schema.projectName);
-        const destination = getDestination(schema, workspace);
+        const destination = getDestination(schema, workspace, tree);
         const newProjectName = getNewProjectName(schema.destination);
 
         const jestConfigPath = path.join(destination, 'jest.config.js');
