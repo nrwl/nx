@@ -4,7 +4,7 @@ import { UnitTestTree } from '@angular-devkit/schematics/testing';
 import { NxJson, readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import * as stripJsonComments from 'strip-json-comments';
-import { createApp, runSchematic } from '../../utils/testing';
+import { createApp, runSchematic, callRule } from '../../utils/testing';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -165,6 +165,33 @@ describe('lib', () => {
           },
         ],
       });
+    });
+
+    it('should check for existance of spec files before deleting them', async () => {
+      callRule(
+        updateJsonInTree('/workspace.json', (workspaceJSON) => {
+          workspaceJSON.schematics = {
+            '@schematics/angular:service': {
+              skipTests: true,
+            },
+            '@schematics/angular:component': {
+              skipTests: true,
+            },
+          };
+
+          return workspaceJSON;
+        }),
+        appTree
+      );
+
+      const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
+
+      expect(
+        tree.read('libs/my-lib/src/lib/my-lib.component.spec.ts')
+      ).toBeFalsy();
+      expect(
+        tree.read('libs/my-lib/src/lib/my-lib.service.spec.ts')
+      ).toBeFalsy();
     });
 
     it('should extend the local tsconfig.json with tsconfig.spec.json', async () => {
