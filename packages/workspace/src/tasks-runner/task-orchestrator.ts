@@ -178,6 +178,9 @@ export class TaskOrchestrator {
           process.stderr.write(chunk);
           outWithErr.push(chunk.toString());
         });
+        process.addListener('SIGINT', () => {
+          p.kill('SIGINT');
+        });
         p.on('exit', (code) => {
           // we didn't print any output as we were running the command
           // print all the collected output|
