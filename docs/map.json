@@ -873,6 +873,11 @@
           {
             "name": "Nx 7 => Nx 8",
             "id": "nx7-to-nx8"
+          },
+          {
+            "name": "Configuring Browser Support",
+            "id": "browser-support",
+            "file": "shared/guides/browser-support"
           }
         ]
       },
@@ -1763,6 +1768,11 @@
             "name": "JavaScript and TypeScript",
             "id": "js-and-ts",
             "file": "react/guides/js-and-ts"
+          },
+          {
+            "name": "Configuring Browser Support",
+            "id": "browser-support",
+            "file": "shared/guides/browser-support"
           }
         ]
       },
