@@ -228,6 +228,63 @@ describe('workspace', () => {
       expect(tree.exists('/apps/myApp/karma.conf.js')).toBe(true);
       expect(tree.exists('/karma.conf.js')).toBe(true);
     });
+
+    it('should work with existing .prettierignore file', async () => {
+      appTree.create('/package.json', JSON.stringify({}));
+      appTree.create('/.prettierignore', '# existing ignore rules');
+      appTree.create(
+        '/angular.json',
+        JSON.stringify({
+          version: 1,
+          defaultProject: 'myApp',
+          projects: {
+            myApp: {
+              root: '',
+              sourceRoot: 'src',
+              architect: {
+                build: {
+                  options: {
+                    tsConfig: 'tsconfig.app.json',
+                  },
+                  configurations: {},
+                },
+                test: {
+                  options: {
+                    tsConfig: 'tsconfig.spec.json',
+                  },
+                },
+                lint: {
+                  options: {
+                    tsConfig: 'tsconfig.app.json',
+                  },
+                },
+                e2e: {
+                  options: {
+                    protractorConfig: 'e2e/protractor.conf.js',
+                  },
+                },
+              },
+            },
+          },
+        })
+      );
+      appTree.create(
+        '/tsconfig.app.json',
+        '{"extends": "../tsconfig.json", "compilerOptions": {}}'
+      );
+      appTree.create(
+        '/tsconfig.spec.json',
+        '{"extends": "../tsconfig.json", "compilerOptions": {}}'
+      );
+      appTree.create('/tsconfig.base.json', '{"compilerOptions": {}}');
+      appTree.create('/tslint.json', '{"rules": {}}');
+      appTree.create('/e2e/protractor.conf.js', '// content');
+      appTree.create('/src/app/app.module.ts', '// content');
+      const tree = await runSchematic('ng-add', { name: 'myApp' }, appTree);
+
+      const prettierIgnore = tree.read('/.prettierignore').toString();
+      expect(prettierIgnore).toBe('# existing ignore rules');
+    });
   });
 
   describe('preserve angular cli layout', () => {
