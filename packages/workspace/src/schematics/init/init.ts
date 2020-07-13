@@ -8,6 +8,7 @@ import {
   Tree,
   url,
   noop,
+  filter,
 } from '@angular-devkit/schematics';
 import { join, normalize } from '@angular-devkit/core';
 import { Schema } from './schema';
@@ -627,6 +628,19 @@ const decorateAngularClI = (host: Tree, context: SchematicContext) => {
   })(host, context);
 };
 
+const addFiles = (host: Tree, context: SchematicContext) => {
+  const templateSource = apply(url('./files'), [
+    filter(
+      (path) =>
+        !host.exists('/.prettierignore') || !(path === '/.prettierignore')
+    ),
+    template({
+      tmpl: '',
+    }),
+  ]);
+  return chain([mergeWith(templateSource)])(host, context);
+};
+
 export default function (schema: Schema): Rule {
   if (schema.preserveAngularCLILayout) {
     return chain([
@@ -639,15 +653,11 @@ export default function (schema: Schema): Rule {
       ...schema,
       npmScope: toFileName(schema.npmScope || schema.name),
     };
-    const templateSource = apply(url('./files'), [
-      template({
-        tmpl: '',
-      }),
-    ]);
+
     return chain([
       checkCanConvertToWorkspace(options),
       moveExistingFiles(options),
-      mergeWith(templateSource),
+      addFiles,
       createAdditionalFiles(options),
       updatePackageJson(),
       updateAngularCLIJson(options),
