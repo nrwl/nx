@@ -3,7 +3,7 @@ import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { Actions, ofType } from '@ngrx/effects';
 import { ROUTER_NAVIGATION, RouterNavigationAction } from '@ngrx/router-store';
 import { Action, Store, ActionCreator } from '@ngrx/store';
-import { Observable, of } from 'rxjs';
+import { isObservable, Observable, of } from 'rxjs';
 import {
   catchError,
   concatMap,
@@ -436,7 +436,7 @@ function findSnapshot(
 }
 
 function wrapIntoObservable<O>(obj: Observable<O> | O | void): Observable<O> {
-  if (!!obj && obj instanceof Observable) {
+  if (isObservable(obj)) {
     return obj;
   } else if (!obj) {
     return of();
