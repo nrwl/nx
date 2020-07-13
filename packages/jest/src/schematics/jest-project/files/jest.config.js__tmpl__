@@ -1,6 +1,18 @@
 module.exports = {
   name: '<%= project %>',
-  preset: '<%= offsetFromRoot %>jest.config.js',<% if(testEnvironment) { %>
+  preset: '<%= offsetFromRoot %>jest.config.js',<% if(setupFile !== 'none') { %>
+  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+  <% } %><% if (transformer === 'ts-jest') { %>
+  globals: {
+    'ts-jest': {
+      tsConfig: '<rootDir>/tsconfig.spec.json',<%if (setupFile === 'angular') { %>
+      stringifyContentPathRegex: '\\.(html|svg)$',
+      astTransformers: [
+        'jest-preset-angular/build/InlineFilesTransformer',
+        'jest-preset-angular/build/StripStylesTransformer'
+      ],<% } %>
+    }
+  },<% } %><% if(testEnvironment) { %>
   testEnvironment: '<%= testEnvironment %>',<% } %><% if (supportTsx) { %>
   transform: {
     '^.+\\.[tj]sx?$': <% if (transformer == 'babel-jest') { %>[ 'babel-jest',

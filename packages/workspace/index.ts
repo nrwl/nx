@@ -48,6 +48,9 @@ export {
   updateNxJsonInTree,
   addProjectToNxJsonInTree,
   readNxJsonInTree,
+  InsertChange,
+  ReplaceChange,
+  RemoveChange,
 } from './src/utils/ast-utils';
 
 export {

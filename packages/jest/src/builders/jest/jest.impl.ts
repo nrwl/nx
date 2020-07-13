@@ -11,13 +11,13 @@ import { JestBuilderOptions } from './schema';
 
 try {
   require('dotenv').config();
-} catch (e) {}
+} catch (e) {
+  // noop
+}
 
 if (process.env.NODE_ENV == null || process.env.NODE_ENV == undefined) {
   (process.env as any).NODE_ENV = 'test';
 }
-
-export default createBuilder<JestBuilderOptions>(run);
 
 function run(
   options: JestBuilderOptions,
@@ -28,43 +28,16 @@ function run(
   const jestConfig: {
     transform: any;
     globals: any;
+    setupFilesAfterEnv: any;
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
   } = require(options.jestConfig);
 
-  let transformers = Object.values<string>(jestConfig.transform || {});
+  const transformers = Object.values<string>(jestConfig.transform || {});
   if (transformers.includes('babel-jest') && transformers.includes('ts-jest')) {
     throw new Error(
       'Using babel-jest and ts-jest together is not supported.\n' +
         'See ts-jest documentation for babel integration: https://kulshekhar.github.io/ts-jest/user/config/babelConfig'
     );
-  }
-
-  // use ts-jest by default
-  const globals = jestConfig.globals || {};
-  if (!transformers.includes('babel-jest')) {
-    const tsJestConfig = {
-      tsConfig: path.resolve(context.workspaceRoot, options.tsConfig),
-    };
-
-    // TODO: This is hacky, We should probably just configure it in the user's workspace
-    // If jest-preset-angular is installed, apply settings
-    try {
-      require.resolve('jest-preset-angular');
-      Object.assign(tsJestConfig, {
-        stringifyContentPathRegex: '\\.(html|svg)$',
-        astTransformers: [
-          'jest-preset-angular/build/InlineFilesTransformer',
-          'jest-preset-angular/build/StripStylesTransformer',
-        ],
-      });
-    } catch (e) {}
-
-    // merge the jestConfig globals with our 'ts-jest' override
-    Object.assign(globals, {
-      'ts-jest': {
-        ...(globals['ts-jest'] || {}),
-        ...tsJestConfig,
-      },
-    });
   }
 
   const config: any = {
@@ -95,13 +68,15 @@ function run(
     useStderr: options.useStderr,
     watch: options.watch,
     watchAll: options.watchAll,
-    globals: JSON.stringify(globals),
   };
 
+  // for backwards compatibility
   if (options.setupFile) {
-    config.setupFilesAfterEnv = [
+    const setupFilesAfterEnvSet = new Set([
+      ...(jestConfig.setupFilesAfterEnv ?? []),
       path.resolve(context.workspaceRoot, options.setupFile),
-    ];
+    ]);
+    config.setupFilesAfterEnv = Array.from(setupFilesAfterEnvSet);
   }
 
   if (options.testFile) {
@@ -132,3 +107,5 @@ function run(
     })
   );
 }
+
+export default createBuilder<JestBuilderOptions>(run);

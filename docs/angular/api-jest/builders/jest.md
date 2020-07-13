@@ -136,7 +136,7 @@ Run all tests serially in the current process (rather than creating a worker poo
 
 Type: `string`
 
-The name of a setup file used by Jest. (https://jestjs.io/docs/en/configuration#setupfilesafterenv-array)
+[Deprecated] The name of a setup file used by Jest. (use Jest config file https://jestjs.io/docs/en/configuration#setupfilesafterenv-array)
 
 ### showConfig
 
@@ -186,7 +186,7 @@ Node module that implements a custom results processor. (https://jestjs.io/docs/
 
 Type: `string`
 
-The name of the Typescript configuration file.
+[Deprecated] The name of the Typescript configuration file. Set the tsconfig option in the jest config file.
 
 ### updateSnapshot
 
