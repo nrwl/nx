@@ -42,13 +42,11 @@ export async function runCommand<T extends RunArgs>(
   });
 
   const hasher = new Hasher(projectGraph, nxJson, tasksOptions);
-  await Promise.all(
-    tasks.map(async (t) => {
-      const hash = await hasher.hash(t);
-      t.hash = hash.value;
-      t.hashDetails = hash.details;
-    })
-  );
+  const res = await hasher.hashTasks(tasks);
+  for (let i = 0; i < res.length; ++i) {
+    tasks[i].hash = res[i].value;
+    tasks[i].hashDetails = res[i].details;
+  }
 
   const cached = [];
   tasksRunner(tasks, tasksOptions, {

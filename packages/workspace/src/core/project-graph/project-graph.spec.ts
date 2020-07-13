@@ -189,21 +189,6 @@ describe('project graph', () => {
     });
   });
 
-  it('should update the graph if the workspace file changes ', async () => {
-    let graph = createProjectGraph();
-    expect(graph.nodes).toMatchObject({
-      demo: { name: 'demo', type: 'app' },
-    });
-    workspaceJson.projects.demo.projectType = 'library';
-    //wait a tick to ensure the modified time of workspace.json will be after the creation of the project graph file
-    await new Promise((resolve) => setTimeout(resolve, 1));
-    fs.writeFileSync('/root/workspace.json', JSON.stringify(workspaceJson));
-    graph = createProjectGraph();
-    expect(graph.nodes).toMatchObject({
-      demo: { name: 'demo', type: 'lib' },
-    });
-  });
-
   it('should handle circular dependencies', () => {
     fs.writeFileSync(
       '/root/libs/shared/util/src/index.ts',

@@ -8,7 +8,7 @@ import { parseRunOneOptions } from './parse-run-one-options';
  *
  * @param workspace Relevant local workspace properties
  */
-process.env.NX_CLI_SET = 'true';
+process.env.NX_CLI_SET = undefined;
 export function initLocal(workspace: Workspace) {
   const supportedNxCommands = require('@nrwl/workspace/' +
     'src/command-line/supported-nx-commands').supportedNxCommands;
@@ -39,6 +39,7 @@ export function initLocal(workspace: Workspace) {
 }
 
 function loadCli(workspace: Workspace) {
+  process.env.NX_CLI_SET = 'true';
   if (workspace.type === 'nx') {
     require(path.join(
       workspace.dir,

@@ -37,13 +37,30 @@ import { ProjectGraph } from './project-graph-models';
 const projectGraphCacheVersion = '1';
 
 export function createProjectGraph(
-  workspaceJson = readWorkspaceJson(),
-  nxJson = readNxJson(),
-  workspaceFiles = readWorkspaceFiles(),
-  fileRead: (s: string) => string = defaultFileRead,
-  cache: false | { data: ProjectGraphCache; mtime: number } = readCache(),
+  workspaceJson: any = undefined,
+  nxJson: any = undefined,
+  workspaceFiles: FileData[] = undefined,
+  fileRead: (s: string) => string = undefined,
+  cache: false | { data: ProjectGraphCache; mtime: number } = undefined,
   shouldCache: boolean = true
 ): ProjectGraph {
+  /**
+   * NX_CLI_SET is set when invoking the command via nx, not via tao
+   * As a result, the project graph is guaranteed to be calculated and stored
+   * in the cache. We don't have to recheck it.
+   */
+  if (process.env.NX_CLI_SET === 'true' && cache === undefined) {
+    cache = readCache();
+    if (cache) {
+      return cache.data.projectGraph;
+    }
+  }
+  if (cache === undefined) cache = readCache();
+  if (workspaceJson === undefined) workspaceJson = readWorkspaceJson();
+  if (nxJson === undefined) nxJson = readNxJson();
+  if (workspaceFiles === undefined) workspaceFiles = readWorkspaceFiles();
+  if (fileRead === undefined) fileRead = defaultFileRead;
+
   assertWorkspaceValidity(workspaceJson, nxJson);
 
   const normalizedNxJson = normalizeNxJson(nxJson);

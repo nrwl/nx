@@ -255,7 +255,7 @@ describe('@nrwl/bazel:sync', () => {
       `);
     });
 
-    it('should generate test bazel targets', async () => {
+    fit('should generate test bazel targets', async () => {
       const result = await runSchematic('sync', {}, tree);
 
       const proj1BuildContents = stripIndents`${result.readContent(
