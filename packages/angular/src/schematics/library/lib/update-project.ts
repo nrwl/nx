@@ -26,11 +26,26 @@ export function updateProject(options: NormalizedSchema): Rule {
   return chain([
     (host: Tree, _context: SchematicContext): Tree => {
       const libRoot = `${options.projectRoot}/src/lib/`;
+      const serviceSpecPath = path.join(
+        libRoot,
+        `${options.name}.service.spec.ts`
+      );
+      const componentSpecPath = path.join(
+        libRoot,
+        `${options.name}.component.spec.ts`
+      );
 
       host.delete(path.join(libRoot, `${options.name}.service.ts`));
-      host.delete(path.join(libRoot, `${options.name}.service.spec.ts`));
+
+      if (host.exists(serviceSpecPath)) {
+        host.delete(serviceSpecPath);
+      }
+
       host.delete(path.join(libRoot, `${options.name}.component.ts`));
-      host.delete(path.join(libRoot, `${options.name}.component.spec.ts`));
+
+      if (host.exists(componentSpecPath)) {
+        host.delete(path.join(libRoot, `${options.name}.component.spec.ts`));
+      }
 
       if (!options.publishable) {
         host.delete(path.join(options.projectRoot, 'ng-package.json'));
