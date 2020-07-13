@@ -416,6 +416,11 @@ describe('lib', () => {
         .toEqual(stripIndents`module.exports = {
       name: 'my-lib',
       preset: '../../jest.config.js',
+      globals: {
+        'ts-jest': {
+          tsConfig: '<rootDir>/tsconfig.spec.json',
+        },
+      },
       testEnvironment: 'node',
       transform: {
         '^.+\\.[tj]sx?$': 'ts-jest',
