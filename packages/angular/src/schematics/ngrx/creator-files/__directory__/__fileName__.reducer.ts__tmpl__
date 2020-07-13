@@ -9,7 +9,7 @@ export const <%= className.toUpperCase() %>_FEATURE_KEY = '<%= propertyName %>';
 export interface State extends EntityState<<%= className %>Entity> {
   selectedId ?: string | number;          // which <%= className %> record has been selected
   loaded      : boolean;                  // has the <%= className %> list been loaded
-  error      ?: string | null;            // last none error (if any)
+  error      ?: string | null;            // last known error (if any)
 }
 
 export interface <%= className %>PartialState {
