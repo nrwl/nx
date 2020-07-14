@@ -11,7 +11,8 @@ import {
   serializeJson,
   updateWorkspace,
 } from '@nrwl/workspace';
-import { addPropertyToJestConfig, jestConfigObject } from '../../..';
+import { addPropertyToJestConfig } from '../../utils/config/update-config';
+import { getJestObject } from './require-jest-config';
 
 function checkJestPropertyObject(object: unknown): object is object {
   return object !== null && object !== undefined;
@@ -26,10 +27,6 @@ function modifyJestConfig(
   tsConfig: string,
   isAngular: boolean
 ) {
-  if (setupFile === '') {
-    return;
-  }
-
   let globalTsJest: any = {
     tsConfig,
   };
@@ -46,23 +43,25 @@ function modifyJestConfig(
   }
 
   try {
-    const jestObject = jestConfigObject(host, jestConfig);
+    const jestObject = getJestObject(jestConfig);
 
-    // add set up env file
-    // setupFilesAfterEnv
-    const existingSetupFiles = jestObject.setupFilesAfterEnv;
+    if (setupFile !== '') {
+      // add set up env file
+      // setupFilesAfterEnv
+      const existingSetupFiles = jestObject.setupFilesAfterEnv;
 
-    let setupFilesAfterEnv: string | string[] = [setupFile];
-    if (Array.isArray(existingSetupFiles)) {
-      setupFilesAfterEnv = setupFile;
+      let setupFilesAfterEnv: string | string[] = [setupFile];
+      if (Array.isArray(existingSetupFiles)) {
+        setupFilesAfterEnv = setupFile;
+      }
+
+      addPropertyToJestConfig(
+        host,
+        jestConfig,
+        'setupFilesAfterEnv',
+        setupFilesAfterEnv
+      );
     }
-
-    addPropertyToJestConfig(
-      host,
-      jestConfig,
-      'setupFilesAfterEnv',
-      setupFilesAfterEnv
-    );
 
     // check if jest config has babel transform
     const transformProperty = jestObject.transform;
@@ -115,7 +114,7 @@ function modifyJestConfig(
   }
 }
 
-function updateJestConfigForProjects() {
+export function updateJestConfigForProjects() {
   return async (host: Tree, context: SchematicContext) => {
     const workspace = await getWorkspace(host, getWorkspacePath(host));
 
