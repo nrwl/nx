@@ -5,8 +5,6 @@ import * as path from 'path';
 import { serializeJson } from '@nrwl/workspace';
 import { jestConfigObject } from '../../utils/config/functions';
 
-import { updateJestConfigForProjects } from './update-jest-configs';
-
 import { getJestObject } from './require-jest-config';
 jest.mock('./require-jest-config');
 const getJestObjectMock = getJestObject as jest.Mock<typeof getJestObject>;

@@ -115,7 +115,7 @@ function modifyJestConfig(
   }
 }
 
-export function updateJestConfigForProjects() {
+function updateJestConfigForProjects() {
   return async (host: Tree, context: SchematicContext) => {
     const workspace = await getWorkspace(host, getWorkspacePath(host));
 
