@@ -1,11 +1,12 @@
 import { vol, fs } from 'memfs';
+jest.mock('fs', () => require('memfs').fs);
+jest.mock('../../utils/app-root', () => ({ appRootPath: '/root' }));
+
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { createProjectGraph } from './project-graph';
 import { DependencyType } from './project-graph-models';
 import { NxJson } from '../shared-interfaces';
-
-jest.mock('fs', () => require('memfs').fs);
-jest.mock('../../utils/app-root', () => ({ appRootPath: '/root' }));
+import { defaultFileHasher } from '@nrwl/workspace/src/core/hasher/file-hasher';
 
 describe('project graph', () => {
   let packageJson: any;
@@ -198,6 +199,9 @@ describe('project graph', () => {
     //wait a tick to ensure the modified time of workspace.json will be after the creation of the project graph file
     await new Promise((resolve) => setTimeout(resolve, 1));
     fs.writeFileSync('/root/workspace.json', JSON.stringify(workspaceJson));
+
+    defaultFileHasher.init();
+
     graph = createProjectGraph();
     expect(graph.nodes).toMatchObject({
       demo: { name: 'demo', type: 'lib' },

@@ -976,7 +976,7 @@ describe('Enforce Module Boundaries', () => {
 });
 
 function createFile(f) {
-  return { file: f, ext: extname(f), mtime: 1 };
+  return { file: f, ext: extname(f), hash: '' };
 }
 
 function runRule(

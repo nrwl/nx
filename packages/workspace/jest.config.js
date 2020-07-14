@@ -1,5 +1,5 @@
 module.exports = {
-  name: 'tao',
+  name: 'workspace',
   preset: '../../jest.config.js',
   transform: {
     '^.+\\.[tj]sx?$': 'ts-jest',

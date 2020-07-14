@@ -6,16 +6,17 @@ import { extname } from 'path';
 import { NxArgs } from '../command-line/utils';
 import { WorkspaceResults } from '../command-line/workspace-results';
 import { appRootPath } from '../utils/app-root';
-import { readJsonFile, fileExists } from '../utils/fileutils';
+import { fileExists, readJsonFile } from '../utils/fileutils';
 import { jsonDiff } from '../utils/json-diff';
 import { ProjectGraphNode } from './project-graph';
 import { Environment, NxJson } from './shared-interfaces';
+import { defaultFileHasher } from './hasher/file-hasher';
 
 const ignore = require('ignore');
 
 export interface FileData {
   file: string;
-  mtime: number;
+  hash: string;
   ext: string;
 }
 
@@ -47,15 +48,15 @@ export function calculateFileChanges(
   if (ignore) {
     files = files.filter((f) => !ignore.ignores(f));
   }
+
   return files.map((f) => {
     const ext = extname(f);
-    const _mtime = mtime(`${appRootPath}/${f}`);
-    // Memoize results so we don't recalculate on successive invocation.
+    const hash = defaultFileHasher.hashFile(f);
 
     return {
       file: f,
       ext,
-      mtime: _mtime,
+      hash,
       getChanges: (): Change[] => {
         if (!nxArgs) {
           return [new WholeFileChange()];
@@ -110,11 +111,11 @@ function defaultReadFileAtRevision(
 }
 
 function getFileData(filePath: string): FileData {
-  const stat = fs.statSync(filePath);
+  const file = path.relative(appRootPath, filePath).split(path.sep).join('/');
   return {
-    file: path.relative(appRootPath, filePath).split(path.sep).join('/'),
+    file: file,
+    hash: defaultFileHasher.hashFile(filePath),
     ext: path.extname(filePath),
-    mtime: stat.mtimeMs,
   };
 }
 
@@ -197,25 +198,35 @@ export function rootWorkspaceFileNames(): string[] {
   return [`package.json`, workspaceFileName(), `nx.json`, `tsconfig.json`];
 }
 
+export function rootWorkspaceFileData(): FileData[] {
+  return rootWorkspaceFileNames().map((f) =>
+    getFileData(`${appRootPath}/${f}`)
+  );
+}
+
 export function readWorkspaceFiles(): FileData[] {
   const workspaceJson = readWorkspaceJson();
-  const files = [];
 
-  files.push(
-    ...rootWorkspaceFileNames().map((f) => getFileData(`${appRootPath}/${f}`))
-  );
+  if (defaultFileHasher.usesGitForHashing) {
+    return defaultFileHasher
+      .allFiles()
+      .map((f) => getFileData(`${appRootPath}/${f}`));
+  } else {
+    const files = [];
+    files.push(...rootWorkspaceFileData());
 
-  // Add known workspace files and directories
-  files.push(...allFilesInDir(appRootPath, false));
-  files.push(...allFilesInDir(`${appRootPath}/tools`));
+    // Add known workspace files and directories
+    files.push(...allFilesInDir(appRootPath, false));
+    files.push(...allFilesInDir(`${appRootPath}/tools`));
 
-  // Add files for workspace projects
-  Object.keys(workspaceJson.projects).forEach((projectName) => {
-    const project = workspaceJson.projects[projectName];
-    files.push(...allFilesInDir(`${appRootPath}/${project.root}`));
-  });
+    // Add files for workspace projects
+    Object.keys(workspaceJson.projects).forEach((projectName) => {
+      const project = workspaceJson.projects[projectName];
+      files.push(...allFilesInDir(`${appRootPath}/${project.root}`));
+    });
 
-  return files;
+    return files;
+  }
 }
 
 export function readEnvironment(
@@ -229,17 +240,6 @@ export function readEnvironment(
   return { nxJson, workspaceJson, workspaceResults };
 }
 
-/**
- * Returns the time when file was last modified
- * Returns -Infinity for a non-existent file
- */
-export function mtime(filePath: string): number {
-  if (!fs.existsSync(filePath)) {
-    return -Infinity;
-  }
-  return fs.statSync(filePath).mtimeMs;
-}
-
 export function normalizedProjectRoot(p: ProjectGraphNode): string {
   if (p.data && p.data.root) {
     const path = p.data.root.split('/').filter((v) => !!v);
@@ -251,4 +251,16 @@ export function normalizedProjectRoot(p: ProjectGraphNode): string {
   } else {
     return '';
   }
+}
+
+export function filesChanged(a: FileData[], b: FileData[]) {
+  if (a.length !== b.length) return true;
+  const sortedA = a.sort((x, y) => x.file.localeCompare(y.file));
+  const sortedB = b.sort((x, y) => x.file.localeCompare(y.file));
+
+  for (let i = 0; i < sortedA.length; ++i) {
+    if (sortedA[i].file !== sortedB[i].file) return true;
+    if (sortedA[i].hash !== sortedB[i].hash) return true;
+  }
+  return false;
 }

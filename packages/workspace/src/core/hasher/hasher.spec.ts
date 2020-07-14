@@ -1,8 +1,7 @@
-import { Hasher, extractNameAndVersion } from './hasher';
+import { Hasher } from './hasher';
+import { extractNameAndVersion } from '@nrwl/workspace/src/core/hasher/file-hasher';
 
-const hasha = require('hasha');
 const fs = require('fs');
-jest.mock('hasha');
 jest.mock('fs');
 
 describe('Hasher', () => {
@@ -14,14 +13,13 @@ describe('Hasher', () => {
     'tsconfig.json': 'tsconfig.json.hash',
     'workspace.json': 'workspace.json.hash',
   };
-  beforeEach(() => {
-    hasha.mockImplementation((values) => values.join('|'));
-    hasha.fromFile.mockImplementation((path) => Promise.resolve(hashes[path]));
-    fs.statSync.mockReturnValue({ size: 100 });
-    fs.readFileSync.mockImplementation(() =>
-      JSON.stringify({ dependencies: {}, devDependencies: {} })
-    );
-  });
+
+  function createHashing(): any {
+    return {
+      hashArray: (values: string[]) => values.join('|'),
+      hashFile: (path: string) => hashes[path],
+    };
+  }
 
   it('should create project hash', async (done) => {
     hashes['/file'] = 'file.hash';
@@ -31,7 +29,7 @@ describe('Hasher', () => {
           proj: {
             name: 'proj',
             type: 'lib',
-            data: { files: [{ file: '/file', ext: '.ts', mtime: 1 }] },
+            data: { files: [{ file: '/file', ext: '.ts', hash: 'some-hash' }] },
           },
         },
         dependencies: {
@@ -41,14 +39,19 @@ describe('Hasher', () => {
       {} as any,
       {
         runtimeCacheInputs: ['echo runtime123', 'echo runtime456'],
-      }
+      },
+      createHashing()
     );
 
-    const hash = await hasher.hash({
-      target: { project: 'proj', target: 'build' },
-      id: 'proj-build',
-      overrides: { prop: 'prop-value' },
-    });
+    const hash = (
+      await hasher.hashTasks([
+        {
+          target: { project: 'proj', target: 'build' },
+          id: 'proj-build',
+          overrides: { prop: 'prop-value' },
+        },
+      ])
+    )[0];
 
     expect(hash.value).toContain('yarn.lock.hash'); //implicits
     expect(hash.value).toContain('file.hash'); //project files
@@ -87,15 +90,18 @@ describe('Hasher', () => {
       {} as any,
       {
         runtimeCacheInputs: ['boom'],
-      }
+      },
+      createHashing()
     );
 
     try {
-      await hasher.hash({
-        target: { project: 'proj', target: 'build' },
-        id: 'proj-build',
-        overrides: {},
-      });
+      await hasher.hashTasks([
+        {
+          target: { project: 'proj', target: 'build' },
+          id: 'proj-build',
+          overrides: {},
+        },
+      ]);
       fail('Should not be here');
     } catch (e) {
       expect(e.message).toContain(
@@ -115,12 +121,16 @@ describe('Hasher', () => {
           parent: {
             name: 'parent',
             type: 'lib',
-            data: { files: [{ file: '/filea', ext: '.ts', mtime: 1 }] },
+            data: {
+              files: [{ file: '/filea', ext: '.ts', hash: 'some-hash' }],
+            },
           },
           child: {
             name: 'child',
             type: 'lib',
-            data: { files: [{ file: '/fileb', ext: '.ts', mtime: 1 }] },
+            data: {
+              files: [{ file: '/fileb', ext: '.ts', hash: 'some-hash' }],
+            },
           },
         },
         dependencies: {
@@ -128,17 +138,22 @@ describe('Hasher', () => {
         },
       },
       {} as any,
-      {}
+      {},
+      createHashing()
     );
 
-    const hasha = await hasher.hash({
-      target: { project: 'parent', target: 'build' },
-      id: 'parent-build',
-      overrides: { prop: 'prop-value' },
-    });
+    const hash = (
+      await hasher.hashTasks([
+        {
+          target: { project: 'parent', target: 'build' },
+          id: 'parent-build',
+          overrides: { prop: 'prop-value' },
+        },
+      ])
+    )[0];
 
     // note that the parent hash is based on parent source files only!
-    expect(hasha.details.sources).toEqual({
+    expect(hash.details.sources).toEqual({
       parent: 'a.hash',
       child: 'b.hash',
     });
@@ -155,12 +170,16 @@ describe('Hasher', () => {
           proja: {
             name: 'proja',
             type: 'lib',
-            data: { files: [{ file: '/filea', ext: '.ts', mtime: 1 }] },
+            data: {
+              files: [{ file: '/filea', ext: '.ts', hash: 'some-hash' }],
+            },
           },
           projb: {
             name: 'projb',
             type: 'lib',
-            data: { files: [{ file: '/fileb', ext: '.ts', mtime: 1 }] },
+            data: {
+              files: [{ file: '/fileb', ext: '.ts', hash: 'some-hash' }],
+            },
           },
         },
         dependencies: {
@@ -169,14 +188,19 @@ describe('Hasher', () => {
         },
       },
       {} as any,
-      {}
+      {},
+      createHashing()
     );
 
-    const hasha = await hasher.hash({
-      target: { project: 'proja', target: 'build' },
-      id: 'proja-build',
-      overrides: { prop: 'prop-value' },
-    });
+    const hasha = (
+      await hasher.hashTasks([
+        {
+          target: { project: 'proja', target: 'build' },
+          id: 'proja-build',
+          overrides: { prop: 'prop-value' },
+        },
+      ])
+    )[0];
 
     expect(hasha.value).toContain('yarn.lock.hash'); //implicits
     expect(hasha.value).toContain('a.hash'); //project files
@@ -186,11 +210,15 @@ describe('Hasher', () => {
     expect(hasha.value).toContain('build'); //target
     expect(hasha.details.sources).toEqual({ proja: 'a.hash', projb: 'b.hash' });
 
-    const hashb = await hasher.hash({
-      target: { project: 'projb', target: 'build' },
-      id: 'projb-build',
-      overrides: { prop: 'prop-value' },
-    });
+    const hashb = (
+      await hasher.hashTasks([
+        {
+          target: { project: 'projb', target: 'build' },
+          id: 'projb-build',
+          overrides: { prop: 'prop-value' },
+        },
+      ])
+    )[0];
 
     expect(hashb.value).toContain('yarn.lock.hash'); //implicits
     expect(hashb.value).toContain('a.hash'); //project files
@@ -199,44 +227,6 @@ describe('Hasher', () => {
     expect(hashb.value).toContain('proj'); //project
     expect(hashb.value).toContain('build'); //target
     expect(hashb.details.sources).toEqual({ proja: 'a.hash', projb: 'b.hash' });
-
-    done();
-  });
-
-  it('should handle large binary files in a special way', async (done) => {
-    fs.statSync.mockImplementation((f) => {
-      if (f === '/file') return { size: 1000000 * 5 + 1 };
-      return { size: 100 };
-    });
-    hashes['/file'] = 'file.hash';
-    const hasher = new Hasher(
-      {
-        nodes: {
-          proja: {
-            name: 'proj',
-            type: 'lib',
-            data: { files: [{ file: '/file', ext: '.ts', mtime: 1 }] },
-          },
-        },
-        dependencies: {},
-      },
-      {} as any,
-      {}
-    );
-
-    const hash = (
-      await hasher.hash({
-        target: { project: 'proja', target: 'build' },
-        id: 'proja-build',
-        overrides: { prop: 'prop-value' },
-      })
-    ).value;
-
-    expect(hash).toContain('yarn.lock.hash'); //implicits
-    expect(hash).toContain('5000001'); //project files
-    expect(hash).toContain('prop-value'); //overrides
-    expect(hash).toContain('proj'); //project
-    expect(hash).toContain('build'); //target
 
     done();
   });

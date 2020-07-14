@@ -10,6 +10,7 @@ export function buildWorkspaceProjectNodes(
   Object.keys(ctx.fileMap).forEach((key) => {
     const p = ctx.workspaceJson.projects[key];
 
+    // TODO, types and projectType should allign
     const projectType =
       p.projectType === 'application'
         ? key.endsWith('-e2e')

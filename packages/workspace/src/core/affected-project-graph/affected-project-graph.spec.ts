@@ -116,7 +116,7 @@ describe('project graph', () => {
     files = Object.keys(filesJson).map((f) => ({
       file: f,
       ext: extname(f),
-      mtime: 1,
+      hash: 'some-hash',
     }));
     readFileAtRevision = (p, r) => {
       const fromFs = filesJson[`./${p}`];
@@ -139,13 +139,13 @@ describe('project graph', () => {
       {
         file: 'something-for-api.txt',
         ext: '.txt',
-        mtime: 1,
+        hash: 'some-hash',
         getChanges: () => [new WholeFileChange()],
       },
       {
         file: 'libs/ui/src/index.ts',
         ext: '.ts',
-        mtime: 1,
+        hash: 'some-hash',
         getChanges: () => [new WholeFileChange()],
       },
     ]);
@@ -211,7 +211,7 @@ describe('project graph', () => {
       {
         file: 'package.json',
         ext: '.json',
-        mtime: 1,
+        hash: 'some-hash',
         getChanges: () => jsonDiff(packageJson, updatedPackageJson),
       },
     ]);
@@ -279,7 +279,7 @@ describe('project graph', () => {
       {
         file: 'package.json',
         ext: '.json',
-        mtime: 1,
+        hash: 'some-hash',
         getChanges: () => jsonDiff(packageJson, updatedPackageJson),
       },
     ]);
@@ -300,7 +300,7 @@ describe('project graph', () => {
       {
         file: 'package.json',
         ext: '.json',
-        mtime: 1,
+        hash: 'some-hash',
         getChanges: () => jsonDiff(packageJson, updatedPackageJson),
       },
     ]);
