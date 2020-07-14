@@ -3,45 +3,60 @@ import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import * as path from 'path';
 import { serializeJson } from '@nrwl/workspace';
-import { jestConfigObject } from '../../..';
+import { jestConfigObject } from '../../utils/config/functions';
+
+import { getJestObject } from './require-jest-config';
+jest.mock('./require-jest-config');
+const getJestObjectMock = getJestObject as jest.Mock<typeof getJestObject>;
+
+const ngJestObject = {
+  name: 'test-jest',
+  preset: '../../jest.config.js',
+  coverageDirectory: '../../coverage/libs/test-jest',
+  globals: {
+    'existing-global': 'test',
+  },
+  snapshotSerializers: [
+    'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
+    'jest-preset-angular/build/AngularSnapshotSerializer.js',
+    'jest-preset-angular/build/HTMLCommentSerializer.js',
+  ],
+};
+
+const reactJestObject = {
+  name: 'my-react-app',
+  preset: '../../jest.config.js',
+  transform: {
+    '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest',
+    '^.+\\\\.[tj]sx?$': [
+      'babel-jest',
+      { cwd: __dirname, configFile: './babel-jest.config.json' },
+    ],
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+  coverageDirectory: '../../coverage/apps/my-react-app',
+};
 
 describe('update 10.0.0', () => {
   let initialTree: Tree;
   let schematicRunner: SchematicTestRunner;
-
   const jestConfig = String.raw`
-    module.exports = {    
-      name: 'test-jest',
-      preset: '../../jest.config.js',
-      coverageDirectory: '../../coverage/libs/test-jest',
-      globals: {
-        "existing-global": "test"
-      },
-      snapshotSerializers: [
-        'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
-        'jest-preset-angular/build/AngularSnapshotSerializer.js',
-        'jest-preset-angular/build/HTMLCommentSerializer.js'
-      ]
-    }
+    module.exports = ${JSON.stringify(ngJestObject)}
   `;
 
   const jestConfigReact = String.raw`
-  module.exports = {    
-      name: 'my-react-app',
-      preset: '../../jest.config.js',
-      transform: {
-        '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest',
-        '^.+\\\\.[tj]sx?$': [
-          'babel-jest',
-          { cwd: __dirname, configFile: './babel-jest.config.json' }
-        ]
-      },
-      moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
-      coverageDirectory: '../../coverage/apps/my-react-app'
-    }
+  module.exports = ${JSON.stringify(reactJestObject)}
   `;
 
   beforeEach(() => {
+    getJestObjectMock.mockImplementation((path: string): any => {
+      if (path.includes('apps/products')) {
+        return ngJestObject;
+      } else if (path.includes('apps/cart')) {
+        return reactJestObject;
+      }
+    });
+
     initialTree = createEmptyWorkspace(Tree.empty());
 
     initialTree.create('apps/products/jest.config.js', jestConfig);
