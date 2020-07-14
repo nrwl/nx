@@ -13,6 +13,7 @@ import {
 } from '@nrwl/workspace';
 import { addPropertyToJestConfig } from '../../utils/config/update-config';
 import { getJestObject } from './require-jest-config';
+import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
 
 function checkJestPropertyObject(object: unknown): object is object {
   return object !== null && object !== undefined;
@@ -43,7 +44,7 @@ function modifyJestConfig(
   }
 
   try {
-    const jestObject = getJestObject(jestConfig);
+    const jestObject = getJestObject(`${appRootPath}/${jestConfig}`);
 
     if (setupFile !== '') {
       // add set up env file
