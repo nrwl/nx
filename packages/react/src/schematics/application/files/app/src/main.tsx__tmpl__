@@ -7,7 +7,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './app/app';
 
 <% if (routing) { %>
-ReactDOM.render(<BrowserRouter><App /></BrowserRouter>, document.getElementById('root'));
+ReactDOM.render(<React.StrictMode><BrowserRouter><App /></BrowserRouter></React.StrictMode>, document.getElementById('root'));
 <% } else { %>
-ReactDOM.render(<App />, document.getElementById('root'));
+ReactDOM.render(<React.StrictMode><App /></React.StrictMode>, document.getElementById('root'));
 <% } %>
