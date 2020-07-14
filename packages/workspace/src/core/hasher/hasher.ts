@@ -1,11 +1,17 @@
-import { ProjectGraph } from '../core/project-graph';
-import { NxJson } from '../core/shared-interfaces';
-import { Task } from './tasks-runner';
-import { statSync, readFileSync } from 'fs';
-import { rootWorkspaceFileNames } from '../core/file-utils';
+import { ProjectGraph } from '../project-graph';
+import { NxJson } from '../shared-interfaces';
+import { Task } from '../../tasks-runner/tasks-runner';
+import { readFileSync } from 'fs';
+import { rootWorkspaceFileNames } from '../file-utils';
 import { execSync } from 'child_process';
+import {
+  defaultFileHasher,
+  extractNameAndVersion,
+  FileHasher,
+} from './file-hasher';
+import { defaultHashing, HashingImp } from './hashing-impl';
+
 const resolve = require('resolve');
-const hasha = require('hasha');
 
 export interface Hash {
   value: string;
@@ -38,28 +44,44 @@ interface NodeModulesResult {
 
 export class Hasher {
   static version = '1.0';
-  implicitDependencies: Promise<ImplicitHashResult>;
-  nodeModules: Promise<NodeModulesResult>;
-  runtimeInputs: Promise<RuntimeHashResult>;
-  fileHashes = new FileHashes();
-  projectHashes = new ProjectHashes(this.projectGraph, this.fileHashes);
+  private implicitDependencies: Promise<ImplicitHashResult>;
+  private nodeModules: Promise<NodeModulesResult>;
+  private runtimeInputs: Promise<RuntimeHashResult>;
+  private fileHasher: FileHasher;
+  private projectHashes: ProjectHasher;
+  private hashing: HashingImp;
 
   constructor(
     private readonly projectGraph: ProjectGraph,
     private readonly nxJson: NxJson,
-    private readonly options: any
-  ) {}
-
-  async hash(task: Task): Promise<Hash> {
-    const command = hasha(
-      [
-        task.target.project || '',
-        task.target.target || '',
-        task.target.configuration || '',
-        JSON.stringify(task.overrides),
-      ],
-      { algorithm: 'sha256' }
+    private readonly options: any,
+    hashing: HashingImp = undefined
+  ) {
+    if (!hashing) {
+      this.hashing = defaultHashing;
+      this.fileHasher = defaultFileHasher;
+    } else {
+      this.hashing = hashing;
+      this.fileHasher = new FileHasher(hashing);
+    }
+    this.projectHashes = new ProjectHasher(
+      this.projectGraph,
+      this.fileHasher,
+      this.hashing
     );
+  }
+
+  async hashTasks(tasks: Task[]): Promise<Hash[]> {
+    return Promise.all(tasks.map((t) => this.hash(t)));
+  }
+
+  private async hash(task: Task): Promise<Hash> {
+    const command = this.hashing.hashArray([
+      task.target.project || '',
+      task.target.target || '',
+      task.target.configuration || '',
+      JSON.stringify(task.overrides),
+    ]);
 
     const values = (await Promise.all([
       this.projectHashes.hashProject(task.target.project, [
@@ -75,12 +97,11 @@ export class Hasher {
       NodeModulesResult
     ];
 
-    const value = hasha(
-      [Hasher.version, command, ...values.map((v) => v.value)],
-      {
-        algorithm: 'sha256',
-      }
-    );
+    const value = this.hashing.hashArray([
+      Hasher.version,
+      command,
+      ...values.map((v) => v.value),
+    ]);
 
     return {
       value,
@@ -109,12 +130,7 @@ export class Hasher {
           })
         )) as any;
 
-        const value = await hasha(
-          values.map((v) => v.value),
-          {
-            algorithm: 'sha256',
-          }
-        );
+        const value = this.hashing.hashArray(values.map((v) => v.value));
         const runtime = values.reduce(
           (m, c) => ((m[c.input] = c.value), m),
           {}
@@ -143,18 +159,12 @@ export class Hasher {
     ];
 
     this.implicitDependencies = Promise.resolve().then(async () => {
-      const fileHashes = await Promise.all(
-        fileNames.map(async (file) => {
-          const hash = await this.fileHashes.hashFile(file);
-          return { file, hash };
-        })
-      );
-
-      const combinedHash = await hasha(
-        fileHashes.map((v) => v.hash),
-        {
-          algorithm: 'sha256',
-        }
+      const fileHashes = fileNames.map((file) => {
+        const hash = this.fileHasher.hashFile(file);
+        return { file, hash };
+      });
+      const combinedHash = this.hashing.hashArray(
+        fileHashes.map((v) => v.hash)
       );
       return {
         value: combinedHash,
@@ -174,21 +184,17 @@ export class Hasher {
           ...Object.keys(j.dependencies),
           ...Object.keys(j.devDependencies),
         ];
-        const packageJsonHashes = await Promise.all(
-          allPackages.map((d) => {
-            try {
-              const path = resolve.sync(`${d}/package.json`, {
-                basedir: process.cwd(),
-              });
-              return this.fileHashes
-                .hashFile(path, extractNameAndVersion)
-                .catch(() => '');
-            } catch (e) {
-              return '';
-            }
-          })
-        );
-        return { value: await hasha(packageJsonHashes) };
+        const packageJsonHashes = allPackages.map((d) => {
+          try {
+            const path = resolve.sync(`${d}/package.json`, {
+              basedir: process.cwd(),
+            });
+            return this.fileHasher.hashFile(path, extractNameAndVersion);
+          } catch (e) {
+            return '';
+          }
+        });
+        return { value: this.hashing.hashArray(packageJsonHashes) };
       } catch (e) {
         return { value: '' };
       }
@@ -198,12 +204,13 @@ export class Hasher {
   }
 }
 
-export class ProjectHashes {
+class ProjectHasher {
   private sourceHashes: { [projectName: string]: Promise<string> } = {};
 
   constructor(
     private readonly projectGraph: ProjectGraph,
-    private readonly fileHashes: FileHashes
+    private readonly fileHasher: FileHasher,
+    private readonly hashing: HashingImp
   ) {}
 
   async hashProject(
@@ -231,7 +238,7 @@ export class ProjectHashes {
         },
         { [projectName]: projectHash }
       );
-      const value = await hasha([
+      const value = this.hashing.hashArray([
         ...depHashes.map((d) => d.value),
         projectHash,
       ]);
@@ -244,88 +251,11 @@ export class ProjectHashes {
       this.sourceHashes[projectName] = new Promise(async (res) => {
         const p = this.projectGraph.nodes[projectName];
         const values = await Promise.all(
-          p.data.files.map((f) => this.fileHashes.hashFile(f.file))
+          p.data.files.map((f) => this.fileHasher.hashFile(f.file))
         );
-        res(hasha(values, { algorithm: 'sha256' }));
+        res(this.hashing.hashArray(values));
       });
     }
     return this.sourceHashes[projectName];
-  }
-}
-
-export function extractNameAndVersion(content: string): string {
-  try {
-    const c = JSON.parse(content);
-    return `${c.name}${c.version}`;
-  } catch (e) {
-    return '';
-  }
-}
-
-type PathAndTransformer = {
-  path: string;
-  transformer: (x: string) => string | null;
-};
-
-export class FileHashes {
-  private queue = [] as PathAndTransformer[];
-  private numberOfConcurrentReads = 0;
-  private fileHashes: { [path: string]: Promise<string> } = {};
-  private resolvers: { [path: string]: Function } = {};
-
-  async hashFile(
-    path: string,
-    transformer: (x: string) => string | null = null
-  ) {
-    if (!this.fileHashes[path]) {
-      this.fileHashes[path] = new Promise((res) => {
-        this.resolvers[path] = res;
-        this.pushFileIntoQueue({ path, transformer });
-      });
-    }
-    return this.fileHashes[path];
-  }
-
-  private pushFileIntoQueue(pathAndTransformer: PathAndTransformer) {
-    this.queue.push(pathAndTransformer);
-    if (this.numberOfConcurrentReads < 2000) {
-      this.numberOfConcurrentReads++;
-      this.takeFromQueue();
-    }
-  }
-
-  private takeFromQueue() {
-    if (this.queue.length > 0) {
-      const pathAndTransformer = this.queue.pop();
-      this.processPath(pathAndTransformer)
-        .then((value) => {
-          this.resolvers[pathAndTransformer.path](value);
-        })
-        .then(() => this.takeFromQueue());
-    } else {
-      this.numberOfConcurrentReads--;
-    }
-  }
-
-  private processPath(pathAndTransformer: PathAndTransformer) {
-    try {
-      const stats = statSync(pathAndTransformer.path);
-      const fileSizeInMegabytes = stats.size / 1000000;
-      // large binary file, skip it
-      if (fileSizeInMegabytes > 5) {
-        return Promise.resolve(stats.size.toString());
-      } else if (pathAndTransformer.transformer) {
-        const transformedFile = pathAndTransformer.transformer(
-          readFileSync(pathAndTransformer.path).toString()
-        );
-        return Promise.resolve('').then(() =>
-          hasha([transformedFile], { algorithm: 'sha256' })
-        );
-      } else {
-        return hasha.fromFile(pathAndTransformer.path, { algorithm: 'sha256' });
-      }
-    } catch (e) {
-      return Promise.resolve('');
-    }
   }
 }

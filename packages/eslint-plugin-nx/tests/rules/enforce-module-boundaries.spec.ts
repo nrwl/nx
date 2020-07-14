@@ -993,7 +993,7 @@ linter.defineParser('@typescript-eslint/parser', parser);
 linter.defineRule(enforceModuleBoundariesRuleName, enforceModuleBoundaries);
 
 function createFile(f) {
-  return { file: f, ext: extname(f), mtime: 1 };
+  return { file: f, ext: extname(f), hash: '' };
 }
 
 function runRule(

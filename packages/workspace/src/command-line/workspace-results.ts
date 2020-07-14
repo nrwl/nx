@@ -1,9 +1,17 @@
 import * as fs from 'fs';
-import { readJsonFile, writeJsonFile } from '../utils/fileutils';
-import { unlinkSync } from 'fs';
+import {
+  directoryExists,
+  readJsonFile,
+  writeJsonFile,
+} from '../utils/fileutils';
+import { existsSync, unlinkSync } from 'fs';
 import { ProjectGraphNode } from '../core/project-graph';
+import { join } from 'path';
+import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
+import * as fsExtra from 'fs-extra';
 
-const RESULTS_FILE = 'dist/.nx-results';
+const resultsDir = join(appRootPath, 'node_modules', '.cache', 'nx');
+const resultsFile = join(resultsDir, 'results.json');
 
 interface NxResults {
   command: string;
@@ -31,11 +39,11 @@ export class WorkspaceResults {
     private command: string,
     private projects: Record<string, ProjectGraphNode>
   ) {
-    const resultsExists = fs.existsSync(RESULTS_FILE);
+    const resultsExists = fs.existsSync(resultsFile);
     this.startedWithFailedProjects = false;
     if (resultsExists) {
       try {
-        const commandResults = readJsonFile(RESULTS_FILE);
+        const commandResults = readJsonFile(resultsFile);
         this.startedWithFailedProjects = commandResults.command === command;
         if (this.startedWithFailedProjects) {
           this.commandResults = commandResults;
@@ -56,10 +64,19 @@ export class WorkspaceResults {
   }
 
   saveResults() {
+    try {
+      if (!existsSync(resultsDir)) {
+        fsExtra.ensureDirSync(resultsDir);
+      }
+    } catch (e) {
+      if (!directoryExists(resultsDir)) {
+        throw new Error(`Failed to create directory: ${resultsDir}`);
+      }
+    }
     if (Object.values<boolean>(this.commandResults.results).includes(false)) {
-      writeJsonFile(RESULTS_FILE, this.commandResults);
-    } else if (fs.existsSync(RESULTS_FILE)) {
-      unlinkSync(RESULTS_FILE);
+      writeJsonFile(resultsFile, this.commandResults);
+    } else if (fs.existsSync(resultsFile)) {
+      unlinkSync(resultsFile);
     }
   }
 

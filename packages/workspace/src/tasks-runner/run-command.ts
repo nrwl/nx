@@ -7,7 +7,7 @@ import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
 import { Environment, NxJson } from '../core/shared-interfaces';
 import { NxArgs } from '@nrwl/workspace/src/command-line/utils';
 import { isRelativePath } from '../utils/fileutils';
-import { Hasher } from './hasher';
+import { Hasher } from '../core/hasher/hasher';
 import { projectHasTargetAndConfiguration } from '../utils/project-graph-utils';
 
 type RunArgs = yargs.Arguments & ReporterArgs;
@@ -42,14 +42,11 @@ export async function runCommand<T extends RunArgs>(
   });
 
   const hasher = new Hasher(projectGraph, nxJson, tasksOptions);
-  await Promise.all(
-    tasks.map(async (t) => {
-      const hash = await hasher.hash(t);
-      t.hash = hash.value;
-      t.hashDetails = hash.details;
-    })
-  );
-
+  const res = await hasher.hashTasks(tasks);
+  for (let i = 0; i < res.length; ++i) {
+    tasks[i].hash = res[i].value;
+    tasks[i].hashDetails = res[i].details;
+  }
   const cached = [];
   tasksRunner(tasks, tasksOptions, {
     initiatingProject: initiatingProject,

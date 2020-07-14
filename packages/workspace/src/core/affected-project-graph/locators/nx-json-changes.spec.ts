@@ -9,7 +9,7 @@ describe('getTouchedProjectsInNxJson', () => {
         {
           file: 'source.ts',
           ext: '.ts',
-          mtime: 0,
+          hash: 'some-hash',
           getChanges: () => [new WholeFileChange()],
         },
       ],
@@ -32,7 +32,7 @@ describe('getTouchedProjectsInNxJson', () => {
         {
           file: 'nx.json',
           ext: '.json',
-          mtime: 0,
+          hash: 'some-hash',
           getChanges: () => [new WholeFileChange()],
         },
       ],
@@ -58,7 +58,7 @@ describe('getTouchedProjectsInNxJson', () => {
         {
           file: 'nx.json',
           ext: '.json',
-          mtime: 0,
+          hash: 'some-hash',
           getChanges: () => [
             {
               type: DiffType.Modified,
@@ -93,7 +93,7 @@ describe('getTouchedProjectsInNxJson', () => {
         {
           file: 'nx.json',
           ext: '.json',
-          mtime: 0,
+          hash: 'some-hash',
           getChanges: () => [
             {
               type: DiffType.Added,
@@ -138,7 +138,7 @@ describe('getTouchedProjectsInNxJson', () => {
         {
           file: 'nx.json',
           ext: '.json',
-          mtime: 0,
+          hash: 'some-hash',
           getChanges: () => [
             {
               type: DiffType.Deleted,
@@ -175,7 +175,7 @@ describe('getTouchedProjectsInNxJson', () => {
         {
           file: 'nx.json',
           ext: '.json',
-          mtime: 0,
+          hash: 'some-hash',
           getChanges: () => [
             {
               type: DiffType.Modified,

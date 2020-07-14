@@ -35,7 +35,7 @@ describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
       [
         {
           file: 'package.json',
-          mtime: 0,
+          hash: 'some-hash',
           ext: '.json',
           getChanges: () => [
             {
@@ -60,7 +60,7 @@ describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
       [
         {
           file: 'package.json',
-          mtime: 0,
+          hash: 'some-hash',
           ext: '.json',
           getChanges: () => [new WholeFileChange()],
         },

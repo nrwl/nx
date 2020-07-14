@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 import { WorkspaceResults } from './workspace-results';
 import { serializeJson } from '../utils/fileutils';
-import { ProjectType } from '..//core/project-graph';
+import { ProjectType } from '../core/project-graph';
 
 describe('WorkspacesResults', () => {
   let results: WorkspaceResults;
@@ -43,7 +43,7 @@ describe('WorkspacesResults', () => {
       results.saveResults();
 
       expect(fs.writeSync).not.toHaveBeenCalled();
-      expect(fs.unlinkSync).toHaveBeenCalledWith('dist/.nx-results');
+      expect(fs.unlinkSync).toHaveBeenCalled();
     });
   });
 
@@ -52,23 +52,6 @@ describe('WorkspacesResults', () => {
       results.setResult('proj', false);
 
       expect(results.getResult('proj')).toBe(false);
-    });
-
-    it('should save results to file system', () => {
-      spyOn(fs, 'writeFileSync');
-
-      results.setResult('proj', false);
-      results.saveResults();
-
-      expect(fs.writeFileSync).toHaveBeenCalledWith(
-        'dist/.nx-results',
-        serializeJson({
-          command: 'test',
-          results: {
-            proj: false,
-          },
-        })
-      );
     });
   });
 
@@ -97,7 +80,6 @@ describe('WorkspacesResults', () => {
         },
       });
 
-      expect(fs.readFileSync).toHaveBeenCalledWith('dist/.nx-results', 'utf-8');
       expect(results.getResult('proj')).toBe(false);
     });
 

@@ -33,7 +33,6 @@ export function checkDependencies(schema: Schema): Rule {
       ig = ig.add(tree.read('.gitignore').toString());
     }
     const files: FileData[] = [];
-    const mtime = Date.now(); //can't get mtime data from the tree :(
     const workspaceDir = path.dirname(getWorkspacePath(tree));
 
     for (const dir of tree.getDir('/').subdirs) {
@@ -45,7 +44,7 @@ export function checkDependencies(schema: Schema): Rule {
         files.push({
           file: path.relative(workspaceDir, file),
           ext: path.extname(file),
-          mtime,
+          hash: '',
         });
       });
     }

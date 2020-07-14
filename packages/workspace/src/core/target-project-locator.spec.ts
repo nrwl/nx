@@ -65,49 +65,49 @@ describe('findTargetProjectWithImport', () => {
         proj: [
           {
             file: 'libs/proj/index.ts',
-            mtime: 0,
+            hash: 'some-hash',
             ext: '.ts',
           },
         ],
         proj2: [
           {
             file: 'libs/proj2/index.ts',
-            mtime: 0,
+            hash: 'some-hash',
             ext: '.ts',
           },
         ],
         proj3a: [
           {
             file: 'libs/proj3a/index.ts',
-            mtime: 0,
+            hash: 'some-hash',
             ext: '.ts',
           },
         ],
         proj4ab: [
           {
             file: 'libs/proj4ab/index.ts',
-            mtime: 0,
+            hash: 'some-hash',
             ext: '.ts',
           },
         ],
         proj123: [
           {
             file: 'libs/proj123/index.ts',
-            mtime: 0,
+            hash: 'some-hash',
             ext: '.ts',
           },
         ],
         proj1234: [
           {
             file: 'libs/proj1234/index.ts',
-            mtime: 0,
+            hash: 'some-hash',
             ext: '.ts',
           },
         ],
         'proj1234-child': [
           {
             file: 'libs/proj1234-child/index.ts',
-            mtime: 0,
+            hash: 'some-hash',
             ext: '.ts',
           },
         ],

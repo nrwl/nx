@@ -7,13 +7,13 @@ describe('getTouchedProjects', () => {
       {
         file: 'libs/a/index.ts',
         ext: '.ts',
-        mtime: 0,
+        hash: 'some-hash',
         getChanges: () => [new WholeFileChange()],
       },
       {
         file: 'libs/b/index.ts',
         ext: '.ts',
-        mtime: 0,
+        hash: 'some-hash',
         getChanges: () => [new WholeFileChange()],
       },
     ];
@@ -30,7 +30,7 @@ describe('getTouchedProjects', () => {
       {
         file: 'libs/a-b/index.ts',
         ext: '.ts',
-        mtime: 0,
+        hash: 'some-hash',
         getChanges: () => [new WholeFileChange()],
       },
     ];
@@ -47,7 +47,7 @@ describe('getTouchedProjects', () => {
       {
         file: 'libs/a-b/index.ts',
         ext: '.ts',
-        mtime: 0,
+        hash: 'some-hash',
         getChanges: () => [new WholeFileChange()],
       },
     ];
@@ -64,7 +64,7 @@ describe('getTouchedProjects', () => {
       {
         file: 'libs/a/b/index.ts',
         ext: '.ts',
-        mtime: 0,
+        hash: 'some-hash',
         getChanges: () => [new WholeFileChange()],
       },
     ];
