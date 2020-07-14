@@ -14,14 +14,22 @@ describe('run-commands', () => {
   it('should generate files', async () => {
     const tree = await runSchematic(
       'run-commands',
-      { name: 'custom', project: 'lib', command: 'echo 1' },
+      {
+        name: 'custom',
+        project: 'lib',
+        command: 'echo 1',
+        cwd: '/packages/foo',
+        outputs: '/dist/a, /dist/b, /dist/c',
+      },
       appTree
     );
     const workspaceJson = readJsonInTree(tree, '/workspace.json');
     expect(workspaceJson.projects['lib'].architect['custom']).toEqual({
       builder: '@nrwl/workspace:run-commands',
+      outputs: ['/dist/a', '/dist/b', '/dist/c'],
       options: {
         command: 'echo 1',
+        cwd: '/packages/foo',
       },
     });
   });

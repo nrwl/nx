@@ -42,11 +42,23 @@ Type: `string`
 
 Command to run
 
+### cwd
+
+Type: `string`
+
+Current working directory of the command
+
 ### name
 
 Type: `string`
 
 Target name
+
+### outputs
+
+Type: `string`
+
+Comma-separated list of output paths
 
 ### project
 

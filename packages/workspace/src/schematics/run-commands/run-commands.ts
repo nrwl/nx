@@ -11,8 +11,12 @@ export default function (schema: Schema): Rule {
     project.architect = project.architect || {};
     project.architect[schema.name] = {
       builder: '@nrwl/workspace:run-commands',
+      outputs: schema.outputs
+        ? schema.outputs.split(',').map((s) => s.trim())
+        : [],
       options: {
         command: schema.command,
+        cwd: schema.cwd,
       },
     };
     return json;
