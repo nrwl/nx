@@ -28,6 +28,14 @@
       "description": "Command to run",
       "type": "string",
       "x-prompt": "What command would you like to run?"
+    },
+    "cwd": {
+      "description": "Current working directory of the command",
+      "type": "string"
+    },
+    "outputs": {
+      "description": "Comma-separated list of output paths",
+      "type": "string"
     }
   },
   "required": ["name", "command", "project"]
