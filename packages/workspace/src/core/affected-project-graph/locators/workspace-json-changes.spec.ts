@@ -9,7 +9,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
         {
           file: 'source.ts',
           ext: '.ts',
-          mtime: 0,
+          hash: 'some-hash',
           getChanges: () => [new WholeFileChange()],
         },
       ],
@@ -32,7 +32,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
         {
           file: 'workspace.json',
           ext: '.json',
-          mtime: 0,
+          hash: 'some-hash',
           getChanges: () => [new WholeFileChange()],
         },
       ],
@@ -57,7 +57,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
         {
           file: 'workspace.json',
           ext: '.json',
-          mtime: 0,
+          hash: 'some-hash',
           getChanges: () => [
             {
               type: DiffType.Modified,
@@ -91,7 +91,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
         {
           file: 'workspace.json',
           ext: '.json',
-          mtime: 0,
+          hash: 'some-hash',
           getChanges: () => [
             {
               type: DiffType.Added,
@@ -132,7 +132,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
         {
           file: 'workspace.json',
           ext: '.json',
-          mtime: 0,
+          hash: 'some-hash',
           getChanges: () => [
             {
               type: DiffType.Deleted,
@@ -167,7 +167,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
         {
           file: 'workspace.json',
           ext: '.json',
-          mtime: 0,
+          hash: 'some-hash',
           getChanges: () => [
             {
               type: DiffType.Modified,

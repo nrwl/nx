@@ -165,7 +165,7 @@ forEachCli((cliName) => {
       expect(failedTests).toContain(`- ${myapp}`);
       expect(failedTests).toContain(`- ${myapp2}`);
       expect(failedTests).toContain(`Failed projects:`);
-      expect(readJson('dist/.nx-results')).toEqual({
+      expect(readJson('node_modules/.cache/nx/results.json')).toEqual({
         command: 'test',
         results: {
           [myapp]: false,
@@ -318,7 +318,7 @@ forEachCli((cliName) => {
       expect(failedTests).toContain(
         'You can isolate the above projects by passing: --only-failed'
       );
-      expect(readJson('dist/.nx-results')).toEqual({
+      expect(readJson('node_modules/.cache/nx/results.json')).toEqual({
         command: 'test',
         results: {
           [myapp]: false,

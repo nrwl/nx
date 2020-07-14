@@ -22,17 +22,19 @@ describe('createFileMap', () => {
       },
     };
     const files = [
-      { file: 'apps/demo/src/main.ts', mtime: 1, ext: '.ts' },
-      { file: 'apps/demo-e2e/src/main.ts', mtime: 1, ext: '.ts' },
-      { file: 'libs/ui/src/index.ts', mtime: 1, ext: '.ts' },
+      { file: 'apps/demo/src/main.ts', hash: 'some-hash', ext: '.ts' },
+      { file: 'apps/demo-e2e/src/main.ts', hash: 'some-hash', ext: '.ts' },
+      { file: 'libs/ui/src/index.ts', hash: 'some-hash', ext: '.ts' },
     ];
 
     const result = createFileMap(workspaceJson, files);
 
     expect(result).toEqual({
-      demo: [{ file: 'apps/demo/src/main.ts', mtime: 1, ext: '.ts' }],
-      'demo-e2e': [{ file: 'apps/demo-e2e/src/main.ts', mtime: 1, ext: '.ts' }],
-      ui: [{ file: 'libs/ui/src/index.ts', mtime: 1, ext: '.ts' }],
+      demo: [{ file: 'apps/demo/src/main.ts', hash: 'some-hash', ext: '.ts' }],
+      'demo-e2e': [
+        { file: 'apps/demo-e2e/src/main.ts', hash: 'some-hash', ext: '.ts' },
+      ],
+      ui: [{ file: 'libs/ui/src/index.ts', hash: 'some-hash', ext: '.ts' }],
     });
   });
 });

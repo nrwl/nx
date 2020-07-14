@@ -409,16 +409,14 @@ export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
 
   const workspaceFiles: FileData[] = [];
 
-  const mtime = +Date.now();
-
   workspaceFiles.push(
     ...allFilesInDirInHost(host, normalize(''), { recursive: false }).map((f) =>
-      getFileDataInHost(host, f, mtime)
+      getFileDataInHost(host, f)
     )
   );
   workspaceFiles.push(
     ...allFilesInDirInHost(host, normalize('tools')).map((f) =>
-      getFileDataInHost(host, f, mtime)
+      getFileDataInHost(host, f)
     )
   );
 
@@ -427,7 +425,7 @@ export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
     const project = workspaceJson.projects[projectName];
     workspaceFiles.push(
       ...allFilesInDirInHost(host, normalize(project.root)).map((f) =>
-        getFileDataInHost(host, f, mtime)
+        getFileDataInHost(host, f)
       )
     );
   });
@@ -441,15 +439,11 @@ export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
   );
 }
 
-export function getFileDataInHost(
-  host: Tree,
-  path: Path,
-  mtime: number
-): FileData {
+export function getFileDataInHost(host: Tree, path: Path): FileData {
   return {
     file: path,
     ext: extname(normalize(path)),
-    mtime,
+    hash: '',
   };
 }
 
