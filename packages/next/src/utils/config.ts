@@ -58,7 +58,7 @@ export function createWebpackConfig(
             use: [
               '@svgr/webpack?-svgo,+titleProp,+ref![path]',
               {
-                loader: 'url-loader',
+                loader: require.resolve('url-loader'),
                 options: {
                   limit: 10000, // 10kB
                   name: '[name].[hash:7].[ext]',
@@ -70,7 +70,7 @@ export function createWebpackConfig(
           {
             use: [
               {
-                loader: 'url-loader',
+                loader: require.resolve('url-loader'),
                 options: {
                   limit: 10000, // 10kB
                   name: '[name].[hash:7].[ext]',

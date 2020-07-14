@@ -121,7 +121,7 @@ function getStylesPartial(
         loaderConfig.loader === 'raw-loader'
       ) {
         return {
-          loader: 'style-loader',
+          loader: require.resolve('style-loader'),
         };
       }
       return loaderConfig;
@@ -138,10 +138,10 @@ function getStylesPartial(
             {
               loader: options.extractCss
                 ? MiniCssExtractPlugin.loader
-                : 'style-loader',
+                : require.resolve('style-loader'),
             },
             {
-              loader: 'css-loader',
+              loader: require.resolve('css-loader'),
               options: {
                 modules: true,
                 importLoaders: 1,
@@ -155,16 +155,16 @@ function getStylesPartial(
             {
               loader: options.extractCss
                 ? MiniCssExtractPlugin.loader
-                : 'style-loader',
+                : require.resolve('style-loader'),
             },
             {
-              loader: 'css-loader',
+              loader: require.resolve('css-loader'),
               options: {
                 modules: true,
                 importLoaders: 1,
               },
             },
-            { loader: 'sass-loader' },
+            { loader: require.resolve('sass-loader') },
           ],
         },
         ...rules,
