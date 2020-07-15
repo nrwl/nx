@@ -984,6 +984,10 @@
             "name": "Overview",
             "id": "overview",
             "file": "shared/migration/overview"
+          },
+          {
+            "name": "From CRA",
+            "id": "migration-cra"
           }
         ]
       },
