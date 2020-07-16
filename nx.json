@@ -156,5 +156,8 @@
       "tags": [],
       "implicitDependencies": ["workspace", "create-nx-workspace"]
     }
+  },
+  "affected": {
+    "defaultBase": "master"
   }
 }
