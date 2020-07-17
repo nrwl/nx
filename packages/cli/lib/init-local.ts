@@ -10,6 +10,7 @@ import { parseRunOneOptions } from './parse-run-one-options';
  */
 process.env.NX_CLI_SET = 'true';
 export function initLocal(workspace: Workspace) {
+  require('@nrwl/workspace/' + 'src/utils/perf-logging');
   const supportedNxCommands = require('@nrwl/workspace/' +
     'src/command-line/supported-nx-commands').supportedNxCommands;
   const runOpts = runOneOptions(workspace);
