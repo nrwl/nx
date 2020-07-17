@@ -15,6 +15,7 @@ import {
   writeJsonFile,
 } from '../../utils/fileutils';
 import { FileMap } from '@nrwl/workspace/src/core/file-graph';
+import { performance } from 'perf_hooks';
 
 export interface ProjectGraphCache {
   version: string;
@@ -26,6 +27,7 @@ export interface ProjectGraphCache {
 const nxDepsDir = join(appRootPath, 'node_modules', '.cache', 'nx');
 const nxDepsPath = join(nxDepsDir, 'nxdeps.json');
 export function readCache(): false | ProjectGraphCache {
+  performance.mark('read cache:start');
   try {
     if (!existsSync(nxDepsDir)) {
       fsExtra.ensureDirSync(nxDepsDir);
@@ -47,6 +49,9 @@ export function readCache(): false | ProjectGraphCache {
   }
 
   const data = fileExists(nxDepsPath) ? readJsonFile(nxDepsPath) : null;
+
+  performance.mark('read cache:end');
+  performance.measure('read cache', 'read cache:start', 'read cache:end');
   return data ? data : false;
 }
 
@@ -54,12 +59,15 @@ export function writeCache(
   rootFiles: FileData[],
   projectGraph: ProjectGraph
 ): void {
+  performance.mark('write cache:start');
   writeJsonFile(nxDepsPath, {
     version: '2.0',
     rootFiles,
     nodes: projectGraph.nodes,
     dependencies: projectGraph.dependencies,
   });
+  performance.mark('write cache:end');
+  performance.measure('write cache', 'write cache:start', 'write cache:end');
 }
 
 export function differentFromCache(

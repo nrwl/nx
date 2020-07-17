@@ -29,6 +29,7 @@ import {
   writeCache,
 } from '../nx-deps/nx-deps-cache';
 import { NxJson } from '../shared-interfaces';
+import { performance } from 'perf_hooks';
 
 export function createProjectGraph(
   workspaceJson = readWorkspaceJson(),
@@ -83,6 +84,7 @@ function buildProjectGraph(
   fileRead: (s: string) => string,
   projectGraph: ProjectGraph
 ) {
+  performance.mark('build project graph:start');
   const builder = new ProjectGraphBuilder(projectGraph);
   const buildNodesFns: BuildNodes[] = [
     buildWorkspaceProjectNodes,
@@ -97,5 +99,12 @@ function buildProjectGraph(
   buildDependenciesFns.forEach((f) =>
     f(ctx, builder.nodes, builder.addDependency.bind(builder), fileRead)
   );
-  return builder.build();
+  const r = builder.build();
+  performance.mark('build project graph:end');
+  performance.measure(
+    'build project graph',
+    'build project graph:start',
+    'build project graph:end'
+  );
+  return r;
 }
