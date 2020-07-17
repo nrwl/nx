@@ -11,6 +11,7 @@ import { jsonDiff } from '../utils/json-diff';
 import { ProjectGraphNode } from './project-graph';
 import { Environment, NxJson } from './shared-interfaces';
 import { defaultFileHasher } from './hasher/file-hasher';
+import { performance } from 'perf_hooks';
 
 const ignore = require('ignore');
 
@@ -206,11 +207,19 @@ export function rootWorkspaceFileData(): FileData[] {
 
 export function readWorkspaceFiles(): FileData[] {
   const workspaceJson = readWorkspaceJson();
+  performance.mark('read workspace files:start');
 
   if (defaultFileHasher.usesGitForHashing) {
-    return defaultFileHasher
+    const r = defaultFileHasher
       .allFiles()
       .map((f) => getFileData(`${appRootPath}/${f}`));
+    performance.mark('read workspace files:end');
+    performance.measure(
+      'read workspace files',
+      'read workspace files:start',
+      'read workspace files:end'
+    );
+    return r;
   } else {
     const files = [];
     files.push(...rootWorkspaceFileData());
@@ -224,7 +233,12 @@ export function readWorkspaceFiles(): FileData[] {
       const project = workspaceJson.projects[projectName];
       files.push(...allFilesInDir(`${appRootPath}/${project.root}`));
     });
-
+    performance.mark('read workspace files:end');
+    performance.measure(
+      'read workspace files',
+      'read workspace files:start',
+      'read workspace files:end'
+    );
     return files;
   }
 }

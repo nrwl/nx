@@ -2,6 +2,7 @@ import { getFileHashes } from './git-hasher';
 import { readFileSync } from 'fs';
 import { defaultHashing, HashingImp } from './hashing-impl';
 import { appRootPath } from '../../utils/app-root';
+import { performance } from 'perf_hooks';
 
 type PathAndTransformer = {
   path: string;
@@ -26,9 +27,16 @@ export class FileHasher {
   }
 
   init() {
+    performance.mark('init hashing:start');
     this.fileHashes = {};
     this.getHashesFromGit();
     this.usesGitForHashing = Object.keys(this.fileHashes).length > 0;
+    performance.mark('init hashing:end');
+    performance.measure(
+      'init hashing',
+      'init hashing:start',
+      'init hashing:end'
+    );
   }
 
   hashFile(path: string, transformer: (x: string) => string | null = null) {
