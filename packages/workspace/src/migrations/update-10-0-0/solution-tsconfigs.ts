@@ -6,7 +6,12 @@ import {
   SchematicContext,
   Tree,
 } from '@angular-devkit/schematics';
-import { formatFiles, readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
+import {
+  formatFiles,
+  NxJson,
+  readJsonInTree,
+  updateJsonInTree,
+} from '@nrwl/workspace';
 import ignore from 'ignore';
 import { relative } from 'path';
 
@@ -107,9 +112,23 @@ function updateExtend(file: Path): Rule {
 
 const originalExtendedTsconfigMap = new Map<string, any>();
 
+const changeImplicitDependency = updateJsonInTree<NxJson>('nx.json', (json) => {
+  if (
+    !json.implicitDependencies ||
+    !json.implicitDependencies['tsconfig.json']
+  ) {
+    return json;
+  }
+  json.implicitDependencies['tsconfig.base.json'] =
+    json.implicitDependencies['tsconfig.json'];
+  delete json.implicitDependencies['tsconfig.json'];
+  return json;
+});
+
 export default function (schema: any): Rule {
   return chain([
     renameRootTsconfig,
+    changeImplicitDependency,
     visitNotIgnoredFiles((file, host, context) => {
       if (!file.endsWith('.json')) {
         return;
