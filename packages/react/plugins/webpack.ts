@@ -26,6 +26,7 @@ function getWebpackConfig(config: Configuration) {
               options: {
                 limit: 10000, // 10kB
                 name: '[name].[hash:7].[ext]',
+                esModule: false,
               },
             },
           ],
