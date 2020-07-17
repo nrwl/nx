@@ -180,5 +180,31 @@ describe('utils', () => {
         )
       ).toEqual(['dist/root-myapp']);
     });
+
+    it('should return default path on test target when nothing else is defined', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          {
+            overrides: {},
+            target: {
+              project: 'myapp',
+              target: 'test',
+              configuration: 'production',
+            },
+          },
+          {
+            name: 'myapp',
+            type: 'application',
+            data: {
+              root: 'root-myapp',
+              architect: {
+                test: {},
+              },
+              files: [],
+            },
+          }
+        )
+      ).toEqual(['coverage/root-myapp']);
+    });
   });
 });

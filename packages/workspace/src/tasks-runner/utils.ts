@@ -69,9 +69,14 @@ export function getOutputsForTargetAndConfiguration(
 
   if (opts.outputPath) {
     return Array.isArray(opts.outputPath) ? opts.outputPath : [opts.outputPath];
-  } else if (target === 'build') {
-    return [`dist/${node.data.root}`];
   } else {
-    return [];
+    switch (target) {
+      case 'build':
+        return [`dist/${node.data.root}`];
+      case 'test':
+        return [`coverage/${node.data.root}`];
+      default:
+        return [];
+    }
   }
 }
