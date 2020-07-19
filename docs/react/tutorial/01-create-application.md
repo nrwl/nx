@@ -2,7 +2,7 @@
 
 In this tutorial you will use Nx to build a full-stack application out of common libraries using modern technologies.
 
-> Next.js: Nx also has first-class Next.js support. Read more about it LINKLINK
+> Next.js: Nx also has first-class Next.js support. Read more about it [here](https://nx.dev/react/plugins/next/overview)
 
 ## Create a New Workspace
 
