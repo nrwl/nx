@@ -123,7 +123,7 @@
               },
               {
                 "input": "packages/workspace",
-                "glob": "**/*.{js,css,html}",
+                "glob": "**/*.{js,css,html,svg}",
                 "output": "/"
               },
               "LICENSE"
