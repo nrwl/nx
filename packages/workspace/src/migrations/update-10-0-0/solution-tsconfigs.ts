@@ -1,19 +1,13 @@
 import { basename, dirname, join, normalize, Path } from '@angular-devkit/core';
-import {
-  callRule,
-  chain,
-  Rule,
-  SchematicContext,
-  Tree,
-} from '@angular-devkit/schematics';
+import { chain, Rule, Tree } from '@angular-devkit/schematics';
 import {
   formatFiles,
   NxJson,
   readJsonInTree,
   updateJsonInTree,
 } from '@nrwl/workspace';
-import ignore from 'ignore';
 import { relative } from 'path';
+import { visitNotIgnoredFiles } from '../../utils/rules/visit-not-ignored-files';
 
 function renameRootTsconfig(host: Tree) {
   if (!host.exists('tsconfig.json')) {
@@ -21,40 +15,6 @@ function renameRootTsconfig(host: Tree) {
   }
 
   host.rename('tsconfig.json', 'tsconfig.base.json');
-}
-
-function visitNotIgnoredFiles(
-  visitor: (file: Path, host: Tree, context: SchematicContext) => void | Rule,
-  dir: Path = normalize('')
-): Rule {
-  return (host, context) => {
-    let ig;
-    if (host.exists('.gitignore')) {
-      ig = ignore();
-      ig.add(host.read('.gitignore').toString());
-    }
-    function visit(_dir: Path) {
-      if (_dir && ig?.ignores(_dir)) {
-        return;
-      }
-      const dirEntry = host.getDir(_dir);
-      dirEntry.subfiles.forEach((file) => {
-        if (ig?.ignores(join(_dir, file))) {
-          return;
-        }
-        const maybeRule = visitor(join(_dir, file), host, context);
-        if (maybeRule) {
-          callRule(maybeRule, host, context).subscribe();
-        }
-      });
-
-      dirEntry.subdirs.forEach((subdir) => {
-        visit(join(_dir, subdir));
-      });
-    }
-
-    visit(dir);
-  };
 }
 
 function moveIncludesToProjectTsconfig(
