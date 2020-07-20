@@ -8,114 +8,134 @@ import {
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 
 describe('schematic:stories', () => {
-  let appTree: Tree;
+  describe('Stories for empty Angular library', () => {
+    let appTree: Tree;
+    beforeEach(async () => {
+      appTree = await createEmptyUILib('test-empty-ui-lib');
+    });
 
-  beforeEach(async () => {
-    appTree = await createTestUILib('test-ui-lib');
+    it('should not fail on empty NgModule declarations.', () => {
+      expect(
+        async () =>
+          await runSchematic<StorybookStoriesSchema>(
+            'stories',
+            { name: 'test-empty-ui-lib', generateCypressSpecs: false },
+            appTree
+          )
+      ).not.toThrowError();
+    });
   });
 
-  describe('Storybook stories', () => {
-    it('should generate stories.ts files', async () => {
-      const tree = await runSchematic<StorybookStoriesSchema>(
-        'stories',
-        { name: 'test-ui-lib', generateCypressSpecs: false },
-        appTree
-      );
+  describe('Stories for non-empty Angular library', () => {
+    let appTree: Tree;
 
-      expect(
-        tree.exists(
-          'libs/test-ui-lib/src/lib/test-button/test-button.component.stories.ts'
-        )
-      ).toBeTruthy();
-      expect(
-        tree.exists(
-          'libs/test-ui-lib/src/lib/test-other/test-other.component.stories.ts'
-        )
-      ).toBeTruthy();
-      expect(
-        tree.exists(
-          'libs/test-ui-lib/src/lib/nested/nested-button/nested-button.component.stories.ts'
-        )
-      ).toBeTruthy();
-      const propLines = [
-        `buttonType: text('buttonType', 'button'),`,
-        `style: text('style', 'default'),`,
-        `age: number('age', ''),`,
-        `isOn: boolean('isOn', false),    `,
-      ];
-      const storyContent = tree.readContent(
-        'libs/test-ui-lib/src/lib/test-button/test-button.component.stories.ts'
-      );
-      propLines.forEach((propLine) => {
-        storyContent.includes(propLine);
-      });
+    beforeEach(async () => {
+      appTree = await createTestUILib('test-ui-lib');
     });
 
-    it('should generate cypress spec files', async () => {
-      let tree = await runExternalSchematic(
-        '@nrwl/storybook',
-        'cypress-project',
-        { name: 'test-ui-lib' },
-        appTree
-      );
-      tree = await runSchematic<StorybookStoriesSchema>(
-        'stories',
-        { name: 'test-ui-lib', generateCypressSpecs: true },
-        tree
-      );
+    describe('Storybook stories', () => {
+      it('should generate stories.ts files', async () => {
+        const tree = await runSchematic<StorybookStoriesSchema>(
+          'stories',
+          { name: 'test-ui-lib', generateCypressSpecs: false },
+          appTree
+        );
 
-      expect(
-        tree.exists(
+        expect(
+          tree.exists(
+            'libs/test-ui-lib/src/lib/test-button/test-button.component.stories.ts'
+          )
+        ).toBeTruthy();
+        expect(
+          tree.exists(
+            'libs/test-ui-lib/src/lib/test-other/test-other.component.stories.ts'
+          )
+        ).toBeTruthy();
+        expect(
+          tree.exists(
+            'libs/test-ui-lib/src/lib/nested/nested-button/nested-button.component.stories.ts'
+          )
+        ).toBeTruthy();
+        const propLines = [
+          `buttonType: text('buttonType', 'button'),`,
+          `style: text('style', 'default'),`,
+          `age: number('age', ''),`,
+          `isOn: boolean('isOn', false),    `,
+        ];
+        const storyContent = tree.readContent(
           'libs/test-ui-lib/src/lib/test-button/test-button.component.stories.ts'
-        )
-      ).toBeTruthy();
-      expect(
-        tree.exists(
-          'libs/test-ui-lib/src/lib/test-other/test-other.component.stories.ts'
-        )
-      ).toBeTruthy();
-      const propLines = [
-        `buttonType: text('buttonType', 'button'),`,
-        `style: text('style', 'default'),`,
-        `age: number('age', ''),`,
-        `isOn: boolean('isOn', false),    `,
-      ];
-      const storyContent = tree.readContent(
-        'libs/test-ui-lib/src/lib/test-button/test-button.component.stories.ts'
-      );
-      propLines.forEach((propLine) => {
-        storyContent.includes(propLine);
+        );
+        propLines.forEach((propLine) => {
+          storyContent.includes(propLine);
+        });
       });
 
-      expect(
-        tree.exists(
-          'apps/test-ui-lib-e2e/src/integration/test-button/test-button.component.spec.ts'
-        )
-      ).toBeTruthy();
-      expect(
-        tree.exists(
-          'apps/test-ui-lib-e2e/src/integration/test-other/test-other.component.spec.ts'
-        )
-      ).toBeTruthy();
-    });
+      it('should generate cypress spec files', async () => {
+        let tree = await runExternalSchematic(
+          '@nrwl/storybook',
+          'cypress-project',
+          { name: 'test-ui-lib' },
+          appTree
+        );
+        tree = await runSchematic<StorybookStoriesSchema>(
+          'stories',
+          { name: 'test-ui-lib', generateCypressSpecs: true },
+          tree
+        );
 
-    it('should run twice without errors', async () => {
-      let tree = await runExternalSchematic(
-        '@nrwl/storybook',
-        'cypress-project',
-        { name: 'test-ui-lib' },
-        appTree
-      );
-      tree = await runSchematic<StorybookStoriesSchema>(
-        'stories',
-        { name: 'test-ui-lib', generateCypressSpecs: false },
-        tree
-      );
-      tree = await runSchematic<StorybookStoriesSchema>(
-        'stories',
-        { name: 'test-ui-lib', generateCypressSpecs: true },
-        tree
-      );
+        expect(
+          tree.exists(
+            'libs/test-ui-lib/src/lib/test-button/test-button.component.stories.ts'
+          )
+        ).toBeTruthy();
+        expect(
+          tree.exists(
+            'libs/test-ui-lib/src/lib/test-other/test-other.component.stories.ts'
+          )
+        ).toBeTruthy();
+        const propLines = [
+          `buttonType: text('buttonType', 'button'),`,
+          `style: text('style', 'default'),`,
+          `age: number('age', ''),`,
+          `isOn: boolean('isOn', false),    `,
+        ];
+        const storyContent = tree.readContent(
+          'libs/test-ui-lib/src/lib/test-button/test-button.component.stories.ts'
+        );
+        propLines.forEach((propLine) => {
+          storyContent.includes(propLine);
+        });
+
+        expect(
+          tree.exists(
+            'apps/test-ui-lib-e2e/src/integration/test-button/test-button.component.spec.ts'
+          )
+        ).toBeTruthy();
+        expect(
+          tree.exists(
+            'apps/test-ui-lib-e2e/src/integration/test-other/test-other.component.spec.ts'
+          )
+        ).toBeTruthy();
+      });
+
+      it('should run twice without errors', async () => {
+        let tree = await runExternalSchematic(
+          '@nrwl/storybook',
+          'cypress-project',
+          { name: 'test-ui-lib' },
+          appTree
+        );
+        tree = await runSchematic<StorybookStoriesSchema>(
+          'stories',
+          { name: 'test-ui-lib', generateCypressSpecs: false },
+          tree
+        );
+        tree = await runSchematic<StorybookStoriesSchema>(
+          'stories',
+          { name: 'test-ui-lib', generateCypressSpecs: true },
+          tree
+        );
+      });
     });
   });
 });
@@ -193,6 +213,18 @@ export class TestButtonComponent implements OnInit {
     externalSchematic('@schematics/angular', 'component', {
       name: 'test-other',
       project: libName,
+    }),
+    appTree
+  );
+  return appTree;
+}
+
+export async function createEmptyUILib(libName: string): Promise<Tree> {
+  let appTree = Tree.empty();
+  appTree = createEmptyWorkspace(appTree);
+  appTree = await callRule(
+    externalSchematic('@nrwl/angular', 'library', {
+      name: libName,
     }),
     appTree
   );
