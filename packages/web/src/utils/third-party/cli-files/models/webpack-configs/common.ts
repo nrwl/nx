@@ -316,7 +316,7 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
     sourceMapUseRule = {
       use: [
         {
-          loader: require.resolve('source-map-loader'),
+          loader: 'source-map-loader',
         },
       ],
     };
@@ -490,7 +490,7 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
       rules: [
         {
           test: /\.(eot|svg|cur|jpg|png|webp|gif|otf|ttf|woff|woff2|ani)$/,
-          loader: require.resolve('file-loader'),
+          loader: 'file-loader',
           options: {
             name: `[name]${hashFormat.file}.[ext]`,
           },

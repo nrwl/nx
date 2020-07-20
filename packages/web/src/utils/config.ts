@@ -48,7 +48,7 @@ export function getBaseWebpackPartial(
       rules: [
         {
           test: /\.([jt])sx?$/,
-          loader: require.resolve(`babel-loader`),
+          loader: `babel-loader`,
           exclude: /node_modules/,
           options: {
             rootMode: 'upward',

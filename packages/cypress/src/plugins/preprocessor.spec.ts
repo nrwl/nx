@@ -20,7 +20,7 @@ describe('getWebpackConfig', () => {
     });
     expect(config.module.rules).toContainEqual({
       test: /\.(j|t)sx?$/,
-      loader: require.resolve('ts-loader'),
+      loader: 'ts-loader',
       exclude: [/node_modules/],
       options: {
         configFile: './tsconfig.json',

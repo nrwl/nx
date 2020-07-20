@@ -49,7 +49,7 @@ describe('getBaseWebpackPartial', () => {
       );
       expect(rule).toBeTruthy();
 
-      expect(rule.loader).toContain('babel-loader');
+      expect(rule.loader).toEqual('babel-loader');
     });
 
     it('should split typescript type checking into a separate workers', () => {
@@ -165,9 +165,8 @@ describe('getBaseWebpackPartial', () => {
       const result = getBaseWebpackPartial(input, true);
 
       expect(
-        (result.module.rules.find((rule) =>
-          rule.loader.toString().includes('babel-loader')
-        ).options as any).envName
+        (result.module.rules.find((rule) => rule.loader === 'babel-loader')
+          .options as any).envName
       ).toMatch('modern');
     });
 
@@ -175,9 +174,8 @@ describe('getBaseWebpackPartial', () => {
       const result = getBaseWebpackPartial(input, false);
 
       expect(
-        (result.module.rules.find((rule) =>
-          rule.loader.toString().includes('babel-loader')
-        ).options as any).envName
+        (result.module.rules.find((rule) => rule.loader === 'babel-loader')
+          .options as any).envName
       ).toMatch('legacy');
     });
   });
