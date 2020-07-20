@@ -99,6 +99,11 @@
       "version": "10.0.0-beta.0",
       "description": "Migrate tsconfigs to solution style tsconfigs",
       "factory": "./src/migrations/update-10-0-0/solution-tsconfigs"
+    },
+    "migrate-eslintrc-tsconfig": {
+      "version": "10.0.1-beta.0",
+      "description": "Migrate .eslintrc files to reference new tsconfig",
+      "factory": "./src/migrations/update-10-0-1/migrate-eslintrc"
     }
   },
   "packageJsonUpdates": {
