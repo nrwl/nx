@@ -146,7 +146,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
       test: /\.scss$|\.sass$/,
       use: [
         {
-          loader: require.resolve('sass-loader'),
+          loader: 'sass-loader',
           options: {
             implementation: sassImplementation,
             sourceMap: cssSourceMap,
@@ -164,7 +164,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
       test: /\.less$/,
       use: [
         {
-          loader: require.resolve('less-loader'),
+          loader: 'less-loader',
           options: {
             sourceMap: cssSourceMap,
             javascriptEnabled: true,
@@ -177,7 +177,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
       test: /\.styl$/,
       use: [
         {
-          loader: require.resolve('stylus-loader'),
+          loader: 'stylus-loader',
           options: {
             sourceMap: cssSourceMap,
             paths: includePaths,
@@ -192,9 +192,9 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
     exclude: globalStylePaths,
     test,
     use: [
-      { loader: require.resolve('raw-loader') },
+      { loader: 'raw-loader' },
       {
-        loader: require.resolve('postcss-loader'),
+        loader: 'postcss-loader',
         options: {
           ident: 'embedded',
           plugins: postcssPluginCreator,
@@ -224,10 +224,10 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
           use: [
             buildOptions.extractCss
               ? MiniCssExtractPlugin.loader
-              : require.resolve('style-loader'),
+              : 'style-loader',
             RawCssLoader,
             {
-              loader: require.resolve('postcss-loader'),
+              loader: 'postcss-loader',
               options: {
                 ident: buildOptions.extractCss ? 'extracted' : 'embedded',
                 plugins: postcssPluginCreator,
