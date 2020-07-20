@@ -91,12 +91,6 @@
       "factory": "./src/schematics/nestjs-schematics/nestjs-schematics#service",
       "schema": "./src/schematics/nestjs-schematics/schema.json",
       "description": "Run the 'service' NestJs Schematic with Nx project support"
-    },
-    "nestjs-schematics": {
-      "factory": "./src/schematics/nestjs-schematics/nestjs-schematics",
-      "schema": "./src/schematics/nestjs-schematics/schema.json",
-      "description": "Run Nest schematics targeting Nx projects",
-      "aliases": ["schematics", "schema"]
     }
   }
 }
