@@ -94,7 +94,7 @@ Changing knobs in the url query parameters allows your Cypress tests to test dif
 **\*.component.stories.ts file**
 
 ```ts
-import { text, number, boolean } from '@storybook/addon-knobs';
+import { text, number } from '@storybook/addon-knobs';
 import { ButtonComponent } from './button.component';
 
 export default {
