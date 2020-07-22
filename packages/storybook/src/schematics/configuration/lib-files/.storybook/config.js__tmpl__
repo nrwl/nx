@@ -1,5 +1,4 @@
-import { configure, addDecorator } from '<%= uiFramework %>';
-import { withKnobs } from '@storybook/addon-knobs';
+import { configure } from '<%= uiFramework %>';
+import '<%= offsetFromRoot %>../.storybook/config';
 
-addDecorator(withKnobs);
 configure(require.context('../src/lib', true, /\.stories\.(j|t)sx?$/), module);
