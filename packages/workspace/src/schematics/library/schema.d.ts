@@ -10,4 +10,5 @@ export interface Schema {
   unitTestRunner: 'jest' | 'none';
   linter: Linter;
   testEnvironment: 'jsdom' | 'node';
+  importPath?: string;
 }

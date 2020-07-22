@@ -5,6 +5,7 @@ import {
   noop,
   Rule,
   schematic,
+  SchematicsException,
   Tree,
 } from '@angular-devkit/schematics';
 import {
@@ -28,6 +29,12 @@ export default function (schema: Schema): Rule {
       throw new Error(`routing must be set`);
     }
 
+    if (options.publishable === true && !schema.importPath) {
+      throw new SchematicsException(
+        `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
+      );
+    }
+
     return chain([
       addLintFiles(options.projectRoot, Linter.TsLint, { onlyGlobal: true }),
       addUnitTestRunner(options),
@@ -42,7 +49,7 @@ export default function (schema: Schema): Rule {
         prefix: options.prefix,
         style: options.style,
         entryFile: 'index',
-        skipPackageJson: !options.publishable,
+        skipPackageJson: !(options.publishable || options.buildable),
         skipTsConfig: true,
       }),
       // TODO: Remove this after Angular 10.1.0
@@ -66,7 +73,9 @@ export default function (schema: Schema): Rule {
             project: options.name,
           })
         : noop(),
-      options.publishable ? updateLibPackageNpmScope(options) : noop(),
+      options.publishable || options.buildable
+        ? updateLibPackageNpmScope(options)
+        : noop(),
       addModule(options),
       formatFiles(options),
     ]);

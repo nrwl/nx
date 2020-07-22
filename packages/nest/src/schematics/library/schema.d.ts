@@ -8,6 +8,7 @@ export interface Schema {
   tags?: string;
   unitTestRunner: 'jest' | 'none';
   linter: Linter;
+  buildable: boolean;
   publishable?: boolean;
   global?: boolean;
   service?: boolean;

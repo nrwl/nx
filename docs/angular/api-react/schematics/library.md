@@ -50,6 +50,14 @@ Type: `string`
 
 The application project to add the library route to.
 
+### buildable
+
+Default: `false`
+
+Type: `boolean`
+
+Generate a buildable library.
+
 ### component
 
 Default: `true`
@@ -65,6 +73,12 @@ Alias(es): d
 Type: `string`
 
 A directory where the lib is placed.
+
+### importPath
+
+Type: `string`
+
+The library name used to import it, like @myorg/my-awesome-lib
 
 ### js
 
@@ -102,11 +116,9 @@ Use pascal case component file name (e.g. App.tsx).
 
 ### publishable
 
-Alias(es): buildable
-
 Type: `boolean`
 
-Create a buildable library.
+Create a publishable library.
 
 ### routing
 

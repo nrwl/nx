@@ -36,11 +36,25 @@ Type: `boolean`
 
 Add a module spec file.
 
+### buildable
+
+Default: `false`
+
+Type: `boolean`
+
+Generate a buildable library.
+
 ### directory
 
 Type: `string`
 
 A directory where the lib is placed
+
+### importPath
+
+Type: `string`
+
+The library name used to import it, like @myorg/my-awesome-lib. Must be a valid npm name.
 
 ### lazy
 
@@ -72,13 +86,11 @@ The prefix to apply to generated selectors.
 
 ### publishable
 
-Alias(es): buildable
-
 Default: `false`
 
 Type: `boolean`
 
-Generate a buildable library.
+Generate a publishable library.
 
 ### routing
 

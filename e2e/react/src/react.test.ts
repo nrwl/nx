@@ -52,7 +52,7 @@ forEachCli('nx', () => {
       const libName = uniq('lib');
 
       runCLI(
-        `generate @nrwl/react:lib ${libName} --publishable --no-interactive`
+        `generate @nrwl/react:lib ${libName} --publishable --importPath=@proj/${libName} --no-interactive`
       );
 
       const libTestResults = await runCLIAsync(
@@ -113,7 +113,7 @@ forEachCli('nx', () => {
       const libName = uniq('lib');
 
       runCLI(
-        `generate @nrwl/react:lib ${libName} --publishable --no-interactive`
+        `generate @nrwl/react:lib ${libName} --publishable --importPath=@proj/${libName} --no-interactive`
       );
 
       const mainPath = `libs/${libName}/src/lib/${libName}.tsx`;

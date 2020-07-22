@@ -36,6 +36,14 @@ nx g lib mylib --directory=myapp
 
 ## Options
 
+### buildable
+
+Default: `false`
+
+Type: `boolean`
+
+Generate a buildable library.
+
 ### controller
 
 Default: `false`
@@ -60,6 +68,12 @@ Type: `boolean`
 
 Add the Global decorator to the generated module.
 
+### importPath
+
+Type: `string`
+
+The library name used to import it, like @myorg/my-awesome-lib. Must be a valid npm name.
+
 ### linter
 
 Default: `tslint`
@@ -78,11 +92,9 @@ Library name
 
 ### publishable
 
-Alias(es): buildable
-
 Type: `boolean`
 
-Create a buildable library.
+Create a publishable library.
 
 ### service
 

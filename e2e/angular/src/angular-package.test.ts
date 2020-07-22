@@ -33,13 +33,13 @@ forEachCli('angular', (cli) => {
       newProject();
 
       runCLI(
-        `generate @nrwl/angular:library ${parentLib} --publishable=true --no-interactive`
+        `generate @nrwl/angular:library ${parentLib} --publishable=true --importPath=@proj/${parentLib} --no-interactive`
       );
       runCLI(
-        `generate @nrwl/angular:library ${childLib} --publishable=true --no-interactive`
+        `generate @nrwl/angular:library ${childLib} --publishable=true --importPath=@proj/${childLib} --no-interactive`
       );
       runCLI(
-        `generate @nrwl/angular:library ${childLib2} --publishable=true --no-interactive`
+        `generate @nrwl/angular:library ${childLib2} --publishable=true --importPath=@proj/${childLib2} --no-interactive`
       );
 
       // create secondary entrypoint

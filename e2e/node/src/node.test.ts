@@ -266,7 +266,9 @@ forEachCli((currentCLIName) => {
       ensureProject();
 
       const nodeLib = uniq('nodelib');
-      runCLI(`generate @nrwl/node:lib ${nodeLib} --publishable`);
+      runCLI(
+        `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@proj/${nodeLib}`
+      );
       checkFilesExist(`libs/${nodeLib}/package.json`);
       const tslibConfig = readJson(`libs/${nodeLib}/tsconfig.lib.json`);
       expect(tslibConfig).toEqual({
@@ -303,12 +305,16 @@ forEachCli((currentCLIName) => {
       const nglib = uniq('nglib');
 
       // Generating two libraries just to have a lot of files to copy
-      runCLI(`generate @nrwl/node:lib ${nodelib} --publishable`);
+      runCLI(
+        `generate @nrwl/node:lib ${nodelib} --publishable --importPath=@proj/${nodelib}`
+      );
       /**
        * The angular lib contains a lot sub directories that would fail without
        * `nodir: true` in the package.impl.ts
        */
-      runCLI(`generate @nrwl/angular:lib ${nglib} --publishable`);
+      runCLI(
+        `generate @nrwl/angular:lib ${nglib} --publishable --importPath=@proj/${nglib}`
+      );
       const workspace = readJson(workspaceConfigName());
       workspace.projects[nodelib].architect.build.options.assets.push({
         input: `./dist/libs/${nglib}`,
@@ -428,9 +434,9 @@ forEachCli((currentCLIName) => {
       ensureProject();
 
       runCLI(`generate @nrwl/express:app ${app}`);
-      runCLI(`generate @nrwl/node:lib ${parentLib} --publishable=true`);
-      runCLI(`generate @nrwl/node:lib ${childLib} --publishable=true`);
-      runCLI(`generate @nrwl/node:lib ${childLib2} --publishable=true`);
+      runCLI(`generate @nrwl/node:lib ${parentLib} --buildable=true`);
+      runCLI(`generate @nrwl/node:lib ${childLib} --buildable=true`);
+      runCLI(`generate @nrwl/node:lib ${childLib2} --buildable=true`);
 
       // create dependencies by importing
       const createDep = (parent, children: string[]) => {

@@ -20,8 +20,12 @@
     "publishable": {
       "type": "boolean",
       "default": false,
-      "description": "Generate a buildable library.",
-      "alias": "buildable"
+      "description": "Generate a publishable library."
+    },
+    "buildable": {
+      "type": "boolean",
+      "default": false,
+      "description": "Generate a buildable library."
     },
     "prefix": {
       "type": "string",
@@ -104,6 +108,10 @@
       "enum": ["karma", "jest", "none"],
       "description": "Test runner to use for unit tests",
       "default": "jest"
+    },
+    "importPath": {
+      "type": "string",
+      "description": "The library name used to import it, like @myorg/my-awesome-lib. Must be a valid npm name."
     }
   },
   "required": []

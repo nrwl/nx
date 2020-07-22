@@ -11,7 +11,11 @@ describe('NxPlugin migration', () => {
   beforeEach(async () => {
     projectName = 'my-plugin';
     appTree = createEmptyWorkspace(ngSchematics.Tree.empty());
-    appTree = await runSchematic('plugin', { name: projectName }, appTree);
+    appTree = await runSchematic(
+      'plugin',
+      { name: projectName, importPath: '@proj/my-plugin' },
+      appTree
+    );
   });
 
   it('should update the workspace.json file', async () => {

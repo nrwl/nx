@@ -1,4 +1,4 @@
 {
-  "name": "@<%= prefix %>/<%= name %>",
+  "name": "<%= importPath %>",
   "version": "0.0.1"
 }

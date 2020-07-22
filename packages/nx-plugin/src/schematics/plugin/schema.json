@@ -5,7 +5,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "g plugin my-plugin --directory=plugins",
+      "command": "g plugin my-plugin --directory=plugins --importPath=@myorg/my-plugin",
       "description": "Generate libs/plugins/my-plugin"
     }
   ],
@@ -23,6 +23,10 @@
       "type": "string",
       "description": "A directory where the plugin is placed",
       "alias": "d"
+    },
+    "importPath": {
+      "type": "string",
+      "description": "How the plugin will be published, like @myorg/my-awesome-plugin. Note this must be a valid npm name"
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
@@ -52,5 +56,5 @@
       "description": "Do not update tsconfig.json for development experience."
     }
   },
-  "required": ["name"]
+  "required": ["name", "importPath"]
 }
