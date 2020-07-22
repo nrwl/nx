@@ -80,28 +80,36 @@ function gitLsTree(path: string): Map<string, string> {
   return parseGitLsTree(spawnProcess('git', ['ls-tree', 'HEAD', '-r'], path));
 }
 
-function gitStatus(path: string): Map<string, string> {
+function gitStatus(
+  path: string
+): { status: Map<string, string>; deletedFiles: string[] } {
+  const deletedFiles: string[] = [];
   const filesToHash: string[] = [];
   parseGitStatus(
     spawnProcess('git', ['status', '-s', '-u', '.'], path)
   ).forEach((changeType: string, filename: string) => {
     if (changeType !== 'D') {
       filesToHash.push(filename);
+    } else {
+      deletedFiles.push(filename);
     }
   });
-  return getGitHashForFiles(filesToHash, path);
+  const status = getGitHashForFiles(filesToHash, path);
+  return { deletedFiles, status };
 }
 
 export function getFileHashes(path: string): Map<string, string> {
   const res = new Map<string, string>();
 
   try {
+    const { deletedFiles, status } = gitStatus(path);
     const m1 = gitLsTree(path);
     m1.forEach((hash: string, filename: string) => {
-      res.set(`${path}/${filename}`, hash);
+      if (deletedFiles.indexOf(filename) === -1) {
+        res.set(`${path}/${filename}`, hash);
+      }
     });
-    const m2 = gitStatus(path);
-    m2.forEach((hash: string, filename: string) => {
+    status.forEach((hash: string, filename: string) => {
       res.set(`${path}/${filename}`, hash);
     });
     return res;
