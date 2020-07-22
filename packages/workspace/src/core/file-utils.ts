@@ -194,6 +194,15 @@ export function readNxJson(): NxJson {
   return config;
 }
 
+export function workspaceLayout(): { appsDir: string; libsDir: string } {
+  const nxJson = readNxJson();
+  const appsDir =
+    (nxJson.workspaceLayout && nxJson.workspaceLayout.appsDir) || 'apps';
+  const libsDir =
+    (nxJson.workspaceLayout && nxJson.workspaceLayout.libsDir) || 'libs';
+  return { appsDir, libsDir };
+}
+
 // TODO: Make this list extensible
 export function rootWorkspaceFileNames(): string[] {
   return [`package.json`, workspaceFileName(), `nx.json`, `tsconfig.base.json`];
@@ -227,12 +236,11 @@ export function readWorkspaceFiles(): FileData[] {
     // Add known workspace files and directories
     files.push(...allFilesInDir(appRootPath, false));
     files.push(...allFilesInDir(`${appRootPath}/tools`));
-
-    // Add files for workspace projects
-    Object.keys(workspaceJson.projects).forEach((projectName) => {
-      const project = workspaceJson.projects[projectName];
-      files.push(...allFilesInDir(`${appRootPath}/${project.root}`));
-    });
+    const wl = workspaceLayout();
+    files.push(...allFilesInDir(`${appRootPath}/${wl.appsDir}`));
+    if (wl.appsDir !== wl.libsDir) {
+      files.push(...allFilesInDir(`${appRootPath}/${wl.libsDir}`));
+    }
     performance.mark('read workspace files:end');
     performance.measure(
       'read workspace files',
