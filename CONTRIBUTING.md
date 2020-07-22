@@ -170,6 +170,7 @@ The scope must be one of the following:
 - node - anything Node specific
 - linter - anything Linter specific
 - react - anything React specific
+- web - anything Web specific
 - storybook - anything Storybook specific
 - testing - anything testing specific (e.g., jest or cypress)
 - repo - anything related to managing the repo itself
