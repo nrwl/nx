@@ -20,7 +20,10 @@ function runNxNewCommand(args?: string, silent?: boolean) {
   );
 }
 
-function patchPackageJsonForPlugin(npmPackageName: string, distPath: string) {
+export function patchPackageJsonForPlugin(
+  npmPackageName: string,
+  distPath: string
+) {
   const p = JSON.parse(readFileSync(tmpProjPath('package.json')).toString());
   p.devDependencies[npmPackageName] = `file:${appRootPath}/${distPath}`;
   writeFileSync(tmpProjPath('package.json'), JSON.stringify(p, null, 2));
