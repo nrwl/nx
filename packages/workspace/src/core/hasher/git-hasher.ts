@@ -29,11 +29,16 @@ function parseGitStatus(output: string): Map<string, string> {
     .trim()
     .split('\n')
     .forEach((line) => {
-      const [changeType, ...filenames]: string[] = line
+      const [changeType, ...filenames] = line
         .trim()
-        .split(' ')
-        .filter((linePart) => !!linePart);
+        .match(/(?:[^\s"]+|"[^"]*")+/g)
+        .map((r) => (r.startsWith('"') ? r.substring(1, r.length - 1) : r))
+        .filter((r) => !!r);
       if (changeType && filenames && filenames.length > 0) {
+        // the before filename we mark as deleted, so we remove it from the map
+        if (changeType === 'R') {
+          changes.set(filenames[0], 'D');
+        }
         changes.set(filenames[filenames.length - 1], changeType);
       }
     });

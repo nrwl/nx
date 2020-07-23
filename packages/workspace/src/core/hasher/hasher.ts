@@ -250,10 +250,11 @@ class ProjectHasher {
     if (!this.sourceHashes[projectName]) {
       this.sourceHashes[projectName] = new Promise(async (res) => {
         const p = this.projectGraph.nodes[projectName];
+        const fileNames = p.data.files.map((f) => f.file);
         const values = await Promise.all(
-          p.data.files.map((f) => this.fileHasher.hashFile(f.file))
+          fileNames.map((f) => this.fileHasher.hashFile(f))
         );
-        res(this.hashing.hashArray(values));
+        res(this.hashing.hashArray([...fileNames, ...values]));
       });
     }
     return this.sourceHashes[projectName];
