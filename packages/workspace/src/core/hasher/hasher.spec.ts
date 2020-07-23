@@ -63,7 +63,7 @@ describe('Hasher', () => {
 
     expect(hash.details.command).toEqual('proj|build||{"prop":"prop-value"}');
     expect(hash.details.sources).toEqual({
-      proj: 'file.hash',
+      proj: '/file|file.hash',
     });
     expect(hash.details.implicitDeps).toEqual({
       'yarn.lock': 'yarn.lock.hash',
@@ -154,8 +154,8 @@ describe('Hasher', () => {
 
     // note that the parent hash is based on parent source files only!
     expect(hash.details.sources).toEqual({
-      parent: 'a.hash',
-      child: 'b.hash',
+      parent: '/filea|a.hash',
+      child: '/fileb|b.hash',
     });
 
     done();
@@ -208,7 +208,10 @@ describe('Hasher', () => {
     expect(hasha.value).toContain('prop-value'); //overrides
     expect(hasha.value).toContain('proj'); //project
     expect(hasha.value).toContain('build'); //target
-    expect(hasha.details.sources).toEqual({ proja: 'a.hash', projb: 'b.hash' });
+    expect(hasha.details.sources).toEqual({
+      proja: '/filea|a.hash',
+      projb: '/fileb|b.hash',
+    });
 
     const hashb = (
       await hasher.hashTasks([
@@ -226,7 +229,10 @@ describe('Hasher', () => {
     expect(hashb.value).toContain('prop-value'); //overrides
     expect(hashb.value).toContain('proj'); //project
     expect(hashb.value).toContain('build'); //target
-    expect(hashb.details.sources).toEqual({ proja: 'a.hash', projb: 'b.hash' });
+    expect(hashb.details.sources).toEqual({
+      proja: '/filea|a.hash',
+      projb: '/fileb|b.hash',
+    });
 
     done();
   });
