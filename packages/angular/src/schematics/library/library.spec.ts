@@ -225,6 +225,15 @@ describe('lib', () => {
         expect(tsconfigJson.extends).toEqual('./tsconfig.json');
       });
 
+      it('should contain includes', async () => {
+        const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
+        const tsConfigJson = readJsonInTree(
+          tree,
+          'libs/my-lib/tsconfig.lib.json'
+        );
+        expect(tsConfigJson.include).toEqual(['**/*.ts']);
+      });
+
       it('should exclude the test setup file when unitTestRunner is jest', async () => {
         const tree = await runSchematic(
           'lib',
