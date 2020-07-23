@@ -80,22 +80,35 @@ export function withDeps(
   subsetNodes: ProjectGraphNode[]
 ): ProjectGraph {
   const builder = new ProjectGraphBuilder();
-  Object.values(subsetNodes).forEach(recur);
+  const visitedNodes = [];
+  const visitedEdges = [];
+  Object.values(subsetNodes).forEach(recurNodes);
+  Object.values(subsetNodes).forEach(recurEdges);
   return builder.build();
 
   // ---------------------------------------------------------------------------
 
-  function recur(node) {
-    const ds = original.dependencies[node.name];
-    // 1. Recursively add all source nodes
-    ds.forEach((n) => {
-      recur(original.nodes[n.target]);
-    });
-    // 2. Add current node
+  function recurNodes(node) {
+    if (visitedNodes.indexOf(node.name) > -1) return;
     builder.addNode(node);
-    // 3. Add all source dependencies
+    visitedNodes.push(node.name);
+
+    original.dependencies[node.name].forEach((n) => {
+      recurNodes(original.nodes[n.target]);
+    });
+  }
+
+  function recurEdges(node) {
+    if (visitedEdges.indexOf(node.name) > -1) return;
+    visitedEdges.push(node.name);
+
+    const ds = original.dependencies[node.name];
     ds.forEach((n) => {
       builder.addDependency(n.type, n.source, n.target);
+    });
+
+    ds.forEach((n) => {
+      recurEdges(original.nodes[n.target]);
     });
   }
 }

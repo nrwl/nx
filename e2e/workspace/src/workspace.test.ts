@@ -498,16 +498,6 @@ forEachCli((cliName) => {
       );
       expect(resWithDeps.tasks).toEqual([
         {
-          id: `${mypublishablelib}:build`,
-          overrides: {},
-          target: {
-            project: mypublishablelib,
-            target: 'build',
-          },
-          command: `npm run ${cliCommand} -- build ${mypublishablelib}`,
-          outputs: [`dist/libs/${mypublishablelib}`],
-        },
-        {
           id: `${myapp}:build`,
           overrides: {},
           target: {
@@ -516,6 +506,16 @@ forEachCli((cliName) => {
           },
           command: `npm run ${cliCommand} -- build ${myapp}`,
           outputs: [`dist/apps/${myapp}`],
+        },
+        {
+          id: `${mypublishablelib}:build`,
+          overrides: {},
+          target: {
+            project: mypublishablelib,
+            target: 'build',
+          },
+          command: `npm run ${cliCommand} -- build ${mypublishablelib}`,
+          outputs: [`dist/libs/${mypublishablelib}`],
         },
       ]);
       compareTwoArrays(resWithDeps.projects, [
