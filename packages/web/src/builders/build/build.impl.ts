@@ -11,10 +11,10 @@ import { getWebConfig } from '../../utils/web.config';
 import { BuildBuilderOptions } from '../../utils/types';
 import {
   bufferCount,
+  concatMap,
   map,
   mergeScan,
   switchMap,
-  concatMap,
 } from 'rxjs/operators';
 import { getSourceRoot } from '../../utils/source-root';
 import { writeIndexHtml } from '../../utils/third-party/cli-files/utilities/index-file/write-index-html';
@@ -119,7 +119,8 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
             options,
             context.logger,
             true,
-            isScriptOptimizeOn
+            isScriptOptimizeOn,
+            context.target.configuration
           ),
           // ES5 build for legacy browsers.
           isScriptOptimizeOn &&
@@ -130,7 +131,8 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
                 options,
                 context.logger,
                 false,
-                isScriptOptimizeOn
+                isScriptOptimizeOn,
+                context.target.configuration
               )
             : undefined,
         ]

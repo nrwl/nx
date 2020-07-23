@@ -5,6 +5,8 @@
 module.exports = function (api: any, options: {}) {
   api.assertVersion(7);
 
+  const isModern = api.caller((caller) => caller.isModern);
+
   return {
     presets: [
       // Support module/nomodule pattern.
@@ -17,7 +19,7 @@ module.exports = function (api: any, options: {}) {
           corejs: 3,
           // Do not transform modules to CJS
           modules: false,
-          targets: api.env('legacy') ? undefined : { esmodules: true },
+          targets: isModern ? { esmodules: true } : undefined,
           bugfixes: true,
           // Exclude transforms that make all code slower
           exclude: ['transform-typeof-symbol'],
