@@ -173,6 +173,65 @@ describe('withDeps', () => {
       },
     });
   });
+
+  it('should handle circular deps', () => {
+    const graph: ProjectGraph = {
+      nodes: {
+        lib1: { name: 'lib1', type: 'lib', data: null },
+        lib2: { name: 'lib2', type: 'lib', data: null },
+      },
+      dependencies: {
+        lib1: [
+          {
+            type: DependencyType.static,
+            source: 'lib1',
+            target: 'lib2',
+          },
+        ],
+        lib2: [
+          {
+            type: DependencyType.static,
+            source: 'lib2',
+            target: 'lib1',
+          },
+        ],
+      },
+    };
+
+    const affectedNodes = [{ name: 'lib1', type: 'lib', data: null }];
+
+    const result = withDeps(graph, affectedNodes);
+    expect(result).toEqual({
+      nodes: {
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: null,
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'lib',
+          data: null,
+        },
+      },
+      dependencies: {
+        lib2: [
+          {
+            type: 'static',
+            source: 'lib2',
+            target: 'lib1',
+          },
+        ],
+        lib1: [
+          {
+            type: 'static',
+            source: 'lib1',
+            target: 'lib2',
+          },
+        ],
+      },
+    });
+  });
 });
 
 describe('filterNodes', () => {
