@@ -141,57 +141,97 @@ forEachCli('nx', () => {
       });
     }, 120000);
 
-    it('should generate app with styled-components', async () => {
+    it('should generate app with different style options', async () => {
       ensureProject();
-      const appName = uniq('app');
+
+      const styledComponentsApp = uniq('app');
 
       runCLI(
-        `generate @nrwl/react:app ${appName} --style styled-components --no-interactive`
+        `generate @nrwl/react:app ${styledComponentsApp} --style styled-components --no-interactive`
       );
 
-      await testGeneratedApp(appName, {
+      // Checking that we can enable displayName just for development.
+      updateFile(
+        `apps/${styledComponentsApp}/.babelrc`,
+        JSON.stringify(
+          {
+            presets: ['@nrwl/react/babel'],
+            env: {
+              development: {
+                plugins: [
+                  [
+                    'styled-components',
+                    {
+                      pure: true,
+                      ssr: true,
+                      displayName: true,
+                    },
+                  ],
+                ],
+              },
+              production: {
+                plugins: [
+                  [
+                    'styled-components',
+                    {
+                      pure: true,
+                      ssr: true,
+                      displayName: false,
+                    },
+                  ],
+                ],
+              },
+            },
+          },
+          null,
+          2
+        )
+      );
+
+      await testGeneratedApp(styledComponentsApp, {
+        checkStyles: false,
+        checkProdBuild: true,
+        checkLinter: false,
+        checkE2E: false,
+      });
+
+      expect(readFile(`dist/apps/${styledComponentsApp}/main.js`)).toContain(
+        'app__StyledApp'
+      );
+      expect(
+        readFile(`dist/apps/${styledComponentsApp}/main.esm.js`)
+      ).not.toContain('app__StyledApp');
+
+      const styledJsxApp = uniq('app');
+
+      runCLI(
+        `generate @nrwl/react:app ${styledJsxApp} --style styled-jsx --no-interactive`
+      );
+
+      await testGeneratedApp(styledJsxApp, {
         checkStyles: false,
         checkProdBuild: false,
         checkLinter: false,
         checkE2E: false,
       });
-    }, 120000);
 
-    it('should generate app with styled-jsx', async () => {
-      ensureProject();
-      const appName = uniq('app');
+      const noStylesApp = uniq('app');
 
       runCLI(
-        `generate @nrwl/react:app ${appName} --style styled-jsx --no-interactive`
+        `generate @nrwl/react:app ${noStylesApp} --style none --no-interactive`
       );
 
-      await testGeneratedApp(appName, {
-        checkStyles: false,
-        checkProdBuild: false,
-        checkLinter: false,
-        checkE2E: false,
-      });
-    }, 120000);
-
-    it('should generate an app with no styles', async () => {
-      ensureProject();
-      const appName = uniq('app');
-
-      runCLI(
-        `generate @nrwl/react:app ${appName} --style none --no-interactive`
-      );
-
-      await testGeneratedApp(appName, {
+      await testGeneratedApp(noStylesApp, {
         checkStyles: false,
         checkProdBuild: false,
         checkLinter: false,
         checkE2E: false,
       });
 
-      expect(() => checkFilesExist(`dist/apps/${appName}/styles.css`)).toThrow(
-        /does not exist/
-      );
-      expect(readFile(`dist/apps/${appName}/index.html`)).not.toContain(
+      expect(() =>
+        checkFilesExist(`dist/apps/${noStylesApp}/styles.css`)
+      ).toThrow(/does not exist/);
+      expect(readFile(`dist/apps/${noStylesApp}/index.html`)).not.toContain(
         `<link rel="stylesheet" href="styles.css">`
       );
     }, 120000);
@@ -288,24 +328,29 @@ forEachCli('nx', () => {
         filesToCheck.push(`dist/apps/${appName}/styles.js`);
       }
       checkFilesExist(...filesToCheck);
+
       expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
         'const App = () =>'
       );
-      runCLI(`build ${appName} --prod --output-hashing none`);
-      filesToCheck = [
-        `dist/apps/${appName}/index.html`,
-        `dist/apps/${appName}/runtime.js`,
-        `dist/apps/${appName}/polyfills.esm.js`,
-        `dist/apps/${appName}/main.esm.js`,
-      ];
-      if (opts.checkStyles) {
-        filesToCheck.push(`dist/apps/${appName}/styles.css`);
-      }
-      checkFilesExist(...filesToCheck);
-      if (opts.checkStyles) {
-        expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
-          `<link rel="stylesheet" href="styles.css">`
-        );
+
+      if (opts.checkProdBuild) {
+        runCLI(`build ${appName} --prod --output-hashing none`);
+        filesToCheck = [
+          `dist/apps/${appName}/index.html`,
+          `dist/apps/${appName}/runtime.js`,
+          `dist/apps/${appName}/polyfills.esm.js`,
+          `dist/apps/${appName}/main.esm.js`,
+        ];
+        if (opts.checkStyles) {
+          filesToCheck.push(`dist/apps/${appName}/styles.css`);
+        }
+        checkFilesExist(...filesToCheck);
+
+        if (opts.checkStyles) {
+          expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
+            `<link rel="stylesheet" href="styles.css">`
+          );
+        }
       }
 
       const testResults = await runCLIAsync(`test ${appName}`);

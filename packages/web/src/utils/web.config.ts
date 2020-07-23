@@ -22,7 +22,8 @@ export function getWebConfig(
   options: WebBuildBuilderOptions,
   logger: LoggerApi,
   esm?: boolean,
-  isScriptOptimizeOn?: boolean
+  isScriptOptimizeOn?: boolean,
+  configuration?: string
 ) {
   const tsConfig = readTsConfig(options.tsConfig);
 
@@ -44,7 +45,7 @@ export function getWebConfig(
     tsConfigPath: options.tsConfig,
   };
   return mergeWebpack([
-    _getBaseWebpackPartial(options, esm, isScriptOptimizeOn),
+    _getBaseWebpackPartial(options, esm, isScriptOptimizeOn, configuration),
     getPolyfillsPartial(options, esm, isScriptOptimizeOn),
     getStylesPartial(wco, options),
     getCommonPartial(wco),
@@ -88,9 +89,15 @@ function getBrowserPartial(
 function _getBaseWebpackPartial(
   options: WebBuildBuilderOptions,
   esm: boolean,
-  isScriptOptimizeOn: boolean
+  isScriptOptimizeOn: boolean,
+  configuration?: string
 ) {
-  let partial = getBaseWebpackPartial(options, esm, isScriptOptimizeOn);
+  let partial = getBaseWebpackPartial(
+    options,
+    esm,
+    isScriptOptimizeOn,
+    configuration
+  );
   delete partial.resolve.mainFields;
   return partial;
 }

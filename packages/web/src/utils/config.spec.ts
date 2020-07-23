@@ -49,7 +49,7 @@ describe('getBaseWebpackPartial', () => {
       );
       expect(rule).toBeTruthy();
 
-      expect(rule.loader).toEqual('babel-loader');
+      expect(rule.loader).toContain('babel-loader');
     });
 
     it('should split typescript type checking into a separate workers', () => {
@@ -157,26 +157,6 @@ describe('getBaseWebpackPartial', () => {
     it('should include es2015 in mainFields if typescript is set es2015', () => {
       const result = getBaseWebpackPartial(input, true);
       expect(result.resolve.mainFields).toContain('es2015');
-    });
-  });
-
-  describe('ES modules', () => {
-    it('should override preset-env target for esm', () => {
-      const result = getBaseWebpackPartial(input, true);
-
-      expect(
-        (result.module.rules.find((rule) => rule.loader === 'babel-loader')
-          .options as any).envName
-      ).toMatch('modern');
-    });
-
-    it('should not override preset-env target for es5', () => {
-      const result = getBaseWebpackPartial(input, false);
-
-      expect(
-        (result.module.rules.find((rule) => rule.loader === 'babel-loader')
-          .options as any).envName
-      ).toMatch('legacy');
     });
   });
 
