@@ -88,7 +88,6 @@ async function storybookOptionMapper(
     ...frameworkOptions,
     frameworkPresets: [...(frameworkOptions.frameworkPresets || [])],
     watch: false,
-    docsMode: builderOptions.docsMode,
   };
   optionsWithFramework.config;
   return optionsWithFramework;
