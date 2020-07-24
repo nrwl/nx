@@ -283,6 +283,21 @@ Tasks runners can accept different options. The following are the options suppor
 
 You can configure `parallel` and `maxParallel` in `nx.json`, but you can also pass them in the terminal `nx run-many --target=test --parallel`.
 
+### Workspace Layout
+
+You can add a `workspaceLayout` property to modify where libraries and apps are located.
+
+```json
+{
+  "workspaceLayout": {
+    "appsDir": "demos",
+    "libsDir": "packages"
+  }
+}
+```
+
+These settings would store apps in `/demos/` and libraries in `/packages/`. The paths specified are relative to the workspace root.
+
 ### Implicit Dependencies
 
 Nx performs advanced source-code analysis to figure out the project graph of the workspace. So when you make a change, Nx can deduce what can be broken by this change. Some dependencies between projects and dependencies between shared files and projects cannot be inferred statically. You can configure those using `implicitDependencies`.
