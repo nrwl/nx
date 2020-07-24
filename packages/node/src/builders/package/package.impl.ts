@@ -153,7 +153,7 @@ function normalizeOptions(
 
   // Relative path for the dist directory
   const tsconfig = readJsonFile(join(context.workspaceRoot, options.tsConfig));
-  const rootDir = tsconfig.compilerOptions.rootDir || '';
+  const rootDir = tsconfig.compilerOptions?.rootDir || '';
   const mainFileDir = dirname(options.main);
   const tsconfigDir = dirname(options.tsConfig);
 
@@ -184,7 +184,7 @@ function compileTypeScriptFiles(
   removeSync(options.normalizedOutputPath);
   let tsConfigPath = join(context.workspaceRoot, options.tsConfig);
 
-  return Observable.create((subscriber: Subscriber<BuilderOutput>) => {
+  return new Observable((subscriber: Subscriber<BuilderOutput>) => {
     if (projectDependencies.length > 0) {
       const libRoot = projGraph.nodes[context.target.project].data.root;
       tsConfigPath = createTmpTsConfig(
@@ -196,7 +196,7 @@ function compileTypeScriptFiles(
     }
 
     try {
-      let args = ['-p', tsConfigPath, '--outDir', options.normalizedOutputPath];
+      let args = ['-p', tsConfigPath];
 
       if (options.sourceMap) {
         args.push('--sourceMap');
