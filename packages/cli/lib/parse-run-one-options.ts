@@ -43,8 +43,7 @@ export function parseRunOneOptions(
 
   if (parsedArgs.configuration) {
     configuration = parsedArgs.configuration;
-  }
-  if (parsedArgs.prod) {
+  } else if (parsedArgs.prod) {
     configuration = 'production';
   }
   if (parsedArgs.project) {
