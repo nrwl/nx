@@ -296,7 +296,7 @@ You can add a `workspaceLayout` property to modify where libraries and apps are 
 }
 ```
 
-These settings would store apps in `/demos/` and libraries in `/packages/`.
+These settings would store apps in `/demos/` and libraries in `/packages/`. The paths specified are relative to the workspace root.
 
 ### Implicit Dependencies
 
