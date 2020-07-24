@@ -166,7 +166,7 @@ You may specify a custom .env file path
 
 Type: `string | string[]`
 
-Tells Nx where the files will be created
+Allows you to specify where the build artifacts are stored. This allows Nx Cloud to pick them up correctly, in the case that the build artifacts are placed somewhere other than the top level dist folder.
 
 ### parallel
 
