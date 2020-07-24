@@ -6,7 +6,7 @@ In this article, you’ll learn how to:
 
 - Create an Nx workspace for a React application
 - Migrate a React application into your Nx workspace
-- Convert a CRA scripts for use in Nx
+- Convert CRA scripts for use in Nx
 - Create a library and use it in your application
 
 For this example, you’ll be migrating the default CRA typescript template app into an Nx workspace. This is the code that is generated when you run `yarn create react-app webapp --template typescript`.
