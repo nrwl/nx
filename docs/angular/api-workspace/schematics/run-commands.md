@@ -58,7 +58,7 @@ Target name
 
 Type: `string`
 
-Comma-separated list of output paths
+Allows you to specify where the build artifacts are stored. This allows Nx Cloud to pick them up correctly, in the case that the build artifacts are placed somewhere other than the top level dist folder.
 
 ### project
 
