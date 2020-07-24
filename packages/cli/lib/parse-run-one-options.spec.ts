@@ -14,6 +14,40 @@ describe('parseRunOneOptions', () => {
     });
   });
 
+  it('should work with --prod', () => {
+    expect(
+      parseRunOneOptions(nxJson, workspaceJson, [
+        'build',
+        'myproj',
+        '--prod',
+        '--flag=true',
+      ])
+    ).toEqual({
+      project: 'myproj',
+      target: 'build',
+      configuration: 'production',
+      parsedArgs: { _: [], flag: 'true' },
+    });
+  });
+
+  it('should override --prod with --configuration', () => {
+    expect(
+      parseRunOneOptions(nxJson, workspaceJson, [
+        'build',
+        'myproj',
+        '--prod',
+        '--configuration',
+        'dev',
+        '--flag=true',
+      ])
+    ).toEqual({
+      project: 'myproj',
+      target: 'build',
+      configuration: 'dev',
+      parsedArgs: { _: [], flag: 'true' },
+    });
+  });
+
   it('should work with run syntax', () => {
     expect(
       parseRunOneOptions(nxJson, workspaceJson, [
