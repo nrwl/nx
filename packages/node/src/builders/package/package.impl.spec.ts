@@ -91,12 +91,7 @@ describe('NodePackageBuilder', () => {
             fork
           ).toHaveBeenCalledWith(
             `${context.workspaceRoot}/node_modules/typescript/bin/tsc`,
-            [
-              '-p',
-              join(context.workspaceRoot, testOptions.tsConfig),
-              '--outDir',
-              join(context.workspaceRoot, testOptions.outputPath),
-            ],
+            ['-p', join(context.workspaceRoot, testOptions.tsConfig)],
             { stdio: [0, 1, 2, 'ipc'] }
           );
 
@@ -296,15 +291,11 @@ describe('NodePackageBuilder', () => {
 
       runNodePackageBuilder(testOptions, context).subscribe({
         complete: () => {
-          expect(fork).toHaveBeenCalledWith(
+          expect(
+            fork
+          ).toHaveBeenCalledWith(
             `${context.workspaceRoot}/node_modules/typescript/bin/tsc`,
-            [
-              '-p',
-              tmpTsConfigPath,
-              // join(context.workspaceRoot, testOptions.tsConfig),
-              '--outDir',
-              join(context.workspaceRoot, testOptions.outputPath),
-            ],
+            ['-p', tmpTsConfigPath],
             { stdio: [0, 1, 2, 'ipc'] }
           );
 

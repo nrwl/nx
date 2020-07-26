@@ -275,9 +275,8 @@ forEachCli((currentCLIName) => {
         extends: './tsconfig.json',
         compilerOptions: {
           module: 'commonjs',
-          outDir: '../../dist/out-tsc',
+          outDir: '../../dist',
           declaration: true,
-          rootDir: './src',
           types: ['node'],
         },
         exclude: ['**/*.spec.ts'],
