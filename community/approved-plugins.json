@@ -68,5 +68,10 @@
     "name": "@joelcode/gcp-function",
     "description": "Nx plugin to generate, test, lint, build, serve, & deploy Google Cloud Function",
     "url": "https://github.com/JoelCode/gcp-function"
+  },
+  {
+    "name": "@nx-go/nx-go",
+    "description": "Nx plugin to use Go in a Nx workspace",
+    "url": "https://github.com/nx-go/nx-go"
   }
 ]
