@@ -23,7 +23,7 @@ The name of the main entry-point file.
 
 Type: `string`
 
-The output path of the generated files.
+The output path for copying asset files.
 
 ### packageJson
 

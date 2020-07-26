@@ -13,7 +13,7 @@
     },
     "outputPath": {
       "type": "string",
-      "description": "The output path of the generated files."
+      "description": "The output path for copying asset files."
     },
     "watch": {
       "type": "boolean",
