@@ -454,6 +454,11 @@
                     "file": "angular/api-react/schematics/redux"
                   },
                   {
+                    "name": "stories",
+                    "id": "stories",
+                    "file": "angular/api-react/schematics/stories"
+                  },
+                  {
                     "name": "storybook-configuration",
                     "id": "storybook-configuration",
                     "file": "angular/api-react/schematics/storybook-configuration"
@@ -1348,6 +1353,11 @@
                     "name": "redux",
                     "id": "redux",
                     "file": "react/api-react/schematics/redux"
+                  },
+                  {
+                    "name": "stories",
+                    "id": "stories",
+                    "file": "react/api-react/schematics/stories"
                   },
                   {
                     "name": "storybook-configuration",
