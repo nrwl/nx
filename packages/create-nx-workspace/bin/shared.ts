@@ -16,7 +16,7 @@ export function showNxWarning(workspaceName: string) {
       title: `Nx CLI is not installed globally.`,
       bodyLines: [
         `This means that you might have to use "yarn nx" or "npm nx" to execute commands in the workspace.`,
-        `Run "yarn global add @nrwl/cli" or "npm install -g @nrwl/cli" to be able to execute command directly.`,
+        `Run "yarn global add nx" or "npm install -g nx" to be able to execute command directly.`,
       ],
     });
   }

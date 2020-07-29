@@ -5,7 +5,7 @@ can see, for each package its dependencies.
 
 | PackageName     | Dependencies                                      | PeerDependencies |
 | --------------- | ------------------------------------------------- | ---------------- |
-| @nrwl/workspace | @nrwl/cli                                         |                  |
+| @nrwl/workspace | nx                                                |                  |
 | @nrwl/react     | @nrwl/cypress, @nrwl/jest, @nrwl/web              | @nrwl/workspace  |
 | @nrwl/next      | @nrwl/cypress, @nrwl/jest, @nrwl/web, @nrwl/react | @nrwl/workspace  |
 | @nrwl/web       | @nrwl/cypress, @nrwl/jest, @nrwl/linter           | @nrwl/workspace  |

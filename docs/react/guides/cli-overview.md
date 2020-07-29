@@ -16,13 +16,13 @@ Install the Nx CLI globally on your system using your preferred package manager:
 Using npm:
 
 ```bash
-npm install -g @nrwl/cli
+npm install -g nx
 ```
 
 Using yarn:
 
 ```bash
-yarn global add @nrwl/cli
+yarn global add nx
 ```
 
 After that, you will have an `nx` executable you can use to run commands in your workspace.

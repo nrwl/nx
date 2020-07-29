@@ -152,6 +152,7 @@ const pkgFiles = [
   'build/npm/eslint-plugin-nx/package.json',
   'build/npm/linter/package.json',
   'build/npm/nx-plugin/package.json',
+  'build/npm/nx/package.json',
 ];
 /**
  * Set the static options for release-it
