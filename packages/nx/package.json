@@ -17,6 +17,9 @@
     "Cypress",
     "CLI"
   ],
+  "bin": {
+    "nx": "./bin/nx.js"
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
