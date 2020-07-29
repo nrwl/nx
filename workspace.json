@@ -1,6 +1,62 @@
 {
   "version": 1,
   "projects": {
+    "nx": {
+      "root": "packages/nx",
+      "sourceRoot": "packages/nx",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "build-base": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/nx",
+            "tsConfig": "packages/nx/tsconfig.lib.json",
+            "packageJson": "packages/nx/package.json",
+            "main": "packages/nx/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/nx",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/nx",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/nx",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/nx",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/nx"],
+          "options": {
+            "commands": [
+              {
+                "command": "nx build-base nx"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js nx"
+              }
+            ],
+            "parallel": false
+          }
+        }
+      }
+    },
     "tao": {
       "root": "packages/tao",
       "sourceRoot": "packages/tao",

@@ -296,7 +296,7 @@ Alternatively press <kbd>Cmd</kbd>+<kbd>P</kbd> (or <kbd>Ctrl</kbd>+<kbd>P</kbd>
 Once you've activated the `autoAttach` option, set a breakpoint in VSCode and execute your schematic with the `--inspect-brk` flag:
 
 ```sh
-node --inspect-brk ./node_modules/@nrwl/cli/bin/nx.js workspace-schematic my-schematic mylib --dry-run
+node --inspect-brk ./node_modules/nx/bin/nx.js workspace-schematic my-schematic mylib --dry-run
 ```
 
 You may want to use the `--dry-run` flag to not actually apply the changes to the file system.

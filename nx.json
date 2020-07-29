@@ -27,6 +27,9 @@
     "libsDir": "packages"
   },
   "projects": {
+    "nx": {
+      "tags": []
+    },
     "tao": {
       "tags": []
     },

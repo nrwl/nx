@@ -19,7 +19,7 @@
 
 You can also select `empty` and add `@nrwl/next` plugin using yarn or npm, and then generate a new express app using `nx g @nrwl/next:app myapp`.
 
-If it's your first Nx project, the command will recommend you to install `@nrwl/cli` globally, so you can invoke `nx` directly without going through yarn or npm.
+If it's your first Nx project, the command will recommend you to install the `nx` package globally, so you can invoke `nx` directly without going through yarn or npm.
 
 ### Serving Application
 

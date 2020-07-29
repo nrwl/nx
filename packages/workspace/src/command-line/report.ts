@@ -5,6 +5,7 @@ import { appRootPath } from '../utils/app-root';
 import { output } from '../utils/output';
 
 export const packagesWeCareAbout = [
+  'nx',
   '@nrwl/angular',
   '@nrwl/cli',
   '@nrwl/cypress',

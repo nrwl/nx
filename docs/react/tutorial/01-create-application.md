@@ -81,13 +81,13 @@ Depending on how your dev env is set up, the command above might result in `Comm
 To fix it, you can either install the `nx` cli globally by running:
 
 ```bash
-npm install -g @nrwl/cli
+npm install -g nx
 ```
 
 or
 
 ```bash
-yarn global add @nrwl/cli
+yarn global add nx
 ```
 
 Or you can prepend every command with `npm run`:

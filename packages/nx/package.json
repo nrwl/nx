@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/cli",
+  "name": "nx",
   "version": "0.0.1",
   "description": "Extensible Dev Tools for Monorepos",
   "repository": {
@@ -17,9 +17,6 @@
     "Cypress",
     "CLI"
   ],
-  "bin": {
-    "nx": "./bin/nx.js"
-  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -27,10 +24,6 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "tmp": "0.0.33",
-    "yargs-parser": "10.0.0",
-    "yargs": "^11.0.0",
-    "@nrwl/tao": "*",
-    "chalk": "2.4.2"
+    "@nrwl/cli": "*"
   }
 }
