@@ -2,5 +2,6 @@ const lib_main_module = require('<%= offsetFromRoot %>../.storybook/main');
 
 // Use the following syntax to add addons!
 // lib_main_module.addons.push('');
-
+lib_main_module.stories.push('../src/lib/**/*.stories.mdx');
+lib_main_module.stories.push('../src/lib/**/*.stories.@(js|jsx|ts|tsx)');
 module.exports = lib_main_module;
