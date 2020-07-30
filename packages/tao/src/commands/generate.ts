@@ -189,6 +189,7 @@ async function createWorkflow(
     packageManager: await detectPackageManager(fsHost),
     root: normalize(root),
     registry: new schema.CoreSchemaRegistry(formats.standardFormats),
+    resolvePaths: [process.cwd(), root],
   });
   const _params = opts.schematicOptions._;
   delete opts.schematicOptions._;
