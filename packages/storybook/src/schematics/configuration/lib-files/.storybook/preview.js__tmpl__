@@ -1,0 +1,4 @@
+import { addDecorator } from '<%= uiFramework %>';
+import { withKnobs } from '@storybook/addon-knobs';
+
+addDecorator(withKnobs);
