@@ -1,1 +1,6 @@
-import '<%= offsetFromRoot %>../.storybook/main';
+const lib_main_module = require('<%= offsetFromRoot %>../.storybook/main');
+
+// Use the following syntax to add addons!
+// lib_main_module.addons.push('');
+
+module.exports = lib_main_module;
