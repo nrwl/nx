@@ -21,8 +21,8 @@ describe('schematic:configuration', () => {
       },
       appTree
     );
-    expect(tree.exists('libs/test-ui-lib/.storybook/addons.js')).toBeTruthy();
-    expect(tree.exists('libs/test-ui-lib/.storybook/config.js')).toBeTruthy();
+    expect(tree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
+    expect(tree.exists('libs/test-ui-lib/.storybook/preview.js')).toBeTruthy();
     expect(
       tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
     ).toBeTruthy();
@@ -60,8 +60,8 @@ describe('schematic:configuration', () => {
       },
       appTree
     );
-    expect(tree.exists('libs/test-ui-lib/.storybook/addons.js')).toBeTruthy();
-    expect(tree.exists('libs/test-ui-lib/.storybook/config.js')).toBeTruthy();
+    expect(tree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
+    expect(tree.exists('libs/test-ui-lib/.storybook/preview.js')).toBeTruthy();
     expect(
       tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
     ).toBeTruthy();

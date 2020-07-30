@@ -25,7 +25,7 @@ If there's no `.storybook` folder at the root of the workspace, one is created.
 ```treeview
 <workspace name>/
 ├── .storybook/
-│   ├── addons.js
+│   ├── main.js
 │   ├── tsconfig.json
 │   └── webpack.config.js
 ├── apps/
@@ -41,7 +41,7 @@ Also, a project-specific `.storybook` folder is added in the root of the project
 ```treeview
 <project root>/
 ├── .storybook/
-│   ├── addons.js
+│   ├── main.js
 │   ├── config.js
 │   ├── tsconfig.json
 │   └── webpack.config.js
@@ -115,11 +115,15 @@ describe('shared-ui', () => {
 
 To register an [addon](https://storybook.js.org/addons/) for all storybook instances in your workspace:
 
-1. In `/.storybook/addons.js` add the register import statement.
+1. In `/.storybook/main.js`, in the `addons` array of the `module.exports` object, add the new addon:
    ```
-   import '@storybook/addon-knobs/register';
+   module.exports = {
+   stories: [...],
+   ...,
+   addons: [..., '@storybook/addon-knobs/register'],
+   };
    ```
-2. If a decorator is required, in each project's `<project-path>/.storybook/config.js` use the `addDecorator` function.
+2. If a decorator is required, in each project's `<project-path>/.storybook/preview.js` use the `addDecorator` function.
 
    ```
    import { configure, addDecorator } from '@storybook/angular';
@@ -132,11 +136,15 @@ To register an [addon](https://storybook.js.org/addons/) for all storybook insta
 
 To register an [addon](https://storybook.js.org/addons/) for a single storybook instance, go to that project's `.storybook` folder:
 
-1. In `addons.js` add the register import statement.
+1. In `main.js`, in the `addons` array of the `module.exports` object, add the new addon:
    ```
-   import '@storybook/addon-knobs/register';
+   module.exports = {
+   stories: [...],
+   ...,
+   addons: [..., '@storybook/addon-knobs/register'],
+   };
    ```
-2. If a decorator is required, in `config.js` use the `addDecorator` function.
+2. If a decorator is required, in `preview.js` use the `addDecorator` function.
 
    ```
    import { configure, addDecorator } from '@storybook/angular';
