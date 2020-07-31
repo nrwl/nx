@@ -2,7 +2,7 @@
 
 There are three top-level configuration files every Nx workspace has: `workspace.json`, `nx.json`, and `tsconfig.json`. Many Nx plugins will modify these files when generating new code, but you can also modify them manually.
 
-## `workspace.json`
+## workspace.json
 
 The `workspace.json` configuration file contains information about the targets and schematics. Let's look at the following example:
 
@@ -221,7 +221,7 @@ The following command will generate a new library: `nx g @nrwl/react:lib mylib`.
 }
 ```
 
-## `nx.json`
+## nx.json
 
 The `nx.json` file contains extra configuration options mostly related to the project graph.
 
