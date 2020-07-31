@@ -7,6 +7,24 @@
   <link rel="stylesheet" href="dep-graph.css" />
 </head>
 <body>
+  <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+    <symbol id="crosshair" viewBox="0 0 24 24">
+      <g
+        fill="none"
+        stroke="#ffffff"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <line x1="22" y1="12" x2="18" y2="12" />
+        <line x1="6" y1="12" x2="2" y2="12" />
+        <line x1="12" y1="6" x2="12" y2="2" />
+        <line x1="12" y1="22" x2="12" y2="18" />
+      </g>
+    </symbol>
+  </svg>
+
   <div id="app">
     <div class="sidebar">
       <div class="sidebar-content">
@@ -77,35 +95,14 @@
             x="-75%"
             y="-75%"
           >
-            <!-- Thicken out the original shape -->
-            <feMorphology
-              operator="dilate"
-              radius="4"
-              in="SourceAlpha"
-              result="thicken"
+            <feDropShadow
+              dx="0"
+              dy="0"
+              stdDeviation="10"
+              flood-color="rgb(8, 108, 159)"
+              flood-opacity="1"
             />
-
-            <!-- Use a gaussian blur to create the soft blurriness of the glow -->
-            <feGaussianBlur in="thicken" stdDeviation="10" result="blurred" />
-
-            <!-- Change the colour -->
-            <feFlood flood-color="rgb(8, 108, 159)" result="glowColor" />
-
-            <!-- Color in the glows -->
-            <feComposite
-              in="glowColor"
-              in2="blurred"
-              operator="in"
-              result="softGlow_colored"
-            />
-
-            <!--	Layer the effects together -->
-            <feMerge>
-              <feMergeNode in="softGlow_colored" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
           </filter>
-
           <filter
             id="sofGlowFocusAffected"
             height="300%"
@@ -113,33 +110,13 @@
             x="-75%"
             y="-75%"
           >
-            <!-- Thicken out the original shape -->
-            <feMorphology
-              operator="dilate"
-              radius="4"
-              in="SourceAlpha"
-              result="thicken"
+            <feDropShadow
+              dx="0"
+              dy="0"
+              stdDeviation="10"
+              flood-color="rgb(248,84,119)"
+              flood-opacity="1"
             />
-
-            <!-- Use a gaussian blur to create the soft blurriness of the glow -->
-            <feGaussianBlur in="thicken" stdDeviation="10" result="blurred" />
-
-            <!-- Change the colour -->
-            <feFlood flood-color="rgb(248,84,119)" result="glowColor" />
-
-            <!-- Color in the glows -->
-            <feComposite
-              in="glowColor"
-              in2="blurred"
-              operator="in"
-              result="softGlow_colored"
-            />
-
-            <!--	Layer the effects together -->
-            <feMerge>
-              <feMergeNode in="softGlow_colored" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
           </filter>
         </defs>
       </svg>
