@@ -11,7 +11,8 @@
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the library?"
+      "x-prompt": "What name would you like to use for the library?",
+      "pattern": "^[a-zA-Z]{1}.*$"
     },
     "directory": {
       "type": "string",
