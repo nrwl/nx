@@ -1,31 +1,26 @@
-import { basename, dirname, join } from '@angular-devkit/core';
-import { chain, Rule } from '@angular-devkit/schematics';
+import { chain, noop, Rule, Tree } from '@angular-devkit/schematics';
 import { formatFiles, updateJsonInTree } from '@nrwl/workspace';
-import { visitNotIgnoredFiles } from '../../utils/rules/visit-not-ignored-files';
 
 export default function (): Rule {
-  return chain([
-    visitNotIgnoredFiles((file) => {
-      if (basename(file) !== '.eslintrc') {
-        return;
-      }
-
-      return updateJsonInTree(file, (json) => {
-        const tsconfig = json?.parserOptions?.project;
-        if (tsconfig) {
-          const tsconfigPath = join(dirname(file), tsconfig);
-          if (tsconfigPath === 'tsconfig.base.json') {
+  return (host: Tree) => {
+    if (!host.exists('.eslintrc')) {
+      return noop();
+    } else {
+      return chain([
+        updateJsonInTree('.eslintrc', (json) => {
+          const tsconfig = json?.parserOptions?.project;
+          if (tsconfig && tsconfig === './tsconfig.base.json') {
             json.parserOptions.project = json.parserOptions.project.replace(
               /tsconfig.base.json$/,
               'tsconfig.*.json'
             );
+            return json;
+          } else {
+            return json;
           }
-          return json;
-        } else {
-          return json;
-        }
-      });
-    }),
-    formatFiles(),
-  ]);
+        }),
+        formatFiles(),
+      ]);
+    }
+  };
 }
