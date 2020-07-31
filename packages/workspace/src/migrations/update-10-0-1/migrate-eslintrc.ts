@@ -10,21 +10,30 @@ export default function (schema: any): Rule {
         return;
       }
 
-      return updateJsonInTree(file, (json) => {
-        const tsconfig = json?.parserOptions?.project;
-        if (tsconfig) {
-          const tsconfigPath = join(dirname(file), tsconfig);
-          if (tsconfigPath === 'tsconfig.json') {
-            json.parserOptions.project = json.parserOptions.project.replace(
-              /tsconfig.json$/,
-              'tsconfig.base.json'
-            );
-          }
-          return json;
-        } else {
-          return json;
+      return (host, context) => {
+        try {
+          updateJsonInTree(file, (json) => {
+            const tsconfig = json?.parserOptions?.project;
+            if (tsconfig) {
+              const tsconfigPath = join(dirname(file), tsconfig);
+              if (tsconfigPath === 'tsconfig.json') {
+                json.parserOptions.project = json.parserOptions.project.replace(
+                  /tsconfig.json$/,
+                  'tsconfig.base.json'
+                );
+              }
+              return json;
+            } else {
+              return json;
+            }
+          })(host, context);
+        } catch (e) {
+          context.logger.warn(
+            `${file} could not be migrated because it is not valid JSON`
+          );
+          context.logger.error(e);
         }
-      });
+      };
     }),
     formatFiles(),
   ]);
