@@ -52,6 +52,6 @@ export function initGlobal() {
     output.note({
       title: `For more information please visit https://nx.dev/`,
     });
-    process.exit(0);
+    process.exit(1);
   }
 }
