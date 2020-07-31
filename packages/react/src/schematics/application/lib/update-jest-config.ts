@@ -1,5 +1,6 @@
 import { chain, noop, Rule } from '@angular-devkit/schematics';
-import { updateJestConfigContent } from '@nrwl/react/src/utils/jest-utils';
+import { updateBabelJestConfig } from '../../../rules/update-babel-jest-config';
+import { updateJestConfigContent } from '../../../utils/jest-utils';
 import { NormalizedSchema } from '../schema';
 import { offsetFromRoot, updateJsonInTree } from '@nrwl/workspace';
 
@@ -29,5 +30,11 @@ export function updateJestConfig(options: NormalizedSchema): Rule {
           const content = updateJestConfigContent(originalContent);
           host.overwrite(configPath, content);
         },
+        updateBabelJestConfig(options.appProjectRoot, (json) => {
+          if (options.style === 'styled-jsx') {
+            json.plugins = (json.plugins || []).concat('styled-jsx/babel');
+          }
+          return json;
+        }),
       ]);
 }
