@@ -53,7 +53,7 @@ button.icon {
   line-height: 50%;
 }
 
-button.icon img {
+button.icon svg {
   width: 1.25em;
   height: 1.25em;
 }
@@ -168,11 +168,11 @@ text {
   font-size: 14px;
 }
 
-svg {
+#svg-canvas {
   cursor: grab;
 }
 
-svg:active {
+#svg-canvas:active {
   cursor: grabbing;
 }
 
