@@ -25,14 +25,16 @@ import {
   getBootstrapComponent,
   readBootstrapInfo,
   removeFromNgModule,
-} from '../../utils/ast-utils';
+} from '@nrwl/workspace/src/utils/decorator-ast-utils';
 import { insertImport } from '@nrwl/workspace/src/utils/ast-utils';
 
 function addImportsToModule(options: Schema): Rule {
   return (host: Tree) => {
     const { moduleClassName, modulePath, moduleSource } = readBootstrapInfo(
       host,
-      options.project
+      options.project,
+      '@angular/core',
+      'NgModule'
     );
 
     insert(host, modulePath, [
@@ -48,16 +50,31 @@ function addImportsToModule(options: Schema): Rule {
         'UpgradeModule',
         '@angular/upgrade/static'
       ),
-      ...addImportToModule(moduleSource, modulePath, 'UpgradeModule'),
+      ...addImportToModule(
+        moduleSource,
+        modulePath,
+        'UpgradeModule',
+        'NgModule',
+        '@angular/core'
+      ),
       ...addDeclarationToModule(
         moduleSource,
         modulePath,
-        '...upgradedComponents'
+        '...upgradedComponents',
+        'NgModule',
+        '@angular/core'
       ),
       ...addEntryComponents(
         moduleSource,
         modulePath,
-        getBootstrapComponent(moduleSource, moduleClassName)
+        getBootstrapComponent(
+          moduleSource,
+          moduleClassName,
+          '@angular/core',
+          'NgModule'
+        ),
+        'NgModule',
+        '@angular/core'
       ),
     ]);
 
@@ -69,7 +86,9 @@ function addNgDoBootstrapToModule(options: Schema): Rule {
   return (host: Tree) => {
     const { moduleClassName, modulePath, moduleSource } = readBootstrapInfo(
       host,
-      options.project
+      options.project,
+      '@angular/core',
+      'NgModule'
     );
 
     insert(host, modulePath, [
@@ -100,7 +119,7 @@ function createFiles(angularJsImport: string, options: Schema): Rule {
       moduleSpec,
       bootstrapComponentClassName,
       bootstrapComponentFileName,
-    } = readBootstrapInfo(host, options.project);
+    } = readBootstrapInfo(host, options.project, '@angular/core', 'NgModule');
 
     const dir = path.dirname(mainPath);
     const templateSource = apply(url('./files'), [

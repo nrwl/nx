@@ -8,7 +8,7 @@ import {
 } from '@nrwl/workspace';
 import * as path from 'path';
 import * as ts from 'typescript';
-import { addRoute } from '../../../utils/ast-utils';
+import { addRoute } from '@nrwl/workspace/src/utils/decorator-ast-utils';
 import { NormalizedSchema } from './normalized-schema';
 
 export function addLoadChildren(options: NormalizedSchema): Rule {

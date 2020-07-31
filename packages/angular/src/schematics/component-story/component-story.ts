@@ -9,7 +9,7 @@ import {
 } from '@angular-devkit/schematics';
 import { findNodes } from '@nrwl/workspace';
 import { PropertyDeclaration, SyntaxKind } from 'typescript';
-import { getTsSourceFile } from '../../utils/ast-utils';
+import { getTsSourceFile } from '@nrwl/workspace/src/utils/decorator-ast-utils';
 import {
   getSourceNodes,
   applyWithSkipExisting,

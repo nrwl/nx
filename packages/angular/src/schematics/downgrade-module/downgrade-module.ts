@@ -7,7 +7,7 @@ import {
   addEntryComponents,
   readBootstrapInfo,
   removeFromNgModule,
-} from '../../utils/ast-utils';
+} from '@nrwl/workspace/src/utils/decorator-ast-utils';
 
 function updateMain(angularJsImport: string, options: Schema): Rule {
   return (host: Tree) => {
@@ -17,7 +17,7 @@ function updateMain(angularJsImport: string, options: Schema): Rule {
       moduleSpec,
       bootstrapComponentClassName,
       bootstrapComponentFileName,
-    } = readBootstrapInfo(host, options.project);
+    } = readBootstrapInfo(host, options.project, '@angular/core', 'NgModule');
 
     host.overwrite(
       mainPath,
@@ -58,7 +58,9 @@ function rewriteBootstrapLogic(options: Schema): Rule {
   return (host: Tree) => {
     const { modulePath, moduleSource, moduleClassName } = readBootstrapInfo(
       host,
-      options.project
+      options.project,
+      '@angular/core',
+      'NgModule'
     );
     insert(host, modulePath, [
       ...addMethod(moduleSource, modulePath, {
@@ -77,11 +79,17 @@ function addEntryComponentsToModule(options: Schema): Rule {
       modulePath,
       moduleSource,
       bootstrapComponentClassName,
-    } = readBootstrapInfo(host, options.project);
+    } = readBootstrapInfo(host, options.project, '@angular/core', 'NgModule');
     insert(
       host,
       modulePath,
-      addEntryComponents(moduleSource, modulePath, bootstrapComponentClassName)
+      addEntryComponents(
+        moduleSource,
+        modulePath,
+        bootstrapComponentClassName,
+        'NgModule',
+        '@angular/core'
+      )
     );
     return host;
   };

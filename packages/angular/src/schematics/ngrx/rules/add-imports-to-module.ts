@@ -6,7 +6,7 @@ import { RequestContext } from './request-context';
 import {
   addImportToModule,
   addProviderToModule,
-} from '../../../utils/ast-utils';
+} from '@nrwl/workspace/src/utils/decorator-ast-utils';
 import { Change, insertImport } from '@nrwl/workspace/src/utils/ast-utils';
 
 export function addImportsToModule(context: RequestContext): Rule {

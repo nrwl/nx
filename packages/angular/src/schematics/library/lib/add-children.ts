@@ -7,7 +7,10 @@ import {
 } from '@nrwl/workspace';
 import { insertImport } from '@nrwl/workspace/src/utils/ast-utils';
 import * as ts from 'typescript';
-import { addImportToModule, addRoute } from '../../../utils/ast-utils';
+import {
+  addImportToModule,
+  addRoute,
+} from '@nrwl/workspace/src/utils/decorator-ast-utils';
 import { NormalizedSchema } from './normalized-schema';
 
 export function addChildren(options: NormalizedSchema): Rule {

@@ -121,8 +121,8 @@ function createPreset(options: Schema): Rule {
 }
 
 function connectAngularAndNest(options: Schema) {
-  const addImportToModule = require('@nrwl/' + 'angular/src/utils/ast-utils')
-    .addImportToModule;
+  const addImportToModule = require('@nrwl/' +
+    'workspace/src/utils/decorator-ast-utils').addImportToModule;
   return (host: Tree) => {
     host.overwrite(
       'libs/api-interfaces/src/lib/api-interfaces.ts',

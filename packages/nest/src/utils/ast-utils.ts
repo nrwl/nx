@@ -1,11 +1,9 @@
 import { Tree } from '@angular-devkit/schematics';
 import {
-  getImport,
   findNodes,
   Change,
   InsertChange,
   getSourceNodes,
-  getProjectConfig,
 } from '@nrwl/workspace/src/utils/ast-utils';
 import * as path from 'path';
 import * as ts from 'typescript';
@@ -67,272 +65,6 @@ export function getLibraryBarrelExport(host: Tree, config: any): string {
     throw new Error(`${barrelPath} can only export a single module`);
   }
   return barrelExports[0] + '.ts';
-}
-
-export function getApplicationModule(host: Tree, config: any): BootstrapInfo {
-  let mainPath;
-  try {
-    mainPath = config.architect.build.options.main;
-  } catch (e) {
-    throw new Error('Main file cannot be located');
-  }
-
-  if (!host.exists(mainPath)) {
-    throw new Error('Main file cannot be located');
-  }
-
-  const mainSource = host.read(mainPath)!.toString('utf-8');
-  const main = ts.createSourceFile(
-    mainPath,
-    mainSource,
-    ts.ScriptTarget.Latest,
-    true
-  );
-  const moduleImports = getImport(
-    main,
-    (s: string) => s.indexOf('.module') > -1
-  );
-  // TODO: Check if we don't already import '@nestjs/graphql'
-  if (moduleImports.length !== 1) {
-    throw new Error(`main.ts can only import a single module`);
-  }
-  const moduleImport = moduleImports[0];
-  const moduleClassName = moduleImport.bindings.filter((b) =>
-    b.endsWith('Module')
-  )[0];
-
-  const modulePath = `${path.join(
-    path.dirname(mainPath),
-    moduleImport.moduleSpec
-  )}.ts`;
-  if (!host.exists(modulePath)) {
-    throw new Error(`Cannot find '${modulePath}'`);
-  }
-
-  const moduleSourceText = host.read(modulePath)!.toString('utf-8');
-  const moduleSource = ts.createSourceFile(
-    modulePath,
-    moduleSourceText,
-    ts.ScriptTarget.Latest,
-    true
-  );
-
-  return {
-    moduleSpec: moduleImport.moduleSpec,
-    mainPath,
-    modulePath,
-    moduleSource,
-    moduleClassName,
-    resolverClassName: moduleClassName.replace('Module', 'Resolver'),
-    resolverFileName: moduleClassName.replace('Module', '').toLowerCase(),
-  };
-}
-
-export interface BootstrapInfo {
-  moduleSpec: string;
-  modulePath: string;
-  mainPath: string;
-  moduleClassName: string;
-  moduleSource: ts.SourceFile;
-  resolverClassName: string;
-  resolverFileName: string;
-}
-
-export function getLibraryModule(host: Tree, config: any): BootstrapInfo {
-  const barrelExport = getLibraryBarrelExport(host, config);
-  let mainPath;
-  try {
-    mainPath = path.join(config.sourceRoot, barrelExport);
-  } catch (e) {
-    throw new Error('Module cannot be located ' + mainPath);
-  }
-
-  if (!host.exists(mainPath)) {
-    throw new Error('Module cannot be located');
-  }
-
-  const mainSource = host.read(mainPath)!.toString('utf-8');
-  const main = ts.createSourceFile(
-    mainPath,
-    mainSource,
-    ts.ScriptTarget.Latest,
-    true
-  );
-
-  const moduleExports = getExport(
-    main,
-    (s: string) => s.indexOf('Module') > -1
-  );
-
-  // // TODO: Check if we don't already import '@nestjs/graphql'
-  if (moduleExports.length > 1) {
-    throw new Error(`Class can only import a single module`);
-  }
-  const moduleExport = moduleExports[0];
-  const moduleClassName = moduleExport.bindings.filter((b) =>
-    b.endsWith('Module')
-  )[0];
-
-  return {
-    moduleSpec: barrelExport,
-    mainPath,
-    modulePath: mainPath,
-    moduleSource: main,
-    moduleClassName,
-    resolverClassName: moduleClassName.replace('Module', 'Resolver'),
-    resolverFileName: moduleClassName.replace('Module', '').toLowerCase(),
-  };
-}
-
-export function readBootstrapInfo(host: Tree, app: string): BootstrapInfo {
-  const config = getProjectConfig(host, app);
-
-  switch (config.projectType) {
-    case 'application':
-      return getApplicationModule(host, config);
-    case 'library':
-      return getLibraryModule(host, config);
-    default:
-      throw new Error(
-        `This schematic only works on an 'application' or 'library', not '${config.projectType}'`
-      );
-  }
-}
-
-function _addSymbolToNestModuleMetadata(
-  source: ts.SourceFile,
-  ngModulePath: string,
-  metadataField: string,
-  expression: string
-): Change[] {
-  const nodes = getDecoratorMetadata(source, 'Module', '@nestjs/common');
-  let node: any = nodes[0]; // tslint:disable-line:no-any
-
-  // Find the decorator declaration.
-  if (!node) {
-    return [];
-  }
-  // Get all the children property assignment of object literals.
-  const matchingProperties: ts.ObjectLiteralElement[] = (node as ts.ObjectLiteralExpression).properties
-    .filter((prop) => prop.kind == ts.SyntaxKind.PropertyAssignment)
-    // Filter out every fields that's not "metadataField". Also handles string literals
-    // (but not expressions).
-    .filter((prop: ts.PropertyAssignment) => {
-      const name = prop.name;
-      switch (name.kind) {
-        case ts.SyntaxKind.Identifier:
-          return (name as ts.Identifier).getText(source) == metadataField;
-        case ts.SyntaxKind.StringLiteral:
-          return (name as ts.StringLiteral).text == metadataField;
-      }
-
-      return false;
-    });
-
-  // Get the last node of the array literal.
-  if (!matchingProperties) {
-    return [];
-  }
-  if (matchingProperties.length == 0) {
-    // We haven't found the field in the metadata declaration. Insert a new field.
-    const expr = node as ts.ObjectLiteralExpression;
-    let position: number;
-    let toInsert: string;
-    if (expr.properties.length == 0) {
-      position = expr.getEnd() - 1;
-      toInsert = `  ${metadataField}: [${expression}]\n`;
-    } else {
-      node = expr.properties[expr.properties.length - 1];
-      position = node.getEnd();
-      // Get the indentation of the last element, if any.
-      const text = node.getFullText(source);
-      if (text.match('^\r?\r?\n')) {
-        toInsert = `,${
-          text.match(/^\r?\n\s+/)[0]
-        }${metadataField}: [${expression}]`;
-      } else {
-        toInsert = `, ${metadataField}: [${expression}]`;
-      }
-    }
-    const newMetadataProperty = new InsertChange(
-      ngModulePath,
-      position,
-      toInsert
-    );
-    return [newMetadataProperty];
-  }
-
-  const assignment = matchingProperties[0] as ts.PropertyAssignment;
-
-  // If it's not an array, nothing we can do really.
-  if (assignment.initializer.kind !== ts.SyntaxKind.ArrayLiteralExpression) {
-    return [];
-  }
-
-  const arrLiteral = assignment.initializer as ts.ArrayLiteralExpression;
-  if (arrLiteral.elements.length == 0) {
-    // Forward the property.
-    node = arrLiteral;
-  } else {
-    node = arrLiteral.elements;
-  }
-
-  if (!node) {
-    console.log(
-      'No app module found. Please add your new class to your component.'
-    );
-
-    return [];
-  }
-
-  const isArray = Array.isArray(node);
-  if (isArray) {
-    const nodeArray = (node as {}) as Array<ts.Node>;
-    const symbolsArray = nodeArray.map((node) => node.getText());
-    if (symbolsArray.includes(expression)) {
-      return [];
-    }
-
-    node = node[node.length - 1];
-  }
-
-  let toInsert: string;
-  let position = node.getEnd();
-  if (!isArray && node.kind == ts.SyntaxKind.ObjectLiteralExpression) {
-    // We haven't found the field in the metadata declaration. Insert a new
-    // field.
-    const expr = node as ts.ObjectLiteralExpression;
-    if (expr.properties.length == 0) {
-      position = expr.getEnd() - 1;
-      toInsert = `  ${metadataField}: [${expression}]\n`;
-    } else {
-      node = expr.properties[expr.properties.length - 1];
-      position = node.getEnd();
-      // Get the indentation of the last element, if any.
-      const text = node.getFullText(source);
-      if (text.match('^\r?\r?\n')) {
-        toInsert = `,${
-          text.match(/^\r?\n\s+/)[0]
-        }${metadataField}: [${expression}]`;
-      } else {
-        toInsert = `, ${metadataField}: [${expression}]`;
-      }
-    }
-  } else if (!isArray && node.kind == ts.SyntaxKind.ArrayLiteralExpression) {
-    // We found the field but it's empty. Insert it just before the `]`.
-    position--;
-    toInsert = `${expression}`;
-  } else {
-    // Get the indentation of the last element, if any.
-    const text = node.getFullText(source);
-    if (text.match(/^\r?\n/)) {
-      toInsert = `,${text.match(/^\r?\n(\r?)\s+/)[0]}${expression}`;
-    } else {
-      toInsert = `, ${expression}`;
-    }
-  }
-  const insert = new InsertChange(ngModulePath, position, toInsert);
-  return [insert];
 }
 
 export function addImportToModule(
@@ -477,4 +209,140 @@ export function getDecoratorMetadata(
         expr.arguments[0].kind == ts.SyntaxKind.ObjectLiteralExpression
     )
     .map((expr) => expr.arguments[0] as ts.ObjectLiteralExpression);
+}
+
+function _addSymbolToNestModuleMetadata(
+  source: ts.SourceFile,
+  ngModulePath: string,
+  metadataField: string,
+  expression: string
+): Change[] {
+  const nodes = getDecoratorMetadata(source, 'Module', '@nestjs/common');
+  let node: any = nodes[0]; // tslint:disable-line:no-any
+
+  // Find the decorator declaration.
+  if (!node) {
+    return [];
+  }
+  // Get all the children property assignment of object literals.
+  const matchingProperties: ts.ObjectLiteralElement[] = (node as ts.ObjectLiteralExpression).properties
+    .filter((prop) => prop.kind == ts.SyntaxKind.PropertyAssignment)
+    // Filter out every fields that's not "metadataField". Also handles string literals
+    // (but not expressions).
+    .filter((prop: ts.PropertyAssignment) => {
+      const name = prop.name;
+      switch (name.kind) {
+        case ts.SyntaxKind.Identifier:
+          return (name as ts.Identifier).getText(source) == metadataField;
+        case ts.SyntaxKind.StringLiteral:
+          return (name as ts.StringLiteral).text == metadataField;
+      }
+
+      return false;
+    });
+
+  // Get the last node of the array literal.
+  if (!matchingProperties) {
+    return [];
+  }
+  if (matchingProperties.length == 0) {
+    // We haven't found the field in the metadata declaration. Insert a new field.
+    const expr = node as ts.ObjectLiteralExpression;
+    let position: number;
+    let toInsert: string;
+    if (expr.properties.length == 0) {
+      position = expr.getEnd() - 1;
+      toInsert = `  ${metadataField}: [${expression}]\n`;
+    } else {
+      node = expr.properties[expr.properties.length - 1];
+      position = node.getEnd();
+      // Get the indentation of the last element, if any.
+      const text = node.getFullText(source);
+      if (text.match('^\r?\r?\n')) {
+        toInsert = `,${
+          text.match(/^\r?\n\s+/)[0]
+        }${metadataField}: [${expression}]`;
+      } else {
+        toInsert = `, ${metadataField}: [${expression}]`;
+      }
+    }
+    const newMetadataProperty = new InsertChange(
+      ngModulePath,
+      position,
+      toInsert
+    );
+    return [newMetadataProperty];
+  }
+
+  const assignment = matchingProperties[0] as ts.PropertyAssignment;
+
+  // If it's not an array, nothing we can do really.
+  if (assignment.initializer.kind !== ts.SyntaxKind.ArrayLiteralExpression) {
+    return [];
+  }
+
+  const arrLiteral = assignment.initializer as ts.ArrayLiteralExpression;
+  if (arrLiteral.elements.length == 0) {
+    // Forward the property.
+    node = arrLiteral;
+  } else {
+    node = arrLiteral.elements;
+  }
+
+  if (!node) {
+    console.log(
+      'No app module found. Please add your new class to your component.'
+    );
+
+    return [];
+  }
+
+  const isArray = Array.isArray(node);
+  if (isArray) {
+    const nodeArray = (node as {}) as Array<ts.Node>;
+    const symbolsArray = nodeArray.map((node) => node.getText());
+    if (symbolsArray.includes(expression)) {
+      return [];
+    }
+
+    node = node[node.length - 1];
+  }
+
+  let toInsert: string;
+  let position = node.getEnd();
+  if (!isArray && node.kind == ts.SyntaxKind.ObjectLiteralExpression) {
+    // We haven't found the field in the metadata declaration. Insert a new
+    // field.
+    const expr = node as ts.ObjectLiteralExpression;
+    if (expr.properties.length == 0) {
+      position = expr.getEnd() - 1;
+      toInsert = `  ${metadataField}: [${expression}]\n`;
+    } else {
+      node = expr.properties[expr.properties.length - 1];
+      position = node.getEnd();
+      // Get the indentation of the last element, if any.
+      const text = node.getFullText(source);
+      if (text.match('^\r?\r?\n')) {
+        toInsert = `,${
+          text.match(/^\r?\n\s+/)[0]
+        }${metadataField}: [${expression}]`;
+      } else {
+        toInsert = `, ${metadataField}: [${expression}]`;
+      }
+    }
+  } else if (!isArray && node.kind == ts.SyntaxKind.ArrayLiteralExpression) {
+    // We found the field but it's empty. Insert it just before the `]`.
+    position--;
+    toInsert = `${expression}`;
+  } else {
+    // Get the indentation of the last element, if any.
+    const text = node.getFullText(source);
+    if (text.match(/^\r?\n/)) {
+      toInsert = `,${text.match(/^\r?\n(\r?)\s+/)[0]}${expression}`;
+    } else {
+      toInsert = `, ${expression}`;
+    }
+  }
+  const insert = new InsertChange(ngModulePath, position, toInsert);
+  return [insert];
 }

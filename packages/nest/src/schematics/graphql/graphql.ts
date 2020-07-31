@@ -21,18 +21,23 @@ import {
   addImportToModule,
   addProviderToModule,
   readBootstrapInfo,
-} from '../../utils/ast-utils';
+} from '@nrwl/workspace/src/utils/decorator-ast-utils';
 import { addGraphQLToPackageJson } from '../../utils/graphql';
 import { Schema } from './schema';
 
 function addImportsToModule(options: Schema): Rule {
   return (host: Tree) => {
-    const {
-      modulePath,
-      moduleSource,
-      resolverFileName,
-      resolverClassName,
-    } = readBootstrapInfo(host, options.project);
+    const { modulePath, moduleSource, moduleClassName } = readBootstrapInfo(
+      host,
+      options.project,
+      '@nestjs/common',
+      'Module'
+    );
+
+    const resolverClassName = moduleClassName.replace('Module', 'Resolver');
+    const resolverFileName = moduleClassName
+      .replace('Module', '')
+      .toLowerCase();
 
     insert(host, modulePath, [
       insertImport(
@@ -50,9 +55,17 @@ function addImportsToModule(options: Schema): Rule {
       ...addImportToModule(
         moduleSource,
         modulePath,
-        'GraphQLModule.forRoot({ autoSchemaFile: true })'
+        'GraphQLModule.forRoot({ autoSchemaFile: true })',
+        'Module',
+        '@nestjs/common'
       ),
-      ...addProviderToModule(moduleSource, modulePath, resolverClassName),
+      ...addProviderToModule(
+        moduleSource,
+        modulePath,
+        resolverClassName,
+        'Module',
+        '@nestjs/common'
+      ),
     ]);
 
     return host;
@@ -69,11 +82,16 @@ function addTasks(options: Schema) {
 
 function createFiles(options: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
-    const {
-      modulePath,
-      resolverClassName,
-      resolverFileName,
-    } = readBootstrapInfo(host, options.project);
+    const { modulePath, moduleClassName } = readBootstrapInfo(
+      host,
+      options.project,
+      '@nestjs/common',
+      'Module'
+    );
+    const resolverClassName = moduleClassName.replace('Module', 'Resolver');
+    const resolverFileName = moduleClassName
+      .replace('Module', '')
+      .toLowerCase();
 
     const dir = path.dirname(modulePath);
     const templateSource = apply(url('./files'), [

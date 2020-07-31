@@ -2,7 +2,7 @@ import { Rule, Tree } from '@angular-devkit/schematics';
 import { addGlobal, insert, toPropertyName } from '@nrwl/workspace';
 import { insertImport } from '@nrwl/workspace/src/utils/ast-utils';
 import * as ts from 'typescript';
-import { addImportToModule } from '../../../utils/ast-utils';
+import { addImportToModule } from '@nrwl/workspace/src/utils/decorator-ast-utils';
 import { NormalizedSchema } from './normalized-schema';
 
 export function addRouterConfiguration(options: NormalizedSchema): Rule {

@@ -18,7 +18,7 @@ describe('@nrwl/nest:graphql', () => {
     expect(tree.exists('apps/my-api/src/app/app.resolver.ts')).toBeTruthy();
   });
 
-  describe('@nestjs/graphql dependencies', () => {
+  xdescribe('@nestjs/graphql dependencies', () => {
     it('should be added by default', async () => {
       const tree = await runSchematic(
         'graphql',

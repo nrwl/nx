@@ -16,7 +16,10 @@ import {
   PropertyDeclaration,
   SyntaxKind,
 } from 'typescript';
-import { getTsSourceFile, getDecoratorMetadata } from '../../utils/ast-utils';
+import {
+  getTsSourceFile,
+  getDecoratorMetadata,
+} from '@nrwl/workspace/src/utils/decorator-ast-utils';
 import {
   getInputPropertyDeclarations,
   getKnobType,

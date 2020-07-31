@@ -35,7 +35,7 @@ import {
   addImportToModule,
   addImportToTestBed,
   getDecoratorPropertyValueNode,
-} from '../../utils/ast-utils';
+} from '@nrwl/workspace/src/utils/decorator-ast-utils';
 import {
   insertImport,
   getProjectConfig,
