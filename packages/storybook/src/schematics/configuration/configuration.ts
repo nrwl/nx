@@ -13,21 +13,32 @@ import {
   getProjectConfig,
   offsetFromRoot,
   updateWorkspace,
+  updateWorkspaceInTree,
+  serializeJson,
+  Linter,
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
-import { applyWithSkipExisting, parseJsonAtPath } from '../../utils/utils';
+
+import {
+  applyWithSkipExisting,
+  isFramework,
+  getTsConfigContent,
+} from '../../utils/utils';
 import { CypressConfigureSchema } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 
-export default function (schema: StorybookConfigureSchema): Rule {
+export default function (rawSchema: StorybookConfigureSchema): Rule {
+  const schema = normalizeSchema(rawSchema);
   return chain([
     schematic('ng-add', {
       uiFramework: schema.uiFramework,
     }),
     createRootStorybookDir(schema.name, schema.js),
     createLibStorybookDir(schema.name, schema.uiFramework, schema.js),
-    configureTsConfig(schema.name),
+    configureTsLibConfig(schema),
+    configureTsSolutionConfig(schema),
+    updateLintTask(schema),
     addStorybookTask(schema.name, schema.uiFramework),
     schema.configureCypress
       ? schematic<CypressConfigureSchema>('cypress-project', {
@@ -37,6 +48,17 @@ export default function (schema: StorybookConfigureSchema): Rule {
         })
       : () => {},
   ]);
+}
+
+function normalizeSchema(schema: StorybookConfigureSchema) {
+  const defaults = {
+    linter: Linter.TsLint,
+    js: false,
+  };
+  return {
+    ...defaults,
+    ...schema,
+  };
 }
 
 function createRootStorybookDir(projectName: string, js: boolean): Rule {
@@ -51,7 +73,7 @@ function createRootStorybookDir(projectName: string, js: boolean): Rule {
 
 function createLibStorybookDir(
   projectName: string,
-  uiFramework: string,
+  uiFramework: StorybookConfigureSchema['uiFramework'],
   js: boolean
 ): Rule {
   return (tree: Tree, context: SchematicContext) => {
@@ -71,37 +93,75 @@ function createLibStorybookDir(
   };
 }
 
-function configureTsConfig(projectName: string): Rule {
+function configureTsLibConfig(schema: StorybookConfigureSchema): Rule {
+  const { name: projectName } = schema;
+
   return (tree: Tree) => {
     const projectPath = getProjectConfig(tree, projectName).root;
-    const tsConfigPath = projectPath + '/tsconfig.lib.json';
-    const projectTsConfig = parseJsonAtPath(tree, tsConfigPath);
-
-    let tsConfigContent: any;
-
-    if (projectTsConfig && projectTsConfig.value) {
-      tsConfigContent = projectTsConfig.value;
-    } else {
-      return tree;
-    }
+    const tsConfigPath = join(projectPath, 'tsconfig.lib.json');
+    const tsConfigContent = getTsConfigContent(tree, tsConfigPath);
 
     tsConfigContent.exclude = [
-      ...tsConfigContent.exclude,
+      ...(tsConfigContent.exclude || []),
       '**/*.stories.ts',
       '**/*.stories.js',
+      ...(isFramework('react', schema)
+        ? ['**/*.stories.jsx', '**/*.stories.tsx']
+        : []),
     ];
 
-    tree.overwrite(
-      tsConfigPath,
-      JSON.stringify(tsConfigContent, null, 2) + '\n'
-    );
+    tree.overwrite(tsConfigPath, serializeJson(tsConfigContent));
+
     return tree;
   };
+}
+
+function configureTsSolutionConfig(schema: StorybookConfigureSchema): Rule {
+  const { name: projectName } = schema;
+
+  return (tree: Tree) => {
+    const projectPath = getProjectConfig(tree, projectName).root;
+    const tsConfigPath = projectPath + '/tsconfig.json';
+    const tsConfigContent = getTsConfigContent(tree, tsConfigPath);
+
+    tsConfigContent.references = [
+      ...(tsConfigContent.references || []),
+      {
+        path: './.storybook/tsconfig.json',
+      },
+    ];
+
+    tree.overwrite(tsConfigPath, serializeJson(tsConfigContent));
+
+    return tree;
+  };
+}
+
+function updateLintTask(schema: StorybookConfigureSchema): Rule {
+  const { name: projectName } = schema;
+
+  return updateWorkspaceInTree((json) => {
+    const projectConfig = json.projects[projectName];
+    const lintTarget = projectConfig.architect.lint;
+
+    if (lintTarget) {
+      lintTarget.options.tsConfig = [
+        ...lintTarget.options.tsConfig,
+        `${projectConfig.root}/.storybook/tsconfig.json`,
+      ];
+    }
+
+    return json;
+  });
 }
 
 function addStorybookTask(projectName: string, uiFramework: string): Rule {
   return updateWorkspace((workspace) => {
     const projectConfig = workspace.projects.get(projectName);
+    if (!projectConfig) {
+      return;
+    }
+
     projectConfig.targets.set('storybook', {
       builder: '@nrwl/storybook:storybook',
       options: {

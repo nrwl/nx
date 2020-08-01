@@ -9,6 +9,11 @@
       "version": "9.2.0-beta.1",
       "description": "Add build-storybook to cacheable operations",
       "factory": "./src/migrations/update-9-2-0/update-9-2-0"
+    },
+    "update-10.0.12": {
+      "version": "10.0.12",
+      "description": "Add missing storybook config to lint target",
+      "factory": "./src/migrations/update-10-0-12/update-10-0-12"
     }
   },
   "packageJsonUpdates": {
