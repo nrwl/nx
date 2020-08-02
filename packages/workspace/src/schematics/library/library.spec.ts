@@ -2,6 +2,7 @@ import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { NxJson } from '@nrwl/workspace';
+
 import { runSchematic } from '../../utils/testing';
 
 describe('lib', () => {
@@ -103,9 +104,14 @@ describe('lib', () => {
 
     it('should generate files', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
+
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/README.md')).toBeTruthy();
+
+      const ReadmeContent = tree.readContent('libs/my-lib/README.md');
+      expect(ReadmeContent).toContain('nx test my-lib');
     });
   });
 
