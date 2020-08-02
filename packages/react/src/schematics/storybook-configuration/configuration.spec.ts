@@ -1,7 +1,7 @@
 import { externalSchematic, Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { callRule, runSchematic } from '../../utils/testing';
-import { StorybookConfigureSchema } from './schema';
+import { Schema } from './schema';
 
 describe('react:storybook-configuration', () => {
   let appTree;
@@ -13,9 +13,9 @@ describe('react:storybook-configuration', () => {
   it('should configure everything at once', async () => {
     appTree = await createTestUILib('test-ui-lib');
 
-    const tree = await runSchematic(
+    const tree = await runSchematic<Schema>(
       'storybook-configuration',
-      <StorybookConfigureSchema>{
+      {
         name: 'test-ui-lib',
         configureCypress: true,
       },
@@ -32,9 +32,9 @@ describe('react:storybook-configuration', () => {
   it('should generate stories for components', async () => {
     appTree = await createTestUILib('test-ui-lib');
 
-    const tree = await runSchematic(
+    const tree = await runSchematic<Partial<Schema>>(
       'storybook-configuration',
-      <StorybookConfigureSchema>{
+      {
         name: 'test-ui-lib',
         generateStories: true,
       },
@@ -54,7 +54,7 @@ describe('react:storybook-configuration', () => {
       `import React from 'react';
 
       import './test.scss';
-      
+
       export const Test = (props) => {
         return (
           <div>
@@ -62,14 +62,14 @@ describe('react:storybook-configuration', () => {
           </div>
         );
       };
-      
-      export default Test;        
+
+      export default Test;
       `
     );
 
-    const tree = await runSchematic(
+    const tree = await runSchematic<Partial<Schema>>(
       'storybook-configuration',
-      <StorybookConfigureSchema>{
+      {
         name: 'test-ui-lib',
         generateCypressSpecs: true,
         generateStories: true,

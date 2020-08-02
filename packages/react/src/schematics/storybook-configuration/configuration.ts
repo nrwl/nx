@@ -5,10 +5,10 @@ import {
   schematic,
   noop,
 } from '@angular-devkit/schematics';
-import { StorybookConfigureSchema } from './schema';
-import { StorybookStoriesSchema } from '../stories/stories';
+import { Schema } from './schema';
+import { Schema as StorybookStoriesSchema } from '../stories/schema';
 
-function generateStories(schema: StorybookConfigureSchema): Rule {
+function generateStories(schema: Schema): Rule {
   return (tree, context) => {
     return schematic<StorybookStoriesSchema>('stories', {
       project: schema.name,
@@ -19,7 +19,7 @@ function generateStories(schema: StorybookConfigureSchema): Rule {
   };
 }
 
-export default function (schema: StorybookConfigureSchema): Rule {
+export default function (schema: Schema): Rule {
   return chain([
     externalSchematic('@nrwl/storybook', 'configuration', {
       name: schema.name,

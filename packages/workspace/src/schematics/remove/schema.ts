@@ -1,4 +1,4 @@
-export interface Schema extends json.JsonObject {
+export interface Schema {
   projectName: string;
   skipFormat: boolean;
   forceRemove: boolean;

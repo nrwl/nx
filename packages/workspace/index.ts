@@ -76,4 +76,9 @@ import * as strings from './src/utils/strings';
 export { checkAndCleanWithSemver } from './src/utils/version-utils';
 export { updatePackagesInPackageJson } from './src/utils/update-packages-in-package-json';
 
+export { Schema as LibrarySchema } from './src/schematics/library/schema';
+export { Schema as RemoveSchema } from './src/schematics/remove/schema';
+export { Schema as MoveSchema } from './src/schematics/move/schema';
+export { Schema as RunCommandsSchema } from './src/schematics/run-commands/schema';
+
 export const stringUtils = strings;

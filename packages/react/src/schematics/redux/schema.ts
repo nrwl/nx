@@ -8,7 +8,7 @@ export interface Schema {
   js?: string;
 }
 
-interface NormalizedSchema extends Schema {
+export interface NormalizedSchema extends Schema {
   projectType: string;
   projectSourcePath: Path;
   projectModulePath: string;

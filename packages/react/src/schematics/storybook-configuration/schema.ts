@@ -1,6 +1,6 @@
 import { Linter } from '@nrwl/workspace';
 
-export interface StorybookConfigureSchema {
+export interface Schema {
   name: string;
   configureCypress: boolean;
   generateStories?: boolean;

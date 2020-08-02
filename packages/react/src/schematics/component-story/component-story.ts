@@ -21,11 +21,12 @@ import {
   getComponentName,
   getComponentPropsInterface,
 } from '../../utils/ast-utils';
+import { Schema } from './schema';
 
-export interface CreateComponentStoriesFileSchema {
-  project: string;
-  componentPath: string;
-}
+// export interface CreateComponentStoriesFileSchema {
+//   project: string;
+//   componentPath: string;
+// }
 
 export type KnobType = 'text' | 'boolean' | 'number' | 'select';
 
@@ -49,7 +50,7 @@ export function createComponentStoriesFile({
   // name,
   project,
   componentPath,
-}: CreateComponentStoriesFileSchema): Rule {
+}: Schema): Rule {
   return (tree: Tree, context: SchematicContext): Rule => {
     const proj = getProjectConfig(tree, project);
     const sourceRoot = proj.sourceRoot;
@@ -142,6 +143,6 @@ export function createComponentStoriesFile({
   };
 }
 
-export default function (schema: CreateComponentStoriesFileSchema): Rule {
+export default function (schema: Schema): Rule {
   return chain([createComponentStoriesFile(schema), formatFiles()]);
 }

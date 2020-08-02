@@ -9,16 +9,11 @@ import {
 } from '@angular-devkit/schematics';
 import { join, Path } from '@angular-devkit/core';
 import { getProjectConfig } from '@nrwl/workspace';
-import { CreateComponentStoriesFileSchema } from '../component-story/component-story';
+import { Schema as CreateComponentStoriesFileSchema } from '../component-story/schema';
 import { CreateComponentSpecFileSchema } from '../component-cypress-spec/component-cypress-spec';
 import { getComponentName } from '../../utils/ast-utils';
 import * as ts from 'typescript';
-
-export interface StorybookStoriesSchema {
-  project: string;
-  generateCypressSpecs: boolean;
-  js?: boolean;
-}
+import { Schema } from './schema';
 
 function containsComponentDeclaration(
   tree: Tree,
@@ -91,7 +86,7 @@ export function createAllStories(
   };
 }
 
-export default function (schema: StorybookStoriesSchema): Rule {
+export default function (schema: Schema): Rule {
   return chain([
     createAllStories(schema.project, schema.generateCypressSpecs, schema.js),
   ]);

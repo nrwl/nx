@@ -1,9 +1,9 @@
 import { Tree, externalSchematic } from '@angular-devkit/schematics';
 import { runSchematic, callRule } from '../../utils/testing';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
+import { ApplicationSchema } from '@nrwl/react';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import { StorybookStoriesSchema } from './stories';
-import { Schema } from 'packages/react/src/schematics/application/schema';
+import { Schema } from './schema';
 
 describe('react:stories', () => {
   let appTree: Tree;
@@ -18,12 +18,12 @@ describe('react:stories', () => {
       `import React from 'react';
 
       import './test.scss';
-      
+
       export interface TestProps {
         name: string;
         displayAge: boolean;
       }
-      
+
       export const Test = (props: TestProps) => {
         return (
           <div>
@@ -31,16 +31,16 @@ describe('react:stories', () => {
           </div>
         );
       };
-      
-      export default Test;        
+
+      export default Test;
       `
     );
   });
 
   it('should create the stories', async () => {
-    tree = await runSchematic(
+    tree = await runSchematic<Partial<Schema>>(
       'stories',
-      <StorybookStoriesSchema>{
+      {
         project: 'test-ui-lib',
       },
       appTree
@@ -55,9 +55,9 @@ describe('react:stories', () => {
   });
 
   it('should generate Cypress specs', async () => {
-    tree = await runSchematic(
+    tree = await runSchematic<Schema>(
       'stories',
-      <StorybookStoriesSchema>{
+      {
         project: 'test-ui-lib',
         generateCypressSpecs: true,
       },
@@ -85,9 +85,9 @@ describe('react:stories', () => {
       `export const add = (a: number, b: number) => a + b;`
     );
 
-    tree = await runSchematic(
+    tree = await runSchematic<Partial<Schema>>(
       'stories',
-      <StorybookStoriesSchema>{
+      {
         project: 'test-ui-lib',
       },
       appTree
@@ -117,10 +117,14 @@ export async function createTestUILib(
   // create some Nx app that we'll use to generate the cypress
   // spec into it. We don't need a real Cypress setup
   appTree = await callRule(
-    externalSchematic('@nrwl/react', 'application', {
-      name: `${libName}-e2e`,
-      js: plainJS,
-    } as Partial<Schema>),
+    externalSchematic<Partial<ApplicationSchema>>(
+      '@nrwl/react',
+      'application',
+      {
+        name: `${libName}-e2e`,
+        js: plainJS,
+      }
+    ),
     appTree
   );
   return appTree;

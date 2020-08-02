@@ -2,7 +2,7 @@ import { externalSchematic, Tree } from '@angular-devkit/schematics';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { callRule, runSchematic } from '../../utils/testing';
-import { CreateComponentStoriesFileSchema } from './component-story';
+import { Schema as CreateComponentStoriesFileSchema } from './schema';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 describe('react:component-story', () => {
@@ -64,16 +64,16 @@ describe('react:component-story', () => {
           .toContain(stripIndents`
             import React from 'react';
             import { TestUiLib, TestUiLibProps } from './test-ui-lib';
-            
+
             export default {
               component: TestUiLib,
               title: 'TestUiLib',
             };
-            
+
             export const primary = () => {
               /* eslint-disable-next-line */
               const props: TestUiLibProps = {};
-            
+
               return <TestUiLib />;
             };
           `);
@@ -88,9 +88,9 @@ describe('react:component-story', () => {
         appTree.create(
           'libs/test-ui-lib/src/lib/test-ui-libplain.jsx',
           `import React from 'react';
-  
+
           import './test.scss';
-          
+
           export const Test = () => {
             return (
               <div>
@@ -98,8 +98,8 @@ describe('react:component-story', () => {
               </div>
             );
           };
-          
-          export default Test;        
+
+          export default Test;
           `
         );
 
@@ -122,16 +122,16 @@ describe('react:component-story', () => {
           .toContain(stripIndents`
             import React from 'react';
             import { Test } from './test-ui-libplain';
-            
+
             export default {
               component: Test,
               title: 'Test',
             };
-            
+
             export const primary = () => {
               /* eslint-disable-next-line */
               const props = {};
-            
+
               return <Test />;
             };
           `);
@@ -143,9 +143,9 @@ describe('react:component-story', () => {
         appTree.overwrite(
           cmpPath,
           `import React from 'react';
-  
+
           import './test.scss';
-          
+
           export const Test = () => {
             return (
               <div>
@@ -153,8 +153,8 @@ describe('react:component-story', () => {
               </div>
             );
           };
-          
-          export default Test;        
+
+          export default Test;
           `
         );
 
@@ -173,12 +173,12 @@ describe('react:component-story', () => {
           .toContain(stripIndents`
             import React from 'react';
             import { Test } from './test-ui-lib';
-            
+
             export default {
               component: Test,
               title: 'Test',
             };
-            
+
             export const primary = () => {
               return <Test />;
             };
@@ -191,14 +191,14 @@ describe('react:component-story', () => {
         appTree.overwrite(
           cmpPath,
           `import React from 'react';
-  
+
           import './test.scss';
-          
+
           export interface TestProps {
             name: string;
             displayAge: boolean;
           }
-          
+
           export const Test = (props: TestProps) => {
             return (
               <div>
@@ -206,8 +206,8 @@ describe('react:component-story', () => {
               </div>
             );
           };
-          
-          export default Test;        
+
+          export default Test;
           `
         );
 
@@ -227,18 +227,18 @@ describe('react:component-story', () => {
             import { text, boolean } from '@storybook/addon-knobs';
             import React from 'react';
             import { Test, TestProps } from './test-ui-lib';
-            
+
             export default {
               component: Test,
               title: 'Test',
             };
-            
+
             export const primary = () => {
               const props: TestProps = {
                 name: text('name', ''),
                 displayAge: boolean('displayAge', false),
               };
-            
+
               return <Test name={props.name} displayAge={props.displayAge} />;
             };
           `);
@@ -328,14 +328,14 @@ describe('react:component-story', () => {
           appTree.overwrite(
             cmpPath,
             `import React from 'react';
-    
+
             import './test.scss';
-            
+
             export interface TestProps {
               name: string;
               displayAge: boolean;
             }
-            
+
             ${config.src}
             `
           );
@@ -356,18 +356,18 @@ describe('react:component-story', () => {
             import { text, boolean } from '@storybook/addon-knobs';
             import React from 'react';
             import { Test, TestProps } from './test-ui-lib';
-            
+
             export default {
               component: Test,
               title: 'Test',
             };
-            
+
             export const primary = () => {
               const props: TestProps = {
                 name: text('name', ''),
                 displayAge: boolean('displayAge', false),
               };
-            
+
               return <Test name={props.name} displayAge={props.displayAge} />;
             };
           `);
@@ -394,16 +394,16 @@ describe('react:component-story', () => {
         .toContain(stripIndents`
           import React from 'react';
           import { TestUiLib, TestUiLibProps } from './test-ui-lib';
-          
+
           export default {
             component: TestUiLib,
             title: 'TestUiLib',
           };
-          
+
           export const primary = () => {
             /* tslint-disable-next-line */
             const props: TestUiLibProps = {};
-          
+
             return <TestUiLib />;
           };
         `);
