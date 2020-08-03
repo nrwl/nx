@@ -556,4 +556,43 @@ describe('app', () => {
       );
     });
   });
+
+  describe('--strict', () => {
+    it('should enable strict type checking', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'my-app', strict: true },
+        appTree
+      );
+
+      // define all the tsconfig files to update
+      const configFiles = [
+        'apps/my-app/tsconfig.json',
+        'apps/my-app-e2e/tsconfig.e2e.json',
+      ];
+
+      for (const configFile of configFiles) {
+        const { compilerOptions, angularCompilerOptions } = JSON.parse(
+          tree.readContent(configFile)
+        );
+
+        // check that the TypeScript compiler options have been updated
+        expect(compilerOptions.forceConsistentCasingInFileNames).toBe(true);
+        expect(compilerOptions.strict).toBe(true);
+        expect(compilerOptions.noImplicitReturns).toBe(true);
+        expect(compilerOptions.noFallthroughCasesInSwitch).toBe(true);
+
+        // check that the Angular Template options have been updated
+        expect(angularCompilerOptions.strictInjectionParameters).toBe(true);
+        expect(angularCompilerOptions.strictTemplates).toBe(true);
+      }
+
+      // check to see if the workspace configuration has been updated to use strict
+      // mode by default in future applications
+      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+      expect(workspaceJson.schematics['@nrwl/angular:application'].strict).toBe(
+        true
+      );
+    });
+  });
 });

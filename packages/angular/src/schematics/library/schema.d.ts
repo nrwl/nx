@@ -21,6 +21,7 @@ export interface Schema {
   lazy?: boolean;
   parentModule?: string;
   tags?: string;
+  strict?: boolean;
 
   unitTestRunner: UnitTestRunner;
 }

@@ -120,6 +120,11 @@
     "backendProject": {
       "type": "string",
       "description": "Backend project that provides data to this application. This sets up proxy.config.json."
+    },
+    "strict": {
+      "type": "boolean",
+      "description": "Creates an application with stricter type checking and build optimization options.",
+      "default": false
     }
   },
   "required": []

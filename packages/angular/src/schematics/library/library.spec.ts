@@ -1149,4 +1149,41 @@ describe('lib', () => {
       expect.assertions(1);
     });
   });
+
+  describe('--strict', () => {
+    it('should enable strict type checking', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          framework: 'angular',
+          publishable: true,
+          importPath: '@myorg/lib',
+          strict: true,
+        },
+        appTree
+      );
+
+      const { compilerOptions, angularCompilerOptions } = JSON.parse(
+        tree.readContent('libs/my-lib/tsconfig.json')
+      );
+
+      // check that the TypeScript compiler options have been updated
+      expect(compilerOptions.forceConsistentCasingInFileNames).toBe(true);
+      expect(compilerOptions.strict).toBe(true);
+      expect(compilerOptions.noImplicitReturns).toBe(true);
+      expect(compilerOptions.noFallthroughCasesInSwitch).toBe(true);
+
+      // check that the Angular Template options have been updated
+      expect(angularCompilerOptions.strictInjectionParameters).toBe(true);
+      expect(angularCompilerOptions.strictTemplates).toBe(true);
+
+      // check to see if the workspace configuration has been updated to use strict
+      // mode by default in future applications
+      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+      expect(workspaceJson.schematics['@nrwl/angular:library'].strict).toBe(
+        true
+      );
+    });
+  });
 });
