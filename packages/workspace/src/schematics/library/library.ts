@@ -54,23 +54,24 @@ function addProject(options: NormalizedSchema): Rule {
 }
 
 function updateTsConfig(options: NormalizedSchema): Rule {
-  return updateJsonInTree('tsconfig.base.json', (json) => {
-    const c = json.compilerOptions;
-    c.paths = c.paths || {};
-    delete c.paths[options.name];
+  return (host: Tree) =>
+    updateJsonInTree('tsconfig.base.json', (json) => {
+      const c = json.compilerOptions;
+      c.paths = c.paths || {};
+      delete c.paths[options.name];
 
-    if (c.paths[options.importPath]) {
-      throw new SchematicsException(
-        `You already have a library using the import path "${options.importPath}". Make sure to specify a unique one.`
-      );
-    }
+      if (c.paths[options.importPath]) {
+        throw new SchematicsException(
+          `You already have a library using the import path "${options.importPath}". Make sure to specify a unique one.`
+        );
+      }
 
-    c.paths[options.importPath] = [
-      `libs/${options.projectDirectory}/src/index.ts`,
-    ];
+      c.paths[options.importPath] = [
+        `${libsDir(host)}/${options.projectDirectory}/src/index.ts`,
+      ];
 
-    return json;
-  });
+      return json;
+    });
 }
 
 function createFiles(options: NormalizedSchema): Rule {
