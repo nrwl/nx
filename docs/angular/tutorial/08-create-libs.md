@@ -115,7 +115,7 @@ export class TodosComponent implements OnInit {
 
 ```html
 <ul>
-  <li *ngFor="let t of todos">{{ t.title }}</li>
+  <li *ngFor="let t of todos" class="todo">{{ t.title }}</li>
 </ul>
 ```
 
