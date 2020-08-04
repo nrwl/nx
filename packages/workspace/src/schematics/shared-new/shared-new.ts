@@ -281,7 +281,7 @@ function setDefaultLinter(linter: string) {
     };
     json.schematics['@nrwl/nest'] = {
       application: { linter },
-      library: { linter }
+      library: { linter },
     };
     json.schematics['@nrwl/express'] = {
       application: { linter },
