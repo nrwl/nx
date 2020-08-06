@@ -28,6 +28,7 @@ import {
   updateWorkspace,
   addLintFiles,
   NxJson,
+  Linter,
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import init from '../init/init';
@@ -411,7 +412,7 @@ function updateComponentSpec(options: NormalizedSchema) {
   };
 }
 
-function updateLinting(options: NormalizedSchema): Rule {
+function updateTsLintConfig(options: NormalizedSchema): Rule {
   return chain([
     updateJsonInTree('tslint.json', (json) => {
       if (
@@ -512,6 +513,12 @@ function updateProject(options: NormalizedSchema): Rule {
         fixedProject.architect.lint.options.exclude.push(
           '!' + join(normalize(options.appProjectRoot), '**/*')
         );
+
+        if (options.linter === Linter.EsLint) {
+          fixedProject.architect.lint.options.linter = Linter.EsLint;
+          fixedProject.architect.lint.builder = '@nrwl/linter:lint';
+          host.delete(`${options.appProjectRoot}/tslint.json`);
+        }
 
         if (options.e2eTestRunner === 'none') {
           delete json.projects[options.e2eProjectName];
@@ -693,9 +700,6 @@ export default function (schema: Schema): Rule {
         ...options,
         skipFormat: true,
       }),
-      addLintFiles(options.appProjectRoot, options.linter, {
-        onlyGlobal: true,
-      }),
       // TODO: Remove this after Angular 10.1.0
       updateJsonInTree('tsconfig.json', () => ({
         files: [],
@@ -732,7 +736,10 @@ export default function (schema: Schema): Rule {
       updateComponentStyles(options),
       updateComponentSpec(options),
       options.routing ? addRouterRootConfiguration(options) : noop(),
-      updateLinting(options),
+      addLintFiles(options.appProjectRoot, options.linter, {
+        onlyGlobal: options.linter === Linter.TsLint, // local lint files are added differently when tslint
+      }),
+      options.linter === 'tslint' ? updateTsLintConfig(options) : noop(),
       options.unitTestRunner === 'jest'
         ? externalSchematic('@nrwl/jest', 'jest-project', {
             project: options.name,

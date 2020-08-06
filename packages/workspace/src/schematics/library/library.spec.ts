@@ -20,8 +20,9 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(workspaceJson.projects['my-lib'].architect.build).toBeUndefined();
       expect(workspaceJson.projects['my-lib'].architect.lint).toEqual({
-        builder: '@angular-devkit/build-angular:tslint',
+        builder: '@nrwl/linter:lint',
         options: {
+          linter: 'eslint',
           exclude: ['**/node_modules/**', '!libs/my-lib/**/*'],
           tsConfig: [
             'libs/my-lib/tsconfig.lib.json',
@@ -159,7 +160,7 @@ describe('lib', () => {
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.ts')
       ).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
-      expect(tree.exists(`libs/my-dir/my-lib/tslint.json`)).toBeTruthy();
+      expect(tree.exists(`libs/my-dir/my-lib/.eslintrc`)).toBeTruthy();
     });
 
     it('should update workspace.json', async () => {
@@ -174,8 +175,9 @@ describe('lib', () => {
         'libs/my-dir/my-lib'
       );
       expect(workspaceJson.projects['my-dir-my-lib'].architect.lint).toEqual({
-        builder: '@angular-devkit/build-angular:tslint',
+        builder: '@nrwl/linter:lint',
         options: {
+          linter: 'eslint',
           exclude: ['**/node_modules/**', '!libs/my-dir/my-lib/**/*'],
           tsConfig: [
             'libs/my-dir/my-lib/tsconfig.lib.json',
@@ -221,21 +223,15 @@ describe('lib', () => {
       ]);
     });
 
-    it('should create a local tslint.json', async () => {
+    it('should create a local .eslintrc', async () => {
       const tree = await runSchematic(
         'lib',
         { name: 'myLib', directory: 'myDir' },
         appTree
       );
 
-      const tslintJson = readJsonInTree(tree, 'libs/my-dir/my-lib/tslint.json');
-      expect(tslintJson).toEqual({
-        extends: '../../../tslint.json',
-        rules: {},
-        linterOptions: {
-          exclude: ['!**/*'],
-        },
-      });
+      const lint = readJsonInTree(tree, 'libs/my-dir/my-lib/.eslintrc');
+      expect(lint.extends).toEqual('../../../.eslintrc');
     });
   });
 

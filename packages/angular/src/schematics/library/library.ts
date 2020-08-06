@@ -36,7 +36,9 @@ export default function (schema: Schema): Rule {
     }
 
     return chain([
-      addLintFiles(options.projectRoot, Linter.TsLint, { onlyGlobal: true }),
+      addLintFiles(options.projectRoot, options.linter, {
+        onlyGlobal: options.linter === Linter.TsLint,
+      }),
       addUnitTestRunner(options),
       // TODO: Remove this after Angular 10.1.0
       updateJsonInTree('tsconfig.json', () => ({

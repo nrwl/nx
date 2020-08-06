@@ -113,6 +113,12 @@
     "importPath": {
       "type": "string",
       "description": "The library name used to import it, like @myorg/my-awesome-lib. Must be a valid npm name."
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["tslint", "eslint"],
+      "default": "tslint"
     }
   },
   "required": []

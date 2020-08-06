@@ -42,7 +42,7 @@ Frontend project that needs to access this application. This sets up proxy confi
 
 ### linter
 
-Default: `tslint`
+Default: `eslint`
 
 Type: `string`
 

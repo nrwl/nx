@@ -53,8 +53,9 @@ describe('app', () => {
         })
       );
       expect(workspaceJson.projects['my-node-app'].architect.lint).toEqual({
-        builder: '@angular-devkit/build-angular:tslint',
+        builder: '@nrwl/linter:lint',
         options: {
+          linter: 'eslint',
           tsConfig: [
             'apps/my-node-app/tsconfig.app.json',
             'apps/my-node-app/tsconfig.spec.json',
@@ -111,10 +112,10 @@ describe('app', () => {
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
-      const tslintJson = JSON.parse(
-        stripJsonComments(getFileContent(tree, 'apps/my-node-app/tslint.json'))
+      const eslintrc = JSON.parse(
+        stripJsonComments(getFileContent(tree, 'apps/my-node-app/.eslintrc'))
       );
-      expect(tslintJson.extends).toEqual('../../tslint.json');
+      expect(eslintrc.extends).toEqual('../../.eslintrc');
     });
   });
 
@@ -134,8 +135,9 @@ describe('app', () => {
       expect(
         workspaceJson.projects['my-dir-my-node-app'].architect.lint
       ).toEqual({
-        builder: '@angular-devkit/build-angular:tslint',
+        builder: '@nrwl/linter:lint',
         options: {
+          linter: 'eslint',
           tsConfig: [
             'apps/my-dir/my-node-app/tsconfig.app.json',
             'apps/my-dir/my-node-app/tsconfig.spec.json',
@@ -196,9 +198,9 @@ describe('app', () => {
           expectedValue: ['node'],
         },
         {
-          path: 'apps/my-dir/my-node-app/tslint.json',
+          path: 'apps/my-dir/my-node-app/.eslintrc',
           lookupFn: (json) => json.extends,
-          expectedValue: '../../../tslint.json',
+          expectedValue: '../../../.eslintrc',
         },
       ].forEach(hasJsonValue);
     });

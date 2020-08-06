@@ -48,7 +48,7 @@ How the plugin will be published, like @myorg/my-awesome-plugin. Note this must 
 
 ### linter
 
-Default: `tslint`
+Default: `eslint`
 
 Type: `string`
 
