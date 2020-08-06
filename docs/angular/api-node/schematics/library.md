@@ -60,7 +60,7 @@ The library name used to import it, like @myorg/my-awesome-lib. Must be a valid 
 
 ### linter
 
-Default: `tslint`
+Default: `eslint`
 
 Type: `string`
 

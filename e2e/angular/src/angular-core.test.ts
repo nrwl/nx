@@ -119,5 +119,15 @@ forEachCli(() => {
       runCLI(`build my-dir-${myapp} --aot`);
       expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
     }, 1000000);
+
+    it('should support eslint', async () => {
+      const myapp = uniq('myapp');
+      runCLI(`generate @nrwl/angular:app ${myapp} --linter=eslint`);
+      expect(runCLI(`lint ${myapp}`)).toContain('All files pass linting.');
+
+      const mylib = uniq('mylib');
+      runCLI(`generate @nrwl/angular:lib ${mylib} --linter=eslint`);
+      expect(runCLI(`lint ${mylib}`)).toContain('All files pass linting.');
+    });
   });
 });

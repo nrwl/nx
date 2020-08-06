@@ -90,7 +90,7 @@ Generate JavaScript files rather than TypeScript files.
 
 ### linter
 
-Default: `tslint`
+Default: `eslint`
 
 Type: `string`
 

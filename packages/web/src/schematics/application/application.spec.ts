@@ -67,10 +67,10 @@ describe('app', () => {
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
-      const tslintJson = JSON.parse(
-        stripJsonComments(tree.readContent('apps/my-app/tslint.json'))
+      const linter = JSON.parse(
+        stripJsonComments(tree.readContent('apps/my-app/.eslintrc'))
       );
-      expect(tslintJson.extends).toEqual('../../tslint.json');
+      expect(linter.extends).toEqual('../../.eslintrc');
 
       expect(tree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
       const tsconfigE2E = JSON.parse(
@@ -152,9 +152,9 @@ describe('app', () => {
           expectedValue: '../../../dist/out-tsc',
         },
         {
-          path: 'apps/my-dir/my-app/tslint.json',
+          path: 'apps/my-dir/my-app/.eslintrc',
           lookupFn: (json) => json.extends,
-          expectedValue: '../../../tslint.json',
+          expectedValue: '../../../.eslintrc',
         },
       ].forEach(hasJsonValue);
     });
@@ -276,8 +276,9 @@ describe('app', () => {
     const workspaceJson = readJsonInTree(tree, 'workspace.json');
 
     expect(workspaceJson.projects['my-app'].architect.lint).toEqual({
-      builder: '@angular-devkit/build-angular:tslint',
+      builder: '@nrwl/linter:lint',
       options: {
+        linter: 'eslint',
         exclude: ['**/node_modules/**', '!apps/my-app/**/*'],
         tsConfig: [
           'apps/my-app/tsconfig.app.json',
