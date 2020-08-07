@@ -1,43 +1,15 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
-  "id": "Schematics",
+  "id": "NestJsSchematics",
   "title": "",
   "type": "object",
-  "examples": [
-    {
-      "command": "g @nrwl/nest:schematics new-class --type=class --project=nest-api",
-      "description": "Generates a new class in the nest-api project"
-    }
-  ],
   "properties": {
-    "type": {
-      "type": "string",
-      "description": "The Nest schematic to run",
-      "enum": [
-        "class",
-        "controller",
-        "decorator",
-        "filter",
-        "gateway",
-        "guard",
-        "interceptor",
-        "interface",
-        "middleware",
-        "module",
-        "pipe",
-        "provider",
-        "resolver",
-        "service"
-      ],
-      "x-prompt": "What Nest schematic would you like to use?",
-      "alias": "t"
-    },
     "name": {
       "type": "string",
-      "description": "The name of resulting Nest schematic file",
+      "description": "The name of generated schematic",
       "$default": {
         "$source": "argv",
-        "index": 1
+        "index": 0
       },
       "x-prompt": "What name would you like to use?"
     },
@@ -58,7 +30,7 @@
     },
     "directory": {
       "type": "string",
-      "description": "A directory where the resulting files are placed",
+      "description": "Directory where the generated files are placed",
       "aliases": ["d", "path"]
     },
     "flat": {
@@ -68,5 +40,5 @@
     }
   },
   "additionalProperties": true,
-  "required": ["type", "name", "project"]
+  "required": ["name", "project"]
 }

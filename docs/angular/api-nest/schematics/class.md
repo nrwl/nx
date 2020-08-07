@@ -22,14 +22,6 @@ Show what will be generated without writing to disk:
 nx g class ... --dry-run
 ```
 
-### Examples
-
-Generates a new class in the nest-api project:
-
-```bash
-nx g @nrwl/nest:schematics new-class --type=class --project=nest-api
-```
-
 ## Options
 
 ### directory
@@ -38,7 +30,7 @@ Alias(es): d,path
 
 Type: `string`
 
-A directory where the resulting files are placed
+Directory where the generated files are placed
 
 ### flat
 
@@ -52,7 +44,7 @@ Flag to indicate if a directory is created.
 
 Type: `string`
 
-The name of resulting Nest schematic file
+The name of generated schematic
 
 ### project
 
@@ -61,16 +53,6 @@ Alias(es): p
 Type: `string`
 
 The nest project to target
-
-### type
-
-Alias(es): t
-
-Type: `string`
-
-Possible values: `class`, `controller`, `decorator`, `filter`, `gateway`, `guard`, `interceptor`, `interface`, `middleware`, `module`, `pipe`, `provider`, `resolver`, `service`
-
-The Nest schematic to run
 
 ### unitTestRunner
 

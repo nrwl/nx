@@ -10,17 +10,51 @@ describe('nestjs-schematics schematic', () => {
     name: 'test',
     unitTestRunner: 'jest',
     type: 'class',
-    project: '',
+    project: 'api',
     flat: false,
   };
 
   beforeEach(() => {
     appTree = createEmptyWorkspace(Tree.empty());
+    appTree.overwrite(
+      'workspace.json',
+      String.raw`
+      {
+        "projects": {
+         "api": {
+            "root": "apps/api",
+            "sourceRoot": "apps/api/src",
+            "projectType": "application",
+            "prefix": "api",
+            "schematics": {},
+            "architect":{}
+         }
+        }
+      }
+    `
+    );
   });
 
-  it('should run successfully', async () => {
+  const testTypes: NestSchematicsSchema['type'][] = [
+    'class',
+    'controller',
+    'decorator',
+    'filter',
+    'gateway',
+    'guard',
+    'interceptor',
+    'interface',
+    'middleware',
+    'module',
+    'pipe',
+    'provider',
+    'resolver',
+    'service',
+  ];
+
+  test.each(testTypes)('%p should run successfully', async (type) => {
     await expect(
-      runSchematic('nestjs-schematics', options, appTree)
+      runSchematic(type, options, appTree)
     ).resolves.not.toThrowError();
   });
 });
