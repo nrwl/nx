@@ -24,6 +24,6 @@ describe('Eslintrc Migration', () => {
       tree
     );
     const eslintrc = readJsonInTree(result, '.eslintrc');
-    expect(eslintrc.parserOptions.project).toEqual('./tsconfig.*.json');
+    expect(eslintrc.parserOptions.project).toEqual('./tsconfig.*?.json');
   });
 });

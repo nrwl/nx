@@ -12,7 +12,7 @@ export default function (): Rule {
           if (tsconfig && tsconfig === './tsconfig.base.json') {
             json.parserOptions.project = json.parserOptions.project.replace(
               /tsconfig.base.json$/,
-              'tsconfig.*.json'
+              'tsconfig.*?.json'
             );
             return json;
           } else {
