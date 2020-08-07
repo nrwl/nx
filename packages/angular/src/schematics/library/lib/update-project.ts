@@ -13,6 +13,7 @@ import {
 } from '@angular-devkit/schematics';
 import {
   getWorkspacePath,
+  Linter,
   offsetFromRoot,
   replaceAppNameWithPath,
   updateJsonInTree,
@@ -154,6 +155,11 @@ export function updateProject(options: NormalizedSchema): Rule {
         fixedProject.architect.lint.options.exclude.push(
           '!' + join(normalize(options.projectRoot), '**/*')
         );
+        if (options.linter === Linter.EsLint) {
+          fixedProject.architect.lint.options.linter = Linter.EsLint;
+          fixedProject.architect.lint.builder = '@nrwl/linter:lint';
+          host.delete(`${options.projectRoot}/tslint.json`);
+        }
 
         json.projects[options.name] = fixedProject;
         return json;

@@ -244,7 +244,7 @@ export function createRollupOptions(
     };
 
     return options.rollupConfig
-      ? require(options.rollupConfig)(rollupConfig)
+      ? require(options.rollupConfig)(rollupConfig, options)
       : rollupConfig;
   });
 }

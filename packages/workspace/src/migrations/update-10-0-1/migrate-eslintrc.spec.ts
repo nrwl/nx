@@ -50,4 +50,9 @@ describe('Eslintrc Migration', () => {
     const eslintrc = readJsonInTree(result, 'project2/.eslintrc');
     expect(eslintrc.parserOptions.project).toEqual('./tsconfig.json');
   });
+
+  it('should not fail for a non-json eslintrc', async () => {
+    tree.overwrite('project2/.eslintrc', 'not-json');
+    await runMigration('migrate-eslintrc-tsconfig', {}, tree);
+  });
 });

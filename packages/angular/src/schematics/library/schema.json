@@ -118,6 +118,12 @@
       "type": "boolean",
       "description": "Creates a library with stricter type checking and build optimization options.",
       "default": false
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["tslint", "eslint"],
+      "default": "tslint"
     }
   },
   "required": []

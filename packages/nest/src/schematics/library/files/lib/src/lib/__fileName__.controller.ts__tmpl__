@@ -3,5 +3,5 @@ import { Controller } from '@nestjs/common';
 
 @Controller('<%= fileName %>')
 export class <%= className %>Controller {
-    constructor(<% if(service) { %>private <%= propertyName %>Service: <%= className %>Service<% } %>) {}
+    <% if(service) { %>constructor(private <%= propertyName %>Service: <%= className %>Service) {}<% } %>
 }

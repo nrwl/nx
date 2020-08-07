@@ -32,6 +32,12 @@ Run E2E test with a specific target:
 nx e2e myapp-e2e --configuration smoke
 ```
 
+Run E2E test in watch mode:
+
+```bash
+nx e2e myapp-e2e --watch
+```
+
 ## Common Options
 
 The options below are common to the E2E commands used within an Nx workspace. Cypress and Protractor-specifc options are listed below.
@@ -55,6 +61,10 @@ Shorthand for `--configuration=production`. When true, sets the build configurat
 ### version
 
 Show version number
+
+### watch
+
+Open the Cypress test runner & autmatically run tests when files are updated
 
 ## Cypress Options
 

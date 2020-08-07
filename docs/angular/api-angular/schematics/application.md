@@ -84,7 +84,7 @@ Default: `tslint`
 
 Type: `string`
 
-Possible values: `tslint`
+Possible values: `tslint`, `eslint`
 
 The tool to use for running lint checks.
 

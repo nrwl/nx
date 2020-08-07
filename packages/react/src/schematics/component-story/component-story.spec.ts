@@ -376,7 +376,7 @@ describe('react:component-story', () => {
     });
   });
 
-  describe('using tslint', () => {
+  describe('using eslint', () => {
     beforeEach(async () => {
       appTree = await createTestUILib('test-ui-lib', false);
       tree = await runSchematic(
@@ -401,7 +401,7 @@ describe('react:component-story', () => {
           };
           
           export const primary = () => {
-            /* tslint-disable-next-line */
+            /* eslint-disable-next-line */
             const props: TestUiLibProps = {};
           
             return <TestUiLib />;
