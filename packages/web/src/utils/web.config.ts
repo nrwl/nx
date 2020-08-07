@@ -125,7 +125,7 @@ function getStylesPartial(
     rule.use = rule.use.map((loaderConfig) => {
       if (
         typeof loaderConfig === 'object' &&
-        loaderConfig.loader === 'raw-loader'
+        loaderConfig.loader === require.resolve('raw-loader')
       ) {
         return {
           loader: require.resolve('style-loader'),
