@@ -72,7 +72,8 @@ const ignoreArgs = ['$0', '_'];
 
 export function splitArgsIntoNxArgsAndOverrides(
   args: yargs.Arguments,
-  mode: 'run-one' | 'run-many' | 'affected'
+  mode: 'run-one' | 'run-many' | 'affected' | 'print-affected',
+  options = { printWarnings: true }
 ): { nxArgs: NxArgs; overrides: yargs.Arguments } {
   const nxSpecific =
     mode === 'run-one' ? runOne : mode === 'run-many' ? runMany : runAffected;
@@ -103,7 +104,9 @@ export function splitArgsIntoNxArgsAndOverrides(
   }
 
   if (mode === 'affected') {
-    printArgsWarning(nxArgs);
+    if (options.printWarnings) {
+      printArgsWarning(nxArgs);
+    }
     if (
       !nxArgs.files &&
       !nxArgs.uncommitted &&
