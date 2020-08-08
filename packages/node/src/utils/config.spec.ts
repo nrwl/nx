@@ -47,7 +47,7 @@ describe('getBaseWebpackPartial', () => {
       );
       expect(typescriptRule).toBeTruthy();
 
-      expect(typescriptRule.loader).toEqual('ts-loader');
+      expect(typescriptRule.loader).toContain('ts-loader');
     });
 
     it('should split typescript type checking into a separate workers', () => {
@@ -131,7 +131,9 @@ describe('getBaseWebpackPartial', () => {
       const result = getBaseWebpackPartial(input);
 
       expect(
-        result.module.rules.find((rule) => rule.loader === 'ts-loader').options
+        result.module.rules.find((rule) =>
+          rule.loader.toString().includes('ts-loader')
+        ).options
       ).toEqual({
         configFile: 'tsconfig.json',
         transpileOnly: true,

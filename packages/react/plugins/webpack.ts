@@ -5,7 +5,7 @@ function getWebpackConfig(config: Configuration) {
   config.module.rules.push(
     {
       test: /\.(png|jpe?g|gif|webp)$/,
-      loader: 'url-loader',
+      loader: require.resolve('url-loader'),
       options: {
         limit: 10000, // 10kB
         name: '[name].[hash:7].[ext]',
@@ -22,7 +22,7 @@ function getWebpackConfig(config: Configuration) {
           use: [
             '@svgr/webpack?-svgo,+titleProp,+ref![path]',
             {
-              loader: 'url-loader',
+              loader: require.resolve('url-loader'),
               options: {
                 limit: 10000, // 10kB
                 name: '[name].[hash:7].[ext]',
@@ -35,7 +35,7 @@ function getWebpackConfig(config: Configuration) {
         {
           use: [
             {
-              loader: 'url-loader',
+              loader: require.resolve('url-loader'),
               options: {
                 limit: 10000, // 10kB
                 name: '[name].[hash:7].[ext]',
