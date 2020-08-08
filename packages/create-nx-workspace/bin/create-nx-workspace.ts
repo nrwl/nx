@@ -452,7 +452,7 @@ function createApp(
 
   if (nxCloud) {
     output.addVerticalSeparator();
-    execSync(`./node_modules/.bin/nx g @nrwl/nx-cloud:init --no-analytics`, {
+    execSync(`npx nx g @nrwl/nx-cloud:init --no-analytics`, {
       stdio: [0, 1, 2],
       cwd: path.join(process.cwd(), name),
     });
