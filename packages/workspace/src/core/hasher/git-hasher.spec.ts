@@ -81,6 +81,16 @@ describe('git-hasher', () => {
     expect([...getFileHashes(dir).keys()]).toEqual([`${dir}/a b.txt`]);
   });
 
+  it('should handle renames and modifications', () => {
+    run(`echo AAA > "a".txt`);
+    run(`git add .`);
+    run(`git commit -am init`);
+    run(`mv a.txt moda.txt`);
+    run(`git add .`);
+    run(`echo modified >> moda.txt`);
+    expect([...getFileHashes(dir).keys()]).toEqual([`${dir}/moda.txt`]);
+  });
+
   function run(command: string) {
     return execSync(command, { cwd: dir, stdio: ['pipe', 'pipe', 'pipe'] });
   }
