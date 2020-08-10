@@ -36,7 +36,10 @@ function parseGitStatus(output: string): Map<string, string> {
         .filter((r) => !!r);
       if (changeType && filenames && filenames.length > 0) {
         // the before filename we mark as deleted, so we remove it from the map
-        if (changeType === 'R') {
+        // changeType can be A/D/R/RM etc
+        // if it R and RM, we need to split the output into before and after
+        // the before part gets marked as deleted
+        if (changeType[0] === 'R') {
           changes.set(filenames[0], 'D');
         }
         changes.set(filenames[filenames.length - 1], changeType);
