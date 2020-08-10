@@ -72,6 +72,14 @@ describe('git-hasher', () => {
       `${dir}/a.txt`,
       `${dir}/newa.txt`,
     ]);
+    
+    run(`mv a.txt moda.txt`);
+    run('echo modified >> moda.txt`);
+    expect([...getFileHashes(dir).keys()]).toEqual([
+      `${dir}/moda.txt`,
+      `${dir}/newa.txt`,
+    ]);
+        
   });
 
   it('should handle spaces in filenames', () => {
