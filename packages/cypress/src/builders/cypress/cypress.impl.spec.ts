@@ -199,6 +199,27 @@ describe('Cypress builder', () => {
     fakeEventEmitter.emit('exit', 0); // Passing tsc command
   });
 
+  it('should call `Cypress.run` with a string of files to ignore', async (done) => {
+    const cfg = {
+      ...cypressBuilderOptions,
+      ignoreTestFiles: '/some/path/to/a/file.js',
+    };
+
+    cypressBuilderRunner(cfg, mockedBuilderContext)
+      .toPromise()
+      .then(() => {
+        expect(cypressRun).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            ignoreTestFiles: cypressBuilderOptions.ignoreTestFiles,
+          })
+        );
+        expect(cypressOpen).not.toHaveBeenCalled();
+        done();
+      });
+
+    fakeEventEmitter.emit('exit', 0); // Passing tsc command
+  });
+
   it('should fail early if application build fails', async (done) => {
     (devkitArchitect as any).scheduleTargetAndForget = jest
       .fn()
