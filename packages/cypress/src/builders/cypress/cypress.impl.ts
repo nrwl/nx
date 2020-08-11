@@ -34,6 +34,7 @@ export interface CypressBuilderOptions extends JsonObject {
   copyFiles?: string;
   ciBuildId?: string;
   group?: string;
+  ignoreTestFiles?: string;
 }
 
 try {
@@ -117,6 +118,7 @@ export function cypressBuilderRunner(
  * @param spec
  * @param ciBuildId
  * @param group
+ * @param ignoreTestFiles
  */
 function initCypress(
   cypressConfig: string,
@@ -131,7 +133,8 @@ function initCypress(
   env?: Record<string, string>,
   spec?: string,
   ciBuildId?: string,
-  group?: string
+  group?: string,
+  ignoreTestFiles?: string
 ): Observable<BuilderOutput> {
   // Cypress expects the folder where a `cypress.json` is present
   const projectFolderPath = dirname(cypressConfig);
@@ -164,6 +167,7 @@ function initCypress(
   options.parallel = parallel;
   options.ciBuildId = ciBuildId;
   options.group = group;
+  options.ignoreTestFiles = ignoreTestFiles;
 
   return fromPromise<any>(
     !isWatching || headless ? Cypress.run(options) : Cypress.open(options)

@@ -64,6 +64,12 @@ Type: `boolean`
 
 Whether or not to open the Cypress application to run the tests. If set to 'true', will run in headless mode
 
+### ignoreTestFiles
+
+Type: `string`
+
+A String or Array of glob patterns used to ignore test files that would otherwise be shown in your list of tests. Cypress uses minimatch with the options: {dot: true, matchBase: true}. We suggest using https://globster.xyz to test what files would match.
+
 ### key
 
 Type: `string`
