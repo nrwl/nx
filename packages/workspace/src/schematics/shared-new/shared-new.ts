@@ -145,7 +145,7 @@ export function sharedNew(cli: string, options: Schema): Rule {
 
 function addCloudDependencies(options: Schema) {
   return options.nxCloud
-    ? addDepsToPackageJson({}, { '@nrwl/nx-cloud': 'latest' })
+    ? addDepsToPackageJson({}, { '@nrwl/nx-cloud': 'latest' }, false)
     : noop();
 }
 
