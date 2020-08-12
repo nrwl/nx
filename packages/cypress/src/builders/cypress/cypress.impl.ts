@@ -64,7 +64,9 @@ export function cypressBuilderRunner(
 
   return (!legacy
     ? options.devServerTarget
-      ? startDevServer(options.devServerTarget, options.watch, context)
+      ? startDevServer(options.devServerTarget, options.watch, context).pipe(
+          map((devServerBaseUrl) => options.baseUrl || devServerBaseUrl)
+        )
       : of(options.baseUrl)
     : legacyCompile(options, context)
   ).pipe(
