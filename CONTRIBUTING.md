@@ -66,7 +66,7 @@ To publish packages to a local registry, do the following:
 - Run `yarn local-registry start` in Terminal 1 (keep it running)
 - Run `yarn local-registry enable` in Terminal 2
 - Run `yarn nx-release 999.9.9 --local` in Terminal 2
-- Run `cd /tmp` in Terminal 2
+- Run `cd ./tmp` in Terminal 2
 - Run `npx create-nx-workspace@999.9.9` in Terminal 2
 
 ### Running Unit Tests
