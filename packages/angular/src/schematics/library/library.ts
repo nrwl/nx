@@ -21,6 +21,7 @@ import { updateLibPackageNpmScope } from './lib/update-lib-package-npm-scope';
 import { updateProject } from './lib/update-project';
 import { updateTsConfig } from './lib/update-tsconfig';
 import { Schema } from './schema';
+import { enableStrictTypeChecking } from './lib/enable-strict-type-checking';
 
 export default function (schema: Schema): Rule {
   return (host: Tree): Rule => {
@@ -79,6 +80,7 @@ export default function (schema: Schema): Rule {
         ? updateLibPackageNpmScope(options)
         : noop(),
       addModule(options),
+      options.strict ? enableStrictTypeChecking(options) : noop(),
       formatFiles(options),
     ]);
   };

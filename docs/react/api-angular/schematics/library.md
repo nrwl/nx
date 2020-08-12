@@ -142,6 +142,14 @@ Type: `boolean`
 
 Do not update tsconfig.json for development experience.
 
+### strict
+
+Default: `false`
+
+Type: `boolean`
+
+Creates a library with stricter type checking and build optimization options.
+
 ### style
 
 Default: `css`

@@ -680,6 +680,66 @@ function addProxyConfig(options: NormalizedSchema): Rule {
   };
 }
 
+function enableStrictTypeChecking(schema: Schema): Rule {
+  return (host) => {
+    const options = normalizeOptions(host, schema);
+
+    // define all the tsconfig files to update
+    const configFiles = [
+      `${options.appProjectRoot}/tsconfig.json`,
+      `${options.e2eProjectRoot}/tsconfig.e2e.json`,
+    ];
+
+    const rules: Rule[] = [];
+
+    // iterate each config file, if it exists then update it
+    for (const configFile of configFiles) {
+      if (!host.exists(configFile)) {
+        continue;
+      }
+
+      // Update the settings in the tsconfig.app.json to enable strict type checking.
+      // This matches the settings defined by the Angular CLI https://angular.io/guide/strict-mode
+      const rule = updateJsonInTree(configFile, (json) => {
+        // update the TypeScript settings
+        json.compilerOptions = {
+          ...(json.compilerOptions ?? {}),
+          forceConsistentCasingInFileNames: true,
+          strict: true,
+          noImplicitReturns: true,
+          noFallthroughCasesInSwitch: true,
+        };
+
+        // update Angular Template Settings
+        json.angularCompilerOptions = {
+          ...(json.angularCompilerOptions ?? {}),
+          strictInjectionParameters: true,
+          strictTemplates: true,
+        };
+
+        return json;
+      });
+
+      rules.push(rule);
+    }
+
+    // set the default so future applications will default to strict mode
+    // unless the user has previously set this to false by default
+    const updateAngularWorkspace = updateWorkspace((workspace) => {
+      workspace.extensions.schematics = workspace.extensions.schematics || {};
+
+      workspace.extensions.schematics['@nrwl/angular:application'] =
+        workspace.extensions.schematics['@nrwl/angular:application'] || {};
+
+      workspace.extensions.schematics['@nrwl/angular:application'].strict =
+        workspace.extensions.schematics['@nrwl/angular:application'].strict ??
+        options.strict;
+    });
+
+    return chain([...rules, updateAngularWorkspace]);
+  };
+}
+
 export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
@@ -762,6 +822,7 @@ export default function (schema: Schema): Rule {
           })
         : noop(),
       options.backendProject ? addProxyConfig(options) : noop(),
+      options.strict ? enableStrictTypeChecking(options) : noop(),
       formatFiles(options),
     ])(host, context);
   };
