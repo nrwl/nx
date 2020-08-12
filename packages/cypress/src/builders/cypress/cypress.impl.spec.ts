@@ -268,6 +268,32 @@ describe('Cypress builder', () => {
     done();
   });
 
+  test('when devServerTarget AND baseUrl options are both present, baseUrl should take precidence', async (done) => {
+    const options: CypressBuilderOptions = {
+      ...cypressBuilderOptions,
+      baseUrl: 'test-url-from-options',
+    };
+    const result = await cypressBuilderRunner(
+      options,
+      mockedBuilderContext
+    ).toPromise();
+    expect(cypressRun.calls.mostRecent().args[0].config.baseUrl).toBe(
+      'test-url-from-options'
+    );
+    done();
+  });
+
+  test('when devServerTarget option present and baseUrl option is absent, baseUrl should come from devServerTarget', async (done) => {
+    const result = await cypressBuilderRunner(
+      cypressBuilderOptions,
+      mockedBuilderContext
+    ).toPromise();
+    expect(cypressRun.calls.mostRecent().args[0].config.baseUrl).toBe(
+      'http://localhost:4200'
+    );
+    done();
+  });
+
   describe('legacy', () => {
     beforeEach(() => {
       cypressConfig = {
