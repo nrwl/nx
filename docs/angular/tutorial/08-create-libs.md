@@ -91,7 +91,7 @@ myorg/
 └── tslint.json
 ```
 
-**Add a `todos` input to `libs/src/lib/todos/todos.component.ts`.**
+**Add a `todos` input to `libs/ui/src/lib/todos/todos.component.ts`.**
 
 ```typescript
 import { Component, OnInit, Input } from '@angular/core';
