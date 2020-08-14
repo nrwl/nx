@@ -11,6 +11,7 @@ import {
 import { Observable } from 'rxjs';
 import { fork } from 'child_process';
 import { join } from 'path';
+import { readJsonInTree } from './ast-utils';
 
 let taskRegistered = false;
 
@@ -22,6 +23,10 @@ export function addUpdateTask(
   return (host: Tree, context: SchematicContext) => {
     // Workflow should always be there during ng update but not during tests.
     if (!context.engine.workflow) {
+      return;
+    }
+    const packageJson = readJsonInTree(host, 'package.json');
+    if (!packageJson.dependencies[pkg] && !packageJson.devDependencies[pkg]) {
       return;
     }
     if (!taskRegistered) {
