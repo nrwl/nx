@@ -225,21 +225,23 @@ function getClientEnvironment(mode) {
 }
 
 export function createCopyPlugin(assets: AssetGlobPattern[]) {
-  return new CopyWebpackPlugin(
-    assets.map((asset) => {
+  return new CopyWebpackPlugin({
+    patterns: assets.map((asset) => {
       return {
         context: asset.input,
         // Now we remove starting slash to make Webpack place it from the output root.
         to: asset.output,
-        ignore: asset.ignore,
-        from: {
-          glob: asset.glob,
+        from: asset.glob,
+        globOptions: {
+          ignore: [
+            '.gitkeep',
+            '**/.DS_Store',
+            '**/Thumbs.db',
+            ...(asset.ignore ? asset.ignore : []),
+          ],
           dot: true,
         },
       };
     }),
-    {
-      ignore: ['.gitkeep', '**/.DS_Store', '**/Thumbs.db'],
-    }
-  );
+  });
 }
