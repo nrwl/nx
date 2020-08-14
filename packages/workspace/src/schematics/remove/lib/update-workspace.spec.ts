@@ -66,9 +66,9 @@ describe('updateWorkspace Rule', () => {
     it('should delete the project', async () => {
       let workspace = JSON.parse(tree.read('workspace.json').toString());
       expect(workspace.projects['ng-app']).toBeDefined();
-  
+
       tree = (await callRule(updateWorkspace(schema), tree)) as UnitTestTree;
-  
+
       workspace = JSON.parse(tree.read('workspace.json').toString());
       expect(workspace.projects['ng-app']).toBeUndefined();
     });
@@ -136,12 +136,12 @@ describe('updateWorkspace Rule', () => {
         skipFormat: false,
         forceRemove: false,
       };
-      
+
       let workspace = JSON.parse(tree.read('workspace.json').toString());
       expect(workspace.defaultProject).toBeDefined();
-  
+
       tree = (await callRule(updateWorkspace(schema), tree)) as UnitTestTree;
-  
+
       workspace = JSON.parse(tree.read('workspace.json').toString());
       expect(workspace.defaultProject).toBeUndefined();
     });
@@ -155,12 +155,11 @@ describe('updateWorkspace Rule', () => {
 
       let workspace = JSON.parse(tree.read('workspace.json').toString());
       expect(workspace.defaultProject).toBeDefined();
-  
+
       tree = (await callRule(updateWorkspace(schema), tree)) as UnitTestTree;
-  
+
       workspace = JSON.parse(tree.read('workspace.json').toString());
       expect(workspace.defaultProject).toBeDefined();
     });
   });
-
 });
