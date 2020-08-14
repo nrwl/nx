@@ -417,9 +417,9 @@ function updateTsLintConfig(options: NormalizedSchema): Rule {
     updateJsonInTree('tslint.json', (json) => {
       if (
         json.rulesDirectory &&
-        json.rulesDirectory.indexOf('node_modules/codelyzer') === -1
+        json.rulesDirectory.indexOf(require.resolve('codelyzer')) === -1
       ) {
-        json.rulesDirectory.push('node_modules/codelyzer');
+        json.rulesDirectory.push(require.resolve('codelyzer'));
         json.rules = {
           ...json.rules,
 

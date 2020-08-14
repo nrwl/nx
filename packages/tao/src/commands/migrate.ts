@@ -389,7 +389,7 @@ function versions(root: string, from: { [p: string]: string }) {
         return from[packageName];
       }
       const content = readFileSync(
-        join(root, `./node_modules/${packageName}/package.json`)
+        join(root, require.resolve(`${packageName}/package.json`))
       );
       return JSON.parse(stripJsonComments(content.toString()))['version'];
     } catch (e) {
@@ -414,7 +414,7 @@ function createFetcher(logger: logging.Logger) {
       const json = JSON.parse(
         stripJsonComments(
           readFileSync(
-            join(dir, 'node_modules', packageName, 'package.json')
+            join(dir, require.resolve(packageName), 'package.json')
           ).toString()
         )
       );
@@ -433,7 +433,7 @@ function createFetcher(logger: logging.Logger) {
           const json = JSON.parse(
             stripJsonComments(
               readFileSync(
-                join(dir, 'node_modules', packageName, migrationsFile)
+                join(dir, require.resolve(packageName), migrationsFile)
               ).toString()
             )
           );

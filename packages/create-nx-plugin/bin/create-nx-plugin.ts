@@ -63,12 +63,7 @@ function createWorkspace(
 
   console.log(`new ${args} --preset=empty --collection=@nrwl/workspace`);
   execSync(
-    `"${path.join(
-      tmpDir,
-      'node_modules',
-      '.bin',
-      'tao'
-    )}" new ${args} --preset=empty --collection=@nrwl/workspace`,
+    `yarn bin tao" new ${args} --preset=empty --collection=@nrwl/workspace`,
     {
       stdio: [0, 1, 2],
     }
@@ -84,7 +79,7 @@ function createNxPlugin(workspaceName, pluginName) {
     `nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${workspaceName}/${pluginName}`
   );
   execSync(
-    `node ./node_modules/@nrwl/cli/bin/nx.js generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${workspaceName}/${pluginName}`,
+    `yarn bin nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${workspaceName}/${pluginName}`,
     {
       cwd: workspaceName,
       stdio: [0, 1, 2],
@@ -177,13 +172,13 @@ function showHelp() {
 
   Create a new Nx workspace
 
-  Args: 
+  Args:
 
     name           workspace name (e.g., org name)
 
   Options:
 
-    pluginName     the name of the plugin to be created  
+    pluginName     the name of the plugin to be created
 `);
 }
 

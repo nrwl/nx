@@ -15,9 +15,12 @@ export function runNxCommand(
   }
 ): string {
   try {
-    return execSync(`node ./node_modules/@nrwl/cli/bin/nx.js ${command}`, {
-      cwd: tmpProjPath(),
-    })
+    return execSync(
+      `node ${require.resolve('@nrwl/cli/bin/nx.js')} ${command}`,
+      {
+        cwd: tmpProjPath(),
+      }
+    )
       .toString()
       .replace(
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,

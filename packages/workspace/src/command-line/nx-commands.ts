@@ -180,10 +180,7 @@ export const commandsObject = yargs
     `,
     (yargs) => yargs,
     () => {
-      const executable =
-        platform() === 'win32'
-          ? `.\\node_modules\\.bin\\tao`
-          : `./node_modules/.bin/tao`;
+      const executable = require.resolve('.bin/tao');
       execSync(`${executable} migrate ${process.argv.slice(3).join(' ')}`, {
         stdio: ['inherit', 'inherit', 'inherit'],
       });

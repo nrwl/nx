@@ -202,10 +202,7 @@ function compileTypeScriptFiles(
         args.push('--sourceMap');
       }
 
-      const tscPath = join(
-        context.workspaceRoot,
-        '/node_modules/typescript/bin/tsc'
-      );
+      const tscPath = require.resolve('typescript/bin/tsc');
       if (options.watch) {
         context.logger.info('Starting TypeScript watch');
         args.push('--watch');

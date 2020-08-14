@@ -41,7 +41,7 @@ export function runNxCommandAsync(
   }
 ): Promise<{ stdout: string; stderr: string }> {
   return runCommandAsync(
-    `node ./node_modules/@nrwl/cli/bin/nx.js ${command}`,
+    `node ${require.resolve('@nrwl/cli/bin/nx.js')} ${command}`,
     opts
   );
 }

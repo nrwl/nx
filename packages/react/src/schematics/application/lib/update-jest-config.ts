@@ -13,12 +13,16 @@ export function updateJestConfig(options: NormalizedSchema): Rule {
           (json) => {
             const offset = offsetFromRoot(options.appProjectRoot);
             json.files = [
-              `${offset}node_modules/@nrwl/react/typings/cssmodule.d.ts`,
-              `${offset}node_modules/@nrwl/react/typings/image.d.ts`,
+              `${offset}${require.resolve(
+                '@nrwl/react/typings/cssmodule.d.ts'
+              )}`,
+              `${offset}${require.resolve('@nrwl/react/typings/image.d.ts')}`,
             ];
             if (options.style === 'styled-jsx') {
               json.files.unshift(
-                `${offset}node_modules/@nrwl/react/typings/styled-jsx.d.ts`
+                `${offset}${require.resolve(
+                  '@nrwl/react/typings/styled-jsx.d.ts'
+                )}`
               );
             }
             return json;

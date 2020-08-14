@@ -57,10 +57,7 @@ function compileTypescriptFiles(
   return Observable.create((subscriber: Subscriber<BuilderOutput>) => {
     try {
       let args = ['-p', join(context.workspaceRoot, tsConfigPath)];
-      const tscPath = join(
-        context.workspaceRoot,
-        '/node_modules/typescript/bin/tsc'
-      );
+      const tscPath = require.resolve('typescript/bin/tsc');
       if (isWatching) {
         args.push('--watch');
         tscProcess = fork(tscPath, args, { stdio: [0, 1, 2, 'ipc'] });

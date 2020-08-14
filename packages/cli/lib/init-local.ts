@@ -18,15 +18,7 @@ export function initLocal(workspace: Workspace) {
   if (supportedNxCommands.includes(process.argv[2])) {
     // required to make sure nrwl/workspace import works
     if (workspace.type === 'nx') {
-      require(path.join(
-        workspace.dir,
-        'node_modules',
-        '@nrwl',
-        'tao',
-        'src',
-        'compat',
-        'compat.js'
-      ));
+      require(path.join('@nrwl/tao', 'src', 'compat', 'compat.js'));
     }
     require('@nrwl/workspace' + '/src/command-line/nx-commands').commandsObject
       .argv;
@@ -41,22 +33,9 @@ export function initLocal(workspace: Workspace) {
 
 function loadCli(workspace: Workspace) {
   if (workspace.type === 'nx') {
-    require(path.join(
-      workspace.dir,
-      'node_modules',
-      '@nrwl',
-      'tao',
-      'index.js'
-    ));
+    require(path.join('@nrwl', 'tao', 'index.js'));
   } else if (workspace.type === 'angular') {
-    require(path.join(
-      workspace.dir,
-      'node_modules',
-      '@angular',
-      'cli',
-      'lib',
-      'init.js'
-    ));
+    require(path.join('@angular', 'cli', 'lib', 'init.js'));
   } else {
     console.error(`Cannot recognize the workspace type.`);
     process.exit(1);
