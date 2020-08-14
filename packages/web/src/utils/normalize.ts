@@ -170,6 +170,5 @@ export function convertBuildOptions(buildOptions: WebBuildBuilderOptions): any {
     aot: false,
     forkTypeChecker: false,
     lazyModules: [] as string[],
-    assets: [] as string[],
   };
 }

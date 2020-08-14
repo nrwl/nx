@@ -99,27 +99,25 @@ export function getBaseWebpackPartial(
 
   // process asset entries
   if (options.assets) {
-    const copyWebpackPluginPatterns = options.assets.map((asset: any) => {
-      return {
-        context: asset.input,
-        // Now we remove starting slash to make Webpack place it from the output root.
-        to: asset.output,
-        ignore: asset.ignore,
-        from: {
-          glob: asset.glob,
-          dot: true,
-        },
-      };
+    const copyWebpackPluginInstance = new CopyWebpackPlugin({
+      patterns: options.assets.map((asset: any) => {
+        return {
+          context: asset.input,
+          // Now we remove starting slash to make Webpack place it from the output root.
+          to: asset.output,
+          from: asset.glob,
+          globOptions: {
+            ignore: [
+              '.gitkeep',
+              '**/.DS_Store',
+              '**/Thumbs.db',
+              ...(asset.ignore ? asset.ignore : []),
+            ],
+            dot: true,
+          },
+        };
+      }),
     });
-
-    const copyWebpackPluginOptions = {
-      ignore: ['.gitkeep', '**/.DS_Store', '**/Thumbs.db'],
-    };
-
-    const copyWebpackPluginInstance = new CopyWebpackPlugin(
-      copyWebpackPluginPatterns,
-      copyWebpackPluginOptions
-    );
     extraPlugins.push(copyWebpackPluginInstance);
   }
 

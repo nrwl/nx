@@ -237,8 +237,8 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
 
   // process asset entries
   if (buildOptions.assets) {
-    const copyWebpackPluginPatterns = buildOptions.assets.map(
-      (asset: AssetPatternClass) => {
+    const copyWebpackPluginInstance = new CopyWebpackPlugin({
+      patterns: buildOptions.assets.map((asset: AssetPatternClass) => {
         // Resolve input paths relative to workspace root and add slash at the end.
         asset.input = path.resolve(root, asset.input).replace(/\\/g, '/');
         asset.input = asset.input.endsWith('/')
@@ -258,23 +258,19 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
           context: asset.input,
           // Now we remove starting slash to make Webpack place it from the output root.
           to: asset.output.replace(/^\//, ''),
-          ignore: asset.ignore,
-          from: {
-            glob: asset.glob,
+          from: asset.glob,
+          globOptions: {
+            ignore: [
+              '.gitkeep',
+              '**/.DS_Store',
+              '**/Thumbs.db',
+              ...(asset.ignore ? asset.ignore : []),
+            ],
             dot: true,
           },
         };
-      }
-    );
-
-    const copyWebpackPluginOptions = {
-      ignore: ['.gitkeep', '**/.DS_Store', '**/Thumbs.db'],
-    };
-
-    const copyWebpackPluginInstance = new CopyWebpackPlugin(
-      copyWebpackPluginPatterns,
-      copyWebpackPluginOptions
-    );
+      }),
+    });
     extraPlugins.push(copyWebpackPluginInstance);
   }
 
