@@ -765,6 +765,11 @@
                 "name": "Run Commands Builder",
                 "id": "run-commands-builder",
                 "file": "shared/running-custom-commands"
+              },
+              {
+                "name": "Creating Custom Builders",
+                "id": "creating-custom-builders",
+                "file": "shared/tools-workspace-builders"
               }
             ]
           },
@@ -1666,6 +1671,11 @@
                 "name": "Run Commands Builder",
                 "id": "run-commands-builder",
                 "file": "shared/running-custom-commands"
+              },
+              {
+                "name": "Creating Custom Builders",
+                "id": "creating-custom-builders",
+                "file": "shared/tools-workspace-builders"
               }
             ]
           },
