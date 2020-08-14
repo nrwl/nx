@@ -277,7 +277,6 @@ forEachCli((currentCLIName) => {
           module: 'commonjs',
           outDir: '../../dist/out-tsc',
           declaration: true,
-          rootDir: './src',
           types: ['node'],
         },
         exclude: ['**/*.spec.ts'],

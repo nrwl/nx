@@ -60,8 +60,8 @@ export default function compileTypeScriptFiles(
 ) {
   removeSync(options.normalizedOutputPath);
   let tsConfigPath = join(context.workspaceRoot, options.tsConfig);
+  const libRoot = projGraph.nodes[context.target.project].data.root;
   if (projectDependencies.length > 0) {
-    const libRoot = projGraph.nodes[context.target.project].data.root;
     tsConfigPath = createTmpTsConfig(
       tsConfigPath,
       context.workspaceRoot,
@@ -72,7 +72,7 @@ export default function compileTypeScriptFiles(
 
   const tsconfig = readTsConfig(tsConfigPath);
   tsconfig.options.outDir = options.normalizedOutputPath;
-  delete tsconfig.options.rootDir;
+  tsconfig.options.rootDir = libRoot;
 
   if (options.watch) {
     return createWatchProgram(tsconfig);
