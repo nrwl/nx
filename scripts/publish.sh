@@ -45,7 +45,7 @@ do
   echo "Publishing ${PACKAGE_NAME}@${VERSION} --tag ${TAG}"
 
   if [ "$LOCALBUILD" = "--local" ]; then
-    npm publish --tag $TAG --access public --registry=NPM_REGISTRY
+    npm publish --tag $TAG --access public --registry=$NPM_REGISTRY
   else
     npm publish --tag $TAG --access public
   fi
