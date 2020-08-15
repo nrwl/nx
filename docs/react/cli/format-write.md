@@ -16,8 +16,6 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npm run
 
 All projects
 
-### apps-and-libs
-
 ### base
 
 Base of the current branch (usually master)
@@ -43,6 +41,8 @@ Latest commit of the current branch (usually HEAD)
 ### help
 
 Show help
+
+### libs-and-apps
 
 ### only-failed
 
