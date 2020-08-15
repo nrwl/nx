@@ -36,8 +36,7 @@ export function help() {
     ${commandName} migrate ${terminal.grey('[package-name]')}
     
     ${terminal.bold('Run migrations.')}
-    ${commandName} migrate --run-migrations=[filename]')}
-  )}
+    ${commandName} migrate ${terminal.grey('--run-migrations=[filename]')}
 
   `);
   return 0;
