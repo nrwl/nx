@@ -8,7 +8,7 @@ export function addProject(options: NormalizedSchema): Rule {
   return updateWorkspaceInTree((json) => {
     const architect: { [key: string]: any } = {};
     const { server } = options;
-    const outputPath = join(normalize('dist'), options.appProjectRoot)
+    const outputPath = join(normalize('dist'), options.appProjectRoot);
 
     architect.build = {
       builder: '@nrwl/next:build',
