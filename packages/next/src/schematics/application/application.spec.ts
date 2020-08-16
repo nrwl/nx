@@ -119,6 +119,7 @@ describe('app', () => {
     const workspaceJson = readJsonInTree(tree, 'workspace.json');
     const architectConfig = workspaceJson.projects['my-app'].architect;
     expect(architectConfig.build.builder).toEqual('@nrwl/next:build');
+    expect(architectConfig.build.outputs).toEqual(['dist/apps/my-app'])
     expect(architectConfig.build.options).toEqual({
       root: 'apps/my-app',
       outputPath: 'dist/apps/my-app',
