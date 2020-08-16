@@ -8,6 +8,7 @@ export function updateWorkspace(options: JestProjectSchema): Rule {
     const projectConfig = json.projects[options.project];
     projectConfig.architect.test = {
       builder: '@nrwl/jest:jest',
+      outputs: [join(normalize('coverage'), projectConfig.root)],
       options: {
         jestConfig: join(normalize(projectConfig.root), 'jest.config.js'),
         tsConfig: join(normalize(projectConfig.root), 'tsconfig.spec.json'),
