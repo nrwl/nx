@@ -23,6 +23,7 @@ describe('app', () => {
         jasmine.objectContaining({
           build: {
             builder: '@nrwl/node:build',
+            outputs: ['dist/apps/my-node-app'],
             options: {
               outputPath: 'dist/apps/my-node-app',
               main: 'apps/my-node-app/src/main.ts',

@@ -43,10 +43,13 @@ function updateNxJson(options: NormalizedSchema): Rule {
 }
 
 function getBuildConfig(project: any, options: NormalizedSchema) {
+  const outputPath = join(normalize('dist'), options.appProjectRoot);
+
   return {
     builder: '@nrwl/node:build',
+    outputs: [outputPath],
     options: {
-      outputPath: join(normalize('dist'), options.appProjectRoot),
+      outputPath,
       main: join(project.sourceRoot, 'main.ts'),
       tsConfig: join(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [join(project.sourceRoot, 'assets')],
