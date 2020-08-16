@@ -36,13 +36,15 @@ describe('addProject Rule', () => {
     const workspaceJson = readJsonInTree(tree, '/workspace.json');
 
     const project = workspaceJson.projects[schema.name];
+    const outputPath = 'dist/apps/todos';
     expect(project.architect.build).toEqual({
       builder: '@nrwl/next:build',
+      outputs: [outputPath],
       configurations: {
         production: {},
       },
       options: {
-        outputPath: 'dist/apps/todos',
+        outputPath,
         root: '/apps/todos',
       },
     });

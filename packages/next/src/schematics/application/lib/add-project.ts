@@ -8,12 +8,14 @@ export function addProject(options: NormalizedSchema): Rule {
   return updateWorkspaceInTree((json) => {
     const architect: { [key: string]: any } = {};
     const { server } = options;
+    const outputPath = join(normalize('dist'), options.appProjectRoot)
 
     architect.build = {
       builder: '@nrwl/next:build',
+      outputs: [outputPath],
       options: {
         root: options.appProjectRoot,
-        outputPath: join(normalize('dist'), options.appProjectRoot),
+        outputPath,
       },
       // This has to be here so `nx serve [app] --prod` will work. Otherwise
       // a missing configuration error will be thrown.
