@@ -17,7 +17,8 @@
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the library?"
+      "x-prompt": "What name would you like to use for the library?",
+      "pattern": "^[a-zA-Z]{1}.*$"
     },
     "directory": {
       "type": "string",
@@ -27,7 +28,7 @@
       "description": "The tool to use for running lint checks.",
       "type": "string",
       "enum": ["eslint", "tslint"],
-      "default": "tslint"
+      "default": "eslint"
     },
     "unitTestRunner": {
       "type": "string",
@@ -54,6 +55,10 @@
       "enum": ["jsdom", "node"],
       "description": "The test environment to use if unitTestRunner is set to jest",
       "default": "jsdom"
+    },
+    "importPath": {
+      "type": "string",
+      "description": "The library name used to import it, like @myorg/my-awesome-lib"
     }
   },
   "required": ["name"]

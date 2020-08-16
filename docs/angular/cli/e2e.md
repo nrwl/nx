@@ -16,7 +16,7 @@ nx e2e <project>
 nx run <project>:e2e
 ```
 
-Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
+Install the `nx` package globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
 
 ### Examples
 
@@ -30,6 +30,12 @@ Run E2E test with a specific target:
 
 ```bash
 nx e2e myapp-e2e --configuration smoke
+```
+
+Run E2E test in watch mode:
+
+```bash
+nx e2e myapp-e2e --watch
 ```
 
 ## Common Options
@@ -55,6 +61,10 @@ Shorthand for `--configuration=production`. When true, sets the build configurat
 ### version
 
 Show version number
+
+### watch
+
+Open the Cypress test runner & autmatically run tests when files are updated
 
 ## Cypress Options
 

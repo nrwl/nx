@@ -1,11 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import {
-  updateWorkspace,
-  readJsonInTree,
-  readWorkspace,
-  getWorkspace,
-} from '@nrwl/workspace';
+import { updateWorkspace, readWorkspace, getWorkspace } from '@nrwl/workspace';
 import { runSchematic } from '../../utils/testing';
 
 describe('NxPlugin e2e-project', () => {
@@ -58,6 +53,22 @@ describe('NxPlugin e2e-project', () => {
     expect(
       tree.exists('apps/my-plugin-e2e/tests/my-plugin.test.ts')
     ).toBeTruthy();
+  });
+
+  it('should set project root with the directory option', async () => {
+    const tree = await runSchematic(
+      'e2e-project',
+      {
+        pluginName: 'my-plugin',
+        pluginOutputPath: `dist/libs/namespace/my-plugin`,
+        npmPackageName: '@proj/namespace-my-plugin',
+        projectDirectory: 'namespace/my-plugin',
+      },
+      appTree
+    );
+    const workspace = await readWorkspace(tree);
+    const project = workspace.projects['my-plugin-e2e'];
+    expect(project.root).toBe('apps/namespace/my-plugin-e2e');
   });
 
   it('should update the nxJson', async () => {

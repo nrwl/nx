@@ -18,8 +18,9 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(workspaceJson.projects['my-lib'].architect.build).toBeUndefined();
       expect(workspaceJson.projects['my-lib'].architect.lint).toEqual({
-        builder: '@angular-devkit/build-angular:tslint',
+        builder: '@nrwl/linter:lint',
         options: {
+          linter: 'eslint',
           exclude: ['**/node_modules/**', '!libs/my-lib/**/*'],
           tsConfig: [
             'libs/my-lib/tsconfig.lib.json',
@@ -191,8 +192,9 @@ describe('lib', () => {
         'libs/my-dir/my-lib'
       );
       expect(workspaceJson.projects['my-dir-my-lib'].architect.lint).toEqual({
-        builder: '@angular-devkit/build-angular:tslint',
+        builder: '@nrwl/linter:lint',
         options: {
+          linter: 'eslint',
           exclude: ['**/node_modules/**', '!libs/my-dir/my-lib/**/*'],
           tsConfig: [
             'libs/my-dir/my-lib/tsconfig.lib.json',
@@ -357,6 +359,23 @@ describe('lib', () => {
     });
   });
 
+  describe('--buildable', () => {
+    it('should have a builder defined', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          buildable: true,
+        },
+        appTree
+      );
+
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+
+      expect(workspaceJson.projects['my-lib'].architect.build).toBeDefined();
+    });
+  });
+
   describe('--publishable', () => {
     it('should add build architect', async () => {
       const tree = await runSchematic(
@@ -364,6 +383,7 @@ describe('lib', () => {
         {
           name: 'myLib',
           publishable: true,
+          importPath: '@proj/my-lib',
         },
         appTree
       );
@@ -384,12 +404,29 @@ describe('lib', () => {
       });
     });
 
+    it('should fail if no importPath is provided with publishable', async () => {
+      expect.assertions(1);
+
+      try {
+        const tree = await runSchematic(
+          'lib',
+          { name: 'myLib', directory: 'myDir', publishable: true },
+          appTree
+        );
+      } catch (e) {
+        expect(e.message).toContain(
+          'For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)'
+        );
+      }
+    });
+
     it('should support styled-components', async () => {
       const tree = await runSchematic(
         'lib',
         {
           name: 'myLib',
           publishable: true,
+          importPath: '@proj/my-lib',
           style: 'styled-components',
         },
         appTree
@@ -410,6 +447,7 @@ describe('lib', () => {
         {
           name: 'myLib',
           publishable: true,
+          importPath: '@proj/my-lib',
           style: '@emotion/styled',
         },
         appTree
@@ -430,18 +468,26 @@ describe('lib', () => {
         {
           name: 'myLib',
           publishable: true,
+          importPath: '@proj/my-lib',
           style: 'styled-jsx',
         },
         appTree
       );
 
       const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      const babelrc = readJsonInTree(tree, 'libs/my-lib/.babelrc');
+      const babelJestConfig = readJsonInTree(
+        tree,
+        'libs/my-lib/babel-jest.config.json'
+      );
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
           external: ['react', 'react-dom', 'styled-jsx'],
         },
       });
+      expect(babelrc.plugins).toContain('styled-jsx/babel');
+      expect(babelJestConfig.plugins).toContain('styled-jsx/babel');
     });
 
     it('should support style none', async () => {
@@ -450,6 +496,7 @@ describe('lib', () => {
         {
           name: 'myLib',
           publishable: true,
+          importPath: '@proj/my-lib',
           style: 'none',
         },
         appTree
@@ -470,6 +517,7 @@ describe('lib', () => {
         {
           name: 'myLib',
           publishable: true,
+          importPath: '@proj/my-lib',
         },
         appTree
       );
@@ -492,6 +540,62 @@ describe('lib', () => {
       );
 
       expect(tree.exists('/libs/my-lib/src/index.js')).toBe(true);
+    });
+  });
+
+  describe('--importPath', () => {
+    it('should update the package.json & tsconfig with the given import path', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          publishable: true,
+          directory: 'myDir',
+          importPath: '@myorg/lib',
+        },
+        appTree
+      );
+      const packageJson = readJsonInTree(
+        tree,
+        'libs/my-dir/my-lib/package.json'
+      );
+      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
+
+      expect(packageJson.name).toBe('@myorg/lib');
+      expect(
+        tsconfigJson.compilerOptions.paths[packageJson.name]
+      ).toBeDefined();
+    });
+
+    it('should fail if the same importPath has already been used', async () => {
+      const tree1 = await runSchematic(
+        'lib',
+        {
+          name: 'myLib1',
+          publishable: true,
+          importPath: '@myorg/lib',
+        },
+        appTree
+      );
+
+      try {
+        await runSchematic(
+          'lib',
+          {
+            name: 'myLib2',
+            framework: 'angular',
+            publishable: true,
+            importPath: '@myorg/lib',
+          },
+          tree1
+        );
+      } catch (e) {
+        expect(e.message).toContain(
+          'You already have a library using the import path'
+        );
+      }
+
+      expect.assertions(1);
     });
   });
 });

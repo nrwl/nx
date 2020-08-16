@@ -84,7 +84,7 @@ Default: `tslint`
 
 Type: `string`
 
-Possible values: `tslint`
+Possible values: `tslint`, `eslint`
 
 The tool to use for running lint checks.
 
@@ -135,6 +135,14 @@ Default: `false`
 Type: `boolean`
 
 Skip creating spec files.
+
+### strict
+
+Default: `false`
+
+Type: `boolean`
+
+Creates an application with stricter type checking and build optimization options.
 
 ### style
 

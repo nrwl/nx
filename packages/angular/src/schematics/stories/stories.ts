@@ -5,12 +5,14 @@ import {
   SchematicContext,
   SchematicsException,
   Tree,
+  noop,
 } from '@angular-devkit/schematics';
 import { getProjectConfig } from '@nrwl/workspace';
 import { SyntaxKind } from 'typescript';
 import { getTsSourceFile, getDecoratorMetadata } from '../../utils/ast-utils';
 import { CreateComponentSpecFileSchema } from '../component-cypress-spec/component-cypress-spec';
 import { CreateComponentStoriesFileSchema } from '../component-story/component-story';
+import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 export interface StorybookStoriesSchema {
   name: string;
@@ -63,9 +65,10 @@ export function createAllStories(
             );
           });
         if (!declarationsPropertyAssignment) {
-          throw new SchematicsException(
-            `No declarations array in the @NgModule decorator in ${filePath}`
+          context.logger.warn(
+            stripIndents`No stories generated because there were no components declared in ${filePath}. Hint: you can always generate stories later with the 'nx generate @nrwl/angular:stories --name=${projectName}' command`
           );
+          return noop();
         }
         const declaredComponents = declarationsPropertyAssignment
           .getChildren()

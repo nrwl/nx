@@ -50,6 +50,14 @@ Type: `string`
 
 The application project to add the library route to.
 
+### buildable
+
+Default: `false`
+
+Type: `boolean`
+
+Generate a buildable library.
+
 ### component
 
 Default: `true`
@@ -66,6 +74,12 @@ Type: `string`
 
 A directory where the lib is placed.
 
+### importPath
+
+Type: `string`
+
+The library name used to import it, like @myorg/my-awesome-lib
+
 ### js
 
 Default: `false`
@@ -76,7 +90,7 @@ Generate JavaScript files rather than TypeScript files.
 
 ### linter
 
-Default: `tslint`
+Default: `eslint`
 
 Type: `string`
 
@@ -102,11 +116,9 @@ Use pascal case component file name (e.g. App.tsx).
 
 ### publishable
 
-Alias(es): buildable
-
 Type: `boolean`
 
-Create a buildable library.
+Create a publishable library.
 
 ### routing
 

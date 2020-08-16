@@ -1,26 +1,39 @@
-import {
-  chain,
-  Rule,
-  SchematicContext,
-  Tree,
-} from '@angular-devkit/schematics';
-import { NxJson, readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
-import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
+import { chain, Rule, SchematicsException } from '@angular-devkit/schematics';
+import { updateJsonInTree } from '@nrwl/workspace';
 import { NormalizedSchema } from './normalized-schema';
+import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
+
+function updateRootConfig(options: NormalizedSchema) {
+  return (host) =>
+    updateJsonInTree('tsconfig.base.json', (json) => {
+      const c = json.compilerOptions;
+      c.paths = c.paths || {};
+      delete c.paths[options.name];
+
+      if (c.paths[options.importPath]) {
+        throw new SchematicsException(
+          `You already have a library using the import path "${options.importPath}". Make sure to specify a unique one.`
+        );
+      }
+
+      c.paths[options.importPath] = [
+        `${libsDir(host)}/${options.projectDirectory}/src/index.ts`,
+      ];
+
+      return json;
+    });
+}
+
+function updateProjectConfig(options: NormalizedSchema) {
+  return updateJsonInTree(
+    `${options.projectRoot}/tsconfig.lib.json`,
+    (json) => {
+      json.include = ['**/*.ts'];
+      return json;
+    }
+  );
+}
 
 export function updateTsConfig(options: NormalizedSchema): Rule {
-  return chain([
-    (host: Tree, context: SchematicContext) => {
-      const nxJson = readJsonInTree<NxJson>(host, 'nx.json');
-      return updateJsonInTree('tsconfig.base.json', (json) => {
-        const c = json.compilerOptions;
-        c.paths = c.paths || {};
-        delete c.paths[options.name];
-        c.paths[`@${nxJson.npmScope}/${options.projectDirectory}`] = [
-          `${libsDir(host)}/${options.projectDirectory}/src/index.ts`,
-        ];
-        return json;
-      })(host, context);
-    },
-  ]);
+  return chain([updateRootConfig(options), updateProjectConfig(options)]);
 }

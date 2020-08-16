@@ -91,7 +91,7 @@ myorg/
 └── tslint.json
 ```
 
-**Add a `todos` input to `libs/src/lib/todos/todos.component.ts`.**
+**Add a `todos` input to `libs/ui/src/lib/todos/todos.component.ts`.**
 
 ```typescript
 import { Component, OnInit, Input } from '@angular/core';
@@ -115,7 +115,7 @@ export class TodosComponent implements OnInit {
 
 ```html
 <ul>
-  <li *ngFor="let t of todos">{{ t.title }}</li>
+  <li *ngFor="let t of todos" class="todo">{{ t.title }}</li>
 </ul>
 ```
 

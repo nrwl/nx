@@ -18,7 +18,12 @@ describe('lib', () => {
     it('should update ng-package.json', async () => {
       const publishableTree = await runSchematic(
         'lib',
-        { name: 'myLib', framework: 'angular', publishable: true },
+        {
+          name: 'myLib',
+          framework: 'angular',
+          publishable: true,
+          importPath: '@myorg/lib',
+        },
         appTree
       );
       let ngPackage = readJsonInTree(
@@ -31,7 +36,12 @@ describe('lib', () => {
     it('should update ng-package.json $schema to the correct folder', async () => {
       const publishableTree = await runSchematic(
         'lib',
-        { name: 'myLib', framework: 'angular', publishable: true },
+        {
+          name: 'myLib',
+          framework: 'angular',
+          publishable: true,
+          importPath: '@myorg/lib',
+        },
         appTree
       );
       let ngPackage = readJsonInTree(
@@ -53,37 +63,27 @@ describe('lib', () => {
     it('should update package.json when publishable', async () => {
       const tree = await runSchematic(
         'lib',
-        { name: 'myLib', framework: 'angular', publishable: true },
+        {
+          name: 'myLib',
+          framework: 'angular',
+          publishable: true,
+          importPath: '@myorg/lib',
+        },
         appTree
       );
       const packageJson = readJsonInTree(tree, '/package.json');
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
     });
 
-    it("should update npmScope of lib's package.json when publishable", async () => {
-      const tree = await runSchematic(
-        'lib',
-        { name: 'myLib', framework: 'angular', publishable: true },
-        appTree
-      );
-      const packageJson = readJsonInTree(tree, '/libs/my-lib/package.json');
-      expect(packageJson.name).toEqual('@proj/my-lib');
-    });
-
-    it("should update npmScope of lib's package.json when publishable", async () => {
-      const tree = await runSchematic(
-        'lib',
-        { name: 'myLib', publishable: true, prefix: 'lib' },
-        appTree
-      );
-      const packageJson = readJsonInTree(tree, '/libs/my-lib/package.json');
-      expect(packageJson.name).toEqual('@proj/my-lib');
-    });
-
     it('should update workspace.json', async () => {
       const tree = await runSchematic(
         'lib',
-        { name: 'myLib', framework: 'angular', publishable: true },
+        {
+          name: 'myLib',
+          framework: 'angular',
+          publishable: true,
+          importPath: '@myorg/lib',
+        },
         appTree
       );
       const workspaceJson = readJsonInTree(tree, '/workspace.json');
@@ -113,6 +113,18 @@ describe('lib', () => {
       expect(
         workspaceJson.projects['my-lib'].architect.build
       ).not.toBeDefined();
+    });
+
+    it('should have a "build" target when a library is buildable', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', publishable: false, buildable: true },
+        appTree
+      );
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+
+      expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
+      expect(workspaceJson.projects['my-lib'].architect.build).toBeDefined();
     });
 
     it('should remove tsconfib.lib.prod.json when library is not publishable', async () => {
@@ -211,6 +223,15 @@ describe('lib', () => {
           'libs/my-lib/tsconfig.lib.json'
         );
         expect(tsconfigJson.extends).toEqual('./tsconfig.json');
+      });
+
+      it('should contain includes', async () => {
+        const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
+        const tsConfigJson = readJsonInTree(
+          tree,
+          'libs/my-lib/tsconfig.lib.json'
+        );
+        expect(tsConfigJson.include).toEqual(['**/*.ts']);
       });
 
       it('should exclude the test setup file when unitTestRunner is jest', async () => {
@@ -454,6 +475,7 @@ describe('lib', () => {
           directory: 'myDir',
           framework: 'angular',
           publishable: true,
+          importPath: '@myorg/lib',
         },
         appTree
       );
@@ -501,6 +523,26 @@ describe('lib', () => {
       expect(
         tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
       ).toBeUndefined();
+    });
+
+    it('should throw an exception when not passing importPath when using --publishable', async () => {
+      expect.assertions(1);
+
+      try {
+        const tree = await runSchematic(
+          'lib',
+          {
+            name: 'myLib',
+            directory: 'myDir',
+            publishable: true,
+          },
+          appTree
+        );
+      } catch (e) {
+        expect(e.message).toContain(
+          'For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)'
+        );
+      }
     });
 
     it('should update tsconfig.json (no existing path mappings)', async () => {
@@ -1047,6 +1089,101 @@ describe('lib', () => {
       expect(
         workspaceJson.projects['my-lib'].architect.lint.options.tsConfig
       ).toEqual(['libs/my-lib/tsconfig.lib.json']);
+    });
+  });
+
+  describe('--importPath', () => {
+    it('should update the package.json & tsconfig with the given import path', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          framework: 'angular',
+          publishable: true,
+          directory: 'myDir',
+          importPath: '@myorg/lib',
+        },
+        appTree
+      );
+      const packageJson = readJsonInTree(
+        tree,
+        'libs/my-dir/my-lib/package.json'
+      );
+      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
+
+      expect(packageJson.name).toBe('@myorg/lib');
+      expect(
+        tsconfigJson.compilerOptions.paths[packageJson.name]
+      ).toBeDefined();
+    });
+
+    it('should fail if the same importPath has already been used', async () => {
+      const tree1 = await runSchematic(
+        'lib',
+        {
+          name: 'myLib1',
+          framework: 'angular',
+          publishable: true,
+          importPath: '@myorg/lib',
+        },
+        appTree
+      );
+
+      try {
+        await runSchematic(
+          'lib',
+          {
+            name: 'myLib2',
+            framework: 'angular',
+            publishable: true,
+            importPath: '@myorg/lib',
+          },
+          tree1
+        );
+      } catch (e) {
+        expect(e.message).toContain(
+          'You already have a library using the import path'
+        );
+      }
+
+      expect.assertions(1);
+    });
+  });
+
+  describe('--strict', () => {
+    it('should enable strict type checking', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          framework: 'angular',
+          publishable: true,
+          importPath: '@myorg/lib',
+          strict: true,
+        },
+        appTree
+      );
+
+      const { compilerOptions, angularCompilerOptions } = JSON.parse(
+        tree.readContent('libs/my-lib/tsconfig.json')
+      );
+
+      // check that the TypeScript compiler options have been updated
+      expect(compilerOptions.forceConsistentCasingInFileNames).toBe(true);
+      expect(compilerOptions.strict).toBe(true);
+      expect(compilerOptions.noImplicitReturns).toBe(true);
+      expect(compilerOptions.noFallthroughCasesInSwitch).toBe(true);
+
+      // check that the Angular Template options have been updated
+      expect(angularCompilerOptions.strictInjectionParameters).toBe(true);
+      expect(angularCompilerOptions.strictTemplates).toBe(true);
+
+      // check to see if the workspace configuration has been updated to use strict
+      // mode by default in future applications
+      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+      expect(workspaceJson.schematics['@nrwl/angular:library'].strict).toBe(
+        true
+      );
     });
   });
 });

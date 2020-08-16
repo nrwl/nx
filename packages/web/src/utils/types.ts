@@ -58,6 +58,7 @@ export interface PackageBuilderOptions {
   watch?: boolean;
   assets?: any[];
   updateBuildableProjectDepsInPackageJson?: boolean;
+  umdName?: string;
 }
 
 export interface AssetGlobPattern extends JsonObject {

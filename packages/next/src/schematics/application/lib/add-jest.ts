@@ -15,6 +15,7 @@ export function addJest(options: NormalizedSchema): Rule {
           supportTsx: true,
           skipSerializers: true,
           setupFile: 'none',
+          babelJest: true,
         }),
 
         updateJsonInTree(

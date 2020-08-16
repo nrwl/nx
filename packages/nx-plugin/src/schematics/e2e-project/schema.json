@@ -5,7 +5,11 @@
   "properties": {
     "pluginName": {
       "type": "string",
-      "description": "the name of the pluging to be tested"
+      "description": "the name of the plugin to be tested"
+    },
+    "projectDirectory": {
+      "type": "string",
+      "description": "the directory where the plugin is placed"
     },
     "npmPackageName": {
       "type": "string",

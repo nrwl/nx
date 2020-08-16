@@ -12,16 +12,17 @@ import { addFiles } from './lib/add-files';
 import { normalizeOptions } from './lib/normalize-options';
 import { updateTsConfig } from './lib/update-tsconfig';
 import { updateWorkspaceJson } from './lib/update-workspace-json';
-import { NormalizedSchema } from './schema';
+import { Schema } from './schema';
 
-export default function (schema: NormalizedSchema): Rule {
-  return (host: Tree) => {
+export default function (schema: Schema): Rule {
+  return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
 
     return chain([
       externalSchematic('@nrwl/node', 'lib', {
         ...schema,
         publishable: true,
+        importPath: schema.importPath,
         unitTestRunner: options.unitTestRunner,
       }),
       addFiles(options),
@@ -29,6 +30,7 @@ export default function (schema: NormalizedSchema): Rule {
       updateTsConfig(options),
       schematic('e2e-project', {
         pluginName: options.name,
+        projectDirectory: options.projectDirectory,
         pluginOutputPath: `dist/${libsDir(host)}/${options.projectDirectory}`,
         npmPackageName: options.npmPackageName,
       }),

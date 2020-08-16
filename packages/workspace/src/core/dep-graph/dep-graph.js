@@ -37,9 +37,24 @@ function createProjectList(headerText, projects) {
     let focusButton = document.createElement('button');
     focusButton.className = 'icon';
 
-    let buttonIcon = document.createElement('img');
-    buttonIcon.src = 'crosshair.svg';
-    focusButton.append(buttonIcon);
+    let buttonIconContainer = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'svg'
+    );
+    let buttonIcon = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'use'
+    );
+
+    buttonIcon.setAttributeNS(
+      'http://www.w3.org/1999/xlink',
+      'xlink:href',
+      '#crosshair'
+    );
+
+    buttonIconContainer.appendChild(buttonIcon);
+
+    focusButton.append(buttonIconContainer);
 
     focusButton.onclick = () => {
       window.focusProject(project.name);
@@ -359,7 +374,7 @@ function render() {
   const render = createRenderer();
 
   // Set up an SVG group so that we can translate the final graph.
-  var svg = d3.select('svg');
+  var svg = d3.select('#svg-canvas');
   svg.select('g').remove();
   let inner = svg.append('g');
 

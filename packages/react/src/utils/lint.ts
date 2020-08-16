@@ -108,14 +108,7 @@ export const reactEslintJson = {
     'no-restricted-globals': ['error'].concat(restrictedGlobals),
     'no-unexpected-multiline': 'warn',
     'no-unreachable': 'warn',
-    'no-unused-expressions': [
-      'error',
-      {
-        allowShortCircuit: true,
-        allowTernary: true,
-        allowTaggedTemplates: true,
-      },
-    ],
+    'no-unused-expressions': 'off',
     'no-unused-labels': 'warn',
     'no-useless-computed-key': 'warn',
     'no-useless-concat': 'warn',
@@ -260,5 +253,13 @@ export const reactEslintJson = {
     ],
     'no-useless-constructor': 'off',
     '@typescript-eslint/no-useless-constructor': 'warn',
+    '@typescript-eslint/no-unused-expressions': [
+      'error',
+      {
+        allowShortCircuit: true,
+        allowTernary: true,
+        allowTaggedTemplates: true,
+      },
+    ],
   },
 };

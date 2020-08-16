@@ -27,7 +27,7 @@ nx g plugin ... --dry-run
 Generate libs/plugins/my-plugin:
 
 ```bash
-nx g plugin my-plugin --directory=plugins
+nx g plugin my-plugin --directory=plugins --importPath=@myorg/my-plugin
 ```
 
 ## Options
@@ -40,9 +40,15 @@ Type: `string`
 
 A directory where the plugin is placed
 
+### importPath
+
+Type: `string`
+
+How the plugin will be published, like @myorg/my-awesome-plugin. Note this must be a valid npm name
+
 ### linter
 
-Default: `tslint`
+Default: `eslint`
 
 Type: `string`
 

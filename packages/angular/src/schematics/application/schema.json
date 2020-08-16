@@ -11,7 +11,8 @@
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the application?"
+      "x-prompt": "What name would you like to use for the application?",
+      "pattern": "^[a-zA-Z]{1}.*$"
     },
     "directory": {
       "description": "The directory of the new application.",
@@ -113,12 +114,17 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["tslint"],
+      "enum": ["tslint", "eslint"],
       "default": "tslint"
     },
     "backendProject": {
       "type": "string",
       "description": "Backend project that provides data to this application. This sets up proxy.config.json."
+    },
+    "strict": {
+      "type": "boolean",
+      "description": "Creates an application with stricter type checking and build optimization options.",
+      "default": false
     }
   },
   "required": []

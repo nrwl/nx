@@ -1,4 +1,6 @@
 import { spawnSync } from 'child_process';
+import { join } from 'path';
+import { statSync } from 'fs';
 
 function parseGitLsTree(output: string): Map<string, string> {
   const changes: Map<string, string> = new Map<string, string>();
@@ -29,11 +31,19 @@ function parseGitStatus(output: string): Map<string, string> {
     .trim()
     .split('\n')
     .forEach((line) => {
-      const [changeType, ...filenames]: string[] = line
+      const [changeType, ...filenames] = line
         .trim()
-        .split(' ')
-        .filter((linePart) => !!linePart);
+        .match(/(?:[^\s"]+|"[^"]*")+/g)
+        .map((r) => (r.startsWith('"') ? r.substring(1, r.length - 1) : r))
+        .filter((r) => !!r);
       if (changeType && filenames && filenames.length > 0) {
+        // the before filename we mark as deleted, so we remove it from the map
+        // changeType can be A/D/R/RM etc
+        // if it R and RM, we need to split the output into before and after
+        // the before part gets marked as deleted
+        if (changeType[0] === 'R') {
+          changes.set(filenames[0], 'D');
+        }
         changes.set(filenames[filenames.length - 1], changeType);
       }
     });
@@ -80,28 +90,67 @@ function gitLsTree(path: string): Map<string, string> {
   return parseGitLsTree(spawnProcess('git', ['ls-tree', 'HEAD', '-r'], path));
 }
 
-function gitStatus(path: string): Map<string, string> {
+function gitStatus(
+  path: string
+): { status: Map<string, string>; deletedFiles: string[] } {
+  const deletedFiles: string[] = [];
   const filesToHash: string[] = [];
   parseGitStatus(
     spawnProcess('git', ['status', '-s', '-u', '.'], path)
   ).forEach((changeType: string, filename: string) => {
     if (changeType !== 'D') {
       filesToHash.push(filename);
+    } else {
+      deletedFiles.push(filename);
     }
   });
-  return getGitHashForFiles(filesToHash, path);
+
+  const updated = checkForDeletedFiles(path, filesToHash, deletedFiles);
+  const status = getGitHashForFiles(updated.filesToHash, path);
+  return { deletedFiles: updated.deletedFiles, status };
+}
+
+/**
+ * This is only needed because of potential issues with interpreting "git status".
+ * We had a few issues where we didn't interpret renames correctly. Even though
+ * doing this somewhat slow, we will keep it for now.
+ *
+ * @vsavkin remove it in nx 10.2
+ */
+function checkForDeletedFiles(
+  path: string,
+  files: string[],
+  deletedFiles: string[]
+) {
+  let filesToHash = [];
+
+  files.forEach((f) => {
+    try {
+      statSync(join(path, f)).isFile();
+      filesToHash.push(f);
+    } catch (err) {
+      console.warn(
+        `Warning: Fell back to using 'fs' to identify ${f} as deleted. Please open an issue at https://github.com/nrwl/nx so we can investigate.`
+      );
+      deletedFiles.push(f);
+    }
+  });
+
+  return { filesToHash, deletedFiles };
 }
 
 export function getFileHashes(path: string): Map<string, string> {
   const res = new Map<string, string>();
 
   try {
+    const { deletedFiles, status } = gitStatus(path);
     const m1 = gitLsTree(path);
     m1.forEach((hash: string, filename: string) => {
-      res.set(`${path}/${filename}`, hash);
+      if (deletedFiles.indexOf(filename) === -1) {
+        res.set(`${path}/${filename}`, hash);
+      }
     });
-    const m2 = gitStatus(path);
-    m2.forEach((hash: string, filename: string) => {
+    status.forEach((hash: string, filename: string) => {
       res.set(`${path}/${filename}`, hash);
     });
     return res;

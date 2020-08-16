@@ -237,14 +237,14 @@ export function createRollupOptions(
         globals,
         format: config.format,
         file: `${options.outputPath}/${context.target.project}.${config.extension}.js`,
-        name: toClassName(context.target.project),
+        name: options.umdName || toClassName(context.target.project),
       },
       external: (id) => externalPackages.includes(id),
       plugins,
     };
 
     return options.rollupConfig
-      ? require(options.rollupConfig)(rollupConfig)
+      ? require(options.rollupConfig)(rollupConfig, options)
       : rollupConfig;
   });
 }

@@ -1,4 +1,5 @@
 import { UnitTestRunner } from '../../utils/test-runners';
+import { Linter } from '@nrwl/workspace';
 
 export interface Schema {
   name: string;
@@ -7,7 +8,9 @@ export interface Schema {
   addModuleSpec?: boolean;
   directory?: string;
   sourceDir?: string;
+  buildable: boolean;
   publishable: boolean;
+  importPath?: string;
 
   spec?: boolean;
   flat?: boolean;
@@ -19,6 +22,8 @@ export interface Schema {
   lazy?: boolean;
   parentModule?: string;
   tags?: string;
+  strict?: boolean;
 
+  linter: Linter;
   unitTestRunner: UnitTestRunner;
 }

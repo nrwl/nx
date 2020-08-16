@@ -160,28 +160,6 @@ describe('getBaseWebpackPartial', () => {
     });
   });
 
-  describe('ES modules', () => {
-    it('should override preset-env target for esm', () => {
-      const result = getBaseWebpackPartial(input, true);
-
-      expect(
-        (result.module.rules.find((rule) =>
-          rule.loader.toString().includes('babel-loader')
-        ).options as any).envName
-      ).toMatch('modern');
-    });
-
-    it('should not override preset-env target for es5', () => {
-      const result = getBaseWebpackPartial(input, false);
-
-      expect(
-        (result.module.rules.find((rule) =>
-          rule.loader.toString().includes('babel-loader')
-        ).options as any).envName
-      ).toMatch('legacy');
-    });
-  });
-
   describe('the file replacements option', () => {
     it('should set aliases', () => {
       spyOn(ts, 'parseJsonConfigFileContent').and.returnValue({

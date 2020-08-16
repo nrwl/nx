@@ -19,7 +19,8 @@ const IGNORED_WEBPACK_WARNINGS = [
 export function getBaseWebpackPartial(
   options: BuildBuilderOptions,
   esm?: boolean,
-  isScriptOptimizeOn?: boolean
+  isScriptOptimizeOn?: boolean,
+  configuration?: string
 ): Configuration {
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
   const mainFields = [...(esm ? ['es2015'] : []), 'module', 'main'];
@@ -48,12 +49,13 @@ export function getBaseWebpackPartial(
       rules: [
         {
           test: /\.([jt])sx?$/,
-          loader: require.resolve(`babel-loader`),
+          loader: join(__dirname, 'web-babel-loader'),
           exclude: /node_modules/,
           options: {
             rootMode: 'upward',
             cwd: join(options.root, options.sourceRoot),
-            envName: esm ? 'modern' : 'legacy',
+            isModern: esm,
+            envName: configuration || 'development',
             babelrc: true,
             cacheDirectory: true,
             cacheCompression: false,
@@ -223,21 +225,23 @@ function getClientEnvironment(mode) {
 }
 
 export function createCopyPlugin(assets: AssetGlobPattern[]) {
-  return new CopyWebpackPlugin(
-    assets.map((asset) => {
+  return new CopyWebpackPlugin({
+    patterns: assets.map((asset) => {
       return {
         context: asset.input,
         // Now we remove starting slash to make Webpack place it from the output root.
         to: asset.output,
-        ignore: asset.ignore,
-        from: {
-          glob: asset.glob,
+        from: asset.glob,
+        globOptions: {
+          ignore: [
+            '.gitkeep',
+            '**/.DS_Store',
+            '**/Thumbs.db',
+            ...(asset.ignore ? asset.ignore : []),
+          ],
           dot: true,
         },
       };
     }),
-    {
-      ignore: ['.gitkeep', '**/.DS_Store', '**/Thumbs.db'],
-    }
-  );
+  });
 }

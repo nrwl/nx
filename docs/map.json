@@ -454,6 +454,11 @@
                     "file": "angular/api-react/schematics/redux"
                   },
                   {
+                    "name": "stories",
+                    "id": "stories",
+                    "file": "angular/api-react/schematics/stories"
+                  },
+                  {
                     "name": "storybook-configuration",
                     "id": "storybook-configuration",
                     "file": "angular/api-react/schematics/storybook-configuration"
@@ -760,6 +765,11 @@
                 "name": "Run Commands Builder",
                 "id": "run-commands-builder",
                 "file": "shared/running-custom-commands"
+              },
+              {
+                "name": "Creating Custom Builders",
+                "id": "creating-custom-builders",
+                "file": "shared/tools-workspace-builders"
               }
             ]
           },
@@ -984,6 +994,10 @@
             "name": "Overview",
             "id": "overview",
             "file": "shared/migration/overview"
+          },
+          {
+            "name": "From CRA",
+            "id": "migration-cra"
           }
         ]
       },
@@ -1346,6 +1360,11 @@
                     "file": "react/api-react/schematics/redux"
                   },
                   {
+                    "name": "stories",
+                    "id": "stories",
+                    "file": "react/api-react/schematics/stories"
+                  },
+                  {
                     "name": "storybook-configuration",
                     "id": "storybook-configuration",
                     "file": "react/api-react/schematics/storybook-configuration"
@@ -1652,6 +1671,11 @@
                 "name": "Run Commands Builder",
                 "id": "run-commands-builder",
                 "file": "shared/running-custom-commands"
+              },
+              {
+                "name": "Creating Custom Builders",
+                "id": "creating-custom-builders",
+                "file": "shared/tools-workspace-builders"
               }
             ]
           },

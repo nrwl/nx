@@ -194,6 +194,15 @@ export function readNxJson(): NxJson {
   return config;
 }
 
+export function workspaceLayout(): { appsDir: string; libsDir: string } {
+  const nxJson = readNxJson();
+  const appsDir =
+    (nxJson.workspaceLayout && nxJson.workspaceLayout.appsDir) || 'apps';
+  const libsDir =
+    (nxJson.workspaceLayout && nxJson.workspaceLayout.libsDir) || 'libs';
+  return { appsDir, libsDir };
+}
+
 // TODO: Make this list extensible
 export function rootWorkspaceFileNames(): string[] {
   return [`package.json`, workspaceFileName(), `nx.json`, `tsconfig.base.json`];
@@ -219,27 +228,28 @@ export function readWorkspaceFiles(): FileData[] {
       'read workspace files:start',
       'read workspace files:end'
     );
+    r.sort((x, y) => x.file.localeCompare(y.file));
     return r;
   } else {
-    const files = [];
-    files.push(...rootWorkspaceFileData());
+    const r = [];
+    r.push(...rootWorkspaceFileData());
 
     // Add known workspace files and directories
-    files.push(...allFilesInDir(appRootPath, false));
-    files.push(...allFilesInDir(`${appRootPath}/tools`));
-
-    // Add files for workspace projects
-    Object.keys(workspaceJson.projects).forEach((projectName) => {
-      const project = workspaceJson.projects[projectName];
-      files.push(...allFilesInDir(`${appRootPath}/${project.root}`));
-    });
+    r.push(...allFilesInDir(appRootPath, false));
+    r.push(...allFilesInDir(`${appRootPath}/tools`));
+    const wl = workspaceLayout();
+    r.push(...allFilesInDir(`${appRootPath}/${wl.appsDir}`));
+    if (wl.appsDir !== wl.libsDir) {
+      r.push(...allFilesInDir(`${appRootPath}/${wl.libsDir}`));
+    }
     performance.mark('read workspace files:end');
     performance.measure(
       'read workspace files',
       'read workspace files:start',
       'read workspace files:end'
     );
-    return files;
+    r.sort((x, y) => x.file.localeCompare(y.file));
+    return r;
   }
 }
 
@@ -269,12 +279,10 @@ export function normalizedProjectRoot(p: ProjectGraphNode): string {
 
 export function filesChanged(a: FileData[], b: FileData[]) {
   if (a.length !== b.length) return true;
-  const sortedA = a.sort((x, y) => x.file.localeCompare(y.file));
-  const sortedB = b.sort((x, y) => x.file.localeCompare(y.file));
 
-  for (let i = 0; i < sortedA.length; ++i) {
-    if (sortedA[i].file !== sortedB[i].file) return true;
-    if (sortedA[i].hash !== sortedB[i].hash) return true;
+  for (let i = 0; i < a.length; ++i) {
+    if (a[i].file !== b[i].file) return true;
+    if (a[i].hash !== b[i].hash) return true;
   }
   return false;
 }

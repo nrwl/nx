@@ -47,7 +47,7 @@ yarn build
 To test if your changes will actually work once the changes are published,
 it can be useful to publish to a local registry.
 
-Here are some useful commands for doing so:
+Check out [this video for a live walkthrough](https://youtu.be/Tx257WpNsxc) or follow the instructions below:
 
 ```bash
 # Starts the local registry. Keep this running in a separate terminal.
@@ -170,6 +170,7 @@ The scope must be one of the following:
 - node - anything Node specific
 - linter - anything Linter specific
 - react - anything React specific
+- web - anything Web specific
 - storybook - anything Storybook specific
 - testing - anything testing specific (e.g., jest or cypress)
 - repo - anything related to managing the repo itself

@@ -135,7 +135,7 @@ function createWorkflow(dryRun: boolean) {
     root,
     dryRun,
     registry: new schema.CoreSchemaRegistry(formats.standardFormats),
-    resolvePaths: [root],
+    resolvePaths: [process.cwd(), rootDirectory],
   });
 }
 

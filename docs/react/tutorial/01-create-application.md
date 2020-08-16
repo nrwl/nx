@@ -2,7 +2,7 @@
 
 In this tutorial you will use Nx to build a full-stack application out of common libraries using modern technologies.
 
-> Next.js: Nx also has first-class Next.js support. Read more about it LINKLINK
+> Next.js: Nx also has first-class Next.js support. Read more about it [here](https://nx.dev/react/plugins/next/overview)
 
 ## Create a New Workspace
 
@@ -81,13 +81,13 @@ Depending on how your dev env is set up, the command above might result in `Comm
 To fix it, you can either install the `nx` cli globally by running:
 
 ```bash
-npm install -g @nrwl/cli
+npm install -g nx
 ```
 
 or
 
 ```bash
-yarn global add @nrwl/cli
+yarn global add nx
 ```
 
 Or you can prepend every command with `npm run`:

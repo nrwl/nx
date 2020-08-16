@@ -11,17 +11,17 @@ import { getWebConfig } from '../../utils/web.config';
 import { BuildBuilderOptions } from '../../utils/types';
 import {
   bufferCount,
+  concatMap,
   map,
   mergeScan,
   switchMap,
-  concatMap,
 } from 'rxjs/operators';
 import { getSourceRoot } from '../../utils/source-root';
 import { writeIndexHtml } from '../../utils/third-party/cli-files/utilities/index-file/write-index-html';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { execSync } from 'child_process';
 import { Range, satisfies } from 'semver';
-import { basename } from 'path';
+import { basename, join } from 'path';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
@@ -84,7 +84,7 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
       context
     );
     options.tsConfig = createTmpTsConfig(
-      options.tsConfig,
+      join(context.workspaceRoot, options.tsConfig),
       context.workspaceRoot,
       target.data.root,
       dependencies
@@ -119,7 +119,8 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
             options,
             context.logger,
             true,
-            isScriptOptimizeOn
+            isScriptOptimizeOn,
+            context.target.configuration
           ),
           // ES5 build for legacy browsers.
           isScriptOptimizeOn &&
@@ -130,7 +131,8 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
                 options,
                 context.logger,
                 false,
-                isScriptOptimizeOn
+                isScriptOptimizeOn,
+                context.target.configuration
               )
             : undefined,
         ]

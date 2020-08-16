@@ -59,7 +59,7 @@ The path to a Jest config file specifying how to find and execute tests. If no r
 
 Type: `string`
 
-An array of regexp pattern strings that are matched against all file paths before executing the test. If the file path matches any of the patterns, coverage information will be skipped.
+The directory where Jest should output its coverage files.
 
 ### coverageReporters
 

@@ -8,6 +8,14 @@ describe('Solution Tsconfigs Migration', () => {
   beforeEach(async () => {
     tree = Tree.empty();
     tree = await callRule(
+      updateJsonInTree('nx.json', () => ({
+        implicitDependencies: {
+          'tsconfig.json': '*',
+        },
+      })),
+      tree
+    );
+    tree = await callRule(
       updateJsonInTree('tsconfig.json', () => ({
         compilerOptions: {
           target: 'es2015',
@@ -52,6 +60,16 @@ describe('Solution Tsconfigs Migration', () => {
     const result = await runMigration('solution-tsconfigs', {}, tree);
     expect(result.exists('tsconfig.base.json')).toEqual(true);
     expect(result.exists('tsconfig.json')).toEqual(false);
+  });
+
+  it('should update implicit dependencies on tsconfig.json', async () => {
+    const result = await runMigration('solution-tsconfigs', {}, tree);
+    const json = readJsonInTree(result, 'nx.json');
+    expect(json).toEqual({
+      implicitDependencies: {
+        'tsconfig.base.json': '*',
+      },
+    });
   });
 
   it('should update tsconfig.base.json', async () => {

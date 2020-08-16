@@ -61,6 +61,31 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "10.1.0": {
+      "version": "10.1.0-beta.0",
+      "packages": {
+        "jest": {
+          "version": "26.2.2",
+          "alwaysAddToPackageJson": false
+        },
+        "ts-jest": {
+          "version": "26.1.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jest": {
+          "version": "26.0.8",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-preset-angular": {
+          "version": "8.2.1",
+          "alwaysAddToPackageJson": false
+        },
+        "babel-jest": {
+          "version": "26.2.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

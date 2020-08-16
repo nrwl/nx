@@ -1,5 +1,6 @@
 export interface Schema {
   pluginName: string;
+  projectDirectory: string;
   npmPackageName: string;
   pluginOutputPath: string;
   jestConfig: string;

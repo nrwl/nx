@@ -11,7 +11,8 @@
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the library?"
+      "x-prompt": "What name would you like to use for the library?",
+      "pattern": "^[a-zA-Z]{1}.*$"
     },
     "directory": {
       "type": "string",
@@ -20,8 +21,12 @@
     "publishable": {
       "type": "boolean",
       "default": false,
-      "description": "Generate a buildable library.",
-      "alias": "buildable"
+      "description": "Generate a publishable library."
+    },
+    "buildable": {
+      "type": "boolean",
+      "default": false,
+      "description": "Generate a buildable library."
     },
     "prefix": {
       "type": "string",
@@ -104,6 +109,21 @@
       "enum": ["karma", "jest", "none"],
       "description": "Test runner to use for unit tests",
       "default": "jest"
+    },
+    "importPath": {
+      "type": "string",
+      "description": "The library name used to import it, like @myorg/my-awesome-lib. Must be a valid npm name."
+    },
+    "strict": {
+      "type": "boolean",
+      "description": "Creates a library with stricter type checking and build optimization options.",
+      "default": false
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["tslint", "eslint"],
+      "default": "tslint"
     }
   },
   "required": []

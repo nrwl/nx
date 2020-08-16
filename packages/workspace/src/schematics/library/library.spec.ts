@@ -2,6 +2,7 @@ import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { NxJson } from '@nrwl/workspace';
+
 import { runSchematic } from '../../utils/testing';
 
 describe('lib', () => {
@@ -20,8 +21,9 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(workspaceJson.projects['my-lib'].architect.build).toBeUndefined();
       expect(workspaceJson.projects['my-lib'].architect.lint).toEqual({
-        builder: '@angular-devkit/build-angular:tslint',
+        builder: '@nrwl/linter:lint',
         options: {
+          linter: 'eslint',
           exclude: ['**/node_modules/**', '!libs/my-lib/**/*'],
           tsConfig: [
             'libs/my-lib/tsconfig.lib.json',
@@ -102,9 +104,14 @@ describe('lib', () => {
 
     it('should generate files', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
+
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/README.md')).toBeTruthy();
+
+      const ReadmeContent = tree.readContent('libs/my-lib/README.md');
+      expect(ReadmeContent).toContain('nx test my-lib');
     });
   });
 
@@ -159,7 +166,7 @@ describe('lib', () => {
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.ts')
       ).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
-      expect(tree.exists(`libs/my-dir/my-lib/tslint.json`)).toBeTruthy();
+      expect(tree.exists(`libs/my-dir/my-lib/.eslintrc`)).toBeTruthy();
     });
 
     it('should update workspace.json', async () => {
@@ -174,8 +181,9 @@ describe('lib', () => {
         'libs/my-dir/my-lib'
       );
       expect(workspaceJson.projects['my-dir-my-lib'].architect.lint).toEqual({
-        builder: '@angular-devkit/build-angular:tslint',
+        builder: '@nrwl/linter:lint',
         options: {
+          linter: 'eslint',
           exclude: ['**/node_modules/**', '!libs/my-dir/my-lib/**/*'],
           tsConfig: [
             'libs/my-dir/my-lib/tsconfig.lib.json',
@@ -221,21 +229,15 @@ describe('lib', () => {
       ]);
     });
 
-    it('should create a local tslint.json', async () => {
+    it('should create a local .eslintrc', async () => {
       const tree = await runSchematic(
         'lib',
         { name: 'myLib', directory: 'myDir' },
         appTree
       );
 
-      const tslintJson = readJsonInTree(tree, 'libs/my-dir/my-lib/tslint.json');
-      expect(tslintJson).toEqual({
-        extends: '../../../tslint.json',
-        rules: {},
-        linterOptions: {
-          exclude: ['!**/*'],
-        },
-      });
+      const lint = readJsonInTree(tree, 'libs/my-dir/my-lib/.eslintrc');
+      expect(lint.extends).toEqual('../../../.eslintrc');
     });
   });
 
@@ -253,6 +255,51 @@ describe('lib', () => {
       expect(
         workspaceJson.projects['my-lib'].architect.lint.options.tsConfig
       ).toEqual(['libs/my-lib/tsconfig.lib.json']);
+    });
+  });
+
+  describe('--importPath', () => {
+    it('should update the tsconfig with the given import path', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          directory: 'myDir',
+          importPath: '@myorg/lib',
+        },
+        appTree
+      );
+      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
+
+      expect(tsconfigJson.compilerOptions.paths['@myorg/lib']).toBeDefined();
+    });
+
+    it('should fail if the same importPath has already been used', async () => {
+      const tree1 = await runSchematic(
+        'lib',
+        {
+          name: 'myLib1',
+          importPath: '@myorg/lib',
+        },
+        appTree
+      );
+
+      try {
+        await runSchematic(
+          'lib',
+          {
+            name: 'myLib2',
+            importPath: '@myorg/lib',
+          },
+          tree1
+        );
+      } catch (e) {
+        expect(e.message).toContain(
+          'You already have a library using the import path'
+        );
+      }
+
+      expect.assertions(1);
     });
   });
 });

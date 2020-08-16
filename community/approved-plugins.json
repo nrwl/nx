@@ -45,6 +45,11 @@
     "url": "https://github.com/mauriziovitale/angular-plugins/tree/master/libs/lite-serve"
   },
   {
+    "name": "@nx-plus/vue",
+    "description": "Nx plugin adding first class support for Vue in your Nx workspace.",
+    "url": "https://github.com/ZachJW34/nx-plus/tree/master/libs/vue"
+  },
+  {
     "name": "@nx-plus/docusaurus",
     "description": "Nx plugin adding first class support for Docusaurus in your Nx workspace.",
     "url": "https://github.com/ZachJW34/nx-plus/tree/master/libs/docusaurus"
@@ -63,5 +68,10 @@
     "name": "@joelcode/gcp-function",
     "description": "Nx plugin to generate, test, lint, build, serve, & deploy Google Cloud Function",
     "url": "https://github.com/JoelCode/gcp-function"
+  },
+  {
+    "name": "@nx-go/nx-go",
+    "description": "Nx plugin to use Go in a Nx workspace",
+    "url": "https://github.com/nx-go/nx-go"
   }
 ]
