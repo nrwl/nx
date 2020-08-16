@@ -519,6 +519,11 @@ function createAdditionalFiles(options: Schema): Rule {
             '.prettierrc',
             serializeJson(DEFAULT_NRWL_PRETTIER_CONFIG)
           );
+        } else {
+          host.overwrite(
+            '.prettierrc',
+            serializeJson(existingPrettierConfig.config)
+          );
         }
       }),
       mapTo(host)

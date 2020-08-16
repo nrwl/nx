@@ -1,4 +1,3 @@
-import { Rule } from '@angular-devkit/schematics';
 import { Options } from 'prettier';
 import * as cosmiconfig from 'cosmiconfig';
 

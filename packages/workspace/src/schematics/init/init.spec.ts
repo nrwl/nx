@@ -229,61 +229,128 @@ describe('workspace', () => {
       expect(tree.exists('/karma.conf.js')).toBe(true);
     });
 
-    it('should work with existing .prettierignore file', async () => {
-      appTree.create('/package.json', JSON.stringify({}));
-      appTree.create('/.prettierignore', '# existing ignore rules');
-      appTree.create(
-        '/angular.json',
-        JSON.stringify({
-          version: 1,
-          defaultProject: 'myApp',
-          projects: {
-            myApp: {
-              root: '',
-              sourceRoot: 'src',
-              architect: {
-                build: {
-                  options: {
-                    tsConfig: 'tsconfig.app.json',
+    describe('prettier', () => {
+      it('should work with existing .prettierignore file', async () => {
+        appTree.create('/package.json', JSON.stringify({}));
+        appTree.create(
+          '/angular.json',
+          JSON.stringify({
+            version: 1,
+            defaultProject: 'myApp',
+            projects: {
+              myApp: {
+                root: '',
+                sourceRoot: 'src',
+                architect: {
+                  build: {
+                    options: {
+                      tsConfig: 'tsconfig.app.json',
+                    },
+                    configurations: {},
                   },
-                  configurations: {},
-                },
-                test: {
-                  options: {
-                    tsConfig: 'tsconfig.spec.json',
+                  test: {
+                    options: {
+                      tsConfig: 'tsconfig.spec.json',
+                    },
                   },
-                },
-                lint: {
-                  options: {
-                    tsConfig: 'tsconfig.app.json',
+                  lint: {
+                    options: {
+                      tsConfig: 'tsconfig.app.json',
+                    },
                   },
-                },
-                e2e: {
-                  options: {
-                    protractorConfig: 'e2e/protractor.conf.js',
+                  e2e: {
+                    options: {
+                      protractorConfig: 'e2e/protractor.conf.js',
+                    },
                   },
                 },
               },
             },
-          },
-        })
-      );
-      appTree.create(
-        '/tsconfig.app.json',
-        '{"extends": "../tsconfig.json", "compilerOptions": {}}'
-      );
-      appTree.create(
-        '/tsconfig.spec.json',
-        '{"extends": "../tsconfig.json", "compilerOptions": {}}'
-      );
-      appTree.create('/tsconfig.base.json', '{"compilerOptions": {}}');
-      appTree.create('/tslint.json', '{"rules": {}}');
-      appTree.create('/e2e/protractor.conf.js', '// content');
-      appTree.create('/src/app/app.module.ts', '// content');
-      const tree = await runSchematic('ng-add', { name: 'myApp' }, appTree);
+          })
+        );
+        appTree.create(
+          '/tsconfig.app.json',
+          '{"extends": "../tsconfig.json", "compilerOptions": {}}'
+        );
+        appTree.create(
+          '/tsconfig.spec.json',
+          '{"extends": "../tsconfig.json", "compilerOptions": {}}'
+        );
+        appTree.create('/tsconfig.base.json', '{"compilerOptions": {}}');
+        appTree.create('/tslint.json', '{"rules": {}}');
+        appTree.create('/e2e/protractor.conf.js', '// content');
+        appTree.create('/src/app/app.module.ts', '// content');
+        appTree.create('/.prettierignore', '# existing ignore rules');
 
-      const prettierIgnore = tree.read('/.prettierignore').toString();
-      expect(prettierIgnore).toBe('# existing ignore rules');
+        const tree = await runSchematic('ng-add', { name: 'myApp' }, appTree);
+
+        const prettierIgnore = tree.read('/.prettierignore').toString();
+        expect(prettierIgnore).toBe('# existing ignore rules');
+      });
+
+      it('should work with existing .prettierrc file', async () => {
+        const config = {
+          semi: true,
+          trailingComma: 'none',
+          singleQuote: true,
+          printWidth: 80,
+        };
+
+        appTree.create('/.prettierrc', JSON.stringify(config));
+        appTree.create('/package.json', JSON.stringify({}));
+        appTree.create(
+          '/angular.json',
+          JSON.stringify({
+            version: 1,
+            defaultProject: 'myApp',
+            projects: {
+              myApp: {
+                root: '',
+                sourceRoot: 'src',
+                architect: {
+                  build: {
+                    options: {
+                      tsConfig: 'tsconfig.app.json',
+                    },
+                    configurations: {},
+                  },
+                  test: {
+                    options: {
+                      tsConfig: 'tsconfig.spec.json',
+                    },
+                  },
+                  lint: {
+                    options: {
+                      tsConfig: 'tsconfig.app.json',
+                    },
+                  },
+                  e2e: {
+                    options: {
+                      protractorConfig: 'e2e/protractor.conf.js',
+                    },
+                  },
+                },
+              },
+            },
+          })
+        );
+        appTree.create(
+          '/tsconfig.app.json',
+          '{"extends": "../tsconfig.json", "compilerOptions": {}}'
+        );
+        appTree.create(
+          '/tsconfig.spec.json',
+          '{"extends": "../tsconfig.json", "compilerOptions": {}}'
+        );
+        appTree.create('/tsconfig.base.json', '{"compilerOptions": {}}');
+        appTree.create('/tslint.json', '{"rules": {}}');
+        appTree.create('/e2e/protractor.conf.js', '// content');
+        appTree.create('/src/app/app.module.ts', '// content');
+
+        const tree = await runSchematic('ng-add', { name: 'myApp' }, appTree);
+        const prettierRc = tree.read('/.prettierrc').toJSON();
+        expect(prettierRc).toStrictEqual(config);
+      });
     });
   });
 
