@@ -212,6 +212,7 @@ describe('app', () => {
     const workspaceJson = readJsonInTree(tree, 'workspace.json');
     const architectConfig = workspaceJson.projects['my-app'].architect;
     expect(architectConfig.build.builder).toEqual('@nrwl/web:build');
+    expect(architectConfig.build.outputs).toEqual(['dist/apps/my-app']);
     expect(architectConfig.build.options).toEqual({
       assets: ['apps/my-app/src/favicon.ico', 'apps/my-app/src/assets'],
       index: 'apps/my-app/src/index.html',

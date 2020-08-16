@@ -65,10 +65,12 @@ function addProject(options: NormalizedSchema): Rule {
   return updateWorkspaceInTree((json) => {
     const architect: { [key: string]: any } = {};
 
+    const outputPath = join(normalize('dist'), options.appProjectRoot);
     architect.build = {
       builder: '@nrwl/web:build',
+      outputs: [outputPath],
       options: {
-        outputPath: join(normalize('dist'), options.appProjectRoot),
+        outputPath,
         index: join(normalize(options.appProjectRoot), 'src/index.html'),
         main: join(normalize(options.appProjectRoot), 'src/main.ts'),
         polyfills: join(normalize(options.appProjectRoot), 'src/polyfills.ts'),
