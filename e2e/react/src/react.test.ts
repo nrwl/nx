@@ -199,7 +199,7 @@ forEachCli('nx', () => {
         'app__StyledApp'
       );
       expect(
-        readFile(`dist/apps/${styledComponentsApp}/main.esm.js`)
+        readFile(`dist/apps/${styledComponentsApp}/prod/main.esm.js`)
       ).not.toContain('app__StyledApp');
 
       const styledJsxApp = uniq('app');
@@ -334,20 +334,23 @@ forEachCli('nx', () => {
       );
 
       if (opts.checkProdBuild) {
-        runCLI(`build ${appName} --prod --output-hashing none`);
+        const prodOutputPath = `dist/apps/${appName}/prod`;
+        runCLI(
+          `build ${appName} --prod --output-hashing none --outputPath ${prodOutputPath}`
+        );
         filesToCheck = [
-          `dist/apps/${appName}/index.html`,
-          `dist/apps/${appName}/runtime.js`,
-          `dist/apps/${appName}/polyfills.esm.js`,
-          `dist/apps/${appName}/main.esm.js`,
+          `${prodOutputPath}/index.html`,
+          `${prodOutputPath}/runtime.js`,
+          `${prodOutputPath}/polyfills.esm.js`,
+          `${prodOutputPath}/main.esm.js`,
         ];
         if (opts.checkStyles) {
-          filesToCheck.push(`dist/apps/${appName}/styles.css`);
+          filesToCheck.push(`${prodOutputPath}/styles.css`);
         }
         checkFilesExist(...filesToCheck);
 
         if (opts.checkStyles) {
-          expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
+          expect(readFile(`${prodOutputPath}/index.html`)).toContain(
             `<link rel="stylesheet" href="styles.css">`
           );
         }

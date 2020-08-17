@@ -116,6 +116,7 @@
     "caniuse-lite": "^1.0.30001030",
     "circular-dependency-plugin": "^5.0.2",
     "clean-css": "4.2.1",
+    "clean-webpack-plugin": "^3.0.0",
     "codelyzer": "~5.0.1",
     "commitizen": "^4.0.3",
     "confusing-browser-globals": "^1.0.9",
