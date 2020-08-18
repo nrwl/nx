@@ -18,7 +18,8 @@ export function runNodePackageBuilder(
   context: BuilderContext
 ) {
   const projGraph = createProjectGraph();
-  const normalizedOptions = normalizeOptions(options, context);
+  const libRoot = projGraph.nodes[context.target.project].data.root;
+  const normalizedOptions = normalizeOptions(options, context, libRoot);
   const { target, dependencies } = calculateProjectDependencies(
     projGraph,
     context
@@ -30,7 +31,7 @@ export function runNodePackageBuilder(
         return compileTypeScriptFiles(
           normalizedOptions,
           context,
-          projGraph,
+          libRoot,
           dependencies
         ).pipe(
           tap(() => {

@@ -1,5 +1,4 @@
 import { BuilderContext, BuilderOutput } from '@angular-devkit/architect';
-import { ProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   createTmpTsConfig,
   DependentBuildableProjectNode,
@@ -55,12 +54,11 @@ function createWatchProgram(tsconfig: ts.ParsedCommandLine) {
 export default function compileTypeScriptFiles(
   options: NormalizedBuilderOptions,
   context: BuilderContext,
-  projGraph: ProjectGraph,
+  libRoot: string,
   projectDependencies: DependentBuildableProjectNode[]
 ) {
   removeSync(options.normalizedOutputPath);
   let tsConfigPath = join(context.workspaceRoot, options.tsConfig);
-  const libRoot = projGraph.nodes[context.target.project].data.root;
   if (projectDependencies.length > 0) {
     tsConfigPath = createTmpTsConfig(
       tsConfigPath,

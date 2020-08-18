@@ -9,7 +9,8 @@ import {
 
 export default function normalizeOptions(
   options: NodePackageBuilderOptions,
-  context: BuilderContext
+  context: BuilderContext,
+  libRoot: string
 ): NormalizedBuilderOptions {
   const outDir = options.outputPath;
   const files: FileInputOutput[] = [];
@@ -49,8 +50,10 @@ export default function normalizeOptions(
     }
   });
 
-  const tsconfigDir = dirname(options.tsConfig);
-  const relativeMainFileOutput = relative(tsconfigDir, tsconfigDir);
+  const rootDir = libRoot || '';
+  const mainFileDir = dirname(options.main);
+
+  const relativeMainFileOutput = relative(rootDir, mainFileDir);
 
   return {
     ...options,

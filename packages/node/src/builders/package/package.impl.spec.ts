@@ -117,8 +117,8 @@ describe('NodePackageBuilder', () => {
             `${testOptions.outputPath}/package.json`,
             {
               name: 'nodelib',
-              main: 'index.js',
-              typings: 'index.d.ts',
+              main: 'src/index.js',
+              typings: 'src/index.d.ts',
             }
           );
           done();
