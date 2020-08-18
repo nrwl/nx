@@ -22,6 +22,7 @@ const runOne = [
   'with-deps',
   'skipNxCache',
   'skip-nx-cache',
+  'scan',
 ];
 
 const runMany = [...runOne, 'projects', 'quiet', 'all'];
@@ -66,6 +67,7 @@ export interface NxArgs {
   select?: string;
   skipNxCache?: boolean;
   'skip-nx-cache'?: boolean;
+  scan?: boolean;
 }
 
 const ignoreArgs = ['$0', '_'];
