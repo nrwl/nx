@@ -779,8 +779,8 @@ forEachCli((cli) => {
         `shared-${lib1}-data-access`,
       ]);
 
-      expect(moveOutput).toContain('UPDATE tsconfig.base.json');
-      const rootTsConfig = readJson('tsconfig.base.json');
+      expect(moveOutput).toContain('UPDATE tsconfig.json');
+      const rootTsConfig = readJson('tsconfig.json');
       expect(
         rootTsConfig.compilerOptions.paths[`@proj/${lib1}/data-access`]
       ).toBeUndefined();
