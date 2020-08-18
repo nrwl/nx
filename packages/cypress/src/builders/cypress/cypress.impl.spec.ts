@@ -210,7 +210,30 @@ describe('Cypress builder', () => {
       .then(() => {
         expect(cypressRun).toHaveBeenCalledWith(
           jasmine.objectContaining({
-            ignoreTestFiles: cypressBuilderOptions.ignoreTestFiles,
+            ignoreTestFiles: cfg.ignoreTestFiles,
+          })
+        );
+        expect(cypressOpen).not.toHaveBeenCalled();
+        done();
+      });
+
+    fakeEventEmitter.emit('exit', 0); // Passing tsc command
+  });
+
+  it('should call `Cypress.run` with a reporter and reporterOptions', async (done) => {
+    const cfg = {
+      ...cypressBuilderOptions,
+      reporter: 'junit',
+      reporterOptions: 'mochaFile=reports/results-[hash].xml,toConsole=true',
+    };
+
+    cypressBuilderRunner(cfg, mockedBuilderContext)
+      .toPromise()
+      .then(() => {
+        expect(cypressRun).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            reporter: cfg.reporter,
+            reporterOptions: cfg.reporterOptions,
           })
         );
         expect(cypressOpen).not.toHaveBeenCalled();
@@ -305,7 +328,7 @@ describe('Cypress builder', () => {
   });
 
   test('when devServerTarget option present and baseUrl option is absent, baseUrl should come from devServerTarget', async (done) => {
-    const result = await cypressBuilderRunner(
+    await cypressBuilderRunner(
       cypressBuilderOptions,
       mockedBuilderContext
     ).toPromise();
