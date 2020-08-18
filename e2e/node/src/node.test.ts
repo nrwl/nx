@@ -277,7 +277,6 @@ forEachCli((currentCLIName) => {
           module: 'commonjs',
           outDir: '../../dist/out-tsc',
           declaration: true,
-          rootDir: './src',
           types: ['node'],
         },
         exclude: ['**/*.spec.ts'],
@@ -285,8 +284,8 @@ forEachCli((currentCLIName) => {
       });
       await runCLIAsync(`build ${nodeLib}`);
       checkFilesExist(
-        `dist/libs/${nodeLib}/index.js`,
-        `dist/libs/${nodeLib}/index.d.ts`,
+        `dist/libs/${nodeLib}/src/index.js`,
+        `dist/libs/${nodeLib}/src/index.d.ts`,
         `dist/libs/${nodeLib}/package.json`
       );
 
@@ -294,8 +293,8 @@ forEachCli((currentCLIName) => {
       expect(packageJson).toEqual({
         name: `@proj/${nodeLib}`,
         version: '0.0.1',
-        main: 'index.js',
-        typings: 'index.d.ts',
+        main: 'src/index.js',
+        typings: 'src/index.d.ts',
       });
     }, 60000);
 

@@ -4,6 +4,11 @@
       "version": "9.2.0-beta.1",
       "description": "Set buildLibsFromSource property to true to not break existing projects.",
       "factory": "./src/migrations/update-9-2-0/set-build-libs-from-source"
+    },
+    "remove-root-dir": {
+      "version": "10.1.0-beta.1",
+      "description": "Removes rootDir from node libs' tsconfig",
+      "factory": "./src/migrations/update-10-1-0/remove-root-dir"
     }
   }
 }
