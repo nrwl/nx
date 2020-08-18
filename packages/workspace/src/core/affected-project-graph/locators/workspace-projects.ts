@@ -1,3 +1,4 @@
+import * as minimatch from 'minimatch';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
 
 export const getTouchedProjects: TouchedProjectLocator = (
@@ -32,13 +33,13 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
     return [];
   }
 
-  const touched = [];
+  const touched = new Set<string>();
 
   for (const [filePath, projects] of Object.entries(
     nxJson.implicitDependencies
   )) {
-    const implicitDependencyWasChanged = fileChanges.some(
-      (f) => f.file === filePath
+    const implicitDependencyWasChanged = fileChanges.some((f) =>
+      minimatch(f.file, filePath)
     );
     if (!implicitDependencyWasChanged) {
       continue;
@@ -46,9 +47,9 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
 
     // File change affects all projects, just return all projects.
     if (Array.isArray(projects)) {
-      touched.push(...projects);
+      projects.forEach((project) => touched.add(project));
     }
   }
 
-  return touched;
+  return Array.from(touched);
 };
