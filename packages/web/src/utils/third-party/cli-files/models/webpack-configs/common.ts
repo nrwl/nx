@@ -10,7 +10,6 @@ import {
   buildOptimizerLoaderPath,
 } from '@angular-devkit/build-optimizer';
 import { tags } from '@angular-devkit/core';
-import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as path from 'path';
 import { ScriptTarget } from 'typescript';
 import {
@@ -233,45 +232,6 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
         })
       );
     });
-  }
-
-  // process asset entries
-  if (buildOptions.assets) {
-    const copyWebpackPluginInstance = new CopyWebpackPlugin({
-      patterns: buildOptions.assets.map((asset: AssetPatternClass) => {
-        // Resolve input paths relative to workspace root and add slash at the end.
-        asset.input = path.resolve(root, asset.input).replace(/\\/g, '/');
-        asset.input = asset.input.endsWith('/')
-          ? asset.input
-          : asset.input + '/';
-        asset.output = asset.output.endsWith('/')
-          ? asset.output
-          : asset.output + '/';
-
-        if (asset.output.startsWith('..')) {
-          const message =
-            'An asset cannot be written to a location outside of the output path.';
-          throw new Error(message);
-        }
-
-        return {
-          context: asset.input,
-          // Now we remove starting slash to make Webpack place it from the output root.
-          to: asset.output.replace(/^\//, ''),
-          from: asset.glob,
-          globOptions: {
-            ignore: [
-              '.gitkeep',
-              '**/.DS_Store',
-              '**/Thumbs.db',
-              ...(asset.ignore ? asset.ignore : []),
-            ],
-            dot: true,
-          },
-        };
-      }),
-    });
-    extraPlugins.push(copyWebpackPluginInstance);
   }
 
   if (buildOptions.progress) {
