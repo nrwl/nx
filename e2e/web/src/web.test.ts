@@ -83,6 +83,21 @@ forEachCli((currentCLIName) => {
       );
       checkFilesExist(`dist/apps/_should_not_remove.txt`);
     }, 120000);
+
+    it('should do another build if differential loading is needed', async () => {
+      ensureProject();
+      const appName = uniq('app');
+
+      runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+
+      updateFile(`apps/${appName}/browserslist`, `IE 9-11`);
+
+      const output = runCLI(`build ${appName} --prod --outputHashing=none`);
+      checkFilesExist(
+        `dist/apps/${appName}/main.esm.js`,
+        `dist/apps/${appName}/main.es5.js`
+      );
+    }, 120000);
   });
 
   describe('CLI - Environment Variables', () => {
