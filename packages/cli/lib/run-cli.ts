@@ -95,11 +95,7 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
     }
   });
 
-  process.on('SIGINT', () => {
-    writeToDisk(forwardOutput, outWithErr);
-  });
-
   process.on('SIGTERM', () => {
-    writeToDisk(forwardOutput, outWithErr);
+    process.exit(15);
   });
 }
