@@ -27,6 +27,7 @@ export interface RunCommandsBuilderOptions extends JsonObject {
   args?: string;
   envFile?: string;
   outputPath?: string;
+  forwardAllArgs?: boolean;
 }
 
 const propKeys = [
@@ -39,6 +40,7 @@ const propKeys = [
   'args',
   'envFile',
   'outputPath',
+  'forwardAllArgs',
 ];
 
 export interface NormalizedRunCommandsBuilderOptions
@@ -122,15 +124,18 @@ function normalizeOptions(
   if (options.command) {
     options.commands = [{ command: options.command }];
     options.parallel = false;
+    options.forwardAllArgs = options.forwardAllArgs ?? true;
   } else {
     options.commands = options.commands.map((c) =>
       typeof c === 'string' ? { command: c } : c
     );
+    options.forwardAllArgs = options.forwardAllArgs ?? false;
   }
   (options as NormalizedRunCommandsBuilderOptions).commands.forEach((c) => {
     c.command = transformCommand(
       c.command,
-      (options as NormalizedRunCommandsBuilderOptions).parsedArgs
+      (options as NormalizedRunCommandsBuilderOptions).parsedArgs,
+      options.forwardAllArgs
     );
   });
   return options as any;
@@ -195,11 +200,15 @@ function processEnv(color: boolean) {
   return env;
 }
 
-function transformCommand(command: string, args: { [key: string]: string }) {
+function transformCommand(
+  command: string,
+  args: { [key: string]: string },
+  forwardAllArgs: boolean
+) {
   if (command.indexOf('{args.') > -1) {
     const regex = /{args\.([^}]+)}/g;
     return command.replace(regex, (_, group: string) => args[group]);
-  } else if (Object.keys(args).length > 0) {
+  } else if (Object.keys(args).length > 0 && forwardAllArgs) {
     const stringifiedArgs = Object.keys(args)
       .map((a) => `--${a}=${args[a]}`)
       .join(' ');

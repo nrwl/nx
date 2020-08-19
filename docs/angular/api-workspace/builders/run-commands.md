@@ -66,6 +66,41 @@ or simply with:
 nx run frontend:create-script --name=example
 ```
 
+##### Arguments forwarding
+
+When interpolation is not present in the command, all arguments are forwarded to the command by default.
+
+This is useful when you need to pass raw argument strings to your command.
+
+For example, when you run:
+
+nx run frontend:webpack --args="--config=example.config.js"
+
+```json
+"webpack": {
+    "builder": "@nrwl/workspace:run-commands",
+    "options": {
+        "command": "webpack"
+    }
+}
+```
+
+The above command will run: `webpack --config=example.config.js`
+
+This functionality can be disabled by setting the `forwardAllArgs` option to `false` as shown below:
+
+```json
+"webpack": {
+    "builder": "@nrwl/workspace:run-commands",
+    "options": {
+        "command": "webpack",
+        "forwardAllArgs": false
+    }
+}
+```
+
+**Note:** When you use `commands` (plural), `forwardAllArgs` is set to `false` by default.
+
 ##### Custom **done** conditions
 
 Normally, `run-commands` considers the commands done when all of them have finished running. If you don't need to wait until they're all done, you can set a special string, that considers the command finished the moment the string appears in `stdout` or `stderr`:
@@ -74,9 +109,7 @@ Normally, `run-commands` considers the commands done when all of them have finis
 "finish-when-ready": {
     "builder": "@nrwl/workspace:run-commands",
     "options": {
-        "command": [
-            "echo 'READY' && sleep 5 && echo 'FINISHED'"
-        ],
+        "command": "echo 'READY' && sleep 5 && echo 'FINISHED'",
         "readyWhen": "READY"
     }
 }
@@ -161,6 +194,12 @@ Current working directory of the commands.
 Type: `string`
 
 You may specify a custom .env file path
+
+### forwardAllArgs
+
+Type: `boolean`
+
+Forwards all arguments to a command that does not use interpolation. For example, if you run: nx run project:target --args='--wait=100' which contains the command: 'echo' the output would be '--wait=100'. Note that by default this option is set to true when you use 'command' and false when you use 'commands'.
 
 ### outputPath
 
