@@ -9,6 +9,7 @@ export interface NodePackageBuilderOptions extends JsonObject {
   assets: Array<AssetGlob | string>;
   packageJson: string;
   updateBuildableProjectDepsInPackageJson?: boolean;
+  srcRootForCompilationRoot?: string;
 }
 
 export interface NormalizedBuilderOptions extends NodePackageBuilderOptions {

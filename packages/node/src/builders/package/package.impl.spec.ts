@@ -19,6 +19,7 @@ import * as fs from 'fs-extra';
 jest.mock('@nrwl/workspace/src/utils/fileutils');
 import * as fsUtility from '@nrwl/workspace/src/utils/fileutils';
 import * as tsUtils from '@nrwl/workspace/src/utils/typescript';
+import * as ts from 'typescript';
 
 describe('NodePackageBuilder', () => {
   let testOptions: NodePackageBuilderOptions;
@@ -211,6 +212,43 @@ describe('NodePackageBuilder', () => {
             expect(fs.copy).toHaveBeenCalledWith(
               `${context.workspaceRoot}/lib/nodelib/src/CONTRIBUTING.md`,
               `${context.workspaceRoot}/${testOptions.outputPath}/CONTRIBUTING.md`
+            );
+            done();
+          },
+        });
+      });
+    });
+
+    describe('srcRootForCompilationRoot', () => {
+      let spy: jest.SpyInstance;
+      beforeEach(() => {
+        jest.clearAllMocks();
+        spy = jest.spyOn(ts, 'createCompilerHost');
+      });
+
+      it('should use srcRootForCompilationRoot when it is defined', (done) => {
+        testOptions.srcRootForCompilationRoot = 'libs/nodelib/src';
+
+        runNodePackageBuilder(testOptions, context).subscribe({
+          complete: () => {
+            expect(spy).toHaveBeenCalledWith(
+              expect.objectContaining({
+                rootDir: 'libs/nodelib/src',
+              })
+            );
+            done();
+          },
+        });
+      });
+      it('should not use srcRootForCompilationRoot when it is not defined', (done) => {
+        testOptions.srcRootForCompilationRoot = undefined;
+
+        runNodePackageBuilder(testOptions, context).subscribe({
+          complete: () => {
+            expect(spy).toHaveBeenCalledWith(
+              expect.objectContaining({
+                rootDir: 'libs/nodelib',
+              })
             );
             done();
           },
