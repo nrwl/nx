@@ -219,8 +219,7 @@ export function readWorkspaceFiles(): FileData[] {
 
   if (defaultFileHasher.usesGitForHashing) {
     const ignoredGlobs = getIgnoredGlobs();
-    const r = defaultFileHasher
-      .allFiles()
+    const r = defaultFileHasher.workspaceFiles
       .filter((f) => !ignoredGlobs.ignores(f))
       .map((f) => getFileData(`${appRootPath}/${f}`));
     performance.mark('read workspace files:end');
