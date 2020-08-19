@@ -2,12 +2,12 @@
   {
     "name": "@nxtend/ionic-react",
     "description": "An Nx plugin for developing Ionic React applications and libraries",
-    "url": "https://github.com/nxtend-team/nxtend/tree/master/libs/ionic-react"
+    "url": "https://github.com/nxtend-team/nxtend/tree/master/packages/ionic-react"
   },
   {
     "name": "@nxtend/capacitor",
     "description": "An Nx plugin for developing cross-platform applications using Capacitor",
-    "url": "https://github.com/nxtend-team/nxtend/tree/master/libs/capacitor"
+    "url": "https://github.com/nxtend-team/nxtend/tree/master/packages/capacitor"
   },
   {
     "name": "@angular-architects/ddd",

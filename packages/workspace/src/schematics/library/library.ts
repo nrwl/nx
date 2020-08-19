@@ -15,14 +15,16 @@ import {
 import { join, normalize } from '@angular-devkit/core';
 import { Schema } from './schema';
 
-import { NxJson, updateWorkspaceInTree, getNpmScope } from '@nrwl/workspace';
-import { updateJsonInTree, readJsonInTree } from '@nrwl/workspace';
+import { updateWorkspaceInTree, getNpmScope } from '@nrwl/workspace';
+import { updateJsonInTree } from '@nrwl/workspace';
 import { toFileName, names } from '@nrwl/workspace';
 import { formatFiles } from '@nrwl/workspace';
 import { offsetFromRoot } from '@nrwl/workspace';
+
 import { generateProjectLint, addLintFiles } from '../../utils/lint';
 import { addProjectToNxJsonInTree, libsDir } from '../../utils/ast-utils';
 import { cliCommand } from '../../core/file-utils';
+import { toJS } from '../../utils/rules/to-js';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -68,7 +70,10 @@ function updateTsConfig(options: NormalizedSchema): Rule {
       }
 
       c.paths[options.importPath] = [
-        `${libsDir(host)}/${options.projectDirectory}/src/index.ts`,
+        maybeJs(
+          options,
+          `${libsDir(host)}/${options.projectDirectory}/src/index.ts`
+        ),
       ];
 
       return json;
@@ -87,6 +92,7 @@ function createFiles(options: NormalizedSchema): Rule {
         hasUnitTestRunner: options.unitTestRunner !== 'none',
       }),
       move(options.projectRoot),
+      options.js ? toJS() : noop(),
     ])
   );
 }
@@ -147,4 +153,10 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     parsedTags,
     importPath,
   };
+}
+
+function maybeJs(options: NormalizedSchema, path: string): string {
+  return options.js && (path.endsWith('.ts') || path.endsWith('.tsx'))
+    ? path.replace(/\.tsx?$/, '.js')
+    : path;
 }

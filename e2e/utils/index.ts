@@ -6,7 +6,7 @@ import {
   statSync,
   writeFileSync,
 } from 'fs';
-import { ensureDirSync } from 'fs-extra';
+import { ensureDirSync, createFileSync } from 'fs-extra';
 import * as path from 'path';
 
 interface RunCmdOpts {
@@ -338,6 +338,14 @@ function setMaxWorkers() {
     });
 
     updateFile(workspaceFile, JSON.stringify(workspace));
+  }
+}
+
+export function createFile(f: string, content: string = ''): void {
+  const path = tmpProjPath(f);
+  createFileSync(path);
+  if (content) {
+    updateFile(path, content);
   }
 }
 

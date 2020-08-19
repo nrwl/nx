@@ -2,6 +2,7 @@ import * as webpack from 'webpack';
 import { Configuration, ProgressPlugin, Stats } from 'webpack';
 import { join, resolve } from 'path';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
+import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as TerserWebpackPlugin from 'terser-webpack-plugin';
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
@@ -82,6 +83,7 @@ export function getBaseWebpackPartial(
       hints: false,
     },
     plugins: [
+      new CleanWebpackPlugin(),
       new ForkTsCheckerWebpackPlugin({
         tsconfig: options.tsConfig,
         memoryLimit:
