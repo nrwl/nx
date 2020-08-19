@@ -68,7 +68,7 @@ The generate command added two projects to our workspace:
 
 ## Serve the newly created application
 
-Now that the application is setup, run it locally via:
+Now that the application is set up, run it locally via:
 
 ```bash
 nx serve todos
