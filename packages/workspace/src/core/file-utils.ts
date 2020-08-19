@@ -215,12 +215,13 @@ export function rootWorkspaceFileData(): FileData[] {
 }
 
 export function readWorkspaceFiles(): FileData[] {
-  const workspaceJson = readWorkspaceJson();
   performance.mark('read workspace files:start');
 
   if (defaultFileHasher.usesGitForHashing) {
+    const ignoredGlobs = getIgnoredGlobs();
     const r = defaultFileHasher
       .allFiles()
+      .filter((f) => !ignoredGlobs.ignores(f))
       .map((f) => getFileData(`${appRootPath}/${f}`));
     performance.mark('read workspace files:end');
     performance.measure(
