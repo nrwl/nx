@@ -85,6 +85,7 @@
     "raw-loader": "3.1.0",
     "rxjs": "^6.5.4",
     "regenerator-runtime": "0.13.3",
+    "rimraf": "^3.0.2",
     "rollup": "1.31.1",
     "rollup-plugin-copy": "^3.3.0",
     "rollup-plugin-filesize": "^9.0.0",

@@ -61,17 +61,26 @@ forEachCli((currentCLIName) => {
     it('should remove previous output before building', async () => {
       ensureProject();
       const appName = uniq('app');
+      const libName = uniq('lib');
 
       runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/react:lib ${libName} --buildable --no-interactive`
+      );
 
       createFile(`dist/apps/${appName}/_should_remove.txt`);
+      createFile(`dist/libs/${libName}/_should_remove.txt`);
       createFile(`dist/apps/_should_not_remove.txt`);
       checkFilesExist(
         `dist/apps/${appName}/_should_remove.txt`,
         `dist/apps/_should_not_remove.txt`
       );
       runCLI(`build ${appName}`);
-      checkFilesDoNotExist(`dist/apps/${appName}/_should_remove.txt`);
+      runCLI(`build ${libName}`);
+      checkFilesDoNotExist(
+        `dist/apps/${appName}/_should_remove.txt`,
+        `dist/libs/${libName}/_should_remove.txt`
+      );
       checkFilesExist(`dist/apps/_should_not_remove.txt`);
     }, 120000);
   });

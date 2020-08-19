@@ -188,6 +188,7 @@
     "react-router-dom": "5.1.2",
     "regenerator-runtime": "0.13.3",
     "release-it": "^7.4.0",
+    "rimraf": "^3.0.2",
     "rollup": "1.31.1",
     "rollup-plugin-copy": "3.3.0",
     "rollup-plugin-filesize": "6.2.1",
