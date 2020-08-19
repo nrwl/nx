@@ -4,7 +4,10 @@ import * as resolve from 'resolve';
 import { getProjectRoots, parseFiles } from './shared';
 import { fileExists } from '../utils/fileutils';
 import { output } from '../utils/output';
-import { createProjectGraph } from '../core/project-graph';
+import {
+  createProjectGraph,
+  onlyWorkspaceProjects,
+} from '../core/project-graph';
 import { filterAffected } from '../core/affected-project-graph';
 import { calculateFileChanges } from '../core/file-utils';
 import * as yargs from 'yargs';
@@ -88,7 +91,7 @@ function getPatterns(args: NxArgs & { libsAndApps: boolean; _: string[] }) {
 }
 
 function getPatternsFromApps(affectedFiles: string[]): string[] {
-  const graph = createProjectGraph();
+  const graph = onlyWorkspaceProjects(createProjectGraph());
   const affectedGraph = filterAffected(
     graph,
     calculateFileChanges(affectedFiles)

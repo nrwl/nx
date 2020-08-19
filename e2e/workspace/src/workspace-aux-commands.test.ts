@@ -159,11 +159,19 @@ forEachCli((cli) => {
     `
       );
 
+      updateFile(
+        `README.md`,
+        `
+         my new readme;
+    `
+      );
+
       let stdout = runCommand(
-        `npm run -s format:check -- --files="libs/${mylib}/index.ts" --libs-and-apps`
+        `npm run -s format:check -- --files="libs/${mylib}/index.ts,package.json" --libs-and-apps`
       );
       expect(stdout).toContain(`libs/${mylib}/index.ts`);
       expect(stdout).toContain(`libs/${mylib}/src/${mylib}.module.ts`);
+      expect(stdout).not.toContain(`README.md`); // It will be contained only in case of exception, that we fallback to all
 
       stdout = runCommand(`npm run -s format:check -- --all`);
       expect(stdout).toContain(`apps/${myapp}/src/main.ts`);
