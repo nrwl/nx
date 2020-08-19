@@ -236,6 +236,36 @@ forEachCli('nx', () => {
       );
     }, 120000);
 
+    it('should generate app with legacy-ie support', async () => {
+      ensureProject();
+      const appName = uniq('app');
+
+      runCLI(
+        `generate @nrwl/react:app ${appName} --style=css --no-interactive`
+      );
+
+      // changing browser suporrt of this application
+      updateFile(`apps/${appName}/.browserslistrc`, `IE 11`);
+
+      await testGeneratedApp(appName, {
+        checkStyles: false,
+        checkProdBuild: true,
+        checkLinter: false,
+        checkE2E: false,
+      });
+
+      const filesToCheck = [
+        `dist/apps/${appName}/prod/polyfills.es5.js`,
+        `dist/apps/${appName}/prod/main.es5.js`,
+      ];
+
+      checkFilesExist(...filesToCheck);
+
+      expect(readFile(`dist/apps/${appName}/prod/index.html`)).toContain(
+        `<script src="main.esm.js" type="module"></script><script src="main.es5.js" nomodule defer></script>`
+      );
+    }, 120000);
+
     it('should be able to add a redux slice', async () => {
       ensureProject();
       const appName = uniq('app');
