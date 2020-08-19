@@ -18,7 +18,7 @@ nx test client-feature-main
 nx e2e client-e2e
 ```
 
-Now imagine, `admin` depends on `admin-feature-permissions`. If we make a change to `admin-feature-permissions`, we need to make sure nothing in the workspace is broken unintentionally.
+Now imagine, `admin` depends on `admin-feature-permissions`. If we make a change to `admin-feature-permissions`, we not only need to make sure that `admin-feature-permissions` still functions as intended. We also need to make sure nothing that depends on `admin-feature-permissions` such as `admin` is broken unintentionally.
 
 Typically, you would do it like this:
 
@@ -53,6 +53,8 @@ Run `nx dep-graph` to see the dependency graph.
 ![dependency-graph](/shared/dependency-graph.png)
 
 ## Affected
+
+Affected projects are projects that are impacted by a set of changes. In order to find out which projects could be impacted by a particular change, Nx first determines which projects own the changed files. These projects are definitely impacted because they had changes made directly to them. Projects that consume projects which are directly changed may also be impacted by these changes. As a result, those projects must be tested as well to verify that all changes in behavior are identified.
 
 To calculate the project affected by your change, Nx needs to know what file you changed. The most direct way to do it is by passing `--files`:
 
