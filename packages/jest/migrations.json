@@ -29,6 +29,11 @@
       "version": "10.0.0-beta.2",
       "description": "update jest configs to include setup env files",
       "factory": "./src/migrations/update-10-0-0/update-jest-configs"
+    },
+    "update-10.1.0": {
+      "version": "10.1.0-beta.3",
+      "description": "Update jest to v26",
+      "factory": "./src/migrations/update-10-1-0/update-10-1-0"
     }
   },
   "packageJsonUpdates": {
