@@ -92,6 +92,11 @@
           {
             "name": "From AngularJS",
             "id": "migration-angularjs"
+          },
+          {
+            "name": "Preserving Git Histories",
+            "id": "preserving-git-histories",
+            "file": "shared/migration/preserving-git-histories"
           }
         ]
       },
@@ -998,6 +1003,11 @@
           {
             "name": "From CRA",
             "id": "migration-cra"
+          },
+          {
+            "name": "Preserving Git Histories",
+            "id": "preserving-git-histories",
+            "file": "shared/migration/preserving-git-histories"
           }
         ]
       },
