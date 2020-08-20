@@ -1,6 +1,6 @@
 import { schema } from '@angular-devkit/core';
 import { fileSync } from 'tmp';
-import { readFileSync, writeFileSync, unlinkSync } from 'fs';
+import { readFileSync, unlinkSync, writeFileSync } from 'fs';
 import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { Architect } from '@angular-devkit/architect';
 import { join } from 'path';
@@ -89,7 +89,6 @@ describe('Command Runner Builder', () => {
     //wait a tick for the serial runner to schedule the first task
     await Promise.resolve();
     const run = await scheduleRun;
-    const result = await run.result;
 
     expect(exec).toHaveBeenCalledWith(`echo --a=123 --b=456`, {
       stdio: [0, 1, 2],

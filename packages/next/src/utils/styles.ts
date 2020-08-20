@@ -4,11 +4,9 @@ import { CSS_IN_JS_DEPENDENCIES } from '@nrwl/react';
 import {
   babelPluginStyledComponentsVersion,
   emotionServerVersion,
-  zeitNextCss,
-  zeitNextLess,
-  zeitNextSass,
-  zeitNextStylus,
   nodeSass,
+  zeitNextLess,
+  zeitNextStylus,
 } from './versions';
 
 export const NEXT_SPECIFIC_STYLE_DEPENDENCIES = {
@@ -27,15 +25,11 @@ export const NEXT_SPECIFIC_STYLE_DEPENDENCIES = {
     devDependencies: CSS_IN_JS_DEPENDENCIES['@emotion/styled'].devDependencies,
   },
   css: {
-    dependencies: {
-      '@zeit/next-css': zeitNextCss,
-    },
+    dependencies: {},
     devDependencies: {},
   },
   scss: {
-    dependencies: {
-      '@zeit/next-sass': zeitNextSass,
-    },
+    dependencies: {},
     devDependencies: {
       'node-sass': nodeSass,
     },
