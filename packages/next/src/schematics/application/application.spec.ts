@@ -56,7 +56,9 @@ describe('app', () => {
         { name: 'myApp', style: 'scss' },
         appTree
       );
-      expect(result.exists('apps/my-app/pages/index.scss')).toEqual(true);
+      expect(result.exists('apps/my-app/pages/index.module.scss')).toEqual(
+        true
+      );
     });
   });
 

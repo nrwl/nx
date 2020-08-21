@@ -39,7 +39,7 @@
       "version": "10.1.0-beta.0",
       "packages": {
         "next": {
-          "version": "9.5.1",
+          "version": "9.5.2",
           "alwaysAddToPackageJson": false
         },
         "node-sass": {
