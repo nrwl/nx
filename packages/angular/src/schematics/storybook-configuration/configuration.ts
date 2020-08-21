@@ -20,6 +20,7 @@ export default function (schema: StorybookConfigureSchema): Rule {
       name: schema.name,
       uiFramework: '@storybook/angular',
       configureCypress: schema.configureCypress,
+      linter: schema.linter,
     }),
     schema.generateStories ? generateStories(schema) : noop(),
   ]);
