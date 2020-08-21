@@ -3,7 +3,6 @@ import * as path from 'path';
 import * as resolve from 'resolve';
 import { getProjectRoots, parseFiles } from './shared';
 import { fileExists } from '../utils/fileutils';
-import { output } from '../utils/output';
 import {
   createProjectGraph,
   onlyWorkspaceProjects,
@@ -27,31 +26,14 @@ const PRETTIER_EXTENSIONS = [
   'mdx',
 ];
 
-export function format(command: 'check' | 'write', args: yargs.Arguments) {
-  let patterns: string[];
+const MATCH_ALL_PATTERN = `**/*.{${PRETTIER_EXTENSIONS.join(',')}}`;
 
+export function format(command: 'check' | 'write', args: yargs.Arguments) {
   const { nxArgs } = splitArgsIntoNxArgsAndOverrides(args, 'affected');
 
-  try {
-    patterns = getPatterns({
-      ...args,
-      ...nxArgs,
-    } as any);
-  } catch (e) {
-    output.error({
-      title: e.message,
-      bodyLines: [
-        `Pass the SHA range: ${output.bold(
-          `npm run format:${command} -- --base=SHA1 --head=SHA2`
-        )}`,
-        '',
-        `Or pass the list of files: ${output.bold(
-          `npm run format:${command} -- --files="libs/mylib/index.ts,libs/mylib2/index.ts"`
-        )}`,
-      ],
-    });
-    process.exit(1);
-  }
+  const patterns = getPatterns({ ...args, ...nxArgs } as any).map(
+    (p) => `"${p}"`
+  );
 
   // Chunkify the patterns array to prevent crashing the windows terminal
   const chunkList: string[][] = chunkify(patterns, 50);
@@ -67,7 +49,7 @@ export function format(command: 'check' | 'write', args: yargs.Arguments) {
 }
 
 function getPatterns(args: NxArgs & { libsAndApps: boolean; _: string[] }) {
-  const allFilesPattern = [`"**/*.{${PRETTIER_EXTENSIONS.join(',')}}"`];
+  const allFilesPattern = [MATCH_ALL_PATTERN];
 
   try {
     if (args.all) {
@@ -75,16 +57,13 @@ function getPatterns(args: NxArgs & { libsAndApps: boolean; _: string[] }) {
     }
 
     const p = parseFiles(args);
-    let patterns = p.files
+    const patterns = p.files
       .filter((f) => fileExists(f))
       .filter((f) =>
         PRETTIER_EXTENSIONS.map((ext) => '.' + ext).includes(path.extname(f))
       );
 
-    const libsAndApp = args.libsAndApps;
-    return libsAndApp
-      ? getPatternsFromApps(patterns)
-      : patterns.map((f) => `"${f}"`);
+    return args.libsAndApps ? getPatternsFromApps(patterns) : patterns;
   } catch (e) {
     return allFilesPattern;
   }
@@ -97,9 +76,7 @@ function getPatternsFromApps(affectedFiles: string[]): string[] {
     calculateFileChanges(affectedFiles)
   );
   const roots = getProjectRoots(Object.keys(affectedGraph.nodes));
-  return roots.map(
-    (root) => `"${root}/**/*.{${PRETTIER_EXTENSIONS.join(',')}}"`
-  );
+  return roots.map((root) => `${root}/${MATCH_ALL_PATTERN}`);
 }
 
 function chunkify(target: string[], size: number): string[][] {
