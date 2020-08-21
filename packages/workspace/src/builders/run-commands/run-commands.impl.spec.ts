@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { Architect } from '@angular-devkit/architect';
 import { join } from 'path';
-import { TEN_MEGABYTES } from '@nrwl/workspace/src/core/file-utils';
+import { LARGE_BUFFER } from '@nrwl/workspace/src/builders/run-commands/run-commands.impl';
 
 function readFile(f: string) {
   return readFileSync(f).toString().replace(/\s/g, '');
@@ -95,6 +95,7 @@ describe('Command Runner Builder', () => {
       stdio: [0, 1, 2],
       cwd: undefined,
       env: process.env,
+      maxBuffer: LARGE_BUFFER,
     });
   });
 
@@ -236,7 +237,7 @@ describe('Command Runner Builder', () => {
       await run.result;
 
       expect(exec).toHaveBeenCalledWith(`echo 'Hello World'`, {
-        maxBuffer: TEN_MEGABYTES,
+        maxBuffer: LARGE_BUFFER,
         env: { ...process.env },
       });
     });
@@ -258,7 +259,7 @@ describe('Command Runner Builder', () => {
       await run.result;
 
       expect(exec).toHaveBeenCalledWith(`echo 'Hello World'`, {
-        maxBuffer: TEN_MEGABYTES,
+        maxBuffer: LARGE_BUFFER,
         env: { ...process.env, FORCE_COLOR: `true` },
       });
     });
