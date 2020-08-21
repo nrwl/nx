@@ -76,7 +76,7 @@ export function splitArgsIntoNxArgsAndOverrides(
   args: yargs.Arguments,
   mode: 'run-one' | 'run-many' | 'affected' | 'print-affected',
   options = { printWarnings: true }
-): { nxArgs: NxArgs; overrides: yargs.Arguments } {
+): { nxArgs: NxArgs; overrides: any } {
   const nxSpecific =
     mode === 'run-one' ? runOne : mode === 'run-many' ? runMany : runAffected;
 
