@@ -42,6 +42,16 @@ Type: `boolean`
 
 Automatically generate \*.stories.ts files for components declared in this library
 
+### linter
+
+Default: `tslint`
+
+Type: `string`
+
+Possible values: `eslint`, `tslint`
+
+The tool to use for running lint checks.
+
 ### name
 
 Type: `string`
