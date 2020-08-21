@@ -56,6 +56,10 @@ function getPatterns(args: NxArgs & { libsAndApps: boolean; _: string[] }) {
       return allFilesPattern;
     }
 
+    if (args.projects && args.projects.length > 0) {
+      return getPatternsFromProjects(args.projects);
+    }
+
     const p = parseFiles(args);
     const patterns = p.files
       .filter((f) => fileExists(f))
@@ -75,7 +79,11 @@ function getPatternsFromApps(affectedFiles: string[]): string[] {
     graph,
     calculateFileChanges(affectedFiles)
   );
-  const roots = getProjectRoots(Object.keys(affectedGraph.nodes));
+  return getPatternsFromProjects(Object.keys(affectedGraph.nodes));
+}
+
+function getPatternsFromProjects(projects: string[]) {
+  const roots = getProjectRoots(projects);
   return roots.map((root) => `${root}/${MATCH_ALL_PATTERN}`);
 }
 
