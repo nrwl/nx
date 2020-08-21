@@ -2,7 +2,8 @@ import { BuilderOutput, createBuilder } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
 import { exec, execSync } from 'child_process';
 import { Observable } from 'rxjs';
-import { TEN_MEGABYTES } from '@nrwl/workspace/src/core/file-utils';
+
+export const LARGE_BUFFER = 1024 * 1000000;
 
 function loadEnvVars(path?: string) {
   if (path) {
@@ -151,7 +152,7 @@ function createProcess(
 ): Promise<boolean> {
   return new Promise((res) => {
     const childProcess = exec(command, {
-      maxBuffer: TEN_MEGABYTES,
+      maxBuffer: LARGE_BUFFER,
       env: processEnv(color),
       cwd,
     });
@@ -183,6 +184,7 @@ function createSyncProcess(command: string, color: boolean, cwd: string) {
   execSync(command, {
     env: processEnv(color),
     stdio: [0, 1, 2],
+    maxBuffer: LARGE_BUFFER,
     cwd,
   });
 }
