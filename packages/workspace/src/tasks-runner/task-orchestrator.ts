@@ -2,7 +2,7 @@ import { Cache, TaskWithCachedResult } from './cache';
 import { cliCommand } from '../core/file-utils';
 import { ProjectGraph } from '../core/project-graph';
 import { AffectedEventType, Task } from './tasks-runner';
-import { getOutputs } from './utils';
+import { getOutputs, unparse } from './utils';
 import { fork } from 'child_process';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { output } from '../utils/output';
@@ -318,13 +318,7 @@ export class TaskOrchestrator {
   }
 
   private getCommandArgs(task: Task) {
-    const args = Object.entries(task.overrides || {}).map(([prop, value]) =>
-      typeof value === 'boolean'
-        ? value
-          ? `--${prop}`
-          : `--no-${prop}`
-        : `--${prop}=${value}`
-    );
+    const args: string[] = unparse(task.overrides || {});
 
     const config = task.target.configuration
       ? `:${task.target.configuration}`
