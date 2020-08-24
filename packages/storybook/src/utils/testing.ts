@@ -24,6 +24,11 @@ testRunner.registerCollection(
 );
 
 testRunner.registerCollection(
+  '@nrwl/react',
+  join(__dirname, '../../../react/collection.json')
+);
+
+testRunner.registerCollection(
   '@nrwl/jest',
   join(__dirname, '../../../jest/collection.json')
 );
@@ -56,25 +61,47 @@ export function runMigration(migrationName: string, options: any, tree: Tree) {
     .toPromise();
 }
 
-export async function createTestUILib(libName: string): Promise<Tree> {
+export async function createTestUILib(
+  libName: string,
+  collectionName: '@nrwl/angular' | '@nrwl/react'
+): Promise<Tree> {
   let appTree = Tree.empty();
   appTree = createEmptyWorkspace(appTree);
   appTree = await callRule(
-    externalSchematic('@nrwl/angular', 'library', {
+    externalSchematic(collectionName, 'library', {
       name: libName,
     }),
     appTree
   );
   appTree = await callRule(
-    externalSchematic('@nrwl/angular', 'component', {
+    externalSchematic(collectionName, 'component', {
       name: 'test-button',
       project: libName,
     }),
     appTree
   );
-  appTree.overwrite(
-    `libs/${libName}/src/lib/test-button/test-button.component.ts`,
-    `
+
+  if (collectionName === '@nrwl/angular') {
+    updateAngularComponent(appTree);
+  }
+  if (collectionName === '@nrwl/react') {
+    // @TODO
+  }
+
+  appTree = await callRule(
+    externalSchematic(collectionName, 'component', {
+      name: 'test-other',
+      project: libName,
+    }),
+    appTree
+  );
+
+  return appTree;
+
+  function updateAngularComponent(appTree: Tree) {
+    appTree.overwrite(
+      `libs/${libName}/src/lib/test-button/test-button.component.ts`,
+      `
 import { Component, OnInit, Input } from '@angular/core';
 import { tmpdir } from 'os';
 import { mkdtempSync } from 'fs';
@@ -99,19 +126,12 @@ export class TestButtonComponent implements OnInit {
 
 }
 `
-  );
-  appTree.overwrite(
-    `libs/${libName}/src/lib/test-button/test-button.component.html`,
-    `<button [attr.type]="type" [ngClass]="style"></button>`
-  );
-  appTree = await callRule(
-    externalSchematic('@nrwl/angular', 'component', {
-      name: 'test-other',
-      project: libName,
-    }),
-    appTree
-  );
-  return appTree;
+    );
+    appTree.overwrite(
+      `libs/${libName}/src/lib/test-button/test-button.component.html`,
+      `<button [attr.type]="type" [ngClass]="style"></button>`
+    );
+  }
 }
 
 function getTempDir() {

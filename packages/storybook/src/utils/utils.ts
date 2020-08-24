@@ -19,7 +19,12 @@ import {
 } from '@angular-devkit/schematics';
 
 import { get } from 'http';
-import { SourceFile, createSourceFile, ScriptTarget } from 'typescript';
+import {
+  SourceFile,
+  createSourceFile,
+  ScriptTarget,
+  CompilerOptions,
+} from 'typescript';
 
 export interface NodePackage {
   name: string;
@@ -34,7 +39,30 @@ export const Constants = {
   },
   jsonIndentLevel: 2,
   coreAddonPrefix: '@storybook/addon-',
+  uiFrameworks: {
+    angular: '@storybook/angular',
+    react: '@storybook/react',
+  } as const,
 };
+type Constants = typeof Constants;
+
+type Framework = {
+  type: keyof Constants['uiFrameworks'];
+  uiFramework: Constants['uiFrameworks'][keyof Constants['uiFrameworks']];
+};
+export function isFramework(
+  type: Framework['type'],
+  schema: Pick<Framework, 'uiFramework'>
+) {
+  if (type === 'angular' && schema.uiFramework === '@storybook/angular') {
+    return true;
+  }
+  if (type === 'react' && schema.uiFramework === '@storybook/react') {
+    return true;
+  }
+
+  return false;
+}
 
 export function safeFileDelete(tree: Tree, path: string): boolean {
   if (tree.exists(path)) {
@@ -110,6 +138,21 @@ export function parseJsonAtPath(tree: Tree, path: string): JsonAstObject {
   }
 
   return json;
+}
+
+export type TsConfig = {
+  extends: string;
+  compilerOptions: CompilerOptions;
+  include?: string[];
+  exclude?: string[];
+  references?: Array<{ path: string }>;
+};
+
+export function getTsConfigContent(tree: Tree, path: string) {
+  const tsConfig = parseJsonAtPath(tree, path);
+  const content = tsConfig.value as TsConfig;
+
+  return content;
 }
 
 export function getTsSourceFile(host: Tree, path: string): SourceFile {
