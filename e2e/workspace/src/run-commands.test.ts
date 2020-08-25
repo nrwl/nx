@@ -42,5 +42,26 @@ forEachCli(() => {
       expect(result).toContain('nested-only-value');
       done();
     }, 120000);
+
+    it('should interpolate provided arguments', async (done) => {
+      ensureProject();
+      const myapp = uniq('myapp1');
+
+      runCLI(`generate @nrwl/web:app ${myapp}`);
+
+      const config = readJson(workspaceConfigName());
+      config.projects[myapp].architect.echo = {
+        builder: '@nrwl/workspace:run-commands',
+        options: {
+          commands: [`echo 'print: {args.var1}'`, `echo 'print: {args.var2}'`],
+        },
+      };
+      updateFile(workspaceConfigName(), JSON.stringify(config));
+
+      const result = runCLI('echo --var1=x --var2=y');
+      expect(result).toContain('print: x');
+      expect(result).toContain('print: y');
+      done();
+    }, 120000);
   });
 });
