@@ -1,4 +1,7 @@
-import { getOutputsForTargetAndConfiguration } from '@nrwl/workspace/src/tasks-runner/utils';
+import {
+  getOutputsForTargetAndConfiguration,
+  unparse,
+} from '@nrwl/workspace/src/tasks-runner/utils';
 
 describe('utils', () => {
   describe('getOutputsForTargetAndConfiguration', () => {
@@ -179,6 +182,61 @@ describe('utils', () => {
           }
         )
       ).toEqual(['dist/root-myapp']);
+    });
+  });
+
+  describe('unparse', () => {
+    it('should unparse options whose values are primitives', () => {
+      const options = {
+        boolean1: false,
+        boolean2: true,
+        number: 4,
+        string: 'foo',
+        'empty-string': '',
+        ignore: null,
+      };
+
+      expect(unparse(options)).toEqual([
+        '--no-boolean1',
+        '--boolean2',
+        '--number=4',
+        '--string=foo',
+        '--empty-string=',
+      ]);
+    });
+
+    it('should unparse options whose values are arrays', () => {
+      const options = {
+        array1: [1, 2],
+        array2: [3, 4],
+      };
+
+      expect(unparse(options)).toEqual([
+        '--array1=1',
+        '--array1=2',
+        '--array2=3',
+        '--array2=4',
+      ]);
+    });
+
+    it('should unparse options whose values are objects', () => {
+      const options = {
+        foo: {
+          x: 'x',
+          y: 'y',
+          w: [1, 2],
+          z: [3, 4],
+        },
+      };
+
+      expect(unparse(options)).toEqual([
+        '--foo.x=x',
+        '--foo.y=y',
+        '--foo.w=1',
+        '--foo.w=2',
+        '--foo.z=3',
+        '--foo.z=4',
+      ]);
     });
   });
 });
