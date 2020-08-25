@@ -53,12 +53,21 @@ describe('getBaseWebpackPartial', () => {
     });
 
     it('should split typescript type checking into a separate workers', () => {
-      const result = getBaseWebpackPartial(input);
+      const result = getBaseWebpackPartial(input, true);
 
       const typeCheckerPlugin = result.plugins.find(
         (plugin) => plugin instanceof ForkTsCheckerWebpackPlugin
       ) as ForkTsCheckerWebpackPlugin;
       expect(typeCheckerPlugin).toBeTruthy();
+    });
+
+    it('should not do type checking for legacy builds', () => {
+      const result = getBaseWebpackPartial(input, false);
+
+      const typeCheckerPlugin = result.plugins.find(
+        (plugin) => plugin instanceof ForkTsCheckerWebpackPlugin
+      ) as ForkTsCheckerWebpackPlugin;
+      expect(typeCheckerPlugin).toBeFalsy();
     });
 
     it('should disable performance hints', () => {
@@ -130,7 +139,7 @@ describe('getBaseWebpackPartial', () => {
 
   describe('the tsConfig option', () => {
     it('should set the correct options for the type checker plugin', () => {
-      const result = getBaseWebpackPartial(input);
+      const result = getBaseWebpackPartial(input, true);
 
       const typeCheckerPlugin = result.plugins.find(
         (plugin) => plugin instanceof ForkTsCheckerWebpackPlugin
@@ -244,10 +253,13 @@ describe('getBaseWebpackPartial', () => {
 
   describe('the memory limit option', () => {
     it('should set the memory limit for the type checker', () => {
-      const result = getBaseWebpackPartial({
-        ...input,
-        memoryLimit: 1024,
-      });
+      const result = getBaseWebpackPartial(
+        {
+          ...input,
+          memoryLimit: 1024,
+        },
+        true
+      );
 
       const typeCheckerPlugin = result.plugins.find(
         (plugin) => plugin instanceof ForkTsCheckerWebpackPlugin
@@ -258,10 +270,13 @@ describe('getBaseWebpackPartial', () => {
 
   describe('the max workers option', () => {
     it('should set the maximum workers for the type checker', () => {
-      const result = getBaseWebpackPartial({
-        ...input,
-        maxWorkers: 1,
-      });
+      const result = getBaseWebpackPartial(
+        {
+          ...input,
+          maxWorkers: 1,
+        },
+        true
+      );
 
       const typeCheckerPlugin = result.plugins.find(
         (plugin) => plugin instanceof ForkTsCheckerWebpackPlugin

@@ -97,6 +97,11 @@ forEachCli((currentCLIName) => {
         `dist/apps/${appName}/main.esm.js`,
         `dist/apps/${appName}/main.es5.js`
       );
+
+      // Do not run type checking for legacy build
+      expect(
+        output.match(/Starting type checking service.../g) || []
+      ).toHaveLength(1);
     }, 120000);
   });
 
