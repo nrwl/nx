@@ -18,6 +18,7 @@ import {
   NodeWorkflow,
   validateOptionsWithSchema,
 } from '@angular-devkit/schematics/tools';
+import { Schema } from '@angular-devkit/schematics/collection-schema';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import { readFileSync, writeFileSync } from 'fs';
@@ -98,7 +99,7 @@ function compileToolsDir(outDir: string) {
 }
 
 function constructCollection() {
-  const schematics = {};
+  const schematics: Schema['schematics'] = {};
   fs.readdirSync(schematicsDir()).forEach((c) => {
     const childDir = path.join(schematicsDir(), c);
     if (exists(path.join(childDir, 'schema.json'))) {
@@ -155,7 +156,7 @@ function listSchematics(collectionName: string, logger: logging.Logger) {
 
 function createPromptProvider(): schema.PromptProvider {
   return (definitions: Array<schema.PromptDefinition>) => {
-    const questions: inquirer.Questions = definitions.map((definition) => {
+    const questions: inquirer.Question[] = definitions.map((definition) => {
       const question: inquirer.Question = {
         name: definition.id,
         message: definition.message,
@@ -325,7 +326,7 @@ async function executeSchematic(
 
 function parseOptions(args: string[], outDir: string): { [k: string]: any } {
   const schemaPath = path.join(outDir, args[0], 'schema.json');
-  let booleanProps = [];
+  let booleanProps: string[] = [];
   if (fileExists(schemaPath)) {
     const { properties } = readJsonFile(
       path.join(outDir, args[0], 'schema.json')

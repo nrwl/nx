@@ -1,7 +1,7 @@
 import { BuilderOutput, createBuilder } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
 import { exec, execSync } from 'child_process';
-import { Observable } from 'rxjs';
+import { Observable, Observer } from 'rxjs';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 
@@ -54,7 +54,7 @@ function run(options: RunCommandsBuilderOptions): Observable<BuilderOutput> {
   loadEnvVars(options.envFile);
   const normalized = normalizeOptions(options);
 
-  return Observable.create(async (observer) => {
+  return Observable.create(async (observer: Observer<{ success: boolean }>) => {
     if (options.readyWhen && !options.parallel) {
       observer.error(
         'ERROR: Bad builder config for @nrwl/run-commands - "readyWhen" can only be used when parallel=true'
@@ -134,7 +134,8 @@ function normalizeOptions(
       (options as NormalizedRunCommandsBuilderOptions).parsedArgs
     );
   });
-  return options as any;
+
+  return options as NormalizedRunCommandsBuilderOptions;
 }
 
 async function runSerially(options: NormalizedRunCommandsBuilderOptions) {
@@ -216,7 +217,7 @@ function parseArgs(options: RunCommandsBuilderOptions) {
   if (!args) {
     const unknownOptionsTreatedAsArgs = Object.keys(options)
       .filter((p) => propKeys.indexOf(p) === -1)
-      .reduce((m, c) => ((m[c] = options[c]), m), {});
+      .reduce((m, c) => ((m[c] = options[c]), m), {} as Record<string, any>);
     return unknownOptionsTreatedAsArgs;
   }
   return args
@@ -232,5 +233,5 @@ function parseArgs(options: RunCommandsBuilderOptions) {
       }
       m[key] = value;
       return m;
-    }, {});
+    }, {} as Record<string, any>);
 }

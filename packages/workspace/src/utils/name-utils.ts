@@ -56,6 +56,6 @@ function toCapitalCase(s: string): string {
  * Determine the parent directory for the ngModule specified
  * in the full-path option 'module'
  */
-export function findModuleParent(modulePath) {
+export function findModuleParent(modulePath: string): string {
   return path.dirname(modulePath);
 }

@@ -2,10 +2,14 @@ import { workspaceFileName } from './file-utils';
 import {
   ImplicitJsonSubsetDependency,
   NxJson,
+  NxWorkspaceJson,
 } from '@nrwl/workspace/src/core/shared-interfaces';
 import { output } from '../utils/output';
 
-export function assertWorkspaceValidity(workspaceJson, nxJson: NxJson) {
+export function assertWorkspaceValidity(
+  workspaceJson: NxWorkspaceJson,
+  nxJson: NxJson
+) {
   const workspaceJsonProjects = Object.keys(workspaceJson.projects);
   const nxJsonProjects = Object.keys(nxJson.projects);
 
@@ -48,21 +52,27 @@ export function assertWorkspaceValidity(workspaceJson, nxJson: NxJson) {
     nxJson.implicitDependencies || {}
   )
     .reduce((acc, entry) => {
-      function recur(value, acc = []) {
+      function recur(
+        value: typeof entry[1],
+        acc: Array<[string, string[]]> = []
+      ) {
         if (value === '*') {
           // do nothing since '*' is calculated and always valid.
-        } else if (Array.isArray(value)) {
-          acc.push([entry[0], value]);
-        } else {
-          Object.values(value).forEach((v) => {
-            recur(v, acc);
-          });
+          return;
         }
+        if (Array.isArray(value)) {
+          acc.push([entry[0], value]);
+          return;
+        }
+
+        Object.values(value).forEach((v) => {
+          recur(v, acc);
+        });
       }
       recur(entry[1], acc);
       return acc;
-    }, [])
-    .reduce((map, [filename, projectNames]: [string, string[]]) => {
+    }, [] as Array<[string, string[]]>)
+    .reduce((map, [filename, projectNames]) => {
       detectAndSetInvalidProjectValues(map, filename, projectNames, projects);
       return map;
     }, invalidImplicitDependencies);
@@ -77,7 +87,7 @@ export function assertWorkspaceValidity(workspaceJson, nxJson: NxJson) {
       detectAndSetInvalidProjectValues(
         map,
         nxJsonProjectName,
-        project.implicitDependencies,
+        project.implicitDependencies!,
         projects
       );
       return map;
@@ -118,7 +128,7 @@ function detectAndSetInvalidProjectValues(
 }
 
 function minus(a: string[], b: string[]): string[] {
-  const res = [];
+  const res: string[] = [];
   a.forEach((aa) => {
     if (!b.find((bb) => bb === aa)) {
       res.push(aa);

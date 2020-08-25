@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
 import * as stripJsonComments from 'strip-json-comments';
-const ignore = require('ignore');
 
 export function writeToFile(filePath: string, str: string) {
   ensureDirSync(path.dirname(filePath));
@@ -42,12 +41,11 @@ export function writeJsonFile(path: string, json: any) {
   writeToFile(path, serializeJson(json));
 }
 
-export function readWorkspaceConfigPath(): any {
+export function readWorkspaceConfigPath(): Record<string, any> {
   if (fileExists('workspace.json')) {
     return readJsonFile('workspace.json');
-  } else {
-    return readJsonFile('angular.json');
   }
+  return readJsonFile('angular.json');
 }
 
 export function copyFile(file: string, target: string) {
@@ -58,7 +56,7 @@ export function copyFile(file: string, target: string) {
   source.on('error', (e) => console.error(e));
 }
 
-export function directoryExists(name) {
+export function directoryExists(name: string) {
   try {
     return fs.statSync(name).isDirectory();
   } catch (e) {

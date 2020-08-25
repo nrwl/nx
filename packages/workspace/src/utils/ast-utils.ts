@@ -28,7 +28,12 @@ import {
 } from '../core/project-graph';
 import { FileData } from '../core/file-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
-import { NxJson, NxJsonProjectConfig } from '../core/shared-interfaces';
+import {
+  NxJson,
+  NxJsonProjectConfig,
+  NxPackageJson,
+  NxWorkspaceJson,
+} from '../core/shared-interfaces';
 import { addInstallTask } from './rules/add-install-task';
 
 function nodesByPosition(first: ts.Node, second: ts.Node): number {
@@ -147,7 +152,7 @@ export class InsertChange implements Change {
   }
 
   apply(host: any) {
-    return host.read(this.path).then((content) => {
+    return host.read(this.path).then((content: string) => {
       const prefix = content.substring(0, this.pos);
       const suffix = content.substring(this.pos);
 
@@ -174,7 +179,7 @@ export class RemoveChange implements Change {
   }
 
   apply(host: any): Promise<void> {
-    return host.read(this.path).then((content) => {
+    return host.read(this.path).then((content: string) => {
       const prefix = content.substring(0, this.pos);
       const suffix = content.substring(this.pos + this.toRemove.length);
       return host.write(this.path, `${prefix}${suffix}`);
@@ -201,7 +206,7 @@ export class ReplaceChange implements Change {
   }
 
   apply(host: any): Promise<void> {
-    return host.read(this.path).then((content) => {
+    return host.read(this.path).then((content: string) => {
       const prefix = content.substring(0, this.pos);
       const suffix = content.substring(this.pos + this.oldText.length);
       const text = content.substring(this.pos, this.pos + this.oldText.length);
@@ -239,7 +244,7 @@ export function addParameterToConstructor(
 export function addMethod(
   source: ts.SourceFile,
   modulePath: string,
-  opts: { className: string; methodHeader: string; body: string }
+  opts: { className: string; methodHeader: string; body: string | null }
 ): Change[] {
   const clazz = findClass(source, opts.className);
   const body = opts.body
@@ -324,12 +329,14 @@ export function getImport(
     const moduleSpec = i.moduleSpecifier
       .getText()
       .substring(1, i.moduleSpecifier.getText().length - 1);
-    const t = i.importClause.namedBindings.getText();
+    const t = i.importClause?.namedBindings?.getText();
     const bindings = t
-      .replace('{', '')
-      .replace('}', '')
-      .split(',')
-      .map((q) => q.trim());
+      ? t
+          .replace('{', '')
+          .replace('}', '')
+          .split(',')
+          .map((q) => q.trim())
+      : [];
     return { moduleSpec, bindings };
   });
 }
@@ -405,7 +412,7 @@ export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
   const workspaceJson = readJsonInTree(host, getWorkspacePath(host));
   const nxJson = readJsonInTree<NxJson>(host, '/nx.json');
 
-  const fileRead = (f: string) => host.read(f).toString();
+  const fileRead = (f: string) => String(host.read(f));
 
   const workspaceFiles: FileData[] = [];
 
@@ -549,16 +556,20 @@ export function addProjectToNxJsonInTree(
   });
 }
 
-export function readWorkspace(host: Tree): any {
+export function readWorkspace(host: Tree): NxWorkspaceJson {
   const path = getWorkspacePath(host);
-  return readJsonInTree(host, path);
+  return readJsonInTree<NxWorkspaceJson>(host, path);
 }
 
 /**
  * verifies whether the given packageJson dependencies require an update
  * given the deps & devDeps passed in
  */
-function requiresAddingOfPackages(packageJsonFile, deps, devDeps): boolean {
+function requiresAddingOfPackages(
+  packageJsonFile: NxPackageJson,
+  deps: NxPackageJson['dependencies'],
+  devDeps: NxPackageJson['devDependencies']
+): boolean {
   let needsDepsUpdate = false;
   let needsDevDepsUpdate = false;
 
@@ -590,8 +601,8 @@ function requiresAddingOfPackages(packageJsonFile, deps, devDeps): boolean {
  * @param addInstall default `true`; set to false to avoid installs
  */
 export function addDepsToPackageJson(
-  deps: any,
-  devDeps: any,
+  deps: NxPackageJson['dependencies'],
+  devDeps: NxPackageJson['devDependencies'],
   addInstall = true
 ): Rule {
   return (host: Tree, context: SchematicContext) => {
@@ -624,8 +635,8 @@ export function addDepsToPackageJson(
 }
 
 export function updatePackageJsonDependencies(
-  deps: any,
-  devDeps: any,
+  deps: NxPackageJson['dependencies'],
+  devDeps: NxPackageJson['devDependencies'],
   addInstall = true
 ): Rule {
   return chain([
@@ -646,14 +657,24 @@ export function updatePackageJsonDependencies(
   ]);
 }
 
-export function getProjectConfig(host: Tree, name: string): any {
-  const workspaceJson = readJsonInTree(host, getWorkspacePath(host));
+/**
+ *
+ * @param host
+ * @param name
+ * @throws {Error}
+ */
+export function getProjectConfig(host: Tree, name: string) {
+  const workspaceJson = readJsonInTree<NxWorkspaceJson<Path>>(
+    host,
+    getWorkspacePath(host)
+  );
   const projectConfig = workspaceJson.projects[name];
+
   if (!projectConfig) {
     throw new Error(`Cannot find project '${name}'`);
-  } else {
-    return projectConfig;
   }
+
+  return projectConfig;
 }
 
 export function createOrUpdate(host: Tree, path: string, content: string) {
@@ -774,7 +795,7 @@ export function renameSyncInTree(
   tree: Tree,
   from: string,
   to: string,
-  cb: (err: string) => void
+  cb: (err: string | null) => void
 ) {
   if (!tree.exists(from)) {
     cb(`Path: ${from} does not exist`);
@@ -790,7 +811,7 @@ export function renameDirSyncInTree(
   tree: Tree,
   from: string,
   to: string,
-  cb: (err: string) => void
+  cb: (err: string | null) => void
 ) {
   const dir = tree.getDir(from);
   if (!dirExists(dir)) {

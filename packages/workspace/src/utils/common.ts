@@ -1,4 +1,3 @@
-import { Rule } from '@angular-devkit/schematics';
 import { Options } from 'prettier';
 import * as cosmiconfig from 'cosmiconfig';
 
@@ -30,7 +29,7 @@ export function resolveUserExistingPrettierConfig(): Promise<ExistingPrettierCon
     stopDir: process.cwd(),
     transform: (result) => {
       if (result && result.config) {
-        delete result.config.$schema;
+        delete (result.config as Record<string, any>).$schema;
       }
       return result;
     },
@@ -40,7 +39,7 @@ export function resolveUserExistingPrettierConfig(): Promise<ExistingPrettierCon
       return null;
     }
     return {
-      sourceFilepath: result.filepath,
+      sourceFilepath: result.filePath,
       config: result.config,
     };
   });

@@ -107,7 +107,7 @@ export class Migrator {
         return Object.keys(migrationsJson.schematics)
           .filter(
             (r) =>
-              this.gt(migrationsJson.schematics[r].version, currentVersion) &
+              this.gt(migrationsJson.schematics[r].version, currentVersion) &&
               this.lte(migrationsJson.schematics[r].version, target.version)
           )
           .map((r) => ({

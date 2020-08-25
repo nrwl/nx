@@ -4,7 +4,7 @@ import { ProjectGraphNodeRecords } from './project-graph/project-graph-models';
 import { getSortedProjectNodes, isWorkspaceProject } from './project-graph';
 
 export class TargetProjectLocator {
-  _sortedNodeNames = [];
+  _sortedNodeNames: string[] = [];
 
   constructor(private nodes: ProjectGraphNodeRecords) {
     this._sortedNodeNames = getSortedProjectNodes(nodes).map(

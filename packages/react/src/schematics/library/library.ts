@@ -372,7 +372,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     }
 
     try {
-      normalized.appMain = appProjectConfig.architect.build.options.main;
+      normalized.appMain = appProjectConfig.architect.build.options
+        .main as string;
       normalized.appSourceRoot = normalize(appProjectConfig.sourceRoot);
     } catch (e) {
       throw new Error(

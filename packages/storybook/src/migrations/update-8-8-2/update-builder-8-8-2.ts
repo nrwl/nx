@@ -6,6 +6,7 @@ import {
   updateJsonInTree,
   formatFiles,
 } from '@nrwl/workspace';
+import { JsonObject } from '@angular-devkit/core';
 
 export default function update(): Rule {
   return chain([
@@ -40,12 +41,11 @@ export default function update(): Rule {
           workspace.projects[name].architect.storybook &&
           workspace.projects[name].architect.storybook.builder ===
             '@nrwl/storybook:storybook' &&
-          workspace.projects[name].architect.storybook.options.config
-            .configFolder
+          (workspace.projects[name].architect.storybook.options
+            .config as JsonObject).configFolder
         ) {
-          const storybookFolderPath =
-            workspace.projects[name].architect.storybook.options.config
-              .configFolder;
+          const storybookFolderPath = (workspace.projects[name].architect
+            .storybook.options.config as JsonObject).configFolder;
           tsconfigUpdateRules.push(
             updateJsonInTree(
               `${storybookFolderPath}/tsconfig.json`,

@@ -6,7 +6,7 @@ import {
   SchematicContext,
   Tree,
 } from '@angular-devkit/schematics';
-let prettier;
+let prettier: typeof import('prettier');
 try {
   prettier = require('prettier');
 } catch (e) {}

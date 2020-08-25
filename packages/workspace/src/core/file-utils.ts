@@ -9,7 +9,12 @@ import { appRootPath } from '../utils/app-root';
 import { fileExists, readJsonFile } from '../utils/fileutils';
 import { jsonDiff } from '../utils/json-diff';
 import { ProjectGraphNode } from './project-graph';
-import { Environment, NxJson } from './shared-interfaces';
+import {
+  Environment,
+  NxJson,
+  NxWorkspaceJson,
+  NxPackageJson,
+} from './shared-interfaces';
 import { defaultFileHasher } from './hasher/file-hasher';
 import { performance } from 'perf_hooks';
 
@@ -130,7 +135,7 @@ export function allFilesInDir(
     return [];
   }
 
-  let res = [];
+  let res: FileData[] = [];
   try {
     fs.readdirSync(dirName).forEach((c) => {
       const child = path.join(dirName, c);
@@ -162,8 +167,8 @@ function readFileIfExisting(path: string) {
   return fs.existsSync(path) ? fs.readFileSync(path, 'UTF-8').toString() : '';
 }
 
-export function readWorkspaceJson(): any {
-  return readJsonFile(`${appRootPath}/${workspaceFileName()}`);
+export function readWorkspaceJson(): NxWorkspaceJson {
+  return readJsonFile<NxWorkspaceJson>(`${appRootPath}/${workspaceFileName()}`);
 }
 
 export function cliCommand() {
@@ -173,23 +178,25 @@ export function cliCommand() {
 export function workspaceFileName() {
   if (fileExists(`${appRootPath}/angular.json`)) {
     return 'angular.json';
-  } else {
-    return 'workspace.json';
   }
+  return 'workspace.json';
 }
 
 export function defaultFileRead(filePath: string) {
   return readFileSync(`${appRootPath}/${filePath}`, 'UTF-8');
 }
 
-export function readPackageJson(): any {
+export function readPackageJson(): NxPackageJson {
   return readJsonFile(`${appRootPath}/package.json`);
 }
 
+/**
+ * @throws {Error}
+ */
 export function readNxJson(): NxJson {
   const config = readJsonFile<NxJson>(`${appRootPath}/nx.json`);
   if (!config.npmScope) {
-    throw new Error(`nx.json must define the npmScope property.`);
+    throw new Error(`nx.json must define the 'npmScope' property.`);
   }
   return config;
 }
@@ -266,15 +273,15 @@ export function readEnvironment(
 
 export function normalizedProjectRoot(p: ProjectGraphNode): string {
   if (p.data && p.data.root) {
-    const path = p.data.root.split('/').filter((v) => !!v);
+    const path = (p.data.root as string).split('/').filter((v) => !!v);
     if (path.length === 1) {
       return path[0];
     }
     // Remove the first part of the path, usually 'libs'
     return path.slice(1).join('/');
-  } else {
-    return '';
   }
+
+  return '';
 }
 
 export function filesChanged(a: FileData[], b: FileData[]) {

@@ -20,12 +20,21 @@ export function parseTarget(targetString: string) {
   };
 }
 
-export function editTarget(targetString: string, callback) {
+export function editTarget(
+  targetString: string,
+  callback: (
+    value: ReturnType<typeof parseTarget>
+  ) => ReturnType<typeof parseTarget>
+) {
   const parsedTarget = parseTarget(targetString);
   return serializeTarget(callback(parsedTarget));
 }
 
-export function serializeTarget({ project, target, config }) {
+export function serializeTarget({
+  project,
+  target,
+  config,
+}: ReturnType<typeof parseTarget>) {
   return [project, target, config].filter((part) => !!part).join(':');
 }
 
