@@ -15,6 +15,7 @@ import {
   storybookVersion,
   nxVersion,
   babelPresetTypescriptVersion,
+  webpackTypesVersion,
 } from '../../utils/versions';
 import { isFramework } from '../../utils/utils';
 import { Schema } from './schema';
@@ -28,6 +29,7 @@ function checkDependenciesInstalled(schema: Schema): Rule {
     // base deps
     devDependencies['@nrwl/storybook'] = nxVersion;
     devDependencies['@storybook/addon-knobs'] = storybookVersion;
+    devDependencies['@types/webpack'] = webpackTypesVersion;
 
     if (isFramework('angular', schema)) {
       devDependencies['@storybook/angular'] = storybookVersion;
