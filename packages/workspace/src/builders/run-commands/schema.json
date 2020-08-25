@@ -69,6 +69,7 @@
       "description": "Current working directory of the commands."
     }
   },
+  "additionalProperties": true,
   "required": [],
   "examplesFile": "../../../docs/run-commands-examples.md"
 }
