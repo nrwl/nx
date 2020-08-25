@@ -312,6 +312,28 @@ describe('Cypress builder', () => {
     done();
   });
 
+  it('should call `Cypress.run` with provided environment variables through additional properties', async (done) => {
+    cypressBuilderRunner(
+      {
+        ...cypressBuilderOptions,
+        '--': ['--env.x=x', '--env.y', 'y'],
+      },
+      mockedBuilderContext
+    )
+      .toPromise()
+      .then(() => {
+        expect(cypressRun).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            env: jasmine.objectContaining({ x: 'x', y: 'y' }),
+          })
+        );
+        expect(cypressOpen).not.toHaveBeenCalled();
+        done();
+      });
+
+    fakeEventEmitter.emit('exit', 0); // Passing tsc command
+  });
+
   test('when devServerTarget AND baseUrl options are both present, baseUrl should take precidence', async (done) => {
     const options: CypressBuilderOptions = {
       ...cypressBuilderOptions,

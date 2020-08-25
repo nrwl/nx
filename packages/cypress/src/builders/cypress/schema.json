@@ -86,6 +86,6 @@
       "description": "The reporter options used. Supported options depend on the reporter."
     }
   },
-  "additionalProperties": false,
+  "additionalProperties": true,
   "required": ["cypressConfig", "tsConfig"]
 }
