@@ -81,17 +81,7 @@ export function getBaseWebpackPartial(
     performance: {
       hints: false,
     },
-    plugins: [
-      new ForkTsCheckerWebpackPlugin({
-        tsconfig: options.tsConfig,
-        memoryLimit:
-          options.memoryLimit ||
-          ForkTsCheckerWebpackPlugin.DEFAULT_MEMORY_LIMIT,
-        workers: options.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE,
-        useTypescriptIncrementalApi: false,
-      }),
-      new webpack.DefinePlugin(getClientEnvironment(mode).stringified),
-    ],
+    plugins: [new webpack.DefinePlugin(getClientEnvironment(mode).stringified)],
     watch: options.watch,
     watchOptions: {
       poll: options.poll,
@@ -107,6 +97,19 @@ export function getBaseWebpackPartial(
   }
 
   const extraPlugins: webpack.Plugin[] = [];
+
+  if (esm) {
+    extraPlugins.push(
+      new ForkTsCheckerWebpackPlugin({
+        tsconfig: options.tsConfig,
+        memoryLimit:
+          options.memoryLimit ||
+          ForkTsCheckerWebpackPlugin.DEFAULT_MEMORY_LIMIT,
+        workers: options.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE,
+        useTypescriptIncrementalApi: false,
+      })
+    );
+  }
 
   if (options.progress) {
     extraPlugins.push(new ProgressPlugin());
