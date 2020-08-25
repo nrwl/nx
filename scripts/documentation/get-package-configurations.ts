@@ -21,8 +21,8 @@ export interface Configuration {
 export function getPackageConfigurations(
   packagesDirectory: string = 'packages',
   documentationsDirectory: string = 'docs'
-): { framework: 'angular' | 'react'; configs: Configuration[] }[] {
-  return ['angular', 'react'].map((framework) => {
+): { framework: 'angular' | 'react' | 'node'; configs: Configuration[] }[] {
+  return ['angular', 'react', 'node'].map((framework) => {
     const packagesDir = path.resolve(
       path.join(__dirname, '../../', packagesDirectory)
     );
