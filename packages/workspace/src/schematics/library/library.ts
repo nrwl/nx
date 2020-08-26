@@ -15,13 +15,16 @@ import {
 import { join, normalize } from '@angular-devkit/core';
 import { Schema } from './schema';
 
-import { NxJson, updateWorkspaceInTree, getNpmScope } from '@nrwl/workspace';
-import { updateJsonInTree, readJsonInTree } from '@nrwl/workspace';
+import { updateWorkspaceInTree, getNpmScope } from '@nrwl/workspace';
+import { updateJsonInTree } from '@nrwl/workspace';
 import { toFileName, names } from '@nrwl/workspace';
 import { formatFiles } from '@nrwl/workspace';
 import { offsetFromRoot } from '@nrwl/workspace';
+
 import { generateProjectLint, addLintFiles } from '../../utils/lint';
 import { addProjectToNxJsonInTree, libsDir } from '../../utils/ast-utils';
+import { cliCommand } from '../../core/file-utils';
+import { toJS } from '../../utils/rules/to-js';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -54,23 +57,27 @@ function addProject(options: NormalizedSchema): Rule {
 }
 
 function updateTsConfig(options: NormalizedSchema): Rule {
-  return updateJsonInTree('tsconfig.base.json', (json) => {
-    const c = json.compilerOptions;
-    c.paths = c.paths || {};
-    delete c.paths[options.name];
+  return (host: Tree) =>
+    updateJsonInTree('tsconfig.base.json', (json) => {
+      const c = json.compilerOptions;
+      c.paths = c.paths || {};
+      delete c.paths[options.name];
 
-    if (c.paths[options.importPath]) {
-      throw new SchematicsException(
-        `You already have a library using the import path "${options.importPath}". Make sure to specify a unique one.`
-      );
-    }
+      if (c.paths[options.importPath]) {
+        throw new SchematicsException(
+          `You already have a library using the import path "${options.importPath}". Make sure to specify a unique one.`
+        );
+      }
 
-    c.paths[options.importPath] = [
-      `libs/${options.projectDirectory}/src/index.ts`,
-    ];
+      c.paths[options.importPath] = [
+        maybeJs(
+          options,
+          `${libsDir(host)}/${options.projectDirectory}/src/index.ts`
+        ),
+      ];
 
-    return json;
-  });
+      return json;
+    });
 }
 
 function createFiles(options: NormalizedSchema): Rule {
@@ -79,11 +86,13 @@ function createFiles(options: NormalizedSchema): Rule {
       template({
         ...options,
         ...names(options.name),
+        cliCommand: cliCommand(),
         tmpl: '',
         offsetFromRoot: offsetFromRoot(options.projectRoot),
         hasUnitTestRunner: options.unitTestRunner !== 'none',
       }),
       move(options.projectRoot),
+      options.js ? toJS() : noop(),
     ])
   );
 }
@@ -144,4 +153,10 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     parsedTags,
     importPath,
   };
+}
+
+function maybeJs(options: NormalizedSchema, path: string): string {
+  return options.js && (path.endsWith('.ts') || path.endsWith('.tsx'))
+    ? path.replace(/\.tsx?$/, '.js')
+    : path;
 }

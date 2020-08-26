@@ -43,6 +43,7 @@ describe('init', () => {
       expect(
         packageJson.devDependencies['@storybook/addon-knobs']
       ).toBeDefined();
+      expect(packageJson.devDependencies['@types/webpack']).toBeDefined();
 
       // angular specific
       expect(packageJson.devDependencies['@storybook/angular']).toBeDefined();

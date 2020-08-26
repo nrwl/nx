@@ -1,16 +1,15 @@
 import React from 'react';
 <% if (styledModule && styledModule !== 'styled-jsx') {
-  var wrapper = 'StyledApp';
+  var wrapper = 'StyledPage';
 %>import styled from '<%= styledModule %>';<% } else {
   var wrapper = 'div';
 %>
-  <%= style !== 'styled-jsx' ? `import './${fileName}.${style}';` : '' %>
+  <%= style !== 'styled-jsx' ? `import styles from './${fileName}.module.${style}';` : '' %>
 <% }
 %>
-import { ReactComponent as NxLogo } from '../public/nx-logo-white.svg';
 
 <% if (styledModule && styledModule !== 'styled-jsx') { %>
-const StyledApp = styled.div`<%= styleContent %>`;
+const StyledPage = styled.div`<%= styleContent %>`;
 <% }%>
 
 export const Index = () => {
@@ -20,7 +19,7 @@ export const Index = () => {
    * Note: The corresponding styles are in the ./${fileName}.${style} file.
    */
   return (
-    <<%= wrapper %><% if (!styledModule || styledModule === 'styled-jsx') {%> className="app"<% } %>>
+    <<%= wrapper %><% if (!styledModule || styledModule === 'styled-jsx') {%> className={styles.page}<% } %>>
       <%= styledModule === 'styled-jsx' ? `<style jsx>{\`${styleContent}\`}</style>` : `` %>
       <%= appContent %>
     </<%= wrapper %>>

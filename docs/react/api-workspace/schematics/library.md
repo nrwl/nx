@@ -48,9 +48,17 @@ Type: `string`
 
 The library name used to import it, like @myorg/my-awesome-lib
 
+### js
+
+Default: `false`
+
+Type: `boolean`
+
+Generate JavaScript files rather than TypeScript files
+
 ### linter
 
-Default: `tslint`
+Default: `eslint`
 
 Type: `string`
 

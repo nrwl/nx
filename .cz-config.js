@@ -24,6 +24,7 @@ module.exports = {
     { name: 'node', description: 'anything Node specific' },
     { name: 'nx-plugin', description: 'anything Nx Plugin specific' },
     { name: 'react', description: 'anything React specific' },
+    { name: 'web', description: 'anything Web specific' },
     { name: 'linter', description: 'anything Linter specific' },
     { name: 'storybook', description: 'anything Storybook specific' },
     {

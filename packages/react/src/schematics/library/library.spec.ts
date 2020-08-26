@@ -18,8 +18,9 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(workspaceJson.projects['my-lib'].architect.build).toBeUndefined();
       expect(workspaceJson.projects['my-lib'].architect.lint).toEqual({
-        builder: '@angular-devkit/build-angular:tslint',
+        builder: '@nrwl/linter:lint',
         options: {
+          linter: 'eslint',
           exclude: ['**/node_modules/**', '!libs/my-lib/**/*'],
           tsConfig: [
             'libs/my-lib/tsconfig.lib.json',
@@ -191,8 +192,9 @@ describe('lib', () => {
         'libs/my-dir/my-lib'
       );
       expect(workspaceJson.projects['my-dir-my-lib'].architect.lint).toEqual({
-        builder: '@angular-devkit/build-angular:tslint',
+        builder: '@nrwl/linter:lint',
         options: {
+          linter: 'eslint',
           exclude: ['**/node_modules/**', '!libs/my-dir/my-lib/**/*'],
           tsConfig: [
             'libs/my-dir/my-lib/tsconfig.lib.json',
@@ -473,12 +475,19 @@ describe('lib', () => {
       );
 
       const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      const babelrc = readJsonInTree(tree, 'libs/my-lib/.babelrc');
+      const babelJestConfig = readJsonInTree(
+        tree,
+        'libs/my-lib/babel-jest.config.json'
+      );
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
           external: ['react', 'react-dom', 'styled-jsx'],
         },
       });
+      expect(babelrc.plugins).toContain('styled-jsx/babel');
+      expect(babelJestConfig.plugins).toContain('styled-jsx/babel');
     });
 
     it('should support style none', async () => {

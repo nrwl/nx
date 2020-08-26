@@ -28,6 +28,7 @@ import {
   updateWorkspace,
   addLintFiles,
   NxJson,
+  Linter,
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import init from '../init/init';
@@ -411,7 +412,7 @@ function updateComponentSpec(options: NormalizedSchema) {
   };
 }
 
-function updateLinting(options: NormalizedSchema): Rule {
+function updateTsLintConfig(options: NormalizedSchema): Rule {
   return chain([
     updateJsonInTree('tslint.json', (json) => {
       if (
@@ -512,6 +513,12 @@ function updateProject(options: NormalizedSchema): Rule {
         fixedProject.architect.lint.options.exclude.push(
           '!' + join(normalize(options.appProjectRoot), '**/*')
         );
+
+        if (options.linter === Linter.EsLint) {
+          fixedProject.architect.lint.options.linter = Linter.EsLint;
+          fixedProject.architect.lint.builder = '@nrwl/linter:lint';
+          host.delete(`${options.appProjectRoot}/tslint.json`);
+        }
 
         if (options.e2eTestRunner === 'none') {
           delete json.projects[options.e2eProjectName];
@@ -673,6 +680,66 @@ function addProxyConfig(options: NormalizedSchema): Rule {
   };
 }
 
+function enableStrictTypeChecking(schema: Schema): Rule {
+  return (host) => {
+    const options = normalizeOptions(host, schema);
+
+    // define all the tsconfig files to update
+    const configFiles = [
+      `${options.appProjectRoot}/tsconfig.json`,
+      `${options.e2eProjectRoot}/tsconfig.e2e.json`,
+    ];
+
+    const rules: Rule[] = [];
+
+    // iterate each config file, if it exists then update it
+    for (const configFile of configFiles) {
+      if (!host.exists(configFile)) {
+        continue;
+      }
+
+      // Update the settings in the tsconfig.app.json to enable strict type checking.
+      // This matches the settings defined by the Angular CLI https://angular.io/guide/strict-mode
+      const rule = updateJsonInTree(configFile, (json) => {
+        // update the TypeScript settings
+        json.compilerOptions = {
+          ...(json.compilerOptions ?? {}),
+          forceConsistentCasingInFileNames: true,
+          strict: true,
+          noImplicitReturns: true,
+          noFallthroughCasesInSwitch: true,
+        };
+
+        // update Angular Template Settings
+        json.angularCompilerOptions = {
+          ...(json.angularCompilerOptions ?? {}),
+          strictInjectionParameters: true,
+          strictTemplates: true,
+        };
+
+        return json;
+      });
+
+      rules.push(rule);
+    }
+
+    // set the default so future applications will default to strict mode
+    // unless the user has previously set this to false by default
+    const updateAngularWorkspace = updateWorkspace((workspace) => {
+      workspace.extensions.schematics = workspace.extensions.schematics || {};
+
+      workspace.extensions.schematics['@nrwl/angular:application'] =
+        workspace.extensions.schematics['@nrwl/angular:application'] || {};
+
+      workspace.extensions.schematics['@nrwl/angular:application'].strict =
+        workspace.extensions.schematics['@nrwl/angular:application'].strict ??
+        options.strict;
+    });
+
+    return chain([...rules, updateAngularWorkspace]);
+  };
+}
+
 export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
@@ -692,9 +759,6 @@ export default function (schema: Schema): Rule {
       init({
         ...options,
         skipFormat: true,
-      }),
-      addLintFiles(options.appProjectRoot, options.linter, {
-        onlyGlobal: true,
       }),
       // TODO: Remove this after Angular 10.1.0
       updateJsonInTree('tsconfig.json', () => ({
@@ -732,7 +796,10 @@ export default function (schema: Schema): Rule {
       updateComponentStyles(options),
       updateComponentSpec(options),
       options.routing ? addRouterRootConfiguration(options) : noop(),
-      updateLinting(options),
+      addLintFiles(options.appProjectRoot, options.linter, {
+        onlyGlobal: options.linter === Linter.TsLint, // local lint files are added differently when tslint
+      }),
+      options.linter === 'tslint' ? updateTsLintConfig(options) : noop(),
       options.unitTestRunner === 'jest'
         ? externalSchematic('@nrwl/jest', 'jest-project', {
             project: options.name,
@@ -755,6 +822,7 @@ export default function (schema: Schema): Rule {
           })
         : noop(),
       options.backendProject ? addProxyConfig(options) : noop(),
+      options.strict ? enableStrictTypeChecking(options) : noop(),
       formatFiles(options),
     ])(host, context);
   };

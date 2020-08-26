@@ -19,4 +19,5 @@ export interface Schema {
   unitTestRunner: UnitTestRunner;
   e2eTestRunner: E2eTestRunner;
   backendProject?: string;
+  strict?: boolean;
 }

@@ -21,7 +21,7 @@ import { writeIndexHtml } from '../../utils/third-party/cli-files/utilities/inde
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { execSync } from 'child_process';
 import { Range, satisfies } from 'semver';
-import { basename } from 'path';
+import { basename, join } from 'path';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
@@ -30,6 +30,7 @@ import {
 import { CrossOriginValue } from '../../utils/third-party/cli-files/utilities/index-file/augment-index-html';
 import { readTsConfig } from '@nrwl/workspace';
 import { BuildBrowserFeatures } from '../../utils/third-party/utils/build-browser-features';
+import { deleteOutputDir } from '../../utils/delete-output-dir';
 
 export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   index: string;
@@ -84,12 +85,15 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
       context
     );
     options.tsConfig = createTmpTsConfig(
-      options.tsConfig,
+      join(context.workspaceRoot, options.tsConfig),
       context.workspaceRoot,
       target.data.root,
       dependencies
     );
   }
+
+  // Delete output path before bundling
+  deleteOutputDir(context.workspaceRoot, options.outputPath);
 
   return from(getSourceRoot(context))
     .pipe(

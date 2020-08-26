@@ -56,7 +56,9 @@ describe('app', () => {
         { name: 'myApp', style: 'scss' },
         appTree
       );
-      expect(result.exists('apps/my-app/pages/index.scss')).toEqual(true);
+      expect(result.exists('apps/my-app/pages/index.module.scss')).toEqual(
+        true
+      );
     });
   });
 
@@ -69,7 +71,14 @@ describe('app', () => {
       );
 
       const content = result.read('apps/my-app/pages/index.tsx').toString();
+
+      const babelJestConfig = readJsonInTree(
+        result,
+        'apps/my-app/babel-jest.config.json'
+      );
+
       expect(content).toMatch(/<style jsx>/);
+      expect(babelJestConfig.plugins).toContain('styled-jsx/babel');
     });
   });
 

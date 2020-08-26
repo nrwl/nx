@@ -72,6 +72,18 @@
     "group": {
       "type": "string",
       "description": "A named group for recorded runs in the Cypress dashboard."
+    },
+    "ignoreTestFiles": {
+      "type": "string",
+      "description": "A String or Array of glob patterns used to ignore test files that would otherwise be shown in your list of tests. Cypress uses minimatch with the options: {dot: true, matchBase: true}. We suggest using https://globster.xyz to test what files would match."
+    },
+    "reporter": {
+      "type": "string",
+      "description": "The reporter used during cypress run"
+    },
+    "reporterOptions": {
+      "type": "string",
+      "description": "The reporter options used. Supported options depend on the reporter."
     }
   },
   "additionalProperties": false,

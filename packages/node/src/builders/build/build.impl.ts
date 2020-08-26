@@ -3,7 +3,7 @@ import { JsonObject, workspaces } from '@angular-devkit/core';
 import { runWebpack, BuildResult } from '@angular-devkit/build-webpack';
 
 import { Observable, from } from 'rxjs';
-import { resolve } from 'path';
+import { join, resolve } from 'path';
 import { map, concatMap } from 'rxjs/operators';
 import { getNodeWebpackConfig } from '../../utils/node.config';
 import { OUT_FILENAME } from '../../utils/config';
@@ -44,7 +44,7 @@ function run(
       context
     );
     options.tsConfig = createTmpTsConfig(
-      options.tsConfig,
+      join(context.workspaceRoot, options.tsConfig),
       context.workspaceRoot,
       target.data.root,
       dependencies

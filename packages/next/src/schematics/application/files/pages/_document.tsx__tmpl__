@@ -19,7 +19,6 @@ export default class CustomDocument extends Document<{ styleTags: ReactElement[]
     return (
       <html>
         <Head>
-          <title>Welcome to <%= name %>!</title>
           {this.props.styleTags}
         </Head>
         <body>

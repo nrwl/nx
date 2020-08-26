@@ -46,8 +46,9 @@ describe('NxPlugin plugin', () => {
       },
     });
     expect(project.architect.lint).toEqual({
-      builder: '@angular-devkit/build-angular:tslint',
+      builder: '@nrwl/linter:lint',
       options: {
+        linter: 'eslint',
         exclude: ['**/node_modules/**', '!libs/my-plugin/**/*'],
         tsConfig: [
           'libs/my-plugin/tsconfig.lib.json',
@@ -63,6 +64,23 @@ describe('NxPlugin plugin', () => {
         passWithNoTests: true,
       },
     });
+  });
+
+  it('should place the plugin in a directory', async () => {
+    const tree = await runSchematic(
+      'plugin',
+      {
+        name: 'myPlugin',
+        directory: 'plugins',
+        importPath: '@project/plugins-my-plugin',
+      },
+      appTree
+    );
+    const workspace = await readWorkspace(tree);
+    const project = workspace.projects['plugins-my-plugin'];
+    const projectE2e = workspace.projects['plugins-my-plugin-e2e'];
+    expect(project.root).toEqual('libs/plugins/my-plugin');
+    expect(projectE2e.root).toEqual('apps/plugins/my-plugin-e2e');
   });
 
   it('should update the tsconfig.lib.json file', async () => {

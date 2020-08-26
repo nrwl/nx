@@ -64,6 +64,16 @@ Type: `boolean`
 
 Add RouterModule.forChild when set to true, and a simple array of routes when set to false.
 
+### linter
+
+Default: `tslint`
+
+Type: `string`
+
+Possible values: `tslint`, `eslint`
+
+The tool to use for running lint checks.
+
 ### name
 
 Type: `string`
@@ -131,6 +141,14 @@ Default: `false`
 Type: `boolean`
 
 Do not update tsconfig.json for development experience.
+
+### strict
+
+Default: `false`
+
+Type: `boolean`
+
+Creates a library with stricter type checking and build optimization options.
 
 ### style
 

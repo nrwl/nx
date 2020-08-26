@@ -20,7 +20,7 @@ export function updateProjectRootFiles(schema: Schema): Rule {
     return from(getWorkspace(tree)).pipe(
       map((workspace) => {
         const project = workspace.projects.get(schema.projectName);
-        const destination = getDestination(schema, workspace);
+        const destination = getDestination(schema, workspace, tree);
 
         const newRelativeRoot = path
           .relative(path.join(appRootPath, destination), appRootPath)

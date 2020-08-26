@@ -80,27 +80,18 @@ forEachCli('nx', () => {
 
       runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
 
-      runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/react:lib ${libName} --no-interactive --style=none`
+      );
 
       const mainPath = `apps/${appName}/pages/index.tsx`;
       updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
-      updateFile(
-        `apps/${appName}/next.config.js`,
-        `
-const withCSS = require('@zeit/next-css');
-module.exports = withCSS({
-  cssModules: false,
-  generateBuildId: function () {
-    return 'fixed';
-  }
-});
-      `
-      );
 
-      await checkApp(appName, { checkLint: true, checkE2E: true });
-
-      // check that the configuration was consumed
-      expect(readFile(`dist/apps/${appName}/.next/BUILD_ID`)).toEqual('fixed');
+      await checkApp(appName, {
+        checkUnitTest: true,
+        checkLint: true,
+        checkE2E: false,
+      });
     }, 120000);
 
     it('should be able to dynamically load a lib', async () => {
@@ -109,7 +100,9 @@ module.exports = withCSS({
       const libName = uniq('lib');
 
       runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
-      runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/react:lib ${libName} --no-interactive --style=none`
+      );
 
       const mainPath = `apps/${appName}/pages/index.tsx`;
       updateFile(
@@ -124,7 +117,11 @@ module.exports = withCSS({
       ` + readFile(mainPath)
       );
 
-      await checkApp(appName, { checkLint: false, checkE2E: false });
+      await checkApp(appName, {
+        checkUnitTest: false,
+        checkLint: false,
+        checkE2E: true,
+      });
     }, 120000);
 
     it('should compile when using a workspace and react lib written in TypeScript', async () => {
@@ -173,8 +170,8 @@ module.exports = withCSS({
         import { TestComponent } from '@proj/${tsxLibName}';\n\n
         ` +
           content.replace(
-            `<main>`,
-            `<main>
+            `</h2>`,
+            `</h2>
               <div>
                 {testFn()}
                 <TestComponent text="Hello Next.JS" />
@@ -183,7 +180,11 @@ module.exports = withCSS({
           )
       );
 
-      await checkApp(appName, { checkLint: true, checkE2E: true });
+      await checkApp(appName, {
+        checkUnitTest: true,
+        checkLint: true,
+        checkE2E: false,
+      });
     }, 120000);
 
     it('should support --style=styled-components', async () => {
@@ -193,7 +194,11 @@ module.exports = withCSS({
         `generate @nrwl/next:app ${appName} --no-interactive --style=styled-components`
       );
 
-      await checkApp(appName, { checkLint: false, checkE2E: false });
+      await checkApp(appName, {
+        checkUnitTest: true,
+        checkLint: false,
+        checkE2E: false,
+      });
     }, 120000);
 
     it('should support --style=@emotion/styled', async () => {
@@ -203,7 +208,11 @@ module.exports = withCSS({
         `generate @nrwl/next:app ${appName} --no-interactive --style=@emotion/styled`
       );
 
-      await checkApp(appName, { checkLint: false, checkE2E: false });
+      await checkApp(appName, {
+        checkUnitTest: true,
+        checkLint: false,
+        checkE2E: false,
+      });
     }, 120000);
 
     it('should build with public folder', async () => {
@@ -224,19 +233,21 @@ module.exports = withCSS({
 
 async function checkApp(
   appName: string,
-  opts: { checkLint: boolean; checkE2E: boolean }
+  opts: { checkUnitTest: boolean; checkLint: boolean; checkE2E: boolean }
 ) {
   if (opts.checkLint) {
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
   }
 
-  const testResults = await runCLIAsync(`test ${appName}`);
-  expect(testResults.combinedOutput).toContain(
-    'Test Suites: 1 passed, 1 total'
-  );
+  if (opts.checkUnitTest) {
+    const testResults = await runCLIAsync(`test ${appName}`);
+    expect(testResults.combinedOutput).toContain(
+      'Test Suites: 1 passed, 1 total'
+    );
+  }
 
-  if (supportUi()) {
+  if (opts.checkE2E) {
     const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
     expect(e2eResults).toContain('All specs passed!');
   }

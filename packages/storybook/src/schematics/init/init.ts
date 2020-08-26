@@ -15,7 +15,9 @@ import {
   storybookVersion,
   nxVersion,
   babelPresetTypescriptVersion,
+  webpackTypesVersion,
 } from '../../utils/versions';
+import { isFramework } from '../../utils/utils';
 import { Schema } from './schema';
 
 function checkDependenciesInstalled(schema: Schema): Rule {
@@ -27,8 +29,9 @@ function checkDependenciesInstalled(schema: Schema): Rule {
     // base deps
     devDependencies['@nrwl/storybook'] = nxVersion;
     devDependencies['@storybook/addon-knobs'] = storybookVersion;
+    devDependencies['@types/webpack'] = webpackTypesVersion;
 
-    if (schema.uiFramework === '@storybook/angular') {
+    if (isFramework('angular', schema)) {
       devDependencies['@storybook/angular'] = storybookVersion;
       if (
         !packageJson.dependencies['@angular/forms'] &&
@@ -36,7 +39,8 @@ function checkDependenciesInstalled(schema: Schema): Rule {
       ) {
         devDependencies['@angular/forms'] = '*';
       }
-    } else if (schema.uiFramework === '@storybook/react') {
+    }
+    if (isFramework('react', schema)) {
       devDependencies['@storybook/react'] = storybookVersion;
       devDependencies['babel-loader'] = babelLoaderVersion;
       devDependencies['@babel/core'] = babelCoreVersion;

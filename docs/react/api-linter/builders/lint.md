@@ -65,7 +65,7 @@ ESLint Output formatter (https://eslint.org/docs/user-guide/formatters).
 
 ### linter
 
-Default: `tslint`
+Default: `eslint`
 
 Type: `string`
 

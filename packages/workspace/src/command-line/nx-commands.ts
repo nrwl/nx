@@ -196,7 +196,7 @@ export const commandsObject = yargs
   .option('quiet', { type: 'boolean', hidden: true });
 
 function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
-  return withAffectedOptions(yargs).option('apps-and-libs', {
+  return withAffectedOptions(yargs).option('libs-and-apps', {
     type: 'boolean',
   });
 }

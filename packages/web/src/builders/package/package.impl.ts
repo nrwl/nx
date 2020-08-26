@@ -37,6 +37,7 @@ import {
   normalizePackageOptions,
 } from '../../utils/normalize';
 import { getSourceRoot } from '../../utils/source-root';
+import { deleteOutputDir } from '../../utils/delete-output-dir';
 
 // These use require because the ES import isn't correct.
 const resolve = require('@rollup/plugin-node-resolve');
@@ -120,6 +121,10 @@ export function run(
         });
       } else {
         context.logger.info('Bundling...');
+
+        // Delete output path before bundling
+        deleteOutputDir(context.workspaceRoot, options.outputPath);
+
         return from(rollupOptions).pipe(
           concatMap((opts) =>
             runRollup(opts).pipe(
@@ -237,14 +242,14 @@ export function createRollupOptions(
         globals,
         format: config.format,
         file: `${options.outputPath}/${context.target.project}.${config.extension}.js`,
-        name: toClassName(context.target.project),
+        name: options.umdName || toClassName(context.target.project),
       },
       external: (id) => externalPackages.includes(id),
       plugins,
     };
 
     return options.rollupConfig
-      ? require(options.rollupConfig)(rollupConfig)
+      ? require(options.rollupConfig)(rollupConfig, options)
       : rollupConfig;
   });
 }

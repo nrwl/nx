@@ -25,7 +25,8 @@
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the application?"
+      "x-prompt": "What name would you like to use for the application?",
+      "pattern": "^[a-zA-Z]{1}.*$"
     },
     "directory": {
       "description": "The directory of the new application.",
@@ -77,7 +78,7 @@
       "description": "The tool to use for running lint checks.",
       "type": "string",
       "enum": ["eslint", "tslint"],
-      "default": "tslint"
+      "default": "eslint"
     },
     "routing": {
       "type": "boolean",

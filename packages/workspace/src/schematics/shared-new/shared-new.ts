@@ -133,7 +133,7 @@ export function sharedNew(cli: string, options: Schema): Rule {
 
     return chain([
       schematic('workspace', { ...workspaceOpts, cli }),
-      cli === 'angular' ? noop() : setDefaultLinter('eslint'),
+      cli === 'angular' ? setDefaultLinter('tslint') : noop(),
       addPresetDependencies(options),
       addCloudDependencies(options),
       move('/', options.directory),
@@ -145,7 +145,7 @@ export function sharedNew(cli: string, options: Schema): Rule {
 
 function addCloudDependencies(options: Schema) {
   return options.nxCloud
-    ? addDepsToPackageJson({}, { '@nrwl/nx-cloud': 'latest' })
+    ? addDepsToPackageJson({}, { '@nrwl/nx-cloud': 'latest' }, false)
     : noop();
 }
 
@@ -262,24 +262,14 @@ function setDefaultLinter(linter: string) {
     }
     json.schematics['@nrwl/workspace'] = { library: { linter } };
     json.schematics['@nrwl/cypress'] = { 'cypress-project': { linter } };
-    json.schematics['@nrwl/react'] = {
-      application: { linter },
-      library: { linter },
-      'storybook-configuration': { linter },
-    };
-
-    json.schematics['@nrwl/next'] = {
-      application: { linter },
-    };
-    json.schematics['@nrwl/web'] = { application: { linter } };
     json.schematics['@nrwl/node'] = {
       application: { linter },
       library: { linter },
     };
-    json.schematics['@nrwl/nx-plugin'] = {
-      plugin: { linter },
+    json.schematics['@nrwl/nest'] = {
+      application: { linter },
+      library: { linter },
     };
-    json.schematics['@nrwl/nest'] = { application: { linter } };
     json.schematics['@nrwl/express'] = {
       application: { linter },
       library: { linter },

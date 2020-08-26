@@ -1,5 +1,6 @@
 import {
   checkFilesExist,
+  checkFilesDoNotExist,
   ensureProject,
   forEachCli,
   readFile,
@@ -7,6 +8,7 @@ import {
   runCLIAsync,
   uniq,
   updateFile,
+  createFile,
 } from '@nrwl/e2e/utils';
 
 forEachCli((currentCLIName) => {
@@ -54,6 +56,47 @@ forEachCli((currentCLIName) => {
 
       const e2eResults = runCLI(`e2e ${appName}-e2e`);
       expect(e2eResults).toContain('All specs passed!');
+    }, 120000);
+
+    it('should remove previous output before building', async () => {
+      ensureProject();
+      const appName = uniq('app');
+      const libName = uniq('lib');
+
+      runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/react:lib ${libName} --buildable --no-interactive`
+      );
+
+      createFile(`dist/apps/${appName}/_should_remove.txt`);
+      createFile(`dist/libs/${libName}/_should_remove.txt`);
+      createFile(`dist/apps/_should_not_remove.txt`);
+      checkFilesExist(
+        `dist/apps/${appName}/_should_remove.txt`,
+        `dist/apps/_should_not_remove.txt`
+      );
+      runCLI(`build ${appName}`);
+      runCLI(`build ${libName}`);
+      checkFilesDoNotExist(
+        `dist/apps/${appName}/_should_remove.txt`,
+        `dist/libs/${libName}/_should_remove.txt`
+      );
+      checkFilesExist(`dist/apps/_should_not_remove.txt`);
+    }, 120000);
+
+    it('should do another build if differential loading is needed', async () => {
+      ensureProject();
+      const appName = uniq('app');
+
+      runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+
+      updateFile(`apps/${appName}/browserslist`, `IE 9-11`);
+
+      const output = runCLI(`build ${appName} --prod --outputHashing=none`);
+      checkFilesExist(
+        `dist/apps/${appName}/main.esm.js`,
+        `dist/apps/${appName}/main.es5.js`
+      );
     }, 120000);
   });
 

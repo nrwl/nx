@@ -70,10 +70,10 @@ describe('app', () => {
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
-      const tslintJson = JSON.parse(
-        stripJsonComments(tree.readContent('apps/my-app/tslint.json'))
+      const eslintJson = JSON.parse(
+        stripJsonComments(tree.readContent('apps/my-app/.eslintrc'))
       );
-      expect(tslintJson.extends).toEqual('../../tslint.json');
+      expect(eslintJson.extends).toEqual(['../../.eslintrc']);
 
       expect(tree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
       const tsconfigE2E = JSON.parse(
@@ -155,9 +155,9 @@ describe('app', () => {
           expectedValue: '../../../dist/out-tsc',
         },
         {
-          path: 'apps/my-dir/my-app/tslint.json',
+          path: 'apps/my-dir/my-app/.eslintrc',
           lookupFn: (json) => json.extends,
-          expectedValue: '../../../tslint.json',
+          expectedValue: ['../../../.eslintrc'],
         },
       ].forEach(hasJsonValue);
     });
@@ -279,7 +279,7 @@ describe('app', () => {
     });
   });
 
-  it('should setup the tslint builder', async () => {
+  it('should setup the eslint builder', async () => {
     const tree = await runSchematic(
       'app',
       {
@@ -289,8 +289,9 @@ describe('app', () => {
     );
     const workspaceJson = readJsonInTree(tree, 'workspace.json');
     expect(workspaceJson.projects['my-app'].architect.lint).toEqual({
-      builder: '@angular-devkit/build-angular:tslint',
+      builder: '@nrwl/linter:lint',
       options: {
+        linter: 'eslint',
         exclude: ['**/node_modules/**', '!apps/my-app/**/*'],
         tsConfig: [
           'apps/my-app/tsconfig.app.json',
@@ -553,6 +554,22 @@ describe('app', () => {
 
       const packageJSON = readJsonInTree(tree, 'package.json');
       expect(packageJSON.dependencies['styled-jsx']).toBeDefined();
+    });
+
+    it('should update babel config', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', style: 'styled-jsx' },
+        appTree
+      );
+
+      const babelrc = readJsonInTree(tree, 'apps/my-app/.babelrc');
+      const babelJestConfig = readJsonInTree(
+        tree,
+        'apps/my-app/babel-jest.config.json'
+      );
+      expect(babelrc.plugins).toContain('styled-jsx/babel');
+      expect(babelJestConfig.plugins).toContain('styled-jsx/babel');
     });
   });
 

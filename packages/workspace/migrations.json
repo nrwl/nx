@@ -104,6 +104,11 @@
       "version": "10.0.1-beta.0",
       "description": "Migrate .eslintrc files to reference new tsconfig",
       "factory": "./src/migrations/update-10-0-1/migrate-eslintrc"
+    },
+    "migrate-eslintrc-tsconfig-wildcard": {
+      "version": "10.1.0-beta.0",
+      "description": "Migrate .eslintrc files to use tsconfig with a wildcard",
+      "factory": "./src/migrations/update-10-1-0/migrate-eslintrc-tsconfig-wildcard"
     }
   },
   "packageJsonUpdates": {

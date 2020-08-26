@@ -9,6 +9,7 @@ import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Schema } from '../schema';
 import { normalizeSlashes } from './utils';
+import { ProjectType } from '@nrwl/workspace/src/utils/project-type';
 
 /**
  * Updates all the imports in the workspace and modifies the tsconfig appropriately.
@@ -20,6 +21,9 @@ export function updateImports(schema: Schema) {
     return from(getWorkspace(tree)).pipe(
       map((workspace) => {
         const nxJson = readJsonInTree<NxJson>(tree, 'nx.json');
+        const libsDir = nxJson.workspaceLayout?.libsDir
+          ? nxJson.workspaceLayout.libsDir
+          : 'libs';
         const project = workspace.projects.get(schema.projectName);
 
         if (project.extensions['projectType'] === 'application') {
@@ -29,7 +33,7 @@ export function updateImports(schema: Schema) {
 
         const projectRef = {
           from: normalizeSlashes(
-            `@${nxJson.npmScope}/${project.root.substr(5)}`
+            `@${nxJson.npmScope}/${project.root.substr(libsDir.length + 1)}`
           ),
           to: normalizeSlashes(`@${nxJson.npmScope}/${schema.destination}`),
         };
@@ -57,7 +61,7 @@ export function updateImports(schema: Schema) {
         }
 
         const projectRoot = {
-          from: project.root.substr(5),
+          from: project.root.substr(libsDir.length + 1),
           to: schema.destination,
         };
 

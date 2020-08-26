@@ -1,5 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
+import { NxJson, updateJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { callRule } from '../../../utils/testing';
 import { Schema } from '../schema';
@@ -206,5 +207,29 @@ describe('updateWorkspace Rule', () => {
     expect(
       e2eProject.architect.e2e.configurations.production.devServerTarget
     ).toBe('subfolder-my-destination:serve:production');
+  });
+
+  it('honor custom workspace layouts', async () => {
+    const schema: Schema = {
+      projectName: 'my-source',
+      destination: 'subfolder/my-destination',
+    };
+
+    tree = (await callRule(
+      updateJsonInTree<NxJson>('nx.json', (json) => {
+        json.workspaceLayout = { appsDir: 'e2e', libsDir: 'packages' };
+        return json;
+      }),
+      tree
+    )) as UnitTestTree;
+
+    tree = (await callRule(updateWorkspace(schema), tree)) as UnitTestTree;
+
+    const workspace = JSON.parse(tree.read('workspace.json').toString());
+
+    const project = workspace.projects['subfolder-my-destination'];
+    expect(project).toBeDefined();
+    expect(project.root).toBe('e2e/subfolder/my-destination');
+    expect(project.sourceRoot).toBe('e2e/subfolder/my-destination/src');
   });
 });

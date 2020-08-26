@@ -34,6 +34,9 @@ export interface CypressBuilderOptions extends JsonObject {
   copyFiles?: string;
   ciBuildId?: string;
   group?: string;
+  ignoreTestFiles?: string;
+  reporter?: string;
+  reporterOptions?: string;
 }
 
 try {
@@ -64,7 +67,9 @@ export function cypressBuilderRunner(
 
   return (!legacy
     ? options.devServerTarget
-      ? startDevServer(options.devServerTarget, options.watch, context)
+      ? startDevServer(options.devServerTarget, options.watch, context).pipe(
+          map((devServerBaseUrl) => options.baseUrl || devServerBaseUrl)
+        )
       : of(options.baseUrl)
     : legacyCompile(options, context)
   ).pipe(
@@ -82,7 +87,10 @@ export function cypressBuilderRunner(
         options.env,
         options.spec,
         options.ciBuildId,
-        options.group
+        options.group,
+        options.ignoreTestFiles,
+        options.reporter,
+        options.reporterOptions
       )
     ),
     options.watch ? tap(noop) : take(1),
@@ -115,6 +123,7 @@ export function cypressBuilderRunner(
  * @param spec
  * @param ciBuildId
  * @param group
+ * @param ignoreTestFiles
  */
 function initCypress(
   cypressConfig: string,
@@ -129,7 +138,10 @@ function initCypress(
   env?: Record<string, string>,
   spec?: string,
   ciBuildId?: string,
-  group?: string
+  group?: string,
+  ignoreTestFiles?: string,
+  reporter?: string,
+  reporterOptions?: string
 ): Observable<BuilderOutput> {
   // Cypress expects the folder where a `cypress.json` is present
   const projectFolderPath = dirname(cypressConfig);
@@ -162,6 +174,9 @@ function initCypress(
   options.parallel = parallel;
   options.ciBuildId = ciBuildId;
   options.group = group;
+  options.ignoreTestFiles = ignoreTestFiles;
+  options.reporter = reporter;
+  options.reporterOptions = reporterOptions;
 
   return fromPromise<any>(
     !isWatching || headless ? Cypress.run(options) : Cypress.open(options)

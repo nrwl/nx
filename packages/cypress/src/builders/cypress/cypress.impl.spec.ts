@@ -199,6 +199,50 @@ describe('Cypress builder', () => {
     fakeEventEmitter.emit('exit', 0); // Passing tsc command
   });
 
+  it('should call `Cypress.run` with a string of files to ignore', async (done) => {
+    const cfg = {
+      ...cypressBuilderOptions,
+      ignoreTestFiles: '/some/path/to/a/file.js',
+    };
+
+    cypressBuilderRunner(cfg, mockedBuilderContext)
+      .toPromise()
+      .then(() => {
+        expect(cypressRun).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            ignoreTestFiles: cfg.ignoreTestFiles,
+          })
+        );
+        expect(cypressOpen).not.toHaveBeenCalled();
+        done();
+      });
+
+    fakeEventEmitter.emit('exit', 0); // Passing tsc command
+  });
+
+  it('should call `Cypress.run` with a reporter and reporterOptions', async (done) => {
+    const cfg = {
+      ...cypressBuilderOptions,
+      reporter: 'junit',
+      reporterOptions: 'mochaFile=reports/results-[hash].xml,toConsole=true',
+    };
+
+    cypressBuilderRunner(cfg, mockedBuilderContext)
+      .toPromise()
+      .then(() => {
+        expect(cypressRun).toHaveBeenCalledWith(
+          jasmine.objectContaining({
+            reporter: cfg.reporter,
+            reporterOptions: cfg.reporterOptions,
+          })
+        );
+        expect(cypressOpen).not.toHaveBeenCalled();
+        done();
+      });
+
+    fakeEventEmitter.emit('exit', 0); // Passing tsc command
+  });
+
   it('should fail early if application build fails', async (done) => {
     (devkitArchitect as any).scheduleTargetAndForget = jest
       .fn()
@@ -265,6 +309,32 @@ describe('Cypress builder', () => {
         'You are using a browser that is not supported by cypress v4+.'
       )
     ).toBeTruthy();
+    done();
+  });
+
+  test('when devServerTarget AND baseUrl options are both present, baseUrl should take precidence', async (done) => {
+    const options: CypressBuilderOptions = {
+      ...cypressBuilderOptions,
+      baseUrl: 'test-url-from-options',
+    };
+    const result = await cypressBuilderRunner(
+      options,
+      mockedBuilderContext
+    ).toPromise();
+    expect(cypressRun.calls.mostRecent().args[0].config.baseUrl).toBe(
+      'test-url-from-options'
+    );
+    done();
+  });
+
+  test('when devServerTarget option present and baseUrl option is absent, baseUrl should come from devServerTarget', async (done) => {
+    await cypressBuilderRunner(
+      cypressBuilderOptions,
+      mockedBuilderContext
+    ).toPromise();
+    expect(cypressRun.calls.mostRecent().args[0].config.baseUrl).toBe(
+      'http://localhost:4200'
+    );
     done();
   });
 

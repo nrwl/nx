@@ -24,7 +24,7 @@ export function updateCypressJson(schema: Schema): Rule {
     return from(getWorkspace(tree)).pipe(
       map((workspace) => {
         const project = workspace.projects.get(schema.projectName);
-        const destination = getDestination(schema, workspace);
+        const destination = getDestination(schema, workspace, tree);
 
         const cypressJsonPath = path.join(destination, 'cypress.json');
 

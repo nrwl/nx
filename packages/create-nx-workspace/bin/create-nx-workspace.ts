@@ -404,26 +404,25 @@ function createApp(
   interactive: boolean,
   defaultBase: string
 ) {
-  // creating the app itself
-  const args = [
-    name,
-    ...process.argv
-      .slice(parsedArgs._[2] ? 3 : 2)
-      .filter(
-        (a) =>
-          !a.startsWith('--cli') &&
-          !a.startsWith('--preset') &&
-          !a.startsWith('--appName') &&
-          !a.startsWith('--app-name') &&
-          !a.startsWith('--style') &&
-          !a.startsWith('--nxCloud') &&
-          !a.startsWith('--nx-cloud') &&
-          !a.startsWith('--interactive') &&
-          !a.startsWith('--defaultBase') &&
-          !a.startsWith('--default-base')
-      ) // not used by the new command
-      .map((a) => `"${a}"`),
-  ].join(' ');
+  const filterArgs = [
+    '_',
+    'app-name',
+    'appName',
+    'cli',
+    'default-base',
+    'defaultBase',
+    'interactive',
+    'nx-cloud',
+    'nxCloud',
+    'preset',
+    'style',
+  ];
+
+  // These are the arguments that are passed to the schematic
+  const args = Object.keys(parsedArgs)
+    .filter((key) => !filterArgs.includes(key))
+    .map((key) => `--${key}=${parsedArgs[key]}`)
+    .join(' ');
 
   const appNameArg = appName ? ` --appName="${appName}"` : ``;
   const styleArg = style ? ` --style="${style}"` : ``;
@@ -434,7 +433,7 @@ function createApp(
   const defaultBaseArg = defaultBase ? ` --defaultBase="${defaultBase}"` : ``;
 
   console.log(
-    `new ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=@nrwl/workspace`
+    `new ${name} ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=@nrwl/workspace`
   );
   const executablePath = path.join(tmpDir, 'node_modules', '.bin', cli.command);
   const collectionJsonPath = path.join(
@@ -445,7 +444,7 @@ function createApp(
     'collection.json'
   );
   execSync(
-    `"${executablePath}" new ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=${collectionJsonPath}`,
+    `"${executablePath}" new ${name} ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=${collectionJsonPath}`,
     {
       stdio: [0, 1, 2],
     }
@@ -453,7 +452,7 @@ function createApp(
 
   if (nxCloud) {
     output.addVerticalSeparator();
-    execSync(`./node_modules/.bin/nx g @nrwl/nx-cloud:init --no-analytics`, {
+    execSync(`npx nx g @nrwl/nx-cloud:init --no-analytics`, {
       stdio: [0, 1, 2],
       cwd: path.join(process.cwd(), name),
     });
