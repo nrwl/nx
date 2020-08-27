@@ -12,6 +12,7 @@ import {
   uniq,
   updateFile,
   workspaceConfigName,
+  tmpProjPath,
 } from '@nrwl/e2e/utils';
 
 let originalCIValue: any;
@@ -687,6 +688,47 @@ forEachCli((cliName) => {
       expect(outputWithoutCachingEnabled2).not.toContain(
         'read the output from cache'
       );
+    }, 120000);
+
+    it('should only cache specific files if build outputs is configured with specific files', async () => {
+      ensureProject();
+
+      const mylib1 = uniq('mylib1');
+      runCLI(`generate @nrwl/react:lib ${mylib1} --buildable`);
+
+      // Update outputs in workspace.json to just be a particular file
+      const workspaceJson = readJson(workspaceConfigName());
+
+      workspaceJson.projects[mylib1].architect['build-base'] = {
+        ...workspaceJson.projects[mylib1].architect.build,
+      };
+      workspaceJson.projects[mylib1].architect.build = {
+        builder: '@nrwl/workspace:run-commands',
+        outputs: [`dist/libs/${mylib1}/${mylib1}.esm.js`],
+        options: {
+          commands: [
+            {
+              command: `npm run nx run ${mylib1}:build-base`,
+            },
+          ],
+          parallel: false,
+        },
+      };
+      updateFile(workspaceConfigName(), JSON.stringify(workspaceJson));
+
+      // run build with caching
+      // --------------------------------------------
+      const outputThatPutsDataIntoCache = runCLI(`run ${mylib1}:build`);
+      // now the data is in cache
+      expect(outputThatPutsDataIntoCache).not.toContain('Cached Output:');
+
+      rmDist();
+
+      const outputWithBuildTasksCached = runCLI(`run ${mylib1}:build`);
+      expect(outputWithBuildTasksCached).toContain('Cached Output:');
+      expectCached(outputWithBuildTasksCached, [mylib1]);
+      // Ensure that only the specific file in outputs was copied to cache
+      expect(listFiles(`dist/libs/${mylib1}`)).toEqual([`${mylib1}.esm.js`]);
     }, 120000);
 
     function expectCached(
