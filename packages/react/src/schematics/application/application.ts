@@ -27,10 +27,16 @@ export default function (schema: Schema): Rule {
         ...options,
         skipFormat: true,
       }),
-      addLintFiles(options.appProjectRoot, options.linter, {
-        localConfig: reactEslintJson,
-        extraPackageDeps: extraEslintDependencies,
-      }),
+      addLintFiles(
+        options.appProjectRoot,
+        options.linter,
+        options.simpleLintConfig
+          ? {}
+          : {
+              localConfig: reactEslintJson,
+              extraPackageDeps: extraEslintDependencies,
+            }
+      ),
       createApplicationFiles(options),
       updateNxJson(options),
       addProject(options),

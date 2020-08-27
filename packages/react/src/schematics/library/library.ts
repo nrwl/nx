@@ -78,10 +78,16 @@ export default function (schema: Schema): Rule {
       options.style = 'none';
     }
     return chain([
-      addLintFiles(options.projectRoot, options.linter, {
-        localConfig: reactEslintJson,
-        extraPackageDeps: extraEslintDependencies,
-      }),
+      addLintFiles(
+        options.projectRoot,
+        options.linter,
+        options.simpleLintConfig
+          ? {}
+          : {
+              localConfig: reactEslintJson,
+              extraPackageDeps: extraEslintDependencies,
+            }
+      ),
       createFiles(options),
       !options.skipTsConfig ? updateTsConfig(options) : noop(),
       addProject(options),

@@ -76,6 +76,11 @@
       "enum": ["eslint", "tslint"],
       "default": "eslint"
     },
+    "simpleLintConfig": {
+      "description": "Use plain linter config, which extends only root config",
+      "type": "boolean",
+      "default": false
+    },
     "unitTestRunner": {
       "type": "string",
       "enum": ["jest", "none"],

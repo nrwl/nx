@@ -7,6 +7,7 @@ export interface Schema {
   style?: SupportedStyles;
   skipTsConfig: boolean;
   skipFormat: boolean;
+  simpleLintConfig: boolean;
   tags?: string;
   pascalCaseFiles?: boolean;
   routing?: boolean;

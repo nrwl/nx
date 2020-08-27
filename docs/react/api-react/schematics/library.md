@@ -126,6 +126,14 @@ Type: `boolean`
 
 Generate library with routes.
 
+### simpleLintConfig
+
+Default: `false`
+
+Type: `boolean`
+
+Use plain linter config, which extends only root config
+
 ### skipFormat
 
 Default: `false`

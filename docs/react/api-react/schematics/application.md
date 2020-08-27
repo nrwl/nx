@@ -118,6 +118,14 @@ Type: `boolean`
 
 Generate application with routes.
 
+### simpleLintConfig
+
+Default: `false`
+
+Type: `boolean`
+
+Use plain linter config, which extends only root config
+
 ### skipFormat
 
 Default: `false`

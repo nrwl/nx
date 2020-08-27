@@ -6,6 +6,7 @@ export interface Schema {
   name: string;
   style?: SupportedStyles;
   skipFormat: boolean;
+  simpleLintConfig: boolean;
   directory?: string;
   tags?: string;
   unitTestRunner: 'jest' | 'none';

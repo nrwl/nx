@@ -1,7 +1,8 @@
 import { Tree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
+import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import { NxJson, readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { runSchematic } from '../../utils/testing';
+import { Schema } from './schema.d';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -112,9 +113,31 @@ describe('lib', () => {
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
     });
 
+    it('should add .eslintrc and dependencies', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', linter: 'eslint' },
+        appTree
+      );
+
+      const eslintJson = readJsonInTree(tree, '/libs/my-lib/.eslintrc');
+      const packageJson = readJsonInTree(tree, '/package.json');
+
+      expect(eslintJson.plugins).toEqual(
+        expect.arrayContaining(['react', 'react-hooks'])
+      );
+      expect(packageJson).toMatchObject({
+        devDependencies: {
+          'eslint-plugin-react': expect.anything(),
+          'eslint-plugin-react-hooks': expect.anything(),
+        },
+      });
+    });
+
     it('should generate files', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
       expect(tree.exists('libs/my-lib/package.json')).toBeFalsy();
+      expect(tree.exists('libs/my-lib/.eslintrc')).toBeTruthy();
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.tsx')).toBeTruthy();
@@ -167,6 +190,7 @@ describe('lib', () => {
         { name: 'myLib', directory: 'myDir' },
         appTree
       );
+      expect(tree.exists('libs/my-dir/my-lib/.eslintrc')).toBeTruthy();
       expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
@@ -596,6 +620,32 @@ describe('lib', () => {
       }
 
       expect.assertions(1);
+    });
+  });
+
+  describe('--simpleLintConfig', () => {
+    it('should generate only basic lint config', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          linter: 'eslint',
+          simpleLintConfig: true,
+        } as Schema,
+        appTree
+      );
+
+      const eslintJson = readJsonInTree(tree, '/libs/my-lib/.eslintrc');
+
+      expect(eslintJson).toMatchInlineSnapshot(`
+        Object {
+          "extends": "../../.eslintrc",
+          "ignorePatterns": Array [
+            "!**/*",
+          ],
+          "rules": Object {},
+        }
+      `);
     });
   });
 });

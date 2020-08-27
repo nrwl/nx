@@ -1,8 +1,9 @@
 import { Tree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
+import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import * as stripJsonComments from 'strip-json-comments';
 import { NxJson, readJsonInTree } from '@nrwl/workspace';
 import { runSchematic } from '../../utils/testing';
+import { Schema } from './schema.d';
 
 describe('app', () => {
   let appTree: Tree;
@@ -10,180 +11,6 @@ describe('app', () => {
   beforeEach(() => {
     appTree = Tree.empty();
     appTree = createEmptyWorkspace(appTree);
-  });
-
-  describe('not nested', () => {
-    it('should update workspace.json', async () => {
-      const tree = await runSchematic('app', { name: 'myApp' }, appTree);
-      const workspaceJson = readJsonInTree(tree, '/workspace.json');
-
-      expect(workspaceJson.projects['my-app'].root).toEqual('apps/my-app');
-      expect(workspaceJson.projects['my-app-e2e'].root).toEqual(
-        'apps/my-app-e2e'
-      );
-      expect(workspaceJson.defaultProject).toEqual('my-app');
-    });
-
-    it('should update nx.json', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myApp', tags: 'one,two' },
-        appTree
-      );
-      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({
-        'my-app': {
-          tags: ['one', 'two'],
-        },
-        'my-app-e2e': {
-          tags: [],
-          implicitDependencies: ['my-app'],
-        },
-      });
-    });
-
-    it('should generate files', async () => {
-      const tree = await runSchematic('app', { name: 'myApp' }, appTree);
-      expect(tree.exists('apps/my-app/.babelrc')).toBeTruthy();
-      expect(tree.exists('apps/my-app/.browserslistrc')).toBeTruthy();
-      expect(tree.exists('apps/my-app/src/main.tsx')).toBeTruthy();
-      expect(tree.exists('apps/my-app/src/app/app.tsx')).toBeTruthy();
-      expect(tree.exists('apps/my-app/src/app/app.spec.tsx')).toBeTruthy();
-      expect(tree.exists('apps/my-app/src/app/app.css')).toBeTruthy();
-
-      const jestConfig = tree.readContent('apps/my-app/jest.config.js');
-      expect(jestConfig).toContain('@nrwl/react/plugins/jest');
-
-      const tsconfig = readJsonInTree(tree, 'apps/my-app/tsconfig.json');
-      expect(tsconfig.references).toEqual([
-        {
-          path: './tsconfig.app.json',
-        },
-        {
-          path: './tsconfig.spec.json',
-        },
-      ]);
-
-      const tsconfigApp = JSON.parse(
-        stripJsonComments(tree.readContent('apps/my-app/tsconfig.app.json'))
-      );
-      expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
-      expect(tsconfigApp.extends).toEqual('./tsconfig.json');
-
-      const eslintJson = JSON.parse(
-        stripJsonComments(tree.readContent('apps/my-app/.eslintrc'))
-      );
-      expect(eslintJson.extends).toEqual(['../../.eslintrc']);
-
-      expect(tree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
-      const tsconfigE2E = JSON.parse(
-        stripJsonComments(tree.readContent('apps/my-app-e2e/tsconfig.e2e.json'))
-      );
-      expect(tsconfigE2E.compilerOptions.outDir).toEqual('../../dist/out-tsc');
-      expect(tsconfigE2E.extends).toEqual('./tsconfig.json');
-    });
-  });
-
-  describe('nested', () => {
-    it('should update workspace.json', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myApp', directory: 'myDir' },
-        appTree
-      );
-      const workspaceJson = readJsonInTree(tree, '/workspace.json');
-
-      expect(workspaceJson.projects['my-dir-my-app'].root).toEqual(
-        'apps/my-dir/my-app'
-      );
-      expect(workspaceJson.projects['my-dir-my-app-e2e'].root).toEqual(
-        'apps/my-dir/my-app-e2e'
-      );
-    });
-
-    it('should update nx.json', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myApp', directory: 'myDir', tags: 'one,two' },
-        appTree
-      );
-      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({
-        'my-dir-my-app': {
-          tags: ['one', 'two'],
-        },
-        'my-dir-my-app-e2e': {
-          tags: [],
-          implicitDependencies: ['my-dir-my-app'],
-        },
-      });
-    });
-
-    it('should generate files', async () => {
-      const hasJsonValue = ({ path, expectedValue, lookupFn }) => {
-        const content = tree.readContent(path);
-        const config = JSON.parse(stripJsonComments(content));
-
-        expect(lookupFn(config)).toEqual(expectedValue);
-      };
-      const tree = await runSchematic(
-        'app',
-        { name: 'myApp', directory: 'myDir' },
-        appTree
-      );
-
-      // Make sure these exist
-      [
-        'apps/my-dir/my-app/src/main.tsx',
-        'apps/my-dir/my-app/src/app/app.tsx',
-        'apps/my-dir/my-app/src/app/app.spec.tsx',
-        'apps/my-dir/my-app/src/app/app.css',
-      ].forEach((path) => {
-        expect(tree.exists(path)).toBeTruthy();
-      });
-
-      // Make sure these have properties
-      [
-        {
-          path: 'apps/my-dir/my-app/tsconfig.app.json',
-          lookupFn: (json) => json.compilerOptions.outDir,
-          expectedValue: '../../../dist/out-tsc',
-        },
-        {
-          path: 'apps/my-dir/my-app-e2e/tsconfig.e2e.json',
-          lookupFn: (json) => json.compilerOptions.outDir,
-          expectedValue: '../../../dist/out-tsc',
-        },
-        {
-          path: 'apps/my-dir/my-app/.eslintrc',
-          lookupFn: (json) => json.extends,
-          expectedValue: ['../../../.eslintrc'],
-        },
-      ].forEach(hasJsonValue);
-    });
-  });
-
-  it('should create Nx specific template', async () => {
-    const tree = await runSchematic(
-      'app',
-      { name: 'myApp', directory: 'myDir' },
-      appTree
-    );
-    expect(tree.readContent('apps/my-dir/my-app/src/app/app.tsx')).toBeTruthy();
-    expect(tree.readContent('apps/my-dir/my-app/src/app/app.tsx')).toContain(
-      'Welcome to my-app'
-    );
-  });
-
-  describe('--style scss', () => {
-    it('should generate scss styles', async () => {
-      const result = await runSchematic(
-        'app',
-        { name: 'myApp', style: 'scss' },
-        appTree
-      );
-      expect(result.exists('apps/my-app/src/app/app.scss')).toEqual(true);
-    });
   });
 
   it('should setup jest with tsx support', async () => {
@@ -300,6 +127,238 @@ describe('app', () => {
       },
     });
   });
+  it('should adds custom webpack config', async () => {
+    const tree = await runSchematic(
+      'app',
+      { name: 'myApp', babel: true },
+      appTree
+    );
+
+    const workspaceJson = readJsonInTree(tree, '/workspace.json');
+
+    expect(
+      workspaceJson.projects['my-app'].architect.build.options.webpackConfig
+    ).toEqual('@nrwl/react/plugins/webpack');
+  });
+
+  it('should add required polyfills for core-js and regenerator', async () => {
+    const tree = await runSchematic(
+      'app',
+      { name: 'myApp', babel: true },
+      appTree
+    );
+    const polyfillsSource = tree
+      .read('apps/my-app/src/polyfills.ts')
+      .toString();
+
+    expect(polyfillsSource).toContain('regenerator');
+    expect(polyfillsSource).toContain('core-js');
+  });
+
+  describe('not nested', () => {
+    it('should update workspace.json', async () => {
+      const tree = await runSchematic('app', { name: 'myApp' }, appTree);
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+
+      expect(workspaceJson.projects['my-app'].root).toEqual('apps/my-app');
+      expect(workspaceJson.projects['my-app-e2e'].root).toEqual(
+        'apps/my-app-e2e'
+      );
+      expect(workspaceJson.defaultProject).toEqual('my-app');
+    });
+
+    it('should update nx.json', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', tags: 'one,two' },
+        appTree
+      );
+      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
+      expect(nxJson.projects).toEqual({
+        'my-app': {
+          tags: ['one', 'two'],
+        },
+        'my-app-e2e': {
+          tags: [],
+          implicitDependencies: ['my-app'],
+        },
+      });
+    });
+
+    it('should generate files', async () => {
+      const tree = await runSchematic('app', { name: 'myApp' }, appTree);
+      expect(tree.exists('apps/my-app/.babelrc')).toBeTruthy();
+      expect(tree.exists('apps/my-app/.browserslistrc')).toBeTruthy();
+      expect(tree.exists('apps/my-app/src/main.tsx')).toBeTruthy();
+      expect(tree.exists('apps/my-app/src/app/app.tsx')).toBeTruthy();
+      expect(tree.exists('apps/my-app/src/app/app.spec.tsx')).toBeTruthy();
+      expect(tree.exists('apps/my-app/src/app/app.css')).toBeTruthy();
+
+      const jestConfig = tree.readContent('apps/my-app/jest.config.js');
+      expect(jestConfig).toContain('@nrwl/react/plugins/jest');
+
+      const tsconfig = readJsonInTree(tree, 'apps/my-app/tsconfig.json');
+      expect(tsconfig.references).toEqual([
+        {
+          path: './tsconfig.app.json',
+        },
+        {
+          path: './tsconfig.spec.json',
+        },
+      ]);
+
+      const tsconfigApp = JSON.parse(
+        stripJsonComments(tree.readContent('apps/my-app/tsconfig.app.json'))
+      );
+      expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
+      expect(tsconfigApp.extends).toEqual('./tsconfig.json');
+
+      const eslintJson = JSON.parse(
+        stripJsonComments(tree.readContent('apps/my-app/.eslintrc'))
+      );
+      expect(eslintJson.extends).toEqual(['../../.eslintrc']);
+
+      expect(tree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
+      const tsconfigE2E = JSON.parse(
+        stripJsonComments(tree.readContent('apps/my-app-e2e/tsconfig.e2e.json'))
+      );
+      expect(tsconfigE2E.compilerOptions.outDir).toEqual('../../dist/out-tsc');
+      expect(tsconfigE2E.extends).toEqual('./tsconfig.json');
+    });
+
+    it('should generate functional components by default', async () => {
+      const tree = await runSchematic('app', { name: 'myApp' }, appTree);
+
+      const appContent = tree.read('apps/my-app/src/app/app.tsx').toString();
+
+      expect(appContent).not.toMatch(/extends Component/);
+    });
+
+    it('should add .eslintrc and dependencies', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', linter: 'eslint' },
+        appTree
+      );
+
+      const eslintJson = readJsonInTree(tree, '/apps/my-app/.eslintrc');
+      const packageJson = readJsonInTree(tree, '/package.json');
+
+      expect(eslintJson.plugins).toEqual(
+        expect.arrayContaining(['react', 'react-hooks'])
+      );
+      expect(packageJson).toMatchObject({
+        devDependencies: {
+          'eslint-plugin-react': expect.anything(),
+          'eslint-plugin-react-hooks': expect.anything(),
+        },
+      });
+    });
+  });
+
+  describe('nested', () => {
+    it('should update workspace.json', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', directory: 'myDir' },
+        appTree
+      );
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+
+      expect(workspaceJson.projects['my-dir-my-app'].root).toEqual(
+        'apps/my-dir/my-app'
+      );
+      expect(workspaceJson.projects['my-dir-my-app-e2e'].root).toEqual(
+        'apps/my-dir/my-app-e2e'
+      );
+    });
+
+    it('should update nx.json', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', directory: 'myDir', tags: 'one,two' },
+        appTree
+      );
+      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
+      expect(nxJson.projects).toEqual({
+        'my-dir-my-app': {
+          tags: ['one', 'two'],
+        },
+        'my-dir-my-app-e2e': {
+          tags: [],
+          implicitDependencies: ['my-dir-my-app'],
+        },
+      });
+    });
+
+    it('should generate files', async () => {
+      const hasJsonValue = ({ path, expectedValue, lookupFn }) => {
+        const content = tree.readContent(path);
+        const config = JSON.parse(stripJsonComments(content));
+
+        expect(lookupFn(config)).toEqual(expectedValue);
+      };
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', directory: 'myDir' },
+        appTree
+      );
+
+      // Make sure these exist
+      [
+        'apps/my-dir/my-app/src/main.tsx',
+        'apps/my-dir/my-app/src/app/app.tsx',
+        'apps/my-dir/my-app/src/app/app.spec.tsx',
+        'apps/my-dir/my-app/src/app/app.css',
+      ].forEach((path) => {
+        expect(tree.exists(path)).toBeTruthy();
+      });
+
+      // Make sure these have properties
+      [
+        {
+          path: 'apps/my-dir/my-app/tsconfig.app.json',
+          lookupFn: (json) => json.compilerOptions.outDir,
+          expectedValue: '../../../dist/out-tsc',
+        },
+        {
+          path: 'apps/my-dir/my-app-e2e/tsconfig.e2e.json',
+          lookupFn: (json) => json.compilerOptions.outDir,
+          expectedValue: '../../../dist/out-tsc',
+        },
+        {
+          path: 'apps/my-dir/my-app/.eslintrc',
+          lookupFn: (json) => json.extends,
+          expectedValue: ['../../../.eslintrc'],
+        },
+      ].forEach(hasJsonValue);
+    });
+
+    it('should create Nx specific template', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', directory: 'myDir' },
+        appTree
+      );
+      expect(
+        tree.readContent('apps/my-dir/my-app/src/app/app.tsx')
+      ).toBeTruthy();
+      expect(tree.readContent('apps/my-dir/my-app/src/app/app.tsx')).toContain(
+        'Welcome to my-app'
+      );
+    });
+  });
+
+  describe('--style scss', () => {
+    it('should generate scss styles', async () => {
+      const result = await runSchematic(
+        'app',
+        { name: 'myApp', style: 'scss' },
+        appTree
+      );
+      expect(result.exists('apps/my-app/src/app/app.scss')).toEqual(true);
+    });
+  });
 
   describe('--unit-test-runner none', () => {
     it('should not generate test configuration', async () => {
@@ -347,32 +406,28 @@ describe('app', () => {
     });
   });
 
-  it('should generate functional components by default', async () => {
-    const tree = await runSchematic('app', { name: 'myApp' }, appTree);
+  describe('--simpleLintConfig', () => {
+    it('should generate only basic lint config', async () => {
+      const tree = await runSchematic(
+        'app',
+        {
+          name: 'myApp',
+          linter: 'eslint',
+          simpleLintConfig: true,
+        } as Schema,
+        appTree
+      );
+      const eslintJson = readJsonInTree(tree, '/apps/my-app/.eslintrc');
 
-    const appContent = tree.read('apps/my-app/src/app/app.tsx').toString();
-
-    expect(appContent).not.toMatch(/extends Component/);
-  });
-
-  it('should add .eslintrc and dependencies', async () => {
-    const tree = await runSchematic(
-      'app',
-      { name: 'myApp', linter: 'eslint' },
-      appTree
-    );
-
-    const eslintJson = readJsonInTree(tree, '/apps/my-app/.eslintrc');
-    const packageJson = readJsonInTree(tree, '/package.json');
-
-    expect(eslintJson.plugins).toEqual(
-      expect.arrayContaining(['react', 'react-hooks'])
-    );
-    expect(packageJson).toMatchObject({
-      devDependencies: {
-        'eslint-plugin-react': expect.anything(),
-        'eslint-plugin-react-hooks': expect.anything(),
-      },
+      expect(eslintJson).toMatchInlineSnapshot(`
+        Object {
+          "extends": "../../.eslintrc",
+          "ignorePatterns": Array [
+            "!**/*",
+          ],
+          "rules": Object {},
+        }
+      `);
     });
   });
 
@@ -593,34 +648,6 @@ describe('app', () => {
       expect(componentSource).toMatch(/<Route\s*path="\/"/);
       expect(componentSource).toMatch(/<Link\s*to="\/"/);
     });
-  });
-
-  it('should adds custom webpack config', async () => {
-    const tree = await runSchematic(
-      'app',
-      { name: 'myApp', babel: true },
-      appTree
-    );
-
-    const workspaceJson = readJsonInTree(tree, '/workspace.json');
-
-    expect(
-      workspaceJson.projects['my-app'].architect.build.options.webpackConfig
-    ).toEqual('@nrwl/react/plugins/webpack');
-  });
-
-  it('should add required polyfills for core-js and regenerator', async () => {
-    const tree = await runSchematic(
-      'app',
-      { name: 'myApp', babel: true },
-      appTree
-    );
-    const polyfillsSource = tree
-      .read('apps/my-app/src/polyfills.ts')
-      .toString();
-
-    expect(polyfillsSource).toContain('regenerator');
-    expect(polyfillsSource).toContain('core-js');
   });
 
   describe('--skipWorkspaceJson', () => {
