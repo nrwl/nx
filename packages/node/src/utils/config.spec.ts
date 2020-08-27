@@ -5,6 +5,7 @@ import * as ts from 'typescript';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 jest.mock('tsconfig-paths-webpack-plugin');
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import { ProgressPlugin } from 'webpack';
@@ -309,12 +310,9 @@ describe('getBaseWebpackPartial', () => {
         ],
       });
 
-      // This test isn't great because it's hard to find CopyWebpackPlugin
       expect(
-        result.plugins.some(
-          (plugin) => !(plugin instanceof ForkTsCheckerWebpackPlugin)
-        )
-      ).toBeTruthy();
+        result.plugins.filter((plugin) => plugin instanceof CopyWebpackPlugin)
+      ).toHaveLength(1);
     });
   });
 
