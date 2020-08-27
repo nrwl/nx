@@ -10,31 +10,30 @@ import {
 import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
 import {
   formats,
-  SchematicEngine,
   UnsuccessfulWorkflowExecution,
 } from '@angular-devkit/schematics';
 import {
-  NodeModulesEngineHost,
   NodeWorkflow,
   validateOptionsWithSchema,
 } from '@angular-devkit/schematics/tools';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
-import { readFileSync, writeFileSync } from 'fs';
 import { copySync, removeSync } from 'fs-extra';
 import * as inquirer from 'inquirer';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
+import * as yargs from 'yargs';
 import { appRootPath } from '../utils/app-root';
 import {
   detectPackageManager,
   getPackageManagerExecuteCommand,
 } from '../utils/detect-package-manager';
-import { fileExists, readJsonFile, writeJsonFile } from '../utils/fileutils';
+import { readJsonFile, writeJsonFile } from '../utils/fileutils';
 import { output } from '../utils/output';
 import { CompilerOptions } from 'typescript';
 
 const rootDirectory = appRootPath;
+const collectionName = 'workspace-schematics.json';
 
 type TsConfig = {
   extends: string;
@@ -45,30 +44,134 @@ type TsConfig = {
   references?: Array<{ path: string }>;
 };
 
-export async function workspaceSchematic(args: string[]) {
+interface ParsedSchematicArgs extends yargs.Arguments {
+  interactive: boolean;
+  dryRun?: boolean;
+  verbose?: boolean;
+}
+export interface ParsedCommandArgs extends yargs.Arguments {
+  /**
+   * workspace schematic name
+   */
+  name?: string;
+  /**
+   * print available workspace schematics
+   */
+  listSchematics?: boolean;
+  help?: boolean;
+}
+
+/**
+ * This was previously shipped within `'@angular-devkit/schematics/collection-schema'`
+ */
+interface CollectionSchematic {
+  aliases?: string[];
+  /**
+   * A description for the schematic
+   */
+  description: string;
+  /**
+   * An schematic override. It can be a local schematic or from another collection (in the
+   * format 'collection:schematic')
+   */
+  extends?: string;
+  /**
+   * A folder or file path to the schematic factory
+   */
+  factory: string;
+  /**
+   * Whether or not this schematic should be listed by the tooling. This does not prevent the
+   * tooling to run this schematic, just removes its name from listSchematicNames().
+   */
+  hidden?: boolean;
+  /**
+   * Whether or not this schematic can be called from an external schematic, or a tool. This
+   * implies hidden: true.
+   */
+  private?: boolean;
+  /**
+   * Location of the schema.json file of the schematic
+   */
+  schema?: string;
+}
+
+/**
+ * This was previously shipped within `'@angular-devkit/schematics/collection-schema'`
+ */
+interface CollectionSchema {
+  extends?: string | string[];
+  /**
+   * A map of schematic names to schematic details
+   */
+  schematics: {
+    [key: string]: CollectionSchematic;
+  };
+  version?: string;
+}
+
+type SchematicSchema = {
+  $schema?: string;
+  id?: string;
+  title?: string;
+  type?: string;
+  properties: {
+    [p: string]: {
+      type: string;
+      alias?: string;
+      description?: string;
+      default?: string | number | boolean | string[];
+    };
+  };
+  required?: string[];
+  description?: string;
+};
+
+export async function workspaceSchematic(
+  args: ParsedCommandArgs,
+  rawSchematicArgs: string[]
+) {
+  const schematicName = args.name;
+
   const outDir = compileTools();
-  const parsedArgs = parseOptions(args, outDir);
+  const parsedSchematicArgs = parseSchematicOptions(
+    rawSchematicArgs,
+    getSchematicBooleanProps(schematicName, outDir)
+  );
   const logger = createConsoleLogger(
-    parsedArgs.verbose,
+    parsedSchematicArgs.verbose,
     process.stdout,
     process.stderr
   );
-  if (parsedArgs.listSchematics) {
-    return listSchematics(
-      path.join(outDir, 'workspace-schematics.json'),
+  const workflow = createWorkflow(parsedSchematicArgs.dryRun);
+  const collectionPath = path.join(outDir, collectionName);
+  const collection = getCollection(workflow, collectionPath);
+
+  if (args.listSchematics) {
+    return listSchematics(collection, logger);
+  }
+
+  if (args.help) {
+    const schematic = collection.createSchematic(schematicName, true);
+    const flattenedSchema = (await workflow.registry
+      .flatten(schematic.description.schemaJson)
+      .toPromise()) as SchematicSchema;
+
+    return printGenHelp(flattenedSchema, logger);
+  }
+
+  try {
+    await executeSchematic(
+      schematicName,
+      parsedSchematicArgs,
+      workflow,
+      outDir,
       logger
     );
-  }
-  const schematicName = args[0];
-  const workflow = createWorkflow(parsedArgs.dryRun);
-  try {
-    await executeSchematic(schematicName, parsedArgs, workflow, outDir, logger);
   } catch (e) {
     process.exit(1);
   }
 }
 
-// compile tools
 function compileTools() {
   const toolsOutDir = getToolsOutDir();
   removeSync(toolsOutDir);
@@ -77,6 +180,7 @@ function compileTools() {
   const schematicsOutDir = path.join(toolsOutDir, 'schematics');
   const collectionData = constructCollection();
   saveCollection(schematicsOutDir, collectionData);
+
   return schematicsOutDir;
 }
 
@@ -104,29 +208,40 @@ function compileToolsDir(outDir: string) {
 }
 
 function constructCollection() {
-  const schematics = {};
-  fs.readdirSync(schematicsDir()).forEach((c) => {
-    const childDir = path.join(schematicsDir(), c);
-    if (exists(path.join(childDir, 'schema.json'))) {
-      schematics[c] = {
-        factory: `./${c}`,
-        schema: `./${path.join(c, 'schema.json')}`,
-        description: `Schematic ${c}`,
+  const schematics = fs
+    .readdirSync(schematicsDir())
+    .reduce((acc, schematicName) => {
+      const childDir = path.join(schematicsDir(), schematicName);
+      const schemaJsonPath = path.join(childDir, 'schema.json');
+      if (!exists(schemaJsonPath)) {
+        return acc;
+      }
+
+      const schematicMetadata = {
+        factory: `./${schematicName}`,
+        schema: `./${path.join(schematicName, 'schema.json')}`,
+        description:
+          getSchemaJson(schemaJsonPath).description ||
+          `Schematic ${schematicName}`,
       };
-    }
-  });
+      acc[schematicName] = schematicMetadata;
+
+      return acc;
+    }, {} as CollectionSchema['schematics']);
+
   return {
-    name: 'workspace-schematics',
+    name: collectionName.replace('.json', ''),
     version: '1.0',
     schematics,
   };
 }
 
-function saveCollection(dir: string, collection: any) {
-  writeFileSync(
-    path.join(dir, 'workspace-schematics.json'),
-    JSON.stringify(collection)
-  );
+function getSchemaJson(schemaPath: string): SchematicSchema {
+  return readJsonFile<SchematicSchema>(schemaPath);
+}
+
+function saveCollection(dir: string, collection: Record<string, any>) {
+  fs.writeFileSync(path.join(dir, collectionName), JSON.stringify(collection));
 }
 
 function schematicsDir() {
@@ -156,18 +271,45 @@ function createWorkflow(dryRun: boolean) {
   });
 }
 
-function listSchematics(collectionName: string, logger: logging.Logger) {
+function listSchematics(
+  collection: ReturnType<typeof getCollection>,
+  logger: logging.Logger
+) {
   try {
-    const engineHost = new NodeModulesEngineHost();
-    const engine = new SchematicEngine(engineHost);
-    const collection = engine.createCollection(collectionName);
-    logger.info(engine.listSchematicNames(collection).join('\n'));
+    const bodyLines: string[] = [];
+
+    bodyLines.push(terminal.bold(terminal.green('WORKSPACE SCHEMATICS')));
+    bodyLines.push('');
+    bodyLines.push(
+      ...Object.entries(collection.description.schematics).map(
+        ([schematicName, schematicMeta]) => {
+          return `${terminal.bold(schematicName)} : ${
+            schematicMeta.description
+          }`;
+        }
+      )
+    );
+    bodyLines.push('');
+
+    output.log({
+      title: '',
+      bodyLines,
+    });
   } catch (error) {
     logger.fatal(error.message);
     return 1;
   }
 
   return 0;
+}
+
+function getCollection(workflow: NodeWorkflow, name: string) {
+  const collection = workflow.engine.createCollection(name);
+  if (!collection) {
+    throw new Error(`Cannot find collection '${name}'`);
+  }
+
+  return collection;
 }
 
 function createPromptProvider(): schema.PromptProvider {
@@ -213,7 +355,6 @@ function createPromptProvider(): schema.PromptProvider {
   };
 }
 
-// execute schematic
 async function executeSchematic(
   schematicName: string,
   options: { [p: string]: any },
@@ -315,7 +456,7 @@ async function executeSchematic(
   try {
     await workflow
       .execute({
-        collection: path.join(outDir, 'workspace-schematics.json'),
+        collection: path.join(outDir, collectionName),
         schematic: schematicName,
         options: options,
         logger: logger,
@@ -340,29 +481,39 @@ async function executeSchematic(
   }
 }
 
-function parseOptions(args: string[], outDir: string): { [k: string]: any } {
-  const schemaPath = path.join(outDir, args[0], 'schema.json');
-  let booleanProps = [];
-  if (fileExists(schemaPath)) {
-    const { properties } = readJsonFile(
-      path.join(outDir, args[0], 'schema.json')
-    );
-    if (properties) {
-      booleanProps = Object.keys(properties).filter(
-        (key) => properties[key].type === 'boolean'
-      );
-    }
-  }
-  return yargsParser(args, {
-    boolean: ['dryRun', 'listSchematics', 'interactive', ...booleanProps],
+function parseSchematicOptions(
+  schematicArgs: string[],
+  schematicBooleanArgs: string[]
+) {
+  return yargsParser(schematicArgs, {
+    boolean: ['dryRun', 'interactive', 'verbose', ...schematicBooleanArgs],
     alias: {
       dryRun: ['d'],
-      listSchematics: ['l'],
     },
     default: {
       interactive: true,
     },
-  });
+  }) as ParsedSchematicArgs;
+}
+
+function getSchematicBooleanProps(
+  schematicName: string | undefined,
+  outDir: string
+) {
+  if (!schematicName) {
+    return [];
+  }
+
+  const schemaJson = getSchemaJson(
+    path.join(outDir, schematicName, 'schema.json')
+  );
+  const { properties = {} } = schemaJson;
+
+  const booleanProps = Object.keys(properties).filter(
+    (key) => properties[key].type === 'boolean'
+  );
+
+  return booleanProps;
 }
 
 function exists(file: string): boolean {
@@ -410,4 +561,51 @@ function cleanupTmpTsConfigFile(tmpTsConfigPath) {
       fs.unlinkSync(tmpTsConfigPath);
     }
   } catch (e) {}
+}
+
+function formatOption(name: string, description: string) {
+  return `  --${(name + '                     ').substr(0, 22)}${terminal.grey(
+    description
+  )}`;
+}
+
+function printHelp(schema: SchematicSchema, logger: logging.Logger) {
+  const args = Object.keys(schema.properties)
+    .map((name) => {
+      const d = schema.properties[name];
+      const def = d.default ? ` (default: ${d.default})` : '';
+      return formatOption(name, `${d.description}${def}`);
+    })
+    .join('\n');
+
+  logger.info(tags.stripIndent`
+
+${terminal.bold('Options')}:
+${args}
+${formatOption('help', 'Show available options for schematic.')}
+  `);
+}
+
+function printGenHelp(schema: SchematicSchema, logger: logging.Logger) {
+  try {
+    printHelp(
+      {
+        ...schema,
+        properties: {
+          ...schema.properties,
+          dryRun: {
+            type: 'boolean',
+            default: false,
+            description: `Runs through and reports activity without writing to disk.`,
+          },
+        },
+      },
+      logger
+    );
+  } catch (error) {
+    logger.fatal(error.message);
+    return 1;
+  }
+
+  return 0;
 }

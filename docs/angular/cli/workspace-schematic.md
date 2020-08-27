@@ -22,7 +22,7 @@ List the available workspace-schematics
 
 ### name
 
-The name of your schematic`
+The name of your schematic
 
 ### version
 
