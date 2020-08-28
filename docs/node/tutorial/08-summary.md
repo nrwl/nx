@@ -1,10 +1,10 @@
-# Step 12: Summary
+# Step 8: Summary
 
 In this tutorial you:
 
-- Built a full stack application using Angular and Nest
-- Shared code between the frontend and the backend
-- Created a UI library
+- Built a full Node application with an API and server side rendered pages
+- Shared code
+- Created a Controller library
 - Used Nx dep graph capabilities to only retest and rebuild what is affected
 
 ## Learn More
