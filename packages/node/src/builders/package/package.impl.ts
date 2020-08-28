@@ -1,11 +1,11 @@
 import { BuilderContext, createBuilder } from '@angular-devkit/architect';
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   updateBuildableProjectPackageJsonDependencies,
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
-import { of } from 'rxjs';
+import { from, Observable, of } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { NodePackageBuilderOptions } from './utils/models';
 import compileTypeScriptFiles from './utils/compile-typescript-files';
@@ -16,18 +16,20 @@ import copyAssetFiles from './utils/copy-asset-files';
 export function runNodePackageBuilder(
   options: NodePackageBuilderOptions,
   context: BuilderContext
-) {
-  const projGraph = createProjectGraph();
-  const libRoot = projGraph.nodes[context.target.project].data.root;
-  const normalizedOptions = normalizeOptions(options, context, libRoot);
-  const { target, dependencies } = calculateProjectDependencies(
-    projGraph,
-    context
-  );
-
-  return of(checkDependentProjectsHaveBeenBuilt(context, dependencies)).pipe(
-    switchMap((result) => {
-      if (result) {
+): Observable<{ success: boolean; outputPath?: string }> {
+  return from(createProjectGraphAsync()).pipe(
+    switchMap((projGraph) => {
+      const libRoot = projGraph.nodes[context.target.project].data.root;
+      const normalizedOptions = normalizeOptions(options, context, libRoot);
+      const { target, dependencies } = calculateProjectDependencies(
+        projGraph,
+        context
+      );
+      const dependentProjectsHaveBeenBuilt = checkDependentProjectsHaveBeenBuilt(
+        context,
+        dependencies
+      );
+      if (dependentProjectsHaveBeenBuilt) {
         return compileTypeScriptFiles(
           normalizedOptions,
           context,
@@ -47,17 +49,15 @@ export function runNodePackageBuilder(
               );
             }
           }),
-          switchMap(() => copyAssetFiles(normalizedOptions, context))
+          switchMap(() => copyAssetFiles(normalizedOptions, context)),
+          map((val) => ({
+            ...val,
+            outputPath: normalizedOptions.outputPath,
+          }))
         );
       } else {
         return of({ success: false });
       }
-    }),
-    map((value) => {
-      return {
-        ...value,
-        outputPath: normalizedOptions.outputPath,
-      };
     })
   );
 }

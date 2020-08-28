@@ -22,10 +22,10 @@ let addedEmotionPreset = false;
  * - For any projects that are not migrated, display a message so users are not surprised.
  */
 export default function update(): Rule {
-  return (host: Tree, context: SchematicContext) => {
+  return async (host: Tree, context: SchematicContext) => {
     const updates = [];
     const conflicts: Array<[string, string]> = [];
-    const projectGraph = getFullProjectGraphFromHost(host);
+    const projectGraph = await getFullProjectGraphFromHost(host);
     if (host.exists('/babel.config.json')) {
       context.logger.info(
         `

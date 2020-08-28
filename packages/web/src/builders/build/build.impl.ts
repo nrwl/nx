@@ -15,6 +15,7 @@ import {
   map,
   mergeScan,
   switchMap,
+  tap,
 } from 'rxjs/operators';
 import { getSourceRoot } from '../../utils/source-root';
 import { writeIndexHtml } from '../../utils/third-party/cli-files/utilities/index-file/write-index-html';
@@ -22,7 +23,7 @@ import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { execSync } from 'child_process';
 import { Range, satisfies } from 'semver';
 import { basename, join } from 'path';
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   createTmpTsConfig,
@@ -78,26 +79,27 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
     );
   }
 
-  if (!options.buildLibsFromSource) {
-    const projGraph = createProjectGraph();
-    const { target, dependencies } = calculateProjectDependencies(
-      projGraph,
-      context
-    );
-    options.tsConfig = createTmpTsConfig(
-      join(context.workspaceRoot, options.tsConfig),
-      context.workspaceRoot,
-      target.data.root,
-      dependencies
-    );
-  }
-
   // Delete output path before bundling
-  deleteOutputDir(context.workspaceRoot, options.outputPath);
 
-  return from(getSourceRoot(context))
+  return from(createProjectGraphAsync())
     .pipe(
-      concatMap(async (sourceRoot) => {
+      tap((projGraph) => {
+        if (!options.buildLibsFromSource) {
+          const { target, dependencies } = calculateProjectDependencies(
+            projGraph,
+            context
+          );
+          options.tsConfig = createTmpTsConfig(
+            join(context.workspaceRoot, options.tsConfig),
+            context.workspaceRoot,
+            target.data.root,
+            dependencies
+          );
+        }
+      }),
+      tap(() => deleteOutputDir(context.workspaceRoot, options.outputPath)),
+      concatMap(async () => {
+        const sourceRoot = await getSourceRoot(context);
         options = normalizeWebBuildOptions(
           options,
           context.workspaceRoot,

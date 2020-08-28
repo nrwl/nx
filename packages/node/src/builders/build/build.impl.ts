@@ -1,16 +1,15 @@
 import { BuilderContext, createBuilder } from '@angular-devkit/architect';
-import { JsonObject, workspaces } from '@angular-devkit/core';
+import { JsonObject } from '@angular-devkit/core';
 import { runWebpack, BuildResult } from '@angular-devkit/build-webpack';
 
 import { Observable, from } from 'rxjs';
 import { join, resolve } from 'path';
-import { map, concatMap } from 'rxjs/operators';
+import { map, concatMap, switchMap, tap } from 'rxjs/operators';
 import { getNodeWebpackConfig } from '../../utils/node.config';
 import { OUT_FILENAME } from '../../utils/config';
 import { BuildBuilderOptions } from '../../utils/types';
 import { normalizeBuildOptions } from '../../utils/normalize';
-import { NodeJsSyncHost } from '@angular-devkit/core/node';
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   createTmpTsConfig,
@@ -37,21 +36,22 @@ function run(
   options: JsonObject & BuildNodeBuilderOptions,
   context: BuilderContext
 ): Observable<NodeBuildEvent> {
-  if (!options.buildLibsFromSource) {
-    const projGraph = createProjectGraph();
-    const { target, dependencies } = calculateProjectDependencies(
-      projGraph,
-      context
-    );
-    options.tsConfig = createTmpTsConfig(
-      join(context.workspaceRoot, options.tsConfig),
-      context.workspaceRoot,
-      target.data.root,
-      dependencies
-    );
-  }
-
-  return from(getSourceRoot(context)).pipe(
+  return from(createProjectGraphAsync()).pipe(
+    tap((projGraph) => {
+      if (!options.buildLibsFromSource) {
+        const { target, dependencies } = calculateProjectDependencies(
+          projGraph,
+          context
+        );
+        options.tsConfig = createTmpTsConfig(
+          join(context.workspaceRoot, options.tsConfig),
+          context.workspaceRoot,
+          target.data.root,
+          dependencies
+        );
+      }
+    }),
+    switchMap(() => getSourceRoot(context)),
     map((sourceRoot) =>
       normalizeBuildOptions(options, context.workspaceRoot, sourceRoot)
     ),
@@ -85,17 +85,14 @@ function run(
 }
 
 async function getSourceRoot(context: BuilderContext) {
-  const workspaceHost = workspaces.createWorkspaceHost(new NodeJsSyncHost());
-  const { workspace } = await workspaces.readWorkspace(
-    context.workspaceRoot,
-    workspaceHost
-  );
-  if (workspace.projects.get(context.target.project).sourceRoot) {
-    return workspace.projects.get(context.target.project).sourceRoot;
-  } else {
+  const sourceRoot = (await context.getProjectMetadata(context.target.project))
+    .sourceRoot as string;
+  if (!sourceRoot) {
     context.reportStatus('Error');
     const message = `${context.target.project} does not have a sourceRoot. Please define one.`;
     context.logger.error(message);
     throw new Error(message);
+  } else {
+    return sourceRoot;
   }
 }

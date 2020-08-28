@@ -5,7 +5,7 @@ import * as opn from 'opn';
 import { join, normalize, parse } from 'path';
 import * as url from 'url';
 import {
-  createProjectGraph,
+  createProjectGraphAsync,
   onlyWorkspaceProjects,
   ProjectGraph,
   ProjectGraphNode,
@@ -139,7 +139,7 @@ function filterGraph(
   return filteredGraph;
 }
 
-export function generateGraph(
+export async function generateGraph(
   args: {
     file?: string;
     host?: string;
@@ -148,8 +148,8 @@ export function generateGraph(
     groupByFolder?: boolean;
   },
   affectedProjects: string[]
-): void {
-  let graph = onlyWorkspaceProjects(createProjectGraph());
+) {
+  let graph = onlyWorkspaceProjects(await createProjectGraphAsync());
 
   const projects = Object.values(graph.nodes) as ProjectGraphNode[];
   projects.sort((a, b) => {

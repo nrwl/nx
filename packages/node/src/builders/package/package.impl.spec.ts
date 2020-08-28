@@ -69,7 +69,7 @@ describe('NodePackageBuilder', () => {
 
   describe('Without library dependencies', () => {
     beforeEach(() => {
-      spyOn(projectGraph, 'createProjectGraph').and.callFake(() => {
+      spyOn(projectGraph, 'createProjectGraphAsync').and.callFake(async () => {
         return {
           nodes: {
             nodelib: {
@@ -260,7 +260,7 @@ describe('NodePackageBuilder', () => {
   describe('building with dependencies', () => {
     beforeEach(() => {
       // fake that dep project has been built
-      spyOn(projectGraph, 'createProjectGraph').and.callFake(() => {
+      spyOn(projectGraph, 'createProjectGraphAsync').and.callFake(async () => {
         return {
           nodes: {
             nodelib: {

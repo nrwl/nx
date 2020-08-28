@@ -2,7 +2,7 @@ import * as yargs from 'yargs';
 import { runCommand } from '../tasks-runner/run-command';
 import { NxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
 import {
-  createProjectGraph,
+  createProjectGraphAsync,
   isWorkspaceProject,
   onlyWorkspaceProjects,
   ProjectGraph,
@@ -14,12 +14,12 @@ import { DefaultReporter } from '../tasks-runner/default-reporter';
 import { projectHasTarget } from '../utils/project-graph-utils';
 import { output } from '../utils/output';
 
-export function runMany(parsedArgs: yargs.Arguments): void {
+export async function runMany(parsedArgs: yargs.Arguments) {
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     parsedArgs,
     'run-many'
   );
-  const projectGraph = createProjectGraph();
+  const projectGraph = await createProjectGraphAsync();
   const projects = projectsToRun(nxArgs, projectGraph);
   const projectMap: Record<string, ProjectGraphNode> = {};
   projects.forEach((proj) => {

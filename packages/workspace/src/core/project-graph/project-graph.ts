@@ -31,6 +31,17 @@ import {
 import { NxJson } from '../shared-interfaces';
 import { performance } from 'perf_hooks';
 
+const buildDependenciesFns: BuildDependencies[] = [
+  buildExplicitTypeScriptDependencies,
+  buildImplicitProjectDependencies,
+  buildExplicitNpmDependencies,
+];
+
+/**
+ * This is sync version of {@link createProjectGraphAsync}
+ *
+ * If possible, use that instead.
+ */
 export function createProjectGraph(
   workspaceJson = readWorkspaceJson(),
   nxJson = readNxJson(),
@@ -39,6 +50,54 @@ export function createProjectGraph(
   cache: false | ProjectGraphCache = readCache(),
   shouldCache: boolean = true
 ): ProjectGraph {
+  assertWorkspaceValidity(workspaceJson, nxJson);
+  const normalizedNxJson = normalizeNxJson(nxJson);
+
+  const rootFiles = rootWorkspaceFileData();
+  const fileMap = createFileMap(workspaceJson, workspaceFiles);
+
+  if (cache && !filesChanged(rootFiles, cache.rootFiles)) {
+    const diff = differentFromCache(fileMap, cache);
+    if (diff.noDifference) {
+      return diff.partiallyConstructedProjectGraph;
+    }
+
+    const ctx = {
+      workspaceJson,
+      nxJson: normalizedNxJson,
+      fileMap: diff.filesDifferentFromCache,
+    };
+    const projectGraph = buildProjectGraph(
+      ctx,
+      fileRead,
+      diff.partiallyConstructedProjectGraph
+    );
+    if (shouldCache) {
+      writeCache(rootFiles, projectGraph);
+    }
+    return projectGraph;
+  } else {
+    const ctx = {
+      workspaceJson,
+      nxJson: normalizedNxJson,
+      fileMap: fileMap,
+    };
+    const projectGraph = buildProjectGraph(ctx, fileRead, null);
+    if (shouldCache) {
+      writeCache(rootFiles, projectGraph);
+    }
+    return projectGraph;
+  }
+}
+
+export async function createProjectGraphAsync(
+  workspaceJson = readWorkspaceJson(),
+  nxJson = readNxJson(),
+  workspaceFiles = readWorkspaceFiles(),
+  fileRead: (s: string) => string = defaultFileRead,
+  cache: false | ProjectGraphCache = readCache(),
+  shouldCache: boolean = true
+): Promise<ProjectGraph> {
   assertWorkspaceValidity(workspaceJson, nxJson);
   const normalizedNxJson = normalizeNxJson(nxJson);
 
@@ -89,11 +148,6 @@ function buildProjectGraph(
   const buildNodesFns: BuildNodes[] = [
     buildWorkspaceProjectNodes,
     buildNpmPackageNodes,
-  ];
-  const buildDependenciesFns: BuildDependencies[] = [
-    buildExplicitTypeScriptDependencies,
-    buildImplicitProjectDependencies,
-    buildExplicitNpmDependencies,
   ];
   buildNodesFns.forEach((f) => f(ctx, builder.addNode.bind(builder), fileRead));
   buildDependenciesFns.forEach((f) =>

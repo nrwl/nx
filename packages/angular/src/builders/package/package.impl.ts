@@ -7,7 +7,7 @@ import { JsonObject } from '@angular-devkit/core';
 import * as ng from '@angular/compiler-cli';
 import { resolve } from 'path';
 import { from, Observable, of } from 'rxjs';
-import { mapTo, switchMap, tap } from 'rxjs/operators';
+import { map, mapTo, switchMap, tap } from 'rxjs/operators';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
@@ -15,7 +15,7 @@ import {
   updateBuildableProjectPackageJsonDependencies,
   updatePaths,
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 
 export interface BuildAngularLibraryBuilderOptions {
   /**
@@ -57,14 +57,14 @@ export function run(
   options: BuildAngularLibraryBuilderOptions & JsonObject,
   context: BuilderContext
 ): Observable<BuilderOutput> {
-  const projGraph = createProjectGraph();
-  const { target, dependencies } = calculateProjectDependencies(
-    projGraph,
-    context
-  );
-  return of(checkDependentProjectsHaveBeenBuilt(context, dependencies)).pipe(
-    switchMap((result) => {
-      if (result) {
+  return from(createProjectGraphAsync()).pipe(
+    map((projGraph) => calculateProjectDependencies(projGraph, context)),
+    switchMap(({ target, dependencies }) => {
+      const dependentProjectsHaveBeenBuilt = checkDependentProjectsHaveBeenBuilt(
+        context,
+        dependencies
+      );
+      if (dependentProjectsHaveBeenBuilt) {
         return from(initializeNgPackagr(options, context, dependencies)).pipe(
           switchMap((packager) =>
             options.watch ? packager.watch() : packager.build()
