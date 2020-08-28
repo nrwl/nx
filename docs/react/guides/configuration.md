@@ -320,6 +320,9 @@ Nx performs advanced source-code analysis to figure out the project graph of the
       "dependencies": "*",
       "devDependencies": {
         "mypackage": ["mylib"]
+      },
+      "scripts": {
+        "check:*": "*"
       }
     },
     "globalFile": ["myapp"],
@@ -333,6 +336,7 @@ In the example above:
 - Changing `workspace.json` will affect every project.
 - Changing the `dependencies` property in `package.json` will affect every project.
 - Changing the `devDependencies` property in `package.json` will only affect `mylib`.
+- Changing any of the custom check `scripts` in `package.json` will affect every project.
 - Changing `globalFile` will only affect `myapp`.
 - Changing any CSS file inside the `styles` directory will only affect `myapp`.
 
