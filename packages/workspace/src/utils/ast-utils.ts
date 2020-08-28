@@ -22,7 +22,7 @@ import * as stripJsonComments from 'strip-json-comments';
 import { serializeJson } from './fileutils';
 import { getWorkspacePath } from './cli-config-utils';
 import {
-  createProjectGraph,
+  createProjectGraphAsync,
   onlyWorkspaceProjects,
   ProjectGraph,
 } from '../core/project-graph';
@@ -397,11 +397,13 @@ export function readJsonInTree<T = any>(host: Tree, path: string): T {
 /**
  * Method for utilizing the project graph in schematics
  */
-export function getProjectGraphFromHost(host: Tree): ProjectGraph {
-  return onlyWorkspaceProjects(getFullProjectGraphFromHost(host));
+export async function getProjectGraphFromHost(
+  host: Tree
+): Promise<ProjectGraph> {
+  return onlyWorkspaceProjects(await getFullProjectGraphFromHost(host));
 }
 
-export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
+export function getFullProjectGraphFromHost(host: Tree): Promise<ProjectGraph> {
   const workspaceJson = readJsonInTree(host, getWorkspacePath(host));
   const nxJson = readJsonInTree<NxJson>(host, '/nx.json');
 
@@ -430,7 +432,7 @@ export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
     );
   });
 
-  return createProjectGraph(
+  return createProjectGraphAsync(
     workspaceJson,
     nxJson,
     workspaceFiles,

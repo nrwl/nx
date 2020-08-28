@@ -4,7 +4,7 @@ import * as resolve from 'resolve';
 import { getProjectRoots, parseFiles } from './shared';
 import { fileExists } from '../utils/fileutils';
 import {
-  createProjectGraph,
+  createProjectGraphAsync,
   onlyWorkspaceProjects,
 } from '../core/project-graph';
 import { filterAffected } from '../core/affected-project-graph';
@@ -28,10 +28,13 @@ const PRETTIER_EXTENSIONS = [
 
 const MATCH_ALL_PATTERN = `**/*.{${PRETTIER_EXTENSIONS.join(',')}}`;
 
-export function format(command: 'check' | 'write', args: yargs.Arguments) {
+export async function format(
+  command: 'check' | 'write',
+  args: yargs.Arguments
+) {
   const { nxArgs } = splitArgsIntoNxArgsAndOverrides(args, 'affected');
 
-  const patterns = getPatterns({ ...args, ...nxArgs } as any).map(
+  const patterns = (await getPatterns({ ...args, ...nxArgs } as any)).map(
     (p) => `"${p}"`
   );
 
@@ -48,7 +51,9 @@ export function format(command: 'check' | 'write', args: yargs.Arguments) {
   }
 }
 
-function getPatterns(args: NxArgs & { libsAndApps: boolean; _: string[] }) {
+async function getPatterns(
+  args: NxArgs & { libsAndApps: boolean; _: string[] }
+) {
   const allFilesPattern = [MATCH_ALL_PATTERN];
 
   try {
@@ -63,14 +68,14 @@ function getPatterns(args: NxArgs & { libsAndApps: boolean; _: string[] }) {
         PRETTIER_EXTENSIONS.map((ext) => '.' + ext).includes(path.extname(f))
       );
 
-    return args.libsAndApps ? getPatternsFromApps(patterns) : patterns;
+    return args.libsAndApps ? await getPatternsFromApps(patterns) : patterns;
   } catch (e) {
     return allFilesPattern;
   }
 }
 
-function getPatternsFromApps(affectedFiles: string[]): string[] {
-  const graph = onlyWorkspaceProjects(createProjectGraph());
+async function getPatternsFromApps(affectedFiles: string[]): Promise<string[]> {
+  const graph = onlyWorkspaceProjects(await createProjectGraphAsync());
   const affectedGraph = filterAffected(
     graph,
     calculateFileChanges(affectedFiles)

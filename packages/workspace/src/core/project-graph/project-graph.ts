@@ -31,6 +31,11 @@ import {
 import { NxJson } from '../shared-interfaces';
 import { performance } from 'perf_hooks';
 
+/**
+ * This is sync version of {@link createProjectGraphAsync}
+ *
+ * If possible, use that instead.
+ */
 export function createProjectGraph(
   workspaceJson = readWorkspaceJson(),
   nxJson = readNxJson(),
@@ -39,6 +44,42 @@ export function createProjectGraph(
   cache: false | ProjectGraphCache = readCache(),
   shouldCache: boolean = true
 ): ProjectGraph {
+  let projectGraph: ProjectGraph;
+  let err: Error;
+  createProjectGraphAsync(
+    workspaceJson,
+    nxJson,
+    workspaceFiles,
+    fileRead,
+    cache,
+    shouldCache
+  )
+    .then((projGraph) => {
+      projectGraph = projGraph;
+    })
+    .catch((e) => {
+      err = e;
+    });
+
+  while (!err && !projectGraph) {
+    // Block Execution
+  }
+
+  if (projectGraph) {
+    return projectGraph;
+  } else {
+    throw err;
+  }
+}
+
+export async function createProjectGraphAsync(
+  workspaceJson = readWorkspaceJson(),
+  nxJson = readNxJson(),
+  workspaceFiles = readWorkspaceFiles(),
+  fileRead: (s: string) => string = defaultFileRead,
+  cache: false | ProjectGraphCache = readCache(),
+  shouldCache: boolean = true
+): Promise<ProjectGraph> {
   assertWorkspaceValidity(workspaceJson, nxJson);
   const normalizedNxJson = normalizeNxJson(nxJson);
 

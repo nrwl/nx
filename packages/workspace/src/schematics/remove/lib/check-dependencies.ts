@@ -8,7 +8,7 @@ import { getWorkspacePath } from '@nrwl/workspace/src/utils/cli-config-utils';
 import ignore from 'ignore';
 import * as path from 'path';
 import {
-  createProjectGraph,
+  createProjectGraphAsync,
   onlyWorkspaceProjects,
   ProjectGraph,
   reverse,
@@ -28,7 +28,7 @@ export function checkDependencies(schema: Schema): Rule {
   }
   let ig = ignore();
 
-  return (tree: Tree): Tree => {
+  return async (tree: Tree) => {
     if (tree.exists('.gitignore')) {
       ig = ig.add(tree.read('.gitignore').toString());
     }
@@ -49,7 +49,7 @@ export function checkDependencies(schema: Schema): Rule {
       });
     }
 
-    const graph: ProjectGraph = createProjectGraph(
+    const graph: ProjectGraph = await createProjectGraphAsync(
       readWorkspace(tree),
       readNxJsonInTree(tree),
       files,
@@ -63,7 +63,7 @@ export function checkDependencies(schema: Schema): Rule {
     const deps = reverseGraph.dependencies[schema.projectName] || [];
 
     if (deps.length === 0) {
-      return tree;
+      return;
     }
 
     throw new Error(

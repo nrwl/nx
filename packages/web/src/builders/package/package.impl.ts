@@ -20,7 +20,7 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '@nrwl/workspace/src/utils/fileutils';
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 
 import {
   calculateProjectDependencies,
@@ -65,14 +65,18 @@ export function run(
   rawOptions: PackageBuilderOptions,
   context: BuilderContext
 ): Observable<BuilderOutput> {
-  const projGraph = createProjectGraph();
-  const { target, dependencies } = calculateProjectDependencies(
-    projGraph,
-    context
-  );
-
-  return from(getSourceRoot(context)).pipe(
-    switchMap((sourceRoot) => {
+  return from(createProjectGraphAsync()).pipe(
+    concatMap((projectGraph) =>
+      getSourceRoot(context).then((sourceRoot) => ({
+        sourceRoot,
+        projectGraph,
+      }))
+    ),
+    switchMap(({ projectGraph, sourceRoot }) => {
+      const { target, dependencies } = calculateProjectDependencies(
+        projectGraph,
+        context
+      );
       if (!checkDependentProjectsHaveBeenBuilt(context, dependencies)) {
         return of({ success: false });
       }

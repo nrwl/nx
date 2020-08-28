@@ -184,8 +184,8 @@ function createRootBuildFile() {
 const runInit = schematic<{}>('init', {});
 
 export default (): Rule => {
-  return (host: Tree) => {
-    const projectGraph = getProjectGraphFromHost(host);
+  return async (host: Tree) => {
+    const projectGraph = await getProjectGraphFromHost(host);
 
     return chain([
       runInit,

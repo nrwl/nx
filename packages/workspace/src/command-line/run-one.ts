@@ -1,16 +1,16 @@
 import { runCommand } from '../tasks-runner/run-command';
-import { createProjectGraph, ProjectGraph } from '../core/project-graph';
+import { createProjectGraphAsync, ProjectGraph } from '../core/project-graph';
 import { readEnvironment } from '../core/file-utils';
 import { EmptyReporter } from '../tasks-runner/empty-reporter';
 import { splitArgsIntoNxArgsAndOverrides } from './utils';
 import { projectHasTarget } from '../utils/project-graph-utils';
 
-export function runOne(opts: {
+export async function runOne(opts: {
   project: string;
   target: string;
   configuration: string;
   parsedArgs: any;
-}): void {
+}) {
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     {
       ...opts.parsedArgs,
@@ -20,7 +20,7 @@ export function runOne(opts: {
     'run-one'
   );
 
-  const projectGraph = createProjectGraph();
+  const projectGraph = await createProjectGraphAsync();
   const { projects, projectsMap } = getProjects(
     projectGraph,
     nxArgs.withDeps,

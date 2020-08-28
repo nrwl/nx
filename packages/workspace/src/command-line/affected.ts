@@ -6,7 +6,7 @@ import { runCommand } from '../tasks-runner/run-command';
 import { NxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
 import { filterAffected } from '../core/affected-project-graph';
 import {
-  createProjectGraph,
+  createProjectGraphAsync,
   onlyWorkspaceProjects,
   ProjectGraphNode,
   ProjectType,
@@ -17,7 +17,7 @@ import { printAffected } from './print-affected';
 import { projectHasTarget } from '../utils/project-graph-utils';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
 
-export function affected(command: string, parsedArgs: yargs.Arguments): void {
+export async function affected(command: string, parsedArgs: yargs.Arguments) {
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     parsedArgs,
     'affected',
@@ -26,7 +26,7 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
     }
   );
 
-  const projectGraph = createProjectGraph();
+  const projectGraph = await createProjectGraphAsync();
   let affectedGraph = nxArgs.all
     ? projectGraph
     : filterAffected(
