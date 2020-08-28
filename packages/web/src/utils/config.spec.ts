@@ -8,6 +8,7 @@ import { BuildBuilderOptions } from './types';
 import { normalize } from '@angular-devkit/core';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 
 jest.mock('tsconfig-paths-webpack-plugin');
 
@@ -288,12 +289,9 @@ describe('getBaseWebpackPartial', () => {
         ],
       });
 
-      // This test isn't great because it's hard to find CopyWebpackPlugin
       expect(
-        result.plugins.some(
-          (plugin) => !(plugin instanceof ForkTsCheckerWebpackPlugin)
-        )
-      ).toBeTruthy();
+        result.plugins.filter((plugin) => plugin instanceof CopyWebpackPlugin)
+      ).toHaveLength(1);
     });
   });
 
