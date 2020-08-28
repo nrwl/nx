@@ -19,6 +19,7 @@ enum Preset {
   React = 'react',
   ReactWithExpress = 'react-express',
   NextJs = 'next',
+  Nest = 'nest',
 }
 
 const presetOptions = [
@@ -45,6 +46,10 @@ const presetOptions = [
     value: Preset.AngularWithNest,
     name:
       'angular-nest      [a workspace with a full stack application (Angular + Nest)]',
+  },
+  {
+    value: Preset.Nest,
+    name: 'nest              [a workspace with a single Nest application]',
   },
   {
     value: Preset.React,
@@ -260,7 +265,8 @@ function determineCli(preset: Preset, parsedArgs: any) {
     case Preset.WebComponents:
     case Preset.React:
     case Preset.ReactWithExpress:
-    case Preset.NextJs: {
+    case Preset.NextJs:
+    case Preset.Nest: {
       return Promise.resolve(nx);
     }
     default: {
@@ -291,7 +297,11 @@ function determineCli(preset: Preset, parsedArgs: any) {
 }
 
 function determineStyle(preset: Preset, parsedArgs: any) {
-  if (preset === Preset.Empty || preset === Preset.OSS) {
+  if (
+    preset === Preset.Empty ||
+    preset === Preset.OSS ||
+    preset === Preset.Nest
+  ) {
     return Promise.resolve(null);
   }
 
@@ -524,6 +534,17 @@ function pointToTutorialAndCourse(preset: Preset) {
         ],
       });
       break;
+    // TODO(Cammisuli): include this after the nx.dev site is updated with the node flavour
+    // case Preset.Nest:
+    //   output.addVerticalSeparator();
+    //   output.note({
+    //     title,
+    //     bodyLines: [
+    //       `https://nx.dev/node/tutorial/01-create-application`,
+    //       ...pointToCourse(),
+    //     ],
+    //   });
+    //   break;
   }
 }
 

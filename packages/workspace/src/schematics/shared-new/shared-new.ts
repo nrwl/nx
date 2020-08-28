@@ -46,7 +46,8 @@ export interface Schema {
     | 'web-components'
     | 'angular-nest'
     | 'react-express'
-    | 'next';
+    | 'next'
+    | 'nest';
   commit?: { name: string; email: string; message?: string };
   defaultBase?: string;
 }
@@ -200,6 +201,14 @@ function addPresetDependencies(options: Schema) {
       {},
       {
         '@nrwl/next': nxVersion,
+      },
+      false
+    );
+  } else if (options.preset === 'nest') {
+    return addDepsToPackageJson(
+      {},
+      {
+        '@nrwl/nest': nxVersion,
       },
       false
     );

@@ -115,6 +115,14 @@ function createPreset(options: Schema): Rule {
       setDefaultCollection('@nrwl/react'),
       connectReactAndExpress(options),
     ]);
+  } else if (options.preset === 'nest') {
+    return chain([
+      externalSchematic('@nrwl/nest', 'application', {
+        name: options.name,
+        linter,
+      }),
+      setDefaultCollection('@nrwl/nest'),
+    ]);
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
   }
