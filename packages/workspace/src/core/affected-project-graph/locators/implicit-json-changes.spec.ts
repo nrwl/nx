@@ -3,34 +3,55 @@ import { NxJson } from '../../shared-interfaces';
 import { WholeFileChange } from '../../file-utils';
 import { DiffType } from '../../../utils/json-diff';
 
+function getModifiedChange(path: string[]) {
+  return {
+    type: DiffType.Modified,
+    path,
+    value: {
+      lhs: 'before',
+      rhs: 'after',
+    },
+  };
+}
+
 describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
   let workspaceJson;
   let nxJson: NxJson<string[]>;
   beforeEach(() => {
-    workspaceJson = {
-      projects: {
-        proj1: {},
-        proj2: {},
-      },
-    };
+    workspaceJson = null;
     nxJson = {
       implicitDependencies: {
         'package.json': {
           dependencies: ['proj1'],
           some: {
             'deep-field': ['proj2'],
+            'deep-glob-*': ['proj3'],
           },
+          'match-*': ['proj4', 'proj5'],
         },
       },
       npmScope: 'scope',
-      projects: {
-        proj1: {},
-        proj2: {},
-      },
+      projects: {},
     };
   });
 
-  it('should handle json changes', () => {
+  it('should handle deep json changes', () => {
+    const result = getImplicitlyTouchedProjectsByJsonChanges(
+      [
+        {
+          file: 'package.json',
+          hash: 'some-hash',
+          ext: '.json',
+          getChanges: () => [getModifiedChange(['some', 'deep-field'])],
+        },
+      ],
+      workspaceJson,
+      nxJson
+    );
+    expect(result).toEqual(['proj2']);
+  });
+
+  it('should handle glob json changes', () => {
     const result = getImplicitlyTouchedProjectsByJsonChanges(
       [
         {
@@ -38,21 +59,16 @@ describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
           hash: 'some-hash',
           ext: '.json',
           getChanges: () => [
-            {
-              type: DiffType.Modified,
-              path: ['some', 'deep-field'],
-              value: {
-                lhs: 'before',
-                rhs: 'after',
-              },
-            },
+            getModifiedChange(['some', 'deep-glob-anything']),
+            getModifiedChange(['match-anything']),
+            getModifiedChange(['dependencies']),
           ],
         },
       ],
       workspaceJson,
       nxJson
     );
-    expect(result).toEqual(['proj2']);
+    expect(result).toEqual(['proj3', 'proj4', 'proj5', 'proj1']);
   });
 
   it('should handle whole file changes', () => {
@@ -68,6 +84,6 @@ describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
       workspaceJson,
       nxJson
     );
-    expect(result).toEqual(['proj1', 'proj2']);
+    expect(result).toEqual(['proj1', 'proj2', 'proj3', 'proj4', 'proj5']);
   });
 });
