@@ -21,19 +21,19 @@
       "version": "9.0.0-beta.1",
       "packages": {
         "@storybook/angular": {
-          "version": "6.0.0-rc.18",
+          "version": "6.0.20",
           "alwaysAddToPackageJson": false
         },
         "@storybook/react": {
-          "version": "6.0.0-rc.18",
+          "version": "6.0.20",
           "alwaysAddToPackageJson": false
         },
         "@storybook/web": {
-          "version": "6.0.0-rc.18",
+          "version": "6.0.20",
           "alwaysAddToPackageJson": false
         },
         "@storybook/addon-knobs": {
-          "version": "6.0.0-rc.18",
+          "version": "6.0.20",
           "alwaysAddToPackageJson": false
         }
       }
