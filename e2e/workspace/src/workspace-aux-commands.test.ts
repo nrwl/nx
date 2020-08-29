@@ -200,7 +200,7 @@ forEachCli((cli) => {
 
   describe('workspace-schematic', () => {
     function setup() {
-      ensureProject();
+      const { tmpProjPath } = ensureProject();
 
       const custom = uniq('custom');
       const failing = uniq('custom-failing');
@@ -216,11 +216,11 @@ forEachCli((cli) => {
         `tools/schematics/${failing}/schema.json`
       );
 
-      return { custom, failing };
+      return { custom, failing, tmpProjPath };
     }
 
     it('should compile only schematic files', () => {
-      const { custom } = setup();
+      const { custom, tmpProjPath } = setup();
       const workspace = uniq('workspace');
 
       updateFile(
@@ -231,13 +231,17 @@ forEachCli((cli) => {
       );
 
       const dryRunOutput = runCommand(
-        `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --directory=dir --skipTsConfig=true -d`
+        `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive -d`
       );
 
       expect(
-        exists(`dist/out-tsc/tools/schematics/${custom}/index.js`)
+        exists(
+          `${tmpProjPath}/dist/out-tsc/tools/schematics/${custom}/index.js`
+        )
       ).toEqual(true);
-      expect(exists(`dist/out-tsc/tools/utils/utils.js`)).toEqual(false);
+      expect(
+        exists(`${tmpProjPath}/dist/out-tsc/tools/utils/utils.js`)
+      ).toEqual(false);
     });
 
     it('should support workspace-specific schematics', async () => {
