@@ -15,9 +15,6 @@ import {
   uniq,
   updateFile,
   workspaceConfigName,
-  listFiles,
-  setCurrentProjName,
-  runCreateWorkspace,
 } from '@nrwl/e2e/utils';
 
 forEachCli((cli) => {
@@ -200,7 +197,7 @@ forEachCli((cli) => {
 
   describe('workspace-schematic', () => {
     function setup() {
-      const { tmpProjPath } = ensureProject();
+      ensureProject();
 
       const custom = uniq('custom');
       const failing = uniq('custom-failing');
@@ -216,11 +213,11 @@ forEachCli((cli) => {
         `tools/schematics/${failing}/schema.json`
       );
 
-      return { custom, failing, tmpProjPath };
+      return { custom, failing };
     }
 
-    it('should compile only schematic files', () => {
-      const { custom, tmpProjPath } = setup();
+    it('should compile only schematic files with dependencies', () => {
+      const { custom } = setup();
       const workspace = uniq('workspace');
 
       updateFile(
@@ -229,19 +226,39 @@ forEachCli((cli) => {
         export const noop = () => {}
         `
       );
+      updateFile(
+        'tools/utils/logger.ts',
+        `
+        export const log = (...args: any[]) => console.log(...args)
+        `
+      );
+      updateFile(
+        `tools/schematics/utils.ts`,
+        `
+        export const noop = ()=>{}
+        `
+      );
+      updateFile(`tools/schematics/${custom}/index.ts`, (content) => {
+        return `
+          import { log } from '../../utils/logger'; \n
+          ${content}
+        `;
+      });
 
       const dryRunOutput = runCommand(
         `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive -d`
       );
 
-      expect(
-        exists(
-          `${tmpProjPath}/dist/out-tsc/tools/schematics/${custom}/index.js`
+      expect(() =>
+        checkFilesExist(
+          `dist/out-tsc/tools/schematics/${custom}/index.js`,
+          `dist/out-tsc/tools/schematics/utils.js`,
+          `dist/out-tsc/tools/utils/logger.js`
         )
-      ).toEqual(true);
-      expect(
-        exists(`${tmpProjPath}/dist/out-tsc/tools/utils/utils.js`)
-      ).toEqual(false);
+      ).not.toThrow();
+      expect(() =>
+        checkFilesExist(`dist/out-tsc/tools/utils/utils.js`)
+      ).toThrow();
     });
 
     it('should support workspace-specific schematics', async () => {
