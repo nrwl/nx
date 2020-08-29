@@ -134,7 +134,7 @@ export function runNgNew(): string {
  * Sets up a new project in the temporary project path
  * for the currently selected CLI.
  */
-export function newProject() {
+export function newProject(): void {
   projName = uniq('proj');
   try {
     if (!directoryExists(tmpBackupProjPath())) {
@@ -165,8 +165,6 @@ export function newProject() {
     console.log(e.message);
     throw e;
   }
-
-  return { tmpProjPath: tmpProjPath() };
 }
 
 /**
@@ -176,9 +174,9 @@ export function newProject() {
  *
  * If one is not found, it creates a new project.
  */
-export function ensureProject() {
+export function ensureProject(): void {
   // if (!directoryExists(tmpProjPath())) {
-  return newProject();
+  newProject();
   // }
 }
 
@@ -351,7 +349,10 @@ export function createFile(f: string, content: string = ''): void {
   }
 }
 
-export function updateFile(f: string, content: string | Function): void {
+export function updateFile(
+  f: string,
+  content: string | ((content: string) => void)
+): void {
   ensureDirSync(path.dirname(tmpProjPath(f)));
   if (typeof content === 'string') {
     writeFileSync(tmpProjPath(f), content);
