@@ -3,7 +3,7 @@ import { generateGraph } from './dep-graph';
 import { output } from '../utils/output';
 import { parseFiles } from './shared';
 import { runCommand } from '../tasks-runner/run-command';
-import { NxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
+import { NxArgs, splitArgsIntoNxArgsAndOverrides, RawNxArgs } from './utils';
 import { filterAffected } from '../core/affected-project-graph';
 import {
   createProjectGraph,
@@ -17,7 +17,10 @@ import { printAffected } from './print-affected';
 import { projectHasTarget } from '../utils/project-graph-utils';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
 
-export function affected(command: string, parsedArgs: yargs.Arguments): void {
+export function affected(
+  command: 'apps' | 'libs' | 'dep-graph' | 'print-affected' | 'affected',
+  parsedArgs: yargs.Arguments & RawNxArgs
+): void {
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     parsedArgs,
     'affected',
