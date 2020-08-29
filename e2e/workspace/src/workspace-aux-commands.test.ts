@@ -15,6 +15,7 @@ import {
   uniq,
   updateFile,
   workspaceConfigName,
+  listFiles,
   setCurrentProjName,
   runCreateWorkspace,
 } from '@nrwl/e2e/utils';
@@ -117,7 +118,9 @@ forEachCli((cli) => {
         );
       });
     });
+  });
 
+  describe('format', () => {
     it('format should check and reformat the code', () => {
       ensureProject();
       const myapp = uniq('myapp');
@@ -193,17 +196,52 @@ forEachCli((cli) => {
         `apps/${myapp}/src/main.ts`
       );
     });
+  });
 
-    it('should support workspace-specific schematics', async () => {
+  describe('workspace-schematic', () => {
+    function setup() {
       ensureProject();
+
       const custom = uniq('custom');
       const failing = uniq('custom-failing');
       runCLI(`g workspace-schematic ${custom} --no-interactive`);
       runCLI(`g workspace-schematic ${failing} --no-interactive`);
+
       checkFilesExist(
         `tools/schematics/${custom}/index.ts`,
         `tools/schematics/${custom}/schema.json`
       );
+      checkFilesExist(
+        `tools/schematics/${failing}/index.ts`,
+        `tools/schematics/${failing}/schema.json`
+      );
+
+      return { custom, failing };
+    }
+
+    it('should compile only schematic files', () => {
+      const { custom } = setup();
+      const workspace = uniq('workspace');
+
+      updateFile(
+        'tools/utils/utils.ts',
+        `
+        export const noop = () => {}
+        `
+      );
+
+      const dryRunOutput = runCommand(
+        `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --directory=dir --skipTsConfig=true -d`
+      );
+
+      expect(
+        exists(`dist/out-tsc/tools/schematics/${custom}/index.js`)
+      ).toEqual(true);
+      expect(exists(`dist/out-tsc/tools/utils/utils.js`)).toEqual(false);
+    });
+
+    it('should support workspace-specific schematics', async () => {
+      const { custom, failing } = setup();
 
       const json = readJson(`tools/schematics/${custom}/schema.json`);
       json.properties['directory'] = {
