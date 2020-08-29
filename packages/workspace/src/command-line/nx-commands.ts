@@ -55,13 +55,13 @@ export const commandsObject = yargs
   .command(
     'affected:apps',
     'Print applications affected by changes',
-    withAffectedOptions,
+    (yargs) => withAffectedOptions(withPlainOption(yargs)),
     (args) => affected('apps', { ...args })
   )
   .command(
     'affected:libs',
     'Print libraries affected by changes',
-    withAffectedOptions,
+    (yargs) => withAffectedOptions(withPlainOption(yargs)),
     (args) =>
       affected('libs', {
         ...args,
@@ -205,6 +205,11 @@ function withPrintAffectedOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs.option('select', { type: 'string' });
 }
 
+function withPlainOption(yargs: yargs.Argv): yargs.Argv {
+  return yargs.option('plain', {
+    describe: 'Produces a plain output for affected:apps and affected:libs',
+  });
+}
 function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .option('files', {
@@ -268,9 +273,6 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     })
     .option('verbose', {
       describe: 'Print additional error stack trace on failure',
-    })
-    .option('plain', {
-      describe: 'Produces a plain output for affected:apps and affected:libs',
     })
     .conflicts({
       files: ['uncommitted', 'untracked', 'base', 'head', 'all'],

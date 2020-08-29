@@ -110,10 +110,6 @@ Default: `false`
 
 Parallelize the command
 
-### plain
-
-Produces a plain output for affected:apps and affected:libs
-
 ### runner
 
 This is the name of the tasks runner configured in nx.json

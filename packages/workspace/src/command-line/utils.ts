@@ -39,6 +39,10 @@ const runAffected = [
   'select',
 ];
 
+export interface RawNxArgs extends NxArgs {
+  prod?: boolean;
+}
+
 export interface NxArgs {
   target?: string;
   configuration?: string;
@@ -78,12 +82,12 @@ export function splitArgsIntoNxArgsAndOverrides(
   const nxSpecific =
     mode === 'run-one' ? runOne : mode === 'run-many' ? runMany : runAffected;
 
-  const nxArgs: any = {};
+  const nxArgs: RawNxArgs = {};
   const overrides = yargsParser(args._);
   delete overrides._;
 
   Object.entries(args).forEach(([key, value]) => {
-    if (nxSpecific.includes(key as any)) {
+    if (nxSpecific.includes(key)) {
       nxArgs[key] = value;
     } else if (!ignoreArgs.includes(key)) {
       overrides[key] = value;
