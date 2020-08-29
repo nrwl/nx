@@ -124,7 +124,7 @@ export function getBaseWebpackPartial(
     );
   }
 
-  if (options.assets) {
+  if (Array.isArray(options.assets) && options.assets.length > 0) {
     extraPlugins.push(createCopyPlugin(options.assets));
   }
 
