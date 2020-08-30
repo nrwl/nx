@@ -13,8 +13,9 @@
     },
     "tsSpecConfig": {
       "type": "string",
-      "description": "Spec tsconfig file"
+      "description": "[Deprecated] Spec tsconfig file",
+      "x-deprecated": true
     }
   },
-  "required": ["target", "jestConfig", "tsSpecConfig"]
+  "required": ["target", "jestConfig"]
 }

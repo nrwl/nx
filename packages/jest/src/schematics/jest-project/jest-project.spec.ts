@@ -67,8 +67,6 @@ describe('jestProject', () => {
       builder: '@nrwl/jest:jest',
       options: {
         jestConfig: 'libs/lib1/jest.config.js',
-        setupFile: 'libs/lib1/src/test-setup.ts',
-        tsConfig: 'libs/lib1/tsconfig.spec.json',
         passWithNoTests: true,
       },
     });
