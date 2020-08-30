@@ -62,13 +62,16 @@ function createWorkspace(
   ].join(' ');
 
   console.log(`new ${args} --preset=empty --collection=@nrwl/workspace`);
+  const executablePath = path.join(tmpDir, 'node_modules', '.bin', 'tao');
+  const collectionJsonPath = path.join(
+    tmpDir,
+    'node_modules',
+    '@nrwl',
+    'workspace',
+    'collection.json'
+  );
   execSync(
-    `"${path.join(
-      tmpDir,
-      'node_modules',
-      '.bin',
-      'tao'
-    )}" new ${args} --preset=empty --collection=@nrwl/workspace`,
+    `"${executablePath}" new ${args} --preset=empty --collection=${collectionJsonPath}`,
     {
       stdio: [0, 1, 2],
     }
