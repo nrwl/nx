@@ -98,6 +98,26 @@ describe('Command Runner Builder', () => {
     });
   });
 
+  it('forward args by default when using commands (plural)', async () => {
+    const exec = spyOn(require('child_process'), 'exec').and.callThrough();
+
+    const run = await architect.scheduleBuilder(
+      '@nrwl/workspace:run-commands',
+      {
+        commands: [{ command: 'echo' }],
+        a: 123,
+        b: 456,
+      }
+    );
+
+    await run.result;
+
+    expect(exec).toHaveBeenCalledWith('echo --a=123 --b=456', {
+      maxBuffer: TEN_MEGABYTES,
+      env: { ...process.env },
+    });
+  });
+
   it('should not forward args if forwardAllArgs flag is set to false', async () => {
     const exec = spyOn(require('child_process'), 'execSync').and.callThrough();
 
@@ -123,13 +143,13 @@ describe('Command Runner Builder', () => {
     });
   });
 
-  it('should not forward args by default when using commands (plural)', async () => {
+  it('should not forward args if forwardAllArgs is set to false and using commands (plural)', async () => {
     const exec = spyOn(require('child_process'), 'exec').and.callThrough();
 
     const run = await architect.scheduleBuilder(
       '@nrwl/workspace:run-commands',
       {
-        commands: ['echo'],
+        commands: [{ command: 'echo', forwardAllArgs: false }],
         a: 123,
         b: 456,
       }
@@ -138,27 +158,6 @@ describe('Command Runner Builder', () => {
     await run.result;
 
     expect(exec).toHaveBeenCalledWith('echo', {
-      maxBuffer: TEN_MEGABYTES,
-      env: { ...process.env },
-    });
-  });
-
-  it('forward args when using commands (plural) and forwardAllArgs flag is set to true', async () => {
-    const exec = spyOn(require('child_process'), 'exec').and.callThrough();
-
-    const run = await architect.scheduleBuilder(
-      '@nrwl/workspace:run-commands',
-      {
-        commands: ['echo'],
-        forwardAllArgs: true,
-        a: 123,
-        b: 456,
-      }
-    );
-
-    await run.result;
-
-    expect(exec).toHaveBeenCalledWith('echo --a=123 --b=456', {
       maxBuffer: TEN_MEGABYTES,
       env: { ...process.env },
     });

@@ -19,7 +19,13 @@ function loadEnvVars(path?: string) {
 
 export interface RunCommandsBuilderOptions extends JsonObject {
   command: string;
-  commands: ({ command: string } | string)[];
+  commands: (
+    | {
+        command: string;
+        forwardAllArgs?: boolean;
+      }
+    | string
+  )[];
   color?: boolean;
   parallel?: boolean;
   readyWhen?: string;
@@ -45,7 +51,10 @@ const propKeys = [
 
 export interface NormalizedRunCommandsBuilderOptions
   extends RunCommandsBuilderOptions {
-  commands: { command: string }[];
+  commands: {
+    command: string;
+    forwardAllArgs?: boolean;
+  }[];
   parsedArgs: { [k: string]: any };
 }
 
@@ -122,20 +131,23 @@ function normalizeOptions(
   options.parsedArgs = parseArgs(options);
 
   if (options.command) {
-    options.commands = [{ command: options.command }];
+    options.commands = [
+      {
+        command: options.command,
+        forwardAllArgs: options.forwardAllArgs ?? true,
+      },
+    ];
     options.parallel = false;
-    options.forwardAllArgs = options.forwardAllArgs ?? true;
   } else {
     options.commands = options.commands.map((c) =>
       typeof c === 'string' ? { command: c } : c
     );
-    options.forwardAllArgs = options.forwardAllArgs ?? false;
   }
   (options as NormalizedRunCommandsBuilderOptions).commands.forEach((c) => {
     c.command = transformCommand(
       c.command,
       (options as NormalizedRunCommandsBuilderOptions).parsedArgs,
-      options.forwardAllArgs
+      c.forwardAllArgs ?? true
     );
   });
   return options as any;

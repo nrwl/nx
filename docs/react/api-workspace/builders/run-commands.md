@@ -100,7 +100,26 @@ This functionality can be disabled by setting the `forwardAllArgs` option to `fa
 }
 ```
 
-**Note:** When you use `commands` (plural), `forwardAllArgs` is set to `false` by default.
+If you want to disable argument forwarding when using `commands` (plural), the command string must be
+converted to a command object which you can then use to disable `forwardAllArgs` like so:
+
+```json
+"create-script": {
+    "builder": "@nrwl/workspace:run-commands",
+    "options": {
+        "commands": [
+            {
+                "command": "mkdir -p scripts",
+                "forwardAllArgs": false
+            },
+            "touch scripts/{args.name}.sh",
+            "chmod +x scripts/{args.name}.sh"
+        ],
+        "cwd": "apps/frontend",
+        "parallel": false
+    }
+}
+```
 
 ##### Custom **done** conditions
 
@@ -198,9 +217,11 @@ You may specify a custom .env file path
 
 ### forwardAllArgs
 
+Default: `true`
+
 Type: `boolean`
 
-Forwards all arguments to a command that does not use interpolation. For example, if you run: nx run project:target --args='--wait=100' which contains the command: 'echo' the output would be '--wait=100'. Note that by default this option is set to true when you use 'command' and false when you use 'commands'.
+Forwards all arguments to a command that does not use interpolation.
 
 ### outputPath
 

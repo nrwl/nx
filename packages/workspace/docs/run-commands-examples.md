@@ -91,7 +91,26 @@ This functionality can be disabled by setting the `forwardAllArgs` option to `fa
 }
 ```
 
-**Note:** When you use `commands` (plural), `forwardAllArgs` is set to `false` by default.
+If you want to disable argument forwarding when using `commands` (plural), the command string must be
+converted to a command object which you can then use to disable `forwardAllArgs` like so:
+
+```json
+"create-script": {
+    "builder": "@nrwl/workspace:run-commands",
+    "options": {
+        "commands": [
+            {
+                "command": "mkdir -p scripts",
+                "forwardAllArgs": false
+            },
+            "touch scripts/{args.name}.sh",
+            "chmod +x scripts/{args.name}.sh"
+        ],
+        "cwd": "apps/frontend",
+        "parallel": false
+    }
+}
+```
 
 ##### Custom **done** conditions
 
