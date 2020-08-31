@@ -2249,51 +2249,51 @@
   dependencies:
     mkdirp "^1.0.4"
 
-"@nrwl/cli@10.1.0-beta.2":
-  version "10.1.0-beta.2"
-  resolved "https://registry.yarnpkg.com/@nrwl/cli/-/cli-10.1.0-beta.2.tgz#dd2230719148ef5116a8a59a12d6936b4fb8f448"
-  integrity sha512-WAoampSUU3ya42uW2wriL56LaFXvWL3bPPi2I95Q24rCKR/5z2ZLo4VHEwa3LPXFzKxGR1Cin1wk1l+dY4t07A==
+"@nrwl/cli@10.1.0":
+  version "10.1.0"
+  resolved "https://registry.yarnpkg.com/@nrwl/cli/-/cli-10.1.0.tgz#b0b85fe875c62d6518e7be59e6bbc5d039130cb1"
+  integrity sha512-kzTFHZmaoC1sdDbgdLQjns6BFyHkpLaj8JIXJkamg2Rp2ZPQtUDTjbrS/pg1FYGBvV87mpX0kG+bhGZPTg1kew==
   dependencies:
-    "@nrwl/tao" "10.1.0-beta.2"
+    "@nrwl/tao" "10.1.0"
     chalk "2.4.2"
     tmp "0.0.33"
     yargs "^11.0.0"
     yargs-parser "10.0.0"
 
-"@nrwl/eslint-plugin-nx@10.1.0-beta.2":
-  version "10.1.0-beta.2"
-  resolved "https://registry.yarnpkg.com/@nrwl/eslint-plugin-nx/-/eslint-plugin-nx-10.1.0-beta.2.tgz#b4e6f95435aa197e4a219c69c169b447569ecc87"
-  integrity sha512-LOcQZM8VKsgWdfDDQvy9qBFLDEPyj45KpZ1laQLu7rzn3Z1zBvg0qGXzPd3+daHqSuNeZymYEhWCcLN7GquMWw==
+"@nrwl/eslint-plugin-nx@10.1.0":
+  version "10.1.0"
+  resolved "https://registry.yarnpkg.com/@nrwl/eslint-plugin-nx/-/eslint-plugin-nx-10.1.0.tgz#43bb8339b33bd2a1469df6405f7776f6147b27af"
+  integrity sha512-Ys2H6C5yS0aAWWlgSmke+BD3leyiQ+hjP1HZmwF61JDID8Qk2L64GGMASn84Mi+8zpBV96TktGWzWgTGlVFTcw==
   dependencies:
     "@typescript-eslint/experimental-utils" "^2.19.2"
 
-"@nrwl/jest@10.1.0-beta.2":
-  version "10.1.0-beta.2"
-  resolved "https://registry.yarnpkg.com/@nrwl/jest/-/jest-10.1.0-beta.2.tgz#841c2cf21da40d3eb525792a7dd7766dfd8bb0fa"
-  integrity sha512-5nQ2RvmRZQtRzpmCo4e/mMrQAS1KLmvenk3qiCXFNo2Nrnm0RNQVuvE1cnEeazHTN20bhMEf5U0ZGJ0o6JllsA==
+"@nrwl/jest@10.1.0":
+  version "10.1.0"
+  resolved "https://registry.yarnpkg.com/@nrwl/jest/-/jest-10.1.0.tgz#b19c63076280da44335bdd34438e2123188a08c4"
+  integrity sha512-FGazorVVp0acDnGCKWej+jnWoj84whLsEwr/rbONJD9l7OgPUh2SH7KmcYKo0BHzAc/sZuYZVSKu3dSw6Re5fw==
   dependencies:
     "@angular-devkit/architect" "~0.1000.0"
     "@angular-devkit/core" "~10.0.0"
     "@angular-devkit/schematics" "~10.0.0"
 
-"@nrwl/linter@10.1.0-beta.2":
-  version "10.1.0-beta.2"
-  resolved "https://registry.yarnpkg.com/@nrwl/linter/-/linter-10.1.0-beta.2.tgz#e96407de7147bb81a31b9844d2c54971ff346caf"
-  integrity sha512-vqb+uv6J0hfiHHDNIR9ITJJBaIU5cFRi6WkDqquc54oLPrFBtUwAmDREVD/gtFARSj5lmPif3L0SnWnJUCw39A==
+"@nrwl/linter@10.1.0":
+  version "10.1.0"
+  resolved "https://registry.yarnpkg.com/@nrwl/linter/-/linter-10.1.0.tgz#59cc68bba14d09dd2707c1a68a944f62ce8b9d6b"
+  integrity sha512-JePWJQhRi+lIoAu4tqQMUl+/Fq+dMVNHXUds0PuMXJZntuobP57DFLmX4fjit5zLm1Lv4qZfXtX4W2CoHK6eFQ==
   dependencies:
     "@angular-devkit/architect" "~0.1000.0"
 
-"@nrwl/node@10.1.0-beta.2":
-  version "10.1.0-beta.2"
-  resolved "https://registry.yarnpkg.com/@nrwl/node/-/node-10.1.0-beta.2.tgz#b609f6b95e2065a327b4dfbdb63490c1d6c6f43f"
-  integrity sha512-/5epEGSX8d1mMXiFX+rvODUP43CAWEvc8nXaTI4eLulLtlePuqirHc7YfpnZuV1nLhx/x9rlDcaruc+94tVFtw==
+"@nrwl/node@10.1.0":
+  version "10.1.0"
+  resolved "https://registry.yarnpkg.com/@nrwl/node/-/node-10.1.0.tgz#a81f18c21e9d923dc31dfb3780d30449e15cc813"
+  integrity sha512-IX9jR1CU9xyWCOy9sl4Q3P6cWljhHj2UOdHdUbZhtnSVUSBAo4slBWFDFArQFdJCBC5TBsJS8NkRw67ekP4zSQ==
   dependencies:
     "@angular-devkit/architect" "~0.1000.0"
     "@angular-devkit/build-webpack" "~0.1000.0"
     "@angular-devkit/core" "~10.0.0"
     "@angular-devkit/schematics" "~10.0.0"
-    "@nrwl/jest" "10.1.0-beta.2"
-    "@nrwl/linter" "10.1.0-beta.2"
+    "@nrwl/jest" "10.1.0"
+    "@nrwl/linter" "10.1.0"
     circular-dependency-plugin "5.2.0"
     copy-webpack-plugin "6.0.3"
     fork-ts-checker-webpack-plugin "^3.1.1"
@@ -2307,19 +2307,21 @@
     webpack-merge "4.2.1"
     webpack-node-externals "1.7.2"
 
-"@nrwl/nx-cloud@^9.3.2":
-  version "9.3.5"
-  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-9.3.5.tgz#72b324e6de55bb5e1dda752ee0556fb06f42de0c"
-  integrity sha512-zVF1FZbtxMRi+rC0Tg8dl90oBNlsYIfIxcs4vaBJmk2U80povO4MuVFie5mKrsvYeA4BJu6rdOqgRTA/dENTig==
+"@nrwl/nx-cloud@10.1.0-beta.1":
+  version "10.1.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-10.1.0-beta.1.tgz#4082e03b8428f28208543110ed3e7de8fe51213f"
+  integrity sha512-GztD2qsD41BlOU9WZSwQoBBzIO431qQI6iRp9i3YmwOyWrbAsCC0ku2Vs0ckEws10cffo26pVgA7FKZ80BIWPQ==
   dependencies:
     axios "^0.19.0"
     node-machine-id "^1.1.12"
+    rxjs "6.5.5"
     tar "5.0.5"
+    uuid "^3.3.3"
 
-"@nrwl/tao@10.1.0-beta.2":
-  version "10.1.0-beta.2"
-  resolved "https://registry.yarnpkg.com/@nrwl/tao/-/tao-10.1.0-beta.2.tgz#2801023acca2ed8419b4da24f1df891c2f8b57a6"
-  integrity sha512-N+ygDUITuXpsjoJgKlh/CEaI09PGGE9CzB+rw8uMyY8O0dWblgb30xwTMHBcRwqCQ97p642KSvzc30vcOpj7xA==
+"@nrwl/tao@10.1.0":
+  version "10.1.0"
+  resolved "https://registry.yarnpkg.com/@nrwl/tao/-/tao-10.1.0.tgz#28420ae22e4cea928c002cad3a12a29587e949bd"
+  integrity sha512-h8q+XdEuSo2m6HK1lRXn7wrxFbM/4vJ6wFSaAETWjxSIsEP7leMrkGkoIs7lu2Ic12Ju/DfxMcCYlcFTlcbK7w==
   dependencies:
     "@angular-devkit/architect" "~0.1000.0"
     "@angular-devkit/core" "~10.0.0"
@@ -2328,14 +2330,14 @@
     minimist "^1.2.0"
     strip-json-comments "2.0.1"
 
-"@nrwl/workspace@10.1.0-beta.2":
-  version "10.1.0-beta.2"
-  resolved "https://registry.yarnpkg.com/@nrwl/workspace/-/workspace-10.1.0-beta.2.tgz#8508ad1ff12786d298ed88003121e7c9c0ae7578"
-  integrity sha512-343OUjzbQH9dkKBIlasPOAS7BVzArlSOcbCdxnNyw9gW6hIROxHMchWjFINa+toGDEKSvPTbt3LoY+mPBFnq0g==
+"@nrwl/workspace@10.1.0":
+  version "10.1.0"
+  resolved "https://registry.yarnpkg.com/@nrwl/workspace/-/workspace-10.1.0.tgz#56b955eca3a3bd230cb563116876b5e47779a675"
+  integrity sha512-mdpiWo8kDtK2ois1KVbrcxQm7+WT6smv+L1FUqDLuwrBSefp+mGP0KyInLmyo/Pb5EbaCkCmVmtC8HN6icH9Yg==
   dependencies:
     "@angular-devkit/core" "~10.0.0"
     "@angular-devkit/schematics" "~10.0.0"
-    "@nrwl/cli" "10.1.0-beta.2"
+    "@nrwl/cli" "10.1.0"
     axios "0.19.2"
     chalk "2.4.2"
     cosmiconfig "4.0.0"
@@ -20831,7 +20833,7 @@ uuid@8.2.0:
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.2.0.tgz#cb10dd6b118e2dada7d0cd9730ba7417c93d920e"
   integrity sha512-CYpGiFTUrmI6OBMkAdjSDM0k5h8SkkiTP4WAjQgDgNB1S3Ou9VBEvr6q0Kv2H1mMk7IWfxYGpMH5sd5AvcIV2Q==
 
-uuid@^3.0.0, uuid@^3.0.1, uuid@^3.1.0, uuid@^3.3.2, uuid@^3.4.0:
+uuid@^3.0.0, uuid@^3.0.1, uuid@^3.1.0, uuid@^3.3.2, uuid@^3.3.3, uuid@^3.4.0:
   version "3.4.0"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.4.0.tgz#b23e4358afa8a202fe7a100af1f5f883f02007ee"
   integrity sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==
