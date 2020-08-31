@@ -66,6 +66,8 @@ function createRootStorybookDir(projectName: string, js: boolean): Rule {
     context.logger.debug('adding .storybook folder to lib');
 
     /**
+     * Notes about versions of Storybook:
+     * 
      * So, here we could check the configuration flag and see if we want to generate
      * a storybook version 5 or version 6
      * (or just look at which version we have installed, I guess)
