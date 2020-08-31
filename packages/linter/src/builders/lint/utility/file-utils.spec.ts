@@ -37,6 +37,7 @@ describe('file-utility', () => {
       { fileName: 'foo.ts', isFromExternalLib: false },
       { fileName: 'foo.d.ts', isFromExternalLib: false },
       { fileName: 'foo.json', isFromExternalLib: false },
+      { fileName: 'bar.d.ts', isFromExternalLib: true },
       { fileName: 'bar.ts', isFromExternalLib: true },
       { fileName: 'bar.ts', isFromExternalLib: false },
     ];
@@ -45,7 +46,7 @@ describe('file-utility', () => {
       isSourceFileFromExternalLibrary: (file: any) => file.isFromExternalLib,
     };
     const toLint = getFilesToLint('/root', {}, program);
-    expect(toLint).toEqual(['foo.ts', 'bar.ts']);
+    expect(toLint).toEqual(['foo.ts', 'foo.d.ts', 'bar.ts']);
   });
   it('should filter out the excluded files from the program', () => {
     const sourceFiles = [
