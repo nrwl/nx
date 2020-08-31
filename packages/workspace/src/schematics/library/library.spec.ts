@@ -4,6 +4,7 @@ import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { NxJson } from '@nrwl/workspace';
 
 import { runSchematic } from '../../utils/testing';
+import { Schema } from './schema.d';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -103,9 +104,31 @@ describe('lib', () => {
     });
 
     it('should generate files', async () => {
-      const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib' } as Schema,
+        appTree
+      );
 
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
+      expect(tree.readContent(`libs/my-lib/jest.config.js`))
+        .toMatchInlineSnapshot(`
+        "module.exports = {
+          name: 'my-lib',
+          preset: '../../jest.config.js',
+          globals: {
+            'ts-jest': {
+              tsConfig: '<rootDir>/tsconfig.spec.json',
+            },
+          },
+          transform: {
+            '^.+\\\\\\\\.[tj]sx?$': 'ts-jest',
+          },
+          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          coverageDirectory: '../../coverage/libs/my-lib',
+        };
+        "
+      `);
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/README.md')).toBeTruthy();
@@ -339,6 +362,51 @@ describe('lib', () => {
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.js')
       ).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.js')).toBeTruthy();
+    });
+  });
+
+  describe(`--babelJest`, () => {
+    it('should use babel for jest', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', babelJest: true } as Schema,
+        appTree
+      );
+
+      expect(tree.readContent(`libs/my-lib/jest.config.js`))
+        .toMatchInlineSnapshot(`
+        "module.exports = {
+          name: 'my-lib',
+          preset: '../../jest.config.js',
+          transform: {
+            '^.+\\\\\\\\.[tj]sx?$': [
+              'babel-jest',
+              { cwd: __dirname, configFile: './babel-jest.config.json' },
+            ],
+          },
+          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          coverageDirectory: '../../coverage/libs/my-lib',
+        };
+        "
+      `);
+
+      expect(readJsonInTree(tree, 'libs/my-lib/babel-jest.config.json'))
+        .toMatchInlineSnapshot(`
+        Object {
+          "presets": Array [
+            Array [
+              "@babel/preset-env",
+              Object {
+                "targets": Object {
+                  "node": "current",
+                },
+              },
+            ],
+            "@babel/preset-typescript",
+            "@babel/preset-react",
+          ],
+        }
+      `);
     });
   });
 });

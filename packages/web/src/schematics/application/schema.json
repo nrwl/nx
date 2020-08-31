@@ -68,6 +68,11 @@
     "tags": {
       "type": "string",
       "description": "Add tags to the application (used for linting)"
+    },
+    "babelJest": {
+      "type": "boolean",
+      "description": "Use babel instead ts-jest",
+      "default": false
     }
   },
   "required": []
