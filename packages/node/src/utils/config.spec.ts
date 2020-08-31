@@ -314,6 +314,17 @@ describe('getBaseWebpackPartial', () => {
         result.plugins.filter((plugin) => plugin instanceof CopyWebpackPlugin)
       ).toHaveLength(1);
     });
+
+    it('should not add a copy-webpack-plugin if the assets option is empty', () => {
+      const result = getBaseWebpackPartial({
+        ...input,
+        assets: [],
+      });
+
+      expect(
+        result.plugins.filter((plugin) => plugin instanceof CopyWebpackPlugin)
+      ).toHaveLength(0);
+    });
   });
 
   describe('the circular dependencies option', () => {
