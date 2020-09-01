@@ -15,22 +15,9 @@ requireCli();
 function requireCli() {
   process.env.NX_CLI_SET = 'true';
   if (workspace.type === 'nx') {
-    require(path.join(
-      workspace.dir,
-      'node_modules',
-      '@nrwl',
-      'tao',
-      'index.js'
-    ));
+    require('@nrwl/tao/index');
   } else {
-    require(path.join(
-      workspace.dir,
-      'node_modules',
-      '@angular',
-      'cli',
-      'lib',
-      'init.js'
-    ));
+    require('@angular/cli/lib/init');
   }
 }
 
