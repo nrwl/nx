@@ -50,6 +50,10 @@ Default: `false`
 
 Isolate projects which previously failed
 
+### projects
+
+Projects to format (comma delimited)
+
 ### runner
 
 This is the name of the tasks runner configured in nx.json

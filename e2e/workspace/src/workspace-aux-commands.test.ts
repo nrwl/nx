@@ -178,6 +178,31 @@ forEachCli((cli) => {
       expect(stdout).toContain(`apps/${myapp}/src/app/app.module.ts`);
       expect(stdout).toContain(`apps/${myapp}/src/app/app.component.ts`);
 
+      stdout = runCommand(`npm run -s format:check -- --projects=${myapp}`);
+      expect(stdout).toContain(`apps/${myapp}/src/main.ts`);
+      expect(stdout).toContain(`apps/${myapp}/src/app/app.module.ts`);
+      expect(stdout).toContain(`apps/${myapp}/src/app/app.component.ts`);
+      expect(stdout).not.toContain(`libs/${mylib}/index.ts`);
+      expect(stdout).not.toContain(`libs/${mylib}/src/${mylib}.module.ts`);
+      expect(stdout).not.toContain(`README.md`);
+
+      stdout = runCommand(
+        `npm run -s format:check -- --projects=${myapp},${mylib}`
+      );
+      expect(stdout).toContain(`apps/${myapp}/src/main.ts`);
+      expect(stdout).toContain(`apps/${myapp}/src/app/app.module.ts`);
+      expect(stdout).toContain(`apps/${myapp}/src/app/app.component.ts`);
+      expect(stdout).toContain(`libs/${mylib}/index.ts`);
+      expect(stdout).toContain(`libs/${mylib}/src/${mylib}.module.ts`);
+      expect(stdout).not.toContain(`README.md`);
+
+      stdout = runCommand(
+        `npm run -s format:check -- --projects=${myapp},${mylib} --all`
+      );
+      expect(stdout).toContain(
+        'Arguments all and projects are mutually exclusive'
+      );
+
       runCommand(
         `npm run format:write -- --files="apps/${myapp}/src/app/app.module.ts,apps/${myapp}/src/app/app.component.ts"`
       );
