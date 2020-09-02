@@ -2249,51 +2249,51 @@
   dependencies:
     mkdirp "^1.0.4"
 
-"@nrwl/cli@10.1.0":
-  version "10.1.0"
-  resolved "https://registry.yarnpkg.com/@nrwl/cli/-/cli-10.1.0.tgz#b0b85fe875c62d6518e7be59e6bbc5d039130cb1"
-  integrity sha512-kzTFHZmaoC1sdDbgdLQjns6BFyHkpLaj8JIXJkamg2Rp2ZPQtUDTjbrS/pg1FYGBvV87mpX0kG+bhGZPTg1kew==
+"@nrwl/cli@10.1.1-beta.2":
+  version "10.1.1-beta.2"
+  resolved "https://registry.yarnpkg.com/@nrwl/cli/-/cli-10.1.1-beta.2.tgz#9904de45fb02f59bf9b7c60769f721d50f6a0aef"
+  integrity sha512-o4rSJZpdn+SOAa3JJhU/qQjidPQkDyEr8mDzeMb9RvgmpkktUQF4jZJnZ638SEB52mMjzIYs5Dt3SojieMRc2w==
   dependencies:
-    "@nrwl/tao" "10.1.0"
+    "@nrwl/tao" "10.1.1-beta.2"
     chalk "2.4.2"
     tmp "0.0.33"
     yargs "^11.0.0"
     yargs-parser "10.0.0"
 
-"@nrwl/eslint-plugin-nx@10.1.0":
-  version "10.1.0"
-  resolved "https://registry.yarnpkg.com/@nrwl/eslint-plugin-nx/-/eslint-plugin-nx-10.1.0.tgz#43bb8339b33bd2a1469df6405f7776f6147b27af"
-  integrity sha512-Ys2H6C5yS0aAWWlgSmke+BD3leyiQ+hjP1HZmwF61JDID8Qk2L64GGMASn84Mi+8zpBV96TktGWzWgTGlVFTcw==
+"@nrwl/eslint-plugin-nx@10.1.1-beta.2":
+  version "10.1.1-beta.2"
+  resolved "https://registry.yarnpkg.com/@nrwl/eslint-plugin-nx/-/eslint-plugin-nx-10.1.1-beta.2.tgz#38a82fff8515ca8f8b73ba6657856eda44690346"
+  integrity sha512-dN4DzWX6IzAntu5o5A3Of52KrxQcMNyPMuHmSws3QmUPPvrXHIJtL4Bc6D/Hysgz+1xEjNF9YIgXPTb9a/XAXw==
   dependencies:
     "@typescript-eslint/experimental-utils" "^2.19.2"
 
-"@nrwl/jest@10.1.0":
-  version "10.1.0"
-  resolved "https://registry.yarnpkg.com/@nrwl/jest/-/jest-10.1.0.tgz#b19c63076280da44335bdd34438e2123188a08c4"
-  integrity sha512-FGazorVVp0acDnGCKWej+jnWoj84whLsEwr/rbONJD9l7OgPUh2SH7KmcYKo0BHzAc/sZuYZVSKu3dSw6Re5fw==
+"@nrwl/jest@10.1.1-beta.2":
+  version "10.1.1-beta.2"
+  resolved "https://registry.yarnpkg.com/@nrwl/jest/-/jest-10.1.1-beta.2.tgz#6303a28b7920eb1a7c2bd4a30b01d98da1e84ce2"
+  integrity sha512-eOIN4QzrYa7cyqyoBp/Ff5IK3bFoUmvsSoChFxO+RZpRNLtsikvGbCPetpqeHN/k1y8cWpT8V4MuvVTzH/gatw==
   dependencies:
     "@angular-devkit/architect" "~0.1000.0"
     "@angular-devkit/core" "~10.0.0"
     "@angular-devkit/schematics" "~10.0.0"
 
-"@nrwl/linter@10.1.0":
-  version "10.1.0"
-  resolved "https://registry.yarnpkg.com/@nrwl/linter/-/linter-10.1.0.tgz#59cc68bba14d09dd2707c1a68a944f62ce8b9d6b"
-  integrity sha512-JePWJQhRi+lIoAu4tqQMUl+/Fq+dMVNHXUds0PuMXJZntuobP57DFLmX4fjit5zLm1Lv4qZfXtX4W2CoHK6eFQ==
+"@nrwl/linter@10.1.1-beta.2":
+  version "10.1.1-beta.2"
+  resolved "https://registry.yarnpkg.com/@nrwl/linter/-/linter-10.1.1-beta.2.tgz#90efd8bc9d1615cb886986d229160945432aa6e8"
+  integrity sha512-13ZD6TPKgRSHQLqcy2BZ0LmbzMR5VMeAotnRnXiHsVXHayWNXo/4qpg2eZUGAIlVVcZW79Gp8sz1bDYsF+9TFA==
   dependencies:
     "@angular-devkit/architect" "~0.1000.0"
 
-"@nrwl/node@10.1.0":
-  version "10.1.0"
-  resolved "https://registry.yarnpkg.com/@nrwl/node/-/node-10.1.0.tgz#a81f18c21e9d923dc31dfb3780d30449e15cc813"
-  integrity sha512-IX9jR1CU9xyWCOy9sl4Q3P6cWljhHj2UOdHdUbZhtnSVUSBAo4slBWFDFArQFdJCBC5TBsJS8NkRw67ekP4zSQ==
+"@nrwl/node@10.1.1-beta.2":
+  version "10.1.1-beta.2"
+  resolved "https://registry.yarnpkg.com/@nrwl/node/-/node-10.1.1-beta.2.tgz#28c171ac45b09f2fc742061b124fdae6aeaaa991"
+  integrity sha512-kS+72gJFhFv6a5Q5lzU9f3C79OglQrJV3ZfVEqQyXINUdVPIvkkdjJh9XjgcQb7Dwk4Ie2IceyM80EicQp+bUg==
   dependencies:
     "@angular-devkit/architect" "~0.1000.0"
     "@angular-devkit/build-webpack" "~0.1000.0"
     "@angular-devkit/core" "~10.0.0"
     "@angular-devkit/schematics" "~10.0.0"
-    "@nrwl/jest" "10.1.0"
-    "@nrwl/linter" "10.1.0"
+    "@nrwl/jest" "10.1.1-beta.2"
+    "@nrwl/linter" "10.1.1-beta.2"
     circular-dependency-plugin "5.2.0"
     copy-webpack-plugin "6.0.3"
     fork-ts-checker-webpack-plugin "^3.1.1"
@@ -2307,10 +2307,10 @@
     webpack-merge "4.2.1"
     webpack-node-externals "1.7.2"
 
-"@nrwl/nx-cloud@10.1.0-beta.1":
-  version "10.1.0-beta.1"
-  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-10.1.0-beta.1.tgz#4082e03b8428f28208543110ed3e7de8fe51213f"
-  integrity sha512-GztD2qsD41BlOU9WZSwQoBBzIO431qQI6iRp9i3YmwOyWrbAsCC0ku2Vs0ckEws10cffo26pVgA7FKZ80BIWPQ==
+"@nrwl/nx-cloud@10.1.0-beta.2":
+  version "10.1.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-10.1.0-beta.2.tgz#221bcec27c2a0461fb365b62fc279bf6ef345cf1"
+  integrity sha512-b9jN/9cFIvUIBRDhihmvxkCEaVxHlsYsoZ1zHdU8m7LZed0W4i1mFKO5eMvcD5YVp6mkEvZ8iYAZ9vAQsouffA==
   dependencies:
     axios "^0.19.0"
     node-machine-id "^1.1.12"
@@ -2318,10 +2318,10 @@
     tar "5.0.5"
     uuid "^3.3.3"
 
-"@nrwl/tao@10.1.0":
-  version "10.1.0"
-  resolved "https://registry.yarnpkg.com/@nrwl/tao/-/tao-10.1.0.tgz#28420ae22e4cea928c002cad3a12a29587e949bd"
-  integrity sha512-h8q+XdEuSo2m6HK1lRXn7wrxFbM/4vJ6wFSaAETWjxSIsEP7leMrkGkoIs7lu2Ic12Ju/DfxMcCYlcFTlcbK7w==
+"@nrwl/tao@10.1.1-beta.2":
+  version "10.1.1-beta.2"
+  resolved "https://registry.yarnpkg.com/@nrwl/tao/-/tao-10.1.1-beta.2.tgz#6a774273ae7463e3a5585fb83f871df84a389d0c"
+  integrity sha512-fF9JPiW0AkOnzX1z8Ut2mrVe/tdYq4PCx0j5k6G/OjsB3qBaZxRHacguz3tg/z0ho/xH6CPf00HCYFIvPtE3Ow==
   dependencies:
     "@angular-devkit/architect" "~0.1000.0"
     "@angular-devkit/core" "~10.0.0"
@@ -2330,20 +2330,22 @@
     minimist "^1.2.0"
     strip-json-comments "2.0.1"
 
-"@nrwl/workspace@10.1.0":
-  version "10.1.0"
-  resolved "https://registry.yarnpkg.com/@nrwl/workspace/-/workspace-10.1.0.tgz#56b955eca3a3bd230cb563116876b5e47779a675"
-  integrity sha512-mdpiWo8kDtK2ois1KVbrcxQm7+WT6smv+L1FUqDLuwrBSefp+mGP0KyInLmyo/Pb5EbaCkCmVmtC8HN6icH9Yg==
+"@nrwl/workspace@10.1.1-beta.2":
+  version "10.1.1-beta.2"
+  resolved "https://registry.yarnpkg.com/@nrwl/workspace/-/workspace-10.1.1-beta.2.tgz#c5696e484dead6c97f9c0e29467629a95c45cde7"
+  integrity sha512-fKGCe+VLcA3k6rOKSEEgNq5JHQGevbqnsG/8FN3OPTcLztsU8S/nUNJFVZSo+XbepPbBs+Du4FUUpKyJMvEbdg==
   dependencies:
     "@angular-devkit/core" "~10.0.0"
     "@angular-devkit/schematics" "~10.0.0"
-    "@nrwl/cli" "10.1.0"
+    "@nrwl/cli" "10.1.1-beta.2"
     axios "0.19.2"
     chalk "2.4.2"
     cosmiconfig "4.0.0"
     dotenv "8.2.0"
+    flat "^5.0.2"
     fs-extra "6.0.0"
     ignore "5.0.4"
+    minimatch "3.0.4"
     npm-run-all "4.1.5"
     opn "^5.3.0"
     rxjs "^6.5.4"
