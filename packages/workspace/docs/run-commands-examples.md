@@ -77,37 +77,21 @@ For example, when you run:
 }
 ```
 
-The above command will run: `webpack --config=example.config.js`
+The above command will execute: `webpack --config=example.config.js`
 
-This functionality can be disabled by setting the `forwardAllArgs` option to `false` as shown below:
+This functionality can be disabled by using `commands` and expanding each `command` into an object
+that sets the `forwardAllArgs` option to `false` as shown below:
 
 ```json
 "webpack": {
     "builder": "@nrwl/workspace:run-commands",
     "options": {
-        "command": "webpack",
-        "forwardAllArgs": false
-    }
-}
-```
-
-If you want to disable argument forwarding when using `commands` (plural), the command string must be
-converted to a command object which you can then use to disable `forwardAllArgs` like so:
-
-```json
-"create-script": {
-    "builder": "@nrwl/workspace:run-commands",
-    "options": {
         "commands": [
             {
-                "command": "mkdir -p scripts",
+                "command": "webpack",
                 "forwardAllArgs": false
-            },
-            "touch scripts/{args.name}.sh",
-            "chmod +x scripts/{args.name}.sh"
-        ],
-        "cwd": "apps/frontend",
-        "parallel": false
+            }
+        ]
     }
 }
 ```

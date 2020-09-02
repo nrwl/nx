@@ -33,7 +33,6 @@ export interface RunCommandsBuilderOptions extends JsonObject {
   args?: string;
   envFile?: string;
   outputPath?: string;
-  forwardAllArgs?: boolean;
 }
 
 const propKeys = [
@@ -46,7 +45,6 @@ const propKeys = [
   'args',
   'envFile',
   'outputPath',
-  'forwardAllArgs',
 ];
 
 export interface NormalizedRunCommandsBuilderOptions
@@ -131,12 +129,7 @@ function normalizeOptions(
   options.parsedArgs = parseArgs(options);
 
   if (options.command) {
-    options.commands = [
-      {
-        command: options.command,
-        forwardAllArgs: options.forwardAllArgs ?? true,
-      },
-    ];
+    options.commands = [{ command: options.command }];
     options.parallel = false;
   } else {
     options.commands = options.commands.map((c) =>

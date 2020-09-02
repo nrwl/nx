@@ -72,11 +72,6 @@
     "cwd": {
       "type": "string",
       "description": "Current working directory of the commands."
-    },
-    "forwardAllArgs": {
-      "type": "boolean",
-      "description": "Forwards all arguments to a command that does not use interpolation.",
-      "default": true
     }
   },
   "required": [],
