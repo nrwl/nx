@@ -113,7 +113,7 @@ describe('Command Runner Builder', () => {
     await run.result;
 
     expect(exec).toHaveBeenCalledWith('echo --a=123 --b=456', {
-      maxBuffer: TEN_MEGABYTES,
+      maxBuffer: LARGE_BUFFER,
       env: { ...process.env },
     });
   });
@@ -133,7 +133,7 @@ describe('Command Runner Builder', () => {
     await run.result;
 
     expect(exec).toHaveBeenCalledWith('echo --a=123 --b=456', {
-      maxBuffer: TEN_MEGABYTES,
+      maxBuffer: LARGE_BUFFER,
       env: { ...process.env },
     });
   });
@@ -153,7 +153,7 @@ describe('Command Runner Builder', () => {
     await run.result;
 
     expect(exec).toHaveBeenCalledWith('echo', {
-      maxBuffer: TEN_MEGABYTES,
+      maxBuffer: LARGE_BUFFER,
       env: { ...process.env },
     });
   });
