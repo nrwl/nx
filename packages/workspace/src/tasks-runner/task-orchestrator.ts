@@ -166,7 +166,9 @@ export class TaskOrchestrator {
           stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
           env,
         });
-
+        process.addListener('SIGINT', () => {
+          p.kill('SIGINT');
+        });
         let out = [];
         let outWithErr = [];
         p.stdout.on('data', (chunk) => {
@@ -178,10 +180,9 @@ export class TaskOrchestrator {
           process.stderr.write(chunk);
           outWithErr.push(chunk.toString());
         });
-        process.addListener('SIGINT', () => {
-          p.kill('SIGINT');
-        });
+
         p.on('exit', (code) => {
+          if (code === null) code = 2;
           // we didn't print any output as we were running the command
           // print all the collected output|
           if (!forwardOutput) {
@@ -234,7 +235,11 @@ export class TaskOrchestrator {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
           env,
         });
+        process.addListener('SIGINT', () => {
+          p.kill('SIGINT');
+        });
         p.on('exit', (code) => {
+          if (code === null) code = 2;
           // we didn't print any output as we were running the command
           // print all the collected output|
           if (!forwardOutput) {
