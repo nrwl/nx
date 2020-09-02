@@ -898,7 +898,7 @@
           "options": {
             "commands": [
               {
-                "command": "NX_CLOUD_NO_MESSAGE=true snx build-base express"
+                "command": "NX_CLOUD_NO_MESSAGE=true nx build-base express"
               },
               {
                 "command": "node ./scripts/copy-readme.js express"
