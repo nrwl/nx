@@ -518,6 +518,6 @@ describe('Linter Builder', () => {
       force: false,
       maxWarnings: 1,
     });
-    expect(output.success).toBeFalsy();
+    expect(output.success).toBeTruthy();
   });
 });
