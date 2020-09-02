@@ -16,8 +16,6 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npm run
 
 All projects
 
-### apps-and-libs
-
 ### base
 
 Base of the current branch (usually master)
@@ -44,15 +42,17 @@ Latest commit of the current branch (usually HEAD)
 
 Show help
 
+### libs-and-apps
+
 ### only-failed
 
 Default: `false`
 
 Isolate projects which previously failed
 
-### plain
+### projects
 
-Produces a plain output for affected:apps and affected:libs
+Projects to format (comma delimited)
 
 ### runner
 

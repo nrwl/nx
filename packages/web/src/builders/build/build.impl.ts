@@ -30,6 +30,7 @@ import {
 import { CrossOriginValue } from '../../utils/third-party/cli-files/utilities/index-file/augment-index-html';
 import { readTsConfig } from '@nrwl/workspace';
 import { BuildBrowserFeatures } from '../../utils/third-party/utils/build-browser-features';
+import { deleteOutputDir } from '../../utils/delete-output-dir';
 
 export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   index: string;
@@ -90,6 +91,9 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
       dependencies
     );
   }
+
+  // Delete output path before bundling
+  deleteOutputDir(context.workspaceRoot, options.outputPath);
 
   return from(getSourceRoot(context))
     .pipe(

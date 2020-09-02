@@ -11,5 +11,6 @@ export interface Schema {
     | 'next'
     | 'web-components'
     | 'angular-nest'
-    | 'react-express';
+    | 'react-express'
+    | 'nest';
 }

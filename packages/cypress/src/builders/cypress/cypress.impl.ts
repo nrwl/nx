@@ -14,6 +14,7 @@ import { readJsonFile } from '@nrwl/workspace';
 import { legacyCompile } from './legacy';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { installedCypressVersion } from '../../utils/cypress-version';
+import * as yargsParser from 'yargs-parser';
 
 const Cypress = require('cypress'); // @NOTE: Importing via ES6 messes the whole test dependencies.
 
@@ -54,6 +55,14 @@ export function cypressBuilderRunner(
   options: CypressBuilderOptions,
   context: BuilderContext
 ): Observable<BuilderOutput> {
+  // Special handling of extra options coming through Angular CLI
+  if (options['--']) {
+    const { _, ...overrides } = yargsParser(options['--'] as string[], {
+      configuration: { 'camel-case-expansion': false },
+    });
+    options = { ...options, ...overrides };
+  }
+
   const legacy = isLegacy(options, context);
   if (legacy) {
     showLegacyWarning(context);

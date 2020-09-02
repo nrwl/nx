@@ -30,6 +30,11 @@
       "version": "10.0.0-beta.1",
       "description": "Upgrades Angular and Angular CLI to 10.0.0",
       "factory": "./src/migrations/update-10-0-0/update-10-0-0"
+    },
+    "update-10-2-0": {
+      "version": "10.2.0-beta.1",
+      "description": "Upgrade NgRx libraries to version 10.0.0",
+      "factory": "./src/migrations/update-10-2-0/update-10-2-0"
     }
   },
   "packageJsonUpdates": {
@@ -38,6 +43,35 @@
       "packages": {
         "rxjs": {
           "version": "~6.5.5",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "10.2.0": {
+      "version": "10.2.0-beta.1",
+      "packages": {
+        "@ngrx/store": {
+          "version": "10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/effects": {
+          "version": "10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/entity": {
+          "version": "10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/router-store": {
+          "version": "10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/schematics": {
+          "version": "10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store-devtools": {
+          "version": "10.0.0",
           "alwaysAddToPackageJson": false
         }
       }

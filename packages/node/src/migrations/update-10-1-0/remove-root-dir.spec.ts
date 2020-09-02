@@ -77,5 +77,15 @@ describe('update 10.1.0', () => {
       exclude: ['**/*.spec.ts'],
       include: ['**/*.ts'],
     });
+
+    const workspace = JSON.parse(result.readContent('workspace.json'));
+    expect(workspace.projects['my-node-lib'].architect.build.options).toEqual({
+      outputPath: 'dist/libs/my-node-lib',
+      tsConfig: 'libs/my-node-lib/tsconfig.lib.json',
+      packageJson: 'libs/my-node-lib/package.json',
+      main: 'libs/my-node-lib/src/index.ts',
+      assets: ['libs/my-node-lib/*.md'],
+      srcRootForCompilationRoot: 'libs/my-node-lib/src',
+    });
   });
 });

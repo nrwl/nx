@@ -28,10 +28,20 @@ import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 import { appRootPath } from '../utils/app-root';
 import { detectPackageManager } from '../utils/detect-package-manager';
-import { fileExists, readJsonFile } from '../utils/fileutils';
+import { fileExists, readJsonFile, writeJsonFile } from '../utils/fileutils';
 import { output } from '../utils/output';
+import { CompilerOptions } from 'typescript';
 
 const rootDirectory = appRootPath;
+
+type TsConfig = {
+  extends: string;
+  compilerOptions: CompilerOptions;
+  files?: string[];
+  include?: string[];
+  exclude?: string[];
+  references?: Array<{ path: string }>;
+};
 
 export async function workspaceSchematic(args: string[]) {
   const outDir = compileTools();
@@ -69,26 +79,22 @@ function compileTools() {
 }
 
 function getToolsOutDir() {
-  return path.resolve(
-    rootDirectory,
-    'tools',
-    JSON.parse(
-      readFileSync(
-        path.join(rootDirectory, 'tools', 'tsconfig.tools.json'),
-        'UTF-8'
-      )
-    ).compilerOptions.outDir
-  );
+  return path.resolve(toolsDir(), toolsTsConfig().compilerOptions.outDir);
 }
 
 function compileToolsDir(outDir: string) {
-  copySync(path.join(rootDirectory, 'tools'), outDir);
+  copySync(schematicsDir(), path.join(outDir, 'schematics'));
+
+  const tmpTsConfigPath = createTmpTsConfig(toolsTsConfigPath(), {
+    include: [path.join(schematicsDir(), '**/*.ts')],
+  });
+
   const tsc =
     platform() === 'win32'
       ? `.\\node_modules\\.bin\\tsc`
       : `./node_modules/.bin/tsc`;
   try {
-    execSync(`${tsc} -p tools/tsconfig.tools.json`, {
+    execSync(`${tsc} -p ${tmpTsConfigPath}`, {
       stdio: 'inherit',
       cwd: rootDirectory,
     });
@@ -124,7 +130,18 @@ function saveCollection(dir: string, collection: any) {
 }
 
 function schematicsDir() {
-  return path.join('tools', 'schematics');
+  return path.join(rootDirectory, 'tools', 'schematics');
+}
+
+function toolsDir() {
+  return path.join(rootDirectory, 'tools');
+}
+
+function toolsTsConfigPath() {
+  return path.join(toolsDir(), 'tsconfig.tools.json');
+}
+function toolsTsConfig() {
+  return readJsonFile<TsConfig>(toolsTsConfigPath());
 }
 
 function createWorkflow(dryRun: boolean) {
@@ -354,4 +371,43 @@ function exists(file: string): boolean {
   } catch (e) {
     return false;
   }
+}
+
+function createTmpTsConfig(
+  tsconfigPath: string,
+  updateConfig: Partial<TsConfig>
+) {
+  const tmpTsConfigPath = path.join(
+    path.dirname(tsconfigPath),
+    'tsconfig.generated.json'
+  );
+  const originalTSConfig = readJsonFile<TsConfig>(tsconfigPath);
+  const generatedTSConfig: TsConfig = {
+    ...originalTSConfig,
+    ...updateConfig,
+  };
+
+  process.on('exit', () => {
+    cleanupTmpTsConfigFile(tmpTsConfigPath);
+  });
+  process.on('SIGTERM', () => {
+    cleanupTmpTsConfigFile(tmpTsConfigPath);
+    process.exit(0);
+  });
+  process.on('SIGINT', () => {
+    cleanupTmpTsConfigFile(tmpTsConfigPath);
+    process.exit(0);
+  });
+
+  writeJsonFile(tmpTsConfigPath, generatedTSConfig);
+
+  return tmpTsConfigPath;
+}
+
+function cleanupTmpTsConfigFile(tmpTsConfigPath) {
+  try {
+    if (tmpTsConfigPath) {
+      fs.unlinkSync(tmpTsConfigPath);
+    }
+  } catch (e) {}
 }

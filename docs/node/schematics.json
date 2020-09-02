@@ -1,0 +1,15 @@
+[
+  "angular",
+  "bazel",
+  "cypress",
+  "express",
+  "jest",
+  "nest",
+  "next",
+  "node",
+  "nx-plugin",
+  "react",
+  "storybook",
+  "web",
+  "workspace"
+]

@@ -2,7 +2,6 @@ import * as webpack from 'webpack';
 import { Configuration, ProgressPlugin, Stats } from 'webpack';
 import { join, resolve } from 'path';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as TerserWebpackPlugin from 'terser-webpack-plugin';
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
@@ -82,18 +81,7 @@ export function getBaseWebpackPartial(
     performance: {
       hints: false,
     },
-    plugins: [
-      new CleanWebpackPlugin(),
-      new ForkTsCheckerWebpackPlugin({
-        tsconfig: options.tsConfig,
-        memoryLimit:
-          options.memoryLimit ||
-          ForkTsCheckerWebpackPlugin.DEFAULT_MEMORY_LIMIT,
-        workers: options.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE,
-        useTypescriptIncrementalApi: false,
-      }),
-      new webpack.DefinePlugin(getClientEnvironment(mode).stringified),
-    ],
+    plugins: [new webpack.DefinePlugin(getClientEnvironment(mode).stringified)],
     watch: options.watch,
     watchOptions: {
       poll: options.poll,
@@ -109,6 +97,19 @@ export function getBaseWebpackPartial(
   }
 
   const extraPlugins: webpack.Plugin[] = [];
+
+  if (esm) {
+    extraPlugins.push(
+      new ForkTsCheckerWebpackPlugin({
+        tsconfig: options.tsConfig,
+        memoryLimit:
+          options.memoryLimit ||
+          ForkTsCheckerWebpackPlugin.DEFAULT_MEMORY_LIMIT,
+        workers: options.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE,
+        useTypescriptIncrementalApi: false,
+      })
+    );
+  }
 
   if (options.progress) {
     extraPlugins.push(new ProgressPlugin());
@@ -126,7 +127,7 @@ export function getBaseWebpackPartial(
     );
   }
 
-  if (options.assets) {
+  if (Array.isArray(options.assets) && options.assets.length > 0) {
     extraPlugins.push(createCopyPlugin(options.assets));
   }
 

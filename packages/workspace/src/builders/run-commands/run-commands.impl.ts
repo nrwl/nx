@@ -2,7 +2,9 @@ import { BuilderOutput, createBuilder } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
 import { exec, execSync } from 'child_process';
 import { Observable } from 'rxjs';
-import { TEN_MEGABYTES } from '@nrwl/workspace/src/core/file-utils';
+import * as yargsParser from 'yargs-parser';
+
+export const LARGE_BUFFER = 1024 * 1000000;
 
 function loadEnvVars(path?: string) {
   if (path) {
@@ -59,6 +61,15 @@ export interface NormalizedRunCommandsBuilderOptions
 export default createBuilder<RunCommandsBuilderOptions>(run);
 
 function run(options: RunCommandsBuilderOptions): Observable<BuilderOutput> {
+  // Special handling of extra options coming through Angular CLI
+  if (options['--']) {
+    const { _, ...overrides } = yargsParser(options['--'] as string[], {
+      configuration: { 'camel-case-expansion': false },
+    });
+    options = { ...options, ...overrides };
+    delete options['--'];
+  }
+
   loadEnvVars(options.envFile);
   const normalized = normalizeOptions(options);
 
@@ -161,7 +172,7 @@ function createProcess(
 ): Promise<boolean> {
   return new Promise((res) => {
     const childProcess = exec(command, {
-      maxBuffer: TEN_MEGABYTES,
+      maxBuffer: LARGE_BUFFER,
       env: processEnv(color),
       cwd,
     });
@@ -193,6 +204,7 @@ function createSyncProcess(command: string, color: boolean, cwd: string) {
   execSync(command, {
     env: processEnv(color),
     stdio: [0, 1, 2],
+    maxBuffer: LARGE_BUFFER,
     cwd,
   });
 }

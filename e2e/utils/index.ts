@@ -349,7 +349,10 @@ export function createFile(f: string, content: string = ''): void {
   }
 }
 
-export function updateFile(f: string, content: string | Function): void {
+export function updateFile(
+  f: string,
+  content: string | ((content: string) => void)
+): void {
   ensureDirSync(path.dirname(tmpProjPath(f)));
   if (typeof content === 'string') {
     writeFileSync(tmpProjPath(f), content);

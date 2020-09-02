@@ -397,7 +397,7 @@ const sharedCommands = [
 
 console.log('Generating Nx Commands Documentation');
 Promise.all(
-  ['angular', 'react'].map(async (framework) => {
+  ['angular', 'react', 'node'].map(async (framework) => {
     const commandsOutputDirectory = path.join(
       __dirname,
       '../../docs/',

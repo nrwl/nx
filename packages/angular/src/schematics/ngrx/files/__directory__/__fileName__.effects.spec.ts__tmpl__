@@ -6,7 +6,7 @@ import { EffectsModule } from '@ngrx/effects';
 import {StoreModule} from '@ngrx/store';
 import {provideMockActions} from '@ngrx/effects/testing';
 
-import { NxModule, DataPersistence } from '@nrwl/angular';
+import { NxModule, <% if (useDataPersistence) { %>DataPersistence<% } %> } from '@nrwl/angular';
 import { hot } from '@nrwl/angular/testing';
 
 import { <%= className %>Effects } from './<%= fileName %>.effects';
@@ -25,7 +25,7 @@ describe('<%= className %>Effects', () => {
       ],
       providers: [
         <%= className %>Effects,
-        DataPersistence,
+        <% if (useDataPersistence) { %>DataPersistence,<% } %>
         provideMockActions(() => actions)
       ],
     });

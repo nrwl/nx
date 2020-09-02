@@ -79,7 +79,7 @@ jobs:
       - setup
       - run:
           name: Run Unit Tests
-          command: NX_VERBOSE_LOGGING=true yarn test
+          command: yarn test
       - run:
           name: Check Documentation
           command: yarn documentation
@@ -114,7 +114,7 @@ jobs:
       - setup
       - run:
           name: Tests Part 3
-          command: NX_VERBOSE_LOGGING=true yarn e2e-ci 3
+          command: yarn e2e-ci 3
           no_output_timeout: 30m
   e2e-4:
     executor: default

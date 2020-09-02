@@ -34,12 +34,6 @@ function requireCli() {
   }
 }
 
-function writeToDisk(forwardOutput: boolean, outWithErr: any[]) {
-  if (!forwardOutput) {
-    fs.writeFileSync(process.env.NX_TERMINAL_OUTPUT_PATH, outWithErr.join(''));
-  }
-}
-
 /**
  * We need to collect all stdout and stderr and store it, so the caching mechanism
  * could store it.
@@ -91,15 +85,14 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
         captureStderr ? outWithErr.join('') : out.join('')
       );
     } else {
-      writeToDisk(forwardOutput, outWithErr);
+      fs.writeFileSync(
+        process.env.NX_TERMINAL_OUTPUT_PATH,
+        outWithErr.join('')
+      );
     }
   });
 
-  process.on('SIGINT', () => {
-    writeToDisk(forwardOutput, outWithErr);
-  });
-
   process.on('SIGTERM', () => {
-    writeToDisk(forwardOutput, outWithErr);
+    process.exit(15);
   });
 }

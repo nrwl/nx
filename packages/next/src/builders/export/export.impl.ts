@@ -40,6 +40,7 @@ function run(
             exportApp(
               root,
               {
+                statusMessage: 'Exporting',
                 silent: options.silent,
                 threads: options.threads,
                 outdir: `${buildOptions.outputPath}/exported`,

@@ -50,7 +50,7 @@ Based on the state of the source code and the environment, Nx was able to figure
 Nx read the output from cache instead of running the command for 1 out of 2 projects.
 ```
 
-Nx built `api` and retrieved `todos` from its computation cache. Read more about the cache [here](/{{framework}}/guides/computation_caching).
+Nx built `api` and retrieved `todos` from its computation cache. Read more about the cache [here](/{{framework}}/workspace/computation-caching).
 
 ## --with-deps
 
