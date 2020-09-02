@@ -282,7 +282,12 @@ export class TaskOrchestrator {
       ...parseEnv(`${task.projectRoot}/.env`),
       ...parseEnv(`${task.projectRoot}/.local.env`),
     };
-    const env = { ...envsFromFiles, FORCE_COLOR: forceColor, ...process.env };
+    const env = {
+      ...envsFromFiles,
+      FORCE_COLOR: forceColor,
+      NX_INVOKED_BY_RUNNER: 'true',
+      ...process.env,
+    };
     if (outputPath) {
       env.NX_TERMINAL_OUTPUT_PATH = outputPath;
       if (this.options.captureStderr) {
