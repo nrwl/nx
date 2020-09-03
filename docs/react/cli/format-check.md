@@ -50,9 +50,9 @@ Default: `false`
 
 Isolate projects which previously failed
 
-### plain
+### projects
 
-Produces a plain output for affected:apps and affected:libs
+Projects to format (comma delimited)
 
 ### runner
 

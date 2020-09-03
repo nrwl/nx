@@ -15,8 +15,6 @@ import {
   uniq,
   updateFile,
   workspaceConfigName,
-  setCurrentProjName,
-  runCreateWorkspace,
 } from '@nrwl/e2e/utils';
 
 forEachCli((cli) => {
@@ -117,7 +115,9 @@ forEachCli((cli) => {
         );
       });
     });
+  });
 
+  describe('format', () => {
     it('format should check and reformat the code', () => {
       ensureProject();
       const myapp = uniq('myapp');
@@ -178,6 +178,31 @@ forEachCli((cli) => {
       expect(stdout).toContain(`apps/${myapp}/src/app/app.module.ts`);
       expect(stdout).toContain(`apps/${myapp}/src/app/app.component.ts`);
 
+      stdout = runCommand(`npm run -s format:check -- --projects=${myapp}`);
+      expect(stdout).toContain(`apps/${myapp}/src/main.ts`);
+      expect(stdout).toContain(`apps/${myapp}/src/app/app.module.ts`);
+      expect(stdout).toContain(`apps/${myapp}/src/app/app.component.ts`);
+      expect(stdout).not.toContain(`libs/${mylib}/index.ts`);
+      expect(stdout).not.toContain(`libs/${mylib}/src/${mylib}.module.ts`);
+      expect(stdout).not.toContain(`README.md`);
+
+      stdout = runCommand(
+        `npm run -s format:check -- --projects=${myapp},${mylib}`
+      );
+      expect(stdout).toContain(`apps/${myapp}/src/main.ts`);
+      expect(stdout).toContain(`apps/${myapp}/src/app/app.module.ts`);
+      expect(stdout).toContain(`apps/${myapp}/src/app/app.component.ts`);
+      expect(stdout).toContain(`libs/${mylib}/index.ts`);
+      expect(stdout).toContain(`libs/${mylib}/src/${mylib}.module.ts`);
+      expect(stdout).not.toContain(`README.md`);
+
+      stdout = runCommand(
+        `npm run -s format:check -- --projects=${myapp},${mylib} --all`
+      );
+      expect(stdout).toContain(
+        'Arguments all and projects are mutually exclusive'
+      );
+
       runCommand(
         `npm run format:write -- --files="apps/${myapp}/src/app/app.module.ts,apps/${myapp}/src/app/app.component.ts"`
       );
@@ -193,17 +218,76 @@ forEachCli((cli) => {
         `apps/${myapp}/src/main.ts`
       );
     });
+  });
 
-    it('should support workspace-specific schematics', async () => {
+  describe('workspace-schematic', () => {
+    function setup() {
       ensureProject();
+
       const custom = uniq('custom');
       const failing = uniq('custom-failing');
       runCLI(`g workspace-schematic ${custom} --no-interactive`);
       runCLI(`g workspace-schematic ${failing} --no-interactive`);
+
       checkFilesExist(
         `tools/schematics/${custom}/index.ts`,
         `tools/schematics/${custom}/schema.json`
       );
+      checkFilesExist(
+        `tools/schematics/${failing}/index.ts`,
+        `tools/schematics/${failing}/schema.json`
+      );
+
+      return { custom, failing };
+    }
+
+    it('should compile only schematic files with dependencies', () => {
+      const { custom } = setup();
+      const workspace = uniq('workspace');
+
+      updateFile(
+        'tools/utils/utils.ts',
+        `
+        export const noop = () => {}
+        `
+      );
+      updateFile(
+        'tools/utils/logger.ts',
+        `
+        export const log = (...args: any[]) => console.log(...args)
+        `
+      );
+      updateFile(
+        `tools/schematics/utils.ts`,
+        `
+        export const noop = ()=>{}
+        `
+      );
+      updateFile(`tools/schematics/${custom}/index.ts`, (content) => {
+        return `
+          import { log } from '../../utils/logger'; \n
+          ${content}
+        `;
+      });
+
+      const dryRunOutput = runCommand(
+        `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive -d`
+      );
+
+      expect(() =>
+        checkFilesExist(
+          `dist/out-tsc/tools/schematics/${custom}/index.js`,
+          `dist/out-tsc/tools/schematics/utils.js`,
+          `dist/out-tsc/tools/utils/logger.js`
+        )
+      ).not.toThrow();
+      expect(() =>
+        checkFilesExist(`dist/out-tsc/tools/utils/utils.js`)
+      ).toThrow();
+    });
+
+    it('should support workspace-specific schematics', async () => {
+      const { custom, failing } = setup();
 
       const json = readJson(`tools/schematics/${custom}/schema.json`);
       json.properties['directory'] = {

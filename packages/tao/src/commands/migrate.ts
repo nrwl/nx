@@ -483,9 +483,12 @@ function updatePackageJson(
   }
 ) {
   const packageJsonPath = join(root, 'package.json');
-  const json = JSON.parse(
-    stripJsonComments(readFileSync(packageJsonPath).toString())
+  const packageJsonContent = readFileSync(packageJsonPath).toString();
+  const endOfFile = packageJsonContent.substring(
+    packageJsonContent.lastIndexOf('}') + 1,
+    packageJsonContent.length
   );
+  const json = JSON.parse(stripJsonComments(packageJsonContent));
   Object.keys(updatedPackages).forEach((p) => {
     if (json.devDependencies && json.devDependencies[p]) {
       json.devDependencies[p] = updatedPackages[p].version;
@@ -496,7 +499,7 @@ function updatePackageJson(
       json.dependencies[p] = updatedPackages[p].version;
     }
   });
-  writeFileSync(packageJsonPath, JSON.stringify(json, null, 2));
+  writeFileSync(packageJsonPath, JSON.stringify(json, null, 2) + endOfFile);
 }
 
 async function generateMigrationsJsonAndUpdatePackageJson(

@@ -1,9 +1,4 @@
-import {
-  forEachCli,
-  runCreateWorkspace,
-  uniq,
-  readJson,
-} from '@nrwl/e2e/utils';
+import { forEachCli, runCreateWorkspace, uniq } from '@nrwl/e2e/utils';
 
 forEachCli(() => {
   describe('create-nx-workspace', () => {
@@ -86,6 +81,15 @@ forEachCli(() => {
       runCreateWorkspace(wsName, {
         preset: 'empty',
         base: 'main',
+      });
+    });
+
+    it('should be able to create a nest workspace', () => {
+      const wsName = uniq('nest');
+      const appName = uniq('app');
+      runCreateWorkspace(wsName, {
+        preset: 'nest',
+        appName,
       });
     });
   });
