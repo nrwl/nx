@@ -8,6 +8,7 @@ import {
   ensureProject,
   uniq,
   forEachCli,
+  runCLIAsync,
 } from '@nrwl/e2e/utils';
 
 forEachCli('nx', () => {
@@ -107,7 +108,7 @@ forEachCli('nx', () => {
       expect(cacheInfo).toContain(`${myapp}/src/app/app.spec.tsx`);
     }, 1000000);
 
-    it('linting should generate an output file with a specific format', () => {
+    it('linting should generate an output file with a specific format', async () => {
       newProject();
       const myapp = uniq('myapp');
 
@@ -122,7 +123,7 @@ forEachCli('nx', () => {
       expect(() => {
         checkFilesExist(outputFile);
       }).toThrow();
-      const stdout = runCLI(
+      const { stdout } = await runCLIAsync(
         `lint ${myapp} --output-file="${outputFile}" --format=json`,
         {
           silenceError: true,

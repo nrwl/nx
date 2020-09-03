@@ -7,6 +7,7 @@ export const supportedNxCommands = [
   'affected:e2e',
   'affected:dep-graph',
   'affected:lint',
+  'lint',
   'print-affected',
   'dep-graph',
   'format',

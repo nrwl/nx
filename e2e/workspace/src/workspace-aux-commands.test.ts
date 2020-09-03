@@ -83,6 +83,21 @@ forEachCli((cli) => {
       );
     }, 1000000);
 
+    it('nx lint should pass all projects', () => {
+      ensureProject();
+
+      const myapp = uniq('myapp');
+      const mylib = uniq('mylib');
+
+      runCLI(`generate @nrwl/angular:app ${myapp}`);
+      runCLI(`generate @nrwl/angular:lib ${mylib}`);
+
+      const stdout = runCommand(`npm run nx lint`);
+      expect(stdout).toContain(`Linting "${myapp}"...`);
+      expect(stdout).toContain(`Linting "${myapp}-e2e"...`);
+      expect(stdout).toContain(`Linting "${mylib}"...`);
+    }, 1000000);
+
     describe('nx lint', () => {
       afterAll(() => {
         newProject();

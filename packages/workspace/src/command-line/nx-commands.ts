@@ -126,6 +126,22 @@ export const commandsObject = yargs
       })
   )
   .command(
+    'lint [project]',
+    'Run linting in a given project',
+    (yargs) =>
+      withRunManyOptions(withParallel(yargs)).positional('project', {
+        describe: 'Optional name of the project to lint',
+      }),
+    (args) => {
+      const { project, ...options } = args;
+      runMany({
+        ...options,
+        target: 'lint',
+        ...(project ? { projects: project } : { all: true }),
+      });
+    }
+  )
+  .command(
     'dep-graph',
     'Graph dependencies within workspace',
     (yargs) => withDepGraphOptions(yargs),
@@ -138,12 +154,11 @@ export const commandsObject = yargs
     (args) => format('check', args)
   )
   .command(
-    'format:write',
+    ['format:write', 'format'],
     'Overwrite un-formatted files',
     withFormatOptions,
     (args) => format('write', args)
   )
-  .alias('format:write', 'format')
   .command(
     'workspace-lint [files..]',
     'Lint workspace or list of files.  Note: To exclude files from this lint rule, you can add them to the ".nxignore" file',
@@ -301,11 +316,6 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       describe: 'Run the target on all projects in the workspace',
     })
     .nargs('all', 0)
-    .check(({ all, projects }) => {
-      if ((all && projects) || (!all && !projects))
-        throw new Error('You must provide either --all or --projects');
-      return true;
-    })
     .options('runner', {
       describe: 'Override the tasks runner in `nx.json`',
       type: 'string',
