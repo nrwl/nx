@@ -20,7 +20,13 @@ function loadEnvVars(path?: string) {
 
 export interface RunCommandsBuilderOptions extends JsonObject {
   command: string;
-  commands: ({ command: string } | string)[];
+  commands: (
+    | {
+        command: string;
+        forwardAllArgs?: boolean;
+      }
+    | string
+  )[];
   color?: boolean;
   parallel?: boolean;
   readyWhen?: string;
@@ -44,7 +50,10 @@ const propKeys = [
 
 export interface NormalizedRunCommandsBuilderOptions
   extends RunCommandsBuilderOptions {
-  commands: { command: string }[];
+  commands: {
+    command: string;
+    forwardAllArgs?: boolean;
+  }[];
   parsedArgs: { [k: string]: any };
 }
 
@@ -131,7 +140,8 @@ function normalizeOptions(
   (options as NormalizedRunCommandsBuilderOptions).commands.forEach((c) => {
     c.command = transformCommand(
       c.command,
-      (options as NormalizedRunCommandsBuilderOptions).parsedArgs
+      (options as NormalizedRunCommandsBuilderOptions).parsedArgs,
+      c.forwardAllArgs ?? true
     );
   });
   return options as any;
@@ -197,11 +207,15 @@ function processEnv(color: boolean) {
   return env;
 }
 
-function transformCommand(command: string, args: { [key: string]: string }) {
+function transformCommand(
+  command: string,
+  args: { [key: string]: string },
+  forwardAllArgs: boolean
+) {
   if (command.indexOf('{args.') > -1) {
     const regex = /{args\.([^}]+)}/g;
     return command.replace(regex, (_, group: string) => args[group]);
-  } else if (Object.keys(args).length > 0) {
+  } else if (Object.keys(args).length > 0 && forwardAllArgs) {
     const stringifiedArgs = Object.keys(args)
       .map((a) => `--${a}=${args[a]}`)
       .join(' ');

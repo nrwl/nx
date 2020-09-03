@@ -13,6 +13,11 @@
               "command": {
                 "type": "string",
                 "description": "Command to run in child process"
+              },
+              "forwardAllArgs": {
+                "type": "boolean",
+                "description": "Whether arguments should be forwarded when interpolation is not present",
+                "default": true
               }
             },
             "additionalProperties": false,

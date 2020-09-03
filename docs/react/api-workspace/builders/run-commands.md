@@ -67,6 +67,44 @@ or simply with:
 nx run frontend:create-script --name=example
 ```
 
+##### Arguments forwarding
+
+When interpolation is not present in the command, all arguments are forwarded to the command by default.
+
+This is useful when you need to pass raw argument strings to your command.
+
+For example, when you run:
+
+nx run frontend:webpack --args="--config=example.config.js"
+
+```json
+"webpack": {
+    "builder": "@nrwl/workspace:run-commands",
+    "options": {
+        "command": "webpack"
+    }
+}
+```
+
+The above command will execute: `webpack --config=example.config.js`
+
+This functionality can be disabled by using `commands` and expanding each `command` into an object
+that sets the `forwardAllArgs` option to `false` as shown below:
+
+```json
+"webpack": {
+    "builder": "@nrwl/workspace:run-commands",
+    "options": {
+        "commands": [
+            {
+                "command": "webpack",
+                "forwardAllArgs": false
+            }
+        ]
+    }
+}
+```
+
 ##### Custom **done** conditions
 
 Normally, `run-commands` considers the commands done when all of them have finished running. If you don't need to wait until they're all done, you can set a special string, that considers the command finished the moment the string appears in `stdout` or `stderr`:
@@ -75,9 +113,7 @@ Normally, `run-commands` considers the commands done when all of them have finis
 "finish-when-ready": {
     "builder": "@nrwl/workspace:run-commands",
     "options": {
-        "command": [
-            "echo 'READY' && sleep 5 && echo 'FINISHED'"
-        ],
+        "command": "echo 'READY' && sleep 5 && echo 'FINISHED'",
         "readyWhen": "READY"
     }
 }
