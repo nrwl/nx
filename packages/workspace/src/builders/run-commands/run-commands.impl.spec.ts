@@ -98,6 +98,66 @@ describe('Command Runner Builder', () => {
     });
   });
 
+  it('should forward args by default when using commands (plural)', async () => {
+    const exec = spyOn(require('child_process'), 'exec').and.callThrough();
+
+    const run = await architect.scheduleBuilder(
+      '@nrwl/workspace:run-commands',
+      {
+        commands: [{ command: 'echo' }],
+        a: 123,
+        b: 456,
+      }
+    );
+
+    await run.result;
+
+    expect(exec).toHaveBeenCalledWith('echo --a=123 --b=456', {
+      maxBuffer: LARGE_BUFFER,
+      env: { ...process.env },
+    });
+  });
+
+  it('should forward args when forwardAllArgs is set to true', async () => {
+    const exec = spyOn(require('child_process'), 'exec').and.callThrough();
+
+    const run = await architect.scheduleBuilder(
+      '@nrwl/workspace:run-commands',
+      {
+        commands: [{ command: 'echo', forwardAllArgs: true }],
+        a: 123,
+        b: 456,
+      }
+    );
+
+    await run.result;
+
+    expect(exec).toHaveBeenCalledWith('echo --a=123 --b=456', {
+      maxBuffer: LARGE_BUFFER,
+      env: { ...process.env },
+    });
+  });
+
+  it('should not forward args when forwardAllArgs is set to false', async () => {
+    const exec = spyOn(require('child_process'), 'exec').and.callThrough();
+
+    const run = await architect.scheduleBuilder(
+      '@nrwl/workspace:run-commands',
+      {
+        commands: [{ command: 'echo', forwardAllArgs: false }],
+        a: 123,
+        b: 456,
+      }
+    );
+
+    await run.result;
+
+    expect(exec).toHaveBeenCalledWith('echo', {
+      maxBuffer: LARGE_BUFFER,
+      env: { ...process.env },
+    });
+  });
+
   it('should throw when invalid args', async () => {
     try {
       const run = await architect.scheduleBuilder(
