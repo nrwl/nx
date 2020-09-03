@@ -7,6 +7,7 @@ import {
   runCLI,
   uniq,
   updateFile,
+  readFile,
 } from '@nrwl/e2e/utils';
 
 forEachCli('nx', (cli) => {
@@ -95,6 +96,26 @@ forEachCli('nx', (cli) => {
         );
         expect(e.stderr.toString()).toContain(`${childLib}`);
       }
+    });
+
+    it('should preserve the tsconfig target set by user', () => {
+      // Setup
+      const myLib = uniq('my-lib');
+      runCLI(
+        `generate @nrwl/react:library ${myLib} --publishable --no-interactive`
+      );
+      updateFile(`libs/${myLib}/tsconfig.json`, (content) => {
+        const json = JSON.parse(content);
+        json.compilerOptions.target = 'ES2020';
+        return JSON.stringify(json, null, 2);
+      });
+      // What we're testing
+      runCLI(`build ${myLib}`);
+      // Assertion
+      const content = readFile(`dist/libs/${myLib}/${myLib}.esm.js`);
+      // ???? Need to figure out what to match on based on tsconfig target
+      // Need to check that the bundle preserves what we expect from es2020
+      expect(content).toMatch(/import React/);
     });
 
     it('should build the library when it does not have any deps', () => {

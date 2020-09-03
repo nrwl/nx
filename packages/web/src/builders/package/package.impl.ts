@@ -189,7 +189,7 @@ export function createRollupOptions(
             allowJs: false,
             declaration: true,
             paths: compilerOptionPaths,
-            target: config.format === 'esm' ? 'esnext' : 'es5',
+            target: config.format === 'esm' ? undefined : 'es5',
           },
         },
       }),
