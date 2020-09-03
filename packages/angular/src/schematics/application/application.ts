@@ -480,27 +480,6 @@ function updateProject(options: NormalizedSchema): Rule {
           options.appProjectRoot
         );
 
-        const angularSchematicNames = [
-          'class',
-          'component',
-          'directive',
-          'guard',
-          'module',
-          'pipe',
-          'service',
-        ];
-
-        if (fixedProject.schematics) {
-          angularSchematicNames.forEach((type) => {
-            const schematic = `@schematics/angular:${type}`;
-            if (schematic in fixedProject.schematics) {
-              fixedProject.schematics[`@nrwl/angular:${type}`] =
-                fixedProject.schematics[schematic];
-              delete fixedProject.schematics[schematic];
-            }
-          });
-        }
-
         delete fixedProject.architect.test;
 
         fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
