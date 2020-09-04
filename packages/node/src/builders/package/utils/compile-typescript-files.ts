@@ -74,11 +74,7 @@ export default function compileTypeScriptFiles(
   if (options.srcRootForCompilationRoot) {
     tsconfig.options.rootDir = options.srcRootForCompilationRoot;
   } else if (tsconfig.options.rootDir) {
-    if (tsconfig.options.rootDir.startsWith('./')) {
-      tsconfig.options.rootDir = libRoot + tsconfig.options.rootDir.substring(1);
-    } else {
-      tsconfig.options.rootDir = tsconfig.options.rootDir;
-    }
+    tsconfig.options.rootDir = tsconfig.options.rootDir;
   } else {
     tsconfig.options.rootDir = libRoot;
   }

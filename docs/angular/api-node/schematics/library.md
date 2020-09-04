@@ -80,6 +80,12 @@ Type: `boolean`
 
 Create a publishable library.
 
+### rootDir
+
+Type: `string`
+
+Sets the rootDir for TypeScript compilation. It's the equivalent of srcRootForCompilationRoot, but it updates tsconfig.lib.json directly. When not defined, it uses the project's root property, or srcRootForCompilationRoot if it is defined.
+
 ### skipFormat
 
 Default: `false`
