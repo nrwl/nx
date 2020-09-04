@@ -104,18 +104,45 @@ forEachCli('nx', (cli) => {
       runCLI(
         `generate @nrwl/react:library ${myLib} --publishable --no-interactive`
       );
+
+      /**
+       *
+       * Here I would update my library file
+       *
+       * updateFile(`libs/${myLib}/src/lib/${myLib}.tsx`, (content) => {
+       *
+       *   Not sure how, will find how.
+       *
+       * })
+       *
+       * I would just add this in the end:
+       *
+       * export const TestFunction = async () => {
+       *     return await Promise.resolve('Done!')
+       * }
+       *
+       */
+
       updateFile(`libs/${myLib}/tsconfig.json`, (content) => {
         const json = JSON.parse(content);
-        json.compilerOptions.target = 'ES2020';
+
+        /**
+         * Set target as es3!!
+         */
+
+        json.compilerOptions.target = 'es3';
         return JSON.stringify(json, null, 2);
       });
       // What we're testing
       runCLI(`build ${myLib}`);
       // Assertion
       const content = readFile(`dist/libs/${myLib}/${myLib}.esm.js`);
-      // ???? Need to figure out what to match on based on tsconfig target
-      // Need to check that the bundle preserves what we expect from es2020
-      expect(content).toMatch(/import React/);
+
+      /**
+       * Then check if the result contains this "promise" polyfill?
+       */
+
+      expect(content).toContain('function __generator(thisArg, body) {');
     });
 
     it('should build the library when it does not have any deps', () => {
