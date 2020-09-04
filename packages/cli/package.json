@@ -28,8 +28,7 @@
   "homepage": "https://nx.dev",
   "dependencies": {
     "tmp": "0.0.33",
-    "yargs-parser": "10.0.0",
-    "yargs": "^11.0.0",
+    "yargs": "15.4.1",
     "@nrwl/tao": "*",
     "chalk": "2.4.2"
   }
