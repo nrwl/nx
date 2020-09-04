@@ -156,29 +156,6 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     }),
     appTree
   );
-  const modulePath = `libs/${libName}/src/lib/${libName}.module.ts`;
-  appTree.overwrite(
-    modulePath,
-    `import * as ButtonExports from './test-button/test-button.component';
-    ${appTree.read(modulePath)}`
-  );
-  appTree = await callRule(
-    externalSchematic('@schematics/angular', 'module', {
-      name: 'nested',
-      project: libName,
-      path: `libs/${libName}/src/lib`,
-    }),
-    appTree
-  );
-  appTree = await callRule(
-    externalSchematic('@schematics/angular', 'component', {
-      name: 'nested-button',
-      project: libName,
-      module: 'nested',
-      path: `libs/${libName}/src/lib/nested`,
-    }),
-    appTree
-  );
   appTree.overwrite(
     `libs/${libName}/src/lib/test-button/test-button.component.ts`,
     `
@@ -209,6 +186,69 @@ export class TestButtonComponent implements OnInit {
     `libs/${libName}/src/lib/test-button/test-button.component.html`,
     `<button [attr.type]="type" [ngClass]="style"></button>`
   );
+
+  const modulePath = `libs/${libName}/src/lib/${libName}.module.ts`;
+  appTree.overwrite(
+    modulePath,
+    `import * as ButtonExports from './test-button/test-button.component';
+    ${appTree.read(modulePath)}`
+  );
+
+  // create a module with component that gets exported in a barrel file
+  appTree = await callRule(
+    externalSchematic('@schematics/angular', 'module', {
+      name: 'barrel',
+      project: libName,
+    }),
+    appTree
+  );
+
+  appTree = await callRule(
+    externalSchematic('@schematics/angular', 'component', {
+      name: 'barrel-button',
+      project: libName,
+      path: `libs/${libName}/src/lib/barrel`,
+      module: 'barrel',
+    }),
+    appTree
+  );
+  appTree.create(
+    `libs/${libName}/src/lib/barrel/barrel-button/index.ts`,
+    `export * from './barrel-button.component';`
+  );
+
+  appTree.overwrite(
+    `libs/${libName}/src/lib/barrel/barrel.module.ts`,
+    `import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { BarrelButtonComponent } from './barrel-button';
+
+@NgModule({
+  imports: [CommonModule],
+  declarations: [BarrelButtonComponent],
+})
+export class BarrelModule {}`
+  );
+
+  // create another button in a nested subpath
+  appTree = await callRule(
+    externalSchematic('@schematics/angular', 'module', {
+      name: 'nested',
+      project: libName,
+      path: `libs/${libName}/src/lib`,
+    }),
+    appTree
+  );
+  appTree = await callRule(
+    externalSchematic('@schematics/angular', 'component', {
+      name: 'nested-button',
+      project: libName,
+      module: 'nested',
+      path: `libs/${libName}/src/lib/nested`,
+    }),
+    appTree
+  );
+
   appTree = await callRule(
     externalSchematic('@schematics/angular', 'component', {
       name: 'test-other',
@@ -216,6 +256,7 @@ export class TestButtonComponent implements OnInit {
     }),
     appTree
   );
+
   return appTree;
 }
 
