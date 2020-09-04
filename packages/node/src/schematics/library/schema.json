@@ -27,12 +27,18 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint", "tslint"],
+      "enum": [
+        "eslint",
+        "tslint"
+      ],
       "default": "eslint"
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "none"],
+      "enum": [
+        "jest",
+        "none"
+      ],
       "description": "Test runner to use for unit tests",
       "default": "jest"
     },
@@ -66,14 +72,20 @@
     },
     "rootDir": {
       "type": "string",
-      "description": "Sets the rootDir for TypeScript compilation. It's the equivalent of srcRootForCompilationRoot, but it updates tsconfig.lib.json directly.  When not defined, it uses the project's root property, or srcRootForCompilationRoot if it is defined."
+      "alias": "srcRootForCompilationRoot",
+      "description": "Sets the rootDir for TypeScript compilation. When not defined, it uses the project's root property, or srcRootForCompilationRoot if it is defined."
     },
     "testEnvironment": {
       "type": "string",
-      "enum": ["jsdom", "node"],
+      "enum": [
+        "jsdom",
+        "node"
+      ],
       "description": "The test environment to use if unitTestRunner is set to jest",
       "default": "jsdom"
     }
   },
-  "required": ["name"]
+  "required": [
+    "name"
+  ]
 }

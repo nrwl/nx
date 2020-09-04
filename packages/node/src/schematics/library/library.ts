@@ -24,7 +24,7 @@ import {
   updateWorkspaceInTree,
 } from '@nrwl/workspace';
 import { Schema } from './schema';
-import { libsDir, updateJsonInTree } from '@nrwl/workspace/src/utils/ast-utils';
+import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -52,7 +52,6 @@ export default function (schema: NormalizedSchema): Rule {
       }),
       createFiles(options),
       addProject(options),
-      updateTsConfigLib(options),
       formatFiles(options),
     ]);
   };
@@ -109,23 +108,6 @@ function createFiles(options: NormalizedSchema): Rule {
   );
 }
 
-function updateTsConfigLib(options: NormalizedSchema): Rule {
-  return () => {
-    return updateJsonInTree(
-      `${options.projectRoot}/tsconfig.lib.json`,
-      (json) => {
-        // update the rootDir setting
-        json.compilerOptions = {
-          ...(json.compilerOptions ?? {}),
-          rootDir: options.rootDir ? options.rootDir : undefined,
-        };
-
-        return json;
-      }
-    );
-  };
-}
-
 function addProject(options: NormalizedSchema): Rule {
   if (!options.publishable && !options.buildable) {
     return noop();
@@ -144,6 +126,10 @@ function addProject(options: NormalizedSchema): Rule {
           assets: [`${options.projectRoot}/*.md`],
         },
       };
+
+      if (options.rootDir) {
+        architect.build.options.srcRootForCompilationRoot = options.rootDir;
+      }
     }
     return json;
   });
