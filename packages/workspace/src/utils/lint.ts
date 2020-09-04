@@ -141,8 +141,8 @@ export function addLintFiles(
               rules: {},
             };
           }
-          // Include all project files to be linted (since they are turned off in the root eslintrc file).
-          configJson.ignorePatterns = ['!**/*'];
+          // Include all project files inside `scr` folder to be linted (since they are turned off in the root eslintrc file).
+          configJson.ignorePatterns = ['/*.*', '!src/**/*'];
           host.create(
             join(projectRoot as any, `.eslintrc`),
             JSON.stringify(configJson)

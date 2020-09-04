@@ -109,6 +109,11 @@
       "version": "10.1.0-beta.0",
       "description": "Migrate .eslintrc files to use tsconfig with a wildcard",
       "factory": "./src/migrations/update-10-1-0/migrate-eslintrc-tsconfig-wildcard"
+    },
+    "migrate-eslintrc-ignore-patterns-wildcard": {
+      "version": "10.2.0-beta.0",
+      "description": "Migrate .eslintrc ignorePatterns to lint only src folder",
+      "factory": "./src/migrations/update-10-2-0/migrate-eslintrc-ignore-patterns-wildcard"
     }
   },
   "packageJsonUpdates": {
