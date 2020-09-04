@@ -70,10 +70,17 @@ export default function compileTypeScriptFiles(
 
   const tsconfig = readTsConfig(tsConfigPath);
   tsconfig.options.outDir = options.normalizedOutputPath;
+
   if (options.srcRootForCompilationRoot) {
     tsconfig.options.rootDir = options.srcRootForCompilationRoot;
+  } else if (tsconfig.options.rootDir) {
+    if (tsconfig.options.rootDir.startsWith('./')) {
+      tsconfig.options.rootDir = libRoot + tsconfig.options.rootDir.substring(1);
+    } else {
+      tsconfig.options.rootDir = tsconfig.options.rootDir;
+    }
   } else {
-    tsconfig.options.rootDir = tsconfig.options.rootDir ? tsconfig.options.rootDir : libRoot;
+    tsconfig.options.rootDir = libRoot;
   }
 
   if (options.watch) {
