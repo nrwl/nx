@@ -12,4 +12,5 @@ export interface Schema {
   publishable?: boolean;
   importPath?: string;
   testEnvironment: 'jsdom' | 'node';
+  rootDir?: string;
 }
