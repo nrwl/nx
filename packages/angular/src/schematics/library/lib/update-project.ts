@@ -133,7 +133,7 @@ export function updateProject(options: NormalizedSchema): Rule {
         if (options.style !== 'css') {
           fixedProject.schematics = {
             ...fixedProject.schematics,
-            '@nrwl/angular:component': {
+            '@schematics/angular:component': {
               style: options.style,
             },
           };

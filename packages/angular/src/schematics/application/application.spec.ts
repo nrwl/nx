@@ -337,7 +337,7 @@ describe('app', () => {
       const workspaceJson = readJsonInTree(result, 'workspace.json');
 
       expect(workspaceJson.projects['my-app'].schematics).toEqual({
-        '@nrwl/angular:component': {
+        '@schematics/angular:component': {
           style: 'scss',
         },
       });
