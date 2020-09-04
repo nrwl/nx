@@ -100,7 +100,9 @@ export function splitArgsIntoNxArgsAndOverrides(
     if (!nxArgs.projects) {
       nxArgs.projects = [];
     } else {
-      nxArgs.projects = args.projects.split(',').map((p: string) => p.trim());
+      nxArgs.projects = (args.projects as string)
+        .split(',')
+        .map((p: string) => p.trim());
     }
   }
 

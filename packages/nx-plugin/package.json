@@ -36,8 +36,7 @@
     "@angular-devkit/schematics": "~10.0.0",
     "fs-extra": "7.0.1",
     "tmp": "0.0.33",
-    "yargs-parser": "10.0.0",
-    "yargs": "^11.0.0",
+    "yargs": "15.4.1",
     "inquirer": "^6.3.1"
   }
 }

@@ -29,8 +29,7 @@
   "dependencies": {
     "@nrwl/workspace": "*",
     "tmp": "0.0.33",
-    "yargs-parser": "10.0.0",
-    "yargs": "^11.0.0",
+    "yargs": "15.4.1",
     "inquirer": "^6.3.1"
   }
 }
