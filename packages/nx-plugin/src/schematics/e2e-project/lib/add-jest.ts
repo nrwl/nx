@@ -17,10 +17,7 @@ export function addJest(options: NxPluginE2ESchema): Rule {
       const e2eOptions = project.targets.get('e2e').options;
       project.targets.get('e2e').options = {
         ...e2eOptions,
-        ...{
-          jestConfig: testOptions.jestConfig,
-          tsSpecConfig: testOptions.tsConfig,
-        },
+        jestConfig: testOptions.jestConfig,
       };
 
       // remove the jest build target

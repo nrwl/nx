@@ -27,7 +27,6 @@ export function runNxPluginE2EBuilder(
     switchMap(() => {
       return from(
         context.scheduleBuilder('@nrwl/jest:jest', {
-          tsConfig: options.tsSpecConfig,
           jestConfig: options.jestConfig,
           watch: false,
         })

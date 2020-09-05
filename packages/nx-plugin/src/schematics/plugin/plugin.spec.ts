@@ -60,7 +60,6 @@ describe('NxPlugin plugin', () => {
       builder: '@nrwl/jest:jest',
       options: {
         jestConfig: 'libs/my-plugin/jest.config.js',
-        tsConfig: 'libs/my-plugin/tsconfig.spec.json',
         passWithNoTests: true,
       },
     });

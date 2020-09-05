@@ -10,16 +10,9 @@ export function updateWorkspace(options: JestProjectSchema): Rule {
       builder: '@nrwl/jest:jest',
       options: {
         jestConfig: join(normalize(projectConfig.root), 'jest.config.js'),
-        tsConfig: join(normalize(projectConfig.root), 'tsconfig.spec.json'),
         passWithNoTests: true,
       },
     };
-    if (options.setupFile !== 'none') {
-      projectConfig.architect.test.options.setupFile = join(
-        normalize(projectConfig.root),
-        'src/test-setup.ts'
-      );
-    }
     if (projectConfig.architect.lint) {
       projectConfig.architect.lint.options.tsConfig = [
         ...projectConfig.architect.lint.options.tsConfig,
