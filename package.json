@@ -8,16 +8,16 @@
   "scripts": {
     "build": "./scripts/package.sh --local",
     "commit": "git-cz",
-    "checkcommit": "node ./scripts/commit-lint.js",
+    "check-commit": "node ./scripts/commit-lint.js",
+    "check-format": "scripts/check-format.sh",
+    "check-imports": "node ./scripts/check-imports.js",
+    "check-versions": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/check-versions.ts",
     "e2e": "./scripts/e2e.sh",
     "e2e-ci": "./scripts/e2e-ci.sh",
     "format": "./scripts/format.sh",
     "nx-release": "./scripts/nx-release.js",
     "test": "nx run-many --target=test --all --parallel",
     "lint": "nx run-many --target=lint --all --parallel",
-    "checkformat": "scripts/check-format.sh",
-    "checkimports": "node ./scripts/check-imports.js",
-    "checkversions": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/check-versions.ts",
     "depcheck": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/depcheck.ts",
     "local-registry": "./scripts/local-registry.sh",
     "documentation": "./scripts/documentation/documentation.sh && ./scripts/documentation/check-documentation.sh",
@@ -251,7 +251,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-push": "yarn checkcommit && yarn documentation && pretty-quick --check"
+      "pre-push": "yarn check-commit && yarn documentation && pretty-quick --check"
     }
   }
 }

@@ -135,7 +135,7 @@ Please follow the following guidelines:
 - Make sure you run `yarn format`
 - Update documentation with `yarn documentation`. For documentation, check for spelling and grammatical errors.
 - Update your commit message to follow the guidelines below (use `yarn commit` to automate compliance)
-  - `yarn checkcommit` will check to make sure your commit messages are formatted correctly
+  - `yarn check-commit` will check to make sure your commit messages are formatted correctly
 
 #### Commit Message Guidelines
 

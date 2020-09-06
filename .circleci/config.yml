@@ -84,13 +84,13 @@ jobs:
           command: yarn documentation
       - run:
           name: Check Imports
-          command: yarn checkimports
+          command: yarn check-imports
       - run:
           name: Check Formatting
-          command: yarn checkformat
+          command: yarn check-format
       - run:
           name: Check Commit Message Format
-          command: yarn checkcommit
+          command: yarn check-commit
       - run:
           name: Run linting
           command: yarn lint
