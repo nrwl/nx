@@ -500,8 +500,8 @@ function pointToTutorialAndCourse(preset: Preset) {
           `In order to add functionality to an empty workspace, you need to install a plugin.`,
           `For example: @nrwl/angular, @nrwl/nest, @nrwl/node, @nrwl/react or @nrwl/web`,
         ],
-      })
-      break
+      });
+      break;
     case Preset.React:
     case Preset.ReactWithExpress:
     case Preset.NextJs:
