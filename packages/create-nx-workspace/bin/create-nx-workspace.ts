@@ -492,6 +492,16 @@ async function askAboutNxCloud(parsedArgs: any) {
 function pointToTutorialAndCourse(preset: Preset) {
   const title = `First time using Nx? Check out this interactive Nx tutorial.`;
   switch (preset) {
+    case Preset.Empty:
+      output.addVerticalSeparator();
+      output.note({
+        title: `First time using Nx?`,
+        bodyLines: [
+          `In order to add functionality to an empty workspace, you need to install a plugin.`,
+          `For example: @nrwl/angular, @nrwl/nest, @nrwl/node, @nrwl/react or @nrwl/web`,
+        ],
+      })
+      break
     case Preset.React:
     case Preset.ReactWithExpress:
     case Preset.NextJs:
