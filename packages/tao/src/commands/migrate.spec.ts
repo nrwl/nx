@@ -309,6 +309,10 @@ describe('Migration', () => {
           '@nrwl/nest': { version: '2.0.0', alwaysAddToPackageJson: false },
           '@nrwl/next': { version: '2.0.0', alwaysAddToPackageJson: false },
           '@nrwl/node': { version: '2.0.0', alwaysAddToPackageJson: false },
+          '@nrwl/nx-cloud': {
+            version: '2.0.0',
+            alwaysAddToPackageJson: false,
+          },
           '@nrwl/nx-plugin': {
             version: '2.0.0',
             alwaysAddToPackageJson: false,
