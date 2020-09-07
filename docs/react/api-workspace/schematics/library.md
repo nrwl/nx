@@ -80,6 +80,16 @@ Type: `string`
 
 Library name
 
+### pascalCaseFiles
+
+Alias(es): P
+
+Default: `false`
+
+Type: `boolean`
+
+Use pascal case file names.
+
 ### skipFormat
 
 Default: `false`
