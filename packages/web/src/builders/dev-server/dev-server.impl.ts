@@ -132,12 +132,15 @@ function getBuildOptions(
       context.getTargetOptions(target),
       context.getBuilderNameForTarget(target),
     ])
-      .then(([targetOptions, builderName]) =>
-        context.validateOptions<WebBuildBuilderOptions & JsonObject>(
-          { ...targetOptions, ...options },
+      .then(([targetOptions, builderName]) => {
+        if (options.baseHref) {
+          targetOptions.baseHref = options.baseHref;
+        }
+        return context.validateOptions<WebBuildBuilderOptions & JsonObject>(
+          targetOptions,
           builderName
-        )
-      )
+        );
+      })
       .then((options) => ({
         ...options,
         ...overrides,
