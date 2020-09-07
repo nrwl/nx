@@ -18,10 +18,14 @@ describe('Web Server Builder', () => {
   let options: WebDevServerOptions;
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+
     context = await getMockContext();
     context.getProjectMetadata = jest
       .fn()
       .mockReturnValue({ sourceRoot: '/root/app/src' });
+
+    context.getTargetOptions = jest.fn().mockReturnValue({});
 
     options = {
       buildTarget: 'app:build',
