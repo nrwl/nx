@@ -294,8 +294,8 @@ function convertCopyAssetsToRollupOptions(
 ): RollupCopyAssetOption[] {
   return assets
     ? assets.map((a) => ({
-        src: join(a.input, a.glob),
-        dest: join(outputPath, a.output),
+        src: join(a.input, a.glob).replace(/\\/g, '/'),
+        dest: join(outputPath, a.output).replace(/\\/g, '/'),
       }))
     : undefined;
 }
