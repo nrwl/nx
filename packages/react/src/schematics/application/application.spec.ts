@@ -196,7 +196,7 @@ describe('app', () => {
     );
 
     expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
-      `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],`
+      `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
     );
   });
 

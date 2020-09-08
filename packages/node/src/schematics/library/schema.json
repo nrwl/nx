@@ -74,6 +74,11 @@
       "enum": ["jsdom", "node"],
       "description": "The test environment to use if unitTestRunner is set to jest",
       "default": "jsdom"
+    },
+    "babelJest": {
+      "type": "boolean",
+      "description": "Use babel instead ts-jest",
+      "default": false
     }
   },
   "required": ["name"]
