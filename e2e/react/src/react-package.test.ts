@@ -107,21 +107,25 @@ forEachCli('nx', (cli) => {
 
       /**
        *
-       * Here I would update my library file
-       *
-       * updateFile(`libs/${myLib}/src/lib/${myLib}.tsx`, (content) => {
-       *
-       *   Not sure how, will find how.
-       *
-       * })
-       *
-       * I would just add this in the end:
+       * Here I update my library file
+       * I am just adding this in the end:
        *
        * export const TestFunction = async () => {
        *     return await Promise.resolve('Done!')
        * }
        *
+       * So that I can see the change in the Promise.
+       *
        */
+
+      updateFile(`libs/${myLib}/src/lib/${myLib}.tsx`, (content) => {
+        return `
+        ${content} \n
+          export const TestFunction = async () => {
+               return await Promise.resolve('Done!')
+          }
+        `;
+      });
 
       updateFile(`libs/${myLib}/tsconfig.json`, (content) => {
         const json = JSON.parse(content);
