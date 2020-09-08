@@ -1,3 +1,6 @@
+const mockCopyPlugin = jest.fn();
+jest.mock('rollup-plugin-copy', () => mockCopyPlugin);
+
 import { of, throwError } from 'rxjs';
 import { join } from 'path';
 
@@ -58,6 +61,28 @@ describe('WebPackagebuilder', () => {
           name: 'Example',
         },
       ]);
+    });
+
+    it(`should always use forward slashes for asset paths`, () => {
+      createRollupOptions(
+        {
+          ...normalizePackageOptions(testOptions, '/root', '/root/src'),
+          assets: [
+            {
+              glob: 'README.md',
+              input: 'C:\\windows\\path',
+              output: '.',
+            },
+          ],
+        },
+        [],
+        context,
+        { name: 'example' },
+        '/root/src'
+      );
+      expect(mockCopyPlugin).toHaveBeenCalledWith({
+        targets: [{ dest: '/root/dist/ui', src: 'C:/windows/path/README.md' }],
+      });
     });
   });
 });
