@@ -13,6 +13,14 @@ Type: `string`
 
 This option allows you to whitelist services that are allowed to access the dev server.
 
+### baseHref
+
+Default: `/`
+
+Type: `string`
+
+Base url for the application being built.
+
 ### buildTarget
 
 Type: `string`

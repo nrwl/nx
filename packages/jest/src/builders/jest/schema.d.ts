@@ -7,7 +7,6 @@ export interface JestBuilderOptions extends JsonObject {
   jestConfig: string;
   testFile?: string;
   setupFile?: string;
-  tsConfig: string;
   bail?: boolean | number;
   ci?: boolean;
   color?: boolean;

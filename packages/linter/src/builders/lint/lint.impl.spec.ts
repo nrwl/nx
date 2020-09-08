@@ -493,7 +493,7 @@ describe('Linter Builder', () => {
     });
     expect(output.success).toBeFalsy();
   });
-  it('should be a failure if there are no errors, but warnings and maxWarnings is set to 0', async () => {
+  it('should be a failure if there are no errors, but there are more warnings than allowed by maxWarnings', async () => {
     mockReports = [
       {
         errorCount: 0,
@@ -503,7 +503,7 @@ describe('Linter Builder', () => {
       },
       {
         errorCount: 0,
-        warningCount: 0,
+        warningCount: 1,
         results: [],
         usedDeprecatedRules: [],
       },

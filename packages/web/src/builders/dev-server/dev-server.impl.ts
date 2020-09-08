@@ -36,11 +36,12 @@ export interface WebDevServerOptions extends JsonObject {
   allowedHosts: string;
   maxWorkers?: number;
   memoryLimit?: number;
+  baseHref?: string;
 }
 
 export default createBuilder<WebDevServerOptions>(run);
 
-function run(
+export function run(
   serveOptions: WebDevServerOptions,
   context: BuilderContext
 ): Observable<DevServerBuildOutput> {
@@ -131,12 +132,15 @@ function getBuildOptions(
       context.getTargetOptions(target),
       context.getBuilderNameForTarget(target),
     ])
-      .then(([options, builderName]) =>
-        context.validateOptions<WebBuildBuilderOptions & JsonObject>(
-          options,
+      .then(([targetOptions, builderName]) => {
+        if (options.baseHref) {
+          targetOptions.baseHref = options.baseHref;
+        }
+        return context.validateOptions<WebBuildBuilderOptions & JsonObject>(
+          targetOptions,
           builderName
-        )
-      )
+        );
+      })
       .then((options) => ({
         ...options,
         ...overrides,

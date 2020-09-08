@@ -22,4 +22,4 @@ the target Nx Plugin project and build
 
 Type: `string`
 
-Spec tsconfig file
+[Deprecated] Spec tsconfig file

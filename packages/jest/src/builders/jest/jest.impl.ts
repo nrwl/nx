@@ -61,7 +61,6 @@ function run(
     testPathPattern: options.testPathPattern,
     colors: options.colors,
     verbose: options.verbose,
-    coverageReporters: options.coverageReporters,
     coverageDirectory: options.coverageDirectory,
     testResultsProcessor: options.testResultsProcessor,
     updateSnapshot: options.updateSnapshot,
@@ -97,6 +96,10 @@ function run(
 
   if (options.reporters && options.reporters.length > 0) {
     config.reporters = options.reporters;
+  }
+
+  if (options.coverageReporters && options.coverageReporters.length > 0) {
+    config.coverageReporters = options.coverageReporters;
   }
 
   return from(runCLI(config, [options.jestConfig])).pipe(
