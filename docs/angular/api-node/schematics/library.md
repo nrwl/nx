@@ -80,6 +80,14 @@ Type: `boolean`
 
 Create a publishable library.
 
+### rootDir
+
+Alias(es): srcRootForCompilationRoot
+
+Type: `string`
+
+Sets the rootDir for TypeScript compilation. When not defined, it uses the project's root property, or srcRootForCompilationRoot if it is defined.
+
 ### skipFormat
 
 Default: `false`

@@ -37,6 +37,19 @@ describe('lib', () => {
       });
     });
 
+    it('adds srcRootForCompilationRoot in workspace.json', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', rootDir: './src', buildable: true },
+        appTree
+      );
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      expect(
+        workspaceJson.projects['my-lib'].architect.build.options
+          .srcRootForCompilationRoot
+      ).toEqual('./src');
+    });
+
     it('should update nx.json', async () => {
       const tree = await runSchematic(
         'lib',
