@@ -1,3 +1,4 @@
+import { tags } from '@angular-devkit/core';
 import { Tree } from '@angular-devkit/schematics';
 import { readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
@@ -19,13 +20,7 @@ describe('jest', () => {
     expect(resultTree.exists('jest.config.js')).toBeTruthy();
     expect(resultTree.readContent('jest.config.js')).toMatchInlineSnapshot(`
       "module.exports = {
-      testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
-      transform: {
-      '^.+\\\\\\\\.(ts|js|html)$': 'ts-jest'
-      },
-      resolver: '@nrwl/jest/plugins/resolver',
-      moduleFileExtensions: ['ts', 'js', 'html'],
-      coverageReporters: ['html']
+      projects: []
       };"
     `);
   });

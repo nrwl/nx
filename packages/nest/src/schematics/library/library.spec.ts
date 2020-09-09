@@ -415,7 +415,7 @@ describe('lib', () => {
       const jestConfig = getFileContent(tree, 'libs/my-lib/jest.config.js');
       expect(stripIndents`${jestConfig}`)
         .toEqual(stripIndents`module.exports = {
-      name: 'my-lib',
+      displayName: 'my-lib',
       preset: '../../jest.config.js',
       globals: {
         'ts-jest': {

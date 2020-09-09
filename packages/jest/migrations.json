@@ -39,6 +39,11 @@
       "version": "10.2.0",
       "description": "Remove deprecated jest builder options",
       "factory": "./src/migrations/update-10-2-0/update-10-2-0"
+    },
+    "update-projects-property": {
+      "version": "10.3.0-beta.1",
+      "description": "Adds all jest projects into the root jest config",
+      "factory": "./src/migrations/update-10-3-0/update-projects-property"
     }
   },
   "packageJsonUpdates": {

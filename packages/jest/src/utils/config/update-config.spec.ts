@@ -29,7 +29,7 @@ describe('Update jest.config.js', () => {
             childArray: ['value1', 'value2']
           }
         },
-        numeric: 0
+        numeric: 0,
       }
     `
     );
