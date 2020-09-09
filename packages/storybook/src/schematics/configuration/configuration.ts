@@ -35,28 +35,32 @@ export default function (rawSchema: StorybookConfigureSchema): Rule {
 
   const packageJsonContents = readPackageJson();
   let workspaceStorybookVersion = storybookVersion;
-  if (packageJsonContents &&
-    packageJsonContents['devDependencies']) {
+  if (packageJsonContents && packageJsonContents['devDependencies']) {
     if (packageJsonContents['devDependencies']['@storybook/angular']) {
-      workspaceStorybookVersion = packageJsonContents['devDependencies']['@storybook/angular'];
+      workspaceStorybookVersion =
+        packageJsonContents['devDependencies']['@storybook/angular'];
     }
     if (packageJsonContents['devDependencies']['@storybook/react']) {
-      workspaceStorybookVersion = packageJsonContents['devDependencies']['@storybook/react'];
+      workspaceStorybookVersion =
+        packageJsonContents['devDependencies']['@storybook/react'];
     }
     if (packageJsonContents['devDependencies']['@storybook/core']) {
-      workspaceStorybookVersion = packageJsonContents['devDependencies']['@storybook/core'];
+      workspaceStorybookVersion =
+        packageJsonContents['devDependencies']['@storybook/core'];
     }
   }
-  if (packageJsonContents &&
-    packageJsonContents['dependencies']) {
+  if (packageJsonContents && packageJsonContents['dependencies']) {
     if (packageJsonContents['dependencies']['@storybook/angular']) {
-      workspaceStorybookVersion = packageJsonContents['dependencies']['@storybook/angular'];
+      workspaceStorybookVersion =
+        packageJsonContents['dependencies']['@storybook/angular'];
     }
     if (packageJsonContents['dependencies']['@storybook/react']) {
-      workspaceStorybookVersion = packageJsonContents['dependencies']['@storybook/react'];
+      workspaceStorybookVersion =
+        packageJsonContents['dependencies']['@storybook/react'];
     }
     if (packageJsonContents['dependencies']['@storybook/core']) {
-      workspaceStorybookVersion = packageJsonContents['dependencies']['@storybook/core'];
+      workspaceStorybookVersion =
+        packageJsonContents['dependencies']['@storybook/core'];
     }
   }
 
@@ -65,18 +69,23 @@ export default function (rawSchema: StorybookConfigureSchema): Rule {
       uiFramework: schema.uiFramework,
     }),
     createRootStorybookDir(schema.name, schema.js, workspaceStorybookVersion),
-    createLibStorybookDir(schema.name, schema.uiFramework, schema.js, workspaceStorybookVersion),
+    createLibStorybookDir(
+      schema.name,
+      schema.uiFramework,
+      schema.js,
+      workspaceStorybookVersion
+    ),
     configureTsLibConfig(schema),
     configureTsSolutionConfig(schema),
     updateLintTask(schema),
     addStorybookTask(schema.name, schema.uiFramework),
     schema.configureCypress
       ? schematic<CypressConfigureSchema>('cypress-project', {
-        name: schema.name,
-        js: schema.js,
-        linter: schema.linter,
-      })
-      : () => { },
+          name: schema.name,
+          js: schema.js,
+          linter: schema.linter,
+        })
+      : () => {},
   ]);
 }
 
@@ -91,9 +100,15 @@ function normalizeSchema(schema: StorybookConfigureSchema) {
   };
 }
 
-function createRootStorybookDir(projectName: string, js: boolean, workspaceStorybookVersion: string): Rule {
+function createRootStorybookDir(
+  projectName: string,
+  js: boolean,
+  workspaceStorybookVersion: string
+): Rule {
   return (tree: Tree, context: SchematicContext) => {
-    context.logger.debug(`adding .storybook folder to root - using Storybook version ${workspaceStorybookVersion}`);
+    context.logger.debug(
+      `adding .storybook folder to root - using Storybook version ${workspaceStorybookVersion}`
+    );
 
     /**
      * Notes about versions of Storybook:
@@ -102,7 +117,7 @@ function createRootStorybookDir(projectName: string, js: boolean, workspaceStory
      * a storybook version 5 or version 6
      * (or just look at which version we have installed, I guess)
      * (so, is there a way to "get storybook version"?)
-     * 
+     *
      * --------> readPackageJson
      *
      * And have two folders, root-files-5 and root-files-6
@@ -148,10 +163,15 @@ function createRootStorybookDir(projectName: string, js: boolean, workspaceStory
      * separate .html file in each one of the .storybook directories in the app, if it needs to be used
      */
 
-
-
     return chain([
-      applyWithSkipExisting(url(workspaceStorybookVersion.startsWith('6') ? './root-files' : './root-files-5'), [js ? toJS() : noop()]),
+      applyWithSkipExisting(
+        url(
+          workspaceStorybookVersion.startsWith('6')
+            ? './root-files'
+            : './root-files-5'
+        ),
+        [js ? toJS() : noop()]
+      ),
     ])(tree, context);
   };
 }
@@ -170,18 +190,27 @@ function createLibStorybookDir(
      * lib-files-5 or lib-files-6
      */
 
-    context.logger.debug(`adding .storybook folder to lib - using Storybook version ${workspaceStorybookVersion}`);
+    context.logger.debug(
+      `adding .storybook folder to lib - using Storybook version ${workspaceStorybookVersion}`
+    );
     const projectConfig = getProjectConfig(tree, projectName);
     return chain([
-      applyWithSkipExisting(url(workspaceStorybookVersion.startsWith('6') ? './lib-files' : './lib-files-5'), [
-        template({
-          tmpl: '',
-          uiFramework,
-          offsetFromRoot: offsetFromRoot(projectConfig.root),
-        }),
-        move(projectConfig.root),
-        js ? toJS() : noop(),
-      ]),
+      applyWithSkipExisting(
+        url(
+          workspaceStorybookVersion.startsWith('6')
+            ? './lib-files'
+            : './lib-files-5'
+        ),
+        [
+          template({
+            tmpl: '',
+            uiFramework,
+            offsetFromRoot: offsetFromRoot(projectConfig.root),
+          }),
+          move(projectConfig.root),
+          js ? toJS() : noop(),
+        ]
+      ),
     ])(tree, context);
   };
 }

@@ -82,7 +82,7 @@ export const addCacheableOperation = updateJsonInTree('nx.json', (nxJson) => {
     !nxJson.tasksRunnerOptions ||
     !nxJson.tasksRunnerOptions.default ||
     nxJson.tasksRunnerOptions.default.runner !==
-    '@nrwl/workspace/tasks-runners/default'
+      '@nrwl/workspace/tasks-runners/default'
   ) {
     return nxJson;
   }
