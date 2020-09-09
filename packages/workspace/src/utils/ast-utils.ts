@@ -405,7 +405,13 @@ export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
   const workspaceJson = readJsonInTree(host, getWorkspacePath(host));
   const nxJson = readJsonInTree<NxJson>(host, '/nx.json');
 
-  const fileRead = (f: string) => host.read(f).toString();
+  const fileRead = (f: string) => {
+    try {
+      return host.read(f).toString();
+    } catch (e) {
+      throw new Error(`${f} does not exist`);
+    }
+  };
 
   const workspaceFiles: FileData[] = [];
 

@@ -1,15 +1,29 @@
 import { resolveModuleByImport } from '../utils/typescript';
-import { normalizedProjectRoot } from './file-utils';
+import { defaultFileRead, normalizedProjectRoot } from './file-utils';
 import { ProjectGraphNodeRecords } from './project-graph/project-graph-models';
 import { getSortedProjectNodes, isWorkspaceProject } from './project-graph';
+import { isRelativePath, parseJsonWithComments } from '../utils/fileutils';
+import { dirname, join } from 'path';
 
 export class TargetProjectLocator {
-  _sortedNodeNames = [];
+  private sortedWorkspaceProjects = [];
+  private paths = parseJsonWithComments(this.fileRead(`./tsconfig.base.json`))
+    ?.compilerOptions?.paths;
+  private cache = new Map<string, string>();
 
-  constructor(private nodes: ProjectGraphNodeRecords) {
-    this._sortedNodeNames = getSortedProjectNodes(nodes).map(
-      ({ name }) => name
-    );
+  constructor(
+    private nodes: ProjectGraphNodeRecords,
+    private fileRead: (path: string) => string = defaultFileRead
+  ) {
+    this.sortedWorkspaceProjects = getSortedProjectNodes(nodes)
+      .filter((node) => isWorkspaceProject(node))
+      .map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          normalizedRoot: normalizedProjectRoot(node),
+        },
+      }));
   }
 
   /**
@@ -27,28 +41,45 @@ export class TargetProjectLocator {
     importExpr: string,
     filePath: string,
     npmScope: string
-  ) {
+  ): string {
     const normalizedImportExpr = importExpr.split('#')[0];
 
-    const resolvedModule = resolveModuleByImport(
-      normalizedImportExpr,
-      filePath
-    );
+    if (isRelativePath(normalizedImportExpr)) {
+      const resolvedModule = join(dirname(filePath), normalizedImportExpr);
+      return this.findProjectOfResolvedModule(resolvedModule);
+    }
 
-    return this._sortedNodeNames.find((projectName) => {
-      const p = this.nodes[projectName];
-
-      if (!isWorkspaceProject(p)) {
-        return false;
+    if (this.paths && this.paths[normalizedImportExpr]) {
+      for (let p of this.paths[normalizedImportExpr]) {
+        const maybeResolvedProject = this.findProjectOfResolvedModule(p);
+        if (maybeResolvedProject) {
+          return maybeResolvedProject;
+        }
       }
+    }
 
-      if (resolvedModule && resolvedModule.startsWith(p.data.root)) {
-        return true;
-      } else {
-        const normalizedRoot = normalizedProjectRoot(p);
-        const projectImport = `@${npmScope}/${normalizedRoot}`;
-        return normalizedImportExpr.startsWith(projectImport);
-      }
+    const resolvedModule = this.cache.has(normalizedImportExpr)
+      ? this.cache.get(normalizedImportExpr)
+      : resolveModuleByImport(normalizedImportExpr, filePath);
+
+    this.cache.set(normalizedImportExpr, resolvedModule);
+    if (resolvedModule) {
+      return this.findProjectOfResolvedModule(resolvedModule);
+    }
+
+    const importedProject = this.sortedWorkspaceProjects.find((p) => {
+      const projectImport = `@${npmScope}/${p.data.normalizedRoot}`;
+      return normalizedImportExpr.startsWith(projectImport);
     });
+
+    return importedProject?.name;
+  }
+
+  private findProjectOfResolvedModule(resolvedModule: string) {
+    const importedProject = this.sortedWorkspaceProjects.find((p) => {
+      return resolvedModule.startsWith(p.data.root);
+    });
+
+    return importedProject?.name;
   }
 }
