@@ -37,7 +37,7 @@ Array [
   "/libs/test-ui-lib/.storybook/preview.js",
   "/libs/test-ui-lib/.storybook/tsconfig.json",
   "/libs/test-ui-lib/.storybook/webpack.config.js",
-  "/.storybook/addons.js",
+  "/.storybook/main.js",
   "/.storybook/tsconfig.json",
   "/.storybook/webpack.config.js",
   "/apps/test-ui-lib-e2e/tslint.json",
