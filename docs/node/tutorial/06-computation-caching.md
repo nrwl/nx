@@ -1,6 +1,6 @@
 # Step 6: Computation Caching
 
-Nx has built-in computation caching, which helps drastically improve the performance of the commands.
+Nx has built-in computation caching, which drastically improves the performance of the commands.
 
 **To see it in action, run `nx build todos`:**
 

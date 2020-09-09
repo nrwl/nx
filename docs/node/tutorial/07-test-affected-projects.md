@@ -1,6 +1,6 @@
 # Step 7: Test Affected Projects
 
-In addition to supporting computation caching, Nx can scale your development by doing code change analysis to see what can affected by a particular pull request.
+In addition to supporting computation caching, Nx can scale your development by doing code change analysis to see what apps or libraries are affected by a particular pull request.
 
 **Commit all the changes in the repo**:
 
@@ -33,7 +33,7 @@ export class AuthController {
 }
 ```
 
-**Run `nx affected:apps`**, and you should see `todos` printed out. The `affected:apps` looks at what you have changed and uses the dependency graph to figure out which apps can be affected by this change.
+**Run `nx affected:apps`**, and you should see `todos` printed out. The `affected:apps` looks at what you have changed and uses the dependency graph to figure out which apps are affected by this change.
 
 **Run `nx affected:libs`**, and you should see `auth` printed out. This command works similarly, but instead of printing the affected apps, it prints the affected libs.
 
@@ -58,7 +58,7 @@ As you can see, since we updated the code, without updating the tests, the unit 
   - todos
 ```
 
-Note that Nx only tried to retest `ui` and `todos`. It didn't retest `data` because there is no way that could be affected by the changes in this branch.
+Note that Nx only tried to retest `ui` and `todos`. It didn't retest `data` because there is no way that library could be affected by the changes in this branch.
 
 ## Affected:\*
 

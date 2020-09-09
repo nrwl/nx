@@ -2,11 +2,11 @@
 
 Great! We now have a server application set up to show some data when going to the `/api` route.
 
-Next, we're going to add a new service, and set up some service side templates.
+Next, we're going to add a new service, and set up some server side templates.
 
 ## Creating a todos service
 
-With Nx, we have the capabilties to scaffold out new code for our application. Let's goo and create a Todos service and populate some todos!
+With Nx, we have the ability to scaffold out new code for our application. Let's create a Todos service and populate some todos!
 
 **Run `nx generate @nrwl/nest:service todo --project todos --directory app` to generate our new service**
 
@@ -17,7 +17,7 @@ CREATE apps/todos/src/app/todo/todo.service.ts (89 bytes)
 UPDATE apps/todos/src/app/app.module.ts (318 bytes)
 ```
 
-> Creating services are not the only thing that the `@nrwl/nest` plugin could create. Run `nx list @nrwl/nest` to see other capabilties that the plugin provides.
+> Services are not the only things that the `@nrwl/nest` plugin can create. Run `nx list @nrwl/nest` to see other capabilities that the plugin provides.
 
 Open the newly created file in `apps/todos/src/app/todo/todo.service.ts` and paste the following code:
 
@@ -89,7 +89,7 @@ We added configuration for setting up the view engine, and removed the `globalPr
 
 ## Template rendering
 
-Under the `assets` directory of the todo's project, we'll create a `views` directory with a `index.hbs` file inside with the following content:
+Under the `assets` directory of the todo's project, we'll create a `views` directory with an `index.hbs` file inside with the following content:
 
 ```handlebars
 <!DOCTYPE html>
@@ -142,7 +142,7 @@ export class AppController {
 We changed the `@Get` decorator for the `getData` function to point to the `api` route. We also changed this to call the `todosService.getTodos()` method. \
 Then we added the `root` function which renders the `index` file from our `views` directory.
 
-> The serve process should be running still, and if not, restart the process with `nx serve todos`
+> The serve process should still be running.  If it isn't, restart the process with `nx serve todos`
 
 !!!!!
 Open http://localhost:3333 in the browser. What do you see?

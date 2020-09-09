@@ -1,8 +1,8 @@
 # Step 3: Share Code
 
-Awesome! The application is working like we expect!
+Awesome! The application is working as expected!
 
-Next, let's work on refactoring a bit. What we're planning to do is move the `Todo` type to it's own library. This would be important if we want to share the type between multiple applications, without having to duplicate the same type everywhere.
+Next, let's work on refactoring a bit. What we're planning to do is move the `Todo` type to it's own library. This is important if we want to share the type between multiple applications, without having to duplicate the same type everywhere.
 
 **Run the following generator to create a library:**
 
@@ -43,7 +43,9 @@ export type Todo = {
 
 ### A note about VS Code :
 
-If you're using [VS Code](https://code.visualstudio.com/) it may be necessary at this point to restart the TS server so that the new `@myorg/data` package is recognised. This may need to be done **every time a new workspace library is added**.
+If you're using [VS Code](https://code.visualstudio.com/) it may be necessary at this point to restart the TS server so that the new `@myorg/data` package is recognised. This needs to be done **every time a new workspace library is added**.
+
+Use the command pallette with a `*.ts` file open and choose `Restart TS Server`.
 
 ## Refactor the Todos Service
 
