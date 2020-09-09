@@ -36,6 +36,14 @@ nx g lib mylib --directory=myapp
 
 ## Options
 
+### babelJest
+
+Default: `false`
+
+Type: `boolean`
+
+Use babel instead ts-jest
+
 ### directory
 
 Type: `string`

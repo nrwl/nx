@@ -12,4 +12,5 @@ export interface Schema {
   testEnvironment: 'jsdom' | 'node';
   importPath?: string;
   js?: boolean;
+  babelJest?: boolean;
 }

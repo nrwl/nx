@@ -192,3 +192,22 @@ class TodoEffects {
   constructor(private action$: Actions, private backend: Backend) {}
 }
 ```
+
+The StoreRouterConnectingModule must be configured with an appropriate serializer. The `DefaultRouterStateSerializer` provides the full router state instead of the `MinimalRouterStateSerializer` that is used without configuration.
+
+```typescript
+import { NgModule } from '@angular/core';
+import {
+  StoreRouterConnectingModule,
+  DefaultRouterStateSerializer,
+} from '@ngrx/router-store';
+
+@NgModule({
+  imports: [
+    StoreRouterConnectingModule.forRoot({
+      serializer: DefaultRouterStateSerializer,
+    }),
+  ],
+})
+export class TodosModule {}
+```

@@ -70,6 +70,7 @@ export default function compileTypeScriptFiles(
 
   const tsconfig = readTsConfig(tsConfigPath);
   tsconfig.options.outDir = options.normalizedOutputPath;
+
   if (options.srcRootForCompilationRoot) {
     tsconfig.options.rootDir = options.srcRootForCompilationRoot;
   } else {

@@ -4,6 +4,8 @@ import * as stripJsonComments from 'strip-json-comments';
 import { readJsonInTree, NxJson } from '@nrwl/workspace';
 import { runSchematic } from '../../utils/testing';
 
+import { Schema } from './schema';
+
 describe('app', () => {
   let appTree: Tree;
 
@@ -158,20 +160,20 @@ describe('app', () => {
         },
       ].forEach(hasJsonValue);
     });
-  });
 
-  it('should create Nx specific template', async () => {
-    const tree = await runSchematic(
-      'app',
-      { name: 'myApp', directory: 'myDir' },
-      appTree
-    );
-    expect(
-      tree.readContent('apps/my-dir/my-app/src/app/app.element.ts')
-    ).toBeTruthy();
-    expect(
-      tree.readContent('apps/my-dir/my-app/src/app/app.element.ts')
-    ).toContain('Thank you for using and showing some ♥ for Nx.');
+    it('should create Nx specific template', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', directory: 'myDir' },
+        appTree
+      );
+      expect(
+        tree.readContent('apps/my-dir/my-app/src/app/app.element.ts')
+      ).toBeTruthy();
+      expect(
+        tree.readContent('apps/my-dir/my-app/src/app/app.element.ts')
+      ).toContain('Thank you for using and showing some ♥ for Nx.');
+    });
   });
 
   describe('--style scss', () => {
@@ -331,6 +333,51 @@ describe('app', () => {
       expect(tree.exists('apps/my-app-e2e')).toBeFalsy();
       const workspaceJson = readJsonInTree(tree, 'workspace.json');
       expect(workspaceJson.projects['my-app-e2e']).toBeUndefined();
+    });
+  });
+
+  describe('--babelJest', () => {
+    it('should use babel for jest', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', babelJest: true } as Schema,
+        appTree
+      );
+
+      expect(tree.readContent(`apps/my-app/jest.config.js`))
+        .toMatchInlineSnapshot(`
+        "module.exports = {
+          name: 'my-app',
+          preset: '../../jest.config.js',
+          setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+          transform: {
+            '^.+\\\\\\\\.[tj]s$': [
+              'babel-jest',
+              { cwd: __dirname, configFile: './babel-jest.config.json' },
+            ],
+          },
+          moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: '../../coverage/apps/my-app',
+        };
+        "
+      `);
+
+      expect(readJsonInTree(tree, 'apps/my-app/babel-jest.config.json'))
+        .toMatchInlineSnapshot(`
+        Object {
+          "presets": Array [
+            Array [
+              "@babel/preset-env",
+              Object {
+                "targets": Object {
+                  "node": "current",
+                },
+              },
+            ],
+            "@babel/preset-typescript",
+          ],
+        }
+      `);
     });
   });
 });

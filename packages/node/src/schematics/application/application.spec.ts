@@ -5,6 +5,8 @@ import { runSchematic } from '../../utils/testing';
 import { NxJson, readJsonInTree } from '@nrwl/workspace';
 import { createApp } from '../../../../angular/src/utils/testing';
 
+import { Schema } from './schema';
+
 describe('app', () => {
   let appTree: Tree;
 
@@ -228,7 +230,7 @@ describe('app', () => {
     });
   });
 
-  describe('frontendProject', () => {
+  describe('--frontendProject', () => {
     it('should configure proxy', async () => {
       appTree = createApp(appTree, 'my-frontend');
 
@@ -263,6 +265,48 @@ describe('app', () => {
       expect(serve.options.proxyConfig).toEqual(
         'apps/my-frontend/proxy.conf.json'
       );
+    });
+  });
+
+  describe('--babelJest', () => {
+    it('should use babel for jest', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myNodeApp', tags: 'one,two', babelJest: true } as Schema,
+        appTree
+      );
+
+      expect(tree.readContent(`apps/my-node-app/jest.config.js`))
+        .toMatchInlineSnapshot(`
+        "module.exports = {
+          name: 'my-node-app',
+          preset: '../../jest.config.js',
+          transform: {
+            '^.+\\\\\\\\.[tj]s$': [ 'babel-jest',
+            { cwd: __dirname, configFile: './babel-jest.config.json' }]
+          },
+            moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: '../../coverage/apps/my-node-app'
+        };
+        "
+      `);
+
+      expect(readJsonInTree(tree, 'apps/my-node-app/babel-jest.config.json'))
+        .toMatchInlineSnapshot(`
+        Object {
+          "presets": Array [
+            Array [
+              "@babel/preset-env",
+              Object {
+                "targets": Object {
+                  "node": "current",
+                },
+              },
+            ],
+            "@babel/preset-typescript",
+          ],
+        }
+      `);
     });
   });
 });
