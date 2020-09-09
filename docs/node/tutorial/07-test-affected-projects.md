@@ -58,7 +58,7 @@ As you can see, since we updated the code, without updating the tests, the unit 
   - todos
 ```
 
-Note that Nx only tried to retest `ui` and `todos`. It didn't retest `data` because there is no way that library could be affected by the changes in this branch.
+Note that Nx only tried to retest `auth` and `todos`. It didn't retest `data` because there is no way that library could be affected by the changes in this branch.
 
 ## Affected:\*
 
