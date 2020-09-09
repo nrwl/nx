@@ -146,33 +146,101 @@ export function findProjectUsingImport(
   return projectGraph.nodes[target];
 }
 
-export function isCircular(
+export function checkCircularPath(
   graph: ProjectGraph,
   sourceProject: ProjectGraphNode,
   targetProject: ProjectGraphNode
-): boolean {
-  if (!graph.nodes[targetProject.name]) return false;
-  return isDependingOn(graph, targetProject.name, sourceProject.name);
+): Array<any> {
+  if (!graph.nodes[targetProject.name]) return [];
+  return getPath(graph, targetProject.name, sourceProject.name);
 }
 
-function isDependingOn(
-  graph: ProjectGraph,
-  sourceProjectName: string,
-  targetProjectName: string,
-  done: { [projectName: string]: boolean } = {}
-): boolean {
-  if (done[sourceProjectName]) return false;
-  if (!graph.dependencies[sourceProjectName]) return false;
-  return graph.dependencies[sourceProjectName]
-    .map((dep) =>
-      dep.target === targetProjectName
-        ? true
-        : isDependingOn(graph, dep.target, targetProjectName, {
-            ...done,
-            [`${sourceProjectName}`]: true,
-          })
-    )
-    .some((result) => result);
+let reach = {
+  graph: null,
+  matrix: null,
+  adjList: null
+};
+
+function buildMatrix(graph) {
+  const dependencies = graph.dependencies;
+  const nodes = Object.keys(graph.nodes).filter(s => !s.includes('npm:'));
+  const adjList = new Array(nodes.length);
+  const matrix = {};
+
+  const initMatrixValues = nodes.reduce((acc, value) => {
+    return {
+      ...acc,
+      [value]: 0
+    };
+  }, {});
+
+  for (let i = 0; i < nodes.length; i++) {
+    adjList[nodes[i]] = [];
+    matrix[nodes[i]] = { ...initMatrixValues };
+  }
+
+  for (let proj in dependencies) {
+    for (let dep of dependencies[proj]) {
+      adjList[proj].push(dep.target);
+    }
+  }
+
+  const traverse = (s, v) => {
+    matrix[s][v] = 1;
+
+    for (let adj of adjList[v]) {
+      if (matrix[s][adj] === 0) {
+        traverse(s, adj);
+      }
+    }
+  };
+
+  for (let i = 0; i < nodes.length; i++) {
+    traverse(nodes[i], nodes[i]);
+  }
+
+  return {
+    matrix,
+    adjList
+  };
+}
+
+function getPath(graph, sourceProjectName, targetProjectName) {
+  if (sourceProjectName === targetProjectName) return [];
+
+  if (reach.graph !== graph) {
+    const result = buildMatrix(graph);
+    reach.graph = graph;
+    reach.matrix = result.matrix;
+    reach.adjList = result.adjList;
+  }
+
+  const adjList = reach.adjList;
+
+  let path = [];
+  let visited = [sourceProjectName];
+  let queue = [[sourceProjectName, path]];
+
+  while (queue.length > 0) {
+    const [current, p] = queue.pop();
+    path = [...p, current];
+
+    if (current === targetProjectName) break;
+
+    adjList[current]
+      .filter(adj => visited.indexOf(adj) === -1)
+      .filter(adj => reach.matrix[adj][targetProjectName] === 1)
+      .forEach(adj => {
+        visited.push(adj);
+        queue.push([adj, [...path]]);
+      });
+  }
+
+  if (path.length === 1) {
+    return [];
+  }
+
+  return path;
 }
 
 export function findConstraintsFor(

@@ -16,7 +16,7 @@ import {
   hasArchitectBuildBuilder,
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
-  isCircular,
+  checkCircularPath,
   isRelativeImportIntoAnotherProject,
   matchImportWithWildcard,
   onlyLoadChildren,
@@ -161,8 +161,10 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     }
 
     // check for circular dependency
-    if (isCircular(this.projectGraph, sourceProject, targetProject)) {
-      const error = `Circular dependency between "${sourceProject.name}" and "${targetProject.name}" detected`;
+    const circularPath = checkCircularPath(this.projectGraph, sourceProject, targetProject);
+    if (circularPath.length !== 0) {
+      const path = circularPath.reduce((acc, v) => `${acc}->${v}`, '');
+      const error = `Circular dependency between "${sourceProject.name}" and "${targetProject.name}" detected. The path is: ${path}`;
       this.addFailureAt(node.getStart(), node.getWidth(), error);
       return;
     }

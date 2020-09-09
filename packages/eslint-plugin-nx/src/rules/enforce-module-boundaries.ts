@@ -8,7 +8,7 @@ import {
   hasArchitectBuildBuilder,
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
-  isCircular,
+  checkCircularPath,
   isRelativeImportIntoAnotherProject,
   matchImportWithWildcard,
   onlyLoadChildren,
@@ -76,7 +76,7 @@ export default createESLintRule<Options, MessageIds>({
     ],
     messages: {
       noRelativeOrAbsoluteImportsAcrossLibraries: `Libraries cannot be imported by a relative or absolute path, and must begin with a npm scope`,
-      noCircularDependencies: `Circular dependency between "{{sourceProjectName}}" and "{{targetProjectName}}" detected`,
+      noCircularDependencies: `Circular dependency between "{{sourceProjectName}}" and "{{targetProjectName}}" detected. The path is: "{{path}}"`,
       noImportsOfApps: 'Imports of apps are forbidden',
       noImportOfNonBuildableLibraries:
         'Buildable libraries cannot import non-buildable libraries',
@@ -169,14 +169,16 @@ export default createESLintRule<Options, MessageIds>({
 
         // check constraints between libs and apps
         // check for circular dependency
-        if (isCircular(projectGraph, sourceProject, targetProject)) {
+        const circularPath = checkCircularPath(projectGraph, sourceProject, targetProject);
+        if (circularPath.length !== 0) {
           context.report({
             node,
             messageId: 'noCircularDependencies',
             data: {
               sourceProjectName: sourceProject.name,
               targetProjectName: targetProject.name,
-            },
+              path: circularPath.reduce((acc, v) => `${acc}->${v}`, '')
+            }
           });
           return;
         }
