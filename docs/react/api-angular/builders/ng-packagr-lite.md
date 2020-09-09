@@ -1,21 +1,11 @@
-# package
+# ng-packagr-lite
 
-Build and package an Angular library for publishing
+Build an Angular library for incremental building
 
 Builder properties can be configured in workspace.json when defining the builder, or when invoking it.
 Read more about how to use builders and the CLI here: https://nx.dev/react/guides/cli.
 
 ## Properties
-
-### buildableProjectDepsInPackageJsonType
-
-Default: `peerDependencies`
-
-Type: `string`
-
-Possible values: `dependencies`, `peerDependencies`
-
-When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`
 
 ### project
 
