@@ -3,6 +3,7 @@ import * as path from 'path';
 import { FileData } from '../core/file-utils';
 import {
   DependencyType,
+  isWorkspaceProject,
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
@@ -146,33 +147,115 @@ export function findProjectUsingImport(
   return projectGraph.nodes[target];
 }
 
-export function isCircular(
+export function checkCircularPath(
   graph: ProjectGraph,
   sourceProject: ProjectGraphNode,
   targetProject: ProjectGraphNode
-): boolean {
-  if (!graph.nodes[targetProject.name]) return false;
-  return isDependingOn(graph, targetProject.name, sourceProject.name);
+): Array<ProjectGraphNode> {
+  if (!graph.nodes[targetProject.name]) return [];
+  return getPath(graph, targetProject.name, sourceProject.name);
 }
 
-function isDependingOn(
+interface Reach {
+  graph: ProjectGraph;
+  matrix: Record<string, Array<string>>;
+  adjList: Record<string, Array<string>>;
+}
+
+const reach: Reach = {
+  graph: null,
+  matrix: null,
+  adjList: null,
+};
+
+function buildMatrix(graph: ProjectGraph) {
+  const dependencies = graph.dependencies;
+  const nodes = Object.keys(graph.nodes).filter((s) =>
+    isWorkspaceProject(graph.nodes[s])
+  );
+  const adjList = {};
+  const matrix = {};
+
+  const initMatrixValues = nodes.reduce((acc, value) => {
+    return {
+      ...acc,
+      [value]: false,
+    };
+  }, {});
+
+  nodes.forEach((v, i) => {
+    adjList[nodes[i]] = [];
+    matrix[nodes[i]] = { ...initMatrixValues };
+  });
+
+  for (let proj in dependencies) {
+    for (let dep of dependencies[proj]) {
+      if (isWorkspaceProject(graph.nodes[dep.target])) {
+        adjList[proj].push(dep.target);
+      }
+    }
+  }
+
+  const traverse = (s, v) => {
+    matrix[s][v] = true;
+
+    for (let adj of adjList[v]) {
+      if (matrix[s][adj] === false) {
+        traverse(s, adj);
+      }
+    }
+  };
+
+  nodes.forEach((v, i) => {
+    traverse(nodes[i], nodes[i]);
+  });
+
+  return {
+    matrix,
+    adjList,
+  };
+}
+
+function getPath(
   graph: ProjectGraph,
   sourceProjectName: string,
-  targetProjectName: string,
-  done: { [projectName: string]: boolean } = {}
-): boolean {
-  if (done[sourceProjectName]) return false;
-  if (!graph.dependencies[sourceProjectName]) return false;
-  return graph.dependencies[sourceProjectName]
-    .map((dep) =>
-      dep.target === targetProjectName
-        ? true
-        : isDependingOn(graph, dep.target, targetProjectName, {
-            ...done,
-            [`${sourceProjectName}`]: true,
-          })
-    )
-    .some((result) => result);
+  targetProjectName: string
+): Array<ProjectGraphNode> {
+  if (sourceProjectName === targetProjectName) return [];
+
+  if (reach.graph !== graph) {
+    const result = buildMatrix(graph);
+    reach.graph = graph;
+    reach.matrix = result.matrix;
+    reach.adjList = result.adjList;
+  }
+
+  const adjList = reach.adjList;
+
+  let path: string[] = [];
+  const queue: Array<[string, string[]]> = [[sourceProjectName, path]];
+  const visited: string[] = [sourceProjectName];
+
+  while (queue.length > 0) {
+    const [current, p] = queue.pop();
+    path = [...p, current];
+
+    if (current === targetProjectName) break;
+
+    adjList[current]
+      .filter((adj) => visited.indexOf(adj) === -1)
+      .filter((adj) => reach.matrix[adj][targetProjectName])
+      .forEach((adj) => {
+        visited.push(adj);
+        queue.push([adj, [...path]]);
+      });
+  }
+
+  if (path.length > 1) {
+    return path.map((n) => graph.nodes[n]);
+  } else {
+    return [];
+  }
 }
 
 export function findConstraintsFor(
