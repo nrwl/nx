@@ -5,7 +5,7 @@
 module.exports = function (api: any, options: {}) {
   api.assertVersion(7);
 
-  const isModern = api.caller((caller) => caller.isModern);
+  const isModern = api.caller((caller) => caller?.isModern);
 
   return {
     presets: [
