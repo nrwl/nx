@@ -1,3 +1,5 @@
+@import '~tippy.js/dist/tippy.css';
+
 :root {
   --color-nrwl-blue: #48c4e5;
   --color-nrwl-light-blue: #96d8e9;
@@ -221,7 +223,7 @@ g.affected ellipse {
   color: var(--color-nrwl-twilight);
 }
 
-.tippy-tooltip {
+.tippy-box {
   background-color: var(--color-nrwl-twilight);
 }
 

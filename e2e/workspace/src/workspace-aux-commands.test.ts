@@ -546,9 +546,10 @@ forEachCli((cli) => {
       runCommand(`npm run dep-graph -- --file=project-graph.html`);
 
       expect(() => checkFilesExist('project-graph.html')).not.toThrow();
-      expect(() => checkFilesExist('static/dep-graph.css')).not.toThrow();
-      expect(() => checkFilesExist('static/dep-graph.js')).not.toThrow();
-      expect(() => checkFilesExist('static/vendor.js')).not.toThrow();
+      expect(() => checkFilesExist('static/styles.css')).not.toThrow();
+      expect(() => checkFilesExist('static/runtime.js')).not.toThrow();
+      expect(() => checkFilesExist('static/polyfills.esm.js')).not.toThrow();
+      expect(() => checkFilesExist('static/main.esm.js')).not.toThrow();
     });
   });
 

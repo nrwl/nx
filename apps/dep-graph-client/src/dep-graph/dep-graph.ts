@@ -1,3 +1,7 @@
+import { default as tippy, hideAll } from 'tippy.js';
+import { select, curveBasis, zoom, zoomIdentity } from 'd3';
+import * as dagreD3 from 'dagre-d3';
+
 function getProjectsByType(type) {
   return window.projects.filter((project) => project.type === type);
 }
@@ -57,7 +61,7 @@ function createProjectList(headerText, projects) {
     focusButton.append(buttonIconContainer);
 
     focusButton.onclick = () => {
-      window.focusProject(project.name);
+      focusProject(project.name);
     };
 
     let label = document.createElement('label');
@@ -125,28 +129,6 @@ function addProjectCheckboxes() {
   }
 }
 
-function autoExclude() {
-  const dependencyCounts = {};
-
-  window.projects.forEach((p) => {
-    dependencyCounts[p.name] = 0;
-  });
-
-  Object.keys(graph.dependencies).forEach((p) => {
-    graph.dependencies[p].forEach((d) => {
-      dependencyCounts[d.target]++;
-    });
-  });
-
-  Object.keys(dependencyCounts)
-    .filter((d) => dependencyCounts[d] > 5 || dependencyCounts[d] === 0)
-    .forEach((d) => {
-      document.querySelector(
-        `input[name=projectName][value=${d}]`
-      ).checked = false;
-    });
-}
-
 function hasPath(target, node, visited) {
   if (target === node) return true;
 
@@ -158,7 +140,7 @@ function hasPath(target, node, visited) {
   return false;
 }
 
-function getProjectCheckboxes() {
+function getProjectCheckboxes(): HTMLInputElement[] {
   return Array.from(document.querySelectorAll('input[name=projectName]'));
 }
 
@@ -175,7 +157,7 @@ function checkForAffected() {
   }
 }
 
-window.selectAffectedProjects = () => {
+function selectAffectedProjects() {
   window.focusedProject = null;
   document.getElementById('focused-project').hidden = true;
   document.getElementById('focused-project-name').innerText = '';
@@ -185,9 +167,11 @@ window.selectAffectedProjects = () => {
   });
 
   window.filterProjects();
-};
+}
 
-window.selectAllProjects = () => {
+window.selectAffectedProjects = selectAffectedProjects;
+
+function selectAllProjects() {
   window.focusedProject = null;
   document.getElementById('focused-project').hidden = true;
   document.getElementById('focused-project-name').innerText = '';
@@ -197,9 +181,11 @@ window.selectAllProjects = () => {
   });
 
   window.filterProjects();
-};
+}
 
-window.deselectAllProjects = () => {
+window.selectAllProjects = selectAllProjects;
+
+function deselectAllProjects() {
   window.focusedProject = null;
   document.getElementById('focused-project').hidden = true;
   document.getElementById('focused-project-name').innerText = '';
@@ -209,7 +195,9 @@ window.deselectAllProjects = () => {
   });
 
   window.filterProjects();
-};
+}
+
+window.deselectAllProjects = deselectAllProjects;
 
 function createDirectoryParents(g, directories) {
   let childDirectory = directories.join('/');
@@ -238,12 +226,12 @@ function createDirectoryParents(g, directories) {
 }
 
 function generateLayout() {
-  const g = new window.dagreD3.graphlib.Graph({
+  const g = new dagreD3.graphlib.Graph({
     compound: true,
     orderRestarts: 10,
   });
 
-  const groupByFolder = document.querySelector(
+  const groupByFolder = document.querySelector<HTMLInputElement>(
     'input[name=displayOptions][value=groupByFolder]'
   ).checked;
 
@@ -290,9 +278,9 @@ function generateLayout() {
     }
   });
 
-  Object.keys(graph.dependencies).forEach((p) => {
+  Object.keys(window.graph.dependencies).forEach((p) => {
     const filteredProjectNames = window.filteredProjects.map((f) => f.name);
-    graph.dependencies[p].forEach((d) => {
+    window.graph.dependencies[p].forEach((d) => {
       if (
         filteredProjectNames.indexOf(p) > -1 &&
         filteredProjectNames.indexOf(d.target) > -1
@@ -311,7 +299,7 @@ function generateLayout() {
         g.setEdge(p, d.target, {
           label: label,
           class: clazz,
-          curve: window.d3.curveBasis,
+          curve: curveBasis,
         });
       }
     });
@@ -336,7 +324,7 @@ function createRenderer() {
       .attr('filter', `url(#${filter})`);
 
     node.intersect = function (point) {
-      return window.dagreD3.intersect.rect(node, point);
+      return dagreD3.intersect.rect(node, point);
     };
 
     return shapeSvg;
@@ -358,7 +346,7 @@ function createRenderer() {
       .attr('filter', `url(#${filter})`);
 
     node.intersect = function (point) {
-      return window.dagreD3.intersect.ellipse(node, rx, ry, point);
+      return dagreD3.intersect.ellipse(node, rx, ry, point);
     };
 
     return shapeSvg;
@@ -368,21 +356,21 @@ function createRenderer() {
 }
 
 function render() {
-  tippy.hideAll();
+  hideAll();
 
   const g = generateLayout();
   const render = createRenderer();
 
   // Set up an SVG group so that we can translate the final graph.
-  var svg = d3.select('#svg-canvas');
+  var svg = select('#svg-canvas');
   svg.select('g').remove();
   let inner = svg.append('g');
 
   // Set up zoom support
-  var zoom = d3.zoom().on('zoom', function () {
-    inner.attr('transform', d3.event.transform);
+  var z = zoom().on('zoom', function (event: any) {
+    inner.attr('transform', event.transform);
   });
-  svg.call(zoom);
+  svg.call(z);
 
   // Run the renderer. This is what draws the final graph.
   setTimeout(() => {
@@ -394,9 +382,12 @@ function render() {
     const mainContent = document.getElementById('main-content');
 
     svg.call(
-      zoom.transform,
-      d3.zoomIdentity
-        .translate((svg.attr('width') - g.graph().width * initialScale) / 2, 20)
+      z.transform as any,
+      zoomIdentity
+        .translate(
+          (+svg.attr('width') - g.graph().width * initialScale) / 2,
+          20
+        )
         .scale(initialScale)
     );
 
@@ -425,6 +416,7 @@ function addTooltips(inner) {
     const project = window.projects.find((p) => p.name === id);
     tippy(this, {
       content: createTipTemplate(project),
+      allowHTML: true,
       interactive: true,
       appendTo: document.body,
       interactiveBorder: 10,
@@ -433,54 +425,60 @@ function addTooltips(inner) {
   });
 }
 
-window.focusProject = (id, doFilter = true) => {
+function focusProject(id, doFilter = true) {
   window.focusedProject = id;
 
   document.getElementById('focused-project').hidden = false;
   document.getElementById('focused-project-name').innerText = id;
 
-  Array.from(document.querySelectorAll('input[name=projectName]')).forEach(
-    (checkbox) => {
-      const showProject =
-        hasPath(id, checkbox.value, []) || hasPath(checkbox.value, id, []);
-      checkbox.checked = showProject;
-      checkbox.parentElement.hidden = !showProject;
-    }
-  );
+  Array.from(
+    document.querySelectorAll<HTMLInputElement>('input[name=projectName]')
+  ).forEach((checkbox) => {
+    const showProject =
+      hasPath(id, checkbox.value, []) || hasPath(checkbox.value, id, []);
+    checkbox.checked = showProject;
+    checkbox.parentElement.hidden = !showProject;
+  });
 
   if (doFilter) {
     window.filterProjects();
   }
-};
+}
 
-window.unfocusProject = () => {
+window.focusProject = focusProject;
+
+function unfocusProject() {
   window.focusedProject = null;
   document.getElementById('focused-project').hidden = true;
   document.getElementById('focused-project-name').innerText = '';
 
-  Array.from(document.querySelectorAll('input[name=projectName]')).forEach(
-    (checkbox) => {
-      checkbox.checked = false;
-      checkbox.parentElement.hidden = false;
-    }
-  );
+  Array.from(
+    document.querySelectorAll<HTMLInputElement>('input[name=projectName]')
+  ).forEach((checkbox) => {
+    checkbox.checked = false;
+    checkbox.parentElement.hidden = false;
+  });
 
   window.filterProjects();
-};
+}
 
-window.excludeProject = (id, doFilter = true) => {
-  document.querySelector(
+window.unfocusProject = unfocusProject;
+
+function excludeProject(id, doFilter = true) {
+  document.querySelector<HTMLInputElement>(
     `input[name=projectName][value=${id}]`
   ).checked = false;
 
   if (doFilter) {
     window.filterProjects();
   }
-};
+}
 
-window.filterProjects = () => {
+window.excludeProject = excludeProject;
+
+function filterProjects() {
   const checkboxes = Array.from(
-    document.querySelectorAll('input[name=projectName]')
+    document.querySelectorAll<HTMLInputElement>('input[name=projectName]')
   );
 
   const selectedProjects = checkboxes
@@ -509,10 +507,14 @@ window.filterProjects = () => {
     document.getElementById('no-projects-chosen').style.display = 'none';
   }
   render();
-};
+}
+
+window.filterProjects = filterProjects;
 
 function listenForTextFilterChanges() {
-  const textFilterInput = document.getElementById('textFilterInput');
+  const textFilterInput = document.getElementById(
+    'textFilterInput'
+  ) as HTMLInputElement;
   const textFilterButton = document.getElementById('textFilterButton');
 
   textFilterButton.addEventListener('click', () => {
@@ -528,7 +530,7 @@ function listenForTextFilterChanges() {
 
 function filterProjectsByText(text) {
   const checkboxes = Array.from(
-    document.querySelectorAll('input[name=projectName]')
+    document.querySelectorAll<HTMLInputElement>('input[name=projectName]')
   );
 
   checkboxes.forEach((checkbox) => (checkbox.checked = false));
@@ -542,8 +544,9 @@ function filterProjectsByText(text) {
         split.findIndex((splitItem) => project.includes(splitItem)) > -1
     );
 
-  const includeInPath = document.querySelector('input[name=textFilterCheckbox]')
-    .checked;
+  const includeInPath = document.querySelector<HTMLInputElement>(
+    'input[name=textFilterCheckbox]'
+  ).checked;
 
   matchedProjects.forEach((project) => {
     checkboxes.forEach((checkbox) => {
@@ -561,7 +564,7 @@ function filterProjectsByText(text) {
   window.filterProjects();
 }
 
-setTimeout(() => {
+export function main() {
   addProjectCheckboxes();
   checkForAffected();
 
@@ -572,7 +575,7 @@ setTimeout(() => {
   window.addEventListener('resize', () => render());
 
   if (window.groupByFolder) {
-    document.querySelector(
+    document.querySelector<HTMLInputElement>(
       'input[name=displayOptions][value=groupByFolder]'
     ).checked = true;
   }
@@ -588,4 +591,4 @@ setTimeout(() => {
   listenForTextFilterChanges();
 
   filterProjects();
-});
+}
