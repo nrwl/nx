@@ -116,6 +116,7 @@ export default function (schema: Schema): Rule {
             project: options.name,
             setupFile: 'none',
             supportTsx: true,
+            babelJest: options.babelJest,
             skipSerializers: true,
             testEnvironment: options.testEnvironment,
           })

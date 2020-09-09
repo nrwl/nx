@@ -3,6 +3,8 @@ import { readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 
+import { JestInitSchema } from './schema.d';
+
 describe('jest', () => {
   let appTree: Tree;
 
@@ -12,8 +14,20 @@ describe('jest', () => {
   });
 
   it('should generate files', async () => {
-    const resultTree = await runSchematic('init', {}, appTree);
+    const resultTree = await runSchematic<JestInitSchema>('init', {}, appTree);
+
     expect(resultTree.exists('jest.config.js')).toBeTruthy();
+    expect(resultTree.readContent('jest.config.js')).toMatchInlineSnapshot(`
+      "module.exports = {
+      testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
+      transform: {
+      '^.+\\\\\\\\.(ts|js|html)$': 'ts-jest'
+      },
+      resolver: '@nrwl/jest/plugins/resolver',
+      moduleFileExtensions: ['ts', 'js', 'html'],
+      coverageReporters: ['html']
+      };"
+    `);
   });
 
   it('should not override existing files', async () => {
@@ -23,7 +37,7 @@ describe('jest', () => {
   });
 
   it('should add dependencies', async () => {
-    const resultTree = await runSchematic('init', {}, appTree);
+    const resultTree = await runSchematic<JestInitSchema>('init', {}, appTree);
     const packageJson = readJsonInTree(resultTree, 'package.json');
     expect(packageJson.devDependencies.jest).toBeDefined();
     expect(packageJson.devDependencies['@nrwl/jest']).toBeDefined();
@@ -31,15 +45,21 @@ describe('jest', () => {
     expect(packageJson.devDependencies['ts-jest']).toBeDefined();
   });
 
-  it('should add babel dependencies', async () => {
-    const resultTree = await runSchematic('init', { babelJest: true }, appTree);
-    const packageJson = readJsonInTree(resultTree, 'package.json');
-    expect(packageJson.devDependencies['@babel/core']).toBeDefined();
-    expect(packageJson.devDependencies['@babel/preset-env']).toBeDefined();
-    expect(
-      packageJson.devDependencies['@babel/preset-typescript']
-    ).toBeDefined();
-    expect(packageJson.devDependencies['@babel/preset-react']).toBeDefined();
-    expect(packageJson.devDependencies['babel-jest']).toBeDefined();
+  describe('--babelJest', () => {
+    it('should add babel dependencies', async () => {
+      const resultTree = await runSchematic<JestInitSchema>(
+        'init',
+        { babelJest: true },
+        appTree
+      );
+      const packageJson = readJsonInTree(resultTree, 'package.json');
+      expect(packageJson.devDependencies['@babel/core']).toBeDefined();
+      expect(packageJson.devDependencies['@babel/preset-env']).toBeDefined();
+      expect(
+        packageJson.devDependencies['@babel/preset-typescript']
+      ).toBeDefined();
+      expect(packageJson.devDependencies['@babel/preset-react']).toBeDefined();
+      expect(packageJson.devDependencies['babel-jest']).toBeDefined();
+    });
   });
 });

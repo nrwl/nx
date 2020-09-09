@@ -424,4 +424,45 @@ describe('getBaseWebpackPartial', () => {
       });
     });
   });
+
+  describe('babel loader', () => {
+    it('should set default options', () => {
+      const result = getBaseWebpackPartial({
+        ...input,
+        progress: true,
+      });
+
+      const rule = result.module.rules.find(
+        (r) => typeof r.loader === 'string' && r.loader.match(/babel-loader/)
+      );
+      expect(rule.options).toMatchObject({
+        rootMode: 'upward',
+        cwd: '/root/root/src',
+        envName: undefined,
+        babelrc: true,
+      });
+    });
+
+    it('should support envName overrides', () => {
+      const result = getBaseWebpackPartial(
+        {
+          ...input,
+          progress: true,
+        },
+        true,
+        true,
+        'production'
+      );
+
+      const rule = result.module.rules.find(
+        (r) => typeof r.loader === 'string' && r.loader.match(/babel-loader/)
+      );
+      expect(rule.options).toMatchObject({
+        rootMode: 'upward',
+        cwd: '/root/root/src',
+        envName: 'production',
+        babelrc: true,
+      });
+    });
+  });
 });

@@ -162,6 +162,7 @@ export default function (schema: Schema): Rule {
             project: options.name,
             setupFile: 'none',
             skipSerializers: true,
+            babelJest: options.babelJest,
           })
         : noop(),
       options.frontendProject ? addProxy(options) : noop(),
