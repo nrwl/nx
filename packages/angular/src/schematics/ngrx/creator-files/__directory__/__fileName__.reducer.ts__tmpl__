@@ -29,7 +29,7 @@ const <%= propertyName %>Reducer = createReducer(
     state => ({ ...state, loaded: false, error: null })
   ),
   on(<%= className %>Actions.load<%= className %>Success,
-    (state, { <%= propertyName %> }) => <%= propertyName %>Adapter.addAll(<%= propertyName %>, { ...state, loaded: true })
+    (state, { <%= propertyName %> }) => <%= propertyName %>Adapter.setAll(<%= propertyName %>, { ...state, loaded: true })
   ),
   on(<%= className %>Actions.load<%= className %>Failure,
     (state, { error }) => ({ ...state, error })
