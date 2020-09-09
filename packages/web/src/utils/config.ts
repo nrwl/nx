@@ -55,7 +55,7 @@ export function getBaseWebpackPartial(
             rootMode: 'upward',
             cwd: join(options.root, options.sourceRoot),
             isModern: esm,
-            envName: configuration || 'development',
+            envName: configuration,
             babelrc: true,
             cacheDirectory: true,
             cacheCompression: false,
