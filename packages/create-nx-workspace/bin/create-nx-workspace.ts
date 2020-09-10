@@ -524,16 +524,6 @@ function pointToTutorialAndCourse(preset: Preset) {
         ],
       });
       break;
-    case Preset.WebComponents:
-      output.addVerticalSeparator();
-      output.note({
-        title: title,
-        bodyLines: [
-          `https://nx.dev/web/tutorial/01-create-application`,
-          ...pointToCourse(),
-        ],
-      });
-      break;
     // TODO(Cammisuli): include this after the nx.dev site is updated with the node flavour
     // case Preset.Nest:
     //   output.addVerticalSeparator();
