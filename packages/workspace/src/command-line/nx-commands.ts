@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import { execSync } from 'child_process';
-import { platform } from 'os';
 import * as yargs from 'yargs';
 import { nxVersion } from '../utils/versions';
 import { generateGraph } from './dep-graph';
@@ -11,6 +10,7 @@ import { report } from './report';
 import { workspaceSchematic } from './workspace-schematic';
 import { affected } from './affected';
 import { runMany } from './run-many';
+import { getPackageManagerExecuteCommand } from '../utils/detect-package-manager';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
@@ -180,13 +180,13 @@ export const commandsObject = yargs
     `,
     (yargs) => yargs,
     () => {
-      const executable =
-        platform() === 'win32'
-          ? `.\\node_modules\\.bin\\tao`
-          : `./node_modules/.bin/tao`;
-      execSync(`${executable} migrate ${process.argv.slice(3).join(' ')}`, {
-        stdio: ['inherit', 'inherit', 'inherit'],
-      });
+      const packageExec = getPackageManagerExecuteCommand();
+      execSync(
+        `${packageExec} tao migrate ${process.argv.slice(3).join(' ')}`,
+        {
+          stdio: ['inherit', 'inherit', 'inherit'],
+        }
+      );
     }
   )
   .command(report)

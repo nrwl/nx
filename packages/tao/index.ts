@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import * as yargs from 'yargs';
 import './src/compat/compat';
 
 export async function invokeCommand(
@@ -72,4 +73,4 @@ export async function invokeCli(root: string, args: string[]) {
   process.exit(await invokeCommand(command, root, commandArgs));
 }
 
-invokeCli(process.cwd(), process.argv.slice(2));
+invokeCli((yargs.argv.root as string) || process.cwd(), process.argv.slice(2));

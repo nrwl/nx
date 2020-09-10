@@ -18,15 +18,7 @@ export function initLocal(workspace: Workspace) {
   if (supportedNxCommands.includes(process.argv[2])) {
     // required to make sure nrwl/workspace import works
     if (workspace.type === 'nx') {
-      require(path.join(
-        workspace.dir,
-        'node_modules',
-        '@nrwl',
-        'tao',
-        'src',
-        'compat',
-        'compat.js'
-      ));
+      require('@nrwl/tao/src/compat/compat.js');
     }
     require('@nrwl/workspace' + '/src/command-line/nx-commands').commandsObject
       .argv;
@@ -40,25 +32,21 @@ export function initLocal(workspace: Workspace) {
 }
 
 function loadCli(workspace: Workspace) {
+  let cliPath: string;
   if (workspace.type === 'nx') {
-    require(path.join(
-      workspace.dir,
-      'node_modules',
-      '@nrwl',
-      'tao',
-      'index.js'
-    ));
+    cliPath = '@nrwl/tao/index.js';
   } else if (workspace.type === 'angular') {
-    require(path.join(
-      workspace.dir,
-      'node_modules',
-      '@angular',
-      'cli',
-      'lib',
-      'init.js'
-    ));
+    cliPath = '@angular/cli/lib/init.js';
   } else {
     console.error(`Cannot recognize the workspace type.`);
+    process.exit(1);
+  }
+
+  try {
+    const cli = require.resolve(cliPath, { paths: [workspace.dir] });
+    require(cli);
+  } catch (e) {
+    console.error(`Could not find ${cliPath} module in this workspace.`, e);
     process.exit(1);
   }
 }

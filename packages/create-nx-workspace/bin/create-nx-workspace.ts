@@ -2,6 +2,7 @@
 
 // we can import from '@nrwl/workspace' because it will require typescript
 import { output } from '@nrwl/workspace/src/utils/output';
+import { getPackageManagerExecuteCommand } from '@nrwl/workspace/src/utils/detect-package-manager';
 import { execSync } from 'child_process';
 import { writeFileSync } from 'fs';
 import * as inquirer from 'inquirer';
@@ -442,27 +443,27 @@ function createApp(
     : ` --interactive=false`;
   const defaultBaseArg = defaultBase ? ` --defaultBase="${defaultBase}"` : ``;
 
+  const packageExec = getPackageManagerExecuteCommand(packageManager);
+  const executable = `${packageExec} ${cli.command}`;
   console.log(
-    `new ${name} ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=@nrwl/workspace`
+    `${executable} new ${name} ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=@nrwl/workspace`
   );
-  const executablePath = path.join(tmpDir, 'node_modules', '.bin', cli.command);
-  const collectionJsonPath = path.join(
-    tmpDir,
-    'node_modules',
-    '@nrwl',
-    'workspace',
-    'collection.json'
+  const collectionJsonPath = require.resolve(
+    '@nrwl/workspace/collection.json',
+    { paths: [tmpDir] }
   );
+
   execSync(
-    `"${executablePath}" new ${name} ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=${collectionJsonPath}`,
+    `${executable} new ${name} ${args} --root="${process.cwd()}" --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=${collectionJsonPath}`,
     {
       stdio: [0, 1, 2],
+      cwd: tmpDir,
     }
   );
 
   if (nxCloud) {
     output.addVerticalSeparator();
-    execSync(`npx nx g @nrwl/nx-cloud:init --no-analytics`, {
+    execSync(`${packageExec} nx g @nrwl/nx-cloud:init --no-analytics`, {
       stdio: [0, 1, 2],
       cwd: path.join(process.cwd(), name),
     });

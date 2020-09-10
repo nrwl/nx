@@ -76,6 +76,11 @@
     "appName": {
       "type": "string",
       "description": "Application name."
+    },
+    "root": {
+      "type": "string",
+      "description": "Root directory.",
+      "hidden": true
     }
   }
 }
