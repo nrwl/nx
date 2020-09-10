@@ -2,12 +2,19 @@ import { Tree } from '@angular-devkit/schematics';
 import { runSchematic } from '../../utils/testing';
 import { StorybookConfigureSchema } from './schema';
 import { createTestUILib } from '../stories/stories.spec';
+import * as fileUtils from '@nrwl/workspace/src/core/file-utils';
 
 describe('schematic:configuration', () => {
   let appTree: Tree;
 
   beforeEach(async () => {
     appTree = await createTestUILib('test-ui-lib');
+    jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
+      devDependencies: {
+        '@storybook/addon-knobs': '6.0.20',
+        '@storybook/react': '6.0.20',
+      },
+    });
   });
 
   it('should only configure storybook', async () => {
