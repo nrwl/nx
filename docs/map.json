@@ -1860,48 +1860,32 @@
             "id": "01-create-application"
           },
           {
-            "name": "2 - Add E2E Test",
-            "id": "02-add-e2e-test"
+            "name": "2 - Display Todos",
+            "id": "02-display-todos"
           },
           {
-            "name": "3 - Display Todos",
-            "id": "03-display-todos"
+            "name": "3 - Share Code",
+            "id": "03-share-code"
           },
           {
-            "name": "4 - Connect to API",
-            "id": "04-connect-to-api"
+            "name": "4 - Create Libraries",
+            "id": "04-create-libs"
           },
           {
-            "name": "5 - Add Node Application",
-            "id": "05-add-node-app"
+            "name": "5 - Dep Graph",
+            "id": "05-dep-graph"
           },
           {
-            "name": "6 - Configure Proxy",
-            "id": "06-proxy"
+            "name": "6 - Use Computation Caching",
+            "id": "06-computation-caching"
           },
           {
-            "name": "7 - Share Code",
-            "id": "07-share-code"
+            "name": "7 - Test Affected Projects",
+            "id": "07-test-affected-projects"
           },
           {
-            "name": "8 - Create Libraries",
-            "id": "08-create-libs"
-          },
-          {
-            "name": "9 - Dep Graph",
-            "id": "09-dep-graph"
-          },
-          {
-            "name": "10 - Use Computation Caching",
-            "id": "10-computation-caching"
-          },
-          {
-            "name": "11 - Test Affected Projects",
-            "id": "11-test-affected-projects"
-          },
-          {
-            "name": "12 - Summary",
-            "id": "12-summary"
+            "name": "8 - Summary",
+            "id": "08-summary"
           }
         ]
       },

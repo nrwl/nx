@@ -14,7 +14,6 @@
     "default": {
       "runner": "@nrwl/nx-cloud",
       "options": {
-        "url": "https://nx-api-prod.herokuapp.com/",
         "scan": true,
         "accessToken": "OTM4MGQ1NDctZGRjMy00ZDlmLThkYzQtOTU3MDhkNWZhZjcwfHJlYWQ=",
         "cacheableOperations": ["build", "build-base", "test", "lint", "e2e"],
