@@ -12,11 +12,8 @@ export function addProject(options: NormalizedSchema): Rule {
       options: {
         outputPath: join(normalize('dist'), options.appProjectRoot),
         index: join(options.appProjectRoot, 'src/index.html'),
-        main: join(options.appProjectRoot, maybeJs(options, `src/main.tsx`)),
-        polyfills: join(
-          options.appProjectRoot,
-          maybeJs(options, 'src/polyfills.ts')
-        ),
+        main: join(options.appProjectRoot, `src/main.tsx`),
+        polyfills: join(options.appProjectRoot, 'src/polyfills.ts'),
         tsConfig: join(options.appProjectRoot, 'tsconfig.app.json'),
         assets: [
           join(options.appProjectRoot, 'src/favicon.ico'),
@@ -35,11 +32,12 @@ export function addProject(options: NormalizedSchema): Rule {
             {
               replace: join(
                 options.appProjectRoot,
-                maybeJs(options, `src/environments/environment.ts`)
+                `src/environments/environment.ts`
               ),
+
               with: join(
                 options.appProjectRoot,
-                maybeJs(options, `src/environments/environment.prod.ts`)
+                `src/environments/environment.prod.ts`
               ),
             },
           ],
@@ -91,10 +89,4 @@ export function addProject(options: NormalizedSchema): Rule {
 
     return json;
   });
-}
-
-function maybeJs(options: NormalizedSchema, path: string): string {
-  return options.js && (path.endsWith('.ts') || path.endsWith('.tsx'))
-    ? path.replace(/\.tsx?$/, '.js')
-    : path;
 }

@@ -24,7 +24,7 @@ export function addRouting(
         function addRouterToComponent(host: Tree) {
           const appPath = join(
             options.appProjectRoot,
-            maybeJs(options, `src/app/${options.fileName}.tsx`)
+            `src/app/${options.fileName}.tsx`
           );
           const appFileContent = host.read(appPath).toString('utf-8');
           const appSource = ts.createSourceFile(
@@ -42,10 +42,4 @@ export function addRouting(
         ),
       ])
     : noop();
-}
-
-function maybeJs(options: NormalizedSchema, path: string): string {
-  return options.js && (path.endsWith('.ts') || path.endsWith('.tsx'))
-    ? path.replace(/\.tsx?$/, '.js')
-    : path;
 }

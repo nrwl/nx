@@ -12,18 +12,19 @@ import {
   url,
 } from '@angular-devkit/schematics';
 import { join, normalize, Path } from '@angular-devkit/core';
-import { Schema } from './schema';
 import {
   updateJsonInTree,
   updateWorkspaceInTree,
   generateProjectLint,
   addLintFiles,
+  getProjectConfig,
+  offsetFromRoot,
+  toFileName,
 } from '@nrwl/workspace';
-import { toFileName } from '@nrwl/workspace';
-import { getProjectConfig } from '@nrwl/workspace';
-import { offsetFromRoot } from '@nrwl/workspace';
-import init from '../init/init';
+import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
+import init from '../init/init';
+import { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -166,6 +167,7 @@ export default function (schema: Schema): Rule {
           })
         : noop(),
       options.frontendProject ? addProxy(options) : noop(),
+      options.js ? toJS() : noop(),
     ])(host, context);
   };
 }

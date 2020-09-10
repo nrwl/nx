@@ -415,4 +415,75 @@ describe('lib', () => {
       `);
     });
   });
+
+  describe('--js flag', () => {
+    it('should generate js files instead of ts files', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          js: true,
+        },
+        appTree
+      );
+
+      expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/index.js')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.js')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.js')).toBeTruthy();
+
+      expect(
+        readJsonInTree(tree, 'libs/my-lib/tsconfig.json').compilerOptions
+      ).toEqual({
+        allowJs: true,
+      });
+
+      const tsConfig = readJsonInTree(tree, 'libs/my-lib/tsconfig.lib.json');
+      expect(tsConfig.include).toEqual(['**/*.js']);
+      expect(tsConfig.exclude).toEqual(['**/*.spec.js']);
+    });
+
+    it('should update root tsconfig.json with a js file path', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', js: true } as Schema,
+        appTree
+      );
+      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
+      expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
+        'libs/my-lib/src/index.js',
+      ]);
+    });
+
+    it('should update architect builder when --buildable', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', buildable: true, js: true } as Schema,
+        appTree
+      );
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+
+      expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
+
+      expect(
+        workspaceJson.projects['my-lib'].architect.build.options.main
+      ).toEqual('libs/my-lib/src/index.js');
+    });
+
+    it('should generate js files for nested libs as well', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', directory: 'myDir', js: true } as Schema,
+        appTree
+      );
+      expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
+      expect(tree.exists('libs/my-dir/my-lib/src/index.js')).toBeTruthy();
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.js')
+      ).toBeTruthy();
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.spec.js')
+      ).toBeTruthy();
+    });
+  });
 });

@@ -66,6 +66,14 @@ Type: `string`
 
 The library name used to import it, like @myorg/my-awesome-lib. Must be a valid npm name.
 
+### js
+
+Default: `false`
+
+Type: `boolean`
+
+Generate JavaScript files rather than TypeScript files.
+
 ### linter
 
 Default: `eslint`

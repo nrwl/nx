@@ -34,4 +34,31 @@ describe('app', () => {
       path: './tsconfig.spec.json',
     });
   });
+
+  describe('--js flag', () => {
+    it('should generate js files instead of ts files', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myNodeApp', js: true },
+        appTree
+      );
+
+      expect(tree.exists('apps/my-node-app/src/main.js')).toBeTruthy();
+      expect(tree.readContent('apps/my-node-app/src/main.js')).toContain(
+        `import * as express from 'express';`
+      );
+
+      const tsConfig = readJsonInTree(tree, 'apps/my-node-app/tsconfig.json');
+      expect(tsConfig.compilerOptions).toEqual({
+        allowJs: true,
+      });
+
+      const tsConfigApp = readJsonInTree(
+        tree,
+        'apps/my-node-app/tsconfig.app.json'
+      );
+      expect(tsConfigApp.include.includes('**/*.js')).toBe(true);
+      expect(tsConfigApp.exclude.includes('**/*.spec.js')).toBe(true);
+    });
+  });
 });

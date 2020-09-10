@@ -309,4 +309,63 @@ describe('app', () => {
       `);
     });
   });
+
+  describe('--js flag', () => {
+    it('should generate js files instead of ts files', async () => {
+      const tree = await runSchematic(
+        'app',
+        {
+          name: 'myNodeApp',
+          js: true,
+        },
+        appTree
+      );
+
+      expect(tree.exists(`apps/my-node-app/jest.config.js`)).toBeTruthy();
+      expect(tree.exists('apps/my-node-app/src/main.js')).toBeTruthy();
+
+      const tsConfig = readJsonInTree(tree, 'apps/my-node-app/tsconfig.json');
+      expect(tsConfig.compilerOptions).toEqual({
+        allowJs: true,
+      });
+
+      const tsConfigApp = readJsonInTree(
+        tree,
+        'apps/my-node-app/tsconfig.app.json'
+      );
+      expect(tsConfigApp.include).toEqual(['**/*.js']);
+      expect(tsConfigApp.exclude).toEqual(['**/*.spec.js']);
+    });
+
+    it('should update workspace.json', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myNodeApp', js: true },
+        appTree
+      );
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      const project = workspaceJson.projects['my-node-app'];
+      const buildTarget = project.architect.build;
+
+      expect(buildTarget.options.main).toEqual('apps/my-node-app/src/main.js');
+      expect(buildTarget.configurations.production.fileReplacements).toEqual([
+        {
+          replace: 'apps/my-node-app/src/environments/environment.js',
+          with: 'apps/my-node-app/src/environments/environment.prod.js',
+        },
+      ]);
+    });
+
+    it('should generate js files for nested libs as well', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myNodeApp', directory: 'myDir', js: true },
+        appTree
+      );
+      expect(
+        tree.exists(`apps/my-dir/my-node-app/jest.config.js`)
+      ).toBeTruthy();
+      expect(tree.exists('apps/my-dir/my-node-app/src/main.js')).toBeTruthy();
+    });
+  });
 });

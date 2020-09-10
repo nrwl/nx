@@ -52,6 +52,11 @@
       "type": "boolean",
       "description": "Use babel instead ts-jest",
       "default": false
+    },
+    "js": {
+      "type": "boolean",
+      "description": "Generate JavaScript files rather than TypeScript files.",
+      "default": false
     }
   },
   "required": []

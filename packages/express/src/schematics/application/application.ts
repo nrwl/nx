@@ -4,13 +4,15 @@ import {
   Rule,
   SchematicContext,
   Tree,
+  noop,
 } from '@angular-devkit/schematics';
 import { join, normalize, Path } from '@angular-devkit/core';
-import { Schema } from './schema';
-import { updateJsonInTree } from '@nrwl/workspace';
-import { toFileName, formatFiles } from '@nrwl/workspace';
-import init from '../init/init';
+import { updateJsonInTree, toFileName, formatFiles } from '@nrwl/workspace';
+import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
+import init from '../init/init';
+import { Schema } from './schema';
+import { mainModule } from 'process';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -27,7 +29,7 @@ function addTypes(options: NormalizedSchema): Rule {
 function addMainFile(options: NormalizedSchema): Rule {
   return (host: Tree) => {
     host.overwrite(
-      join(options.appProjectRoot, 'src/main.ts'),
+      join(options.appProjectRoot, options.js ? 'src/main.js' : 'src/main.ts'),
       `/**
  * This is not a production server yet!
  * This is only a minimal backend to get started.
@@ -59,6 +61,7 @@ export default function (schema: Schema): Rule {
       externalSchematic('@nrwl/node', 'application', schema),
       addMainFile(options),
       addTypes(options),
+      options.js ? toJS() : noop(),
       formatFiles(options),
     ])(host, context);
   };

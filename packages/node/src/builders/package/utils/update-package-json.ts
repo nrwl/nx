@@ -8,7 +8,7 @@ export default function updatePackageJson(
   options: NormalizedBuilderOptions,
   context: BuilderContext
 ) {
-  const mainFile = basename(options.main, '.ts');
+  const mainFile = basename(options.main).replace(/\.[tj]s$/, '');
   const typingsFile = `${mainFile}.d.ts`;
   const mainJsFile = `${mainFile}.js`;
   const packageJson = readJsonFile(

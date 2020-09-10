@@ -48,6 +48,14 @@ Type: `string`
 
 Frontend project that needs to access this application. This sets up proxy configuration.
 
+### js
+
+Default: `false`
+
+Type: `boolean`
+
+Generate JavaScript files rather than TypeScript files.
+
 ### linter
 
 Default: `eslint`

@@ -3,6 +3,7 @@ import {
   Rule,
   SchematicContext,
   Tree,
+  noop,
 } from '@angular-devkit/schematics';
 import { addLintFiles, formatFiles } from '@nrwl/workspace';
 import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
@@ -18,6 +19,7 @@ import { addRouting } from './lib/add-routing';
 import { setDefaults } from './lib/set-defaults';
 import { updateNxJson } from './lib/update-nx-json';
 import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
+import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 
 export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
@@ -40,6 +42,7 @@ export default function (schema: Schema): Rule {
       addStyledModuleDependencies(options.styledModule),
       addRouting(options, context),
       setDefaults(options),
+      options.js ? toJS() : noop(),
       formatFiles(options),
     ]);
   };

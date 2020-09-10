@@ -126,6 +126,7 @@ export default function (schema: Schema): Rule {
       ),
       updateAppRoutes(options, context),
       initRootBabelConfig(),
+      options.js ? toJS() : noop(),
       formatFiles(options),
     ])(host, context);
   };
@@ -161,7 +162,7 @@ function addProject(options: NormalizedSchema): Rule {
           outputPath: `dist/${libsDir(host)}/${options.projectDirectory}`,
           tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
           project: `${options.projectRoot}/package.json`,
-          entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
+          entryFile: `${options.projectRoot}/src/index.ts`,
           external,
           babelConfig: `@nrwl/react/plugins/bundle-babel`,
           rollupConfig: `@nrwl/react/plugins/bundle-rollup`,
@@ -203,10 +204,7 @@ function updateTsConfig(options: NormalizedSchema): Rule {
         }
 
         c.paths[options.importPath] = [
-          maybeJs(
-            options,
-            `${libsDir(host)}/${options.projectDirectory}/src/index.ts`
-          ),
+          `${libsDir(host)}/${options.projectDirectory}/src/index.ts`,
         ];
 
         return json;
@@ -228,7 +226,6 @@ function createFiles(options: NormalizedSchema): Rule {
       options.publishable || options.buildable
         ? noop()
         : filter((file) => !file.endsWith('package.json')),
-      options.js ? toJS() : noop(),
     ])
   );
 }
@@ -259,7 +256,7 @@ function updateAppRoutes(
 
     const appComponentPath = join(
       options.appSourceRoot,
-      maybeJs(options, `${componentImportPath}.tsx`)
+      `${componentImportPath}.tsx`
     );
     return chain([
       addDepsToPackageJson(
@@ -391,10 +388,4 @@ function updateLibPackageNpmScope(options: NormalizedSchema): Rule {
     json.name = options.importPath;
     return json;
   });
-}
-
-function maybeJs(options: NormalizedSchema, path: string): string {
-  return options.js && (path.endsWith('.ts') || path.endsWith('.tsx'))
-    ? path.replace(/\.tsx?$/, '.js')
-    : path;
 }

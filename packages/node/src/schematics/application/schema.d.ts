@@ -10,4 +10,5 @@ export interface Schema {
   tags?: string;
   frontendProject?: string;
   babelJest?: boolean;
+  js?: boolean;
 }

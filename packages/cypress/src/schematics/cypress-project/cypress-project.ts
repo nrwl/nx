@@ -44,7 +44,6 @@ function generateFiles(options: CypressProjectSchema): Rule {
           offsetFromRoot: offsetFromRoot(options.projectRoot),
         }),
         move(options.projectRoot),
-        options.js ? toJS() : noop(),
       ])
     );
   };
@@ -137,6 +136,7 @@ export default function (options: CypressProjectSchema): Rule {
       generateFiles(options),
       updateWorkspaceJson(options),
       updateNxJson(options),
+      options.js ? toJS() : noop(),
     ])(host, context);
   };
 }

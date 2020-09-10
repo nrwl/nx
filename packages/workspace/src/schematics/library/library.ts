@@ -70,10 +70,7 @@ function updateTsConfig(options: NormalizedSchema): Rule {
       }
 
       c.paths[options.importPath] = [
-        maybeJs(
-          options,
-          `${libsDir(host)}/${options.projectDirectory}/src/index.ts`
-        ),
+        `${libsDir(host)}/${options.projectDirectory}/src/index.ts`,
       ];
 
       return json;
@@ -92,7 +89,6 @@ function createFiles(options: NormalizedSchema): Rule {
         hasUnitTestRunner: options.unitTestRunner !== 'none',
       }),
       move(options.projectRoot),
-      options.js ? toJS() : noop(),
     ])
   );
 }
@@ -121,6 +117,7 @@ export default function (schema: Schema): Rule {
             testEnvironment: options.testEnvironment,
           })
         : noop(),
+      options.js ? toJS() : noop(),
       formatFiles(options),
     ])(host, context);
   };
@@ -154,10 +151,4 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     parsedTags,
     importPath,
   };
-}
-
-function maybeJs(options: NormalizedSchema, path: string): string {
-  return options.js && (path.endsWith('.ts') || path.endsWith('.tsx'))
-    ? path.replace(/\.tsx?$/, '.js')
-    : path;
 }

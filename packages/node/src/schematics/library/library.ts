@@ -23,8 +23,9 @@ import {
   toFileName,
   updateWorkspaceInTree,
 } from '@nrwl/workspace';
-import { Schema } from './schema';
 import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
+import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
+import { Schema } from './schema';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -53,6 +54,7 @@ export default function (schema: NormalizedSchema): Rule {
       createFiles(options),
       addProject(options),
       formatFiles(options),
+      options.js ? toJS() : noop(),
     ]);
   };
 }
