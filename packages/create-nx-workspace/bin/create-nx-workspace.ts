@@ -140,7 +140,7 @@ function showHelp() {
 
     interactive               Enable interactive mode when using presets (boolean)
     
-    nx-cloud                  Connect to distributed computation cache provided by Nx Cloud (boolean)
+    nx-cloud                  Use Nx Cloud (boolean)
 
     [new workspace options]   any 'new workspace' options
 `);
@@ -475,18 +475,18 @@ async function askAboutNxCloud(parsedArgs: any) {
       .prompt([
         {
           name: 'NxCloud',
-          message: `Use the free tier of the distributed cache provided by Nx Cloud?`,
+          message: `Use Nx Cloud? (It's free and doesn't require registration.)`,
           type: 'list',
           choices: [
             {
               value: 'yes',
               name:
-                'Yes [Faster command execution, faster CI. Learn more at https://nx.app]',
+                'Yes [Faster builds, run details, Github integration. Learn more at https://nx.app]',
             },
 
             {
               value: 'no',
-              name: 'No  [Only use local computation cache]',
+              name: 'No',
             },
           ],
           default: 'no',
