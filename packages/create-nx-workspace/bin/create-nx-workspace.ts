@@ -2,6 +2,7 @@
 
 // we can import from '@nrwl/workspace' because it will require typescript
 import { output } from '@nrwl/workspace/src/utils/output';
+import { getPackageManagerExecuteCommand } from '@nrwl/workspace/src/utils/detect-package-manager';
 import { execSync } from 'child_process';
 import { writeFileSync } from 'fs';
 import * as inquirer from 'inquirer';
@@ -442,6 +443,7 @@ function createApp(
     : ` --interactive=false`;
   const defaultBaseArg = defaultBase ? ` --defaultBase="${defaultBase}"` : ``;
 
+  const packageExec = getPackageManagerExecuteCommand(packageManager);
   console.log(
     `new ${name} ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=@nrwl/workspace`
   );
@@ -462,7 +464,7 @@ function createApp(
 
   if (nxCloud) {
     output.addVerticalSeparator();
-    execSync(`npx nx g @nrwl/nx-cloud:init --no-analytics`, {
+    execSync(`${packageExec} nx g @nrwl/nx-cloud:init --no-analytics`, {
       stdio: [0, 1, 2],
       cwd: path.join(process.cwd(), name),
     });

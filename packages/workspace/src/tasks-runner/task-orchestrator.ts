@@ -317,14 +317,10 @@ export class TaskOrchestrator {
   }
 
   private getCommand() {
-    return path.join(
-      this.workspaceRoot,
-      'node_modules',
-      '@nrwl',
-      'cli',
-      'lib',
-      'run-cli.js'
-    );
+    const cli = require.resolve(`@nrwl/cli/lib/run-cli.js`, {
+      paths: [this.workspaceRoot],
+    });
+    return `${cli}`;
   }
 
   private getCommandArgs(task: Task) {
