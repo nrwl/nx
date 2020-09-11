@@ -216,3 +216,88 @@ yarn add --dev @storybook/react@latest
 #### Step 4: Check that everything works as expected
 
 Check that everything works as expected. If you are still having trouble, you can submit you issue in the [GitHub Nx repo](https://github.com/nrwl/nx). We wish you luck!
+
+### Sample files for manual upgrade
+
+If you have not changed the content of the files which the `storybook-configuration` schematic produced, you can use the following samples to migrate to Storybook `6`:
+
+#### Configuring the root `./storybook` directory
+
+- In the root `./storybook` directory, create a new file named `main.js` with the following content:
+
+```
+module.exports = {
+  stories: [],
+  addons: ['@storybook/addon-knobs/register'],
+};
+```
+
+- If you have any addons in the `addons.js` file, add them in the `addons` array in the `main.js` file. If you are using the default generated files without any changes, you should only have the `@storybook/addon-knobs/register` addon, which we already put in the array. You can now delete the `addons.js` file.
+
+- The other two files remain unchanged.
+
+#### Configuring the Storybook instances across apps and libraries - the library-specific `./storybook` directories
+
+- In the library `./storybook` directory, create a new file named `main.js` with the following content:
+
+```
+const lib_main_module = require('../../.storybook/main');
+
+lib_main_module.stories.push('../src/lib/**/*.stories.mdx');
+lib_main_module.stories.push('../src/lib/**/*.stories.@(js|jsx|ts|tsx)');
+module.exports = lib_main_module;
+```
+
+Please take extra care making sure that the path to the root `./storybook` directory provided in the first line is correct.
+
+- If you have any addons in the `addons.js` file, add them in the `addons` array in the `main.js` file. You can add any addons in the `addons` module array using the following syntax:
+
+```
+lib_main_module.addons.push('<YOUR_ADDON_HERE>');
+```
+
+After you add any addons in the `main.js` file, you can safely delete the `addons.js` file. If you are using the default generated files without any changes, your `addons.js` file should be empty (but an import line, referencing the root `addons.js` file).
+
+- Rename the file `config.js` to `preview.js` and remove the last line where your stories paths are configured. Now, the contents of the `preview.js` file will look like this:
+
+```
+import { addDecorator } from '<%= uiFramework %>';
+import { withKnobs } from '@storybook/addon-knobs';
+
+addDecorator(withKnobs);
+```
+
+- Modify the contents of `webpack.config.js`. Remove the following lines, which are the TypeScript configuration, which is not needed by Storybook any more:
+
+```
+  config.module.rules.push({
+    test: /\.(ts|tsx)$/,
+    loader: require.resolve('babel-loader'),
+    options: {
+      presets: [
+        '@babel/preset-env',
+        '@babel/preset-react',
+        '@babel/preset-typescript'
+      ]
+    }
+  });
+```
+
+#### Check final folder structure
+
+Your folder structure should now look like this:
+
+```
+your_nx_workspace
+___.storybook
+______main.js
+______tsconfig.json
+______webpack.config.js
+___libs
+______your_lib
+_________.storybook
+____________main.js
+____________preview.js
+____________tsconfig.json
+____________webpack.config.js
+```
