@@ -178,11 +178,11 @@ For more on using Storybook, see the [official Storybook documentation](https://
 
 ## Upgrading to Storybook 6 (and Nx versions >10.1.x)
 
-Nx now comes with [Storybook version 6](https://storybook.js.org/releases/6.0). Chances are, if you used Nx version 10.1.x or older with Storybook, you are using [Storybook version 5.3](https://storybook.js.org/releases/5.3) with configuration files of [Storybook version 5.2](https://storybook.js.org/releases/5.2).
+Nx now comes with [Storybook version 6](https://storybook.js.org/releases/6.0). Chances are, if you used Nx version `10.1.x` or older with Storybook, you are using [Storybook version 5.3](https://storybook.js.org/releases/5.3) with configuration files of [Storybook version 5.2](https://storybook.js.org/releases/5.2).
 
 Nx version `10.2.x` will continue to support Storybook version `5.2.x`, however newer versions of Nx will only support Storybook version `6` (and on).
 
-We chose not to provide an automatic migration script for your Storybook instances and configurations across your apps and libraries, since there a number of breaking changes that Storybook introduced in versions `5.3` and `6.0`, and making decisions on what to migrate automatically would risk the integrity of your code. Instead, when you choose to migrate from Nx X to Nx X.X< we will keep your Storybook packages and Storybook instances and configurations intact. We suggest that you do the migration on your own, manually, using the guide below, with all the references to the official Storybook migration guides. Look at the use cases below, and follow the one that matches your case.
+We chose not to provide an automatic migration script for your Storybook instances and configurations across your apps and libraries, since there a number of breaking changes that Storybook introduced in versions `5.3` and `6.0`, and making decisions on what to migrate automatically would risk the integrity of your code. Instead, when you choose to migrate from Nx versions `<10.1.x` to Nx versions `>10.2.x` we will keep your Storybook packages and Storybook instances and configurations intact. We suggest that you do the migration on your own, manually, using the guide below, with all the references to the official Storybook migration guides. Look at the use cases below, and follow the one that matches your case.
 
 ### Use cases:
 
@@ -202,11 +202,11 @@ In that case, when you run the Nx migration scripts, the scripts will ignore the
 
 ### Step 0:
 
-Commit any changes you have locally. We would suggest that you start the migration with a clean git history, in case anything goes wrong.
+**Commit any changes you have locally**. We would suggest that you start the migration with a clean git history, in case anything goes wrong.
 
 #### Step 1: Changing the configuration files from version 5.2 to 5.3
 
-The most noticeable change in Storybook versions newer than 5.2 is that the configuration files have changed names and content.
+The most noticeable change in Storybook versions newer than `5.2` is that the configuration files have changed names and content.
 Quoting from the [official Storybook migration guide](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-52x-to-53x):
 
 - `presets.js` has been renamed to `main.js`. `main.js` is the main point of configuration for storybook.
@@ -219,7 +219,7 @@ Please follow the [official Storybook version 5.2.x to 5.3.x migration guide](ht
 
 Please check out this official [Storybook 6 Migration Guide](https://medium.com/storybookjs/storybook-6-migration-guide-200346241bb5) article, as well as the [detailed guides here](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-53x-to-60x).
 
-- One big change in Storybook version 6 is that it has **built-in Typescript support**. This means that you can remove Typescript configurations from your configuration files.
+- One big change in Storybook version `6` is that it has **built-in Typescript support**. This means that you can remove Typescript configurations from your configuration files.
 - Please also **check that your stories match any differences in syntax** introduced in versions `5.3` and `6.0`.
 
 #### Step 3: Upgrade all `@storybook/*` packages in your project
