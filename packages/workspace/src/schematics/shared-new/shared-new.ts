@@ -25,7 +25,7 @@ import { nxVersion } from '../../utils/versions';
 import * as path from 'path';
 import { Observable } from 'rxjs';
 import { spawn } from 'child_process';
-import { platform } from 'os';
+import { getPackageManagerExecuteCommand } from '../../utils/detect-package-manager';
 // @ts-ignore
 import yargsParser = require('yargs-parser');
 
@@ -75,10 +75,7 @@ function createPresetTaskExecutor(cli: string, opts: Schema) {
           shell: true,
           cwd: path.join(process.cwd(), opts.directory),
         };
-        const executable =
-          platform() === 'win32'
-            ? `.\\node_modules\\.bin\\${cliCommand}`
-            : `./node_modules/.bin/${cliCommand}`;
+        const executable = `${getPackageManagerExecuteCommand()} ${cliCommand}`;
         const args = [
           `g`,
           `@nrwl/workspace:preset`,
