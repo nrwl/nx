@@ -156,3 +156,63 @@ To register an [addon](https://storybook.js.org/addons/) for a single storybook 
 ### More Information
 
 For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/basics/introduction/).
+
+## Upgrading to Storybook 6 (and Nx versions >10.1.x)
+
+Nx now comes with [Storybook version 6](https://storybook.js.org/releases/6.0). Chances are, if you used Nx version 10.1.x or older with Storybook, you are using [Storybook version 5.3](https://storybook.js.org/releases/5.3) with configuration files of [Storybook version 5.2](https://storybook.js.org/releases/5.2).
+
+Nx version `10.2.x` will continue to support Storybook version `5.2.x`, however newer versions of Nx will only support Storybook version `6` (and on).
+
+We chose not to provide an automatic migration script for your Storybook instances and configurations across your apps and libraries, since there a number of breaking changes that Storybook introduced in versions `5.3` and `6.0`, and making decisions on what to migrate automatically would risk the integrity of your code. Instead, when you choose to migrate from Nx X to Nx X.X< we will keep your Storybook packages and Storybook instances and configurations intact. We suggest that you do the migration on your own, manually, using the guide below, with all the references to the official Storybook migration guides. Look at the use cases below, and follow the one that matches your case.
+
+### Use cases:
+
+#### Use case 1: Create an Nx workspace from scratch using the latest version of Nx
+
+If you are creating an Nx workspace using the latest version of Nx, the latest version of Storybook (version 6) will be used as well. You do not need to do anything.
+
+#### Use case 2: I already have an Nx workspace that does NOT use Storybook and I want to migrate to the latest Nx
+
+If you already have an Nx workspace with a previous version of Nx that does NOT use Storybook, and you migrate to the latest Nx using the migrate scripts provided by Nx, and then, after the migration to the latest Nx, you choose to add Storybook, the latest version of Storybook will be used. You do not need to do anything.
+
+#### Use case 3: I already have an Nx workspace with Storybook and I want to migrate to the latest Nx
+
+In that case, when you run the Nx migration scripts, the scripts will ignore the Storybook packages, the Storybook configuration files, the Storybook instances in your apps and libraries, and all the generated stories. If you continue to add Storybook configurations and Storybook instances to new libraries and applications, then the version of Storybook that you already have will be used (most probably, if you have not changed anything manually, that version will be `5.3.9` using, however, the configuration files of `5.2`). You will have to do the [upgrade to the latest Storybook on your own, manually](#how-to-use-storybook-in-an-nx-repo). After that, Nx will use that version, and configure all new Storybook instances using the new version.
+
+### Upgrading to Storybook 6 manually
+
+### Step 0:
+
+Commit any changes you have locally. We would suggest that you start the migration with a clean git history, in case anything goes wrong.
+
+#### Step 1: Changing the configuration files from version 5.2 to 5.3
+
+The most noticeable change in Storybook versions newer than 5.2 is that the configuration files have changed names and content.
+Quoting from the [official Storybook migration guide](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-52x-to-53x):
+
+- `presets.js` has been renamed to `main.js`. `main.js` is the main point of configuration for storybook.
+- `config.js` has been renamed to `preview.js`. `preview.js` configures the "preview" iframe that renders your components.
+- `addons.js` has been renamed to `manager.js`. `manager.js` configures Storybook's "manager" UI that wraps the preview, and also configures addons panel.
+
+Please follow the [official Storybook version 5.2.x to 5.3.x migration guide](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-52x-to-53x) to change your files accordingly.
+
+#### Step 2: Going from version 5.3 to 6.0
+
+Please check out this official [Storybook 6 Migration Guide](https://medium.com/storybookjs/storybook-6-migration-guide-200346241bb5) article, as well as the [detailed guides here](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-53x-to-60x).
+
+- One big change in Storybook version 6 is that it has **built-in Typescript support**. This means that you can remove Typescript configurations from your configuration files.
+- Please also **check that your stories match any differences in syntax** introduced in versions `5.3` and `6.0`.
+
+#### Step 3: Upgrade all `@storybook/*` packages in your project
+
+Check your `package.json` file for all `@storybook` packages. Install the latest versions of these, usign `yarn`:
+
+For example:
+
+```
+yarn add --dev @storybook/react@latest
+```
+
+#### Step 4: Check that everything works as expected
+
+Check that everything works as expected. If you are still having trouble, you can submit you issue in our GitHub page. We wish you luck!
