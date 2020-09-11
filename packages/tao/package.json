@@ -34,6 +34,9 @@
     "@angular-devkit/architect": "~0.1000.0",
     "inquirer": "^6.3.1",
     "minimist": "^1.2.0",
-    "strip-json-comments": "2.0.1"
+    "strip-json-comments": "2.0.1",
+    "semver": "6.3.0",
+    "tmp": "0.0.33",
+    "tslib": "^1.9.3"
   }
 }
