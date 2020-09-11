@@ -10,6 +10,7 @@ describe('updateModuleName Rule', () => {
   const schema: Schema = {
     projectName: 'my-source',
     destination: 'my-destination',
+    updateImportPath: true,
   };
 
   const modulePath = '/libs/my-destination/src/lib/my-destination.module.ts';

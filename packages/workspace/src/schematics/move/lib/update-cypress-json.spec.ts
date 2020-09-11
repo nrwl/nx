@@ -22,6 +22,8 @@ describe('updateCypressJson Rule', () => {
     const schema: Schema = {
       projectName: 'my-lib',
       destination: 'my-destination',
+      importPath: undefined,
+      updateImportPath: true,
     };
 
     await expect(
@@ -53,6 +55,8 @@ describe('updateCypressJson Rule', () => {
     const schema: Schema = {
       projectName: 'my-lib',
       destination: 'my-destination',
+      importPath: undefined,
+      updateImportPath: true,
     };
 
     tree = (await callRule(updateCypressJson(schema), tree)) as UnitTestTree;

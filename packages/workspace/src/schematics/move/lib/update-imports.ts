@@ -9,7 +9,6 @@ import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Schema } from '../schema';
 import { normalizeSlashes } from './utils';
-import { ProjectType } from '@nrwl/workspace/src/utils/project-type';
 
 /**
  * Updates all the imports in the workspace and modifies the tsconfig appropriately.
@@ -31,33 +30,53 @@ export function updateImports(schema: Schema) {
           return tree;
         }
 
+        // use the source root to find the from location
+        // this attempts to account for libs that have been created with --importPath
+        const tsConfigPath = 'tsconfig.base.json';
+        let tsConfig: any;
+        let fromPath: string;
+        if (tree.exists(tsConfigPath)) {
+          tsConfig = JSON.parse(tree.read(tsConfigPath).toString('utf-8'));
+          fromPath = Object.keys(tsConfig.compilerOptions.paths).find((path) =>
+            tsConfig.compilerOptions.paths[path].some((x) =>
+              x.startsWith(project.sourceRoot)
+            )
+          );
+        }
+
         const projectRef = {
-          from: normalizeSlashes(
-            `@${nxJson.npmScope}/${project.root.substr(libsDir.length + 1)}`
-          ),
-          to: normalizeSlashes(`@${nxJson.npmScope}/${schema.destination}`),
+          from:
+            fromPath ||
+            normalizeSlashes(
+              `@${nxJson.npmScope}/${project.root.substr(libsDir.length + 1)}`
+            ),
+          to:
+            schema.importPath ||
+            normalizeSlashes(`@${nxJson.npmScope}/${schema.destination}`),
         };
 
-        const replaceProjectRef = new RegExp(projectRef.from, 'g');
+        if (schema.updateImportPath) {
+          const replaceProjectRef = new RegExp(projectRef.from, 'g');
 
-        for (const [name, definition] of workspace.projects.entries()) {
-          if (name === schema.projectName) {
-            continue;
-          }
-
-          const projectDir = tree.getDir(definition.root);
-          projectDir.visit((file) => {
-            const contents = tree.read(file).toString('utf-8');
-            if (!replaceProjectRef.test(contents)) {
-              return;
+          for (const [name, definition] of workspace.projects.entries()) {
+            if (name === schema.projectName) {
+              continue;
             }
 
-            const updatedFile = tree
-              .read(file)
-              .toString()
-              .replace(replaceProjectRef, projectRef.to);
-            tree.overwrite(file, updatedFile);
-          });
+            const projectDir = tree.getDir(definition.root);
+            projectDir.visit((file) => {
+              const contents = tree.read(file).toString('utf-8');
+              if (!replaceProjectRef.test(contents)) {
+                return;
+              }
+
+              const updatedFile = tree
+                .read(file)
+                .toString()
+                .replace(replaceProjectRef, projectRef.to);
+              tree.overwrite(file, updatedFile);
+            });
+          }
         }
 
         const projectRoot = {
@@ -65,19 +84,23 @@ export function updateImports(schema: Schema) {
           to: schema.destination,
         };
 
-        const tsConfigPath = 'tsconfig.base.json';
-        if (tree.exists(tsConfigPath)) {
-          let contents = JSON.parse(tree.read(tsConfigPath).toString('utf-8'));
-          const path = contents.compilerOptions.paths[
+        if (tsConfig) {
+          const path = tsConfig.compilerOptions.paths[
             projectRef.from
           ] as string[];
 
-          contents.compilerOptions.paths[projectRef.to] = path.map((x) =>
+          const updatedPath = path.map((x) =>
             x.replace(new RegExp(projectRoot.from, 'g'), projectRoot.to)
           );
-          delete contents.compilerOptions.paths[projectRef.from];
 
-          tree.overwrite(tsConfigPath, serializeJson(contents));
+          if (schema.updateImportPath) {
+            tsConfig.compilerOptions.paths[projectRef.to] = updatedPath;
+            delete tsConfig.compilerOptions.paths[projectRef.from];
+          } else {
+            tsConfig.compilerOptions.paths[projectRef.from] = updatedPath;
+          }
+
+          tree.overwrite(tsConfigPath, serializeJson(tsConfig));
         }
 
         return tree;
