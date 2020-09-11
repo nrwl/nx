@@ -826,7 +826,7 @@
               {
                 "name": "Dependency Graph",
                 "id": "dependency-graph",
-                "file": "shared/workspace/structure/dependency-graph.md"
+                "file": "shared/workspace/structure/dependency-graph"
               }
             ]
           },
@@ -1737,7 +1737,7 @@
               {
                 "name": "Dependency Graph",
                 "id": "dependency-graph",
-                "file": "shared/workspace/structure/dependency-graph.md"
+                "file": "shared/workspace/structure/dependency-graph"
               }
             ]
           },
@@ -2626,7 +2626,7 @@
               {
                 "name": "Dependency Graph",
                 "id": "dependency-graph",
-                "file": "shared/workspace/structure/dependency-graph.md"
+                "file": "shared/workspace/structure/dependency-graph"
               }
             ]
           },
