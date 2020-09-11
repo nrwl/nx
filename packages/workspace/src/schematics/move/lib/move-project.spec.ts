@@ -15,6 +15,8 @@ describe('moveProject Rule', () => {
     const schema: Schema = {
       projectName: 'my-lib',
       destination: 'my-destination',
+      importPath: undefined,
+      updateImportPath: true,
     };
 
     // TODO - Currently this test will fail due to
