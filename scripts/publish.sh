@@ -42,12 +42,12 @@ do
 
   PACKAGE_NAME=`node -e "console.log(require('./package.json').name)"`
 
-  echo "Publishing ${PACKAGE_NAME}@${VERSION}"
+  echo "Publishing ${PACKAGE_NAME}@${VERSION} --tag ${TAG}"
 
   if [ "$LOCALBUILD" = "--local" ]; then
-    npm publish --access public --registry=NPM_REGISTRY
+    npm publish --tag ${TAG} --access public --registry=NPM_REGISTRY
   else
-    npm publish --access public
+    npm publish --tag ${TAG} --access public
   fi
 
   cd $ORIG_DIRECTORY
