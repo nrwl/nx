@@ -1,5 +1,4 @@
 import { fs, vol } from 'memfs';
-import { join } from 'path';
 import {
   ProjectGraphContext,
   ProjectGraphNode,
@@ -197,6 +196,34 @@ describe('findTargetProjectWithImport', () => {
     targetProjectLocator = new TargetProjectLocator(projects);
   });
 
+  it('should be able to resolve a module by using relative paths', () => {
+    const res1 = targetProjectLocator.findProjectWithImport(
+      './class.ts',
+      'libs/proj/index.ts',
+      ctx.nxJson.npmScope
+    );
+    const res2 = targetProjectLocator.findProjectWithImport(
+      '../index.ts',
+      'libs/proj/src/index.ts',
+      ctx.nxJson.npmScope
+    );
+    const res3 = targetProjectLocator.findProjectWithImport(
+      '../proj/../proj2/index.ts',
+      'libs/proj/index.ts',
+      ctx.nxJson.npmScope
+    );
+    const res4 = targetProjectLocator.findProjectWithImport(
+      '../proj/../index.ts',
+      'libs/proj/src/index.ts',
+      ctx.nxJson.npmScope
+    );
+
+    expect(res1).toEqual('proj');
+    expect(res2).toEqual('proj');
+    expect(res3).toEqual('proj2');
+    expect(res4).toEqual('proj');
+  });
+
   it('should be able to resolve a module by using tsConfig paths', () => {
     const proj2 = targetProjectLocator.findProjectWithImport(
       '@proj/my-second-proj',
@@ -242,20 +269,5 @@ describe('findTargetProjectWithImport', () => {
       ctx.nxJson.npmScope
     );
     expect(parentProj).toEqual('proj1234');
-  });
-
-  it('should be able to sort graph nodes', () => {
-    expect(targetProjectLocator._sortedNodeNames).toEqual([
-      'proj1234-child',
-      'proj1234',
-      'proj123',
-      'proj4ab',
-      'proj3a',
-      'proj2',
-      'proj',
-      '@ng/core',
-      '@ng/common',
-      'npm-package',
-    ]);
   });
 });

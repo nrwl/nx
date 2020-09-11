@@ -14,7 +14,7 @@ export function buildExplicitTypeScriptDependencies(
   fileRead: (s: string) => string
 ) {
   const importLocator = new TypeScriptImportLocator(fileRead);
-  const targetProjectLocator = new TargetProjectLocator(nodes);
+  const targetProjectLocator = new TargetProjectLocator(nodes, fileRead);
   Object.keys(ctx.fileMap).forEach((source) => {
     Object.values(ctx.fileMap[source]).forEach((f) => {
       importLocator.fromFile(
