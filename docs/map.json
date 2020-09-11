@@ -822,6 +822,11 @@
                 "name": "Using Tags",
                 "id": "monorepo-tags",
                 "file": "shared/monorepo-tags"
+              },
+              {
+                "name": "Dependency Graph",
+                "id": "dependency-graph",
+                "file": "shared/workspace/structure/dependency-graph.md"
               }
             ]
           },
@@ -866,11 +871,6 @@
                 "file": "shared/incremental-builds"
               }
             ]
-          },
-          {
-            "name": "Visualizing Workspaces",
-            "id": "monorepo-dependency-diagrams",
-            "file": "shared/monorepo-dependency-diagrams"
           },
           {
             "name": "Using NgRx",
@@ -1733,6 +1733,11 @@
                 "name": "Using Tags",
                 "id": "monorepo-tags",
                 "file": "shared/monorepo-tags"
+              },
+              {
+                "name": "Dependency Graph",
+                "id": "dependency-graph",
+                "file": "shared/workspace/structure/dependency-graph.md"
               }
             ]
           },
@@ -1777,11 +1782,6 @@
                 "file": "shared/incremental-builds"
               }
             ]
-          },
-          {
-            "name": "Visualizing Workspaces",
-            "id": "monorepo-dependency-diagrams",
-            "file": "shared/monorepo-dependency-diagrams"
           },
           {
             "name": "Adding Images, Fonts, and Files",
@@ -2622,6 +2622,11 @@
                 "name": "Using Tags",
                 "id": "monorepo-tags",
                 "file": "shared/monorepo-tags"
+              },
+              {
+                "name": "Dependency Graph",
+                "id": "dependency-graph",
+                "file": "shared/workspace/structure/dependency-graph.md"
               }
             ]
           },
@@ -2666,11 +2671,6 @@
                 "file": "shared/incremental-builds"
               }
             ]
-          },
-          {
-            "name": "Visualizing Workspaces",
-            "id": "monorepo-dependency-diagrams",
-            "file": "shared/monorepo-dependency-diagrams"
           },
           {
             "name": "Using Nx at Enterprises",
