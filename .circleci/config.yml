@@ -20,6 +20,7 @@ commands:
   install_rsync:
     description: 'Install Rsync'
     steps:
+      - run: echo $NX_BRANCH
       - run: sudo apt install rsync
   yarn_install:
     description: 'Install Dependencies'
