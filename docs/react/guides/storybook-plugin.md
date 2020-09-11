@@ -286,6 +286,7 @@ addDecorator(withKnobs);
 #### Check final folder structure
 
 Your folder structure should now look like this:
+
 ```
 <workspace name>/
 ├── .storybook/
