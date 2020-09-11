@@ -52,6 +52,7 @@
     "prettier": "^2.0.4"
   },
   "dependencies": {
+    "@angular-devkit/architect": "~0.1000.0",
     "@angular-devkit/core": "~10.0.0",
     "@angular-devkit/schematics": "~10.0.0",
     "cosmiconfig": "4.0.0",
@@ -65,10 +66,14 @@
     "strip-json-comments": "2.0.1",
     "tmp": "0.0.33",
     "yargs": "15.4.1",
+    "yargs-parser": "17.0.0",
     "chalk": "2.4.2",
     "@nrwl/cli": "*",
     "axios": "0.19.2",
     "flat": "^5.0.2",
-    "minimatch": "3.0.4"
+    "minimatch": "3.0.4",
+    "inquirer": "^6.3.1",
+    "resolve": "1.17.0",
+    "tslib": "^1.9.3"
   }
 }

@@ -31,6 +31,7 @@
     "@nrwl/workspace": "*"
   },
   "dependencies": {
+    "@angular-devkit/core": "~10.0.0",
     "@babel/core": "7.9.6",
     "@babel/preset-react": "7.9.4",
     "@nrwl/cypress": "*",
