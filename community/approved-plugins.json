@@ -45,6 +45,11 @@
     "url": "https://github.com/mauriziovitale/angular-plugins/tree/master/libs/lite-serve"
   },
   {
+    "name": "@nx-plus/nuxt",
+    "description": "Nx plugin adding first class support for Nuxt in your Nx workspace.",
+    "url": "https://github.com/ZachJW34/nx-plus/tree/master/libs/nuxt"
+  },
+  {
     "name": "@nx-plus/vue",
     "description": "Nx plugin adding first class support for Vue in your Nx workspace.",
     "url": "https://github.com/ZachJW34/nx-plus/tree/master/libs/vue"
