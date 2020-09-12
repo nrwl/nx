@@ -16,6 +16,7 @@ nx run-many --target=build --all --parallel
 
 cd build/packages
 
+// some change
 if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i "" "s|exports.nxVersion = '\*';|exports.nxVersion = '$NX_VERSION';|g" {react,next,web,jest,node,express,nest,cypress,storybook,angular,workspace}/src/utils/versions.js
     sed -i "" "s|\*|$NX_VERSION|g" {react,next,web,jest,node,express,nest,cypress,storybook,angular,workspace,cli,linter,bazel,tao,eslint-plugin-nx,create-nx-workspace,create-nx-plugin,nx-plugin}/package.json
