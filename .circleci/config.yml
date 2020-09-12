@@ -20,12 +20,11 @@ commands:
   install_rsync:
     description: 'Install Rsync'
     steps:
-      - run: echo $NX_BRANCH
       - run: sudo apt install rsync
   yarn_install:
     description: 'Install Dependencies'
     steps:
-      - run: echo $NX_BRANCH
+      - run: echo << pipeline.git.branch >>
       - run: yarn install --frozen-lockfile --non-interactive
       - run: ./node_modules/.bin/cypress verify
       - save_cache:
