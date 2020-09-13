@@ -10,7 +10,7 @@ executors:
     environment:
       # install Cypress in Linux-like cache folder
       CYPRESS_CACHE_FOLDER: '~/.cache/Cypress'
-      NX_BRANCH: 'empty'
+      NX_BRANCH: 'computedInSteps'
       NX_RUN_GROUP: << pipeline.number >>
 
     docker:
