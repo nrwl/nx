@@ -33,7 +33,6 @@ describe('lib', () => {
         builder: '@nrwl/jest:jest',
         options: {
           jestConfig: 'libs/my-lib/jest.config.js',
-          tsConfig: 'libs/my-lib/tsconfig.spec.json',
           passWithNoTests: true,
         },
       });
@@ -427,7 +426,7 @@ describe('lib', () => {
       transform: {
         '^.+\\.[tj]sx?$': 'ts-jest',
       },
-      moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+      moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
       coverageDirectory: '../../coverage/libs/my-lib',
       };`);
     });

@@ -16,11 +16,12 @@ import { calculateFileChanges, readEnvironment } from '../core/file-utils';
 import { printAffected } from './print-affected';
 import { projectHasTarget } from '../utils/project-graph-utils';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
+import { promptForNxCloud } from './prompt-for-nx-cloud';
 
-export function affected(
+export async function affected(
   command: 'apps' | 'libs' | 'dep-graph' | 'print-affected' | 'affected',
   parsedArgs: yargs.Arguments & RawNxArgs
-): void {
+) {
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     parsedArgs,
     'affected',
@@ -28,6 +29,8 @@ export function affected(
       printWarnings: command !== 'print-affected' && !parsedArgs.plain,
     }
   );
+
+  await promptForNxCloud(nxArgs.scan);
 
   const projectGraph = createProjectGraph();
   let affectedGraph = nxArgs.all

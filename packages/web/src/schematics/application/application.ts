@@ -175,6 +175,7 @@ export default function (schema: Schema): Rule {
             project: options.projectName,
             skipSerializers: true,
             setupFile: 'web-components',
+            babelJest: options.babelJest,
           })
         : noop(),
       formatFiles(options),

@@ -156,28 +156,18 @@ forEachCli('nx', () => {
         JSON.stringify(
           {
             presets: ['@nrwl/react/babel'],
+            plugins: [
+              [
+                'styled-components',
+                { pure: true, ssr: true, displayName: true },
+              ],
+            ],
             env: {
-              development: {
-                plugins: [
-                  [
-                    'styled-components',
-                    {
-                      pure: true,
-                      ssr: true,
-                      displayName: true,
-                    },
-                  ],
-                ],
-              },
               production: {
                 plugins: [
                   [
                     'styled-components',
-                    {
-                      pure: true,
-                      ssr: true,
-                      displayName: false,
-                    },
+                    { pure: true, ssr: true, displayName: false },
                   ],
                 ],
               },

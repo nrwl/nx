@@ -28,6 +28,14 @@ nx g application ... --dry-run
 
 ## Options
 
+### babelJest
+
+Default: `false`
+
+Type: `boolean`
+
+Use babel instead ts-jest
+
 ### directory
 
 Type: `string`

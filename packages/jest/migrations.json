@@ -34,6 +34,11 @@
       "version": "10.1.0-beta.4",
       "description": "Update jest to v26",
       "factory": "./src/migrations/update-10-1-0/update-10-1-0"
+    },
+    "update-10.2.0": {
+      "version": "10.2.0",
+      "description": "Remove deprecated jest builder options",
+      "factory": "./src/migrations/update-10-2-0/update-10-2-0"
     }
   },
   "packageJsonUpdates": {

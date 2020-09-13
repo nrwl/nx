@@ -60,6 +60,11 @@
       "type": "string",
       "description": "The library name used to import it, like @myorg/my-awesome-lib"
     },
+    "babelJest": {
+      "type": "boolean",
+      "description": "Use babel instead ts-jest",
+      "default": false
+    },
     "js": {
       "type": "boolean",
       "description": "Generate JavaScript files rather than TypeScript files",

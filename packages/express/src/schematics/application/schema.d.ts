@@ -10,4 +10,5 @@ export interface Schema {
   tags?: string;
   linter: Linter;
   frontendProject?: string;
+  babelJest?: boolean;
 }
