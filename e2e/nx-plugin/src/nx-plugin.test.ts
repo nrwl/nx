@@ -72,7 +72,7 @@ forEachCli((currentCLIName) => {
       expectTestsPass(results);
 
       done();
-    }, 150000);
+    }, 250000);
 
     it('should be able to generate a migration', async (done) => {
       ensureProject();
