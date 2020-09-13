@@ -10,7 +10,7 @@ executors:
     environment:
       # install Cypress in Linux-like cache folder
       CYPRESS_CACHE_FOLDER: '~/.cache/Cypress'
-      NX_BRANCH: << pipeline.git.branch >>
+      NX_BRANCH: 'empty'
       NX_RUN_GROUP: << pipeline.number >>
 
     docker:
@@ -53,6 +53,13 @@ commands:
   setup:
     description: 'Setup Executor'
     steps:
+      - run:
+          name: Set PR number to NX_BRANCH
+          command: |
+            echo 'export NX_BRANCH="${CIRCLE_PR_NUMBER:-${CIRCLE_PULL_REQUEST##*/}}"' >> $BASH_ENV
+            source $BASH_ENV
+            echo $NX_BRANCH
+      - run: echo $NX_BRANCH
       - checkout
       - install_rsync
       - attach_workspace:

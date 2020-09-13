@@ -20,7 +20,8 @@
         "canTrackAnalytics": false,
         "showUsageWarnings": true,
         "runtimeCacheInputs": ["echo $SELECTED_CLI"],
-        "cacheDirectory": "/tmp/nx-cache"
+        "cacheDirectory": "/tmp/nx-cache",
+        "nxCloudUsePrId": true
       }
     }
   },
