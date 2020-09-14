@@ -35,6 +35,11 @@
       "version": "10.2.0-beta.1",
       "description": "Upgrade NgRx libraries to version 10.0.0",
       "factory": "./src/migrations/update-10-2-0/update-10-2-0"
+    },
+    "update-10-3-0": {
+      "version": "10.3.0-beta.1",
+      "description": "Update jest-preset-angular library to version 8.3.1",
+      "factory": "./src/migrations/update-10-3-0/update-10-3-0"
     }
   },
   "packageJsonUpdates": {
@@ -72,6 +77,15 @@
         },
         "@ngrx/store-devtools": {
           "version": "10.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "10.3.0": {
+      "version": "10.3.0-beta.1",
+      "packages": {
+        "jest-preset-angular": {
+          "version": "8.3.1",
           "alwaysAddToPackageJson": false
         }
       }
