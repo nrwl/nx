@@ -33,6 +33,38 @@ import { storybookVersion } from '../../utils/versions';
 export default function (rawSchema: StorybookConfigureSchema): Rule {
   const schema = normalizeSchema(rawSchema);
 
+  const workspaceStorybookVersion = readCurrentWorkspaceStorybookVersion();
+
+  return chain([
+    schematic('ng-add', {
+      uiFramework: schema.uiFramework,
+    }),
+    createRootStorybookDir(
+      schema.uiFramework,
+      schema.js,
+      workspaceStorybookVersion
+    ),
+    createLibStorybookDir(
+      schema.name,
+      schema.uiFramework,
+      schema.js,
+      workspaceStorybookVersion
+    ),
+    configureTsLibConfig(schema),
+    configureTsSolutionConfig(schema),
+    updateLintTask(schema),
+    addStorybookTask(schema.name, schema.uiFramework),
+    schema.configureCypress
+      ? schematic<CypressConfigureSchema>('cypress-project', {
+          name: schema.name,
+          js: schema.js,
+          linter: schema.linter,
+        })
+      : () => {},
+  ]);
+}
+
+function readCurrentWorkspaceStorybookVersion(): string {
   const packageJsonContents = readPackageJson();
   let workspaceStorybookVersion = storybookVersion;
   if (packageJsonContents && packageJsonContents['devDependencies']) {
@@ -63,30 +95,7 @@ export default function (rawSchema: StorybookConfigureSchema): Rule {
         packageJsonContents['dependencies']['@storybook/core'];
     }
   }
-
-  return chain([
-    schematic('ng-add', {
-      uiFramework: schema.uiFramework,
-    }),
-    createRootStorybookDir(schema.name, schema.js, workspaceStorybookVersion),
-    createLibStorybookDir(
-      schema.name,
-      schema.uiFramework,
-      schema.js,
-      workspaceStorybookVersion
-    ),
-    configureTsLibConfig(schema),
-    configureTsSolutionConfig(schema),
-    updateLintTask(schema),
-    addStorybookTask(schema.name, schema.uiFramework),
-    schema.configureCypress
-      ? schematic<CypressConfigureSchema>('cypress-project', {
-          name: schema.name,
-          js: schema.js,
-          linter: schema.linter,
-        })
-      : () => {},
-  ]);
+  return workspaceStorybookVersion;
 }
 
 function normalizeSchema(schema: StorybookConfigureSchema) {
@@ -101,67 +110,22 @@ function normalizeSchema(schema: StorybookConfigureSchema) {
 }
 
 function createRootStorybookDir(
-  projectName: string,
+  uiFramework: string,
   js: boolean,
   workspaceStorybookVersion: string
 ): Rule {
   return (tree: Tree, context: SchematicContext) => {
     context.logger.debug(
-      `adding .storybook folder to root - using Storybook version ${workspaceStorybookVersion}`
+      `adding .storybook folder to root -\n
+      based on the Storybook version installed: ${workspaceStorybookVersion}, we'll bootstrap a scaffold for that particular version. 
+      https://nx.dev/${uiFramework.replace(
+        '@storybook/',
+        ''
+      )}/plugins/${uiFramework.replace(
+        '@storybook/',
+        ''
+      )}/schematics/storybook-configuration`
     );
-
-    /**
-     * Notes about versions of Storybook:
-     *
-     * So, here we could check the configuration flag and see if we want to generate
-     * a storybook version 5 or version 6
-     * (or just look at which version we have installed, I guess)
-     * (so, is there a way to "get storybook version"?)
-     *
-     * --------> readPackageJson
-     *
-     * And have two folders, root-files-5 and root-files-6
-     * and then choose the correct one for the corresponding version
-     *
-     * So, I guess the check should happen automatically (version of storybook)
-     *
-     * Use case:
-     * A user has a huge app with Storybook v5 configured.
-     * User upgrades to Nx 10. All their storybooks are still v5. So, old config files, old stories.
-     *
-     * They don't want their Storybook package to upgrade to Storybook v6 just yet, because
-     * it will break their builds. And they want the new stories they produce to be
-     * in version 5 still, for the same reason.
-     * When they have time to manually migrate all instances of Storybook v5 to Storybook v6,
-     * then they will want their Storbook package to upgrade to v6.
-     *
-     * All new Storybooks that are added or created should be in v6, if the package.json does
-     * not have Storybook.
-     */
-
-    /**
-     * Notes about manager.js
-     *
-     * Potentially, we should add manager.js to the root folder, just an empty file.
-     * Let's discuss, but it should just be an empty file, which is then referenced
-     * in the lib-files, just to save the users from the trouble of creating
-     * that file themselves, in case they need it.
-     * There's a change users will never use it, but some will. So, this
-     * will save those the trouble of manually creating a manager.js file
-     * in root-files and then an importing one in all instances of storybook.
-     */
-
-    /**
-     * Notes about .html files (preview-head.html, preview-body.html, manager-head.html)
-     *
-     * These files need to be created in each one separate instance of Storybook.
-     * We either do the same as we did with manager.js> just add them there, but most users
-     * will never use them, or let the users who want to add them, manually create them when and
-     * if they ever need them.
-     *
-     * These files cannot be imported or referenced or required. There needs to be a one and
-     * separate .html file in each one of the .storybook directories in the app, if it needs to be used
-     */
 
     return chain([
       applyWithSkipExisting(

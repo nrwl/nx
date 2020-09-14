@@ -11,8 +11,8 @@ describe('react:storybook-configuration', () => {
     // appTree = await createTestUILib('test-ui-lib');
     jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
       devDependencies: {
-        '@storybook/addon-knobs': '6.0.20',
-        '@storybook/react': '6.0.20',
+        '@storybook/addon-knobs': '^6.0.21',
+        '@storybook/react': '^6.0.21',
       },
     });
   });

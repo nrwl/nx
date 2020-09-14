@@ -16,26 +16,5 @@ module.exports = async ({ config, mode }) => {
     ? config.resolve.plugins.push(tsPaths)
     : (config.resolve.plugins = [tsPaths])
 
-  <% if(uiFramework === '@storybook/react') { %>
-  config.resolve.extensions.push('.ts', '.tsx');
-
-  /**
-  *  Removing the following lines, which are the TypeScript config
-  *  for webpack - which is not needed any more in Storybook 6.
-  *
-  * 
-  *  config.module.rules.push({
-  *    test: /\.(ts|tsx)$/,
-  *    loader: require.resolve('babel-loader'),
-  *    options: {
-  *      presets: [
-  *        '@babel/preset-env',
-  *        '@babel/preset-react',
-  *        '@babel/preset-typescript'
-  *      ]
-  *    }
-  *  });
-  */
-  <% } %>
   return config;
 };
