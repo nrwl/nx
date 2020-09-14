@@ -1,5 +1,5 @@
 {
-  "extends": "<%= offsetFromRoot %>../tsconfig.base.json",
+  "extends": "../tsconfig.json",
   "compilerOptions": {
     "emitDecoratorMetadata": true
   },
