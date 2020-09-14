@@ -121,7 +121,7 @@ export function run(
           return () => watcher.close();
         });
       } else {
-        context.logger.info('Bundling...');
+        context.logger.info(`Bundling...`);
 
         // Delete output path before bundling
         deleteOutputDir(context.workspaceRoot, options.outputPath);
@@ -190,7 +190,7 @@ export function createRollupOptions(
             allowJs: false,
             declaration: true,
             paths: compilerOptionPaths,
-            target: config.format === 'esm' ? 'esnext' : 'es5',
+            target: config.format === 'esm' ? undefined : 'es5',
           },
         },
       }),
