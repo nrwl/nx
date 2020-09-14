@@ -3,7 +3,9 @@ import * as stripJsonComments from 'strip-json-comments';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 import { NxJson, readJsonInTree } from '@nrwl/workspace';
-import { createApp } from '../../../../angular/src/utils/testing';
+// to break the dependency
+const createApp = require('../../../../angular/' + 'src/utils/testing')
+  .createApp;
 
 import { Schema } from './schema';
 
