@@ -2486,7 +2486,7 @@
     "@rollup/pluginutils" "^3.0.4"
     mini-svg-data-uri "^1.1.3"
 
-"@rollup/plugin-json@^4.0.0":
+"@rollup/plugin-json@^4.0.0", "@rollup/plugin-json@^4.1.0":
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/@rollup/plugin-json/-/plugin-json-4.1.0.tgz#54e09867ae6963c593844d8bd7a9c718294496f3"
   integrity sha512-yfLbTdNS6amI/2OpmbiBoW12vngr5NW2jCJVZSBEz+H5KfUJZ2M7sDjk0U6GOOdCWFVScShte29o9NezJ53TPw==

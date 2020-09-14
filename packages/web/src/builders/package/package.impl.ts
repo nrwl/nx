@@ -42,6 +42,7 @@ const resolve = require('@rollup/plugin-node-resolve');
 const commonjs = require('@rollup/plugin-commonjs');
 const typescript = require('rollup-plugin-typescript2');
 const image = require('@rollup/plugin-image');
+const json = require('@rollup/plugin-json');
 const copy = require('rollup-plugin-copy');
 const postcss = require('rollup-plugin-postcss');
 const filesize = require('rollup-plugin-filesize');
@@ -222,6 +223,7 @@ export function createRollupOptions(
       }),
       commonjs(),
       filesize(),
+      json(),
     ];
 
     const globals = options.globals

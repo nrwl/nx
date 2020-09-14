@@ -71,6 +71,7 @@
     "@rollup/plugin-babel": "5.0.2",
     "@rollup/plugin-commonjs": "11.0.2",
     "@rollup/plugin-image": "2.0.4",
+    "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "7.1.1",
     "@schematics/angular": "10.0.3",
     "@storybook/addon-knobs": "5.3.9",
