@@ -64,45 +64,7 @@ export default function (rawSchema: StorybookConfigureSchema): Rule {
   ]);
 }
 
-function readCurrentWorkspaceStorybookVersion(): string {
-  const packageJsonContents = readPackageJson();
-  let workspaceStorybookVersion = storybookVersion;
-  if (packageJsonContents && packageJsonContents['devDependencies']) {
-    if (packageJsonContents['devDependencies']['@storybook/angular']) {
-      workspaceStorybookVersion =
-        packageJsonContents['devDependencies']['@storybook/angular'];
-    }
-    if (packageJsonContents['devDependencies']['@storybook/react']) {
-      workspaceStorybookVersion =
-        packageJsonContents['devDependencies']['@storybook/react'];
-    }
-    if (packageJsonContents['devDependencies']['@storybook/core']) {
-      workspaceStorybookVersion =
-        packageJsonContents['devDependencies']['@storybook/core'];
-    }
-  }
-  if (packageJsonContents && packageJsonContents['dependencies']) {
-    if (packageJsonContents['dependencies']['@storybook/angular']) {
-      workspaceStorybookVersion =
-        packageJsonContents['dependencies']['@storybook/angular'];
-    }
-    if (packageJsonContents['dependencies']['@storybook/react']) {
-      workspaceStorybookVersion =
-        packageJsonContents['dependencies']['@storybook/react'];
-    }
-    if (packageJsonContents['dependencies']['@storybook/core']) {
-      workspaceStorybookVersion =
-        packageJsonContents['dependencies']['@storybook/core'];
-    }
-  }
-  if (
-    workspaceStorybookVersion.startsWith('6') ||
-    workspaceStorybookVersion.startsWith('^6')
-  ) {
-    workspaceStorybookVersion = '6';
-  }
-  return workspaceStorybookVersion;
-}
+
 
 function normalizeSchema(schema: StorybookConfigureSchema) {
   const defaults = {
@@ -278,4 +240,44 @@ function addStorybookTask(projectName: string, uiFramework: string): Rule {
       },
     });
   });
+}
+
+function readCurrentWorkspaceStorybookVersion(): string {
+  const packageJsonContents = readPackageJson();
+  let workspaceStorybookVersion = storybookVersion;
+  if (packageJsonContents && packageJsonContents['devDependencies']) {
+    if (packageJsonContents['devDependencies']['@storybook/angular']) {
+      workspaceStorybookVersion =
+        packageJsonContents['devDependencies']['@storybook/angular'];
+    }
+    if (packageJsonContents['devDependencies']['@storybook/react']) {
+      workspaceStorybookVersion =
+        packageJsonContents['devDependencies']['@storybook/react'];
+    }
+    if (packageJsonContents['devDependencies']['@storybook/core']) {
+      workspaceStorybookVersion =
+        packageJsonContents['devDependencies']['@storybook/core'];
+    }
+  }
+  if (packageJsonContents && packageJsonContents['dependencies']) {
+    if (packageJsonContents['dependencies']['@storybook/angular']) {
+      workspaceStorybookVersion =
+        packageJsonContents['dependencies']['@storybook/angular'];
+    }
+    if (packageJsonContents['dependencies']['@storybook/react']) {
+      workspaceStorybookVersion =
+        packageJsonContents['dependencies']['@storybook/react'];
+    }
+    if (packageJsonContents['dependencies']['@storybook/core']) {
+      workspaceStorybookVersion =
+        packageJsonContents['dependencies']['@storybook/core'];
+    }
+  }
+  if (
+    workspaceStorybookVersion.startsWith('6') ||
+    workspaceStorybookVersion.startsWith('^6')
+  ) {
+    workspaceStorybookVersion = '6';
+  }
+  return workspaceStorybookVersion;
 }
