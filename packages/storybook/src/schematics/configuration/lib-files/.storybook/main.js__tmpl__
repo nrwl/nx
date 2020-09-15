@@ -1,8 +1,7 @@
 const rootMain = require('<%= offsetFromRoot %>../.storybook/main');
-const main = [...rootMain];
 
 // Use the following syntax to add addons!
-// lib_main_module.addons.push('');
-main.stories.push(...['../src/lib/**/*.stories.mdx', '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'])
+// rootMain.addons.push('');
+rootMain.stories.push(...['../src/lib/**/*.stories.mdx', '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'])
 
-module.exports = main;
+module.exports = rootMain;

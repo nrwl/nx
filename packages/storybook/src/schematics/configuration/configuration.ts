@@ -95,6 +95,12 @@ function readCurrentWorkspaceStorybookVersion(): string {
         packageJsonContents['dependencies']['@storybook/core'];
     }
   }
+  if (
+    workspaceStorybookVersion.startsWith('6') ||
+    workspaceStorybookVersion.startsWith('^6')
+  ) {
+    workspaceStorybookVersion = '6';
+  }
   return workspaceStorybookVersion;
 }
 
@@ -123,9 +129,7 @@ function createRootStorybookDir(
     return chain([
       applyWithSkipExisting(
         url(
-          workspaceStorybookVersion.startsWith('6')
-            ? './root-files'
-            : './root-files-5'
+          workspaceStorybookVersion === '6' ? './root-files' : './root-files-5'
         ),
         [js ? toJS() : noop()]
       ),
@@ -154,9 +158,7 @@ function createLibStorybookDir(
     return chain([
       applyWithSkipExisting(
         url(
-          workspaceStorybookVersion.startsWith('6')
-            ? './lib-files'
-            : './lib-files-5'
+          workspaceStorybookVersion === '6' ? './lib-files' : './lib-files-5'
         ),
         [
           template({

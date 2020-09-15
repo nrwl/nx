@@ -224,7 +224,6 @@ describe('react:component-story', () => {
       it('should setup knobs based on the component props', () => {
         expect(stripIndents`${tree.readContent(storyFilePath)}`)
           .toContain(stripIndents`
-            import { text, boolean } from '@storybook/addon-knobs';
             import React from 'react';
             import { Test, TestProps } from './test-ui-lib';
             
@@ -235,8 +234,8 @@ describe('react:component-story', () => {
             
             export const primary = () => {
               const props: TestProps = {
-                name: text('name', ''),
-                displayAge: boolean('displayAge', false),
+                name: '',
+                displayAge: false,
               };
             
               return <Test name={props.name} displayAge={props.displayAge} />;

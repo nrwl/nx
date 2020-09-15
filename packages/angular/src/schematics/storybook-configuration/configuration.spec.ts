@@ -11,7 +11,7 @@ describe('schematic:configuration', () => {
     appTree = await createTestUILib('test-ui-lib');
     jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
       devDependencies: {
-        '@storybook/addon-knobs': '^6.0.21',
+        '@storybook/addon-essentials': '^6.0.21',
         '@storybook/react': '^6.0.21',
       },
     });
@@ -29,10 +29,7 @@ describe('schematic:configuration', () => {
       appTree
     );
     expect(tree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
-    expect(tree.exists('libs/test-ui-lib/.storybook/preview.js')).toBeTruthy();
-    expect(
-      tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
-    ).toBeTruthy();
+
     expect(tree.exists('apps/test-ui-lib-e2e/cypress.json')).toBeFalsy();
     expect(
       tree.exists(
@@ -68,10 +65,6 @@ describe('schematic:configuration', () => {
       appTree
     );
     expect(tree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
-    expect(tree.exists('libs/test-ui-lib/.storybook/preview.js')).toBeTruthy();
-    expect(
-      tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
-    ).toBeTruthy();
     expect(tree.exists('apps/test-ui-lib-e2e/cypress.json')).toBeTruthy();
     expect(
       tree.exists(

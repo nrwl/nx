@@ -12,8 +12,8 @@ describe('schematic:configuration', () => {
     appTree = await createTestUILib('test-ui-lib', '@nrwl/angular');
     jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
       devDependencies: {
-        '@storybook/addon-knobs': '^6.0.21',
-        '@storybook/react': '^6.0.21',
+        '@storybook/addon-essentials': '^6.0.21',
+        '@storybook/angular': '^6.0.21',
       },
     });
   });
@@ -41,28 +41,9 @@ describe('schematic:configuration', () => {
 
     // Local
     expect(
-      tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
+      tree.exists('libs/test-ui-lib/.storybook/webpack.config.js')
     ).toBeTruthy();
-    expect(tree.exists('libs/test-ui-lib/.storybook/preview.js')).toBeTruthy();
     expect(tree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
-
-    const storybookTsconfigJson = readJsonInTree<{ exclude: string[] }>(
-      tree,
-      'libs/test-ui-lib/.storybook/tsconfig.json'
-    );
-
-    expect(
-      storybookTsconfigJson.exclude.includes('../**/*.spec.ts')
-    ).toBeTruthy();
-    expect(
-      storybookTsconfigJson.exclude.includes('../**/*.spec.tsx')
-    ).toBeFalsy();
-    expect(
-      storybookTsconfigJson.exclude.includes('../**/*.spec.js')
-    ).toBeFalsy();
-    expect(
-      storybookTsconfigJson.exclude.includes('../**/*.spec.jsx')
-    ).toBeFalsy();
   });
 
   it('should update workspace file', async () => {
@@ -95,7 +76,7 @@ describe('schematic:configuration', () => {
         tsConfig: [
           'libs/test-ui-lib/tsconfig.lib.json',
           'libs/test-ui-lib/tsconfig.spec.json',
-          'libs/test-ui-lib/.storybook/tsconfig.json',
+
         ],
       },
     });

@@ -57,16 +57,15 @@ forEachCli(() => {
           tmpProjPath(`libs/${mylib2}/src/lib/button.stories.tsx`),
           `
             import React from 'react';
-            import { text, number } from '@storybook/addon-knobs';
             import { Button, ButtonStyle } from './button';
             
             export default { title: 'Button' };
             
             export const primary = () => (
               <Button
-                padding={number('Padding', 0)}
-                style={text('Style', 'default') as ButtonStyle}
-                text={text('Text', 'Click me')}
+                padding='0'
+                style='default'
+                text='Click me'
               />
             );
             `

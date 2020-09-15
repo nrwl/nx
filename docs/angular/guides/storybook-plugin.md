@@ -42,7 +42,6 @@ Also, a project-specific `.storybook` folder is added in the root of the project
 <project root>/
 ├── .storybook/
 │   ├── main.js
-│   ├── preview.js
 │   ├── tsconfig.json
 │   └── webpack.config.js
 ├── src/
@@ -94,7 +93,6 @@ Changing knobs in the url query parameters allows your Cypress tests to test dif
 **\*.component.stories.ts file**
 
 ```ts
-import { text, number } from '@storybook/addon-knobs';
 import { ButtonComponent } from './button.component';
 
 export default {
@@ -107,9 +105,9 @@ export const primary = () => ({
   },
   component: ButtonComponent,
   props: {
-    text: text('text', 'Click me!'),
-    padding: number('padding', 0),
-    style: text('style', 'default'),
+    text: 'Click me!',
+    padding: 0,
+    style: 'default',
   },
 });
 ```
@@ -139,16 +137,8 @@ To register an [addon](https://storybook.js.org/addons/) for all storybook insta
    module.exports = {
    stories: [...],
    ...,
-   addons: [..., '@storybook/addon-knobs/register'],
+   addons: [..., '@storybook/<SOME_ADDON>'],
    };
-   ```
-2. If a decorator is required, in each project's `<project-path>/.storybook/preview.js` use the `addDecorator` function.
-
-   ```
-   import { configure, addDecorator } from '@storybook/angular';
-   import { withKnobs } from '@storybook/addon-knobs';
-
-   addDecorator(withKnobs);
    ```
 
 **-- OR --**
@@ -160,16 +150,8 @@ To register an [addon](https://storybook.js.org/addons/) for a single storybook 
    module.exports = {
    stories: [...],
    ...,
-   addons: [..., '@storybook/addon-knobs/register'],
+   addons: [..., '@storybook/<SOME_ADDON>'],
    };
-   ```
-2. If a decorator is required, in `preview.js` use the `addDecorator` function.
-
-   ```
-   import { configure, addDecorator } from '@storybook/angular';
-   import { withKnobs } from '@storybook/addon-knobs';
-
-   addDecorator(withKnobs);
    ```
 
 ### More Information
@@ -249,11 +231,11 @@ If you have not changed the content of the files which the `storybook-configurat
 ```
 module.exports = {
   stories: [],
-  addons: ['@storybook/addon-knobs/register'],
+  addons: [],
 };
 ```
 
-- If you have any addons in the `addons.js` file, add them in the `addons` array in the `main.js` file. If you are using the default generated files without any changes, you should only have the `@storybook/addon-knobs/register` addon, which we already put in the array. You can now delete the `addons.js` file.
+- If you have any addons in the `addons.js` file, add them in the `addons` array in the `main.js` file. If you are using the default generated files without any changes, you should not have any addons. You can now delete the `addons.js` file.
 
 - The other two files remain unchanged.
 
@@ -279,18 +261,12 @@ lib_main_module.addons.push('<YOUR_ADDON_HERE>');
 
 After you add any addons in the `main.js` file, you can safely delete the `addons.js` file. If you are using the default generated files without any changes, your `addons.js` file should be empty (but an import line, referencing the root `addons.js` file).
 
-- Rename the file `config.js` to `preview.js` and remove the last line where your stories paths are configured. Now, the contents of the `preview.js` file will look like this:
-
-```
-import { addDecorator } from '<%= uiFramework %>';
-import { withKnobs } from '@storybook/addon-knobs';
-
-addDecorator(withKnobs);
-```
+- Rename the file `config.js` to `preview.js` and remove the core related to `'@storybook/addon-knobs'`. Now, the contents of the `preview.js` file will either be empty or have any code you have added on your own. If it is empty, you can safely delete it.
 
 - Modify the contents of `webpack.config.js`. Remove the following lines, which are the TypeScript configuration, which is not needed by Storybook any more:
 
 ```
+  config.resolve.extensions.push('.ts', '.tsx');
   config.module.rules.push({
     test: /\.(ts|tsx)$/,
     loader: require.resolve('babel-loader'),
@@ -319,7 +295,6 @@ Your folder structure should now look like this:
 │    └── <library name>/
 │       ├── .storybook/
 │       │   ├── main.js
-│       │   ├── preview.js
 │       │   ├── tsconfig.json
 │       │   └── webpack.config.js
 │       ├── src/
