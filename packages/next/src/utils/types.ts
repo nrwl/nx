@@ -3,7 +3,7 @@ import { JsonObject } from '@angular-devkit/core';
 export type NextServer = (
   options: NextServerOptions,
   proxyConfig?: ProxyConfig,
-  buildArgs?: NextServeBuilderOptions
+  builderArgs?: NextServeBuilderOptions
 ) => Promise<void>;
 
 export interface ProxyConfig {
@@ -44,7 +44,6 @@ export interface NextServeBuilderOptions extends JsonObject {
   quiet: boolean;
   buildTarget: string;
   customServerPath?: string;
-  customConfigPath?: string;
   hostname?: string;
   proxyConfig?: string;
 }

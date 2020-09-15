@@ -6,7 +6,7 @@ import { NextServerOptions, ProxyConfig } from '../../../utils/types';
 export function customServer(
   settings: NextServerOptions,
   proxyConfig?: ProxyConfig,
-  buildArgs?: NextServeBuilderOptions
+  builderArgs?: NextServeBuilderOptions
 ) {
   const nextApp = new NextServer(settings);
 
@@ -14,6 +14,6 @@ export function customServer(
     nextApp,
     settings,
     proxyConfig,
-    buildArgs
+    builderArgs
   );
 }
