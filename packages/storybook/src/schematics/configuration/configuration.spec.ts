@@ -94,7 +94,7 @@ describe('schematic:configuration', () => {
         tsConfig: [
           'libs/test-ui-lib/tsconfig.lib.json',
           'libs/test-ui-lib/tsconfig.spec.json',
-          'libs/test-ui-lib/.storybook/tsconfig.json'
+          'libs/test-ui-lib/.storybook/tsconfig.json',
         ],
       },
     });

@@ -64,8 +64,6 @@ export default function (rawSchema: StorybookConfigureSchema): Rule {
   ]);
 }
 
-
-
 function normalizeSchema(schema: StorybookConfigureSchema) {
   const defaults = {
     linter: Linter.TsLint,
