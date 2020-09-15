@@ -41,9 +41,27 @@ describe('schematic:configuration', () => {
 
     // Local
     expect(
-      tree.exists('libs/test-ui-lib/.storybook/webpack.config.js')
+      tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
     ).toBeTruthy();
     expect(tree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
+
+    const storybookTsconfigJson = readJsonInTree<{ exclude: string[] }>(
+      tree,
+      'libs/test-ui-lib/.storybook/tsconfig.json'
+    );
+
+    expect(
+      storybookTsconfigJson.exclude.includes('../**/*.spec.ts')
+    ).toBeTruthy();
+    expect(
+      storybookTsconfigJson.exclude.includes('../**/*.spec.tsx')
+    ).toBeFalsy();
+    expect(
+      storybookTsconfigJson.exclude.includes('../**/*.spec.js')
+    ).toBeFalsy();
+    expect(
+      storybookTsconfigJson.exclude.includes('../**/*.spec.jsx')
+    ).toBeFalsy();
   });
 
   it('should update workspace file', async () => {
@@ -76,7 +94,7 @@ describe('schematic:configuration', () => {
         tsConfig: [
           'libs/test-ui-lib/tsconfig.lib.json',
           'libs/test-ui-lib/tsconfig.spec.json',
-
+          'libs/test-ui-lib/.storybook/tsconfig.json'
         ],
       },
     });
