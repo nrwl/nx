@@ -29,7 +29,9 @@ describe('schematic:configuration', () => {
       appTree
     );
     expect(tree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
-
+    expect(
+      tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
+    ).toBeTruthy();
     expect(tree.exists('apps/test-ui-lib-e2e/cypress.json')).toBeFalsy();
     expect(
       tree.exists(
@@ -65,6 +67,9 @@ describe('schematic:configuration', () => {
       appTree
     );
     expect(tree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
+    expect(
+      tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
+    ).toBeTruthy();
     expect(tree.exists('apps/test-ui-lib-e2e/cypress.json')).toBeTruthy();
     expect(
       tree.exists(

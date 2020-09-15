@@ -128,12 +128,7 @@ describe('react:component-story', () => {
               title: 'Test',
             };
             
-            export const primary = () => {
-              /* eslint-disable-next-line */
-              const props = {};
-            
-              return <Test />;
-            };
+            export const Basic = (args) => <Test {...args} />
           `);
       });
     });
@@ -179,9 +174,7 @@ describe('react:component-story', () => {
               title: 'Test',
             };
             
-            export const primary = () => {
-              return <Test />;
-            };
+            export const Basic = (args) => <Test {...args} />
           `);
       });
     });
@@ -348,29 +341,6 @@ describe('react:component-story', () => {
             appTree
           );
         });
-
-        it('should properly setup the knobs based on the component props', () => {
-          expect(stripIndents`${tree.readContent(storyFilePath)}`)
-            .toContain(stripIndents`
-            import { text, boolean } from '@storybook/addon-knobs';
-            import React from 'react';
-            import { Test, TestProps } from './test-ui-lib';
-            
-            export default {
-              component: Test,
-              title: 'Test',
-            };
-            
-            export const primary = () => {
-              const props: TestProps = {
-                name: text('name', ''),
-                displayAge: boolean('displayAge', false),
-              };
-            
-              return <Test name={props.name} displayAge={props.displayAge} />;
-            };
-          `);
-        });
       });
     });
   });
@@ -399,12 +369,7 @@ describe('react:component-story', () => {
             title: 'TestUiLib',
           };
           
-          export const primary = () => {
-            /* eslint-disable-next-line */
-            const props: TestUiLibProps = {};
-          
-            return <TestUiLib />;
-          };
+          export const Basic = (args) => <TestUiLib {...args} />;
         `);
     });
   });
