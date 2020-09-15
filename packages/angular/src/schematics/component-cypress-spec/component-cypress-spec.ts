@@ -22,6 +22,7 @@ import {
   getKnobType,
 } from '../component-story/component-story';
 import { applyWithSkipExisting } from '@nrwl/workspace/src/utils/ast-utils';
+import { join, normalize } from '@angular-devkit/core';
 
 export default function (schema: CreateComponentSpecFileSchema): Rule {
   return chain([createComponentSpecFile(schema)]);
@@ -45,8 +46,11 @@ export function createComponentSpecFile({
   return (tree: Tree, context: SchematicContext): Rule => {
     const e2eLibIntegrationFolderPath =
       getProjectConfig(tree, projectName + '-e2e').sourceRoot + '/integration';
-    const fullComponentPath =
-      libPath + '/' + componentPath + '/' + componentFileName + '.ts';
+    const fullComponentPath = join(
+      normalize(libPath),
+      componentPath,
+      `${componentFileName}.ts`
+    );
     const props = getInputPropertyDeclarations(tree, fullComponentPath).map(
       (node) => {
         const decoratorContent = findNodes(

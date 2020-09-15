@@ -20,9 +20,12 @@ class TodoEffects {
       optimisticUpdate({
         // provides an action
         run: (action: UpdateTodo) => {
-          return this.backend.updateTodo(action.todo.id, action.todo);
+          return this.backend.updateTodo(action.todo.id, action.todo).pipe(
+            mapTo({
+              type: 'UPDATE_TODO_SUCCESS',
+            })
+          );
         },
-
         undoAction: (action: UpdateTodo, error: any) => {
           // dispatch an undo action to undo the changes in the client state
           return {

@@ -13,6 +13,8 @@ import { getTsSourceFile, getDecoratorMetadata } from '../../utils/ast-utils';
 import { CreateComponentSpecFileSchema } from '../component-cypress-spec/component-cypress-spec';
 import { CreateComponentStoriesFileSchema } from '../component-story/component-story';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { directoryExists } from '@nrwl/workspace/src/utils/fileutils';
+import { join, normalize } from '@angular-devkit/core';
 
 export interface StorybookStoriesSchema {
   name: string;
@@ -39,8 +41,8 @@ export function createAllStories(
       moduleFilePaths.push(filePath);
     });
     return chain(
-      moduleFilePaths.map((filePath) => {
-        const file = getTsSourceFile(tree, filePath);
+      moduleFilePaths.map((moduleFilePath) => {
+        const file = getTsSourceFile(tree, moduleFilePath);
 
         const ngModuleDecorators = getDecoratorMetadata(
           file,
@@ -49,7 +51,7 @@ export function createAllStories(
         );
         if (ngModuleDecorators.length === 0) {
           throw new SchematicsException(
-            `No @NgModule decorator in ${filePath}`
+            `No @NgModule decorator in ${moduleFilePath}`
           );
         }
         const ngModuleDecorator = ngModuleDecorators[0];
@@ -66,7 +68,7 @@ export function createAllStories(
           });
         if (!declarationsPropertyAssignment) {
           context.logger.warn(
-            stripIndents`No stories generated because there were no components declared in ${filePath}. Hint: you can always generate stories later with the 'nx generate @nrwl/angular:stories --name=${projectName}' command`
+            stripIndents`No stories generated because there were no components declared in ${moduleFilePath}. Hint: you can always generate stories later with the 'nx generate @nrwl/angular:stories --name=${projectName}' command`
           );
           return noop();
         }
@@ -83,6 +85,12 @@ export function createAllStories(
         const imports = file.statements.filter(
           (statement) => statement.kind === SyntaxKind.ImportDeclaration
         );
+
+        const modulePath = moduleFilePath.substr(
+          0,
+          moduleFilePath.lastIndexOf('/')
+        );
+
         const componentInfo = declaredComponents.map((componentName) => {
           try {
             const importStatement = imports.find((statement) => {
@@ -106,11 +114,61 @@ export function createAllStories(
               .find((node) => node.kind === SyntaxKind.StringLiteral)
               .getText()
               .slice(1, -1);
-            const path = fullPath.slice(0, fullPath.lastIndexOf('/'));
-            const componentFileName = fullPath.slice(
-              fullPath.lastIndexOf('/') + 1
+
+            // if it is a directory, search recursively for the component
+            let fullCmpImportPath = moduleFilePath.slice(
+              0,
+              moduleFilePath.lastIndexOf('/')
             );
-            return { name: componentName, path, componentFileName };
+            if (fullCmpImportPath.startsWith('/')) {
+              fullCmpImportPath = fullCmpImportPath.slice(
+                1,
+                fullCmpImportPath.length
+              );
+            }
+
+            const componentImportPath = join(
+              normalize(fullCmpImportPath),
+              fullPath
+            );
+
+            const dir = tree.getDir(componentImportPath);
+            if (dir && dir.subfiles.length > 0) {
+              let path = null;
+              let componentFileName = null;
+              // search the fullPath for component declarations
+              tree.getDir(componentImportPath).visit((componentFilePath) => {
+                if (componentFilePath.endsWith('.ts')) {
+                  const content = tree
+                    .read(componentFilePath)
+                    .toString('utf-8');
+                  if (content.indexOf(`class ${componentName}`) > -1) {
+                    path = componentFilePath
+                      .slice(0, componentFilePath.lastIndexOf('/'))
+                      .replace(modulePath, '.');
+                    componentFileName = componentFilePath.slice(
+                      componentFilePath.lastIndexOf('/') + 1,
+                      componentFilePath.lastIndexOf('.')
+                    );
+                    return;
+                  }
+                }
+              });
+
+              if (path === null) {
+                throw new SchematicsException(
+                  `Path to component ${componentName} couldn't be found. Please open an issue on https://github.com/nrwl/nx/issues.`
+                );
+              }
+
+              return { name: componentName, path, componentFileName };
+            } else {
+              const path = fullPath.slice(0, fullPath.lastIndexOf('/'));
+              const componentFileName = fullPath.slice(
+                fullPath.lastIndexOf('/') + 1
+              );
+              return { name: componentName, path, componentFileName };
+            }
           } catch (ex) {
             context.logger.warn(
               `Could not generate a story for ${componentName}.  Error: ${ex}`
@@ -119,7 +177,6 @@ export function createAllStories(
           }
         });
 
-        const modulePath = filePath.substr(0, filePath.lastIndexOf('/'));
         return chain(
           componentInfo
             .filter((info) => info !== undefined)

@@ -1,4 +1,3 @@
-import * as path from 'path';
 import * as fs from 'fs';
 import { findWorkspaceRoot } from './find-workspace-root';
 
@@ -14,23 +13,21 @@ requireCli();
 
 function requireCli() {
   process.env.NX_CLI_SET = 'true';
+  let cliPath: string;
   if (workspace.type === 'nx') {
-    require(path.join(
-      workspace.dir,
-      'node_modules',
-      '@nrwl',
-      'tao',
-      'index.js'
-    ));
+    cliPath = '@nrwl/tao/index.js';
   } else {
-    require(path.join(
-      workspace.dir,
-      'node_modules',
-      '@angular',
-      'cli',
-      'lib',
-      'init.js'
-    ));
+    cliPath = '@angular/cli/lib/init.js';
+  }
+
+  try {
+    const cli = require.resolve(cliPath, {
+      paths: [workspace.dir],
+    });
+    require(cli);
+  } catch (e) {
+    console.error(`Could not find ${cliPath} module in this workspace.`, e);
+    process.exit(1);
   }
 }
 

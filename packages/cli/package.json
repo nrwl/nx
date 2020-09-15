@@ -29,6 +29,7 @@
   "dependencies": {
     "tmp": "0.0.33",
     "yargs": "15.4.1",
+    "yargs-parser": "17.0.0",
     "@nrwl/tao": "*",
     "chalk": "2.4.2"
   }
