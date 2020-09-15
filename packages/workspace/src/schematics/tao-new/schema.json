@@ -76,6 +76,11 @@
     "appName": {
       "type": "string",
       "description": "Application name."
+    },
+    "nxWorkspaceRoot": {
+      "type": "string",
+      "description": "Root directory.",
+      "hidden": true
     }
   }
 }

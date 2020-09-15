@@ -50,6 +50,7 @@ export interface Schema {
     | 'nest';
   commit?: { name: string; email: string; message?: string };
   defaultBase?: string;
+  nxWorkspaceRoot?: string;
 }
 
 class RunPresetTask {
@@ -73,7 +74,7 @@ function createPresetTaskExecutor(cli: string, opts: Schema) {
         const spawnOptions = {
           stdio: [process.stdin, process.stdout, process.stderr],
           shell: true,
-          cwd: path.join(process.cwd(), opts.directory),
+          cwd: path.join(opts.nxWorkspaceRoot || process.cwd(), opts.directory),
         };
         const executable = `${getPackageManagerExecuteCommand()} ${cliCommand}`;
         const args = [

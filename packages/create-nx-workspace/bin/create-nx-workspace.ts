@@ -94,7 +94,7 @@ determineWorkspaceName(parsedArgs).then((name) => {
       return determineStyle(preset, parsedArgs).then((style) => {
         return determineCli(preset, parsedArgs).then((cli) => {
           return askAboutNxCloud(parsedArgs).then((cloud) => {
-            const tmpDir = createSandbox(packageManager, cli);
+            const tmpDir = createSandbox(packageManager);
             createApp(
               tmpDir,
               cli,
@@ -376,10 +376,7 @@ function determineStyle(preset: Preset, parsedArgs: any) {
   return Promise.resolve(parsedArgs.style);
 }
 
-function createSandbox(
-  packageManager: string,
-  cli: { package: string; version: string }
-) {
+function createSandbox(packageManager: string) {
   console.log(`Creating a sandbox with Nx...`);
   const tmpDir = dirSync().name;
   writeFileSync(
@@ -387,7 +384,7 @@ function createSandbox(
     JSON.stringify({
       dependencies: {
         '@nrwl/workspace': nxVersion,
-        [cli.package]: cli.version,
+        '@nrwl/tao': cliVersion,
         typescript: tsVersion,
         prettier: prettierVersion,
       },
@@ -444,21 +441,22 @@ function createApp(
   const defaultBaseArg = defaultBase ? ` --defaultBase="${defaultBase}"` : ``;
 
   const packageExec = getPackageManagerExecuteCommand(packageManager);
-  console.log(
-    `new ${name} ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=@nrwl/workspace`
+  const command = `new ${name} ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=@nrwl/workspace`;
+  console.log(command);
+
+  const collectionJsonPath = require.resolve(
+    '@nrwl/workspace/collection.json',
+    { paths: [tmpDir] }
   );
-  const executablePath = path.join(tmpDir, 'node_modules', '.bin', cli.command);
-  const collectionJsonPath = path.join(
-    tmpDir,
-    'node_modules',
-    '@nrwl',
-    'workspace',
-    'collection.json'
-  );
+
   execSync(
-    `"${executablePath}" new ${name} ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=${collectionJsonPath}`,
+    `${packageExec} tao ${command.replace(
+      '--collection=@nrwl/workspace',
+      `--collection=${collectionJsonPath}`
+    )} --cli=${cli.command} --nxWorkspaceRoot=${process.cwd()}`,
     {
       stdio: [0, 1, 2],
+      cwd: tmpDir,
     }
   );
 
