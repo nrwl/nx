@@ -78,7 +78,7 @@ export function run(
         proxyConfig = require(proxyConfigPath);
       }
 
-      return from(server(settings, proxyConfig)).pipe(
+      return from(server(settings, proxyConfig, options)).pipe(
         catchError((err) => {
           if (options.dev) {
             throw err;

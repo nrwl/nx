@@ -2,7 +2,8 @@ import { JsonObject } from '@angular-devkit/core';
 
 export type NextServer = (
   options: NextServerOptions,
-  proxyConfig?: ProxyConfig
+  proxyConfig?: ProxyConfig,
+  builderArgs?: NextServeBuilderOptions
 ) => Promise<void>;
 
 export interface ProxyConfig {

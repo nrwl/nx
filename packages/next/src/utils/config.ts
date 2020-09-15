@@ -97,13 +97,14 @@ export function createWebpackConfig(
     return config;
   };
 }
+export type NextConfigPhase =
+  | typeof PHASE_PRODUCTION_BUILD
+  | typeof PHASE_EXPORT
+  | typeof PHASE_DEVELOPMENT_SERVER
+  | typeof PHASE_PRODUCTION_SERVER;
 
 export function prepareConfig(
-  phase:
-    | typeof PHASE_PRODUCTION_BUILD
-    | typeof PHASE_EXPORT
-    | typeof PHASE_DEVELOPMENT_SERVER
-    | typeof PHASE_PRODUCTION_SERVER,
+  phase: NextConfigPhase,
   options: NextBuildBuilderOptions,
   context: BuilderContext
 ) {
