@@ -6,12 +6,13 @@ import {
   ProjectGraphNodeRecords,
 } from '../project-graph-models';
 import { TypeScriptImportLocator } from './typescript-import-locator';
+import { FileRead } from '../../file-utils';
 
 export function buildExplicitNpmDependencies(
   ctx: ProjectGraphContext,
   nodes: ProjectGraphNodeRecords,
   addDependency: AddProjectDependency,
-  fileRead: (s: string) => string
+  fileRead: FileRead
 ) {
   const importLocator = new TypeScriptImportLocator(fileRead);
 
