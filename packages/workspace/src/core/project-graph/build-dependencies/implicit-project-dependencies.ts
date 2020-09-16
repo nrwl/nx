@@ -8,8 +8,7 @@ import {
 export function buildImplicitProjectDependencies(
   ctx: ProjectGraphContext,
   nodes: ProjectGraphNodeRecords,
-  addDependency: AddProjectDependency,
-  fileRead: (s: string) => string
+  addDependency: AddProjectDependency
 ) {
   Object.keys(ctx.nxJson.projects).forEach((source) => {
     const p = ctx.nxJson.projects[source];

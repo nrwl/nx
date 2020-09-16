@@ -2,6 +2,7 @@ import { assertWorkspaceValidity } from '../assert-workspace-validity';
 import { createFileMap, FileMap } from '../file-graph';
 import {
   defaultFileRead,
+  FileRead,
   filesChanged,
   readNxJson,
   readWorkspaceFiles,
@@ -35,7 +36,7 @@ export function createProjectGraph(
   workspaceJson = readWorkspaceJson(),
   nxJson = readNxJson(),
   workspaceFiles = readWorkspaceFiles(),
-  fileRead: (s: string) => string = defaultFileRead,
+  fileRead: FileRead = defaultFileRead,
   cache: false | ProjectGraphCache = readCache(),
   shouldCache: boolean = true
 ): ProjectGraph {
@@ -81,7 +82,7 @@ export function createProjectGraph(
 
 function buildProjectGraph(
   ctx: { nxJson: NxJson<string[]>; workspaceJson: any; fileMap: FileMap },
-  fileRead: (s: string) => string,
+  fileRead: FileRead,
   projectGraph: ProjectGraph
 ) {
   performance.mark('build project graph:start');

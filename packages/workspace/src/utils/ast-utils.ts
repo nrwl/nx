@@ -26,7 +26,7 @@ import {
   onlyWorkspaceProjects,
   ProjectGraph,
 } from '../core/project-graph';
-import { FileData } from '../core/file-utils';
+import { FileData, FileRead } from '../core/file-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
 import { NxJson, NxJsonProjectConfig } from '../core/shared-interfaces';
 import { addInstallTask } from './rules/add-install-task';
@@ -405,7 +405,7 @@ export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
   const workspaceJson = readJsonInTree(host, getWorkspacePath(host));
   const nxJson = readJsonInTree<NxJson>(host, '/nx.json');
 
-  const fileRead = (f: string) => {
+  const fileRead: FileRead = (f: string) => {
     try {
       return host.read(f).toString();
     } catch (e) {

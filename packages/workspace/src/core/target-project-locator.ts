@@ -1,19 +1,22 @@
 import { resolveModuleByImport } from '../utils/typescript';
-import { defaultFileRead, normalizedProjectRoot } from './file-utils';
+import { defaultFileRead, FileRead, normalizedProjectRoot } from './file-utils';
 import { ProjectGraphNodeRecords } from './project-graph/project-graph-models';
 import { getSortedProjectNodes, isWorkspaceProject } from './project-graph';
 import { isRelativePath, parseJsonWithComments } from '../utils/fileutils';
 import { dirname, join } from 'path';
+import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
 
 export class TargetProjectLocator {
   private sortedWorkspaceProjects = [];
-  private paths = parseJsonWithComments(this.fileRead(`./tsconfig.base.json`))
+  private tsConfigPath = this.getRootTsConfigPath();
+  private absTsConfigPath = join(appRootPath, this.tsConfigPath);
+  private paths = parseJsonWithComments(this.fileRead(this.tsConfigPath))
     ?.compilerOptions?.paths;
   private cache = new Map<string, string>();
 
   constructor(
     private nodes: ProjectGraphNodeRecords,
-    private fileRead: (path: string) => string = defaultFileRead
+    private fileRead: FileRead = defaultFileRead
   ) {
     this.sortedWorkspaceProjects = getSortedProjectNodes(nodes)
       .filter((node) => isWorkspaceProject(node))
@@ -60,7 +63,11 @@ export class TargetProjectLocator {
 
     const resolvedModule = this.cache.has(normalizedImportExpr)
       ? this.cache.get(normalizedImportExpr)
-      : resolveModuleByImport(normalizedImportExpr, filePath);
+      : resolveModuleByImport(
+          normalizedImportExpr,
+          filePath,
+          this.absTsConfigPath
+        );
 
     this.cache.set(normalizedImportExpr, resolvedModule);
     if (resolvedModule) {
@@ -81,5 +88,14 @@ export class TargetProjectLocator {
     });
 
     return importedProject?.name;
+  }
+
+  private getRootTsConfigPath() {
+    try {
+      this.fileRead('tsconfig.base.json');
+      return 'tsconfig.base.json';
+    } catch (e) {
+      return 'tsconfig.json';
+    }
   }
 }
