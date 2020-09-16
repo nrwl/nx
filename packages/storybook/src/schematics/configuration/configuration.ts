@@ -93,12 +93,20 @@ function createLibStorybookDir(
   };
 }
 
+function getTsConfigPath(tree: Tree, projectName: string): string {
+  const { projectType } = getProjectConfig(tree, projectName);
+  const projectPath = getProjectConfig(tree, projectName).root;
+  return join(
+    projectPath,
+    projectType === 'application' ? 'tsconfig.app.json' : 'tsconfig.lib.json'
+  );
+}
+
 function configureTsLibConfig(schema: StorybookConfigureSchema): Rule {
   const { name: projectName } = schema;
 
   return (tree: Tree) => {
-    const projectPath = getProjectConfig(tree, projectName).root;
-    const tsConfigPath = join(projectPath, 'tsconfig.lib.json');
+    const tsConfigPath = getTsConfigPath(tree, projectName);
     const tsConfigContent = getTsConfigContent(tree, tsConfigPath);
 
     tsConfigContent.exclude = [
