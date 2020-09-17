@@ -327,6 +327,21 @@ forEachCli((currentCLIName) => {
       runCLI(`build ${nodelib}`);
       checkFilesExist(`./dist/libs/${nodelib}/esm2015/index.js`);
     }, 60000);
+
+    it('should fail when trying to compile typescript files that are invalid', () => {
+      ensureProject();
+      const nodeLib = uniq('nodelib');
+      runCLI(
+        `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@proj/${nodeLib}`
+      );
+      updateFile(
+        `libs/${nodeLib}/src/index.ts`,
+        stripIndents`
+        const temp: number = 'should fail'
+        `
+      );
+      expect(() => runCLI(`build ${nodeLib}`)).toThrow();
+    });
   });
 
   describe('nest libraries', function () {
