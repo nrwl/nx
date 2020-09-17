@@ -46,7 +46,7 @@ Generate JavaScript files rather than TypeScript files.
 
 ### linter
 
-Default: `eslint`
+Default: `tslint`
 
 Type: `string`
 

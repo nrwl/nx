@@ -8,7 +8,7 @@ Graph dependencies affected by changes
 nx affected:dep-graph
 ```
 
-Install `nx` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
+Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
 
 ### Examples
 
@@ -42,12 +42,6 @@ Open the dep graph of the workspace in the browser, and highlight the projects a
 nx affected:dep-graph --base=master~1 --head=master
 ```
 
-Open the dep graph of the workspace in the browser, highlight the projects affected, but exclude project-one and project-two:
-
-```bash
-nx affected:dep-graph --exclude=project-one,project-two
-```
-
 ## Options
 
 ### all
@@ -76,13 +70,9 @@ output file (e.g. --file=output.json or --file=dep-graph.html)
 
 Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas
 
-### focus
+### filter
 
-Use to show the dependency graph for a particular project and every node that is either an ancestor or a descendant.
-
-### groupByFolder
-
-Group projects by folder in dependency graph
+Use to limit the dependency graph to only show specific projects, list of projects delimited by commas.
 
 ### head
 
@@ -101,10 +91,6 @@ Bind the dep graph server to a specific ip address.
 Default: `false`
 
 Isolate projects which previously failed
-
-### plain
-
-Produces a plain output for affected:apps and affected:libs
 
 ### runner
 

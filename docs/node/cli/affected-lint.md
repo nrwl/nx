@@ -8,7 +8,7 @@ Lint projects affected by changes
 nx affected:lint
 ```
 
-Install `nx` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
+Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
 
 ### Examples
 
@@ -97,10 +97,6 @@ Isolate projects which previously failed
 Default: `false`
 
 Parallelize the command
-
-### plain
-
-Produces a plain output for affected:apps and affected:libs
 
 ### runner
 

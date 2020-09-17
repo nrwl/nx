@@ -36,14 +36,6 @@ nx g lib mylib --directory=myapp
 
 ## Options
 
-### buildable
-
-Default: `false`
-
-Type: `boolean`
-
-Generate a buildable library.
-
 ### directory
 
 Alias(es): d
@@ -52,15 +44,9 @@ Type: `string`
 
 A directory where the lib is placed
 
-### importPath
-
-Type: `string`
-
-The library name used to import it, like @myorg/my-awesome-lib. Must be a valid npm name.
-
 ### linter
 
-Default: `eslint`
+Default: `tslint`
 
 Type: `string`
 
@@ -75,6 +61,8 @@ Type: `string`
 Library name
 
 ### publishable
+
+Alias(es): buildable
 
 Type: `boolean`
 
@@ -94,7 +82,7 @@ Default: `false`
 
 Type: `boolean`
 
-Do not update tsconfig.base.json for development experience.
+Do not update tsconfig.json for development experience.
 
 ### tags
 

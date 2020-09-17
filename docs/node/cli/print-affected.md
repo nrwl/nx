@@ -8,7 +8,7 @@ Graph execution plan
 nx print-affected
 ```
 
-Install `nx` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
+Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
 
 ### Examples
 
@@ -85,10 +85,6 @@ Show help
 Default: `false`
 
 Isolate projects which previously failed
-
-### plain
-
-Produces a plain output for affected:apps and affected:libs
 
 ### runner
 
