@@ -237,6 +237,7 @@
     "webpack-subresource-integrity": "1.1.0-rc.6",
     "worker-plugin": "3.2.0",
     "yargs": "15.4.1",
+    "yargs-parser": "20.0.0",
     "zone.js": "^0.10.0"
   },
   "author": "Victor Savkin",
