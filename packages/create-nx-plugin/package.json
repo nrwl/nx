@@ -30,7 +30,7 @@
     "@nrwl/workspace": "*",
     "tmp": "0.0.33",
     "yargs": "15.4.1",
-    "yargs-parser": "17.0.0",
+    "yargs-parser": "20.0.0",
     "inquirer": "^6.3.1",
     "fs-extra": "7.0.1"
   }
