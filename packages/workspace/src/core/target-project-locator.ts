@@ -7,7 +7,7 @@ import { dirname, join } from 'path';
 
 export class TargetProjectLocator {
   private sortedWorkspaceProjects = [];
-  private paths = parseJsonWithComments(this.fileRead(`./tsconfig.base.json`))
+  private paths = parseJsonWithComments(this.fileRead(`./tsconfig.json`))
     ?.compilerOptions?.paths;
   private cache = new Map<string, string>();
 
