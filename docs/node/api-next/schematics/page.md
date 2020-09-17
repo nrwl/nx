@@ -38,14 +38,6 @@ nx g component my-component --project=mylib --classComponent
 
 ## Options
 
-### directory
-
-Alias(es): d
-
-Type: `string`
-
-Create the page under this directory (can be nested). Will be created under 'pages/'.
-
 ### export
 
 Alias(es): e

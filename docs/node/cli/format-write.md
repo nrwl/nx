@@ -8,13 +8,15 @@ Overwrite un-formatted files
 nx format:write
 ```
 
-Install `nx` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
+Install `@nrwl/cli` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
 
 ## Options
 
 ### all
 
 All projects
+
+### apps-and-libs
 
 ### base
 
@@ -42,17 +44,11 @@ Latest commit of the current branch (usually HEAD)
 
 Show help
 
-### libs-and-apps
-
 ### only-failed
 
 Default: `false`
 
 Isolate projects which previously failed
-
-### plain
-
-Produces a plain output for affected:apps and affected:libs
 
 ### runner
 

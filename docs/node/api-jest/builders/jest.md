@@ -59,7 +59,7 @@ The path to a Jest config file specifying how to find and execute tests. If no r
 
 Type: `string`
 
-The directory where Jest should output its coverage files.
+An array of regexp pattern strings that are matched against all file paths before executing the test. If the file path matches any of the patterns, coverage information will be skipped.
 
 ### coverageReporters
 
@@ -137,7 +137,7 @@ Run all tests serially in the current process (rather than creating a worker poo
 
 Type: `string`
 
-[Deprecated] The name of a setup file used by Jest. (use Jest config file https://jestjs.io/docs/en/configuration#setupfilesafterenv-array)
+The name of a setup file used by Jest. (https://jestjs.io/docs/en/configuration#setupfilesafterenv-array)
 
 ### showConfig
 
@@ -187,7 +187,7 @@ Node module that implements a custom results processor. (https://jestjs.io/docs/
 
 Type: `string`
 
-[Deprecated] The name of the Typescript configuration file. Set the tsconfig option in the jest config file.
+The name of the Typescript configuration file.
 
 ### updateSnapshot
 

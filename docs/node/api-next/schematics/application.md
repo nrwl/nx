@@ -56,7 +56,7 @@ Test runner to use for end to end (e2e) tests
 
 ### linter
 
-Default: `eslint`
+Default: `tslint`
 
 Type: `string`
 
