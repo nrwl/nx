@@ -782,6 +782,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "10.4.0": {
+      "version": "10.4.0-beta.1",
+      "packages": {
+        "prettier": {
+          "version": "2.1.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
