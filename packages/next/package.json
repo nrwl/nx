@@ -36,7 +36,7 @@
     "@nrwl/react": "*",
     "@nrwl/web": "*",
     "@angular-devkit/schematics": "~10.0.0",
-    "@svgr/webpack": "^4.3.3",
-    "url-loader": "^2.2.0"
+    "@svgr/webpack": "^5.4.0",
+    "url-loader": "^3.0.0"
   }
 }

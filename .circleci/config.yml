@@ -94,6 +94,9 @@ jobs:
       - run:
           name: Run linting
           command: yarn lint
+      - run:
+          name: Check Package dependencies
+          command: yarn depcheck
   e2e-1:
     executor: default
     steps:
