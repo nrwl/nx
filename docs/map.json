@@ -451,12 +451,12 @@
                   {
                     "name": "component-cypress-spec",
                     "id": "component-cypress-spec",
-                    "file": "node/api-react/schematics/component-cypress-spec"
+                    "file": "angular/api-react/schematics/component-cypress-spec"
                   },
                   {
                     "name": "component-story",
                     "id": "component-story",
-                    "file": "node/api-react/schematics/component-story"
+                    "file": "angular/api-react/schematics/component-story"
                   },
                   {
                     "name": "library",
